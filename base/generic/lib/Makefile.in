@@ -12,9 +12,9 @@
 
 
 SHELL = /bin/sh
-builddir = ../../../base/generic
-srcdir = @srcdir@
-VPATH = @srcdir@
+builddir = ..
+srcdir = @srcdir@/../generic
+VPATH = @srcdir@/../generic
 
 
 

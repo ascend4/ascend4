@@ -1985,25 +1985,48 @@ AC_SUBST(help_topbuilddir)
 #AWW20041117:	$conoptlib_makefile
 #AWW20041117:	$minoslib_makefile
 
-
+#AWW20041216:   Mark suggested using the following - except for last 
+#AWW20041216:   except for last six items. Do they matter?
 AC_OUTPUT(
- 	../../base/generic/ConfigAscend:../../base/generic/ConfigAscend.in
- 	../../base/generic/Makefile
- 	../../base/generic/bin/ascend4.sh
- 	../../base/generic/Makefile.Rules:../../base/generic/Makefile.Rules.in
- 	../../base/generic/archive/Makefile
- 	../../base/generic/bin/Makefile
- 	../../base/generic/compiler/Makefile
- 	../../base/generic/general/Makefile
- 	../../tcltk98/generic/interface/Makefile
- 	../../base/generic/lib/Makefile
- 	../../base/generic/packages/Makefile
- 	../../base/generic/solver/Makefile
- 	../../base/generic/utilities/Makefile
-	$tkdir_makefiles
-	$models_makefiles
-	$help_makefiles
-        $blaslib_makefile
-	$lpaklib_makefile
-	$lsodlib_makefile
-	)
+       ConfigAscend:../../base/generic/ConfigAscend.in
+       Makefile:../../base/generic/Makefile.in
+       bin/ascend4.sh:../../base/generic/bin/ascend4.sh.in
+       Makefile.Rules:../../base/generic/Makefile.Rules.in
+       archive/Makefile:../../base/generic/archive/Makefile.in
+       bin/Makefile:../../base/generic/bin/Makefile.in
+       compiler/Makefile:../../base/generic/compiler/Makefile.in
+       general/Makefile:../../base/generic/general/Makefile.in
+       interface/Makefile:../../tcltk98/generic/interface/Makefile.in
+       lib/Makefile:../../base/generic/lib/Makefile.in
+       packages/Makefile:../../base/generic/packages/Makefile.in
+       solver/Makefile:../../base/generic/solver/Makefile.in
+       utilities/Makefile:../../base/generic/utilities/Makefile.in
+       $tkdir_makefiles
+       $models_makefiles
+       $help_makefiles
+       $blaslib_makefile
+       $lpaklib_makefile
+       $lsodlib_makefile
+       )
+
+#AC_OUTPUT(
+# 	../../base/generic/ConfigAscend:../../base/generic/ConfigAscend.in
+# 	../../base/generic/Makefile
+# 	../../base/generic/bin/ascend4.sh
+# 	../../base/generic/Makefile.Rules:../../base/generic/Makefile.Rules.in
+# 	../../base/generic/archive/Makefile
+# 	../../base/generic/bin/Makefile
+# 	../../base/generic/compiler/Makefile
+# 	../../base/generic/general/Makefile
+# 	../../tcltk98/generic/interface/Makefile
+# 	../../base/generic/lib/Makefile
+# 	../../base/generic/packages/Makefile
+# 	../../base/generic/solver/Makefile
+# 	../../base/generic/utilities/Makefile
+#	$tkdir_makefiles
+#	$models_makefiles
+#	$help_makefiles
+#        $blaslib_makefile
+#	$lpaklib_makefile
+#	$lsodlib_makefile
+#	)

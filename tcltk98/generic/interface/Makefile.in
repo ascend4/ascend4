@@ -10,9 +10,9 @@
 
 SHELL = /bin/sh
 #AWW20041206: builddir = ..
-builddir = ../../../base/generic
-srcdir = @srcdir@
-VPATH = @srcdir@
+builddir = ..
+srcdir = @srcdir@/../../../tcltk98/generic
+VPATH = @srcdir@/../../../tcltk98/generic
 
 
 
