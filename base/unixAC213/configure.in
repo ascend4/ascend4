@@ -77,21 +77,56 @@ fi
 ##AWW   Current directory one is in:    /home/me/a4/asc4
 ##AWW   Directory containing configure: /home/me/a4/asc4
 ##AWW   Command to invoke configure:    ./configure
-##AWW   $ascpwd will be: /home/me/a4/asc4
-##AWW   $srcdir will be: .
+##AWW       $ascpwd will be: /home/me/a4/asc4
+##AWW       $srcdir will be: .
 ##AWW
 ##AWW   Example 2 (different directories, abs path for command)
 ##AWW   Current directory one is in:    /home/me/a4/tmp
 ##AWW   Directory containing configure: /home/me/a4/asc4
 ##AWW   Command to invoke configure:    /home/me/a4/asc4/configure
-##AWW   $ascpwd will be: /home/me/a4/tmp
-##AWW   $srcdir will be: /home/me/a4/asc4
+##AWW       $ascpwd will be: /home/me/a4/tmp
+##AWW       $srcdir will be: /home/me/a4/asc4
 ##AWW
 ##AWW   Example 3 (different directories, rel path for command)
 ##AWW   Same as Example 2
 ##AWW   Command to invoke configure:    ../asc4/configure
-##AWW   $ascpwd will be: /home/me/a4/tmp (same as in Example 2)
-##AWW   $srcdir will be: ../asc4
+##AWW       $ascpwd will be: /home/me/a4/tmp (same as in Example 2)
+##AWW       $srcdir will be: ../asc4
+##AWW
+##AWW   Key elements of the source tree are:
+##AWW       base/unixAC213/configure
+##AWW       base/generic
+##AWW       tcltk98
+##AWW   where $ascdir is pointing to base/unixAC213, the folder
+##AWW   containing "configure"
+##AWW
+##AWW   Configure is located at:
+##AWW       $srcdir/configure
+##AWW   while the .c/.h files one wants are in:
+##AWW       $srcdir/../generic/compiler
+##AWW       $srcdir/../generic/general
+##AWW       $srcdir/../generic/packages
+##AWW       $srcdir/../generic/solver
+##AWW       $srcdir/../generic/utilities
+##AWW       $srcdir/../../tcltk98/generic/interface
+##AWW
+##AWW   Each of these directories contain Makefiles and possible
+##AWW   need to find .h files in the other directories.  For example
+##AWW   the include statements are always of the form
+##AWW       #include compiler/slv3.h or
+##AWW       #include interface/SlvProc.h
+##AWW
+##AWW   A safe include path should assume one is a directory with any
+##AWW   of these .h and .c files and one needs to find a .h file in
+##AWW   any other of them.  The following paths should do it.   
+##AWW   
+##AWW   If in compiler, general, packages, solver, utilities
+##AWW       ..             for general, packages, etc
+##AWW       ../../../tcltk98  for interface
+##AWW   If in interface
+##AWW       ..             for interface
+##AWW       ../../base/generic  for compiler, general, packages, ...
+##AWW
 #--------------------------------------------------------------------
 
 ascpwd=`pwd`
@@ -324,7 +359,7 @@ fi
 #	2. If `flex' was found, see if it understands -V.  If so,
 #	   set `scanner_src' and `typer_src' to have `flex' generate
 #	   the C files from the flex input files
-#	   ascend4/compiler/scanner.l & ascend4/interface/typelex.l
+#	   base/generic/compiler/scanner.l & tcltk98/interface/typelex.l
 #	   We don't need to look for libfl.a since we define
 #	   yywrap() ourselves.
 #	3. If `flex' wasn't found or was found but isn't new enough:
@@ -352,8 +387,8 @@ fi
 
 if test -z "$LEX" ; then
     AC_MSG_WARN([Cannot find a flex lexer version 2.4.1 or greater.
-	Using pregenerated C files for ascend4/compiler/scanner.l
-	and ascend4/interface/typelex.l.  If you have flex 2.4.1
+	Using pregenerated C files for base/generic/compiler/scanner.l
+	and tcltk98/interface/typelex.l.  If you have flex 2.4.1
 	or newer, set the LEX environment variable to its location
 	and run configure again.])
     scanner_src="scanner.c.from.c"
@@ -1486,15 +1521,18 @@ case "$with_fortran$with_blas" in
 	#  Fortran is enabled and the user specified --with-blas=build
 	#  For a search for BLAS source code and tell the Makefile
 	#  to build it; useful for testing configure.
-        blas_src_file="$srcdir/blas/dcopy.f"
+#AWW20041206:        blas_src_file="$srcdir/blas/dcopy.f"
+        blas_src_file="$srcdir/../../blas/dcopy.f"
         AC_MSG_CHECKING([for blas source file $blas_src_file ])
         if test -f $blas_src_file ; then
             AC_MSG_RESULT(yes)
 #AWW20041119:            BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
             BLASLIB="$ascpwd/../generic/archive/libascblas.a"
 	    make_blaslib='make-blaslib'
-	    blaslib_makefile="blas/Makefile"
-            asc_subdirs="$asc_subdirs ../blas"
+#AWW20041206:	    blaslib_makefile="blas/Makefile"
+	    blaslib_makefile="../../blas/Makefile"
+#AWW20041206:            asc_subdirs="$asc_subdirs ../blas"
+            asc_subdirs="$asc_subdirs ../../blas"
         else
             AC_MSG_RESULT(no)
             AC_MSG_ERROR([User specified '--with-blas=build' but
@@ -1508,16 +1546,18 @@ case "$with_fortran$with_blas" in
 	#  fails, look for BLAS source code; if that also fails,
 	#  disable all Fortran and print a warning.
         AC_PATH_PROGS(BLASLIB, libblas.a libascblas.a, , $asc_f77_support_dirs)
-        blas_src_file="$srcdir/blas/dcopy.f"
+        blas_src_file="$srcdir/../../blas/dcopy.f"
         if test -z "$BLASLIB" -a -n "$blas_src_file" ; then
             AC_MSG_CHECKING([for blas source file $blas_src_file ])
             if test -f $blas_src_file ; then
                 AC_MSG_RESULT(yes)
-#AWW20031119:        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+#AWW20041119:        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
         	BLASLIB="$ascpwd/../generic/archive/libascblas.a"
 	        make_blaslib='make-blaslib'
-	        blaslib_makefile="blas/Makefile"
-        	asc_subdirs="$asc_subdirs ../blas"
+#AWW20041206:	        blaslib_makefile="blas/Makefile"
+	        blaslib_makefile="../../blas/Makefile"
+#AWW20041206:        	asc_subdirs="$asc_subdirs ../blas"
+        	asc_subdirs="$asc_subdirs ../../blas"
             else
                 AC_MSG_RESULT(no)
             fi
@@ -1564,15 +1604,17 @@ case "$with_fortran$with_linpack" in
 	#  Fortran is enabled and the user specified --with-linpack=build
 	#  For a search for LINPACK source code and tell the Makefile
 	#  to build it; useful for testing configure.
-        lpak_src_file="$srcdir/linpack/d1mach.f"
+        lpak_src_file="$srcdir/../../linpack/d1mach.f"
         AC_MSG_CHECKING([for linpack source file $lpak_src_file ])
         if test -f $lpak_src_file ; then
             AC_MSG_RESULT(yes)
 #AWW20041119:            LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
             LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
 	    make_lpaklib='make-lpaklib'
-	    lpaklib_makefile="linpack/Makefile"
-            asc_subdirs="$asc_subdirs ../linpack"
+#AWW20041206:	    lpaklib_makefile="linpack/Makefile"
+	    lpaklib_makefile="../../linpack/Makefile"
+#AWW20041206:            asc_subdirs="$asc_subdirs ../linpack"
+            asc_subdirs="$asc_subdirs ../../linpack"
         else
             AC_MSG_RESULT(no)
             AC_MSG_ERROR([User specified '--with-linpack=build' but
@@ -1586,7 +1628,7 @@ case "$with_fortran$with_linpack" in
 	#  fails, look for LINPACK source code; if that also fails,
 	#  disable all Fortran and print a warning.
         AC_PATH_PROGS(LPAKLIB, liblpak.a libasclpak.a, , $asc_f77_support_dirs)
-        lpak_src_file="$srcdir/linpack/d1mach.f"
+        lpak_src_file="$srcdir/../../linpack/d1mach.f"
         if test -z "$LPAKLIB" -a -n "$lpak_src_file" ; then
             AC_MSG_CHECKING([for linpack source file $lpak_src_file ])
             if test -f $lpak_src_file ; then
@@ -1594,8 +1636,10 @@ case "$with_fortran$with_linpack" in
 #AWW20041119:        	LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
         	LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
 	        make_lpaklib='make-lpaklib'
-	        lpaklib_makefile="linpack/Makefile"
-        	asc_subdirs="$asc_subdirs ../linpack"
+#AWW20041206:	        lpaklib_makefile="linpack/Makefile"
+	        lpaklib_makefile="../../linpack/Makefile"
+#AWW20041206:        	asc_subdirs="$asc_subdirs ../linpack"
+        	asc_subdirs="$asc_subdirs ../../linpack"
             else
                 AC_MSG_RESULT(no)
             fi
@@ -1641,15 +1685,17 @@ case "$with_fortran$with_lsod" in
 	#  Fortran is enabled and the user specified --with-lsod=build
 	#  For a search for LSOD source code and tell the Makefile
 	#  to build it; useful for testing configure.
-        lsod_src_file="$srcdir/lsod/lsode.f"
+        lsod_src_file="$srcdir/../../lsod/lsode.f"
         AC_MSG_CHECKING([for lsod source file $lsod_src_file ])
         if test -f $lsod_src_file ; then
             AC_MSG_RESULT(yes)
 #AWW20041119:            LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
             LSODLIB="$ascpwd/../generic/archive/libinteg.a"
 	    make_lsodlib='make-lsodlib'
-	    lsodlib_makefile="lsod/Makefile"
-            asc_subdirs="$asc_subdirs ../lsod"
+#AWW20041206:	    lsodlib_makefile="lsod/Makefile"
+	    lsodlib_makefile="../../lsod/Makefile"
+#AWW20041206:            asc_subdirs="$asc_subdirs ../lsod"
+            asc_subdirs="$asc_subdirs ../../lsod"
             HAVE_LSOD='-DSTATIC_LSOD'
         else
             AC_MSG_RESULT(no)
@@ -1664,7 +1710,7 @@ case "$with_fortran$with_lsod" in
 	#  for LSOD source code; if that also fails, disable LSOD
 	#  and print a warning.
         AC_PATH_PROGS(LSODLIB, libinteg.a libasclsod.a, , $asc_f77_support_dirs)
-        lsod_src_file="$srcdir/lsod/lsode.f"
+        lsod_src_file="$srcdir/../../lsod/lsode.f"
         if test -z "$LSODLIB" -a -n "$lsod_src_file" ; then
             AC_MSG_CHECKING([for lsod source file $lsod_src_file ])
             if test -f $lsod_src_file ; then
@@ -1672,8 +1718,10 @@ case "$with_fortran$with_lsod" in
 #AWW20041119:        	LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
         	LSODLIB="$ascpwd/../generic/archive/libinteg.a"
 	        make_lsodlib='make-lsodlib'
-	        lsodlib_makefile="lsod/Makefile"
-        	asc_subdirs="$asc_subdirs ../lsod"
+#AWW20041206:	        lsodlib_makefile="lsod/Makefile"
+	        lsodlib_makefile="../../lsod/Makefile"
+#AWW20041206:        	asc_subdirs="$asc_subdirs ../lsod"
+        	asc_subdirs="$asc_subdirs ../../lsod"
             else
                 AC_MSG_RESULT(no)
             fi
@@ -1761,7 +1809,8 @@ AC_ARG_WITH(tkdir,
 if test ! "X$with_tkdir" = "Xno" ; then
     subdir_file_exists='AscendRC'
 #AWW20041117: FIXME next line
-    subdir_locations='ascend4/TK'
+#AWW20041206:    subdir_locations='ascend4/TK'
+    subdir_locations='../tcltk98/TK'
     subdir_output='
 	$subdir_root/Makefile
 	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
@@ -1788,7 +1837,8 @@ AC_ARG_WITH(models,
 if test ! "X$with_models" = "Xno" ; then
     subdir_file_exists='system.a4l'
 #AWW20041117: FIXME next line
-    subdir_locations='models ascend4/models'
+#AWW20041206:    subdir_locations='models ascend4/models'
+    subdir_locations='models ../../base/generic/models'
     subdir_output='
 	$subdir_root/Makefile
 	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
@@ -1903,7 +1953,9 @@ AC_SUBST(models_topbuilddir)
 AC_SUBST(help_dir_root)
 AC_SUBST(help_topbuilddir)
 
-AC_OUTPUT(
+#AWW20041129:   In the following macro, replace the following
+#AWW20041129:   in the call.
+#AWW20041129:
 #AWW20041113: 	ascend4/ConfigAscend:ascend4/ConfigAscend.in
 #AWW20041113: 	ascend4/Makefile
 #AWW20041113: 	ascend4/bin/ascend4.sh
@@ -1917,26 +1969,32 @@ AC_OUTPUT(
 #AWW20041113: 	ascend4/packages/Makefile
 #AWW20041113: 	ascend4/solver/Makefile
 #AWW20041113: 	ascend4/utilities/Makefile
- 	../generic/ConfigAscend:../generic/ConfigAscend.in
- 	../generic/Makefile
- 	../generic/bin/../generic.sh
- 	../generic/Makefile.Rules:../generic/Makefile.Rules.in
- 	../generic/archive/Makefile
- 	../generic/bin/Makefile
- 	../generic/compiler/Makefile
- 	../generic/general/Makefile
- 	../generic/interface/Makefile
- 	../generic/lib/Makefile
- 	../generic/packages/Makefile
- 	../generic/solver/Makefile
- 	../generic/utilities/Makefile
+#AWW20041129:
+#AWW20041129:   and remove the following
+#AWW20041129:
+#AWW20041117:	$rsqplib_makefile
+#AWW20041117:	$conoptlib_makefile
+#AWW20041117:	$minoslib_makefile
+
+
+AC_OUTPUT(
+ 	../../base/generic/ConfigAscend:../../base/generic/ConfigAscend.in
+ 	../../base/generic/Makefile
+ 	../../base/generic/bin/ascend4.sh
+ 	../../base/generic/Makefile.Rules:../../base/generic/Makefile.Rules.in
+ 	../../base/generic/archive/Makefile
+ 	../../base/generic/bin/Makefile
+ 	../../base/generic/compiler/Makefile
+ 	../../base/generic/general/Makefile
+ 	../../tcltk98/generic/interface/Makefile
+ 	../../base/generic/lib/Makefile
+ 	../../base/generic/packages/Makefile
+ 	../../base/generic/solver/Makefile
+ 	../../base/generic/utilities/Makefile
 	$tkdir_makefiles
 	$models_makefiles
 	$help_makefiles
         $blaslib_makefile
 	$lpaklib_makefile
 	$lsodlib_makefile
-#AWW20041117:	$rsqplib_makefile
-#AWW20041117:	$conoptlib_makefile
-#AWW20041117:	$minoslib_makefile
 	)
