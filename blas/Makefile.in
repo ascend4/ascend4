@@ -15,12 +15,12 @@
 #  that libraries location (e.g., /usr/lib/libblas.a)
 #
 #  If you add files to these targets, please update the README.FORTRAN
-#  in the ascend4/config directory
+#  in the generic/config directory
 #
 
 
 SHELL = /bin/sh
-builddir = ../ascend4
+builddir = ../base/generic
 srcdir = @srcdir@
 VPATH = @srcdir@
 

@@ -20,7 +20,7 @@
 
 
 SHELL = /bin/sh
-builddir = ../ascend4
+builddir = ../base/generic
 srcdir = @srcdir@
 VPATH = @srcdir@
 
