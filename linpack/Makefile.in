@@ -21,8 +21,8 @@
 
 SHELL = /bin/sh
 builddir = ../base/generic
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir = @srcdir@/../../linpack
+VPATH = @srcdir@/../../linpack
 
 
 
