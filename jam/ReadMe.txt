@@ -44,6 +44,6 @@ among others.
 ** Currently, Open Watcom 1.3 can compile the Ascend sources
 and build the libraries.  However, it does not supply the required
 IEEE math functions isnan() and copysign().  At present, Ascend does
-not supply these, so the use must provide these functions to use
+not supply these, so the user must provide these functions to use
 the libraries under Watcom.
 
