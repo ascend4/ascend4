@@ -43,6 +43,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
 #include "utilities/ascMalloc.h"
@@ -355,10 +356,10 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
  *
  *	This file provides a replacement for the header file "dlfcn.h"
  *	on systems where dlfcn.h is missing.  It's primary use is for
- *	AIX, where Tcl emulates the dl library.
+ *	AIX, where tcl emulates the dl library.
  *
  *	This file is subject to the following copyright notice, which is
- *	different from the notice used elsewhere in Tcl but rougly
+ *	different from the notice used elsewhere in tcl but rougly
  *	equivalent in meaning.
  *
  *	Copyright (c) 1992,1993,1995,1996, Jens-Uwe Mager, Helios Software GmbH
@@ -418,11 +419,11 @@ int dlclose(void *handle);
  * tclLoadAix.c --
  *
  *	This file implements the dlopen and dlsym APIs under the
- *	AIX operating system, to enable the Tcl "load" command to
+ *	AIX operating system, to enable the tcl "load" command to
  *	work.  This code was provided by Jens-Uwe Mager.
  *
  *	This file is subject to the following copyright notice, which is
- *	different from the notice used elsewhere in Tcl.  The file has
+ *	different from the notice used elsewhere in tcl.  The file has
  *	been modified to incorporate the file dlfcn.h in-line.
  *
  *	Copyright (c) 1992,1993,1995,1996, Jens-Uwe Mager, Helios Software GmbH
@@ -436,7 +437,7 @@ int dlclose(void *handle);
  * SCCS: @(#) tclLoadAix.c 1.11 96/10/07 10:41:24
  *
  * Note:  this file has been altered from the original in a few
- * ways in order to work properly with Tcl.
+ * ways in order to work properly with tcl.
  */
 
 /*

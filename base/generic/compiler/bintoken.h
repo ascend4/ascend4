@@ -55,7 +55,7 @@ enum bintoken_kind {
  * Set the configurations for building code.
  * The string arguments given are kept.
  * They are freed on the next call which specifies a new string or NULL.
- * Strings given should not be allocated from Tcl.
+ * Strings given should not be allocated from tcl.
  * This function must be called before Create is.
  *
  * err = BinTokenSetOptions(srcname, objname, libname, buildcommand,

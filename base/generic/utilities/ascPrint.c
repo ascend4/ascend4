@@ -27,82 +27,64 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#include <stdlib.h>
+#include <stdarg.h>
+#include "utilities/ascConfig.h"
+static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 /*
  *  Only compile this file if we are using Asc_Printf()
  */
 #if PRINTF == Asc_PrintF
 
 
-#include <stdarg.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
 
 
 #define PRINT_BUFFER_SIZE 16380
 
-
-/*
- *  The Tcl channels for stdout and stderr.
- *
- *  These need to be initialized by calling Asc_PrintInit() before
- *  calls to Asc_Printf() will write to the Tcl Channels.
- */
-static Tcl_Channel g_tclout = NULL;   /* the Tcl channel for stdout */
-static Tcl_Channel g_tclerr = NULL;   /* the Tcl channel for stderr */
-
-
-extern int Asc_PrintInit(void)
+int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable)
 {
-  /*
-   *  Initialize ASCEND's ideas of Tcl's idea of stdout and stderr.
-   */
-  g_tclout = Tcl_GetStdChannel( TCL_STDOUT );
-  g_tclerr = Tcl_GetStdChannel( TCL_STDERR );
-
-  if(( g_tclout == NULL ) || ( g_tclerr == NULL )) {
-    return 1;
-  }
-  return 0;
+	if (	vtable->name == NULL ||
+		vtable->print == NULL ||
+		vtable->fflush == NULL
+	   ) {
+		return 1;
+	}
+	/* push it on the stack */
+	assert(vtable->next == NULL);
+	vtable->next = g_Asc_printVtables;
+	g_Asc_printVtables = vtable;
 }
 
-
-/*
- *  int AscPrint(fp, format, args)
- *      FILE *fp;
- *      CONST char *format;
- *      va_list args;
- *
- *  Using the sprintf-style format string `format', print the arguments in
- *  the va_list `args' to the file pointer `fp'.  Return the number of
- *  bytes printed.
- *
- *  NOTE: The last argument to this function is a VA_LIST, NOT a variable
- *  number of arguments.  You must initialize the va_list before calling
- *  this function, and cleanup the va_list afterwards.
- */
-static
-int AscPrint(FILE *fp, CONST char *format, va_list args)
+extern struct Asc_PrintVTable * Asc_PrintRemoveVTable(CONST char *name)
 {
-  static char buf[PRINT_BUFFER_SIZE]; /* the buffer that holds the output */
+	struct Asc_PrintVTable * prev;
+	struct Asc_PrintVTable * vt;
 
-  if(( fp == stdout ) && ( g_tclout != NULL )) {
-    vsprintf( buf, format, args );
-    return Tcl_Write( g_tclout, buf, -1 );
-  }
-  else if(( fp == stderr ) && ( g_tclerr != NULL )) {
-    vsprintf( buf, format, args );
-    return Tcl_Write( g_tclerr, buf, -1 );
-  }
-  /* TODO: should this fail loudly when a NULL fp is passed in? */
-  else if (fp != NULL) {
-    return vfprintf( fp, format, args );
-  }
-  else {
-    return 0;
-  }
+	/* skip notables case */
+	if (g_Asc_printVtables == NULL) {
+		return NULL;
+	}
+	/* LIFO is easy */
+	if ( strcmp(vt->name,name) == 0 ) {
+		struct Asc_PrintVTable * vt = g_Asc_printVtables;
+		g_Asc_printVtables = g_Asc_printVtables->next;
+		return vt;
+	}
+	/* middle chain is worse */
+	prev = g_Asc_printVtables;
+	vt = prev->next;
+	while (vt != NULL) {
+		if ( strcmp(vt->name,name) == 0 ) {
+			prev->next = vt->next;
+			return vt;
+		}
+		vt = vt->next;
+		prev = prev->next;
+	}
+	return NULL;
+
 }
-
 
 /*
  *  int Asc_Printf(format, variable_number_args)
@@ -121,11 +103,15 @@ int Asc_Printf(CONST char *format, ...)
   va_list args;    /* the variable number of arguments */
   int result;      /* the result of the call to AscPrint; our return value */
 
-  /* create the va_list */
-  va_start( args, format );
-  result = AscPrint( stdout, format, args );
-  /* cleanup and return */
-  va_end( args );
+  struct Asc_PrintVTable * vt = g_Asc_printVtables;
+  while (vt != NULL) {
+	  /* create the va_list */
+	  va_start( args, format );
+	  result = vt->print( stdout, format, args );
+	  /* cleanup and return */
+	  va_end( args );
+	  vt = vt->next;
+  }
   return result;
 }
 
@@ -148,11 +134,15 @@ int Asc_FPrintf(FILE *fp, CONST char *format, ...)
   va_list args;    /* the variable number of arguments */
   int result;      /* the result of the call to AscPrint; our return value */
 
-  /* create the va_list */
-  va_start( args, format );
-  result = AscPrint( fp, format, args );
-  /* cleanup and return */
-  va_end( args );
+  struct Asc_PrintVTable * vt = g_Asc_printVtables;
+  while (vt != NULL) {
+	  /* create the va_list */
+	  va_start( args, format );
+	  result = vt->print( fp, format, args );
+	  /* cleanup and return */
+	  va_end( args );
+	  vt = vt->next;
+  }
   return result;
 }
 
@@ -169,21 +159,13 @@ int Asc_FPrintf(FILE *fp, CONST char *format, ...)
 extern
 int Asc_FFlush( FILE *fileptr )
 {
-  if(( fileptr == stdout ) && ( g_tclout != NULL )) {
-    if( Tcl_Flush( g_tclout ) != TCL_OK ) {
-      return EOF;
-    }
-    return 0;
+  int result;
+  struct Asc_PrintVTable * vt = g_Asc_printVtables;
+  while (vt != NULL) {
+	  result = vt->fflush(fileptr);
+	  vt = vt->next;
   }
-  else if(( fileptr == stdout ) && ( g_tclerr )) {
-    if( Tcl_Flush( g_tclerr ) != TCL_OK ) {
-      return EOF;
-    }
-    return 0;
-  }
-  else {
-    return fflush(fileptr);
-  }
+  return result;
 }
 
 
@@ -201,7 +183,7 @@ extern
 int Asc_FPutc( int c, FILE *fileptr )
 {
   /*
-   *  Call Tcl_Write for output to stdout and stderr, or the real putc
+   *  Call vtable list for output to stdout and stderr, or the real putc
    *  for output to other file handles
    */
   if(( fileptr == stdout )  || ( fileptr == stderr )) {

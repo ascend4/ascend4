@@ -31,7 +31,7 @@
  *  There is not corresponding compiler.c. The variables
  *  declared in this header are defined in ascParse.y.
  *
- *  This header and Tcl/Tk headers are known to conflict. This header
+ *  This header and tcl/tk headers are known to conflict. This header
  *  should be included AFTER tcl.h or tk.h, not before.
  */
 
@@ -122,7 +122,7 @@
 #include<stdio.h>
 
 #ifdef __WIN32__
-#undef Status         /* jds20041229 - #define in Tcl include/X11/XLib.h conflicts. */
+#undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
 #undef WIN32_LEAN_AND_MEAN
@@ -304,6 +304,9 @@ typedef	unsigned   uint32;
 #endif /* ISNULL */
 #endif /* NULL */
 
+#ifndef NULL
+#error "Null not defined by the time ascConfig.h seen"
+#endif
 
 
 /*
