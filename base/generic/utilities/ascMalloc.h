@@ -1,4 +1,4 @@
-/**< 
+/**<
  *  Ascend Memory Allocation Routines
  *  by Tom Epperly
  *  Created: 2/6/90
@@ -31,6 +31,31 @@
 #ifndef __ASCMALLOC_H_SEEN__
 #define __ASCMALLOC_H_SEEN__
 
+/*
+ *  The following macros affect the compilation and run-time behavior
+ *  of Ascend memory management.
+ *
+ *    MOD_ASCMALLOC     Forces the memory allocation functions to always
+ *                      allocate at least 1 byte and return a non-NULL 
+ *                      pointer.  This macro should be defined if your
+ *                      allocator returns NULL when a zero-sized block is
+ *                      requested.  It need not be defined if your 
+ *                      allocator returns a non-NULL pointer to a zero-
+ *                      length block, saving you a few bytes of memory.
+ *
+ *    MALLOC_DEBUG      Causes all calls to memory allocation routines
+ *                      to be tracked and logged to an output file.
+ *                      This really slows down the memory management
+ *                      system, and so should be used for debugging only.
+ *
+ *    ALLOCATED_TESTS   Forces a lot of extra assertions when defined
+ *                      along with MALLOC_DEBUG.
+ *
+ *    MOD_REALLOC       If defined, ascreallocPURE() uses a homegrown 
+ *                      realloc() that behaves properly with purify.
+ *                      This is more expensive, and should be used
+ *                      for debugging only.
+*/
 
 extern char *ascstrdup(char *s);
 /*^ as strdup. */

@@ -1,4 +1,4 @@
-/** 
+/**
  *  Ascend Panic
  *  by Mark Thomas
  *  Created: 1997.05.15
@@ -49,11 +49,12 @@
  *  This function prints the arguments "args" using the format string
  *  "format" to the ASCERR file handle.  The first line of the panic
  *  message will print ``ASCEND PANIC!! in function'' if the argument
- *  "function" is not NULL.  If an panic output file location has been
- *  specified with the Asc_PanicSetOutfile() function, the panic message
- *  is also stored there.  Under Windows, we also pop up a MessageBox
- *  containing the message.  Finally, we exit the program with the status
- *  "status".
+ *  "function" is not NULL.  If ASCERR has not been initialized to a
+ *  valid file pointer, the message will not be printed.  Either way,
+ *  if an panic output file location has been specified with the 
+ *  Asc_PanicSetOutfile() function, the panic message is also stored 
+ *  there.  Under Windows, we also pop up a MessageBox containing the 
+ *  message.  Finally, we exit the program with the status "status".
  *
  *  Side Effects: Exits the program.
  */

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Script to build Ascend using jam
+
+# Build the Ascend base libraries
+cd ../../base/jam                                  
+./build_linux
+
+# Build the Ascend executable
+cd ../../tcltk98/jam
+jam -f Jambase
+
