@@ -1253,9 +1253,9 @@ case "$with_wish" in
         Setting env vars TCL_LIBRARY, TK_LIBRARY may be needed to run.])
         ;;
     *)
-        AC_MSG_CHECKING([wish for tcl_library,tklibrary])
-        ASC_TK_LIBRARY=`config/wishvar tk_library $with_wish`
-        ASC_TCL_LIBRARY=`config/wishvar tcl_library $with_wish`
+        AC_MSG_CHECKING([wish for tcl_library,tk_library])
+        ASC_WISHVAR(ASC_TK_LIBRARY, tk_library, $with_wish)
+        ASC_WISHVAR(ASC_TCL_LIBRARY, tcl_library, $with_wish)
 	AC_MSG_RESULT([ $ASC_TCL_LIBRARY , $ASC_TK_LIBRARY])
         ;;
 esac
