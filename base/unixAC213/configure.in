@@ -1,0 +1,1908 @@
+
+#--------------------------------------------------------------------
+#  A configure.in file for ASCEND.
+#
+#  Process `configure.in' file with `autoconf' to produce
+#  a `configure' script.  This `configure.in' was prepared
+#  for AutoConf v2.59.
+#--------------------------------------------------------------------
+
+#--------------------------------------------------------------------
+#	Disable caching since it seems to get in the way
+#	more times than it helps us.
+#--------------------------------------------------------------------
+define([AC_CACHE_LOAD], )dnl
+define([AC_CACHE_SAVE], )dnl
+
+
+#--------------------------------------------------------------------
+#	This file must exist for configure to continue.  It's
+#	how we know we're in the right place.
+#--------------------------------------------------------------------
+##AWW20041113: AC_INIT(ascend4/compiler/ascParse.y)
+AC_INIT(../generic/compiler/ascParse.y)
+
+
+#--------------------------------------------------------------------
+#  CVS Most Recent Revision Data
+#	Put this data after AC_INIT since we want this information
+#	to also appear in configure and autoconf, when creating
+#	configure, strips all comments that appear in configure.in
+#	before AC_INIT
+#    $Revision: 1.38 $
+#    $Date: 2003/11/23 19:36:39 $
+#    $Author: ballan $
+#    $Source: /afs/cs.cmu.edu/project/ascend/Repository/configure.in,v $
+#--------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------
+#	Where configure should look for files it needs.
+#--------------------------------------------------------------------
+AC_CONFIG_AUX_DIR(config)
+
+#--------------------------------------------------------------------
+#	Set the output variables prefix and exec_prefix that
+#	determine where things will be installed.
+#--------------------------------------------------------------------
+if test "${prefix}" = "NONE"; then
+    prefix=/usr/local
+fi
+if test "${exec_prefix}" = "NONE"; then
+    exec_prefix=$prefix
+fi
+
+
+#--------------------------------------------------------------------
+#	For the Fortran support libraries and the TCL/TK libraries
+#	and header files, we unfortunately need the full path to
+#	these files.  The problem with having the full path is that
+#	if the user moves the source tree, things will break unless
+#	the user re-runs configure.
+#--------------------------------------------------------------------
+##AWW20041113: FIXME - I think this is okay
+##AWW   ascpwd will be set to the path for the directory one is in
+##AWW   when invoking configure (which may not be where configure
+##AWW   is located.  So if one invokes it using the instruction
+##AWW   from /home/me/a4/tmp and invokes ../asc4/configure, ascpwd 
+##AWW   would be set to /home/me/a4/tmp.
+ascpwd=`pwd`
+fullpathsrcdir=`cd $srcdir ; pwd`
+
+
+#--------------------------------------------------------------------
+#       When one invokes configure from where one is, it is done 
+#       with the path $srcdir/configure.  For example, if one is
+#       in the directory containing configure, one would invoke
+#       ./configure and $srcdir would have the value ".".
+#
+#	The asc_include variable is (directory) path to the ascend4
+#	SOURCE directory relative to the immediate subdirectories of
+#	the ascend4 OBJECT directory.
+#	-- If we are building in the source directory ($srcdir is "."
+#	   asc_include is simply "../."
+#	-- If the user gives us a full path to the configure script,
+#	   we just append "../generic" to that full path:
+#	   "$scrdir/../generic"
+#	-- For any other value of $srcdir (like ../src/), we go up
+#	   two directories (to get to the top of the OBJECT tree,
+#	   insert the source directory, and then go back down one
+#	   level to the ascend4 directory: "../../$srcdir/../generic"
+#--------------------------------------------------------------------
+##AWW20041113: FIXME??
+case "$srcdir" in
+    .)
+        asc_include="../$srcdir"
+        ;;
+    /*)
+#AWW20041113:        asc_include="$srcdir/ascend4"
+        asc_include="$srcdir/../generic"
+        ;;
+    *)
+#AWW20041113:        asc_include="../../$srcdir/ascend4"
+        asc_include="../../$srcdir/../generic"
+        ;;
+esac
+
+
+#--------------------------------------------------------------------
+#	Do basic checks to determine
+#	* if we have `ranlib'
+#	* if we can create symbolic links
+#	* if `make' sets the MAKE macro
+#	* a bsd-compatible `install' program
+#	  If we use the install-sh script that comes with configure,
+#	  prefix it with the current directory so it'll work in
+#	  subdirectories.  Unfortunately, it won't work if the user
+#	  moves the source tree.
+#--------------------------------------------------------------------
+AC_PROG_RANLIB
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_INSTALL
+##AWW20041113: FIXME??  No fixing seems necessary.
+case "X$INSTALL" in
+    X/*)
+        ;;
+    *)
+        INSTALL="$ascpwd/$INSTALL"
+        ;;
+esac
+
+
+#--------------------------------------------------------------------
+#	Get the host type for various checks along the way
+#--------------------------------------------------------------------
+AC_CANONICAL_HOST
+
+
+#--------------------------------------------------------------------
+#	Check for the C compiler: set CC and CFLAGS.
+#	If the user does NOT specify `--enable-gcc' on the configure
+#	command command line, set CC to either the envar CC or `cc'.
+#	Call AC_PROG_CC which will use the value of CC (perhaps set
+#	immediately above) or will check for `gcc' and then for `cc'
+#	if `gcc' is not found.
+#
+#	If we are using GCC, then assume it groks ANSI.  Otherwise,
+#	try to compile a small program using ANSI constructs with
+#	CC.  If this fails, try to locate each of the following:
+#		c89 xlc acc
+#	and if successful, see if it compiles an ANSI C program.
+#	(Doing this in a loop would be ideal, but configure caches
+#	the result of AC_CHECK_PROG and uses the cached value for
+#	all but the first pass through the loop.  This is also the
+#	reason we have to use a different variable asc_cc1, asc_cc2
+#	for each call to AC_CHECK_PROG.
+#
+#	If we do not find an ANSI C compiler, print a warning and
+#	use the first value of CC we tried.
+#--------------------------------------------------------------------
+
+AC_ARG_ENABLE(gcc,
+    [
+ASCEND specific options
+
+Compiler options:
+  --enable-gcc            allow use of gcc if avaiable],
+    [asc_gcc_ok=$enableval], [asc_gcc_ok=no])
+if test ! "$asc_gcc_ok" = "yes"; then
+    CC=${CC-cc}
+fi
+asc_orig_cc=$CC
+
+if test "X$asc_gcc_ok" = "Xyes" ; then
+    asc_ansi_ok=yes
+else
+    AC_MSG_CHECKING(
+        [whether $CC understands const, void*, and function prototypes])
+    AC_TRY_COMPILE( , [
+          int tstproto(int arg1, char * arg2);
+          int tstconst(const int arg1, const char *arg2);
+          int tstvoidp(const int arg1, const void *arg2); ],
+        [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
+    AC_MSG_RESULT($asc_ansi_ok)
+fi
+
+if test "$asc_ansi_ok" = no ; then
+    AC_CHECK_PROG(asc_cc1, c89, c89, NONE)
+    if test ! "$asc_cc1" = NONE ; then
+        CC=$asc_cc1
+        AC_MSG_CHECKING(
+            [whether $CC understands const, void*, and function prototypes])
+        AC_TRY_COMPILE( , [
+              int tstproto(int arg1, char * arg2);
+              int tstconst(const int arg1, const char *arg2);
+              int tstvoidp(const int arg1, const void *arg2); ],
+            [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
+        AC_MSG_RESULT($asc_ansi_ok)
+    fi
+fi
+
+if test "$asc_ansi_ok" = no ; then
+    AC_CHECK_PROG(asc_cc2, xlc, xlc, NONE)
+    if test ! "$asc_cc2" = NONE ; then
+        CC=$asc_cc2
+        AC_MSG_CHECKING(
+            [whether $CC understands const, void*, and function prototypes])
+        AC_TRY_COMPILE( , [
+              int tstproto(int arg1, char * arg2);
+              int tstconst(const int arg1, const char *arg2);
+              int tstvoidp(const int arg1, const void *arg2); ],
+            [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
+        AC_MSG_RESULT($asc_ansi_ok)
+    fi
+fi
+
+if test "$asc_ansi_ok" = no ; then
+    AC_CHECK_PROG(asc_cc3, acc, acc, NONE)
+    if test ! "$asc_cc3" = NONE ; then
+        CC=$asc_cc3
+        AC_MSG_CHECKING(
+            [whether $CC understands const, void*, and function prototypes])
+        AC_TRY_COMPILE( , [
+              int tstproto(int arg1, char * arg2);
+              int tstconst(const int arg1, const char *arg2);
+              int tstvoidp(const int arg1, const void *arg2); ],
+            [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
+        AC_MSG_RESULT($asc_ansi_ok)
+    fi
+fi
+
+AC_PROG_CC
+
+if test "$asc_ansi_ok" = no ; then
+    CC=$asc_orig_cc
+    AC_MSG_ERROR([Cannot find an ANSI C compiler.  ASCEND will not build
+	without an ANSI compiler.  If you have an ANSI compiler which
+	configure is not finding, set the CC environment variable to
+	the full path fo the compiler and rerun configure.])
+fi
+
+
+#--------------------------------------------------------------------
+#	Do other misc checks with CC and CFLAGS.
+#
+#	Determine how to run the C preprocessor.
+#
+#	If the user specifies --enable-optimization, remove `-g'
+#	from CFLAGS, add `-O' to CFLAGS, and define `NDEBUG'.  If
+#	we are not building optimized, check for special libraries
+#	needed for building a debugging binary (currenly only
+#	/usr/lib/end.o under HPUX).
+#
+#	Check if we're running on AIX; if so, add `-D_ALL_SOURCE'
+#	to CFLAGS.
+#
+#	Check if we're running on HPUX; if so, add -D_HPUX_SOURCE'
+#	to CFLAGS unless the C preprocessor goes it for us.
+#--------------------------------------------------------------------
+
+AC_PROG_CPP
+
+AC_ARG_ENABLE(optimization,
+    [  --enable-optimization   optimize the C code while building ascend],
+    [asc_do_opt="$enableval"], [asc_do_opt=no])
+if test "$asc_do_opt" = yes; then
+    CFLAGS=`echo "-O $CFLAGS " | sed 's/ -g / /g'`
+    AC_DEFINE(NDEBUG)
+else
+    AC_PATH_PROG(DEBUG_LIBS, end.o, , /usr/lib)
+fi
+
+AC_MSG_CHECKING([for AIX])
+AC_EGREP_CPP(yes, [
+#ifdef _AIX
+    yes
+#endif
+], [ asc_aix=yes ; AC_DEFINE(_ALL_SOURCE) ], [asc_aix=no])
+AC_MSG_RESULT($asc_aix)
+
+AC_MSG_CHECKING([whether -D_HPUX_SOURCE is needed])
+AC_EGREP_CPP(yes, [
+#ifdef __hpux
+#ifndef _HPUX_SOURCE
+    yes
+#endif
+#endif
+], [ asc_hpux=yes ; AC_DEFINE(_HPUX_SOURCE) ], [asc_hpux=no])
+AC_MSG_RESULT($asc_hpux)
+
+# Check the size of pointers; if cross compiling, assume 32 bit pointers
+AC_CHECK_SIZEOF(void *, 4)
+
+
+#--------------------------------------------------------------------
+#	Set YACC.
+#	See if we can find `yacc' ourselves; if not, call the
+#	autoconf macro which looks for `bison' and then for `yacc'
+#--------------------------------------------------------------------
+asc_found_yacc=0
+AC_CHECK_PROG(YACC, yacc, yacc, [asc_found_yacc=no])
+if test "$asc_found_yacc" = no ; then
+    AC_PROG_YACC
+fi
+
+
+#--------------------------------------------------------------------
+#	Set LEX.
+#	ASCEND requires a `flex' which understands -P (allows you to
+#	specify a prefix other than `yy').  The -P flag was added at
+#	the same time a -V (version) flag was added (version 2.4.1),
+#	so if `flex' understands -V, it'll understand -P (checking
+#	for -P directly requires a flex input file).
+#
+#	1. If `LEX' is not set, look for `flex' and set `LEX' to
+#	   `flex' if found.
+#	2. If `flex' was found, see if it understands -V.  If so,
+#	   set `scanner_src' and `typer_src' to have `flex' generate
+#	   the C files from the flex input files
+#	   ascend4/compiler/scanner.l & ascend4/interface/typelex.l
+#	   We don't need to look for libfl.a since we define
+#	   yywrap() ourselves.
+#	3. If `flex' wasn't found or was found but isn't new enough:
+#	   a. Print a warning message
+#	   b. Set `scanner_src' and `typer_src' to use pre-generated
+#	      C files for the flex files mentioned in (2).
+#	   c. Set `LEX' to `lex'
+#	   d. Search for the lex library `libl.a' and set LEXLIB to
+#	      its location.
+#--------------------------------------------------------------------
+AC_CHECK_PROG(LEX, flex, flex)
+
+if test -n "$LEX" ; then
+    AC_MSG_CHECKING([whether $LEX is at least version 2.4.1])
+    echo "$LEX -V" 1>&5
+    if $LEX -V 1>&5 2>&5 ; then
+        AC_MSG_RESULT(yes)
+        scanner_src="scanner.c.from.flex"
+        typer_src="typelex.c.from.flex"
+    else
+        AC_MSG_RESULT(no)
+        LEX=''
+    fi
+fi
+
+if test -z "$LEX" ; then
+    AC_MSG_WARN([Cannot find a flex lexer version 2.4.1 or greater.
+	Using pregenerated C files for ascend4/compiler/scanner.l
+	and ascend4/interface/typelex.l.  If you have flex 2.4.1
+	or newer, set the LEX environment variable to its location
+	and run configure again.])
+    scanner_src="scanner.c.from.c"
+    typer_src="typelex.c.from.c"
+
+    # let configure set LEX and LEXLIB even though we won't be using them
+    AC_PROG_LEX
+fi
+
+
+#--------------------------------------------------------------------
+#	Math libraries.
+#	On a few very rare systems, all of the libm.a stuff is
+#	already in libc.a.  Set compiler flags accordingly.
+#	Also, Linux requires the "ieee" library for math to work
+#	right (and it must appear before "-lm").
+#
+#	When building on HPUX with GCC, GCC cannot find `copysign'
+#	because it lives in an odd place; see if we need to add
+#	this odd place to MATH_LIBS.
+#
+#	See if erf(), the error function, exists; if so, define
+#	HAVE_ERF.
+#--------------------------------------------------------------------
+AC_CHECK_FUNC(sin, MATH_LIBS="", MATH_LIBS="-lm")
+
+AC_CHECK_LIB(ieee, printf, [MATH_LIBS="-lieee $MATH_LIBS"])
+
+if test -n "$MATH_LIBS" ; then
+    AC_CHECK_LIB(m, copysign, ,
+        AC_CHECK_LIB(m, drem, [MATH_LIBS="$MATH_LIBS /lib/pa1.1/libM.a"]
+                     , , /lib/pa1.1/libM.a
+        ),
+    $MATH_LIBS)
+fi
+
+# store the current list of libraries, add the math libraries to LIBS,
+# check for erf(), then reset the value of LIBS.
+asc_keep_LIBS="$LIBS"
+LIBS="$LIBS $MATH_LIBS"
+AC_CHECK_FUNCS(erf)
+LIBS="$asc_keep_LIBS"
+
+
+#--------------------------------------------------------------------
+#	Check for X11.
+#	We'll use the simple autoconf builtin macro for finding
+#	X11 until we find a reason not to.
+#
+#	On Solaris and IRIX, add the path to the X library to the
+#	run-time shared-library-search-path so the ASCEND binary
+#	can find the X library without the user having to set
+#	LD_LIBRARY_PATH
+#--------------------------------------------------------------------
+AC_PATH_X
+if test -n "$x_includes"; then
+    X11_INCLUDES="-I$x_includes"
+fi
+if test -n "$x_libraries"; then
+    X11_LIBRARIES="-L$x_libraries"
+    case "$host" in
+        sparc-sun-solaris*)
+            X11_RUN_PATH="-R$x_libraries" 
+            ;;
+        mips-sgi-irix*)
+            X11_RUN_PATH="-rpath $x_libraries"
+            ;;
+        *)
+            X11_RUN_PATH=""
+            ;;
+    esac
+fi
+
+
+#--------------------------------------------------------------------
+#	Check for the existence of various libraries.  The order here
+#	is important, so that then end up in the right order in the
+#	command line generated by make.  The -lsocket and -lnsl
+#	libraries require a couple of special tricks:
+#	1. Use "connect" and "accept" to check for -lsocket, and
+#	   "gethostbyname" to check for -lnsl.
+#	2. Use each function name only once:  can't redo a check
+#	   because autoconf caches the results of the last check
+#	   and won't redo it.
+#	3. Use -lnsl and -lsocket only if they supply procedures that
+#	   aren't already present in the normal libraries.  This is
+#	   because IRIX 5.2 has libraries, but they aren't needed and
+#	   they're bogus:  they goof up name resolution if used.
+#	4. On some SVR4 systems, can't use -lsocket without -lnsl
+#	   too. To get around this problem, check for both libraries
+#	   together if -lsocket doesn't work by itself.
+#--------------------------------------------------------------------
+dnl AC_CHECK_LIB(Xbsd, printf, [LIBS="$LIBS -lXbsd"])
+
+asc_checkBoth=0
+AC_CHECK_FUNC(connect, [asc_checkSocket=0], [asc_checkSocket=1])
+if test "$asc_checkSocket" = 1; then
+    AC_CHECK_LIB(socket, printf, [X11_EXTRA_LIBS="-lsocket"],[asc_checkBoth=1])
+fi
+if test "$asc_checkBoth" = 1; then
+    asc_oldLibs=$LIBS
+    X11_EXTRA_LIBS="-lsocket -lnsl"
+    LIBS="$LIBS $X11_EXTRA_LIBS"
+    AC_CHECK_FUNC(accept, asc_checkNsl=0, [X11_EXTRA_LIBS=""])
+    LIBS=$asc_oldLibs
+fi
+asc_oldLibs=$LIBS
+LIBS="$LIBS $X11_EXTRA_LIBS"
+AC_CHECK_FUNC(gethostbyname, ,
+    AC_CHECK_LIB(nsl, printf, [X11_EXTRA_LIBS="$X11_EXTRA_LIBS -lnsl"]))
+LIBS=$asc_oldLibs
+
+
+#--------------------------------------------------------------------
+#	The following comes directly from the configure.in file for
+#	Tcl8.0.
+#
+#	The statements below define a collection of symbols related to
+#	dynamic loading and shared libraries:
+#
+#	DL_OBJS -	Name of the object file that implements dynamic
+#			loading for ASCEND on this system.
+#	DL_LIBS -	Library file(s) to include in tclsh and other base
+#			applications in order for the "load" command to work.
+#	LD_FLAGS -	Flags to pass to the compiler when linking object
+#			files into an executable application binary such
+#			as tclsh.
+#	LD_SEARCH_FLAGS-Flags to pass to ld, such as "-R /usr/local/tcl/lib",
+#			that tell the run-time dynamic linker where to look
+#			for shared libraries such as libtcl.so.  Depends on
+#			the variable LIB_RUNTIME_DIR in the Makefile.
+#	MAKE_LIB -	Command to execute to build the ASCEND library;
+#			differs depending on whether or not ASCEND is being
+#			compiled as a shared library.
+#	SHLIB_CFLAGS -	Flags to pass to cc when compiling the components
+#			of a shared library (may request position-independent
+#			code, among other things).
+#	SHLIB_LD -	Base command to use for combining object files
+#			into a shared library.
+#	SHLIB_LD_LIBS -	Dependent libraries for the linker to scan when
+#			creating shared libraries.  This symbol typically
+#			goes at the end of the "ld" commands that build
+#			shared libraries. The value of the symbol is
+#			"${LIBS}" if all of the dependent libraries should
+#			be specified when creating a shared library.  If
+#			dependent libraries should not be specified (as on
+#			SunOS 4.x, where they cause the link to fail, or in
+#			general if ASCEND and Tk aren't themselves shared
+#			libraries), then this symbol has an empty string
+#			as its value.
+#	SHLIB_SUFFIX -	Suffix to use for the names of dynamically loadable
+#			extensions.  An empty string means we don't know how
+#			to use shared libraries on this platform.
+#	ASC_LIB_FILE -	Name of the file that contains the ASCEND library, such
+#			as libtcl7.8.so or libtcl7.8.a.
+#	ASC_LIB_SUFFIX -Specifies everything that comes after the "libtcl"
+#			in the shared library name, using the $VERSION variable
+#			to put the version in the right place.  This is used
+#			by platforms that need non-standard library names.
+#			Examples:  ${VERSION}.so.1.1 on NetBSD, since it needs
+#			to have a version after the .so, and ${VERSION}.a
+#			on AIX, since the ASCEND shared library needs to have
+#			a .a extension whereas shared objects for loadable
+#			extensions have a .so extension.  Defaults to
+#			${VERSION}${SHLIB_SUFFIX}.
+#--------------------------------------------------------------------
+
+# Step 1: set the variable "system" to hold the name and version number
+# for the system.  This can usually be done via the "uname" command, but
+# there are a few systems, like Next, where this doesn't work.
+
+# Changed this to use the "$host" variable from AC_CANONICAL_HOST
+
+# Step 2: check for existence of -ldl library.  This is needed because
+# Linux can use either -ldl or -ldld for dynamic loading.
+
+AC_CHECK_LIB(dl, dlopen, have_dl=yes, have_dl=no)
+
+# Step 3: set configuration options based on system name and version.
+
+ASC_SHARED_LIB_SUFFIX=""
+ASC_UNSHARED_LIB_SUFFIX=""
+ASC_LIB_VERSIONS_OK=ok
+case $host in
+    *-aix*)
+	SHLIB_CFLAGS=""
+	SHLIB_LD="$fullpathsrcdir/ldAix /bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512"
+	SHLIB_LD_LIBS='${LIBS}'
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-lld"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+	ASC_SHARED_LIB_SUFFIX='${VERSION}.a'
+	;;
+    *-bsdi*)
+	SHLIB_CFLAGS=""
+	SHLIB_LD="shlicc -r"
+	SHLIB_LD_LIBS='${LIBS}'
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS=""
+	;;
+    *-dgux*)
+	SHLIB_CFLAGS="-K PIC"
+	SHLIB_LD="cc -G"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS=""
+	;;
+    *-hpux8*|*-hpux9*|*-hpux10*)
+	AC_CHECK_LIB(dld, shl_load, tcl_ok=yes, tcl_ok=no)
+	if test "$tcl_ok" = yes; then
+	    SHLIB_CFLAGS="+z"
+	    SHLIB_LD="ld -b"
+	    SHLIB_LD_LIBS=""
+	    SHLIB_SUFFIX=".sl"
+	    DL_OBJS=""
+	    DL_LIBS="-ldld"
+	    LD_FLAGS="-Wl,-E"
+	    LD_SEARCH_FLAGS='-Wl,+b,${LIB_RUNTIME_DIR}:.'
+	fi
+	;;
+    *-irix4*)
+	SHLIB_CFLAGS="-G 0"
+	SHLIB_SUFFIX=".a"
+	SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r -G 0"
+	SHLIB_LD_LIBS='${LIBS}'
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS="-Wl,-D,08000000"
+	LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+	ASC_SHARED_LIB_SUFFIX='${VERSION}.a'
+	;;
+    *-irix5*|*-irix6.*)
+	SHLIB_CFLAGS=""
+	SHLIB_LD="ld -shared -rdata_shared"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
+	;;
+    *-linux*)
+	SHLIB_CFLAGS="-fPIC"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	if test "$have_dl" = yes; then
+	    SHLIB_LD="${CC} -shared"
+	    DL_OBJS=""
+	    DL_LIBS="-ldl"
+	    LD_FLAGS="-rdynamic"
+	    LD_SEARCH_FLAGS=""
+	else
+	    AC_CHECK_HEADER(dld.h, [
+		SHLIB_LD="ld -shared"
+		DL_OBJS=""
+		DL_LIBS="-ldld"
+		LD_FLAGS=""
+		LD_SEARCH_FLAGS=""])
+	fi
+	;;
+    MP-RAS-02*)
+	SHLIB_CFLAGS="-K PIC"
+	SHLIB_LD="cc -G"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS=""
+	;;
+    MP-RAS-*)
+	SHLIB_CFLAGS="-K PIC"
+	SHLIB_LD="cc -G"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS="-Wl,-Bexport"
+	LD_SEARCH_FLAGS=""
+	;;
+    *-netbsd*|*-freebsd*|*-openbsd*)
+	# Not available on all versions:  check for include file.
+	AC_CHECK_HEADER(dlfcn.h, [
+	    SHLIB_CFLAGS="-fpic"
+	    SHLIB_LD="ld -Bshareable -x"
+	    SHLIB_LD_LIBS=""
+	    SHLIB_SUFFIX=".so"
+	    DL_OBJS=""
+	    DL_LIBS=""
+	    LD_FLAGS=""
+	    LD_SEARCH_FLAGS=""
+	    ASC_SHARED_LIB_SUFFIX='`echo ${VERSION} | tr -d .`.so.1.0'
+	], [
+	    SHLIB_CFLAGS=""
+	    SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r"
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".a"
+	    DL_OBJS=""
+	    DL_LIBS=""
+	    LD_FLAGS=""
+	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+	    ASC_SHARED_LIB_SUFFIX='`echo ${VERSION} | tr -d .`.a'
+	])
+
+	# FreeBSD doesn't handle version numbers with dots.
+
+	ASC_UNSHARED_LIB_SUFFIX='`echo ${VERSION} | tr -d .`.a'
+	ASC_LIB_VERSIONS_OK=nodots
+	;;
+    *-nextstep*)
+	SHLIB_CFLAGS=""
+	SHLIB_LD="cc -nostdlib -r"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS=""
+	;;
+    alpha-dec-osf*)
+        # Digital OSF/1
+	SHLIB_CFLAGS=""
+	SHLIB_LD='ld -shared -expect_unresolved "*"'
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
+	;;
+    *-riscos*)
+	SHLIB_CFLAGS="-G 0"
+	SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r -G 0"
+	SHLIB_LD_LIBS='${LIBS}'
+	SHLIB_SUFFIX=".a"
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS="-Wl,-D,08000000"
+	LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+	;;
+    SCO_SV-3.2*)
+        # Note, dlopen is available only on SCO 3.2.5 and greater.  However,
+        # this test works, since "uname -s" was non-standard in 3.2.4 and
+        # below.
+	SHLIB_CFLAGS="-Kpic -belf"
+	SHLIB_LD="ld -G"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS="-belf -Wl,-Bexport"
+	LD_SEARCH_FLAGS=""
+	;;
+    *-sni-sysv*)
+	SHLIB_CFLAGS="-K PIC"
+	SHLIB_LD="cc -G"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS=""
+	;;
+    *-sunos4*)
+	SHLIB_CFLAGS="-PIC"
+	SHLIB_LD="ld"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+
+	# SunOS can't handle version numbers with dots in them in library
+	# specs, like -ltcl7.5, so use -ltcl75 instead.  Also, it
+	# requires an extra version number at the end of .so file names.
+	# So, the library has to have a name like libtcl75.so.1.0
+
+	ASC_SHARED_LIB_SUFFIX='`echo ${VERSION} | tr -d .`.so.1.0'
+	ASC_UNSHARED_LIB_SUFFIX='`echo ${VERSION} | tr -d .`.a'
+	ASC_LIB_VERSIONS_OK=nodots
+	;;
+    *-solaris*)
+	SHLIB_CFLAGS="-KPIC"
+	SHLIB_LD="/usr/ccs/bin/ld -G -z text"
+
+	# Note: need the LIBS below, otherwise Tk won't find ASCEND's
+	# symbols when dynamically loaded into tclsh.
+
+	SHLIB_LD_LIBS='${LIBS}'
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	LD_FLAGS=""
+	LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
+	;;
+    *-ultrix4*)
+	SHLIB_CFLAGS="-G 0"
+	SHLIB_SUFFIX=".a"
+	SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r -G 0"
+	SHLIB_LD_LIBS='${LIBS}'
+	DL_OBJS=""
+	DL_LIBS=""
+	LD_FLAGS="-Wl,-D,08000000"
+	LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
+	;;
+    mips-dde-sysv*)
+	SHLIB_CFLAGS="-KPIC"
+	SHLIB_LD="cc -G"
+	SHLIB_LD_LIBS=""
+	SHLIB_SUFFIX=".so"
+	DL_OBJS=""
+	DL_LIBS="-ldl"
+	# Some UNIX_SV* systems (unixware 1.1.2 for example) have linkers
+	# that don't grok the -Bexport option.  Test that it does.
+	hold_ldflags=$LDFLAGS
+	AC_MSG_CHECKING([for ld accepts -Bexport flag])
+	LDFLAGS="${LDFLAGS} -Wl,-Bexport"
+	AC_TRY_LINK(, [int i;], found=yes, found=no)
+	LDFLAGS=$hold_ldflags
+	AC_MSG_RESULT($found)
+	if test "$found" = yes; then
+	  LD_FLAGS="-Wl,-Bexport"
+	else
+	  LD_FLAGS=""
+	fi
+	LD_SEARCH_FLAGS=""
+	;;
+esac
+
+#--------------------------------------------------------------------
+#	TCL / TK / TK-TABLE
+#
+#	The user can specify the location of the Tcl and/or Tk
+#	libraries using the --with-tcl and --with-tk configure
+#	options. Print a warning if the user tries to say
+#	--without-tcl since ASCEND requires Tcl/Tk.
+#
+#	If the user does not specify the location, we need to search
+#	for either shared or static versions of the Tcl and Tk
+#	libraries, and they must be for version 8.x of Tcl/Tk.
+#
+#	Check for the static Tcl library in a list of reasonable
+#	locations.  If we find it, verify that it is from Tcl 8.0 by
+#	looking for the symbol `TclCompileCatchCmd'.  Remember, we
+#	need the math library and the dynamic loader library (-ldl or
+#	-ldld) to avoid undefined symbols when we test the version of
+#	the Tcl library.
+#
+#	If we can't find a static Tcl8.0 library, try to find a
+#	dynamic one by calling AC_CHECK_LIB and looking for the
+#	function `TclCompileCatchCmd'.  If we fail, print an error
+#	message and exit configure.
+#
+#	Search for a version of tcl.h that contains `8.' in the
+#	TCL_MAJOR_VERSION macro; we look in a list of reasonable
+#	locations, then call AC_EGREP_HEADER to look for us.
+#
+#	Repeat the process for the Tk library; the symbol we want is
+#	`Tk_NameOfFont'; remember we need the X library---and all the
+#	libraries it needs---as well as the Tcl library to avoid
+#	undefined symbols when we test the version of the Tk library.
+#
+#	The user can use --with-tktable to specify a location for a
+#	static version of the Tk-Table library.  If a value is
+#	specified, assume it is good and define the cpp macro
+#	STATIC_TABLE.
+#
+#	If a value is not specified, look for libTktable.a; if we
+#	find it, assume it works and define the cpp macro
+#	STATIC_TABLE.  If we don't find it, assume ASCEND will be
+#	able to dynamically load it at run time and tell the user
+#	about our assumption.
+#--------------------------------------------------------------------
+#
+#  a list of directories to search for the Tcl/Tk libraries
+asc_tcl_library_dirs="
+    /usr/local/lib/ascend/lib
+    $prefix/lib:$exec_prefix/lib
+    $ascpwd/tcl8.0
+    $ascpwd/tcl8.0/unix
+    $ascpwd/tk8.0
+    $ascpwd/tk8.0/unix
+    $ascpwd/ascend4/lib
+    /lib
+    /usr/lib
+    /usr/local/lib
+    /usr/contributed/lib
+    /afs/cs/project/ascend/depot/@sys/lib
+"
+#  a list of directories to search for the Tcl/Tk include files
+asc_tcl_include_dirs="
+    /usr/local/lib/ascend/include
+    $prefix/include
+    $fullpathsrcdir/tcl8.0
+    $fullpathsrcdir/tcl8.0/generic
+    $fullpathsrcdir/tk8.0
+    $fullpathsrcdir/tk8.0/generic
+    $fullpathsrcdir/ascend4/include
+    $ascpwd/ascend4/include
+    /usr/include
+    /usr/local/include
+    /usr/contributed/include
+    /afs/cs/project/ascend/depot/common/include
+"
+#  a list of directories to search for the TkTable library
+asc_tk_table_dirs="
+    /usr/local/lib/ascend/lib/Tktable
+    $prefix/lib/Tktable
+    $exec_prefix/lib/Tktable
+    $ascpwd/tkTable1.80
+    $ascpwd/ascend4/lib
+    $ascpwd/ascend4/lib/Tktable
+    /afs/cs/project/ascend/depot/@sys/lib/Tktable
+"
+#  see if the user gave us the location of the Tcl8.0
+#  library and/or header file
+#
+AC_ARG_WITH(tcl,
+    [Location of Tcl, Tk, and tkTable:
+  --with-tcl=LIBRARY,HEADER
+                          The location of the Tcl8.0 library and/or header
+                          For a static Tcl8.0 library, give the full path:
+                              --with-tcl='/usr/local/lib/libtcl8.0.a'
+                          For a dynamic library, give any -L options required:
+                              --with-tcl='-L/usr/local/lib -ltcl8.0'
+                          To specify only the header, leave off the library:
+                              --with-tcl=',/usr/local/include/tcl.h'] ,
+    , [with_tcl=yes])
+
+case "$with_tcl" in
+    no)
+	#  User specified --without-tcl; this makes no sense,
+	#  print a warning and search for it ourselves
+        AC_MSG_WARN([Bad option '--without-tcl'
+	ASCEND must be compiled with Tcl8.0.])
+	with_tcllib=_searching
+	with_tclhdr=_searching
+        ;;
+    yes|,|"")
+	#  User didn't give the option or didn't give useful
+	#  information, search for it ourselves
+	with_tcllib=_searching
+	with_tclhdr=_searching
+	;;
+    ,*)
+	#  Only the header was specified.
+	with_tcllib=_searching
+	TCL_HDR=`echo $with_tcl | sed 's/^,//'`
+        ;;
+    *,?*)
+	#  Both the library and the header were specified
+        TCL_LIB=`echo $with_tcl | sed 's/,.*$//'`
+	TCL_HDR=`echo $with_tcl | sed 's/^.*,//'`
+        ;;
+    *)
+	#  Only the library was specified
+        TCL_LIB=`echo $with_tcl | sed 's/,$//'`
+	with_tclhdr=_searching
+        ;;
+esac
+
+#  try to find a static version of the Tcl8.0 library
+#
+if test "X$with_tcllib" = X_searching ; then
+    AC_PATH_PROGS(TCL_LIB, libtcl8.0.a libtcl80.a libtcl8.3.a, , $asc_tcl_library_dirs)
+    if test -z "$TCL_LIB" ; then
+        TCL_LIB=_searching
+    fi
+else
+    AC_MSG_RESULT([checking for tcl library... $TCL_LIB])
+fi
+
+#  verify the TCL_LIB
+if test ! "X$TCL_LIB" = X_searching ; then
+    AC_MSG_CHECKING([whether $TCL_LIB is for Tcl8.3])
+    asc_libs_orig=$LIBS
+    LIBS="$TCL_LIB $X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS $LIBS"
+    AC_TRY_LINK( , [TclCompileCatchCmd()], , [TCL_LIB=_searching]);
+    if test "X$TCL_LIB" = X_searching ; then
+        AC_MSG_RESULT(no)
+    else
+        AC_MSG_RESULT(yes)
+    fi
+    LIBS=$asc_libs_orig
+fi
+
+#  see if the default LPATH can find the Tcl8.0 library
+#
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl83, TclCompileCatchCmd, [TCL_LIB="-ltcl83"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl8.3, TclCompileCatchCmd, [TCL_LIB="-ltcl8.3"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl8.0, TclCompileCatchCmd, [TCL_LIB="-ltcl8.0"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl80, TclCompileCatchCmd, [TCL_LIB="-ltcl80"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl, TclCompileCatchCmd, [TCL_LIB="-ltcl"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+
+#  give up searching for the Tcl8.0 library
+#
+if test "X$TCL_LIB" = X_searching ; then
+    AC_MSG_ERROR([Cannot find a compatiable Tcl library.
+	You must build and install Tcl version 8.3  before you
+	can build ASCEND.  If you have installed the correct version
+	of Tcl, run configure again with the argument:
+		--with-tcl=LIBRARY,HEADER
+	where LIBRARY and HEADER are the full paths to the Tcl8.3
+	library file and header file, respectively.])
+fi
+
+#  see if the user gave us the location of the Tcl8.0 header file
+#
+if test ! "X$with_tclhdr" = X_searching ; then
+    if test ! -f "$TCL_HDR" ; then
+	AC_MSG_WARN([user specified Tcl header file, $TCL_HDR, does not exist])
+        with_tclhdr=_searching
+        TCL_HDR=''
+    fi
+fi
+if test "X$with_tclhdr" = X_searching ; then
+    AC_PATH_PROG(TCL_HDR, tcl.h, , $asc_tcl_include_dirs)
+    if test -z "$TCL_HDR" ; then
+        AC_EGREP_HEADER([TCL_MAJOR_VERSION.*8], tcl.h, [TCL_HDR='tcl.h'], )
+    fi
+else
+    AC_MSG_RESULT([checking for tcl header... $TCL_HDR])
+fi
+if test -f "$TCL_HDR" ; then
+    AC_MSG_CHECKING([whether $TCL_HDR is for version 8])
+    echo 'grep TCL_MAJOR_VERSION "$TCL_HDR" 2>&5' 1>&5
+    grep_tcl_h=`grep TCL_MAJOR_VERSION "$TCL_HDR" 2>&5`
+    echo $grep_tcl_h 1>&5
+    case "$grep_tcl_h" in
+        *8)
+	    AC_MSG_RESULT(yes)
+            ;;
+        *)
+	    AC_MSG_RESULT(no)
+	    TCL_HDR=
+            ;;
+    esac
+fi
+if test -z "$TCL_HDR" ; then
+    AC_MSG_ERROR([Cannot find a compatiable Tcl header file.
+	You must build and install Tcl version 8.3 (but not yet 8.4) before you
+	can build ASCEND.  If you have installed the correct version
+	of Tcl, run configure again with the argument:
+		--with-tcl=LIBRARY,HEADER
+	where LIBRARY and HEADER are the full paths to the Tcl8.3
+	library file and header file, respectively.])
+fi
+TCL_HDR=`echo $TCL_HDR | sed 's,tcl\.h$,,'`
+if test -n "$TCL_HDR" ; then
+    TCL_HDR="-I$TCL_HDR"
+fi
+
+
+######  REPEAT FOR TK
+#
+#  see if the user gave us the location of the Tk8.3
+#  library and/or header file
+#
+AC_ARG_WITH(tk,
+    [  --with-tk=LIBRARY,HEADER
+                          The location of the Tk8.0 library and/or header
+                          For a static Tk8.0 library, give the full path:
+                              --with-tk='/usr/local/lib/libtk8.3.a'
+                          For a dynamic library, give any -L options required:
+                              --with-tk='-L/usr/local/lib -ltk8.3'
+                          To specify only the header, leave off the library:
+                              --with-tk=',/usr/local/include/tk.h'] ,
+    , [with_tk=yes])
+
+case "$with_tk" in
+    no)
+	#  User specified --without-tk; this makes no sense,
+	#  print a warning and search for it ourselves
+        AC_MSG_WARN([Bad option '--without-tk'
+	ASCEND must be compiled with Tk8.0.])
+	with_tklib=_searching
+	with_tkhdr=_searching
+        ;;
+    yes|,|"")
+	#  User didn't give the option or didn't give useful
+	#  information, search for it ourselves
+	with_tklib=_searching
+	with_tkhdr=_searching
+	;;
+    ,*)
+	#  Only the header was specified.
+	with_tklib=_searching
+	TK_HDR=`echo $with_tk | sed 's/^,//'`
+        ;;
+    *,?*)
+	#  Both the library and the header were specified
+        TK_LIB=`echo $with_tk | sed 's/,.*$//'`
+	TK_HDR=`echo $with_tk | sed 's/^.*,//'`
+        ;;
+    *)
+	#  Only the library was specified
+        TK_LIB=`echo $with_tk | sed 's/,$//'`
+	with_tkhdr=_searching
+        ;;
+esac
+
+#  try to find a static version of the Tk8.0 library
+#
+if test "X$with_tklib" = X_searching ; then
+    AC_PATH_PROGS(TK_LIB, libtk8.0.a libtk80.a libtk.a libtk8.3.a, , $asc_tcl_library_dirs)
+    if test -z "TK_LIB" ; then
+        TK_LIB=_searching
+    fi
+else
+    AC_MSG_RESULT([checking for tk library... $TK_LIB])
+fi
+
+#  verify the TK_LIB
+#
+if test ! "X$TK_LIB" = X_searching ; then
+    AC_MSG_CHECKING([whether $TK_LIB is for Tk8.0])
+    asc_libs_orig=$LIBS
+    LIBS="$TK_LIB $TCL_LIB $X11_LIBRARIES -lX11 $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS $LIBS"
+    AC_TRY_LINK( , [Tk_NameOfFont()], , [TK_LIB=_searching]);
+    if test "X$TK_LIB" = X_searching ; then
+        AC_MSG_RESULT(no)
+    else
+        AC_MSG_RESULT(yes)
+    fi
+    LIBS=$asc_libs_orig
+fi
+
+#  see if the default LPATH can find the Tk8.0 library
+#
+if test "X$TK_LIB" = X_searching ; then
+    AC_MSG_RESULT([checking for a dynamically loaded Tk8.0 library])
+    AC_CHECK_LIB(tk8.0, Tk_NameOfFont, [TK_LIB="-ltk8.0"] , , 
+	[$TCL_LIB $X11_LIBRARIES -lX11 $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TK_LIB" = X_searching ; then
+    AC_CHECK_LIB(tk80, Tk_NameOfFont, [TK_LIB="-ltk80"] , , 
+	[$TCL_LIB $X11_LIBRARIES -lX11 $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TK_LIB" = X_searching ; then
+    AC_CHECK_LIB(tk, Tk_NameOfFont, [TK_LIB="-ltk"] , , 
+	[$TCL_LIB $X11_LIBRARIES -lX11 $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+
+#  give up searching for the Tk8.0 library
+#
+if test "X$TK_LIB" = X_searching ; then
+    AC_MSG_ERROR([Cannot find a compatiable Tk library.
+	You must build and install Tk version 8.0 or newer before you
+	can build ASCEND.  If you have installed the correct version
+	of Tk, run configure again with the argument:
+		--with-tk=LIBRARY,HEADER
+	where LIBRARY and HEADER are the full paths to the Tk8.0
+	library file and header file, respectively.])
+fi
+
+#  see if the user gave us the location of the Tk8.0 header file
+#
+if test ! "X$with_tkhdr" = X_searching ; then
+    if test ! -f "$TK_HDR" ; then
+	AC_MSG_WARN([user specified Tk header file, $TK_HDR, does not exist])
+        with_tkhdr=_searching
+        TK_HDR=''
+    fi
+fi
+if test "X$with_tkhdr" = X_searching ; then
+    AC_PATH_PROG(TK_HDR, tk.h, , $asc_tcl_include_dirs)
+    if test -z "$TK_HDR" ; then
+        AC_EGREP_HEADER([TK_MAJOR_VERSION.*8], tk.h, [TK_HDR='tk.h'], )
+    fi
+else
+    AC_MSG_RESULT([checking for tk header... $TK_HDR])
+fi
+if test -f "$TK_HDR" ; then
+    AC_MSG_CHECKING([whether $TK_HDR is for version 8])
+    echo 'grep TK_MAJOR_VERSION "$TK_HDR" 2>&5' 1>&5
+    grep_tk_h=`grep TK_MAJOR_VERSION "$TK_HDR" 2>&5`
+    echo $grep_tk_h 1>&5
+    case "$grep_tk_h" in
+        *8)
+	    AC_MSG_RESULT(yes)
+            ;;
+        *)
+	    AC_MSG_RESULT(no)
+            TK_HDR=
+            ;;
+    esac
+fi
+if test -z "$TK_HDR" ; then
+    AC_MSG_ERROR([Cannot find a compatiable Tk header file.
+	You must build and install Tk version 8.0 or newer before you
+	can build ASCEND.  If you have installed the correct version
+	of Tk, run configure again with the argument:
+		--with-tk=LIBRARY,HEADER
+	where LIBRARY and HEADER are the full paths to the Tk8.0
+	library file and header file, respectively.])
+fi
+TK_HDR=`echo $TK_HDR | sed 's,tk\.h$,,'`
+if test -n "$TK_HDR" ; then
+    TK_HDR="-I$TK_HDR"
+    if test "X$TCL_HDR" = "X$TK_HDR" ; then
+        TK_HDR=
+    fi
+fi
+
+
+AC_ARG_WITH(tktable,
+    [  --with-tktable=TKTABLE  full path to a TkTable1.3 static library], , )
+case "$with_tktable" in
+    yes|no|"")
+        # search for the table
+        AC_PATH_PROG(TKTABLE_LIB, libTktable.a, , $asc_tk_table_dirs)
+        ;;
+    *)
+        # use the user's value
+        TKTABLE_LIB="$with_tktable"
+        ;;
+esac
+if test -n "$TKTABLE_LIB" ; then
+    HAVE_TKTABLE='-DSTATIC_TKTABLE'
+else
+    AC_MSG_RESULT(Assuming Tktable will be dynamically linked into ASCEND)
+fi
+
+AC_ARG_WITH(wish,
+    [  --with-wish=/path/to/bin/wish
+                          The location of the wish shell executable matching 
+                          the tcl/tk given by --with-tk and --with-tcl.
+                          X11 must be running during configure.  ] ,
+    , [with_wish=no])
+case "$with_wish" in
+    yes|no|"")
+        AC_MSG_RESULT([--with-wish not specified.
+        Setting env vars TCL_LIBRARY, TK_LIBRARY may be needed to run.])
+        ;;
+    *)
+        AC_MSG_CHECKING([wish for tcl_library,tklibrary])
+        ASC_TK_LIBRARY=`config/wishvar tk_library $with_wish`
+        ASC_TCL_LIBRARY=`config/wishvar tcl_library $with_wish`
+	AC_MSG_RESULT([ $ASC_TCL_LIBRARY , $ASC_TK_LIBRARY])
+        ;;
+esac
+
+
+#--------------------------------------------------------------------
+#	FORTRAN
+#
+#	ASCEND uses the LSOD integrator and is capable of working
+#	with CONOPT and with MINOS.  These libraries are written in
+#	Fortran; to use them, configure needs to find a Fortran
+#	compiler and the necessary Fortran libraries (e.g.,
+#	libF77.a).  LSOD, CONOPT, and MINOS also require the BLAS and
+#	LINPACK libraries to avoid undefined symbols at link time.
+#
+#	The builder can specify the location of
+#	* the Fortran compiler and libraries using
+#	  --with-fortran=<compiler>,<libraries>
+#	* the BLAS library using
+#	  --with-blas=<blas-library>
+#	* the LINPACK library using
+#	  --with-linpack=<linpack-library>
+#	* the LSOD library using
+#	  --with-blas=<lsod-library>
+#	* the CONOPT library using
+#	  --with-conopt=<conopt-library>
+#	* the MINOS library using
+#	  --with-minos=<minos-library>   <===currently disabled
+#	The builder can disable some parts of the fortran build using
+#	the --without-<package> configure option.
+#
+#	If the user does not specify the locations of the compiler
+#	and the libraries and does not disable them, configure
+#	attempts to find them.
+#
+#	Building with LSOD, CONOPT, and/or MINOS is further
+#	complicated by the dependencies between these libraries and
+#	the BLAS and LINPACK libraries.
+#
+#	If we cannot find a Fortran compiler, we disable all Fortran
+#	code (LSOD, CONOPT, and MINOS).  Otherwise, look for the
+#	Fortran libraries (e.g., libF77.a) based on the type of
+#	machine we are compiling on.
+#
+#	If Fortran is enabled, we need to find a compiled BLAS
+#	library or source code.  Check for the machine's libblas.a
+#	and ASCEND's libascblas.a; if those fail, check for the
+#	libascblas.a source code; if that fails, we disable all
+#	Fortran (LSOD, CONOPT, MINOS).
+#
+#	If Fortran is enabled, we need to find a compiled LINPACK
+#	library or source code.  Check for the machine's liblpak.a
+#	and ASCEND's libasclpak.a; if those fail, check for the
+#	libasclpak.a source code; if that fails, we disable all
+#	Fortran (LSOD, CONOPT, MINOS).
+#
+#	If Fortran is enabled, we try to find a compiled LSOD library
+#	or source code.  Check for a libinteg.a; if that fails, check
+#	for the libinteg.a source code; if that fails, we disable
+#	LSOD.  If we find LSOD, define STATIC_LSOD.
+#
+#	If Fortran is enabled, we try to find a compiled OPTSQP
+#	library or source code.  Check for a librsqp.a; if that fails,
+#	check for the librsqp.a source code; if that fails, we disable
+#	OPTSQP.  If we find RSQP, define STATIC_OPTSQP.
+#
+#	If Fortran is enabled, we try to find a compiled CONOPT
+#	library.  Check for a libconsub.a; if that fails, we disable
+#	CONOPT.  If we find CONOPT, define STATIC_CONOPT; if not,
+#	tell the user where to find CONOPT using the contact
+#	information from the nonlinear programming FAQ:
+#    http://www.mcs.anl.gov/home/otc/Guide/faq/nonlinear-programming-faq.html
+#
+#	If Fortran is enabled, we try to find a compiled MINOS
+#	library or source code.  Check for a libminos54.a; if that
+#	fails, check for the libminos54.a source code; if that fails,
+#	we disable MINOS.  If we find MINOS, define STATIC_MINOS; if
+#	not, tell the user where to find MINOS using the contact
+#	information from the nonlinear programming FAQ:
+#    http://www.mcs.anl.gov/home/otc/Guide/faq/nonlinear-programming-faq.html
+#--------------------------------------------------------------------
+#
+#  the list of directories to search for the fortran compiler
+asc_f77_prog_dirs="$PATH:/usr/lang:/opt/SUNWspro/bin"
+#
+#  the list of directories to search for the required fortran libraries
+asc_f77_support_dirs="
+    /lib
+    /usr/lib
+    /usr/local/lib
+    /usr/contributed/lib
+    /usr/local/lib/ascend/lib
+    $ascpwd/blas
+    $ascpwd/linpack
+    $ascpwd/lsod
+#AWW20041113:    $ascpwd/conopt
+#AWW20041113:    $ascpwd/rsqp
+#AWW20041113:    $ascpwd/minos
+#AWW20041113:    $ascpwd/ascend4/archive
+    $srcdir/generic/archive
+    /afs/cs/project/ascend/depot/@sys/lib
+    /afs/cs/project/ascend/depot/build/obj/conopt
+"
+#
+AC_ARG_WITH(fortran,
+    [Fortran compiler and libraries:
+  --with-fortran=F77,F77LIBS
+                          The location of your Fortran compiler and its
+                          library files.  For example, under SunOS:
+                             --with-fortran='f77,-L/usr/lang/lib -lF77 -lM77'
+                          To specify only the compiler or libraries, leave off
+                          whatever is not needed:
+                              --with-fortran=',-L/usr/lang/lib -lF77 -lM77'
+                          Use '--without-fortran' to not link against
+                          any Fortran libraries],
+    , [with_fortran=yes])
+case "$with_fortran" in
+    no)
+	#  The user disabled all fortran using
+	#  the --without-fortran option.
+        F77=
+        F77LIBS=
+        with_f77=no
+	with_f77libs=no
+        ;;
+    yes|,|"")
+	#  The user didn't pass in the --with-fortran option
+	#  or didn't give us any useful information.  We do
+	#  the search ourselves.
+        with_f77=_searching
+	with_f77libs=_searching
+        ;;
+    ,*)
+	#  The user passed in the libraries, search for the
+	#  compiler ourselves.
+	with_f77=_searching
+	F77LIBS=`echo $with_fortran | sed 's/^,//'`
+        echo "user gave F77LIBS=$F77LIBS"
+        ;;
+    *,?*)
+	#  The user passed in both the compiler and the
+	#  libraries.
+	F77=`echo $with_fortran | sed s'/,.*$//'`
+	F77LIBS=`echo $with_fortran | sed 's/^.*,//'`
+        echo "user gave F77=$F77"
+        echo "user gave F77LIBS=$F77LIBS"
+	;;
+    *)
+	#  The user passed in the compiler; search for the
+	#  libraries ourselves.
+	F77=`echo $with_fortran | sed s'/,$//'`
+	with_f77libs=_searching
+        echo "user gave F77=$F77"
+	;;
+esac
+
+if test "X$with_f77" = X_searching ; then
+    #  Search for the fortran compiler; print a warning if we can't
+    #  find it and disable all fortran.
+    AC_PATH_PROGS(F77, f77 xlf g77, , $asc_f77_prog_dirs)
+    if test -z "$F77" ; then
+        with_fortran=no
+        with_f77libs=no
+        AC_MSG_WARN([Cannot find your Fortran compiler.  Building ASCEND
+	without integration, MINOS, and CONOPT support.  To bulid ASCEND with
+	Fortran support, run configure with the option
+		--with-fortran=F77,F77LIBS
+	where F77 is the full path to your Fortran compiler and F77LIBS are
+	its related libraries])
+    fi
+fi
+
+if test "X$with_f77libs" = X_searching ; then
+    #  We found a compiler, now search for the fortran libraries
+    #  based on the system type.
+    AC_MSG_RESULT([checking for fortran libraries based on system type])
+    case "$host" in
+        alpha-dec-osf*)
+            AC_CHECK_LIB(for, for_lle, [F77LIBS="$F77LIBS -lfor"], , $F77LIBS)
+            AC_CHECK_LIB(ots, _OtsFill, [F77LIBS="$F77LIBS -lots"], , $F77LIBS)
+            AC_CHECK_LIB(Ufor, etime_, [F77LIBS="$F77LIBS -lUfor"], , $F77LIBS)
+            ;;
+        mips-dec-ultrix*)
+            AC_CHECK_LIB(for, for_lle, [F77LIBS="$F77LIBS -lfor"], , $F77LIBS)
+            ;;
+        hppa1.1-hp-hpux*)
+            AC_CHECK_LIB(cl, FTN_QATAN, [F77LIBS="$F77LIBS -lcl"], , $F77LIBS)
+            ;;
+        *-ibm-aix*)
+            # need to add -lc before -lxlf on AIX to
+            # avoid getting the wrong getenv
+            F77LIBS="-lc $F77LIBS"
+            AC_CHECK_LIB(xlf, _xldabs, [F77LIBS="$F77LIBS -lxlf"], , $F77LIBS)
+            AC_CHECK_LIB(xlfutil, srand_, [F77LIBS="$F77LIBS -lxlfutil"], ,
+                $F77LIBS)
+            AC_CHECK_LIB(xlf90, printf,
+                [F77LIBS="$F77LIBS -lxlf90"], , $F77LIBS)
+            ;;
+	*-linux-*)
+	    AC_CHECK_LIB(f2c, pow_dd, [F77LIBS="$F77LIBS -lf2c"], , $F77LIBS)
+	    AC_CHECK_LIB(g2c, pow_dd, [F77LIBS="$F77LIBS -lg2c"], , $F77LIBS)
+	    ;;
+        sparc-sun-solaris*)
+            if test -n "$GCC" ; then
+                F77LIBS="-L/opt/SUNWspro/lib -R/opt/SUNWspro/lib"
+            fi
+            AC_CHECK_LIB(sunmath, d_sqrt_, [MATH_LIBS="-lsunmath $MATH_LIBS"])
+            AC_CHECK_LIB(F77, f77_init,
+                [F77LIBS="$F77LIBS -lF77"], , $F77LIBS $MATH_LIBS)
+            AC_CHECK_LIB(M77, inmax_, 
+                [F77LIBS="$F77LIBS -lM77"], , $F77LIBS $MATH_LIBS)
+            ;;
+        sparc-sun-sunos4*)
+            if test -n "$GCC" ; then
+                F77LIBS="-L/usr/lang/lib"
+            fi
+            AC_CHECK_LIB(F77, f77_init, [F77LIBS="$F77LIBS -lF77"], , $F77LIBS)
+            AC_CHECK_LIB(M77, inmax_, [F77LIBS="$F77LIBS -lM77"], , $F77LIBS)
+            ;;
+        mips-sgi-irix*)
+            AC_CHECK_LIB(F77, s_copy, [F77LIBS="$F77LIBS -lF77"], , $F77LIBS)
+            AC_CHECK_LIB(I77, f_exit, [F77LIBS="$F77LIBS -lI77"], , $F77LIBS)
+            AC_CHECK_LIB(isam, mkidxname, 
+                [F77LIBS="$F77LIBS -lisam"], , $F77LIBS)
+            ;;
+        *)
+            AC_CHECK_LIB(F77,  printf, [F77LIBS="$F77LIBS -lF77"],  , $F77LIBS)
+            AC_CHECK_LIB(M77,  printf, [F77LIBS="$F77LIBS -lM77"],  , $F77LIBS)
+	    AC_CHECK_LIB(f2c,  pow_dd, [F77LIBS="$F77LIBS -lf2c"],  , $F77LIBS)
+            AC_CHECK_LIB(f77,  printf, [F77LIBS="$F77LIBS -lf77"],  , $F77LIBS)
+            AC_CHECK_LIB(for,  printf, [F77LIBS="$F77LIBS -lfor"],  , $F77LIBS)
+            AC_CHECK_LIB(ots,  printf, [F77LIBS="$F77LIBS -lots"],  , $F77LIBS)
+            AC_CHECK_LIB(Ufor, printf, [F77LIBS="$F77LIBS -lUfor"], , $F77LIBS)
+            ;;
+    esac
+fi
+
+#  asc_subdirs are the extra fortran subdirectories we have to visit
+#  to build the fortran libraries.  Initialize it to empty here.
+asc_subdirs=''
+
+#  Initialize the blas variables
+make_blaslib=''
+
+AC_ARG_WITH(blas,
+    [  --with-blas=BLASLIB     The full path to the blas library.
+                          Use '--with-blas=build' to build the blas library
+                          from the sources that come with the distribution.],
+    , [with_blas=yes] )
+case "$with_fortran$with_blas" in
+    no*)
+	#  Fortran is disabled; ignore this option (if present)
+	BLASLIB=
+        ;;
+    *no)
+	#  It is an error if the user chooses to build without
+	#  the BLAS library if Fortran is enabled.
+        AC_MSG_ERROR([Bad option '--without-blas'
+	To support Fortran calls, ASCEND must be compiled with a blas library])
+        ;;
+    *build)
+	#  Fortran is enabled and the user specified --with-blas=build
+	#  For a search for BLAS source code and tell the Makefile
+	#  to build it; useful for testing configure.
+        blas_src_file="$srcdir/blas/dcopy.f"
+        AC_MSG_CHECKING([for blas source file $blas_src_file ])
+        if test -f $blas_src_file ; then
+            AC_MSG_RESULT(yes)
+            BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+	    make_blaslib='make-blaslib'
+	    blaslib_makefile="blas/Makefile"
+            asc_subdirs="$asc_subdirs ../blas"
+        else
+            AC_MSG_RESULT(no)
+            AC_MSG_ERROR([User specified '--with-blas=build' but
+        configure cannot find the blas source file $blas_src_file])
+        fi
+        ;;
+    *yes)
+	#  Fortran in enabled and the user didn't give the --with-blas
+	#  option or didn't give the library's location.
+	#  Search for a compiled libblas.a or libascblas.a; if that
+	#  fails, look for BLAS source code; if that also fails,
+	#  disable all Fortran and print a warning.
+        AC_PATH_PROGS(BLASLIB, libblas.a libascblas.a, , $asc_f77_support_dirs)
+        blas_src_file="$srcdir/blas/dcopy.f"
+        if test -z "$BLASLIB" -a -n "$blas_src_file" ; then
+            AC_MSG_CHECKING([for blas source file $blas_src_file ])
+            if test -f $blas_src_file ; then
+                AC_MSG_RESULT(yes)
+        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+	        make_blaslib='make-blaslib'
+	        blaslib_makefile="blas/Makefile"
+        	asc_subdirs="$asc_subdirs ../blas"
+            else
+                AC_MSG_RESULT(no)
+            fi
+        fi
+        if test -z "$BLASLIB" ; then
+	    with_fortran=no
+            AC_MSG_WARN([Cannot find libblas.a, libascblas.a, nor blas
+	source code.  Building ASCEND without integration, MINOS, and CONOPT
+	support.  To specify a specific location for the blas library, run
+	configure again with the argument:
+		--with-blas=BLASLIB
+	where BLASLIB is the full path to the blas library file.])
+        fi
+	;;
+    *)
+	#  The user gave us --with-blas=BLASLIB, use that as the
+	#  location of the BLAS library.
+	BLASLIB="$with_blas"
+	;;
+esac
+
+
+#  Initialize the linpack variables
+make_lpaklib=''
+
+AC_ARG_WITH(linpack,
+    [  --with-linpack=LPAKLIB  The full path to the linpack library.
+                          Use '--with-linpack=build' to build the library
+                          from the sources that come with the distribution.],
+    , [with_linpack=yes] )
+case "$with_fortran$with_linpack" in
+    no*)
+	#  Fortran is disabled; ignore this option (if present)
+	LPAKLIB=
+        ;;
+    *no)
+	#  It is an error if the user chooses to build without
+	#  the LINPACK library if Fortran is enabled.
+        AC_MSG_ERROR([Bad option '--without-linpack'
+	To support Fortran calls, ASCEND must be compiled with a
+	linpack library.])
+        ;;
+    *build)
+	#  Fortran is enabled and the user specified --with-linpack=build
+	#  For a search for LINPACK source code and tell the Makefile
+	#  to build it; useful for testing configure.
+        lpak_src_file="$srcdir/linpack/d1mach.f"
+        AC_MSG_CHECKING([for linpack source file $lpak_src_file ])
+        if test -f $lpak_src_file ; then
+            AC_MSG_RESULT(yes)
+            LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
+	    make_lpaklib='make-lpaklib'
+	    lpaklib_makefile="linpack/Makefile"
+            asc_subdirs="$asc_subdirs ../linpack"
+        else
+            AC_MSG_RESULT(no)
+            AC_MSG_ERROR([User specified '--with-linpack=build' but
+        configure cannot find the linpack source file $lpak_src_file])
+        fi
+        ;;
+    *yes)
+	#  Fortran in enabled and the user didn't give the --with-linpack
+	#  option or didn't give the library's location.
+	#  Search for a compiled liblpak.a or libasclpak.a; if that
+	#  fails, look for LINPACK source code; if that also fails,
+	#  disable all Fortran and print a warning.
+        AC_PATH_PROGS(LPAKLIB, liblpak.a libasclpak.a, , $asc_f77_support_dirs)
+        lpak_src_file="$srcdir/linpack/d1mach.f"
+        if test -z "$LPAKLIB" -a -n "$lpak_src_file" ; then
+            AC_MSG_CHECKING([for linpack source file $lpak_src_file ])
+            if test -f $lpak_src_file ; then
+                AC_MSG_RESULT(yes)
+        	LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
+	        make_lpaklib='make-lpaklib'
+	        lpaklib_makefile="linpack/Makefile"
+        	asc_subdirs="$asc_subdirs ../linpack"
+            else
+                AC_MSG_RESULT(no)
+            fi
+        fi
+        if test -z "$LPAKLIB" ; then
+	    with_fortran=no
+            AC_MSG_WARN([Cannot find liblpak.a, libasclpak.a, nor linpack
+	source code.  Building ASCEND without integration, MINOS, and CONOPT
+	support.  To specify a specific location for the linpack library, run
+	configure again with the argument:
+		--with-linpack=LPAKLIB
+	where LPAKLIB is the full path to the linpack library file.])
+        fi
+	;;
+    *)
+	#  The user gave us --with-linkpack=LINKPACKLIB, use that
+	#  as the location of the LINKPACK library.
+	LPAKLIB="$with_linpack"
+	;;
+esac
+
+
+#  Initialize the lsod variables
+make_lsodlib=''
+HAVE_LSOD=''
+
+AC_ARG_WITH(lsod,
+    [  --with-lsod=LSODLIB     The full path to the lsod library.
+                          Use '--with-lsod=build' to build the lsod library
+                          from the sources that come with the distribution.],
+    , [with_lsod=yes] )
+case "$with_fortran$with_lsod" in
+    no*)
+	#  Fortran is disabled; ignore this option (if present)
+	LSODLIB=
+	with_lsod=no
+        ;;
+    *no)
+	#  Fortran is enabled but the user specified --without-lsod
+	LSODLIB=
+	;;
+    *build)
+	#  Fortran is enabled and the user specified --with-lsod=build
+	#  For a search for LSOD source code and tell the Makefile
+	#  to build it; useful for testing configure.
+        lsod_src_file="$srcdir/lsod/lsode.f"
+        AC_MSG_CHECKING([for lsod source file $lsod_src_file ])
+        if test -f $lsod_src_file ; then
+            AC_MSG_RESULT(yes)
+            LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
+	    make_lsodlib='make-lsodlib'
+	    lsodlib_makefile="lsod/Makefile"
+            asc_subdirs="$asc_subdirs ../lsod"
+            HAVE_LSOD='-DSTATIC_LSOD'
+        else
+            AC_MSG_RESULT(no)
+            AC_MSG_ERROR([User specified '--with-lsod=build' but
+        configure cannot find the lsod source file $lsod_src_file])
+        fi
+        ;;
+    *yes)
+	#  Fortran in enabled and the user didn't give the --with-lsod
+	#  option or didn't give the library's location.
+	#  Search for a compiled libinteg.a; if that fails, look
+	#  for LSOD source code; if that also fails, disable LSOD
+	#  and print a warning.
+        AC_PATH_PROGS(LSODLIB, libinteg.a libasclsod.a, , $asc_f77_support_dirs)
+        lsod_src_file="$srcdir/lsod/lsode.f"
+        if test -z "$LSODLIB" -a -n "$lsod_src_file" ; then
+            AC_MSG_CHECKING([for lsod source file $lsod_src_file ])
+            if test -f $lsod_src_file ; then
+                AC_MSG_RESULT(yes)
+        	LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
+	        make_lsodlib='make-lsodlib'
+	        lsodlib_makefile="lsod/Makefile"
+        	asc_subdirs="$asc_subdirs ../lsod"
+            else
+                AC_MSG_RESULT(no)
+            fi
+        fi
+        if test -z "$LSODLIB" ; then
+	    with_lsod=no
+            AC_MSG_WARN([Cannot find libinteg.a nor the lsod
+	source code.  Building ASCEND without integration
+	support.  To specify a specific location for the lsod library, run
+	configure again with the argument:
+		--with-lsod=LSODLIB
+	where LSODLIB is the full path to the lsod integration library file.])
+	else
+	    HAVE_LSOD='-DSTATIC_LSOD'
+        fi
+	;;
+    *)
+	#  The user gave us --with-lsod=LSODLIB, use that as the
+	#  location of the LSOD library and define -DSTATIC_LSOD.
+	LSODLIB="$with_lsod"
+	HAVE_LSOD='-DSTATIC_LSOD'
+	;;
+esac
+
+
+#--------------------------------------------------------------------
+#	Other trees which may or may not be present.  If present,
+#	generate the Makefiles in the tree unless the user passes in
+#	a --without-<package> argument.
+#
+#	Valid <package> values are: TK, models, help
+#
+#	We could have `configure' do this for us via
+#	AC_CONFIG_SUBDIRS, but `configure' scripts in the trees can
+#	only be one directory removed from this configure script.
+#	For example, it would be nice to have `models' under
+#	`ascend4', but `configure' doesn't like `ascend4/models' as
+#	an argument to AC_CONFIG_SUBDIRS.
+#
+#	To get around this problem, we do things by hand. :-)
+#
+#	If the user gives a --without-<package> argument, we have
+#	nothing to do for that package.
+#
+#	Otherwise,
+#	* Set `subdir_file_exists' to a file that should exist in the
+#	  subtree---this is how we know that the subtree is really
+#	  there.
+#	* Set `subdir_locations' to the list of locations, relative
+#	  to this configure script, where the subtree may live.
+#	* Set `subdir_output' to the list of makefiles to generate;
+#	  the variable `subdir_root' in this list will be replaced
+#	  with the correct value from `subdir_locations'.
+#
+#	To see which (if any) of the values in `subdir_locations' is
+#	the correct one, we set `subdir_root' to each value in
+#	`subdir_locations' and check for the existence of
+#	$fullpathsrcdir/$subdir_root/$subdir_file_exists, where
+#	$fullpathsrcdir is the full path to the source directory.  If
+#	that file exists, we
+#	* Set <package>_dir_root to ../$subdir_root.  The "../" is
+#	  needed since this value is used in the `ascend4' directory
+#	  and $subdir_root is relative to the parent of `ascend4'.
+#	* Substitute the value of $subdir_root into `subdir_output'
+#	  and set the result to <package>_makefiles: the list of
+#	  Makefiles for configure to generate.
+#	* Each package needs to be able to find its way back to
+#	  ascend4/ConfigAscend; it needs to go back up the tree
+#	  however many levels deep it is---i.e., `foo/bar/baz' should
+#	  become `../../..' and this does it: sed 's,[^/][^/]*,..,g'
+#	  but we need to quote the [] from m4, so we get this bizarre
+#	  thing: sed 's,[[^/][^/]]*,..,g' Set <package>_topbuilddir
+#	  to this result.
+#	* Exit the loop.
+#--------------------------------------------------------------------
+
+# Initialize variables
+tkdir_root=''
+tkdir_topbuilddir=''
+
+AC_ARG_WITH(tkdir,
+    [Generation of Makefiles:
+  --without-tkdir         do not generate Makefiles in the TK subdir],
+    , [with_tkdir=yes])
+if test ! "X$with_tkdir" = "Xno" ; then
+    subdir_file_exists='AscendRC'
+    subdir_locations='ascend4/TK'
+    subdir_output='
+	$subdir_root/Makefile
+	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
+	$subdir_root/bitmaps/Makefile
+	$subdir_root/templates/Makefile
+	'
+    for subdir_root in $subdir_locations ; do
+        if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
+	    tkdir_root="../$subdir_root"
+            tkdir_makefiles=`eval echo $subdir_output`
+            tkdir_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
+            break
+        fi
+    done
+fi
+
+# Initialize variables
+models_dir_root=''
+models_topbuilddir=''
+
+AC_ARG_WITH(models,
+    [  --without-models        do not generate Makefiles in the models subdir],
+    , [with_models=yes])
+if test ! "X$with_models" = "Xno" ; then
+    subdir_file_exists='system.a4l'
+    subdir_locations='models ascend4/models'
+    subdir_output='
+	$subdir_root/Makefile
+	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
+        $subdir_root/ben/Makefile
+	'
+	## $subdir_root/examples/Makefile
+	## $subdir_root/examples/abbott/Makefile
+	## $subdir_root/examples/flexible_design/Makefile
+	## $subdir_root/libraries/Makefile
+	## $subdir_root/libraries/abbott/Makefile
+	## $subdir_root/pending/Makefile
+	## $subdir_root/pending/examples/Makefile
+	## $subdir_root/pending/libraries/Makefile
+    for subdir_root in $subdir_locations ; do
+        if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
+	    models_dir_root="../$subdir_root"
+            models_makefiles=`eval echo $subdir_output`
+            models_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
+            break
+        fi
+    done
+fi
+
+
+# Initialize variables
+help_dir_root=''
+help_topbuilddir=''
+
+dnl >>>>AC_ARG_WITH(help,
+dnl >>>>    [  --without-help          do not generate Makefiles in the help subdir],
+dnl >>>>    , [with_help=yes])
+dnl >>>>if test ! "X$with_help" = "Xno" ; then
+dnl >>>>    subdir_file_exists='ascend-helpTOC.htm'
+dnl >>>>    subdir_locations='help ascend4/help'
+dnl >>>>    subdir_output='
+dnl >>>>	$subdir_root/Makefile
+dnl >>>>	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
+dnl >>>>	$subdir_root/Screenshots/Makefile
+dnl >>>>	'
+dnl >>>>    for subdir_root in $subdir_locations ; do
+dnl >>>>        if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
+dnl >>>>	    help_dir_root="../$subdir_root"
+dnl >>>>            help_makefiles=`eval echo $subdir_output`
+dnl >>>>            help_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
+dnl >>>>            break
+dnl >>>>        fi
+dnl >>>>    done
+dnl >>>>fi
+
+
+#--------------------------------------------------------------------
+#	The variables we substitute into the Makefile.in files
+#	and the command to actually generate the Makefiles
+#--------------------------------------------------------------------
+AC_SUBST(ascpwd)
+AC_SUBST(fullpathsrcdir)
+AC_SUBST(asc_include)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(LEX)
+AC_SUBST(LEXLIB)
+AC_SUBST(scanner_src)
+AC_SUBST(typer_src)
+AC_SUBST(MATH_LIBS)
+AC_SUBST(DEBUG_LIBS)
+AC_SUBST(X11_INCLUDES)
+AC_SUBST(X11_LIBRARIES)
+AC_SUBST(X11_RUN_PATH)
+AC_SUBST(X11_EXTRA_LIBS)
+AC_SUBST(DL_LIBS)
+AC_SUBST(LD_FLAGS)
+AC_SUBST(LD_SEARCH_FLAGS)
+AC_SUBST(SHLIB_CFLAGS)
+AC_SUBST(SHLIB_LD)
+AC_SUBST(SHLIB_LD_LIBS)
+AC_SUBST(SHLIB_SUFFIX)
+AC_SUBST(ASC_LIB_SUFFIX)
+AC_SUBST(TCL_LIB)
+AC_SUBST(TCL_HDR)
+AC_SUBST(TK_LIB)
+AC_SUBST(TK_HDR)
+AC_SUBST(TKTABLE_LIB)
+AC_SUBST(ASC_TK_LIBRARY)
+AC_SUBST(ASC_TCL_LIBRARY)
+AC_SUBST(HAVE_TKTABLE)
+AC_SUBST(asc_subdirs)
+AC_SUBST(F77)
+AC_SUBST(F77LIBS)
+AC_SUBST(BLASLIB)
+AC_SUBST(make_blaslib)
+AC_SUBST(LPAKLIB)
+AC_SUBST(make_lpaklib)
+AC_SUBST(LSODLIB)
+AC_SUBST(make_lsodlib)
+AC_SUBST(HAVE_LSOD)
+AC_SUBST(OPTSQPLIB)
+AC_SUBST(make_rsqplib)
+AC_SUBST(HAVE_OPTSQP)
+dnl AC_SUBST(HARWELLLIB)
+dnl AC_SUBST(make_harwelllib)
+dnl AC_SUBST(HAVE_HARWELL)
+AC_SUBST(MINOSLIB)
+AC_SUBST(make_minoslib)
+AC_SUBST(HAVE_MINOS)
+AC_SUBST(CONOPTLIB)
+AC_SUBST(make_conoptlib)
+AC_SUBST(HAVE_CONOPT)
+AC_SUBST(tkdir_root)
+AC_SUBST(tkdir_topbuilddir)
+AC_SUBST(models_dir_root)
+AC_SUBST(models_topbuilddir)
+AC_SUBST(help_dir_root)
+AC_SUBST(help_topbuilddir)
+
+AC_OUTPUT(
+	ascend4/ConfigAscend:ascend4/ConfigAscend.in
+	ascend4/Makefile
+	ascend4/bin/ascend4.sh
+	ascend4/Makefile.Rules:ascend4/Makefile.Rules.in
+	ascend4/archive/Makefile
+	ascend4/bin/Makefile
+	ascend4/compiler/Makefile
+	ascend4/general/Makefile
+	ascend4/interface/Makefile
+	ascend4/lib/Makefile
+	ascend4/packages/Makefile
+	ascend4/solver/Makefile
+	ascend4/utilities/Makefile
+	$tkdir_makefiles
+	$models_makefiles
+	$help_makefiles
+        $blaslib_makefile
+	$lpaklib_makefile
+	$lsodlib_makefile
+	$rsqplib_makefile
+	$conoptlib_makefile
+	$minoslib_makefile
+	)
