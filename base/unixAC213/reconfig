@@ -1,5 +1,6 @@
 #! /bin/sh
 tkroot=/home/aw0a/tk
+tkroot=/home/baallan/tk83
 ./configure  \
 --with-fortran=g77 \
 --with-tcl="$tkroot/lib/libtcl8.3.so,$tkroot/include/tcl.h" \
