@@ -1,0 +1,54 @@
+Ok, so here's the assumptions and goals.
+
+0) source directory layout:"
+	blas
+	linpack
+	lsod
+	base
+	base/generic
+	base/generic/[compiler, etc]
+	base/unixac213
+
+1) configure and its auxiliaries will exist in unixac213 for the 2.13 autoconf build.
+2) relative to unixac213, the source code is in ../generic.
+3) unixac213/configure may be run from *anywhere*
+   and therefore the makefiles must be structured accordingly.
+4) We will require gnu make in the autoconf-based builds.
+gmake is available on all but windows now, and windows users
+generally want to use a Visual tool or jam or something other
+than autoconf anyway.
+
+Let's assume we're going to build in /tmp/ascend
+and the subversion source is in $HOME/newcmu.
+This means $HOME/newcmu/code/trunk/base/unixAC213 exists and is the home
+of the configure source for ac213 purposes.
+
+The implications of 3) are--
+
+a) generated files will all be under /tmp/ascend, including:
+   makefiles from configure, parser from yacc, .o from compiler, etc.
+b) The source is never touched by the build process, just read.
+c) If we want to blow away the build mess and start over, it's easy.
+d) configure has to have a clue or be given one. The autotools standard
+   says the clue is given: --srcdir=where-the-configure-is-dir
+e) VPATH must *always* be present in the generated makefiles,
+   not just when --srcdir is passed to configure. Note autoconf 2.13
+   gets rid of VPATH lines in makefiles whenever it can, as it isn't
+   portable to solaris make,  so we force VPATH lines to be left in
+   by using a gmake-ism (VPATH := or VPATH += rather than VPATH=).
+
+
+So the build example cases that must work are:
+
+A) (build in place -- this is what we should never do, btw.)
+	cd $HOME/newcmu/code/trunk/base/unixAC213; ./configure {stuff}; make; make install
+
+B) (srcdir build)
+	cd /tmp/ascend; ../../home/baallan/newcmu/code/trunk/base/unixAC213/configure --srcdir=$HOME/newcmu/code/trunk/base/unixAC213 {stuff}; make; make install
+
+(B) is what Mark had working almost forever while we were at CMU,
+but under the old directory layout. When (B) works, A is the trivial
+case, so the challenge is to make B work and to use --src-dir as
+required when configuring ascend.
+
+

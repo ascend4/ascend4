@@ -21,8 +21,8 @@
 
 
 SHELL = /bin/sh
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir =@tkdir_topbuilddir@/templates
+VPATH = @tkdir_topbuilddir@/templates
 
 
 

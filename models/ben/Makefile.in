@@ -21,8 +21,8 @@
 
 
 SHELL = /bin/sh
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir = @models_topbuilddir@/ben
+VPATH = @models_topbuilddir@/ben
 
 
 

@@ -4263,7 +4263,7 @@ asc_f77_support_dirs="
 #AWW20041113:    $ascpwd/rsqp
 #AWW20041113:    $ascpwd/minos
 #AWW20041113:    $ascpwd/ascend4/archive
-    $ascpwd/generic/archive
+    $ascpwd/archive
     /afs/cs/project/ascend/depot/@sys/lib
     /afs/cs/project/ascend/depot/build/obj/conopt
 "
@@ -5443,12 +5443,12 @@ echo "configure:5443: checking for blas source file $blas_src_file " >&5
         if test -f $blas_src_file ; then
             echo "$ac_t""yes" 1>&6
 #AWW20041119:            BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
-            BLASLIB="$ascpwd/../generic/archive/libascblas.a"
+            BLASLIB="$ascpwd/archive/libascblas.a"
 	    make_blaslib='make-blaslib'
 #AWW20041206:	    blaslib_makefile="blas/Makefile"
-	    blaslib_makefile="../../blas/Makefile"
+	    blaslib_makefile="blas/Makefile:../../blas/Makefile.in"
 #AWW20041206:            asc_subdirs="$asc_subdirs ../blas"
-            asc_subdirs="$asc_subdirs ../../blas"
+            asc_subdirs="$asc_subdirs blas"
         else
             echo "$ac_t""no" 1>&6
             { echo "configure: error: User specified '--with-blas=build' but
@@ -5508,12 +5508,12 @@ echo "configure:5508: checking for blas source file $blas_src_file " >&5
             if test -f $blas_src_file ; then
                 echo "$ac_t""yes" 1>&6
 #AWW20041119:        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
-        	BLASLIB="$ascpwd/../generic/archive/libascblas.a"
+        	BLASLIB="$ascpwd/archive/libascblas.a"
 	        make_blaslib='make-blaslib'
 #AWW20041206:	        blaslib_makefile="blas/Makefile"
-	        blaslib_makefile="../../blas/Makefile"
+	        blaslib_makefile="blas/Makefile:../../blas/Makefile.in"
 #AWW20041206:        	asc_subdirs="$asc_subdirs ../blas"
-        	asc_subdirs="$asc_subdirs ../../blas"
+        	asc_subdirs="$asc_subdirs blas"
             else
                 echo "$ac_t""no" 1>&6
             fi
@@ -5569,12 +5569,12 @@ echo "configure:5569: checking for linpack source file $lpak_src_file " >&5
         if test -f $lpak_src_file ; then
             echo "$ac_t""yes" 1>&6
 #AWW20041119:            LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
-            LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
+            LPAKLIB="$ascpwd/archive/libasclpak.a"
 	    make_lpaklib='make-lpaklib'
 #AWW20041206:	    lpaklib_makefile="linpack/Makefile"
-	    lpaklib_makefile="../../linpack/Makefile"
+	    lpaklib_makefile="linpack/Makefile:../../linpack/Makefile.in"
 #AWW20041206:            asc_subdirs="$asc_subdirs ../linpack"
-            asc_subdirs="$asc_subdirs ../../linpack"
+            asc_subdirs="$asc_subdirs linpack"
         else
             echo "$ac_t""no" 1>&6
             { echo "configure: error: User specified '--with-linpack=build' but
@@ -5634,12 +5634,12 @@ echo "configure:5634: checking for linpack source file $lpak_src_file " >&5
             if test -f $lpak_src_file ; then
                 echo "$ac_t""yes" 1>&6
 #AWW20041119:        	LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
-        	LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
+        	LPAKLIB="$ascpwd/archive/libasclpak.a"
 	        make_lpaklib='make-lpaklib'
 #AWW20041206:	        lpaklib_makefile="linpack/Makefile"
-	        lpaklib_makefile="../../linpack/Makefile"
+	        lpaklib_makefile="linpack/Makefile:../../linpack/Makefile.in"
 #AWW20041206:        	asc_subdirs="$asc_subdirs ../linpack"
-        	asc_subdirs="$asc_subdirs ../../linpack"
+        	asc_subdirs="$asc_subdirs linpack"
             else
                 echo "$ac_t""no" 1>&6
             fi
@@ -5694,12 +5694,12 @@ echo "configure:5694: checking for lsod source file $lsod_src_file " >&5
         if test -f $lsod_src_file ; then
             echo "$ac_t""yes" 1>&6
 #AWW20041119:            LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
-            LSODLIB="$ascpwd/../generic/archive/libinteg.a"
+            LSODLIB="$ascpwd/archive/libinteg.a"
 	    make_lsodlib='make-lsodlib'
 #AWW20041206:	    lsodlib_makefile="lsod/Makefile"
-	    lsodlib_makefile="../../lsod/Makefile"
+	    lsodlib_makefile="lsod/Makefile:../../lsod/Makefile.in"
 #AWW20041206:            asc_subdirs="$asc_subdirs ../lsod"
-            asc_subdirs="$asc_subdirs ../../lsod"
+            asc_subdirs="$asc_subdirs lsod"
             HAVE_LSOD='-DSTATIC_LSOD'
         else
             echo "$ac_t""no" 1>&6
@@ -5760,12 +5760,12 @@ echo "configure:5760: checking for lsod source file $lsod_src_file " >&5
             if test -f $lsod_src_file ; then
                 echo "$ac_t""yes" 1>&6
 #AWW20041119:        	LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
-        	LSODLIB="$ascpwd/../generic/archive/libinteg.a"
+        	LSODLIB="$ascpwd/archive/libinteg.a"
 	        make_lsodlib='make-lsodlib'
 #AWW20041206:	        lsodlib_makefile="lsod/Makefile"
-	        lsodlib_makefile="../../lsod/Makefile"
+	        lsodlib_makefile="lsod/Makefile:../../lsod/Makefile.in"
 #AWW20041206:        	asc_subdirs="$asc_subdirs ../lsod"
-        	asc_subdirs="$asc_subdirs ../../lsod"
+        	asc_subdirs="$asc_subdirs lsod"
             else
                 echo "$ac_t""no" 1>&6
             fi
@@ -5860,19 +5860,20 @@ if test ! "X$with_tkdir" = "Xno" ; then
     subdir_file_exists='AscendRC'
 #AWW20041117: FIXME next line
 #AWW20041206:    subdir_locations='ascend4/TK'
+    subdir_target="TK"	
     subdir_locations='../../tcltk98/TK'
     subdir_output='
-	$subdir_root/Makefile
-	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
-	$subdir_root/bitmaps/Makefile
-	$subdir_root/templates/Makefile
+	$subdir_target/Makefile:$subdir_root/Makefile.in
+	$subdir_target/Makefile.Rules:$subdir_root/Makefile.Rules.in
+	$subdir_target/bitmaps/Makefile:$subdir_root/bitmaps/Makefile.in
+	$subdir_target/templates/Makefile:$subdir_root/templates/Makefile.in
 	'
     for subdir_root in $subdir_locations ; do
         if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
 #AWW20041208:	    tkdir_root="../$subdir_root"
-	    tkdir_root="$subdir_root"
+	    tkdir_root=$subdir_target
             tkdir_makefiles=`eval echo $subdir_output`
-            tkdir_topbuilddir=`echo "$subdir_root" | sed 's,[^/][^/]*,..,g'`
+            tkdir_topbuilddir="$fullpathsrcdir/../../tcltk98/TK"
             break
         fi
     done
@@ -5894,11 +5895,12 @@ if test ! "X$with_models" = "Xno" ; then
     subdir_file_exists='system.a4l'
 #AWW20041117: FIXME next line
 #AWW20041206:    subdir_locations='models ascend4/models'
-    subdir_locations='models ../../base/generic/models'
+    subdir_target="models"
+    subdir_locations='models ../../models'
     subdir_output='
-	$subdir_root/Makefile
-	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
-        $subdir_root/ben/Makefile
+	$subdir_target/Makefile:$subdir_root/Makefile.in
+	$subdir_target/Makefile.Rules:$subdir_root/Makefile.Rules.in
+        $subdir_target/ben/Makefile:$subdir_root/ben/Makefile.in
 	'
 	## $subdir_root/examples/Makefile
 	## $subdir_root/examples/abbott/Makefile
@@ -5911,9 +5913,9 @@ if test ! "X$with_models" = "Xno" ; then
     for subdir_root in $subdir_locations ; do
         if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
 #AWW20041208:	    models_dir_root="../$subdir_root"
-	    models_dir_root="$subdir_root"
+	    models_dir_root="$subdir_target"
             models_makefiles=`eval echo $subdir_output`
-            models_topbuilddir=`echo "$subdir_root" | sed 's,[^/][^/]*,..,g'`
+            models_topbuilddir="$fullpathsrcdir/../../models"
             break
         fi
     done
@@ -6035,34 +6037,15 @@ trap 'rm -f $CONFIG_STATUS conftest*; exit 1' 1 2 15
 # Transform confdefs.h into DEFS.
 # Protect against shell expansion while executing Makefile rules.
 # Protect against Makefile macro expansion.
-#
-# If the first sed substitution is executed (which looks for macros that
-# take arguments), then we branch to the quote section.  Otherwise,
-# look for a macro that doesn't take arguments.
-cat >confdef2opt.sed <<\_ACEOF
-t clear
-: clear
-s,^[ 	]*#[ 	]*define[ 	][ 	]*\([^ 	(][^ 	(]*([^)]*)\)[ 	]*\(.*\),-D\1=\2,g
-t quote
-s,^[ 	]*#[ 	]*define[ 	][ 	]*\([^ 	][^ 	]*\)[ 	]*\(.*\),-D\1=\2,g
-t quote
-d
-: quote
-s,[ 	`~#$^&*(){}\\|;'"<>?],\\&,g
-s,\[,\\&,g
-s,\],\\&,g
-s,\$,$$,g
-p
-_ACEOF
-# We use echo to avoid assuming a particular line-breaking character.
-# The extra dot is to prevent the shell from consuming trailing
-# line-breaks from the sub-command output.  A line-break within
-# single-quotes doesn't work because, if this script is created in a
-# platform that uses two characters for line-breaks (e.g., DOS), tr
-# would break.
-ac_LF_and_DOT=`echo; echo .`
-DEFS=`sed -n -f confdef2opt.sed confdefs.h | tr "$ac_LF_and_DOT" ' .'`
-rm -f confdef2opt.sed
+cat > conftest.defs <<\EOF
+s%#define \([A-Za-z_][A-Za-z0-9_]*\) *\(.*\)%-D\1=\2%g
+s%[ 	`~#$^&*(){}\\|;'"<>?]%\\&%g
+s%\[%\\&%g
+s%\]%\\&%g
+s%\$%$$%g
+EOF
+DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' '`
+rm -f conftest.defs
 
 
 # Without the "./", some shells look in PATH for config.status.
@@ -6109,7 +6092,7 @@ trap 'rm -fr `echo "ConfigAscend:../../base/generic/ConfigAscend.in
        bin/Makefile:../../base/generic/bin/Makefile.in
        compiler/Makefile:../../base/generic/compiler/Makefile.in
        general/Makefile:../../base/generic/general/Makefile.in
-       ../../tcltk98/generic/interface/Makefile:../../tcltk98/generic/interface/Makefile.in
+       interface/Makefile:../../tcltk98/generic/interface/Makefile.in
        lib/Makefile:../../base/generic/lib/Makefile.in
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in
@@ -6263,7 +6246,7 @@ CONFIG_FILES=\${CONFIG_FILES-"ConfigAscend:../../base/generic/ConfigAscend.in
        bin/Makefile:../../base/generic/bin/Makefile.in
        compiler/Makefile:../../base/generic/compiler/Makefile.in
        general/Makefile:../../base/generic/general/Makefile.in
-       ../../tcltk98/generic/interface/Makefile:../../tcltk98/generic/interface/Makefile.in
+       interface/Makefile:../../tcltk98/generic/interface/Makefile.in
        lib/Makefile:../../base/generic/lib/Makefile.in
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in

@@ -22,7 +22,7 @@
 SHELL = /bin/sh
 builddir = ..
 srcdir = @fullpathsrcdir@/../generic/packages
-VPATH = @fullpathsrcdir@/../generic/packages
+VPATH := @fullpathsrcdir@/../generic/packages
 
 
 

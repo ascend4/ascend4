@@ -11,7 +11,7 @@
 SHELL = /bin/sh
 builddir = ..
 srcdir = @fullpathsrcdir@/../generic/solver
-VPATH = @fullpathsrcdir@/../generic/solver
+VPATH := @fullpathsrcdir@/../generic/solver
 
 
 

@@ -21,8 +21,8 @@
 
 
 SHELL = /bin/sh
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir = @tkdir_topbuilddir@/bitmaps
+VPATH = @tkdir_topbuilddir@/bitmaps
 
 
 

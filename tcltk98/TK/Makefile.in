@@ -40,9 +40,9 @@
 
 
 SHELL = /bin/sh
-builddir = @tkdir_topbuilddir@/../../base/generic
-srcdir = @srcdir@
-VPATH = @srcdir@
+builddir = ..
+srcdir = @tkdir_topbuilddir@
+VPATH = @tkdir_topbuilddir@
 
 
 

@@ -9,9 +9,9 @@
 
 
 SHELL = /bin/sh
-builddir = ../base/generic
+builddir = ..
 srcdir = @fullpathsrcdir@/../../lsod
-VPATH = @fullpathsrcdir@/../../lsod
+VPATH := @fullpathsrcdir@/../../lsod
 
 
 

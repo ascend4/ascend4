@@ -40,9 +40,9 @@
 
 
 SHELL = /bin/sh
-builddir = @models_topbuilddir@/ascend4
-srcdir = @srcdir@
-VPATH = @srcdir@
+builddir = ..
+srcdir = @models_topbuilddir@
+VPATH = @models_topbuilddir@
 
 
 
