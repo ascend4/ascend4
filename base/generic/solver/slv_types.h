@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Benjamin Andrew Allan
  *  Created: 6/1/96
@@ -49,7 +49,7 @@
 #define slv_types__already_included
 
 typedef void *SlvBackendToken;
-/**
+/**< 
  ***  Backends that provide the residuals, gradients, and so forth
  ***  may be object-oriented and associate some sort of pointer
  ***  with each of the variables or relations they are serving up.
@@ -68,8 +68,8 @@ typedef void *SlvBackendToken;
  **/
 
 typedef struct slv_system_structure *slv_system_t;
-/**
+/**< 
  ***  This is the handle which should be used in all of the functions
  ***  in slv and system to reference a mathematical problem.
  **/
-#endif /* slv_types__already_included */
+#endif /**< slv_types__already_included */

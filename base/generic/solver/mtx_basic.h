@@ -1,4 +1,4 @@
-/*
+/**< 
  *  mtx2: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -33,7 +33,7 @@
  */
 #ifndef __MTX_BASIC_H_SEEN__
 #define __MTX_BASIC_H_SEEN__
-/* requires #include "mtx.h" */
+/**< requires #include "mtx.h" */
 
 
 /***********************************************************************\
@@ -41,8 +41,8 @@
 \***********************************************************************/
 extern boolean      check_matrix(mtx_matrix_t, char *, int);
 #define mtx_check_matrix(m) check_matrix((m),__FILE__,__LINE__)
-/* (mtx_matrix_t, char *, int); */
-/**
+/**< (mtx_matrix_t, char *, int); */
+/**< 
  ** Use mtx_check_matrix in all cases.
  ** If mtx given is ok, returns 1, otherwise returns 0.
  ** spits up to stderr if not ok.
@@ -52,8 +52,8 @@ extern boolean      check_matrix(mtx_matrix_t, char *, int);
 
 extern boolean      check_sparse(const mtx_sparse_t * const, char *, int);
 #define mtx_check_sparse(sp) check_sparse((sp),__FILE__,__LINE__)
-/* (mtx_sparse_t *, char *, int); */
-/**
+/**< (mtx_sparse_t *, char *, int); */
+/**< 
  ** Use mtx_check_sparse in all cases.
  ** If sparse given is ok, returns 1, otherwise returns 0.
  ** spits up to stderr if not ok.
@@ -64,7 +64,7 @@ extern mtx_coord_t  *mtx_coord(mtx_coord_t *, int32, int32);
 extern mtx_range_t  *mtx_range(mtx_range_t *, int32, int32);
 extern mtx_region_t *mtx_region(mtx_region_t *, int32, int32,
                                 int32, int32);
-/**
+/**< 
  ***  coordp = mtx_coord(coordp,row,col)
  ***  rangep = mtx_range(rangep,low,high)
  ***  regionp = mtx_region(regionp,rowlow,rowhigh,collow,colhigh)
@@ -87,14 +87,14 @@ extern void mtx_zero_int32(int32 *, int);
 extern void mtx_zero_real64(real64 *, int);
 extern void mtx_zero_ptr(void **, int);
 #define mtx_zero_char(ar,len) if ((ar)!=NULL) memset((ar),0,(len))
-/**
+/**< 
  ***  mtx_zero_XXX(ptr,length);
  ***  Zeros a vector of specified length and type.
  ***  Ignore NULL input vectors.
  **/
 
 extern mtx_matrix_t mtx_create();
-/**
+/**< 
  ***  matrix = mtx_create()
  ***  mtx_matrix_t matrix;
  ***
@@ -103,7 +103,7 @@ extern mtx_matrix_t mtx_create();
  **/
 
 extern mtx_matrix_t mtx_create_slave(mtx_matrix_t);
-/**
+/**< 
  ***  matrix = mtx_create_slave(master)
  ***  mtx_matrix_t matrix, master;
  ***
@@ -136,13 +136,13 @@ extern mtx_matrix_t mtx_create_slave(mtx_matrix_t);
  **/
 
 extern void mtx_debug_redirect_freeze();
-/**
+/**< 
  *** stops future mtx_create/mtx_create_slave from
  *** redirecting errors back to stderr.
  **/
 
 extern void         mtx_destroy(mtx_matrix_t);
-/**
+/**< 
  ***  mtx_destroy(matrix);
  ***  mtx_matrix_t matrix;
  ***
@@ -154,7 +154,7 @@ extern void         mtx_destroy(mtx_matrix_t);
  **/
 
 extern mtx_sparse_t *mtx_create_sparse(int32);
-/**
+/**< 
  ***  sp = mtx_create_sparse(capacity);
  ***  mtx_sparse_t *sp;
  ***  int32 capacity;
@@ -166,7 +166,7 @@ extern mtx_sparse_t *mtx_create_sparse(int32);
  **/
 
 extern void         mtx_destroy_sparse(mtx_sparse_t *);
-/**
+/**< 
  ***  mtx_destroy_sparse(sp);
  ***  mtx_sparse_t *sp;
  ***  
@@ -176,7 +176,7 @@ extern void         mtx_destroy_sparse(mtx_sparse_t *);
  **/
 
 extern void         mtx_destroy_blocklist(mtx_block_t *);
-/**
+/**< 
  ***  mtx_destroy_blocklist);
  ***  mtx_block_t *bl;
  ***  
@@ -188,7 +188,7 @@ extern void         mtx_destroy_blocklist(mtx_block_t *);
  **/
 
 extern mtx_matrix_t mtx_duplicate_region(mtx_matrix_t, mtx_region_t *, real64);
-/**
+/**< 
  -$-  slave = mtx_duplicate_region(matrix,region,drop);
  ***
  ***  mtx_matrix_t slave, matrix;
@@ -213,7 +213,7 @@ extern mtx_matrix_t mtx_duplicate_region(mtx_matrix_t, mtx_region_t *, real64);
 
 extern mtx_matrix_t mtx_copy_options(mtx_matrix_t, boolean,
                                      boolean, mtx_region_t *, real64);
-/**
+/**< 
  -$-  copy = mtx_copy_options(matrix,blocks,incidence,region,drop);
  ***
  ***  All operations can take either a master or a slave matrix
@@ -275,7 +275,7 @@ extern mtx_matrix_t mtx_copy_options(mtx_matrix_t, boolean,
 mtx_ENTIRE_MATRIX,0.0)
 
 extern int32  mtx_order(mtx_matrix_t);
-/**
+/**< 
  ***  order = mtx_order(matrix)
  ***  int32 order;
  ***  mtx_matrix_t matrix;
@@ -285,7 +285,7 @@ extern int32  mtx_order(mtx_matrix_t);
  **/
 
 extern int32  mtx_capacity(mtx_matrix_t);
-/**
+/**< 
  ***  cap = mtx_capacity(matrix)
  ***  int32 cap;
  ***  mtx_matrix_t matrix;
@@ -298,7 +298,7 @@ extern int32  mtx_capacity(mtx_matrix_t);
  **/
 
 extern void         mtx_set_order(mtx_matrix_t, int32);
-/**
+/**< 
  ***  mtx_set_order(matrix,order)
  ***  mtx_matrix_t matrix;
  ***  int32 order;
@@ -324,7 +324,7 @@ extern void         mtx_clear_collist(mtx_matrix_t,
 extern void         mtx_clear_region(mtx_matrix_t, mtx_region_t *);
 extern void         mtx_reset_perm(mtx_matrix_t);
 extern void         mtx_clear(mtx_matrix_t);
-/**
+/**< 
  -$-  mtx_clear_coord(matrix,row,col)
  -$-  mtx_clear_row(matrix,row,rng)
  -$-  mtx_clear_col(matrix,col,rng)
@@ -375,7 +375,7 @@ extern void         mtx_set_value(mtx_matrix_t, mtx_coord_t *, real64);
 extern void         mtx_fill_value(mtx_matrix_t, mtx_coord_t *, real64);
 extern void         mtx_fill_org_value(mtx_matrix_t, const mtx_coord_t *,
                                        real64);
-/**
+/**< 
  -$-  value = mtx_value(matrix,coord)
  -$-  mtx_set_value(matrix,coord,value)
  -$-  mtx_fill_value(matrix,coord,value)
@@ -413,11 +413,11 @@ extern void         mtx_fill_org_value(mtx_matrix_t, const mtx_coord_t *,
  ***
  -$-  Returns 0.0/does nothing from/to a bad matrix.
  **/
-/* grandfathering old linsol. remove when linsolqr replaces linsol */
+/**< grandfathering old linsol. remove when linsolqr replaces linsol */
 #define mtx_add_value(a,b,c) mtx_fill_value((a),(b),(c))
 
 extern int32  mtx_assemble(mtx_matrix_t);
-/**
+/**< 
  ***  dinc = mtx_assemble(mtx_matrix_t);
  ***  mtx_matrix_t matrix;
  ***  int32 dinc; 
@@ -440,7 +440,7 @@ extern void         mtx_del_zr_in_row(mtx_matrix_t, int32);
 extern void         mtx_del_zr_in_col(mtx_matrix_t, int32);
 extern void         mtx_del_zr_in_rowrange(mtx_matrix_t, mtx_range_t *);
 extern void         mtx_del_zr_in_colrange(mtx_matrix_t, mtx_range_t *);
-/**
+/**< 
  -$-  mtx_del_zr_in_row(matrix,row)
  -$-  mtx_del_zr_in_col(matrix,col)
  -$-  mtx_del_zr_in_rowrange(matrix,rng)
@@ -462,7 +462,7 @@ extern void         mtx_steal_cur_row_vec(mtx_matrix_t, int32,
                                           real64 *, mtx_range_t *);
 extern void         mtx_steal_cur_col_vec(mtx_matrix_t, int32,
                                           real64 *, mtx_range_t *);
-/**
+/**< 
  -$-  mtx_steal_org_row_vec(mtx,row,vec,colrng)
  -$-  mtx_steal_org_col_vec(mtx,col,vec,rowrng)
  -$-  mtx_steal_cur_row_vec(mtx,row,vec,colrng)
@@ -516,7 +516,7 @@ extern boolean      mtx_steal_cur_row_sparse(mtx_matrix_t, int32,
                                              mtx_sparse_t *, mtx_range_t *);
 extern boolean      mtx_steal_cur_col_sparse(mtx_matrix_t, int32,
                                              mtx_sparse_t *, mtx_range_t *);
-/**
+/**< 
  -$-  err = mtx_steal_org_row_sparse(mtx,row,sparse,colrng)
  -$-  err = mtx_steal_org_col_sparse(mtx,col,sparse,rowrng)
  -$-  err = mtx_steal_cur_row_sparse(mtx,row,sparse,colrng)
@@ -549,7 +549,7 @@ extern boolean      mtx_steal_cur_col_sparse(mtx_matrix_t, int32,
  -$-  Fetches nothing from a bad matrix.
  **/
 
-/**
+/**< 
 extern wish  ! ! !  NOT YET IMPLEMENTED. NO USE FOR THEM SO FAR.
 extern void  ! ! !  mtx_set_org_row_vec(mtx_matrix_t, int32,
                                         real64 *, mtx_range_t *,boolean);
@@ -604,7 +604,7 @@ extern void         mtx_dropfill_cur_row_vec(mtx_matrix_t, int32,
 extern void         mtx_dropfill_cur_col_vec(mtx_matrix_t, int32,
                                              real64 *, mtx_range_t *,
                                              real64);
-/**
+/**< 
  -$-  mtx_fill_org_row_vec(mtx,row,vec,colrng)
  -$-  mtx_fill_org_col_vec(mtx,col,vec,rowrng)
  -$-  mtx_fill_cur_row_vec(mtx,row,vec,colrng)
@@ -648,7 +648,7 @@ extern void         mtx_fill_cur_row_sparse(mtx_matrix_t, int32,
                                             const mtx_sparse_t *);
 extern void         mtx_fill_cur_col_sparse(mtx_matrix_t, int32,
                                             const mtx_sparse_t *);
-/**
+/**< 
  -$-  mtx_fill_org_row_sparse(mtx,row,sp)
  -$-  mtx_fill_org_col_sparse(mtx,col,sp)
  -$-  mtx_fill_cur_row_sparse(mtx,row,sp)
@@ -684,7 +684,7 @@ extern void         mtx_mult_col(mtx_matrix_t,int32,
                                  real64,mtx_range_t *);
 extern void         mtx_mult_row_zero(mtx_matrix_t,int32,mtx_range_t *);
 extern void         mtx_mult_col_zero(mtx_matrix_t,int32,mtx_range_t *);
-/**
+/**< 
  -$-  mtx_mult_row(matrix,row,factor,colrng)
  -$-  mtx_mult_col(matrix,col,factor,rowrng)
  -$-  mtx_mult_row_zero(matrix,row,colrng)
@@ -705,7 +705,7 @@ extern void         mtx_add_row(mtx_matrix_t,int32,int32,
                                 real64,mtx_range_t *);
 extern void         mtx_add_col(mtx_matrix_t,int32,int32,
                                 real64,mtx_range_t *);
-/**
+/**< 
  -$-  mtx_add_row(matrix,srow,trow,factor,colrng)
  -$-  mtx_add_col(matrix,scol,tcol,factor,rowrng)
  ***  mtx_matrix_t matrix;
@@ -727,7 +727,7 @@ extern void         mtx_add_row_series_init(mtx_matrix_t, int32,
                                             boolean);
 extern void         mtx_add_col_series_init(mtx_matrix_t, int32,
                                             boolean);
-/**
+/**< 
  -$-  mtx_add_row_series(srow,factor,colrng)
  -$-  mtx_add_col_series(scol,factor,rowrng)
  -$-  mtx_add_row_series_init(matrix,trow,userow)
@@ -771,7 +771,7 @@ extern void         mtx_add_col_series_init(mtx_matrix_t, int32,
  -$-  Does nothing on a bad matrix.
  **/
 
-/**
+/**< 
 extern wish  ! ! !  NOT YET IMPLEMENTED. NO USE FOR THEM SO FAR. 
 extern void  ! ! !  mtx_add_row_org_vec(mtx_matrix_t,int32,
                                         real64 *,real64,
@@ -814,7 +814,7 @@ extern void mtx_old_add_row_sparse(mtx_matrix_t, int32, real64 *,
                                   real64, mtx_range_t *, int32 *);
 extern void mtx_old_add_col_sparse(mtx_matrix_t, int32, real64 *,
                                   real64, mtx_range_t *, int32 *);
-/**
+/**< 
  ***  Note: the interface of this operator needs some work!
  ***  In particular, it should be redone with consideration given
  ***  to the mtx_sparse_t recently added.
@@ -854,7 +854,7 @@ extern void mtx_old_add_col_sparse(mtx_matrix_t, int32, real64 *,
 
 extern void mtx_add_row_sparse(mtx_matrix_t, int32, real64, mtx_sparse_t *);
 extern void mtx_add_col_sparse(mtx_matrix_t, int32, real64, mtx_sparse_t *);
-/**
+/**< 
  -$-  mtx_add_row_sparse(matrix,row,factor,sparse)
  -$-  mtx_add_col_sparse(matrix,col,factor,sparse)
  ***  mtx_matrix_t matrix;
@@ -866,7 +866,7 @@ extern void mtx_add_col_sparse(mtx_matrix_t, int32, real64, mtx_sparse_t *);
 
 extern size_t       mtx_size(mtx_matrix_t);
 extern size_t       mtx_chattel_size(mtx_matrix_t);
-/**
+/**< 
  *** size=mtx_size(mtx)
  *** size=mtx_chattel_size(mtx)
  *** size_t size;
@@ -885,7 +885,7 @@ extern size_t       mtx_chattel_size(mtx_matrix_t);
  **/
 
 extern void         mtx_free_reused_mem();
-/**
+/**< 
  ***  mtx_free_reused_mem()
  ***
  ***  Deallocates any memory that mtx may be squirrelling away for
@@ -897,14 +897,14 @@ extern void         mtx_free_reused_mem();
   mtx io routines
 \***********************************************************************/
 extern void         mtx_write_sparse(FILE *,mtx_sparse_t *);
-/**
+/**< 
  ***  mtx_write_sparse(file,sparse);
  ***  Outputs sizes and data of sparse vector to the file given.
  **/
 
 extern void         mtx_write_region_human_f(FILE *,mtx_matrix_t,
                                              mtx_region_t *,int,int);
-/**
+/**< 
  ***  MACROS:
  ***  mtx_write_region_human(file,mtx,region);
  ***    Grandfather support for the old usages.
@@ -939,7 +939,7 @@ mtx_write_region_human_f((f),(m),(r),0,1)
 mtx_write_region_human_f((f),(m),(r),1,1)
 
 extern void         mtx_write_region(FILE *,mtx_matrix_t,mtx_region_t *);
-/**
+/**< 
  ***  mtx_write_region(file,mtx,region)
  ***  Outputs permutation and values of the nonzero elements in the
  ***  given region of the mtx to the file given along with the matrix
@@ -957,7 +957,7 @@ extern void         mtx_write_region(FILE *,mtx_matrix_t,mtx_region_t *);
  **/
 
 extern mtx_matrix_t mtx_read_region(FILE *,mtx_matrix_t,int);
-/**
+/**< 
  ***  mtx_read_region(file,mtx,transposed)
  ***  From the file pointer, does the following:
  ***  Gets the matrix order of the data in the file.
@@ -988,7 +988,7 @@ extern mtx_matrix_t mtx_read_region(FILE *,mtx_matrix_t,int);
  **/
 
 extern void         mtx_write_region_matlab(FILE *,mtx_matrix_t,mtx_region_t *);
-/**
+/**< 
  ***  mtx_write_region_matlab(file,mtx,region)
  ***  Outputs values of the nonzero elements in the
  ***  given region of the mtx to the file in matlab/harwell sparse format.
@@ -998,7 +998,7 @@ extern void         mtx_write_region_matlab(FILE *,mtx_matrix_t,mtx_region_t *);
  **/
 
 extern void         mtx_write_region_plot(FILE *,mtx_matrix_t,mtx_region_t *);
-/**
+/**< 
  ***  mtx_write_region_plot(file,mtx,region)
  ***  Outputs the coordinates of elements to file with format suitable
  ***  for xgraph consumption from the given region of the mtx.
@@ -1012,7 +1012,7 @@ extern void         mtx_write_region_smms(FILE *,mtx_matrix_t,
 					  mtx_region_t *, int);
 extern mtx_matrix_t mtx_read_smms(FILE *,mtx_matrix_t,int);
 
-/**
+/**< 
  ***  mtx_write_region_csr(file,mtx,region,offset)
  ***  mtx_write_region_smms(file,mtx,region,offset)
  ***  mtx = mtx_read_smms(file,mtx,transpose);
@@ -1034,7 +1034,7 @@ extern mtx_matrix_t mtx_read_smms(FILE *,mtx_matrix_t,int);
  **/
 
 extern void         mtx_exception_recover();
-/**
+/**< 
  ***  mtx_exception_recover();
  ***  You don't need to know what this does, except that you should call
  ***  it any time it is probable that a floating point exception has
@@ -1051,7 +1051,7 @@ extern void         mtx_exception_recover();
  **/
  
 extern void         mtx__debug_output(FILE *,mtx_matrix_t);
-/**
+/**< 
  ***  mtx_debug_output(fp,matrix)
  ***  FILE *fp;
  ***  mtx_matrix_t matrix;
@@ -1062,4 +1062,4 @@ extern void         mtx__debug_output(FILE *,mtx_matrix_t);
  ***  Doesn't care about master/slave status.
  **/
 
-#endif /* __MTX_BASIC_H_SEEN__ */
+#endif /**< __MTX_BASIC_H_SEEN__ */

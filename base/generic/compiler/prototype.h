@@ -1,4 +1,4 @@
-/*
+/**< 
  *  This Module Store A Copy of Atom Instances
  *  by Tom Epperly
  *  Version: $Revision: 1.7 $
@@ -25,7 +25,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including prototype.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -33,25 +33,25 @@
 
 #ifndef __PROTOTYPE_H_SEEN__
 #define __PROTOTYPE_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"instance_enum.h"
 */
 
 
-/*
+/**< 
  *  Given the amount of time we spend looking for prototypes, we need
  *  to be running distinct prototype libraries for models, atoms, and
  *  possibly constants.
  */
 
 extern void InitializePrototype(void);
-/*
+/**< 
  *  Must be called before any other prototype procedure.
  */
 
 extern struct Instance *LookupPrototype(symchar *);
-/*
+/**< 
  *  struct Instance *LookupPrototype(t)
  *  symchar *t;
  *
@@ -61,7 +61,7 @@ extern struct Instance *LookupPrototype(symchar *);
  */
 
 extern void DeletePrototype(symchar *);
-/*
+/**< 
  *  void DeletePrototype(t)
  *  const char *t;
  *
@@ -71,7 +71,7 @@ extern void DeletePrototype(symchar *);
  */
 
 extern void AddPrototype(struct Instance *);
-/*
+/**< 
  *  void AddPrototype(i)
  *  struct Instance *i;
  *
@@ -80,9 +80,9 @@ extern void AddPrototype(struct Instance *);
  */
 
 extern void DestroyPrototype(void);
-/*
+/**< 
  *  void DestroyPrototype()
  *  This deletes all the instances in the prototype library.  This should
  *  be done before the program exits.
  */
-#endif /* __PROTOTYPE_H_SEEN__ */
+#endif /**< __PROTOTYPE_H_SEEN__ */

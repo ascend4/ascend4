@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Name Tree Visit Implementation
  *  by Benjamin Andrew Allan
  *  9/19/97
@@ -30,14 +30,14 @@
 #ifndef __VISITNAME_H_SEEN__
 #define __VISITNAME_H_SEEN__
 
-/*
+/**< 
  *  When #including visitname.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
  */
 
 typedef void (*VisitNameProc)(struct Instance *,struct gl_list_t *);
-/*
+/**< 
  *  Typedef for a function that takes an instance;
  *  Used with VisitNameTree (if/when implemented).
  */
@@ -45,7 +45,7 @@ typedef void (*VisitNameProc)(struct Instance *,struct gl_list_t *);
 typedef void (*VisitNameTwoProc)(struct Instance *,
                                  struct gl_list_t *,
                                  VOIDPTR);
-/*
+/**< 
  *  func(i,path,userdata);
  *  Typedef for a function that takes an instance,
  *  a path to the instance, and a user pointer,
@@ -66,7 +66,7 @@ typedef void (*VisitNameTwoProc)(struct Instance *,
  * will ever appear in the path twice. Child numbers may repeat, obviously.
  */
 
-/*
+/**< 
  *  Tree procedures
  */
 #ifdef NDEBUG
@@ -80,7 +80,7 @@ extern void SilentVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
                                    int,int,int,VOIDPTR);
 extern void SlowVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
                                  int,int,int,VOIDPTR);
-/*
+/**< 
  *  macro VisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata);
  *  void SilentVisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata);
  *  void SlowVisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata);
@@ -119,4 +119,4 @@ extern void SlowVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
  *  userdata is passed as the last argument to the user supplied proc.
  */
 
-#endif /* __VISITNAME_H_SEEN__ */
+#endif /**< __VISITNAME_H_SEEN__ */

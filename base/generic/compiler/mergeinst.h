@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -31,14 +31,14 @@
 #define __MERGEINST_H_SEEN__
 
 
-/*
+/**< 
  *  When #including mergeinst.h, make sure these files are #included first:
  *     #include "instance_enum.h"
  */
 
 
 extern struct Instance *MergeInstances(struct Instance *,struct Instance *);
-/*
+/**< 
  *  struct Instance *MergeInstances(i1,i2)
  *  struct Instance *i1,*i2;
  *  This is the ARE_THE_SAME operator.
@@ -59,7 +59,7 @@ extern struct Instance *MergeInstances(struct Instance *,struct Instance *);
  */
 
 extern void PostMergeCheck(struct Instance *);
-/*
+/**< 
  *  void PostMergeCheck(i)
  *  struct Instance *i;
  *  This should be performed after a MergeInstances call or a sequence of
@@ -69,7 +69,7 @@ extern void PostMergeCheck(struct Instance *);
 
 
 extern void MergeCliques(struct Instance *,struct Instance *);
-/*
+/**< 
  *  void MergeCliques(i1,i2)
  *  struct Instance *i1,*i2;
  *  Merge the cliques represented by i1 and i2.  This does not enforce
@@ -78,4 +78,4 @@ extern void MergeCliques(struct Instance *,struct Instance *);
  */
 
 #endif
-/* __MERGEINST_H_SEEN__ */
+/**< __MERGEINST_H_SEEN__ */

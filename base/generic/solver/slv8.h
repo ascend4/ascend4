@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Incorporation of the nonlinear solver CONOPT to ASCEND
  *  by Ken Tyner 
  *  Created: 6/97
@@ -28,7 +28,7 @@
  *
  */
 
-/*
+/**< 
  * Contents:     CONOPT module
  *
  * Authors:      Ken Tyner and Vicente Rico-Ramirez
@@ -42,18 +42,18 @@
 #ifndef slv8__already_included
 #define slv8__already_included
 
-/* 
+/**< 
  * requires #include "slv_client.h" 
  */
 
 typedef struct slv8_system_structure *slv8_system_t;
 
 int slv8_register(SlvFunctionsT *);
-/*
+/**< 
  * This is the function that tells the system about the CONOPT solver.
  * Our index is not necessarily going to be 8. That everything here is
  * named slv8* is just a historical result and a convenient way of
  * shutting up the linker.
  */
 
-#endif /*  ifndef slv8__already_included  */
+#endif /**<  ifndef slv8__already_included  */

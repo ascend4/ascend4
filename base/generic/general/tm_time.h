@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Time module
  *  by Karl Westerberg
  *  Created: 6/90
@@ -28,7 +28,7 @@
  */
 
 
-/*
+/**< 
  *  Contents:     Time module
  *
  *  Authors:      Karl Westerberg
@@ -55,26 +55,26 @@
 
 #ifndef CLOCKS_PER_SEC
 
-/* case linux */
+/**< case linux */
 #ifdef linux
 #define CLOCKS_PER_SEC  100
-#endif /* linux */
+#endif /**< linux */
 
-/* case windoze */
+/**< case windoze */
 #ifdef WIN
 #define CLOCKS_PER_SEC 1000
-#endif /* windoze */
+#endif /**< windoze */
 
-/* default */
+/**< default */
 #ifndef CLOCKS_PER_SEC
-#define CLOCKS_PER_SEC  1000000         /* typical clock ticks per sec */
-/* note that typically clocks have a minimum resolution of 16666, sigh */
-#endif /* default */
+#define CLOCKS_PER_SEC  1000000         /**< typical clock ticks per sec */
+/**< note that typically clocks have a minimum resolution of 16666, sigh */
+#endif /**< default */
 
-#endif /* CLOCKS_PER_SEC */
+#endif /**< CLOCKS_PER_SEC */
 
 extern double tm_cpu_time();
-/*
+/**< 
  *  Returns the number of seconds used during
  *  processing by the CPU since any part of
  *  ASCEND first called tm_cpu_time().
@@ -90,7 +90,7 @@ extern void tm_cpu_time_ftn();
 extern void aftime();
 extern void TM_CPU_TIME_FTN();
 extern void AFTIME();
-/*
+/**< 
  *  double *time;
  *  Does the same thing as tm_cpu_time, with the exception
  *  that this function takes a double * arg, to satisfy

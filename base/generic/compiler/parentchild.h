@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Link Implementation
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -33,14 +33,14 @@
 #define __PARENTCHILD_H_SEEN__
 
 
-/*
+/**< 
  *  When #including parentchild.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
  */
 
 
-/*
+/**< 
  *  Parent routines
  *
  *  General comments on parents:
@@ -66,7 +66,7 @@
  */
 
 extern unsigned long NumberParents(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long NumberParents(i)
  *  const struct Instance *i;
  *
@@ -75,7 +75,7 @@ extern unsigned long NumberParents(CONST struct Instance *);
  */
 
 extern struct Instance *InstanceParent(CONST struct Instance *,unsigned long);
-/*
+/**< 
  *  struct Instance *InstanceParent(i,n);
  *  const struct Instance *i;
  *  unsigned long n;
@@ -87,7 +87,7 @@ extern struct Instance *InstanceParent(CONST struct Instance *,unsigned long);
 
 extern unsigned long SearchForParent(CONST struct Instance *,
          CONST struct Instance *);
-/*
+/**< 
  *  unsigned long SearchForParent(i,p)
  *  const struct Instance *i,*p;
  *
@@ -98,7 +98,7 @@ extern unsigned long SearchForParent(CONST struct Instance *,
  */
 
 extern void DeleteParent(struct Instance *,unsigned long);
-/*
+/**< 
  *  void DeleteParent(i,pos)
  *  Remove parent in pos from i's parent list.
  *  DummyInstance just reduces its reference count.
@@ -106,7 +106,7 @@ extern void DeleteParent(struct Instance *,unsigned long);
 
 extern struct InstanceName ParentsName(CONST struct Instance *,
                                        CONST struct Instance *);
-/*
+/**< 
  *  struct InstanceName ParentsName(p,c)
  *  const struct Instance *p,*c;
  *
@@ -121,7 +121,7 @@ extern struct InstanceName ParentsName(CONST struct Instance *,
  */
 
 extern void AddParent(struct Instance *, struct Instance *);
-/*
+/**< 
  *  void AddParent(i,p)
  *  struct Instance *i,*p;
  *
@@ -137,7 +137,7 @@ extern void AddParent(struct Instance *, struct Instance *);
  *  things work out ok.
  */
 
-/*
+/**< 
  *  Children routines
  *
  *  General comments on children:
@@ -161,7 +161,7 @@ extern void AddParent(struct Instance *, struct Instance *);
  */
 
 extern unsigned long NumberChildren(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long NumberChildren(i)
  *  const struct Instance *i;
  *
@@ -171,7 +171,7 @@ extern unsigned long NumberChildren(CONST struct Instance *);
 
 extern struct Instance *InstanceChild(CONST struct Instance *,
                                       unsigned long);
-/*
+/**< 
  *  struct Instance *InstanceChild(i,n)
  *  const struct Instance *i;
  *  unsigned long n;
@@ -184,7 +184,7 @@ extern struct Instance *InstanceChild(CONST struct Instance *,
  */
 
 extern struct InstanceName ChildName(CONST struct Instance *,unsigned long);
-/*
+/**< 
  *  struct InstanceName ChildName(i,n)
  *  struct Instance *i;
  *  unsigned long n;
@@ -195,7 +195,7 @@ extern struct InstanceName ChildName(CONST struct Instance *,unsigned long);
 
 extern CONST struct Statement *ChildDeclaration(CONST struct Instance *,
                                                 unsigned long);
-/*
+/**< 
  *  CONST struct Statement *ChildDeclaration(i,n)
  *  struct Instance *i;
  *  unsigned long n;
@@ -209,7 +209,7 @@ extern CONST struct Statement *ChildDeclaration(CONST struct Instance *,
 
 extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *,
                                                   unsigned long);
-/*
+/**< 
  *  CONST struct TypeDescription *ChildRefines(i,n)
  *  struct Instance *i;
  *  unsigned long n;
@@ -229,7 +229,7 @@ extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *,
 
 extern unsigned long ChildSearch(CONST struct Instance *,
                                  CONST struct InstanceName *);
-/*
+/**< 
  *  unsigned long ChildSearch(i,name)
  *  struct Instance *sreli;
  *  struct InstanceName *name;
@@ -243,7 +243,7 @@ extern unsigned long ChildSearch(CONST struct Instance *,
  */
 
 extern struct Instance *ChildByChar(CONST struct Instance *,symchar *);
-/*
+/**< 
  *  c = ChildByChar(p,str);
  *  struct Instance *p;
  *  char *str;
@@ -256,7 +256,7 @@ extern struct Instance *ChildByChar(CONST struct Instance *,symchar *);
  *  can have a child with a name which is not in the symbol table.
  */
 
-/*
+/**< 
  *  extern unsigned long ChildSearchRegExp(); NOT IMPLEMENTED.
  *  unsigned long ChildSearchRegExp(i,name,start)
  *  struct Instance *i;
@@ -276,7 +276,7 @@ extern struct Instance *ChildByChar(CONST struct Instance *,symchar *);
 
 extern unsigned long ChildIndex(CONST struct Instance *,
     CONST struct Instance *);
-/*
+/**< 
  *  unsigned long ChildIndex(i,child)
  *  const struct Instance *i,*child;
  *  This procedure searches through the child list of instance i for child.
@@ -285,7 +285,7 @@ extern unsigned long ChildIndex(CONST struct Instance *,
  */
 
 extern void StoreChildPtr(struct Instance *,unsigned long,struct Instance *);
-/*
+/**< 
  *  void StoreChildPtr(i,n,child)
  *  struct Instance *i,*child;
  *  unsigned long n;
@@ -297,4 +297,4 @@ extern void StoreChildPtr(struct Instance *,unsigned long,struct Instance *);
  */
 
 #endif
-/* __PARENTCHILD_H_SEEN__ */
+/**< __PARENTCHILD_H_SEEN__ */

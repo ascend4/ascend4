@@ -1,4 +1,4 @@
-/*
+/**< 
  *  ASCEND Printf Substitutes
  *  by Mark Thomas
  *  Created: 27.May.1997
@@ -30,7 +30,7 @@
 #ifndef _ASCPRINT_H
 #define _ASCPRINT_H
 
-/*
+/**< 
  *  When including this file, you must include:
  *      #include <stdarg.h>
  *      #include "compiler/compiler.h"
@@ -39,7 +39,7 @@
 
 
 extern int Asc_PrintInit(void);
-/*
+/**< 
  *  int Asc_PrintInit()
  *
  *  Initialize ASCEND's pointers to the Tcl channels used for output.
@@ -49,7 +49,7 @@ extern int Asc_PrintInit(void);
  */
 
 extern int Asc_Printf(CONST char *, ...);
-/*
+/**< 
  *  int Asc_Printf(format, variable_number_args)
  *      CONST char *format;            // sprintf-style format string
  *      va_list variable_number_args;  // arguments for the `format' string
@@ -63,7 +63,7 @@ extern int Asc_Printf(CONST char *, ...);
  */
 
 extern int Asc_FPrintf(FILE *, CONST char *, ...);
-/*
+/**< 
  *  int Asc_FPrintf(fileptr, format, variable_number_args)
  *      FILE *fileptr;                 // file handle to send output to
  *      CONST char *format;            // sprintf-style format string
@@ -79,7 +79,7 @@ extern int Asc_FPrintf(FILE *, CONST char *, ...);
 
 
 extern int Asc_FFlush(FILE *);
-/*
+/**< 
  *  int Asc_FFlush(fileptr)
  *      FILE *fileptr;
  *
@@ -91,7 +91,7 @@ extern int Asc_FFlush(FILE *);
 
 
 extern int Asc_FPutc(int, FILE*);
-/*
+/**< 
  *  int Asc_FPutc( c, fileptr );
  *      int c;
  *      FILE *fileptr;
@@ -105,7 +105,7 @@ extern int Asc_FPutc(int, FILE*);
 
 
 extern int Asc_Putchar(int);
-/*
+/**< 
  *  int Asc_Putchar( c );
  *      int c;
  *
@@ -115,4 +115,4 @@ extern int Asc_Putchar(int);
  *  This is needed under Windows to redirect stdout and stderr to the
  *  TkConsole instead of into the bit bucket.
  */
-#endif /* _ASCPRINT_H */
+#endif /**< _ASCPRINT_H */

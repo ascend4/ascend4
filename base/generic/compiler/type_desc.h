@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Atom description structure data type
  *  by Tom Epperly
  *  9/3/89
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including type_desc.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -37,7 +37,7 @@
 
 #ifndef __TYPE_DESC_H_SEEN__
 #define __TYPE_DESC_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"list.h"
@@ -47,15 +47,15 @@
 # #include"slist.h"
 */
 
-/* bad pointer for a patently bogus definition when needed */
-/* This token is an illegal address for any type definition,
+/**< bad pointer for a patently bogus definition when needed */
+/**< This token is an illegal address for any type definition,
  * (illegal for alignment reasons) which we can use to denote
  * the UNIVERSAL root MODEL which does not exist as a real
  * type description in the library.
  */
 #define ILLEGAL_DEFINITION ((struct TypeDescription *)0xF0F0F0F7)
 
-/* some bit patterns to make basetype checking faster, etc. */
+/**< some bit patterns to make basetype checking faster, etc. */
 #define REAL_KIND	0x1
 #define INT_KIND	0x2
 #define BOOL_KIND	0x4
@@ -71,68 +71,68 @@
                           0x200|0x400|0x1000|0x2000|0x4000|EQN_KIND|DUMB_KIND)
 #define SIMPLE_KINDS \
  ( REAL_KIND | INT_KIND | BOOL_KIND | SYM_KIND | SET_KIND | EQN_KIND )
-/* (t & ERROR_KIND) ==> bogus type, there may be other bogus types as well.)*/
+/**< (t & ERROR_KIND) ==> bogus type, there may be other bogus types as well.)*/
 enum type_kind {
 
-  /* complex base types */
+  /**< complex base types */
   model_type =		COMPOUND_KIND | 0x100,
   array_type = 		COMPOUND_KIND | 0x200,
   patch_type =		COMPOUND_KIND | 0x400,
-  /* list_type? COMPOUND_KIND | 0x800, */
-  /* oddly structured base types */
+  /**< list_type? COMPOUND_KIND | 0x800, */
+  /**< oddly structured base types */
   relation_type =	EQN_KIND | 0x1000,
   logrel_type =         EQN_KIND | 0x2000,
   when_type =           EQN_KIND | 0x4000,
-  /* simply structured base types */
+  /**< simply structured base types */
   real_type =		ATOM_KIND | REAL_KIND,
   integer_type =	ATOM_KIND | INT_KIND,
   boolean_type =	ATOM_KIND | BOOL_KIND,
   symbol_type = 	ATOM_KIND | SYM_KIND,
   set_type = 		ATOM_KIND | SET_KIND,
-  /* list_type = ATOM_KIND | SET_KIND */
-  /* baa: eventually become a variable ordered set */
+  /**< list_type = ATOM_KIND | SET_KIND */
+  /**< baa: eventually become a variable ordered set */
 
-  /* very simply structured base types */
+  /**< very simply structured base types */
   real_constant_type =		CONSTANT_KIND | REAL_KIND,
   integer_constant_type =	CONSTANT_KIND | INT_KIND,
   boolean_constant_type =	CONSTANT_KIND | BOOL_KIND,
   symbol_constant_type =	CONSTANT_KIND | SYM_KIND,
-  /* set atoms should be down here */
+  /**< set atoms should be down here */
 
-  /* dummy type */
+  /**< dummy type */
   dummy_type =			DUMB_KIND
 };
 
 struct ConstantTypeDesc {
-  unsigned long byte_length;	/* byte length of an instance */
+  unsigned long byte_length;	/**< byte length of an instance */
   union {
-    double defreal;		/* default value for real instances */
-    long definteger;		/* default value for integer instances */
-    symchar *defsymbol;		/* default value for symbol instances */
-    unsigned defboolean;	/* default value for boolean instances */
+    double defreal;		/**< default value for real instances */
+    long definteger;		/**< default value for integer instances */
+    symchar *defsymbol;		/**< default value for symbol instances */
+    unsigned defboolean;	/**< default value for boolean instances */
   } u;
-  unsigned defaulted;		/* 0 -> ignore default value and units */
-    /* 1 -> don't ignore them */
-  CONST dim_type *dimp;		/* dimensions of instance */
-    /* no stinking child list */
+  unsigned defaulted;		/**< 0 -> ignore default value and units */
+    /**< 1 -> don't ignore them */
+  CONST dim_type *dimp;		/**< dimensions of instance */
+    /**< no stinking child list */
 };
 
 struct AtomTypeDesc {
-  unsigned long byte_length;	/* byte length of an instance */
-  struct ChildDesc *childinfo;	/* description of children */
-  unsigned defaulted;		/* 0 -> ignore default value and units */
-    /* 1 -> don't ignore them */
-  double defval;		/* default value for real instances */
+  unsigned long byte_length;	/**< byte length of an instance */
+  struct ChildDesc *childinfo;	/**< description of children */
+  unsigned defaulted;		/**< 0 -> ignore default value and units */
+    /**< 1 -> don't ignore them */
+  double defval;		/**< default value for real instances */
   union {
-    double defval;		/* default value for real instances */
-    long defint;		/* default value for integer instances */
-    symchar *defsym; 		/* default value for symbol instances */
-    unsigned defbool;		/* default value for boolean instances */
+    double defval;		/**< default value for real instances */
+    long defint;		/**< default value for integer instances */
+    symchar *defsym; 		/**< default value for symbol instances */
+    unsigned defbool;		/**< default value for boolean instances */
   } u;
-  CONST dim_type *dimp;		/* dimensions of instance */
+  CONST dim_type *dimp;		/**< dimensions of instance */
 };
 
-/*
+/**< 
  * IndexType has been modified to store a key, and a string
  * representation of the set of indices. As it stands the set
  * of indices is of very little utility. For example, if we had
@@ -151,76 +151,76 @@ struct AtomTypeDesc {
  */
 
 struct IndexType {
-  struct Set *set;		/* the original set */
-  symchar *sptr;		/* a string representation off the set */
-  unsigned int_index;		/* 0 this index is an enumerate one, 1 this */
-    /* index is an integer one */
+  struct Set *set;		/**< the original set */
+  symchar *sptr;		/**< a string representation off the set */
+  unsigned int_index;		/**< 0 this index is an enumerate one, 1 this */
+    /**< index is an integer one */
 };
 
 struct ArrayDesc {
-  struct gl_list_t *indices;	/* a list of IndexTypes */
-  struct TypeDescription *desc;	/* the type of the array/common superclass*/
-  /* the following 4 need to be made bit flags.
+  struct gl_list_t *indices;	/**< a list of IndexTypes */
+  struct TypeDescription *desc;	/**< the type of the array/common superclass*/
+  /**< the following 4 need to be made bit flags.
    * At present, this overuse of ints does not dominate the
    * union cost at the end of the typedescription struct, so
    * we have no incentive to do the fiddling with bits.
    */
-  int isintset;			/* in case the type of the array is a set */
-  int isrelation;		/* TRUE in case of an array of relations */
-  int islogrel;	 	/* TRUE in case of array of logical relation */
-  int iswhen;	 	        /* TRUE in case of array of WHEN */
+  int isintset;			/**< in case the type of the array is a set */
+  int isrelation;		/**< TRUE in case of an array of relations */
+  int islogrel;	 	/**< TRUE in case of array of logical relation */
+  int iswhen;	 	        /**< TRUE in case of array of WHEN */
 };
 
-/* ModelArgs is a structure in preparation for parameterized types */
+/**< ModelArgs is a structure in preparation for parameterized types */
 struct ModelArgs {
   struct StatementList *declarations;
-  /* list of the statements in the parameter list */
+  /**< list of the statements in the parameter list */
   struct StatementList *absorbed;
-  /* list of IS_A statements and their matching assignments
+  /**< list of IS_A statements and their matching assignments
    * removed in refinements.
    */
   struct StatementList *reductions;
-  /* list of assignments from the REFINES x(reductions)
+  /**< list of assignments from the REFINES x(reductions)
    * these statements are not directly used in instantiation.
    * duplicates (references) end up in the absorbed list.
    * this list is kept to enable printing types properly.
    */
   struct StatementList *wheres;
-  /* list of statements placing additional structural requirements
+  /**< list of statements placing additional structural requirements
    * on the arguments passed by reference. (WBTS's)
    * these statements used for configuration checking in instantiation.
    */
-  /* struct gl_list_t *argdata;
+  /**< struct gl_list_t *argdata;
    * list of final values, etc if needed. (not yet in use)
    */
   unsigned int argcnt;
-  /* number of args required in an IS_A of this type. */
+  /**< number of args required in an IS_A of this type. */
 };
 
 struct TypeDescription {
-  symchar *name;		/* type name */
-  enum type_kind t;		/* base type of the type */
-  short universal;		/* TRUE universal type, FALSE non-universal */
-  unsigned short flags;		/* various boolean flags */
-  struct TypeDescription *refines; /* the type it refines or NULL */
-  struct module_t *mod;		/* module where it is defined */
-  ChildListPtr children;	/* list of children. Never NULL for models */
-  struct gl_list_t *init;	/* initialization procedures */
-  struct StatementList *stats;  /* statements */
-  struct gl_list_t *refiners;   /* list of types that refine this. alpha */
-  unsigned long ref_count;      /* count includes instances, other types */
-  long int parseid; 	        /* n as in 'nth definition made' */
+  symchar *name;		/**< type name */
+  enum type_kind t;		/**< base type of the type */
+  short universal;		/**< TRUE universal type, FALSE non-universal */
+  unsigned short flags;		/**< various boolean flags */
+  struct TypeDescription *refines; /**< the type it refines or NULL */
+  struct module_t *mod;		/**< module where it is defined */
+  ChildListPtr children;	/**< list of children. Never NULL for models */
+  struct gl_list_t *init;	/**< initialization procedures */
+  struct StatementList *stats;  /**< statements */
+  struct gl_list_t *refiners;   /**< list of types that refine this. alpha */
+  unsigned long ref_count;      /**< count includes instances, other types */
+  long int parseid; 	        /**< n as in 'nth definition made' */
   union {
-    struct ArrayDesc array;		/* description of array things */
-    struct AtomTypeDesc atom;		/* atom description stuff */
-    struct ConstantTypeDesc constant;	/* constant description stuff */
-    struct ModelArgs modarg;            /* parameter list stuff */
+    struct ArrayDesc array;		/**< description of array things */
+    struct AtomTypeDesc atom;		/**< atom description stuff */
+    struct ConstantTypeDesc constant;	/**< constant description stuff */
+    struct ModelArgs modarg;            /**< parameter list stuff */
   } u;
 };
 
 
 #define MAKEARRAYNAMES 1
-/*
+/**< 
  *  If MAKEARRAYNAMES != 0 we will make up names for arrays
  *  so clients that want everything to have a name are happy.
  *  Note that virtually NOTHING works anymore if MAKEARRAYNAMES
@@ -233,7 +233,7 @@ struct TypeDescription {
 #define GetChildList(d) GetChildListF(d)
 #endif
 extern ChildListPtr GetChildListF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetChildList(d)
  *  const ChildListPtr GetChildListF(d)
  *  const struct TypeDescription *d;
@@ -246,7 +246,7 @@ extern ChildListPtr GetChildListF(CONST struct TypeDescription *);
 #define GetBaseType(d) GetBaseTypeF(d)
 #endif
 extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetBaseType(d)
  *  enum type_kind GetBaseTypeF(d)
  *  const struct TypeDescription *d;
@@ -264,7 +264,7 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *);
 #define BaseTypeIsCompound(d)	((d)->t & COMPOUND_KIND)
 #define BaseTypeIsEquation(d)	((d)->t & EQN_KIND)
 #define BaseTypeIsSimple(d)     ((d)->t & SIMPLE_KINDS)
-/*
+/**< 
  *  const struct TypeDescription *d;
  *  int truth;
  *
@@ -324,7 +324,7 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *);
 #endif
 extern CONST struct StatementList
   *GetStatementListF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetStatementList(d)
  *  const struct StatementList *GetStatementListF(d)
  *  const struct TypeDescription *d;
@@ -342,14 +342,14 @@ extern CONST struct StatementList
 #endif
 extern struct gl_list_t
   *GetInitializationListF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetInitializationList(d)
  *  struct gl_list_t *GetInitializationListF(d)
  *  const struct TypeDescription *d;
  *  Returns the list of initialization procedures.
  */
 
-/* the following two functions make it much easier to debug methods
+/**< the following two functions make it much easier to debug methods
  * interactively without reconstructing complex objects.
  * Since methods are fully interpretted at run time, this is not an
  * unreasonable thing to do.
@@ -358,7 +358,7 @@ extern struct gl_list_t
  */
 
 extern int AddMethods(struct TypeDescription *,struct gl_list_t *,int);
-/*
+/**< 
  *  struct gl_list_t *AddMethods(d,pl,err)
  *  const struct TypeDescription *d;
  *  struct gl_list_t *pl;
@@ -373,7 +373,7 @@ extern int AddMethods(struct TypeDescription *,struct gl_list_t *,int);
  */
 
 extern int ReplaceMethods(struct TypeDescription *,struct gl_list_t *,int);
-/*
+/**< 
  *  struct gl_list_t *ReplaceMethods(d,pl,err)
  *  const struct TypeDescription *d;
  *  struct gl_list_t *pl;
@@ -394,7 +394,7 @@ extern int ReplaceMethods(struct TypeDescription *,struct gl_list_t *,int);
 #define CopyTypeDesc(d) CopyTypeDescF(d)
 #endif
 extern void CopyTypeDescF(struct TypeDescription *);
-/*
+/**< 
  *  macro CopyTypeDesc(d)
  *  void CopyTypeDescF(d)
  *  struct TypeDescription *d;
@@ -402,7 +402,7 @@ extern void CopyTypeDescF(struct TypeDescription *);
  */
 
 extern void DeleteTypeDesc(struct TypeDescription *);
-/*
+/**< 
  *  void DeleteTypeDesc(d)
  *  struct TypeDescription *d;
  *  Decrement the reference count.  Eventually, this should delete it
@@ -411,7 +411,7 @@ extern void DeleteTypeDesc(struct TypeDescription *);
  */
 
 extern void DeleteNewTypeDesc(struct TypeDescription *);
-/*
+/**< 
  *  void DeleteNewTypeDesc(d)
  *  struct TypeDescription *d;
  *  Checks that the type has a refcount of 1 before passing it on to
@@ -426,7 +426,7 @@ extern void DeleteNewTypeDesc(struct TypeDescription *);
 #define GetByteSize(d) GetByteSizeF(d)
 #endif
 extern unsigned GetByteSizeF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetByteSize(d)
  *  unsigned long GetByteSizeF(d)
  *  const struct TypeDescription *d;
@@ -439,7 +439,7 @@ extern unsigned GetByteSizeF(CONST struct TypeDescription *);
 #define GetChildDesc(d) GetChildDescF(d)
 #endif
 extern CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetChildDesc(d)
  *  const struct ChildDesc *GetChildDescF(d)
  *  const struct TypeDescription *d;
@@ -452,7 +452,7 @@ extern CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *);
 #define GetUniversalFlag(d) GetUniversalFlagF(d)
 #endif
 extern int GetUniversalFlagF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetUniversalFlag(d)
  *  short GetUniversalFlagF(d)
  *  const struct TypeDescription *d;
@@ -466,7 +466,7 @@ extern int GetUniversalFlagF(CONST struct TypeDescription *);
 #define GetTypeFlags(d) GetTypeFlagsF(d)
 #endif
 extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetTypeFlags(d)
  *  unsigned short GetTypeFlagsF(d)
  *  const struct TypeDescription *d;
@@ -476,12 +476,12 @@ extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *);
 
 #define TYPECONTAINSDEFAULTS 0x1
 #define TYPECONTAINSPARINSTS 0x2
-/*
+/**< 
  *  We can add more, up to the minimum number of bits we expect a short
  *  to have under any C compiler.
  *  Universal really should be under this protocol.
  */
-#define TYPESHOW 0x100              /* For browsing purposes */
+#define TYPESHOW 0x100              /**< For browsing purposes */
 
 #ifdef NDEBUG
 #define TypeHasDefaultStatements(d) (GetTypeFlags(d)&TYPECONTAINSDEFAULTS)
@@ -489,7 +489,7 @@ extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *);
 #define TypeHasDefaultStatements(d) TypeHasDefaultStatementsF(d)
 #endif
 extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro TypeHasDefaultStatements(d)
  *  unsigned TypeHasDefaultStatementsF(d)
  *  const struct TypeDescription *d;
@@ -504,7 +504,7 @@ extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *);
 #define TypeHasParameterizedInsts(d) TypeHasParameterizedInstsF(d)
 #endif
 extern unsigned TypeHasParameterizedInstsF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro TypeHasParameterizedInsts(d)
  *  unsigned TypeHasParameterizedInstsF(d)
  *  const struct TypeDescription *d;
@@ -516,14 +516,14 @@ extern unsigned TypeHasParameterizedInstsF(CONST struct TypeDescription *);
  */
 
 #define AtomDefaulted(d) ((d)->u.atom.defaulted)
-/*
+/**< 
  *  macro AtomDefaulted(d)
  *  struct TypeDescription *d;
  *  Return TRUE if the atom has a default value; otherwise return FALSE.
  */
 
 #define ConstantDefaulted(d) ((d)->u.constant.defaulted)
-/*
+/**< 
  *  macro ConstantDefaulted(d)
  *  struct TypeDescription *d;
  *  Return TRUE if the Constant has a default value; otherwise return FALSE.
@@ -543,7 +543,7 @@ extern unsigned TypeHasParameterizedInstsF(CONST struct TypeDescription *);
 #endif
 extern double GetRealDefaultF(CONST struct TypeDescription *,
                               CONST char *, CONST int);
-/*
+/**< 
  *  macro GetIntDefault(d)		returns long
  *  macro GetSymDefault(d)		returns symchar *
  *  macro GetBoolDefault(d)		returns unsigned
@@ -559,7 +559,7 @@ extern double GetRealDefaultF(CONST struct TypeDescription *,
 
 extern unsigned GetBoolDefaultF(CONST struct TypeDescription *,
                                 CONST char *, CONST int);
-/*
+/**< 
  *  unsigned GetBoolDefaultF(d,f,l)
  *  struct TypeDescription *d;
  *  FILE *f;
@@ -573,7 +573,7 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *,
 #define GetConstantDefInteger(d) ((d)->u.constant.u.definteger)
 #define GetConstantDefBoolean(d) ((d)->u.constant.u.defboolean)
 #define GetConstantDefSymbol(d) ((d)->u.constant.u.defsymbol)
-/*
+/**< 
  *  macro GetConstantDefReal(d)
  *  macro GetConstantDefInteger(d)
  *  macro GetConstantDefBoolean(d)
@@ -589,7 +589,7 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *,
 #endif
 extern CONST dim_type *GetRealDimensF(CONST struct TypeDescription *,
                                       CONST char *, CONST int);
-/*
+/**< 
  *  macro GetRealDimens(d)
  *  CONST dim_type *GetRealDimensF(d,f,l);
  *  struct TypeDescription *d;
@@ -607,7 +607,7 @@ extern CONST dim_type *GetRealDimensF(CONST struct TypeDescription *,
 #endif
 extern CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *,
      CONST char *, CONST int);
-/*
+/**< 
  *  macro GetConstantDimens(d)
  *  CONST dim_type *GetConstantDimensF(d,f,l);
  *  struct TypeDescription *d;
@@ -625,7 +625,7 @@ extern CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *,
 #define GetName(d) GetNameF(d)
 #endif
 extern symchar *GetNameF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro GetName(d)
  *  const char *GetNameF(d)
  *  const struct TypeDescription *d;
@@ -633,28 +633,28 @@ extern symchar *GetNameF(CONST struct TypeDescription *);
  */
 
 #define GetParseId(d) ((d)->parseid)
-/*
+/**< 
  *  macro GetParseId(d)
  *  struct TypeDescription *d;
  *  Return the parseid of d.
  */
 
 #define GetRefinement(d) ((d)->refines)
-/*
+/**< 
  *  macro GetRefinement(d)
  *  struct TypeDescription *d;
  *  Return the refinement TypeDescription or NULL.
  */
 
 #define GetRefiners(d) ((d)->refiners)
-/*
+/**< 
  *  macro GetRefiners(d)
  *  struct TypeDescription *d;
  *  Return the refiners gl_list of struct TypeDescription * or NULL.
  */
 
 extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
-/*
+/**< 
  *  names = GetAncestorsNames(d);
  *  struct gl_list_t *names;
  *  Return the names of ancestors of type d given.
@@ -664,7 +664,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetModelParameterList(d) ((d)->u.modarg.declarations)
-/*
+/**< 
  *  macro GetModelParameterList(d)
  *  struct TypeDescription *d;
  *  Return the statements (forward declarations that constitute the
@@ -675,7 +675,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetModelParameterCount(d) ((d)->u.modarg.argcnt)
-/*
+/**< 
  *  macro GetModelParameterCount(d)
  *  n =  GetModelParameterCount(d);
  *  struct TypeDescription *d;
@@ -685,7 +685,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetModelAbsorbedParameters(d) ((d)->u.modarg.absorbed)
-/*
+/**< 
  *  macro GetModelAbsorbedParameters(d)
  *  struct TypeDescription *d;
  *  Return the list of ISAs and CASGNs that absorbed them.
@@ -693,7 +693,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetModelParameterReductions(d) ((d)->u.modarg.reductions)
-/*
+/**< 
  *  macro GetModelParameterReductions(d)
  *  struct TypeDescription *d;
  *  Return the list of statements that absorb parameter isas in the
@@ -701,7 +701,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetModelParameterWheres(d) ((d)->u.modarg.wheres)
-/*
+/**< 
  *  macro GetModelParameterWheres(d)
  *  struct TypeDescription *d;
  *  Return the list of statements that restrict the structure of
@@ -710,7 +710,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetModelParameterValues(d) ((d)->u.modarg.argdata)
-/*
+/**< 
  *  macro GetModelParameterValues(d)
  *  struct gl_list_t *ad;
  *  Return the list of values that match the ParameterLists.
@@ -719,35 +719,35 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 #define GetArrayBaseType(d) ((d)->u.array.desc)
-/*
+/**< 
  *  macro GetArrayBaseType(d)
  *  struct TypeDescription *d;
  *  Return the base type of the array type description.
  */
 
 #define GetArrayBaseIsRelation(d) ((d)->u.array.isrelation)
-/*
+/**< 
  *  macro GetArrayBaseIsRelation(d)
  *  struct TypeDescription *d;
  *  Return TRUE if the array is an array of relations.
  */
 
 #define GetArrayBaseIsLogRel(d) ((d)->u.array.islogrel)
-/*
+/**< 
  *  macro GetArrayBaseIsLogRel(d)
  *  struct TypeDescription *d;
  *  Return TRUE if the array is an array of logical relations.
  */
 
 #define GetArrayBaseIsWhen(d) ((d)->u.array.iswhen)
-/*
+/**< 
  *  macro GetArrayBaseIsWhen(d)
  *  struct TypeDescription *d;
  *  Return TRUE if the array is an array of WHEN's.
  */
 
 #define GetArrayBaseIsInt(d) ((d)->u.array.isintset)
-/*
+/**< 
  *  macro GetArrayBaseIsInt(d)
  *  struct TypeDescription *d;
  *  This is only meaningful when the base type is a refinement of set,
@@ -760,7 +760,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
 #define GetModule(d) ((d)->mod)
 
 #define GetPatchOriginal(d)  ((d)->refines)
-/*
+/**< 
  *  macro GetPatchOriginal(d)
  *  struct TypeDescription *d;
  *  Return the original type of the TypeDescription being patched. NULL
@@ -769,7 +769,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *);
  */
 
 extern struct IndexType *CreateIndexType(struct Set *,int);
-/*
+/**< 
  *  struct IndexType *CreateIndexType(set,int_index)
  *  struct Set *set;
  *  int int_index;
@@ -777,7 +777,7 @@ extern struct IndexType *CreateIndexType(struct Set *,int);
  */
 
 extern struct IndexType *CreateDummyIndexType(int);
-/*
+/**< 
  *  struct IndexType *CreateDummyIndexType(intindex)
  *  Returns the dummy IndexType for int if intindex!=0
  *  or for enum if intindex==0.
@@ -786,7 +786,7 @@ extern struct IndexType *CreateDummyIndexType(int);
  */
 
 extern struct IndexType *CreateIndexTypeFromStr(char *,int);
-/*
+/**< 
  *  struct IndexType *CreateIndexType(str,int_index)
  *  symchar *str;
  *  int int_index;
@@ -796,7 +796,7 @@ extern struct IndexType *CreateIndexTypeFromStr(char *,int);
  */
 
 extern void DestroyIndexType(struct IndexType *);
-/*
+/**< 
  *  void DestroyIndexType(ind)
  *  struct IndexType *ind;
  *  Deallocate this structure and its internals. The string is assumed
@@ -806,10 +806,10 @@ extern void DestroyIndexType(struct IndexType *);
 #define GetIndexType(p) ((p)->int_index)
 
 #define GetIndexSet(p) ((p)->set)
-/* note this may return NULL in odd circumstances */
+/**< note this may return NULL in odd circumstances */
 
 #define GetIndexSetStr(p) ((p)->sptr)
-/* note this may return NULL in odd circumstances */
+/**< note this may return NULL in odd circumstances */
 
 extern
 struct TypeDescription *CreateModelTypeDesc(symchar *,
@@ -824,7 +824,7 @@ struct TypeDescription *CreateModelTypeDesc(symchar *,
          struct StatementList *,
          struct StatementList *
                                             );
-/*
+/**< 
  *  struct TypeDescription *CreateModelTypeDesc(name,rdesc,mod,cl,pl,sl,univ,
  *                                             psl,rsl,tsl,wsl)
  *
@@ -846,7 +846,7 @@ struct TypeDescription *CreateModelTypeDesc(symchar *,
 
 extern
 struct TypeDescription *CreateDummyTypeDesc(symchar *);
-/*
+/**< 
  *  struct TypeDescription *CreateDummyTypeDesc(name)
  *  symchar *name;			name of the type
  *  Create the universal dummy type for unselected instances.
@@ -864,7 +864,7 @@ struct TypeDescription *CreateConstantTypeDesc(symchar *,
         long,
         symchar *,
         int);
-/*
+/**< 
  *  struct TypeDescription *CreateConstantTypeDesc(
  *           name,t,rdesc,mod,bytesize,defaulted,rval,dim,ival,sval,univ)
  *  symchar *name;			name of type
@@ -896,7 +896,7 @@ struct TypeDescription *CreateAtomTypeDesc(symchar *,
                                            int,
                                            long,
                                            symchar *);
-/*
+/**< 
  *  struct TypeDescription *
  *  CreateAtomTypeDesc(name,t,rdesc,mod,childl,procl,statl,
  *                     bytesize,childd,defaulted,
@@ -927,7 +927,7 @@ struct TypeDescription *CreateRelationTypeDesc(struct module_t *,
                                                struct StatementList *,
                                                unsigned long,
                                                struct ChildDesc *);
-/*
+/**< 
  *  struct TypeDescription *
  *  CreateRelationTypeDesc(mod,clist,plist,statl,bytesize,childd)
  *  struct module_t *mod;		the module where it is define
@@ -945,7 +945,7 @@ struct TypeDescription *CreateLogRelTypeDesc(struct module_t *,
                                              struct StatementList *,
                                              unsigned long,
                                              struct ChildDesc *);
-/*
+/**< 
  *  struct TypeDescription *
  *  CreateLogRelTypeDesc(mod,clist,plist,statl,bytesize,childd)
  *  struct module_t *mod;		the module where it is defined
@@ -961,7 +961,7 @@ extern
 struct TypeDescription *CreateWhenTypeDesc(struct module_t *,
                                            struct gl_list_t *,
                                            struct StatementList *);
-/*
+/**< 
  *  struct TypeDescription *CreateWhenTypeDesc(mod,pl,sl)
  *
  *  struct module_t *mod;		the module where it is defined
@@ -978,7 +978,7 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *,
                                             int,
                                             int,
                                             struct gl_list_t *);
-/*
+/**< 
  *  struct TypeDescription *CreateArrayTypeDesc(mod,desc,isintset,isrel,
  *                                             islogrel,iswhen,indices)
  *  struct module_t *mod;
@@ -999,7 +999,7 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *,
  */
 
 
-/*
+/**< 
  *  Patches.
  *
  *  Patches are construct which are not strictly part of the main
@@ -1022,7 +1022,7 @@ struct TypeDescription *CreatePatchTypeDesc(symchar *,
                                             struct module_t *,
                                             struct gl_list_t *,
                                             struct StatementList *);
-/*
+/**< 
  *  struct TypeDescripion *CreatePatchTypeDesc(name,rdesc,mod,sl);
  *  symchar *name;
  *  struct TypeDescription *rdesc;
@@ -1039,7 +1039,7 @@ struct TypeDescription *CreatePatchTypeDesc(symchar *,
 
 extern struct TypeDescription *MoreRefined(CONST struct TypeDescription *,
                                            CONST struct TypeDescription *);
-/*
+/**< 
  *  struct TypeDescription *MoreRefined(desc1,desc2)
  *  CONST struct TypeDescription *desc1,*desc2;
  *  Return the more refined of desc1 or desc2.  Return NULL if they are
@@ -1049,7 +1049,7 @@ extern struct TypeDescription *MoreRefined(CONST struct TypeDescription *,
 extern CONST struct TypeDescription *
 GreatestCommonAncestor(CONST struct TypeDescription *,
                        CONST struct TypeDescription *);
-/*
+/**< 
  *  struct TypeDescription *GreatestCommonAncestor(desc1,desc2)
  *  CONST struct TypeDescription *desc1,*desc2;
  *  Return the most refined common ancestor type of desc1,desc2.
@@ -1065,7 +1065,7 @@ GreatestCommonAncestor(CONST struct TypeDescription *,
 
 extern int TypesAreEquivalent(CONST struct TypeDescription *,
                               CONST struct TypeDescription *);
-/*
+/**< 
  * returns 1 if types appear to be equivalent semantically.
  * This means comparing statment lists, methods, and so forth.
  * Uses, among others, CompareStatementLists CompareStatement,
@@ -1075,7 +1075,7 @@ extern int TypesAreEquivalent(CONST struct TypeDescription *,
 
 extern void DifferentVersionCheck(CONST struct TypeDescription *,
                                   CONST struct TypeDescription *);
-/*
+/**< 
  *  void DifferentVersionCheck(desc1,desc2)
  *  const struct TypeDescription *desc1, *desc2;
  *  It is assumed that desc1 and desc2 are unconformable.  This routine
@@ -1087,7 +1087,7 @@ extern void DifferentVersionCheck(CONST struct TypeDescription *,
  */
 
 extern struct TypeDescription *GetStatTypeDesc(CONST struct Statement *);
-/*
+/**< 
  *  struct TypeDescription *GetStatTypeDesc(s)
  *  const struct Statement *s;
  *  Return the type field of an IS_A, WILL_BE, or IS_REFINED_TO statement
@@ -1103,7 +1103,7 @@ extern struct TypeDescription *GetStatTypeDesc(CONST struct Statement *);
  */
 
 extern void WriteArrayTypeList(FILE *);
-/*
+/**< 
  *  void WriteArrayTypeList(fp)
  *  Writes the internal (implicit) array types to file f.
  *  This is a debugging function. The information written isn't very
@@ -1117,7 +1117,7 @@ extern void WriteArrayTypeList(FILE *);
 #define TypeShow(d) TypeShowF(d)
 #endif
 extern unsigned TypeShowF(CONST struct TypeDescription *);
-/*
+/**< 
  *  macro TypeShow(d)
  *  unsigned TypeShow(d)
  *  const struct TypeDescription *d;
@@ -1126,7 +1126,7 @@ extern unsigned TypeShowF(CONST struct TypeDescription *);
  */
 
 extern void SetTypeShowBit(struct TypeDescription *, int);
-/*
+/**< 
  *  struct TypeDescription *d;
  *  int value;
  *  Set the bit TYPESHOW. This bit is for browsing purposes.
@@ -1136,4 +1136,4 @@ extern void SetTypeShowBit(struct TypeDescription *, int);
 
 
 #endif
-/* __TYPE_DESC_H_SEEN__ */
+/**< __TYPE_DESC_H_SEEN__ */

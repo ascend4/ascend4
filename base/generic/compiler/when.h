@@ -1,4 +1,4 @@
-/*
+/**< 
  *  WHEN List Routines
  *  by Vicente Rico-Ramirez
  *  7/96
@@ -27,7 +27,7 @@
  */
 #ifndef __WHEN_H_SEEN__
 #define __WHEN_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"sets.h"
 # #include"exprs.h"
@@ -36,7 +36,7 @@
 */
 
 extern struct WhenList *CreateWhen(struct Set *,struct StatementList *);
-/*
+/**< 
  *  struct WhenList *CreateWhen(set,sl)
  *  struct Set *set;
  *  struct StatementList *sl;
@@ -45,14 +45,14 @@ extern struct WhenList *CreateWhen(struct Set *,struct StatementList *);
  */
 
 extern struct WhenList *ReverseWhenCases(struct WhenList *);
-/*
+/**< 
  *  struct WhenList *ReverseWhenCases(w)
  *  struct WhenList *w;
  *  Reverse this list.
  */
 
 extern struct WhenList *LinkWhenCases(struct WhenList *,struct WhenList *);
-/*
+/**< 
  *  struct WhenList *LinkWhenCases(w1,w2)
  *  struct WhenList *w1,*w2;
  *  Link two case lists and return the joined list.  This works best when
@@ -66,7 +66,7 @@ extern struct WhenList *LinkWhenCases(struct WhenList *,struct WhenList *);
 #define NextWhenCase(w) NextWhenCaseF(w)
 #endif
 extern struct WhenList *NextWhenCaseF(struct WhenList *);
-/*
+/**< 
  *  macro NextWhenCase(case)
  *  struct WhenList *NextWhenCaseF(case)
  *  struct WhenList *case;
@@ -79,7 +79,7 @@ extern struct WhenList *NextWhenCaseF(struct WhenList *);
 #define WhenSetList(w) WhenSetListF(w)
 #endif
 extern struct Set *WhenSetListF(struct WhenList *);
-/*
+/**< 
  *  macro WhenSetList(w)
  *  struct Set *WhenSetListF(w)
  *  const struct WhenList *w;
@@ -93,7 +93,7 @@ extern struct Set *WhenSetListF(struct WhenList *);
 #define WhenStatementList(w) WhenStatementListF(w)
 #endif
 extern struct StatementList *WhenStatementListF(struct WhenList *);
-/*
+/**< 
  *  macro WhenStatementList(w)
  *  const struct StatementList *WhenStatementListF(w)
  *  const struct WhenList *w;
@@ -101,33 +101,33 @@ extern struct StatementList *WhenStatementListF(struct WhenList *);
  */
 
 extern void DestroyWhenList(struct WhenList *);
-/*
+/**< 
  *  void DestroyWhenList(w)
  *  struct WhenList *w;
  *  Destroy a whole list.
  */
 
 extern void DestroyWhenNode(struct WhenList *);
-/*
+/**< 
  *  void DestroyWhenNode(w)
  *  struct WhenList *w;
  *  Destroy just this node.
  */
 
 extern struct WhenList *CopyWhenNode(struct WhenList *);
-/*
+/**< 
  *  struct WhenList *CopyWhenNode(w)
  *  struct WhenList *w;
  *  Copy a case.  The next attribute is initialized to NULL.
  */
 
 extern struct WhenList *CopyWhenList(struct WhenList *);
-/*
+/**< 
  *  struct WhenList *CopyWhenList(w)
  *  struct WhenList *w;
  *  Copy the whole list contents. not a reference count change.
  */
-#endif /* __WHEN_H_SEEN__ */
+#endif /**< __WHEN_H_SEEN__ */
 
 
 

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Allocation Functions
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -32,14 +32,14 @@
 #define __CREATEINST_H_SEEN__
 
 extern void ZeroNewChildrenEntries(struct Instance **, unsigned long int num);
-/*
+/**< 
  *  ZeroNewChildrenEntries(ary,num)
  *  Sets num entries of ary to NULL.
  */
 
 extern struct Instance *CreateSimulationInstance(struct TypeDescription *,
        symchar *);
-/*
+/**< 
  *  struct Instance *CreateSimulationInstance(type,name)
  *  struct TypeDescription *type;
  *  symchar *name;
@@ -56,7 +56,7 @@ extern struct Instance *CreateSimulationInstance(struct TypeDescription *,
  */
 
 extern struct Instance *CreateModelInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateModelInstance(type)
  *  struct TypeDescription *type;
  *
@@ -69,7 +69,7 @@ extern struct Instance *CreateModelInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CreateDummyInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateDummyInstance(type)
  *  struct TypeDescription *type;
  *
@@ -81,7 +81,7 @@ extern struct Instance *CreateDummyInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CreateRealInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateRealInstance(type)
  *  struct TypeDescription *type;
  *
@@ -97,7 +97,7 @@ extern struct Instance *CreateRealInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CreateIntegerInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateIntegerInstance(type)
  *  struct TypeDescription *type;
  *
@@ -113,7 +113,7 @@ extern struct Instance *CreateIntegerInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CreateBooleanInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateBooleanInstance(type)
  *  struct TypeDescription *type;
  *
@@ -127,7 +127,7 @@ extern struct Instance *CreateBooleanInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CreateSetInstance(struct TypeDescription *,int);
-/*
+/**< 
  *  struct Instance *CreateSetInstance(type,intset)
  *  struct TypeDescription *type;
  *  int intset;
@@ -141,7 +141,7 @@ extern struct Instance *CreateSetInstance(struct TypeDescription *,int);
  */
 
 extern struct Instance *CreateSymbolInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateSymbolInstance(type)
  *  struct TypeDescription *type;
  *
@@ -155,7 +155,7 @@ extern struct Instance *CreateSymbolInstance(struct TypeDescription *);
 
 extern struct Instance *CreateArrayInstance(struct TypeDescription *,
          unsigned long);
-/*
+/**< 
  *  struct Instance *CreateArrayInstance(type,index)
  *  struct TypeDescription *type;
  *  unsigned long index;
@@ -169,7 +169,7 @@ extern struct Instance *CreateArrayInstance(struct TypeDescription *,
 
 extern struct Instance *CreateRelationInstance(struct TypeDescription *,
             enum Expr_enum);
-/*
+/**< 
  *  struct Instance *CreateRelationInstance(type,reltype)
  *  struct TypeDescription *type;
  *  enum Expr_enum reltype;
@@ -181,7 +181,7 @@ extern struct Instance *CreateRelationInstance(struct TypeDescription *,
  */
 
 extern struct Instance *CreateLogRelInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateLogRelInstance(type)
  *  struct TypeDescription *type;
  *
@@ -191,7 +191,7 @@ extern struct Instance *CreateLogRelInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CreateWhenInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *CreateWhenInstance(type)
  *  struct TypeDescription *type;
  *
@@ -200,4 +200,4 @@ extern struct Instance *CreateWhenInstance(struct TypeDescription *);
  */
 
 #endif
-/* __CREATEINST_H_SEEN__ */
+/**< __CREATEINST_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Kirk Andre' Abbott
  *  Created: 10/06/95
@@ -32,27 +32,27 @@
 #define rootfind_already_included
 
 #ifndef STAND_ALONE
-/* requires #include "extfunc.h"
+/**< requires #include "extfunc.h"
                          * needed only for the definition of
 			 * ExtEvalFunc. This definition should probably
 			 * be moved to types.h. or compiler.h */
 #else
-/* requires #include "codegen_support.h" */
-#endif /* STAND_ALONE */
+/**< requires #include "codegen_support.h" */
+#endif /**< STAND_ALONE */
 
 
-extern double zbrent(ExtEvalFunc *func,	/* the evaluation function */
-	      double *lowbound,		/* low bound */
-	      double *upbound,		/* up bound */
-	      int *mode,		/* to pass to the eval func */
-	      int *m,			/* the relation index */
-	      int *n,			/* the variable index */
-	      double *x,	/* the x vector -- needed by eval func */
-	      double *u,	/* the u vector -- needed by eval func */
-	      double *f,		/* vector of residuals */
-	      double *g,		/* vector of gradients */
-	      double *tolerance,	/* accuracy of solution */
-	      int *status);		/* success or failure */
+extern double zbrent(ExtEvalFunc *func,	/**< the evaluation function */
+	      double *lowbound,		/**< low bound */
+	      double *upbound,		/**< up bound */
+	      int *mode,		/**< to pass to the eval func */
+	      int *m,			/**< the relation index */
+	      int *n,			/**< the variable index */
+	      double *x,	/**< the x vector -- needed by eval func */
+	      double *u,	/**< the u vector -- needed by eval func */
+	      double *f,		/**< vector of residuals */
+	      double *g,		/**< vector of gradients */
+	      double *tolerance,	/**< accuracy of solution */
+	      int *status);		/**< success or failure */
 /*********************************************************************\
   Using Brents method, find the root of a function known to lie
   between x1 and x2. The root, returned as zbrent, will be refined
@@ -62,7 +62,7 @@ extern double zbrent(ExtEvalFunc *func,	/* the evaluation function */
   that is to be solved for.
 \*********************************************************************/
 
-#endif /* rootfind_already_included */
+#endif /**< rootfind_already_included */
 
 
 

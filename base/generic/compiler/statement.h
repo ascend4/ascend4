@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Statement list module
  *  by Tom Epperly
  *  August 8, 1989
@@ -31,7 +31,7 @@
 #define __STATEMENT_H_SEEN__
 
 
-/*
+/**< 
  *  When #including statement.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -42,7 +42,7 @@
 
 
 extern void AddContext(struct StatementList *,unsigned int);
-/*
+/**< 
  *  AddContext(slist,c)
  *
  *  Adds the given context flags, c, to the statements in the list
@@ -65,7 +65,7 @@ extern void AddContext(struct StatementList *,unsigned int);
 
 
 extern unsigned int SlistHasWhat(struct StatementList *);
-/*
+/**< 
  *  unsigned int SlistHasWhat(slist);
  *  Returns an unsigned with the low bits set according to whether or
  *  not there is a statement of the indicated class in the slist given.
@@ -76,7 +76,7 @@ extern unsigned int SlistHasWhat(struct StatementList *);
 
 extern struct Statement *CreateALIASES(struct VariableList *,
                                        struct Name *);
-/*
+/**< 
  *  struct Statement *CreateALIASES(vl,n,nsize)
  *  struct VariableList *vl;
  *  struct Name *n;
@@ -94,7 +94,7 @@ extern struct Statement *CreateARR(struct VariableList *,
                                    struct VariableList *,
                                    int,
                                    struct Set *);
-/*
+/**< 
  *  struct Statement *CreateARR(aname,il,setname,intset,setvals)
  *  struct VariableList *avlname;
  *  struct VariableList *il;
@@ -120,7 +120,7 @@ extern struct Statement *CreateARR(struct VariableList *,
 
 extern struct Statement *CreateISA(struct VariableList *,symchar *,
        struct Set *,symchar *);
-/*
+/**< 
  *  struct Statement *CreateISA(vl,t,ta,st)
  *  struct VariableList *vl;
  *  struct Set *ta;
@@ -138,7 +138,7 @@ extern struct Statement *CreateISA(struct VariableList *,symchar *,
 extern struct Statement *CreateWILLBE(struct VariableList *, symchar *,
                                       struct Set *, symchar *,
                                       struct Expr *);
-/*
+/**< 
  *  struct Statement *CreateWILLBE(vl,t,ta,st,cv)
  *  struct VariableList *vl;
  *  struct Set *ta;
@@ -157,7 +157,7 @@ extern struct Statement *CreateWILLBE(struct VariableList *, symchar *,
 
 extern struct Statement *CreateIRT(struct VariableList *,symchar *,
                                    struct Set *);
-/*
+/**< 
  *  struct Statement *CreateIRT(vl,t)
  *  struct VariableList *vl;
  *  const char *t;
@@ -173,7 +173,7 @@ extern struct Statement *CreateIRT(struct VariableList *,symchar *,
  */
 
 extern struct Statement *CreateAA(struct VariableList *);
-/*
+/**< 
  *  struct Statement *CreateAA(vl)
  *  struct VariableList *vl;
  *  Parameters
@@ -185,7 +185,7 @@ extern struct Statement *CreateAA(struct VariableList *);
  */
 
 extern struct Statement *CreateATS(struct VariableList *);
-/*
+/**< 
  *  struct Statement *CreateATS(vl)
  *  struct VariableList *vl;
  *  Parameters
@@ -197,7 +197,7 @@ extern struct Statement *CreateATS(struct VariableList *);
  */
 
 extern struct Statement *CreateWBTS(struct VariableList *);
-/*
+/**< 
  *  struct Statement *CreateWBTS(vl)
  *  struct VariableList *vl;
  *  Parameters
@@ -209,7 +209,7 @@ extern struct Statement *CreateWBTS(struct VariableList *);
  */
 
 extern struct Statement *CreateWNBTS(struct VariableList *);
-/*
+/**< 
  *  struct Statement *CreateWNBTS(vl)
  *  struct VariableList *vl;
  *  Parameters
@@ -223,7 +223,7 @@ extern struct Statement *CreateWNBTS(struct VariableList *);
 extern struct Statement *CreateFOR(symchar *,struct Expr *,
        struct StatementList *,
        enum ForOrder,enum ForKind);
-/*
+/**< 
  *  struct Statement *CreateFOR(index,expr,stmts,order,kind)
  *  struct Expr *expr;
  *  const char *index;
@@ -243,7 +243,7 @@ extern struct Statement *CreateFOR(symchar *,struct Expr *,
  */
 
 extern struct Statement *CreateREL(struct Name *,struct Expr *);
-/*
+/**< 
  *  struct Statement *CreateREL(n,relation);
  *  struct Name *n;
  *  struct Expr *relation;
@@ -253,7 +253,7 @@ extern struct Statement *CreateREL(struct Name *,struct Expr *);
 
 
 extern struct Statement *CreateLOGREL(struct Name *,struct Expr *);
-/*
+/**< 
  *  struct Statement *CreateLOGREL(n,logrel);
  *  struct Name *n;
  *  struct Expr *logrel;
@@ -265,7 +265,7 @@ extern struct Statement *CreateLOGREL(struct Name *,struct Expr *);
 extern struct Statement *CreateEXTERN(int mode, struct Name *, CONST char *,
           struct VariableList *,struct Name *,
           struct Name *);
-/*
+/**< 
  *  struct Statement *CreateEXTERN(mode,n,funcname,vl);
  *  int mode; -- 0 = procedural;
  *           -- 1 = glassbox declarative;
@@ -281,7 +281,7 @@ extern struct Statement *CreateEXTERN(int mode, struct Name *, CONST char *,
  */
 
 extern struct Statement *CreateFlow(enum FlowControl, CONST char *);
-/*
+/**< 
  *  struct Statement *CreateFlow(fc,msgtext);
  *  Create a BREAK, CONTINUE, FALL_THROUGH, RETURN, STOP as
  *  indicated by fc. If msgtext is not NULL, it is
@@ -291,7 +291,7 @@ extern struct Statement *CreateFlow(enum FlowControl, CONST char *);
 extern
 struct Statement *CreateREF(struct VariableList *,symchar *,
                             symchar *, int);
-/*
+/**< 
  *  struct Statement *CreateREF(vl,ref_name,st,mode)
  *  struct VariableList *vl;
  *  const char *ref_name;
@@ -307,7 +307,7 @@ struct Statement *CreateREF(struct VariableList *,symchar *,
  */
 
 extern void SetRelationName(struct Statement *, struct Name *);
-/*
+/**< 
  *  void SetRelationName(stat,n)
  *  struct Statement *stat;
  *  struct Name *n;
@@ -318,7 +318,7 @@ extern void SetRelationName(struct Statement *, struct Name *);
 
 
 extern void SetLogicalRelName(struct Statement *, struct Name *);
-/*
+/**< 
  *  void SetLogicalRelName(stat,n)
  *  struct Statement *stat;
  *  struct Name *n;
@@ -329,7 +329,7 @@ extern void SetLogicalRelName(struct Statement *, struct Name *);
 
 
 extern struct Statement *CreateRUN(struct Name *,struct Name *);
-/*
+/**< 
  *  struct Statement *CreateRUN(n,type)
  *  struct Name *n;
  *  struct Name *type;
@@ -342,7 +342,7 @@ extern struct Statement *CreateRUN(struct Name *,struct Name *);
  */
 
 extern struct Statement *CreateCALL(symchar *,struct Set *);
-/*
+/**< 
  *  struct Statement *CreateCALL(n,argList)
  *  symchar *n;
  *  struct Set * argList;
@@ -354,7 +354,7 @@ extern struct Statement *CreateCALL(symchar *,struct Set *);
 
 extern struct Statement *CreateIF(struct Expr *,struct StatementList *,
       struct StatementList *);
-/*
+/**< 
  *  struct Statement *CreateIF(ex,ifblock,elseblock)
  *  struct Expr *ex;
  *  struct StatementList *ifblock,*elseblock;
@@ -365,7 +365,7 @@ extern struct Statement *CreateIF(struct Expr *,struct StatementList *,
  */
 
 extern struct Statement *CreateWhile(struct Expr *, struct StatementList *);
-/*
+/**< 
  *  struct Statement *CreateWhile(test,body)
  *  struct Expr *test;
  *  struct StatementList *body;
@@ -376,7 +376,7 @@ extern struct Statement *CreateWhile(struct Expr *, struct StatementList *);
 
 extern struct Statement *CreateWHEN(struct Name *, struct VariableList *,
                                     struct WhenList *);
-/*
+/**< 
  *  struct Statement *CreateWHEN(wname,vlist,wl)
  *  struct Name *wname;
  *  struct VariableList *vlist;
@@ -387,7 +387,7 @@ extern struct Statement *CreateWHEN(struct Name *, struct VariableList *,
  */
 
 extern struct Statement *CreateFNAME(struct Name *);
-/*
+/**< 
  *  struct Statement *CreateFNAME(name)
  *  Crease a FNAME statement structure.
  *  The statement's module is set to the current open module.
@@ -397,7 +397,7 @@ extern struct Statement *CreateFNAME(struct Name *);
 
 extern struct Statement *CreateSWITCH(struct VariableList *,
                                       struct SwitchList *);
-/*
+/**< 
  *  struct Statement *CreateSWITCH(v,sw)
  *  struct VariableList *v;
  *  struct SelectList *sw;
@@ -408,7 +408,7 @@ extern struct Statement *CreateSWITCH(struct VariableList *,
 
 
 extern struct Statement *CreateCOND(struct StatementList *);
-/*
+/**< 
  *  struct Statement *CreateCOND(stat)
  *  struct StatementList *stmts;
  *  Create a CONDITIONAL statement structure.
@@ -419,7 +419,7 @@ extern struct Statement *CreateCOND(struct StatementList *);
 
 extern struct Statement *CreateSELECT(struct VariableList *,
                                       struct SelectList *);
-/*
+/**< 
  *  struct Statement *CreateSELECT(v,sel)
  *  struct VariableList *v;
  *  struct SelectList *sel;
@@ -429,7 +429,7 @@ extern struct Statement *CreateSELECT(struct VariableList *,
  */
 
 extern struct Statement *CreateASSIGN(struct Name *, struct Expr *);
-/*
+/**< 
  *  struct Statement *CreateASSIGN(n,rhs);
  *  struct Name *n;
  *  struct Expr *rhs;
@@ -440,7 +440,7 @@ extern struct Statement *CreateASSIGN(struct Name *, struct Expr *);
  */
 
 extern struct Statement *CreateCASSIGN(struct Name *, struct Expr *);
-/*
+/**< 
  *  struct Statement *CreateCASSIGN(n,rhs);
  *  struct Name *n;
  *  struct Expr *rhs;
@@ -456,7 +456,7 @@ extern struct Statement *CreateCASSIGN(struct Name *, struct Expr *);
 #define StatementType(s) StatementTypeF(s)
 #endif
 extern enum stat_t StatementTypeF(CONST struct Statement *);
-/*
+/**< 
  *  macro StatementType(s)
  *  enum stat_t StatementTypeF(s)
  *  const struct Statement *s;
@@ -469,7 +469,7 @@ extern enum stat_t StatementTypeF(CONST struct Statement *);
 #define StatementModule(s) StatementModuleF(s)
 #endif
 extern struct module_t *StatementModuleF(CONST struct Statement *);
-/*
+/**< 
  *  macro StatementModule(s)
  *  struct module_t *StatementModuleF(s)
  *  const struct Statement *s;
@@ -482,7 +482,7 @@ extern struct module_t *StatementModuleF(CONST struct Statement *);
 #define StatementLineNum(s) StatementLineNumF(s)
 #endif
 extern unsigned long StatementLineNumF(CONST struct Statement *);
-/*
+/**< 
  *  macro StatementLineNum(s)
  *  unsigned long StatementLineNumF(s)
  *  const struct Statement *s;
@@ -495,7 +495,7 @@ extern unsigned long StatementLineNumF(CONST struct Statement *);
 #define CopyStatement(s) CopyStatementF(s)
 #endif
 extern struct Statement *CopyStatementF(struct Statement *);
-/*
+/**< 
  *  struct Statement *CopyStatementF(s)
  *  struct Statement *s;
  *  Make a new reference to statement s.  This does not actually make a new
@@ -507,7 +507,7 @@ extern struct Statement *CopyStatementF(struct Statement *);
  */
 
 extern void DestroyStatement(struct Statement *);
-/*
+/**< 
  *  void DeleteStatement(s)
  *  struct Statement *s;
  *  Delete a reference to statement s.  This make not actually deallocate
@@ -517,7 +517,7 @@ extern void DestroyStatement(struct Statement *);
  */
 
 extern struct Statement *CopyToModify(struct Statement *);
-/*
+/**< 
  *  struct Statement *CopyToModify(s)
  *  struct Statement *s;
  *  This will always make a new separate copy of the statement, so that
@@ -531,7 +531,7 @@ extern struct Statement *CopyToModify(struct Statement *);
 #define GetStatContext(s) GetStatContextF(s)
 #endif
 extern unsigned int GetStatContextF(CONST struct Statement *);
-/*
+/**< 
  *  bits = GetStatContext(s);
  *  const struct Statement *s;
  *  Returns the context bits of the statement.
@@ -540,61 +540,61 @@ extern unsigned int GetStatContextF(CONST struct Statement *);
  */
 
 #define StatInFOR(stat) (GetStatContext(stat)&context_FOR)
-/*
+/**< 
  *  Returns a nonzero value (context_FOR) if the statement is inside
  *  the statement list of a FOR statement.
  */
 
 #define StatInMETH(stat) (GetStatContext(stat)&context_METH)
-/*
+/**< 
  *  Returns a nonzero value (context_METH) if the statement is inside
  *  the statement list of a method.
  */
 
 #define StatWrong(stat) (GetStatContext(stat)&context_WRONG)
-/*
+/**< 
  *  Returns a nonzero value (context_WRONG) if the statement is probably
  *  incorrect in all situations.
  */
 
 #define StatInCOND(stat) (GetStatContext(stat)&context_COND)
-/*
+/**< 
  *  Returns a nonzero value (context_COND) if the statement is inside
  *  the statement list of a CONDITIONAL statement.
  */
 
 #define StatInWHEN(stat) (GetStatContext(stat)&context_WHEN)
-/*
+/**< 
  *  Returns a nonzero value (context_WHEN) if the statement is inside
  *  the statement list of a WHEN statement.
  */
 
 #define StatInSELECT(stat) (GetStatContext(stat)&context_SELECT)
-/*
+/**< 
  *  Returns a nonzero value (context_SELECT) if the statement is inside
  *  the statement list of a SELECT statement.
  */
 
 #define StatInIF(stat) (GetStatContext(stat)&context_IF)
-/*
+/**< 
  *  Returns a nonzero value (context_IF) if the statement is inside
  *  the thenblock or elseblock of an IF statement.
  */
 
 #define StatInSWITCH(stat) (GetStatContext(stat)&context_SWITCH)
-/*
+/**< 
  *  Returns a nonzero value (context_SWITCH) if the statement is inside
  *  the statement list of a SWITCH statement.
  */
 
 #define StatModelParameter(stat) (GetStatContext(stat)&context_MODPARAM)
-/*
+/**< 
  *  Returns a nonzero value (context_MODPARAM) if the statement is
  *  in a parameterized type list. (or at least came from there).
  */
 
 extern void SetStatContext(struct Statement *,unsigned int);
-/*
+/**< 
  *  SetStatContext(s,bits)
  *  Sets the context field of a statement to the value, bits, given.
  *  E.g. to turn on the FOR context bit,
@@ -605,7 +605,7 @@ extern void SetStatContext(struct Statement *,unsigned int);
  */
 
 extern void MarkStatContext(struct Statement *,unsigned int);
-/*
+/**< 
  *  MarkStatContext(s,bits)
  *  Adds the context bits given in bits to the context field of the
  *  statement given.
@@ -618,7 +618,7 @@ extern void MarkStatContext(struct Statement *,unsigned int);
  */
 
 extern struct VariableList *GetStatVarList(CONST struct Statement *);
-/*
+/**< 
  *  struct VariableList *GetStatVarListF(s)
  *  const struct Statement *s;
  *  Returns the variable list of a
@@ -636,7 +636,7 @@ extern struct VariableList *GetStatVarList(CONST struct Statement *);
 #define GetStatType(s) GetStatTypeF(s)
 #endif
 extern symchar *GetStatTypeF(CONST struct Statement *);
-/*
+/**< 
  *  macro GetStatType(s)
  *  symchar *GetStatTypeF(s)
  *  const struct Statement *s;
@@ -652,7 +652,7 @@ extern symchar *GetStatTypeF(CONST struct Statement *);
 #define GetStatTypeArgs(s) GetStatTypeArgsF(s)
 #endif
 extern CONST struct Set *GetStatTypeArgsF(CONST struct Statement *);
-/*
+/**< 
  *  macro GetStatTypeArgs(s)
  *  const struct Set *GetStatTypeArgsF(s)
  *  const struct Statement *s;
@@ -663,7 +663,7 @@ extern CONST struct Set *GetStatTypeArgsF(CONST struct Statement *);
  */
 
 extern unsigned int GetStatNeedsArgs(CONST struct Statement *);
-/*
+/**< 
  *  len = GetStatNeedsArgs(s);
  *  const struct Statement *s;
  *  unsigned int len;
@@ -679,7 +679,7 @@ extern unsigned int GetStatNeedsArgs(CONST struct Statement *);
 #define GetStatSetType(s) GetStatSetTypeF(s)
 #endif
 extern symchar *GetStatSetTypeF(CONST struct Statement *);
-/*
+/**< 
  *  macro GetStatSetType(s)
  *  symchar *GetStatSetTypeF(s)
  *  const struct Statement *s;
@@ -694,7 +694,7 @@ extern symchar *GetStatSetTypeF(CONST struct Statement *);
 #define GetStatCheckValue(s) GetStatCheckValueF(s)
 #endif
 extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *);
-/*
+/**< 
  *  macro GetStatCheckValue(s)
  *  const struct Expr *GetStatCheckValueF(s)
  *  const struct Statement *s;
@@ -710,7 +710,7 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *);
 #define AliasStatName(s) AliasStatNameF(s)
 #endif
 extern CONST struct Name *AliasStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro AliasStatName(s)
  *  struct Name *AliasStatNameF(s)
  *  Return the Name RHS from a simple ALIASES statement.
@@ -724,7 +724,7 @@ extern CONST struct Name *AliasStatNameF(CONST struct Statement *);
 #define ArrayStatAvlNames(s) ArrayStatAvlNamesF(s)
 #endif
 extern CONST struct VariableList *ArrayStatAvlNamesF(CONST struct Statement *);
-/*
+/**< 
  *  macro ArrayStatAvlNames(s)
  *  CONST struct VariableList *ArrayStatAvlNamesF(s)
  *  Return the LHS (new array(s)) being defined from an ARR statement.
@@ -745,7 +745,7 @@ extern CONST struct VariableList *ArrayStatAvlNamesF(CONST struct Statement *);
 #define ArrayStatSetName(s) ArrayStatSetNameF(s)
 #endif
 extern CONST struct VariableList *ArrayStatSetNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro ArrayStatSetName(s)
  *  struct VariableList *ArrayStatSetNameF(s)
  *  const struct Statement *s;
@@ -758,7 +758,7 @@ extern CONST struct VariableList *ArrayStatSetNameF(CONST struct Statement *);
 #define ArrayStatIntSet(s) ArrayStatIntSetF(s)
 #endif
 extern int ArrayStatIntSetF(CONST struct Statement *);
-/*
+/**< 
  *  macro ArrayStatIntSet(s)
  *  int ArrayStatIntSetF(s)
  *  const struct Statement *s;
@@ -774,7 +774,7 @@ extern int ArrayStatIntSetF(CONST struct Statement *);
 #define ArrayStatSetValues(s) ArrayStatSetValuesF(s)
 #endif
 extern CONST struct Set *ArrayStatSetValuesF(CONST struct Statement *);
-/*
+/**< 
  *  macro ArrayStatSetValues(s)
  *  struct Set *ArrayStatSetValuesF(s)
  *  const struct Statement *s;
@@ -793,7 +793,7 @@ extern CONST struct Set *ArrayStatSetValuesF(CONST struct Statement *);
 #define ForStatIndex(s) ForStatIndexF(s)
 #endif
 extern symchar *ForStatIndexF(CONST struct Statement *);
-/*
+/**< 
  *  macro ForStatIndex(s)
  *  symchar *ForStatIndexF(s)
  *  const struct Statement *s;
@@ -806,7 +806,7 @@ extern symchar *ForStatIndexF(CONST struct Statement *);
 #define ForStatExpr(s) ForStatExprF(s)
 #endif
 extern struct Expr *ForStatExprF(CONST struct Statement *);
-/*
+/**< 
  *  macro ForStatExpr(s)
  *  struct Expr *ForStatExprF(s)
  *  const struct Statement *s;
@@ -819,7 +819,7 @@ extern struct Expr *ForStatExprF(CONST struct Statement *);
 #define ForStatStmts(s) ForStatStmtsF(s)
 #endif
 extern struct StatementList *ForStatStmtsF(CONST struct Statement *);
-/*
+/**< 
  *  macro ForStatStmts(s)
  *  struct StatementList *ForStatStmtsF(s)
  *  const struct Statement *s;
@@ -832,7 +832,7 @@ extern struct StatementList *ForStatStmtsF(CONST struct Statement *);
 #define ForLoopKind(s) ForLoopKindF(s)
 #endif
 extern enum ForKind ForLoopKindF(CONST struct Statement *);
-/*
+/**< 
  *  macro ForLoopKind(s)
  *  enum ForOrder ForLoopKindF(s)
  *  const struct Statement *s;
@@ -845,7 +845,7 @@ extern enum ForKind ForLoopKindF(CONST struct Statement *);
 #define ForLoopOrder(s) ForLoopOrderF(s)
 #endif
 extern enum ForOrder ForLoopOrderF(CONST struct Statement *);
-/*
+/**< 
  *  macro ForLoopOrder(s)
  *  enum ForOrder ForLoopOrderF(s)
  *  const struct Statement *s;
@@ -910,7 +910,7 @@ extern unsigned ForContainsWillbeF(CONST struct Statement *);
 extern unsigned ForContainsSelectF(CONST struct Statement *);
 extern unsigned ForContainsConditionalF(CONST struct Statement *);
 extern unsigned ForContainsIllegalF(CONST struct Statement *);
-/*
+/**< 
  *  macro ForContains(s)
  *  unsigned ForContainsF(s)
  *  macro ForContainsRelations(s)
@@ -955,7 +955,7 @@ extern unsigned ForContainsIllegalF(CONST struct Statement *);
 
 /*** StateAssign functions ***/
 
-/*
+/**< 
  *  Assign has been split into Assign (structural) and Default
  *  (variable) assignment types.
  */
@@ -965,7 +965,7 @@ extern unsigned ForContainsIllegalF(CONST struct Statement *);
 #define DefaultStatVar(sptr) DefaultStatVarF(sptr)
 #endif
 extern struct Name *DefaultStatVarF(CONST struct Statement *);
-/*
+/**< 
  *  macro DefaultStatVar(s)
  *  struct Name *DefaultStatVarF(s)
  *  const struct Statement *s;
@@ -979,7 +979,7 @@ extern struct Name *DefaultStatVarF(CONST struct Statement *);
 #define DefaultStatRHS(s) DefaultStatRHSF(s)
 #endif
 extern struct Expr *DefaultStatRHSF(CONST struct Statement *);
-/*
+/**< 
  *  macro DefaultStatRHS(s)
  *  struct Expr *DefaultStatRHSF(s)
  *  const struct Statement *s;
@@ -992,7 +992,7 @@ extern struct Expr *DefaultStatRHSF(CONST struct Statement *);
 #define AssignStatVar(sptr) AssignStatVarF(sptr)
 #endif
 extern struct Name *AssignStatVarF(CONST struct Statement *);
-/*
+/**< 
  *  macro AssignStatVar(s)
  *  struct Name *AssignStatVarF(s)
  *  const struct Statement *s;
@@ -1006,7 +1006,7 @@ extern struct Name *AssignStatVarF(CONST struct Statement *);
 #define AssignStatRHS(s) AssignStatRHSF(s)
 #endif
 extern struct Expr *AssignStatRHSF(CONST struct Statement *);
-/*
+/**< 
  *  macro AssignStatRHS(s)
  *  struct Expr *AssignStatRHSF(s)
  *  const struct Statement *s;
@@ -1021,7 +1021,7 @@ extern struct Expr *AssignStatRHSF(CONST struct Statement *);
 #define RelationStatName(s) RelationStatNameF(s)
 #endif
 extern struct Name *RelationStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro RelationStatName(s)
  *  struct Name *RelationStatNameF(s)
  *  const struct Statement *s;
@@ -1034,7 +1034,7 @@ extern struct Name *RelationStatNameF(CONST struct Statement *);
 #define RelationStatExpr(s) RelationStatExprF(s)
 #endif
 extern struct Expr *RelationStatExprF(CONST struct Statement *);
-/*
+/**< 
  *  macro RelationStatExpr(s)
  *  struct Expr *RelationStatExprF(s)
  *  const struct Statement *s;
@@ -1048,7 +1048,7 @@ extern struct Expr *RelationStatExprF(CONST struct Statement *);
 #define LogicalRelStatName(s) LogicalRelStatNameF(s)
 #endif
 extern struct Name *LogicalRelStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro LogicalRelStatName(s)
  *  struct Name *LogicalRelStatNameF(s)
  *  const struct Statement *s;
@@ -1061,7 +1061,7 @@ extern struct Name *LogicalRelStatNameF(CONST struct Statement *);
 #define LogicalRelStatExpr(s) LogicalRelStatExprF(s)
 #endif
 extern struct Expr *LogicalRelStatExprF(CONST struct Statement *);
-/*
+/**< 
  *  macro LogicalRelStatExpr(s)
  *  struct Expr *LogicalRelStatExprF(s)
  *  const struct Statement *s;
@@ -1076,7 +1076,7 @@ extern struct Expr *LogicalRelStatExprF(CONST struct Statement *);
 #define ExternalStatMode(s) ExternalStatModeF(s)
 #endif
 extern int ExternalStatModeF(CONST struct Statement *);
-/*
+/**< 
  *  macro ExternalStatMode(s)
  *  int ExternalStatModeF(s)
  *  const struct Statement *s;
@@ -1090,7 +1090,7 @@ extern int ExternalStatModeF(CONST struct Statement *);
 #define ExternalStatName(s) ExternalStatNameF(s)
 #endif
 extern struct Name *ExternalStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro ExternalStatName(s)
  *  struct Name *ExternalStatNameF(s)
  *  const struct Statement *s;
@@ -1103,7 +1103,7 @@ extern struct Name *ExternalStatNameF(CONST struct Statement *);
 #define ExternalStatData(s) ExternalStatDataF(s)
 #endif
 extern struct Name *ExternalStatDataF(CONST struct Statement *);
-/*
+/**< 
  *  macro ExternalStatData(s)
  *  struct Name *ExternalStatDataF(s)
  *  const struct Statement *s;
@@ -1116,7 +1116,7 @@ extern struct Name *ExternalStatDataF(CONST struct Statement *);
 #define ExternalStatScope(s) ExternalStatScopeF(s)
 #endif
 extern struct Name *ExternalStatScopeF(CONST struct Statement *);
-/*
+/**< 
  *  macro ExternalStatScope(s)
  *  struct Name *ExternalStatScopeF(s)
  *  const struct Statement *s;
@@ -1132,7 +1132,7 @@ extern struct Name *ExternalStatScopeF(CONST struct Statement *);
 #define ExternalStatVlist(s) ExternalStatVlistF(s)
 #endif
 extern struct VariableList *ExternalStatVlistF(CONST struct Statement *);
-/*
+/**< 
  *  macro ExternalStatVlist(s)
  *  struct VariableList *ExternalStatVlist(s)
  *  const struct Statement *s;
@@ -1146,7 +1146,7 @@ extern struct VariableList *ExternalStatVlistF(CONST struct Statement *);
 #define ExternalStatFuncName(s) ExternalStatFuncNameF(s)
 #endif
 extern CONST char *ExternalStatFuncNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro ExternalStatFuncName(s)
  *  struct Name *ExternalStatFuncNameF(s)
  *  const struct Statement *s;
@@ -1162,7 +1162,7 @@ extern CONST char *ExternalStatFuncNameF(CONST struct Statement *);
 #define ReferenceStatMode(s) ReferenceStatModeF(s)
 #endif
 extern int ReferenceStatModeF(CONST struct Statement *);
-/*
+/**< 
  *  macro ReferenceStatMode(s)
  *  int ReferenceStatModeF(s)
  *  const struct Statement *s;
@@ -1177,7 +1177,7 @@ extern int ReferenceStatModeF(CONST struct Statement *);
 #define ReferenceStatName(s) ReferenceStatNameF(s)
 #endif
 extern symchar *ReferenceStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro ReferenceStatName(s)
  *  const char *ReferenceStatNameF(s)
  *  const struct Statement *s;
@@ -1193,7 +1193,7 @@ extern symchar *ReferenceStatNameF(CONST struct Statement *);
 #define ReferenceStatSetType(s) ReferenceStatSetTypeF(s)
 symchar *ReferenceStatSetTypeF(CONST struct Statement *s);
 #endif
-/*
+/**< 
  *  macro ReferenceStatSetType(s)
  *  symchar *ReferenceStatSetType(s)
  *  const struct Statement *s;
@@ -1209,7 +1209,7 @@ symchar *ReferenceStatSetTypeF(CONST struct Statement *s);
 #define ReferenceStatVlist(s) ReferenceStatVlistF(s)
 #endif
 extern struct VariableList *ReferenceStatVlistF(CONST struct Statement *);
-/*
+/**< 
  *  macro ReferenceStatVlist(s)
  *  struct VariableList *ReferenceStatVlistF(s)
  *  const struct Statement *s;
@@ -1224,7 +1224,7 @@ extern struct VariableList *ReferenceStatVlistF(CONST struct Statement *);
 #define RunStatName(s) RunStatNameF(s)
 #endif
 extern struct Name *RunStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro RunStatName(s)
  *  struct Name *RunStatNameF(s)
  *  const struct Statement *s;
@@ -1237,7 +1237,7 @@ extern struct Name *RunStatNameF(CONST struct Statement *);
 #define RunStatAccess(s) RunStatAccessF(s)
 #endif
 extern struct Name *RunStatAccessF(CONST struct Statement *);
-/*
+/**< 
  *  macro RunStatAccess(s)
  *  char *RunStatAccessF(s)
  *  const struct Statement *s;
@@ -1253,7 +1253,7 @@ extern struct Name *RunStatAccessF(CONST struct Statement *);
 #define CallStatArgs(s) CallStatArgsF(s)
 #endif
 extern struct Set *CallStatArgsF(CONST struct Statement *);
-/*
+/**< 
  *  macro CallStatArgs(s)
  *  struct Set *CallStatArgs(s)
  *  const struct Statement *s;
@@ -1266,7 +1266,7 @@ extern struct Set *CallStatArgsF(CONST struct Statement *);
 #define CallStatId(s) CallStatIdF(s)
 #endif
 extern symchar *CallStatIdF(CONST struct Statement *);
-/*
+/**< 
  *  macro CallStatId(s)
  *  symchar *CallStatId(s)
  *  const struct Statement *s;
@@ -1281,7 +1281,7 @@ extern symchar *CallStatIdF(CONST struct Statement *);
 #define WhileStatExpr(s) WhileStatExprF(s)
 #endif
 extern struct Expr *WhileStatExprF(CONST struct Statement *);
-/*
+/**< 
  *  macro WhileStatExpr(s)
  *  struct Expr *WhileStatExprF(s)
  *  const struct Statement *s;
@@ -1294,20 +1294,20 @@ extern struct Expr *WhileStatExprF(CONST struct Statement *);
 #define WhileStatBlock(s) WhileStatBlockF(s)
 #endif
 extern struct StatementList *WhileStatBlockF(CONST struct Statement *);
-/*
+/**< 
  *  macro WhileStatBlock(s)
  *  struct StatementList *WhileStatBlockF(s)
  *  const struct Statement *s;
  *  Return the block of a while statement.
  */
 
-/* stateflow */
+/**< stateflow */
 
 #define FlowStatControl(s) ((s)->v.flow.fc)
-/* return the type of flow control. needs a function wrapper. */
+/**< return the type of flow control. needs a function wrapper. */
 
 #define FlowStatMessage(s) ((s)->v.flow.message)
-/* return the message of the flow control. needs a function wrapper. */
+/**< return the message of the flow control. needs a function wrapper. */
 
 /*** StateIf functions ***/
 
@@ -1317,7 +1317,7 @@ extern struct StatementList *WhileStatBlockF(CONST struct Statement *);
 #define IfStatExpr(s) IfStatExprF(s)
 #endif
 extern struct Expr *IfStatExprF(CONST struct Statement *);
-/*
+/**< 
  *  macro IfStatExpr(s)
  *  struct Expr *IfStatExprF(s)
  *  const struct Statement *s;
@@ -1330,7 +1330,7 @@ extern struct Expr *IfStatExprF(CONST struct Statement *);
 #define IfStatThen(s) IfStatThenF(s)
 #endif
 extern struct StatementList *IfStatThenF(CONST struct Statement *);
-/*
+/**< 
  *  macro IfStatThen(s)
  *  struct StatementList *IfStatThenF(s)
  *  const struct Statement *s;
@@ -1343,7 +1343,7 @@ extern struct StatementList *IfStatThenF(CONST struct Statement *);
 #define IfStatElse(s) IfStatElseF(s)
 #endif
 extern struct StatementList *IfStatElseF(CONST struct Statement *);
-/*
+/**< 
  *  macro IfStatElse(s)
  *  struct StatementList *IfStatElseF(s)
  *  const struct Statement *s;
@@ -1359,7 +1359,7 @@ extern struct StatementList *IfStatElseF(CONST struct Statement *);
 #define WhenStatName(s) WhenStatNameF(s)
 #endif
 extern struct Name *WhenStatNameF(CONST struct Statement *);
-/*
+/**< 
  *  macro WhenStatName(s)
  *  struct Name *WhenStatName(s)
  *  const struct Statement *s;
@@ -1368,7 +1368,7 @@ extern struct Name *WhenStatNameF(CONST struct Statement *);
 
 
 extern void SetWhenName(struct Statement *, struct Name *);
-/*
+/**< 
  *  void SetWhenName(s,n)
  *  struct Statement *s;
  *  struct Name *n;
@@ -1382,7 +1382,7 @@ extern void SetWhenName(struct Statement *, struct Name *);
 #define WhenStatVL(s) WhenStatVLF(s)
 #endif
 extern struct VariableList *WhenStatVLF(CONST struct Statement *);
-/*
+/**< 
  *  macro WhenStatVL(s)
  *  struct VariableList *WhenStatVLF(s)
  *  const struct Statement *s;
@@ -1395,7 +1395,7 @@ extern struct VariableList *WhenStatVLF(CONST struct Statement *);
 #define WhenStatCases(s) WhenStatCasesF(s)
 #endif
 extern struct WhenList *WhenStatCasesF(CONST struct Statement *);
-/*
+/**< 
  *  macro WhenStatCases(s)
  *  struct WhenList *WhenStatCasesF(s)
  *  const struct Statement *s;
@@ -1405,7 +1405,7 @@ extern struct WhenList *WhenStatCasesF(CONST struct Statement *);
 
 extern int CompareWhenStatements(CONST struct Statement *,
             CONST struct Statement *);
-/*
+/**< 
  *  Compare functions for WHEN statements. It includes the decomposition
  *  of the WHEN in the list of variables and the list of CASEs. Also,
  *  each case is decomposed in the set of values and the list of statements.
@@ -1425,7 +1425,7 @@ extern int CompareWhenStatements(CONST struct Statement *,
 #define FnameStat(s) FnameStatF(s)
 #endif
 extern struct Name *FnameStatF(CONST struct Statement *);
-/*
+/**< 
  *  macro FnameStatcases(s)
  *  struct Name *FnameStatF(s)
  *  const struct Statement *s;
@@ -1440,7 +1440,7 @@ extern struct Name *FnameStatF(CONST struct Statement *);
 #define CondStatList(s) CondStatListF(s)
 #endif
 extern struct StatementList *CondStatListF(CONST struct Statement *);
-/*
+/**< 
  *  macro CondStatList(s)
  *  struct StatementList *CondStatListF(s)
  *  const struct Statement *s;
@@ -1459,7 +1459,7 @@ extern struct StatementList *CondStatListF(CONST struct Statement *);
 extern unsigned CondContainsF(CONST struct Statement *);
 extern unsigned CondContainsRelationsF(CONST struct Statement *);
 extern unsigned CondContainsLogRelationsF(CONST struct Statement *);
-/*
+/**< 
  *  macro CondContains(s)
  *  unsigned CondContainsF(s)
  *  macro CondContainsRelations(s)
@@ -1483,7 +1483,7 @@ extern unsigned CondContainsLogRelationsF(CONST struct Statement *);
 #define SelectStatVL(s) SelectStatVLF(s)
 #endif
 extern struct VariableList *SelectStatVLF(CONST struct Statement *);
-/*
+/**< 
  *  macro SelectStatVL(s)
  *  struct VariableList *SelectStatVLF(s)
  *  const struct Statement *s;
@@ -1496,7 +1496,7 @@ extern struct VariableList *SelectStatVLF(CONST struct Statement *);
 #define SelectStatNumberStats(s) SelectStatNumberStatsF(s)
 #endif
 extern int SelectStatNumberStatsF(CONST struct Statement *);
-/*
+/**< 
  *  macro SelectStatNumberStats(s)
  *  int SelectStatNumberStatsF(s)
  *  const struct Statement *s;
@@ -1509,7 +1509,7 @@ extern int SelectStatNumberStatsF(CONST struct Statement *);
 #define SelectStatCases(s) SelectStatCasesF(s)
 #endif
 extern struct SelectList *SelectStatCasesF(CONST struct Statement *);
-/*
+/**< 
  *  macro SelectStatCases(s)
  *  struct SelectList *SelectStatCasesF(s)
  *  const struct Statement *s;
@@ -1520,7 +1520,7 @@ extern struct SelectList *SelectStatCasesF(CONST struct Statement *);
 extern int CompareSelectStatements(CONST struct Statement *,
               CONST struct Statement *);
 
-/*
+/**< 
  *  Compare functions for SELECT statements. It includes the decomposition
  *  of the SELECT in the list of variables and the list of CASEs. Also,
  *  each case is decomposed in the set of values and the list of statements.
@@ -1589,7 +1589,7 @@ extern unsigned SelectContainsWillbeF(CONST struct Statement *);
 extern unsigned SelectContainsSelectF(CONST struct Statement *);
 extern unsigned SelectContainsConditionalF(CONST struct Statement *);
 extern unsigned SelectContainsIllegalF(CONST struct Statement *);
-/*
+/**< 
  *  macro SelectContains(s)
  *  unsigned SelectContainsF(s)
  *  macro SelectContainsRelations(s)
@@ -1643,7 +1643,7 @@ extern unsigned SelectContainsIllegalF(CONST struct Statement *);
 #define SwitchStatVL(s) SwitchStatVLF(s)
 #endif
 extern struct VariableList *SwitchStatVLF(CONST struct Statement *);
-/*
+/**< 
  *  macro SwitchStatVL(s)
  *  struct VariableList *SwitchStatVLF(s)
  *  const struct Statement *s;
@@ -1656,7 +1656,7 @@ extern struct VariableList *SwitchStatVLF(CONST struct Statement *);
 #define SwitchStatCases(s) SwitchStatCasesF(s)
 #endif
 extern struct SwitchList *SwitchStatCasesF(CONST struct Statement *);
-/*
+/**< 
  *  macro SwitchStatCases(s)
  *  struct SwitchList *SwitchStatCasesF(s)
  *  const struct Statement *s;
@@ -1667,7 +1667,7 @@ extern struct SwitchList *SwitchStatCasesF(CONST struct Statement *);
 extern int CompareSwitchStatements(CONST struct Statement *,
               CONST struct Statement *);
 
-/*
+/**< 
  *  Compare functions for SWITCH statements. It includes the decomposition
  *  of the Switch in the list of variables and the list of CASEs. Also,
  *  each case is decomposed in the set of values and the list of statements.
@@ -1684,7 +1684,7 @@ extern int CompareSwitchStatements(CONST struct Statement *,
 
 extern int CompareStatements(CONST struct Statement *,
                              CONST struct Statement *);
-/*
+/**< 
  *  CompareStatements(s1,s2);
  *  Returns -1,0,1 as s1 is <, ==, > s2.
  *  s1 < s2 if type(s1) < type(s2), exception: NULL > all statements.
@@ -1699,7 +1699,7 @@ extern int CompareStatements(CONST struct Statement *,
 
 extern int CompareISStatements(CONST struct Statement *,
                                CONST struct Statement *);
-/*
+/**< 
  *  CompareISStatements(s1,s2);
  *  s1 and s2 must be StateIS or some of the StateARE based statements, i.e.
  *  IS_A WILL_BE IS_REFINED_TO WILL_BE_THE_SAME statements, or
@@ -1727,4 +1727,4 @@ extern int CompareISStatements(CONST struct Statement *,
  *  see CompareStatements above.
  */
 
-#endif /* __STATEMENT_H_SEEN__ */
+#endif /**< __STATEMENT_H_SEEN__ */

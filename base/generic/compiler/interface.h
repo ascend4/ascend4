@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Interface Include File
  *  by Tom Epperly
  *  Created: 1/17/90
@@ -30,13 +30,13 @@
 #ifndef __INTERFACE_H_SEEN__
 #define __INTERFACE_H_SEEN__
 
-/*
+/**< 
  *  When #including interface.h.h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
  */
 
 extern void Interface(void);
-/*
+/**< 
  *  Take no parameters
  */
-#endif /* __INTERFACE_H_SEEN__ */
+#endif /**< __INTERFACE_H_SEEN__ */

@@ -1,5 +1,5 @@
 #ifdef __MTX_C_SEEN__
-/*
+/**< 
  *  mtx2: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -61,18 +61,18 @@
 \*********************************************************************/
 #ifndef __MTX_INTERNAL_USE_ONLY_H__
 #define __MTX_INTERNAL_USE_ONLY_H__
-/* requires #include <stdio.h> */
-/* requires #include "mem.h" */
-/* requires #include "mtx.h" */
+/**< requires #include <stdio.h> */
+/**< requires #include "mem.h" */
+/**< requires #include "mtx.h" */
 
 #ifndef FALSE
-/* these should have come in from base.h. */
+/**< these should have come in from base.h. */
 #define FALSE 0
 #define TRUE 1
 #endif
 
 #define MTX_DEBUG FALSE
-/* MTX_DEBUG is a no holds barred sanity checking flag for use when
+/**< MTX_DEBUG is a no holds barred sanity checking flag for use when
  * nothing else is giving a clue why something is going wrong. It
  * slows down the code to a crawl. Do not under any conditions change
  * its value or undefine it except at this location. If you need some
@@ -83,7 +83,7 @@
 #define EVEN FALSE
 #define ODD TRUE
 #define SWAPS_PRESERVE_ORDER TRUE
-/**
+/**< 
  ***  Do row and column swaps preserve the ordering of non-zeros in rows
  ***  and columns?  Setting this to TRUE means swapping only entails the
  ***  movement of integer row or column numbers and NOT the exchange of
@@ -91,14 +91,14 @@
  **/
 #define WIDTHMAGIC 2048
 #define LENMAGIC 10
-/**
+/**< 
  *** WIDTHMAGIC is the byte size to aim for in allocating groups of elements.
  *** LENMAGIC initial # of groups of elements, hence the smallest
  *** possible number of elements a matrix will ever have is LENM*WIDTHM/eltsize.
  **/
 
 extern FILE *g_mtxerr;
-/**
+/**< 
  *** Global file pointer to which errors are reported. Should never be
  *** NULL. Also useful when running ascend in gdb and you can't find
  *** any other file pointer to use.
@@ -108,7 +108,7 @@ struct next_element_t {
   struct element_t *row;
   struct element_t *col;
 };
-/* just a struct to make resulting code more readable. */
+/**< just a struct to make resulting code more readable. */
 
 struct element_t {
   real64 value;
@@ -116,7 +116,7 @@ struct element_t {
   int32 col;
   struct next_element_t next;
 };
-/**
+/**< 
  ***  This is the basic jacobian element of an mtx.
  ***  It's size is 24 bytes on 4 byte pointer machines and
  ***  32 bytes on 8 byte pointer machines.
@@ -130,7 +130,7 @@ struct nz_headers_t {
   struct element_t **row;
   struct element_t **col;
 };
-/**
+/**< 
  ***  Each matrix is really just a pair of arrays of pointers to
  ***  elements. The index of a row or column in THESE arrays is
  ***  what is referred to as an org index. A value of NULL in
@@ -147,11 +147,11 @@ struct nz_headers_t {
  **/
 
 struct permutation_t {
-  int32 *org_to_cur;          /* org_to_cur[-1] = -1 */
-  int32 *cur_to_org;          /* cur_to_org[-1] = -1 */
+  int32 *org_to_cur;          /**< org_to_cur[-1] = -1 */
+  int32 *cur_to_org;          /**< cur_to_org[-1] = -1 */
   boolean parity; 
 };
-/**
+/**< 
  ***  We maintain, rather than rederiving, the information required to
  ***  answer all possible permutation questions.
  ***  This is a policy decision based on the fact that mtx is research
@@ -165,8 +165,8 @@ struct permutation_t {
  ***  Special note: The -1th element of nz_header arrays is NOT allocated.
  **/
 
-/* Do not access the parity field of a slave matrix, refer to its master. */
-/* Conduct all permuting operations on the master. */
+/**< Do not access the parity field of a slave matrix, refer to its master. */
+/**< Conduct all permuting operations on the master. */
 
 struct permutations_t {
   struct permutation_t row;
@@ -175,11 +175,11 @@ struct permutations_t {
 };
 
 struct structural_data_t {
-  int32 symbolic_rank;        /* Symbolic rank (< 0 if invalid) */
-  int32 nblocks;              /* # blocks in matrix */
-  mtx_region_t *block;              /* Pointer to array of blocks */
+  int32 symbolic_rank;        /**< Symbolic rank (< 0 if invalid) */
+  int32 nblocks;              /**< # blocks in matrix */
+  mtx_region_t *block;              /**< Pointer to array of blocks */
 };
-/**
+/**< 
  *** There is a list of blocks associated with a matrix.
  *** This is an artifact of POOR solver API design between
  *** Peter Piela and Karl Westerberg. The blockwise decomposition
@@ -190,19 +190,19 @@ struct structural_data_t {
  **/
 
 struct mtx_header {
-  int integrity;                    /* Integrity integer */
-  int32 order;                /* Order of the matrix */
-  int32 capacity;             /* Capacity of all the arrays */
-  int32 nslaves;              /* number of slave matrices */
-  struct nz_headers_t hdr;          /* Non-zero headers of the matrix */
-  struct element_t *last_value;     /* value/set_value memory */
-  mem_store_t ms;                   /* element cache memory */
-  struct permutations_t perm;       /* Permutation vectors */
-  struct structural_data_t *data;   /* Pointer to structural information */
-  mtx_matrix_t master;              /* the master of this mtx, if slave */
-  mtx_matrix_t *slaves;             /* array of slave matrices */
+  int integrity;                    /**< Integrity integer */
+  int32 order;                /**< Order of the matrix */
+  int32 capacity;             /**< Capacity of all the arrays */
+  int32 nslaves;              /**< number of slave matrices */
+  struct nz_headers_t hdr;          /**< Non-zero headers of the matrix */
+  struct element_t *last_value;     /**< value/set_value memory */
+  mem_store_t ms;                   /**< element cache memory */
+  struct permutations_t perm;       /**< Permutation vectors */
+  struct structural_data_t *data;   /**< Pointer to structural information */
+  mtx_matrix_t master;              /**< the master of this mtx, if slave */
+  mtx_matrix_t *slaves;             /**< array of slave matrices */
 };
-/**
+/**< 
  ***  capacity may be > order.
  ***  A matrix of capacity 0 doesn't have a mem_store_t yet and elements
  ***  cannot be queried about without a core dump.
@@ -210,13 +210,13 @@ struct mtx_header {
 
 struct mtx_block_perm_structure {
   int integrity;
-  int32 order;                /* Order of the matrix */
-  int32 capacity;             /* Capacity of all the arrays */
-  mtx_matrix_t mtx;                 /* matrix of origin */
-  struct permutations_t perm;       /* Permutation vectors */
-  struct structural_data_t *data;    /* Pointers to structural information */
+  int32 order;                /**< Order of the matrix */
+  int32 capacity;             /**< Capacity of all the arrays */
+  mtx_matrix_t mtx;                 /**< matrix of origin */
+  struct permutations_t perm;       /**< Permutation vectors */
+  struct structural_data_t *data;    /**< Pointers to structural information */
 };
-/**
+/**< 
  *** If you want to save a permutation for restoration, you
  *** have to make a copy of that data, eh? Here's the place you
  *** put it. Note that the block list should be disappearing from
@@ -226,22 +226,22 @@ struct mtx_block_perm_structure {
 
 #define OK        ((int)201539237)
 #define DESTROYED ((int)531503871)
-/* matrix integrity values. */
+/**< matrix integrity values. */
 
 #define ZERO      ((int32)0)
 #define D_ZERO    ((real64)0.0)
 #define D_ONE    ((real64)1.0)
-/* useful constants if your C compiler is not too bright about ANSI */
+/**< useful constants if your C compiler is not too bright about ANSI */
 
 #define ISSLAVE(m) ((m)->master!=NULL)
-/**
+/**< 
  ***  Returns 1 if m is a slave matrix, 0 if not.
  **/
 
 #define ordered3(a,b,c) ((a) <= (b) && (b) <= (c))
 #define in_range(rng,ndx) ordered3((rng)->low,ndx,(rng)->high)
 #define legal(mtx,ndx) ordered3(ZERO,ndx,(mtx)->order-1)
-/**
+/**< 
  ***  Boolean operators to compare a row or column
  ***  index with some specified range or the maximum
  ***  range of the matrix in which it is used.
@@ -249,7 +249,7 @@ struct mtx_block_perm_structure {
 
 #define fast_in_range(l,h,i) ( ordered3(l,i,h) )
 #define not_in_range(l,h,i) ( (i)<(l) || (i)>(h) ) 
-/**
+/**< 
  ***  Boolean operators to compare 3 integers.
  ***  l <= h must be TRUE or these will lie. In many cases,
  ***  this condition can (or should) be met before in_range
@@ -266,7 +266,7 @@ struct mtx_block_perm_structure {
 
 #define zero(ptr,nelts,type)  \
    mem_zero_byte_cast((ptr),0,(nelts)*sizeof(type))
-/**
+/**< 
  ***  Zeros a vector of specified length and type.
  ***  It is inefficient to use, however, if you know the type
  ***  is one of the basic types (int,double,ptr,char)
@@ -277,7 +277,7 @@ struct mtx_block_perm_structure {
   Private check routines
 \**************************************************************************/
 extern int super_check_matrix(mtx_matrix_t);
-/**
+/**< 
  *** After somevery extensive checking, returns an error count.
  *** More or less assume MTX_DEBUG is TRUE, and that is the only
  *** condition under which this should be called.
@@ -297,7 +297,7 @@ extern int super_check_matrix(mtx_matrix_t);
 \**************************************************************************/
 
 struct element_t *mtx_find_element( mtx_matrix_t, int32, int32);
-/**
+/**< 
  ***  mtx_find_element(mtx,org_row,org_col)
  ***  mtx_matrix_t mtx;
  ***  int32 org_row;
@@ -310,7 +310,7 @@ struct element_t *mtx_find_element( mtx_matrix_t, int32, int32);
  **/
 
 struct element_t *mtx_create_element( mtx_matrix_t, int32, int32);
-/**
+/**< 
  ***  mtx_create_element(mtx,org_row,org_col);
  ***  mtx_matrix_t mtx;
  ***  int32 org_row;
@@ -325,7 +325,7 @@ struct element_t *mtx_create_element( mtx_matrix_t, int32, int32);
 
 struct element_t *mtx_create_element_value(mtx_matrix_t, int32,
                                            int32,real64);
-/**
+/**< 
  ***  mtx_create_element_value(mtx,org_row,org_col,val);
  ***  mtx_matrix_t mtx;
  ***  int32 org_row;
@@ -345,7 +345,7 @@ struct element_t *mtx_create_element_value(mtx_matrix_t, int32,
 \**************************************************************************/
 extern struct element_t *mtx_next_col(register struct element_t *,
                                       mtx_range_t *, int32 *);
-/**
+/**< 
  ***  enext = struct element_t *mtx_next_col(elt,rng,tocur);
  ***  struct element_t *elt, *enext;
  ***  mtx_range_t *rng;
@@ -357,7 +357,7 @@ extern struct element_t *mtx_next_col(register struct element_t *,
 
 extern struct element_t *mtx_next_row(register struct element_t *,
                                       mtx_range_t *, int32 *);
-/**
+/**< 
  ***  enext = struct element_t *mtx_next_row(elt,rng,tocur);
  ***  struct element_t *elt, *enext;
  ***  mtx_range_t *rng;
@@ -371,7 +371,7 @@ extern struct element_t *mtx_next_row(register struct element_t *,
   Permutation memory management.
 \**************************************************************************/
 extern int32 *mtx_alloc_perm(int32);
-/**
+/**< 
  ***  p = mtx_alloc_perm(cap);
  ***  int32 cap, *p;
  ***  Allocates a permutation vector.  The user need
@@ -379,7 +379,7 @@ extern int32 *mtx_alloc_perm(int32);
  **/
 
 extern void mtx_copy_perm(int32 *, int32 *, int32);
-/**
+/**< 
  ***  mtx_copy_perm(tarperm,srcperm,cap)
  ***  int32 *tarperm;
  ***  int32 *srcperm;
@@ -389,7 +389,7 @@ extern void mtx_copy_perm(int32 *, int32 *, int32);
  **/
 
 extern void mtx_free_perm(int32 *);
-/** 
+/**< 
  ***  mtx_free_perm(perm);
  ***  int32 *perm;
  **/
@@ -406,22 +406,22 @@ extern void mtx_free_perm(int32 *);
 \**************************************************************************/
 
 struct reusable_data_vector {
-  void *arr;          /* pointer to array of objects size entrysize */
-  int capacity;       /* number of object slots in array */
-  size_t entry_size;  /* size of slots */
-  int last_line;      /* line most recently associated with this structure,
+  void *arr;          /**< pointer to array of objects size entrysize */
+  int capacity;       /**< number of object slots in array */
+  size_t entry_size;  /**< size of slots */
+  int last_line;      /**< line most recently associated with this structure,
                          should be 0 if the array is not in use. */
 };
 
 extern struct reusable_data_vector
-  g_mtx_null_index_data,		/* bunch of int32 */
-  g_mtx_null_sum_data,			/* bunch of mtx_value_t */
-  g_mtx_null_mark_data,			/* bunch of char */
-  g_mtx_null_vector_data,		/* bunch of element pointers */
-  g_mtx_null_col_vector_data,		/* bunch of element pointers */
-  g_mtx_null_row_vector_data;		/* bunch of element pointers */
+  g_mtx_null_index_data,		/**< bunch of int32 */
+  g_mtx_null_sum_data,			/**< bunch of mtx_value_t */
+  g_mtx_null_mark_data,			/**< bunch of char */
+  g_mtx_null_vector_data,		/**< bunch of element pointers */
+  g_mtx_null_col_vector_data,		/**< bunch of element pointers */
+  g_mtx_null_row_vector_data;		/**< bunch of element pointers */
 
-/**
+/**< 
  ***  vec = mtx_null_vector(nptrs);
  ***  vec = mtx_null_col_vector(nptrs);
  ***  vec = mtx_null_row_vector(nptrs);
@@ -514,7 +514,7 @@ extern struct reusable_data_vector
 
 extern void *mtx_null_vector_f(int32, int, CONST char *,
                                struct reusable_data_vector *, char *);
-/**
+/**< 
  *** v = mtx_null_vector_f(cap,line,file, ptr,fn);
  *** int32 cap;
  *** int line;
@@ -533,7 +533,7 @@ extern void *mtx_null_vector_f(int32, int, CONST char *,
 
 extern void mtx_null_vector_release_f(int, CONST char *,
                                       struct reusable_data_vector *, char *);
-/**
+/**< 
  *** mtx_null_vector_release_f(line,file,ptr,fn);
  *** int line;
  *** CONST char *file,
@@ -546,17 +546,17 @@ extern void mtx_null_vector_release_f(int, CONST char *,
  **/
 
 extern void mtx_reset_null_vectors(void);
-/**
+/**< 
  *** This resets the reusable arrays of zeroes to zero in the event
  *** that they may have been corrupted.
  **/
 
-/*
+/**< 
  ** INTERNAL element vector operations of some utility.
  */
 
 extern struct element_t **mtx_expand_row(mtx_matrix_t, int32);
-/**
+/**< 
  ***  buf = mtx_expand_row(mtx,orgrow);
  ***  mtx_matrix_t mtx;
  ***  int32 orgrow;
@@ -570,7 +570,7 @@ extern struct element_t **mtx_expand_row(mtx_matrix_t, int32);
  **/
 
 extern struct element_t **mtx_expand_col(mtx_matrix_t, int32);
-/**
+/**< 
  ***  buf = mtx_expand_col(mtx,orgcol);
  ***  mtx_matrix_t mtx;
  ***  int32 orgcol;
@@ -585,7 +585,7 @@ extern struct element_t **mtx_expand_col(mtx_matrix_t, int32);
 
 extern void mtx_renull_using_row(mtx_matrix_t, int32,
                                  struct element_t **);
-/**
+/**< 
  ***  mtx_renull_using_row(mtx,orgrow,arr)
  ***  mtx_matrix_t mtx;
  ***  int32 orgrow;
@@ -598,7 +598,7 @@ extern void mtx_renull_using_row(mtx_matrix_t, int32,
 
 extern void mtx_renull_using_col(mtx_matrix_t, int32,
                                  struct element_t **);
-/**
+/**< 
  ***  mtx_renull_using_row(mtx,orgcol,arr);
  ***  mtx_matrix_t mtx;
  ***  int32 orgcol;
@@ -610,7 +610,7 @@ extern void mtx_renull_using_col(mtx_matrix_t, int32,
  **/
 
 extern void mtx_renull_all(mtx_matrix_t, struct element_t **);
-/**
+/**< 
  ***  mtx_renull_all(mtx,arr);
  ***  mtx_matrix_t mtx;
  ***  struct element_t **arr;
@@ -619,5 +619,5 @@ extern void mtx_renull_all(mtx_matrix_t, struct element_t **);
  ***  
  **/
 
-#endif /* __MTX_INTERNAL_USE_ONLY_H__ */
-#endif /* none of your business if you aren't mtx_*.c */
+#endif /**< __MTX_INTERNAL_USE_ONLY_H__ */
+#endif /**< none of your business if you aren't mtx_*.c */

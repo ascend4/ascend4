@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Function module
  *  by Tom Epperly
  *  Version: $Revision: 1.8 $
@@ -35,7 +35,7 @@
 #define __FUNCTYPE_H_SEEN__
 
 
-/*
+/**< 
  *  When #including functype.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -49,7 +49,7 @@ enum safe_err {
   safe_overflow = 3,
   safe_underflow = 4,
   safe_range_error = 5
-}; /* if you add to this enum be sure to add to safe_error_to_stderr */
+}; /**< if you add to this enum be sure to add to safe_error_to_stderr */
 
 enum Func_enum {
    F_LOG, F_LN, F_EXP,
@@ -62,39 +62,39 @@ enum Func_enum {
 };
 
 struct Func {
-  CONST char *name;		/* ASCEND name of function. not symchar */
-  CONST char *cname;		/* C name of function. not symchar */
-  CONST char *deriv1cname;	/* C name of first derivative. not symchar */
-  CONST char *deriv2cname;	/* C name of second derivative. not symchar */
-  enum Func_enum id;            /* identification of function */
-  double (*value)(double);	/* pointer to function evaluation */
-  double (*deriv)(double);	/* pointer to derivative evaluation */
-  double (*deriv2)(double);	/* pointer to a second derivative evaluation */
+  CONST char *name;		/**< ASCEND name of function. not symchar */
+  CONST char *cname;		/**< C name of function. not symchar */
+  CONST char *deriv1cname;	/**< C name of first derivative. not symchar */
+  CONST char *deriv2cname;	/**< C name of second derivative. not symchar */
+  enum Func_enum id;            /**< identification of function */
+  double (*value)(double);	/**< pointer to function evaluation */
+  double (*deriv)(double);	/**< pointer to derivative evaluation */
+  double (*deriv2)(double);	/**< pointer to a second derivative evaluation */
   double (*safevalue)(double,enum safe_err *);
- /* pointer to function evaluation */
+ /**< pointer to function evaluation */
   double (*safederiv)(double,enum safe_err *);
- /* pointer to derivative evaluation */
+ /**< pointer to derivative evaluation */
   double (*safederiv2)(double,enum safe_err *);
- /* pointer to a second derivative evaluation */
+ /**< pointer to a second derivative evaluation */
 #ifdef CHRIS_FUNC
-  struct Interval (*ivalue)();	/* interval evaluation of function */
+  struct Interval (*ivalue)();	/**< interval evaluation of function */
   void (*slope)(unsigned long,struct Interval *,struct Interval *,
   struct Interval *);
-    /* pointer to slope evaluation routine */
+    /**< pointer to slope evaluation routine */
   struct Interval (*ideriv)(struct Interval);
-    /* interval derivative evaluation routine */
-  double (*tmin)(double,double);/* return the point where the func is a min */
-  double (*tmax)(double,double);/* return the point where the func is a max */
+    /**< interval derivative evaluation routine */
+  double (*tmin)(double,double);/**< return the point where the func is a min */
+  double (*tmax)(double,double);/**< return the point where the func is a max */
   double (*e)(double,double,double,double (*)(double));
-    /* convex envelope */
+    /**< convex envelope */
   double (*ed)(double,double,double,double (*)(double));
-    /* convex envelope derivative */
+    /**< convex envelope derivative */
   double (*E)(double,double,double,double (*)(double));
-    /* concave envelope */
+    /**< concave envelope */
   double (*Ed)(double,double,double,double (*)(double));
-    /* concave envelope derivative */
+    /**< concave envelope derivative */
 #endif
 };
 
 #endif
-/* __FUNCTYPE_H_SEEN__ */
+/**< __FUNCTYPE_H_SEEN__ */

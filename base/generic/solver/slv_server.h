@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -32,18 +32,18 @@
 #ifndef slv_server_h__already_included
 #define slv_server_h__already_included
 
-/* requires #include "base.h" */
-/* requires #include "var.h" */
-/* requires #include "rel.h" */
-/* requires #include "discrete.h" */
-/* requires #include "conditional.h" */
-/* requires #include "logrel.h" */
-/* requires #include "bnd.h" */
-/* requires #include "linsol.h" */
-/* requires #include "linsolqr.h" */
-/* requires #include "slv_common.h" */
-/* requires #include "slv_types.h" */
-/* requires #include "slv_client.h" */
+/**< requires #include "base.h" */
+/**< requires #include "var.h" */
+/**< requires #include "rel.h" */
+/**< requires #include "discrete.h" */
+/**< requires #include "conditional.h" */
+/**< requires #include "logrel.h" */
+/**< requires #include "bnd.h" */
+/**< requires #include "linsol.h" */
+/**< requires #include "linsolqr.h" */
+/**< requires #include "slv_common.h" */
+/**< requires #include "slv_types.h" */
+/**< requires #include "slv_client.h" */
 
 /***  ! ! We are going through a solver API definition restructuring.
  ! !  The appearance of ! ! in the header means the code in question
@@ -54,7 +54,7 @@
  **/
 
 extern slv_system_t slv_create(void);
-/**
+/**< 
  ***  sys = slv_create();
  ***  slv_system_t sys;
  ***
@@ -62,7 +62,7 @@ extern slv_system_t slv_create(void);
  **/
 
 extern int slv_destroy(slv_system_t);
-/**
+/**< 
  ***  slv_destroy(sys)
  ***  slv_system_t sys;
  ***
@@ -74,7 +74,7 @@ extern int slv_destroy(slv_system_t);
 
 extern SlvBackendToken slv_instance(slv_system_t);
 extern void slv_set_instance(slv_system_t, SlvBackendToken);
-/**
+/**< 
  ***  returns or sets the root instance of the slv system.
  ***  All naming within the context of the slv_system_t is
  ***  done relative to this instance pointer.
@@ -85,13 +85,13 @@ extern void slv_set_instance(slv_system_t, SlvBackendToken);
  **/
 
 extern void slv_set_num_models(slv_system_t,int32);
-/**
+/**< 
  ***  slv_set_num_models(sys,nmod);
  ***  Sets the number of models associated with the system to nmod.
  **/
 
 extern void slv_set_need_consistency(slv_system_t, int32);
-/*   
+/**<   
  *  slv_set_need_consistency(sys,need_consistency);
  *  slv_need_consistency(sys);
  *  Sets the int need_consitency associated with the system.
@@ -117,7 +117,7 @@ extern void slv_set_master_condlogrel_list(slv_system_t,
 				           int);
 extern void slv_set_master_when_list(slv_system_t, struct w_when **,int);
 extern void slv_set_master_bnd_list(slv_system_t, struct bnd_boundary **,int);
-/**
+/**< 
  ! !  slv_set_master_*_list(sys,list,size)
  ***  slv_system_t sys;
  ***  struct var_variable **vlist;
@@ -141,7 +141,7 @@ extern void slv_set_master_bnd_list(slv_system_t, struct bnd_boundary **,int);
  **/
 
 extern void slv_set_symbol_list(slv_system_t, struct gl_list_t *);
-/*
+/**< 
  * set gllist of SymbolValues struct to sys. they are used to assign an
  * integer value to a symbol value
  */
@@ -158,7 +158,7 @@ extern void slv_set_logrel_buf(slv_system_t, struct logrel_relation *);
 extern void slv_set_condlogrel_buf(slv_system_t, struct logrel_relation *);
 extern void slv_set_when_buf(slv_system_t, struct w_when *,int);
 extern void slv_set_bnd_buf(slv_system_t, struct bnd_boundary *,int);
-/** 
+/**< 
  ***  slv_set_*_buf(sys,array);
  ***  You should give these functions a pointer to an array of
  ***  the var or rel structure. These arrays should contain the
@@ -175,7 +175,7 @@ extern void slv_set_bnd_buf(slv_system_t, struct bnd_boundary *,int);
 extern void slv_set_incidence(slv_system_t, struct var_variable **,long);
 extern void slv_set_var_incidence(slv_system_t, struct rel_relation **,long);
 extern void slv_set_logincidence(slv_system_t, struct dis_discrete **,long);
-/** 
+/**< 
  ***  slv_set_incidence(sys,array,size);
  ***  slv_set_var_incidence(sys,array,size);
  ***  slv_set_logincidence(sys,array,size);
@@ -204,7 +204,7 @@ extern void slv_set_logincidence(slv_system_t, struct dis_discrete **,long);
 extern void slv_set_extrel_list(slv_system_t,struct ExtRelCache **,int);
 extern struct ExtRelCache **slv_get_extrel_list(slv_system_t);
 extern int slv_get_num_extrels(slv_system_t);
-/**
+/**< 
  ***  slv_set_extrel_list(sys,rlist,size)
  ***  erlist = slv_get_extrel_list(sys)
  ***
@@ -229,7 +229,7 @@ extern int slv_get_num_extrels(slv_system_t);
  **/
 
 extern int32 slv_obj_select_list(slv_system_t, int32 **);
-/**
+/**< 
  ***  count = slv_obj_select_list(sys, rip)
  ***  int32 count;
  ***  slv_system_t sys;
@@ -243,7 +243,7 @@ extern int32 slv_obj_select_list(slv_system_t, int32 **);
  **/
 
 extern int32 slv_get_obj_num(slv_system_t);
-/**
+/**< 
  ***  num = slv_get_obj_num(sys)
  ***  int32 num;
  ***  slv_system_t sys;
@@ -254,7 +254,7 @@ extern int32 slv_get_obj_num(slv_system_t);
  **/
 
 extern int32 slv_near_bounds(slv_system_t, real64, int32 **);
-/**
+/**< 
  ***  count = slv_near_bounds(sys, epsilon, rip)
  ***  int32 count;
  ***  real64 epsilon;
@@ -275,7 +275,7 @@ extern int32 slv_near_bounds(slv_system_t, real64, int32 **);
  **/
 
 extern int32 slv_far_from_nominals(slv_system_t, real64, int32 **);
-/**
+/**< 
  ***  count = slv_far_from_nominals(sys, bignum, rip)
  ***  int32 count;
  ***  real64 bignum;

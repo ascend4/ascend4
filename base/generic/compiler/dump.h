@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Instance Garbage Dump
  *  by Tom Epperly
  *  10/24/89
@@ -37,7 +37,7 @@
 #define __DUMP_H_SEEN__
 
 
-/*
+/**< 
  *  When #including dump.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
@@ -46,20 +46,20 @@
 #define MESSYTHRESH 10
 
 extern void InitDump(void);
-/*
+/**< 
  *  void InitDump()
  *  Must be called to initialize the dump.
  */
 
 extern void EmptyTrash(void);
-/*
+/**< 
  *  void EmptyTrash()
  *  Delete all the instances in the dump.  The dump can still be used
  *  after this call.
  */
 
 extern void TendTrash(void);
-/*
+/**< 
  *  void TendTrash()
  *  This is a less drastic version of EmptyTrash, which only deletes
  *  instance with too many copies in the dump.  Too many is more than
@@ -67,7 +67,7 @@ extern void TendTrash(void);
  */
 
 extern void TrashType(symchar *);
-/*
+/**< 
  *  void TrashType(str)
  *  const char *str;
  *  Delete any copies of type 'str' from the dump.  This should be called
@@ -79,18 +79,18 @@ extern void TrashType(symchar *);
  */
 
 extern void AddInstance(struct Instance *);
-/*
+/**< 
  *  void AddInstance(i,type)
  *  struct Instance *i;
  *  This adds instance i to the trash dump.
  */
 
 extern struct Instance *FindInstance(symchar *);
-/*
+/**< 
  *  struct Instance *FindInstance(str)
  *  symchar *str;
  *  This will return an instance if it one is available; otherwise, it
  *  returns NULL.
  */
 
-#endif /* __DUMP_H_SEEN__ */
+#endif /**< __DUMP_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Basic Definitions for Ascend
  *  by Tom Epperly
  *  Version: $Revision: 1.26 $
@@ -38,18 +38,18 @@
 #ifndef __COMPILER_H_SEEN__
 #define __COMPILER_H_SEEN__
 
-/* some influential defines and where to set them:
+/**< some influential defines and where to set them:
 	ATDEBUG anontype.c -- controls anon type/relation sharing spew
 	ASC_NO_POOL -- compiler -D flag. Turn off many memory recycles of small objects.
 	ASC_NO_TRAPS -- compiler -D flag. Turn off traps/setjmp/longjump.
 */
 
 #define TIMECOMPILER 1
-/*
+/**< 
  * set to 1 for timing spew or 0 for not.
  */
 
-/*
+/**< 
  * define to check internal and client compliance with symbol
  * table requirements. 0 for production code. 
  */
@@ -60,7 +60,7 @@
 #endif
 
 #if CHECK_SYMBOL_USE
-/* This non-integral typedef
+/**< This non-integral typedef
  * forces all the whines on virtually all compilers.
  * The only way to shut it up is to use AddSymbol,symchars,
  * and SCP() correctly. The visible typedef does not change
@@ -72,14 +72,14 @@
  */
 typedef CONST double symchar; 
 #ifndef __GNUC__
-/* strcmp() is dumb in string.h. we want it to whine a lot. */
+/**< strcmp() is dumb in string.h. we want it to whine a lot. */
 extern int strcmp(CONST char *, CONST char *);
 #endif
 #else
-/* This is the real definition for production builds. */
+/**< This is the real definition for production builds. */
 typedef CONST char symchar;
 #endif
-/*
+/**< 
  * Symchar exists so we can be very clear about strings coming from
  * symbol tables. If it's a pair of symchar *, it is a sufficient
  * comparison to compare the pointers if only equality is sought.
@@ -90,52 +90,52 @@ typedef CONST char symchar;
  * or your code will most likely not compile and not run.
  */
 #define SCP(s) ((CONST char *)(s))
-/*
+/**< 
  * SCP(s) returns the string ptr from a symchar ptr, whatever a symchar is.
  * If you need a just plain (char *) for I/O (tcl perhaps) just write
  * (char *)SCP(foo)
  */
 
 #define SCLEN(s) (*(int *)(((char *)s)-sizeof(int)))
-/*
+/**< 
  * returns, at considerably less expense, strlen(SCP(s))
  * by looking up the length of the string in an int stored
  * just before the character string itself.
  */
 
-/* bracedtext atomic type. see braced.h */
+/**< bracedtext atomic type. see braced.h */
 struct bracechar;
 
-/* globals from ascParse.y that yacc won't put in ascParse.h generated. */
+/**< globals from ascParse.y that yacc won't put in ascParse.h generated. */
 
 extern int g_compiler_warnings;
-/*
+/**< 
  *  Flag to turn on ASCEND instantiation whinings in various ways.
  *  higher values mean more spew. 0 = no warnings.
  *  Variable is declared in ascParse.y.
  */
 
 extern int g_parser_warnings;
-/*
+/**< 
  *  Flag to turn on lintlike ASCEND whinings in various ways.
  *  higher values mean less spew. 0 = no warnings.
  *  Variable is declared in typelint.c.
  */
 
 extern int g_parse_relns;
-/* abandon relation productions - very bad idea but useful for
+/**< abandon relation productions - very bad idea but useful for
  * benchmarking sometimes.
  */
 
 extern int g_simplify_relations;
-/*
+/**< 
  * turn on or off relation simplification as noted in
  * relation.h. This variable is defined in relation.c and
  * headered here for UI exports.
  */
 
 extern int g_use_copyanon;
-/*
+/**< 
  * turn on/off relation sharing. see instantiate.h.
  */
 
@@ -151,13 +151,13 @@ extern int g_use_copyanon;
 #define BASE_CON_INTEGER_NAME   "integer_constant"
 #define BASE_CON_BOOLEAN_NAME   "boolean_constant"
 #define BASE_CON_SYMBOL_NAME    "symbol_constant"
-/* relation, etc names */
+/**< relation, etc names */
 #define BASE_REL_NAME "relation"
 #define BASE_LOGREL_NAME "logic_relation"
 #define BASE_WHEN_NAME "when"
 #define BASE_EXT_NAME "EXTERNAL_MODEL"
 #define BASE_UNSELECTED "unSELECTed_part"
-/*
+/**< 
  *  Don't randomly change these, as ASCEND MODEL code assumes they
  *  are what they are. Changing these constitutes requiring a global
  *  revision of ASCEND models.
@@ -167,4 +167,4 @@ extern int g_use_copyanon;
  * type_descio.h instead.
  */
 
-#endif /* __COMPILER_H_SEEN__ */
+#endif /**< __COMPILER_H_SEEN__ */

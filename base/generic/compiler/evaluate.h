@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Expression Evaluation Routine
  *  by Tom Epperly
  *  Created: 1/16/90
@@ -31,7 +31,7 @@
 #define __EVALUATE_H_SEEN__
 
 
-/*
+/**< 
  *  When #including evaluate.h, make sure these files are #included first:
  *         #include "list.h"
  *         #include "fractions.h"
@@ -42,7 +42,7 @@
 
 
 extern struct value_t EvaluateSet(CONST struct Set *,struct value_t (*)());
-/*
+/**< 
  *  struct value_t EvaluateSet(sptr,EvaluateName)
  *  const struct Set *sptr;
  *  struct value_t (*EvaluateName)();
@@ -55,7 +55,7 @@ extern struct value_t EvaluateSet(CONST struct Set *,struct value_t (*)());
 
 extern struct value_t EvaluateExpr(CONST struct Expr *,CONST struct Expr *,
        struct value_t (*)());
-/*
+/**< 
  *  struct value_t EvaluateExpr(expr,stop,EvaluateName)
  *  const struct Expr *expr,*stop;
  *  struct value_t (*EvaluateName)();
@@ -72,7 +72,7 @@ extern struct value_t EvaluateExpr(CONST struct Expr *,CONST struct Expr *,
 extern struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *,
                                              CONST struct Expr *stop,
                                              struct gl_list_t *);
-/*
+/**< 
  *  list = EvaluateNamesNeeded(e,stop,list);
  *  const struct Expr *expr,*stop;
  *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
@@ -96,7 +96,7 @@ extern struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *,
 extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *,
                                                     CONST struct Expr *stop,
                                                     struct gl_list_t *);
-/*
+/**< 
  *  list = EvaluateNamesNeededShallow(e,stop,list);
  *  const struct Expr *expr,*stop;
  *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
@@ -119,7 +119,7 @@ extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *,
 
 extern struct gl_list_t *
 EvaluateSetNamesNeeded(CONST struct Set *,struct gl_list_t *);
-/*
+/**< 
  *  list = EvaluateSetNamesNeeded(sptr,list)
  *  const struct Set *sptr;
  *  extern struct gl_list_t *list;
@@ -143,7 +143,7 @@ EvaluateSetNamesNeeded(CONST struct Set *,struct gl_list_t *);
 
 extern struct gl_list_t *
 EvaluateSetNamesNeededShallow(CONST struct Set *,struct gl_list_t *);
-/*
+/**< 
  *  list = EvaluateSetNamesNeededShallow(sptr,list)
  *  const struct Set *sptr;
  *  extern struct gl_list_t *list;
@@ -166,7 +166,7 @@ EvaluateSetNamesNeededShallow(CONST struct Set *,struct gl_list_t *);
  */
 
 extern void ClearRecycleStack(void);
-/*
+/**< 
  *  Call this function after shutting down the compiler.
  *
  *  The stack seldom gets beyond 2 deep, but we recycle the memory for
@@ -178,4 +178,4 @@ extern void ClearRecycleStack(void);
  *  There is an option inside evaluate.c that causes this function to
  *  report how many recycled stack elements it deallocates.
  */
-#endif /* __EVALUATE_H_SEEN__ */
+#endif /**< __EVALUATE_H_SEEN__ */

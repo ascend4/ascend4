@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Set routine external definitions
  *  by Tom Epperly
  *  July 31, 1989
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including sets.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -37,21 +37,21 @@
 
 #ifndef __SETS_H_SEEN__
 #define __SETS_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"types.h"
 # #include"list.h"
 */
 
 extern struct Set *CreateSingleSet(struct Expr *);
-/*
+/**< 
  *  struct Set *CreateSingleSet(ex)
  *  struct Expr *ex;
  *  Create a set node of type single with ex as its expression.
  */
 
 extern struct Set *CreateRangeSet(struct Expr *,struct Expr *);
-/*
+/**< 
  *  struct Set *CreateRangeSet(lower,upper)
  *  struct Expr *lower,*upper;
  *  Create a set node of type range with lower as its lower bound and
@@ -59,7 +59,7 @@ extern struct Set *CreateRangeSet(struct Expr *,struct Expr *);
  */
 
 extern void LinkSets(struct Set *,struct Set *);
-/*
+/**< 
  *  void LinkSets(cur,next)
  *  struct Set *cur, *next;
  *  Sets the next field of cur to next.
@@ -71,7 +71,7 @@ extern void LinkSets(struct Set *,struct Set *);
 #define NextSet(s) NextSetF(s)
 #endif
 extern struct Set *NextSetF(CONST struct Set *);
-/*
+/**< 
  *  macro NextSet(s)
  *  struct Set *NextSetF(s)
  *  const struct Set *s;
@@ -84,7 +84,7 @@ extern struct Set *NextSetF(CONST struct Set *);
 #define SetType(s) SetTypeF(s)
 #endif
 extern int SetTypeF(CONST struct Set *);
-/*
+/**< 
  *  macro SetType(s)
  *  const int SetTypeF(s)
  *  struct Set *s;
@@ -97,7 +97,7 @@ extern int SetTypeF(CONST struct Set *);
 #define GetSingleExpr(s) GetSingleExprF(s)
 #endif
 extern CONST struct Expr *GetSingleExprF(CONST struct Set *);
-/*
+/**< 
  *  macro GetSingleExpr(s)
  *  const struct Expr *GetSingleExprF(s)
  *  const struct Set *s;
@@ -111,7 +111,7 @@ extern CONST struct Expr *GetSingleExprF(CONST struct Set *);
 #define GetLowerExpr(s) GetLowerExprF(s)
 #endif
 extern CONST struct Expr *GetLowerExprF(CONST struct Set *);
-/*
+/**< 
  *  macro GetLowerExpr(s)
  *  const struct Expr *GetLowerExprF(s)
  *  const struct Set *s;
@@ -124,7 +124,7 @@ extern CONST struct Expr *GetLowerExprF(CONST struct Set *);
 #define GetUpperExpr(s) GetUpperExprF(s)
 #endif
 extern CONST struct Expr *GetUpperExprF(CONST struct Set *);
-/*
+/**< 
  *  macro GetUpperExpr(s)
  *  const struct Expr *GetUpperExprF(s)
  *  const struct Set *s;
@@ -132,7 +132,7 @@ extern CONST struct Expr *GetUpperExprF(CONST struct Set *);
  */
 
 extern struct Set *CopySetNode(CONST struct Set *);
-/*
+/**< 
  *  struct Set *CopySetNode(s)
  *  const struct Set *s;
  *  Return a copy of s, but not anything pointed at by s->next.
@@ -141,7 +141,7 @@ extern struct Set *CopySetNode(CONST struct Set *);
  */
 
 extern struct Set *CopySetList(CONST struct Set *);
-/*
+/**< 
  *  struct Set *CopySetList(s)
  *  const struct Set *s;
  *  Return a copy of s.
@@ -149,7 +149,7 @@ extern struct Set *CopySetList(CONST struct Set *);
  */
 
 extern void DestroySetNode(struct Set *);
-/*
+/**< 
  *  void DestroySetNode(s)
  *  Destroys Set node given and the expression contents of the sets.
  *  struct Set *s;
@@ -157,7 +157,7 @@ extern void DestroySetNode(struct Set *);
  */
 
 extern void DestroySetList(struct Set *);
-/*
+/**< 
  *  void DestroySetList(s)
  *  struct Set *s;
  *  Destroys Set chain given and the expression contents of the sets.
@@ -166,7 +166,7 @@ extern void DestroySetList(struct Set *);
  */
 
 extern void DestroySetHead(struct Set *);
-/*
+/**< 
  *  void DestroySetHead(s)
  *  Destroys Set node given but not the expression contents of the node.
  *  struct Set *s;
@@ -174,27 +174,27 @@ extern void DestroySetHead(struct Set *);
  */
 
 extern struct Set *CopySetByReference(struct Set *);
-/*
+/**< 
  *  struct Set *CopySetByReference(s)
  *  const struct Set *s;
  *  increase ref_count.
  */
 
 extern void DestroySetListByReference(struct Set *);
-/*
+/**< 
  *  void DestroySetListByReference(s)
  *  struct Set *s;
  */
 
 extern void DestroySetNodeByReference(struct Set *);
-/*
+/**< 
  *  void DestroySetNodeByReference(s)
  *  struct Set *s;
  *  decrease ref_count;
  */
 
 extern struct Set *JoinSetLists(struct Set *,struct Set *);
-/*
+/**< 
  *  void JoinSetLists(s1,s2)
  *  struct Set *s1, *s2;
  *  Append list s2 to the end of s1.  Returns the pointer to the joined list.
@@ -202,21 +202,21 @@ extern struct Set *JoinSetLists(struct Set *,struct Set *);
  */
 
 extern struct Set *ReverseSetList(struct Set *);
-/*
+/**< 
  *  struct Set *ReverseSetList(s)
  *  struct Set *s;
  *  Reverse the order of the set list.
  */
 
 extern int SetStructuresEqual(CONST struct Set *,CONST struct Set *);
-/*
+/**< 
  *  int SetStructuresEqual(s1,s2)
  *  const struct Set *s1,*s2;
  *  Return TRUE if and only if, s1 and s2 are structurally equivalent.
  */
 
 extern int CompareSetStructures(CONST struct Set *,CONST struct Set *);
-/*
+/**< 
  *  int CompareSetStructures(s1,s2)
  *  const struct Set *s1,*s2;
  *  Returns -1,0,1 as s1 < = > s2.
@@ -226,12 +226,12 @@ extern int CompareSetStructures(CONST struct Set *,CONST struct Set *);
  */
 
 extern unsigned long SetLength(CONST struct Set *);
-/*
+/**< 
  *  Returns the number of elements in the set given.
  */
 
 extern struct gl_list_t *SetNameList(CONST struct Set *);
-/*
+/**< 
  *  Returns a list containing all the names found in the Set given.
  *  The names in the list belong to the set, so you can destroy
  *  just the list when you are done with it. The list may be
@@ -239,7 +239,7 @@ extern struct gl_list_t *SetNameList(CONST struct Set *);
  */
 
 extern char *CreateStrFromSet(CONST struct Set *);
-/*
+/**< 
  *  char *CreateStrFromSet(set);
  *  const struct Set *set;
  *  Returns a copy of the string representation of the given set.
@@ -247,18 +247,18 @@ extern char *CreateStrFromSet(CONST struct Set *);
 
 
 extern void sets_init_pool(void);
-/*
+/**< 
  * starts memory recycle. do not call twice before stopping recycle.
  */
 
 extern void sets_destroy_pool(void);
-/*
+/**< 
  * stops memory recycle. do not call while ANY Expr are outstanding.
  */
 
 extern void sets_report_pool(void);
-/*
+/**< 
  * write the pool report to ASCERR for the sets pool.
  */
 
-#endif /* __SETS_H_SEEN__ */
+#endif /**< __SETS_H_SEEN__ */

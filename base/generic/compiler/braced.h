@@ -1,4 +1,4 @@
-/*
+/** 
  *  Braced Text Module
  *  By Benjamin Allan
  *  March 20, 1998.
@@ -31,42 +31,42 @@
 #ifndef __BRACED_H_SEEN__
 #define __BRACED_H_SEEN__
 
-/* Module for storing braced text of notes and
+/** Module for storing braced text of notes and
  * some other BRACEDTEXT_T applications.
  */
-/* requires "compiler/compiler.h" */
-/*
+/** requires "compiler/compiler.h" */
+/** 
  * Not everything that is defined as BRACEDTEXT_T in
  * the grammar is necessarily kept by using this module.
  * For example, some units END up in the symbol table.
  */
-/*
+/** 
  * struct bracechar defined first in compiler.h hides the details of
  * whatever it is we do with braced text in composing
  * NOTES and other persist forms.
  * Braced text may be very long.
  */
 
-/*
+/** 
  * bc = AddBraceChar(string,lang);
  * Creates a bracechar from a string. We do not keep the string.
  * If a lang is given, it is kept.
  */
 extern struct bracechar *AddBraceChar(CONST char *, symchar *);
 
-/*
+/** 
  * cbc = CopyBraceChar(bc);
  * increments a reference count and returns bc.
  */
 struct bracechar *CopyBraceChar(struct bracechar *);
 
-/*
+/** 
  * DestroyBraceChar(bc);
  * Frees memory associated with bc, (subject to refcounting).
  */
 extern void DestroyBraceChar(struct bracechar *);
 
-/*
+/** 
  * Returns a string of the bracechar content for READ-ONLY
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
@@ -74,7 +74,7 @@ extern void DestroyBraceChar(struct bracechar *);
 extern CONST char *BraceCharString(struct bracechar *);
 #define BCS(sbc) BraceCharString(sbc)
 
-/*
+/** 
  * Returns a 'language' of the bracechar content for READ-ONLY
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
@@ -83,7 +83,7 @@ extern CONST char *BraceCharString(struct bracechar *);
 extern symchar *BraceCharLang(struct bracechar *);
 #define BCLANG(sbc) BraceCharLang(sbc)
 
-/*
+/** 
  * Returns length of the bracechar content for READ-ONLY
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
@@ -92,4 +92,4 @@ extern symchar *BraceCharLang(struct bracechar *);
 extern int BraceCharLen(struct bracechar *);
 #define BCL(sbc) BraceCharLen(sbc)
 
-#endif /* __BRACED_H_SEEN__ */
+#endif /** __BRACED_H_SEEN__ */

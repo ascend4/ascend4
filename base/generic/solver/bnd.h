@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Boundary Module
  *  Created: 04/97
  *  Version: $Revision: 1.10 $
@@ -25,7 +25,7 @@
  *
  */
 
-/*
+/**< 
  *  Description: This is the ascend version of the boundary module.
  *               This version should be used by any user who receives
  *               his/her formulation directly from an instance tree
@@ -36,15 +36,15 @@
 #ifndef bnd__already_included
 #define bnd__already_included
 
-/* Need a better way of doing this, dynamic allocation */
+/**< Need a better way of doing this, dynamic allocation */
 #define MAXNUM_OF_SAT_TERMS 5
 
-/* requires #include "base.h" */
-/* requires #include "rel.h" */
-/* requires #include "logrel.h" */
+/**< requires #include "base.h" */
+/**< requires #include "rel.h" */
+/**< requires #include "logrel.h" */
 
 
- /* The condition is a rel or a logrel */
+ /**< The condition is a rel or a logrel */
 enum bnd_enum {
   e_bnd_rel,
   e_bnd_logrel,
@@ -57,21 +57,21 @@ union bnd_union {
 };
 
 struct bnd_boundary {
-   enum bnd_enum kind;         /* real or logical condition */
-   union bnd_union cond;       /* condition */
-   struct gl_list_t *logrels;  /* logrel using the truth value of condition */
-   real64 tolerance;           /* assume a unique and consistent value for the
+   enum bnd_enum kind;         /**< real or logical condition */
+   union bnd_union cond;       /**< condition */
+   struct gl_list_t *logrels;  /**< logrel using the truth value of condition */
+   real64 tolerance;           /**< assume a unique and consistent value for the
                                   tolerance. Used only when the condition is a
                                   rel_relation. Needs FIX for arbitrary 
                                   values */
-   int32 mindex;	       /* index in the slv_system_t master list */
-   int32 sindex;	       /* index in the slv_system_t solver list */
-   int32 model;		       /* index of a hypothetical MODEL bnd is from */
-   uint32 flags;	       /* flags */
+   int32 mindex;	       /**< index in the slv_system_t master list */
+   int32 sindex;	       /**< index in the slv_system_t solver list */
+   int32 model;		       /**< index of a hypothetical MODEL bnd is from */
+   uint32 flags;	       /**< flags */
 };
 
 extern struct bnd_boundary *bnd_create(struct bnd_boundary *);
-/*
+/**< 
  *  bnd_create(bnd)
  *  bnd = bnd_create(NULL)
  *  struct bnd_boundary *bnd;
@@ -85,7 +85,7 @@ extern struct bnd_boundary *bnd_create(struct bnd_boundary *);
  */
 
 extern void bnd_destroy(struct bnd_boundary *);
-/*
+/**< 
  *  bnd_destroy(bnd)
  *  struct bnd_boundary *bnd;
  *
@@ -94,7 +94,7 @@ extern void bnd_destroy(struct bnd_boundary *);
 
 extern void bnd_set_kind(struct bnd_boundary *,enum bnd_enum); 
 extern enum bnd_enum bnd_kind(struct bnd_boundary *);
-/*
+/**< 
  * kind = bnd_kind(bnd);
  * bnd_enum kind;
  * struct bnd_boundary *bnd;
@@ -108,7 +108,7 @@ extern enum bnd_enum bnd_kind(struct bnd_boundary *);
 
 extern void bnd_set_logrels(struct bnd_boundary *,struct gl_list_t *);
 extern struct gl_list_t *bnd_logrels(struct bnd_boundary *);
-/*
+/**< 
  *  logrels = bnd_logrels(bnd)
  *  struct bnd_logrels *bnd;
  *  struct gl_list_t *logrels;
@@ -119,7 +119,7 @@ extern struct gl_list_t *bnd_logrels(struct bnd_boundary *);
 
 extern void bnd_set_tolerance(struct bnd_boundary *,real64);
 extern real64 bnd_tolerance(struct bnd_boundary *);
-/*
+/**< 
  *  tolerance = bnd_tolerance(bnd)
  *  struct bnd_boundary *bnd;
  *  real64 tolerance;
@@ -130,7 +130,7 @@ extern real64 bnd_tolerance(struct bnd_boundary *);
  */
 
 extern char *bnd_make_name(slv_system_t,struct bnd_boundary *);
-/*
+/**< 
  *  name = bnd_make_name(sys,bnd)
  *  slv_system_t sys;
  *  struct bnd_boundary *bnd;
@@ -142,7 +142,7 @@ extern char *bnd_make_name(slv_system_t,struct bnd_boundary *);
  
 extern int32 bnd_mindex(struct bnd_boundary *);
 extern void bnd_set_mindex(struct bnd_boundary *,int32);
-/*
+/**< 
  *  index = bnd_mindex(bnd)
  *  bnd_set_mindex(bnd,index)
  *  int32 index;
@@ -154,7 +154,7 @@ extern void bnd_set_mindex(struct bnd_boundary *,int32);
 
 extern int32 bnd_sindex(const struct bnd_boundary *);
 extern void bnd_set_sindex(struct bnd_boundary *,int32);
-/*
+/**< 
  *  index = bnd_sindex(bnd)
  *  bnd_set_sindex(bnd,index)
  *  int32 index;
@@ -166,7 +166,7 @@ extern void bnd_set_sindex(struct bnd_boundary *,int32);
     
 extern int32 bnd_model(const struct bnd_boundary *);
 extern void bnd_set_model(struct bnd_boundary *,int32);
-/*
+/**< 
  *  index = bnd_model(bnd)
  *  bnd_set_model(bnd,index)
  *  int32 index;
@@ -178,18 +178,18 @@ extern void bnd_set_model(struct bnd_boundary *,int32);
  */
 
 extern struct var_variable **bnd_real_incidence(struct bnd_boundary *);
-/*
+/**< 
  * Get the list of variables incident in the relation constituting
  * the boundary. 
  */
  
 extern int32 bnd_n_real_incidences(struct bnd_boundary *);
-/*
+/**< 
  * Get the number of variables incident in the relation constituting
  * the boundary. 
  */
 
-/*
+/**< 
  * Boundary filtration functions.
  * We have a lot (32) of binary (one bit) flags a client may want to query
  * in arbitrary combinations and paying attention to only certain of
@@ -203,7 +203,7 @@ typedef struct bnd_filter_structure {
 } bnd_filter_t;
 
 extern int bnd_apply_filter(const struct bnd_boundary *,bnd_filter_t *);
-/*
+/**< 
  *  value = bnd_apply_filter(bnd,filter)
  *  int value;
  *  struct bnd_boundary *bnd;
@@ -217,7 +217,7 @@ extern int bnd_apply_filter(const struct bnd_boundary *,bnd_filter_t *);
   
 extern unsigned int bnd_flags(struct bnd_boundary *);
 extern void bnd_set_flags(struct bnd_boundary *,uint32);
-/*
+/**< 
  *  struct bnd_boundary *bnd;
  *  uint32 flags;
  *
@@ -227,7 +227,7 @@ extern void bnd_set_flags(struct bnd_boundary *,uint32);
  */
 
 extern uint32 bnd_flagbit(struct bnd_boundary *,uint32);
-/* 
+/**< 
  *  bnd_flagbit(bnd,name);
  *  struct bnd_boundary *bnd;
  *  uint32 name;		
@@ -236,7 +236,7 @@ extern uint32 bnd_flagbit(struct bnd_boundary *,uint32);
  */
 
 extern void bnd_set_flagbit(struct bnd_boundary *,uint32, uint32);
-/*
+/**< 
  *  struct bnd_boundary *bnd;
  *  unsigned int NAME,oneorzero;
  *  bnd_set_flagbit(bnd,NAME,oneorzero)
@@ -246,7 +246,7 @@ extern void bnd_set_flagbit(struct bnd_boundary *,uint32, uint32);
  *  The macro names are the defined up at the top of this file.
  */
 
-/* the bit flags.*/
+/**< the bit flags.*/
 #define BND_REAL	0x1
 #define BND_IN_LOGREL	0x2
 #define BND_EQUALITY	0x4
@@ -257,7 +257,7 @@ extern void bnd_set_flagbit(struct bnd_boundary *,uint32, uint32);
 #define BND_PERTURB     0x80
 
      
-/*
+/**< 
  * BND_REAL	is the boundary a real relation ?
  * BND_IN_LOGREL	is the boundary used in some logical relation ?
  * BND_EQUALITY	is the boundary an equality? readonly for clients.
@@ -271,7 +271,7 @@ extern void bnd_set_flagbit(struct bnd_boundary *,uint32, uint32);
  *                 of logical variables ?
  */
 
-/* 
+/**< 
  * the bit flag lookups 
  */
 #ifdef NDEBUG
@@ -292,9 +292,9 @@ extern void bnd_set_flagbit(struct bnd_boundary *,uint32, uint32);
 #define bnd_pre_status(b)	bnd_flagbit((b),BND_PRE_STATUS)
 #define bnd_crossed(b)          bnd_flagbit((b),BND_CROSSED)
 #define bnd_perturb(b)          bnd_flagbit((b),BND_PERTURB)
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
-/* 
+/**< 
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
@@ -309,10 +309,10 @@ extern void bnd_set_flagbit(struct bnd_boundary *,uint32, uint32);
 
 extern int32 bnd_status_cur( struct bnd_boundary *);
 extern int32 bnd_status_pre( struct bnd_boundary *);
-/*
+/**< 
  * Functions returning an int32 (0 or 1) instead of an arbitrary nonzero
  * or zero value. It is silly, but it makes easier to deal with comparisons
  * between the current and the previous status of a boundary.
  */
 
-#endif /* bnd__already_included */
+#endif /**< bnd__already_included */

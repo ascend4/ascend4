@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SELECT List Routines
  *  by Vicente Rico-Ramirez
  *  1/97
@@ -28,7 +28,7 @@
 #ifndef __SELECT_H_SEEN__
 #define __SELECT_H_SEEN__
 
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"sets.h"
 # #include"exprs.h"
@@ -37,7 +37,7 @@
 */
 
 extern struct SelectList *CreateSelect(struct Set *,struct StatementList *);
-/*
+/**< 
  *  struct SelectList *CreateSelect(set,sl)
  *  struct Set *set;
  *  struct StatementList *sl;
@@ -48,7 +48,7 @@ extern struct SelectList *CreateSelect(struct Set *,struct StatementList *);
  */
 
 extern struct SelectList *ReverseSelectCases(struct SelectList *);
-/*
+/**< 
  *  struct SelectList *ReverseSelectCases(sel)
  *  struct SelectList *sel;
  *  Reverse this list.
@@ -56,7 +56,7 @@ extern struct SelectList *ReverseSelectCases(struct SelectList *);
 
 extern struct SelectList *
 LinkSelectCases(struct SelectList *,struct SelectList *);
-/*
+/**< 
  *  struct SelectList *LinkSelectCases(sel1,sel2)
  *  struct SelectList *sel1,*sel2;
  *  Link two case lists and return the joined list.  This works best when
@@ -70,7 +70,7 @@ LinkSelectCases(struct SelectList *,struct SelectList *);
 #define NextSelectCase(sel) NextSelectCaseF(sel)
 #endif
 extern struct SelectList *NextSelectCaseF(struct SelectList *);
-/*
+/**< 
  *  macro NextSelectCase(case)
  *  struct SelectList *NextSelectCaseF(case)
  *  struct SelectList *case;
@@ -83,7 +83,7 @@ extern struct SelectList *NextSelectCaseF(struct SelectList *);
 #define SelectSetList(sel) SelectSetListF(sel)
 #endif
 extern struct Set *SelectSetListF(struct SelectList *);
-/*
+/**< 
  *  macro SelectSetList(sel)
  *  struct Set *SelectSetListF(sel)
  *  const struct SelectList *sel;
@@ -97,7 +97,7 @@ extern struct Set *SelectSetListF(struct SelectList *);
 #define SelectStatementList(sel) SelectStatementListF(sel)
 #endif
 extern struct StatementList *SelectStatementListF(struct SelectList *);
-/*
+/**< 
  *  macro SelectStatementList(sel)
  *  const struct StatementList *SelectStatementListF(sel)
  *  const struct SelectList *sel;
@@ -105,33 +105,33 @@ extern struct StatementList *SelectStatementListF(struct SelectList *);
  */
 
 extern void DestroySelectList(struct SelectList *);
-/*
+/**< 
  *  void DestroySelectList(sel)
  *  struct SelectList *sel;
  *  Destroy a whole list.
  */
 
 extern void DestroySelectNode(struct SelectList *);
-/*
+/**< 
  *  void DestroySelectNode(sel)
  *  struct SelectList *sel;
  *  Destroy just this node.
  */
 
 extern struct SelectList *CopySelectNode(struct SelectList *);
-/*
+/**< 
  *  struct SelectList *CopySelectNode(sel)
  *  struct SelectList *sel;
  *  Copy a case.  The next attribute is initialized to NULL.
  */
 
 extern struct SelectList *CopySelectList(struct SelectList *);
-/*
+/**< 
  *  struct SelectList *CopySelectList(sel)
  *  struct SelectList *sel;
  *  Copy the whole list content. not a reference count change.
  */
-#endif /* __SELECT_H_SEEN__ */
+#endif /**< __SELECT_H_SEEN__ */
 
 
 

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Initialization Routines
  *  by Tom Epperly
  *  Created: 3/24/1990
@@ -31,7 +31,7 @@
 #define __INITIALIZE_H_SEEN__
 
 
-/*
+/**< 
  *  When #including initialize.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "fractions.h"
@@ -42,7 +42,7 @@
 
 
 extern void SetProcStackLimit(unsigned long);
-/*
+/**< 
  *  void SetProcStackLimit(l);
  *  Sets the procedure stack limit = l.
  *  The stack limit starts out at INITSTACKLIMIT.
@@ -52,7 +52,7 @@ extern void SetProcStackLimit(unsigned long);
 #define INITSTACKLIMIT 20
 
 extern unsigned long GetProcStackLimit(void);
-/*
+/**< 
  *  int GetProcStackLimit(l);
  *  Gets the procedure stack limit currently set.
  */
@@ -61,7 +61,7 @@ extern enum Proc_enum Initialize(struct Instance *,struct Name *,
                                  char *, FILE *,
                                  wpflags, struct gl_list_t *,
                                  FILE *);
-/*
+/**< 
  *  enum Proc_enum Initialize(context,name)
  *  struct Instance *context;
  *  struct Name *name;
@@ -89,7 +89,7 @@ extern enum Proc_enum ClassAccessInitialize(struct Instance *, struct Name *,
                                             struct Name *, char *, FILE *,
                                             wpflags, struct gl_list_t *,
                                             FILE *);
-/*
+/**< 
  *  enum Proc_enum ClassAccessInitialize(context, class, procname,
  *                                       cname, ferr, options, wpts, flog);
  *  struct Instance *context;
@@ -115,7 +115,7 @@ extern enum Proc_enum ClassAccessInitialize(struct Instance *, struct Name *,
 
 extern struct InitProcedure *FindProcedure(CONST struct Instance *,
                                            symchar *);
-/*
+/**< 
  *  struct InitProcedure *FindProcedure(i,procname)
  *  This will return the pointer to the named procedure if it exists in i.
  *  Returns null if named not found.
@@ -123,9 +123,9 @@ extern struct InitProcedure *FindProcedure(CONST struct Instance *,
 
 extern struct InitProcedure *SearchProcList(CONST struct gl_list_t *,
                                             symchar *);
-/*
+/**< 
  * struct InitProcedure *proc = SearchProcList(list,name);
  * list generally comes from GetInitializationList.
  */
 
-#endif /* __INITIALIZE_H_SEEN__ */
+#endif /**< __INITIALIZE_H_SEEN__ */

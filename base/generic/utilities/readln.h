@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Read line module
  *  by Karl Westerberg
  *  Created: 6/90
@@ -27,7 +27,7 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-/*
+/**< 
  *  Contents:     Read line module
  *
  *  Authors:      Karl Westerberg
@@ -38,13 +38,13 @@
  *                since [a]readln will provide a better interface to the
  *                terminal.
  */
-/* requires
+/**< requires
 # #include "ascmalloc.h"
 */
 
 extern int readln();
 extern int freadln(); 
-/*
+/**< 
  *  length = readln(s,max)
  *  length = freadln(s,max,input)
  *  int length;
@@ -60,7 +60,7 @@ extern int freadln();
 
 extern char *areadln();
 extern char *afreadln();
-/*
+/**< 
  *  str = areadln()
  *  str = afreadln()
  *
@@ -72,7 +72,7 @@ extern char *afreadln();
 
 extern long readlong();
 extern double readdouble();
-/*
+/**< 
  *  number = readlong(number_default)
  *  value = readdouble(value_default)
  *  long number, number_default;

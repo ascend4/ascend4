@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Procedure Data Structure
  *  by Tom Epperly
  *  Created: 1/10/90
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including proc.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -35,22 +35,22 @@
 
 #ifndef __PROC_H_SEEN__
 #define __PROC_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"list.h"
 # #include"slist.h"
 */
 
 struct InitProcedure {
-  symchar *name;		/* procedure's name */
-  struct StatementList *slist;	/* statement list */
-  long int parse_id;            /* parse id of type desc with which this is defined */
-                                /* 0 if method is not yet associated */
+  symchar *name;		/**< procedure's name */
+  struct StatementList *slist;	/**< statement list */
+  long int parse_id;            /**< parse id of type desc with which this is defined */
+                                /**< 0 if method is not yet associated */
 };
 
 extern struct InitProcedure *CreateProcedure(symchar *,
           struct StatementList *);
-/*
+/**< 
  *  struct InitProcedure *CreateProcedure(name,stats)
  *  symchar *name;
  *  struct StatementList *stats;
@@ -58,7 +58,7 @@ extern struct InitProcedure *CreateProcedure(symchar *,
  */
 
 extern struct InitProcedure *CopyProcedure(struct InitProcedure *);
-/*
+/**< 
  *  struct InitProcedure *CopyProcedure(p)
  *  struct InitProcedure *p;
  *  Make a copy of procedure p, but this copy should not be modified.
@@ -67,7 +67,7 @@ extern struct InitProcedure *CopyProcedure(struct InitProcedure *);
  */
 
 extern struct InitProcedure *CopyProcToModify(struct InitProcedure *);
-/*
+/**< 
  *  struct InitProcedure *CopyProcToModify(p)
  *  struct InitProcedure *p;
  *  Make a copy, but this copy can be changed.
@@ -75,7 +75,7 @@ extern struct InitProcedure *CopyProcToModify(struct InitProcedure *);
 
 extern struct gl_list_t *MergeProcedureLists(struct gl_list_t *,
                                              struct gl_list_t *);
-/*
+/**< 
  *  plr = MergeProcedureLists(old,new);
  *  struct gl_list_t *plr, *old, *new;
  *  old or new may be NULL.
@@ -94,20 +94,20 @@ extern struct gl_list_t *MergeProcedureLists(struct gl_list_t *,
  */
 
 extern struct gl_list_t *GetUniversalProcedureList(void);
-/*
+/**< 
  * Returns the list of methods defined for all MODELs
  * unless they redefine the methods themselves.
  */
 
 extern void SetUniversalProcedureList(struct gl_list_t *);
-/*
+/**< 
  * Sets the list of procedures defined for all MODELs.
  * If a UPL already exists, it will be destroyed unless it
  * is the same. If the same, it is resorted.
  */
 
 extern void DestroyProcedure(struct InitProcedure *);
-/*
+/**< 
  *  void DestroyProcedure(p)
  *  struct InitProcedure *p;
  *  Destroy this reference to p.  This won't necessary destroy all the parts
@@ -115,7 +115,7 @@ extern void DestroyProcedure(struct InitProcedure *);
  */
 
 extern void DestroyProcedureList(struct gl_list_t *);
-/*
+/**< 
  *  void DestroyProcedureList(pl)
  *  struct gl_list_t *pl contain pointers to
  *  struct InitProcedure *p
@@ -127,7 +127,7 @@ extern void DestroyProcedureList(struct gl_list_t *);
 
 extern int CompareProcedureLists(struct gl_list_t *,struct gl_list_t *,
                                  unsigned long int *);
-/*
+/**< 
  *  CompareProcedureLists(pl1,pl2,&n)
  *  struct gl_list_t *pl1, *pl2 contain pointers to
  *  struct InitProcedure *p.
@@ -143,7 +143,7 @@ extern int CompareProcedureLists(struct gl_list_t *,struct gl_list_t *,
 #define ProcName(p) ProcNameF(p)
 #endif
 extern symchar *ProcNameF(CONST struct InitProcedure *);
-/*
+/**< 
  *  macro ProcName(p)
  *  symchar *ProcNameF(p)
  *  const struct InitProcedure *p;
@@ -156,7 +156,7 @@ extern symchar *ProcNameF(CONST struct InitProcedure *);
 #define ProcStatementList(p) ProcStatementListF(p)
 #endif
 extern struct StatementList *ProcStatementListF(CONST struct InitProcedure *);
-/*
+/**< 
  *  struct StatementList *ProcStatementListF(p)
  *  const struct InitProcedure *p;
  *  Return the statement list part of the procedure structure.
@@ -168,7 +168,7 @@ extern struct StatementList *ProcStatementListF(CONST struct InitProcedure *);
 #define GetProcParseId(p) GetProcParseIdF(p)
 #endif
 extern long GetProcParseIdF(CONST struct InitProcedure *);
-/*
+/**< 
  *  id = GetProcParseIdF(p);
  *  const struct InitProcedure *p;
  *  long id;
@@ -183,7 +183,7 @@ extern long GetProcParseIdF(CONST struct InitProcedure *);
 #define SetProcParseId(p,id) SetProcParseIdF((p),(id))
 #endif
 extern void SetProcParseIdF(struct InitProcedure *,long);
-/*
+/**< 
  *  SetProcParseIdF(p,id);
  *  const struct InitProcedure *p;
  *  long id.
@@ -199,10 +199,10 @@ extern void SetProcParseIdF(struct InitProcedure *,long);
  */
 
 extern int CmpProcs(CONST struct InitProcedure *,CONST struct InitProcedure *);
-/*
+/**< 
  *  int CmpProcs(p1,p2)
  *  const struct InitProcedure *p1,*p2;
  *  Compare the two procedures to provide an ordering for them.
  *  Simply alphabetizing.
  */
-#endif /* __PROC_H_SEEN__ */
+#endif /**< __PROC_H_SEEN__ */

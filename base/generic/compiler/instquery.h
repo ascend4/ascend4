@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Miscellaneous Queries
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -33,14 +33,14 @@
 #define __INSTQUERY_H_SEEN__
 
 
-/*
+/**< 
  *  When #including instquery.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
  */
 
 
-/*
+/**< 
  *  The following InterfacePtr functions are to support a global,
  *  persistent client (most likely a GUI) that for some reason
  *  insists (brain dead idiot) that it must decorate the instance
@@ -55,7 +55,7 @@
  */
 
 extern void (*InterfacePtrDelete)();
-/*
+/**< 
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  This procedure will be called
  *  when an instance is deleted.  Its purpose is to dispose of the
@@ -79,7 +79,7 @@ extern void (*InterfacePtrDelete)();
  */
 
 extern void (*InterfaceNotify)();
-/*
+/**< 
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  This procedure will be called
  *  when an instance is moved in memory.  It is provided in case the
@@ -104,7 +104,7 @@ extern void (*InterfaceNotify)();
  */
 
 extern void (*InterfacePtrATS)();
-/*
+/**< 
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  The function will be called
  *  when two instances are going to be ARE_THE_SAME'd.  The function's
@@ -133,7 +133,7 @@ extern void (*InterfacePtrATS)();
  *  }
  */
 
-/*
+/**< 
  *  General instance interogation routines
  */
 
@@ -143,7 +143,7 @@ extern void (*InterfacePtrATS)();
 #define InstanceKind(i) ((i==NULL) ? ERROR_INST : ((struct Instance *)(i))->t)
 #endif
 extern enum inst_t InstanceKindF(CONST struct Instance *);
-/*
+/**< 
  *  enum inst_t InstanceKind(i);
  *  const struct Instance *i;
  *
@@ -156,14 +156,14 @@ extern enum inst_t InstanceKindF(CONST struct Instance *);
 #define IsCompoundInstance(i)		((i)->t & ICOMP)
 #define IsArrayInstance(i)		((i)->t & IARR)
 #define IsChildlessInstance(i)		((i)->t & ICHILDLESS)
-/*
+/**< 
  *  int Is*Instance(i);
  *  const struct Instance *i;
  *  TRUE (some value >0) if i is of the instance class indicated.
  */
 
 extern unsigned long InstanceDepth(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long InstanceDepth(i)
  *  const struct Instance *i;
  *  Return the longest distance between i and root.  The depth of NULL is 0.
@@ -171,7 +171,7 @@ extern unsigned long InstanceDepth(CONST struct Instance *);
  */
 
 extern unsigned long InstanceShortDepth(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long InstanceShortDepth(i)
  *  const struct Instance *i;
  *  Return the shortest distance between i and root.  The depth of NULL
@@ -180,7 +180,7 @@ extern unsigned long InstanceShortDepth(CONST struct Instance *);
 
 
 extern void SetNextCliqueMember(struct Instance *, struct Instance *);
-/*
+/**< 
  *  SetNextCliqueMember(i,ptr)
  *  sets i->alike_ptr to ptr for types that have alike_ptrs.
  *  exits on types that don't or bad input.
@@ -189,7 +189,7 @@ extern void SetNextCliqueMember(struct Instance *, struct Instance *);
  */
 
 extern struct Instance *NextCliqueMember(CONST struct Instance *);
-/*
+/**< 
  *  struct Instance *NextCliqueMember(i);
  *  const struct Instance *i;
  *
@@ -212,7 +212,7 @@ extern struct Instance *NextCliqueMember(CONST struct Instance *);
  */
 
 extern VOIDPTR GetInterfacePtr(CONST struct Instance *);
-/*
+/**< 
  *  VOIDPTR GetInterfacePtr(i)
  *  const struct Instance *i;
  *  Return the interface pointer.  The compiler initializes this to NULL
@@ -236,7 +236,7 @@ extern VOIDPTR GetInterfacePtr(CONST struct Instance *);
  */
 
 extern void SetInterfacePtr(struct Instance *,VOIDPTR);
-/*
+/**< 
  *  void SetInterfacePtr(i,c)
  *  struct Instance *i;
  *  VOIDPTR c;
@@ -246,7 +246,7 @@ extern void SetInterfacePtr(struct Instance *,VOIDPTR);
  */
 
  extern unsigned int GetAnonFlags(CONST struct Instance *);
-/*
+/**< 
  *  unsigned int GetAnonFlags(i)
  *  const struct Instance *i;
  *  Returns the flags associated with an instance. This is a utility
@@ -256,7 +256,7 @@ extern void SetInterfacePtr(struct Instance *,VOIDPTR);
  */
 
 extern void SetAnonFlags(struct Instance *,unsigned int);
-/*
+/**< 
  *  void SetAnonFlags(i,flags)
  *  const struct Instance *i;
  *  unsigned int flags;
@@ -266,7 +266,7 @@ extern void SetAnonFlags(struct Instance *,unsigned int);
  */
 
 extern struct BitList *InstanceBitList(CONST struct Instance *);
-/*
+/**< 
  *  struct BitList *InstanceBitList(i)
  *  const struct Instance *i;
  *  Return the bit list which indicates which statements have and have not
@@ -274,14 +274,14 @@ extern struct BitList *InstanceBitList(CONST struct Instance *);
  *  Only MODEL_INST have bitlists.
  */
 
-/*
+/**< 
  *  Instance querying routines
  *
  *  These are general instance querying routines.
  */
 
 extern symchar *InstanceType(CONST struct Instance *);
-/*
+/**< 
  *  symchar *InstanceType(i)
  *  CONST struct Instance *i;
  *  Return a string indicating the type of instance i.  This works for
@@ -290,7 +290,7 @@ extern symchar *InstanceType(CONST struct Instance *);
  */
 
 extern struct TypeDescription *InstanceTypeDesc(CONST struct Instance *);
-/*
+/**< 
  *  struct TypeDescription *InstanceTypeDesc(i)
  *  const struct Instance *i;
  *  Return the instance's type description.  This returns NULL for fundamental
@@ -298,14 +298,14 @@ extern struct TypeDescription *InstanceTypeDesc(CONST struct Instance *);
  */
 
 extern unsigned long InstanceIndirected(CONST struct Instance *);
-/*
+/**< 
  * Returns the indirected field of array instances and LONG_MAX
  * for other kinds of instances.
  * Does not tolerate NULL.
  */
 
 extern unsigned long InstanceSize(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long InstanceSize(i);
  *  CONST struct Instance *i;
  *  Returns the number of bytes chargeable to the given instance i.
@@ -319,12 +319,12 @@ extern unsigned long InstanceSize(CONST struct Instance *);
 
 #define InstanceUniversal(i) \
   (GetUniversalFlag(InstanceTypeDesc(i)) != 0)
-/*
+/**< 
  * macro InstanceUniversal(i); returns TRUE if i is a UNIVERSAL instance.
  */
 
 extern int IntegerSetInstance(CONST struct Instance *);
-/*
+/**< 
  *  int IntegerSetInstance(i)
  *  const struct Instance *i;
  *  This should only be called on set instances.  It will return true if
@@ -332,21 +332,21 @@ extern int IntegerSetInstance(CONST struct Instance *);
  */
 
 extern symchar *GetSimulationName(struct Instance *);
-/*
+/**< 
  *  const char *GetSimulationName(i);
  *  struct Instance *i;
  *  Returns the name of the simulation instance. i must be a SIM_INST kind.
  */
 
 extern struct gl_list_t *FindSimulationAncestors(struct Instance *);
-/*
+/**< 
  * sl = FindSimulationAncestors(i);
  * Returns a list of all the simulation ancestors of i.
  * Caller should destroy the list (but obviously not its content).
  */
 
 extern struct Instance *GetSimulationRoot(struct Instance *);
-/*
+/**< 
  *  struct Instance *GetSimulationRoot(i);
  *  struct Instance *i;
  *  Returns the root instance of the simulation. This is where most if not
@@ -355,4 +355,4 @@ extern struct Instance *GetSimulationRoot(struct Instance *);
  */
 
 #endif
-/* __INSTQUERY_H_SEEN__ */
+/**< __INSTQUERY_H_SEEN__ */

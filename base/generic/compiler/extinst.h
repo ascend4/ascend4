@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -29,25 +29,25 @@
 
 #ifndef __EXTINST_H_SEEN__
 #define __EXTINST_H_SEEN__
-/*
+/**< 
  *  When #including extinst.h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
  */
 
 
-/*
+/**< 
  *  Special stuff for External Relations.
  */
 
 extern struct Instance **g_ExtVariablesTable;
-/*
+/**< 
  *  A global variable which is non NULL if external relations have been
  *  processed and have hence added variables to the table. After use it
  *  should be appropriately reset.
  */
 
 extern struct Instance **AddVarToTable(struct Instance *inst, int *added);
-/*
+/**< 
  *  struct Instance **AddVarToTable(struct Instance *,int *);
  *  struct Instane *inst;
  *  int *added;
@@ -58,14 +58,14 @@ extern struct Instance **AddVarToTable(struct Instance *inst, int *added);
  */
 
 extern void FixExternalVars(struct Instance *,struct Instance *);
-/*
+/**< 
  *  FixExternalVars(old,new)
  *  This will be called only for MODEL_INSTS.
  *  Replaces old with new in the table.
  */
 
 extern void SetSimulationExtVars(struct Instance *,struct Instance **);
-/*
+/**< 
  *  void SetSimulationExtVars(i,extvars);
  *  struct Instance *i;
  *  struct Instance **extvars;
@@ -74,4 +74,4 @@ extern void SetSimulationExtVars(struct Instance *,struct Instance **);
  *  However instantiate needs to be able to set this table when finished.
  */
 #endif
-/* __EXTINST_H_SEEN__ */
+/**< __EXTINST_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Safe function evaluator.
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -30,7 +30,7 @@
  *
  */
 
-/*
+/**< 
  *  Contents:     Safe calculation module
  *
  *  Authors:      Karl Westerberg, Joseph Zaher
@@ -58,7 +58,7 @@
  *                It's floating point. Can they ever be?
  */
 
-/*
+/**< 
  *  When #including safe.h, make sure these files are #included first:
  *         #include "compiler.h"
  *         #include "functype.h"
@@ -73,7 +73,7 @@
 
 extern void safe_error_to_stderr(enum safe_err *);
 
-/*
+/**< 
  *  The variable safe_err will be set to the appropriate value whenever
  *  an undefined numerical calculation is attempted.
  *  In this case, if the variable safe_print_errors is set to TRUE,
@@ -84,21 +84,21 @@ extern void safe_error_to_stderr(enum safe_err *);
  *  (it's our on silly version of errno...)
  */
 
-#define safe_ERF_COEF    1.1283791670955130   /* = 2 / sqrt(PI) */
-#define safe_LOG10_COEF  0.4342944819032518   /* = log10(e) = 1/ln(10) */
+#define safe_ERF_COEF    1.1283791670955130   /**< = 2 / sqrt(PI) */
+#define safe_LOG10_COEF  0.4342944819032518   /**< = log10(e) = 1/ln(10) */
 #define safe_PI          3.1415926535897930
 
-extern double safe_upower(double, unsigned, enum safe_err *); /* buggy */
+extern double safe_upower(double, unsigned, enum safe_err *); /**< buggy */
 extern double safe_factorial(unsigned,enum safe_err *);
 extern double safe_rec(double,enum safe_err *);
 extern double safe_cube(register double,enum safe_err *);
 extern double safe_Dn_rec(double,int,enum safe_err *);
 #ifdef HAVE_ERF
 extern double safe_erf_inv(double,enum safe_err *);
-#endif /* HAVE_ERF */
+#endif /**< HAVE_ERF */
 extern double safe_lnm_inv(double,enum safe_err *);
 extern int safe_is_int(double,enum safe_err *);
-/*
+/**< 
  *  value = safe_upower(x,n,safe)   Compute x^n. Not Verified Code!
  *  value = safe_factorial(n,safe)  Compute n!.
  *  value = safe_rec(x,safe)        Compute 1/x.
@@ -112,7 +112,7 @@ extern int safe_is_int(double,enum safe_err *);
  *  int isint;
  */
 
-/*  All of the following safe_XXXX_Di must resolve to C functions
+/**<  All of the following safe_XXXX_Di must resolve to C functions
  *  rather than macros because safe_func_Di takes the address of them.
  */
 
@@ -130,7 +130,7 @@ extern double safe_arccosh_D0(double,enum safe_err *);
 extern double safe_arctanh_D0(double,enum safe_err *);
 #ifdef HAVE_ERF
 extern double safe_erf_D0(double,enum safe_err *);
-#endif /* HAVE_ERF */
+#endif /**< HAVE_ERF */
 extern double safe_exp_D0(double,enum safe_err *);
 extern double safe_ln_D0(double,enum safe_err *);
 extern double safe_lnm_D0(double,enum safe_err *);
@@ -140,7 +140,7 @@ extern double safe_sqrt_D0(double,enum safe_err *);
 extern double safe_cbrt_D0(double,enum safe_err *);
 extern double safe_fabs_D0(double,enum safe_err *);
 extern double safe_hold_D0(double,enum safe_err *);
-/*
+/**< 
  *  value = safe_<uop>_D0(x)
  *  double value,x;
  *  enum safe_err *safe
@@ -162,7 +162,7 @@ extern double safe_arctan_D1(double,enum safe_err *);
 extern double safe_arctanh_D1(double,enum safe_err *);
 #ifdef HAVE_ERF
 extern double safe_erf_D1(double,enum safe_err *);
-#endif /* HAVE_ERF */
+#endif /**< HAVE_ERF */
 extern double safe_exp_D1(double,enum safe_err *);
 extern double safe_ln_D1(double,enum safe_err *);
 extern double safe_lnm_D1(double,enum safe_err *);
@@ -174,7 +174,7 @@ extern double safe_cube_D1(double,enum safe_err *);
 extern double safe_cbrt_D1(double,enum safe_err *);
 extern double safe_fabs_D1(double,enum safe_err *);
 extern double safe_hold_D1(double,enum safe_err *);
-/*
+/**< 
  *  value = safe_<uop>_D1(x)
  *  double value,x;
  *  enum safe_err *safe
@@ -197,7 +197,7 @@ extern double safe_arctan_D2(double,enum safe_err *);
 extern double safe_arctanh_D2(double,enum safe_err *);
 #ifdef HAVE_ERF
 extern double safe_erf_D2(double,enum safe_err *);
-#endif /* HAVE_ERF */
+#endif /**< HAVE_ERF */
 extern double safe_exp_D2(double,enum safe_err *);
 extern double safe_ln_D2(double,enum safe_err *);
 extern double safe_lnm_D2(double,enum safe_err *);
@@ -208,7 +208,7 @@ extern double safe_cube_D2(double,enum safe_err *);
 extern double safe_cbrt_D2(double,enum safe_err *);
 extern double safe_fabs_D2(double,enum safe_err *);
 #define safe_hold_D2 safe_hold_D1
-/*
+/**< 
  *  value = safe_<uop>_D2(x)
  *  double value,x;
  *  enum safe_err *safe
@@ -223,7 +223,7 @@ extern double safe_cos_Dn(double,int,enum safe_err *);
 extern double safe_sin_Dn(double,int,enum safe_err *);
 #ifdef HAVE_ERF
 extern double safe_erf_Dn(double,int,enum safe_err *);
-#endif /* HAVE_ERF */
+#endif /**< HAVE_ERF */
 extern double safe_exp_Dn(double,int,enum safe_err *);
 extern double safe_ln_Dn(double,int,enum safe_err *);
 extern double safe_log_Dn(double,int,enum safe_err *);
@@ -232,7 +232,7 @@ extern double safe_sqrt_Dn(double,int,enum safe_err *);
 extern double safe_tan_Dn(double,int,enum safe_err *);
 extern double safe_fabs_Dn(double,int,enum safe_err *);
 #define safe_hold_Dn safe_hold_D1
-/*
+/**< 
  *  value = safe_<uop>_Dn(x,n)
  *  double value,x;
  *  int n;   n >= 0
@@ -247,7 +247,7 @@ extern double safe_fabs_Dn(double,int,enum safe_err *);
 #define safe_div_D0(x,y,safe) safe_mul_D0((x),safe_rec(y,safe),(safe))
 #define safe_ipow_D0(x,y,safe) asc_ipow((x),ascnint(y))
 extern double safe_pow_D0(double,double,enum safe_err *);
-/*
+/**< 
  *  value = safe_<binop>_D0(x,y,safe)
  *  double value,x,y;
  *  enum safe_err *safe
@@ -261,7 +261,7 @@ extern double safe_pow_D0(double,double,enum safe_err *);
 extern double safe_div_D1(double,double,int,enum safe_err *);
 extern double safe_ipow_D1(double,double,int,enum safe_err *);
 extern double safe_pow_D1(double,double,int,enum safe_err *);
-/*
+/**< 
  *  diff = safe_<binop>_D1(x,y,wrt)
  *  double diff,x,y;
  *  int wrt;   0 ==> d/dx, 1 ==> d/dy
@@ -276,7 +276,7 @@ extern double safe_pow_D1(double,double,int,enum safe_err *);
 extern double safe_div_D2(double,double,int,int,enum safe_err *);
 extern double safe_ipow_D2(double, double, int, int,enum safe_err *);
 extern double safe_pow_D2(double, double, int, int,enum safe_err *);
-/*
+/**< 
  *  diff2 = safe_<binop>_D2(x,y,wrt1,wrt2,safe)
  *  double diff2,x,y;
  *  int wrt1,wrt2;   0 ==> w.r.t 1st arg, 1 ==> w.r.t. 2nd arg
@@ -298,7 +298,7 @@ extern double safe_mul_Dn(double,double,int,int,enum safe_err *);
 extern double safe_div_Dn(double,double,int,int,enum safe_err *);
 extern double
 safe_pow_Dn(double,double,int,int,enum safe_err *); /*this one not verified!*/
-/*
+/**< 
  *  diffn = safe_<binop>_Dn(x,y,nwrt0,nwrt1)
  *  double diffn,x,y;
  *  int nwrt0,nwrt1;

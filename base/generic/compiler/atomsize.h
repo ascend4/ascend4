@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Atom Size Functions.
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -30,18 +30,18 @@
  */
 #ifndef __ATOMSIZE_H_SEEN__
 #define __ATOMSIZE_H_SEEN__
-/* requires
+/**< requires
  *# #include"instance_enum.h"
  *# #include"childinfo.h"
  */
 
-/*
+/**< 
  *  Byte length calculation routines for atoms/relations.
  *  Routines provided to fill the byte length field of the type description.
  */
 
 extern unsigned long ConstantByteLength(enum inst_t);
-/*
+/**< 
  *  unsigned long ConstantByteLength(it)
  *  enum inst_t it;
  *  Returns the number of bytes needed for the Constant instance of type it.
@@ -49,7 +49,7 @@ extern unsigned long ConstantByteLength(enum inst_t);
 
 extern unsigned long RealAtomByteLength(unsigned long,
      CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long RealAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -59,7 +59,7 @@ extern unsigned long RealAtomByteLength(unsigned long,
 
 extern unsigned long IntegerAtomByteLength(unsigned long,
         CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long IntegerAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -69,7 +69,7 @@ extern unsigned long IntegerAtomByteLength(unsigned long,
 
 extern unsigned long BooleanAtomByteLength(unsigned long,
         CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long BooleanAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -79,7 +79,7 @@ extern unsigned long BooleanAtomByteLength(unsigned long,
 
 extern unsigned long SetAtomByteLength(unsigned long,
            CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long SetAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -89,7 +89,7 @@ extern unsigned long SetAtomByteLength(unsigned long,
 
 extern unsigned long SymbolAtomByteLength(unsigned long,
        CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long SymbolAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -99,7 +99,7 @@ extern unsigned long SymbolAtomByteLength(unsigned long,
 
 extern unsigned long RelationAtomByteLength(unsigned long,
          CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long RelationAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -109,7 +109,7 @@ extern unsigned long RelationAtomByteLength(unsigned long,
 
 extern unsigned long LogRelAtomByteLength(unsigned long,
          CONST struct ChildDesc *);
-/*
+/**< 
  *  unsigned long LogRelAtomByteLength(num_children,c)
  *  unsigned long num_children;
  *  const struct ChildDesc *c;
@@ -118,4 +118,4 @@ extern unsigned long LogRelAtomByteLength(unsigned long,
  */
 
 #endif
-/* __ATOMSIZE_H_SEEN__ */
+/**< __ATOMSIZE_H_SEEN__ */

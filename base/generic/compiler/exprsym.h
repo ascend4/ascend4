@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Symbolic Expression Manipulation
  *  by Kirk Abbott
  *  Created: Novermber 21, 1994
@@ -31,13 +31,13 @@
 #define __EXPRSYM_H_SEEN__
 
 
-/*
+/**< 
  *  When #including .h, make sure these files are #included first:
  *         #include "instance_enum.h"
  */
 
 
-/*
+/**< 
  * Until we decide whether to let the postfix and
  * infix data structures be shared. we will use these
  * typedefs.
@@ -45,13 +45,13 @@
 
 typedef struct Func Func;
 typedef struct relation_term Term;
-/* note, so now Term has to be treated like A_TERM. */
-typedef struct relation RelationINF;	/* infix relation */
+/**< note, so now Term has to be treated like A_TERM. */
+typedef struct relation RelationINF;	/**< infix relation */
 
 #define K_TERM(i) ((Term *)(i))
-/* Cast the i back to Term */
+/**< Cast the i back to Term */
 
-/*
+/**< 
  *  The user is reminded that the author of these routines
  *  could not be bothered with dimensionality, so don't expect
  *  much in the way of output that dimensionally checks or
@@ -64,14 +64,14 @@ typedef struct relation RelationINF;	/* infix relation */
  */
 
 extern Term *TermSimplify(Term *term);
-/*
+/**< 
  *  Attempts term simplification. Later different levels of simplification
  *  will be made a feature.
  */
 
 extern Term *Derivative(Term *term,unsigned long wrt,
                         int (*filter)(struct Instance *));
-/*
+/**< 
  *  The low level routine which acutally does the symbolic differentiation
  *  with sub epxression simplification/elimination. In general not a safe
  *  place to start as use is made of a free store which has to be set up
@@ -79,7 +79,7 @@ extern Term *Derivative(Term *term,unsigned long wrt,
  */
 
 extern void PrepareDerivatives(int setup,int n_buffers,int buffer_length);
-/*
+/**< 
  *  Call this function before and after doing symbolic derivatives.
  *  If setup is true, a free store of terms will be set up, with the
  *  specified number of buffers and buffer length. I am now using 2
@@ -92,7 +92,7 @@ extern void PrepareDerivatives(int setup,int n_buffers,int buffer_length);
 
 extern Term *TermDerivative(Term *term,unsigned long wrt,
                             int (*)(struct Instance *) );
-/*
+/**< 
  *  TermDerivative is the function that is used by RelationDerivative
  *  to generate the derivatives. Again it is perhaps more efficient
  *  to call RelationDerivative.
@@ -100,7 +100,7 @@ extern Term *TermDerivative(Term *term,unsigned long wrt,
 
 extern RelationINF *RelDerivative(RelationINF *, unsigned long,
                                   int (*)(struct Instance *));
-/*
+/**< 
  *  RelationINF *RelDeriveSloppy(rel,wrt,filter);
  *  RelationINF *rel;
  *  unsigned long wrt;
@@ -115,7 +115,7 @@ extern RelationINF *RelDerivative(RelationINF *, unsigned long,
  */
 
 extern void RelDestroySloppy(RelationINF *);
-/*
+/**< 
  *  void RelDestroySloppy(rel);
  *  RelationINF *rel;
  *  This function is to be used to deallocate a relation that was returned
@@ -136,7 +136,7 @@ extern void RelDestroySloppy(RelationINF *);
 
 extern RelationINF *RelDeriveSloppy(RelationINF *rel,unsigned long wrt,
                                     int (*)(struct Instance *));
-/*
+/**< 
  *  RelationINF *RelDeriveSloppy(rel,wrt,filter);
  *  RelationINF *rel;
  *  unsigned long wrt;
@@ -168,7 +168,7 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel,unsigned long wrt,
  *  Shutdown.
  */
 
-#endif /* __EXPRSYM_H_SEEN__ */
+#endif /**< __EXPRSYM_H_SEEN__ */
 
 
 

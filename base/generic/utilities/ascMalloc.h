@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Memory Allocation Routines
  *  by Tom Epperly
  *  Created: 2/6/90
@@ -36,7 +36,7 @@ extern char *ascstrdup(char *s);
 /*^ as strdup. */
 
 extern char *asc_memcpy(char *,char *,unsigned int);
-/*
+/**< 
  *  char *memcpy(s1, s2, n)
  *  char *s1, *s2;
  *  int n;
@@ -47,7 +47,7 @@ extern char *asc_memcpy(char *,char *,unsigned int);
  */
 
 extern char *ascreallocPUREF(char *,size_t,size_t);
-/*
+/**< 
  *  char *ascreallocPUREF(ptr,oldbytes,newbytes)
  *  char *ptr;
  *  size_t oldbytes,newbytes;
@@ -57,7 +57,7 @@ extern char *ascreallocPUREF(char *,size_t,size_t);
  */
 
 extern void ascstatus(CONST char *);
-/*
+/**< 
  *  void ascstatus(msg)
  *  const char *msg;
  *  If MALLOC_DEBUG is not defined, this does nothing.
@@ -67,7 +67,7 @@ extern void ascstatus(CONST char *);
  */
 
 extern void ascshutdown(CONST char *);
-/*
+/**< 
  *  void ascshutdown(CONST char *)
  *  const char *msg;
  *  If MALLOC_DEBUG is not defined, this does nothing.
@@ -76,7 +76,7 @@ extern void ascshutdown(CONST char *);
  */
 
 extern unsigned long ascmeminuse();
-/*
+/**< 
  *  The memory total reporting function is ascmeminuse().
  *  The following macros have the listed effects if they are defined at
  *  C compile time.
@@ -89,12 +89,12 @@ extern unsigned long ascmeminuse();
  *  If MALLOC_DEBUG is undefined, we will report 0 memory allocated.
  */
 
-/*
+/**< 
  *  all the bcopy/bzero functions have been replaced with their mem
  *  counterparts for ansi compliance
  */
 
-/*
+/**< 
  * The following define is for debugging purposes only.
  * In some OS, realloc fools purify into thinking there
  * is a memory leak.
@@ -116,12 +116,12 @@ extern unsigned long ascmeminuse();
 #define ascreallocPURE(p,nold,nnew) ascreallocPUREF((p),(nold),(nnew))
 #endif
 
-/*
+/**< 
  * The next line switches between the normal ascmalloc.h and the
  * alpha and rs6000 ascmalloc declarations.
  */
 #ifndef MOD_ASCMALLOC
-/* heres the normal version: */
+/**< heres the normal version: */
 #ifdef MALLOC_DEBUG
 #define asccalloc(p,q) \
   asccallocf(p,q,__FILE__,__LINE__)
@@ -150,7 +150,7 @@ extern void ascbzerof(VOIDPTR,int,CONST char *,int);
 #define ascbfill(p,q) memset((char *)p,255,q)
 
 extern int AllocatedMemory(CONST VOIDPTR,unsigned);
-/*
+/**< 
  *  return values
  *        0       no memory is used
  *        1       the memory block is wholly contained in an allocated block
@@ -159,7 +159,7 @@ extern int AllocatedMemory(CONST VOIDPTR,unsigned);
  */
 
 extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
-/*
+/**< 
  *  extern int InMemoryBlock(ptr1,ptr2)
  *  Return true if ptr2 is in the memory block headed by ptr1, otherwise
  *  return false.
@@ -177,7 +177,7 @@ extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
 
 #define AssertContainedIn(p,q) \
   assert(InMemoryBlock((VOIDPTR)(p),(VOIDPTR)(q)))
-#else /* ALLOCATED_TESTS */
+#else /**< ALLOCATED_TESTS */
 #define AssertAllocatedMemory(p,q)
 
 #define AssertMemory(p)
@@ -185,8 +185,8 @@ extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
 #define AssertContainedMemory(p,q)
 
 #define AssertContainedIn(p,q)
-#endif /* ALLOCATED_TESTS */
-#else /* MALLOC_DEBUG */
+#endif /**< ALLOCATED_TESTS */
+#else /**< MALLOC_DEBUG */
 
 #define ascmalloc(x) malloc(x)
 
@@ -217,9 +217,9 @@ extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
 #define AssertContainedMemory(p,q)
 
 #define AssertContainedIn(p,q)
-#endif /* MALLOC_DEBUG */
-#else /* MOD_ASCMALLOC */
-/*  here starts the modified version of ascmalloc headers */
+#endif /**< MALLOC_DEBUG */
+#else /**< MOD_ASCMALLOC */
+/**<  here starts the modified version of ascmalloc headers */
 #ifndef MAX
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 #endif
@@ -252,7 +252,7 @@ extern void ascbzerof(VOIDPTR,int,CONST char *,int);
 #define ascbfill(p,q) memset((char *)p,255,q)
 
 extern int AllocatedMemory(CONST VOIDPTR,unsigned);
-/*
+/**< 
  *  return values
  *      0       no memory is used
  *      1       the memory block is wholly contained in an allocated block
@@ -261,7 +261,7 @@ extern int AllocatedMemory(CONST VOIDPTR,unsigned);
  */
 
 extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
-/*
+/**< 
  *  extern int InMemoryBlock(ptr1,ptr2)
  *  Return true if ptr2 is in the memory block headed by ptr1, otherwise
  *  return false.
@@ -279,7 +279,7 @@ extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
 
 #define AssertContainedIn(p,q) \
   assert(InMemoryBlock((VOIDPTR)(p),(VOIDPTR)(q)))
-#else /* ALLOCATED_TESTS */
+#else /**< ALLOCATED_TESTS */
 #define AssertAllocatedMemory(p,q)
 
 #define AssertMemory(p)
@@ -287,8 +287,8 @@ extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
 #define AssertContainedMemory(p,q)
 
 #define AssertContainedIn(p,q)
-#endif /* ALLOCATED_TESTS */
-#else /* MALLOC_DEBUG */
+#endif /**< ALLOCATED_TESTS */
+#else /**< MALLOC_DEBUG */
 
 #define ascmalloc(x) malloc(MAX(x,1))
 
@@ -315,6 +315,6 @@ extern int InMemoryBlock(CONST VOIDPTR,CONST VOIDPTR);
 #define AssertContainedMemory(p,q)
 
 #define AssertContainedIn(p,q)
-#endif /* MALLOC_DEBUG */
-#endif /* MOD_ASCMALLOC */
-#endif /* __ASCMALLOC_H_SEEN__ */
+#endif /**< MALLOC_DEBUG */
+#endif /**< MOD_ASCMALLOC */
+#endif /**< __ASCMALLOC_H_SEEN__ */

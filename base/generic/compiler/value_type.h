@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Value Type Definitions
  *  by Tom Epperly
  *  Created: 1/16/90
@@ -27,7 +27,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including value_type.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -38,7 +38,7 @@
 
 #ifndef __VALUE_TYPE_H_SEEN__
 #define __VALUE_TYPE_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"list.h"
@@ -48,7 +48,7 @@
 # #include"setinstval.h"
 */
 
-/* Note:
+/**< Note:
  * This file is a mess as we are passing around 24 byte structures rather than
  * pointers to structures. ewww! Anytime you are returned a struct value_t
  * from any of the functions in this file, remember to call DestroyValue
@@ -67,15 +67,15 @@
  */
 enum evaluation_error{
   type_conflict,
-  name_unfound,			/* inst of name not made yet */
-  incorrect_name,		/* name can never be found */
+  name_unfound,			/**< inst of name not made yet */
+  incorrect_name,		/**< name can never be found */
   temporary_variable_reused,
-  undefined_value,		/* inst exists without being assigned */
-  dimension_conflict,		/* arithmetic error in dimensionality */
+  undefined_value,		/**< inst exists without being assigned */
+  dimension_conflict,		/**< arithmetic error in dimensionality */
   incorrect_such_that,
-  empty_choice,			/* CHOICE() on an empty set */
+  empty_choice,			/**< CHOICE() on an empty set */
   empty_intersection,
-  illegal_set_use               /* set used in list context */
+  illegal_set_use               /**< set used in list context */
 };
 
 enum value_kind {
@@ -83,8 +83,8 @@ enum value_kind {
   integer_value,
   symbol_value,
   boolean_value,
-  list_value,	/* keep set and list together */
-  set_value,   /* set is unique and sorted, or ought to be */
+  list_value,	/**< keep set and list together */
+  set_value,   /**< set is unique and sorted, or ought to be */
   error_value
 };
 
@@ -94,16 +94,16 @@ struct real_value_t{
 };
 
 union value_union{
-  struct real_value_t r;	/* real value */
-  long i;			/* integer value */
-  int b;			/* boolean value */
-  symchar *sym_ptr;		/* symbol value */
-  struct set_t *sptr;		/* set structure */
-  struct gl_list_t *lvalues;	/* list of values */
-  enum evaluation_error t;	/* type of evaluation error */
+  struct real_value_t r;	/**< real value */
+  long i;			/**< integer value */
+  int b;			/**< boolean value */
+  symchar *sym_ptr;		/**< symbol value */
+  struct set_t *sptr;		/**< set structure */
+  struct gl_list_t *lvalues;	/**< list of values */
+  enum evaluation_error t;	/**< type of evaluation error */
 };
 
-/* v.constant is true if the data from which the value is derived is
+/**< v.constant is true if the data from which the value is derived is
  * impossible to change. Useful in some applications.
  * At present it should only be examined for values of type
  * real, boolean, integer, symbol. always true for sets at present.
@@ -112,10 +112,10 @@ union value_union{
  */
 struct value_t {
   enum value_kind t;
-  unsigned int constant; /* since the union aligns on the double, this free */
+  unsigned int constant; /**< since the union aligns on the double, this free */
   union value_union u;
 };
-/* Be sure that within value_t the union is aligned on an 8 byte boundary
+/**< Be sure that within value_t the union is aligned on an 8 byte boundary
  * or alignment errors will occur. As of 3/96 it does on all
  * CMU architectures (sparc, hp, alpha).
  * Someone really should redo this struct value_t so that it doesn't
@@ -124,7 +124,7 @@ struct value_t {
  */
 
 void InitValueManager(void);
-/*
+/**< 
  *  InitValueManager();
  *  Sets up value memory management. This must be called once
  *  before any value_t can be built, ideally at startup time.
@@ -134,7 +134,7 @@ void InitValueManager(void);
  */
 
 void DestroyValueManager(void);
-/*
+/**< 
  *  DestroyValueManager();
  *  Destroy value memory management. This must be called to
  *  clean up before shutting down ASCEND.
@@ -143,33 +143,33 @@ void DestroyValueManager(void);
  */
 
 void ReportValueManager(FILE*);
-/*
+/**< 
  *  ReportValueManager(f);
  *  FILE *f;
  *  Reports on the value manager to f.
  */
 
-/* In the macro IVAL, x must be a struct value_t variable,
+/**< In the macro IVAL, x must be a struct value_t variable,
  * NOT a pointer to same.
  * If you want to init a pointer contents, y, use IVALPTR.
  */
 #ifdef NDEBUG
-/* do nothings */
+/**< do nothings */
 #define IVAL(x)
 #define IVALPTR(y)
 #else
-/* init to 0 */
+/**< init to 0 */
 #define IVAL(x) ValInit(&(x))
 #define IVALPTR(y) ValInit(y)
 #endif
 extern void ValInit(struct value_t *);
-/*
+/**< 
  *  ValInit(v)
  *  Inits the contents of v to 0.
  *  Do not call this function -- use the IVAL macros
  */
 
-/*
+/**< 
  * IVAL(stackvar) should be called on locally allocated
  * value_t before any other action using them is taken.
  * When NDEBUG is not defined, it causes the stack memory to be
@@ -180,49 +180,49 @@ extern void ValInit(struct value_t *);
 
 
 #define ValueKind(v) ((v).t)
-/*
+/**< 
  *  macro ValueKind(v)
  *  struct value_t v;
  *  Return the value of a value_t.
  */
 
 #define IntegerValue(v) ((v).u.i)
-/*
+/**< 
  *  macro IntegerValue(v)
  *  struct value_t v;
  *  Return the value of an integer or integer_constant value_t.
  */
 
 #define RealValue(v) ((v).u.r.value)
-/*
+/**< 
  *  macro RealValue(v)
  *  struct value_t v;
  *  Return the real value of a real or real_constant value_t.
  */
 
 #define BooleanValue(v) ((v).u.b)
-/*
+/**< 
  *  macro BooleanValue(v)
  *  struct value_t v;
  *  Return the boolean value of a boolean or boolean_constant value_t.
  */
 
 #define RealValueDimensions(v) ((v).u.r.dimp)
-/*
+/**< 
  *  macro RealValueDimensions(v)
  *  struct value_t v;
  *  Return the dimensions of the real or real_constant value_t.
  */
 
 #define SetValue(v) ((v).u.sptr)
-/*
+/**< 
  *  macro SetValue(v)
  *  struct value_t v;
  *  Return the set value of a set value_t.
  */
 
 #define SymbolValue(v) ((v).u.sym_ptr)
-/*
+/**< 
  *  macro SymbolValue(v)
  *  struct value_t v;
  *  Return the symbol value of a symbol or symbol_constant value_t.
@@ -230,21 +230,21 @@ extern void ValInit(struct value_t *);
  */
 
 #define ErrorValue(v) ((v).u.t)
-/*
+/**< 
  *  macro ErrorValue(v)
  *  struct value_t v;
  *  Return the error type.
  */
 
 extern struct value_t CopyValue(struct value_t);
-/*
+/**< 
  *  struct value_t CopyValue(value)
  *  struct value_t value;
  *  Return a copy of the value.
  */
 
 extern struct value_t CreateRealValue(double,CONST dim_type *,unsigned);
-/*
+/**< 
  *  struct value_t CreateRealValue(value,dim,constant)
  *  double value;
  *  const dim_type *dim;
@@ -254,7 +254,7 @@ extern struct value_t CreateRealValue(double,CONST dim_type *,unsigned);
  */
 
 extern struct value_t CreateIntegerValue(long,unsigned);
-/*
+/**< 
  *  struct value_t CreateIntegerValue(value,constant)
  *  long value;
  *  Create an integer value.
@@ -263,7 +263,7 @@ extern struct value_t CreateIntegerValue(long,unsigned);
  */
 
 extern struct value_t CreateSymbolValue(symchar *,unsigned);
-/*
+/**< 
  *  struct value_t CreateSymbolValue(sym_ptr,constant)
  *  symchar *sym_ptr;
  *  Create a symbol value.
@@ -272,7 +272,7 @@ extern struct value_t CreateSymbolValue(symchar *,unsigned);
  */
 
 extern struct value_t CreateBooleanValue(int,unsigned);
-/*
+/**< 
  *  struct value_t CreateBooleanValue(truth,constant)
  *  int truth;
  *  Create a boolean value.
@@ -281,7 +281,7 @@ extern struct value_t CreateBooleanValue(int,unsigned);
  */
 
 extern struct value_t CreateSetValue(struct set_t *);
-/*
+/**< 
  *  struct value_t CreateSetValue(sptr)
  *  struct set_t *sptr;
  *  Create a set value.
@@ -291,7 +291,7 @@ extern struct value_t CreateSetValue(struct set_t *);
  */
 
 extern struct value_t CreateSetFromList(struct value_t);
-/*
+/**< 
  *  struct value_t CreateSetFromList(value)
  *  struct value_t value;
  *  Create a set from a list of values. Does not damage the list value given.
@@ -303,7 +303,7 @@ extern struct value_t CreateSetFromList(struct value_t);
  */
 
 extern struct value_t CreateOrderedSetFromList(struct value_t);
-/*
+/**< 
  *  struct value_t CreateOrderedSetFromList(value)
  *  struct value_t value;
  *  Create a set from a list of values. The set that will be created will
@@ -316,7 +316,7 @@ extern struct value_t CreateOrderedSetFromList(struct value_t);
  */
 
 extern struct value_t CreateErrorValue(enum evaluation_error);
-/*
+/**< 
  *  struct value_t CreateErrorValue(t)
  *  enum evaluation_error t;
  *  Create an error value.
@@ -325,7 +325,7 @@ extern struct value_t CreateErrorValue(enum evaluation_error);
  */
 
 extern struct value_t CreateVacantListValue(void);
-/*
+/**< 
  *  struct value_t CreateEmptyListValue()
  *  Create a list value with no elements and minimal memory.
  *  Use this when you expect the list to die soon and without expansion.
@@ -334,7 +334,7 @@ extern struct value_t CreateVacantListValue(void);
  */
 
 extern struct value_t CreateEmptyListValue(void);
-/*
+/**< 
  *  struct value_t CreateEmptyListValue()
  *  Create a list value with no elements but some memory.
  *  Value created is created marked as variable. Mark it as constant
@@ -342,7 +342,7 @@ extern struct value_t CreateEmptyListValue(void);
  */
 
 extern void AppendToListValue(struct value_t,struct value_t);
-/*
+/**< 
  *  void AppendToListValue(list,value)
  *  struct value_t list,value;
  *  Add "value" to the list value "list".  This procedure will destory
@@ -350,27 +350,27 @@ extern void AppendToListValue(struct value_t,struct value_t);
  */
 
 #define IsConstantValue(v) ((v).constant)
-/*
+/**< 
  *  Return 1 if value is marked constant, 0 if not.
  */
 
 #define BothConstantValue(va,vb) ((va).constant && (vb).constant)
-/*
+/**< 
  *  Return 1 if both args marked constant, 0 if not.
  */
 
 #define SetConstantValue(v) ((v).constant = 1)
-/*
+/**< 
  *  Mark value as constant.
  */
 
 #define SetVariableValue(v) ((v).constant = 0)
-/*
+/**< 
  *  Mark value as constant.
  */
 
 extern void DestroyValue(struct value_t *);
-/*
+/**< 
  *  This function will deallocate the sets and lists of a value.
  *  Note this requires a pointer. This function does NOT free the
  *  pointer sent it. It DOES free all the values contained in the list of
@@ -378,12 +378,12 @@ extern void DestroyValue(struct value_t *);
  *  potentially recursive.
  */
 
-/*
+/**< 
  *  OPERATIONS: None of the operations below will ever deallocate memory.
  */
 
 extern struct value_t AddValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t AddValues(value1,value2);
  *  struct value_t value1,value2;
  *  return value1 + value2
@@ -394,7 +394,7 @@ extern struct value_t AddValues(struct value_t,struct value_t);
  */
 
 extern struct value_t SubtractValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t SubtractValues(value1,value2)
  *  struct value_t value1,value2;
  *  return value1 - value2
@@ -404,7 +404,7 @@ extern struct value_t SubtractValues(struct value_t,struct value_t);
  */
 
 extern struct value_t MultiplyValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t MultiplyValues(value1,value2)
  *  struct value_t value1,value2;
  *  return value1 * value2
@@ -417,7 +417,7 @@ extern struct value_t MultiplyValues(struct value_t,struct value_t);
  */
 
 extern struct value_t DivideValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t DivideValues(struct value_t,struct value_t)
  *  struct value_t value1,value2;
  *  return value1 / value2
@@ -430,7 +430,7 @@ extern struct value_t DivideValues(struct value_t,struct value_t);
  */
 
 extern struct value_t PowerValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t PowerValues(struct value_t,struct value_t)
  *  struct value_t value1,value2;
  *  return value1 ^ value2
@@ -441,7 +441,7 @@ extern struct value_t PowerValues(struct value_t,struct value_t);
  */
 
 extern struct value_t CardValues(struct value_t);
-/*
+/**< 
  *  struct value_t CardValues(value)
  *  struct value_t value;
  *  Return the cardinality of the set in value.
@@ -450,7 +450,7 @@ extern struct value_t CardValues(struct value_t);
  */
 
 extern struct value_t ChoiceValues(struct value_t);
-/*
+/**< 
  *  struct value_t ChoiceValues(value)
  *  struct value_t value;
  *  return an arbitrary but consistent member of the set in value.
@@ -459,7 +459,7 @@ extern struct value_t ChoiceValues(struct value_t);
  */
 
 #define FIRSTCHOICE 1
-/*
+/**< 
  *  If FIRSTCHOICE = 0 ChoiceValues uses a fancy method to pick the
  *  set member, else it will always return the first (in internal
  *  storage) set member. You can guess what our storage is.
@@ -469,7 +469,7 @@ extern struct value_t ChoiceValues(struct value_t);
  */
 
 extern struct value_t SumValues(struct value_t);
-/*
+/**< 
  *  struct value_t SumValues(value)
  *  struct value_t value;
  *  Return the summation of the value.
@@ -480,7 +480,7 @@ extern struct value_t SumValues(struct value_t);
  */
 
 extern struct value_t ProdValues(struct value_t);
-/*
+/**< 
  *  struct value_t ProdValues(value)
  *  struct value_t value;
  *  Return the product of the value.
@@ -489,7 +489,7 @@ extern struct value_t ProdValues(struct value_t);
  */
 
 extern struct value_t UnionValues(struct value_t);
-/*
+/**< 
  *  struct value_t UnionValues(value)
  *  struct value_t value;
  *  Return the union of the value.
@@ -498,7 +498,7 @@ extern struct value_t UnionValues(struct value_t);
  */
 
 extern struct value_t IntersectionValues(struct value_t);
-/*
+/**< 
  *  struct value_t IntersectionValues(value)
  *  struct value_t value;
  *  Return the intersection of the value.  If value is an empty list,
@@ -508,7 +508,7 @@ extern struct value_t IntersectionValues(struct value_t);
  */
 
 extern struct value_t OrValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t OrValues(value1,value2)
  *  struct value_t value1,value2;
  *  Return value1 OR value2. Arguments and result are boolean.
@@ -516,7 +516,7 @@ extern struct value_t OrValues(struct value_t,struct value_t);
  */
 
 extern struct value_t AndValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t AndValues(value1,value2)
  *  struct value_t value1,value2;
  *  Return value1 AND value2. Arguments and result are boolean.
@@ -524,7 +524,7 @@ extern struct value_t AndValues(struct value_t,struct value_t);
  */
 
 extern struct value_t InValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t InValues(value1,value2)
  *  struct value_t value1,value2;
  *  Return value1 IN value2.
@@ -533,7 +533,7 @@ extern struct value_t InValues(struct value_t,struct value_t);
  */
 
 extern struct value_t EqualValues(struct value_t, struct value_t);
-/*
+/**< 
  *  struct value_t EqualValues(value1,value2)
  *  struct value_t value1,value2;
  *  Return value1 == value2. Result is boolean.
@@ -543,7 +543,7 @@ extern struct value_t EqualValues(struct value_t, struct value_t);
  */
 
 extern struct value_t NotEqualValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t NotEqualValues(value1,value2)
  *  sturct value_t value1,value2;
  *  Return value1 != value2. Result is boolean.
@@ -554,7 +554,7 @@ extern struct value_t NotEqualValues(struct value_t,struct value_t);
  */
 
 extern struct value_t LessValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t LessValues(value1,value2)
  *  struct value_t value1,value2
  *  return value1 < value2. result is boolean.
@@ -565,7 +565,7 @@ extern struct value_t LessValues(struct value_t,struct value_t);
  */
 
 extern struct value_t GreaterValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t GreaterValues(value1,value2)
  *  struct value_t value1,value2;
  *  return value1 > value2. result is boolean.
@@ -576,7 +576,7 @@ extern struct value_t GreaterValues(struct value_t,struct value_t);
  */
 
 extern struct value_t LessEqValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t LessEqValues(value1,value2)
  *  struct value_t value1,value2
  *  return value1 <= value2. result is boolean.
@@ -587,7 +587,7 @@ extern struct value_t LessEqValues(struct value_t,struct value_t);
  */
 
 extern struct value_t GreaterEqValues(struct value_t,struct value_t);
-/*
+/**< 
  *  struct value_t GreaterEqValues(value1,value2)
  *  struct value_t value1,value2;
  *  return value1 >= value2. result is boolean.
@@ -598,7 +598,7 @@ extern struct value_t GreaterEqValues(struct value_t,struct value_t);
  */
 
 extern struct value_t ApplyFunction(struct value_t, CONST struct Func *);
-/*
+/**< 
  *  struct value_t ApplyFunction(value,f)
  *  struct value_t value;
  *  const struct Func *f;
@@ -608,7 +608,7 @@ extern struct value_t ApplyFunction(struct value_t, CONST struct Func *);
  */
 
 extern struct value_t NegateValue(struct value_t );
-/*
+/**< 
  *  struct value_t NegateValue(value)
  *  struct value_t value;
  *  return - value;
@@ -616,10 +616,10 @@ extern struct value_t NegateValue(struct value_t );
  */
 
 extern struct value_t NotValue(struct value_t);
-/*
+/**< 
  *  struct value_t NotValue(value)
  *  struct value_t value;
  *  return NOT value; Value and result are boolean.
  *  If args are constant, result is.
  */
-#endif /* __VALUE_TYPE_H_SEEN__ */
+#endif /**< __VALUE_TYPE_H_SEEN__ */

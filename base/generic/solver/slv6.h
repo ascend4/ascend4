@@ -1,4 +1,4 @@
-/*
+/**< 
  *  MPS: Ascend MPS file generator
  *  by Craig Schmidt
  *  Created: 2/11/95
@@ -57,7 +57,7 @@
 #ifndef slv6__already_included
 #define slv6__already_included
 
-/* requires #include "slv_client.h" */
+/**< requires #include "slv_client.h" */
 
 typedef struct slv6_system_structure *slv6_system_t;
 
@@ -70,14 +70,14 @@ int slv6_register(SlvFunctionsT *);
 
 #endif
 
-/* REMOVE EVERYTHING BELOW THIS POINT */     
+/**< REMOVE EVERYTHING BELOW THIS POINT */     
 # if 0 
 #ifdef STATIC_MPS
-#define slv6_solver_name "makeMPS" /* Solver's name. don't mess with the caps!*/
-#define slv6_solver_number 6   /* Solver's number */
+#define slv6_solver_name "makeMPS" /**< Solver's name. don't mess with the caps!*/
+#define slv6_solver_number 6   /**< Solver's number */
 
 extern boolean free_inc_var_filter(struct var_variable *var);
-/**
+/**< 
  ***  I've been calling this particular var filter a lot ,
  ***  so I decided to make it a subroutine.  Returns true if
  ***  var is not fixed and incident in something.
@@ -173,7 +173,7 @@ extern void slv6_solve();
 #define slv6_CA_SIZE 1
 #define slv6_VA_SIZE 0
 
-/* subscripts for ia */
+/**< subscripts for ia */
 #define SP6_NONLIN   0
 #define SP6_RELAXED  1
 #define SP6_NONNEG   2
@@ -187,13 +187,13 @@ extern void slv6_solve();
 #define SP6_BO       10
 #define SP6_EPS      11
 
-/* subscripts for ra */
+/**< subscripts for ra */
 #define SP6_BOVAL   0
 #define SP6_EPSVAL  1
 #define SP6_PINF    2
 #define SP6_MINF    3
 
-/* subscripts for ca */
+/**< subscripts for ca */
 #define SP6_FILENAME 0
 
 /***                            
@@ -219,59 +219,59 @@ extern void slv6_solve();
  ***       crow       ->  [      c       ]
  **/
 
-typedef struct mps_data {   /* see more detailed comments in calc_matrix */
+typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 
-   int32   rused;     /* row of last relation (incident or not) */
-   int32   rinc;      /* number of incident relations */ 
-   int32   crow;      /* row of cost vector (rused+1)*/
-   int32   vused;     /* column of last variable (incident or not) */
-   int32   vinc;      /* number of incident variables */
-   int32   cap;       /* size of sparse square matrix=max(vused+2+1,rused+4+1) */ 
-   int32   rank;      /* Symbolic rank of problem */
-   int32   bused;     /* Included boundaries */
+   int32   rused;     /**< row of last relation (incident or not) */
+   int32   rinc;      /**< number of incident relations */ 
+   int32   crow;      /**< row of cost vector (rused+1)*/
+   int32   vused;     /**< column of last variable (incident or not) */
+   int32   vinc;      /**< number of incident variables */
+   int32   cap;       /**< size of sparse square matrix=max(vused+2+1,rused+4+1) */ 
+   int32   rank;      /**< Symbolic rank of problem */
+   int32   bused;     /**< Included boundaries */
 
-   int solver_var_used;     /* values are calculated in calc_svtlist  */
-   int solver_relaxed_used; /* is cache of how many of each vars used */
+   int solver_var_used;     /**< values are calculated in calc_svtlist  */
+   int solver_relaxed_used; /**< is cache of how many of each vars used */
    int solver_int_used;                    
    int solver_binary_used;   
    int solver_semi_used;     
    int solver_other_used; 
-   int solver_fixed;        /* number of fixed or non-incident vars */
+   int solver_fixed;        /**< number of fixed or non-incident vars */
 
-   mtx_matrix_t  Ac_mtx;    /* Matrix representation of the A matrix and c vector */
+   mtx_matrix_t  Ac_mtx;    /**< Matrix representation of the A matrix and c vector */
 
-   real64  *lbrow;    /* pointer to array of lower bounds */
-   real64  *ubrow;    /* pointer to array of upper bounds */
-   real64  *bcol;     /* pointer to array of RHS b vector */
-   char          *typerow;  /* pointer to array of variable types */
-   char          *relopcol; /* pointer to array of relational operators i.e. <=, >=, =  */
+   real64  *lbrow;    /**< pointer to array of lower bounds */
+   real64  *ubrow;    /**< pointer to array of upper bounds */
+   real64  *bcol;     /**< pointer to array of RHS b vector */
+   char          *typerow;  /**< pointer to array of variable types */
+   char          *relopcol; /**< pointer to array of relational operators i.e. <=, >=, =  */
 
 } mps_data_t;
 
 
 
-/* _____________________________________________________________________ */
+/**< _____________________________________________________________________ */
 
-/* define solver variable types */
-/* note: 0 not defined since default value for sparse matrix, and so a value of 
+/**< define solver variable types */
+/**< note: 0 not defined since default value for sparse matrix, and so a value of 
          0 will imply an invalid row/col is being accessed */
-#define SOLVER_VAR     1          /* original solver_var, or some other refinement */
-#define SOLVER_RELAXED 2          /* something else, but are working on a relaxed  */
-                                  /* problem, so treat it as a regular solver_var  */
-#define SOLVER_INT     3          /* integer var, refines solver_var */
-#define SOLVER_BINARY  4          /* binary var, refines solver_int */
-#define SOLVER_SEMI    5          /* semicontinuos solver_var, refines solver_var */
-#define SOLVER_FIXED   6          /* a fixed or nonincident var */
+#define SOLVER_VAR     1          /**< original solver_var, or some other refinement */
+#define SOLVER_RELAXED 2          /**< something else, but are working on a relaxed  */
+                                  /**< problem, so treat it as a regular solver_var  */
+#define SOLVER_INT     3          /**< integer var, refines solver_var */
+#define SOLVER_BINARY  4          /**< binary var, refines solver_int */
+#define SOLVER_SEMI    5          /**< semicontinuos solver_var, refines solver_var */
+#define SOLVER_FIXED   6          /**< a fixed or nonincident var */
 
 
-/* define another token to go with 
+/**< define another token to go with 
    rel_TOK_less, rel_TOK_equal, and rel_TOK_greater, 
    defined in rel.h */
 #define rel_TOK_nonincident 00
 
 #else
-#define slv6_solver_name "no_makeMPS"   /* Solver's name */
-#define slv6_solver_number 6        /* Solver's number */
+#define slv6_solver_name "no_makeMPS"   /**< Solver's name */
+#define slv6_solver_number 6        /**< Solver's number */
 #endif
 
 #endif

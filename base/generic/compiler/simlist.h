@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Simulation Management for Ascend
  *  by Ben Allan
  *  Version: $Revision: 1.2 $
@@ -34,7 +34,7 @@
 #define __SIMLIST_H_SEEN__
 
 extern struct gl_list_t *g_simulation_list;
-/*
+/**< 
  * pointer to a simulation list. simulations need much better
  * management than they currently get, once we start building
  * simulations out of other simulations. For now this
@@ -42,12 +42,12 @@ extern struct gl_list_t *g_simulation_list;
  */
 
 extern void Asc_DeAllocSim(struct Instance *);
-/*
+/**< 
  * destroys the instance given. should be a simulation instance.
  */
 
 extern void Asc_DestroySimulations(void);
-/*
+/**< 
  * destroys all known instances on the simulation list.
  */
-#endif /* __SIMLIST_H_SEEN__ */
+#endif /**< __SIMLIST_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  mtx2: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -29,7 +29,7 @@
  */
 #ifndef __MTX_LINAL_H_SEEN__
 #define __MTX_LINAL_H_SEEN__
-/* requires #include "mtx.h" */
+/**< requires #include "mtx.h" */
 
 extern void         mtx_householder_transform_region(mtx_matrix_t,
                                                      const real64,
@@ -37,7 +37,7 @@ extern void         mtx_householder_transform_region(mtx_matrix_t,
                                                      const mtx_region_t *,
                                                      real64,
                                                      boolean);
-/**
+/**< 
  ***
  -$-  mtx_householder_transform_region(mtx,coef,orgsp,reg,droptol,transpose);
  ***  mtx_matrix_t mtx;
@@ -69,4 +69,4 @@ extern void         mtx_householder_transform_region(mtx_matrix_t,
  ***    does not remove soft zeroes created when 2 numbers add to zero.
  **/
 
-#endif /* __MTX_LINAL_H_SEEN__ */
+#endif /**< __MTX_LINAL_H_SEEN__ */

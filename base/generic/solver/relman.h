@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -46,13 +46,13 @@
 #ifndef relman__already_included
 #define relman__already_included
 
-/* requires #include "mtx.h" */
-/* requires #include "var.h" */
-/* requires #include "rel.h" */
+/**< requires #include "mtx.h" */
+/**< requires #include "var.h" */
+/**< requires #include "rel.h" */
 
 
 #define relman_is_linear(a,b) (FALSE)
-/**
+/**< 
 extern boolean relman_is_linear(struct rel_relation *,var_filter_t *);
  *  islinear = relman_is_linear(rel,filter)
  *  boolean islinear;
@@ -69,7 +69,7 @@ extern boolean relman_is_linear(struct rel_relation *,var_filter_t *);
 
 extern real64 relman_linear_coef(struct rel_relation *,
   struct var_variable *,var_filter_t *);
-/**
+/**< 
  *  coef = relman_linear_coef(rel,var,filter)
  *  real64 coef;
  *  struct rel_relation *rel;
@@ -87,7 +87,7 @@ extern real64 relman_linear_coef(struct rel_relation *,
  **/
 
 extern relman_simplify(struct rel_relation *,int);
-/**  NOT IMPLEMENTED
+/**<  NOT IMPLEMENTED
  *  relman_simplify(rel,opt_level)
  *  struct rel_relation *rel;
  *  int opt_level;
@@ -98,7 +98,7 @@ extern relman_simplify(struct rel_relation *,int);
  **/
 
 extern relman_dissolve_vars(struct rel_relation *,var_filter_t *);
-/**   NOT IMPLEMENTED
+/**<   NOT IMPLEMENTED
  *  relman_dissolve_vars(rel,filter)
  *  struct rel_relation *rel;
  *  var_filter_t *filter;
@@ -108,7 +108,7 @@ extern relman_dissolve_vars(struct rel_relation *,var_filter_t *);
  **/
 
 extern void relman_decide_incidence(struct rel_relation *);
-/**
+/**< 
  *  relman_decide_incidence(rel)
  *  struct rel_relation *rel;
  *
@@ -121,7 +121,7 @@ extern void relman_decide_incidence(struct rel_relation *);
 
 extern void relman_get_incidence(struct rel_relation *,
                                  var_filter_t *,mtx_matrix_t);
-/**
+/**< 
  *  relman_get_incidence(rel,filter,matrix)
  *  struct rel_relation *rel;
  *  var_filter_t *filter;
@@ -133,7 +133,7 @@ extern void relman_get_incidence(struct rel_relation *,
  **/
 
 extern real64 relman_eval(struct rel_relation *, int32 *, int);
-/**
+/**< 
  *  residual = relman_eval(rel,status,safe)
  *  struct rel_relation *rel;
  *  int32 *status;
@@ -156,7 +156,7 @@ extern real64 relman_eval(struct rel_relation *, int32 *, int);
  **/
 
 extern int32 relman_obj_direction(struct rel_relation *);
-/**
+/**< 
  *  direction = relman_eval_obj(rel,status,safe)
  *  struct rel_relation *rel;
  *
@@ -167,7 +167,7 @@ extern int32 relman_obj_direction(struct rel_relation *);
  **/
 
 extern real64 relman_scale(struct rel_relation *);
-/**
+/**< 
  *  residual = relman_scale(rel)
  *  struct rel_relation *rel;
  *  real64 residual;
@@ -179,7 +179,7 @@ extern real64 relman_scale(struct rel_relation *);
  **/
 
 #define relman_diff(a,b,c,d) (abort(),1)
-/** needs to be reimplemented.
+/**< needs to be reimplemented.
 ExTERn int relman_diff(struct rel_relation *,struct var_variable*,real64*,int);
  *!  status = relman_diff(rel,var,pd,safe);
  *!  struct rel_relation *rel;
@@ -198,7 +198,7 @@ ExTERn int relman_diff(struct rel_relation *,struct var_variable*,real64*,int);
 
 extern int relman_diff2(struct rel_relation *, var_filter_t *,
 			real64 *, int32 *, int32 *, int32);
-/**
+/**< 
  *  status = relman_diff2(rel,filter,derivatives,variables,count,safe)
  *  struct rel_relation *rel;
  *  var_filter_t *filter;
@@ -226,7 +226,7 @@ extern int relman_diff2(struct rel_relation *, var_filter_t *,
 extern int relman_diff_grad(struct rel_relation *, var_filter_t *,
 			    real64 *, int32 *, int32 *, int32 *, real64 *,
 			    int32);
-/**
+/**< 
  ***  status = relman_diff_grad(rel,filter,derivatives,variables_master,
  ***                            variables_solver,count,resid,safe)
  ***  struct rel_relation *rel;
@@ -262,7 +262,7 @@ extern int relman_diff_grad(struct rel_relation *, var_filter_t *,
 
 extern int relman_diffs(struct rel_relation *, var_filter_t *,
                         mtx_matrix_t, real64 *, int);
-/**
+/**< 
  *  status = relman_diffs(rel,filter,mtx,resid,safe)
  *  struct rel_relation *rel;
  *  var_filter_t *filter;
@@ -299,7 +299,7 @@ extern int32 relman_diff_harwell(struct rel_relation **,
                                  var_filter_t *, rel_filter_t *,
                                  int32, int32, int32,
                                  real64 *, int32 *, int32 *);
-/*
+/**< 
  * err = relman_diff_harwell(rlist,vfilter,rfilter,rlen,bias,mors,
  *                           avec,ivec,jvec);
  * This fills an "a-i-j" sparse matrix in the avec/ivec/jvec given.
@@ -327,7 +327,7 @@ extern int32 relman_diff_harwell(struct rel_relation **,
 
 extern int32 relman_jacobian_count(struct rel_relation **, int32,
                                    var_filter_t *, rel_filter_t *, int32 *);
-/*
+/**< 
  * nnz = relman_jacobian_count(rlist, rlen, vfilter, rfilter, rhomax);
  * Return the number of nonzero gradient entries in the equations
  * given. Only equations passing rfilter and entries passing vfilter
@@ -337,7 +337,7 @@ extern int32 relman_jacobian_count(struct rel_relation **, int32,
 
 extern boolean relman_calc_satisfied(struct rel_relation *,real64);
 extern boolean relman_calc_satisfied_scaled(struct rel_relation *,real64);
-/**
+/**< 
  *  satisfied = relman_calc_satisfied(rel,tolerance)
  *  satisfied = relman_calc_satisfied_scaled(rel,tolerance)
  *  boolean satisfied;
@@ -359,7 +359,7 @@ extern boolean relman_calc_satisfied_scaled(struct rel_relation *,real64);
   relman_directly_solve_new(r,s,a,n,1.0e-8)
 extern real64 *relman_directly_solve_new(struct rel_relation *,struct var_variable *,
   int *,int *,real64);
-/**
+/**< 
  *  solution_list = relman_directly_solve(rel,solvefor,able,nsolns)
  *  solution_list = relman_directly_solve_new(rel,solvefor,able,nsolns,tol)
  *  real64 *solution_list;
@@ -395,14 +395,14 @@ extern real64 *relman_directly_solve_new(struct rel_relation *,struct var_variab
   relman_make_vstring_postfix((s),(r),TRUE)
 #define relman_make_xstring_infix(s,r)   \
   relman_make_vstring_infix((s),(r),FALSE)
-#if 0 /* needs compiler side work */
+#if 0 /**< needs compiler side work */
 #define relman_make_xstring_postfix(s,r) \
   relman_make_vstring_postfix((s),(r),FALSE)
 #else
 #define relman_make_xstring_postfix(s,r) \
   dummy_rel_string(s,r,0)
 #endif
-/**
+/**< 
  *  string = relman_make_string_infix(sys,rel)
  *  string = relman_make_string_postfix(sys,rel)
  *  string = relman_make_xstring_infix(sys,rel)
@@ -427,12 +427,12 @@ extern char *relman_make_vstring_infix(slv_system_t,
                                        struct rel_relation *,int);
 extern char *relman_make_vstring_postfix(slv_system_t,
                                          struct rel_relation *,int);
-/*
+/**< 
  * tmp function to placehold unimplemented io functions.
  */
 extern char *dummyrelstring(slv_system_t, struct rel_relation *,int);
 
-/*
+/**< 
  * relman_free_reused_mem(void); 
  * Call when desired to free memory cached internally.
  */

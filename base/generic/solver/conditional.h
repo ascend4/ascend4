@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Conditional Module
  *  by Vicente Rico-Ramirez
  *  Created: 09/96
@@ -26,7 +26,7 @@
  *
  */
 
-/*
+/**< 
  *  Contents:     Conditional  module (ascend)
  *
  *  Dates:        09/96 - original version
@@ -39,41 +39,41 @@
 
 #ifndef conditional__already_included
 #define conditional__already_included
-/* 
+/**< 
  * requires #include "list.h" 
  * requires #include "base.h" 
  */
-/*
+/**< 
  * I have to get rid of this
  */
 #ifndef MAX_VAR_IN_LIST
 #define MAX_VAR_IN_LIST 20
-#endif  /* MAX_VAR_IN_LIST */ 
+#endif  /**< MAX_VAR_IN_LIST */ 
 
 
 struct w_when {
-  SlvBackendToken instance;    /* the associated ascend ATOM  */
-  struct gl_list_t *dvars;     /* index of dis vars  */
-  struct gl_list_t *cases;     /* when_case's */
-  int32 num_cases;             /* number of cases in the WHEN */ 
+  SlvBackendToken instance;    /**< the associated ascend ATOM  */
+  struct gl_list_t *dvars;     /**< index of dis vars  */
+  struct gl_list_t *cases;     /**< when_case's */
+  int32 num_cases;             /**< number of cases in the WHEN */ 
   int32 sindex;
   int32 mindex;
-  int32 model;		      /* index of a hypothetical MODEL when is from */
+  int32 model;		      /**< index of a hypothetical MODEL when is from */
   uint32 flags;
 };
 
-/* 
+/**< 
  * if you mess with the above struct, change the defaults for it in .c file 
  */
 
 
-/*
+/**< 
  *                        When functions
  */
 
 
 extern struct w_when *when_create(SlvBackendToken, struct w_when *);
-/*
+/**< 
  *  when_create(instance,newwhen)
  *  struct w_when *newwhen;
  *  SlvBackendToken instance;
@@ -89,7 +89,7 @@ extern struct w_when *when_create(SlvBackendToken, struct w_when *);
 
 
 extern SlvBackendToken when_instance(struct w_when *);
-/*
+/**< 
  *  when_instance(when)
  *  struct w_when *when;
  *
@@ -97,7 +97,7 @@ extern SlvBackendToken when_instance(struct w_when *);
  */
 
 extern void when_write_name(slv_system_t,struct w_when *,FILE *);
-/*
+/**< 
  *  when_write_name(sys,when,file);
  *
  *  Writes a name to the file given. Handles 
@@ -106,7 +106,7 @@ extern void when_write_name(slv_system_t,struct w_when *,FILE *);
  */
 
 extern void when_destroy_cases(struct w_when *);
-/*
+/**< 
  *  when_destroy_cases(when)
  *  struct w_when *when;
  *
@@ -114,7 +114,7 @@ extern void when_destroy_cases(struct w_when *);
  */
 
 extern void when_destroy(struct w_when *);
-/*
+/**< 
  *  when_destroy(when)
  *  struct w_when *when;
  *
@@ -122,7 +122,7 @@ extern void when_destroy(struct w_when *);
  */
 
 extern char *when_make_name(slv_system_t,struct w_when *);
-/*
+/**< 
  *  name = when_make_name(sys,when)
  *  slv_system_t sys;
  *  struct w_when *when;
@@ -135,7 +135,7 @@ extern char *when_make_name(slv_system_t,struct w_when *);
 
 extern struct gl_list_t *when_dvars_list( struct w_when *);
 extern void when_set_dvars_list( struct w_when *, struct gl_list_t *);
-/*
+/**< 
  *  dvars = when_dvars_list(when)
  *  when_set_dvars_list(when,dvlist)
  *  struct gl_list_t *dvlist;
@@ -147,7 +147,7 @@ extern void when_set_dvars_list( struct w_when *, struct gl_list_t *);
 
 extern struct gl_list_t *when_cases_list( struct w_when *);
 extern void when_set_cases_list( struct w_when *, struct gl_list_t *);
-/*
+/**< 
  *  cases = when_cases_list(when)
  *  when_set_cases_list(when,clist)
  *  struct gl_list_t *clist;
@@ -158,7 +158,7 @@ extern void when_set_cases_list( struct w_when *, struct gl_list_t *);
 
 extern int32 when_num_cases(struct w_when *);
 extern void when_set_num_cases(struct w_when *,int32);
-/*
+/**< 
  *  num_cases = when_num_cases(when)
  *  when_set_num_cases(when,num_cases)
  *  int32 num_cases;
@@ -170,7 +170,7 @@ extern void when_set_num_cases(struct w_when *,int32);
 
 extern int32 when_mindex(struct w_when *);
 extern void when_set_mindex(struct w_when *,int32);
-/*
+/**< 
  *  index = when_mindex(when)
  *  when_set_mindex(when,index)
  *  int32 index;
@@ -182,7 +182,7 @@ extern void when_set_mindex(struct w_when *,int32);
 
 extern int32 when_sindex(struct w_when *);
 extern void when_set_sindex(struct w_when *,int32);
-/*
+/**< 
  *  index = when_sindex(when)
  *  when_set_sindex(when,index)
  *  int32 index;
@@ -194,7 +194,7 @@ extern void when_set_sindex(struct w_when *,int32);
 
 extern int32 when_model(const struct w_when *);
 extern void when_set_model(struct w_when *,int32);
-/*
+/**< 
  *  index = when_model(when)
  *  when_set_model(when,index) 
  *  int32 index;
@@ -211,7 +211,7 @@ typedef struct when_filter_structure {
 } when_filter_t;
 
 
-/*
+/**< 
  * when filtration functions.
  * We could have 32 binary (one bit) flags a client may want to query
  * in arbitrary combinations and paying attention to only certain of
@@ -220,7 +220,7 @@ typedef struct when_filter_structure {
  */
 
 extern int32 when_apply_filter(struct w_when *,when_filter_t *);
-/*
+/**< 
  *  value = when_apply_filter(when,filter)
  *  int32 value;
  *  struct w_when *when;
@@ -234,7 +234,7 @@ extern int32 when_apply_filter(struct w_when *,when_filter_t *);
   
 extern uint32 when_flags(struct w_when *);
 extern void when_set_flags(struct w_when *,uint32);
-/*
+/**< 
  *  struct w_when *when;
  *  uint32 flags;
  *
@@ -244,7 +244,7 @@ extern void when_set_flags(struct w_when *,uint32);
  */
 
 extern uint32 when_flagbit(struct w_when *,uint32);
-/* 
+/**< 
  *  when_flagbit(when,name);
  *  struct w_when *when;
  *  uint32 name;		
@@ -253,7 +253,7 @@ extern uint32 when_flagbit(struct w_when *,uint32);
  */
 
 extern void when_set_flagbit(struct w_when *,uint32, uint32);
-/*
+/**< 
  *  struct w_when *when;
  *  uint32 NAME,oneorzero;
  *  when_set_flagbit(when,NAME,oneorzero)
@@ -273,7 +273,7 @@ extern void when_set_flagbit(struct w_when *,uint32, uint32);
  *  In unix, see also man 3f bit or man not.
  */
 
-/* 
+/**< 
  * the bit flags. 
  */
 
@@ -282,7 +282,7 @@ extern void when_set_flagbit(struct w_when *,uint32, uint32);
 #define WHEN_VISITED	0x4
 #define WHEN_CHANGES_STRUCTURE	0x8
      
-/*
+/**< 
  * WHEN_INWHEN	  Is this when nested in another when ?
  * WHEN_INCLUDED  solvers, ui clients. user wants when in problem.
  * 		  bit should be treated as readonly. use when_set_*
@@ -294,7 +294,7 @@ extern void when_set_flagbit(struct w_when *,uint32, uint32);
  *                otherwise
  */
 
-/* 
+/**< 
  * the bit flag lookups 
  */
 #ifdef NDEBUG
@@ -307,9 +307,9 @@ extern void when_set_flagbit(struct w_when *,uint32, uint32);
 #define when_included(w) 	 when_flagbit((w),WHEN_INCLUDED)
 #define when_visited(w) 	 when_flagbit((w),WHEN_VISITED)
 #define when_changes_structure(w) when_flagbit((w),WHEN_CHANGES_STRUCTURE)
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
-/* 
+/**< 
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
@@ -324,26 +324,26 @@ extern void when_set_flagbit(struct w_when *,uint32, uint32);
 
 
 
-/*
+/**< 
  *                  When Case  utility functions
  */
 
 
 struct when_case {
-  int32 values[MAX_VAR_IN_LIST];  /* values of conditional variables */
-  struct gl_list_t *rels;         /* pointer to relations */
-  struct gl_list_t *logrels;      /* pointer to logrelations */
-  struct gl_list_t *whens;        /* pointer to whens */
-  int32 case_number;              /* number of case */
-  int32 num_rels;                 /* number of relations */
-  int32 num_inc_var;              /* number of incident variables */
-  int32 *ind_inc;                 /* master indeces of incidences */
-  uint32 flags;                   /* flags ?? */
+  int32 values[MAX_VAR_IN_LIST];  /**< values of conditional variables */
+  struct gl_list_t *rels;         /**< pointer to relations */
+  struct gl_list_t *logrels;      /**< pointer to logrelations */
+  struct gl_list_t *whens;        /**< pointer to whens */
+  int32 case_number;              /**< number of case */
+  int32 num_rels;                 /**< number of relations */
+  int32 num_inc_var;              /**< number of incident variables */
+  int32 *ind_inc;                 /**< master indeces of incidences */
+  uint32 flags;                   /**< flags ?? */
 };
 
 
 extern struct when_case *when_case_create(struct when_case *);
-/*
+/**< 
  *  when_case_create(newcase)
  *  struct when_case *newcase;
  *
@@ -354,7 +354,7 @@ extern struct when_case *when_case_create(struct when_case *);
  */
 
 extern void when_case_destroy(struct when_case *);
-/*
+/**< 
  *  when_case_destroy(wc)
  *  struct when_case *wc;
  *
@@ -363,7 +363,7 @@ extern void when_case_destroy(struct when_case *);
 
 extern int32 *when_case_values_list( struct when_case *); 
 extern void when_case_set_values_list( struct when_case *, int32 *values);
-/*
+/**< 
  *  values = when_case_values_list(wc)
  *  when_case_set_values_list(wc,vallist)
  *  int32 *vallist;
@@ -374,7 +374,7 @@ extern void when_case_set_values_list( struct when_case *, int32 *values);
 
 extern struct gl_list_t *when_case_rels_list( struct when_case *); 
 extern void when_case_set_rels_list( struct when_case *, struct gl_list_t *);
-/*
+/**< 
  *  rels = when_case_rels_list(wc)
  *  when_case_set_rels_list(wc,rlist)
  *  struct gl_list_t *rlist;
@@ -385,7 +385,7 @@ extern void when_case_set_rels_list( struct when_case *, struct gl_list_t *);
 
 extern struct gl_list_t *when_case_logrels_list( struct when_case *); 
 extern void when_case_set_logrels_list(struct when_case *,struct gl_list_t *);
-/*
+/**< 
  *  logrels = when_case_logrels_list(wc)
  *  when_case_set_logrels_list(wc,lrlist)
  *  struct gl_list_t *lrlist;
@@ -396,7 +396,7 @@ extern void when_case_set_logrels_list(struct when_case *,struct gl_list_t *);
 
 extern struct gl_list_t *when_case_whens_list( struct when_case *); 
 extern void when_case_set_whens_list( struct when_case *, struct gl_list_t *);
-/*
+/**< 
  *  whens = when_case_whens_list(wc)
  *  when_case_set_whens_list(wc,wlist)
  *  struct gl_list_t *wlist;
@@ -407,7 +407,7 @@ extern void when_case_set_whens_list( struct when_case *, struct gl_list_t *);
 
 extern int32 when_case_case_number(struct when_case *);
 extern void when_case_set_case_number(struct when_case *,int32);
-/*
+/**< 
  *  struct when_case *wc;
  *  int32 case_number;
  *
@@ -418,7 +418,7 @@ extern void when_case_set_case_number(struct when_case *,int32);
 
 extern int32 when_case_num_rels( struct when_case *);
 extern void when_case_set_num_rels(struct when_case *, int32);
-/*
+/**< 
  *  struct when_case *wc;
  *  int32 num_rels;
  *
@@ -429,7 +429,7 @@ extern void when_case_set_num_rels(struct when_case *, int32);
 
 extern int32 when_case_num_inc_var( struct when_case *);
 extern void when_case_set_num_inc_var(struct when_case *, int32);
-/*
+/**< 
  *  struct when_case *wc;
  *  int32 num_inc_var;
  *
@@ -441,7 +441,7 @@ extern void when_case_set_num_inc_var(struct when_case *, int32);
 
 extern int32 *when_case_ind_inc( struct when_case *);
 extern void when_case_set_ind_inc(struct when_case *, int32*);
-/*
+/**< 
  *  struct when_case *wc;
  *  int32 *ind_inc;
  *
@@ -457,12 +457,12 @@ typedef struct when_case_filter_structure {
 } when_case_filter_t;
 
 
-/*  
+/**<  
  * case filtration functions 
  */
 
 extern int32 when_case_apply_filter(struct when_case *,when_case_filter_t *);
-/*
+/**< 
  *  value = when_case_apply_filter(wc,filter)
  *  int32 value;
  *  struct when_case *wc;
@@ -476,7 +476,7 @@ extern int32 when_case_apply_filter(struct when_case *,when_case_filter_t *);
   
 extern uint32 when_case_flags(struct when_case *);
 extern void when_case_set_flags(struct when_case *,uint32);
-/*
+/**< 
  *  struct when_case *wc;
  *  uint32 flags;
  *
@@ -486,7 +486,7 @@ extern void when_case_set_flags(struct when_case *,uint32);
  */
 
 extern uint32 when_case_flagbit(struct when_case *,uint32);
-/*
+/**< 
  *  when_case_flagbit(wc,name);
  *  struct when_case *wc;
  *  uint32 name;		
@@ -495,7 +495,7 @@ extern uint32 when_case_flagbit(struct when_case *,uint32);
  */
 
 extern void when_case_set_flagbit(struct when_case *,uint32, uint32);
-/*
+/**< 
  *  struct when_case *wc;
  *  uint32 NAME,oneorzero;
  *  when_case_set_flagbit(wc,NAME,oneorzero)
@@ -505,30 +505,30 @@ extern void when_case_set_flagbit(struct when_case *,uint32, uint32);
  *  The macro names are the defined up at the top of this file.
  */
 
-/* 
+/**< 
  * the bit flags. 
  */
 
 #define WHEN_CASE_ACTIVE        0x1
      
-/*
+/**< 
  * WHEN_CASE_ACTIVE	Is this case active ?
  */
 
-/* 
+/**< 
  * the bit flag lookups 
  */
 #ifdef NDEBUG
 #define when_case_active(c) 	         ((c)->flags & WHEN_CASE_ACTIVE)
 #else
 #define when_case_active(c) 	    when_case_flagbit((c),WHEN_CASE_ACTIVE)
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
-/* 
+/**< 
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
 #define when_case_set_active(c,bv)   \
                when_case_set_flagbit((c),WHEN_CASE_ACTIVE,(bv))
 
-#endif  /* conditional__already_included */
+#endif  /**< conditional__already_included */

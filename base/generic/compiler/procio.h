@@ -1,4 +1,4 @@
-/*
+/** 
  *  Procedure Output
  *  by Benjamin Allan
  *  Created: 3/12/98
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/** 
  *  When #including procio.h, make sure these files are #included first:
  *         #include "compiler.h"
  *         #include "proc.h"
@@ -35,12 +35,12 @@
 
 #ifndef __PROCIO_H_SEEN__
 #define __PROCIO_H_SEEN__
-/* requires
+/** requires
 # #include<stdio.h>
 # #include"proc.h"
 */
 
-/* codes for old-style external call messaging */
+/** codes for old-style external call messaging */
 enum ProcExtError {
   PE_unloaded,
   PE_nulleval,
@@ -49,12 +49,12 @@ enum ProcExtError {
   PE_evalerr
 };
 
-/* METHODs equivalent of WSEM. should go away soon. */
+/** METHODs equivalent of WSEM. should go away soon. */
 extern  void WriteInitWarn(struct procFrame *, char *);
 extern  void WriteInitErr(struct procFrame *, char *);
 
 /** error message services **/
-/*
+/** 
  * ProcWriteCaseError(fm,arm,pos);
  * write error encountered while evaluating SWITCH.
  * arm gives the number of the case in question. pos
@@ -62,32 +62,32 @@ extern  void WriteInitErr(struct procFrame *, char *);
  */
 extern void ProcWriteCaseError(struct procFrame *, int, int);
 
-/*
+/** 
  * ProcWriteForError(fm);
  * write error encountered while evaluating FOR/DO.
  */
 extern void ProcWriteForError(struct procFrame *);
 
-/*
+/** 
  * ProcWriteAssignmentError(fm);
  * write error encountered while evaluating := assignment.
  */
 extern void ProcWriteAssignmentError(struct procFrame *);
 
-/*
+/** 
  * ProcWriteIfError(fm,cname);
  * write error encountered while evaluating boolean flow control.
  * cname is normally "IF" or "WHILE".
  */
 extern void ProcWriteIfError(struct procFrame *, CONST char *);
 
-/*
+/** 
  * ProcWriteRunError(fm);
  * write error encountered while evaluating RUN arguments.
  */
 extern void ProcWriteRunError(struct procFrame *);
 
-/*
+/** 
  * ProcWriteExtError(fm,funcname,err,pos);
  */
 extern void ProcWriteExtError(struct procFrame *, CONST char *,
@@ -96,14 +96,14 @@ extern void ProcWriteExtError(struct procFrame *, CONST char *,
 
 /** backtrace output functions. **/
 
-/*
+/** 
  * Issue a message if we blew the stack limit or are
  * unwinding the stack.
  */
 extern void ProcWriteStackCheck(struct procFrame *,
                                 struct Name *, struct Name *);
 
-/*
+/** 
  * WriteProcedureBlock(fp,initstack,str);
  * Writes a line to file fp in a format resembling:
  * ("%s %s in %s\n",str,stack->last->proc,stack->last->context)
@@ -115,7 +115,7 @@ extern void ProcWriteStackCheck(struct procFrame *,
 extern void WriteProcedureBlock(FILE *, struct gl_list_t *initstack,
                                 CONST char *);
 
-/*
+/** 
  * WriteProcedureLine(fp,initstack,str);
  * Writes a line to file fp in a format resembling:
  * ("%s %d: %s in %s\n",str,line,proc,context)
@@ -125,5 +125,5 @@ extern void WriteProcedureBlock(FILE *, struct gl_list_t *initstack,
  */
 extern void WriteProcedureLine(FILE *, struct gl_list_t *initstack,
                                CONST char *);
-#endif /* __PROCIO_H_SEEN__ */
+#endif /** __PROCIO_H_SEEN__ */
 

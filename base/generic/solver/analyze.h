@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Problem Analysis Routines
  *  by Benjamin Andrew Allan
  *  5/19/96
@@ -54,57 +54,57 @@
 #ifndef _analyze_h_seen_
 #define _analyze_h_seen_
 
-/* 
+/**< 
  * requires #include "system.h"
  * requires #include "instance_enum.h" 
  */
 
-/* used to give an integer value to each symbol used in a when */
+/**< used to give an integer value to each symbol used in a when */
 struct SymbolValues {
   char *name;
   int value;
 };
 
 extern int analyze_make_problem(slv_system_t, struct Instance *);
-/*
+/**< 
  *  Takes a system and populates the guts of it from the instance.
  *  this implementation of analyze is specific to the ascend compiler
  *  back end.
  */
 
 extern int analyze_remake_problem(slv_system_t);
-/*
+/**< 
  * Reanalyzes the system, reordering solvers var and relation lists
  * if needed. 
  */
 
 extern void analyze_free_reused_mem(void);
-/*
+/**< 
  * Resets all internal memory recycles.
  */
 
 extern int varinst_found_in_whenlist(slv_system_t, struct Instance *);
-/*
+/**< 
  * Determine if the conditional variable inst is part of the
  * variable list of some when in the when list of slv_system_t
  */
 
 extern int dis_var_in_a_when(struct Instance *, struct w_when *);
-/*
+/**< 
  * return 1 if the discrete var is a member of the when var list, else
  * return 0
  */
 
 extern int GetIntFromSymbol(CONST char *,struct gl_list_t *);
-/*
+/**< 
  * Creates the gl list of SymboValues struct to asign an integer
  * value to a symbol value 
  */
 
 extern void DestroySymbolValuesList(struct gl_list_t *);
-/*
+/**< 
  * Destroy the gl list of SymboValues struct created to asign an integer
  * value to symbol value
  */
 
-#endif /*  _analyze_h_seen_ */
+#endif /**<  _analyze_h_seen_ */

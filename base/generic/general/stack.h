@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Stack Module
  *  by Kirk A. Abbott
  *  Created December 18, 1994.
@@ -29,7 +29,7 @@
  *  the file named COPYING.
  */
 
-/*
+/**< 
  *  Abstract
  *  Stacks are occasionally used in the implementation of a compiler
  *  and/or interpreter. This module (in the spirit of the list module)
@@ -40,18 +40,18 @@
  */
 #ifndef __STACK_H_SEEN__
 #define __STACK_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 */
 
 struct gs_stack_t {
-  VOIDPTR	*data;		/* The data */
-  unsigned long size;		/* Number of items used */
-  unsigned long capacity;	/* Capacity of the stack */
+  VOIDPTR	*data;		/**< The data */
+  unsigned long size;		/**< Number of items used */
+  unsigned long capacity;	/**< Capacity of the stack */
 };
 
 extern struct gs_stack_t *gs_stack_create(unsigned long);
-/*
+/**< 
  *  struct gs_stack_t *gs_stack_create(capacity);
  *  unsigned long capacity;
  *
@@ -65,7 +65,7 @@ extern struct gs_stack_t *gs_stack_create(unsigned long);
  */
 
 extern void gs_stack_clear(struct gs_stack_t *);
-/*
+/**< 
  *  gs_stack_clear(stack);
  *  struct gs_stack_t *stack;
  *  This function accepts a stack and resets it to a clean state, as if the
@@ -74,7 +74,7 @@ extern void gs_stack_clear(struct gs_stack_t *);
  */
 
 extern void gs_stack_destroy(struct gs_stack_t *,int);
-/*
+/**< 
  *  gs_stack_destroy(stack,dispose);
  *  struct gs_stack_t *stack;
  *  int dispose;
@@ -87,7 +87,7 @@ extern void gs_stack_destroy(struct gs_stack_t *,int);
  */
 
 extern void gs_stack_push(struct gs_stack_t *,VOIDPTR);
-/*
+/**< 
  *  gs_stack_push(stack,ptr);
  *  struct gs_stack_t *stack;
  *  VOIDPTR ptr;
@@ -107,7 +107,7 @@ extern void gs_stack_push(struct gs_stack_t *,VOIDPTR);
  */
 
 extern VOIDPTR gs_stack_pop(struct gs_stack_t *);
-/*
+/**< 
  *  gs_stack_pop(stack);
  *  struct gs_stack_t *stack;
  *
@@ -129,7 +129,7 @@ extern VOIDPTR gs_stack_pop(struct gs_stack_t *);
  */
 
 extern unsigned long gs_stack_size(CONST struct gs_stack_t *);
-/*
+/**< 
  *  unsigned long gs_stack_size(stack);
  *  const struct gs_stack_t *stack;
  *
@@ -138,7 +138,7 @@ extern unsigned long gs_stack_size(CONST struct gs_stack_t *);
  */
 
 extern int gs_stack_empty(CONST struct gs_stack_t *stack);
-/*
+/**< 
  *  int gs_stack_empty(stack);
  *  const struct gs_stack_t *stack;
  *
@@ -147,7 +147,7 @@ extern int gs_stack_empty(CONST struct gs_stack_t *stack);
  */
 
 extern void gs_stack_apply(struct gs_stack_t *, void (*) (VOIDPTR));
-/*
+/**< 
  *  void gs_stack_apply(stack,func)
  *  struct gs_stack_t *stack;
  *  void (*func) (VOIDPTR);
@@ -159,4 +159,4 @@ extern void gs_stack_apply(struct gs_stack_t *, void (*) (VOIDPTR));
  *  debugging.
  */
 
-#endif /* __STACK_H_SEEN__ */
+#endif /**< __STACK_H_SEEN__ */

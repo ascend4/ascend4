@@ -33,7 +33,7 @@
 #define __FREE_ALL_VARS_H_SEEN__
 
 extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *);
-/* Asc_ClearVarsInTree(i).
+/**< Asc_ClearVarsInTree(i).
  * A service routine which assumes a solver_var modeling world
  * and clears (set var.fixed := FALSE) all var and refinements
  * of var in the DAG rooted at i.
@@ -41,7 +41,7 @@ extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *);
 
 extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *, struct Instance *,
                                     struct gl_list_t *, unsigned long);
-/*
+/**<
  *  err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);
  *  All arguments except rootinstance are ignored.
  *  rootinstance is used as the argument to a call to Asc_ClearVarsInTree.

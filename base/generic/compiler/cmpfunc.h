@@ -1,4 +1,4 @@
-/*
+/**< 
  *  ASCEND comparison functions of various sorts.
  *  by Ben Allen
  *  Created 9/16/96
@@ -31,7 +31,7 @@
 #ifndef __CMPFUNC_H_SEEN__
 #define __CMPFUNC_H_SEEN__
 
-/* requires
+/**< requires
 # #include "compiler.h"
 # #include "instance_enum.h"
 and possibly, or CmpIntIndex is undefined,
@@ -43,8 +43,8 @@ functions can use it without that because of a nasty
 ifdef down below.
 */
 
-/* reminder strcmp("abc","fcd") --> -1 */
-/*
+/**< reminder strcmp("abc","fcd") --> -1 */
+/**< 
  *  When used with a sort function, these yield a list ordered in
  *  increasing value.
  *  if comparing symbols, use CmpSymchar for maximum speed or
@@ -52,7 +52,7 @@ ifdef down below.
  */
 
 extern int CmpSymchar(symchar *,symchar *);
-/*
+/**< 
  *  Regardless of the details of the symchar definition, returns
  *  the result of alphabetic comparison between two items from the
  *  symbol table.
@@ -62,7 +62,7 @@ extern int CmpSymchar(symchar *,symchar *);
  */
 
 extern int CmpPtrs(void *, void *);
-/*
+/**< 
  *  CmpPtrs(p1,p2);
  *  returns:	if:
  *  -1		p1<p2
@@ -71,7 +71,7 @@ extern int CmpPtrs(void *, void *);
  */
 
 extern int CmpRealPtrs(void *, void *);
-/*
+/**< 
  *  CmpRealPtrs(p1,p2);
  *  First asserts p1, p2 != NULL, then:
  *  returns:	if:
@@ -80,7 +80,7 @@ extern int CmpRealPtrs(void *, void *);
  *   1		p1>p2
  */
 
-/*
+/**< 
  *  Comparison functions for instance pointers.
  *  All rather similar, but we may decide to change the comparison
  *  methods later, so each has its own function.
@@ -92,7 +92,7 @@ extern int CmpRealPtrs(void *, void *);
 #define CmpParents CmpParentsF
 #endif
 extern int CmpParentsF(CONST struct Instance *,CONST struct Instance *);
-/*
+/**< 
  *  Comparison functions for parent instance pointers.
  */
 
@@ -102,7 +102,7 @@ extern int CmpParentsF(CONST struct Instance *,CONST struct Instance *);
 #define CmpRelations CmpRelationsF
 #endif
 extern int CmpRelationsF(CONST struct Instance *,CONST struct Instance *);
-/*
+/**< 
  *  Comparison functions for relation instance pointers.
  */
 
@@ -112,7 +112,7 @@ extern int CmpRelationsF(CONST struct Instance *,CONST struct Instance *);
 #define CmpLogRelations CmpLogRelationsF
 #endif
 extern int CmpLogRelationsF(CONST struct Instance *,CONST struct Instance *);
-/*
+/**< 
  *  Comparison functions for logrelation instance pointers.
  */
 
@@ -122,7 +122,7 @@ extern int CmpLogRelationsF(CONST struct Instance *,CONST struct Instance *);
 #define CmpWhens CmpWhensF
 #endif
 extern int CmpWhensF(CONST struct Instance *,CONST struct Instance *);
-/*
+/**< 
  *  Comparison functions for when instance pointers.
  */
 
@@ -131,7 +131,7 @@ extern int CmpWhensF(CONST struct Instance *,CONST struct Instance *);
 
 extern int CmpIntIndex(CONST struct ArrayChild *, CONST struct ArrayChild *);
 extern int CmpStrIndex(CONST struct ArrayChild *, CONST struct ArrayChild *);
-/*
+/**< 
  *  CmpStrIndex(a,b),CmpIntIndex(a,b)
  *  Comparison functions for ArrayChildren.
  *  Both a and b must be nonNULL and are then ASSUMED to be an arraychild
@@ -142,15 +142,15 @@ extern int CmpStrIndex(CONST struct ArrayChild *, CONST struct ArrayChild *);
  */
 
 #endif
-/* INSTANCE_TYPES_H_SEEN__ */
+/**< INSTANCE_TYPES_H_SEEN__ */
 
-/*
+/**< 
  *  When used with a sort function, these yield a list ordered in
  *  decreasing value.
  */
 
 extern int CmpPtrsReverse(void *, void *);
-/*
+/**< 
  *  CmpPtrsReverse(p1,p2);
  *  returns:	if:
  *  -1		p1>p2
@@ -159,4 +159,4 @@ extern int CmpPtrsReverse(void *, void *);
  */
 
 #endif
-/* __CMPFUNC_H_SEEN__ */
+/**< __CMPFUNC_H_SEEN__ */

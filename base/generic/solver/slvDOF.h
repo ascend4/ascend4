@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SlvDOF: Ascend Degrees of Freedom module
  *  by Benjamin A Allan and Vicente Rico-Ramirez
  *  Created: 7/11/94
@@ -29,7 +29,7 @@
  *  COPYING is found in ../compiler.
  */
 
-/*
+/**< 
  *  Contents:     DOF module
  *
  *  Authors:      Ben Allan
@@ -47,10 +47,10 @@
 #ifndef slvdof_already_included
 #define slvdof_already_included
 
-/* requires #include <stdio.h> */
-/* requires #include "slv_client.h" */
+/**< requires #include <stdio.h> */
+/**< requires #include "slv_client.h" */
 
-/*
+/**< 
  * The following functions are for use in running DOF analysis and dialog
  * through the interface. The tcl callbacks for them will be coded in 
  * DebugProc.c probably.
@@ -61,7 +61,7 @@
  */
 
 extern int slvDOF_eligible(slv_system_t, int32**);
-/*
+/**< 
  * Returns 1 if able to determine lists, 0 otherwise.
  * usage: if(slvDOF_eligible(server,&vil))
  * int32 *vil;
@@ -79,7 +79,7 @@ extern int slvDOF_eligible(slv_system_t, int32**);
  */
 
 extern int slvDOF_structsing(slv_system_t, int32, int32**, int32**,int32**);
-/*
+/**< 
  * if(slvDOF_structsing(server,relindex,&vil,&ril,&fil)) {.... }
  * int32 *vil, *ril, fil.
  * Returns 1 if able to determine lists, 0 otherwise.
@@ -98,7 +98,7 @@ extern int slvDOF_structsing(slv_system_t, int32, int32**, int32**,int32**);
  */
 
 extern int32 slvDOF_status(slv_system_t, int32 *, int32 *);
-/*
+/**< 
  * Return the status of the current problem.
  *
  * status = 1  ==> underspecified
@@ -114,7 +114,7 @@ extern int32 slvDOF_status(slv_system_t, int32 *, int32 *);
  */
 
 extern int32 get_globally_consistent_eligible(slv_system_t,int32 **);
-/*
+/**< 
  * Returns 1 if able to determine list, 0 otherwise.
  * usage: get_globally_consistent_eligible(server,&(eliset))
  * int32 *eliset
@@ -128,7 +128,7 @@ extern int32 get_globally_consistent_eligible(slv_system_t,int32 **);
  */
 
 extern int32 consistency_analysis(slv_system_t,int32 **);
-/*
+/**< 
  * Returns 1 if system is structurally consistent, 0 otherwise.
  * usage: consistency_analysis(server,&(fixed))
  * int32 *fixed
@@ -147,4 +147,4 @@ extern int32 consistency_analysis(slv_system_t,int32 **);
  * The indices are var_mindex of vars on master_var_list.
  * 
  */
-#endif /* slvdof_already_included */
+#endif /**< slvdof_already_included */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Logical Relation Module
  *  by Vicente Rico-Ramirez
  *  Created: 09/96
@@ -26,7 +26,7 @@
  *
  */
 
-/*
+/**< 
  *  Contents:     Logical Relation module (ascend)
  *
  *  Dates:        09/96 - original version
@@ -39,7 +39,7 @@
 #ifndef logrel__already_included
 #define logrel__already_included
 
-/* 
+/**< 
  * requires #include "/base.h"
  * requires #include "/discrete.h" 
  */
@@ -53,7 +53,7 @@ enum logrel_enum {
   e_logrel_not_equal
 };
 
-/*
+/**< 
  * enum logrel_enum:
  * The operator of a logical relation.
  */
@@ -61,20 +61,20 @@ enum logrel_enum {
 struct logrel_relation {
    SlvBackendToken instance;
    struct dis_discrete **incidence;
-   int32 n_incidences;		/* length of incidence */
-   int32 mindex;		/* index in the slv_system_t master list */
-   int32 sindex;		/* index in the slv_system_t solver list */
-   int32 model;		       /* index of a hypothetical MODEL rel is from */
-   uint32 flags;		/* flags */
+   int32 n_incidences;		/**< length of incidence */
+   int32 mindex;		/**< index in the slv_system_t master list */
+   int32 sindex;		/**< index in the slv_system_t solver list */
+   int32 model;		       /**< index of a hypothetical MODEL rel is from */
+   uint32 flags;		/**< flags */
 };
-/* 
+/**< 
  * if you mess with the above struct, change the defaults for it in .c file 
  */
 
 
 extern struct logrel_relation *logrel_create(SlvBackendToken ,
 					     struct logrel_relation *);
-/*
+/**< 
  *  logrel_create(instance,newlogrel)
  *  struct logrel_relation *newlogrel;
  *  SlvBackendToken instance;
@@ -93,7 +93,7 @@ extern struct logrel_relation *logrel_create(SlvBackendToken ,
 
 
 extern SlvBackendToken logrel_instance(struct logrel_relation *);
-/*
+/**< 
  *  logrel_instance(logrel)
  *  struct logrel_relation *logrel;
  *
@@ -101,7 +101,7 @@ extern SlvBackendToken logrel_instance(struct logrel_relation *);
  */
 
 extern void logrel_write_name(slv_system_t,struct logrel_relation *,FILE *);
-/*
+/**< 
  *  logrel_write_name(sys,logrel,file);
  *
  *  Writes a name to the file given. 
@@ -110,7 +110,7 @@ extern void logrel_write_name(slv_system_t,struct logrel_relation *,FILE *);
  */
 
 extern void logrel_destroy(struct logrel_relation *);
-/*
+/**< 
  *  logrel_destroy(logrel)
  *  struct logrel_relation *logrel;
  *
@@ -119,7 +119,7 @@ extern void logrel_destroy(struct logrel_relation *);
 
 extern boolean logrel_equal(struct logrel_relation *);
 extern boolean logrel_not_equal(struct logrel_relation *);
-/*
+/**< 
  *  eq = logrel_equal(logrel)
  *  neq = logrel_not_equal(logrel)
  *  boolean eq,neq;
@@ -133,7 +133,7 @@ extern boolean logrel_not_equal(struct logrel_relation *);
  */
 
 extern enum logrel_enum logrel_relop(struct logrel_relation *);
-/*
+/**< 
  * relop = logrel_relop(logrel);
  * logrel_enum relop;
  * struct logrel_relation *logrel;
@@ -141,7 +141,7 @@ extern enum logrel_enum logrel_relop(struct logrel_relation *);
  */
 
 extern char *logrel_make_name(slv_system_t,struct logrel_relation *);
-/*
+/**< 
  *  name = logrel_make_name(sys,logrel)
  *  slv_system_t sys;
  *  struct logrel_relation *logrel;
@@ -153,7 +153,7 @@ extern char *logrel_make_name(slv_system_t,struct logrel_relation *);
  
 extern int32 logrel_mindex(struct logrel_relation *);
 extern void logrel_set_mindex(struct logrel_relation *,int32);
-/*
+/**< 
  *  index = logrel_mindex(logrel)
  *  logrel_set_mindex(logrel,index)
  *  int32 index;
@@ -165,7 +165,7 @@ extern void logrel_set_mindex(struct logrel_relation *,int32);
 
 extern int32 logrel_sindex(struct logrel_relation *);
 extern void logrel_set_sindex(struct logrel_relation *,int32);
-/*
+/**< 
  *  index = logrel_sindex(logrel)
  *  logrel_set_sindex(logrel,index)
  *  int32 index;
@@ -177,7 +177,7 @@ extern void logrel_set_sindex(struct logrel_relation *,int32);
 
 extern int32 logrel_model(const struct logrel_relation *);
 extern void logrel_set_model(struct logrel_relation *,int32);
-/*
+/**< 
  *  index = logrel_model(logrel)
  *  logrel_set_model(logrel,index)
  *  int32 index;
@@ -189,7 +189,7 @@ extern void logrel_set_model(struct logrel_relation *,int32);
 
 extern int32 logrel_residual(struct logrel_relation *);
 extern void logrel_set_residual(struct logrel_relation *,int32);
-/*
+/**< 
  *  residual = logrel_residual(logrel)
  *  logrel_set_residual(logrel,residual)
  *  int32 residual;
@@ -202,7 +202,7 @@ extern void logrel_set_residual(struct logrel_relation *,int32);
  */
 
 extern int32 logrel_nominal(struct logrel_relation *);
-/*
+/**< 
  *  nominal = logrel_nominal(logrel)
  *  int32 nominal;
  *  struct logrel_relation *logrel;
@@ -221,13 +221,13 @@ extern int32 logrel_nominal(struct logrel_relation *);
 #define logrel_n_incidences(lr) logrel_n_incidencesF(lr)
 #define logrel_set_incidences(lr,n,ilist) \
    logrel_set_incidencesF((lr),(n),(ilist))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 
 extern int32 logrel_n_incidencesF(struct logrel_relation *);
 extern void logrel_set_incidencesF(struct logrel_relation *,
                                    int32,struct dis_discrete **);
-/*
+/**< 
  *  logrel_n_incidences(logrel)
  *  logrel_set_incidences(logrel,n,ilist)
  *  struct logrel_relation *logrel;
@@ -244,7 +244,7 @@ extern const struct dis_discrete
 **logrel_incidence_list(struct logrel_relation *);
 extern struct dis_discrete
 **logrel_incidence_list_to_modify(struct logrel_relation *);
-/*
+/**< 
  *  bv = logrel_incidence_list(logrel)
  *  struct logrel_relation *logrel;
  *  struct dis_discrete **bv;
@@ -259,7 +259,7 @@ extern struct dis_discrete
  *  BV IS NOT a NULL-TERMINATED LIST.
  */
 
-/*
+/**< 
  * logrelation filtration functions.
  * We coulhave 32 binary (one bit) flags a client may want to query
  * in arbitrary combinations and paying attention to only certain of
@@ -273,7 +273,7 @@ typedef struct logrel_filter_structure {
 } logrel_filter_t;
 
 extern int logrel_apply_filter(struct logrel_relation *,logrel_filter_t *);
-/*
+/**< 
  *  value = logrel_apply_filter(logrel,filter)
  *  int value;
  *  struct logrel_relation *logrel;
@@ -287,7 +287,7 @@ extern int logrel_apply_filter(struct logrel_relation *,logrel_filter_t *);
   
 extern uint32 logrel_flags(struct logrel_relation *);
 extern void logrel_set_flags(struct logrel_relation *,uint32);
-/*
+/**< 
  *  struct logrel_relation *logrel;
  *  uint32 flags;
  *
@@ -297,7 +297,7 @@ extern void logrel_set_flags(struct logrel_relation *,uint32);
  */
 
 extern uint32 logrel_flagbit(struct logrel_relation *,uint32);
-/* 
+/**< 
  *  logrel_flagbit(logrel,name);
  *  struct logrel_relation *logrel;
  *  uint32 name;		
@@ -306,7 +306,7 @@ extern uint32 logrel_flagbit(struct logrel_relation *,uint32);
  */
 
 extern void logrel_set_flagbit(struct logrel_relation *,uint32, uint32);
-/*
+/**< 
  *  struct logrel_relation *logrel;
  *  unsigned int NAME,oneorzero;
  *  logrel_set_flagbit(logrel,NAME,oneorzero)
@@ -326,12 +326,12 @@ extern void logrel_set_flagbit(struct logrel_relation *,uint32, uint32);
  *  In unix, see also man 3f bit or man not.
  */
 
-/* 
+/**< 
  * the bit flags. explained afterward. several are for use of
  * transient clients and should be ignored by solver engines 
  */
 #define LOGREL_INCLUDED	0x1
-/* 
+/**< 
  * INCLUDED is as yet a funny one. treat it as readonly because
  * you can only change it using a int function and not the
  * bit manipulation functions. It is here in the bits because
@@ -339,13 +339,13 @@ extern void logrel_set_flagbit(struct logrel_relation *,uint32, uint32);
  */
 #define LOGREL_SATISFIED 0x2
 #define LOGREL_EQUALITY	0x4
-/* Conditional Modeling */
+/**< Conditional Modeling */
 #define LOGREL_INWHEN      0x8
 #define LOGREL_ACTIVE      0x10 
-/* Conditional LogRelations (Boundaries) */
+/**< Conditional LogRelations (Boundaries) */
 #define LOGREL_CONDITIONAL 0x20 
 #define LOGREL_IN_BLOCK 0x40 
-/*
+/**< 
  * LOGREL_INCLUDED	solvers, ui clients. user wants eqn in problem.
  *		        bit should be treated as readonly. use logrel_set_*
  *		        to change.
@@ -360,7 +360,7 @@ extern void logrel_set_flagbit(struct logrel_relation *,uint32, uint32);
  *		        client? for clients.
  */
 
-/* 
+/**< 
  * the bit flag lookups 
  */
 #ifdef NDEBUG
@@ -377,9 +377,9 @@ extern void logrel_set_flagbit(struct logrel_relation *,uint32, uint32);
 #define logrel_active(lr) 	 logrel_flagbit((lr),LOGREL_ACTIVE)
 #define logrel_conditional(lr)   logrel_flagbit((lr),LOGREL_CONDITIONAL)
 #define logrel_in_bolck(lr)      logrel_flagbit((lr),LOGREL_IN_BLOCK)
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
-/* 
+/**< 
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
@@ -398,7 +398,7 @@ extern void logrel_set_flagbit(struct logrel_relation *,uint32, uint32);
 
 extern uint32 logrel_included(struct logrel_relation *);
 extern void logrel_set_included(struct logrel_relation *,uint32);
-/*
+/**< 
  *  included = logrel_included(logrel)
  *  logrel_set_included(logrel,included)
  *  uint32 included;
@@ -410,4 +410,4 @@ extern void logrel_set_included(struct logrel_relation *,uint32);
  *  change.
  */
 
-#endif  /* logrel_already_included  */
+#endif  /**< logrel_already_included  */

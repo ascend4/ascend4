@@ -1,4 +1,4 @@
-/*
+/** 
  *  Ascend Panic
  *  by Mark Thomas
  *  Created: 1997.05.15
@@ -31,7 +31,7 @@
 #ifndef _ASCPANIC_H
 #define _ASCPANIC_H
 
-/*
+/** 
  *  To include this header file, you must include the following:
  *      #include <stdarg.h>
  *      #include "compiler/compiler.h"
@@ -39,7 +39,7 @@
  */
 
 
-/*
+/** 
  * Asc_Panic( status, function, format, args )
  *      int status;
  *      CONST char *function
@@ -61,7 +61,7 @@ extern void Asc_Panic(CONST int status, CONST char *function,
                       CONST char *format, ...);
 
 
-/*
+/** 
  *  Asc_PanicSetOutfile(filename)
  *      CONST char *filename;
  *
@@ -73,4 +73,4 @@ extern void Asc_Panic(CONST int status, CONST char *function,
  */
 extern void Asc_PanicSetOutfile(CONST char *filename);
 
-#endif  /* _ASCPANIC_H */
+#endif  /** _ASCPANIC_H */

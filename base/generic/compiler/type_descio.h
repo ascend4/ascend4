@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Type Description Output
  *  by Tom Epperly
  *  Created: 1/15/89
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including type_descio.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -37,13 +37,13 @@
 
 #ifndef __TYPE_DESCIO_H_SEEN__
 #define __TYPE_DESCIO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"type_desc.h"
 */
 
 extern void WriteDefinition(FILE *,struct TypeDescription *);
-/*
+/**< 
  *  void WriteDefinition(f,desc)
  *  FILE *f;
  *  struct TypeDescription *desc;
@@ -52,7 +52,7 @@ extern void WriteDefinition(FILE *,struct TypeDescription *);
  */
 
 extern char *WriteDefinitionStringList(struct TypeDescription *);
-/*
+/**< 
  * char *WriteDefinitionString(d); 
  * struct TypeDescription *desc;
  * Returns a string containing in braced list format (compatible
@@ -82,7 +82,7 @@ extern char *WriteDefinitionStringList(struct TypeDescription *);
  */
 
 extern void WriteDiffDefinition(FILE *,struct TypeDescription *);
-/*
+/**< 
  *  void WriteDiffDefinition(f,desc)
  *  FILE *f;
  *  struct TypeDescription *desc;
@@ -97,15 +97,15 @@ extern void WriteDiffDefinition(FILE *,struct TypeDescription *);
  */
 
 extern symchar *GetBaseTypeName(enum type_kind);
-/*
+/**< 
  * returns the symbol for the kind of type given.
  * InitBaseTypeNames must have been called first.
  * ascCompiler takes care of that.
  */
 
 extern void InitBaseTypeNames(void);
-/*
+/**< 
  * setup the basetypes symbol table.
  */
 
-#endif /* __TYPE_DESCIO_H_SEEN__ */
+#endif /**< __TYPE_DESCIO_H_SEEN__ */

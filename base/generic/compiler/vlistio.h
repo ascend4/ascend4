@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Temporary variable list output routines
  *  by Tom Epperly
  *  Version: $Revision: 1.5 $
@@ -28,13 +28,13 @@
 
 #ifndef __VLISTIO_H_SEEN__
 #define __VLISTIO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"vlist.h"
 */
 
 extern void WriteVariableList(FILE *,CONST struct VariableList *);
-/*
+/**< 
  *  void WriteVariableList(f,n)
  *  FILE *f;
  *  struct VariableList *n;
@@ -42,11 +42,11 @@ extern void WriteVariableList(FILE *,CONST struct VariableList *);
  */
 
 extern void WriteVariableListNode(FILE *, CONST struct VariableList *);
-/*
+/**< 
  *  void WriteVariableListNode(f,n);
  *  FILE *f;
  *  struct VariableList *n;
  *  Write just this one variable list node, and not any of the ones
  *  following it.
  */
-#endif /* __VLISTIO_H_SEEN__ */
+#endif /**< __VLISTIO_H_SEEN__ */

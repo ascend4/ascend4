@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -31,7 +31,7 @@
 #ifndef slv1__already_included
 #define slv1__already_included
 
-/* requires #include "slv_client.h" */
+/**< requires #include "slv_client.h" */
 
 typedef struct slv1_system_structure *slv1_system_t;
 

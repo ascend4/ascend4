@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Symbol Table Management
  *  by Tom Epperly
  *  7/24/89
@@ -32,7 +32,7 @@
  *  information store in it.
  */
 
-/*
+/**< 
  *  When #including symtab.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -40,20 +40,20 @@
 
 #ifndef __SYMTAB_H_SEEN__
 #define __SYMTAB_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 */
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 
 extern void DestroyStringSpace(void);
-/*
+/**< 
  *  void DestroyStringSpace()
  *  This deallocates all the memory associated with the string space.
  */
 
 extern void InitSymbolTable(void);
-/*
+/**< 
  *  void InitSymbolTable()
  *  This procedure performs all the necessary initialization for the symbol
  *  table manager.  It should be called once and only once, and it must
@@ -65,7 +65,7 @@ extern void InitSymbolTable(void);
  */
 
 extern symchar *AddSymbol(CONST char *);
-/*
+/**< 
  *  symchar *AddSymbol(c)
  *  const char *c;
  *  E.g.
@@ -91,7 +91,7 @@ extern symchar *AddSymbol(CONST char *);
  */
 
 extern symchar *AddSymbolL(CONST char *,int);
-/*
+/**< 
  *  symchar *AddSymbolL(c,len)
  *  const char *c;
  *  int len;
@@ -113,7 +113,7 @@ extern symchar *AddSymbolL(CONST char *,int);
  */
 
 extern symchar *AscFindSymbol(symchar *);
-/*
+/**< 
  * s = AscFindSymbol(s);
  * Returns NULL if the pointer s given is not from the table.
  * Otherwise returns the pointer given. 
@@ -123,7 +123,7 @@ extern symchar *AscFindSymbol(symchar *);
  */
 
 extern void PrintTab(int);
-/*
+/**< 
  *  PrintTab(noisy);
  *  int noisy;
  *  if (noisy) prints lots of goop.
@@ -131,10 +131,10 @@ extern void PrintTab(int);
  */
 
 extern void DestroySymbolTable(void);
-/*
+/**< 
  *  void DestroySymbolTable();
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.
  */
 
-#endif /* __SYMTAB_H_SEEN__ */
+#endif /**< __SYMTAB_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  mtx2: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -29,12 +29,12 @@
  */
 #ifndef __MTX_QUERY_H_SEEN__
 #define __MTX_QUERY_H_SEEN__
-/* requires #include "mtx.h" */
+/**< requires #include "mtx.h" */
 
 
 extern real64 mtx_next_in_row(mtx_matrix_t, mtx_coord_t *,mtx_range_t *);
 extern real64 mtx_next_in_col(mtx_matrix_t, mtx_coord_t *,mtx_range_t *);
-/**
+/**< 
  -$-  value = mtx_next_in_row(matrix,coord,colrng)
  -$-  value = mtx_next_in_col(matrix,coord,rowrng)
  ***  real64 value;
@@ -100,7 +100,7 @@ extern real64 mtx_row_max(mtx_matrix_t, mtx_coord_t *,
                                 mtx_range_t *, real64 *);
 extern real64 mtx_col_max(mtx_matrix_t, mtx_coord_t *,
                                 mtx_range_t *, real64 *);
-/**
+/**< 
  -$-  value = mtx_row_max(matrix,coord,colrng,signval)
  -$-  value = mtx_col_max(matrix,coord,rowrng,signval)
  -$-  value = mtx_row_min(matrix,coord,colrng,signval)
@@ -131,7 +131,7 @@ extern real64 mtx_row_min(mtx_matrix_t, mtx_coord_t *,
                                 mtx_range_t *, real64 *,real64);
 extern real64 mtx_col_min(mtx_matrix_t, mtx_coord_t *,
                                 mtx_range_t *, real64 *,real64);
-/**
+/**< 
  -$-  value = mtx_row_min(matrix,coord,colrng,signval,minval)
  -$-  value = mtx_col_min(matrix,coord,rowrng,signval,minval)
  ***  real64 value, *signval, minval;
@@ -152,7 +152,7 @@ extern real64 mtx_get_pivot_col(mtx_matrix_t, mtx_coord_t *,
 extern real64 mtx_get_pivot_row(mtx_matrix_t, mtx_coord_t *,
                                       mtx_range_t *, real64 *,
                                       real64, real64);
-/**
+/**< 
  -$-  value = mtx_get_pivot_col(matrix,coord,colrng,signval,tol,eps)
  -$-  value = mtx_get_pivot_row(matrix,coord,rowrng,signval,tol,eps)
  ***  real64 value, *signval;
@@ -189,7 +189,7 @@ extern int32  mtx_nonzeros_in_region(mtx_matrix_t, mtx_region_t *);
 extern int32  mtx_numbers_in_row(mtx_matrix_t,int32,mtx_range_t *);
 extern int32  mtx_numbers_in_col(mtx_matrix_t,int32,mtx_range_t *);
 extern int32  mtx_numbers_in_region(mtx_matrix_t, mtx_region_t *);
-/**
+/**< 
  -$-  count = mtx_nonzeros_in_row(matrix,row,colrng)
  -$-  count = mtx_nonzeros_in_col(matrix,col,rowrng)
  -$-  count = mtx_nonzeros_in_region(matrix,reg)
@@ -249,7 +249,7 @@ extern void         mtx_cur_row_vec(mtx_matrix_t, int32,
                                     real64 *, mtx_range_t *);
 extern void         mtx_cur_col_vec(mtx_matrix_t, int32,
                                     real64 *, mtx_range_t *);
-/**
+/**< 
  -$-  mtx_org_row_vec(mtx,row,vec,colrng)
  -$-  mtx_org_col_vec(mtx,col,vec,rowrng)
  -$-  mtx_cur_row_vec(mtx,row,vec,colrng)
@@ -306,7 +306,7 @@ extern mtx_sparse_t *mtx_cur_row_sparse(mtx_matrix_t, int32,
 extern mtx_sparse_t *mtx_cur_col_sparse(mtx_matrix_t, int32,
                                         mtx_sparse_t * const, mtx_range_t *,
                                         int);
-/**
+/**< 
  -$-  sparse = mtx_org_row_sparse(mtx,row,sparse,colrng,zeroes)
  -$-  sparse = mtx_org_col_sparse(mtx,col,sparse,rowrng,zeroes)
  -$-  sparse = mtx_cur_row_sparse(mtx,row,sparse,colrng,zeroes)
@@ -348,7 +348,7 @@ extern void         mtx_zr_cur_vec_using_row(mtx_matrix_t, int32,
                                              real64 *, mtx_range_t *);
 extern void         mtx_zr_cur_vec_using_col(mtx_matrix_t, int32,
                                              real64 *, mtx_range_t *);
-/**
+/**< 
  -$-  mtx_zr_org_vec_using_row(mtx,row,vec,colrng)
  -$-  mtx_zr_org_vec_using_col(mtx,col,vec,rowrng)
  -$-  mtx_zr_cur_vec_using_row(mtx,row,vec,colrng)
@@ -379,7 +379,7 @@ extern real64 mtx_sum_abs_in_row(mtx_matrix_t, int32,
                                         const mtx_range_t *);
 extern real64 mtx_sum_abs_in_col(mtx_matrix_t, int32,
                                         const mtx_range_t *);
-/**
+/**< 
  -$-  sum = mtx_sum_sqrs_in_row(matrix,row,colrng)
  -$-  sum = mtx_sum_sqrs_in_col(matrix,col,rowrng)
  -$-  sum = mtx_sum_abs_in_row(matrix,row,colrng)
@@ -410,7 +410,7 @@ extern real64 mtx_row_dot_full_org_vec(mtx_matrix_t, int32,
 extern real64 mtx_col_dot_full_org_vec(mtx_matrix_t, int32,
                                              real64 *, mtx_range_t *,
                                              boolean);
-/**
+/**< 
  -$-  sum = mtx_row_dot_full_org_vec(matrix,row,orgvec,colrng,transpose)
  -$-  sum = mtx_col_dot_full_org_vec(matrix,col,orgvec,rowrng,transpose)
  ***  real64 sum;
@@ -447,7 +447,7 @@ extern real64 mtx_row_dot_full_cur_vec(mtx_matrix_t, int32,
 extern real64 mtx_col_dot_full_cur_vec(mtx_matrix_t, int32,
                                              real64 *, mtx_range_t *,
                                              boolean);
-/**
+/**< 
  -$-  sum = mtx_row_dot_full_cur_vec(matrix,row,currowvec,colrng,transpose)
  -$-  sum = mtx_col_dot_full_cur_vec(matrix,col,curcolvec,rowrng,transpose)
  ***  real64 sum;
@@ -483,7 +483,7 @@ extern real64 mtx_col_dot_full_org_custom_vec(mtx_matrix_t,
 					      mtx_matrix_t, int32,
                                              real64 *, mtx_range_t *,
                                              boolean);
-/**
+/**< 
  -$-  sum =
  mtx_row_dot_full_org_custom_vec(matrix1,matrix2,row,orgvec,colrng,transpose)
  -$-  sum =
@@ -531,7 +531,7 @@ extern void         mtx_cur_vec_add_row(mtx_matrix_t, real64 *,
 extern void         mtx_cur_vec_add_col(mtx_matrix_t, real64 *,
                                         int32, real64,
                                         mtx_range_t *,boolean);
-/**
+/**< 
  -$-  mtx_org_vec_add_row(matrix,tvec,srow,factor,colrng,transpose)
  -$-  mtx_org_vec_add_col(matrix,tvec,scol,factor,rowrng,transpose)
  -$-  mtx_cur_vec_add_row(matrix,tvec,srow,factor,colrng,transpose)
@@ -570,4 +570,4 @@ extern void         mtx_cur_vec_add_col(mtx_matrix_t, real64 *,
  -$-  Does nothing to a bad matrix.
  **/
 
-#endif /* __MTX_QUERY_H_SEEN__ */
+#endif /**< __MTX_QUERY_H_SEEN__ */

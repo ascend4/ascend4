@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Statement list routines
  *  by Tom Epperly
  *  Version: $Revision: 1.9 $
@@ -25,7 +25,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including slist.h, make sure these files are #included first:
  *         #include "compiler.h"
  *         #include "list.h"
@@ -35,21 +35,21 @@
 
 #ifndef __SLIST_H_SEEN__
 #define __SLIST_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"list.h"
 # #include"stattypes.h"
 */
 
 extern struct StatementList *CreateStatementList(struct gl_list_t *);
-/*
+/**< 
  *  struct StatementList *CreateStatementList(l)
  *  struct gl_list_t *l;
  *  Create a statement list structure.
  */
 
 extern struct StatementList *EmptyStatementList(void);
-/*
+/**< 
  *  struct StatementList *EmptyStatementList()
  *  Create an empty statement list structure.
  */
@@ -61,7 +61,7 @@ extern struct StatementList *EmptyStatementList(void);
 #endif
 extern struct gl_list_t *GetListF(CONST struct StatementList *,
                                   CONST char * , int);
-/*
+/**< 
  *  macro GetList(sl)
  *  struct gl_list_t *GetListF(sl,file,line)
  *  struct StatementList *sl;
@@ -70,7 +70,7 @@ extern struct gl_list_t *GetListF(CONST struct StatementList *,
 
 extern unsigned long StatementInList(CONST struct StatementList *,
                                      CONST struct Statement *);
-/*
+/**< 
  *  c = StatementInList(sl,s);
  *  struct StatementList *sl;
  *  struct Statement *s;
@@ -80,7 +80,7 @@ extern unsigned long StatementInList(CONST struct StatementList *,
 
 extern struct Statement *GetStatement(CONST struct StatementList *,
                                       unsigned long int);
-/*
+/**< 
  *  s = GetStatement(sl,j);
  *  struct StatementList *sl;
  *  unsigned long j;
@@ -91,7 +91,7 @@ extern struct Statement *GetStatement(CONST struct StatementList *,
  */
 
 extern struct StatementList *CopyStatementList(struct StatementList *);
-/*
+/**< 
  *  struct StatementList *CopyStatementList(sl)
  *  struct StatementList *sl;
  *  By reference on the slist. Statements in the list are not
@@ -99,7 +99,7 @@ extern struct StatementList *CopyStatementList(struct StatementList *);
  */
 
 extern struct StatementList *CopyListToModify(struct StatementList *);
-/*
+/**< 
  *  struct StatementList *CopyListToModify(sl)
  *  struct StatementList *sl;
  *  Creates new slist and new copies in memory of all that it contains.
@@ -109,7 +109,7 @@ extern struct StatementList *CopyListToModify(struct StatementList *);
 extern int CompareStatementLists(CONST struct StatementList *,
                                  CONST struct StatementList *,
                                  unsigned long int *);
-/*
+/**< 
  *  cmp = CompareStatementLists(sl1,sl2,diff);
  *  CONST struct StatementList *sl1, *sl2;
  *  unsigned long int *diff;
@@ -129,7 +129,7 @@ extern int CompareStatementLists(CONST struct StatementList *,
 extern int CompareISLists(CONST struct StatementList *,
                           CONST struct StatementList *,
                           unsigned long int *);
-/*
+/**< 
  *  cmp = CompareISLists(sl1,sl2,diff);
  *  CONST struct StatementList *sl1, *sl2;
  *  unsigned long int diff;
@@ -157,7 +157,7 @@ extern int CompareISLists(CONST struct StatementList *,
  */
 
 extern void AppendStatement(struct StatementList *, struct Statement *);
-/*
+/**< 
  *  AppendStatement(sl,s);
  *  struct StatementList *sl;
  *  struct Statement *s;
@@ -169,7 +169,7 @@ extern void AppendStatement(struct StatementList *, struct Statement *);
 extern struct StatementList *
 AppendStatementLists(CONST struct StatementList *,
                      struct StatementList *);
-/*
+/**< 
  *  struct StatementList *AppendStatementLists(sl1,sl2)
  *  slr = AppendStatementLists(sl1,sl2);
  *  CONST struct StatementList *sl1;
@@ -192,9 +192,9 @@ AppendStatementLists(CONST struct StatementList *,
  */
 
 extern void DestroyStatementList(struct StatementList *);
-/*
+/**< 
  *  void DestroyStatementList(sl)
  *  struct StatementList *sl;
  *  tolerates null input.
  */
-#endif /* __SLIST_H_SEEN__ */
+#endif /**< __SLIST_H_SEEN__ */

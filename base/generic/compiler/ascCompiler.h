@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Basic Initializations for Ascend
  *  by Ben Allan
  *  Version: $Revision: 1.2 $
@@ -33,7 +33,7 @@
 #define __ASCCOMPILER_H_SEEN__
 
 extern int Asc_CompilerInit(int);
-/* err = Asc_CompilerInit(simplify_relations);
+/**< err = Asc_CompilerInit(simplify_relations);
  *
  * If this function returns nonzero, ascend cannot run and a ton
  * of memory might be leaked.
@@ -47,8 +47,8 @@ extern int Asc_CompilerInit(int);
  */
 
 extern void Asc_CompilerDestroy(void);
-/* This function should not be called while there are any clients
+/**< This function should not be called while there are any clients
  * with pointers to any compiler structures, including gl_lists.
  */
 
-#endif /* __ASCCOMPILER_H_SEEN__*/
+#endif /**< __ASCCOMPILER_H_SEEN__*/

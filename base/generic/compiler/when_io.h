@@ -1,4 +1,4 @@
-/*
+/**< 
  *  When Output Routines
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.7 $
@@ -29,7 +29,7 @@
 
 #ifndef __WHENINST_IO_H_SEEN__
 #define __WHENINST_IO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"instance_enum.h"
 */
@@ -38,7 +38,7 @@
 
 extern void WriteWhen(FILE *, CONST struct Instance *,
                       CONST struct Instance *);
-/*
+/**< 
  *  void WriteWhen(f,wheninst,ref);
  *  FILE *f;
  *  CONST struct Instance *wheninst;
@@ -48,7 +48,7 @@ extern void WriteWhen(FILE *, CONST struct Instance *,
 
 extern char *WriteWhenString(CONST struct Instance *,
                              CONST struct Instance *);
-/*
+/**< 
  *  char WriteWhenString(wheninst,ref);
  *  char *result;
  *  CONST struct Instance *wheninst;
@@ -58,4 +58,4 @@ extern char *WriteWhenString(CONST struct Instance *,
 
 
 
-#endif /* __WHENINST_IO_H_SEEN__ */
+#endif /**< __WHENINST_IO_H_SEEN__ */

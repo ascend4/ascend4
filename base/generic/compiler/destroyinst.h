@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Killing
  *  by Tom Epperly
  *  8/16/89
@@ -32,14 +32,14 @@
 #define __DESTROYINST_H_SEEN__
 
 
-/*
+/**< 
  *  When #including destroyinst.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  */
 
 
 extern void DestroyInstance(struct Instance *,struct Instance *);
-/*
+/**< 
  *  void DestroyInstance(inst,parent)
  *  struct Instance *inst,*parent;
  *  If parent is NULL, this will destroy all references to inst and deallocate
@@ -53,4 +53,4 @@ extern void DestroyInstance(struct Instance *,struct Instance *);
 
 
 #endif
-/* __DESTROYINST_H_SEEN__ */
+/**< __DESTROYINST_H_SEEN__ */

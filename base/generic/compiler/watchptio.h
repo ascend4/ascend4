@@ -1,4 +1,4 @@
-/*
+/** 
  *  watchptio.h: An API to ascend methods
  *  by Benjamin Allan
  *  March 17, 1998
@@ -32,7 +32,7 @@
 #ifndef __WATCHPTIO_H_SEEN__
 #define __WATCHPTIO_H_SEEN__
 
-/*
+/** 
  *  void WriteProcedure(f,p)
  *  FILE *f;
  *  struct InitProcedure *p;
@@ -41,4 +41,4 @@
 extern void WriteProcedure(FILE *,struct InitProcedure *);
 
 
-#endif /* __WATCHPTIO_H_SEEN__ */
+#endif /** __WATCHPTIO_H_SEEN__ */

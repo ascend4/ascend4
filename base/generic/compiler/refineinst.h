@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -31,7 +31,7 @@
 #define __REFINEINST_H_SEEN__
 
 
-/*
+/**< 
  *  When #including refineinst.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -40,14 +40,14 @@
  */
 
 
-/*
+/**< 
  *  Instance Refinement Routine and Clique Management
  */
 
 extern struct Instance *RefineInstance(struct Instance *,
            struct TypeDescription *,
                                        struct Instance *);
-/*
+/**< 
  *  struct Instance *RefineInstance(i,type,arginst)
  *  struct Instance *, *arginsti;
  *  struct TypeDescription *type;
@@ -65,7 +65,7 @@ extern struct Instance *RefineInstance(struct Instance *,
 extern struct Instance *RefineClique(struct Instance *,
          struct TypeDescription *,
                                      struct Instance *);
-/*
+/**< 
  *  void RefineClique(i,type,arginst)
  *  struct Instance *i, *arginst;
  *  struct TypeDescription *type;
@@ -84,4 +84,4 @@ extern struct Instance *RefineClique(struct Instance *,
  */
 
 #endif
-/* __REFINEINST_H_SEEN__ */
+/**< __REFINEINST_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Variable name list
  *  by Tom Epperly
  *  August 8, 1989
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including .h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -35,11 +35,11 @@
 
 #ifndef __VLIST_H_SEEN__
 #define __VLIST_H_SEEN__
-/* requires
+/**< requires
 # #include"types.h"
 */
 
-/*
+/**< 
  *  Don't ever access these things yourself.  Use the functions and/or
  *  macros defined in this file.
  */
@@ -49,7 +49,7 @@ struct VariableList {
 };
 
 extern struct VariableList *CreateVariableNode(struct Name *);
-/*
+/**< 
  *  struct VariableList *CreateVariableNode(n)
  *  struct Name *n;
  *  Create a node with name pointer n.  The next attribute is initialized to
@@ -57,7 +57,7 @@ extern struct VariableList *CreateVariableNode(struct Name *);
  */
 
 extern void LinkVariableNodes(struct VariableList *,struct VariableList *);
-/*
+/**< 
  *  void LinkVariableListNodes(cur,next)
  *  struct VariableList *cur,*next;
  *  Set the next attribute of cur to next.  Next can be NULL, but cur cannot.
@@ -70,7 +70,7 @@ extern void LinkVariableNodes(struct VariableList *,struct VariableList *);
 #endif
 extern CONST struct VariableList
 *NextVariableNodeF(CONST struct VariableList *);
-/*
+/**< 
  *  macro NextVariableNode(n)
  *  extern CONST struct VariableList *NextVariableNodeF(n)
  *  struct VariableList *n;
@@ -83,28 +83,28 @@ extern CONST struct VariableList
 #define NamePointer(n) NamePointerF(n)
 #endif
 extern CONST struct Name *NamePointerF(CONST struct VariableList *);
-/*
+/**< 
  *  struct Name *NamePointer(n)
  *  struct VariableList *n;
  *  Return the name pointer stored in node n.
  */
 
 extern struct VariableList *CopyVariableList(struct VariableList *);
-/*
+/**< 
  *  struct VariableList *CopyVariableList(n)
  *  struct VariableList *n;
  *  Make and return a copy of the whole name list.
  */
 
 extern void DestroyVariableList(struct VariableList *);
-/*
+/**< 
  *  void DestroyVariableList(n)
  *  struct VariableList *n;
  *  Deallocate the memory associated with the list of names.
  */
 
 extern void DestroyVariableListNode(struct VariableList *);
-/*
+/**< 
  *  void DestroyVariableListNode(n)
  *  struct VariableList *n;
  *  Deallocate this name node, and don't change the next one.
@@ -112,7 +112,7 @@ extern void DestroyVariableListNode(struct VariableList *);
 
 extern struct VariableList *JoinVariableLists(struct VariableList *,
            struct VariableList *);
-/*
+/**< 
  *  struct VariableList *JoinVariableLists(n1,n2)
  *  struct VariableList *n1,*n2;
  *  Appends n2 to the end of n1.  This will return n1, unless n1 is NULL
@@ -120,14 +120,14 @@ extern struct VariableList *JoinVariableLists(struct VariableList *,
  */
 
 extern struct VariableList *ReverseVariableList(struct VariableList *);
-/*
+/**< 
  *  struct VariableList *ReverseVariableList(n)
  *  struct VariableList *n;
  *  Returns the reverse of n.
  */
 
 extern unsigned long VariableListLength(CONST struct VariableList *);
-/*
+/**< 
  *  unsigned long VariableListLength(n);
  *  CONST struct VariableList *n;
  *  Returns the length of the variable list. Does not attempt to expand arrays
@@ -136,9 +136,9 @@ extern unsigned long VariableListLength(CONST struct VariableList *);
 
 extern int CompareVariableLists(CONST struct VariableList *,
                                 CONST struct VariableList *);
-/*
+/**< 
  *  int CompareVariableLists(vl1,vl2);
  *  Returns -1,0,1 as vl1 is < == > vl2 in content.
  *  The NULL list is > all lists.
  */
-#endif /* __VLIST_H_SEEN__ */
+#endif /**< __VLIST_H_SEEN__ */

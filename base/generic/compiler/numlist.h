@@ -1,4 +1,4 @@
-/*
+/** 
  *  numlist.h
  *  by Ben Allan
  *  December 20, 1997
@@ -29,15 +29,15 @@
  *  the file named COPYING.
  */
 
-/* this header requires general/list.h */
-/*
+/** this header requires general/list.h */
+/** 
  * building with -DNUMPAIRSELFTEST causes numlist to
  * compile a simple main().
  */
 #ifndef __NUMPAIR_H_SEEN__
 #define __NUMPAIR_H_SEEN__
 
-/*
+/** 
  *  NUMLISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
  *  manage list memory overhead. Performance is enhanced this way.
  *
@@ -46,7 +46,7 @@
  */
 #define NUMLISTUSESPOOL TRUE
 
-/*
+/** 
  * Numlists are lists of integer scalars and ranges.
  * Valid numbers are 1..INT_MAX.
  * Numbers are stored in increasing order, and condensed to ranges
@@ -57,13 +57,13 @@
  */
 typedef struct numpair_list *Numlist_p;
 
-/*
+/** 
  * we have an iterator defined for Numlist_p's. It takes a function
  * of the following kind.
  */
 typedef void (*NPLFunc)(int, void *);
 
-/*
+/** 
  * enlp = NumpairExpandableList(enlp,size);
  * Expands the size of nlp, which must be created
  * with NumpairExpandableList. If nlp is NULL, creates
@@ -75,20 +75,20 @@ typedef void (*NPLFunc)(int, void *);
  */
 extern Numlist_p NumpairExpandableList(Numlist_p,int);
 
-/* NumpairDestroyList(nlp); NumpairDestroyList(enlp);
+/** NumpairDestroyList(nlp); NumpairDestroyList(enlp);
  * Destroy a list. list may have come from
  * NumpairCopyList or NumpairExpandableList.
  */
 extern void NumpairDestroyList(Numlist_p);
 
-/*
+/** 
  * nlp = NumpairElementary(index);
  * Returns an efficiently allocated numlist containing the
  * scalar with value index. nlp is not expandable.
  */
 extern Numlist_p NumpairElementary(int);
 
-/*
+/** 
  * nlp2 = NumpairCopyList(nlp);
  * Numlist_p nlp2, nlp;
  * Returns an efficiently allocated numpair_list containing the
@@ -98,7 +98,7 @@ extern Numlist_p NumpairElementary(int);
  */
 extern Numlist_p NumpairCopyList(Numlist_p);
 
-/*
+/** 
  * NumpairCalcUnion(enlp1,nlp2,scratchenlp);
  * Numlist_p enlp1,nlp2,scratchenlp;
  * Calculates the union of enlp1, nlp2 and leaves the result in
@@ -107,14 +107,14 @@ extern Numlist_p NumpairCopyList(Numlist_p);
  */
 extern void NumpairCalcUnion( Numlist_p, Numlist_p, Numlist_p);
 
-/*
+/** 
  * NumpairCalcIntersection(nlp1,nlp2,enlp3);
  * Numlist_p nlp1,nlp2,enlp3;
  * Calculates the intersection of nlp1, nlp2 and leaves the result in enlp3. 
  */
 extern void NumpairCalcIntersection(Numlist_p, Numlist_p, Numlist_p);
 
-/*
+/** 
  * nlp = NumpairCombineLists(nlpgl,s1,s2);
  * Numlist_p s1,s2;
  * struct gl_list_t *nlpgl;
@@ -130,14 +130,14 @@ extern void NumpairCalcIntersection(Numlist_p, Numlist_p, Numlist_p);
  */
 extern Numlist_p NumpairCombineLists(struct gl_list_t *, Numlist_p,Numlist_p);
 
-/*
+/** 
  * NumpairAppendList(enlp,num);
  * Inserts a num to an expandable numlist.
  * typically O(1), sometimes O(len(enlp)).
  */
 extern void NumpairAppendList(Numlist_p, int);
 
-/*
+/** 
  * int NumpairListLen(nlp); 
  * Returns the number of scalars and ranges currently
  * stored in nlp. List capacity may be larger if nlp is
@@ -145,7 +145,7 @@ extern void NumpairAppendList(Numlist_p, int);
  */
 extern int NumpairListLen(Numlist_p);
 
-/*
+/** 
  * NumpairClearList(enlp); 
  * Resets the number of elements stored in enlp to 0.
  * List capacity may obviously be larger.
@@ -153,14 +153,14 @@ extern int NumpairListLen(Numlist_p);
  */
 extern void NumpairClearList(Numlist_p);
 
-/*
+/** 
  * NumpairNumberInList(nlp,number);
  * Returns 1 if number is in list and 0 if it is not.
  * Uses a binary search.
  */
 extern int NumpairNumberInList(Numlist_p,int);
 
-/*
+/** 
  * NumpairNumberInListHintedDecreasing(nlp,number,hint);
  * int number, *hint;
  * Returns 1 if number is in list at or to the left of
@@ -172,7 +172,7 @@ extern int NumpairNumberInList(Numlist_p,int);
  */
 extern int NumpairNumberInListHintedDecreasing(Numlist_p, int, int *);
 
-/*
+/** 
  * prev = NumpairPrevNumber(nlp,last,hint);
  * int *hint;
  * int last;
@@ -187,7 +187,7 @@ extern int NumpairNumberInListHintedDecreasing(Numlist_p, int, int *);
  */
 extern int NumpairPrevNumber(Numlist_p,int,int *);
 
-/*
+/** 
  * prev = NumpairNextNumber(nlp,last,hint);
  * int *hint;
  * int last;
@@ -200,12 +200,12 @@ extern int NumpairPrevNumber(Numlist_p,int,int *);
  */
 extern int NumpairNextNumber(Numlist_p,int,int *);
 
-/* NumpairListIterate(nlp,func,userdata);
+/** NumpairListIterate(nlp,func,userdata);
  * Calls func(i,userdata) for every integer i listed in nlp.
  */
 extern void NumpairListIterate(Numlist_p, NPLFunc, void *);
 
-/*
+/** 
  * common = NumpairGTIntersection(nlp1,nlp2,lowlimit);
  * int lowlimit;
  * Returns the first number that is both common to nlp1, nlp2
@@ -214,7 +214,7 @@ extern void NumpairListIterate(Numlist_p, NPLFunc, void *);
  */
 extern int NumpairGTIntersection(Numlist_p,Numlist_p,int);
 
-/*
+/** 
  * last = NumpairIntersectionLTHinted(nlp1,&hint1,nlp2,&hint2,highlimit);
  * Return the highest intersection of nlp1 and nlp2 with value < highlimit
  * and using hint1, hint2 from previous calls on the same list to simplify
@@ -224,13 +224,13 @@ extern int NumpairGTIntersection(Numlist_p,Numlist_p,int);
  */
 extern int NumpairIntersectionLTHinted(Numlist_p, int *, Numlist_p, int *, int);
 
-/*
+/** 
  * Returns the count of integers represented by the list.
  * Tolerates all sorts of crappy input and returns 0 in those cases.
  */
 extern int NumpairCardinality(Numlist_p);
 
-/*
+/** 
  * NumpairClearPuddle();
  * Clears up the internal queue of lists that have room left in
  * them to share with other nonexpandable lists.
@@ -242,7 +242,7 @@ extern int NumpairCardinality(Numlist_p);
 extern void NumpairClearPuddle(void);
 
 #ifdef NUMLISTEXPORTIO
-/* temporarily exported function for debugging
+/** temporarily exported function for debugging
  * NLPWrite(fp,nlp);
  * fp may be NULL, --> stderr output.
  */
@@ -250,4 +250,4 @@ extern void NLPWrite(FILE *,Numlist_p);
 #define NLPWRITE 1
 #endif
 
-#endif /* __NUMPAIR_H_SEEN__ */
+#endif /** __NUMPAIR_H_SEEN__ */

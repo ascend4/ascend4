@@ -1,4 +1,4 @@
-/*
+/** 
  *  pretty.h
  *  I/O Formatting Functions
  *  by Ben Allan
@@ -32,7 +32,7 @@
 #ifndef __pretty_h_seen__
 #define __pretty_h_seen__
 
-/*
+/** 
  * count = print_long_string(fp,string,width,indent);
  * Writes a string to a file, splitting it at the blank characters
  * tabs, or returns to attempt keeping line length < width given.
@@ -49,10 +49,10 @@
  */
 extern int print_long_string(FILE *, char *, int, int);
 
-/* Like print_long_string, except instead of breaking at width, it
+/** Like print_long_string, except instead of breaking at width, it
  * breaks at occurences of /{star}EOL{star}/ (commented EOL).
  * print_long_string(fp,string,indent);
  */
 extern void print_long_string_EOL(FILE *, char *, int);
 
-#endif /* __pretty_h_seen__ */
+#endif /** __pretty_h_seen__ */

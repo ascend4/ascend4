@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Instance name routines
  *  by Tom Epperly
  *  Part Of Ascend
@@ -31,16 +31,16 @@
 #define __INSTANCE_NAME_H_SEEN__
 
 
-/*
+/**< 
  *  When #including instance_name.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
 
 
 enum NameTypes {
-  IntArrayIndex,		/* integer array index */
-  StrArrayIndex,		/* string array index */
-  StrName			/* string name */
+  IntArrayIndex,		/**< integer array index */
+  StrArrayIndex,		/**< string array index */
+  StrName			/**< string name */
 };
 
 union InstanceNameUnion {
@@ -54,7 +54,7 @@ struct InstanceName {
 };
 
 #define InstanceNameType(in) ((in).t)
-/*
+/**< 
  *  macro InstanceNameType(in)
  *  struct InstanceName in;
  *
@@ -62,7 +62,7 @@ struct InstanceName {
  */
 
 #define InstanceNameStr(in) ((in).u.name)
-/*
+/**< 
  *  macro InstanceNameStr(in)
  *  struct InstanceName in;
  *
@@ -71,14 +71,14 @@ struct InstanceName {
  */
 
 #define InstanceIntIndex(in) ((in).u.index)
-/*
+/**< 
  *  macro InstanceIntIndex(in)
  *  struct InstanceName in;
  *  Return the integer index value.
  */
 
 #define InstanceStrIndex(in) ((in).u.name)
-/*
+/**< 
  *  macro InstanceStrIndex(in)
  *  struct InstanceName in;
  *
@@ -86,7 +86,7 @@ struct InstanceName {
  */
 
 #define SetInstanceNameType(in,type) ((in).t) = (type)
-/*
+/**< 
  *  macro SetInstanceNameType(in,type)
  *  struct InstanceName in;
  *  enum NameTypes type;
@@ -95,7 +95,7 @@ struct InstanceName {
  */
 
 #define SetInstanceNameStrPtr(in,str) ((in).u.name) = (str)
-/*
+/**< 
  *  macro SetInstanceNameStrPtr(in,str)
  *  struct InstanceName in;
  *  symchar *str;
@@ -104,7 +104,7 @@ struct InstanceName {
  */
 
 #define SetInstanceNameStrIndex(in,str) ((in).u.name) = (str)
-/*
+/**< 
  *  macro SetInstanceNameStrIndex(in,str)
  *  struct InstanceName in;
  *  symchar *str;
@@ -113,11 +113,11 @@ struct InstanceName {
  */
 
 #define SetInstanceNameIntIndex(in,int_index) ((in).u.index) = (int_index)
-/*
+/**< 
  *  macro SetInstanceNameIndex(in,int_index)
  *  struct InstanceName in;
  *  long int_index;
  *
  *  Set the instance name structure integer index to int_index.
  */
-#endif /* __INSTANCE_NAME_H_SEEN__ */
+#endif /**< __INSTANCE_NAME_H_SEEN__ */

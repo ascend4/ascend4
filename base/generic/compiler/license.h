@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Text of the GNU Public License
  *  by Tom Epperly
  *  Created: 1 February 1994
@@ -31,7 +31,7 @@
 #define __LICENSE_H_SEEN__
 
 
-/*
+/**< 
  *  When #including .h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
  */
@@ -42,14 +42,14 @@ extern const char GPL2[];
 extern const char GPL3[];
 extern const char GPL4[];
 extern const char GPL5[];
-/*
+/**< 
  *  This string set contains the complete text of the GNU Public License
  *  version 2.
  */
 
 extern const char * const NO_WARRANTY;
-/*
+/**< 
  *  This string contains the no warranty section of the GNU Public License
  *  version 2.  This is a pointer to the last GPL.
  */
-#endif /* __LICENSE_H_SEEN__ */
+#endif /**< __LICENSE_H_SEEN__ */
