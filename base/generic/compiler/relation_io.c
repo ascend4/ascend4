@@ -66,6 +66,12 @@ static CONST char RelationOutputRoutinesRCS[]="$Id: relation_io.c,v 1.16 1998/04
 static char g_shortbuf[256];
 #define SB255 g_shortbuf
 
+#ifdef ASC_NO_POOL
+#define RELIO_USES_POOL FALSE
+#else
+#define RELIO_USES_POOL TRUE
+#endif
+
 /*
  * stack entry for relation io conversion to infix.
  */
@@ -134,10 +140,18 @@ void RelationIO_report_pool(void)
   pool_print_store(ASCERR,g_rel_stack_pool,0);
 }
 
+#if RELIO_USES_POOL
 #define RSPMALLOC ((struct rel_stack *)(pool_get_element(g_rel_stack_pool)))
 /* get a token. Token is the size of the struct struct rel_stack */
 #define RSPFREE(p) (pool_free_element(g_rel_stack_pool,((void *)p)))
 /* return a struct rel_stack */
+
+#else
+
+#define RSPMALLOC ascmalloc(sizeof(struct rel_stack ))
+#define RSPFREE(p) ascfree(p)
+
+#endif /* RELIO_USES_POOL */
 
 static
 void WriteOp(FILE *f, enum Expr_enum t)
@@ -1721,7 +1735,7 @@ void Save__Reln2GlassBox(FILE *fp, CONST struct Instance *relinst,
  *********************************************************************
  */
 void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
-		       char *prefix, unsigned long index)
+		       char *prefix, unsigned long index_)
 {
   enum Expr_enum type;
 
@@ -1729,7 +1743,7 @@ void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
   switch (type) {
   case e_token:		/* token -> glassbox */
   case e_opcode:	/* opcode -> glassbox */
-    SaveReln2GlassBox(fp,relinst,prefix,index);
+    SaveReln2GlassBox(fp,relinst,prefix,index_);
     break;
   case e_glassbox:
     SaveGlassBoxRelation(fp,relinst);	/* we will use the existing prefix */

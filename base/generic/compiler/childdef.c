@@ -81,7 +81,7 @@ static symchar *FundamentalTypeList[NUM_FUNDTYPES];
  */
 int BaseType(symchar *name)
 {
-  static init = 0;
+  static int init = 0;
   int c;
   if (!name) return -1;         /* missing OF in set declaration */
   if (!init) {

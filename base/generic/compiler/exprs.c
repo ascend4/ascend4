@@ -50,7 +50,11 @@
 static CONST char ExpressionID[] = "$Id: exprs.c,v 1.13 1998/02/05 16:35:58 ballan Exp $";
 #endif
 
+#ifdef ASC_NO_POOL
+#define EXPRSUSESPOOL FALSE
+#else
 #define EXPRSUSESPOOL TRUE
+#endif
 
 #if EXPRSUSESPOOL /* FALSE means hacking ascCompiler.c */
 static pool_store_t g_exprs_pool = NULL;
@@ -110,6 +114,13 @@ void exprs_report_pool()
 
 #define EPFREE(p) ascfree(p)
 #define EPMALLOC (struct Expr *)ascmalloc(sizeof(struct Expr))
+void exprs_init_pool(void) {}
+void exprs_destroy_pool(void) {}
+void exprs_report_pool(void)
+{
+    FPRINTF(ASCERR,"ExprsPool not used at all\n");
+}
+
 
 #endif
 

@@ -55,7 +55,11 @@ static CONST char NameProcID[] = "$Id: name.c,v 1.14 1998/02/05 16:37:12 ballan 
 #define TRUE 1
 #endif
 
-#define NAMEUSESPOOL TRUE /* FALSE will require changing ascCompiler.c */
+#ifdef ASC_NO_POOL
+#define NAMEUSESPOOL FALSE
+#else
+#define NAMEUSESPOOL TRUE 
+#endif
 #define NAMEDEBUG 0
 
 /* do not make these static or conditional or interface.c will need fixing */
@@ -143,6 +147,13 @@ void name_report_pool(void)
 
 #define IDNFREE(p) ascfree(p)
 #define IDNMALLOC (struct Name *)ascmalloc(sizeof(struct Name))
+
+void name_init_pool(void) {}
+void name_destroy_pool(void) {}
+void name_report_pool(void) {
+    FPRINTF(ASCERR,"ListHeadPool is not used at all.\n");
+}
+
 
 #endif /* NAMEUSESPOOL */
 #endif /* NAMEDEBUG */

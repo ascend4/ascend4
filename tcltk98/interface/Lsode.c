@@ -27,8 +27,10 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#ifndef NO_SIGNAL_TRAPS
 #include <signal.h>
 #include <setjmp.h>
+#endif /* NO_SIGNAL_TRAPS */
 #include "tcl.h"
 #include "utilities/ascConfig.h"
 #include "utilities/ascSignal.h"
@@ -562,10 +564,13 @@ void Asc_BLsodeIntegrate(slv_system_t sys, unsigned long start_index ,
     xprev = x[0];
     print_debug("BEFORE %lu BLSODE CALL\n", index);
 
+#ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
       LSODE(&(LSODE_FEX), &my_neq, y, x, &xend,
             &itol, reltol, abtol, &itask, &istate,
             &iopt ,rwork, &lrw, iwork, &liw, &(LSODE_JEX), &mf);
+#ifndef NO_SIGNAL_TRAPS
     } else {
       FPRINTF(stderr,
        "Integration terminated due to float error in LSODE call.\n");
@@ -580,6 +585,7 @@ void Asc_BLsodeIntegrate(slv_system_t sys, unsigned long start_index ,
       }
       return;
     }
+#endif /* NO_SIGNAL_TRAPS */
 
     print_debug("AFTER %lu LSODE CALL\n", index);
     /* this check is better done in fex,jex, but lsode takes no status */
@@ -627,7 +633,9 @@ void Asc_BLsodeIntegrate(slv_system_t sys, unsigned long start_index ,
     /* put x,y in d in case lsode got x,y by interpolation, as it does  */
     Asc_IntegPrintYLine(y_out,blsys);
     if (nobs > 0) {
+#ifndef NO_SIGNAL_TRAPS
       if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
         /* solve for obs since d isn't necessarily already
            computed there though lsode's x and y may be.
            Note that since lsode usually steps beyond xend
@@ -637,6 +645,7 @@ void Asc_BLsodeIntegrate(slv_system_t sys, unsigned long start_index ,
         /* calculate observations, if any, at returned x and y. */
         obs = Asc_IntegGetDObs(obs);
         Asc_IntegPrintObsLine(obs_out,blsys);
+#ifndef NO_SIGNAL_TRAPS
       } else {
         FPRINTF(stderr,
          "Integration terminated due to float error in LSODE FEX call.\n"
@@ -652,6 +661,7 @@ void Asc_BLsodeIntegrate(slv_system_t sys, unsigned long start_index ,
         }
         return;
       }
+#endif /* NO_SIGNAL_TRAPS */
     }
     FPRINTF(stdout, "Integration completed from ");
     FPRINTF(stdout, "%3g to %3g\n",xprev,x[0]);

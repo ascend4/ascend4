@@ -74,7 +74,7 @@ void DestroyBraceChar(struct bracechar *bc)
     return;
   }
   if (bc->refcount == 0) {
-    free(bc->string); /* fixme */
+    ascfree(bc->string); /* fixme */
     bc->slen = -1;
     bc->lang = NULL;
     bc->string = NULL;

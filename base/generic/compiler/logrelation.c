@@ -1232,17 +1232,21 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
   struct for_var_t *fvp;
   enum find_errors err;
   if((str = SimpleNameIdPtr(name))){
-    if (TempExists(str))
-      if (ValueKind(TempValue(str))==integer_value)
+    if (TempExists(str)) {
+      if (ValueKind(TempValue(str))==integer_value) {
 	return 1;
-      else
+      } else {
 	return -1;
+      }
+    }
     if (GetEvaluationForTable() != NULL &&
-        (fvp=FindForVar(GetEvaluationForTable(),str)))
-      if (GetForKind(fvp)==f_integer)
+        (fvp=FindForVar(GetEvaluationForTable(),str)) ) {
+      if (GetForKind(fvp)==f_integer) {
 	return 1;
-      else
+      } else {
 	return -1;
+      }
+    }
   }
   instances = FindInstances(ref,name,&err); /* need noisy version of Find */
   if (instances == NULL){

@@ -49,6 +49,14 @@
 extern pool_store_t g_array_child_pool;
 /* never ever dereference this except with the following 2 macros: */
 
+#ifdef ASC_NO_POOL
+
+/* slow version for debugging */
+#define MALLOCPOOLAC CAC( ascmalloc(sizeof(struct ArrayChild)) )
+#define FREEPOOLAC(ac) ascfree(ac);
+
+#else
+
 #define MALLOCPOOLAC CAC(pool_get_element(g_array_child_pool))
 /*
  *  Get an element from the pool. Only after InitInstanceNanny.
@@ -58,6 +66,8 @@ extern pool_store_t g_array_child_pool;
 /*
  *  Return an element, ac, to the pool. Only after InitInstanceNanny.
  */
+
+#endif /* ASC_NO_POOL */
 
 extern void InitInstanceNanny(void);
 /*

@@ -59,6 +59,13 @@ static CONST char SetFuncsID[] = "$Id: sets.c,v 1.13 1998/01/27 11:00:21 ballan 
 
 #define SMALLOC (struct Set *)ascmalloc((unsigned)sizeof(struct Set))
 #define SFREE(s) ascfree((char *)(s))
+void sets_init_pool(void) {}
+void sets_destroy_pool(void) {}
+void sets_report_pool(void)
+{
+    FPRINTF(ASCERR,"SetsPool not used at all\n");
+}
+
 
 #else
 

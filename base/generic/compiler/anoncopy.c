@@ -106,6 +106,11 @@
 static CONST char anoncopyModuleId[] = "$Id: anoncopy.c,v 1.3 1998/06/16 16:38:34 mthomas Exp $";
 #endif
 
+#if ATDEBUG
+#include "compiler/relation_io.h"
+static struct Instance *g_Pass2AddAnonProtoVar_visit_root = 0;
+#endif
+
 /* forward declaration */
 static struct Instance *
 CopyAnonRelationArrayInstance(struct Instance *, struct Instance *,
@@ -263,6 +268,7 @@ void Pass2AddAnonProtoVar(struct Instance *i,
   unsigned long int *indices;
   int j;
   if (GetTmpNum(i)) {
+    assert(InstanceKind(i) == REAL_ATOM_INST);
     indices = (unsigned long int *)
         ascmalloc((activelen+1)*sizeof(unsigned long));
     if (indices==NULL) {
@@ -275,6 +281,17 @@ void Pass2AddAnonProtoVar(struct Instance *i,
     indices[activelen] = 0L;
     gl_append_ptr(indexpaths,(void *)indices);
     SetTmpNum(i,gl_length(indexpaths));
+#if ATDEBUG
+    FPRINTF(ASCERR,"Pass2AddAnonProtoVar: found index path %lu for ", gl_length(indexpaths));
+	WriteInstanceName(ASCERR, i,g_Pass2AddAnonProtoVar_visit_root);
+    FPRINTF(ASCERR,"\n");
+    FPRINTF(ASCERR,"indices(0-terminated) =");
+    for (j = 0 ; j <= activelen; j++) {
+      FPRINTF(ASCERR,"%lu ", indices[j]);
+    }
+    FPRINTF(ASCERR,"\n");
+#endif
+    
   }
 }
 
@@ -321,6 +338,11 @@ struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i)
   struct gl_list_t *result;
 
   assert(InstanceKind(i)==MODEL_INST);
+#if ATDEBUG
+      FPRINTF(ASCERR,"Pass2AddAnonProtoVar: Labeling vars for model:\n   ");
+	WriteInstanceName(ASCERR,i,NULL);
+      FPRINTF(ASCERR,"\n");
+#endif
   len = NumberChildren(i);
   result = gl_create(100);
   indices = (unsigned long *)ascmalloc(indexlen*sizeof( unsigned long));
@@ -340,12 +362,22 @@ struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i)
     ch = InstanceChild(i,c);
     switch (InstanceKind(ch)) {
     case REL_INST:
+#if ATDEBUG
+      FPRINTF(ASCERR,"Pass2AddAnonProtoVar: Labeling vars for equation:\n   ");
+	WriteRelation(ASCERR,ch,i);
+      FPRINTF(ASCERR,"\n");
+#endif
       Pass2LabelAnonProtoVars(ch);
       break;
     case ARRAY_INT_INST:
     case ARRAY_ENUM_INST:
       if (GetBaseType(GetArrayBaseType(InstanceTypeDesc(ch)))
           == relation_type) {
+#if ATDEBUG
+      FPRINTF(ASCERR,"Pass2AddAnonProtoVar: Labeling vars for an eqn array:  \n   ");
+	WriteInstanceName(ASCERR,ch,i);
+      FPRINTF(ASCERR,"\n");
+#endif
         SilentVisitInstanceTree(ch,(VisitProc)Pass2LabelAnonProtoVars,0,0);
       }
       break;
@@ -358,6 +390,9 @@ struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i)
    * tmpnum != 0. Set the tmpnum of each collected var to the index
    * in the path.
    */
+#if ATDEBUG
+	g_Pass2AddAnonProtoVar_visit_root = i;
+#endif
   IndexedVisitInstanceTree(i,(IndexedVisitProc)Pass2AddAnonProtoVar,
                            0,0,&indices,&indexlen,result);
   ascfree(indices);
@@ -388,6 +423,12 @@ struct gl_list_t *Pass2CollectAnonCopyVars(struct gl_list_t *protovars,
   unsigned long *indexpath;
   int j;
 
+#if ATDEBUG
+      FPRINTF(ASCERR,"Pass2CollectAnonCopyVars: collecting vars for model:\n   ");
+	WriteInstanceName(ASCERR,i,NULL);
+      FPRINTF(ASCERR,"\n");
+#endif
+  assert(InstanceKind(i)==MODEL_INST);
   len = gl_length(protovars);
   result = gl_create(len);
   for (c=1; c <= len; c++) {
@@ -397,8 +438,18 @@ struct gl_list_t *Pass2CollectAnonCopyVars(struct gl_list_t *protovars,
     for (j = 0; indexpath[j] != 0; j++) {
       ch = InstanceChild(ch,indexpath[j]);
       assert(ch!=NULL);
+#if ATDEBUG
+      FPRINTF(ASCERR,"Pass2CollectAnonCopyVars: child link %d = %lu to  ",j,indexpath[j]);
+	WriteInstanceName(ASCERR,ch,i);
+      FPRINTF(ASCERR,"\n");
+#endif
     }
     gl_append_ptr(result,ch);
+    assert(InstanceKind(ch) == REAL_ATOM_INST);
+#if ATDEBUG
+	WriteInstanceName(ASCERR,ch,i);
+    FPRINTF(ASCERR,"\n");
+#endif
   }
   return result;
 }
@@ -443,6 +494,11 @@ void Pass2CopyAnonProto(struct Instance *proto,
     /* for now, this if will always pass */
     RemoveInstance(i);
   }
+#if ATDEBUG
+      FPRINTF(ASCERR,"Pass2CollectAnonCopyVars: Collecting vars for  ");
+	WriteInstanceName(ASCERR,i,NULL);
+    FPRINTF(ASCERR,"\n");
+#endif
   copyvars = Pass2CollectAnonCopyVars(protovarindices,i);
   /* Now copy local relations, and wherever a var is needed
    * in the copy, use the tmpnum of the original var in proto to

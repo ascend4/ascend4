@@ -28,8 +28,10 @@
  */
 
 
+#ifndef NO_SIGNAL_TRAPS
 #include <setjmp.h>
 #include <signal.h>
+#endif  /* NO_SIGNAL_TRAPS */
 #include "tcl.h"
 #include "tk.h"
 #include "utilities/ascConfig.h"

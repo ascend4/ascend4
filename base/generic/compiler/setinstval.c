@@ -45,6 +45,12 @@ static CONST char SetInstValID[] = "$Id: setinstval.c,v 1.9 1998/02/05 16:37:50 
 
 #define MYMIN(x,y) (((x)<(y)) ? (x) : (y))
 
+#ifdef ASC_NO_POOL
+#define SETINST_USES_POOL FALSE
+#else
+#define SETINST_USES_POOL TRUE
+#endif
+
 static pool_store_t g_set_pool=NULL;
 /*
  * A pool_store for all the sets ever simultaneously in use.
@@ -68,6 +74,7 @@ static pool_store_t g_set_pool=NULL;
 
 void InitSetManager(void)
 {
+#if SETINST_USES_POOL 
   if (g_set_pool != NULL ) {
     Asc_Panic(2, NULL, "ERROR: InitSetManager called twice.\n");
   }
@@ -76,24 +83,36 @@ void InitSetManager(void)
   if (g_set_pool == NULL) {
     Asc_Panic(2, NULL, "ERROR: InitSetManager unable to allocate pool.\n");
   }
+#endif
 }
 
 void DestroySetManager(void)
 {
+#if SETINST_USES_POOL 
   assert(g_set_pool!=NULL);
   pool_destroy_store(g_set_pool);
   g_set_pool = NULL;
+#endif
 }
 
 void ReportSetManager(FILE *f)
 {
+#if SETINST_USES_POOL 
   assert(g_set_pool!=NULL);
   FPRINTF(f,"SetManager ");
   pool_print_store(f,g_set_pool,0);
+#else
+  FPRINTF(f,"SetManager pool not used.");
+#endif
 }
 
+#if SETINST_USES_POOL 
 #define MALLOCSET(x) (x = (struct set_t *)pool_get_element(g_set_pool))
 #define FREESET(set) pool_free_element(g_set_pool,(set))
+#else
+#define MALLOCSET(x) x = (struct set_t *)ascmalloc(sizeof(struct set_t ))
+#define FREESET(set) ascfree(set)
+#endif /* SETINST_USES_POOL */
 
 static
 int SetIntCmp(long int i1, long int i2)

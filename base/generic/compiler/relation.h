@@ -334,7 +334,7 @@ extern struct relation *CreateOpCodeRelation(struct Instance *,
 extern struct relation *CreateGlassBoxRelation(struct Instance *,
             struct ExternalFunc *efunc,
             struct gl_list_t *varlist,
-            int index,
+            int index_,
             enum Expr_enum relop);
 /*
  *  struct relation *CreateGlassBoxRelation(relinst,efunc,varlist,index,relop)

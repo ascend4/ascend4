@@ -1345,14 +1345,18 @@ int Asc_Sims2Solve(ClientData cdata, Tcl_Interp *interp,
       return TCL_ERROR;
     }
     FPRINTF(ASCERR,"Presolving . . .\n");
+#ifndef NO_SIGNAL_TRAPS 
     if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
       slv_presolve(g_solvsys_cur);
+#ifndef NO_SIGNAL_TRAPS 
     } else {
       FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_presolve. Help!",
                     TCL_STATIC);
       return TCL_ERROR;
     }
+#endif /* NO_SIGNAL_TRAPS */
     FPRINTF(ASCERR,"Presolving done.\n");
   }
   if( g_solvsys_cur == NULL ) {
@@ -1421,8 +1425,11 @@ int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
       return TCL_ERROR;
     }
     FPRINTF(ASCERR,"Presolving . . .\n");
+#ifndef NO_SIGNAL_TRAPS 
     if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
       slv_presolve(g_solvsys_cur);
+#ifndef NO_SIGNAL_TRAPS 
     } else {
         FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
         Tcl_SetResult(interp,
@@ -1430,6 +1437,7 @@ int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
                       TCL_STATIC);
         return TCL_ERROR;
     }
+#endif /* NO_SIGNAL_TRAPS */
     FPRINTF(ASCERR,"Presolving done.\n");
   }
   if( g_solvsys_cur == NULL ) {
@@ -1699,7 +1707,9 @@ int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
+#ifndef NO_SIGNAL_TRAPS 
   if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
       slv_presolve(g_solvsys_cur);
       return TCL_OK;
@@ -1708,12 +1718,14 @@ int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
       Tcl_SetResult(interp, "empty solver context.", TCL_STATIC);
       return TCL_ERROR;
     }
+#ifndef NO_SIGNAL_TRAPS 
   } else {
       FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_presolve. Help!",
                     TCL_STATIC);
       return TCL_ERROR;
   }
+#endif /* NO_SIGNAL_TRAPS */
 }
 
 /* After modification of an instance included in a when var list or
@@ -1783,7 +1795,9 @@ int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
+#ifndef NO_SIGNAL_TRAPS 
   if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
       slv_resolve(g_solvsys_cur);
       return TCL_OK;
@@ -1792,12 +1806,14 @@ int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
       Tcl_SetResult(interp, "empty solver context.", TCL_STATIC);
       return TCL_ERROR;
     }
+#ifndef NO_SIGNAL_TRAPS 
   } else {
       FPRINTF(ASCERR, "Floating point exception in slv_resolve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_resolve. Help!",
                     TCL_STATIC);
       return TCL_ERROR;
   }
+#endif /* NO_SIGNAL_TRAPS */
 }
 
 /* invoking the name of the beast three times makes it come! */
@@ -1812,7 +1828,9 @@ int Asc_SolvSlvSolve(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp, "no arguments allowed for slv_solve", TCL_STATIC);
     return TCL_ERROR;
   }
+#ifndef NO_SIGNAL_TRAPS 
   if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
       slv_solve(g_solvsys_cur);
       return TCL_OK;
@@ -1821,12 +1839,14 @@ int Asc_SolvSlvSolve(ClientData cdata, Tcl_Interp *interp,
       Tcl_SetResult(interp, " empty solver context.", TCL_STATIC);
       return TCL_ERROR;
     }
+#ifndef NO_SIGNAL_TRAPS 
   } else {
       FPRINTF(ASCERR, "Floating point exception in slv_solve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_solve. Help!",
                     TCL_STATIC);
       return TCL_ERROR;
   }
+#endif /* NO_SIGNAL_TRAPS */
 }
 
 /* hide it out here from the exception clobber */
@@ -1879,17 +1899,21 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
 
   start=tm_cpu_time();
   for (safe_status=0;safe_status<steps && delta <time;safe_status++) {
+#ifndef NO_SIGNAL_TRAPS 
     if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
       slv_get_status(g_solvsys_cur,&s);
       if (s.ready_to_solve && !Solv_C_CheckHalt_Flag) {
         slv_iterate(g_solvsys_cur);
       }
+#ifndef NO_SIGNAL_TRAPS 
     } else {
       FPRINTF(ASCERR, "Floating point exception in slv_iterate!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_iterate. Help!",
                     TCL_STATIC);
       return TCL_ERROR;
     }
+#endif /* NO_SIGNAL_TRAPS */
     delta=tm_cpu_time()-start;
   }
   return TCL_OK;

@@ -376,8 +376,8 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list)
       WriteInstSet(ASCERR,list);
       FPRINTF(ASCERR,"for set OF %s\n",
         (SA_INST(i)->int_set==1) ?
-        GetBaseTypeName(integer_constant_type):
-        GetBaseTypeName(symbol_constant_type));
+        SCP(GetBaseTypeName(integer_constant_type)) :
+        SCP(GetBaseTypeName(symbol_constant_type)) );
       return 0;
     }
     if (SA_INST(i)->list != NULL) {
