@@ -557,7 +557,8 @@ static int AscDriver(int argc, CONST84 char *argv[])
  *    ASCTK_ENVIRONVAR     ASCENDTK           ASCENDDIST/../../tcltk98/TK
  *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      ASCENDTK/bitmaps
  *    LIBR_ENVIRONVAR      ASCENDLIBRARY
- *                     .:ASCENDDIST/models/libraries:ASCENDDIST/models/examples
+ * AWW20041209: .:ASCENDDIST/models/libraries:ASCENDDIST/models/examples
+ *       .:ASCENDDIST/../../models
  *
  */
 static int AscCheckEnvironVars(Tcl_Interp *interp)
@@ -632,9 +633,12 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
                 "Not enough memory to extend the environment");
     }
 
-    /*  Add ``$ASCENDDIST/models'' to the ASCENDLIBRARY envar */
+    /*AWW20041209:  Add ``$ASCENDDIST/models'' to the ASCENDLIBRARY envar */
+    /* Add ``$ASCENDDIST/../../models'' to the ASCENDLIBRARY envar */
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/models", -1);
+    /*AWW20041209:    Tcl_DStringAppend(&buffer2, "/models",
+      -1);*/
+    Tcl_DStringAppend(&buffer2, "/../../models", -1);
     if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                        &buffer1))) {
       if(Asc_AppendPath(LIBR_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
@@ -647,7 +651,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     Tcl_DStringFree(&buffer2);
 
     /*  Add ``$ASCENDDIST/models/examples'' to the ASCENDLIBRARY envar */
-    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
+    /*AWW20041209 - remove all this:    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
     Tcl_DStringAppend(&buffer2, "/models/examples", -1);
     if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                        &buffer1))) {
@@ -659,9 +663,9 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
       Tcl_DStringFree(&buffer1);
     }
     Tcl_DStringFree(&buffer2);
-
+    */
     /*  Add ``$ASCENDDIST/models/libraries'' to the ASCENDLIBRARY envar */
-    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
+    /*    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
     Tcl_DStringAppend(&buffer2, "/models/libraries", -1);
     if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                        &buffer1))) {
@@ -673,6 +677,8 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
       Tcl_DStringFree(&buffer1);
     }
     Tcl_DStringFree(&buffer2);
+
+    up to here */
 
     /*  Get the full value of the environment variable and set
      *  $env(ASCENDLIBRARY) in the Tcl code
