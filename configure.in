@@ -1034,7 +1034,7 @@ esac
 #  try to find a static version of the Tcl8.0 library
 #
 if test "X$with_tcllib" = X_searching ; then
-    AC_PATH_PROGS(TCL_LIB, libtcl8.0.a libtcl80.a, , $asc_tcl_library_dirs)
+    AC_PATH_PROGS(TCL_LIB, libtcl8.0.a libtcl80.a libtcl8.3.a, , $asc_tcl_library_dirs)
     if test -z "$TCL_LIB" ; then
         TCL_LIB=_searching
     fi
@@ -1044,7 +1044,7 @@ fi
 
 #  verify the TCL_LIB
 if test ! "X$TCL_LIB" = X_searching ; then
-    AC_MSG_CHECKING([whether $TCL_LIB is for Tcl8.0])
+    AC_MSG_CHECKING([whether $TCL_LIB is for Tcl8.3])
     asc_libs_orig=$LIBS
     LIBS="$TCL_LIB $X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS $LIBS"
     AC_TRY_LINK( , [TclCompileCatchCmd()], , [TCL_LIB=_searching]);
@@ -1058,6 +1058,14 @@ fi
 
 #  see if the default LPATH can find the Tcl8.0 library
 #
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl83, TclCompileCatchCmd, [TCL_LIB="-ltcl83"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
+if test "X$TCL_LIB" = X_searching ; then
+    AC_CHECK_LIB(tcl8.3, TclCompileCatchCmd, [TCL_LIB="-ltcl8.3"] , , 
+	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
+fi
 if test "X$TCL_LIB" = X_searching ; then
     AC_CHECK_LIB(tcl8.0, TclCompileCatchCmd, [TCL_LIB="-ltcl8.0"] , , 
 	[$X11_LIBRARIES $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
@@ -1075,11 +1083,11 @@ fi
 #
 if test "X$TCL_LIB" = X_searching ; then
     AC_MSG_ERROR([Cannot find a compatiable Tcl library.
-	You must build and install Tcl version 8.0 or newer before you
+	You must build and install Tcl version 8.3  before you
 	can build ASCEND.  If you have installed the correct version
 	of Tcl, run configure again with the argument:
 		--with-tcl=LIBRARY,HEADER
-	where LIBRARY and HEADER are the full paths to the Tcl8.0
+	where LIBRARY and HEADER are the full paths to the Tcl8.3
 	library file and header file, respectively.])
 fi
 
@@ -1117,11 +1125,11 @@ if test -f "$TCL_HDR" ; then
 fi
 if test -z "$TCL_HDR" ; then
     AC_MSG_ERROR([Cannot find a compatiable Tcl header file.
-	You must build and install Tcl version 8.0 or newer before you
+	You must build and install Tcl version 8.3 (but not yet 8.4) before you
 	can build ASCEND.  If you have installed the correct version
 	of Tcl, run configure again with the argument:
 		--with-tcl=LIBRARY,HEADER
-	where LIBRARY and HEADER are the full paths to the Tcl8.0
+	where LIBRARY and HEADER are the full paths to the Tcl8.3
 	library file and header file, respectively.])
 fi
 TCL_HDR=`echo $TCL_HDR | sed 's,tcl\.h$,,'`
@@ -1132,16 +1140,16 @@ fi
 
 ######  REPEAT FOR TK
 #
-#  see if the user gave us the location of the Tk8.0
+#  see if the user gave us the location of the Tk8.3
 #  library and/or header file
 #
 AC_ARG_WITH(tk,
     [  --with-tk=LIBRARY,HEADER
                           The location of the Tk8.0 library and/or header
                           For a static Tk8.0 library, give the full path:
-                              --with-tk='/usr/local/lib/libtk8.0.a'
+                              --with-tk='/usr/local/lib/libtk8.3.a'
                           For a dynamic library, give any -L options required:
-                              --with-tk='-L/usr/local/lib -ltk8.0'
+                              --with-tk='-L/usr/local/lib -ltk8.3'
                           To specify only the header, leave off the library:
                               --with-tk=',/usr/local/include/tk.h'] ,
     , [with_tk=yes])
@@ -1181,7 +1189,7 @@ esac
 #  try to find a static version of the Tk8.0 library
 #
 if test "X$with_tklib" = X_searching ; then
-    AC_PATH_PROGS(TK_LIB, libtk8.0.a libtk80.a libtk.a, , $asc_tcl_library_dirs)
+    AC_PATH_PROGS(TK_LIB, libtk8.0.a libtk80.a libtk.a libtk8.3.a, , $asc_tcl_library_dirs)
     if test -z "TK_LIB" ; then
         TK_LIB=_searching
     fi
@@ -2202,7 +2210,7 @@ AC_SUBST(help_topbuilddir)
 AC_OUTPUT(
 	ascend4/ConfigAscend:ascend4/ConfigAscend.in
 	ascend4/Makefile
-	ascend4/bin/ascend
+	ascend4/bin/ascend4.sh
 	ascend4/Makefile.Rules:ascend4/Makefile.Rules.in
 	ascend4/archive/Makefile
 	ascend4/bin/Makefile
