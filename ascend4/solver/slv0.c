@@ -3238,6 +3238,20 @@ static void slv0_iterate(slv_system_t server, SlvClientToken asys)
 
       minor++;
 
+/* code by AWW to eliminate runaway minor loop */
+    int32 maxMinorIterations;
+    maxMinorIterations = 30;
+    if(minor >= maxMinorIterations){
+      FPRINTF(stderr,"\nslv0: Too many minor iterations. Check variables on bounds.\n");
+      sys->s.inconsistent = TRUE;
+      iteration_ends(sys);
+      update_status(sys);
+      return;
+    }
+
+/* end of code by AWW */
+
+
       if (first) {
 	 change_maxstep(sys, MAXDOUBLE);
 	 first = FALSE;
