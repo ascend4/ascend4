@@ -1,0 +1,56 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libasc_compiler", "libasc_compiler.vcproj", "{89864B7C-E317-4701-ABC6-51A944030FD3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libasc_general", "libasc_general.vcproj", "{89864B7C-E317-4701-ABC6-51A944030FD3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libasc_packages", "libasc_packages.vcproj", "{89864B7C-E317-4701-ABC6-51A944030FD3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libasc_solver", "libasc_solver.vcproj", "{89864B7C-E317-4701-ABC6-51A944030FD3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libasc_utilities", "libasc_utilities.vcproj", "{89864B7C-E317-4701-ABC6-51A944030FD3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.ActiveCfg = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.Build.0 = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.ActiveCfg = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.Build.0 = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.ActiveCfg = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.Build.0 = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.ActiveCfg = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.Build.0 = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.ActiveCfg = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.Build.0 = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.ActiveCfg = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.Build.0 = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.ActiveCfg = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.Build.0 = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.ActiveCfg = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.Build.0 = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.ActiveCfg = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.Build.0 = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.ActiveCfg = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionItems) = postSolution
+		readme.txt = readme.txt
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

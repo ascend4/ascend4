@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ascend4", "Ascend4.vcproj", "{2B9468DD-9554-4C57-B5A9-8B6D9AA3FFB6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89864B7C-E317-4701-ABC6-51A944030FD3} = {89864B7C-E317-4701-ABC6-51A944030FD3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libasc_tcltk98", "libasc_tcltk98.vcproj", "{89864B7C-E317-4701-ABC6-51A944030FD3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{2B9468DD-9554-4C57-B5A9-8B6D9AA3FFB6}.Debug.ActiveCfg = Debug|Win32
+		{2B9468DD-9554-4C57-B5A9-8B6D9AA3FFB6}.Debug.Build.0 = Debug|Win32
+		{2B9468DD-9554-4C57-B5A9-8B6D9AA3FFB6}.Release.ActiveCfg = Release|Win32
+		{2B9468DD-9554-4C57-B5A9-8B6D9AA3FFB6}.Release.Build.0 = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.ActiveCfg = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Debug.Build.0 = Debug|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.ActiveCfg = Release|Win32
+		{89864B7C-E317-4701-ABC6-51A944030FD3}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

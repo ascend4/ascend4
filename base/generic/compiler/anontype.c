@@ -1507,6 +1507,11 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
 #if (TIMECOMPILER && AMSTAT)
   clock_t start,classt;
 #endif
+#if (AWAL && defined(__WIN32__))
+  char WAL_filename[] = "atmlist.txt";
+  char WAL_file[PATH_MAX + 12];
+  char *temp_path;
+#endif
 
   ZeroTmpNums(i,0);
   t = CreateAnonTable(ANONTABLESIZE);
@@ -1535,7 +1540,7 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
     classt = clock();
     FPRINTF(ASCERR,
             "Mergedetect\t\t%lu\n",(unsigned long)(classt-start));
-#endif 
+#endif
   SilentVisitInstanceTreeTwo(i,(VisitTwoProc)DeriveAnonType,1,0,(void *)&info);
 #if AWAL
   {
@@ -1543,9 +1548,24 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
 #if TIMECOMPILER
     FPRINTF(ASCERR, "start atmlist: %lu\n",(unsigned long)clock());
 #endif
+#ifdef __WIN32__
+    temp_path = getenv("TEMP");   /* put file in TEMP, if defined */
+    if (temp_path && (PATH_MAX > strlen(temp_path))) {
+      strcpy(WAL_file, temp_path);
+      strcat(WAL_file, "\\");
+    }
+    strcat(WAL_file, WAL_filename);
+    fp = fopen(WAL_file,"w+");
+#else   /* !__WIN32__ */
     fp = fopen("/tmp/atmlist","w+");
-    Asc_WriteAnonList(fp, atl, i, 1);
-    fclose(fp);
+#endif  /* __WIN32__ */
+    if (fp == NULL) {
+      FPRINTF(ASCERR, "Error opening output file in Asc_DeriveAnonList().\n");
+    }
+    else {
+      Asc_WriteAnonList(fp, atl, i, 1);
+      fclose(fp);
+    }
 #if TIMECOMPILER
     FPRINTF(ASCERR, "done atmlist: %lu\n",(unsigned long)clock());
 #endif

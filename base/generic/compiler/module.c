@@ -151,7 +151,8 @@ static struct gl_list_t *g_module_list = NULL;
 static int CmpModulesNameVers(CONST struct module_t*, CONST struct module_t*);
 static struct module_t *FindModuleFile(CONST char *, int * CONST, int);
 static struct module_t *CreateStringModule(CONST char *, int * CONST, CONST char *);
-#define FreeModule(m) ascfree(m)
+/* jds20041214 - winbase.h defines FreeModule(), so changed here to DeleteModule(). */
+#define DeleteModule(m) ascfree(m)
 static unsigned long ModuleNameToInternalNameVers(CONST char *, char * CONST);
 static int ModuleSearchPath(CONST char*, char*, struct module_t*, int * CONST);
 static int ModuleStatFile(struct module_t * CONST, CONST char *, int * CONST);
@@ -198,7 +199,7 @@ static void DestroyModule(struct module_t *m)
     FPRINTF(ASCERR, "Module %s being destroyed while opened by lexer\n",
              SCP(m->name));
   }
-  FreeModule(m);
+  DeleteModule(m);
 }
 
 /**  See the header file for this function's documentation
@@ -452,7 +453,7 @@ struct module_t *FindModuleFile(CONST char *name,
    *  having this name already exists
    */
   if(( do_not_overwrite == TRUE ) && ( dup != NULL )) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = 5;
     return dup;
   }
@@ -467,7 +468,7 @@ struct module_t *FindModuleFile(CONST char *name,
    * Check for a memory error in ModuleSearchPath.
    */
   if( result == -3 ) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = -3;
     return NULL;
   }
@@ -478,13 +479,13 @@ struct module_t *FindModuleFile(CONST char *name,
    */
   if( result == -1 ) {
     WriteWhyNotFound( new_module->filename, error );
-    FreeModule(new_module);
+    DeleteModule(new_module);
     *status = -2;
     return NULL;
   }
   if( result == 1 ) {
     FPRINTF(ASCERR, "Unable to locate file for module %s\n", name);
-    FreeModule(new_module);
+    DeleteModule(new_module);
     *status = -1;
     return NULL;
   }
@@ -507,7 +508,7 @@ struct module_t *FindModuleFile(CONST char *name,
     sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
     new_module->name = AddSymbol(filename);
     if( StoreModule( new_module ) != 0 ) {
-      FreeModule( new_module );
+      DeleteModule( new_module );
       *status = -3;
       return NULL;
     }
@@ -522,14 +523,14 @@ struct module_t *FindModuleFile(CONST char *name,
   if( dup->provided_by != NULL ) {
     /* remove the module-alias from the module list and destroy it */
     RemoveModule( dup );
-    FreeModule( dup );
+    DeleteModule( dup );
     /* add the new_module to the list and return */
     new_module->open_count = 1;
     new_module->version = 0;
     sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
     new_module->name = AddSymbol(filename);
     if( StoreModule( new_module ) != 0 ) {
-      FreeModule( new_module );
+      DeleteModule( new_module );
       *status = -3;
       return NULL;
     }
@@ -566,7 +567,7 @@ struct module_t *FindModuleFile(CONST char *name,
     FPRINTF(ASCERR,
             "Asc-Warn: Module %s includes itself either directly"
             " or indirectly\n\tIgnoring....\n", SCP(new_module->base_name));
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = 4;
     return dup;
   }
@@ -582,7 +583,7 @@ struct module_t *FindModuleFile(CONST char *name,
     dup->f = new_module->f;
     dup->linenum = new_module->linenum;
     dup->open_count++;
-    FreeModule(new_module);
+    DeleteModule(new_module);
     *status = 2;
     return dup;
   }
@@ -597,7 +598,7 @@ struct module_t *FindModuleFile(CONST char *name,
   sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
   new_module->name = AddSymbol(filename);
   if( StoreModule( new_module ) != 0 ) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = -3;
     return NULL;
   }
@@ -696,7 +697,7 @@ struct module_t *CreateStringModule(CONST char *name,
    *  having this name already exists
    */
   if(( do_not_overwrite == TRUE ) && ( dup != NULL )) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = 5;
     return dup;
   }
@@ -714,7 +715,7 @@ struct module_t *CreateStringModule(CONST char *name,
    * Check for a memory error in ModuleSearchPath.
    */
   if( result == -3 ) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = -3;
     return NULL;
   }
@@ -725,13 +726,13 @@ struct module_t *CreateStringModule(CONST char *name,
    */
   if( result == -1 ) {
     WriteWhyNotFound( new_module->filename, error );
-    FreeModule(new_module);
+    DeleteModule(new_module);
     *status = -2;
     return NULL;
   }
   if( result == 1 ) {
     FPRINTF(ASCERR, "Unable to locate file for module %s\n", name);
-    FreeModule(new_module);
+    DeleteModule(new_module);
     *status = -1;
     return NULL;
   }
@@ -770,7 +771,7 @@ struct module_t *CreateStringModule(CONST char *name,
     sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
     new_module->name = AddSymbol(filename);
     if( StoreModule( new_module ) != 0 ) {
-      FreeModule( new_module );
+      DeleteModule( new_module );
       *status = -3;
       return NULL;
     }
@@ -788,14 +789,14 @@ struct module_t *CreateStringModule(CONST char *name,
   if( dup->provided_by != NULL ) {
     /* remove the module-alias from the module list and destroy it */
     RemoveModule( dup );
-    FreeModule( dup );
+    DeleteModule( dup );
     /* add the new_module to the list and return */
     new_module->open_count = 1;
     new_module->version = 0;
     sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
     new_module->name = AddSymbol(filename);
     if( StoreModule( new_module ) != 0 ) {
-      FreeModule( new_module );
+      DeleteModule( new_module );
       *status = -3;
       return NULL;
     }
@@ -832,7 +833,7 @@ struct module_t *CreateStringModule(CONST char *name,
     FPRINTF(ASCERR,
             "Asc-Warn: Module %s includes itself either directly"
             " or indirectly\n\tIgnoring....\n", SCP(new_module->base_name));
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = 4;
     return dup;
   }
@@ -848,7 +849,7 @@ struct module_t *CreateStringModule(CONST char *name,
     dup->f = new_module->f;
     dup->linenum = new_module->linenum;
     dup->open_count++;
-    FreeModule(new_module);
+    DeleteModule(new_module);
     *status = 2;
     return dup;
   }
@@ -863,7 +864,7 @@ struct module_t *CreateStringModule(CONST char *name,
   sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
   new_module->name = AddSymbol(filename);
   if( StoreModule( new_module ) != 0 ) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     *status = -3;
     return NULL;
   }
@@ -1108,7 +1109,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
     sprintf(mod_name,"%s<%lu>",SCP(new_module->base_name),new_module->version);
     new_module->name = AddSymbol(mod_name);
     if( StoreModule( new_module ) != 0 ) {
-      FreeModule( new_module );
+      DeleteModule( new_module );
       return -3;
     }
     return 0;
@@ -1120,7 +1121,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
    *  silently and return.
    */
   if( dup->provided_by == m ) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     return 2;
   }
 
@@ -1139,7 +1140,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
               SCP(dup->base_name), SCP(dup->provided_by->filename));
     }
     RemoveModule( dup );
-    FreeModule( dup );
+    DeleteModule( dup );
     new_module->provided_by = m;
     /* probably redundant addsymbol next line */
     new_module->base_name = AddSymbol(SCP(new_module->base_name));
@@ -1147,7 +1148,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
     sprintf(mod_name,"%s<%lu>",SCP(new_module->base_name),new_module->version);
     new_module->name = AddSymbol(mod_name);
     if( StoreModule( new_module ) != 0 ) {
-      FreeModule( new_module );
+      DeleteModule( new_module );
       return -3;
     }
     return 3;
@@ -1159,7 +1160,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
    *  ``PROVIDE "foo.a4c";''  If so, destroy the new_module silently.
    */
   if( dup == g_current_module ) {
-    FreeModule( new_module );
+    DeleteModule( new_module );
     return 1;
   }
 
@@ -1172,7 +1173,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
           "Error: File \"%s\" cannot PROVIDE \"%s\"\n"
           "  because a module with that name already exists (%s)\n",
           SCP(m->filename), SCP(new_module->base_name), SCP(dup->name));
-  FreeModule( new_module );
+  DeleteModule( new_module );
   return -2;
 }
 
@@ -1497,7 +1498,7 @@ extern CONST struct module_t *Asc_GetModuleByName(CONST char *module_name)
    *  Search for the module and free the module we used for searching.
    */
   result = SearchForModule( mod );
-  FreeModule( mod );
+  DeleteModule( mod );
 
   /*
    *  If result is a module-alias, return the module that PROVIDED it

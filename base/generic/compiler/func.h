@@ -1,4 +1,4 @@
-/**< 
+/**<
  *  Function module
  *  by Tom Epperly
  *  Version: $Revision: 1.16 $
@@ -63,7 +63,7 @@
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-extern double cbrt(double);
+extern double DLEXPORT cbrt(double);
 #ifdef HAVE_ERF
 extern double erf(double);
 #endif /**< HAVE_ERF */
@@ -73,10 +73,10 @@ extern double erf(double);
  * should provide cbrt, erf.
  */
 #endif /**< stdc defined */
-
+ 
 extern CONST struct Func *LookupFunc(CONST char *);
 /**< 
- *  const struct Func *LookupFunc(name) 
+ *  const struct Func *LookupFunc(name)
  *  const char *name; (ascend name, not C)
  *  Lookup the function with the given name.  If no match is found, it
  *  returns NULL.

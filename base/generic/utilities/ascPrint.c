@@ -94,8 +94,12 @@ int AscPrint(FILE *fp, CONST char *format, va_list args)
     vsprintf( buf, format, args );
     return Tcl_Write( g_tclerr, buf, -1 );
   }
-  else {
+  /* TODO: should this fail loudly when a NULL fp is passed in? */
+  else if (fp != NULL) {
     return vfprintf( fp, format, args );
+  }
+  else {
+    return 0;
   }
 }
 

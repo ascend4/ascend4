@@ -118,7 +118,15 @@
 #ifdef _OSF_SOURCE
 #include <sys/syslimits.h>
 #endif
+/* for use practically everywhere */
+#include<stdio.h>
 
+#ifdef __WIN32__
+#undef Status         /* jds20041229 - #define in Tcl include/X11/XLib.h conflicts. */
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
+#undef WIN32_LEAN_AND_MEAN
+#endif
 
 #ifndef PATH_MAX
 /* Normally will come from stdio.h or limits.h */
@@ -170,8 +178,6 @@
  *
  */
 
-/* for use practically everywhere */
-#include<stdio.h>
 /* for use by ascmalloc, which is also practically everywhere */
 #include <assert.h>
 #include <string.h>

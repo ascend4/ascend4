@@ -38,20 +38,23 @@
 #include <unistd.h>
 #else
 #define WIN32_LEAN_AND_MEAN
+/* jds20041229 - windows.h now included in ascConfig.h.
 #include <windows.h>
+*/
 #include <locale.h>
 #undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
-#include "utilities/ascMalloc.h" /* for ascshutdown */
-#include "utilities/ascPanic.h"  /* for Asc_Panic */
+#include "utilities/ascMalloc.h"    /* for ascshutdown */
+#include "utilities/ascPanic.h"     /* for Asc_Panic */
 #include "utilities/ascEnvVar.h"
 #include "compiler/compiler.h"
 #include "compiler/ascCompiler.h"
 #include "compiler/instance_enum.h"
 #include "compiler/fractions.h"
 #include "compiler/dimen.h"
-#include "compiler/compiler.h" /* for symchar for units.h */
+#include "compiler/compiler.h"      /* for symchar for units.h */
 #include "compiler/units.h"
+#include "compiler/redirectFile.h"  /* for Asc_RedirectCompilerDefault() */
 #include "solver/slv_types.h"
 #include "solver/var.h"
 #include "solver/rel.h"
@@ -338,6 +341,10 @@ static int AscDriver(int argc, CONST84 char *argv[])
   Tcl_Channel inChannel;
   Tcl_Channel outChannel;
  
+  /* jds20050119:  Initialize ASCERR before any calls to ascPanic(). */
+  /* TODO: revisit when interface is decoupled from base - this may change. */
+  Asc_RedirectCompilerDefault();
+
   /*
    *  Create the Tk Console
    *
@@ -651,7 +658,8 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     Tcl_DStringFree(&buffer2);
 
     /*  Add ``$ASCENDDIST/models/examples'' to the ASCENDLIBRARY envar */
-    /*AWW20041209 - remove all this:    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
+    /*AWW20041209 - remove all this:
+    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
     Tcl_DStringAppend(&buffer2, "/models/examples", -1);
     if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                        &buffer1))) {
