@@ -1783,8 +1783,10 @@ esac
 #	$fullpathsrcdir is the full path to the source directory.  If
 #	that file exists, we
 #	* Set <package>_dir_root to ../$subdir_root.  The "../" is
-#	  needed since this value is used in the `ascend4' directory
-#	  and $subdir_root is relative to the parent of `ascend4'.
+#AWW20041208:#	  needed since this value is used in the `ascend4' directory
+#	  needed since this value is used in the `generic' directory
+#AWW20041208:#	  and $subdir_root is relative to the parent of `ascend4'.
+#	  and $subdir_root is relative to the parent of `generic'.
 #	* Substitute the value of $subdir_root into `subdir_output'
 #	  and set the result to <package>_makefiles: the list of
 #	  Makefiles for configure to generate.
@@ -1810,7 +1812,7 @@ if test ! "X$with_tkdir" = "Xno" ; then
     subdir_file_exists='AscendRC'
 #AWW20041117: FIXME next line
 #AWW20041206:    subdir_locations='ascend4/TK'
-    subdir_locations='../tcltk98/TK'
+    subdir_locations='../../tcltk98/TK'
     subdir_output='
 	$subdir_root/Makefile
 	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
@@ -1819,7 +1821,8 @@ if test ! "X$with_tkdir" = "Xno" ; then
 	'
     for subdir_root in $subdir_locations ; do
         if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
-	    tkdir_root="../$subdir_root"
+#AWW20041208:	    tkdir_root="../$subdir_root"
+	    tkdir_root="$subdir_root"
             tkdir_makefiles=`eval echo $subdir_output`
             tkdir_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
             break
@@ -1854,7 +1857,8 @@ if test ! "X$with_models" = "Xno" ; then
 	## $subdir_root/pending/libraries/Makefile
     for subdir_root in $subdir_locations ; do
         if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
-	    models_dir_root="../$subdir_root"
+#AWW20041208:	    models_dir_root="../$subdir_root"
+	    models_dir_root="$subdir_root"
             models_makefiles=`eval echo $subdir_output`
             models_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
             break

@@ -40,7 +40,7 @@
 
 
 SHELL = /bin/sh
-builddir = @tkdir_topbuilddir@/ascend4
+builddir = @tkdir_topbuilddir@/../../base/generic
 srcdir = @srcdir@
 VPATH = @srcdir@
 
