@@ -37,7 +37,7 @@
 #
 # Users should copy/rename this file to 'Jamrules', then modify
 # the settings manually for their particular system.  Ascend
-# cannot be built by jam unless the Jambase file is present.
+# cannot be built by jam unless the Jamrules file is present.
 #
 # User-customized Jamrules files should not be placed in version
 # control.  Only the Jamrules.in template should be versioned.

@@ -35,7 +35,7 @@
 #
 # Modify the parameters below and in Jamrules for your system, then:
 #
-#    jam -f Jambase install
+#    jam -f ../../jam/Jambase ascend
 #
 #---------------------------------------------------------------------------
 
