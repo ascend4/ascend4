@@ -1,0 +1,44 @@
+$Revision: 1.2 $
+$Author: ballan $
+$Date: 1997/07/05 14:12:06 $
+
+After having successfully solved a square problem, run the
+following command from the command line.
+
+dbg_calc_relnoms
+
+This procedure calculates the nominals for the relations.
+This will help GAMS with scaling the problem.  After having
+done this, running the following command from the command
+line
+
+dbg_write_slv0_sys filename
+
+Where filename is the name of the file you want to generate.
+For example, if I want to generate a file called preprocess, I 
+would type the following
+
+dbg_write_slv0_sys preprocess
+
+After having generated the file to be processed, invoke the 
+following command from a shell prompt.
+
+ascend2gms.pl input
+
+The input is the name of the file you want to parse. In the 
+previous example, this is preprocess.  The script will 
+automatically generate a file called preprocess.gms, which 
+is the GAMS input file and a file called preprocess.lk which
+contains the actual ASCEND variables and there associated 
+variables used in the GAMS input file. 
+
+The GAMS file that is created is assumed to be a  nonlinear program.  
+The current working version of ascend2gms.pl does not handle integer
+variables YET!  The user must fill in an appropriate objective
+function.  The equation obj1.. is provided. The default is to 
+minimize the objective function using NLP.  This could be changed
+by the user if the MODEL happens to be linear.
+
+Once the objective function has been supplied, the user will need
+ to free additional variables in order to solve a non-square
+system of equations.
