@@ -9,7 +9,8 @@
 
 
 SHELL = /bin/sh
-builddir = ..
+#AWW20041206: builddir = ..
+builddir = ../../base/generic
 srcdir = @srcdir@
 VPATH = @srcdir@
 
@@ -80,7 +81,9 @@ LIB_OBJS = \
 
 
 #  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
-#  
+#
+#AWW $builddir is currently pointing to: base/generic
+# 
 include $(builddir)/ConfigAscend
 include $(builddir)/Makefile.Rules
 
