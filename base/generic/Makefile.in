@@ -26,7 +26,7 @@ SUPPORT_SUBDIRS  = $(ASC_TK_SUBDIRS) $(MODELS_SUBDIRS) $(HELP_SUBDIRS)
 EXTERNAL_SUBDIRS = @asc_subdirs@
 SUBDIRS          = $(ASCEND_SUBDIRS) $(SUPPORT_SUBDIRS) $(EXTERNAL_SUBDIRS)
 #AWW20041129: ASCEND_MAKEFILES = ../config.status ConfigAscend Makefile Makefile.Rules
-ASCEND_MAKEFILES = ../unixAC213/config.status ConfigAscend Makefile Makefile.Rules
+ASCEND_MAKEFILES = ConfigAscend Makefile Makefile.Rules
 
 
 ascend: $(ASCEND_MAKEFILES) support_libs all_libs GUI
