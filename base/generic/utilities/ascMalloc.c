@@ -46,6 +46,14 @@
 static CONST char AscendMemoryAllocRCSid[]="$Id: ascMalloc.c,v 1.1 1997/07/18 11:44:49 mthomas Exp $";
 #endif
 
+char *ascstrdup(char *s) {
+	char *result;
+	if (!s) { return 0; }
+	result = (char *)malloc(strlen(s) + 1);
+	strcpy(result, s);
+	return result;
+}
+
 char *asc_memcpy(char *to, char *from, unsigned size)
 {
 /* We really should be moving stuff a long at a time, but that mean

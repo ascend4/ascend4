@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
+#include "utilities/ascMalloc.h"
 struct ascend_dlrecord {
   char *path;   /* library name */
   void *dlreturn; /* return from dlopen */
@@ -66,7 +67,7 @@ int AscAddRecord(void *dlreturn, CONST char *path)
   if (dlreturn == NULL || path == NULL) {
     return 1;
   }
-  keeppath = strdup((char *)path);
+  keeppath = ascstrdup((char *)path);
   if (keeppath==NULL) return 1;
   new = (struct ascend_dlrecord *)malloc(sizeof(struct ascend_dlrecord));
   if (new==NULL) {

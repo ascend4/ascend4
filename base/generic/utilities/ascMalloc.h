@@ -32,6 +32,9 @@
 #define __ASCMALLOC_H_SEEN__
 
 
+extern char *ascstrdup(char *s);
+/*^ as strdup. */
+
 extern char *asc_memcpy(char *,char *,unsigned int);
 /*
  *  char *memcpy(s1, s2, n)

@@ -1987,7 +1987,7 @@ void slv_set_char_parameter(char **cp, char *newvalue)
     if (*cp != NULL) {
       ascfree(*cp);
     }
-    *cp = strdup(newvalue);
+    *cp = ascstrdup(newvalue);
   }
 }
 
