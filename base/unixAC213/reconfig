@@ -1,0 +1,11 @@
+#! /bin/sh
+tkroot=/home/aw0a/tk
+./configure  \
+--with-fortran=g77 \
+--with-tcl="$tkroot/lib/libtcl8.3.so,$tkroot/include/tcl.h" \
+--with-tk="$tkroot/lib/libtk8.3.so,$tkroot/include/tk.h" \
+--with-wish="$tkroot/bin/wish" \
+--with-tktable=$tkroot/lib/Tktable2.8/libTktable2.8.so
+
+
+
