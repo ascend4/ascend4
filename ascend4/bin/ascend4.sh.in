@@ -1,7 +1,7 @@
 #!/bin/sh
-ASCENDDIST=/home/aw0a/ascend/a4/ascend4/ascend4
+ASCENDDIST=@prefix@
 export ASCENDDIST
-ASCENDLIBRARY=/dos/windata/ProgramsUnregistered/ascend4-0.9.0/ascend4/models/
+ASCENDLIBRARY=$ASCENDDIST/ascend4/models/
 export ASCENDLIBRARY
 $ASCENDDIST/bin/ascend4
 
