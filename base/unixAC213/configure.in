@@ -60,36 +60,43 @@ fi
 #	if the user moves the source tree, things will break unless
 #	the user re-runs configure.
 #--------------------------------------------------------------------
-##AWW20041113: FIXME - I think this is okay
-##AWW   ascpwd will be set to the path for the directory one is in
-##AWW   when invoking configure (which may not be where configure
-##AWW   is located.  So if one invokes it using the instruction
-##AWW   from /home/me/a4/tmp and invokes ../asc4/configure, ascpwd 
-##AWW   would be set to /home/me/a4/tmp.
-ascpwd=`pwd`
-fullpathsrcdir=`cd $srcdir ; pwd`
-
 
 #--------------------------------------------------------------------
-#       When one invokes configure from where one is, it is done 
-#       with the path $srcdir/configure.  For example, if one is
-#       in the directory containing configure, one would invoke
-#       ./configure and $srcdir would have the value ".".
-#
 #	The asc_include variable is (directory) path to the ascend4
 #	SOURCE directory relative to the immediate subdirectories of
 #	the ascend4 OBJECT directory.
-#	-- If we are building in the source directory ($srcdir is "."
-#	   asc_include is simply "../."
-#	-- If the user gives us a full path to the configure script,
-#	   we just append "../generic" to that full path:
-#	   "$scrdir/../generic"
-#	-- For any other value of $srcdir (like ../src/), we go up
-#	   two directories (to get to the top of the OBJECT tree,
-#	   insert the source directory, and then go back down one
-#	   level to the ascend4 directory: "../../$srcdir/../generic"
+##AWW
+##AWW   We put the .o files when compiling into a tree structure
+##AWW   relative to the directory in which we currently reside,
+##AWW   while the .c and .h files are in a similar tree structure
+##AWW   relative to the configure instruction we invoke.  This
+##AWW   allows one to have separate .o files in their own tree when
+##AWW   compiling for different operating systems.
+##AWW
+##AWW   Example 1 (same directories)
+##AWW   Current directory one is in:    /home/me/a4/asc4
+##AWW   Directory containing configure: /home/me/a4/asc4
+##AWW   Command to invoke configure:    ./configure
+##AWW   $ascpwd will be: /home/me/a4/asc4
+##AWW   $srcdir will be: .
+##AWW
+##AWW   Example 2 (different directories, abs path for command)
+##AWW   Current directory one is in:    /home/me/a4/tmp
+##AWW   Directory containing configure: /home/me/a4/asc4
+##AWW   Command to invoke configure:    /home/me/a4/asc4/configure
+##AWW   $ascpwd will be: /home/me/a4/tmp
+##AWW   $srcdir will be: /home/me/a4/asc4
+##AWW
+##AWW   Example 3 (different directories, rel path for command)
+##AWW   Same as Example 2
+##AWW   Command to invoke configure:    ../asc4/configure
+##AWW   $ascpwd will be: /home/me/a4/tmp (same as in Example 2)
+##AWW   $srcdir will be: ../asc4
 #--------------------------------------------------------------------
-##AWW20041113: FIXME??
+
+ascpwd=`pwd`
+fullpathsrcdir=`cd $srcdir ; pwd`
+
 case "$srcdir" in
     .)
         asc_include="../$srcdir"
@@ -120,7 +127,7 @@ AC_PROG_RANLIB
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
-##AWW20041113: FIXME??  No fixing seems necessary.
+##AWW20041113:   No fixing seems necessary.
 case "X$INSTALL" in
     X/*)
         ;;
@@ -1304,11 +1311,17 @@ asc_f77_support_dirs="
     $ascpwd/blas
     $ascpwd/linpack
     $ascpwd/lsod
+
+##AWW   There are folders two levels up from configure for these packages
+    $fullpathsrcdir/../../blas
+    $fullpathsrcdir/../../linpack
+    $fullpathsrcdir/../../lsod
+
 #AWW20041113:    $ascpwd/conopt
 #AWW20041113:    $ascpwd/rsqp
 #AWW20041113:    $ascpwd/minos
 #AWW20041113:    $ascpwd/ascend4/archive
-    $srcdir/generic/archive
+    $ascpwd/generic/archive
     /afs/cs/project/ascend/depot/@sys/lib
     /afs/cs/project/ascend/depot/build/obj/conopt
 "
@@ -1477,7 +1490,8 @@ case "$with_fortran$with_blas" in
         AC_MSG_CHECKING([for blas source file $blas_src_file ])
         if test -f $blas_src_file ; then
             AC_MSG_RESULT(yes)
-            BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+#AWW20041119:            BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+            BLASLIB="$ascpwd/../generic/archive/libascblas.a"
 	    make_blaslib='make-blaslib'
 	    blaslib_makefile="blas/Makefile"
             asc_subdirs="$asc_subdirs ../blas"
@@ -1499,7 +1513,8 @@ case "$with_fortran$with_blas" in
             AC_MSG_CHECKING([for blas source file $blas_src_file ])
             if test -f $blas_src_file ; then
                 AC_MSG_RESULT(yes)
-        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+#AWW20031119:        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
+        	BLASLIB="$ascpwd/../generic/archive/libascblas.a"
 	        make_blaslib='make-blaslib'
 	        blaslib_makefile="blas/Makefile"
         	asc_subdirs="$asc_subdirs ../blas"
@@ -1553,7 +1568,8 @@ case "$with_fortran$with_linpack" in
         AC_MSG_CHECKING([for linpack source file $lpak_src_file ])
         if test -f $lpak_src_file ; then
             AC_MSG_RESULT(yes)
-            LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
+#AWW20041119:            LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
+            LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
 	    make_lpaklib='make-lpaklib'
 	    lpaklib_makefile="linpack/Makefile"
             asc_subdirs="$asc_subdirs ../linpack"
@@ -1575,7 +1591,8 @@ case "$with_fortran$with_linpack" in
             AC_MSG_CHECKING([for linpack source file $lpak_src_file ])
             if test -f $lpak_src_file ; then
                 AC_MSG_RESULT(yes)
-        	LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
+#AWW20041119:        	LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
+        	LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
 	        make_lpaklib='make-lpaklib'
 	        lpaklib_makefile="linpack/Makefile"
         	asc_subdirs="$asc_subdirs ../linpack"
@@ -1628,7 +1645,8 @@ case "$with_fortran$with_lsod" in
         AC_MSG_CHECKING([for lsod source file $lsod_src_file ])
         if test -f $lsod_src_file ; then
             AC_MSG_RESULT(yes)
-            LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
+#AWW20041119:            LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
+            LSODLIB="$ascpwd/../generic/archive/libinteg.a"
 	    make_lsodlib='make-lsodlib'
 	    lsodlib_makefile="lsod/Makefile"
             asc_subdirs="$asc_subdirs ../lsod"
@@ -1651,7 +1669,8 @@ case "$with_fortran$with_lsod" in
             AC_MSG_CHECKING([for lsod source file $lsod_src_file ])
             if test -f $lsod_src_file ; then
                 AC_MSG_RESULT(yes)
-        	LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
+#AWW20041119:        	LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
+        	LSODLIB="$ascpwd/../generic/archive/libinteg.a"
 	        make_lsodlib='make-lsodlib'
 	        lsodlib_makefile="lsod/Makefile"
         	asc_subdirs="$asc_subdirs ../lsod"
@@ -1741,6 +1760,7 @@ AC_ARG_WITH(tkdir,
     , [with_tkdir=yes])
 if test ! "X$with_tkdir" = "Xno" ; then
     subdir_file_exists='AscendRC'
+#AWW20041117: FIXME next line
     subdir_locations='ascend4/TK'
     subdir_output='
 	$subdir_root/Makefile
@@ -1767,6 +1787,7 @@ AC_ARG_WITH(models,
     , [with_models=yes])
 if test ! "X$with_models" = "Xno" ; then
     subdir_file_exists='system.a4l'
+#AWW20041117: FIXME next line
     subdir_locations='models ascend4/models'
     subdir_output='
 	$subdir_root/Makefile
@@ -1863,18 +1884,18 @@ AC_SUBST(make_lpaklib)
 AC_SUBST(LSODLIB)
 AC_SUBST(make_lsodlib)
 AC_SUBST(HAVE_LSOD)
-AC_SUBST(OPTSQPLIB)
-AC_SUBST(make_rsqplib)
-AC_SUBST(HAVE_OPTSQP)
-dnl AC_SUBST(HARWELLLIB)
-dnl AC_SUBST(make_harwelllib)
-dnl AC_SUBST(HAVE_HARWELL)
-AC_SUBST(MINOSLIB)
-AC_SUBST(make_minoslib)
-AC_SUBST(HAVE_MINOS)
-AC_SUBST(CONOPTLIB)
-AC_SUBST(make_conoptlib)
-AC_SUBST(HAVE_CONOPT)
+#AWW20041113: AC_SUBST(OPTSQPLIB)
+#AWW20041113: AC_SUBST(make_rsqplib)
+#AWW20041113: AC_SUBST(HAVE_OPTSQP)
+#AWW20041113: dnl AC_SUBST(HARWELLLIB)
+#AWW20041113: dnl AC_SUBST(make_harwelllib)
+#AWW20041113: dnl AC_SUBST(HAVE_HARWELL)
+#AWW20041113: AC_SUBST(MINOSLIB)
+#AWW20041113: AC_SUBST(make_minoslib)
+#AWW20041113: AC_SUBST(HAVE_MINOS)
+#AWW20041113: AC_SUBST(CONOPTLIB)
+#AWW20041113: AC_SUBST(make_conoptlib)
+#AWW20041113: AC_SUBST(HAVE_CONOPT)
 AC_SUBST(tkdir_root)
 AC_SUBST(tkdir_topbuilddir)
 AC_SUBST(models_dir_root)
@@ -1883,26 +1904,39 @@ AC_SUBST(help_dir_root)
 AC_SUBST(help_topbuilddir)
 
 AC_OUTPUT(
-	ascend4/ConfigAscend:ascend4/ConfigAscend.in
-	ascend4/Makefile
-	ascend4/bin/ascend4.sh
-	ascend4/Makefile.Rules:ascend4/Makefile.Rules.in
-	ascend4/archive/Makefile
-	ascend4/bin/Makefile
-	ascend4/compiler/Makefile
-	ascend4/general/Makefile
-	ascend4/interface/Makefile
-	ascend4/lib/Makefile
-	ascend4/packages/Makefile
-	ascend4/solver/Makefile
-	ascend4/utilities/Makefile
+#AWW20041113: 	ascend4/ConfigAscend:ascend4/ConfigAscend.in
+#AWW20041113: 	ascend4/Makefile
+#AWW20041113: 	ascend4/bin/ascend4.sh
+#AWW20041113: 	ascend4/Makefile.Rules:ascend4/Makefile.Rules.in
+#AWW20041113: 	ascend4/archive/Makefile
+#AWW20041113: 	ascend4/bin/Makefile
+#AWW20041113: 	ascend4/compiler/Makefile
+#AWW20041113: 	ascend4/general/Makefile
+#AWW20041113: 	ascend4/interface/Makefile
+#AWW20041113: 	ascend4/lib/Makefile
+#AWW20041113: 	ascend4/packages/Makefile
+#AWW20041113: 	ascend4/solver/Makefile
+#AWW20041113: 	ascend4/utilities/Makefile
+ 	../generic/ConfigAscend:../generic/ConfigAscend.in
+ 	../generic/Makefile
+ 	../generic/bin/../generic.sh
+ 	../generic/Makefile.Rules:../generic/Makefile.Rules.in
+ 	../generic/archive/Makefile
+ 	../generic/bin/Makefile
+ 	../generic/compiler/Makefile
+ 	../generic/general/Makefile
+ 	../generic/interface/Makefile
+ 	../generic/lib/Makefile
+ 	../generic/packages/Makefile
+ 	../generic/solver/Makefile
+ 	../generic/utilities/Makefile
 	$tkdir_makefiles
 	$models_makefiles
 	$help_makefiles
         $blaslib_makefile
 	$lpaklib_makefile
 	$lsodlib_makefile
-	$rsqplib_makefile
-	$conoptlib_makefile
-	$minoslib_makefile
+#AWW20041117:	$rsqplib_makefile
+#AWW20041117:	$conoptlib_makefile
+#AWW20041117:	$minoslib_makefile
 	)
