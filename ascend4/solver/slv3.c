@@ -4006,6 +4006,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 /* end of code by AWW */
 
+
     if (first) {
       change_maxstep(sys, MAXDOUBLE);
       first = FALSE;
