@@ -10,9 +10,9 @@
 
 SHELL = /bin/sh
 #AWW20041206: builddir = ..
-builddir = ..
-srcdir = @srcdir@/../../../tcltk98/generic
-VPATH = @srcdir@/../../../tcltk98/generic
+builddir = ../../../base/generic
+srcdir = @fullpathsrcdir@/../../tcltk98/generic/interface
+VPATH = @fullpathsrcdir@/../../tcltk98/generic/interface
 
 
 
@@ -84,8 +84,8 @@ LIB_OBJS = \
 #
 #AWW $builddir is currently pointing to: base/generic
 # 
-include $(builddir)/ConfigAscend
-include $(builddir)/Makefile.Rules
+include $(builddir)/../../base/generic/ConfigAscend
+include $(builddir)/../../base/generic/Makefile.Rules
 
 
 

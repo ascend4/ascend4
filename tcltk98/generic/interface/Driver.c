@@ -76,7 +76,7 @@ static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan 
  *  The following are the environment variables ASCEND requires.
  *  If the user does not have the DIST_ENVIRONVAR set in his or her
  *  environment, a default value is set based on the directory where the
- *  ascend binary lives.  The other enviornment variables will be set
+ *  ascend binary lives.  The other environment variables will be set
  *  to default values keyed off of DIST_ENVIRONVAR.  See the function
  *  CheckEnvironmentVars later in this file for the details.
  */

@@ -1,0 +1,8 @@
+#! /bin/sh
+echo DO NOT EXECUTE yourself.  a4setup executes this script.
+../../../../$1/configure  \
+--with-fortran=g77 \
+--with-tcl="$2/lib/libtcl8.3.so,$2/include/tcl.h" \
+--with-tk="$2/lib/libtk8.3.so,$2/include/tk.h" \
+--with-wish="$2/bin/wish" \
+--with-tktable=$2/lib/Tktable2.8/libTktable2.8.so

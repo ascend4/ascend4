@@ -10,8 +10,8 @@
 SHELL = /bin/sh
 @SET_MAKE@
 builddir = .
-srcdir = @srcdir@/../generic
-VPATH = @srcdir@/../generic
+srcdir = @fullpathsrcdir@/../generic
+VPATH = @fullpathsrcdir@/../generic
 
 INCMAKE = $(builddir)/ConfigAscend
 include $(INCMAKE)
