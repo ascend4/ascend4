@@ -58,7 +58,7 @@ EXEC_LIBS = $(ASC_LIBS) $(FOR_LIBS) $(TK_LIBS) $(TKTABLE_LIB) $(X11_LIBS) \
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
 LIB_SRCS = \
-	AscBitmaps.c BrowLogRel_io.c BrowWhen_io.c BrowserDag.c \
+	AscBitmaps.c AscPrintTcl.c BrowLogRel_io.c BrowWhen_io.c BrowserDag.c \
 	BrowserMethod.c BrowserProc.c BrowserQuery.c BrowserRel_io.c \
 	CodeGen.c CodeGen2.c Commands.c DebugProc.c DisplayProc.c \
 	EnvVarProc.c HelpProc.c Integrators.c \
@@ -68,7 +68,7 @@ LIB_SRCS = \
 	plot.c tkConsole.c typelex.c old_utils.c
 
 LIB_OBJS = \
-	AscBitmaps.o BrowLogRel_io.o BrowWhen_io.o \
+	AscBitmaps.o AscPrintTcl.o BrowLogRel_io.o BrowWhen_io.o \
 	BrowserMethod.o BrowserProc.o BrowserQuery.o BrowserRel_io.o \
 	Commands.o DebugProc.o DisplayProc.o \
 	EnvVarProc.o HelpProc.o Integrators.o \

@@ -63,6 +63,8 @@
 #include "solver/mtx.h"
 #include "solver/slv_stdcalls.h"
 #include "interface/AscBitmaps.h"
+#include "utilities/ascPrint.h"
+#include "interface/AscPrintTcl.h"
 #include "interface/HelpProc.h"
 #include "interface/Commands.h"
 #include "interface/Driver.h"
@@ -344,6 +346,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
   /* jds20050119:  Initialize ASCERR before any calls to ascPanic(). */
   /* TODO: revisit when interface is decoupled from base - this may change. */
   Asc_RedirectCompilerDefault();
+  Asc_PrintInit_TclVtable();
 
   /*
    *  Create the Tk Console
@@ -412,7 +415,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
   }
 #endif /* ASC_USE_TK_CONSOLE */
 #ifdef USE_ASC_PRINTF
-  Asc_PrintInit();
+  Asc_PrintInit_Tcl();
 #endif /* USE_ASC_PRINTF */
 
   /*
@@ -513,6 +516,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
   }
   Tk_MainLoop();
   Asc_ScriptConfigureInterrupt(0,interp);
+  Asc_PrintFinalize_Tcl();
 #ifdef DEBUG_MALLOC
   ascstatus("Memory status after Tk_MainLoop() exits");
 #endif /* DEBUG_MALLOC */

@@ -67,12 +67,7 @@ LIB_OBJS = \
 
 
 #  File specific rules
-
-#  The Tcl include file is needed by ascPrint when we
-#  are using the Tcl print routines.
-#
-ascPrint.obj: $(srcdir)\ascPrint.c
-	$(CC) $(CC_SWITCHES) $(TK_INCS) -c $(srcdir)\ascPrint.c
+# none
 
 
 

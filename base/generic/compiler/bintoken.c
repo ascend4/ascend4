@@ -139,7 +139,7 @@ int bt_string_replace(char *new, char **ptr)
  * Set the configurations for building code.
  * The string arguments given are kept.
  * They are freed on the next call which specifies a new string or NULL.
- * strings given should not be allocated from Tcl.
+ * strings given should not be allocated from tcl.
  */
 int BinTokenSetOptions(char *srcname,
                        char *objname,

@@ -68,13 +68,7 @@ include $(builddir)/Makefile.Rules
 
 
 #  File specific rules
-
-#  The Tcl include file is needed by ascPrint when we
-#  are using the Tcl print routines.
-#
-ascPrint.o: $(srcdir)/ascPrint.c
-	$(CC) $(CC_SWITCHES) $(TK_INCS) -c $(srcdir)/ascPrint.c
-
+# got rid of tcl dependence here.
 
 
 # DO NOT DELETE THIS LINE -- g++dep uses it.

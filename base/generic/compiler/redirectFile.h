@@ -31,7 +31,7 @@
  *  There is not corresponding compiler.c. The variables
  *  declared in this header are defined in ascParse.y.
  *
- *  This header and Tcl/Tk headers are known to conflict. This header
+ *  This header and tcl/tk headers are known to conflict. This header
  *  should be included AFTER tcl.h or tk.h, not before.
  */
 
