@@ -69,7 +69,7 @@ extern boolean calc_print_errors;
 
 #define calc_ERF_COEF    1.1283791670955130   /**<  = 2 / sqrt(PI) */
 #define calc_LOG10_COEF  0.4342944819032518   /**< = log10(e) = 1/ln(10) */
-#define calc_PI          3.1415926535897930 /* really should be using M_PI */
+#define calc_PI          3.1415926535897930 /**< really should be using M_PI */
 
 extern real64 calc_upower(real64, unsigned);
 extern real64 calc_factorial(unsigned);
@@ -81,7 +81,7 @@ extern real64 calc_erf_inv();
 #endif /* HAVE_ERF */
 extern real64 calc_lnm_inv();
 extern int calc_is_int();
-/**
+/**<
  ***  value = calc_upower(x,n)   Compute x^n.
  ***  value = calc_factorial(n)  Compute n!.
  ***  value = calc_rec(x)        Compute 1/x.
@@ -151,7 +151,7 @@ extern real64 calc_log_D1(double);
 extern real64 calc_sqrt_D1(double);
 extern real64 calc_cbrt_D1(double);
 extern real64 calc_fabs_D1(double);
-/**
+/**<
  ***  value = calc_<uop>_D1(x)
  ***  real64 value,x;
  ***
@@ -182,7 +182,7 @@ extern real64 calc_log_D2();
 extern real64 calc_sqrt_D2();
 extern real64 calc_cbrt_D2();
 extern real64 calc_fabs_D2();
-/**
+/**<
  ***  value = calc_<uop>_D2(x)
  ***  real64 value,x;
  ***
@@ -204,7 +204,7 @@ extern real64 calc_sqr_Dn();
 extern real64 calc_sqrt_Dn();
 extern real64 calc_tan_Dn();
 extern real64 calc_fabs_Dn();
-/**
+/**<
  ***  value = calc_<uop>_Dn(x,n)
  ***  real64 value,x;
  ***  int n;   n >= 0
@@ -218,7 +218,7 @@ extern real64 calc_fabs_Dn();
 #define calc_div_D0(x,y) calc_mul_D0(x,calc_rec(y))
 #define calc_ipow_D0(x,y) asc_ipow(x,(int)y)
 extern real64 calc_pow_D0();
-/**
+/**<
  ***  value = calc_<binop>_D0(x,y)
  ***  real64 value,x,y;
  ***
@@ -231,7 +231,7 @@ extern real64 calc_pow_D0();
 extern real64 calc_div_D1();
 #define calc_ipow_D1(x,y) asc_d1ipow(x,(int)y)     
 extern real64 calc_pow_D1();
-/**
+/**<
  ***  diff = calc_<binop>_D1(x,y,wrt)
  ***  real64 diff,x,y;
  ***  int wrt;   0 ==> w.r.t 1st arg, 1 ==> w.r.t. 2nd arg
@@ -259,7 +259,7 @@ extern real64 calc_sub_Dn();
 extern real64 calc_mul_Dn();
 extern real64 calc_div_Dn();
 extern real64 calc_pow_Dn();
-/**
+/**<
  ***  diffn = calc_<binop>_Dn(x,y,nwrt0,nwrt1)
  ***  real64 diffn,x,y;
  ***  int nwrt0,nwrt1;

@@ -120,7 +120,7 @@
  *                currently lies ? */
 
 #define VAR_ELIGIBLE    0x100000
-/**< VAR_ELIGIBLE   is this variable eligible to be fixed (globally)?
+/**< VAR_ELIGIBLE   is this variable eligible to be fixed (globally)? */
 
 #define VAR_ELIGIBLE_IN_SUBREGION 0x200000
 /**< VAR_ELIGIBLE_IN_SUBREGION is this variable eligible to be fixed (in current
