@@ -9,7 +9,7 @@
 
 
 SHELL = /bin/sh
-builddir = ..
+builddir = ../../../base/generic
 srcdir = @srcdir@
 VPATH = @srcdir@
 

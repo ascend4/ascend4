@@ -63,6 +63,7 @@
 #include "solver/mps.h"
 #include "interface/old_utils.h"
 
+
 #if !defined(STATIC_MPS) && !defined(DYNAMIC_MPS)
 int slv6_register(SlvFunctionsT *f)
 {
