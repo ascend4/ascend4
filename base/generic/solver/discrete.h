@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Discrete Variable Module
  *  by Vicente Rico-Ramirez
  *  Created: 06/96
@@ -26,7 +26,7 @@
  *
  */
 
-/*
+/**< 
  *  Contents:     Discrete Variable module (ascend)
  *
  *  Dates:        06/96 - original version
@@ -40,7 +40,7 @@
 
 #ifndef dis__already_included
 #define dis__already_included
-/* 
+/**< 
  * requires #include <stdio.h> 
  * requires #include "base.h" 
  * requires #include "slv_types.h" 
@@ -56,23 +56,23 @@ enum discrete_kind {
 };
 
 struct dis_discrete {
-  enum discrete_kind t;         /* kind of discrete variable */
-  SlvBackendToken datom;	/* the associated ascend ATOM */
-  struct dis_discrete **sos;    /* not implemented yet. Used to represent */
-                                /* integer and symbols in terms of booleans */
-  struct dis_discrete *source;  /* Not implemented yet. This would be used for
+  enum discrete_kind t;         /**< kind of discrete variable */
+  SlvBackendToken datom;	/**< the associated ascend ATOM */
+  struct dis_discrete **sos;    /**< not implemented yet. Used to represent */
+                                /**< integer and symbols in terms of booleans */
+  struct dis_discrete *source;  /**< Not implemented yet. This would be used for
                                    booleans, members of sos, to point back to
 				   the variable which is using it */
-  struct gl_list_t *whens;    /* whens in which this variable is used */
-  int32 range;                /* Ranges for integer or symbols.Sme as above */
-  int32 cur_value;            /* current value */
-  int32 pre_value;            /* previous value */
-  int32 sindex;	              /* index in the solver clients list */
-  int32 mindex;	              /* index in the slv_system_t master list */
-  uint32 flags;               /* batch of binary flags */
+  struct gl_list_t *whens;    /**< whens in which this variable is used */
+  int32 range;                /**< Ranges for integer or symbols.Sme as above */
+  int32 cur_value;            /**< current value */
+  int32 pre_value;            /**< previous value */
+  int32 sindex;	              /**< index in the solver clients list */
+  int32 mindex;	              /**< index in the slv_system_t master list */
+  uint32 flags;               /**< batch of binary flags */
 };
 
-/* 
+/**< 
  * Do not dereference this structure except
  * via macros/functions, because we make no commitments about being
  * backward compatible with such code.
@@ -86,7 +86,7 @@ typedef struct dis_filter_structure {
 
 extern struct dis_discrete *dis_create(SlvBackendToken, 
 				       struct dis_discrete *);
-/*
+/**< 
  *  dis_create(instance,newdis)
  *  struct dis_discrete *newdis;
  *  SlvBackendToken instance;
@@ -106,12 +106,12 @@ extern struct dis_discrete *dis_create(SlvBackendToken,
 #else 
 #define dis_instance(dis) dis_instanceF(dis)
 #define dis_set_instance(dis,i) dis_set_instanceF((dis),(i))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 
 extern SlvBackendToken dis_instanceF(const struct dis_discrete *);
 extern void dis_set_instanceF(struct dis_discrete *,SlvBackendToken );
-/*
+/**< 
  * i = dis_instance(dis); 
  * dis_set_instance(dis,i);
  * struct dis_discrete *dis;
@@ -121,7 +121,7 @@ extern void dis_set_instanceF(struct dis_discrete *,SlvBackendToken );
 
 extern char *dis_make_name(const slv_system_t,const struct dis_discrete *);
 extern char *dis_make_xname(const struct dis_discrete *);
-/*
+/**< 
  *  name = dis_make_name(sys,dis)
  *  name = dis_make_xname(dis)
  *  struct dis_discrete *dis;
@@ -138,7 +138,7 @@ extern char *dis_make_xname(const struct dis_discrete *);
 
 extern void dis_write_name(const slv_system_t,
                            const struct dis_discrete *,FILE *);
-/*
+/**< 
  *  dis_write_name(sys,dis,file);
  *  Writes a name to the file given.
  *  Does not print any whitespace, including carriage returns.
@@ -147,7 +147,7 @@ extern void dis_write_name(const slv_system_t,
  */
 
 void dis_destroy(struct dis_discrete *);
-/*
+/**< 
  *  dis_destroy(dis);
  *  struct dis_discrete *dis;
  *
@@ -157,7 +157,7 @@ void dis_destroy(struct dis_discrete *);
 
 extern struct gl_list_t *dis_whens_list(struct dis_discrete *);
 extern void dis_set_whens_list(struct dis_discrete *, struct gl_list_t *);
-/*
+/**< 
  *  wlist = dis_whens_list(dis)
  *  dis_set_whens_list(dis,wlist)
  *  struct gl_list_t *wlist;
@@ -172,11 +172,11 @@ extern void dis_set_whens_list(struct dis_discrete *, struct gl_list_t *);
 #else
 #define dis_kind(dis) dis_kindF(dis)
 #define dis_set_kind(dis,kind) dis_set_kindF((dis),(kind))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 extern enum discrete_kind dis_kindF(const struct dis_discrete *);
 extern void dis_set_kindF(struct dis_discrete *, enum discrete_kind);
-/*
+/**< 
  * enum discrete_kind dis_kind(dis);
  * void dis_set_kind(dis,kind);
  * const struct dis_discrete *dis;
@@ -190,11 +190,11 @@ extern void dis_set_kindF(struct dis_discrete *, enum discrete_kind);
 #else 
 #define dis_mindex(dis) dis_mindexF(dis)
 #define dis_set_mindex(dis,n) dis_set_mindexF((dis),(n))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 extern int32 dis_mindexF(const struct dis_discrete *);
 extern void dis_set_mindexF(struct dis_discrete *,int32);
-/*
+/**< 
  *  index = dis_mindex(dis)
  *  dis_set_mindex(dis,index)
  *  int32 index;
@@ -210,11 +210,11 @@ extern void dis_set_mindexF(struct dis_discrete *,int32);
 #else 
 #define dis_sindex(dis) dis_sindexF(dis)
 #define dis_set_sindex(dis,n) dis_set_sindexF((dis),(n))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
  
 extern int32 dis_sindexF(const struct dis_discrete *);
 extern void dis_set_sindexF(struct dis_discrete *,int32);
-/*
+/**< 
  *  index = dis_sindex(dis)
  *  dis_set_sindex(dis,index)
  *  int32 index;
@@ -226,7 +226,7 @@ extern void dis_set_sindexF(struct dis_discrete *,int32);
 
 extern int32 dis_value(const struct dis_discrete *);
 extern void dis_set_value(struct dis_discrete *,int32);
-/*
+/**< 
  *  value = dis_value(dis)
  *  dis_set_value(dis,value)
  *  int32 value;
@@ -241,7 +241,7 @@ extern void dis_set_value(struct dis_discrete *,int32);
 extern void dis_set_inst_and_field_value(struct dis_discrete *,int32);
 extern void dis_set_value_from_inst(struct dis_discrete *,struct gl_list_t *);
 #define dis_set_boolean_value(dis,val) dis_set_inst_and_field_value(dis,val)
-/* 
+/**< 
  *  void dis_set_inst_and_field_value
  *  Set the current value of the dis_discrete and the value of 
  *  the corresponding instance simultaneously. Such a value is 
@@ -267,7 +267,7 @@ extern void dis_set_value_from_inst(struct dis_discrete *,struct gl_list_t *);
 
 extern int32 dis_previous_value(const struct dis_discrete *);
 extern void dis_set_previous_value(struct dis_discrete *,int32);
-/*
+/**< 
  *  value = dis_previous_value(dis)
  *  dis_set_previous_value(dis,value)
  *  int32 value;
@@ -277,7 +277,7 @@ extern void dis_set_previous_value(struct dis_discrete *,int32);
  */
 
 
-/*
+/**< 
  * What constitutes a boolean_var 
  * is controlled by the ascend server via the following functions.
  * Clients shouldn't use these.
@@ -287,7 +287,7 @@ extern void dis_set_previous_value(struct dis_discrete *,int32);
 
 extern boolean boolean_var(SlvBackendToken);
 
-/*
+/**< 
  *  e.g. if (boolean_var(inst)) {}
  *  SlvBackendToken inst;
  *  Returns true if the instance in question matches the currently
@@ -295,14 +295,14 @@ extern boolean boolean_var(SlvBackendToken);
  */
 
 extern boolean set_boolean_types(void);
-/*
+/**< 
  *  Sets (changes) the current definition of boolean_var to match
  *  the current library. Returns 1 if unsuccessful, 0 if ok.
  */
 
 extern int32 dis_nominal(struct dis_discrete *);
 extern void dis_set_nominal(struct dis_discrete *,int32);
-/*
+/**< 
  *  nominal = dis_nominal(dis)
  *  dis_set_nominal(dis,nominal)
  *  int32 nominal;
@@ -314,7 +314,7 @@ extern void dis_set_nominal(struct dis_discrete *,int32);
 
 extern uint32 dis_fixed(struct dis_discrete *);
 extern void dis_set_fixed(struct dis_discrete *, uint32);
-/*
+/**< 
  *  fixed = dis_fixed(dis)
  *  dis_set_fixed(dis,fixed)
  *  uint32 fixed;
@@ -326,7 +326,7 @@ extern void dis_set_fixed(struct dis_discrete *, uint32);
  */
 
 
-/*
+/**< 
  * The section of flagbit definitions
  */
 
@@ -341,7 +341,7 @@ extern void dis_set_fixed(struct dis_discrete *, uint32);
 #define DIS_VAL_MODIFIED 0x100
 #define DIS_CHANGES_STRUCTURE 0x200
 
-/*
+/**< 
  * DIS_INCIDENT  is this variable incident on some equation in 
  *               the slv_system?
  * DIS_INWHEN    is this variable in some WHEN in the slv_system?
@@ -364,11 +364,11 @@ extern void dis_set_fixed(struct dis_discrete *, uint32);
 #else
 #define dis_flags(dis) dis_flagsF(dis)
 #define dis_set_flags(dis,f) dis_set_flagsF((dis),(f))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 extern uint32 dis_flagsF(const struct dis_discrete *);
 extern void dis_set_flagsF(struct dis_discrete *,uint32);
-/*
+/**< 
  *  dis_flags(dis);
  *  dis_set_flags(dis,flags);
  *  struct dis_discrete *dis;
@@ -381,7 +381,7 @@ extern void dis_set_flagsF(struct dis_discrete *,uint32);
  */
 
 extern uint32 dis_flagbit(const struct dis_discrete *,const uint32);
-/*
+/**< 
  *  dis_flagbit(dis,name);
  *  struct dis_discrete *dis;
  *  uint32 name;
@@ -390,7 +390,7 @@ extern uint32 dis_flagbit(const struct dis_discrete *,const uint32);
  */
 
 extern void dis_set_flagbit(struct dis_discrete *,uint32, uint32);
-/*
+/**< 
  *  struct dis_discrete *dis;
  *  unsigned int NAME,oneorzero;
  *  dis_set_flagbit(dis,NAME,oneorzero)
@@ -402,7 +402,7 @@ extern void dis_set_flagbit(struct dis_discrete *,uint32, uint32);
 
 extern int32 dis_apply_filter(const struct dis_discrete *,
                              const dis_filter_t *);
-/*
+/**< 
  *  value = dis_apply_filter(dis,filter)
  *  int32 value;
  *  struct dis_discrete *dis;
@@ -430,7 +430,7 @@ extern int32 dis_apply_filter(const struct dis_discrete *,
 #define dis_boolean(dis) dis_flagbit((dis),DIS_BOOLEAN)
 #define dis_val_modified(dis) dis_flagbit((dis),DIS_VAL_MODIFIED)
 #define dis_changes_structure(dis) dis_flagbit((dis),DIS_CHANGES_STRUCTURE)
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 #define dis_set_inwhen(dis,b) dis_set_flagbit((dis),DIS_INWHEN,(b))
 #define dis_set_const(dis,b) dis_set_flagbit((dis),DIS_CONST,(b))
@@ -443,7 +443,7 @@ extern int32 dis_apply_filter(const struct dis_discrete *,
 #define dis_set_changes_structure(dis,b)   \
                dis_set_flagbit((dis),DIS_CHANGES_STRUCTURE,(b))
 
-/*
+/**< 
  *  incident = dis_incident(dis)
  *  dis_set_incident(dis,incident)
  *  uint32 incident;
@@ -455,7 +455,7 @@ extern int32 dis_apply_filter(const struct dis_discrete *,
 extern struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t,
 						      SlvBackendToken *, 
                                                       int32);
-/*
+/**< 
  *  dislist = dis_BackendTokens_to_dis(sys,tokenlist,len);
  *  slv_system_t sys;			System to get indexing from.
  *  SlvBackendToken tokenlist[];	Array of backend tokens.
@@ -477,4 +477,4 @@ extern struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t,
  *  
  */
 
-#endif /* dis__already_included */
+#endif /**< dis__already_included */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Instance Checking Routines
  *  by Tom Epperly
  *  Created: 5/4/1990
@@ -27,7 +27,7 @@
  *  COPYING.
  */
 
-/*
+/**< 
  *  When #including check.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
@@ -36,7 +36,7 @@
 
 #ifndef __CHECK_H_SEEN__
 #define __CHECK_H_SEEN__
-/* requires
+/**< requires
  *# #include<stdio.h>
  *# #include"compiler.h"
  *# #include"instance_enum.h"
@@ -44,7 +44,7 @@
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
 extern void CheckInstanceLevel(FILE *,CONST struct Instance *,int);
-/*
+/**< 
  *  void CheckInstanceLevel(f,i,pass)
  *  FILE *f;
  *  const struct Instance *i;
@@ -62,7 +62,7 @@ extern void CheckInstanceLevel(FILE *,CONST struct Instance *,int);
  */
 
 extern void CheckInstanceStructure(FILE *,CONST struct Instance *);
-/*
+/**< 
  *  void CheckInstanceStructure(f,i)
  *  FILE *f;
  *  const struct Instance *i;
@@ -72,7 +72,7 @@ extern void CheckInstanceStructure(FILE *,CONST struct Instance *);
  */
 
 extern void InstanceTokenStatistics(FILE *, CONST struct Instance *);
-/*
+/**< 
  *  void InstanceTokenStatistics(f,i)
  *  FILE *f;
  *  const struct Instance *i;
@@ -81,10 +81,10 @@ extern void InstanceTokenStatistics(FILE *, CONST struct Instance *);
  */
 
 extern void InstanceStatistics(FILE *, CONST struct Instance *);
-/*
+/**< 
  *  void InstanceStatistics(f,i)
  *  FILE *f;
  *  const struct Instance *i;
  *  This compiles and prints various statistics about this instance tree.
  */
-#endif /* __CHECK_H_SEEN__ */
+#endif /**< __CHECK_H_SEEN__ */

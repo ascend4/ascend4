@@ -1,4 +1,4 @@
-/*
+/** 
  *  anontypes
  *  Anonymous ASCEND IV type classification functions.
  *  By Benjamin Andrew Allan
@@ -27,7 +27,7 @@
  *  COPYING.
  */
 
-/*
+/** 
  *  When #including anontype.h, make sure these files are #included first:
  *  "utilities/ascConfig.h", <stdio.h>, "general/list.h", 
  *  "compiler/instance_enum.h"
@@ -35,10 +35,10 @@
 #ifndef __ANONTYPE_H_SEEN__
 #define __ANONTYPE_H_SEEN__
 
-/* For debugging set =1, for performance set = 0 */
+/** For debugging set =1, for performance set = 0 */
 #define ATDEBUG 0
 
-/*
+/** 
  * The idea of this module is to find and report groups of
  * isomorphic instances (instances with the same Anonymous Type).
  * We do not actually produce type definitions, or anything like them,
@@ -101,22 +101,22 @@
  * assuming there are no meaningful constants for modeling
  * which take on the maximum value of the machine representation.
  */
-struct AnonType { /* abbreviated AT in comments */
-   unsigned long index;			/* index in the gllist of ATs
+struct AnonType { /** abbreviated AT in comments */
+   unsigned long index;			/** index in the gllist of ATs
                                          * 0 -> not in list. -1 == freed.
                                          */
-   struct gl_list_t *instances;		/* list of this AT's instances */
-   struct AnonType *prev, *next;	/* other ATs related by
+   struct gl_list_t *instances;		/** list of this AT's instances */
+   struct AnonType *prev, *next;	/** other ATs related by
                                          * all being the same formally.
                                          */
-   int exactfamily;			/* group id of anonymous types
+   int exactfamily;			/** group id of anonymous types
                                          * which are identical except
                                          * for merged substructure.
                                          */
-   int visited;	/* counter for arbitrary use. */
+   int visited;	/** counter for arbitrary use. */
 };
 
-/*
+/** 
  * The initial number of instances to expect for each AT.
  * Tuning this may be hard. E.g. relations and some atoms
  * will grow to a huge number, but many constant types will
@@ -126,14 +126,14 @@ struct AnonType { /* abbreviated AT in comments */
  */
 #define INSTANCES_PER_AT 2
 
-/*
+/** 
  * Define the expected maximum number of anonymous types.
  * This should not be too low or the code will do memory
  * reallocation of gl_list, atl.
  */
 #define ANONEXPECTED 200
 
-/*
+/** 
  * Define the size for the hash tables keyed by the
  * formal type name and secondarily keyed by type ptr.
  * The secondary key is required because mixed simulations
@@ -145,14 +145,14 @@ struct AnonType { /* abbreviated AT in comments */
  */
 #define ANONTABLESIZE 1024
 
-/*
+/** 
  * struct AnonType *at = Asc_GetAnonType(atl,n);
  * Return the nth element of an anon type list.
  */
 #define Asc_GetAnonType(atl,n) \
   ((struct AnonType *)gl_fetch((atl),(n)))
 
-/*
+/** 
  * unsigned long n_instances = Asc_GetAnonCount(atl,n)
  * Return the number of instances associated with the nth position
  * in an anonymous type list.
@@ -160,7 +160,7 @@ struct AnonType { /* abbreviated AT in comments */
 #define Asc_GetAnonCount(atl,n) \
   gl_length(Asc_GetAnonType((atl),(n))->instances)
 
-/*
+/** 
  * i = Asc_GetAnonTypeInstance(at,c);
  * struct Instance *i;
  * struct AnonType *at;  = Asc_GetAnonType(atl,n);
@@ -171,7 +171,7 @@ struct AnonType { /* abbreviated AT in comments */
 #define Asc_GetAnonTypeInstance(at,c) \
   (struct Instance *)gl_fetch((at)->instances,(c))
 
-/*
+/** 
  * i = Asc_GetAnonPrototype(at);
  * struct Instance *i;
  * struct AnonType *at;
@@ -180,14 +180,14 @@ struct AnonType { /* abbreviated AT in comments */
  */
 extern struct Instance *Asc_GetAnonPrototype(struct AnonType *);
 
-/*
+/** 
  * Asc_DestroyAnonList(atl);
  * Destroys the anonlist we returned from a call to classify.
  * Do not destroy this list any other way.
  */
 extern void Asc_DestroyAnonList(struct gl_list_t *);
 
-/*
+/** 
  * atl = Asc_DeriveAnonList(root);
  * struct Instance *root;
  * struct gl_list_t *atl;
@@ -198,7 +198,7 @@ extern void Asc_DestroyAnonList(struct gl_list_t *);
  */
 extern struct gl_list_t *Asc_DeriveAnonList(struct Instance *);
 
-/*
+/** 
  * Asc_WriteAnonList(fp,atl,root,mlists);
  * struct Instance *root;
  * struct gl_list_t *atl;
@@ -213,4 +213,4 @@ extern struct gl_list_t *Asc_DeriveAnonList(struct Instance *);
 extern void Asc_WriteAnonList(FILE *, struct gl_list_t *,
                               struct Instance *,int);
 
-#endif /* __ANONTYPE_H_SEEN__ */
+#endif /** __ANONTYPE_H_SEEN__ */

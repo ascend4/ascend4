@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Conditional modeling Solver
  *  by Vicente Rico-Ramirez
  *  Created: 04/97
@@ -29,14 +29,14 @@
 #ifndef slv9__already_included
 #define slv9__already_included
 
-/* 
+/**< 
  * requires #include "slv_client.h" 
  */
 
 typedef struct slv9_system_structure *slv9_system_t;
 
 int slv9_register(SlvFunctionsT *);
-/*
+/**< 
  * This is the function that tells the system about the CMSlv solver.
  * Our index is not necessarily going to be 9. That everything here is
  * named slv9* is just a historical result and a convenient way of
@@ -44,4 +44,4 @@ int slv9_register(SlvFunctionsT *);
  */
 
 
-#endif /* slv9__already_included */
+#endif /**< slv9__already_included */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  mtx: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -29,14 +29,14 @@
  */
 #ifndef __MTX_PERMS_H_SEEN__
 #define __MTX_PERMS_H_SEEN__
-/* requires #include "mtx.h" */
+/**< requires #include "mtx.h" */
 
 
-/* the following block_perm functions are not yet implemented: this is
+/**< the following block_perm functions are not yet implemented: this is
 the software spec. 5/3/95 baa. */
 
 extern mtx_block_perm_t mtx_create_block_perm(mtx_matrix_t);
-/**
+/**< 
  ***  bp = mtx_create_block_perm(mtx);
  ***  mtx_matrix_t mtx;
  ***  mtx_block_perm_t bp;
@@ -58,7 +58,7 @@ extern mtx_block_perm_t mtx_create_block_perm(mtx_matrix_t);
 
 extern int              mtx_update_block_perm(mtx_matrix_t,
                                               int32, mtx_block_perm_t);
-/**
+/**< 
  ***  mtx_update_block_perm(mtx,bnum,bperm);
  ***  mtx_matrix_t mtx;
  ***  int32 bnum;
@@ -90,7 +90,7 @@ extern int              mtx_update_block_perm(mtx_matrix_t,
 
 extern int              mtx_restore_block_perm(mtx_matrix_t, int32,
                                                mtx_block_perm_t);
-/**
+/**< 
  ***  mtx_restore_block_perm(mtx,bnum,bperm);
  ***  mtx_matrix_t mtx;
  ***  int32 bnum;
@@ -126,7 +126,7 @@ extern int              mtx_restore_block_perm(mtx_matrix_t, int32,
  **/
 
 extern int              mtx_destroy_block_perm(mtx_block_perm_t);
-/**
+/**< 
  ***  mtx_destroy_block_perm(bperm);
  ***  mtx_block_perm_t bperm;
  ***
@@ -137,7 +137,7 @@ extern int              mtx_destroy_block_perm(mtx_block_perm_t);
  **/
 
 extern size_t           mtx_block_perm_size(mtx_block_perm_t);
-/**
+/**< 
  ***  mtx_block_perm_size(bperm);
  ***  mtx_block_perm_t bperm;
  ***
@@ -145,7 +145,7 @@ extern size_t           mtx_block_perm_size(mtx_block_perm_t);
  ***  the mtx_block_perm_t. Bytes as usual.
  **/
 
-/* end block_perm functions */
+/**< end block_perm functions */
 
 /***********************************************************************\
   mtx permutation and permutation info routines
@@ -155,7 +155,7 @@ extern void         mtx_swap_cols(mtx_matrix_t, int32, int32);
 extern void         mtx_drag(mtx_matrix_t, int32, int32);
 extern void         mtx_reverse_diagonal(mtx_matrix_t,
                                          int32, int32);
-/**
+/**< 
  -$-  mtx_swap_rows(matrix,row1,row2)
  -$-  mtx_swap_cols(matrix,col1,col2)
  -$-  mtx_drag(matrix,d1,d2)
@@ -201,7 +201,7 @@ extern int32  mtx_row_to_org(mtx_matrix_t, int32);
 extern int32  mtx_col_to_org(mtx_matrix_t, int32);
 extern int32  mtx_org_to_row(mtx_matrix_t, int32);
 extern int32  mtx_org_to_col(mtx_matrix_t, int32);
-/**
+/**< 
  -$-  org_row = mtx_row_to_org(matrix,row)
  -$-  org_col = mtx_col_to_org(matrix,col)
  -$-  row = mtx_org_to_row(matrix,org_row)
@@ -218,7 +218,7 @@ extern int32  mtx_org_to_col(mtx_matrix_t, int32);
 
 extern boolean      mtx_row_parity(mtx_matrix_t);
 extern boolean      mtx_col_parity(mtx_matrix_t);
-/**
+/**< 
  -$-  parity = mtx_row_parity(matrix)
  -$-  parity = mtx_col_parity(matrix)
  ***  boolean parity;
@@ -236,7 +236,7 @@ extern boolean      mtx_col_parity(mtx_matrix_t);
 \***********************************************************************/
 
 extern int	mtx_output_assign_region(mtx_matrix_t, mtx_region_t *,int *);
-/**
+/**< 
  ***  int rank = mtx_output_assign_region(matrix,region,orphaned_rows)
  ***  mtx_matrix_t matrix;
  ***  mtx_region_t *reg;
@@ -259,7 +259,7 @@ extern int	mtx_output_assign_region(mtx_matrix_t, mtx_region_t *,int *);
 
 
 extern void	mtx_output_assign(mtx_matrix_t, int32, int32);
-/**
+/**< 
  ***  mtx_output_assign(matrix,hirow,hicol)
  ***  mtx_matrix_t matrix;
  ***  int32 hirow,hicol;
@@ -296,7 +296,7 @@ extern void	mtx_output_assign(mtx_matrix_t, int32, int32);
  **/
 
 extern boolean      mtx_output_assigned(mtx_matrix_t);
-/**
+/**< 
  ***  symbolic_rank_exists = mtx_output_assigned(matrix)
  ***  boolean symbolic_rank_exists;
  ***  mtx_matrix_t matrix;
@@ -308,7 +308,7 @@ extern boolean      mtx_output_assigned(mtx_matrix_t);
  **/
 
 extern int32  mtx_symbolic_rank(mtx_matrix_t);
-/**
+/**< 
  ***  symbolic_rank = mtx_symbolic_rank(matrix)
  ***  int32 symbolic_rank;
  ***  mtx_matrix_t matrix;
@@ -321,7 +321,7 @@ extern int32  mtx_symbolic_rank(mtx_matrix_t);
  **/
      
 extern void mtx_set_symbolic_rank(mtx_matrix_t, int32);
-/**
+/**< 
  ***  mtx_symbolic_rank(matrix,rank)
  ***  int32 rank;
  ***  mtx_matrix_t matrix;
@@ -333,7 +333,7 @@ extern void mtx_set_symbolic_rank(mtx_matrix_t, int32);
      
 extern boolean      mtx_make_col_independent(mtx_matrix_t,int32,
                                              mtx_range_t *);
-/**
+/**< 
  ***  swapped = mtx_make_col_independent(matrix,col,rng)
  ***  boolean swapped;
  ***  mtx_matrix_t matrix;
@@ -352,7 +352,7 @@ extern boolean      mtx_make_col_independent(mtx_matrix_t,int32,
 
 
 extern void         mtx_org_permute(mtx_matrix_t, mtx_region_t *);
-/**
+/**< 
  ***  mtx_org_permute(mtx,region);
  ***  mtx_matrix_t matrix;
  ***  mtx_region_t *region.
@@ -368,7 +368,7 @@ extern void         mtx_org_permute(mtx_matrix_t, mtx_region_t *);
  **/
 
 extern int32 mtx_full_diagonal(mtx_matrix_t, mtx_range_t *, int);
-/**
+/**< 
  ***  mtx_full_diagonal(mtx,rng,noisy);
  ***
  ***  This function checks the diagonal for holes. If symbolic_rank is
@@ -382,7 +382,7 @@ extern int32 mtx_full_diagonal(mtx_matrix_t, mtx_range_t *, int);
  **/
 
 extern int32 mtx_transpose(mtx_matrix_t);
-/**
+/**< 
  *** mtx_transpose(mtx);
  *** Transposes everything about the matrix. The user is
  *** responsible for keeping track of the change in the semantics
@@ -397,7 +397,7 @@ extern int32 mtx_transpose(mtx_matrix_t);
  **/
 
 extern int32 mtx_isa_transpose(mtx_matrix_t);
-/**
+/**< 
  *** mtx_isa_transpose(mtx);
  *** Returns 1 if the matrix is transposed from another and 0 if not.
  *** Calling mtx_transpose twice yields a mtx which responds with 0.
@@ -410,7 +410,7 @@ extern int32 mtx_isa_transpose(mtx_matrix_t);
 \***********************************************************************/
 
 extern mtx_block_t  *mtx_block_partition(mtx_matrix_t, mtx_region_t *);
-/**
+/**< 
  ***  mtx_partition(mtx,reg);
  ***  mtx_matrix_t matrix;
  ***  mtx_region_t *reg.
@@ -436,7 +436,7 @@ extern mtx_block_t  *mtx_block_partition(mtx_matrix_t, mtx_region_t *);
 \***********************************************************************/
 
 extern void         mtx_partition(mtx_matrix_t);
-/**
+/**< 
  ***  mtx_partition(matrix);
  ***  mtx_matrix_t matrix;
  ***
@@ -448,7 +448,7 @@ extern void         mtx_partition(mtx_matrix_t);
  **/
 
 extern void         mtx_ut_partition(mtx_matrix_t);
-/**
+/**< 
  ***  mtx_ut_partition(matrix);
  ***  mtx_matrix_t matrix;
  ***
@@ -460,7 +460,7 @@ extern void         mtx_ut_partition(mtx_matrix_t);
  **/
 
 extern boolean      mtx_check_blocks(mtx_matrix_t);
-/**
+/**< 
  ***  valid = mtx_check_blocks(matrix)
  ***  boolean valid;
  ***  mtx_matrix_t matrix;
@@ -474,7 +474,7 @@ extern boolean      mtx_check_blocks(mtx_matrix_t);
  **/
 
 extern int32  mtx_number_of_blocks(mtx_matrix_t);
-/**
+/**< 
  ***
  -$-  nblocks = mtx_number_of_blocks(matrix)
  ***  int32 nblocks;
@@ -490,7 +490,7 @@ extern int32  mtx_number_of_blocks(mtx_matrix_t);
  **/
 
 extern int32  mtx_block(mtx_matrix_t,int32, mtx_region_t *);
-/**
+/**< 
  ***  bndx = mtx_block(matrix,block_number,block)
  ***  mtx_matrix_t matrix;
  ***  int32 block_number;
@@ -511,7 +511,7 @@ extern int32  mtx_block_containing_row(mtx_matrix_t,int32,
                                                        mtx_region_t *);
 extern int32  mtx_block_containing_col(mtx_matrix_t,int32,
                                                        mtx_region_t *);
-/**
+/**< 
  ***  block_number = mtx_block_containing_row(matrix,row,block)
  ***  block_number = mtx_block_containing_col(matrix,col,block)
  ***  int32 block_number;
@@ -527,4 +527,4 @@ extern int32  mtx_block_containing_col(mtx_matrix_t,int32,
  ***  Calls on slaves are passed up to the master matrix.
  **/
 
-#endif /* __MTX_PERMS_H_SEEN__ */
+#endif /**< __MTX_PERMS_H_SEEN__ */

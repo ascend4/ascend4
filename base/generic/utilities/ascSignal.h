@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Signal handling protocol definitions for ASCEND
  *  May 27, 1997
  *  By Benjamin Andrew Allan
@@ -47,7 +47,7 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
 #endif
 
 #define TRAPPTR(a) void (*(a))(int)
-/*
+/**< 
  * This macro defines a pointer to a signal handler named a.
  * Substitute your variable name and
  * TRAPPTR(yourname); is a function pointer declaration.
@@ -55,14 +55,14 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
  */
 
 #define TPTYPE void (*)(int)
-/*
+/**< 
  * This macro can be used like  tp = (TPTYPE)foo;
  * or in function prototypes to indicate a signal handling
  * function pointer is the argument.
  */
 
 #define MAX_TRAP_DEPTH 40L
-/*
+/**< 
  * This is the maximum number of traps that can be nested.
  * with push and pop below.
  */
@@ -70,18 +70,18 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
 extern jmp_buf g_fpe_env;
 extern jmp_buf g_seg_env;
 extern jmp_buf g_int_env;
-/*
+/**< 
  * standard signals
  */
 
 extern jmp_buf g_foreign_code_call_env;
-/*
+/**< 
  * not currently in use, but should be when we get to a unified
  * standard for signal handling.
  */
 
 extern void Asc_SignalTrap(int);
-/*
+/**< 
  * Asc_SignalTrap(sigval);
  * This is the trap that should be used for most applications in
  * ASCEND. It calls longjmp(g_SIG_env,sigval) 
@@ -113,7 +113,7 @@ extern void Asc_SignalTrap(int);
  */
 
 extern int Asc_SignalInit(void);
-/* int err = Asc_SignalInit();
+/**< int err = Asc_SignalInit();
  * Returns 0 if successful, 1 if out of memory, 2 otherwyse.
  * Does not establish any traps, just the stacks for
  * maintaining them. Cannot be called twice successfully.
@@ -122,12 +122,12 @@ extern int Asc_SignalInit(void);
  */
 
 extern void Asc_SignalDestroy(void);
-/* Asc_SignalDestroy();
+/**< Asc_SignalDestroy();
  * Clears and destroys the stacks of signal handlers.
  */
 
 extern void Asc_SignalRecover(int);
-/*
+/**< 
  * Asc_SignalRecover(force);
  * This function reinstalls the most recent signal handlers this module
  * has been informed of. This should be called after every
@@ -147,7 +147,7 @@ extern void Asc_SignalRecover(int);
  */
 
 extern int Asc_SignalHandlerPush(int, TPTYPE);
-/* 
+/**< 
  * err =  Asc_SignalHandlerPush(signum, tp)
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
@@ -160,7 +160,7 @@ extern int Asc_SignalHandlerPush(int, TPTYPE);
  */
 
 extern int Asc_SignalHandlerPop(int, TPTYPE);
-/*
+/**< 
  * err = Asc_SignalHandlerPop(signum, tp);
  * Pops the last trap off the stack of signum trap functions and
  * installs the new last trap. Sideeffects: reinstalls all other

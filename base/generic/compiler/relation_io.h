@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Relation Output Routines
  *  by Tom Epperly
  *  Created: 2/8/90
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including relation_io.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "fractions.h"
@@ -39,7 +39,7 @@
 
 #ifndef __RELATION_IO_H_SEEN__
 #define __RELATION_IO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"exprs.h"
@@ -51,13 +51,13 @@ enum rel_lang_format {
   relio_ascend,
   relio_C
 };
-/* Add others here as desired and then update RelationWriteString.
+/**< Add others here as desired and then update RelationWriteString.
  * This enum controls the format of function names and other
  * minor operator variations in the supported languages.
  */
 
 typedef char * (*WRSNameFunc)(CONST struct relation *,unsigned long,void *);
-/* 
+/**< 
  * name = func(tokenrel,varnum,userdata);
  * For use with WriteRelationString and token relations.
  * Func should return a name for varnum in tokenrel.
@@ -74,7 +74,7 @@ struct RXNameData{
 
 extern char *RelationVarXName(CONST struct relation *, unsigned long, 
                            struct RXNameData *);
-/*
+/**< 
  * ns = RelationVarXName(r,varnum,rxndata);
  * Returns names like x23.
  * Returns a character string (which we own, not the caller, but it won't
@@ -92,7 +92,7 @@ extern char *RelationVarXName(CONST struct relation *, unsigned long,
  */
 
 extern int NeedParen(enum Expr_enum,enum Expr_enum,int);
-/*
+/**< 
  *  int NeedParen(parent,child,rhs);
  *  enum Expr_enum parent_op;
  *  enum Expr_enum child_op;
@@ -108,7 +108,7 @@ extern int NeedParen(enum Expr_enum,enum Expr_enum,int);
 
 extern void WriteRelation(FILE *,CONST struct Instance *,
      CONST struct Instance *);
-/*
+/**< 
  *  WriteRelation(f,relinst,ref);
  *  FILE *f;
  *  const struct Instance *relinst;
@@ -123,7 +123,7 @@ extern char *WriteRelationString(CONST struct Instance *,
                                  WRSNameFunc, void *, 
                                  enum rel_lang_format,
                                  int *);
-/*
+/**< 
  *  s = WriteRelationString(relinst,ref,func,userdata,lang,lenptr);
  *  char *f;
  *  const struct Instance *relinst;
@@ -144,7 +144,7 @@ extern char *WriteRelationString(CONST struct Instance *,
 
 extern void WriteRelationPostfix(FILE *,CONST struct Instance *,
      CONST struct Instance *);
-/*
+/**< 
  *  void WriteRelationPostfix(f,relinst,ref)
  *  FILE *f;
  *  const struct Instance *relinst;
@@ -155,7 +155,7 @@ extern void WriteRelationPostfix(FILE *,CONST struct Instance *,
 
 extern char *WriteRelationPostfixString(CONST struct Instance *,
      CONST struct Instance *);
-/*
+/**< 
  *  void WriteRelationPostfixString(relinst,ref)
  *  char *f;
  *  const struct Instance *relinst;
@@ -166,7 +166,7 @@ extern char *WriteRelationPostfixString(CONST struct Instance *,
 
 extern void Infix_WriteRelation(FILE *,CONST struct Instance *,
     CONST struct Instance *);
-/*
+/**< 
  *  void Infix_WriteRelation(f,r,ref)
  *  FILE *f;
  *  const struct Instance *relinst;
@@ -177,62 +177,62 @@ extern void Infix_WriteRelation(FILE *,CONST struct Instance *,
  */
 
 extern void WriteRelationsInTree(FILE *,struct Instance *);
-/*
+/**< 
  *  Search for relations in an instance and write them to the
  *  file given in various formats.
  */
 
 extern void WriteRelationsInList(FILE *,struct gl_list_t *);
-/*
+/**< 
  *  Search for relations in an instance list and write them to the
  *  file given in various formats.
  */
 
 extern void SaveRelationVariables(FILE *fp, CONST struct relation *r);
-/*
+/**< 
  *  Given a relation will save its variable list in the ASCEND condensed
  *  format.
  */
 
 extern void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst);
-/*
+/**< 
  *  Given a glassbox relation will save it in the ASCEND condensed
  *  format.
  */
 
 extern void SaveTokenRelation(FILE *fp, CONST struct Instance *relinst);
-/*
+/**< 
  *  Given a token relation will save it in the ASCEND condensed
  *  format.
  */
 
 extern void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
          char *prefix, unsigned long index_);
-/*
+/**< 
  *  Given a relation will save it and perform conversion to the glassbox
  *  format.
  */
 
 int ConversionIsValid(enum Expr_enum old, enum Expr_enum new);
-/*
+/**< 
  *  Gicen a relation format will return TRUE if conversion to another
  *  format is valid. It assumes that new is a valid relation type.
  */
 
 extern void RelationIO_init_pool(void);
-/*
+/**< 
  * starts memory recycle. do not call twice before stopping recycle.
  */
 
 extern void RelationIO_destroy_pool(void);
-/*
+/**< 
  * stops memory recycle. do not call while ANY Expr are outstanding.
  */
 
 extern void RelationIO_report_pool(void);
-/*
+/**< 
  * write the pool report to ASCERR for the ppe pool.
  */
 
-#endif /* __RELATION_IO_H_SEEN__ */
+#endif /**< __RELATION_IO_H_SEEN__ */
 

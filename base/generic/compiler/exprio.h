@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Expression Input/Output
  *  by Tom Epperly
  *  Version: $Revision: 1.6 $
@@ -30,7 +30,7 @@
 #define __EXPRIO_H_SEEN__
 
 
-/*
+/**< 
  *  When #including exprio.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -41,7 +41,7 @@
 
 
 extern CONST char *ExprEnumName(CONST enum Expr_enum);
-/*
+/**< 
  *  CONST char *ExprEnumName(t);
  *  CONST enum Expr_enum t;
  *  Returns a pointer to a string containing the name of the Expr term
@@ -50,14 +50,14 @@ extern CONST char *ExprEnumName(CONST enum Expr_enum);
  */
 
 extern void WriteExprNode(FILE *,CONST struct Expr *);
-/*
+/**< 
  *  void WriteExprNode(f,e)
  *  FILE *f;
  *  const struct Expr *e;
  */
 
 extern void WriteExpr(FILE *,CONST struct Expr *);
-/*
+/**< 
  *  void WriteExpr(f,e)
  *  FILE *f;
  *  const struct Expr *e;
@@ -65,20 +65,20 @@ extern void WriteExpr(FILE *,CONST struct Expr *);
  */
 
 extern void WriteExprNode2Str(Asc_DString *,CONST struct Expr *);
-/*
+/**< 
  *  void WriteExprNode2Str(dstring,e)
  *  Asc_DString *dstring;
  *  const struct Expr *e;
  */
 
 extern void WriteExpr2Str(Asc_DString *,CONST struct Expr *);
-/*
+/**< 
  *  void WriteExpr2Str(dstring,e)
  *  Asc_DString *dstring;
  *  const struct Expr *e;
  *  Write the expression with no leading or trailing white space.
  */
-#endif /* __EXPRIO_H_SEEN__ */
+#endif /**< __EXPRIO_H_SEEN__ */
 
 
 

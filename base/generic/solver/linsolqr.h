@@ -1,4 +1,4 @@
-/*
+/**< 
  *  linsol II: Ascend Linear Equation Solver
  *  by Karl Westerberg
  *  Created: 2/6/90
@@ -107,32 +107,32 @@
 #ifndef linsolqr__already_included
 #define linsolqr__already_included
 
-/* requires #include <string.h> */
-/* requires #include "base.h" */
-/* requires #include "mtx.h" */
+/**< requires #include <string.h> */
+/**< requires #include "base.h" */
+/**< requires #include "mtx.h" */
 
 #define LINSOLMTX_DEBUG FALSE
-/* */
+/**< */
 #define LINQR_DROP_TOLERANCE 1.0e-16
-/* This is the default for drop tolerances in methods which use a drop tol */
+/**< This is the default for drop tolerances in methods which use a drop tol */
 
 typedef struct linsolqr_header *linsolqr_system_t;
-/**
+/**< 
  ***  linsolqr_system_t is the linear system handle.
  **/
 
 enum factor_class {
-  unknown_c,  /* error handling class */
-  ranki = 100,     /* all ranki (and gauss until broken out) methods */
-  s_qr = 200       /* all sparse qr methods */
+  unknown_c,  /**< error handling class */
+  ranki = 100,     /**< all ranki (and gauss until broken out) methods */
+  s_qr = 200       /**< all sparse qr methods */
 };
 
 enum reorder_method {
-  unknown_r,       /* error handling method */
-  natural = 1000,  /* do nothing reorder */
-  spk1 = 2000,     /* Stadtherr's SPK1 reordering */
-  tspk1 = 3000     /* transpose of Stadtherr's SPK1 reordering good for gauss */
-  /* future work:
+  unknown_r,       /**< error handling method */
+  natural = 1000,  /**< do nothing reorder */
+  spk1 = 2000,     /**< Stadtherr's SPK1 reordering */
+  tspk1 = 3000     /**< transpose of Stadtherr's SPK1 reordering good for gauss */
+  /**< future work:
   invspk1,      spk1 then diagonally inverted
   invtspk1,     tspk1 then diagonally inverted
   widespk1,     spk1 of an MxN region, N > M
@@ -140,30 +140,30 @@ enum reorder_method {
 };
 
 enum factor_method {
-  unknown_f = 0,    /* error handling method */
-  ranki_kw = 1,     /* original linsol method */
-  ranki_jz = 2,     /* original linsol method with pseudo-complete pivoting */
-  ranki_kw2 = 3,    /* better data structure version of ranki_kw, w/drop tol */ 
-  ranki_jz2 = 4,    /* better data structure version of ranki_jz, w/drop tol */ 
-  ranki_ka = 12,    /* kirks hacked verion of the basic method. */
-  plain_qr = 5,     /* rectangular col pivoted qr variants */
-  cond_qr = 6,      /* stewart-based sparse QR method new Coke */
-  ranki_ba2 = 7,    /* proper linked list implementation of ranki (dragfree) */
-  opt_qr = 8,       /* coming soon */
-  ls_qr = 9,        /* anticipated */
-  gauss_ba2 = 10,   /* anticipated */
-  symmetric_lu = 11 /* anticipated */
+  unknown_f = 0,    /**< error handling method */
+  ranki_kw = 1,     /**< original linsol method */
+  ranki_jz = 2,     /**< original linsol method with pseudo-complete pivoting */
+  ranki_kw2 = 3,    /**< better data structure version of ranki_kw, w/drop tol */ 
+  ranki_jz2 = 4,    /**< better data structure version of ranki_jz, w/drop tol */ 
+  ranki_ka = 12,    /**< kirks hacked verion of the basic method. */
+  plain_qr = 5,     /**< rectangular col pivoted qr variants */
+  cond_qr = 6,      /**< stewart-based sparse QR method new Coke */
+  ranki_ba2 = 7,    /**< proper linked list implementation of ranki (dragfree) */
+  opt_qr = 8,       /**< coming soon */
+  ls_qr = 9,        /**< anticipated */
+  gauss_ba2 = 10,   /**< anticipated */
+  symmetric_lu = 11 /**< anticipated */
 };
 
 extern int g_linsolqr_timing;
-/*
+/**< 
  * If nonzero and certain internal defines are set, factorization
  * generates a fill and timing message.
  */
 
 
-/* KAA_DEBUG */
-extern boolean linsolqr_col_is_a_spike (/* mtx_matrix_t mtx,
+/**< KAA_DEBUG */
+extern boolean linsolqr_col_is_a_spike (/**< mtx_matrix_t mtx,
 					   int32 col*/);
 /*********************************************************************\
   Returns true if the column in question is a spike.
@@ -280,10 +280,10 @@ extern boolean linsolqr_col_is_a_spike (/* mtx_matrix_t mtx,
  See the header of linsolqr_set_pivot_tolerance below for details.
 \*********************************************************************/
 
-/* Functions for managing interfaces */
+/**< Functions for managing interfaces */
 
 extern char *linsolqr_rmethods();
-/**
+/**< 
  *** s=linsolqr_rmethods();
  ***
  *** Returns a , separated list of the names of reordering methods
@@ -294,7 +294,7 @@ extern char *linsolqr_rmethods();
  **/
 
 extern char *linsolqr_fmethods();
-/**
+/**< 
  *** s=linsolqr_fmethods();
  ***
  *** Returns a , separated list of the names of factorization methods
@@ -304,7 +304,7 @@ extern char *linsolqr_fmethods();
  **/
 
 extern enum reorder_method linsolqr_rmethod_to_enum(char *);
-/**  
+/**<  
  *** meth=linsolqr_rmethod_to_enum(s);
  ***
  *** Returns the enum of a reorder method with the name s.
@@ -312,7 +312,7 @@ extern enum reorder_method linsolqr_rmethod_to_enum(char *);
  **/
 
 extern enum factor_method linsolqr_fmethod_to_enum(char *);
-/**  
+/**<  
  *** meth=linsolqr_fmethod_to_enum(s);
  ***
  *** Returns the enum of a factor method with the name s.
@@ -320,7 +320,7 @@ extern enum factor_method linsolqr_fmethod_to_enum(char *);
  **/
 
 extern enum factor_class linsolqr_fmethod_to_fclass(enum factor_method);
-/**  
+/**<  
  *** class=linsolqr_fmethod_to_fclass(fm);
  ***
  *** Returns the enum of the factor class containing the method given.
@@ -328,7 +328,7 @@ extern enum factor_class linsolqr_fmethod_to_fclass(enum factor_method);
  **/
 
 extern char *linsolqr_enum_to_rmethod(enum reorder_method);
-/**  
+/**<  
  *** s=linsolqr_enum_to_rmethod(m);
  ***
  *** Returns the name of a reorder method with the enum m.
@@ -337,7 +337,7 @@ extern char *linsolqr_enum_to_rmethod(enum reorder_method);
  **/
 
 extern char *linsolqr_enum_to_fmethod(enum factor_method);
-/**  
+/**<  
  *** s=linsolqr_enum_to_fmethod(m);
  ***
  *** Returns the name of a factor method with the enum m.
@@ -346,7 +346,7 @@ extern char *linsolqr_enum_to_fmethod(enum factor_method);
  **/
 
 extern char *linsolqr_rmethod_description(enum reorder_method);
-/**  
+/**<  
  *** description=linsolqr_rmethod_description(meth);
  ***
  *** Returns a string describing the method inquired on. Do not mess
@@ -355,7 +355,7 @@ extern char *linsolqr_rmethod_description(enum reorder_method);
  **/
 
 extern char *linsolqr_fmethod_description(enum factor_method);
-/**  
+/**<  
  *** description=linsolqr_fmethod_description(meth);
  ***
  *** Returns a string describing the method inquired on. Do not mess
@@ -363,10 +363,10 @@ extern char *linsolqr_fmethod_description(enum factor_method);
  *** If you implement a new method, update this function.
  **/
 
-/* Functions for specifying problems and controlling them */
+/**< Functions for specifying problems and controlling them */
 
 extern linsolqr_system_t linsolqr_create();
-/**
+/**< 
  ***  sys = linsolqr_create()
  ***  linsolqr_system_t sys;
  ***
@@ -375,7 +375,7 @@ extern linsolqr_system_t linsolqr_create();
  **/
 
 extern void linsolqr_destroy(linsolqr_system_t);
-/**
+/**< 
  ***  linsolqr_destroy(sys)
  ***  linsolqr_system_t sys;
  ***
@@ -384,7 +384,7 @@ extern void linsolqr_destroy(linsolqr_system_t);
  **/
 
 extern void linsolqr_set_matrix(linsolqr_system_t, mtx_matrix_t);
-/**
+/**< 
  ***  linsolqr_set_matrix(sys,mtx)
  ***  linsolqr_system_t sys;
  ***  mtx_matrix_t mtx;
@@ -393,7 +393,7 @@ extern void linsolqr_set_matrix(linsolqr_system_t, mtx_matrix_t);
  **/
 
 extern void linsolqr_set_region(linsolqr_system_t, mtx_region_t);
-/**
+/**< 
  ***  linsolqr_set_region(sys,region)
  ***  linsolqr_system_t sys;
  ***  mtx_region_t region;
@@ -402,7 +402,7 @@ extern void linsolqr_set_region(linsolqr_system_t, mtx_region_t);
  **/
 
 extern mtx_matrix_t linsolqr_get_matrix(linsolqr_system_t);
-/**
+/**< 
  ***  mtx = linsolqr_get_matrix(sys)
  ***  mtx_matrix_t mtx;
  ***  linsolqr_system_t sys;
@@ -411,7 +411,7 @@ extern mtx_matrix_t linsolqr_get_matrix(linsolqr_system_t);
  **/
 
 extern void linsolqr_add_rhs(linsolqr_system_t, real64 *, boolean);
-/**
+/**< 
  ***  linsolqr_add_rhs(sys,rhs,transpose)
  ***  linsolqr_system_t sys;
  ***  real64 *rhs;
@@ -451,7 +451,7 @@ extern void linsolqr_add_rhs(linsolqr_system_t, real64 *, boolean);
  **/
 
 extern void linsolqr_remove_rhs(linsolqr_system_t, real64 *);
-/**
+/**< 
  ***  linsolqr_remove_rhs(sys,rhs)
  ***  linsolqr_system_t sys;
  ***  real64 *rhs;
@@ -461,7 +461,7 @@ extern void linsolqr_remove_rhs(linsolqr_system_t, real64 *);
  **/
 
 extern int32 linsolqr_number_of_rhs(linsolqr_system_t);
-/**
+/**< 
  ***  nrhs = linsolqr_number_of_rhs(sys)
  ***  int32 nrhs;
  ***  linsolqr_system_t sys;
@@ -470,7 +470,7 @@ extern int32 linsolqr_number_of_rhs(linsolqr_system_t);
  **/
 
 extern real64 *linsolqr_get_rhs(linsolqr_system_t,int);
-/**
+/**< 
  ***  rhs = linsolqr_get_rhs(sys,n)
  ***  real64 *rhs;
  ***  linsolqr_system_t sys;
@@ -482,7 +482,7 @@ extern real64 *linsolqr_get_rhs(linsolqr_system_t,int);
  **/
 
 extern void linsolqr_matrix_was_changed(linsolqr_system_t);
-/**
+/**< 
  ***  linsolqr_matrix_was_changed(sys)
  ***  linsolqr_system_t sys;
  ***
@@ -492,7 +492,7 @@ extern void linsolqr_matrix_was_changed(linsolqr_system_t);
  **/
 
 extern void linsolqr_rhs_was_changed(linsolqr_system_t, real64 *);
-/**
+/**< 
  ***  linsolqr_rhs_was_changed(sys,rhs)
  ***  linsolqr_system_t sys;
  ***  real64 *rhs;  
@@ -503,7 +503,7 @@ extern void linsolqr_rhs_was_changed(linsolqr_system_t, real64 *);
 
 extern void linsolqr_set_pivot_zero(linsolqr_system_t, real64);
 extern real64 linsolqr_pivot_zero(linsolqr_system_t);
-/**
+/**< 
  ***  linsolqr_set_pivot_zero(sys,pivot_zero)
  ***  pivot_zero = linsolqr_pivot_zero(sys)
  ***  linsolqr_system_t sys;
@@ -520,7 +520,7 @@ extern void linsolqr_set_condition_tolerance(linsolqr_system_t, real64);
 extern real64 linsolqr_condition_tolerance(linsolqr_system_t);
 extern void linsolqr_set_drop_tolerance(linsolqr_system_t, real64);
 extern real64 linsolqr_drop_tolerance(linsolqr_system_t);
-/**
+/**< 
  ***  linsolqr_set_pivot_tolerance(sys,ptol)
  ***  ptol = linsolqr_pivot_tolerance(sys)
  ***
@@ -559,10 +559,10 @@ extern real64 linsolqr_drop_tolerance(linsolqr_system_t);
  ***  linsolqr_matrix_was_changed().
  **/
 
-/* Functions for analyzing and querying linear systems. */
+/**< Functions for analyzing and querying linear systems. */
 
 extern enum factor_class linsolqr_fclass(linsolqr_system_t);
-/**
+/**< 
  ***  meth = linsolqr_fclass(sys)
  ***  enum factor_class;
  ***  linsolqr_system_t sys;
@@ -572,7 +572,7 @@ extern enum factor_class linsolqr_fclass(linsolqr_system_t);
  **/
 
 extern enum factor_method linsolqr_fmethod(linsolqr_system_t);
-/**
+/**< 
  ***  meth = linsolqr_fmethod(sys)
  ***  enum factor_method;
  ***  linsolqr_system_t sys;
@@ -582,7 +582,7 @@ extern enum factor_method linsolqr_fmethod(linsolqr_system_t);
  **/
 
 extern enum reorder_method linsolqr_rmethod(linsolqr_system_t);
-/**
+/**< 
  ***  meth = linsolqr_rmethod(sys)
  ***  enum reorder_method;
  ***  linsolqr_system_t sys;
@@ -592,7 +592,7 @@ extern enum reorder_method linsolqr_rmethod(linsolqr_system_t);
  **/
 
 extern int32 linsolqr_rank(linsolqr_system_t);
-/**
+/**< 
  ***  rank = linsolqr_rank(sys)
  ***  int32 rank;
  ***  linsolqr_system_t sys;
@@ -602,7 +602,7 @@ extern int32 linsolqr_rank(linsolqr_system_t);
  **/
 
 extern real64 linsolqr_smallest_pivot(linsolqr_system_t);
-/**
+/**< 
  ***  smallest_pivot = linsolqr_smallest_pivot(sys)
  ***  real64 smallest_pivot;
  ***  linsolqr_system_t sys;
@@ -613,7 +613,7 @@ extern real64 linsolqr_smallest_pivot(linsolqr_system_t);
  **/
 
 extern int linsolqr_prep(linsolqr_system_t,enum factor_class);
-/**
+/**< 
  ***  linsolqr_prep(sys,fclass)
  ***  linsolqr_system_t sys;
  ***  enum factor_class;
@@ -641,7 +641,7 @@ extern int linsolqr_prep(linsolqr_system_t,enum factor_class);
 
 extern int linsolqr_reorder(linsolqr_system_t,mtx_region_t *,
                             enum reorder_method);
-/**
+/**< 
  ***  linsolqr_reorder(sys,region,rmeth)
  ***  linsolqr_system_t sys;
  ***  mtx_region_t *region;
@@ -684,7 +684,7 @@ extern int linsolqr_reorder(linsolqr_system_t,mtx_region_t *,
  **/
 
 extern int linsolqr_factor(linsolqr_system_t,enum factor_method);
-/**
+/**< 
  ***  linsolqr_factor(sys,fmethod)
  ***  linsolqr_system_t sys;
  ***  enum factor_method fmethod;
@@ -705,7 +705,7 @@ extern int linsolqr_factor(linsolqr_system_t,enum factor_method);
  **/
 
 extern int linsolqr_get_pivot_sets(linsolqr_system_t, unsigned *, unsigned *);
-/**
+/**< 
  ***  status=linsolqr_get_pivot_sets(sys,org_rowpivots,org_colpivots)
  ***  linsolqr_system_t sys;
  ***  unsigned *org_rowpivots,*org_colpivots;  (see the "set" module)
@@ -726,7 +726,7 @@ extern int linsolqr_get_pivot_sets(linsolqr_system_t, unsigned *, unsigned *);
 
 extern mtx_sparse_t *linsolqr_unpivoted_rows(linsolqr_system_t);
 extern mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t);
-/**
+/**< 
  ***  singrows = linsolqr_unpivoted_rows(sys);
  ***  singcols = linsolqr_unpivoted_cols(sys);
  ***  linsolqr_system_t sys;
@@ -750,7 +750,7 @@ extern mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t);
 
 extern mtx_sparse_t *linsolqr_pivoted_rows(linsolqr_system_t);
 extern mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t);
-/**
+/**< 
  ***  pivrows = linsolqr_pivoted_rows(sys);
  ***  pivcols = linsolqr_pivoted_cols(sys);
  ***  linsolqr_system_t sys;
@@ -774,7 +774,7 @@ extern mtx_sparse_t *linsolqr_pivoted_cols(linsolqr_system_t);
      
 extern int32 linsolqr_org_row_to_org_col(linsolqr_system_t, int32);
 extern int32 linsolqr_org_col_to_org_row(linsolqr_system_t, int32);
-/**
+/**< 
  ***  org_col = linsolqr_org_row_to_org_col(sys,org_row)
  ***  org_row = linsolqr_org_col_to_org_row(sys,org_col)
  ***  linsolqr_system_t sys;
@@ -790,7 +790,7 @@ extern int32 linsolqr_org_col_to_org_row(linsolqr_system_t, int32);
 
 extern void linsolqr_calc_row_dependencies(linsolqr_system_t);
 extern void linsolqr_calc_col_dependencies(linsolqr_system_t);
-/**
+/**< 
  ***  linsolqr_calc_row_dependencies(sys);
  ***  linsolqr_calc_col_dependencies(sys);
  ***  linsolqr_system_t sys;
@@ -822,7 +822,7 @@ extern mtx_sparse_t *linsolqr_row_dependence_coefs(linsolqr_system_t,
                                                    int32);
 extern mtx_sparse_t *linsolqr_col_dependence_coefs(linsolqr_system_t,
                                                    int32);
-/**
+/**< 
  ***  rowcoefs = linsolqr_row_dependence_coefs(sys,orgrow);
  ***  colcoefs = linsolqr_col_dependence_coefs(sys,orgcol);
  *** 
@@ -851,7 +851,7 @@ extern real64 linsolqr_org_row_dependency(linsolqr_system_t,
                                                 int32,int32);
 extern real64 linsolqr_org_col_dependency(linsolqr_system_t,
                                                 int32,int32);
-/**
+/**< 
  ***  coef = linsolqr_org_row_dependency(sys,dep,ind)
  ***  coef = linsolqr_org_col_dependency(sys,dep,ind)
  ***  real64 coef;
@@ -870,7 +870,7 @@ extern real64 linsolqr_org_col_dependency(linsolqr_system_t,
  **/
 
 extern int linsolqr_solve(linsolqr_system_t, real64 *);
-/**
+/**< 
  ***  linsolqr_solve(sys,rhs)
  ***  linsolqr_system_t sys;
  ***  real64 *rhs; 
@@ -886,7 +886,7 @@ extern int linsolqr_solve(linsolqr_system_t, real64 *);
 
 extern real64 linsolqr_var_value(linsolqr_system_t,
                                        real64 *,int32);
-/**
+/**< 
  ***  value = linsolqr_var_value(sys,rhs,var)
  ***  real64 value;
  ***  linsolqr_system_t sys;
@@ -904,7 +904,7 @@ extern real64 linsolqr_var_value(linsolqr_system_t,
 
 extern boolean linsolqr_copy_solution(linsolqr_system_t, real64 *,
                                       real64 *);
-/**
+/**< 
  ***  not_ok = linsolqr_copy_solution(sys,rhs,vector)
  ***  linsolqr_system_t sys;
  ***  real64 *rhs, *vector;
@@ -922,7 +922,7 @@ extern boolean linsolqr_copy_solution(linsolqr_system_t, real64 *,
 
 extern real64 linsolqr_eqn_residual(linsolqr_system_t,
                                           real64 *,int32);
-/**
+/**< 
  ***  residual = linsolqr_eqn_residual(sys,rhs,eqn)
  ***  real64 residual;
  ***  linsolqr_system_t sys;
@@ -944,7 +944,7 @@ extern real64 linsolqr_eqn_residual(linsolqr_system_t,
 
 extern boolean linsolqr_calc_residual(linsolqr_system_t,
 				      real64 *, real64 *);
-/**
+/**< 
  ***  not_ok = linsolqr_calc_residual(sys,rhs,vector)
  ***  linsolqr_system_t sys;
  ***  real64 *rhs, *vector;
@@ -966,10 +966,10 @@ extern boolean linsolqr_calc_residual(linsolqr_system_t,
  ***  return value is TRUE, else FALSE. 
  **/
 
-/* miscellaneous functions for C programmers wanting to know things. */
+/**< miscellaneous functions for C programmers wanting to know things. */
 
 extern size_t linsolqr_size(linsolqr_system_t);
-/**
+/**< 
  *** size = linsolqr_size(sys)
  *** size_t size;
  *** linsolqr_system_t sys;
@@ -981,7 +981,7 @@ extern size_t linsolqr_size(linsolqr_system_t);
  **/
 
 extern void linsolqr_free_reused_mem();
-/**
+/**< 
  ***  linsolqr_free_reused_mem()
  ***
  ***  Deallocates any memory that linsolqr may be squirrelling away for
@@ -990,7 +990,7 @@ extern void linsolqr_free_reused_mem();
  ***  There isn't a way to query how many bytes this is.
  **/
 
-/**
+/**< 
  ***  The following calls exist to facilitate debugging of the linear
  ***  solver when it is being tested on large systems. Do not use them
  ***  in routine coding. If you need access to the factor/inverse matrices
@@ -1000,7 +1000,7 @@ extern void linsolqr_free_reused_mem();
  
 extern mtx_matrix_t linsolqr_get_factors(linsolqr_system_t);
 extern mtx_matrix_t linsolqr_get_inverse(linsolqr_system_t);
-/**
+/**< 
  ***  linsolqr_get_factors(sys)
  ***  linsolqr_get_inverse(sys)
  ***
@@ -1018,7 +1018,7 @@ extern mtx_matrix_t linsolqr_get_inverse(linsolqr_system_t);
  **/
 
 extern mtx_region_t *linsolqr_get_region(linsolqr_system_t);
-/**
+/**< 
  ***  reg = linsolqr_get_region(sys)
  ***  mtx_region_t *reg;
  ***  linsolqr_system_t sys;

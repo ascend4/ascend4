@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -30,7 +30,7 @@
  *
  */
 
-/*
+/**< 
  *  Contents:     Relation module (ascend)
  *
  *  Authors:      Karl Westerberg
@@ -51,11 +51,11 @@
 #ifndef rel__already_included
 #define rel__already_included
 
-/* 
+/**< 
  * requires #include "var.h" 
  */
 
-/*
+/**< 
  * rel_relation data type and basic type operators.
  */
 
@@ -65,7 +65,7 @@
 
 struct rel_extnode {
   int32 whichvar;
-  struct ExtRelCache *cache; /* pointer to private structure */
+  struct ExtRelCache *cache; /**< pointer to private structure */
 };
   
 enum rel_enum {
@@ -78,7 +78,7 @@ enum rel_enum {
   e_rel_lesseq,
   e_rel_greatereq
 };
-/*
+/**< 
  * enum rel_enum:
  * The exact operator of a relation.
  */
@@ -90,10 +90,10 @@ enum backend_enum {
   
 struct rel_relation {
    SlvBackendToken instance;
-   struct rel_extnode *nodeinfo; /* Not NULL if blackbox relation */
+   struct rel_extnode *nodeinfo; /**< Not NULL if blackbox relation */
    struct var_variable **incidence;
-   /* array of atomic vars and nonvars in rel */
-/* 
+   /**< array of atomic vars and nonvars in rel */
+/**< 
  * For future use:
  *
  * struct var_variable **incidentals; array of nonvars, 
@@ -101,20 +101,20 @@ struct rel_relation {
  *
  * int32 n_incidentals;	
  */
-   enum backend_enum type;	/* tokens, glassbox or blackbox */
-   int32 n_incidences;		/* length of incidence. */
-   int32 mindex;		/* index in the slv_system_t master list */
-   int32 sindex;		/* index in the slv_system_t solver list */
-   int32 model;			/* index of a hypothetical MODEL rel is from */
-   uint32 flags;		/* flags */
+   enum backend_enum type;	/**< tokens, glassbox or blackbox */
+   int32 n_incidences;		/**< length of incidence. */
+   int32 mindex;		/**< index in the slv_system_t master list */
+   int32 sindex;		/**< index in the slv_system_t solver list */
+   int32 model;			/**< index of a hypothetical MODEL rel is from */
+   uint32 flags;		/**< flags */
 };
-/* 
+/**< 
  * if you mess with the above struct, change the defaults for it in .c file 
  */
 
 
 extern struct rel_relation *rel_create(SlvBackendToken ,struct rel_relation *);
-/*
+/**< 
  *  rel_create(instance,rel)
  *  rel = rel_create(instance,NULL)
  *  struct rel_relation *rel;
@@ -133,7 +133,7 @@ extern struct rel_relation *rel_create(SlvBackendToken ,struct rel_relation *);
  */
 
 extern void rel_destroy(struct rel_relation *);
-/*
+/**< 
  *  rel_destroy(rel)
  *  struct rel_relation *rel;
  *
@@ -141,7 +141,7 @@ extern void rel_destroy(struct rel_relation *);
  */
 
 extern void rel_write_name(slv_system_t,struct rel_relation *,FILE *);
-/*
+/**< 
  *  rel_write_name(sys,rel,file);
  *  Writes a name to the file given. Handles NULL inputs gracefully.
  *  Does not print any whitespace, including carriage returns.
@@ -156,7 +156,7 @@ typedef struct rel_filter_structure {
 } rel_filter_t;
 
 extern SlvBackendToken rel_instance(struct rel_relation *);
-/*
+/**< 
  *  rel_instance(rel)
  *  struct rel_relation *rel;
  *
@@ -166,7 +166,7 @@ extern SlvBackendToken rel_instance(struct rel_relation *);
 
 extern struct rel_extnode *rel_extnodeinfo(struct rel_relation *);
 extern void rel_set_extnodeinfo(struct rel_relation *,struct rel_extnode *);
-/*
+/**< 
  *  struct rel_relation *rel;
  *  struct rel_extnode *nodeinfo;
  *
@@ -179,7 +179,7 @@ extern void rel_set_extnodeinfo(struct rel_relation *,struct rel_extnode *);
 
 extern int32 rel_extwhichvar(struct rel_relation *);
 extern void rel_set_extwhichvar(struct rel_relation *,int);
-/*
+/**< 
  *  struct rel_relation *rel;
  *  int32 whichvar;
  *
@@ -196,7 +196,7 @@ extern void rel_set_extwhichvar(struct rel_relation *,int);
 extern boolean rel_less(struct rel_relation *);
 extern boolean rel_equal(struct rel_relation *);
 extern boolean rel_greater(struct rel_relation *);
-/*
+/**< 
  *  le = rel_less(rel)
  *  eq = rel_equal(rel)
  *  gr = rel_greater(rel)
@@ -213,7 +213,7 @@ extern boolean rel_greater(struct rel_relation *);
  */
 
 extern enum rel_enum rel_relop(struct rel_relation *);
-/*
+/**< 
  * relop = rel_relop(rel);
  * rel_enum relop;
  * struct rel_relation *rel;
@@ -221,7 +221,7 @@ extern enum rel_enum rel_relop(struct rel_relation *);
  */
 
 extern char *rel_make_name(slv_system_t,struct rel_relation *);
-/*
+/**< 
  *  name = rel_make_name(sys,rel)
  *  slv_system_t sys;
  *  struct rel_relation *rel;
@@ -233,7 +233,7 @@ extern char *rel_make_name(slv_system_t,struct rel_relation *);
  
 extern int32 rel_mindex(struct rel_relation *);
 extern void rel_set_mindex(struct rel_relation *,int32);
-/*
+/**< 
  *  index = rel_mindex(rel)
  *  rel_set_mindex(rel,index)
  *  int32 index;
@@ -245,7 +245,7 @@ extern void rel_set_mindex(struct rel_relation *,int32);
 
 extern int32 rel_sindex(const struct rel_relation *);
 extern void rel_set_sindex(struct rel_relation *,int32);
-/*
+/**< 
  *  index = rel_sindex(rel)
  *  rel_set_sindex(rel,index)
  *  int32 index;
@@ -259,7 +259,7 @@ extern void rel_set_sindex(struct rel_relation *,int32);
 
 extern int32 rel_model(const struct rel_relation *);
 extern void rel_set_model(struct rel_relation *,int32);
-/*
+/**< 
  *  index = rel_model(rel)
  *  rel_set_model(rel,index) //SERVER ONLY
  *  int32 index;
@@ -272,7 +272,7 @@ extern void rel_set_model(struct rel_relation *,int32);
 
 extern real64 rel_residual(struct rel_relation *);
 extern void rel_set_residual(struct rel_relation *,real64);
-/*
+/**< 
  *  residual = rel_residual(rel)
  *  rel_set_residual(rel,residual)
  *  real64 residual;
@@ -285,7 +285,7 @@ extern void rel_set_residual(struct rel_relation *,real64);
  */
 
 extern real64 rel_nominal(struct rel_relation *);
-/*
+/**< 
  *  nominal = rel_nominal(rel)
  *  real64 nominal;
  *  struct rel_relation *rel;
@@ -296,7 +296,7 @@ extern real64 rel_nominal(struct rel_relation *);
  */
 
 extern void rel_set_nominal(struct rel_relation *,real64);
-/*
+/**< 
  * Breaking above 'rule' for time being
  */
      
@@ -307,12 +307,12 @@ extern void rel_set_nominal(struct rel_relation *,real64);
 #else
 #define rel_n_incidences(r) rel_n_incidencesF(r)
 #define rel_set_incidences(r,n,ilist) rel_set_incidencesF((r),(n),(ilist))
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
 extern int32 rel_n_incidencesF(struct rel_relation *);
 extern void rel_set_incidencesF(struct rel_relation *,
                                 int32,struct var_variable **);
-/*
+/**< 
  *  rel_n_incidences(rel)
  *  rel_set_incidences(rel,n,ilist) //SERVER ONLY
  *  struct rel_relation *rel;
@@ -330,7 +330,7 @@ extern void rel_set_incidencesF(struct rel_relation *,
 extern const struct var_variable **rel_incidence_list(struct rel_relation *);
 extern struct var_variable
 **rel_incidence_list_to_modify(struct rel_relation *);
-/*
+/**< 
  *  va = rel_incidence_list(rel)
  *  struct rel_relation *rel;
  *  struct var_variable **va;
@@ -345,7 +345,7 @@ extern struct var_variable
  *  VA IS NOT a NULL-TERMINATED LIST.
  */
 
-/*
+/**< 
  * relation filtration functions.
  * We have a lot (32) of binary (one bit) flags a client may want to query
  * in arbitrary combinations and paying attention to only certain of
@@ -354,7 +354,7 @@ extern struct var_variable
  */
 
 extern int32 rel_apply_filter(const struct rel_relation *,rel_filter_t *);
-/*
+/**< 
  *  value = rel_apply_filter(rel,filter)
  *  int32 value;
  *  struct rel_relation *rel;
@@ -379,7 +379,7 @@ extern int32 rel_apply_filter(const struct rel_relation *,rel_filter_t *);
   
 extern uint32 rel_flags(struct rel_relation *);
 extern void rel_set_flags(struct rel_relation *,uint32);
-/*
+/**< 
  *  struct rel_relation *rel;
  *  uint32 flags;
  *
@@ -389,7 +389,7 @@ extern void rel_set_flags(struct rel_relation *,uint32);
  */
 
 extern uint32 rel_flagbit(struct rel_relation *,uint32);
-/* 
+/**< 
  *  rel_flagbit(rel,name);
  *  struct rel_relation *rel;
  *  uint32 name;		
@@ -398,7 +398,7 @@ extern uint32 rel_flagbit(struct rel_relation *,uint32);
  */
 
 extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
-/*
+/**< 
  *  struct rel_relation *rel;
  *  uint32 NAME,oneorzero;
  *  rel_set_flagbit(rel,NAME,oneorzero)
@@ -418,7 +418,7 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
  *  In unix, see also man 3f bit or man not.
  */
 
-/*
+/**< 
  *  the bit flags. explained afterward. several are for use of
  *  transient clients and should be ignored by solver engines 
  */
@@ -426,7 +426,7 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 #define REL_TORN	0x2
 #define REL_INTERFACE	0x4
 #define REL_INCLUDED	0x8
-/* 
+/**< 
  * INCLUDED is as yet a funny one. treat it as readonly because
  * you can only change it using a real function and not the
  * bit manipulation functions. It is here in the bits because
@@ -437,20 +437,20 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 #define REL_SATISFIED	0x40
 #define REL_EQUALITY	0x80
 #define REL_INBLOCK	0x100
-/* Conditional Modeling */
+/**< Conditional Modeling */
 #define REL_INWHEN      0x200
 #define REL_ACTIVE      0x400
 #define REL_INVARIANT   0x800
-/* Conditional Relations (Boundaries) */
+/**< Conditional Relations (Boundaries) */
 #define REL_CONDITIONAL 0x1000
 #define REL_IN_CUR_SUBREGION 0x2000
-/* 
+/**< 
  * temporary relation that doesn't exist independently in the backend,
  * but is made by some process of the backend or the solver client.
  */
 #define REL_GENERATED 0x10000
      
-/*
+/**< 
  * REL_PARTITION	reordering clients. is it in the interesting region
  * REL_TORN	        reordering clients output. is it a tear.
  * REL_INTERFACE	solvers, ui clients. user suggests it's a tear eqn.
@@ -476,7 +476,7 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
  * REL_GENERATED	is rel fake and cooked up for this system only?
  */
 
-/* 
+/**< 
  * the bit flag lookups 
  */
 #ifdef NDEBUG
@@ -509,9 +509,9 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 #define rel_conditional(r)	rel_flagbit((r),REL_CONDITIONAL)
 #define rel_in_cur_subregion(r)	rel_flagbit((r),REL_IN_CUR_SUBREGION)
 #define rel_generated(r)	rel_flagbit((r),REL_GENERATED)
-#endif /* NDEBUG */
+#endif /**< NDEBUG */
 
-/* 
+/**< 
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  * Many of these bits have read-only semantics for clients.
@@ -536,7 +536,7 @@ extern void rel_set_flagbit(struct rel_relation *,uint32, uint32);
 
 extern uint32 rel_included(struct rel_relation *);
 extern void rel_set_included(struct rel_relation *,uint32);
-/*
+/**< 
  *  included = rel_included(rel)
  *  rel_set_included(rel,included)
  *  uint32 included;
@@ -548,7 +548,7 @@ extern void rel_set_included(struct rel_relation *,uint32);
  *  change.
  */
 
-/*
+/**< 
  *  in_block = rel_in_block(rel)
  *  rel_set_in_block(rel,in_block)
  *  uint32 in_block;
@@ -558,7 +558,7 @@ extern void rel_set_included(struct rel_relation *,uint32);
  *  which determines if the relation is within the current block.
  */
 
-/* 
+/**< 
  *   rel_obj_negate(rel)
  *   struct rel_relation *rel;
  *
@@ -568,7 +568,7 @@ extern void rel_set_included(struct rel_relation *,uint32);
  *   will give a meaningless result (probably FALSE). 
  */
 
-/*
+/**< 
  *  satisfied = rel_satisfied(rel)
  *  rel_set_satisfied(rel,satisfied)
  *  uint32 satisfied;
@@ -578,7 +578,7 @@ extern void rel_set_included(struct rel_relation *,uint32);
  *  rel_residual() for disclaimer).
  */
 
-/*
+/**< 
  *  equality = rel_equality(rel)
  *  rel_set_equality(rel,equality)
  *  uint32 equality;
@@ -589,7 +589,7 @@ extern void rel_set_included(struct rel_relation *,uint32);
 
 extern real64 rel_multiplier(struct rel_relation *);
 extern void rel_set_multiplier(struct rel_relation *,real64);
-/* 
+/**< 
  *  (won a temporary reprieve. this should be a system property, not rel.)
  *  multiplier = rel_multiplier(rel)
  *  rel_set_multiplier(rel,multiplier)
@@ -602,7 +602,7 @@ extern void rel_set_multiplier(struct rel_relation *,real64);
  *  function.
  */
 
-/*
+/**< 
  *  rel_relation utility functions.
  *
  *  Things for the server side only. Not visible to clients.
@@ -613,7 +613,7 @@ extern void rel_set_multiplier(struct rel_relation *,real64);
  *  of the header at any time in the future.
  */
 #ifdef _SLV_SERVER_C_SEEN_
-/* 
+/**< 
  *requires #include "expr.h" 
  * requires #include "types.h" 
  * requires #include "extfunc.h" 
@@ -623,27 +623,27 @@ extern void rel_set_multiplier(struct rel_relation *,real64);
  * requires #include "mtx.h" 
  */
 
-extern double g_external_tolerance; /* DEFAULT 1e-12 */
+extern double g_external_tolerance; /**< DEFAULT 1e-12 */
 
 struct ExtRelCache {
   int32 nodestamp;
-  struct ExternalFunc *efunc;           /* pre_slv, eval and deriv funcs */
-  SlvBackendToken data;                 /* only passed on pre_slv */
-  struct gl_list_t *arglist;            /* only passed on pre_slv */
+  struct ExternalFunc *efunc;           /**< pre_slv, eval and deriv funcs */
+  SlvBackendToken data;                 /**< only passed on pre_slv */
+  struct gl_list_t *arglist;            /**< only passed on pre_slv */
   struct gl_list_t *inputlist;
-  void *user_data;                      /* user data */
+  void *user_data;                      /**< user data */
   int32 ninputs, noutputs;
   double *inputs;
   double *outputs;
   double *jacobian;
-  unsigned newcalc_done     :1;         /* bits needed to control */
-  unsigned first_func_eval  :1;         /* recalculation. until we can */
-  unsigned first_deriv_eval :1;         /* do proper block coding */
+  unsigned newcalc_done     :1;         /**< bits needed to control */
+  unsigned first_func_eval  :1;         /**< recalculation. until we can */
+  unsigned first_deriv_eval :1;         /**< do proper block coding */
 };
 
 extern struct ExtRelCache *rel_extcache(struct rel_relation *);
 extern void rel_set_extcache(struct rel_relation *,struct ExtRelCache *);
-/*
+/**< 
  *  cache = rel_extcache(rel);
  *  rel_set_extcache(rel,cache);
  *  struct rel_relation *rel;
@@ -658,7 +658,7 @@ extern void rel_set_extcache(struct rel_relation *,struct ExtRelCache *);
  *  don't.
  */
 
-/* 
+/**< 
  * The following aren't commented because Kirk Abbott didn't comment them.
  * It's all server magic anyway? 
  */
@@ -672,14 +672,14 @@ extern real64 ExtRel_Evaluate_LHS(struct rel_relation *);
 extern real64 ExtRel_Diffs_RHS(struct rel_relation *, var_filter_t *,
                                int32, mtx_matrix_t);
 extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
-                               int32, mtx_matrix_t); /* not implemented */
+                               int32, mtx_matrix_t); /**< not implemented */
 
-#endif /* _SLV_SERVER_C_SEEN_ */
+#endif /**< _SLV_SERVER_C_SEEN_ */
 
-/*
+/**< 
  * Things dead.
  */
-/*  DEFUNCT
+/**<  DEFUNCT
  *  extern struct rel_relation *rel_objcreate(SlvBackendToken, boolean);
  *  rel = rel_objcreate(instance,negate)
  *  struct rel_relation *rel;
@@ -693,7 +693,7 @@ extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
  *  a minimize relation.
  */
 
-/*  DEFUNCT
+/**<  DEFUNCT
  * If you're smart enough to understand the answer to this question,
  * then you should be asking the instance directly, not asking us.
  * extern enum rel_enum rel_type(struct rel_relation *);
@@ -704,7 +704,7 @@ extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
  * the relation is a token, opcode, glassbox, or blackbox relation.
  */
 
-/*   DEFUNCT for now.
+/**<   DEFUNCT for now.
  * extern boolean rel_in_subregion(struct rel_relation *);
  *  in_subregion = rel_in_subregion(rel)
  *  boolean in_subregion;
@@ -715,7 +715,7 @@ extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
  *  It will return TRUE even if there are no conditions.
  */
 
-/* DEFUNCT the solver has no business knowing about sides. this is the
+/**< DEFUNCT the solver has no business knowing about sides. this is the
  *  compilers job. temporarily still active.
  * extern expr_t rel_lhs(struct rel_relation *);
  * extern expr_t rel_rhs(struct rel_relation *);
@@ -731,4 +731,4 @@ extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
  */
 
 
-#endif /* rel__already_included  */
+#endif /**< rel__already_included  */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Link Management
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -34,7 +34,7 @@
 
 extern void ChangeRelationPointers(struct Instance *, struct Instance *,
                                    struct Instance *);
-/*
+/**< 
  *  ChangeRelationPointers(rel,old,new)
  *  This procedure changes all references of "old" in relation
  *  instance rel to "new".
@@ -42,7 +42,7 @@ extern void ChangeRelationPointers(struct Instance *, struct Instance *,
 
 extern void ChangeLogRelPointers(struct Instance *,
                                  struct Instance *,struct Instance *);
-/*
+/**< 
  *  ChangeLogRelPointers(lrel,old,new)
  *  This procedure changes all references of "old" in logical relation
  *  instance lrel to "new".
@@ -50,7 +50,7 @@ extern void ChangeLogRelPointers(struct Instance *,
 
 extern void ChangeWhenPointers(struct Instance *,
                                struct Instance *, struct Instance *);
-/*
+/**< 
  *  ChangeWhenPointers(when,old,new)
  *  This procedure changes all references of "old" in when
  *  instance when to "new".
@@ -58,7 +58,7 @@ extern void ChangeWhenPointers(struct Instance *,
 
 extern void ChangeParent(struct Instance *, struct Instance *,
                          struct Instance *);
-/*
+/**< 
  *  ChangeParent(parent,oldchild,newchild);
  *  struct Instance *parent;
  *  struct Instance *oldchild;
@@ -67,7 +67,7 @@ extern void ChangeParent(struct Instance *, struct Instance *,
  */
 
 extern void ReDirectParents(struct Instance *, struct Instance *);
-/*
+/**< 
  *  ReDirectParents(old,new);
  *  struct Instance *old;
  *  struct Instance *new;
@@ -76,7 +76,7 @@ extern void ReDirectParents(struct Instance *, struct Instance *);
  */
 
 extern void ReDirectChildren(struct Instance *, struct Instance *);
-/*
+/**< 
  *  ReDirectChildren(old,new);
  *  struct Instance *old;
  *  struct Instance *new;
@@ -88,7 +88,7 @@ extern void ReorderChildrenPtrs(struct Instance **,
                                 CONST ChildListPtr,
                                 CONST ChildListPtr,
                                 unsigned long int, unsigned long int);
-/*
+/**< 
  *  ReorderChildrenPtrs(c,old,new,oldlen,newlen);
  *  struct Instance **c;
  *  CONST ChildListPtr old;
@@ -107,7 +107,7 @@ extern void ReorderChildrenPtrs(struct Instance **,
  */
 
 extern void FixCliques(struct Instance *, struct Instance *);
-/*
+/**< 
  *  FixCliques(old,new);
  *  struct Instance *old;
  *  struct Instance *new;
@@ -118,7 +118,7 @@ extern void FixCliques(struct Instance *, struct Instance *);
  */
 
 extern void FixRelations(struct RealAtomInstance *, struct RealAtomInstance *);
-/*
+/**< 
  *  FixRelations(old,new);
  *  struct RealAtomInstance *new;
  *  struct RealAtomInstance *old;
@@ -142,7 +142,7 @@ extern void FixRelations(struct RealAtomInstance *, struct RealAtomInstance *);
 
 extern void FixLogRelations(struct Instance *,
                             struct Instance *);
-/*
+/**< 
  *  FixLogRelations(old,new);
  *  struct Instance *new;
  *  struct Instance *old;
@@ -168,7 +168,7 @@ extern void FixLogRelations(struct Instance *,
  */
 
 extern void FixWhens(struct Instance *, struct Instance *);
-/*
+/**< 
  *  FixWhens(old,new);
  *  struct Instance *new;
  *  struct Instance *old;
@@ -250,7 +250,7 @@ extern void FixWhens(struct Instance *, struct Instance *);
  */
 
 extern void FixWhensForRefinement(struct Instance *, struct Instance *);
-/*
+/**< 
  *  FixWhensForRefinement(old,new);
  *  struct Instance *new;
  *  struct Instance *old;
@@ -268,4 +268,4 @@ extern void FixWhensForRefinement(struct Instance *, struct Instance *);
  */
 
 #endif
-/* __LINKINST_H_SEEN__ */
+/**< __LINKINST_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Routines to Describe Interface Commands
  *  by Tom Epperly
  *  Version: $Revision: 1.7 $
@@ -33,32 +33,32 @@ enum arg_type {
   instance_arg,
   definition_arg,
   id_arg,
-  shell_arg /* same as id almost */
+  shell_arg /**< same as id almost */
 };
 
 
 #define MAX_COMMAND_ARGS 4
-/*
+/**< 
  *  The maximum number of arguments a command can have.
  */
 
 
 extern void InitializeCommands(void);
-/*
+/**< 
  *  void InitializeCommands()
  *  Initialize the command list.  This must be called before anything else.
  */
 
 
 extern void DestroyCommands(void);
-/*
+/**< 
  *  void DestroyCommands()
  *  This will destroy the command structure.
  */
 
 
 extern void AddCommand(int, ...);
-/*
+/**< 
  *  void AddCommand(dummy,cmd,func,help,terminate,num_args,arg_def*)
  *  char *cmd,*help;
  *  void (*func)();
@@ -70,26 +70,26 @@ extern void AddCommand(int, ...);
 
 
 extern unsigned long NumberCommands(void);
-/*
+/**< 
  *  unsigned long NumberCommands()
  *  Return the number of defined commands.
  */
 
 
 extern CONST char *CommandName(unsigned long);
-/*
+/**< 
  *  Return the commands name.
  */
 
 
 extern CONST char *CommandHelp(unsigned long);
-/*
+/**< 
  *  Return the commands short help message.
  */
 
 
-extern void CommandFunc(unsigned long int u, void (**func) (/* ??? */));
-/*
+extern void CommandFunc(unsigned long int u, void (**func) (/**< ??? */));
+/**< 
  *  void CommandFunc(u,func)
  *  unsigned long u;
  *  void (**func)();
@@ -98,32 +98,32 @@ extern void CommandFunc(unsigned long int u, void (**func) (/* ??? */));
 
 
 extern int CommandTerminate(unsigned long);
-/*
+/**< 
  *  Return true if the command is a termination command.
  */
 
 
 extern int CommandNumArgs(unsigned long);
-/*
+/**< 
  *  Return the number of arguments
  */
 
 
 extern enum arg_type CommandArgument(unsigned long, int);
-/*
+/**< 
  *  Return the argument type.
  */
 
 
 extern void CommandArgsPrint(FILE *fp, unsigned long int);
-/*
+/**< 
  *  CommandArgsPrint(fp,u);
  *  Print the args expected on fp for command u.
  */
 
 
 extern void LimitCommand(unsigned long *, unsigned long *, CONST char *, int);
-/*
+/**< 
  *  void LimitCommand(lower,upper,str,place)
  *  unsigned long *lower,*upper;
  *  char *str;
@@ -137,7 +137,7 @@ extern void LimitCommand(unsigned long *, unsigned long *, CONST char *, int);
 
 
 extern void CompleteCommand(unsigned long, unsigned long, char *, int *);
-/*
+/**< 
  *  void CompleteCommand(lower,upper,str,place)
  *  unsigned long lower,upper;
  *  char *str;
@@ -148,10 +148,10 @@ extern void CompleteCommand(unsigned long, unsigned long, char *, int *);
 
 
 extern unsigned long FindCommand(CONST char *);
-/*
+/**< 
  *  c = FindCommand(string);
  *  Return the number of the command matching string, or 0 if none does.
  *  Exact matches only.
  */
 
-#endif /* __COMMANDS_H_SEEN__ */
+#endif /**< __COMMANDS_H_SEEN__ */

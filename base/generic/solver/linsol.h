@@ -1,4 +1,4 @@
-/*
+/**< 
  *  linsol: Ascend Linear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -65,12 +65,12 @@
 
 
 typedef struct linsol_header *linsol_system_t;
-/**
+/**< 
  ***  linsol_system_t is the linear system handle.
  **/
 
 extern linsol_system_t linsol_create();
-/**
+/**< 
  ***  sys = linsol_create()
  ***  linsol_system_t sys;
  ***
@@ -79,7 +79,7 @@ extern linsol_system_t linsol_create();
  **/
 
 extern void linsol_destroy();
-/**
+/**< 
  ***  linsol_destroy(sys)
  ***  linsol_system_t sys;
  ***
@@ -88,7 +88,7 @@ extern void linsol_destroy();
  **/
 
 extern void linsol_set_matrix();
-/**
+/**< 
  ***  linsol_set_matrix(sys,mtx)
  ***  linsol_system_t sys;
  ***  mtx_matrix_t mtx;
@@ -97,7 +97,7 @@ extern void linsol_set_matrix();
  **/
 
 extern mtx_matrix_t linsol_get_matrix();
-/**
+/**< 
  ***  mtx = linsol_get_matrix(sys)
  ***  mtx_matrix_t mtx;
  ***  linsol_system_t sys;
@@ -106,7 +106,7 @@ extern mtx_matrix_t linsol_get_matrix();
  **/
 
 extern mtx_matrix_t linsol_get_inverse();
-/**
+/**< 
  ***  mtx = linsol_get_inverse(sys)
  ***  mtx_matrix_t mtx;
  ***  linsol_system_t sys;
@@ -115,7 +115,7 @@ extern mtx_matrix_t linsol_get_inverse();
  **/
 
 extern void linsol_add_rhs();
-/**
+/**< 
  ***  linsol_add_rhs(sys,rhs,transpose)
  ***  linsol_system_t sys;
  ***  real64 *rhs;
@@ -130,7 +130,7 @@ extern void linsol_add_rhs();
  **/
 
 extern void linsol_remove_rhs();
-/**
+/**< 
  ***  linsol_remove_rhs(sys,rhs)
  ***  linsol_system_t sys;
  ***  real64 *rhs;
@@ -140,7 +140,7 @@ extern void linsol_remove_rhs();
  **/
 
 extern int linsol_number_of_rhs();
-/**
+/**< 
  ***  nrhs = linsol_number_of_rhs(sys)
  ***  int nrhs;
  ***  linsol_system_t sys;
@@ -149,7 +149,7 @@ extern int linsol_number_of_rhs();
  **/
 
 extern real64 *linsol_get_rhs();
-/**
+/**< 
  ***  rhs = linsol_get_rhs(sys,n)
  ***  real64 *rhs;
  ***  linsol_system_t sys;
@@ -161,7 +161,7 @@ extern real64 *linsol_get_rhs();
  **/
 
 extern void linsol_matrix_was_changed();
-/**
+/**< 
  ***  linsol_matrix_was_changed(sys)
  ***  linsol_system_t sys;
  ***
@@ -171,7 +171,7 @@ extern void linsol_matrix_was_changed();
  **/
 
 extern void linsol_rhs_was_changed();
-/**
+/**< 
  ***  linsol_rhs_was_changed(sys,rhs)
  ***  linsol_system_t sys;
  ***  real64 *rhs;  
@@ -182,7 +182,7 @@ extern void linsol_rhs_was_changed();
 
 extern void linsol_set_pivot_zero();
 extern real64 linsol_pivot_zero();
-/**
+/**< 
  ***  linsol_set_pivot_zero(sys,pivot_zero)
  ***  pivot_zero = linsol_pivot_zero(sys)
  ***  linsol_system_t sys;
@@ -195,7 +195,7 @@ extern real64 linsol_pivot_zero();
 
 extern void linsol_set_pivot_tolerance();
 extern real64 linsol_pivot_tolerance();
-/**
+/**< 
  ***  linsol_set_pivot_tolerance(sys,ptol)
  ***  ptol = linsol_pivot_tolerance(sys)
  ***  linsol_system_t sys;
@@ -208,7 +208,7 @@ extern real64 linsol_pivot_tolerance();
  **/
 
 extern void linsol_reorder();
-/**
+/**< 
  ***  linsol_reorder(sys,region)
  ***  linsol_system_t sys;
  ***  mtx_region_t *region;
@@ -219,7 +219,7 @@ extern void linsol_reorder();
  **/
 
 extern void linsol_invert();
-/**
+/**< 
  ***  linsol_invert(sys,region)
  ***  linsol_system_t sys;
  ***  mtx_region_t *region;
@@ -233,7 +233,7 @@ extern void linsol_invert();
  **/
 
 extern int32 linsol_rank();
-/**
+/**< 
  ***  rank = linsol_rank(sys)
  ***  int32 rank;
  ***  linsol_system_t sys;
@@ -243,7 +243,7 @@ extern int32 linsol_rank();
  **/
 
 extern real64 linsol_smallest_pivot();
-/**
+/**< 
  ***  smallest_pivot = linsol_smallest_pivot(sys)
  ***  real64 smallest_pivot;
  ***  linsol_system_t sys;
@@ -254,7 +254,7 @@ extern real64 linsol_smallest_pivot();
  **/
 
 extern int linsol_get_pivot_sets();
-/**
+/**< 
  ***  status=linsol_get_pivot_sets(sys,org_rowpivots,org_colpivots)
  ***  linsol_system_t sys;
  ***  unsigned *org_rowpivots,*org_colpivots;  (see the "set" module)
@@ -273,7 +273,7 @@ extern int linsol_get_pivot_sets();
 
 extern int32 linsol_org_row_to_org_col();
 extern int32 linsol_org_col_to_org_row();
-/**
+/**< 
  ***  org_col = linsol_org_row_to_org_col(sys,org_row)
  ***  org_row = linsol_org_col_to_org_row(sys,org_col)
  ***  linsol_system_t sys;
@@ -289,7 +289,7 @@ extern int32 linsol_org_col_to_org_row();
 
 extern real64 linsol_org_row_dependency();
 extern real64 linsol_org_col_dependency();
-/**
+/**< 
  ***  coef = linsol_org_row_dependency(sys,dep,ind)
  ***  coef = linsol_org_col_dependency(sys,dep,ind)
  ***  real64 coef;
@@ -306,7 +306,7 @@ extern real64 linsol_org_col_dependency();
  **/
 
 extern void linsol_solve();
-/**
+/**< 
  ***  linsol_solve(sys,rhs)
  ***  linsol_system_t sys;
  ***  real64 *rhs; 
@@ -318,7 +318,7 @@ extern void linsol_solve();
  **/
 
 extern real64 linsol_var_value();
-/**
+/**< 
  ***  value = linsol_var_value(sys,rhs,var)
  ***  real64 value;
  ***  linsol_system_t sys;
@@ -333,7 +333,7 @@ extern real64 linsol_var_value();
  **/
 
 extern boolean linsol_copy_solution();
-/**
+/**< 
  ***  result = linsol_copy_solution(sys,rhs,vector)
  ***  linsol_system_t sys;
  ***  real64 *rhs;
@@ -350,7 +350,7 @@ extern boolean linsol_copy_solution();
  **/
 
 extern real64 linsol_eqn_residual();
-/**
+/**< 
  ***  residual = linsol_eqn_residual(sys,rhs,eqn)
  ***  real64 residual;
  ***  linsol_system_t sys;

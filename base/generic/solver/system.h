@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -48,10 +48,10 @@
  *************************************************************************/
 #ifndef system__already_included
 #define system__already_included
-/* requires #include "slv_types.h" */
+/**< requires #include "slv_types.h" */
 
 extern slv_system_t system_build(SlvBackendToken);
-/**
+/**< 
  ***  sys = system_build(inst)
  ***  slv_system_t sys;
  ***  SlvBackendToken inst;
@@ -62,7 +62,7 @@ extern slv_system_t system_build(SlvBackendToken);
  **/
 
 extern void system_destroy(slv_system_t);
-/**
+/**< 
  ***  system_destroy(sys)
  ***  slv_system_t sys;
  ***
@@ -70,7 +70,7 @@ extern void system_destroy(slv_system_t);
  **/
 
 extern void system_free_reused_mem(void);
-/**
+/**< 
  ***  system_free_reused_mem()
  ***
  ***  Deallocates any memory that solvers may be squirrelling away for

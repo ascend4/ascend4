@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Set Instance Output Routine
  *  by Tom Epperly
  *  Created: 2/15/90
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including setinst_io.h, make sure these files are #included first:
  *         #include "compiler.h"
  *         #include "setinstval.h"
@@ -35,16 +35,16 @@
 
 #ifndef __SETINST_IO_H_SEEN__
 #define __SETINST_IO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"setinstval.h"
 */
 
 extern void WriteInstSet(FILE *,CONST struct set_t *);
-/*
+/**< 
  *  void WriteInstSet(f,s)
  *  FILE *f;
  *  const struct set_t *s;
  */
-#endif /* __SETINST_IO_H_SEEN__ */
+#endif /**< __SETINST_IO_H_SEEN__ */

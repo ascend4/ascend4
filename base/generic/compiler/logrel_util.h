@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Logical Relation utility functions for Ascend
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.9 $
@@ -30,7 +30,7 @@
 
 #ifndef __LOGRELATION_UTIL_H_SEEN__
 #define __LOGRELATION_UTIL_H_SEEN__
-/* requires
+/**< requires
  *# #include "compiler.h"
  *# #include "logrelation.h"
  *# #include "instance_enum.h"
@@ -39,7 +39,7 @@
 */
 
 extern enum Expr_enum LogRelRelop(CONST struct logrelation *);
-/*
+/**< 
  *  enum Expr_enum LogRelRelop(lrel)
  *  CONST struct logrelation *lrel;
  *  Return the type of the logical relation operator of the relation:
@@ -48,7 +48,7 @@ extern enum Expr_enum LogRelRelop(CONST struct logrelation *);
  */
 
 extern unsigned long NumberBoolVars(CONST struct logrelation *);
-/*
+/**< 
  *  unsigned long NumberBoolVars(lrel)
  *  struct logrelation *lrel;
  *  This will indicate the number of distinct boolean atoms to which this
@@ -58,7 +58,7 @@ extern unsigned long NumberBoolVars(CONST struct logrelation *);
 
 extern struct Instance *LogRelBoolVar(CONST struct logrelation *,
           unsigned long);
-/*
+/**< 
  *  struct Instance *LogRelBoolVar(lrel,varnum)
  *  struct logrelation *lrel;
  *  unsigned long varnum;
@@ -66,7 +66,7 @@ extern struct Instance *LogRelBoolVar(CONST struct logrelation *,
  */
 
 extern unsigned long NumberRelations(CONST struct logrelation *);
-/*
+/**< 
  *  unsigned long NumberRelations(lrel)
  *  struct logrelation *lrel;
  *  This will indicate the number of distinct relations to which this
@@ -76,7 +76,7 @@ extern unsigned long NumberRelations(CONST struct logrelation *);
 
 extern struct Instance *LogRelRelation(CONST struct logrelation *,
            unsigned long);
-/*
+/**< 
  *  struct Instance *LogRelRelation(lrel,relnum)
  *  struct logrelation *lrel;
  *  unsigned long relnum;
@@ -91,7 +91,7 @@ extern struct Instance *LogRelRelation(CONST struct logrelation *,
  */
 
 extern unsigned long LogRelLength(CONST struct logrelation *,int);
-/*
+/**< 
  *  unsigned long LogRelLength(lrel,lhs)
  *  const struct logrelation *lrel;
  *  int lhs;
@@ -102,7 +102,7 @@ extern unsigned long LogRelLength(CONST struct logrelation *,int);
 
 extern CONST struct logrel_term *LogRelTerm(CONST struct logrelation *,
       unsigned long,int);
-/*
+/**< 
  *  const struct logrel_term *LogRelTerm(lrel,pos,lhs)
  *  const struct logrelation *lrel;
  *  unsigned long pos;
@@ -121,7 +121,7 @@ LOGA_TERM( (l)!=0 ? (&((r)->token.lhs[(p)])) : (&((r)->token.rhs[(p)])) )
 #endif
 extern CONST struct logrel_term *NewLogRelTermF(CONST struct logrelation *,
       unsigned long,int);
-/*
+/**< 
  *  const struct logrel_term *NewLogRelTerm(lrel,apos,lhs)
  *  const struct logrelation *lrel;
  *  unsigned long apos;
@@ -140,7 +140,7 @@ extern CONST struct logrel_term *NewLogRelTermF(CONST struct logrelation *,
 #endif
 extern CONST struct logrel_term
 *LogRelSideTermF(CONST union LogRelTermUnion *, unsigned long);
-/*
+/**< 
  *  CONST struct logrel_term *LogRelSideTerm(lrelside,apos)
  *  CONST union LogRelTermUnion *lrelside
  *  unsigned long apos;
@@ -154,7 +154,7 @@ extern CONST struct logrel_term
 #define LogRelTermType(rtp) LogRelTermTypeF(rtp)
 #endif
 extern enum Expr_enum LogRelTermTypeF(CONST struct logrel_term *);
-/*
+/**< 
  *  enum Expr_enum LogRelTermType(term)
  *  const struct logrel_term *term;
  *  return the type of the logical relation term.
@@ -163,28 +163,28 @@ extern enum Expr_enum LogRelTermTypeF(CONST struct logrel_term *);
  */
 
 extern unsigned long LogTermBoolVarNumber(CONST struct logrel_term *);
-/*
+/**< 
  *  unsigned long LogTermBoolVarNumber(term)
  *  const struct logrel_term *term;
  *  Return the index into the logical relation variable list.
  */
 
 extern int LogTermBoolean(CONST struct logrel_term *);
-/*
+/**< 
  *  int LogTermBoolean(term)
  *  const struct logrel_term *term;
  *  Return the boolean value from an e_boolean type logical relation term.
  */
 
 extern int LogTermInteger(CONST struct logrel_term *);
-/*
+/**< 
  *  int LogTermInteger(term);
  *  CONST struct logrel_term *term;
  *  Return the integer value from an e_int type logical relation term.
  */
 
 extern int LogTermIntegerBoolValue(CONST struct logrel_term *);
-/*
+/**< 
  *  int LogTermInteger(term);
  *  CONST struct logrel_term *term;
  *  Return a 0-1 value from an e_int type logical relation term.
@@ -192,7 +192,7 @@ extern int LogTermIntegerBoolValue(CONST struct logrel_term *);
 
 extern int LogTermBoolVar(CONST struct logrelation * ,
                           CONST struct logrel_term *);
-/*
+/**< 
  *  int LogTermBoolVar(lrel,term)
  *  const struct logrelation *lrel;
  *  const struct logrel_term *term;
@@ -202,7 +202,7 @@ extern int LogTermBoolVar(CONST struct logrelation * ,
 extern int LogTermSatisfied(CONST struct logrelation *,
                             CONST struct logrel_term *, int,
                             struct gl_list_t *);
-/*
+/**< 
  *  int LogTermSatisfied(lrel,term);
  *  CONST struct logrelation *lrel;
  *  CONST struct logrel_term *term;
@@ -215,7 +215,7 @@ extern int LogTermSatisfied(CONST struct logrelation *,
  */
 
 extern CONST struct Name *LogTermSatName(CONST struct logrel_term *);
-/*
+/**< 
  *  struct Name *LogTermSatName(term)
  *  const struct logrel_term *term;
  *  Return the name of the conditional equation specified in an
@@ -223,21 +223,21 @@ extern CONST struct Name *LogTermSatName(CONST struct logrel_term *);
  */
 
 extern unsigned long LogTermSatRelNumber(CONST struct logrel_term *);
-/*
+/**< 
  *  unsigned long LogTermSatRelNumber(term)
  *  const struct logrel_term *term;
  *  Return the index into the logical relation relations list.
  */
 
 extern double LogTermSatTolerance(CONST struct logrel_term *);
-/*
+/**< 
  *  double *LogTermSatTolerance(term)
  *  const struct logrel_term *term;
  *  Return the real value specified as the tolerance of an e_satisfied term
  */
 
 extern CONST dim_type *LogTermSatDimensions(CONST struct logrel_term *);
-/*
+/**< 
  *  const dim_type *LogTermSatDimensions(term)
  *  const struct logrel_term *term;
  *  Return the dimensions of the real value specified in the tolerance of
@@ -245,7 +245,7 @@ extern CONST dim_type *LogTermSatDimensions(CONST struct logrel_term *);
  */
 
 extern unsigned long LogRelDepth(CONST struct logrelation *);
-/*
+/**< 
  *  unsigned long LogRelDepth(lrel)
  *  struct logrelation *lrel;
  *  Return the depth of stack required to evaluate this logical relation.
@@ -258,7 +258,7 @@ extern unsigned long LogRelDepth(CONST struct logrelation *);
  *---------------------------------------------------------------------------
  */
 
-/*
+/**< 
  *  The four defines following return term pointers.
  *  struct logrel_term *r, *t;
  *  r = LogTermUniLeft(t); for example.
@@ -270,19 +270,19 @@ extern unsigned long LogRelDepth(CONST struct logrelation *);
 #define LogTermBinRight(t) ( ((struct LogRelBinary *)t) -> right)
 
 extern struct logrel_term *LogRelINF_Lhs(CONST struct logrelation *);
-/*
+/**< 
  *  Returns the lhs of an infix logical relation. This may be NULL,
  *  if the logical relation has not been set for infix scanning.
  */
 
 extern struct logrel_term *LogRelINF_Rhs(CONST struct logrelation *);
-/*
+/**< 
  *  Return the rhs of an infix logical relation. This may be NULL
  *  if the logical relation has not been set up for infix scanning.
  */
 
 extern CONST struct gl_list_t *LogRelBoolVarList(CONST struct logrelation *);
-/*
+/**< 
  *  const struct gl_list_t *LogRelBoolVarList(lr);
  *  const struct logrelation *lr;
  *  Returns the unique incident variable list which is owned by the
@@ -292,7 +292,7 @@ extern CONST struct gl_list_t *LogRelBoolVarList(CONST struct logrelation *);
  */
 
 extern CONST struct gl_list_t *LogRelSatRelList(CONST struct logrelation *);
-/*
+/**< 
  *  const struct gl_list_t *LogRelSatRelList(lr);
  *  const struct logrelation *lr;
  *  Returns the unique relation list which is owned by the
@@ -302,14 +302,14 @@ extern CONST struct gl_list_t *LogRelSatRelList(CONST struct logrelation *);
  */
 
 int LogRelResidual(CONST struct logrelation *);
-/*
+/**< 
  *  int LogRelResidual(lrel)
  *  const struct logrelation *lrel;
  *  Return the boolean residual of the logical relation.
  */
 
 extern void SetLogRelResidual(struct logrelation *,int);
-/*
+/**< 
  *  void SetLogRelResidual(lrel,value)
  *  struct logrelation *lrel;
  *  int value;
@@ -317,28 +317,28 @@ extern void SetLogRelResidual(struct logrelation *,int);
  */
 
 extern int LogRelIsCond(CONST struct logrelation *);
-/*
+/**< 
  *  int LogRelIsCond(lrel)
  *  const struct logrelation *lrel;
  *  Return the value of the logiscond flag of the logicalrelation.
  */
 
 extern void SetLogRelIsCond(struct logrelation *);
-/*
+/**< 
  *  void SetLogRelIsCond(lrel)
  *  struct logrelation *lrel;
  *  Sets the value of the logiscond field of the logical relation to 1
  */
 
 extern int LogRelNominal(CONST struct logrelation *);
-/*
+/**< 
  *  int LogRelNominal(lrel)
  *  const struct logrelation *lrel;
  *  Return the nominal of the logical relation.
  */
 
 extern void SetLogRelNominal(struct logrelation *,int);
-/*
+/**< 
  *  void SetLogRelNominal(lrel,i)
  *  struct logrelation *lrel;
  *  int i;
@@ -348,7 +348,7 @@ extern void SetLogRelNominal(struct logrelation *,int);
 
 extern int FindTolInSatTermOfLogRel(struct Instance *,struct Instance *,
                                     double *);
-/*
+/**< 
  *  status = FindTolInSatTermOfLogRel(lrelinst,condinst);
  *  struct Instance *lrelinst;
  *  struct Instance *condinst;
@@ -363,13 +363,13 @@ extern int FindTolInSatTermOfLogRel(struct Instance *,struct Instance *,
  *  status !=0 indicates it did not find a term containing the instance.
  */
 
-/*
+/**< 
  *---------------------------------------------------------------------------
  * Calculation routines
  *---------------------------------------------------------------------------
  */
  
-/*
+/**< 
  *  Calculation of the Logical Residuals of a logical relation :
  *  LogRelCalcResidualPostfix
  *  LogRelCalcResidualInfix
@@ -430,7 +430,7 @@ extern int FindTolInSatTermOfLogRel(struct Instance *,struct Instance *,
 
 extern int LogRelCalcResidualPostfix(struct Instance *,int *,int,
                                      struct gl_list_t *);
-/*
+/**< 
  *  status = int LogRelCalcResidualPostfix(i,res,perturb,instances);
  *  struct Instance *i;
  *  int *res;
@@ -453,7 +453,7 @@ extern int LogRelCalcResidualPostfix(struct Instance *,int *,int,
 
 extern int LogRelCalcResidualInfix(struct Instance *,int *, int, 
                                    struct gl_list_t *);
-/*
+/**< 
  *  status = LogRelCalcResidualInfix(i,res,perturb,instances);
  *  struct Instance *i;
  *  int *res;
@@ -477,7 +477,7 @@ extern int LogRelCalcResidualInfix(struct Instance *,int *, int,
 extern int *LogRelFindBoolValues(struct Instance *,unsigned long *,
                                  int *,int *, int, 
                                  struct gl_list_t *);
-/*
+/**< 
  *  soln_list = LogRelFindBoolValues(i,dvarnum,able,nsolns,perturb,instances);
  *  struct Instance *i;
  *  long *dvarnum;
@@ -502,12 +502,12 @@ extern int *LogRelFindBoolValues(struct Instance *,unsigned long *,
  */
 
 #define LogRelCalcResidual(i,r) LogRelCalcResidualPostfix(i,r,0,NULL)
-/*
+/**< 
  *  Macro for users interested in the calculation of pure logic relations.
  *  Not conditional modeling.
  */
 
-#endif /* __LOGRELATION_UTIL_H_SEEN__ */
+#endif /**< __LOGRELATION_UTIL_H_SEEN__ */
 
 
 

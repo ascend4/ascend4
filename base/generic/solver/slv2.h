@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -29,7 +29,7 @@
  */
 #ifndef slv2__already_included
 #define slv2__already_included
-/* requires #include "slv_client.h" */
+/**< requires #include "slv_client.h" */
 
 typedef struct slv2_system_structure *slv2_system_t;
 
@@ -42,7 +42,7 @@ int slv2_register(SlvFunctionsT *);
 
 #endif
 
-/* REMOVE EVERYTHING BELOW THIS POINT */     
+/**< REMOVE EVERYTHING BELOW THIS POINT */     
 # if 0 
 /*********************************************************************
 This file created by make_slv_header, so don't modify it yourself.
@@ -55,11 +55,11 @@ the system.  Note also that the select solver functions don't exist.
 typedef struct slv2_system_structure *slv2_system_t;
 
 #ifdef STATIC_OPTSQP
-#define slv2_solver_name "OPT"   /* Solver's name */
-#define slv2_solver_number 2   /* Solver's number */
+#define slv2_solver_name "OPT"   /**< Solver's name */
+#define slv2_solver_number 2   /**< Solver's number */
 
 extern slv2_system_t slv2_create();
-extern int slv2_destroy(); /* note error return needs to be implemented */
+extern int slv2_destroy(); /**< note error return needs to be implemented */
 extern void slv2_set_rel_list();
 extern struct rel_relation **slv2_get_rel_list();
 extern void slv2_set_extrel_list();
@@ -85,7 +85,7 @@ extern void slv2_resolve();
 extern void slv2_iterate();
 extern void slv2_solve();
 
-/* the following will be stomped on by make_slvheaders. beware. */
+/**< the following will be stomped on by make_slvheaders. beware. */
 #define slv2_IA_SIZE 9
 #define slv2_RA_SIZE 2
 #define slv2_CA_SIZE 0
@@ -111,8 +111,8 @@ extern void slv2_solve();
 /*** subscripts for va ***/
 
 #else
-#define slv2_solver_name "no_opt"   /* Solver's name */
-#define slv2_solver_number 2   /* Solver's number */
+#define slv2_solver_name "no_opt"   /**< Solver's name */
+#define slv2_solver_number 2   /**< Solver's number */
 #endif
 
 #endif

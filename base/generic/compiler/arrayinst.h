@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Array Functions
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -32,7 +32,7 @@
 #ifndef __ARRAYINST_H_SEEN__
 #define __ARRAYINST_H_SEEN__
 
-/*
+/**< 
  *  When #including arrayinst.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
@@ -42,35 +42,35 @@
  */
 
 
-/* Array child memory management */
+/**< Array child memory management */
 
 #define CAC(acp) ((struct ArrayChild *)(acp))
 
 extern pool_store_t g_array_child_pool;
-/* never ever dereference this except with the following 2 macros: */
+/**< never ever dereference this except with the following 2 macros: */
 
 #ifdef ASC_NO_POOL
 
-/* slow version for debugging */
+/**< slow version for debugging */
 #define MALLOCPOOLAC CAC( ascmalloc(sizeof(struct ArrayChild)) )
 #define FREEPOOLAC(ac) ascfree(ac);
 
 #else
 
 #define MALLOCPOOLAC CAC(pool_get_element(g_array_child_pool))
-/*
+/**< 
  *  Get an element from the pool. Only after InitInstanceNanny.
  */
 
 #define FREEPOOLAC(ac) pool_free_element(g_array_child_pool,(ac))
-/*
+/**< 
  *  Return an element, ac, to the pool. Only after InitInstanceNanny.
  */
 
-#endif /* ASC_NO_POOL */
+#endif /**< ASC_NO_POOL */
 
 extern void InitInstanceNanny(void);
-/*
+/**< 
  *  InitInstanceNanny();
  *  Sets up array child instantiation gizmos. This must be called once
  *  before any arrays can be built, ideally at startup time.
@@ -82,7 +82,7 @@ extern void InitInstanceNanny(void);
  */
 
 extern void DestroyInstanceNanny(void);
-/*
+/**< 
  *  DestroyInstanceNanny();
  *  Destroy array child instantiation gizmos. This must be called to
  *  clean up before shutting down ASCEND.
@@ -91,13 +91,13 @@ extern void DestroyInstanceNanny(void);
  */
 
 extern void ReportInstanceNanny(FILE*);
-/*
+/**< 
  *  ReportInstanceNanny(f);
  *  FILE *f;
  *  Reports on the array child instantiator to f.
  */
 
-/*
+/**< 
  * Notes on the structure implemented for ASCEND arrays.
  *
  * ASCEND arrays are 'associative arrays.' That is they are
@@ -151,7 +151,7 @@ extern void ReportInstanceNanny(FILE*);
 
 extern struct gl_list_t *CollectArrayInstances(CONST struct Instance *,
                                                struct gl_list_t *);
-/*
+/**< 
  *  list = CollectArrayInstances(i,NULL);
  *  const struct Instance *i;
  *  struct gl_list_t *list;
@@ -166,7 +166,7 @@ extern struct gl_list_t *CollectArrayInstances(CONST struct Instance *,
 
 typedef void (*AVProc)(struct Instance *);
 extern void ArrayVisitLocalLeaves(struct Instance *,AVProc);
-/*
+/**< 
  *  ArrayVisitLocalLeaves(mch,func)
  *  struct Instance *mch; 
  *  AVProc func;
@@ -176,12 +176,12 @@ extern void ArrayVisitLocalLeaves(struct Instance *,AVProc);
  *  given in the definition statement of mch.
  */
 
-/*
+/**< 
  *  Dense array procedures. (non-relations)
  */
 
 extern int RectangleArrayExpanded(CONST struct Instance *);
-/*
+/**< 
  *  int RectangleArrayExpanded(i)
  *  const struct Instance *i;
  *  Test if the array is fully expanded
@@ -198,7 +198,7 @@ extern int RectangleArrayExpanded(CONST struct Instance *);
 extern int RectangleSubscriptsMatch(CONST struct Instance *,
                                     CONST struct Instance *,
                                     CONST struct Name *);
-/*
+/**< 
  *  int RectangleSubscriptsMatch(context,ary,subscripts)
  *  const struct Instance *context, *ary;
  *  const struct Name *subscripts;
@@ -218,7 +218,7 @@ extern int RectangleSubscriptsMatch(CONST struct Instance *,
  */
 
 extern unsigned long NextToExpand(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long NextToExpand(i)
  *  const struct Instance *i;
  *  Return the number of the dereferencing that needs to be expanded.  This
@@ -226,7 +226,7 @@ extern unsigned long NextToExpand(CONST struct Instance *);
  */
 
 extern unsigned long NumberofDereferences(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long NumberofDereferences(i)
  *  const struct Instance *i;
  *  This returns the number of dereferences that this array instance has
@@ -234,7 +234,7 @@ extern unsigned long NumberofDereferences(CONST struct Instance *);
  */
 
 extern CONST struct Set *IndexSet(CONST struct Instance *,unsigned long);
-/*
+/**< 
  *  struct Set *IndexSet(i,num)
  *  struct Instance *i;
  *  unsigned long num;
@@ -251,7 +251,7 @@ extern void ExpandArray(struct Instance *,
                         struct Instance *,
                         struct Instance *,
                         struct gl_list_t *);
-/*
+/**< 
  *  void ExpandArray(i,num,set,rhsinst,arginst,rhslist)
  *  struct Instance *i;
  *  unsigned long num;
@@ -280,14 +280,14 @@ extern void ExpandArray(struct Instance *,
  *  will be used to construct the elements and pending list may be affected.
  */
 
-/*
+/**< 
  *  Sparse arrays stuff.
  */
 
 extern struct Instance *FindOrAddIntChild(struct Instance *,long,
                                           struct Instance *,
                                           struct Instance *);
-/*
+/**< 
  *  struct Instance *FindOrAddIntChild(i,v,rhsinst,arginst)
  *  struct Instance *i,*rhsinst, *arginst;
  *  long v;
@@ -300,7 +300,7 @@ extern struct Instance *FindOrAddIntChild(struct Instance *,long,
 extern struct Instance *FindOrAddStrChild(struct Instance *,symchar *,
                                           struct Instance *,
                                           struct Instance *);
-/*
+/**< 
  *  struct Instance *FindOrAddStrChild(i,sym,rhsinst,arginst)
  *  struct Instance *i, *rhsinst, *arginst;
  *  symchar *sym;
@@ -311,7 +311,7 @@ extern struct Instance *FindOrAddStrChild(struct Instance *,symchar *,
  */
 
 extern int CmpArrayInsts(struct Instance *, struct Instance *);
-/*
+/**< 
  *  int CmpArrayInsts(i1,i2)
  *  struct Instance *i1, *i2;
  *  Returns 0 if the arrays i1 and i2 are defined over equivalent subscript
@@ -323,4 +323,4 @@ extern int CmpArrayInsts(struct Instance *, struct Instance *);
  */
 
 #endif
-/* __ARRAYINST_H_SEEN__ */
+/**< __ARRAYINST_H_SEEN__ */

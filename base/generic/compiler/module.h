@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Module Control
  *  by Tom Epperly
  *  Created: 1/10/90
@@ -29,7 +29,7 @@
  */
 
 
-/*
+/**< 
  *  When #including module.h, make sure these files are #included first:
  *       #include "compiler.h"
  */
@@ -39,7 +39,7 @@
 
 
 #define PATHENVIRONMENTVAR "ASCENDLIBRARY"
-/*
+/**< 
  *  The name of the environment variable containing a list' of paths
  *  to search when trying to open a module.  The list is in the style
  *  of the native OS: colon-separated on UNIX and semicolon separated
@@ -55,7 +55,7 @@
 #define  MOD_NEW_UNITS ".a4u"
 #define  MOD_CATCHALL ""
 extern CONST char *g_alt_ending[MOD_FILE_EXTS];
-/*
+/**< 
  *  This array defines the expected file extensions for
  *  parsable ascend MODEL/ATOM/unit code. Files are not
  *  limited to these, however. Interfaces that see a
@@ -69,7 +69,7 @@ struct module_t;
 
 
 extern int Asc_InitModules(unsigned long);
-/*
+/**< 
  *  int Asc_InitModules(init_length)
  *      unsigned long init_length;  // initial length of module list
  *
@@ -86,7 +86,7 @@ extern int Asc_InitModules(unsigned long);
 
 
 extern void Asc_DestroyModules(DestroyFunc);
-/*
+/**< 
  *  void Asc_DestroyModules((DestroyFunc)DestroyStatementList);
  *
  *  Deallocate all of the modules.  This should be done when all types
@@ -95,7 +95,7 @@ extern void Asc_DestroyModules(DestroyFunc);
  */
 
 extern struct module_t *Asc_OpenStringModule(CONST char *, int *, CONST char *);
-/*
+/**< 
  *  struct module_t *Asc_OpenStringModule(inputstring,status, nameprefix)
  *      const char *inputstring; // string to be parsed and saved
  *      const char *nameprefix;  // prefix to use when making the module name
@@ -112,7 +112,7 @@ extern struct module_t *Asc_OpenStringModule(CONST char *, int *, CONST char *);
 
 extern struct module_t *Asc_OpenModule(CONST char *, int *);
 extern struct module_t *Asc_RequireModule(CONST char *, int *);
-/*
+/**< 
  *  struct module_t *Asc_OpenModule(name,status)
  *  struct module_t *Asc_RequireModule(name,status)
  *      const char *inputstring;  // the string statements to parse
@@ -211,7 +211,7 @@ extern struct module_t *Asc_RequireModule(CONST char *, int *);
 
 
 extern int Asc_ModuleCreateAlias(CONST struct module_t *, CONST char *);
-/*
+/**< 
  *  int Asc_ModuleCreateAlias(m, name);
  *      const struct module_t *m;
  *      const char *name;
@@ -280,7 +280,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *, CONST char *);
 
 
 extern int Asc_CloseCurrentModule(void);
-/*
+/**< 
  *  int Asc_CloseCurrentModule()
  *
  *  This function will close the current module, and restore the module
@@ -291,7 +291,7 @@ extern int Asc_CloseCurrentModule(void);
  */
 
 extern int Asc_ModuleAddStatements(struct module_t *,struct gl_list_t *);
-/*
+/**< 
  * err = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
  * struct gl_list_t *stats; // list of StatementList *.
  * Returns 0 or 1 if successful, or -1 if not. The usual cause for
@@ -305,7 +305,7 @@ extern int Asc_ModuleAddStatements(struct module_t *,struct gl_list_t *);
  */
 
 extern CONST struct module_t *Asc_GetModuleByName(CONST char *);
-/*
+/**< 
  *  struct module_t *Asc_GetModuleByName(name);
  *      const char *name;
  *
@@ -322,7 +322,7 @@ extern CONST struct module_t *Asc_GetModuleByName(CONST char *);
 
 
 extern struct gl_list_t *Asc_ModuleList(int);
-/*
+/**< 
  *  nameslist = struct gl_list_t *Asc_ModuleList(module_type);
  *
  *  module_type 0;
@@ -349,7 +349,7 @@ extern struct gl_list_t *Asc_ModuleList(int);
 
 
 extern void Asc_ModuleWrite(FILE *, CONST struct module_t *);
-/*
+/**< 
  *  void Asc_ModuleWrite(f,m)
  *      FILE *f;
  *      const struct module_t *m;
@@ -364,8 +364,8 @@ extern struct module_t *Asc_CurrentModuleF(void);
 #else
 extern struct module_t *g_current_module;
 #define Asc_CurrentModule() g_current_module
-#endif /* NDEBUG */
-/*
+#endif /**< NDEBUG */
+/**< 
  *  struct module_t *Asc_CurrentModule()
  *
  *  Returns a pointer to the current module.
@@ -373,7 +373,7 @@ extern struct module_t *g_current_module;
 
 
 extern CONST char *Asc_ModuleName(CONST struct module_t *);
-/*
+/**< 
  *  const char *Asc_ModuleName(m)
  *      const struct module_t *m;
  *
@@ -381,7 +381,7 @@ extern CONST char *Asc_ModuleName(CONST struct module_t *);
  */
 
 extern struct gl_list_t *Asc_ModuleStatementLists(CONST struct module_t *);
-/*
+/**< 
  * Returns a gl_list_t *, or NULL if none, containing pointers to 
  * struct StatementList *. The batches of statements are in order
  * parsed. File modules will never have statements.
@@ -394,7 +394,7 @@ extern struct gl_list_t *Asc_ModuleStatementLists(CONST struct module_t *);
  */
 
 extern CONST char *Asc_ModuleString(CONST struct module_t *);
-/*
+/**< 
  *  const char *Asc_ModuleString(m)
  *      const struct module_t *m;
  *
@@ -403,7 +403,7 @@ extern CONST char *Asc_ModuleString(CONST struct module_t *);
  */
 
 extern CONST char *Asc_ModuleFileName(CONST struct module_t *);
-/*
+/**< 
  *  const char *Asc_ModuleFileName(m)
  *      const struct module_t *m;
  *
@@ -411,7 +411,7 @@ extern CONST char *Asc_ModuleFileName(CONST struct module_t *);
  */
 
 extern CONST char *Asc_ModuleBestName(CONST struct module_t *);
-/*
+/**< 
  *  const char *Asc_ModuleBestName(m)
  *      const struct module_t *m;
  *
@@ -423,7 +423,7 @@ extern CONST char *Asc_ModuleBestName(CONST struct module_t *);
 
 
 extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *);
-/*
+/**< 
  *  unsigned long Asc_ModuleTimesOpened(m)
  *      const struct module_t *m;
  *
@@ -433,7 +433,7 @@ extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *);
 
 
 extern struct tm *Asc_ModuleTimeModified(CONST struct module_t *);
-/*
+/**< 
  *  struct tm Asc_ModuleTimeModified(m)
  *      const struct module_t *m;
  *
@@ -442,7 +442,7 @@ extern struct tm *Asc_ModuleTimeModified(CONST struct module_t *);
  */
 
 extern int Asc_ModuleStringIndex(CONST struct module_t *);
-/*
+/**< 
  *  int Asc_ModuleTime(m)
  *      const struct module_t *m;
  *
@@ -451,7 +451,7 @@ extern int Asc_ModuleStringIndex(CONST struct module_t *);
  */
 
 #define Asc_ModulesEqual(m1,m2) ((m1)==(m2))
-/*
+/**< 
  *  int Asc_ModulesEqual(m1,m2)
  *      struct module_t m1;
  *      struct module_t m2;
@@ -459,4 +459,4 @@ extern int Asc_ModuleStringIndex(CONST struct module_t *);
  *  This macro will evaluate to TRUE if module `m1' equals module `m2';
  */
 
-#endif /* __MODULE_H_SEEN__ */
+#endif /**< __MODULE_H_SEEN__ */

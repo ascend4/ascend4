@@ -1,4 +1,4 @@
-/*
+/**< 
  *  External Definitions of CONOPT Subroutines
  *  by Vicente Rico Ramirez
  *  Created: 05/97
@@ -29,50 +29,50 @@
 #ifndef conopt__already_included
 #define conopt__already_included
 
-/* 
+/**< 
  * Macros defined because of the different convention of Fortran from C about  
  * the use of an index in arrays (starting from zero or from one).
  */
 #define F2C(x) x - 1
 #define C2F(x) x + 1
 
-/*
+/**< 
  * Parameter required for CONOPT subroutines
  */
 #define NINTGR 3
 #define MAX_INT 20000
 #define MAX_REAL 10e300
 
-/* 
+/**< 
  * CONOPT data structure.
  */
 struct conopt_data {
-  int32 n;                      /* number of columns */
-  int32 m;                      /* number of rows */
-  int32 nz;                     /* number of nonzeros */
-  int32 maxrow;                 /* number of elements in densest row */
-  int32 modsta;                 /* model status */
-  int32 solsta;                 /* solver status */
-  int32 iter;                   /* # of conopt iterations */
-  real64 obj;                   /* objective value */
+  int32 n;                      /**< number of columns */
+  int32 m;                      /**< number of rows */
+  int32 nz;                     /**< number of nonzeros */
+  int32 maxrow;                 /**< number of elements in densest row */
+  int32 modsta;                 /**< model status */
+  int32 solsta;                 /**< solver status */
+  int32 iter;                   /**< # of conopt iterations */
+  real64 obj;                   /**< objective value */
 
-  real64 *work;                 /* work space */
-  int32 minmem;                 /* minimum memory suggested by conopt */
-  int32 estmem;                 /* estimated memory suggested by conopt */
-  int32 lwork;                  /* size of allocated workspace */
-  int32 nintgr;                 /* size of problem size vector */
-  int32 ipsz[NINTGR];           /* problem size vector */
+  real64 *work;                 /**< work space */
+  int32 minmem;                 /**< minimum memory suggested by conopt */
+  int32 estmem;                 /**< estimated memory suggested by conopt */
+  int32 lwork;                  /**< size of allocated workspace */
+  int32 nintgr;                 /**< size of problem size vector */
+  int32 ipsz[NINTGR];           /**< problem size vector */
 
-  int32 kept;                   /* if 1 can call warm conopt restart */
+  int32 kept;                   /**< if 1 can call warm conopt restart */
 
-  int32 optimized;              /* has conopt been called? */
-  int32 maxusd;                 /* maximum work space used */
-  int32 curusd;                 /* current work space used */
-  int32 opt_count;              /* count of calls to coiopt */
-  int32 progress_count;         /* count of calls to coiprg */
+  int32 optimized;              /**< has conopt been called? */
+  int32 maxusd;                 /**< maximum work space used */
+  int32 curusd;                 /**< current work space used */
+  int32 opt_count;              /**< count of calls to coiopt */
+  int32 progress_count;         /**< count of calls to coiprg */
 };
 
-/*
+/**< 
  * Structure of function pointers, so that a particular solver can define
  * its user-defined CONOPT subroutines independently
  */
@@ -94,40 +94,40 @@ struct conopt_function_pointers {
   void (*coiorc_ptr)();
 };
 
-/*
+/**< 
  * Pointer to the previous structure
  */
 typedef struct conopt_function_pointers *conopt_pointers;
 
 
-/*
+/**< 
  * is CONOPT available ?
  */
 #if (defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT))
 #define CONOPT_ACTIVE TRUE
-#else  /* defined(STATIC_CONOPT) */
+#else  /**< defined(STATIC_CONOPT) */
 #define CONOPT_ACTIVE FALSE
-#endif /* defined(STATIC_CONOPT) */
+#endif /**< defined(STATIC_CONOPT) */
 
 
-#if CONOPT_ACTIVE  /* code used if CONOPT is available */
-/*
+#if CONOPT_ACTIVE  /**< code used if CONOPT is available */
+/**< 
  *  Take care of fortran underbar madness
  */
 #ifdef sun
 #define FORTRAN_UNDERBARS
-#endif /* sun */
+#endif /**< sun */
 
 #ifdef __alpha
 #define FORTRAN_UNDERBARS
-#endif /* __alpha */
+#endif /**< __alpha */
 
 #ifdef __sgi
 #define FORTRAN_UNDERBARS
-#endif /* __sgi */
+#endif /**< __sgi */
 
 #ifdef __WIN32__
-/* dec visual fortran */
+/**< dec visual fortran */
 #define COICSM COICSM
 #define COIMEM COIMEM
 #define COIRMS COIRMS
@@ -146,7 +146,7 @@ typedef struct conopt_function_pointers *conopt_pointers;
 #define COIPRG COIPRG
 #define COIORC COIORC
 #else
-/* unixisms */
+/**< unixisms */
 #ifdef FORTRAN_UNDERBARS
 #define COICSM coicsm_
 #define COICRM coicrm_
@@ -185,11 +185,11 @@ typedef struct conopt_function_pointers *conopt_pointers;
 #define COIENZ coienz
 #define COIPRG coiprg
 #define COIORC coiorc
-#endif  /* FORTRAN_UNDERBARS */
-#endif /* !WIN */
+#endif  /**< FORTRAN_UNDERBARS */
+#endif /**< !WIN */
 
 
-/*
+/**< 
  *  Optimization subroutines for CONOPT
  *  ---------------------------------
  */
@@ -197,7 +197,7 @@ typedef struct conopt_function_pointers *conopt_pointers;
 extern void COIRMS(real64 *, real64 *, real64 *, int32 *, int32 *, real64 *,
 		   real64 *, int32 *, int32 *, int32 *, real64 *, int32 *,
 		   int32 *, int32 *, int32 *, int32 *, real64 *);
-/*
+/**< 
  * COIRMS Based on the information provided in Coispz, CONOPT will
  * allocate the number of vectors into which the user can define
  * the details of the model. The details of the model are defined
@@ -230,7 +230,7 @@ extern void COIFBL(real64 *, real64 *, int32 *, int32 *, int32 *, int32 *,
 		   real64 *, int32 *, int32 *, int32 *, int32 *, int32 *,
 	           int32 *, int32 *, int32 *, int32 *, int32 *, int32 *, 
 		   int32 *, int32 *, int32 *, real64 *);
-/*
+/**< 
  * COIFBL Defines the nonlinearities of the model by returning
  * numerical values. It works on a block of rows during each call.
  * COIFBL( x, g, otn, nto, from, to, jac, stcl, rnum, cnum, nl, strw,
@@ -264,7 +264,7 @@ extern void COIFBL(real64 *, real64 *, int32 *, int32 *, int32 *, int32 *,
 
 extern void COIFDE(real64 *, real64 *, real64 *, int32 *, int32 *, int32 *,
 		   int32 *, int32 *, int32 *, int32 *, real64 *);
-/*
+/**< 
  * COIFDE Defines the nonlinearities of the model by returning
  * numerical values. It works on one row or equation at a time
  * COIFDE(x, g, jac, rowno, jcnm, mode, errcnt, newpt, n, nj, usrmem)
@@ -284,7 +284,7 @@ extern void COIFDE(real64 *, real64 *, real64 *, int32 *, int32 *, int32 *,
 
 
 extern void COISTA(int32 *, int32 *, int32 *, real64 *, real64 *);
-/*
+/**< 
  * COISTA Pass the solution from CONOPT to the modeler. It returns
  * completion status
  * COISTA(modsta, solsts, iter, objval, usrmem)
@@ -299,7 +299,7 @@ extern void COISTA(int32 *, int32 *, int32 *, real64 *, real64 *);
 
 extern void COIRS(real64 *, real64 *, int32 *, int32 *, real64 *, real64 *,
 		  int32 *, int32 *, int32 *, int32 *, real64 *);
-/*
+/**< 
  * COIRS passes the solution from CONOPT to the modeler. It returns
  * solution values
  * COIRS(val, xmar, xbas, xsta, yval, ymar, ybas, ysta, n, m, usrmem)
@@ -319,7 +319,7 @@ extern void COIRS(real64 *, real64 *, int32 *, int32 *, real64 *, real64 *,
 
 
 extern void COIUSZ(int32 *, int32 *, int32 *, real64 *, real64 *);
-/*
+/**< 
  * COIUSZ communicates and update of an existing model to CONOPT
  * COIUSZ(nintg, ipsz, nreal, rpsz, usrmem)
  *
@@ -332,7 +332,7 @@ extern void COIUSZ(int32 *, int32 *, int32 *, real64 *, real64 *);
 
 
 extern void COIOPT(char *, real64 *, int32 *, int32 *, real64 *);
-/*
+/**< 
  * COIOPT communicates non-default option values to CONOPT
  * COIOPT(name, rval, ival, lval, usrmem)
  * name   - the name of a CONOPT CR-cell defined by the modeler
@@ -344,7 +344,7 @@ extern void COIOPT(char *, real64 *, int32 *, int32 *, real64 *);
 
 
 extern void COIPSZ(int32 *, int32 *, int32 *, real64 *, real64 *);
-/*
+/**< 
  * COIPSZ communicates the model size and structure to CONOPT
  * COIPSZ(nintg, ipsz, nreal, rpsz, usrmem)
  *
@@ -373,7 +373,7 @@ extern void COIPRG (int32 *nintgr, int32 *intrep, int32 *nreal,
 extern void COIORC (int32 *colno, int32 *rowno, real64 *value,
       real64 *resid,real64 *usrmem);
 
-/*
+/**< 
  * IMPORTANT: The use of the following functions is a   H A C K   to avoid
  * unresolved externals while linking to the CONOPT library. For some
  * reason, the linker wants the calls to the provided subroutines 
@@ -381,18 +381,18 @@ extern void COIORC (int32 *colno, int32 *rowno, real64 *value,
  * defined CONOPT subroutines
  */
 
-/*
+/**< 
  * Passes arguments to COIMEM
  */
 extern void conopt_estimate_memory(int32 *, int32 *, int32 *, int32 *);
 
-/*
+/**< 
  * Passes arguments to COICRM
  */
 extern void conopt_restart(int32 *, real64 **, int32 *, real64 *, int32 *, 
 			   int32 *);
 
-/*
+/**< 
  * Passes arguments to COICSM
  */
 extern void conopt_start(int32 *, real64 **, int32 *, real64 *, int32 *, 
@@ -400,18 +400,18 @@ extern void conopt_start(int32 *, real64 **, int32 *, real64 *, int32 *,
 
 
 #if defined(DYNAMIC_CONOPT)
-/*
+/**< 
  * conopt_load attempts to dynamically load CONOPT.
  * Returns 0 for success, 1 for failure.
  */
 int32 conopt_load(void);
 #else
-/*
+/**< 
  * CONOPT Provided Subroutines.Only the external definition. The
  * code for the subroutines is provided by CONOPT.
  */
 
-/* 
+/**< 
  * Memory estimation by using CONOPT subroutine coimem
  *
  * COIMEM Estimates the amount of memory needed by CONOPT
@@ -425,7 +425,7 @@ int32 conopt_load(void);
  */
 extern void COIMEM(int32 *, int32 *, int32 *, int32 *);
 
-/*
+/**< 
  * COICRM restarts CONOPT with user memory
  * COICRM(kept, usrmem, lwork, work, maxusd, curusd)
  *
@@ -438,7 +438,7 @@ extern void COIMEM(int32 *, int32 *, int32 *, int32 *);
  */
 extern void COICRM(int32 *, real64 *, int32 *, real64 *, int32 *, int32 *);
 
-/*
+/**< 
  * COICSM starts up CONOPT with user memory
  * COICSM(kept, usrmem, lwork, work, maxusd, curusd)
  *
@@ -450,8 +450,8 @@ extern void COICRM(int32 *, real64 *, int32 *, real64 *, int32 *, int32 *);
  * curusd - current amount of memory in use
  */
 extern void COICSM(int32 *, real64 *, int32 *, real64 *, int32 *, int32 *);
-#endif /* DYNAMIC_CONOPT */
-#endif /* if CONOPT_ACTIVE */
-#endif /* conopt__already_included */
+#endif /**< DYNAMIC_CONOPT */
+#endif /**< if CONOPT_ACTIVE */
+#endif /**< conopt__already_included */
 
 

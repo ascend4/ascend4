@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Type definitions for statements and statement lists.
  *  Tom Epperly
  *  August 10, 1989
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including stattypes.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -37,7 +37,7 @@
 
 #ifndef __STATTYPES_H_SEEN__
 #define __STATTYPES_H_SEEN__
-/* requires
+/**< requires
 # #include<limits.h>
 # #include"compiler.h"
 # #include"list.h"
@@ -49,79 +49,79 @@
 
 
 enum ForOrder {
-  f_random,	/* FOR/CREATE only */
-  f_increasing,	/* FOR/DO INCREASING and FOR/DO default */
-  f_decreasing	/* FOR/DO DECREASING */
+  f_random,	/**< FOR/CREATE only */
+  f_increasing,	/**< FOR/DO INCREASING and FOR/DO default */
+  f_decreasing	/**< FOR/DO DECREASING */
 };
 
 enum ForKind {
-  fk_create,	/* for create */
-  fk_do,	/* for do */
-  fk_check,	/* for check */
-  fk_expect 	/* for expect */
+  fk_create,	/**< for create */
+  fk_do,	/**< for do */
+  fk_check,	/**< for check */
+  fk_expect 	/**< for expect */
 };
 
 enum FlowControl {
-  /* codes for the varieties of flow control statement */
+  /**< codes for the varieties of flow control statement */
   fc_break,
   fc_continue,
   fc_fallthru,
   fc_return,
-  fc_stop /* this one must be last or fix statio.c */
+  fc_stop /**< this one must be last or fix statio.c */
 };
 
 enum stat_t {
-  ALIASES = 0,		/* ALIASES */
-  ISA,			/* IS_A */
-  ARR,			/* CREATE ARRAY i AND SIZE j FROM(list) */
-  IRT,			/* IS_REFINED_TO */
-  ATS,			/* ARE_THE_SAME */
-  AA,			/* ARE_ALIKE */
-  FLOW,			/* BREAK, CONTINUE, FALL_THROUGH, RETURN, STOP */
-  FOR,			/* FOR CREATE LOOP */
-  REL,			/* RELATION */
-  LOGREL,               /* LOGICAL RELATION */
-  ASGN,			/* ASSIGNMENT */
-  CASGN,		/* Structural ASSIGNMENT */
-  RUN,			/* RUN statement */
-  IF,			/* IF-ELSE statement */
-  WHEN,                 /* WHEN statement */
-  FNAME,                /* Name of model or relation */
-  SELECT,               /* SELECT statement */
-  SWITCH,               /* SWITCH statement */
-  WHILE,                /* WHILE statement */
-  EXT,                  /* EXTERNAL fcn/relation statement of abbott */
-  CALL,                 /* user defined function statement */
-  REF,			/* REFERENCE statement */
-  COND,                 /* CONDITIONAL statement */
-  WBTS,			/* WILL_BE_THE_SAME */
-  WNBTS,		/* WILL_NOT_BE_THE_SAME */
-  WILLBE		/* WILL_BE */
-  /* if you add anything after WILLBE, change statio.c/suppression
+  ALIASES = 0,		/**< ALIASES */
+  ISA,			/**< IS_A */
+  ARR,			/**< CREATE ARRAY i AND SIZE j FROM(list) */
+  IRT,			/**< IS_REFINED_TO */
+  ATS,			/**< ARE_THE_SAME */
+  AA,			/**< ARE_ALIKE */
+  FLOW,			/**< BREAK, CONTINUE, FALL_THROUGH, RETURN, STOP */
+  FOR,			/**< FOR CREATE LOOP */
+  REL,			/**< RELATION */
+  LOGREL,               /**< LOGICAL RELATION */
+  ASGN,			/**< ASSIGNMENT */
+  CASGN,		/**< Structural ASSIGNMENT */
+  RUN,			/**< RUN statement */
+  IF,			/**< IF-ELSE statement */
+  WHEN,                 /**< WHEN statement */
+  FNAME,                /**< Name of model or relation */
+  SELECT,               /**< SELECT statement */
+  SWITCH,               /**< SWITCH statement */
+  WHILE,                /**< WHILE statement */
+  EXT,                  /**< EXTERNAL fcn/relation statement of abbott */
+  CALL,                 /**< user defined function statement */
+  REF,			/**< REFERENCE statement */
+  COND,                 /**< CONDITIONAL statement */
+  WBTS,			/**< WILL_BE_THE_SAME */
+  WNBTS,		/**< WILL_NOT_BE_THE_SAME */
+  WILLBE		/**< WILL_BE */
+  /**< if you add anything after WILLBE, change statio.c/suppression
    * accordingly.
    */
-  /* Inserting before WILLBE is fine, though, don't forget to check
+  /**< Inserting before WILLBE is fine, though, don't forget to check
    * that the io routines handle the new statements.
    */
 };
 
-#define context_MODEL 0	      /* main declarative line */
-#define context_FOR 0x1	      /* in a loop, declarative or method */
-#define context_COND 0x2      /* inside a CONDITIONAL statement*/
-#define context_METH 0x4      /* statement is in a method */
-#define context_WRONG 0x8     /* statement is uninstantiably bad */
-#define context_MODPARAM 0x10 /* statement is in model parameter list */
-#define context_SELECT 0x20   /* statement is in SELECT's statement list */
-#define context_WHEN 0x40     /* statement is in WHEN's statement list */
-                              /* The context in WHENs is useful only in*/
-                              /* the case of a nested WHEN. It does not */
-                              /* hurt to have this information though. */
-#define context_IF 0x80       /* statement is in IF's statement list */
-#define context_SWITCH 0x100  /* statement is in SWITCH's statement list */
-#define context_WHILE 0x200   /* statement is in WHILE's statement list */
-#define context_MODWHERE 0x400 /* statement is in model where list */
+#define context_MODEL 0	      /**< main declarative line */
+#define context_FOR 0x1	      /**< in a loop, declarative or method */
+#define context_COND 0x2      /**< inside a CONDITIONAL statement*/
+#define context_METH 0x4      /**< statement is in a method */
+#define context_WRONG 0x8     /**< statement is uninstantiably bad */
+#define context_MODPARAM 0x10 /**< statement is in model parameter list */
+#define context_SELECT 0x20   /**< statement is in SELECT's statement list */
+#define context_WHEN 0x40     /**< statement is in WHEN's statement list */
+                              /**< The context in WHENs is useful only in*/
+                              /**< the case of a nested WHEN. It does not */
+                              /**< hurt to have this information though. */
+#define context_IF 0x80       /**< statement is in IF's statement list */
+#define context_SWITCH 0x100  /**< statement is in SWITCH's statement list */
+#define context_WHILE 0x200   /**< statement is in WHILE's statement list */
+#define context_MODWHERE 0x400 /**< statement is in model where list */
 
-/*
+/**< 
  * Certain statement types are more easily interpreted if we cache
  * some information about where they appear within the MODEL.
  * These are the bit values we have detected a need for so far.
@@ -138,195 +138,195 @@ enum stat_t {
  */
 
 struct WhenList {
-  struct WhenList *next;	/* next in list */
-  struct Set *values;	        /* matching values of the case */
-  struct StatementList *slist;	/* statements to be executed */
+  struct WhenList *next;	/**< next in list */
+  struct Set *values;	        /**< matching values of the case */
+  struct StatementList *slist;	/**< statements to be executed */
 };
 
 struct SelectList {
-  struct SelectList *next;	/* next in list */
-  struct Set *values;	        /* matching values of the case */
-  struct StatementList *slist;	/* statements to be executed */
+  struct SelectList *next;	/**< next in list */
+  struct Set *values;	        /**< matching values of the case */
+  struct StatementList *slist;	/**< statements to be executed */
 };
 
 struct SwitchList {
-  struct SwitchList *next;	/* next in list */
-  struct Set *values;	        /* matching values of the case */
-  struct StatementList *slist;	/* statements to be executed */
+  struct SwitchList *next;	/**< next in list */
+  struct Set *values;	        /**< matching values of the case */
+  struct StatementList *slist;	/**< statements to be executed */
 };
 
-/* Lets see if we can get by with no more than 6 members in any of
+/**< Lets see if we can get by with no more than 6 members in any of
  * the individual statement types. 5-6 seems to be a functional
  * minimum.
  */
 struct StateRUN {
-  struct Name *proc_name;	/* procedure name */
-  struct Name *type_name;	/* whether 'class access' eg a::b */
+  struct Name *proc_name;	/**< procedure name */
+  struct Name *type_name;	/**< whether 'class access' eg a::b */
 };
 
 struct StateIF {
-  struct Expr *test;		/* expression to be tested */
+  struct Expr *test;		/**< expression to be tested */
   struct StatementList *thenblock;
   struct StatementList *elseblock;
 };
 
 struct StateCOND {
-  struct StatementList *stmts;  /* list of conditional log/relations */
-  unsigned int contains;        /* flags about what in COND stmts lists */
+  struct StatementList *stmts;  /**< list of conditional log/relations */
+  unsigned int contains;        /**< flags about what in COND stmts lists */
 };
 
 struct StateWHEN {
-  struct Name *nptr;             /* Name of the WHEN */
-  struct VariableList *vl;	 /* list of variables */
-  struct WhenList *cases;	 /* list of cases  */
+  struct Name *nptr;             /**< Name of the WHEN */
+  struct VariableList *vl;	 /**< list of variables */
+  struct WhenList *cases;	 /**< list of cases  */
 };
 
 struct StateFNAME {
-  struct Name *wname;             /* Name of model or a relation (WHEN)  */
+  struct Name *wname;             /**< Name of model or a relation (WHEN)  */
 };
 
 struct StateSELECT {
-  struct VariableList *vl;	 /*  list of variables */
-  struct SelectList *cases;	 /*  list of cases  */
-  int n_statements;              /* number of stmts in SELECT stmts lists */
-  unsigned int contains;         /* flags about what in SELECT stmts lists */
+  struct VariableList *vl;	 /**<  list of variables */
+  struct SelectList *cases;	 /**<  list of cases  */
+  int n_statements;              /**< number of stmts in SELECT stmts lists */
+  unsigned int contains;         /**< flags about what in SELECT stmts lists */
 };
 
 
 struct StateSWITCH {
-  struct VariableList *vl;	 /* list of variables */
-  struct SwitchList *cases;	 /* list of cases  */
+  struct VariableList *vl;	 /**< list of variables */
+  struct SwitchList *cases;	 /**< list of cases  */
 };
 
 
-struct StateIS {	/* used for IS_A, IS_REFINED_TO, WILL_BE */
-  struct VariableList *vl;	/* all, but WILL_BE may want len=1. */
-  symchar *type;		/* all */
-  struct Set *typeargs;		/* all, parameter list. may be NULL */
-  symchar *settype;		/* IS_A only */
-  struct Expr *checkvalue;	/* WILL_BE only */
-  /* note that checkvalue!=NULL and typeargs!=NULL are mutually exclusive
+struct StateIS {	/**< used for IS_A, IS_REFINED_TO, WILL_BE */
+  struct VariableList *vl;	/**< all, but WILL_BE may want len=1. */
+  symchar *type;		/**< all */
+  struct Set *typeargs;		/**< all, parameter list. may be NULL */
+  symchar *settype;		/**< IS_A only */
+  struct Expr *checkvalue;	/**< WILL_BE only */
+  /**< note that checkvalue!=NULL and typeargs!=NULL are mutually exclusive
    * because checkvalues go with constants which are never parameterized.
    */
 };
 
 struct CompoundAlias {
-/* used for ARR, the compound ALIASES/set IS_A. */
-  struct VariableList *setname;	/* name of new set being defined, as varlist */
-  int intset;			/* 0 -> symbol set, 1-> integer set */
-  struct Set *setvals;		/* set expression for values, if given */
+/**< used for ARR, the compound ALIASES/set IS_A. */
+  struct VariableList *setname;	/**< name of new set being defined, as varlist */
+  int intset;			/**< 0 -> symbol set, 1-> integer set */
+  struct Set *setvals;		/**< set expression for values, if given */
 };
 
 struct StateAlias {
-  /* used for ALIASES and IS (undefined). Eventually IS
+  /**< used for ALIASES and IS (undefined). Eventually IS
    * may be universe scope alii
    */
   struct VariableList *vl;
-    /* ALIASES:		LHS, new alii being defined  a,b,c ALIASES y */
-    /* ARR:		RHS list of instances to point at a[s] ALIASES y[s2] */
-    /* Ken has, quite reasonably, requested that vl be a set expression
+    /**< ALIASES:		LHS, new alii being defined  a,b,c ALIASES y */
+    /**< ARR:		RHS list of instances to point at a[s] ALIASES y[s2] */
+    /**< Ken has, quite reasonably, requested that vl be a set expression
      * so that set arithmetic can control which subset y[i]  | i IN foo
      * is usable. This may play hell on type checking -- need to see
      * what the rules are for determining the base type of instances
      * named with a set expression.
      */
   union {
-    struct Name *nptr;	 /* ALIASES: RHS, name of object being pointed at */
-    struct VariableList *avlname;	/* ARR: LHS, new alias being defined */
+    struct Name *nptr;	 /**< ALIASES: RHS, name of object being pointed at */
+    struct VariableList *avlname;	/**< ARR: LHS, new alias being defined */
   } u;
-  struct CompoundAlias c; /* ARR use only */
+  struct CompoundAlias c; /**< ARR use only */
 };
 
-struct StateARE {		/* used for ARE_THE_SAM,E ARE_ALIKE and */
-  struct VariableList *vl;	/* WILL_BE_THE_SAME, WILL_NOT_BE_THE_SAME. */
+struct StateARE {		/**< used for ARE_THE_SAM,E ARE_ALIKE and */
+  struct VariableList *vl;	/**< WILL_BE_THE_SAME, WILL_NOT_BE_THE_SAME. */
 };
 
-struct StateAssign {		/* used for assignment :==,:= statements */
+struct StateAssign {		/**< used for assignment :==,:= statements */
   struct Name *nptr;
   struct Expr *rhs;
 };
 
-struct StateCall {              /* used for general external methods */
-  symchar *id;			/* global function called */
-  struct Set *args;		/* list of arguments to function */
+struct StateCall {              /**< used for general external methods */
+  symchar *id;			/**< global function called */
+  struct Set *args;		/**< list of arguments to function */
 };
 
-struct StateRelation {		/* used for relations */
+struct StateRelation {		/**< used for relations */
   struct Name *nptr;
   struct Expr *relation;
 };
 
-struct StateLogicalRel {	/* used for logical relations */
+struct StateLogicalRel {	/**< used for logical relations */
   struct Name *nptr;
   struct Expr *logrel;
 };
 
-struct StateExternal {          /* used for external statements */
-  int mode;			/* 0=procedural, 1=glassbox, 2=blackbox */
-  struct Name *nptr;            /* name of the statement */
-  CONST char *extcall;          /* name of the function */
-  struct VariableList *vl;      /* list of arguments */
-  struct Name *data;            /* additional user data */
-  struct Name *scope;		/* scope to add the external
+struct StateExternal {          /**< used for external statements */
+  int mode;			/**< 0=procedural, 1=glassbox, 2=blackbox */
+  struct Name *nptr;            /**< name of the statement */
+  CONST char *extcall;          /**< name of the function */
+  struct VariableList *vl;      /**< list of arguments */
+  struct Name *data;            /**< additional user data */
+  struct Name *scope;		/**< scope to add the external
                                  * relations for glassboxes */
 };
 
 struct StateReference {
-  int mode;			/* clone or reference */
-  symchar *ref_name;		/* thing being referenced */
+  int mode;			/**< clone or reference */
+  symchar *ref_name;		/**< thing being referenced */
   symchar *settype;
   struct VariableList *vl;
 };
 
 struct StateFlow {
-  enum FlowControl fc;		/* what control flow change */
-  struct bracechar *message;	/* message on change, if any */
+  enum FlowControl fc;		/**< what control flow change */
+  struct bracechar *message;	/**< message on change, if any */
 };
 
-struct StateFOR {		/* used for FOR loops */
+struct StateFOR {		/**< used for FOR loops */
   symchar *index;
   struct Expr *e;
   struct StatementList *stmts;
   enum ForOrder order;
   enum ForKind kind;
-  /* NOTE: the following bits are recursive. If stmts contains a for
+  /**< NOTE: the following bits are recursive. If stmts contains a for
    * loop which contains relations, then thereby this for loop does too.
    */
-  unsigned int contains;       /* bit flags about what in for statement list */
+  unsigned int contains;       /**< bit flags about what in for statement list */
 };
 
-struct StateWhile {		/* used for While loops */
+struct StateWhile {		/**< used for While loops */
   struct Expr *test;
   struct StatementList *block;
 };
 
-/*
+/**< 
  * The following bits are used for BOTH FOR statements and SELECT
  * statements. VRR
  */
-#define contains_REL 0x1 	/* TRUE if relations in stmts list */
-#define contains_DEF 0x2	/* true if default statements in stmts list */
-#define contains_CAS 0x4  /* true if structural var assignments in stmts list*/
-#define contains_ALI 0x8	/* true if aliases in stmts list */
-#define contains_ISA 0x10	/* true if IS_A in stmts list */
-#define contains_WILLBE 0x20	/* true if IS_A in stmts list */
-#define contains_ATS 0x40	/* true if ARE_THE_SAME in stmts list */
-#define contains_IRT 0x80	/* true if IS_REFINED_TO in stmts list */
-#define contains_LREL 0x100 	/* TRUE if logical relations in stmts list */
-#define contains_WHEN 0x200 	/* TRUE if WHENs in stmts list */
-#define contains_AA 0x400	/* true if aliases in stmts list */
-#define contains_WBTS 0x800	/* true if WILL_BE_THE_SAME in stmts list */
-#define contains_ARR 0x1000	/* true if CREATE ARRAY in stmts list */
-#define contains_WNBTS 0x2000  /* true if WILL_NOT_BE_THE_SAME in stmts list */
-#define contains_SELECT 0x4000	/* true if SELECT in stmts list */
-#define contains_COND 0x8000	/* true if CONDITIONAL in stmts list */
-                                /* I am doing this seeking for a */
-                                /* generalization. IMHO, a CONDITIONAL*/
-                                /* should always be only in the context of a */
-                                /* MODEL, and any loop should be inside the */
-                                /* CONDITIONAL statement. VRR */
-#define contains_ILL 0x10000 	/* true if illegal statement in loop */
-/* unsupported values, meaning we should be using them but don't yet */
+#define contains_REL 0x1 	/**< TRUE if relations in stmts list */
+#define contains_DEF 0x2	/**< true if default statements in stmts list */
+#define contains_CAS 0x4  /**< true if structural var assignments in stmts list*/
+#define contains_ALI 0x8	/**< true if aliases in stmts list */
+#define contains_ISA 0x10	/**< true if IS_A in stmts list */
+#define contains_WILLBE 0x20	/**< true if IS_A in stmts list */
+#define contains_ATS 0x40	/**< true if ARE_THE_SAME in stmts list */
+#define contains_IRT 0x80	/**< true if IS_REFINED_TO in stmts list */
+#define contains_LREL 0x100 	/**< TRUE if logical relations in stmts list */
+#define contains_WHEN 0x200 	/**< TRUE if WHENs in stmts list */
+#define contains_AA 0x400	/**< true if aliases in stmts list */
+#define contains_WBTS 0x800	/**< true if WILL_BE_THE_SAME in stmts list */
+#define contains_ARR 0x1000	/**< true if CREATE ARRAY in stmts list */
+#define contains_WNBTS 0x2000  /**< true if WILL_NOT_BE_THE_SAME in stmts list */
+#define contains_SELECT 0x4000	/**< true if SELECT in stmts list */
+#define contains_COND 0x8000	/**< true if CONDITIONAL in stmts list */
+                                /**< I am doing this seeking for a */
+                                /**< generalization. IMHO, a CONDITIONAL*/
+                                /**< should always be only in the context of a */
+                                /**< MODEL, and any loop should be inside the */
+                                /**< CONDITIONAL statement. VRR */
+#define contains_ILL 0x10000 	/**< true if illegal statement in loop */
+/**< unsupported values, meaning we should be using them but don't yet */
 
 union StateUnion {
   struct StateAlias ali;
@@ -352,16 +352,16 @@ union StateUnion {
 
 struct Statement {
   enum stat_t t;
-  unsigned int context;		/* tells about context and correctness */
+  unsigned int context;		/**< tells about context and correctness */
   union StateUnion v;
-  struct module_t *mod;		/* module where statement occurs */
-  unsigned long linenum;	/* line number where statement occurs */
-  char *stringform;             /* character string in {} list format */
-  REFCOUNT_T ref_count;	        /* number of references to this structure */
+  struct module_t *mod;		/**< module where statement occurs */
+  unsigned long linenum;	/**< line number where statement occurs */
+  char *stringform;             /**< character string in {} list format */
+  REFCOUNT_T ref_count;	        /**< number of references to this structure */
 };
 
 struct StatementList {
   REFCOUNT_T ref_count;
   struct gl_list_t *l;
 };
-#endif /* __STATTYPES_H_SEEN__ */
+#endif /**< __STATTYPES_H_SEEN__ */

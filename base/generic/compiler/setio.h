@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Temporary set output routines
  *  by Tom Epperly
  *  Version: $Revision: 1.4 $
@@ -26,7 +26,7 @@
  */
 #ifndef __SETIO_H_SEEN__
 #define __SETIO_H_SEEN__
-/*
+/**< 
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"types.h"
@@ -34,7 +34,7 @@
 */
 
 extern void WriteSetNode(FILE *,CONST struct Set *);
-/*
+/**< 
  *  void WriteSetNode(f,s)
  *  FILE *f;
  *  const struct Set *s;
@@ -42,7 +42,7 @@ extern void WriteSetNode(FILE *,CONST struct Set *);
  */
 
 extern void WriteSet(FILE *,CONST struct Set *);
-/*
+/**< 
  *  void WriteSet(f,s)
  *  FILE *f;
  *  const struct Set *s;
@@ -51,7 +51,7 @@ extern void WriteSet(FILE *,CONST struct Set *);
 
 
 extern void WriteSetNode2Str(Asc_DString *,CONST struct Set *);
-/*
+/**< 
  *  void WriteSetNode2Str(dstring,s)
  *  Asc_DString *dstring;
  *  const struct Set *s;
@@ -59,10 +59,10 @@ extern void WriteSetNode2Str(Asc_DString *,CONST struct Set *);
  */
 
 extern void WriteSet2Str(Asc_DString *,CONST struct Set *);
-/*
+/**< 
  *  void WriteSet2Str(dsring,s)
  *  Asc_DString *dstring;
  *  const struct Set *s;
  *  Output the set with no leading or trailing white space.
  */
-#endif /* __SETIO_H_SEEN__ */
+#endif /**< __SETIO_H_SEEN__ */

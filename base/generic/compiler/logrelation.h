@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Logical Relation Construction Routines
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.9 $
@@ -31,7 +31,7 @@
 #define __LOGRELATION_H_SEEN__
 
 
-/*
+/**< 
  *  When #including logrelation.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -43,21 +43,21 @@
 
 
 enum logrelation_errors {
-  find_logerror,		/* error finding an instance */
+  find_logerror,		/**< error finding an instance */
   incorrect_logstructure,
-  incorrect_linst_type,		/* contains a nonboolean instance type */
-  incorrect_real_linst_type,	/* contains a real_inst type */
-  incorrect_boolean_linst_type,	/* contains a boolean instance type */
-  incorrect_integer_linst_type,	/* contains an integer variable instance type*/
-  incorrect_symbol_linst_type,	/* contains a symbol instance type */
-  boolean_value_undefined,	/* boolean constant doesn't have a value yet */
-  incorrect_num_largs,           /* wrong number of arguments */
+  incorrect_linst_type,		/**< contains a nonboolean instance type */
+  incorrect_real_linst_type,	/**< contains a real_inst type */
+  incorrect_boolean_linst_type,	/**< contains a boolean instance type */
+  incorrect_integer_linst_type,	/**< contains an integer variable instance type*/
+  incorrect_symbol_linst_type,	/**< contains a symbol instance type */
+  boolean_value_undefined,	/**< boolean constant doesn't have a value yet */
+  incorrect_num_largs,           /**< wrong number of arguments */
   lokay
 };
 
 
 extern int g_simplify_logrelations;
-/*
+/**< 
  *  The default value of this variable is 0.
  *  Values imply
  *  <0: As 0 below.
@@ -72,7 +72,7 @@ extern int g_simplify_logrelations;
 
 
 extern void InitLogRelInstantiator(void);
-/*
+/**< 
  *  InitLogRelInstantiator();
  *  Sets up logical relation instantiation gizmos. This must be called once
  *  before any logical relations can be built, ideally at startup time.
@@ -81,7 +81,7 @@ extern void InitLogRelInstantiator(void);
  */
 
 extern void DestroyLogRelInstantiator(void);
-/*
+/**< 
  *  DestroyLogRelInstantiator();
  *  Destroy logical relation instantiation gizmos. This must be called to
  *  clean up before shutting down ASCEND.
@@ -90,13 +90,13 @@ extern void DestroyLogRelInstantiator(void);
  */
 
 extern void ReportLogRelInstantiator(FILE*);
-/*
+/**< 
  *  ReportLogRelInstantiator(f);
  *  FILE *f;
  *  Reports on the logical relation instantiator to f.
  */
 
-/*
+/**< 
  * Some defines for Logical Relations. struct logrelation *lr;
  */
 #define Infix_Log_LhsSide(lr)	((lr)->token.lhs_term)
@@ -106,7 +106,7 @@ extern void ReportLogRelInstantiator(FILE*);
 
 
 extern int CheckLogRel(CONST struct Instance *,CONST struct Expr *);
-/*
+/**< 
  *  int CheckLogRel(reference,ex)
  *  const struct Instance *reference;
  *  const struct Expr *ex;
@@ -114,7 +114,7 @@ extern int CheckLogRel(CONST struct Instance *,CONST struct Expr *);
  */
 
 extern struct logrelation *CreateLogRelStructure(enum Expr_enum);
-/*
+/**< 
  *  struct logrelation *CreateLogRelStructure(t);
  *  enum Epxr_enum t;
  *  Create and return a new logrelation node of type t.
@@ -127,7 +127,7 @@ extern struct logrelation *CreateLogicalRelation(struct Instance *,
               CONST struct Expr *,
               enum logrelation_errors *,
               enum find_errors *);
-/*
+/**< 
  *  struct logrelation *CreateLogicalRelation(reference,lrelinst,ex,err,ferr)
  *  struct Instance *reference,*relinst;
  *  const struct Expr *ex;
@@ -150,7 +150,7 @@ extern struct logrelation *CreateLogicalRelation(struct Instance *,
 
 
 extern void DestroyLogRelation(struct logrelation *,struct Instance *);
-/*
+/**< 
  *  void DestroyLogRelation(lrel,lrelinst)
  *  struct logrelation *lrel;
  *  struct Instance *lrelinst;
@@ -166,7 +166,7 @@ extern void ModifyLogRelPointers(struct gl_list_t *,
      CONST struct Instance *,
      CONST struct Instance *);
 
-/*
+/**< 
  *  void ModifyLogRelPointers(relorvar,lrel,old,new);
  *  struct gl_list_t *relorvar;
  *  struct logrelation *lrel;
@@ -179,7 +179,7 @@ extern void ModifyLogRelPointers(struct gl_list_t *,
 extern void DoInOrderLogRelVisit(struct logrel_term *,struct logrelation *,
          void (*func)(struct logrel_term *,
        struct logrelation *));
-/*
+/**< 
  *  void DoInOrderLogRelVisit(term,r,func);
  *  struct logrel_term *term;
  *  void (*func)(struct logrel_term *,struct logrelation *r);
@@ -197,7 +197,7 @@ extern struct logrelation *CopyLogRelByReference(CONST struct Instance *,
        struct Instance *,
        struct gl_list_t *,
        struct gl_list_t *);
-/*
+/**< 
  *  Not implemented yet.
  */
 
@@ -205,7 +205,7 @@ extern struct logrelation *CopyLogRelToModify(CONST struct Instance *,
            struct Instance *,
            struct gl_list_t *,
            struct gl_list_t *);
-/*
+/**< 
  *  struct logrelation *CopyLogRelation(src_inst,dest_inst,varlist,rellist)
  *  const struct Instance *src_inst;
  *  struct Instance *dest_inst;
@@ -222,4 +222,4 @@ extern struct logrelation *CopyLogRelToModify(CONST struct Instance *,
  *  NOT independently allocated, they are in the postfix array.
  */
 
-#endif /* __LOGRELATION_H_SEEN__ */
+#endif /**< __LOGRELATION_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Atom Value Functions
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -29,7 +29,7 @@
  *  COPYING.
  */
 
-/*
+/**< 
  *  When #including atomvalue.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "fractions.h"
@@ -40,12 +40,12 @@
 
 #ifndef __ATOMVALUE_H_SEEN__
 #define __ATOMVALUE_H_SEEN__
-/* requires
+/**< requires
 # #include "instance_enum.h"
 # #include "sets.h"
 */
 
-/*
+/**< 
  *  Atom value querying and assignment routines
  *
  *  These routines provide access to atom values and related attributes.
@@ -53,7 +53,7 @@
  */
 
 extern unsigned AtomAssigned(CONST struct Instance *);
-/*
+/**< 
  *  unsigned AtomAssigned(i)
  *  const struct Instance *i;
  *
@@ -64,7 +64,7 @@ extern unsigned AtomAssigned(CONST struct Instance *);
  */
 
 extern unsigned AtomMutable(CONST struct Instance *);
-/*
+/**< 
  *  unsigned AtomMutable(i);
  *  const struct Instance *i;
  *
@@ -76,7 +76,7 @@ extern unsigned AtomMutable(CONST struct Instance *);
  */
 
 extern unsigned DepthAssigned(CONST struct Instance *);
-/*
+/**< 
  *  unsigned DepthAssigned(i)
  *  const struct Instance *i;
  *
@@ -84,7 +84,7 @@ extern unsigned DepthAssigned(CONST struct Instance *);
  *  boolean instances.
  */
 
-/*
+/**< 
  *  The following Get/Set*AtomValue functions apply to all the scalar
  *  kinds integer, symbol, boolean, and real. This includes
  *  fundamentals (atom children), atoms, and constants. We would take
@@ -93,7 +93,7 @@ extern unsigned DepthAssigned(CONST struct Instance *);
  */
 
 extern double RealAtomValue(CONST struct Instance *);
-/*
+/**< 
  *  double RealAtomValue(i)
  *  const struct Instance *i;
  *  Return the real value of real instance i.  This works only on
@@ -101,7 +101,7 @@ extern double RealAtomValue(CONST struct Instance *);
  */
 
 extern void SetRealAtomValue(struct Instance *,double,unsigned);
-/*
+/**< 
  *  void SetRealAtomValue(i,d,depth)
  *  struct Instance *i;
  *  double d;
@@ -116,7 +116,7 @@ extern void SetRealAtomValue(struct Instance *,double,unsigned);
  */
 
 extern CONST dim_type *RealAtomDims(CONST struct Instance *);
-/*
+/**< 
  *  const dim_type *RealAtomDims(i)
  *  const struct Instance *i;
  *  Return the dimensions attribute of instance i.  This works only on
@@ -125,7 +125,7 @@ extern CONST dim_type *RealAtomDims(CONST struct Instance *);
  */
 
 extern void SetRealAtomDims(struct Instance *,CONST dim_type *);
-/*
+/**< 
  *  void SetRealAtomDims(i,dim)
  *  struct Instance *i;
  *  const dim_type *dim;
@@ -136,7 +136,7 @@ extern void SetRealAtomDims(struct Instance *,CONST dim_type *);
  */
 
 extern long GetIntegerAtomValue(CONST struct Instance *);
-/*
+/**< 
  *  long GetIntegerAtomValue(i)
  *  const struct Instance *i;
  *  Return the value of the integer instance i.  This only works on
@@ -144,7 +144,7 @@ extern long GetIntegerAtomValue(CONST struct Instance *);
  */
 
 extern void SetIntegerAtomValue(struct Instance *,long,unsigned);
-/*
+/**< 
  *  void SetIntegerAtomValue(i,v,depth)
  *  struct Instance *i;
  *  long v;
@@ -157,7 +157,7 @@ extern void SetIntegerAtomValue(struct Instance *,long,unsigned);
  */
 
 extern int GetBooleanAtomValue(CONST struct Instance *);
-/*
+/**< 
  *  int GetBooleanAtomValue(i)
  *  struct Instance *i;
  *  Return a true value if i is TRUE; otherwise return a false value.
@@ -166,7 +166,7 @@ extern int GetBooleanAtomValue(CONST struct Instance *);
  */
 
 extern void SetBooleanAtomValue(struct Instance *,int,unsigned);
-/*
+/**< 
  *  void SetBooleanAtomValue(i,truth,depth)
  *  struct Instance *i;
  *  int truth;
@@ -181,7 +181,7 @@ extern void SetBooleanAtomValue(struct Instance *,int,unsigned);
  */
 
 extern CONST struct set_t *SetAtomList(CONST struct Instance *);
-/*
+/**< 
  *  struct set_t *SetAtomList(i)
  *  struct Instance *i;
  *  Return the list from the set instance i.  This only works on SET_INST
@@ -190,7 +190,7 @@ extern CONST struct set_t *SetAtomList(CONST struct Instance *);
  */
 
 extern int AssignSetAtomList(struct Instance *, struct set_t *);
-/*
+/**< 
  *  void AssignSetAtomList(i,list)
  *  struct Instance *i;
  *  struct set_t *list;
@@ -202,14 +202,14 @@ extern int AssignSetAtomList(struct Instance *, struct set_t *);
  */
 
 extern int GetSetAtomKind(CONST struct Instance *);
-/*
+/**< 
  *  int GetSetAtomKind(i);
  *  const struct Instance *i;
  *  Return the kind of the set. 1 ==> integer set; 0 ==> string set.
  */
 
 extern symchar *GetSymbolAtomValue(CONST struct Instance *);
-/*
+/**< 
  *  symchar *GetSymbolAtomValue(i)
  *  const struct Instance *i;
  *  This returns the symbol that instance i is assigned to.
@@ -220,7 +220,7 @@ extern symchar *GetSymbolAtomValue(CONST struct Instance *);
  */
 
 extern void SetSymbolAtomValue(struct Instance *,symchar *);
-/*
+/**< 
  *  void SetSymbolAtomValue(i,s)
  *  struct Instance *i;
  *  symchar *s;
@@ -231,7 +231,7 @@ extern void SetSymbolAtomValue(struct Instance *,symchar *);
  */
 
 extern int CmpAtomValues(CONST struct Instance *, CONST struct Instance *);
-/*
+/**< 
  *  int CmpAtomValues(i1,i2)
  *  struct Instance *i1,*i2;
  *  Return -1,0,1 as i2 < == or > i1. i1 and i2 should be of the same base
@@ -242,4 +242,4 @@ extern int CmpAtomValues(CONST struct Instance *, CONST struct Instance *);
  */
 
 #endif
- /* __ATOMVALUE_H_SEEN__ */
+ /**< __ATOMVALUE_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Implementation Macros
  *  by Tom Epperly & Ben Allan
  *  9/3/89
@@ -32,85 +32,85 @@
 #ifndef __INSTMACRO_H_SEEN__
 #define __INSTMACRO_H_SEEN__
 
-/*
+/**< 
  *---------------------------------------------------------------------------
  *      This header for instance and instantiator consumption only.
  *                      Clients keep your hands off!
  *---------------------------------------------------------------------------
  */
 
-/* temporary global variables used for debugging only */
+/**< temporary global variables used for debugging only */
 #ifndef NDEBUG
-/* fundies */
+/**< fundies */
 extern struct RealInstance *g_r_inst;
 extern struct IntegerInstance *g_i_inst;
 extern struct BooleanInstance *g_b_inst;
 extern struct SetInstance *g_s_inst;
 extern struct SymbolInstance *g_sym_inst;
-/* constants */
+/**< constants */
 extern struct RealConstantInstance *g_rc_inst;
 extern struct IntegerConstantInstance *g_ic_inst;
 extern struct BooleanConstantInstance *g_bc_inst;
 extern struct SetConstantInstance *g_sc_inst;
 extern struct SymbolConstantInstance *g_symc_inst;
-/* atoms */
+/**< atoms */
 extern struct RealAtomInstance *g_ra_inst;
 extern struct IntegerAtomInstance *g_ia_inst;
 extern struct BooleanAtomInstance *g_ba_inst;
 extern struct SetAtomInstance *g_sa_inst;
 extern struct SymbolAtomInstance *g_syma_inst;
-/* other */
+/**< other */
 extern struct ModelInstance *g_mod_inst;
 extern struct RelationInstance *g_rel_inst;
 extern struct LogRelInstance *g_lrel_inst;
 extern struct WhenInstance *g_when_inst;
 #endif
 
-/* init parent list size */
-#define AVG_CONSTANT_PARENTS 2L	       /* size to which all parent lists are */
-           /* initialized for real constants */
-#define AVG_ICONSTANT_PARENTS 20L      /* size to which all parent lists are */
-           /* initialized for int constants */
-#define AVG_PARENTS 2L		/* size to which all parent lists are */
-    /* initialized */
-#define AVG_CASES 2L		/* size to which all cases lists are */
-    /* initialized (WHEN instance) */
-#define AVG_WHEN 2L		/* size to which all when lists are */
-    /* initialized (models, relations) */
-#define AVG_RELATIONS 7L	/* size to which all relation lists are */
-    /* initialized */
-#define AVG_LOGRELS 7L  	/* size to which all logical relation   */
-                                /* lists are initialized */
-#define AVG_ARY_CHILDREN 7L	/* size to which all array children lists */
-    /* are initialized */
+/**< init parent list size */
+#define AVG_CONSTANT_PARENTS 2L	       /**< size to which all parent lists are */
+           /**< initialized for real constants */
+#define AVG_ICONSTANT_PARENTS 20L      /**< size to which all parent lists are */
+           /**< initialized for int constants */
+#define AVG_PARENTS 2L		/**< size to which all parent lists are */
+    /**< initialized */
+#define AVG_CASES 2L		/**< size to which all cases lists are */
+    /**< initialized (WHEN instance) */
+#define AVG_WHEN 2L		/**< size to which all when lists are */
+    /**< initialized (models, relations) */
+#define AVG_RELATIONS 7L	/**< size to which all relation lists are */
+    /**< initialized */
+#define AVG_LOGRELS 7L  	/**< size to which all logical relation   */
+                                /**< lists are initialized */
+#define AVG_ARY_CHILDREN 7L	/**< size to which all array children lists */
+    /**< are initialized */
 #define UNDEFAULTEDREAL 0.0
 
-#define MAX_EXTRELATIONS 20     /* maximum number of different ext relations */
-                                /* for a given simulation */
+#define MAX_EXTRELATIONS 20     /**< maximum number of different ext relations */
+                                /**< for a given simulation */
 
-/* type coercion definitions */
-/* any */
+/**< type coercion definitions */
+/**< any */
 #define INST(i) ((struct Instance *)(i))
-/* other */
+/**< other */
 #define SIM_INST(i) ((struct SimulationInstance *)(i))
 #define RELN_INST(i) ((struct RelationInstance *)(i))
 #define LRELN_INST(i) ((struct LogRelInstance *)(i))
 #define ARY_INST(i) ((struct ArrayInstance *)(i))
 #define MOD_INST(i) ((struct ModelInstance *)(i))
 #define W_INST(i) ((struct WhenInstance *)(i))
-/* fundies */
+/**< fundies */
 #define R_INST(i) ((struct RealInstance *)(i))
 #define I_INST(i) ((struct IntegerInstance *)(i))
 #define B_INST(i) ((struct BooleanInstance *)(i))
 #define S_INST(i) ((struct SetInstance *)(i))
 #define SYM_INST(i) ((struct SymbolInstance *)(i))
-/* constants */
+/**< constants */
 #define CI_INST(i) ((struct CommonConstantInstance *)(i))
 #define RC_INST(i) ((struct RealConstantInstance *)(i))
 #define IC_INST(i) ((struct IntegerConstantInstance *)(i))
 #define BC_INST(i) ((struct BooleanConstantInstance *)(i))
 #define SYMC_INST(i) ((struct SymbolConstantInstance *)(i))
-/* atoms */
+/**< atoms */
 #define CA_INST(i) ((struct CommonAtomInstance *)(i))
 #define RA_INST(i) ((struct RealAtomInstance *)(i))
 #define BA_INST(i) ((struct BooleanAtomInstance *)(i))
@@ -120,12 +120,12 @@ extern struct WhenInstance *g_when_inst;
 #define SOL_INST(i) ((struct SolverAtomInstance *)(i))
 
 #define D_INST(i) ((struct GlobalDummyInstance *)(i))
-/* constant inst assigned? */
+/**< constant inst assigned? */
 #define CIASS(i) (CI_INST(i)->vflag & ci_ASSIGNED)
-/* boolean constant value */
+/**< boolean constant value */
 #define BCV(i) ((BC_INST(i)->vflag & ci_BVAL) == ci_BVAL)
 
-/* parent macros for fundamental atoms real, integer, boolean, and set */
+/**< parent macros for fundamental atoms real, integer, boolean, and set */
 #define R_PARENT(i) \
   INST((unsigned long)i-(unsigned long)R_INST(i)->parent_offset)
 #define I_PARENT(i) \
@@ -137,12 +137,12 @@ extern struct WhenInstance *g_when_inst;
 #define SYM_PARENT(i) \
   INST((unsigned long)i-(unsigned long)SYM_INST(i)->parent_offset)
 
-/* this should probably be conditionally defined by LONGCHILDREN
+/**< this should probably be conditionally defined by LONGCHILDREN
  * so that if LONGCHILDREN, just returns ivalue.
  */
 #define NextHighestEven(ivalue) (((ivalue) & 1) ? ((ivalue)+1) : (ivalue))
 
-/* child array macros */
+/**< child array macros */
 #define CHILD_ADR(iptr,type,c)\
   ((struct Instance **)((unsigned long)iptr+(unsigned long)sizeof(type))+c)
 #define SIM_CHILD(i,c) CHILD_ADR(i,struct SimulationInstance,c)
@@ -158,7 +158,7 @@ extern struct WhenInstance *g_when_inst;
 #define CLIST(in,type) (struct Instance **)((unsigned long)(in)+sizeof(type))
 #define BASE_ADDR(in,num,type) INST((CLIST(in,type)) + NextHighestEven(num))
 
-/* the whole use of BASE_ADDR needs to be reinvestigated. in particular
+/**< the whole use of BASE_ADDR needs to be reinvestigated. in particular
  * we need RealInstance children to be aligned to 8 bytes, not 2 bytes
  * which is all NextHighestEven gives us.
  */
@@ -169,7 +169,7 @@ extern struct WhenInstance *g_when_inst;
 #define NotAtom(i) NotAtomF(i)
 #endif
 extern int NotAtomF(struct Instance *);
-/*
+/**< 
  *  macro NotAtom(i)
  *  NotAtomF(i)
  *  Returns 1 if instance is compound (i.e. not relation, ATOM, constant,
@@ -177,4 +177,4 @@ extern int NotAtomF(struct Instance *);
  */
 
 #endif
-/* __INSTMACRO_H_SEEN__ */
+/**< __INSTMACRO_H_SEEN__ */

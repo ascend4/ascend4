@@ -29,7 +29,7 @@
  *  COPYING.  COPYING is found in ../compiler.
  *
  */
-/*
+/**
  *  Contents:     Variable module (ascend)
  *
  *  Authors:      Karl Westerberg
@@ -69,22 +69,19 @@
  * they are very, very smart.
  */
 #define VAR_REAL	0x1
+/**<  don't know what this is good for. */
 #define VAR_INCIDENT	0x2
+/**< is this variable incident on some equation in the slv_system? */
 #define VAR_PVAR 	0x4
+/**< do we think this var a 'solver_par'? */
 #define VAR_SVAR	0x8
+/**< do we think this var a 'solver_var'? */
 #define VAR_INTEGER	0x10
+/**< do we think this var a solver_integer? */
 #define VAR_BINARY	0x20
+/**< do we think this var a solver_binary?  */
 #define VAR_SEMICONT	0x40
-
-/*
- * VAR_REAL       don't know what this is good for
- * VAR_INCIDENT   is this variable incident on some equation in the slv_system?
- * VAR_PVAR       do we think this var a 'solver_par'?
- * VAR_SVAR       do we think this var a 'solver_var'?
- * VAR_INTEGER    do we think this var a solver_integer?
- * VAR_BINARY     do we think this var a solver_binary? 
- * VAR_SEMICONT   do we think this var a solver_semi(continuous) ?
- */
+/**< do we think this var a solver_semi(continuous) ?  */
 
 /*
  * The remaining flagbit definitions are those flags to be
@@ -95,54 +92,63 @@
 */
 
 #define VAR_PARAM	0x1000
-#define VAR_FIXED	0x2000
-#define VAR_INBLOCK	0x4000
-#define VAR_INTERFACE	0x8000
-#define VAR_RELAXED	0x10000
-#define VAR_ACTIVE      0x20000
-#define VAR_NONBASIC    0x40000
-#define VAR_ACTIVE_AT_BND  0x80000
-#define VAR_ELIGIBLE    0x100000
-#define VAR_ELIGIBLE_IN_SUBREGION 0x200000
-#define VAR_POTENTIALLY_FIXED 0x400000
-#define VAR_INCIDENT_IN_CASE    0x800000
+/**< VAR_PARAM      is this variable considered parametric currently? */
 
-/*
- * VAR_PARAM      is this variable considered parametric currently?
- * VAR_FIXED      is this variable considered fixed currently?
- * VAR_INBLOCK    is this var in the columns of the block we are 
- *                currently solving? 
- * VAR_INTERFACE  is this var an interface var currently?
- * VAR_RELAXED    is this var currently a relaxed int or binary or semi var?
- * VAR_ACTIVE     is this var currently a part of my problem
- * VAR_NONBASIC   is this var currently an independent variable 
- *                (optimization)?
- * VAR_ACTIVE_AT_BND is this var active in some of the subregions 
+#define VAR_FIXED	0x2000
+/**< VAR_FIXED      is this variable considered fixed currently? */
+
+#define VAR_INBLOCK	0x4000
+/**< VAR_INBLOCK    is this var in the columns of the block we are 
+                currently solving?  */
+
+#define VAR_INTERFACE	0x8000
+/**< VAR_INTERFACE  is this var an interface var currently? */
+
+#define VAR_RELAXED	0x10000
+/**< VAR_RELAXED    is this var currently a relaxed int or binary or semi var? */
+
+#define VAR_ACTIVE      0x20000
+/**< VAR_ACTIVE     is this var currently a part of my problem */
+
+#define VAR_NONBASIC    0x40000
+/**< VAR_NONBASIC   is this var currently an independent variable 
+ *                (optimization)? */
+
+#define VAR_ACTIVE_AT_BND  0x80000
+/**< VAR_ACTIVE_AT_BND is this var active in some of the subregions 
  *                neighboring the boundary on which the problem 
- *                currently lies ?
- * VAR_ELIGIBLE   is this variable eligible to be fixed (globally)?
- * VAR_ELIGIBLE_IN_SUBREGION is this variable eligible to be fixed (in current
- *                           subregion) ?
- * VAR_POTENTIALLY_FIXED this bit is auxiliar while iteratively and recurively
+ *                currently lies ? */
+
+#define VAR_ELIGIBLE    0x100000
+/**< VAR_ELIGIBLE   is this variable eligible to be fixed (globally)?
+
+#define VAR_ELIGIBLE_IN_SUBREGION 0x200000
+/**< VAR_ELIGIBLE_IN_SUBREGION is this variable eligible to be fixed (in current
+ *                           subregion) ? */
+
+#define VAR_POTENTIALLY_FIXED 0x400000
+/**< VAR_POTENTIALLY_FIXED this bit is auxiliar while iteratively and recurively
  *                       we are performing a combinatorial search, looking
  *                       for a consitent partition for all the alternatives
- *                       in an conditional model
- * VAR_INCIDENT_IN_CASE is this variable incident in some relation of a 
+ *                       in an conditional model */
+
+#define VAR_INCIDENT_IN_CASE    0x800000
+/**< VAR_INCIDENT_IN_CASE is this variable incident in some relation of a 
  *                CASE in a WHEN statement ?. This is for purposes of
  *                simplfying the analysis of conditional models
  */
 
 struct var_variable {
-  SlvBackendToken ratom;	/* the associated ascend ATOM */
+  SlvBackendToken ratom;	/**< the associated ascend ATOM */
   struct rel_relation **incidence;
-  /* array rels which contain var */
-  int32 n_incidences;		/* length of incidence. */
-  int32 sindex;	/* index in the solver clients list (often column index) */
-  int32 mindex;	/* index in the slv_system_t master list */
-  uint32 flags; /* batch of binary flags. The bit positions are as above */
+  /**< array rels which contain var */
+  int32 n_incidences;		/**< length of incidence. */
+  int32 sindex;	/**< index in the solver clients list (often column index) */
+  int32 mindex;	/**< index in the slv_system_t master list */
+  uint32 flags; /**< batch of binary flags. The bit positions are as above */
 };
 
-/*
+/**<
  *  Finally, we have a real structure so that we aren't hanging stuff
  * of the global instance tree. Do not dereference this structure except
  * via macros/functions, because we make no commitments about being
@@ -170,7 +176,7 @@ typedef struct var_filter_structure {
 
 extern SlvBackendToken var_instanceF(const struct var_variable *);
 extern void var_set_instanceF(struct var_variable *,SlvBackendToken );
-/*
+/**<
  * i = var_instance(var); 
  * var_set_instance(var,i);
  * struct var_variable *var;
@@ -180,7 +186,7 @@ extern void var_set_instanceF(struct var_variable *,SlvBackendToken );
 
 extern char *var_make_name(const slv_system_t,const struct var_variable *);
 extern char *var_make_xname(const struct var_variable *);
-/*
+/**<
  *  name = var_make_name(sys,var)
  *  name = var_make_xname(var)
  *  struct var_variable *var;
@@ -197,7 +203,7 @@ extern char *var_make_xname(const struct var_variable *);
 
 extern void var_write_name(const slv_system_t,
                            const struct var_variable *,FILE *);
-/*
+/**<
  *  var_write_name(sys,var,file);
  *  Writes a name to the file given. Handles NULL inputs gracefully.
  *  Does not print any whitespace, including carriage returns.
@@ -207,7 +213,7 @@ extern void var_write_name(const slv_system_t,
  */
 
 void var_destroy(struct var_variable *);
-/*
+/**<
  *  var_destroy(var);
  *  struct var_variable *var;
  *
@@ -225,7 +231,7 @@ void var_destroy(struct var_variable *);
 
 extern int32 var_mindexF(const struct var_variable *);
 extern void var_set_mindexF(struct var_variable *,int32);
-/*
+/**<
  *  index = var_mindex(var)
  *  var_set_mindex(var,index)
  *  int32 index;
@@ -246,7 +252,7 @@ extern void var_set_mindexF(struct var_variable *,int32);
 
 extern int32 var_sindexF(const struct var_variable *);
 extern void var_set_sindexF(struct var_variable *,int32);
-/*
+/**<
  *  index = var_sindex(var)
  *  var_set_sindex(var,index)
  *  int32 index;
@@ -259,7 +265,7 @@ extern void var_set_sindexF(struct var_variable *,int32);
 
 extern real64 var_value(const struct var_variable *);
 extern void var_set_value(struct var_variable *,real64);
-/*
+/**<
  *  value = var_value(var)
  *  var_set_value(var,value)
  *  real64 value;
@@ -270,7 +276,7 @@ extern void var_set_value(struct var_variable *,real64);
 
 extern real64 var_nominal(struct var_variable *);
 extern void var_set_nominal(struct var_variable *,real64);
-/*
+/**<
  *  nominal = var_nominal(var)
  *  var_set_nominal(var,nominal)
  *  real64 nominal;
@@ -282,7 +288,7 @@ extern void var_set_nominal(struct var_variable *,real64);
 
 extern real64 var_lower_bound(struct var_variable *);
 extern void var_set_lower_bound(struct var_variable *,real64);
-/*
+/**<
  *  lower_bound = var_lower_bound(var)
  *  var_set_lower_bound(var,lower_bound)
  *  real64 lower_bound;
@@ -293,7 +299,7 @@ extern void var_set_lower_bound(struct var_variable *,real64);
 
 extern real64 var_upper_bound(struct var_variable *);
 extern void var_set_upper_bound(struct var_variable *,real64);
-/*
+/**<
  *  upper_bound = var_upper_bound(var)
  *  var_set_upper_bound(var,upper_bound)
  *  real64 upper_bound;
@@ -314,7 +320,7 @@ extern void var_set_upper_bound(struct var_variable *,real64);
 extern int32 var_n_incidencesF(struct var_variable *);
 extern void var_set_incidencesF(struct var_variable *,
                                 int32,struct rel_relation **);
-/*
+/**<
  *  var_n_incidences(var)
  *  var_set_incidences(var,n,ilist) //SERVER ONLY
  *  struct var_variable *var;
@@ -332,7 +338,7 @@ extern void var_set_incidencesF(struct var_variable *,
 extern const struct rel_relation **var_incidence_list(struct var_variable *);
 extern struct rel_relation
 **var_incidence_list_to_modify(struct var_variable *);
-/*
+/**<
  *  va = var_incidence_list(var)
  *  struct var_variable *var;
  *  struct rel_relation **va;
@@ -360,7 +366,7 @@ extern struct rel_relation
 
 extern uint32 var_flagsF(const struct var_variable *);
 extern void var_set_flagsF(struct var_variable *,uint32);
-/*
+/**<
  *  var_flags(var);
  *  var_set_flags(var,flags);
  *  struct var_variable *var;
@@ -373,7 +379,7 @@ extern void var_set_flagsF(struct var_variable *,uint32);
  */
 
 extern uint32 var_flagbit(const struct var_variable *,const uint32);
-/*
+/**<
  *  var_flagbit(rel,name);
  *  struct var_variable *rel;
  *  uint32 name;
@@ -382,7 +388,7 @@ extern uint32 var_flagbit(const struct var_variable *,const uint32);
  */
 
 extern void var_set_flagbit(struct var_variable *,uint32, uint32);
-/*
+/**<
  *  struct var_variable *var;
  *  unsigned int32 NAME,oneorzero;
  *  var_set_flagbit(var,NAME,oneorzero)
@@ -401,7 +407,7 @@ extern void var_set_flagbit(struct var_variable *,uint32, uint32);
  *  }
  */
 
-/*
+/**<
  * At present there is some insanity about asking the instance tree
  * vs asking our data structure about the flag values. This needs to
  * be fixed. In the process of that fix, we should establish a 
@@ -420,7 +426,7 @@ extern void var_set_flagbit(struct var_variable *,uint32, uint32);
 
 extern int32 var_apply_filter(const struct var_variable *,
                                const var_filter_t *);
-/*
+/**<
  *  value = var_apply_filter(var,filter)
  *  int32 value;
  *  struct var_variable *var;
@@ -436,7 +442,7 @@ extern uint32 var_relaxed(struct var_variable *);
 extern void var_set_relaxed(struct var_variable *, uint32);
 extern uint32 var_interface(struct var_variable *);
 extern void var_set_interface(struct var_variable *, uint32);
-/*
+/**<
  *  fixed = var_fixed(var)
  *  var_set_fixed(var,fixed)
  *  uint32 fixed;
@@ -479,7 +485,7 @@ extern void var_set_interface(struct var_variable *, uint32);
 #define var_set_incident_in_case(v,b) var_set_flagbit((v),VAR_INCIDENT_IN_CASE,(b))
 #define var_set_potentially_fixed(v,b) var_set_flagbit((v),VAR_POTENTIALLY_FIXED,(b))
 
-/*
+/**<
  *  incident = var_incident(var)
  *  var_set_incident(var,incident)
  *  uint32 incident;
@@ -487,7 +493,7 @@ extern void var_set_interface(struct var_variable *, uint32);
  *
  *  Gets/sets the incident flag of the variable.
  */
-/*
+/**<
  *  in_block = var_in_block(var)
  *  var_set_in_block(var,in_block)
  *  uint32 in_block;
@@ -498,7 +504,7 @@ extern void var_set_interface(struct var_variable *, uint32);
 
 extern struct var_variable **var_BackendTokens_to_vars(slv_system_t,
 						SlvBackendToken *, int32);
-/*
+/**<
  *  varp = var_BackendTokens_to_vars(sys,tokenlist,len);
  *  slv_system_t sys;			System to get indexing from.
  *  SlvBackendToken tokenlist[];	Array of backend tokens.
@@ -541,7 +547,7 @@ extern boolean solver_var(SlvBackendToken);
 extern boolean solver_int(SlvBackendToken);
 extern boolean solver_binary(SlvBackendToken);
 extern boolean solver_semi(SlvBackendToken);
-/*
+/**<
  *  e.g. if (solver_var(inst)) {}
  *  SlvBackendToken inst;
  *  Returns true if the instance in question matches the currently
@@ -557,7 +563,7 @@ extern boolean solver_semi(SlvBackendToken);
  */
 
 extern boolean set_solver_types(void);
-/*
+/**<
  *  Sets (changes) the current definition of solver_var to match
  *  the current library. Returns 1 if unsuccessful, 0 if ok.
  *  If 1, it is useless to invoke the solvers.

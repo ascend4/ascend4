@@ -1,4 +1,4 @@
-/*
+/**< 
  *  When Utility Functions
  *  Version: $Revision: 1.8 $
  *  Version control file: $RCSfile: when_util.h,v $
@@ -28,7 +28,7 @@
 
 #ifndef __WHEN_UTIL_H_SEEN__
 #define __WHEN_UTIL_H_SEEN__
-/* requires
+/**< requires
  *# #include "compiler.h"
  *# #include "base.h"
  *  base, say what?
@@ -46,12 +46,12 @@
 #define FALSE      0
 #endif
 
-/*
+/**< 
  *                       When utility fuctions
  */
 
 extern unsigned long NumberWhenVariables(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long NumberWhenVariables(when)
  *  struct Instance *when;
  *  This will indicate the number of distinct variables to which the
@@ -60,7 +60,7 @@ extern unsigned long NumberWhenVariables(CONST struct Instance *);
 
 extern struct Instance *WhenVariable(CONST struct Instance *,
                                      unsigned long);
-/*
+/**< 
  *  struct Instance *WhenVariable(when,varnum)
  *  struct Instance *when;
  *  unsigned long varnum;
@@ -68,7 +68,7 @@ extern struct Instance *WhenVariable(CONST struct Instance *,
  */
 
 extern int VarFoundInWhen(CONST struct Instance *, CONST struct Instance *);
-/*
+/**< 
  *  int VarFoundInWhen(var,when)
  *  struct Instance *var;
  *  struct Instance *when;
@@ -76,7 +76,7 @@ extern int VarFoundInWhen(CONST struct Instance *, CONST struct Instance *);
  */
 
 extern unsigned long NumberWhenCases(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long NumberWhenCases(when)
  *  struct Instance *when;
  *  This will indicate the number of distinct cases to which the
@@ -85,7 +85,7 @@ extern unsigned long NumberWhenCases(CONST struct Instance *);
 
 extern struct Case *WhenCase(CONST struct Instance *,
                              unsigned long);
-/*
+/**< 
  *  struct Instance *WhenCase(when,casenum)
  *  struct Instance *when;
  *  unsigned long casenum;
@@ -95,7 +95,7 @@ extern struct Case *WhenCase(CONST struct Instance *,
 extern void ModifyWhenPointers(struct gl_list_t *,
                                CONST struct Instance *,
                                CONST struct Instance *);
-/*
+/**< 
  *  void ModifyWhenPointers(reforvar,old,new);
  *  struct gl_list_t *reforvar;
  *  CONST struct Instance *old;
@@ -122,7 +122,7 @@ extern void ModifyWhenPointers(struct gl_list_t *,
 
 extern struct gl_list_t *CopyWhenBVarList(struct Instance *,
               struct gl_list_t *);
-/*
+/**< 
  *  struct gl_list_t *CopyWhenBVarList(dest_inst,copylist)
  *  struct Instance *dest_inst;
  *  struct gl_list_t *copylist;
@@ -132,7 +132,7 @@ extern struct gl_list_t *CopyWhenBVarList(struct Instance *,
 
 extern struct gl_list_t *CopyWhenCaseRefList(struct Instance *,
                  struct gl_list_t *);
-/*
+/**< 
  *  struct gl_list_t *CopyWhenCaseRefList(dest_inst,copylist)
  *  struct Instance *dest_inst;
  *  struct gl_list_t *copylist;
@@ -140,7 +140,7 @@ extern struct gl_list_t *CopyWhenCaseRefList(struct Instance *,
  */
 
 extern void DestroyWhenVarList(struct gl_list_t *, struct Instance *);
-/*
+/**< 
  *  void DestroyWhenVarList(l,inst)
  *  struct gl_list_t *l;
  *  struct Instance *inst;
@@ -149,7 +149,7 @@ extern void DestroyWhenVarList(struct gl_list_t *, struct Instance *);
 
 
 extern void DestroyWhenCaseList(struct gl_list_t *, struct Instance *);
-/*
+/**< 
  *  void DestroyWhenCaseList(l,inst);
  *  struct gl_list_t *l;
  *  struct Instance *inst;
@@ -157,7 +157,7 @@ extern void DestroyWhenCaseList(struct gl_list_t *, struct Instance *);
  */
 
 
-/*
+/**< 
  *  Model Filtration functions. This file will provide a mean to "turn
  *  off" all the models included in a WHEN statement. That will be done
  *  by using a set of binary (one bit) flags. We will provide a set of
@@ -167,7 +167,7 @@ extern void DestroyWhenCaseList(struct gl_list_t *, struct Instance *);
 
 extern unsigned int model_flags(struct Instance *);
 extern void model_set_flags(struct Instance *,unsigned int);
-/*
+/**< 
  *  struct ModelInstance *mod;
  *  unsigned int anon_ flags;
  *
@@ -177,7 +177,7 @@ extern void model_set_flags(struct Instance *,unsigned int);
  */
 
 extern unsigned int model_flagbit(CONST struct Instance *, unsigned int);
-/*
+/**< 
  *  model_flagbit(mod,name);
  *  struct WhenInstance *mod;
  *  unsigned int name;
@@ -187,7 +187,7 @@ extern unsigned int model_flagbit(CONST struct Instance *, unsigned int);
 
 extern void model_set_flagbit(struct Instance *,unsigned int,
                               unsigned int);
-/*
+/**< 
  *  struct ModelInstance *mod;
  *  unsigned int NAME,oneorzero;
  *  model_set_flagbit(mod,NAME,oneorzero)
@@ -205,12 +205,12 @@ extern void model_set_flagbit(struct Instance *,unsigned int,
  *  }
  */
 
-/* the bit flags. explained afterward.*/
+/**< the bit flags. explained afterward.*/
 #define MODEL_ON    	0x1
 #define MODEL_IN_WHEN	0x2
 #define MODEL_ACTIVE    0x4
 
-/*
+/**< 
  *  MODEL_ON  	     is the model part of my problem ?
  *  MODEL_IN_WHEN	     is the MODEL inside a WHEN statement ?
  *  MODEL_ACTIVE         is the model active in the current iteration ?
@@ -220,7 +220,7 @@ extern void model_set_flagbit(struct Instance *,unsigned int,
 #define model_in_when(m)	model_flagbit((m),MODEL_IN_WHEN)
 #define model_active(m)	       	model_flagbit((m),MODEL_ACTIVE)
 
-/*
+/**< 
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
@@ -229,7 +229,7 @@ extern void model_set_flagbit(struct Instance *,unsigned int,
 #define model_set_active(m,bv)	  model_set_flagbit((m),MODEL_ACTIVE,(bv))
 
 
-/*
+/**< 
  *  Log/Relation Filtration functions. This file will provide a mean to "turn
  *  on" all the relations/logrelation  not included in a WHEN statement.
  *  That will be done by using a set of binary (one bit) flags. We will
@@ -240,7 +240,7 @@ extern void model_set_flagbit(struct Instance *,unsigned int,
 
 extern unsigned int relinst_flags(struct Instance *);
 extern void relinst_set_flags(struct Instance *,unsigned int);
-/*
+/**< 
  *  struct Instance *rel;
  *  unsigned int anon_ flags;
  *
@@ -250,7 +250,7 @@ extern void relinst_set_flags(struct Instance *,unsigned int);
  */
 
 extern unsigned int relinst_flagbit(CONST struct Instance *,unsigned int);
-/*
+/**< 
  *  relinst_flagbit(rel,name);
  *  struct Instance *rel;
  *  unsigned int name;
@@ -260,7 +260,7 @@ extern unsigned int relinst_flagbit(CONST struct Instance *,unsigned int);
 
 extern void relinst_set_flagbit(struct Instance *,unsigned int,
                                 unsigned int);
-/*
+/**< 
  *  struct Instance *rel;
  *  unsigned int NAME,oneorzero;
  *  relinst_set_flagbit(rel,NAME,oneorzero)
@@ -280,7 +280,7 @@ extern void relinst_set_flagbit(struct Instance *,unsigned int,
 
 extern unsigned int logrelinst_flags(struct Instance *);
 extern void logrelinst_set_flags(struct Instance *,unsigned int);
-/*
+/**< 
  *  struct Instance *lrel;
  *  unsigned int anon_ flags;
  *
@@ -291,7 +291,7 @@ extern void logrelinst_set_flags(struct Instance *,unsigned int);
  */
 
 extern unsigned int logrelinst_flagbit(CONST struct Instance *,unsigned int);
-/*
+/**< 
  *  logrelinst_flagbit(lrel,name);
  *  struct Instance *lrel;
  *  unsigned int name;
@@ -302,7 +302,7 @@ extern unsigned int logrelinst_flagbit(CONST struct Instance *,unsigned int);
 
 extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
                                    unsigned int);
-/*
+/**< 
  *  struct Instance *rel;
  *  unsigned int NAME,oneorzero;
  *  logrelinst_set_flagbit(lrel,NAME,oneorzero)
@@ -320,7 +320,7 @@ extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
  *  }
  */
 
-/* the bit flags. explained afterward.*/
+/**< the bit flags. explained afterward.*/
 #define RELINST_ON    	0x1
 #define RELINST_CONDITIONAL	0x2
 #define RELINST_IN_WHEN     0x4
@@ -328,7 +328,7 @@ extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
 #define LOGRELINST_CONDITIONAL	0x10
 #define LOGRELINST_IN_WHEN     0x20
 
-/*
+/**< 
  *  RELINST_ON  	     is the relation part of my problem ?
  *  RELINST_CONDITIONAL  is the relation a boundary expression ?
  *  RELINST_IN_WHEN	     is the relation inside a WHEN statement?
@@ -337,9 +337,9 @@ extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
  *  LOGRELINST_IN_WHEN	     is the logical relation inside a WHEN statement?
  */
 
-/* the bit flag lookups */
+/**< the bit flag lookups */
 #if 0
-/*
+/**< 
  *  need to fix these. r is now an instance, not relation instance
  *  Also, lr is a not a logrelation instance.
  */
@@ -359,7 +359,7 @@ extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
 #define logrelinst_in_when(lr)	    logrelinst_flagbit((lr),LOGRELINST_IN_WHEN)
 #endif
 
-/*
+/**< 
  *  bit flag assignments. any value other than 0 for bv turns the
  *  named flag to 1. 0 sets it to 0.
  */
@@ -374,4 +374,4 @@ extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
 #define logrelinst_set_in_when(lr,bv) \
                        logrelinst_set_flagbit((lr),LOGRELINST_IN_WHEN,(bv))
 
-#endif /* __WHEN_UTIL_H_SEEN__ */
+#endif /**< __WHEN_UTIL_H_SEEN__ */

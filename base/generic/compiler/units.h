@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Units Type definitions
  *  by Tom Epperly
  *  8/18/89
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including units.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -36,7 +36,7 @@
 
 #ifndef __UNITS_H_SEEN__
 #define __UNITS_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"dimen.h"
@@ -49,16 +49,16 @@
 #define ACAST const char *
 #define BCAST char *
 #endif
-/* to shut up the hp lexer */
+/**< to shut up the hp lexer */
 
 
 struct Units {
-  double conversion_factor;	/* to convert from units to system units */
-  symchar *description;	/* description of units */
-  CONST dim_type *dim;		/* dimenions of units */
-  struct Units *next;		/* not for human consumption */
+  double conversion_factor;	/**< to convert from units to system units */
+  symchar *description;	/**< description of units */
+  CONST dim_type *dim;		/**< dimenions of units */
+  struct Units *next;		/**< not for human consumption */
 };
-/*
+/**< 
  *  value in system units = value in given units * conversion_factor
  */
 
@@ -68,12 +68,12 @@ struct UnitDefinition {
   CONST char *filename;
   int linenum;
 };
-/*
+/**< 
  * temporary structure for parsing unit definitions in ascParse.y.
  */
 
 #define UNITS_HASH_SIZE (1023)
-/*
+/**< 
  *  size of the hash table for unit structs
  */
 
@@ -87,18 +87,18 @@ struct UnitDefinition {
 #define UNIT_BASE_LUMINOUS_INTENSITY "candela"
 #define UNIT_BASE_PLANE_ANGLE        "radian"
 #define UNIT_BASE_SOLID_ANGLE        "steradian"
-/*
+/**< 
  * name of the basic SI units for the 10 dimensions.
  * If you have better names for them, fix that here.
  */
 
 extern struct Units *g_units_hash_table[];
-/*
+/**< 
  *  The hash table for unit structs.
  */
 
 extern void InitUnitsTable(void);
-/*
+/**< 
  *  void InitUnitsTable()
  *  This routine must be called once and only once when the program is
  *  starting up.  It initializes some internal variables, so that all the
@@ -107,14 +107,14 @@ extern void InitUnitsTable(void);
  */
 
 extern void DestroyUnitsTable(void);
-/*
+/**< 
  *  void DestroyUnitsTable()
  *  This routine can be called to deallocate all of the units in the table.
  */
 
 extern struct UnitDefinition *CreateUnitDef(symchar *, CONST char *,
                                             CONST char *, int);
-/*
+/**< 
  * udptr = CreateUnitDef(new_name,unitsexpr,filename,linenum);
  * new_name should be from the symbol table.
  * unitsexpr is a string that we will copy, so it does not
@@ -123,20 +123,20 @@ extern struct UnitDefinition *CreateUnitDef(symchar *, CONST char *,
  */
 
 extern void DestroyUnitDef(struct UnitDefinition *);
-/*
+/**< 
  * DestroyUnitDef(udp);
  * Destroys udp and its unitsexpr.
  */
 
 extern void ProcessUnitDef(struct UnitDefinition *);
-/*
+/**< 
  * ProcessUnitDef(udp);
  * Attempts to add the info in udp to the units table.
  * messages to ascerr if not possible.
  */
 
 extern CONST struct Units *LookupUnits(CONST char *);
-/*
+/**< 
  *  const struct Units *LookupUnits(c)
  *  const char *c;
  *  Check the units library for units with a description string which
@@ -146,7 +146,7 @@ extern CONST struct Units *LookupUnits(CONST char *);
  */
 
 extern CONST struct Units *DefineUnits(symchar *,double,CONST dim_type *);
-/*
+/**< 
  *  const struct Units *DefineUnits(c,conv,dim)
  *  const char *c;
  *  double conv;
@@ -170,7 +170,7 @@ extern CONST struct Units *DefineUnits(symchar *,double,CONST dim_type *);
 extern CONST struct Units *FindOrDefineUnits(CONST char *,
                                              unsigned long * CONST,
                                              int * CONST);
-/*
+/**< 
  *  struct Units *FindOrDefineUnits(c,pos,error_code)
  *  CONST char *c;
  *  unsigned long * const pos;
@@ -207,7 +207,7 @@ extern CONST struct Units *FindOrDefineUnits(CONST char *,
  */
 
 extern char **UnitsExplainError(CONST char *,int,int);
-/*
+/**< 
  *  errv = UnitsExplainError(unitsexpr,code,pos);
  *  Returns an array of strings which may be helpful in
  *  explaining the error.
@@ -220,28 +220,28 @@ extern char **UnitsExplainError(CONST char *,int,int);
  */
 
 #define UnitsDescription(u) ((u)->description)
-/*
+/**< 
  *  macro UnitsDescription(u)
  *  struct Units *u;
  *  Returns the string description attribute of a units structure.
  */
 
 #define UnitsConvFactor(u) ((u)->conversion_factor)
-/*
+/**< 
  *  macro UnitsConvFactor(u)
  *  struct Units *u;
  *  Returns the conversion factor for a given units structure.
  */
 
 #define UnitsDimensions(u) ((u)->dim)
-/*
+/**< 
  *  macro UnitsDimensions(u)
  *  struct Units *u;
  *  Returns the dimensions of the units structure.
  */
 
 extern char *UnitsStringSI(struct Units *);
-/*
+/**< 
  *  UnitsStringSI(up);
  *  returns the SI form of the units for the dimensionality of up.
  *  Wild = *, Dimensionless = "", NULL up --> NULL return.
@@ -249,4 +249,4 @@ extern char *UnitsStringSI(struct Units *);
  */
 
 extern void DumpUnits(FILE *);
-#endif /* __UNITS_H_SEEN__ */
+#endif /**< __UNITS_H_SEEN__ */

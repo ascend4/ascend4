@@ -1,4 +1,4 @@
-/*
+/** 
  *  anoncopy.h
  *  by Benjamin Allan
  *  September 08, 1997
@@ -31,14 +31,14 @@
 
 #ifndef __ANONCOPY_H_SEEN__
 #define __ANONCOPY_H_SEEN__
-/* */
+/** */
 extern struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *);
 
-/* */
+/** */
 extern void Pass2DestroyAnonProtoVars(struct gl_list_t *);
 
-/* */
+/** */
 extern void Pass2CopyAnonProto(struct Instance *, struct BitList *,
                                struct gl_list_t *, struct Instance *);
 
-#endif /* __ANONCOPY_H_SEEN__ */
+#endif /** __ANONCOPY_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Type Definition Lint Module
  *  by Benjamin Andrew Allan
  *  Created: 9/16/96
@@ -27,12 +27,12 @@
  */
 #ifndef __TYPELINT_H_SEEN__
 #define __TYPELINT_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"list.h"
 # #include"stattypes.h"
 */
-/*
+/**< 
  *  This module provides some lint-like functionality for ascend type
  *  definitions, that is it checks for the most obvious sorts of blunders
  *  but due to the nature of the ascend language, not all can be
@@ -40,7 +40,7 @@
  *  This implementation is merely a start. It needs to be much better.
  */
 
-/*
+/**< 
  * if TLINT_STYLE == TRUE, then style messages should be issued. 
  * Likewise for the other levels of messaging.
  */
@@ -102,7 +102,7 @@ enum typelinterr {
 };
 
 extern void TypeLintError(FILE *,CONST struct Statement *,enum typelinterr);
-/*
+/**< 
  *  TypeLintError(file,statement,error_code)
  *  Writes a message describing the error and giving the statement to
  *  the file given.
@@ -111,7 +111,7 @@ extern void TypeLintError(FILE *,CONST struct Statement *,enum typelinterr);
  */
 
 extern void TypeLintErrorAuxillary(FILE *,char *,enum typelinterr,int);
-/*
+/**< 
  *  TypeLintErrorAuxillary(file,string,error_code,uselabel)
  *  Writes a string describing the error in some context to the
  *  the file given.
@@ -122,7 +122,7 @@ extern void TypeLintErrorAuxillary(FILE *,char *,enum typelinterr,int);
  */
 
 extern void TypeLintName(FILE *, CONST struct Name *,char *);
-/*
+/**< 
  *  TypeLintName(file,name,mesg)
  *  Writes a message followed by the name and a return to the file given.
  *  No NULL arguments allowed.
@@ -130,7 +130,7 @@ extern void TypeLintName(FILE *, CONST struct Name *,char *);
 
 #define TLNM(f,n,m,l) TypeLintNameMsg((f),(n),(m),(l))
 extern void TypeLintNameMsg(FILE *, CONST struct Name *,char *,int);
-/*
+/**< 
  *  TypeLintNameMsg(file,name,mesg,level)
  *  Writes a message followed by the name and a return to the file given.
  *  Uses the StatioLabel matching level given here.
@@ -139,7 +139,7 @@ extern void TypeLintNameMsg(FILE *, CONST struct Name *,char *,int);
  */
 
 extern void TypeLintNameNode(FILE *, CONST struct Name *,char *);
-/*
+/**< 
  *  TypeLintNameNode(file,name,mesg)
  *  Writes a message followed by the first element of name and a return
  *  to the file given.
@@ -148,7 +148,7 @@ extern void TypeLintNameNode(FILE *, CONST struct Name *,char *);
 
 #define TLNNM(f,n,m,l) TypeLintNameNodeMsg((f),(n),(m),(l))
 extern void TypeLintNameNodeMsg(FILE *, CONST struct Name *,char *,int);
-/*
+/**< 
  *  TypeLintNameNodeMsg(file,name,mesg,level)
  *  Writes a message followed by the first element of name and a return
  *  to the file given.
@@ -157,7 +157,7 @@ extern void TypeLintNameNodeMsg(FILE *, CONST struct Name *,char *,int);
  *  No NULL arguments allowed.
  */
 
-/*
+/**< 
  * Below, less ambitious lint functions.
  * These 'Illegal' functions check statements for semantic
  * errors that can be detected WITHOUT knowing the overall
@@ -167,7 +167,7 @@ extern void TypeLintNameNodeMsg(FILE *, CONST struct Name *,char *,int);
 extern enum typelinterr
 TypeLintIllegalBodyStats(FILE *, symchar *,
                          CONST struct StatementList *, unsigned int);
-/*
+/**< 
  *  error_code = TypeLintIllegalBodyStats(fp,typename,statements,context);
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in body and are any
@@ -184,7 +184,7 @@ TypeLintIllegalBodyStats(FILE *, symchar *,
 extern enum typelinterr
 TypeLintIllegalParamStats(FILE *, symchar *,
                           CONST struct StatementList * );
-/*
+/**< 
  *  error_code = TypeLintIllegalParamStats(fp,typename,statements);
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in parameter list and are any
@@ -199,7 +199,7 @@ TypeLintIllegalParamStats(FILE *, symchar *,
 extern enum typelinterr
 TypeLintIllegalWhereStats(FILE *, symchar *,
                           CONST struct StatementList * );
-/*
+/**< 
  *  error_code = TypeLintIllegalWhereStats(fp,typename,statements);
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in WHERE list.
@@ -212,7 +212,7 @@ TypeLintIllegalWhereStats(FILE *, symchar *,
 extern enum typelinterr
 TypeLintIllegalReductionStats(FILE *,symchar *,
                               CONST struct StatementList * );
-/*
+/**< 
  *  error_code = TypeLintIllegalReductionStats(fp,typename,statements);
  *  Checks all statements for type legality, i.e.
  *  is the statement of a type allowed in reduction list.
@@ -225,7 +225,7 @@ TypeLintIllegalReductionStats(FILE *,symchar *,
 extern enum typelinterr
 TypeLintIllegalMethodStats(FILE *,symchar *,
                            struct gl_list_t *,unsigned int);
-/*
+/**< 
  *  error_code = TypeLintIllegalMethodStats(fp,typename,pl,context);
  *  Checks all init procedures for type legality, i.e.
  *  is the statement of a type allowed in a method.
@@ -233,6 +233,6 @@ TypeLintIllegalMethodStats(FILE *,symchar *,
  *  DEF_ILLEGAL or other when unhappy.
  */
 
-/*
+/**< 
  */
-#endif /* __TYPELINT_H_SEEN__ */
+#endif /**< __TYPELINT_H_SEEN__ */

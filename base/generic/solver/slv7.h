@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -42,7 +42,7 @@
 #ifndef slv7__already_included
 #define slv7__already_included
 
-/* requires #include "slv_client.h" */
+/**< requires #include "slv_client.h" */
 
 typedef struct slv7_system_structure *slv7_system_t;
 

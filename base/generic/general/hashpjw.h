@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Hash function
  *  by Tom Epperly
  *  10/24/89
@@ -8,7 +8,7 @@
  *  Last modified by: $Author: mthomas $
  */
 
-/*
+/**< 
  *  When #including hashpjw.h, make sure these files are #included first:
  *  #include "compiler.h"
  */
@@ -16,12 +16,12 @@
 
 #ifndef __HASHPJW_H_SEEN__
 #define __HASHPJW_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 */
 
 extern unsigned long hashpjw(CONST char *,unsigned long);
-/*
+/**< 
  *  unsigned long hashpjw(str,size)
  *  CONST char *str;
  *  unsigned long size;
@@ -29,7 +29,7 @@ extern unsigned long hashpjw(CONST char *,unsigned long);
  */
 
 extern unsigned long hashpjw_int(int ,unsigned long);
-/*
+/**< 
  *  unsigned long hashpjw_id(id,size)
  *  int id;
  *  unsigned long size;
@@ -38,4 +38,4 @@ extern unsigned long hashpjw_int(int ,unsigned long);
  *  and so is relatively expensive. This needs to be cleaned up, with a
  *  dedicated integer hashing function.
  */
-#endif /* __HASHPJW_H_SEEN__ */
+#endif /**< __HASHPJW_H_SEEN__ */

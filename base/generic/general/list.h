@@ -1,4 +1,4 @@
-/*
+/**< 
  *  List Module
  *  by Tom Epperly
  *  Version: $Revision: 1.3 $
@@ -26,7 +26,7 @@
  *
  */
 
-/*
+/**< 
  *  Abstract
  *
  *    The purpose of this module is to provide a kind of flexible array.
@@ -70,7 +70,7 @@
  *  9/20/97     Added gl_compare_ptrs.
  */
 
-/*
+/**< 
  *  When #including list.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -78,7 +78,7 @@
 
 #ifndef __LIST_H_SEEN__
 #define __LIST_H_SEEN__
-/* requires
+/**< requires
 # #include <stdio.h>
 # #include"compiler.h"
 */
@@ -89,29 +89,29 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
-#define LISTIMPLEMENTED 0 		/* BAA_DEBUG changes thatneed work */
+#define LISTIMPLEMENTED 0 		/**< BAA_DEBUG changes thatneed work */
 
-/*
+/**< 
  * The following bit fields are defined for the gllist flags
  */
 #define gsf_SORTED 0x1
 #define gsf_EXPANDABLE 0x2
 
 struct gl_list_t {
-  VOIDPTR		*data;		/* The data*/
-  unsigned long		length;		/* Number of items used*/
-  unsigned long		capacity;	/* Capacity of list*/
-  unsigned int flags;			/* Status flags*/
+  VOIDPTR		*data;		/**< The data*/
+  unsigned long		length;		/**< Number of items used*/
+  unsigned long		capacity;	/**< Capacity of list*/
+  unsigned int flags;			/**< Status flags*/
 };
 
-/* generic comparator for sorts and searches */
+/**< generic comparator for sorts and searches */
 typedef int (*CmpFunc)(CONST VOIDPTR, CONST VOIDPTR);
 
-/* generic destroyer for iterations */
+/**< generic destroyer for iterations */
 typedef void (*DestroyFunc)(VOIDPTR);
 
 extern void gl_init(void);
-/*
+/**< 
  *  Until this function is called, no recycling will take place.
  *  This function initializes a list recycler control table.
  *  This recycler control table should be tuned to your application.
@@ -123,7 +123,7 @@ extern void gl_init(void);
 #else
 #define LISTUSESPOOL TRUE
 #endif
-/*
+/**< 
  *  LISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
  *  manage list memory overhead. Performance is enhanced this way.
  *
@@ -135,7 +135,7 @@ extern void gl_init(void);
  */
 
 extern void gl_init_pool(void);
-/*
+/**< 
  *  gl_init_pool();
  *  Sets up list overhead structure data management
  *  before anything can be built, ideally at startup time.
@@ -145,7 +145,7 @@ extern void gl_init_pool(void);
  */
 
 extern void gl_destroy_pool(void);
-/*
+/**< 
  *  gl_destroy_pool();
  *  Destroy list overhead structure data management. This must be called to
  *  clean up before shutting down you application if gl_init_pool was called.
@@ -156,14 +156,14 @@ extern void gl_destroy_pool(void);
  */
 
 extern void gl_report_pool(FILE *);
-/*
+/**< 
  *  gl_report_pool(f);
  *  FILE *f;
  *  Reports on the recycle pool to f.
  */
 
 extern	struct gl_list_t *gl_create(unsigned long);
-/*
+/**< 
  *  FUNCTION gl_create(capacity)
  *  unsigned long capacity;
  *
@@ -179,7 +179,7 @@ extern	struct gl_list_t *gl_create(unsigned long);
  */
 
 extern	void gl_free_and_destroy(struct gl_list_t *);
-/*
+/**< 
  *  PROCEDURE gl_free_and_destroy(list);
  *  struct gl_list_t *list;
  *
@@ -194,7 +194,7 @@ extern	void gl_free_and_destroy(struct gl_list_t *);
  */
 
 extern	void gl_destroy(struct gl_list_t *);
-/*
+/**< 
  *  PROCEDURE gl_destroy(list);
  *  struct gl_list_t *list;
  *
@@ -217,7 +217,7 @@ extern	void gl_destroy(struct gl_list_t *);
 #define gl_fetch(l,p) ((l)->data[((p)-1)])
 #endif
 extern VOIDPTR gl_fetchF(CONST struct gl_list_t *,unsigned long);
-/*
+/**< 
  *  FUNCTION gl_fetch(list,pos);
  *  const struct gl_list_t *list;
  *  unsigned long pos;
@@ -240,7 +240,7 @@ extern VOIDPTR gl_fetchF(CONST struct gl_list_t *,unsigned long);
  */
 
 extern	void gl_store(struct gl_list_t *,unsigned long, VOIDPTR);
-/*
+/**< 
  *  PROCEDURE gl_store(list,pos,ptr);
  *  struct gl_list_t *list;
  *  unsigned long pos;
@@ -268,7 +268,7 @@ extern	void gl_store(struct gl_list_t *,unsigned long, VOIDPTR);
  */
 
 extern	void gl_append_ptr(struct gl_list_t *,VOIDPTR);
-/*
+/**< 
  *  PROCEDURE gl_append_ptr(list,ptr);
  *  struct gl_list_t *list;
  *  VOIDPTR ptr;
@@ -296,7 +296,7 @@ extern	void gl_append_ptr(struct gl_list_t *,VOIDPTR);
  */
 
 extern	void gl_fast_append_ptr(struct gl_list_t *,VOIDPTR);
-/*
+/**< 
  *  PROCEDURE gl_fast_append_ptr(list,ptr);
  *  struct gl_list_t *list;
  *  VOIDPTR ptr;
@@ -321,7 +321,7 @@ extern	void gl_fast_append_ptr(struct gl_list_t *,VOIDPTR);
  */
 
 extern	void gl_append_list(struct gl_list_t *,struct gl_list_t *);
-/*
+/**< 
  *  PROCEDURE gl_append_list(extendlist,list);
  *  struct gl_list_t *list,*extendlist;
  *
@@ -351,7 +351,7 @@ extern	void gl_append_list(struct gl_list_t *,struct gl_list_t *);
 #define gl_length(l) ((l)->length)
 #endif
 extern	unsigned long gl_lengthF(CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_lengthF(list)
  *  const struct gl_list_t *list;
  *
@@ -362,7 +362,7 @@ extern	unsigned long gl_lengthF(CONST struct gl_list_t *);
  */
 
 extern unsigned long gl_safe_length(CONST struct gl_list_t *list);
-/*
+/**< 
  *  FUNCTION gl_safe_length(list)
  *  const struct gl_list_t *list;
  *
@@ -375,7 +375,7 @@ extern unsigned long gl_safe_length(CONST struct gl_list_t *list);
 
 
 extern	unsigned long gl_capacity(CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_length(list)
  *  const struct gl_list_t *list;
  *
@@ -387,7 +387,7 @@ extern	unsigned long gl_capacity(CONST struct gl_list_t *);
  */
 
 extern	int gl_sorted(CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_sorted(list);
  *  const struct gl_list_t *list;
  *
@@ -397,7 +397,7 @@ extern	int gl_sorted(CONST struct gl_list_t *);
 
 #if LISTIMPLEMENTED
 extern void gl_ptr_sort(struct gl_list_t *, int);
-/*
+/**< 
  *  PROCEDURE gl_ptr_sort(list,inc);
  *  struct gl_list_t *list;
  *  int inc;
@@ -416,7 +416,7 @@ extern void gl_ptr_sort(struct gl_list_t *, int);
 #endif
 
 extern void gl_sort(struct gl_list_t *, CmpFunc);
-/*
+/**< 
  *  PROCEDURE gl_sort(list,func);
  *  struct gl_list_t *list;
  *  CmpFunc func;
@@ -439,7 +439,7 @@ extern void gl_sort(struct gl_list_t *, CmpFunc);
 
 #if LISTIMPLEMENTED
 extern	void gl_insert_ptr_sorted(struct gl_list_t *,VOIDPTR,int);
-/*
+/**< 
  *  PROCEDURE gl_insert_ptr_sorted(list,ptr,inc);
  *  struct gl_list_t *list;
  *  VOIDPTR ptr;
@@ -462,7 +462,7 @@ extern	void gl_insert_ptr_sorted(struct gl_list_t *,VOIDPTR,int);
 #endif
 
 extern	void gl_insert_sorted(struct gl_list_t *,VOIDPTR, CmpFunc);
-/*
+/**< 
  *  PROCEDURE gl_insert_sorted(list,ptr,func);
  *  struct gl_list_t *list;
  *  VOIDPTR ptr;
@@ -490,7 +490,7 @@ extern	void gl_insert_sorted(struct gl_list_t *,VOIDPTR, CmpFunc);
  */
 
 extern	void gl_iterate(struct gl_list_t *,void (*)(VOIDPTR) );
-/*
+/**< 
  *  PROCEDURE gl_iterate(list,func);
  *  struct gl_list_t *list;
  *  void (*func)(VOIDPTR);
@@ -503,7 +503,7 @@ extern	void gl_iterate(struct gl_list_t *,void (*)(VOIDPTR) );
  */
 
 extern unsigned long gl_ptr_search(CONST struct gl_list_t *,CONST VOIDPTR,int);
-/*
+/**< 
  *  FUNCTION gl_ptr_search(list,match,inc);
  *  const struct gl_list_t *list;
  *  const VOIDPTR match;
@@ -528,7 +528,7 @@ extern unsigned long gl_ptr_search(CONST struct gl_list_t *,CONST VOIDPTR,int);
 
 extern	unsigned long gl_search(CONST struct gl_list_t *,
     CONST VOIDPTR, CmpFunc);
-/*
+/**< 
  *  FUNCTION gl_search(list,match,func);
  *  const struct gl_list_t *list;
  *  const VOIDPTR match;
@@ -558,7 +558,7 @@ extern	unsigned long gl_search(CONST struct gl_list_t *,
 
 extern unsigned long gl_search_reverse(CONST struct gl_list_t *,
                                        CONST VOIDPTR, CmpFunc);
-/*
+/**< 
  *  FUNCTION gl_search(list,match,func);
  *  const struct gl_list_t *list;
  *  const VOIDPTR match;
@@ -573,7 +573,7 @@ extern unsigned long gl_search_reverse(CONST struct gl_list_t *,
  */
 
 extern	int gl_empty(CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_empty(list)
  *  const struct gl_list_t *list;
  *
@@ -582,7 +582,7 @@ extern	int gl_empty(CONST struct gl_list_t *);
  */
 
 extern	int gl_unique_list(CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_unique_list(list)
  *  const struct gl_list_t *list;
  *
@@ -592,7 +592,7 @@ extern	int gl_unique_list(CONST struct gl_list_t *);
  */
 
 extern	void gl_delete(struct gl_list_t *,unsigned long,int);
-/*
+/**< 
  *  PROCEDURE gl_delete(list,pos,dispose);
  *  struct gl_list_t *list;
  *  unsigned long pos;
@@ -608,7 +608,7 @@ extern	void gl_delete(struct gl_list_t *,unsigned long,int);
  */
 
 extern	void gl_reverse(struct gl_list_t *);
-/*
+/**< 
  *  PROCEDURE gl_reverse(list);
  *  struct gl_list_t *list;
  *  unsigned long pos;
@@ -622,7 +622,7 @@ extern	void gl_reverse(struct gl_list_t *);
  */
 
 extern void gl_reset(struct gl_list_t *);
-/*
+/**< 
  *  PROCEDURE gl_reset(list);
  *  struct gl_list_t list;
  *
@@ -635,7 +635,7 @@ extern void gl_reset(struct gl_list_t *);
  */
 
 extern	struct gl_list_t *gl_copy(CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_copy(list);
  *  const struct gl_list_t *list;
  *
@@ -650,7 +650,7 @@ extern	struct gl_list_t *gl_copy(CONST struct gl_list_t *);
 
 extern	struct gl_list_t *gl_concat(CONST struct gl_list_t *,
                                     CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_concat(list1,list2);
  *  const struct gl_list_t *list1,*list2;
  *
@@ -662,7 +662,7 @@ extern	struct gl_list_t *gl_concat(CONST struct gl_list_t *,
  */
 
 extern	int gl_compare_ptrs(CONST struct gl_list_t *, CONST struct gl_list_t *);
-/*
+/**< 
  *  FUNCTION gl_compare_ptrs(list1,list2);
  *  const struct gl_list_t *list1,*list2;
  *
@@ -677,13 +677,13 @@ extern	int gl_compare_ptrs(CONST struct gl_list_t *, CONST struct gl_list_t *);
  */
 
 extern void gl_set_sorted(struct gl_list_t *);
-/*
+/**< 
  *  Set the sorted flag.  This should be done only when you are sure that
  *  the list is sorted.
  */
 
 extern void gl_set_notexpandable(struct gl_list_t *);
-/*
+/**< 
  *  Set the expandable flag.  This should be done only when you are sure
  *  that you dont want the list to be expandable. All lists are expandable
  *  until this flag is explicitly set. It sometimes useful to have a list
@@ -692,13 +692,13 @@ extern void gl_set_notexpandable(struct gl_list_t *);
  */
 
 extern VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list, unsigned long);
-/*
+/**< 
  *  Return the address of the pointer to the information stored at
  *  position pos. This is sometimes useful for ptr to ptr manipulation.
  */
 
 extern void gl_emptyrecycler();
-/*
+/**< 
  *  To improve runtime performance, this list module trys to reuse destroyed
  *  lists.  However, it may be beneficial to empty recycling bin from time
  *  to time.  The most appropriate time for this is before shutdown and
@@ -706,11 +706,11 @@ extern void gl_emptyrecycler();
  */
 
 extern void gl_reportrecycler(FILE *);
-/*
+/**< 
  *  To improve runtime performance, this list module trys to reuse destroyed
  *  lists. This function reports the recycler status.
  */
-#endif /* __LIST_H_SEEN__ */
+#endif /**< __LIST_H_SEEN__ */
 
 
 

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Name external definitions
  *  by Tom Epperly
  *  July 31, 1989
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including name.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -37,19 +37,19 @@
 
 #ifndef __NAME_H_SEEN__
 #define __NAME_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"types.h"
 */
 
-/*
+/**< 
  *  These things need to be pooled to save space and time. baa 3/96
  */
 
 #define CreateIdName(s) CreateIdNameF((s),NAMEBIT_IDTY)
 #define CreateSystemIdName(s) CreateIdNameF((s),NAMEBIT_IDTY|NAMEBIT_AUTO)
 extern struct Name *CreateIdNameF(symchar *,int);
-/*
+/**< 
  *  macro CreateIdName(s)
  *  macro CreateSystemIdName(s)
  *  Create name with Id or system name Id+Auto flags.
@@ -60,14 +60,14 @@ extern struct Name *CreateIdNameF(symchar *,int);
  */
 
 extern struct Name *CreateSetName(struct Set *);
-/*
+/**< 
  *  struct Name *CreateSetName(s)
  *  struct Set *s;
  *  Create a name node of type set with the set s associated with it.
  */
 
 extern void LinkNames(struct Name *, struct Name *);
-/*
+/**< 
  *  void LinkName(cur,next)
  *  struct Name *cur;
  *  const struct Name *next;
@@ -80,7 +80,7 @@ extern void LinkNames(struct Name *, struct Name *);
 #define NextName(n) NextNameF(n)
 #endif
 extern struct Name *NextNameF(CONST struct Name *);
-/*
+/**< 
  *  macro NextName(n)
  *  struct Name *NextNameF(n)
  *  const struct Name *n;
@@ -93,7 +93,7 @@ extern struct Name *NextNameF(CONST struct Name *);
 #define NameId(n) NameIdF(n)
 #endif
 extern int NameIdF(CONST struct Name *);
-/*
+/**< 
  *  macro NameId(n)
  *  int NameIdF(n)
  *  const struct Name *n;
@@ -108,7 +108,7 @@ extern int NameIdF(CONST struct Name *);
 #define NameAuto(n) NameAutoF(n)
 #endif
 extern int NameAutoF(CONST struct Name *);
-/*
+/**< 
  *  macro NameAuto(n)
  *  int NameAutoF(n)
  *  const struct Name *n;
@@ -122,7 +122,7 @@ extern int NameAutoF(CONST struct Name *);
 #define NameIdPtr(n) NameIdPtrF(n)
 #endif
 extern symchar *NameIdPtrF(CONST struct Name *);
-/*
+/**< 
  *  macro NameIdPtr(n)
  *  extern const char *NameIdPtrF(n)
  *  const struct Name *n;
@@ -130,7 +130,7 @@ extern symchar *NameIdPtrF(CONST struct Name *);
  */
 
 extern symchar *SimpleNameIdPtr(CONST struct Name *);
-/*
+/**< 
  *  const char *SimpleNameIdPtr(n)
  *  const struct Name *n;
  *  Return NULL if n is not an NameId or if it has a next field.  Otherwise,
@@ -138,7 +138,7 @@ extern symchar *SimpleNameIdPtr(CONST struct Name *);
  */
 
 extern unsigned int NameLength(CONST struct Name *);
-/*
+/**< 
  *  unsigned int NameLength(n);
  *  const struct Name *n;
  *  Returns the number of links in a chain of names. May be used in a
@@ -153,21 +153,21 @@ extern unsigned int NameLength(CONST struct Name *);
 #define NameSetPtr(n) NameSetPtrF(n)
 #endif
 extern CONST struct Set *NameSetPtrF(CONST struct Name *);
-/*
+/**< 
  *  const struct Set *NameSetPtrF(n)
  *  const struct Name *n;
  *  Assumes that n is a set type name node.  Returns the set pointer.
  */
 
 extern struct Name *CopyName(CONST struct Name *);
-/*
+/**< 
  *  struct Name *CopyName(n)
  *  const struct Name *n;
  *  Make and return a copy of the whole name.
  */
 
 extern void DestroyName(struct Name *);
-/*
+/**< 
  *  void DestroyName(n)
  *  struct Name *n;
  *  Deallocate the whole name linked list
@@ -175,7 +175,7 @@ extern void DestroyName(struct Name *);
  */
 
 extern void DestroyNamePtr(struct Name *);
-/*
+/**< 
  *  void DestroyNamePtr(n)
  *  struct Name *n;
  *  Deallocate this name node, and don't change the next node.
@@ -183,7 +183,7 @@ extern void DestroyNamePtr(struct Name *);
  */
 
 extern struct Name *JoinNames(struct Name *, struct Name *);
-/*
+/**< 
  *  struct Name *JoinNames(n1,n2)
  *  struct Name *n1, *n2;
  *  Appends n2 to the end of n1.  This will return n1, unless n1 is NULL in
@@ -191,14 +191,14 @@ extern struct Name *JoinNames(struct Name *, struct Name *);
  */
 
 extern struct Name *ReverseName(struct Name *);
-/*
+/**< 
  *  struct Name *ReverseName(n)
  *  struct Name *n;
  *  Returns the reverse of n.
  */
 
 extern CONST struct Name *NextIdName(CONST struct Name *);
-/*
+/**< 
  *  struct Name *NextIdName(n)
  *  struct Name *n;
  *  Returns the first NameId element in the name after the current element
@@ -206,7 +206,7 @@ extern CONST struct Name *NextIdName(CONST struct Name *);
  */
 
 extern int NameCompound(CONST struct Name *);
-/*
+/**< 
  *  int NameCompound(n)
  *  const struct Name *n;
  *  If name is compound (i.e. crosses a MODEL/ATOM boundary) this
@@ -224,14 +224,14 @@ extern int NameCompound(CONST struct Name *);
  */
 
 extern int NamesEqual(CONST struct Name *,CONST struct Name *);
-/*
+/**< 
  *  int NamesEqual(n1,n2)
  *  const struct Name *n1,*n2;
  *  Return TRUE if and only if n1 and n2 are structurally equivalent.
  */
 
 extern int CompareNames(CONST struct Name *,CONST struct Name *);
-/*
+/**< 
  *  int CompareNames(n1,n2)
  *  const struct Name *n1,*n2;
  *  Returns -1 0 1 as n1 < = > n2.
@@ -239,17 +239,17 @@ extern int CompareNames(CONST struct Name *,CONST struct Name *);
  */
 
 extern void name_init_pool(void);
-/*
+/**< 
  * starts memory recycle. do not call twice before stopping recycle.
  */
 
 extern void name_destroy_pool(void);
-/*
+/**< 
  * stops memory recycle. do not call while ANY names are outstanding.
  */
 
 extern void name_report_pool(void);
-/*
+/**< 
  * write the pool report to ASCERR for the name pool.
  */
-#endif /* __NAME_H_SEEN__ */
+#endif /**< __NAME_H_SEEN__ */

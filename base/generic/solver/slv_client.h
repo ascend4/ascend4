@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -30,7 +30,7 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-/*
+/**< 
  *  SLV general interface for solver clients, etc.
  *  By Ben Allan
  *
@@ -67,7 +67,7 @@
  *  The functions the UI are kept here.
  */
 
-/*
+/**< 
  *  Contents:     Solver module
  *
  *  Authors:      Karl Westerberg
@@ -137,18 +137,18 @@
 #ifndef slv_client_h__already_included
 #define slv_client_h__already_included
 
-/* requires #include "base.h" */
-/* requires #include "instance_enum.h" */
-/* requires #include "var.h" */
-/* requires #include "rel.h" */
-/* requires #include "discrete.h" */
-/* requires #include "conditional.h" */
-/* requires #include "logrel.h" */
-/* requires #include "bnd.h" */
-/* requires #include "linsol.h" */
-/* requires #include "linsolqr.h" */
-/* requires #include "slv_common.h" */
-/* requires #include "slv_types.h" */
+/**< requires #include "base.h" */
+/**< requires #include "instance_enum.h" */
+/**< requires #include "var.h" */
+/**< requires #include "rel.h" */
+/**< requires #include "discrete.h" */
+/**< requires #include "conditional.h" */
+/**< requires #include "logrel.h" */
+/**< requires #include "bnd.h" */
+/**< requires #include "linsol.h" */
+/**< requires #include "linsolqr.h" */
+/**< requires #include "slv_common.h" */
+/**< requires #include "slv_types.h" */
 
 /***  ! ! We are going through a solver API definition restructuring.
  ! !  The appearance of ! ! in the header means the code in question
@@ -261,14 +261,14 @@
 \***********************************************************************/
 
 typedef void *SlvClientToken;
-/* A pointer that is meaningful to a registered client.
+/**< A pointer that is meaningful to a registered client.
  * Each call that requires a client response will include this
  * token so that we can have multiple copies of a particular
  * client simultaneously. Clients shouldn't have to use any
  * global variables to save their state information -- they
  * should put such info with their token.
  */
-/* NOTE TO present (6/96) developers: SlvClientToken is an alias for
+/**< NOTE TO present (6/96) developers: SlvClientToken is an alias for
  * all the old slv*_system_t pointers. cast it to be the type you
  * want.
  */
@@ -277,37 +277,37 @@ struct slv_reorder_data {
   int partition;
   int basis_selection;
   int block_reordering;
-  /* other parameters here. convert to enums. */
+  /**< other parameters here. convert to enums. */
 };
 
 typedef struct dof_data_structure {
-  mtx_block_t blocks;		/* block structure determined by analyze */
-  int32 structural_rank;	/* length of output assignment */
-  int32 n_rows;			/* total included equations */
-  int32 n_cols;			/* total free and incident solver variables */
-  int32 n_fixed;		/* total fixed solver variables */
-  int32 n_unincluded;		/* total unincluded equations */
+  mtx_block_t blocks;		/**< block structure determined by analyze */
+  int32 structural_rank;	/**< length of output assignment */
+  int32 n_rows;			/**< total included equations */
+  int32 n_cols;			/**< total free and incident solver variables */
+  int32 n_fixed;		/**< total fixed solver variables */
+  int32 n_unincluded;		/**< total unincluded equations */
   struct slv_reorder_data reorder;
 } dof_t;
 
 #define slv_number_of_solvers g_SlvNumberOfRegisteredClients
 extern int g_SlvNumberOfRegisteredClients;
 
-/* The number of solver's that have ever registered.
+/**< The number of solver's that have ever registered.
  * Once a solver is registered, we keep track of its name,
  * a number which is the order it was registered in, and
  * the functions it defines.
  */
 #define SLVMAXCLIENTS 100
-/*
+/**< 
  * The maximum number of clients that ever can be registered.
  * Limit is arbitrary. Note that not all clients of slv_system_t
  * should register, just those that purport to be solve engines
  * and the like.
  */
 
-/* type declarations for registered client functions */
-/* We will explain all these later in this file someday soon. */
+/**< type declarations for registered client functions */
+/**< We will explain all these later in this file someday soon. */
 typedef SlvClientToken (SlvClientCreateF) (slv_system_t,int *);
 typedef int (SlvClientDestroyF) (slv_system_t,SlvClientToken);
 typedef int (SlvClientEligibleF) (slv_system_t);
@@ -322,10 +322,10 @@ typedef void (SlvDumpInfoF)(slv_system_t, SlvClientToken,int);
 typedef void (SlvSolveF)(slv_system_t, SlvClientToken);
 
 typedef struct slv_registration_data {
-  int number; /* we set number AFTER the client registration returns 0 */
-  /* client sets all the rest, starting with a symbolic name */
+  int number; /**< we set number AFTER the client registration returns 0 */
+  /**< client sets all the rest, starting with a symbolic name */
   const char *name;
-  /* Required functions */
+  /**< Required functions */
   SlvClientCreateF *ccreate;
   SlvClientDestroyF *cdestroy;
   SlvClientEligibleF *celigible;
@@ -334,7 +334,7 @@ typedef struct slv_registration_data {
   SlvSetParamsF	*setparam;
   SlvGetStatusF	*getstatus;
   SlvSolveF	*solve;
-  /* Functions we really want, but can live without if your solver is old
+  /**< Functions we really want, but can live without if your solver is old
    * and klunky. Your solver may not 'look good' in an interactive environment,
    * but then those nasty batch codes seldom do anyway.
    * Redesign you're blinkin' batch code.
@@ -342,7 +342,7 @@ typedef struct slv_registration_data {
   SlvSolveF	*presolve;
   SlvSolveF	*iterate;
   SlvSolveF	*resolve;
-  /* Strictly Optional Functions */
+  /**< Strictly Optional Functions */
   SlvGetLinsolF	*getlinsol;
   SlvGetLinSysF	*getlinsys;
   SlvGetSysMtxF	*getsysmtx;
@@ -351,7 +351,7 @@ typedef struct slv_registration_data {
 
 
 typedef int (SlvRegistration)(SlvFunctionsT *);
-/**
+/**< 
  ***  status = YourRegistrationFunction(our_sft);
  ***  SlvFunctionsT *our_sft;
  ***  int status;
@@ -370,7 +370,7 @@ typedef int (SlvRegistration)(SlvFunctionsT *);
  **/
 
 extern int slv_register_client(SlvRegistration, char *, char *);
-/**
+/**< 
  *** Examples:
  *** slv_register_client(slv0_register,NULL,NULL);
  *** slv_register_client(NULL,"yourregisterfuncname","yourbinaryname");
@@ -386,7 +386,7 @@ extern int slv_register_client(SlvRegistration, char *, char *);
  **/
 
 extern const char *slv_solver_name(int);
-/**
+/**< 
  ***  There may in general be more than one solver.  The solvers will be
  ***  numbered from 0 to slv_number_of_solvers-1.  Not all the solvers may
  ***  be present in a given installation of ASCEND as some are proprietary
@@ -399,7 +399,7 @@ extern const char *slv_solver_name(int);
 
 extern int Solv_C_CheckHalt_Flag;
 extern int Solv_C_CheckHalt();
-/**
+/**< 
  ***  Function to check for variable ascSolvStatVect(menubreak) ="1"   
  ***  Returns 1 if true or if variable not found in global context,
  ***  else returns 0.
@@ -413,7 +413,7 @@ extern int Solv_C_CheckHalt();
  **/
 
 extern unsigned int slv_serial_id(slv_system_t);
-/**
+/**< 
  ***  id =slv_serial_id(sys);
  ***  slv_system_t sys;
  ***  unsigned id;
@@ -424,7 +424,7 @@ extern unsigned int slv_serial_id(slv_system_t);
 
 extern dof_t *slv_get_dofdata(slv_system_t);
 extern dof_t *slv_get_log_dofdata(slv_system_t);
-/**
+/**< 
  ***  d=slv_get_dofdata(server);
  ***  d=slv_get_log_dofdata(server);
  ***  slv_system_t server;
@@ -441,7 +441,7 @@ extern dof_t *slv_get_log_dofdata(slv_system_t);
 
 extern const mtx_block_t *slv_get_solvers_blocks(slv_system_t);
 extern const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t);
-/**
+/**< 
  ***  bl = slv_get_solvers_blocks(sys); 
  ***  bl = slv_get_solvers_log_blocks(sys); 
  ***  slv_system_t sys;
@@ -487,7 +487,7 @@ extern const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t);
 
 extern void slv_set_solvers_blocks(slv_system_t,int32,mtx_region_t *);
 extern void slv_set_solvers_log_blocks(slv_system_t,int32,mtx_region_t *);
-/**
+/**< 
  ***  slv_get_solvers_blocks(sys,len,data);
  ***  slv_get_solvers_log_blocks(sys,len,data);
  ***  slv_system_t sys;
@@ -503,7 +503,7 @@ extern void slv_set_solvers_log_blocks(slv_system_t,int32,mtx_region_t *);
 
 extern void slv_check_var_initialization(slv_system_t);
 extern void slv_check_dvar_initialization(slv_system_t);
-/**
+/**< 
  ***  slv_check_var_initialization(sys);
  ***  slv_check_dvar_initialization(sys);
  ***  slv_system_t sys;
@@ -518,7 +518,7 @@ extern void slv_check_dvar_initialization(slv_system_t);
  **/
 
 extern void slv_bnd_initialization(slv_system_t);
-/**
+/**< 
  ***  slv_bnd_initialization(sys);
  ***  slv_system_t sys;
  ***  
@@ -548,7 +548,7 @@ extern void slv_set_solvers_condlogrel_list(slv_system_t,
 					    struct logrel_relation **,int);
 extern void slv_set_solvers_when_list(slv_system_t, struct w_when **,int);
 extern void slv_set_solvers_bnd_list(slv_system_t, struct bnd_boundary **,int);
-/**
+/**< 
  ! !  slv_set_solvers_var_list(sys,vlist,size);
  ! !  slv_set_solvers_par_list(sys,vlist);
  ! !  slv_set_solvers_unattached_list(sys,vlist,size);
@@ -596,7 +596,7 @@ extern struct var_variable **slv_get_master_par_list(slv_system_t);
 extern struct var_variable **slv_get_master_unattached_list(slv_system_t);
 extern struct dis_discrete **slv_get_master_dvar_list(slv_system_t);
 extern struct dis_discrete **slv_get_master_disunatt_list(slv_system_t);
-/**
+/**< 
  ***  vlist = slv_get_*_*_list(sys)
  ***  slv_system_t sys;
  ***  struct var_variable **vlist;
@@ -649,12 +649,12 @@ extern struct bnd_boundary **slv_get_master_bnd_list(slv_system_t);
  **/
 
 extern struct gl_list_t *slv_get_symbol_list(slv_system_t);
-/*
+/**< 
  * return the list of SymbolValues struct os a slv_sys
  */
 
 extern int32 slv_need_consistency(slv_system_t);
-/*  
+/**<  
  * slv_need_consistency(sys);
  * Gets the int need_consitency associated with the system.
  */
@@ -683,7 +683,7 @@ extern int32 slv_get_num_master_logrels(slv_system_t);
 extern int32 slv_get_num_master_condlogrels(slv_system_t);
 extern int32 slv_get_num_master_whens(slv_system_t);
 extern int32 slv_get_num_master_bnds(slv_system_t);
-/**
+/**< 
  ***  len = slv_get_num_*_*(sys);
  ***  slv_system_t sys;
  ***  int len;
@@ -694,7 +694,7 @@ extern int32 slv_get_num_master_bnds(slv_system_t);
  **/
 
 extern int32 slv_get_num_models(slv_system_t);
-/**
+/**< 
  ***  len = slv_get_num_models(sys);
  ***  slv_system_t sys;
  ***  int len;
@@ -728,7 +728,7 @@ extern int32 slv_count_master_logrels(slv_system_t,logrel_filter_t *);
 extern int32 slv_count_master_condlogrels(slv_system_t,logrel_filter_t *);
 extern int32 slv_count_master_whens(slv_system_t,when_filter_t *);
 extern int32 slv_count_master_bnds(slv_system_t,bnd_filter_t *);
-/**
+/**< 
  ***  count = slv_count_*_*(sys,vfilter)
  ***  count = slv_count_*_*rels(sys,rfilter)
  ***  slv_system_t sys;
@@ -750,7 +750,7 @@ extern int32 slv_count_master_bnds(slv_system_t,bnd_filter_t *);
 \**************************************************************************/
 extern void slv_set_obj_relation(slv_system_t,struct rel_relation *);
 extern struct rel_relation *slv_get_obj_relation(slv_system_t);
-/**
+/**< 
  ***  slv_set_obj_relation(sys,obj)
  ***  obj = slv_get_obj_relation(sys)
  ***  slv_system_t sys;
@@ -769,7 +769,7 @@ extern struct rel_relation *slv_get_obj_relation(slv_system_t);
 extern void slv_set_obj_variable(slv_system_t, struct var_variable *,unsigned);
 extern struct var_variable *slv_get_obj_variable(slv_system_t);
 extern real64 slv_get_obj_variable_gradient(slv_system_t);
-/**
+/**< 
  ***  slv_set_obj_variable(sys,objvar,maximize);
  ***  objvar = slv_get_obj_variable(sys);
  ***  objvar_grad = slv_get_obj_variable_gradient(sys);
@@ -801,7 +801,7 @@ extern real64 slv_get_obj_variable_gradient(slv_system_t);
  **/
 
 extern int slv_eligible_solver(slv_system_t);
-/**
+/**< 
  ***  eligible = slv_eligible_solver(sys)
  ***  int eligible;
  ***  slv_system_t sys;
@@ -818,7 +818,7 @@ extern int slv_eligible_solver(slv_system_t);
 
 extern int slv_select_solver(slv_system_t,int);
 extern int slv_get_selected_solver(slv_system_t);
-/**
+/**< 
  ***  solver=slv_select_solver(sys,solver)
  ***  solver = slv_get_selected_solver(sys)
  ***  slv_system_t sys;
@@ -836,7 +836,7 @@ extern int slv_get_selected_solver(slv_system_t);
  **/
 
 extern int slv_switch_solver(slv_system_t,int);
-/**
+/**< 
  ***  solver=slv_switch_solver(sys,solver)
  ***  slv_system_t sys;
  ***  int solver;
@@ -849,11 +849,11 @@ extern int slv_switch_solver(slv_system_t,int);
  **/
 
 extern int32 slv_get_default_parameters(int32,slv_parameters_t *);
-/* KHACK: NEED TO COMMENT */
+/**< KHACK: NEED TO COMMENT */
 
 extern void slv_get_parameters(slv_system_t,slv_parameters_t *);
 extern void slv_set_parameters(slv_system_t,slv_parameters_t *);
-/**
+/**< 
  ***  slv_get_parameters(sys,parameters)
  ***  slv_set_parameters(sys,parameters)
  ***  slv_system_t sys;
@@ -878,21 +878,21 @@ extern void slv_set_parameters(slv_system_t,slv_parameters_t *);
 
 extern SlvClientToken slv_get_client_token(slv_system_t);
 extern void slv_set_client_token(slv_system_t,SlvClientToken);
-/**
+/**< 
  ***  ct=slv_get_client_token(sys)
  ***  slv_system_t sys;
  ***  Return/sets  the client token of the system_t
  **/
 
 extern void slv_set_solver_index(slv_system_t, int);
-/**
+/**< 
  ***  slv_set_solver_index(sys)
  ***  slv_system_t sys;
  ***  Sets the solver index of the slv_system_t
  **/
 
 extern void slv_get_status(slv_system_t,slv_status_t *);
-/**
+/**< 
  ***  slv_get_status(sys,status)
  ***  slv_system_t sys;
  ***  slv_status_t *status;
@@ -901,8 +901,8 @@ extern void slv_get_status(slv_system_t,slv_status_t *);
  **/
 
 extern linsolqr_system_t slv_get_linsolqr_sys(slv_system_t);
-/* THIS CALL SHOULD GO AWAY */
-/**
+/**< THIS CALL SHOULD GO AWAY */
+/**< 
  ***  lqrsys = slv_get_linsolqr_sys(sys)
  ***  linsolqr_system_t lqrsys;
  ***  slv_system_t sys;
@@ -911,8 +911,8 @@ extern linsolqr_system_t slv_get_linsolqr_sys(slv_system_t);
  **/
 
 extern linsol_system_t slv_get_linsol_sys(slv_system_t);
-/* THIS CALL SHOULD GO AWAY */
-/**
+/**< THIS CALL SHOULD GO AWAY */
+/**< 
  ***  lsys = slv_get_linsol_sys(sys)
  ***  linsol_system_t lsys;
  ***  slv_system_t sys;
@@ -921,8 +921,8 @@ extern linsol_system_t slv_get_linsol_sys(slv_system_t);
  **/
 
 extern mtx_matrix_t slv_get_sys_mtx(slv_system_t);
-/* THIS CALL SHOULD GO AWAY */
-/**
+/**< THIS CALL SHOULD GO AWAY */
+/**< 
  ***  mtx = slv_get_sys_mtx(sys)
  ***  mtx_matrix_t mtx;
  ***  slv_system_t sys;
@@ -931,7 +931,7 @@ extern mtx_matrix_t slv_get_sys_mtx(slv_system_t);
  **/
 
 extern void slv_dump_internals(slv_system_t,int);
-/**
+/**< 
  ***  slv_dump_internals(sys,level)
  ***  slv_system_t sys;
  ***  int level;
@@ -944,7 +944,7 @@ extern void slv_dump_internals(slv_system_t,int);
  **/
 
 extern void slv_presolve(slv_system_t);
-/**
+/**< 
  ***  slv_presolve(sys)
  ***  slv_system_t sys;
  ***
@@ -968,7 +968,7 @@ extern void slv_presolve(slv_system_t);
  **/
 
 extern void slv_resolve(slv_system_t);
-/**
+/**< 
  ***  slv_resolve(sys)
  ***  slv_system_t sys;
  ***
@@ -996,7 +996,7 @@ extern void slv_resolve(slv_system_t);
 
 extern void slv_iterate(slv_system_t);
 extern void slv_solve(slv_system_t);
-/**
+/**< 
  ***  slv_iterate(sys)
  ***  slv_solve(sys)
  ***  slv_system_t sys;
@@ -1015,7 +1015,7 @@ extern void slv_solve(slv_system_t);
  **/
 
 extern void slv_destroy_client(slv_system_t);
-/**
+/**< 
  ***  slv_destroy_client(sys)
  ***  slv_system_t sys;
  ***  Destroy the client token of slv_system_t. It does not deallocate
@@ -1023,8 +1023,8 @@ extern void slv_destroy_client(slv_system_t);
  **/
 
 extern boolean slv_change_basis(slv_system_t,int32,mtx_range_t *);
-/* THIS CALL SHOULD GO AWAY */
-/**
+/**< THIS CALL SHOULD GO AWAY */
+/**< 
  *** slv_change_basis (sys,index,rng);
  *** slv_system_t sys;
  *** int32 index;
@@ -1038,7 +1038,7 @@ extern boolean slv_change_basis(slv_system_t,int32,mtx_range_t *);
 
 extern void slv_print_output(FILE *, slv_system_t);
 
-/**
+/**< 
  *** start of some report generation routines. Just prints out
  *** the variable values and residuals at the moment. Will be
  *** made more general in the future.

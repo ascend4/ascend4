@@ -1,4 +1,4 @@
-/*
+/** 
  *  Dynamic String Utilities
  *
  *  The following routines are more or less stolen from TCL by
@@ -37,19 +37,19 @@
 
 
 typedef struct Asc_DString {
-  char *string;		/* Points to beginning of string:  either
+  char *string;		/** Points to beginning of string:  either
                          * staticSpace below or a malloc'ed array. */
-  int length;		/* Number of non-NULL characters in the
+  int length;		/** Number of non-NULL characters in the
                          * string. */
-  int spaceAvl;		/* Total number of bytes available for the
+  int spaceAvl;		/** Total number of bytes available for the
                          * string and its terminating NULL char. */
   char staticSpace[ASC_DSTRING_STATIC_SIZE];
-                         /* Space to use in common case where string
+                         /** Space to use in common case where string
                           * is small. */
 } Asc_DString;
 
 
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringLength --
@@ -68,7 +68,7 @@ typedef struct Asc_DString {
 #define Asc_DStringLength(dsPtr) ((dsPtr)->length)
 
 
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringValue --
@@ -88,7 +88,7 @@ typedef struct Asc_DString {
 #define Asc_DStringValue(dsPtr) ((dsPtr)->string)
 
 
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringAppend --
@@ -109,7 +109,7 @@ extern char *Asc_DStringAppend(Asc_DString *dsPtr, CONST char *string,
                                int length);
 
 
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringFree --
@@ -129,7 +129,7 @@ extern char *Asc_DStringAppend(Asc_DString *dsPtr, CONST char *string,
 extern void Asc_DStringFree(Asc_DString *dsPtr);
 
 
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringInit --
@@ -147,7 +147,7 @@ extern void Asc_DStringFree(Asc_DString *dsPtr);
  *----------------------------------------------------------------------
  */
 extern void Asc_DStringInit(Asc_DString *dsPtr);
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringResult --
@@ -167,7 +167,7 @@ extern void Asc_DStringInit(Asc_DString *dsPtr);
 extern char *Asc_DStringResult(Asc_DString *dsPtr);
 
 
-/*
+/** 
  *----------------------------------------------------------------------
  *
  * Asc_DStringTrunc --
@@ -187,4 +187,4 @@ extern char *Asc_DStringResult(Asc_DString *dsPtr);
 extern void Asc_DStringTrunc(Asc_DString *dsPtr, int length);
 
 
-#endif /*  _DSTRING_H  */
+#endif /**  _DSTRING_H  */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  mtx: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -246,11 +246,11 @@
  *************************************************************************/
 #ifndef __MTX_H_SEEN__
 #define __MTX_H_SEEN__
-/* requires #include <stdio.h> */
-/* requires #include <string.h> */
-/* requires #include "base.h" */
+/**< requires #include <stdio.h> */
+/**< requires #include <string.h> */
+/**< requires #include "base.h" */
 
-/**
+/**< 
  **
  ** header conventions: (DON'T SKIP READING THIS SECTION!!)
  **   -$- in place of *** implies as described in compilation flags below.
@@ -323,14 +323,14 @@
   public mtx data structures
 \***********************************************************************/
 typedef struct mtx_header *mtx_matrix_t;
-/* Handle to the matrix */
+/**< Handle to the matrix */
 
-/* Used to index rows and columns of matrices */
+/**< Used to index rows and columns of matrices */
 
 typedef struct mtx_coord_struct {
    int32 row,col;
 } mtx_coord_t;
-/**
+/**< 
  ***  Refers to (row,col) element of a matrix
  **/
 
@@ -338,29 +338,29 @@ struct mtx_coord_list {
   mtx_coord_t coord;
   struct mtx_coord_list *next;
 };
-/**
+/**< 
  *** provide a list type for giving functions a list of coordinates.
  **/
 
 typedef struct mtx_range_struct {
   int32 low,high;
 } mtx_range_t;
-/**
+/**< 
  ***  Range refered to is low..high, inclusive.  If low>high, range is empty
  **/
 
 typedef struct mtx_region_struct {
   mtx_range_t row,col;
 } mtx_region_t;
-/**
+/**< 
  ***  Rectangular region of a matrix
  **/
 
 typedef struct mtx_block_struct {
   int32 nblocks;
-  mtx_region_t *block;		/* array of regions denoting blocks */
+  mtx_region_t *block;		/**< array of regions denoting blocks */
 } mtx_block_t;
-/**
+/**< 
  *** Block structure of a matrix.
  **/
 
@@ -370,7 +370,7 @@ typedef struct mtx_sparse_vector_struct {
   int32 cap;
   int32 len;
 } mtx_sparse_t;
-/**
+/**< 
  *** A structure for holding a compressed row or column vector.
  *** The semantics imposed for this structure are very limited
  *** so that one may be used (or reused) in many contexts.
@@ -396,7 +396,7 @@ typedef struct mtx_sparse_vector_struct {
  **/
 
 typedef struct mtx_block_perm_structure *mtx_block_perm_t;
-/**
+/**< 
  ***  The mtx_block_perm_structure contains a copy of the information
  ***  needed to apply a previously derived and saved ordering to the
  ***  matrix in question. Precisely what this information is is nobody's
@@ -440,19 +440,19 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
  **/
 
 #define mtx_ENTIRE_MATRIX NULL
-/**
+/**< 
  ***  Refers to the entire matrix in any function where a region is called for
  **/
 
 #define mtx_ALL_ROWS NULL
 #define mtx_ALL_COLS NULL
-/**
+/**< 
  ***  Refers to all rows/columns in any function where a row/column range
  ***  is called for
  **/
 
 #define mtx_CREATE_SPARSE NULL
-/**
+/**< 
  ***  In calls that take an mtx_sparse_t as an argument AND return a
  ***  pointer to a sparse AND do not note otherwise in the header
  ***  mtx_CREATE_SPARSE can be passed the argument and the call will
@@ -463,7 +463,7 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
 
 #define mtx_IGNORE_ZEROES (1)
 #define mtx_SOFT_ZEROES (0)
-/**
+/**< 
  *** Those functions which fill a sparse_t might optionally return
  *** soft zeroes given mtx_SOFT_ZEROES.
  **/
@@ -475,7 +475,7 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
 
 
 #include "mtx_basic.h"
- /**
+ /**< 
  ***  All operations involving accounting/memory
  ***  management and CHANGES to matrix data structure.
  ***  This includes data file i/o and floating point
@@ -491,7 +491,7 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
  **/
 
 #include "mtx_query.h"
- /**                        
+ /**<                        
  ***  READ_ONLY functions that don't make more sense
  ***  in mtx2_perms or mtx2_basic. Most vector data
  ***  and basic math operations fall in this file.
@@ -509,4 +509,4 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
  ***  file or use those that are in it.
  **/
 
-#endif /* __MTX_H_SEEN__ */
+#endif /**< __MTX_H_SEEN__ */

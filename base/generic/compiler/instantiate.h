@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Interpretter(Instantiator)
  *  by Tom Epperly
  *  Created: 1/24/90
@@ -31,7 +31,7 @@
 #define __INSTANTIATE_H_SEEN__
 
 
-/*
+/**< 
  *  When #including instantiate.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "fractions.h"
@@ -50,12 +50,12 @@
 #define EXTRELS (GBOXRELS | BBOXRELS)
 
 extern long int g_compiler_counter;
-/*
+/**< 
  * unique id of calls to instantiator.
  */
 
 
-/*
+/**< 
  * vvvvvvvvvvvvvvvvvvvvvvvvv <-- exported to UI via compiler.h.
  * extern int g_use_copyanon;
  *
@@ -66,7 +66,7 @@ extern long int g_compiler_counter;
 
 extern void SetInstantiationRelnFlags(unsigned int);
 extern unsigned int GetInstantiationRelnFlags(void);
-/*
+/**< 
  *  void SetInstantiationRelnFlags(flag);
  *  GetInstantiationRelnFlags();
  *  These function manipulate the state of the instantiator with respect
@@ -75,7 +75,7 @@ extern unsigned int GetInstantiationRelnFlags(void);
  *  for so called 'phased-compilation'.
  */
 
-/*
+/**< 
  *  The following defines allow us to manage the development phase of
  *  the ASCEND IV instantiator so that the interface is independent
  *  of the absolute latest compiler hacks.
@@ -87,7 +87,7 @@ extern unsigned int GetInstantiationRelnFlags(void);
  */
 
 extern struct Instance *NewInstantiate(symchar *,symchar *,int,symchar *);
-/*
+/**< 
  *  struct Instance *NewInstantiate(type,name,intset,defmethod)
  *  symchar *type,*name;
  *  int intset;
@@ -161,7 +161,7 @@ extern struct Instance *NewInstantiate(symchar *,symchar *,int,symchar *);
 #define Instantiate(a,b,c,d) NewInstantiate((a),(b),(c),(d))
 
 extern void NewReInstantiate(struct Instance *);
-/*
+/**< 
  *  void NewReInstantiate(i)
  *  struct Instance *i;
  *  This routine is used to resume execution of an instance with unexecuted
@@ -175,7 +175,7 @@ extern void NewReInstantiate(struct Instance *);
 extern void UpdateInstance(struct Instance *,
       struct Instance *,
       CONST struct StatementList *);
-/*
+/**< 
  *  void UpdateInstance(root,target,slist);
  *  Update instance takes a pointer to the root of a simulation (ie the
  *  instance tree), and will find instance target. It will then apply
@@ -186,7 +186,7 @@ extern void UpdateInstance(struct Instance *,
 
 extern struct Instance *InstantiatePatch(symchar *patch,
              symchar *name, int intset);
-/*
+/**< 
  *  struct Instance *InstantiatePatch(patch,name,intset, defmethod);
  *  Instantiate patch takes the name of a patch that is supposed to be
  *  applied to a type. It partially instantiates the instance, then
@@ -196,7 +196,7 @@ extern struct Instance *InstantiatePatch(symchar *patch,
  */
 
 extern void ConfigureInstFromArgs(struct Instance *, CONST struct Instance *);
-/*
+/**< 
  *  ConfigureInstFromArgs(inst,arginst);
  *  struct Instance *inst;
  *  const struct Instance *arginst;
@@ -210,7 +210,7 @@ extern void ConfigureInstFromArgs(struct Instance *, CONST struct Instance *);
  */
 
 extern void ReConfigureInstFromArgs(struct Instance *, CONST struct Instance*);
-/*
+/**< 
  *  ReConfigureInstFromArgs(inst,arginst);
  *  struct Instance *inst;
  *  const struct Instance *arginst;
@@ -227,16 +227,16 @@ extern void ReConfigureInstFromArgs(struct Instance *, CONST struct Instance*);
 extern void LinkToParentByPos(struct Instance *, 
                               struct Instance *, 
                               unsigned long);
-/*
+/**< 
  *  LinkToParentByPos(parent,child,childnum);
  *  Add child as childnumth child of parent and add parent to child.
  */
 
 extern int IncompleteArray(CONST struct Instance *);
-/*
+/**< 
  *  Given an array instance i, returns 1 if incomplete, 0 if ok.
  *  This means all NONNULL children are done, with the possible
  *  exception of arrays of relations/logical_relations.
  */
 
-#endif /* __INSTANTIATE_H_SEEN__ */
+#endif /**< __INSTANTIATE_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Memory module
  *  by Karl Westerberg, Ben Allan
  *  Created: 6/90
@@ -28,7 +28,7 @@
  */
 
 
-/*
+/**< 
  *  Contents:     Memory module
  *
  *  Authors:      Karl Westerberg
@@ -68,7 +68,7 @@
  *                accordingly.
  */
 #ifndef mem_NULL
-/* requires
+/**< requires
 # #include <stdio.h>
 */
 
@@ -77,13 +77,13 @@
 #define mem_address(ptr) ((long)(ptr))
 #define mem_code_address(ptr) ((long)(ptr))
 
-/* use the defines below based on these rather than these directly */
+/**< use the defines below based on these rather than these directly */
 extern void mem_move(POINTER, POINTER, unsigned);
 extern void mem_move_disjoint(POINTER, POINTER, int);
 extern void mem_repl_byte(POINTER, unsigned, unsigned);
 extern void mem_zero_byte(POINTER, unsigned, unsigned);
 extern void mem_repl_word(POINTER, unsigned, unsigned);
-/* here are the defines */
+/**< here are the defines */
 #define mem_move_cast(from,too,nbytes) \
    mem_move((POINTER)(from),(POINTER)(too),(unsigned)(nbytes))
 
@@ -95,14 +95,14 @@ extern void mem_repl_word(POINTER, unsigned, unsigned);
 
 #define mem_zero_byte_cast(too,byte,nbytes) \
    mem_zero_byte((POINTER)(too),(unsigned)(byte),(unsigned)(nbytes))
-/* byte is ignored by mem_zero_byte. It is a placeholder for mem_repl_byte
+/**< byte is ignored by mem_zero_byte. It is a placeholder for mem_repl_byte
    substitutability.
 */
 
 #define mem_repl_word_cast(too,word,nwords) \
    mem_repl_word((POINTER)(too),(unsigned)(word),(unsigned)(nwords))
 
-/* the following are pretty much a monument to Karl. */
+/**< the following are pretty much a monument to Karl. */
 #if 0
 extern int mem_get_byte();
 #endif
@@ -157,7 +157,7 @@ extern void mem_set_double();
 \***************************************************************************/
 
 typedef struct mem_store_header *mem_store_t;
-/**
+/**< 
   The token for this memory system. malloc doesn't tell you much
   about its internals, and we aren't telling you about ours.
   You can't dereference or free this pointer yourself, so there's
@@ -165,20 +165,20 @@ typedef struct mem_store_header *mem_store_t;
 **/
 
 struct mem_statistics {
-  double m_eff;		/* bytes in use / bytes allocated */
-  double m_recycle;	/* avg reuses per element */
-  int elt_total;	/* current elements existing in store*/
-  int elt_taken;	/* fresh elements handed out */
-  int elt_inuse;	/* elements the user currently has */
-  int elt_onlist;	/* elements awaiting reuse */
-  int elt_size;		/* bytes/element, as mem sees it */
-  int str_len;		/* length of active pool. */
-  int str_wid;          /* elements/pointer in pool. */
+  double m_eff;		/**< bytes in use / bytes allocated */
+  double m_recycle;	/**< avg reuses per element */
+  int elt_total;	/**< current elements existing in store*/
+  int elt_taken;	/**< fresh elements handed out */
+  int elt_inuse;	/**< elements the user currently has */
+  int elt_onlist;	/**< elements awaiting reuse */
+  int elt_size;		/**< bytes/element, as mem sees it */
+  int str_len;		/**< length of active pool. */
+  int str_wid;          /**< elements/pointer in pool. */
 };
-/* The reporting structure for a mem_store_header query. */
+/**< The reporting structure for a mem_store_header query. */
 
 extern void mem_get_stats(struct mem_statistics *, mem_store_t);
-/*
+/**< 
  *  mem_get_stats(m_stats,ms);
  *  struct mem_statistics *m_stats;
  *  mem_store_t ms;
@@ -191,7 +191,7 @@ extern void mem_get_stats(struct mem_statistics *, mem_store_t);
  */
 
 extern mem_store_t mem_create_store(int, int, size_t, int, int);
-/*
+/**< 
  *  ms = mem_create_store(length, width, eltsize, deltalen, deltapool);
  *  mem_store_t ms;
  *  int length,width,deltalen,deltapool;
@@ -243,7 +243,7 @@ extern mem_store_t mem_create_store(int, int, size_t, int, int);
  */
 
 extern void *mem_get_element(mem_store_t);
-/*
+/**< 
  *  eltpointer = (elt_type *)mem_get_element(ms);
  *  mem_store_t ms;
  *  <the elt_type you want is your business> *eltpointer;
@@ -256,7 +256,7 @@ extern void *mem_get_element(mem_store_t);
  */
 
 extern void mem_get_element_list(mem_store_t, int, void **);
-/*
+/**< 
  *  mem_get_element_list(ms, len, ellist);
  *  int len;
  *  mem_store_t ms;
@@ -276,12 +276,12 @@ extern void mem_get_element_list(mem_store_t, int, void **);
  */
 
 #define mem_DEBUG FALSE
-/* mem_DEBUG set TRUE causes the mem_store routines to do
+/**< mem_DEBUG set TRUE causes the mem_store routines to do
    some RATHER expensive checking. It should be set to
    FALSE.
 */
 #define mem_LIGHTENING FALSE
-/* mem_LIGHTENING set TRUE causes mem_store routines to assume the
+/**< mem_LIGHTENING set TRUE causes mem_store routines to assume the
    user is perfect: no sanity checks are at all necessary and most
    internal accounting can be disabled. Noone with an ounce of sanity
    would ever set this flag to TRUE unless the code using the
@@ -295,7 +295,7 @@ extern void mem_get_element_list(mem_store_t, int, void **);
 */
 
 extern void mem_free_element(mem_store_t, void *);
-/*
+/**< 
  *  mem_free_element(ms,(void *)eltpointer);  
  *  mem_store_t ms;
  *  <your elttype> *eltpointer;
@@ -319,7 +319,7 @@ extern void mem_free_element(mem_store_t, void *);
  */
 
 extern void mem_clear_store(mem_store_t);
-/*
+/**< 
  *  mem_clear_store(ms);
  *  mem_store_t ms;
  *
@@ -340,7 +340,7 @@ extern void mem_clear_store(mem_store_t);
  */
 
 extern void mem_destroy_store(mem_store_t);
-/*
+/**< 
  *  mem_destroy_store(ms);
  *  mem_store_t ms;
  *
@@ -351,7 +351,7 @@ extern void mem_destroy_store(mem_store_t);
  */
 
 extern void mem_print_store(FILE *, mem_store_t,unsigned);
-/*
+/**< 
  *  mem_print_store(fp,ms,detail);
  *  FILE *fp;
  *  mem_store_t ms;
@@ -364,7 +364,7 @@ extern void mem_print_store(FILE *, mem_store_t,unsigned);
  */
 
 extern size_t mem_sizeof_store(mem_store_t);
-/*
+/**< 
  *  mem_sizeof_store(ms);
  *  Returns the current total byte usage of the store.
  */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Logical Relation Manipulator Module
  *  Created: 04/97
  *  Version: $Revision: 1.3 $
@@ -25,7 +25,7 @@
  *
  */
 
-/*
+/**< 
  *  Contents:     Logical Relation manipulator module
  *
  *  Authors:      Vicente Rico-Ramirez based on relman.[ch]
@@ -39,7 +39,7 @@
 #ifndef logrelman__already_included
 #define logrelman__already_included
 
-/* 
+/**< 
  * requires #include "mtx.h" 
  * requires #include "discrete.h" 
  * requires #include "logrel.h" 
@@ -48,7 +48,7 @@
 
 extern void logrelman_get_incidence(struct logrel_relation *,
                                     dis_filter_t *,mtx_matrix_t);
-/*
+/**< 
  *  logrelman_get_incidence(lrel,filter,matrix)
  *  struct logrel_relation *lrel;
  *  dis_filter_t *filter;
@@ -61,7 +61,7 @@ extern void logrelman_get_incidence(struct logrel_relation *,
 
 
 extern int32 logrelman_eval(struct logrel_relation *, int32 *);
-/*
+/**< 
  *  logresidual = logrelman_eval(lrel,status)
  *  struct logrel_relation *lrel;
  *  int32 *status;
@@ -78,7 +78,7 @@ extern int32 logrelman_eval(struct logrel_relation *, int32 *);
 
 
 extern boolean logrelman_calc_satisfied(struct logrel_relation *);
-/*
+/**< 
  *  satisfied = logrelman_calc_satisfied(lrel)
  *  boolean satisfied;
  *
@@ -94,7 +94,7 @@ extern int32 *logrelman_directly_solve(struct logrel_relation *,
                                        struct dis_discrete *,
                                        int *,int *, int,
                                        struct gl_list_t *);
-/*
+/**< 
  *  solution_list = logrelman_directly_solve(lrel,solvefor,able,nsolns,
  *                                           perturb,insts)
  *  int32 *solution_list;
@@ -121,7 +121,7 @@ extern char *logrelman_make_string_infix(slv_system_t,
                                          struct logrel_relation *,int);
 extern char *logrelman_make_string_postfix(slv_system_t,
                                            struct logrel_relation *,int);
-/*
+/**< 
  *  string = logrelman_make_string_infix(sys,lrel,style)
  *  string = logrelman_make_string_postfix(sys,lrel,style)
  *  int style = FALSE;
@@ -135,5 +135,5 @@ extern char *logrelman_make_string_postfix(slv_system_t,
  *  provide the slv_system_t from which you got the logical relation.
  */
 
-#endif /*  logrelman__already_included */
+#endif /**<  logrelman__already_included */
 

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  External Call Module
  *  by Kirk Andre Abbott
  *  Created: Jun 1, 1995.
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including extcall.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -35,7 +35,7 @@
 
 #ifndef __EXTCALL_H_SEEN__
 #define __EXTCALL_H_SEEN__
-/* requires
+/**< requires
 # #include <stdio.h>
 # #include <stdlib.h>
 # #include "compiler.h"
@@ -47,23 +47,23 @@
 
 struct ExtCallNode{
   struct ExternalFunc *efunc;
-  struct gl_list_t *arglist;    /* list of Instance pointers */
-  struct Instance **data;      	/* a hanlde to additional user data*/
-  unsigned long subject;	/* index into the arglist */
-  int nodestamp;               	/* a unique id for each call node */
+  struct gl_list_t *arglist;    /**< list of Instance pointers */
+  struct Instance **data;      	/**< a hanlde to additional user data*/
+  unsigned long subject;	/**< index into the arglist */
+  int nodestamp;               	/**< a unique id for each call node */
 };
 
 extern struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
       struct gl_list_t *args,
       struct Instance *subject,
       struct Instance *data);
-/*
+/**< 
  *
  */
 
 extern void DestroyExtCall(struct ExtCallNode *ext,
       struct Instance *relinst);
-/*
+/**< 
  *
  */
 
@@ -74,7 +74,7 @@ extern unsigned long CountNumberOfArgs(struct gl_list_t *,
 
 extern struct gl_list_t *LinearizeArgList(struct gl_list_t *,
        unsigned long, unsigned long);
-/*
+/**< 
  *  struct gl_list_t *LinearizeArgList(list,start,end)
  *  struct gl_list_t *list;
  *  unsigned long start;
@@ -89,7 +89,7 @@ extern struct gl_list_t *LinearizeArgList(struct gl_list_t *,
 extern struct gl_list_t *CopySpecialList(struct gl_list_t *);
 
 extern void DestroySpecialList(struct gl_list_t *);
-/*
+/**< 
  *  void DestroySpecialList(struct gl_list_t *)
  *  struct gl_list_t *list;
  *  Given a list of gl_list_t's, this function will destroy the lists
@@ -104,7 +104,7 @@ extern void DestroySpecialList(struct gl_list_t *);
 #define ExternalCallExtFunc(ext) ExternalCallExtFuncF(ext)
 #endif
 extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *);
-/*
+/**< 
  *  struct ExternalFunc *ExternalCallExtFunc(ext);
  *  struct ExtCallNode *ext;
  *  Return the external function pointer of an external call;
@@ -116,7 +116,7 @@ extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *);
 #define ExternalCallArgList(ext) ExternalCallArgListF(ext)
 #endif
 extern struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext);
-/*
+/**< 
  *  struct gl_list_t *ExternalCallArgList(ext);
  *  struct relation_ExternalCall;
  *  Return the arguement list, which is a List of Lists of struct
@@ -124,7 +124,7 @@ extern struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext);
  */
 
 extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *);
-/*
+/**< 
  *  struct Instance *ExternalCallDataInstance(ext);
  *  struct ExtCallNode *ext;
  *  Return the 'data' instance for an external call. This 'data'
@@ -139,7 +139,7 @@ extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *);
 #define ExternalCallVarIndex(ext) ExternalCallVarIndexF(ext)
 #endif
 extern unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext);
-/*
+/**< 
  *  unsigned long ExternalCallSubjectVarNdx(ext);
  *  struct ExtCallNode *ext;
  *  Return the index in the arguement list of the subject variable.
@@ -147,7 +147,7 @@ extern unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext);
  */
 
 extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
-/*
+/**< 
  *  struct Instance *ExternalCallSubjectVar(ext);
  *  struct ExtCallNode *ext;
  *  Return the "subject" variable instance of the external call. This is
@@ -161,7 +161,7 @@ extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
 #define ExternalCallNodeStamp(ext) ExternalCallNodeStampF(ext)
 #endif
 extern int ExternalCallNodeStampF(struct ExtCallNode *ext);
-/*
+/**< 
  *  int ExternalCallNodeStamp(ext);
  *  struct ExtCallNode *ext;
  *  Return the nodestamp for the given external node. Valid results
@@ -171,7 +171,7 @@ extern int ExternalCallNodeStampF(struct ExtCallNode *ext);
 extern void SetExternalCallNodeStamp(struct ExtCallNode *ext,
          int nodestamp);
 
-#endif /* __EXTCALL_H_SEEN__ */
+#endif /**< __EXTCALL_H_SEEN__ */
 
 
 

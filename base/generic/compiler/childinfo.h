@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Atom Child Description List
  *  by Tom Epperly
  *  Part of Ascend
@@ -32,7 +32,7 @@
 
 #ifndef __CHILDINFO_H_SEEN__
 #define __CHILDINFO_H_SEEN__
-/* requires
+/**< requires
  *# #include"compiler.h"
  *# #include"list.h"
  *# #include"dimen.h"
@@ -45,25 +45,25 @@ struct ChildDescR {
 };
 
 struct ChildDescI {
-  long value;		/* always mutable */
+  long value;		/**< always mutable */
 };
 
 struct ChildDescS{
-  struct set_t *slist;		/* set list */
-  unsigned is_int;		/* integer 1 or symbol 0 set */
+  struct set_t *slist;		/**< set list */
+  unsigned is_int;		/**< integer 1 or symbol 0 set */
 };
 
 union ChildDescUnion {
-  int bvalue;			/* boolean value */
-  struct ChildDescS s;		/* set information */
-  struct ChildDescI ivalue;	/* integer value */
-  struct ChildDescR rvalue;	/* real value */
-  symchar *svalue;		/* symbol value */
+  int bvalue;			/**< boolean value */
+  struct ChildDescS s;		/**< set information */
+  struct ChildDescI ivalue;	/**< integer value */
+  struct ChildDescR rvalue;	/**< real value */
+  symchar *svalue;		/**< symbol value */
 };
 
 enum ChildDescT {
   bad_child,
-  /*
+  /**< 
    * this should never, ever, ever be seen except in childless atoms who need
    * a place holder. bad_child-ren are never assigned and the UNION meaningless
    */
@@ -76,33 +76,33 @@ enum ChildDescT {
 
 struct ChildDesc {
   enum ChildDescT t;
-  unsigned assigned; /* 0,1 */
+  unsigned assigned; /**< 0,1 */
   union ChildDescUnion u;
 };
 
-/*
+/**< 
  * In the macro ICDESC, x must be a struct ChildDesc variable,
  * NOT a pointer to same.
  * If you want to init a pointer contents, y, use ICDESCPTR.
  */
 #ifdef NDEBUG
-/* do nothings */
+/**< do nothings */
 #define ICDESC(x)
 #define ICDESCPTR(y)
 #else
-/* init to 0 */
+/**< init to 0 */
 #define ICDESC(x) CDescInit(&(x))
 #define ICDESCPTR(y) CDescInit(y)
 #endif
 extern void CDescInit(struct ChildDesc *);
-/*
+/**< 
  *  CDescInit(c)
  *  Inits the contents of c to 0.
  *  Do not call this function -- use the ICDESC macros
  */
 
 extern struct ChildDesc *CreateChildDescArray(unsigned long);
-/*
+/**< 
  *  struct ChildDesc *CreateChildDescArray(l)
  *  unsigned long l;
  *  Allocate space for an array of length l.  This will not initialize
@@ -111,7 +111,7 @@ extern struct ChildDesc *CreateChildDescArray(unsigned long);
  */
 
 extern struct ChildDesc *CreateEmptyChildDescArray(void);
-/*
+/**< 
  *  struct ChildDesc *CreateEmptyChildDescArray();
  *  Allocate space for an array of length 1.
  *  This will be initialized to contain a bad_child.
@@ -122,7 +122,7 @@ extern struct ChildDesc *CreateEmptyChildDescArray(void);
 
 extern void DestroyChildDescArray(struct ChildDesc *,
       unsigned long);
-/*
+/**< 
  *  void DestroyChildDescArray(c,l)
  *  struct ChildDesc *c;
  *  unsigned long l;
@@ -138,7 +138,7 @@ extern void DestroyChildDescArray(struct ChildDesc *,
 extern void AssignChildArrayElementF(struct ChildDesc *,
          unsigned long,
          struct ChildDesc);
-/*
+/**< 
  *  macro AssignChildArrayElement(a,n,e)
  *  void AssignChildArrayElementF(a,n,e)
  *  struct ChildDesc *a;
@@ -156,7 +156,7 @@ extern void AssignChildArrayElementF(struct ChildDesc *,
 #endif
 extern struct ChildDesc GetChildArrayElementF(CONST struct ChildDesc *,
            unsigned long);
-/*
+/**< 
  *  macro GetChildArrayElement(a,n)
  *  struct ChildDesc GetChildArrayElementF(a,n)
  *  const struct ChildDesc *a;
@@ -171,7 +171,7 @@ extern struct ChildDesc GetChildArrayElementF(CONST struct ChildDesc *,
 #define ChildDescType(e) ChildDescTypeF(e)
 #endif
 extern enum ChildDescT ChildDescTypeF(struct ChildDesc);
-/*
+/**< 
  *  macro ChildDescType(e)
  *  enum ChildDescT ChildDescF(e)
  *  struct ChildDesc e;
@@ -184,7 +184,7 @@ extern enum ChildDescT ChildDescTypeF(struct ChildDesc);
 #define ValueAssigned(e) ValueAssignedF(e)
 #endif
 extern int ValueAssignedF(struct ChildDesc);
-/*
+/**< 
  *  macro ValueAssigned(e)
  *  int ValueAssignedF(e)
  *  struct ChildDesc e;
@@ -198,7 +198,7 @@ extern int ValueAssignedF(struct ChildDesc);
 #define IntegerDefault(e) IntegerDefaultF(e)
 #endif
 extern long IntegerDefaultF(struct ChildDesc);
-/*
+/**< 
  *  macro IntegerDefault(e)
  *  long IntegerDefaultF(e)
  *  struct ChildDesc e;
@@ -212,7 +212,7 @@ extern long IntegerDefaultF(struct ChildDesc);
 #define BooleanDefault(e) BooleanDefaultF(e)
 #endif
 extern int BooleanDefaultF(struct ChildDesc);
-/*
+/**< 
  *  macro BooleanDefault(e)
  *  int BooleanDefaultF(e)
  *  struct ChildDesc e;
@@ -226,7 +226,7 @@ extern int BooleanDefaultF(struct ChildDesc);
 #define SetDefault(e) SetDefaultF(e)
 #endif
 extern CONST struct set_t *SetDefaultF(struct ChildDesc);
-/*
+/**< 
  *  macro SetDefault(e)
  *  const struct set_t *SetDefaultF(e)
  *  struct ChildDesc e;
@@ -240,7 +240,7 @@ extern CONST struct set_t *SetDefaultF(struct ChildDesc);
 #define SetIsIntegerSet(e) SetIsIntegerSetF(e)
 #endif
 extern int SetIsIntegerSetF(struct ChildDesc);
-/*
+/**< 
  *  macro SetIsIntegerSet(e)
  *  int SetIsIntegerSetF(e)
  *  struct ChildDesc e;
@@ -253,7 +253,7 @@ extern int SetIsIntegerSetF(struct ChildDesc);
 #define SymbolDefault(e) SymbolDefaultF(e)
 #endif
 extern symchar *SymbolDefaultF(struct ChildDesc);
-/*
+/**< 
  *  macro SymbolDefault(e)
  *  symchar *SymbolDefaultF(e)
  *  struct ChildDesc e;
@@ -267,7 +267,7 @@ extern symchar *SymbolDefaultF(struct ChildDesc);
 #define RealDefaultValue(e) RealDefaultValueF(e)
 #endif
 extern double RealDefaultValueF(struct ChildDesc);
-/*
+/**< 
  *  macro RealDefaultValue(e)
  *  struct ChildDesc e;
  *  Return the real default value assuming that e is a real_child.
@@ -280,7 +280,7 @@ extern double RealDefaultValueF(struct ChildDesc);
 #define RealDimensions(e) RealDimensionsF(e)
 #endif
 extern CONST dim_type *RealDimensionsF(struct ChildDesc);
-/*
+/**< 
  *  macro RealDimensions(e)
  *  struct ChildDesc e;
  *  Return the units pointer assuming that e is a real_child.
@@ -288,7 +288,7 @@ extern CONST dim_type *RealDimensionsF(struct ChildDesc);
  */
 
 extern struct ChildDesc MakeRealDesc(int,double, CONST dim_type *);
-/*
+/**< 
  *  struct ChildDesc MakeRealDesc(assigned,v,dims);
  *  int assigned;
  *  double v;
@@ -298,7 +298,7 @@ extern struct ChildDesc MakeRealDesc(int,double, CONST dim_type *);
  */
 
 extern struct ChildDesc MakeIntegerDesc(int,long);
-/*
+/**< 
  *  struct ChildDesc MakeIntegerDesc(assigned,i)
  *  int assigned;
  *  long i;
@@ -307,7 +307,7 @@ extern struct ChildDesc MakeIntegerDesc(int,long);
  */
 
 extern struct ChildDesc MakeBooleanDesc(int,int);
-/*
+/**< 
  *  struct ChildDesc MakeBooleanDesc(assigned,b)
  *  int assigned,b;
  *  Make a boolean child with default value b.  The value b is ignored if
@@ -315,7 +315,7 @@ extern struct ChildDesc MakeBooleanDesc(int,int);
  */
 
 extern struct ChildDesc MakeSetDesc(int,int,struct set_t *);
-/*
+/**< 
  *  struct ChildDesc MakeSetDesc(assigned,intset,s)
  *  int assigned;
  *  int intset;
@@ -325,11 +325,11 @@ extern struct ChildDesc MakeSetDesc(int,int,struct set_t *);
  */
 
 extern struct ChildDesc MakeSymbolDesc(int,symchar *);
-/*
+/**< 
  *  struct ChildDesc MakeSymbolDesc(assigned,str)
  *  int assigned;
  *  char *str;
  *  Make a symbol child description with default value str.  The value of
  *  str is ignored if assigned is false.
  */
-#endif /* __CHILDINFO_H_SEEN__ */
+#endif /**< __CHILDINFO_H_SEEN__ */

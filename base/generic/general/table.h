@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Table Module
  *  by Kirk A. Abbott
  *  Created December 29, 1994.
@@ -28,7 +28,7 @@
  *  the file named COPYING.
  *
  */
-/*
+/**< 
  *  Abstract
  *
  *  Many hash tables are used throughout the implementation of a compiler
@@ -39,7 +39,7 @@
  *  it if required is fast. We append the new element to the front of the
  *  chain. The hashpjw algorithm is used.
  */
-/*
+/**< 
  * This module is appropriate for hash tables keyed with arbitrary strings.
  * It is not appropriate for use with symbol table entry keys.
  */
@@ -50,12 +50,12 @@
 
 typedef  void (*TableIteratorOne)(void *);
 typedef  void (*TableIteratorTwo)(void *,void *);
-/*
+/**< 
  * Typedefs for casting of functions being passed to TableApply* functions.
  */
 
 extern struct Table *CreateTable(unsigned long);
-/*
+/**< 
  *  struct Table *CreateTable(hashsize)
  *  unsigned long hashsize;
  *  Creates a new hash table with the specified hashsize. This ideally
@@ -66,7 +66,7 @@ extern struct Table *CreateTable(unsigned long);
  */
 
 extern void DestroyTable(struct Table *,int);
-/*
+/**< 
  *  void DestroyTable(table,info);
  *  struct Table *table;
  *  int info;
@@ -78,7 +78,7 @@ extern void DestroyTable(struct Table *,int);
  */
 
 extern void AddTableData(struct Table *,void *,CONST char *);
-/*
+/**< 
  *  void AddTableData(table,data,id);
  *  struct Table *table;
  *  void *data;
@@ -92,7 +92,7 @@ extern void AddTableData(struct Table *,void *,CONST char *);
  */
 
 extern void *LookupTableData(struct Table *,CONST char *);
-/*
+/**< 
  *  void LookupTableData(table,id)
  *  struct Table *table;
  *  char *id;
@@ -104,7 +104,7 @@ extern void *LookupTableData(struct Table *,CONST char *);
  */
 
 extern void *RemoveTableData(struct Table *,char *);
-/*
+/**< 
  *  void *RemoveTableData(table,id);
  *  struct Table *table;
  *  char *id;
@@ -114,7 +114,7 @@ extern void *RemoveTableData(struct Table *,char *);
  */
 
 void TableApplyOne(struct Table *,TableIteratorOne,char *);
-/*
+/**< 
  *  void TableApplyOne(table,applyfunc,id);
  *  struct Table *table;
  *  void (*applyfunc)(void *);
@@ -126,7 +126,7 @@ void TableApplyOne(struct Table *,TableIteratorOne,char *);
  */
 
 extern void TableApplyAll(struct Table *,TableIteratorOne);
-/*
+/**< 
  *  void TableApplyOne(table,applyfunc);
  *  struct Table *table;
  *  TableIteratorOne applyfunc;
@@ -138,7 +138,7 @@ extern void TableApplyAll(struct Table *,TableIteratorOne);
  */
 
 extern void TableApplyAllTwo(struct Table *,TableIteratorTwo, void *);
-/*
+/**< 
  *  struct Table *table;
  *  TableIteratorTwo applyfunc;
  *  void *arg2;
@@ -147,7 +147,7 @@ extern void TableApplyAllTwo(struct Table *,TableIteratorTwo, void *);
  */
 
 extern void PrintTable(FILE *,struct Table *);
-/*
+/**< 
  *  void PrintTable(f,table);
  *  FILE *f;
  *  struct Table *table;
@@ -158,14 +158,14 @@ extern void PrintTable(FILE *,struct Table *);
  */
 
 extern unsigned long TableSize(struct Table *);
-/*
+/**< 
  *  unsigned long TableSize(table);
  *  struct Table *table;
  *  Returns the current number of entries in the table.
  */
 
 extern unsigned long TableHashSize(struct Table *);
-/*
+/**< 
  *  unsigned long TableHashSize(table);
  *  struct Table *table;
  *  Returns the current hashsize of the table. If internally we change
@@ -175,11 +175,11 @@ extern unsigned long TableHashSize(struct Table *);
  */
 
 extern void *TableLastFind(struct Table *);
-/*
+/**< 
  *  void *TableLastFind(table);
  *  struct Table *table;
  *  Returns the information that was last requested. Could be useful
  *  for those, "do you exist?; now do something with you".
  */
 
-#endif /* __TABLE_H_SEEN__ */
+#endif /**< __TABLE_H_SEEN__ */

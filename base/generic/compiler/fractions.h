@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Fraction module for ASCEND
  *  by Tom Epperly
  *  8/18/89
@@ -31,7 +31,7 @@
 #define __FRACTIONS_H_SEEN__
 
 
-/*
+/**< 
  *  When #including fractions.h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
  */
@@ -44,7 +44,7 @@ struct fraction {
 };
 
 extern struct fraction CreateFraction(short,short);
-/*
+/**< 
  *  struct fraction CreateFraction(n,d)
  *  short n,d;
  *  n - numerator
@@ -52,7 +52,7 @@ extern struct fraction CreateFraction(short,short);
  */
 
 extern struct fraction Simplify(struct fraction);
-/*
+/**< 
  *  struct fraction Simplify(f)
  *  struct fraction f;
  *  Simplify the fraction.  This forces the denominator to be >= 0; so
@@ -60,58 +60,58 @@ extern struct fraction Simplify(struct fraction);
  */
 
 #define Numerator(f) ((f).numerator)
-/*
+/**< 
  *  macro Numerator(f)
  *  struct fraction f;
  *  return the numerator of f
  */
 
 #define Denominator(f) ((f).denominator)
-/*
+/**< 
  *  macro Denominator(f)
  *  struct fraction f;
  *  return the denominator of f.
  */
 
 extern struct fraction AddF(struct fraction,struct fraction);
-/*
+/**< 
  *  struct fraction AddF(f1,f2)
  *  struct fraction f1,f2;
  *  Return f1+f2 simplified.
  */
 
 extern struct fraction SubF(struct fraction,struct fraction);
-/*
+/**< 
  *  struct fraction SubF(f1,f2)
  *  struct fraction f1,f2;
  *  Return f1-f2 simplified.
  */
 
 extern struct fraction MultF(struct fraction,struct fraction);
-/*
+/**< 
  *  struct fraction MultF(f1,f2)
  *  struct fraction f1,f2;
  *  Return f1*f2 simplified.
  */
 
 extern struct fraction DivF(struct fraction,struct fraction);
-/*
+/**< 
  *  struct fraction DivF(f1,f2)
  *  struct fraction f1,f2;
  *  Return f1/f2 simplified.
  */
 
 extern int CmpF(struct fraction,struct fraction);
-/*
+/**< 
  *  int CmpF(f1,f2)
  *  struct fraction f1,f2;
  *  Return -1,0,1 if f1 is <,=, or > than f2 respectively.
  */
 
 extern struct fraction NegateF(struct fraction);
-/*
+/**< 
  *  struct fraction NegateF(f)
  *  struct fraction f;
  *  Returned fraction equal -f.
  */
-#endif /* __FRACTIONS_H_SEEN__ */
+#endif /**< __FRACTIONS_H_SEEN__ */

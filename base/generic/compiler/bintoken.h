@@ -1,4 +1,4 @@
-/*
+/** 
  *  bintoken.h
  *  By Benjamin A. Allan
  *  Jan 7, 1998.
@@ -29,14 +29,14 @@
  *  the file named COPYING.
  */
 
-/* Note that this header and btprolog.h are a pair.
+/** Note that this header and btprolog.h are a pair.
  * btprolog exists to make the C compiler job simpler -
  * we don't want it to know about struct Instance when
  * building code because we may not have the compiler
  * directory available. btprolog.h is installed with
  * the ascend binaries or scripts.
  */
-/*
+/** 
  * this header requires:
  * #include "compiler/instance_enum.h"
  */
@@ -46,12 +46,12 @@
 enum bintoken_kind {
   BT_error,
   BT_C,
-  BT_F77,	/* ansi f77, unimplemented */
-  BT_SunJAVA,	/* Sun JAVA, unimplemented */
-  BT_MsJAVA	/* Microsoft(tm) JAVA(hah!), unimplemented */
+  BT_F77,	/** ansi f77, unimplemented */
+  BT_SunJAVA,	/** Sun JAVA, unimplemented */
+  BT_MsJAVA	/** Microsoft(tm) JAVA(hah!), unimplemented */
 };
 
-/*
+/** 
  * Set the configurations for building code.
  * The string arguments given are kept.
  * They are freed on the next call which specifies a new string or NULL.
@@ -73,7 +73,7 @@ enum bintoken_kind {
 extern int BinTokenSetOptions(char *, char *, char *, char *, char *,
                               unsigned long, int, int);
 
-/*
+/** 
  * BinTokenClearTables();
  * Frees global data allocated during loading.
  * Do not call any previously loaded functions after this is
@@ -81,7 +81,7 @@ extern int BinTokenSetOptions(char *, char *, char *, char *, char *,
  */
 extern void BinTokenClearTables(void);
 
-/*
+/** 
  * BinTokenDeleteReference(btable);
  * When all the references expire, we might unload the library.
  * Note there is no AddReference since all the references
@@ -91,7 +91,7 @@ extern void BinTokenClearTables(void);
  */
 extern void BinTokenDeleteReference(int);
 
-/*
+/** 
  * BinTokensCreate(root,method);
  * Searches for unbinary equations in the tree of root and
  * compiles them to source, then object, then dynamically loaded
@@ -100,7 +100,7 @@ extern void BinTokenDeleteReference(int);
  */
 extern void BinTokensCreate(struct Instance *, enum bintoken_kind);
 
-/*
+/** 
  * err = BinTokenCalcResidual(btable,bindex,vars,residual);
  * Returns 1 if can't evaluate function.
  * Vars is assumed already filled with values.
@@ -112,7 +112,7 @@ extern void BinTokensCreate(struct Instance *, enum bintoken_kind);
  */
 extern int BinTokenCalcResidual(int, int, double *, double *);
 
-/*
+/** 
  * err = BinTokenCalcGradient(int,int,vars,residual,gradient);
  * Returns nonzero if can't evaluate gradient using binary
  * form of token relation.

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Math Object Functions
  *  by Tom Epperly
  *  8/16/89
@@ -30,7 +30,7 @@
 #ifndef __MATHINST_H_SEEN__
 #define __MATHINST_H_SEEN__
 
-/*
+/**< 
  *  When #including mathinst.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "instance_enum.h"
@@ -40,13 +40,13 @@
  */
 
 
-/*
+/**< 
  *  Relation, logical relation, and When querying and assignment routines
  */
 
 extern enum Expr_enum GetInstanceRelationType(CONST struct Instance *);
 
-/*
+/**< 
  *  enum Expr_enum GetInstanceRelationType(i);
  *  const struct Instance *i;
  *  This returns the type of the relation associated with this relations
@@ -55,7 +55,7 @@ extern enum Expr_enum GetInstanceRelationType(CONST struct Instance *);
  */
 
 extern CONST struct relation *GetInstanceRelationOnly(CONST struct Instance *);
-/*
+/**< 
  *  const struct relation *GetInstanceRelationOnly(i)
  *  const struct Instance *i;
  *  This returns the guts of a relation instance (REL_INST).
@@ -65,7 +65,7 @@ extern CONST struct relation *GetInstanceRelationOnly(CONST struct Instance *);
 
 extern CONST struct relation *GetInstanceRelation(CONST struct Instance *,
                                                   enum Expr_enum *);
-/*
+/**< 
  *  const struct relation *GetInstanceRelation(i,type)
  *  const struct Instance *i;
  *  enum Expr_enum *type;
@@ -78,7 +78,7 @@ extern CONST struct relation *GetInstanceRelation(CONST struct Instance *,
 
 extern struct relation *GetInstanceRelToModify(struct Instance *,
                                                enum Expr_enum *);
-/*
+/**< 
  *  struct relation *GetInstanceRelToModify(i,type)
  *  struct Instance *i;
  *  enum Expr_enum *type;
@@ -90,7 +90,7 @@ extern struct relation *GetInstanceRelToModify(struct Instance *,
 
 extern void SetInstanceRelation(struct Instance *,struct relation *,
                                 enum Expr_enum);
-/*
+/**< 
  *  void SetInstanceRelation(i,rel,type)
  *  struct Instance *i;
  *  struct relation *rel;
@@ -102,7 +102,7 @@ extern void SetInstanceRelation(struct Instance *,struct relation *,
  */
 
 extern CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance*);
-/*
+/**< 
  *  const struct logrelation *GetInstanceLogRelOnly(i)
  *  const struct Instance *i;
  *  This returns the guts of a logical relation instance (LREL_INST).
@@ -111,14 +111,14 @@ extern CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance*);
  */
 
 extern CONST struct logrelation *GetInstanceLogRel(CONST struct Instance *);
-/*
+/**< 
  *  const struct logrelation *GetInstanceLogRel(i)
  *  const struct Instance *i;
  *  This returns the value of a logrelation inst(LREL_INST).
  */
 
 extern struct logrelation *GetInstanceLogRelToModify(struct Instance *);
-/*
+/**< 
  *  struct logrelation *GetInstanceLogRelToModify(i)
  *  struct Instance *i;
  *  This returns the value of a logrelation inst(LREL_INST). In this function
@@ -127,7 +127,7 @@ extern struct logrelation *GetInstanceLogRelToModify(struct Instance *);
  */
 
 extern void SetInstanceLogRel(struct Instance *,struct logrelation *);
-/*
+/**< 
  *  void SetInstanceLogRel(i,lrel)
  *  struct Instance *i;
  *  struct logrelation *lrel;
@@ -136,7 +136,7 @@ extern void SetInstanceLogRel(struct Instance *,struct logrelation *);
  */
 
 extern struct gl_list_t *GetInstanceOperands(CONST struct Instance *);
-/*
+/**< 
  * l = GetInstanceOperands(i);
  * Returns list of vars/models/equations in a mathematical relationship.
  * Accepts all instance kinds. returns list only if the query makes
@@ -145,7 +145,7 @@ extern struct gl_list_t *GetInstanceOperands(CONST struct Instance *);
  */
 
 extern struct gl_list_t *GetInstanceWhenVars(CONST struct Instance *);
-/*
+/**< 
  *  gl_list_t *GetInstanceWhenVars(i);
  *  struct Instance *i;
  *  This returns the list of variables associated with this when
@@ -153,7 +153,7 @@ extern struct gl_list_t *GetInstanceWhenVars(CONST struct Instance *);
  */
 
 extern struct gl_list_t *GetInstanceWhenCases(CONST struct Instance *);
-/*
+/**< 
  *  gl_list_t *GetInstanceWhenCases(i);
  *  struct Instance *i;
  *  This returns the list of cases associated with this when
@@ -161,7 +161,7 @@ extern struct gl_list_t *GetInstanceWhenCases(CONST struct Instance *);
  */
 
 extern struct gl_list_t *GetInstanceWhens(CONST struct Instance *);
-/*
+/**< 
  *  strcut gl_list_t *GetInstanceWhens(i);
  *  struct Instance *i;
  *  This returns the list of whens associated with this instance.
@@ -169,7 +169,7 @@ extern struct gl_list_t *GetInstanceWhens(CONST struct Instance *);
  */
 
 extern void SetWhenVarList(struct Instance *, struct gl_list_t *);
-/*
+/**< 
  *  void SetWhenVarList(i,whenvars);
  *  struct Instance *i;
  *  struct gl_list_t *whenvars;
@@ -177,14 +177,14 @@ extern void SetWhenVarList(struct Instance *, struct gl_list_t *);
  */
 
 extern void SetWhenCases(struct Instance *, struct gl_list_t *);
-/*
+/**< 
  *  void SetWhenCases(i,whencases);
  *  struct Instance *i;
  *  struct gl_list_t *whencases;
  *  Set the list of cases of a when instance to whencases
  */
 
-/*
+/**< 
  *  Special Real Atom Functions
  *
  *  Each real instance knows what mathematical relations that it appears in.
@@ -193,7 +193,7 @@ extern void SetWhenCases(struct Instance *, struct gl_list_t *);
  */
 
 extern unsigned long RelationsCount(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long RelationsCount(i)
  *  struct Instance *i;
  *  This will return the number of relations that instance "i" appears in.
@@ -203,7 +203,7 @@ extern unsigned long RelationsCount(CONST struct Instance *);
 
 extern struct Instance *RelationsForAtom(CONST struct Instance *,
                                          unsigned long);
-/*
+/**< 
  *  struct Instance *Relation(i,c)
  *  struct Instance *i;
  *  unsigned long c;
@@ -212,7 +212,7 @@ extern struct Instance *RelationsForAtom(CONST struct Instance *,
  */
 
 extern void AddRelation(struct Instance *,struct Instance *);
-/*
+/**< 
  *  void AddRelation(i,reln)
  *  struct Instance *i,*reln;
  *  Add the relation instance reln to instance i's relation list.  "i" must
@@ -220,7 +220,7 @@ extern void AddRelation(struct Instance *,struct Instance *);
  */
 
 extern void RemoveRelation(struct Instance *, struct Instance *);
-/*
+/**< 
  *  void RemoveRelation(i,reln)
  *  struct Instance *i,*reln;
  *  Remove reln from i's relation list.  If 'reln' isn't found in i's relation
@@ -228,7 +228,7 @@ extern void RemoveRelation(struct Instance *, struct Instance *);
  */
 
 extern unsigned long LogRelationsCount(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long LogRelationsCount(i)
  *  struct Instance *i;
  *  This will return the number of logical relations that instance "i"
@@ -237,7 +237,7 @@ extern unsigned long LogRelationsCount(CONST struct Instance *);
 
 extern struct Instance *LogRelationsForInstance(CONST struct Instance *,
                                                 unsigned long);
-/*
+/**< 
  *  struct Instance *LogRelationsForInstance(i,c)
  *  struct Instance *i;
  *  unsigned long c;
@@ -247,7 +247,7 @@ extern struct Instance *LogRelationsForInstance(CONST struct Instance *,
  */
 
 extern void AddLogRel(struct Instance *,struct Instance *);
-/*
+/**< 
  *  void AddLogRel(i,reln)
  *  struct Instance *i,*lreln;
  *  Add the logical relation instance lreln to instance i's logical relation
@@ -257,7 +257,7 @@ extern void AddLogRel(struct Instance *,struct Instance *);
  */
 
 extern void RemoveLogRel(struct Instance *, struct Instance *);
-/*
+/**< 
  *  void RemoveLogRel(i,lreln)
  *  struct Instance *i,*lreln;
  *  Remove lreln from i's logical relation list.  If 'lreln' isn't found in
@@ -265,7 +265,7 @@ extern void RemoveLogRel(struct Instance *, struct Instance *);
  */
 
 extern unsigned long WhensCount(struct Instance *);
-/*
+/**< 
  *  unsigned long WhensCount(i)
  *  struct Instance *i;
  *  This will return the number of whens that instance "i" is referenced in.
@@ -273,7 +273,7 @@ extern unsigned long WhensCount(struct Instance *);
 
 extern struct Instance *WhensForInstance(struct Instance *,
                                          unsigned long);
-/*
+/**< 
  *  struct Instance *WhensForInstance(i,c)
  *  struct Instance *i;
  *  unsigned long c;
@@ -282,7 +282,7 @@ extern struct Instance *WhensForInstance(struct Instance *,
  */
 
 extern void AddWhen(struct Instance *,struct Instance *);
-/*
+/**< 
  *  void AddWhen(i,when)
  *  struct Instance *i,*when;
  *  Add the when instance when to instance i's when list.  when must be of
@@ -290,7 +290,7 @@ extern void AddWhen(struct Instance *,struct Instance *);
  */
 
 extern void RemoveWhen(struct Instance *, struct Instance *);
-/*
+/**< 
  *  void RemoveWhen(i,when)
  *  struct Instance *i,*when;
  *  Remove when from i's when list.  If 'when' isn't found in i's when
@@ -298,4 +298,4 @@ extern void RemoveWhen(struct Instance *, struct Instance *);
  */
 
 #endif
-/* __MATHINST_H_SEEN__ */
+/**< __MATHINST_H_SEEN__ */

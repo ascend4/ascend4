@@ -55,19 +55,21 @@
 #define calc__already_included
 
 extern int32 calc_ok;
-extern boolean calc_print_errors;
-/**
+/**<
  ***  The variable calc_ok will be set to FALSE whenever an undefined
- ***  numerical calculation is attempted.  In this case, if the variable
+ ***  numerical calculation is attempted. 
+ */
+extern boolean calc_print_errors;
+/**<  When calc_ok false, if the variable
  ***  calc_print_errors is set to TRUE, a description of the error will be
  ***  printed to stderr.  In order to monitor errors effectively, it is
  ***  the responsibility of the user to set the calc_ok variable to TRUE
  ***  before calling any of the functions below. 
  **/
 
-#define calc_ERF_COEF    1.1283791670955130   /* = 2 / sqrt(PI) */
-#define calc_LOG10_COEF  0.4342944819032518   /* = log10(e) = 1/ln(10) */
-#define calc_PI          3.1415926535897930
+#define calc_ERF_COEF    1.1283791670955130   /**<  = 2 / sqrt(PI) */
+#define calc_LOG10_COEF  0.4342944819032518   /**< = log10(e) = 1/ln(10) */
+#define calc_PI          3.1415926535897930 /* really should be using M_PI */
 
 extern real64 calc_upower(real64, unsigned);
 extern real64 calc_factorial(unsigned);
@@ -119,7 +121,7 @@ extern real64 calc_log_D0();
 extern real64 calc_sqrt_D0();
 #define calc_cbrt_D0     cbrt
 #define calc_fabs_D0     fabs
-/**
+/**<
  ***  value = calc_<uop>_D0(x)
  ***  real64 value,x;
  ***

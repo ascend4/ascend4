@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Expression Module
  *  by Tom Epperly
  *  Version: $Revision: 1.11 $
@@ -29,7 +29,7 @@
 #ifndef __EXPRS_H_SEEN__
 #define __EXPRS_H_SEEN__
 
-/*
+/**< 
  *  When #including exprs.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -39,14 +39,14 @@
 
 
 extern struct Expr *CreateVarExpr(struct Name *);
-/*
+/**< 
  *  struct Expr *CreateVarExpr(n)
  *  struct Name *n;
  *  Create a name type expr node.
  */
 
 extern void InitVarExpr(struct Expr *,CONST struct Name *);
-/*
+/**< 
  *  struct Expr *InitVarExpr(e,n)
  *  struct Expr *e;
  *  CONST struct Name *n;
@@ -62,14 +62,14 @@ extern void InitVarExpr(struct Expr *,CONST struct Name *);
  */
 
 extern struct Expr *CreateOpExpr(enum Expr_enum);
-/*
+/**< 
  *  struct Expr *CreateOpExpr(t)
  *  enum Expr_enum t;
  *  Create an operator node.
  */
 
 extern struct Expr *CreateSatisfiedExpr(struct Name *,double,CONST dim_type *);
-/*
+/**< 
  *  struct Expr *CreateSatisfiedExpr(n,tol,dims)
  *  struct Name *n;
  *  double tol;
@@ -78,21 +78,21 @@ extern struct Expr *CreateSatisfiedExpr(struct Name *,double,CONST dim_type *);
  */
 
 extern struct Expr *CreateFuncExpr(CONST struct Func *);
-/*
+/**< 
  *  struct Expr *CreateFuncExpr(f)
  *  const struct Func *f;
  *  Create a function node.
  */
 
 extern struct Expr *CreateIntExpr(long);
-/*
+/**< 
  *  struct Expr *CreateIntExpr(i)
  *  long i;
  *  Create an integer node.
  */
 
 extern struct Expr *CreateRealExpr(double,CONST dim_type *);
-/*
+/**< 
  *  struct Expr *CreateRealExpr(r,dims)
  *  double r;
  *  const dim_type *dims;
@@ -100,39 +100,39 @@ extern struct Expr *CreateRealExpr(double,CONST dim_type *);
  */
 
 extern struct Expr *CreateTrueExpr(void);
-/*
+/**< 
  *  struct Expr *CreateTrueExpr();
  *  Create a boolean node with value TRUE.
  */
 
 extern struct Expr *CreateFalseExpr(void);
-/*
+/**< 
  *  struct Expr *CreateFalseExpr();
  *  Create a boolean node with value FALSE.
  */
 
 extern struct Expr *CreateAnyExpr(void);
-/*
+/**< 
  *  struct Expr *CreateAnyExpr();
  *  Create a boolean node with undefined value. b_value will be 2.
  */
 
 extern struct Expr *CreateSetExpr(struct Set *);
-/*
+/**< 
  *  struct Expr *CreateSetExpr(set)
  *  struct Set *set.
  *  Create a set node.
  */
 
 extern struct Expr *CreateSymbolExpr(symchar *);
-/*
+/**< 
  *  struct Expr *CreateSymbolExpr(sym)
  *  const char *sym;
  *  Create a symbol node.
  */
 
 extern struct Expr *CreateQStringExpr(CONST char *);
-/*
+/**< 
  *  struct Expr *CreateQStringExpr(sym)
  *  const char *qstring;
  *  Create a string node. The difference is that string may contain 
@@ -141,7 +141,7 @@ extern struct Expr *CreateQStringExpr(CONST char *);
  */
 
 extern struct Expr *CreateBuiltin(enum Expr_enum,struct Set *);
-/*
+/**< 
  *  struct Expr *CreateBuiltin(t,set)
  *  enum Expr_enum t;
  *  struct Set *set;
@@ -149,14 +149,14 @@ extern struct Expr *CreateBuiltin(enum Expr_enum,struct Set *);
  */
 
 extern void LinkExprs(struct Expr *, struct Expr *);
-/*
+/**< 
  *  void LinkExprs(cur,next)
  *  struct Expr *cur, *next;
  *  Link cur to next.
  */
 
 unsigned long ExprListLength(CONST struct Expr *);
-/*
+/**< 
  *  unsigned long ExprListLength(e);
  *  CONST struct Expr *e;
  *  Does as you expect. Traverse to list to the end to find the length.
@@ -169,7 +169,7 @@ unsigned long ExprListLength(CONST struct Expr *);
 #define NextExpr(e) NextExprF(e)
 #endif
 extern struct Expr *NextExprF(CONST struct Expr *);
-/*
+/**< 
  *  macro NextExpr(e)
  *  struct Expr *NextExprF(e)
  *  const struct Expr *e;
@@ -182,7 +182,7 @@ extern struct Expr *NextExprF(CONST struct Expr *);
 #define ExprType(e) ExprTypeF(e)
 #endif
 extern enum Expr_enum ExprTypeF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprType(e)
  *  enum Expr_enum ExprTypeF(e)
  *  const struct Expr *e;
@@ -195,7 +195,7 @@ extern enum Expr_enum ExprTypeF(CONST struct Expr *);
 #define ExprName(e) ExprNameF(e)
 #endif
 extern CONST struct Name *ExprNameF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprName(e)
  *  const struct Name *ExprNameF(e)
  *  const struct Expr *e;
@@ -208,7 +208,7 @@ extern CONST struct Name *ExprNameF(CONST struct Expr *);
 #define ExprFunc(e) ExprFuncF(e)
 #endif
 extern CONST struct Func *ExprFuncF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprFunc(e)
  *  const struct Func *ExprFuncF(e)
  *  const struct Expr *e;
@@ -221,7 +221,7 @@ extern CONST struct Func *ExprFuncF(CONST struct Expr *);
 #define ExprIValue(e) ExprIValueF(e)
 #endif
 extern long ExprIValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprIValue(e)
  *  long ExprIValueF(e)
  *  const struct Expr *e;
@@ -234,7 +234,7 @@ extern long ExprIValueF(CONST struct Expr *);
 #define ExprRValue(e) ExprRValueF(e)
 #endif
 extern double ExprRValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprRValue(e)
  *  double ExprRValueF(e)
  *  const struct Expr *e;
@@ -247,7 +247,7 @@ extern double ExprRValueF(CONST struct Expr *);
 #define ExprRDimensions(e) ExprRDimensionsF(e)
 #endif
 extern CONST dim_type *ExprRDimensionsF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprRDimensions(e)
  *  const dim_type *ExprRDimensionsF(e)
  *  const struct Expr *e;
@@ -260,7 +260,7 @@ extern CONST dim_type *ExprRDimensionsF(CONST struct Expr *);
 #define SatisfiedExprName(e) SatisfiedExprNameF(e)
 #endif
 extern CONST struct Name *SatisfiedExprNameF(CONST struct Expr *);
-/*
+/**< 
  *  macro SatisfiedExprName(e)
  *  const struct Name *SatisfiedExprNameF(e)
  *  const struct Expr *e;
@@ -273,7 +273,7 @@ extern CONST struct Name *SatisfiedExprNameF(CONST struct Expr *);
 #define SatisfiedExprRValue(e) SatisfiedExprRValueF(e)
 #endif
 extern double SatisfiedExprRValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro SatisfiedExprRValue(e)
  *  double SatisfiedExprRValueF(e)
  *  const struct Expr *e;
@@ -286,7 +286,7 @@ extern double SatisfiedExprRValueF(CONST struct Expr *);
 #define SatisfiedExprRDimensions(e) SatisfiedExprRDimensionsF(e)
 #endif
 extern CONST dim_type *SatisfiedExprRDimensionsF(CONST struct Expr *);
-/*
+/**< 
  *  macro SatisfiedExprRDimensions(e)
  *  const dim_type *SatisfiedExprRDimensionsF(e)
  *  const struct Expr *e;
@@ -299,7 +299,7 @@ extern CONST dim_type *SatisfiedExprRDimensionsF(CONST struct Expr *);
 #define ExprBValue(e) ExprBValueF(e)
 #endif
 extern int ExprBValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprBValue(e)
  *  int ExprBValue(e)
  *  const struct Expr *e;
@@ -312,7 +312,7 @@ extern int ExprBValueF(CONST struct Expr *);
 #define ExprSValue(e) ExprSValueF(e)
 #endif
 extern struct Set *ExprSValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprSValue(e)
  *  struct Set *ExprSValueF(e)
  *  const struct Expr *e;
@@ -325,7 +325,7 @@ extern struct Set *ExprSValueF(CONST struct Expr *);
 #define ExprSymValue(e) ExprSymValueF(e)
 #endif
 extern symchar *ExprSymValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprSymValue(e)
  *  symchar *ExprSymValueF(e)
  *  const struct Expr *e;
@@ -338,7 +338,7 @@ extern symchar *ExprSymValueF(CONST struct Expr *);
 #define ExprQStrValue(e) ExprQStrValueF(e)
 #endif
 extern CONST char *ExprQStrValueF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprQStrValue(e)
  *  const char *ExprQStrValueF(e)
  *  const struct Expr *e;
@@ -353,7 +353,7 @@ extern CONST char *ExprQStrValueF(CONST struct Expr *);
 #define ExprBuiltinSet(e) ExprBuiltinSetF(e)
 #endif
 extern CONST struct Set *ExprBuiltinSetF(CONST struct Expr *);
-/*
+/**< 
  *  macro ExprBuiltinSet(e)
  *  const struct Set *ExprBuiltinSetF(e)
  *  const struct Expr *e;
@@ -362,14 +362,14 @@ extern CONST struct Set *ExprBuiltinSetF(CONST struct Expr *);
  */
 
 extern struct Expr *CopyExprList(CONST struct Expr *);
-/*
+/**< 
  *  struct Expr *CopyExprList(e)
  *  struct Expr *e;
  *  Make and return a copy of e.
  */
 
 extern void DestroyExprList(struct Expr *);
-/*
+/**< 
  *  void DestroyExprList(e)
  *  struct Expr *e;
  *  Deallocate all the memory associated with e.
@@ -377,7 +377,7 @@ extern void DestroyExprList(struct Expr *);
  */
 
 extern struct Expr *JoinExprLists(struct Expr *,struct Expr *);
-/*
+/**< 
  *  struct Expr *JoinExprLists(e1,e2)
  *  struct Expr *e1, *e2;
  *  Append list e2 to the end of e1.  This returns e1, unless e1
@@ -385,14 +385,14 @@ extern struct Expr *JoinExprLists(struct Expr *,struct Expr *);
  */
 
 extern int ExprsEqual(CONST struct Expr *,CONST struct Expr *);
-/*
+/**< 
  *  int ExprsEqual(e1,e2)
  *  const struct Expr *e1,*e2;
  *  Return TRUE if and only if e1 and e2 are structurally equivalent.
  */
 
 extern int CompareExprs(CONST struct Expr *,CONST struct Expr *);
-/*
+/**< 
  *  int CompareExprs(e1,e2)
  *  const struct Expr *e1,*e2;
  *  Return -1, 0, 1 as e1 is < == > e2.
@@ -404,18 +404,18 @@ extern int CompareExprs(CONST struct Expr *,CONST struct Expr *);
  */
 
 extern void exprs_init_pool(void);
-/*
+/**< 
  * starts memory recycle. do not call twice before stopping recycle.
  */
 
 extern void exprs_destroy_pool(void);
-/*
+/**< 
  * stops memory recycle. do not call while ANY Expr are outstanding.
  */
 
 extern void exprs_report_pool(void);
-/*
+/**< 
  * write the pool report to ASCERR for the exprs pool.
  */
 
-#endif /* __EXPRS_H_SEEN__ */
+#endif /**< __EXPRS_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  SWITCH List Routines
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.3 $
@@ -27,7 +27,7 @@
 #ifndef __SWITCH_H_SEEN__
 #define __SWITCH_H_SEEN__
 
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"sets.h"
 # #include"exprs.h"
@@ -36,7 +36,7 @@
 */
 
 extern struct SwitchList *CreateSwitch(struct Set *,struct StatementList *);
-/*
+/**< 
  *  struct SwitchList *CreateSwitch(set,sl)
  *  struct Set *set;
  *  struct StatementList *sl;
@@ -46,7 +46,7 @@ extern struct SwitchList *CreateSwitch(struct Set *,struct StatementList *);
  */
 
 extern struct SwitchList *ReverseSwitchCases(struct SwitchList *);
-/*
+/**< 
  *  struct SwitchList *ReverseSwitchCases(sw)
  *  struct SwitchList *sw;
  *  Reverse this list.
@@ -54,7 +54,7 @@ extern struct SwitchList *ReverseSwitchCases(struct SwitchList *);
 
 extern struct SwitchList *LinkSwitchCases(struct SwitchList *,
                                           struct SwitchList *);
-/*
+/**< 
  *  struct SwitchList *LinkSwitchCases(sw1,sw2)
  *  struct SwitchList *sw1,*sw2;
  *  Link two case lists and return the joined list.  This works best when
@@ -68,7 +68,7 @@ extern struct SwitchList *LinkSwitchCases(struct SwitchList *,
 #define NextSwitchCase(sw) NextSwitchCaseF(sw)
 #endif
 extern struct SwitchList *NextSwitchCaseF(struct SwitchList *);
-/*
+/**< 
  *  macro NextSwitchCase(case)
  *  struct SwitchList *NextSwitchCaseF(case)
  *  struct SwitchList *case;
@@ -81,7 +81,7 @@ extern struct SwitchList *NextSwitchCaseF(struct SwitchList *);
 #define SwitchSetList(sw) SwitchSetListF(sw)
 #endif
 extern struct Set *SwitchSetListF(struct SwitchList *);
-/*
+/**< 
  *  macro SwitchSetList(sw)
  *  struct Set *SwitchSetListF(sw)
  *  const struct SwitchList *sw;
@@ -95,7 +95,7 @@ extern struct Set *SwitchSetListF(struct SwitchList *);
 #define SwitchStatementList(sw) SwitchStatementListF(sw)
 #endif
 extern struct StatementList *SwitchStatementListF(struct SwitchList *);
-/*
+/**< 
  *  macro SwitchStatementList(sw)
  *  const struct StatementList *SwitchStatementListF(sw)
  *  const struct SwitchList *sw;
@@ -103,33 +103,33 @@ extern struct StatementList *SwitchStatementListF(struct SwitchList *);
  */
 
 extern void DestroySwitchList(struct SwitchList *);
-/*
+/**< 
  *  void DestroySwitchList(sw)
  *  struct SwitchList *sw;
  *  Destroy a whole list.
  */
 
 extern void DestroySwitchNode(struct SwitchList *);
-/*
+/**< 
  *  void DestroySwitchNode(sw)
  *  struct SwitchList *sw;
  *  Destroy just this node.
  */
 
 extern struct SwitchList *CopySwitchNode(struct SwitchList *);
-/*
+/**< 
  *  struct SwitchList *CopySwitchNode(sw)
  *  struct SwitchList *sw;
  *  Copy a case.  The next attribute is initialized to NULL.
  */
 
 extern struct SwitchList *CopySwitchList(struct SwitchList *);
-/*
+/**< 
  *  struct SwitchList *CopySwitchList(sw)
  *  struct SwitchList *sw;
  *  Copy the whole list content. not a reference count change.
  */
-#endif /* __SWITCH_H_SEEN__ */
+#endif /**< __SWITCH_H_SEEN__ */
 
 
 

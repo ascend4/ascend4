@@ -1,4 +1,4 @@
-/*
+/** 
  *  -----------------------------------------------------------------
  *    Copyright 1993 D.I.S. - Universita` di Pavia - Italy
  *  -----------------------------------------------------------------
@@ -24,7 +24,7 @@
  */
 
 
-/*
+/** 
  * Small changes made by Michael Moore (mdm@cis.ohio-state.edu)
  * December 24th, 1993.
  * The tcl sections ripped out by Kirk Abbott (ka0p@edrc.cmu.edu)
@@ -46,12 +46,12 @@
 
 #ifndef __ASCDYNALOAD_H_SEEN__
 #define __ASCDYNALOAD_H_SEEN__
-/* use of this header requires
+/** use of this header requires
  * #include "utilities/ascConfig.h"
  */
 
 
-/*
+/** 
  * error = Asc_DynamicLoad(path, initFun);
  * Returns 1 if fails to load the file named in path and find 
  * the symbol in initFun as an int function.
@@ -67,7 +67,7 @@
  */
 extern int Asc_DynamicLoad(CONST char *,CONST char *);
 
-/*
+/** 
  * error = DynamicLoad(path, initFun);
  * Returns 1 if fails to load the file named in path and find 
  * the symbol in initFun as an int function.
@@ -78,13 +78,13 @@ extern int Asc_DynamicLoad(CONST char *,CONST char *);
  * be used very often.
  */
 extern int DynamicLoad(CONST char *, CONST char *);
-/*
+/** 
  * note on some systems (ultrix) this header hides a lot of non-static
  * function names which don't appear terribly
  * standard.
  */
 
-/*
+/** 
  * Asc_DynamicUnLoad(path);
  * Attempts to find our record of loading a module of the same
  * path and unload it. 
@@ -100,7 +100,7 @@ extern int DynamicLoad(CONST char *, CONST char *);
  */
 extern int Asc_DynamicUnLoad(CONST char *);
 
-/*
+/** 
  * yourFuncOrVar = (YOURCAST)Asc_DynamicSymbol(libraryname,symbolname);
  * rPtr =
  *  (double (*)(double *, double *))Asc_DynamicSymbol("lib.dll","calc");
@@ -110,4 +110,4 @@ extern int Asc_DynamicUnLoad(CONST char *);
  */
 extern void *Asc_DynamicSymbol(CONST char *, CONST char *);
 
-#endif /* __ASCDYNALOAD_H_SEEN__ */
+#endif /** __ASCDYNALOAD_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Visit Implementation
  *  by Tom Epperly, Ben Allan, Vicente Rico-Ramirez
  *  8/16/89
@@ -33,7 +33,7 @@
 #define __VISITINST_H_SEEN__
 
 
-/*
+/**< 
  *  When #including visitinst.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
@@ -41,20 +41,20 @@
 
 
 typedef void (*VisitProc)(struct Instance *);
-/*
+/**< 
  *  Typedef for a function that takes an instance;
  *  Used with VisitInstanceTree.
  */
 
 typedef void (*VisitTwoProc)(struct Instance *,VOIDPTR);
-/*
+/**< 
  *  Typedef for a function that takes an instance and a user pointer;
  *  Used with VisitInstanceTreeTwo.
  */
 
 typedef void (*IndexedVisitProc)(struct Instance *, unsigned long *,
                                  int, VOIDPTR);
-/*
+/**< 
  *  Used with IndexedVisitInstanceTree.
  *  fcn(i,llist,activelen,userdata);
  *  The user supplied 'fcn' must accept the list of child indices from the
@@ -66,30 +66,30 @@ typedef void (*IndexedVisitProc)(struct Instance *, unsigned long *,
  */
 
 enum visitmap_enum {
-  vimap_ERROR = -1,	/* mapinfo is not valid */
-  vimap_DOWN,		/* mapinfo represents visiting a child of inst */
-  vimap_UP		/* mapinfo represents returning from completed inst */
+  vimap_ERROR = -1,	/**< mapinfo is not valid */
+  vimap_DOWN,		/**< mapinfo represents visiting a child of inst */
+  vimap_UP		/**< mapinfo represents returning from completed inst */
 };
 
 struct visitmapinfo {
-  struct Instance *parent;	/* inst came from to context. maybe NULL */
-  struct Instance *context;	/* inst being visited. never NULL */
-  enum visitmap_enum dir;	/* see above */
-  int last;			/* map index of last time left,if UP.else -1 */
-  unsigned long child;		/* child going to from inst */
+  struct Instance *parent;	/**< inst came from to context. maybe NULL */
+  struct Instance *context;	/**< inst being visited. never NULL */
+  enum visitmap_enum dir;	/**< see above */
+  int last;			/**< map index of last time left,if UP.else -1 */
+  unsigned long child;		/**< child going to from inst */
 };
-/*
+/**< 
  * mapping node for instances seen maps.
  * The information recorded is redundant in some sense, but we
  * don't know the minimum desired by a give client.
  */
 
-/*
+/**< 
  *  Tree procedures
  */
 
 extern void ResetVisitCounts(struct Instance *inst);
-/*
+/**< 
  *  void ResetVisitCounts(i);
  *
  *  Resets the visit count of all instances in the tree rooted at i to 0.
@@ -119,7 +119,7 @@ extern void SlowVisitInstanceTree(struct Instance *, VisitProc, int,int);
 #else
 #define VisitInstanceTree(a,b,c,d) SilentVisitInstanceTree(a,b,c,d)
 #endif
-/*
+/**< 
  *  macro VisitInstanceTree(inst,proc,depth,leaf)
  *
  *  void FastVisitInstanceTree(inst,proc,depth,leaf)
@@ -160,7 +160,7 @@ extern void IndexedVisitInstanceTree(struct Instance *, IndexedVisitProc,
                                      int,int,
                                      unsigned long **,
                                      unsigned int *, VOIDPTR);
-/*
+/**< 
  *  void IndexedVisitInstanceTree(inst,proc,depth,leaf,llist,llen,userdata)
  *  struct Instance *i;
  *  IndexedVisitProc proc;
@@ -187,7 +187,7 @@ extern void SilentVisitInstanceTreeTwo(struct Instance *, VisitTwoProc,
                                        int,int,VOIDPTR);
 extern void VisitInstanceTreeTwo(struct Instance *, VisitTwoProc,
                                  int,int,VOIDPTR);
-/*
+/**< 
  *  void SilentVisitInstanceTreeTwo(inst,proc,depth,leaf,userdata)
  *  void VisitInstanceTreeTwo(inst,proc,depth,leaf,userdata)
  *  struct Instance *i;
@@ -210,7 +210,7 @@ extern void SilentVisitInstanceFringeTwo(struct Instance *, VisitTwoProc,
                                          VisitTwoProc,int,int,VOIDPTR);
 extern void VisitInstanceFringeTwo(struct Instance *, VisitTwoProc,
                                    VisitTwoProc,int,int,VOIDPTR);
-/*
+/**< 
  *  void SilentVisitInstanceFringeTwo(inst,proc1,proc2,depth,leaf,userdata)
  *  void VisitInstanceFringeTwo(inst,proc1,proc2,depth,leaf,userdata)
  *  struct Instance *i;
@@ -230,7 +230,7 @@ extern void VisitInstanceFringeTwo(struct Instance *, VisitTwoProc,
 
 extern void SilentVisitInstanceRootsTwo(struct Instance *, VisitTwoProc,
                                         int,VOIDPTR);
-/*
+/**< 
  * void SilentVisitInstanceRootsTwo(i,proc,depth,userdata);
  *
  * Like SilentVisitInstanceTreeTwo, except goes up the tree instead
@@ -240,7 +240,7 @@ extern void SilentVisitInstanceRootsTwo(struct Instance *, VisitTwoProc,
  */
 
 extern struct visitmapinfo *MakeVisitMap(struct Instance *,unsigned long *);
-/*
+/**< 
  * map = MakeVisitMap(i,&maplen);
  * struct Instance *i; (input)
  * struct visitmapinfo *map;
@@ -267,4 +267,4 @@ extern struct visitmapinfo *MakeVisitMap(struct Instance *,unsigned long *);
  * memory, we visit the tree to get size then again to get data.
  */
 #endif
-/* __VISITINST_H_SEEN__ */
+/**< __VISITINST_H_SEEN__ */

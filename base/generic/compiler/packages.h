@@ -1,4 +1,4 @@
-/*
+/**< 
  *  User Packages
  *  by Ben Allan & Kirk Abbott
  *  Created: July 4, 1994
@@ -28,7 +28,7 @@
  *
  */
 
-/*
+/**< 
  *  When #including packages.h, make sure these files are #included first:
  *         #include "compiler.h"
  *         #include "instance_enum.h"
@@ -39,7 +39,7 @@
 #ifndef __PACKAGES_H_SEEN__
 #define __PACKAGES_H_SEEN__
 
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"ascmalloc.h"
@@ -52,7 +52,7 @@
 # #include"relation.h" (going away soon)
 */
 
-/*
+/**< 
  * Users of this header should not have to include anything
  * except instance_enum.h and list.h and whatever headers those
  * may require.
@@ -62,11 +62,11 @@
     typedef void *ascClientData;
 #   else
     typedef int *ascClientData;
-#   endif /* __STDC__ */
+#   endif /**< __STDC__ */
 #define _ASCCLIENTDATA
 #endif
 
-/* these are for external clients to return to us when they have
+/**< these are for external clients to return to us when they have
  * an error or other procedural message to report about flow of
  * control.
  */
@@ -81,89 +81,89 @@ typedef int (Asc_MethodProc) (ascClientData, CONST char *,
 
 typedef int (Asc_MethodDelete) (ascClientData, CONST char *, Asc_MethodProc);
 
-/* Clients should use the operators below to access this enum and
+/**< Clients should use the operators below to access this enum and
  * associated structure.
  */
 enum argItemEnum {
-  argError,     /*     should never be seen by client */
-  /* the first 3 characters of the comment lines are the
+  argError,     /**<     should never be seen by client */
+  /**< the first 3 characters of the comment lines are the
    * equivalent of C conversion characters in printf when
    * specifying the arguments desired in the parsestring.
    */
-  argOldFileId,     /* OF  name of an existing file (char *) */
-  argNewFileId,     /* NF  name of new file (char *) */
-  argUnkFileId,     /* UF  name of file, unknown status (char *) */
-  argFloat,         /*  f  maps ASCEND integer/real types to a float value */
-  argDouble,        /*  g  maps ASCEND integer/real types to a double value */
-  argLong,          /*  ld maps ASCEND integer/boolean to long value. */
-  argDoublePtr,     /* pg  maps ASCEND reals to a double * */
-  argLongPtr,       /* pld maps ASCEND integers to long * */
-  argInt,           /*  d  maps ASCEND integer/boolean to int value. */
-  argBoolean,       /*  b  maps ASCEND boolean or integer to 0,1 value */
-  argString,        /*  s  maps ASCEND symbol types to a C const char * */
-  argSetString,     /*  ss maps ASCEND set types into a C const char * */
-  argNameString,    /*  n  maps ASCEND Name given into a C const char * */
-  argNameList,      /*  N  expand ASCEND Name given into a C const char * */
-  argTypeString,    /*  T  maps ASCEND type name given into a C const char * */
-  argInst,          /*  i  instance pointer may be any kind */
-  argInstReal,      /*  R  instance pointer must be REAL*INST */
-  argInstRealList,  /* LR  flattens array of real insts into a gl_list */
-  argInstRealArray, /* AR  instance pointer must be an array of reals */
-  argDoubleConst,   /* CR  pointer to new double value for unassigned const */
-  argInstInt,       /*  I  instance pointer must be INTEGER*INST */
-  argInstIntList,   /* LI  flattens array of integer insts into a gl_list */
-  argInstIntArray,  /* AI  instance pointer must be an array of integers */
-  argIntConst,      /* CI  pointer to new long value for unassigned const */
-  argInstBool,      /*  B  instance must be BOOLEAN_[ATOM/CONSTANT]_INST */
-  argInstBoolList,  /* LB  flattens array of boolean insts into a gl_list */
-  argInstBoolArray, /* AB  instance pointer must be an array of boolean */
-  argBoolConst,     /* CB  pointer to new 0/1 value for unassigned const */
-  argInstSym,       /*  S  instance must be SYMBOL_[ATOM/CONSTANT]_INST */
-  argInstSymList,   /* LS  flattens array of symbol insts into a gl_list */
-  argInstSymArray,  /* AS  instance pointer must be an array of symbols */
-  argSymConst,      /* CS  pointer to new char * value for unassigned const */
-  argInstSet,       /*  SS instance must be SET_[ATOM/CONSTANT]_INST */
-  argInstSetList,   /* LSS flattens array of set insts into a gl_list */
-  argInstSetArray,  /* ASS instance pointer must be an array of sets */
-  argISetConst,     /* CSS pointer to gl_list of longs for unassigned set */
-  argESetConst,     /* DSS pointer to gl_list of char * for unassigned set */
-  argInstRel,       /*  r  instance must be RELATION_INST */
-  argInstRelList,   /* Lr  flattens array of relation insts into a gl_list */
-  argInstRelArray,  /* Ar  instance pointer must be an array of relations */
-  argInstLRel,      /*  lr instance must be LOGREL_INST */
-  argInstLRelList,  /* Llr flattens array of logrelations into a gl_list */
-  argInstLRelArray, /* Alr instance pointer must be an array of logrel */
-  argInstModel,     /*  M  MODEL instance pointer */
-  argInstModelList, /* LM  flattens array of MODEL insts into a gl_list */
-  argInstModelArray,/* AM  flattens array of MODEL insts into a gl_list */
-  argProcName,      /*  P  maps name of a method/call to a CONST char * */
-  argExpr,          /*  V  maps a reference to an ASCEND Expr into lval */
-  argSLit           /*  Q  a C string literal is expected. */
-  /* probably need to add type Q for double quoted text */
+  argOldFileId,     /**< OF  name of an existing file (char *) */
+  argNewFileId,     /**< NF  name of new file (char *) */
+  argUnkFileId,     /**< UF  name of file, unknown status (char *) */
+  argFloat,         /**<  f  maps ASCEND integer/real types to a float value */
+  argDouble,        /**<  g  maps ASCEND integer/real types to a double value */
+  argLong,          /**<  ld maps ASCEND integer/boolean to long value. */
+  argDoublePtr,     /**< pg  maps ASCEND reals to a double * */
+  argLongPtr,       /**< pld maps ASCEND integers to long * */
+  argInt,           /**<  d  maps ASCEND integer/boolean to int value. */
+  argBoolean,       /**<  b  maps ASCEND boolean or integer to 0,1 value */
+  argString,        /**<  s  maps ASCEND symbol types to a C const char * */
+  argSetString,     /**<  ss maps ASCEND set types into a C const char * */
+  argNameString,    /**<  n  maps ASCEND Name given into a C const char * */
+  argNameList,      /**<  N  expand ASCEND Name given into a C const char * */
+  argTypeString,    /**<  T  maps ASCEND type name given into a C const char * */
+  argInst,          /**<  i  instance pointer may be any kind */
+  argInstReal,      /**<  R  instance pointer must be REAL*INST */
+  argInstRealList,  /**< LR  flattens array of real insts into a gl_list */
+  argInstRealArray, /**< AR  instance pointer must be an array of reals */
+  argDoubleConst,   /**< CR  pointer to new double value for unassigned const */
+  argInstInt,       /**<  I  instance pointer must be INTEGER*INST */
+  argInstIntList,   /**< LI  flattens array of integer insts into a gl_list */
+  argInstIntArray,  /**< AI  instance pointer must be an array of integers */
+  argIntConst,      /**< CI  pointer to new long value for unassigned const */
+  argInstBool,      /**<  B  instance must be BOOLEAN_[ATOM/CONSTANT]_INST */
+  argInstBoolList,  /**< LB  flattens array of boolean insts into a gl_list */
+  argInstBoolArray, /**< AB  instance pointer must be an array of boolean */
+  argBoolConst,     /**< CB  pointer to new 0/1 value for unassigned const */
+  argInstSym,       /**<  S  instance must be SYMBOL_[ATOM/CONSTANT]_INST */
+  argInstSymList,   /**< LS  flattens array of symbol insts into a gl_list */
+  argInstSymArray,  /**< AS  instance pointer must be an array of symbols */
+  argSymConst,      /**< CS  pointer to new char * value for unassigned const */
+  argInstSet,       /**<  SS instance must be SET_[ATOM/CONSTANT]_INST */
+  argInstSetList,   /**< LSS flattens array of set insts into a gl_list */
+  argInstSetArray,  /**< ASS instance pointer must be an array of sets */
+  argISetConst,     /**< CSS pointer to gl_list of longs for unassigned set */
+  argESetConst,     /**< DSS pointer to gl_list of char * for unassigned set */
+  argInstRel,       /**<  r  instance must be RELATION_INST */
+  argInstRelList,   /**< Lr  flattens array of relation insts into a gl_list */
+  argInstRelArray,  /**< Ar  instance pointer must be an array of relations */
+  argInstLRel,      /**<  lr instance must be LOGREL_INST */
+  argInstLRelList,  /**< Llr flattens array of logrelations into a gl_list */
+  argInstLRelArray, /**< Alr instance pointer must be an array of logrel */
+  argInstModel,     /**<  M  MODEL instance pointer */
+  argInstModelList, /**< LM  flattens array of MODEL insts into a gl_list */
+  argInstModelArray,/**< AM  flattens array of MODEL insts into a gl_list */
+  argProcName,      /**<  P  maps name of a method/call to a CONST char * */
+  argExpr,          /**<  V  maps a reference to an ASCEND Expr into lval */
+  argSLit           /**<  Q  a C string literal is expected. */
+  /**< probably need to add type Q for double quoted text */
 };
 
 struct argItem {
   enum argItemEnum kind;
-  int depth;    /* For Array and list arguments, sets the number of
+  int depth;    /**< For Array and list arguments, sets the number of
                  * subscripts expected. If 0, any number is allowed.
                  * Internal use only.
                  */
   union {
-    double dval;		/* double value */
-    long lival;			/* long int value */
-    double dptr;		/* double pointer */
-    long liptr;			/* long int pointer */
-    int ival;			/* int value */
-    int bval;			/* boolean value */
-    CONST char *cval;		/* const char * from an ascend set/symbol */
-    CONST char *nval;		/* string form of the ascend name given */
-    CONST char *fval;		/* file id string */
-    CONST struct gl_list_t *lval; /* list according to enum */
-    struct Instance *i;		/* instance according to enum */
+    double dval;		/**< double value */
+    long lival;			/**< long int value */
+    double dptr;		/**< double pointer */
+    long liptr;			/**< long int pointer */
+    int ival;			/**< int value */
+    int bval;			/**< boolean value */
+    CONST char *cval;		/**< const char * from an ascend set/symbol */
+    CONST char *nval;		/**< string form of the ascend name given */
+    CONST char *fval;		/**< file id string */
+    CONST struct gl_list_t *lval; /**< list according to enum */
+    struct Instance *i;		/**< instance according to enum */
   } u;
-  short args;	/* 0 usually. 1 if item is ... at the end. Internal use. */
-  short exact;	/* 0 usually. 1 if type specifier to be match. 2 if exactly */
-  symchar *typename; /* typeidentifier from the symbol table */
+  short args;	/**< 0 usually. 1 if item is ... at the end. Internal use. */
+  short exact;	/**< 0 usually. 1 if type specifier to be match. 2 if exactly */
+  symchar *typename; /**< typeidentifier from the symbol table */
 };
 
 #define Asc_argItemKind(aip)		 ((aip)->kind)
@@ -180,7 +180,7 @@ struct argItem {
 #define Asc_argItemTypeName(aip)	 ((aip)->u.nval)
 #define Asc_argItemFileString(aip)	 ((aip)->u.fval)
 #define Asc_argItemListValue(aip)	 ((aip)->u.lval)
-/*
+/**< 
  * All of the data in or referenced directly by an argItem
  * should not be changed or destroyed by the user proc.
  * The only exception is that the value pointed to by argItemDoublePtr
@@ -188,15 +188,15 @@ struct argItem {
  */
 
 
-extern int Asc_AddUserMethod(CONST char *,	/* name */
-                            Asc_MethodProc,	/* proc (fcn ptr) */
-                            enum inst_t, 	/* selfKind */
-                            CONST char *,	/* parseString */
-                            ascClientData, 	/* your private data */
-                            Asc_MethodDelete,	/* deleteProc */
-                            CONST char *, 	/* description */
-                            CONST char *);	/* details */
-/*
+extern int Asc_AddUserMethod(CONST char *,	/**< name */
+                            Asc_MethodProc,	/**< proc (fcn ptr) */
+                            enum inst_t, 	/**< selfKind */
+                            CONST char *,	/**< parseString */
+                            ascClientData, 	/**< your private data */
+                            Asc_MethodDelete,	/**< deleteProc */
+                            CONST char *, 	/**< description */
+                            CONST char *);	/**< details */
+/**< 
  * err = Asc_AddUserMethod(methodname,
  *                         proc, 
  *                         selfKind,
@@ -292,7 +292,7 @@ extern int Asc_AddUserMethod(CONST char *,	/* name */
  *     .intdepth restricts array instances to have intdepth subscripts.
  */
 
-/*
+/**< 
  * E.g.
  * int ClearWrapper(ascClientData cdata, CONST char *calledAs,
  *                  struct Instance *root, struct gl_list_t *argList)
@@ -328,7 +328,7 @@ extern int Asc_AddUserMethod(CONST char *,	/* name */
  */
 
 extern int Asc_DeleteUserMethod(char *);
-/*
+/**< 
  * err = Asc_DeleteUserMethod(mname);
  * Finds mname among the user defined methods and undefines it.
  * normally returns 0.
@@ -343,39 +343,39 @@ extern int Asc_DeleteUserMethod(char *);
  */
 
 extern CONST char *Asc_UserMethodDescription(char *);
-/*
+/**< 
  * string = Asc_UserMethodDescription(mname);
  * looks up the one-liner for mname.
  * Returns NULL if mname is unknown.
  */
 
 extern CONST char *Asc_UserMethodDetails(char *);
-/*
+/**< 
  * string = Asc_UserMethodDetails(mname);
  * looks up the detail information for mname.
  * Returns NULL if mname is unknown.
  */
 
 extern struct gl_list_t *Asc_UserMethodsDefined(void);
-/* mlist = Asc_UserMethodsDefined();
+/**< mlist = Asc_UserMethodsDefined();
  * returns a list of CONST char * pointers to names registered.
  * The caller should gl_destroy(mlist) when done with looking at it.
  */
 
 extern int Asc_UserMethodArguments(FILE *, char *);
-/* Asc_UserMethodArguments(fp,mname);
+/**< Asc_UserMethodArguments(fp,mname);
  * Writes a synopsis of the arguments required, based on information
  * derived from the parse-string to fp.
  */
 
 
 /*********************************************************************/
-/*
+/**< 
  * This whole header is junk below here. Temporarily, it is functioning
 extern * junk. We need to reimplement some and scrap the rest.
  */
 /*********************************************************************/
-/*
+/**< 
  *  This file implements an interface to external packages. These
  *  external packages may be invoked from the procedural section, say
  *  for doing external calculations, querying a database, and writing/
@@ -485,7 +485,7 @@ extern * junk. We need to reimplement some and scrap the rest.
 
 
 extern void Init_Slv_Interp(struct Slv_Interp *slv_interp);
-/*
+/**< 
  *  Gets the interpreter back to a 'clean' state.
  *  The default settings are guaranteed to be as follows:
  *  nodestamp = 0;
@@ -499,25 +499,25 @@ extern void Init_Slv_Interp(struct Slv_Interp *slv_interp);
  */
 
 extern void Reset_Slv_Interp(struct Slv_Interp *slv_interp);
-/*
+/**< 
  *  Resets the interpreter to its initial state.
  */
 
 extern void AddUserFunctions(void);
-/*
+/**< 
  *  This function registers user packages, *if* they are statically
  *  linked, otherwise it does nothing.
  */
 
 extern int CallExternalProcs(struct Instance *);
-/*
+/**< 
  *  This function given a handle to a relation instance which represents
  *  an external relation, will attempt to invoke it and write the results
  *  to stdout.
  */
 
 extern symchar *MakeArchiveLibraryName(CONST char *prefix);
-/*
+/**< 
  *  Given a file prefix, this function will try to construct a platform
  *  dependent name for a dynamically loadable archive. In the case of
  *  sun, alphas, solaris -- lib<prefix>.so.1.0
@@ -532,7 +532,7 @@ extern symchar *MakeArchiveLibraryName(CONST char *prefix);
  */
 
 extern int LoadArchiveLibrary(CONST char *name, CONST char *initfunc);
-/*
+/**< 
  *  Given the name of a dynamically loadable library/archive (dll),
  *  and the name of an initialization routine to be found in this
  *  archive, this function will attempt to load the archive and to run
@@ -543,4 +543,4 @@ extern int LoadArchiveLibrary(CONST char *name, CONST char *initfunc);
  *  See ascDynaLoad.h for correct replacement.
  */
 
-#endif /* __PACKAGES_H_SEEN__ */
+#endif /**< __PACKAGES_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Model-based Reordering Routines
  *  by Benjamin Andrew Allan
  *  6/22/96
@@ -36,31 +36,31 @@
  */
 #ifndef _model_reorder_h_seen_
 #define _model_reorder_h_seen_
-/* requires #include "base.h" */
-/* requires #include "slv_types.h" */
-/* requires #include "mtx.h" */
+/**< requires #include "base.h" */
+/**< requires #include "slv_types.h" */
+/**< requires #include "mtx.h" */
 
 #define MRDEBUG 0
- /* if !=0, generate spew while working */
+ /**< if !=0, generate spew while working */
 #define CUTOFFDEFAULT 1000
- /* tuning parameter in need of investigation */
+ /**< tuning parameter in need of investigation */
 
 typedef struct mr_bisection_structure {
-  /* data spaces */
+  /**< data spaces */
   slv_system_t slv;
   mtx_matrix_t mtx;
-  int32 *local;		/* MODEL indexed array of counts of relations */
-  char *active;		/* in block flags for models */
-  int32 *tmpmodlist;	/* a unique list of indices of models found so far */
-  int32 tmpmodused;	/* currently used length of tmpmodlist */
-  int32 activelen;	/* length of active,local and tmpmodlist arrays */
+  int32 *local;		/**< MODEL indexed array of counts of relations */
+  char *active;		/**< in block flags for models */
+  int32 *tmpmodlist;	/**< a unique list of indices of models found so far */
+  int32 tmpmodused;	/**< currently used length of tmpmodlist */
+  int32 activelen;	/**< length of active,local and tmpmodlist arrays */
 
-  /* control parameters */
+  /**< control parameters */
   int32 cutoff;
   int32 maxtears;
   double maxtearfraction;
 
-  /* miscellaneous statistics */
+  /**< miscellaneous statistics */
   int32 ntears;
   int32 nblts;
 } mr_reorder_t;
@@ -201,4 +201,4 @@ we encountered malloc failure.
 The values in reg may be messed with, so if the data in
 reg is needed after this function call, keep it elsewhere.
 \************************************************************************/
-#endif /* _model_reorder_h_seen_ */
+#endif /**< _model_reorder_h_seen_ */

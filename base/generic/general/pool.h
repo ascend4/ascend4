@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Pooled Memory Manager
  *  by Benjamin Andrew Allan
  *  Created: 2/96
@@ -27,7 +27,7 @@
  *  COPYING.
  *
  */
-/*
+/**< 
  *  Contents:     Pool Memory module
  *
  *  Authors:
@@ -56,7 +56,7 @@
  *		    compiler goop.
  */
 
-/*
+/**< 
  *  When #including pool.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -64,12 +64,12 @@
 
 #ifndef __POOL_H_SEEN__
 #define __POOL_H_SEEN__
-/* requires
+/**< requires
  * #include <stdio.h>
  * #include "compiler.h"
  */
 
-/*
+/**< 
  *  The following definitions provide a generic and reasonably efficient memory
  *  allocation system for situations where many many objects of the same size
  *  need to be "allocated and deallocated" rapidly and stored efficiently:
@@ -110,7 +110,7 @@
  */
 
 typedef struct pool_store_header *pool_store_t;
-/*
+/**< 
  *  The token for this memory system. malloc doesn't tell you much
  *  about its internals, and we aren't telling you about ours.
  *  You can't dereference or free this pointer yourself, so there's
@@ -118,20 +118,20 @@ typedef struct pool_store_header *pool_store_t;
  */
 
 struct pool_statistics {
-  double p_eff;		/* bytes in use / bytes allocated */
-  double p_recycle;	/* avg reuses per element */
-  int elt_total;	/* current elements existing in store*/
-  int elt_taken;	/* fresh elements handed out */
-  int elt_inuse;	/* elements the user currently has */
-  int elt_onlist;	/* elements awaiting reuse */
-  int elt_size;		/* bytes/element, as mem sees it */
-  int str_len;		/* length of active pool. */
-  int str_wid;          /* elements/pointer in pool. */
+  double p_eff;		/**< bytes in use / bytes allocated */
+  double p_recycle;	/**< avg reuses per element */
+  int elt_total;	/**< current elements existing in store*/
+  int elt_taken;	/**< fresh elements handed out */
+  int elt_inuse;	/**< elements the user currently has */
+  int elt_onlist;	/**< elements awaiting reuse */
+  int elt_size;		/**< bytes/element, as mem sees it */
+  int str_len;		/**< length of active pool. */
+  int str_wid;          /**< elements/pointer in pool. */
 };
-/* The reporting structure for a pool_store_header query. */
+/**< The reporting structure for a pool_store_header query. */
 
 extern void pool_get_stats(struct pool_statistics *, pool_store_t);
-/*
+/**< 
  *  pool_get_stats(p_stats,ps);
  *  struct pool_statistics *p_stats;
  *  pool_store_t ps;
@@ -144,7 +144,7 @@ extern void pool_get_stats(struct pool_statistics *, pool_store_t);
  */
 
 extern pool_store_t pool_create_store(int, int, size_t, int, int);
-/*
+/**< 
  *  ps = pool_create_store(length, width, eltsize, deltalen, deltapool);
  *  pool_store_t ps;
  *  int length,width,deltalen,deltapool;
@@ -196,7 +196,7 @@ extern pool_store_t pool_create_store(int, int, size_t, int, int);
  */
 
 extern void *pool_get_element(pool_store_t);
-/*
+/**< 
  *  eltpointer = (elt_type *)pool_get_element(ps);
  *  pool_store_t ps;
  *  <the elt_type you want is your business> *eltpointer;
@@ -209,7 +209,7 @@ extern void *pool_get_element(pool_store_t);
  */
 
 extern void pool_get_element_list(pool_store_t, int, void **);
-/*
+/**< 
  *  pool_get_element_list(ps, len, ellist);
  *  int len;
  *  pool_store_t ps;
@@ -229,12 +229,12 @@ extern void pool_get_element_list(pool_store_t, int, void **);
  */
 
 #define pool_DEBUG FALSE
-/*  pool_DEBUG set TRUE causes the pool_store routines to do
+/**<  pool_DEBUG set TRUE causes the pool_store routines to do
  *  some RATHER expensive checking. It should be set to
  *   FALSE.
  */
 #define pool_LIGHTENING FALSE
-/*  pool_LIGHTENING set TRUE causes pool_store routines to assume the
+/**<  pool_LIGHTENING set TRUE causes pool_store routines to assume the
  *  user is perfect: no sanity checks are at all necessary and most
  *  internal accounting can be disabled. Noone with an ounce of sanity
  *  would ever set this flag to TRUE unless the code using the
@@ -257,7 +257,7 @@ extern void pool_free_elementF(pool_store_t, void *
 ,CONST char *
 #endif
 );
-/*
+/**< 
  *  pool_free_element(ps,(void *)eltpointer[,__FILE__]);
  *  pool_store_t ps;
  *  <your elttype> *eltpointer;
@@ -290,7 +290,7 @@ extern void pool_clear_storeF(pool_store_t
 , CONST char *
 #endif
 );
-/*
+/**< 
  *  pool_clear_store(ps[,__FILE__]);
  *  pool_store_t ps;
  *
@@ -311,7 +311,7 @@ extern void pool_clear_storeF(pool_store_t
  */
 
 extern void pool_destroy_store(pool_store_t);
-/*
+/**< 
  *  pool_destroy_store(ps);
  *  pool_store_t ps;
  *
@@ -322,7 +322,7 @@ extern void pool_destroy_store(pool_store_t);
  */
 
 extern void pool_print_store(FILE *, pool_store_t,unsigned);
-/*
+/**< 
  *  pool_print_store(fp,ps,detail);
  *  FILE *fp;
  *  pool_store_t ps;
@@ -335,7 +335,7 @@ extern void pool_print_store(FILE *, pool_store_t,unsigned);
  */
 
 extern size_t pool_sizeof_store(pool_store_t);
-/*
+/**< 
  *  pool_sizeof_store(ps);
  *  Returns the current total byte usage of the store.
  */

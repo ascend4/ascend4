@@ -1,4 +1,4 @@
-/*
+/**< 
  *  mtx: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -29,17 +29,17 @@
  */
 #ifndef __MTX_REORDER_H_SEEN__
 #define __MTX_REORDER_H_SEEN__
-/* requires #include "mtx.h" */
+/**< requires #include "mtx.h" */
 
 enum mtx_reorder_method {
-  mtx_UNKNOWN,  /* junk method */
-  mtx_SPK1,	/* Stadtherr's SPK1 reordering */
-  mtx_TSPK1,	/* transpose of Stadtherr's SPK1 reordering */
-  mtx_NATURAL	/* kinda pointless, don't you think? */
+  mtx_UNKNOWN,  /**< junk method */
+  mtx_SPK1,	/**< Stadtherr's SPK1 reordering */
+  mtx_TSPK1,	/**< transpose of Stadtherr's SPK1 reordering */
+  mtx_NATURAL	/**< kinda pointless, don't you think? */
 };
 
 extern int mtx_reorder(mtx_matrix_t,mtx_region_t *, enum mtx_reorder_method);
-/**
+/**< 
  ***  mtx_reorder(sys,region,rmeth)
  ***  mtx_matrix_t mtx;
  ***  mtx_region_t *region;
@@ -81,4 +81,4 @@ extern int mtx_reorder(mtx_matrix_t,mtx_region_t *, enum mtx_reorder_method);
  ***
  ***  Return 0 if ok, 1 if bad input detected, 2 if unable to do.
  **/
-#endif /* __MTX_REORDER_H_SEEN__ */
+#endif /**< __MTX_REORDER_H_SEEN__ */

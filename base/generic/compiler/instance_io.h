@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Instance Output Routines
  *  by Tom Epperly
  *  Created: 2/8/90
@@ -32,14 +32,14 @@
 #define __INSTANCE_IO_H_SEEN__
 
 
-/*
+/**< 
  *  When #including instance_io.h, make sure these files are #included first:
  *         #include "compiler.h"
  *         #include "symtab.h"
  */
 
 
-/*
+/**< 
  *  struct NameNode is used by the AllPaths and WriteAliases routines to
  *  keep track of an instance and which child name is used for a
  *  particular name chain.
@@ -51,9 +51,9 @@ struct NameNode {
 
 extern struct gl_list_t *ShortestPath(CONST struct Instance *,
                                       CONST struct Instance *,
-                                      /* CONST */ unsigned int,
-                                      /* CONST */ unsigned int);
-/*
+                                      /**< CONST */ unsigned int,
+                                      /**< CONST */ unsigned int);
+/**< 
  *  struct gl_list_t *ShortestPath(inst,ref,height,best)
  *  const struct Instance *inst, *ref;
  *  const unsigned int height,best;
@@ -68,7 +68,7 @@ extern struct gl_list_t *ShortestPath(CONST struct Instance *,
  */
 
 extern struct gl_list_t *AllPaths(CONST struct Instance *);
-/*
+/**< 
  *  struct gl_list_t *AllPaths(inst)
  *  const struct Instance *i;
  *
@@ -89,7 +89,7 @@ extern struct gl_list_t *AllPaths(CONST struct Instance *);
  */
 
 extern struct gl_list_t *ISAPaths(CONST struct gl_list_t *);
-/*
+/**< 
  *  struct gl_list_t *ISAPaths(pathlist)
  *  struct gl_list_t *pathlist, *list;
  *  isalist = ISAPaths(pathlist);
@@ -105,7 +105,7 @@ extern struct gl_list_t *ISAPaths(CONST struct gl_list_t *);
 
 extern int WriteInstanceName(FILE *,CONST struct Instance *,
         CONST struct Instance *);
-/*
+/**< 
  *  int WriteInstanceName(f,i,ref)
  *  const struct Instance *i,*ref;
  *  FILE *f;
@@ -118,7 +118,7 @@ extern int WriteInstanceName(FILE *,CONST struct Instance *,
 
 extern void WriteInstanceNameDS(Asc_DString *, CONST struct Instance *,
         CONST struct Instance *);
-/*
+/**< 
  *  WriteInstanceNameDS(dsPtr,i,ref)
  *  const struct Instance *i,*ref;
  *  Asc_DString *dsPtr;
@@ -132,7 +132,7 @@ extern void WriteInstanceNameDS(Asc_DString *, CONST struct Instance *,
 
 extern char *WriteInstanceNameString(CONST struct Instance *,
                                      CONST struct Instance *);
-/*
+/**< 
  *  result = WriteInstanceNameString(i,ref)
  *  const struct Instance *i,*ref;
  *  char *result;
@@ -144,7 +144,7 @@ extern char *WriteInstanceNameString(CONST struct Instance *,
  */
 
 extern int WriteAnyInstanceName(FILE *, struct Instance *);
-/*
+/**< 
  *  int  WriteAnyInstanceName(f,i,ref);
  *  struct Instance *i,*ref;
  *  FILE *f;
@@ -157,19 +157,19 @@ extern int WriteAnyInstanceName(FILE *, struct Instance *);
  */
 
 extern unsigned long CountAliases(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long CountAliases(i)
  *  Count all the known names of the instance given.
  */
 
 extern unsigned long CountISAs(CONST struct Instance *);
-/*
+/**< 
  *  unsigned long CountISAs(i)
  *  Count the names with which the instance given was created.
  */
 
 extern void WriteAliases(FILE *,CONST struct Instance *);
-/*
+/**< 
  *  void WriteAliases(f,i)
  *  FILE *f;
  *  struct Instance *i;
@@ -177,7 +177,7 @@ extern void WriteAliases(FILE *,CONST struct Instance *);
  */
 
 extern void WriteISAs(FILE *,CONST struct Instance *);
-/*
+/**< 
  *  void WriteISAs(f,i)
  *  FILE *f;
  *  struct Instance *i;
@@ -186,7 +186,7 @@ extern void WriteISAs(FILE *,CONST struct Instance *);
  */
 
 extern struct gl_list_t *WriteAliasStrings(CONST struct Instance *);
-/*
+/**< 
  *  aliases=WriteAliasStrings(i);
  *  struct Instance *i;
  *  struct gl_list_t *aliases;
@@ -197,7 +197,7 @@ extern struct gl_list_t *WriteAliasStrings(CONST struct Instance *);
  */
 
 extern struct gl_list_t *WriteISAStrings(CONST struct Instance *);
-/*
+/**< 
  *  aliases=WriteISAStrings(i);
  *  struct Instance *i;
  *  struct gl_list_t *aliases;
@@ -214,7 +214,7 @@ extern struct gl_list_t *WriteISAStrings(CONST struct Instance *);
  */
 
 extern void WriteClique(FILE *,CONST struct Instance *);
-/*
+/**< 
  *  void WriteClique(f,i)
  *  FILE *f;
  *  struct Instance *i;
@@ -222,7 +222,7 @@ extern void WriteClique(FILE *,CONST struct Instance *);
  */
 
 extern void WriteInstance(FILE *,CONST struct Instance *);
-/*
+/**< 
  *  void WriteInstance(f,i)
  *  FILE *f;
  *  struct Instance *i;
@@ -230,7 +230,7 @@ extern void WriteInstance(FILE *,CONST struct Instance *);
  */
 
 extern int WritePath(FILE *, CONST struct gl_list_t *);
-/*
+/**< 
  *  l =  WritePath(f,path);
  *  FILE *f;
  *  CONST struct gl_list_t *path;
@@ -239,7 +239,7 @@ extern int WritePath(FILE *, CONST struct gl_list_t *);
  */
 
 extern char *WritePathString(CONST struct gl_list_t *);
-/*
+/**< 
  *  str =  WritePathString(path);
  *  CONST struct gl_list_t *path;
  *  char *str;
@@ -248,7 +248,7 @@ extern char *WritePathString(CONST struct gl_list_t *);
  */
 
 extern void SaveInstance(FILE *,CONST struct Instance *,int);
-/*
+/**< 
  *  void SaveInstance(fp,inst,dorelations);
  *  FILE *fp,
  *  const struct Instance *inst;
@@ -259,7 +259,7 @@ extern void SaveInstance(FILE *,CONST struct Instance *,int);
  */
 
 extern void WriteInstanceList(struct gl_list_t *list);
-/*
+/**< 
  *  void WriteInstanceList(list);
  *  struct gl_list_t *list;
  *  This is a debugging aid and not intended for general use.
@@ -268,14 +268,14 @@ extern void WriteInstanceList(struct gl_list_t *list);
  */
 
 extern void WriteAtomValue(FILE *, CONST struct Instance *);
-/*
+/**< 
  *  void WriteAtomValue(f,i);
  *  FILE *f;
  *  CONST struct Instance *i;
  */
 
 typedef VOIDPTR (*IPFunc)(struct Instance *,VOIDPTR);
-/*
+/**< 
  *  This is the type of function you should write for use with
  *  PushInterfacePtrs. It will be applied to the instances in the
  *  tree. If your function returns anything other than NULL, then
@@ -304,7 +304,7 @@ typedef VOIDPTR (*IPFunc)(struct Instance *,VOIDPTR);
 
 extern struct gl_list_t *PushInterfacePtrs(struct Instance *,IPFunc,
                                            unsigned long int,int,VOIDPTR);
-/*
+/**< 
  *  oldips = PushInterfacePtrs(i,ipcreatef,iest,visitorder,vp);
  *  struct Instance *i;
  *  IPFunc ipcreatef;
@@ -340,7 +340,7 @@ extern struct gl_list_t *PushInterfacePtrs(struct Instance *,IPFunc,
  */
 
 typedef VOIDPTR (*IPDeleteFunc)(struct Instance *,VOIDPTR,VOIDPTR);
-/*
+/**< 
  *  func(i,ipdata,vp);
  *  struct Instance *i;
  *  VOIDPTR ipdata;   (you gave us with your IPFunc)
@@ -352,7 +352,7 @@ typedef VOIDPTR (*IPDeleteFunc)(struct Instance *,VOIDPTR,VOIDPTR);
  */
 
 extern void PopInterfacePtrs(struct gl_list_t *,IPDeleteFunc,VOIDPTR);
-/*
+/**< 
  *  PopInterfacePtrs(oldips,ipdestroyf,vp);
  *  IPDeleteFunc ipdestroyf;
  *  struct gl_list_t *oldips;
@@ -368,7 +368,7 @@ extern void PopInterfacePtrs(struct gl_list_t *,IPDeleteFunc,VOIDPTR);
 
 
 int ArrayIsRelation(struct Instance *);
-/*
+/**< 
  *  r = ArrayIsRelation(i);
  *  struct Instance *i;
  *  int r;
@@ -377,7 +377,7 @@ int ArrayIsRelation(struct Instance *);
  */
 
 int ArrayIsLogRel(struct Instance *);
-/*
+/**< 
  *  r = ArrayIsLogRel(i);
  *  struct Instance *i;
  *  int r;
@@ -386,7 +386,7 @@ int ArrayIsLogRel(struct Instance *);
  */
 
 int ArrayIsWhen(struct Instance *);
-/*
+/**< 
  *  r = ArrayIsWhen(i);
  *  struct Instance *i;
  *  int r;
@@ -395,7 +395,7 @@ int ArrayIsWhen(struct Instance *);
  */
 
 int ArrayIsModel(struct Instance *);
-/*
+/**< 
  *  r = ArrayIsModel(i);
  *  struct Instance *i;
  *  int r;
@@ -403,4 +403,4 @@ int ArrayIsModel(struct Instance *);
  *  or when, 0 OTHERWISE.
  */
 
-#endif /* __INSTANCE_IO_H_SEEN__ */
+#endif /**< __INSTANCE_IO_H_SEEN__ */

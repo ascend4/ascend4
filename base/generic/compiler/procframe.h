@@ -1,4 +1,4 @@
-/*
+/** 
  *  procframe.h: Method interpreter debugger stack frame information.
  *  by Benjamin Allan
  *  March 17, 1998
@@ -31,7 +31,7 @@
 
 #ifndef __PROCFRAME_H_SEEN__
 #define __PROCFRAME_H_SEEN__
-/* Method interpreter debugger stack frame information.
+/** Method interpreter debugger stack frame information.
  * The data structures in this header should not be passed
  * through headers except inside gl_lists. This header
  * should not be accessed except by the interpreter and
@@ -40,16 +40,16 @@
  */
 
 enum FrameMode {
-  FrameInherit,		/* inherit previous mode when used in Add */
-  FrameNormal,		/* normal operations. inheritable. */
-  FrameDebug,		/* trace operations. inheritable. */
-  FrameStart,		/* not yet supported. initiate something. */
-  FrameStep,		/* not yet supported. do next statement any scope */
-  FrameNext,		/* not yet supported. do next instruction this scope */
-  FrameDestroyed	/* severe error if seen */
+  FrameInherit,		/** inherit previous mode when used in Add */
+  FrameNormal,		/** normal operations. inheritable. */
+  FrameDebug,		/** trace operations. inheritable. */
+  FrameStart,		/** not yet supported. initiate something. */
+  FrameStep,		/** not yet supported. do next statement any scope */
+  FrameNext,		/** not yet supported. do next instruction this scope */
+  FrameDestroyed	/** severe error if seen */
 };
 
-/* Because error handling is user defined according to watchpt.h
+/** Because error handling is user defined according to watchpt.h
  * the following enum is used internally.
  * External package functions
  * should return Proc_CallOK, Proc_CallError,
@@ -57,67 +57,67 @@ enum FrameMode {
  * Error message output is affected by FrameControl.
  */
 enum FrameControl {
-  FrameOK = 0,	/* normal return and entry state. */
-  FrameError,	/* error return. only the erroneous frame uses this. */
-  FrameBreak,	/* break from an enclosing loop. If no enclosing loop
+  FrameOK = 0,	/** normal return and entry state. */
+  FrameError,	/** error return. only the erroneous frame uses this. */
+  FrameBreak,	/** break from an enclosing loop. If no enclosing loop
                  * exists, will be passed up to calling frame. */
-  FrameContinue,/* skip to next iteration in an enclosing loop. If no
+  FrameContinue,/** skip to next iteration in an enclosing loop. If no
                  * enclosing loop exists, will be passed up to calling frame.*/
-  FrameFallthru,/* suppress break inside switch processing of cases */
-  FrameReturn,	/* frames above a FrameError or FrameReturn stop & return */
-              	/* Initialize morphs this back to a FrameError for client. */
-  FrameLoop	/* in the scope of a loop. valid entry state. */
+  FrameFallthru,/** suppress break inside switch processing of cases */
+  FrameReturn,	/** frames above a FrameError or FrameReturn stop & return */
+              	/** Initialize morphs this back to a FrameError for client. */
+  FrameLoop	/** in the scope of a loop. valid entry state. */
 };
-/* keep the above in sync with the internals of FrameControlToString below */
+/** keep the above in sync with the internals of FrameControlToString below */
 
 
-/*
+/** 
  * some watch point structures for internal use only.
  * see watchpt.h for UI watchpoint input structures.
  */
 struct anywatch {
-  void *key;	/* all watches hash on some sort of unique ptr key */
-  void *next;	/* all watches are in hash tables. */
-  void *data;	/* everyone wants to know something. */
-  unsigned long flags;	/* control bits */
+  void *key;	/** all watches hash on some sort of unique ptr key */
+  void *next;	/** all watches are in hash tables. */
+  void *data;	/** everyone wants to know something. */
+  unsigned long flags;	/** control bits */
 };
 
 struct namewatch {
   symchar *leafname;
   struct namewatch *next;
   struct gl_list_t *where;
-  unsigned long flags;	/* control bits */
+  unsigned long flags;	/** control bits */
 };
 
 struct procwatch {
   symchar *leafname;
   struct procwatch *next;
   struct gl_list_t *where;
-  unsigned long flags;	/* control bits */
+  unsigned long flags;	/** control bits */
 };
 
 struct statwatch {
   struct Statement *stat;
   struct statwatch *next;
   struct gl_list_t *where;
-  unsigned long flags;	/* control bits */
+  unsigned long flags;	/** control bits */
 };
 
 struct varswatch {
-  struct Instance *var;		/* watched var */
+  struct Instance *var;		/** watched var */
   struct varswatch *next;
-  struct gl_list_t *where;	/* list of statement/context pairs */
-  unsigned long flags;	/* control bits */
+  struct gl_list_t *where;	/** list of statement/context pairs */
+  unsigned long flags;	/** control bits */
 };
 
 struct typewatch {
-  struct TypeDescription *desc;	/* watched var type */
+  struct TypeDescription *desc;	/** watched var type */
   struct typewatch *next;
-  struct TypeDescription *ancestor;	/* watched ancestor causing this */
-  unsigned long flags;	/* control bits */
+  struct TypeDescription *ancestor;	/** watched ancestor causing this */
+  unsigned long flags;	/** control bits */
 };
 
-/* Masks are always = 2^N -1 for some N. Such a mask
+/** Masks are always = 2^N -1 for some N. Such a mask
  * can be used in hashing a pointer into an array of size 2^N.
  * N should be even.
  * Until we run tests, hard to say what the masks should be.
@@ -138,7 +138,7 @@ struct typewatch {
 #define SWTSHIFT 22
 #define TWTSHIFT 22
 #define VWTSHIFT 22
-/* The idea here is that pointers (to persistent instances, names, types
+/** The idea here is that pointers (to persistent instances, names, types
  * and methods, but not stack instances) are unique keys during method
  * execution, so these can be hashed for more or less linear cost trace
  * operations. We're hashing things because it's really gross to use
@@ -153,15 +153,15 @@ struct typewatch {
 
 struct procDebug {
   wpflags what;
-  /* what tells what tables are active. check it, not the table ptrs */
-  FILE *log; 	/* where debugger output should go. probably same as err */
-  int errcnt;	/* total error messages issued while processing this stack */
-  struct namewatch **ntab;	/* hash table of leaf names being watched */
-  struct procwatch **ptab;	/* hash table of proc names being watched */
-  struct statwatch **stab;	/* hash table of statements being watched */
-  struct typewatch **ttab;	/* hash table of var types being watched */
-  struct varswatch **vtab;	/* hash table of variables being watched */
-  /* above watch tables point at below data spaces unless no break points
+  /** what tells what tables are active. check it, not the table ptrs */
+  FILE *log; 	/** where debugger output should go. probably same as err */
+  int errcnt;	/** total error messages issued while processing this stack */
+  struct namewatch **ntab;	/** hash table of leaf names being watched */
+  struct procwatch **ptab;	/** hash table of proc names being watched */
+  struct statwatch **stab;	/** hash table of statements being watched */
+  struct typewatch **ttab;	/** hash table of var types being watched */
+  struct varswatch **vtab;	/** hash table of variables being watched */
+  /** above watch tables point at below data spaces unless no break points
    * of the classes involved are set. If a table is not used, its tab
    * pointer is left NULL instead of being assigned to its head.
    */
@@ -172,61 +172,61 @@ struct procDebug {
   struct varswatch *varshead[VWTMASK+1];
 };
 
-/*
+/** 
  * a procFrame defines the stack information we may carry about while
  * executing a method call from the interface. It is for the
  * internal use of initialize.c only.
  */
 struct procFrame {
-  enum FrameMode m;		/* 0 -> no -> rest of frame data empty */
-  enum FrameControl flow;	/* flow of control info */
-  enum Proc_enum ErrNo;		/* last status computed */
-  int depth;			/* where on the stack. redundant. */
-  FILE *err;	                /* where interactive messages should be sent */
-  struct Instance *i;		/* scope proc is being executed in. */
-  char *cname;			/* name of scope by which we got here. */
-  struct InitProcedure *proc;	/* proc being evaluated. */
-  struct Statement *stat;	/* statement being evaluated. */
-  struct procFrame *caller;	/* scope that lead here in execution.
+  enum FrameMode m;		/** 0 -> no -> rest of frame data empty */
+  enum FrameControl flow;	/** flow of control info */
+  enum Proc_enum ErrNo;		/** last status computed */
+  int depth;			/** where on the stack. redundant. */
+  FILE *err;	                /** where interactive messages should be sent */
+  struct Instance *i;		/** scope proc is being executed in. */
+  char *cname;			/** name of scope by which we got here. */
+  struct InitProcedure *proc;	/** proc being evaluated. */
+  struct Statement *stat;	/** statement being evaluated. */
+  struct procFrame *caller;	/** scope that lead here in execution.
                                  * NULL if caller was a user interface.
                                  */
-  wpflags gen;			/* some general debug options valid
+  wpflags gen;			/** some general debug options valid
                                  * whether or not dbi == NULL.
                                  */
-  struct procDebug *dbi;	/* points to debugging information which
+  struct procDebug *dbi;	/** points to debugging information which
                                  * is shared by all frames in a stack since
                                  * debugging is a global activity.
                                  * The root frame should create this data.
                                  * If NULL, no messaging at all.
                                  */
-  /* not yet supported: */
-  struct gl_list_t *locals;	/* local vars simulation list. */
+  /** not yet supported: */
+  struct gl_list_t *locals;	/** local vars simulation list. */
 };
 
-/* setting this to 1 causes a STOP at the next sensible moment */
-/* UIs access this variable through watchpt.h only. */
+/** setting this to 1 causes a STOP at the next sensible moment */
+/** UIs access this variable through watchpt.h only. */
 extern int g_procframe_stop;
 
-/* return a string (not caller's to free)  form of the enum given */
+/** return a string (not caller's to free)  form of the enum given */
 extern char *FrameControlToString(enum FrameControl);
-/*
+/** 
  * Doing anything more than output during execution probably calls for
  * a real debugging thread or a most careful inside-out method
  * execution protocol.
  */
 
-/* init a top procFrame for normal execution with no debugging. */
+/** init a top procFrame for normal execution with no debugging. */
 extern void InitNormalTopProcFrame(struct procFrame *, struct Instance *,
                                    char *, FILE *,int);
 
-/* init a top procFrame for debugging execution. */
+/** init a top procFrame for debugging execution. */
 extern void InitDebugTopProcFrame(struct procFrame *, struct Instance *,
                                   char *, FILE *, int,
                                   struct procDebug *, struct gl_list_t *,
                                   FILE *);
 
-/* add a frame */
-/*
+/** add a frame */
+/** 
  * Create a frame for a stack. parent should be the
  * containing frame unless this is the first frame in a
  * stack. Context is the instance statements are supposed
@@ -241,8 +241,8 @@ extern struct procFrame *AddProcFrame(struct procFrame *, struct Instance *,
                                       char *, struct InitProcedure *,
                                       enum FrameMode);
 
-/* update context info in a frame */
-/* set the statement for the given frame. statement had best be somewhere
+/** update context info in a frame */
+/** set the statement for the given frame. statement had best be somewhere
  * in the proc list of the frame. i had better be the context the
  * statement is to be evaluated in if it is evaluated.
  */
@@ -250,8 +250,8 @@ extern void UpdateProcFrame(struct procFrame *,
                             struct Statement *,
                             struct Instance *);
 
-/* iffy */
+/** iffy */
 extern void DestroyProcFrame(struct procFrame *);
 
 
-#endif /* __PROCFRAME_H_SEEN__ */
+#endif /** __PROCFRAME_H_SEEN__ */

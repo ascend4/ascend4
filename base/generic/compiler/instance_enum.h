@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Definitions
  *  by Ben Allan
  *  6/02/96
@@ -31,13 +31,13 @@
 #ifndef __INSTANCE_ENUM_H_SEEN__
 #define __INSTANCE_ENUM_H_SEEN__
 
-/*
+/**< 
  *  When #including instance_enum.h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
  */
 
 
-/*
+/**< 
  *  Notes on the instance type scheme.
  *      Ben Allan, Feb. 1996.
  *  We have three types of 'scalar data' instances:
@@ -80,47 +80,47 @@
 #define IWHEN   0x4000
 #define IAUTO   0x8000
 #define IDUMB   0x10000
-/* future work */
+/**< future work */
 #define ICHILDLESS (IFUND | ICONS | IWHEN | IDUMB)
-/* constants and fundamental types have no child list */
-/* when's have no children.  Better way of doing this?  */
+/**< constants and fundamental types have no child list */
+/**< when's have no children.  Better way of doing this?  */
 #define IERRINST ~(IREAL|IINT|IBOOL|ISYM|ISET|IARR|IENUM|IFUND|ICONS|IATOM| \
  ICOMP|IMOD|IRELN|ILRELN|IWHEN|IAUTO|IDUMB)
-/* any of these bits on is an error */
+/**< any of these bits on is an error */
 enum inst_t {
-  ERROR_INST =		0,		/* deleted instances get this type*/
-  SIM_INST =		ICOMP,		/* a simulation instance */
-  MODEL_INST =		ICOMP | IMOD,	/* model instance */
-  /* AUTO_INST = ICOMP | IMOD | IAUTO, */ /* future stack instance */
-  REL_INST =		IRELN,		/* relation(equality or inequality) */
-  LREL_INST =		ILRELN,		/* logical relation( == || != ) */
-  WHEN_INST =           IWHEN,          /* WHEN instance  */
-  ARRAY_INT_INST =	ICOMP | IARR  | IINT,	/* an array instance integer */
-  ARRAY_ENUM_INST = 	ICOMP | IARR  | ISYM,	/* an array instance enumed */
-  /* fundamental instances */
+  ERROR_INST =		0,		/**< deleted instances get this type*/
+  SIM_INST =		ICOMP,		/**< a simulation instance */
+  MODEL_INST =		ICOMP | IMOD,	/**< model instance */
+  /**< AUTO_INST = ICOMP | IMOD | IAUTO, */ /**< future stack instance */
+  REL_INST =		IRELN,		/**< relation(equality or inequality) */
+  LREL_INST =		ILRELN,		/**< logical relation( == || != ) */
+  WHEN_INST =           IWHEN,          /**< WHEN instance  */
+  ARRAY_INT_INST =	ICOMP | IARR  | IINT,	/**< an array instance integer */
+  ARRAY_ENUM_INST = 	ICOMP | IARR  | ISYM,	/**< an array instance enumed */
+  /**< fundamental instances */
   REAL_INST =		IFUND | IREAL,
   INTEGER_INST =	IFUND | IINT,
   BOOLEAN_INST =	IFUND | IBOOL,
   SYMBOL_INST =		IFUND | ISYM,
   SET_INST =		IFUND | ISET,
-  /* nonfundamental atomic instances */
+  /**< nonfundamental atomic instances */
   REAL_ATOM_INST =	IATOM | IREAL,
   INTEGER_ATOM_INST =	IATOM | IINT,
   BOOLEAN_ATOM_INST =	IATOM | IBOOL,
   SYMBOL_ATOM_INST =	IATOM | ISYM,
   SET_ATOM_INST =	IATOM | ISET,
-  /* nonfundamental constant instances */
+  /**< nonfundamental constant instances */
   REAL_CONSTANT_INST =		ICONS | IREAL,
   BOOLEAN_CONSTANT_INST =	ICONS | IINT,
   INTEGER_CONSTANT_INST =	ICONS | IBOOL,
   SYMBOL_CONSTANT_INST =	ICONS | ISYM,
-  /* dummy instance - unselected IS_A children. */
+  /**< dummy instance - unselected IS_A children. */
   DUMMY_INST =		IDUMB
 };
 
-/* Never, ever, allocate either one of these types */
+/**< Never, ever, allocate either one of these types */
 struct Instance {
   enum inst_t t;
 };
 
-#endif /* __INSTANCE_ENUM_H_SEEN__ */
+#endif /**< __INSTANCE_ENUM_H_SEEN__ */

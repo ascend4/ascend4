@@ -1,4 +1,4 @@
-/*
+/**< 
  *
  *  Implementation of Free Store Module
  *  Kirk A. Abbott
@@ -36,20 +36,20 @@
 
 #ifndef __FREESTORE_H_SEEN__
 #define __FREESTORE_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"stack.h"
 # #include"exprsym.h"
 */
 
 struct FreeStore {
-  union RelationTermUnion **root;			/* ptr to it all */
-  union RelationTermUnion *next_free;		/* ptr to next_clean slot */
-  struct gs_stack_t *returned;	/* stack of returned blocks */
-  int n_buffers;		/* # of big chunks */
-  int buffer_length;		/* size of chunks */
-  int row;			/* index of the next free location's row */
-  int col;			/* index of the next free locations's col */
+  union RelationTermUnion **root;			/**< ptr to it all */
+  union RelationTermUnion *next_free;		/**< ptr to next_clean slot */
+  struct gs_stack_t *returned;	/**< stack of returned blocks */
+  int n_buffers;		/**< # of big chunks */
+  int buffer_length;		/**< size of chunks */
+  int row;			/**< index of the next free location's row */
+  int col;			/**< index of the next free locations's col */
 };
 
 extern long FreeStore_UnitsAllocated();
@@ -57,12 +57,12 @@ extern void FreeStore__Statistics(FILE *fp,
       struct FreeStore *store);
 
 extern void FreeStore__BlastMem(struct FreeStore *store);
-/*
+/**< 
  *  This function deallocates *all* the memory associated with a free
  *  store. The free store should not be referenced after this call.
  */
 
-/*
+/**< 
  *  These are the normal user level routines.
  *
  *  Known Bugs:
@@ -77,13 +77,13 @@ extern void FreeStore__BlastMem(struct FreeStore *store);
  */
 
 extern struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length);
-/*
+/**< 
  *  Create a new free store with 1 buffer of size buffer length.
  *  The information within the buffer is *not* initialized in any way.
  */
 
 extern void FreeStore_ReInit(struct FreeStore *store);
-/*
+/**< 
  *  Reinitializes the free store. This simply tells the free store to
   *forget* about anything that may have be allotted to a user. In other
  *  words, after this call the freestore will behave as if it was just
@@ -92,7 +92,7 @@ extern void FreeStore_ReInit(struct FreeStore *store);
  */
 
 extern union RelationTermUnion *GetMem();
-/*
+/**< 
  *  This function returns a marked block to the caller. When not needed
  *  any more the user must use FreeMem(term).
  *  It is the users responsibility to remember
@@ -104,14 +104,14 @@ extern union RelationTermUnion *GetMem();
  */
 
 extern void FreeMem(union RelationTermUnion *term);
-/*
+/**< 
  *  This function returns a block of memory that was obtained from a
  *  freestore. The appropriate store must be set a priori.
  */
 
 extern union RelationTermUnion
 *FreeStoreCheckMem(union RelationTermUnion *term);
-/*
+/**< 
  *  This will function will return a non NULL pointer if the memory
  *  associated with the term was allocated from the currently active
  *  freestore.
@@ -119,11 +119,11 @@ extern union RelationTermUnion
 
 extern void FreeStore_SetFreeStore(struct FreeStore *store);
 extern struct FreeStore *FreeStore_GetFreeStore(void);
-/*
+/**< 
  *  These set up and/or retrieve the current working freestore.
  */
 
-#endif /* __FREESTORE_H_SEEN__ */
+#endif /**< __FREESTORE_H_SEEN__ */
 
 
 

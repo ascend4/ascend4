@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Permanent Statement Output routines
  *  by Tom Epperly
  *  Version: $Revision: 1.14 $
@@ -25,7 +25,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including statio.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -36,7 +36,7 @@
 
 #ifndef __STATIO_H_SEEN__
 #define __STATIO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"list.h"
@@ -44,7 +44,7 @@
 */
 
 extern struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList*);
-/*
+/**< 
  *  struct gl_list_t *GetTypesFromStatList(sl)
  *  CONST struct StatementList *sl;
  *  Return a gl_list of types referenced by the statement list
@@ -58,7 +58,7 @@ extern struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList*);
  */
 
 extern void WriteStatement(FILE *,CONST struct Statement *,int);
-/*
+/**< 
  *  void WriteStatement(f,s,i)
  *  FILE *f;
  *  const struct Statement *s;
@@ -67,7 +67,7 @@ extern void WriteStatement(FILE *,CONST struct Statement *,int);
  */
 
 extern unsigned long StatementListLength(CONST struct StatementList *);
-/*
+/**< 
  *  unsigned long StatementListLength(CONST struct StatementList *);
  *  Returns the number of statements in the list, which may be 0.
  *  On NULL input, returns 0 -- and much code relies on this fact.
@@ -75,7 +75,7 @@ extern unsigned long StatementListLength(CONST struct StatementList *);
 
 extern void WriteDiffStatementList(FILE *,CONST struct StatementList *,
                                    CONST struct StatementList *, int);
-/*
+/**< 
  *  void WriteDiffStatementList(f,sl1,sl2,i)
  *  FILE *f;
  *  const struct StatementList *sl1, *sl2;
@@ -86,7 +86,7 @@ extern void WriteDiffStatementList(FILE *,CONST struct StatementList *,
  */
 
 extern void WriteStatementList(FILE *,CONST struct StatementList *,int);
-/*
+/**< 
  *  void WriteStatementList(f,sl,i)
  *  FILE *f;
  *  const struct StatementList *sl;
@@ -97,7 +97,7 @@ extern void WriteStatementList(FILE *,CONST struct StatementList *,int);
 
 #define WSS(f,s) WriteStatementSuppressed(f,s)
 extern void WriteStatementSuppressed(FILE *, CONST struct Statement *);
-/*
+/**< 
  *  macro WSS(f,stat)
  *  void WriteStatementSuppressed(f,stat)
  *  FILE *f;
@@ -113,7 +113,7 @@ extern void WriteStatementErrorMessage(FILE *,
                                        CONST struct Statement *,
                                        CONST char *,
                                        int,int);
-/*
+/**< 
  *  macro WSEM(f,stat,message)  Write a message verbosely.
  *  macro WSSM(f,stat,message,level)  Write a shorter message.
  *  void WriteStatementErrorMessage(f,stat,message,noisy,level)
@@ -139,7 +139,7 @@ extern void WriteStatementErrorMessage(FILE *,
  */
 
 extern CONST char *StatioLabel(int);
-/*
+/**< 
  *  StatioLabel(level);
  *  Returns an Asc-#######: label padded to a uniform length.
  *  You don't own the string returned.
@@ -148,14 +148,14 @@ extern CONST char *StatioLabel(int);
  */
 
 extern int *GetStatioSuppressions(void);
-/*
+/**< 
  *  Returns a table initialized so that all statement types are
  *  NOT suppressed. To suppress a statement type,
  *  set table[statement_enum_of_type_you_hate] = 1.
  */
 
 extern void DestroySuppressions(int *);
-/*
+/**< 
  *  Destroys a table of suppressions from GetStatioSuppressions.
  */
 
@@ -163,7 +163,7 @@ extern void DestroySuppressions(int *);
 extern void WriteStatementErrorSparse(FILE *,
                                        CONST struct Statement *,
                                        CONST char *,int *);
-/*
+/**< 
  *  macro WSEMSPARSE(f,stat,message,table)
  *  void WriteStatementErrorSparse(f,stat,message,table)
  *  FILE *f;
@@ -181,7 +181,7 @@ extern void WriteStatementErrorSparse(FILE *,
  */
 
 symchar *StatementTypeString(CONST struct Statement *);
-/*
+/**< 
  * s = StatementTypeString(stat);
  * symchar *s;
  * CONST struct Statement *stat;
@@ -191,16 +191,16 @@ symchar *StatementTypeString(CONST struct Statement *);
  */
 
 extern void Asc_StatErrMsg_NotAllowedMethod(FILE *, CONST struct Statement *);
-/*
+/**< 
  * Writes a message to the file given indicating the statement is not
  * allowed in a method.
  */
 
 extern void Asc_StatErrMsg_NotAllowedDeclarative(FILE *, 
                                                  CONST struct Statement *);
-/*
+/**< 
  * Writes a message to the file given indicating the statement is not
  * allowed in a declarative MODEL body.
  */
 
-#endif /* __STATIO_H_SEEN__ */
+#endif /**< __STATIO_H_SEEN__ */

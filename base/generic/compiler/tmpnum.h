@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree TmpNum functions.
  *  by Tom Epperly & Kirk Abbott
  *  8/16/89
@@ -29,7 +29,7 @@
 #ifndef __TMPNUM_H_SEEN__
 #define __TMPNUM_H_SEEN__
 
-/*
+/**< 
  *  About tmp numbers. These are a scratch long for use of transient
  *  clients, including the compiler itself. The tmp num should not be
  *  expected to remain the same above the scope of the function in
@@ -44,7 +44,7 @@
  */
 
 extern unsigned long GetTmpNum(CONST struct Instance *);
-/*
+/**< 
  *  l= GetTmpNum(i);
  *  CONST struct Instance *i;
  *  Return the tmp number, or LONG_MAX if i is NULL,
@@ -52,7 +52,7 @@ extern unsigned long GetTmpNum(CONST struct Instance *);
  */
 
 extern void SetTmpNum(struct Instance *, unsigned long int);
-/*
+/**< 
  *  SetTmpNum(i,n);
  *  struct Instance *i;
  *  long n;
@@ -60,7 +60,7 @@ extern void SetTmpNum(struct Instance *, unsigned long int);
  */
 
 extern unsigned long IncrementTmpNum(struct Instance *);
-/*
+/**< 
  *  l= IncrementTmpNum(i);
  *  CONST struct Instance *i;
  *  unsigned long l;
@@ -71,7 +71,7 @@ extern unsigned long IncrementTmpNum(struct Instance *);
  */
 
 extern unsigned long DecrementTmpNum(struct Instance *);
-/*
+/**< 
  *  l= DecrementTmpNum(i);
  *  CONST struct Instance *i;
  *  unsigned long l;
@@ -82,7 +82,7 @@ extern unsigned long DecrementTmpNum(struct Instance *);
  */
 
 extern void ZeroTmpNums(struct Instance *,int);
-/*
+/**< 
  *  ZeroTmpNums(i);
  *  struct Instance *i;
  *  int order;
@@ -91,4 +91,4 @@ extern void ZeroTmpNums(struct Instance *,int);
  */
 
 #endif
-/*  __TMPNUM_H_SEEN__  */
+/**<  __TMPNUM_H_SEEN__  */

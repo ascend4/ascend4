@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Boundary Manipulator Module
  *  Created: 04/97
  *  Version: $Revision: 1.6 $
@@ -26,7 +26,7 @@
  */
 
 
-/*
+/**< 
  *  Contents:     Boundary manipulator module
  *
  *  Dates:        04/97 - original version
@@ -40,7 +40,7 @@
 
 extern real64 bndman_real_eval(struct bnd_boundary *);
 extern int32  bndman_log_eval(struct bnd_boundary *);
-/*
+/**< 
  *  value = bndman_real_eval(bnd)
  *  logvalue = bndman_log_eval(bnd)
  *  real64 value;
@@ -51,7 +51,7 @@ extern int32  bndman_log_eval(struct bnd_boundary *);
  */
 
 extern int32 bndman_calc_satisfied(struct bnd_boundary *);
-/*
+/**< 
  *  value = bndman_calc_satisfied(bnd);
  *  int32 value;
  *  struct bnd_boundary *bnd;
@@ -61,7 +61,7 @@ extern int32 bndman_calc_satisfied(struct bnd_boundary *);
  */
 
 extern int32 bndman_calc_at_zero(struct bnd_boundary *);
-/*
+/**< 
  *  value = bndman_calc_at_zero(bnd);
  *  int32 value;
  *  struct bnd_boundary *bnd;
@@ -71,4 +71,4 @@ extern int32 bndman_calc_at_zero(struct bnd_boundary *);
  *  Used only for real(not boolean) boundaries.
  */
 
-#endif  /* bndman__already_included */
+#endif  /**< bndman__already_included */

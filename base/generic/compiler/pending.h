@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Pending Instance Routines
  *  by Tom Epperly
  *  Created: 1/24/90
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including pending.h, make sure these files are #included first:
  *         #include "instance_enum.h"
  *         #include "compiler.h"
@@ -35,12 +35,12 @@
 
 #ifndef __PENDING_H_SEEN__
 #define __PENDING_H_SEEN__
-/* requires
+/**< requires
 # #include <stdio.h>
 # #include"instance_enum.h"
 */
 
-/*
+/**< 
  *  The pending list is implemented as a doubly linked list.
  *  Clients of this module should NOT access the internals of this list.
  *  They should not access next and prev in particular.
@@ -54,7 +54,7 @@ struct pending_t {
 };
 
 extern void InitPendingPool(void);
-/*
+/**< 
  *  InitPendingPool();
  *  Sets up pending structure data management
  *  before anything can be built, ideally at startup time.
@@ -63,7 +63,7 @@ extern void InitPendingPool(void);
  */
 
 extern void DestroyPendingPool(void);
-/*
+/**< 
  *  DestroyPendingPool();
  *  Destroy pending structure data management. This must be called to
  *  clean up before shutting down ASCEND.
@@ -74,7 +74,7 @@ extern void DestroyPendingPool(void);
  */
 
 extern void ReportPendingPool(FILE*);
-/*
+/**< 
  *  ReportPendingPool(f);
  *  FILE *f;
  *  Reports on the pending pool to f.
@@ -86,7 +86,7 @@ extern void ReportPendingPool(FILE*);
 #define PendingInstance(pt) PendingInstanceF(pt)
 #endif
 extern struct Instance *PendingInstanceF(CONST struct pending_t *);
-/*
+/**< 
  *  macro PendingInstance(pt)
  *  struct Instance PendingInstanceF(pt)
  *  const struct pending_t *pt;
@@ -95,7 +95,7 @@ extern struct Instance *PendingInstanceF(CONST struct pending_t *);
  */
 
 extern void ClearList(void);
-/*
+/**< 
  *  void ClearList()
  *  Prepare an empty list.  This gets rid of any remaining list and makes
  *  a new empty list ready for use.
@@ -104,14 +104,14 @@ extern void ClearList(void);
  */
 
 extern unsigned long NumberPending(void);
-/*
+/**< 
  *  unsigned long NumberPending()
  *  Return the number of instances in the pending instance list.
  */
 
 extern void AddBelow(struct pending_t *,
        struct Instance *);
-/*
+/**< 
  *  void AddBelow(pt,i)
  *  struct pending_t *pt;
  *  struct Instance *i;
@@ -121,7 +121,7 @@ extern void AddBelow(struct pending_t *,
  */
 
 extern void AddToEnd(struct Instance *);
-/*
+/**< 
  *  void AddToEnd(i)
  *  struct Instance *i;
  *  Insert instance i at the end of the pending instance list.
@@ -129,7 +129,7 @@ extern void AddToEnd(struct Instance *);
  */
 
 extern void RemoveInstance(struct Instance *);
-/*
+/**< 
  *  void RemoveInstance(i)
  *  struct Instance *i;
  *  Remove instance i from the pending instance list if it is in it.
@@ -137,7 +137,7 @@ extern void RemoveInstance(struct Instance *);
  */
 
 extern void PendingInstanceRealloced(struct Instance *,struct Instance *);
-/*
+/**< 
  *  void PendingInstanceRealloced(old,new)
  *  struct Instance *old,*new;
  *  Change references to old to new.
@@ -146,7 +146,7 @@ extern void PendingInstanceRealloced(struct Instance *,struct Instance *);
  */
 
 extern int InstanceInList(struct Instance *);
-/*
+/**< 
  *  int InstanceInList(i)
  *  struct Instance *i;
  *  Return true iff i is in the list.
@@ -155,13 +155,13 @@ extern int InstanceInList(struct Instance *);
  */
 
 extern struct pending_t *TopEntry(void);
-/*
+/**< 
  *  struct pending_t *TopEntry()
  *  Return the top item in the pending list.
  */
 
 extern struct pending_t *ListEntry(unsigned long);
-/*
+/**< 
  *  struct pending_t *ListEntry(n)
  *  unsigned long n;
  *  Return the n'th entry in the list.  This returns NULL if n is less
@@ -169,23 +169,23 @@ extern struct pending_t *ListEntry(unsigned long);
  */
 
 extern struct pending_t *BottomEntry(void);
-/*
+/**< 
  *  struct pending_t *BottomEntry()
  *      Return the bottom item in the pending list.
  */
 
 extern void MoveToBottom(struct pending_t *);
-/*
+/**< 
  *  void MoveToBottom(struct pending_t *pt)
  *  Move the item pt to the bottom of the list.
  */
 
 extern unsigned long NumberPendingInstances(struct Instance *);
-/*
+/**< 
  *  unsigned long NumberPendingInstances;
  *  struct Instance *i;
  *  Visits the Instance Tree seatch for instances with pending statements.
  *  Increments g_unresolved_count for each pending instance found.
  *  Returns the total count of pendings.
  */
-#endif /* __PENDING_H_SEEN__ */
+#endif /**< __PENDING_H_SEEN__ */

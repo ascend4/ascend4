@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Standard Clients module of ASCEND environment
  *  by Benjamin Andrew Allan
  *  5/19/96
@@ -33,11 +33,11 @@
 
 #ifndef _slv_stdclients_h_seen_
 #define _slv_stdclients_h_seen_
-/* requires #include <stdio.h> */
-/* requires #include "system.h" */
-/* requires #include "slv_client.h" */
-/* requires #include "mtx.h" */
-/* requires #include "slvDOF.h" */
+/**< requires #include <stdio.h> */
+/**< requires #include "system.h" */
+/**< requires #include "slv_client.h" */
+/**< requires #include "mtx.h" */
+/**< requires #include "slvDOF.h" */
 
 extern int slv_std_make_incidence_mtx(slv_system_t, mtx_matrix_t, 
                                       var_filter_t *,rel_filter_t *);
@@ -53,10 +53,10 @@ Returns 0 if went ok.
 \*********************************************************************/
 
 #define slv_block_partition(s) slv_block_partition_real((s),0)
-/* do BLT permutation to system solvers lists */
+/**< do BLT permutation to system solvers lists */
 
 #define slv_block_partition_upper(s) slv_block_partition_real((s),1)
-/* do BUT permutation to system solvers lists */
+/**< do BUT permutation to system solvers lists */
 
 extern int slv_block_partition_real(slv_system_t,int);
 /*********************************************************************\
@@ -251,4 +251,4 @@ extern int slv_log_block_partition(slv_system_t);
   If fail for any other reason, return is 1.
 \*********************************************************************/
 
-#endif /*  _slv_stdclients_h_seen_ */
+#endif /**<  _slv_stdclients_h_seen_ */

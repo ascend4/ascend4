@@ -1,4 +1,4 @@
-/*
+/** 
  *  anonmerge.c       
  *  Minimalist merge detection for anonymous type detection.
  *  by Benjamin Andrew Allan
@@ -71,7 +71,7 @@
 
 #ifndef __ANONMERG_H_SEEN__
 #define __ANONMERG_H_SEEN__
-/*
+/** 
  * If want to collect/report some statistics, set to 1.
  * what statistics are written and where depends on flags
  * defined in anonmerg.c. this is for debugging purposes
@@ -79,7 +79,7 @@
  */
 #define AMSTAT 0
 
-/*
+/** 
  * vp = Asc_AnonMergeMarkIPs(root);
  * VOIDPTR vp;
  * This function finds merged instances, anon or otherwise, and
@@ -106,7 +106,7 @@
  */
 extern VOIDPTR Asc_AnonMergeMarkIPs(struct Instance *);
 
-/*
+/** 
  * cmp = Asc_AnonMergeCmpInstances(i1,i2);
  * int cmp;
  * CONST struct Instance *i1, *i2;
@@ -124,7 +124,7 @@ extern VOIDPTR Asc_AnonMergeMarkIPs(struct Instance *);
 extern int Asc_AnonMergeCmpInstances(CONST struct Instance *,
                                      CONST struct Instance *);
 
-/*
+/** 
  * AnonMergeUnmarkIPs(vp)
  * Frees data structure returned by AnonMergeMarkIPs.
  * Neglect to call this and you will cause trouble.
@@ -133,7 +133,7 @@ extern int Asc_AnonMergeCmpInstances(CONST struct Instance *,
  */
 extern void Asc_AnonMergeUnmarkIPs(VOIDPTR);
 
-/*
+/** 
  * Asc_AnonMergeWriteList(fp,i);
  * Writes the AnonMerge path lists for instance i.
  * The function is for debugging only. it will not
@@ -143,4 +143,4 @@ extern void Asc_AnonMergeUnmarkIPs(VOIDPTR);
  */
 extern void Asc_AnonMergeWriteList(FILE *, struct Instance *);
 
-#endif /* __ANONMERG_H_SEEN__ */
+#endif /** __ANONMERG_H_SEEN__ */

@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Type Definition Module
  *  by Tom Epperly
  *  Created: 1/11/90
@@ -31,7 +31,7 @@
 #define __TYPEDEF_H_SEEN__
 
 
-/*
+/**< 
  *  When #including typedef.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "instance_enum.h"
@@ -45,7 +45,7 @@
  */
 
 extern void DestroyTypedefRecycle(void);
-/*
+/**< 
  *  DestroyTypedefRecycle()
  *  To work efficiently the typedef module recycles internally
  *  certain pieces of memory.
@@ -57,18 +57,18 @@ extern void DestroyTypedefRecycle(void);
  */
 
 extern struct TypeDescription *
-CreateModelTypeDef(symchar *,              /* model name */
+CreateModelTypeDef(symchar *,              /**< model name */
                    symchar *,              /*refines name*/
                    struct module_t *,
-                   int,                       /* universal ? */
-                   struct StatementList *,    /* declarative statements*/
-                   struct gl_list_t *,        /* initialization procs */
-                   struct StatementList *,    /* parameter statements */
-                   struct StatementList *,    /* parameter reductions */
-                   struct StatementList *,    /* parameter wheres */
+                   int,                       /**< universal ? */
+                   struct StatementList *,    /**< declarative statements*/
+                   struct gl_list_t *,        /**< initialization procs */
+                   struct StatementList *,    /**< parameter statements */
+                   struct StatementList *,    /**< parameter reductions */
+                   struct StatementList *,    /**< parameter wheres */
                    unsigned int
                    );
-/*
+/**< 
  *  struct TypeDescription *CreateModelTypeDef(name,refines,mod,univ,sl,pl,
  *                                             psl,rsl,wsl,err)
  *  const char *name,		name of the type to define
@@ -95,18 +95,18 @@ CreateModelTypeDef(symchar *,              /* model name */
  */
 
 extern struct TypeDescription *
-CreateConstantTypeDef(symchar *,	  /* constant name */
-                      symchar *,	  /* refines name*/
-                      struct module_t *,  /* module */
-                      int,		  /* universal ? */
-                      int,		  /* defaulted ? */
-                      double,		  /* default real value */
-                      long,		  /* default integer/boolean value */
-                      symchar *,	  /* default symbol value */
-                      CONST dim_type *,   /* default dimensions */
+CreateConstantTypeDef(symchar *,	  /**< constant name */
+                      symchar *,	  /**< refines name*/
+                      struct module_t *,  /**< module */
+                      int,		  /**< universal ? */
+                      int,		  /**< defaulted ? */
+                      double,		  /**< default real value */
+                      long,		  /**< default integer/boolean value */
+                      symchar *,	  /**< default symbol value */
+                      CONST dim_type *,   /**< default dimensions */
                       unsigned int
                       );
-/*
+/**< 
  *  struct TypeDescription *CreateConstantTypeDef(
  *  name,refines,mod,univ,defaulted,rval,ival,sval,dim,err)
  *  const char *name;		name of the type
@@ -127,21 +127,21 @@ CreateConstantTypeDef(symchar *,	  /* constant name */
  */
 
 extern struct TypeDescription *
-CreateAtomTypeDef(symchar *,            /* atom name */
-                  symchar *,            /* refines name*/
+CreateAtomTypeDef(symchar *,            /**< atom name */
+                  symchar *,            /**< refines name*/
                   enum type_kind,
-                  struct module_t *,       /* module */
-                  int,                     /* universal ? */
-                  struct StatementList *,  /* declarative statements */
-                  struct gl_list_t *,      /* initialization procedures*/
+                  struct module_t *,       /**< module */
+                  int,                     /**< universal ? */
+                  struct StatementList *,  /**< declarative statements */
+                  struct gl_list_t *,      /**< initialization procedures*/
                   int,
-                  double,                  /* default value */
-                  CONST dim_type *,        /* default dimensions */
-                  long,                    /* default int/bool */
-                  symchar *,            /* default sym*/
+                  double,                  /**< default value */
+                  CONST dim_type *,        /**< default dimensions */
+                  long,                    /**< default int/bool */
+                  symchar *,            /**< default sym*/
                   unsigned int
                   );
-/*
+/**< 
  *  struct TypeDescription *CreateAtomTypeDef(name,refines,t,mod,univ,sl,pl,
  *          defaulted,val,dim,ival,sval,err)
  *  const char *name,		name of the type
@@ -173,7 +173,7 @@ extern struct TypeDescription *CreateRelationTypeDef(struct module_t *,
                                                      struct StatementList *,
                                                      struct gl_list_t *
                                                      );
-/*
+/**< 
  *  struct TypeDescription *CreateRelationTypeDef(mod,name,sl,pl)
  *  struct module_t *mod;	the module it is defined in
  *  const char *name;           the name to assign to the relation type
@@ -186,7 +186,7 @@ extern struct TypeDescription *CreateLogRelTypeDef(struct module_t *,
                                                    struct StatementList *,
                                                    struct gl_list_t *
                                                    );
-/*
+/**< 
  *  struct TypeDescription *CreateLogRelTypeDef(mod,name,sl,pl)
  *  struct module_t *mod;	the module it is defined in
  *  symchar *name;              the name to assign to the logrel type
@@ -203,7 +203,7 @@ struct TypeDescription *CreatePatchTypeDef(symchar *,
                                            struct StatementList *,
                                            struct gl_list_t *,
                                            unsigned int);
-/*
+/**< 
  *  struct TypeDescription *
  *  CreatePatchTypeDef(patch,original,orig_mod,sl,pl,err);
  *  const char *name;		name of the patch
@@ -220,11 +220,11 @@ struct TypeDescription *CreatePatchTypeDef(symchar *,
  */
 
 extern void DefineFundamentalTypes(void);
-/*
+/**< 
  *  Define the fundamental and constant basetypes used in ascend.
  *  They will be named following the defines in type_desc.h.
  *
  *  Bugs: doesn't specify the name "relation". Doing so is problematic
  *  wrt instantiate.c.
  */
-#endif /* __TYPEDEF_H_SEEN__ */
+#endif /**< __TYPEDEF_H_SEEN__ */

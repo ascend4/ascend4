@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Temporary Variable Module
  *  by Tom Epperly
  *  Created: 1/17/90
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including temp.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -39,13 +39,13 @@
 
 #ifndef __TEMP_H_SEEN__
 #define __TEMP_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"value_type.h"
 */
 
 extern void AddTemp(symchar *);
-/*
+/**< 
  *  void AddTemp(name)
  *  const char *name;
  *  Make a temporary variable called name.  Assume that one doesn't
@@ -53,36 +53,36 @@ extern void AddTemp(symchar *);
  */
 
 extern void SetTemp(symchar *,struct value_t);
-/*
+/**< 
  *  void SetTemp(name,value)
  *  const char *name;
  *  struct value_t value;
  */
 
 extern void RemoveTemp(symchar *);
-/*
+/**< 
  *  void RemoveTemp(name)
  *  const char *name;
  *  Remove a temporary variable called name.
  */
 
 extern int TempExists(symchar *);
-/*
+/**< 
  *  int TempExists(name)
  *  const char *name;
  *  Return true is a temporary variable of the given name exists.
  */
 
 extern struct value_t TempValue(symchar *);
-/*
+/**< 
  *  struct value_t TempValue(name)
  *  const char *name;
  *  Return the value of a temporary variable.
  */
 
 extern void DestroyTemporaryList();
-/*
+/**< 
  *  void DestroyTemporaryList()
  *  Free the memory for the temporary variable list.
  */
-#endif /* __TEMP_H_SEEN__ */
+#endif /**< __TEMP_H_SEEN__ */

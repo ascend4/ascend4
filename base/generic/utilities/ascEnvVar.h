@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Environment Variable Imitation
  *  by Ben Allan
  *  Created: 6/3/97
@@ -33,7 +33,7 @@
  *  paths.
  */
 
-/* Using this header does not require using any other headers.
+/**< Using this header does not require using any other headers.
  * Linking against this header requires linking 
  * optionally (depending on defines in list.h and the makefile):
  * ascmalloc.o,
@@ -48,7 +48,7 @@
 #define __ASCENV_H_SEEN__
 
 extern int Asc_InitEnvironment(int);
-/*
+/**< 
  * err = Asc_InitEnv(anticipated);
  * Creates an empty environment of size anticipated.
  * Calls to other functions in this file will fail until
@@ -56,12 +56,12 @@ extern int Asc_InitEnvironment(int);
  */
 
 extern void Asc_DestroyEnvironment(void);
-/*
+/**< 
  * Destroys any information currently in the environment.
  */
 
 extern int Asc_SetPathList(CONST char *, CONST char *);
-/*
+/**< 
  * err = Asc_SetPathList(var,path);
  * Takes the value of path and assigns it to var,
  * allowing blanks around :,; if needed, as well as trimming leading
@@ -78,7 +78,7 @@ extern int Asc_SetPathList(CONST char *, CONST char *);
  */
 
 extern int Asc_PutEnv(char *);
-/*
+/**< 
  * err = Asc_PutEnv(putenv_input_string);
  * Takes an input string of the form "%s=%s"
  * appropriate for a putenv (but allowing blanks around =,:,; if needed)
@@ -94,7 +94,7 @@ extern int Asc_PutEnv(char *);
  */
 
 extern int Asc_ImportPathList(CONST char *);
-/*
+/**< 
  * err = Asc_ImportPathList(osEnvVar)
  * Looks for an environment variable using getenv() and
  * transports it into the asc environment space at its current value.
@@ -105,7 +105,7 @@ extern int Asc_ImportPathList(CONST char *);
 
 
 extern int Asc_AppendPath(char *, char*);
-/*
+/**< 
  * err = Asc_AppendPath(envvar, newelement);
  * Takes the string newelement and adds it to the list of
  * values for envvar. If envvar does not exist, it is created.
@@ -116,7 +116,7 @@ extern int Asc_AppendPath(char *, char*);
  */
 
 extern char **Asc_GetPathList(char *, int *);
-/*
+/**< 
  * argv = Asc_GetPathList(envvar, argcPtr);
  * Sets argcPtr to the length of the argv returned.
  * argv[0..*argcPtr-1] are the elements of the path.
@@ -127,7 +127,7 @@ extern char **Asc_GetPathList(char *, int *);
  */
 
 extern char *Asc_GetEnv(char *);
-/*
+/**< 
  * pathvar = Asc_GetEnv(envvar);
  * Returns the elements of envvar assembled according to the
  * platform convention (; on MS or : on UNIX) into a
@@ -136,7 +136,7 @@ extern char *Asc_GetEnv(char *);
  */
 
 extern char **Asc_EnvNames(int *);
-/*
+/**< 
  * argvconst = Asc_EnvNames(&argc);
  * Returns an array of char * and fills argc with the size of the
  * array. The caller is responsible for freeing argv, but should
@@ -145,4 +145,4 @@ extern char **Asc_EnvNames(int *);
  * If argc is 0, argv should be freed.
  */
 
-#endif /* __ASCENV_H_SEEN__ */
+#endif /**< __ASCENV_H_SEEN__ */

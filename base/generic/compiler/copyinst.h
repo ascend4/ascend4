@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -29,7 +29,7 @@
 
 #ifndef __COPYINST_H_SEEN__
 #define __COPYINST_H_SEEN__
-/*
+/**< 
  *  When #including copyinst.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -45,7 +45,7 @@ enum Copy_enum {
 };
 
 extern void CheckChildCopies(unsigned long int, struct Instance **);
-/*
+/**< 
  * CheckChildCopies(num,clist);
  * Fixes up the num subatomic children sets copied into clist.
  */
@@ -53,13 +53,13 @@ extern void CheckChildCopies(unsigned long int, struct Instance **);
 extern void RedoChildPointers(unsigned long int, struct Instance *,
                               struct Instance **, CONST struct Instance *,
                               struct Instance * CONST *);
-/*
+/**< 
  * RedoChildPointers(num,newparent,newchildptrs, oldparent,oldchildptrs);
  * Fix up the num subatomic child pointers of newparent.
  */
 
 extern struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription*);
-/*
+/**< 
  *  struct Instance *ShortCutMakeUniversalInstance(type);
  *  struct TypeDescription *type;
  *
@@ -74,7 +74,7 @@ extern struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription*);
  */
 
 extern void CollectNodes(struct Instance *,struct gl_list_t *);
-/*
+/**< 
  *  CollectNodes(i,l);
  *  Appends i to l, and sets the tmpnum of i to be the length of l
  *  after i was appended. If i does not have a tmpnum (ATOM children)
@@ -82,7 +82,7 @@ extern void CollectNodes(struct Instance *,struct gl_list_t *);
  */
 
 extern struct Instance *ShortCutProtoInstance(struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *ShortCutProtoInstance(type);
  *  struct TypeDescription *type;
  *
@@ -98,7 +98,7 @@ extern struct Instance *ShortCutProtoInstance(struct TypeDescription *);
  */
 
 extern struct Instance *CopyInstance(CONST struct Instance *);
-/*
+/**< 
  *  struct Instance *CopyInstance(i)
  *  const struct Instance *i;
  *
@@ -125,4 +125,4 @@ extern struct Instance *CopyInstance(CONST struct Instance *);
  */
 
 #endif
-/* __COPYINST_H_SEEN__ */
+/**< __COPYINST_H_SEEN__ */

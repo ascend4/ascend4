@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Universal Routines
  *  by Tom Epperly
  *  Created: 3/27/1990
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including universal.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -39,7 +39,7 @@
 #ifndef __UNIVERSAL_H_SEEN__
 #define __UNIVERSAL_H_SEEN__
 
-/* requires
+/**< requires
 # #include"list.h"
 # #include"instance_enum.h"
 # #include"type_desc.h"
@@ -48,14 +48,14 @@
 #define UniversalTable gl_list_t
 
 extern struct UniversalTable *CreateUniversalTable(void);
-/*
+/**< 
  *  struct UniversalTable *CreateUniversalTable()
  *
  *  Create an empty table for holding the universal instances.
  */
 
 extern void DestroyUniversalTable(struct UniversalTable *);
-/*
+/**< 
  *  void DestroyUniversalTable(table)
  *  struct UniversalTable *table;
  *
@@ -64,7 +64,7 @@ extern void DestroyUniversalTable(struct UniversalTable *);
 
 extern struct UniversalTable *MergeTables(struct UniversalTable *,
        struct UniversalTable *);
-/*
+/**< 
  *  struct UniversalTable *MergeTables(table1,table2)
  *
  *  Merge the contents of two universal tables and make a joint table.
@@ -73,7 +73,7 @@ extern struct UniversalTable *MergeTables(struct UniversalTable *,
  */
 
 extern void SetUniversalTable(struct UniversalTable *);
-/*
+/**< 
  *  void SetUniversalTable(table)
  *  struct UniversalTable *table;
  *
@@ -84,7 +84,7 @@ extern void SetUniversalTable(struct UniversalTable *);
  */
 
 extern struct UniversalTable *GetUniversalTable(void);
-/*
+/**< 
  *  struct UniversalTable *GetUniversalTable()
  *
  *  Return a pointer to the current global universal table.
@@ -92,7 +92,7 @@ extern struct UniversalTable *GetUniversalTable(void);
 
 extern struct Instance *LookupInstance(struct UniversalTable *,
            struct TypeDescription *);
-/*
+/**< 
  *  struct Instance *LookupInstance(table,desc)
  *  struct UniversalTable *table;
  *  struct TypeDescription *desc;
@@ -104,7 +104,7 @@ extern struct Instance *LookupInstance(struct UniversalTable *,
 extern void AddUniversalInstance(struct UniversalTable *,
      struct TypeDescription *,
      struct Instance *);
-/*
+/**< 
  *  void AddUniversalInstance(table,desc,inst)
  *  struct UniversalTable *table;
  *  struct TypeDescription *desc;
@@ -119,7 +119,7 @@ extern void AddUniversalInstance(struct UniversalTable *,
  */
 
 extern unsigned long NumberTypes(struct UniversalTable *);
-/*
+/**< 
  *  unsigned long NumberTypes(table)
  *  struct UniversalTable *table;
  *
@@ -129,7 +129,7 @@ extern unsigned long NumberTypes(struct UniversalTable *);
 extern void ChangeUniversalInstance(struct UniversalTable *,
         struct Instance *,
         struct Instance *);
-/*
+/**< 
  *  void ChangeUniversalInstance(table,oldinst,newinst)
  *  struct UniversalTable *table;
  *  struct Instance *oldinst,*newinst;
@@ -138,7 +138,7 @@ extern void ChangeUniversalInstance(struct UniversalTable *,
 
 extern void RemoveUniversalInstance(struct UniversalTable *,
         struct Instance *);
-/*
+/**< 
  *  void RemoveUniversalInstance(table,inst)
  *  struct UniversalTable *table;
  *  struct Instance *inst;
@@ -148,7 +148,7 @@ extern void RemoveUniversalInstance(struct UniversalTable *,
 
 extern struct TypeDescription *GetTypeDescription(struct UniversalTable *,
         unsigned long);
-/*
+/**< 
  *  struct TypeDescription *GetTypeDescription(table,pos);
  *
  *  Return the type description in position pos.  Note that the instance
@@ -157,11 +157,11 @@ extern struct TypeDescription *GetTypeDescription(struct UniversalTable *,
 
 extern struct Instance *GetInstance(struct UniversalTable *,
         unsigned long);
-/*
+/**< 
  *  struct Instance *GetInstance(table,pos)
  *  struct UniversalTable *table;
  *  unsigned long pos;
  *
  *  Return the instance in position pos.
  */
-#endif /* __UNIVERSAL_H_SEEN__ */
+#endif /**< __UNIVERSAL_H_SEEN__ */

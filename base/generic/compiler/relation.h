@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Relation Construction Routines
  *  by Tom Epperly
  *  Created: 1/30/90
@@ -27,7 +27,7 @@
  *  with the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-/*
+/**< 
  *  Change log:
  *  1995 Abbott
  *  Added glassbox and blackbox external relations.
@@ -40,7 +40,7 @@
  *  Removed relation query/scaling routines to relation_util.h.
  */
 
-/*
+/**< 
  *  When #including relation.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -54,7 +54,7 @@
 
 #ifndef __RELATION_H_SEEN__
 #define __RELATION_H_SEEN__
-/* requires
+/**< requires
 # #include "compiler.h"
 # #include "instance_enum.h"
 # #include "dimen.h"
@@ -64,30 +64,30 @@
 */
 
 enum relation_errors {
-  find_error,			/* indicates an error finding an instance */
+  find_error,			/**< indicates an error finding an instance */
   incorrect_structure,
-  incorrect_inst_type,		/* contains a nonscalar instance type */
-  incorrect_real_inst_type,	/* contains a real_inst type */
-  incorrect_boolean_inst_type,	/* contains a boolean instance type */
-  incorrect_integer_inst_type,	/* contains an integer variable instance type*/
-  incorrect_symbol_inst_type,	/* contains a symbol instance type */
-  integer_value_undefined,	/* integer constant doesn't have a value yet */
-  real_value_undefined,		/* real constant doesn't have a value yet */
-  real_value_wild,		/* real constant doesn't have a dim yet */
-  incorrect_num_args,           /* wrong number of arguements */
+  incorrect_inst_type,		/**< contains a nonscalar instance type */
+  incorrect_real_inst_type,	/**< contains a real_inst type */
+  incorrect_boolean_inst_type,	/**< contains a boolean instance type */
+  incorrect_integer_inst_type,	/**< contains an integer variable instance type*/
+  incorrect_symbol_inst_type,	/**< contains a symbol instance type */
+  integer_value_undefined,	/**< integer constant doesn't have a value yet */
+  real_value_undefined,		/**< real constant doesn't have a value yet */
+  real_value_wild,		/**< real constant doesn't have a dim yet */
+  incorrect_num_args,           /**< wrong number of arguements */
   okay
 };
 
 extern int g_ExternalNodeStamps;
-/* counter of the nodestamps ever used.
+/**< counter of the nodestamps ever used.
  * if you aren't with relation.c or instantiate.c, don't
  * change this value.
  */
 
 #define RANT 1
-/* The following comment is an editorial by Kirk Abbott.
+/**< The following comment is an editorial by Kirk Abbott.
    Your mileage may vary. Widely. Very Widely. */
-/*
+/**< 
  *  This module attempts to encapsulate the code needed for relations
  *  processing in ASCEND. At this time we find it necessary to support
  *  four (4) !! types of relations.
@@ -136,10 +136,10 @@ extern int g_ExternalNodeStamps;
  *  such as ARE_THE_SAME etc.
  */
 
-/* The following comment is a rebuttal, by Ben Allan, of the above.
+/**< The following comment is a rebuttal, by Ben Allan, of the above.
  * Your mileage may vary. Very Widely.
  */
-/*
+/**< 
  *  The above goop is mostly conjecture unsupported by fact.
  *  It was written describing a very naive implementation of token
  *  relations. It was also written ignoring the fact that todays
@@ -168,7 +168,7 @@ extern int g_ExternalNodeStamps;
  */
 #undef RANT
 
-/*  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv <--headered in compiler.h now.
+/**<  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv <--headered in compiler.h now.
  *  extern int g_simplify_relations;
  *
  *  The default value of this variable is 1.
@@ -209,7 +209,7 @@ extern int g_ExternalNodeStamps;
  */
 
 extern void InitRelInstantiator(void);
-/*
+/**< 
  *  InitRelInstantiator();
  *  Sets up relation instantiation gizmos. This must be called once
  *  before any relations can be built, ideally at startup time.
@@ -218,7 +218,7 @@ extern void InitRelInstantiator(void);
  */
 
 extern void DestroyRelInstantiator(void);
-/*
+/**< 
  *  DestroyRelInstantiator();
  *  Destroy relation instantiation gizmos. This must be called to
  *  clean up before shutting down ASCEND.
@@ -227,13 +227,13 @@ extern void DestroyRelInstantiator(void);
  */
 
 extern void ReportRelInstantiator(FILE*);
-/*
+/**< 
  *  ReportRelInstantiator(f);
  *  FILE *f;
  *  Reports on the relation instantiator to f.
  */
 
-/*
+/**< 
  * Some defines for SharedRelations. struct relation *r;
  * In principle, all relations are SharedRelations.
  * These macros can be used as C lval or rval.
@@ -241,7 +241,7 @@ extern void ReportRelInstantiator(FILE*);
  */
 #define RelationRefCount(r) ((r)->share->s.ref_count)
 
-/* General key-stroke saving macros that will also let us
+/**< General key-stroke saving macros that will also let us
  * avoid rewriting most of relation.c every time the
  * structures get changed.
  * struct relation *r;
@@ -251,7 +251,7 @@ extern void ReportRelInstantiator(FILE*);
 #define RGBOX(r) (r)->share->gbox
 #define ROPCODE(r) (r)->share->opcode
 
-/*
+/**< 
  * Some defines for TokenRelations. struct relation *r;
  */
 #define Infix_LhsSide(r)	((r)->share->token.lhs_term)
@@ -260,7 +260,7 @@ extern void ReportRelInstantiator(FILE*);
 #define PostFix_RhsSide(r)	((r)->share->token.rhs)
 
 extern int CheckRelation(CONST struct Instance *,CONST struct Expr *);
-/*
+/**< 
  *  int CheckRelation(reference,ex)
  *  const struct Instance *reference;
  *  const struct Expr *ex;
@@ -270,7 +270,7 @@ extern int CheckRelation(CONST struct Instance *,CONST struct Expr *);
 #define crs_NOUNION 0
 #define crs_NEWUNION 1
 extern struct relation *CreateRelationStructure(enum Expr_enum,int);
-/*
+/**< 
  *  struct relation *CreateRelationStructure(relop,copyunion);
  *  enum Epxr_enum relop;
  *
@@ -287,7 +287,7 @@ extern struct relation *CreateTokenRelation(struct Instance *,
          CONST struct Expr *,
          enum relation_errors *,
          enum find_errors *);
-/*
+/**< 
  *  struct relation *CreateTokenRelation(reference,relinst,ex,err,ferr)
  *  struct Instance *reference,*relinst;
  *  const struct Expr *ex;
@@ -312,7 +312,7 @@ extern struct relation *CreateOpCodeRelation(struct Instance *,
           CONST struct Expr *,
           enum relation_errors *,
           enum find_errors *);
-/*
+/**< 
  *  struct relation *CreateOpCodeRelation(reference,relinst,ex,err,ferr)
  *  struct Instance *reference,*relinst;
  *  const struct Expr *ex;
@@ -336,7 +336,7 @@ extern struct relation *CreateGlassBoxRelation(struct Instance *,
             struct gl_list_t *varlist,
             int index_,
             enum Expr_enum relop);
-/*
+/**< 
  *  struct relation *CreateGlassBoxRelation(relinst,efunc,varlist,index,relop)
  *  struct Instance *relinst;
  *  struct ExternalFunc *efunc;
@@ -355,7 +355,7 @@ extern struct relation *CreateBlackBoxRelation(struct Instance *,
             struct Instance *,
             struct gl_list_t *,
             struct Instance *);
-/*
+/**< 
  *  struct relation *CreateBlackBoxRelation(relinst,efunc,arglist,whichvar,
  *                                         inputs,data);
  *  struct Instance *relinst;
@@ -372,7 +372,7 @@ extern struct relation *CreateBlackBoxRelation(struct Instance *,
 
 
 extern void DestroyRelation(struct relation *,struct Instance *);
-/*
+/**< 
  *  void DestroyRelation(rel,relinst)
  *  struct relation *rel;
  *  struct Instance *relinst;
@@ -396,7 +396,7 @@ extern void ModifyBlackBoxRelPointers(struct Instance *,
           struct relation *,
           CONST struct Instance *,
           CONST struct Instance *);
-/*
+/**< 
  *  void ModifyTokenRelationPointers(relintst,rel,old,new);
  *  void ModifyGlassBoxRelPointers(relintst,rel,old,new);
  *  void ModifyBlackBoxRelPointers(relintst,rel,old,new);
@@ -421,7 +421,7 @@ extern void ModifyBlackBoxRelPointers(struct Instance *,
 extern void DoInOrderVisit(struct relation_term *,struct relation *,
                            void (*func)(struct relation_term *,
                            struct relation *));
-/*
+/**< 
  *  void DoInOrderVisit(term,r,func);
  *  struct relation_term *term;
  *  void (*func)(struct relation_term *,struct relation *r);
@@ -441,7 +441,7 @@ extern void DoInOrderVisit(struct relation_term *,struct relation *,
 extern struct relation *CopyRelationByReference(CONST struct Instance *,
                                                 struct Instance *,
                                                 struct gl_list_t *);
-/*
+/**< 
  * Abbott version of relation reference copying.
  * CopyRelationByReference(src_instance, target_instance, targvarlist);
  * src_instance is a completed rel instance.
@@ -454,7 +454,7 @@ extern struct relation *CopyRelationByReference(CONST struct Instance *,
 extern struct relation *CopyAnonRelationByReference(CONST struct Instance *,
                                                     struct Instance *,
                                                     struct gl_list_t *);
-/*
+/**< 
  * CopyAnonRelationByReference(anonproto,target,copyvars);
  * Version of relation copy-by-reference for use with the AnonType
  * approach to copying relations.
@@ -473,7 +473,7 @@ extern struct relation *CopyAnonRelationByReference(CONST struct Instance *,
 extern struct relation *CopyRelationToModify(CONST struct Instance *,
                                              struct Instance *,
                                              struct gl_list_t *);
-/*
+/**< 
  *  struct relation *CopyRelationStructure(src_inst,dest_inst,newvarlist)
  *  const struct Instance *src_inst;
  *  struct Instance *dest_inst;
@@ -490,11 +490,11 @@ extern struct relation *CopyRelationToModify(CONST struct Instance *,
  */
 
 extern void RelationSetBinTokens(struct Instance *,int, int);
-/*
+/**< 
  * RelationSetBinTokens(i,btable,bindex);
  * Resets the btable and bindex for the shared in a token
  * relation. If btable and bindex are not 0,0, then
  * this will report an error if the existing share does
  * not INT_MAX for btable and bindex.
  */
-#endif /* __RELATION_H_SEEN__ */
+#endif /**< __RELATION_H_SEEN__ */

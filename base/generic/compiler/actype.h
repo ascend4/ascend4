@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Character Types
  *  Shortcut character recognition
  *  by Tom Epperly
@@ -27,14 +27,14 @@
  *  COPYING.
  */
 
-/*
+/**< 
  *  When #including actype.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
 
 #ifndef __ACTYPE_H_SEEN__
 #define __ACTYPE_H_SEEN__
-/* requires
+/**< requires
  *# #include"compiler.h"
  */
 
@@ -47,7 +47,7 @@ extern CONST unsigned char ascend_char_t[];
 #define ALPHA_CHAR 16
 
 #define isunit(c) ((ascend_char_t[(unsigned char)c])&UNIT_CHAR)
-/*
+/**< 
  *  macro isunit(c)
  *  char c;
  *  Produce a true value if c is a character than can appear inside unit
@@ -55,10 +55,10 @@ extern CONST unsigned char ascend_char_t[];
  */
 
 #define isidchar(c) ((ascend_char_t[(unsigned char)c])&ID_CHAR)
-/*
+/**< 
  *  macro isidchar(c)
  *  char c;
  *  Produce a true value if c is a character that can appear in an
  *  identifier.
  */
-#endif /* __ACTYPE_H_SEEN__ */
+#endif /**< __ACTYPE_H_SEEN__ */

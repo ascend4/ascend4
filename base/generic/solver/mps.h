@@ -1,4 +1,4 @@
-/*
+/**< 
  *  write_MPS: create the actual MPS file
  *  by Craig Schmidt
  *  Created: 2/19/95
@@ -49,19 +49,19 @@
 
 #ifdef STATIC_MPS
 
-/* requires #include "slv6.h" */
+/**< requires #include "slv6.h" */
 
-/* writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names */
+/**< writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names */
 
-extern boolean write_name_map(const char *name,          /* file name without .map suffix */
-                              struct var_variable  **vlist);   /* Variable list (NULL terminated) */
+extern boolean write_name_map(const char *name,          /**< file name without .map suffix */
+                              struct var_variable  **vlist);   /**< Variable list (NULL terminated) */
 
-/* writes out an MPS file */
+/**< writes out an MPS file */
 
-extern boolean write_MPS(const char *name,                /* filename for output */
-                         mps_data_t mps,                  /* the main chunk of data for the problem */
-                         int iarray[slv6_IA_SIZE],        /* Integer subparameters */
-                         double rarray[slv6_RA_SIZE]);    /* Real subparameters */
+extern boolean write_MPS(const char *name,                /**< filename for output */
+                         mps_data_t mps,                  /**< the main chunk of data for the problem */
+                         int iarray[slv6_IA_SIZE],        /**< Integer subparameters */
+                         double rarray[slv6_RA_SIZE]);    /**< Real subparameters */
 
 #endif
 

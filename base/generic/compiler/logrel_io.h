@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Logical Relation Output Routines
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.8 $
@@ -26,7 +26,7 @@
  */
 #ifndef __LOGRELATION_IO_H_SEEN__
 #define __LOGRELATION_IO_H_SEEN__
-/* requires
+/**< requires
 # #include<stdio.h>
 # #include"compiler.h"
 # #include"exprs.h"
@@ -35,7 +35,7 @@
 */
 
 extern int LogExprNeedParentheses(enum Expr_enum,enum Expr_enum,int);
-/*
+/**< 
  *  int LogExprNeedParentheses(parent,child,rhs);
  *  enum Expr_enum parent_op;
  *  enum Expr_enum child_op;
@@ -47,7 +47,7 @@ extern int LogExprNeedParentheses(enum Expr_enum,enum Expr_enum,int);
 
 extern void WriteLogRel(FILE *,CONST struct Instance *,
    CONST struct Instance *);
-/*
+/**< 
  *  WriteLogRel(f,lrelinst,ref);
  *  FILE *f;
  *  const struct Instance *lrelinst;
@@ -57,7 +57,7 @@ extern void WriteLogRel(FILE *,CONST struct Instance *,
 
 extern char *WriteLogRelToString(CONST struct Instance *,
          CONST struct Instance *);
-/*
+/**< 
  *  s = WriteLogRelToString(lrelinst,ref);
  *  char *f;
  *  const struct Instance *lrelinst;
@@ -67,7 +67,7 @@ extern char *WriteLogRelToString(CONST struct Instance *,
 
 extern void WriteLogRelPostfix(FILE *,CONST struct Instance *,
           CONST struct Instance *);
-/*
+/**< 
  *  void WriteLogRelPostfix(f,lrelinst,ref)
  *  FILE *f;
  *  const struct Instance *lrelinst;
@@ -77,7 +77,7 @@ extern void WriteLogRelPostfix(FILE *,CONST struct Instance *,
 
 extern char *WriteLogRelPostfixToString(CONST struct Instance *,
           CONST struct Instance *);
-/*
+/**< 
  *  void WriteRelationPostfixString(lrelinst,ref)
  *  char *f;
  *  const struct Instance *lrelinst;
@@ -87,7 +87,7 @@ extern char *WriteLogRelPostfixToString(CONST struct Instance *,
 
 extern void WriteLogRelInfix(FILE *,CONST struct Instance *,
          CONST struct Instance *);
-/*
+/**< 
  *  void WriteLogRelInfix(f,lrelinst,ref)
  *  FILE *f;
  *  const struct Instance *lrelinst;
@@ -96,24 +96,24 @@ extern void WriteLogRelInfix(FILE *,CONST struct Instance *,
  */
 
 extern void WriteLogRelationsInTree(FILE *,struct Instance *);
-/*
+/**< 
  *  Search for logical relations in an instance and write them to the
  *  file given in various formats.
  */
 
 extern void SaveLogRelBoolVars(FILE *, CONST struct logrelation *);
-/*
+/**< 
  *  Given a logical relation will save its variable list in the ASCEND
  *  condensed format.
  */
 
 
 extern void SaveLogRel(FILE *, CONST struct Instance *);
-/*
+/**< 
  *  Given a logical relation will save it in the ASCEND condensed
  *  format.
  */
 
 
-#endif /* __LOGRELATION_IO_H_SEEN__ */
+#endif /**< __LOGRELATION_IO_H_SEEN__ */
 

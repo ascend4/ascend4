@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Bit lists
  *  by Tom Epperly
  *  Version: $Revision: 1.7 $
@@ -32,7 +32,7 @@
  *  Bits are numbered 0 .. (BLength(list)-1)
  */
 
-/*
+/**< 
  *  When #including bit.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -47,7 +47,7 @@ struct BitList {
 };
 
 extern struct BitList *CreateBList(unsigned long);
-/*
+/**< 
  *  struct BitList *CreateBList(len)
  *  unsigned long len;
  *  Create a bit list with len elements.  The elements are all initialized to
@@ -55,7 +55,7 @@ extern struct BitList *CreateBList(unsigned long);
  */
 
 extern struct BitList *CreateFBList(unsigned long);
-/*
+/**< 
  *  struct BitList *CreateFBList(len)
  *  unsigned long len;
  *  Create a bit list with len elements.  The elements are all initialized to
@@ -63,7 +63,7 @@ extern struct BitList *CreateFBList(unsigned long);
  */
 
 extern struct BitList *ExpandBList(struct BitList *,unsigned long);
-/*
+/**< 
  *  struct BitList *ExpandBList(bl,len)
  *  struct BitList *bl;
  *  unsigned long len;
@@ -74,7 +74,7 @@ extern struct BitList *ExpandBList(struct BitList *,unsigned long);
  */
 
 extern struct BitList *ExpandFBList(struct BitList *,unsigned long);
-/*
+/**< 
  *  struct BitList *ExpandBList(bl,len)
  *  struct BitList *bl;
  *  unsigned long len;
@@ -85,14 +85,14 @@ extern struct BitList *ExpandFBList(struct BitList *,unsigned long);
  */
 
 extern void DestroyBList(struct BitList *);
-/*
+/**< 
  *  void DestroyBList(bl)
  *  struct BitList *bl;
  *  Deallocate the memory for bl.
  */
 
 extern struct BitList *CopyBList(CONST struct BitList *);
-/*
+/**< 
  *  struct BitList *CopyBList(bl)
  *  struct BitList *bl;
  *  Make a copy of bl and return it.  The length of the copy equals that of bl,
@@ -101,7 +101,7 @@ extern struct BitList *CopyBList(CONST struct BitList *);
  */
 
 extern void OverwriteBList(CONST struct BitList *, struct BitList *);
-/*
+/**< 
  *  struct BitList *OverwriteBList(src,target)
  *  struct BitList *src, *target;
  *  src and target must be the same length or this function will not return.
@@ -111,7 +111,7 @@ extern void OverwriteBList(CONST struct BitList *, struct BitList *);
  */
 
 extern unsigned long BitListBytes(CONST struct BitList *);
-/*
+/**< 
  *  unsigned long BitListBytes(bl)
  *  struct BitList *bl;
  *  unsigned long bytes;
@@ -119,7 +119,7 @@ extern unsigned long BitListBytes(CONST struct BitList *);
  */
 
 extern void SetBit(struct BitList *,unsigned long);
-/*
+/**< 
  *  void SetBit(bl,pos)
  *  struct BitList *bl;
  *  unsigned long pos;
@@ -127,7 +127,7 @@ extern void SetBit(struct BitList *,unsigned long);
  */
 
 extern void ClearBit(struct BitList *,unsigned long);
-/*
+/**< 
  *  void ClearBit(bl,pos)
  *  struct BitList *bl;
  *  unsigned long pos;
@@ -135,7 +135,7 @@ extern void ClearBit(struct BitList *,unsigned long);
  */
 
 extern void CondSetBit(struct BitList *,unsigned long,int);
-/*
+/**< 
  *  void CondSetBit(bl,pos,cond)
  *  struct BitList *bl;
  *  unsigned long pos;
@@ -144,7 +144,7 @@ extern void CondSetBit(struct BitList *,unsigned long,int);
  */
 
 extern int ReadBit(CONST struct BitList *,unsigned long);
-/*
+/**< 
  *  int ReadBit(bl,pos)
  *  struct BitList *bl;
  *  unsigned long pos;
@@ -152,7 +152,7 @@ extern int ReadBit(CONST struct BitList *,unsigned long);
  */
 
 extern void IntersectBLists(struct BitList *,CONST struct BitList *);
-/*
+/**< 
  *  void IntersectBList(bl1,bl2)
  *  struct BitList *bl1;
  *  const struct BitList *bl2;
@@ -161,7 +161,7 @@ extern void IntersectBLists(struct BitList *,CONST struct BitList *);
  */
 
 extern void UnionBLists(struct BitList *,CONST struct BitList *);
-/*
+/**< 
  *  void UnionBLists(bl1,bl2)
  *  struct BitList *bl1;
  *  const struct BitList *bl2;
@@ -175,7 +175,7 @@ extern void UnionBLists(struct BitList *,CONST struct BitList *);
 #define BLength(bl) BLengthF(bl)
 #endif
 extern unsigned long BLengthF(CONST struct BitList *);
-/*
+/**< 
  *  macro BLength(bl)
  *  unsigned long BLengthF(bl)
  *  const struct BitList *bl;
@@ -183,7 +183,7 @@ extern unsigned long BLengthF(CONST struct BitList *);
  */
 
 extern int BitListEmpty(CONST struct BitList *);
-/*
+/**< 
  *  int BitListEmpty(bl)
  *  const struct BitList *bl;
  *  Return a true value if bl is empty; otherwise, it returns a false value.
@@ -191,7 +191,7 @@ extern int BitListEmpty(CONST struct BitList *);
 
 
 extern int CompBList(struct BitList *,struct BitList *);
-/*
+/**< 
  *  int CompBList(bl,b2)
  *  const struct BitList *bl;
  *  const struct BitList *b2;
@@ -199,10 +199,10 @@ extern int CompBList(struct BitList *,struct BitList *);
  */
 
 extern unsigned long FirstNonZeroBit(CONST struct BitList *);
-/*
+/**< 
  *  unsigned long FirstNonZeroBit(bl)
  *  const struct BitList *bl;
  *  Return the first non-zero bit.  If it is unable to find a non-zero
  *  it will return a number greater than BLength(bl).
  */
-#endif /* __BIT_H_SEEN__ */
+#endif /**< __BIT_H_SEEN__ */

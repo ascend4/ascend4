@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Case Processing functions
  *  Version: $Revision: 1.6 $
  *  Version control file: $RCSfile: case.h,v $
@@ -25,28 +25,28 @@
  */
 #ifndef __CASE_H_SEEN__
 #define __CASE_H_SEEN__
-/* requires
+/**< requires
 # #include"compiler.h"
 # #include"list.h"
 # #include"types.h"
 */
 
-/*
+/**< 
  *                         Case processing
  */
 
 struct Case {
-    struct Set *ValueList;   /* List of Values for the Conditions  */
-                             /* NULL if OTHERWISE  */
-    struct gl_list_t *ref;   /* References to RelationInstance
+    struct Set *ValueList;   /**< List of Values for the Conditions  */
+                             /**< NULL if OTHERWISE  */
+    struct gl_list_t *ref;   /**< References to RelationInstance
     ModelInstance or WhenInstance */
-    unsigned active;         /*  1:active   0:inactive  */
+    unsigned active;         /**<  1:active   0:inactive  */
 };
 
 
 
 extern struct Case *CreateCase(struct Set *, struct gl_list_t *);
-/*
+/**< 
  *  struct Case *CreateCase(vl,refinst,cond);
  *  struct Set *vl;
  *  struct gl_list_t *refinst;
@@ -59,7 +59,7 @@ extern struct Case *CreateCase(struct Set *, struct gl_list_t *);
 #define GetCaseValues(c) GetCaseValuesF(c)
 #endif
 extern struct Set *GetCaseValuesF(struct Case *);
-/*
+/**< 
  *  struct Set *GetCaseValuesF(case);
  *  struct Case *case;
  *  Return the List of Values of a Case.
@@ -71,7 +71,7 @@ extern struct Set *GetCaseValuesF(struct Case *);
 #define GetCaseReferences(c) GetCaseReferencesF(c)
 #endif
 extern struct gl_list_t *GetCaseReferencesF(struct Case *);
-/*
+/**< 
  *  struct gl_list_t  *GetCaseReferences(case)
  *  struct Case *case;
  *  Return the List of References of a Case.
@@ -83,14 +83,14 @@ extern struct gl_list_t *GetCaseReferencesF(struct Case *);
 #define GetCaseStatus(c) GetCaseStatusF(c)
 #endif
 extern int GetCaseStatusF(struct Case *);
-/*
+/**< 
  *  int *GetCaseStatusF(case);
  *  struct Case *case;
  *  Return the Status of a Case.
  */
 
 extern struct Case *SetCaseValues(struct Case *,struct Set *);
-/*
+/**< 
  *  struct Case *SetCaseValues(set);
  *  struct Case *case;
  *  struct Set *set;
@@ -98,7 +98,7 @@ extern struct Case *SetCaseValues(struct Case *,struct Set *);
  */
 
 extern struct Case *SetCaseReferences(struct Case *,struct gl_list_t *);
-/*
+/**< 
  *  struct Case  *SetCaseReferences(list);
  *  struct Case *case;
  *  struct gl_list_t *refinst;
@@ -107,7 +107,7 @@ extern struct Case *SetCaseReferences(struct Case *,struct gl_list_t *);
 
 
 extern struct Case *SetCaseStatus(struct Case *,int);
-/*
+/**< 
  *  extern Case *SetCaseStatus(int);
  *  struct Case *case;
  *  unsigned status;
@@ -115,7 +115,7 @@ extern struct Case *SetCaseStatus(struct Case *,int);
  */
 
 extern unsigned long NumberCaseRefs(struct Case *);
-/*
+/**< 
  *  unsigned long NumberCaseRefs(c)
  *  struct Case *c;
  *  This will indicate the number of distinct instances to which the
@@ -124,7 +124,7 @@ extern unsigned long NumberCaseRefs(struct Case *);
 
 extern struct Instance *CaseRef(struct Case *,
     unsigned long);
-/*
+/**< 
  *  struct Instance *CaseRef(c,casenum)
  *  struct Case *c;
  *  unsigned long casenum;
@@ -132,7 +132,7 @@ extern struct Instance *CaseRef(struct Case *,
  */
 
 extern void DestroyCase(struct Case *);
-/*
+/**< 
  *  void DestroyCase(case)
  *  struct Case *case;
  *  Destroy a Case.
@@ -140,13 +140,13 @@ extern void DestroyCase(struct Case *);
 
 
 extern struct Case *CopyCase(struct Case *);
-/*
+/**< 
  *  struct Case *CopyCase(case)
  *  struct Case *case;
  *  Copy a Case.
  */
 
 
-#endif /* __CASE_H_SEEN__ */
+#endif /**< __CASE_H_SEEN__ */
 
 

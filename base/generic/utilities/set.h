@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Set module
  *  by Karl Westerberg
  *  Created: 6/90
@@ -27,7 +27,7 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-/*
+/**< 
  *  Contents:     Set module
  *
  *  Authors:      Karl Westerberg
@@ -48,7 +48,7 @@
 #ifndef	_SET_H
 #define _SET_H
 
-/* requires
+/**< requires
 # #include "base.h"
 # #include "mask.h"
 # #include "ascmalloc.h"
@@ -56,7 +56,7 @@
 
 #define	set_size(n) \
    (((n)+(WORDSIZE-1))/WORDSIZE)
-/*
+/**< 
  *  Returns the number of unsigned ints required
  *  to store a set of n bits.
  *  WORDSIZE is computed in base.h
@@ -64,7 +64,7 @@
 
 #define	set_create(n) \
    (set_size(n)>0?((unsigned *)ascmalloc(sizeof(unsigned)*set_size(n))):NULL)
-/*
+/**< 
  *  Returns a pointer to a newly created set
  *  of bit-size n.  The initial contents are
  *  garbage.
@@ -72,18 +72,18 @@
 
 #define	set_destroy(set) \
    (ascfree((POINTER)set))
-/*
+/**< 
  *  Destroys the set.
  */
 
 #define	set_ndx(k) \
    ((k)/WORDSIZE)
-/*
+/**< 
  *  Index into array of unsigned
  *  where element k's status is found
  */
 
-/*
+/**< 
  *  previous definition: trying to get rid of mask.h
  *
  *#define	set_mask(k) \
@@ -91,21 +91,21 @@
  */
 #define	set_mask(k) \
    (((unsigned)1) << ((k)%WORDSIZE))
-/*
+/**< 
  *  Returns an integer with the bit
  *  corresponding to element k turned on
  */
 
 #define	set_is_member(set,k) \
    ((set[set_ndx(k)] & set_mask(k)) != 0)
-/*
+/**< 
  *  Returns TRUE if k belongs to the given set, FALSE
  *  otherwise.  It is assumed that 0 <= k < n, where n is the
  *  bit-size of the set.
  */
 
 extern unsigned int *set_null(unsigned int *, int);
-/*
+/**< 
  *  set_null(set,n)
  *  unsigned *set;
  *  int n;
@@ -115,7 +115,7 @@ extern unsigned int *set_null(unsigned int *, int);
  */
 
 extern void set_change_member(unsigned int *  , int  , boolean );
-/*     
+/**<     
  *  set_change_member(set,k,value)
  *  unsigned *set;
  *  int k;
@@ -129,13 +129,13 @@ extern void set_change_member(unsigned int *  , int  , boolean );
 #ifdef THIS_IS_DEAD_CODE
 #define	set_chk_is_member(set,k,n) \
    ((k)>=0 && (k)<(n) && set_is_member(set,k))
-/*
+/**< 
  *  Make sure k is within the limits of the set indeces
  *  before looking to see if it is a member.
  */
 
 extern unsigned int *set_copy(unsigned int *, unsigned int *, int, int);
-/*
+/**< 
  *  set_copy(set,target,n,n2)
  *  unsigned *set, *target;
  *  int n,n2;
@@ -149,7 +149,7 @@ extern unsigned int *set_copy(unsigned int *, unsigned int *, int, int);
  */
 
 extern void set_change_member_rng(unsigned int *  , int  , int  , boolean );
-/*
+/**< 
  *  set_change_member_rng(set,k1,k2,value)
  *  unsigned *set;
  *  int k1, k2;
@@ -161,7 +161,7 @@ extern void set_change_member_rng(unsigned int *  , int  , int  , boolean );
  */
 
 extern int set_find_next(unsigned int *  , int  , int );
-/*
+/**< 
  *  next = set_find_next(set,k,n)
  *  int next;
  *  unsigned *set;
@@ -174,7 +174,7 @@ extern int set_find_next(unsigned int *  , int  , int );
  */
 
 extern int set_count(unsigned int *  , int );
-/*
+/**< 
  *  count = set_count(set,n)
  *  int count;
  *  unsigned *set;
@@ -184,7 +184,7 @@ extern int set_count(unsigned int *  , int );
  */
  
 extern unsigned *set_complement(unsigned int *  , int );
-/*
+/**< 
  *  set_complement(set,n)
  *  unsigned *set;
  *  int n;
@@ -195,7 +195,7 @@ extern unsigned *set_complement(unsigned int *  , int );
  */
 
 extern unsigned *set_intersect(unsigned int *, unsigned int *, int, int);
-/*
+/**< 
  *  set_intersect(set,set2,n,n2)
  *  unsigned *set, *set2;
  *  int n,n2;
@@ -209,7 +209,7 @@ extern unsigned *set_intersect(unsigned int *, unsigned int *, int, int);
  */
 
 extern unsigned *set_union(unsigned int *  , unsigned int *  , int  , int );
-/*
+/**< 
  *  set_union(set,set2,n,n2)
  *  unsigned *set, *set2;
  *  int n,n2;
@@ -218,6 +218,6 @@ extern unsigned *set_union(unsigned int *  , unsigned int *  , int  , int );
  *  Size mismatch handled as for intersection.
  *  Returns the pointer to set, which has been modified.
  */
-#endif /* THIS_IS_DEAD_CODE */
+#endif /**< THIS_IS_DEAD_CODE */
 
-#endif  /* _SET_H  */
+#endif  /**< _SET_H  */

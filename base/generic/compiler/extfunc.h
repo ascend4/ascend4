@@ -1,4 +1,4 @@
-/*
+/**< 
  *  External Functions Module
  *  by Kirk Andre Abbott
  *  Created: July 4, 1994.
@@ -26,7 +26,7 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/*
+/**< 
  *  When #including extfunc.h, make sure these files are #included first:
  *         #include "compiler.h"
  */
@@ -79,26 +79,26 @@ typedef int ExtBBoxFunc(struct Slv_Interp *,
    double *inputs, double *outputs, double *jacobian);
 
 extern void InitExternalFuncLibrary(void);
-/*
+/**< 
  *  The main external functions library initialization routine. This
  *  function must be called before all others.
  */
 
 extern void DestroyExtFuncLibrary(void);
-/*
+/**< 
  *  Destroys the external function library and deallocates all the
  *  information associated with it.
  */
 
 
 extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
-/*
+/**< 
  *  Creates and returns and ExternalFunc node, with all attributes
  *  initialized to 0 or NULL.
  */
 
 extern int AddExternalFunc(struct ExternalFunc *efunc,int force);
-/*
+/**< 
  *  Given an external function node, add it to the external function
  *  library. We look up the external function before adding it to the
  *  library. If force is zero and the function exists then nothing
@@ -108,7 +108,7 @@ extern int AddExternalFunc(struct ExternalFunc *efunc,int force);
  */
 
 extern struct ExternalFunc *LookupExtFunc(CONST char *funcname);
-/*
+/**< 
  *  Returns the external function corresponding to the name, or NULL if
  *  not found.
  */
@@ -122,7 +122,7 @@ extern int CreateUserFunction(CONST char *name,
          unsigned long n_inputs,
          unsigned long n_outputs,
          char *help);
-/*
+/**< 
  *  This function is used to add external functions to the ASCEND system.
  *  The name of the function is looked up. If it already exists, the
  *  information will be updated. If the name was not found in the external
@@ -134,20 +134,20 @@ extern int CreateUserFunction(CONST char *name,
  */
 
 extern struct ExternalFunc *RemoveExternalFunc(char *);
-/*
+/**< 
  *  Given the name of an external function will remove it from the
  *  External function library.
  */
 
 extern void DestroyExternalFunc(struct ExternalFunc *);
-/*
+/**< 
  *  Destroys an external function, but does *not* remove it from the
  *  library. Use the RemoveExternalFunc library first to retrieve the
  *  information, then call this function.
  */
 
 
-extern int (*GetInitFunc(struct ExternalFunc *efunc))(/* */);
+extern int (*GetInitFunc(struct ExternalFunc *efunc))(/**< */);
 extern ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc);
@@ -158,7 +158,7 @@ extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *);
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *);
 
 extern CONST char *ExternalFuncName(struct ExternalFunc *efunc);
-/*
+/**< 
  *  Returns the name of an external function.
  */
 
@@ -167,18 +167,18 @@ extern unsigned long NumberOutputArgs(struct ExternalFunc *);
 
 
 extern void PrintExtFuncLibrary(FILE *);
-/*
+/**< 
  *  Prints the contents of the external function library to the given
  *  file. The file must be opened for writing.
  */
 
 extern char *WriteExtFuncLibraryString(void);
-/*
+/**< 
  * Returns a string of formatted information about the external functions
  * defined. the string looks like "{{name1} {help1}} {{name2} {help2}} "
  * The string may be empty/NULL if there are no external functions loaded.
  */
-#endif /* __EXTFUNC_H_SEEN__ */
+#endif /**< __EXTFUNC_H_SEEN__ */
 
 
 

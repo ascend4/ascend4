@@ -1,4 +1,4 @@
-/*
+/** 
  *  Model Child list output routines
  *  by Ben Allan
  *  Version: $Revision: 1.3 $
@@ -28,7 +28,7 @@
  *  This is a package of routines to process child list io.
  */
 
-/*
+/** 
  *  When #including child.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
@@ -38,13 +38,13 @@
 
 #ifndef __CHILDIO_H_SEEN__
 #define __CHILDIO_H_SEEN__
-/* requires
+/** requires
  *include"compiler.h"
  *include"list.h"
  *include"child.h"
  */
 
-/*
+/** 
  *  WriteChildList(fp,cl)
  *  Write what is known at parse time about the children in the child list
  *  given.  What is known may be surprising. It may be only mildly
@@ -52,7 +52,7 @@
  */
 extern void WriteChildList(FILE *,ChildListPtr);
 
-/*
+/** 
  * s = WriteChildDetails(cl,n);
  * Return a string containing buckets o'stuff about the nth child in list.
  * The string will make use of braces as necessary to delimit
@@ -64,7 +64,7 @@ extern void WriteChildList(FILE *,ChildListPtr);
  */
 extern char *WriteChildDetails(ChildListPtr,unsigned long);
 
-/*
+/** 
  * metas = WriteChildMetaDetails();
  * Returns a string with fields brace delimited. Each field
  * describes the corresponding field of a WriteChildDetails
@@ -84,7 +84,7 @@ extern char *WriteChildDetails(ChildListPtr,unsigned long);
  */
 extern CONST char *WriteChildMetaDetails(void);
 
-/*
+/** 
  * WriteChildMissing(fp,scope,childname);
  * FILE *fp;
  * char *scope;
@@ -94,4 +94,4 @@ extern CONST char *WriteChildMetaDetails(void);
  * with any NULL argument.
  */
 extern void WriteChildMissing(FILE *, char *, symchar *);
-#endif /* __CHILDIO_H_SEEN__ */
+#endif /** __CHILDIO_H_SEEN__ */

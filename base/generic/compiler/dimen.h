@@ -1,4 +1,4 @@
-/*
+/**< 
  *  Ascend Dimensions Data Structure
  *  by Tom Epperly
  *  8/18/89
@@ -31,51 +31,51 @@
 #define __DIMEN_H_SEEN__
 
 
-/*
+/**< 
  *  When #including dimen.h, make sure these files are #included first:
  *         #include "fractions.h"
  *         #include "compiler.h"
  */
 
 #define NUM_DIMENS            10
-#define D_MASS                0  /* index for mass dimension */
-#define D_QUANTITY            1  /* index for quantity dimension */
-#define D_LENGTH              2  /* index for length dimension */
-#define D_TIME                3  /* index for time dimension */
-#define D_TEMPERATURE         4  /* index for temperature dimension */
-#define D_CURRENCY            5  /* index for currency dimension */
-#define D_ELECTRIC_CURRENT    6  /* index for electric current dimension */
-#define D_LUMINOUS_INTENSITY  7  /* index for luminous intensity dimension */
-#define D_PLANE_ANGLE         8  /* index for plane angle dimension */
-#define D_SOLID_ANGLE         9  /* index for solid angle dimension */
+#define D_MASS                0  /**< index for mass dimension */
+#define D_QUANTITY            1  /**< index for quantity dimension */
+#define D_LENGTH              2  /**< index for length dimension */
+#define D_TIME                3  /**< index for time dimension */
+#define D_TEMPERATURE         4  /**< index for temperature dimension */
+#define D_CURRENCY            5  /**< index for currency dimension */
+#define D_ELECTRIC_CURRENT    6  /**< index for electric current dimension */
+#define D_LUMINOUS_INTENSITY  7  /**< index for luminous intensity dimension */
+#define D_PLANE_ANGLE         8  /**< index for plane angle dimension */
+#define D_SOLID_ANGLE         9  /**< index for solid angle dimension */
 
 struct DimStruct {
   struct fraction f[NUM_DIMENS];
-  unsigned int wild;	/* only valid values 0 and DIM_WILD */
+  unsigned int wild;	/**< only valid values 0 and DIM_WILD */
 #define DIM_WILD 0x1
 };
 
 typedef struct DimStruct dim_type;
 
 extern struct gl_list_t * g_dimen_list;
-/*
+/**< 
  *  Global list of dimension data structures. All persistent dim pointers
  *  should resolve to something pointed at in this list to minimize dim
  *  overhead.
  */
 
 extern void InitDimenList(void);
-/*
+/**< 
  *  Must be called once and only once before any other dimension calls.
  */
 
 extern void DestroyDimenList(void);
-/*
+/**< 
  *  This can be called to deallocate all of the allocated dimensions.
  */
 
 #define GetDimFraction(d,i) ((d).f[i])
-/*
+/**< 
  *  Returns a fraction struct from a dim_type.
  *  i should be one of D_MASS D_QUANTITY D_LENGTH D_TIME D_TEMPERATURE
  *  D_CURRENCY D_ELECTRIC_CURRENT D_LUMINOUS_INTENSITY D_PLANE_ANGLE
@@ -84,7 +84,7 @@ extern void DestroyDimenList(void);
 
 #define GetDimPower(d,i)  \
  (int)(Denominator((d).f[i])==1 ? Numerator((d).f[i]) : 0)
-/*
+/**< 
  *  Returns an int value of the numerator, or 0 if the
  *  denominator != 1.
  */
@@ -92,33 +92,33 @@ extern void DestroyDimenList(void);
 #define SetDimFraction(d,i,frac) ( (d).f[(i)] = (frac) )
 
 extern void ClearDimensions(dim_type *);
-/*
+/**< 
  *  ClearDimensions(d)
  *  dim_type *d;
  *  Initialize all the dimension fractions to zero.
  */
 
 extern CONST dim_type *Dimensionless(void);
-/*
+/**< 
  *  dim_type *Dimensionless();
  *  Return a pointer to the dimensionless structure.
  */
 
 extern CONST dim_type *TrigDimension(void);
-/*
+/**< 
  *  dim_type *TrigDimension();
  *  Return a pointer to the dimension structure for plane angle.
  */
 
 extern CONST dim_type *WildDimension(void);
-/*
+/**< 
  *  dim_type *WildDimension()
  *  Return a pointer to a wild dimension structure.  You don't need to
  *  call FindOrAddDimen with this dimension.
  */
 
 extern  CONST dim_type *HalfDimension(CONST dim_type *,int);
-/*
+/**< 
  *  dim_type *HalfDimension(d,b)
  *  Return a pointer to a dimension structure with sqrt dimensionality.
  *  Returns null if sqrt dimensionality is fractional when tested (b true).
@@ -126,7 +126,7 @@ extern  CONST dim_type *HalfDimension(CONST dim_type *,int);
  */
 
 extern  CONST dim_type *ThirdDimension(CONST dim_type *,int);
-/*
+/**< 
  *  dim_type *ThirdDimension(d,b)
  *  Return a pointer to a dimension structure with cbrt dimensionality.
  *  Returns null if cbrt dimensionality is fractional when tested (b true).
@@ -134,7 +134,7 @@ extern  CONST dim_type *ThirdDimension(CONST dim_type *,int);
  */
 
 extern  CONST dim_type *SquareDimension(CONST dim_type *,int);
-/*
+/**< 
  *  dim_type *SquareDimension(d,b)
  *  Return a pointer to a dimension structure with square dimensionality.
  *  Returns null if square dimensionality is fractional when tested (b true).
@@ -142,7 +142,7 @@ extern  CONST dim_type *SquareDimension(CONST dim_type *,int);
  */
 
 extern  CONST dim_type *CubeDimension(CONST dim_type *,int);
-/*
+/**< 
  *  dim_type *CubeDimension(d,b)
  *  Return a pointer to a dimension structure with cube dimensionality.
  *  Returns null if cube dimensionality is fractional when tested (b true).
@@ -150,7 +150,7 @@ extern  CONST dim_type *CubeDimension(CONST dim_type *,int);
  */
 
 extern  CONST dim_type *PowDimension(long,CONST dim_type *,int);
-/*
+/**< 
  *  dim_type *IntDimension(mult,d,b)
  *  Return a pointer to a dimension structure with d*mult dimensionality.
  *  Returns null if cube dimensionality is fractional when tested (b true)
@@ -159,35 +159,35 @@ extern  CONST dim_type *PowDimension(long,CONST dim_type *,int);
  */
 
 extern void SetWild(dim_type *);
-/*
+/**< 
  *  void SetWild(dim)
  *  dim_type *dim;
  *  Set the wild flag of dimensions dim.
  */
 
 extern int IsWild(CONST dim_type *);
-/*
+/**< 
  *  int IsWild(d)
  *  const dim_type *d;
  *  Return a true value if d is wild, and otherwise return a false value.
  */
 
 extern int OddDimension(CONST dim_type *);
-/*
+/**< 
  *  int OddDimension(d)
  *  const dim_type *d;
  *  Return a true value if d has an odd, wild, or non-integer dimension.
  */
 
 extern int NonCubicDimension(CONST dim_type *);
-/*
+/**< 
  *  int CubicDimension(d)
  *  const dim_type *d;
  *  Return a true value if d has an noncubic, wild, or non-integer dimension.
  */
 
 extern int SameDimen(CONST dim_type *,CONST dim_type *);
-/*
+/**< 
  *  SameDimen(d1,d2)
  *  const dim_type *d1,*d2;
  *  Return 1 if d1 and d2 have the same dimensional value, or 0
@@ -197,14 +197,14 @@ extern int SameDimen(CONST dim_type *,CONST dim_type *);
  */
 
 extern int CmpDimen(CONST dim_type *,CONST dim_type *);
-/*
+/**< 
  *  CmpDimen(d1,d2)
  *  const dim_type *d1,*d2;
  *  Return 1,0,-1 if d1 is >,=, or < d2 respectively.
  */
 
 extern CONST dim_type *FindOrAddDimen(CONST dim_type *);
-/*
+/**< 
  *  const dim_type *FindOrAddDimen(d)
  *  const dim_type *d;
  *  This function is run to make sure only one copy of each dimensions
@@ -219,7 +219,7 @@ extern CONST dim_type *FindOrAddDimen(CONST dim_type *);
  */
 
 extern void CopyDimensions(CONST dim_type *,dim_type *);
-/*
+/**< 
  *  void CopyDimensions(src,dest)
  *  const dim_type *src;
  *  dim_type *dest;
@@ -227,7 +227,7 @@ extern void CopyDimensions(CONST dim_type *,dim_type *);
  */
 
 extern dim_type AddDimensions(CONST dim_type *,CONST dim_type *);
-/*
+/**< 
  *  dim_type AddDimensions(d1,d2)
  *  const dim_type *d1,*d2;
  *  Wild+anything equals wild.
@@ -238,7 +238,7 @@ extern dim_type AddDimensions(CONST dim_type *,CONST dim_type *);
  */
 
 extern CONST dim_type *SumDimensions(CONST dim_type *,CONST dim_type *,int);
-/*
+/**< 
  *  CONST dim_type *SumDimensions(d1,d2,check)
  *  const dim_type *d1,*d2;
  *  int check;
@@ -250,7 +250,7 @@ extern CONST dim_type *SumDimensions(CONST dim_type *,CONST dim_type *,int);
  */
 
 extern dim_type SubDimensions(CONST dim_type *,CONST dim_type *);
-/*
+/**< 
  *  dim_type SubDimensions(d1,d2)
  *  const dim_type *d1,*d2;
  *  Wild-anything equals wild.
@@ -261,7 +261,7 @@ extern dim_type SubDimensions(CONST dim_type *,CONST dim_type *);
  */
 
 extern CONST dim_type *DiffDimensions(CONST dim_type *,CONST dim_type *,int);
-/*
+/**< 
  *  CONST dim_type *SumDimensions(d1,d2,check)
  *  const dim_type *d1,*d2;
  *  int check;
@@ -273,7 +273,7 @@ extern CONST dim_type *DiffDimensions(CONST dim_type *,CONST dim_type *,int);
  */
 
 extern dim_type ScaleDimensions(CONST dim_type *,struct fraction);
-/*
+/**< 
  *  dim_type ScaleDimensions(dim,frac)
  *  dim_type *dim;
  *  struct fraction frac;
@@ -281,7 +281,7 @@ extern dim_type ScaleDimensions(CONST dim_type *,struct fraction);
  */
 
 extern void ParseDim(dim_type *,CONST char *);
-/*
+/**< 
  *  void ParseDim(dim,c)
  *  dim_type *dim;
  *  char *c;
@@ -302,7 +302,7 @@ extern void ParseDim(dim_type *,CONST char *);
  */
 
 extern char *DimName(CONST int);
-/*
+/**< 
  *  char *DimName(index)
  *  int index;
  *  Return the internal copy of the name of the dimension corresponding
@@ -310,7 +310,7 @@ extern char *DimName(CONST int);
  */
 
 extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *,CONST dim_type *);
-/*
+/**< 
  *  dim_t *CheckDimensionsMatch(d1,d2)
  *  const dim_t *d1,*d2;
  *  Return d1 if d2 is wild
@@ -321,6 +321,6 @@ extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *,CONST dim_type *);
 
 extern void PrintDimen(FILE *,CONST dim_type *);
 extern void DumpDimens(FILE *);
-/* used in interface */
+/**< used in interface */
 
-#endif /* __DIMEN_H_SEEN__ */
+#endif /**< __DIMEN_H_SEEN__ */
