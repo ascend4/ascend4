@@ -22,7 +22,7 @@ not currently implemented.  Until it is, users will need to manually
 copy Jamrules.in to Jamrules and edit Jamrules to match their
 preferenes & configuration.
 
-The library (libasc_tcltk98) is built in
+The interface library (libasc_tcltk98) is built in
 ./CONFIGTYPE/COMPILER/interface, while the executable
 is built in ./CONFIGTYPE/COMPILER where
     CONFIGTYPE = Debug, Release
