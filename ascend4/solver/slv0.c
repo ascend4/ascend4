@@ -3238,7 +3238,7 @@ static void slv0_iterate(slv_system_t server, SlvClientToken asys)
 
       minor++;
 
-/* code by AWW to eliminate runaway minor loop */
+      /* FIXME: fix this part as in slv3.c */
     int32 maxMinorIterations;
     maxMinorIterations = 30;
     if(minor >= maxMinorIterations){
