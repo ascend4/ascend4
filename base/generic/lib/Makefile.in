@@ -14,7 +14,7 @@
 SHELL = /bin/sh
 builddir = ..
 srcdir = @fullpathsrcdir@/../generic/lib
-VPATH = @fullpathsrcdir@/../generic/lib
+VPATH := @fullpathsrcdir@/../generic/lib
 
 
 

@@ -1361,7 +1361,7 @@ asc_f77_support_dirs="
 #AWW20041113:    $ascpwd/rsqp
 #AWW20041113:    $ascpwd/minos
 #AWW20041113:    $ascpwd/ascend4/archive
-    $ascpwd/generic/archive
+    $ascpwd/archive
     /afs/cs/project/ascend/depot/@sys/lib
     /afs/cs/project/ascend/depot/build/obj/conopt
 "
@@ -1532,12 +1532,12 @@ case "$with_fortran$with_blas" in
         if test -f $blas_src_file ; then
             AC_MSG_RESULT(yes)
 #AWW20041119:            BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
-            BLASLIB="$ascpwd/../generic/archive/libascblas.a"
+            BLASLIB="$ascpwd/archive/libascblas.a"
 	    make_blaslib='make-blaslib'
 #AWW20041206:	    blaslib_makefile="blas/Makefile"
-	    blaslib_makefile="../../blas/Makefile"
+	    blaslib_makefile="blas/Makefile:../../blas/Makefile.in"
 #AWW20041206:            asc_subdirs="$asc_subdirs ../blas"
-            asc_subdirs="$asc_subdirs ../../blas"
+            asc_subdirs="$asc_subdirs blas"
         else
             AC_MSG_RESULT(no)
             AC_MSG_ERROR([User specified '--with-blas=build' but
@@ -1557,12 +1557,12 @@ case "$with_fortran$with_blas" in
             if test -f $blas_src_file ; then
                 AC_MSG_RESULT(yes)
 #AWW20041119:        	BLASLIB="$ascpwd/ascend4/archive/libascblas.a"
-        	BLASLIB="$ascpwd/../generic/archive/libascblas.a"
+        	BLASLIB="$ascpwd/archive/libascblas.a"
 	        make_blaslib='make-blaslib'
 #AWW20041206:	        blaslib_makefile="blas/Makefile"
-	        blaslib_makefile="../../blas/Makefile"
+	        blaslib_makefile="blas/Makefile:../../blas/Makefile.in"
 #AWW20041206:        	asc_subdirs="$asc_subdirs ../blas"
-        	asc_subdirs="$asc_subdirs ../../blas"
+        	asc_subdirs="$asc_subdirs blas"
             else
                 AC_MSG_RESULT(no)
             fi
@@ -1614,12 +1614,12 @@ case "$with_fortran$with_linpack" in
         if test -f $lpak_src_file ; then
             AC_MSG_RESULT(yes)
 #AWW20041119:            LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
-            LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
+            LPAKLIB="$ascpwd/archive/libasclpak.a"
 	    make_lpaklib='make-lpaklib'
 #AWW20041206:	    lpaklib_makefile="linpack/Makefile"
-	    lpaklib_makefile="../../linpack/Makefile"
+	    lpaklib_makefile="linpack/Makefile:../../linpack/Makefile.in"
 #AWW20041206:            asc_subdirs="$asc_subdirs ../linpack"
-            asc_subdirs="$asc_subdirs ../../linpack"
+            asc_subdirs="$asc_subdirs linpack"
         else
             AC_MSG_RESULT(no)
             AC_MSG_ERROR([User specified '--with-linpack=build' but
@@ -1639,12 +1639,12 @@ case "$with_fortran$with_linpack" in
             if test -f $lpak_src_file ; then
                 AC_MSG_RESULT(yes)
 #AWW20041119:        	LPAKLIB="$ascpwd/ascend4/archive/libasclpak.a"
-        	LPAKLIB="$ascpwd/../generic/archive/libasclpak.a"
+        	LPAKLIB="$ascpwd/archive/libasclpak.a"
 	        make_lpaklib='make-lpaklib'
 #AWW20041206:	        lpaklib_makefile="linpack/Makefile"
-	        lpaklib_makefile="../../linpack/Makefile"
+	        lpaklib_makefile="linpack/Makefile:../../linpack/Makefile.in"
 #AWW20041206:        	asc_subdirs="$asc_subdirs ../linpack"
-        	asc_subdirs="$asc_subdirs ../../linpack"
+        	asc_subdirs="$asc_subdirs linpack"
             else
                 AC_MSG_RESULT(no)
             fi
@@ -1695,12 +1695,12 @@ case "$with_fortran$with_lsod" in
         if test -f $lsod_src_file ; then
             AC_MSG_RESULT(yes)
 #AWW20041119:            LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
-            LSODLIB="$ascpwd/../generic/archive/libinteg.a"
+            LSODLIB="$ascpwd/archive/libinteg.a"
 	    make_lsodlib='make-lsodlib'
 #AWW20041206:	    lsodlib_makefile="lsod/Makefile"
-	    lsodlib_makefile="../../lsod/Makefile"
+	    lsodlib_makefile="lsod/Makefile:../../lsod/Makefile.in"
 #AWW20041206:            asc_subdirs="$asc_subdirs ../lsod"
-            asc_subdirs="$asc_subdirs ../../lsod"
+            asc_subdirs="$asc_subdirs lsod"
             HAVE_LSOD='-DSTATIC_LSOD'
         else
             AC_MSG_RESULT(no)
@@ -1721,12 +1721,12 @@ case "$with_fortran$with_lsod" in
             if test -f $lsod_src_file ; then
                 AC_MSG_RESULT(yes)
 #AWW20041119:        	LSODLIB="$ascpwd/ascend4/archive/libinteg.a"
-        	LSODLIB="$ascpwd/../generic/archive/libinteg.a"
+        	LSODLIB="$ascpwd/archive/libinteg.a"
 	        make_lsodlib='make-lsodlib'
 #AWW20041206:	        lsodlib_makefile="lsod/Makefile"
-	        lsodlib_makefile="../../lsod/Makefile"
+	        lsodlib_makefile="lsod/Makefile:../../lsod/Makefile.in"
 #AWW20041206:        	asc_subdirs="$asc_subdirs ../lsod"
-        	asc_subdirs="$asc_subdirs ../../lsod"
+        	asc_subdirs="$asc_subdirs lsod"
             else
                 AC_MSG_RESULT(no)
             fi
@@ -1817,19 +1817,20 @@ if test ! "X$with_tkdir" = "Xno" ; then
     subdir_file_exists='AscendRC'
 #AWW20041117: FIXME next line
 #AWW20041206:    subdir_locations='ascend4/TK'
+    subdir_target="TK"	
     subdir_locations='../../tcltk98/TK'
     subdir_output='
-	$subdir_root/Makefile
-	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
-	$subdir_root/bitmaps/Makefile
-	$subdir_root/templates/Makefile
+	$subdir_target/Makefile:$subdir_root/Makefile.in
+	$subdir_target/Makefile.Rules:$subdir_root/Makefile.Rules.in
+	$subdir_target/bitmaps/Makefile:$subdir_root/bitmaps/Makefile.in
+	$subdir_target/templates/Makefile:$subdir_root/templates/Makefile.in
 	'
     for subdir_root in $subdir_locations ; do
         if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
 #AWW20041208:	    tkdir_root="../$subdir_root"
-	    tkdir_root="$subdir_root"
+	    tkdir_root=$subdir_target
             tkdir_makefiles=`eval echo $subdir_output`
-            tkdir_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
+            tkdir_topbuilddir="$fullpathsrcdir/../../tcltk98/TK"
             break
         fi
     done
@@ -1846,11 +1847,12 @@ if test ! "X$with_models" = "Xno" ; then
     subdir_file_exists='system.a4l'
 #AWW20041117: FIXME next line
 #AWW20041206:    subdir_locations='models ascend4/models'
-    subdir_locations='models ../../base/generic/models'
+    subdir_target="models"
+    subdir_locations='models ../../models'
     subdir_output='
-	$subdir_root/Makefile
-	$subdir_root/Makefile.Rules:$subdir_root/Makefile.Rules.in
-        $subdir_root/ben/Makefile
+	$subdir_target/Makefile:$subdir_root/Makefile.in
+	$subdir_target/Makefile.Rules:$subdir_root/Makefile.Rules.in
+        $subdir_target/ben/Makefile:$subdir_root/ben/Makefile.in
 	'
 	## $subdir_root/examples/Makefile
 	## $subdir_root/examples/abbott/Makefile
@@ -1863,9 +1865,9 @@ if test ! "X$with_models" = "Xno" ; then
     for subdir_root in $subdir_locations ; do
         if test -f $fullpathsrcdir/$subdir_root/$subdir_file_exists ; then
 #AWW20041208:	    models_dir_root="../$subdir_root"
-	    models_dir_root="$subdir_root"
+	    models_dir_root="$subdir_target"
             models_makefiles=`eval echo $subdir_output`
-            models_topbuilddir=`echo "$subdir_root" | sed 's,[[^/][^/]]*,..,g'`
+            models_topbuilddir="$fullpathsrcdir/../../models"
             break
         fi
     done
@@ -1996,7 +1998,7 @@ AC_OUTPUT(
        bin/Makefile:../../base/generic/bin/Makefile.in
        compiler/Makefile:../../base/generic/compiler/Makefile.in
        general/Makefile:../../base/generic/general/Makefile.in
-       ../../tcltk98/generic/interface/Makefile:../../tcltk98/generic/interface/Makefile.in
+       interface/Makefile:../../tcltk98/generic/interface/Makefile.in
        lib/Makefile:../../base/generic/lib/Makefile.in
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in

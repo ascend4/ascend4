@@ -12,7 +12,7 @@
 SHELL = /bin/sh
 builddir = ..
 srcdir = @fullpathsrcdir@/../generic/bin
-VPATH = @fullpathsrcdir@/../generic/bin
+VPATH := @fullpathsrcdir@/../generic/bin
 
 
 

@@ -16,9 +16,12 @@ VPATH = @fullpathsrcdir@/../generic
 INCMAKE = $(builddir)/ConfigAscend
 include $(INCMAKE)
 
+IFACE_DIR=../../tcltk98/generic/
+# remote IFACE_DIR no longer needed
+IFACE_DIR=.
 
 
-ASCEND_SUBDIRS   = utilities general compiler packages solver ../../tcltk98/generic/interface lib
+ASCEND_SUBDIRS   = utilities general compiler packages solver $(IFACE_DIR)/interface lib
 ASC_TK_SUBDIRS   = @tkdir_root@
 MODELS_SUBDIRS   = @models_dir_root@
 HELP_SUBDIRS     = @help_dir_root@
@@ -46,16 +49,16 @@ all_libs: libutils.a libgeneral.a libasc.a libpackages.a libsolver.a \
 	libascif.a btlib
 
 ascend4: support_libs all_libs
-	cd ../../tcltk98/generic/interface; $(MAKE) ascend4
+	cd $(IFACE_DIR)/interface; $(MAKE) ascend4
 
 ascend4p: support_libs all_libs
-	cd ../../tcltk98/generic/interface; $(MAKE) ascend4p
+	cd $(IFACE_DIR)/interface; $(MAKE) ascend4p
 
 ascend4q: support_libs all_libs
-	cd ../../tcltk98/generic/interface; $(MAKE) ascend4q
+	cd $(IFACE_DIR)/interface; $(MAKE) ascend4q
 
 GUI:
-	cd ../../tcltk98/generic/interface; $(MAKE) ascend4
+	cd $(IFACE_DIR)/interface; $(MAKE) ascend4
 
 libutils.a:
 	cd utilities; $(MAKE) libutils.a
@@ -73,7 +76,7 @@ libsolver.a:
 	cd solver; $(MAKE) libsolver.a
 
 libascif.a:
-	cd ../../tcltk98/generic/interface; $(MAKE) libascif.a
+	cd $(IFACE_DIR)/interface; $(MAKE) libascif.a
 
 btlib:
 	cd lib; $(MAKE) default
@@ -92,15 +95,15 @@ lsod $(LSODLIB): @make_lsodlib@
 
 make-blaslib:
 #AWW20041206:	cd ../blas; $(MAKE) libascblas.a
-	cd ../../blas; $(MAKE) libascblas.a
+	cd blas; $(MAKE) libascblas.a
 
 make-lpaklib:
 #AWW20041206:	cd ../linpack; $(MAKE) libasclpak.a
-	cd ../../linpack; $(MAKE) libasclpak.a
+	cd linpack; $(MAKE) libasclpak.a
 
 make-lsodlib:
 #AWW20041206:	cd ../lsod; $(MAKE) libinteg.a
-	cd ../../lsod; $(MAKE) libinteg.a
+	cd lsod; $(MAKE) libinteg.a
 
 #AWW20041129: make-rsqplib:
 #AWW20041129:   cd ../rsqp; $(MAKE) librsqp.a

@@ -11,7 +11,7 @@
 SHELL = /bin/sh
 builddir = ..
 srcdir = @fullpathsrcdir@/../generic/compiler
-VPATH = @fullpathsrcdir@/../generic/compiler
+VPATH := @fullpathsrcdir@/../generic/compiler
 
 
 
