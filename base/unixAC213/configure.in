@@ -62,9 +62,6 @@ fi
 #--------------------------------------------------------------------
 
 #--------------------------------------------------------------------
-#	The asc_include variable is (directory) path to the ascend4
-#	SOURCE directory relative to the immediate subdirectories of
-#	the ascend4 OBJECT directory.
 ##AWW
 ##AWW   We put the .o files when compiling into a tree structure
 ##AWW   relative to the directory in which we currently reside,
@@ -74,30 +71,30 @@ fi
 ##AWW   compiling for different operating systems.
 ##AWW
 ##AWW   Example 1 (same directories)
-##AWW   Current directory one is in:    /home/me/a4/asc4
-##AWW   Directory containing configure: /home/me/a4/asc4
+##AWW   Current directory one is in:    /home/me/trunk/base/unixAC213
+##AWW   Directory containing configure: /home/me/trunk/base/unixAC213
 ##AWW   Command to invoke configure:    ./configure
-##AWW       $ascpwd will be: /home/me/a4/asc4
+##AWW       $ascpwd will be: /home/me/trunk/base/unixAC213
 ##AWW       $srcdir will be: .
 ##AWW
 ##AWW   Example 2 (different directories, abs path for command)
-##AWW   Current directory one is in:    /home/me/a4/tmp
-##AWW   Directory containing configure: /home/me/a4/asc4
-##AWW   Command to invoke configure:    /home/me/a4/asc4/configure
-##AWW       $ascpwd will be: /home/me/a4/tmp
-##AWW       $srcdir will be: /home/me/a4/asc4
+##AWW   Current directory one is in:    /home/me/trunk/base/newTree
+##AWW   Directory containing configure: /home/me/trunk/base/unixAC213
+##AWW   Command to invoke configure:    /home/me/trunk/base/unixAC213/configure
+##AWW       $ascpwd will be: /home/me/trunk/base/newTree
+##AWW       $srcdir will be: /home/me/trunk/base/unixAC213
 ##AWW
 ##AWW   Example 3 (different directories, rel path for command)
 ##AWW   Same as Example 2
-##AWW   Command to invoke configure:    ../asc4/configure
-##AWW       $ascpwd will be: /home/me/a4/tmp (same as in Example 2)
-##AWW       $srcdir will be: ../asc4
+##AWW   Command to invoke configure:    ../unixAC213/configure
+##AWW       $ascpwd will be: /home/me/trunk/base/newTree (same as in Example 2)
+##AWW       $srcdir will be: ../unixAC213
 ##AWW
 ##AWW   Key elements of the source tree are:
-##AWW       base/unixAC213/configure
-##AWW       base/generic
-##AWW       tcltk98
-##AWW   where $ascdir is pointing to base/unixAC213, the folder
+##AWW       code/trunk/trunk/base/unixAC213/configure
+##AWW       code/trunk/trunk/base/generic
+##AWW       code/trunk/tcltk98
+##AWW   where $srcdir is pointing to /home/me/trunk/base/unixAC213, the folder
 ##AWW   containing "configure"
 ##AWW
 ##AWW   Configure is located at:
@@ -121,13 +118,21 @@ fi
 ##AWW   any other of them.  The following paths should do it.   
 ##AWW   
 ##AWW   If in compiler, general, packages, solver, utilities
-##AWW       ..             for general, packages, etc
-##AWW       ../../../tcltk98  for interface
+##AWW       ..                        for general, packages, etc
+##AWW       ../../../tcltk98/generic  for interface
 ##AWW   If in interface
-##AWW       ..             for interface
-##AWW       ../../base/generic  for compiler, general, packages, ...
+##AWW       ..                        for interface
+##AWW       ../../../base/generic        for compiler, general, ..
 ##AWW
 #--------------------------------------------------------------------
+#	The asc_include variable is (directory) path to the ascend4
+#	SOURCE directory relative to the immediate subdirectories of
+#	the ascend4 OBJECT directory. --rewrite - not clear.
+#AWW    To compile a new ASCEND executable, one should move into the
+#AWW    directory in which one wants the ASCEND object/executable
+#AWW    to reside (call this objTree) and from there run 
+#AWW    ../base/unixAC213/configure.
+#AWW    In the following code asc_include is set to the path from
 
 ascpwd=`pwd`
 fullpathsrcdir=`cd $srcdir ; pwd`
@@ -142,7 +147,7 @@ case "$srcdir" in
         ;;
     *)
 #AWW20041113:        asc_include="../../$srcdir/ascend4"
-        asc_include="../../$srcdir/../generic"
+        asc_include="$srcdir/../generic"
         ;;
 esac
 
