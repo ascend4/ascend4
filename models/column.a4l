@@ -1,0 +1,1162 @@
+REQUIRE "flash.a4l";
+(* => flash.a4l, stream_holdup.a4l, thermodynamics.a4l, components.a4l,
+ *    phases.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "column.a4l";
+
+(*
+ *  column.a4l
+ *  by Ben Allan, Art Westerberg, and Jennifer Perry
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 18:50:36 $
+ *  $Revision: 1.5 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/column.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *  It defines basic tray-by-tray steady-state distillation models.
+ *
+ *  Copyright (C) 1997,1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+MODEL colmodel() REFINES cmumodel();
+	boundwidth IS_A bound_width;
+END colmodel;
+
+MODEL tray_stack(
+	n_trays WILL_BE integer_constant;
+	vapout WILL_BE stream;
+	liqin WILL_BE stream;
+	vapin WILL_BE stream;
+	liqout WILL_BE stream;
+	reduce WILL_BE fraction;
+	equilibrated WILL_BE boolean;
+) WHERE (
+	n_trays > 1;
+	vapout, liqin, vapin, liqout WILL_NOT_BE_THE_SAME;
+	vapout.cd, vapin.cd, liqout.cd, liqin.cd WILL_BE_THE_SAME;
+	vapout.pd, vapin.pd WILL_BE_THE_SAME;
+	liqout.pd, liqin.pd WILL_BE_THE_SAME;
+	liqout.pd.phase_indicator == 'L';
+	vapin.pd.phase_indicator == 'V';
+	liqin.pd.phase_indicator == 'L';
+	vapout.pd.phase_indicator == 'V';
+) REFINES colmodel();
+
+NOTES 'ascii-picture'
+SELF {
+vapout ^ |
+       | v liqin
+      +---+
+      |_1_|
+      |___| n_trays (at least 2)
+      |___|
+      |_n_|
+ vapin ^ |
+       | v liqout
+}
+'usage'
+equilibrated {
+When TRUE, enforces equilbrium between phases on all the trays.
+When FALSE, uses constant alpha between phases on all the trays.
+}
+reduce {
+Homotopy parameter used by reduce_Q to move fixed errors in the
+energy balances (Qin per tray) toward 0.
+}
+'contra-indications' SELF {
+For a n==1 tray stack, use a "tray" MODEL from the flash library.
+}
+END NOTES;
+
+	cd ALIASES liqout.cd;
+	pdL ALIASES liqout.pd;
+	pdV ALIASES vapout.pd;
+	vap_option ALIASES pdV.vapor_option;
+	liq_option ALIASES pdL.liquid1_option;
+	pdVL IS_A phases_data('VL', vap_option, liq_option, 'none');
+
+	(*
+	 * The ALIASES/IS_A break if the liqout,vapout are on the same tray.
+	 *)
+
+	Tray_set IS_A set OF integer_constant;
+	Tray_set :== [1..n_trays];
+
+	components ALIASES cd.components;
+	phases ALIASES pdVL.phases;
+
+	(* there are alternative ways of building repeated structures.
+	 * This is the first one I came up with. It may not be the best.
+	 * BAA.
+	 *)
+
+	(* build the internal phase mixing rules, and interior stream
+	 * states, and interior streams.
+	 *)
+	internal_liquid_mixture[1..n_trays-1]
+		IS_A select_mixture_type(cd, liq_option);
+	FOR k IN [1..n_trays-1] CREATE
+		internal_liquid_phase[k]['liquid1'] ALIASES
+			internal_liquid_mixture[k].phase;
+	END FOR;
+	FOR k IN [1..n_trays-1] CREATE
+		internal_liquid_state[k] IS_A
+		thermodynamics(cd, pdL, internal_liquid_phase[k], equilibrated);
+	END FOR;
+	FOR k IN [1..n_trays-1] CREATE
+		internal_liquid_stream[k] IS_A
+		detailed_stream(internal_liquid_state[k]);
+	END FOR;
+	internal_vapor_mixture[2..n_trays]
+		IS_A select_mixture_type(cd, vap_option);
+	FOR k IN [2..n_trays] CREATE
+		internal_vapor_phase[k]['vapor'] ALIASES
+			internal_vapor_mixture[k].phase;
+	END FOR;
+	FOR k IN [2..n_trays] CREATE
+		internal_vapor_state[k] IS_A
+		thermodynamics(cd, pdV, internal_vapor_phase[k], equilibrated);
+	END FOR;
+	FOR k IN [2..n_trays] CREATE
+		internal_vapor_stream[k] IS_A
+		detailed_stream(internal_vapor_state[k]);
+	END FOR;
+
+	(* build tray VLE objects *)
+
+	(* assemble into intermediate, easily accessed arrays *)
+	tray_liquid_mixture[tlTrays] ALIASES
+		(internal_liquid_mixture[1..n_trays-1].phase,
+		liqout.smt['liquid1'].phase)
+		WHERE tlTrays IS_A set OF integer_constant
+		WITH_VALUE (1..n_trays);
+	tray_vapor_mixture[tvTrays] ALIASES
+		(vapout.smt['vapor'].phase,
+		internal_vapor_mixture[2..n_trays].phase)
+		WHERE tvTrays IS_A set OF integer_constant
+		WITH_VALUE (1..n_trays);
+	(* assemble into little pairs for building VLE states *)
+	FOR k IN [Tray_set] CREATE
+		trayVL[k][VLphases[k]] ALIASES
+		(tray_vapor_mixture[k],tray_liquid_mixture[k])
+		WHERE VLphases[k] IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+	END FOR;
+	(* compile vle of each tray *)
+	FOR k IN [1..n_trays] CREATE
+		tray_state[k] IS_A
+			thermodynamics(cd, pdVL, trayVL[k], equilibrated);
+	END FOR;
+	(* setup
+	 * tray_liqin[1..n_trays+1], tray_vapin[0..n_trays],
+	 * input streams.
+	 *)
+	tray_vapin[tV] ALIASES (vapout.Details,
+		internal_vapor_stream[2..n_trays], vapin.Details)
+		WHERE tV IS_A set OF integer_constant
+		WITH_VALUE (0..n_trays);
+
+	tray_liqin[tL] ALIASES (liqin.Details,
+		internal_liquid_stream[1..n_trays-1], liqout.Details)
+		WHERE tL IS_A set OF integer_constant
+		WITH_VALUE (1..n_trays+1);
+
+	Qin[Tray_set] IS_A energy_rate;
+
+	FOR k IN Tray_set CREATE
+		Stack[k] IS_A detailed_tray(
+			Qin[k],
+			equilibrated,
+			tray_liqin[k],
+			tray_vapin[k],
+			tray_liqin[k+1],
+			tray_vapin[k-1],
+			tray_state[k]
+		);
+	END FOR;
+
+	FOR k IN Tray_set CREATE
+		P[k] ALIASES tray_state[k].P;
+		T[k] ALIASES tray_state[k].T;
+	END FOR;
+
+METHODS
+
+METHOD default_all;
+	RUN liqin.default_all;
+	RUN liqout.default_all;
+	RUN vapin.default_all;
+	RUN vapout.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	Qin[Tray_set] := 0{watt};
+	boundwidth := 100;
+	RUN pdVL.default_self;
+	RUN internal_liquid_mixture[1..n_trays-1].default_self;
+	RUN internal_vapor_mixture[2..n_trays].default_self;
+	RUN internal_liquid_state[1..n_trays-1].default_self;
+	RUN internal_vapor_state[2..n_trays].default_self;
+	RUN internal_liquid_stream[1..n_trays-1].default_self;
+	RUN internal_vapor_stream[2..n_trays].default_self;
+	RUN tray_state[Tray_set].default_self;
+	Stack[Tray_set].flowscale := 10{mole/second};
+	Stack[Tray_set].H_flowscale := 1000{J/second};
+END default_self;
+
+METHOD check_all;
+	RUN liqin.check_all;
+	RUN liqout.check_all;
+	RUN vapin.check_all;
+	RUN vapout.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN pdVL.check_self;
+	RUN internal_liquid_mixture[1..n_trays-1].check_self;
+	RUN internal_vapor_mixture[2..n_trays].check_self;
+	RUN internal_liquid_state[1..n_trays-1].check_self;
+	RUN internal_vapor_state[2..n_trays].check_self;
+	RUN internal_liquid_stream[1..n_trays-1].check_self;
+	RUN internal_vapor_stream[2..n_trays].check_self;
+	RUN tray_state[Tray_set].check_self;
+END check_self;
+
+METHOD scale_all;
+	RUN liqin.scale_all;
+	RUN liqout.scale_all;
+	RUN vapin.scale_all;
+	RUN vapout.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	(* fortunately no local equations to scale *)
+	RUN pdVL.scale_self;
+	RUN internal_liquid_mixture[1..n_trays-1].scale_self;
+	RUN internal_vapor_mixture[2..n_trays].scale_self;
+	RUN internal_liquid_state[1..n_trays-1].scale_self;
+	RUN internal_vapor_state[2..n_trays].scale_self;
+	RUN internal_liquid_stream[1..n_trays-1].scale_self;
+	RUN internal_vapor_stream[2..n_trays].scale_self;
+	RUN tray_state[Tray_set].scale_self;
+END scale_self;
+
+METHOD bound_all;
+	RUN liqin.bound_all;
+	RUN liqout.bound_all;
+	RUN vapin.bound_all;
+	RUN vapout.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	(* fortunately no local variables to scale *)
+	RUN pdVL.bound_self;
+
+	internal_liquid_mixture[1..n_trays-1].boundwidth := boundwidth;
+	internal_vapor_mixture[2..n_trays].boundwidth := boundwidth;
+	internal_liquid_state[1..n_trays-1].boundwidth := boundwidth;
+	internal_vapor_state[2..n_trays].boundwidth := boundwidth;
+	internal_liquid_stream[1..n_trays-1].boundwidth := boundwidth;
+	internal_vapor_stream[2..n_trays].boundwidth := boundwidth;
+	tray_state[Tray_set].boundwidth := boundwidth;
+
+	RUN internal_liquid_mixture[1..n_trays-1].bound_self;
+	RUN internal_vapor_mixture[2..n_trays].bound_self;
+	RUN internal_liquid_state[1..n_trays-1].bound_self;
+	RUN internal_vapor_state[2..n_trays].bound_self;
+	RUN internal_liquid_stream[1..n_trays-1].bound_self;
+	RUN internal_vapor_stream[2..n_trays].bound_self;
+	RUN tray_state[Tray_set].bound_self;
+
+END bound_self;
+
+METHOD specify;
+	RUN seqmod;
+	RUN liqin.specify;
+	RUN vapin.specify;
+END specify;
+
+METHOD seqmod;
+	RUN Stack[Tray_set].seqmod;
+END seqmod;
+
+METHOD scale;
+	RUN Stack[Tray_set].scale;
+END scale;
+
+METHOD reset_to_mass_balance;
+	equilibrated := FALSE;
+	RUN reset;
+END reset_to_mass_balance;
+
+METHOD reset_to_full_thermo;
+	equilibrated := TRUE;
+	RUN reset;
+END reset_to_full_thermo;
+
+METHOD reset_to_adiabatic;
+	RUN reset_to_full_thermo;
+	Stack[Tray_set].cmo_ratio.fixed := FALSE;
+	Stack[Tray_set].Qin.fixed := TRUE;
+	Stack[Tray_set].Qin := 0{W};
+END reset_to_adiabatic;
+
+METHOD reduce_Q;
+	FOR j IN [Tray_set] DO
+		Stack[j].Qin := reduce * Stack[j].Qin;
+	END FOR;
+END reduce_Q;
+
+END tray_stack;
+
+MODEL test_tray_stack() REFINES testcmumodel();
+	n_trays_below	IS_A integer_constant;
+	n_trays_below :== 2;
+	equilibrated	IS_A start_false;
+	reduce		IS_A fraction;
+
+NOTES
+'usage' equilibrated {
+This variable and feed.equilibrated may or may not be the same.
+Do not assume they are when writing methods.
+}
+reduce {
+This is a fraction from 0 to 1. The method reduce_Q uses it
+to move the Qin on each stack and feed tray toward 0.
+Essentially this is a physical homotopy parameter.
+}
+END NOTES;
+
+
+	cd IS_A components_data(['n_pentane','n_hexane','n_heptane'],
+				 'n_heptane');
+	pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+	pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+
+	Vapout		IS_A stream(cd, pdV, equilibrated);
+	Liqin		IS_A stream(cd, pdL, equilibrated);
+	Vapin		IS_A stream(cd, pdV, equilibrated);
+	Liqout		IS_A stream(cd, pdL, equilibrated);
+
+	Section IS_A tray_stack(
+		n_trays_below,
+		Vapout,
+		Liqin,
+		Vapin,
+		Liqout,
+		reduce,
+		equilibrated
+	);
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+METHOD default_self;
+	equilibrated := FALSE;
+	RUN Section.default_self;
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN Section.check_all;
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	RUN Section.bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	RUN Section.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN Section.specify;
+END specify;
+
+METHOD reset_to_adiabatic;
+	RUN Section.reset_to_adiabatic;
+END reset_to_adiabatic;
+END test_tray_stack;
+
+
+MODEL simple_column(
+	pdVL		WILL_BE phases_data;
+	distillate	WILL_BE stream;
+	n_trays_above	WILL_BE integer_constant;
+	feed 		WILL_BE stream;
+	n_trays_below	WILL_BE integer_constant;
+	bottoms		WILL_BE stream;
+	equilibrated	WILL_BE boolean;
+	reduce		WILL_BE fraction;
+) WHERE (
+	n_trays_above > 1;
+	n_trays_below > 1;
+	distillate, bottoms, feed WILL_NOT_BE_THE_SAME;
+	feed.cd, distillate.cd, bottoms.cd WILL_BE_THE_SAME;
+	pdVL.phase_indicator == 'VL';
+	distillate.pd, bottoms.pd WILL_BE_THE_SAME;
+	distillate.pd.phase_indicator == 'L';
+	pdVL.liquid1_option == distillate.pd.liquid1_option;
+	feed.pd.phase_indicator IN ['V','L','VL'] == TRUE;
+) REFINES colmodel();
+
+NOTES
+'ascii-picture' SELF {
+	         ___   total condenser
+	        /   \________> distillate liquid
+	        |___|
+(condenser_vapin)^ |
+	         | |
+	         | v(rectifier_liqin)
+	        +---+
+	        |___|
+	        |___| n_trays_above (at least 2)
+	        |___|
+	        |___|
+(rectifier_vapin)^ |
+	         | |
+	         | v(feed_tray_liqin)
+	        +---+
+ V/L feed ----->|   |
+	        +___+
+(feed_tray_vapin)^ |
+	         | |
+	         | v(stripper_liqin)
+	        +---+
+	        |___|
+	        |___| n_trays_below (at least 2)
+	        |___|
+	        |___|
+ (stripper_vapin)^ |
+	         | |
+	         | v(reboiler_liqin)
+	         ___
+	        |   |________> bottoms liquid
+	        \___/ non-adiabatic flash
+}
+'usage' equilibrated {
+This variable and feed.equilibrated may or may not be the same.
+Do not assume they are when writing methods.
+}
+reduce {
+This is a fraction from 0 to 1. The method reduce_Q uses it
+to move the Qin on each stack and feed tray toward 0.
+Essentially this is a physical homotopy parameter.
+}
+'changing' SELF {
+This MODEL is very large, therefore it is very carefully
+structured following the ascii-picture.
+It should be relatively easy to modify this MODEL
+just by carefully following the patterns we use. The pattern is
+that all streams are given names corresponding to their input
+roles.
+
+You can build arbitrarily complicated columns with bypasses,
+recycles, intercoolers, etc just by copying this MODEL
+and rerouting section or tray connections after adding or
+removing sections, exchangers, and so forth.
+}
+END NOTES;
+
+(*
+ * The creation steps:
+ *	alias the options from the feed stream. (done above).
+ *	inter-section streams (single phase)
+ *	column sections
+ * At the end of the steps, everything has been wired up
+ * simply by passing common parts to both places they belong.
+ * For clarity, no arrays are used.
+ *
+ * If you are nuts enough to reimplement this MODEL using
+ * arrays, have a look at tray_stack for techniques to avoid
+ * sending the compiler to hell.
+ *
+ * The thermodynamic options of the given pdVL
+ * column without using ARE_ALIKE or ARE_THE_SAME.
+ *)
+
+	pdL ALIASES bottoms.pd;
+	pdV IS_A phases_data('V', pdVL.vapor_option, 'none', 'none');
+	cd ALIASES feed.cd;
+	components ALIASES feed.components;
+
+	(* inter-section streams *)
+	condenser_vapin "vapor rising to condenser",
+	rectifier_vapin "vapor rising from feed tray",
+	feed_tray_vapin "vapor rising from stripper",
+	stripper_vapin "vapor rising from reboiler"
+		IS_A stream(cd, pdV, equilibrated);
+
+	rectifier_liqin "reflux condensate",
+	feed_tray_liqin "liquid falling from rectifier",
+	stripper_liqin "liquid falling from feed tray",
+	reboiler_liqin "liquid falling to reboiler"
+		IS_A stream(cd, pdL, equilibrated);
+
+	(* typical heat duties *)
+	Qin_condenser "condenser duty",
+	Qin_feed "feed heater duty",
+	Qin_reboiler "reboiler duty" IS_A energy_rate;
+
+	(* column sections *)
+	condenser IS_A total_condenser(
+		Qin_condenser,
+		condenser_vapin,
+		rectifier_liqin,
+		distillate
+	);
+	rectifying_section "the trays above the feed" IS_A tray_stack(
+		n_trays_above,
+		condenser_vapin,
+		rectifier_liqin,
+		rectifier_vapin,
+		feed_tray_liqin,
+		reduce,
+		equilibrated
+	);
+	feed_tray IS_A feed_tray(
+		Qin_feed,
+		equilibrated,
+		feed,
+		feed_tray_liqin,
+		feed_tray_vapin,
+		stripper_liqin,
+		rectifier_vapin
+	);
+	stripping_section "the trays below the feed" IS_A tray_stack(
+		n_trays_below,
+		feed_tray_vapin,
+		stripper_liqin,
+		stripper_vapin,
+		reboiler_liqin,
+		reduce,
+		equilibrated
+	);
+	reboiler IS_A simple_reboiler(
+		Qin_reboiler,
+		equilibrated,
+		reboiler_liqin,
+		stripper_vapin,
+		bottoms
+	);
+
+	(* this array has the common type flash_base,
+	 * so it is mainly useful for methods.
+	 *)
+	Tray[zTr] ALIASES (
+		condenser,
+		rectifying_section.Stack[1..n_trays_above],
+		feed_tray,
+		stripping_section.Stack[1..n_trays_below],
+		reboiler)
+	WHERE zTr IS_A set OF integer_constant
+	WITH_VALUE (0..N_trays);
+
+	(* useful things to know from an END user perspective *)
+	N_trays IS_A integer_constant;
+	N_trays :== n_trays_above + 1 + n_trays_below + 1;
+	VLE_set IS_A set OF integer_constant;
+	VLE_set :== [1 .. N_trays];
+	Feed_loc IS_A integer_constant;
+	Feed_loc :== n_trays_above +1;
+
+	(* why is this here? total reflux? *)
+	omb_slack[components]	IS_A molar_rate;
+	FOR i IN components CREATE
+	overall_mass_balance[i]:
+		feed.f[i] = (distillate.f[i] + bottoms.f[i] + omb_slack[i]);
+	END FOR;
+
+METHODS
+
+METHOD default_self;
+	omb_slack[components] := 0 {mol/s};
+	omb_slack[components].lower_bound := -1000{mole/s};
+	RUN condenser.default_self;
+	RUN rectifying_section.default_self;
+	RUN feed_tray.default_self;
+	RUN stripping_section.default_self;
+	RUN reboiler.default_self;
+END default_self;
+
+METHOD default_all;
+	RUN pdVL.default_all;
+	RUN distillate.default_all;
+	RUN feed.default_all;
+	RUN bottoms.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN check_self;
+	RUN pdVL.check_all;
+	RUN distillate.check_all;
+	RUN feed.check_all;
+	RUN bottoms.check_all;
+END check_all;
+
+METHOD check_self;
+	FOR i IN components DO
+		IF ( omb_slack[i]/feed.flow.nominal > 1.0e-4 ) THEN
+			STOP {Column violates over-all species balance};
+		END IF;
+	END FOR;
+	RUN pdV.check_self;
+	RUN condenser_vapin.check_self;
+	RUN rectifier_vapin.check_self;
+	RUN feed_tray_vapin.check_self;
+	RUN stripper_vapin.check_self;
+	RUN rectifier_liqin.check_self;
+	RUN feed_tray_liqin.check_self;
+	RUN stripper_liqin.check_self;
+	RUN reboiler_liqin.check_self;
+	RUN condenser.check_self;
+	RUN rectifying_section.check_self;
+	RUN feed_tray.check_self;
+	RUN stripping_section.check_self;
+	RUN reboiler.check_self;
+END check_self;
+
+METHOD scale_all;
+	RUN pdVL.scale_all;
+	RUN distillate.scale_all;
+	RUN feed.scale_all;
+	RUN bottoms.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	RUN pdV.scale_self;
+	RUN condenser_vapin.scale_self;
+	RUN rectifier_vapin.scale_self;
+	RUN feed_tray_vapin.scale_self;
+	RUN stripper_vapin.scale_self;
+	RUN rectifier_liqin.scale_self;
+	RUN feed_tray_liqin.scale_self;
+	RUN stripper_liqin.scale_self;
+	RUN reboiler_liqin.scale_self;
+	RUN condenser.scale_self;
+	RUN rectifying_section.scale_self;
+	RUN feed_tray.scale_self;
+	RUN stripping_section.scale_self;
+	RUN reboiler.scale_self;
+END scale_self;
+
+METHOD bound_all;
+	RUN pdVL.bound_all;
+	RUN distillate.bound_all;
+	RUN feed.bound_all;
+	RUN bottoms.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	RUN pdV.bound_self;
+	RUN condenser_vapin.bound_self;
+	RUN rectifier_vapin.bound_self;
+	RUN feed_tray_vapin.bound_self;
+	RUN stripper_vapin.bound_self;
+	RUN rectifier_liqin.bound_self;
+	RUN feed_tray_liqin.bound_self;
+	RUN stripper_liqin.bound_self;
+	RUN reboiler_liqin.bound_self;
+	RUN condenser.bound_self;
+	RUN rectifying_section.bound_self;
+	RUN feed_tray.bound_self;
+	RUN stripping_section.bound_self;
+	RUN reboiler.bound_self;
+END bound_self;
+
+METHOD seqmod;
+	RUN condenser.seqmod;
+	RUN rectifying_section.seqmod;
+	RUN feed_tray.seqmod;
+	RUN stripping_section.seqmod;
+	RUN reboiler.seqmod;
+END seqmod;
+
+METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+        IF (feed.equilibrated AND (feed.pd.phase_indicator == 'VL')) THEN
+		feed.Details.state.phase[feed.pd.reference_phase].T.fixed := FALSE;
+		feed.Details.state.phase_fraction[feed.pd.other_phases].fixed := TRUE;
+        END IF;
+END specify;
+
+METHOD reset_to_mass_balance;
+	equilibrated := FALSE;
+	feed.state.equilibrated := FALSE;
+	RUN reset;
+END reset_to_mass_balance;
+
+METHOD reset_to_full_thermo;
+	equilibrated := TRUE;
+	feed.state.equilibrated := TRUE;
+	RUN reset;
+END reset_to_full_thermo;
+
+METHOD reset_to_adiabatic;
+	RUN reset_to_full_thermo;
+	(* condenser, reboiler Qin left free *)
+	rectifying_section.Stack[1..n_trays_above].cmo_ratio.fixed := FALSE;
+	stripping_section.Stack[1..n_trays_below].cmo_ratio.fixed := FALSE;
+	Tray[1..N_trays-1].Qin.fixed := TRUE;
+	Tray[1..N_trays-1].Qin := 0{W};
+	feed_tray.q.fixed := FALSE;
+END reset_to_adiabatic;
+
+METHOD propagate_feed_values;
+	(* propagate feed tray flows and relative volatilities,
+	 * after solving the feed tray.
+	 *)
+	FOR i IN components DO
+		(* use feed alpha everywhere *)
+		Tray[VLE_set].alpha[i] := feed_tray.alpha[i];
+		(* copy feed flow rates to all internal streams *)
+		(* This copying should factor in the RR and BR *)
+		Tray[0..N_trays-1].liqout.f[i] := feed.f[i];
+		Tray[1..N_trays].vapout.f[i] := feed.f[i];
+	END FOR;
+END propagate_feed_values;
+
+END simple_column;
+
+MODEL simple_column_profiles(
+	sc WILL_BE simple_column;
+) REFINES colmodel();
+
+	traynum[sc.VLE_set] IS_A integer_constant;
+	FOR i IN sc.VLE_set CREATE
+		traynum[i] :== i;
+	END FOR;
+
+	cmo_ratio[zc] ALIASES (
+		sc.rectifying_section.Stack[1..sc.n_trays_above].cmo_ratio,
+		sc.stripping_section.Stack[1..sc.n_trays_below].cmo_ratio)
+	WHERE zc IS_A set OF integer_constant
+	WITH_VALUE (	1 .. sc.n_trays_above,
+			sc.Feed_loc+1 .. sc.Feed_loc+sc.n_trays_below);
+
+	P[zP] ALIASES (
+		sc.rectifying_section.P[1..sc.n_trays_above],
+		sc.feed_tray.P,
+		sc.stripping_section.P[1..sc.n_trays_below],
+		sc.reboiler.P)
+	WHERE zP IS_A set OF integer_constant WITH_VALUE (sc.VLE_set);
+
+	T[zT] ALIASES (
+		sc.rectifying_section.T[1..sc.n_trays_above],
+		sc.feed_tray.T,
+		sc.stripping_section.T[1..sc.n_trays_below],
+		sc.reboiler.T)
+	WHERE zT IS_A set OF integer_constant WITH_VALUE (sc.VLE_set);
+
+	(* next one is simple because flash_base defines Qin *)
+	Qin[zQ] ALIASES (sc.Tray[0..sc.N_trays].Qin)
+	WHERE zQ IS_A set OF integer_constant WITH_VALUE (0..sc.N_trays);
+
+	Lin[zL] ALIASES (
+		sc.rectifying_section.tray_liqin[1..sc.n_trays_above].flow,
+		sc.feed_tray.liqin.flow,
+		sc.stripping_section.tray_liqin[1..sc.n_trays_below].flow,
+		sc.reboiler.liqin.flow)
+	WHERE zL IS_A set OF integer_constant WITH_VALUE (sc.VLE_set);
+
+	Vin[zV] ALIASES (
+		sc.rectifying_section.tray_vapin[0..sc.n_trays_above].flow,
+		sc.feed_tray.vapin.flow,
+		sc.stripping_section.tray_vapin[1..sc.n_trays_below].flow)
+	WHERE zV IS_A set OF integer_constant WITH_VALUE (0..sc.N_trays-1);
+
+	FOR i IN sc.components CREATE
+
+	x[i][zx[i]] ALIASES (
+		sc.rectifying_section.Stack[1..sc.n_trays_above].x[i],
+		sc.feed_tray.x[i],
+		sc.stripping_section.Stack[1..sc.n_trays_below].x[i],
+		sc.reboiler.x[i])
+	WHERE zx[i] IS_A set OF integer_constant WITH_VALUE (sc.VLE_set);
+
+	y[i][zy[i]] ALIASES (
+		sc.rectifying_section.Stack[1..sc.n_trays_above].y[i],
+		sc.feed_tray.y[i],
+		sc.stripping_section.Stack[1..sc.n_trays_below].y[i],
+		sc.reboiler.y[i])
+	WHERE zy[i] IS_A set OF integer_constant WITH_VALUE (sc.VLE_set);
+
+	kvalues_when_full_thermo[i][zk[i]] ALIASES (
+		sc.rectifying_section.Stack[1..sc.n_trays_above].alpha[i],
+		sc.feed_tray.alpha[i],
+		sc.stripping_section.Stack[1..sc.n_trays_below].alpha[i],
+		sc.reboiler.alpha[i])
+	WHERE zk[i] IS_A set OF integer_constant WITH_VALUE (sc.VLE_set);
+
+	END FOR (* components *);
+
+METHODS
+(* This MODEL defines no new equations, variables, or submodels *)
+(* so we put in a bunch of harmless methods so the system defined
+ * ones get replaced.
+ *)
+METHOD check_self;
+END check_self;
+METHOD check_all;
+END check_all;
+METHOD default_self;
+END default_self;
+METHOD default_all;
+END default_all;
+METHOD scale_self;
+END scale_self;
+METHOD scale_all;
+END scale_all;
+METHOD bound_self;
+END bound_self;
+METHOD bound_all;
+END bound_all;
+METHOD specify;
+END specify;
+
+END simple_column_profiles;
+
+
+MODEL test_simple_column() REFINES testcmumodel();
+
+	cd IS_A components_data(
+		['n_pentane','n_hexane','n_heptane'], 'n_heptane'
+	);
+	pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+				'UNIFAC_liquid_mixture','none');
+	pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+	pdL IS_A phases_data('L','none','UNIFAC_liquid_mixture','none');
+
+
+	Feed_equil, Equilibrated IS_A start_false;
+	Feed		IS_A stream(cd, pdVL, Feed_equil);
+	Distillate	IS_A stream(cd, pdL, Equilibrated);
+	Bottoms		IS_A stream(cd, pdL, Equilibrated);
+
+	n_trays_above, n_trays_below IS_A integer_constant;
+	n_trays_above :== 6;
+	n_trays_below :== 5;
+	reduce IS_A fraction;
+	Column IS_A simple_column(
+		pdVL,
+		Distillate,
+		n_trays_above,
+		Feed,
+		n_trays_below,
+		Bottoms,
+		Equilibrated,
+		reduce
+	);
+
+	Profile IS_A simple_column_profiles(Column);
+	boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_self;
+	boundwidth := 100;
+	RUN Feed.default_self;
+	RUN Distillate.default_self;
+	RUN Bottoms.default_self;
+	RUN Column.default_self;
+	RUN Profile.default_self;
+END default_self;
+
+METHOD check_self;
+	RUN Feed.check_self;
+	RUN Distillate.check_self;
+	RUN Bottoms.check_self;
+	RUN Column.check_self;
+	RUN Profile.check_self;
+END check_self;
+
+METHOD scale_self;
+	RUN Feed.scale_self;
+	RUN Distillate.scale_self;
+	RUN Bottoms.scale_self;
+	RUN Column.scale_self;
+	RUN Profile.scale_self;
+END scale_self;
+
+METHOD bound_self;
+	Column.boundwidth := boundwidth;
+	Profile.boundwidth := boundwidth;
+	Feed.boundwidth := boundwidth;
+	Distillate.boundwidth := boundwidth;
+	Bottoms.boundwidth := boundwidth;
+	RUN Feed.bound_self;
+	RUN Distillate.bound_self;
+	RUN Bottoms.bound_self;
+	RUN Column.bound_self;
+	RUN Profile.bound_self;
+END bound_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD values;
+	Column.feed_tray.alpha['n_pentane'] := 3;
+	Column.feed_tray.alpha['n_hexane'] := 2;
+	Column.feed_tray.alpha['n_heptane'] := 1;
+	Column.condenser.reflux_ratio := 1.3;
+	Feed.T := 298 {K};
+	Feed.P := 1{atm};
+	Feed.f['n_pentane'] := 3{mole/s};
+	Feed.f['n_hexane'] := 3{mole/s};
+	Feed.f['n_heptane'] := 3{mole/s};
+	(* here we should SOLVE the feed tray *)
+	RUN Column.propagate_feed_values;
+END values;
+
+END test_simple_column;
+
+MODEL demo_column(
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+	n_trays IS_A integer_constant;
+	feed_location IS_A integer_constant;
+) WHERE (
+	reference IN components == TRUE;
+	n_trays > 5;
+	feed_location > 2;
+	feed_location < n_trays - 2;
+) REFINES colmodel();
+
+	cd	IS_A components_data(components,reference);
+	pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+				'UNIFAC_liquid_mixture','none');
+	pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+	pdL IS_A phases_data('L','none','UNIFAC_liquid_mixture','none');
+
+	Equilibrated IS_A start_false;
+	Feed		IS_A stream(cd, pdVL, Equilibrated);
+	Distillate	IS_A stream(cd, pdL, Equilibrated);
+	Bottoms		IS_A stream(cd, pdL, Equilibrated);
+
+	n_trays_above, n_trays_below IS_A integer_constant;
+	n_trays_above :== feed_location - 1;
+	n_trays_below :== n_trays - feed_location - 1;
+	reduce IS_A fraction;
+	Column IS_A simple_column(
+		pdVL,
+		Distillate,
+		n_trays_above,
+		Feed,
+		n_trays_below,
+		Bottoms,
+		Equilibrated,
+		reduce
+	);
+
+	(* component names in order of boiling point. useful for methods. *)
+	z_boiling_comp[1..CARD[components]] IS_A symbol;
+	z_bc IS_A symbol;
+	z_bi IS_A integer;
+
+METHODS
+
+METHOD default_self;
+	boundwidth := 100;
+	RUN Feed.default_self;
+	RUN Distillate.default_self;
+	RUN Bottoms.default_self;
+	RUN Column.default_self;
+END default_self;
+
+METHOD check_self;
+	RUN Feed.check_self;
+	RUN Distillate.check_self;
+	RUN Bottoms.check_self;
+	RUN Column.check_self;
+END check_self;
+
+METHOD scale_self;
+	RUN Feed.scale_self;
+	RUN Distillate.scale_self;
+	RUN Bottoms.scale_self;
+	RUN Column.scale_self;
+END scale_self;
+
+METHOD bound_self;
+	Column.boundwidth := boundwidth;
+	Feed.boundwidth := boundwidth;
+	Distillate.boundwidth := boundwidth;
+	Bottoms.boundwidth := boundwidth;
+	RUN Feed.bound_self;
+	RUN Distillate.bound_self;
+	RUN Bottoms.bound_self;
+	RUN Column.bound_self;
+END bound_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD values;
+	(* The demo user may very well want to rewrite this method
+	 * for their particular mixture.
+	 *)
+	z_bi := 1;
+	(* order the components arbitrarily in a list *)
+	FOR i IN components DO
+		z_boiling_comp[z_bi] := i;
+		z_bi := z_bi + 1;
+	END FOR;
+	(* use a bubble point sort, pun intended, to order the components. *)
+	FOR i IN [1..CARD[components]-1] DO
+		FOR j IN [i+1 .. CARD[components]] DO
+			IF cd.data[z_boiling_comp[i]].Tb >
+				cd.data[z_boiling_comp[j]].Tb THEN
+				z_bc := z_boiling_comp[j];
+				z_boiling_comp[j] := z_boiling_comp[i];
+				z_boiling_comp[i] := z_bc;
+			END IF;
+		END FOR;
+	END FOR;
+	z_bi := 1;
+	(* assign close alpha's *)
+	FOR i IN [1.. CARD[components]] DO
+		Column.feed_tray.alpha[z_boiling_comp[i]] :=
+			1+ 1.0*(CARD[components]-i+1); (* 1.0 here --> 0.2 *)
+		IF (Feed.pd.phase_indicator == 'VL') THEN
+			Feed.state.phase['vapor'].alpha[z_boiling_comp[i]] :=
+				Column.feed_tray.alpha[z_boiling_comp[i]];
+		END IF;
+	END FOR;
+	Column.condenser.reflux_ratio := 1.3;
+	Feed.T := 298 {K};
+	Feed.P := 1{atm};
+	Feed.f[components] := 3{mole/s};
+	RUN Column.propagate_feed_values;
+END values;
+
+END demo_column;
+
+
+MODEL test_demo_column() REFINES testcmumodel();
+
+METHODS
+METHOD check_self;
+	RUN demo.check_self;
+END check_self;
+METHOD check_all;
+	RUN demo.check_all;
+END check_all;
+METHOD default_self;
+	RUN demo.default_self;
+END default_self;
+METHOD default_all;
+	RUN demo.scale_all;
+END default_all;
+METHOD scale_self;
+	RUN demo.scale_self;
+END scale_self;
+METHOD scale_all;
+	RUN demo.scale_all;
+END scale_all;
+METHOD bound_self;
+	RUN demo.bound_self;
+END bound_self;
+METHOD bound_all;
+	RUN demo.bound_all;
+END bound_all;
+
+METHOD specify;
+	RUN demo.specify;
+END specify;
+
+METHOD values;
+	RUN demo.values;
+END values;
+
+METHOD reset_to_mass_balance;
+	RUN demo.Column.reset_to_mass_balance;
+END reset_to_mass_balance;
+
+METHOD reset_to_full_thermo;
+	RUN demo.Column.reset_to_full_thermo;
+END reset_to_full_thermo;
+
+METHOD reset_to_adiabatic;
+	RUN demo.Column.reset_to_adiabatic;
+END reset_to_adiabatic;
+
+END test_demo_column;
+
+MODEL mw_demo_column() REFINES test_demo_column();
+	demo IS_A demo_column(['methanol','water'],'water',13,7);
+METHODS
+END mw_demo_column;
+
+MODEL abc_demo_column() REFINES test_demo_column();
+	demo IS_A
+	demo_column(['benzene','chloroform','acetone'],'benzene',13,7);
+METHODS
+END abc_demo_column;
+
+MODEL c567_demo_column() REFINES test_demo_column();
+	demo IS_A
+	demo_column(['n_pentane','n_hexane','n_heptane'],'n_heptane',13,7);
+METHODS
+END c567_demo_column;

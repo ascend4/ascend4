@@ -1,0 +1,313 @@
+(*********************************************************************\
+                        newintegration.lib
+                        by Joseph J. Zaher
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/07/03 14:50:14 $
+  $Revision: 1.7 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/newintegration.lib,v $
+\*********************************************************************)
+(**
+ **
+ **  I  N  T  E  G  R  A  T  I  O  N  .  L  I  B
+ **  -------------------------------------------
+ **
+ **  AUTHOR:      Joseph J. Zaher
+ **
+ **  DATES:       07/91 - Original code.
+ **               02/92 - Made compatible with new set version of ASCEND.
+ **                       Condensed quadrature and ODE methods into 
+ **                       integration.
+ **
+ **  CONTENTS:    For boundary value problems and for dynamic optimization,
+ **               a general integration model is supplied which enables 
+ **               users to specify any of a number of alternative integration
+ **               techniques.
+ **
+ **  REQUIRES:    "system.lib"
+ **
+ **)
+
+
+(* REQUIRE atoms.lib *)
+
+MODEL derivatives;
+
+    n_var                                IS_A integer_constant;
+    dydx[1..n_var], y[1..n_var], x       IS_A solver_var;
+
+    METHODS
+        METHOD clear;
+            x.fixed := FALSE;
+            y[1..n_var].fixed := FALSE;
+            dydx[1..n_var].fixed := FALSE;
+        END clear;
+        METHOD specify;
+            x.fixed := TRUE;
+            y[1..n_var].fixed := TRUE;
+            dydx[1..n_var].fixed := TRUE;
+        END specify;
+
+END derivatives;
+
+MODEL base_model REFINES derivatives;
+
+  deriv IS_A derivatives;
+  
+  deriv.dydx, dydx ARE_THE_SAME;
+  deriv.y, y ARE_THE_SAME;
+  deriv.x, x ARE_THE_SAME;
+  deriv.n_var, n_var ARE_THE_SAME;
+
+END base_model;
+
+
+MODEL test_base_model REFINES base_model;
+
+  n_var :== 5;
+
+END test_base_model;
+
+
+MODEL propagation;
+                         
+    n_point, n_order, n_var             IS_A integer_constant;
+    eval[0..n_point]                    IS_A derivatives;
+    initial, final                      IS_A derivatives;
+    h                                   IS_A solver_var;
+        
+        eval[0..n_point] ARE_ALIKE;
+        h, eval[0].x ARE_ALIKE;
+        initial, eval[0] ARE_THE_SAME;
+        final, eval[n_point] ARE_THE_SAME;
+        n_var, eval[0].n_var ARE_THE_SAME;
+        final.x = initial.x + h;
+
+    METHODS
+        METHOD clear;
+            RUN eval[0..n_point].clear;
+            h.fixed := FALSE;
+        END clear;
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+        END specify;
+
+END propagation;
+
+
+MODEL euler REFINES propagation;
+                        
+    n_point                             :== 1;
+    n_order                             :== 1;
+
+        FOR i IN [1..n_var] CREATE
+            eval[1].y[i] = eval[0].y[i] + h*eval[0].dydx[i];
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_var].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END euler;
+                
+MODEL trapezoid REFINES propagation;
+            
+    n_point                             :== 1;
+    n_order                             :== 2;
+            
+        FOR i IN [1..n_var] CREATE
+            eval[1].y[i] = eval[0].y[i] + (1.0/2.0)*h*
+                (eval[0].dydx[i] + eval[1].dydx[i]);
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_var].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END trapezoid;
+
+MODEL midpoint REFINES propagation;
+
+    n_point                             :== 2;
+    n_order                             :== 2;
+
+               
+        eval[1].x = initial.x + (1.0/2.0)*h;
+        FOR i IN [1..n_var] CREATE
+            eval[1].y[i] = eval[0].y[i] + (1.0/2.0)*h*
+                eval[0].dydx[i];
+            eval[2].y[i] = eval[0].y[i] + h*
+                eval[1].dydx[i];
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_var].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END midpoint;
+
+MODEL simpsons REFINES propagation;
+
+    n_point                             :== 2;
+    n_order                             :== 4;
+
+        eval[1].x = initial.x + (1.0/2.0)*h;
+        FOR i IN [1..n_var] CREATE    
+            eval[1].y[i] = eval[0].y[i] + (1.0/2.0)*h*
+                ((5.0/12.0)*eval[0].dydx[i] + 
+                (8.0/12.0)*eval[1].dydx[i] - 
+                (1.0/12.0)*eval[2].dydx[i]);
+            eval[2].y[i] = eval[0].y[i] + h*
+                ((1.0/6.0)*eval[0].dydx[i] + 
+                (4.0/6.0)*eval[1].dydx[i] + 
+                (1.0/6.0)*eval[2].dydx[i]);
+        END FOR;
+              
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_var].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END simpsons;
+
+MODEL runge_kutta_gill REFINES propagation;
+            
+    n_point                             :== 4;
+    n_order                             :== 4;
+             
+        eval[1].x, eval[2].x ARE_THE_SAME;
+        eval[3].x, eval[4].x ARE_THE_SAME;
+        eval[1].x = initial.x + (1.0/2.0)*h;
+        FOR i IN [1..n_var] CREATE 
+            eval[1].y[i] = eval[0].y[i] + (1.0/2.0)*h*
+                eval[0].dydx[i];
+            eval[2].y[i] = eval[0].y[i] + (1.0/2.0)*h*
+                (0.41421356*eval[0].dydx[i] + 
+                0.58578644*eval[1].dydx[i]);
+            eval[3].y[i] = eval[0].y[i] + h*
+                (-0.707106781*eval[1].dydx[i] +
+                1.707106781*eval[2].dydx[i]);
+            eval[4].y[i] = eval[0].y[i] + h*
+                (0.166666667*eval[0].dydx[i] + 
+                0.097631073*eval[1].dydx[i] +
+                0.569035590*eval[2].dydx[i] + 
+                0.166666667*eval[3].dydx[i]);
+        END FOR; 
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_var].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END runge_kutta_gill;
+
+MODEL gauss REFINES propagation;
+
+    n_point                             :== 4;
+    n_order                             :== 6;
+
+        eval[1].x = initial.x + 0.11270167*h;
+        eval[2].x = initial.x + 0.50000000*h;
+        eval[3].x = initial.x + 0.88729833*h;
+        FOR i IN [1..n_var] CREATE
+            eval[1].y[i] = initial.y[i] + 0.11270167*h*
+                (1.23236*eval[1].dydx[i] -
+                0.31922*eval[2].dydx[i] +
+                0.08686*eval[3].dydx[i]);
+            eval[2].y[i] = initial.y[i] + 0.50000000*h*
+                (0.60053*eval[1].dydx[i] +
+                0.44444*eval[2].dydx[i] -
+                0.04497*eval[3].dydx[i]);
+            eval[3].y[i] = initial.y[i] + 0.88729833*h*
+                (0.30203*eval[1].dydx[i] +
+                0.54144*eval[2].dydx[i] +
+                0.15653*eval[3].dydx[i]);
+            eval[4].y[i] = initial.y[i] + h*
+                (0.27778*eval[1].dydx[i] +
+                0.44444*eval[2].dydx[i] +
+                0.27778*eval[3].dydx[i]);
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_var].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END gauss;
+
+
+MODEL integration;
+                                                    
+    nstep                               IS_A integer_constant;
+    step[1..nstep]                      IS_A propagation;
+    initial, final                      IS_A derivatives;
+
+        FOR i IN [1..nstep-1] CREATE              
+            step[i].final, step[i+1].initial ARE_THE_SAME;
+        END FOR;
+        initial, step[1].initial ARE_THE_SAME;
+        final, step[nstep].final ARE_THE_SAME;
+
+    METHODS
+        METHOD clear;
+            RUN step[1..nstep].clear;
+        END clear;
+        METHOD specify;
+            FOR i IN [1..nstep] DO
+                RUN step[nstep - i + 1].specify;
+            END FOR;
+        END specify;
+
+END integration;
+

@@ -1,0 +1,141 @@
+REQUIRE "simple_fs.a4c";
+(* => simple_fs.a4c, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "simple_fs_ext.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module is demonstrated by the associated script file
+ * simple_fs_cost.a4s.
+ *)
+
+UNIVERSAL MODEL stream_parameters;
+
+        components			IS_A set OF symbol_constant;
+	MW[components]                  IS_A molar_weight_constant;
+        SpGr[components]		IS_A factor_constant;
+
+END stream_parameters;
+
+
+MODEL mod_mixture REFINES mixture;
+
+	sp				IS_A stream_parameters;
+	MW_ave				IS_A molar_mass;
+     	SpGr_ave			IS_A factor;
+
+	sp.components,
+	    components			ARE_THE_SAME;
+
+	yw[components],
+	    yv_liq[components]		IS_A fraction;
+
+
+	sp.MW['A']	:==	50{g/mol};
+	sp.MW['B']	:==	120{g/mol};
+	sp.MW['C']	:==	120{g/mol};
+
+	sp.SpGr['A']	:==	0.8;
+	sp.SpGr['B']	:==	0.8;
+	sp.SpGr['C']	:==	0.8;
+
+	FOR i IN components CREATE
+	    yw_def[i]: yw[i]*MW_ave = y[i]*sp.MW[i];
+	END FOR;
+
+	FOR i IN components CREATE
+	    yv_liq_def[i]: yv_liq[i]*sp.SpGr[i] = yw[i]*SpGr_ave;
+	END FOR;
+
+	sum_yw: SUM[yw[components]] = 1.0;
+	sum_yv_liq: SUM[yv_liq[components]] = 1.0;
+
+
+  METHODS
+
+    METHOD clear;
+	y[components].fixed		:=	FALSE;
+	yw[components].fixed		:=	FALSE;
+	yv_liq[components].fixed		:=	FALSE;
+	MW_ave.fixed			:=	FALSE;
+	SpGr_ave.fixed			:=	FALSE;
+    END clear;
+
+    METHOD specify;
+        y[components].fixed 		:= TRUE;
+        y[CHOICE[components]].fixed 	:= FALSE;
+    END specify;
+
+END mod_mixture;
+
+
+MODEL mod_stream REFINES molar_stream;
+
+	Wtot,w[components]		IS_A mass_rate;
+	Vtot_liq,v_liq[components]	IS_A volume_rate;
+
+	state				IS_REFINED_TO mod_mixture;
+	state.components,
+	    components			ARE_THE_SAME;
+
+	Wtot_def: Wtot = Ftot*state.MW_ave;
+	Vtot_liq_def: Vtot_liq = Wtot/state.SpGr_ave;
+
+	FOR i IN components CREATE
+	    w_def[i]: w[i] = state.yw[i]*Wtot;
+	END FOR;
+
+	FOR i IN components CREATE
+	    v_liq_def[i]: v_liq[i] = state.yv_liq[i]*Vtot_liq;
+	END FOR;
+
+  METHODS
+
+    METHOD clear;
+
+	RUN state.clear;
+	Ftot.fixed			:= FALSE;
+	f[components].fixed		:= FALSE;
+	Wtot.fixed			:= FALSE;
+	w[components].fixed		:= FALSE;
+	Vtot_liq.fixed			:= FALSE;
+	v_liq[components].fixed		:= FALSE;
+	Wtot.fixed			:= FALSE;
+
+    END clear;
+
+    METHOD specify;
+	f[components].fixed		:= TRUE;
+    END specify;
+
+END mod_stream;
+
+
+(*
+ *  simple_fs_ext.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:43:48 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs_ext.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994-1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

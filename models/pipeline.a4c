@@ -1,0 +1,383 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "pipeline.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ *  Use of this module is demonstrated by the associated script file
+ *  pipeline.a4s.
+ *)
+
+(*
+   Ascend model of the pipeline network example presented by Bullard
+and Biegler -- Iterated Linear Programming Strategies for Nonsmooth
+Simulation: Continuous and Mixed Integer Approaches. Comp. Chem. Eng.
+Vol. 16, 949-961, 1992 --. The problem consists of a  network of 38 pipes,
+5 of them including a check valve (so that the flow in those pipes is
+possible only in one direction). Each pipe is represented by a set of
+algebraic disjunctive equations. It represent a problem
+which we can represent as a conditional model and solve  with the
+ascend conditional solver CMSlv.
+
+This model requires:
+			"system.a4l"
+		    	"atoms.a4l"
+*)
+
+(* ************************************************* *)
+
+(* Base model of a pipe *)
+MODEL arc;
+	k		IS_A k_constant;
+	Q		IS_A volume_rate;
+	H		IS_A distance;
+  METHODS
+END arc;
+
+
+(* ************************************************* *)
+
+(* Pipe without check valve *)
+MODEL arc_w_no_valve REFINES arc;
+
+	bol		IS_A boolean_var;
+
+(* Boundary *)
+
+	CONDITIONAL
+	  cond: Q >= 0.0 {gpm};
+	END CONDITIONAL;
+
+	bol == SATISFIED(cond,1e-08 {gpm});
+
+(* Variant Equations *)
+
+	eq1: H = k * sqr(Q);
+	eq2: H = -k * sqr(Q);
+
+(* Disjunctive Statement *)
+
+        WHEN (bol)
+	  CASE TRUE:
+		USE eq1;
+	  CASE FALSE:
+		USE eq2;
+	END WHEN;
+
+  METHODS
+
+    METHOD default_self;
+    END default_self;
+
+    METHOD specify;
+    	k.fixed := TRUE;
+    END specify;
+
+    METHOD bound_self;
+	Q.lower_bound := -1e50{gpm};
+	H.lower_bound := -1e50{ft};
+    END bound_self;
+
+    METHOD values;
+	H := 0 {ft};
+	bol := SATISFIED(cond,1e-08 {gpm});
+    END values;
+
+END arc_w_no_valve;
+
+(* ************************************************* *)
+
+(* Pipe with check valve *)
+MODEL arc_w_valve REFINES arc;
+
+	bol		IS_A boolean_var;
+
+(* Boundary *)
+
+	CONDITIONAL
+	  cond: H >= 0.0 {ft};
+	END CONDITIONAL ;
+
+	bol == SATISFIED(cond,1e-08{ft});
+
+(* Variant Equations *)
+
+	eq1: sqr(Q) = H/k;
+	eq2: Q = 0.0 {gpm};
+
+(* Disjunctive Statement *)
+
+        WHEN (bol)
+	  CASE TRUE:
+		USE eq1;
+	  CASE FALSE:
+		USE eq2;
+	END WHEN;
+
+  METHODS
+
+    METHOD default_self;
+    END default_self;
+
+    METHOD specify;
+    	k.fixed := TRUE;
+    END specify;
+
+    METHOD bound_self;
+	H.lower_bound := -1e50{ft};
+    END bound_self;
+
+    METHOD values;
+	H := 1.0 {ft};
+	bol := SATISFIED(cond,1e-08{ft});
+    END values;
+END arc_w_valve;
+
+(* ************************************************* *)
+
+(* Pipeline Network *)
+MODEL pipeline;
+
+	nodes		IS_A set OF integer_constant;
+	arcs		IS_A set OF integer_constant;
+	Pipe[arcs]	IS_A arc;
+	P[nodes]	IS_A distance;
+	W[nodes]	IS_A volume_rate;
+	Q[arcs]		IS_A volume_rate;
+	H[arcs]		IS_A distance;
+	k		IS_A k_constant;
+
+(* Sets definition *)
+
+	nodes :== [1..22];
+	arcs  :== [1..38];
+
+(* Wire up network *)
+
+	Pipe[15],Pipe[19],Pipe[23],Pipe[32],
+	    Pipe[34] IS_REFINED_TO arc_w_valve;
+
+	FOR i IN [1..14] CREATE
+	    Pipe[i] IS_REFINED_TO arc_w_no_valve;
+	END FOR;
+	FOR i IN [16..18] CREATE
+	    Pipe[i] IS_REFINED_TO arc_w_no_valve;
+	END FOR;
+	FOR i IN [20..22] CREATE
+	    Pipe[i] IS_REFINED_TO arc_w_no_valve;
+	END FOR ;
+	FOR i IN [24..31] CREATE
+	    Pipe[i] IS_REFINED_TO arc_w_no_valve;
+	END FOR;
+	Pipe[33] IS_REFINED_TO arc_w_no_valve;
+	FOR i IN [35..38] CREATE
+	    Pipe[i] IS_REFINED_TO arc_w_no_valve;
+	END FOR;
+
+	FOR i IN arcs CREATE
+	    Q[i],Pipe[i].Q ARE_THE_SAME;
+	    H[i],Pipe[i].H ARE_THE_SAME;
+	    k,Pipe[i].k ARE_THE_SAME;
+	END FOR;
+
+(* Invariant Equations *)
+
+	(* Pressure Drops at each arc *)
+	P[1]  - P[6]  = H[1];
+	P[2]  - P[1]  = H[2];
+	P[2]  - P[3]  = H[3];
+	P[3]  - P[11] = H[4];
+	P[13] - P[11] = H[5];
+	P[14] - P[12] = H[6];
+	P[12] - P[16] = H[7];
+	P[16] - P[17] = H[8];
+	P[19] - P[20] = H[9];
+	P[21] - P[19] = H[10];
+	P[7]  - P[6]  = H[11];
+	P[10] - P[9]  = H[12];
+	P[7]  - P[9]  = H[13];
+	P[21] - P[18] = H[14];
+	P[14] - P[10] = H[15];
+	P[22] - P[10] = H[16];
+	P[21] - P[22] = H[17];
+	P[1]  - P[5]  = H[18];
+	P[5]  - P[4]  = H[19];
+	P[4]  - P[2]  = H[20];
+	P[3]  - P[4]  = H[21];
+	P[11] - P[4]  = H[22];
+	P[11] - P[12] = H[23];
+	P[12] - P[13] = H[24];
+	P[13] - P[14] = H[25];
+	P[12] - P[15] = H[26];
+	P[16] - P[15] = H[27];
+	P[18] - P[15] = H[28];
+	P[17] - P[18] = H[29];
+	P[19] - P[15] = H[30];
+	P[15] - P[20] = H[31];
+	P[20] - P[21] = H[32];
+	P[9]  - P[22] = H[33];
+	P[9]  - P[8]  = H[34];
+	P[5]  - P[8]  = H[35];
+	P[5]  - P[10] = H[36];
+	P[8]  - P[7]  = H[37];
+	P[6]  - P[5]  = H[38];
+
+	(* Flow balance around each node  *)
+
+	W[1] = Q[2] - Q[1] - Q[18];
+	W[2] = Q[20] - Q[2] - Q[3];
+	W[3] = Q[3] - Q[4] - Q[21];
+	W[4] = Q[19] + Q[21] + Q[22] - Q[20];
+	W[5] = Q[18] + Q[38] - Q[19] - Q[35] - Q[36];
+	W[6] = Q[1] + Q[11] - Q[38];
+	W[7] = Q[37] - Q[11] - Q[13];
+	W[8] = Q[34] + Q[35] - Q[37];
+	W[9] = Q[12] + Q[13] - Q[33] - Q[34];
+	W[10] = Q[15] + Q[16] + Q[36] - Q[12];
+	W[11] = Q[4] + Q[5] - Q[22] - Q[23];
+	W[12] = Q[6] + Q[23] - Q[7] - Q[24] - Q[26];
+	W[13] = Q[24] - Q[5] - Q[25];
+	W[14] = Q[25] - Q[6] - Q[15];
+	W[15] = Q[26] + Q[27] + Q[28] + Q[30] - Q[31];
+	W[16] = Q[7] - Q[8] - Q[27];
+	W[17] = Q[8] - Q[29];
+	W[18] = Q[14] + Q[29] - Q[28];
+	W[19] = Q[10] - Q[9] - Q[30];
+	W[20] = Q[9] + Q[31] - Q[32];
+	W[21] = Q[32] - Q[10] - Q[14] - Q[17];
+	W[22] = Q[17] + Q[33] - Q[16];
+
+
+  METHODS
+
+    METHOD default_self;
+    END default_self;
+
+    METHOD specify;
+	k.fixed := TRUE;
+	FOR i IN nodes DO
+	    W[i].fixed := TRUE;
+	END FOR;
+	W[18].fixed := FALSE;
+	P[17].fixed := TRUE;
+    END specify;
+
+   METHOD bound_self;
+	FOR i IN nodes DO
+	    W[i].lower_bound := -1e50 {gpm};
+	END FOR;
+	FOR i IN nodes DO
+	    P[i].lower_bound := 0 {ft};
+	END FOR ;
+   END bound_self;
+
+    METHOD bound_all;
+	FOR i IN arcs DO
+	    RUN Pipe[i].bound_self;
+	END FOR;
+        RUN bound_self;
+    END bound_all;
+
+    METHOD values;
+
+        RUN bound_all;
+
+	FOR i IN arcs DO
+	    RUN Pipe[i].values;
+	END FOR;
+
+(* fixed *)
+	k := 0.36412197 {s^2/ft^5};
+
+	FOR i IN nodes DO
+	    W[i] := 0 {gpm};
+	END FOR;
+	W[1] := -897.6 {gpm};
+	W[7] := -1570.9 {gpm};
+	W[11] := 897.6 {gpm};
+	W[17] := 1795.3 {gpm};
+	W[20] := 448.8 {gpm};
+	W[22] := -673.2 {gpm};
+
+(* Initial guess *)
+
+	(* Pressure head *)
+	FOR i IN nodes DO
+	    P[i] := 0 {ft};
+	END FOR ;
+	P[17] := 0 {ft};
+
+	(* volume rates *)
+	Q[1] :=  -48.5 {gpm};
+	Q[2] :=  -640.7 {gpm};
+	Q[3] :=  393.2 {gpm};
+	Q[4] :=  538.9 {gpm};
+	Q[5] :=  -32.3 {gpm};
+	Q[6] :=  490.2 {gpm};
+	Q[7] :=  649.9 {gpm};
+	Q[8] :=  904.7 {gpm};
+	Q[9] :=  112.2 {gpm};
+	Q[10] :=  232.5 {gpm};
+	Q[11] :=  402.3 {gpm};
+	Q[12] :=  -420.4 {gpm};
+	Q[13] :=  687.3 {gpm};
+	Q[14] :=  621.7 {gpm};
+	Q[15] :=  -719.2 {gpm};
+	Q[16] :=  52.7 {gpm};
+	Q[17] :=  1199 {gpm};
+	Q[18] :=  305.4 {gpm};
+	Q[19] :=  582.8 {gpm};
+	Q[20] :=  -247.5 {gpm};
+	Q[21] :=  -145.7 {gpm};
+	Q[22] :=  -684.6 {gpm};
+	Q[23] :=  293.6 {gpm};
+	Q[24] :=  -261.3 {gpm};
+	Q[25] :=  -229 {gpm};
+	Q[26] :=  -395.1 {gpm};
+	Q[27] :=  -254.8 {gpm};
+	Q[28] :=  -268.9 {gpm};
+	Q[29] :=  -890.6 {gpm};
+	Q[30] :=  120.3 {gpm};
+	Q[31] :=  -8.1{gpm};
+	Q[32] :=  -344.7 {gpm};
+	Q[33] :=  473.1 {gpm};
+	Q[34] :=  -206.2 {gpm};
+	Q[35] :=  -275 {gpm};
+	Q[36] :=  351.5 {gpm};
+	Q[37] :=  -481.2 {gpm};
+	Q[38] :=  353.9 {gpm};
+    END values;
+
+END pipeline;
+
+
+(*
+ *  pipeline.a4c
+ *  by Vicente Rico-Ramirez
+ *  April 10, 1998
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:15:04 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/pipeline.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

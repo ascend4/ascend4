@@ -1,0 +1,224 @@
+#  ASCEND Compiler Makefile
+#  Tom Epperly
+#  modified Kirk Abbott to accept the interface.
+#  $Date: 1997/12/20 17:50:56 $
+#  $Revision: 1.5 $
+#  $Author: ballan $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/compiler/Makefile.vc,v $
+#
+
+
+builddir = ..
+srcdir = .
+VPATH = .
+
+
+
+#  The next variables are the primary executables and/or libraries that
+#  this makefile is responsible for, and the default target of this
+#  makefile.
+
+EXECUTABLE = ascend
+
+PURIFIED_EXEC = ascendp
+
+QUANTIFIED_EXEC = ascendq
+
+LIBRARY = libasc.lib
+
+
+default: $(LIBRARY)
+
+
+
+#  Defines and Includes that are specific to this directory
+
+DIR_SPECIFIC_DEFS = 
+DIR_SPECIFIC_INCS = 
+
+
+
+#  The next variables list the source files (EXEC_SCRS) to compile
+#  into the object files (EXEC_OBJS) that are linked with the
+#  library files (EXEC_LIBS) to make EXECUTABLE
+
+EXEC_SRCS = actype.c interface.c license.c main.c termsetup.c
+
+EXEC_OBJS = actype.obj interface.obj license.obj main.obj termsetup.obj \
+		$(ARCHIVE)\libasc.lib $(ARCHIVE)\libutils.lib \
+		$(ARCHIVE)\libgeneral.lib
+
+EXEC_LIBS = $(DEBUG_MALLOC_LIBS) $(MATH_LIBS) -ltermcap $(DEBUG_LIBS)
+
+
+
+#  The next variables list the source files (LIB_SCRS) to compile
+#  into the object files (LIB_OBJS) that are combined to make LIBRARY
+
+LIB_SRCS = \
+	anoncopy.c anonmerg.c anontype.c arrayinst.c ascCompiler.c \
+	ascParse.c atomsize.c atomvalue.c bit.c case.c \
+	check.c child.c childdef.c childinfo.c cmpfunc.c \
+	commands.c copyinst.c createinst.c destroyinst.c \
+	dimen.c dimen_io.c dump.c \
+	evaluate.c exprio.c exprs.c exprsym.c extcall.c extfunc.c \
+	extinst.c find.c forvars.c fractions.c freestore.c func.c \
+	initialize.c instance.c instance_io.c \
+	instantiate.c instmacro.c instquery.c interval.c library.c \
+	linkinst.c logrel_io.c logrel_util.c logrelation.c \
+	mathinst.c mergeinst.c module.c name.c nameio.c numlist.c packages.c \
+	parentchild.c pending.c proc.c procio.c prototype.c \
+	refineinst.c rel_common.c relation.c relation_io.c \
+	relation_util.c rootfind.c rounded.c safe.c scanner.c \
+	select.c setinst_io.c setinstval.c setio.c sets.c slist.c \
+	simlist.c statement.c statio.c switch.c symtab.c syntax.c \
+	temp.c tmpnum.c type_desc.c type_descio.c \
+	typedef.c typelint.c units.c universal.c value_type.c \
+	visitinst.c visitlink.c vlist.c vlistio.c \
+	when.c when_io.c when_util.c
+
+LIB_OBJS = \
+	anoncopy.obj anonmerg.obj anontype.obj arrayinst.obj \
+	ascCompiler.obj ascParse.obj atomsize.obj \
+	atomvalue.obj bit.obj case.obj check.obj child.obj \
+	childdef.obj childinfo.obj cmpfunc.obj commands.obj \
+	copyinst.obj createinst.obj destroyinst.obj \
+	dimen.obj dimen_io.obj dump.obj \
+	evaluate.obj exprio.obj exprs.obj exprsym.obj extcall.obj extfunc.obj \
+	extinst.obj find.obj forvars.obj fractions.obj freestore.obj func.obj \
+	initialize.obj instance.obj instance_io.obj \
+	instantiate.obj instmacro.obj instquery.obj interval.obj library.obj \
+	linkinst.obj logrel_io.obj logrel_util.obj logrelation.obj \
+	mathinst.obj mergeinst.obj module.obj name.obj nameio.obj numlist.obj \
+	packages.obj \
+	parentchild.obj pending.obj proc.obj procio.obj prototype.obj \
+	refineinst.obj rel_common.obj relation.obj relation_io.obj \
+	relation_util.obj rootfind.obj rounded.obj safe.obj scanner.obj \
+	select.obj setinst_io.obj setinstval.obj setio.obj sets.obj slist.obj \
+	simlist.obj statement.obj statio.obj switch.obj symtab.obj syntax.obj \
+	temp.obj tmpnum.obj type_desc.obj type_descio.obj \
+	typedef.obj typelint.obj units.obj universal.obj value_type.obj \
+	visitinst.obj visitlink.obj vlist.obj vlistio.obj \
+	when.obj when_io.obj when_util.obj
+
+
+
+#  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
+#  
+!include $(builddir)/ConfigAscend.vc
+!include $(builddir)/Makefile.Rules.vc
+
+
+
+#  File specific rules
+
+#  The parser needs some massaging to change the prefix from `yy' to `zz_'
+
+#ascParse.obj: $(srcdir)\ascParse.y
+
+#ascParse.c ascParse.h: $(srcdir)\ascParse.y
+#	$(YACC) -d $(srcdir)\ascParse.y
+#	$(RM) ascParse.h ascParse.c
+#	cat y.tab.c | $(SED) -e "\#ifndef YYSTYPE\,\#endif\d" \
+#		-e "s\yy\zz_\g" -e "s\YY\ZZ_\g" > ascParse.c
+#	$(SED) -e "s\yy\zz_\g" -e "s\YY\ZZ_\g" < y.tab.h > ascParse.h
+#	$(RM) y.tab.c y.tab.h
+
+ascParse.obj: $(srcdir)\ascParse.y $(srcdir)\ascParse.c.no.yacc
+	$(MAKE) -f Makefile.vc ascParse.c.from.c
+	$(CC) $(CC_SWITCHES) -DYY_USE_CONST -c ascParse.c
+
+ascParse.c.from.yacc: $(srcdir)\ascParse.y
+	$(YACC) -d $(srcdir)\ascParse.y
+	$(RM) ascParse.h ascParse.c
+	cat y.tab.c | $(SED) -e "\#ifndef YYSTYPE\,\#endif\d" \
+		-e "s\yy\zz_\g" -e "s\YY\ZZ_\g" > ascParse.c
+	$(SED) -e "s\yy\zz_\g" -e "s\YY\ZZ_\g" < y.tab.h > ascParse.h
+	$(RM) y.tab.c y.tab.h
+
+ascParse.c.from.c: $(srcdir)\ascParse.c.no.yacc
+	$(CP) $(srcdir)\ascParse.c.no.yacc ascParse.c
+	$(CP) $(srcdir)\ascParse.h.no.yacc ascParse.h
+
+ascParse.h ascParse.c: $(srcdir)\ascParse.y $(srcdir)\ascParse.c.no.yacc
+	$(MAKE) -f Makefile.vc ascParse.c.from.c
+
+#  rounded needs a special define
+
+rounded.obj: $(srcdir)\rounded.h $(srcdir)\rounded.c $(srcdir)\compiler.h
+	$(CC) -DSLOPPY $(CC_SWITCHES) -c $(srcdir)\rounded.c
+
+
+#  The C file for the scanner (scanner.c) can either be generated by flex,
+#  or it can come from a pregenerated C file.  The configure script will
+#  set the $(MAKE) line under the ``scanner'' target to make either
+#      scanner.c.from.flex   ---to generate the scanner using flex
+#      scanner.c.from.c      ---to use the pregenerated C file
+#  depending on the value of $(LEX).
+
+scanner.obj: $(srcdir)\scanner.l $(srcdir)\scanner.c.no.flex .\ascParse.h
+	$(MAKE) -f Makefile.vc scanner.c.from.c
+	$(CC) $(CC_SWITCHES) -DYY_USE_CONST -c scanner.c
+
+scanner.c.from.flex: $(srcdir)\scanner.l .\ascParse.h
+	$(LEX) -Pzz_ -t $(srcdir)\scanner.l > scanner.c
+
+scanner.c.from.c: $(srcdir)\scanner.c.no.flex
+	$(CP) $(srcdir)\scanner.c.no.flex scanner.c
+
+scanner.c: $(srcdir)\scanner.l $(srcdir)\scanner.c.no.flex .\ascParse.h
+	$(MAKE) -f Makefile.vc scanner.c.from.c
+
+
+#  This ensures that packages was built with -DNO_PACKAGES 
+#  when building the stand-alone compiler
+
+.no-packages: packages.obj
+	$(RM) $?
+	$(MAKE) -f Makefile.vc $? HAVE_PACKAGES=-DNO_PACKAGES
+	$(ECHO) 'Made packages.obj with -DNO_PACKAGES' > $@
+
+packages.obj: $(srcdir)\packages.c
+	$(CC) $(HAVE_PACKAGES) $(CC_SWITCHES) -c $?
+
+
+###==> standalone compiler <==##############################
+#  uncomment the following lines if you want to build a standalone
+#  compiler with NO_PACKAGES selected in ConfigAscend.
+#HAVE_PACKAGES = -DNO_PACKAGES
+#PACK_LIBS = 
+
+
+#  Here is a target to build a stand alone version of the ASCEND
+#  compiler.  It makes sure packages was built with -NO_PACKAGES,
+#  and then builds ascend.
+#
+stand-alone: .no-packages
+	$(MAKE) -f Makefile.vc ascend PACK_LIBS=""
+
+
+#  profiling stuff -- DEC alpha only
+#
+time:
+	$(PIXIE) ascend
+	cd $(PIXIEDIR); $(builddir)\ascend.pixie .\system
+	$(RM) \tmp\time.ascend
+	prof $(PIXIE_OPTS) ascend ascend.Addrs \
+	$(PIXIEDIR)\ascend.Counts > \tmp\time.ascend
+
+
+
+#  Files, in addition to the default, to remove when we `make clean'
+
+clean::
+	-$(RM) ascParse.h ascParse.c y.ascParse.c y.ascParse.h yacc.* \
+		scanner.c fascend .no-packages
+
+
+
+# DO NOT DELETE THIS LINE -- g++dep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+
+
+# IF YOU PUT ANYTHING HERE IT WILL GO AWAY
+#

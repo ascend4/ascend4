@@ -1,0 +1,162 @@
+REQUIRE "simple_fs_ext.a4c";
+(* => simple_fs_ext.a4c, simple_fs.a4c, atoms.a4l, measures.a4l,
+ *    system.a4l, basemodel.a4l *)
+REQUIRE "Guthrie_costs.a4l";
+(* => Guthrie_costs.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "simple_fs_cost.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+ATOM cash_flow REFINES cost_per_time;
+    lower_bound := -1.0e50 {USdollar/min};
+    nominal     := 1.0 {USdollar/s};
+END cash_flow;
+
+
+MODEL flowsheet_cost;
+
+	tc				IS_A 	test_controller;
+	cm1,cr1,cfl1			IS_A 	simple_pressure_vessel_cost;
+
+       	feed_cost,bleed_value,
+	    product_value,
+	    annual_profit,
+	    annual_investment_cost	IS_A 	cash_flow;
+       	price[tc.fs.m1.out.components],
+	    fuel_price			IS_A	cost_per_mass;
+	payout_time			IS_A	time;
+
+
+	tc.fs.m1.feed[1],
+	    tc.fs.m1.out,
+	    tc.fs.r1.out,
+	    tc.fs.fl1.liq,
+	    tc.fs.fl1.vap,
+	    tc.fs.sp1.out[1..2]		IS_REFINED_TO mod_stream;
+
+
+	cm1.gc.ci,
+	cr1.gc.ci,
+	cfl1.gc.ci			ARE_THE_SAME;
+
+	cm1.vol_flow,
+	    tc.fs.m1.out.Vtot_liq	ARE_THE_SAME;
+
+	cr1.vol_flow,
+	    tc.fs.r1.feed.Vtot_liq	ARE_THE_SAME;
+
+	cfl1.vol_flow,
+	    tc.fs.fl1.feed.Vtot_liq	ARE_THE_SAME;
+
+	annual_investment_cost = (cm1.installed_cost + cr1.installed_cost
+	    + cfl1.installed_cost)/payout_time;
+
+	feed_cost = price['B']*tc.fs.m1.feed[1].w['B']
+	    *tc.fs.m1.feed[1].state.yw['B'];
+
+	bleed_value = fuel_price*tc.fs.sp1.out[1].Wtot;
+
+	product_value = price['C']*tc.fs.fl1.liq.w['C']
+	    *tc.fs.fl1.liq.state.yw['C'];
+
+	annual_profit = product_value+bleed_value-feed_cost
+	    -annual_investment_cost;
+
+	MAXIMIZE annual_profit;
+
+
+  METHODS
+
+    METHOD clear;
+	RUN tc.clear;
+	RUN cm1.clear;
+	RUN cr1.clear;
+	RUN cfl1.clear;
+
+	feed_cost.fixed				:=	FALSE;
+	bleed_value.fixed			:=	FALSE;
+	product_value.fixed			:=	FALSE;
+	price[tc.fs.m1.out.components].fixed    :=	FALSE;
+	fuel_price.fixed			:=	FALSE;
+	payout_time.fixed			:=	FALSE;
+
+    END clear;
+
+    METHOD specify;
+	RUN tc.specify;
+	RUN cm1.specify;
+	RUN cr1.specify;
+	RUN cfl1.specify;
+
+	cm1.vol_flow.fixed			:=	FALSE;
+	cr1.vol_flow.fixed			:=	FALSE;
+	cfl1.vol_flow.fixed			:=	FALSE;
+
+	price[tc.fs.m1.out.components].fixed	:=	TRUE;
+	fuel_price.fixed			:=	TRUE;
+	payout_time.fixed			:=	TRUE;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD values;
+
+	RUN tc.values;
+
+	payout_time.nominal		:=	2{yr};
+	price['A']				:=	0.15{dollar/lbm};
+	price['B']				:=	0.15{dollar/lbm};
+	price['C']				:=	0.30{dollar/lbm};
+
+	fuel_price				:=	0.1 {dollar/lbm};
+	payout_time				:=	3 {yr};
+
+	cm1.gc.ci.MandSindex			:=	990.8;
+	cm1.gc.ci.Fp				:=	1.0;
+	cm1.gc.ci.Fm				:=	1.0;
+
+	cm1.H_to_D				:=	2.0;
+	cm1.liq_holdup_time			:=	10{s};
+	cr1.H_to_D				:=	2.0;
+	cr1.liq_holdup_time			:=	10{s};
+	cfl1.H_to_D				:=	2.0;
+	cfl1.liq_holdup_time			:=	10{s};
+
+    END values;
+
+END flowsheet_cost;
+
+
+(*
+ *  simple_fs_cost.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:43:47 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs_cost.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994-1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

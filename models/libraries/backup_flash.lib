@@ -1,0 +1,899 @@
+(*********************************************************************\
+                        flash.lib
+                        by Robert S. Huss
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/07/03 14:49:40 $
+  $Revision: 1.6 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/backup_flash.lib,v $
+\*********************************************************************)
+
+(*
+
+	F L A S H . L I B
+        -----------------
+
+	AUTHOR:		Robert S. Huss
+
+	DATES:		5/93 - Original code.
+			9/93 - Slight changes to original code.
+			6/94 - Made compatible with ASCEND3C
+                        4/96 - Modified for the use of constants and abs
+
+	CONTENTS:	Vapor-liquid-equilibrium flash models.  
+			Molar flash models:
+
+			VLE_flash:  Basic molar flash model with constant
+			relative volatility.  Any number of input streams,
+			any number of liquid and vapor output streams.
+
+			simple_tray:  Refines VLE_flash.  Specifies
+			1 liquid and 1 vapor input streams, 1 liquid
+			and 1 vapor output streams.
+
+			simple_feed_tray: Refines VLE_flash.  Specifies
+			1 liquid, 1 vapor, and 1 feed input streams, 
+			1 liquid, 1 vapor output streams;
+
+			multiple_feed_tray: Refines VLE_flash.  Any
+			number of 'feed' inputs, 1 liquid, 1 vapor input,
+			1 liquid, 1 vapor output.
+
+			condenser: Refines VLE_flash.  1 vapor input,
+			2 liquid outputs (liquid, distillate), 1 vapor 
+			output (vapor_product).
+
+			reboiler: Refines VLE_flash.  1 liquid input,
+			2 vapor outputs (vapor, vapor_product), 1 liquid
+			output (bottoms).
+
+			Thermodynamic flash models (td):  Refine molar
+			flash models to incorporate thermodynamics. 
+			data[components] must be defined, and feed streams
+			must be refined to thermodynamic stream models. With td
+			models, ideal and rigorous thermodynamic models are
+			possible. Models are: td_VLE_flash, td_simple_tray,
+			td_simple_feed_tray, td_multiple_feed_tray, 
+			td_condenser, td_rebolier.  The variable 
+			'can_be_adiabatic' defines whether or not the
+			flash type would typically be adiabatic in a 
+			standard column.  
+
+			murphree_equilibrium_mixture: Refinement of
+			multiphase_mixture in thermodynamics library
+			to incorporate Murphree Vapor Efficiency
+			into a tray model.  When used with a tray
+			model, the ref_y variables should be ARE_THE_SAME'd
+			to the incoming vapor to get Murphree Vapor
+			Efficiency.  This model can be used to get
+			a pseudo efficiency by using the overall
+			mixture composition y[components] as the
+			reference composition.
+
+			murph_tray:  Refinement of td_simple_tray to 
+			include Murphree efficiency.  Uses
+			murphree_equilibrium_mixture. 
+
+	REQUIRES:	"atoms.lib"
+			"components.lib"
+			"H_S_thermodynamics.lib" or "H_G_thermodynamics.lib"  
+			"stream.lib"
+*)
+
+
+(* REQUIRE stream.lib *)
+
+(* ***********************************+************************************ *)
+(* ********************         Flash Definitions     ********************* *)
+(* ***********************************+************************************ *)
+
+                  
+(* ***********************************+************************************ *)
+(* ********************           VLE_flash           ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL VLE_flash;
+
+	components				IS_A set OF symbol_constant;
+	alpha[components]			IS_A factor;
+
+	inputs, liqouts, vapouts		IS_A set OF symbol_constant;
+	input[inputs],
+	liqout[liqouts],
+	vapout[vapouts]				IS_A molar_stream;
+
+	VLE					IS_A heterogeneous_mixture;
+	scale					IS_A scaling_constant;
+	
+	(* Linking *)
+
+	components, 
+	input[inputs].components,
+	totfeed.components,
+	VLE.components				ARE_THE_SAME;
+
+	FOR i IN components CREATE
+	  alpha[i], VLE.alpha['vapor'][i]	ARE_THE_SAME;
+	END FOR;
+
+
+	(* defining equilibrium *)
+
+	VLE.phases				:== ['liquid','vapor'];
+
+	liqout[liqouts].state,
+	VLE.mix['liquid']			ARE_THE_SAME;
+
+	vapout[vapouts].state,
+	VLE.mix['vapor']			ARE_THE_SAME;
+
+
+	VLE.reference				:== 'liquid';
+
+	(* Mass  balances 	*)
+
+	totfeed					IS_A molar_stream;
+
+	liqsplit[liqouts],
+	vapsplit[vapouts]			IS_A fraction;
+
+
+	FOR i IN components CREATE
+	  totfeedflow[i]: totfeed.f[i] = SUM[input[inputs].f[i]];
+	END FOR;
+
+	FOR i IN components - [CHOICE[components]] CREATE
+	  totfeed.state.y[i], VLE.y[i]			ARE_THE_SAME;
+	END FOR;
+
+	FOR j IN liqouts CREATE
+	  liqoutflow[j]: liqout[j].Ftot = 
+		VLE.phi['liquid']*totfeed.Ftot*liqsplit[j];
+	END FOR;
+
+	FOR j IN vapouts CREATE
+	  vapoutflow[j]: vapout[j].Ftot = 
+		VLE.phi['vapor']*totfeed.Ftot*vapsplit[j];
+	END FOR;
+
+	sum_liqsplit: SUM[liqsplit[liqouts]] = 1.0;
+	sum_vapsplit: SUM[vapsplit[vapouts]] = 1.0;
+
+
+  METHODS
+
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN VLE.specify;
+	VLE.y[components].fixed			:= FALSE; 
+	liqsplit[liqouts].fixed			:= TRUE;
+	liqsplit[CHOICE[liqouts]].fixed		:= FALSE;
+	vapsplit[vapouts].fixed			:= TRUE;
+	vapsplit[CHOICE[vapouts]].fixed		:= FALSE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+	RUN input[inputs].specify;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;  
+   
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+    END scale;
+
+
+END VLE_flash;    
+
+(* ***********************************+************************************ *)
+(* ********************          simple_tray          ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL simple_tray REFINES VLE_flash;
+
+	inputs :== ['liquid','vapor'];
+	liqouts :== ['liquid'];
+	vapouts :== ['vapor'];
+
+	cmo_ratio				IS_A factor;
+
+	cmo: cmo_ratio*input['liquid'].Ftot = liqout['liquid'].Ftot;
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	cmo_ratio.fixed 			:= FALSE;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	cmo.included				:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN VLE.specify;
+	VLE.y[components].fixed			:= FALSE;
+	VLE.phi[VLE.phases].fixed 		:= FALSE;
+	cmo_ratio.fixed				:= TRUE;
+    END seqmod;
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	cmo_ratio.nominal := cmo_ratio;
+	cmo_ratio.lower_bound := 0.0;
+	cmo_ratio.upper_bound := cmo_ratio + scale*cmo_ratio.nominal;
+    END scale;
+
+END simple_tray;
+
+(* ***********************************+************************************ *)
+(* ********************       simple_feed_tray        ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL simple_feed_tray REFINES VLE_flash;
+
+
+	q					IS_A factor;
+
+	inputs :== ['feed','liquid','vapor'];
+	liqouts :== ['liquid'];
+	vapouts :== ['vapor'];
+
+	qeq: liqout['liquid'].Ftot = 
+		input['liquid'].Ftot + q*input['feed'].Ftot;
+
+	q := 1.0;
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	q.fixed 				:= FALSE;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	qeq.included				:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN VLE.specify;
+	VLE.y[components].fixed			:= FALSE;
+	VLE.phi[VLE.phases].fixed 		:= FALSE;
+	q.fixed					:= TRUE;
+    END seqmod;
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	q.nominal := abs(q);
+	q.lower_bound := q - scale*q.nominal;
+	q.upper_bound := q + scale*q.nominal;
+    END scale;
+
+END simple_feed_tray;
+
+(* ***********************************+************************************ *)
+(* ********************            condenser          ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL condenser REFINES VLE_flash;
+
+	reflux_ratio				IS_A factor;
+	prodsplit['distillate','vapor_product']	IS_A fraction;
+	totprod					IS_A molar_stream;
+	
+	inputs					:== ['vapor'];
+	liqouts 				:== ['liquid','distillate'];  
+	vapouts					:== ['vapor_product'];
+
+                                                        
+	components, totprod.components		ARE_THE_SAME;
+      
+	reflux_def: liqout['liquid'].Ftot = 
+	reflux_ratio*totprod.Ftot;
+
+	FOR i IN components CREATE
+		totprodflow[i]: totprod.f[i] = liqout['distillate'].f[i] 
+				+ vapout['vapor_product'].f[i];
+	END FOR;
+	split_def_distillate: totprod.Ftot*prodsplit['distillate'] 
+				= liqout['distillate'].Ftot;
+	split_def_vapor_product: totprod.Ftot*prodsplit['vapor_product'] 
+				= vapout['vapor_product'].Ftot;
+
+
+	prodsplit['distillate'] := 1.0;
+	prodsplit['vapor_product'] := 0.0;
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	reflux_ratio.fixed 			:= FALSE;
+	prodsplit['distillate'].fixed		:= FALSE;
+	prodsplit['vapor_product'].fixed 	:= FALSE;
+	RUN totprod.clear;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	reflux_def.included			:= TRUE;
+	totprodflow[components].included	:= TRUE;
+	split_def_distillate.included	:= TRUE;
+	split_def_vapor_product.included	:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN VLE.specify;
+	VLE.y[components].fixed			:= FALSE;
+	reflux_ratio.fixed			:= TRUE;
+	VLE.phi[VLE.phases].fixed		:= FALSE;
+	prodsplit['vapor_product'].fixed	:= TRUE;
+    END seqmod;
+    METHOD scale;
+	RUN VLE.scale;
+	reflux_ratio.nominal := reflux_ratio;
+	reflux_ratio.lower_bound := 1e-8;
+	reflux_ratio.upper_bound := reflux_ratio + scale*reflux_ratio.nominal;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	RUN totprod.scale;
+    END scale;
+
+END condenser;
+
+(* ***********************************+************************************ *)
+(* ********************            reboiler           ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL reboiler REFINES VLE_flash;
+
+	reboil_ratio				IS_A factor;
+	prodsplit['bottoms','vapor_product']	IS_A fraction;
+	totprod					IS_A molar_stream;
+
+	inputs					:== ['liquid'];
+	liqouts 				:== ['bottoms'];
+	vapouts					:== ['vapor','vapor_product'];
+
+	components, totprod.components		ARE_THE_SAME;
+
+	reboil_def: vapout['vapor'].Ftot =
+			reboil_ratio*totprod.Ftot;
+
+	FOR i IN components CREATE
+		totprodflow[i]: totprod.f[i] = liqout['bottoms'].f[i] 
+				+ vapout['vapor_product'].f[i];
+	END FOR;
+	split_def_bottoms: totprod.Ftot*prodsplit['bottoms'] 
+				= liqout['bottoms'].Ftot;
+	split_def_vapor_product: totprod.Ftot*prodsplit['vapor_product'] 
+				= vapout['vapor_product'].Ftot;
+
+	prodsplit['bottoms'] := 1.0;
+	prodsplit['vapor_product'] := 0.0;
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	reboil_ratio.fixed 			:= FALSE;
+	prodsplit['bottoms'].fixed		:= FALSE;
+	prodsplit['vapor_product'].fixed 	:= FALSE;
+	RUN totprod.clear;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	reboil_def.included			:= TRUE;
+	totprodflow[components].included	:= TRUE;
+	split_def_bottoms.included		:= TRUE;
+	split_def_vapor_product.included	:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN VLE.specify;
+	VLE.y[components].fixed			:= FALSE;
+	VLE.phi[VLE.phases].fixed 		:= FALSE;
+	reboil_ratio.fixed			:= TRUE;
+	prodsplit['vapor_product'].fixed	:= TRUE;
+    END seqmod;
+    METHOD scale;
+	RUN VLE.scale;
+	reboil_ratio.nominal := refboil_ratio;
+	reboil_ratio.lower_bound := 1e-8;
+	reboil_ratio.upper_bound := reboil_ratio + scale*reboil_ratio.nominal;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	RUN totprod.scale;
+    END scale;
+
+END reboiler;
+
+(* ***********************************+************************************ *)
+(* ********************         td_VLE_flash          ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL td_VLE_flash REFINES VLE_flash;
+
+	Qin					IS_A energy_rate;
+	data[components]			IS_A component_constants;
+	can_be_adiabatic			IS_A boolean;
+
+	can_be_adiabatic			:= TRUE;
+
+	VLE 				IS_REFINED_TO td_heterogeneous_mixture;
+
+	input[inputs]   		IS_REFINED_TO td_stream;
+	liqout[liqouts] 		IS_REFINED_TO liquid_stream;
+	vapout[vapouts] 		IS_REFINED_TO vapor_stream;
+
+	FOR i IN components CREATE
+	  data[i],
+	  input[inputs].data[i],
+	  VLE.data[i]				ARE_THE_SAME;
+	END FOR;
+
+	(* heat balance *)
+
+	energy_bal:  SUM[input[inputs].Htot] + Qin = 
+		     SUM[liqout[liqouts].Htot] + SUM[vapout[vapouts].Htot];
+
+  METHODS
+
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	Qin.fixed				:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	energy_bal.included			:= TRUE;
+    END clear;
+
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	Qin.nominal := abs(Qin) + 1{kW};
+	Qin.lower_bound := Qin - scale*Qin.nominal;
+	Qin.upper_bound := Qin + scale*Qin.nominal;
+    END scale;
+
+END td_VLE_flash;
+
+(* ***********************************+************************************ *)
+(* ********************        td_simple_tray         ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL td_simple_tray REFINES simple_tray;
+
+	Qin					IS_A energy_rate;
+	data[components]			IS_A component_constants;
+	can_be_adiabatic			IS_A boolean;
+
+	can_be_adiabatic			:= TRUE;
+
+	VLE 				IS_REFINED_TO td_heterogeneous_mixture;
+
+	input[inputs]   		IS_REFINED_TO td_stream;
+	liqout[liqouts] 		IS_REFINED_TO liquid_stream;
+	vapout[vapouts] 		IS_REFINED_TO vapor_stream;
+
+	FOR i IN components CREATE
+	  data[i],
+	  input[inputs].data[i],
+	  VLE.data[i]				ARE_THE_SAME;
+	END FOR;
+
+
+
+	(* heat balance *)
+
+	energy_bal:  SUM[input[inputs].Htot] + Qin = 
+		     SUM[liqout[liqouts].Htot] + SUM[vapout[vapouts].Htot];
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	Qin.fixed				:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	cmo_ratio.fixed 			:= FALSE;
+	totfeedflow[components].included	:= TRUE;
+	energy_bal.included			:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	cmo.included				:= TRUE;
+    END clear;
+
+    METHOD heat_balance;
+	cmo_ratio.fixed := FALSE;
+	Qin.fixed := TRUE;
+    END heat_balance;
+
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	Qin.nominal := abs(Qin) + 1{kW};
+	Qin.lower_bound := Qin - scale*Qin.nominal;
+	Qin.upper_bound := Qin + scale*Qin.nominal;
+	cmo_ratio.nominal := cmo_ratio;
+	cmo_ratio.lower_bound := 0.0;
+	cmo_ratio.upper_bound := cmo_ratio + scale*cmo_ratio.nominal;
+    END scale;
+
+END td_simple_tray;
+
+(* ***********************************+************************************ *)
+(* ********************      td_simple_feed_tray      ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL td_simple_feed_tray REFINES simple_feed_tray;
+
+	Qin					IS_A energy_rate;
+	data[components]			IS_A component_constants;
+	can_be_adiabatic			IS_A boolean;
+
+	can_be_adiabatic			:= TRUE;
+
+	VLE IS_REFINED_TO td_heterogeneous_mixture;
+
+	input['feed']   IS_REFINED_TO vapor_liquid_stream;
+	input[inputs]   IS_REFINED_TO td_stream;
+	liqout[liqouts] IS_REFINED_TO liquid_stream;
+	vapout[vapouts] IS_REFINED_TO vapor_stream;
+
+	FOR i IN components CREATE
+	  data[i],
+	  input[inputs].data[i],
+	  VLE.data[i]				ARE_THE_SAME;
+	END FOR;
+
+
+	liqout[liqouts].state,
+	input['feed'].state.mix['liquid']	ARE_ALIKE;
+
+	vapout['vapor'].state,
+	input['feed'].state.mix['vapor']	ARE_ALIKE;
+
+	input['feed'].state.phi['liquid'] := 1.0;
+	input['feed'].state.phi['vapor'] := 0.0;
+
+	(* heat balance *)
+
+	energy_bal:  SUM[input[inputs].Htot] + Qin = 
+		     SUM[liqout[liqouts].Htot] + SUM[vapout[vapouts].Htot];
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	Qin.fixed				:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	q.fixed 				:= FALSE;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	energy_bal.included			:= TRUE;
+	qeq.included				:= TRUE;
+    END clear;
+
+    METHOD heat_balance;
+	q.fixed := FALSE;
+	Qin.fixed := TRUE;
+    END heat_balance;
+
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	Qin.nominal := abs(Qin) + 1{kW};
+	Qin.lower_bound := Qin - scale*Qin.nominal;
+	Qin.upper_bound := Qin + scale*Qin.nominal;
+	q.nominal := abs(q);
+	q.lower_bound := q - scale*q.nominal;
+	q.upper_bound := q + scale*q.nominal;
+    END scale;
+
+END td_simple_feed_tray;
+ 
+(* ***********************************+************************************ *)
+(* ********************         td_reboiler           ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL td_reboiler REFINES reboiler;
+
+	Qin					IS_A energy_rate;
+	data[components]			IS_A component_constants;
+	can_be_adiabatic			IS_A boolean;
+
+	can_be_adiabatic			:= FALSE;
+
+	VLE 				IS_REFINED_TO td_heterogeneous_mixture;
+
+	input[inputs]   		IS_REFINED_TO td_stream;
+	liqout[liqouts] 		IS_REFINED_TO liquid_stream;
+	vapout[vapouts] 		IS_REFINED_TO vapor_stream;
+
+	FOR i IN components CREATE
+	  data[i],
+	  input[inputs].data[i],
+	  VLE.data[i]				ARE_THE_SAME;
+	END FOR;
+
+	(* heat balance *)
+
+	energy_bal:  SUM[input[inputs].Htot] + Qin = 
+		     SUM[liqout[liqouts].Htot] + SUM[vapout[vapouts].Htot];
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	Qin.fixed				:= FALSE;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	reboil_ratio.fixed 			:= FALSE;
+	prodsplit['bottoms'].fixed		:= FALSE;
+	prodsplit['vapor_product'].fixed 	:= FALSE;
+	RUN totprod.clear;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	reboil_def.included			:= TRUE;
+	totprodflow[components].included	:= TRUE;
+	split_def_bottoms.included		:= TRUE;
+	split_def_vapor_product.included	:= TRUE;
+	energy_bal.included			:= TRUE;
+    END clear;
+
+    METHOD scale;
+	RUN VLE.scale;
+	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	Qin.nominal := abs(Qin) + 1{kW};
+	Qin.lower_bound := Qin - scale*Qin.nominal;
+	Qin.upper_bound := Qin + scale*Qin.nominal;
+	RUN totprod.scale;
+	reboil_ratio.nominal := reboil_ratio;
+	reboil_ratio.lower_bound := 1e-8;
+	reboil_ratio.upper_bound := reboil_ratio + scale*reboil_ratio.nominal;
+    END scale;
+
+END td_reboiler;
+
+(* ***********************************+************************************ *)
+(* ********************           td_condenser        ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL td_condenser REFINES condenser;
+
+	Qin					IS_A energy_rate;
+	data[components]			IS_A component_constants;
+	can_be_adiabatic			IS_A boolean;
+
+	can_be_adiabatic			:= FALSE;
+
+	VLE 				IS_REFINED_TO td_heterogeneous_mixture;
+
+	input[inputs]   		IS_REFINED_TO td_stream;
+	liqout[liqouts] 		IS_REFINED_TO liquid_stream;
+	vapout[vapouts] 		IS_REFINED_TO vapor_stream;
+
+	FOR i IN components CREATE
+	  data[i],
+	  input[inputs].data[i],
+	  VLE.data[i]				ARE_THE_SAME;
+	END FOR;
+
+	(* heat balance *)
+
+	energy_bal:  SUM[input[inputs].Htot] + Qin = 
+		     SUM[liqout[liqouts].Htot] + SUM[vapout[vapouts].Htot];
+
+  METHODS
+    METHOD clear;
+	alpha[components].fixed			:= FALSE;
+	Qin.fixed				:= FALSE;
+	RUN input[inputs].clear;
+	RUN liqout[liqouts].clear;
+	RUN vapout[vapouts].clear;
+	RUN VLE.clear;
+	RUN totfeed.clear;
+	liqsplit[liqouts].fixed			:= FALSE;
+	vapsplit[vapouts].fixed			:= FALSE;
+	reflux_ratio.fixed 			:= FALSE;
+	prodsplit['distillate'].fixed		:= FALSE;
+	prodsplit['vapor_product'].fixed 	:= FALSE;
+	RUN totprod.clear;
+	totfeedflow[components].included	:= TRUE;
+	liqoutflow[liqouts].included		:= TRUE;
+	vapoutflow[vapouts].included		:= TRUE;
+	sum_liqsplit.included			:= TRUE;
+	sum_vapsplit.included			:= TRUE;
+	reflux_def.included			:= TRUE;
+	totprodflow[components].included	:= TRUE;
+	split_def_distillate.included		:= TRUE;
+	split_def_vapor_product.included	:= TRUE;
+	energy_bal.included			:= TRUE;
+    END clear;
+
+    METHOD scale;
+	RUN VLE.scale;
+ 	RUN input[inputs].scale;
+	RUN liqout[liqouts].scale;
+	RUN vapout[vapouts].scale;
+	RUN totfeed.scale;
+	Qin.nominal := abs(Qin) + 1{kW};
+	Qin.lower_bound := Qin - scale*Qin.nominal;
+	Qin.upper_bound := Qin + scale*Qin.nominal;
+	RUN totprod.scale;
+	reflux_ratio.nominal := reflux_ratio;
+	reflux_ratio.lower_bound := 1e-8;
+	reflux_ratio.upper_bound := reflux_ratio + scale*reflux_ratio.nominal;
+    END scale;
+
+END td_condenser;
+
+(* ***********************************+************************************ *)
+(* ********************   Murphree efficiency models  ********************* *)
+(* ***********************************+************************************ *)
+
+
+(* ***********************************+************************************ *)
+(* ********************           muphree tray        ********************* *)
+(* ***********************************+************************************ *)
+
+
+MODEL murph_tray REFINES td_simple_tray;
+
+	murph_eff				IS_A factor;
+
+	VLE IS_REFINED_TO murphree_equilibrium_mixture;
+
+	murph_eff, VLE.murph_eff		ARE_THE_SAME;
+
+	FOR i IN components - [CHOICE[components]] CREATE
+		VLE.ref_y[i],
+		input['vapor'].state.y[i]	ARE_THE_SAME;
+	END FOR;
+
+  METHODS
+
+    METHOD seqmod;
+	RUN VLE.specify;
+	VLE.y[components].fixed			:= FALSE;
+	VLE.phi[VLE.phases].fixed 		:= FALSE;
+	cmo_ratio.fixed				:= TRUE;
+	VLE.ref_y[components].fixed		:= FALSE;
+    END seqmod;
+
+END murph_tray;
+
+
+
+

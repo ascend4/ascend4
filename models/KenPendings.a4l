@@ -1,0 +1,214 @@
+REQUIRE "ben/benstream.a4l";
+(* => ben/stream.a4l, ben/benHGthermo.a4l, ben/benpropertyoptions.a4l,
+ *    ben/bencomponents.a4l, atoms.a4l, measures.a4l, system.a4l,
+ *    basemodel.a4l *)
+PROVIDE "KenPendings.a4l";
+
+(*
+ *  KenPendings.a4l
+ *  by Kenneth H. Tyner
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:45:36 $
+ *  $Revision: 1.4 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/KenPendings.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997-1998  Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+ *  Various models that Ken finds useful but are not yet
+ *  recomended for general use.  Many of these models are
+ *  currently hacks due to compiler bugs from the recent
+ *  ASCEND version upgrade.  When the compiler is fixed
+ *  much more elegant models will replace these.
+ *
+ *)
+
+MODEL mass_stream(
+        components IS_A set OF symbol_constant;
+	);
+	Ftot,f[components] IS_A molar_rate;
+
+	Ftot = SUM[f[i] | i IN components];
+
+  METHODS
+    METHOD clear;
+	Ftot.fixed := FALSE;
+	f[components].fixed := FALSE;
+    END clear;
+    METHOD reset;
+	f[components].fixed := TRUE;
+    END reset;
+    METHOD seqmod;
+	RUN clear;
+    END seqmod;
+END mass_stream;
+
+(****************************************************************************
+  MODELS USING HOMOTOPY METHODS
+  ****************************************************************************)
+
+MODEL mass_balance_mixer_single_output_base(
+    );
+(*
+NOTES inline SELF {
+Provides common methods FOR mass_balance_mixer_single_output class OF mixers.
+NEVER CREATE one OF these
+}
+END NOTES;
+*)
+  METHODS
+    METHOD clear;
+	RUN input[inputs].clear;
+	RUN output.clear;
+    END clear;
+    METHOD seqmod;
+	RUN output.specify;
+	output.f[output.state.options.ds.components].fixed := FALSE;
+    (* type OF inputs not know so must be handled somewhere ELSE *)
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+	RUN input[inputs].specify;
+    END specify;
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+    METHOD scale;
+	RUN output.scale;
+	RUN input[inputs].scale;
+    END scale;
+END mass_balance_mixer_single_output_base;
+
+MODEL mass_balance_homotopy_mixer_single_output_int(
+    inputs IS_A set OF integer_constant;
+    input[inputs] WILL_BE mass_stream;
+(*    input[inputs] WILL_BE homogeneous_molar_stream;*)
+    output WILL_BE two_phase_molar_stream;
+    reduce WILL_BE factor;
+    ) WHERE (
+    ) REFINES mass_balance_mixer_single_output_base(
+);
+    f_mult[output.components] IS_A factor;
+
+    FOR i IN output.components CREATE
+	cmb[i]: output.f[i] =
+	    SUM[f_mult[i]*input[k].f[i] | k IN inputs];
+    END FOR;
+  METHODS
+    METHOD clear;
+	RUN mass_balance_mixer_single_output_base::clear;
+	f_mult[output.components].fixed := FALSE;
+        END clear;
+    METHOD seqmod;
+(*	RUN mass_balance_mixer_single_output_base::seqmod;*)
+	RUN output.specify;
+	output.f[output.components].fixed := FALSE;
+	f_mult[output.components].fixed := TRUE;
+    END seqmod;
+    METHOD calc_multipliers;
+	f_mult[output.components].fixed := FALSE;
+	output.f[output.components].fixed := TRUE;
+    END calc_multipliers;
+    METHOD calc_outputs;
+	f_mult[output.components].fixed := TRUE;
+	output.f[output.components].fixed := FALSE;
+    END calc_outputs;
+
+    METHOD reduce_mix_diff;
+	FOR i IN output.components DO
+	    f_mult[i] := f_mult[i] + reduce*(1-f_mult[i]);
+	END FOR;
+    END reduce_mix_diff;
+
+END mass_balance_homotopy_mixer_single_output_int;
+
+MODEL mass_balance_homotopy_mixer_single_output_int2(
+    inputs IS_A set OF integer_constant;
+    input[inputs] WILL_BE mass_stream;
+(*    input[inputs] WILL_BE homogeneous_molar_stream;*)
+    output WILL_BE homogeneous_molar_stream;
+    reduce WILL_BE factor;
+    ) WHERE (
+    ) REFINES mass_balance_mixer_single_output_base(
+);
+    f_mult[output.components] IS_A factor;
+
+    FOR i IN output.components CREATE
+	cmb[i]: output.f[i] =
+	    SUM[f_mult[i]*input[k].f[i] | k IN inputs];
+    END FOR;
+  METHODS
+    METHOD clear;
+	RUN mass_balance_mixer_single_output_base::clear;
+	f_mult[output.components].fixed := FALSE;
+        END clear;
+    METHOD seqmod;
+	RUN mass_balance_mixer_single_output_base::seqmod;
+	f_mult[output.components].fixed := TRUE;
+    END seqmod;
+    METHOD calc_multipliers;
+	f_mult[output.components].fixed := FALSE;
+	output.f[output.components].fixed := TRUE;
+    END calc_multipliers;
+    METHOD reduce_mix_diff;
+	FOR i IN output.components DO
+	    f_mult[i] := f_mult[i] + reduce*(1-f_mult[i]);
+	END FOR;
+    END reduce_mix_diff;
+
+END mass_balance_homotopy_mixer_single_output_int2;
+
+MODEL liquid_stream_splitter_int(
+    input WILL_BE liquid_stream;
+    outputs IS_A set OF integer_constant;
+    output[outputs] WILL_BE mass_stream;
+(*    ) WHERE (
+	input.state,
+	output[outputs].state WILL_NOT_BE_THE_SAME;*)
+    );
+    split[outputs] IS_A fraction;
+
+    FOR i IN [outputs] CREATE
+	FOR j IN input.state.options.ds.components CREATE
+	    output[i].f[j] = split[i]*input.f[j];
+	END FOR;
+    END FOR;
+
+(*    SUM[split[i] | i IN outputs] = 1.0;*)
+(*
+    FOR i IN [outputs] CREATE
+	output[i].state.T = input.state.T;
+	output[i].state.P = input.state.P;
+    END FOR;
+*)
+  METHODS
+    METHOD clear;
+	RUN input.clear;
+	RUN output[outputs].clear;
+(*	output[outputs].saturated := FALSE;*)
+	split[outputs].fixed := FALSE;
+    END clear;
+    METHOD seqmod;
+	RUN clear;
+    END seqmod;
+END liquid_stream_splitter_int;

@@ -1,0 +1,6 @@
+#SLV_NORMAL is the flag we will be using to determine whether
+# to build the 'ascend' or the 'normal' solver version.
+# if not defined, assume 'ascend' version.
+#MTX_DEBUG is defined in mtx.c.
+#MINOS_DEBUG is defined in slv1.c
+

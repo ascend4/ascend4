@@ -1,0 +1,25 @@
+#		Dummy Makefile to force configure to make this directory
+#		Mark Thomas
+#		May 28, 1996
+#		$Date: 1996/07/09 22:05:39 $
+#		$Revision: 1.1 $
+#		$Author: mthomas $
+#		$Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/archive/Makefile.in,v $
+#
+
+SHELL = /bin/sh
+
+all:
+
+clean:
+
+mostlyclean:
+
+distclean:
+	rm -f Makefile
+
+install:
+
+install-binaries:
+
+install-libraries:

@@ -1,0 +1,17 @@
+mi30spec.f was patched for char(*) rather than fixed length strings.
+Care is in order.
+11c11
+<       character*(*)      buffer
+---
+>       character*(72)      buffer
+44c44
+<       character*(*)      buffer
+---
+>       character*(56)     buffer
+72c72
+<       character*(*)      buffer
+---
+>       character*(56)     buffer
+1311d1310
+<          print *, 'buffer: ', buffer
+

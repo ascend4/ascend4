@@ -1,0 +1,480 @@
+
+========================================================================
+                           UNIX Installation
+========================================================================
+
+    These are the instructions for building and installing release 0.9
+of the ASCEND IV mathematical modeling environment on a UNIX system.
+For Windows, you can download precompiled binaries from our web site:
+    http://www.cs.cmu.edu/~ascend/
+
+Executive summary version
+=========================
+
+    If your system meets the requirements 2 through 5 below, and if
+all those pieces lists are installed in the usual places
+(/usr/local,/usr/bin/,/usr/lang, etc) you can probably build ASCEND by
+typing at the unix prompt (%):
+        % ./configure
+        % cd ascend4   <--- remember to `cd'
+        % make
+        % bin/ascend4  <--- runs the program if make doesn't die.
+
+    When ASCEND starts, you will see a lot of startup messages, and
+finally you should see something like:
+        Reading utilities
+        Interface Loaded.
+        
+        -----------------------------------
+        User data directory is /usr0/ballan/ascdata
+        -----------------------------------
+
+    If the above does not work, you'll need to 
+        % make distclean
+in the ascend4 directory, then work through the detailed instructions
+contained in this file.
+
+    Otherwise, after you've used ASCEND a little bit without
+experiencing any run-time problems, you can boost its performance by
+building an optimized version:
+        % cd ascend4
+        % make distclean
+        % cd ..
+        % ./configure --enable-optimization
+        % cd ascend4
+        % make
+        % bin/ascend4  
+
+    In fact, if you're a trusting soul and are *sure* Tk, F77, etc are
+all installed properly, you can use --enable-optimization from the
+beginning.
+
+Requirements
+============
+
+    To build and run ASCEND, you need
+    1.  Some flavor of UNIX.  This release of ASCEND has been built on
+        the following platforms:
+        - DEC Alpha running OSF/Digital Unix 3.2, 4.0
+        - HP9000/700 running HP-UX 9.05, 10.20
+        - IBM PowerPC running AIX 3.2, 4.2
+        - Intel x86 running RedHat Linux 4.2, 5.2, 6.1
+        - Intel x86 running NetBSD 1.1
+        - SGI Indy running Irix 6.2
+        - Sun Sparc running SunOS 4.1.x
+        - Sun Sparc running Solaris 2.5
+    2.  An ANSI-C compiler and C libraries that support ANSI C.
+    3.  X11.  This release of ASCEND has only been built on X11r6.
+    4.  Tcl/Tk 8.0.5 built and installed on your system.  The official
+        Tcl/Tk 8.0 web site is off of the Scriptics Home Page:
+            http://www.scriptics.com/
+        To download Tcl/Tk 8.0 or patches, visit
+            http://www.scriptics.com/download/8.0.html
+        Tcl/Tk 8.1 is still an alpha release, and we have not tested
+        ASCEND with that preliminary release of Tcl/Tk 8.1.
+    5.  Tktable v2.5 built and installed on your system, which is
+        available from the ASCEND web site and from
+            http://www.hobbs.wservice.com/tcl/capp/tkTable
+        or indirectly from
+            ftp://ftp.cs.uoregon.edu/pub/tcl/tkTable/tkTable1.80.tar.gz
+            http://www.scriptics.com in the 
+        Resources / Extensions section.
+    6.  yacc or bison.
+    Recommend (but not required) tools are
+    7.  The flex lexer, version 2.4.1 or later.
+    8.  A FORTRAN compiler (You can build ASCEND without a FORTRAN
+        compiler, but you may lose some functionality.  See below.)
+    9.  xgraph, a graphing program; available from the ASCEND web site.
+
+    ASCEND comes with a `configure' script to help you build ASCEND on
+your favorite platform.  However, the configure script is not perfect
+and UNIX systems vary widely, so take some time to read through this
+file to see what you must do to have ASCEND successfully build on your
+machine.
+
+    The `configure' shell script attempts to guess correct values for
+various system-dependent variables used during compilation.  It uses
+those values to create a `Makefile' in each directory of the ASCEND
+source tree and a `ConfigAscend' file in the ascend4 directory.  Also,
+it creates a shell script `config.status' that you can run in the future
+to recreate the current configuration of Makefiles, and a file
+`config.log' containing compiler output (useful mainly for debugging
+`configure').
+
+    The file `configure.in' is used to create `configure' by a program
+called `autoconf'.  You only need `configure.in' if you want to change
+it or regenerate `configure' using a newer version of `autoconf'.  The
+`configure.in' that comes with ASCEND was designed to use version 2.12
+of `autoconf'. 2.13 is known not to work with configure.in.
+
+    The following instructions assume you have down loaded the files
+        ascend4-0.9.tar.Z
+        tkTable2.5.tar.gz
+from the ASCEND web site into the directory where you plan to build
+ASCEND; we'll call that directory BUILD_DIR.
+    These instructions also assume you have down loaded the files
+        tcl8.0.5.tar.gz
+        tk8.0.5.tar.gz
+from http://www.scriptic.com into the directory where you plan to build
+ASCEND, OR that you work on a system where tcl/tk 8.0.5 is installed,
+    such as Redhat Linux 6.x or late 5.x.
+    Unpacking all the above files in the build directory creates the directories
+        ascendiv-0.9/
+        tcl8.0.5/
+        tk8.0.5/
+        Tktable2.5/
+
+    The simplest way to compile this package is:
+
+    1.  Build and install Tcl v8.0.5.  If Tcl v8.0.5 is already
+        installed, go to the next step; otherwise obtain the Tcl v8.0.5
+        distribution, unpack it, and build it following the directions
+        in the distribution.  A summary of the steps to build Tcl are:
+      1a. `cd' into the `tcl8.0/unix' directory.
+      1b. Type `./configure' to configure Tcl's Makefile.  If you want
+          to install Tcl in a directory other than `/usr/local', pass
+          that directory in the `--prefix' argument to `configure'.  For
+          example:
+                ./configure --prefix=/full/install/path
+          If you do not plan to install ASCEND, a reasonable value for
+          the `--prefix' option is the ascend4 directory in the ASCEND
+          distribution, i.e.,
+                ./configure --prefix=BUILD_DIR/ascendiv-0.9/ascend4
+      1c. Type `make' to build Tcl.
+      1d. Type `make test' to test Tcl (optional).
+      1e. Type `make install' to install Tcl into the directory you
+          specified in the `--prefix' argument.  If you do not want to
+          install the man pages, issue the command
+                make install-binaries install-libraries
+          to install only the binaries, the header file, and the *.tcl
+          files.
+      1f. Do NOT `make clean' until after you have made the Tk library.
+      1g. If you run into problems building Tcl, please consult the Tcl
+          distribution.
+
+    2.  Build and install Tk v8.0.5.  If Tk v8.0.5 is already installed,
+        go to the next step; otherwise obtain the Tk v8.0.5
+        distribution, unpack it, and build it following the directions
+        in the distribution.  A summary of the steps to build Tk are:
+      2a. `cd' into the `tk8.0/unix' directory.
+      2b. Type `./configure' to configure Tk's Makefile.  You should use
+          the same value for `--prefix' here as you did when building
+          Tcl.
+      2c. Type `make' to build Tk.
+      2d. Type `make test' to test Tk (optional).
+      2e. Type `make install' to install Tk into the directory you
+          specified with the `--prefix' argument.  If you do not want to
+          install the man pages, issue the command
+                make install-binaries install-libraries
+          to install only the binaries, the header file, and the *.tcl
+          files.
+      2f. You can now `make clean' to remove the object files, library,
+          and executable.  You can also `cd' into the `tcl8.0/unix'
+          directory and `make clean' there.
+      2g. If you run into problems building Tk, please consult the Tk
+          distribution.
+
+    3.  Build and install TkTable v2.5.  If TkTable v2.5 is already
+        installed, go to the next step; otherwise obtain the TkTable
+        v2.5 distribution, unpack it, and build it following the
+        directions in the distribution, except as noted below.  A summarya
+        of the steps to build TkTable are:
+      3a. `cd' into the `Tktable2.5/src' directory.
+      3b. Type `./configure' to configure TkTable's Makefile.  You
+          should use the same value for `--prefix' here as you did when
+          building Tcl and Tk. If you are using a stock redhat linux where
+          tcl/tk are installed in /usr instead of /usr/local, type
+          `./configure  --prefix=/usr --with-tcl=/usr/lib --with-tk=/usr/lib'
+      3c. Type `make clean; make' to build TkTable.
+      3d. Type `make install' to install TkTable into the directory you
+          specified with the `--prefix' argument. You may need to su to root.
+      3e. You can now `make clean' to remove the object files, and
+          library.
+      3f. If you run into problems building TkTable, please consult the
+          TkTable distribution.
+
+    4.  `cd' to the `ascendiv-0.9' directory and type `./configure' to
+        configure ASCEND for your system.  If you're using `csh' on an
+        old version of System V, you might need to type `sh ./configure'
+        instead to prevent `csh' from trying to execute `configure'
+        itself.
+
+        Running `configure' takes awhile.  While running, it prints some
+        messages telling which features it is checking for.
+
+        See below for arguments to pass to `configure' and for
+        explanations of the and error messages `configure' may produce.
+ 
+    5.  `cd' into the `ascend4' directory and type `make'.  This will
+        build any FORTRAN libraries that `configure' didn't find
+        (assuming `configure' found a FORTRAN compiler) before it builds
+        ASCEND.
+
+    6.  Once `make' successfully completes, typing `bin/ascend4' should
+        start ASCEND.  Note that your `DISPLAY' environment variable
+        will need to be set to run ASCEND.
+
+        In the `Script' window you will see the License and Warranty for
+        ASCEND.  Please read it.
+
+    7.  If you have built ASCEND for your personal use, you can continue
+        to run ASCEND from the build directory.  If you want to install
+        ASCEND elsewhere so that others may use it or to free disk
+        space, type `make install' which will install the ascend binary
+        (ascend4), the ASCEND tcl support files (found in the TK
+        directory), and the ASCEND models (found in the models
+        directory).
+
+    8.  You can remove the program binaries and object files from the
+        source code directory by typing `make clean'.  To also remove
+        the files that `configure' created (so you can compile the
+        package for a different kind of computer), type
+        `make distclean'.
+
+Compilers and Options
+=====================
+
+    Some systems require unusual options for compilation or linking that
+the `configure' script does not know about.  You can give `configure'
+initial values for variables by setting them in the environment.  Using
+a Bourne-compatible shell, you can do that on the command line like
+this:
+      CC=c89 CFLAGS=-O2 LIBS=-lposix ./configure
+
+Or on systems that have the `env' program, you can do it like this:
+      env CPPFLAGS=-I/usr/local/include LDFLAGS=-s ./configure
+
+    Some systems (notably newer egcs-based systems) require a little
+manual intervention to find the right f77 support library. You may need
+to give configure the full path for libf2c/libg2c depending on what you
+have installed. This can happen even if configure found f77/g77 ok.
+For additional help with FORTRAN, see section "Warnings and Errors 
+Generated by Configure." You may also need to set (for the build only)
+the environment variable CC with the value so that configure picks up
+the C compiler that matches your f77.
+
+Warnings and Errors Generated by Configure
+==========================================
+
+    Most of the time `configure' will work properly and no intervention
+is needed.  We have developed `configure' to work around common
+problems, in which case it prints a warning and goes on.  These common
+problems include:
+
+    * You do not have a recent version of the `flex' lexer.
+      In this case, `configure' will set up the Makefiles to use
+      pregenerated C files instead of running `flex' on the input files
+      ascend4/compiler/scanner.l and ascend4/interface/typelex.l.  If
+      you have `flex' version 2.4.1 or newer and `configure' cannot find
+      it, set the `LEX' environment variable to the full path of your
+      `flex' program and run `configure' again.
+
+    * You do not have a FORTRAN77 compiler.
+      For this case, `configure' disables use of the LSODE integrator,
+      so you will not be able to integrate with ASCEND.  If you have a
+      Fortran compiler that `configure' is not finding, re-run
+      `configure' with the option --with-fortran=COMPILER,LIBRARIES
+      where COMPILER is your Fortran compiler and LIBRARIES are any
+      libraries it needs.  For example, under SunOS:
+        configure --with-fortran='/usr/lang/f77,-L/usr/lang/lib -lF77 -lM77'
+      If you have GNU Fortran compiler installed as `g77', configure
+      should do the right thing.  If you have it installed as `f77',
+      configure may become confused because it look for the wrong set of
+      libraries.  In this case, run configure with the argument
+        configure --with-fortran='g77,-lf2c'
+      If you have an old redhat f77 or f2c, you may want something like:
+        configure \
+--with-fortran='f77,-L/usr/lib/gcc-lib/i386-redhat-linux/egcs-2.90.29 -lf2c'
+
+    * Cannot find CONOPT library nor source code.
+      CONOPT is proprietary, so we cannot distribute it, but we do
+      distribute an interface to it.  To build with CONOPT, run
+      `configure' with the option --with-conopt=CONOPTLIB where
+      CONOPTLIB is the location of your CONOPT library.  For example:
+        configure --with-conopt=/export/conopt/lib/libconsub.a
+
+    There are problems which `configure' lists as fatal errors because
+these problems prevent you from building ASCEND.  Those problems are:
+
+    * Cannot find ANSI C compiler.
+      We have written ASCEND in ANSI C; you'll need a compiler that
+      understands ANSI C and C libraries that implement ANSI C features
+      in order to build ASCEND.  If you have an ANSI compiler that
+      `configure' is not finding, set the `CC' environment variable to
+      its location and run configure again.  If you still get the error,
+      please make sure your compiler understands ANSI C and send us mail
+      so we can fix `configure'.  Note that `gcc' understands ANSI C, so
+      run `configure' with the `--enable-gcc' argument which allows
+      `configure' the search for `gcc'.  Also note when using `gcc'
+      under SunOS 4.1.x the link phase will fail, since the standard
+      SunOS 4.1.x setup does not provide ANSI C libraries.
+
+    * Cannot find compatible Tcl/Tk library or header.
+      ASCEND needs Tcl v8.0 and Tk v8.0 compatible library files and
+      header files.  If you have built and installed Tcl and Tk 8.0 and
+      `configure' cannot find them, run configure again with the
+      arguments `--with-tcl=TCL_LIB,TCL_HEADER' where TCL_LIB is the
+      location of the Tcl library, and TCL_HEADER is the location of the
+      Tcl header file; a similar `--with-tk' argument exists.  For
+      example,
+        configure --with-tcl='-L/usr/local/lib -ltcl,/usr/local/include/tcl.h' \
+                  --with-tk='-L/usr/local/lib -ltk,/usr/local/include/tk.h'
+
+
+ASCEND Specific Options for Configure
+=====================================
+
+    `configure' accepts several options.  Type `configure --help' for a
+full list.  Options of particular interest when building ASCEND are:
+    --enable-gcc
+        By default, `configure' uses the environment variable `CC', then
+        `cc', `c89', `xlf', and `acc' when searching for an ANSI C
+        compiler. This option tells `configure' to use the environment
+        variable `CC', next to look for `gcc', and then to consider the
+        other compilers as listed above when it is trying to locate an
+        ANSI C compiler.
+    --enable-optimization
+        By default, `configure' sets `CFLAGS' such that the C files are
+        built with debugging information (-g).  This option turns off
+        debugging and turns on optimization and NDEBUG (-O -DNDEBUG=1).
+    --without-models
+        If `configure' finds the `models' source directory, it will
+        descend into it and create Makefiles. With this option, 
+        `configure' does not create Makefiles in the `models' directory.
+        If there is no `models' source directory, this option has no
+        effect.  The only purpose for the Makefiles in the `models'
+        directory is to allow the `make install' target to work.
+    --without-TK
+        Same as the `--without-models' option except is applies to the
+        `TK' subdirectory.
+
+Compiling For Multiple Architectures
+====================================
+
+    You can compile ASCEND for more than one kind of computer at
+the same time, by placing the object files for each architecture in
+their own directory.  To do this, you must use a version of `make' that
+supports the `VPATH' variable, such as GNU `make'.  `cd' to the
+directory where you want the object files and executables to go and run
+the `configure' script.  `configure' automatically checks for the source
+code in the directory that `configure' is in and in `..'.
+
+    If you have to use a `make' that does not support the `VPATH'
+variable, you have to compile the package for one architecture at a time
+in the source code directory.  After you have installed the package for
+one architecture, use `make distclean' before reconfiguring for another
+architecture.
+
+Installation Names
+==================
+
+    By default, `make install' will install the package's files in
+`/usr/local/bin', `/usr/local/man', etc.  You can specify an
+installation prefix other than `/usr/local' by giving `configure' the
+option `--prefix=PATH'.
+
+    You can specify separate installation prefixes for architecture-
+specific files and architecture-independent files.  If you give
+`configure' the option `--exec-prefix=PATH', the package will use PATH
+as the prefix for installing programs and libraries.  Documentation and
+other data files will still use the regular prefix.
+
+    In addition, if you use an unusual directory layout you can give
+options like `--bindir=PATH' to specify different values for particular
+kinds of files.  Run `configure --help' for a list of the directories
+you can set and what kinds of files go in them.
+
+    Note that you should use the final `apparent' resting place of the
+files as the arguments to `--prefix' and `--exec_prefix' since these
+options often set variables that get compiled into the binaries.  When
+you actually do `make install' to install the program, pass the `actual'
+resting place on the `make' line.  For example, if ascend appears to
+live in /usr/local/bin/ascend but that is actually a symbolic link to
+/afs/cs/local/ascend/@sys/omega/bin/ascend, you should:
+        configure --prefix=/usr/local
+        make
+        make install prefix=/afs/cs/local/ascend/@sys/omega
+
+Optional Features
+=================
+
+    For packages that use the X Window System, `configure' can usually
+find the X include and library files automatically, but if it doesn't,
+you can use the `configure' options `--x-includes=DIR' and
+`--x-libraries=DIR' to specify their locations.
+
+Specifying the System Type
+==========================
+
+    There may be some features `configure' can not figure out
+automatically, but needs to determine by the type of host the package
+will run on.  Usually `configure' can figure that out, but if it prints
+a message saying it can not guess the host type, give it the
+`--host=TYPE' option.  TYPE can either be a short name for the system
+type, such as `sun4', or a canonical name with three fields:
+     CPU-COMPANY-SYSTEM
+
+See the file `config/config.sub' for the possible values of each field.
+If `config/config.sub' isn't included in this package, then this package
+doesn't need to know the host type.
+
+Sharing Defaults
+================
+
+    If you want to set default values for `configure' scripts to share,
+you can create a site shell script called `config.site' that gives
+default values for variables like `CC', `cache_file', and `prefix'.
+`configure' looks for `PREFIX/share/config.site' if it exists, then
+`PREFIX/etc/config.site' if it exists.  Or, you can set the
+`CONFIG_SITE' environment variable to the location of the site script.
+A warning: not all `configure' scripts look for a site script.
+
+Operation Controls
+==================
+
+    `configure' recognizes the following options to control how it
+operates.
+
+`--help'
+    Print a summary of the options to `configure', and exit.
+
+`--quiet'
+`--silent'
+`-q'
+    Do not print messages saying which checks are being made.
+
+`--srcdir=DIR'
+    Look for the package's source code in directory DIR.  Usually
+    `configure' can determine that directory automatically.
+
+`--version'
+    Print the version of Autoconf used to generate the `configure'
+    script, and exit.
+
+`configure' also accepts some other, not widely useful, options.
+
+
+========================================================================
+                              Getting Help
+========================================================================
+
+    To get help in building ASCEND, please send email to
+ascend+build@edrc.cmu.edu or fill in the form on the contact page off
+our home page: http://www.cs.cmu.edu/~ascend/
+    If your mailer can't cope with the + in the address, send the
+information requested on the form to ascend-www@vagu.edrc.cmu.edu.
+
+
+========================================================================
+                             Administrivia
+========================================================================
+
+$Revision: 1.8 $
+$Date: 2000/01/25 02:13:24 $
+$Source: /afs/cs.cmu.edu/project/ascend/Repository/INSTALL,v $
+
+Local Variables:
+mode: text
+fill-column: 72
+indent-tabs-mode: nil
+End:

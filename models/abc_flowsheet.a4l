@@ -1,0 +1,492 @@
+REQUIRE "collocation.a4l";
+REQUIRE "ben/bencolumn.a4l";
+(* => ben/bencolumn.a4l, ben/benflash.a4l, ben/benstream.a4l,
+ *    ben/benHGthermo.a4l, ben/benpropertyoptions.a4l,
+ *    ben/bencomponents.a4l, atoms.a4l, measures.a4l, system.a4l,
+ *    basemodel.a4l *)
+REQUIRE "KenPendings.a4l";
+(* => KenPendings.a4l, ben/benstream.a4l, ben/benHGthermo.a4l,
+ *    ben/benpropertyoptions.a4l, ben/bencomponents.a4l, atoms.a4l,
+ *    measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "abc_flowsheet.a4l";
+
+(*
+ *  abc_flowsheet.a4l
+ *  by Kenneth H. Tyner
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:49:24 $
+ *  $Revision: 1.4 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/abc_flowsheet.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997, 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+ *  Distillation flowsheet demos (using aceton-benzene-chloroform.
+ *)
+MODEL demo_flowsheet(
+        n_columns IS_A integer_constant;
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+	n_trays[1..n_columns] IS_A integer_constant;
+	vapor_options WILL_BE vapor_phase_options;
+	liquid_options WILL_BE liquid_phase_options;
+) WHERE (
+	reference IN components == TRUE;
+);
+
+	feed_P[1..n_columns] IS_A pressure;
+	feed_T[1..n_columns] IS_A temperature;
+	FOR i IN [1..n_columns] CREATE
+	    feed_vapor_state[i] IS_A vapor_mixture(
+		feed_P[i],
+		feed_T[i],
+		vapor_options
+		);
+	    feed_liquid_state[i] IS_A liquid_mixture(
+		feed_P[i],
+		feed_T[i],
+		liquid_options
+		);
+	END FOR;
+
+	Equilibrated[1..n_columns] IS_A boolean;
+	FOR i IN [1..n_columns] CREATE
+	    feed_state[i] IS_A td_VLE_mixture(
+		feed_P[i],
+		feed_T[i],
+		feed_vapor_state[i],
+		feed_liquid_state[i],
+		Equilibrated[i]
+		);
+	END FOR;
+	FOR i IN [1..n_columns] CREATE
+	    Feed[i]		IS_A vapor_liquid_stream(feed_state[i]);
+	END FOR;
+
+
+	distillate_P[1..n_columns]	IS_A pressure;
+	distillate_T[1..n_columns] 	IS_A temperature;
+	FOR i IN [1..n_columns] CREATE
+	    distillate_state[i] IS_A liquid_mixture(
+		distillate_P[i],
+		distillate_T[i],
+		liquid_options
+		);
+	END FOR;
+	FOR i IN [1..n_columns] CREATE
+	    Distillate[i]	IS_A liquid_stream(distillate_state[i]);
+	END FOR;
+
+	bottoms_P[1..n_columns]	IS_A pressure;
+	bottoms_T[1..n_columns]	IS_A temperature;
+	FOR i IN [1..n_columns] CREATE
+	    bottoms_state[i] IS_A liquid_mixture(
+		bottoms_P[i],
+		bottoms_T[i],
+		liquid_options
+		);
+	END FOR;
+	FOR i IN [1..n_columns] CREATE
+	    Bottoms[i]	IS_A liquid_stream(bottoms_state[i]);
+	END FOR;
+
+	reduce[1..n_columns] IS_A fraction;
+	z_on[1..n_columns] IS_A  boolean;
+        hat_on[1..n_columns] IS_A boolean;
+        hb_on[1..n_columns] IS_A boolean;
+
+	z_on[1..n_columns] := FALSE;
+	hat_on[1..n_columns] := FALSE;
+	hb_on[1..n_columns] := FALSE;
+	Equilibrated[1..n_columns] := FALSE;
+
+	FOR i IN [1..n_columns] CREATE
+	    Column[i] IS_A simple_coll_column(
+	        n_trays[i],
+		Distillate[i],
+		Feed[i],
+		Bottoms[i],
+		Equilibrated[i],
+		reduce[i],
+	        z_on[i],
+	        hat_on[i],
+	        hb_on[i]
+		);
+	END FOR;
+
+(* hooking it all up *)
+        n_sheet_feeds IS_A integer_constant;
+	n_sheet_feeds :== 1;
+
+	outputs IS_A set OF symbol_constant;
+	outputs :== [components,'waste'];
+
+	product_P[outputs]	IS_A pressure;
+	product_T[outputs] 	IS_A temperature;
+	sheet_feed_P[n_sheet_feeds]	IS_A pressure;
+	sheet_feed_T[n_sheet_feeds]	IS_A temperature;
+	FOR i IN [outputs] CREATE
+	    product_state[i] IS_A liquid_mixture(
+		product_P[i],
+		product_T[i],
+		liquid_options
+		);
+	END FOR;
+	FOR i IN [n_sheet_feeds] CREATE
+	    sheet_feed_state[i] IS_A liquid_mixture(
+		sheet_feed_P[i],
+		sheet_feed_T[i],
+		liquid_options
+		);
+	END FOR;
+
+	FOR i IN [outputs] CREATE
+	    product[i]	IS_A liquid_stream(product_state[i]);
+	END FOR;
+	Product[n] ALIASES
+	    (product[outputs])
+	    WHERE n IS_A set OF integer_constant
+	    WITH_VALUE (1..CARD[components]+1);
+
+	FOR i IN [1..n_sheet_feeds] CREATE
+	    Sheet_Feed[i] IS_A liquid_stream(sheet_feed_state[i]);
+	END FOR;
+
+	sources IS_A set OF integer_constant;
+	sinks IS_A set OF integer_constant;
+
+	sources :== [1..(n_columns*2 + n_sheet_feeds)];
+	sinks :== [1..(n_columns+CARD[components]+1)];
+(*
+	link_T[sources][sinks] IS_A temperature;
+	link_P[sources][sinks] IS_A pressure;
+	FOR i IN sources CREATE
+	    FOR j IN sinks CREATE
+		link_state[i][j] IS_A liquid_mixture(
+		    link_P[i][j],
+		    link_T[i][j],
+		    liquid_options
+		    );
+	    END FOR;
+	END FOR;*)
+	FOR i IN sources CREATE
+	    FOR j IN sinks CREATE
+(*		Source_Link[i][j] IS_A liquid_stream(link_state[i][j]);*)
+		Source_Link[i][j] IS_A mass_stream(components);
+	    END FOR;
+	END FOR;
+	FOR i IN sinks CREATE
+	    FOR j IN sources CREATE
+		Sink_Link[i][j] ALIASES Source_Link[j][i];
+	    END FOR;
+	END FOR;
+
+	mb_reduce[1..n_columns] IS_A factor;
+	prod_reduce[1..CARD[components]+1] IS_A factor;
+
+	FOR i IN [1..n_columns] CREATE
+	    mixer[i] IS_A mass_balance_homotopy_mixer_single_output_int(
+		sources,
+		Sink_Link[i],
+		Feed[i],
+		mb_reduce[i]
+		);
+	    dist_split[i] IS_A liquid_stream_splitter_int(
+		Distillate[i],
+		sinks,
+		Source_Link[i]
+		);
+	    bot_split[i] IS_A liquid_stream_splitter_int(
+		Bottoms[i],
+		sinks,
+		Source_Link[n_columns + i]
+		);
+	END FOR;
+	FOR i IN [1..n_sheet_feeds] CREATE
+	    feed_split[i] IS_A liquid_stream_splitter_int(
+		Sheet_Feed[i],
+		sinks,
+		Source_Link[n_columns*2 + i]
+		);
+	END FOR;
+	FOR i IN [1..CARD[components]+1] CREATE
+	    prod_mix[i] IS_A mass_balance_homotopy_mixer_single_output_int2(
+		sources,
+		Sink_Link[n_columns + i],
+		Product[i],
+		prod_reduce[i]
+		);
+	END FOR;
+
+	(* conditionals *)
+	(* could just use mass streams *)
+	stream_exists[sources][sinks] IS_A boolean;
+	stream_exists[sources][sinks] := FALSE;
+(*	FOR i IN sources CREATE
+	FOR j IN sinks CREATE
+	WHEN (stream_exists[i][j])
+	CASE TRUE:
+	USE Source_Link[i][j].state;
+	USE Source_Link[i][j].Htot_def;
+	USE Source_Link[i][j].bubble_point;
+	END FOR;
+	END FOR;
+	END FOR;
+*)
+  METHODS
+    METHOD scale;
+	RUN Column[1..n_columns].scale;
+    END scale;
+    METHOD set_connections;
+	dist_split[1..n_columns].split[sinks].fixed := TRUE;
+	bot_split[1..n_columns].split[sinks].fixed := TRUE;
+	feed_split[1..n_sheet_feeds].split[sinks].fixed := TRUE;
+
+	FOR i IN [1..n_columns] DO
+	    FOR j IN sinks DO
+		IF (stream_exists[i][j] == FALSE) THEN
+		    dist_split[i].split[j] := 0;
+		END IF;
+	    END FOR;
+	END FOR;
+	FOR i IN [n_columns+1..n_columns*2] DO
+	    FOR j IN sinks DO
+		IF (stream_exists[i][j] == FALSE) THEN
+		    bot_split[i-n_columns].split[j] := 0;
+		END IF;
+	    END FOR;
+	END FOR;
+	FOR i IN [n_columns*2+1..n_columns*2+n_sheet_feeds] DO
+	    FOR j IN sinks DO
+		IF (stream_exists[i][j] == FALSE) THEN
+		    feed_split[i-n_columns*2].split[j] := 0;
+		END IF;
+	    END FOR;
+	END FOR;
+	(*
+  FOR i IN sources DO
+	FOR j IN sinks DO
+	    IF (stream_exists[i][j] == FALSE) THEN
+		Source_Link[i][j].f_def[components].included
+		    := FALSE;
+			ELSE
+		Source_Link[i][j].f_def[components].included
+		    := TRUE;
+			END FOR;
+	    END IF;
+	END FOR;
+	*)
+    END set_connections;
+    METHOD remove_connections;
+	FOR i IN sources DO
+	    FOR j IN sinks DO
+		stream_exists[i][j] := FALSE;
+	    END FOR;
+	END FOR;
+    END remove_connections;
+    METHOD fix_splits;
+	FOR i IN [1..n_columns] DO
+	    dist_split[i].split[sinks].fixed := TRUE;
+	    bot_split[i].split[sinks].fixed := TRUE;
+	END FOR;
+	FOR i IN [1..n_sheet_feeds] DO
+	    feed_split[i].split[sinks].fixed := TRUE;
+	END FOR;
+    END fix_splits;
+
+    METHOD calc_multipliers;
+	RUN mixer[1..n_columns].calc_multipliers;
+    END calc_multipliers;
+
+    METHOD calc_outputs;
+	RUN mixer[1..n_columns].calc_outputs;
+    END calc_outputs;
+
+    METHOD reduce_mix_diff;
+	RUN mixer[1..n_columns].reduce_mix_diff;
+    END reduce_mix_diff;
+
+    METHOD clear;
+	RUN Sheet_Feed[1..n_sheet_feeds].clear;
+	RUN Column[1..n_columns].clear;
+	RUN Source_Link[sources][sinks].clear;
+	RUN mixer[1..n_columns].clear;
+	RUN dist_split[1..n_columns].clear;
+	RUN bot_split[1..n_columns].clear;
+	RUN feed_split[1..n_sheet_feeds].clear;
+	RUN prod_mix[1..CARD[components]+1].clear;
+    END clear;
+
+    METHOD reset;
+	RUN clear;
+
+	RUN dist_split[1..n_columns].seqmod;
+	RUN bot_split[1..n_columns].seqmod;
+	RUN feed_split[1..n_sheet_feeds].seqmod;
+
+	RUN Column[1..n_columns].reset;
+	RUN mixer[1..n_columns].seqmod;
+	RUN prod_mix[1..CARD[components]+1].seqmod;
+
+	RUN Sheet_Feed[1..n_sheet_feeds].specify;
+    END reset;
+
+END demo_flowsheet;
+
+MODEL abc_demo_sheet;
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+	n_columns IS_A integer_constant;
+	n_trays[1..n_columns] IS_A integer_constant;
+
+	n_columns :== 3;
+	components :== ['acetone','benzene','chloroform'];
+	reference :== 'chloroform';
+	n_trays[1] :== 4;
+	n_trays[2] :== 2;
+	n_trays[3] :== 2;
+
+
+
+	ds IS_A
+	    td_component_data_set(components,reference);
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	(* liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');*)
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','Wilson');
+
+    abc_sheet IS_A demo_flowsheet(n_columns,
+	components,reference,n_trays,
+	vapor_options,liquid_options);
+
+    (* PLOTING SECTION *)
+
+    FOR i IN [1..n_columns] CREATE
+	liq_eq_plot[i] IS_A ternary_plot_equilateral(
+	    'abc liquid comp',
+	    components,
+	    'acetone',
+	    'chloroform',
+	    abc_sheet.Column[i].n_plt_points_x,
+	    abc_sheet.Column[i].x_plot
+	    );
+    END FOR;
+
+    curves IS_A set OF symbol_constant;
+    curves :== ['Column_1','Column_2','Column_3'];
+    curve[c] ALIASES
+	(liq_eq_plot[1..n_columns].curve)
+	WHERE c IS_A set OF symbol_constant
+	WITH_VALUE ([curves]);
+
+    eq_plot IS_A ternary_plot_equilateral2(
+	'Acetone-Benzene-Chloroform Liquid Comps',
+	components,
+	'acetone',
+	'chloroform',
+	curves,
+	curve
+	);
+
+
+
+
+(*
+    r_plot IS_A ternary_plot_right(
+	'abc liquid comp',
+	abc_column.components,
+	'acetone',
+	'chloroform',
+	abc_column.Column.n_plt_points_x,
+	abc_column.Column.x_plot
+	);
+*)
+
+  METHODS
+    METHOD values;
+        abc_sheet.Column[1].feed_tray_state.alpha['acetone'] := 1.73;
+	abc_sheet.Column[1].feed_tray_state.alpha['benzene'] := 0.97;
+	abc_sheet.Column[1].feed_tray_state.alpha['chloroform'] := 1.19;
+	abc_sheet.Feed[1].f['acetone'] := 3.5{mole/s};
+	abc_sheet.Feed[1].f['chloroform'] := 2.5{mole/s};
+	abc_sheet.Feed[1].f['benzene'] := 4.0{mole/s};
+	abc_sheet.Distillate[1].Ftot := 3.5{mole/s};
+	abc_sheet.Column[1].rectifying_section.stot := 10;
+	abc_sheet.Column[1].stripping_section.stot := 10;
+	abc_sheet.feed_state[1].phi['vapor'] := 0;
+	abc_sheet.Column[1].condenser.reflux_ratio := 4.0;
+	abc_sheet.Column[1].s_stack[1] := 20.0;
+	abc_sheet.Column[1].s_stack[2] := 15.0;
+	abc_sheet.feed_T[1] := 298 {K};
+	abc_sheet.feed_P[1] := 1{atm};
+	RUN abc_sheet.Column[1].propagate_feed;
+
+        abc_sheet.Column[2].feed_tray_state.alpha['acetone'] := 1.76;
+	abc_sheet.Column[2].feed_tray_state.alpha['benzene'] := 0.79;
+	abc_sheet.Column[2].feed_tray_state.alpha['chloroform'] := 1.22;
+	abc_sheet.Feed[2].f['acetone'] := 0.2{mole/s};
+	abc_sheet.Feed[2].f['chloroform'] := 2.5{mole/s};
+	abc_sheet.Feed[2].f['benzene'] := 4.0{mole/s};
+	abc_sheet.Distillate[2].Ftot := 2.675{mole/s};
+	abc_sheet.Column[2].rectifying_section.stot := 10;
+	abc_sheet.Column[2].stripping_section.stot := 7;
+	abc_sheet.feed_state[2].phi['vapor'] := 0;
+	abc_sheet.Column[2].condenser.reflux_ratio := 4.25;
+	abc_sheet.feed_T[2] := 298 {K};
+	abc_sheet.feed_P[2] := 1{atm};
+	RUN abc_sheet.Column[2].propagate_feed;
+
+        abc_sheet.Column[3].feed_tray_state.alpha['acetone'] := 1.0;
+	abc_sheet.Column[3].feed_tray_state.alpha['benzene'] := 0.6;
+	abc_sheet.Column[3].feed_tray_state.alpha['chloroform'] := 1.11;
+	abc_sheet.Feed[3].f['acetone'] := 0.3{mole/s};
+	abc_sheet.Feed[3].f['chloroform'] := 2.5{mole/s};
+	abc_sheet.Feed[3].f['benzene'] := 0.1{mole/s};
+	abc_sheet.Distillate[3].Ftot := 2.2{mole/s};
+	abc_sheet.Column[3].rectifying_section.stot := 10;
+	abc_sheet.Column[3].stripping_section.stot := 5;
+	abc_sheet.feed_state[3].phi['vapor'] := 0;
+	abc_sheet.Column[3].condenser.reflux_ratio := 4.0;
+	abc_sheet.feed_T[3] := 298 {K};
+	abc_sheet.feed_P[3] := 1{atm};
+	RUN abc_sheet.Column[3].propagate_feed;
+
+	abc_sheet.Sheet_Feed[1].f['acetone'] := 3.5{mole/s};
+	abc_sheet.Sheet_Feed[1].f['chloroform'] := 2.5{mole/s};
+	abc_sheet.Sheet_Feed[1].f['benzene'] := 4.0{mole/s};
+	abc_sheet.sheet_feed_T[1] := 298 {K};
+	abc_sheet.sheet_feed_P[1] := 1{atm};
+
+	abc_sheet.z_on[1..n_columns] := FALSE;
+	abc_sheet.hat_on[1..n_columns] := FALSE;
+	abc_sheet.hb_on[1..n_columns] := FALSE;
+	abc_sheet.Equilibrated[1..n_columns] := FALSE;
+
+	abc_sheet.Distillate[1..n_columns].saturated := FALSE;
+	abc_sheet.Bottoms[1..n_columns].saturated := FALSE;
+	abc_sheet.Product[1..CARD[components]+1].saturated := FALSE;
+	abc_sheet.Sheet_Feed[1..abc_sheet.n_sheet_feeds].saturated := FALSE;
+(*	abc_sheet.Source_Link[abc_sheet.sources][abc_sheet.sinks].saturated
+	    := FALSE;*)
+
+    END values;
+
+END abc_demo_sheet;

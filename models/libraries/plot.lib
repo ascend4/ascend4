@@ -1,0 +1,86 @@
+(*********************************************************************\
+                        plot.lib
+                        by Peter Piela, Kirk A. Abbott
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1991,1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/02/20 18:55:48 $
+  $Revision: 1.5 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/plot.lib,v $
+\*********************************************************************)
+
+(*=============================================================================*
+
+    P L O T  .  L  I  B
+    -------------------------
+
+    AUTHOR:      Peter Piela and Kirk A. Abbott
+
+    DATES:       07/91 - Original code.
+		 06/94 - Reduced and converted for ASCEND3C by
+			Kirk Abbott
+		 04/96 - Modified for the use of constant instance types
+
+    CONTENTS:    Contains the LSODE base type definition as well
+		 as the derivatives model definition that is required
+		 in the LSODE model.
+
+    REQUIRES:	"system.lib"
+*)
+
+(* REQUIRE atoms.lib *)
+
+
+MODEL plt_point;
+   x, y IS_A solver_var;
+END plt_point;
+
+(***************************************************************)
+
+MODEL plt_curve;
+   legend            IS_A symbol_constant;
+   npnt              IS_A integer_constant;
+   pnt[1..npnt]	     IS_A plt_point;
+
+   pnt[1..npnt].x	ARE_ALIKE;
+   pnt[1..npnt].y	ARE_ALIKE;
+END plt_curve;
+
+(***************************************************************)
+
+MODEL plt_plot_integer;
+   title, XLabel, YLabel IS_A symbol_constant;
+   ncurve                IS_A integer_constant;
+   curve[1..ncurve]      IS_A plt_curve;
+END plt_plot_integer;
+
+(***************************************************************)
+
+MODEL plt_plot_symbol;
+   title, XLabel, YLabel IS_A symbol_constant;
+   curve_set		 IS_A set OF symbol_constant;
+   curve[curve_set]      IS_A plt_curve;
+END plt_plot_symbol;
+
+(***************************************************************)

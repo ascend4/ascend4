@@ -1,0 +1,56 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of splitter.a4l
+
+DELETE TYPES;
+READ FILE "splitter.a4l";
+
+COMPILE ts1 OF test_splitter;
+BROWSE {ts1};
+RUN {ts1.values};
+RUN {ts1.reset};
+SOLVE {ts1} WITH QRSlv;
+DELETE SYSTEM;
+ASSIGN {ts1.equil} true {*};
+RUN {ts1.reset};
+SOLVE {ts1} WITH QRSlv;
+
+COMPILE ts2 OF test_splitter_with_shared_state;
+BROWSE {ts2};
+RUN {ts2.values};
+RUN {ts2.reset};
+SOLVE {ts2} WITH QRSlv;
+DELETE SYSTEM;
+ASSIGN {ts2.equil} TRUE;
+RUN {ts2.reset};
+SOLVE {ts2} WITH QRSlv;
+
+##########  splitter.a4s ends here  ##########
+#
+#  splitter.a4s
+#  by Arthur W. Westerberg
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:46 $
+#  $Revision: 1.2 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/splitter.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

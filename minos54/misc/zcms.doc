@@ -1,0 +1,27 @@
+This is file zcms.doc.
+For IBM CMS systems, proceed as follows.
+
+ 1. Transfer all files from the MINOS floppy disk to a disk of your choice.
+
+ 2. Compile all the Fortran files, creating TEXT files.
+
+ 3. Load the MINOS TEXT files
+       mi10mach, mi15blas, ... mi80ncon
+    into a library called MINOS TXTLIB.
+
+ 4. Write an EXEC to define run-time files and load the relevant
+    main program and nonlinear functions.
+    For example, the following is suitable for running MINOS on the
+    nonlinear test problem "t5weapon":
+
+       GLOBAL TXTLIB    VFORTLIB MINOS
+       GLOBAL LOADLIB   VFLODLIB
+       FILEDEF  4 DISK  T5WEAPON SPC     '*'
+       FILEDEF  6 DISK  TERMINAL
+       FILEDEF  9 DISK  T5WEAPON LISTING  A
+       FILEDEF 10 DISK  T5WEAPON MPS     '*'
+       FILEDEF 11 DISK  T5WEAPON BASIS    A '(' RECFM FB  LRECL 80
+       FILEDEF 12 DISK  T5WEAPON NEWBASIS A '(' RECFM FB  LRECL 80
+       LOAD MI00MAIN, MI05FUNS '(' NOMAP START
+
+ 5. Follow the general guidelines in m1minos.doc.

@@ -1,0 +1,179 @@
+#  ASCEND Models Makefile
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/06/20 19:49:22 $
+#  $Revision: 1.35 $
+#  $Author: ballan $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/Makefile.in,v $
+#
+
+#  This file installs the ASCEND modeling libraries and examples into
+#  the install directory MODELS_DIR
+#
+#  This Makefile is the top level makefile for the directory tree
+#  rooted here.  Typing `make' in this directory will traverse the
+#  directory tree (`make' descends into the directories listed in
+#  INSTALL_SUBDIR_LIST).
+
+#  Two macros get defined here and in every Makefile in the
+#  subdirectory tree:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed
+#
+#  Since this is the top of this directory tree, this Makefile needs
+#  to define some macros that are used throughout the tree:
+#
+#    RULES_FILE -- a makefile that contains general rules for this
+#                  directory tree; it is passed by `make' to every
+#                  subdirectory and included by that directory's
+#                  Makefile
+#
+#    INSTALL_TARGET_DIR -- the directory in which to install the files
+#
+#    TAGSFILE -- The file to create when running `etags'.  The default
+#                behavior is to put all the `etags' entries into one
+#                TAGS file at the top of the subtree.
+
+
+SHELL = /bin/sh
+builddir = @models_topbuilddir@/ascend4
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+#  the default target.  `make' without a target does nothing
+default::
+
+#  these targets install all files in this subtree
+install install-libraries install-models:: Makefile.Rules install-subtree
+
+#  unintall the files in this subtree
+uninstall:: uninstall-subtree
+
+#  Warn when the Makefile.Rules is older than Makefile.Rules.in
+Makefile.Rules: $(srcdir)/Makefile.Rules.in
+	@echo ""
+	@echo "$(srcdir)/Makefile.Rules.in is newer than Makefile.Rules"
+	@echo "Consider running 'configure' again or running 'make makes'"
+	@echo ""
+
+#  when backing up makefiles, also save the Makefile.Rules file
+save-makes::
+	-$(CP) Makefile.Rules Makefile.Rules.SAVED
+
+
+
+RULES_FILE = Makefile.Rules
+
+TAGSFILE = TAGS
+
+INSTALL_TARGET_DIR = $(MODELS_DIR)
+
+INSTALL_SUBDIR_LIST = \
+	ben
+
+INSTALL_FILE_LIST = \
+	Guthrie_costs.a4l \
+	KenPendings.a4l \
+	README \
+	README.html \
+	README.txt \
+	abc_flowsheet.a4l \
+	atoms.a4l \
+	basemodel.a4l \
+	bvp.a4l \
+	casestudy.a4s \
+	collocation.a4l \
+	collocation.a4s \
+	collocation_tests.a4s \
+	column.a4l \
+	components.a4l \
+	cost_column.a4l \
+	distance_calc.a4c \
+	dyn_column.a4l \
+	dyn_flash.a4l \
+	dyn_separation_demos.a4s \
+	dyn_tank.a4c \
+	dyn_tank.a4s \
+	flash.a4l \
+	force1d.a4c \
+	force1d.a4s \
+	heatex.a4c \
+	heatex.a4s \
+	ivpsystem.a4l \
+	kinetics.a4l \
+	kinetics.a4s \
+	linear_balance.a4c \
+	linear_balance.a4s \
+	measures.a4l \
+	mix.a4l \
+	mix.a4s \
+	old_separation_demos.a4s \
+	phaseq.a4c \
+	phaseq.a4s \
+	phaseq_comp.a4c \
+	phaseq_comp.a4s \
+	phases.a4l \
+	pipeline.a4c \
+	pipeline.a4s \
+	plot.a4l \
+	plotbvp.a4c \
+	plotbvp.a4s \
+	plotcol.a4c \
+	rachford.a4c \
+	rachford.a4s \
+	ratelaws.a4c \
+	reactor.a4l \
+	reactor.a4s \
+	roots_of_poly.a4c \
+	separation_demos.a4s \
+	set_intervals.tcl \
+	simple_fs.a4c \
+	simple_fs.a4s \
+	simple_fs_cost.a4c \
+	simple_fs_cost.a4s \
+	simple_fs_ext.a4c \
+	sonic.a4c \
+	sonic.a4s \
+	splitter.a4l \
+	splitter.a4s \
+	stream_holdup.a4l \
+	system.a4l \
+	ternary_plot.a4l \
+	thermodynamics.a4l \
+	vessel.a4c \
+	vessel.a4s \
+	vesselMethods.a4c \
+	vesselNotes.a4c \
+	vesselParams.a4c \
+	vesselPlain.a4c \
+	vesselPlot.a4c \
+	vesselPlot.a4s \
+	vesselStudy.a4s \
+	vesselTabulated.a4c \
+	vesselTabulated.a4s \
+	when_demo.a4c \
+	when_demo.a4s \
+	z-addmethod.a4c \
+	z-align.a4c \
+	z-alike.a4c \
+	z-anontype.a4c \
+	z-arsubs.a4c \
+	z-context.a4c \
+	z-emptyarg.a4c \
+	z-emptyfor.a4c \
+	z-iflogic.a4c \
+	z-indirect.a4c \
+	z-isawhere.a4c \
+	z-relname.a4c \
+	z-suite.a4s
+
+
+
+include $(builddir)/ConfigAscend
+include $(RULES_FILE)

@@ -1,0 +1,62 @@
+PROVIDE "z-arsubs.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+MODEL range_test;
+a IS_A boolean_constant;
+b IS_A real_constant;
+c IS_A integer_constant;
+d IS_A symbol_constant;
+a2 IS_A boolean;
+b2 IS_A real;
+c2 IS_A integer;
+d2 IS_A symbol;
+a :== TRUE;
+b :== 2.1;
+c :== 3;
+d :== 'sdf';
+a2 := TRUE;
+b2 := 2.1;
+c2 := 3;
+d2 := 'sdf';
+w[a] IS_A real;
+x[b] IS_A real;
+y[c] IS_A real;
+z[d] IS_A real;
+w2[a] IS_A real;
+x2[b] IS_A real;
+y2[c] IS_A real;
+z2[d] IS_A real;
+END range_test;
+
+
+(*
+ *  z-arsubs.a4c
+ *  by Benjamin A. Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:33 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-arsubs.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

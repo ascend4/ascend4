@@ -1,0 +1,143 @@
+REQUIRE "measures.a4l";
+(* => measures.a4l *)
+PROVIDE "z-iflogic.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+MODEL testif;
+    i IS_A integer;
+    j IS_A symbol_constant;
+    k IS_A boolean;
+    l IS_A real;
+    eval[1..4] IS_A boolean; (* all elements should --> FALSE *)
+    pass[1..4] IS_A boolean; (* all elements should --> TRUE *)
+    if[1..6] IS_A boolean; (* all elements should --> TRUE *)
+    nif[1..6] IS_A boolean; (* all elements should --> FALSE *)
+    j :== 'no';
+    METHODS
+    METHOD test;
+        i :=1;
+        k := FALSE;
+        l := 1 {m/s};
+        eval[1] := i=2;
+        eval[2] := j='yes';
+        eval[3] := k = TRUE;
+        eval[4] := l = 1.0;
+        pass[1] := i=1;
+        pass[2] := j='no';
+        pass[3] := k = FALSE;
+        pass[4] := l = 1.0 {m/s};
+
+        (* TRUE *)
+        IF i <> 0 AND i = 1 THEN
+            (* we don't promote int to bool. test for 0 explicitly *)
+            if[1] := TRUE;
+        ELSE
+            if[1] := FALSE;
+        END IF;
+
+        IF TRUE AND i = 1 THEN (* and? *)
+            if[2] := TRUE;
+        ELSE
+            if[2] := FALSE;
+        END IF;
+
+        IF i = 2 OR i = 1 THEN (* or? *)
+            if[3] := TRUE;
+        ELSE
+            if[3] := FALSE;
+        END IF;
+
+        IF j = j THEN (* strcmp? *)
+            if[4] := TRUE;
+        ELSE
+            if[4] := FALSE;
+        END IF;
+
+        IF  NOT k THEN  (* not of bool? *)
+            if[5] := TRUE;
+        ELSE
+            if[5] := FALSE;
+        END IF;
+
+        IF l > 0.5{?} THEN
+            if[6] := TRUE;
+        ELSE
+            if[6] := FALSE;
+        END IF;
+
+        (* FALSE *)
+        IF (i != 0) AND (i = 2) THEN
+            (* i  AND i = 2   --> error because we don't promote i to bool *)
+            (* i != 0 AND i = 2 --> error because precedence is incorrect *)
+            nif[1] := TRUE;
+        ELSE
+            nif[1] := FALSE;
+        END IF;
+
+        IF NOT TRUE AND i = 1 THEN (* not precedence *)
+            nif[2] := TRUE;
+        ELSE
+            nif[2] := FALSE;
+        END IF;
+
+        IF i = 2 OR i = 5 THEN (* or *)
+            nif[3] := TRUE;
+        ELSE
+            nif[3] := FALSE;
+        END IF;
+
+        IF j = 'y' THEN (* strcmp *)
+            nif[4] := TRUE;
+        ELSE
+            nif[4] := FALSE;
+        END IF;
+
+        IF  k THEN  (* bool *)
+            nif[5] := TRUE;
+        ELSE
+            nif[5] := FALSE;
+        END IF;
+
+        IF l > 0.5{s} THEN
+            (* dimensionality not correctly enforced in inequalities.
+             * dimen conflict should --> UNDEFINED error.
+             *)
+            nif[6] := TRUE;
+        ELSE
+            nif[6] := FALSE;
+        END IF;
+
+    END test;
+END testif;
+
+
+(*
+ *  IF statement (mis)interpretation tests.
+ *  By Benjamin Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:36 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-iflogic.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
+ *)

@@ -1,0 +1,419 @@
+REQUIRE "system.a4l"; (* for testing log/relations/reals *)
+(* => system.a4l, basemodel.a4l *)
+PROVIDE "z-anontype.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+(* File to test anontype classification.
+ * There may be some gaps around arrays with mixed subscripts,
+ * but since we force the indirect counter into the classification
+ * scheme, this shouldn't need testing.
+ * This file whines around some of the testing constant type
+ * definitions during parse and has deliberate compiling problems
+ * as outlined at end to test NULL classifications.
+ *
+ * To test with this file, load it and compile test_all_anon.
+ *)
+
+CONSTANT st REFINES symbol_constant :== 'one';
+MODEL test_sc_anon; (* ok *)
+  a,b,c,d,e,f,g IS_A symbol_constant;
+  a :== 'one';
+  b :== 'two';
+  c :== 'one';
+  d :== 'three';
+  f,g IS_REFINED_TO st;
+  A,B,C,D,E,F,G IS_A symbol_constant;
+  A :== 'one';
+  B :== 'two';
+  C :== 'one';
+  D :== 'three';
+  F,G IS_REFINED_TO st;
+END test_sc_anon;
+
+CONSTANT bt REFINES boolean_constant;
+CONSTANT sbt REFINES boolean_constant :== TRUE;
+MODEL test_bc_anon; (*ok*)
+  a,b,e IS_A boolean_constant;
+  c,d IS_A boolean_constant;
+  c :== FALSE;
+  d IS_REFINED_TO sbt;
+  a :== TRUE;
+  b :== FALSE;
+  A,B,E IS_A boolean_constant;
+  C,D IS_A boolean_constant;
+  C :== FALSE;
+  D IS_REFINED_TO sbt;
+  A :== TRUE;
+  B :== FALSE;
+END test_bc_anon;
+
+CONSTANT it REFINES integer_constant;
+CONSTANT sit REFINES integer_constant :== 2;
+MODEL test_ic_anon;
+  a,b,c,d IS_A integer_constant;
+  e,f IS_A it;
+  g,h IS_A sit;
+  a :== 1;
+  c :== 1;
+  d :== 2;
+  b :== 3;
+  (* e undefined *)
+  f :== 2;
+  A,B,C,D IS_A integer_constant;
+  E,F IS_A it;
+  G,H IS_A sit;
+  A :== 1;
+  C :== 1;
+  D :== 2;
+  B :== 3;
+  (* e undefined *)
+  F :== 2;
+END test_ic_anon;
+
+MODEL test_rc_anon;
+  a,b,c,d,e,f,g,h IS_A real_constant;
+  a :== 1;
+  f :== 1;
+  d :== 2{meter};
+  g :== 2{meter};
+  b :== 2;
+  c :== 3{meter};
+  h :== 0{?};
+  (* e unassigned *)
+  A,B,C,D,E,F,G,H IS_A real_constant;
+  A :== 1;
+  F :== 1;
+  D :== 2{meter};
+  G :== 2{meter};
+  B :== 2;
+  C :== 3{meter};
+  H :== 0{?};
+  (* E unassigned *)
+END test_rc_anon;
+
+MODEL test_ra_anon;
+  a,b,c,d IS_A real;
+  a := 1{meter};
+  c := 1{meter};
+  b,d IS_REFINED_TO solver_var;
+END test_ra_anon;
+
+MODEL test_set_anon;
+
+  c,C,zC IS_A set OF symbol_constant;
+
+  a,f,h,j IS_A set OF symbol_constant;
+  a :== ['foo','t'];
+  f :== ['foo','t'];
+  j :== ['a','t'];
+  h :== INTERSECTION[a,['bar']]; (* empty *)
+
+  A,F,H,J IS_A set OF symbol_constant;
+  A :== ['foo','t'];
+  F :== ['foo','t'];
+  J :== ['a','foo','t'];
+  H :== INTERSECTION[A,['bar']]; (* empty *)
+
+  zA,zF,zH,zJ IS_A set OF symbol_constant;
+  zA :== ['foo','t'];
+  zF :== ['foo','t'];
+  zJ :== ['a','foo','t'];
+  zH :== INTERSECTION[zA,['bar']]; (* empty *)
+
+  g,G,zG IS_A set OF integer_constant;
+
+  e,b,d IS_A set OF integer_constant;
+  e :== [1,2];
+  b :== [1,2];
+  d :== INTERSECTION[e,[5]]; (* empty *)
+
+  E,B,D IS_A set OF integer_constant;
+  E :== [1,2];
+  B :== [1,2];
+  D :== INTERSECTION[E,[5]]; (* empty *)
+
+  zE,zB,zD IS_A set OF integer_constant;
+  zE :== [1,2];
+  zB :== [1,2];
+  zD :== INTERSECTION[zE,[5]]; (* empty *)
+
+END test_set_anon;
+
+MODEL test_c_anon;
+  r IS_A test_rc_anon;
+  s IS_A test_sc_anon;
+  b IS_A test_bc_anon;
+  i IS_A test_ic_anon;
+  t IS_A test_set_anon;
+
+  s2 IS_A test_sc_anon;
+  s3,s4 IS_A test_sc_anon;
+  s2.e :== 'models';
+  s3.e :== 'models';
+  s4.e :== 'models2';
+END test_c_anon;
+
+ATOM tr REFINES real;
+END tr;
+
+MODEL test_ai_anon1;
+  a[1..3],c[1..3] IS_A real;
+  b[2..3] IS_A real;
+  d[3..1] IS_A real; (* empty *)
+  e[3..1] IS_A real;
+  f[1..3] IS_A real;
+  f[2] IS_REFINED_TO tr;
+  g[1,2,3] IS_A integer;
+  h[1..3] IS_A integer;
+  i[1..3] IS_A integer;
+END test_ai_anon1;
+
+MODEL test_ai_anon2;
+  a[5][1..3],c[5][1..3] IS_A real;
+  b[5][2..3] IS_A real;
+  d[5][3..1] IS_A real; (* empty *)
+  e[5][3..1] IS_A real;
+  f[5][1..3] IS_A real;
+  f[5][2] IS_REFINED_TO tr;
+  g[5][1,2,3] IS_A integer;
+  h[5][1..3] IS_A integer;
+  i[5][1..3] IS_A integer;
+  (* these should show up under the abc umbrellas somehow.
+   * but they don't because all levels of an array share the
+   * same typedesc -- there is no distinct [1..3]  tyepdesc
+   * created in the definition of a. at present we're not
+   * going to mess with the array implicit typing system.
+   *)
+  j[1..3] IS_A real;
+  k[2..3] IS_A real;
+  m[2..4] IS_A real;
+END test_ai_anon2;
+
+MODEL test_ai_anon3;
+  a[5][1..3][7],c[5][1..3][7] IS_A real;
+  b[5][2..3][7] IS_A real;
+  d[5][3..1][7] IS_A real; (* empty *)
+  e[5][3..1][7] IS_A real;
+  f[5][1..3][7] IS_A real;
+  f[5][2][7] IS_REFINED_TO tr;
+  g[5][1,2,3][7] IS_A integer; (* type -> singleton *)
+  h[5][1..3][7] IS_A integer;
+  i[5][1..3][7] IS_A integer;
+  (* not under the abc umbrellas somehow. *)
+  j[1..3][7] IS_A real;
+  k[2..3][7] IS_A real;
+  m[2..4][7] IS_A real;
+END test_ai_anon3;
+
+MODEL test_ae_anon3;
+
+  s IS_A set OF symbol_constant;
+  s :== ['1','2','3'];
+  a['5']['1','2','3']['7'],c['5']['1','2','3']['7'] IS_A real;
+  b['5']['2','3']['7'] IS_A real;
+  d['5'][INTERSECTION[['a'],['b']]]['7'] IS_A real; (* empty *)
+  e['5'][INTERSECTION[['a'],['b']]]['7'] IS_A real;
+  f['5']['1','2','3']['7'] IS_A real;
+  f['5']['2']['7'] IS_REFINED_TO tr;
+  g['5'][s]['7'] IS_A integer;
+  h['5']['1','2','3']['7'] IS_A integer;
+  i['5']['1','2','3']['7'] IS_A integer;
+  (* not under the abc umbrellas somehow. *)
+  j['1','2','3']['7'] IS_A real;
+  k['2','3']['7'] IS_A real;
+  m['2','3','4']['7'] IS_A real;
+
+END test_ae_anon3;
+
+MODEL test_rel_anon;
+  x IS_A real;
+  y[1] IS_A real;
+  y[2] = y[3]; (* NULL relation; fooled the parse checks w/subscript. *)
+  x = x; (* silly but buildable *)
+  y[2] = y[3]; (* NULL relation; fooled the parse checks w/subscript. *)
+  x = x; (* silly but buildable *)
+END test_rel_anon;
+
+MODEL test_lrel_anon;
+  x IS_A boolean;
+  y[1] IS_A boolean;
+  y[2] == y[3]; (* NULL relation; fooled the parse checks w/subscript. *)
+  x == x; (* silly but buildable *)
+  y[2] == y[3]; (* NULL relation; fooled the parse checks w/subscript. *)
+  x == x; (* silly but buildable *)
+END test_lrel_anon;
+
+MODEL test_dummy_anon;
+  i IS_A integer_constant;
+  i:==1;
+  SELECT(i)
+  CASE 1:
+    x IS_A real;
+  CASE 2:
+    y,z,w IS_A integer;
+  END SELECT;
+END test_dummy_anon;
+
+UNIVERSAL ATOM ut REFINES real;
+END ut;
+
+MODEL test_u_anon;
+a,b,c IS_A ut;
+b2 IS_A real;
+END test_u_anon;
+
+MODEL test_u2_anon;
+p,q IS_A test_u_anon;
+END test_u2_anon;
+
+MODEL test_m_anon;
+  tic IS_A  test_ic_anon;
+  Tic IS_A  test_ic_anon;
+tai IS_A  test_ai_anon3;
+Tai IS_A  test_ai_anon3;
+tae IS_A  test_ae_anon3;
+Tae IS_A  test_ae_anon3;
+trel IS_A  test_rel_anon;
+Trel IS_A  test_rel_anon;
+td IS_A  test_dummy_anon;
+Td IS_A  test_dummy_anon;
+END test_m_anon;
+
+MODEL test_all_anon;
+tsc IS_A  test_sc_anon;
+tbc IS_A  test_bc_anon;
+tic IS_A  test_ic_anon;
+trc IS_A  test_rc_anon;
+tset IS_A  test_set_anon;
+tc IS_A  test_c_anon;
+tai1 IS_A  test_ai_anon1;
+tai2 IS_A  test_ai_anon2;
+tai3 IS_A  test_ai_anon3;
+tae3 IS_A  test_ae_anon3;
+trel IS_A  test_rel_anon;
+tlrel IS_A  test_lrel_anon;
+td IS_A  test_dummy_anon;
+tm IS_A test_m_anon;
+tu IS_A test_u_anon;
+tu2 IS_A test_u2_anon;
+END test_all_anon;
+
+(*
+ * here is the parser whine.
+Asc-Style:   (st): Assigned Constant better if Universal.
+Asc-Style:   (sbt): Assigned Constant better if Universal.
+Asc-Style:   (sit): Assigned Constant better if Universal.
+
+ * here is the expected compilation spew for test_all_anon.
+
+Heuristic FindExprType failed. Check your indices.
+Report this failure to ascend+bugs@cs.cmu.edu if no apparent error.
+Assuming integer array index.
+Possibly undefined indices in IS_A statement. z-test-a.a4c:201
+  d['5'][INTERSECTION[['a'],['b']]]['7'] IS_A real;
+
+Heuristic FindExprType failed. Check your indices.
+Report this failure to ascend+bugs@cs.cmu.edu if no apparent error.
+Assuming integer array index.
+Possibly undefined indices in IS_A statement. z-test-a.a4c:202
+  e['5'][INTERSECTION[['a'],['b']]]['7'] IS_A real;
+
+There are 1 unexecuted Phase 1 statements in the instance.
+---- Pass 1 pending: -------------
+tae3 has the following unexecuted statements.
+Unable to execute z-test-a.a4c:201
+d['5'][INTERSECTION[['a'],['b']]]['7'] IS_A real;
+
+Unable to execute z-test-a.a4c:202
+e['5'][INTERSECTION[['a'],['b']]]['7'] IS_A real;
+
+Instance tae3 is missing part `e'
+Instance tae3 is missing part `d'
+Undimensioned Unassigned real constant trc.E
+Undimensioned real constant trc.H
+Undimensioned Unassigned real constant trc.e
+Undimensioned real constant trc.h
+Undimensioned Unassigned real constant tc.r.E
+Undimensioned real constant tc.r.H
+Undimensioned Unassigned real constant tc.r.e
+Undimensioned real constant tc.r.h
+Unassigned constant tc.b.E
+Unassigned constant tc.b.e
+Unassigned constant tbc.E
+Unassigned constant tbc.e
+Unassigned constant tic.E
+Unassigned constant tic.e
+Unassigned constant tc.i.E
+Unassigned constant tc.i.e
+Unassigned constant tsc.E
+Unassigned constant tsc.e
+Unassigned constant tc.s4.E
+Unassigned constant tc.s3.E
+Unassigned constant tc.s2.E
+Unassigned constant tc.s.E
+Unassigned constant tc.s.e
+---- End pass 1 pending-----------
+Phase 1 models          199992
+Impossible name or subscript :
+y[2]
+Asc-Error:    Line 218: z-test-a.a4c
+  Relation contains an impossible instance
+  test_rel_anon_1 : (details suppressed);
+Impossible name or subscript :
+y[2]
+Asc-Error:    Line 220: z-test-a.a4c
+  Relation contains an impossible instance
+  test_rel_anon_3 : (details suppressed);
+Phase 2 relations               16666
+Logical Relation contains an impossible instance z-test-a.a4c:227
+  test_lrel_anon_1 : (details suppressed);
+Logical Relation contains an impossible instance z-test-a.a4c:229
+  test_lrel_anon_3 : (details suppressed);
+There are unexecuted Phase 3 (logical relations) in the instance.
+Phase 3 logicals                16666
+Phase 4 when-case               16666
+There are unexecuted statements in the instance.
+DEFAULT assignments not executed.
+Phase 5 defaults                0
+Compilation times (microseconds):
+Phase 1 models          199992
+Phase 2 relations               16666
+Phase 3 logical                 16666
+Phase 4 when-case               16666
+Phase 5 defaults                0
+Total           249990
+Instantiation time (u-sec): 249990
+ *
+ *)
+
+
+(*
+ *  z-anontype.a4c
+ *  by Benjamin A Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:32 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-anontype.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

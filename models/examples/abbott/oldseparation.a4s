@@ -1,0 +1,7 @@
+# script to test compilation of big models ala bob/joe/peter/art
+DELETE TYPES;
+READ FILE "/usr0/ballan/new/models/examples/abbott/oldseparation.a4c";
+COMPILE srb OF small_recovery_backend;
+
+COMPILE rb OF recovery_backend;
+

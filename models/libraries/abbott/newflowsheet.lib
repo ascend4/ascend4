@@ -1,0 +1,285 @@
+(*********************************************************************\
+                        newflowsheet.lib
+                        by Kirk A. Abbott
+			(modified from flowsheet.lib
+			by Joseph J. Zaher)
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1996
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/08/29 12:20:47 $
+  $Revision: 1.5 $
+  $Author: ballan $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/abbott/newflowsheet.lib,v $
+\*********************************************************************)
+
+(**
+ **
+ **  F  L  O  W  S  H  E  E  T  .  L  I  B
+ **  -------------------------------------
+ **
+ **  AUTHOR:      Joseph J. Zaher
+ **
+ **  DATES:       11/92 - Original code.
+ **               05/93 - Reflected changes in thermodynamics library.
+ **
+ **  CONTENTS:    ASCEND structure for creating unit operations in a chemical
+ **               process flowsheet.
+ **
+ **  REQUIRES:    "atoms.lib"
+ **               "components.lib"
+ **               "thermodynamics.lib"
+ **)
+
+
+(* REQUIRE stream.lib *)
+
+
+MODEL unit_operation;
+
+  inputs                              IS_A set OF symbol_constant;
+  outputs                             IS_A set OF symbol_constant;
+  input[inputs]                       IS_A molar_stream;
+  output[outputs]	              IS_A molar_stream;
+  components IS_A set OF symbol_constant;
+
+  components,
+    input[inputs].components, output[outputs].components ARE_THE_SAME;
+
+  METHODS
+  METHOD clear;
+      RUN input[inputs].clear;
+      RUN output[outputs].clear;
+  END clear;
+  METHOD specify;
+      RUN input[inputs].specify;
+      RUN output[outputs].specify;
+  END specify;
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+  
+END unit_operation;
+
+
+MODEL splitter_base REFINES unit_operation;
+
+  inputs                              :== ['feed'];
+  phi[outputs]                        IS_A fraction;
+
+  input['feed'].state, output[outputs].state ARE_THE_SAME;
+  
+  FOR i IN outputs CREATE
+    split_eqn[i]:
+      output[i].Ftot = phi[i] * input['feed'].Ftot;
+  END FOR;
+  
+  sum_split: SUM[phi[i] | i IN outputs] = 1.0;
+
+  METHODS
+  
+  METHOD clear;
+      RUN input[inputs].clear;
+      RUN output[outputs].clear;
+      phi[outputs].fixed := FALSE;
+  END clear;
+  
+  METHOD seqmod;
+      RUN input[inputs].seqmod;
+      RUN output[outputs].seqmod;
+      phi[outputs].fixed := TRUE;
+      phi[CHOICE[outputs]].fixed := FALSE;
+      output[outputs].Ftot.fixed := FALSE;
+  END seqmod;
+
+  METHOD specify;
+      RUN input[inputs].specify;
+      phi[outputs].fixed := TRUE;
+      phi[CHOICE[outputs]].fixed := FALSE;
+  END specify;
+
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+  
+END splitter_base;
+
+
+MODEL splitter REFINES splitter_base;
+
+  n_connections IS_A integer_constant;
+  n_components IS_A integer_constant;
+
+  n_connections :== CARD[inputs] + CARD[outputs];
+  n_components :== CARD[components];
+  
+END splitter;
+
+
+(*
+ * This MODEL can not be used as an entry point !!.
+ * You see at this stage we dont know what type the streams are.
+ * This template MODEL was built for coding efficiency.
+ * Use td_liquid_splitter and td_vapor_splitter instead.
+ *)
+ 
+MODEL td_splitter REFINES splitter;
+
+  data[components] 		IS_A component_constants;
+  
+  FOR i IN components CREATE
+    data[i],
+      input[inputs].data[i],
+      output[outputs].data[i] ARE_THE_SAME;
+  END FOR;
+
+END td_splitter;
+
+
+MODEL td_liquid_splitter REFINES td_splitter;
+
+  input[inputs] IS_REFINED_TO liquid_stream;
+  output[outputs] IS_REFINED_TO liquid_stream;
+
+END td_liquid_splitter;
+
+
+MODEL td_vapor_splitter REFINES td_splitter;
+  
+  input[inputs] IS_REFINED_TO vapor_stream;
+  output[outputs] IS_REFINED_TO vapor_stream;
+
+END td_vapor_splitter;
+
+
+
+MODEL homogeneous_mixer_base REFINES unit_operation;
+
+  outputs			    :== ['product'];
+  output['product'].state           IS_REFINED_TO homogeneous_mixture;
+  duty            	 	    IS_A energy_rate;
+
+  input[inputs].state, 
+    output[outputs].state ARE_ALIKE;
+
+  FOR i IN components CREATE
+    m_balance[i]:
+      SUM[(input[j].state.y[i] * input[j].Ftot) | j IN inputs] =
+      output['product'].state.y[i] * output['product'].Ftot;
+  END FOR;
+  
+
+  METHODS
+  
+  METHOD clear;
+      RUN input[inputs].clear;
+      RUN output[outputs].clear;
+      duty.fixed := FALSE;
+  END clear;
+
+  METHOD seqmod;
+      RUN input[inputs].seqmod;
+      RUN output[outputs].seqmod;
+  END seqmod;
+      
+  METHOD specify;
+      RUN input[inputs].specify;
+      RUN output[outputs].specify;
+      FOR i IN components DO
+	output['product'].state.y[i].fixed := FALSE;
+      END FOR;
+      output['product'].Ftot.fixed := FALSE;
+  END specify;
+
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+
+END homogeneous_mixer_base;
+
+MODEL homogeneous_mixer REFINES homogeneous_mixer_base;
+
+
+  n_connections IS_A integer_constant;
+  n_components IS_A integer_constant;
+
+  n_connections :== CARD[inputs] + CARD[outputs];
+  n_components :== CARD[components];
+  
+END homogeneous_mixer;
+
+(*
+ * See the comment above with respect to the td_homogeneous_splitter.
+ * Likewise use MODEL  td_liquid_mixer and td_vapor_mixer accordingly.
+ *)
+
+MODEL td_homogeneous_mixer REFINES homogeneous_mixer;
+
+  data[components] 		IS_A component_constants;
+
+  FOR i IN components CREATE
+    data[i],
+      input[inputs].data[i],
+      output[outputs].data[i] ARE_THE_SAME;
+  END FOR;
+
+  (* overall enthalpy balance *)
+  h_balance:
+    SUM[input[i].Htot * input[i].Ftot | i IN inputs] + duty =
+    output['product'].Htot * output['product'].Ftot;
+
+
+  METHODS
+  METHOD clear;
+      RUN homogeneous_mixer::clear;
+  END clear;
+  
+  METHOD specify;
+      RUN homogeneous_mixer::specify;
+  END specify;
+
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+  
+END td_homogeneous_mixer;
+
+
+MODEL td_liquid_mixer REFINES td_homogeneous_mixer;
+
+  input[inputs], output[outputs] IS_REFINED_TO liquid_stream;
+
+END td_liquid_mixer;
+
+
+
+MODEL td_vapor_mixer REFINES td_homogeneous_mixer;
+
+  input[inputs], output[outputs] IS_REFINED_TO vapor_stream;
+
+END td_vapor_mixer;
+
+    

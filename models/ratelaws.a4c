@@ -1,0 +1,179 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "ratelaws.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module requires an empty ascend system.
+ *)
+
+MODEL rxntest;
+
+	(* this MODEL is generic to all reacting systems that conserve mass *)
+        species IS_A set OF symbol_constant;
+	(* all the species in our system *)
+        species :== ['A','B','C','D'];
+
+        rxns IS_A set OF integer_constant;
+	(* all the chemical reactions we will model *)
+        rxns :== [1..3];
+
+        reactants[rxns] IS_A set OF symbol_constant;
+        (* species participating in each reaction *)
+        reactants[1] :== ['A','B','C'];
+        reactants[2] :== ['A','C'];
+        reactants[3] :== ['A','B','D'];
+
+        reactions[species] IS_A set OF integer_constant;
+        (* reactions each species participates in *)
+ 	FOR i IN species CREATE
+		reactions[i] :== [j IN rxns SUCH_THAT i IN reactants[j]];
+	END FOR;
+
+	(* sparse stoichiometric matrix. nu could be a variable if needed *)
+        FOR j IN rxns CREATE
+                FOR i IN reactants[j] CREATE
+                        nu[i][j] IS_A integer_constant;
+			(* mole i/mole rxn j*)
+                END FOR;
+        END FOR;
+
+
+        production[species] IS_A molar_rate;
+	(* production rates of all species *)
+
+        rate[rxns] IS_A molar_rate;
+	(* mole rxn j/time *)
+
+	(* generic conservation of species equations. *)
+        FOR i IN species CREATE
+        netgen[i]: production[i] =
+		SUM[nu[i][j]*rate[j] SUCH_THAT j IN reactions[i]];
+        END FOR;
+
+END rxntest;
+
+MODEL ratetest REFINES rxntest;
+	(* some less generic rate equations that assume
+	 * elementary reaction kinetics and forward-only mechanisms
+	 * written in mole fraction terms.
+	 *)
+
+	x[species] IS_A mole_fraction;
+	k[rxns] IS_A real; (* rate coefficient values the user must specify *)
+	FOR j IN rxns CREATE
+  	ratelaw[j]:
+	rate[j] =
+		k[j]*
+		PROD[
+			 PROD[ x[i] | m IN [1..-(nu[i][j])]]
+		| i IN reactants[j] ];
+	END FOR;
+(*
+* note this equation filters out the rhs stoichiometric coefficents
+* because [m..n] where (n < m) == empty set, [].
+*)
+END ratetest;
+
+
+(* very specific chemistry *)
+MODEL kintest REFINES ratetest;
+	(* stoichiometric coefficients *)
+        (* rxn 1 *)
+        nu['A'][1] :== -2;
+        nu['B'][1] :== -1;
+        nu['C'][1] :== 1;
+        (* rxn 2 *)
+        nu['A'][2] :== -1;
+        nu['C'][2] :== 3;
+        (* rxn 3 *)
+        nu['A'][3] :== 1;
+        nu['B'][3] :== -1;
+        nu['D'][3] :== 1;
+END kintest;
+
+MODEL rxntest2;
+
+        (* Here is the dense version without the extra-silly sets.
+         * It gives equivalent eqns, but has extra constants defined.
+	 * When moving to several dozen species and rxns, this is not
+	 * scalable.
+         *)
+        species IS_A set OF symbol_constant;
+        species :== ['A','B','C','D'];
+
+        rxns IS_A set OF integer_constant;
+        rxns :== [1..3];
+
+        reactants[rxns] IS_A set OF symbol_constant;
+        (* species in each rxn *)
+        reactants[1] :== ['A','B','C'];
+        reactants[2] :== ['A','C'];
+        reactants[3] :== ['A','B','D'];
+
+        reactions[species] IS_A set OF integer_constant;
+        (* rxns for each species *)
+ 	FOR i IN species CREATE
+		reactions[i] :== [j IN rxns | i IN reactants[j]];
+	END FOR;
+
+        nu[species][rxns] IS_A real_constant; (* mole i/mole rxn j*)
+
+        (* rxn 1 *)
+        nu['A'][1] :== -2;
+        nu['B'][1] :== -1;
+        nu['C'][1] :== 1;
+        nu['D'][1] :== 0;
+        (* rxn 2 *)
+        nu['A'][2] :== -1;
+        nu['B'][2] :== 0;
+        nu['C'][2] :== 3;
+        nu['D'][2] :== 0;
+        (* rxn 3 *)
+        nu['A'][3] :== 1;
+        nu['B'][3] :== -1;
+        nu['C'][3] :== 0;
+        nu['D'][3] :== 1;
+        (* this data entry would be much much much easier in the
+         * table data syntax we don't have implemented yet.
+         *)
+
+        production[species] IS_A molar_rate;
+        rate[rxns] IS_A molar_rate; (* mole rxn j/time *)
+
+        FOR i IN species CREATE
+        netgen[i]: production[i] = SUM[nu[i][j]*rate[j] |j IN rxns];
+        END FOR;
+
+END rxntest2;
+
+
+(*
+ *  ratetest.a4c
+ *  by Benjamin Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:23:05 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/ratelaws.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Benjamin Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more dnuils.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

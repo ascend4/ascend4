@@ -1,0 +1,1757 @@
+(*********************************************************************\
+			components.lib
+			by Joseph J. Zaher
+			Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1994 Joseph J Zaher
+Copyright (C) 1997 Benjamin Andrew Allan
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1998/02/26 13:17:18 $
+  $Revision: 1.5 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/components.par.lib,v $
+\*********************************************************************)
+(**
+ **
+ **  C  O  M  P  O  N  E  N  T  S  .  L  I  B
+ **  ----------------------------------------
+ **
+ **  AUTHOR:	  Joseph J. Zaher
+ **
+ **  DATES:	   07/91 - Original code.
+ **		   02/92 - Made compatible with new set version of ASCEND.
+ **			   Expanded data base, revised vapor pressure data,
+ **			   and added UNIFAC group and subgroup sets with help
+ **			   of Bob Huss.
+ **		   07/92 - Expanded data base with help of Kay C. Dee.
+ **		   08/92 - Replaced name attribute of each component with a
+ **		   	   formula attribute.  Component names are free to be 
+ **			   specified by the user.
+ **		   03/94 - Made compatible with gnu-ascend.
+ **		   08/94 - Made compatible with H,G or H,S thermo library,
+ **			   and with Wilson models written by Boyd Safrit.
+ **		  02/96 - Made compatible with ASCEND IV. Ben Allan.
+ **		  01/97 - Addition OF td_component_constants by _____
+ **		  01/97 - All constants checked by Jennifer Perry
+ **		   03/97 - Added container models for data groups. BAA.
+ **
+ **
+ **  CONTENTS:	ASCEND structure for component physical property constants.
+ **		   All anticipated constants which may be used by the models
+ **		   of "thermodynamics.lib" are created in a general model where
+ **		   a consistent reference state (298.15{K} and 1.0{atm}) is 
+ **		   chosen.  Specific refinements to actual chemical species are 
+ **		   made UNIVERSAL to ensure only one instantiation of the 
+ **		   constants for each component is maintained throughout a 
+ **		   user's simulation.  A reference enthalpy and entropy is 
+ **		   chosen by default to be those of formation of the component
+ **		   from its elements at the reference state.
+ **
+ **  REQUIRES:	"atoms.lib"
+ **	  
+ **)
+(*
+REQUIRE system.lib
+REQUIRE atoms.lib
+*)
+
+(* Wilson pairs checked by Boyd 
+i_propanol-water
+i_propanol-ethylene_glycol
+ethylene_glycol-water
+acetone-chloroform
+acetone-benzene
+acetone-methanol
+methanol-water
+benzene-chloroform
+propadiene-propylene	provided by Vince Verneulli OF Sim Sci
+propadiene-propane	provided by Vince Verneulli OF Sim Sci
+propylene-propane	provided by Vince Verneulli OF Sim Sci	
+*)
+
+UNIVERSAL MODEL UNIFAC_constants;
+
+(* 
+REFERENCE:
+The reference for the bulk of this MODEL is
+Reid, Prausnitz & Poling, Properties of Gases and Liquids,
+1986, Chapter 8.
+DISCLAIMER:
+The authors of ASCEND and Carnegie Mellon University make
+absolutely NO WARRANTY about the accuracy of this transcription
+of the RPP data or of the original data itself, nor do they
+provide any guarantee that the data here represented is
+suitable for any purpose academic or commercial.
+NOTES:
+The frontiers of group contribution methods have moved on
+well past the data presented here and the correlations
+it is used with. Users with a penchant for thermodynamic
+detail are advised to MODEL their own favorite correlations.
+COMMON USAGE:
+The local name of every instance of this MODEL 
+(since it is UNIVERSAL) should always be uc.
+In the comments that follow, we will use uc where applicable.
+ANNOTATED:
+10/96 Ben Allan
+*)
+
+
+	groups		IS_A set OF integer_constant;
+(*
+uc.groups is the main group list (the ones we support) from RPP
+Table 8.21 column 1. 
+Currently supported groups are (in RPP Main index)
+1,2,3,4,5,6,7,8,9,23, and 11
+*)
+	groups	   :== [1..9,11,23];
+
+(*
+uc.sub[i IN uc.groups] is the set of secondary groups for the ith
+main group. This is the column 2 data of RPP Table 8-21.
+The UNION of uc.sub[i] is uc.	subgroups, basically the set of
+rows in Table 8-21 that we have entered.
+*)
+	sub[groups]				 IS_A set OF symbol_constant;
+	sub[1]   :== ['CH3', 'CH2', 'CH', 'C'];
+	sub[2]   :== ['CH2=CH', 'CH=CH', 'CH2=C', 'CH=C', 'C=C'];
+	sub[3]   :== ['ACH', 'AC'];
+	sub[4]   :== ['ACCH3', 'ACCH2', 'ACCH'];
+	sub[5]   :== ['OH'];
+	sub[6]   :== ['CH3OH'];
+	sub[7]   :== ['H2O'];
+	sub[8]   :== ['ACOH'];
+	sub[9]   :== ['CH3CO', 'CH2CO'];
+	sub[23]  :== ['CHCl3', 'CCl3'];
+	sub[11]  :== ['CH3COO', 'CH2COO'];
+	subgroups				   IS_A set OF symbol_constant;
+
+(*
+uc.	subgroups is the total list of secondary groups we accomodate.
+*)
+	subgroups			:== UNION[sub[i] | i IN groups];
+	group[subgroups]		IS_A integer_constant;
+(*
+Next we have a horribly named array, group, that lets us look up the
+main group given a particular subgroup. So, for example,
+if we want to know the main group of 'CHCl3', then
+group['CHCl3'] will give it to us: 'CCl3'.
+Note, then, that the assignments which follow in most
+cases expand to have several left-hand-sides.
+*)
+	FOR i IN groups CREATE
+	group[sub[i]]	:== i;
+	END FOR;
+
+	a[groups][groups]			IS_A UNIFAC_a;
+(*
+Now we have uc.a[m][n], a portion of RPP Table 8-22, the main group
+interaction matrix which is asymmetric and in principle
+dense but in practice rather sparse.
+Adding a main group to this MODEL means adding a row and
+column to uc.a, which is a non-trivial exercise until we
+get a proper tabular assignment syntax implemented.
+Note that such an syntax has been completely scoped but
+we've just not yet got round to implementation.
+When we do implement, this will be the first test MODEL.
+a[i][j] should have i and j being integer_constant!
+*)
+
+(* we would like the ascend TABLE syntax or a database
+ * external lookup to handle this data entry.
+ *)
+(* row 1 *)
+	a[1][1]		:==	0.0{K};
+	a[1][2]		:==	86.020{K};
+	a[1][3]		:==	61.13{K};
+	a[1][4]		:==	76.50{K};
+	a[1][5]		:==	986.5{K};
+	a[1][6]		:==	697.2{K};
+	a[1][7]		:==	1318.0{K};
+	a[1][8]		:==	1333.0{K};
+	a[1][9]		:==	476.4{K};
+	a[1][23]	:==	24.90{K};
+	a[1][11]	:==	232.1{K};
+
+(* row 2 *)
+	a[2][1]		:==	2520{K};
+	a[2][2]		:==	0.0{K};
+	a[2][3]		:==	340.7{K};
+	a[2][4]		:==	4102{K};
+	a[2][5]		:==	693.9{K};
+	a[2][6]		:==	1509.0{K};
+	a[2][7]		:==	634.2{K};
+	a[2][8]		:==	547.4{K};
+	a[2][9]		:==	524.5{K};
+	a[2][23]	:==	4584.0{K};
+	a[2][11]	:==	71.23{K};
+
+(* row 3 *)
+	a[3][1]		:==	-11.12{K};
+	a[3][2]		:==	3.446{K};
+	a[3][3]		:==	0.0{K};
+	a[3][4]		:==	167.0{K};
+	a[3][5]		:==	636.10{K};
+	a[3][6]		:==	637.3{K};
+	a[3][7]		:==	903.8{K};
+	a[3][8]		:==	1329.0{K};
+	a[3][9]		:==	25.77{K};
+	a[3][23]	:==	-231.9{K};
+	a[3][11]	:==	5.994{K};
+
+(* row 4 *)
+	a[4][1]		:==	-69.70{K};
+	a[4][2]		:==	-113.6{K};
+	a[4][3]		:==	-146.80{K};
+	a[4][4]		:==	0.0{K};
+	a[4][5]		:==	803.20{K};
+	a[4][6]		:==	603.2{K};
+	a[4][7]		:==	5695.00{K};
+	a[4][8]		:==	547.4{K};
+	a[4][9]		:==	-52.10{K};
+	a[4][23]	:==	-12.14{K};
+	a[4][11]	:==	5688.0{K};
+
+(* row 5 *)
+	a[5][1]		:==	156.40{K};
+	a[5][2]		:==	475.000{K};
+	a[5][3]		:==	89.60{K};
+	a[5][4]		:==	25.82{K};
+	a[5][5]		:==	0.0{K};
+	a[5][6]		:==	-137.1{K};
+	a[5][7]		:==	353.50{K};
+	a[5][8]		:==	-259.7{K};
+	a[5][9]		:==	84.0{K};
+	a[5][23]	:==	-98.12{K};
+	a[5][11]	:==	101.1{K};
+
+(* row 6 *)
+	a[6][1]		:==	16.51{K};
+	a[6][2]		:==	-12.520{K};
+	a[6][3]		:==	-50.00{K};
+	a[6][4]		:==	-44.50{K};
+	a[6][5]		:==	249.1{K};
+	a[6][6]		:==	0.0{K};
+	a[6][7]		:==	-181.0{K};
+	a[6][8]		:==	-101.7{K};
+	a[6][9]		:==	23.39{K};
+	a[6][23]	:==	-139.4{K};
+	a[6][11]	:==	-10.72{K};
+
+(* row 7 *)
+	a[7][1]		:==	300.00{K};
+	a[7][2]		:==	496.100{K};
+	a[7][3]		:==	362.30{K};
+	a[7][4]		:==	377.60{K};
+	a[7][5]		:==	-229.10{K};
+	a[7][6]		:==	289.6{K};
+	a[7][7]		:==	0.0{K};
+	a[7][8]		:==	324.5{K};
+	a[7][9]		:==	-195.40{K};
+	a[7][23]	:==	353.7{K};
+	a[7][11]	:==	14.42{K};
+
+(* row 8 *)
+	a[8][1]		:==	275.8{K};
+	a[8][2]		:==	217.5{K};
+	a[8][3]		:==	25.34{K};
+	a[8][4]		:==	244.2{K};
+	a[8][5]		:==	-451.6{K};
+	a[8][6]		:==	-265.2{K};
+	a[8][7]		:==	-601.8{K};
+	a[8][8]		:==	0.0{K};
+	a[8][9]		:==	-356.1{K};
+	a[8][23]	:==	0.0{K};
+	a[8][11]	:==	-449.4{K};
+
+(* row 9 *)
+	a[9][1]		:==	26.76{K};
+	a[9][2]		:==	42.920{K};
+	a[9][3]		:==	140.10{K};
+	a[9][4]		:==	365.80{K};
+	a[9][5]		:==	164.5{K};
+	a[9][6]		:==	108.7{K};
+	a[9][7]		:==	472.5{K};
+	a[9][8]		:==	-133.1{K};
+	a[9][9]		:==	0.0{K};
+	a[9][23]	:==	-354.6{K};
+	a[9][11]	:==	-213.7{K};
+
+(* row 23 *)
+	a[23][1]	:==	36.70{K};
+	a[23][2]	:==	51.060{K};
+	a[23][3]	:==	288.5{K};
+	a[23][4]	:==	33.61{K};
+	a[23][5]		:==	742.1{K};
+	a[23][6]	:==	649.1{K};
+	a[23][7]	:==	826.7{K};
+	a[23][8]	:==	0.0{K};
+	a[23][9]	:==	552.1{K};
+	a[23][23]	:==	0.0{K};
+	a[23][11]	:==	176.5{K};
+
+(* row 11 *)
+	a[11][1]	:==	114.8{K};
+	a[11][2]	:==	132.1{K};
+	a[11][3]	:==	85.84{K};
+	a[11][4]	:==	-170.0{K};
+	a[11][5]		:==	245.4{K};
+	a[11][6]	:==	249.6{K};
+	a[11][7]	:==	10000.0{K};
+	a[11][8]	:==	-36.72{K};
+	a[11][9]	:==	372.2{K};
+	a[11][23]	:==	-209.7{K};
+	a[11][11]	:==	0.0{K};
+
+	R[subgroups], Q[subgroups]   	IS_A UNIFAC_size;
+(*
+R and Q are the unifac volume and surface contributions,
+indexed by subgroup, columns 4 & 5 in RPP Table 8-21
+*)
+	R['CH3']		:==	0.9011;
+	R['CH2']		:==	0.6744;
+	R['CH']			:==	0.4469;
+	R['C']			:==	0.2195;
+	R['CH2=CH']		:==	1.3454;
+	R['CH=CH']		:==	1.1167;
+	R['CH2=C']		:==	1.1173;
+	R['CH=C']		:==	0.8886;
+	R['C=C']		:==	0.6605;
+	R['ACH']		:==	0.5313;
+	R['AC']			:==	0.3652;
+	R['ACCH3']		:==	1.2663;
+	R['ACCH2']		:==	1.0396;
+	R['ACCH']		:==	0.8121;
+	R['OH']			:==	1.000;
+	R['CH3OH']		:==	1.4311;
+	R['H2O']		:==	0.9200;
+	R['ACOH']		:==	0.8952;
+	R['CH3CO']		:==	1.6724;
+	R['CH2CO']		:==	1.4457;
+	R['CHCl3']		:==	2.87007;
+	R['CCl3']		:==	2.6401;
+	R['CH3COO']		:==	1.9031;
+	R['CH2COO']		:==	1.6764;
+
+	Q['CH3']		:==	0.848;
+	Q['CH2']		:==	0.540;
+	Q['CH']			:==	0.228;
+	Q['C']			:==	0.0;
+	Q['CH2=CH']		:==	1.176;
+	Q['CH=CH']		:==	0.867;
+	Q['CH2=C']		:==	0.988;
+	Q['CH=C']		:==	0.676;
+	Q['C=C']		:==	0.485;
+	Q['ACH']		:==	0.40;
+	Q['AC']			:==	0.120;
+	Q['ACCH3']		:==	0.968;
+	Q['ACCH2']		:==	0.660;
+	Q['ACCH']		:==	0.348;
+	Q['OH']			:==	1.200;
+	Q['CH3OH']		:==	1.432;
+	Q['H2O']		:==	1.400;
+	Q['ACOH']		:==	0.680;
+	Q['CH3CO']		:==	1.488;
+	Q['CH2CO']		:==	1.180;
+	Q['CHCl3']		:==	2.410;
+	Q['CCl3']		:==	2.184;
+	Q['CH3COO']		:==	1.728;
+	Q['CH2COO']		:==	1.420;
+
+END UNIFAC_constants;
+
+
+MODEL component_constants(
+	supported_components IS_A set OF symbol_constant;
+);
+
+	formula			IS_A	symbol_constant;
+	subgroups		IS_A	set OF symbol_constant;
+	groups			IS_A	set OF integer_constant;
+
+	wilson_set		IS_A	set OF symbol_constant;
+	uc			IS_A	UNIFAC_constants;
+	mw			IS_A	molar_weight_constant;
+	Tb			IS_A	boiling_temperature;
+	Tc			IS_A	critical_temperature;
+	Pc			IS_A	critical_pressure;
+	Vc			IS_A	critical_volume;
+	Zc			IS_A	critical_compressibility;
+	omega			IS_A	acentric_factor;
+	cpvapa			IS_A	heat_capacity_a;
+	cpvapb			IS_A	heat_capacity_b;
+	cpvapc			IS_A	heat_capacity_c;
+	cpvapd			IS_A	heat_capacity_d;
+	Hf			IS_A	enthalpy_of_formation_constant;
+	Gf			IS_A	free_energy_of_formation_constant;
+
+	vpa, vpb, vpc, vpd	IS_A	vapor_pressure_constant;
+	vp_correlation		IS_A 	integer_constant;
+	(* vpa, vpb, vpc, vpd are defined as wild real refinements.
+         * They must be assigned values with appropriate units.
+	 * The values in RPP have units appropriate (but unstated)
+	 * to the vp_correlation specified.
+	 * For Equation 1: vpa, vpb, vpc, vpd are DIMENSIONLESS (no units).
+	 * For Equation 2: vpa, vpc are DIMENSIONLESS, vpb is in {K}, 
+	 *                 and vpd is {K^2/bar}.
+	 * For Equation 3: vpa DIMENSIONLESS, vpb, vpc are in {K}, vpd not used.
+	 *)
+
+	Hv			IS_A	heat_of_vaporization_constant;
+	Tliq			IS_A	reference_temperature;
+	Vliq			IS_A	reference_molar_volume;
+	lden			IS_A	reference_mass_density;
+	T0			IS_A	reference_temperature;
+	P0			IS_A	reference_pressure;
+	H0, G0			IS_A	reference_molar_energy;
+	S0			IS_A	reference_molar_entropy;
+
+	T0 :== 298.15{K};
+	P0 :== 1.0{atm};
+
+(* data checked by: Jennifer L Perry 1/97 *)
+
+END component_constants;
+
+MODEL td_component_constants(
+	component_name IS_A symbol_constant;
+) WHERE (
+	(component_name IN supported_components) == TRUE;
+) REFINES component_constants(
+	(* note: keep this list consistent with td_component_data_set *)
+	(* each component name we support should be in the SELECT below *)
+	supported_components :== [
+		'hydrogen',
+		'carbon_dioxide',
+		'water',
+		'chloroform',
+		'methane',
+		'methanol',
+		'ethylene',
+		'ethane',
+		'ethanol',
+		'propylene',
+		'acetone',
+		'propane',
+		'propadiene',
+		'n_propanol',
+		'i_propanol',
+		'ethylene_glycol',
+		'n_butane',
+		'i_butane',
+		'n_butanol',
+		'i_butanol',
+		'n_pentane',
+		'i_pentane',
+		'benzene',
+		'n_hexane',
+		'toluene',
+		'n_heptane',
+		'styrene',
+		'ethylbenzene',
+		'n_octane',
+		'diethylbenzene',
+		'n_decane',
+		'diphenyl',
+		'pentanol_1',
+		'chloro_benzene',
+		'oxygen',
+		'nitrogen'
+	];
+);
+	
+	nu[subgroups]		IS_A	integer_constant;
+	lambda[	wilson_set]	IS_A	Wilson_constant;
+	del_ip[	wilson_set]	IS_A 	Wilson_energy_constant;
+	groups :== UNION[[uc.group[i]] | i IN 	subgroups];
+
+	Vliq :== mw/lden;
+	S0 :== (H0-G0)/T0;
+	H0 :== 	Hf;
+	G0 :== 	Gf;
+(* At some point we need to choose either Gf Or G0, etc and stay with it*)
+	
+	SELECT(component_name)
+(*No. 75 equilibrium_hydrogen*)
+	CASE 'hydrogen':
+		formula				:== 'H2';
+		subgroups			:== [];
+		wilson_set			:== [];
+		mw :== 2.016 {g/g_mole};
+		Tb :== 20.3 {K};
+		Tc :== 33.0 {K};
+		Pc :== 12.9 {bar};
+		Vc :== 64.3 {cm^3/g_mole};
+		Zc :== 0.303;
+		omega :== -0.216;
+		cpvapa :== 27.14 {J/g_mole/K};
+		cpvapb :== 9.274e+1 {J/g_mole/K^2};
+		cpvapc :== -1.381e-5 {J/g_mole/K^3};
+		cpvapd :== 7.645e-9 {J/g_mole/K^4};
+		Hf :== 0.00 {J/g_mole};
+		Gf :== 0.00 {J/g_mole};
+		vpa :== -5.57929;
+		vpb :== 2.60012;
+		vpc :== -0.85506;
+		vpd :== 1.70503;
+		vp_correlation :== 1;
+		Hv :== 216 {cal/g_mole};(*Reid, et.al 2nd ed.*)
+		Tliq :== 20.0 {K};
+		lden :== 0.071 {g/cm^3};
+
+(*No. 99*)
+	CASE 'carbon_dioxide':
+		formula				:== 'CO2';
+		subgroups			:== [];
+		wilson_set			:== [];
+		mw :== 44.010 {g/g_mole};
+		Tb :== 194.7 {K}; (*Reid, et.al 2nd ed.*)
+		Tc :== 304.1 {K};
+		Pc :== 73.8 {bar};
+		Vc :== 93.9 {cm^3/g_mole};
+		Zc :== 0.274;
+		omega :== 0.239;
+		cpvapa :== 19.80 {J/g_mole/K};
+		cpvapb :== 7.344e-2 {J/g_mole/K^2};
+		cpvapc :== -5.602e-5 {J/g_mole/K^3};
+		cpvapd :== 1.715e-8 {J/g_mole/K^4};
+		Hf :== -3.938e+5 {J/g_mole};
+		Gf :== -3.946e+5 {J/g_mole};
+		vpa :== -6.95626;
+		vpb :== 1.19695;
+		vpc :== -3.12614;
+		vpd :== 2.99448;
+		vp_correlation :== 1;
+		Hv :== 4100 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 293 {K}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.777; (*Reid, et.al 2nd ed.*)
+
+(*No. 77*)
+	CASE 'water':
+		formula	 	:== 'H2O';
+		subgroups	:== ['H2O'];
+		wilson_set	:== ['CH3OH','(CH3)2CO','(CH3)2CHOH','C2H6O2','H2O'];
+		mw :== 18.015 {g/g_mole};
+		Tb :== 373.2 {K};
+		Tc :== 647.3 {K};
+		Pc :== 221.2 {bar};
+		Vc :== 57.1 {cm^3/g_mole};
+		Zc :== 0.235;
+		omega :== 0.344;
+		cpvapa :== 32.24 {J/g_mole/K};
+		cpvapb :== 1.924e-3 {J/g_mole/K^2};
+		cpvapc :== 1.055e-5 {J/g_mole/K^3};
+		cpvapd :== -3.596e-9 {J/g_mole/K^4};
+		Hf :== -2.420e+5 {J/g_mole};
+		Gf :== -2.288e+5 {J/g_mole};
+		vpa :== -7.76451;
+		vpb :== 1.45838;
+		vpc :== -2.77580;
+		vpd :== -1.23303;
+		vp_correlation :== 1;
+		Hv :== 9717.0 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 293.0 {K};
+		lden :== 0.998 {g/cm^3};
+		nu['H2O']		:==	1;
+		lambda['CH3OH']		:==	0.94934;
+		lambda['(CH3)2CO']	:==	0.40640;
+		lambda['(CH3)2CHOH']	:==	0.78363;
+		lambda['C2H6O2']	:==	1.35289;
+		lambda['H2O']		:==	1.0;
+		del_ip['(CH3)2CHOH']	:==	5085.76 {J/g_mole};
+		del_ip['(CH3)2CO']	:==	5997.845 {J/g_mole};
+		del_ip['CH3OH']		:==	2.0760E+002 {J/g_mole};
+		del_ip['C2H6O2']	:==	3946.12 {J/g_mole};
+		del_ip['H2O']		:==	0.0 {J/g_mole};
+(* No. 103 *)
+	CASE 'chloroform':
+
+		formula				   :== 'CHCl3';
+		subgroups				 :== ['CHCl3'];
+		wilson_set				:== ['CHCl3','C6H6','(CH3)2CO'];
+		mw :== 119.378 {g/g_mole};
+		Tb :== 334.3 {K};
+		Tc :== 536.4 {K};
+		Pc :== 53.7 {bar};
+		Vc :== 238.9 {cm^3/g_mole};
+		Zc :== 0.293;
+		omega :== 0.218;
+		cpvapa :== 24.00 {J/g_mole/K};
+		cpvapb :== 1.893e-1 {J/g_mole/K^2};
+		cpvapc :== -1.841e-4 {J/g_mole/K^3};
+		cpvapd :== 6.657e-8 {J/g_mole/K^4};
+		Hf :== -1.013e+5 {J/g_mole};
+		Gf :== -6.858e+4 {J/g_mole};
+		vpa :== -6.95546;
+		vpb :== 1.16625;
+		vpc :== -2.13970;
+		vpd :== -3.44421;
+		vp_correlation :== 1;
+		Hv :== 7100 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 293.15 {K};
+		lden :== 1.489 {g/cm^3};
+
+		nu['CHCl3']		:==	1;
+		lambda['(CH3)2CO']	:==	1.49288;
+		lambda['C6H6']		:==	1.92309;
+		lambda['CHCl3']		:==	1.0;
+		del_ip['(CH3)2CO']	:==	-1359.32 {J/g_mole};
+		del_ip['C6H6']		:==	-1638.28 {J/g_mole};
+		del_ip['CHCl3']		:==	0.0 {J/g_mole};
+
+(* No. 116 *)
+	CASE 'methane':
+
+		formula				   :== 'CH4';
+		subgroups				 :== ['CH3'];
+		wilson_set				:== [];
+
+		mw :== 16.043 {g/g_mole};
+		Tb :== 111.6 {K};
+		Tc :== 190.4 {K};
+		Pc :== 46.0 {bar};
+		Vc :== 99.0 {cm^3/g_mole};
+		Zc :== 0.288;
+		omega :== 0.011;
+		cpvapa :== 19.25 {J/g_mole/K};
+		cpvapb :== 5.213e-2 {J/g_mole/K^2};
+		cpvapc :== 1.197e-5 {J/g_mole/K^3};
+		cpvapd :== -1.132e-8 {J/g_mole/K^4};
+		Hf :== -7.490e+4 {J/g_mole};
+		Gf :== -5.087e+4 {J/g_mole};
+		vpa :== -6.00435;
+		vpb :== 1.18850;
+		vpc :== -0.83408;
+		vpd :== -1.22833;
+		vp_correlation :== 1;
+		Hv :== 1955 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 111.7 {K};
+		lden :== 0.425 {g/cm^3};
+	 
+		nu['CH3']		:==	1;
+
+(* No. 117 *)
+	CASE 'methanol':
+
+		formula				   :== 'CH3OH';
+		subgroups				 :== ['CH3', 'OH'];
+		wilson_set			   :== ['H2O','(CH3)2CO','CH3OH'];
+
+		mw :== 32.042 {g/g_mole};
+		Tb :== 337.7 {K};
+		Tc :== 512.6 {K};
+		Pc :== 80.9 {bar};
+		Vc :== 118.0 {cm^3/g_mole};
+		Zc :== 0.224;
+		omega :== 0.556;
+		cpvapa :== 21.15 {J/g_mole/K};
+		cpvapb :== 7.092e-2 {J/g_mole/K^2};
+		cpvapc :== 2.587e-5 {J/g_mole/K^3};
+		cpvapd :== -2.852e-8 {J/g_mole/K^4};
+		Hf :== -2.0133e+5 {J/g_mole};
+		Gf :== -1.626e+5 {J/g_mole};
+		vpa :== -8.54796;
+		vpb :== 0.76982;
+		vpc :== -3.10850;
+		vpd :== 1.54481;
+		vp_correlation :== 1;
+		Hv :== 8426 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 293 {K};
+		lden :== 0.791 {g/cm^3};
+	
+		nu['CH3']		:==	1;
+		nu['OH']		:==	1;
+		lambda['H2O']		:==	0.43045;
+		lambda['(CH3)2CO']	:==	0.77204;
+		lambda['CH3OH']		:==	1.0;
+		del_ip['(CH3)2CO']	:==	2.6493E+002 {J/g_mole};
+		del_ip['H2O']		:==	1.1944E+002 {J/g_mole};
+		del_ip['CH3OH']		:==	0.0 {J/g_mole};
+
+
+(* No. 155 *)
+	CASE 'ethylene':
+
+		formula				   :== 'C2H4';
+		subgroups				 :== ['CH2=CH'];
+		wilson_set				:== [];
+		mw :== 28.054 {g/g_mole};
+		Tb :== 169.3 {K};
+		Tc :== 282.4 {K};
+		Pc :== 50.4 {bar};
+		Vc :== 130.4 {cm^3/g_mole};
+		Zc :== 0.280;
+		omega :== 0.089;
+		cpvapa :== 3.806 {J/g_mole/K};
+		cpvapb :== 1.566e-1 {J/g_mole/K^2};
+		cpvapc :== -8.348e-5 {J/g_mole/K^3};
+		cpvapd :== 1.755e-8 {J/g_mole/K^4};
+		Hf :== 5.234e+4 {J/g_mole};
+		Gf :== 6.816e+4 {J/g_mole};
+		vpa :== -6.32055;
+		vpb :== 1.16819;
+		vpc :== -1.55935;
+		vpd :== -1.83552;
+		vp_correlation :== 1;
+		Hv :== 3237 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 163{K};
+		lden :== 0.577 {g/cm^3};
+		nu['CH2=CH']		:==	1;
+	
+
+(* No. 168 *)
+	CASE 'ethane':
+
+		formula				   :== 'C2H6';
+		subgroups				 :== ['CH3'];
+		wilson_set				:== [];
+		mw :== 30.070 {g/g_mole};
+		Tb :== 184.6 {K};
+		Tc :== 305.4 {K};
+		Pc :== 48.8 {bar};
+		Vc :== 148.3 {cm^3/g_mole};
+		Zc :== 0.285;
+		omega :== 0.099;
+		cpvapa :== 5.409 {J/g_mole/K};
+		cpvapb :== 1.781e-1 {J/g_mole/K^2};
+		cpvapc :== -6.938e-5 {J/g_mole/K^3};
+		cpvapd :== 8.713e-9 {J/g_mole/K^4};
+		Hf :== -8.474e+4 {J/g_mole};
+		Gf :== -3.295e+4 {J/g_mole};
+		vpa :== -6.34307;
+		vpb :== 1.01630;
+		vpc :== -1.19116;
+		vpd :== -2.03539;
+		vp_correlation :== 1;
+		Hv :== 3515 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 183.0 {K};
+		lden :== 0.548 {g/cm^3};
+
+		nu['CH3']		:==	2;
+
+
+(* No. 170 *)
+	CASE 'ethanol':
+
+		formula				   :== 'C2H5OH';
+		subgroups				 :== ['CH3', 'CH2', 'OH'];
+		wilson_set				:== [];
+
+		mw :== 46.069 {g/g_mole};
+		Tb :== 351.4 {K};
+		Tc :== 513.9 {K};
+		Pc :== 61.4 {bar};
+		Vc :== 167.1 {cm^3/g_mole};
+		Zc :== 0.240;
+		omega :== 0.644;
+		cpvapa :== 9.014 {J/g_mole/K};
+		cpvapb :== 2.141e-1 {J/g_mole/K^2};
+		cpvapc :== -8.390e-5 {J/g_mole/K^3};
+		cpvapd :== 1.373e-9 {J/g_mole/K^4};
+		Hf :== -2.350e+5 {J/g_mole};
+		Gf :== -1.684e+5 {J/g_mole};
+		vpa :== -8.51838;
+		vpb :== 0.34163;
+		vpc :== -5.73683;
+		vpd :== 8.32581;
+		vp_correlation :== 1;
+		Hv :== 9260 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 293.15 {K};
+		lden :== 0.789 {g/cm^3};
+
+		nu['CH3']		:==	1;
+		nu['CH2']		:==	1;
+		nu['OH']		:== 1;
+
+(* No. 194 *) 
+	CASE 'propylene':
+
+		formula				   :== 'C3H6';
+		subgroups				 :== ['CH3', 'CH2', 'CH'];
+		wilson_set				:== ['C3H4','C3H8','C3H6'];
+
+		mw :== 42.081 {g/g_mole};
+		Tb :== 225.5 {K};
+		Tc :== 364.9 {K};
+		Pc :== 46.0 {bar};
+		Vc :== 181.0 {cm^3/g_mole};
+		Zc :== 0.274;
+		omega :== 0.144;
+		cpvapa :== 3.710 {J/g_mole/K};
+		cpvapb :== 2.345e-1 {J/g_mole/K^2};
+		cpvapc :== -1.160e-4 {J/g_mole/K^3};
+		cpvapd :== 2.205e-8 {J/g_mole/K^4};
+		Hf :== 2.043e+4 {J/g_mole};
+		Gf :== 6.276e+4 {J/g_mole};
+		vpa :== -6.64231;
+		vpb :== 1.21857;
+		vpc :== -1.81005;
+		vpd :== -2.48212;
+		vp_correlation :== 1;
+		Hv :== 4400 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 223.0 {K};
+		lden :== 0.612 {g/cm^3};
+	
+		nu['CH3']		:==	1;
+		nu['CH2']		:==	1;
+		nu['CH']		:==	1;
+
+		lambda['C3H4']		:==	1.150;
+		lambda['C3H8']		:==	1.057;
+		lambda['C3H6']		:==	1.0;
+
+		del_ip[wilson_set] :== MAX_REAL * 1e-12{J/g_mole};
+
+(* No. 196 *)
+	CASE 'acetone':
+
+		formula				   :== '(CH3)2CO';
+		subgroups				 :== ['CH3', 'CH3CO'];
+		wilson_set :== ['H2O','CH3OH','CHCl3','C6H6','(CH3)2CO'];
+
+		mw :== 58.080 {g/g_mole};
+		Tb :== 329.2 {K};
+		Tc :== 508.1 {K};
+		Pc :== 47.0 {bar};
+		Vc :== 209.0 {cm^3/g_mole};
+		Zc :== 0.232;
+		omega :== 0.304;
+		cpvapa :== 6.301 {J/g_mole/K};
+		cpvapb :== 2.606e-1 {J/g_mole/K^2};
+		cpvapc :== -1.253e-4 {J/g_mole/K^3};
+		cpvapd :== 2.038e-8 {J/g_mole/K^4};
+		Hf :== -2.177e+5 {J/g_mole};
+		Gf :== -1.532e+5 {J/g_mole};
+		vpa :== -7.45514;
+		vpb :== 1.20200;
+		vpc :== -2.43926;
+		vpd :== -3.35590;
+		vp_correlation :== 1;
+		Hv :== 6960 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 293.15{K};
+		lden :== 0.790 {g/cm^3};
+	
+		nu['CH3']  :== 1;
+		nu['CH3CO']		:==	1;
+
+		lambda['H2O']		:==	0.16924;
+		lambda['CH3OH']		:==	0.65675;
+		lambda['CHCl3']		:==	1.29452;
+		lambda['C6H6']		:==	0.75632;
+		lambda['(CH3)2CO']		:==	1.0;
+
+		del_ip['CH3OH']		:==	23.2321 {J/g_mole};
+		del_ip['H2O']		:==	1674.817 {J/g_mole};
+		del_ip['C6H6']		:==	1364.63 {J/g_mole};
+		del_ip['CHCl3']		:==	-468.831 {J/g_mole};
+		del_ip['(CH3)2CO']		:==	0.0 {J/g_mole};
+
+
+(* No. 206 *)
+	CASE 'propane':
+
+		formula			   :== 'C3H8';
+		subgroups			 :== ['CH3', 'CH2'];
+		wilson_set			:== ['C3H4','C3H8','C3H6'];
+
+		mw :== 44.094 {g/g_mole};
+		Tb :== 231.1 {K};
+		Tc :== 369.8 {K};
+		Pc :== 42.5 {bar};
+		Vc :== 203.0 {cm^3/g_mole};
+		Zc :== 0.281;
+		omega :== 0.153;
+		cpvapa :== -4.224 {J/g_mole/K};
+		cpvapb :== 3.063e-1 {J/g_mole/K^2};
+		cpvapc :== -1.586e-4 {J/g_mole/K^3};
+		cpvapd :== 3.215e-8 {J/g_mole/K^4};
+		Hf :== -1.039e+5 {J/g_mole};
+		Gf :== -2.349e+4 {J/g_mole};
+		vpa :== -6.72219;
+		vpb :== 1.33236;
+		vpc :== -2.13868;
+		vpd :== -1.38551;
+		Hv :== 4487 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		Tliq :== 231.0 {K};
+		lden :== 0.582 {g/cm^3};
+		vp_correlation :== 1;
+	
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	1;
+
+		lambda['C3H4']		:==	1.439;
+		lambda['C3H8']		:==	1.0;
+		lambda['C3H6']		:==	1.062;
+	(* we don't have this data yet *)
+	FOR w IN wilson_set CREATE
+		del_ip[w] :== MAX_REAL*1e-12{J/g_mole};
+	END FOR;
+
+(* No. 185 *)
+	CASE 'propadiene':
+
+
+		formula			   :== 'C3H4';
+		subgroups			 :== ['CH2', 'CH2=C'];
+		wilson_set			:== ['C3H4','C3H8','C3H6'];
+
+		mw :== 40.065 {g/g_mole};
+		Tb :== 238.7 {K};
+		Tc :== 393.0 {K};
+		Pc :== 54.7 {bar};
+		Vc :== 162.0 {cm^3/g_mole};
+		Zc :== 0.271;
+		omega :== 0.313;
+		cpvapa :== 9.906 {J/g_mole/K};
+		cpvapb :== 1.977e-1 {J/g_mole/K^2};
+		cpvapc :== -1.182e-4 {J/g_mole/K^3};
+		cpvapd :== 2.782e-8 {J/g_mole/K^4};
+		Hf :== 1.923e5 {J/g_mole};
+		Gf :== 2.025e5 {J/g_mole};
+		vpa :== 6.5361;
+		vpb :== 1054.72{K};
+		vpc :== -77.08{K};
+		vpd :== 0;
+		vp_correlation :== 3;
+		Hv :== 4450.0 {cal/g_mole};  (*Reid, et.al 2nd ed.*)
+		lden :== 0.658 {g/cm^3};
+		Tliq :== 238.0 {K};
+	
+		nu['CH2']		:==	2;
+		nu['CH2=C']		:==	2;
+
+		lambda['C3H4']		:==	1.0;
+		lambda['C3H8']		:==	1.353;
+		lambda['C3H6']		:==	1.136;
+	
+	FOR w IN 	wilson_set CREATE
+	(* we don't have this data yet *)
+		del_ip[w] :== MAX_REAL * 1e-12{J/g_mole};
+	END FOR;
+
+(* No. 207 l_propanol *)
+	CASE 'n_propanol':
+
+		formula			   :== 'C3H7OH';
+		subgroups			 :== ['CH3', 'CH2', 'OH'];
+		wilson_set			:== [];
+
+		mw :== 60.096 {g/g_mole};
+		Tb :== 370.4 {K};
+		Tc :== 536.7 {K};
+		Pc :== 51.7 {bar};
+		Vc :== 218.5 {cm^3/g_mole};
+		Zc :== 0.253;
+		omega :== 0.623;
+		cpvapa :== 2.470 {J/g_mole/K};
+		cpvapb :== 3.325e-1 {J/g_mole/K^2};
+		cpvapc :== -1.855e-4 {J/g_mole/K^3};
+		cpvapd :== 4.296e-8 {J/g_mole/K^4};
+		Hf :== -2.566e+5 {J/g_mole};
+		Gf :== -1.619e+5 {J/g_mole};
+		vpa :== -8.05594;
+		vpb :== 0.0425183;
+		vpc :== -7.51296;
+		vpd :== 6.89004;
+		vp_correlation :== 1;
+		Hv :== 9980 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.804 {g/cm^3};
+		Tliq :== 293.0 {K};
+	
+		nu['CH3']		:==	1;
+		nu['CH2']		:==	2;
+		nu['OH']		:==	1;
+
+(* No. 208 isopropyl alcohol *)
+	CASE 'i_propanol':
+
+		formula		   :== '(CH3)2CHOH';
+		subgroups		 :== ['CH3', 'CH', 'OH'];
+		wilson_set		:== ['H2O','C2H6O2','(CH3)2CHOH'];
+		mw :== 60.096 {g/g_mole};
+		Tb :== 355.4 {K};
+		Tc :== 508.3 {K};
+		Pc :== 47.6 {bar};
+		Vc :== 220.0 {cm^3/g_mole};
+		Zc :== 0.248;
+		omega :== 0.665;
+		cpvapa :== 32.43 {J/g_mole/K};
+		cpvapb :== 1.885e-1 {J/g_mole/K^2};
+		cpvapc :== 6.406e-5 {J/g_mole/K^3};
+		cpvapd :== -9.261e-8 {J/g_mole/K^4};
+		Hf :== -2.726e+5 {J/g_mole};
+		Gf :== -1.177e+5 {J/g_mole};
+		vpa :== -8.16927;
+		vpb :== -0.0943213;
+		vpc :== -8.10040;
+		vpd :== 7.85000;
+		vp_correlation :== 1;
+		Hv :== 9520 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.786 {g/cm^3};
+		Tliq :== 293.0 {K};
+	
+		nu['CH3']		:==	2;
+		nu['CH']		:==	1;
+		nu['OH']		:==	1;
+		lambda['H2O']		:==	0.03094;
+		lambda['C2H6O2']		:==	1.80740;
+		lambda['(CH3)2CHOH']		:==	1.0;
+		del_ip['H2O']		:==	6255.66 {J/g_mole};
+		del_ip['C2H6O2']		:==	-1319.20 {J/g_mole};
+	  	del_ip['(CH3)2CHOH']		:==	0.0 {J/g_mole};
+	  
+(* No 171 *)
+	CASE 'ethylene_glycol':
+
+		formula				   :== 'C2H6O2';
+		subgroups				 :== ['CH2','OH'];
+		wilson_set				:== ['H2O','(CH3)2CHOH','C2H6O2'];
+
+		mw :== 62.069 {g/g_mole};
+		Tb :== 470.5 {K};
+		Tc :== 645 {K};
+		Pc :== 77 {bar};
+		Vc :== 55.71723{cm^3/g_mole};
+		Zc :== 0.270;
+		omega :== (0.9145 + 1.20)/2; (*Calculated using Perry's, p. 3-257*)
+		cpvapa :== 3.570e+1 {J/g_mole/K};
+		cpvapb :== 2.483e-1 {J/g_mole/K^2};
+		cpvapc :== -1.497e-4 {J/g_mole/K^3};
+		cpvapd :== 3.010e-8 {J/g_mole/K^4};
+		Hf :== -3.896e5 {J/g_mole};
+		Gf :== -3.047e5 {J/g_mole};
+		vpa :== 13.6299;
+		vpb :== 6022.18{K};
+		vpc :== -28.25{K};
+		vpd :== 0;
+		vp_correlation :== 3;
+		Hv :== 12550.0 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 1.114 {g/cm^3};
+		Tliq :== 293.0 {K};
+   
+		nu['CH2']		:==	2;
+		nu['OH']		:==	2;
+
+		lambda['H2O']		:==	0.42861;
+		lambda['(CH3)2CHOH']		:==	0.23018;
+		lambda['C2H6O2']		:==	1.0;
+
+		del_ip['H2O']		:==	-2661.746 {J/g_mole};
+		del_ip['(CH3)2CHOH']		:==	2167.164 {J/g_mole};
+		del_ip['C2H6O2']		:==	0.0 {J/g_mole};
+
+
+(* No. 258 *)
+	CASE 'n_butane':
+
+		formula				   :== 'C4H10';
+		subgroups				 :== ['CH3', 'CH2'];
+		wilson_set				:== [];
+
+		mw :== 58.124 {g/g_mole};
+		Tb :== 272.7 {K};
+		Tc :== 425.2 {K};
+		Pc :== 38.0 {bar};
+		Vc :== 255 {cm^3/g_mole};
+		Zc :== 0.274;
+		omega :== 0.199;
+		cpvapa :== 9.487 {J/g_mole/K};
+		cpvapb :== 3.313e-1 {J/g_mole/K^2};
+		cpvapc :== -1.108e-4 {J/g_mole/K^3};
+		cpvapd :== -2.822e-9 {J/g_mole/K^4};
+		Hf :== -1.262e+5 {J/g_mole};
+		Gf :== -1.610e+4 {J/g_mole};
+		vpa :== -6.88709;
+		vpb :== 1.15157;
+		vpc :== -1.99873;
+		vpd :== -3.13003;
+		vp_correlation :== 1;
+		Hv :== 5352 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.579 {g/cm^3};
+		Tliq :== 293.0 {K};
+		
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	2;
+
+(* No. 259 isobutane*) 
+	CASE 'i_butane':
+
+		formula				   :== '(CH3)3CH';
+		subgroups				 :== ['CH3', 'CH'];
+		wilson_set				:== [];
+
+		mw :== 58.124 {g/g_mole};
+		Tb :== 261.4 {K};
+		Tc :== 408.2 {K};
+		Pc :== 36.5 {bar};
+		Vc :== 263 {cm^3/g_mole};
+		Zc :== 0.283;
+		omega :== 0.183;
+		cpvapa :== -1.390 {J/g_mole/K};
+		cpvapb :== 3.847e-1 {J/g_mole/K^2};
+		cpvapc :== -1.846e-4 {J/g_mole/K^3};
+		cpvapd :== 2.895e-8 {J/g_mole/K^4};
+		Hf :== -1.346e+5 {J/g_mole};
+		Gf :== -2.090e+4 {J/g_mole};
+		vpa :== -6.95579;
+		vpb :== 1.50090;
+		vpc :== -2.52717;
+		vpd :== -1.49776;
+		vp_correlation :== 1;
+		Hv :== 5090 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.557 {g/cm^3};
+		Tliq :== 293.0 {K};
+  
+		nu['CH3']		:==	3;
+		nu['CH']		:==	1;
+
+
+(* No. 260*)
+	CASE 'n_butanol':
+
+		formula				   :== 'C4H9OH';
+		subgroups				 :== ['CH3', 'CH2', 'OH'];
+		wilson_set				:== [];
+
+		mw :== 74.123 {g/g_mole};
+		Tb :== 390.9 {K};
+		Tc :== 563.1 {K};
+		Pc :== 44.2 {bar};
+		Vc :== 274.0 {cm^3/g_mole};
+		Zc :== 0.259;
+		omega :== 0.593;
+		cpvapa :== 3.266 {J/g_mole/K};
+		cpvapb :== 4.180e-1 {J/g_mole/K^2};
+		cpvapc :== -2.242e-4 {J/g_mole/K^3};
+		cpvapd :== 4.685e-8 {J/g_mole/K^4};
+		Hf :== -2.749e+5 {J/g_mole};
+		Gf :== -1.509e+5 {J/g_mole};
+		vpa :== -8.00756;
+		vpb :== 0.53783;
+		vpc :== -9.34240;
+		vpd :== 6.68692;
+		vp_correlation :== 1;
+		Hv :== 10300 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.810 {g/cm^3};
+		Tliq :== 293 {K};
+	
+		nu['CH3']		:==	1;
+		nu['CH2']		:==	3;
+		nu['OH']  :== 1;
+
+
+(* No. 262 isobutanol*)
+	CASE 'i_butanol':
+
+		formula				   :== '(CH3)2CHCH2OH';
+		subgroups				 :== ['CH3','CH2','CH','OH'];
+		wilson_set				:== [];
+
+
+		mw :== 74.123 {g/g_mole};
+		Tb :== 381.0 {K};
+		Tc :== 547.8 {K};
+		Pc :== 43.0 {bar};
+		Vc :== 273 {cm^3/g_mole};
+		Zc :== 0.257;
+		omega :== 0.592;
+		cpvapa :== -7.708 {J/g_mole/K};
+		cpvapb :== 4.689e-1 {J/g_mole/K^2};
+		cpvapc :== -2.884e-4 {J/g_mole/K^3};
+		cpvapd :== 7.231e-8 {J/g_mole/K^4};
+		Hf :== -2.834e+5 {J/g_mole};
+		Gf :== -1.674e+5 {J/g_mole};
+		vpa :== 10.2510;
+		vpb :== 2874.73{K};
+		vpc :== -100.3{K};
+		vpd :== 0;
+		vp_correlation :== 3;
+		Hv :== 10050 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.802 {g/cm^3};
+		Tliq :== 293.0 {K};
+ 
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	1;
+		nu['CH']  :== 1;
+		nu['OH']  :== 1;
+
+
+(* No. 311 *)
+	CASE 'n_pentane':
+
+
+		formula				   :== 'C5H12';
+		subgroups				 :== ['CH3', 'CH2'];
+		wilson_set				:== [];
+
+		mw :== 72.151 {g/g_mole};
+		Tb :== 309.2 {K};
+		Tc :== 469.7 {K};
+		Pc :== 33.7 {bar};
+		Vc :== 304 {cm^3/g_mole};
+		Zc :== 0.263;
+		omega :== 0.251;
+		cpvapa :== -3.626 {J/g_mole/K};
+		cpvapb :== 4.873e-1 {J/g_mole/K^2};
+		cpvapc :== -2.580e-4 {J/g_mole/K^3};
+		cpvapd :== 5.305e-8 {J/g_mole/K^4};
+		Hf :== -1.465e+5 {J/g_mole};
+		Gf :== -8.370e+3 {J/g_mole};
+		vpa :== -7.28936;
+		vpb :== 1.53679;
+		vpc :== -3.08367;
+		vpd :== -1.02456;
+		vp_correlation :== 1;
+		Hv :== 6160 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.626 {g/cm^3};
+		Tliq :== 293.0 {K};
+
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	3;
+
+
+(* No. 312 2-methyl butane*)
+	CASE 'i_pentane':
+
+		formula				   :== 'C2H5CH(CH3)2';
+		subgroups				 :== ['CH3', 'CH2', 'CH'];
+		wilson_set				:== [];
+
+		mw :== 72.151 {g/g_mole};
+		Tb :== 301.0 {K};
+		Tc :== 460.4 {K};
+		Pc :== 33.9 {bar};
+		Vc :== 306 {cm^3/g_mole};
+		Zc :== 0.271;
+		omega :== 0.227;
+		cpvapa :== -9.525 {J/g_mole/K};
+		cpvapb :== 5.066e-1 {J/g_mole/K^2};
+		cpvapc :== -2.729e-4 {J/g_mole/K^3};
+		cpvapd :== 5.723e-8 {J/g_mole/K^4};
+		Hf :== -1.546e+5 {J/g_mole};
+		Gf :== -1.482e+4 {J/g_mole};
+		vpa :== -7.12727;
+		vpb :== 1.38996;
+		vpc :== -2.54302;
+		vpd :== -2.45657;
+		vp_correlation :== 1;
+		Hv :== 5900 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.620 {g/cm^3};
+		Tliq :== 293.0{K};
+	
+		nu['CH3']		:==	3;
+		nu['CH2']		:==	1;
+		nu['CH']		:==	1;
+
+
+(* No. 343 *)
+	CASE 'benzene':
+
+		formula				   :== 'C6H6';
+		subgroups				 :== ['ACH'];
+		wilson_set				:== ['CHCl3','C6H6','(CH3)2CO'];
+
+		mw :== 78.114 {g/g_mole};
+		Tb :== 353.2 {K};
+		Tc :== 562.2 {K};
+		Pc :== 48.9 {bar};
+		Vc :== 259 {cm^3/g_mole};
+		Zc :== 0.271;
+		omega :== 0.212;
+		cpvapa :== -3.392e+1 {J/g_mole/K};
+		cpvapb :== 4.739e-1 {J/g_mole/K^2};
+		cpvapc :== -3.017e-4 {J/g_mole/K^3};
+		cpvapd :== 7.130e-8 {J/g_mole/K^4};
+		Hf :== 8.298e+4 {J/g_mole};
+		Gf :== 1.297e+5 {J/g_mole};
+		vpa :== -6.98273;
+		vpb :== 1.33213;
+		vpc :== -2.62863;
+		vpd :== -3.33399;
+		vp_correlation :== 1;
+		Hv :== 7352 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.885 {g/cm^3};
+		Tliq :== 289.0{K};
+	
+		nu['ACH']		   :==	 6;
+		lambda['CHCl3']	 :==	 0.52431;
+		lambda['(CH3)2CO']		  :==	 0.87629;
+		lambda['C6H6']	  :==	 1.0;
+		del_ip['CHCl3']	 :==	 1614.0 {J/g_mole};
+		del_ip['(CH3)2CO']		  :==	 -156.458 {J/g_mole};
+		del_ip['C6H6']	  :==	 0.0 {J/g_mole};
+
+
+(* No. 379 *)
+	CASE 'n_hexane':
+
+		formula				   :== 'C6H14';
+		subgroups				 :== ['CH3', 'CH2'];
+		wilson_set				:== [];
+
+
+		mw :== 86.178 {g/g_mole};
+		Tb :== 341.9 {K};
+		Tc :== 507.5 {K};
+		Pc :== 30.1 {bar};
+		Vc :== 370 {cm^3/g_mole};
+		Zc :== 0.264;
+		omega :== 0.299;
+		cpvapa :== -4.413 {J/g_mole/K};
+		cpvapb :== 5.820e-1 {J/g_mole/K^2};
+		cpvapc :== -3.119e-4 {J/g_mole/K^3};
+		cpvapd :== 6.494e-8 {J/g_mole/K^4};
+		Hf :== -1.673e+5 {J/g_mole};
+		Gf :== -1.670e+2 {J/g_mole};
+		vpa :== -7.46765;
+		vpb :== 1.44211;
+		vpc :== -3.28222;
+		vpd :== -2.50941;
+		vp_correlation :== 1;
+		Hv :== 6896 {cal/g_mole};  (*Reid, et.al 2nd ed.*)
+		lden :== 0.659 {g/cm^3};
+		Tliq :== 293.0{K};
+  
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	4;
+
+
+(* No. 400*)
+	CASE 'toluene':
+
+		formula				   :== 'C6H5CH3';
+		subgroups				 :== ['ACH', 'ACCH3'];
+		wilson_set				:== [];
+
+		mw :== 92.141 {g/g_mole};
+		Tb :== 383.8 {K};
+		Tc :== 591.8 {K};
+		Pc :== 41.0 {bar};
+		Vc :== 316 {cm^3/g_mole};
+		Zc :== 0.263;
+		omega :== 0.263;
+		cpvapa :== -2.435e+1 {J/g_mole/K};
+		cpvapb :== 5.125e-1 {J/g_mole/K^2};
+		cpvapc :== -2.765e-4 {J/g_mole/K^3};
+		cpvapd :== 4.911e-8 {J/g_mole/K^4};
+		Hf :== 5.003e+4 {J/g_mole};
+		Gf :== 1.221e+5 {J/g_mole};
+		vpa :== -7.28607;
+		vpb :== 1.38091;
+		vpc :== -2.83433;
+		vpd :== -2.79168;
+		vp_correlation :== 1;
+		Hv :== 7930 {cal/g_mole};  (*Reid, et.al 2nd ed.*)
+		Tliq :== 293.0{K};
+		lden :== 0.867 {g/cm^3};
+
+		nu['ACH']		:==	5;
+		nu['ACCH3']		:==	1;
+
+
+(* No. 429 *)
+	CASE 'n_heptane':
+
+		formula				   :== 'C7H16';
+		subgroups				 :== ['CH3', 'CH2'];
+		wilson_set				:== [];
+
+		mw :== 100.205 {g/g_mole};
+		Tb :== 371.6 {K};
+		Tc :== 540.3 {K};
+		Pc :== 27.4 {bar};
+		Vc :== 432 {cm^3/g_mole};
+		Zc :== 0.263;
+		omega :== 0.349;
+		cpvapa :== -5.146 {J/g_mole/K};
+		cpvapb :== 6.762e-1 {J/g_mole/K^2};
+		cpvapc :== -3.651e-4 {J/g_mole/K^3};
+		cpvapd :== 7.658e-8 {J/g_mole/K^4};
+		Hf :== -1.879e+5 {J/g_mole};
+		Gf :== 8.000e+3 {J/g_mole};
+		vpa :== -7.67468;
+		vpb :== 1.37068;
+		vpc :== -3.53620;
+		vpd :== -3.20243;
+		vp_correlation :== 1;
+		Hv :== 7576 {cal/g_mole}; (*Reid, et.al 2nd ed.*) 
+		lden :== 0.684 {g/cm^3};
+		Tliq :== 293.0{K};
+	
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	5;
+
+
+(* No. 440 *)
+	CASE 'styrene':
+
+		formula				   :== 'C6H5C2H3';
+		subgroups				 :== ['ACH', 'AC', 'CH2=CH'];
+		wilson_set				:== [];
+
+		mw :== 104.152 {g/g_mole};
+		Tb :== 418.3 {K};
+		Tc :== 647 {K};
+		Pc :== 39.9 {bar};
+		Vc :== 350.55 {cm^3/g_mole};(*Not sure about 	Vc 	Zc*)
+		Zc :== 0.260;
+		omega :== 0.257;
+		cpvapa :== -2.825e+1 {J/g_mole/K};
+		cpvapb :== 6.159e-1 {J/g_mole/K^2};
+		cpvapc :== -4.023e-4 {J/g_mole/K^3};
+		cpvapd :== 9.935e-8 {J/g_mole/K^4};
+		Hf :== 1.475e+5 {J/g_mole};
+		Gf :== 2.139e+5 {J/g_mole};
+		vpa :== -7.15981;
+		vpb :== 1.78861;
+		vpc :== -5.10359;
+		vpd :== 1.63749;
+		vp_correlation :== 1;
+		Hv :== 8800 {cal/g_mole}; (*Reid, et.al 2nd ed.*) 
+		lden :== 0.906 {g/cm^3};
+		Tliq :== 293.15{K};
+	
+		nu['ACH']		:==	5;
+		nu['AC']		:==	1;
+		nu['CH2=CH']		:==	1;
+
+
+(* No. 447 *)
+	CASE 'ethylbenzene':
+
+		formula				   :== 'C6H5C2H5';
+		subgroups				 :== ['ACH', 'ACCH2', 'CH3'];
+		wilson_set				:== [];
+
+		mw :== 106.168 {g/g_mole};
+		Tb :== 409.3 {K};
+		Tc :== 617.2 {K};
+		Pc :== 36.0 {bar};
+		Vc :== 374 {cm^3/g_mole};
+		Zc :== 0.262;
+		omega :== 0.302;
+		cpvapa :== -4.310e1 {J/g_mole/K};
+		cpvapb :== 7.072e-1 {J/g_mole/K^2};
+		cpvapc :== -4.811e-4 {J/g_mole/K^3};
+		cpvapd :== 1.301e-7 {J/g_mole/K^4};
+		Hf :== 2.981e4 {J/g_mole};
+		Gf :== 1.307e5 {J/g_mole};
+		vpa :== -7.48645;
+		vpb :== 1.45488;
+		vpc :== -3.37538;
+		vpd :== -2.23048;
+		vp_correlation :== 1;
+		Hv :== 8500 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.867 {g/cm^3};
+		Tliq :== 293{K};
+ 	
+		nu['ACH']		:==	5;
+		nu['ACCH2']		:==	1;
+		nu['CH3']		:==	1;
+
+
+(* No. 483 *)
+	CASE 'n_octane':
+
+		formula				   :== 'C8H18';
+		subgroups				 :== ['CH3', 'CH2'];
+		wilson_set				:== [];
+
+		mw :== 114.232 {g/g_mole};
+		Tb :== 398.8 {K};
+		Tc :== 568.8 {K};
+		Pc :== 24.9 {bar};
+		Vc :== 492.0 {cm^3/g_mole};
+		Zc :== 0.259;
+		omega :== 0.398;
+		cpvapa :== -6.096 {J/g_mole/K};
+		cpvapb :== 7.712e-1 {J/g_mole/K^2};
+		cpvapc :== -4.195e-4 {J/g_mole/K^3};
+		cpvapd :== 8.855e-8 {J/g_mole/K^4};
+		Hf :== -2.086e5 {J/g_mole};
+		Gf :== 1.640e4 {J/g_mole};
+		vpa :== -7.91211;
+		vpb :== 1.38007;
+		vpc :== -3.80435;
+		vpd :== -4.50132;
+		vp_correlation :== 1;
+		Hv :== 8225 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.703 {g/cm^3};
+		Tliq :== 293.0{K};
+
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	6;
+
+
+(* No. 552 *)
+	CASE 'diethylbenzene':
+
+		formula				   :== 'C6H4(C2H5)2';
+		subgroups				 :== ['ACH', 'ACCH2', 'CH3'];
+		wilson_set				:== [];
+
+		mw :== 134.222 {g/g_mole};
+		Tb :== 456.9 {K};
+		Tc :== 657.9 {K};
+		Pc :== 28.0 {bar};
+		Vc :== 480.0 {cm^3/g_mole};(*Not sure about 	Vc 	Zc*)
+		Zc :== 0.25;
+		omega :== 0.404;
+		cpvapa :== -3.742e+1 {J/g_mole/K};
+		cpvapb :== 8.671e-1 {J/g_mole/K^2};
+		cpvapc :== -5.560e-4 {J/g_mole/K^3};
+		cpvapd :== 1.411e-7 {J/g_mole/K^4};
+		Hf :== -2.227e+4 {J/g_mole};
+		Gf :== 1.380e+5 {J/g_mole};
+		vpa :== -8.11413;
+		vpb :== 1.77697;
+		vpc :== -4.43960;
+		vpd :== -1.47477;
+		vp_correlation :== 1;
+		Hv :== 9410 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.862 {g/cm^3};
+		Tliq :== 293 {K};
+	
+		nu['ACH']		:==	4;
+		nu['ACCH2']		:==	2;
+		nu['CH3']		:==	2;
+
+
+(* No. 567 *)
+	CASE 'n_decane':
+
+		formula				   :== 'C10H22';
+		subgroups				 :== ['CH3', 'CH2'];
+		wilson_set				:== [];
+
+		mw :== 142.286 {g/g_mole};
+		Tb :== 447.3 {K};
+		Tc :== 617.7 {K};
+		Pc :== 21.2 {bar};
+		Vc :== 603.0 {cm^3/g_mole};
+		Zc :== 0.249;
+		omega :== 0.489;
+		cpvapa :== -7.913 {J/g_mole/K};
+		cpvapb :== 9.609e-1 {J/g_mole/K^2};
+		cpvapc :== -5.288e-4 {J/g_mole/K^3};
+		cpvapd :== 1.131e-7 {J/g_mole/K^4};
+		Hf :== -2.498e5 {J/g_mole};
+		Gf :== 3.324e4 {J/g_mole};
+		vpa :== -8.56523;
+		vpb :== 1.97756;
+		vpc :== -5.81971;
+		vpd :== -0.29982;
+		vp_correlation :== 1;
+		Hv :== 9388 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.730 {g/cm^3};
+		Tliq :== 293.0 {K};
+	
+		nu['CH3']		:==	2;
+		nu['CH2']		:==	8;
+
+
+(* No. 579 *)
+	CASE 'diphenyl':
+
+		formula				   :== '(C6H5)2';
+		subgroups				 :== ['ACH', 'AC'];
+		wilson_set				:== [];
+
+		mw :== 154.212 {g/g_mole};
+		Tb :== 529.3 {K};
+		Tc :== 789.0 {K};
+		Pc :== 38.5 {bar};
+		Vc :== 502.0 {cm^3/g_mole};
+		Zc :== 0.295;
+		omega :== 0.372;
+		cpvapa :== -9.707e+1 {J/g_mole/K};
+		cpvapb :== 1.106 {J/g_mole/K^2};
+		cpvapc :== -8.855e-4 {J/g_mole/K^3};
+		cpvapd :== 2.790e-7 {J/g_mole/K^4};
+		Hf :== 1.822e+5 {J/g_mole};
+		Gf :== 2.803e+5 {J/g_mole};
+		vpa :== -7.6740;
+		vpb :== 1.23008;
+		vpc :== -3.67908;
+		vpd :== -2.29172;
+		vp_correlation :== 1;
+		Hv :== 10900 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.990 {g/cm^3};
+		Tliq :== 347 {K};
+		nu['ACH']		:==	10;
+		nu['AC']		:==	2;
+
+
+(* No. 314 1_pentanol*)
+	CASE 'pentanol_1':
+
+		formula				   :== 'C5H12O';
+		subgroups				 :== ['CH3', 'CH2', 'OH'];
+		wilson_set				:== [];
+
+		mw :== 88.150 {g/g_mole};		  
+		Tb :== 411.1 {K};	   
+		Tc :== 588.2 {K}; 
+		Pc :== 39.1 {bar};
+		Vc :== 326.0 {cm^3/g_mole};
+		Zc :== 0.260;
+		omega :== 0.579;
+		cpvapa :== 3.869 {J/g_mole/K};
+		cpvapb :== 0.5045 {J/g_mole/K^2};
+		cpvapc :== -2.639e-04 {J/g_mole/K^3};
+		cpvapd :== 5.120e-08 {J/g_mole/K^4};
+		Hf :== -2.989e05 {J/g_mole};			  
+		Gf :== -1.461e05 {J/g_mole};	
+		vpa :== -8.97725;
+		vpb :== 2.99791;
+		vpc :== -12.9596;
+		vpd :== 8.84205;
+		Hv :== 10600.0 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 0.815;
+		Tliq :== 293.0 {K};
+ 	
+		nu['CH2']		:==	4;
+		nu['CH3']		:==	1;
+		nu['OH']		:==	1;
+
+
+(* No. 340*)
+	CASE 'chloro_benzene':
+
+		formula				   :== 'C6H5Cl';
+		subgroups				 :== ['ACH', 'AC'];
+		wilson_set				:== [];
+
+		mw :== 112.559 {g/g_mole};		  
+		Tb :== 404.9 {K};	   
+		Tc :== 632.4 {K}; 
+		Pc :== 45.2 {bar};
+		Vc :== 308.0 {cm^3/g_mole};
+		Zc :== 0.265;
+		omega :== 0.249;
+		cpvapa :== -33.89 {J/g_mole/K};
+		cpvapb :== 0.5631 {J/g_mole/K^2};
+		cpvapc :== -4.522e-04 {J/g_mole/K^3};
+		cpvapd :== 1.426e-07 {J/g_mole/K^4};
+		Hf :== 5.187e04 {J/g_mole};			  
+		Gf :== 9.923e04 {J/g_mole};	
+		vpa :== -7.5870;
+		vpb :== 2.26551;
+		vpc :== -4.09418;
+		vpd :== 0.17038;
+		Hv :== 8735.0 {cal/g_mole}; (*Reid, et.al 2nd ed.*)
+		lden :== 1.106 {g/cm^3};
+		Tliq :== 293.0 {K};
+ 
+		nu['ACH']		:==	5;
+		nu['AC']		:==	1;
+
+
+(* added from art *)
+	CASE 'oxygen':
+
+		formula				   :== 'O2';
+		subgroups				 :== [];
+		wilson_set				:== [];
+
+		mw :== 31.999 {g/g_mole};
+		Tb :== 90.2 {K};
+		Tc :== 154.6 {K};
+		Pc :== 50.4 {bar};
+		Vc :== 73.4 {cm^3/g_mole};
+		Zc :== 0.288;
+		omega :== 0.025;
+		cpvapa :== 2.811e1 {cal/g_mole/K};
+		cpvapb :== -3.680e-6 {cal/g_mole/K^2};
+		cpvapc :== 1.746e-5 {cal/g_mole/K^3};
+		cpvapd :== -1.065e-8 {cal/g_mole/K^4};
+		Hf :== 0.00 {J/g_mole};
+		Gf :== 0.00 {J/g_mole};
+		vpa :== -6.28275;
+		vpb :== 1.73619;
+		vpc :== -1.81349;
+		vpd :== -2.53645e-2;
+		Hv :== 1630 {cal/g_mole};
+		Tliq :== 90 {K};
+		lden:== 1.149 {g/cm^3};
+
+	  
+	CASE 'nitrogen':
+
+		formula				   :== 'O2';
+		subgroups				 :== [];
+		wilson_set				:== [];
+
+		mw :== 28.013 {g/g_mole};
+		Tb :== 77.4 {K};
+		Tc :== 126.2 {K};
+		Pc :== 33.9 {bar};
+		Vc :== 89.8 {cm^3/g_mole};
+		Zc :== 0.290;
+		omega :== 0.039;
+		cpvapa :== 3.115e1 {cal/g_mole/K};
+		cpvapb :== -1.357e-2 {cal/g_mole/K^2};
+		cpvapc :== 2.680e-5 {cal/g_mole/K^3};
+		cpvapd :== -1.168e-8 {cal/g_mole/K^4};
+		Hf :== 0.00 {J/g_mole};
+		Gf :== 0.00 {J/g_mole};
+		vpa :== -6.09676;
+		vpb :== 1.13670;
+		vpc :== -1.04072;
+		vpd :== -1.93306;
+		Hv :== 1333 {cal/g_mole};
+		Tliq :== 78 {K};
+		lden :== 0.804 {g/cm^3};
+
+	END SELECT; (* select component_name*)
+
+END td_component_constants;
+
+MODEL td_component_data_set(
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+) WHERE (
+	(reference IN components) == TRUE;
+	FOR i IN components CREATE
+(* note: keep this list consistent with td_component_constants CASES *)
+		(i IN ['hydrogen', 'carbon_dioxide', 'water', 'chloroform',
+			'methane', 'methanol', 'ethylene', 'ethane',
+			'ethanol', 'propylene', 'acetone', 'propane',
+			'propadiene', 'n_propanol', 'i_propanol',
+			'ethylene_glycol', 'n_butane', 'i_butane',
+			'n_butanol', 'i_butanol', 'n_pentane', 'i_pentane',
+			'benzene', 'n_hexane', 'toluene', 'n_heptane',
+			'styrene', 'ethylbenzene', 'n_octane',
+			'diethylbenzene', 'n_decane', 'diphenyl',
+			'pentanol_1', 'chloro_benzene', 'oxygen',
+			'nitrogen' ]) == TRUE;
+	END FOR;
+);
+	FOR i IN components CREATE
+		data[i] IS_A td_component_constants(i);
+	END FOR;
+	other IS_A set OF symbol_constant;
+	other :== [components - [reference]];
+END td_component_data_set;
+
+MODEL test_components;
+ 	ds IS_A td_component_data_set(['methanol','water'],'water');
+END test_components;

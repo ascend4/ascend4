@@ -1,0 +1,238 @@
+$Revision: 1.1.1.1 $
+$Date: 1996/04/30 18:34:40 $
+
+This is a highly static directory, so it is not under the
+Makefile.in convention for toplevel building.
+
+The following is the FORTRAN namespace in use by ASCEND solvers and the
+ASCEND BLAS/LINPACK packages. 
+If you have a machine tuned BLAS or LINPACK library, link against it rather
+than the ASCEND BLAS and LINPACK libraries.
+The function/subroutine calls are given at the bottom of this file.
+
+*     These correspond to members of the BLAS package (Basic Linear
+*     Algebra Subprograms, Lawson et al. (1979), ACM TOMS 5, 3).
+*     If possible, they should be replaced by authentic BLAS routines
+*     tuned to the machine being used.
+*     Which functions and subroutines are used by which FORTRAN codes
+*     are given in the matrix below.
+*     dasum    daxpy    dcopy    ddot     dnrm2    dscal    idamax
+
+*     The following utilities are also in use by MINOS:
+*     dddiv    ddscl    dload    dnorm1
+*     hcopy    hload    icopy    iload    iload1
+*     These could be tuned to the machine being used.
+*     dload  is used the most.
+*     These have been moved from mi15blas.f to miascend.f
+
+m54=minos, ls=lsode
+
+BLAS usage matrix
+dasum   m54 
+daxpy   m54  ls
+dcopy   m54 
+ddot    m54 
+dnrm2   m54 
+dscal   m54  ls
+idamax  m54  ls
+
+LINPACK usage matrix
+dgbfa   ls
+dgbsl   ls
+dgesl   ls
+dgefa   ls
+d1mach  ls
+
+ASCEND BLAS FUNCTIONS and SUBROUTINES
+dasum.f:    double precision function dasum(n,dx,incx)
+daxpy.f     subroutine daxpy(n,da,dx,incx,dy,incy)
+dcopy.f:    subroutine  dcopy(n,dx,incx,dy,incy)
+ddot.f:     double precision function ddot(n,dx,incx,dy,incy)
+dnrm2.f:    double precision function dnrm2 ( n, dx, incx)
+dscal.f:    subroutine  dscal(n,da,dx,incx)
+idamax.f:   integer function idamax(n,dx,incx)
+
+ASCEND LINPACK FUNCTIONS and SUBROUTINES
+dgbfa.f:    subroutine dgbfa(abd,lda,n,ml,mu,ipvt,info)
+dgbsl.f:    subroutine dgbsl(abd,lda,n,ml,mu,ipvt,b,job)
+dgefa.f:    subroutine dgefa(a,lda,n,ipvt,info)
+dgesl.f:    subroutine dgesl(a,lda,n,ipvt,b,job)
+d1mach.f    double precision function d1mach(i)
+
+LSODE defined FUNCTIONS and SUBROUTINES
+lsode.f:    double precision function vnorm (n, v, w)
+lsode.f:    subroutine lsode (f, neq, y, t, tout, itol, rtol, atol, itask,
+lsode.f:    subroutine solsy (wm, iwm, x, tem)
+lsode.f:    subroutine prepj (neq, y, yh, nyh, ewt, ftem, savf, wm, iwm,
+lsode.f:    subroutine stode (neq, y, yh, nyh, yh1, ewt, savf, acor,
+lsode.f:    subroutine cfode (meth, elco, tesco)
+lsode.f:    subroutine intdy (t, k, yh, nyh, dky, iflag)
+lsode.f:    subroutine xerrwv (msg, nmes, nerr, level, ni, i1, i2, nr, r1, r2)
+lsode.f:    subroutine ewset (n, itol, rtol, atol, ycur, ewt)
+
+MINOS54 defined FUNCTIONS and SUBROUTINES
+miascend.f:  subroutine get_minos_common(major,minor)
+miascend.f:  function   dnorm1( n, x, incx )
+miascend.f:  subroutine dddiv ( n, d, incd, x, incx )
+miascend.f:  subroutine ddscl ( n, d, incd, x, incx )
+miascend.f:  subroutine dload ( n, const, x, incx )
+miascend.f:  subroutine hcopy ( n, hx, incx, hy, incy )
+miascend.f:  subroutine hload ( n, const, hx, incx )
+miascend.f:  subroutine icopy ( n, x, incx, y, incy )
+miascend.f:  subroutine iload ( n, const, x, incx )
+miascend.f:  subroutine iload1( n, const, x, incx )
+mi30spec.f:  FUNCTION OPNUMB(
+mi10unix.f:  subroutine minoss(
+mi10unix.f:  subroutine minos1(
+mi10unix.f:  subroutine minos2(
+mi10unix.f:  subroutine minos3(
+mi10unix.f:  subroutine mifile(
+mi10unix.f:  subroutine mispec(
+mi10unix.f:  subroutine misolv(
+mi10unix.f:  subroutine m1clos(
+mi10unix.f:  subroutine m1envt(
+mi10unix.f:  subroutine m1init(
+mi10unix.f:  subroutine m1open(
+mi10unix.f:  subroutine m1page(
+mi10unix.f:  subroutine m1time(
+mi10unix.f:  subroutine m1timp(
+mi10unix.f:  subroutine m1cpu (
+mi20amat.f:  subroutine m2core(
+mi20amat.f:  subroutine m2amat(
+mi20amat.f:  subroutine m2aprd(
+mi20amat.f:  subroutine m2apr1(
+mi20amat.f:  subroutine m2apr5(
+mi20amat.f:  subroutine m2crsh(
+mi20amat.f:  subroutine m2scal(
+mi20amat.f:  subroutine m2scla(
+mi20amat.f:  subroutine m2unpk(
+mi20amat.f:  subroutine matcol(
+mi25bfac.f:  subroutine m2bfac(
+mi25bfac.f:  subroutine m2bmap(
+mi25bfac.f:  subroutine m2belm(
+mi25bfac.f:  subroutine m2bsol(
+mi25bfac.f:  subroutine m2sing(
+mi25bfac.f:  subroutine lu1fac(
+mi25bfac.f:  subroutine lu1fad(
+mi25bfac.f:  subroutine lu1gau(
+mi25bfac.f:  subroutine lu1mar(
+mi25bfac.f:  subroutine lu1pen(
+mi25bfac.f:  subroutine lu1max(
+mi25bfac.f:  subroutine lu1or1(
+mi25bfac.f:  subroutine lu1or2(
+mi25bfac.f:  subroutine lu1or3(
+mi25bfac.f:  subroutine lu1or4(
+mi25bfac.f:  subroutine lu1pq1(
+mi25bfac.f:  subroutine lu1pq2(
+mi25bfac.f:  subroutine lu1pq3(
+mi25bfac.f:  subroutine lu1rec(
+mi25bfac.f:  subroutine lu6chk(
+mi25bfac.f:  subroutine lu6sol(
+mi25bfac.f:  subroutine lu7add(
+mi25bfac.f:  subroutine lu7cyc(
+mi25bfac.f:  subroutine lu7elm(
+mi25bfac.f:  subroutine lu7for(
+mi25bfac.f:  subroutine lu7rnk(
+mi25bfac.f:  subroutine lu7zap(
+mi25bfac.f:  subroutine lu8rpc(
+mi30spec.f:  subroutine miopt (
+mi30spec.f:  subroutine miopti(
+mi30spec.f:  subroutine mioptr(
+mi30spec.f:  subroutine m3char(
+mi30spec.f:  subroutine m3dflt(
+mi30spec.f:  subroutine m3key (
+mi30spec.f:  subroutine opfile(
+mi30spec.f:  SUBROUTINE OPLOOK(
+mi30spec.f:  SUBROUTINE OPSCAN(
+mi30spec.f:  SUBROUTINE OPTOKN(
+mi30spec.f:  SUBROUTINE OPUPPR(
+mi35inpt.f:  subroutine m3getp(
+mi35inpt.f:  subroutine m3hash(
+mi35inpt.f:  subroutine m3imov(
+mi35inpt.f:  subroutine m3inpt(
+mi35inpt.f:  subroutine m3mpsa(
+mi35inpt.f:  subroutine m3mpsb(
+mi35inpt.f:  subroutine m3mpsc(
+mi35inpt.f:  subroutine m3read(
+mi40bfil.f:  subroutine m4getb(
+mi40bfil.f:  subroutine m4chek(
+mi40bfil.f:  subroutine m4id  (
+mi40bfil.f:  subroutine m4name(
+mi40bfil.f:  subroutine m4inst(
+mi40bfil.f:  subroutine m4load(
+mi40bfil.f:  subroutine m4oldb(
+mi40bfil.f:  subroutine m4savb(
+mi40bfil.f:  subroutine m4dump(
+mi40bfil.f:  subroutine m4newb(
+mi40bfil.f:  subroutine m4pnch(
+mi40bfil.f:  subroutine m4rc  (
+mi40bfil.f:  subroutine m4infs(
+mi40bfil.f:  subroutine m4rept(
+mi40bfil.f:  subroutine m4soln(
+mi40bfil.f:  subroutine m4solp(
+mi40bfil.f:  subroutine m4stat(
+mi50lp.f:    subroutine m5bsx (
+mi50lp.f:    subroutine m5chzr(
+mi50lp.f:    subroutine m5dgen(
+mi50lp.f:    subroutine m5frmc(
+mi50lp.f:    subroutine m5hs  (
+mi50lp.f:    subroutine m5log (
+mi50lp.f:    subroutine m5lpit(
+mi50lp.f:    subroutine m5pric(
+mi50lp.f:    subroutine m5rc  (
+mi50lp.f:    subroutine m5setp(
+mi50lp.f:    subroutine m5setx(
+mi50lp.f:    subroutine m5solv(
+mi60srch.f:  subroutine m6dmmy(
+mi60srch.f:  subroutine m6fcon(
+mi60srch.f:  subroutine m6fobj(
+mi60srch.f:  subroutine m6fun (
+mi60srch.f:  subroutine m6fun1(
+mi60srch.f:  subroutine m6grd (
+mi60srch.f:  subroutine m6grd1(
+mi60srch.f:  subroutine m6dobj(
+mi60srch.f:  subroutine m6dcon(
+mi60srch.f:  subroutine m6srch(
+mi60srch.f:  subroutine srchc (
+mi60srch.f:  subroutine srchq (
+mi65rmod.f:  subroutine m6bfgs(
+mi65rmod.f:  subroutine m6bswp(
+mi65rmod.f:  subroutine m6radd(
+mi65rmod.f:  subroutine m6rcnd(
+mi65rmod.f:  subroutine m6rdel(
+mi65rmod.f:  subroutine m6rmod(
+mi65rmod.f:  subroutine m6rset(
+mi65rmod.f:  subroutine m6rsol(
+mi65rmod.f:  subroutine m6swap(
+mi70nobj.f:  subroutine m7bsg (
+mi70nobj.f:  subroutine m7chkd(
+mi70nobj.f:  subroutine m7chkg(
+mi70nobj.f:  subroutine m7chzq(
+mi70nobj.f:  subroutine m7fixb(
+mi70nobj.f:  subroutine m7rg  (
+mi70nobj.f:  subroutine m7rgit(
+mi70nobj.f:  subroutine m7sdir(
+mi70nobj.f:  subroutine m7sscv(
+mi80ncon.f:  subroutine m8ajac(
+mi80ncon.f:  subroutine m8augl(
+mi80ncon.f:  subroutine m8aug1(
+mi80ncon.f:  subroutine m8chkj(
+mi80ncon.f:  subroutine m8prtj(
+mi80ncon.f:  subroutine m8sclj(
+mi80ncon.f:  subroutine m8setj(
+mi80ncon.f:  subroutine m8viol(
+
+NRDIST defined FUNCTIONS and SUBROUTINES
+nrdist_sub2.f: SUBROUTINE NDIST(
+nrdist_sub2.f: SUBROUTINE ACTIV(
+nrdist_sub2.f: SUBROUTINE SOLVE(
+nrdist_sub2.f: SUBROUTINE PARMAT(
+nrdist_sub2.f: SUBROUTINE TRIMAT(
+nrdist_sub2.f: SUBROUTINE TERMO(
+nrdist_sub2.f: SUBROUTINE ANTON(
+nrdist_sub2.f: SUBROUTINE ENTH(
+nrdist_sub2.f: SUBROUTINE INTER(
+nrdist_sub2.f: SUBROUTINE GAUSL(
+nrdist_sub2.f: SUBROUTINE MODCAL(
+nrdist_sub2.f: SUBROUTINE MODTEM(
+nrdist_sub2.f: SUBROUTINE MODIN(

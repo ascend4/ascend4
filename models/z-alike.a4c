@@ -1,0 +1,114 @@
+REQUIRE "system.a4l";
+(* => system.a4l, basemodel.a4l *)
+PROVIDE "z-alike.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module is in an empty ascend system.
+ *)
+
+(*********************************************************************\
+\*********************************************************************)
+
+MODEL test_alike_base;
+NOTES 'purpose' SELF
+{ This library exercises parser error checking. All models with fail_
+in the name should fail. All models with pass_ in the name should pass
+but make AA noise.
+}
+END NOTES;
+
+END test_alike_base;
+
+MODEL a (x WILL_BE real;) REFINES test_alike_base;
+(* simple dummy parameterized object *)
+END a;
+
+MODEL fail_1_illegal_aa_of_ATOM_children REFINES test_alike_base;
+(* bad *)
+x IS_A solver_var;
+z1,z2 IS_A a(x);
+x.lower_bound,z1.upper_bound ARE_ALIKE;
+END fail_1_illegal_aa_of_ATOM_children;
+
+MODEL fail_2_illegal_aa_of_missing_children REFINES test_alike_base;
+(* bad *)
+x IS_A solver_var;
+z1,z2 IS_A a(x);
+x.lower_bound.y,z1.upper_bound.y ARE_ALIKE;
+END fail_2_illegal_aa_of_missing_children;
+
+MODEL fail_3_illegal_aa_down_in_parameterized_object REFINES test_alike_base;
+(* bad *)
+x IS_A solver_var;
+z1,z2 IS_A a(x);
+z1.x,z2.x ARE_ALIKE;
+END fail_3_illegal_aa_down_in_parameterized_object;
+
+MODEL fail_4_illegal_aa_of_parameterized_object REFINES test_alike_base;
+(* bad *)
+x IS_A solver_var;
+z1,z2 IS_A a(x);
+z1,z2 ARE_ALIKE;
+END fail_4_illegal_aa_of_parameterized_object;
+
+MODEL fail_5_illegal_aa_of_real_with_array REFINES test_alike_base;
+(* bad *)
+a[1..2] IS_A real;
+b[1..3] IS_A real;
+a[1],b ARE_ALIKE;
+END fail_5_illegal_aa_of_real_with_array;
+
+MODEL fail_6_illegal_aa_of_relations REFINES test_alike_base;
+(* bad *)
+  x IS_A real;
+  a: x=1;
+  b: x=1;
+  a,b ARE_ALIKE;
+END fail_6_illegal_aa_of_relations;
+
+MODEL pass_1 REFINES test_alike_base;
+  a,b IS_A solver_var;
+  a,b ARE_ALIKE;
+END pass_1;
+
+MODEL box REFINES test_alike_base;
+(* another little test MODEL part *)
+ x IS_A solver_var;
+END box;
+
+MODEL pass_2_legal_aa_down_in_unparameterized_object REFINES test_alike_base;
+  a,b IS_A box;
+  a.x,b.x ARE_ALIKE;
+END pass_2_legal_aa_down_in_unparameterized_object;
+
+
+(*
+ *  z-arealike.a4c
+ *  by  Benjamin Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:31 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-alike.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Benjamin Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

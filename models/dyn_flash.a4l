@@ -1,0 +1,2268 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "splitter.a4l";
+(* => splitter.a4l, stream_holdup.a4l thermodynamics.a4l, components.a4l,
+ *    phases.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "dyn_flash.a4l";
+
+(*
+ *  dyn_flash.a4l
+ *  by Duncan Coffey
+ *  Modified from flash.a4l by Ben Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/20 15:12:02 $
+ *  $Revision: 1.3 $
+ *  $Author: ballan $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/dyn_flash.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *  The file provide basic vapor-liquid equilibrium flash calcuations
+ *  in various unit operation configurations.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+MODEL flash_base(
+) REFINES cmumodel;
+
+NOTES
+'usage' SELF {
+Never create one of these directly.
+This is just a common ancestor type to
+make type tree navigation easier.
+}
+'purpose' SELF {
+This library provides models:
+vapor_liquid_flash - a simple two product flash of an arbitrary feed.
+simple_reboiler - a reboiler with "stream" connections for use in columns.
+total_condenser - a total condenser with "stream" connections for use in columns.
+tray - a tray with "stream" connections for use in columns.
+feed_tray - a feed tray with "stream" connections for use in columns.
+detailed_tray - a tray with "detailed_stream" connections for use in stacks.
+}
+END NOTES;
+END flash_base;
+
+MODEL vapor_liquid_flash(
+    feed WILL_BE stream;
+    vapout WILL_BE stream;
+    liqout WILL_BE stream;
+    t WILL_BE time;
+    dynamic WILL_BE boolean;
+    ode_offset WILL_BE ode_counter;
+    obs_offset WILL_BE obs_counter;
+) WHERE (
+    feed, vapout, liqout WILL_NOT_BE_THE_SAME;
+    feed.cd, vapout.cd, liqout.cd WILL_BE_THE_SAME;
+    vapout.pd.phase_indicator == 'V';
+    liqout.pd.phase_indicator == 'L';
+    (feed.pd.phase_indicator IN ['V','L','VL','VLL']) == TRUE;
+) REFINES flash_base;
+
+NOTES
+'purpose' SELF {
+This MODEL computes a VL flash with the potential that the whole
+feed subcools or superheats into one or the other product.
+The user supplies all streams, time, a dynamic boolean and obs and ode
+counters.
+If equilibrated is TRUE, V-L equilibrium will be
+attempted, otherwise the unit will solve only the mass balances
+and single phase properties.
+}
+'developer-Duncan' SELF {
+This is a simple dynamic model of a flash unit. The user creates a
+vapor product, a liquid product, and any
+feed and gives them to us with time, a dynamic boolean and ode and obs
+counters. We do the assembly of the flash VLE MODEL from
+the given output stream states.
+}
+END NOTES;
+
+        cd ALIASES feed.cd;
+        P ALIASES liqout.P;
+	T ALIASES liqout.T;
+	equilibrated ALIASES vapout.equilibrated;
+	(* flash thermo options are derived from product streams *)
+	pdVL IS_A phases_data('VL', vapout.pd.vapor_option,
+				liqout.pd.liquid1_option, 'none');
+
+	(* flash Vapor-Liquid state comes from thermo of product streams. *)
+	phaseVL[VLphases] ALIASES
+		(vapout.phase['vapor'], liqout.phase['liquid1'])
+		WHERE VLphases IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+	state IS_A thermodynamics(cd, pdVL, phaseVL, equilibrated);
+
+	x "liquid product composition" ALIASES liqout.state.y;
+	y "vapor product composition" ALIASES vapout.state.y;
+
+
+	dMi_dt[cd.other_components] IS_A molar_rate;
+	M "total mass holdup",
+		Mi[cd.components] "species holdup",
+		Ml "liquid mass holdup",
+		Mv "vapor mass holdup" IS_A mole;
+	dM_dt IS_A molar_rate;
+	dU_dt IS_A energy_rate;
+	U "internal energy holdup" IS_A energy;
+	Vol "holdup volume",
+		vol_liq "holdup liquid volume",
+		vol_vap "holdup vapor volume" IS_A volume;
+	Qin "heat input" IS_A energy_rate;
+	split_fraction[VLphases] IS_A fraction;
+	flowscale IS_A molar_rate_scale;
+
+	(* component material balances *)
+	FOR i IN cd.other_components CREATE
+	cmb[i]:
+	    dMi_dt[i]/flowscale = 
+		(feed.f[i] - vapout.f[i] - liqout.f[i]) / flowscale;
+	END FOR;
+
+	(* overall material balance *)
+	OMB:
+	dM_dt/flowscale = (feed.flow - vapout.flow - liqout.flow)/flowscale;
+
+	vapor_balance:	(vapout.flow -
+		split_fraction['vapor'] * feed.flow)/flowscale = 0;
+
+	SUM[split_fraction[i] | i IN VLphases] = 1;
+
+	state.phase_fraction['vapor'] * M = Mv;
+
+	FOR i IN cd.components CREATE
+	    Mi[i] = Ml*x[i] + Mv*y[i];
+	END FOR;
+	M = Ml + Mv;
+	Vol = vol_liq + vol_vap;
+	vol_liq = Ml * state.phase['liquid1'].v_y;
+	vol_vap = Mv * state.phase['vapor'].v_y;
+
+	(* overall energy balance *)
+	H_flowscale IS_A energy_rate_scale;
+
+	dU_dt/H_flowscale =
+	(feed.H_flow + Qin - vapout.H_flow - liqout.H_flow)/H_flowscale;
+
+	U/H_flowscale = 
+	(state.phase['vapor'].h_y * Mv + state.phase['liquid1'].h_y * Ml)
+	/H_flowscale;
+
+	boundwidth IS_A bound_width;
+
+	METHODS
+
+	METHOD check_self;
+	    IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {Liquid flow dried up in flash};
+	    END IF;
+	    IF (vapout.flow < 1e-4 {mole/s}) THEN
+		STOP {All vapor condensed in flash};
+	    END IF;
+	    IF (feed.flow < 1e-4 {mole/s}) THEN
+		STOP {No feed flowing to flash};
+	    END IF;
+	    IF (abs(feed.flow - vapout.flow - liqout.flow)/flowscale > 1.0e-4) THEN
+		STOP {Flash violates overall mass-balance};
+	    END IF;
+	    RUN pdVL.check_self;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN feed.check_self;
+	    RUN vapout.check_self;
+	    RUN liqout.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := feed.Details.flowscale;
+	    H_flowscale := feed.Details.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    (* Upper bound of split fraction must be changed to
+	      greater than 1 for dynamic simulation *)
+	    split_fraction[VLphases].upper_bound :=2;
+	    split_fraction[VLphases].lower_bound :=-2;
+	    dynamic :=FALSE;
+	    t :=0 {s};
+	    RUN pdVL.default_self;
+	    RUN state.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN feed.default_self;
+	    RUN vapout.default_self;
+	    RUN liqout.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	    RUN pdVL.bound_self;
+	    RUN state.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    feed.boundwidth := boundwidth;
+	    vapout.boundwidth := boundwidth;
+	    liqout.boundwidth := boundwidth;
+	    RUN feed.bound_self;
+	    RUN vapout.bound_self;
+	    RUN liqout.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := feed.flow;
+	    H_flowscale := feed.H_flow;
+	    RUN pdVL.scale_self;
+	    RUN state.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN feed.scale_self;
+	    RUN vapout.scale_self;
+	    RUN liqout.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed := FALSE;
+	    IF equilibrated THEN
+		state.T.fixed :=FALSE;
+	    ELSE
+		state.T.fixed :=TRUE;
+	    END IF;
+	    split_fraction['vapor'].fixed :=TRUE;
+	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    dMi_dt[cd.other_components].fixed 	:=TRUE;
+	    Mi[cd.components].fixed 		:=FALSE;
+	    dM_dt.fixed 	:=TRUE;
+	    M.fixed 		:=FALSE;
+	    dU_dt.fixed 	:=TRUE;
+	    U.fixed 		:=FALSE;
+	    Vol.fixed 		:=TRUE;
+	    vol_liq.fixed 	:=TRUE;
+	    IF dynamic THEN
+		dMi_dt[cd.other_components].fixed 	:=FALSE;
+		Mi[cd.other_components].fixed 		:=TRUE;
+		dM_dt.fixed 	:=FALSE;
+		M.fixed 	:=TRUE;
+		dU_dt.fixed 	:=FALSE;
+		U.fixed 	:=TRUE;
+		Qin.fixed 	:=TRUE;
+		IF equilibrated THEN
+		    state.P.fixed		:=FALSE;
+		ELSE
+		    state.T.fixed		:=FALSE;
+		END IF;
+		vol_liq.fixed 	:=FALSE;
+		liqout.flow.fixed :=TRUE;
+		vapout.flow.fixed :=TRUE;
+		split_fraction['vapor'].fixed :=FALSE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN feed.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+	    M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+
+	METHOD set_obs;
+	    Vol.obs_id		:=obs_offset;
+	    vol_liq.obs_id	:=obs_offset+1;
+	    state.T.obs_id	:=obs_offset+2;
+	    state.P.obs_id	:=obs_offset+3;
+	    Qin.obs_id          :=obs_offset+4;
+	    feed.flow.obs_id	:=obs_offset+5;
+	    liqout.flow.obs_id	:=obs_offset+6;
+	    vapout.flow.obs_id	:=obs_offset+7;
+	    obs_offset		:=obs_offset+8;
+	END set_obs;
+END vapor_liquid_flash;
+
+MODEL tray_base(
+
+) REFINES flash_base;
+END tray_base;
+
+MODEL detailed_tray(
+	liqin WILL_BE detailed_stream;
+	vapin WILL_BE detailed_stream;
+	liqout WILL_BE detailed_stream;
+	vapout WILL_BE detailed_stream;
+	state WILL_BE thermodynamics;
+	t WILL_BE time;
+	dynamic WILL_BE boolean;
+	ode_offset WILL_BE ode_counter;
+	obs_offset WILL_BE obs_counter;
+) WHERE (
+	liqout.state, vapout.state WILL_NOT_BE_THE_SAME;
+	vapin.state.cd, vapout.state.cd WILL_BE_THE_SAME;
+	vapin.state.pd.phase_indicator == 'V';
+	liqin.state.pd.phase_indicator == 'L';
+	vapout.state.pd.phase_indicator == 'V';
+	liqout.state.pd.phase_indicator == 'L';
+) REFINES tray_base;
+
+NOTES
+'purpose' SELF {
+This MODEL computes VLE for a tray with the purpose of being used in a
+stack of trays for a column.  The streams used are detailed_streams
+which make it easier to construct a stack of trays with a lot less variables.
+The user supplies all streams, time, a dynamic boolean and obs and ode
+counters.
+If equilibrated is TRUE, V-L equilibrium will be
+attempted, OTHERWISE the unit will solve only the mass balances.
+}
+'developer-Duncan' SELF {
+This is a simple dynamic model of a tray. The user creates a
+vapor feed and product, a liquid feed and product, along with  time,
+a dynamic boolean and ode and obs counters. We do the assembly of the
+tray VLE MODEL from the given output stream states.
+}
+END NOTES;
+
+        cd ALIASES vapout.state.cd;
+	P ALIASES liqout.P;
+	T ALIASES liqout.T;
+	equilibrated ALIASES vapout.state.equilibrated;
+	x "liquid product composition" ALIASES liqout.state.y;
+	y "vapor product composition" ALIASES vapout.state.y;
+
+
+	dMi_dt[cd.other_components] IS_A molar_rate;
+	M,Mi[cd.components],Ml,Mv IS_A mole;
+	dM_dt IS_A molar_rate;
+	dU_dt IS_A energy_rate;
+	U IS_A energy;
+	Vol,vol_liq,vol_vap IS_A volume;
+	Qin IS_A energy_rate;
+	flowscale IS_A molar_rate_scale;
+	cmo_ratio "Constant molar overflow" IS_A factor;
+
+	cmo_eqn: (cmo_ratio * liqin.flow - liqout.flow)/flowscale = 0;
+
+	(* component material balances *)
+	FOR i IN cd.other_components CREATE
+	    dMi_dt[i]/flowscale=(liqin.f[i]+vapin.f[i]-vapout.f[i]-liqout.f[i])/flowscale;
+	END FOR;
+	(* overall material balance *)
+	dM_dt/flowscale=(liqin.flow+vapin.flow-vapout.flow-liqout.flow)/flowscale;
+
+	FOR i IN cd.components CREATE
+	    Mi[i]=Ml*x[i]+Mv*y[i];
+	END FOR;
+	M=Ml+Mv;
+	Vol=vol_liq+vol_vap;
+	vol_liq=Ml*state.phase['liquid1'].v_y;
+	vol_vap=Mv*state.phase['vapor'].v_y;
+
+	state.phase_fraction['vapor'] * M = Mv;
+
+	(* hydraulic type equations *)
+	taul,tauv	IS_A time;
+
+	taul*liqout.flow = Ml;
+	tauv*vapout.flow = sqrt(state.P/1{Pa})*1{mol};
+
+
+	(* overall energy balance *)
+	H_flowscale IS_A energy_rate_scale;
+
+	dU_dt/H_flowscale=(liqin.H_flow+vapin.H_flow+Qin-vapout.H_flow
+	                   -liqout.H_flow)/H_flowscale;
+
+        U/H_flowscale = (state.phase['vapor'].h_y*Mv+state.phase['liquid1'].h_y*Ml)
+	                /H_flowscale;
+	boundwidth IS_A bound_width;
+	METHODS
+	METHOD check_self;
+	    IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {Liquid flow dried up in tray};
+	    END IF;
+	    IF (vapout.flow < 1e-4 {mole/s}) THEN
+		STOP {All vapor condensed in tray};
+	    END IF;
+	    IF (vapin.flow < 1e-4 {mole/s}) THEN
+		STOP {No vapin flowing to tray};
+	    END IF;
+	    IF (liqin.flow < 1e-4 {mole/s}) THEN
+		STOP {No liqin flowing to tray};
+	    END IF;
+	    IF (abs(vapin.flow+liqin.flow - vapout.flow - liqout.flow)
+	            /flowscale > 1.0e-4) THEN
+		STOP {tray violates overall mass-balance};
+	    END IF;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN vapin.check_self;
+	    RUN liqin.check_self;
+	    RUN vapout.check_self;
+	    RUN liqout.check_self;
+	    RUN state.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := vapout.flowscale;
+	    H_flowscale := vapout.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    dynamic :=FALSE;
+	    t :=0 {s};
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN vapin.default_self;
+	    RUN liqin.default_self;
+	    RUN vapout.default_self;
+	    RUN liqout.default_self;
+	    RUN state.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	END bound_self;
+
+	METHOD bound_all;
+	    vapin.boundwidth := boundwidth;
+	    liqin.boundwidth := boundwidth;
+	    vapout.boundwidth := boundwidth;
+	    liqout.boundwidth := boundwidth;
+	    RUN vapin.bound_self;
+	    RUN liqin.bound_self;
+	    RUN vapout.bound_self;
+	    RUN liqout.bound_self;
+	    RUN state.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := vapin.flow;
+	    H_flowscale := vapin.H_flow;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN vapin.scale_self;
+	    RUN liqin.scale_self;
+	    RUN vapout.scale_self;
+	    RUN liqout.scale_self;
+	    RUN state.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed := FALSE;
+	    IF equilibrated THEN
+		state.T.fixed :=FALSE;
+	    ELSE
+		state.T.fixed :=TRUE;
+	    END IF;
+	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    cmo_ratio.fixed :=TRUE;
+	    dMi_dt[cd.other_components].fixed :=TRUE;
+	    Mi[cd.other_components].fixed :=FALSE;
+	    dM_dt.fixed :=TRUE;
+	    M.fixed :=FALSE;
+	    dU_dt.fixed :=TRUE;
+	    U.fixed :=FALSE;
+	    Vol.fixed :=TRUE;
+	    vol_liq.fixed :=TRUE;
+	    tauv.fixed :=FALSE;
+	    taul.fixed :=FALSE;
+    	    liqout.flow.fixed :=FALSE;
+	    vapout.flow.fixed :=FALSE;
+	    IF dynamic THEN
+		dMi_dt[cd.other_components].fixed :=FALSE;
+		Mi[cd.other_components].fixed :=TRUE;
+		dM_dt.fixed :=FALSE;
+		M.fixed :=TRUE;
+		dU_dt.fixed :=FALSE;
+		U.fixed :=TRUE;
+		Qin.fixed :=TRUE;
+		IF equilibrated THEN
+		    state.P.fixed		:=FALSE;
+		ELSE
+		    state.T.fixed		:=FALSE;
+		END IF;
+		vol_liq.fixed :=FALSE;
+		tauv.fixed :=TRUE;
+		taul.fixed :=TRUE;
+		cmo_ratio.fixed	:=FALSE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN vapin.specify;
+	    RUN liqin.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD reset_to_adiabatic;
+	    cmo_ratio.fixed := FALSE;
+	    Qin.fixed := TRUE;
+	    Qin := 0{W};
+	END reset_to_adiabatic;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+	    M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+	METHOD set_obs;
+	    Vol.obs_id		:=obs_offset;
+	    vol_liq.obs_id	:=obs_offset+1;
+	    state.T.obs_id	:=obs_offset+2;
+	    state.P.obs_id	:=obs_offset+3;
+	    Qin.obs_id          :=obs_offset+4;
+	    vapin.flow.obs_id	:=obs_offset+5;
+	    liqin.flow.obs_id	:=obs_offset+6;
+	    liqout.flow.obs_id	:=obs_offset+7;
+	    vapout.flow.obs_id	:=obs_offset+8;
+	    obs_offset		:=obs_offset+9;
+	END set_obs;
+END detailed_tray;
+
+
+MODEL tray(
+	liqin WILL_BE stream;
+	vapin WILL_BE stream;
+	liqout WILL_BE stream;
+	vapout WILL_BE stream;
+	t WILL_BE time;
+	dynamic WILL_BE boolean;
+	ode_offset WILL_BE ode_counter;
+	obs_offset WILL_BE obs_counter;
+) WHERE (
+	liqout.state, vapout.state WILL_NOT_BE_THE_SAME;
+	vapin.state.cd, vapout.state.cd WILL_BE_THE_SAME;
+	vapin.pd.phase_indicator == 'V';
+	liqin.pd.phase_indicator == 'L';
+	vapout.pd.phase_indicator == 'V';
+	liqout.pd.phase_indicator == 'L';
+) REFINES tray_base;
+NOTES
+'purpose' SELF {
+This MODEL uses the detailed_tray model create a tray using streams
+instead of detailed streams.
+The user supplies all streams, time, a dynamic boolean and obs and ode
+counters.
+If equilibrated is TRUE, V-L equilibrium will be
+attempted, OTHERWISE the unit will solve only the mass balances.
+}
+'developer-Duncan' SELF {
+This is a simple dynamic model of a tray. The user creates a
+vapor feed and product, a liquid feed and product, along with  time,
+a dynamic boolean and ode and obs counters. We do the assembly of the
+tray VLE MODEL from the given output stream states.
+}
+END NOTES;
+        cd ALIASES vapout.cd;
+	P ALIASES liqout.P;
+	T ALIASES liqout.T;
+	equilibrated ALIASES vapout.equilibrated;
+	pdVL IS_A phases_data('VL', vapout.pd.vapor_option,
+				liqout.pd.liquid1_option, 'none');
+
+	phaseVL[VLphases] ALIASES
+		(vapout.phase['vapor'], liqout.phase['liquid1'])
+		WHERE VLphases IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+
+	state IS_A thermodynamics(cd,pdVL,phaseVL,equilibrated);
+
+	details IS_A detailed_tray(liqin.Details,vapin.Details,liqout.Details,vapout.Details,
+	                           state,t,dynamic,ode_offset,obs_offset);
+
+	Vol ALIASES details.Vol;
+	vol_liq ALIASES details.vol_liq;
+	vol_vap ALIASES details.vol_vap;
+	Qin ALIASES details.Qin;
+	cmo_ratio ALIASES details.cmo_ratio;
+
+	METHODS
+	METHOD check_self;
+	    IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {Liquid flow dried up in tray};
+	    END IF;
+	    IF (vapout.flow < 1e-4 {mole/s}) THEN
+		STOP {All vapor condensed in tray};
+	    END IF;
+	    IF (vapin.flow < 1e-4 {mole/s}) THEN
+		STOP {No vapin flowing to tray};
+	    END IF;
+	    IF (liqin.flow < 1e-4 {mole/s}) THEN
+		STOP {No liqin flowing to tray};
+	    END IF;
+	    IF (abs(vapin.flow+liqin.flow - vapout.flow - liqout.flow)
+	            > 1.0e-4) THEN
+		STOP {tray violates overall mass-balance};
+	    END IF;
+	    RUN details.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN vapin.check_self;
+	    RUN liqin.check_self;
+	    RUN vapout.check_self;
+	    RUN liqout.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    dynamic :=FALSE;
+	    t :=0 {s};
+	    RUN pdVL.default_self;
+	    RUN state.default_self;
+	    RUN details.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    RUN vapin.default_self;
+	    RUN liqin.default_self;
+	    RUN vapout.default_self;
+	    RUN liqout.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    RUN pdVL.bound_self;
+	    RUN state.bound_self;
+	    RUN details.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    RUN vapin.bound_self;
+	    RUN liqin.bound_self;
+	    RUN vapout.bound_self;
+	    RUN liqout.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    RUN pdVL.scale_self;
+	    RUN state.scale_self;
+	    RUN details.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN vapin.scale_self;
+	    RUN liqin.scale_self;
+	    RUN vapout.scale_self;
+	    RUN liqout.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN details.seqmod;
+	END seqmod;
+
+	METHOD specify;
+	    RUN details.specify;
+	END specify;
+
+	METHOD reset_to_adiabatic;
+	    RUN details.reset_to_adiabatic;
+	END reset_to_adiabatic;
+
+	METHOD set_ode;
+	    RUN details.set_ode;
+	END set_ode;
+	METHOD set_obs;
+	    RUN details.set_obs;
+	END set_obs;
+END tray;
+
+MODEL feed_tray(
+        feed WILL_BE stream;
+	liqin WILL_BE stream;
+	vapin WILL_BE stream;
+	liqout WILL_BE stream;
+	vapout WILL_BE stream;
+	t WILL_BE time;
+	dynamic WILL_BE boolean;
+	ode_offset WILL_BE ode_counter;
+	obs_offset WILL_BE obs_counter;
+) WHERE (
+	feed.state, liqout.state, vapout.state WILL_NOT_BE_THE_SAME;
+	feed.cd, vapin.state.cd, vapout.state.cd WILL_BE_THE_SAME;
+	(feed.pd.phase_indicator IN ['V','L','VL','VLL']) == TRUE;
+	vapin.pd.phase_indicator == 'V';
+	liqin.pd.phase_indicator == 'L';
+	vapout.pd.phase_indicator == 'V';
+	liqout.pd.phase_indicator == 'L';
+) REFINES tray_base;
+NOTES
+'purpose' SELF {
+This MODEL is the same as a tray except it has an extra input
+stream and the equations are written instead of created by
+detailed+tray. This model would be used as a feed tray in a column
+model.
+The user supplies all streams, time, a dynamic boolean and obs and ode
+counters.
+If equilibrated is TRUE, V-L equilibrium will be
+attempted, OTHERWISE the unit will solve only the mass balances.
+}
+'developer-Duncan' SELF {
+This is a simple dynamic model of a feed_tray. The user creates a
+vapor feed and product, a liquid feed and product, just like a normal
+tray but also has to create another feed, along with  time,
+a dynamic boolean and ode and obs counters. We do the assembly of the
+tray VLE MODEL from the given output stream states.
+}
+END NOTES;
+        cd ALIASES feed.cd;
+	P ALIASES liqout.P;
+	T ALIASES liqout.T;
+	equilibrated ALIASES vapout.equilibrated;
+	(* flash thermo options are derived from product streams *)
+	pdVL IS_A phases_data('VL', vapout.pd.vapor_option,
+				liqout.pd.liquid1_option, 'none');
+
+	(* flash Vapor-Liquid state comes from thermo of product streams. *)
+	phaseVL[VLphases] ALIASES
+		(vapout.phase['vapor'], liqout.phase['liquid1'])
+		WHERE VLphases IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+	state IS_A thermodynamics(cd, pdVL, phaseVL, equilibrated);
+
+	x "liquid product composition" ALIASES liqout.state.y;
+	y "vapor product composition" ALIASES vapout.state.y;
+
+
+	dMi_dt[cd.other_components] IS_A molar_rate;
+	M,Mi[cd.components],Ml,Mv IS_A mole;
+	dM_dt,dMl_dt,dMv_dt IS_A molar_rate;
+	dU_dt IS_A energy_rate;
+	U IS_A energy;
+	Vol,vol_liq,vol_vap IS_A volume;
+	Qin IS_A energy_rate;
+	flowscale IS_A molar_rate_scale;
+	q IS_A factor;
+
+	q_eqn: (liqout.flow - (liqin.flow + q * feed.flow)) / flowscale = 0;
+
+	(* component material balances *)
+	FOR i IN cd.other_components CREATE
+	cmb[i]:
+	    dMi_dt[i]/flowscale=(feed.f[i]+liqin.f[i]+vapin.f[i]-vapout.f[i]
+	                         -liqout.f[i])/flowscale;
+	END FOR;
+	(* overall material balance *)
+	OMB:
+	dM_dt/flowscale=(feed.flow+liqin.flow+vapin.flow-vapout.flow-liqout.flow)/flowscale;
+
+	FOR i IN cd.components CREATE
+	phase_cb[i]:
+	    Mi[i]=Ml*x[i]+Mv*y[i];
+	END FOR;
+	M=Ml+Mv;
+	Vol=vol_liq+vol_vap;
+	vol_liq=Ml*state.phase['liquid1'].v_y;
+	vol_vap=Mv*state.phase['vapor'].v_y;
+
+	state.phase_fraction['vapor'] * M = Mv;
+
+	(* hydraulic type equations *)
+	taul,tauv	IS_A time;
+
+	taul*liqout.flow = Ml;
+	tauv*vapout.flow = sqrt(state.P/1{Pa})*1{mol};
+
+	(* overall energy balance *)
+
+	H_flowscale IS_A energy_rate_scale;
+
+	dU_dt/H_flowscale=(feed.H_flow+liqin.H_flow+vapin.H_flow+Qin-vapout.H_flow
+	                   -liqout.H_flow)/H_flowscale;
+	U/H_flowscale = (state.phase['vapor'].h_y*Mv+state.phase['liquid1'].h_y*Ml)
+	                /H_flowscale;
+
+	boundwidth IS_A bound_width;
+	METHODS
+	METHOD check_self;
+	    IF (feed.flow < 1e-4 {mole/s}) THEN
+		STOP {feed flow dried up in flash};
+	    END IF;
+	    IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {Liquid flow dried up in flash};
+	    END IF;
+	    IF (vapout.flow < 1e-4 {mole/s}) THEN
+		STOP {All vapor condensed in flash};
+	    END IF;
+	    IF (vapin.flow < 1e-4 {mole/s}) THEN
+		STOP {No vapin flowing to flash};
+	    END IF;
+	    IF (liqin.flow < 1e-4 {mole/s}) THEN
+		STOP {No liqin flowing to flash};
+	    END IF;
+	    IF (abs(vapin.flow+feed.flow+liqin.flow-vapout.flow-liqout.flow)
+		    /flowscale > 1.0e-4) THEN
+		STOP {Feed tray violates overall mass-balance};
+	    END IF;
+	    RUN pdVL.check_self;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN feed.check_self;
+	    RUN vapin.check_self;
+	    RUN liqin.check_self;
+	    RUN vapout.check_self;
+	    RUN liqout.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := vapout.Details.flowscale;
+	    H_flowscale := vapout.Details.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    dynamic :=FALSE;
+	    t :=0 {s};
+	    RUN pdVL.default_self;
+	    RUN state.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN feed.default_self;
+	    RUN vapin.default_self;
+	    RUN liqin.default_self;
+	    RUN vapout.default_self;
+	    RUN liqout.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	    RUN pdVL.bound_self;
+	    RUN state.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    feed.boundwidth := boundwidth;
+	    vapin.boundwidth := boundwidth;
+	    liqin.boundwidth := boundwidth;
+	    vapout.boundwidth := boundwidth;
+	    liqout.boundwidth := boundwidth;
+	    RUN vapin.bound_self;
+	    RUN liqin.bound_self;
+	    RUN vapout.bound_self;
+	    RUN liqout.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := vapin.flow;
+	    H_flowscale := vapin.H_flow;
+	    RUN pdVL.scale_self;
+	    RUN state.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN feed.scale_self;
+	    RUN vapin.scale_self;
+	    RUN liqin.scale_self;
+	    RUN vapout.scale_self;
+	    RUN liqout.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed := FALSE;
+	    IF equilibrated THEN
+		state.T.fixed :=FALSE;
+	    ELSE
+		state.T.fixed :=TRUE;
+	    END IF;
+	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    q.fixed :=TRUE;
+	    dMi_dt[cd.other_components].fixed :=TRUE;
+	    Mi[cd.other_components].fixed :=FALSE;
+	    dM_dt.fixed :=TRUE;
+	    M.fixed :=FALSE;
+	    dU_dt.fixed :=TRUE;
+	    U.fixed :=FALSE;
+	    Vol.fixed :=TRUE;
+	    vol_liq.fixed :=TRUE;
+	    tauv.fixed :=FALSE;
+	    taul.fixed :=FALSE;
+	    IF dynamic THEN
+		dMi_dt[cd.other_components].fixed :=FALSE;
+		Mi[cd.other_components].fixed :=TRUE;
+		dM_dt.fixed :=FALSE;
+		M.fixed :=TRUE;
+		dU_dt.fixed :=FALSE;
+		U.fixed :=TRUE;
+		Qin.fixed :=TRUE;
+		IF equilibrated THEN
+		    state.P.fixed		:=FALSE;
+		ELSE
+		    state.T.fixed		:=FALSE;
+		END IF;
+		vol_liq.fixed :=FALSE;
+		tauv.fixed :=TRUE;
+		taul.fixed :=TRUE;
+		q.fixed	:=FALSE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN feed.specify;
+	    RUN vapin.specify;
+	    RUN liqin.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD reset_to_adiabatic;
+	    RUN seqmod;
+	    q.fixed := FALSE;
+	    Qin.fixed := TRUE;
+	    Qin := 0{W};
+	END reset_to_adiabatic;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+            M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+	METHOD set_obs;
+	    Vol.obs_id		:=obs_offset;
+	    vol_liq.obs_id	:=obs_offset+1;
+	    state.T.obs_id	:=obs_offset+2;
+	    state.P.obs_id	:=obs_offset+3;
+	    Qin.obs_id          :=obs_offset+4;
+	    feed.flow.obs_id	:=obs_offset+5;
+	    vapin.flow.obs_id	:=obs_offset+6;
+	    liqin.flow.obs_id	:=obs_offset+7;
+	    liqout.flow.obs_id	:=obs_offset+8;
+	    vapout.flow.obs_id	:=obs_offset+9;
+	    obs_offset		:=obs_offset+10;
+	END set_obs;
+END feed_tray;
+
+MODEL condenser(
+	vapin WILL_BE stream;
+	vap_distillate WILL_BE stream;
+	liq_distillate WILL_BE stream;
+	liqout WILL_BE stream;
+	partial WILL_BE boolean;
+	t WILL_BE time;
+	dynamic WILL_BE boolean;
+	ode_offset WILL_BE ode_counter;
+	obs_offset WILL_BE obs_counter;
+) WHERE (
+        vapin, liqout WILL_NOT_BE_THE_SAME;
+	vapin, vap_distillate, liq_distillate WILL_NOT_BE_THE_SAME;
+	vapin.cd, liqout.cd, liq_distillate.cd,vap_distillate.cd WILL_BE_THE_SAME;
+	vap_distillate.pd.phase_indicator == 'V';
+	liq_distillate.pd.phase_indicator == 'L';
+	liqout.pd.phase_indicator == 'L';
+	vapin.pd.phase_indicator == 'V';
+) REFINES flash_base;
+NOTES
+'purpose' SELF {
+This MODEL can be used as a partial or a total condenser and would
+normally be used in a column model.
+The user supplies all streams, a partial boolean, time, a dynamic
+boolean and obs and ode counters.
+The partial boolean is used to convert from a total condenser to a
+partial condenser.  If partial is FALSE then vap_distillate is fixed
+and the user is expected to set the flow rate to zero so there is no
+vapor product. If partial is TRUE then liq_distillate is fixed
+and the user is expected to set the flow rate to zero so there is no
+liquid product.  Both vapor and liquid products are possible both it
+is up to the user to define what fraction of the product will be vapor
+and what fraction liquid.
+If equilibrated is TRUE, V-L equilibrium will be
+attempted, OTHERWISE the unit will solve only the mass balances.
+}
+'developer-Duncan' SELF {
+This is a simple dynamic model of a condenser. The user creates a
+vapor feed and product, 2 liquid products, a partial
+boolean along with  time, a dynamic boolean and ode and obs
+counters. We do the assembly of the condenser VLE MODEL from the given
+output stream states.
+}
+END NOTES;
+        cd ALIASES vapin.cd;
+	P ALIASES liq.P;
+	T ALIASES liq.T;
+	equilibrated ALIASES liq_distillate.equilibrated;
+	(* condenser thermo options are derived from product streams *)
+	pdL IS_A phases_data('L','none',liq_distillate.pd.liquid1_option,'none');
+	pdVL IS_A phases_data('VL', vap_distillate.pd.vapor_option,
+				liq.pd.liquid1_option, 'none');
+	liq IS_A stream(cd, pdL, equilibrated);
+
+	phaseVL[VLphases] ALIASES
+		(vap_distillate.phase['vapor'],liq.phase['liquid1'])
+		WHERE VLphases IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+	state IS_A thermodynamics(cd, pdVL, phaseVL, equilibrated);
+
+	out[outs] ALIASES (liqout, liq_distillate) WHERE outs
+	IS_A set OF integer_constant;
+	n_outs IS_A integer_constant;
+	n_outs :== CARD[outs];
+
+	split IS_A splitter(liq,n_outs,out);
+
+	dMi_dt[cd.other_components] IS_A molar_rate;
+	M,Mi[cd.components],Ml,Mv IS_A mole;
+	dM_dt IS_A molar_rate;
+	dU_dt IS_A energy_rate;
+	U IS_A energy;
+	Vol,vol_liq,vol_vap IS_A volume;
+	Qin IS_A energy_rate;
+	flowscale IS_A molar_rate_scale;
+
+	(* component material balances *)
+	FOR i IN cd.other_components CREATE
+	    dMi_dt[i]/flowscale=(vapin.f[i]-vap_distillate.f[i]-liq.f[i])/flowscale;
+	END FOR;
+	(* overall material balance *)
+	dM_dt/flowscale=(vapin.flow-vap_distillate.flow-liq.flow)/flowscale;
+
+	reflux_ratio IS_A factor;
+	reflux_eqn: (liqout.flow - reflux_ratio * (vap_distillate.flow+
+	             liq_distillate.flow))/ flowscale = 0;
+
+	FOR i IN cd.components CREATE
+	    Mi[i]=Ml*state.phase['liquid1'].y[i]+Mv*state.phase['vapor'].y[i];
+	END FOR;
+	Vol=vol_liq+vol_vap;
+	vol_liq=Ml*state.phase['liquid1'].v_y;
+	vol_vap=Mv*state.phase['vapor'].v_y;
+	M=Ml+Mv;
+	state.phase_fraction['vapor'] * M = Mv;
+
+	(* overall energy balance *)
+	H_flowscale IS_A energy_rate_scale;
+
+	dU_dt/H_flowscale=(vapin.H_flow+Qin-vap_distillate.H_flow
+	                   -liq.H_flow)/H_flowscale;
+
+	U/H_flowscale = (state.phase['vapor'].h_y*Mv+state.phase['liquid1'].h_y*Ml)
+	                /H_flowscale;
+
+	boundwidth IS_A bound_width;
+	METHODS
+	METHOD check_self;
+	    IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {No reflux/liquid flow in condenser};
+	    END IF;
+	    IF (vapin.flow < 1e-4 {mole/s}) THEN
+		STOP {No vapor feed to condenser};
+	    END IF;
+	    IF partial THEN
+		IF (vap_distillate.flow < 1e-4 {mole/s}) THEN
+		    STOP {No liquid distillate product from Condenser};
+		END IF;
+	    ELSE
+		IF (liq_distillate.flow < 1e-4 {mole/s}) THEN
+		    STOP {No vapor distillate product from Condenser};
+		END IF;
+	    END IF;
+	    IF (abs(vapin.flow - vap_distillate.flow- liq_distillate.flow
+		- liqout.flow) > 1.0e-4) THEN
+		STOP {Condenser violates overall mass-balance};
+	    END IF;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN vapin.check_self;
+	    IF partial THEN
+		RUN vap_distillate.check_self;
+	    ELSE
+		RUN liq_distillate.check_self;
+	    END IF;
+	    RUN liqout.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := vapin.Details.flowscale;
+	    H_flowscale := vapin.Details.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    dynamic :=FALSE;
+	    partial :=FALSE;
+	    t :=0 {s};
+	    RUN liq.default_self;
+	    RUN split.default_self;
+	    RUN state.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN vapin.default_self;
+	    RUN vap_distillate.default_self;
+	    RUN liq_distillate.default_self;
+	    RUN liqout.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	    RUN liq.bound_self;
+	    RUN split.bound_self;
+	    RUN state.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    vapin.boundwidth := boundwidth;
+	    distillate.boundwidth := boundwidth;
+	    liqout.boundwidth := boundwidth;
+	    RUN vapin.bound_self;
+	    RUN vap_distillate.bound_self;
+	    RUN liq_distillate.bound_self;
+	    RUN liqout.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := vapin.flow;
+	    H_flowscale := vapin.H_flow;
+	    RUN liq.scale_self;
+	    RUN split.scale_self;
+	    RUN state.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN vapin.scale_self;
+	    RUN vap_distillate.scale_self;
+	    RUN liq_distillate.scale_self;
+	    RUN liqout.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed := FALSE;
+	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    IF equilibrated THEN
+		state.T.fixed :=FALSE;
+	    ELSE
+		state.T.fixed :=TRUE;
+	    END IF;
+	    RUN split.seqmod;
+	    split.split[1].fixed :=FALSE;
+	    liqout.flow.fixed :=FALSE;
+	    vap_distillate.flow.fixed :=FALSE;
+	    liq_distillate.flow.fixed :=FALSE;
+	    IF partial THEN
+		liq_distillate.flow.fixed :=TRUE;
+	    ELSE
+		vap_distillate.flow.fixed :=TRUE;
+	    END IF;
+	    reflux_ratio.fixed :=TRUE;
+	    dMi_dt[cd.other_components].fixed :=TRUE;
+	    Mi[cd.other_components].fixed :=FALSE;
+	    dM_dt.fixed :=TRUE;
+	    M.fixed :=FALSE;
+	    dU_dt.fixed :=TRUE;
+	    U.fixed :=FALSE;
+	    Qin.fixed :=FALSE;
+	    Vol.fixed :=TRUE;
+	    vol_liq.fixed :=TRUE;
+	    IF dynamic THEN
+		dMi_dt[cd.other_components].fixed :=FALSE;
+		Mi[cd.other_components].fixed :=TRUE;
+		dM_dt.fixed :=FALSE;
+		M.fixed :=TRUE;
+		dU_dt.fixed :=FALSE;
+		U.fixed :=TRUE;
+		Qin.fixed :=TRUE;
+		IF equilibrated THEN
+		    state.P.fixed		:=FALSE;
+		ELSE
+		    state.T.fixed		:=FALSE;
+		END IF;
+		vol_liq.fixed	:=FALSE;
+		reflux_ratio.fixed :=FALSE;
+		state.phase_fraction['vapor'].fixed :=FALSE;
+		liqout.flow.fixed :=TRUE;
+(*		liqout.Details.state.slack_PhaseDisappearance['liquid1'].fixed :=TRUE;*)
+		vap_distillate.flow.fixed :=TRUE;
+		liq_distillate.flow.fixed :=TRUE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN vapin.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+	    M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+
+	METHOD set_obs;
+	    Vol.obs_id		:=obs_offset;
+	    vol_liq.obs_id	:=obs_offset+1;
+	    state.T.obs_id	:=obs_offset+2;
+	    state.P.obs_id	:=obs_offset+3;
+	    Qin.obs_id          :=obs_offset+4;
+	    vapin.flow.obs_id	:=obs_offset+5;
+	    liqout.flow.obs_id	:=obs_offset+6;
+	    vap_distillate.flow.obs_id	:=obs_offset+7;
+	    liq_distillate.flow.obs_id	:=obs_offset+8;
+	    obs_offset		:=obs_offset+9;
+	END set_obs;
+END condenser;
+
+MODEL reboiler(
+	liqin WILL_BE stream;
+	vap_bottom WILL_BE stream;
+	liq_bottom WILL_BE stream;
+	vapout WILL_BE stream;
+	partial WILL_BE boolean;
+	t WILL_BE time;
+	dynamic WILL_BE boolean;
+	ode_offset WILL_BE ode_counter;
+	obs_offset WILL_BE obs_counter;
+) WHERE (
+        liqin, vapout WILL_NOT_BE_THE_SAME;
+	liqin, vap_bottom, liq_bottom WILL_NOT_BE_THE_SAME;
+	liqin.cd, vapout.cd, liq_bottom.cd,vap_bottom.cd WILL_BE_THE_SAME;
+	vap_bottom.pd.phase_indicator == 'V';
+	liq_bottom.pd.phase_indicator == 'L';
+	vapout.pd.phase_indicator == 'V';
+	liqin.pd.phase_indicator == 'L';
+) REFINES flash_base;
+NOTES
+'purpose' SELF {
+This MODEL can be used as a partial or a total reboiler and would
+normally be used in a column model.
+The user supplies all streams, a partial boolean, time, a dynamic
+boolean and obs and ode counters.
+The partial boolean is used to convert from a total reboiler to a
+partial reboiler.  If partial is FALSE then liq_bottoms is fixed
+and the user is expected to set the flow rate to zero so there is no
+liquid product. If partial is TRUE then vap_bottoms is fixed
+and the user is expected to set the flow rate to zero so there is no
+vapor product.  Both vapor and liquid products are possible both it
+is up to the user to define what fraction of the product will be vapor
+and what fraction liquid.
+If equilibrated is TRUE, V-L equilibrium will be
+attempted, OTHERWISE the unit will solve only the mass balances.
+}
+'developer-Duncan' SELF {
+This is a simple dynamic model of a reboiler. The user creates a
+vapor product, a liquid feed and products, a partial
+boolean along with  time, a dynamic boolean and ode and obs
+counters. We do the assembly of the condenser VLE MODEL from the given
+output stream states.
+}
+END NOTES;
+        cd ALIASES liqin.cd;
+	P ALIASES liq_bottom.P;
+	T ALIASES liq_bottom.T;
+	equilibrated ALIASES liq_bottom.equilibrated;
+	(* reboiler thermo options are derived from product streams *)
+	pdV IS_A phases_data('V', vapout.pd.vapor_option,'none','none');
+	vap IS_A stream(cd,pdV,equilibrated);
+	pdVL IS_A phases_data('VL', vap.pd.vapor_option,
+				liq_bottom.pd.liquid1_option, 'none');
+	phaseVL[VLphases] ALIASES
+		(vap.phase['vapor'],liq_bottom.phase['liquid1'])
+		WHERE VLphases IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+	state IS_A thermodynamics(cd, pdVL, phaseVL, equilibrated);
+
+	out[outs] ALIASES (vapout,vap_bottom)
+	WHERE outs IS_A set OF integer_constant;
+	n_outs IS_A integer_constant;
+	n_outs :==CARD[outs];
+
+	split IS_A splitter(vap,n_outs,out);
+
+
+	dMi_dt[cd.other_components] IS_A molar_rate;
+	M,Mi[cd.components],Ml,Mv IS_A mole;
+	dM_dt IS_A molar_rate;
+	dU_dt IS_A energy_rate;
+	U IS_A energy;
+	Vol,vol_liq,vol_vap IS_A volume;
+	Qin IS_A energy_rate;
+	flowscale IS_A molar_rate_scale;
+
+	(* component material balances *)
+	FOR i IN cd.other_components CREATE
+	    dMi_dt[i]/flowscale=(liqin.f[i]-vap.f[i]-liq_bottom.f[i])/flowscale;
+	END FOR;
+	(* overall material balance *)
+	dM_dt/flowscale=(liqin.flow-vap.flow-liq_bottom.flow)/flowscale;
+
+	reboil_ratio IS_A factor;
+	reboil_eqn: (vapout.flow - reboil_ratio * (vap_bottom.flow+
+	             liq_bottom.flow))/ flowscale = 0;
+
+	FOR i IN cd.components CREATE
+	    Mi[i]=Ml*state.phase['liquid1'].y[i]+Mv*state.phase['vapor'].y[i];
+	END FOR;
+	Vol=vol_liq+vol_vap;
+	vol_liq=Ml*state.phase['liquid1'].v_y;
+	vol_vap=Mv*state.phase['vapor'].v_y;
+	M=Ml+Mv;
+	state.phase_fraction['vapor'] * M = Mv;
+
+	(* overall energy balance *)
+	H_flowscale IS_A energy_rate_scale;
+
+	dU_dt/H_flowscale=(liqin.H_flow+Qin-vap.H_flow
+	                   -liq_bottom.H_flow)/H_flowscale;
+
+	U/H_flowscale = (state.phase['vapor'].h_y*Mv+state.phase['liquid1'].h_y*Ml)
+	                /H_flowscale;
+
+	boundwidth IS_A bound_width;
+	METHODS
+	METHOD check_self;
+	    IF (vapout.flow < 1e-4 {mole/s}) THEN
+		STOP {No reboil/vapor flow out of reboiler};
+	    END IF;
+	    IF (liqin.flow < 1e-4 {mole/s}) THEN
+		STOP {No liquid feed to reboiler};
+	    END IF;
+	    IF partial THEN
+		IF (liq_bottom.flow < 1e-4 {mole/s}) THEN
+		    STOP {No liquid bottom product from reboiler};
+		END IF;
+	    ELSE
+		IF (vap_bottom.flow < 1e-4 {mole/s}) THEN
+		    STOP {No vapor bottom product from reboiler};
+		END IF;
+	    END IF;
+	    IF (abs(liqin.flow - vap_bottom.flow- liq_bottom.flow
+		- vapout.flow) > 1.0e-4) THEN
+		STOP {Reboiler violates overall mass-balance};
+	    END IF;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN liqin.check_self;
+	    IF partial THEN
+		RUN liq_bottom.check_self;
+	    ELSE
+		RUN vap_bottom.check_self;
+	    END IF;
+	    RUN vapout.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := liqin.Details.flowscale;
+	    H_flowscale := liqin.Details.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    dynamic :=FALSE;
+	    partial :=TRUE;
+	    t :=0 {s};
+	    RUN vap.default_self;
+	    RUN split.default_self;
+	    RUN state.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN liqin.default_self;
+	    RUN vap_bottom.default_self;
+	    RUN liq_bottom.default_self;
+	    RUN vapout.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	    RUN vap.bound_self;
+	    RUN splitbound_self;
+	    RUN state.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    liqin.boundwidth := boundwidth;
+	    distillate.boundwidth := boundwidth;
+	    vapout.boundwidth := boundwidth;
+	    RUN liqin.bound_self;
+	    RUN vap_bottom.bound_self;
+	    RUN liq_bottom.bound_self;
+	    RUN vapout.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := liqin.flow;
+	    H_flowscale := liqin.H_flow;
+	    RUN vap.scale_self;
+	    RUN split.scale_self;
+	    RUN state.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN liqin.scale_self;
+	    RUN vap_bottom.scale_self;
+	    RUN liq_bottom.scale_self;
+	    RUN vapout.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed := FALSE;
+	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    IF equilibrated THEN
+		state.T.fixed :=FALSE;
+	    ELSE
+		state.T.fixed :=TRUE;
+	    END IF;
+	    RUN split.seqmod;
+	    split.split[1].fixed :=FALSE;
+	    vapout.flow.fixed :=FALSE;
+	    vap_bottom.flow.fixed :=FALSE;
+	    liq_bottom.flow.fixed :=FALSE;
+	    IF partial THEN
+		vap_bottom.flow.fixed :=TRUE;
+	    ELSE
+		liq_bottom.flow.fixed :=TRUE;
+	    END IF;
+	    reboil_ratio.fixed :=TRUE;
+	    dMi_dt[cd.other_components].fixed :=TRUE;
+	    Mi[cd.other_components].fixed :=FALSE;
+	    dM_dt.fixed :=TRUE;
+	    M.fixed :=FALSE;
+	    dU_dt.fixed :=TRUE;
+	    U.fixed :=FALSE;
+	    Qin.fixed :=FALSE;
+	    Vol.fixed :=TRUE;
+	    vol_liq.fixed :=TRUE;
+	    IF dynamic THEN
+		dMi_dt[cd.other_components].fixed :=FALSE;
+		Mi[cd.other_components].fixed :=TRUE;
+		dM_dt.fixed :=FALSE;
+		M.fixed :=TRUE;
+		dU_dt.fixed :=FALSE;
+		U.fixed :=TRUE;
+		Qin.fixed :=TRUE;
+		IF equilibrated THEN
+		    state.P.fixed		:=FALSE;
+		ELSE
+		    state.T.fixed		:=FALSE;
+		END IF;
+		vol_liq.fixed	:=FALSE;
+		reboil_ratio.fixed :=FALSE;
+		state.phase_fraction['vapor'].fixed :=FALSE;
+		vapout.flow.fixed :=TRUE;
+		vap_bottom.flow.fixed :=TRUE;
+		liq_bottom.flow.fixed :=TRUE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN liqin.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+	    M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+
+	METHOD set_obs;
+	    Vol.obs_id		:=obs_offset;
+	    vol_liq.obs_id	:=obs_offset+1;
+	    state.T.obs_id	:=obs_offset+2;
+	    state.P.obs_id	:=obs_offset+3;
+	    Qin.obs_id          :=obs_offset+4;
+	    liqin.flow.obs_id	:=obs_offset+5;
+	    vapout.flow.obs_id	:=obs_offset+6;
+	    vap_bottom.flow.obs_id	:=obs_offset+7;
+	    liq_bottom.flow.obs_id	:=obs_offset+8;
+	    obs_offset		:=obs_offset+9;
+	END set_obs;
+END reboiler;
+
+(**************************************************************************)
+(**************************************************************************)
+
+
+MODEL testflashmodel() REFINES testcmumodel;
+(* root fo flash based test models *)
+END testflashmodel;
+
+MODEL test_vapor_liquid_flash() REFINES testflashmodel();
+
+	(* the next 5 are probably used throughout a flowsheet *)
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    pdVL IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+	                        'UNIFAC_liquid_mixture', 'none');
+    equilibrated IS_A boolean;
+    feed IS_A stream(cd, pdVL, equilibrated);
+    liq IS_A stream(cd, pdL, equilibrated);
+    vap IS_A stream(cd, pdV, equilibrated);
+    t IS_A time;
+    dynamic IS_A boolean;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+    fl1 IS_A vapor_liquid_flash(feed, vap, liq,t,dynamic,ode_offset,obs_offset);
+
+	(* boundwidth might be unit specific *)
+    boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+        boundwidth := 10;
+	equilibrated :=TRUE;
+	ode_offset :=1;
+	obs_offset :=1;
+	RUN feed.default_self;
+	RUN liq.default_self;
+	RUN vap.default_self;
+	RUN fl1.default_self;
+(* or could be RUN fl1.default_all; *)
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN feed.check_self;
+	RUN liq.check_self;
+	RUN vap.check_self;
+	RUN fl1.check_self;
+(* or could be RUN check_all; *)
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	fl1.boundwidth := boundwidth;
+	liq.boundwidth := boundwidth;
+	vap.boundwidth := boundwidth;
+	feed.boundwidth := boundwidth;
+(* The right, later reusable, way to finish this method is as follows:
+	RUN feed.bound_self;
+	RUN liq.bound_self;
+	RUN vap.bound_self;
+	RUN fl1.bound_self;
+ * where we didn't have to look inside the parts we're using because
+ * we know they follow the standard in system.a4l.
+ *)
+(* The quick and dirty way, since there are no parts passed into
+ * this MODEL is like so:
+ *)
+	RUN fl1.bound_all;
+(* This works, but we had to look into the VLflash MODEL to be sure. *)
+END bound_self;
+
+METHOD scale_self;
+	RUN feed.scale_self;
+	RUN liq.scale_self;
+	RUN vap.scale_self;
+	RUN fl1.scale_self;
+(* or could be RUN fl1.scale_all; *)
+END scale_self;
+
+METHOD specify;
+	RUN fl1.specify;
+END specify;
+
+METHOD values;
+	feed.P := 1 {atm};
+	feed.T := 365 {K};
+	feed.f['methanol'] := 0.01 {kmol/s};
+	feed.f['ethanol'] := 0.015 {kmol/s};
+	feed.f['water'] := 0.02 {kmol/s};
+	fl1.state.phase_fraction['vapor'] := 0.5;
+	fl1.P := 1 {atm};
+	fl1.T := 365 {K};
+	fl1.Qin := 0 {kW};
+	fl1.Vol := 10 {m^3};
+	fl1.vol_liq := 3 {m^3};
+END values;
+END test_vapor_liquid_flash;
+
+
+MODEL test_tray() REFINES testflashmodel();
+
+	(* the next 5 are probably used throughout a flowsheet *)
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+
+    equilibrated IS_A boolean;
+    vin IS_A stream(cd, pdV, equilibrated);
+    lin IS_A stream(cd, pdL, equilibrated);
+    lout IS_A stream(cd, pdL, equilibrated);
+    vout IS_A stream(cd, pdV, equilibrated);
+    t IS_A time;
+    dynamic IS_A boolean;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+    fl1 IS_A tray(lin,vin,lout,vout,t,dynamic,ode_offset,obs_offset);
+
+	(* boundwidth might be unit specific *)
+	boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+        boundwidth := 10;
+	equilibrated :=TRUE;
+	ode_offset :=1;
+	obs_offset :=1;
+	RUN vin.default_self;
+	RUN lin.default_self;
+	RUN lout.default_self;
+	RUN vout.default_self;
+	RUN fl1.default_self;
+(* or could be RUN fl1.default_all; *)
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+    RUN vin.check_self;
+    RUN lin.check_self;
+    RUN lout.check_self;
+    RUN vout.check_self;
+    RUN fl1.check_self;
+(* or could be RUN check_all; *)
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+    fl1.boundwidth := boundwidth;
+    lin.boundwidth := boundwidth;
+    vin.boundwidth := boundwidth;
+    lout.boundwidth := boundwidth;
+    vout.boundwidth := boundwidth;
+(* The right, later reusable, way to finish this method is as follows:
+    RUN vin.bound_self
+    RUN lin.bound_self;
+	RUN lout.bound_self;
+	RUN vout.bound_self;
+	RUN fl1.bound_self;
+ * where we didn't have to look inside the parts we're using because
+ * we know they follow the standard in system.a4l.
+ *)
+(* The quick and dirty way, since there are no parts passed into
+ * this MODEL is like so:
+ *)
+	RUN fl1.bound_all;
+(* This works, but we had to look into the VLflash MODEL to be sure. *)
+END bound_self;
+
+METHOD scale_self;
+    RUN vin.scale_self;
+    RUN lin.scale_self;
+    RUN lout.scale_self;
+    RUN vout.scale_self;
+    RUN fl1.scale_self;
+(* or could be RUN fl1.scale_all; *)
+END scale_self;
+
+METHOD specify;
+	RUN fl1.specify;
+END specify;
+
+METHOD values;
+	vin.P := 1 {atm};
+	vin.T := 365 {K};
+	vin.f['methanol'] := 0.01 {kmol/s};
+	vin.f['ethanol'] := 0.015 {kmol/s};
+	vin.f['water'] := 0.02 {kmol/s};
+	lin.P := 1 {atm};
+	lin.T := 365 {K};
+	lin.f['methanol'] := 0.01 {kmol/s};
+	lin.f['ethanol'] := 0.015 {kmol/s};
+	lin.f['water'] := 0.02 {kmol/s};
+	fl1.cmo_ratio := 1;
+	fl1.P := 1 {atm};
+	fl1.T := 365 {K};
+	fl1.Qin := 0 {kW};
+	fl1.Vol := 10 {m^3};
+	fl1.vol_liq := 3 {m^3};
+END values;
+
+END test_tray;
+
+
+MODEL test_feed_tray() REFINES testflashmodel();
+
+	(* the next 5 are probably used throughout a flowsheet *)
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+
+    equilibrated IS_A boolean;
+    feed IS_A stream(cd, pdV, equilibrated);
+    vin IS_A stream(cd, pdV, equilibrated);
+    lin IS_A stream(cd, pdL, equilibrated);
+    lout IS_A stream(cd, pdL, equilibrated);
+    vout IS_A stream(cd, pdV, equilibrated);
+    t IS_A time;
+    dynamic IS_A boolean;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+    fl1 IS_A feed_tray(feed,lin,vin,lout,vout,t,dynamic,ode_offset,obs_offset);
+
+	(* boundwidth might be unit specific *)
+	boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+        boundwidth := 10;
+	equilibrated :=TRUE;
+	ode_offset :=1;
+	obs_offset :=1;
+	RUN feed.default_self;
+	RUN vin.default_self;
+	RUN lin.default_self;
+	RUN lout.default_self;
+	RUN vout.default_self;
+	RUN fl1.default_self;
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+    RUN feed.check_self;
+    RUN vin.check_self;
+    RUN lin.check_self;
+    RUN lout.check_self;
+    RUN vout.check_self;
+    RUN fl1.check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+    fl1.boundwidth := boundwidth;
+    feed.boundwidth := boundwidth;
+    lin.boundwidth := boundwidth;
+    vin.boundwidth := boundwidth;
+    lout.boundwidth := boundwidth;
+    vout.boundwidth := boundwidth;
+    RUN fl1.bound_all;
+END bound_self;
+
+METHOD scale_self;
+    RUN feed.scale_self;
+    RUN vin.scale_self;
+    RUN lin.scale_self;
+    RUN lout.scale_self;
+    RUN vout.scale_self;
+    RUN fl1.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN fl1.specify;
+END specify;
+
+METHOD values;
+ 	feed.P := 1 {atm};
+	feed.T := 365 {K};
+	feed.f['methanol'] := 0.01 {kmol/s};
+	feed.f['ethanol'] := 0.015 {kmol/s};
+	feed.f['water'] := 0.02 {kmol/s};
+	vin.P := 1 {atm};
+	vin.T := 365 {K};
+	vin.f['methanol'] := 0.01 {kmol/s};
+	vin.f['ethanol'] := 0.015 {kmol/s};
+	vin.f['water'] := 0.02 {kmol/s};
+	lin.P := 1 {atm};
+	lin.T := 365 {K};
+	lin.f['methanol'] := 0.01 {kmol/s};
+	lin.f['ethanol'] := 0.015 {kmol/s};
+	lin.f['water'] := 0.02 {kmol/s};
+	fl1.q := 0;
+	fl1.P := 1 {atm};
+	fl1.T := 365 {K};
+	fl1.Qin := 0 {kW};
+	fl1.Vol := 10 {m^3};
+	fl1.vol_liq := 3 {m^3};
+END values;
+END test_feed_tray;
+
+
+
+MODEL test_condenser() REFINES testflashmodel();
+
+	(* the next 5 are probably used throughout a flowsheet *)
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    partial IS_A boolean;
+    equilibrated IS_A boolean;
+    vapin IS_A stream(cd, pdV, equilibrated);
+    liq IS_A stream(cd, pdL, equilibrated);
+    liq_dist IS_A stream(cd, pdL, equilibrated);
+    vap_dist IS_A stream(cd, pdV, equilibrated);
+    t IS_A time;
+    dynamic IS_A boolean;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+    fl1 IS_A condenser(vapin,vap_dist,liq_dist,liq,partial,t,dynamic,
+                       ode_offset,obs_offset);
+
+	(* boundwidth might be unit specific *)
+	boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+        boundwidth := 10;
+	equilibrated :=TRUE;
+	ode_offset :=1;
+	obs_offset :=1;
+	RUN vapin.default_self;
+	RUN liq.default_self;
+	RUN vap_dist.default_self;
+	RUN liq_dist.default_self;
+	RUN fl1.default_self;
+(* or could be RUN fl1.default_all; *)
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN vapin.check_self;
+	RUN liq.check_self;
+	IF partial THEN
+	    RUN vap_dist.check_self;
+	ELSE
+	    RUN liq_dist.check_self;
+	END IF;
+	RUN fl1.check_self;
+(* or could be RUN fl1.check_all; *)
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	fl1.boundwidth := boundwidth;
+	liq.boundwidth := boundwidth;
+	liq_dist.boundwidth := boundwidth;
+	vap_dist.boundwidth := boundwidth;
+	vapin.boundwidth := boundwidth;
+	RUN fl1.bound_all;
+END bound_self;
+
+METHOD scale_self;
+	RUN vapin.scale_self;
+	RUN liq.scale_self;
+	RUN vap_dist.scale_self;
+	RUN liq_dist.scale_self;
+	RUN fl1.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN fl1.specify;
+END specify;
+
+METHOD values;
+	vapin.P := 1 {atm};
+	vapin.T := 365 {K};
+	vapin.f['methanol'] := 0.01 {kmol/s};
+	vapin.f['ethanol'] := 0.015 {kmol/s};
+	vapin.f['water'] := 0.02 {kmol/s};
+	fl1.reflux_ratio :=1;
+	fl1.P := 1 {atm};
+	fl1.T := 365 {K};
+	fl1.Qin := 0 {kW};
+	fl1.Vol := 3 {m^3};
+	fl1.vol_liq := 1 {m^3};
+END values;
+END test_condenser;
+
+MODEL test_reboiler() REFINES testflashmodel();
+
+	(* the next 5 are probably used throughout a flowsheet *)
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    partial IS_A boolean;
+    equilibrated IS_A boolean;
+    liqin IS_A stream(cd, pdL, equilibrated);
+    vap IS_A stream(cd, pdV, equilibrated);
+    liq_bot IS_A stream(cd, pdL, equilibrated);
+    vap_bot IS_A stream(cd, pdV, equilibrated);
+    t IS_A time;
+    dynamic IS_A boolean;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+    fl1 IS_A reboiler(liqin,vap_bot,liq_bot,vap,partial,t,dynamic,
+                       ode_offset,obs_offset);
+
+	(* boundwidth might be unit specific *)
+	boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+        boundwidth := 10;
+	equilibrated :=TRUE;
+	partial :=FALSE;
+	ode_offset :=1;
+	obs_offset :=1;
+	RUN liqin.default_self;
+	RUN vap.default_self;
+	RUN vap_bot.default_self;
+	RUN liq_bot.default_self;
+	RUN fl1.default_self;
+(* or could be RUN fl1.default_all; *)
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN liqin.check_self;
+	RUN vap.check_self;
+	IF partial THEN
+	    RUN liq_bot.check_self;
+	ELSE
+	    RUN vap_bot.check_self;
+	END IF;
+	RUN fl1.check_self;
+(* or could be RUN check_all; *)
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	fl1.boundwidth := boundwidth;
+	vap.boundwidth := boundwidth;
+	liq_bot.boundwidth := boundwidth;
+	vap_bot.boundwidth := boundwidth;
+	liqin.boundwidth := boundwidth;
+	RUN fl1.bound_all;
+END bound_self;
+
+METHOD scale_self;
+	RUN liqin.scale_self;
+	RUN vap.scale_self;
+	RUN vap_bot.scale_self;
+	RUN liq_bot.scale_self;
+	RUN fl1.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN fl1.specify;
+END specify;
+
+METHOD values;
+	liqin.P := 1 {atm};
+	liqin.T := 365 {K};
+	liqin.f['methanol'] := 0.01 {kmol/s};
+	liqin.f['ethanol'] := 0.015 {kmol/s};
+	liqin.f['water'] := 0.02 {kmol/s};
+	fl1.reboil_ratio :=1;
+	fl1.P := 1 {atm};
+	fl1.T := 365 {K};
+	fl1.Qin := 0 {kW};
+	fl1.Vol := 3 {m^3};
+	fl1.vol_liq :=1 {m^3};
+END values;
+END test_reboiler;
+
+
+MODEL test_detailed_tray() REFINES testflashmodel();
+
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    equilibrated IS_A boolean;
+    vin IS_A stream(cd,pdV,equilibrated);
+    lin IS_A stream(cd,pdL,equilibrated);
+    lout IS_A stream(cd,pdL,equilibrated);
+    vout IS_A stream(cd,pdV,equilibrated);
+    pdVL IS_A phases_data('VL', vout.pd.vapor_option,
+                          lout.pd.liquid1_option, 'none');
+    phaseVL[VLphases] ALIASES
+        (vout.phase['vapor'],lout.phase['liquid1'])
+        WHERE VLphases IS_A set OF symbol_constant
+        WITH_VALUE ('vapor','liquid1');
+    state IS_A thermodynamics(cd, pdVL, phaseVL, equilibrated);
+    t IS_A time;
+    dynamic IS_A boolean;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+    fl1 IS_A detailed_tray(lin.Details,vin.Details,lout.Details,vout.Details,
+                        state,t,dynamic,ode_offset,obs_offset);
+
+	(* boundwidth might be unit specific *)
+	boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+        boundwidth := 10;
+	equilibrated :=TRUE;
+	ode_offset :=1;
+	obs_offset :=1;
+	RUN vin.default_self;
+	RUN lin.default_self;
+	RUN lout.default_self;
+	RUN vout.default_self;
+	RUN fl1.default_self;
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+    RUN vin.check_self;
+    RUN lin.check_self;
+    RUN lout.check_self;
+    RUN vout.check_self;
+    RUN fl1.check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+    fl1.boundwidth := boundwidth;
+    lin.boundwidth := boundwidth;
+    vin.boundwidth := boundwidth;
+    lout.boundwidth := boundwidth;
+    vout.boundwidth := boundwidth;
+    RUN fl1.bound_all;
+END bound_self;
+
+METHOD scale_self;
+    RUN vin.scale_self;
+    RUN lin.scale_self;
+    RUN lout.scale_self;
+    RUN vout.scale_self;
+    RUN fl1.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN fl1.specify;
+END specify;
+
+METHOD values;
+	vin.P := 1 {atm};
+	vin.T := 365 {K};
+	vin.f['methanol'] := 0.01 {kmol/s};
+	vin.f['ethanol'] := 0.015 {kmol/s};
+	vin.f['water'] := 0.02 {kmol/s};
+	lin.P := 1 {atm};
+	lin.T := 365 {K};
+	lin.f['methanol'] := 0.01 {kmol/s};
+	lin.f['ethanol'] := 0.015 {kmol/s};
+	lin.f['water'] := 0.02 {kmol/s};
+	fl1.cmo_ratio := 1;
+	fl1.P := 1 {atm};
+	fl1.T := 365 {K};
+	fl1.Qin := 0 {kW};
+	fl1.Vol := 10 {m^3};
+	fl1.vol_liq := 3 {m^3};
+END values;
+
+END test_detailed_tray;

@@ -1,0 +1,78 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of dyn_tank.a4c
+
+DELETE TYPES;
+READ FILE "dyn_tank.a4c";
+source "$env(ASCENDDIST)/models/set_intervals.tcl";
+
+COMPILE ex OF tank;
+BROWSE {ex};
+RUN {ex.default_self};
+RUN {ex.reset};
+RUN {ex.values};
+SOLVE ex WITH QRSlv;
+RUN {ex.check_all};
+ASSIGN {ex.dynamic} TRUE;
+RUN {ex.reset};
+RUN {ex.set_ode};
+RUN {ex.set_obs};
+set_int 500 10 {s};
+INTEGRATE ex FROM 0 TO 50 WITH BLSODE;
+
+ASSIGN {ex.input} 101 {mole/s};
+INTEGRATE ex FROM 50 TO 499 WITH BLSODE;
+
+# In order to view integration results from both the integrations
+# the user will have to goto the solver window, select options general
+# and turn off the overwrite integrator logs toggle on the second page.
+# (NOTE: If you were then to run a different model or this same simulation
+# again it would still write to the same files)
+
+# In order to see both sets of data at the same time on one plot
+# you will have to merge the two sets of data in the file.  This
+# is done with following command.
+
+asc_merge_data_file ascend new_obs.dat obs.dat;
+ASCPLOT new_obs.dat;
+
+# This command can also be used to convert data into a format
+# that can be loaded into matlab for further work.
+
+asc_merge_data_file matlab matlab_obs.m obs.dat;
+
+# This command can also be used to convert data into a format
+# that can be loaded into excel as a tab delimited text file.
+
+asc_merge_data_file excel excel_obs.txt obs.dat;
+
+##########  dyn_tank.a4s ends here  ##########
+#
+#  dyn_tank.a4s
+#  by Duncan Coffey
+#  June, 1998
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:31 $
+#  $Revision: 1.2 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/dyn_tank.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

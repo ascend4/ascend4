@@ -1,0 +1,830 @@
+MODEL flash_base;
+	Qin IS_A energy_rate;
+NOTES
+'usage' SELF {
+Never create one of these directly. 
+This is just a common ancestor type.
+}
+END NOTES;
+END flash_base;
+
+MODEL vapor_liquid_flash(
+	feed WILL_BE liquid_stream;
+	vapout WILL_BE vapor_stream;
+	liqout WILL_BE liquid_stream;
+	flash_state WILL_BE td_VLE_mixture;
+) WHERE (
+	flash_state.heavy, liqout.state WILL_BE_THE_SAME;
+	flash_state.light, vapout.state WILL_BE_THE_SAME;
+	vapout.state.T, feed.state.T WILL_NOT_BE_THE_SAME;
+	vapout.state.P, feed.state.P WILL_NOT_BE_THE_SAME;
+	liqout.state.T, feed.state.T WILL_NOT_BE_THE_SAME;
+	liqout.state.P, feed.state.P WILL_NOT_BE_THE_SAME;
+	liqout.state.options.ds.components == 
+	vapout.state.options.ds.components;
+) REFINES flash_base;
+
+	components ALIASES flash_state.components;
+	H_scale IS_A real;
+	F_scale IS_A real;
+
+
+	FOR i IN components - [feed.state.options.ds.reference] CREATE
+		flash_state.y[i] = feed.state.y[i];
+	END FOR;
+	(vapout.Ftot - flash_state.phi['vapor'] * feed.Ftot)/F_scale = 0;
+	(liqout.Ftot - flash_state.phi['liquid'] * feed.Ftot)/F_scale = 0;
+
+	
+	EBal: (feed.Htot + Qin - (vapout.Htot + liqout.Htot))/H_scale = 0;
+	H_scale := 1e+8{J/s};
+	F_scale := 10{mole/s};
+
+METHODS
+
+METHOD clear;
+	RUN feed.clear;
+	RUN vapout.clear;
+	RUN liqout.clear;
+	RUN flash_state.clear;
+	Qin.fixed := FALSE;
+END clear;
+
+METHOD seqmod;
+	RUN flash_state.specify;
+	flash_state.y[components].fixed := FALSE;
+END seqmod;
+
+METHOD reset_to_massbal;
+	flash_state.equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+	flash_state.equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+END specify;
+
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+
+END vapor_liquid_flash;
+
+MODEL tray(
+	liqin WILL_BE liquid_stream;
+	vapin WILL_BE vapor_stream;
+	liqout WILL_BE liquid_stream;
+	vapout WILL_BE vapor_stream;
+	tray_state WILL_BE td_VLE_mixture;
+) WHERE (
+	tray_state.heavy, liqout.state WILL_BE_THE_SAME;
+	tray_state.light, vapout.state WILL_BE_THE_SAME;
+	vapout.state.T, vapin.state.T, liqin.state.T WILL_NOT_BE_THE_SAME;
+	vapout.state.P, vapin.state.P, liqin.state.P WILL_NOT_BE_THE_SAME;
+	liqin.state.options.ds.components == liqout.state.options.ds.components;
+	vapin.state.options.ds.components == liqout.state.options.ds.components;
+) REFINES flash_base;
+
+	cmo_ratio IS_A factor;
+
+	cmo: (cmo_ratio * liqin.Ftot - liqout.Ftot)/F_scale = 0;
+
+	components ALIASES tray_state.components;
+	H_scale IS_A real;
+	F_scale IS_A real;
+	scale IS_A scaling_constant;
+
+	FOR i IN components - [vapin.state.options.ds.reference] CREATE
+	(
+		tray_state.y[i] * (liqin.Ftot + vapin.Ftot) -
+		(vapin.state.y[i] * vapin.Ftot + liqin.state.y[i] * liqin.Ftot)
+	) / F_scale = 0;
+	END FOR;
+
+	(vapout.Ftot - tray_state.phi['vapor'] * (vapin.Ftot+liqin.Ftot))
+	/ F_scale = 0;
+	(liqout.Ftot - tray_state.phi['liquid'] * (vapin.Ftot+liqin.Ftot))
+	/ F_scale = 0;
+
+	
+	EBal: ((vapin.Htot+liqin.Htot) + Qin - (vapout.Htot + liqout.Htot))
+	/ H_scale = 0;
+
+	H_scale := 1e+8{J/s};
+	F_scale := 10{mole/s};
+
+	METHODS
+
+METHOD clear;
+	RUN vapin.clear;
+	RUN liqin.clear;
+	RUN vapout.clear;
+	RUN liqout.clear;
+	RUN tray_state.clear;
+	cmo_ratio.fixed	:= FALSE;
+	Qin.fixed := FALSE;
+END clear;
+
+METHOD seqmod;
+	RUN tray_state.specify;
+	tray_state.y[components].fixed := FALSE;
+	tray_state.phi['vapor'].fixed := FALSE;
+	cmo_ratio.fixed	:= TRUE;
+END seqmod;
+
+METHOD seqmod_massbal;
+	tray_state.equilibrated := FALSE;
+	RUN seqmod;
+	vapin.state.T.fixed		:= TRUE;
+	liqin.state.T.fixed		:= TRUE;
+END seqmod_massbal;
+
+METHOD seqmod_fullthermo;
+	tray_state.equilibrated := TRUE;
+	RUN seqmod;
+END seqmod_fullthermo;
+
+METHOD seqmod_fixed_Q;
+	RUN fullthermo_seqmod;
+	cmo_ratio.fixed := FALSE;
+	Qin.fixed := TRUE;
+END seqmod_fixed_Q;
+
+METHOD seqmod_adiabatic;
+	RUN seqmod_fixed_Q;
+	Qin := 0{W};
+END seqmod_adiabatic;
+
+METHOD reset_to_massbal;
+	tray_state.equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+	tray_state.equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+	RUN reset_to_fullthermo;
+	cmo_ratio.fixed := FALSE;
+	Qin.fixed := TRUE;
+	Qin := 0{W};
+END reset_to_adiabatic;
+
+METHOD specify;
+	RUN seqmod;
+	RUN vapin.specify;
+	RUN liqin.specify;
+END specify;
+
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+
+METHOD scale;
+	RUN tray_state.scale;
+	RUN liqin.scale;
+	RUN vapin.scale;
+	RUN liqout.scale;
+	RUN vapout.scale;
+	cmo_ratio.nominal := cmo_ratio;
+	cmo_ratio.lower_bound := 0.0;
+	cmo_ratio.upper_bound := cmo_ratio + scale*cmo_ratio.nominal;
+END scale;
+
+METHOD heat_balance;
+    cmo_ratio.fixed := FALSE;
+    Qin.fixed := TRUE;
+END heat_balance;
+METHOD CMO;
+    cmo_ratio.fixed := TRUE;
+    Qin.fixed := FALSE;
+END CMO;
+
+END tray;
+
+MODEL feed_tray(
+	feed WILL_BE vapor_liquid_stream;
+	liqin WILL_BE liquid_stream;
+	vapin WILL_BE vapor_stream;
+	liqout WILL_BE liquid_stream;
+	vapout WILL_BE vapor_stream;
+	feed_tray_state WILL_BE td_VLE_mixture;
+) WHERE (
+	feed_tray_state.heavy, liqout.state WILL_BE_THE_SAME;
+	feed_tray_state.light, vapout.state WILL_BE_THE_SAME;
+	vapout.state.T, feed.state.T WILL_NOT_BE_THE_SAME;
+	vapout.state.P, feed.state.P WILL_NOT_BE_THE_SAME;
+	liqin.state.options.ds.components == feed.components;
+	vapin.state.options.ds.components == feed.components;
+	liqout.state.options.ds.components == feed.components;
+	vapout.state.options.ds.components == feed.components;
+) REFINES flash_base;
+
+	q IS_A factor;
+
+	q_eqn: (liqout.Ftot - (liqin.Ftot + q * feed.Ftot)) / F_scale = 0;
+	q := 1.0;
+
+
+	components ALIASES feed_tray_state.components;
+	H_scale IS_A real;
+	F_scale IS_A real;
+	scale IS_A scaling_constant;
+
+	FOR i IN components - [vapin.state.options.ds.reference] CREATE
+	( (feed_tray_state.y[i] * (feed.Ftot + liqin.Ftot + vapin.Ftot)) -
+	  (vapin.state.y[i]*vapin.Ftot + liqin.state.y[i]*liqin.Ftot +
+		feed.state.y[i]*feed.Ftot)
+	) / F_scale = 0;
+	END FOR;
+	(vapout.Ftot -
+	feed_tray_state.phi['vapor'] * (vapin.Ftot+liqin.Ftot+feed.Ftot))
+	/ F_scale = 0;
+	(liqout.Ftot - 
+	feed_tray_state.phi['liquid'] * (vapin.Ftot+liqin.Ftot+feed.Ftot))
+	/ F_scale = 0;
+
+	
+	EBal: ((vapin.Htot + liqin.Htot + feed.Htot) + Qin - 
+		(vapout.Htot + liqout.Htot)) / H_scale = 0;
+	H_scale := 1e+8{J/s};
+	F_scale := 10{mole/s};
+
+METHODS
+
+METHOD clear;
+	RUN feed.clear;
+       	RUN vapin.clear;
+	RUN liqin.clear;
+	RUN vapout.clear;
+	RUN liqout.clear;
+	RUN feed_tray_state.clear;
+	q.fixed	:= FALSE;
+	Qin.fixed := FALSE;
+END clear;
+
+METHOD seqmod;
+	RUN feed_tray_state.specify;
+	feed_tray_state.y[components].fixed := FALSE;
+	feed_tray_state.phi['vapor'].fixed := FALSE;
+	q.fixed	:= TRUE;
+END seqmod;
+
+METHOD seqmod_massbal;
+	feed_tray_state.equilibrated := FALSE;
+	RUN seqmod;
+	vapin.state.T.fixed		:= TRUE;
+	liqin.state.T.fixed		:= TRUE;
+END seqmod_massbal;
+
+METHOD seqmod_fullthermo;
+	feed_tray_state.equilibrated := TRUE;
+	RUN seqmod;
+END seqmod_fullthermo;
+
+METHOD seqmod_fixed_Q;
+	RUN fullthermo_seqmod;
+	q.fixed := FALSE;
+	Qin.fixed := TRUE;
+END seqmod_fixed_Q;
+
+METHOD seqmod_adiabatic;
+	RUN seqmod_fixed_Q;
+	Qin := 0{W};
+END seqmod_adiabatic;
+
+METHOD reset_to_massbal;
+	feed_tray_state.equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+	feed_tray_state.equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+	RUN reset_to_fullthermo;
+	q.fixed := FALSE;
+	Qin.fixed := TRUE;
+	Qin := 0{W};
+END reset_to_adiabatic;
+
+METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+	RUN vapin.specify;
+	RUN liqin.specify;
+END specify;
+
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+
+METHOD scale;
+	RUN feed_tray_state.scale;
+	RUN feed.scale;
+	RUN liqin.scale;
+	RUN vapin.scale;
+	RUN liqout.scale;
+	RUN vapout.scale;
+	q.nominal := abs(q);
+	q.lower_bound := q - scale*q.nominal;
+	q.upper_bound := q + scale*q.nominal;
+END scale;
+END feed_tray;
+
+MODEL simple_condenser(
+	vapin WILL_BE vapor_stream;
+	liqout WILL_BE liquid_stream;
+	distillate WILL_BE liquid_stream;
+) WHERE (
+	liqout.state, distillate.state WILL_BE_THE_SAME;
+) REFINES flash_base;
+
+	reflux_ratio			IS_A factor;
+	
+	reflux_def: (liqout.Ftot - reflux_ratio*distillate.Ftot) / F_scale = 0;
+
+	condenser_state ALIASES liqout.state;
+	components ALIASES condenser_state.options.ds.components;
+	H_scale IS_A real;
+	F_scale IS_A real;
+	scale IS_A scaling_constant;
+
+	FOR i IN components - [vapin.state.options.ds.reference] CREATE
+		condenser_state.y[i] = vapin.state.y[i];
+	END FOR;
+
+	(vapin.Ftot - distillate.Ftot - liqout.Ftot) / F_scale = 0;
+
+	
+	EBal: (vapin.Htot + Qin - (liqout.Htot + distillate.Htot)) /H_scale =0;
+	H_scale := 1e+8{J/s};
+	F_scale := 10{mole/s};
+
+METHODS
+
+METHOD clear;
+	RUN vapin.clear;
+	RUN distillate.clear;
+	RUN liqout.clear;
+	RUN condenser_state.clear;
+	Qin.fixed := FALSE;
+	reflux_ratio.fixed := FALSE;
+END clear;
+
+METHOD seqmod;
+        RUN condenser_state.specify;
+	RUN distillate.seqmod;
+	condenser_state.y[components].fixed := FALSE;
+	reflux_ratio.fixed := TRUE;
+END seqmod;
+
+METHOD specify;
+	RUN seqmod;
+	RUN vapin.specify;
+END specify;
+
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+
+METHOD scale;
+	RUN condenser_state.scale;
+	RUN vapin.scale;
+	RUN liqout.scale;
+	RUN distillate.scale;
+END scale;  
+
+
+
+END simple_condenser;
+
+MODEL simple_reboiler(
+	liqin WILL_BE liquid_stream;
+	vapout WILL_BE vapor_stream;
+	bottoms WILL_BE liquid_stream;
+	reboiler_state WILL_BE td_VLE_mixture;
+) WHERE (
+	reboiler_state.light, vapout.state WILL_BE_THE_SAME;
+	reboiler_state.heavy, bottoms.state WILL_BE_THE_SAME;
+        vapout.state.T, liqin.state.T WILL_NOT_BE_THE_SAME;
+        vapout.state.P, liqin.state.P WILL_NOT_BE_THE_SAME;
+        bottoms.state.T, liqin.state.T WILL_NOT_BE_THE_SAME;
+        bottoms.state.P, liqin.state.P WILL_NOT_BE_THE_SAME;
+        bottoms.state.options.ds.components == 
+        vapout.state.options.ds.components;
+) REFINES flash_base;
+
+NOTES 'ascii-picture' SELF {
+   |         ^
+   v liqin   | vapout
+ /-------------\
+ |             |
+ |~~~~~~~~~~~~~|
+ \__OOO________+--> bottoms
+    | |
+Qin ^ .
+}
+END NOTES;
+
+	reboil_ratio	IS_A factor;
+	
+	reboil_def: (vapout.Ftot - reboil_ratio * bottoms.Ftot ) / F_scale = 0;
+
+	components ALIASES reboiler_state.components;
+	H_scale IS_A real;
+	F_scale IS_A real;
+
+
+	FOR i IN components - [liqin.state.options.ds.reference] CREATE
+		reboiler_state.y[i] = liqin.state.y[i];
+	END FOR;
+
+	(vapout.Ftot - reboiler_state.phi['vapor'] * liqin.Ftot)/F_scale = 0;
+	(bottoms.Ftot - reboiler_state.phi['liquid'] * liqin.Ftot)/F_scale = 0;
+
+	EBal: (liqin.Htot + Qin - (vapout.Htot + bottoms.Htot))/H_scale = 0;
+	H_scale := 1e+8{J/s};
+	F_scale := 10{mole/s};
+
+METHODS
+
+METHOD clear;
+	RUN liqin.clear;
+	RUN bottoms.clear;
+	RUN vapout.clear;
+	RUN reboiler_state.clear;
+	Qin.fixed := FALSE;
+	reboil_ratio.fixed := FALSE;
+END clear;
+
+METHOD seqmod;
+	RUN reboiler_state.specify;
+	reboiler_state.y[components].fixed := FALSE;
+	reboiler_state.phi['vapor'].fixed := FALSE;
+	reboil_ratio.fixed := TRUE;
+END seqmod;
+
+METHOD reset_to_massbal;
+	reboiler_state.equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+	reboiler_state.equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD specify;
+	RUN seqmod;
+	RUN liqin.specify;
+END specify;
+
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+
+METHOD scale;
+	RUN reboiler_state.scale;
+	RUN liqin.scale;
+	RUN vapout.scale;
+	RUN bottoms.scale;
+END scale;  
+
+END simple_reboiler;
+
+MODEL test_vapor_liquid_flash;
+
+(* This is written in the top down style of a novice modeler.
+ * Expert models put the statements in reverse order, adding
+ * new statements needed _above_ the old ones as they discover
+ * from the parameter lists what else is needed to create
+ * each object.
+ * Of course order in ASCEND doesn't matter in terms of having
+ * a correct MODEL, but it does affect compiler performance.
+ * Defining arguments before passing them helps the compiler.
+ *)
+	Flash IS_A vapor_liquid_flash(Feed, Vapout, Liqout, flash_state);
+
+	Feed IS_A liquid_stream(feed_state);
+	Vapout IS_A vapor_stream(vapor_state);
+	Liqout IS_A liquid_stream(liquid_state);
+
+	flash_state IS_A
+	td_VLE_mixture(P, T,  vapor_state, liquid_state, equilibrated);
+
+	P	IS_A pressure;
+	T 	IS_A temperature;
+	equilibrated IS_A boolean;
+	feed_state IS_A liquid_mixture(feed_P, feed_T, liquid_options);
+	liquid_state IS_A liquid_mixture(P, T, liquid_options);
+	vapor_state IS_A vapor_mixture(P, T, vapor_options);
+
+	feed_P	IS_A pressure;
+	feed_T 	IS_A temperature;
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	ds	IS_A
+	td_component_data_set(['n_pentane','n_hexane','n_heptane'],'n_heptane');
+
+METHODS
+
+METHOD clear;
+	RUN Flash.clear;
+END clear;
+
+METHOD reset;
+	RUN clear;
+	RUN Flash.reset;
+END reset;
+
+METHOD values;
+	flash_state.alpha['n_pentane'] := 5;
+	flash_state.alpha['n_hexane'] := 2;
+	flash_state.alpha['n_heptane'] := 1;
+	T := 298 {K};
+	P := 1{atm};
+	Feed.f['n_pentane'] := 3{mole/s};
+	Feed.f['n_hexane'] := 3{mole/s};
+	Feed.f['n_heptane'] := 3{mole/s};
+END values;
+	
+END test_vapor_liquid_flash;
+
+MODEL test_hard_vapor_liquid_flash;
+	(* This MODEL is bottom-up, as an expert would write *)
+
+
+	ds	IS_A
+	td_component_data_set(['acetone','chloroform','benzene'],'benzene');
+	
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	feed_P	IS_A pressure;
+	feed_T 	IS_A temperature;
+	P	IS_A pressure;
+	T 	IS_A temperature;
+
+	equilibrated IS_A boolean;
+	feed_state IS_A liquid_mixture(feed_P, feed_T, liquid_options);
+	liquid_state IS_A liquid_mixture(P, T, liquid_options);
+	vapor_state IS_A vapor_mixture(P, T, vapor_options);
+
+
+	Feed IS_A liquid_stream(feed_state);
+	Vapout IS_A vapor_stream(vapor_state);
+	Liqout IS_A liquid_stream(liquid_state);
+	flash_state IS_A
+	td_VLE_mixture(P, T,  vapor_state, liquid_state, equilibrated);
+
+	Flash IS_A vapor_liquid_flash(Feed, Vapout, Liqout, flash_state);
+
+METHODS
+
+METHOD clear;
+	RUN Flash.clear;
+END clear;
+
+METHOD reset;
+	RUN clear;
+	RUN Flash.reset;
+END reset;
+
+METHOD values;
+	flash_state.alpha['acetone'] := 3;
+	flash_state.alpha['chloroform'] := 2;
+	flash_state.alpha['benzene'] := 1;
+	T := 298 {K};
+	P := 1{atm};
+	Feed.f['acetone','chloroform','benzene'] := 3{mole/s};
+END values;
+
+END test_hard_vapor_liquid_flash;
+
+MODEL test_tray;
+
+	ds	IS_A
+	td_component_data_set(['n_pentane','n_hexane','n_heptane'],'n_heptane');
+
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	P	IS_A pressure;
+	T 	IS_A temperature;
+	vapin_P	IS_A pressure;
+	vapin_T 	IS_A temperature;
+	liqin_P IS_A pressure;
+	liqin_T IS_A temperature;
+
+	vapin_state IS_A vapor_mixture(vapin_P, vapin_T, vapor_options);
+	liqin_state IS_A liquid_mixture(liqin_P, liqin_T, liquid_options);
+	liquid_state IS_A liquid_mixture(P, T, liquid_options);
+	vapor_state IS_A vapor_mixture(P, T, vapor_options);
+
+	Liqin IS_A liquid_stream(liqin_state);
+	Vapin IS_A vapor_stream(vapin_state);
+	Vapout IS_A vapor_stream(vapor_state);
+	Liqout IS_A liquid_stream(liquid_state);
+
+	equilibrated IS_A boolean;
+	tray_state IS_A
+	td_VLE_mixture(P, T,  vapor_state, liquid_state, equilibrated);
+
+	Tray IS_A tray(Liqin, Vapin, Liqout, Vapout, tray_state);
+
+METHODS
+
+METHOD clear;
+	RUN Tray.clear;
+END clear;
+
+METHOD reset;
+	RUN Tray.reset;
+END reset;
+
+METHOD values;
+	tray_state.alpha['n_pentane'] := 3;
+	tray_state.alpha['n_hexane'] := 2;
+	tray_state.alpha['n_heptane'] := 1;
+	T := 298 {K};
+	P := 1{atm};
+	Liqin.f['n_pentane'] := 3{mole/s};
+	Liqin.f['n_hexane'] := 3{mole/s};
+	Liqin.f['n_heptane'] := 3{mole/s};
+END values;
+	
+END test_tray;
+
+MODEL test_feed_tray;
+	ds	IS_A
+	td_component_data_set(['n_pentane','n_hexane','n_heptane'],'n_heptane');
+
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	P	IS_A pressure;
+	T 	IS_A temperature;
+	feedin_P IS_A pressure;
+	feedin_T IS_A temperature;
+	vapin_P	IS_A pressure;
+	vapin_T 	IS_A temperature;
+	liqin_P IS_A pressure;
+	liqin_T IS_A temperature;
+
+	equilibrated IS_A boolean;
+	feedin_state IS_A td_VLE_mixture(
+		feedin_P, feedin_T, feed_vapor_state, feed_liquid_state,
+		equilibrated);
+
+	feed_vapor_state 
+	IS_A vapor_mixture(feedin_P, feedin_T, vapor_options);
+
+	feed_liquid_state 
+	IS_A liquid_mixture(feedin_P, feedin_T, liquid_options);
+
+	vapin_state IS_A vapor_mixture(vapin_P, vapin_T, vapor_options);
+	liqin_state IS_A liquid_mixture(liqin_P, liqin_T, liquid_options);
+	liquid_state IS_A liquid_mixture(P, T, liquid_options);
+	vapor_state IS_A vapor_mixture(P, T, vapor_options);
+
+	Feedin IS_A vapor_liquid_stream(feedin_state);
+	Liqin IS_A liquid_stream(liqin_state);
+	Vapin IS_A vapor_stream(vapin_state);
+	Vapout IS_A vapor_stream(vapor_state);
+	Liqout IS_A liquid_stream(liquid_state);
+	feed_tray_state IS_A
+	td_VLE_mixture(P, T,  vapor_state, liquid_state, equilibrated);
+
+	Feed_tray IS_A 
+	feed_tray(Feedin, Liqin, Vapin, Liqout, Vapout, feed_tray_state);
+METHODS
+
+METHOD clear;
+	RUN Feed_tray.clear;
+END clear;
+
+METHOD reset;
+	RUN Feed_tray.reset;
+END reset;
+
+METHOD values;
+	feed_tray_state.alpha['n_pentane'] := 3;
+	feed_tray_state.alpha['n_hexane'] := 2;
+	feed_tray_state.alpha['n_heptane'] := 1;
+	T := 298 {K};
+	P := 1{atm};
+	Liqin.f['n_pentane'] := 3{mole/s};
+	Liqin.f['n_hexane'] := 3{mole/s};
+	Liqin.f['n_heptane'] := 3{mole/s};
+END values;
+	
+END test_feed_tray;
+
+MODEL test_condenser;
+	ds	IS_A
+	td_component_data_set(['n_pentane','n_hexane','n_heptane'],'n_heptane');
+
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	P	IS_A pressure;
+	T 	IS_A temperature;
+	vapin_P		IS_A pressure;
+	vapin_T		IS_A temperature;
+	liquid_state IS_A liquid_mixture(P, T, liquid_options);
+	vapin_state IS_A vapor_mixture(vapin_P, vapin_T, vapor_options);
+
+	Vapin IS_A vapor_stream(vapin_state);
+	Distillate IS_A liquid_stream(liquid_state);
+	Liqout IS_A liquid_stream(liquid_state);
+
+	Condenser IS_A 
+	simple_condenser(Vapin, Liqout, Distillate);
+
+METHODS
+
+METHOD clear;
+	RUN Condenser.clear;
+END clear;
+
+METHOD reset;
+	RUN Condenser.reset;
+END reset;
+
+METHOD values;
+	T := 298 {K};
+	P := 1{atm};
+	Vapin.f['n_pentane'] := 3{mole/s};
+	Vapin.f['n_hexane'] := 3{mole/s};
+	Vapin.f['n_heptane'] := 3{mole/s};
+END values;
+	
+END test_condenser;
+
+
+MODEL test_reboiler;
+
+	ds	IS_A
+	td_component_data_set(['n_pentane','n_hexane','n_heptane'],'n_heptane');
+
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	P	IS_A pressure;
+	T 	IS_A temperature;
+	liqin_P	IS_A pressure;
+	liqin_T 	IS_A temperature;
+
+	equilibrated IS_A boolean;
+	liqin_state IS_A liquid_mixture(liqin_P, liqin_T, liquid_options);
+	liquid_state IS_A liquid_mixture(P, T, liquid_options);
+	vapor_state IS_A vapor_mixture(P, T, vapor_options);
+
+	Vapout IS_A vapor_stream(vapor_state);
+	Bottoms IS_A liquid_stream(liquid_state);
+	Liqin IS_A liquid_stream(liqin_state);
+	reboiler_state IS_A
+	td_VLE_mixture(P, T,  vapor_state, liquid_state, equilibrated);
+
+	Reboiler IS_A simple_reboiler(Liqin, Vapout, Bottoms, reboiler_state);
+
+METHODS
+
+METHOD clear;
+	RUN Reboiler.clear;
+END clear;
+
+METHOD reset;
+	RUN clear;
+	RUN Reboiler.reset;
+END reset;
+
+METHOD values;
+	reboiler_state.alpha['n_pentane'] := 3;
+	reboiler_state.alpha['n_hexane'] := 2;
+	reboiler_state.alpha['n_heptane'] := 1;
+	T := 298 {K};
+	P := 1{atm};
+	Liqin.f['n_pentane'] := 3{mole/s};
+	Liqin.f['n_hexane'] := 3{mole/s};
+	Liqin.f['n_heptane'] := 3{mole/s};
+END values;
+	
+END test_reboiler;

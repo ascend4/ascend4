@@ -1,0 +1,89 @@
+REQUIRE "system.a4l";
+(* => system.a4l, basemodel.a4l *)
+PROVIDE "z-emptyfor.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+(*
+ * This file demonstrates how associative arrays of variables and relations
+ * are handled in the case of definition over the empty set.
+ * In version ascend IV 0.8 and all previous C versions, the handling
+ * is inconsistent between FOR and non-FOR defined structures.
+ *
+ * The specified behavior is:
+ * - all cases marked (* empty *) here should compile an empty array stub.
+ * - all other cases should compile an array of the specified object even if,
+ * as in the case of ra1 and ra2, that object is not mathematically
+ * sensible. Productions such as ra1,ra2 should be allowed but warned
+ * about vociferously.
+ *
+ * An action plan to bring the compiler up to the specification is not yet
+ * in place, especially since the entire implementation strategy for
+ * associative arrays and FOR statements needs to be redesigned due to
+ * other problems in compiler instruction scheduling.
+ *)
+
+MODEL varfor;
+  a[1..2] IS_A real;
+  b[2..1] IS_A real; (* empty_*)
+  FOR i IN [1..2] CREATE
+	c[i] IS_A real;
+  END FOR;
+
+  FOR i IN [2..1] CREATE
+	d[i] IS_A real; (* empty *)
+  END FOR;
+END varfor;
+
+MODEL badrelfor;
+ (* not allowed to have array of unindexed eqns. *)
+ x IS_A generic_real;
+ ra1[1..2]: x=2;
+ ra2[2..1]: x=3; (* empty*)
+END badrelfor;
+
+MODEL relfor;
+ x IS_A generic_real;
+ FOR i IN [1..2] CREATE
+   ra3[i]: x = i;
+ END FOR;
+ FOR i IN [2..1] CREATE
+   ra4[i]: x = i;
+ END FOR;
+END relfor;
+
+MODEL testfor;
+  v IS_A varfor;
+  r IS_A relfor;
+END testfor;
+
+
+(*
+ *  z-emptyfor.a4c
+ *  by Benjamin A Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:35 $
+ *  $Revision: 1.4 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-emptyfor.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *  Copyright (C) 1997 Benjamin A Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
+ *)

@@ -1,0 +1,888 @@
+(*********************************************************************\
+                        atoms.lib
+                        by Joseph J. Zaher, 
+			   Benjamin A. Allan, 
+			   Robert S. Huss
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+
+  $Date: 1997/06/03 12:26:41 $
+  $Revision: 1.16 $
+  $Author: rv2a $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/atoms.lib,v $
+\*********************************************************************)
+(*=============================================================================*
+
+    A  T  O  M  S  .  L  I  B
+    -------------------------
+
+    AUTHOR:      Joseph J. Zaher
+
+    DATES:       07/91 - Original code.
+                 02/92 - Eliminated "display_units" assignments, added
+                         commonly used UNIVERSAL constants and transport
+                         quantities.
+                 04/92 - Added electro-magnetic quantities. 
+                 06/92 - Converted by Ben Allan to be compatible with ASCEND3C
+		 08/92 - Additional monetary atoms added by Bob Huss
+		 02/96 - Brought proper constants into the library. Ben Allan.
+                 07/96 - Incorporated Ken Tyner's substitution atoms. BAA.
+		 07/96 - Switched to REQUIRE syntax.
+		 08/96 - Switched to REQUIRE ivpsystem.lib.
+
+    CONTENTS:    ASCEND atom definitions for engineering variable types.
+                 Many of the anticipated dimensional variables which occur
+                 in engineering design calculations are given to provide a
+                 means of standardization.  Chosen defaults, nominal, and
+                 lower and upper bound values should be re-specified if 
+                 necessary to enhance the convergence properties of 
+                 specific models.  Units to be displayed are to be controlled
+                 using the UNITS tool kit of the environment.
+
+    REQUIRES:   measures.lib and (
+                system.lib or
+		ivpsystem.lib, until we can get the PROVIDE syntax done.
+                )
+ *=============================================================================*)
+
+REQUIRE "measures.lib";
+
+(* REQUIRE "ivpsystem.lib"; *)
+
+(*  G E N E R I C    C O N S T A N T S      ( C H E M .  E .   B I A S )
+    --------------------------------------------------------------------  *)
+
+    CONSTANT constant 
+    (* any sloppiness about what is a constant will yield a wild real *)
+    REFINES real_constant;
+
+    (* dimensionless *)
+
+    CONSTANT critical_compressibility REFINES real_constant DIMENSIONLESS;
+
+    CONSTANT acentric_factor REFINES real_constant DIMENSIONLESS;
+
+    CONSTANT UNIFAC_size REFINES real_constant DIMENSIONLESS;
+
+    CONSTANT Wilson_constant REFINES real_constant DIMENSIONLESS;
+
+    CONSTANT vapor_pressure_constant REFINES real_constant;
+
+    CONSTANT factor_constant REFINES real_constant DIMENSIONLESS;
+
+    (* molecular weight *)
+    CONSTANT molar_weight_constant
+    REFINES real_constant DIMENSION M/Q;
+
+    (* temperatures *)
+    CONSTANT temperature_constant
+    REFINES real_constant DIMENSION TMP;
+
+    CONSTANT boiling_temperature
+    REFINES temperature_constant;
+
+    CONSTANT critical_temperature
+    REFINES temperature_constant;
+
+    CONSTANT reference_temperature
+    REFINES temperature_constant;
+
+    CONSTANT UNIFAC_a
+    REFINES temperature_constant;
+
+    (* pressures *)
+    CONSTANT pressure_constant
+    REFINES real_constant DIMENSION M/L/T^2;
+
+    CONSTANT critical_pressure
+    REFINES pressure_constant;
+
+    CONSTANT reference_pressure
+    REFINES pressure_constant;
+
+    (* molar volumes *)
+    CONSTANT molar_volume_constant
+    REFINES real_constant DIMENSION L^3/Q;
+
+    CONSTANT critical_volume
+    REFINES molar_volume_constant;
+
+    CONSTANT reference_molar_volume
+    REFINES molar_volume_constant;
+
+    (* mass densities *)
+    CONSTANT reference_mass_density
+    REFINES real_constant DIMENSION M/L^3;
+
+    (* molar energies *)
+    CONSTANT molar_energy_constant
+    REFINES real_constant DIMENSION M*L^2/T^2/Q;
+
+    CONSTANT reference_molar_energy
+    REFINES molar_energy_constant;
+
+    CONSTANT enthalpy_of_formation_constant
+    REFINES molar_energy_constant;
+
+    CONSTANT free_energy_of_formation_constant
+    REFINES molar_energy_constant;
+
+    CONSTANT heat_of_vaporization_constant
+    REFINES molar_energy_constant;
+
+    CONSTANT Wilson_energy_constant
+    REFINES molar_energy_constant;
+
+    (* molar entropies *)
+    CONSTANT molar_entropy_constant
+    REFINES real_constant DIMENSION M*L^2/T^2/Q/TMP;
+
+    CONSTANT reference_molar_entropy
+    REFINES molar_entropy_constant;
+
+    (* other strange correlation coefficients *)
+    CONSTANT heat_capacity_constant
+    REFINES real_constant;
+
+    CONSTANT heat_capacity_a
+    REFINES heat_capacity_constant DIMENSION M*L^2/T^2/Q/TMP;
+
+    CONSTANT heat_capacity_b
+    REFINES heat_capacity_constant DIMENSION M*L^2/T^2/Q/TMP^2;
+
+    CONSTANT heat_capacity_c
+    REFINES heat_capacity_constant DIMENSION M*L^2/T^2/Q/TMP^3;
+
+    CONSTANT heat_capacity_d
+    REFINES heat_capacity_constant DIMENSION M*L^2/T^2/Q/TMP^4;
+
+(*
+    CONSTANT 
+    REFINES real_constant DIMENSION;
+*)
+
+(*  U N I V E R S A L    C O N S T A N T S
+    --------------------------------------  *)
+
+    UNIVERSAL CONSTANT gas_constant 
+    (* DIMENSION M*L^2/T^2/Q/TMP *)
+    REFINES real_constant :== 1{GAS_C};
+
+    UNIVERSAL CONSTANT gravity_constant 
+    (* DIMENSION L/T^2 *)
+    REFINES real_constant :== 1{EARTH_G};
+
+    UNIVERSAL CONSTANT circle_constant 
+    REFINES real_constant :== 1{PI};
+
+    UNIVERSAL CONSTANT speed_of_light 
+    REFINES real_constant :== 1{LIGHT_C};
+
+    UNIVERSAL CONSTANT planck_constant 
+    (* DIMENSION M*L^2/T *)
+    REFINES real_constant :== 1{PLANCK_C};
+
+    UNIVERSAL CONSTANT avogadro_constant 
+    REFINES real_constant :== 1{AVOGADRO_C};
+
+    UNIVERSAL CONSTANT permittivity_constant
+    (* DIMENSION E^2*T^4/M/L^3 *)
+    REFINES real_constant :== 1{EPSILON0};
+
+    UNIVERSAL CONSTANT permeability_constant 
+    REFINES real_constant :== 1{MU0};
+
+    UNIVERSAL CONSTANT electron_charge 
+    REFINES real_constant :== 1{eCHARGE};
+
+    UNIVERSAL CONSTANT electron_mass 
+    REFINES real_constant :== 1{eMASS};
+
+    UNIVERSAL CONSTANT proton_mass 
+    REFINES real_constant :== 1{pMASS};
+
+   (* B O O L E A N S   *)
+
+ATOM start_true REFINES boolean
+    DEFAULT  TRUE;
+END start_true;
+
+ATOM start_false REFINES boolean
+    DEFAULT  FALSE;
+END start_false;
+
+
+   (* P A R A M E T E R S *)
+
+UNIVERSAL ATOM scaling_constant REFINES real
+    (* not really a constant but a parameter *)
+    DIMENSIONLESS
+    DEFAULT 1e8;
+END scaling_constant;
+
+UNIVERSAL ATOM ode_counter REFINES integer
+    DIMENSIONLESS
+    DEFAULT 1;
+END ode_counter;
+
+UNIVERSAL ATOM obs_counter REFINES integer
+    DIMENSIONLESS
+    DEFAULT 1;
+END obs_counter;
+
+ATOM real_parameter REFINES real;
+END real_parameter;
+    
+ATOM length_parameter REFINES real_parameter
+    DIMENSION  L
+    DEFAULT 1.0 {m};
+END length_parameter;
+
+    
+(*  D I M E N S I O N L E S S  Q U A N T I T I E S 
+    ----------------------------------------------  *)
+
+    ATOM positive_variable REFINES solver_var 
+    (* one for the gams folks *)
+        DIMENSIONLESS
+        DEFAULT 1.0;
+        lower_bound := 0.0;
+        upper_bound := 1e20;
+        nominal := 1.0;
+    END positive_variable;
+
+    ATOM factor REFINES solver_var 
+        DIMENSIONLESS
+        DEFAULT 1.0;
+        lower_bound := -1e50;
+        upper_bound := 1e50;
+        nominal := 1.0;
+    END factor;
+
+    ATOM variable REFINES solver_var
+	DIMENSIONLESS;
+    END variable;	
+
+
+    ATOM fraction REFINES solver_var
+        DIMENSIONLESS
+        DEFAULT 0.5;
+        nominal := 1.0;
+        lower_bound := 0.0;
+        upper_bound := 1.0;
+    END fraction;
+    
+    ATOM positive_factor REFINES factor;
+        lower_bound := 0.0;
+    END positive_factor;
+
+    ATOM small_factor REFINES factor;
+        lower_bound := -10.0;
+        upper_bound := 10.0;
+    END small_factor;
+
+    ATOM small_positive_factor REFINES factor;
+        lower_bound := 0.0;
+        upper_bound := 10.0;
+    END small_positive_factor;
+
+    ATOM reduced_pressure REFINES factor;
+    END reduced_pressure;
+
+(*  S U B S T I T U T I O N  V A R I A B L E S
+    ------------------------------------------  *)
+    ATOM exp_sub REFINES factor ;
+        lower_bound := -1e50;
+        upper_bound := 100;
+        nominal := 1.0;
+    END exp_sub;
+         
+    ATOM power_sub REFINES factor;
+        lower_bound := -25;
+        upper_bound := 25;
+        nominal := 1.0;
+    END power_sub;
+
+(*  T E M P E R A T U R E
+    ---------------------  *)
+
+    ATOM temperature REFINES solver_var 
+        DIMENSION TMP 
+        DEFAULT 298.0{K};
+        lower_bound := 1.0e-6{K};
+        upper_bound := 10000{K};
+        nominal := 298.0{K};
+    END temperature;
+
+    ATOM inverse_temperature REFINES solver_var
+        DIMENSION 1/TMP
+        DEFAULT 0.00366099{1/K};
+        lower_bound := 0.0{1/K};
+        upper_bound := 1e50{1/K};
+        nominal := 0.00366099{1/K};
+    END inverse_temperature;
+    
+(*  P R E S S U R E
+    ---------------  *)
+
+    ATOM pressure REFINES solver_var 
+        DIMENSION M/L/T^2 
+        DEFAULT 1.0{atm};
+        lower_bound := 0.001{Pa};
+        upper_bound := 5000{atm};
+        nominal := 1.0{atm};
+    END pressure;
+
+    ATOM vapor_pressure REFINES pressure
+        DIMENSION M/L/T^2 
+        DEFAULT 1.0{atm};
+        lower_bound := 0.001{Pa};
+        upper_bound := 5000{atm};
+        nominal := 0.5{atm};
+    END vapor_pressure;
+
+    ATOM k_constant REFINES solver_var 
+    (* what IS this ? ? ? *)
+        DIMENSION T^2/L^5 
+        DEFAULT 1.0 {s^2/ft^5};
+        lower_bound := 0.001 {s^2/ft^5};
+        upper_bound := 5000 {s^2/ft^5};
+        nominal := 1.0 {s^2/ft^5};
+    END k_constant;    
+
+
+(*  M A S S / M O L E  Q U A N T I T I E S
+    --------------------------------------  *)
+
+    ATOM molar_mass REFINES solver_var 
+        DIMENSION M/Q
+        DEFAULT 100.0{g/g_mole};
+        lower_bound := 0.0{g/g_mole};
+        upper_bound := 1e9{g/g_mole};
+        nominal := 100.0{g/g_mole};
+    END molar_mass;
+                  
+    ATOM mass REFINES solver_var 
+        DIMENSION M
+        DEFAULT 10.0{kg};
+        lower_bound := 0.0{kg};
+        upper_bound := 1e50{kg};
+        nominal := 10.0{kg};
+    END mass;
+
+    ATOM mole REFINES solver_var 
+        DIMENSION Q
+        DEFAULT 10.0{lb_mole};
+        lower_bound := 0.0{lb_mole};
+        upper_bound := 1e50{lb_mole};
+        nominal := 10.0{lb_mole};
+    END mole;
+
+    ATOM mass_rate REFINES solver_var 
+        DIMENSION M/T  
+        DEFAULT 50{g/s};
+        lower_bound := 0.0{g/s};
+        upper_bound := 1e50{g/s};
+        nominal := 100.0{g/s};    
+    END mass_rate;
+
+    ATOM molar_rate REFINES solver_var 
+        DIMENSION Q/T
+        DEFAULT 100.0{lb_mole/hour};
+        lower_bound := 0.0{lb_mole/hour};
+        upper_bound := 1e50{lb_mole/hour};
+        nominal := 100.0{lb_mole/hour};
+    END molar_rate;
+
+    ATOM mole_fraction REFINES fraction
+        DIMENSIONLESS
+        DEFAULT 0.5;
+        lower_bound := 0.0;
+        nominal := 0.3;
+        upper_bound := 1.0;
+    END mole_fraction;
+
+    ATOM mass_fraction REFINES fraction
+        DIMENSIONLESS
+        DEFAULT 0.5;
+        lower_bound := 0.0;
+        nominal := 0.3;
+        upper_bound := 1.0;
+    END mass_fraction;
+
+
+(*  V O L U M E  Q U A N T I T I E S
+    --------------------------------  *)
+
+    ATOM molar_volume REFINES solver_var 
+        DIMENSION L^3/Q
+        DEFAULT 1000.0{cm^3/g_mole};
+        lower_bound := 0.0{cm^3/g_mole};
+        upper_bound := 1e50{cm^3/g_mole};
+        nominal := 1000.0{cm^3/g_mole};
+    END molar_volume;
+
+    ATOM volume REFINES solver_var 
+        DIMENSION L^3 
+        DEFAULT 100.0{ft^3};
+        lower_bound := 0.0{ft^3};
+        upper_bound := 1e50{ft^3};
+        nominal := 100.0{ft^3};  
+    END volume;
+
+    ATOM volume_rate REFINES solver_var 
+        DIMENSION L^3/T 
+        DEFAULT 100.0{gpm};
+        lower_bound := 0.0{gpm};
+        upper_bound := 1e50{gpm};
+        nominal := 100.0{gpm};
+    END volume_rate;
+
+    ATOM volume_rate_square REFINES solver_var 
+        DIMENSION L^6/T^2 
+        DEFAULT 100.0{ft^6/s^2};
+        lower_bound := 0.0{ft^6/s^2};
+        upper_bound := 1e50{ft^6/s^2};
+        nominal := 100 {ft^6/s^2};
+    END volume_rate_square;    
+
+    ATOM volume_expansivity REFINES solver_var 
+        DIMENSION 1/TMP
+        DEFAULT 0.001{1/K};
+        lower_bound := 0.0{1/K};
+        upper_bound := 1e50{1/K};
+        nominal := 0.001{1/K};
+    END volume_expansivity;
+
+
+(*  D E N S I T Y  Q U A N T I T I E S
+    ----------------------------------  *)
+
+    ATOM molar_density REFINES solver_var 
+        DIMENSION Q/L^3
+        DEFAULT 0.1{mole/m^3};
+        lower_bound := 0.0{mole/m^3};
+        upper_bound := 1e50{mole/m^3};
+        nominal := 0.1{mole/m^3};
+    END molar_density;
+
+    ATOM mass_density REFINES solver_var 
+        DIMENSION M/L^3
+        DEFAULT 1.0{g/cm^3};
+        lower_bound := 0.0{g/cm^3};
+        upper_bound := 1e50{g/cm^3};
+        nominal := 1.0{g/cm^3};        
+    END mass_density;
+
+
+(*  E N E R G Y  Q U A N T I T I E S
+    ------------------------------------  *)
+
+    ATOM molar_energy REFINES solver_var 
+        DIMENSION M*L^2/T^2/Q  
+        DEFAULT 10000.0{BTU/lb_mole};
+        lower_bound := -1e50{BTU/lb_mole};
+        upper_bound := 1e50{BTU/lb_mole};
+        nominal := 10000.0{BTU/lb_mole};  
+    END molar_energy;
+
+    ATOM energy REFINES solver_var 
+        DIMENSION M*L^2/T^2
+        DEFAULT 100000.0{BTU};
+        lower_bound := -1e50{BTU};
+        upper_bound := 1e50{BTU};
+        nominal := 100000.0{BTU};
+    END energy;
+
+    ATOM energy_rate REFINES solver_var 
+        DIMENSION M*L^2/T^3  
+        DEFAULT 100000.0{BTU/hour};
+        lower_bound := -1e50{BTU/hour};
+        upper_bound := 1e50{BTU/hour};
+        nominal := 100000.0{BTU/hour};   
+    END energy_rate;
+
+    ATOM heat_capacity REFINES solver_var 
+        DIMENSION M*L^2/T^2/Q/TMP 
+        DEFAULT 1.00e5{J/mole/K};
+        lower_bound := 0.0{J/mole/K};
+        upper_bound := 1e60{J/mole/K};
+        nominal := 1.00e5{J/mole/K};
+    END heat_capacity;
+
+    ATOM molar_energy_rate REFINES solver_var
+        DIMENSION M*L^2/T^3/Q
+        DEFAULT 0 {BTU/lb_mole/hr};
+        lower_bound := -1e50 {BTU/lb_mole/hr};
+        upper_bound := 1e50 {BTU/lb_mole/hr};
+        nominal := 10000.0 {BTU/lb_mole/hr};
+    END molar_energy_rate;
+
+(*  E N T R O P Y  Q U A N T I T I E S
+    ----------------------------------  *)
+
+    ATOM molar_entropy REFINES solver_var 
+        DIMENSION M*L^2/T^2/Q/TMP
+        DEFAULT 100.0{BTU/lb_mole/R};
+        lower_bound := -1e50{BTU/lb_mole/R};
+        upper_bound := 1e50{BTU/lb_mole/R};
+        nominal := 100.0{BTU/lb_mole/R};
+    END molar_entropy;
+
+    ATOM entropy REFINES solver_var 
+        DIMENSION M*L^2/T^2/TMP
+        DEFAULT 1000.0{BTU/R};
+        lower_bound := -1e50{BTU/R};
+        upper_bound := 1e50{BTU/R};
+        nominal := 1000.0{BTU/R};
+    END entropy;
+
+    ATOM entropy_rate REFINES solver_var 
+        DIMENSION M*L^2/T^3/TMP
+        DEFAULT 1000.0{BTU/hour/R};
+        lower_bound := -1e50{BTU/hour/R};
+        upper_bound := 1e50{BTU/hour/R};
+        nominal := 1000.0{BTU/hour/R};
+    END entropy_rate;
+
+
+
+(*  E Q U I L I B R I U M  Q U A N T I T I E S
+    ------------------------------------------  *)
+
+    ATOM partition_coefficient REFINES factor (* new *)
+        DEFAULT 1.0;
+        lower_bound := 1.0e-10;
+        upper_bound := 30.0;
+        nominal := 1.0;
+    END partition_coefficient;
+
+    ATOM relative_volatility REFINES partition_coefficient; (* new *)
+    END relative_volatility;
+
+
+(*  M O N E T A R Y  Q U A N T I T I E S
+    ------------------------------------  *)
+
+    ATOM monetary_unit REFINES solver_var 
+        DIMENSION C
+        DEFAULT 100.0{USdollar};
+        lower_bound := -1e50{USdollar};
+        upper_bound := 1e50{USdollar};
+        nominal := 100.0{USdollar};
+    END monetary_unit;
+
+ATOM cost_per_volume REFINES solver_var
+        DIMENSION C/L^3
+        DEFAULT 1.0{USdollar/gallon};
+        lower_bound := 0.0{USdollar/gallon};
+        upper_bound := 1e50{USdollar/gallon};
+        nominal := 1.0{USdollar/gallon};
+END cost_per_volume;
+
+ATOM cost_per_mass REFINES solver_var
+        DIMENSION C/M
+        DEFAULT 1.0{USdollar/lbm};
+        lower_bound := 0.0{USdollar/lbm};
+        upper_bound := 1e50{USdollar/lbm};
+        nominal := 1.0{USdollar/lbm};
+END cost_per_mass;
+
+ATOM cost_per_mole REFINES solver_var
+        DIMENSION C/Q
+        DEFAULT 1.0{USdollar/lb_mole};
+        lower_bound := 0.0{USdollar/lb_mole};
+        upper_bound := 1e50{USdollar/lb_mole};
+        nominal := 1.0{USdollar/lb_mole};
+END cost_per_mole;
+
+ATOM cost_per_time REFINES solver_var
+        DIMENSION C/T
+        DEFAULT 1.0{USdollar/min};
+        lower_bound := 0.0{USdollar/min};
+        upper_bound := 1e50{USdollar/min};
+        nominal := 1.0{USdollar/min};
+END cost_per_time;
+
+ATOM cost_per_energy REFINES solver_var
+        DIMENSION C*T^2/M/L^2
+        DEFAULT 1.0{USdollar/BTU};
+        lower_bound := 0.0{USdollar/BTU};
+        upper_bound := 1e50{USdollar/BTU};
+        nominal := 1.0{USdollar/BTU};
+END cost_per_energy;
+
+
+(*  S U R V E Y I N G   Q U A N T I T I E S
+    ---------------------------------------  *)
+
+    ATOM distance REFINES solver_var 
+        DIMENSION L 
+        DEFAULT 10.0{ft};
+        lower_bound := 0.0{ft};
+        upper_bound := 1e50{ft};
+        nominal := 10.0{ft};
+    END distance;
+
+    ATOM area REFINES solver_var 
+        DIMENSION L^2 
+        DEFAULT 10.0{ft^2};
+        lower_bound := 0.0{ft^2};
+        upper_bound := 1e50{ft^2};
+        nominal := 10.0{ft^2};    
+    END area;
+
+    ATOM angle REFINES solver_var
+        DIMENSION P
+        DEFAULT 1 {rad};
+        lower_bound := -1e50 {rad};
+        upper_bound := 1e50 {rad};
+        nominal := 1 {rad};
+    END angle;
+
+    ATOM solid_angle REFINES solver_var
+        DIMENSION S
+        DEFAULT 1 {srad};
+        lower_bound := -1e50 {srad};
+        upper_bound := 1e50 {srad};
+        nominal := 1 {srad};
+    END solid_angle;
+
+(*  M O T I O N   Q U A N T I T I E S
+    ---------------------------------  *)
+
+    ATOM time REFINES solver_var 
+        DIMENSION T 
+        DEFAULT 60.0{s};
+        lower_bound := -1e50{s};
+        upper_bound := 1e50{s};
+        nominal := 60.0{s};
+    END time;
+
+    ATOM speed REFINES solver_var 
+        DIMENSION L/T
+        DEFAULT 3.0{ft/s};
+        lower_bound := -1e50{m/s};
+        upper_bound := 1e50{m/s};
+        nominal := 1.0{m/s};
+    END speed;
+
+    ATOM acceleration REFINES solver_var 
+        DIMENSION L/T^2
+        DEFAULT 9.8{m/s^2};
+        lower_bound := -1e50{m/s^2};
+        upper_bound := 1e50{m/s^2};
+        nominal := 9.8{m/s^2};
+    END acceleration;
+
+    ATOM frequency REFINES solver_var
+        DIMENSION 1/T
+        DEFAULT 60.0{1/s};
+        lower_bound := 0.0{1/s};
+        upper_bound := 1e50{1/s};
+        nominal := 60.0{1/s};
+    END frequency;
+
+
+(*  T R A N S P O R T   Q U A N T I T I E S
+    ---------------------------------------  *)
+
+    ATOM viscosity REFINES solver_var 
+        DIMENSION M/L/T
+        DEFAULT 1.0{cP};
+        lower_bound := 0.0{cP};
+        upper_bound := 1e50{cP};
+        nominal := 1.0{cP};          
+    END viscosity;
+
+    ATOM thermal_conductivity REFINES solver_var
+        DIMENSION M*L/T^3/TMP
+        DEFAULT 0.1{BTU/hour/ft/R};
+        lower_bound := 0.0{BTU/hour/ft/R};
+        upper_bound := 1e50{BTU/hour/ft/R};
+        nominal := 0.1{BTU/hour/ft/R};
+    END thermal_conductivity;
+
+    ATOM diffusivity REFINES solver_var
+        DIMENSION L^2/T
+        DEFAULT 1.0{cm^2/s};
+        lower_bound := 0.0{cm^2/s};
+        upper_bound := 1e50{cm^2/s};
+        nominal := 1.0{cm^2/s};
+    END diffusivity;
+
+
+(*  E L E C T R O - M A G N E T I C  Q U A N T I T I E S
+    ----------------------------------------------------  *)
+
+    ATOM voltage REFINES solver_var 
+        DIMENSION M*L^2/(T^3*E)
+        DEFAULT 10.0{volt};
+        lower_bound := -1e50{volt};
+        upper_bound := 1e50{volt};
+        nominal := 10.0{volt};
+    END voltage;
+
+    ATOM resistance REFINES solver_var 
+        DIMENSION M*L^2/(E^2*T^3)
+        DEFAULT 10.0{ohm};
+        lower_bound := -1e50{ohm};
+        upper_bound := 1e50{ohm};
+        nominal := 10.0{ohm};
+    END resistance;
+
+    ATOM current REFINES solver_var 
+        DIMENSION E 
+        DEFAULT 1.0{amp};
+        lower_bound := -1e50{amp};
+        upper_bound := 1e50{amp};
+        nominal := 1.0{amp};
+    END current;
+
+    ATOM capacitance REFINES solver_var 
+        DIMENSION E^2*T^4/M/L^2
+        DEFAULT 1.0{coulomb/volt};
+        lower_bound := -1e50{coulomb/volt};
+        upper_bound := 1e50{coulomb/volt};
+        nominal := 1.0{coulomb/volt};
+    END capacitance;
+
+    ATOM inductance REFINES solver_var 
+        DIMENSION M*L^2/E^2/T^2
+        DEFAULT 1.0{volt*s/amp};
+        lower_bound := -1e50{volt*s/amp};
+        upper_bound := 1e50{volt*s/amp};
+        nominal := 1.0{volt*s/amp};
+    END inductance;
+
+    ATOM magnetic_field REFINES solver_var
+        DIMENSION E/L
+        DEFAULT 1.0{amp/m};
+        lower_bound := -1e50{amp/m};
+        upper_bound := 1e50{amp/m};
+        nominal := 1.0{amp/m};
+    END magnetic_field;
+
+    ATOM electric_field REFINES solver_var
+        DIMENSION M*L/E/T^3
+        DEFAULT 1.0{volt/m};
+        lower_bound := -1e50{volt/m};
+        upper_bound := 1e50{volt/m};
+        nominal := 1.0{volt/m};
+    END electric_field;
+
+(*  D I F F E R E N T I A L  Q U A N T I T I E S
+    -------------------------------------------  *)
+
+    ATOM delta_temperature REFINES solver_var 
+        DIMENSION TMP/T 
+        DEFAULT 0{K/s};
+        lower_bound := -100{K/s};
+        upper_bound := 100{K/s};
+        nominal := 298.0{K/s};
+    END delta_temperature;
+
+    ATOM delta_mass REFINES solver_var 
+        DIMENSION M
+        DEFAULT 0.0{kg};
+        lower_bound := -1e50{kg};
+        upper_bound := 1e50{kg};
+        nominal := 10.0{kg};
+    END delta_mass;
+
+    ATOM delta_mole REFINES solver_var 
+        DIMENSION Q
+        DEFAULT 0{lb_mole};
+        lower_bound := -1e50{lb_mole};
+        upper_bound := 1e50{lb_mole};
+        nominal := 10.0{lb_mole};
+    END delta_mole;
+
+    ATOM delta_mass_rate REFINES solver_var 
+        DIMENSION M/T  
+        DEFAULT 0{g/s};
+        lower_bound := -1e50{g/s};
+        upper_bound := 1e50{g/s};
+        nominal := 100.0{g/s};    
+    END delta_mass_rate;
+
+    ATOM delta_molar_rate REFINES solver_var 
+        DIMENSION Q/T
+        DEFAULT 0.0{lb_mole/hour};
+        lower_bound := -1e50{lb_mole/hour};
+        upper_bound := 1e50{lb_mole/hour};
+        nominal := 100.0{lb_mole/hour};
+    END delta_molar_rate;
+
+    ATOM delta_volume_rate REFINES solver_var 
+        DIMENSION L^3/T 
+        DEFAULT 0.0{gpm};
+        lower_bound := -1e50{gpm};
+        upper_bound := 1e50{gpm};
+        nominal := 100.0{gpm};
+    END delta_volume_rate;
+
+    ATOM delta_energy_rate REFINES solver_var 
+        DIMENSION M*L^2/T^3  
+        DEFAULT 0.0{BTU/hour};
+        lower_bound := -1e50{BTU/hour};
+        upper_bound := 1e50{BTU/hour};
+        nominal := 100000.0{BTU/hour};   
+    END delta_energy_rate;
+
+    ATOM delta_molar_energy_rate REFINES solver_var
+        DIMENSION M*L^2/T^3/Q
+        DEFAULT 0 {BTU/lb_mole/hr};
+        lower_bound := -1e50 {BTU/lb_mole/hr};
+        upper_bound := 1e50 {BTU/lb_mole/hr};
+        nominal := 10000.0 {BTU/lb_mole/hr};
+    END delta_molar_energy_rate;
+
+    ATOM delta_entropy_rate REFINES solver_var 
+        DIMENSION M*L^2/T^3/TMP
+        DEFAULT 0.0{BTU/hour/R};
+        lower_bound := -1e50{BTU/hour/R};
+        upper_bound := 1e50{BTU/hour/R};
+        nominal := 1000.0{BTU/hour/R};
+    END delta_entropy_rate;
+
+(*  C O N T R O L L E R  Q U A N T I T I E S
+    ----------------------------------------  *)
+
+    ATOM mass_sec REFINES solver_var 
+        DIMENSION M*T
+        DEFAULT 0.0{kg*s};
+        lower_bound := -1e50{kg*s};
+        upper_bound := 1e50{kg*s};
+        nominal := 10.0{kg*s};
+    END mass_sec; 
+
+    ATOM mole_sec REFINES solver_var 
+        DIMENSION Q*T
+        DEFAULT 0.0{lb_mole*s};
+        lower_bound := -1e50{lb_mole*s};
+        upper_bound := 1e50{lb_mole*s};
+        nominal := 10.0{lb_mole*s};
+    END mole_sec;
+

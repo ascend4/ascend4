@@ -1,0 +1,164 @@
+REQUIRE "basemodel.a4l";
+(* => basemodel.a4l *)
+PROVIDE "system.a4l";
+
+(*
+ *  system.a4l
+ *  by Benjamin A. Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:31:48 $
+ *  $Revision: 1.7 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/system.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994-1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*============================================================================*
+
+    S Y S T E M  .  A 4 L
+    ----------------------
+
+    AUTHOR:      Benjamin A. Allan
+
+    DATES:       06/94 - Original Code
+                 02/95 - Definitions for discrete variables added by
+                         Craig Schmidt (CWS).
+
+    CONTENTS:	 Basic definitions for relation, solver_var,
+		 and generic_real.  This file is necessary for all
+		 other ASCEND models to work on ASCEND3C.
+                 If integration with the new DAE interface (blsode)
+                 is desired, ivpsystem.a4l should be loaded instead.
+                 This file is strictly for algebraic modeling.
+
+*============================================================================*)
+
+DEFINITION relation
+
+    included IS_A boolean;
+    message	IS_A symbol;
+
+    included := TRUE;
+    message := 'none';
+END relation;
+
+
+DEFINITION logic_relation
+
+    included IS_A boolean;
+    message	IS_A symbol;
+
+    included := TRUE;
+    message := 'none';
+
+END logic_relation;
+
+ATOM solver_var REFINES real
+	DEFAULT 0.5 {?};
+
+    lower_bound	IS_A real;
+    upper_bound IS_A real;
+    nominal	IS_A real;
+    fixed	IS_A boolean;
+    message	IS_A symbol;
+
+    fixed := FALSE;
+    lower_bound := -1e20 {?};
+    upper_bound := 1e20 {?};
+    nominal := 0.5 {?};
+    message := 'none';
+
+END solver_var;
+
+ATOM boolean_var REFINES boolean
+	DEFAULT TRUE;
+
+    nominal	IS_A boolean;
+    fixed	IS_A boolean;
+    fixed := FALSE;
+    nominal := TRUE;
+
+END boolean_var;
+
+ATOM generic_real REFINES solver_var
+	DIMENSIONLESS
+	DEFAULT 0.5;
+	lower_bound := -1e20;
+	upper_bound := 1e20;
+	nominal := 0.5;
+END generic_real;
+
+
+ADD NOTES IN solver_int;
+'purpose' SELF {
+  solver_int is an integer variable for an MILP solver
+       lower bound almost always 0
+       relaxed indicates if the var should be treated as a normal solver_var
+}
+END NOTES;
+ADD NOTES IN solver_binary;
+'purpose' SELF {
+  solver_binary is a binary variable for a MILP solver
+       lower bound must be 0, and upper bound must be 1
+}
+END NOTES;
+ADD NOTES IN solver_semi;
+'purpose' SELF {
+  solver_semi is a semicontinous variable for use in SCICONIC
+       this var can have a value between 1 and the arbitrary upper bound, or 0.
+       (note that SCICONIC requires the lower bound to be 1)
+       if is_zero = true, then the current value is taken as 0
+}
+END NOTES;
+
+
+ATOM solver_int REFINES solver_var
+	DIMENSIONLESS
+	DEFAULT 0.0;
+
+	relaxed IS_A boolean;
+
+	lower_bound := 0.0;
+	upper_bound := 1000000.0;
+	nominal := 0.5;
+END solver_int;
+
+ATOM solver_binary REFINES solver_int
+	DIMENSIONLESS
+	DEFAULT 0.0;
+
+	lower_bound := 0.0;
+	upper_bound := 1.0;
+	nominal := 0.5;
+
+END solver_binary;
+
+ATOM solver_semi REFINES solver_var
+	DEFAULT 1.0 {?};
+
+	is_zero IS_A boolean;
+	relaxed IS_A boolean;
+
+	lower_bound := 1 {?};
+	upper_bound := 1e20 {?};
+	nominal := 1.0 {?};
+
+END solver_semi;

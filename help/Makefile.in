@@ -1,0 +1,108 @@
+#  ASCEND Help Makefile
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/05/15 13:09:01 $
+#  $Revision: 1.7 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/help/Makefile.in,v $
+#
+
+#  This file installs the ASCEND help files into the install directory
+#  HELP_DIR
+#
+#  This Makefile is the top level makefile for the directory tree
+#  rooted here.  Typing `make' in this directory will traverse the
+#  directory tree (`make' descends into the directories listed in
+#  INSTALL_SUBDIR_LIST).
+
+#  Two macros get defined here and in every Makefile in the
+#  subdirectory tree:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed
+#
+#  Since this is the top of this directory tree, this Makefile needs
+#  to define some macros that are used throughout the tree:
+#
+#    RULES_FILE -- a makefile that contains general rules for this
+#                  directory tree; it is passed by `make' to every
+#                  subdirectory and included by that directory's
+#                  Makefile
+#
+#    INSTALL_TARGET_DIR -- the directory in which to install the files
+
+
+SHELL = /bin/sh
+builddir = @help_topbuilddir@/ascend4
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+#  the default target.  `make' without a target does nothing
+default::
+
+#  these targets install all files in this subtree
+install install-libraries install-help:: Makefile.Rules install-subtree
+
+#  unintall the files in this subtree
+uninstall:: uninstall-subtree
+
+#  Warn when the Makefile.Rules is older than Makefile.Rules.in
+Makefile.Rules: $(srcdir)/Makefile.Rules.in
+	@echo ""
+	@echo "$(srcdir)/Makefile.Rules.in is newer than Makefile.Rules"
+	@echo "Consider running 'configure' again or running 'make makes'"
+	@echo ""
+
+#  when backing up makefiles, also save the Makefile.Rules file
+save-makes::
+	-$(CP) Makefile.Rules Makefile.Rules.SAVED
+
+
+
+RULES_FILE = Makefile.Rules
+
+INSTALL_TARGET_DIR = $(HELP_DIR)
+
+INSTALL_SUBDIR_LIST = \
+	Screenshots
+
+INSTALL_FILE_LIST = \
+	ascend-helpLOP.htm \
+	ascend-helpTOC.htm \
+	ascendtitle.htm \
+	ascplot.htm \
+	browser.htm \
+	display.htm \
+	fontsel.htm \
+	getting_started.htm \
+	history.htm \
+	index.htm \
+	library.htm \
+	library_example_files.htm \
+	measures.htm \
+	print_dialog.htm \
+	probe.htm \
+	script.htm \
+	simple_fs_model.htm \
+	simple_problems.htm \
+	simulations.htm \
+	solver.htm \
+	syntax.htm \
+	title.htm \
+	tkxgraph.htm \
+	toc.htm \
+	toolbox.htm \
+	units.htm \
+	using_ascend.htm \
+	utilities.htm \
+	when_model.htm
+
+
+
+include $(builddir)/ConfigAscend
+include $(RULES_FILE)

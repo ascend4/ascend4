@@ -1,0 +1,8 @@
+$ ! PROCEDURE FOR SDASSL (SPARSE VERSION OF DASSL)
+$ ! 25-JUNE-1990
+$ ! ANDREAS KROENER 
+$ ! 
+$ fortran/debug/noopt DEMO, ISRDASSL
+$ link/debug DEMO, ISRDASSL
+$ !
+$ exit

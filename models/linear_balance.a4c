@@ -1,0 +1,390 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "linear_balance.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module is demonstrated by the associated script file
+ * linear_balance.a4s.
+ *)
+
+
+(*
+   Ascend model of the linear mass balance example presented by Grossmann
+and Turkay -- Solution of Algebraic Systems of Disjuctive Equations, Comp.
+and Chem. Eng., Vol. 20, Suppl. Part A, s339-44, 1996 --. It represent a
+problem which we can represent as a conditional model and solve  with the
+ascend conditional solver CMSlv. The problem consists of a six unit
+operations flowsheet, each unit operation having three possible operation
+modes.
+
+This model requires:
+			"system.a4l"
+		    	"atoms.a4l"
+*)
+
+(* ************************************************* *)
+
+MODEL unit_op1;
+
+	Fmain,Fsub1,Fsub2	IS_A molar_rate;
+	B[bounds]		IS_A molar_rate;
+	disjunc			IS_A set OF integer_constant;
+        bounds			IS_A set OF integer_constant;
+	a[disjunc]		IS_A factor_constant;
+	b[disjunc]		IS_A factor_constant;
+	bol1,bol2		IS_A boolean_var;
+
+	disjunc :== [1..3];
+	bounds :== [1..2];
+
+(* Boundaries *)
+
+	CONDITIONAL
+	  cond1: Fmain <= B[1];
+	  cond2: Fmain >= B[2];
+	END CONDITIONAL;
+
+	bol1 == SATISFIED(cond1,1e-08{lb_mole/hour});
+	bol2 == SATISFIED(cond2,1e-08{lb_mole/hour});
+
+(* Variant Equations *)
+
+	eq1a: Fsub1 = a[1] * Fmain;
+	eq1b: Fsub2 = b[1] * Fmain;
+
+	eq2a: Fsub1 = a[2] * Fmain;
+	eq2b: Fsub2 = b[2] * Fmain;
+
+	eq3a: Fsub1 = a[3] * Fmain;
+	eq3b: Fsub2 = b[3] * Fmain;
+
+(* Disjunctive Statements  *)
+
+	WHEN (bol1,bol2)
+	  CASE TRUE,FALSE:
+		USE eq1a;
+		USE eq1b;
+	  CASE FALSE,FALSE:
+		USE eq2a;
+		USE eq2b;
+	  CASE FALSE,TRUE:
+		USE eq3a;
+		USE eq3b;
+	END WHEN;
+
+METHODS
+
+   METHOD default_self;
+   END default_self;
+
+   METHOD specify;
+	FOR i IN bounds DO
+	   B[i].fixed := TRUE;
+	END FOR;
+   END specify;
+
+   METHOD values;
+	bol1 := SATISFIED(cond1,1e-08{lb_mole/hour});
+	bol2 := SATISFIED(cond2,1e-08{lb_mole/hour});
+   END values;
+
+END unit_op1;
+
+
+(* ************************************************* *)
+
+MODEL unit_op2;
+
+	Fmain,Fsub1		IS_A molar_rate;
+	B[bounds]		IS_A molar_rate;
+	disjunc			IS_A set OF integer_constant;
+        bounds			IS_A set OF integer_constant;
+	a[disjunc]		IS_A factor_constant;
+	bol1,bol2		IS_A boolean_var;
+
+	disjunc :== [1..3];
+	bounds :== [1..2];
+
+(* Boundaries *)
+
+	CONDITIONAL
+	  cond1: Fmain <= B[1];
+	  cond2: Fmain >= B[2];
+	END CONDITIONAL;
+
+	bol1 == SATISFIED(cond1,1e-08{lb_mole/hour});
+	bol2 == SATISFIED(cond2,1e-08{lb_mole/hour});
+
+
+(* Variant Equations  *)
+
+	eq1: Fsub1 = a[1] * Fmain;
+
+	eq2: Fsub1 = a[2] * Fmain;
+
+	eq3: Fsub1 = a[3] * Fmain;
+
+(* Disjunctive Statements  *)
+
+	WHEN (bol1,bol2)
+	  CASE TRUE,FALSE:
+		USE eq1;
+	  CASE FALSE,FALSE:
+		USE eq2;
+	  CASE FALSE,TRUE:
+		USE eq3;
+	END WHEN;
+
+
+METHODS
+
+   METHOD default_self;
+   END default_self;
+
+   METHOD specify;
+	FOR i IN bounds DO
+	   B[i].fixed := TRUE;
+	END FOR;
+   END specify;
+
+   METHOD values;
+	bol1 := SATISFIED(cond1,1e-08{lb_mole/hour});
+	bol2 := SATISFIED(cond2,1e-08{lb_mole/hour});
+   END values;
+
+END unit_op2;
+
+
+(* ************************************************* *)
+
+MODEL flowsheet;
+
+	U[num_units1]	IS_A unit_op1;
+	U2[num_units2]	IS_A unit_op2;
+	F[num_flow]	IS_A molar_rate;
+	num_units1	IS_A set OF integer_constant;
+	num_units2	IS_A integer_constant;
+	num_flow	IS_A set OF integer_constant;
+
+(* wire up flowsheet *)
+
+	F[2],U[2].Fsub1			ARE_THE_SAME;
+	F[3],U[4].Fsub1			ARE_THE_SAME;
+	F[4],U[3].Fmain			ARE_THE_SAME;
+	F[5],U2[6].Fmain		ARE_THE_SAME;
+	F[6],U[1].Fsub1			ARE_THE_SAME;
+	F[7],U[1].Fmain,U[2].Fsub2	ARE_THE_SAME;
+	F[8],U[2].Fmain,U[3].Fsub1	ARE_THE_SAME;
+	F[9],U[3].Fsub2			ARE_THE_SAME;
+	F[10],U[1].Fsub2		ARE_THE_SAME;
+	F[11],U[5].Fsub1		ARE_THE_SAME;
+	F[12],U[4].Fsub2		ARE_THE_SAME;
+	F[13],U[4].Fmain,U[5].Fsub2	ARE_THE_SAME;
+	F[14],U[5].Fmain,U2[6].Fsub1	ARE_THE_SAME;
+
+
+(* Set definitions *)
+
+	num_units1 :== [1..5];
+	num_units2 :== 6;
+	num_flow :== [1..14];
+
+(* Invariant Equations  *)
+
+	F[1] = F[6] + F[12];
+	F[9] = F[10] + F[11];
+
+(* Constants *)
+
+	U[1].a[1] :== 1.1;
+	U[1].a[2] :== 1.15;
+	U[1].a[3] :== 1.2;
+	U[1].b[1] :== 0.05;
+	U[1].b[2] :== 0.1;
+	U[1].b[3] :== 0.2;
+
+	U[2].a[1] :== 0.5;
+	U[2].a[2] :== 0.47;
+	U[2].a[3] :== 0.45;
+	U[2].b[1] :== 0.8;
+	U[2].b[2] :== 0.75;
+	U[2].b[3] :== 0.7;
+
+	U[3].a[1] :== 1.7;
+	U[3].a[2] :== 1.8;
+	U[3].a[3] :== 1.87;
+	U[3].b[1] :== 0.67;
+	U[3].b[2] :== 0.7;
+	U[3].b[3] :== 0.75;
+
+	U[4].a[1] :== 1.18;
+	U[4].a[2] :== 1.15;
+	U[4].a[3] :== 1.10;
+	U[4].b[1] :== 0.23;
+	U[4].b[2] :== 0.25;
+	U[4].b[3] :== 0.3;
+
+	U[5].a[1] :== 0.37;
+	U[5].a[2] :== 0.35;
+	U[5].a[3] :== 0.3;
+	U[5].b[1] :== 1.2;
+	U[5].b[2] :== 1.25;
+	U[5].b[3] :== 1.3;
+
+	U2[6].a[1] :== 1.15;
+	U2[6].a[2] :== 1.10;
+	U2[6].a[3] :== 1.02;
+
+METHODS
+
+   METHOD default_self;
+   END default_self;
+
+
+   METHOD specify;
+	F[1].fixed := TRUE;
+        FOR i IN num_units1 DO
+	   RUN U[i].specify;
+	END FOR;
+	RUN U2[num_units2].specify;
+   END specify;
+
+   METHOD bound_all;
+(* Unit 1 *)
+	U[1].Fmain.upper_bound := 150 {lb_mole/hour};
+
+(* Unit 2 *)
+	U[2].Fmain.upper_bound := 150 {lb_mole/hour};
+
+(* Unit 3 *)
+	U[3].Fmain.upper_bound := 180 {lb_mole/hour};
+
+(* Unit 4 *)
+	U[4].Fmain.upper_bound := 140 {lb_mole/hour};
+
+(* Unit 5 *)
+	U[5].Fmain.upper_bound := 130 {lb_mole/hour};
+
+(* Unit 6 *)
+	U2[6].Fmain.upper_bound := 75 {lb_mole/hour};
+
+   END bound_all;
+
+   METHOD values;
+
+	RUN bound_all;
+
+        (* Fixed Values*)
+
+	F[1] := 47.5 {lb_mole/hour };
+
+(* Unit 1 *)
+	U[1].B[1] := 50 {lb_mole/hour};
+	U[1].B[2] := 80 {lb_mole/hour};
+
+(* Unit 2 *)
+	U[2].B[1] := 50 {lb_mole/hour};
+	U[2].B[2] := 100 {lb_mole/hour};
+
+(* Unit 3 *)
+	U[3].B[1] := 50 {lb_mole/hour};
+	U[3].B[2] := 110 {lb_mole/hour};
+
+(* Unit 4 *)
+	U[4].B[1] := 50 {lb_mole/hour};
+	U[4].B[2] := 90 {lb_mole/hour};
+
+(* Unit 5 *)
+	U[5].B[1] := 40 {lb_mole/hour};
+	U[5].B[2] := 80 {lb_mole/hour};
+
+(* Unit 6 *)
+	U2[6].B[1] := 20 {lb_mole/hour};
+	U2[6].B[2] := 45 {lb_mole/hour};
+
+
+	(* Initial Guess *)
+
+
+(* Unit 1 *)
+	U[1].Fmain := 34 {lb_mole/hour};
+	U[1].Fsub1 := 37.5 {lb_mole/hour};
+	U[1].Fsub2 := 1.70 {lb_mole/hour};
+
+(* Unit 2 *)
+
+	U[2].Fmain := 52.5 {lb_mole/hour};
+	U[2].Fsub1 := 21.25 {lb_mole/hour};
+	U[2].Fsub2 := 60 {lb_mole/hour};
+
+(* Unit 3 *)
+	(* initial *)
+	U[3].Fmain := 25 {lb_mole/hour};
+	U[3].Fsub1 := 52.5 {lb_mole/hour};
+	U[3].Fsub2 := 16.75 {lb_mole/hour};
+
+(* Unit 4 *)
+	(* initial *)
+	U[4].Fmain := 60.0 {lb_mole/hour};
+	U[4].Fsub1 := 69 {lb_mole/hour};
+	U[4].Fsub2 := 15 {lb_mole/hour};
+
+(* Unit 5 *)
+	(* initial *)
+	U[5].Fmain := 48 {lb_mole/hour};
+	U[5].Fsub1 := 16.8 {lb_mole/hour};
+	U[5].Fsub2 := 110 {lb_mole/hour};
+
+(* Unit 6 *)
+	(* initial *)
+	U2[6].Fmain := 50 {lb_mole/hour};
+	U2[6].Fsub1 := 48 {lb_mole/hour};
+
+(* Same initial value as complementarity  *)
+
+	U[2].Fmain := 42.5 {lb_mole/hour};
+	U[3].Fsub1 := 42.5 {lb_mole/hour};
+	U2[6].Fmain := 43 {lb_mole/hour};
+
+(* Initialization of boolean variables *)
+        FOR i IN num_units1 DO
+	   RUN U[i].values;
+	END FOR;
+	RUN U2[num_units2].values;
+
+   END values;
+
+END flowsheet;
+
+
+(*
+ *  linear_balance.a4c
+ *  by Vicente Rico-Ramirez
+ *  April 10, 1998
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:11:17 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/linear_balance.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998  Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

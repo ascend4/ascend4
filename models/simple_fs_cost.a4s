@@ -1,0 +1,68 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of simple_fs_cost.a4c
+
+DELETE TYPES;
+# The following read statement will cause lots OF warnings,
+# because the modeling style is NOT particularly clean. The
+# models work, however.
+READ FILE "simple_fs_cost.a4c";
+
+COMPILE tfc OF flowsheet_cost;
+BROWSE {tfc};
+RUN {tfc.values};
+RUN {tfc.reset};
+SOLVE {tfc} WITH QRSlv;
+
+PROBE current {tfc.annual_profit} {};
+PROBE current {tfc.tc.conv} {};
+PROBE current {tfc.tc.fs.sp1.split[1]} {};
+PROBE current {tfc.tc.fs.fl1.vap_to_feed_ratio} {};
+PROBE current {tfc.tc.fs.fl1.liq.w} {};
+BROWSE {tfc.tc.fs.fl1.vap_to_feed_ratio};
+ASSIGN {tfc.tc.fs.fl1.vap_to_feed_ratio.fixed} FALSE {};
+
+# Now run some case studies
+STUDY {annual_profit} {tc.conv} {tc.fs.fl1.vap_to_feed_ratio} \
+IN tfc VARYING {tc.fs.sp1.split[1] 0.1 0.2 0.3 0.4 0.5 0.6 0.7} \
+USING {QRSlv} OUTFILE study.data ERROR stop;
+
+# If your version OF ascend doesn't have conopt OR another optimizer
+# loaded, you cannot RUN the next part OF this script.
+
+SOLVE {tfc} WITH CONOPT;
+BROWSE {tfc.tc.fs.sp1.split[1]};
+ASSIGN {tfc.tc.fs.sp1.split[1].fixed} FALSE {};
+BROWSE {tfc.tc.fs.fl1.vap_to_feed_ratio};
+ASSIGN {tfc.tc.fs.fl1.vap_to_feed_ratio.fixed} TRUE {};
+SOLVE {tfc} WITH CONOPT;
+
+##########  simple_fs_cost.a4s ends here  ##########
+#
+#  simple_fs_cost.a4s
+#  by Arthur W. Westerberg
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:44 $
+#  $Revision: 1.3 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs_cost.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1994 - 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

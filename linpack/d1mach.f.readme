@@ -1,0 +1,5 @@
+d1mach.f must be edited on a per architecture basis to get the correct
+values for machine constants. A C equivalent has been written
+and is used instead: d1mach.c
+
+d1mach.f currently set to DEC ALPHA (littleendian) constants.

@@ -1,0 +1,149 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "plot.a4l";
+(* => plot.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "vesselPlot.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module is demonstrated by the associated script file
+ * vesselPlot.a4s.
+ *)
+
+MODEL vessel(
+	vessel_vol	WILL_BE volume;
+	wall_thickness	WILL_BE distance;
+	metal_density	WILL_BE mass_density;
+	H_to_D_ratio	WILL_BE factor;
+	metal_mass	WILL_BE mass;
+);
+
+NOTES 'purpose' SELF {
+This model relates the mass of metal in the walls to the diameter
+and height of a thin-walled storage vessel.  The vessel is cylindrical
+with two flat ends. Extensive documentation exist for this model to
+teach a new user of ascend how to write, debug, and run ASCEND
+models.
+}
+END NOTES;
+
+	(* variables *)
+	side_area, end_area	IS_A area;
+	wall_vol		IS_A volume;
+	H, D			IS_A distance;
+
+	(* equations *)
+FlatEnds:	end_area = 1{PI} * D^2 / 4;
+Sides:		side_area = 1{PI} * D * H;
+Cylinder:	vessel_vol = end_area * H;
+Metal_volume:	(side_area + 2 * end_area) * wall_thickness = wall_vol;
+HD_definition:	D * H_to_D_ratio = H;
+VesselMass:	metal_mass = metal_density * wall_vol;
+
+METHODS
+
+METHOD default_self;
+	D			:=	1 {m};
+	H			:=	1 {m};
+END default_self;
+
+METHOD specify;
+	vessel_vol.fixed	:=	TRUE;
+	H_to_D_ratio.fixed	:=	TRUE;
+	wall_thickness.fixed	:=	TRUE;
+	metal_density.fixed	:=	TRUE;
+END specify;
+
+METHOD values;
+	H_to_D_ratio		:=	2;
+	vessel_vol		:=	250 {ft^3};
+	wall_thickness		:=	5 {mm};
+	metal_density		:=	5000 {kg/m^3};
+END values;
+
+END vessel;
+
+MODEL tabulated_vessel_values;
+	vessel_volume IS_A volume;
+	wall_thickness IS_A distance;
+	metal_density IS_A mass_density;
+
+	n_entries IS_A integer_constant;
+	n_entries :== 20;
+
+	H_to_D_ratio[1..n_entries] IS_A factor;
+	metal_mass[1..n_entries] IS_A mass;
+
+	FOR i IN [1..n_entries] CREATE
+		v[i] IS_A  vessel(vessel_volume, wall_thickness,
+			metal_density, H_to_D_ratio[i], metal_mass[i]);
+	END FOR;
+
+	CurveSet IS_A set OF symbol_constant;
+	CurveSet :== ['5 mm'];
+
+	Curves['5 mm'] IS_A plt_curve([1..n_entries], metal_mass,
+	H_to_D_ratio);
+
+	massVSratio IS_A plt_plot_symbol(CurveSet, Curves);
+
+METHODS
+
+METHOD default_self;
+    (* set the title for the plot and the labels for the ordinate and abscissa
+     *)
+    massVSratio.title :=
+	'Metal mass of the walls vs H to D ratio for a thin-walled cylindrical vessel';
+    massVSratio.XLabel := 'H to D ratio';
+    massVSratio.YLabel := 'metal mass IN kg/m^3';
+END default_self;
+
+METHOD specify;
+	RUN v[1..n_entries].specify;
+END specify;
+
+METHOD values;
+	vessel_volume := 250 {ft^3};
+	wall_thickness := 5 {mm};
+	metal_density := 5000 {kg/m^3};
+	FOR i IN [1..n_entries] DO
+		H_to_D_ratio[i] := i/10.0;
+	END FOR;
+END values;
+
+METHOD scale_self;
+END scale_self;
+
+END tabulated_vessel_values;
+
+
+(*
+ *  vesselPlot.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:35:06 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/vesselPlot.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998  Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *
+ *)

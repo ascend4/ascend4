@@ -1,0 +1,128 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of collocation.a4l
+
+DELETE TYPES;
+READ FILE "collocation.a4l";
+
+COMPILE coll OF test_coll_column;
+BROWSE {coll};
+RUN {coll.values};
+
+#################################################
+# Here we initialize and solve the feed tray state so the
+# relative volatilities can be used throughout the column.
+#################################################
+
+RUN {coll.Column.feed_tray.state.reset_to_fullthermo};
+
+# The following lines give us a saturated liquid state
+
+ASSIGN {coll.Column.feed_tray.state.phase_fraction['vapor'].fixed} TRUE {*};
+ASSIGN {coll.Column.feed_tray.state.phase_fraction['vapor']} 0.0 {};
+ASSIGN {coll.Column.feed_tray.state.T.fixed} FALSE {*};
+SOLVE {coll.Column.feed_tray.state} WITH QRSlv;
+DELETE SYSTEM;
+RUN {coll.Column.propagate_feed_values};
+
+###################################################
+# Here we solve the column at constant relative volatilities.
+###################################################
+
+RUN {coll.Column.reset_to_massbal};
+SOLVE {coll.Column} WITH QRSlv;
+
+###################################################
+# Here we activate transform equations which yeild more
+# accurate collocation solutions and resolve the model
+###################################################
+
+RUN {coll.Column.trans_poly};
+RUN {coll.Column.z_based_poly};
+SOLVE {coll.Column} WITH QRSlv;
+
+######################################################
+# Here we solve the column using thermodynamic corolations.
+# This is a constant molal overflow calculation (Heat balance is
+#  not enforced on the trays).
+######################################################
+
+RUN {coll.Column.reset_to_fullthermo};
+SOLVE  {coll.Column} WITH QRSlv;
+
+######################################################
+# Here we solve the column using thermodynamic corolations
+# and Heat balances on the trays.
+######################################################
+
+RUN {coll.Column.reset_to_adiabatic};
+RUN {coll.Column.zero_Q};
+SOLVE {coll} WITH QRSlv;
+
+
+######################################################
+# Here we change the reflux ratio several times, resolving the
+# model at each increment.
+######################################################
+
+RUN {coll.Column.scale_self};
+
+ASSIGN {coll.Column.condenser.reflux_ratio} 4 {};
+SOLVE {coll} WITH QRSlv;
+ASSIGN {coll.Column.condenser.reflux_ratio} 6 {};
+SOLVE {coll} WITH QRSlv;
+ASSIGN {coll.Column.condenser.reflux_ratio} 8 {};
+SOLVE {coll} WITH QRSlv;
+
+######################################################
+# One of the benefits of collocation is that the number of trays
+# can be changed without the need for a model recompilation.
+# Here we change the number of trays in the stripping section
+# and rectifying section from 10 to 14 and resolve
+######################################################
+
+ASSIGN {coll.Column.s_stack[1]} 14 {};
+ASSIGN {coll.Column.s_stack[2]} 14 {};
+RUN {coll.Column.scale_self};
+SOLVE {coll} WITH QRSlv;
+
+######################################################
+# Here we generate and display two plots. Additional plots are
+# available.
+######################################################
+
+PLOT {coll.Column.T_Liq_diagram_e.plot};
+SHOW LAST;
+PLOT {coll.Column.Plot_xs};
+SHOW LAST;
+
+##########  collocation.a4s ends here  ##########
+#
+#  collocation.a4s
+#  by Ken Tyner
+#  May 13, 1998
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:28 $
+#  $Revision: 1.4 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/collocation.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

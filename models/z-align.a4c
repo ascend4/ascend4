@@ -1,0 +1,311 @@
+PROVIDE "z-align.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+(*============================================================================*
+
+    Z - A L I G N . A 4 C
+    ---------------------
+
+    AUTHOR:      Benjamin A. Allan
+
+    DATES:       02/97 - Original Code based on system.a4l
+
+    CONTENTS:	 Basic definitions for relation, solver_var,
+		 and generic_real and extended definitions
+		 for exercising the alignment of children of atoms.
+		 These tests are not exhaustive, but should catch the
+		 probable errors.
+
+    REQUIRES: empty library, except for intrinsics.
+
+*============================================================================*)
+
+DEFINITION relation
+
+    included IS_A boolean;
+    included := TRUE;
+    tolerance IS_A real;
+    tolerance := 1e-8{?};
+
+END relation;
+
+
+DEFINITION logic_relation
+
+    b_index IS_A integer;
+    included IS_A boolean;
+    included := TRUE;
+    b_index :=2;
+    tolerance IS_A real;
+    tolerance := 1e-8{?};
+
+END logic_relation;
+
+ATOM solver_var REFINES real
+	DEFAULT 0.5 {?};
+
+    lower_bound	IS_A real;
+    upper_bound IS_A real;
+    nominal	IS_A real;
+    fixed	IS_A boolean;
+
+    fixed := FALSE;
+    lower_bound := -1e20 {?};
+    upper_bound := 1e20 {?};
+    nominal := 0.5 {?};
+
+END solver_var;
+
+ATOM boolean_var REFINES boolean
+	DEFAULT TRUE;
+
+    nominal	IS_A boolean;
+    fixed	IS_A boolean;
+    fixed := FALSE;
+    nominal := TRUE;
+
+END boolean_var;
+
+ATOM generic_real REFINES solver_var
+	DIMENSIONLESS
+	DEFAULT 0.5;
+	lower_bound := -1e20;
+	upper_bound := 1e20;
+	nominal := 0.5;
+END generic_real;
+
+ATOM solver_int REFINES solver_var
+	DIMENSIONLESS
+	DEFAULT 0.0;
+
+	relaxed IS_A boolean;
+
+	relaxed := FALSE;
+	lower_bound := 0.0;
+	upper_bound := 1000000.0;
+	nominal := 0.5;
+END solver_int;
+
+ATOM solver_binary REFINES solver_int
+	DIMENSIONLESS
+	DEFAULT 0.0;
+
+	lower_bound := 0.0;
+	upper_bound := 1.0;
+	nominal := 0.5;
+
+END solver_binary;
+
+ATOM solver_semi REFINES solver_var
+	DEFAULT 1.0 {?};
+
+	is_zero IS_A boolean;
+	relaxed IS_A boolean;
+
+	is_zero := FALSE;
+	relaxed := FALSE;
+	lower_bound := 1 {?};
+	upper_bound := 1e20 {?};
+	nominal := 1.0 {?};
+
+END solver_semi;
+
+
+
+
+MODEL testalignment1;
+
+(* MODEL to test all the standard stuff *)
+reltest: x=1;
+logtest: p==TRUE;
+
+p IS_A boolean;
+v IS_A solver_var;
+w IS_A boolean_var;
+x IS_A solver_semi;
+y IS_A solver_binary;
+z IS_A solver_int;
+
+END testalignment1;
+
+(* children of real atoms. packing test works on alpha order assumption
+ * of the child packing scheme. testing pairwise, since real is generally
+ * the most difficult to align.
+ *)
+ATOM rt1 REFINES real DEFAULT 0.5 {meter};
+ 	a IS_A boolean;
+	b IS_A real;
+	c IS_A real;
+	a := TRUE;
+	b := 7 {meter};
+	c := 7 {meter};
+END rt1;
+
+ATOM rt2 REFINES real DEFAULT 0.5 {meter};
+ 	a IS_A integer;
+	b IS_A real;
+	c IS_A real;
+	a := 1;
+	b := 7 {meter};
+	c := 7 {meter};
+END rt2;
+
+ATOM rt3 REFINES real DEFAULT 0.5 {meter};
+ 	a IS_A symbol;
+	b IS_A real;
+	c IS_A real;
+	a := 'fred';
+	b := 7 {meter};
+	c := 7 {meter};
+END rt3;
+
+ATOM rt4 REFINES real DEFAULT 0.5 {meter};
+ 	a IS_A set OF symbol;
+	b IS_A real;
+	c IS_A real;
+	a := ['fred','dead'];
+	b := 7 {meter};
+	c := 7 {meter};
+END rt4;
+
+ATOM rt5 REFINES real DEFAULT 0.5 {meter};
+ 	a IS_A real;
+	b IS_A real;
+	c IS_A real;
+	a := 7{meter};
+	b := 7 {meter};
+	c := 7 {meter};
+END rt5;
+
+MODEL testalignment2;
+
+  x1 IS_A rt1;
+  x2 IS_A rt2;
+  x3 IS_A rt3;
+  x4 IS_A rt4;
+  x5 IS_A rt5;
+
+END testalignment2;
+
+ATOM bt1 REFINES boolean DEFAULT TRUE;
+ 	a IS_A boolean;
+	b IS_A real;
+	a := FALSE;
+	b := 7 {meter};
+END bt1;
+
+ATOM bt2 REFINES boolean DEFAULT TRUE;
+ 	a IS_A integer;
+	b IS_A real;
+	a := 1;
+	b := 7 {meter};
+END bt2;
+
+ATOM bt3 REFINES boolean DEFAULT TRUE;
+ 	a IS_A real;
+	b IS_A real;
+	a := 1;
+	b := 7 {meter};
+END bt3;
+
+MODEL testalignment3;
+  x1 IS_A bt1;
+  x2 IS_A bt2;
+  x3 IS_A bt3;
+END testalignment3;
+
+ATOM st1 REFINES symbol DEFAULT 'biteme';
+ 	a IS_A boolean;
+	b IS_A real;
+	a := FALSE;
+	b := 7 {meter};
+END st1;
+
+ATOM st2 REFINES symbol DEFAULT 'biteme';
+ 	a IS_A integer;
+	b IS_A real;
+	a := 1;
+	b := 7 {meter};
+END st2;
+
+ATOM st3 REFINES symbol DEFAULT 'biteme';
+ 	a IS_A real;
+	b IS_A real;
+	a := 1;
+	b := 7 {meter};
+END st3;
+
+MODEL testalignment4;
+  x1 IS_A st1;
+  x2 IS_A st2;
+  x3 IS_A st3;
+END testalignment4;
+
+
+ATOM it1 REFINES integer DEFAULT 3;
+ 	a IS_A boolean;
+	b IS_A real;
+	a := FALSE;
+	b := 7 {meter};
+END it1;
+
+ATOM it2 REFINES integer DEFAULT 3;
+ 	a IS_A integer;
+	b IS_A real;
+	a := 1;
+	b := 7 {meter};
+END it2;
+
+ATOM it3 REFINES integer DEFAULT 3;
+ 	a IS_A real;
+	b IS_A real;
+	a := 1;
+	b := 7 {meter};
+END it3;
+
+MODEL testalignment5;
+  x1 IS_A it1;
+  x2 IS_A it2;
+  x3 IS_A it3;
+END testalignment5;
+
+MODEL testall;
+  t1 IS_A testalignment1;
+  t2 IS_A testalignment2;
+  t3 IS_A testalignment3;
+  t4 IS_A testalignment4;
+  t5 IS_A testalignment5;
+END testall;
+
+
+(*
+ *  z-align.a4l
+ *  by Benjamin A. Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:31 $
+ *  $Revision: 1.4 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-align.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
