@@ -10,8 +10,8 @@
 
 SHELL = /bin/sh
 builddir = ..
-srcdir = @srcdir@/../generic
-VPATH = @srcdir@/../generic
+srcdir = @fullpathsrcdir@/../generic/compiler
+VPATH = @fullpathsrcdir@/../generic/compiler
 
 
 

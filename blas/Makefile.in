@@ -21,8 +21,8 @@
 
 SHELL = /bin/sh
 builddir = ../base/generic
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir = @fullpathsrcdir@/../../blas
+VPATH = @fullpathsrcdir@/../../blas
 
 
 

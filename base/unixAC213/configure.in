@@ -1996,7 +1996,7 @@ AC_OUTPUT(
        bin/Makefile:../../base/generic/bin/Makefile.in
        compiler/Makefile:../../base/generic/compiler/Makefile.in
        general/Makefile:../../base/generic/general/Makefile.in
-       interface/Makefile:../../tcltk98/generic/interface/Makefile.in
+       ../../tcltk98/generic/interface/Makefile:../../tcltk98/generic/interface/Makefile.in
        lib/Makefile:../../base/generic/lib/Makefile.in
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in

@@ -11,8 +11,8 @@
 
 SHELL = /bin/sh
 builddir = ..
-srcdir = @srcdir@/../generic
-VPATH = @srcdir@/../generic
+srcdir = @fullpathsrcdir@/../generic/bin
+VPATH = @fullpathsrcdir@/../generic/bin
 
 
 
