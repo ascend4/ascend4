@@ -553,7 +553,8 @@ static int AscDriver(int argc, CONST84 char *argv[])
  *    CPP_MACRO            ENVIRONMENT VAR    DEFAULT VALUE
  *    =================    ===============    =============
  *    DIST_ENVIRONVAR      ASCENDDIST         parent of binary's directory
- *    ASCTK_ENVIRONVAR     ASCENDTK           ASCENDDIST/TK
+ * AWW20041208:   ASCTK_ENVIRONVAR     ASCENDTK           ASCENDDIST/TK
+ *    ASCTK_ENVIRONVAR     ASCENDTK           ASCENDDIST/../../tcltk98/TK
  *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      ASCENDTK/bitmaps
  *    LIBR_ENVIRONVAR      ASCENDLIBRARY
  *                     .:ASCENDDIST/models/libraries:ASCENDDIST/models/examples
@@ -705,7 +706,9 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     ascfree(tmpenv);
   } else {
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/TK", -1);
+    /* AWW20041208:    Tcl_DStringAppend(&buffer2, "/TK", -1);
+     */
+    Tcl_DStringAppend(&buffer2, "/../../tcltk98/TK", -1);
     if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                       &buffer1))) {
       if( Asc_SetPathList(ASCTK_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
@@ -736,7 +739,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
                TCL_GLOBAL_ONLY);
   } else {
     Asc_Panic(2, "AscCheckEnvironVars",
-              "ERROR: Cannot find the file \"%s\" in the subdirectory \"TK\"\n"
+              "ERROR: Cannot find the file \"%s\" in the subdirectory \"..\/..\/tcltk98\/TK\"\n"
               "under the directory \"%s\"\n"
               "Please check the value of the environment variables %s and\n"
               "and %s and start ASCEND again.\n",
