@@ -114,7 +114,7 @@ struct bt_data {
   unsigned long maxrels; /* no more than this many C relations per file */
   int verbose; /* comments in generated code */
   int housekeep; /* if !=0, generated src files are deleted sometimes. */
-} g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,NULL,1,0};
+} g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,NULL,1,0,0};
 
 static
 int bt_string_replace(char *new, char **ptr)
@@ -893,15 +893,21 @@ int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual)
       if (subroutine != NULL) {
         int ForG,status;
         ForG = BinTokenRESIDUAL;
+#ifndef NO_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
           (*subroutine)(vars,NULL,residual,&ForG,&bindex,&status);
+#ifndef NO_SIGNAL_TRAPS
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
+#endif /* NO_SIGNAL_TRAPS */
           return status;
+#ifndef NO_SIGNAL_TRAPS
         } else {
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
           return 1;
         }
+#endif /* NO_SIGNAL_TRAPS */
       }
       return 1;
     }
@@ -936,15 +942,21 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       }
       func = ctable[bindex].G;
       if (func != NULL) {
+#ifndef NO_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
           (*func)(vars,gradient,residual);
+#ifndef NO_SIGNAL_TRAPS
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
+#endif /* NO_SIGNAL_TRAPS */
           return 0;
+#ifndef NO_SIGNAL_TRAPS
         } else {
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
           return 1;
         }
+#endif /* NO_SIGNAL_TRAPS */
       }
       return 1;
     }
@@ -960,16 +972,22 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
       if (subroutine != NULL) {
         int ForG,status;
         ForG = BinTokenGRADIENT;
+#ifndef NO_SIGNAL_TRAPS
         Asc_SignalHandlerPush(SIGFPE,Asc_SignalTrap);
         if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
           (*subroutine)(vars,gradient,residual,&ForG,&bindex,&status);
+#ifndef NO_SIGNAL_TRAPS
           Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
+#endif /* NO_SIGNAL_TRAPS */
           return status;
+#ifndef NO_SIGNAL_TRAPS
         } else {
           status = 1;
         }
         Asc_SignalHandlerPop(SIGFPE,Asc_SignalTrap);
         return status;
+#endif /* NO_SIGNAL_TRAPS */
       }
       return 1;
     }

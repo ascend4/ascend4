@@ -341,6 +341,13 @@ typedef	unsigned   uint32;
 
 #endif /* __WIN32__ */
 
+#ifdef ASC_NO_TRAPS
+/* use signals by default, but disable with configure.
+ */
+#define NO_SIGNAL_TRAPS 1
+#else
+#define NO_SIGNAL_TRAPS 0
+#endif
 
 #ifdef USE_ASC_PRINTF
 #define PRINTF  Asc_Printf

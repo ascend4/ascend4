@@ -50,8 +50,9 @@ void WriteInstSet(FILE *f, CONST struct set_t *s)
   case string_set:
     PUTC('[',f);
     len = Cardinality(s);
-    for(c=1;c<=len;c++)
-      FPRINTF(f,(c<len)?"'%s',":"'%s'",FetchStrMember(s,c));
+    for(c=1;c<=len;c++) {
+      FPRINTF(f, (c<len) ? "'%s'," : "'%s'" , SCP( FetchStrMember(s,c) ) );
+    }
     FPRINTF(f,"]");
     break;
   }

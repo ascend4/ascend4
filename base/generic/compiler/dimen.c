@@ -244,17 +244,28 @@ int SameDimen(CONST dim_type *d1, CONST dim_type *d2)
 
 int CmpDimen(CONST dim_type *d1, CONST dim_type *d2)
 {
-  register unsigned c;
-  register int i;
-  assert(d1!=NULL);
-  assert(d2!=NULL);
-  if (WILD(d1))
-    if (WILD(d2)) return 0;
-    else return -1;
-  if (WILD(d2)) return 1;
-  for(c=0;c<NUM_DIMENS;c++) {
-    if ((i=CmpF(GetDimFraction(*d1,c),GetDimFraction(*d2,c)))<0) return -1;
-    else if (i>0) return 1;
+	register unsigned c;
+	register int i;
+	assert(d1!=NULL);
+	assert(d2!=NULL);
+	if (WILD(d1)) {
+		if (WILD(d2)) {
+			return 0;
+		} else {
+			return -1;
+		}
+	}
+	if (WILD(d2)) { return 1; }
+	for(c=0;c<NUM_DIMENS;c++) {
+		i = CmpF( GetDimFraction(*d1,c), GetDimFraction(*d2,c) );
+		if (i<0) { 
+			return -1;
+		} else { 
+			if (i>0) { 
+				return 1; 
+			} 
+			/* else continue to next dimen */
+		}
   }
   return 0;
 }

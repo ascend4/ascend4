@@ -118,7 +118,11 @@ extern void gl_init(void);
  *  The list recycler is independent of the pool implementation.
  */
 
+#ifdef ASC_NO_POOL
+#define LISTUSESPOOL FALSE
+#else
 #define LISTUSESPOOL TRUE
+#endif
 /*
  *  LISTUSESPOOL == TRUE allows the list module to use pool.[ch] to
  *  manage list memory overhead. Performance is enhanced this way.

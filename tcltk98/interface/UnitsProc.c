@@ -27,8 +27,10 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#ifndef NO_SIGNAL_TRAPS
 #include <signal.h>
 #include <setjmp.h>
+#endif
 #include <stdarg.h>
 #include "tcl.h"
 #include "utilities/ascConfig.h"
@@ -408,6 +410,7 @@ void Unit_UpdateFundUnits(struct DisplayUnit *du)
   }
 }
 
+#ifndef NO_SIGNAL_TRAPS
 /* un/conversion error handling done in the next 5 procedures */
 static
 void uunconversion_trap(int sigval)
@@ -418,6 +421,7 @@ void uunconversion_trap(int sigval)
   FPRESET;
   longjmp(g_unit_env,SIGFPE);
 }
+#endif /* NO_SIGNAL_TRAPS */
 
 /* respects any already active Asc_SignalTrap as we may want unit
  * output during another call which needs trapping.
@@ -430,14 +434,18 @@ static int Unit_UnconvertReal(double val, struct Units *u, double *retval)
   if (!u) {
     return 1;
   }
+#ifndef NO_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,uunconversion_trap);
   if (setjmp(g_unit_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     status = 0;
     *retval = val*UnitsConvFactor(u);
+#ifndef NO_SIGNAL_TRAPS
   } else {
     status = 1;
   }
   Asc_SignalHandlerPop(SIGFPE,uunconversion_trap);
+#endif /* NO_SIGNAL_TRAPS */
   return status;
 }
 
@@ -460,17 +468,21 @@ static int Unit_ConvertReal(double val, struct Units *u, double *retval)
   if (!u) {
     return 1;
   }
+#ifndef NO_SIGNAL_TRAPS
   Asc_SignalHandlerPush(SIGFPE,uconversion_trap);
   if (setjmp(g_unit_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     status = 0;
 /* often enough debug
     FPRINTF(stderr,"Conversion: v%.16g f%.16g\n",val,UnitsConvFactor(u));
 */
     *retval = val/UnitsConvFactor(u);
+#ifndef NO_SIGNAL_TRAPS
   } else {
     status = 1;
   }
   Asc_SignalHandlerPop(SIGFPE,uconversion_trap);
+#endif /* NO_SIGNAL_TRAPS */
   return status;
 }
 

@@ -27,8 +27,10 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#ifndef NO_SIGNAL_TRAPS
 #include <signal.h>
 #include <setjmp.h>
+#endif /* NO_SIGNAL_TRAPS */
 #include "tcl.h"
 #include "utilities/ascConfig.h"
 #include "utilities/ascSignal.h"
@@ -2781,14 +2783,18 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
   }
   region = b->block[cur_block];
   linsolqr_set_region(lsys,region);
+#ifndef NO_SIGNAL_TRAPS
   if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     dbg_factor_block(lsys,&region,mtx,rp,vp);
+#ifndef NO_SIGNAL_TRAPS
   } else {
     FPRINTF(ASCERR, "Floating point exception in dbg_num_block_singular.\n");
     Tcl_SetResult(interp, " Float error in dbg_num_block_singular. ",
                   TCL_STATIC);
     return TCL_ERROR;
   }
+#endif /* NO_SIGNAL_TRAPS */
   switch (argv[3][0]) {
     case 'r':
       rc=0;
@@ -3109,16 +3115,20 @@ in the jmps due to float errors.
 static int dbg_calc_nominal(struct rel_relation *rel) {
   double nom;
   enum Expr_enum dummy;
+#ifndef NO_SIGNAL_TRAPS
   if (setjmp(g_fpe_env)==0) {
+#endif /* NO_SIGNAL_TRAPS */
     nom = CalcRelationNominal(rel_instance(rel));
     if (nom >0.0) {
       SetRelationNominal(
         (struct relation *)GetInstanceRelation(rel_instance(rel),&dummy), nom);
     }
     return 0;
+#ifndef NO_SIGNAL_TRAPS
   } else {
     return 2;
   }
+#endif /* NO_SIGNAL_TRAPS */
 }
 
 int Asc_DebuCheckRelFp(ClientData cdata, Tcl_Interp *interp,

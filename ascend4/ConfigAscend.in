@@ -39,7 +39,7 @@ CPP = @CPP@
 #  Note that these flags are compiler and OS dependent.
 #
 #	Any GCC
-#CCWARN = -ansi -Wall -Wshadow -W -pedantic
+#CCWARN = -ansi -Wall -Wshadow -W -pedantic -D_GNU_SOURCE
 #	DEC Alpha OSF or Digital-Unix
 #CCWARN = -std1 -verbose
 #	DEC Ultrix

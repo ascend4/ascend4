@@ -94,8 +94,8 @@ void BadMerge(FILE *fp, char *m1,
               CONST struct Instance *i1, CONST struct Instance *i2, char *m2)
 {
   FPRINTF(fp,"%sInstance 1 IS_A %s (ptr=%p)\nInstance 2 IS_A %s (ptr=%p)\n%s",
-	  m1, SCP(InstanceType(i1)), InstanceTypeDesc(i1),
-          SCP(InstanceType(i2)), InstanceTypeDesc(i2),m2);
+	  m1, SCP(InstanceType(i1)), (void *)InstanceTypeDesc(i1),
+          SCP(InstanceType(i2)), (void *)InstanceTypeDesc(i2),m2);
 }
 
 /*

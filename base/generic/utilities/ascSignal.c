@@ -39,10 +39,12 @@
  * and cleared by recipient.
  */
 
-#include <signal.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include "utilities/ascConfig.h"
+#ifndef NO_SIGNAL_TRAPS 
+#include <signal.h>
+#include <setjmp.h>
+#endif /* NO_SIGNAL_TRAPS*/
 #ifdef __WIN32__
 #include <process.h>
 #else
@@ -62,6 +64,7 @@
  */
 
 static jmp_buf g_test_env;
+#ifndef NO_SIGNAL_TRAPS 
 /* test buf for initialization */
 jmp_buf g_fpe_env;
 jmp_buf g_seg_env;
@@ -69,6 +72,8 @@ jmp_buf g_int_env;
 
 /* for future use */
 jmp_buf g_foreign_code_call_env;
+
+#endif /* NO_SIGNAL_TRAPS*/
 
 static int g_reset_needed = -2;
 /* has value 0 or 1 after Init is called.
@@ -88,6 +93,7 @@ static struct gl_list_t *g_seg_traps = NULL;
 static int testdooley2(int sig)
 {
   raise(sig);
+
   return 0;
 }
 
@@ -199,6 +205,7 @@ int Asc_SignalInit(void)
   g_fpe_traps = gl_create(MAX_TRAP_DEPTH);
   g_int_traps = gl_create(MAX_TRAP_DEPTH);
   g_seg_traps = gl_create(MAX_TRAP_DEPTH);
+#ifndef NO_SIGNAL_TRAPS 
   /* push the old ones if any, on the stack. */
   initstack(g_fpe_traps,SIGFPE);
   initstack(g_int_traps,SIGINT);
@@ -209,6 +216,7 @@ int Asc_SignalInit(void)
     g_reset_needed = 1;
     return 2;
   }
+#endif /* NO_SIGNAL_TRAPS */
   if (g_fpe_traps == NULL || g_int_traps == NULL || g_seg_traps == NULL) {
     return 1;
   }
@@ -249,9 +257,11 @@ static void reset_trap(int signum,struct gl_list_t *tlist)
  */
 void Asc_SignalRecover(int force) {
   if (force || g_reset_needed > 0) {
+#ifndef NO_SIGNAL_TRAPS 
     reset_trap(SIGFPE,g_fpe_traps);
     reset_trap(SIGINT,g_int_traps);
     reset_trap(SIGSEGV,g_seg_traps);
+#endif /* NO_SIGNAL_TRAPS */
   }
 }
 
@@ -349,6 +359,7 @@ int Asc_SignalHandlerPop(int signum, TRAPPTR(tp))
 }
 
 void Asc_SignalTrap(int sigval) {
+#ifndef NO_SIGNAL_TRAPS 
   switch(sigval) {
   case SIGFPE:
 #ifndef __WIN32__
@@ -371,4 +382,5 @@ void Asc_SignalTrap(int sigval) {
     break;
   }
   return;
+#endif /* NO_SIGNAL_TRAPS */
 }

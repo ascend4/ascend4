@@ -452,8 +452,14 @@ struct InstanceName ParentsName(CONST struct Instance *p,
   case DUMMY_INST:
     Asc_Panic(2, NULL,
               "ParentsName cannot be called on a fundamental or constant.\n");
+    child = 0;
+    clist = 0;
+    num_children = 0;
   default:
     Asc_Panic(2, NULL, "Invalid instance passed as parent to ParentsName.\n");
+    child = 0;
+    clist = 0;
+    num_children = 0;
   }
   SetInstanceNameType(result,StrName);
   while(num_children--) {
@@ -1071,6 +1077,7 @@ unsigned long ChildIndex(CONST struct Instance *i,
     break;
   default:
     Asc_Panic(2, NULL, "Invalid argument to ChildIndex.\n");
+    childlist = 0;
   }
   while(num_children--) {
     if (*(childlist++) == child) return count;

@@ -281,6 +281,7 @@ static int CheckVisitNumber(struct Instance *i)
 }
 #endif  /*  OLDCHECKVISIT  */
 
+#if 0 /* old unused code. might be handy for debugging someday */
 /* if visit number of i is nonzero sets it 0 and returns 1, else 0 */
 static int ZeroVisitNumber(struct Instance *i)
 {
@@ -387,6 +388,7 @@ static int ZeroVisitNumber(struct Instance *i)
   exit(2); /* Needed to keep gcc from whining */
 }
 
+#endif /* old unused code. might be handy for debugging someday */
 
 static
 void WriteWhereNull(FILE *f, struct Instance *i)

@@ -207,7 +207,7 @@ extern void SaveTokenRelation(FILE *fp, CONST struct Instance *relinst);
  */
 
 extern void SaveReln2GlassBox(FILE *fp, CONST struct Instance *relinst,
-         char *prefix, unsigned long index);
+         char *prefix, unsigned long index_);
 /*
  *  Given a relation will save it and perform conversion to the glassbox
  *  format.

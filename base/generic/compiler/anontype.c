@@ -81,7 +81,7 @@ static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:5
 /*
  * write merge list before returning.
  */
-#define AWAL 0
+#define AWAL 1
 
 /*
  * enum for use in sorting compound types
@@ -1226,6 +1226,9 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
 
   assert(b!=NULL);
   after = b->anonlist;
+#if ATDEBUG
+  FPRINTF(ASCERR,"NearestAnonTypeModel: checking children\n",c);
+#endif
   if (after == NULL) {
     *exact = 0;
     return after;
@@ -1237,6 +1240,9 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
     return after;
   }
   s = at_notdone;
+#if ATDEBUG
+  FPRINTF(ASCERR,"NearestAnonTypeModel: at_notdone set starting len = %lu\n",len);
+#endif
   testat = after;
   /* for loop will be entered */
   for (c = 1; c <= len && s == at_notdone; c++) {
@@ -1249,9 +1255,15 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
     while (testindex < index) {
       if (testat->next == NULL) {
         s = at_append;  /* testat is end of at list, exact is 0 */
+#if ATDEBUG
+        FPRINTF(ASCERR,"NearestAnonTypeModel: at_append set (index=%lu, testindex=%lu)\n",index, testindex);
+#endif
         break;          /* exit while early */
       } else {
         /* move right */
+#if ATDEBUG
+        FPRINTF(ASCERR,"NearestAnonTypeModel: moving right(index=%lu, testindex=%lu)\n",index, testindex);
+#endif
         after = testat;
         testat = testat->next;
         testi = GAP(testat);
@@ -1261,17 +1273,26 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
     /* append, or testindex >= index. = -> on to next child, > -> insert. */
     if (s == at_notdone && testindex > index) {
       s = at_previous;  /* insert new at between after, testat */
+#if ATDEBUG
+      FPRINTF(ASCERR,"NearestAnonTypeModel: at_previous set at c = %lu (index=%lu, testindex=%lu)\n",c, index, testindex);
+#endif
       break;            /* exit for early */
     }
-    /* index = test index */
+    /* index == test index */
   }
 
-  if (c > len) {
+#if ATDEBUG
+  FPRINTF(ASCERR,"NearestAnonTypeModel: after loop c = %lu, s = %d\n",c,s);
+#endif
+  if (c > len && s == at_notdone) {
     /* now we have to compare the merge lists, sigh.  The for loop
      * leaves us with the first AT in our exact family.
      */
     s = MatchATMerges(i,&after,&testat,exactfamily); 
   }
+#if ATDEBUG
+  FPRINTF(ASCERR,"NearestAnonTypeModel: after merge check c = %lu, s = %d\n",c,s);
+#endif
 
   switch (s) {
   case at_exact:
@@ -1426,7 +1447,7 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
   after = NearestAnonType(i,b,&exact,&exactfamily);
 #if ATDEBUG
   WriteInstanceName(ASCERR,i,info->root);
-  FPRINTF(ASCERR,"\nexact = %d. after = 0x%p\n",exact,after);
+  FPRINTF(ASCERR,"\nexact = %d. after = 0x%p\n",exact,(void *)after);
 #endif
   if (!exact) {
     at = ExpandAnonResult(info->atl); /* create, add to atl , set index */
@@ -1437,7 +1458,7 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
     }
     InsertAnonType(b,at,after);
 #if ATDEBUG
-    FPRINTF(ASCERR,"\tnew-at = 0x%p\n",at);
+    FPRINTF(ASCERR,"\tnew-at = 0x%p\n",(void *)at);
 #endif
   } else {
     at = after;

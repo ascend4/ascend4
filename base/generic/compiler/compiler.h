@@ -38,6 +38,11 @@
 #ifndef __COMPILER_H_SEEN__
 #define __COMPILER_H_SEEN__
 
+/* some influential defines and where to set them:
+	ATDEBUG anontype.c -- controls anon type/relation sharing spew
+	ASC_NO_POOL -- compiler -D flag. Turn off many memory recycles of small objects.
+	ASC_NO_TRAPS -- compiler -D flag. Turn off traps/setjmp/longjump.
+*/
 
 #define TIMECOMPILER 1
 /*

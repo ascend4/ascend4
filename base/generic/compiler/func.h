@@ -129,7 +129,7 @@ extern double FuncGetLnmEpsilon();
  */
 #define FuncGetLnmEpsilon() (g_lnm_epsilon)
 
-extern FuncSetLnmEpsilon(double);
+extern void FuncSetLnmEpsilon(double);
 /*
  *  Change the current epsilon for the modified log function lnm.
  *  epsilon > 0.0.
