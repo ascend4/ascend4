@@ -1,6 +1,0 @@
-$ link  'P1'  /exe=minosl  -
-    minosl  ,              -    ! put problem-dependent routines here
-    mi10vms ,              		    -
-    mi15blas, mi20amat, mi25bfac,           -
-    mi30spec, mi35inpt, mi40bfil, mi50lp  , -
-    [-]vmsc/opt
