@@ -1,0 +1,296 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of object passing
+
+DELETE TYPES;
+READ FILE "plotcol.a4c";
+
+# C5/C6/C7 flash. VL feed, vapor and liquid products
+COMPILE tvlf OF test_vapor_liquid_flash;
+BROWSE {tvlf};
+RUN {tvlf.values};
+ASSIGN tvlf.equilibrated FALSE;
+RUN {tvlf.reset};
+SOLVE {tvlf} WITH QRSlv;
+RUN tvlf.check_self;
+DELETE SYSTEM;
+ASSIGN tvlf.equilibrated TRUE;
+RUN {tvlf.reset};
+SOLVE {tvlf} WITH QRSlv;
+RUN tvlf.check_self;
+# You should see error messages.
+# Script should stop here. Select more and continue.
+ASSIGN {tvlf.liq.T} 350 {K};
+SOLVE {tvlf} WITH QRSlv;
+RUN tvlf.check_self; # you should see no new error messages, now.
+
+# Acetone-Benzene-Chloroform flash
+COMPILE thvlf OF test_hard_vapor_liquid_flash;
+BROWSE {thvlf};
+RUN {thvlf.values};
+ASSIGN thvlf.equilibrated FALSE;
+RUN {thvlf.reset};
+SOLVE {thvlf} WITH QRSlv;
+RUN thvlf.check_self;
+DELETE SYSTEM;
+ASSIGN thvlf.equilibrated TRUE;
+RUN {thvlf.reset};
+SOLVE {thvlf} WITH QRSlv;
+
+# bypass user-defined method error handling behavior:
+global old_btuifstop
+set old_btuifstop $ascLibrVect(btuifstop); #save old value
+set ascLibrVect(btuifstop) 1; # force check to ignore STOP statements.
+RUN thvlf.check_self;
+# Check should fail because vapor stream
+# disappears. First failure seen, however,
+# is the sum of small numbers not properly
+# scaled in the flow equations.
+#
+# Restore error handling behavior:
+set ascLibrVect(btuifstop) $old_btuifstop
+
+# Internal Tray
+COMPILE tt OF test_tray;
+BROWSE {tt};
+RUN {tt.values};
+ASSIGN tt.equilibrated FALSE;
+RUN {tt.reset};
+SOLVE {tt} WITH QRSlv;
+RUN tt.check_self;
+DELETE SYSTEM
+ASSIGN tt.equilibrated TRUE;
+RUN {tt.reset};
+SOLVE {tt} WITH QRSlv;
+RUN tt.check_self;
+RUN tt.Tray.reset_to_adiabatic;
+SOLVE {tt} WITH QRSlv;
+RUN tt.check_self;
+
+# "Simple" feed tray with 1 V/L feed.
+COMPILE tft OF test_feed_tray;
+BROWSE {tft};
+RUN {tft.values};
+ASSIGN tft.equilibrated FALSE;
+RUN {tft.reset};
+SOLVE {tft} WITH QRSlv;
+RUN tft.check_self;
+DELETE SYSTEM;
+ASSIGN tft.equilibrated TRUE;
+RUN {tft.reset};
+SOLVE {tft} WITH QRSlv;
+RUN tft.check_self;
+RUN {tft.Feed_tray.reset_to_adiabatic};
+SOLVE {tft} WITH QRSlv;
+RUN tft.check_self;
+
+# "Simple" Condenser with 1 liquid product
+COMPILE tc OF test_condenser;
+BROWSE {tc};
+RUN {tc.values};
+RUN {tc.reset};
+SOLVE {tc} WITH QRSlv;
+RUN tc.check_self;
+ASSIGN tc.equilibrated TRUE;
+RUN tc.reset;
+SOLVE {tc} WITH QRSlv
+RUN tc.check_self;
+
+# "Simple" Reboiler with 1 liquid product
+COMPILE tr OF test_reboiler;
+BROWSE {tr};
+RUN {tr.values};
+ASSIGN tr.equilibrated FALSE;
+RUN {tr.reset};
+SOLVE {tr} WITH QRSlv;
+RUN tr.check_self;
+DELETE SYSTEM;
+ASSIGN tr.equilibrated TRUE;
+RUN {tr.reset};
+SOLVE {tr} WITH QRSlv;
+RUN tr.check_self;
+
+# Internal Tray Stack Model
+COMPILE tts OF test_tray_stack;
+BROWSE {tts};
+ASSIGN {tts.equilibrated} FALSE;
+RUN {tts.reset};
+SOLVE {tts} WITH QRSlv;
+RUN tts.check_self;
+DELETE SYSTEM;
+ASSIGN {tts.equilibrated} TRUE;
+RUN {tts.reset};
+SOLVE {tts} WITH QRSlv;
+RUN tts.check_self;
+RUN {tts.reset_to_adiabatic};
+SOLVE {tts} WITH QRSlv;
+RUN tts.check_self;
+
+# "Simple" Column Model
+# Note that some of the solves in the following model
+# may require a few more iterations than the solver
+# gives by default, depending on the solver scaling
+# and factorization and step control options.
+# Just hit the Solve button again.
+
+COMPILE {tsc} OF {test_simple_column};
+BROWSE {tsc};
+RUN {tsc.values};
+
+# Configure to solve mass balances first
+ASSIGN tsc.Equilibrated FALSE;
+RUN {tsc.Column.reset};
+SOLVE tsc;
+RUN tsc.check_self;
+
+# Configure to solve mass and energy balances
+# with slack Qin on each tray, fixed RR and BU.
+# It might be easier to free BU (reboil_ratio) and
+# specify the distillate.Ftot flow.
+DELETE SYSTEM;
+ASSIGN tsc.Equilibrated TRUE;
+RUN {tsc.Column.reset};
+SOLVE {tsc};
+RUN tsc.check_self;
+
+# Configure to solve energy balanced column
+# with fixed RR and BU and saturated liquid feed.
+RUN {tsc.Column.reset_to_adiabatic};
+SOLVE {tsc};
+RUN tsc.check_self;
+
+COMPILE tmwdc OF mw_demo_column;
+BROWSE {tmwdc};
+RUN {tmwdc.values};
+RUN {tmwdc.reset_to_mass_balance};
+SOLVE {tmwdc} WITH QRSlv;
+RUN tmwdc.check_self;
+RUN {tmwdc.reset_to_full_thermo};
+SOLVE {tmwdc} WITH QRSlv;
+RUN tmwdc.check_self;
+RUN {tmwdc.reset_to_adiabatic};
+SOLVE {tmwdc} WITH QRSlv;
+RUN tmwdc.check_self;
+
+COMPILE tabcdc OF abc_demo_column;
+BROWSE {tabcdc};
+RUN tabcdc.values;
+RUN {tabcdc.reset_to_mass_balance};
+SOLVE {tabcdc} WITH QRSlv;
+RUN tabcdc.check_self;
+RUN {tabcdc.reset_to_full_thermo};
+SOLVE {tabcdc} WITH QRSlv;
+RUN tabcdc.check_self;
+RUN {tabcdc.reset_to_adiabatic};
+SOLVE {tabcdc} WITH QRSlv;
+RUN tabcdc.check_self;
+
+COMPILE tc567dc OF c567_demo_column;
+BROWSE {tc567dc};
+RUN {tc567dc.values};
+RUN {tc567dc.reset_to_mass_balance};
+SOLVE {tc567dc} WITH QRSlv;
+RUN tc567dc.check_self;
+RUN tc567dc.scale_self;
+RUN {tc567dc.reset_to_full_thermo};
+SOLVE {tc567dc} WITH QRSlv;
+RUN tc567dc.check_self;
+RUN tc567dc.scale_self;
+RUN {tc567dc.reset_to_adiabatic};
+SOLVE {tc567dc} WITH QRSlv;
+RUN tc567dc.check_self;
+
+#
+# columns with graphical output.
+#
+
+# Define a macro for the script (a tcl proc)
+# so we can make plotting simpler.
+# This macro takes the name of a demo_plot_column.
+
+proc DemoPlotMacro {simulation} {
+  PLOT $simulation.demo.Plot_K
+  SHOW LAST
+  PLOT $simulation.demo.Plot_x
+  SHOW LAST
+  PLOT $simulation.demo.Plot_y
+  SHOW LAST
+  PLOT $simulation.demo.Plot_P
+  SHOW LAST
+  PLOT $simulation.demo.Plot_T
+  SHOW LAST
+  PLOT $simulation.demo.Plot_Q
+  SHOW LAST
+  PLOT $simulation.demo.Plot_L
+  SHOW LAST
+  PLOT $simulation.demo.Plot_V
+  SHOW LAST
+}
+
+COMPILE mwdpc OF mw_demo_plot_column;
+BROWSE {mwdpc};
+RUN {mwdpc.values};
+RUN {mwdpc.reset_to_mass_balance};
+SOLVE {mwdpc} WITH QRSlv;
+RUN mwdpc.check_self;
+# call the macro to build 8 plots from tmwdpc
+DemoPlotMacro mwdpc;
+
+RUN {mwdpc.reset_to_full_thermo};
+SOLVE {mwdpc} WITH QRSlv;
+RUN mwdpc.check_self;
+DemoPlotMacro mwdpc;
+
+RUN {mwdpc.reset_to_adiabatic};
+SOLVE {mwdpc} WITH QRSlv;
+RUN mwdpc.check_self;
+DemoPlotMacro mwdpc;
+
+COMPILE c567dpc OF c567_demo_plot_column;
+BROWSE {c567dpc};
+RUN {c567dpc.values};
+RUN {c567dpc.reset_to_mass_balance};
+SOLVE {c567dpc} WITH QRSlv;
+RUN c567dpc.check_self;
+DemoPlotMacro c567dpc;
+
+RUN {c567dpc.reset_to_full_thermo};
+SOLVE {c567dpc} WITH QRSlv;
+RUN c567dpc.check_self;
+DemoPlotMacro c567dpc;
+
+RUN {c567dpc.reset_to_adiabatic};
+SOLVE {c567dpc} WITH QRSlv;
+RUN c567dpc.check_self;
+DemoPlotMacro c567dpc;
+
+##########  separation_demos.a4s ends here  ##########
+#
+#  separation_demos.a4s
+#  by Benjamin Allan
+#  March 30, 1997.
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:42 $
+#  $Revision: 1.10 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/separation_demos.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1997 - 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

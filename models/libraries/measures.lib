@@ -1,0 +1,387 @@
+(*
+			Units input file
+			by Tom Epperly
+			Version: $Revision: 1.2 $
+			Date last modified: $Date: 1997/07/03 14:50:11 $
+			Copyright(C) 1990 Thomas Guthrie Epperly
+
+ This is a file defining the conversion factors ASCEND will recognize when
+ it sees them as {units). Note that the assignment x:= 0.5 {100};; yields
+ x == 50, and that there are no 'offset conversions,' e.g. F=9/5C+32; 
+ Added money which isn't really time 3-94 BAA
+ Expanded, including some of Karl's units, constants. 4-94 BAA
+ Updated with supplementary SI dimensions and less ambiguous mole dim. jz/baa
+
+ Please keep unit names to 20 characters or less as this makes life pretty.
+ This is not a hard limit however.
+
+ The root system units in SI MKS system are set in the C code to:
+       unitname  DIMENSION
+define kilogram   M;        internal mass unit SI
+define mole       Q;        internal quantity unit SI
+define second     T;        internal time unit SI
+define meter      L;        internal length unit SI
+define Kelvin     TMP;      internal temperature unit SI
+define currency   C;        internal currency unit
+define ampere     E;        internal electric current unit SI suggested
+define candela    LUM;      internal luminous intensity unit SI
+define radian     P;        internal plane angle unit SI suggested
+define steradian  S;        internal solid angle unit SI suggested
+*)
+
+UNITS
+
+(* distance *)
+
+pc = {3.08374e+16*meter};
+parsec = {pc};
+kpc = {1000*pc};
+Mpc = {1e6*pc};
+km = {meter*1000};
+m = {meter};
+dm = {meter/10};
+cm = {meter/100};
+mm = {meter/1000};
+um = {meter/1000000};
+nm = {1.e-9*meter};
+kilometer = {km};
+centimeter = {cm};
+millimeter = {mm};
+micron = {um};
+nanometer = {nm};
+angstrom = {m/1e10};
+fermi = {m/1e15};
+
+mi = {1609.344*meter};
+yd = {0.914412*meter};
+ft = {0.304804*meter};
+inch = {0.0254*meter};
+mile = {mi};
+yard = {yd};
+feet = {ft};
+foot = {ft};
+in = {inch};
+
+(* mass *)
+
+metton = {kilogram *1000};
+mton = {kilogram *1000};
+kg = {kilogram};
+g = {kilogram/1000};
+gram = {g};
+mg = {g/1000};
+milligram = {mg};
+ug= {kilogram*1e-9};
+microgram= {ug};
+ng= {kilogram*1e-12};
+nanogram= {ng};
+pg= {kilogram*1e-15};
+picogram= {pg};
+
+amu = {1.661e-27*kilogram};
+lbm = {4.535924e-1*kilogram};
+ton = {lbm*2000};
+oz = {0.028349525*kilogram};
+slug = {14.5939*kilogram};
+
+(*  time *)
+
+yr = {31557600*second};
+wk = {604800*second};
+dy = {86400*second};
+hr = {3600*second};
+min = {60*second};
+sec = {second};
+s = {second};
+ms = {second/1000};
+us = {second/1e6};
+ns = {second/1e9};
+ps = {second/1e12};
+year = {yr};
+week = {wk};
+day = {dy};
+hour = {hr};
+minute = {min};
+millisecond = {ms};
+microsecond = {us};
+nanosecond = {ns};
+picosecond = {ps};
+
+(*  molecular quantities *)
+
+kg_mole= {1000*mole};
+g_mole = {mole};
+gm_mole = {mole};
+kmol = {1000*mole};
+mol = {mole};
+mmol = {mole/1000};
+millimole= {mmol};
+umol = {mole/1e6};
+micromole= {umol};
+lb_mole = {4.535924e+2*mole};
+
+ (* temperature *)
+
+K = {Kelvin};
+R = {5*Kelvin/9};
+Rankine = {R};
+
+(*  money *)
+
+dollar = {currency};
+US = {currency};
+USdollar= {currency};
+CR = {currency};
+credits= {currency};
+
+(*  reciprocal time (frequency) *)
+
+rev = {1.0};
+cycle = {rev};
+rpm = {rev/minute};
+rps = {rev/second};
+hertz = {cycle/second};
+Hz = {hertz};
+
+(*  area *)
+
+ha = {meter^2*10000};
+hectare= {ha};
+acre= {meter^2*4046.856};
+
+(*  volume *)
+
+l = {meter^3/1000};
+liter = {l};
+ml = {liter/1000};
+ul = {liter/1e6};
+milliliter = {ml};
+microliter = {ul};
+
+hogshead= {2.384809e-1*meter^3};
+cuft = {0.02831698*meter^3};
+impgal = {4.52837e-3*meter^3};
+gal = {3.785412e-3*meter^3};
+barrel = {42.0*gal};
+gallon = {gal};
+quart = {gal/4};
+pint = {gal/8};
+cup = {gal/16};
+floz = {gal/128};
+
+(*  force *)
+
+N = {kilogram*meter/second^2};
+newton = {N};
+dyne = {N*1.0e-5};
+pn= {N*1e-9};
+picoNewton= {pn};
+
+lbf = {N*4.448221};
+
+(* pressure *)
+
+Pa = {kilogram/meter/second^2};
+MPa = {1.0e+6*Pa};
+bar = {1.0e+5*Pa};
+kPa = {1000*Pa};
+pascal = {Pa};
+
+atm = {Pa*101325.0};
+mmHg = {133.322*Pa};
+torr = {133.322*Pa};
+psia = {6894.733*Pa};
+psi = {psia};
+ftH2O = {2989*Pa};
+
+(* energy *)
+
+J = {kilogram*meter^2/second^2};
+joule = {J};
+MJ = {J * 1000000};
+kJ = {J * 1000};
+mJ= {J*1.0e-3};
+uJ= {J*1.0e-6};
+nJ= {J*1.0e-9};
+milliJoule= {mJ};
+microJoule= {uJ};
+nanoJoule= {nJ};
+erg = {J*1.0e-7};
+
+BTU = {1055.056*J};
+pCu = {BTU * 1.8};
+cal = {J*4.18393};
+calorie = {cal};
+kcal= {1000*calorie};
+Cal= {1000*calorie};
+
+(* power *)
+
+W = {J/second};
+EW = {1.0e+18*W};
+PW = {1.0e+15*W};
+TW = {1.0e+12*W};
+GW = {1.0e+9*W};
+MW = {1.0e+6*W};
+kW = {1000*W};
+mW = {W/1000};
+uW = {W/1000000};
+nW = {W/1e9};
+pW = {W/1e12};
+fW = {W/1e15};
+aW = {W/1e18};
+terawatt = {TW};
+gigawatt = {GW};
+megawatt = {MW};
+kilowatt = {kW};
+watt = {W};
+milliwatt = {mW};
+microwatt = {uW};
+nanowatt = {nW};
+picowatt = {pW};
+femtowatt = {fW};
+attowatt = {aW};
+ aWW= {1*EW}; (* we could say art has a lot of power *)
+
+hp= {7.456998e+2*W};
+
+(* absolute viscosity *)
+
+poise = {Pa*s/10};
+cP = {poise/100};
+
+(* electric charge *)
+
+coulomb= {ampere*second};
+C = {coulomb};
+coul = {coulomb};
+mC = {0.001*C};
+uC = {1e-6*C};
+nC = {1e-9*C};
+pC = {1e-12*C};
+
+(* misc electro-magnetic fun *)
+
+V = {kilogram*meter^2/second^3/ampere};
+F = {ampere^2*second^4/kilogram/meter^2};
+ohm = {kilogram*meter^2/second^3/ampere^2};
+mho = {ampere^2*second^3/kilogram/meter^2};
+S = {mho};
+siemens = {S};
+A= {ampere};
+amp = {ampere};
+volt = {V};
+farad= {F};
+mA= {A/1000};
+uA= {A/1000000};
+kV= {1000*V};
+MV= {1e6*V};
+mV= {V/1000};
+mF = {0.001*F};
+uF = {1e-6*F};
+nF = {1e-9*F};
+pF = {1e-12*F};
+kohm = {1000*ohm};
+Mohm = {1e6*ohm};
+kS = {1000*S};
+mS = {0.001*S};
+uS = {1e-6*S};
+Wb = {V*second};
+weber = {Wb};
+tesla = {Wb/m^2};
+gauss = {1e-4*tesla};
+H = {Wb/A};
+henry = {H};
+mH = {0.001*H};
+uH = {1e-6*H};
+ 
+(*
+ numeric constants of some interest
+ to set a variable or constant to these, the code is (in the declarations)
+ ATOM constant REFINES real; END constant;
+ MODEL gizmo;
+ x IS_A constant;
+ x := 1 {PI};
+ ...
+*)
+molecule = {1.0};
+PI= {3.1415926535897932385};              (* Circumference/Diameter ratio *)
+EULER_C = {0.57721566490153286};         (* euler gamma *)
+GOLDEN_C = {1.618033988749894};          (* golden ratio *)
+HBAR = {1.055e-34*J*second};             (* Reduced planck's constant *)
+PLANCK_C = {2*PI*HBAR};                  (* Planck's constant *)
+LIGHT_C = {2.99793e8 * meter/second};    (* Speed of light in vacuum *)
+MU0 = {4e-7*PI*kg*m/C/C};              (* Permeability of free space *)
+EPSILON0 = {1/LIGHT_C/LIGHT_C/MU0};      (* Permittivity of free space *)
+BOLTZMAN_C = {1.3805e-23 * J/K};         (* Boltzman's constant *)
+AVOGADRO_C = {6.023e23 *molecule/mole};  (* Avogadro's number of molecules *)
+GRAVITY_C = {6.673e-11 * N*m*m/kg/kg}; (* Newtons gravitational constant *)
+GAS_C = {BOLTZMAN_C*AVOGADRO_C};         (* Gas constant *)
+INFINITY= {1.0e38};                       (* damn big number *)
+LIM_EXP= {709.78};                        (* ln ( maxdouble ) *)
+LIM_CUBE= {5.6438030941223618e101};       (*  cbrt ( maxdouble ) *)
+LIM_SQR= {1.0e154};                       (*  sqrt(maxdouble) *)
+(*  swiped from math.h *)
+M_E=         {2.7182818284590452354E0};   (*  base e *)
+M_LOG2E=     {1.4426950408889634074E0};   (*  log2(e) *)
+M_LOG10E=    {4.3429448190325182765E-1};  (*  log10(e) *)
+M_LN2=       {6.9314718055994530942E-1};  (*  ln(2) *)
+M_LN10=      {2.3025850929940456840E0};   (*  ln(10) *)
+M_PI=        {3.1415926535897932385E0};   (*  as PI, but for consistency *)
+M_PI_2=      {1.5707963267948966192E0};   (*  PI/2 *)
+M_PI_4=      {7.8539816339744830962E-1};  (*  PI/4 *)
+M_1_PI=      {3.1830988618379067154E-1};  (*  1/PI   *)
+M_2_PI=      {6.3661977236758134308E-1};  (*  2/PI *)
+M_2_SQRTPI= {1.1283791670955125739E0};   (*  2/sqrt(PI) *)
+M_SQRT2=     {1.4142135623730950488E0};   (*  sqrt(2) *)
+M_SQRT1_2=   {7.0710678118654752440E-1};  (*  1/sqrt(2) *)
+
+eCHARGE = {1.602e-19*C};         (* Charge of an electron *)
+EARTH_G = {9.80665 * m/s/s};   (* Earth's gravitational field, somewhere *)
+eMASS = {9.1095e-31*kilogram};   (* Electron rest mass, I suppose *)
+pMASS = {1.67265e-27*kilogram};  (* Proton mass *)
+
+(* constant based conversions *)
+
+eV = {eCHARGE * V};
+keV = {1000*eV};
+MeV = {1e6*eV};
+GeV = {1e9*eV};
+TeV = {1e12*eV};
+PeV = {1e15*eV};
+EeV = {1e18*eV};
+
+lyr = {LIGHT_C * yr};               (*      Light-year *)
+
+oersted = {gauss/MU0};
+ 
+(* subtly dimensionless measures *)
+
+rad = {radian};
+srad = {steradian};
+deg = {radian*1.74532925199433e-2};
+degrees = {deg}; 
+grad = {0.9*deg};
+arcmin = {degrees/60.0};
+arcsec = {arcmin/60.0};
+
+(* light quantities *)
+
+cd = {candela};
+lm = {candela*steradian};
+lumen = {lm};
+lx = {lm/meter^2};
+lux= {lx};
+
+(* misc rates *)
+
+gpm = {gallon/minute};
+
+(* time variant conversions *)
+
+MINIMUMWAGE = {3.35*US/hr}; (* 1987 *)
+(*
+ conversions we'd like to see , but probably won't
+ milliHelen = {beauty/ship};
+*)
+END UNITS;

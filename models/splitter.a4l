@@ -1,0 +1,372 @@
+REQUIRE "stream_holdup.a4l";
+(* => stream_holdup.a4l, thermodynamics.a4l, components.a4l, phases.a4l,
+ *    atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "splitter.a4l";
+
+(*
+ *  splitter.a4l
+ *  by Ben Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/23 15:26:24 $
+ *  $Revision: 1.3 $
+ *  $Author: ballan $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/splitter.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+
+(* splitter and splitter_with_shared_state *)
+
+(* Both model a simple stream splitter, a unit that splits a stream
+* into n_outs other streams.  *)
+
+(* MODEL splitter *)
+
+(* In this unit the user should create and pass in the feed and all
+* output streams.  The unit creates equations to set the pressure,
+* temperature and the mole fractions of the feed equal to the
+* pressure, temperature and mole fractions of the output streams.
+* Each stream has it own state and its own physical property
+* calculation.  If there is only one output stream, this unit can be
+* used to change the option used to compute the mixture physical
+* properties for the stream.  For example, the feed stream could
+* compute liquid mixture properties using Unifac_liquid_mixture while
+* the output stream could use Wilson_liquid_mixture.  *)
+
+(* MODEL splitter_with_shared_state *)
+
+(* In this unit the user should create and pass in only the feed to
+* the unit.  This unit creates its own output streams -- UNLIKE ANY
+* OTHER UNIT.  The output streams are created to share the state of
+* the feed stream.  To make the output streams accessible locally in
+* the model for which this splitter is a part, the user should include
+* the statement similar to the following to alias the output streams
+* to the outer scope: *)
+
+(*                       out ALIASES spl1.out;                     *)
+
+(* where spl1 is the name of the instance of the splitter.  We
+* consider this to be 'expert behavior' but the splitter is a
+* difficult unit -- conceptually.  *)
+
+
+(* ****************************************************************** *)
+
+(* base_splitter.  No one should create a model of this type.  It is
+* here only to provide a common ancestry for the two splitter
+* models. *)
+
+MODEL base_splitter;
+END base_splitter;
+
+(* ****************************************************************** *)
+
+MODEL splitter(
+    feed WILL_BE stream;
+    n_outs WILL_BE integer_constant;
+    out[1..n_outs] WILL_BE stream;
+) WHERE (
+    feed, out[1..n_outs] WILL_NOT_BE_THE_SAME;
+)
+REFINES base_splitter;
+
+
+    FOR j IN [1..n_outs] CREATE
+        FOR i IN feed.cd.other_components CREATE
+	    y_eqns[i][j]: out[j].y[i] = feed.y[i];
+        END FOR;
+    END FOR;
+
+    FOR j IN [1..n_outs] CREATE
+	P_set[j]: out[j].P = feed.P;
+	T_set[j]: out[j].T = feed.T;
+    END FOR;
+
+    split[1..n_outs] IS_A fraction;
+    sum_splits: SUM[split[1..n_outs]] = 1;
+
+    FOR k IN [1..n_outs] CREATE
+	split_flows[k]: out[k].flow = split[k]*feed.flow;
+    END FOR;
+
+    METHODS
+
+    METHOD check_self;
+	RUN check_all;
+    END check_self;
+
+    METHOD check_all;
+	RUN feed.check_all;
+	RUN out[1..n_outs].check_all;
+    END check_all;
+
+    METHOD default_self;
+    END default_self;
+
+    METHOD default_all;
+	RUN feed.default_all;
+	RUN out[1..n_outs].default_all;
+    END default_all;
+
+    METHOD bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN feed.bound_all;
+	RUN out[1..n_outs].bound_all;
+    END bound_all;
+
+    METHOD scale_self;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN feed.scale_all;
+	RUN out[1..n_outs].scale_all;
+    END scale_all;
+
+    METHOD seqmod;
+	split[1..n_outs-1].fixed := TRUE;
+	RUN out[1..n_outs].specify;
+	out[1..n_outs].P.fixed := FALSE;
+	out[1..n_outs].T.fixed := FALSE;
+	out[1..n_outs].f[feed.cd.components].fixed := FALSE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+    END specify;
+
+END splitter;
+
+(* ****************************************************************** *)
+
+MODEL splitter_with_shared_state(
+    feed WILL_BE stream;
+    n_outs WILL_BE integer_constant;
+) REFINES base_splitter;
+
+    state ALIASES feed.Details.state;
+    out[1..n_outs] IS_A detailed_stream(state);
+    split[1..n_outs] IS_A fraction;
+    sum_splits: SUM[split[1..n_outs]] = 1;
+    FOR k IN [1..n_outs] CREATE
+	split_flows[k]: out[k].flow = split[k]*feed.flow;
+    END FOR;
+
+    METHODS
+    METHOD check_self;
+	RUN check_all;
+    END check_self;
+
+    METHOD check_all;
+	RUN feed.check_all;
+	RUN out[1..n_outs].check_all;
+    END check_all;
+
+    METHOD default_self;
+	RUN out[1..n_outs].default_all;
+    END default_self;
+
+    METHOD default_all;
+	RUN feed.default_all;
+	RUN out[1..n_outs].default_all;
+    END default_all;
+
+    METHOD bound_self;
+	RUN out[1..n_outs].bound_all;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN feed.bound_all;
+	RUN out[1..n_outs].bound_all;
+    END bound_all;
+
+    METHOD scale_self;
+	RUN out[1..n_outs].scale_all;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN feed.scale_all;
+	RUN out[1..n_outs].scale_all;
+    END scale_all;
+
+    METHOD seqmod;
+	split[1..n_outs-1].fixed := TRUE;
+	RUN out[1..n_outs].specify;
+	out[1..n_outs].P.fixed := FALSE;
+	out[1..n_outs].T.fixed := FALSE;
+	out[1..n_outs].f[feed.cd.components].fixed := FALSE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+	RUN feed.specify;
+    END specify;
+
+END splitter_with_shared_state;
+
+(* ****************************************************************** *)
+(* ********************** test splitter models ********************** *)
+(* ****************************************************************** *)
+
+MODEL test_splitter;
+
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+                          'UNIFAC_liquid_mixture', 'none');
+    equil IS_A boolean;
+
+    spl1_feed IS_A stream(cd, pdVL, equil);
+
+    n_outs IS_A integer_constant;
+    n_outs :== 2;
+    spl1_out[1..n_outs] IS_A stream(cd, pdVL, equil);
+    spl1 IS_A splitter(spl1_feed, n_outs, spl1_out);
+
+    METHODS
+    METHOD check_self;
+	RUN check_all;
+    END check_self;
+
+    METHOD check_all;
+	RUN spl1.check_all;
+    END check_all;
+
+    METHOD default_self;
+	RUN default_all;
+    END default_self;
+
+    METHOD default_all;
+	RUN spl1.default_all;
+    END default_all;
+
+    METHOD bound_self;
+	RUN bound_all;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN spl1.bound_all;
+    END bound_all;
+
+    METHOD scale_self;
+	RUN scale_all;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN spl1.scale_all;
+    END scale_all;
+
+    METHOD specify;
+	RUN spl1.specify;
+    END specify;
+
+    METHOD values;
+        spl1_feed.P := 1 {atm};
+        spl1_feed.T := 350 {K};
+	spl1_feed.f['methanol'] := 0.01 {kmol/s};
+	spl1_feed.f['ethanol'] := 0.015 {kmol/s};
+	spl1_feed.f['water'] := 0.02 {kmol/s};
+	spl1_feed.phase['vapor'].alpha['methanol'] := 2.1;
+	spl1_feed.phase['vapor'].alpha['ethanol'] := 1.6;
+	spl1_feed.phase['vapor'].alpha['water'] := 0.9;
+	spl1_out[1..n_outs].phase['vapor'].alpha['methanol'] := 2.1;
+	spl1_out[1..n_outs].phase['vapor'].alpha['ethanol'] := 1.6;
+	spl1_out[1..n_outs].phase['vapor'].alpha['water'] := 0.9;
+	spl1.split[1] := 0.5;
+	spl1.split[2] := 0.5;
+        equil := FALSE;
+    END values;
+
+END test_splitter;
+
+(* ****************************************************************** *)
+
+MODEL test_splitter_with_shared_state;
+
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+                          'UNIFAC_liquid_mixture', 'none');
+    equil IS_A boolean;
+    n_outs IS_A integer_constant;
+    n_outs :== 2;
+
+    spl1_feed IS_A stream(cd, pdVL, equil);
+    spl1 IS_A splitter_with_shared_state(spl1_feed, n_outs);
+    spl1_out ALIASES spl1.out;
+
+    METHODS
+
+    METHOD check_self;
+	RUN spl1_feed.check_all;
+    END check_self;
+
+    METHOD check_all;
+	RUN spl1.check_all;
+    END check_all;
+
+    METHOD default_self;
+	RUN spl1_feed.default_all;
+    END default_self;
+
+    METHOD default_all;
+	RUN spl1.default_all;
+    END default_all;
+
+    METHOD bound_self;
+	RUN spl1_feed.bound_all;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN spl1.bound_all;
+    END bound_all;
+
+    METHOD scale_self;
+	RUN spl1_feed.scale_all;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN spl1.scale_all;
+    END scale_all;
+
+    METHOD specify;
+	RUN spl1.specify;
+    END specify;
+
+    METHOD values;
+        spl1_feed.P := 1 {atm};
+        spl1_feed.T := 365 {K};
+	spl1_feed.f['methanol'] := 0.01 {kmol/s};
+	spl1_feed.f['ethanol'] := 0.015 {kmol/s};
+	spl1_feed.f['water'] := 0.02 {kmol/s};
+	spl1_feed.phase['vapor'].alpha['methanol'] := 2.1;
+	spl1_feed.phase['vapor'].alpha['ethanol'] := 1.6;
+	spl1_feed.phase['vapor'].alpha['water'] := 0.9;
+	spl1.split[1] := 0.5;
+	spl1.split[2] := 0.5;
+        equil := FALSE;
+    END values;
+
+END test_splitter_with_shared_state;

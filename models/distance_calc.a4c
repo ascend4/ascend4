@@ -1,0 +1,76 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "distance_calc.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * This model is the second example in "Solved simple models with ASCEND."
+ *)
+
+MODEL travel_distance;
+   kmax	IS_A integer_constant;
+   v[1..2*kmax+1] IS_A speed;
+   delta_time IS_A time;
+   d IS_A distance;
+
+   d = SUM[v[2*k-1]+4*v[2*k]+v[2*k+1] SUCH_THAT k IN
+			 [1..kmax]]*delta_time/6;
+
+END travel_distance;
+
+MODEL test_travel_distance REFINES travel_distance;
+   kmax :== 5;
+
+METHODS
+
+   METHOD specify;
+       v[1..2*kmax+1].fixed := TRUE;
+       delta_time.fixed := TRUE;
+   END specify;
+
+   METHOD values;
+      	v[1] := 100 {ft/min};
+ 	v[2] := 120 {ft/min};
+	v[3] := 130 {ft/min};
+ 	v[4] := 135 {ft/min};
+ 	v[5] := 140 {ft/min};
+	v[6] := 160 {ft/min};
+	v[7] := 180 {ft/min};
+	v[8] := 210 {ft/min};
+	v[9] := 240 {ft/min};
+ 	v[10] := 220 {ft/min};
+ 	v[11] := 200 {ft/min};
+	delta_time := 10 {s};
+   END values;
+
+END test_travel_distance;
+
+(*
+ *  Travel distance small example
+ *  By Arthur Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 18:59:42 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/distance_calc.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

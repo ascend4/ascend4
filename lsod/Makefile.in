@@ -1,0 +1,72 @@
+#  ASCEND Integrators Makefile
+#  Ben Allan
+#  August 20, 1994
+#  $Date: 1997/09/27 20:58:48 $
+#  $Revision: 1.9 $
+#  $Author: ballan $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/lsod/Makefile.in,v $
+#
+
+
+SHELL = /bin/sh
+builddir = ../ascend4
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+#  The next variables are the primary executables and/or libraries that
+#  this makefile is responsible for, and the default target of this
+#  makefile.
+
+EXECUTABLE = 
+
+LIBRARY  = libinteg.a
+
+
+default: $(LIBRARY)
+
+
+
+#  Defines and Includes that are specific to this directory
+
+DIR_SPECIFIC_DEFS = 
+DIR_SPECIFIC_INCS = 
+
+
+
+#  The next variables list the source files (EXEC_SCRS) to compile
+#  into the object files (EXEC_OBJS) that are linked with the
+#  library files (EXEC_LIBS) to make EXECUTABLE
+
+EXEC_SRCS = 
+
+EXEC_OBJS = 
+
+EXEC_LIBS = 
+
+
+
+#  The next variables list the source files (LIB_SCRS) to compile
+#  into the object files (LIB_OBJS) that are combined to make LIBRARY
+
+LIB_SRCS = \
+	lsode.f
+
+LIB_OBJS = \
+	lsode.o
+
+
+
+#  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
+#  
+include $(builddir)/ConfigAscend
+include $(builddir)/Makefile.Rules
+
+
+
+# DO NOT DELETE THIS LINE -- g++dep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+
+
+# IF YOU PUT ANYTHING HERE IT WILL GO AWAY

@@ -1,0 +1,236 @@
+(*********************************************************************\
+                        flowsheet.lib
+                        by Joseph J. Zaher
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/07/03 14:50:03 $
+  $Revision: 1.7 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/flowsheet.lib,v $
+\*********************************************************************)
+(**
+ **
+ **  F  L  O  W  S  H  E  E  T  .  L  I  B
+ **  -------------------------------------
+ **
+ **  AUTHOR:      Joseph J. Zaher
+ **
+ **  DATES:       11/92 - Original code.
+ **               05/93 - Reflected changes in thermodynamics library.
+ **               04/96 - Modified for the use of true constants
+ **  CONTENTS:    ASCEND structure for creating unit operations in a chemical
+ **               process flowsheet.
+ **
+ **  REQUIRES:    "atoms.lib"
+ **               "components.lib"
+ **               "thermodynamics.lib"
+ **)
+
+
+(* REQUIRE H_G_thermodynamics.lib *)
+
+
+MODEL stream;
+
+    state                               IS_A thermodynamic_properties;
+    F                                   IS_A molar_rate;
+
+    METHODS
+        METHOD clear;
+            RUN state.clear;
+            F.fixed := FALSE;
+        END clear;
+        METHOD specify;
+            RUN state.specify;
+            F.fixed := TRUE;
+        END specify;
+        METHOD reset;
+            RUN clear;
+            RUN specify;
+        END reset;
+
+END stream;
+
+MODEL unit_operation;
+
+    inputs                              IS_A set OF symbol_constant;
+    outputs                             IS_A set OF symbol_constant;
+    feed[inputs]                        IS_A stream;
+    product[outputs]                    IS_A stream;
+
+    METHODS
+        METHOD clear;
+            RUN feed[inputs].clear;
+            RUN product[outputs].clear;
+        END clear;
+        METHOD specify;
+            RUN feed[inputs].specify;
+            RUN product[outputs].specify;
+        END specify;
+        METHOD reset;
+            RUN clear;
+            RUN specify;
+        END reset;
+END unit_operation;
+
+MODEL splitter REFINES unit_operation;
+
+    inputs                              :== ['inlet'];
+    phi[outputs]                        IS_A fraction;
+
+        feed['inlet'].state, product[outputs].state ARE_THE_SAME;
+        FOR i IN outputs CREATE
+            product[i].F = phi[i]*feed['inlet'].F;
+        END FOR;
+        SUM[phi[i] | i IN outputs] = 1.0;
+
+    METHODS
+        METHOD clear;
+            RUN feed[inputs].clear;
+            RUN product[outputs].clear;
+            phi[outputs].fixed := FALSE;
+        END clear;
+        METHOD specify;
+            RUN feed[inputs].specify;
+            RUN product[outputs].specify;
+            phi[outputs].fixed := TRUE;
+            phi[CHOICE[outputs]].fixed := FALSE;
+            product[outputs].F.fixed := FALSE;
+        END specify;
+
+END splitter;
+
+MODEL homogeneous_mixer REFINES unit_operation;
+
+    outputs                             :== ['outlet'];
+    product['outlet'].state             IS_REFINED_TO homogeneous_mixture;
+    duty                                IS_A energy_rate;
+
+        feed[inputs].state, 
+            product[outputs].state ARE_ALIKE;
+        feed[inputs].state.P,
+            product['outlet'].state.P ARE_THE_SAME;
+        feed[inputs].state.components,
+            product['outlet'].state.components ARE_THE_SAME;
+        FOR i IN product['outlet'].state.components CREATE
+            feed[inputs].state.data[i],
+                product['outlet'].state.data[i] ARE_THE_SAME;
+            feed[inputs].state.pure[i],
+                product['outlet'].state.pure[i] ARE_ALIKE;
+            SUM[feed[j].state.y[i]*feed[j].F | j IN inputs] =
+                product['outlet'].state.y[i]*product['outlet'].F;
+        END FOR;
+        SUM[feed[i].state.H*feed[i].F | i IN inputs] + duty =
+            product['outlet'].state.H*product['outlet'].F;
+
+    METHODS
+        METHOD clear;
+            RUN feed[inputs].clear;
+            RUN product[outputs].clear;
+            duty.fixed := FALSE;
+        END clear;
+        METHOD specify;
+            RUN feed[inputs].specify;
+            RUN product[outputs].specify;
+            FOR i IN product['outlet'].state.components DO
+                product['outlet'].state.y[i].fixed := FALSE;
+            END FOR;
+            product['outlet'].F.fixed := FALSE;
+        END specify;
+
+END homogeneous_mixer;
+
+MODEL flash REFINES unit_operation;
+
+    T                                   IS_A temperature;
+    P                                   IS_A pressure;
+    Q                                   IS_A energy_rate;
+    outputs                             :== ['top', 'bottom'];
+    state                               IS_A heterogeneous_mixture;
+    state.phases                        :== ['vapor', 'liquid'];
+    state.reference                     :== 'liquid';
+    state.mix['vapor']                  IS_REFINED_TO Pitzer_mixture;
+    state.mix['liquid']                 IS_REFINED_TO UNIFAC_mixture;
+    feed[inputs].state                  IS_REFINED_TO mixture;
+    components                          IS_A set OF symbol_constant;
+    data[components]                    IS_A component_constants;
+
+        T, state.T ARE_THE_SAME;
+        P, state.P ARE_THE_SAME;
+        FOR j IN components - [CHOICE[components]] CREATE
+            SUM[feed[i].state.y[j]*feed[i].F | i IN inputs] =
+            state.y[j]*SUM[feed[i].F | i IN inputs];
+        END FOR;
+        product['top'].F = state.phi['vapor']*
+            SUM[feed[i].F | i IN inputs];
+        product['bottom'].F = state.phi['liquid']*
+            SUM[feed[i].F | i IN inputs];
+        product['top'].state, state.mix['vapor'] ARE_THE_SAME;
+        product['bottom'].state, state.mix['liquid'] ARE_THE_SAME;
+        SUM[feed[i].state.H*feed[i].F | i IN inputs] + Q =
+            state.H*SUM[feed[i].F | i IN inputs];
+
+        components, state.components, 
+            feed[inputs].state.components ARE_THE_SAME;
+        FOR j IN components CREATE
+            data[j], state.data[j],
+            feed[inputs].state.data[j] ARE_THE_SAME;
+        END FOR;
+
+    METHODS
+        METHOD clear;
+            RUN feed[inputs].clear;
+            RUN product[outputs].clear;
+            RUN state.clear;
+            Q.fixed := FALSE;
+        END clear;
+        METHOD specify;
+            RUN feed[inputs].specify;
+            RUN product[outputs].specify;
+            RUN state.specify;
+            product[outputs].F.fixed := FALSE;
+            state.y[components].fixed := FALSE;
+        END specify;
+
+END flash;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

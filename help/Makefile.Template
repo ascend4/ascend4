@@ -1,0 +1,35 @@
+#  ASCEND Subtree Makefile
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/04/20 12:58:45 $
+#  $Revision: 1.2 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/help/Makefile.Template,v $
+#
+
+#  This file contains two lists used for installing ASCEND:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed.
+
+#  Running `make install' further up the directory tree will cause
+#  make to descend into this directory and install the listed file.
+#  The location of the RULES_FILE will be passed to `make'.
+
+
+SHELL = /bin/sh
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+INSTALL_SUBDIR_LIST = 
+
+INSTALL_FILE_LIST = 
+
+
+
+include $(RULES_FILE)

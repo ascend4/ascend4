@@ -1,0 +1,20 @@
+global xfSaveModuleList
+set xfSaveModuleList {
+  util.tcl units.tcl
+  toolbox.tcl
+  sims.tcl
+  probe.tcl
+  browser.tcl
+  script.tcl
+  library.tcl
+  main.tcl
+  display.tcl
+  slv.tcl
+  solver.tcl
+  debug.tcl
+  mtx.tcl
+  help.tcl
+}
+# eof
+#
+

@@ -1,0 +1,43 @@
+#  ASCEND Subtree Makefile
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/06/01 15:43:19 $
+#  $Revision: 1.1 $
+#  $Author: ballan $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/ben/Makefile.in,v $
+#
+
+#  This file contains two lists used for installing ASCEND:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed.
+
+#  Running `make install' further up the directory tree will cause
+#  make to descend into this directory and install the listed file.
+#  The location of the RULES_FILE will be passed to `make'.
+
+
+SHELL = /bin/sh
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+INSTALL_SUBDIR_LIST = 
+
+INSTALL_FILE_LIST = \
+	benHGthermo.a4l \
+	bencolumn.a4l \
+	bencomponents.a4l \
+	benflash.a4l \
+	benplot.a4l \
+	benplotcol.a4c \
+	benpropertyoptions.a4l \
+	benstream.a4l \
+	test_components.a4s
+
+
+include $(RULES_FILE)

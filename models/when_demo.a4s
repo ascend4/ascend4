@@ -1,0 +1,66 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of when_demo.a4c
+
+DELETE TYPES
+READ FILE "when_demo.a4c";
+
+COMPILE {t1} OF {test_flowsheet};
+BROWSE {t1};
+#
+# Initial configuration. The values of the boolean
+# variables as well as the values of the fixed variables
+# are given by the METHOD values
+#
+RUN {t1.reset};
+RUN {t1.values};
+SOLVE {t1} WITH QRSlv;
+PROBE current {t1} {1 1 1 0 1 0 0 0 0 0 0 0 0 0 0 0};
+#
+# Note that the residuals of the inactive equations are still
+# equal to the default value since we have not attempted to
+# solve them
+#
+# Change configuration and resolve. Note the change in the
+# number of active variables, active equations and degrees
+# of freedom.
+#
+RUN {t1.configuration2};
+SOLVE {t1} WITH QRSlv;
+#
+# Third configuration
+#
+RUN {t1.configuration3};
+SOLVE {t1} WITH QRSlv;
+
+##########  when_demo.a4s ends here  ##########
+#
+#  when_demo.a4s
+#  by Vicente Rico-Ramirez
+#  June 03, 1997
+#  by Arthur W. Westerberg
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:51 $
+#  $Revision: 1.7 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/when_demo.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1997 - 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

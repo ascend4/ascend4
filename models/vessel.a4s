@@ -1,0 +1,110 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of vessel.a4c
+
+DELETE TYPES;
+READ FILE "vessel.a4c";
+
+COMPILE v OF vessel;
+BROWSE {v};
+RUN {v.values};
+RUN {v.reset};
+SOLVE {v} WITH QRSlv;
+
+REFINE {v} TO vessel_optimize;
+RUN {v.min_cost};
+SOLVE {v} WITH CONOPT;
+
+ASSIGN {v.H_to_D_ratio.fixed} TRUE;
+ASSIGN {v.H.fixed} FALSE;
+
+STUDY {cost} IN {v} \
+VARYING {H_to_D_ratio 1 2 3 5 10 20} \
+USING QRSlv \
+OUTFILE vessel.dat \
+ERROR STOP;
+ASCPLOT vessel.dat;
+# before you run another study, close the ASCPLOT window.
+ASCPLOT CLOSE;
+
+# GAMS optimization conversion example.
+# GAMS does not tolerate poor scaling nearly as well as ASCEND.
+# Therefore, you should set good values for the variable.nominals:
+# values near the expected solution (within a factor of 1-100).
+
+RUN v.scale;
+
+# Note that this scale method, which scales the variables, is missing.
+# Fortunately, 'vessel' is so nearly linear that you can get away
+# with not scaling it's variables beyond the default nominal value.
+
+# Once you have scaled the variables, ASCEND will
+# scale the equations based on the scaled variables.
+# Do this even though vessel does not have a scale method.
+
+dbg_calc_relnoms;
+
+# Now you tell ASCEND to generate a generic equation file
+# in ASCEND notation.
+
+dbg_write_slv0_sys vessel.a2g;
+
+# But we have to convert it to GAMS notation because GAMS
+# cannot tolerate long, descriptive, and otherwise user-friendly
+# variable names. A PERL 5 script, ascend2gms.pl, does this.
+# set ATOG to be the path to the PERL converter.
+
+set ATOG $ascGlobalVect(ascend2gms);
+
+# call the GAMS converter
+
+exec $ATOG vessel.a2g;
+
+# Call GAMS. ASCEND will freeze while GAMS runs.
+# You should peek at the error messages or output
+# in vessel.a2g.lst that GAMS will create.
+
+exec gams vessel.a2g.gms;
+
+# Load the results, or try to at least. This may fail if gams did.
+# GAMS solvers (e.g. CONOPT set very tight default bounds
+# for equation residuals and Jacobian elements in order to
+# trap user input errors of a class that simply do not exist
+# in ASCEND generated GAMS code. You may need a file
+# like 'conopt.opt' to reset these bounds.
+# For example in conopt.opt we typically have:
+# SET RTMAXJ 9.E22
+# SET RTMAXV 1.E20
+
+set GTOA $ascGlobalVect(gms2ascend)
+exec $GTOA vessel.a2g.lst;
+
+##########  vessel.a4s ends here  ##########
+#
+#  vessel.a4s
+#  by Arthur W. Westerberg
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:46 $
+#  $Revision: 1.4 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/vessel.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1994 - 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

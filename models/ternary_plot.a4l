@@ -1,0 +1,579 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "plot.a4l";
+(* => plot.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "ternary_plot.a4l";
+
+(*
+ *  ternary_plot.a4l
+ *  by Kenneth H. Tyner
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:32:35 $
+ *  $Revision: 1.6 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/ternary_plot.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997  Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+	T E R N A R Y _ P L O T . A 4 L
+	-------------------------------
+
+	AUTHOR:		Kenneth H. Tyner
+
+	DATES:		6/97 - First Public Release
+
+
+	CONTENTS:	Ternary plots to complement distillation modeling.
+
+
+
+
+
+	NOTES:		These models useable but are still in a state of flux.
+			The parameter lists may change without notice!!!!
+*)
+MODEL ternary_plot_right_all(
+    components WILL_BE set OF symbol_constant;
+    npnts IS_A set OF integer_constant;
+    comp_data[components][npnts] WILL_BE real;
+    ) WHERE (
+	CARD[components] = 3;
+    );
+    (* make triangle *)
+    nt_points IS_A set OF integer_constant;
+    nt_points :== [0..3];
+    x_points[nt_points] IS_A real;
+    y_points[nt_points] IS_A real;
+    triangle IS_A plt_curve(nt_points,y_points,x_points);
+
+    FOR i IN components CREATE
+	FOR j IN [components - [i]] CREATE
+	    curve[i][j] IS_A
+		plt_curve(npnts,comp_data[i],comp_data[j]);
+	END FOR;
+    END FOR;
+    FOR i IN components CREATE
+	FOR j IN [components - [i]] CREATE
+	    plots[i][j][plot_set[i][j]] ALIASES (
+		triangle, curve[i][j]
+		) WHERE plot_set[i][j] IS_A set OF symbol_constant
+		WITH_VALUE ('triangle','profile');
+	END FOR;
+    END FOR;
+    FOR i IN components CREATE
+	FOR j IN [components - [i]] CREATE
+	    plot[i][j] IS_A
+		plt_plot_symbol(plot_set[i][j],
+		plots[i][j]);
+	END FOR;
+    END FOR;
+
+  METHODS
+    METHOD default_self;
+	x_points[0,2,3] := 0;
+	x_points[1] := 1;
+	y_points[0,1,3] := 0;
+	y_points[2] := 1;
+	FOR i IN components DO
+	    FOR j IN [components - [i]] DO
+		plot[i][j].title := 'i vs j';
+		plot[i][j].YLabel := i;
+		plot[i][j].XLabel := j;
+		plot[i][j].Ylow := 0;
+		plot[i][j].Yhigh := 1;
+	    END FOR;
+	END FOR;
+    END default_self;
+    METHOD default_all;
+	RUN default_self;
+    END default_all;
+    METHOD scale_self;
+    END scale_self;
+    METHOD scale_all;
+	RUN scale_self;
+    END scale_all;
+    METHOD bound_self;
+    END bound_self;
+    METHOD bound_all;
+	RUN bound_self;
+    END bound_all;
+    METHOD check_self;
+    END check_self;
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+END ternary_plot_right_all;
+
+MODEL ternary_plot_equilateral_all(
+    components WILL_BE set OF symbol_constant;
+    npnts WILL_BE set OF integer_constant;
+    comp_data[components][npnts] WILL_BE real;
+    ) WHERE (
+	CARD[components] = 3;
+    );
+    (* make triangle *)
+
+    tcomp1[0..58] IS_A fraction;
+    tcomp2[0..58] IS_A fraction;
+
+    nt_points IS_A set OF integer_constant;
+    nt_points :== [0..58];
+    x_points[nt_points] IS_A fraction;
+    y_points[nt_points] IS_A fraction;
+    triangle IS_A plt_curve(nt_points,y_points,x_points);
+
+
+    x_comp_top[1..2][components][npnts] IS_A fraction;
+    y_comp_top[components][npnts] IS_A fraction;
+
+    FOR i IN components CREATE
+	FOR j IN npnts CREATE
+	x_comp_top[1][i][j] = (comp_data[CHOICE[components - [i]]][j] +
+	    comp_data[components - [i,CHOICE[components - [i]]]][j])/2;
+	x_comp_top[2][i][j] = 1 - x_comp_top[1][i][j];
+	y_comp_top[i][j] = 2 * abs(comp_data[CHOICE[components - [i]]][j]
+	    - x_comp_top[1][i][j]);
+	END FOR;
+    END FOR;
+
+    FOR i IN components CREATE
+	FOR j IN [1..2] CREATE
+	    curve[i][j] IS_A
+		plt_curve(npnts,y_comp_top[i],x_comp_top[j][i]);
+	END FOR;
+    END FOR;
+
+    FOR i IN components CREATE
+	FOR j IN [1..2] CREATE
+	    plots[i][j][plot_set[i][j]] ALIASES (
+		triangle, curve[i][j]
+		) WHERE plot_set[i][j] IS_A set OF symbol_constant
+		WITH_VALUE ('triangle','profile');
+	END FOR;
+    END FOR;
+    FOR i IN components CREATE
+	FOR j IN [1..2] CREATE
+	    plot[i][j] IS_A
+		plt_plot_symbol(plot_set[i][j],
+		plots[i][j]);
+	END FOR;
+    END FOR;
+
+METHODS
+METHOD default_self;
+    tcomp1[0..58].fixed := TRUE;
+    tcomp2[0..58].fixed := TRUE;
+
+    tcomp1[0] := 1;
+    tcomp2[0] := 0;
+    FOR i IN [1..5] DO
+	tcomp1[4*i-3] := 0;
+	tcomp1[4*i-3+1] := 0;
+	tcomp2[4*i-3] := tcomp1[4*i-3-1];
+	tcomp2[4*i-3+1] := tcomp2[4*i-3] - 0.1;
+	tcomp1[4*i-3+2] := tcomp2[4*i-3+1];
+	tcomp1[4*i-3+3] := tcomp1[4*i-3+2] - 0.1;
+	tcomp2[4*i-3+2] := 0;
+	tcomp2[4*i-3+3] := 0;
+    END FOR;
+
+    FOR i IN [6..10] DO
+	tcomp2[4*i-3] := tcomp2[4*i-4] + 0.1;
+	tcomp2[4*i-3+1] := tcomp2[4*i-3];
+	tcomp2[4*i-3+2] := tcomp2[4*i-3+1] + 0.1;
+	tcomp2[4*i-3+3] := tcomp2[4*i-3+2];
+
+	tcomp1[4*i-3] := 0;
+	tcomp1[4*i-3+1] := 1 - tcomp2[4*i-3+1];
+	tcomp1[4*i-3+2] := 1 - tcomp2[4*i-3+2];
+	tcomp1[4*i-3+3] := 0;
+    END FOR;
+    tcomp1[40] := 0.1;
+    tcomp2[40] := 0.9;
+    FOR i IN [10..14] DO
+	tcomp1[4*i+1] := tcomp1[4*i+1-1];
+	tcomp1[4*i+1+1] := tcomp1[4*i+1] + 0.1;
+	tcomp1[4*i+1+2] := tcomp1[4*i+1+1];
+	tcomp1[4*i+1+3] := tcomp1[4*i+1+2] + 0.1;
+	tcomp2[4*i+1] := 0;
+	tcomp2[4*i+1+1] := 0;
+	tcomp2[4*i+1+2] := 1 - tcomp1[4*i+1+2];
+	tcomp2[4*i+1+3] := 1 - tcomp1[4*i+1+3];
+    END FOR;
+    tcomp1[59..60] := 1;
+    tcomp2[59..60] := 0;
+    FOR i IN components DO
+	FOR j IN [1..2] DO
+	    plot[i][j].title := 'i vs j';
+	    plot[i][j].YLabel := i;
+	    plot[i][j].XLabel := j;
+	    plot[i][j].Ylow := 0;
+	    plot[i][j].Yhigh := 1;
+	END FOR;
+    END FOR;
+
+    FOR i IN nt_points DO
+	x_points[i] := (tcomp2[i] - tcomp1[i] + 1)/2;
+	y_points[i] := 2 * abs(tcomp2[i] - x_points[i]);
+    END FOR;
+
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+METHOD scale_self;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+METHOD bound_self;
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+
+END ternary_plot_equilateral_all;
+
+MODEL ternary_plot_right(
+    Title IS_A symbol_constant;
+    components WILL_BE set OF symbol_constant;
+    y_comp IS_A symbol_constant;
+    x_comp IS_A symbol_constant;
+    npnts IS_A set OF integer_constant;
+    comp_data[components][npnts] WILL_BE fraction;
+    ) WHERE (
+	CARD[components] = 3;
+        y_comp IN components == TRUE;
+	x_comp IN components == TRUE;
+    );
+    (* make triangle *)
+    nt_points IS_A set OF integer_constant;
+    nt_points :== [0..3];
+    x_points[nt_points] IS_A real;
+    y_points[nt_points] IS_A real;
+    triangle IS_A plt_curve(nt_points,y_points,x_points);
+
+    curve IS_A
+	plt_curve(npnts,comp_data[y_comp],comp_data[x_comp]);
+
+    plots[plot_set] ALIASES (
+	triangle, curve
+	) WHERE plot_set IS_A set OF symbol_constant
+	WITH_VALUE ('triangle','profile');
+    plot IS_A
+	plt_plot_symbol(plot_set,
+	plots);
+
+METHODS
+METHOD default_self;
+    x_points[0,2,3] := 0;
+    x_points[1] := 1;
+    y_points[0,1,3] := 0;
+    y_points[2] := 1;
+
+    plot.title := Title;
+    plot.YLabel := y_comp;
+    plot.XLabel := x_comp;
+    plot.Ylow := 0;
+    plot.Yhigh := 1;
+    plot.Xlow := 0;
+    plot.Xhigh := 1;
+    plots['profile'].legend := 'profile';
+    plots['triangle'].legend := 'triangle';
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+METHOD scale_self;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+METHOD bound_self;
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+END ternary_plot_right;
+
+MODEL ternary_plot_equilateral(
+    Title IS_A symbol_constant;
+    components WILL_BE set OF symbol_constant;
+    left_comp IS_A symbol_constant;
+    right_comp IS_A symbol_constant;
+    npnts IS_A set OF integer_constant;
+    comp_data[components][npnts] WILL_BE fraction;
+    ) WHERE (
+	CARD[components] = 3;
+        left_comp IN components == TRUE;
+	right_comp IN components == TRUE;
+    );
+    (* make triangle *)
+
+    tcomp1[0..60] IS_A fraction;
+    tcomp2[0..60] IS_A fraction;
+
+    nt_points IS_A set OF integer_constant;
+    nt_points :== [0..60];
+    x_points[nt_points] IS_A fraction;
+    y_points[nt_points] IS_A fraction;
+    triangle IS_A plt_curve(nt_points,y_points,x_points);
+
+    x_comp_eq[npnts] IS_A fraction;
+    y_comp_eq[npnts] IS_A fraction;
+
+    FOR i IN npnts CREATE
+	x_comp_eq[i] = (comp_data[right_comp][i] -
+	    comp_data[left_comp][i] + 1)/2;
+	y_comp_eq[i] = 2 * abs(comp_data[right_comp][i] - x_comp_eq[i]);
+    END FOR;
+
+    curve IS_A
+	plt_curve(npnts,y_comp_eq,x_comp_eq);
+
+    plots[plot_set] ALIASES (
+	triangle, curve
+	) WHERE plot_set IS_A set OF symbol_constant
+	WITH_VALUE ('triangle','profile');
+
+    plot IS_A
+	plt_plot_symbol(plot_set,
+	plots);
+
+METHODS
+METHOD default_self;
+    tcomp1[0..58].fixed := TRUE;
+    tcomp2[0..58].fixed := TRUE;
+
+
+    tcomp1[0] := 1;
+    tcomp2[0] := 0;
+    FOR i IN [1..5] DO
+	tcomp1[4*i-3] := 0;
+	tcomp1[4*i-3+1] := 0;
+	tcomp2[4*i-3] := tcomp1[4*i-3-1];
+	tcomp2[4*i-3+1] := tcomp2[4*i-3] - 0.1;
+	tcomp1[4*i-3+2] := tcomp2[4*i-3+1];
+	tcomp1[4*i-3+3] := tcomp1[4*i-3+2] - 0.1;
+	tcomp2[4*i-3+2] := 0;
+	tcomp2[4*i-3+3] := 0;
+    END FOR;
+
+    FOR i IN [6..10] DO
+	tcomp2[4*i-3] := tcomp2[4*i-4] + 0.1;
+	tcomp2[4*i-3+1] := tcomp2[4*i-3];
+	tcomp2[4*i-3+2] := tcomp2[4*i-3+1] + 0.1;
+	tcomp2[4*i-3+3] := tcomp2[4*i-3+2];
+
+	tcomp1[4*i-3] := 0;
+	tcomp1[4*i-3+1] := 1 - tcomp2[4*i-3+1];
+	tcomp1[4*i-3+2] := 1 - tcomp2[4*i-3+2];
+	tcomp1[4*i-3+3] := 0;
+    END FOR;
+    tcomp1[40] := 0.1;
+    tcomp2[40] := 0.9;
+    FOR i IN [10..14] DO
+	tcomp1[4*i+1] := tcomp1[4*i+1-1];
+	tcomp1[4*i+1+1] := tcomp1[4*i+1] + 0.1;
+	tcomp1[4*i+1+2] := tcomp1[4*i+1+1];
+	tcomp1[4*i+1+3] := tcomp1[4*i+1+2] + 0.1;
+	tcomp2[4*i+1] := 0;
+	tcomp2[4*i+1+1] := 0;
+	tcomp2[4*i+1+2] := 1 - tcomp1[4*i+1+2];
+	tcomp2[4*i+1+3] := 1 - tcomp1[4*i+1+3];
+    END FOR;
+    tcomp1[59..60] := 1;
+    tcomp2[59..60] := 0;
+    FOR i IN nt_points DO
+	x_points[i] := (tcomp2[i] - tcomp1[i] + 1)/2;
+	y_points[i] := 2 * abs(tcomp2[i] - x_points[i]);
+    END FOR;
+    plot.title := Title;
+    FOR i IN [components - [left_comp] - [right_comp]] DO
+	plot.YLabel := i;
+    END FOR;
+    plot.XLabel := right_comp;
+    plot.Ylow := 0;
+    plot.Yhigh := 1;
+    plot.Xlow := 0;
+    plot.Xhigh := 1;
+    plots['profile'].legend := 'profile';
+    plots['triangle'].legend := 'triangle';
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+METHOD scale_self;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+METHOD bound_self;
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+METHOD seqmod;
+    tcomp1[0..60].fixed := TRUE;
+    tcomp2[0..60].fixed := TRUE;
+END seqmod;
+METHOD reset;
+    RUN seqmod;
+    comp_data[components][npnts].fixed := TRUE;
+END reset;
+END ternary_plot_equilateral;
+
+MODEL ternary_plot_equilateral2(
+    Title IS_A symbol_constant;
+    components WILL_BE set OF symbol_constant;
+    left_comp IS_A symbol_constant;
+    right_comp IS_A symbol_constant;
+    curves IS_A set OF symbol_constant;
+    curve[curves] WILL_BE plt_curve;
+    ) WHERE (
+	CARD[components] = 3;
+        left_comp IN components == TRUE;
+	right_comp IN components == TRUE;
+    );
+    (* make triangle *)
+
+    tcomp1[0..60] IS_A fraction;
+    tcomp2[0..60] IS_A fraction;
+
+    nt_points IS_A set OF integer_constant;
+    nt_points :== [0..60];
+    x_points[nt_points] IS_A fraction;
+    y_points[nt_points] IS_A fraction;
+    triangle IS_A plt_curve(nt_points,y_points,x_points);
+
+    plots[plot_set] ALIASES (
+	triangle, curve[curves]
+	) WHERE plot_set IS_A set OF symbol_constant
+	WITH_VALUE ('triangle',curves);
+
+    plot IS_A
+	plt_plot_symbol(plot_set,
+	plots);
+
+METHODS
+METHOD default_self;
+    tcomp1[0..58].fixed := TRUE;
+    tcomp2[0..58].fixed := TRUE;
+
+
+    tcomp1[0] := 1;
+    tcomp2[0] := 0;
+    FOR i IN [1..5] DO
+	tcomp1[4*i-3] := 0;
+	tcomp1[4*i-3+1] := 0;
+	tcomp2[4*i-3] := tcomp1[4*i-3-1];
+	tcomp2[4*i-3+1] := tcomp2[4*i-3] - 0.1;
+	tcomp1[4*i-3+2] := tcomp2[4*i-3+1];
+	tcomp1[4*i-3+3] := tcomp1[4*i-3+2] - 0.1;
+	tcomp2[4*i-3+2] := 0;
+	tcomp2[4*i-3+3] := 0;
+    END FOR;
+
+    FOR i IN [6..10] DO
+	tcomp2[4*i-3] := tcomp2[4*i-4] + 0.1;
+	tcomp2[4*i-3+1] := tcomp2[4*i-3];
+	tcomp2[4*i-3+2] := tcomp2[4*i-3+1] + 0.1;
+	tcomp2[4*i-3+3] := tcomp2[4*i-3+2];
+
+	tcomp1[4*i-3] := 0;
+	tcomp1[4*i-3+1] := 1 - tcomp2[4*i-3+1];
+	tcomp1[4*i-3+2] := 1 - tcomp2[4*i-3+2];
+	tcomp1[4*i-3+3] := 0;
+    END FOR;
+    tcomp1[40] := 0.1;
+    tcomp2[40] := 0.9;
+    FOR i IN [10..14] DO
+	tcomp1[4*i+1] := tcomp1[4*i+1-1];
+	tcomp1[4*i+1+1] := tcomp1[4*i+1] + 0.1;
+	tcomp1[4*i+1+2] := tcomp1[4*i+1+1];
+	tcomp1[4*i+1+3] := tcomp1[4*i+1+2] + 0.1;
+	tcomp2[4*i+1] := 0;
+	tcomp2[4*i+1+1] := 0;
+	tcomp2[4*i+1+2] := 1 - tcomp1[4*i+1+2];
+	tcomp2[4*i+1+3] := 1 - tcomp1[4*i+1+3];
+    END FOR;
+    tcomp1[59..60] := 1;
+    tcomp2[59..60] := 0;
+    FOR i IN nt_points DO
+	x_points[i] := (tcomp2[i] - tcomp1[i] + 1)/2;
+	y_points[i] := 2 * abs(tcomp2[i] - x_points[i]);
+    END FOR;
+    plot.title := Title;
+    FOR i IN [components - [left_comp] - [right_comp]] DO
+	plot.YLabel := i;
+    END FOR;
+    plot.XLabel := right_comp;
+    plot.Ylow := 0;
+    plot.Yhigh := 1;
+    plot.Xlow := 0;
+    plot.Xhigh := 1;
+    FOR j IN curves DO
+	plots[j].legend := j;
+    END FOR;
+    plots['triangle'].legend := 'triangle';
+
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+METHOD scale_self;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+METHOD bound_self;
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+METHOD values;
+END values;
+METHOD seqmod;
+    tcomp1[0..60].fixed := TRUE;
+    tcomp2[0..60].fixed := TRUE;
+END seqmod;
+END ternary_plot_equilateral2;

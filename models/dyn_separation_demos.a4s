@@ -1,0 +1,317 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of dyn_column.a4l
+
+DELETE TYPES;
+READ FILE "dyn_column.a4l";
+source "$env(ASCENDDIST)/models/set_intervals.tcl";
+
+#Vapor liquid flash.
+COMPILE tvlf OF test_vapor_liquid_flash;
+BROWSE {tvlf};
+ASSIGN tvlf.equilibrated FALSE;
+RUN {tvlf.values};
+RUN {tvlf.reset};
+SOLVE {tvlf} WITH QRSlv;
+RUN {tvlf.check_self};
+ASSIGN tvlf.dynamic TRUE;
+RUN {tvlf.fl1.seqmod};
+RUN {tvlf.fl1.set_ode};
+RUN {tvlf.fl1.set_obs};
+set_int 100 1 {s};
+ASSIGN {tvlf.feed.f['water']} 0.025 {kmol/s};
+INTEGRATE tvlf FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM;
+ASSIGN tvlf.dynamic FALSE;
+ASSIGN tvlf.equilibrated TRUE;
+RUN {tvlf.values};
+RUN {tvlf.reset};
+SOLVE {tvlf} WITH QRSlv;
+RUN {tvlf.check_self};
+ASSIGN tvlf.dynamic TRUE;
+RUN {tvlf.fl1.seqmod};
+#RUN {tvlf.fl1.set_ode};
+#RUN {tvlf.fl1.set_obs};
+ASSIGN tvlf.t 0 {s};
+ASSIGN {tvlf.feed.f['water']} 0.010 {kmol/s};
+INTEGRATE tvlf FROM 0 TO 99 WITH BLSODE;
+
+# Single Tray
+COMPILE tt OF test_tray;
+BROWSE {tt};
+ASSIGN tt.equilibrated FALSE;
+RUN {tt.values};
+RUN {tt.reset};
+SOLVE {tt} WITH QRSlv;
+RUN {tt.check_self};
+ASSIGN tt.dynamic TRUE;
+RUN {tt.reset};
+RUN {tt.fl1.set_ode};
+RUN {tt.fl1.set_obs};
+ASSIGN {tt.vin.f['water']} 0.030 {kmol/s};
+INTEGRATE tt FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM
+ASSIGN tt.dynamic FALSE;
+ASSIGN tt.equilibrated TRUE;
+RUN {tt.values};
+RUN {tt.reset};
+SOLVE {tt} WITH QRSlv;
+RUN {tt.check_self};
+ASSIGN tt.dynamic TRUE;
+RUN {tt.reset};
+#RUN {tt.fl1.set_ode};
+#RUN {tt.fl1.set_obs};
+ASSIGN tt.t 0 {s};
+ASSIGN {tt.vin.f['water']} 0.010 {kmol/s};
+INTEGRATE tt FROM 0 TO 99 WITH BLSODE;
+
+ASSIGN tt.dynamic FALSE;
+RUN {tt.values};
+RUN {tt.reset};
+RUN tt.fl1.reset_to_adiabatic;
+SOLVE {tt} WITH QRSlv;
+RUN {tt.check_self};
+ASSIGN tt.dynamic TRUE;
+RUN {tt.fl1.seqmod};
+ASSIGN tt.t 0 {s};
+ASSIGN {tt.vin.f['water']} 0.015 {kmol/s};
+INTEGRATE tt FROM 0 TO 99 WITH BLSODE;
+
+
+# Feed tray with 1 V/L feed.
+COMPILE tft OF test_feed_tray;
+BROWSE {tft};
+ASSIGN tft.equilibrated FALSE;
+RUN {tft.values};
+RUN {tft.reset};
+SOLVE {tft} WITH QRSlv;
+RUN {tft.check_self};
+ASSIGN tft.dynamic TRUE;
+RUN {tft.reset};
+RUN {tft.fl1.set_ode};
+RUN {tft.fl1.set_obs};
+ASSIGN {tft.feed.f['water']} 0.030 {kmol/s};
+INTEGRATE tft FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM;
+ASSIGN tft.dynamic FALSE;
+ASSIGN tft.equilibrated TRUE;
+RUN {tft.values};
+RUN {tft.reset};
+SOLVE {tft} WITH QRSlv;
+RUN {tft.check_self};
+ASSIGN tft.dynamic TRUE;
+RUN {tft.reset};
+ASSIGN tft.t 0 {s};
+ASSIGN {tft.feed.f['water']} 0.010 {kmol/s};
+INTEGRATE tft FROM 0 TO 99 WITH BLSODE;
+
+ASSIGN tft.dynamic FALSE;
+RUN {tft.values};
+RUN {tft.reset};
+RUN {tft.fl1.reset_to_adiabatic};
+SOLVE {tft} WITH QRSlv;
+RUN {tft.check_self};
+ASSIGN tft.dynamic TRUE;
+RUN {tft.reset};
+ASSIGN tft.t 0 {s};
+ASSIGN {tft.feed.f['water']} 0.015 {kmol/s};
+INTEGRATE tft FROM 0 TO 99 WITH BLSODE;
+
+# Condenser with 1 liquid product when partial is
+# FALSE and 1 vapor product when partial is TRUE;
+# Both Liquid and vapor products are possible but
+# one of the flows must be set or a ratio given.
+COMPILE tc OF test_condenser;
+BROWSE {tc};
+ASSIGN tc.partial FALSE;
+# Partial is false - this is a total condenser
+ASSIGN tc.fl1.vap_distillate.flow 0 {mole/sec};
+# if partial TRUE set liq_distillate.flow = 0;
+ASSIGN tc.equilibrated FALSE;
+RUN {tc.values};
+RUN {tc.reset};
+SOLVE {tc} WITH QRSlv;
+RUN {tc.check_self};
+ASSIGN tc.dynamic TRUE;
+RUN tc.fl1.seqmod;
+RUN tc.fl1.set_ode;
+RUN tc.fl1.set_obs;
+ASSIGN tc.t 0 {s};
+ASSIGN {tc.vapin.f['water']} 0.025 {kmol/s};
+INTEGRATE tc FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM;
+ASSIGN tc.dynamic FALSE;
+ASSIGN tc.equilibrated TRUE;
+RUN {tc.values};
+RUN tc.fl1.seqmod;
+SOLVE {tc} WITH QRSlv;
+RUN {tc.check_self};
+ASSIGN tc.dynamic TRUE;
+ASSIGN tc.t 0 {s};
+ASSIGN {tc.vapin.f['water']} 0.025 {kmol/s};
+INTEGRATE tc FROM 0 TO 99 WITH BLSODE;
+
+# Reboiler with 1 liquid product when partial is
+# TRUE and 1 vapor product with partial is FALSE;
+# Both liquid an vapor products are possible if one
+# of the follows is fixed or a ratio is given.
+
+COMPILE tr OF test_reboiler;
+BROWSE {tr};
+ASSIGN tr.dynamic FALSE;
+ASSIGN tr.partial TRUE;
+ASSIGN tr.fl1.vap_bottom.flow 0 {mole/s};
+ASSIGN tr.equilibrated FALSE;
+RUN {tr.values};
+RUN {tr.reset};
+SOLVE {tr} WITH QRSlv;
+RUN {tr.check_self};
+ASSIGN tr.dynamic TRUE;
+RUN tr.fl1.seqmod;
+RUN tr.fl1.set_ode;
+RUN tr.fl1.set_obs;
+ASSIGN tr.t 0 {s};
+ASSIGN {tr.liqin.f['water']} 0.025 {kmol/s};
+INTEGRATE tr FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM;
+ASSIGN tr.dynamic FALSE;
+ASSIGN tr.equilibrated TRUE;
+RUN {tr.values};
+RUN {tr.reset};
+SOLVE {tr} WITH QRSlv;
+RUN {tr.check_self};
+ASSIGN tr.dynamic TRUE;
+RUN tr.fl1.seqmod;
+ASSIGN tr.t 0 {s};
+ASSIGN {tr.liqin.f['water']} 0.015 {kmol/s};
+INTEGRATE tr FROM 0 TO 99 WITH BLSODE;
+
+# Internal Tray Stack Model
+# Stack of trays for a column
+COMPILE tts OF test_tray_stack;
+BROWSE {tts};
+ASSIGN {tts.dynamic} FALSE;
+ASSIGN {tts.equilibrated} FALSE;
+RUN {tts.values};
+RUN {tts.reset};
+SOLVE {tts} WITH QRSlv;
+RUN {tts.check_self};
+ASSIGN {tts.dynamic} TRUE;
+RUN {tts.fl1.seqmod};
+RUN {tts.fl1.set_ode};
+RUN {tts.fl1.set_obs};
+set_int 100 1 {s};
+ASSIGN {tts.lin.f['water']} 0.015 {kmol/s};
+INTEGRATE tts FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM;
+ASSIGN {tts.dynamic} FALSE;
+ASSIGN {tts.equilibrated} TRUE;
+RUN {tts.values};
+RUN {tts.reset};
+SOLVE {tts} WITH QRSlv;
+RUN {tts.check_self};
+ASSIGN {tts.dynamic} TRUE;
+RUN {tts.fl1.seqmod};
+ASSIGN {tts.t} 0 {s};
+ASSIGN {tts.lin.f['water']} 0.025 {kmol/s};
+INTEGRATE tts FROM 0 TO 99 WITH BLSODE;
+
+ASSIGN {tts.dynamic} FALSE;
+RUN {tts.values};
+RUN {tts.fl1.reset_to_adiabatic};
+SOLVE {tts} WITH QRSlv;
+RUN {tts.check_self};
+ASSIGN {tts.dynamic} TRUE;
+RUN {tts.fl1.seqmod};
+ASSIGN {tts.t} 0 {s};
+ASSIGN {tts.lin.f['water']} 0.015 {kmol/s};
+INTEGRATE tts FROM 0 TO 99 WITH BLSODE;
+
+
+
+# Column Model
+# Note that some of the solves in the following model
+# may require a few more iterations than the solver
+# gives by default, depending on the solver scaling
+# and factorization and step control options.
+# Just hit the Solve button again.
+# In this model the condenser is defaulted to a total
+# condenser and the reboiler is a partial reboiler.
+COMPILE {tsc} OF {test_column};
+BROWSE {tsc};
+ASSIGN {tsc.dynamic} FALSE;
+ASSIGN {tsc.equilibrated} FALSE;
+#RUN {tsc.scale_all};
+RUN {tsc.reset};
+RUN {tsc.values};
+SOLVE tsc WITH QRSlv;
+RUN {tsc.check_self};
+ASSIGN {tsc.dynamic} TRUE;
+RUN {tsc.reset};
+RUN {tsc.col.set_ode};
+RUN {tsc.col.set_obs};
+set_int 10000 1 {s};
+ASSIGN {tsc.feed.f['n_heptane']} 0.011 {kmol/s};
+INTEGRATE tsc FROM 0 TO 99 WITH BLSODE;
+
+DELETE SYSTEM;
+ASSIGN {tsc.dynamic} FALSE;
+ASSIGN {tsc.equilibrated} TRUE;
+RUN {tsc.values};
+RUN {tsc.reset};
+SOLVE tsc WITH QRSlv;
+RUN {tsc.check_self};
+ASSIGN {tsc.dynamic} TRUE;
+RUN {tsc.reset};
+ASSIGN {tsc.t} 0 {s};
+ASSIGN {tsc.feed.f['n_heptane']} 0.009 {kmol/s};
+INTEGRATE tsc FROM 0 TO 99 WITH BLSODE;
+
+ASSIGN {tsc.dynamic} FALSE;
+RUN {tsc.values};
+RUN {tsc.reset};
+RUN {tsc.col.reset_to_adiabatic};
+SOLVE tsc WITH QRSlv;
+RUN {tsc.check_self};
+ASSIGN {tsc.dynamic} TRUE;
+RUN {tsc.reset};
+ASSIGN {tsc.t} 0{s};
+ASSIGN {tsc.feed.f['n_heptane']} 0.011 {kmol/s};
+INTEGRATE tsc FROM 0 TO 99 WITH BLSODE;
+
+##########  dyn_separation_demos.a4s ends here  ##########
+#
+#  dyn_separation_demos.a4s
+#  by Duncan Coffey
+#  June, 1998
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:30 $
+#  $Revision: 1.3 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/dyn_separation_demos.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

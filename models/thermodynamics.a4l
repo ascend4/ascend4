@@ -1,0 +1,1531 @@
+REQUIRE "components.a4l";
+(* => components.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "phases.a4l";
+(* => phases.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "thermodynamics.a4l";
+
+(*
+ *  thermodynamics.a4l
+ *  by Arthur W. Westerberg, Ben Allan, and Vicente Rico-Ramirez
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:33:42 $
+ *  $Revision: 1.6 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/thermodynamics.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+MODEL td_model;
+(* This MODEL is simply a root and documentation container for the
+ * thermodynamic modeling library.
+ * It should contain nothing except notes on the library and
+ * the boundwidth which is standard for this library.
+ *)
+NOTES
+'licensing' SELF {This library is subject to the GNU Public License v.2.0}
+
+'sacredness' SELF {
+There is nothing sacred or mysterious about either
+thermodynamics in general or this implementation of
+property calculations in particular.  Please experiment --
+you really cannot break anything in such a way that you
+cannot also fix it.
+
+It's all really just a matter of consistent and correct
+modeling practice combined with good coefficient data
+supplied by thermodynamicists.
+}
+
+'purpose' SELF {
+Thermodynamic-based physical property package for
+expressing the state information about multiphase,
+multicomponent streams and holdups. Handles single-phase,
+single-component degenerate cases correctly.
+}
+
+'author' SELF {Arthur W. Westerberg, Ben Allan, and Vicente Rico-Ramirez}
+'created' SELF {November 9, 1997}
+'last revised' SELF {$Revision: 1.6 $}
+
+'new users' SELF {
+The enduser MODEL in this library, if there is one, is
+"thermodynamics" which has a relatively simple interface.
+Adding new correlations for properties is relatively easy. To
+understand how, examine by way of example the two models
+"ideal_vapor_mixture" and "Pitzer_vapor_mixture".
+}
+
+'telephone support' SELF {
+You must be kidding. CAPD consortium sponsors can contact the authors
+for further consultancy. Everyone else can submit questions, suggestions,
+and bug reports via the World Wide Web.
+}
+
+'URL' SELF {http://www.cs.cmu.edu/~ascend}
+
+'design goal' SELF {
+The approach used by this form for the physical property package is
+to have the modeler using it define only the components (see model
+"components_data") in mixture and the phases and the choice of
+mixture models (see model "phases_data") to be used for the vapor
+and liquid phases present.  The models contained herein will set up
+all the needed pure component data models, the physical property
+models and the equilibrium relationships from just this
+information.
+
+New mixing rules should be easily added (and are) by defining new
+refinements of the phase_partials MODEL here and adding them
+to the alternatives allowed in phases.a4l.
+}
+
+'history' SELF {
+Contains previously created models for a pure Pitzer vapor
+component and a pure Rackett liquid component, and for a Pitzer
+vapor mixture, a UNIFAC liquid mixture and a Wilson liquid mixture
+created by Joe Zaher, Bob Huss and Boyd Safrit.
+New models for ideal gases added by Ben Allan.
+}
+
+'technique' SELF {
+The models in this file follow the pattern for easy reuse of:
+Given (MODEL name and parameter list are the givens)
+Assumptions (These are enforced as needed by the WHERE statements)
+Wanted (NOTES 'purpose' SELF are explain what the MODEL is to do)
+Equations and variables.
+METHODS
+Starting default values for a typical problem
+Checking functions that verify the solutions calculated if requested.
+Bounding functions that limit the variables for nonlinear search.
+Scaling functions that provide scaling values for variables and some eqns.
+Specify and reset functions for typical degree of freedom configurations.
+}
+
+'naming conventions' SELF {
+Note the following variable naming convention applies here.
+If a variable is the simple sum of simple products,
+such as Vs = Sum Vi * yi, then it is notated v_y,
+the inner product of vector V dot vector y.
+The same convention applies in streams and holdup models.
+This convention does not generalize prettily to sums of
+vector products.
+For example Sum(phi[j]*phase[j].v_y) would be rather
+ambiguously notated as phi_v_y. So there it gets
+simplified to a capital letter V. We need superscript
+underbars or curly underbars or some such.
+}
+END NOTES;
+
+	boundwidth "width factor for bound calculations" IS_A bound_width;
+
+END td_model;
+
+(* murphree_equilibrium_mixture added by FIXME!! fixme! *)
+
+(* ****************************************************************** *)
+
+MODEL thermodynamic_properties(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+) REFINES td_model;
+
+	v "species molar volume"	IS_A molar_volume;
+	h "species molar enthalpy"	IS_A molar_energy;
+	g "species molar Gibbs free energy"	IS_A molar_energy;
+
+
+NOTES
+'purpose' SELF {
+The base thermodynamic property model.  Two other models in this
+library are refinements of this model.  Its purpose is to
+create the variables for pressure, temperature, molar volume, molar
+enthalpy and molar Gibbs free energy of a pure species.
+}
+END NOTES;
+
+METHODS
+
+(* inherits ClearAll, reset *)
+
+METHOD default_all;
+	(* all the ATOM default values are fine so far as we know *)
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	(* All the ATOM default values are fine so far as we know.
+	 * Might want to change the boundwidth value, though, later..
+	 *)
+END default_self;
+
+METHOD check_all;
+	IF (T < 0.0{K}) THEN
+		STOP {Negative absolute temperature?!};
+	END IF;
+	IF (P < 0.0{Pa}) THEN
+		STOP {Negative absolute pressure?!};
+	END IF;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	IF (v <= 0.0{liter/mole}) THEN
+		STOP {Negative molar volume?};
+	END IF;
+	(* Don't know how to check g,h *)
+END check_self;
+
+METHOD scale_all;
+	(* assuming all are not near 0.0, which is not necessarily so. *)
+	T.nominal := T;
+	P.nominal := P;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	(* assuming all are not near 0.0, which is not necessarily so. *)
+	v.nominal := v;
+	h.nominal := abs(h);
+	g.nominal := abs(g);
+END scale_self;
+
+METHOD bound_all;
+        (* resets most bounds to the interval centered at the current point.
+	 * (variable.value) +/- boundwidth * variable.nominal
+         *)
+	T.lower_bound := 1.0e-8{K};
+	P.lower_bound := 1.0e-8{atm};
+	T.upper_bound := T + boundwidth*T.nominal;
+	P.upper_bound := P + boundwidth*P.nominal;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	v.upper_bound := v + boundwidth*v.nominal;
+	v.lower_bound := 1.0e-8{liter/g_mole};
+	h.upper_bound := h + boundwidth*h.nominal;
+	h.lower_bound := h - boundwidth*h.nominal;
+	g.upper_bound := g + boundwidth*g.nominal;
+	g.lower_bound := g - boundwidth*g.nominal;
+END bound_self;
+
+METHOD specify;
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+	v.fixed := TRUE;
+	h.fixed := TRUE;
+	g.fixed := TRUE;
+END specify;
+
+END thermodynamic_properties;
+
+(* ****************************************************************** *)
+
+
+MODEL pure_component(
+    P WILL_BE pressure;
+    T WILL_BE temperature;
+    data WILL_BE td_component_constants;
+) REFINES thermodynamic_properties;
+
+NOTES
+'purpose' SELF {
+This model provides the pressure, temperature, molar volume, molar
+enthalpy and molar Gibbs free energy for a pure component.
+}
+END NOTES;
+
+METHODS
+(* Inherits: ClearAll, default_self, bound_self,
+ * check_self, scale_self, specify, reset.
+ *)
+METHOD check_all;
+	RUN data.check_all;
+	RUN check_self;
+END check_all;
+METHOD default_all;
+	RUN data.default_all;
+	RUN default_self;
+END default_all;
+METHOD scale_all;
+	RUN data.scale_all;
+	RUN scale_self;
+END scale_all;
+METHOD bound_all;
+	RUN data.bound_all;
+	RUN bound_self;
+END bound_all;
+
+END pure_component;
+
+(* ****************************************************************** *)
+
+
+MODEL partial_component(
+    P WILL_BE pressure;
+    T WILL_BE temperature;
+) REFINES thermodynamic_properties;
+
+NOTES
+'purpose' SELF {
+This model provides the pressure, temperature, partial
+molar volume, partial molar enthalpy and partial molar
+Gibbs free energy for a single component.
+}
+END NOTES;
+
+METHODS
+(* Inherits: ClearAll, default_all, default_self, bound_all, bound_self,
+ * check_all, check_self, scale_all, scale_self, specify, reset.
+ *)
+METHOD specify_partials_computed;
+	(* assumes equations for v,h,g have been added by refinement. *)
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+END specify_partials_computed;
+
+END partial_component;
+
+(* ****************************************************************** *)
+
+
+MODEL Pitzer_vapor_component(
+    P WILL_BE pressure;
+    T WILL_BE temperature;
+    data WILL_BE td_component_constants;
+) REFINES pure_component;
+
+NOTES
+'purpose' SELF {
+This model provides the equations that compute molar
+volume, molar enthalpy and molar Gibbs free energy in terms
+of pressure and temperature for a single component based on
+the Pitzer vapor model.
+}
+END NOTES;
+Pitzer_component_v:
+		P*v/(1{GAS_C})/data.Tc = T/data.Tc + (P/data.Pc)*
+	(0.083 - 0.422*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.172*(data.Tc/T)^4.2));
+
+Pitzer_component_h:
+	h/(1{GAS_C})/data.Tc = data.H0/(1{GAS_C})/data.Tc +
+	data.cpvapa*(T - data.T0)/(1{GAS_C})/data.Tc +
+	data.cpvapb*(T^2 - data.T0^2)/2/(1{GAS_C})/data.Tc +
+	data.cpvapc*(T^3 - data.T0^3)/3/(1{GAS_C})/data.Tc +
+	data.cpvapd*(T^4 - data.T0^4)/4/(1{GAS_C})/data.Tc +
+	(P/data.Pc)*(0.083 - 1.097*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.894*(data.Tc/T)^4.2));
+
+Pitzer_component_g:
+		g/(1{GAS_C})/data.Tc = data.G0/(1{GAS_C})/data.Tc -
+		(data.H0 - data.G0)*(T/data.T0 - 1)/(1{GAS_C})/data.Tc -
+		data.cpvapa*(T*lnm(T/data.T0) - T + data.T0)/1{GAS_C}/data.Tc -
+		data.cpvapb*(T^2 - 2*T*data.T0 + data.T0^2)/
+		(2*1{GAS_C}*data.Tc) -
+		data.cpvapc*(T^3/2 - 3*T*data.T0^2/2 + data.T0^3)/
+		(3*1{GAS_C}*data.Tc) -
+		data.cpvapd*(T^4/3 - 4*T*data.T0^3/3 + data.T0^4)/
+		(4*1{GAS_C}*data.Tc) +
+		T*lnm(P/data.P0)/data.Tc +
+		(P/data.Pc)*
+		(0.083 - 0.422*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.172*(data.Tc/T)^4.2));
+
+METHODS
+(* Inherited methods: ClearAll, check_all, check_self,
+ * bound_all, bound_self, scale_all, scale_self, reset.
+ *)
+METHOD default_all;
+	(* Rather arbitrary but ok limits for defaults.
+	 * the default bounds on T, P are rather too large.
+	 *)
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 0.1{atm};
+	T.upper_bound := 1000{K};
+	P.upper_bound := 20{atm};
+	RUN data.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	v := 24{liter/mole};
+	(* ATOM defaults ok for rest. *)
+END default_self;
+
+METHOD specify;
+	(* release v,h,g since equations calculate them. *)
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+END specify;
+
+END Pitzer_vapor_component;
+
+(* ****************************************************************** *)
+MODEL ideal_vapor_component(
+    P WILL_BE pressure;
+    T WILL_BE temperature;
+    data WILL_BE td_component_constants;
+) REFINES pure_component;
+
+NOTES
+'purpose' SELF {
+This model provides the equations that compute molar
+volume, molar enthalpy and molar Gibbs free energy in terms
+of pressure and temperature for a single component based on
+the ideal gas (vapor) model.
+}
+'FIXME' SELF {Needs to be independently checked. Did I get h and g correct?}
+END NOTES;
+
+ideal_component_v: P*v/(1{GAS_C})/data.Tc = T/data.Tc;
+
+ideal_component_h:
+	h/(1{GAS_C})/data.Tc =
+	data.H0/(1{GAS_C})/data.Tc +
+	data.cpvapa*(T - data.T0)/(1{GAS_C})/data.Tc +
+	data.cpvapb*(T^2 - data.T0^2)/2/(1{GAS_C})/data.Tc +
+	data.cpvapc*(T^3 - data.T0^3)/3/(1{GAS_C})/data.Tc +
+	data.cpvapd*(T^4 - data.T0^4)/4/(1{GAS_C})/data.Tc;
+
+ideal_component_g:
+	g/(1{GAS_C})/data.Tc =
+	data.G0/(1{GAS_C})/data.Tc -
+	(data.H0 - data.G0)*(T/data.T0 - 1)/(1{GAS_C})/data.Tc -
+	data.cpvapa*(T*lnm(T/data.T0) - T + data.T0)/1{GAS_C}/data.Tc -
+	data.cpvapb*(T^2 - 2*T*data.T0 + data.T0^2)/(2*1{GAS_C}*data.Tc) -
+	data.cpvapc*(T^3/2 - 3*T*data.T0^2/2 + data.T0^3)/
+	  (3*1{GAS_C}*data.Tc) -
+	data.cpvapd*(T^4/3 - 4*T*data.T0^3/3 + data.T0^4)/
+	  (4*1{GAS_C}*data.Tc) +
+	T*lnm(P/data.P0)/data.Tc;
+
+METHODS
+(* Inherited methods: ClearAll, check_all, check_self,
+ * bound_all, bound_self, scale_all, scale_self, reset.
+ *)
+METHOD default_all;
+	(* Rather arbitrary but ok limits for defaults.
+	 * the default bounds on T, P are rather too large.
+	 *)
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 0.1{atm};
+	T.upper_bound := 1000{K};
+	P.upper_bound := 10{atm};
+	RUN data.default_all;
+	RUN default_self;
+END default_all;
+METHOD default_self;
+	v := 24{liter/mole};
+	(* ATOM defaults ok for rest. *)
+END default_self;
+METHOD specify;
+	(* release v,h,g since equations calculate them. *)
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+END specify;
+END ideal_vapor_component;
+
+(* ****************************************************************** *)
+
+
+MODEL Rackett_liquid_component(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+        data WILL_BE td_component_constants;
+) REFINES pure_component;
+
+NOTES
+'purpose' SELF {
+This model provides the equations that compute vapor
+pressure, molar volume, molar enthalpy and molar Gibbs free
+energy in terms of pressure and temperature for a pure
+component based on the Rackett liquid model.
+}
+END NOTES;
+
+        VP "pure species vapor pressure" IS_A pressure;
+
+(*Rackett_component_VP:*)
+	SELECT (data.vp_correlation)
+	CASE 1:
+		lnm(VP/data.Pc)*T/data.Tc*abs(data.Tc - T) =
+		(data.vpa * abs(1.0 - T/data.Tc) +
+		data.vpb * abs(1.0 - T/data.Tc)^1.5 +
+		data.vpc * abs(1.0 - T/data.Tc)^3.0 +
+		data.vpd * abs(1.0 - T/data.Tc)^6.0) * (data.Tc - T);
+	CASE 2:
+		lnm(VP/1{bar}) / lnm(data.Pc/1{bar}) =
+		(data.vpa - data.vpb/T + data.vpc * lnm(T/1{K}) +
+		 data.vpd * VP/sqr(T)) / lnm(data.Pc/1{bar});
+	CASE 3:
+		lnm(VP/1{bar}) / lnm(data.Pc/1{bar}) =
+		(data.vpa - data.vpb/(data.vpc + T)) / lnm(data.Pc/1{bar});
+	END SELECT;
+
+	Rackett_component_v: v/data.Vliq =
+		data.Zc^(abs(1.0 - T/data.Tc)^(2/7))/
+		data.Zc^(abs(1.0 - data.Tliq/data.Tc)^(2/7));
+
+	Rackett_component_h:
+		h / (1{GAS_C} * data.Tc) = data.H0/(1{GAS_C})/data.Tc +
+		(T - data.T0)	  * (data.cpvapa/(1{GAS_C})/data.Tc)   +
+		(T^2 - data.T0^2)  * (data.cpvapb/2/(1{GAS_C})/data.Tc) +
+		(T^3 - data.T0^3)  * (data.cpvapc/3/(1{GAS_C})/data.Tc) +
+		(T^4 - data.T0^4)  * (data.cpvapd/4/(1{GAS_C})/data.Tc) +
+		(VP/data.Pc)*
+		(0.083 - 1.097*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.894*(data.Tc/T)^4.2)) -
+		(data.Hv/(1{GAS_C})/data.Tc)*
+		abs((data.Tc-T)/(data.Tc-data.Tb))^0.38 +
+		(P - VP)*(data.Vliq/(1{GAS_C})/data.Tc)*
+		(data.Zc^(abs(1.0 - T/data.Tc)^(2/7))/
+		data.Zc^(abs(1.0 - data.Tliq/data.Tc)^(2/7)))*(1.0 -
+		(-2/7)*(T/data.Tc)*(abs(1 - T/data.Tc)^(-5/7))*lnm(data.Zc));
+
+	Rackett_component_g: g/(1{GAS_C}*data.Tc) =
+		data.G0/(1{GAS_C})/data.Tc -
+		(T/data.T0 - 1) * ((data.H0 - data.G0)/(1{GAS_C})/data.Tc) -
+		(T*lnm(T/data.T0) - T + data.T0) *
+		(data.cpvapa/(1{GAS_C})/data.Tc) -
+		(T^2 - T*(2*data.T0) + data.T0^2) *
+		(data.cpvapb/2/(1{GAS_C})/data.Tc) -
+		(T^3/2 - T*(3/2*data.T0^2) + data.T0^3) *
+		(data.cpvapc/3/(1{GAS_C})/data.Tc) -
+		(T^4/3 - T*(4/3*data.T0^3) + data.T0^4) *
+		(data.cpvapd/4/(1{GAS_C})/data.Tc) +
+		T*lnm(VP/data.P0)/data.Tc +
+		(VP/data.Pc) *
+		(0.083 - 0.422*(data.Tc/T)^1.6 + data.omega *
+		(0.139 - 0.172*(data.Tc/T)^4.2)) +
+		(P - VP)*(data.Vliq/(1{GAS_C})/data.Tc) *
+		(data.Zc^(abs(1.0 - T/data.Tc)^(2/7))/
+		data.Zc^(abs(1.0 - data.Tliq/data.Tc)^(2/7)));
+
+METHODS
+(* Inherited methods: ClearAll, check_all, check_self, reset.  *)
+(* we need to see if there are any qualitative checks of VP
+ * or the VP slope
+ * to be added in check_self. At present, we just
+ * inherit checking of v. fixme, FIXME.
+ *)
+METHOD default_all;
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 0.1{atm};
+	T.upper_bound := 1000{K};
+	P.upper_bound := 20{atm};
+	RUN data.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	VP.lower_bound := 1.0e-12{Pa};
+	v := 0.1{liter/mole};
+END default_self;
+
+METHOD scale_all;
+	RUN data.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	VP.nominal := VP;
+	RUN pure_component::scale_self;
+END scale_self;
+
+METHOD bound_all;
+	RUN data.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	VP.lower_bound := VP - boundwidth*VP.nominal;
+	IF (VP.lower_bound < 1.0e-12{Pa}) THEN
+		VP.lower_bound := 1.0e-12{Pa};
+	END IF;
+	VP.upper_bound := VP + boundwidth*VP.nominal;
+	RUN pure_component::bound_self;
+END bound_self;
+
+METHOD specify;
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+END specify;
+
+END Rackett_liquid_component;
+
+(* ****************************************************************** *)
+
+MODEL phase_partials(
+    cd WILL_BE components_data;
+) REFINES td_model;
+
+NOTES
+'purpose' SELF {
+This model is the base model for computing the mixture
+thermodynamic properties of molar volume, molar enthalpy and molar
+Gibbs free energy in terms of pressure and temperature for a single
+phase, based on summing the partial molar quantities times the
+corresponding mole fractions for the components in the mixture.
+This base model also provides space for relative volatilities for
+the phase -- which can be used later to computer phase equilibrium
+for multi-phase mixtures.
+}
+END NOTES;
+    P IS_A pressure;
+    T IS_A temperature;
+
+    v_y "mixture molar volume" IS_A molar_volume;
+    h_y "mixture molar enthalpy" IS_A molar_energy;
+    g_y "mixture molar Gibbs free energy" IS_A molar_energy;
+
+    components ALIASES cd.components;
+    partial[components] IS_A partial_component(P, T);
+    alpha[components] IS_A relative_volatility;
+
+NOTES 'scaling' v_mix,h_mix,g_mix {
+DIMENSIONLESS well-scaled equations are easier to converge from anywhere,
+even if simply bilinear in dimensional form.
+v*Pcref/(R*Tcref) = Sum(yi*vi |i) * Pcref/(R*Tcref);
+comes from v = Sum(yi*vi);
+} END NOTES;
+
+    v_mix: v_y * (cd.data[cd.reference].Pc /
+               (cd.data[cd.reference].Tc * 1{GAS_C}))
+             = SUM[y[i]*partial[i].v | i IN cd.components] *
+               (cd.data[cd.reference].Pc /
+               (cd.data[cd.reference].Tc * 1{GAS_C}));
+
+    (* likewise for h and g *)
+    h_mix: h_y / (cd.data[cd.reference].Tc * 1{GAS_C})
+             = SUM[y[i]*partial[i].h | i IN cd.components] /
+               (cd.data[cd.reference].Tc * 1{GAS_C});
+
+    g_mix: g_y / (cd.data[cd.reference].Tc * 1{GAS_C})
+             = SUM[y[i]*partial[i].g | i IN cd.components] /
+               (cd.data[cd.reference].Tc * 1{GAS_C});
+
+    y[components] "mixture species mole fractions" IS_A mole_fraction;
+
+NOTES 'slack explanation' slack_PhaseDisappearance {
+When slack_PhaseDisappearance != 0.0, then the phase
+does not exist in this formulation of multi-phase
+equilibrium thermodynamics.
+} END NOTES;
+    slack_PhaseDisappearance "complementarity slack variable" IS_A fraction;
+
+    sum_y: SUM[y[components]] + slack_PhaseDisappearance  = 1.0;
+
+METHODS
+
+(* Inherited methods: ClearAll, reset.  *)
+METHOD default_self;
+        T.lower_bound := 1.0{K};
+        P.lower_bound := 1.0{Pa};
+        v_y := 24{liter/mole}; (* presupposes a vapor *)
+        RUN partial[components].default_self;
+END default_self;
+
+METHOD default_all;
+	RUN cd.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN cd.check_all;
+	IF (T < 0.0{K}) THEN
+		STOP {Phase has negative absolute temperature?!};
+	END IF;
+	IF (P < 0.0{Pa}) THEN
+		STOP {Phase has negative absolute pressure?!};
+	END IF;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	IF (v_y <= 0.0{liter/mole}) THEN
+		STOP {Phase has negative molar volume?!};
+	END IF;
+	(* Don't know how to check g_y,h_y *)
+        RUN partial[components].check_self;
+END check_self;
+
+METHOD scale_all;
+	RUN cd.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	(* assuming all are not near 0.0, which is not necessarily so. *)
+	T.nominal := T;
+	P.nominal := P;
+	v_y.nominal := v_y;
+	h_y.nominal := abs(h_y);
+	g_y.nominal := abs(g_y);
+        RUN partial[components].scale_self;
+END scale_self;
+
+METHOD bound_all;
+	RUN cd.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+        (* Resets most bounds to the interval centered at the current point.
+	 * (variable.value) +/- boundwidth * variable.nominal
+         *)
+	T.upper_bound := T + boundwidth*T.nominal;
+	T.lower_bound := 1.0e-8{K};
+	P.upper_bound := P + boundwidth*P.nominal;
+	P.lower_bound := 1.0e-8{atm};
+	v_y.upper_bound := v_y + boundwidth*v_y.nominal;
+	v_y.lower_bound := 1.0e-8{liter/g_mole};
+	h_y.upper_bound := h_y + boundwidth*h_y.nominal;
+	h_y.lower_bound := h_y - boundwidth*h_y.nominal;
+	g_y.upper_bound := g_y + boundwidth*g_y.nominal;
+	g_y.lower_bound := g_y - boundwidth*g_y.nominal;
+END bound_self;
+
+METHOD specify_partials_seqmod_massonly;
+	(* like specify_partials_computed, except leaves alpha[i] free *)
+	P.fixed := TRUE;
+	T.fixed := TRUE;
+	alpha[components].fixed := FALSE;
+	RUN partial[components].specify;
+	y[cd.other_components].fixed := TRUE;
+	slack_PhaseDisappearance.fixed := TRUE;
+	slack_PhaseDisappearance := 0.0;
+END specify_partials_seqmod_massonly;
+
+METHOD specify_partials_seqmod;
+	(* like specify_partials_computed, except leaves alpha[i] free *)
+	P.fixed := TRUE;
+	T.fixed := TRUE;
+	alpha[components].fixed := FALSE;
+	RUN partial[components].specify_partials_computed;
+	y[cd.other_components].fixed := TRUE;
+	slack_PhaseDisappearance.fixed := TRUE;
+	slack_PhaseDisappearance := 0.0;
+END specify_partials_seqmod;
+
+METHOD specify_partials_computed;
+       P.fixed := TRUE;
+       T.fixed := TRUE;
+       alpha[components].fixed := TRUE;
+       RUN partial[components].specify_partials_computed;
+       y[cd.other_components].fixed := TRUE;
+       slack_PhaseDisappearance.fixed := TRUE;
+       slack_PhaseDisappearance := 0.0;
+END specify_partials_computed;
+
+METHOD specify;
+       P.fixed := TRUE;
+       T.fixed := TRUE;
+       alpha[components].fixed := TRUE;
+       RUN partial[components].specify;
+       y[cd.other_components].fixed := TRUE;
+       slack_PhaseDisappearance.fixed := TRUE;
+       slack_PhaseDisappearance := 0.0;
+END specify;
+
+END phase_partials;
+
+(* ****************************************************************** *)
+
+MODEL ideal_vapor_mixture(
+    cd WILL_BE components_data;
+) REFINES phase_partials();
+
+NOTES 'purpose' SELF {
+A refinement of the phase_partials model given just above, this
+model computes the partial molar quantities for a vapor mixture
+phase for molar volume, molar enthalpy and molar Gibbs free energy
+based on the ideal gas model for a mixture.
+} END NOTES;
+
+    data ALIASES cd.data;
+
+    FOR i IN components CREATE
+        pure[i] "pure species ideal gas properties for the i-th species"
+		IS_A ideal_vapor_component(P, T, data[i]);
+    END FOR;
+
+    FOR i IN components CREATE
+
+	ideal_mixture_v[i]:
+		(partial[i].v - pure[i].v) *
+		(data[i].Pc/(1{GAS_C}*data[i].Tc)) = 0;
+
+	ideal_mixture_h[i]:
+		(partial[i].h - pure[i].h)/((1{GAS_C})*data[i].Tc) = 0;
+
+        ideal_mixture_g[i]:
+		(partial[i].g - pure[i].g - (1{GAS_C})*T*lnm(y[i])) /
+		(1{GAS_C}*data[i].Tc) = 0;
+	END FOR;
+
+METHODS
+
+(* Inherited methods: ClearAll, default_all, check_all, bound_all,
+ * scale_all, reset.
+ *)
+METHOD default_self;
+	RUN phase_partials::default_self;
+	RUN pure[components].default_self;
+END default_self;
+
+METHOD check_self;
+	RUN phase_partials::check_self;
+	RUN pure[components].check_self;
+END check_self;
+
+METHOD bound_self;
+	RUN phase_partials::bound_self;
+	RUN pure[components].bound_self;
+END bound_self;
+
+METHOD scale_self;
+	RUN phase_partials::scale_self;
+	RUN pure[components].scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN phase_partials::specify_partials_computed;
+END specify;
+
+END ideal_vapor_mixture;
+
+(* ****************************************************************** *)
+
+MODEL Pitzer_vapor_mixture(
+    cd WILL_BE components_data;
+) REFINES phase_partials();
+
+NOTES 'purpose' SELF {
+A refinement of the phase_partials model given just above, this
+model computes the partial molar quantities for a vapor mixture
+phase for molar volume, molar enthalpy and molar Gibbs free energy
+based on the Pitzer vapor model for a mixture.
+}
+END NOTES;
+
+    data ALIASES cd.data;
+
+    FOR i IN components CREATE
+        pure[i]
+	 "pure species properties for the i-th species using acentric factors"
+		IS_A Pitzer_vapor_component(P, T,  data[i]);
+    END FOR;
+
+    FOR i IN components CREATE
+
+	Pitzer_mixture_v[i]:
+		 (partial[i].v - pure[i].v)*(data[i].Pc/
+		(1{GAS_C}*data[i].Tc)) =
+		-1.0*(0.083 - 0.422*(data[i].Tc/T)^1.6 + data[i].omega*
+		(0.139 - 0.172*(data[i].Tc/T)^4.2))*(1.0 - y[i])^2 +
+		0.50*(1.0 - y[i])*
+		SUM[y[j]*((1.0 + (data[j].Vc/data[i].Vc)^(1/3))^3/
+		(1.0 + data[j].Zc/data[i].Zc))*
+		(0.083 - 0.422*(sqrt(data[i].Tc*data[j].Tc)/T)^1.6 +
+		0.5*(data[i].omega + data[j].omega)*
+		(0.139 - 0.172*(sqrt(data[i].Tc*data[j].Tc)/T)^4.2))
+	        | j IN components - [i]];
+
+	Pitzer_mixture_h[i]:
+		(partial[i].h - pure[i].h)/((1{GAS_C})*data[i].Tc) =
+		-(P/data[i].Pc)*
+		(0.083 - 1.097*(data[i].Tc/T)^1.6 + data[i].omega*
+		(0.139 - 0.894*(data[i].Tc/T)^4.2))*(1.0 - y[i])^2 +
+		(1.0 - y[i])*(P/(data[i].Pc*2))*
+		SUM[y[j]*((1.0 + (data[j].Vc/data[i].Vc)^(1/3))^3/
+		(1.0 + data[j].Zc/data[i].Zc))*
+		(0.083 - 1.097*(sqrt(data[i].Tc*data[j].Tc)/T)^1.6 +
+		0.5*(data[i].omega + data[j].omega)*
+		(0.139 - 0.894*(sqrt(data[i].Tc*data[j].Tc)/T)^4.2))
+		  | j IN components - [i]];
+
+        Pitzer_mixture_g[i]:
+		(partial[i].g - pure[i].g - (1{GAS_C})*T*lnm(y[i])) /
+		(1{GAS_C}*data[i].Tc) =
+		-(P/data[i].Pc)*
+		(0.083 - 0.422*(data[i].Tc/T)^1.6 + data[i].omega*
+		(0.139 - 0.172*(data[i].Tc/T)^4.2))*(1.0 - y[i])^2 +
+		(1.0 - y[i])*(P/(data[i].Pc*2))*
+		SUM[y[j]*((1.0 + (data[j].Vc/data[i].Vc)^(1/3))^3/
+		(1.0 + data[j].Zc/data[i].Zc))*
+		(0.083 - 0.422*(sqrt(data[i].Tc*data[j].Tc)/T)^1.6 +
+		0.5*(data[i].omega + data[j].omega)*
+		(0.139 - 0.172*(sqrt(data[i].Tc*data[j].Tc)/T)^4.2))
+		| j IN components - [i]];
+	END FOR;
+
+METHODS
+
+(* Inherited methods: ClearAll, default_all, check_all, bound_all,
+ * scale_all, reset.
+ *)
+METHOD default_self;
+	RUN phase_partials::default_self;
+	RUN pure[components].default_self;
+END default_self;
+
+METHOD check_self;
+	RUN phase_partials::check_self;
+	RUN pure[components].check_self;
+END check_self;
+
+METHOD bound_self;
+	RUN phase_partials::bound_self;
+	RUN pure[components].bound_self;
+END bound_self;
+
+METHOD scale_self;
+	RUN phase_partials::scale_self;
+	RUN pure[components].scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN phase_partials::specify_partials_computed;
+END specify;
+
+END Pitzer_vapor_mixture;
+
+(* ****************************************************************** *)
+
+
+MODEL UNIFAC_liquid_mixture(
+    cd WILL_BE components_data;
+) REFINES phase_partials();
+
+NOTES 'purpose' SELF {
+A refinement of the phase_partials model given just above, this
+model computes the partial molar quantities for a liquid mixture
+phase for molar volume, molar enthalpy and molar Gibbs free energy
+based on the UNIFAC model for a liquid mixture.
+} END NOTES;
+
+    data ALIASES cd.data;
+
+    FOR i IN components CREATE
+        pure[i]
+	  "pure species liquid properties for the i-th species by Rackett"
+		IS_A Rackett_liquid_component(P, T, data[i]);
+    END FOR;
+
+	subgroups		IS_A set OF symbol_constant;
+	groups			IS_A set OF integer_constant;
+	comps[subgroups]	IS_A set OF symbol_constant;
+	rv[components] "computed molecular volumes, ri constant"
+		IS_A UNIFAC_size;
+	qs[components] "computed molecular areas, qi constant"
+		IS_A UNIFAC_size;
+	Jv[components]		IS_A factor;
+	Ls[components]		IS_A factor;
+	theta[subgroups]	IS_A factor;
+	eta[subgroups]		IS_A factor;
+	uc 		        IS_A UNIFAC_constants;
+
+	subgroups :== UNION[data[i].subgroups | i IN components];
+	groups :== UNION[data[i].groups | i IN components];
+	FOR k IN subgroups CREATE
+		comps[k] :== [i IN components | k IN data[i].subgroups];
+	END FOR;
+	FOR k IN subgroups CREATE
+		UNIFAC_mixture_theta[k]:
+		theta[k] = uc.Q[k]*SUM[data[i].nu[k]*y[i] | i IN comps[k]];
+
+		UNIFAC_mixture_eta[k]:
+		eta[k] =
+		SUM[theta[m] | m IN subgroups*uc.sub[uc.group[k]]] +
+		SUM[SUM[theta[m]*exp(-uc.a[g][uc.group[k]]/T)
+		| m IN subgroups*uc.sub[g]]
+		| g IN groups - [uc.group[k]]];
+	END FOR;
+
+	FOR i IN components CREATE
+		rv[i] :== SUM[0, data[i].nu[k]*uc.R[k]
+				| k IN data[i].subgroups];
+		qs[i] :== SUM[0, data[i].nu[k]*uc.Q[k]
+				| k IN data[i].subgroups];
+	END FOR;
+	FOR i IN components CREATE
+		UNIFAC_mixture_rv[i]:
+		rv[i] = Jv[i]*SUM[rv[j]*y[j] | j IN components];
+
+		UNIFAC_mixture_qs[i]:
+		qs[i] = Ls[i]*SUM[qs[j]*y[j] | j IN components];
+		UNIFAC_partial_v[i]:
+		partial[i].v = pure[i].v;
+
+		UNIFAC_mixture_h_excess[i]:
+		(partial[i].h - pure[i].h)/(1{GAS_C})/data[i].Tc =
+		SUM[0,theta[k]*
+		SUM[0,SUM[0,theta[n]*
+		((uc.a[g][uc.group[k]] -
+		uc.a[uc.group[n]][uc.group[k]])/data[i].Tc)*
+		exp(-(uc.a[g][uc.group[k]] +
+		uc.a[uc.group[n]][uc.group[k]])/T)*
+		SUM[0,data[i].nu[m]*uc.Q[m]
+		| m IN data[i].subgroups*uc.sub[g]]
+		| g IN data[i].groups - [uc.group[n]]]
+		| n IN subgroups]/eta[k]/eta[k]
+		| k IN subgroups] -
+		SUM[0,(data[i].nu[k]*uc.Q[k]/(
+		SUM[0,data[i].nu[m]*uc.Q[m]
+		| m IN data[i].subgroups*uc.sub[uc.group[k]]] +
+		SUM[0,SUM[0,data[i].nu[m]*uc.Q[m] *
+				exp(-uc.a[g][uc.group[k]]/T)
+		| m IN data[i].subgroups*uc.sub[g]]
+		| g IN data[i].groups - [uc.group[k]]]))*
+		SUM[0,SUM[0,theta[n]*
+		((uc.a[g][uc.group[k]] -
+		uc.a[uc.group[n]][uc.group[k]])/data[i].Tc)*
+		exp(-(uc.a[g][uc.group[k]] +
+		uc.a[uc.group[n]][uc.group[k]])/T)*
+		SUM[0,data[i].nu[m]*uc.Q[m]
+		| m IN data[i].subgroups*uc.sub[g]]
+		| g IN data[i].groups - [uc.group[n]]]
+		| n IN subgroups]/eta[k]
+		| k IN data[i].subgroups];
+
+		UNIFAC_mixture_g_excess[i]:
+		(partial[i].g - pure[i].g - (1{GAS_C})*T*lnm(y[i])) /
+		(1{GAS_C}*data[i].Tc) =
+		(1.0 - Jv[i] + lnm(Jv[i]) -
+		5.0*qs[i]*(1.0 - Jv[i]/Ls[i] + lnm(Jv[i]/Ls[i])) +
+		qs[i]*(1 - lnm(Ls[i])))*T/data[i].Tc -
+		SUM[0,theta[k]*(
+		SUM[0,data[i].nu[m]*uc.Q[m]
+		| m IN data[i].subgroups*uc.sub[uc.group[k]]] +
+		SUM[0,SUM[0,data[i].nu[m] * uc.Q[m] *
+				exp(-uc.a[g][uc.group[k]]/T)
+		| m IN data[i].subgroups*uc.sub[g]]
+		| g IN data[i].groups - [uc.group[k]]])/eta[k]
+		| k IN subgroups]*T/data[i].Tc +
+		SUM[0,data[i].nu[k]*uc.Q[k]*lnm((
+		SUM[0,data[i].nu[m]*uc.Q[m]
+		| m IN data[i].subgroups*uc.sub[uc.group[k]]] +
+		SUM[0,SUM[0, data[i].nu[m] * uc.Q[m] *
+				exp(-uc.a[g][uc.group[k]]/T)
+		| m IN data[i].subgroups*uc.sub[g]]
+		| g IN data[i].groups - [uc.group[k]]])/eta[k])
+		| k IN data[i].subgroups]*T/data[i].Tc;
+	END FOR;
+
+	FOR i IN components CREATE
+		rv[i] :== SUM[0,data[i].nu[k]*uc.R[k]
+				| k IN data[i].subgroups];
+		qs[i] :== SUM[0,data[i].nu[k]*uc.Q[k]
+				| k IN data[i].subgroups];
+	END FOR;
+
+METHODS
+
+(* inherited methods: ClearAll, default_all, check_all, bound_all,
+ * scale_all, reset.
+ *)
+
+METHOD default_UNIFAC;
+NOTES 'purpose' SELF {
+This method should be run after partial and pure are defaulted.
+This takes care of the mess of local variables in UNIFAC
+and makes the molar volumes initial values to a liquid size.
+} END NOTES;
+	Jv[components].lower_bound := 1.0e-8;
+	Ls[components].lower_bound := 1.0e-8;
+	theta[subgroups].lower_bound := 0.0;
+	eta[subgroups].lower_bound := 0.0;
+	(* liquid molar volumes are much smaller than vapor volumes *)
+	v_y := 0.1{liter/mole};
+	partial[components].v := 0.1{liter/mole};
+	pure[components].v := 0.1{liter/mole};
+END default_UNIFAC;
+
+METHOD default_self;
+	RUN phase_partials::default_self;
+	RUN pure[components].default_self;
+	RUN default_UNIFAC;
+END default_self;
+
+METHOD check_self;
+	(* fixme FIXME. Are there limits, on eta,theta,Ls,Jv we need to check?*)
+	RUN phase_partials::check_self;
+	RUN pure[components].check_self;
+END check_self;
+
+METHOD scale_self;
+	RUN phase_partials::scale_self;
+	RUN pure[components].scale_self;
+	(* we may need to further investigate the scaling on these
+	 * when we approach small numbers for Ls, Jv.
+	 * fixme FIXME.
+	 *)
+	FOR i IN components DO
+		Ls[i].nominal := Ls[i];
+		Jv[i].nominal := Jv[i];
+	END FOR;
+	FOR j IN subgroups DO
+		theta[j].nominal := theta[j];
+		eta[j].nominal := eta[j];
+	END FOR;
+END scale_self;
+
+METHOD bound_self;
+	RUN phase_partials::bound_self;
+	RUN pure[components].bound_self;
+	(* we may need to further investigate the bounding on these
+	 * when we approach small numbers for Ls, Jv.
+	 * fixme FIXME.
+	 *)
+	FOR i IN components DO
+		Ls[i].upper_bound := Ls[i] + boundwidth*Ls[i].nominal;
+		Jv[i].upper_bound := Jv[i] + boundwidth*Jv[i].nominal;
+	END FOR;
+	FOR j IN subgroups DO
+		theta[j].upper_bound := theta[j] + boundwidth*theta[j].nominal;
+		eta[j].upper_bound := eta[j] + boundwidth*eta[j].nominal;
+	END FOR;
+END bound_self;
+
+METHOD specify;
+	RUN phase_partials::specify_partials_computed;
+END specify;
+
+END UNIFAC_liquid_mixture;
+
+(* ****************************************************************** *)
+
+MODEL Wilson_liquid_mixture(
+    cd WILL_BE components_data;
+) REFINES phase_partials();
+
+NOTES 'purpose' SELF {
+A refinement of the phase_partials model given just above, this
+model computes the partial molar quantities for a liquid mixture
+phase for molar volume, molar enthalpy and molar Gibbs free energy
+based on the Wilson model for a liquid mixture.
+} END NOTES;
+
+    data ALIASES cd.data;
+
+    FOR i IN components CREATE
+        pure[i] IS_A Rackett_liquid_component(P, T,  data[i]);
+    END FOR;
+
+	lambda[components][components] "Wilson binary parameters"
+		IS_A factor;
+
+	FOR i IN components CREATE
+		FOR j IN components CREATE
+			lambda[i][j] = (pure[j].v / pure[i].v) *
+			exp(-data[i].del_ip[data[j].formula] /
+			(1{GAS_C} * T));
+		END FOR;
+	END FOR;
+
+	FOR i IN components CREATE
+		partial[i].v = pure[i].v; (* fix me. scaling. *)
+
+	Wilson_mixture_g_excess[i]:
+		partial[i].g - pure[i].g - (1{GAS_C})*T*lnm(y[i]) =
+		(1{GAS_C})*T*(-lnm( SUM[y[j]*lambda[i][j] | j IN components])
+		 + 1 -
+		SUM[(y[k] * lambda[k][i]) / SUM[ y[j] * lambda[k][j]
+		| j IN components] | k IN components]);
+
+	Wilson_mixture_h_excess[i]:
+		partial[i].h - pure[i].h =
+		(SUM[ y[j] * lambda[i][j] *
+		 data[i].del_ip[data[j].formula]
+		| j IN components]) /
+		(SUM[y[s]*lambda[i][s]
+		| s IN components]) -
+		(SUM[y[k]*lambda[k][i] | k IN components]*
+		SUM[SUM[y[l]*lambda[m][l]*
+		 data[m].del_ip[data[l].formula]
+		| l IN components]
+		| m IN components]) / (
+		SUM[SUM[y[n]*lambda[o][n]
+		| n IN components]
+		| o IN components])^2 +
+		(SUM[y[p]*lambda[p][i]*
+		 data[p].del_ip[data[i].formula]
+		 | p IN components]) /
+		 (SUM[SUM[y[q]*lambda[r][q]
+		 | q IN components]
+		 | r IN components]);
+	END FOR;
+
+METHODS
+
+(* inherited methods: ClearAll, default_all, check_all, bound_all,
+ * scale_all, reset.
+ *)
+
+METHOD default_Wilson;
+NOTES 'purpose' SELF {
+This method should be run after partial and pure are defaulted.
+This takes care of the mess of local variables in Wilson
+and makes the molar volumes initial values to a liquid size.
+} END NOTES;
+
+(* The following initial bounds on lambda will only be useful
+  if meaninful bounds on pure[i].v have been set. *)
+	FOR i IN components DO
+	    FOR j IN components DO
+		IF (pure[i].v.upper_bound > 0{liter/mole}) THEN
+		    lambda[i][j].lower_bound :=
+		    (pure[j].v.lower_bound / pure[i].v.upper_bound) *
+		    exp(-data[i].del_ip[data[j].formula] /
+		    (1{GAS_C} * T));
+		END IF;
+		IF (pure[i].v.lower_bound > 0{liter/mole}) THEN
+		    lambda[i][j].upper_bound :=
+		    (pure[j].v.upper_bound / pure[i].v.lower_bound) *
+		    exp(-data[i].del_ip[data[j].formula] /
+		    (1{GAS_C} * T));
+		END IF;
+	    END FOR;
+	END FOR;
+
+	(* liquid molar volumes are much smaller than vapor volumes *)
+	v_y := 0.1{liter/mole};
+	partial[components].v := 0.1{liter/mole};
+	pure[components].v := 0.1{liter/mole};
+END default_Wilson;
+
+METHOD default_self;
+	RUN phase_partials::default_self;
+	RUN pure[components].default_self;
+	RUN default_Wilson;
+END default_self;
+
+METHOD check_self;
+	(* fixme FIXME. Are there limits, on lambdaIJ we need to check?*)
+	RUN phase_partials::check_self;
+	RUN pure[components].check_self;
+END check_self;
+
+METHOD scale_self;
+	RUN phase_partials::scale_self;
+	RUN pure[components].scale_self;
+	(* we may need to further investigate the scaling on these
+	 * when we approach small numbers for lambdaIJ.
+	 * fixme FIXME.
+	 *)
+	FOR i IN components DO
+		FOR j IN components DO
+			lambda[i][j].nominal := lambda[i][j];
+		END FOR;
+	END FOR;
+END scale_self;
+
+METHOD bound_self;
+	RUN phase_partials::bound_self;
+	RUN pure[components].bound_self;
+	FOR i IN components DO
+	    FOR j IN components DO
+		IF (pure[i].v.upper_bound > 0{liter/mole}) THEN
+		    lambda[i][j].lower_bound :=
+		    (pure[j].v.lower_bound / pure[i].v.upper_bound) *
+		    exp(-data[i].del_ip[data[j].formula] /
+		    (1{GAS_C} * T));
+		END IF;
+		IF (pure[i].v.lower_bound > 0{liter/mole}) THEN
+		    lambda[i][j].upper_bound :=
+		    (pure[j].v.upper_bound / pure[i].v.lower_bound) *
+		    exp(-data[i].del_ip[data[j].formula] /
+		    (1{GAS_C} * T));
+		END IF;
+	    END FOR;
+	END FOR;
+END bound_self;
+
+METHOD specify;
+	RUN phase_partials::specify_partials_computed;
+END specify;
+
+END Wilson_liquid_mixture;
+
+(* ****************************************************************** *)
+
+
+MODEL thermodynamics(
+   cd WILL_BE components_data;
+   pd WILL_BE phases_data;
+   phase[pd.phases] WILL_BE phase_partials;
+   equilibrated WILL_BE boolean;
+) REFINES td_model;
+
+NOTES
+'purpose' SELF {
+This model is the target model for this library of models.
+It computes the state of a multiphase multicomponent
+mixture.  The state of a multiphase multicomponent mixture
+is a sufficient set of intensive variables to completely
+characterize it when one assumes the phases are in
+thermodynamic equilibrium.  Here a sufficient set of
+variables is: pressure, temperature, molar composition,
+molar volume, molar enthalpy and molar Gibbs free energy
+for each of the phases and overall for all the phases.
+}
+
+'equilibrium' SELF {
+Equilibrium is expressed in this MODEL by equating
+temperature and pressure in all the phases and then by
+using either a relative volatility model (equilibrated :=
+FALSE) or by equating the partial molar Gibbs free energy
+(chemical potential) for each of the components in each of
+the phases (equilibrated := TRUE).
+}
+END NOTES;
+
+   P ALIASES phase[pd.reference_phase].P;
+   T ALIASES phase[pd.reference_phase].T;
+
+   V "molar average volume over all species i, phases j" IS_A molar_volume;
+   H "molar average enthalpy over all species i, phases j" IS_A molar_energy;
+   G "molar average Gibbs free energy over all species i, phases j"
+	IS_A molar_energy;
+   y[cd.components] "average mole fractions over all phases j" IS_A fraction;
+   phase_fraction[pd.phases] "division of moles into phases " IS_A fraction;
+   alpha_bar[pd.other_phases] "mole fraction weighted sum of volatilities"
+	 IS_A relative_volatility;
+   number_of_other_phases "Np - 1" IS_A integer_constant;
+
+   FOR j IN [pd.phases] CREATE
+     slack_PhaseDisappearance[j] ALIASES phase[j].slack_PhaseDisappearance;
+     (* If you set slack_PhaseDisappearance[j].fixed := TRUE,
+      * (useful if you want to _force_ a phase to exist)
+      * then you must also set complementarity[j].included := FALSE;
+      * OTHERWISE the Jacobian matrix of this MODEL is singular.
+      * The only sensible value of slack_PhaseDisappearance[i]
+      * when it is fixed is 0.0.
+      *)
+   END FOR;
+
+   sum_phase_fractions: SUM[phase_fraction[pd.phases]] = 1.0;
+   overall_v:	V * (cd.data[cd.reference].Pc /
+                     (1{GAS_C} * cd.data[cd.reference].Tc))
+                  = SUM[phase_fraction[j]*phase[j].v_y | j IN pd.phases] *
+                     (cd.data[cd.reference].Pc /
+                     (1{GAS_C} * cd.data[cd.reference].Tc));
+   overall_h:	H / (1{GAS_C} * cd.data[cd.reference].Tc)
+                  = SUM[phase_fraction[j]*phase[j].h_y | j IN pd.phases] /
+                    (1{GAS_C} * cd.data[cd.reference].Tc);
+   overall_g:	G / (1{GAS_C} * cd.data[cd.reference].Tc)
+                  = SUM[phase_fraction[j]*phase[j].g_y | j IN pd.phases]/
+                    (1{GAS_C} * cd.data[cd.reference].Tc);
+
+   FOR i IN cd.components CREATE
+   overall_y[i]: y[i] = SUM[phase_fraction[j]*phase[j].y[i] | j IN pd.phases];
+   END FOR;
+
+   number_of_other_phases :== CARD[pd.other_phases];
+
+   SELECT (number_of_other_phases)
+	CASE 0:
+	   (* Create Nothing *)
+	OTHERWISE:
+
+	(* Create equilibrium relationships *)
+
+	(* equilibrium *)
+
+	(* pressure and temperature equilibrium.
+         * this condition of equilibrium is not UNIVERSAL
+         * to all equilibrium thermodynamic systems.
+         * It certainly applies to non-electrolytic Vapor-Liquid
+         * systems, however.
+         *)
+   	FOR j IN [pd.other_phases] CREATE
+       		equateP[j]: phase[j].P = phase[pd.reference_phase].P;
+       		equateT[j]: phase[j].T = phase[pd.reference_phase].T;
+	END FOR;
+
+NOTES
+'usage' alpha_bar, alphaeqn, phase[pd.phases].alpha[components] {
+If using a relative volatility version for equilibrium, fix
+the relative volatilities alpha for all components in all
+phases (except perhaps the reference phase) and compute
+alpha_bar.
+
+Else activate the equations that equate the chemical
+potential for each component in each phase to its value in
+the reference phase, fix alpha_bar and set its value to one
+and compute alphas for all the components.
+
+Note, there is a vector of alphas in the reference phase
+that is unused.
+}
+'interpretation' alpha {
+When alpha_bar is fixed at 1.0, then the alpha[i] are essentially
+K-values. When alpha bar is computed from fixed alpha[i], the
+alpha[i] are essentially relative volatilities. The oldest of the
+authors believes this note to be entirely redundant, but the
+youngest has found it helps some people to relate the MODEL to
+their old unit operations textbooks.
+}
+END NOTES;
+
+	   FOR j IN [pd.other_phases] CREATE
+	       FOR i IN cd.components CREATE
+ 	          alphaeqn[j][i]:
+  	            alpha_bar[j] * phase[j].y[i]
+	              = phase[j].alpha[i] * phase[pd.reference_phase].y[i];
+	       END FOR;
+	   END FOR;
+
+	   FOR j IN [pd.other_phases] CREATE
+	       FOR i IN cd.components CREATE
+	       td_eql[j][i]:
+	              phase[j].partial[i].g
+			= phase[pd.reference_phase].partial[i].g;
+	       END FOR;
+	   END FOR;
+
+	   WHEN (equilibrated)
+	       CASE TRUE:
+			USE td_eql;
+	       OTHERWISE:
+		(* relax free energy, but still insist T,P same over all *)
+	   END WHEN;
+
+           (* Complementarity formulation *)
+
+	   FOR j IN [pd.phases] CREATE
+           complementarity[j]:
+		slack_PhaseDisappearance[j] * phase_fraction[j] = 0.0;
+           END FOR;
+
+    END SELECT;
+
+METHODS
+
+(* inherited methods: ClearAll, reset. *)
+METHOD check_self;
+(* there really isn't much that can be checked here since
+ * whether phases missing or not is an error we can't tell here.
+ * STOP {MODEL "thermodynamics" needs a check method for complementarity.};
+ *)
+END check_self;
+METHOD check_all;
+	RUN cd.check_all;
+	RUN pd.check_all;
+	RUN phase[pd.phases].check_all;
+	RUN check_self;
+END check_all;
+METHOD default_self;
+	V := 30 {liter/mole};
+END default_self;
+METHOD default_all;
+	RUN cd.default_all;
+	RUN pd.default_all;
+	RUN phase[pd.phases].default_all;
+	equilibrated := FALSE;
+	RUN default_self;
+END default_all;
+METHOD scale_self;
+	(* fixme! assumed nonzero! always TRUE? *)
+	V.nominal := V;
+	G.nominal := abs(G);
+	H.nominal := abs(H);
+	(* should we rescale y, phase_fraction, alpha_bar here?? *)
+END scale_self;
+METHOD scale_all;
+	RUN cd.scale_all;
+	RUN pd.scale_all;
+	RUN phase[pd.phases].scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD bound_all;
+	RUN cd.bound_all;
+	RUN pd.bound_all;
+	RUN phase[pd.phases].bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	(* bounds on alpha_bar? y, phase_fraction? *)
+	V.upper_bound := V + boundwidth*V.nominal;
+	V.lower_bound := 1.0e-8{liter/g_mole};
+	H.upper_bound := H + boundwidth*H.nominal;
+	H.lower_bound := H - boundwidth*H.nominal;
+	G.upper_bound := G + boundwidth*G.nominal;
+	G.lower_bound := G - boundwidth*G.nominal;
+END bound_self;
+
+METHOD specify;
+	IF (pd.phase_indicator != 'M') THEN
+		RUN phase[pd.phases].specify_partials_seqmod;
+	ELSE
+		RUN phase[pd.phases].specify_partials_seqmod_massonly;
+	END IF;
+	(* The phase specify methods fix
+ 	 * all but one y variable per phase, and each phase's P and T.
+ 	 * They also specify that the phases must not disappear.
+	 * They leave the alpha[i] free.
+ 	 *)
+	phase[pd.other_phases].P.fixed := FALSE;
+	phase[pd.other_phases].T.fixed := FALSE;
+	phase[pd.phases].y[cd.components].fixed := FALSE;
+	(* Now only reference phase P,T fixed, unless a mass only MODEL. *)
+
+  	IF (number_of_other_phases != 0) THEN
+		(* allow phases to disappear *)
+		slack_PhaseDisappearance[pd.phases].fixed := FALSE;
+		slack_PhaseDisappearance[pd.phases] := 0.0;
+	END IF;
+
+	(* Fix Np - 1 phase fractions and Nc - 1 overall mole fractions *)
+	y[cd.other_components].fixed := TRUE;
+
+	IF (equilibrated) THEN
+		(* use thermo instead of relative volatility. free alphas. *)
+		phase[pd.phases].alpha[cd.components].fixed := FALSE;
+		alpha_bar[pd.other_phases].fixed := TRUE;
+		alpha_bar[pd.other_phases] := 1.0;
+		(* When alphas are free, they are essentially K-values *)
+		(* Solve for fixed phase fraction for equilibrium
+ 		 * flash -- setting T may push flash out of multiphase region.
+		 * Do we need to swap T,ph_fr here? Think so.
+ 		 *)
+	ELSE
+		(* Else solve as relative volatility model *)
+  		phase_fraction[pd.other_phases].fixed := TRUE;
+		phase[pd.other_phases].alpha[cd.components].fixed := TRUE;
+	END IF;
+END specify;
+
+METHOD reset_to_massbalance;
+	RUN ClearAll;
+	equilibrated := FALSE;
+	RUN specify;
+END reset_to_massbalance;
+
+METHOD reset_to_fullthermo;
+	RUN ClearAll;
+	equilibrated := TRUE;
+	RUN specify;
+END reset_to_fullthermo;
+
+END thermodynamics;

@@ -1,0 +1,238 @@
+#  Top Level Ascend Makefile
+#  Ben Allan June 25, 1994.
+#  $Revision: 1.25 $
+#  $Date: 1998/05/18 18:06:36 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/Makefile.in,v $
+#
+
+
+SHELL = /bin/sh
+@SET_MAKE@
+builddir = .
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+INCMAKE = $(builddir)/ConfigAscend
+include $(INCMAKE)
+
+
+
+ASCEND_SUBDIRS   = utilities general compiler packages solver interface lib
+ASC_TK_SUBDIRS   = @tkdir_root@
+MODELS_SUBDIRS   = @models_dir_root@
+HELP_SUBDIRS     = @help_dir_root@
+SUPPORT_SUBDIRS  = $(ASC_TK_SUBDIRS) $(MODELS_SUBDIRS) $(HELP_SUBDIRS)
+EXTERNAL_SUBDIRS = @asc_subdirs@
+SUBDIRS          = $(ASCEND_SUBDIRS) $(SUPPORT_SUBDIRS) $(EXTERNAL_SUBDIRS)
+ASCEND_MAKEFILES = ../config.status ConfigAscend Makefile Makefile.Rules
+
+
+ascend: $(ASCEND_MAKEFILES) support_libs all_libs GUI
+
+z_notify:
+	zwrite -d -q -i make $(USER) -m Your build on `hostname` is complete.
+
+support_libs: \
+	$(BLASLIB) \
+	$(LPAKLIB) \
+	$(LSODLIB) \
+	$(OPTSQPLIB) \
+	$(CONOPTLIB) \
+	$(MINOSLIB)
+
+all_libs: libutils.a libgeneral.a libasc.a libpackages.a libsolver.a \
+	libascif.a btlib
+
+ascend4: support_libs all_libs
+	cd interface; $(MAKE) ascend4
+
+ascend4p: support_libs all_libs
+	cd interface; $(MAKE) ascend4p
+
+ascend4q: support_libs all_libs
+	cd interface; $(MAKE) ascend4q
+
+GUI:
+	cd interface; $(MAKE) ascend4
+
+libutils.a:
+	cd utilities; $(MAKE) libutils.a
+
+libgeneral.a:
+	cd general; $(MAKE) libgeneral.a
+
+libasc.a:
+	cd compiler; $(MAKE) libasc.a
+
+libpackages.a:
+	cd packages; $(MAKE) libpackages.a
+
+libsolver.a:
+	cd solver; $(MAKE) libsolver.a
+
+libascif.a:
+	cd interface; $(MAKE) libascif.a
+
+btlib:
+	cd lib; $(MAKE) default
+
+blas $(BLASLIB): @make_blaslib@
+
+lpak $(LPAKLIB): @make_lpaklib@
+
+lsod $(LSODLIB): @make_lsodlib@
+
+rsqp $(OPTSQPLIB): @make_rsqplib@
+
+conopt $(CONOPTLIB): @make_conoptlib@
+
+minos $(MINOSLIB): @make_minoslib@
+
+make-blaslib:
+	cd ../blas; $(MAKE) libascblas.a
+
+make-lpaklib:
+	cd ../linpack; $(MAKE) libasclpak.a
+
+make-lsodlib:
+	cd ../lsod; $(MAKE) libinteg.a
+
+make-rsqplib:
+	cd ../rsqp; $(MAKE) librsqp.a
+
+make-conoptlib:
+	cd ../conopt; $(MAKE) libconopt.a
+
+make-minoslib:
+	cd ../minos54; $(MAKE) libminos54.a
+
+makes: ../config.status
+	cd .. ; ./config.status
+
+save-makes:
+	-@for i in $(SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) save-makes) ; \
+		fi ; \
+	done
+	-$(CP) Makefile Makefile.SAVED
+	-$(CP) ConfigAscend ConfigAscend.SAVED
+	-$(CP) Makefile.Rules Makefile.Rules.SAVED
+
+../config.status: $(srcdir)/../configure
+	@echo ""
+	@echo "$(srcdir)/../configure is newer than ../config.status"
+	@echo "Consider running 'configure' again"
+	@echo ""
+
+ConfigAscend: $(srcdir)/ConfigAscend.in
+	@echo ""
+	@echo "$(srcdir)/ConfigAscend.in is newer than ConfigAscend"
+	@echo "Consider running 'configure' again or running 'make makes'"
+	@echo ""
+
+Makefile: $(srcdir)/Makefile.in
+	@echo ""
+	@echo "$(srcdir)/Makefile.in is newer than Makefile"
+	@echo "Consider running 'configure' again or running 'make makes'"
+	@echo ""
+
+Makefile.Rules: $(srcdir)/Makefile.Rules.in
+	@echo ""
+	@echo "$(srcdir)/Makefile.Rules.in is newer than Makefile.Rules"
+	@echo "Consider running 'configure' again or running 'make makes'"
+	@echo ""
+
+
+
+install: 
+	-@for i in $(SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) install) ; \
+		fi ; \
+	done
+
+install-binaries:
+	-for i in $(SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) install-binaries) ; \
+		fi ; \
+	done
+
+install-libraries:
+	-for i in $(SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) install-libraries) ; \
+		fi ; \
+	done
+
+install-man:
+	-for i in $(SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) install-man) ; \
+		fi ; \
+	done
+
+install-TK:
+	cd $(ASC_TK_SUBDIRS) ; $(MAKE) install-TK
+
+install-models:
+	cd $(MODELS_SUBDIRS) ; $(MAKE) install-models
+
+install-help:
+	cd $(HELP_SUBDIRS) ; $(MAKE) install-help
+
+uninstall:
+	-@for i in bin TK $(SUPPORT_SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) uninstall) ; \
+		fi ; \
+	done
+
+
+
+clean mostlyclean reallyclean:
+	-@for i in $(SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) clean) ; \
+		fi ; \
+	done
+
+distclean:
+	-@for i in $(SUBDIRS) archive bin /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) distclean) ; \
+		fi ; \
+	done
+	-$(RM) Makefile Makefile.SAVED ConfigAscend ConfigAscend.SAVED \
+		Makefile.Rules Makefile.Rules.SAVED TAGS tags *~ \#* *.bak \
+		../config.status ../config.cache ../config.log
+
+
+
+#  Targets to generate or remove dependency information.  `nodepend'
+#  removes dependency information, `depend' generates dependency
+#  information, and `depend-nosys' generates dependency information but
+#  leaves out dependencies on system header files.
+
+nodepend:
+	-@for i in $(ASCEND_SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) nodepend) ; \
+		fi ; \
+	done
+
+depend-nosys depend-no-sys:
+	-@for i in $(ASCEND_SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) depend-nosys) ; \
+		fi ; \
+	done
+
+depend:
+	-@for i in $(ASCEND_SUBDIRS) /dev/null ; do \
+		if test $$i != "/dev/null" ; then \
+			(cd $$i ; $(MAKE) depend) ; \
+		fi ; \
+	done

@@ -1,0 +1,68 @@
+# This is a typical Unix makefile for maintaining variants of MINOS.
+# It should be called "makefile".
+#
+# 30 May 1991: Original version written by Philip Gill for a DECstation 3100
+#              with the MIPS RISC F77 compiler.
+#              The FFLAGS compiler options will be machine-dependent.
+#              FFLAGS = -O4 -c  is appropriate for SUN Fortran.
+# 30 Apr 1992: .SUFFIXES, .f.o  added by Peter Piela to be more portable.
+#	f77 -O -c -g $*.f   is for Apollo Fortran. (1st character is a tab)
+
+
+#FFLAGS = -g2 -c -check_bounds -C 
+FFLAGS = -O2 -c -check_underflow
+F77=f77
+
+.SUFFIXES:	.o.f
+.f.o:
+	$(F77) $(FFLAGS) $<
+
+minos54.sl:                         mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o 
+	/bin/ld -b                  mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o            \
+              -o minos54.sl
+
+minos54.o:                          mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o 
+	/bin/ld -r                  mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o            \
+              -o minos54.o
+
+minos.exe:	mi00main.o mi05funs.o mi10unix.o mi15blas.o mi20amat.o \
+		mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+		mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o 
+	$(F77)  mi00main.o mi05funs.o mi10unix.o mi15blas.o mi20amat.o \
+		mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+		mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o            \
+		-o minos.exe
+
+minost.exe:   minost.o   mi05funs.o mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o 
+	f77   minost.o   mi05funs.o mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o            \
+              -o minost.exe
+
+t5weapon.exe: mi00main.o mi05funs.o mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o 
+	f77   mi00main.o mi05funs.o mi10unix.o mi15blas.o mi20amat.o \
+              mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+              mi60srch.o mi65rmod.o mi70nobj.o mi80ncon.o            \
+              -o t5weapon.exe
+
+minosl.exe:	minosl.o              mi10unix.o mi15blas.o mi20amat.o \
+		mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o 
+	$(F77)  minosl.o              mi10unix.o mi15blas.o mi20amat.o \
+		mi25bfac.o mi30spec.o mi35inpt.o mi40bfil.o mi50lp.o   \
+		-o minosl.exe
+
+
+minost1.exe:   minost.o minos54.sl 
+	f77   minost.o minos54.sl -o minost1.exe

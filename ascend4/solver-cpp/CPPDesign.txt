@@ -1,0 +1,146 @@
+Motivations:
+
+- Abstracting interfaces for equations, variables, and our
+other exotic creatures so that other model servers, including those
+out-of-process can also contribute to a total model. This should
+make the connection of external models much easier.
+
+- We want it to be *really* easy for a new variable attribute,
+relation attribute, etc to be found in the instance definition and
+routed through to the solvers in a clean fashion. We will accept a
+performance hit (mostly in presolve) to make this possible.
+
+- Our overall target is to support solution of conditional programs,
+IP, LP, NLP, ODE, and all the exotic combinations of these.
+
+- We assume the building of equation models requires a hierarchical
+activity in order to efficiently reuse knowledge from many modelers.
+This results in the the potential to exploit graph algorithms to
+formulate system decompositions useful in solving complex systems.
+ 
+
+Terms/Classes: (Definitely a work in progress -- not yet finalized.)
+
+- Model backend: A database of models, equations, variables, and other
+                 mathematical constructs. Many types and instances of
+                 mathematical systems to be solved may be derived from
+                 a backend. Once a system is derived and an algorithm
+                 applied to the system, the results are moved back
+                 to the database.  A series of such systems may be
+                 needed to obtain an over-all solution.
+
+- SystemCpp: A collection of VarCpp, RelCpp, etc derived from one or more
+             model back ends. A particularly impoverished system might
+             only provide a variable vector and a residual vector, making us
+             wrap it up with finite difference code. Eww.
+
+- VarCpp: The proxy interface for a unique floating point variable
+          in a unique model backend. A VarCpp may participate in
+          several Systems simultaneously, as needed when solving with
+          hybrid algorithms such as MINLP.
+
+- DiscreteCpp: The proxy interface for a unique discrete variable 
+               in a unique model backend. This covers integer,
+               boolean, and any other discrete type. The residuals
+               of BoundaryCpp can be used in computing the values of
+               DiscreteCpp variables.
+
+- RelCpp: The proxy interface for a unique equation in a unique model
+          backend. A RelCpp may participate in several Systems
+          simultaneously, as needed when solving with hybrid
+          algorithms such as MINLP. ASCEND4 NOTE: We're going back
+          to the assumption that a RelCpp can evaluate itself at a
+          given point without requiring the changing of values in the
+          model backend first. Other RelCpp implementations are free to
+          ignore this assumption.
+
+- LogRelCpp: The proxy interface for a unique logical equation in a unique
+             model backend. A LogRelCpp may participate in several
+             Systems simultaneously, as needed when solving with hybrid
+             algorithms such as MINLP. ASCEND4 NOTE: We're going
+             back to the assumption that a LogRelCpp can evaluate
+             itself at a given point without requiring the changing
+             of values in the model backend first. Other LogRelCpp
+             implementations are free to ignore this assumption.
+
+- BoundaryCpp: A non-simple inequality defining the boundary of a region in
+               the solution space. For example, "rho*V*D/mu < 64;"
+               where any two of rho,V,D, and mu are variables is
+               a Boundary. "X < 30;" is a simple inequality and is
+               best expressed as a bound on a VarCpp. Of course since
+               these are all abstract interfaces, we can't enforce
+               non-simpleness -- if the modeler wants to treat a
+               simple bound as non-simple for some algorithmic reason,
+               we can't stop them.
+
+- CondCpp: The proxy interface for a unique formulation control construct
+           in a unique model backend. The CondCpp construct controls
+           which of a set of RelCpp, LogRelCpp is active in the
+           current system by examining a set of Discrete variables.
+
+- FlagBit: A boolean property of a VarCpp, RelCpp, BoundaryCpp,
+             DiscreteCpp, LogRelCpp, or CondCpp. The list of Attributes
+             is extensible. Most information needed for system control
+             comes conveniently in the form of booleans.  To facilitate
+             efficient evaluation, storage and communication, we
+             maintain a global list of named booleans to which clients
+             or backends can add. Each of these names gets assigned
+             an associated position in a list.  The global list is
+             on a per-Class basis, that is there is a separate list
+             for each of VarCpp, RelCpp, etc. FlagBit is an implementation
+             optimization.
+
+- Attributes: The properties of a VarCpp, RelCpp, BoundaryCpp, 
+              DiscreteCpp, LogRelCpp, or CondCpp. The list of
+              Attributes is extensible. 
+
+- ModelGraph: A graph describing the structure of the equation model.
+              Each edge denotes a part-whole relationship among model and
+              sub-models.
+              Each node denotes a scope which contributes a set of equations,
+              thus each equation belongs to exactly one node. In the degenerate
+              case (a NULL ModelGraph) all equations belong to the same node.
+              The basic data for a model graph in a given System is
+              a set of node ids, the set of links among node ids, and
+              the list of RelCpp indexes associated with each node.
+              The ModelGraph may be a DAG or a tree.
+
+
+- RelCpp sub-interfaces:
+Relations come in lots of flavors and levels of capability, depending on 
+the server backend, darn it. We don't mean to exclude below the
+notion of a compound relation -- a box with several residuals that
+are always evaluated in a single call (from the point of view of the system).
+The list of capabilities is long:
+
+REAL values:
+. Residual at a point.
+. Roots in a single variable at a point.
+. Gradient wrt a variable subset at a point.
+. Finite difference gradient wrt a variable subset at a point.
+. Hessian of a variable subset at a point.
+. Maximum additive term at a point.
+. Residual of a variable subset of the first derivative wrt independent 
+  variable at a point (time derivative).
+. Gradient of a variable subset of the first derivative wrt independent 
+  variable at a point.
+. Hessian of a variable subset of the first derivative wrt independent 
+  variable at a point.
+. Interval arithmetic version of all of the above.
+
+BOOLEAN properties derived symbolically/numerically:
+. Linearity in variable subset at a point in the excluded variables.
+. Bilinearity in variable subset at a point in the excluded variables.
+. Convexity in variable subset at a point in the excluded variables.
+. Continuity in a variable subset at a point in the excluded variables.
+. Monotonicity in a variable subset at a point in the excluded variables.
+
+EXPRESSIONS derived symbolically/numerically:
+. Symbolic form in a variable subset at a point in the excluded variables.
+. Convex/concave under/over estimator in a variable subset at a point 
+  in the excluded variables. (Do we need this, or just the resid/grad thereof?)
+
+GRAPH info:
+. Incidence patterns of practically everything above.
+
+We group the functionalities into interfaces as follows.

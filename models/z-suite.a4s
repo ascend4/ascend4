@@ -1,0 +1,148 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# beginning test suite for compiler features.
+# by Ben Allan, Nov. 1997
+#
+# The models used in this script are not intended to be reusable, nor
+# to be examples of good style, nor to be read by anyone except system
+# developers. They are included as part of the ascend library to prove
+# that we really do test things before we put them out on the net. We
+# test a lot more than what is shown here. Here we have boundary and
+# completeness tests for features not ordinarily exercised in
+# tastefully written models.
+
+# test atom/relation child alignment
+DELETE TYPES;
+READ FILE "z-align.a4c";
+COMPILE tall OF testall;
+BROWSE {tall};
+CLEAR_VARS {tall};
+
+# test parsing of ARE_ALIKE statements.
+# All fail_* models should fail, passes should have
+# style warnings, and there should be 4 definitions
+# in the Library from z-alike.a4c:
+# a, box, pass_1, pass_2_legal_aa_...
+# All but a should compile without warnings other than missing default_self.
+DELETE TYPES;
+READ FILE "z-alike.a4c";
+COMPILE box OF box;
+COMPILE pass_1 OF pass_1;
+COMPILE pass_2 OF pass_2_legal_aa_down_in_unparameterized_object;
+
+# test context checking for methods/cases.
+# all models except 'pass' should fail.
+DELETE TYPES;
+READ FILE "z-context.a4c";
+
+# checks passing of empty array object.
+# No error messages should appear.
+DELETE TYPES;
+READ FILE "z-emptyarg.a4c";
+COMPILE test OF test;
+BROWSE {test.b};
+
+# test indirect addressing in defining associative arrays.
+# no warnings/errors should occur other than missing default_self.
+DELETE TYPES;
+READ FILE "z-indirect.a4c";
+COMPILE testind OF testindirect;
+
+
+# testing where-created calculations.
+# see NOTES in the model 'testwherecreated' for
+# details.
+DELETE TYPES;
+READ FILE "z-isawhere.a4c";
+COMPILE a OF testwherecreated;
+BROWSE {a};
+BROWSE {a.y};
+BROWSE {a.z};
+BROWSE {a.p1};
+BROWSE {a.p2};
+BROWSE {a.w};
+
+# test unlabeled equation name generation and conflict
+# resolution. No errors should occur except missing default_self.
+DELETE TYPES;
+READ FILE "z-relname.a4c";
+COMPILE t OF testrelname;
+BROWSE {t.g};
+BROWSE {t.testrelname_1};
+BROWSE {t.testrelname_2};
+BROWSE {t.testrelname_4};
+BROWSE {t.testrelname_5a};
+BROWSE {t.testrelname_6};
+
+# Parser test of adding methods and replacing methods.
+# Pass conditions are noted in the models.
+# The add and replace methods blocks for type b1
+# should fail. The others should pass.
+DELETE TYPES;
+READ FILE "z-addmethod.a4c";
+
+###
+### The following tests document one or more known bugs.
+### These need to be fixed, but are sufficiently marginal in
+### impact that we are not panicking about getting the fix
+### done yesterday.
+### These cases arise because with a small syntax you cannot
+### stop some really bizarre productions.
+###
+
+# test if logic evaluation.
+# at present, only t.nif[6] fails.
+DELETE TYPES;
+READ FILE "z-iflogic.a4c";
+COMPILE t OF testif;
+BROWSE {t};
+RUN {t.test};
+BROWSE t.eval;
+BROWSE t.pass;
+BROWSE t.if;
+BROWSE t.nif;
+
+# test execution of for loops with empty resulting arrays.
+# currently empty relation arrays fail this test.
+DELETE TYPES;
+READ FILE "z-emptyfor.a4c";
+COMPILE t OF testfor;
+BROWSE {t};
+
+# test execution of arrays with bogus subscripts.
+# parts w,w2,x,x2 should appear UNDEFINED arrays.
+DELETE TYPES;
+READ FILE "z-arsubs.a4c";
+COMPILE t OF range_test;
+BROWSE {t};
+
+##########  z-suite.a4s ends here  ##########
+#
+#  z-suite.a4s
+#  by Benjamin Allan
+#  December 02, 1997
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:52 $
+#  $Revision: 1.6 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-suite.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1997 - 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

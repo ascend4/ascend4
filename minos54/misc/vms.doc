@@ -1,0 +1,83 @@
+This is file VMS.DOC.
+To install MINOS on DEC VAX/VMS systems, proceed as follows.
+
+ 1. Transfer all files from the MINOS floppy disk to a MINOS
+    directory of your choice.  For descriptive purposes we
+    suppose that the directory is [me.minos].
+
+ 2. Set the default directory:
+       set default [me.minos]
+
+ 3. Define "make" to mean "execute vmsmake.com":
+       make :== @[me.minos]vmsmake
+    (This could be done permanently in your login.com file.)
+
+ 4. Create subdirectories to contain "debug" and "optimized" object code:
+       create /dir [.dbg]
+       create /dir [.opt]
+    We will use only the [.opt] directory here.  See vmsmake.com for
+    discussion of the [.dbg] directory.
+
+ 5. Rename some of the VMS files:
+       @vmsnames
+
+ 6. Enter the directory for optimized code:
+       set def [.opt]
+
+ 7. If you wish to solve only linear programs, compile and link MINOSL:
+       make minosl
+
+    Otherwise, compile and link MINOS:
+       make minos
+
+    (Ignore messages about missing .obj files.  They are being created
+    for the first time!  Next time you do "make" they won't appear.)
+
+ 8. Test MINOSL or MINOS on a small linear program, t1diet.
+    If you are solving only linear programs,
+       @minosl ?          gives you instructions.
+       @minosl t1diet     runs the test.
+
+    Otherwise,
+       @minos ?           gives you instructions.
+       @minos t1diet      runs the test.
+
+    Compare results with Section 8.1 of the MINOS 5.1 User's Guide.
+    The optimal objective value is 92.5.
+
+ 9. If you chose to make minos, run some of the nonlinear 
+    test problems t2... t6.  In particular,
+       @minos t2banana      runs an unconstrained example      (Section 8.1)
+       @minos t3qp          runs a small quadratic program     (Section 8.2)
+       @minos t4manne       runs problem MANNE                 (Section 8.4)
+       @minos t5weapon      runs the Weapon Assignment problem (Section 7.6)
+
+    For t4manne, the iteration log will be different from that shown
+    in Section 8.4, but the optimal objective value should be the same:
+    close to 2.670.
+
+10. Solution of larger problems may require more storage than that
+    declared in the main program (file mi00main.for).  However, the VAX/VMS
+    version of MINOS allocates more memory as required (see subroutine
+    minos2 in file mi10vms.for).  There is probably no need to alter the
+    main program.
+
+11. Solution of further nonlinear problems requires user-specific code
+    (subroutines funobj and/or funcon) and command files *.mak, *.lnk, *.com
+    similar to minos.* above.
+
+12. If MINOS is to be used as a subroutine, a calling program is needed
+    to set up the data and call subroutine minoss (pronounced minos-s).
+    File minoss.for contains an example that generates the problem t4manne.
+    To run this:
+       make minoss        compiles minoss.for and makes minoss.exe
+       @minoss ?          gives instructions
+       @minoss            runs minoss.exe to solve t4manne.
+
+13. If MINOS is to be used by many people, it may be appropriate to
+    dispense with the "make" facility and use an object library.
+
+14. If necessary, VMS has facilities for pre-linking most of MINOS
+    as a shareable image, and allowing new function routines to be
+    linked later.  A full discussion is beyond us here.  As VAXes become
+    faster, there will be less need to reduce link time in this way.

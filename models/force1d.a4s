@@ -1,0 +1,109 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of force1d.a4c and the use of
+# PLOT in ASCEND
+
+# Mass/spring/anchor/finger/hook stationary on horizontal surface.
+#
+
+DELETE TYPES;
+READ FILE "force1d.a4c";
+
+#
+# build a test model anchor/spring/mass/finger
+#
+COMPILE hand OF finger_test;
+BROWSE {hand};
+RUN {hand.reset};
+
+# Send the distances we want to see to the probe
+PROBE current {hand.h1.X} {};
+PROBE current {hand.h2.X} {};
+PROBE current {hand.h3.X} {};
+PROBE current {hand.s1.dx} {};
+
+# Send the input variables to the probe
+PROBE current {hand.m1.width} {};
+PROBE current {hand.pinky.pull} {};
+PROBE current {hand.s1.L0} {};
+
+ASSIGN {hand.m1.width} 0.04 {meter};
+SOLVE {hand} WITH QRSlv;
+
+# now specify the spring stretch and calc pull.
+DELETE SYSTEM;
+ASSIGN {hand.s1.dx} 0.05 {meter};
+ASSIGN {hand.s1.dx.fixed} TRUE {};
+ASSIGN {hand.pinky.pull.fixed} FALSE {};
+SOLVE {hand} WITH QRSlv;
+
+#
+# build a test model anchor/spring/spring/finger
+#
+COMPILE slinky OF spring_test;
+BROWSE {slinky};
+RUN {slinky.reset};
+
+# Send the distances we want to see to the probe
+PROBE new {slinky.h1.X} {};
+PROBE current {slinky.h2.X} {};
+PROBE current {slinky.h3.X} {};
+PROBE current {slinky.s1.dx} {};
+
+# Send the input variables to the probe
+PROBE current {slinky.s2.L0} {};
+PROBE current {slinky.pinky.pull} {};
+PROBE current {slinky.s1.L0} {};
+
+ASSIGN {slinky.s2.L0} 0.4 {meter};
+SOLVE {slinky} WITH QRSlv;
+
+# now specify the spring stretch and calc pull.
+DELETE SYSTEM;
+ASSIGN {slinky.s1.dx} 0.05 {meter};
+ASSIGN {slinky.s1.dx.fixed} TRUE {};
+ASSIGN {slinky.pinky.pull.fixed} FALSE {};
+SOLVE {slinky} WITH QRSlv;
+
+#
+# This block does the work illustrated in howto-plot.
+#
+
+# do plot model
+COMPILE pst OF plot_spring_test;
+BROWSE {pst};
+RUN {pst.st.reset};
+SOLVE {pst.st} WITH QRSlv;
+PLOT {pst.Plot_X} ;
+SHOW LAST;
+
+##########  force1d.a4s ends here  ##########
+#
+#  force1d.a4s
+#  by Benjamin Allan
+#  May 16, 1998
+#  Part of the ASCEND Library
+#  $Date: 1998/06/17 20:08:32 $
+#  $Revision: 1.2 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/force1d.a4s,v $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

@@ -1,0 +1,535 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "cost_column.a4l";
+
+(*
+ *  cost_column.a4l
+ *  by Robert S. Huss
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 18:56:15 $
+ *  $Revision: 1.6 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/cost_column.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994, 1997 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+	C O S T _ C O L U M N . A 4 L
+	-----------------------------
+
+	AUTHOR:		Robert S. Huss
+
+	DATES:		5/95 - First Public Release
+                        4/96 - Modified for using constant instance types
+			6/97 - Updated to use parameterized types
+
+	CONTENTS:	Collocation models for distillation modeling.
+
+
+
+
+	REQUIRES:	"system.a4l"
+	                "atoms.a4l"
+			"components.a4l"
+			"thermodynamics.a4l"
+			"plot.a4l"
+			"stream.a4l"
+			"flash.a4l"
+
+*)
+
+MODEL cost_calc(
+    column_cost WILL_BE cost_per_time; (* cost/time: capital and operating
+                                        * cost OF column *)
+    Tc WILL_BE temperature; (* temperature of condenser *)
+    QC WILL_BE energy_rate; (* heat duty of condenser *)
+    QR WILL_BE energy_rate; (* heat duty of reboiler *)
+    nsections WILL_BE integer_constant; (* number OF column sections *)
+    V[1..nsections] WILL_BE molar_rate; (* molar vapor flow rate out
+                                         * of section *)
+    V_bar[1..nsections] WILL_BE molar_volume; (* corresponding molar vapor
+                                               * volume *)
+    stot WILL_BE factor; (* total number of trays in column *)
+    M_g WILL_BE molar_mass; (* average molar mass of vapor *)
+    Feedtot WILL_BE molar_rate; (* molar rate OF feed *)
+);
+
+	Afrac			IS_A real; (* fraction of area taken by tray *)
+
+	Fp1,
+	Fm1			IS_A real; (* material factors for column  p 574*)
+	Fd2,
+	Fp2,
+	Fm2			IS_A real; (* material factors for exchangers p 572*)
+	M_S			IS_A real;
+	Tin			IS_A real; (* in temperature of cooling water *)
+	Uc			IS_A real; (* heat transfer coefficient for condenser *)
+	CpW			IS_A real; (* heat capacity of cooling water *)
+	Hs			IS_A real; (* heat of vaporization of steam *)
+	Cw			IS_A real; (* price of cooling water *)
+	Cs			IS_A real; (* price of steam *)
+	Tray_height		IS_A real; (* height of each tray *)
+
+
+	cost			IS_A factor;
+
+	condenser_cost,
+	    condenser_min,
+	    condenser_max,
+	reboiler_cost,
+	    reboiler_min,
+	    reboiler_max,
+	water_cost,
+	    water_min,
+	    water_max,
+	steam_cost,
+	    steam_min,
+	    steam_max		IS_A cost_per_time;
+	boundwidth		IS_A bound_width;
+	Area			IS_A area; (* total cross-sectional area of column *)
+	D			IS_A distance; (* diameter of column *)
+	H			IS_A distance; (* height of column *)
+	pi			IS_A circle_constant;
+	DT_C			IS_A temperature; (* change in cooling water temperature *)
+	Ac,
+	Ar,
+	    Acmin,
+	    Acmax,
+	    Armin,
+	    Armax		IS_A area; (* area of condenser and reboiler *)
+	Tout 			IS_A temperature;
+	Fc1			IS_A factor;
+	Fc2			IS_A factor;
+	Feedmax,
+	    Feedmin		IS_A molar_rate;
+	F[1..nsections],
+	    Fmax,
+	    Fmin		IS_A factor; (* flooding factor *)
+	LMT			IS_A factor; (* log mean temperature difference in condenser *)
+
+
+	FOR j IN [1..nsections] CREATE
+	    Area = 1{ft^2}*V[j]*1{hr/lb_mole}
+		*sqrt(M_g*1{lb_mole^2/lbm/ft^3}
+		*V_bar[j])/Afrac/F[j]/3600;
+	END FOR;
+
+	F[1]*Feedmin = Fmin*Feedtot;
+	F[1]*Feedmax = Fmax*Feedtot;
+
+	Acmin*F[1] = Fmin*Ac;
+	Acmax*F[1] = Fmax*Ac;
+	Armin*F[1] = Fmin*Ar;
+	Armax*F[1] = Fmax*Ar;
+
+
+
+	D = (4*Area/pi)^0.5;
+
+	H = Tray_height*1.15*stot;
+
+	Fc1 = Fm1*Fp1;
+	Fc2 = (Fd2+Fp2)*Fm1;
+
+	DT_C = (Tout - Tin);
+
+	LMT = ln((Tc-Tin)/(Tc-Tout));
+	Ac = -QC*LMT/((Tout-Tin)*Uc);
+	Ar = QR/11250{BTU/hr/ft^2};
+	Tout IS_REFINED_TO temperature;
+	Tout = Tc - 5{K};
+
+	c1: column_cost = (M_S/280/3{yr})*(120*(D/1{ft})
+	    *((H/1{ft})^0.8))*(2.18 + Fc1);
+	c2: condenser_cost = (M_S/280/3{yr})*(101.3)
+	    *(2.29+Fc2)*((Ac/1{ft^2})^0.65);
+	c3: reboiler_cost = (M_S/280/3{yr})*(101.3)
+	    *(2.29+Fc2)*((Ar/1{ft^2})^0.65);
+	c4: water_cost =  Cw*(-QC)*1{ml/g}*18{g/mole}/(CpW*DT_C);
+	c5: steam_cost = Cs*QR/Hs;
+
+
+	condenser_min = (M_S/280/3{yr})*(101.3)*(2.29+Fc2)*((Acmin/1{ft^2})^0.65);
+	condenser_max = (M_S/280/3{yr})*(101.3)*(2.29+Fc2)*((Acmax/1{ft^2})^0.65);
+	reboiler_min = (M_S/280/3{yr})*(101.3)*(2.29+Fc2)*((Armin/1{ft^2})^0.65);
+	reboiler_max = (M_S/280/3{yr})*(101.3)*(2.29+Fc2)*((Armax/1{ft^2})^0.65);
+	water_min*F[1] = Fmin*water_cost;
+	water_max*F[1] = Fmax*water_cost;
+	steam_min*F[1] = Fmin*steam_cost;
+	steam_max*F[1] = Fmax*steam_cost;
+
+
+
+
+        c_tot1: cost*1.0{USdollar/yr} = column_cost + condenser_cost
+            + reboiler_cost + water_cost + steam_cost;
+
+
+METHODS
+METHOD default_self;
+	F[1..nsections] := 1.51{};
+	Fmax		:= 2.5;
+	Fmin		:= 0.75;
+
+	Afrac := 0.88{};
+	Fp1 := 1.0{};
+	Fm1 := 1.0{};
+	Fd2 := 1.0{};
+	Fp2 := 0.0{};
+	Fm2 := 1.0{};
+
+	M_S := 900{USdollar};
+
+	Tin := 459.67{R} + 70{R};
+	Tout := 459.67{R} + 90{R};
+	Uc := 100{BTU/hr/ft^2/R};
+	CpW := 1{cal/mole/K};
+	Hs := 933{BTU/lbm};
+	Cw := 0.03{USdollar}/1000{gallon};
+	Cs := 2.5{USdollar}/1000{lbm};
+	Tray_height := 2.0{ft};
+
+
+	V_bar[1..nsections] := 24{liter/mol};
+	M_g := 70{g/mol};
+	Tc := 350{K};
+	QC := -30{kW};
+	QR := 30{kW};
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+
+METHOD check_self;
+END check_self;
+
+METHOD scale_self;
+END scale_self;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+
+METHOD check_all;
+    RUN check_self;
+END check_all;
+
+    METHOD clear;
+	cost.fixed		:= FALSE;
+	column_cost.fixed	:= FALSE;
+	condenser_cost.fixed	:= FALSE;
+	reboiler_cost.fixed	:= FALSE;
+	water_cost.fixed	:= FALSE;
+	steam_cost.fixed	:= FALSE;
+	Area.fixed		:= FALSE;
+	V[1..nsections].fixed			:= FALSE;
+	V_bar[1..nsections].fixed		:= FALSE;
+	M_g.fixed		:= FALSE;
+	D.fixed			:= FALSE;
+	H.fixed			:= FALSE;
+	DT_C.fixed		:= FALSE;
+	QC.fixed		:= FALSE;
+	QR.fixed		:= FALSE;
+	F[1..nsections].fixed	:= FALSE;
+	Fmax.fixed		:= FALSE;
+	Fmin.fixed		:= FALSE;
+	Feedtot.fixed		:= FALSE;
+	Feedmin.fixed		:= FALSE;
+	Feedmax.fixed		:= FALSE;
+	Fc1.fixed		:= FALSE;
+	Fc2.fixed		:= FALSE;
+	Tc.fixed		:= FALSE;
+	stot.fixed		:= FALSE;
+	condenser_min.fixed		:= FALSE;
+	condenser_max.fixed		:= FALSE;
+	reboiler_min.fixed		:= FALSE;
+	reboiler_max.fixed		:= FALSE;
+	water_min.fixed		:= FALSE;
+	water_max.fixed		:= FALSE;
+	steam_min.fixed		:= FALSE;
+	steam_max.fixed		:= FALSE;
+	Acmin.fixed		:= FALSE;
+	Acmax.fixed		:= FALSE;
+	Armin.fixed		:= FALSE;
+	Armax.fixed		:= FALSE;
+     END clear;
+     METHOD seqmod;
+	F[1].fixed	 	:= TRUE;
+	Fmin.fixed		:= TRUE;
+	Fmax.fixed 		:= TRUE;
+     END seqmod;
+     METHOD specify;
+	Tc.fixed := TRUE;
+	M_g.fixed := TRUE;
+	QC.fixed := TRUE;
+	QR.fixed := TRUE;
+	V[1..nsections].fixed := TRUE;
+	V_bar[1..nsections].fixed := TRUE;
+	stot.fixed := TRUE;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD scale;
+	RUN col.scale;
+	column_cost.nominal := column_cost;
+	condenser_cost.nominal := condenser_cost;
+	condenser_min.nominal := condenser_min;
+	condenser_max.nominal := condenser_max;
+	reboiler_cost.nominal := reboiler_cost;
+	reboiler_min.nominal := reboiler_min;
+	reboiler_max.nominal := reboiler_max;
+	water_cost.nominal := water_cost;
+	water_min.nominal := water_min;
+	water_max.nominal := water_max;
+	steam_cost.nominal := steam_cost;
+	steam_min.nominal := steam_min;
+	steam_max.nominal := steam_max;
+
+	column_cost.upper_bound := column_cost +
+	    boundwidth*column_cost.nominal;
+	condenser_cost.upper_bound := condenser_cost +
+	    boundwidth*condenser_cost.nominal;
+	condenser_min.upper_bound := condenser_min +
+	    boundwidth*condenser_min.nominal;
+	condenser_max.upper_bound := condenser_max +
+	    boundwidth*condenser_max.nominal;
+	reboiler_cost.upper_bound := reboiler_cost +
+	    boundwidth*reboiler_cost.nominal;
+	reboiler_min.upper_bound := reboiler_min +
+	    boundwidth*reboiler_min.nominal;
+	reboiler_max.upper_bound := reboiler_max +
+	    boundwidth*reboiler_max.nominal;
+	water_cost.upper_bound := water_cost +
+	    boundwidth*water_cost.nominal;
+	water_min.upper_bound := water_min + boundwidth*water_min.nominal;
+	water_max.upper_bound := water_max + boundwidth*water_max.nominal;
+	steam_cost.upper_bound := steam_cost +
+	    boundwidth*steam_cost.nominal;
+	steam_min.upper_bound := steam_min + boundwidth*steam_min.nominal;
+	steam_max.upper_bound := steam_max + boundwidth*steam_max.nominal;
+
+	FOR j IN [1..nsections] DO
+	    V[j].nominal := V[j];
+	    V_bar[j].nominal := V_bar[j];
+	    F[j].nominal := sqrt(sqr(F[j]));
+	    F[j].lower_bound := F[j] - boundwidth*F[j].nominal;
+	    V[j].upper_bound := V[j] + boundwidth*V[j];
+	    V_bar[j].upper_bound := V_bar[j] + boundwidth*V_bar[j];
+	    F[j].upper_bound := F[j] + boundwidth*F[j].nominal;
+	END FOR;
+
+
+	Area.nominal := Area;
+	M_g.nominal := M_g;
+	D.nominal := D;
+	H.nominal := H;
+	DT_C.nominal := DT_C;
+	Ac.nominal := Ac;
+	Ar.nominal := Ar;
+	Acmin.nominal := Acmin;
+	Acmax.nominal := Acmax;
+	Armin.nominal := Armin;
+	Armax.nominal := Armax;
+	QC.nominal := sqrt(sqr(QC));
+	QR.nominal := sqrt(sqr(QR));
+	Tc.nominal := Tc;
+	Tout.nominal := Tout;
+	Fc1.nominal := Fc1;
+	Fc2.nominal := Fc2;
+
+	Feedtot.nominal := Feedtot;
+	Feedmax.nominal := Feedmax;
+	Feedmin.nominal := Feedmin;
+	Fmax.nominal := Fmax;
+	Fmin.nominal := Fmin;
+	LMT.nominal := LMT;
+	stot.nominal := stot;
+
+	Area.upper_bound := Area + boundwidth*Area.nominal;
+	M_g.upper_bound := M_g + boundwidth*M_g.nominal;
+	D.upper_bound := D + boundwidth*D.nominal;
+	H.upper_bound := H + boundwidth*H.nominal;
+	DT_C.upper_bound := DT_C + boundwidth*DT_C.nominal;
+	Ac.upper_bound := Ac + boundwidth*Ac.nominal;
+	Ar.upper_bound := Ar + boundwidth*Ar.nominal;
+	Acmin.upper_bound := Acmin + boundwidth*Acmin.nominal;
+	Acmax.upper_bound := Acmax + boundwidth*Acmax.nominal;
+	Armin.upper_bound := Armin + boundwidth*Armin.nominal;
+	Armax.upper_bound := Armax + boundwidth*Armax.nominal;
+	QC.upper_bound := QC + boundwidth*QC.nominal;
+	QR.upper_bound := QR + boundwidth*QR.nominal;
+	Tc.upper_bound := Tc + boundwidth*Tc.nominal;
+	Tout.upper_bound := Tout + boundwidth*Tout.nominal;
+	Fc1.upper_bound := Fc1 + boundwidth*Fc1.nominal;
+	Fc2.upper_bound := Fc2 + boundwidth*Fc2.nominal;
+
+	Feedtot.upper_bound := Feedtot + boundwidth*Feedtot.nominal;
+	Feedmax.upper_bound := Feedmax + boundwidth*Feedmax.nominal;
+	Feedmin.upper_bound := Feedmin + boundwidth*Feedmin.nominal;
+	Fmax.upper_bound := Fmax + boundwidth*Fmax.nominal;
+	Fmin.upper_bound := Fmin + boundwidth*Fmin.nominal;
+	LMT.upper_bound := LMT + boundwidth*LMT.nominal;
+	stot.upper_bound := stot + boundwidth*stot.nominal;
+
+
+
+	QC.lower_bound := QC - boundwidth*QC.nominal;
+	QR.lower_bound := QR - boundwidth*QR.nominal;
+
+	Fmax.lower_bound := Fmax + boundwidth*Fmax.nominal;
+	Fmin.lower_bound := Fmin + boundwidth*Fmin.nominal;
+     END scale;
+END cost_calc;
+(*
+MODEL cost_column;
+
+	cost_calc		IS_A cost_calc;
+	col			IS_A td_coll_column;
+
+	cost_calc.Tc,
+	col.condenser.VLE.T	ARE_THE_SAME;
+	cost_calc.QC,
+	col.condenser.Qin	ARE_THE_SAME;
+	cost_calc.QR,
+	col.reboiler.Qin	ARE_THE_SAME;
+
+	cost_calc.nsections :== col.nfeeds+1;
+
+
+	FOR j IN [1..col.nfeeds+1] CREATE
+	    cost_calc.V[j],
+		col.coll_stack[j].coll[1].tray[1].vapout['vapor'].Ftot	ARE_THE_SAME;
+	    cost_calc.V_bar[j],
+		col.coll_stack[j].coll[1].tray[1].vapout['vapor'].state.V	ARE_THE_SAME;
+	END FOR;
+
+
+
+	cost_calc.stot,
+	col.stot		ARE_THE_SAME;
+
+	cost_calc.M_g = SUM[col.feed_tray[1].data[i].mw
+		*col.feed_tray[1].vapout['vapor'].state.y[i]
+		| i IN col.components];
+	cost_calc.Feedtot,
+	    col.feed_tray[1].input['feed'].Ftot	ARE_THE_SAME;
+
+
+  METHODS
+     METHOD clear;
+	RUN col.clear;
+	RUN cost_calc.clear;
+     END clear;
+     METHOD seqmod;
+	RUN col.seqmod;
+	RUN cost_calc.seqmod;
+     END seqmod;
+     METHOD specify;
+	 RUN seqmod;
+	 RUN col.feed_tray[1..col.nfeeds].input['feed'].specify;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+END cost_column;
+
+
+MODEL opt_column REFINES cost_column;
+
+
+
+	opt1: MINIMIZE cost_calc.cost;
+
+   METHODS
+
+      METHOD free;
+	col.condenser.reflux_ratio.fixed := FALSE;
+	col.condenser.totprod.Ftot.fixed := FALSE;
+	col.s_stack[1..2].fixed := FALSE;
+      END free;
+END opt_column;
+
+MODEL standard_cost REFINES column_w_plot;
+
+
+
+	cc	IS_A cost_column;
+
+	cc.col,
+	col	ARE_THE_SAME;
+
+	col.nfeeds :== 1;
+	col.coll_stack[1..2].ncolls :== 2;
+
+	col.coll_stack[1..2].coll[1].z_set.up_down := -1.0;
+	col.coll_stack[1..2].coll[2].z_set.up_down := 1.0;
+
+	col.coll_stack[1..col.nfeeds+1].coll
+	 [1..col.coll_stack[1].ncolls].z_set.lgr IS_REFINED_TO lgr_2_points;
+
+	col IS_REFINED_TO td_coll_column;
+	col.coll_stack[1..2].coll[1..2] IS_REFINED_TO h_coll;
+
+
+  METHODS
+     METHOD clear;
+	RUN col.clear;
+	RUN plots.clear;
+     END clear;
+     METHOD seqmod;
+	plots.z_space.fixed := TRUE;
+	plots.box_height.fixed := TRUE;
+	RUN cc.seqmod;
+     END seqmod;
+     METHOD specify;
+	 RUN seqmod;
+	 RUN col.feed_tray[1..col.nfeeds].input['feed'].specify;
+     END specify;
+     METHOD values;
+	col.feed_tray[1].alpha['c1'] := 1.5;
+	col.feed_tray[1].alpha['c2'] := 1.2;
+	col.feed_tray[1].alpha['c3'] := 1.0;
+	RUN col.propogate_feed;
+	FOR j IN [1..2] DO
+		col.coll_stack[j].split[1] := 0.5;
+		col.coll_stack[j].stot := 7;
+		col.coll_stack[j].coll[1].z_set.stot := 3;
+		col.coll_stack[j].coll[1..col.coll_stack[1].ncolls].z_set.a := 0.1;
+	END FOR;
+	col.feed_tray[1].input['feed'].f[col.components] := 3{mol/s};
+	col.feed_tray[1].q := 1.0;
+	col.condenser.prodsplit['vapor_product'] := 0.0;
+	col.reboiler.prodsplit['vapor_product'] := 0.0;
+	col.condenser.totprod.Ftot := 3{mol/s};
+	col.condenser.reflux_ratio := 2.0;
+   END values;
+END standard_cost;
+*)

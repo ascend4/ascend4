@@ -1,0 +1,55 @@
+#  ASCEND Subtree Makefile
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/04/20 13:00:19 $
+#  $Revision: 1.2 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/help/Screenshots/Makefile.in,v $
+#
+
+#  This file contains two lists used for installing ASCEND:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed.
+
+#  Running `make install' further up the directory tree will cause
+#  make to descend into this directory and install the listed file.
+#  The location of the RULES_FILE will be passed to `make'.
+
+
+SHELL = /bin/sh
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+INSTALL_SUBDIR_LIST = 
+
+INSTALL_FILE_LIST = \
+	browserexport.gif \
+	browserwindow.gif \
+	display.gif \
+	fontsel.gif \
+	libcreatesim.gif \
+	libfindtype.gif \
+	libhidefund.gif \
+	libmodelparts.gif \
+	libroots.gif \
+	libsimulation.gif \
+	libtyperefine.gif \
+	manytoprobe.gif \
+	print_dialog.gif \
+	probe.gif \
+	solverdebugger.gif \
+	solvergeneralopt.gif \
+	solverincidence.gif \
+	solverwindow.gif \
+	toobox.gif \
+	utilities.gif
+
+
+
+include $(RULES_FILE)

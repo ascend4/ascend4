@@ -1,0 +1,12 @@
+
+DELETE TYPES;
+READ FILE bencomponents.a4l;
+
+COMPILE tc OF test_components;
+BROWSE {tc};
+# Now search interactively for 
+# real_constant, integer_constant, symbol_constant
+# VALUE UNDEFINED. All integers should be defined.
+# some reals, particularly the 0 entries of unifac may be
+#undefined.
+

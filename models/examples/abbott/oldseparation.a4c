@@ -1,0 +1,246 @@
+(* the following files are part of the ethylene flowsheet put together
+ * by kirk abbott for his thesis.  They are not intended for reusability
+ * but rather to demonstrate the possible efficiency of the ascend
+ * compiler and solver under assumptions that may hold in the future,
+ * like after ben has finished his thesis and done parameterized types
+ * right.
+ * This version of separation.asc was ported to ascend4 by ben allan.
+ * This version defines the recovery backend in the old style of
+ * modeling a la Bob/Art/Joe/Peter.
+ *)
+
+(* REQUIRE abbott/newethylene_ppp_column.lib *)
+(* REQUIRE abbott/newethylene_column.lib *)
+
+
+
+(* This MODEL deals with the backend and the c3 splitter
+ * IN particular. There are only 3 components IN this MODEL.
+ * column_5 is the c3/c4 column
+ * column_6 is the c3_splitter.
+ * We dont make an array OF columns as we are treating both
+ * OF them differently. 
+ *)
+   
+REQUIRE "system.lib";
+REQUIRE "measures.lib";
+REQUIRE "atoms.lib";
+REQUIRE "components.lib";
+REQUIRE "H_G_thermodynamics.lib";
+REQUIRE "stream.lib";
+REQUIRE "plot.lib";
+REQUIRE "flash.lib";
+REQUIRE "column.lib";
+
+MODEL recovery_backend;
+  
+  components IS_A set OF symbol_constant;
+  components :== ['propadiene','propylene','propane'];
+
+  data[components] IS_A component_constants;
+  data['propane'] IS_REFINED_TO propane;
+  data['propylene'] IS_REFINED_TO propylene;
+  data['propadiene'] IS_REFINED_TO propadiene;
+  
+  streams IS_A set OF integer_constant;
+  stream[streams] IS_A td_stream;
+  streams :== [8,9,10,11,12,14]; (* no 13 :-) *)
+  stream[9,11,12,14] IS_REFINED_TO liquid_stream;
+  stream[8,10] IS_REFINED_TO vapor_liquid_stream;
+  
+(* the equivalences may not be exact, but they are close *)
+(*
+ * column_5 IS_A column30_eq;
+ * column_6 IS_A column164;
+ *)
+  column_5 IS_A equilibrium_column;
+  column_6 IS_A equilibrium_column;
+(* big version
+*)
+   column_5.ntrays :== 30;
+   column_5.feed_loc :== 15;
+   column_6.ntrays :== 164;
+   column_6.feed_loc :== 104;
+(* start small 
+   column_5.ntrays :== 5;
+   column_5.feed_loc :== 3;
+   column_6.ntrays :== 5;
+   column_6.feed_loc :== 3;
+ *) 
+  
+  components,
+    column_5.components,
+    column_6.components,
+    stream[streams].components ARE_THE_SAME;
+  
+  FOR i IN components CREATE
+    data[i],
+      column_5.tray[column_5.feed_loc].input['feed'].data[i],
+      column_6.tray[column_6.feed_loc].input['feed'].data[i],
+      stream[streams].data[i]	ARE_THE_SAME;
+  END FOR;
+
+  
+  (* associate the streams with the units *)
+
+  column_5.tray[column_5.feed_loc].input['feed'], stream[8] ARE_THE_SAME;
+  column_5.tray[column_5.ntrays].liqout['bottoms'], stream[9] ARE_THE_SAME;
+
+  column_6.tray[1].liqout['distillate'], stream[11] ARE_THE_SAME;
+  column_6.tray[column_6.feed_loc].input['feed'], stream[10] ARE_THE_SAME;
+  column_6.tray[column_6.ntrays].liqout['bottoms'], stream[12] ARE_THE_SAME;
+
+(* oh, just don't bother.
+ *
+ *  (* connect column_5 tops to c3_splitter feed *)
+ *  FOR i IN components CREATE
+ *    join_c5_2_c6[i]:
+ *      column_5.distillate.f[i] = stream[10].f[i];
+ *  END FOR;
+ *
+ *)
+  (* MIXER *)
+  (* simulate the mixer *)
+  FOR i IN components CREATE
+    simulate_mixer4[i]:
+      stream[12].f[i] + stream[9].f[i] = stream[14].f[i];
+  END FOR;
+
+  METHODS
+  METHOD clear;
+      RUN column_5.clear;
+      RUN column_6.clear;
+      RUN stream[streams].clear;
+  END clear;
+  METHOD seqmod;
+      RUN column_5.seqmod;
+      RUN column_6.seqmod;
+  END seqmod;
+  METHOD specify;
+      RUN column_5.reset;
+      RUN column_6.reset;
+      
+      RUN column_5.feed.reset;
+      RUN column_6.feed.clear;
+      RUN column_6.feed.seqmod;
+      
+      RUN stream[14].clear;
+      RUN stream[14].seqmod;
+  END specify;
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+  METHOD values;
+      RUN column_5.values;
+      RUN column_6.values;
+  END values;
+  
+END recovery_backend;
+
+MODEL small_recovery_backend;
+  
+  components IS_A set OF symbol_constant;
+  components :== ['propadiene','propylene','propane'];
+
+  data[components] IS_A component_constants;
+  data['propane'] IS_REFINED_TO propane;
+  data['propylene'] IS_REFINED_TO propylene;
+  data['propadiene'] IS_REFINED_TO propadiene;
+  
+  streams IS_A set OF integer_constant;
+  stream[streams] IS_A td_stream;
+  streams :== [8,9,10,11,12,14]; (* no 13 :-) *)
+  stream[9,11,12,14] IS_REFINED_TO liquid_stream;
+  stream[8,10] IS_REFINED_TO vapor_liquid_stream;
+  
+(* the equivalences may not be exact, but they are close *)
+(*
+ * column_5 IS_A column30_eq;
+ * column_6 IS_A column164;
+ *)
+  column_5 IS_A equilibrium_column;
+  column_6 IS_A equilibrium_column;
+(* big version
+   column_5.ntrays :== 30;
+   column_5.feed_loc :== 15;
+   column_6.ntrays :== 164;
+   column_6.feed_loc :== 104;
+*)
+(* start small 
+ *) 
+   column_5.ntrays :== 5;
+   column_5.feed_loc :== 3;
+   column_6.ntrays :== 5;
+   column_6.feed_loc :== 3;
+  
+  components,
+    column_5.components,
+    column_6.components,
+    stream[streams].components ARE_THE_SAME;
+  
+  FOR i IN components CREATE
+    data[i],
+      column_5.tray[column_5.feed_loc].input['feed'].data[i],
+      column_6.tray[column_6.feed_loc].input['feed'].data[i],
+      stream[streams].data[i]	ARE_THE_SAME;
+  END FOR;
+
+  
+  (* associate the streams with the units *)
+
+  column_5.tray[column_5.feed_loc].input['feed'], stream[8] ARE_THE_SAME;
+  column_5.tray[column_5.ntrays].liqout['bottoms'], stream[9] ARE_THE_SAME;
+
+  column_6.tray[1].liqout['distillate'], stream[11] ARE_THE_SAME;
+  column_6.tray[column_6.feed_loc].input['feed'], stream[10] ARE_THE_SAME;
+  column_6.tray[column_6.ntrays].liqout['bottoms'], stream[12] ARE_THE_SAME;
+
+(* oh, just don't bother.
+ *
+ *  (* connect column_5 tops to c3_splitter feed *)
+ *  FOR i IN components CREATE
+ *    join_c5_2_c6[i]:
+ *      column_5.distillate.f[i] = stream[10].f[i];
+ *  END FOR;
+ *
+ *)
+  (* MIXER *)
+  (* simulate the mixer *)
+  FOR i IN components CREATE
+    simulate_mixer4[i]:
+      stream[12].f[i] + stream[9].f[i] = stream[14].f[i];
+  END FOR;
+
+  METHODS
+  METHOD clear;
+      RUN column_5.clear;
+      RUN column_6.clear;
+      RUN stream[streams].clear;
+  END clear;
+  METHOD seqmod;
+      RUN column_5.seqmod;
+      RUN column_6.seqmod;
+  END seqmod;
+  METHOD specify;
+      RUN column_5.reset;
+      RUN column_6.reset;
+      
+      RUN column_5.feed.reset;
+      RUN column_6.feed.clear;
+      RUN column_6.feed.seqmod;
+      
+      RUN stream[14].clear;
+      RUN stream[14].seqmod;
+  END specify;
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+  METHOD values;
+      RUN column_5.values;
+      RUN column_6.values;
+  END values;
+  
+END small_recovery_backend;
+

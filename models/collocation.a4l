@@ -1,0 +1,2816 @@
+REQUIRE "cost_column.a4l";
+(* => cost_column.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "flash.a4l";
+(* => flash.a4l, stream_holdup.a4l, thermodynamics.a4l, components.a4l,
+ *    phases.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "ternary_plot.a4l";
+(* => ternary_plot.a4l, plot.a4l, atoms.a4l, measures.a4l, system.a4l,
+ *    basemodel.a4l *)
+PROVIDE "collocation.a4l";
+
+(*
+ *  collocation.a4l
+ *  by Robert S. Huss
+ *  major revisions by Kenneth H. Tyner
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:46:38 $
+ *  $Revision: 1.6 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/collocation.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994, 1997  Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+	C O L L O C A T I O N . A 4 L
+	-----------------------------
+
+	AUTHORS:	Robert S. Huss
+			Kenneth H. Tyner
+
+	DATES:		5/95 - First Public Release
+                        4/96 - Modified for using constant instance types
+			6/97 - Second Public Release
+				Now using parameterized models.
+
+	CONTENTS:	Collocation models for distillation modeling.
+
+
+
+
+	REQUIRES:	"system.a4l"
+	                "atoms.a4l"
+			"components.a4l"
+			"thermodynamics.a4l"
+			"plot.a4l"
+			"stream.a4l"
+			"flash.a4l"
+
+*)
+
+MODEL coll_partial_condenser(
+	Qin WILL_BE energy_rate;
+	vapin WILL_BE stream;
+	liqout WILL_BE stream;
+	distillate WILL_BE stream;
+	equilibrated WILL_BE boolean;
+) WHERE (
+	vapin, liqout, distillate WILL_NOT_BE_THE_SAME;
+	distillate.state, liqout.state WILL_NOT_BE_THE_SAME;
+	distillate.cd, liqout.cd, vapin.cd WILL_BE_THE_SAME;
+	vapin.pd.phase_indicator IN ['V','M'] == TRUE;
+	liqout.pd.phase_indicator == 'L';
+	distillate.pd.phase_indicator == 'VL';
+) REFINES flash_base;
+
+NOTES
+'purpose' SELF {
+This models a condenser that produces a two phase stream as a
+distillate product. This is primarilly used for modeling a total
+condenser with a saturated liquid product.
+}
+'ascii-picture' SELF {
+   |
+   v Vapin
+ /-------------\
+ |OOOOOOOOOOOOO+--< Qin
+ |~~~~~~~~~~~~~|
+ \_____________+--> Distillate
+      | Liqout
+      v
+}
+END NOTES;
+
+	cd ALIASES vapin.cd;
+	state ALIASES distillate.state;
+	P ALIASES state.P;
+	T ALIASES state.T;
+
+	reflux_ratio		IS_A factor;
+
+	reflux_eqn: (liqout.flow - reflux_ratio * distillate.flow)
+			 / flowscale = 0;
+
+	FOR i IN cd.other_components CREATE
+		distillate.state.y[i] = vapin.state.y[i];
+		liqout.state.y[i] = vapin.state.y[i];
+	END FOR;
+
+	liqout.T = distillate.T;
+	liqout.P = distillate.P;
+
+	flowscale IS_A molar_rate_scale;
+	(vapin.flow - distillate.flow - liqout.flow) / flowscale = 0;
+
+	H_flowscale IS_A energy_rate_scale;
+	energy_balance:	(vapin.H_flow + Qin -
+			(liqout.H_flow + distillate.H_flow)) / H_flowscale =0;
+
+
+
+METHODS
+
+METHOD check_all;
+	RUN vapin.check_all;
+	RUN liqout.check_all;
+	RUN distillate.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	IF (vapin.flow < 1e-4 {mole/s}) THEN
+		STOP {Vapor flow to condenser disappeared};
+	END IF;
+	IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {No reflux leaving condenser};
+	END IF;
+	IF (distillate.flow < 1e-4 {mole/s}) THEN
+		STOP {No distillate leaving condenser};
+	END IF;
+	IF (abs(vapin.flow -
+		distillate.flow - liqout.flow)/flowscale > 1.0e-4) THEN
+		STOP {Condensor violates overall mass-balance};
+	END IF;
+END check_self;
+
+METHOD default_self;
+	H_flowscale := vapin.H_flow + abs(Qin);
+	flowscale := vapin.Details.flowscale;
+	reflux_ratio := 10;
+	reflux_ratio.upper_bound := 1000;
+	reflux_ratio.lower_bound := 0;
+END default_self;
+
+METHOD default_all;
+	RUN vapin.default_all;
+	RUN liqout.default_all;
+	RUN distillate.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD bound_self;
+	reflux_ratio.lower_bound :=
+		reflux_ratio - boundwidth * reflux_ratio.nominal;
+	reflux_ratio.upper_bound :=
+		reflux_ratio + boundwidth * reflux_ratio.nominal;
+	IF (reflux_ratio.lower_bound < 0) THEN
+		reflux_ratio.lower_bound := 0;
+	END IF;
+END bound_self;
+
+METHOD bound_all;
+	vapin.boundwidth := boundwidth;
+	liqout.boundwidth := boundwidth;
+	distillate.boundwidth := boundwidth;
+	RUN vapin.bound_all;
+	RUN liqout.bound_all;
+	RUN distillate.bound_all;
+	RUN bound_self;
+	STOP {MODEL total_condenser method bound_all needs to do Qin};
+END bound_all;
+
+METHOD scale_self;
+	flowscale := vapin.Details.flowscale + liqout.Details.flowscale
+			+ distillate.Details.flowscale;
+	H_flowscale := liqout.Details.H_flowscale + vapin.Details.H_flowscale
+			+ distillate.Details.H_flowscale;
+	reflux_ratio.nominal := abs(reflux_ratio)*1.01 + 1;
+END scale_self;
+
+METHOD scale_all;
+	RUN vapin.scale_all;
+	RUN liqout.scale_all;
+	RUN distillate.scale_all;
+	RUN scale_self;
+	STOP {MODEL total_condenser method scale_all needs to do Qin};
+END scale_all;
+
+METHOD seqmod;
+	RUN liqout.seqmod;
+	RUN distillate.seqmod;
+	RUN vapin.seqmod;
+	reflux_ratio.fixed := TRUE;
+	liqout.T.fixed := FALSE;
+	liqout.P.fixed := FALSE;
+END seqmod;
+
+METHOD specify;
+	RUN seqmod;
+	RUN vapin.specify;
+END specify;
+
+END coll_partial_condenser;
+
+MODEL lagrange_polynomial(
+    ntrays WILL_BE integer_constant;
+    );
+
+	npoints,
+	order					IS_A integer_constant;
+	W[0..npoints][0..order],
+	w_tray[0..ntrays+1],
+	w_points[0..npoints],
+	w_mid					IS_A factor;
+	f_int,
+	f_mid					IS_A fraction;
+	scale					IS_A scaling_constant;
+
+	npoints :== 2*ntrays + 1;
+	order :== ntrays;
+
+	w_tray[0],
+	    w_points[0]				ARE_THE_SAME;
+	w_tray[ntrays+1],
+	w_points[npoints]			ARE_THE_SAME;
+
+	w_mid = w_tray[0] + f_mid*(w_tray[ntrays+1] - w_tray[0]);
+
+	FOR i IN [0..npoints] CREATE
+	    FOR k IN [0..ntrays] CREATE
+		W[i][k]*PROD[(w_tray[k] - w_tray[j]) | j IN
+		    [0..k-1,k+1..ntrays]] = PROD[(w_points[i] - w_tray[j])
+		    | j IN [0..k-1,k+1..ntrays]];
+	    END FOR;
+	END FOR;
+
+	(* point spacing equations *)
+	even IS_A boolean_constant;
+	tray_comp IS_A integer_constant;
+
+	tray_comp :== 2*(ntrays/2);
+	even :== (tray_comp == ntrays);
+
+
+	count IS_A integer_constant;
+	mult[1..ntrays] IS_A factor;
+	f_count IS_A factor; (* need floating point arithmetic
+				 to set up multipliers *)
+	f_ntrays IS_A factor; (* need floating point arithmetic
+	                     to set up multipliers *)
+
+	SELECT (even)
+	CASE FALSE: (* odd number OF trays *)
+	    count :== (ntrays + 1)/2;
+	    w_tray[count], w_mid	ARE_THE_SAME;
+	    FOR i IN [1..count - 1] CREATE
+		w_tray[i] = w_mid - f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	    FOR i IN [count + 1..ntrays] CREATE
+		w_tray[i] = w_mid + f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	CASE TRUE: (* even number OF trays *)
+	    count :== ntrays/2;
+	    FOR i IN [1..count] CREATE
+		w_tray[i] = w_mid - f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	    FOR i IN [count + 1..ntrays] CREATE
+		w_tray[i] = w_mid + f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	END SELECT;
+
+
+METHODS
+
+METHOD default_self;
+    f_mid := 0.5;
+    IF (even == FALSE) THEN
+	f_count := count;
+	f_ntrays := ntrays;
+	f_int :=  2/(f_ntrays + 1)*(f_count - 1);
+	mult[1] := 1;
+	FOR i IN [2..count - 1] DO
+	    mult[i] := (f_count - i)/(f_count - 1);
+	END FOR;
+	FOR i IN [count + 1..ntrays] DO
+	    mult[i] := mult[ntrays + 1 - i];
+	END FOR;
+    ELSE
+	f_count := count;
+	f_ntrays := ntrays;
+	f_int := 2/(f_ntrays + 1)*(f_count - 1 + 0.5);
+	mult[1] := 1;
+	FOR i IN [2..count] DO
+	    mult[i] := 1/(f_count + i - 1);
+	END FOR;
+	FOR i IN [count + 1..ntrays] DO
+	    mult[i] := mult[ntrays + 1 - i];
+	END FOR;
+    END IF;
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+METHOD scale_self;
+    f_int.nominal := f_int;
+    f_mid.nominal := f_mid;
+    FOR i IN [0..npoints] DO
+	w_points[i].nominal := abs(w_points[i]) + 0.01;
+
+	FOR j IN [0..order] DO
+	    W[i][j].nominal := abs(W[i][j]) + 0.01;
+	END FOR;
+    END FOR;
+    FOR j IN [0..ntrays+1] DO
+	w_tray[j].nominal := abs(w_tray[j]) + 0.01;
+    END FOR;
+    w_mid.nominal := abs(w_mid) + 0.01;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+METHOD bound_self;
+(*    FOR i IN [0..npoints] DO
+(*	w_points[i].lower_bound := -2.0;
+	w_points[i].upper_bound := abs(w_points[i]) +
+	scale*w_points[i].nominal;
+*)
+	FOR j IN [0..order] DO
+	    (* NEED BETTER BOUNDING HERE
+	      note that lower bound can go negative for
+	      some Wij and others will have zero lower bound.
+	    W[i][j].lower_bound := ??;
+	    W[i][j].upper_bound := ??;
+	    *)
+	END FOR;
+    END FOR;
+(*    FOR j IN [0..ntrays+1] DO
+	w_tray[j].lower_bound := -2.0;
+	w_tray[j].upper_bound := w_tray[j] +
+	scale*w_tray[j].nominal;
+    END FOR;
+    w_mid.lower_bound := -2.0;
+    w_mid.upper_bound := w_mid + scale*w_mid.nominal;
+*)
+*)
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+
+METHOD specify;
+    w_points[0..npoints].fixed	:= TRUE;
+    f_int.fixed 			:= TRUE;
+    f_mid.fixed			:= TRUE;
+    mult[1..ntrays].fixed		:= TRUE;
+END specify;
+METHOD reset;
+    RUN ClearAll;
+    RUN specify;
+END reset;
+
+END lagrange_polynomial;
+
+
+MODEL collpoint(
+    z WILL_BE factor;
+    s WILL_BE factor;
+    up_down WILL_BE real;
+    a WILL_BE factor;
+    );
+	ztop				IS_A factor;
+	scale				IS_A scaling_constant;
+
+	s_def: z = 1-exp(-a*s);
+	ztopdefn: ztop = 1-(1-z)*exp(-up_down*a);
+
+METHODS
+METHOD default_self;
+    ztop					:= 0.5;
+    ztop.upper_bound			:= 1.0;
+    ztop.lower_bound			:= -0.5;
+END default_self;
+METHOD default_all;
+    s := 1.0;
+    s.lower_bound := 0.0;
+    s.upper_bound := 100.0;
+    z := 0.5;
+    RUN default_self;
+END default_all;
+METHOD scale_self;
+    ztop.nominal := abs(ztop) + 0.01;
+END scale_self;
+METHOD scale_all;
+    a.nominal := a + 0.01;
+    z.nominal := abs(z) + 0.01;
+    s.nominal := s + 0.01;
+    RUN scale_self;
+END scale_all;
+METHOD bound_self;
+    ztop.lower_bound := 1-(1-z.lower_bound)*exp(-up_down*a);
+    ztop.upper_bound := 1-(1-z.upper_bound)*exp(-up_down*a);
+END bound_self;
+METHOD bound_all;
+    ztop.nominal := abs(ztop) + 0.01;
+    a.lower_bound := 0.0;
+    a.upper_bound := 3.0;
+    z.lower_bound := 1-exp(-a*s.lower_bound);
+    z.upper_bound := 1-exp(-a*s.upper_bound);
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+
+METHOD seqmod;
+    a.fixed					:= TRUE;
+    s.fixed					:= TRUE;
+END seqmod;
+METHOD specify;
+    RUN seqmod;
+END specify;
+METHOD reset;
+    RUN ClearAll;
+    RUN specify;
+END reset;
+METHOD s_off;
+    s_def.included				:= FALSE;
+    s.fixed					:= TRUE;
+END s_off;
+
+END collpoint;
+
+
+MODEL z_set(
+    ntrays WILL_BE integer_constant;
+    up_down WILL_BE real;
+    a WILL_BE factor;
+    z_on WILL_BE boolean;
+    );
+
+    s_values[0..ntrays+1],
+	z_values[0..ntrays+1],
+	stot			IS_A factor;
+
+
+    FOR i IN [0..ntrays+1] CREATE
+	z[i] IS_A collpoint(z_values[i],s_values[i],up_down,a);
+    END FOR;
+
+    ztop,
+	zbot			IS_A factor;
+
+    lgr IS_A lagrange_polynomial(ntrays);
+
+    scale				IS_A scaling_constant;
+
+    stot = s_values[ntrays+1] - s_values[0];
+
+    FOR j IN [1..ntrays] CREATE
+	lgr.w_points[2*j-1],
+	    lgr.w_tray[j]		ARE_THE_SAME;
+    END FOR;
+
+
+    (*	z_based		*)
+    FOR j IN [1..ntrays] CREATE
+
+	z_based_odd[2*j-1]: lgr.w_points[2*j-1] =
+	    z_values[j];
+	z_based_even[2*j]: lgr.w_points[2*j] =
+	    z[j].ztop;
+    END FOR;
+
+    z_based_0: lgr.w_points[0] = z_values[0];
+    z_based_n: lgr.w_points[lgr.npoints] =
+	z_values[ntrays+1];
+
+
+    (*	s_based	 	*)
+
+    FOR j IN [1..ntrays] CREATE
+
+	s_based_odd[2*j-1]: lgr.w_points[2*j-1] =
+	    s_values[j];
+	s_based_even[2*j]: lgr.w_points[2*j] =
+	    s_values[j] + z[0].up_down;
+    END FOR;
+
+    s_based_0: lgr.w_points[0] = s_values[0];
+    s_based_n: lgr.w_points[lgr.npoints] =
+	s_values[ntrays+1];
+
+
+    ztop = (up_down+1)*z_values[ntrays+1]/2 +(1-up_down)*z_values[0]/2;
+    zbot = (up_down+1)*z_values[0]/2 +(1-up_down)*z_values[ntrays+1]/2;
+
+    tray_delta		IS_A factor;
+
+    s_values[ntrays] + tray_delta = s_values[ntrays+1];
+
+    WHEN(z_on)
+    CASE TRUE:
+	USE z_based_odd;
+        USE z_based_even;
+	USE z_based_0;
+	USE z_based_n;
+    CASE FALSE:
+	USE s_based_odd;
+        USE s_based_even;
+	USE s_based_0;
+	USE s_based_n;
+    END WHEN;
+
+
+  METHODS
+METHOD default_self;
+    s_values[0] := 0;
+    s_values[1..ntrays+1] := 1.0;
+    s_values[0..ntrays+1].lower_bound := 0.0;
+    z_values[0] := 0;
+    z_values[1..ntrays+1] := 0.5;
+    z_values[0..ntrays+1].lower_bound := 0.0;
+    z_values[0..ntrays+1].upper_bound := 1.0;
+    stot.lower_bound := 1;
+    stot.upper_bound := 100;
+
+    RUN z[0..ntrays+1].default_self;
+    RUN lgr.default_self;
+END default_self;
+METHOD default_all;
+    RUN default_self;
+END default_all;
+
+METHOD scale_self;
+    RUN z[0..ntrays+1].scale_self;
+    RUN lgr.scale_self;
+    stot.nominal := stot + 0.01;
+    tray_delta.nominal := tray_delta + 0.01;
+    ztop.nominal := abs(ztop) + 0.01;
+    zbot.nominal := abs(zbot) + 0.01;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+END scale_all;
+
+METHOD bound_self;
+    s_values[0..ntrays+1].upper_bound := stot.upper_bound;
+    RUN z[0..ntrays+1].bound_self;
+
+    RUN lgr.bound_self;
+    tray_delta.lower_bound := 1e-8;
+    tray_delta.upper_bound := tray_delta +
+    scale*tray_delta.nominal;
+    ztop.lower_bound := -0.5;
+    ztop.upper_bound := 1.0;
+    zbot.lower_bound := -0.5;
+    zbot.upper_bound := 1.0;
+
+    IF (z_on) THEN
+	FOR j IN [1..ntrays] DO
+	    lgr.w_points[2*j-1].lower_bound := z_values[j].lower_bound; (* 0 *)
+	    lgr.w_points[2*j-1].upper_bound := z_values[j].upper_bound; (* 1 *)
+	    lgr.w_points[2*j].lower_bound := z[j].ztop.lower_bound;
+	    lgr.w_points[2*j].upper_bound := z[j].ztop.upper_bound;
+	END FOR;
+	lgr.w_tray[0..ntrays+1].lower_bound := 0;
+	lgr.w_tray[0..ntrays+1].upper_bound := 1;
+    ELSE
+	FOR j IN [1..ntrays] DO
+	    lgr.w_points[2*j-1].lower_bound := 0;
+	    lgr.w_points[2*j-1].upper_bound := stot.upper_bound;
+	    lgr.w_points[2*j].lower_bound := 0 + z[0].up_down;
+	    lgr.w_points[2*j].upper_bound := stot.upper_bound + z[0].up_down;
+	END FOR;
+	lgr.w_tray[0..ntrays+1].lower_bound := 0;
+	lgr.w_tray[0..ntrays+1].upper_bound := stot.upper_bound;
+    END IF;
+
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+
+METHOD specify;
+    RUN lgr.specify;
+    lgr.w_points[0..lgr.npoints].fixed 	:= FALSE;
+    a.fixed					:= TRUE;
+    s_values[0].fixed			:= TRUE;
+    stot.fixed				:= TRUE;
+END specify;
+METHOD reset;
+    RUN ClearAll;
+    RUN specify;
+END reset;
+
+METHOD s_off;
+    RUN z[ntrays..ntrays+1].s_off;
+END s_off;
+
+END z_set;
+
+MODEL coll_material_detailed_stream(
+	state WILL_BE thermodynamics;
+) WHERE (
+    state.pd.phase_indicator == 'M';
+) REFINES detailed_stream;
+
+    sum_y: SUM[state.y[i] | i IN components] = 1.0;
+
+(* this is a wrapper that permanently removes equations *)
+    false_cond IS_A boolean_constant;
+    false_cond :== FALSE;
+    WHEN (false_cond)
+    CASE TRUE:
+	USE state.overall_h;
+	USE state.overall_g;
+	USE state.overall_v;
+	USE state.overall_y;
+	USE V_eqn;
+	USE state.phase['material'].g_mix;
+	USE state.phase['material'].v_mix;
+	USE state.phase['material'].h_mix;
+	USE state.phase['material'].sum_y;
+	USE state.sum_phase_fractions;
+    OTHERWISE:
+    END WHEN;
+METHODS
+METHOD specify;
+    RUN detailed_stream::specify;
+    state.H.fixed := TRUE;
+END specify;
+END coll_material_detailed_stream;
+
+MODEL coll_material_stream(
+   cd WILL_BE components_data;
+   pd WILL_BE phases_data;
+   equilibrated WILL_BE boolean;
+) WHERE (
+    pd.phase_indicator == 'M';
+) REFINES stream;
+
+    sum_y: SUM[state.y[i] | i IN components] = 1.0;
+(* this is a wrapper that permanently removes equations *)
+    false_cond IS_A boolean_constant;
+    false_cond :== FALSE;
+    WHEN (false_cond)
+    CASE TRUE:
+	USE state.overall_h;
+	USE state.overall_g;
+	USE state.overall_v;
+	USE state.overall_y;
+	USE Details.V_eqn;
+	USE state.phase['material'].g_mix;
+	USE state.phase['material'].v_mix;
+	USE state.phase['material'].h_mix;
+	USE state.phase['material'].sum_y;
+	USE state.sum_phase_fractions;
+    OTHERWISE:
+    END WHEN;
+METHODS
+METHOD specify;
+    RUN stream::specify;
+    state.H.fixed := TRUE;
+END specify;
+END coll_material_stream;
+
+
+MODEL coll_detailed_tray(
+	Qin WILL_BE energy_rate;
+	equilibrated WILL_BE boolean;
+	liqin WILL_BE detailed_stream;
+	vapin WILL_BE detailed_stream;
+	liqout WILL_BE detailed_stream;
+	vapout WILL_BE detailed_stream;
+	state WILL_BE thermodynamics;
+) WHERE (
+	vapin.state.pd.phase_indicator IN ['V','M'] == TRUE;
+	vapout.state.pd.phase_indicator == 'V';
+	liqin.state.pd.phase_indicator IN ['L','M'] == TRUE;
+	liqout.state.pd.phase_indicator == 'L';
+	state.pd.phase_indicator == 'VL';
+	liqout.state, vapout.state WILL_NOT_BE_THE_SAME;
+	state.phase['liquid1'], liqout.state.phase['liquid1'] WILL_BE_THE_SAME;
+	state.phase['vapor'], vapout.state.phase['vapor'] WILL_BE_THE_SAME;
+	state.cd, liqin.state.cd, liqout.state.cd,
+		vapin.state.cd, vapout.state.cd WILL_BE_THE_SAME;
+) REFINES detailed_tray;
+
+METHODS
+METHOD seqmod;
+    RUN detailed_tray::seqmod;
+    RUN liqin.seqmod;
+    RUN vapin.seqmod;
+END seqmod;
+END coll_detailed_tray;
+
+MODEL coll_feed_tray(
+	Qin WILL_BE energy_rate;
+	equilibrated WILL_BE boolean;
+	feed WILL_BE stream;
+	liqin WILL_BE stream;
+	vapin WILL_BE stream;
+	liqout WILL_BE stream;
+	vapout WILL_BE stream;
+) WHERE (
+	feed, liqin, vapin, vapout, liqout WILL_NOT_BE_THE_SAME;
+	feed.cd, liqin.cd, liqout.cd, vapin.cd, vapout.cd WILL_BE_THE_SAME;
+	liqin.pd.phase_indicator IN ['L','M'] == TRUE;
+	liqout.pd.phase_indicator == 'L';
+	vapin.pd.phase_indicator IN ['V','M'] == TRUE;
+	vapout.pd.phase_indicator == 'V';
+	(feed.pd.phase_indicator IN ['V','L','VL']) == TRUE;
+) REFINES feed_tray;
+METHODS
+METHOD seqmod;
+    RUN feed_tray::seqmod;
+    RUN liqin.seqmod;
+    RUN vapin.seqmod;
+    RUN feed.seqmod;
+END seqmod;
+END coll_feed_tray;
+
+MODEL coll_simple_reboiler(
+	Qin WILL_BE energy_rate;
+	equilibrated WILL_BE boolean;
+	liqin WILL_BE stream;
+	vapout WILL_BE stream;
+	bottoms WILL_BE stream;
+) WHERE (
+	liqin, vapout, bottoms WILL_NOT_BE_THE_SAME;
+	liqin.cd, vapout.cd, bottoms.cd WILL_BE_THE_SAME;
+	liqin.pd.phase_indicator IN ['L','M'] == TRUE;
+	vapout.pd.phase_indicator == 'V';
+	bottoms.pd.phase_indicator == 'L';
+) REFINES simple_reboiler;
+METHODS
+METHOD seqmod;
+    RUN simple_reboiler::seqmod;
+    RUN liqin.seqmod;
+END seqmod;
+END coll_simple_reboiler;
+
+MODEL coll(
+    ntrays WILL_BE integer_constant;
+    topvap WILL_BE stream;
+    topliq WILL_BE stream;
+    botvap WILL_BE stream;
+    botliq WILL_BE stream;
+    pdL WILL_BE phases_data;
+    pdV WILL_BE phases_data;
+    reduce WILL_BE fraction;
+    equilibrated WILL_BE boolean;
+    up_down WILL_BE real;
+    a WILL_BE factor;
+    z_on WILL_BE boolean;
+    hat_on WILL_BE boolean;
+    hb_on WILL_BE boolean;
+) WHERE (
+	ntrays >= 1;
+	topvap, topliq, botvap, botliq WILL_NOT_BE_THE_SAME;
+	topvap.cd, botvap.cd, botliq.cd, topliq.cd WILL_BE_THE_SAME;
+	botliq.pd.phase_indicator IN ['M','L'] == TRUE;
+	botvap.pd.phase_indicator IN ['M','V'] == TRUE;
+	topliq.pd.phase_indicator IN ['M','L'] == TRUE;
+	topvap.pd.phase_indicator IN ['M','V'] == TRUE;
+) REFINES cmumodel();
+
+	cd ALIASES topliq.state.cd;
+	vap_option ALIASES pdV.vapor_option;
+	liq_option ALIASES pdL.liquid1_option;
+	pdVL IS_A phases_data('VL', vap_option, liq_option, 'none');
+	pdM IS_A phases_data('M', 'none', 'none', 'none');
+	mat_option ALIASES pdM.liquid1_option; (* none *)
+
+
+	FOR i IN [1..ntrays] CREATE
+	    liqin_mix[i] IS_A select_mixture_type(cd, mat_option);
+	    liqout_mix[i] IS_A select_mixture_type(cd, liq_option);
+	    vapin_mix[i] IS_A select_mixture_type(cd, mat_option);
+	    vapout_mix[i] IS_A select_mixture_type(cd, vap_option);
+	END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+	    liqin_phase[i]['material'] ALIASES liqin_mix[i].phase;
+	    liqout_phase[i]['liquid1'] ALIASES liqout_mix[i].phase;
+	    vapin_phase[i]['material'] ALIASES vapin_mix[i].phase;
+	    vapout_phase[i]['vapor'] ALIASES vapout_mix[i].phase;
+	END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+	        liqin_state[i] IS_A thermodynamics(
+			cd,
+			pdM,
+			liqin_phase[i],
+			equilibrated
+		);
+	        liqout_state[i] IS_A thermodynamics(
+			cd,
+			pdL,
+			liqout_phase[i],
+			equilibrated
+		);
+	        vapin_state[i] IS_A thermodynamics(
+			cd,
+			pdM,
+			vapin_phase[i],
+			equilibrated
+		);
+	        vapout_state[i] IS_A thermodynamics(
+			cd,
+			pdV,
+			vapout_phase[i],
+			equilibrated
+		);
+        END FOR;
+	FOR i IN [1..ntrays] CREATE
+	    liqin[i] IS_A coll_material_detailed_stream(liqin_state[i]);
+	    liqout[i] IS_A detailed_stream(liqout_state[i]);
+	    vapin[i] IS_A coll_material_detailed_stream(vapin_state[i]);
+	    vapout[i] IS_A detailed_stream(vapout_state[i]);
+        END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+	    trayVL[i][VLphases[i]] ALIASES
+	    (vapout_mix[i].phase,liqout_mix[i].phase)
+	    WHERE VLphases[i] IS_A set OF symbol_constant
+	    WITH_VALUE ('vapor','liquid1');
+	END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+	    tray_state[i] IS_A thermodynamics(
+			cd,
+			pdVL,
+			trayVL[i],
+			equilibrated
+	    );
+	END FOR;
+
+	Qin_tray[1..ntrays]			IS_A energy_rate;
+
+	FOR i IN [1..ntrays] CREATE
+		tray[i] IS_A coll_detailed_tray(
+		        Qin_tray[i],
+			equilibrated,
+		        liqin[i],
+			vapin[i],
+			liqout[i],
+			vapout[i],
+			tray_state[i]
+		);
+	END FOR;
+
+	components ALIASES cd.components;
+	inactive_component ALIASES cd.reference;
+
+	x_order,
+	    y_order				IS_A integer_constant;
+
+	x_coeff[components
+	    - [inactive_component]]
+	    [0..x_order],
+	    y_coeff[components
+	    - [inactive_component]]
+	    [0..y_order],
+	    cmo[1..ntrays],
+	    cmotot				IS_A factor;
+
+	z_set IS_A z_set(ntrays,up_down,a,z_on);
+	x[1..ntrays][components]	IS_A fraction;
+	y[1..ntrays][components]	IS_A fraction;
+	x_hat[1..ntrays][components]	IS_A factor;
+	scale				IS_A scaling_constant;
+
+
+	FOR i IN components CREATE
+	    FOR j IN [1..ntrays] CREATE
+		x[j][i] = (1+z_set.up_down)
+		    *tray[ntrays+1-j].liqout.state.y[i]/2
+		    + (1-z_set.up_down)
+		    *tray[j].liqout.state.y[i]/2;
+		y[j][i] = (1+z_set.up_down)
+		    *tray[ntrays+1-j].vapin.state.y[i]/2
+		    + (1-z_set.up_down)
+		    *tray[j].vapin.state.y[i]/2;
+		x_hat[j][i] = (1+z_set.up_down)
+		    *tray_x_hat['out'][i][ntrays+1-j]/2
+		    + (1-z_set.up_down)
+		    *tray_x_hat['out'][i][j]/2;
+	    END FOR;
+	END FOR;
+
+	x_order 	:== ntrays;
+	y_order 	:== ntrays;
+
+
+	(* constant molar overflow model - instead of heat balance *)
+
+	FOR j IN [1..ntrays] CREATE
+	    cmo[j]*tray[j].liqin.flow = botliq.flow;
+	END FOR;
+
+	cmotot*topliq.flow = botliq.flow;
+
+	FOR i IN components CREATE
+	    overall_MB[i]: topliq.f[i] - topvap.f[i] =
+		botliq.f[i] - botvap.f[i];
+	END FOR;
+
+	(* xtrans stuff *)
+
+	tray_x_hat['in','out'][components][1..ntrays],
+	    tray_y_hat['in','out'][components][1..ntrays],
+	    end_x_hat['top','bot'][components],
+	    end_y_hat['top','bot'][components]	IS_A factor;
+	td		IS_A real;
+
+
+	FOR i IN components CREATE
+	    tanh_botliq[i]: (1.0)*(2.0*botliq.state.y[i] - 1.0)
+		= tanh(end_x_hat['bot'][i]*td);
+	    tanh_topliq[i]: (1.0)*(2.0*topliq.state.y[i] - 1.0)
+		= tanh(end_x_hat['top'][i]*td);
+	    tanh_botvap[i]: (1.0)*(2.0*botvap.state.y[i] - 1.0)
+		= tanh(end_y_hat['bot'][i]*td);
+	    tanh_topvap[i]: (1.0)*(2.0*topvap.state.y[i] - 1.0)
+		= tanh(end_y_hat['top'][i]*td);
+
+	END FOR;
+
+	FOR i IN components CREATE
+
+	    FOR j IN [1..ntrays] CREATE
+
+		tanh_liqout[i][j]: (1.0)*(2.0*tray[j].liqout.state.y[i] - 1.0)
+		    = tanh(tray_x_hat['out'][i][j]*td);
+		tanh_liqin[i][j]: (1.0)*(2.0*tray[j].liqin.state.y[i] - 1.0)
+		    = tanh(tray_x_hat['in'][i][j]*td);
+		tanh_vapout[i][j]: (1.0)*(2.0*tray[j].vapout.state.y[i] - 1.0)
+		    = tanh(tray_y_hat['out'][i][j]*td);
+		tanh_vapin[i][j]: (1.0)*(2.0*tray[j].vapin.state.y[i] - 1.0)
+		    = tanh(tray_y_hat['in'][i][j]*td);
+	    END FOR;
+	END FOR;
+
+	(* polynomial *)
+
+	(* Overall material balances *)
+
+	FOR j IN [1..ntrays] CREATE
+	    tot_trayMB[j]: botvap.flow - botliq.flow =
+		tray[j].vapout.flow -
+		tray[j].liqin.flow;
+
+	END FOR;
+
+	FOR i IN components - [inactive_component] CREATE
+	    FOR j IN [1..ntrays] CREATE
+		frac_x_in[j][i]:  tray[j].liqin.state.y[i] =
+		    SUM[z_set.lgr.W[2*j][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		frac_y_in[j][i]:  tray[j].vapin.state.y[i] =
+		    SUM[z_set.lgr.W[2*j-1][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+		frac_x_out[j][i]:  tray[j].liqout.state.y[i] =
+		    SUM[z_set.lgr.W[2*j-1][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		frac_y_out[j][i]:  tray[j].vapout.state.y[i] =
+		    SUM[z_set.lgr.W[2*j][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+	    END FOR;
+	END FOR;
+
+	FOR i IN components - [inactive_component] CREATE
+	    FOR j IN [1..ntrays] CREATE
+
+		trans_x_out[j][i]: tray_x_hat['out'][i][j] =
+		    SUM[z_set.lgr.W[2*j-1][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		trans_x_in[j][i]: tray_x_hat['in'][i][j] =
+		    SUM[z_set.lgr.W[2*j][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		trans_y_out[j][i]: tray_y_hat['out'][i][j] =
+		    SUM[z_set.lgr.W[2*j][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+		trans_y_in[j][i]: tray_y_hat['in'][i][j] =
+		    SUM[z_set.lgr.W[2*j-1][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+	    END FOR;
+	END FOR;
+
+
+	FOR i IN components - [inactive_component] CREATE
+	    frac_x_top[i]:  topliq.state.y[i]
+		= SUM[((z_set.up_down+1)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[0][k]/2)*x_coeff[i][k]
+		| k IN [0..x_order]];
+	    frac_y_top[i]:  topvap.state.y[i]
+		= SUM[((z_set.up_down+1)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[0][k]/2)*y_coeff[i][k]
+		| k IN [0..y_order]];
+	    frac_y_bot[i]: botvap.state.y[i]
+		= SUM[((z_set.up_down+1)
+		*z_set.lgr.W[0][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+		*y_coeff[i][k]
+		| k IN [0..y_order]];
+	END FOR;
+
+	FOR i IN components - [inactive_component] CREATE
+	    trans_x_top[i]: end_x_hat['top'][i]
+		= SUM[(((z_set.up_down+1)*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2))*x_coeff[i][k]
+		| k IN [0..x_order]];
+	    trans_y_top[i]: end_y_hat['top'][i]
+		= SUM[(((z_set.up_down+1)*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2))*y_coeff[i][k]
+		| k IN [0..y_order]];
+	    trans_y_bot[i]: end_y_hat['bot'][i]
+		= SUM[((z_set.up_down+1)*z_set.lgr.W[0][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2)*y_coeff[i][k]
+		| k IN [0..y_order]];
+	END FOR;
+
+
+	slope[components]	IS_A factor;
+
+	FOR i IN components CREATE
+	    slope[i]*z_set.stot = abs(topliq.state.y[i] - botliq.state.y[i]);
+	END FOR;
+
+
+	aslope[components]			IS_A factor;
+	intercept[components]			IS_A fraction;
+	slope_slack[1..ntrays][components]	IS_A factor;
+
+
+
+
+	FOR i IN components CREATE
+	    botpoint[i]: botliq.state.y[i] = aslope[i]*z_set.zbot +
+		intercept[i];
+	    toppoint[i]: topliq.state.y[i] = aslope[i]*z_set.ztop +
+		intercept[i];
+	    FOR j IN [1..ntrays] CREATE
+		midpoint[j][i]: tray[j].liqout.state.y[i] =
+		    aslope[i]*(z_set.z_values[j] - z_set.zbot) +
+		    intercept[i] + slope_slack[j][i];
+	    END FOR;
+	END FOR;
+
+    WHEN(hat_on)
+    CASE TRUE:
+	USE trans_x_out;
+        USE trans_x_in;
+	USE trans_y_out;
+	USE trans_y_in;
+	USE trans_x_top;
+	USE trans_y_top;
+	USE trans_y_bot;
+    CASE FALSE:
+	USE frac_x_in;
+        USE frac_y_in;
+	USE frac_x_out;
+	USE frac_y_out;
+	USE frac_x_top;
+	USE frac_y_top;
+	USE frac_y_bot;
+    END WHEN;
+
+    (* ENTHALPY / HEAT-BALANCE SECTION *)
+    h_order ALIASES ntrays;
+    h_coeff['liquid','vapor'][0..h_order]	IS_A molar_energy;
+    Qtot,
+	Qin[1..ntrays]				IS_A energy_rate;
+
+    Overall_HB: Qtot + topliq.H_flow + botvap.H_flow =
+	botliq.H_flow + topvap.H_flow;
+
+    FOR j IN [1..ntrays] CREATE
+	tot_trayHB[j]: Qin[j] +topliq.H_flow - topvap.H_flow =
+	    tray[j].liqout.H_flow -
+	    tray[j].vapin.H_flow;
+    END FOR;
+
+    (* end points *)
+
+    h_end_topliq: topliq.state.H = SUM[((z_set.up_down+1)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2
+	+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2)
+	*h_coeff['liquid'][k]
+	| k IN [0..h_order]];
+    h_end_topvap: topvap.state.H = SUM[((z_set.up_down+1)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2
+	+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2)
+	*h_coeff['vapor'][k]
+	| k IN [0..h_order]];
+    h_end_botliq: botliq.state.H =  SUM[((z_set.up_down+1)
+	*z_set.lgr.W[0][k]/2
+	+ (1-z_set.up_down)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+	*h_coeff['liquid'][k]
+	| k IN [0..h_order]];
+    h_end_botvap: botvap.state.H = SUM[((z_set.up_down+1)
+	*z_set.lgr.W[0][k]/2
+	+ (1-z_set.up_down)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+	*h_coeff['vapor'][k]
+	| k IN [0..h_order]];
+    (* interior points *)
+    FOR j IN [1..ntrays] CREATE
+
+	h_int_liqout[j]: tray[j].liqout.state.H =
+	    SUM[z_set.lgr.W[2*j-1][k]*h_coeff['liquid'][k]
+	    | k IN [0..h_order]];
+	h_int_liqin[j]: tray[j].liqin.state.H =
+	    SUM[z_set.lgr.W[2*j][k]*h_coeff['liquid'][k]
+	    | k IN [0..h_order]];
+	h_int_vapout[j]: tray[j].vapout.state.H =
+	    SUM[z_set.lgr.W[2*j][k]*h_coeff['vapor'][k]
+	    | k IN [0..h_order]];
+	h_int_vapin[j]: tray[j].vapin.state.H =
+	    SUM[z_set.lgr.W[2*j-1][k]*h_coeff['vapor'][k]
+	    | k IN [0..h_order]];
+    END FOR;
+
+    use_H_eqns IS_A boolean;
+    WHEN(use_H_eqns)
+    CASE TRUE:
+	USE Overall_HB;
+        USE tot_trayHB;
+	USE h_end_topliq;
+	USE h_end_topvap;
+    	USE h_end_botliq;
+        USE h_end_botvap;
+	USE h_int_liqout;
+	USE h_int_liqin;
+	USE h_int_vapout;
+	USE h_int_vapin;
+    OTHERWISE:
+    END WHEN;
+
+
+
+    (* Plotting Section *)
+    z_shift IS_A factor;
+    s_shift IS_A factor;
+
+    n_plt_points IS_A set OF integer_constant;
+    n_plt_points :== [0..ntrays+1];
+    z_tray_loc[0..ntrays+1] IS_A factor;
+    s_tray_loc[0..ntrays+1] IS_A factor;
+    x_plot[components][0..ntrays+1] IS_A fraction;
+    y_plot[components][0..ntrays+1] IS_A fraction;
+
+    z_tray_0: z_tray_loc[0] = z_set.z_values[0] + z_shift;
+    z_tray_end: z_tray_loc[ntrays+1] = z_set.z_values[ntrays+1] + z_shift;
+    s_tray_0: s_tray_loc[0] = z_set.s_values[0] + s_shift;
+    s_tray_end: s_tray_loc[ntrays+1] = z_set.s_values[ntrays+1] + s_shift;
+    FOR i IN [1..ntrays] CREATE
+	z_tray[i]: z_tray_loc[i] =
+	    (1+up_down)*(z_set.z_values[ntrays+1]
+	    - z_set.z_values[ntrays+1-i])*0.5
+	    + (1-up_down)*z_set.z_values[i]*0.5 + z_shift;
+
+	s_tray[i]: s_tray_loc[i] =
+	    (1+up_down)*(z_set.s_values[ntrays+1]
+	    - z_set.s_values[ntrays+1-i])*0.5
+	    + (1-up_down)*z_set.s_values[i]*0.5 + s_shift;
+    END FOR;
+
+    FOR i IN components CREATE
+	x_plot[i][0] = topliq.state.y[i];
+	y_plot[i][0] = topvap.state.y[i];
+	FOR j IN [1..ntrays] CREATE
+	    x_plot[i][j] =
+		(1 - up_down)*tray[j].liqout.state.y[i]/2 +
+		(1 + up_down)*tray[ntrays - j + 1].liqout.state.y[i]/2;
+
+	    y_plot[i][j] =
+		(1 - up_down)*tray[j].vapout.state.y[i]/2 +
+		(1 + up_down)*tray[ntrays - j + 1].vapout.state.y[i]/2;
+	END FOR;
+	x_plot[i][ntrays+1] = botliq.state.y[i];
+	y_plot[i][ntrays+1] = botvap.state.y[i];
+
+	x_z_curves[i] IS_A plt_curve(n_plt_points,x_plot[i],z_tray_loc);
+	x_s_curves[i] IS_A plt_curve(n_plt_points,x_plot[i],s_tray_loc);
+	y_z_curves[i] IS_A plt_curve(n_plt_points,y_plot[i],z_tray_loc);
+	y_s_curves[i] IS_A plt_curve(n_plt_points,y_plot[i],s_tray_loc);
+    END FOR;
+
+    Plot_xz IS_A plt_plot_symbol(components,x_z_curves);
+    Plot_xs IS_A plt_plot_symbol(components,x_s_curves);
+    Plot_yz IS_A plt_plot_symbol(components,y_z_curves);
+    Plot_ys IS_A plt_plot_symbol(components,y_s_curves);
+
+METHODS
+METHOD default_self;
+    y_coeff[components - [inactive_component]][0..y_order] := 0.5;
+    x_coeff[components - [inactive_component]][0..x_order] := 0.5;
+    td := 1.0;
+
+    tray_x_hat['in','out'][components][1..ntrays].nominal := 20;
+    tray_y_hat['in','out'][components][1..ntrays].nominal := 20;
+    end_x_hat['top','bot'][components].nominal := 20;
+    end_y_hat['top','bot'][components].nominal := 20;
+
+    tray_x_hat['in','out'][components][1..ntrays] := 1;
+    tray_y_hat['in','out'][components][1..ntrays] := 1;
+    end_x_hat['top','bot'][components] := 1;
+    end_y_hat['top','bot'][components] := 1;
+
+    RUN liqin_mix[1..ntrays].default_self;
+    RUN liqout_mix[1..ntrays].default_self;
+    RUN vapin_mix[1..ntrays].default_self;
+    RUN vapout_mix[1..ntrays].default_self;
+
+    RUN liqin_state[1..ntrays].default_self;
+    RUN liqout_state[1..ntrays].default_self;
+    RUN vapin_state[1..ntrays].default_self;
+    RUN vapout_state[1..ntrays].default_self;
+    RUN tray_state[1..ntrays].default_self;
+
+    RUN liqin[1..ntrays].default_self;
+    RUN liqout[1..ntrays].default_self;
+    RUN vapin[1..ntrays].default_self;
+    RUN vapout[1..ntrays].default_self;
+    RUN tray[1..ntrays].default_self;
+
+    RUN z_set.default_self;
+
+    z_shift := 0.0;
+    s_shift := 0.0;
+
+    Plot_xz.title := 'Liquid Compositions vs. z';
+    Plot_xz.YLabel := 'Liquid Compositions';
+    Plot_xz.XLabel := 'transformed stage location (z)';
+    Plot_xz.Ylow := 0;
+    Plot_xz.Yhigh := 1;
+
+    Plot_xs.title := 'Liquid Compositions vs. s';
+    Plot_xs.YLabel := 'Liquid Compositions';
+    Plot_xs.XLabel := 'stage location (s)';
+    Plot_xs.Ylow := 0;
+    Plot_xs.Yhigh := 1;
+
+    Plot_yz.title := 'Vapor Compositions vs. z';
+    Plot_yz.YLabel := 'Vapor Compositions';
+    Plot_yz.XLabel := 'transformed stage location (z)';
+    Plot_yz.Ylow := 0;
+    Plot_yz.Yhigh := 1;
+
+    Plot_ys.title := 'Vapor Compositions vs. s';
+    Plot_ys.YLabel := 'Vapor Compositions';
+    Plot_ys.XLabel := 'stage location (s)';
+    Plot_ys.Ylow := 0;
+    Plot_ys.Yhigh := 1;
+
+    FOR i IN components DO
+	Plot_xz.curve[i].legend := i;
+	Plot_xs.curve[i].legend := i;
+	Plot_yz.curve[i].legend := i;
+	Plot_ys.curve[i].legend := i;
+    END FOR;
+
+END default_self;
+METHOD default_all;
+    RUN default_self;
+    z_on 		:= FALSE;
+    hat_on 		:= FALSE;
+
+    RUN topliq[1..ntrays].default_all;
+    RUN botliq[1..ntrays].default_all;
+    RUN topvap[1..ntrays].default_all;
+    RUN botvap[1..ntrays].default_all;
+
+END default_all;
+
+METHOD values;
+
+END values;
+
+METHOD seqmod_massbal;
+    hb_on := FALSE;
+    equilibrated := FALSE;
+    use_H_eqns := hb_on OR equilibrated;
+
+    cmo[1..ntrays].fixed 				:= TRUE;
+    cmotot.fixed					:= TRUE;
+
+    RUN tray[1..ntrays].seqmod_massbal;
+    RUN z_set.specify;
+
+    RUN topliq.seqmod;
+    RUN botvap.seqmod;
+    RUN topvap.seqmod;
+    RUN botliq.seqmod;
+
+    RUN CMO;
+
+    topvap.state.H.fixed := TRUE;
+    botliq.state.H.fixed := TRUE;
+
+    liqin_state[1..ntrays].H.fixed := TRUE;
+    tray[1..ntrays].Qin.fixed := TRUE;
+    s_shift.fixed := FALSE;
+    z_shift.fixed := FALSE;
+END seqmod_massbal;
+
+METHOD seqmod_fullthermo;
+    hb_on := FALSE;
+    equilibrated := TRUE;
+    use_H_eqns := hb_on OR equilibrated;
+
+    cmo[1..ntrays].fixed 				:= TRUE;
+    cmotot.fixed					:= TRUE;
+    RUN tray[1..ntrays].seqmod_fullthermo;
+    RUN z_set.specify;
+
+    RUN topliq.seqmod;
+    RUN botvap.seqmod;
+    RUN topvap.seqmod;
+    RUN botliq.seqmod;
+
+    RUN CMO;
+
+    topliq.state.T.fixed := FALSE;
+    botvap.state.T.fixed := FALSE;
+    topvap.state.T.fixed := FALSE;
+    botliq.state.T.fixed := FALSE;
+
+
+    topliq.state.H.fixed := FALSE;
+    botvap.state.H.fixed := FALSE;
+    topvap.state.H.fixed := FALSE;
+    botliq.state.H.fixed := FALSE;
+
+    s_shift.fixed := FALSE;
+    z_shift.fixed := FALSE;
+END seqmod_fullthermo;
+
+METHOD seqmod_adiabatic;
+    hb_on := TRUE;
+    equilibrated := TRUE;
+    use_H_eqns := hb_on OR equilibrated;
+    RUN seqmod_fullthermo;
+    RUN heat_balance;
+    s_shift.fixed := FALSE;
+    z_shift.fixed := FALSE;
+END seqmod_adiabatic;
+
+METHOD heat_balance;
+    hb_on							:= TRUE;
+    RUN tray[1..ntrays].heat_balance;
+    Qtot.fixed 						:= TRUE;
+    cmotot.fixed 						:= FALSE;
+    Qin[1..ntrays].fixed 					:= TRUE;
+    cmo[1..ntrays].fixed 					:= FALSE;
+END heat_balance;
+METHOD CMO;
+    hb_on							:= FALSE;
+    tray[1..ntrays].cmo_ratio.fixed			:= TRUE;
+    tray[1..ntrays].Qin.fixed				:= FALSE;
+    Qtot.fixed 						:= FALSE;
+    cmotot.fixed 						:= TRUE;
+    Qin[1..ntrays].fixed 					:= FALSE;
+    cmo[1..ntrays].fixed 					:= TRUE;
+END CMO;
+METHOD specify;
+    IF (hb_on AND NOT(equilibrated)) THEN
+	equilibrated := TRUE;
+    END IF;
+    IF (hb_on AND equilibrated) THEN
+	RUN seqmod_adiabatic;
+    END IF;
+    IF (NOT(hb_on) AND equilibrated) THEN
+	RUN seqmod_fullthermo;
+    END IF;
+    IF (NOT(hb_on) AND NOT(equilibrated)) THEN
+	RUN seqmod_massbal;
+    END IF;
+
+    RUN topliq.specify;
+    RUN botvap.specify;
+    s_shift.fixed := TRUE;
+    z_shift.fixed := TRUE;
+END specify;
+METHOD reset;
+    RUN ClearAll;
+    RUN specify;
+END reset;
+
+METHOD reset_to_massbal;
+    hb_on	:= FALSE;
+    equilibrated := FALSE;
+    RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+    hb_on	:= FALSE;
+    equilibrated := TRUE;
+    RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+    hb_on	:= TRUE;
+    equilibrated := TRUE;
+    RUN reset;
+END reset_to_adiabatic;
+
+METHOD zero_Q;
+    reduce := 0;
+    RUN reduce_Q;
+END zero_Q;
+
+METHOD reduce_Q;
+    Qtot := reduce * Qtot;
+    FOR i IN [1..ntrays] DO
+	tray[i].Qin := reduce * tray[i].Qin;
+	Qin[i] := reduce * Qin[i];
+    END FOR;
+END reduce_Q;
+
+METHOD scale_self;
+    RUN tray[1..ntrays].scale_self;
+    RUN z_set.scale_self;
+
+    RUN liqin_mix[1..ntrays].scale_self;
+    RUN liqout_mix[1..ntrays].scale_self;
+    RUN vapin_mix[1..ntrays].scale_self;
+    RUN vapout_mix[1..ntrays].scale_self;
+
+    RUN liqin_state[1..ntrays].scale_self;
+    RUN liqout_state[1..ntrays].scale_self;
+    RUN vapin_state[1..ntrays].scale_self;
+    RUN vapout_state[1..ntrays].scale_self;
+    RUN tray_state[1..ntrays].scale_self;
+
+    RUN liqin[1..ntrays].scale_self;
+    RUN liqout[1..ntrays].scale_self;
+    RUN vapin[1..ntrays].scale_self;
+    RUN vapout[1..ntrays].scale_self;
+
+    FOR i IN components - [inactive_component] DO
+	FOR j IN [0..x_order] DO
+	    x_coeff[i][j].nominal :=
+	    abs(x_coeff[i][j]) + 0.00001;
+	END FOR;
+	FOR j IN [0..y_order] DO
+	    y_coeff[i][j].nominal :=
+	    abs(y_coeff[i][j]) + 0.00001;
+	END FOR;
+    END FOR;
+    FOR j IN [1..ntrays] DO
+	cmo[j].nominal := cmo[j];
+    END FOR;
+    cmotot.nominal := cmotot;
+    FOR i IN components DO
+	FOR j IN [1..ntrays] DO
+	    x[j][i].nominal := x[j][i];
+	    y[j][i].nominal := y[j][i];
+	    x_hat[j][i].nominal := abs(x_hat[j][i]);
+
+	    FOR k IN ['in','out'] DO
+		tray_x_hat[k][i][j].nominal :=
+		abs(tray_x_hat[k][i][j]);
+		tray_y_hat[k][i][j].nominal :=
+		abs(tray_y_hat[k][i][j]);
+	    END FOR;
+	END FOR;
+	FOR k IN ['top','bot'] DO
+	    end_x_hat[k][i].nominal := abs(end_x_hat[k][i]);
+	    end_y_hat[k][i].nominal := abs(end_y_hat[k][i]);
+	END FOR;
+	slope[i].nominal := abs(slope[i]);
+    END FOR;
+    FOR i IN ['liquid','vapor'] DO
+	FOR j IN [0..h_order] DO
+	    h_coeff[i][j].nominal := abs(h_coeff[i][j]);
+	END FOR;
+    END FOR;
+    (*
+      THIS CAUSES SEVERE PROBLEMS WHEN SWITCHING BETWEEN ADIABATIC AND
+      MASS BALANCE: we need better scaling here
+      Qtot.nominal := abs(Qtot);
+      FOR j IN [1..ntrays] DO
+          Qin[j].nominal := abs(Qin[j]);
+      END FOR;
+      *)
+END scale_self;
+
+METHOD scale_all;
+    RUN topliq.scale_all;
+    RUN topvap.scale_all;
+    RUN botliq.scale_all;
+    RUN botvap.scale_all;
+    RUN scale_self;
+END scale_all;
+
+METHOD bound_self;
+    RUN tray[1..ntrays].bound_self;
+    RUN z_set.bound_self;
+
+(* NEED BETTER BOUNDING HERE!
+   running these methods leads to convergence problems*)
+    RUN liqin_mix[1..ntrays].bound_self;
+    RUN liqout_mix[1..ntrays].bound_self;
+    RUN vapin_mix[1..ntrays].bound_self;
+    RUN vapout_mix[1..ntrays].bound_self;
+
+    RUN liqin_state[1..ntrays].bound_self;
+    RUN liqout_state[1..ntrays].bound_self;
+    RUN vapin_state[1..ntrays].bound_self;
+    RUN vapout_state[1..ntrays].bound_self;
+    RUN tray_state[1..ntrays].bound_self;
+
+    RUN liqin[1..ntrays].bound_self;
+    RUN liqout[1..ntrays].bound_self;
+    RUN vapin[1..ntrays].bound_self;
+    RUN vapout[1..ntrays].bound_self;
+
+
+    IF (hat_on == TRUE) THEN
+	x_coeff[components - [inactive_component]][0..x_order].lower_bound
+	    := -18;
+	x_coeff[components - [inactive_component]][0..x_order].upper_bound
+	    := 18;
+    ELSE
+	x_coeff[components - [inactive_component]][0..x_order].lower_bound
+	    := 0;
+	x_coeff[components - [inactive_component]][0..x_order].upper_bound
+	    := 0;
+    END IF;
+    FOR j IN [1..ntrays] DO
+	cmo[j].lower_bound := 1e-8;
+	cmo[j].upper_bound := cmo[j] + scale*cmo[j].nominal;
+    END FOR;
+    cmotot.lower_bound := 1e-8;
+    (* NEED BETTER SCALING HERE
+      cmotot.upper_bound := cmotot + scale*cmotot.nominal;
+    *)
+    x_hat[1..ntrays][components].lower_bound
+        := -18;
+    x_hat[1..ntrays][components].upper_bound
+	:= 18;
+    FOR i IN components DO
+	FOR j IN [1..ntrays] DO
+	    FOR k IN ['in','out'] DO
+		tray_x_hat[k][i][j].lower_bound := -18;
+		tray_x_hat[k][i][j].upper_bound := 18;
+		tray_y_hat[k][i][j].lower_bound := -18;
+		tray_y_hat[k][i][j].upper_bound := 18;
+	    END FOR;
+	END FOR;
+	FOR k IN ['top','bot'] DO
+	    end_x_hat[k][i].lower_bound := -18;
+	    end_x_hat[k][i].upper_bound := 18;
+	    end_y_hat[k][i].lower_bound := -18;
+	    end_y_hat[k][i].upper_bound := 18;
+	END FOR;
+	slope[i].lower_bound := 0;
+	slope[i].upper_bound := 1/z_set.stot.lower_bound;
+    END FOR;
+
+    (* NEED BETTER BOUNDING HERE!
+    h_coeff['vapor'][1..h_order].lower_bound :=
+        tray[1].vapout.state.H.lower_bound;
+    h_coeff['vapor'][1..h_order].upper_bound :=
+        tray[1].vapout.state.H.upper_bound;
+    h_coeff['liquid'][1..h_order].lower_bound :=
+        tray[1].vapout.state.H.lower_bound;
+    h_coeff['liquid'][1..h_order].upper_bound :=
+        tray[1].vapout.state.H.upper_bound;
+    *)
+      (*
+      THIS CAUSES SEVERE PROBLEMS WHEN SWITCHING BETWEEN ADIABATIC AND
+      MASS BALANCE:  we need better bounding here
+      Qtot.lower_bound := Qtot - scale*Qtot.nominal;
+      Qtot.upper_bound := Qtot + scale*Qtot.nominal;
+      FOR j IN [1..ntrays] DO
+      Qin[j].lower_bound := Qin[j] - scale*Qin[j].nominal;
+      Qin[j].upper_bound := Qin[j] + scale*Qin[j].nominal;
+      END FOR;
+      *)
+END bound_self;
+
+METHOD bound_all;
+    RUN topliq.bound_all;
+    RUN topvap.bound_all;
+    RUN botliq.bound_all;
+    RUN botvap.bound_all;
+    RUN bound_self;
+END bound_all;
+
+
+METHOD s_off;
+    RUN z_set.s_off;
+END s_off;
+END coll;
+
+
+
+MODEL std_coll_stack(
+    ntrays WILL_BE integer_constant;
+    topvap WILL_BE stream;
+    topliq WILL_BE stream;
+    botvap WILL_BE stream;
+    botliq WILL_BE stream;
+    pdL WILL_BE phases_data;
+    pdV WILL_BE phases_data;
+    reduce WILL_BE fraction;
+    equilibrated WILL_BE boolean;
+    z_on WILL_BE boolean;
+    hat_on WILL_BE boolean;
+    hb_on WILL_BE boolean;
+    );
+
+    cd ALIASES topliq.state.cd;
+    vap_option ALIASES pdV.vapor_option;
+    liq_option ALIASES pdL.liquid1_option;
+    pdVL IS_A phases_data('VL', vap_option, liq_option, 'none');
+    pdM IS_A phases_data('M', 'none', 'none', 'none');
+    mat_option ALIASES pdM.liquid1_option; (* none *)
+
+    FOR i IN [1..ncolls-1] CREATE
+	internal_liquid[i] IS_A coll_material_stream(cd,pdM,equilibrated);
+	internal_vapor[i] IS_A coll_material_stream(cd,pdM,equilibrated);
+    END FOR;
+
+    coll_vapin[csV] ALIASES
+	(topvap, internal_vapor[1..ncolls-1], botvap)
+	WHERE csV IS_A set OF integer_constant
+	WITH_VALUE (0..ncolls);
+    coll_liqin[csL] ALIASES
+	(topliq, internal_liquid[1..ncolls-1], botliq)
+	WHERE csL IS_A set OF integer_constant
+	WITH_VALUE (1..ncolls+1);
+
+    Coll_set IS_A set OF integer_constant;
+
+    ncolls IS_A integer_constant;
+    ncolls :== 2;
+
+    up_down[1..ncolls] IS_A real;
+
+    a IS_A factor;
+
+    FOR i IN [1..ncolls] CREATE
+	coll[i] IS_A coll(
+	    ntrays,
+	    coll_vapin[i-1],
+	    coll_liqin[i],
+	    coll_vapin[i],
+	    coll_liqin[i+1],
+	    pdL,
+	    pdV,
+	    reduce,
+	    equilibrated,
+	    up_down[i],
+	    a,
+	    z_on,
+	    hat_on,
+	    hb_on
+	    );
+    END FOR;
+
+	straight_choice			IS_A symbol_constant;
+	split[1..ncolls]		IS_A fraction;
+	stot				IS_A factor;
+	scale				IS_A scaling_constant;
+
+	FOR j IN [1..ncolls] CREATE
+		tray_split[j]: coll[j].z_set.stot = split[j]*stot;
+	END FOR;
+
+	stot_def: stot = SUM[coll[j].z_set.stot | j IN [1..ncolls]];
+
+
+    (* Plotting Section *)
+    z_shift IS_A factor;
+    s_shift IS_A factor;
+
+    n_plt_points IS_A set OF integer_constant;
+    n_plt_points :== [0..ncolls*(ntrays+1)];
+
+    z_loc_1: coll[1].z_shift = z_shift;
+    s_loc_1: coll[1].s_shift = s_shift;
+    FOR i IN [2..ncolls] CREATE
+	z_loc[i]: coll[i].z_shift = coll[i-1].z_shift +
+	    coll[i-1].z_set.z_values[ntrays+1];
+	s_loc[i]: coll[i].s_shift = coll[i-1].s_shift +
+	    coll[i-1].z_set.s_values[ntrays+1];
+    END FOR;
+
+
+    z_tray_loc[tp] ALIASES (
+	coll[1].z_tray_loc[0],
+	coll[1..ncolls].z_tray_loc[1..ntrays+1]
+	) WHERE
+	tp IS_A set OF integer_constant
+	WITH_VALUE (0..ncolls*(ntrays+1));
+
+    s_tray_loc[tp2] ALIASES (
+	coll[1].s_tray_loc[0],
+	coll[1..ncolls].s_tray_loc[1..ntrays+1]
+	) WHERE
+	tp2 IS_A set OF integer_constant
+	WITH_VALUE (0..ncolls*(ntrays+1));
+
+
+    FOR i IN topliq.components CREATE
+	x_plot[i][np[i]] ALIASES (
+	    topliq.state.y[i],
+	    coll[1..ncolls].x_plot[i][1..ntrays+1]
+	    ) WHERE
+	    np[i] IS_A set OF integer_constant
+	    WITH_VALUE (0..ncolls*(ntrays+1));
+	y_plot[i][np2[i]] ALIASES (
+	    topvap.state.y[i],
+	    coll[1..ncolls].y_plot[i][1..ntrays+1]
+	    ) WHERE
+	    np2[i] IS_A set OF integer_constant
+	    WITH_VALUE (0..ncolls*(ntrays+1));
+    END FOR;
+
+    FOR i IN topliq.components CREATE
+	x_z_curves[i] IS_A plt_curve(n_plt_points,x_plot[i],z_tray_loc);
+	x_s_curves[i] IS_A plt_curve(n_plt_points,x_plot[i],s_tray_loc);
+	y_z_curves[i] IS_A plt_curve(n_plt_points,y_plot[i],z_tray_loc);
+	y_s_curves[i] IS_A plt_curve(n_plt_points,y_plot[i],s_tray_loc);
+    END FOR;
+
+    Plot_xz IS_A plt_plot_symbol(topliq.components,x_z_curves);
+    Plot_xs IS_A plt_plot_symbol(topliq.components,x_s_curves);
+
+    Plot_yz IS_A plt_plot_symbol(topliq.components,y_z_curves);
+    Plot_ys IS_A plt_plot_symbol(topliq.components,y_s_curves);
+
+  METHODS
+    METHOD default_self;
+	up_down[1] := -1;
+	up_down[2] := 1;
+	a := 0.1;
+        a.lower_bound := 0.0;
+        a.upper_bound := 3.0;
+	stot := 2;
+	stot.lower_bound := 2;
+	split[1..ncolls] := 1.0/ncolls;
+        RUN internal_liquid[1..ncolls-1].default_self;
+        RUN internal_vapor[1..ncolls-1].default_self;
+	RUN coll[1..ncolls].default_self;
+
+	z_shift := 0.0;
+	s_shift := 0.0;
+
+	Plot_xz.title := 'Liquid Compositions vs. z';
+	Plot_xz.YLabel := 'Liquid Compositions';
+	Plot_xz.XLabel := 'transformed stage location (z)';
+	Plot_xz.Ylow := 0;
+	Plot_xz.Yhigh := 1;
+
+	Plot_xs.title := 'Liquid Compositions vs. s';
+	Plot_xs.YLabel := 'Liquid Compositions';
+	Plot_xs.XLabel := 'stage location (s)';
+	Plot_xs.Ylow := 0;
+	Plot_xs.Yhigh := 1;
+
+	Plot_yz.title := 'Vapor Compositions vs. z';
+	Plot_yz.YLabel := 'Vapor Compositions';
+	Plot_yz.XLabel := 'transformed stage location (z)';
+	Plot_yz.Ylow := 0;
+	Plot_yz.Yhigh := 1;
+
+	Plot_ys.title := 'Vapor Compositions vs. s';
+	Plot_ys.YLabel := 'Vapor Compositions';
+	Plot_ys.XLabel := 'stage location (s)';
+	Plot_ys.Ylow := 0;
+	Plot_ys.Yhigh := 1;
+
+
+	FOR i IN topliq.components DO
+	    Plot_xz.curve[i].legend := i;
+	    Plot_xs.curve[i].legend := i;
+	    Plot_yz.curve[i].legend := i;
+	    Plot_ys.curve[i].legend := i;
+	END FOR;
+
+    END default_self;
+    METHOD default_all;
+	RUN topvap[1..ntrays].default_all;
+	RUN topliq[1..ntrays].default_all;
+	RUN botvap[1..ntrays].default_all;
+	RUN botliq[1..ntrays].default_all;
+	(* reduce := *)
+	RUN default_self;
+    END default_all;
+    METHOD scale_self;
+	stot.nominal := stot;
+        RUN internal_liquid[1..ncolls-1].scale_self;
+        RUN internal_vapor[1..ncolls-1].scale_self;
+	RUN coll[1..ncolls].scale_self;
+    END scale_self;
+    METHOD scale_all;
+	RUN topvap[1..ntrays].scale_all;
+	RUN topliq[1..ntrays].scale_all;
+	RUN botvap[1..ntrays].scale_all;
+	RUN botliq[1..ntrays].scale_all;
+	(* reduce := *)
+	RUN scale_self;
+    END scale_all;
+    METHOD bound_self;
+	coll[1..ncolls].z_set.stot.upper_bound :=
+	stot.upper_bound/ncolls + 1.0;
+        RUN internal_liquid[1..ncolls-1].bound_self;
+        RUN internal_vapor[1..ncolls-1].bound_self;
+	RUN coll[1..ncolls].bound_self;
+    END bound_self;
+    METHOD bound_all;
+	RUN topvap[1..ntrays].bound_all;
+	RUN topliq[1..ntrays].bound_all;
+	RUN botvap[1..ntrays].bound_all;
+	RUN botliq[1..ntrays].bound_all;
+	(* reduce := *)
+	RUN bound_self;
+    END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+END check_all;
+
+METHOD values;
+
+    RUN coll[1..ncolls].values;
+END values;
+METHOD seqmod_massbal;
+    hb_on := FALSE;
+    equilibrated := FALSE;
+    RUN coll[1..ncolls].seqmod_massbal;
+    FOR j IN [1..ncolls] DO
+	(*coll[j].botliq.state.H.fixed := FALSE;*)
+
+	coll[j].z_set
+	.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	coll[j].z_set.stot.fixed			:= FALSE;
+    END FOR;
+    stot.fixed					:= TRUE;
+    split[1..ncolls-1].fixed 			:= TRUE;
+    IF (hb_on) THEN
+	RUN heat_balance;
+    END IF;
+    z_shift.fixed := FALSE;
+    s_shift.fixed := FALSE;
+END seqmod_massbal;
+
+METHOD seqmod_fullthermo;
+    hb_on := FALSE;
+    equilibrated := TRUE;
+    RUN coll[1..ncolls].seqmod_fullthermo;
+    FOR j IN [1..ncolls] DO
+	(*coll[j].botliq.state.H.fixed := FALSE;*)
+
+	coll[j].z_set
+	.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	coll[j].z_set.stot.fixed			:= FALSE;
+    END FOR;
+    stot.fixed					:= TRUE;
+    split[1..ncolls-1].fixed 			:= TRUE;
+    IF (hb_on) THEN
+	RUN heat_balance;
+    END IF;
+
+    z_shift.fixed := FALSE;
+    s_shift.fixed := FALSE;
+END seqmod_fullthermo;
+
+METHOD seqmod_adiabatic;
+    hb_on := TRUE;
+    equilibrated := TRUE;
+    RUN coll[1..ncolls].seqmod_adiabatic;
+    FOR j IN [1..ncolls] DO
+	(*coll[j].botliq.state.H.fixed := FALSE;*)
+
+	coll[j].z_set
+	.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	coll[j].z_set.stot.fixed			:= FALSE;
+    END FOR;
+    stot.fixed					:= TRUE;
+    split[1..ncolls-1].fixed 			:= TRUE;
+    IF (hb_on) THEN
+	RUN heat_balance;
+    END IF;
+
+    z_shift.fixed := FALSE;
+    s_shift.fixed := FALSE;
+END seqmod_adiabatic;
+
+
+METHOD specify;
+    IF (hb_on AND NOT(equilibrated)) THEN
+	equilibrated := TRUE;
+    END IF;
+    IF (hb_on AND equilibrated) THEN
+	RUN seqmod_adiabatic;
+    END IF;
+    IF (NOT(hb_on) AND equilibrated) THEN
+	RUN seqmod_fullthermo;
+    END IF;
+    IF (NOT(hb_on) AND NOT(equilibrated)) THEN
+	RUN seqmod_massbal;
+    END IF;
+    RUN coll[1].topliq.specify;
+    RUN coll[ncolls].botvap.specify;
+    z_shift.fixed := TRUE;
+    s_shift.fixed := TRUE;
+END specify;
+METHOD reset;
+    RUN ClearAll;
+    RUN specify;
+END reset;
+METHOD standard_poly;
+    RUN coll[1..ncolls].standard_poly;
+END standard_poly;
+METHOD trans_poly;
+    RUN coll[1..ncolls].trans_poly;
+END trans_poly;
+METHOD z_based_poly;
+    RUN coll[1..ncolls].z_based_poly;
+END z_based_poly;
+METHOD s_based_poly;
+    RUN coll[1..ncolls].s_based_poly;
+END s_based_poly;
+
+METHOD heat_balance;
+    RUN coll[1..ncolls].heat_balance;
+END heat_balance;
+
+METHOD reset_to_massbal;
+    hb_on	:= FALSE;
+    equilibrated := FALSE;
+    RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+    hb_on	:= FALSE;
+    equilibrated := TRUE;
+    RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+    hb_on	:= TRUE;
+    equilibrated := TRUE;
+    RUN reset;
+END reset_to_adiabatic;
+
+METHOD reduce_Q;
+    RUN coll[1..ncolls].reduce_Q;
+END reduce_Q;
+
+METHOD zero_Q;
+    reduce := 0;
+    RUN reduce_Q;
+END zero_Q;
+
+METHOD CMO;
+    RUN coll[1..ncolls].CMO;
+END CMO;
+
+
+END std_coll_stack;
+
+MODEL simple_coll_column(
+    ntrays WILL_BE integer_constant;
+    pdVL  WILL_BE phases_data;
+    distillate WILL_BE stream;
+    feed WILL_BE stream;
+    bottoms WILL_BE stream;
+    equilibrated WILL_BE boolean;
+    reduce WILL_BE fraction;
+    z_on WILL_BE boolean;
+    hat_on WILL_BE boolean;
+    hb_on WILL_BE boolean;
+) WHERE (
+    distillate, bottoms, feed WILL_NOT_BE_THE_SAME;
+    feed.cd, distillate.cd, bottoms.cd WILL_BE_THE_SAME;
+    pdVL.phase_indicator == 'VL';
+    distillate.pd.phase_indicator IN ['L','VL'] == TRUE;
+    pdVL.liquid1_option == distillate.pd.liquid1_option;
+    feed.pd.phase_indicator IN ['V','L','VL'] == TRUE;
+);
+
+    pdL ALIASES bottoms.pd;
+    pdV IS_A phases_data('V', pdVL.vapor_option, 'none', 'none');
+    pdM IS_A phases_data('M', 'none', 'none', 'none');
+    cd ALIASES feed.cd;
+    components ALIASES feed.components;
+
+    nfeeds IS_A integer_constant;
+    nfeeds :== 1;
+
+    coll_stack[cs] ALIASES
+    (rectifying_section,stripping_section)
+    WHERE cs IS_A set OF integer_constant
+    WITH_VALUE (1..2);
+
+    (*feed condition*)
+    saturated_liquid_feed IS_A start_true;
+    saturated_vapor_feed IS_A start_false;
+
+    (* inter-section streams *)
+    rectifier_vapin "vapor rising from feed tray",
+    stripper_vapin "vapor rising from reboiler"
+        IS_A stream(cd, pdV, equilibrated);
+
+    condenser_vapin "vapor rising to condenser",
+    feed_tray_vapin "vapor rising from stripper"
+        IS_A coll_material_stream(cd, pdM, equilibrated);
+
+    rectifier_liqin "reflux condensate",
+    stripper_liqin "liquid falling from feed tray"
+        IS_A stream(cd, pdL, equilibrated);
+
+    feed_tray_liqin "liquid falling from rectifier",
+    reboiler_liqin "liquid falling to reboiler"
+        IS_A coll_material_stream(cd, pdM, equilibrated);
+
+    (* typical heat duties *)
+    Qin_condenser "condenser duty",
+    Qin_feed "feed heater duty",
+    Qin_reboiler "reboiler duty" IS_A energy_rate;
+
+    (* column sections *)
+    condenser IS_A coll_partial_condenser(
+        Qin_condenser,
+        condenser_vapin,
+        rectifier_liqin,
+	distillate,
+	equilibrated
+    );
+    rectifying_section "the trays above the feed" IS_A std_coll_stack(
+        ntrays,
+	condenser_vapin,
+	rectifier_liqin,
+	rectifier_vapin,
+	feed_tray_liqin,
+	pdL,
+	pdV,
+	reduce,
+	equilibrated,
+	z_on,
+	hat_on,
+	hb_on
+    );
+    feed_tray IS_A coll_feed_tray(
+        Qin_feed,
+	equilibrated,
+	feed,
+	feed_tray_liqin,
+	feed_tray_vapin,
+	stripper_liqin,
+	rectifier_vapin
+    );
+    stripping_section "the trays below the feed" IS_A std_coll_stack(
+        ntrays,
+	feed_tray_vapin,
+	stripper_liqin,
+	stripper_vapin,
+	reboiler_liqin,
+	pdL,
+	pdV,
+	reduce,
+	equilibrated,
+	z_on,
+	hat_on,
+	hb_on
+    );
+    reboiler IS_A coll_simple_reboiler(
+        Qin_reboiler,
+	equilibrated,
+	reboiler_liqin,
+	stripper_vapin,
+	bottoms
+    );
+
+	stot,
+	s_stack[1..nfeeds+1]		IS_A factor;
+	split[1..nfeeds+1]		IS_A fraction;
+	xsi[components]			IS_A fraction;
+	xsi_set[components]		IS_A fraction;
+	xsi_diff[components]		IS_A fraction;
+	scale				IS_A scaling_constant;
+
+	s_stack[1],
+	rectifying_section.stot	ARE_THE_SAME;
+	s_stack[2],
+	stripping_section.stot	ARE_THE_SAME;
+	stot = SUM[s_stack[1..nfeeds+1]];
+
+	FOR j IN [1..nfeeds+1] CREATE
+
+	    tray_split[j]: s_stack[j] = split[j]*stot;
+	END FOR;
+
+	FOR i IN components CREATE
+	    OverallMB[i]: feed_tray.feed.f[i] =
+	    condenser.distillate.f[i] +
+	    reboiler.bottoms.f[i];
+	END FOR;
+
+	FOR i IN components CREATE
+	    xsi[i]*feed_tray.feed.f[i]
+	    = condenser.distillate.f[i];
+	    xsi_diff[i] = 0.5*sqr(xsi[i] - xsi_set[i]);
+	END FOR;
+
+	recovery: MINIMIZE SUM[xsi_diff[i] | i IN components];
+
+	binary_sep[components][components]	IS_A factor;
+
+	FOR i IN components CREATE
+	    FOR j IN components CREATE
+		binary_sep[i][j] *
+		(condenser.distillate.f[i] + condenser.distillate.f[j]) *
+		(reboiler.bottoms.f[i] + reboiler.bottoms.f[j]) =
+		(condenser.distillate.f[i] *
+		(reboiler.bottoms.f[i] + reboiler.bottoms.f[j]) -
+		reboiler.bottoms.f[i] *
+		(condenser.distillate.f[i] + condenser.distillate.f[j]));
+
+		sep_opt[i][j]: MINIMIZE -sqr(binary_sep[i][j]);
+
+	    END FOR;
+	END FOR;
+
+	(* costing *)
+	V[ns]  ALIASES
+	(coll_stack[1..nfeeds+1].coll[1].tray[1].vapout.flow)
+	WHERE ns IS_A set OF integer_constant
+	WITH_VALUE (1..nfeeds+1);
+
+	V_bar[ns2]  ALIASES
+	(coll_stack[1..nfeeds+1].coll[1].tray[1].vapout.state.V)
+	WHERE ns2 IS_A set OF integer_constant
+	WITH_VALUE (1..nfeeds+1);
+
+	M_g IS_A molar_mass;
+
+	mol_mass: M_g = SUM[feed.Details.state.cd.data[i].mw*
+	feed_tray.vapout.state.y[i]
+	| i IN components];
+
+	nsections IS_A integer_constant;
+	nsections :== nfeeds+1;
+
+	column_cost IS_A cost_per_time;
+	cost_calc IS_A cost_calc(
+	column_cost,
+	distillate.state.T,
+	condenser.Qin,
+	reboiler.Qin,
+	nsections,
+	V,
+	V_bar,
+	stot,
+	M_g,
+	feed.flow
+	);
+
+	objmult IS_A factor;
+	opcost, capcost IS_A cost_per_time;
+	optime IS_A fraction;
+	op_cost_def: opcost = cost_calc.water_cost + cost_calc.steam_cost;
+	cap_cost_def: capcost = cost_calc.column_cost +
+	cost_calc.condenser_cost +
+	cost_calc.reboiler_cost;
+	tot_cost: MINIMIZE objmult*(capcost + optime*opcost);
+	cap_cost: MINIMIZE objmult*capcost;
+	op_cost: MINIMIZE objmult*opcost;
+
+	(*
+	 * Cost calculation doesn't mean much for constant alpha case.
+	 * We do provide overide though. :)
+	 *)
+
+	WHEN (equilibrated)
+	CASE TRUE:
+	    USE cost_calc;
+	    USE mol_mass;
+	    USE tot_cost;
+	    USE cap_cost;
+	    USE op_cost;
+	    USE cap_cost_def;
+	    USE op_cost_def;
+	OTHERWISE:
+	END WHEN;
+
+	do_cost_calc IS_A boolean;
+	WHEN (do_cost_calc)
+	CASE TRUE:
+	    USE cost_calc;
+	    USE mol_mass;
+	    USE tot_cost;
+	    USE cap_cost;
+	    USE op_cost;
+	    USE cap_cost_def;
+	    USE op_cost_def;
+	OTHERWISE:
+	END WHEN;
+
+
+    (* Plotting Section *)
+    z_shift IS_A factor;
+    s_shift IS_A factor;
+
+    n_plt_points_x IS_A set OF integer_constant;
+    n_plt_points_x :== [0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3)];
+    n_plt_points_y IS_A set OF integer_constant;
+    n_plt_points_y :== [0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3)-1];
+
+    z_loc_1: coll_stack[1].z_shift = z_shift;
+    s_loc_1: coll_stack[1].s_shift = s_shift;
+
+    z_space IS_A factor;
+
+    FOR i IN [2..nfeeds+1] CREATE
+	z_loc[i]: coll_stack[i].z_shift =
+	    coll_stack[i-1].z_tray_loc[CARD[coll_stack[i-1].n_plt_points]-1]
+	    + z_space; (* add arbitrary factor *)
+	s_loc[i]: coll_stack[i].s_shift =
+	    coll_stack[i-1].s_tray_loc[coll_stack[1].ncolls*(ntrays+1)]
+	    + 1; (* FOR feed tray *)
+    END FOR;
+
+
+    reboiler_s_loc, reboiler_z_loc IS_A factor;
+
+    z_tray_loc_x[tp] ALIASES (
+	coll_stack[1..nfeeds+1].z_tray_loc[0..coll_stack[1].ncolls*(ntrays+1)]
+	, reboiler_z_loc
+	) WHERE
+	tp IS_A set OF integer_constant
+	WITH_VALUE (0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3));
+
+    s_tray_loc_x[tp2] ALIASES (
+	coll_stack[1..nfeeds+1].s_tray_loc[0..coll_stack[1].ncolls*(ntrays+1)]
+	, reboiler_s_loc
+	) WHERE
+	tp2 IS_A set OF integer_constant
+	WITH_VALUE (0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3));
+
+    reb_s_loc: reboiler_s_loc = 1 +
+	s_tray_loc_x[(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3)-1];
+    reb_z_loc: reboiler_z_loc =
+	coll_stack[nfeeds+1].
+	z_tray_loc[CARD[coll_stack[nfeeds+1].n_plt_points]-1] +
+	z_space;
+
+    z_tray_loc_y[tp3] ALIASES (
+	coll_stack[1..nfeeds+1].z_tray_loc[0..coll_stack[1].ncolls*(ntrays+1)]
+	) WHERE
+	tp3 IS_A set OF integer_constant
+	WITH_VALUE (0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3)-1);
+
+    s_tray_loc_y[tp4] ALIASES (
+	coll_stack[1..nfeeds+1].s_tray_loc[0..coll_stack[1].ncolls*(ntrays+1)]
+	) WHERE
+	tp4 IS_A set OF integer_constant
+	WITH_VALUE (0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3)-1);
+
+
+    FOR i IN coll_stack[1].topliq.components CREATE
+	x_plot[i][np[i]] ALIASES (
+	    coll_stack[1..nfeeds+1].
+	        x_plot[i][0..coll_stack[1].ncolls*(ntrays+1)],
+	    reboiler.bottoms.state.y[i]
+	    ) WHERE
+	    np[i] IS_A set OF integer_constant
+	    WITH_VALUE (0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3));
+	y_plot[i][np2[i]] ALIASES (
+	    coll_stack[1..nfeeds+1].
+	        y_plot[i][0..coll_stack[1].ncolls*(ntrays+1)]
+	    ) WHERE
+	    np2[i] IS_A set OF integer_constant
+	    WITH_VALUE (0..(nfeeds+1)*(coll_stack[1].ncolls*ntrays+3)-1);
+    END FOR;
+
+    FOR i IN coll_stack[1].topliq.components CREATE
+	x_z_curves[i] IS_A plt_curve(n_plt_points_x,x_plot[i],z_tray_loc_x);
+	x_s_curves[i] IS_A plt_curve(n_plt_points_x,x_plot[i],s_tray_loc_x);
+	y_z_curves[i] IS_A plt_curve(n_plt_points_y,y_plot[i],z_tray_loc_y);
+	y_s_curves[i] IS_A plt_curve(n_plt_points_y,y_plot[i],s_tray_loc_y);
+    END FOR;
+
+    Plot_xz IS_A plt_plot_symbol(coll_stack[1].topliq.components,x_z_curves);
+    Plot_xs IS_A plt_plot_symbol(coll_stack[1].topliq.components,x_s_curves);
+
+    Plot_yz IS_A plt_plot_symbol(coll_stack[1].topliq.components,y_z_curves);
+    Plot_ys IS_A plt_plot_symbol(coll_stack[1].topliq.components,y_s_curves);
+
+    ncomps IS_A integer_constant;
+    ncomps :== CARD[components];
+
+    SELECT (ncomps)
+    CASE 3:
+	T_Liq_diagram_e IS_A
+	ternary_plot_equilateral('liquid composition profiles',
+	    components,
+	    CHOICE[components],
+	    CHOICE[components - [CHOICE[components]]],
+	    n_plt_points_x,x_plot);
+	T_Vap_diagram_e IS_A
+	ternary_plot_equilateral('vapor composition profiles',
+	    components,
+	    CHOICE[components],
+	    CHOICE[components - [CHOICE[components]]],
+	    n_plt_points_y,y_plot);
+    END SELECT;
+
+METHODS
+
+METHOD default_self;
+
+    RUN condenser_vapin.default_self;
+    RUN rectifier_liqin.default_self;
+    RUN rectifier_vapin.default_self;
+    RUN feed_tray_liqin.default_self;
+    RUN feed_tray_vapin.default_self;
+    RUN stripper_liqin.default_self;
+    RUN stripper_vapin.default_self;
+    RUN reboiler_liqin.default_self;
+
+    RUN condenser.default_self;
+    RUN coll_stack[1..nfeeds+1].default_self;
+    RUN feed_tray.default_self;
+    RUN reboiler.default_self;
+
+    RUN cost_calc.default_self;
+
+    hb_on := FALSE;
+    equilibrated := FALSE;
+    do_cost_calc := FALSE;
+    objmult.fixed := TRUE;
+    objmult := 10000;
+    optime.fixed := TRUE;
+    optime := 1.0;
+    split[1..nfeeds+1] := 1.0/(nfeeds+1);
+
+    z_shift.fixed := TRUE;
+    s_shift.fixed := TRUE;
+    z_shift := 0;
+    s_shift := 0;
+    z_space := 0.1;
+
+    distillate.state.phase_fraction['vapor'] := 0;
+
+    Plot_xz.title := 'Liquid Compositions vs. z';
+    Plot_xz.YLabel := 'Liquid Compositions';
+    Plot_xz.XLabel := 'transformed stage location (z)';
+    Plot_xz.Ylow := 0;
+    Plot_xz.Yhigh := 1;
+
+    Plot_xs.title := 'Liquid Compositions vs. s';
+    Plot_xs.YLabel := 'Liquid Compositions';
+    Plot_xs.XLabel := 'stage location (s)';
+    Plot_xs.Ylow := 0;
+    Plot_xs.Yhigh := 1;
+
+    Plot_yz.title := 'Vapor Compositions vs. z';
+    Plot_yz.YLabel := 'Vapor Compositions';
+    Plot_yz.XLabel := 'transformed stage location (z)';
+    Plot_yz.Ylow := 0;
+    Plot_yz.Yhigh := 1;
+
+    Plot_ys.title := 'Vapor Compositions vs. s';
+    Plot_ys.YLabel := 'Vapor Compositions';
+    Plot_ys.XLabel := 'stage location (s)';
+    Plot_ys.Ylow := 0;
+    Plot_ys.Yhigh := 1;
+
+    FOR i IN components DO
+	Plot_xz.curve[i].legend := i;
+	Plot_xs.curve[i].legend := i;
+	Plot_yz.curve[i].legend := i;
+	Plot_ys.curve[i].legend := i;
+    END FOR;
+
+    IF (ncomps == 3) THEN
+	RUN T_Liq_diagram_e.default_self;
+	RUN T_Vap_diagram_e.default_self;
+    END IF;
+
+END default_self;
+METHOD default_all;
+    RUN distillate.default_all;
+    RUN feed.default_all;
+    RUN bottoms.default_all;
+    RUN default_self;
+END default_all;
+
+METHOD scale_self;
+    stot.nominal := stot;
+    coll_stack[1..nfeeds+1].stot.upper_bound :=
+    stot.upper_bound/(nfeeds+1) + 1.0;
+    RUN condenser.scale_self;
+    RUN coll_stack[1..nfeeds+1].scale_self;
+    RUN feed_tray.scale_self;
+    RUN reboiler.scale_self;
+    FOR i IN components DO
+	xsi[i].nominal := xsi[i];
+	xsi_set[i].nominal := xsi_set[i];
+	xsi_diff[i].nominal := xsi_diff[i];
+    END FOR;
+END scale_self;
+METHOD scale_all;
+    RUN scale_self;
+    RUN distillate.scale_all;
+    RUN feed.scale_all;
+    RUN bottoms.scale_all;
+END scale_all;
+METHOD bound_self;
+    stot.lower_bound := 4;
+    stot.upper_bound := 100;
+    RUN condenser.bound_self;
+    RUN coll_stack[1..nfeeds+1].bound_self;
+    RUN feed_tray.bound_self;
+    RUN reboiler.bound_self;
+END bound_self;
+METHOD bound_all;
+    RUN bound_self;
+    RUN distillate.bound_all;
+    RUN feed.bound_all;
+    RUN bottoms.bound_all;
+END bound_all;
+METHOD check_self;
+END check_self;
+METHOD check_all;
+    RUN check_self;
+    RUN distillate.check_all;
+    RUN feed.check_all;
+    RUN bottoms.check_all;
+END check_all;
+
+    METHOD values;
+	RUN coll_stack[1..nfeeds+1].values;
+    END values;
+
+    METHOD heat_balance;
+	RUN coll_stack[1..nfeeds+1].heat_balance;
+	feed_tray.q.fixed := FALSE;
+	feed_tray.Qin.fixed := TRUE;
+	hb_on := TRUE;
+     END heat_balance;
+     METHOD CMO;
+	 RUN coll_stack[1..nfeeds+1].CMO;
+	 feed_tray[1..nfeeds].q.fixed := TRUE;
+	 feed_tray[1..nfeeds].Qin.fixed := FALSE;
+	 hb_on := FALSE;
+     END CMO;
+     METHOD reduce_Q;
+	FOR i IN [1..nfeeds+1] DO
+	  FOR j IN [1..coll_stack[i].ncolls] DO
+		coll_stack[i].coll[j].Qtot :=
+		coll_stack[i].coll[j].Qtot*reduce;
+	    FOR k IN [1..coll_stack[i].coll[j].ntrays] DO
+		coll_stack[i].coll[j].Qin[k] :=
+		coll_stack[i].coll[j].Qin[k]*reduce;
+		coll_stack[i].coll[j].tray[k].Qin :=
+		coll_stack[i].coll[j].tray[k].Qin*reduce;
+	    END FOR;
+	  END FOR;
+	END FOR;
+	feed_tray.Qin :=
+	feed_tray.Qin*reduce;
+     END reduce_Q;
+     METHOD zero_Q;
+	reduce := 0;
+	RUN reduce_Q;
+     END zero_Q;
+
+     METHOD specify_feed;
+	 RUN feed.ClearAll;
+	 IF (feed.pd.phase_indicator == 'VL') THEN
+	     feed.equilibrated := equilibrated;
+	     RUN feed.specify;
+	     IF (equilibrated == TRUE) THEN
+		 IF (saturated_liquid_feed == TRUE) THEN
+		     saturated_vapor_feed := FALSE;
+		     feed.T.fixed := FALSE;
+		     feed.state.phase_fraction['vapor'].fixed := TRUE;
+		     feed.state.phase_fraction['vapor'] := 0.0;
+		 END IF;
+		 IF (saturated_vapor_feed == TRUE) THEN
+		     feed.T.fixed := FALSE;
+		     feed.state.phase_fraction['vapor'].fixed := TRUE;
+		     feed.state.phase_fraction['vapor'] := 1.0;
+		 END IF;
+	     END IF;
+	 ELSE
+	     RUN feed.specify;
+	 END IF;
+     END specify_feed;
+     METHOD seqmod;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod;
+	RUN feed_tray.seqmod;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.distillate.flow.fixed			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+	z_space.fixed					:= TRUE;
+	s_shift.fixed					:= TRUE;
+	z_shift.fixed					:= TRUE;
+     END seqmod;
+
+     METHOD seqmod_massbal;
+        objmult.fixed := TRUE;
+        optime.fixed := TRUE;
+	hb_on := FALSE;
+	equilibrated := FALSE;
+
+	RUN cost_calc.seqmod;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod_massbal;
+	RUN feed_tray.seqmod_massbal;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.distillate.flow.fixed			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+
+	z_space.fixed					:= TRUE;
+	s_shift.fixed					:= TRUE;
+	z_shift.fixed					:= TRUE;
+
+     END seqmod_massbal;
+
+    METHOD seqmod_fullthermo;
+        objmult.fixed := TRUE;
+        optime.fixed := TRUE;
+	hb_on := FALSE;
+	equilibrated := TRUE;
+
+	RUN cost_calc.seqmod;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod_fullthermo;
+	RUN feed_tray.seqmod_fullthermo;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.distillate.flow.fixed			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+
+	z_space.fixed					:= TRUE;
+	s_shift.fixed					:= TRUE;
+	z_shift.fixed					:= TRUE;
+
+    END seqmod_fullthermo;
+
+    METHOD seqmod_adiabatic;
+        objmult.fixed := TRUE;
+        optime.fixed := TRUE;
+	hb_on := TRUE;
+	equilibrated := TRUE;
+	RUN seqmod_fullthermo;
+	RUN heat_balance;
+
+	z_space.fixed					:= TRUE;
+	s_shift.fixed					:= TRUE;
+	z_shift.fixed					:= TRUE;
+
+    END seqmod_adiabatic;
+
+     METHOD specify;
+	IF (hb_on AND NOT(equilibrated)) THEN
+	    equilibrated := TRUE;
+	END IF;
+	IF (hb_on AND equilibrated) THEN
+	    RUN seqmod_adiabatic;
+	END IF;
+	IF (NOT(hb_on) AND equilibrated) THEN
+	    RUN seqmod_fullthermo;
+	END IF;
+	IF (NOT(hb_on) AND NOT(equilibrated)) THEN
+	    RUN seqmod_massbal;
+	END IF;
+	RUN specify_feed;
+
+	condenser.liqout.T.fixed := FALSE;
+	condenser.liqout.P.fixed := FALSE;
+     END specify;
+     METHOD reset;
+	RUN ClearAll;
+	RUN specify;
+     END reset;
+     METHOD standard_poly;
+	 hat_on := FALSE;
+     END standard_poly;
+     METHOD trans_poly;
+	 hat_on := TRUE;
+     END trans_poly;
+     METHOD z_based_poly;
+	 z_on := TRUE;
+     END z_based_poly;
+     METHOD s_based_poly;
+	 z_on := FALSE;
+     END s_based_poly;
+     METHOD propagate_feed_values;
+	FOR i IN components DO
+	  FOR k IN [1..nfeeds+1] DO
+	   FOR j IN [1..coll_stack[k].ncolls] DO
+		coll_stack[k].coll[j].tray[1..coll_stack[k]
+		  .coll[j].ntrays].alpha[i]
+			:= feed_tray.alpha[i];
+	   END FOR;
+	  END FOR;
+		reboiler.alpha[i] :=
+		    feed_tray.alpha[i];
+	END FOR;
+     END propagate_feed_values;
+     METHOD initialize_feed_tray_state;
+	 FOR i IN components DO
+	     feed_tray.state.y[i] :=
+	     feed.f[i]/SUM[feed.f[j] | j IN components];
+	 END FOR;
+	 feed_tray.state.T := feed.T;
+	 feed_tray.state.P := feed.P;
+     END initialize_feed_tray_state;
+
+     METHOD overallMB;
+	OverallMB[components].included			:= TRUE;
+	feed_tray[1].totfeedflow[components].included 	:= FALSE;
+     END overallMB;
+
+METHOD reset_to_massbal;
+	hb_on	:= FALSE;
+	equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+        hb_on	:= FALSE;
+    	equilibrated := TRUE;
+	RUN reset;
+	distillate.T.fixed := FALSE;
+	distillate.state.phase_fraction['vapor'].fixed := TRUE;
+	distillate.state.phase_fraction['vapor'] := 0;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+	hb_on	:= TRUE;
+    	equilibrated := TRUE;
+	RUN reset;
+	distillate.T.fixed := FALSE;
+	distillate.state.phase_fraction['vapor'].fixed := TRUE;
+	distillate.state.phase_fraction['vapor'] := 0;
+END reset_to_adiabatic;
+
+METHOD equipment_bounds;
+        RUN cost_calc.equipment_bounds;
+END equipment_bounds;
+
+METHOD optimization_DOF;
+    distillate.flow.fixed := FALSE;
+    condenser.reflux_ratio.fixed := FALSE;
+    s_stack[1..2].fixed := FALSE;
+END optimization_DOF;
+END simple_coll_column;
+
+
+MODEL test_coll_column();
+    cd IS_A components_data(
+        ['acetone','benzene','chloroform'],'chloroform'
+    );
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+    'Wilson_liquid_mixture','none');
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L','none','Wilson_liquid_mixture','none');
+
+
+    Feed_equil, Equilibrated IS_A start_false;
+    Feed		IS_A stream(cd, pdVL, Feed_equil);
+    Distillate	IS_A stream(cd, pdVL, Equilibrated);
+    Bottoms		IS_A stream(cd, pdL, Equilibrated);
+
+    ntrays IS_A integer_constant;
+    ntrays :== 2;
+
+    reduce IS_A fraction;
+
+    z_on, hat_on, hb_on IS_A start_false;
+
+    Column IS_A simple_coll_column(
+    ntrays,
+    pdVL,
+    Distillate,
+    Feed,
+    Bottoms,
+    Equilibrated,
+    reduce,
+    z_on,
+    hat_on,
+    hb_on
+    );
+    boundwidth IS_A bound_width;
+
+    METHODS
+
+    METHOD default_self;
+	RUN Feed.default_self;
+	RUN Distillate.default_self;
+	RUN Bottoms.default_self;
+	RUN Column.default_self;
+	boundwidth := 100;
+    END default_self;
+
+    METHOD check_self;
+	RUN Feed.check_self;
+	RUN Distillate.check_self;
+	RUN Bottoms.check_self;
+	RUN Column.check_self;
+    END check_self;
+
+    METHOD scale_self;
+	RUN Feed.scale_self;
+	RUN Distillate.scale_self;
+	RUN Bottoms.scale_self;
+	RUN Column.scale_self;
+    END scale_self;
+
+    METHOD bound_self;
+	Column.boundwidth := boundwidth;
+	Profile.boundwidth := boundwidth;
+	Feed.boundwidth := boundwidth;
+	Distillate.boundwidth := boundwidth;
+	Bottoms.boundwidth := boundwidth;
+	RUN Feed.bound_self;
+	RUN Distillate.bound_self;
+	RUN Bottoms.bound_self;
+	RUN Column.bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN bound_self;
+    END bound_all;
+
+    METHOD scale_all;
+	RUN scale_self;
+    END scale_all;
+
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD default_all;
+	RUN default_self;
+    END default_all;
+
+    METHOD values;
+	Column.condenser.reflux_ratio := 2.0;
+	Column.s_stack[1] := 10;
+	Column.s_stack[2] := 10;
+	Feed.T := 298 {K};
+	Feed.P := 1{atm};
+	Feed.f['acetone'] := 3.6 {mole/s};
+	Feed.f['benzene'] := 4 {mole/s};
+	Feed.f['chloroform'] := 2.4 {mole/s};
+	Distillate.flow := 6.0 {mole/s};
+
+	RUN Column.initialize_feed_tray_state;
+    END values;
+
+END test_coll_column;

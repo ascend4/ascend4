@@ -1,0 +1,526 @@
+PROVIDE "basemodel.a4l";
+
+(*
+ *  basemodel.a4l
+ *  by Benjamin A. Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 14:15:10 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/basemodel.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*============================================================================*
+
+    B A S E M O D E L . A 4 L
+    -------------------------
+
+    AUTHOR:      Benjamin A. Allan
+
+    DATES:       03/98 - Original Code
+
+    CONTENTS:	 Basic definitions cmu libraries and standard
+		 methods.
+		 This file is necessary for all
+		 other CMU authored ASCEND models to work in ASCEND IV.
+
+*============================================================================*)
+
+MODEL catch_Word_model (* Bill Gates sacrificial goat *);
+(* This MODEL does nothing.
+ * Normally catch_Word_model just gets parsed and ignored.
+ *
+ * If the user has tried to read a Microsoft Word binary file, Tcl file,
+ * or some other piece of junk as if it were an ASCEND MODEL
+ * source file, then catch_Word_model will die on an unknown
+ * syntax error.
+ * While catch_Word_model is dying the parser returns a good
+ * starting condition.
+ *
+ * Here is the message of recovery when this MODEL fails:
+Asc-Error: Model definition "catch_Word_model" abandoned due to syntax errors.
+Asc-Error: Rejected "catch_Word_model" at line basemodel.a4l:62.
+ *)
+END catch_Word_model;
+
+(* First define the standard methods, or stand-ins which will tell
+ * us when a standard method has not been written.
+ *)
+ADD METHODS IN DEFINITION MODEL;
+
+METHOD ClearAll;
+
+NOTES 'purpose' SELF {
+This method finds anything that is a solver_var and changes
+the .fixed flag on the var to FALSE.
+
+This method does not change .included flags on relations
+or return boolean, integer, or symbol variables to a
+default value.
+} END NOTES;
+
+	EXTERNAL asc_free_all_variables(SELF);
+END ClearAll;
+
+(*
+ * Geniuses make more mistakes than anyone else -- because they
+ * try more things that anyone else. Part (perhaps a very large
+ * part) of what makes a genius different from the rest of
+ * humanity is that they quickly recognize their own mistakes
+ * and move on to try something else before anyone notices
+ * they screwed up! Solving a problem as far and as fast as you
+ * can, then going back to criticize every aspect of the solution
+ * with an eye to improving it is how you usually discover right answers.
+ *
+ * The authors of ASCEND (geniuses or not we'll
+ * leave to our users to decide) have found that it is
+ * best to do things such as writing mathematical MODELs and
+ * writing mathematical modeling software in ways which
+ * makes our mistakes (or your mistakes) very easy to detect.
+ *
+ * Below we describe a methodology (pun intended) which can
+ * help make anyone who can solve a quadratic equation
+ * a mathematical modeling expert. This methodology helps
+ * you to avoid screwing up and to find out about it when you have.
+ *
+ * The ASCEND system will not force you to write standard
+ * methods in your models. :-( METHODs of the sort we advocate
+ * here make your MODELs much easier to use and
+ * much more reliable. They pay off in the short run as well
+ * as the long run. These are _guidelines_, not _laws_: real
+ * genius requires knowing when to color outside the lines. :-)
+ *
+ * If you do not write the standard methods, your MODEL will
+ * inherit the ones given here. The "ClearAll" and "reset"
+ * methods here will work for you if you followed the guidelines.
+ * The other methods contain STOP statements which will warn you
+ * that you have skipped something important, should you accidentally
+ * end up calling one of them.
+ *
+ * The following methods should be redefined by each
+ * reusable library MODEL that REFINES this root MODEL.
+ * Models that do not supply proper versions of these
+ * (and possibly other) methods are very hard to reuse.
+ *
+ * The premise of this method design is that we can
+ * write the _self methods incrementally, building on the
+ * already tested methods of previous MODEL parts we are
+ * reusing. In this way we never have to write a single huge method
+ * that directly checks 100s of variables in a hierarchy.
+ *
+ * The _all methods are methods which simply "top off" the
+ * _self methods. With an _all method, you can treat
+ * just a part of a larger simulation already built
+ * as a self-contained simulation.
+ *
+ *)
+
+(*
+ * Usually discovery of the information you need to write the methods
+ * proceeds in the order that they appear below:
+ * check, default, specify, bound, scale.
+ *)
+
+METHOD check_self;
+NOTES 'purpose' SELF {
+This method should be written first, though it is run
+last.  Just like they taught you in elementary school,
+always check your work.  Start by defining criteria for a
+successful solution that will not be included in the
+equations solved and then computing those in this method.
+As you develop your MODEL, you should expect to revise the
+check method from time to time, if you are learning
+anything about the MODEL. We frequently change our
+definition of success.
+
+When a mathematical MODEL is solved, the assumptions that
+went into writing (deriving) the equations should be
+checked. Usually there are redundant equations available
+(more than one way to state the physical MODEL
+mathematically). These should be used to check the
+particularly tricky bits of the MODEL.
+
+Check that the physical or intuitive (qualitative)
+relationships among variables ch you expect to hold are
+TRUE, especially if you have not written such relationships
+in terms of inequalities in the MODEL equations.
+
+In some models, checking the variable values against
+absolute physical limits (temperature > 0{K} and
+temperature < Tcritical for example) may be all that is
+necessary or possible. Do not check variable values against
+their .lower_bound or .upper_bound, as any decent algebraic
+solver or modeling system will do this for you.
+
+If a check fails, use a STOP or ERROR statement to notify
+yourself (or you MODEL using customer) that the solution
+may be bogus.
+
+Currently only STOP is implemented.
+STOP raises an error signal and issues an error message;
+STOP normally also stops further execution of the method
+and returns control to a higher level, though there are
+interactive tools to force method execution to continue.
+STOP does not crash the ASCEND system.
+
+} END NOTES;
+
+  STOP {Error! Standard method "check_self" called but not written in MODEL.};
+
+END check_self;
+
+METHOD check_all;
+
+NOTES 'purpose' SELF {
+When solving only a part of a simulation, it is necessary to check
+the models and variables passed into the part as well as the
+locally defined parts and variables. This method should check
+all the received models and variables, then check the local
+stuff.
+} END NOTES;
+
+  STOP {Error! Standard method "check_all" called but not written in MODEL.};
+  RUN check_self; (* intentionally _second_ *)
+
+END check_all;
+
+METHOD defaults;
+(*
+ * This is a kluge for interfaces that still think of
+ * 'defaults' as the standard method.
+ *)
+	RUN default_self;
+	STOP {GUI (or somebody) called non-standard method defaults. Call forwarded to default_self before stopping here.};
+END defaults;
+
+METHOD default_self;
+NOTES 'purpose' SELF {
+This method should set default values for any variables
+declared locally (IS_A) to the MODEL. It should run
+default_self on _all_ the models that are declared locally
+(with IS_A) in the MODEL also.  If the atoms you use to
+define your variables have a suitable default already, then
+you do not need to assign them a default in this method.
+
+This method should not run any methods on MODEL parts that
+come via WILL_BE in the definition's parameter list. This
+method also should not change the values of variables that
+are passed in through the parameter list.
+
+Sometimes there will be nothing for this method to do.
+Define it anyway, leaving it empty.
+
+When a top-level simulation is built by the compiler, this
+method will be run at the end of compilation by the
+compiler.
+} END NOTES;
+
+  STOP {Error! Standard method "default_self" called but not written in MODEL.};
+END default_self;
+
+METHOD default_all;
+
+NOTES 'purpose' SELF {
+This method assumes that the arguments to the MODEL
+instance have not been properly initialized, as is
+frequently the case in one-off modeling efforts. This
+method should run the default_self method on each of the
+parts received through the parameter list and should give
+appropriate default values to any variables received
+through the parameter list. After these have been done, it
+should then call default_self to take care of all locally
+declared default needs.
+} END NOTES;
+
+  STOP {Error! Standard method "default_all" called but not written in MODEL.};
+	RUN default_self;
+END default_all;
+
+METHOD specify;
+NOTES 'purpose' SELF {
+ * Assuming ClearAll has been run on the MODEL, this method
+ * should get the MODEL to a condition called 'square':
+ * the case where there are as many variables with .fixed == FALSE
+ * as there equations available to compute them.
+ * This is one of the hardest tasks ever invented by mathematicians
+ * if you go about it in the wrong way. We think we know the right way.
+ *
+ * Actually, 'square' is a bit trickier to achieve
+ * than simply counting equations and variables.
+ * Solver, such as QRSlv in ASCEND, may help greatly with the bookkeeping.
+ *
+The general approach is to:
+
+(1) Run "specify" for all the parts (both passed in and locally defined)
+     that are not passed on into other parts.
+
+(2) Fix up (by tweaking .fixed flags on variables) any difficulties
+     that arise when parts compete to calculate the same variable.
+
+(3) Use the remaining new local variables to take care of any leftover
+     equations among the parts and any new equations written locally.
+
+At all steps 1-3
+    Pay special attention to indexed variables used in
+    indexed equations; frequently you must fix or free N or
+    N-1 variables of a set sized N, if there are N matching equations.
+    In general, if you think you have specify correctly written, change
+    the sizes of all the sets in your MODEL by one and then by two
+    members. If your specify method still works, you are using sets
+    correctly.
+
+When writing models that combine parts which do not share
+very well, or which both try to compute the same variable
+in different ways, it may even be necessary to write a WHEN
+statement to selectively TURN OFF the conflicting equations
+or MODEL fragments. An object or equation USEd in a WHEN
+statement is turned off by default and becomes a part of
+the solved MODEL only when the conditions of some CASE
+which refers to that object are matched.
+
+The setting of boolean, integer, and symbol variables which
+are controlling conditions of WHEN and SWITCH statements
+should be taken care of in the specify method.
+
+There is no 'one perfect "specify"' for all purposes. This
+routine should merely define a reasonably useful base
+configuration of the MODEL.
+
+Other specify_whatElseYouWant methods can (should) also be
+written.
+
+The name of a method is a communication tool.  Please use
+meaningful names as long as necessary to tell what the
+method does. Avoid cryptic abbreviations and hyper-
+specialized jargon known only to you and your three friends
+when you are naming methods; however, do not shy away from
+technical terms common to the engineering domain in which
+you are modeling.
+
+} END NOTES;
+
+  STOP {Error! Standard method "specify" called but not written in MODEL.};
+
+END specify;
+
+METHOD reset;
+NOTES 'purpose' SELF {
+This method gets the MODEL to some standard starting state,
+though not necessarily the most useful starting state for a
+particular application. In Chem. Eng. terms, this method
+establishes a base case.
+
+There is no 'one perfect "reset"' for all purposes. This
+routine should merely define a reasonably useful base
+configuration of the MODEL.
+
+Other reset_whatElseYouWant methods can (should) also be
+written.
+
+Normally you do not need to write this method: your models
+will inherit this one unless you override it (redefine it)
+in your MODEL.
+}
+END NOTES;
+
+	RUN ClearAll;
+	RUN specify;
+
+END reset;
+
+METHOD bound_self;
+NOTES 'purpose' SELF {
+Much of the art of nonlinear physical modeling is in
+bounding the solution.
+
+This method should update the bounds on _locally_ defined
+(IS_A) variables and IS_A defined MODEL parts. Updating
+bounds requires some care.  For example, the bounds on
+fractions frequently don't need updating.
+
+A common formula for updating bounds is to define a region
+around the current value of the variable. A linear region
+size formula, as an example, would be:
+
+  v.upper_bound := v + boundwidth * v.nominal;
+  v.lower_bound := v - boundwidth * v.nominal;
+
+Care must be taken that such a formula does not move the
+bounds (particularly lower bounds) out so far as to allow
+non-physical solutions. Logarithmic bounding regions are
+also simple to calculate.
+
+Here boundwidth IS_A bound_width;
+boundwidth is a real variable (but not a solver_var) or a
+value you can use to determine how much "wiggle-room" you
+want to give a solver. Small powers of 4 and 10 are usually
+good values of boundwidth.
+
+Too small a boundwidth can cut off the portion of number
+space where the solution is found. Too large a bound width
+can allow solvers to wander for great distances in
+uninteresting regions of the number space.
+
+This method should not bound variables passed into the
+MODEL definition or parts passed into the definition.
+} END NOTES;
+
+  STOP {Error! Standard method "bound_self" called but not written in MODEL.};
+END bound_self;
+
+METHOD bound_all;
+NOTES 'purpose' SELF {
+This method should be like bound_self except that it bounds the
+passed in variables and calls bound_self on the passed in parts.
+It should then call bound_self.
+} END NOTES;
+
+  STOP {Error! Standard method "bound_all" called but not written in MODEL.};
+  RUN bound_self;
+END bound_all;
+
+METHOD scale_self;
+NOTES 'purpose' SELF {
+Most nonlinear (and many linear) models cannot be solved without
+proper scaling of the variables.
+
+This method should reset the .nominal value on every real
+variable in need of scaling. It should then call the
+scale_self method on all the locally defined (IS_A) parts
+of the MODEL.  0.0 is the worst possible nominal value. A
+proper nominal is one such that you expect at the solution
+the quantity
+
+  abs(variable/(variable.nominal))
+
+to be around 1 (in the range of [0.1..10] or [0.01..100]).
+
+Variables (like fractions) bounded such that they cannot be
+too far away from 1.0 in magnitude probably don't need scaling
+most of the time if they are also bounded away from 0.0.
+
+Some solvers, but not all, will attempt to scale the
+equations and variables by heuristic matrix-based methods.
+This works, but inconsistently; user-defined scaling is
+generaly much superior.
+
+ASCEND makes it easy to do. You scale the variables, which
+can only be done well by knowing something about where the
+solution is going to be found (by being an engineer, for
+example.) Then ASCEND can calculate an appropriate
+equation-scaling by efficient symbolic methods.
+
+This method should not change the scaling of models and
+variables that are received through the parameter list of
+the MODEL.
+} END NOTES;
+
+  STOP {Error! Standard method "scale_self" called but not written in MODEL.};
+END scale_self;
+
+METHOD scale_all;
+NOTES 'purpose' SELF {
+This method should be like scale_self above except that it also
+should scale the variables and models received through the
+parameter list. It should then call scale_self to take care of
+the local variables and models.
+} END NOTES;
+
+  STOP {Error! Standard method "scale_all" called but not written in MODEL.};
+  RUN scale_self;
+END scale_all;
+END METHODS;
+
+MODEL cmumodel();
+NOTES
+'purpose' SELF {
+This MODEL does nothing except provide a root
+for a collection of loosely related models.
+If it happens to reveal a few bugs in the software,
+and perhaps masks others, well, what me worry?
+BAA, 8/97.
+}
+'methods' SELF {
+This MODEL also provides a hook to put in candidates for
+becoming ascBuiltin global methods. Global methods may be
+overridden by local definitions.
+BAA, 3/98.
+}
+END NOTES;
+
+END cmumodel;
+
+MODEL testcmumodel();
+(*
+ * All CMU test models, of whatever sort should ultimately be
+ * rooted here or be a final refinement of a reusable MODEL.
+ *)
+METHODS
+METHOD values;
+(*
+ * In a final application MODEL, you should record at least one set of
+ * input values (values of the fixed variables and guesses of key
+ * solved-for variables) that leads to a good solution.
+ * Do this so noone need reinvent that set the next time
+ * you use the MODEL or someone picks the MODEL up after you.
+ *)
+  STOP {Error! Standard method "values" called but not written in MODEL.};
+END values;
+
+METHOD specify;
+  STOP {Error! Standard method "specify" called but not written in test MODEL.};
+END specify;
+(*
+METHOD ClearAll;
+  EXTERNAL asc_free_all_variables(SELF);
+END ClearAll;
+
+METHOD reset;
+(* This method gets the MODEL to some standard starting state,
+ * though not necessarily the most useful starting state for
+ * a particular application. In Chem. Eng. terms, this method
+ * establishes a base case.
+ * There is no 'one perfect "reset"' for all purposes. This
+ * routine should merely define a reasonably useful base configuration
+ * of the MODEL.
+ * Other reset_whatElseYouWant methods can (should) also be
+ * written.
+ *
+ * Normally you do not need to write this method: your models
+ * will inherit this one unless you override it (redefine it)
+ * in your MODEL.
+ *)
+	RUN ClearAll;
+	RUN specify;
+END reset;
+*)
+END testcmumodel;
+
+MODEL your_site_models();
+(* if you create a library to share with the net which is
+ * not just an end application of Carnegie Mellon models,
+ * please create an empy root MODEL such as this and use
+ * it as the origin of your library in the same way that
+ * we use cmumodel as the origin of our libraries.
+ * Thank you.
+ *)
+END your_site_models;

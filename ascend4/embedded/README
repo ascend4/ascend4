@@ -1,0 +1,5 @@
+This is a sketch/start at making ascend compiler and solver toolsets
+embeddable. Clearly Jon Shao is having a shot at something similar.
+
+DriverNoTickle is a hack at this point and must eventually 
+be renamed or go away.

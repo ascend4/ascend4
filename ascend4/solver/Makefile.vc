@@ -1,0 +1,95 @@
+#  ASCEND Solver Makefile
+#  Ben Allan
+#  January 4, 1994
+#  $Revision: 1.1 $
+#  $Date: 1997/07/29 17:34:30 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/solver/Makefile.vc,v $
+#
+
+
+builddir = ..
+srcdir = .
+VPATH = .
+
+
+
+#  The next variables are the primary executables and/or libraries that
+#  this makefile is responsible for, and the default target of this
+#  makefile.
+
+EXECUTABLE = 
+
+LIBRARY = solver.lib
+
+
+default: $(LIBRARY)
+
+
+
+#  Defines and Includes that are specific to this directory
+
+DIR_SPECIFIC_DEFS = $(SOLVER_DEFS)
+DIR_SPECIFIC_INCS = 
+
+
+
+#  The next variables list the source files (EXEC_SCRS) to compile
+#  into the object files (EXEC_OBJS) that are linked with the
+#  library files (EXEC_LIBS) to make EXECUTABLE
+
+EXEC_SRCS = 
+
+EXEC_OBJS = 
+
+EXEC_LIBS = 
+
+
+
+#  The next variables list the source files (LIB_SCRS) to compile
+#  into the object files (LIB_OBJS) that are combined to make LIBRARY
+
+LIB_SRCS = \
+	analyze.c bnd.c bndman.c calc.c cond_config.c \
+	conditional.c conopt.c discrete.c extrel.c linsol.c \
+	linsolqr.c linutils.c logrel.c logrelman.c model_reorder.c \
+	mps.c mtx_basic.c mtx_linal.c mtx_perms.c mtx_query.c \
+	mtx_reorder.c mtx_use_only.c rel.c relman.c rootfind.c \
+	slv.c slv0.c slv1.c slv2.c slv3.c slv6.c slv7.c \
+	slv8.c slv9.c slv9a.c slvDOF.c slv_common.c \
+	slv_interface.c slv_stdcalls.c system.c var.c
+
+LIB_OBJS = \
+	analyze.obj bnd.obj bndman.obj calc.obj cond_config.obj \
+	conditional.obj conopt.obj discrete.obj            linsol.obj \
+	linsolqr.obj linutils.obj logrel.obj logrelman.obj model_reorder.obj \
+	mps.obj mtx_basic.obj mtx_linal.obj mtx_perms.obj mtx_query.obj \
+	mtx_reorder.obj mtx_use_only.obj rel.obj relman.obj rootfind.obj \
+	slv.obj slv0.obj slv1.obj slv2.obj slv3.obj slv6.obj slv7.obj \
+	slv8.obj slv9.obj slv9a.obj slvDOF.obj slv_common.obj \
+	slv_interface.obj slv_stdcalls.obj system.obj var.obj
+
+
+
+#  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
+#  
+!include $(builddir)\ConfigAscend.vc
+!include $(builddir)\Makefile.Rules.vc
+
+
+
+#  debugging for mtx (typically defined in mtx.c)
+#
+#MTX_DEBUG = 
+#
+#  debugging for minos (typically defined in slv1.c)
+#
+#MINOS_DEBUG = 
+
+
+
+# DO NOT DELETE THIS LINE -- g++dep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+
+
+# IF YOU PUT ANYTHING HERE IT WILL GO AWAY

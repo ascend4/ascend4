@@ -1,0 +1,38 @@
+Notes on setting up and using subversion
+
+First you should get a copy of the subversion .pdf book and read the
+first four chapters.  It is available at subversion.tigris.org.
+
+
+Redhat client ----
+
+Each person using subversion must install the subversion client on
+his/her computer.  I did this for redhat linux by importing and
+installing the following five rpms.
+
+  apr-0.9.5-0.4.i386.rpm       neon-0.24.7-4.i386.rpm
+  apr-util-0.9.5-0.4.i386.rpm  subversion-1.0.9-1.fc1.i386.rpm
+  db42-4.2.52-0.1.i386.rpm
+
+I have created a .tar.gz file containing all of these and put it into
+LIRE'.  Admittedly it is dated, but it could help some of you to get a
+quick start now.
+
+Once installed, a typical command will be
+
+
+  svn import ~/tmp/dirToBeImported \
+  https://tweety.ices.cmu.edu/svn/ascend \
+  -m "your comment"
+
+Note, it is the second line in this command that is the important one.
+Your access to the server is via https (you can also access via http
+but that is not secure and would expose your password).
+
+
+Windows client ----
+
+This is likely an easier option to install and use.  I have not done
+it, but go to subversion.tigris.org to find the client.  Note, unless
+the package has the name server in it, it is the client software.
+

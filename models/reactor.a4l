@@ -1,0 +1,690 @@
+REQUIRE "ivpsystem.a4l";
+(* => modified version of system.a4l, basemodel.a4l *)
+REQUIRE "stream_holdup.a4l";
+(* => stream_holdup.a4l, thermodynamics.a4l, components.a4l, phases.a4l,
+ *    atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "kinetics.a4l";
+(* => kinetics,a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "reactor.a4l";
+
+(*
+ *  reactor.a4l
+ *  by Duncan Coffey
+ *  May 1998
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/20 15:12:06 $
+ *  $Revision: 1.3 $
+ *  $Author: ballan $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/reactor.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Duncan Coffey
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+ *  Requires an empty ascend system.
+ *)
+
+
+(* ***********************************+************************************ *)
+(* ********************           Reactor             ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL single_phase_cstr(
+    input	  	WILL_BE stream;
+    output	  	WILL_BE stream;
+    kinetics		WILL_BE base_kinetics;
+    t			WILL_BE solver_var;
+    dynamic     	WILL_BE boolean;
+    ode_offset	      	WILL_BE ode_counter;
+    obs_offset	      	WILL_BE obs_counter;
+)WHERE(
+    input.cd, output.cd WILL_BE_THE_SAME;
+    kinetics.reac_T, output.T WILL_BE_THE_SAME;
+    (input.pd.phase_indicator IN ['V','L','VL','VLL']) == TRUE;
+    (output.pd.phase_indicator IN ['V','L']) == TRUE;
+)REFINES cmumodel;
+
+    cd ALIASES input.cd;
+    equilibrated ALIASES output.equilibrated;
+    FOR i IN kinetics.nr CREATE
+	rate[i] ALIASES kinetics.rate[i];
+    END FOR;
+    state ALIASES output.Details.state;
+
+    dM_dt,dMi_dt[cd.other_components] IS_A molar_rate;
+    M,Mi[cd.components]		IS_A mole;
+    dU_dt	IS_A energy_rate;
+    U		IS_A energy;
+    Qin		IS_A energy_rate;
+    FOR i IN cd.components CREATE
+	x[i] ALIASES state.y[i];
+	conc[i] ALIASES kinetics.conc[i];
+    END FOR;
+    Volume	IS_A volume;
+    vol_rate   	IS_A volume_rate;
+    res_time	IS_A time;
+    flowscale	IS_A molar_rate_scale;
+    H_flowscale IS_A energy_rate_scale;
+
+    (* Define what the differential equations are for the system. *)
+    FOR i IN cd.other_components  CREATE
+	dMi_dt[i]/flowscale = (input.f[i]+Volume*kinetics.production[i]-output.f[i])
+	                        /flowscale;
+    END FOR;
+
+    dM_dt/flowscale = (input.flow-output.flow
+          +SUM[Volume*kinetics.production[i] | i IN cd.components])/flowscale;
+
+    dU_dt/H_flowscale = (input.H_flow + Qin - output.H_flow)/H_flowscale;
+
+    U/H_flowscale = (state.H-state.P*state.V)*M/H_flowscale;
+
+    Volume = M*state.V;
+
+    vol_rate = input.flow*input.state.V;
+
+    res_time = Volume/vol_rate;
+
+    FOR i IN cd.components CREATE
+	x[i]=Mi[i]/M;
+	conc[i] = Mi[i]/Volume;
+    END FOR;
+
+    boundwidth IS_A bound_width;
+
+    METHODS
+	METHOD check_self;
+	    IF (output.flow < 1e-4 {mole/s}) THEN
+		STOP {output flow dried up in reactor};
+	    END IF;
+	    IF (input.flow < 1e-4 {mole/s}) THEN
+		STOP {input flow fries up in reactor};
+	    END IF;
+	    IF (abs(input.flow+SUM[Volume*kinetics.production[i] | i
+		IN cd.components]-output.flow)/flowscale > 1.0e-4) THEN
+		STOP {reactor violates overall mass-balance};
+	    END IF;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN input.check_self;
+	    RUN output.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := input.Details.flowscale;
+	    H_flowscale := input.Details.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    equilibrated :=FALSE;
+	    dynamic :=FALSE;
+	    t :=0 {s};
+	    ode_offset	:=1;
+	    obs_offset	:=1;
+	    RUN state.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN input.default_self;
+	    RUN output.default_self;
+	    RUN kinetics.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	    RUN state.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    input.boundwidth := boundwidth;
+	    output.boundwidth := boundwidth;
+	    RUN input.bound_self;
+	    RUN output.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := input.flow;
+	    H_flowscale := input.H_flow;
+	    RUN state.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN input.scale_self;
+	    RUN output.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed	:= FALSE;
+	    dMi_dt[cd.other_components].fixed	:= TRUE;
+	    Mi[cd.other_components].fixed	:= FALSE;
+	    dM_dt.fixed				:= TRUE;
+	    M.fixed				:= FALSE;
+	    dU_dt.fixed				:= TRUE;
+	    U.fixed				:= FALSE;
+	    Volume.fixed			:= TRUE;
+	    IF(dynamic = TRUE) THEN
+		Mi[cd.other_components].fixed	:= TRUE;
+		dMi_dt[cd.other_components].fixed:= FALSE;
+		M.fixed				:= TRUE;
+		dM_dt.fixed			:= FALSE;
+		U.fixed				:= TRUE;
+		dU_dt.fixed			:= FALSE;
+		output.flow.fixed		:= TRUE;
+		Volume.fixed			:= FALSE;
+		Qin.fixed			:= TRUE;
+		state.T.fixed			:= FALSE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN input.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+	    M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+
+	METHOD set_obs;
+	    Volume.obs_id	:=obs_offset+1;
+	    state.T.obs_id	:=obs_offset+2;
+	    state.P.obs_id	:=obs_offset+3;
+	    input.flow.obs_id	:=obs_offset+4;
+	    output.flow.obs_id	:=obs_offset+5;
+	    obs_offset		:=obs_offset+6;
+	END set_obs;
+END single_phase_cstr;
+
+MODEL multiple_phase_cstr(
+    vapin	  	WILL_BE stream;
+    liqin		WILL_BE stream;
+    vapout	  	WILL_BE stream;
+    liqout		WILL_BE stream;
+    kinetics		WILL_BE base_kinetics;
+    t			WILL_BE solver_var;
+    dynamic     	WILL_BE boolean;
+    ode_offset	      	WILL_BE ode_counter;
+    obs_offset	      	WILL_BE obs_counter;
+)WHERE(
+    vapin.cd, vapout.cd, liqin.cd, liqout.cd WILL_BE_THE_SAME;
+    vapin, liqin WILL_NOT_BE_THE_SAME;
+    kinetics.reac_T, liqout.T WILL_BE_THE_SAME;
+    vapin.pd.phase_indicator == 'V';
+    liqin.pd.phase_indicator == 'L';
+    vapout.pd.phase_indicator == 'V';
+    liqout.pd.phase_indicator == 'L';
+)REFINES cmumodel;
+
+        cd ALIASES vapout.cd;
+	P ALIASES liqout.P;
+	T ALIASES liqout.T;
+	equilibrated ALIASES vapout.equilibrated;
+	(* reactor thermo options are derived from product streams *)
+	pdVL IS_A phases_data('VL', vapout.pd.vapor_option,
+				liqout.pd.liquid1_option, 'none');
+
+	(* reactor Vapor-Liquid state comes from thermo of product streams. *)
+	phaseVL[VLphases] ALIASES
+		(vapout.phase['vapor'], liqout.phase['liquid1'])
+		WHERE VLphases IS_A set OF symbol_constant
+		WITH_VALUE ('vapor','liquid1');
+	state IS_A thermodynamics(cd, pdVL, phaseVL, equilibrated);
+
+	x "liquid product composition" ALIASES liqout.state.y;
+	y "vapor product composition" ALIASES vapout.state.y;
+
+
+	dMi_dt[cd.other_components] IS_A molar_rate;
+	M,Mi[cd.components],Ml,Mv IS_A mole;
+	dM_dt IS_A molar_rate;
+	dU_dt IS_A energy_rate;
+	U IS_A energy;
+	Vol,vol_liq,vol_vap IS_A volume;
+	Qin IS_A energy_rate;
+	flowscale IS_A molar_rate_scale;
+	split_fraction[VLphases] IS_A fraction;
+
+	Liquid_split: (split_fraction['liquid1']*(liqin.flow+vapin.flow
+	     +Vol*SUM[kinetics.production[i] | i IN cd.components])-liqout.flow)/flowscale = 0;
+	Vapor_split: (split_fraction['vapor']*(liqin.flow+vapin.flow
+	     +Vol*SUM[kinetics.production[i] | i IN cd.components])-vapout.flow)/flowscale = 0;
+
+	(* component material balances *)
+	FOR i IN cd.other_components CREATE
+	    dMi_dt[i]/flowscale=(liqin.f[i]+vapin.f[i]+Vol*kinetics.production[i]-vapout.f[i]-liqout.f[i])/flowscale;
+	END FOR;
+	(* overall material balance *)
+	dM_dt/flowscale=(liqin.flow+vapin.flow-vapout.flow-liqout.flow
+	     +Vol*SUM[kinetics.production[i] | i IN cd.components])/flowscale;
+
+	FOR i IN cd.components CREATE
+	    Mi[i]=Ml*x[i]+Mv*y[i];
+	    conc[i] ALIASES kinetics.conc[i];
+	    conc[i]=Mi[i]/Vol;
+	END FOR;
+	M=Ml+Mv;
+	Vol=vol_liq+vol_vap;
+	vol_liq=Ml*state.phase['liquid1'].v_y;
+	vol_vap=Mv*state.phase['vapor'].v_y;
+
+	state.phase_fraction['vapor']=Mv/M;
+
+	(* overall energy balance *)
+	H_flowscale IS_A energy_rate_scale;
+
+	dU_dt/H_flowscale=(liqin.H_flow+vapin.H_flow+Qin-vapout.H_flow
+	                   -liqout.H_flow)/H_flowscale;
+
+        U/H_flowscale = (state.phase['vapor'].h_y*Mv+state.phase['liquid1'].h_y*Ml)
+	                /H_flowscale;
+	boundwidth IS_A bound_width;
+
+    METHODS
+	METHOD check_self;
+	    IF (vapout.flow < 1e-4 {mole/s}) THEN
+		STOP {vapor output flow dried up in reactor};
+	    END IF;
+	    IF (vapin.flow < 1e-4 {mole/s}) THEN
+		STOP {vapor input flow fries up in reactor};
+	    END IF;
+	    IF (liqout.flow < 1e-4 {mole/s}) THEN
+		STOP {liquid output flow dried up in reactor};
+	    END IF;
+	    IF (liqin.flow < 1e-4 {mole/s}) THEN
+		STOP {liquid input flow fries up in reactor};
+	    END IF;
+	    IF (abs(vapin.flow+liqin.flow+SUM[Vol*kinetics.production[i] | i
+		IN cd.components]-vapout.flow-liqout.flow)/flowscale > 1.0e-4) THEN
+		STOP {reactor violates overall mass-balance};
+	    END IF;
+	    RUN state.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN vapin.check_self;
+	    RUN liqin.check_self;
+	    RUN vapout.check_self;
+	    RUN liqout.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    boundwidth :=10;
+	    flowscale := vapin.Details.flowscale;
+	    H_flowscale := vapin.Details.H_flowscale;
+	    dMi_dt[cd.other_components]	:=0 {mole/sec};
+	    dMi_dt[cd.other_components].lower_bound	:=-1e100 {mole/sec};
+	    dM_dt :=0 {mole/sec};
+	    dM_dt.lower_bound :=-1e100 {mole/sec};
+	    dU_dt :=0 {J/sec};
+	    (* Upper bound of split fraction must be changed to
+	      greater than 1 for dynamic simulation *)
+	    split_fraction[VLphases].upper_bound :=2;
+	    equilibrated :=FALSE;
+	    dynamic :=FALSE;
+	    t :=0 {s};
+	    RUN state.default_self;
+	END default_self;
+
+	METHOD default_all;
+	    Qin := 0 {watt};
+	    RUN vapin.default_self;
+	    RUN liqin.default_self;
+	    RUN vapout.default_self;
+	    RUN liqout.default_self;
+	    RUN kinetics.default_self;
+	    RUN default_self;
+	END default_all;
+
+	METHOD bound_self;
+	    state.boundwidth := boundwidth;
+	    RUN state.bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    vapin.boundwidth := boundwidth;
+	    liqin.boundwidth := boundwidth;
+	    vapout.boundwidth := boundwidth;
+	    liqout.boundwidth := boundwidth;
+	    RUN vapin.bound_self;
+	    RUN liqin.bound_self;
+	    RUN vapout.bound_self;
+	    RUN liqout.bound_self;
+	    RUN bound_self;
+	END bound_all;
+
+	METHOD scale_self;
+	    flowscale := vapin.flow;
+	    H_flowscale := vapin.H_flow;
+	    RUN state.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN vapin.scale_self;
+	    RUN liqin.scale_self;
+	    RUN vapout.scale_self;
+	    RUN liqout.scale_self;
+	    RUN scale_self;
+	END scale_all;
+
+	METHOD seqmod;
+	    RUN state.specify;
+	    state.y[cd.components].fixed := FALSE;
+	    IF equilibrated THEN
+		state.T.fixed :=FALSE;
+	    ELSE
+		state.T.fixed :=TRUE;
+	    END IF;
+	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    split_fraction['vapor'].fixed :=TRUE;
+	    dMi_dt[cd.other_components].fixed :=TRUE;
+	    Mi[cd.other_components].fixed :=FALSE;
+	    dM_dt.fixed :=TRUE;
+	    M.fixed :=FALSE;
+	    dU_dt.fixed :=TRUE;
+	    U.fixed :=FALSE;
+	    Vol.fixed :=TRUE;
+	    vol_liq.fixed :=TRUE;
+	    IF dynamic THEN
+		dMi_dt[cd.other_components].fixed :=FALSE;
+		Mi[cd.other_components].fixed :=TRUE;
+		dM_dt.fixed :=FALSE;
+		M.fixed :=TRUE;
+		dU_dt.fixed :=FALSE;
+		U.fixed :=TRUE;
+		Qin.fixed :=TRUE;
+		IF equilibrated THEN
+		    state.P.fixed		:=FALSE;
+		ELSE
+		    state.T.fixed		:=FALSE;
+		END IF;
+		vol_liq.fixed :=FALSE;
+		liqout.flow.fixed :=TRUE;
+		vapout.flow.fixed :=TRUE;
+		split_fraction['vapor'].fixed	:=FALSE;
+	    ELSE
+		dMi_dt[cd.other_components] :=0 {mole/sec};
+		dM_dt :=0 {mole/sec};
+		dU_dt :=0 {J/sec};
+	    END IF;
+	END seqmod;
+
+	METHOD specify;
+	    RUN vapin.specify;
+	    RUN liqin.specify;
+	    RUN seqmod;
+	END specify;
+
+	METHOD set_ode;
+	    t.ode_type	:=-1;
+	    FOR i IN cd.other_components DO
+		dMi_dt[i].ode_type	:=2;
+		Mi[i].ode_type		:=1;
+		dMi_dt[i].ode_id	:=ode_offset;
+		Mi[i].ode_id		:=ode_offset;
+		ode_offset		:=ode_offset+1;
+	    END FOR;
+	    dM_dt.ode_type	:=2;
+	    M.ode_type		:=1;
+	    dM_dt.ode_id	:=ode_offset;
+	    M.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	    dU_dt.ode_type	:=2;
+	    U.ode_type		:=1;
+	    dU_dt.ode_id	:=ode_offset;
+	    U.ode_id		:=ode_offset;
+	    ode_offset		:=ode_offset+1;
+	END set_ode;
+
+	METHOD set_obs;
+	    Vol.obs_id		:=obs_offset+1;
+	    vol_liq.obs_id	:=obs_offset+2;
+	    state.T.obs_id	:=obs_offset+3;
+	    state.P.obs_id	:=obs_offset+4;
+	    vapin.flow.obs_id	:=obs_offset+5;
+	    liqin.flow.obs_id	:=obs_offset+6;
+	    vapout.flow.obs_id	:=obs_offset+7;
+	    liqout.flow.obs_id	:=obs_offset+8;
+	    obs_offset		:=obs_offset+9;
+	END set_obs;
+END multiple_phase_cstr;
+
+(*****************************************************************************)
+
+MODEL test_single_phase_cstr() REFINES cmumodel;
+
+    components IS_A set OF symbol_constant;
+    components :==['n_butane','butene_1','n_octane'];
+    cd IS_A components_data(components,'n_octane');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    equilibrated IS_A boolean;
+    input IS_A stream(cd,pdV,equilibrated);
+    output IS_A stream(cd,pdV,equilibrated);
+    nr IS_A set OF symbol_constant;
+    Kr[nr] IS_A constant;
+    active_energy[nr] IS_A constant;
+    species[nr]	IS_A set OF symbol_constant;
+    nu[components][nr] IS_A integer_constant;
+    conc[components] IS_A molar_density;
+    kinetics IS_A element_kinetics(components,nr,Kr,active_energy,output.T,
+                                   species,nu,conc);
+    dynamic IS_A boolean;
+    t IS_A time;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+
+    reactor IS_A single_phase_cstr(input,output,kinetics,t,dynamic,
+                                   ode_offset,obs_offset);
+
+    nr			:==['forward','backward'];
+    Kr['forward']		:== 0.1 {m^3/mol/s};
+    Kr['backward']		:== 10 {1/s};
+    active_energy['forward']	:== 50 {J/mol};
+    active_energy['backward']	:== 50 {J/mol};
+
+    species['forward']		:==['n_butane','butene_1','n_octane'];
+    species['backward']		:==['n_butane','butene_1','n_octane'];
+    nu['n_butane']['forward']   :==-1;
+    nu['butene_1']['forward']   :==-1;
+    nu['n_octane']['forward']   :==1;
+    nu['n_butane']['backward']  :==1;
+    nu['butene_1']['backward']  :==1;
+    nu['n_octane']['backward']  :==-1;
+
+    METHODS
+	METHOD check_self;
+	    RUN reactor.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN input.check_self;
+	    RUN output.check_self;
+	    RUN reactor.check_self;
+	    RUN check_self;
+	END check_all;
+
+	METHOD default_self;
+	    RUN default_all;
+	END default_self;
+
+	METHOD default_all;
+	    RUN reactor.default_all;
+	END default_all;
+
+	METHOD bound_self;
+	END bound_self;
+
+	METHOD bound_all;
+	    RUN reactor.bound_all;
+	END bound_all;
+
+	METHOD specify;
+	    RUN reactor.specify;
+	END specify;
+
+	METHOD scale_self;
+	    RUN reactor.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN reactor.scale_all;
+	END scale_all;
+
+	METHOD values;
+	    input.f['n_butane'] :=100 {kmol/hr};
+	    input.f['butene_1'] :=100 {kmol/hr};
+	    input.f['n_octane'] :=1e-11 {kmol/hr};
+	    input.T :=300 {K};
+	    input.P :=1 {atm};
+	    reactor.state.T	:=320 {K};
+	    reactor.state.P 	:=1 {atm};
+	END values;
+END test_single_phase_cstr;
+
+MODEL test_multiple_phase_cstr() REFINES cmumodel;
+
+    components IS_A set OF symbol_constant;
+    components :==['n_butane','butene_1','n_octane'];
+    cd IS_A components_data(components,'n_octane');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    equilibrated IS_A boolean;
+    vapin IS_A stream(cd,pdV,equilibrated);
+    vapout IS_A stream(cd,pdV,equilibrated);
+    liqin IS_A stream(cd,pdL,equilibrated);
+    liqout IS_A stream(cd,pdL,equilibrated);
+    nr IS_A set OF symbol_constant;
+    Kr[nr] IS_A constant;
+    active_energy[nr] IS_A constant;
+    species[nr]	IS_A set OF symbol_constant;
+    nu[components][nr] IS_A integer_constant;
+    conc[components] IS_A molar_density;
+    kinetics IS_A element_kinetics(components,nr,Kr,active_energy,liqout.T,
+                                   species,nu,conc);
+    dynamic IS_A boolean;
+    t IS_A time;
+    ode_offset IS_A ode_counter;
+    obs_offset IS_A obs_counter;
+
+    reactor IS_A multiple_phase_cstr(vapin, liqin, vapout, liqout, kinetics,
+                                     t, dynamic, ode_offset, obs_offset);
+
+    nr			:==['forward','backward'];
+    Kr['forward']		:== 0.1 {m^3/mol/s};
+    Kr['backward']		:== 10 {1/s};
+    active_energy['forward']	:== 50 {J/mol};
+    active_energy['backward']	:== 50 {J/mol};
+
+    species['forward']		:==['n_butane','butene_1','n_octane'];
+    species['backward']		:==['n_butane','butene_1','n_octane'];
+    nu['n_butane']['forward']   :==-1;
+    nu['butene_1']['forward']   :==-1;
+    nu['n_octane']['forward']   :==1;
+    nu['n_butane']['backward']  :==1;
+    nu['butene_1']['backward']  :==1;
+    nu['n_octane']['backward']  :==-1;
+
+    METHODS
+	METHOD check_self;
+	    RUN reactor.check_self;
+	END check_self;
+
+	METHOD check_all;
+	    RUN reactor.check_all;
+	END check_all;
+
+	METHOD default_self;
+	    RUN default_all;
+	END default_self;
+
+	METHOD default_all;
+	    RUN reactor.default_all;
+	END default_all;
+
+	METHOD bound_self;
+	    RUN bound_all;
+	END bound_self;
+
+	METHOD bound_all;
+	    RUN reactor.bound_all;
+	END bound_all;
+
+	METHOD specify;
+	    RUN reactor.specify;
+	END specify;
+
+	METHOD scale_self;
+	    RUN reactor.scale_self;
+	END scale_self;
+
+	METHOD scale_all;
+	    RUN reactor.scale_all;
+	END scale_all;
+
+	METHOD values;
+	    vapin.f['n_butane'] :=100 {kmol/hr};
+	    vapin.f['butene_1'] :=100 {kmol/hr};
+	    vapin.f['n_octane'] :=1e-10 {kmol/hr};
+	    vapin.T :=300 {K};
+	    vapin.P :=1 {atm};
+	    liqin.f['n_butane'] :=100 {kmol/hr};
+	    liqin.f['butene_1'] :=100 {kmol/hr};
+	    liqin.f['n_octane'] :=1e-10 {kmol/hr};
+	    liqin.T :=300 {K};
+	    liqin.P :=1 {atm};
+	    reactor.state.T	:=320 {K};
+	    reactor.state.P 	:=1 {atm};
+	    reactor.Vol		:=25 {m^3};
+	    reactor.vol_liq	:=12.5 {m^3};
+	END values;
+END test_multiple_phase_cstr;

@@ -1,0 +1,7 @@
+$ link  'P1'  /exe=minost  -
+    minost  , mi05funs,    -    ! put problem-dependent routines here
+    mi10vms ,                               -
+    mi15blas, mi20amat, mi25bfac,           -
+    mi30spec, mi35inpt, mi40bfil, mi50lp  , -
+    mi60srch, mi65rmod, mi70nobj, mi80ncon, -
+    [-]vmsc/opt

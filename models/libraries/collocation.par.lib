@@ -1,0 +1,3736 @@
+(********************************************************************
+
+  collocation.lib
+  by Robert S. Huss
+  Part OF the ASCEND Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+  
+    ********************************************************************)
+
+(*********************************************************************\
+  $Date: 1998/02/26 13:15:50 $
+  $Revision: 1.4 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/collocation.par.lib,v $
+\*********************************************************************)
+(*
+	C O L L O C A T I O N . L I B
+	-----------------------------
+
+	AUTHOR:		Robert S. Huss
+
+	DATES:		5/95 - First Public Release
+                        4/96 - Modified for using constant instance types
+	
+
+	CONTENTS:	Collocation models for distillation modeling. 
+
+
+			 
+
+	REQUIRES:	"system.lib"
+	                "atoms.lib"
+			"components.lib"
+			"H_S_thermodynamics.lib" or "H_G_thermodynamics.lib"
+			"plot.lib"
+			"stream.lib"
+			"flash.lib"
+
+*)
+
+
+(* REQUIRE flash.lib *)
+(* REQUIRE plot.lib *)
+
+
+MODEL lagrange_polynomial(
+    ntrays WILL_BE integer_constant;
+    );
+
+	npoints,
+	order					IS_A integer_constant;
+	W[0..npoints][0..order],
+	w_tray[0..ntrays+1],
+	w_points[0..npoints],
+	w_mid					IS_A factor;
+	f_int,
+	f_mid					IS_A fraction;
+	scale					IS_A scaling_constant;
+	
+
+	change[1..ntrays]			IS_A factor;
+
+	change[1..ntrays] := 1.0;
+
+	npoints :== 2*ntrays + 1;
+	order :== ntrays;
+
+	w_tray[0],
+	    w_points[0]				ARE_THE_SAME;
+	w_tray[ntrays+1],
+	w_points[npoints]			ARE_THE_SAME;
+
+	w_mid = w_tray[0] + f_mid*(w_tray[ntrays+1] - w_tray[0]);
+
+	f_mid := 0.5;
+
+	FOR i IN [0..npoints] CREATE
+	    FOR k IN [0..ntrays] CREATE
+		W[i][k] = PROD[(w_points[i] - w_tray[j])
+		    / (w_tray[k] - w_tray[j]) | j IN
+		    [0..k-1,k+1..ntrays]];
+	    END FOR;
+	END FOR;
+
+	(* point spacing equations *)
+	even IS_A boolean_constant;
+	tray_comp IS_A integer_constant;
+
+	tray_comp :== 2*(ntrays/2);
+	even :== (tray_comp == ntrays);
+	
+
+	count IS_A integer_constant;
+	mult[1..ntrays] IS_A factor;
+	f_count IS_A factor; (* need floating point arithmetic
+				 to set up multipliers *)
+	f_ntrays IS_A factor; (* need floating point arithmetic
+	                     to set up multipliers *)
+		
+	SELECT (even)
+	CASE FALSE: (* odd number OF trays *) 
+	    count :== (ntrays + 1)/2;
+	    f_count := count;
+	    f_ntrays := ntrays;
+	    f_int :=  2/(f_ntrays + 1)*(f_count - 1);
+	    mult[1] := 1;
+	    FOR i IN [2..count - 1] CREATE
+		mult[i] := (f_count - i)/(f_count - 1);
+	    END FOR;
+	    FOR i IN [count + 1..ntrays] CREATE
+		mult[i] := mult[ntrays + 1 - i];
+	    END FOR;
+
+	    w_tray[count], w_mid	ARE_THE_SAME;
+	    FOR i IN [1..count - 1] CREATE
+		w_tray[i] = w_mid - f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	    FOR i IN [count + 1..ntrays] CREATE
+		w_tray[i] = w_mid + f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	CASE TRUE: (* even number OF trays *) 
+	    count :== ntrays/2;
+	    f_count := count;
+	    f_ntrays := ntrays;
+	    f_int := 2/(f_ntrays + 1)*(f_count - 1 + 0.5);
+	    mult[1] := 1;
+	    FOR i IN [2..count] CREATE
+		mult[i] := 1/(f_count + i - 1);
+	    END FOR;
+	    FOR i IN [count + 1..ntrays] CREATE
+		mult[i] := mult[ntrays + 1 - i];
+	    END FOR;
+
+	    FOR i IN [1..count] CREATE
+		w_tray[i] = w_mid - f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	    FOR i IN [count + 1..ntrays] CREATE
+		w_tray[i] = w_mid + f_int*mult[i]*(w_mid - w_tray[0]);
+	    END FOR;
+	END SELECT;
+	
+	
+  METHODS
+
+     METHOD clear;
+	W[0..npoints][0..order].fixed 	:= FALSE;
+	w_tray[0..ntrays+1].fixed	:= FALSE;
+	w_points[0..npoints].fixed 	:= FALSE;
+	w_mid.fixed 			:= FALSE;
+	f_int.fixed 			:= FALSE;
+	f_mid.fixed			:= FALSE;
+	change[1..ntrays].fixed		:= FALSE;
+	mult[1..ntrays].fixed		:= FALSE;
+     END clear;
+     METHOD specify;
+	w_points[0..npoints].fixed	:= TRUE;
+	f_int.fixed 			:= TRUE;
+	f_mid.fixed			:= TRUE;
+	change[1..ntrays].fixed		:= TRUE;
+	mult[1..ntrays].fixed		:= TRUE;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD scale;
+	 f_int.nominal := f_int;
+	 f_mid.nominal := f_mid;
+	 FOR j IN [1..ntrays] DO
+	     change[j].nominal := abs(change[j]);
+	     change[j].lower_bound := change[j] -
+		 scale*change[j].nominal;
+	     change[j].upper_bound := change[j] +
+		 scale*change[j].nominal;
+	 END FOR;
+	 FOR i IN [0..npoints] DO
+	     w_points[i].nominal := abs(w_points[i]) + 0.01;
+	     w_points[i].lower_bound := -2.0;
+	     w_points[i].upper_bound := abs(w_points[i]) +
+		 scale*w_points[i].nominal;
+	     
+	     FOR j IN [0..order] DO
+		 W[i][j].nominal := abs(W[i][j]) + 0.01;
+		 W[i][j].lower_bound := W[i][j] -
+		     scale*W[i][j].nominal;
+		  W[i][j].upper_bound := W[i][j] +
+		     scale*W[i][j].nominal;
+	 
+	     END FOR;
+	 END FOR;
+	 FOR j IN [0..ntrays+1] DO
+	     w_tray[j].nominal := abs(w_tray[j]) + 0.01;
+	     w_tray[j].lower_bound := -2.0;
+	     w_tray[j].upper_bound := w_tray[j] +
+		 scale*w_tray[j].nominal;
+	 END FOR;
+	 w_mid.nominal := abs(w_mid) + 0.01;
+	 w_mid.lower_bound := -2.0;
+	 w_mid.upper_bound := w_mid + scale*w_mid.nominal;
+     END scale;
+     
+END lagrange_polynomial;
+
+
+MODEL collpoint(
+    z WILL_BE factor;
+    s WILL_BE factor;
+    up_down WILL_BE real;
+    a WILL_BE factor;
+    );
+	ztop				IS_A factor;
+	scale				IS_A scaling_constant;
+
+	s_def: z = 1-exp(-a*s);
+	ztopdefn: ztop = 1-(1-z)*exp(-up_down*a);
+
+	a					:= 0.1;
+	z					:= 0.5;
+	ztop					:= 0.5;
+	s					:= 1;
+
+
+	a.lower_bound 				:= 0.0;
+	a.upper_bound				:= 3.0;
+	z.lower_bound				:= -0.5;
+	ztop.lower_bound			:= -0.5;
+	z.upper_bound				:= 1.0;
+	ztop.upper_bound			:= 1.0;
+	s.lower_bound				:= 0.0;
+	
+
+  METHODS
+    METHOD scale;
+	a.nominal := a + 0.01;
+	z.nominal := abs(z) + 0.01;
+	s.nominal := s + 0.01;
+	ztop.nominal := abs(ztop) + 0.01;
+	a.lower_bound := 0.0;
+	a.upper_bound := 3.0;
+	z.lower_bound := -0.5;
+	z.upper_bound := 1.0;
+	s.lower_bound := 0.0;
+	s.upper_bound := s + scale*s.nominal;
+	ztop.lower_bound := -0.5;
+	ztop.upper_bound := 1.0;
+    END scale;
+    
+	
+     METHOD seqmod;
+	a.fixed					:= TRUE;
+	s.fixed					:= TRUE;
+     END seqmod;
+
+     METHOD specify;
+	RUN seqmod;
+     END specify;
+     METHOD clear;
+	a.fixed					:= FALSE;
+	z.fixed					:= FALSE;
+	ztop.fixed				:= FALSE;
+	s_def.included				:= TRUE;
+	ztopdefn.included			:= TRUE;
+     END clear;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD s_off;
+	s_def.included				:= FALSE;
+	s.fixed					:= TRUE;
+     END s_off;
+END collpoint;
+
+
+MODEL z_set(
+    ntrays WILL_BE integer_constant;
+    up_down WILL_BE real;
+    a WILL_BE factor;
+    z_on WILL_BE boolean;
+    );
+
+    s_values[0..ntrays+1],
+	z_values[0..ntrays+1],
+	stot			IS_A factor;
+
+
+    FOR i IN [0..ntrays+1] CREATE
+	z[i] IS_A collpoint(z_values[i],s_values[i],up_down,a);
+    END FOR;
+    
+    ztop,
+	zbot			IS_A factor;
+    
+    lgr IS_A lagrange_polynomial(ntrays);
+    
+    scale				IS_A scaling_constant;
+    
+    z_on := FALSE;
+    
+    
+    stot = s_values[ntrays+1] - s_values[0];
+    
+    s_values[0] := 0;
+    z_values[0] := 0;
+    
+    stot.lower_bound := 0.0;
+    
+    
+    FOR j IN [1..ntrays] CREATE
+	lgr.w_points[2*j-1],
+	    lgr.w_tray[j]		ARE_THE_SAME;
+    END FOR;	
+    
+    
+    (*	z_based		*)
+    FOR j IN [1..ntrays] CREATE
+	
+	z_based_odd[2*j-1]: lgr.w_points[2*j-1] = 
+	    z_values[j];
+	z_based_even[2*j]: lgr.w_points[2*j] =
+	    z[j].ztop;
+    END FOR;	
+    
+    z_based_0: lgr.w_points[0] = z_values[0];
+    z_based_n: lgr.w_points[lgr.npoints] =
+	z_values[ntrays+1];
+    
+    
+    (*	s_based	 	*)
+    
+    FOR j IN [1..ntrays] CREATE
+	
+	s_based_odd[2*j-1]: lgr.w_points[2*j-1] = 
+	    s_values[j];
+	s_based_even[2*j]: lgr.w_points[2*j] =
+	    s_values[j] + z[0].up_down;
+    END FOR;	
+    
+    s_based_0: lgr.w_points[0] = s_values[0];
+    s_based_n: lgr.w_points[lgr.npoints] =
+	s_values[ntrays+1];
+    
+    
+    ztop = (up_down+1)*z_values[ntrays+1]/2 +(1-up_down)*z_values[0]/2;
+    zbot = (up_down+1)*z_values[0]/2 +(1-up_down)*z_values[ntrays+1]/2;
+    
+    tray_delta		IS_A factor;
+    
+    s_values[ntrays] + tray_delta = s_values[ntrays+1];
+
+    WHEN(z_on)
+    CASE TRUE:
+	USE z_based_odd;
+        USE z_based_even;
+	USE z_based_0;
+	USE z_based_n;
+    CASE FALSE:
+	USE s_based_odd;
+        USE s_based_even;
+	USE s_based_0;
+	USE s_based_n;
+    END WHEN;
+    
+
+  METHODS
+    METHOD scale;
+	RUN z[0..ntrays+1].scale;
+	RUN lgr.scale;
+	stot.nominal := stot + 0.01;
+	stot.lower_bound := 1e-8;
+	stot.upper_bound := stot + scale*stot.nominal;
+	tray_delta.nominal := tray_delta + 0.01;
+	tray_delta.lower_bound := 1e-8;
+	tray_delta.upper_bound := tray_delta +
+	    scale*tray_delta.nominal;
+	ztop.nominal := abs(ztop) + 0.01;
+	ztop.lower_bound := -0.5;
+	ztop.upper_bound := 1.0;
+	zbot.nominal := abs(zbot) + 0.01;
+	zbot.lower_bound := -0.5;
+	zbot.upper_bound := 1.0;
+    END scale;
+
+    METHOD clear;
+	z_values[0..ntrays+1].fixed		:= FALSE;
+	s_values[0..ntrays+1].fixed		:= FALSE;
+	RUN z[0..ntrays+1].clear;
+	ztop.fixed				:= FALSE;
+	zbot.fixed				:= FALSE;
+	stot.fixed				:= FALSE;
+	a.fixed					:= FALSE;
+	FOR j IN [1..ntrays] DO
+	    z_based_odd[2*j-1].included 	:= TRUE;
+	    z_based_even[2*j].included 		:= TRUE;
+	    s_based_odd[2*j-1].included 	:= TRUE;
+	    s_based_even[2*j].included 		:= TRUE;
+	END FOR;
+	z_based_0.included 			:= TRUE;
+	z_based_n.included 			:= TRUE;
+	s_based_0.included 			:= TRUE;
+	s_based_n.included 			:= TRUE;
+	RUN lgr.clear;
+	tray_delta.fixed 			:= FALSE;
+    END clear;
+    METHOD specify;
+	RUN lgr.specify;
+	lgr.w_points[0..lgr.npoints].fixed 	:= FALSE;
+	a.fixed					:= TRUE;
+	s_values[0].fixed			:= TRUE;
+	stot.fixed				:= TRUE;
+    END specify;
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD s_off;
+	RUN z[ntrays..ntrays+1].s_off;
+    END s_off;
+
+END z_set;
+
+MODEL coll(
+    ntrays WILL_BE integer_constant;
+    topliq WILL_BE liquid_stream;
+    topvap WILL_BE vapor_stream;
+    botliq WILL_BE liquid_stream;
+    botvap WILL_BE vapor_stream;
+    reduce WILL_BE fraction;
+    equilibrated WILL_BE boolean;
+    up_down WILL_BE real;
+    a WILL_BE factor;
+    z_on WILL_BE boolean;
+    hat_on WILL_BE boolean;
+    hb_on WILL_BE boolean;
+    P WILL_BE pressure;
+) WHERE (
+(*
+	ntrays > 1;
+*)
+	topvap, topliq, botvap, botliq WILL_NOT_BE_THE_SAME;
+	topvap.state.options, botvap.state.options WILL_BE_THE_SAME;
+	botliq.state.options, topliq.state.options WILL_BE_THE_SAME;
+);
+
+	liquid_options ALIASES botliq.state.options;
+	vapor_options ALIASES topvap.state.options;
+	liqin_P[1..ntrays] IS_A pressure;
+	vapin_P[1..ntrays] IS_A pressure;
+	vapout_P[1..ntrays] IS_A pressure;
+	liqin_T[1..ntrays] IS_A temperature;
+	vapin_T[1..ntrays] IS_A temperature;
+	vapout_T[1..ntrays] IS_A temperature;
+
+(* this is a constant pressure MODEL *)
+	FOR i IN [1..ntrays] CREATE
+	    liqin_P[i] = P;
+	    vapin_P[i] = P;
+	END FOR;
+		
+	liqout_P[tP] ALIASES
+	    (vapout_P[1..ntrays])
+	    WHERE tP IS_A set OF integer_constant
+	    WITH_VALUE (1..ntrays);
+	liqout_T[tT] ALIASES
+	    (vapout_T[1..ntrays])
+	    WHERE tT IS_A set OF integer_constant
+	    WITH_VALUE (1..ntrays);
+	
+	FOR i IN [1..ntrays] CREATE
+	        liqin_state[i] IS_A liquid_mixture(
+			liqin_P[i],
+			liqin_T[i],
+			liquid_options
+		);
+	        liqout_state[i] IS_A liquid_mixture(
+			liqout_P[i],
+			liqout_T[i],
+			liquid_options
+		);
+	        vapin_state[i] IS_A vapor_mixture(
+			vapin_P[i],
+			vapin_T[i],
+			vapor_options
+		);
+	        vapout_state[i] IS_A vapor_mixture(
+			vapout_P[i],
+			vapout_T[i],
+			vapor_options
+		);
+        END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+		tray_state[i] IS_A td_VLE_mixture(
+			vapout_P[i],
+			vapout_T[i],
+			vapout_state[i],
+			liqout_state[i],
+			equilibrated
+		);
+	END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+	    vapout[i] IS_A vapor_stream(
+		vapout_state[i]
+	    );
+	    vapin[i] IS_A vapor_stream(
+		vapin_state[i]
+	    );
+	    liqout[i] IS_A liquid_stream(
+		liqout_state[i]
+	    );
+	    liqin[i] IS_A liquid_stream(
+		liqin_state[i]
+	    );
+	END FOR;
+
+	FOR i IN [1..ntrays] CREATE
+		tray[i] IS_A tray(
+			liqin[i],
+			vapin[i],
+			liqout[i],
+			vapout[i],
+			tray_state[i]
+		);
+	END FOR;		
+
+	components ALIASES topliq.components;
+	inactive_component ALIASES topliq.state.options.ds.reference;
+	
+	x_order,
+	    y_order				IS_A integer_constant;
+
+	x_coeff[components
+	    - [inactive_component]]
+	    [0..x_order],
+	    y_coeff[components
+	    - [inactive_component]]
+	    [0..y_order],
+	    cmo[1..ntrays],
+	    cmotot				IS_A factor;
+
+
+
+	z_set IS_A z_set(ntrays,up_down,a,z_on);
+	x[1..ntrays][components]	IS_A fraction;
+	y[1..ntrays][components]	IS_A fraction;
+	x_hat[1..ntrays][components]	IS_A factor;
+	scale				IS_A scaling_constant;
+
+	z_on 		:= FALSE;
+	hat_on 		:= FALSE;
+
+	FOR i IN components CREATE
+	    FOR j IN [1..ntrays] CREATE
+		x[j][i] = (1+z_set.up_down)
+		    *tray[ntrays+1-j].liqout.state.y[i]/2
+		    + (1-z_set.up_down)
+		    *tray[j].liqout.state.y[i]/2;
+		y[j][i] = (1+z_set.up_down)
+		    *tray[ntrays+1-j].vapin.state.y[i]/2
+		    + (1-z_set.up_down)
+		    *tray[j].vapin.state.y[i]/2;
+		x_hat[j][i] = (1+z_set.up_down)
+		    *tray_x_hat['out'][i][ntrays+1-j]/2
+		    + (1-z_set.up_down)
+		    *tray_x_hat['out'][i][j]/2;
+	    END FOR;
+	END FOR;
+
+	x_order 	:== ntrays;
+	y_order 	:== ntrays;
+
+
+	y_coeff[components - [inactive_component]][0..y_order] := 0.5;
+	x_coeff[components - [inactive_component]][0..x_order] := 0.5;
+
+	(* KHACK: ABOVE IS FINE, CMO MAY NOT BE NEEDED *)
+	(* constant molar overflow model - instead of heat balance *)
+
+	FOR j IN [1..ntrays] CREATE
+	    cmo[j]*tray[j].liqin.Ftot = botliq.Ftot;
+	END FOR;
+
+	cmotot*topliq.Ftot = botliq.Ftot;
+
+	FOR i IN components CREATE
+	    overall_MB[i]: topliq.f[i] - topvap.f[i] =
+		botliq.f[i] - botvap.f[i];
+	END FOR;
+
+	(* xtrans stuff *)
+
+	tray_x_hat['in','out'][components][1..ntrays],
+	    tray_y_hat['in','out'][components][1..ntrays],
+	    end_x_hat['top','bot'][components],
+	    end_y_hat['top','bot'][components]	IS_A factor;
+	td		IS_A real;
+
+	td := 1.0;
+
+	tray_x_hat['in','out'][components][1..ntrays].nominal := 20;
+	tray_y_hat['in','out'][components][1..ntrays].nominal := 20;
+	end_x_hat['top','bot'][components].nominal := 20;
+	end_y_hat['top','bot'][components].nominal := 20;
+
+	tray_x_hat['in','out'][components][1..ntrays] := 1;
+	tray_y_hat['in','out'][components][1..ntrays] := 1;
+	end_x_hat['top','bot'][components] := 1;
+	end_y_hat['top','bot'][components] := 1;
+
+	FOR i IN components CREATE
+	    (1.0)*(2.0*botliq.state.y[i] - 1.0)
+		= tanh(end_x_hat['bot'][i]*td);
+	    (1.0)*(2.0*topliq.state.y[i] - 1.0)
+		= tanh(end_x_hat['top'][i]*td); 
+	    (1.0)*(2.0*botvap.state.y[i] - 1.0)
+		= tanh(end_y_hat['bot'][i]*td); 
+	    (1.0)*(2.0*topvap.state.y[i] - 1.0)
+		= tanh(end_y_hat['top'][i]*td); 
+
+	END FOR;
+
+	FOR i IN components CREATE
+
+	    FOR j IN [1..ntrays] CREATE
+
+		(1.0)*(2.0*tray[j].liqout.state.y[i] - 1.0)
+		    = tanh(tray_x_hat['out'][i][j]*td);
+		(1.0)*(2.0*tray[j].liqin.state.y[i] - 1.0)
+		    = tanh(tray_x_hat['in'][i][j]*td); 
+		(1.0)*(2.0*tray[j].vapout.state.y[i] - 1.0)
+		    = tanh(tray_y_hat['out'][i][j]*td); 
+		(1.0)*(2.0*tray[j].vapin.state.y[i] - 1.0)
+		    = tanh(tray_y_hat['in'][i][j]*td); 
+	    END FOR;
+	END FOR;
+
+	(* polynomial *)
+
+	(* Overall material balances *)
+
+	FOR j IN [1..ntrays] CREATE
+	    tot_trayMB[j]: botvap.Ftot - botliq.Ftot =
+		tray[j].vapout.Ftot -
+		tray[j].liqin.Ftot;
+
+	END FOR;
+
+	FOR i IN components - [inactive_component] CREATE
+	    FOR j IN [1..ntrays] CREATE
+		frac_x_in[j][i]:  tray[j].liqin.state.y[i] =
+		    SUM[z_set.lgr.W[2*j][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		frac_y_in[j][i]:  tray[j].vapin.state.y[i] =
+		    SUM[z_set.lgr.W[2*j-1][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+		frac_x_out[j][i]:  tray[j].liqout.state.y[i] =
+		    SUM[z_set.lgr.W[2*j-1][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		frac_y_out[j][i]:  tray[j].vapout.state.y[i] =
+		    SUM[z_set.lgr.W[2*j][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+	    END FOR;
+	END FOR;
+
+	FOR i IN components - [inactive_component] CREATE
+	    FOR j IN [1..ntrays] CREATE
+
+		trans_x_out[j][i]: tray_x_hat['out'][i][j] =
+		    SUM[z_set.lgr.W[2*j-1][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		trans_x_in[j][i]: tray_x_hat['in'][i][j] =
+		    SUM[z_set.lgr.W[2*j][k]*x_coeff[i][k]
+		    | k IN [0..x_order]];
+		trans_y_out[j][i]: tray_y_hat['out'][i][j] =
+		    SUM[z_set.lgr.W[2*j][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+		trans_y_in[j][i]: tray_y_hat['in'][i][j] =
+		    SUM[z_set.lgr.W[2*j-1][k]*y_coeff[i][k]
+		    | k IN [0..y_order]];
+	    END FOR;
+	END FOR;
+
+
+	FOR i IN components - [inactive_component] CREATE
+	    frac_x_top[1][i]:  topliq.state.y[i] 
+		= SUM[((z_set.up_down+1)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[0][k]/2)*x_coeff[i][k]
+		| k IN [0..x_order]];
+	    frac_y_top[1][i]:  topvap.state.y[i] 
+		= SUM[((z_set.up_down+1)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[0][k]/2)*y_coeff[i][k]
+		| k IN [0..y_order]];
+	    frac_y_bot[1][i]: botvap.state.y[i] 
+		= SUM[((z_set.up_down+1)
+		*z_set.lgr.W[0][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+		*y_coeff[i][k]
+		| k IN [0..y_order]];
+	END FOR;
+
+	FOR i IN components - [inactive_component] CREATE
+	    trans_x_top[1][i]: end_x_hat['top'][i] 
+		= SUM[(((z_set.up_down+1)*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2))*x_coeff[i][k]
+		| k IN [0..x_order]];
+	    trans_y_top[1][i]: end_y_hat['top'][i] 
+		= SUM[(((z_set.up_down+1)*z_set.lgr.W[z_set.lgr.npoints][k]/2
+		+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2))*y_coeff[i][k]
+		| k IN [0..y_order]];
+	    trans_y_bot[1][i]: end_y_hat['bot'][i] 
+		= SUM[((z_set.up_down+1)*z_set.lgr.W[0][k]/2
+		+ (1-z_set.up_down)
+		*z_set.lgr.W[z_set.lgr.npoints][k]/2)*y_coeff[i][k]
+		| k IN [0..y_order]];
+	END FOR;
+
+
+	slope[components]	IS_A factor;
+
+	FOR i IN components CREATE
+	    slope[i]*z_set.stot = abs(topliq.state.y[i] - botliq.state.y[i]);
+	END FOR;
+
+
+	aslope[components]			IS_A factor;
+	intercept[components]			IS_A fraction;
+	slope_slack[1..ntrays][components]	IS_A factor;
+
+
+
+
+	FOR i IN components CREATE
+	    botpoint[i]: botliq.state.y[i] = aslope[i]*z_set.zbot +
+		intercept[i];
+	    toppoint[i]: topliq.state.y[i] = aslope[i]*z_set.ztop +
+		intercept[i];
+	    FOR j IN [1..ntrays] CREATE
+		midpoint[j][i]: tray[j].liqout.state.y[i] =
+		    aslope[i]*(z_set.z_values[j] - z_set.zbot) +
+		    intercept[i] + slope_slack[j][i];
+	    END FOR;
+	END FOR;
+
+    WHEN(hat_on)
+    CASE TRUE:
+	USE trans_x_out;
+        USE trans_x_in;
+	USE trans_y_out;
+	USE trans_y_in;
+	USE trans_x_top;
+	USE trans_y_top;
+	USE trans_y_bot;
+    CASE FALSE:
+	USE frac_x_in;
+        USE frac_y_in;
+	USE frac_x_out;
+	USE frac_y_out;
+	USE frac_x_top;
+	USE frac_y_top;
+	USE frac_y_bot;
+    END WHEN;
+
+    (* ENTHALPY / HEAT-BALANCE SECTION *)
+    h_order ALIASES ntrays;
+    h_coeff['liquid','vapor'][0..h_order]	IS_A molar_energy;
+    Qtot,
+	Qin[1..ntrays]				IS_A energy_rate;
+
+    Overall_HB: Qtot + topliq.Htot + botvap.Htot =
+	botliq.Htot + topvap.Htot;
+    
+    FOR j IN [1..ntrays] CREATE
+	tot_trayHB[j]: Qin[j] +topliq.Htot - topvap.Htot =
+	    tray[j].liqout.Htot -
+	    tray[j].vapout.Htot;
+    END FOR;	
+
+    (* end points *)
+
+    h_end_topliq: topliq.H = SUM[((z_set.up_down+1)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2
+	+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2)
+	*h_coeff['liquid'][k]
+	| k IN [0..h_order]];
+    h_end_topvap: topvap.H = SUM[((z_set.up_down+1)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2
+	+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2)
+	*h_coeff['vapor'][k]
+	| k IN [0..h_order]];
+    h_end_botliq: botliq.H =  SUM[((z_set.up_down+1)
+	*z_set.lgr.W[0][k]/2
+	+ (1-z_set.up_down)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+	*h_coeff['liquid'][k]
+	| k IN [0..h_order]];
+    h_end_botvap: botvap.H = SUM[((z_set.up_down+1)
+	*z_set.lgr.W[0][k]/2
+	+ (1-z_set.up_down)
+	*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+	*h_coeff['vapor'][k]
+	| k IN [0..h_order]]; 
+    (* interior points *)
+    FOR j IN [1..ntrays] CREATE
+	
+	h_int_liqout[j]: tray[j].liqout.H =
+	    SUM[z_set.lgr.W[2*j-1][k]*h_coeff['liquid'][k]
+	    | k IN [0..h_order]];
+	h_int_liqin[j]: tray[j].liqin.H =
+	    SUM[z_set.lgr.W[2*j][k]*h_coeff['liquid'][k]
+	    | k IN [0..h_order]];
+	h_int_vapout[j]: tray[j].vapout.H =
+	    SUM[z_set.lgr.W[2*j][k]*h_coeff['vapor'][k]
+	    | k IN [0..h_order]];
+	h_int_vapin[j]: tray[j].vapin.H =
+	    SUM[z_set.lgr.W[2*j-1][k]*h_coeff['vapor'][k]
+	    | k IN [0..h_order]];
+    END FOR;
+
+    use_H_eqns IS_A boolean;
+    WHEN(use_H_eqns)
+    CASE TRUE:
+	USE Overall_HB;
+        USE tot_trayHB;
+	USE h_end_topliq;
+	USE h_end_topvap;
+    	USE h_end_botliq;
+        USE h_end_botvap;
+	USE h_int_liqout;
+	USE h_int_liqin;
+	USE h_int_vapout;
+	USE h_int_vapin;
+    END WHEN;
+
+  METHODS
+
+    METHOD clear;
+	RUN topliq.clear;
+	RUN botliq.clear;
+	RUN topvap.clear;
+	RUN botvap.clear;
+	x_coeff[components 
+	    - [inactive_component]][0..x_order].fixed	:= FALSE;
+	y_coeff[components 
+	    - [inactive_component]][0..y_order].fixed	:= FALSE;
+	cmo[1..ntrays].fixed 					:= FALSE;
+	cmotot.fixed 						:= FALSE;
+	RUN z_set.clear;
+	RUN tray[1..ntrays].clear;	
+	frac_x_in[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	frac_y_in[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	frac_x_out[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	frac_y_out[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	frac_x_top[1][components 
+	    - [inactive_component]].included 		:=TRUE;
+	frac_y_top[1][components 
+	    - [inactive_component]].included 		:=TRUE;
+	frac_y_bot[1][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_x_out[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_x_in[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_y_out[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_y_in[1..ntrays][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_x_top[1][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_y_top[1][components 
+	    - [inactive_component]].included 		:=TRUE;
+	trans_y_bot[1][components 
+	    - [inactive_component]].included 		:=TRUE;
+	tray_x_hat['in','out'][components][1..ntrays].fixed	:= FALSE;
+	tray_y_hat['in','out'][components][1..ntrays].fixed	:= FALSE;
+	end_x_hat['top','bot'][components].fixed		:= FALSE;
+	end_y_hat['top','bot'][components].fixed		:= FALSE;
+	x[1..ntrays][components].fixed				:= FALSE;
+	y[1..ntrays][components].fixed				:= FALSE;
+	x_hat[1..ntrays][components].fixed			:= FALSE;
+	slope[components].fixed					:= FALSE;
+	aslope[components].fixed				:= FALSE;
+	intercept[components].fixed				:= FALSE;
+	slope_slack[1..ntrays][components].fixed		:= FALSE;
+	toppoint[components].included				:= TRUE;
+	botpoint[components].included				:= TRUE;
+	midpoint[1..ntrays][components].included		:= TRUE;
+
+	h_coeff['liquid','vapor'][0..h_order].fixed		:= FALSE;
+	Qtot.fixed						:= FALSE;
+	Qin[1..ntrays].fixed					:= FALSE;
+	slope[components].fixed					:= FALSE;
+    END clear;
+    METHOD seqmod;
+	cmo[1..ntrays].fixed 				:= TRUE;
+	cmotot.fixed					:= TRUE;
+	RUN tray[1..ntrays].seqmod;
+	RUN z_set.specify;
+(*	RUN tray[1..ntrays].input[tray[1].inputs].seqmod;*)
+	RUN tray[1..ntrays].liqin.seqmod;
+	RUN tray[1..ntrays].vapin.seqmod;
+	RUN topliq.seqmod;
+	RUN botvap.seqmod;
+	RUN topvap.seqmod;
+	RUN botliq.seqmod;
+(* 	tray[1..ntrays].input[tray[1].inputs].H.fixed 		:= FALSE;*)
+ 	tray[1..ntrays].liqin.H.fixed 		:= FALSE;
+ 	tray[1..ntrays].vapin.H.fixed 		:= FALSE;
+	topvap.H.fixed						:= FALSE;
+	botliq.H.fixed						:= FALSE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+	(* extra crap to get DOF correct...check parts sometime *)
+(*	liqin_P[1..ntrays].fixed 				:= TRUE;
+	vapin_P[1..ntrays].fixed 				:= TRUE;
+	vapout_P[1..ntrays].fixed			       	:= FALSE;
+	liqout_P[1..ntrays].fixed			       	:= FALSE;
+	tray_state[1..ntrays].P.fixed				:= TRUE;
+	tray[1..ntrays].tray_state.P.fixed			:= TRUE;*)
+(*	vapout_T[1..ntrays].fixed			       	:= FALSE;
+	liqout_T[1..ntrays].fixed			       	:= FALSE;*)
+(*	botliq.state.T.fixed					:= FALSE;*)
+
+
+        liqin_T[1..ntrays].fixed 				:= FALSE;
+	vapin_T[1..ntrays].fixed 				:= FALSE;
+
+	topvap.state.T.fixed					:= FALSE;
+	botliq.state.T.fixed					:= FALSE;
+	topliq.state.T.fixed					:= FALSE;
+	botvap.state.T.fixed					:= FALSE;
+
+(*	topvap.state.P.fixed					:= FALSE;
+	botliq.state.P.fixed					:= FALSE;*)
+	topliq.state.P.fixed					:= FALSE;
+	botvap.state.P.fixed					:= FALSE;
+
+    END seqmod;
+
+    METHOD seqmod_massbal;
+	hb_on := FALSE;
+	equilibrated := FALSE;
+	use_H_eqns := hb_on OR equilibrated;
+	
+	cmo[1..ntrays].fixed 				:= TRUE;
+	cmotot.fixed					:= TRUE;
+
+	RUN tray[1..ntrays].seqmod_massbal;
+	RUN z_set.specify;
+
+	RUN topliq.seqmod;
+	RUN botvap.seqmod;
+	RUN topvap.seqmod;
+	RUN botliq.seqmod;
+
+	RUN CMO;
+	
+	P.fixed := TRUE;
+    END seqmod_massbal;
+
+    METHOD seqmod_fullthermo;
+	hb_on := FALSE;
+	equilibrated := TRUE;
+	use_H_eqns := hb_on OR equilibrated;
+		
+	cmo[1..ntrays].fixed 				:= TRUE;
+	cmotot.fixed					:= TRUE;
+	RUN tray[1..ntrays].seqmod_fullthermo;
+	RUN z_set.specify;
+
+	RUN topliq.seqmod;
+	RUN botvap.seqmod;
+	RUN topvap.seqmod;
+	RUN botliq.seqmod;
+
+	RUN CMO;
+		
+	topliq.state.T.fixed := FALSE;
+	botvap.state.T.fixed := FALSE;
+	topvap.state.T.fixed := FALSE;
+	botliq.state.T.fixed := FALSE;
+
+	P.fixed := TRUE;
+    END seqmod_fullthermo;
+
+    METHOD seqmod_adiabatic;
+	hb_on := TRUE;
+	equilibrated := TRUE;
+	use_H_eqns := hb_on OR equilibrated;
+	RUN seqmod_fullthermo;
+	RUN heat_balance;
+    END seqmod_adiabatic;
+        
+     METHOD heat_balance;
+	hb_on							:= TRUE;
+	RUN tray[1..ntrays].heat_balance;
+	Qtot.fixed 						:= TRUE;
+	cmotot.fixed 						:= FALSE;
+	Qin[1..ntrays].fixed 					:= TRUE;
+	cmo[1..ntrays].fixed 					:= FALSE;
+     END heat_balance;
+     METHOD CMO;
+	 hb_on							:= FALSE;
+	 tray[1..ntrays].cmo_ratio.fixed			:= TRUE;
+	 tray[1..ntrays].Qin.fixed				:= FALSE;
+	 Qtot.fixed 						:= FALSE;
+	 cmotot.fixed 						:= TRUE;
+	 Qin[1..ntrays].fixed 					:= FALSE;
+	 cmo[1..ntrays].fixed 					:= TRUE;
+     END CMO;
+    METHOD specify;
+	IF (hb_on AND NOT(equilibrated)) THEN
+	    equilibrated := TRUE;
+	END IF;
+	IF (hb_on AND equilibrated) THEN
+	    RUN seqmod_adiabatic;
+	END IF;
+	IF (NOT(hb_on) AND equilibrated) THEN
+	    RUN seqmod_fullthermo;
+	END IF;
+	IF (NOT(hb_on) AND NOT(equilibrated)) THEN
+	    RUN seqmod_massbal;
+	END IF;
+	    
+	RUN topliq.specify;
+	RUN botvap.specify;
+    END specify;
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+METHOD reset_to_massbal;
+	hb_on	:= FALSE;
+	equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+        hb_on	:= FALSE;
+    	equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+        hb_on	:= TRUE;
+    	equilibrated := TRUE;
+	RUN reset;
+END reset_to_adiabatic;
+
+METHOD zero_Q;
+	reduce := 0;
+	RUN reduce_Q;
+END zero_Q;
+
+METHOD reduce_Q;
+	FOR j IN [Tray_set] DO
+		Stack[j].Qin := reduce * Stack[j].Qin;
+	END FOR;
+END reduce_Q;
+    
+    METHOD scale;
+	RUN topliq.scale;
+	RUN topvap.scale;
+	RUN botliq.scale;
+	RUN botvap.scale;
+	RUN tray[1..ntrays].scale;
+	RUN z_set.scale;
+
+	FOR i IN components - [inactive_component] DO
+	    FOR j IN [0..x_order] DO
+		x_coeff[i][j].nominal :=
+		    abs(x_coeff[i][j]) + 0.00001;
+		x_coeff[i][j].lower_bound :=
+		    x_coeff[i][j] - scale*x_coeff[i][j].nominal;
+		x_coeff[i][j].upper_bound :=
+		    x_coeff[i][j] + scale*x_coeff[i][j].nominal;
+	    END FOR;
+	    FOR j IN [0..y_order] DO
+		y_coeff[i][j].nominal :=
+		    abs(y_coeff[i][j]) + 0.00001;
+		y_coeff[i][j].lower_bound :=
+		    y_coeff[i][j] - scale*y_coeff[i][j].nominal;
+		y_coeff[i][j].upper_bound :=
+		    y_coeff[i][j] + scale*y_coeff[i][j].nominal;
+	    END FOR;
+	END FOR;
+	FOR j IN [1..ntrays] DO
+	    cmo[j].nominal := cmo[j];
+	    cmo[j].lower_bound := 1e-8;
+	    cmo[j].upper_bound := cmo[j] + scale*cmo[j].nominal;
+	END FOR;
+	cmotot.nominal := cmotot;
+	cmotot.lower_bound := 1e-8;
+	cmotot.upper_bound := cmotot + scale*cmotot.nominal;
+	FOR i IN components DO
+	    FOR j IN [1..ntrays] DO
+		x[j][i].nominal := x[j][i];
+		y[j][i].nominal := y[j][i];
+		x_hat[j][i].nominal := abs(x_hat[j][i]);
+		x_hat[j][i].lower_bound := x_hat[j][i] -
+		    scale*x_hat[j][i].nominal;
+		x_hat[j][i].upper_bound := x_hat[j][i] +
+		    scale*x_hat[j][i].nominal;
+
+		FOR k IN ['in','out'] DO
+		    tray_x_hat[k][i][j].nominal :=
+			abs(tray_x_hat[k][i][j]);
+		    tray_x_hat[k][i][j].lower_bound :=
+			tray_x_hat[k][i][j] -
+			scale*tray_x_hat[k][i][j].nominal;
+		    tray_x_hat[k][i][j].upper_bound :=
+			tray_x_hat[k][i][j] +
+			scale*tray_x_hat[k][i][j].nominal;
+		    tray_y_hat[k][i][j].nominal :=
+			abs(tray_y_hat[k][i][j]);
+		    tray_y_hat[k][i][j].lower_bound :=
+			tray_y_hat[k][i][j] -
+			scale*tray_y_hat[k][i][j].nominal;
+		    tray_y_hat[k][i][j].upper_bound :=
+			tray_y_hat[k][i][j] +
+			scale*tray_y_hat[k][i][j].nominal;
+		END FOR;
+	    END FOR;
+	    FOR k IN ['top','bot'] DO
+		end_x_hat[k][i].nominal := abs(end_x_hat[k][i]);
+		end_x_hat[k][i].lower_bound := end_x_hat[k][i] -
+		    scale*end_x_hat[k][i].nominal;
+		end_x_hat[k][i].upper_bound := end_x_hat[k][i] +
+		    scale*end_x_hat[k][i].nominal;
+		end_y_hat[k][i].nominal := abs(end_y_hat[k][i]);
+		end_y_hat[k][i].lower_bound := end_y_hat[k][i] -
+		    scale*end_y_hat[k][i].nominal;
+		end_y_hat[k][i].upper_bound := end_y_hat[k][i] +
+		    scale*end_y_hat[k][i].nominal;
+	    END FOR;
+	    slope[i].nominal := abs(slope[i]);
+	    slope[i].lower_bound := slope[i] - scale*slope[i];
+	    slope[i].upper_bound := slope[i] + scale*slope[i];
+	END FOR;
+	FOR i IN ['liquid','vapor'] DO
+	    FOR j IN [0..h_order] DO
+		h_coeff[i][j].nominal := abs(h_coeff[i][j]);
+		h_coeff[i][j].lower_bound := h_coeff[i][j] -
+		    scale*h_coeff[i][j].nominal;
+		h_coeff[i][j].upper_bound :=h_coeff[i][j] + scale*
+		    h_coeff[i][j].nominal;
+	    END FOR;
+	END FOR;
+	Qtot.nominal := abs(Qtot);
+	Qtot.lower_bound := Qtot - scale*Qtot.nominal;
+	Qtot.upper_bound := Qtot + scale*Qtot.nominal;
+	FOR j IN [1..ntrays] DO
+	    Qin[j].nominal := abs(Qin[j]);
+	    Qin[j].lower_bound := Qin[j] - scale*Qin[j].nominal;
+	    Qin[j].upper_bound := Qin[j] + scale*Qin[j].nominal;
+	END FOR;
+    END scale;
+    METHOD s_off;
+	RUN z_set.s_off;
+    END s_off;
+END coll;
+
+MODEL std_coll_stack(
+    ntrays WILL_BE integer_constant;
+    topvap WILL_BE vapor_stream;
+    topliq WILL_BE liquid_stream;
+    botvap WILL_BE vapor_stream;
+    botliq WILL_BE liquid_stream;
+    equilibrated WILL_BE boolean;	
+    reduce WILL_BE fraction;
+    z_on WILL_BE boolean;
+    hat_on WILL_BE boolean;
+    hb_on WILL_BE boolean;
+    P WILL_BE pressure;
+    );
+
+    liquid_options ALIASES botliq.state.options;
+    vapor_options ALIASES topvap.state.options;
+    internal_coll_liq_P[1..ncolls-1] IS_A pressure;
+    internal_coll_liq_T[1..ncolls-1] IS_A temperature;
+    internal_coll_vap_P[1..ncolls-1] IS_A pressure;
+    internal_coll_vap_T[1..ncolls-1] IS_A temperature;
+
+(* this is a constant pressure MODEL *)
+	FOR i IN [1..ncolls-1] CREATE
+	    internal_coll_liq_P[i] = P;
+	    internal_coll_vap_P[i] = P;
+	END FOR;
+
+    FOR i IN [1..ncolls-1] CREATE
+	internal_liquid_state[i] IS_A liquid_mixture(
+	    internal_coll_liq_P[i],
+	    internal_coll_liq_T[i],
+	    liquid_options
+	    );
+    END FOR;
+    FOR i IN [1..ncolls-1] CREATE
+	internal_vapor_state[i] IS_A vapor_mixture(
+	    internal_coll_vap_P[i],
+	    internal_coll_vap_T[i],
+	    vapor_options
+	    );
+    END FOR;
+
+    FOR i IN [1..ncolls-1] CREATE
+	internal_vapor[i] IS_A vapor_stream(
+	    internal_vapor_state[i]
+	    );
+    END FOR;
+    coll_vapin[csV] ALIASES
+	(topvap, internal_vapor[1..ncolls-1], botvap)
+	WHERE csV IS_A set OF integer_constant 
+	WITH_VALUE (0..ncolls);
+    
+    FOR i IN [1..ncolls-1] CREATE
+	internal_liquid[i] IS_A liquid_stream(
+	    internal_liquid_state[i]
+	    );
+    END FOR;
+    coll_liqin[csL] ALIASES
+	(topliq, internal_liquid[1..ncolls-1], botliq)
+	WHERE csL IS_A set OF integer_constant 
+	WITH_VALUE (1..ncolls+1);
+
+    Coll_set IS_A set OF integer_constant;
+
+    ncolls IS_A integer_constant;
+    ncolls :== 2;
+    
+    up_down[1..ncolls] IS_A real;
+    up_down[1] := -1;
+    up_down[2] := 1;
+    
+    a IS_A factor;
+    a := 0.1;
+    
+    FOR i IN [1..ncolls] CREATE
+	coll[i] IS_A coll(
+	    ntrays,
+	    coll_liqin[i],
+	    coll_vapin[i-1],
+	    coll_liqin[i+1],
+	    coll_vapin[i],
+	    reduce,
+	    equilibrated,
+	    up_down[i],
+	    a,
+	    z_on,
+	    hat_on,
+	    hb_on,
+	    P
+	    );
+    END FOR;
+    
+	straight_choice			IS_A symbol_constant;
+	split[1..ncolls]		IS_A fraction;
+	stot				IS_A factor;
+	scale				IS_A scaling_constant;
+
+	FOR j IN [1..ncolls] CREATE
+		tray_split[j]: coll[j].z_set.stot = split[j]*stot;
+		split[j] := 1.0/ncolls;
+
+	END FOR;
+
+	stot_def: stot = SUM[coll[j].z_set.stot | j IN [1..ncolls]];
+
+
+	stot.lower_bound := 1e-8;             
+
+  METHODS
+     METHOD clear;
+	RUN coll[1..ncolls].clear;
+	stot.fixed					:= FALSE;
+	tray_split[1..ncolls-1].included 		:= TRUE;
+	split[1..ncolls-1].fixed := FALSE;
+
+     END clear;
+     METHOD seqmod;
+	RUN coll[1..ncolls].seqmod;
+	FOR j IN [1..ncolls] DO
+	    (*coll[j].botliq.H.fixed := FALSE;*)
+	    
+	    coll[j].z_set
+		.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	    coll[j].z_set.stot.fixed			:= FALSE;
+	END FOR;
+	stot.fixed					:= TRUE;
+	split[1..ncolls-1].fixed 			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+		
+     END seqmod;
+
+     METHOD seqmod_massbal;
+	hb_on := FALSE;
+	equilibrated := FALSE;
+	RUN coll[1..ncolls].seqmod_massbal;
+	FOR j IN [1..ncolls] DO
+	    (*coll[j].botliq.H.fixed := FALSE;*)
+	    
+	    coll[j].z_set
+		.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	    coll[j].z_set.stot.fixed			:= FALSE;
+	END FOR;
+	stot.fixed					:= TRUE;
+	split[1..ncolls-1].fixed 			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+
+	P.fixed := TRUE;
+	internal_coll_liq_P[1..ncolls-1].fixed := FALSE;
+	internal_coll_vap_P[1..ncolls-1].fixed := FALSE;
+
+     END seqmod_massbal;
+
+    METHOD seqmod_fullthermo;
+	hb_on := FALSE;
+	equilibrated := TRUE;
+	RUN coll[1..ncolls].seqmod_fullthermo;
+	FOR j IN [1..ncolls] DO
+	    (*coll[j].botliq.H.fixed := FALSE;*)
+	    
+	    coll[j].z_set
+		.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	    coll[j].z_set.stot.fixed			:= FALSE;
+	END FOR;
+	stot.fixed					:= TRUE;
+	split[1..ncolls-1].fixed 			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+
+	P.fixed := TRUE;
+	internal_coll_liq_P[1..ncolls-1].fixed := FALSE;
+	internal_coll_vap_P[1..ncolls-1].fixed := FALSE;
+
+    END seqmod_fullthermo;
+
+    METHOD seqmod_adiabatic;
+	hb_on := TRUE;
+	equilibrated := TRUE;
+	RUN coll[1..ncolls].seqmod_adiabatic;
+	FOR j IN [1..ncolls] DO
+	    (*coll[j].botliq.H.fixed := FALSE;*)
+	    
+	    coll[j].z_set
+		.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	    coll[j].z_set.stot.fixed			:= FALSE;
+	END FOR;
+	stot.fixed					:= TRUE;
+	split[1..ncolls-1].fixed 			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+
+	P.fixed := TRUE;
+	internal_coll_liq_P[1..ncolls-1].fixed := FALSE;
+	internal_coll_vap_P[1..ncolls-1].fixed := FALSE;
+
+    END seqmod_adiabatic;
+
+
+     METHOD specify;
+	IF (hb_on AND NOT(equilibrated)) THEN
+	    equilibrated := TRUE;
+	END IF;
+	IF (hb_on AND equilibrated) THEN
+	    RUN seqmod_adiabatic;
+	END IF;
+	IF (NOT(hb_on) AND equilibrated) THEN
+	    RUN seqmod_fullthermo;
+	END IF;
+	IF (NOT(hb_on) AND NOT(equilibrated)) THEN
+	    RUN seqmod_massbal;
+	END IF;
+	RUN coll[1].topliq.specify;
+	RUN coll[ncolls].botvap.specify;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD scale;
+	RUN coll[1..ncolls].scale;
+	stot.nominal := stot;
+	stot.lower_bound := 1e-8;
+	stot.upper_bound := stot + scale*stot.nominal;
+     END scale;
+     METHOD standard_poly;
+	RUN coll[1..ncolls].standard_poly;
+     END standard_poly;
+     METHOD trans_poly;
+	RUN coll[1..ncolls].trans_poly;
+     END trans_poly;
+     METHOD z_based_poly;
+	RUN coll[1..ncolls].z_based_poly;
+     END z_based_poly;
+     METHOD s_based_poly;
+	RUN coll[1..ncolls].s_based_poly;
+     END s_based_poly;
+
+     (* new METHODS *)
+     METHOD heat_balance;
+	 RUN coll[1..ncolls].heat_balance;
+     END heat_balance;
+
+METHOD reset_to_massbal;
+	hb_on	:= FALSE;
+	equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+        hb_on	:= FALSE;
+    	equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+        hb_on	:= TRUE;
+    	equilibrated := TRUE;
+	RUN reset;
+END reset_to_adiabatic;
+
+METHOD reduce_Q;
+    RUN coll[1..ncolls].reduce_Q;
+END reduce_Q;
+
+METHOD zero_Q;
+	reduce := 0;
+	RUN reduce_Q;
+END zero_Q;
+
+METHOD CMO;
+    RUN coll[1..ncolls].CMO;
+END CMO;    
+     
+
+END std_coll_stack; 
+
+
+MODEL simple_coll_column(
+	ntrays WILL_BE integer_constant;
+	distillate WILL_BE liquid_stream;
+	feed WILL_BE vapor_liquid_stream;
+	bottoms WILL_BE liquid_stream;
+	equilibrated WILL_BE boolean;
+	reduce WILL_BE fraction;
+        z_on WILL_BE boolean;
+        hat_on WILL_BE boolean;
+        hb_on WILL_BE boolean;
+) WHERE (
+	distillate, bottoms, feed WILL_NOT_BE_THE_SAME;
+	bottoms.state.options, distillate.state.options,
+	feed.state.heavy.options WILL_BE_THE_SAME;
+);
+	liquid_options ALIASES feed.state.heavy.options;
+	vapor_options ALIASES feed.state.light.options;
+
+        nfeeds IS_A integer_constant;
+	nfeeds :== 1;
+
+	coll_stack[cs] ALIASES
+	    (rectifying_section,stripping_section)
+	    WHERE cs IS_A set OF integer_constant
+	    WITH_VALUE (1..2);
+
+	components ALIASES feed.components;
+
+(* this is a constant pressure MODEL *)
+	P			IS_A pressure;
+	feed_tray_P = P;
+	condenser_vapin_P = P;
+	feed_tray_liqin_P = P;
+	feed_tray_vapin_P = P;
+	reboiler_liqin_P = P;
+	
+	feed_tray_P		IS_A pressure;
+	feed_tray_T		IS_A temperature;
+	
+	condenser_vapin_P	IS_A pressure;
+	rectifier_liqin_P	ALIASES distillate.state.P;
+	rectifier_vapin_P	ALIASES feed_tray_P;
+	feed_tray_liqin_P	IS_A pressure;
+	feed_tray_vapin_P	IS_A pressure;
+	stripper_liqin_P	ALIASES feed_tray_P;
+	stripper_vapin_P	ALIASES bottoms.state.P;
+	reboiler_liqin_P	IS_A pressure;
+
+	condenser_vapin_T	IS_A temperature;
+	rectifier_liqin_T	ALIASES distillate.state.T;
+	rectifier_vapin_T	ALIASES feed_tray_T;
+	feed_tray_liqin_T	IS_A temperature;
+	feed_tray_vapin_T	IS_A temperature;
+	stripper_liqin_T	ALIASES feed_tray_T;
+	stripper_vapin_T	ALIASES bottoms.state.T;
+	reboiler_liqin_T	IS_A temperature;
+
+	condenser_vapin_state IS_A vapor_mixture(
+		condenser_vapin_P,
+		condenser_vapin_T,
+		vapor_options
+	);
+	rectifier_liqin_state ALIASES distillate.state;
+	rectifier_vapin_state IS_A vapor_mixture(
+		rectifier_vapin_P,
+		rectifier_vapin_T,
+		vapor_options
+	);
+	feed_tray_liqin_state IS_A liquid_mixture(
+		feed_tray_liqin_P,
+		feed_tray_liqin_T,
+		liquid_options
+	);
+	feed_tray_vapin_state IS_A vapor_mixture(
+		feed_tray_vapin_P,
+		feed_tray_vapin_T,
+		vapor_options
+	);
+	stripper_liqin_state IS_A liquid_mixture(
+		stripper_liqin_P,
+		stripper_liqin_T,
+		liquid_options
+	);
+	stripper_vapin_state IS_A vapor_mixture(
+		stripper_vapin_P,
+		stripper_vapin_T,
+		vapor_options
+	);
+	reboiler_liqin_state IS_A liquid_mixture(
+		reboiler_liqin_P,
+		reboiler_liqin_T,
+		liquid_options
+	);
+
+(* thermodynamic state definitions for reboiler, feed_tray *)
+	feed_tray_state	IS_A td_VLE_mixture(
+		feed_tray_P,
+		feed_tray_T,
+		rectifier_vapin_state,
+		stripper_liqin_state,
+		equilibrated
+	);
+
+	reboiler_state 	IS_A td_VLE_mixture(
+		stripper_vapin_P,
+		stripper_vapin_T,
+		stripper_vapin_state,
+		bottoms.state,
+		equilibrated
+	);
+
+(* inter-section streams *)
+	condenser_vapin		IS_A vapor_stream(
+		condenser_vapin_state
+	);
+	rectifier_liqin		IS_A liquid_stream(
+		rectifier_liqin_state
+	);
+	rectifier_vapin		IS_A vapor_stream(
+		rectifier_vapin_state
+	);
+	feed_tray_liqin		IS_A liquid_stream(
+		feed_tray_liqin_state
+	);
+	feed_tray_vapin		IS_A vapor_stream(
+		feed_tray_vapin_state
+	);
+	stripper_liqin		IS_A liquid_stream(
+		stripper_liqin_state
+	);
+	stripper_vapin		IS_A vapor_stream(
+		stripper_vapin_state
+	);
+	reboiler_liqin		IS_A liquid_stream(
+		reboiler_liqin_state
+	);
+
+(* column sections *)
+	condenser IS_A simple_condenser(
+		condenser_vapin,
+		rectifier_liqin,
+		distillate
+	);
+	rectifying_section IS_A std_coll_stack(
+	        ntrays,
+		condenser_vapin,
+		rectifier_liqin,
+		rectifier_vapin,
+		feed_tray_liqin,
+		equilibrated,
+		reduce,
+	        z_on,
+	        hat_on,
+	        hb_on,
+	        P
+	);
+
+	feed_tray IS_A feed_tray(
+		feed,
+		feed_tray_liqin,
+		feed_tray_vapin,
+		stripper_liqin,
+		rectifier_vapin,
+		feed_tray_state
+	);
+	stripping_section IS_A std_coll_stack(
+	        ntrays,
+		feed_tray_vapin,
+		stripper_liqin,
+		stripper_vapin,
+		reboiler_liqin,
+		equilibrated,
+		reduce,
+	        z_on,
+	        hat_on,
+	        hb_on,
+	        P
+	);
+	reboiler IS_A simple_reboiler(
+		reboiler_liqin,
+		stripper_vapin,
+		bottoms,
+		reboiler_state
+	);
+
+
+	stot,
+	s_stack[1..nfeeds+1]		IS_A factor;
+	split[1..nfeeds+1]		IS_A fraction;
+	xsi[components]			IS_A fraction;
+	xsi_set[components]		IS_A fraction;
+	xsi_diff[components]		IS_A fraction;
+	scale				IS_A scaling_constant;
+	
+
+	s_stack[1],
+	    rectifying_section.stot	ARE_THE_SAME;
+	s_stack[2],
+	    stripping_section.stot	ARE_THE_SAME;
+	stot = SUM[s_stack[1..nfeeds+1]];
+
+	FOR j IN [1..nfeeds+1] CREATE
+
+		tray_split[j]: s_stack[j] = split[j]*stot;
+		split[j] := 1.0/(nfeeds+1);
+
+	END FOR;
+
+
+	FOR i IN components CREATE
+		OverallMB[i]: feed_tray.feed.f[i] =
+			condenser.distillate.f[i] +
+			reboiler.bottoms.f[i];
+	END FOR;
+
+	FOR i IN components CREATE
+		xsi[i]*feed_tray.feed.f[i]
+			= condenser.distillate.f[i];
+		xsi_diff[i] = 0.5*sqr(xsi[i] - xsi_set[i]);
+	END FOR;
+
+	recovery: MINIMIZE SUM[xsi_diff[i] | i IN components];
+
+	binary_sep[components][components]	IS_A factor;
+
+	FOR i IN components CREATE
+	    FOR j IN components CREATE
+		
+		
+		binary_sep[i][j] *
+	        (condenser.distillate.f[i] + condenser.distillate.f[j]) *
+	        (reboiler.bottoms.f[i] + reboiler.bottoms.f[j]) =
+		    (condenser.distillate.f[i] *
+		    (reboiler.bottoms.f[i] + reboiler.bottoms.f[j]) -
+		    reboiler.bottoms.f[i] *
+		    (condenser.distillate.f[i] + condenser.distillate.f[j]));
+
+		sep_opt[i][j]: MINIMIZE -sqr(binary_sep[i][j]);
+	
+	    END FOR;
+	END FOR;
+	
+
+
+  METHODS
+     METHOD heat_balance;
+	RUN coll_stack[1..nfeeds+1].heat_balance;
+	feed_tray.q.fixed := FALSE;
+	feed_tray.Qin.fixed := TRUE;
+	hb_on := TRUE;
+     END heat_balance;
+     METHOD CMO;
+	 RUN coll_stack[1..nfeeds+1].CMO;
+	 feed_tray[1..nfeeds].q.fixed := TRUE;
+	 feed_tray[1..nfeeds].Qin.fixed := FALSE;
+	 hb_on := FALSE;
+     END CMO;
+     METHOD reduce_Q;
+	FOR i IN [1..nfeeds+1] DO
+	  FOR j IN [1..coll_stack[i].ncolls] DO
+		coll_stack[i].coll[j].Qtot :=
+		coll_stack[i].coll[j].Qtot*reduce;
+	    FOR k IN [1..coll_stack[i].coll[j].ntrays] DO
+		coll_stack[i].coll[j].Qin[k] :=
+		coll_stack[i].coll[j].Qin[k]*reduce;
+		coll_stack[i].coll[j].tray[k].Qin :=
+		coll_stack[i].coll[j].tray[k].Qin*reduce;
+	    END FOR;
+	  END FOR;
+	END FOR;
+	FOR i IN [1..nfeeds] DO
+ 		feed_tray.Qin := 
+		feed_tray.Qin*reduce;
+	END FOR;
+     END reduce_Q;
+     METHOD zero_Q;
+	reduce := 0;
+	RUN reduce_Q;
+     END zero_Q;
+            
+    METHOD clear;
+	RUN condenser.clear;
+	RUN coll_stack[1..nfeeds+1].clear;
+	(*	RUN feed_tray[1..nfeeds].clear;*)
+	RUN feed_tray.clear;
+	RUN reboiler.clear;
+	stot.fixed					:= FALSE;
+	split[1..nfeeds+1].fixed			:= FALSE;
+	xsi[components].fixed				:= FALSE;
+	xsi_diff[components].fixed			:= FALSE;
+	xsi_set[components].fixed			:= FALSE;
+	binary_sep[components][components].fixed	:= FALSE;
+	OverallMB[components].included			:= TRUE;
+	recovery.included				:= TRUE;
+	sep_opt[components][components].included	:= TRUE;
+     END clear;
+     METHOD seqmod;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod;
+	RUN feed_tray.seqmod;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.distillate.Ftot.fixed			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END IF;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+     END seqmod;
+
+     METHOD seqmod_massbal;
+        distillate.saturated := FALSE;
+	hb_on := FALSE;
+	equilibrated := FALSE;
+
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod_massbal;
+	RUN feed_tray.seqmod_massbal;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.distillate.Ftot.fixed			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+
+	P.fixed := TRUE;
+	feed_tray_P.fixed 				:= FALSE;
+	condenser_vapin_P.fixed 		       	:= FALSE;
+	feed_tray_liqin_P.fixed			        := FALSE;
+	feed_tray_vapin_P.fixed 			:= FALSE;
+	reboiler_liqin_P.fixed 				:= FALSE;
+
+     END seqmod_massbal;
+
+    METHOD seqmod_fullthermo;
+        distillate.saturated := TRUE;
+	hb_on := FALSE;
+	equilibrated := TRUE;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod_fullthermo;
+	RUN feed_tray.seqmod_fullthermo;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.distillate.Ftot.fixed			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+
+	P.fixed := TRUE;
+	feed_tray_P.fixed 				:= FALSE;
+	condenser_vapin_P.fixed 		       	:= FALSE;
+	feed_tray_liqin_P.fixed			        := FALSE;
+	feed_tray_vapin_P.fixed 			:= FALSE;
+	reboiler_liqin_P.fixed 				:= FALSE;
+
+    END seqmod_fullthermo;
+
+    METHOD seqmod_adiabatic;
+        distillate.saturated := TRUE;
+	hb_on := TRUE;
+	equilibrated := TRUE;
+	RUN seqmod_fullthermo;
+	RUN heat_balance;
+
+	P.fixed := TRUE;
+	feed_tray_P.fixed 				:= FALSE;
+	condenser_vapin_P.fixed 		       	:= FALSE;
+	feed_tray_liqin_P.fixed			        := FALSE;
+	feed_tray_vapin_P.fixed 			:= FALSE;
+	reboiler_liqin_P.fixed 				:= FALSE;
+
+    END seqmod_adiabatic;
+
+     METHOD specify;
+	IF (hb_on AND NOT(equilibrated)) THEN
+	    equilibrated := TRUE;
+	END IF;
+	IF (hb_on AND equilibrated) THEN
+	    RUN seqmod_adiabatic;
+	END IF;
+	IF (NOT(hb_on) AND equilibrated) THEN
+	    RUN seqmod_fullthermo;
+	END IF;
+	IF (NOT(hb_on) AND NOT(equilibrated)) THEN
+	    RUN seqmod_massbal;
+	END IF;
+	RUN feed_tray.feed.specify;
+
+(* This is somewhat screwed up....look into this *)
+(*	distillate.state.T.fixed := TRUE;*)
+	
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD scale;
+	RUN condenser.scale;
+	RUN coll_stack[1..nfeeds+1].scale;
+	RUN feed_tray[1..nfeeds].scale;
+	RUN reboiler.scale;
+	stot.nominal := stot;
+	stot.lower_bound := 1e-8;
+	stot.upper_bound := stot + scale*stot.nominal;
+	FOR i IN components DO
+	    xsi[i].nominal := xsi[i];
+	    xsi_set[i].nominal := xsi_set[i];
+	    xsi_diff[i].nominal := xsi_diff[i];
+	END FOR;
+     END scale;
+     METHOD standard_poly;
+	 hat_on := FALSE;
+     END standard_poly;
+     METHOD trans_poly;
+	 hat_on := TRUE;
+     END trans_poly;
+     METHOD z_based_poly;
+	 z_on := TRUE;
+     END z_based_poly;
+     METHOD s_based_poly;
+	 z_on := FALSE;
+     END s_based_poly;
+     METHOD propagate_feed;
+	FOR i IN components DO
+(*	    condenser.alpha[i] := feed_tray[1].alpha[i];*)
+(*	    FOR k IN [2..nfeeds] DO
+		feed_tray[k].alpha[i] :=
+		    feed_tray[1].alpha[i];
+	    END FOR;*)
+	  FOR k IN [1..nfeeds+1] DO
+	   FOR j IN [1..coll_stack[k].ncolls] DO
+		coll_stack[k].coll[j].tray[1..coll_stack[k]
+		  .coll[j].ntrays].tray_state.alpha[i] 
+			:= feed_tray.feed_tray_state.alpha[i];
+	   END FOR;
+	  END FOR;
+		reboiler.reboiler_state.alpha[i] :=
+		    feed_tray.feed_tray_state.alpha[i];
+	END FOR;
+
+     END propagate_feed;
+     METHOD overallMB;
+	OverallMB[components].included			:= TRUE;
+	feed_tray[1].totfeedflow[components].included 	:= FALSE;
+     END overallMB;
+
+(* new METHODS *)
+METHOD reset_to_massbal;
+        distillate.saturated := FALSE;
+	hb_on	:= FALSE;
+	equilibrated := FALSE;
+	RUN reset;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+        distillate.saturated := TRUE;
+        hb_on	:= FALSE;
+    	equilibrated := TRUE;
+	RUN reset;
+END reset_to_fullthermo;
+
+METHOD reset_to_adiabatic;
+        distillate.saturated := TRUE;
+	hb_on	:= TRUE;
+    	equilibrated := TRUE;
+	RUN reset;
+END reset_to_adiabatic;
+
+END simple_coll_column;
+
+
+
+(* new stuff *)
+
+
+MODEL demo_column(
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+	n_trays IS_A integer_constant;
+) WHERE (
+	reference IN components == TRUE;
+	n_trays > 0;
+);
+
+	ds	IS_A td_component_data_set(components,reference);
+	vapor_options IS_A vapor_phase_options(ds,'Pitzer','Pitzer');
+	liquid_options IS_A liquid_phase_options(ds,'Rackett','UNIFAC');
+
+	feed_P IS_A pressure;
+	feed_T IS_A temperature;
+	feed_vapor_state IS_A vapor_mixture(
+		feed_P,
+		feed_T,
+		vapor_options
+	);
+	feed_liquid_state IS_A liquid_mixture(
+		feed_P,
+		feed_T,
+		liquid_options
+	);
+	Equilibrated IS_A boolean;
+	feed_state IS_A td_VLE_mixture(
+		feed_P,
+		feed_T,
+		feed_vapor_state,
+		feed_liquid_state,
+		Equilibrated
+	);
+	Feed		IS_A vapor_liquid_stream(feed_state);
+
+	distillate_P	IS_A pressure;
+	distillate_T 	IS_A temperature;
+	distillate_state IS_A liquid_mixture(
+		distillate_P,
+		distillate_T,
+		liquid_options
+	);
+	Distillate	IS_A liquid_stream(distillate_state);
+
+	bottoms_P	IS_A pressure;
+	bottoms_T 	IS_A temperature;
+	bottoms_state IS_A liquid_mixture(
+		bottoms_P,
+		bottoms_T,
+		liquid_options
+	);
+	Bottoms		IS_A liquid_stream(bottoms_state);
+
+	reduce IS_A fraction;
+	z_on IS_A  boolean;
+        hat_on IS_A boolean;
+        hb_on IS_A boolean;
+
+	z_on := FALSE;
+	hat_on := FALSE;
+	hb_on := FALSE;
+	Equilibrated := FALSE;
+
+	Column IS_A simple_coll_column(
+	        n_trays,
+		Distillate, 
+		Feed,
+		Bottoms,
+		Equilibrated,
+		reduce,
+	        z_on,
+	        hat_on,
+	        hb_on
+	);
+
+	(* component names in order of boiling point. useful for methods. *)
+	z_boiling_comp[1..CARD[components]] IS_A symbol;
+	z_bc IS_A symbol;
+	z_bi IS_A integer;
+METHODS
+METHOD clear;
+	RUN feed.clear;
+	RUN Column.clear;
+	Equilibrated := TRUE;
+END clear;
+
+METHOD values;
+	(* The demo user may very well want to rewrite this method
+	 * for their particular mixture.
+	 *)
+	z_bi := 1;
+	(* order the components arbitrarily in a list *)
+	FOR i IN components DO
+		z_boiling_comp[z_bi] := i;
+		z_bi := z_bi + 1;
+	END FOR;
+	(* use a bubble point sort, pun intended, to order the components. *)
+	FOR i IN [1..CARD[components]-1] DO
+		FOR j IN [i+1 .. CARD[components]] DO
+			IF ds.data[z_boiling_comp[i]].Tb >
+				ds.data[z_boiling_comp[j]].Tb THEN
+				z_bc := z_boiling_comp[j];
+				z_boiling_comp[j] := z_boiling_comp[i];
+				z_boiling_comp[i] := z_bc;
+			END IF;
+		END FOR;
+	END FOR;
+	z_bi := 1;
+	(* assign integer alpha's *)
+	FOR i IN [1.. CARD[components]] DO
+		Column.feed_tray_state.alpha[z_boiling_comp[i]] :=
+			CARD[components]-i+1;
+	END FOR;
+	Column.condenser.reflux_ratio := 1.3;
+	feed_T := 298 {K};
+	feed_P := 1{atm};
+	Feed.f[components] := 3{mole/s};
+	RUN Column.propagate_feed;
+END values;
+	
+END demo_column;
+
+MODEL mw_demo_column;
+
+    mw_column IS_A demo_column(['methanol','water'],'water',2);
+
+
+  METHODS
+    METHOD values;
+	mw_column.Column.feed_tray_state.alpha['methanol'] := 1;
+	mw_column.Column.feed_tray_state.alpha['water'] := 1.4;
+	mw_column.Feed.f['methanol'] := 3{mole/s};
+	mw_column.Feed.f['water'] := 3{mole/s};
+	mw_column.Distillate.Ftot := 3{mole/s};
+	mw_column.Column.rectifying_section.stot := 10;
+	mw_column.Column.stripping_section.stot := 10;
+	
+	mw_column.feed_state.phi['vapor'] := 0;
+	mw_column.Column.condenser.reflux_ratio := 1.3;
+	mw_column.feed_T := 298 {K};
+	mw_column.feed_P := 1{atm};
+	RUN mw_column.Column.propagate_feed;
+END values;
+	
+
+
+END mw_demo_column;
+
+MODEL pbb_demo_column;
+
+    pbb_column IS_A demo_column(['n_propanol','i_butanol','n_butanol'],
+         'n_butanol',2);
+
+  METHODS
+METHOD defaults;
+	RUN pbb_column.defaults;
+END defaults;
+
+    METHOD values;
+	pbb_column.Column.feed_tray_state.alpha['n_propanol'] := 2;
+	pbb_column.Column.feed_tray_state.alpha['i_butanol'] := 1.5;
+	pbb_column.Column.feed_tray_state.alpha['n_butanol'] := 1.0;
+	pbb_column.Feed.f['n_propanol'] := 3{mole/s};
+	pbb_column.Feed.f['i_butanol'] := 3{mole/s};
+	pbb_column.Feed.f['n_butanol'] := 3{mole/s};
+	pbb_column.Distillate.Ftot := 3{mole/s};
+	pbb_column.Column.rectifying_section.stot := 20;
+	pbb_column.Column.stripping_section.stot := 20;
+	
+	pbb_column.feed_state.phi['vapor'] := 0;
+	pbb_column.Column.condenser.reflux_ratio := 5.73;
+	pbb_column.feed_T := 298 {K};
+	pbb_column.feed_P := 1{atm};
+	RUN pbb_column.Column.propagate_feed;
+END values;
+END pbb_demo_column;
+(* END new stuff *)
+
+
+
+
+
+
+
+
+
+
+
+(*
+MODEL td_coll REFINES coll;
+	data[components]		IS_A component_constants;
+	
+	tray[1..ntrays] IS_REFINED_TO td_simple_tray;
+	topliq		IS_REFINED_TO td_stream;
+	topvap		IS_REFINED_TO td_stream;
+	botliq		IS_REFINED_TO td_stream;
+	botvap		IS_REFINED_TO td_stream;
+
+	tray[1..ntrays].liqout['liquid'].state	ARE_ALIKE;
+	tray[1..ntrays].vapout['vapor'].state	ARE_ALIKE;
+
+	FOR i IN components CREATE
+		data[i],
+		tray[1..ntrays].data[i],
+		topliq.data[i],
+		topvap.data[i],
+		botliq.data[i],
+		botvap.data[i]		ARE_THE_SAME;
+	END FOR;
+END td_coll;
+
+MODEL h_coll REFINES td_coll;
+
+	h_order					IS_A integer_constant;
+	h_order,ntrays	ARE_THE_SAME;
+	h_coeff['liquid','vapor'][0..h_order]	IS_A molar_energy;
+	Qtot,
+	Qin[1..ntrays]				IS_A energy_rate;
+	h_exist,
+	    hb_on				IS_A boolean;
+		
+	h_exist := TRUE;
+	hb_on := FALSE;
+	
+
+
+
+	Overall_HB: Qtot + topliq.Htot + botvap.Htot =
+	    botliq.Htot + topvap.Htot;
+
+	FOR j IN [1..ntrays] CREATE
+		tot_trayHB[j]: Qin[j] +topliq.Htot - topvap.Htot =
+				tray[j].liqout['liquid'].Htot -
+				tray[j].input['vapor'].Htot;
+	END FOR;
+
+
+(* end points *)
+
+	h_end_topliq: topliq.H = SUM[((z_set.up_down+1)
+			*z_set.lgr.W[z_set.lgr.npoints][k]/2
+			+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2)
+			*h_coeff['liquid'][k]
+			| k IN [0..h_order]];
+	h_end_topvap: topvap.H = SUM[((z_set.up_down+1)
+			*z_set.lgr.W[z_set.lgr.npoints][k]/2
+			+ (1-z_set.up_down)*z_set.lgr.W[0][k]/2)
+			*h_coeff['vapor'][k]
+			| k IN [0..h_order]];
+	h_end_botliq: botliq.H =  SUM[((z_set.up_down+1)
+			*z_set.lgr.W[0][k]/2
+			+ (1-z_set.up_down)
+			*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+			*h_coeff['liquid'][k]
+			| k IN [0..h_order]];
+	h_end_botvap: botvap.H = SUM[((z_set.up_down+1)
+			*z_set.lgr.W[0][k]/2
+			+ (1-z_set.up_down)
+			*z_set.lgr.W[z_set.lgr.npoints][k]/2)
+			*h_coeff['vapor'][k]
+			| k IN [0..h_order]]; 
+(* interior points *)
+	FOR j IN [1..ntrays] CREATE
+
+		h_int_liqout[j]: tray[j].liqout['liquid'].H =
+		    SUM[z_set.lgr.W[2*j-1][k]*h_coeff['liquid'][k]
+		    | k IN [0..h_order]];
+		h_int_liqin[j]: tray[j].input['liquid'].H =
+		    SUM[z_set.lgr.W[2*j][k]*h_coeff['liquid'][k]
+		    | k IN [0..h_order]];
+		h_int_vapout[j]: tray[j].vapout['vapor'].H =
+		    SUM[z_set.lgr.W[2*j][k]*h_coeff['vapor'][k]
+		    | k IN [0..h_order]];
+		h_int_vapin[j]: tray[j].input['vapor'].H =
+		    SUM[z_set.lgr.W[2*j-1][k]*h_coeff['vapor'][k]
+		    | k IN [0..h_order]];
+	END FOR;
+
+   METHODS
+     METHOD clear;
+	RUN topliq.clear;
+	RUN botliq.clear;
+	RUN topvap.clear;
+	RUN botvap.clear;
+	x_coeff[components 
+		- [inactive_component]][0..x_order].fixed	:= FALSE;
+	y_coeff[components 
+		- [inactive_component]][0..y_order].fixed	:= FALSE;
+	cmo[1..ntrays].fixed 					:= FALSE;
+	cmotot.fixed 						:= FALSE;
+	RUN z_set.clear;
+	RUN tray[1..ntrays].clear;	
+	frac_x_in[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	frac_y_in[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	frac_x_out[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	frac_y_out[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	frac_x_top[1][components 
+		- [inactive_component]].included 		:=TRUE;
+	frac_y_top[1][components 
+		- [inactive_component]].included 		:=TRUE;
+	frac_y_bot[1][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_x_out[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_x_in[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_y_out[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_y_in[1..ntrays][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_x_top[1][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_y_top[1][components 
+		- [inactive_component]].included 		:=TRUE;
+	trans_y_bot[1][components 
+		- [inactive_component]].included 		:=TRUE;
+	tray_x_hat['in','out'][components][1..ntrays].fixed	:= FALSE;
+	tray_y_hat['in','out'][components][1..ntrays].fixed	:= FALSE;
+	end_x_hat['top','bot'][components].fixed		:= FALSE;
+	end_y_hat['top','bot'][components].fixed		:= FALSE;
+	x[1..ntrays][components].fixed				:= FALSE;
+	y[1..ntrays][components].fixed				:= FALSE;
+	x_hat[1..ntrays][components].fixed			:= FALSE;
+
+	h_coeff['liquid','vapor'][0..h_order].fixed		:= FALSE;
+	Qtot.fixed						:= FALSE;
+	Qin[1..ntrays].fixed					:= FALSE;
+	slope[components].fixed					:= FALSE;
+     END clear;
+     METHOD seqmod;
+	cmo[1..ntrays].fixed 					:= TRUE;
+	cmotot.fixed						:= TRUE;
+	RUN tray[1..ntrays].seqmod;
+	RUN z_set.specify;
+	RUN tray[1..ntrays].input[tray[1].inputs].seqmod;
+	RUN topliq.seqmod;
+	RUN botvap.seqmod;
+	RUN topvap.seqmod;
+	RUN botliq.seqmod;
+	IF (hat_on) THEN
+		RUN trans_poly;
+	ELSE
+		RUN standard_poly;
+	END FOR;
+ 	tray[1..ntrays].input[tray[1].inputs].H.fixed 		:= FALSE;
+	topvap.H.fixed						:= FALSE;
+	botliq.H.fixed						:= FALSE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END FOR;
+	
+     END seqmod;
+     METHOD heat_balance;
+	RUN tray[1..ntrays].heat_balance;
+	Qtot.fixed 						:= TRUE;
+	cmotot.fixed 						:= FALSE;
+	Qin[1..ntrays].fixed 					:= TRUE;
+	cmo[1..ntrays].fixed 					:= FALSE;
+	hb_on							:= TRUE;
+     END heat_balance;
+     METHOD CMO;
+	 tray[1..ntrays].cmo_ratio.fixed			:= TRUE;
+	 tray[1..ntrays].Qin.fixed				:= FALSE;
+	 Qtot.fixed 						:= FALSE;
+ 	cmotot.fixed 						:= TRUE;
+	Qin[1..ntrays].fixed 					:= FALSE;
+	cmo[1..ntrays].fixed 					:= TRUE;
+	hb_on							:= FALSE;
+     END CMO;
+     METHOD scale;
+	RUN topliq.scale;
+	RUN topvap.scale;
+	RUN botliq.scale;
+	RUN botvap.scale;
+	RUN tray[1..ntrays].scale;
+	RUN z_set.scale;
+	
+	FOR i IN components - [inactive_component] DO
+	   FOR j IN [0..x_order] DO
+		x_coeff[i][j].nominal :=
+		    abs(x_coeff[i][j]) + 0.00001;
+		x_coeff[i][j].lower_bound :=
+		    x_coeff[i][j] - scale*x_coeff[i][j].nominal;
+		x_coeff[i][j].upper_bound :=
+		    x_coeff[i][j] + scale*x_coeff[i][j].nominal;
+	   END FOR;
+	   FOR j IN [0..y_order] DO
+		y_coeff[i][j].nominal :=
+		    abs(y_coeff[i][j]) + 0.00001;
+		y_coeff[i][j].lower_bound :=
+		    y_coeff[i][j] - scale*y_coeff[i][j].nominal;
+		y_coeff[i][j].upper_bound :=
+		    y_coeff[i][j] + scale*y_coeff[i][j].nominal;
+	   END FOR;
+	END FOR;
+	FOR j IN [1..ntrays] DO
+	    cmo[j].nominal := cmo[j];
+	    cmo[j].lower_bound := 1e-8;
+	    cmo[j].upper_bound := cmo[j] + scale*cmo[j].nominal;
+	END FOR;
+	cmotot.nominal := cmotot;
+	cmotot.lower_bound := 1e-8;
+	cmotot.upper_bound := cmotot + scale*cmotot.nominal;
+	FOR i IN components DO
+	    FOR j IN [1..ntrays] DO
+		x[j][i].nominal := x[j][i];
+		y[j][i].nominal := y[j][i];
+		x_hat[j][i].nominal := abs(x_hat[j][i]);
+		x_hat[j][i].lower_bound := x_hat[j][i] -
+		    scale*x_hat[j][i].nominal;
+		x_hat[j][i].upper_bound := x_hat[j][i] +
+		    scale*x_hat[j][i].nominal;
+
+		FOR k IN ['in','out'] DO
+		    tray_x_hat[k][i][j].nominal :=
+			abs(tray_x_hat[k][i][j]);
+		    tray_x_hat[k][i][j].lower_bound :=
+			tray_x_hat[k][i][j] -
+			scale*tray_x_hat[k][i][j].nominal;
+		    tray_x_hat[k][i][j].upper_bound :=
+			tray_x_hat[k][i][j] +
+			scale*tray_x_hat[k][i][j].nominal;
+		    tray_y_hat[k][i][j].nominal :=
+			abs(tray_y_hat[k][i][j]);
+		    tray_y_hat[k][i][j].lower_bound :=
+			tray_y_hat[k][i][j] -
+			scale*tray_y_hat[k][i][j].nominal;
+		    tray_y_hat[k][i][j].upper_bound :=
+			tray_y_hat[k][i][j] +
+			scale*tray_y_hat[k][i][j].nominal;
+		END FOR;
+	    END FOR;
+	    FOR k IN ['top','bot'] DO
+		end_x_hat[k][i].nominal := abs(end_x_hat[k][i]);
+		end_x_hat[k][i].lower_bound := end_x_hat[k][i] -
+		    scale*end_x_hat[k][i].nominal;
+		end_x_hat[k][i].upper_bound := end_x_hat[k][i] +
+		    scale*end_x_hat[k][i].nominal;
+		end_y_hat[k][i].nominal := abs(end_y_hat[k][i]);
+		end_y_hat[k][i].lower_bound := end_y_hat[k][i] -
+		    scale*end_y_hat[k][i].nominal;
+		end_y_hat[k][i].upper_bound := end_y_hat[k][i] +
+		    scale*end_y_hat[k][i].nominal;
+	    END FOR;
+	    slope[i].nominal := abs(slope[i]);
+	    slope[i].lower_bound := slope[i] - scale*slope[i];
+	    slope[i].upper_bound := slope[i] + scale*slope[i];
+	END FOR;
+	FOR i IN ['liquid','vapor'] DO
+	    FOR j IN [0..h_order] DO
+		h_coeff[i][j].nominal := abs(h_coeff[i][j]);
+		h_coeff[i][j].lower_bound := h_coeff[i][j] -
+		    scale*h_coeff[i][j].nominal;
+		h_coeff[i][j].upper_bound :=h_coeff[i][j] + scale*
+		    h_coeff[i][j].nominal;
+	    END FOR;
+	END FOR;
+	Qtot.nominal := abs(Qtot);
+	Qtot.lower_bound := Qtot - scale*Qtot.nominal;
+	Qtot.upper_bound := Qtot + scale*Qtot.nominal;
+	FOR j IN [1..ntrays] DO
+	    Qin[j].nominal := abs(Qin[j]);
+	    Qin[j].lower_bound := Qin[j] - scale*Qin[j].nominal;
+	    Qin[j].upper_bound := Qin[j] + scale*Qin[j].nominal;
+	END FOR;
+	
+	
+     END scale;
+     
+			 
+
+
+END h_coll;
+
+MODEL td_coll_stack REFINES coll_stack;
+
+	data[components]	IS_A component_constants;
+	coll[1..ncolls]		IS_REFINED_TO td_coll;
+	hb_on			IS_A boolean;
+
+	hb_on := FALSE;
+
+	FOR i IN components CREATE
+		data[i],
+		coll[1..ncolls].data[i]	ARE_THE_SAME;
+	END FOR;
+
+	coll[1..ncolls].tray[1].liqout['liquid'].state		ARE_ALIKE;
+	coll[1..ncolls].tray[1].vapout['vapor'].state		ARE_ALIKE;
+
+	
+   METHODS
+     METHOD heat_balance;
+	RUN coll[1..ncolls].heat_balance;
+	hb_on							:= TRUE;
+     END heat_balance;
+     METHOD CMO;
+	 RUN coll[1..ncolls].CMO;
+	 hb_on							:= FALSE;
+     END CMO;
+     METHOD seqmod;
+	RUN coll[1..ncolls].seqmod;
+	FOR j IN [1..ncolls] DO
+	   IF coll[j].h_exist THEN
+		coll[j].botliq.H.fixed 				:= FALSE;
+	   END FOR;
+	    coll[j].z_set.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	    coll[j].z_set.stot.fixed				:= FALSE;
+	END FOR;
+	stot.fixed						:= TRUE;
+	split[1..ncolls-1].fixed 				:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END FOR;
+     END seqmod;	
+END td_coll_stack;
+
+MODEL pinch_stack REFINES td_coll_stack;
+	pinch_VLE[1..ncolls-1]	IS_A equilibrium_mixture;
+
+	pinch_VLE[1..ncolls-1].components,
+	    components		ARE_THE_SAME;
+
+	
+	pinch_VLE[1..ncolls-1].phases := ['liquid','vapor'];
+	pinch_VLE[1..ncolls-1].reference := 'liquid';
+
+	pinch_slack[1..ncolls-1][components]	IS_A factor;
+
+	FOR j IN [1..ncolls-1] CREATE
+	    pinch_VLE[j].mix['liquid'],
+		coll[j].botliq.state	ARE_THE_SAME;
+	    FOR i IN components CREATE
+		pinch_VLE[j].mix['vapor'].y[i] = pinch_slack[j][i]
+		    + coll[j].botvap.state.y[i];
+	    END FOR;
+	END FOR;
+	FOR i IN components CREATE
+	    data[i],
+		pinch_VLE[1..ncolls-1].data[i]	ARE_THE_SAME;
+	END FOR;
+	pinch_VLE[1..ncolls-1].mix['liquid'] IS_REFINED_TO UNIFAC_mixture;
+	pinch_VLE[1..ncolls-1].mix['vapor'] IS_REFINED_TO Pitzer_mixture;
+  METHODS
+     METHOD clear;
+	RUN coll[1..ncolls].clear;
+	stot.fixed					:= FALSE;
+	tray_split[1..ncolls-1].included 		:= TRUE;
+	split[1..ncolls-1].fixed := FALSE;
+	RUN pinch_VLE[1..ncolls-1].clear;
+	pinch_slack[1..ncolls-1][components].fixed	:= FALSE;
+     END clear;
+     METHOD seqmod;
+	RUN coll[1..ncolls].seqmod;
+	FOR j IN [1..ncolls] DO
+	   IF coll[j].h_exist THEN
+		coll[j].botliq.H.fixed 				:= FALSE;
+	   END FOR;
+	    coll[j].z_set.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
+	    coll[j].z_set.stot.fixed				:= FALSE;
+	END FOR;
+	stot.fixed						:= TRUE;
+	split[1..ncolls-1].fixed 				:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END FOR;
+	RUN pinch_VLE[1..ncolls-1].specify;
+	pinch_VLE[1..ncolls-1].y[components].fixed		:= FALSE;
+     END seqmod;
+     METHOD force_pinch;
+	 FOR j IN [1..ncolls-1] DO
+	     pinch_slack[j][components].fixed			:= TRUE;
+	     pinch_slack[j][CHOICE[components]].fixed		:= FALSE;
+	     pinch_slack[j][components]				:= 0.0;
+	     coll[j+1].trans_x_top[1][components -
+		 [inactive_component]].included 		:= FALSE;
+	     coll[j+1].frac_x_top[1][components -
+		 [inactive_component]].included 		:= FALSE;
+	 END FOR;
+	 coll[ncolls].slope[CHOICE[components]].fixed				:= TRUE;
+	 stot.fixed						:= FALSE;
+	
+     END force_pinch;
+   
+END pinch_stack;
+
+MODEL td_coll_column REFINES coll_column;
+
+	reduce				IS_A factor;
+	reduce := 0.5;
+
+	data[components]		IS_A component_constants;
+
+	condenser			IS_REFINED_TO td_condenser;
+	feed_tray[1..nfeeds] 		IS_REFINED_TO td_simple_feed_tray;
+	reboiler 			IS_REFINED_TO td_reboiler;
+	coll_stack[1..nfeeds+1]		IS_REFINED_TO td_coll_stack;
+	hb_on				IS_A boolean;
+
+	hb_on := FALSE;
+	
+
+	FOR i IN components CREATE
+		data[i],
+		condenser.data[i],
+		coll_stack[1..nfeeds+1].coll[1].data[i],
+		feed_tray[1..nfeeds].data[i],
+		reboiler.data[i]				ARE_THE_SAME;
+	END FOR;
+
+
+
+	condenser.liqout['liquid'].state,
+	coll_stack[1..nfeeds+1].coll[1].tray[1].liqout['liquid'].state,
+	feed_tray[1..nfeeds].liqout['liquid'].state,
+	reboiler.liqout['bottoms'].state			ARE_ALIKE;
+
+	condenser.vapout['vapor_product'].state,
+	coll_stack[1..nfeeds+1].coll[1].tray[1].vapout['vapor'].state,
+	feed_tray[1..nfeeds].vapout['vapor'].state,
+	reboiler.vapout['vapor_product'].state			ARE_ALIKE;
+
+
+   METHODS
+     METHOD heat_balance;
+	RUN coll_stack[1..nfeeds+1].heat_balance;
+	RUN feed_tray[1..nfeeds].heat_balance;
+	hb_on := TRUE;
+     END heat_balance;
+     METHOD CMO;
+	 RUN coll_stack[1..nfeeds+1].CMO;
+	 feed_tray[1..nfeeds].q.fixed := TRUE;
+	 feed_tray[1..nfeeds].Qin.fixed := FALSE;
+	 hb_on := FALSE;
+     END CMO;
+     METHOD reduce_Q;
+	FOR i IN [1..nfeeds+1] DO
+	  FOR j IN [1..coll_stack[i].ncolls] DO
+		coll_stack[i].coll[j].Qtot :=
+		coll_stack[i].coll[j].Qtot*reduce;
+	    FOR k IN [1..coll_stack[i].coll[j].ntrays] DO
+		coll_stack[i].coll[j].Qin[k] :=
+		coll_stack[i].coll[j].Qin[k]*reduce;
+		coll_stack[i].coll[j].tray[k].Qin :=
+		coll_stack[i].coll[j].tray[k].Qin*reduce;
+	    END FOR;
+	  END FOR;
+	END FOR;
+	FOR i IN [1..nfeeds] DO
+ 		feed_tray[i].Qin := 
+		feed_tray[i].Qin*reduce;
+	END FOR;
+     END reduce_Q;
+     METHOD zero_Q;
+	reduce := 0;
+	RUN reduce_Q;
+     END zero_Q;
+     METHOD seqmod;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod;
+	RUN feed_tray[1..nfeeds].seqmod;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.bottoms.Ftot.fixed 			:= TRUE;
+	xsi_set[components].fixed			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END FOR;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+     END seqmod;
+     
+
+
+END td_coll_column;
+
+
+MODEL equilibrium_coll_column REFINES td_coll_column;
+
+	condenser.VLE			IS_REFINED_TO equilibrium_mixture;
+	feed_tray[1..nfeeds]
+		.input['feed'].state 	IS_REFINED_TO equilibrium_mixture;
+   METHODS
+     METHOD seqmod;
+	RUN condenser.seqmod;
+	RUN coll_stack[1..nfeeds+1].seqmod;
+	RUN feed_tray[1..nfeeds].seqmod;
+	RUN reboiler.seqmod;
+	OverallMB[components].included			:= FALSE;
+	reboiler.reboil_ratio.fixed 			:= FALSE;
+	condenser.bottoms.Ftot.fixed 			:= TRUE;
+	condenser.VLE.T.fixed 				:= FALSE;
+	xsi_set[components].fixed			:= TRUE;
+	IF (hb_on) THEN
+	    RUN heat_balance;
+	END FOR;
+	recovery.included				:= FALSE;
+	sep_opt[components][components].included	:= FALSE;
+     END seqmod;
+     METHOD CRV;
+	RUN condenser.VLE.CRV;
+	RUN feed_tray[1..nfeeds].VLE.CRV;
+	RUN reboiler.VLE.CRV;
+	FOR i IN [1..nfeeds+1] DO
+	  FOR j IN [1..coll_stack[i].ncolls] DO
+	   FOR k IN [1..coll_stack[i].coll[j].ntrays] DO
+		RUN coll_stack[i].coll[j].tray[k].VLE.CRV;
+	   END FOR;
+	  END FOR;
+	END FOR;
+      END CRV;
+     METHOD equilibrium;
+	RUN condenser.VLE.equilibrium;
+	RUN feed_tray[1..nfeeds].VLE.equilibrium;
+	RUN reboiler.VLE.equilibrium;
+	FOR i IN [1..nfeeds+1] DO
+	  FOR j IN [1..coll_stack[i].ncolls] DO
+	   FOR k IN [1..coll_stack[i].coll[j].ntrays] DO
+		RUN coll_stack[i].coll[j].tray[k].VLE.equilibrium;
+	   END FOR;
+	  END FOR;
+	END FOR;
+      END equilibrium;
+     
+
+END equilibrium_coll_column;
+
+
+
+
+MODEL basic_coll_column REFINES coll_column;
+
+	nfeeds :== 1;
+	coll_stack[1..2].ncolls :== 2;
+
+	coll_stack[1..2].coll[1].z_set.up_down := -1.0;
+	coll_stack[1..2].coll[2].z_set.up_down := 1.0;
+
+END basic_coll_column;
+
+
+MODEL two_feed_column REFINES coll_column;
+
+	nfeeds :== 2;
+
+	coll_stack[1..3].ncolls :== 2;
+
+	coll_stack[1..3].coll[1].z_set.up_down := -1.0;
+	coll_stack[1..3].coll[2].z_set.up_down := 1.0;
+END two_feed_column;
+
+MODEL coll_plot;
+
+	ntrays					IS_A integer_constant;
+	components				IS_A set OF symbol_constant;
+
+	box_height,
+	z_values[0..ntrays+1],
+	s_values[0..ntrays+1]			IS_A factor;
+	shift,
+	up_down					IS_A real;
+	x[0..ntrays+1][components],
+	y[0..ntrays+1][components]		IS_A fraction;
+
+	tray_x_hat[components][0..ntrays+1]	IS_A factor;
+
+	(* PLOTTING *)
+
+	plots['plotx',
+	    'ploty',
+	    'plotx_s',
+	    'ploty_s',
+	    'plotxt']			IS_A plt_plot_symbol;
+	(* liquid composition *)
+
+
+
+	box_height := 1.0;
+	shift := 0.0;
+
+
+	
+
+	plots['plotx'].title :== 'liquid compositions vs z';
+	plots['plotx'].XLabel :== 'z';
+	plots['plotx'].YLabel :== 'liquid comp';
+	plots['plotx'].curve_set :== components + ['box'];
+	plots['plotx',
+	    'ploty',
+	    'plotx_s',
+	    'ploty_s',
+	    'plotxt'].curve_set			ARE_THE_SAME;
+
+	plots['plotx'].curve['box'].npnt	:== 4;
+	plots['plotx','ploty','plotx_s','ploty_s',
+		'plotxt'].curve['box'].npnt	ARE_THE_SAME;	
+	plots['plotx','ploty','plotx_s','ploty_s',
+		'plotxt'].curve['box'].legend	ARE_THE_SAME;	
+	plots['plotx'].curve['box'].legend 	:== 'box';
+
+
+	FOR k IN ['plotx','ploty','plotx_s','ploty_s','plotxt'] CREATE
+
+		plots[k].curve['box'].pnt[1..2].x	ARE_THE_SAME;
+		plots[k].curve['box'].pnt[3..4].x	ARE_THE_SAME;
+
+		plots[k].curve['box'].pnt[1].x,
+		plots[k].curve[CHOICE[components]].pnt[1].x ARE_THE_SAME;
+		plots[k].curve[CHOICE[components]]
+		    .pnt[plots[k].curve[CHOICE[components]].npnt].x,
+		plots[k].curve['box'].pnt[4].x	 	ARE_THE_SAME;
+	END FOR;
+
+	plots['plotx','ploty','plotx_s','ploty_s','plotxt']
+	    .curve[plots['plotx'].curve_set].pnt[1].x IS_REFINED_TO factor;
+
+(* basics *)
+	FOR k IN [components] CREATE
+
+	  plots['plotx'].curve[k].legend :== k;
+	  plots['plotx','ploty','plotx_s','ploty_s',
+		'plotxt'].curve[k].legend	ARE_THE_SAME;
+
+	  plots['plotx'].curve[k].npnt	:== ntrays+2;
+	  plots['plotx','ploty','plotx_s','ploty_s',
+		'plotxt'].curve[k].npnt	ARE_THE_SAME;
+
+	END FOR;
+
+	  plots['ploty'].title	:== 'Vapor composition vs z';
+	  plots['ploty'].XLabel  	:== 'z';
+	  plots['ploty'].YLabel  	:== 'vapor composition';
+
+
+	plots['plotx_s'].title :== 'liquid compositions vs s';
+	plots['plotx_s'].XLabel :== 's';
+	plots['plotx_s'].YLabel :== 'liquid comp';
+
+
+	  plots['ploty_s'].title	:== 'Vapor composition vs s';
+	  plots['ploty_s'].XLabel  	:== 's';
+	  plots['ploty_s'].YLabel  	:== 'vapor composition';
+
+
+	plots['plotxt'].title :== 'x_hat vs z';
+	plots['plotxt'].XLabel :== 'z';
+	plots['plotxt'].YLabel :== 'x_hat';
+
+
+	box_height,
+	plots['plotx'].curve['box'].pnt[2,3].y,
+	plots['plotxt'].curve['box'].pnt[2,3].y,
+	plots['ploty'].curve['box'].pnt[2,3].y,
+	plots['plotx_s'].curve['box'].pnt[2,3].y,
+	plots['ploty_s'].curve['box'].pnt[2,3].y ARE_THE_SAME;
+
+	plots['plotx'].curve['box'].pnt[1,4].y,
+	plots['plotxt'].curve['box'].pnt[1,4].y,
+	plots['ploty'].curve['box'].pnt[1,4].y,
+	plots['plotx_s'].curve['box'].pnt[1,4].y,
+	plots['ploty_s'].curve['box'].pnt[1,4].y ARE_THE_SAME;
+
+
+(* point merges *)
+	FOR j IN [1..plots['plotx'].curve['box'].npnt] CREATE
+		plots['plotx','ploty','plotxt']
+		 .curve['box'].pnt[j].x 	ARE_THE_SAME;
+		plots['plotx_s','ploty_s']
+		 .curve['box'].pnt[j].x		ARE_THE_SAME;
+	END FOR;
+	FOR j IN [1..plots['plotx'].curve[CHOICE[components]].npnt] CREATE
+		plots['plotx','ploty','plotxt']
+		 .curve[components].pnt[j].x	ARE_THE_SAME;
+		plots['plotx_s','ploty_s']
+		 .curve[components].pnt[j].x	ARE_THE_SAME;
+	END FOR;
+
+
+(* composition merges *)
+
+	FOR k IN [components] CREATE
+	   FOR j IN [0..ntrays+1] CREATE
+		plots['plotx'].curve[k].pnt[j+1].y,
+		plots['plotx_s'].curve[k].pnt[j+1].y,
+		x[j][k]		ARE_THE_SAME;
+
+		plots['ploty'].curve[k].pnt[j+1].y,
+		plots['ploty_s'].curve[k].pnt[j+1].y,
+		y[j][k]		ARE_THE_SAME;
+
+		plots['plotxt'].curve[k].pnt[j+1].y,
+		tray_x_hat[k][j]	ARE_THE_SAME;
+	   END FOR;
+	END FOR;
+
+(* equations also IN procedure *)
+
+	plots['plotx'].curve['box'].pnt[1].y = 0;
+
+	plots['plotx'].curve[CHOICE[components]].pnt[1].x = z_values[0];
+	plots['plotx'].curve[CHOICE[components]].pnt[ntrays+2].x =
+	    z_values[ntrays+1];
+	plots['plotx_s'].curve[CHOICE[components]].pnt[1].x =
+	    s_values[0] + shift;
+	plots['plotx_s'].curve[CHOICE[components]].pnt[ntrays+2].x =
+	    s_values[ntrays+1]+ shift;
+	FOR j IN [1..ntrays] CREATE
+		plots['plotx'].curve[CHOICE[components]].pnt[j+1].x = 
+		    (1+up_down)*(z_values[ntrays+1]-z_values[ntrays+1-j])/2
+		    + (1-up_down)*z_values[j]/2;
+		plots['plotx_s'].curve[CHOICE[components]].pnt[j+1].x = shift +
+		    (1+up_down)*(s_values[ntrays+1]-s_values[ntrays+1-j])/2
+		    + (1-up_down)*s_values[j]/2;
+	END FOR;
+
+   METHODS
+     METHOD clear;
+	z_values[0..ntrays+1].fixed			:= FALSE;
+	s_values[0..ntrays+1].fixed			:= FALSE;
+	box_height.fixed				:= FALSE;
+	x[1..ntrays][components].fixed			:= FALSE;
+	y[1..ntrays][components].fixed			:= FALSE;
+	tray_x_hat[components][1..ntrays].fixed		:= FALSE;
+     END clear;
+     METHOD specify;
+	z_values[0..ntrays+1].fixed			:= TRUE;
+	s_values[0..ntrays+1].fixed			:= TRUE;
+	box_height.fixed				:= TRUE;
+	x[1..ntrays][components].fixed			:= TRUE;
+	y[1..ntrays][components].fixed			:= TRUE;
+	tray_x_hat[components][1..ntrays].fixed		:= TRUE;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD plot_values;
+	plots['plotx'].curve['box'].pnt[1].y := 0;
+
+	plots['plotx'].curve[CHOICE[components]].pnt[1].x :=
+	    z_values[0];
+	plots['plotx'].curve[CHOICE[components]].pnt[ntrays+2].x :=
+	    z_values[ntrays+1];
+	plots['plotx_s'].curve[CHOICE[components]].pnt[1].x :=
+	    s_values[0]+ shift;
+	plots['plotx_s'].curve[CHOICE[components]].pnt[ntrays+2].x :=
+	    s_values[ntrays+1] + shift;
+	FOR j IN [1..ntrays] DO
+		plots['plotx'].curve[CHOICE[components]].pnt[j+1].x :=
+		    shift + (1+up_down)*(z_values[ntrays+1]-
+		    z_values[ntrays+1-j])/2
+		    + (1-up_down)*z_values[j]/2;
+		plots['plotx_s'].curve[CHOICE[components]].pnt[j+1].x :=
+		    shift + (1+up_down)*(s_values[ntrays+1]-
+		    s_values[ntrays+1-j])/2
+		    + (1-up_down)*s_values[j]/2;
+	END FOR;
+      END plot_values;
+		
+END coll_plot;
+
+
+MODEL coll_stack_plot;
+
+	components				IS_A set OF symbol_constant;
+	ncolls					IS_A integer_constant;
+	coll[1..ncolls]				IS_A coll_plot;
+	box_height,
+	z_space					IS_A factor;
+	
+	box_height,
+	coll[1..ncolls].box_height		ARE_THE_SAME;
+
+	components,
+	coll[1..ncolls].components		ARE_THE_SAME;
+
+	endpoints[1..ncolls][plots['plotx'].curve_set]		IS_A integer_constant;
+	plots['plotx',
+	    'ploty',
+	    'plotx_s',
+	    'ploty_s',
+	    'plotxt']				IS_A plt_plot_symbol;
+
+
+	plots['plotx'].curve_set,
+	plots['plotxt'].curve_set,
+	plots['ploty'].curve_set,
+	plots['plotx_s'].curve_set,
+	plots['ploty_s'].curve_set			ARE_THE_SAME;
+
+
+	plots['plotx'].curve_set,
+	coll[1].plots['plotx'].curve_set		ARE_THE_SAME;
+
+	FOR k IN [plots['plotx'].curve_set] CREATE
+		endpoints[1][k] :== coll[1].plots['plotx'].curve[k].npnt;
+	END FOR;
+	FOR j IN [2..ncolls] CREATE
+	    FOR k IN [plots['plotx'].curve_set] CREATE
+
+	  	endpoints[j][k] :== 
+		 endpoints[j-1][k] + coll[j].plots['plotx'].curve[k].npnt;
+	    END FOR;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+		plots['plotx'].curve[k].npnt,
+		plots['plotxt'].curve[k].npnt,
+		plots['ploty'].curve[k].npnt,
+		plots['plotx_s'].curve[k].npnt,
+		plots['ploty_s'].curve[k].npnt		ARE_THE_SAME;
+		
+		plots['plotx'].curve[k].npnt :== endpoints[ncolls][k];
+	END FOR;
+
+	FOR k IN ['plotx','ploty','plotx_s','ploty_s','plotxt'] CREATE
+		plots[k].title, 
+		coll[1..ncolls].plots[k].title		ARE_THE_SAME;
+		plots[k].XLabel,
+		coll[1..ncolls].plots[k].XLabel		ARE_THE_SAME;
+		plots[k].YLabel,
+		coll[1..ncolls].plots[k].YLabel		ARE_THE_SAME;
+	END FOR;
+
+
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	  	plots['plotx','ploty','plotx_s','ploty_s'
+			,'plotxt'].curve[k].legend,
+		coll[1].plots['plotx'].curve[k].legend		ARE_THE_SAME;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	    FOR j IN [1..plots['plotx'].curve[k].npnt] CREATE
+		plots['plotx','ploty','plotxt'].curve[k].pnt[j].x ARE_THE_SAME;
+		plots['plotx_s','ploty_s'].curve[k].pnt[j].x	  ARE_THE_SAME;
+	    END FOR;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	    FOR j IN [1..endpoints[1][k]] CREATE
+		plots['plotx'].curve[k].pnt[j],
+		coll[1].plots['plotx'].curve[k].pnt[j]		ARE_THE_SAME;
+	    END FOR; 
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+	    FOR i IN [2..ncolls] CREATE
+		FOR j IN [1..coll[i].plots['plotx'].curve[k].npnt] CREATE
+		 plots['plotx'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		 coll[i].plots['plotx'].curve[k].pnt[j].y	ARE_THE_SAME;
+		END FOR;
+	    END FOR;
+	END FOR;
+
+	FOR k IN [plots['ploty'].curve_set] CREATE
+
+	    FOR j IN [1..endpoints[1][k]] CREATE
+		plots['ploty'].curve[k].pnt[j],
+		coll[1].plots['ploty'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR; 
+	END FOR;
+	FOR k IN [plots['ploty'].curve_set] CREATE
+	    FOR i IN [2..ncolls] CREATE
+		FOR j IN [1..coll[i].plots['ploty'].curve[k].npnt] CREATE
+		 plots['ploty'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		 coll[i].plots['ploty'].curve[k].pnt[j].y	ARE_THE_SAME;
+		END FOR;
+	    END FOR;
+	END FOR;
+
+	FOR k IN [plots['plotx_s'].curve_set] CREATE
+
+	    FOR j IN [1..endpoints[1][k]] CREATE
+		plots['plotx_s'].curve[k].pnt[j],
+		coll[1].plots['plotx_s'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR; 
+	END FOR;
+	FOR k IN [plots['plotx_s'].curve_set] CREATE
+	    FOR i IN [2..ncolls] CREATE
+		FOR j IN [1..coll[i].plots['plotx_s'].curve[k].npnt] CREATE
+		 plots['plotx_s'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		 coll[i].plots['plotx_s'].curve[k].pnt[j].y	ARE_THE_SAME;
+		END FOR;
+	    END FOR;
+	END FOR;
+
+	FOR k IN [plots['ploty_s'].curve_set] CREATE
+
+	    FOR j IN [1..endpoints[1][k]] CREATE
+		plots['ploty_s'].curve[k].pnt[j],
+		coll[1].plots['ploty_s'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR; 
+	END FOR;
+	FOR k IN [plots['ploty_s'].curve_set] CREATE
+	    FOR i IN [2..ncolls] CREATE
+		FOR j IN [1..coll[i].plots['ploty_s'].curve[k].npnt] CREATE
+		 plots['ploty_s'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		 coll[i].plots['ploty_s'].curve[k].pnt[j].y	ARE_THE_SAME;
+		END FOR;
+	    END FOR;
+	END FOR;
+
+	FOR k IN [plots['plotxt'].curve_set] CREATE
+
+	    FOR j IN [1..endpoints[1][k]] CREATE
+		plots['plotxt'].curve[k].pnt[j],
+		coll[1].plots['plotxt'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR; 
+	END FOR;
+	FOR k IN [plots['plotxt'].curve_set] CREATE
+	    FOR i IN [2..ncolls] CREATE
+		FOR j IN [1..coll[i].plots['plotxt'].curve[k].npnt] CREATE
+		 plots['plotxt'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		 coll[i].plots['plotxt'].curve[k].pnt[j].y	ARE_THE_SAME;
+		END FOR;
+	    END FOR;
+	END FOR;
+
+
+	FOR i IN [2..ncolls] CREATE
+
+	   FOR k IN [plots['plotx'].curve_set] CREATE
+	      FOR j IN [1..coll[i].plots['plotx'].curve[k].npnt] CREATE
+		 plots['plotx'].curve[k].pnt[j+endpoints[i-1][k]].x
+		  = plots['plotx'].curve[k].pnt[endpoints[i-1][k]].x
+		 	+ coll[i].plots['plotx'].curve[k].pnt[j].x;
+		 plots['plotx_s'].curve[k].pnt[j+endpoints[i-1][k]].x
+		  = plots['plotx_s'].curve[k].pnt[endpoints[i-1][k]].x
+		 	+ coll[i].plots['plotx_s'].curve[k].pnt[j].x;
+	      END FOR;
+	   END FOR;
+	END FOR;
+
+
+   METHODS
+     METHOD clear;
+	RUN coll[1..ncolls].clear;
+	z_space.fixed 				:= FALSE;
+     END clear;
+     METHOD specify;
+	z_space.fixed 				:= TRUE;
+	RUN coll[1..ncolls].specify;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD plot_values;
+	RUN coll[1..ncolls].plot_values;
+
+	FOR i IN [2..ncolls] DO
+
+	   FOR k IN [plots['plotx'].curve_set] DO
+	      FOR j IN [1..coll[i].plots['plotx'].curve[k].npnt] DO
+		 plots['plotx'].curve[k].pnt[j+endpoints[i-1][k]].x
+		  := plots['plotx'].curve[k].pnt[endpoints[i-1][k]].x
+		 	+ coll[i].plots['plotx'].curve[k].pnt[j].x;
+		 plots['plotx_s'].curve[k].pnt[j+endpoints[i-1][k]].x
+		  := plots['plotx_s'].curve[k].pnt[endpoints[i-1][k]].x
+		 	+ coll[i].plots['plotx_s'].curve[k].pnt[j].x;
+	      END FOR;
+	   END FOR;
+	END FOR;
+     END plot_values;
+
+END coll_stack_plot;
+
+MODEL coll_column_plot;
+
+	nfeeds					IS_A integer_constant;
+	components				IS_A set OF symbol_constant;
+	coll_stack[1..nfeeds+1]			IS_A coll_stack_plot;
+
+	box_height				IS_A factor;
+	xreb[components],	
+	ycond[components]			IS_A fraction;
+	components,
+	coll_stack[1..nfeeds+1].components	ARE_THE_SAME;
+
+	box_height,
+	coll_stack[1..nfeeds+1].box_height	ARE_THE_SAME;
+
+	plots['plotx',
+	    'ploty',
+	    'plotx_s',
+	    'ploty_s',
+	    'plotxt']				IS_A plt_plot_symbol;
+
+
+	plots['plotx'].curve_set,
+	plots['plotxt'].curve_set,
+	plots['ploty'].curve_set,
+	plots['plotx_s'].curve_set,
+	plots['ploty_s'].curve_set			ARE_THE_SAME;
+
+	z_space					IS_A factor;
+	stack_npnt[1..nfeeds+1][plots['plotx'].curve_set],
+	endpoints[1..nfeeds+1][plots['plotx'].curve_set]	IS_A integer_constant;
+
+	z_space,
+	coll_stack[1..nfeeds+1].z_space		ARE_THE_SAME;
+	z_space := 0.1;
+
+	plots['plotx'].curve_set,
+	coll_stack[1..nfeeds+1].plots['plotx'].curve_set	ARE_THE_SAME;
+
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+		plots['plotx'].curve[k].npnt,
+		plots['plotxt'].curve[k].npnt,
+		plots['ploty'].curve[k].npnt,
+		plots['plotx_s'].curve[k].npnt,
+		plots['ploty_s'].curve[k].npnt		ARE_THE_SAME;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+
+	  FOR j IN [1..nfeeds+1] CREATE
+		stack_npnt[j][k],
+		coll_stack[j].plots['plotx'].curve[k].npnt	ARE_THE_SAME;
+	  END FOR;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+		endpoints[1][k] :==  stack_npnt[1][k];
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+	  FOR j IN [2..nfeeds+1] CREATE
+		endpoints[j][k] :== endpoints[j-1][k] + stack_npnt[j][k];
+	  END FOR;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+		plots['plotx'].curve[k].npnt :== 1 + endpoints[nfeeds+1][k];
+	END FOR;
+
+	FOR k IN ['plotx','ploty','plotx_s','ploty_s','plotxt'] CREATE
+		plots[k].title,
+		coll_stack[1..nfeeds+1].coll[1].plots[k].title	ARE_THE_SAME;
+		plots[k].XLabel,
+		coll_stack[1..nfeeds+1].coll[1].plots[k].XLabel	ARE_THE_SAME;
+		plots[k].YLabel,
+		coll_stack[1..nfeeds+1].coll[1].plots[k].YLabel	ARE_THE_SAME;
+	END FOR;
+
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	  	plots['plotx','ploty','plotx_s'
+			,'ploty_s','plotxt'].curve[k].legend,
+		coll_stack[1..nfeeds+1].coll[1].
+		    plots['plotx'].curve[k].legend	ARE_THE_SAME;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	  FOR j IN [1..plots['plotx'].curve[k].npnt-1] CREATE
+		plots['plotx','plotxt'].curve[k].pnt[j].x,
+		plots['ploty'].curve[k].pnt[j+1].x		ARE_THE_SAME;
+		plots['plotx_s'].curve[k].pnt[j].x,
+		plots['ploty_s'].curve[k].pnt[j+1].x		ARE_THE_SAME;
+	  END FOR;
+	END FOR;
+
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	  FOR j IN [1..stack_npnt[1][k]] CREATE
+		plots['plotx'].curve[k].pnt[j],
+		coll_stack[1].plots['plotx'].curve[k].pnt[j]	ARE_THE_SAME;
+	  END FOR;
+	END FOR;
+	FOR k IN [plots['plotx'].curve_set] CREATE
+
+	  FOR i IN [2..nfeeds+1] CREATE
+	    FOR j IN [1..stack_npnt[i][k]] CREATE
+		plots['plotx'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		coll_stack[i].plots['plotx'].curve[k].pnt[j].y	ARE_THE_SAME;
+	
+	    END FOR;
+	  END FOR;
+	END FOR;
+
+	FOR k IN [components] CREATE
+		plots['plotx'].curve[k].pnt[plots['plotx'].curve[k].npnt].y,
+		xreb[k]	ARE_THE_SAME;
+	END FOR;
+
+	plots['plotx'].curve['box']
+	 .pnt[plots['plotx'].curve['box'].npnt],
+	plots['plotx'].curve['box'].pnt[plots['plotx']
+	 .curve['box'].npnt-1]		ARE_THE_SAME;
+
+	FOR k IN [plots['plotx_s'].curve_set] CREATE
+	    FOR j IN [1..stack_npnt[1][k]] CREATE
+		plots['plotx_s'].curve[k].pnt[j],
+		coll_stack[1].plots['plotx_s'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR;
+	END FOR;
+	FOR k IN [plots['plotx_s'].curve_set] CREATE
+	  FOR i IN [2..nfeeds+1] CREATE
+	    FOR j IN [1..stack_npnt[i][k]] CREATE
+		plots['plotx_s'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		coll_stack[i].plots['plotx_s'].curve[k].pnt[j].y	ARE_THE_SAME;
+	
+	    END FOR;
+	  END FOR;
+	END FOR;
+	FOR k IN [components] CREATE
+		plots['plotx_s'].curve[k].pnt[plots['plotx_s'].curve[k].npnt].y,
+		xreb[k]	ARE_THE_SAME;
+	END FOR;
+
+	plots['plotx_s'].curve['box'].pnt[plots['plotx_s']
+		.curve['box'].npnt],
+	plots['plotx_s'].curve['box'].pnt[plots['plotx_s']
+		.curve['box'].npnt-1]		ARE_THE_SAME;
+
+
+
+	FOR k IN [components] CREATE
+		plots['ploty'].curve[k].pnt[1].y,
+		plots['ploty_s'].curve[k].pnt[1].y,
+		ycond[k]	ARE_THE_SAME;
+	END FOR;
+
+	plots['ploty'].curve['box'].pnt[1],
+	plots['ploty'].curve['box'].pnt[2] 	ARE_THE_SAME;
+
+	FOR k IN [plots['ploty'].curve_set] CREATE
+	    FOR j IN [1..stack_npnt[1][k]] CREATE
+		plots['ploty'].curve[k].pnt[j+1],
+		coll_stack[1].plots['ploty'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR;
+	END FOR;
+	FOR k IN [plots['ploty'].curve_set] CREATE
+	  FOR i IN [2..nfeeds+1] CREATE
+	    FOR j IN [1..stack_npnt[i][k]] CREATE
+		plots['ploty'].curve[k].pnt[1+j+endpoints[i-1][k]].y,
+		coll_stack[i].plots['ploty'].curve[k].pnt[j].y	ARE_THE_SAME;
+	
+	    END FOR;
+	  END FOR;
+	END FOR;
+
+	plots['ploty_s'].curve['box'].pnt[1],
+	plots['ploty_s'].curve['box'].pnt[2]	ARE_THE_SAME;
+
+	FOR k IN [plots['ploty_s'].curve_set] CREATE
+	    FOR j IN [1..stack_npnt[1][k]] CREATE
+		plots['ploty_s'].curve[k].pnt[j+1],
+		coll_stack[1].plots['ploty_s'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR;
+	END FOR;
+	FOR k IN [plots['ploty_s'].curve_set] CREATE
+	  FOR i IN [2..nfeeds+1] CREATE
+	    FOR j IN [1..stack_npnt[i][k]] CREATE
+		plots['ploty_s'].curve[k].pnt[1+j+endpoints[i-1][k]].y,
+		coll_stack[i].plots['ploty_s'].curve[k].pnt[j].y	ARE_THE_SAME;
+	
+	    END FOR;
+	  END FOR;
+	END FOR;
+
+	FOR k IN [plots['plotxt'].curve_set] CREATE
+	    FOR j IN [1..stack_npnt[1][k]] CREATE
+		plots['plotxt'].curve[k].pnt[j],
+		coll_stack[1].plots['plotxt'].curve[k].pnt[j]	ARE_THE_SAME;
+	    END FOR;
+	END FOR;
+	FOR k IN [plots['plotxt'].curve_set] CREATE
+	  FOR i IN [2..nfeeds+1] CREATE
+	    FOR j IN [1..stack_npnt[i][k]] CREATE
+		plots['plotxt'].curve[k].pnt[j+endpoints[i-1][k]].y,
+		coll_stack[i].plots['plotxt'].curve[k].pnt[j].y	ARE_THE_SAME;
+	
+	    END FOR;
+	  END FOR;
+	END FOR;
+
+	FOR k IN [components] CREATE
+		plots['plotxt'].curve[k].pnt[plots['plotxt']
+			.curve[k].npnt].y,
+		plots['plotxt'].curve[k].pnt[plots['plotxt']
+			.curve[k].npnt-1].y			ARE_THE_SAME;
+	END FOR;
+
+	plots['plotxt'].curve['box'].pnt[plots['plotxt']
+		.curve['box'].npnt],
+	plots['plotxt'].curve['box'].pnt[plots['plotxt']
+		.curve['box'].npnt-1]		ARE_THE_SAME;
+
+(* *)
+	FOR k IN [plots['plotx'].curve_set] CREATE
+	  FOR i IN [2..nfeeds+1] CREATE
+	    FOR j IN [1..stack_npnt[i][k]] CREATE
+		plots['plotx'].curve[k].pnt[j+endpoints[i-1][k]].x =
+		    z_space +
+		    plots['plotx'].curve[k].pnt[endpoints[i-1][k]].x +
+		    coll_stack[i].plots['plotx'].curve[k].pnt[j].x;
+		plots['plotx_s'].curve[k].pnt[j+endpoints[i-1][k]].x =
+			1 +
+		    plots['plotx_s'].curve[k].pnt[endpoints[i-1][k]].x +
+		    coll_stack[i].plots['plotx_s'].curve[k].pnt[j].x;
+	     END FOR;
+	  END FOR;
+	END FOR;
+
+	FOR k IN [components] CREATE
+		plots['plotx'].curve[k].pnt[plots['plotx'].curve[k].npnt].x =
+		  z_space + 
+		  plots['plotx'].curve[k].pnt[plots['plotx'].curve[k].npnt-1].x;
+		plots['plotx_s'].curve[k].pnt[plots['plotx_s'].curve[k].npnt].x
+		  = 1 + plots['plotx_s'].curve[k].pnt[plots['plotx_s']
+		 	.curve[k].npnt-1].x;
+		plots['ploty'].curve[k].pnt[1].x = plots['ploty'].curve[k].pnt[2].x - z_space;
+		plots['ploty_s'].curve[k].pnt[1].x = plots['ploty_s'].curve[k].pnt[2].x -1.0;
+		plots['plotxt'].curve[k].pnt[plots['plotxt'].curve[k].npnt].x 
+		  = z_space + plots['plotxt']
+			 .curve[k].pnt[plots['plotxt'].curve[k].npnt-1].x;
+	END FOR;
+
+   METHODS
+     METHOD clear;
+	RUN coll_stack[1..nfeeds+1].clear;
+	xreb[components].fixed := FALSE;
+	ycond[components].fixed := FALSE;
+     END clear;
+     METHOD specify;
+	RUN coll_stack[1..nfeeds+1].specify;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD plot_values;
+	RUN coll_stack[1..nfeeds+1].plot_values;
+
+	FOR k IN [plots['plotx'].curve_set] DO
+	  FOR i IN [2..nfeeds+1] DO
+	    FOR j IN [1..stack_npnt[i][k]] DO
+		plots['plotx'].curve[k].pnt[j+endpoints[i-1][k]].x :=
+			z_space + plots['plotx'].curve[k].pnt[endpoints[i-1][k]].x +
+			coll_stack[i].plots['plotx'].curve[k].pnt[j].x;
+		plots['plotx_s'].curve[k].pnt[j+endpoints[i-1][k]].x :=
+			1 + plots['plotx_s'].curve[k].pnt[endpoints[i-1][k]].x +
+			coll_stack[i].plots['plotx_s'].curve[k].pnt[j].x;
+	     END FOR;
+	  END FOR;
+	END FOR;
+
+	FOR k IN [components] DO
+		plots['plotx'].curve[k].pnt[plots['plotx'].curve[k].npnt].x :=
+		  z_space + 
+		  plots['plotx'].curve[k].pnt[plots['plotx'].curve[k].npnt-1].x;
+		plots['plotx_s'].curve[k].pnt[plots['plotx_s'].curve[k].npnt].x
+		  := 1 + plots['plotx_s'].curve[k].pnt[plots['plotx_s']
+		 	.curve[k].npnt-1].x;
+		plots['ploty'].curve[k].pnt[1].x := plots['ploty'].curve[k].pnt[2].x - z_space;
+		plots['ploty_s'].curve[k].pnt[1].x := plots['ploty_s'].curve[k].pnt[2].x -1.0;
+		plots['plotxt'].curve[k].pnt[plots['plotxt'].curve[k].npnt].x 
+		  := z_space + plots['plotxt']
+			 .curve[k].pnt[plots['plotxt'].curve[k].npnt-1].x;
+	END FOR;
+
+
+     END plot_values;
+
+END coll_column_plot;
+
+	
+MODEL ternary_column_plot REFINES coll_column_plot;
+
+	ternary[components]	IS_A plt_plot_integer;
+
+	ternary[components].ncurve :== 2;
+	ternary[components].curve[2].npnt :== 2;
+
+	ternary[components].curve[2].pnt[1].x := 0.0;
+	ternary[components].curve[2].pnt[1].y := 1.0;
+	ternary[components].curve[2].pnt[2].x := 1.0;
+	ternary[components].curve[2].pnt[2].y := 0.0;
+	
+
+	FOR i IN components CREATE
+	    ternary[i].curve[1].npnt,
+		plots['plotx'].curve[i].npnt	ARE_THE_SAME;
+	END FOR;
+	FOR i IN components CREATE 
+	    
+		ternary[i].XLabel :== CHOICE[components-[i]];
+		ternary[i].YLabel :== CHOICE[(components-[i])-[CHOICE[components-[i]]]];
+		ternary[i].curve[1..2].legend :== ' ' ;
+		ternary[i].title :== ' ' ;
+	END FOR;
+	FOR i IN components CREATE
+	    FOR j IN [1..ternary[i].curve[1].npnt] CREATE
+		ternary[i].curve[1].pnt[j].x,
+		    plots['plotx'].curve[CHOICE[components -
+		    [i]]].pnt[j].y ARE_THE_SAME;
+		
+		ternary[i].curve[1].pnt[j].y,
+		    plots['plotx'].curve[((components - [i]) -
+		    [CHOICE[components - [i]]])].pnt[j].y	ARE_THE_SAME;
+	    END FOR;
+	END FOR;
+	
+END ternary_column_plot;
+
+MODEL coll_w_plot;
+
+	col	IS_A coll;
+	plot	IS_A coll_plot;
+	components	IS_A set OF symbol_constant;
+
+	col.z_set.up_down,
+	plot.up_down				ARE_THE_SAME;
+
+	components,
+	col.components,
+	plot.components				ARE_THE_SAME;
+	col.ntrays,
+	plot.ntrays				ARE_THE_SAME;
+
+	FOR j IN [0..col.ntrays+1] CREATE
+
+		col.z_set.z_values[j],
+		plot.z_values[j]		ARE_THE_SAME;
+		col.z_set.s_values[j],
+		plot.s_values[j]		ARE_THE_SAME;
+	END FOR;
+
+	FOR i IN col.components CREATE
+	   FOR j IN [1..col.ntrays] CREATE
+		col.x[j][i],
+		plot.x[j][i]			ARE_THE_SAME;
+		col.y[j][i],
+		plot.y[j][i]			ARE_THE_SAME;
+		col.x_hat[j][i],
+		plot.tray_x_hat[i][j]		ARE_THE_SAME;
+	   END FOR;
+		col.topliq.state.y[i],
+		plot.x[0][i]			ARE_THE_SAME;
+		col.topvap.state.y[i],
+		plot.y[0][i]			ARE_THE_SAME;
+		col.botliq.state.y[i],
+		plot.x[col.ntrays+1][i]		ARE_THE_SAME;
+		col.botvap.state.y[i],
+		plot.y[col.ntrays+1][i]		ARE_THE_SAME;
+
+		col.end_x_hat['top'][i],
+		plot.tray_x_hat[i][0]		ARE_THE_SAME;
+		col.end_x_hat['bot'][i],
+		plot.tray_x_hat[i][col.ntrays+1]	ARE_THE_SAME;
+	END FOR;
+   METHODS
+     METHOD clear;
+	RUN col.clear;
+     END clear;
+     METHOD seqmod;
+	RUN col.seqmod;
+     END seqmod;
+     METHOD specify;
+	RUN col.specify;
+     END specify;
+     METHOD reset;
+ 	RUN col.reset;
+     END reset;
+     METHOD scale;
+	RUN col.scale;
+     END scale;
+
+END coll_w_plot;
+
+MODEL coll_stack_w_plot;
+ 	coll_stack		IS_A coll_stack;
+	plots			IS_A coll_stack_plot;
+	components		IS_A set OF symbol_constant;
+
+	components,
+	coll_stack.components,
+	plots.components	ARE_THE_SAME;
+
+	coll_stack.ncolls,
+	plots.ncolls		ARE_THE_SAME;
+
+	FOR k IN [1..plots.ncolls] CREATE
+
+		coll_stack.coll[k].z_set.up_down,
+		plots.coll[k].up_down		ARE_THE_SAME;
+
+		coll_stack.coll[k].ntrays,
+		plots.coll[k].ntrays		ARE_THE_SAME;
+	END FOR;
+	FOR k IN [1..plots.ncolls] CREATE
+
+	   FOR j IN [0..coll_stack.coll[k].ntrays+1] CREATE
+		coll_stack.coll[k].z_set.z_values[j],
+		plots.coll[k].z_values[j]	ARE_THE_SAME;
+		coll_stack.coll[k].z_set.s_values[j],
+		plots.coll[k].s_values[j]	ARE_THE_SAME;
+	   END FOR;
+	END FOR;
+	FOR k IN [1..plots.ncolls] CREATE
+
+	   FOR i IN coll_stack.coll[k].components CREATE
+	      FOR j IN [1..coll_stack.coll[k].ntrays] CREATE
+
+		coll_stack.coll[k].x[j][i],
+		plots.coll[k].x[j][i]		ARE_THE_SAME;
+		coll_stack.coll[k].y[j][i],
+		plots.coll[k].y[j][i]		ARE_THE_SAME;
+		coll_stack.coll[k].x_hat[j][i],
+		plots.coll[k].tray_x_hat[i][j]	ARE_THE_SAME;
+	      END FOR;
+	   END FOR;
+	END FOR;
+	FOR k IN [1..plots.ncolls] CREATE
+	   FOR i IN coll_stack.coll[k].components CREATE
+		coll_stack.coll[k].topliq.state.y[i],
+		plots.coll[k].x[0][i]		ARE_THE_SAME;
+		coll_stack.coll[k].topvap.state.y[i],
+		plots.coll[k].y[0][i]		ARE_THE_SAME;
+		coll_stack.coll[k].botliq.state.y[i],
+		plots.coll[k].x[plots.coll[k].ntrays+1][i]	ARE_THE_SAME;
+		coll_stack.coll[k].botvap.state.y[i],
+		plots.coll[k].y[plots.coll[k].ntrays+1][i]	ARE_THE_SAME;
+
+		coll_stack.coll[k].end_x_hat['top'][i],
+		plots.coll[k].tray_x_hat[i][0]			ARE_THE_SAME;
+		coll_stack.coll[k].end_x_hat['bot'][i],
+		plots.coll[k]
+		.tray_x_hat[i][plots.coll[k].ntrays+1]		ARE_THE_SAME;
+	      
+	    END FOR;
+	END FOR;
+
+   METHODS
+     METHOD clear;
+	RUN coll_stack.clear;
+	RUN plots.clear;
+     END clear;
+     METHOD seqmod;
+	plots.box_height.fixed := TRUE;
+	RUN coll_stack.seqmod;
+     END seqmod;
+     METHOD specify;
+	plots.box_height.fixed := TRUE;
+	RUN coll_stack.specify;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD scale;
+	RUN coll_stack.scale;
+     END scale;
+END coll_stack_w_plot;
+
+
+MODEL column_w_plot;
+	col				IS_A coll_column;
+	plots				IS_A coll_column_plot;
+	components			IS_A set OF symbol_constant;
+	scale				IS_A scaling_constant;
+	
+	components,
+	col.components,
+	plots.components			ARE_THE_SAME;
+	
+	col.nfeeds,
+	plots.nfeeds				ARE_THE_SAME;
+
+	FOR j IN [1..col.nfeeds+1] CREATE
+		col.coll_stack[j].ncolls,
+		plots.coll_stack[j].ncolls	ARE_THE_SAME;
+	END FOR;
+
+	FOR i IN col.components CREATE
+
+		col.reboiler.liqout['bottoms'].state.y[i],
+		plots.xreb[i]			ARE_THE_SAME;
+		col.condenser.vapout['vapor_product'].state.y[i],
+		plots.ycond[i]			ARE_THE_SAME;
+	END FOR;
+
+	FOR m IN [1..col.nfeeds+1] CREATE
+	  FOR k IN [1..col.coll_stack[m].ncolls] CREATE
+		col.coll_stack[m].coll[k].z_set.up_down,
+		plots.coll_stack[m].coll[k].up_down	ARE_THE_SAME;
+
+		col.coll_stack[m].coll[k].ntrays,
+		plots.coll_stack[m].coll[k].ntrays	ARE_THE_SAME;
+	  END FOR;
+	END FOR;
+	FOR m IN [1..col.nfeeds+1] CREATE
+	  FOR k IN [1..col.coll_stack[m].ncolls] CREATE
+	   FOR j IN [0..col.coll_stack[m].coll[k].ntrays+1] CREATE
+
+		col.coll_stack[m].coll[k].z_set.z_values[j],
+		plots.coll_stack[m].coll[k].z_values[j]	ARE_THE_SAME;
+		col.coll_stack[m].coll[k].z_set.s_values[j],
+		plots.coll_stack[m].coll[k].s_values[j]	ARE_THE_SAME;
+ 	   END FOR;
+	  END FOR;
+	END FOR;
+	FOR m IN [1..col.nfeeds+1] CREATE
+	  FOR k IN [1..col.coll_stack[m].ncolls] CREATE
+	   FOR i IN col.coll_stack[m].coll[k].components CREATE
+
+	      FOR j IN [1..col.coll_stack[m].coll[k].ntrays] CREATE
+		col.coll_stack[m].coll[k].x[j][i],
+		plots.coll_stack[m].coll[k].x[j][i]		ARE_THE_SAME;
+		col.coll_stack[m].coll[k].y[j][i],
+		plots.coll_stack[m].coll[k].y[j][i]		ARE_THE_SAME;
+		col.coll_stack[m].coll[k].x_hat[j][i],
+		plots.coll_stack[m].coll[k].tray_x_hat[i][j]	ARE_THE_SAME;
+	      END FOR;
+	   END FOR;
+	  END FOR;
+	END FOR;
+	FOR m IN [1..col.nfeeds+1] CREATE
+	  FOR k IN [1..col.coll_stack[m].ncolls] CREATE
+	   FOR i IN col.coll_stack[m].coll[k].components CREATE
+		col.coll_stack[m].coll[k].topliq.state.y[i],
+		plots.coll_stack[m].coll[k].x[0][i]		ARE_THE_SAME;
+		col.coll_stack[m].coll[k].topvap.state.y[i],
+		plots.coll_stack[m].coll[k].y[0][i]		ARE_THE_SAME;
+		col.coll_stack[m].coll[k].botliq.state.y[i],
+		plots.coll_stack[m].coll[k]
+		 .x[col.coll_stack[m].coll[k].ntrays+1][i]	ARE_THE_SAME;
+		col.coll_stack[m].coll[k].botvap.state.y[i],
+		plots.coll_stack[m].coll[k]
+		 .y[col.coll_stack[m].coll[k].ntrays+1][i]	ARE_THE_SAME;
+
+		col.coll_stack[m].coll[k].end_x_hat['top'][i],
+		plots.coll_stack[m].coll[k].tray_x_hat[i][0]	ARE_THE_SAME;
+		col.coll_stack[m].coll[k].end_x_hat['bot'][i],
+		plots.coll_stack[m].coll[k]
+		 .tray_x_hat[i][col.coll_stack[m].coll[k].ntrays+1]	ARE_THE_SAME;
+	   END FOR;
+	  END FOR;
+	END FOR;
+
+   METHODS
+     METHOD clear;
+	RUN col.clear;
+	RUN plots.clear;
+     END clear;
+     METHOD seqmod;
+	plots.z_space.fixed := TRUE;
+	plots.box_height.fixed := TRUE;
+	RUN col.seqmod;
+     END seqmod;
+     METHOD specify;
+	plots.z_space.fixed := TRUE;
+	plots.box_height.fixed := TRUE;
+	RUN col.specify;
+     END specify;
+     METHOD reset;
+	RUN clear;
+	RUN specify;
+     END reset;
+     METHOD scale;
+	RUN col.scale;
+     END scale;
+END column_w_plot;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*)

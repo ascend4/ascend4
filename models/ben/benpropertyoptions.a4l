@@ -1,0 +1,209 @@
+REQUIRE "ben/bencomponents.a4l";
+(* --> measures,system,atoms *)
+PROVIDE "benpropertyoptions.a4l";
+(*********************************************************************\
+                        property_options.lib
+                        by Ben Allan
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1996 Benjamin A Allan
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1998/06/01 15:43:29 $
+  $Revision: 1.1 $
+  $Author: ballan $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/ben/benpropertyoptions.a4l,v $
+\*********************************************************************)
+(**
+ **
+ **  P R O P E R T Y O P T S  .  L  I  B
+ **  -------------------------------------
+ **
+ **  AUTHOR:      Benjamin Allan
+ **
+ **  DATES:       03/97 - Original code.
+ **  CONTENTS:    ASCEND structure for specifying property options
+ **               in process flowsheets using parameterized types.
+ **
+ **)
+
+
+MODEL optionsmodel() REFINES cmumodel();
+(* root for options library *)
+END optionsmodel;
+
+(********************** Single phase option sets *********************)
+
+MODEL single_phase_options(
+	ds WILL_BE td_component_data_set;
+        phase IS_A symbol_constant;
+        component_thermo_correlation IS_A symbol_constant;
+        mixture_thermo_correlation IS_A symbol_constant;
+) REFINES optionsmodel();
+NOTES
+'usage' SELF {
+This is a template. Never use this type in the body of a MODEL.
+Instead use a final refinement like
+UNIFAC_Rackett_liquid_options
+Wilson_Rackett_liquid_options
+Pitzer_vapor_options
+or material_only_options.
+}
+END NOTES;
+END single_phase_options;
+
+MODEL material_only_options (
+	ds WILL_BE td_component_data_set;
+) REFINES single_phase_options(
+	phase :== 'material';
+	component_thermo_correlation :== 'ideal';
+	mixture_thermo_correlation :== 'ideal';
+);
+END material_only_options;
+
+MODEL liquid_phase_options (
+	ds WILL_BE td_component_data_set;
+	component_thermo_correlation IS_A symbol_constant;
+	mixture_thermo_correlation IS_A symbol_constant;
+) WHERE (
+	component_thermo_correlation == 'Rackett';
+	(mixture_thermo_correlation == 'UNIFAC') OR 
+	(mixture_thermo_correlation == 'Wilson');
+) REFINES single_phase_options (
+	phase :== 'liquid';
+);
+NOTES
+'usage' SELF {
+This is a template. Never use this type in the body of a MODEL.
+Instead use a final refinement like
+UNIFAC_Rackett_liquid_options or Wilson_Rackett_liquid_options
+}
+END NOTES;
+END liquid_phase_options;
+
+
+MODEL vapor_phase_options (
+	ds WILL_BE td_component_data_set;
+	component_thermo_correlation IS_A symbol_constant;
+	mixture_thermo_correlation IS_A symbol_constant;
+) WHERE (
+	component_thermo_correlation == 'Pitzer';
+	mixture_thermo_correlation == 'Pitzer';
+) REFINES single_phase_options(
+	phase :== 'vapor';
+);
+NOTES
+'usage' SELF {
+This is a template. Avoid using this type in the body of a MODEL.
+Instead use a final refinement like Pitzer_vapor_options.
+}
+END NOTES;
+END vapor_phase_options;
+
+MODEL UNIFAC_Rackett_liquid_options (
+	ds WILL_BE td_component_data_set;
+) WHERE (
+	component_thermo_correlation == 'Rackett';
+	(mixture_thermo_correlation == 'UNIFAC') OR 
+	(mixture_thermo_correlation == 'Wilson');
+) REFINES liquid_phase_options(
+	component_thermo_correlation :== 'Rackett';
+	mixture_thermo_correlation :== 'UNIFAC';
+);
+END UNIFAC_Rackett_liquid_options;
+
+MODEL Wilson_Rackett_liquid_options (
+	ds WILL_BE td_component_data_set;
+) WHERE (
+	component_thermo_correlation == 'Rackett';
+	(mixture_thermo_correlation == 'UNIFAC') OR 
+	(mixture_thermo_correlation == 'Wilson');
+) REFINES liquid_phase_options(
+	component_thermo_correlation :== 'Rackett';
+	mixture_thermo_correlation :== 'Wilson';
+);
+END Wilson_Rackett_liquid_options;
+
+MODEL Pitzer_vapor_options (
+	ds WILL_BE td_component_data_set;
+) WHERE (
+	component_thermo_correlation == 'Pitzer';
+	mixture_thermo_correlation == 'Pitzer';
+) REFINES vapor_phase_options(
+	component_thermo_correlation :== 'Pitzer';
+	mixture_thermo_correlation :== 'Pitzer';
+);
+END Pitzer_vapor_options;
+
+
+(********************** Multiphase option sets *********************)
+MODEL generic_mixture_options(
+	phases IS_A set OF symbol_constant;
+	phase[phases] WILL_BE single_phase_options;
+	reference_phase IS_A symbol_constant;
+) REFINES optionsmodel();
+	n_phases IS_A integer_constant;
+	n_phases :== CARD[phases];
+	other_phases IS_A set OF symbol_constant;
+	other_phases :== phases - [reference_phase];
+END generic_mixture_options;
+
+MODEL any_two_phase_options(
+	phase1opt WILL_BE single_phase_options;
+	phase2opt WILL_BE single_phase_options;
+) REFINES optionsmodel();
+	phases IS_A set OF symbol_constant;
+	phases :== UNION[[phase1opt.phase],[phase2opt.phase]];
+END any_two_phase_options;
+
+MODEL vle_options(
+	phase1opt WILL_BE liquid_phase_options;
+	phase2opt WILL_BE vapor_phase_options;
+) WHERE(
+	phase1opt.ds, phase2opt.ds WILL_BE_THE_SAME;
+) REFINES any_two_phase_options;
+
+	phase[pnames] ALIASES (phase1opt,phase2opt)
+	WHERE pnames IS_A set OF symbol_constant
+	WITH_VALUE ('liquid','vapor');
+(*	pnames, phases ARE_THE_SAME; TRUE but not needed *)
+
+	ds ALIASES phase1opt.ds;
+
+	reference_phase IS_A symbol_constant;
+	reference_phase :== 'liquid';
+END vle_options;
+
+MODEL Pitzer_Rackett_Wilson_options(
+	phase1opt WILL_BE Wilson_Rackett_liquid_options;
+	phase2opt WILL_BE Pitzer_vapor_options;
+) WHERE(
+	phase1opt.ds, phase2opt.ds WILL_BE_THE_SAME;
+) REFINES vle_options;
+END Pitzer_Rackett_Wilson_options;
+
+MODEL Pitzer_Rackett_UNIFAC_options(
+	phase1opt WILL_BE UNIFAC_Rackett_liquid_options;
+	phase2opt WILL_BE Pitzer_vapor_options;
+) WHERE(
+	phase1opt.ds, phase2opt.ds WILL_BE_THE_SAME;
+) REFINES vle_options;
+END Pitzer_Rackett_UNIFAC_options;

@@ -1,0 +1,67 @@
+#  ASCEND Subtree Makefile
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/04/17 17:09:16 $
+#  $Revision: 1.6 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/Makefile.in,v $
+#
+
+#  This file contains two lists used for installing ASCEND:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed.
+
+#  Running `make install' further up the directory tree will cause
+#  make to descend into this directory and install the listed file.
+#  The location of the RULES_FILE will be passed to `make'.
+
+
+SHELL = /bin/sh
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+INSTALL_SUBDIR_LIST = \
+	abbott
+
+INSTALL_FILE_LIST = \
+	HGthermo.par.lib \
+	H_G_thermodynamics.lib \
+	H_S_thermodynamics.lib \
+	atoms.lib \
+	backup_column.lib \
+	backup_flash.lib \
+	bvp.lib \
+	collocation.lib \
+	collocation.par.lib \
+	column.lib \
+	column.par.lib \
+	components.lib \
+	components.par.lib \
+	flash.lib \
+	flash.par.lib \
+	flowsheet.lib \
+	integration.lib \
+	ivp.lib \
+	ivpsystem.lib \
+	lsode.lib \
+	measures.lib \
+	molar.lib \
+	newintegration.lib \
+	plot.lib \
+	plot.par.lib \
+	propertyoptions.par.lib \
+	stream.lib \
+	stream.par.lib \
+	system.lib \
+	thermodynamics.lib \
+	wilson_stream.lib
+
+
+
+include $(RULES_FILE)

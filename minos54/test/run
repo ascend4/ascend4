@@ -1,0 +1,46 @@
+#!/usr/bin/csh
+
+# This is a typical Unix script for running a program such as MINOS.
+# It should be called "run".
+# Note that file names of the form fort.* may be machine-dependent.
+#
+# 30 May 1991: Original version written by Philip Gill for a DECstation 3100.
+
+if ( {$1}x == x) then
+     echo 'run minos pilot       runs minos.exe with pilot.mps, pilot.spc'
+     echo 'run minos pilot lp    runs minos.exe with pilot.mps, lp.spc'
+     exit
+endif
+
+set PROB = $1
+if ({$2}x != x)  then
+     set PROB = $2
+endif
+
+set SPECS = $PROB
+if ({$3}x != x)  then
+     set SPECS = $3
+endif
+echo "Defining $2 files"
+echo "Will use $SPECS.spc"
+
+#rm	ftn04	>& /dev/null
+#rm	ftn10	>& /dev/null
+
+cp	$SPECS.spc	minos.specs	
+cp	$PROB.mps	minos.mps	
+cp	$PROB.basis	minos.oldb	>& /dev/null
+ls -l $PROB*   
+if ($SPECS == $PROB) then 
+   ls  -l $SPECS*
+endif
+
+./$1.exe
+
+#cp	ftn12	$PROB.newbasis	>& /dev/null
+cp	minos.print	$PROB.out		
+
+#rm ftn04	
+#rm ftn09	>& /dev/null
+#rm ftn10	
+#rm ftn12	>& /dev/null

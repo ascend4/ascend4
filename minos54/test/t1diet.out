@@ -1,0 +1,216 @@
+1
+ 
+          
+         ==============================
+         M I N O S    5.4    (Dec 1992)
+         ==============================
+
+      Begin t1diet   (DIET LP problem)
+         Minimize
+         Rows                      20
+         Columns                   30
+         Elements                  50
+       
+         MPS file                  10
+       
+         Iterations               100
+         Print level                1  * OK for small problems
+         Print frequency            1
+         Summary frequency          1
+      End DIET Problem
+
+ Reasonable Workspace limits are         0 ...    1316
+ Actual     Workspace limits are         0 ...   50000 ...   50000  words of  z.
+1
+ 
+ Parameters
+ ----------
+ MPS INPUT DATA.
+ Row limit..............        20       List limit.............         0       Lower bound default....  0.00E+00
+ Column limit...........        30       Error message limit....        10       Upper bound default....  1.00E+20
+ Elements limit ........        50       Phantom elements.......         0       Aij tolerance..........  1.00E-10
+
+ FILES.
+ MPS file ..............        10       Old basis file ........         0       (Card reader)..........         5
+ Solution file..........         0       New basis file ........         0       (Printer)..............         9
+ Insert file............         0       Backup basis file......         0       (Specs file)...........         4
+ Punch file.............         0       Load file..............         0       Dump file..............         0
+
+ FREQUENCIES.
+ Log frequency..........         1       Check row error........        60       Save new basis map.....       100
+ Summary frequency......         1       Factorize basis........       100       Expand frequency.......     10000
+
+ LP PARAMETERS.
+ Scale option...........         2       Feasibility tolerance..  1.00E-06       Iteration limit........       100
+ Scale tolerance........      .900       Optimality tolerance...   .10E-05       Partial  price.........        10
+ Crash option...........         3       Pivot tolerance........  3.25E-11       Multiple price.........         1
+ Crash tolerance........      .100       Weight on objective....   .00E+00
+
+ NONLINEAR PROBLEMS.
+ Nonlinear constraints..         0       Hessian dimension......         1       Function precision.....  3.00E-13
+ Nonlinear Jacobian vars         0       Superbasics limit......         1       Difference interval....  5.48E-07
+ Nonlinear objectiv vars         0       Linesearch tolerance...    .10000       Central difference int.  6.69E-05
+ Problem number.........         0       Subspace tolerance.....    .50000       Derivative level.......         3
+ Unbounded objective val  1.00E+20       Unbounded step size....  1.00E+10       Verify level...........         0
+
+ AUGMENTED LAGRANGIAN.
+ Jacobian...............     Dense       Major iterations limit.        50       Radius of convergence..  1.00E-02
+ Lagrangian.............       Yes       Minor iterations limit.        40       Row tolerance..........  1.00E-06
+ Penalty parameter......  1.00E+00       Completion.............      Full       Print level..(JFLXB)...         1
+ Major damping parameter  2.00E+00       Minor damping parameter  2.00E+00
+
+ MISCELLANEOUS.
+ LU factor tolerance....    100.00       Workspace (user).......         0       Debug level............         0
+ LU update tolerance....     10.00       Workspace (total)......     50000       Linesearch debug after.   9999999
+ LU singularity tol.....  3.25E-11       eps (machine precision)  2.22E-16       nwordr, nwordi, nwordh.   2  2  2
+ LU swap tolerance......  1.22E-04       Timing level...........         3
+1
+ 
+ MPS file
+ --------
+      1    NAME          T1DIET
+      2    ROWS
+      7    COLUMNS
+     20    RHS
+     23    BOUNDS
+     30    ENDATA
+
+
+
+ Names selected
+ --------------
+ Objective      COST     (Min)       1
+ RHS            DEMANDS              3
+ RANGES                              0
+ BOUNDS         SERVINGS             6
+
+
+
+ Length of row-name hash table           101
+ Collisions during table lookup            0
+
+ Nonzeros allowed for in LU factors    24909
+ Scale option  2,      Partial price       1
+ Partial price section size (A)            6
+ Partial price section size (I)            4
+
+
+
+ Matrix Statistics
+ -----------------
+               Total      Normal        Free       Fixed     Bounded
+ Rows              4           3           1           0           0
+ Columns           6           0           0           0           6
+
+ No. of matrix elements                   24     Density     100.000
+ Biggest                          4.2000E+02  (excluding fixed columns,
+ Smallest                         2.0000E+00   free rows, and RHS)
+
+ No. of objective coefficients             6
+ Biggest                          2.4000E+01  (excluding fixed columns)
+ Smallest                         3.0000E+00
+
+
+ Number of Nonlinear constraints           0
+ Number of Linear    constraints           4
+ Number of Variables                       6
+1
+ 
+ Initial basis
+ -------------
+
+ No basis file supplied
+
+
+ Scaling
+ -------
+             Min elem    Max elem       Max col ratio
+ After  0    2.00E+00    4.20E+02              105.00
+ After  1    2.43E-01    4.11E+00               16.88
+ After  2    3.17E-01    3.15E+00                9.95
+ After  3    3.18E-01    3.15E+00                9.90
+
+            Min scale                       Max scale      Between 0.5 and 2.0
+ Col      1   2.0E-01            Col      4   2.9E+00                4    66.7
+ Row      2   8.5E+00            Row      1   1.7E+02                0      .0
+
+ Norm of fixed columns and slacks             1.4E+03
+ (before and after row scaling)               2.2E+01
+
+
+ Crash option  3
+ Crash on linear E  rows:
+1
+ 
+ Iterations
+ ----------
+
+ Factorize     1    Demand        0    Iteration     0    Infeas        0    Objective  0.000000000E+00
+ Nonlinear     0    Linear        0    Slacks        4    Elems         4    Density   25.00
+ Compressns    0    Merit       .00    lenL          0    lenU          4    Increase    .00    m      4  Ut     4  d1     0
+ Lmax    0.0E+00    Bmax    1.0E+00    Umax    1.0E+00    Umin    1.0E+00    Growth  1.0E+00    Lt     0  bp     0  d2     0
+ 
+ Itn      0 -- linear E rows feasible.   Obj =   0.000000000E+00
+ Crash on linear LG rows:
+ Slacks     1  Free cols     0  Preferred     0
+ Unit       0  Double        0  Triangle      1  Pad     2
+
+ Factorize     2    Demand        0    Iteration     0    Infeas        1    Objective  0.000000000E+00
+ Nonlinear     0    Linear        1    Slacks        3    Elems         7    Density   43.75
+ Compressns    0    Merit       .00    lenL          0    lenU          7    Increase    .00    m      4  Ut     4  d1     0
+ Lmax    0.0E+00    Bmax    3.1E+00    Umax    3.1E+00    Umin    1.0E+00    Growth  1.0E+00    Lt     0  bp     0  d2     0
+ Itn      0 -- infeasible.  Num =    2   Sum =   1.255002353E+00
+
+    Itn ph pp     dj    +sbs  -sbs   -bs  step    pivot   ninf  sinf,objective     L     U ncp
+      1  1  1 -3.2E+00     4     4     0 1.1E+00  0.0E+00    2  1.25500235E+00     0     7   0
+      2  1  1 -7.3E-01     5     5     1 3.2E-02  7.3E-01    1  2.35683072E-02     0     7   0
+ 
+ Itn      2 -- feasible solution.  Objective =   9.733333333E+01
+ 
+      3  2  1  1.0E+01     4     4     5 4.7E-01 -1.4E-01    0  9.25000000E+01     0     7   0
+
+ Biggest dj =  4.860E+01 (variable      6)   norm rg =  0.000E+00   norm pi =  3.258E+02
+1
+ 
+ EXIT -- optimal solution found
+
+ T1DIET  
+ No. of iterations                   3   Objective value      9.2500000000E+01
+ No. of degenerate steps             0   Percentage                        .00
+ Norm of x  (scaled)         1.188E+00   Norm of pi (scaled)         3.258E+02
+ Norm of x                   1.106E+03   Norm of pi                  5.281E-01
+ Primal inf (scaled)      0    0.0E+00   Dual inf   (scaled)      0    0.0E+00
+ Primal infeas            0    0.0E+00   Dual infeas              0    0.0E+00
+1
+ 
+ NAME           T1DIET                OBJECTIVE VALUE       9.2500000000E+01
+
+ STATUS         OPTIMAL SOLN          ITERATION      3    SUPERBASICS      0
+
+ OBJECTIVE      COST     (Min)
+ RHS            DEMANDS 
+ RANGES                 
+ BOUNDS         SERVINGS
+
+ SECTION 1 - ROWS
+
+  NUMBER  ...ROW.. STATE  ...ACTIVITY...  SLACK ACTIVITY  ..LOWER LIMIT.  ..UPPER LIMIT.  .DUAL ACTIVITY    ..I
+
+       7  ENERGY      LL      2000.00000          .00000      2000.00000           NONE           .05625      1
+       8  PROTEIN     BS        60.00000        -5.00000        55.00000           NONE           .00000      2
+       9  CALCIUM     BS      1334.50000      -534.50000       800.00000           NONE           .00000      3
+      10  COST        BS        92.50000       -92.50000           NONE            NONE         -1.00000      4
+1
+ 
+ SECTION 2 - COLUMNS
+
+  NUMBER  .COLUMN. STATE  ...ACTIVITY...  .OBJ GRADIENT.  ..LOWER LIMIT.  ..UPPER LIMIT.  REDUCED GRADNT    M+J
+
+       1  OATMEAL     UL         4.00000         3.00000          .00000         4.00000        -3.18750      5
+       2  CHICKEN     LL          .00000        24.00000          .00000         3.00000        12.46875      6
+       3  EGGS        LL          .00000        13.00000          .00000         2.00000         4.00000      7
+       4  MILK        BS         4.50000         9.00000          .00000         8.00000          .00000      8
+       5  PIE         UL         2.00000        20.00000          .00000         2.00000        -3.62500      9
+       6  PORKBEAN    LL          .00000        19.00000          .00000         2.00000         4.37500     10
+ 
+ Endrun

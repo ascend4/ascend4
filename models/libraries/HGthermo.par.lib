@@ -1,0 +1,1225 @@
+(*********************************************************************\
+  H_G_thermodynamics.lib
+  by Joseph J. Zaher
+  Part of the Ascend Library
+
+  This file is part of the Ascend modeling library.
+
+  Copyright (C) 1994
+
+  The Ascend modeling library is free software; you can redistribute
+  it and/or modify it under the terms of the GNU General Public License as
+  published by the Free Software Foundation; either version 2 of the
+  License, or (at your option) any later version.
+
+  The Ascend Language Interpreter is distributed in hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  the program; if not, write to the Free Software Foundation, Inc., 675
+  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+  \*********************************************************************)
+
+(**
+  **
+  **  T  H  E  R  M  O  D  Y  N  A  M  I  C  S  .  L  I  B
+  **  ----------------------------------------------------
+  **
+  **  AUTHOR:	  Joseph J. Zaher
+  **
+  **  DATES:	   07/91 - Original code.
+  **		   02/92 - Made compatible with new set version of ASCEND.
+  **			   Scaled equations to enhance convergence, updated
+  **			   vapor pressure correlation, added Pitzer extension
+  **			   to vapor mixtures and UNIFAC extension to liquid
+  **			   mixtures with help of Bob Huss.
+  **		   03/92 - Removed stream model.  Library remains purely
+  **			   intensive without any assumption to static or
+  **			   dynamic modeling.
+  **		   07/92 - Structural changes to provide a common thermodynamic
+  **			   properties root model as the library interface.
+  **			   Modified the existing phase distribution model
+  **			   to incorporate an intensive mass balance over the
+  **			   phases.  Residual quantities for pure vapor 
+  **			   components estimate corrections from ideal gas 
+  **			   behavior while residual quantities for pure liquid 
+  **			   components estimate corrections from incompressible
+  **			   fluid behavior.
+  **		   08/92 - Allowed component names in mixtures to be freely
+  **			   specified by user.
+  **		   03/94 - Made compatible with gnu-ascend.
+  **		   05/94 - Removed refinement link of models correction and
+  **			   and partial_component which should not contain T, 
+  **			   P, and R anyway.  The interface to the library
+  **			   is now returned to model thermodynamic_properties
+  **			   where refinement to pure_component,
+  **			   homogeneous_mixture, or heterogeneous_mixture
+  **			   is possible.
+  **		   06/94 - Changed canonical variables from V, H, and S to
+  **			   V, H, and G. Also, liquid component model was
+  **			   condensed, eliminating instance saturated.
+  **
+  **		   08/94 - Slight structural changes made by Bob Huss to
+  **			   allow refinement of non-thermodynamic models,
+  **			   and to include Wilson liquid mixture written
+  **			   by Boyd Safrit.
+  **
+  **		   08/95 - Addition OF zeros by Jen Stokes to UNIFAC which
+  **			   cleared up the wild dimensionality problem it
+  **			   was having due to empty sets.  However, a mixture
+  **			   with ammonia, hydrogen, or carbon_dioxide alone
+  **			   is still not feasible IN this version OF
+  **			   UNIFAC because they DO not contain any groups or
+  **			   subgroups and would CREATE completely NULL
+  **			   systems. Also added names to the equations.
+  **
+  **		   03/97 - Addition of SELECT statements for correlations
+  **			   by Jen (Stokes) Perry.
+  **		   03/97 - Euthanasia of mixture and alpha_mixture types 
+  **			   by Ben Allan.
+  **
+  **
+  **
+  **  CONTENTS:	ASCEND structure for calculating the basic set of intensive  
+  **	   thermodynamic properties molar volume, enthalpy, and 
+  **	   entropy for single and multiple phase streams of pure and 
+  **	   mixed components. Specify METHODs are included which
+  **	   have been designed to provide a means of calculating ideal
+  **	   approximations when base models are used.  For pure
+  **	   component vapors, the ideal gas law can be obtained whereas
+  **	   for pure component liquids, incompressibility can be
+  **	   specified.  Ideal vapor and liquid mixtures are maintained
+  **	   by setting all partial molar excess properties to zero.
+  **	   Distribution of components among multiple phases can be
+  **	   ideally computed using constant relative volatilities.
+  **
+  **	   For more rigorous non-ideal calculations, some generalized
+  **	   refinements of the base models are provided.  For pure
+  **	   component vapors, a Pitzer correlation of the two term
+  **	   virial equation allows a more accurate compressibility and
+  **	   residual calculation.  The widely used Rackett correlation
+  **	   is accurate in estimating the effect of temperature on
+  **	   liquid volumes.  Non-ideal vapor mixtures are computed using
+  **	   an extension of the Pitzer correlation where the exact
+  **	   composition dependence of the second virial coefficient is
+  **	   given by statistical mechanics.  A reliable UNIFAC model
+  **	   estimates non-ideal liquid mixtures.  Phase equilibrium
+  **	   can be enforced rigorously among multiple phases which 
+  **	   in turn will allow calculation of the true relative 
+  **	   volatilities.
+  **
+  	REQUIRE "system.lib";
+  	REQUIRE "atoms.lib";
+   	REQUIRE "components.lib";
+   	REQUIRE "property_options.lib";
+  **)
+
+
+MODEL thermodynamic_properties(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+);
+
+	V	IS_A molar_volume;
+	H	IS_A molar_energy;
+	G	IS_A molar_energy;
+	scale	IS_A scaling_constant;
+
+
+METHODS
+METHOD clear;
+	T.fixed := FALSE;
+	P.fixed := FALSE;
+	V.fixed := FALSE;
+	H.fixed := FALSE;
+	G.fixed := FALSE;
+END clear;
+METHOD specify;
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+	V.fixed := TRUE;
+	H.fixed := TRUE;
+	G.fixed := TRUE;
+END specify;
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+METHOD scale;
+	T.nominal := T;
+	P.nominal := P;
+	V.nominal := V;
+	H.nominal := sqrt(sqr(H));
+	G.nominal := sqrt(sqr(G));
+	T.lower_bound := 1.0e-8{K};
+	P.lower_bound := 1.0e-8{atm};
+	V.lower_bound := 1.0e-8{liter/g_mole};
+	H.lower_bound := H - scale*H.nominal;
+	G.lower_bound := G - scale*G.nominal;
+	T.upper_bound := T + scale*T.nominal;
+	P.upper_bound := P + scale*P.nominal;
+	V.upper_bound := V + scale*V.nominal;
+	H.upper_bound := H + scale*H.nominal;
+	G.upper_bound := G + scale*G.nominal;
+END scale;
+
+END thermodynamic_properties;
+
+MODEL pure_component(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	data WILL_BE td_component_constants;	
+	phase IS_A symbol_constant;
+	correlation WILL_BE symbol_constant;
+) REFINES thermodynamic_properties();
+(* no body *)
+END pure_component;
+
+
+MODEL partial_component;
+
+	V	IS_A molar_volume;
+	H	IS_A molar_energy;
+	G	IS_A molar_energy;
+	scale				IS_A scaling_constant;
+
+METHODS
+METHOD clear;
+	V.fixed := FALSE;
+	H.fixed := FALSE;
+	G.fixed := FALSE;
+	END clear;
+METHOD specify;
+	V.fixed := TRUE;
+	H.fixed := TRUE;
+	G.fixed := TRUE;
+END specify;
+METHOD reset;
+	RUN clear;
+	RUN specify;
+	END reset;
+METHOD scale;
+	V.nominal := V;
+	H.nominal := sqrt(sqr(H));
+	G.nominal := sqrt(sqr(G));
+	V.lower_bound := 1.0e-8{liter/g_mole};
+	H.lower_bound := H - scale*H.nominal;
+	G.lower_bound := G - scale*G.nominal;
+	V.upper_bound := V + scale*V.nominal;
+	H.upper_bound := H + scale*H.nominal;
+	G.upper_bound := G + scale*G.nominal;
+END scale;
+
+END partial_component;
+
+(* mixture gone away *)
+
+MODEL homogeneous_mixture(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	options WILL_BE single_phase_options;  
+)REFINES thermodynamic_properties();
+
+	y[options.ds.components]   	IS_A mole_fraction;
+	mixture_y_def: SUM[y[i] | i IN options.ds.components] = 1.0;
+	phi[options.phase]  IS_A constant;
+	phi[options.phase] :== 1;
+
+METHODS
+METHOD clear;
+	y[options.ds.components].fixed := FALSE;
+END clear;
+METHOD specify;
+	y[options.ds.components-[options.ds.reference]].fixed := TRUE;
+END specify;
+METHOD reset;
+	RUN clear;
+	RUN specify;
+END reset;
+METHOD scale;
+(* P5
+	y[options.ds.components].nominal := 0.5;
+*)
+	FOR i IN options.ds.components DO
+		y[i].nominal := y[i];
+	END FOR;
+END scale;
+
+END homogeneous_mixture;
+
+MODEL two_phase_mixture(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	light WILL_BE homogeneous_mixture;
+	heavy WILL_BE homogeneous_mixture;
+) WHERE (
+	P, heavy.P, light.P WILL_BE_THE_SAME;
+	T, heavy.T, light.T WILL_BE_THE_SAME;
+	light.options.phase != heavy.options.phase;
+	light.options.ds.reference == heavy.options.ds.reference;
+	(* constrain the reference component to be a mobile species.*)
+	INTERSECTION[	light.options.ds.components,
+			heavy.options.ds.components,
+			[light.options.ds.reference]
+	] == [light.options.ds.reference];
+) REFINES thermodynamic_properties;
+	(* this MODEL could have species which are not able to
+	 * exist in one of the phases.
+	 *)
+	components "all the components found in at least one phase"
+	IS_A set OF symbol_constant;
+	components :== [light.options.ds.components,
+			 heavy.options.ds.components];
+
+	y[components] "the mole fraction of each species in total mixture"
+	IS_A fraction;
+	mixture_y_def: SUM[y[i] | i IN components] = 1.0;
+
+	mobile "all the components moving between phases"
+	IS_A set OF symbol_constant;
+	mobile :==
+	INTERSECTION[light.options.ds.components,heavy.options.ds.components];
+
+	number_stuck "the number of nondistributing components"
+	IS_A integer_constant;
+	number_stuck :== CARD[components - mobile];
+
+	phases "the names of the phases" IS_A set OF symbol_constant;
+	phases :== [light.options.phase,heavy.options.phase];
+	phi[light.options.phase,heavy.options.phase] 
+	"fraction of total moles in each phase" IS_A fraction;
+
+	reference IS_A symbol_constant;
+	reference :== heavy.options.phase;
+
+
+	SELECT (number_stuck)
+	CASE 0:	 (* this is the standard case *)
+		alpha[components]	IS_A partition_coefficient;
+		ave_alpha		IS_A partition_coefficient;
+		FOR i IN components CREATE
+		two_phase_mixture_alpha[i]:
+			ave_alpha * light.y[i] = alpha[i] * heavy.y[i];
+		two_phase_mixture_phi[i]:
+ 			y[i] = phi[light.options.phase] * light.y[i] +
+				phi[heavy.options.phase] * heavy.y[i];
+		END FOR;
+	OTHERWISE:
+	(* this cases needs to be rewritten to allow for species which
+	 * are stuck in one phase or the other.
+	 *)
+	END SELECT; (* select number_stuck *)
+
+METHODS
+METHOD clear;
+	RUN light.clear;
+	RUN heavy.clear;
+	V.fixed := FALSE;
+	H.fixed := FALSE;
+	G.fixed := FALSE;
+	y[components].fixed := FALSE;
+	alpha[components].fixed := FALSE;
+	ave_alpha.fixed := FALSE;
+	phi[phases].fixed := FALSE;
+END clear;
+METHOD specify;
+	(* this method buggy if number_stuck > 0 components *)
+	RUN light.specify;
+	light.y[components].fixed := FALSE;
+	RUN heavy.specify;
+	V.fixed := TRUE;
+	H.fixed := TRUE;
+	G.fixed := TRUE;
+	alpha[components].fixed := TRUE;
+	y[light.options.ds.other].fixed := TRUE;
+	phi[light.options.phase].fixed := TRUE;
+END specify;
+METHOD scale;
+	alpha[components].lower_bound := 1e-8;
+(* P5
+	y[components].nominal := 0.5;
+*)
+	FOR i IN components DO
+		alpha[i].nominal := alpha[i] +1;
+		alpha[i].upper_bound := alpha[i] + scale * alpha[i].nominal;
+		y[i].nominal := y[i];
+	END FOR;
+	RUN light.scale;
+	RUN heavy.scale;
+END scale;
+END two_phase_mixture;
+
+(* alpha_mixture gone away *)
+
+MODEL td_homogeneous_mixture(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	options WILL_BE single_phase_options;  
+) REFINES homogeneous_mixture;
+
+	ds ALIASES options.ds;
+	FOR i IN ds.components CREATE	
+		pure[i] IS_A
+		pure_component(P, T, ds.data[i], options.phase,
+				options.component_thermo_correlation);
+	END FOR;
+	partial[ds.components] IS_A partial_component;
+
+td_homogeneous_mixture_V:
+	V * (ds.data[ds.reference].Pc / (1{GAS_C}*ds.data[ds.reference].Tc)) =
+	SUM[ y[i] * partial[i].V | i IN ds.components] *
+		(ds.data[ds.reference].Pc /
+		 (1{GAS_C}*ds.data[ds.reference].Tc));
+td_homogeneous_mixture_H:
+	H / (1{GAS_C} * ds.data[ds.reference].Tc) =
+		SUM[ y[i] * partial[i].H | i IN ds.components]/
+			(1{GAS_C} * ds.data[ds.reference].Tc);
+td_homogeneous_mixture_G:
+	G / (1{GAS_C} * ds.data[ds.reference].Tc) = 
+		SUM[ y[i] * partial[i].G | i IN ds.components] /
+			(1{GAS_C} * ds.data[ds.reference].Tc);
+
+	y[ds.components].lower_bound := 1.0e-12;
+
+METHODS
+METHOD clear;
+	RUN pure[ds.components].clear;
+	RUN partial[ds.components].clear;
+	y[ds.components].fixed := FALSE;
+	V.fixed := FALSE;
+	H.fixed := FALSE;
+	G.fixed := FALSE;
+END clear;
+METHOD specify;
+	RUN pure[ds.components].specify;
+	RUN partial[ds.components].specify;
+	y[ds.components].fixed := TRUE;
+	y[ds.reference].fixed := FALSE;
+END specify;
+METHOD scale;
+	RUN pure[ds.components].scale;
+	RUN partial[ds.components].scale;
+(* P5
+	y[ds.components].nominal := 0.5;
+*)
+	FOR i IN ds.components DO
+		y[i].nominal := y[i];
+	END FOR;
+	T.nominal := T;
+	P.nominal := P;
+	V.nominal := V;
+	H.nominal := sqrt(sqr(H));
+	G.nominal := sqrt(sqr(G));
+	T.lower_bound := 1.0e-8{K};
+	P.lower_bound := 1.0e-8{atm};
+	V.lower_bound := 1.0e-8{liter/g_mole};
+	H.lower_bound := H - scale*H.nominal;
+	G.lower_bound := G - scale*G.nominal;
+	T.upper_bound := T + scale*T.nominal;
+	P.upper_bound := P + scale*P.nominal;
+	V.upper_bound := V + scale*V.nominal;
+	H.upper_bound := H + scale*H.nominal;
+	G.upper_bound := G + scale*G.nominal;
+END scale;
+
+END td_homogeneous_mixture;
+
+MODEL td_two_phase_mixture(	(* was td_alpha_mixture *)
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	light WILL_BE td_homogeneous_mixture;
+	heavy WILL_BE td_homogeneous_mixture;
+	equilibrated WILL_BE boolean;
+) WHERE (
+	P, heavy.P, light.P WILL_BE_THE_SAME;
+	T, heavy.T, light.T WILL_BE_THE_SAME;
+	light.options.phase != heavy.options.phase;
+	light.options.ds.reference == heavy.options.ds.reference;
+	(* constrain the reference component to be a mobile species.*)
+	INTERSECTION[	light.options.ds.components,
+			heavy.options.ds.components,
+			[light.options.ds.reference]
+	] == [light.options.ds.reference];
+	light.options.ds.components == heavy.options.ds.components;
+) REFINES two_phase_mixture;
+
+	data ALIASES heavy.options.ds.data;
+	ds ALIASES heavy.options.ds;
+
+td_two_phase_mixture_V:
+	V * (data[ds.reference].Pc /
+		((1{GAS_C})*data[ds.reference].Tc)) =
+	(phi[light.options.phase] * light.V +
+	 phi[heavy.options.phase] * heavy.V) *
+	(data[ds.reference].Pc / ((1{GAS_C})*data[ds.reference].Tc));
+
+td_two_phase_mixture_H:
+	H/((1{GAS_C})*data[ds.reference].Tc) =
+	(phi[light.options.phase] * light.H +
+	 phi[heavy.options.phase] * heavy.H) /
+	((1{GAS_C})*data[ds.reference].Tc);
+
+td_two_phase_mixture_G:
+	G/((1{GAS_C})*data[ds.reference].Tc) = 
+	(phi[light.options.phase] * light.G +
+	 phi[heavy.options.phase] * heavy.G) /
+	((1{GAS_C})*data[ds.reference].Tc);
+
+	FOR i IN ds.components CREATE
+	equil_condition[i]:
+		(light.partial[i].G - heavy.partial[i].G ) / (1E5{J/mole}) = 0;
+	(* oops, can't scale with G0 because hydrogen G0 = 0.0 *)
+	END FOR;
+
+(*
+NOTES 'default' FOR 
+equilibrated {
+The equilibrium condition can be relaxed, effectively making this
+model devolve to td_heterogeneous mixture. It is arguable whether
+this type and its immediate ancestor should be merged.
+};
+END NOTES;
+*)
+
+	WHEN (equilibrated)
+	CASE TRUE:
+		USE equil_condition;
+  	END WHEN;
+	
+	V := 30{liter/mol};
+	equilibrated := TRUE;
+
+
+METHODS
+METHOD clear;
+	RUN two_phase_mixture::clear;
+	V.fixed := FALSE;
+	H.fixed := FALSE;
+	G.fixed := FALSE;
+END clear;
+
+METHOD specify;
+	P.fixed	:= TRUE;
+	phi[light.options.phase].fixed	:= TRUE;
+	y[light.options.ds.other].fixed := TRUE;
+	IF equilibrated THEN
+	        ave_alpha := 1.0;
+		ave_alpha.fixed := TRUE;
+	ELSE
+		T.fixed := TRUE;
+		alpha[ds.components].fixed := TRUE;
+	END IF;
+END specify;
+
+METHOD reset_to_massbal;
+	RUN clear;
+	equilibrated := FALSE;
+	RUN specify;
+END reset_to_massbal;
+
+METHOD reset_to_fullthermo;
+	RUN clear;
+	equilibrated := TRUE;
+	RUN specify;
+END reset_to_fullthermo;
+	    
+METHOD reset;
+(* reset for whatever value of equilibrated has been previously set *)
+	RUN clear;
+	RUN specify;
+END reset;
+
+METHOD scale;
+	RUN two_phase_mixture::scale;
+  	T.nominal := T;
+	P.nominal := P;
+	V.nominal := V;
+	H.nominal := sqrt(sqr(H));
+	G.nominal := sqrt(sqr(G));
+	T.lower_bound := 1.0e-8{K};
+	P.lower_bound := 1.0e-8{atm};
+	V.lower_bound := 1.0e-8{liter/g_mole};
+	H.lower_bound := H - scale*H.nominal;
+	G.lower_bound := G - scale*G.nominal;
+	T.upper_bound := T + scale*T.nominal;
+	P.upper_bound := P + scale*P.nominal;
+	V.upper_bound := V + scale*V.nominal;
+	H.upper_bound := H + scale*H.nominal;
+	G.upper_bound := G + scale*G.nominal;
+END scale;
+
+END td_two_phase_mixture;
+
+(* td_equilibrium_mixture merged with td_two_phase *)
+
+MODEL vapor_component(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	data WILL_BE td_component_constants;	
+	correlation WILL_BE symbol_constant;
+) REFINES pure_component(phase :== 'vapor';);
+(* no body *)
+END vapor_component;
+
+MODEL liquid_component(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	data WILL_BE td_component_constants;	
+	correlation WILL_BE symbol_constant;
+) REFINES pure_component(phase :== 'liquid';);
+
+	VP IS_A pressure;
+END liquid_component;
+
+MODEL Pitzer_vapor_component(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	data WILL_BE td_component_constants;
+	correlation WILL_BE symbol_constant WITH_VALUE 'Pitzer';
+) REFINES vapor_component;
+
+Pitzer_component_V:
+		P*V/(1{GAS_C})/data.Tc = T/data.Tc + (P/data.Pc)*
+	(0.083 - 0.422*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.172*(data.Tc/T)^4.2));
+
+Pitzer_component_H:
+	H/(1{GAS_C})/data.Tc = data.H0/(1{GAS_C})/data.Tc +
+	data.cpvapa*(T - data.T0)/(1{GAS_C})/data.Tc +
+	data.cpvapb*(T^2 - data.T0^2)/2/(1{GAS_C})/data.Tc +
+	data.cpvapc*(T^3 - data.T0^3)/3/(1{GAS_C})/data.Tc +
+	data.cpvapd*(T^4 - data.T0^4)/4/(1{GAS_C})/data.Tc +
+	(P/data.Pc)*(0.083 - 1.097*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.894*(data.Tc/T)^4.2));
+
+Pitzer_component_G:
+		G/(1{GAS_C})/data.Tc = data.G0/(1{GAS_C})/data.Tc - 
+		(data.H0 - data.G0)*(T/data.T0 - 1)/(1{GAS_C})/data.Tc -
+		data.cpvapa*(T*ln(T/data.T0) - T + data.T0)/1{GAS_C}/data.Tc -
+		data.cpvapb*(T^2 - 2*T*data.T0 + data.T0^2)/
+		(2*1{GAS_C}*data.Tc) -
+		data.cpvapc*(T^3/2 - 3*T*data.T0^2/2 + data.T0^3)/
+		(3*1{GAS_C}*data.Tc) -
+		data.cpvapd*(T^4/3 - 4*T*data.T0^3/3 + data.T0^4)/4/(1{GAS_C})/data.Tc +
+		T*ln(P/data.P0)/data.Tc +
+		(P/data.Pc)*
+		(0.083 - 0.422*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.172*(data.Tc/T)^4.2));
+
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 0.1{atm};
+	T.upper_bound := 1000{K};
+	P.upper_bound := 20{atm};
+	V := 24{liter/mole};
+	
+METHODS
+METHOD specify;
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+END specify;
+END Pitzer_vapor_component;
+
+MODEL Rackett_liquid_component(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	data WILL_BE td_component_constants;
+	correlation WILL_BE symbol_constant WITH_VALUE 'Rackett';
+	vp_correlation WILL_BE integer_constant;
+) REFINES liquid_component;
+(*Rackett_component_VP:*)
+	SELECT (vp_correlation)
+	CASE 1:
+		ln(VP/data.Pc)*T/data.Tc*abs(data.Tc - T) =
+		(data.vpa * abs(1.0 - T/data.Tc) +
+		data.vpb * abs(1.0 - T/data.Tc)^1.5 +
+		data.vpc * abs(1.0 - T/data.Tc)^3.0 +
+		data.vpd * abs(1.0 - T/data.Tc)^6.0) * (data.Tc - T);
+	CASE 2:
+		ln(VP/1{bar}) / ln(data.Pc/1{bar}) =
+		(data.vpa - data.vpb/T + data.vpc * ln(T/1{K}) +
+		 data.vpd * VP/sqr(T)) / ln(data.Pc/1{bar});
+	CASE 3:
+		ln(VP/1{bar}) / ln(data.Pc/1{bar}) =
+		(data.vpa - data.vpb/(data.vpc + T)) / ln(data.Pc/1{bar});
+	END SELECT;
+
+	Rackett_component_V: V/data.Vliq = 
+		data.Zc^(abs(1.0 - T/data.Tc)^(2/7))/
+		data.Zc^(abs(1.0 - data.Tliq/data.Tc)^(2/7));
+
+	Rackett_component_H: 
+		H / (1{GAS_C} * data.Tc) = data.H0/(1{GAS_C})/data.Tc +
+		(T - data.T0)	  * (data.cpvapa/(1{GAS_C})/data.Tc)   +
+		(T^2 - data.T0^2)  * (data.cpvapb/2/(1{GAS_C})/data.Tc) +
+		(T^3 - data.T0^3)  * (data.cpvapc/3/(1{GAS_C})/data.Tc) +
+		(T^4 - data.T0^4)  * (data.cpvapd/4/(1{GAS_C})/data.Tc) + 
+		(VP/data.Pc)*
+		(0.083 - 1.097*(data.Tc/T)^1.6 + data.omega*
+		(0.139 - 0.894*(data.Tc/T)^4.2)) -
+		(data.Hv/(1{GAS_C})/data.Tc)*
+		abs((data.Tc-T)/(data.Tc-data.Tb))^0.38 +
+		(P - VP)*(data.Vliq/(1{GAS_C})/data.Tc)*
+		(data.Zc^(abs(1.0 - T/data.Tc)^(2/7))/
+		data.Zc^(abs(1.0 - data.Tliq/data.Tc)^(2/7)))*(1.0 -
+		(-2/7)*(T/data.Tc)*(abs(1 - T/data.Tc)^(-5/7))*ln(data.Zc));
+
+	Rackett_component_G: G/(1{GAS_C}*data.Tc) =
+		data.G0/(1{GAS_C})/data.Tc - 
+		(T/data.T0 - 1) * ((data.H0 - data.G0)/(1{GAS_C})/data.Tc) -
+		(T*ln(T/data.T0) - T + data.T0) *
+		(data.cpvapa/(1{GAS_C})/data.Tc) -
+		(T^2 - T*(2*data.T0) + data.T0^2) *
+		(data.cpvapb/2/(1{GAS_C})/data.Tc) -
+		(T^3/2 - T*(3/2*data.T0^2) + data.T0^3) *
+		(data.cpvapc/3/(1{GAS_C})/data.Tc) -
+		(T^4/3 - T*(4/3*data.T0^3) + data.T0^4) *
+		(data.cpvapd/4/(1{GAS_C})/data.Tc) +
+		T*ln(VP/data.P0)/data.Tc +
+		(VP/data.Pc) *
+		(0.083 - 0.422*(data.Tc/T)^1.6 + data.omega *
+		(0.139 - 0.172*(data.Tc/T)^4.2)) +
+		(P - VP)*(data.Vliq/(1{GAS_C})/data.Tc) *
+		(data.Zc^(abs(1.0 - T/data.Tc)^(2/7))/
+		data.Zc^(abs(1.0 - data.Tliq/data.Tc)^(2/7)));
+
+	VP.lower_bound := 1.0e-12{Pa};
+	V := 0.1{liter/mole};
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 0.1{atm};
+	T.upper_bound := 1000{K};
+	P.upper_bound := 20{atm};
+
+METHODS
+		
+METHOD clear;
+	RUN liquid_component::clear;
+	VP.fixed := FALSE;
+END clear;
+METHOD specify;
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+END specify;
+METHOD scale;
+	RUN liquid_component::scale;
+	VP.nominal := VP;
+	VP.lower_bound := 1.0e-8{atm};
+	VP.upper_bound := VP + scale*VP.nominal;
+END scale;
+
+
+END Rackett_liquid_component;
+
+MODEL Pitzer_partials(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	V WILL_BE molar_volume;
+	H WILL_BE molar_energy;
+	G WILL_BE molar_energy;
+	scale WILL_BE scaling_constant;
+	options WILL_BE single_phase_options;
+	y[options.ds.components] WILL_BE mole_fraction;
+	pure[options.ds.components] WILL_BE Pitzer_vapor_component;
+	partial[options.ds.components] WILL_BE partial_component;
+);
+
+	ds ALIASES options.ds;
+		
+	FOR i IN ds.components CREATE
+	Pitzer_mixture_V[i]:
+		 (partial[i].V - pure[i].V)*(ds.data[i].Pc/
+		(1{GAS_C}*ds.data[i].Tc)) = 
+		-1.0*(0.083 - 0.422*(ds.data[i].Tc/T)^1.6 + ds.data[i].omega*
+		(0.139 - 0.172*(ds.data[i].Tc/T)^4.2))*(1.0 - y[i])^2 +
+		0.50*(1.0 - y[i])*
+		SUM[y[j]*((1.0 + (ds.data[j].Vc/ds.data[i].Vc)^(1/3))^3/
+		(1.0 + ds.data[j].Zc/ds.data[i].Zc))*
+		(0.083 - 0.422*(sqrt(ds.data[i].Tc*ds.data[j].Tc)/T)^1.6 +
+		0.5*(ds.data[i].omega + ds.data[j].omega)*
+		(0.139 - 0.172*(sqrt(ds.data[i].Tc*ds.data[j].Tc)/T)^4.2))
+		 | j IN ds.components - [i]];
+		  Pitzer_mixture_H[i]:
+		(partial[i].H - pure[i].H)/((1{GAS_C})*ds.data[i].Tc) = 
+		-(P/ds.data[i].Pc)*
+		(0.083 - 1.097*(ds.data[i].Tc/T)^1.6 + ds.data[i].omega*
+		(0.139 - 0.894*(ds.data[i].Tc/T)^4.2))*(1.0 - y[i])^2 +
+		(1.0 - y[i])*(P/(ds.data[i].Pc*2))*
+		SUM[y[j]*((1.0 + (ds.data[j].Vc/ds.data[i].Vc)^(1/3))^3/
+		(1.0 + ds.data[j].Zc/ds.data[i].Zc))*
+		(0.083 - 1.097*(sqrt(ds.data[i].Tc*ds.data[j].Tc)/T)^1.6 +
+		0.5*(ds.data[i].omega + ds.data[j].omega)*
+		(0.139 - 0.894*(sqrt(ds.data[i].Tc*ds.data[j].Tc)/T)^4.2))
+		  | j IN ds.components - [i]];
+		  Pitzer_mixture_G[i]:
+		(partial[i].G - pure[i].G - (1{GAS_C})*T*ln(y[i])) /
+		(1{GAS_C}*ds.data[i].Tc) = 
+		-(P/ds.data[i].Pc)*
+		(0.083 - 0.422*(ds.data[i].Tc/T)^1.6 + ds.data[i].omega*
+		(0.139 - 0.172*(ds.data[i].Tc/T)^4.2))*(1.0 - y[i])^2 +
+		(1.0 - y[i])*(P/(ds.data[i].Pc*2))*
+		SUM[y[j]*((1.0 + (ds.data[j].Vc/ds.data[i].Vc)^(1/3))^3/
+		(1.0 + ds.data[j].Zc/ds.data[i].Zc))*
+		(0.083 - 0.422*(sqrt(ds.data[i].Tc*ds.data[j].Tc)/T)^1.6 +
+		0.5*(ds.data[i].omega + ds.data[j].omega)*
+		(0.139 - 0.172*(sqrt(ds.data[i].Tc*ds.data[j].Tc)/T)^4.2))
+		| j IN ds.components - [i]];
+	END FOR;
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 1.0{Pa};
+	V := 24{liter/mole};
+	partial[ds.components].V := 24{liter/mole};
+	pure[ds.components].V := 24{liter/mole};
+	
+METHODS			
+
+METHOD specify;
+	partial[ds.components].V.fixed := FALSE;
+	partial[ds.components].H.fixed := FALSE;
+	partial[ds.components].G.fixed := FALSE;
+END specify;
+	
+END Pitzer_partials;
+
+(*UNIFAC_partials is a model which helps to select mixing rules at the
+* liquid mixture level, hiding unneccessary code from users.
+*)
+MODEL UNIFAC_partials(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	V WILL_BE molar_volume;
+	H WILL_BE molar_energy;
+	G WILL_BE molar_energy;
+	scale WILL_BE scaling_constant;
+	options WILL_BE single_phase_options;
+	y[options.ds.components] WILL_BE mole_fraction;
+	pure[options.ds.components] WILL_BE Rackett_liquid_component;
+	partial[options.ds.components] WILL_BE partial_component;
+);
+
+	ds ALIASES options.ds;
+	subgroups		IS_A set OF symbol_constant;
+	groups			IS_A set OF integer_constant;
+	comps[subgroups]	IS_A set OF symbol_constant;
+	rv[ds.components]	IS_A UNIFAC_size;
+	qs[ds.components]	IS_A UNIFAC_size;
+	Jv[ds.components]	IS_A factor;
+	Ls[ds.components]	IS_A factor;
+	theta[subgroups]	IS_A factor;
+	eta[subgroups]		IS_A factor;
+	uc									  IS_A UNIFAC_constants;
+
+	subgroups :== UNION[ds.data[i].subgroups | i IN ds.components];
+	groups :== UNION[ds.data[i].groups | i IN ds.components];
+	FOR k IN subgroups CREATE
+		comps[k] :== [i IN ds.components | k IN ds.data[i].subgroups];
+	END FOR;
+	FOR k IN subgroups CREATE
+		UNIFAC_mixture_theta[k]:  
+		theta[k] = uc.Q[k]*SUM[ds.data[i].nu[k]*y[i] | i IN comps[k]];
+
+		UNIFAC_mixture_eta[k]:
+		eta[k] =
+		SUM[theta[m] | m IN subgroups*uc.sub[uc.group[k]]] +
+		SUM[SUM[theta[m]*exp(-uc.a[g][uc.group[k]]/T)
+		| m IN subgroups*uc.sub[g]]
+		| g IN groups - [uc.group[k]]];
+	END FOR;
+
+	FOR i IN ds.components CREATE
+		rv[i] :== SUM[0, ds.data[i].nu[k]*uc.R[k]
+				| k IN ds.data[i].subgroups];
+		qs[i] :== SUM[0, ds.data[i].nu[k]*uc.Q[k] 
+				| k IN ds.data[i].subgroups];
+	END FOR;
+	FOR i IN ds.components CREATE
+		UNIFAC_mixture_rv[i]:
+		rv[i] = Jv[i]*SUM[rv[j]*y[j] | j IN ds.components];
+
+		UNIFAC_mixture_qs[i]:
+		qs[i] = Ls[i]*SUM[qs[j]*y[j] | j IN ds.components];
+		partial[i].V = pure[i].V;
+
+		UNIFAC_mixture_H_excess[i]:
+		(partial[i].H - pure[i].H)/(1{GAS_C})/ds.data[i].Tc = 
+		SUM[0,theta[k]*
+		SUM[0,SUM[0,theta[n]*
+		((uc.a[g][uc.group[k]] -
+		uc.a[uc.group[n]][uc.group[k]])/ds.data[i].Tc)*
+		exp(-(uc.a[g][uc.group[k]] +
+		uc.a[uc.group[n]][uc.group[k]])/T)*
+		SUM[0,ds.data[i].nu[m]*uc.Q[m]
+		| m IN ds.data[i].subgroups*uc.sub[g]]
+		| g IN ds.data[i].groups - [uc.group[n]]]
+		| n IN subgroups]/eta[k]/eta[k]
+		| k IN subgroups] -
+		SUM[0,(ds.data[i].nu[k]*uc.Q[k]/(
+		SUM[0,ds.data[i].nu[m]*uc.Q[m]
+		| m IN ds.data[i].subgroups*uc.sub[uc.group[k]]] +
+		SUM[0,SUM[0,ds.data[i].nu[m]*uc.Q[m] * 
+				exp(-uc.a[g][uc.group[k]]/T)
+		| m IN ds.data[i].subgroups*uc.sub[g]]
+		| g IN ds.data[i].groups - [uc.group[k]]]))*
+		SUM[0,SUM[0,theta[n]*
+		((uc.a[g][uc.group[k]] -
+		uc.a[uc.group[n]][uc.group[k]])/ds.data[i].Tc)*
+		exp(-(uc.a[g][uc.group[k]] +
+		uc.a[uc.group[n]][uc.group[k]])/T)*
+		SUM[0,ds.data[i].nu[m]*uc.Q[m]
+		| m IN ds.data[i].subgroups*uc.sub[g]]
+		| g IN ds.data[i].groups - [uc.group[n]]]
+		| n IN subgroups]/eta[k]
+		| k IN ds.data[i].subgroups];
+
+		UNIFAC_mixture_G_excess[i]:
+		(partial[i].G - pure[i].G - (1{GAS_C})*T*ln(y[i])) /
+		(1{GAS_C}*ds.data[i].Tc) = 
+		(1.0 - Jv[i] + ln(Jv[i]) -
+		5.0*qs[i]*(1.0 - Jv[i]/Ls[i] + ln(Jv[i]/Ls[i])) +
+		qs[i]*(1 - ln(Ls[i])))*T/ds.data[i].Tc -
+		SUM[0,theta[k]*(
+		SUM[0,ds.data[i].nu[m]*uc.Q[m]
+		| m IN ds.data[i].subgroups*uc.sub[uc.group[k]]] +
+		SUM[0,SUM[0,ds.data[i].nu[m] * uc.Q[m] *
+				exp(-uc.a[g][uc.group[k]]/T)
+		| m IN ds.data[i].subgroups*uc.sub[g]]
+		| g IN ds.data[i].groups - [uc.group[k]]])/eta[k]
+		| k IN subgroups]*T/ds.data[i].Tc +
+		SUM[0,ds.data[i].nu[k]*uc.Q[k]*ln((
+		SUM[0,ds.data[i].nu[m]*uc.Q[m] 
+		| m IN ds.data[i].subgroups*uc.sub[uc.group[k]]] +
+		SUM[0,SUM[0, ds.data[i].nu[m] * uc.Q[m] *
+				exp(-uc.a[g][uc.group[k]]/T)
+		| m IN ds.data[i].subgroups*uc.sub[g]]
+		| g IN ds.data[i].groups - [uc.group[k]]])/eta[k])
+		| k IN ds.data[i].subgroups]*T/ds.data[i].Tc;
+	END FOR;
+
+	T.lower_bound := 1.0{K};
+	P.lower_bound := 1.0{Pa};
+	Jv[ds.components].lower_bound := 1.0e-8;
+	Ls[ds.components].lower_bound := 1.0e-8;
+	theta[subgroups].lower_bound := 0.0;
+	eta[subgroups].lower_bound := 0.0;
+	V := 0.1{liter/mole};
+	partial[ds.components].V := 0.1{liter/mole};
+	pure[ds.components].V := 0.1{liter/mole};
+
+	FOR i IN ds.components CREATE
+		rv[i] :== SUM[0,ds.data[i].nu[k]*uc.R[k] 
+				| k IN ds.data[i].subgroups];
+		qs[i] :== SUM[0,ds.data[i].nu[k]*uc.Q[k] 
+				| k IN ds.data[i].subgroups];
+	END FOR;
+
+METHODS
+METHOD clear;
+	Jv[ds.components].fixed := FALSE;
+	Ls[ds.components].fixed := FALSE;
+	theta[subgroups].fixed := FALSE;
+	eta[subgroups].fixed := FALSE;
+END clear;
+METHOD specify;
+	partial[ds.components].V.fixed := FALSE;
+	partial[ds.components].H.fixed := FALSE;
+	partial[ds.components].G.fixed := FALSE;
+END specify;
+
+METHOD scale;
+	(* we may need to further investigate the scaling on these
+	 * when we approach small numbers for Ls, Jv.
+	 *)
+	FOR i IN ds.components DO
+		Ls[i].nominal := Ls[i];
+		Jv[i].nominal := Jv[i];
+		Ls[i].upper_bound := Ls[i]+ scale*Ls[i].nominal;
+		Jv[i].upper_bound := Jv[i] + scale*Jv[i].nominal;
+	END FOR;
+	FOR j IN subgroups DO
+		theta[j].nominal := theta[j];
+		eta[j].nominal := eta[j];
+		theta[j].upper_bound := theta[j] + scale*theta[j].nominal;
+		eta[j].upper_bound := eta[j] + scale*eta[j].nominal;
+	END FOR;
+END scale;
+END UNIFAC_partials;
+
+MODEL Wilson_partials(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	V WILL_BE molar_volume;
+	H WILL_BE molar_energy;
+	G WILL_BE molar_energy;
+	scale WILL_BE scaling_constant;
+	options WILL_BE single_phase_options;
+	y[options.ds.components] WILL_BE mole_fraction;
+	pure[options.ds.components] WILL_BE Rackett_liquid_component;
+	partial[options.ds.components] WILL_BE partial_component;
+);
+
+	ds ALIASES options.ds;
+	lambda[ds.components][ds.components]		IS_A factor;
+
+	FOR i IN ds.components CREATE
+		FOR j IN ds.components CREATE
+			lambda[i][j] = (pure[j].V / pure[i].V) *
+			exp(-pure[i].data.del_ip[pure[j].data.formula] /
+			(1{GAS_C} * T));
+		END FOR;
+	END FOR;
+
+	FOR i IN ds.components CREATE
+		partial[i].V = pure[i].V;
+
+	Wilson_mixture_G_excess[i]:
+		partial[i].G - pure[i].G - (1{GAS_C})*T*ln(y[i]) =
+		(1{GAS_C})*T*(-ln( SUM[y[j]*lambda[i][j] | j IN ds.components])
+		 + 1 -
+		SUM[(y[k] * lambda[k][i]) / SUM[ y[j] * lambda[k][j]
+		| j IN ds.components] | k IN ds.components]);
+
+	Wilson_mixture_H_excess[i]:
+		partial[i].H - pure[i].H = 
+		(SUM[ y[j] * lambda[i][j] *
+		 pure[i].data.del_ip[pure[j].data.formula]
+		| j IN ds.components]) /
+		(SUM[y[s]*lambda[i][s]
+		| s IN ds.components]) - 
+		(SUM[y[k]*lambda[k][i] | k IN ds.components]*
+		SUM[SUM[y[l]*lambda[m][l]*
+		 pure[m].data.del_ip[pure[l].data.formula]
+		| l IN ds.components]
+		| m IN ds.components]) / (
+		SUM[SUM[y[n]*lambda[o][n]
+		| n IN ds.components]
+		| o IN ds.components])^2 +
+		(SUM[y[p]*lambda[p][i]*
+		 pure[p].data.del_ip[pure[i].data.formula] 
+		 | p IN ds.components]) /
+		 (SUM[SUM[y[q]*lambda[r][q] 
+		 | q IN ds.components] 
+		 | r IN ds.components]);
+	END FOR;
+
+	V := 0.1{liter/mole};
+	partial[ds.components].V := 0.1{liter/mole};
+	pure[ds.components].V := 0.1{liter/mole};
+METHODS
+METHOD clear;
+	lambda[ds.components][ds.components].fixed := FALSE;
+END clear;
+METHOD specify;
+	partial[ds.components].V.fixed := FALSE;
+	partial[ds.components].G.fixed := FALSE;
+	partial[ds.components].H.fixed := FALSE;
+END specify;
+METHOD scale;
+	FOR i IN ds.components DO
+		FOR j IN ds.components DO
+		lambda[i][j].nominal :=
+			lambda[i][j];
+		lambda[i][j].lower_bound := lambda[i][j] -
+			scale*lambda[i][j].nominal;
+		lambda[i][j].upper_bound := lambda[i][j] +
+			scale*lambda[i][j].nominal;
+		END FOR;
+	END FOR;
+END scale;
+
+END Wilson_partials;
+ 
+MODEL vapor_mixture(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	options WILL_BE vapor_phase_options;
+) REFINES td_homogeneous_mixture;
+
+	SELECT (options.mixture_thermo_correlation)
+	CASE 'Pitzer':
+		FOR i IN ds.components CREATE
+			pure[i] IS_REFINED_TO
+			Pitzer_vapor_component(P, T, ds.data[i],
+			options.component_thermo_correlation);
+	  	END FOR;
+		Pitzer_mixing_rule IS_A
+		Pitzer_partials(P, T, V, H, G, scale, options, 
+				y, pure, partial);
+	END SELECT;
+
+METHODS
+METHOD specify;
+	RUN td_homogeneous_mixture::specify;
+	IF options.mixture_thermo_correlation = 'Pitzer' THEN
+		RUN Pitzer_mixing_rule.specify;
+	END IF;
+END specify;
+	   
+END vapor_mixture;
+
+MODEL liquid_mixture(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	options WILL_BE liquid_phase_options;
+) REFINES td_homogeneous_mixture;
+
+	SELECT (options.mixture_thermo_correlation)
+	CASE 'UNIFAC':
+		FOR i IN ds.components CREATE
+			pure[i] IS_REFINED_TO 
+			Rackett_liquid_component(P, T, ds.data[i],
+			options.component_thermo_correlation,
+			ds.data[i].vp_correlation);
+		END FOR;
+
+		UNIFAC_mixing_rule IS_A
+		UNIFAC_partials(P, T, V, H, G, scale, 
+				options, y, pure, partial);
+
+	CASE 'Wilson':
+		Wilson_mixing_rule IS_A
+		Wilson_partials(P, T, V, H, G, scale,
+				options, y, pure, partial);
+	END SELECT; (* select correlation *)
+
+	(* The Rackett_liquid_component	may not
+	   be invariant across all future liquid_mixture options
+	   and may need to be moved inside the select IN the future.
+	   It is now outside to prevent warnings about undefined names
+	   due to refinements inside select statements not being
+	   recognized when a file is imported *)	
+	FOR i IN ds.components CREATE
+	    pure[i] IS_REFINED_TO 
+		Rackett_liquid_component(P, T, ds.data[i],
+		options.component_thermo_correlation,
+		ds.data[i].vp_correlation);
+	END FOR;		
+METHODS
+METHOD clear;
+	RUN td_homogeneous_mixture::clear;
+	IF options.mixture_thermo_correlation = 'UNIFAC' THEN
+		RUN UNIFAC_mixing_rule.clear;
+	END IF;
+	IF options.mixture_thermo_correlation = 'Wilson' THEN
+		RUN Wilson_mixing_rule.clear;
+	END IF;
+END clear;
+
+METHOD specify;
+	RUN td_homogeneous_mixture::specify;
+	SWITCH (options.mixture_thermo_correlation)
+	CASE 'UNIFAC':
+		partial[ds.components].V.fixed := FALSE;
+		partial[ds.components].H.fixed := FALSE;
+		partial[ds.components].G.fixed := FALSE;
+	(* We ought to have break/fallthrough behavior here.
+	 * There's a sneaky way to get it without deep grammar changes.
+	 *)
+	CASE 'Wilson':
+		partial[ds.components].V.fixed := FALSE;
+		partial[ds.components].H.fixed := FALSE;
+		partial[ds.components].G.fixed := FALSE;
+	END SWITCH;
+END specify;
+METHOD scale;
+	RUN td_homogeneous_mixture::scale;
+	IF options.mixture_thermo_correlation = 'UNIFAC' THEN
+		RUN UNIFAC_mixing_rule.scale;
+	END IF;
+	IF options.mixture_thermo_correlation = 'Wilson' THEN
+		RUN Wilson_mixing_rule.scale;
+	END IF;
+END scale;
+END liquid_mixture;
+
+MODEL td_VLE_mixture(	
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	light WILL_BE vapor_mixture;
+	heavy WILL_BE liquid_mixture;
+	equilibrated WILL_BE boolean;
+) WHERE (
+	P, heavy.P, light.P WILL_BE_THE_SAME;
+	T, heavy.T, light.T WILL_BE_THE_SAME;
+	light.options.phase != heavy.options.phase;
+	light.options.ds.reference == heavy.options.ds.reference;
+	(* constrain the reference component to be a mobile species.*)
+	INTERSECTION[	light.options.ds.components,
+			heavy.options.ds.components,
+			[light.options.ds.reference]
+	] == [light.options.ds.reference];
+	light.options.ds.components == heavy.options.ds.components;
+	light.options.phase == 'vapor';
+	heavy.options.phase == 'liquid';
+) REFINES td_two_phase_mixture;
+(* no body *)
+
+METHODS
+(* uses old ones in td_two_phase_mixture *)
+END td_VLE_mixture;
+
+MODEL murphree_equilibrium_mixture(
+	P WILL_BE pressure;
+	T WILL_BE temperature;
+	light WILL_BE vapor_mixture;
+	heavy WILL_BE liquid_mixture;
+	equilibrated WILL_BE boolean;
+) WHERE (
+	P, heavy.P, light.P WILL_BE_THE_SAME;
+	T, heavy.T, light.T WILL_BE_THE_SAME;
+	light.options.phase != heavy.options.phase;
+	light.options.ds.reference == heavy.options.ds.reference;
+	(* constrain the reference component to be a mobile species.*)
+	INTERSECTION[	light.options.ds.components,
+			heavy.options.ds.components,
+			[light.options.ds.reference]
+	] == [light.options.ds.reference];
+	light.options.ds.components == heavy.options.ds.components;
+	light.options.phase == 'vapor';
+	heavy.options.phase == 'liquid';
+) REFINES td_VLE_mixture;
+
+booleqnlabel:	equilibrated == TRUE; (* logical constraint *)
+
+	alpha[ds.components],
+	ave_alpha IS_REFINED_TO relative_volatility;
+
+	vap_eq	IS_A vapor_mixture(light.P, light.T, light.options);
+	
+	equil_alpha[ds.components]	IS_A relative_volatility;
+	ref_y[ds.components]		IS_A fraction; 
+	murph_eff			IS_A factor;
+
+murphee_equil_ref_y_def:
+	SUM[ref_y[ds.components]] = 1;
+
+	FOR i IN ds.components CREATE 
+		murphee_equil_vap_eq_y_def[i]:
+		vap_eq.y[i] = equil_alpha[i] * heavy.y[i];
+		(vap_eq.partial[i].G - heavy.partial[i].G)/1E+5 {J/mole} =0;
+	END FOR;								 
+
+	FOR i IN ds.other CREATE
+		murphee_equil_murph_eff_def[i]:
+		murph_eff*(vap_eq.y[i] - ref_y[i]) = light.y[i] - ref_y[i];
+	END FOR;
+
+METHODS
+METHOD clear;
+	RUN td_VLE_mixture::clear;
+	RUN vap_eq.clear;
+	equil_alpha[ds.components].fixed := FALSE;
+	ref_y[ds.components].fixed := FALSE;
+	murph_eff.fixed := FALSE;
+END clear;
+METHOD specify;
+	RUN td_two_phase_mixture::specify;
+	RUN vap_eq.specify;
+	vap_eq.y[ds.components].fixed := FALSE;
+	equil_alpha[ds.components].fixed := FALSE;
+	ref_y[ds.other].fixed := TRUE;
+	murph_eff.fixed := TRUE;
+	T.fixed := FALSE;
+END specify;
+
+END murphree_equilibrium_mixture;

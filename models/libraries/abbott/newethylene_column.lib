@@ -1,0 +1,644 @@
+(*********************************************************************\
+                        newethylene_column.lib
+			by Kirk A. Abbott
+                        base on Robert S. Huss
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1996
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/08/29 12:20:42 $
+  $Revision: 1.6 $
+  $Author: ballan $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/abbott/newethylene_column.lib,v $
+\*********************************************************************)
+
+(*
+	C O L U M N . L I B
+	-------------------
+
+	AUTHOR:		Kirk A. Abbott
+	AUTHOR:		Robert S. Huss
+
+	DATES:		5/93 - Original code. 
+			9/93 - Slight changes made to original code.
+			6/94 - Made compatible with ASCEND3C
+
+	CONTENTS:	Column definitions. 
+
+			tray_stack:  Set of Linked VLE_flash models,
+			with interior trays assumed to at least have
+			liquid/vapor input/output.  Refinements of
+			tray_stack can refine flash models as desired.
+			Procedures heat_balance, reduce_Q, and zero_Q
+			are for turning on the heat balance in th
+			column, and use the variable 'can_be_adiabatic'
+			to determine if the heat balance should be 
+			turned on at each tray.
+
+			plot_column: Plotting for any column type.
+			Contains tray_stack which can be refined to
+			any column type.
+
+			simple_column: Refines tray_stack.  Top tray
+			refined to condenser, tray[feed_loc] refined
+			to simple_feed_tray, bottom tray refined to
+			reboiler, all other trays refined to simple_tray.
+			This column is based on molar streams and
+			mixtures, with constant relative_volatilities. 
+			Can be refined to td_column, equilibrium_column,
+			or rigorous_column.  Must define data[components]
+			for these refinements.
+
+			murph_column: Refinement of td_column to include
+			Murphree vapor efficiencies in the column model.
+			Model allows for separate efficiencies above
+			and below the feed tray.  Can be used to 
+			solve for columns with a known efficiency (less
+			than 1), or it can be used to model a larger column
+			with fewer trays (murph_eff>1). Note that large
+			murph_eff will cause convergence problems and
+			inaccurate solutions.
+
+			plot_murph_column.  Refinement of plot_column to
+			show the simulated number of trays due to the
+			Murphree efficiency.  
+			
+
+	REQUIRES:	"atoms.lib"
+			"components.lib"
+			"H_S_thermodynamics.lib" or "H_G_thermodynamics.lib"
+			"plot.lib"
+			"stream.lib"
+			"flash.lib"
+
+*)
+
+
+(* REQUIRE abbott/newethylene_flash.lib *)
+(* REQUIRE plot.lib *)
+
+(* ***********************************+************************************ *)
+(* ********************      Column Definitions       ********************* *)
+(* ***********************************+************************************ *)
+
+ 
+(* ***********************************+************************************ *)
+(* ********************          tray_stack           ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL tray_stack;
+
+	components				IS_A set OF symbol_constant;
+	ntrays					IS_A integer_constant;
+	tray[1..ntrays]				IS_A VLE_flash;
+	reduce					IS_A factor;
+	components,
+	tray[1..ntrays].components		ARE_THE_SAME;
+
+
+	FOR j IN [2..ntrays] CREATE
+		tray[j].vapout['vapor'],
+		tray[j-1].input['vapor']	ARE_THE_SAME;
+		tray[j].input['liquid'],
+		tray[j-1].liqout['liquid']	ARE_THE_SAME;
+
+		tray[1].liqout[tray[1].liqouts],
+		tray[j].liqout[tray[j].liqouts]	ARE_ALIKE;
+		tray[1].vapout[tray[1].vapouts],
+		tray[j].vapout[tray[j].vapouts]	ARE_ALIKE;
+
+		tray[1].liqout[tray[1].liqouts].state,
+		tray[j].liqout[tray[j].liqouts].state	ARE_ALIKE;
+		tray[1].vapout[tray[1].vapouts].state,
+		tray[j].vapout[tray[j].vapouts].state	ARE_ALIKE;
+
+	END FOR;
+
+
+
+  METHODS
+    METHOD scale;
+	RUN tray[1..ntrays].scale;
+    END scale;
+
+    METHOD heat_balance;
+	FOR j IN [1..ntrays] DO
+	    IF (tray[j].can_be_adiabatic) THEN
+		RUN tray[j].heat_balance;
+	    END IF;
+	END FOR;
+    END heat_balance;
+
+    METHOD reduce_Q;
+	FOR j IN [1..ntrays] DO
+	    IF (tray[j].can_be_adiabatic) THEN
+		tray[j].Qin := reduce*tray[j].Qin;
+	    END IF;
+	END FOR;
+    END reduce_Q;
+
+    METHOD zero_Q;
+	FOR j IN [1..ntrays] DO
+	    IF (tray[j].can_be_adiabatic) THEN
+		tray[j].Qin := 0.0{kW};
+	    END IF;
+	END FOR;
+    END zero_Q;
+END tray_stack;
+
+
+(* ***********************************+************************************ *)
+(* ********************          plot_column          ********************* *)
+(* ***********************************+************************************ *)
+
+
+MODEL plot_column;
+        col                                     IS_A tray_stack;
+        plotx,ploty                             IS_A plt_plot_symbol;
+        components                              IS_A set OF symbol_constant;
+
+        components,
+        col.components,
+	plotx.curve_set,
+	ploty.curve_set	                  ARE_THE_SAME;
+
+
+        plotx.title                     :== 'liquid compositions vs tray';
+        plotx.XLabel                    :== 'tray';
+        plotx.YLabel                    :== 'liquid comp';
+
+        FOR k IN [components] CREATE
+                plotx.curve[k].npnt     :== col.ntrays;
+                plotx.curve[k].legend   :== k;
+	END FOR;
+        FOR k IN [components] CREATE
+
+                FOR j IN [1..col.ntrays] CREATE
+                        plotx.curve[k].pnt[j].y,
+                        col.tray[j].liqout[CHOICE[col.tray[j].liqouts]]
+                        .state.y[k]    ARE_THE_SAME;
+                END FOR;
+        END FOR;
+
+        ploty.title                     :== 'vapor compositions vs tray';
+        ploty.XLabel                    :== 'tray';
+        ploty.YLabel                    :== 'vapor comp';
+
+        FOR k IN [components] CREATE
+                ploty.curve[k].npnt     :== col.ntrays;
+                ploty.curve[k].legend   :== k;
+	END FOR;
+        FOR k IN [components] CREATE
+                FOR j IN [1..col.ntrays] CREATE
+                        ploty.curve[k].pnt[j].y,
+                        col.tray[j].vapout[CHOICE[col.tray[j].vapouts]]
+                        .state.y[k]    ARE_THE_SAME;
+                END FOR;
+        END FOR;
+	plotx.curve[components].pnt[1..col.ntrays].x,
+	ploty.curve[components].pnt[1..col.ntrays].x	IS_REFINED_TO factor;
+
+
+  METHODS
+    METHOD clear;
+        RUN col.clear;
+    END clear;
+    METHOD seqmod;
+        RUN col.seqmod;
+    END seqmod;
+    METHOD specify;
+       RUN col.specify;
+    END specify;
+    METHOD reset;
+        RUN col.reset;
+    END reset;
+    METHOD plot_values;
+        FOR k IN [components] DO
+                FOR j IN [1..col.ntrays] DO
+                        plotx.curve[k].pnt[j].x := j;
+                        ploty.curve[k].pnt[j].x := j;
+                END FOR;
+        END FOR;
+     END plot_values;
+     METHOD scale;
+        RUN col.scale;
+     END scale;
+END plot_column;
+
+(* ***********************************+************************************ *)
+(* ********************   Basic Column Definitions    ********************* *)
+(* ***********************************+************************************ *)
+ 
+
+(* ***********************************+************************************ *)
+(* ********************         simple_column         ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL simple_column REFINES tray_stack;
+
+                          
+	feed_loc				IS_A integer_constant;
+	omb_slack[components]			IS_A molar_rate;
+
+        tray[1] 				IS_REFINED_TO condenser;
+        tray[2..feed_loc-1] 			IS_REFINED_TO simple_tray;
+        tray[feed_loc] 				IS_REFINED_TO simple_feed_tray;
+        tray[feed_loc+1..ntrays-1] 		IS_REFINED_TO simple_tray;
+        tray[ntrays] 				IS_REFINED_TO reboiler;
+                                                                      
+	tray[2..feed_loc-1].VLE,
+	    tray[feed_loc+1..ntrays-1].VLE			ARE_ALIKE;
+	F_scale					IS_A real;
+
+	F_scale, tray[feed_loc].input['feed'].Ftot_scale ARE_THE_SAME;
+	
+
+	FOR i IN components CREATE
+		OMB[i]: tray[feed_loc].input['feed'].f[i]/F_scale =
+			(tray[1].totprod.f[i] +
+			tray[ntrays].totprod.f[i]
+			+ omb_slack[i])/F_scale;
+		omb_slack[i] := 0{mol/s};
+		omb_slack[i].lower_bound := -1000{mole/s};
+		
+	END FOR;
+	
+
+  METHODS
+
+    METHOD clear;
+	RUN tray[1..ntrays].clear;
+	reduce.fixed					:= FALSE;
+	omb_slack[components].fixed			:= FALSE;
+	OMB[components].included			:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN tray[1..ntrays].seqmod;
+	tray[ntrays].reboil_ratio.fixed 		:= FALSE;
+	tray[1].totprod.Ftot.fixed			:= TRUE;
+	reduce.fixed					:= TRUE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+	RUN tray[feed_loc].input['feed'].specify;
+    END specify;
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;  
+    
+    METHOD overall_mb;
+	tray[feed_loc].totfeedflow[components].included := FALSE;
+	omb_slack[components] := 0.0{mol/s};
+	omb_slack[components].fixed := TRUE;
+    END overall_mb;
+ 
+    METHOD propogate_feed;
+		
+	FOR i IN components DO
+		tray[1..ntrays].alpha[i] := 
+			tray[feed_loc].alpha[i];
+
+		tray[1..ntrays-1].liqout[tray[2].liqouts].f[i] := 
+			tray[feed_loc].input['feed'].f[i];
+		tray[2..ntrays].vapout[tray[2].vapouts].f[i] := 
+			tray[feed_loc].input['feed'].f[i];
+
+	END FOR;
+    END propogate_feed;
+
+    METHOD total_reflux;
+	tray[1].reflux_ratio.fixed := TRUE;
+	tray[1].reflux_def.included := FALSE;
+	tray[1].totprod.Ftot := 0.0{mol/s};
+	tray[1].totprod.Ftot.fixed := FALSE;
+	tray[ntrays].reboil_ratio.fixed := TRUE;
+	tray[ntrays].reboil_def.included := FALSE;
+	tray[feed_loc].input['feed'].f[components].fixed := FALSE;
+	tray[feed_loc].qeq.included := FALSE;
+	tray[feed_loc].input['feed'].Ftot := 0.0{mol/s};
+	tray[feed_loc].input['feed'].Ftot.fixed := TRUE;
+	tray[feed_loc].input['feed'].state.y[components-[CHOICE[components]]].fixed := TRUE;
+	RUN tray[feed_loc].liqout['liquid'].specify;
+	tray[feed_loc].vle.phi['liquid'].fixed := TRUE;
+	tray[feed_loc].vle.phi['liquid'] := 0.5;
+	
+    END total_reflux;
+
+
+END simple_column;
+
+(* ***********************************+************************************ *)
+(* ********************           td_column           ********************* *)
+(* ***********************************+************************************ *)
+                   
+MODEL td_column REFINES simple_column;
+
+  data[components]			IS_A component_constants;
+
+ 
+	tray[1] IS_REFINED_TO td_condenser;
+        tray[2..feed_loc-1] IS_REFINED_TO td_simple_tray;
+        tray[feed_loc] IS_REFINED_TO td_simple_feed_tray;
+        tray[feed_loc+1..ntrays-1] IS_REFINED_TO td_simple_tray;
+        tray[ntrays] IS_REFINED_TO td_reboiler;
+
+	FOR i IN components CREATE
+		data[i],
+		tray[1..ntrays].data[i]		ARE_THE_SAME;
+	END FOR;
+          
+END td_column;
+
+(* ***********************************+************************************ *)
+(* ********************        equilibrium_column     ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL equilibrium_column REFINES td_column;
+
+  tray[1..ntrays].VLE		 IS_REFINED_TO equilibrium_mixture;
+  tray[feed_loc].input['feed'].state IS_REFINED_TO equilibrium_mixture;
+
+END equilibrium_column;
+
+(* ***********************************+************************************ *)
+(* ********************   Special Column Definitions  ********************* *)
+(* ***********************************+************************************ *)
+ 
+
+(* ***********************************+************************************ *)
+(* ********************         murph_column          ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL murph_column REFINES td_column;
+
+  top_murph, bot_murph			IS_A factor;
+
+  tray[2..feed_loc-1] 		IS_REFINED_TO murph_tray;
+  tray[feed_loc+1..ntrays-1] 	IS_REFINED_TO murph_tray;
+  tray[1].VLE 			IS_REFINED_TO equilibrium_mixture;
+  tray[feed_loc].VLE 		IS_REFINED_TO equilibrium_mixture;
+  tray[ntrays].VLE 		IS_REFINED_TO equilibrium_mixture;
+  tray[feed_loc].input['feed'].state IS_REFINED_TO equilibrium_mixture;
+
+  top_murph,tray[2..feed_loc-1].murph_eff	ARE_THE_SAME;
+  bot_murph,tray[feed_loc+1..ntrays-1].murph_eff	ARE_THE_SAME;
+
+END murph_column;
+
+MODEL plot_murph_column REFINES plot_column;
+  col				IS_REFINED_TO murph_column;
+
+  METHODS
+  METHOD murph_plot_values;
+      FOR k IN [1..plotx.ncurve] DO
+	FOR j IN [2..col.feed_loc-1] DO
+	  plotx.curve[k].pnt[j].x := plotx.curve[k].pnt[j-1].x
+	    + col.tray[j].murph_eff;
+	  ploty.curve[k].pnt[j].x := ploty.curve[k].pnt[j-1].x
+	    + col.tray[j].murph_eff;
+	END FOR;
+	plotx.curve[k].pnt[col.feed_loc].x := 
+	  plotx.curve[k].pnt[col.feed_loc-1].x + 1;
+	ploty.curve[k].pnt[col.feed_loc].x := 
+	  ploty.curve[k].pnt[col.feed_loc-1].x + 1;
+	FOR j IN [col.feed_loc+1..col.ntrays-1] DO
+	  plotx.curve[k].pnt[j].x := plotx.curve[k].pnt[j-1].x 
+	    + col.tray[j].murph_eff;
+	  ploty.curve[k].pnt[j].x := ploty.curve[k].pnt[j-1].x
+	    + col.tray[j].murph_eff;
+	END FOR;
+	plotx.curve[k].pnt[col.ntrays].x := 
+	  plotx.curve[k].pnt[col.ntrays-1].x + 1;
+	ploty.curve[k].pnt[col.ntrays].x := 
+	  ploty.curve[k].pnt[col.ntrays-1].x + 1;
+
+      END FOR;
+  END murph_plot_values;
+
+END plot_murph_column;
+
+
+MODEL fast_section;
+  ntrays IS_A integer_constant;
+  ntrays :== 4;		(* the DEFAULT size OF a section *)
+
+  tray[1..ntrays] IS_A td_simple_tray;  
+
+  FOR i IN [1..ntrays-1] CREATE
+    tray[i].input['vapor'], tray[i+1].vapout['vapor'] ARE_THE_SAME;
+  END FOR;
+  FOR i IN [1..ntrays-1] CREATE
+    tray[i].liqout['liquid'], tray[i+1].input['liquid'] ARE_THE_SAME;
+  END FOR;
+
+  METHODS
+  METHOD clear;
+      RUN tray[1..ntrays].clear;
+  END clear;
+  METHOD seqmod;
+      RUN tray[1..ntrays].seqmod;
+  END seqmod;
+  METHOD specify;
+      RUN seqmod;
+      RUN tray[1].input['liquid'].specify;
+      RUN tray[ntrays].input['vapor'].specify;
+  END specify;
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+END fast_section;
+      
+
+MODEL fast_stack;
+  section[1,2] IS_A fast_section;
+
+  last_top_tray IS_A integer_constant;
+  last_top_tray :== section[1].ntrays;
+
+  section[1].tray[last_top_tray],
+    section[2].tray[1] ARE_THE_SAME;
+END fast_stack;
+
+  
+MODEL fast_column;
+
+  ntrays IS_A integer_constant;
+  feed_loc IS_A integer_constant;
+  ntop_trays IS_A integer_constant;
+  nbot_trays IS_A integer_constant;
+  
+  cond IS_A 			td_condenser;
+  toptray[1..ntop_trays] IS_A 	td_simple_tray;
+  feedtray IS_A 		td_simple_feed_tray;
+  bottray[1..nbot_trays] IS_A 	td_simple_tray;
+  reb IS_A 			td_reboiler;
+
+  (* just to provide a litte interface to the external world.
+      Remember that components and data are defined IN ethylene_flash.lib *)
+  feed IS_A vapor_liquid_stream;
+  distillate, bottoms IS_A liquid_stream;
+  components IS_A set OF symbol_constant;
+  data[components] IS_A component_constants;
+
+  components,  
+    feed.components,
+    distillate.components,
+    bottoms.components,
+    feedtray.components ARE_THE_SAME;
+  FOR i IN components CREATE
+    data[i],
+      distillate.data[i],
+      feed.data[i],
+      bottoms.data[i],
+      feedtray.data[i] ARE_THE_SAME;
+  END FOR;
+  (* We really need an alias function !!! *)
+  feed, 		feedtray.input['feed'] ARE_THE_SAME;
+  distillate, 		cond.liqout['liquid']  ARE_THE_SAME;
+  bottoms,		reb.liqout['bottoms']  ARE_THE_SAME;
+  
+
+    
+  (* NOW DO THE WIRING UP *)
+  
+  (* the condenser *)
+  cond.input['vapor'], toptray[1].vapout['vapor'] ARE_THE_SAME;
+  cond.liqout['liquid'], toptray[1].input['liquid'] ARE_THE_SAME;
+
+  (* the top trays *)
+  FOR i IN [1..ntop_trays-1] CREATE
+    toptray[i].input['vapor'], toptray[i+1].vapout['vapor'] ARE_THE_SAME;
+  END FOR;
+  FOR i IN [1..ntop_trays-1] CREATE
+    toptray[i].liqout['liquid'], toptray[i+1].input['liquid'] ARE_THE_SAME;
+  END FOR;
+
+  (* the feed *)
+
+  feedtray.vapout['vapor'], toptray[ntop_trays].input['vapor'] ARE_THE_SAME;
+  feedtray.input['liquid'], toptray[ntop_trays].liqout['liquid'] ARE_THE_SAME;
+  feedtray.input['vapor'], bottray[1].vapout['vapor'] ARE_THE_SAME;
+  feedtray.liqout['liquid'], bottray[1].input['liquid'] ARE_THE_SAME;
+
+  (* the bottom trays *)
+  FOR i IN [1..nbot_trays-1] CREATE
+    bottray[i].input['vapor'], bottray[i+1].vapout['vapor'] ARE_THE_SAME;
+  END FOR;
+  FOR i IN [1..nbot_trays-1] CREATE
+    bottray[i].liqout['liquid'], bottray[i+1].input['liquid'] ARE_THE_SAME;
+  END FOR;
+
+
+  (* the reboiler *)
+  reb.input['liquid'], bottray[nbot_trays].liqout['liquid'] ARE_THE_SAME;
+  reb.vapout['vapor'], bottray[nbot_trays].input['vapor'] ARE_THE_SAME;
+
+  METHODS
+  METHOD clear;
+      RUN cond.clear;
+      RUN toptray[1..ntop_trays].clear;
+      RUN feedtray.clear;
+      RUN bottray[1..nbot_trays].clear;
+      RUN reb.clear;
+      RUN feed.clear;
+      RUN distillate.clear;
+      RUN bottoms.clear;
+  END clear;
+  METHOD seqmod;
+      RUN cond.seqmod;
+      RUN toptray[1..ntop_trays].seqmod;
+      RUN feedtray.seqmod;
+      RUN bottray[1..nbot_trays].seqmod;
+      RUN reb.seqmod;
+      reb.reboil_ratio.fixed := FALSE;
+      cond.totprod.Ftot.fixed := FALSE;
+  END seqmod;
+  METHOD specify;
+      RUN seqmod;
+      RUN feed.specify;
+      cond.totprod.Ftot.fixed := TRUE;
+  END specify;
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+  METHOD values;
+      RUN cond.values;
+      RUN toptray[1..ntop_trays].values;
+      RUN feedtray.values;
+      RUN bottray[1..nbot_trays].values;
+      RUN reb.values;
+  END values;
+
+END fast_column;
+
+MODEL eq_fast_column REFINES fast_column;
+  
+  cond.VLE IS_REFINED_TO equilibrium_mixture;
+  toptray[1..ntop_trays].VLE IS_REFINED_TO equilibrium_mixture;
+  feedtray.VLE IS_REFINED_TO equilibrium_mixture;
+  feedtray.input['feed'].state IS_REFINED_TO equilibrium_mixture;
+  bottray[1..nbot_trays].VLE IS_REFINED_TO equilibrium_mixture;
+  reb.VLE IS_REFINED_TO equilibrium_mixture;
+
+END eq_fast_column;
+
+
+MODEL small_column REFINES eq_fast_column;
+
+  (* a 10 tray MODEL; note that we simply can
+     not just set the feed location as it is
+     calculated based on the number OF top trays *)
+  ntop_trays :== 2;		(* problem dependent *)
+  nbot_trays :== 2;		(* problem dependent *)
+  ntrays :== 1 + ntop_trays + 1 + nbot_trays + 1;
+  feed_loc :== 1 + ntop_trays + 1;
+
+END small_column;
+
+MODEL medium_column REFINES eq_fast_column;
+
+  (* a 30 tray MODEL; see the comment IN small_column
+     concerning feed location *)
+  ntop_trays :== 15;		(* problem dependent *)
+  nbot_trays :== 15;		(* problem dependent *)
+  ntrays :== 1 + ntop_trays + 1 + nbot_trays + 1;
+  feed_loc :== 1 + ntop_trays + 1;
+
+END medium_column;
+
+
+MODEL big_column REFINES eq_fast_column;
+
+  (* a 50 tray MODEL; see the comment IN small_column
+     concerning feed location *)
+  ntop_trays :== 24;		(* problem dependent *)
+  nbot_trays :== 24;		(* problem dependent *)
+  ntrays :== 1 + ntop_trays + 1 + nbot_trays + 1;
+  feed_loc :== 1 + ntop_trays + 1;
+
+END big_column;
+

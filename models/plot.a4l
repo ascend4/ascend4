@@ -1,0 +1,135 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "plot.a4l";
+
+(*
+ *  plot.a4l
+ *  by Ben Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:20:25 $
+ *  $Revision: 1.4 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/plot.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Benjamin Andrew Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*============================================================================*
+
+	 P L O T . A 4 L
+	 ---------------
+
+	AUTHOR:	Ben Allan
+		provoked by plot.a4l by Peter Piela and Kirk A. Abbott
+
+	DATES:	03/97 - Original code.
+
+	CONTENTS:
+		A parameterized plot library mostly compatible
+		with plot.a4l, but with variable graph titles.
+
+*)
+
+MODEL pltmodel() REFINES cmumodel();
+(* the methods in this MODEL library have
+ * basically nothing to do except exist.
+ *)
+METHODS
+
+METHOD default_self;
+END default_self;
+
+METHOD check_self;
+END check_self;
+
+METHOD scale_self;
+END scale_self;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD default_all;
+END default_all;
+
+METHOD check_all;
+END check_all;
+
+METHOD bound_all;
+END bound_all;
+
+METHOD scale_all;
+END scale_all;
+
+METHOD specify;
+END specify;
+
+END pltmodel;
+
+MODEL plt_point(
+	x WILL_BE real;
+	y WILL_BE real;
+) REFINES pltmodel();
+END plt_point;
+
+(***************************************************************)
+
+MODEL plt_curve(
+	npnts IS_A set OF integer_constant;
+	y_data[npnts] WILL_BE real;
+	x_data[npnts] WILL_BE real;
+) REFINES pltmodel();
+(* points of matching subscript will be plotted in order of
+ * increasing subscript value.
+ *)
+	legend				IS_A symbol; (* mutable now! *)
+	FOR i IN [npnts] CREATE
+		pnt[i]	IS_A plt_point(x_data[i],y_data[i]);
+	END FOR;
+END plt_curve;
+
+(***************************************************************)
+
+MODEL plt_plot_integer(
+	curve_set IS_A set OF integer_constant;
+	curve[curve_set] WILL_BE plt_curve;
+) REFINES pltmodel();
+	title, XLabel, YLabel IS_A symbol; (* mutable now! *)
+	Xlow IS_A real;
+	Ylow IS_A real;
+	Xhigh IS_A real;
+	Yhigh IS_A real;
+	Xlog IS_A boolean_start_false;
+	Ylog IS_A boolean_start_false;
+END plt_plot_integer;
+
+(***************************************************************)
+
+MODEL plt_plot_symbol(
+	curve_set IS_A set OF symbol_constant;
+	curve[curve_set] WILL_BE plt_curve;
+) REFINES pltmodel();
+	title, XLabel, YLabel IS_A symbol; (* mutable now! *)
+	Xlow IS_A real;
+	Ylow IS_A real;
+	Xhigh IS_A real;
+	Yhigh IS_A real;
+	Xlog IS_A boolean_start_false;
+	Ylog IS_A boolean_start_false;
+END plt_plot_symbol;

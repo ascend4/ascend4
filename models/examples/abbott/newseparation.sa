@@ -1,0 +1,64 @@
+# ASCEND IV script to test PPP splitter alias recovery backend.
+# by ben allan, 5/17/96.
+# For standalone compiler testing.
+#
+# DELETE TYPES;
+# in unix before running ascend
+setenv ASCENDLIBRARY /usr0/ballan/new/ascend4/models/libraries/abbott:/usr0/ballan/new/ascend4/models/libraries:/usr0/ballan/new/ascend4/models/examples/abbott
+
+# from your compiler directory one of the following
+either
+gdb ./ascend
+run -c system
+
+or
+./ascend system 
+
+load atoms
+load components
+load thermo
+load stream 
+load newintegration
+load plot
+load newflowsheet
+load newethylene_flash
+load newethylene_column
+load newethylene_ppp_flash
+load newethylene_ppp_column
+load separation
+load tube_reactor
+load furnace
+load plant
+
+
+# the following sets of statements generate prototype models
+# which we can then use to copy rather than reinterpretting
+# dozens of times in building a flowsheet.
+
+ncreate ppp_tray td_simple_tray_PPP
+proto ppp_tray
+
+ncreate t1 td_simple_tray
+proto t1
+
+ncreate k1 kinetics_2
+proto k1
+
+#don't go too far, though. this one loses.
+#ncreate r2 Reactor
+#proto r2
+
+check ppp_tray
+check t1
+check k1
+# all these complain about wilson constants unset.
+
+# If you run this statement you get a 17.5K equations instance
+# in about 12M and 12 seconds. Don't do this.
+
+ncreate rb recovery_backend
+
+# Now we will build an 80K equations instance
+# in about 80M and 80 seconds. Watch my dust.
+
+ncreate p1 plant

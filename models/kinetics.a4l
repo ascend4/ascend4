@@ -1,0 +1,385 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "kinetics.a4l";
+
+(*
+ *  kinetics.a4l
+ *  by Duncan Coffey
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:10:29 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/kinetics.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Duncan Coffey
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+
+(* ************************************************************************ *)
+(* ********************           Kinetics             ******************** *)
+(* ************************************************************************ *)
+MODEL base_kinetics(
+    components		       	IS_A set OF symbol_constant;
+    nr			       	IS_A set OF symbol_constant;
+    Kr[nr]	      		IS_A constant;
+    active_energy[nr]		IS_A constant;
+    reac_T			WILL_BE temperature;
+    species[nr]		       	IS_A set OF symbol_constant;
+    nu[components][nr]		WILL_BE integer_constant;
+    conc[components]		WILL_BE molar_density;
+)WHERE(
+
+)REFINES cmumodel;
+NOTES
+'purpose' SELF {
+This MODEL computes the production rates per volume of the reactant
+speices given.  There are three possible models to use.
+
+base_kinetics - No rate law is constructed and is expected to be given
+by the user. Production rates are then calculated from the given rate laws.
+
+nr - names of reactions
+Kr[nr] - rate constants
+species[nr] - set of components involved in each reaction
+nu[components][nr] - stoichiometry for each components and reaction
+conc[components] - Concentrations used in rate laws.
+
+element_kinetics - Here the rate laws are constructed from the
+stoichiometry (nu) given.
+
+specify_kinetics - Here the rate laws are constructed from the orders (order) given.
+
+}
+'developer-Duncan' SELF {From the element_kinetics and
+specify_kinetics most rate laws can be constructed. However in many cases
+there may need to be intermediate steps and it might just be easier to
+use base_kinetics.
+}
+END NOTES;
+
+    rate[nr]		       	IS_A conc_rate;
+    reactions[components]     	IS_A set OF symbol_constant;
+    production[components]     	IS_A conc_rate;
+    Ftot_scale			IS_A scaling_constant;
+    R				IS_A gas_constant;
+
+    (* Define the production rate for a component *)
+    FOR i IN components CREATE
+	production[i] / Ftot_scale = SUM[nu[i][j]*rate[j] | j IN reactions[i]] / Ftot_scale;
+    END FOR;
+
+    (* define rxns where each component is present *)
+    FOR i IN components CREATE
+	reactions[i] :== [j IN nr | i IN species[j]];
+    END FOR;
+
+    METHODS
+
+    METHOD default_self;
+	rate[nr].lower_bound :=-1e100 {mole/m^3/s};
+	production[components].lower_bound :=-1e100 {mole/m^3/s};
+	Ftot_scale :=1000;
+    END default_self;
+
+    METHOD default_all;
+	RUN reac.default_self;
+    END default_all;
+
+    METHOD check_self;
+    END check_self;
+
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN bound_self;
+    END bound_all;
+
+    METHOD scale_self;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN scale_self;
+    END scale_all;
+
+    METHOD seqmod;
+	conc[components].fixed		:=TRUE;
+	reac_T.fixed   			:=TRUE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+    END specify;
+END base_kinetics;
+
+
+MODEL element_kinetics(
+    components		       	IS_A set OF symbol_constant;
+    nr			       	IS_A set OF symbol_constant;
+    Kr[nr]	      		IS_A constant;
+    active_energy[nr]		IS_A constant;
+    reac_T			WILL_BE temperature;
+    species[nr]		       	IS_A set OF symbol_constant;
+    nu[components][nr]		WILL_BE integer_constant;
+    conc[components]		WILL_BE molar_density;
+)WHERE(
+
+)REFINES base_kinetics;
+
+    (* define the rate equations for each component *)
+    FOR j IN nr CREATE
+	rate[j] / Ftot_scale = (Kr[j]*exp(-active_energy[j]/R/reac_T)*PROD[
+	PROD[ conc[i] | m IN [1..-(nu[i][j])]] | i IN species[j]]) / Ftot_scale;
+    END FOR;
+
+
+
+    METHODS
+
+    METHOD default_self;
+	rate[nr].lower_bound :=-1e100 {mole/m^3/s};
+	production[components].lower_bound :=-1e100 {mole/m^3/s};
+	Ftot_scale :=1000;
+    END default_self;
+
+    METHOD default_all;
+	RUN reac.default_self;
+    END default_all;
+
+    METHOD check_self;
+    END check_self;
+
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN bound_self;
+    END bound_all;
+
+    METHOD scale_self;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN scale_self;
+    END scale_all;
+
+    METHOD seqmod;
+	conc[components].fixed		:=TRUE;
+	reac_T.fixed			:=TRUE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+    END specify;
+
+END element_kinetics;
+
+
+MODEL specify_kinetics(
+    components		       	IS_A set OF symbol_constant;
+    nr			       	IS_A set OF symbol_constant;
+    Kr[nr]	      		IS_A constant;
+    active_energy[nr]		IS_A constant;
+    reac_T			WILL_BE temperature;
+    species[nr]		       	IS_A set OF symbol_constant;
+    nu[components][nr]		WILL_BE integer_constant;
+    conc[components]		WILL_BE molar_density;
+    order[components][nr]      	WILL_BE constant;
+)WHERE(
+
+)REFINES base_kinetics;
+
+
+    (* define the rate equations for each component *)
+    FOR j IN nr CREATE
+	rate[j] / Ftot_scale = (Kr[j]*exp(-active_energy[j]/R/reac_T)*
+	   PROD[conc[i]^order[i][j] | i IN species[j]]) / Ftot_scale;
+    END FOR;
+
+    METHODS
+
+    METHOD default_self;
+	rate[nr].lower_bound 			:=-1e100 {mole/m^3/s};
+	production[components].lower_bound	:=-1e100 {mole/m^3/s};
+	Ftot_scale				:=1000;
+    END default_self;
+
+    METHOD seqmod;
+	conc[components].fixed		:=TRUE;
+	reac_T.fixed			:=TRUE;
+    END seqmod;
+
+    METHOD specify;
+	RUN seqmod;
+    END specify;
+
+END specify_kinetics;
+
+MODEL test_elm_kinetics;
+    components		       	IS_A set OF symbol_constant;
+    nr			       	IS_A set OF symbol_constant;
+    Kr[nr]	      		IS_A constant;
+    active_energy[nr]		IS_A constant;
+    reac_T			IS_A temperature;
+    species[nr]		       	IS_A set OF symbol_constant;
+    nu[components][nr]		IS_A integer_constant;
+    conc[components]		IS_A molar_density;
+
+
+    components	:==['methane','ethane','n_butane'];
+    nr		:==['reaction_1','reaction_2'];
+    species['reaction_1']	:==['methane','ethane'];
+    species['reaction_2']	:==['methane','ethane'];
+    Kr['reaction_1']		:==2 {m^3/mol/s};
+    Kr['reaction_2']		:==3 {1/s};
+    active_energy['reaction_1']	:==70000 {J};
+    active_energy['reaction_2']	:==70000 {J};
+
+    nu['methane']['reaction_1']	:==-2;
+    nu['ethane']['reaction_1']	:==1;
+    nu['methane']['reaction_2']	:==2;
+    nu['ethane']['reaction_2']	:==-1;
+    (* define nu=0 FOR components not IN reactions*)
+    FOR i IN nr CREATE
+	FOR j IN components - [species[i]] CREATE
+	    nu[j][i]	:==0;
+	END FOR;
+    END FOR;
+
+
+
+    reac IS_A element_kinetics(components, nr, Kr, active_energy,
+                               reac_T, species, nu, conc);
+
+    METHODS
+
+    METHOD default_self;
+	RUN reac.default_self;
+    END default_self;
+
+    METHOD default_all;
+	RUN reac.default_self;
+    END default_all;
+
+    METHOD check_self;
+    END check_self;
+
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN bound_self;
+    END bound_all;
+
+    METHOD scale_self;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN scale_self;
+    END scale_all;
+END test_elm_kinetics;
+
+MODEL test_ord_kinetics;
+    components		       	IS_A set OF symbol_constant;
+    nr			       	IS_A set OF symbol_constant;
+    Kr[nr]	      		IS_A constant;
+    active_energy[nr]		IS_A constant;
+    reac_T			IS_A temperature;
+    species[nr]		       	IS_A set OF symbol_constant;
+    nu[components][nr]		IS_A integer_constant;
+    order[components][nr]      	IS_A constant;
+    conc[components]		IS_A molar_density;
+
+
+    components	:==['methane','ethane','n_butane'];
+    nr		:==['reaction_1','reaction_2'];
+    species['reaction_1']	:==['methane','ethane'];
+    species['reaction_2']	:==['methane','ethane'];
+    Kr['reaction_1']		:==2 {m^3/mol/s};
+    Kr['reaction_2']		:==3 {1/s};
+    active_energy['reaction_1']	:==70000 {J};
+    active_energy['reaction_2']	:==70000 {J};
+
+    nu['methane']['reaction_1']	:==-2;
+    nu['ethane']['reaction_1']	:==1;
+    nu['methane']['reaction_2']	:==2;
+    nu['ethane']['reaction_2']	:==-1;
+    (* define nu=0 FOR components not IN reactions*)
+    FOR i IN nr CREATE
+	FOR j IN components - [species[i]] CREATE
+	    nu[j][i]	:==0;
+	END FOR;
+    END FOR;
+
+    order['methane']['reaction_1']	:==2;
+    order['ethane']['reaction_1']	:==0;
+    order['methane']['reaction_2']	:==3;
+    order['ethane']['reaction_2']	:==1;
+    FOR i IN nr CREATE
+	FOR j IN components - [species[i]] CREATE
+	    order[j][i]	:==0;
+	END FOR;
+    END FOR;
+
+    reac IS_A specify_kinetics(components, nr, Kr, active_energy,
+                               reac_T, species, nu, conc, order);
+
+    METHODS
+    METHOD default_self;
+	RUN reac.default_self;
+    END default_self;
+
+    METHOD default_all;
+	RUN reac.default_self;
+    END default_all;
+
+    METHOD check_self;
+    END check_self;
+
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN bound_self;
+    END bound_all;
+
+    METHOD scale_self;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN scale_self;
+    END scale_all;
+END test_ord_kinetics;

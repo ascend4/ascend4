@@ -1,0 +1,318 @@
+REQUIRE "column.a4l";
+(* => column.a4l, flash.a4l, stream_holdup.a4l, thermodynamics.a4l,
+ *    components.a4l, phases.a4l, atoms.a4l, measures.a4l, system.a4l,
+ *    basemodel.a4l *)
+REQUIRE "plot.a4l";
+(* => plot.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "plotcol.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+MODEL demo_plot_column(
+	components IS_A set OF symbol_constant;
+	reference IS_A symbol_constant;
+        n_trays IS_A integer_constant;
+        feed_location IS_A integer_constant;
+) WHERE (
+        reference IN components == TRUE;
+        n_trays > 5;
+        feed_location > 2;
+        feed_location < n_trays - 2;
+) REFINES demo_column;
+
+	z_eq_tray_set ALIASES Column.VLE_set;
+	z_eq_tray_coord[z_eq_tray_set] IS_A real;
+
+	z_eq_tray_above_set IS_A set OF integer_constant;
+	z_eq_tray_above_set :== [0 .. Column.N_trays-1];
+	z_eq_tray_above_coord[z_eq_tray_above_set] IS_A real;
+
+	z_all_tray_set IS_A set OF integer_constant;
+	z_all_tray_set :== [0 .. Column.N_trays];
+	z_all_tray_coord[z_all_tray_set] IS_A real;
+
+	z_icmp IS_A set OF integer_constant;
+	z_icmp :== [1..CARD[components]];
+
+	Profile IS_A simple_column_profiles(Column);
+
+	FOR i IN [components] CREATE
+		x_curves[i] IS_A plt_curve(
+			Profile.zx[i],
+			Profile.x[i],
+			z_eq_tray_coord
+		);
+		y_curves[i] IS_A plt_curve(
+			Profile.zy[i],
+			Profile.y[i],
+			z_eq_tray_coord
+		);
+		k_curves[i] IS_A plt_curve(
+			Profile.zk[i],
+			Profile.kvalues_when_full_thermo[i],
+			z_eq_tray_coord
+		);
+	END FOR;
+
+	t_curve IS_A plt_curve(Profile.zT,Profile.T,z_eq_tray_coord);
+	t_curves[1] ALIASES t_curve;
+
+	p_curve IS_A plt_curve(Profile.zP,Profile.P,z_eq_tray_coord);
+	p_curves[2] ALIASES p_curve;
+
+	Q_curve IS_A plt_curve(Profile.zQ,Profile.Qin,z_all_tray_coord);
+	Q_curves[3] ALIASES Q_curve;
+
+	L_curve IS_A plt_curve(Profile.zL,Profile.Lin,z_eq_tray_coord);
+	L_curves[4] ALIASES L_curve;
+
+	V_curve IS_A plt_curve(Profile.zV,Profile.Vin,z_eq_tray_above_coord);
+	V_curves[5] ALIASES V_curve;
+
+	Plot_x IS_A plt_plot_symbol(components,x_curves);
+	Plot_y IS_A plt_plot_symbol(components,y_curves);
+	Plot_K IS_A plt_plot_symbol(components,k_curves);
+	Plot_T IS_A plt_plot_integer([1],t_curves);
+	Plot_P IS_A plt_plot_integer([2],p_curves);
+	Plot_Q IS_A plt_plot_integer([3],Q_curves);
+	Plot_L IS_A plt_plot_integer([4],L_curves);
+	Plot_V IS_A plt_plot_integer([5],V_curves);
+
+(* this stuff needs work
+(* in conversion process from bob's mcplot code.
+	SELECT (CARD[components])
+	CASE 2:
+	(* mccabe thiele plot only for 2 components *)
+
+(* these get mapped into parameters *)
+	mceq.npnt :== Plot_x.curve[reference].npnt;
+	mcstages.npnt :== 2*(Plot_x.curve[reference].npnt) + 1;
+	mcopline.npnt :== Plot_x.curve[reference].npnt+1;
+	mcident.npnt :== 2;
+	mcqline.npnt :== 2;
+
+
+	FOR j IN [1..mceq.npnt] CREATE
+		mceq.pnt[j].x, Plot_x.curve[reference].pnt[j].y	ARE_THE_SAME;
+		mceq.pnt[j].y, Plot_y.curve[reference].pnt[j].y	ARE_THE_SAME;
+
+		mcstages.pnt[2*j-1], mcopline.pnt[j]	ARE_THE_SAME;
+		mcstages.pnt[2*j], mceq.pnt[j]		ARE_THE_SAME;
+	END FOR;
+
+	FOR j IN [2..mcopline.npnt-1] CREATE
+		mcopline.pnt[j].x, Plot_x.curve[reference].pnt[j-1].y
+		ARE_THE_SAME;
+		mcopline.pnt[j].y, Plot_y.curve[reference].pnt[j].y
+		ARE_THE_SAME;
+	END FOR;
+
+	mcstages.pnt[1].x, mcstages.pnt[1].y, Plot_y.curve[reference].pnt[1].y
+	ARE_THE_SAME;
+
+	mcstages.pnt[2*(Plot_x.curve[reference].npnt)+1].x,
+	mcstages.pnt[2*(Plot_x.curve[reference].npnt)+1].y,
+	Plot_x.curve[reference].pnt[Plot_x.curve[reference].npnt].y
+	ARE_THE_SAME;
+
+	mcstages.pnt[2*(Plot_x.curve[reference].npnt)+1],
+	mcopline.pnt[Plot_x.curve[reference].npnt+1]	ARE_THE_SAME;
+
+	mcident.pnt[1], mcopline.pnt[1]	ARE_THE_SAME;
+	mcident.pnt[2], mcopline.pnt[mcopline.npnt] ARE_THE_SAME;
+
+	mcqline.pnt[2], mceq.pnt[col.feed_loc]	ARE_THE_SAME;
+
+(* stuff below here or something very like should work when complete *)
+
+	(* I may be missing the distillate from mceq and mcstagex *)
+	mceq IS_A plt_curve(
+		Column.zx[reference],
+		Column.Profile_x[reference],
+		Column.Profile_y[reference]
+	);
+
+	mcstagex[mc_sx_pts] ALIASES ((
+		(Column.Profile_x[reference][k],Column.Profile_x[reference][k])
+		 | k IN z_eq_tray_set),
+		Column.Profile_x[reference][Column.N_trays])
+	WHERE mc_sx_pts IS_A set OF integer_constant;
+
+	(* this one may be way off *)
+	mcstagey[mc_sy_pts] ALIASES ((
+		(Column.Profile_Y[reference][k+1],
+		 Column.Profile_Y[reference][k])
+		 | k IN z_eq_tray_set),
+		Column.Profile_x[reference][Column.N_trays])
+	WHERE mc_sy_pts IS_A set OF integer_constant;
+
+	(* If we get all the curves built ok, this part is a nobrainer *)
+	mc_curves[mc_set] ALIASES (mceq,mcstages,mcopline,mcident,mcqline)
+	WHERE mc_set IS_A set OF integer_constant;
+
+	Plot_MT	IS_A plt_plot_integer(mc_set,mc_curves);
+
+	OTHERWISE
+	END FOR;  (* select CARD components *)
+
+*)
+*)
+
+METHODS
+METHOD values;
+	RUN demo_column::values;
+	z_all_tray_coord[0] := 0;
+	FOR i IN z_eq_tray_set DO
+		z_all_tray_coord[i] := i;
+		z_eq_tray_coord[i] := i;
+		z_eq_tray_above_coord[i-1] := i-1;
+	END FOR;
+	t_curve.legend := 'temperature';
+	p_curve.legend := 'pressure';
+	Q_curve.legend := 'enthalpy';
+	V_curve.legend := 'entering vapor';
+	L_curve.legend := 'entering liquid';
+	FOR i IN components DO
+		y_curves[i].legend := i;
+		x_curves[i].legend := i;
+		k_curves[i].legend := i;
+	END FOR;
+	Plot_x.title := 'Liquid Compositions';
+	Plot_y.title := 'Vapor Compositions';
+	Plot_K.title := 'Volatilities';
+	Plot_T.title := 'Temperature';
+	Plot_P.title := 'Pressure';
+	Plot_Q.title := 'Input heat';
+	Plot_L.title := 'Liquid Flow';
+	Plot_V.title := 'Vapor Flow';
+	Plot_P.XLabel := 'tray number';
+	Plot_T.XLabel := 'tray number';
+	Plot_y.XLabel := 'tray number';
+	Plot_x.XLabel := 'tray number';
+	Plot_K.XLabel := 'tray number';
+	Plot_Q.XLabel := 'tray number';
+	Plot_L.XLabel := 'tray number';
+	Plot_V.XLabel := 'tray number';
+	Plot_T.YLabel := '{K}';
+	Plot_P.YLabel := '{Pascal}';
+	Plot_y.YLabel := 'mole fraction';
+	Plot_x.YLabel := 'mole fraction';
+	Plot_K.YLabel := 'K value';
+	Plot_Q.YLabel := 'watt';
+	Plot_L.YLabel := 'mole/s';
+	Plot_V.YLabel := 'mole/s';
+	(* make composition plots cover 0 - 1 *)
+	Plot_x.Ylow := 0;
+	Plot_x.Yhigh := 1;
+	Plot_y.Ylow := 0;
+	Plot_y.Yhigh := 1;
+
+(* This part ok when Plot_MT is finished above.
+	IF CARD[components] == 2 THEN
+		Plot_MT.title := 'McCabe-Thiele Diagram';
+		Plot_MT.XLabel := 'Liquid composition';
+		Plot_MT.YLabel := 'Vapor composition';
+		mceq.legend := 'equilibrium';
+		mcstages.legend := 'stages';
+		mcopline.legend := 'operating line';
+		mcident.legend := 'x=y';
+		mcqline.legend := 'qline';
+	END FOR;
+*)
+END values;
+
+END demo_plot_column;
+
+MODEL testdemoplotmodel() REFINES testcmumodel();
+METHODS
+METHOD check_self;
+        RUN demo.check_self;
+END check_self;
+METHOD check_all;
+        RUN demo.check_all;
+END check_all;
+METHOD default_self;
+        RUN demo.default_self;
+END default_self;
+METHOD default_all;
+        RUN demo.scale_all;
+END default_all;
+METHOD scale_self;
+        RUN demo.scale_self;
+END scale_self;
+METHOD scale_all;
+        RUN demo.scale_all;
+END scale_all;
+METHOD bound_self;
+        RUN demo.bound_self;
+END bound_self;
+METHOD bound_all;
+        RUN demo.bound_all;
+END bound_all;
+
+METHOD specify;
+        RUN demo.specify;
+END specify;
+
+METHOD values;
+        RUN demo.values;
+END values;
+METHOD reset_to_mass_balance;
+        RUN demo.Column.reset_to_mass_balance;
+END reset_to_mass_balance;
+
+METHOD reset_to_full_thermo;
+        RUN demo.Column.reset_to_full_thermo;
+END reset_to_full_thermo;
+
+METHOD reset_to_adiabatic;
+        RUN demo.Column.reset_to_adiabatic;
+END reset_to_adiabatic;
+
+END testdemoplotmodel;
+
+MODEL mw_demo_plot_column() REFINES testdemoplotmodel();
+        demo IS_A demo_plot_column(['methanol','water'],'water',13,7);
+END mw_demo_plot_column;
+
+MODEL abc_demo_plot_column() REFINES testdemoplotmodel();
+        demo IS_A
+        demo_plot_column(['benzene','chloroform','acetone'],'benzene',13,7);
+END abc_demo_plot_column;
+
+MODEL c567_demo_plot_column() REFINES testdemoplotmodel();
+        demo IS_A
+        demo_plot_column(['n_pentane','n_hexane','n_heptane'],'n_heptane',13,7);
+END c567_demo_plot_column;
+
+
+(*
+ *  plotcol.a4c
+ *  by Benjamin A Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:22:22 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/plotcol.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *  Copyright (C) 1997 Benjamin A Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
+ *)

@@ -1,0 +1,744 @@
+(*********************************************************************\
+                        bvp.lib
+                        by Benjamin A Allan
+			remodeled from integration.lib 
+                        by Peter Piela, Boyd T. Safrit, Joseph J. Zaher
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1997 Benjamin A Allan
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/07/03 14:49:41 $
+  $Revision: 1.2 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/bvp.lib,v $
+\*********************************************************************)
+(*=============================================================================*
+
+    B V P . L I B
+    -----------------------------
+
+    AUTHORS:     Ben Allan
+                 Peter Piela
+                 Boyd T. Safrit
+                 Joseph J. Zaher
+
+    DATES:       07/91 - Original code.
+                 08/94 - Added the observations to LSODE.
+                 09/94 - Added ivp as base type for all initial value problem
+                         solvers. baa.
+                 10/94 - Added other integration methods to supplement lsode
+                         and provide a means for dynamic optimization.
+                 04/96 - Modified for the use of constants and function abs
+		 03/97 - Decoupled from IVP, rewritten in ASCEND IV.
+
+    CONTENTS:    The bvp_point model definition that is required
+                 in the integration model.
+                 For boundary value
+                 problems and for dynamic optimization, a general integration
+                 model is supplied which enables users to specify any of a
+                 number of alternative integration techniques.  The user
+                 should be aware, however, that using the general integration
+                 model will substantially increase the size of a problem.
+                 When possible, an IVP library is preferable to use.
+
+Don't forget to comment the REQUIRE out before checking in. 
+ REQUIRE "system";
+ REQUIRE "atoms";
+*)
+
+(* ******************************************************************** *)
+(* **************  bvp_point: the collocation MODEL API  ************** *)
+(* ******************************************************************** *)
+MODEL bvp_point;
+   (*   Generic definition of the differential equation system,
+    *   Dy[i] = dydx[i], i=1..n_eq, D = d/dx. 
+    * Create a refinement of this type that includes a part 
+    * which is your DAE MODEL and
+    * merge your variables with x,y,dydx as needed.
+    *)
+
+   n_eq IS_A integer_constant; (* number of implicit ODE's *)
+   dydx[1..n_eq],              (* derivative variables *)
+   y[1..n_eq],                 (* state variables *)
+   x         IS_A solver_var;  (* independent variable *)
+
+(*
+ * Note that the integration will behave much better if the
+ * typical values of your state variables are all about the
+ * same size. Integrators can lie if you give them poorly
+ * scaled problems. Dimensionless variables are generally best
+ * to use if you can easily formulate your MODEL in those terms.
+ *)
+
+   METHODS
+       METHOD clear;
+           x.fixed := FALSE;
+           y[1..n_eq].fixed := FALSE;
+           dydx[1..n_eq].fixed := FALSE;
+       END clear;
+       METHOD specify;
+           (* The state variables are set
+            * TRUE, while their derivatives are FALSE.
+            *)
+           x.fixed := TRUE;
+           y[1..n_eq].fixed := TRUE;
+           dydx[1..n_eq].fixed := FALSE;
+       END specify;
+END bvp_point;
+
+
+(* ******************************************************************** *)
+(* *********************  bvp internal models ************************* *)
+(* ******************************************************************** *)
+
+MODEL propagation(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+);
+(*      eval[0..n_point] ARE_ALIKE; 
+ * Eval[i] must be deeply alike, so use of ARE_ALIKE here is heuristic at best.
+ * Formal type compatibility does not ensure a well defined BVP.
+ * No longer an issue, since eval is coming in from outside where it
+ * was constructed all at the same time.
+ *)
+(*
+NOTES 
+'usage' SELF {
+This MODEL does nothing by itself, and should never be created.
+Only the refinements of this MODEL should be created.
+If you need a new collocation formula, create it by refining
+propagation and then update the SELECT and IF statements in
+the MODEL integration.
+}
+'usage' n_order {
+n_order did nothing.
+It was mainly a carrier of information for the user.
+Specifically, it gives the order of the error of the collocation.
+in terms of h.
+this information should just be kept in NOTES instead, like so.
+}
+END NOTES;
+*)
+                         
+	h IS_A solver_var;
+	(* propagate the dimensionality of x to h, though the
+        h, eval[0].x ARE_ALIKE; 
+	 * ASCEND environment would do the same thing for us automagically.
+	 * We actually couldn't care less about the type of h, so
+	 * long as it is dimensionally consistent with the x.
+	 * or we could do it with an assignment:
+	h := eval[0].x;
+	 *)
+        initial ALIASES  eval[0];
+        final ALIASES eval[n_point];
+        final.x = initial.x + h;
+
+    METHODS
+        METHOD clear;
+            RUN eval[0..n_point].clear;
+            h.fixed := FALSE;
+        END clear;
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+        END specify;
+        METHOD reset;
+            RUN clear;
+            RUN specify;
+        END reset;
+END propagation;
+
+MODEL euler(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 1;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in the euler method is O(h).
+}
+END NOTES;
+*)
+                        
+
+        FOR i IN [1..n_eq] CREATE
+            eval[1].y[i] = eval[0].y[i] + h*eval[0].dydx[i];
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END euler;
+                
+MODEL trapezoid(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 1;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in the trapezoidal rule is O(h^2).
+}
+END NOTES;
+*)
+            
+        FOR i IN [1..n_eq] CREATE
+            eval[1].y[i] = eval[0].y[i] + 0.5*h*
+                (eval[0].dydx[i] + eval[1].dydx[i]);
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END trapezoid;
+
+MODEL midpoint(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 2;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in the midpoint rule is O(h^2).
+}
+END NOTES;
+*)
+
+        eval[1].x = initial.x + (1.0/2.0)*h;
+        FOR i IN [1..n_eq] CREATE
+            eval[1].y[i] = eval[0].y[i] + (1.0/2.0)*h*
+                eval[0].dydx[i];
+            eval[2].y[i] = eval[0].y[i] + h*
+                eval[1].dydx[i];
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END midpoint;
+
+MODEL simpsons(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 2;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in simpson's rule is O(h^4).
+}
+END NOTES;
+*)
+
+        eval[1].x = initial.x + 0.5*h;
+        FOR i IN [1..n_eq] CREATE    
+            eval[1].y[i] = eval[0].y[i] + 0.5*h*
+                ((5.0/12.0)*eval[0].dydx[i] + 
+                (8.0/12.0)*eval[1].dydx[i] - 
+                (1.0/12.0)*eval[2].dydx[i]);
+            eval[2].y[i] = eval[0].y[i] + h*
+                ((1.0/6.0)*eval[0].dydx[i] + 
+                (4.0/6.0)*eval[1].dydx[i] + 
+                (1.0/6.0)*eval[2].dydx[i]);
+        END FOR;
+              
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END simpsons;
+
+MODEL runge_kutta_gill(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 4;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in the 4 point Runge-Kutta-Gill method is O(h^4).
+}
+END NOTES;
+*)
+            
+        eval[1].x = eval[2].x;
+        eval[3].x = eval[4].x;
+        eval[1].x = initial.x + 0.5*h;
+        FOR i IN [1..n_eq] CREATE 
+            eval[1].y[i] = eval[0].y[i] + 0.5*h*
+                eval[0].dydx[i];
+            eval[2].y[i] = eval[0].y[i] + 0.5*h*
+                (0.41421356*eval[0].dydx[i] + 
+                0.58578644*eval[1].dydx[i]);
+            eval[3].y[i] = eval[0].y[i] + h*
+                (-0.707106781*eval[1].dydx[i] +
+                1.707106781*eval[2].dydx[i]);
+            eval[4].y[i] = eval[0].y[i] + h*
+                (0.166666667*eval[0].dydx[i] + 
+                0.097631073*eval[1].dydx[i] +
+                0.569035590*eval[2].dydx[i] + 
+                0.166666667*eval[3].dydx[i]);
+        END FOR; 
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END runge_kutta_gill;
+
+MODEL gauss(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 4;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in 4 point gauss method is O(h^6).
+}
+END NOTES;
+*)
+
+        eval[1].x = initial.x + 0.11270167*h;
+        eval[2].x = initial.x + 0.5*h;
+        eval[3].x = initial.x + 0.88729833*h;
+        FOR i IN [1..n_eq] CREATE
+            eval[1].y[i] = initial.y[i] + 0.11270167*h*
+                (1.23236*eval[1].dydx[i] -
+                0.31922*eval[2].dydx[i] +
+                0.08686*eval[3].dydx[i]);
+            eval[2].y[i] = initial.y[i] + 0.5*h*
+                (0.60053*eval[1].dydx[i] +
+                0.44444*eval[2].dydx[i] -
+                0.04497*eval[3].dydx[i]);
+            eval[3].y[i] = initial.y[i] + 0.88729833*h*
+                (0.30203*eval[1].dydx[i] +
+                0.54144*eval[2].dydx[i] +
+                0.15653*eval[3].dydx[i]);
+            eval[4].y[i] = initial.y[i] + h*
+                (0.27778*eval[1].dydx[i] +
+                0.44444*eval[2].dydx[i] +
+                0.27778*eval[3].dydx[i]);
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END gauss;
+
+MODEL lobatto(
+	n_point WILL_BE integer_constant; 
+	eval[0..n_point] WILL_BE bvp_point;
+	n_eq WILL_BE integer_constant;
+) WHERE (
+	n_eq == eval[0].n_eq;
+	n_point == 4;
+) REFINES propagation();
+(*
+NOTES 
+'order of error' SELF {
+The error in the 4 lobatto point method is O(h^8).
+}
+END NOTES;
+*)
+
+        eval[1].x = initial.x + 0.11270167*h;
+        eval[2].x = initial.x + 0.5*h;
+        eval[3].x = initial.x + 0.88729833*h;
+        FOR i IN [1..n_eq] CREATE
+            eval[1].y[i] = initial.y[i] + 0.11270167*h*
+                (0.428010*eval[0].dydx[i] +
+                0.602339*eval[1].dydx[i] -
+                0.044301*eval[2].dydx[i] +
+                0.029587*eval[3].dydx[i] -
+                0.015635*eval[4].dydx[i]);
+            eval[2].y[i] = initial.y[i] + 0.5*h*
+                (-0.06250*eval[0].dydx[i] +
+                0.68122*eval[1].dydx[i] +
+                0.44444*eval[2].dydx[i] -
+                0.12566*eval[3].dydx[i] +
+                0.06250*eval[4].dydx[i]);
+            eval[3].y[i] = initial.y[i] + 0.88729833*h*
+                (0.001986*eval[0].dydx[i] +
+                0.309303*eval[1].dydx[i] +
+                0.506524*eval[2].dydx[i] +
+                0.236552*eval[3].dydx[i] -
+                0.054365*eval[4].dydx[i]);
+            eval[4].y[i] = initial.y[i] + h*
+                (0.277778*eval[1].dydx[i] +
+                0.444444*eval[2].dydx[i] +
+                0.277778*eval[3].dydx[i]);
+        END FOR;
+
+    METHODS
+        METHOD specify;
+            RUN eval[0..n_point].specify;
+            h.fixed := TRUE;
+            final.x.fixed := FALSE;
+            eval[1..n_point].y[1..n_eq].fixed := FALSE;
+            eval[1..n_point].x.fixed := FALSE;
+        END specify;
+
+END lobatto;
+
+MODEL integration(
+	nstep IS_A integer_constant;
+	npoint IS_A integer_constant;
+	method IS_A symbol_constant;
+	grid[0..nstep*npoint] WILL_BE bvp_point;
+	stepsize WILL_BE solver_var;
+	n_eq IS_A integer_constant;
+) WHERE (
+	((method == 'Euler') AND (npoint == 1)) OR
+	((method == 'trapezoidal') AND (npoint == 1)) OR
+	((method == 'midpoint') AND (npoint == 2)) OR
+	((method == 'Simpsons') AND (npoint == 2)) OR
+	((method == 'Runge-Kutta-Gill') AND (npoint == 4)) OR
+	((method == 'Gauss') AND (npoint == 4)) OR
+	((method == 'Lobatto') AND (npoint == 4));
+);
+                                                    
+NOTES 'usage' SELF {
+This writes the equations for a mesh with nstep collocation
+intervals. In each interval there npoint nodes.
+The total mesh has (nstep * npoint + 1) nodes.
+
+In order to use this MODEL, create a refinement of bvp_point
+that contains the MODEL you want to integrate, then create
+an array of them (grid) and pass it in along with the other options.
+See the MODEL bvp_point for details of how to do this.
+See the MODELs bvp_test and bvp_dynamics for an example.
+}
+END NOTES;
+	(* cook up the little arrays for propagation out of the
+	 * big array from the user.
+	 *)
+	FOR i IN [0..nstep-1] CREATE
+		step_nodes[i+1][pset[i]] ALIASES 
+			(grid[(i*npoint)..((i+1)*npoint)])
+		WHERE pset[i] IS_A set OF integer_constant WITH_VALUE
+			(0..npoint);
+	END FOR;
+
+	(* merge all the damn sets. we need a better way of
+	 * getting at the set defined for an array.
+	 * we could get by without the merge.
+	 *)
+	pset[0..nstep-1] ARE_THE_SAME;
+
+	(* cook up the steps for various types of integration rule *)
+	SELECT (method)
+	CASE 'Euler':
+		FOR i IN [1..nstep] CREATE              
+    			euler1_step[i] IS_A
+			euler(npoint,step_nodes[i],n_eq);
+		END FOR;
+	CASE 'trapezoidal':
+		FOR i IN [1..nstep] CREATE              
+    			trapezoid1_step[i] IS_A
+			trapezoid(npoint,step_nodes[i],n_eq);
+		END FOR;
+	CASE 'midpoint':
+		FOR i IN [1..nstep] CREATE              
+    			midpoint2_step[i] IS_A
+			midpoint(npoint,step_nodes[i],n_eq);
+		END FOR;
+	CASE 'Simpsons':
+		FOR i IN [1..nstep] CREATE              
+    			simpsons2_step[i] IS_A
+			simpsons(npoint,step_nodes[i],n_eq);
+		END FOR;
+	CASE 'Runge-Kutta-Gill':
+		FOR i IN [1..nstep] CREATE              
+    			rkg4_step[i] IS_A 
+			runge_kutta_gill(npoint,step_nodes[i],n_eq);
+		END FOR;
+	CASE 'Gauss':
+		FOR i IN [1..nstep] CREATE              
+    			gauss4_step[i] IS_A
+			gauss(npoint,step_nodes[i],n_eq);
+		END FOR;
+	CASE 'Lobatto':
+		FOR i IN [1..nstep] CREATE              
+    			lobatto4_step[i] IS_A
+			lobatto(npoint,step_nodes[i],n_eq);
+		END FOR;
+	END FOR;
+
+
+	METHODS
+	METHOD values;
+		IF method == 'Euler' THEN
+			euler1_step[1..nstep].h := stepsize;
+		END FOR;
+		IF method == 'trapezoidal' THEN
+			trapezoid1_step[1..nstep].h := stepsize;
+		END FOR;
+		IF method == 'midpoint' THEN
+			midpoint2_step[1..nstep].h := stepsize;
+		END FOR;
+		IF method == 'Simpsons' THEN
+			simpsons2_step[1..nstep].h := stepsize;
+		END FOR;
+		IF method == 'Runge-Kutta-Gill' THEN
+			rkg4_step[1..nstep].h := stepsize;
+		END FOR;
+		IF method == 'Gauss' THEN
+			gauss4_step[1..nstep].h := stepsize;
+		END FOR;
+		IF method == 'Lobatto' THEN
+			lobatto4_step[1..nstep].h := stepsize;
+		END FOR;
+        END values;
+	METHOD clear;
+		stepsize.fixed := FALSE;
+		IF method == 'Euler' THEN
+			RUN euler1_step[1..nstep].clear;
+		END FOR;
+		IF method == 'trapezoidal' THEN
+			RUN trapezoid1_step[1..nstep].clear;
+		END FOR;
+		IF method == 'midpoint' THEN
+			RUN midpoint2_step[1..nstep].clear;
+		END FOR;
+		IF method == 'Simpsons' THEN
+			RUN simpsons2_step[1..nstep].clear;
+		END FOR;
+		IF method == 'Runge-Kutta-Gill' THEN
+			RUN rkg4_step[1..nstep].clear;
+		END FOR;
+		IF method == 'Gauss' THEN
+			RUN gauss4_step[1..nstep].clear;
+		END FOR;
+		IF method == 'Lobatto' THEN
+			RUN lobatto4_step[1..nstep].clear;
+		END FOR;
+        END clear;
+        METHOD specify;
+		stepsize.fixed := TRUE;
+		IF method == 'Euler' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN euler1_step[i].specify;
+			END FOR;
+		END FOR;
+		IF method == 'trapezoidal' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN trapezoid1_step[i].specify;
+			END FOR;
+		END FOR;
+		IF method == 'midpoint' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN midpoint2_step[i].specify;
+			END FOR;
+		END FOR;
+		IF method == 'Simpsons' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN simpsons2_step[i].specify;
+			END FOR;
+		END FOR;
+		IF method == 'Runge-Kutta-Gill' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN rkg4_step[i].specify;
+			END FOR;
+		END FOR;
+		IF method == 'Gauss' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN gauss4_step[i].specify;
+			END FOR;
+		END FOR;
+		IF method == 'Lobatto' THEN
+			FOR i IN [1..nstep] DECREASING DO
+				RUN lobatto4_step[i].specify;
+			END FOR;
+		END FOR;
+        END specify;
+
+        METHOD reset;
+            RUN clear;
+            RUN specify;
+        END reset;
+
+END integration;
+
+(************************************************************************)
+(************** demo and test models ************************************)
+(************************************************************************)
+
+MODEL test_dynamics;
+	x IS_A factor;
+	t IS_A time;
+	xdot IS_A frequency;
+	xdot = 2{1/s} * x * exp(-2{1/s}*t) * cos(t*1{rad/s});
+METHODS
+METHOD clear;
+	x.fixed := FALSE;
+	xdot.fixed := FALSE;
+	t.fixed := FALSE;
+END clear;
+METHOD specify;
+	x.fixed := TRUE;
+	xdot.fixed := FALSE;
+	t.fixed := TRUE;
+END specify;
+METHOD values;
+	xdot.lower_bound := -1e6{1/s};
+END values;
+END test_dynamics;
+
+MODEL dynamic_point REFINES bvp_point;
+
+	n_eq :== 1; (* you can have as many as you like *)
+
+	(* replace the following line with an IS_A of your MODEL *)
+	your_model IS_A test_dynamics;
+
+	(* connect independent variables. If your MODEL is autonomous,
+	 * you don't need to, but then you must call
+	 * bvp_point::clear and bvp_point::specify in your methods
+	 * to get x set properly.
+	 *)
+	x, your_model.t ARE_THE_SAME; 
+
+	(* connect your variables to the integration state variables *)
+	y[1], your_model.x ARE_THE_SAME;
+
+	(* connect your variables to the integration derivatives *)
+	dydx[1], your_model.xdot ARE_THE_SAME;
+
+METHODS
+
+METHOD clear;
+
+	RUN your_model.clear;
+
+	(* You don't need to run bvp_point::clear because
+	you've wired all the bvp variables into some of
+	yours. (Not TRUE if your MODEL is autonomous, though).
+		RUN bvp_point::clear;
+	 *)
+END clear;
+
+METHOD specify;
+
+	RUN your_model.specify;
+	(* If you write your_model correctly, you don't need
+	   to run bvp_point::specify because you've wired all
+	   the bvp variables into some of yours.
+	   (Not TRUE if your MODEL is autonomous, though).
+		RUN bvp_point::specify;
+	*)
+
+END specify;
+END dynamic_point;
+
+
+MODEL bvp_test;
+	stepsize IS_A time;
+	npoint, nstep IS_A integer_constant;
+	npoint :== 1;
+	nstep :== 100;
+	nodes[0..nstep*npoint] IS_A dynamic_point;
+	initial ALIASES nodes[0];
+	final ALIASES nodes[nstep*npoint];
+	integral IS_A 
+	integration(nstep,npoint,'Euler',nodes,stepsize,initial.n_eq);
+
+	(* we don't tie the test MODEL to the ASCEND plot MODEL *)
+
+METHODS
+METHOD clear;
+	stepsize.fixed := FALSE;
+	RUN integral.clear;
+	RUN nodes[0..nstep*npoint].clear;
+END clear;
+METHOD specify;
+	stepsize.fixed := TRUE;
+	RUN integral.specify;
+END specify;
+METHOD values;
+	stepsize := 0.05{s};
+	initial.x := 0{s};
+	initial.y[1] := 1;
+	RUN nodes[0..nstep*npoint].your_model.values;
+	RUN integral.values;
+END values;
+	
+END bvp_test;

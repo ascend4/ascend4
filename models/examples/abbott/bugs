@@ -1,0 +1,16 @@
+top on tika
+after parse, prototyping:
+TTY   PID USERNAME  PRI   NI  SIZE  RES  STATE   TIME   %WCPU  %CPU  COMMAND
+p3   19095 ballan  156   20  2880K 2328K  run     0:03   3.30   3.28 ./ascend s
+
+after
+ncreate p1 plant
+Compilation times (microseconds):
+Phase 1         52980000
+Phase 2         28680000
+Phase 3         2980000
+Total           84640000
+New Instantiation time (u-sec): 84640000
+TTY   PID USERNAME  PRI   NI  SIZE  RES  STATE   TIME   %WCPU  %CPU  COMMAND
+p3   19095 ballan  156   20 61996K 61444K  run     1:27   0.00   0.00 ./ascend s
+

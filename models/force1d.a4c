@@ -1,0 +1,603 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "plot.a4l";
+(* => plot.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "force1d.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+CONSTANT spring_constant REFINES real_constant DIMENSION M/T^2;
+CONSTANT position_constant REFINES real_constant DIMENSION L;
+ATOM position REFINES distance DEFAULT 0{m};
+END position;
+
+MODEL force_base() REFINES cmumodel();
+NOTES
+'purpose' SELF {
+This set of models illustrates building complex mechanical
+systems from simple components at perhaps the level of
+junior high school physics.
+It does this primarily as an excuse to demonstrate
+the plt_plot models and the ALIASES/ISA statement of ASCEND.
+}
+'revision' SELF {
+$Revision: 1.2 $
+}
+END NOTES;
+END force_base;
+
+MODEL test_force_base() REFINES testcmumodel;
+END test_force_base;
+
+MODEL hook REFINES force_base;
+NOTES
+'purpose' SELF {
+Hooks are used to connect masses, springs, and other
+objects. Each hook defines a point in a 1-dimensional coordinate
+system and computes a force balance at that point.
+Some other model must set one of the forces and the position.
+The hook is stationary in this MODEL since no net force term is written.
+}
+END NOTES;
+
+	F_left, F_right IS_A force;
+	F_left = F_right;
+	X IS_A position;
+NOTES 'ascii-picture' SELF {
+F_left <--O--> F_right
+}
+END NOTES;
+
+METHODS
+(* generated code for hook to be customized or corrected. *)
+METHOD default_all;
+	RUN default_self;
+END default_all;
+METHOD default_self;
+	(* ATOM defaults are fine *)
+END default_self;
+METHOD check_all;
+	RUN check_self;
+END check_all;
+METHOD check_self;
+END check_self;
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+METHOD bound_self;
+END bound_self;
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+METHOD scale_self;
+	F_left.nominal := abs(F_left) * 1.001 + 1.0e-4{N};
+	F_right.nominal := abs(F_right) * 1.001 + 1.0e-4{N};
+	X.nominal := abs(X) * 1.001 + 1.0e-4{?};
+END scale_self;
+
+METHOD specify;
+	F_right.fixed := TRUE;
+END specify;
+METHOD specify_float;
+END specify_float;
+
+END hook;
+
+MODEL massless_spring(
+	k IS_A spring_constant;
+	h_left WILL_BE hook;
+	h_right WILL_BE hook;
+) WHERE (
+	h_left, h_right WILL_NOT_BE_THE_SAME;
+) REFINES force_base;
+
+	L0, dx IS_A distance;
+
+	(* spring takes up space *)
+	(* compute right end of spring position. *)
+	h_right.X = h_left.X + L0 + dx;
+
+	(* spring may exert force if loaded. *)
+	F = k * dx;
+	h_left.F_right = F;
+	h_right.F_left = F;
+	F IS_A force;
+
+NOTES 'ascii-picture' SELF {
+O--/\/\/\/\/\/--O
+   |-L0-|-dx-|
+}
+END NOTES;
+METHODS
+
+METHOD default_self;
+	dx := 1{cm};
+	L0 := 10{cm};
+END default_self;
+
+METHOD default_all;
+	RUN h_left.default_all;
+	RUN h_right.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN h_left.check_all;
+	RUN h_right.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN h_left.bound_all;
+	RUN h_right.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN h_left.scale_all;
+	RUN h_right.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	F.nominal := abs(F) * 1.001 + 1.0e-4{N};
+	L0.nominal := abs(L0) * 1.001 + 1.0e-4{m};
+	dx.nominal := abs(dx) * 1.001 + 1.0e-4{m};
+END scale_self;
+
+METHOD specify;
+	L0.fixed := TRUE;
+	RUN h_left.reset;
+	RUN h_right.reset;
+	h_left.F_right.fixed := FALSE;
+	h_left.X.fixed := TRUE;
+END specify;
+
+METHOD specify_float;
+	L0.fixed := TRUE;
+	RUN h_left.specify_float;
+	RUN h_right.specify_float;
+END specify_float;
+
+END massless_spring;
+
+MODEL massless_block(
+	h_left WILL_BE hook;
+	h_right WILL_BE hook;
+) WHERE (
+	h_left, h_right WILL_NOT_BE_THE_SAME;
+) REFINES force_base;
+
+	(* this block has no momentum or acceleration so it is massless *)
+	width IS_A distance;
+
+	(* condition of the block not moving *)
+	h_left.F_right = h_right.F_left;
+	(* block takes up space *)
+	h_right.X = h_left.X + width;
+
+	X "center of the block" IS_A position;
+	X = width/2 +  h_left.X;
+
+NOTES 'ascii-picture' SELF {
+    ___
+O--|   |--O
+   |___|
+}
+END NOTES;
+METHODS
+
+METHOD default_self;
+	width := 3{cm};
+END default_self;
+
+
+METHOD default_all;
+	RUN h_left.default_all;
+	RUN h_right.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN h_left.check_all;
+	RUN h_right.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN h_left.bound_all;
+	RUN h_right.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN h_left.scale_all;
+	RUN h_right.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	width.nominal := abs(width) * 1.001 + 1.0e-4{m};
+END scale_self;
+
+METHOD specify;
+	width.fixed := TRUE;
+	RUN h_left.reset;
+	h_left.F_right.fixed := FALSE;
+	h_left.X.fixed := TRUE;
+	RUN h_right.reset;
+END specify;
+
+METHOD specify_float;
+	width.fixed := TRUE;
+	RUN h_left.specify_float;
+	RUN h_right.specify_float;
+END specify_float;
+
+END massless_block;
+
+MODEL anchor(
+	x IS_A position_constant;
+	h_right WILL_BE hook;
+) REFINES force_base;
+
+	h_right.X = x;
+	F = h_right.F_left;
+	F IS_A force;
+
+NOTES 'ascii-picture' SELF {
+\\--O
+}
+END NOTES;
+METHODS
+
+METHOD default_self;
+END default_self;
+
+METHOD default_all;
+	RUN h_right.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN h_right.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN h_right.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN h_right.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	F.nominal := abs(F) * 1.001 + 1.0e-4{N};
+END scale_self;
+
+METHOD specify;
+	RUN h_right.reset;
+END specify;
+
+METHOD specify_float;
+END specify_float;
+
+END anchor;
+
+MODEL finger(
+	h1 WILL_BE hook;
+) REFINES force_base;
+	pull IS_A force;
+	h1.F_right = pull;
+
+NOTES 'ascii-picture' SELF {
+  __
+O(_ \
+   \ \
+}
+END NOTES;
+METHODS
+METHOD default_self;
+	pull := 3{N};
+END default_self;
+
+METHOD default_all;
+	RUN h1.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN h1.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN h1.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN h1.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	pull.nominal := abs(pull) * 1.001 + 1.0e-4{N};
+END scale_self;
+
+METHOD specify;
+	RUN h1.reset;
+	h1.F_right.fixed := FALSE;
+	pull.fixed := TRUE;
+END specify;
+
+END finger;
+
+
+MODEL finger_test() REFINES test_force_base();
+
+NOTES 'ascii-picture' SELF {
+                        ___     __
+\\--O--/\/\/\/\/\/--O--|   |--O(_ \
+                       |___|     \ \
+(reference)-h1-(s1)-h2-(m1)-h3-(pinky)
+}
+END NOTES;
+
+	reference IS_A anchor(0.0{m},h1);
+	h1 IS_A hook;
+	s1 IS_A massless_spring(100{kg/s^2},h1,h2);
+	h2 IS_A hook;
+	m1 IS_A massless_block(h2,h3);
+	h3 IS_A hook;
+	pinky IS_A finger(h3);
+
+METHODS
+(* generated code for finger_test to be customized or corrected. *)
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	RUN h1.default_self;
+	RUN h2.default_self;
+	RUN h3.default_self;
+	RUN m1.default_self;
+	RUN pinky.default_self;
+	RUN reference.default_self;
+	RUN s1.default_self;
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN h1.check_self;
+	RUN h2.check_self;
+	RUN h3.check_self;
+	RUN m1.check_self;
+	RUN pinky.check_self;
+	RUN reference.check_self;
+	RUN s1.check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	RUN h1.bound_self;
+	RUN h2.bound_self;
+	RUN h3.bound_self;
+	RUN m1.bound_self;
+	RUN pinky.bound_self;
+	RUN reference.bound_self;
+	RUN s1.bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	RUN h1.scale_self;
+	RUN h2.scale_self;
+	RUN h3.scale_self;
+	RUN m1.scale_self;
+	RUN pinky.scale_self;
+	RUN reference.scale_self;
+	RUN s1.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN m1.specify_float;
+	RUN pinky.reset;
+	RUN reference.specify_float;
+	RUN s1.specify_float;
+END specify;
+END finger_test;
+
+MODEL spring_test() REFINES test_force_base();
+
+NOTES 'ascii-picture' SELF {
+                        ___     __
+\\--O--/\/\/\/\/\/--O--|   |--O(_ \
+                       |___|     \ \
+(reference)-h1-(s1)-h2-(s2)-h3-(pinky)
+}
+END NOTES;
+
+	reference IS_A anchor(0.0{m},h1);
+	h1 IS_A hook;
+	s1 IS_A massless_spring(100{kg/s^2},h1,h2);
+	h2 IS_A hook;
+	s2 IS_A massless_spring(75{kg/s^2},h2,h3);
+	h3 IS_A hook;
+	pinky IS_A finger(h3);
+
+METHODS
+(* generated code for finger_test to be customized or corrected. *)
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	RUN h1.default_self;
+	RUN h2.default_self;
+	RUN h3.default_self;
+	RUN s2.default_self;
+	RUN pinky.default_self;
+	RUN reference.default_self;
+	RUN s1.default_self;
+END default_self;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN h1.check_self;
+	RUN h2.check_self;
+	RUN h3.check_self;
+	RUN s2.check_self;
+	RUN pinky.check_self;
+	RUN reference.check_self;
+	RUN s1.check_self;
+END check_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	RUN h1.bound_self;
+	RUN h2.bound_self;
+	RUN h3.bound_self;
+	RUN s2.bound_self;
+	RUN pinky.bound_self;
+	RUN reference.bound_self;
+	RUN s1.bound_self;
+END bound_self;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	RUN h1.scale_self;
+	RUN h2.scale_self;
+	RUN h3.scale_self;
+	RUN s2.scale_self;
+	RUN pinky.scale_self;
+	RUN reference.scale_self;
+	RUN s1.scale_self;
+END scale_self;
+
+METHOD specify;
+	RUN pinky.reset;
+	RUN reference.specify_float;
+	RUN s1.specify_float;
+	RUN s2.specify_float;
+END specify;
+
+END spring_test;
+
+MODEL plot_spring_test;
+
+	(* create our model *)
+	st IS_A spring_test;
+
+	(* Now gather the sampled data into an array for plotting *)
+	x_data[Xset] ALIASES (st.h1.X,st.h2.X,st.h3.X)
+	WHERE Xset IS_A set OF integer_constant;
+
+	(* Now create the Y coordinates of the plot since there is no
+	 * natural Y coordinate in our MODEL.
+	 *)
+	y_data[Xset] IS_A real; (* all will be assigned to 1.0 *)
+
+	X_curve IS_A plt_curve(Xset,y_data,x_data);
+
+	(* Make X_curve into the expected array for plt_plot *)
+	curves[curve_set] ALIASES (X_curve) WHERE
+	curve_set IS_A set OF integer_constant;
+
+	Plot_X IS_A plt_plot_integer(curve_set,curves);
+
+METHODS
+
+METHOD default_self;
+	RUN st.default_self;
+	st.s1.L0 := 0.2{m};
+	RUN X_curve.default_self;
+	RUN Plot_X.default_self;
+	FOR i IN Xset DO
+		y_data[i] := i;
+	END FOR;
+	X_curve.legend := 'meter';
+	Plot_X.title := 'Hook locations';
+	Plot_X.XLabel := 'location';
+	Plot_X.YLabel := 'hook #';
+END default_self;
+
+END plot_spring_test;
+
+
+(*
+ *  force1d.a4c
+ *  by Ben Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:06:54 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/force1d.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

@@ -1,0 +1,50 @@
+# This is the .ascendrc file for running Ascend4
+# a copy of it should be put in each user's startup directory.
+# This file is called by the ascend binary.
+#
+# $Date: 1998/06/01 12:42:45 $
+# $Revision: 1.9 $
+#
+global env tcl_platform
+source "$env(ASCENDTK)/ascend.tcl"
+# ----------- do not change anything above this line --------------
+# unless of course you know what you are doing in TCL/Tk
+
+#  Add a CLEAR ALL to the console's EDIT menu if the console
+#  exists; CLEAR ALL removes all text from the console window.
+if {[info command console] == "console"} {
+  console eval {
+    .menubar.edit add command \
+      -label {Clear All} \
+      -command {.console delete 1.0 end}
+  }
+}
+
+# comment out the following to skip automatically loading the relation and
+# solver_var definitions
+READ system.a4l
+ 
+# The following procedure is called during the normal exit of ascend,
+# but not when exiting by ^C, ^D, or seg. fault (heaven forbid)
+# You may put anything you want in it, but note that it is not called
+# until AFTER the ascend windows have been destroyed.
+proc user_shutdown {} {
+  global ascUtilVect
+  # delete scratch plot files on exit
+  set username [ascwhoami]
+  set fprefix $ascUtilVect(asctmp)/asc$username*
+  if {![catch {set flist "[glob $fprefix]"} ]} {
+    puts "Deleting scratch files $fprefix:"
+    foreach i $flist {
+      puts $i
+      catch { file delete $i }
+    }
+  }
+  # other stuff you like below here
+}
+
+# You can add other TCL commands, including those for setting solver
+# parameter defaults, sourcing your own TCL/Tk definitions, etc
+# here. See the online solver parameters page help for more details
+# on how to set solver defaults.
+# Parameters defined here override ascend.ad and *.a4o files.

@@ -1,0 +1,433 @@
+(*********************************************************************\
+  stream.lib
+  by Robert S. Huss
+  Part of the Ascend Library
+
+  This file is part of the Ascend modeling library.
+
+  Copyright (C) 1993,1994
+
+  The Ascend modeling library is free software; you can redistribute
+  it and/or modify it under the terms of the GNU General Public License as
+  published by the Free Software Foundation; either version 2 of the
+  License, or (at your option) any later version.
+
+  The Ascend Language Interpreter is distributed in hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  the program; if not, write to the Free Software Foundation, Inc., 675
+  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+  \*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/07/03 14:50:19 $
+  $Revision: 1.4 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/stream.par.lib,v $
+\*********************************************************************)
+(*
+  S T R E A M . L I B
+  -------------------
+
+  AUTHOR:		Robert S. Huss
+
+  DATES:		5/93 - Original code.
+  9/93 - Slight changes to original code,
+         added vapor_liquid_stream model.
+  6/94 - Made compatible with ASCEND3C
+  8/94 - Made compatible with H_G_thermodynamics.lib.
+         Can still be used with H_S_thermodynamics.lib
+  3/95 - Added relation scaling for absolute convergence
+
+  CONTENTS:	Stream definitions, ranging from a simple molar
+                stream to a thermodynamic multiphase stream.  
+                Molar stream can be refined to include 
+                thermodynamic models, if data are available
+                for each component.
+
+  REQUIRES:
+  "system.lib"
+  "atoms.lib"
+  "components.lib"
+  "newopts.lib"
+  "newhgb*"
+  *)
+
+
+(* ***********************************+************************************ *)
+(* ********************      Stream definitions       ********************* *)
+(* ***********************************+************************************ *)
+MODEL stream_base(
+    );
+(*
+NOTES inline SELF {
+Provides common ancestor FOR streams.
+NEVER CREATE one OF these
+}
+END NOTES;
+*)
+END stream_base;
+
+(* ***********************************+************************************ *)
+(* ********************      homogeneous_molar_stream ********************* *)
+(* ***********************************+************************************ *)
+
+
+MODEL homogeneous_molar_stream(
+	state WILL_BE homogeneous_mixture;
+) REFINES stream_base;
+
+	components ALIASES state.options.ds.components;
+	Ftot, f[components]     IS_A molar_rate;
+	scale			IS_A scaling_constant;
+	Ftot_scale 		IS_A real;
+
+
+	FOR i IN components CREATE
+	    f_def[i]: f[i]/Ftot_scale = Ftot*state.y[i]/Ftot_scale; 
+	END FOR;
+
+	Ftot_scale := 1000 {mole/s};
+(* horrible scaling method - global var, ack! *)
+
+  METHODS
+
+    METHOD clear;
+	RUN state.clear;
+	Ftot.fixed				:= FALSE;
+	f[components].fixed	:= FALSE;
+	f_def[components].included:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed		:= FALSE;
+    END seqmod;
+
+    METHOD specify;  
+	RUN seqmod;   
+	f[components].fixed			:= TRUE;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+	RUN state.scale;
+	FOR i IN components DO
+	    f[i].nominal := f[i] + 0.1{mol/s};
+	    f[i].upper_bound := f[i] + scale*f[i].nominal;
+	END FOR;
+	Ftot.nominal := Ftot + 0.1{mol/s};
+	Ftot.upper_bound := Ftot + scale*Ftot.nominal;
+	Ftot_scale := Ftot.nominal;
+    END scale;
+END homogeneous_molar_stream;
+
+
+(* ***********************************+************************************ *)
+(* ********************homogeous_thermodynamic_stream ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL homogeneous_td_stream(
+	state WILL_BE homogeneous_mixture;
+) REFINES homogeneous_molar_stream;
+(*
+NOTES inline SELF {
+td_stream here does NOT denote that the state is a td_homo or td_hetero
+mixture. It merely indicates that total H is computed so that certain
+thermodynamic principles may be applied using this type of stream.
+state.H may be an arbitrary number if the state does not compute
+it from some correlation.
+}
+END NOTES;
+*)
+
+	H				ALIASES state.H;
+	Htot				IS_A energy_rate;
+	Htot_scale			IS_A real;
+
+	Htot_def: Htot/Htot_scale = H*Ftot/Htot_scale;
+
+	Htot_scale := 1{MW};
+
+  METHODS
+
+    METHOD clear;
+	RUN state.clear;
+	Ftot.fixed			:= FALSE;
+	f[components].fixed		:= FALSE;
+	Htot.fixed			:= FALSE;
+	H.fixed				:= FALSE;
+	f_def[components].included	:= TRUE;
+	Htot_def.included		:= TRUE;
+    END clear;
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed	:= FALSE;
+	H.fixed				:= TRUE;
+    END seqmod;
+
+
+    METHOD scale;
+	RUN state.scale;
+	FOR i IN components DO
+	    f[i].nominal := f[i] + 0.1{mol/s};
+	    f[i].upper_bound := f[i] + scale*f[i].nominal;
+	END FOR;
+	Ftot.nominal := Ftot + 0.1{mol/s};
+	Ftot.upper_bound := Ftot + scale*Ftot.nominal;
+	Htot.nominal := abs(Htot) + 1{kW};
+	Htot.lower_bound := Htot - scale*Htot.nominal;
+	Htot.upper_bound := Htot + scale*Htot.nominal;
+	Ftot_scale := Ftot.nominal;
+	Htot_scale := Htot.nominal;
+
+    END scale;
+
+END homogeneous_td_stream;
+
+
+    
+(* ***********************************+************************************ *)
+(* ********************      two_phase_molar_stream  ********************* *)
+(* ***********************************+************************************ *)
+
+
+MODEL two_phase_molar_stream(
+	state WILL_BE two_phase_mixture;
+) REFINES stream_base;
+
+	components ALIASES state.components;
+	Ftot,
+	f[components]		IS_A molar_rate;
+	scale			IS_A scaling_constant;
+	Ftot_scale 		IS_A real;
+
+
+	FOR i IN components CREATE
+	    f_def[i]: f[i]/Ftot_scale = Ftot*state.y[i]/Ftot_scale; 
+	END FOR;
+
+	Ftot_scale := 1000 {mole/s};
+(* horrible scaling method - global var, ack! *)
+
+  METHODS
+
+    METHOD clear;
+	RUN state.clear;
+	Ftot.fixed				:= FALSE;
+	f[components].fixed	:= FALSE;
+	f_def[components].included:= TRUE;
+    END clear;
+
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed		:= FALSE;
+    END seqmod;
+
+    METHOD specify;  
+	RUN seqmod;   
+	f[components].fixed			:= TRUE;
+    END specify;
+
+    METHOD reset;
+	RUN clear;
+	RUN specify;
+    END reset;
+
+    METHOD scale;
+	RUN state.scale;
+	FOR i IN components DO
+	    f[i].nominal := f[i] + 0.1{mol/s};
+	    f[i].upper_bound := f[i] + scale*f[i].nominal;
+	END FOR;
+	Ftot.nominal := Ftot + 0.1{mol/s};
+	Ftot.upper_bound := Ftot + scale*Ftot.nominal;
+	Ftot_scale := Ftot.nominal;
+    END scale;
+END two_phase_molar_stream;
+
+
+(* ***********************************+************************************ *)
+(* ********************     thermodynamic_stream      ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL two_phase_td_stream(
+	state WILL_BE two_phase_mixture;
+) REFINES two_phase_molar_stream;
+(*
+NOTES inline SELF {
+td_stream here does NOT denote that the state is a td_homo or td_hetero
+mixture. It merely indicates that total H is computed so that certain
+thermodynamic principles may be applied using this type of stream.
+state.H may be an arbitrary number if the state does not compute
+it from some correlation.
+}
+END NOTES;
+*)
+
+	H				ALIASES state.H;
+	Htot				IS_A energy_rate;
+	Htot_scale			IS_A real;
+
+	Htot_def: Htot/Htot_scale = H*Ftot/Htot_scale;
+
+	Htot_scale := 1{MW};
+
+  METHODS
+
+    METHOD clear;
+	RUN state.clear;
+	Ftot.fixed			:= FALSE;
+	f[components].fixed		:= FALSE;
+	Htot.fixed			:= FALSE;
+	H.fixed				:= FALSE;
+	f_def[components].included	:= TRUE;
+	Htot_def.included		:= TRUE;
+    END clear;
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed	:= FALSE;
+	H.fixed				:= TRUE;
+    END seqmod;
+
+
+    METHOD scale;
+	RUN state.scale;
+	FOR i IN components DO
+	    f[i].nominal := f[i] + 0.1{mol/s};
+	    f[i].upper_bound := f[i] + scale*f[i].nominal;
+	END FOR;
+	Ftot.nominal := Ftot + 0.1{mol/s};
+	Ftot.upper_bound := Ftot + scale*Ftot.nominal;
+	Htot.nominal := abs(Htot) + 1{kW};
+	Htot.lower_bound := Htot - scale*Htot.nominal;
+	Htot.upper_bound := Htot + scale*Htot.nominal;
+	Ftot_scale := Ftot.nominal;
+	Htot_scale := Htot.nominal;
+
+    END scale;
+
+END two_phase_td_stream;
+
+(* ***********************************+************************************ *)
+(* ********************          vapor_stream         ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL vapor_stream (
+	state WILL_BE vapor_mixture;
+) REFINES homogeneous_td_stream;
+
+  METHODS
+
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed		:= FALSE;
+    END seqmod;
+
+END vapor_stream;
+
+
+(* ***********************************+************************************ *)
+(* ********************         liquid_stream         ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL liquid_stream(
+	state WILL_BE liquid_mixture;
+) REFINES homogeneous_td_stream;
+
+saturated IS_A boolean;
+bubble_point: state.P = state.pure[CHOICE[components]].VP *
+    SUM[state.y[i]*state.pure[i].VP/state.pure[CHOICE[components]].VP
+    | i IN components];
+
+saturated := FALSE;
+bubble_point.included := FALSE;
+
+  METHODS
+
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed		:= FALSE;
+	IF (saturated) THEN
+	    bubble_point.included		:= TRUE;
+	    state.T.fixed			:= FALSE;
+	ELSE
+	    bubble_point.included		:= FALSE;
+	    (* T already fixed *)
+	END IF;
+    END seqmod;
+
+END liquid_stream;
+
+
+(* ***********************************+************************************ *)
+(* ********************      multiphase_stream        ********************* *)
+(* ***********************************+************************************ *)
+
+MODEL multiphase_stream( 
+	state WILL_BE td_two_phase_mixture;
+) REFINES two_phase_td_stream;
+
+	phases ALIASES state.phases;
+	phase_flow[phases]		IS_A molar_rate;
+
+	FOR k IN phases CREATE
+	    phase_flow_def[k]: phase_flow[k]/Ftot_scale =
+		state.phi[k]*Ftot/Ftot_scale;
+	END FOR;
+
+  METHODS
+
+    METHOD clear;      
+	RUN state.clear;
+	Ftot.fixed				:= FALSE;
+	f[components].fixed		:= FALSE;
+	Htot.fixed				:= FALSE;
+	phase_flow[phases].fixed	:= FALSE;
+	Htot_def.included			:= TRUE;
+	f_def[components].included	:= TRUE;
+	phase_flow_def[phases].included	:= TRUE;
+    END clear;
+
+    METHOD scale;
+	RUN state.scale;
+	FOR i IN components DO
+	    f[i].nominal := f[i] + 0.1{mol/s};
+	    f[i].upper_bound := f[i] + scale*f[i].nominal;
+	END FOR;
+	Ftot.nominal := Ftot + 0.1{mol/s};
+	Ftot.upper_bound := Ftot + scale*Ftot.nominal;
+	Htot.nominal := abs(Htot) + 1{kW};
+	Htot.lower_bound := Htot - scale*Htot.nominal;
+	Htot.upper_bound := Htot + scale*Htot.nominal;
+
+	FOR j IN phases DO
+	    phase_flow[j].nominal := phase_flow[j] + 0.1{mol/s};
+	    phase_flow[j].upper_bound :=
+		phase_flow[j] + scale*phase_flow[j].nominal;
+	END FOR;
+	Ftot_scale := Ftot.nominal;
+	Htot_scale := Htot.nominal;
+    END scale;
+
+    METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed		:= FALSE;
+    END seqmod;
+
+END multiphase_stream;
+
+
+MODEL vapor_liquid_stream(
+	state WILL_BE td_VLE_mixture;
+) REFINES multiphase_stream;
+(* nobody *)
+END vapor_liquid_stream;

@@ -1,0 +1,17 @@
+mv mi00main.for  mi00main.f
+mv mi05funs.for  mi05funs.f
+mv mi10unix.for  mi10unix.f
+mv mi10vms.for   mi10vms.f
+mv mi15blas.for  mi15blas.f
+mv mi20amat.for  mi20amat.f
+mv mi25bfac.for  mi25bfac.f
+mv mi30spec.for  mi30spec.f
+mv mi35inpt.for  mi35inpt.f
+mv mi40bfil.for  mi40bfil.f
+mv mi50lp.for    mi50lp.f
+mv mi60srch.for  mi60srch.f
+mv mi65rmod.for  mi65rmod.f
+mv mi70nobj.for  mi70nobj.f
+mv mi80ncon.for  mi80ncon.f
+mv minosl.for    minosl.f
+mv minost.for    minost.f

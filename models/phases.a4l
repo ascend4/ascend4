@@ -1,0 +1,201 @@
+REQUIRE "system.a4l";
+(* => system.a4l, basemodel.a4l *)
+PROVIDE "phases.a4l";
+
+(*
+ *  phases.a4l
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:16:57 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/phases.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Arthur W Westerberg
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*
+ *  This model establishes the symbolic information needed by streams
+ *  and holdups for the phases they contain, based on the information
+ *  with which the user parameterizes this model.
+ *)
+
+MODEL phases_data(
+    phase_indicator IS_A symbol_constant;
+    vapor_option IS_A symbol_constant;
+    liquid1_option IS_A symbol_constant;
+    liquid2_option IS_A symbol_constant;
+) WHERE(
+	(* The next 3 conditions limit to models supported in thermo.a4l.
+	 * as models for new correlations, solid phases, and so forth
+	 * are added to thermo.a4l, this should be expanded.
+	 *)
+    (phase_indicator IN ['M','V','L','VL','LL','VLL']) == TRUE;
+    (vapor_option IN
+	['Pitzer_vapor_mixture','ideal_vapor_mixture','none']) == TRUE;
+    (liquid1_option IN
+       ['Wilson_liquid_mixture', 'UNIFAC_liquid_mixture', 'none']) == TRUE;
+
+	(* Note: The Wilson method cannot predict a second liquid phase *)
+    ((liquid1_option IN ['Wilson_liquid_mixture']) AND
+	(phase_indicator IN ['LL','VLL'])) == FALSE;
+    (liquid2_option IN ['UNIFAC_liquid_mixture', 'none']) == TRUE;
+
+	(* not all combinations involving 'none' are legal. *)
+	((phase_indicator == 'M') AND
+	(vapor_option == 'none') AND
+	(liquid1_option == 'none') AND (liquid2_option == 'none'))
+	OR
+	((phase_indicator == 'V') AND
+	(liquid1_option == 'none') AND
+	(liquid2_option == 'none'))
+	OR
+	((phase_indicator == 'L') AND
+	(vapor_option == 'none') AND (liquid2_option == 'none'))
+	OR
+	((phase_indicator == 'VL') AND (liquid2_option == 'none'))
+	OR
+	((phase_indicator == 'LL') AND (vapor_option == 'none'))
+	OR
+	((phase_indicator == 'VLL') AND (
+	 ('none' IN [vapor_option,liquid1_option,liquid2_option]) == FALSE))
+;
+(*
+*)
+
+	(* Note: at present the thermodynamics models do not have
+         * correlations that will support a complete LLE calculation,
+         * so VLL is diabled until we get models that do.
+         * If you create such models, remove the next condition.
+         *)
+    (phase_indicator IN ['LL','VLL']) == FALSE;
+);
+
+    (*
+    *	typical examples of use --
+    *  	pd IS_A phases_data('M', 'none', 'none', 'none');
+    *  	pd IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    *  	pd IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+    *               'Wilson_liquid_mixture','none');
+    *  	pd IS_A phases_data('VLL', 'Pitzer', 'UNIFAC_liquid_mixture',
+    *               'UNIFAC_liquid_mixture');
+    *)
+
+    phases IS_A set OF symbol_constant;
+    reference_phase IS_A symbol_constant;
+
+    SELECT (phase_indicator)
+    CASE 'M':
+	phases :== ['material'];
+        reference_phase :== 'material';
+    CASE 'V':
+	phases :== ['vapor'];
+        reference_phase :== 'vapor';
+    CASE 'L':
+	phases :== ['liquid1'];
+        reference_phase :== 'liquid1';
+    CASE 'VL':
+	phases :== ['vapor','liquid1'];
+        reference_phase :== 'liquid1';
+    CASE 'LL':
+	phases :== ['liquid1','liquid2'];
+        reference_phase :== 'liquid1';
+    CASE 'VLL':
+	phases :== ['vapor','liquid1','liquid2'];
+        reference_phase :== 'liquid1';
+    END SELECT;
+
+    phase_type[phases] IS_A symbol_constant;
+
+    SELECT (phase_indicator)
+    CASE 'M':
+	phase_type['material'] 	:== vapor_option;
+    CASE 'V':
+	phase_type['vapor'] 	:== vapor_option;
+    CASE 'L':
+	phase_type['liquid1'] 	:== liquid1_option;
+    CASE 'VL':
+	phase_type['vapor'] 	:== vapor_option;
+	phase_type['liquid1'] 	:== liquid1_option;
+    CASE 'LL':
+	phase_type['liquid1'] 	:== liquid1_option;
+	phase_type['liquid2'] 	:== liquid2_option;
+    CASE 'VLL':
+	phase_type['vapor'] 	:== vapor_option;
+	phase_type['liquid1'] 	:== liquid1_option;
+	phase_type['liquid2'] 	:== liquid2_option;
+    END SELECT;
+
+    other_phases IS_A set OF symbol_constant;
+    other_phases :== [phases - [reference_phase]];
+
+METHODS
+(* No clear, specify, reset methods are needed here
+ * as all items are constants. But we are setting a
+ * rigorous example of how to MODEL, so here they are.
+ *)
+
+METHOD check_self;
+END check_self;
+METHOD check_all;
+END check_all;
+METHOD default_self;
+END default_self;
+METHOD default_all;
+END default_all;
+METHOD specify;
+END specify;
+METHOD scale_self;
+END scale_self;
+METHOD scale_all;
+END scale_all;
+METHOD bound_self;
+END bound_self;
+METHOD bound_all;
+END bound_all;
+
+END phases_data;
+
+MODEL test_phases_data REFINES testcmumodel;
+	(* the following 3 models should all build properly. *)
+    pass1 IS_A phases_data('M', 'none', 'none', 'none');
+    pass2 IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pass3 IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+                'Wilson_liquid_mixture','none');
+
+	(* and the rest should fail *)
+    fail4 IS_A phases_data('VLL', 'Pitzer_vapor_mixture',
+				'UNIFAC_liquid_mixture',
+				'UNIFAC_liquid_mixture');
+    fail5 IS_A phases_data('M', 'Pitzer_vapor_mixture',
+			 	'UNIFAC_liquid_mixture',
+				 'UNIFAC_liquid_mixture');
+    fail6 IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+			 	'none', 'UNIFAC_liquid_mixture');
+	(* we really should put in all 20 or so other failures, but
+	 * it's tedious and pointless.
+	 *)
+
+METHODS
+(* for completeness *)
+METHOD values;
+	(* everything is currently a constant, so nothing to do. *)
+END values;
+END test_phases_data;

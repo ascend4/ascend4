@@ -1,0 +1,84 @@
+#  ASCEND BLAS FORTRAN LIBRARY Makefile
+#  Ben Allan
+#  Sept 1, 1994
+#  $Date: 1998/04/25 18:22:44 $
+#  $Revision: 1.7 $
+#  $Author: ballan $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/blas/Makefile.in,v $
+#
+
+#  This file builds the libraries of blas common to minos,
+#  lsode, and other F77 codes connected to ASCEND.
+#
+#  If you have a blas library (libblas.a) tuned to your hardware, use it
+#  instead; to do that, set the BLASLIB variable in ConfigAscend to point
+#  that libraries location (e.g., /usr/lib/libblas.a)
+#
+#  If you add files to these targets, please update the README.FORTRAN
+#  in the ascend4/config directory
+#
+
+
+SHELL = /bin/sh
+builddir = ../ascend4
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+
+
+#  The next variables are the primary executables and/or libraries that
+#  this makefile is responsible for, and the default target of this
+#  makefile.
+
+EXECUTABLE = 
+
+LIBRARY  = libascblas.a
+
+
+default: $(LIBRARY)
+
+
+
+#  Defines and Includes that are specific to this directory
+
+DIR_SPECIFIC_DEFS = 
+DIR_SPECIFIC_INCS = 
+
+
+
+#  The next variables list the source files (EXEC_SCRS) to compile
+#  into the object files (EXEC_OBJS) that are linked with the
+#  library files (EXEC_LIBS) to make EXECUTABLE
+
+EXEC_SRCS = 
+
+EXEC_OBJS = 
+
+EXEC_LIBS = 
+
+
+
+#  The next variables list the source files (LIB_SCRS) to compile
+#  into the object files (LIB_OBJS) that are combined to make LIBRARY
+
+LIB_SRCS = \
+	dasum.f daxpy.f dcopy.f ddot.f dnrm2.f dscal.f idamax.f \
+	dtrsv.f dswap.f dgemv.f dtrsm.f xerbla.f lsame.f dgemm.f
+
+LIB_OBJS = \
+	dasum.o daxpy.o dcopy.o ddot.o dnrm2.o dscal.o idamax.o \
+	dtrsv.o dswap.o dgemv.o dtrsm.o xerbla.o lsame.o dgemm.o
+
+
+#  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
+#  
+include $(builddir)/ConfigAscend
+include $(builddir)/Makefile.Rules
+
+
+
+# DO NOT DELETE THIS LINE -- g++dep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+
+
+# IF YOU PUT ANYTHING HERE IT WILL GO AWAY

@@ -1,0 +1,186 @@
+REQUIRE "system.a4l";
+(* => system.a4l, basemodel.a4l *)
+PROVIDE "z-context.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+MODEL fail_context;
+
+ a IS_A real;
+
+METHODS
+
+METHOD fail_foo;
+ b IS_A real; (* illegal IS_A. we do not yet have method variables *)
+END fail_foo;
+
+METHOD fail_when;
+  WHEN (i) (* illegal when. use SWITCH. also, i not defined. *)
+  CASE TRUE:
+    USE b;
+  END WHEN;
+END fail_when;
+
+METHOD fail_select;
+  SELECT (i) (* illegal select until we have local variables. use SWITCH *)
+  CASE TRUE: (* also, i not defined *)
+    USE b;
+  END SELECT;
+END fail_select;
+
+METHOD fail_rel;
+  a = b; (* relations not legal (no local data structures) and b not defined *)
+END fail_rel;
+
+END fail_context;
+
+MODEL fail_switchcontext;
+  is IS_A boolean;
+  SWITCH (is)  (* illegal in declarative. use when or select *)
+  CASE TRUE:  USE j; (* j not defined *)
+  END SWITCH;
+END fail_switchcontext;
+
+MODEL fail_ifcontext;
+  is IS_A boolean;
+  IF (is) THEN (* if illegal in declarative. use when instead. *)
+    USE j;
+  END IF;
+END fail_ifcontext;
+
+MODEL fail_selectcontext;
+  is IS_A boolean;
+  SELECT (is) (* is must be a constant, not a variable *)
+  CASE TRUE: USE j; (* j undefined *)
+  END SELECT;
+END fail_selectcontext;
+
+MODEL pass (
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+);
+
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+METHODS
+METHOD doo;
+	FOR j IN b DO
+		x[j] := 1;
+	END FOR;
+END doo;
+END pass;
+
+MODEL failcheck (
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+	FOR j IN b DO
+		x[j] := 1;
+	END FOR;
+);
+
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+METHODS
+METHOD doo;
+	FOR j IN b DO
+		x[j] := 1;
+	END FOR;
+END doo;
+END failcheck;
+
+MODEL faildo (
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+);
+
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+METHODS
+METHOD doo;
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+	FOR j IN b CREATE
+		x[j] IS_A real;
+	END FOR;
+END doo;
+END faildo;
+
+MODEL failcreate (
+	a IS_A integer_constant;
+	b WILL_BE set OF integer_constant;
+	c[b] IS_A integer_constant;
+) WHERE (
+	FOR i IN b CHECK
+		a==c[i];
+	END FOR;
+);
+	FOR j IN b DO
+		x[j] IS_A real;
+	END FOR;
+	FOR j IN b CHECK
+		x[j] IS_A real;
+	END FOR;
+	FOR j IN b EXPECT
+		x[j] IS_A real;
+	END FOR;
+METHODS
+METHOD doo;
+	FOR j IN b DO
+		x[j] := 1;
+	END FOR;
+END doo;
+END failcreate;
+
+
+(*
+ *  z-context.a4c
+ *  by Benjamin Allan
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:39:34 $
+ *  $Revision: 1.3 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/z-context.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998  Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

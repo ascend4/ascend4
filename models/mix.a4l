@@ -1,0 +1,162 @@
+REQUIRE "stream_holdup.a4l";
+(* => stream_holdup.a4l, thermodynamics.a4l, components.a4l, phases.a4l,
+ *    atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "mix.a4l";
+
+(*
+ *  mix.a4l
+ *  by Duncan Coffey
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/24 10:47:06 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/mix.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Duncan Coffey
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+
+(* ***********************************+************************************ *)
+(* ************************         Mixer      **************************** *)
+(* ***********************************+************************************ *)
+MODEL mixer(
+    inputs			WILL_BE set OF symbol_constant;
+    input[inputs]		WILL_BE stream;
+    output			WILL_BE stream;
+)WHERE(
+
+)REFINES cmumodel;
+
+    Ftot_scale ALIASES output.Details.flowscale;
+    Htot_scale ALIASES output.Details.H_flowscale;
+    cd ALIASES output.cd;
+
+    FOR j IN cd.components CREATE
+	output.f[j]/Ftot_scale=SUM[input[k].f[j] | k IN inputs]/Ftot_scale;
+    END FOR;
+
+    output.H_flow/Htot_scale=SUM[input[k].H_flow | k IN inputs]/Htot_scale;
+
+    METHODS
+    METHOD default_self;
+	Ftot_scale	:=1000 {mol/s};
+	Htot_scale	:=1e6 {J/s};
+    END default_self;
+
+    METHOD default_all;
+	RUN input[inputs].default_all;
+	RUN output.default_all;
+	RUN default_self;
+    END default_all;
+
+    METHOD check_self;
+
+    END check_self;
+
+    METHOD check_all;
+	RUN check_self;
+    END check_all;
+
+    METHOD bound_self;
+    END bound_self;
+
+    METHOD bound_all;
+    END bound_all;
+
+    METHOD scale_self;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN input[inputs].scale_self;
+	RUN output.scale_self;
+    END scale_all;
+
+    METHOD seqmod;
+	RUN output.specify;
+	output.T.fixed :=FALSE;
+	FOR i IN cd.components DO
+	    output.f[i].fixed :=FALSE;
+	END FOR;
+    END seqmod;
+
+    METHOD specify;
+	RUN input[inputs].specify;
+	RUN seqmod;
+    END specify;
+
+END mixer;
+
+MODEL mix_test;
+
+    cd IS_A components_data(['methanol','ethanol','water'],'water');
+    pdV IS_A phases_data('V', 'Pitzer_vapor_mixture', 'none', 'none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL', 'Pitzer_vapor_mixture','UNIFAC_liquid_mixture', 'none');
+    equil IS_A boolean;
+
+    output IS_A stream(cd, pdVL, equil);
+
+    inputs IS_A set OF symbol_constant;
+    inputs :== ['input_1','input_2','input_3','input_4'];
+    input[inputs] IS_A stream(cd, pdVL, equil);
+    mix IS_A mixer(inputs, input, output);
+
+    METHODS
+    METHOD check_self;
+	RUN check_all;
+    END check_self;
+
+    METHOD check_all;
+	RUN mix.check_all;
+    END check_all;
+
+    METHOD default_self;
+	RUN default_all;
+    END default_self;
+
+    METHOD default_all;
+	RUN mix.default_all;
+    END default_all;
+
+    METHOD bound_self;
+	RUN bound_all;
+    END bound_self;
+
+    METHOD bound_all;
+	RUN mix.bound_all;
+    END bound_all;
+
+    METHOD scale_self;
+	RUN scale_all;
+    END scale_self;
+
+    METHOD scale_all;
+	RUN mix.scale_all;
+    END scale_all;
+
+    METHOD specify;
+	RUN mix.specify;
+    END specify;
+
+    METHOD values;
+    END values;
+
+END mix_test;
+

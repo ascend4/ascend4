@@ -1,0 +1,166 @@
+<HTML>
+<HEAD>
+<TITLE>ASCEND HELP</TITLE>
+</HEAD>
+<BODY>
+<!---
+Last modified by $Author: ballan $ on $Date: 1996/09/12 00:38:23 $
+ --->
+<!---LINK_BACK_TO_MAIN_HELP_PAGE_TOP--->
+<H1>utilities menu</H1>
+<LI><a href="#ascendhelp.path">ASCENDHELP path</a>
+<LI><a href="#scratch.directory">Scratch directory</a>
+<LI><a href="#working.directory">Working Directory</a>
+<LI><a href="#text.edit.command">Text edit command</a>
+<LI><a href="#postscript.viewer">Postscript viewer</a>
+<LI><a href="#bug.mail.command">Bug mail command</a>
+<LI><a href="#plot.program.name">Plot program name</a>
+<LI><a href="#plot.file.type">Plot file type</a>
+<LI><a href="#text.print.command">Text print command</a>
+<LI><a href="#www">Help mail command</a>
+<LI><a href="#font.selector">Font selector</a>
+<LI><a href="#spreadsheet.command">Spreadsheet command</a>
+<PRE>
+Last $Author: ballan $
+</PRE>
+Utilities is a window which displays and allows modification of the global
+variables which control the interaction of ASCEND with UNIX.
+Below are explanations of the buttons and then some of the options.
+<p>
+
+<pre>
+Buttons:
+  OK: This will close the window. If the sanity checks fail, the window
+      will not close. Currently the only sanity checks are that the
+      Scratch directory and Working directory must exist out in UNIXland.
+Save: This writes the current set of options to a file called
+      ~/.ascend-config. (~ is your home directory.) ~/.ascend-config is
+      read on starting ASCEND to get your UNIX defaults.
+      EXCEPTION: The variables with names in ALL CAPS, e.g. PRINTER, are
+      UNIX environment variables. You may change them interactively, but
+      their interactive values are NOT saved. Your environment variables
+      are typically set in your .login, .profile, .[ba,c]shrc, or .environ
+      file and are used by programs other than ASCEND.
+Read: Fetches the values in ~/.ascend-config. This is in case you want to
+      edit ~/.ascend-config by hand while running ASCEND or you want to
+      verify that the changes you saved were properly saved.
+More: Rotates you through the pages of options. (2 at present.)
+Help: Is how you got here.
+</pre>
+<p>
+
+
+<a name="WWW">
+<H2>WWW stuff</H2>
+We need the WWW variables explained here.
+<p>
+
+<a name="scratch.directory">
+<H2>Scratch directory</H2>
+Typically this is /tmp or /usr/tmp but it can be any existing directory you
+have write access to.
+The scratch directory is used to write temporary and plot files ASCEND
+creates. The temporary files are automatically deleted before you leave
+ASCEND, but the plot files are not (since people often want to save plots.)
+Other users on your system may be disturbed if you clog up /tmp with
+plot files.
+<a name="working.directory">
+<H2>Working Directory</H2>
+Typically this is the directory you start ASCEND from but it can be any
+existing directory you have write access to. Our handling of the
+working.directory is a bit flakey at the moment because the commandline
+allows the user to cd without telling the rest of the interface about it.
+Intermediate files are sometimes written to working.directory.
+
+<a name="text.edit.command">
+<H2>Text edit command</H2>
+This is a command to spawn your favorite text file editor.
+The default is vi in an xterm, but you can change it to your
+favorite flavor of emacs or whatever you like. Only one of us
+here actually uses vi, but since he wrote the Utilities window
+code he chose the default.
+
+<a name="postscript.viewer">
+<H2>Postscript viewer</H2>
+This allows you to specify your systems command for looking at Postscript
+files. Some ASCEND concepts are only rapidly communicable by pictures and
+we do such documentation via PostScript files. Ghostview (aka gv) is the
+viewer around here. (CMU)
+
+<a name="plot.program.name">
+<H2>Plot program name</H2>
+This is the name of your plotting program. It should be able to take
+the file type given in plot.file.type as input.
+
+<a name="plot.file.type">
+<H2>Plot file type</H2>
+The supported plot types are: plain_plot, gnu_plot, and xgraph_plot.
+(These may be abbreviated xgraph, gnu, and plain.)
+If you do not have gnu-plot or xgraph or xmgr, try selecting
+plain_plot and seeing if the output will work with your own
+plotting package. Gnu-plot, xgraph, and xmgr are all available
+for free on the net. We are not experts in building any of these
+3 packages.
+
+<a name="text.print.command">
+<H2>Text print command</H2>
+<p>
+<pre>
+Printing to a file:
+Set the print command to be
+> filename.you.want cat
+
+<p>
+
+Printing to a printer:
+lpr -Pprintername
+
+<p>
+
+Landscape printing:
+xa2ps -Ppostscriptprintername
+enscript -2rGPpostscriptprintername
+<p>
+
+You may safely omit the -P[postscript]printername part of
+these commands if you normally do so in your Unix shell.
+Note that ASCEND (TCL, really) does not know about your
+Unix environment aliases.
+<p>
+
+Printing from the probe or the display execute.print buttons 
+to Unix is done by TCL executing a script consisting of
+$printcommand $scratchfilename.
+where $printcommand is the string you've set on the utilities page
+and $scratchfilename is set by ASCEND internally.
+<p>
+
+</pre>
+<a name="font.selector">
+<H2>Font selector</H2>
+This is a program that allows you to interactively determine font
+names available to ASCEND. The default (xfontsel) is the only 
+program we know of which does this properly. (Xfontsel has it's own
+set of bugs, so we suggest you tamper with nothing to the right of
+ptSz on the xfontsel widget.) Once you have found fonts you like with
+xfontsel, you may wish to set the Font values in ~/.ascend.ad.
+Beware: fonts are Xserver dependent. The fonts available on one workstation
+often differ from those on another. ASCEND will make some substitution
+for unavailable fonts if it can, but the results are not always pretty.
+In at least one case we have found the default ASCEND comes up with to
+be Katakana (a Japanese typeface.) We find most machines know some sort
+of helvetica font.
+
+<a name="spreadsheet.command">
+<H2>Spreadsheet command</H2>
+We have not been content with any of the free UNIX spreadsheet programs.
+The thing to be done is to write out the desired variables as columns
+of numbers suitable for import to any spreadsheet. Nobody gets PhD
+points for doing this code, so it's not done yet. If you want to
+do it, let us know and we'll be happy to consult. ballan@cs.cmu.edu
+has pseudocode for this laying around someplace.
+<p>
+
+<!---LINK_BACK_TO_MAIN_HELP_PAGE_BOTTOM--->
+</BODY>
+</HTML>

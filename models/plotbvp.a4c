@@ -1,0 +1,121 @@
+REQUIRE "bvp.a4l";
+(* => bvp.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "plot.a4l";
+(* => plot.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "plotbvp.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *)
+
+MODEL plot_bvp_demo1;
+NOTES
+'purpose' SELF {
+This MODEL demonstrates how to make a plot out of a bvp MODEL.
+}
+'author' SELF {Benjamin Allan}
+'created' SELF {May 17, 1998}
+'revision' SELF {$Revision: 1.2 $}
+'comment' SELF {
+Once again, we avoid tangling plot modeling with the mathematics.}
+END NOTES;
+
+	bt IS_A bvp_test;
+
+	y[pointSet] ALIASES (bt.nodes[0 .. bt.nstep*bt.npoint].y[1])
+	WHERE pointSet IS_A set OF integer_constant
+	WITH_VALUE (0 .. bt.nstep*bt.npoint);
+
+	x[timeSet] ALIASES (bt.nodes[0 .. bt.nstep*bt.npoint].x)
+	WHERE timeSet IS_A set OF integer_constant
+	WITH_VALUE (0 .. bt.nstep*bt.npoint);
+
+
+	Y_curve IS_A plt_curve(pointSet,y,x);
+
+	(* Make Y_curve into the expected array for plt_plot *)
+	curves[curve_set] ALIASES (Y_curve) WHERE
+	curve_set IS_A set OF integer_constant;
+
+	Plot_Y IS_A plt_plot_integer(curve_set,curves);
+
+METHODS
+
+METHOD default_self;
+	RUN Plot_Y.default_self;
+	RUN Y_curve.default_self;
+	RUN bt.default_self;
+	Plot_Y.title := 'd/dx = 2x exp(-2t) cos(t)';
+	Plot_Y.XLabel := 'time t';
+	Plot_Y.YLabel := 'x';
+	Y_curve.legend := 'd/dx';
+END default_self;
+
+METHOD check_self;
+	RUN Plot_Y.check_self;
+	RUN Y_curve.check_self;
+	RUN bt.check_self;
+END check_self;
+
+METHOD scale_self;
+	RUN bt.scale_self;
+END scale_self;
+
+METHOD bound_self;
+	RUN Plot_Y.bound_self;
+	RUN Y_curve.bound_self;
+	RUN bt.bound_self;
+END bound_self;
+
+METHOD default_all;
+	RUN default_self;
+END default_all;
+
+METHOD check_all;
+	RUN check_self;
+END check_all;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD specify;
+	RUN bt.reset;
+END specify;
+
+END plot_bvp_demo1;
+
+
+(*
+ *  plotbvp.a4c
+ *  by Ben Allan
+ *  May 1998
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:21:54 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/plotbvp.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1997 Benjamin Andrew Allan
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

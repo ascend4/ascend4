@@ -1,0 +1,150 @@
+(*********************************************************************\
+                        ivp.lib
+                        by Peter Piela Boyd T. Safrit
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1991,1994
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/07/03 14:50:07 $
+  $Revision: 1.7 $
+  $Author: mthomas $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/ivp.lib,v $
+\*********************************************************************)
+(*=============================================================================*
+
+    L S O D E  .  L  I  B
+    -------------------------
+
+    AUTHOR:      Peter Piela and Boyd T. Safrit
+
+    DATES:       07/91 - Original code.
+		 08/94 - Added the observations to LSODE.
+                 09/94 - Added ivp as base type for all initial value problem
+                         solvers. baa.
+                 04/96 - Modified for the use of constants
+
+    CONTENTS:    Contains the ivp & lsode base type definitions as well
+		 as the derivatives model definition that is required
+		 in the ivp model.
+
+    REQUIRES:	"system.lib"
+*)
+
+
+(* REQUIRE atoms.lib *)
+
+(* ******************************************************************** *)
+(* *************************   derivatives  *************************** *)
+(* ******************************************************************** *)
+MODEL derivatives;
+   (*   Generic definition of the system,
+        Dy[i] = dydx[i], i=1..n_eq, D = d/dx.    *)
+
+   n_eq                                 IS_A integer_constant; (*number of ODE's*)
+   dydx[1..n_eq], y[1..n_eq], x         IS_A solver_var;
+
+   (* The number of monitored variables *)
+   n_obs				IS_A integer_constant;
+
+   (* obs[1..n_obs] is the array of additional variables that
+      the user is interested in. n_obs can be 0. *)
+   obs[1..n_obs]			IS_A solver_var;
+
+   METHODS
+       METHOD clear;
+           x.fixed := FALSE;
+           y[1..n_eq].fixed := FALSE;
+           obs[1..n_obs].fixed := FALSE;
+           dydx[1..n_eq].fixed := FALSE;
+       END clear;
+       METHOD specify;
+           (*Always TRUE for LSODE interface.  The state variables must be set
+             TRUE, while their derivatives are FALSE.*)
+           x.fixed := TRUE;
+           y[1..n_eq].fixed := TRUE;
+           dydx[1..n_eq].fixed := FALSE;
+       END specify;
+END derivatives;
+
+
+(* ******************************************************************** *)
+(* ***************************  ivp  ********************************** *)
+(* ******************************************************************** *)
+MODEL ivp;
+(*      Define the interface that is used between ASCEND
+        and ivp integrators.      *)
+   d                            	IS_A derivatives;
+   nstep				IS_A integer_constant;
+
+   (*y[step number, equation number], x[step number]*)
+
+   y[0..nstep][1..d.n_eq], x[0..nstep]  IS_A solver_var;
+
+   (*obs[step number, observation number] is the array of additional
+     variables that the user is interested in monitoring during the
+     course of the integration.*)
+   obs[0..nstep][1..d.n_obs]		IS_A solver_var;
+
+   x[0..nstep], d.x                     ARE_ALIKE;
+
+   FOR i IN [1..d.n_eq] CREATE
+      y[0..nstep][i], d.y[i]            ARE_ALIKE;
+   END FOR; (*FOR*)
+ 
+   FOR i IN [1..d.n_eq] CREATE
+      y[0][i], d.y[i]            	ARE_THE_SAME;
+   END FOR; (*FOR*)
+
+   FOR i IN [1..d.n_obs] CREATE
+      obs[0..nstep][i], d.obs[i]	ARE_ALIKE;
+   END FOR; (*FOR*)
+
+   FOR i IN [1..d.n_obs] CREATE
+      obs[0][i], d.obs[i]		ARE_THE_SAME;
+   END FOR; (*FOR*)
+
+METHODS
+   METHOD clear;
+      x[0..nstep].fixed := FALSE;
+      y[0..nstep][1..d.n_eq].fixed := FALSE;
+      obs[0..nstep][1..d.n_obs].fixed := FALSE;
+      RUN d.clear;
+   END clear;
+   METHOD specify;
+      RUN d.specify;
+   END specify;
+   METHOD fix_x_and_y;
+      RUN d.specify;
+   END fix_x_and_y;
+END ivp;
+
+MODEL lsode REFINES ivp;
+
+   (*You must specify an RTOL and ATOL for each Y.*)
+
+   (*relative tolerance on y[i]*)
+   rtol[1..d.n_eq]                      IS_A real;
+
+   (*absolute tolerance on y[i]*)
+   atol[1..d.n_eq]                      IS_A real;
+
+END lsode;

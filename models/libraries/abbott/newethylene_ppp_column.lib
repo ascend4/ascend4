@@ -1,0 +1,318 @@
+(*********************************************************************\
+                        newethylene_ppp_column.lib
+                        by Kirk A. Abbott
+                        Part of the Ascend Library
+
+This file is part of the Ascend modeling library.
+
+Copyright (C) 1996
+
+The Ascend modeling library is free software; you can redistribute
+it and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+The Ascend Language Interpreter is distributed in hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+the program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
+
+\*********************************************************************)
+
+(*********************************************************************\
+  $Date: 1997/08/29 12:20:45 $
+  $Revision: 1.5 $
+  $Author: ballan $
+  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/libraries/abbott/newethylene_ppp_column.lib,v $
+\*********************************************************************)
+
+
+(* REQUIRE abbott/newethylene_ppp_flash.lib *)
+
+ATOM reflux_ratio REFINES factor
+  DEFAULT 4.0;
+END reflux_ratio;
+
+ATOM reboil_ratio REFINES factor
+  DEFAULT 1.0;
+END reboil_ratio;
+
+MODEL column_ext_base;
+
+  ntrays IS_A integer_constant;
+
+  feedloc IS_A integer_constant;
+
+  tray[1..ntrays] IS_A  flash_PPP_base; (* see ppp_flash.lib *)
+
+  components IS_A set OF symbol_constant;
+  data[components] IS_A component_constants;
+
+  FOR i IN components CREATE
+    data[i],
+      tray[1..ntrays].data[i] ARE_THE_SAME;
+  END FOR;
+
+  tray[1] 				   IS_REFINED_TO td_condenser_PPP;
+  tray[2..(feedloc-1),
+    (feedloc+1)..(ntrays-1)]    	   IS_REFINED_TO td_simple_tray_PPP;
+  tray[feedloc] 			   IS_REFINED_TO td_simple_feed_tray_PPP;
+  tray[ntrays] 				   IS_REFINED_TO td_reboiler_PPP;
+
+
+  FOR j IN [2..ntrays] CREATE
+    tray[j].vapout['vapor'],
+      tray[j-1].input['vapor']	ARE_THE_SAME;
+    tray[j].input['liquid'],
+      tray[j-1].liqout['liquid']	ARE_THE_SAME;
+
+  END FOR;
+
+  F_scale					IS_A real;
+
+  F_scale, tray[feed_loc].input['feed'].Ftot_scale ARE_THE_SAME;
+
+
+  METHODS
+  METHOD clear;
+      RUN tray[1..ntrays].clear;
+  END clear;
+
+  (*
+    * the column's reset is the all trays put IN seqmod mode.
+    *)
+  METHOD reset;
+      RUN tray[1..ntrays].seqmod;
+  END reset;
+
+  METHOD values;
+      RUN tray[1..ntrays].values;
+  END values;
+
+END column_ext_base;
+
+MODEL column_td_base;
+
+  ntrays IS_A integer_constant;
+  feedloc IS_A integer_constant;
+  internals IS_A set OF integer_constant;
+  internals :== [2..(feedloc-1), (feedloc+1)..(ntrays-1)];
+
+  tray_1 		IS_A td_condenser_PPP;
+  tray_feedloc 		IS_A td_simple_feed_tray_PPP;
+  tray_ntrays 		IS_A td_reboiler_PPP;
+  tray[internals]	IS_A td_simple_tray_PPP;
+
+  components IS_A set OF symbol_constant;
+  data[components] IS_A component_constants;
+
+
+  components	:== ['propadiene','propylene','propane'];  (* very problem dependent *)
+  data['propadiene'] IS_REFINED_TO propadiene;
+  data['propylene'] IS_REFINED_TO propylene;
+  data['propane'] IS_REFINED_TO propane;
+
+  FOR i IN components CREATE
+    FOR j IN  internals CREATE
+      tray[j].data[i], data[i] ARE_THE_SAME;
+    END FOR;
+  END FOR;
+  
+  FOR i IN components CREATE
+    data[i],
+      tray_1.data[i],
+      tray_feedloc.data[i],
+      tray_ntrays.data[i] ARE_THE_SAME;
+  END FOR;
+
+
+  FOR j IN [3..(feedloc-1)] CREATE
+    tray[j].vapout['vapor'],
+      tray[j-1].input['vapor']	ARE_THE_SAME;
+    tray[j].input['liquid'],
+      tray[j-1].liqout['liquid']	ARE_THE_SAME;
+  END FOR;
+
+  FOR j IN [(feedloc+2)..(ntrays-1)] CREATE
+    tray[j].vapout['vapor'],
+      tray[j-1].input['vapor']	ARE_THE_SAME;
+    tray[j].input['liquid'],
+      tray[j-1].liqout['liquid']	ARE_THE_SAME;
+  END FOR;
+    
+  tray[2].vapout['vapor'], tray_1.input['vapor'] ARE_THE_SAME;
+  tray[2].input['liquid'], tray_1.liqout['liquid'] ARE_THE_SAME;
+
+  tray_feedloc.vapout['vapor'], tray[feedloc-1].input['vapor'] ARE_THE_SAME;
+  tray_feedloc.input['liquid'], tray[feedloc-1].liqout['liquid'] ARE_THE_SAME;
+  tray[feedloc+1].vapout['vapor'], tray_feedloc.input['vapor'] ARE_THE_SAME;
+  tray[feedloc+1].input['liquid'], tray_feedloc.liqout['liquid'] ARE_THE_SAME;
+
+  tray_ntrays.vapout['vapor'], tray[ntrays-1].input['vapor'] ARE_THE_SAME;
+  tray_ntrays.input['liquid'], tray[ntrays-1].liqout['liquid'] ARE_THE_SAME;
+      
+  F_scale					IS_A real;
+  F_scale, tray_feedloc.input['feed'].Ftot_scale ARE_THE_SAME;
+
+  
+  (* give the problem a little interface *)
+  feed IS_A vapor_liquid_stream;
+  distillate, bottoms IS_A liquid_stream;
+  
+  feed, tray_feedloc.input['feed'] ARE_THE_SAME;
+  distillate, tray_1.liqout['distillate'] ARE_THE_SAME;
+  bottoms, tray_ntrays.liqout['bottoms'] ARE_THE_SAME;
+  
+  METHODS
+  METHOD clear;
+      RUN tray_1.clear;
+      RUN tray[internals].clear;
+      RUN tray_feedloc.clear;
+      RUN tray_ntrays.clear;
+      RUN feed.clear;
+      RUN distillate.clear;
+      RUN bottoms.clear;
+  END clear;
+
+  METHOD seqmod;
+      RUN tray_1.seqmod;
+      RUN tray[internals].seqmod;
+      RUN tray_feedloc.seqmod;
+      RUN tray_ntrays.seqmod;
+      tray_1.totprod.Ftot.fixed := TRUE;
+      tray_ntrays.reboil_ratio.fixed := FALSE;
+  END seqmod;
+
+  METHOD specify;
+      RUN seqmod;
+      RUN tray_feedloc.input['feed'].specify;
+  END specify;
+  
+  METHOD reset;
+      RUN clear;
+      RUN specify;
+  END reset;
+
+  METHOD propogate_feed;
+      FOR i IN components DO
+	tray[internals].alpha[i] := tray_feedloc.alpha[i];
+	tray_1.alpha[i] := tray_feedloc.alpha[i];
+	tray_ntrays.alpha[i] := tray_feedloc.alpha[i];
+      END FOR;
+      FOR i IN components DO
+	tray[internals].liqout['liquid'].f[i] := feed.f[i];
+	tray_1.liqout['liquid'].f[i] := feed.f[i];
+	tray_ntrays.liqout['bottoms'].f[i]:= feed.f[i];
+      END FOR;
+  END propogate_feed;
+  
+      
+  METHOD propogate_feed_P;
+      tray[internals].liqout['liquid'].state.P := feed.state.P;
+      tray_1.liqout['liquid'].state.P := feed.state.P;
+      tray_ntrays.liqout['bottoms'].state.P := feed.state.P;
+  END propogate_feed_P;
+  
+  METHOD propogate_feed_T;
+      tray[internals].liqout['liquid'].state.T := feed.state.T;
+      tray_1.liqout['liquid'].state.T := feed.state.T;
+      tray_ntrays.liqout['bottoms'].state.T := feed.state.T;
+  END propogate_feed_T;
+
+  METHOD values;
+      feed.f['propadiene'] 	:= 2.0{mol/s};
+      feed.f['propylene'] 	:= 60.0{mol/s};
+      feed.f['propane'] 	:= 38.0{mol/s};
+      feed.state.T 	:= 324.0 {K};	(* about 124 F *)
+      feed.state.P	:= 320.0 {psia};
+      
+      tray_feedloc.alpha['propadiene'] := 0.723;
+      tray_feedloc.alpha['propylene'] := 1.222;
+      tray_feedloc.alpha['propane'] := 1.129;
+      tray_feedloc.q 	      := 1.0;
+      
+      RUN propogate_feed;
+      RUN propogate_feed_T;
+      RUN propogate_feed_P;
+	      	        
+      tray_1.reflux_ratio := 10.0;
+      tray_1.totprod.Ftot := 60.0 {mol/s};
+      tray_1.prodsplit['vapor_product'] := 0.0;
+      tray_ntrays.prodsplit['vapor_product'] := 0.0;    
+  END values;
+      
+END column_td_base;
+  
+MODEL column_eq_base REFINES column_td_base;
+  
+  tray_1.VLE 			IS_REFINED_TO equilibrium_mixture;
+  tray_feedloc.VLE 		IS_REFINED_TO equilibrium_mixture;
+  tray[internals].VLE 		IS_REFINED_TO equilibrium_mixture;
+  tray_ntrays.VLE 		IS_REFINED_TO equilibrium_mixture;
+
+  feed.state 			IS_REFINED_TO equilibrium_mixture;
+
+END column_eq_base;
+
+
+MODEL column10_td REFINES column_td_base;
+  
+  ntrays :== 10;
+  feedloc :== 5;
+      
+END column10_td;
+
+MODEL column10_eq REFINES column_eq_base;
+
+  ntrays :== 10;
+  feedloc :== 5;
+
+END column10_eq;
+
+
+MODEL column30_td REFINES column_td_base;
+  
+  ntrays :== 30;
+  feedloc :== 15;
+  
+END column30_td;
+
+
+MODEL column30_eq REFINES column_eq_base;
+  
+  ntrays :== 30;
+  feedloc :== 15;
+  
+END column30_eq;
+
+
+(*
+ * The bigger columns are all equilibrium models
+ *)
+
+MODEL column100 REFINES column_eq_base;
+  
+  ntrays :== 100;
+  feedloc :== 63;
+  
+END column100;
+
+
+MODEL column164 REFINES column_eq_base;
+
+  ntrays :== 164;
+  feedloc :== 104;
+  
+END column164;
+
+MODEL column200 REFINES column_eq_base;
+
+  ntrays :== 200;
+  feedloc :== 100;
+  
+END column200;
+

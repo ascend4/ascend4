@@ -1,0 +1,83 @@
+#  ASCEND Utilities Makefile, VC++4.2 version
+#  Mark Thomas
+#  July 29, 1997
+#  $Revision: 1.1 $
+#  $Date: 1997/07/29 17:41:47 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/utilities/Makefile.vc,v $
+#
+
+
+builddir = ..
+srcdir = .
+VPATH = .
+
+
+
+#  The next variables are the primary executables and/or libraries that
+#  this makefile is responsible for, and the default target of this
+#  makefile.
+
+EXECUTABLE = 
+
+LIBRARY  = utilities.lib
+
+
+default: $(LIBRARY)
+
+
+
+#  Defines and Includes that are specific to this directory
+
+DIR_SPECIFIC_DEFS = 
+DIR_SPECIFIC_INCS = 
+
+
+
+#  The next variables list the source files (EXEC_SCRS) to compile
+#  into the object files (EXEC_OBJS) that are linked with the
+#  library files (EXEC_LIBS) to make EXECUTABLE
+
+EXEC_SRCS = 
+
+EXEC_OBJS = 
+
+EXEC_LIBS = 
+
+
+
+#  The next variables list the source files (LIB_SCRS) to compile
+#  into the object files (LIB_OBJS) that are combined to make LIBRARY
+
+LIB_SRCS = \
+	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c \
+	ascPrint.c ascSignal.c mem.c readln.c set.c
+
+LIB_OBJS = \
+	ascDynaLoad.obj ascEnvVar.obj ascMalloc.obj ascPanic.obj \
+	ascPrint.obj ascSignal.obj mem.obj readln.obj set.obj
+
+
+
+#  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
+#  
+!include $(builddir)\ConfigAscend.vc
+!include $(builddir)\Makefile.Rules.vc
+
+
+
+#  File specific rules
+
+#  The Tcl include file is needed by ascPrint when we
+#  are using the Tcl print routines.
+#
+ascPrint.obj: $(srcdir)\ascPrint.c
+	$(CC) $(CC_SWITCHES) $(TK_INCS) -c $(srcdir)\ascPrint.c
+
+
+
+# DO NOT DELETE THIS LINE -- g++dep uses it.
+# DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.
+
+
+# IF YOU PUT ANYTHING HERE IT WILL GO AWAY
