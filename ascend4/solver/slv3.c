@@ -85,17 +85,17 @@ int slv3_register(SlvFunctionsT *f)
 
 #define SLV3(s) ((slv3_system_t)(s))
 #define SERVER (sys->slv)
-#define slv3_PA_SIZE 43 /* MUST INCREMENT WHEN ADDING PARAMETERS */
+#define slv3_PA_SIZE 44 /* MUST INCREMENT WHEN ADDING PARAMETERS */
 #define slv3_RA_SIZE 11
 
 /* do not delete (or extend) this array definition.
 */
 #define IEX(n) slv3_iaexpln[(n)]
-#define slv3_IA_SIZE 16
+#define slv3_IA_SIZE 17
 static char *slv3_iaexpln[slv3_IA_SIZE] = {
 "If lifds != 0 and showlessimportant is TRUE, show direct solve details",
 "If savlin != 0, write out matrix data file at each iteration to SlvLinsol.dat",
-"scale residuals by relation nominals for evaluating progress",
+"Scale residuals by relation nominals for evaluating progress",
 "Cutoff is the block size cutoff for MODEL-based reordering of partitions",
 "Update jacobian every this many major iterations",
 "Update row scalings every this many major iterations",
@@ -108,7 +108,8 @@ static char *slv3_iaexpln[slv3_IA_SIZE] = {
 "Use safe calculation routines",
 "Update relation nominal scalings every this many major iterations",
 "Max iterations for iterative scaling",
-"scaleopt = 0: 2norm,= 1: relnom,= 2 2norm + iterative,= 3: relnom + iterative,= 4: iterative"
+"scaleopt = 0: 2norm,= 1: relnom,= 2 2norm + iterative,= 3: relnom + iterative,= 4: iterative",
+"Stop line search after this many minor iterations"
 };
 
 /* change  slv3_PA_SIZE above (MUST INCREMENT) WHEN ADDING PARAMETERS */
@@ -198,6 +199,9 @@ static char *slv3_iaexpln[slv3_IA_SIZE] = {
 #define CONVOPT			((*(char **)CONVOPT_PTR))
 #define LINTIME_PTR		(sys->parm_array[42])
 #define LINTIME			((*(int *)LINTIME_PTR))
+#define MAX_MINOR_PTR		(sys->parm_array[43])
+#define MAX_MINOR	        ((*(int *)MAX_MINOR_PTR))
+
 /* change  slv3_PA_SIZE above (MUST INCREMENT) WHEN ADDING PARAMETERS */
 
 
@@ -3187,6 +3191,10 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys,
 	       U_p_int(hi,sizeof(factor_names)/sizeof(char *)),1);
   SLV_CPARM_MACRO(FACTOR_OPTION_PTR,parameters);
 
+  slv_define_parm(parameters, int_parm,
+	       "maxminor", "maximum line search iterations", IEX(16),
+	       U_p_int(val, 30),U_p_int(lo,5),U_p_int(hi,100), 2);
+  SLV_IPARM_MACRO(MAX_MINOR_PTR,parameters);
   return 1;
 }
 
@@ -3994,10 +4002,8 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     minor++;
 
 /* 2004.11.5 code by AWW to eliminate runaway minor loop */
-    int32 maxMinorIterations;
-    maxMinorIterations = 30;
-    if(minor >= maxMinorIterations){
-      FPRINTF(stderr,"\nQRSlv: Too many minor iterations. Check variables on bounds.\n");
+    if(minor >= MAX_MINOR){
+      FPRINTF(mif,"\nQRSlv: Exceeded max line search iterations. Check for variables on bounds.\n");
       sys->s.inconsistent = TRUE;
       iteration_ends(sys);
       update_status(sys);
