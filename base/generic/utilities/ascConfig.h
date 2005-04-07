@@ -308,6 +308,10 @@ typedef	unsigned   uint32;
 #error "Null not defined by the time ascConfig.h seen"
 #endif
 
+#ifndef UNREFERENCED_PARAMETER
+/** Standardize the treatment of unreferenced function parameters. */
+#  define UNREFERENCED_PARAMETER(p) (void)(p)
+#endif
 
 /*
  *
@@ -332,7 +336,7 @@ typedef	unsigned   uint32;
  *  build the Tk Console
  */
 #ifndef ASC_USE_TK_CONSOLE
-#define ASC_USE_TK_CONSOLE
+#define ASC_USE_TK_CONSOLE      
 #endif /* ASC_USE_TK_CONSOLE */
 
 /*
@@ -397,15 +401,21 @@ typedef	unsigned   uint32;
  * the following patch up IEEE754isms that some systems can't seem to
  * get right.
  */
-#define FPRESET (void)0
+#define FPRESET (void)0              
 #ifdef __WIN32__
-/* renamed */
-#define finite(x) _finite(x)
-#define isnan(x) _isnan(x)
-#define isinf(x) _isinf(x)
-#undef FPRESET
-#define FPRESET _fpreset()
-#endif
+   /* renamed in some __WIN32__ compiler systems */
+#  ifndef finite
+#    define finite(x) _finite(x)
+#  endif
+#  ifndef isnan
+#    define isnan(x) _isnan(x)
+#  endif
+#  ifndef isinf
+#    define isinf(x) _isinf(x)
+#  endif
+#  undef FPRESET
+#  define FPRESET _fpreset()
+#endif  /* __WIN32__ *.
 
 #ifdef __SUN_SUNOS__
 /* not properly headered in math.h or ieee*.h */

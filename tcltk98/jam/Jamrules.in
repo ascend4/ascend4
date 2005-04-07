@@ -37,16 +37,20 @@
 #
 # Users should copy/rename this file to 'Jamrules', then modify
 # the settings manually for their particular system.  Ascend
-# cannot be built by jam unless the Jamrules file is present.
+# cannot be built by jam unless the Jambase file is present.
 #
 # User-customized Jamrules files should not be placed in version
 # control.  Only the Jamrules.in template should be versioned.
 #
 #---------------------------------------------------------------------------
 
+# root directory for installation
 prefix =  c:\\dev ;
 INSTALL_ROOT = $(prefix)$(SLASH)Ascend4_install ;
 
+# name of the builder of the executable (in double quotes) 
+BUILD_CREDIT = "anonymous" ;
+                                 
 # Root dir of Ascend base library sources.
 ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
 
@@ -59,7 +63,7 @@ TK_DIR  = $(TCL_DIR) ;
 
 # Set the Tcl/Tk/tkTable import library names here to override the
 # default, compiler-specific names.  Comment out to use defaults.
-# TCL_LIBRARY = tcl80$(SUFLIB ;
+# TCL_LIBRARY = tcl80$(SUFLIB) ;
 # TK_LIBRARY  = tk80$(SUFLIB) ;
 # TKTABLE_LIB = tkTable$(SUFLIB) ;
 
@@ -181,9 +185,9 @@ if $(NT)
   }
   else if $(MINGW) || $(TOOLSET) = MINGW)
   {
-    TCL_LIBRARY ?= libtcl80_mingw$(SUFLIB) ;
-    TK_LIBRARY  ?= libtk80_mingw$(SUFLIB) ;
-    TKTABLE_LIB ?= libtkTable_mingw$(SUFLIB) ;    
+    TCL_LIBRARY ?= libtcl80$(SUFLIB) ;
+    TK_LIBRARY  ?= libtk80$(SUFLIB) ;
+    TKTABLE_LIB ?= libtkTable$(SUFLIB) ;
   }
   else if $(WATCOM) || $(TOOLSET) = WATCOM)
   {
@@ -192,7 +196,7 @@ if $(NT)
     TKTABLE_LIB ?= tkTable_wat$(SUFLIB) ;
   }
 }
-else if $(UNIX)
+else if $(OS) = LINUX
 {
     TCL_LIBRARY ?= libtcl80$(SUFLIB) ;
     TK_LIBRARY  ?= libtk80$(SUFLIB) ;

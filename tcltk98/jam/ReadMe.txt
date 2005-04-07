@@ -26,7 +26,7 @@ The interface library (libasc_tcltk98) is built in
 ./CONFIGTYPE/COMPILER/interface, while the executable
 is built in ./CONFIGTYPE/COMPILER where
     CONFIGTYPE = Debug, Release
-    COMPILER   = bcc, msvc, mingw, watcom, unix
+    COMPILER   = bcc, msvc, mingw, watcom, linix
 
 There are several dependent libraries which must be provided to
 successfully link the Ascend executable:

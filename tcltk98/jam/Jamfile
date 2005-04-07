@@ -26,7 +26,7 @@
 #
 # The jam build depends on specialized Jamrules and Jambase files.
 # A central version of these files is currently maintained in
-# ../base/jam.  This may change as work proceeds to decouple the
+# ../../jam.  This may change as work proceeds to decouple the
 # Ascend base from the original Tcl/Tk interface.
 #
 #---------------------------------------------------------------------------
@@ -60,6 +60,7 @@ NOTFILE ascend ;
 
 ASC_TCLTK98_SOURCES =
   AscBitmaps.c
+  AscPrintTcl.c
   BrowLogRel_io.c
   BrowWhen_io.c
   BrowserMethod.c
@@ -101,7 +102,7 @@ MakeLocate $(ASC_TCLTK98_LIB) : $(BUILD_DIR) ;
 # Build the Ascend executable
 Main $(EXE_NAME) : Driver.c ;
 
-ObjectCcFlags $(ASC_TCLTK98_SOURCES) Driver.c : $(SOLVER_DEFS) ;
+ObjectCcFlags $(ASC_TCLTK98_SOURCES) Driver.c : $(SOLVER_DEFS) -DTIMESTAMP="\"\\\"by $(BUILD_CREDIT)\\\"\"" ;
 ObjectHdrs $(ASC_TCLTK98_SOURCES) Driver.c : $(ASC_BASE_ROOT) $(TK_HDRS) ;
 
 LinkLibraries $(EXE_NAME) : $(ASC_TCLTK98_LIB) $(ASC_BASE_LIBS) $(PACKAGE_LIBS) ;
