@@ -160,8 +160,12 @@ if $(NT)
     FORTRANFLAGS = -c -I4 -O ;
     F77_LIBS += $(MINGW)$(SLASH)lib$(SLASH)libg2c.a ;
 
-    # uncomment to compile as strict ansi with full warnings
-    #CCWARN = -ansi -Wall -W -pedantic -Wshadow ;
+    # uncomment to select desired warning level and ansi-strictness
+    CCWARN += -Wall ;
+    CCWARN += -W ;
+    CCWARN += -pedantic ;
+    #CCWARN += -Wshadow ;
+    #CCWARN += -ansi ;
 
     if $(NODEBUG)
     {
@@ -199,8 +203,13 @@ else if $(OS) = LINUX
   SUFSHR = .so ;
   FORTRANFLAGS = -c -I4 -O -lg2c ;
 
-  # uncomment to compile as strict ansi with full warnings
-  #CCWARN = -ansi -Wall -W -pedantic -Wshadow ;
+  # uncomment to select desired warning level and ansi-strictness
+  CCWARN += -Wall ;
+  CCWARN += -W ;
+  CCWARN += -pedantic ;
+  #CCWARN += -Wshadow ;
+  #CCWARN += -ansi ;
+
   if $(NODEBUG)
   {
     CCDEBUG = -O3 ;

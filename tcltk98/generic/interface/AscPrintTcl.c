@@ -38,7 +38,7 @@
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
 
-
+                                             
 #define PRINT_BUFFER_SIZE 16380
 
 
@@ -63,6 +63,7 @@ int Asc_PrintInit_TclVtable(void)
   g_Asc_PrintVTable_Tcl.fflush = Asc_FFlushTcl;
   g_Asc_PrintVTable_Tcl.next = 0;
   Asc_PrintPushVTable(&g_Asc_PrintVTable_Tcl);
+  return 0;
 }
 
 int Asc_PrintInit_Tcl(void)

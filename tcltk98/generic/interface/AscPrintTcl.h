@@ -1,4 +1,4 @@
-/**< 
+/**<
  *  Tcl Printf Substitutes
  *  by Mark Thomas
  *  Created: 27.May.1997
@@ -39,20 +39,21 @@
 
 extern int Asc_PrintInit_TclVtable(void);
 /**< 
- * set up the vtable on the print stack.
- * This can be done before Asc_PrintInit_Tcl, and
+ * Set up the vtable on the print stack.
+ * This can be done before Asc_PrintInit_Tcl(), and
  * the result will be stderr/stdout output.
+ * Always returns 0.
  */
 
 extern int Asc_PrintInit_Tcl(void);
-/**< 
- *  int Asc_PrintInit()
- *
+/**<
  *  Initialize tcltk98 interface pointers to the Tcl channels used for output.
- *  
+ *
  *  This function should be called after the Tcl channels have been
  *  initialized.  Any calls to Asc_Printf() made prior to calling
- *  Asc_PrintInit() will use ordinary printf().
+ *  Asc_PrintInit() will use ordinary printf().  Returns 0 if the
+ *  initialization is successful, non-zero if any of the Tcl 
+ *  channels could not be initialized.
  */
 
 extern void Asc_PrintFinalize_Tcl(void);

@@ -10,13 +10,13 @@ The following files are included:
 The Ascend jam build system currently supports building under Windows 
 using the MSVC, Borland, MinGW, and Watcom** compilers, and under
 Linux using gcc/g77.  With use of the included Jambase file, it should 
-work with both the original and ftjam variants of jam.  
-The system was developed primarily using ftjam.
+work with both the original and ftjam variants of jam. However, the
+system was developed primarily using ftjam.
 
-Automatic processing of Jamrules_general.in to Jamrules_general by 
-configure is not currently implemented.  Until it is, users will 
-need to manually copy Jamrules_general.in to Jamrules_general and 
-edit Jamrules to match their preferenes & configuration.
+Automatic processing of Jamrules_general.in to Jamrules_general by
+configure is not currently implemented.  Until it is, users will
+need to manually copy Jamrules_general.in to Jamrules_general and
+edit Jamrules_general to match their preferenes & configuration.
 
 -------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ Build Instructions
 
 2. Copy Jamrules_general.in to Jamrules_general.
 
-3. Manually edit Jamrules_general to set configuration and local 
+3. Manually edit Jamrules_general to set configuration and local
    directory options.  These settings are used by all the Jamfiles
    in the Ascend source tree.
 

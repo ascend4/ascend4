@@ -42,6 +42,7 @@
 #include <windows.h>
 */
 #include <locale.h>
+#include "interface/tkConsole.h"
 #undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
 #include "utilities/ascMalloc.h"    /* for ascshutdown */
@@ -274,6 +275,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   char *p;
   char buffer[MAX_PATH];
 
+  UNREFERENCED_PARAMETER(hInstance);
+  UNREFERENCED_PARAMETER(hPrevInstance);
+  UNREFERENCED_PARAMETER(lpszCmdLine);
+  UNREFERENCED_PARAMETER(nCmdShow);
+
   /*
    * Set up the default locale to be standard "C" locale so parsing
    * is performed correctly.
@@ -341,7 +347,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
 {
   Tcl_Interp *interp;                   /* local version of global g_interp */
   Tcl_Channel inChannel;
-  Tcl_Channel outChannel;
+  Tcl_Channel outChannel;         
  
   /* jds20050119:  Initialize ASCERR before any calls to ascPanic(). */
   /* TODO: revisit when interface is decoupled from base - this may change. */
@@ -424,7 +430,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
    */
   PRINTF("ASCEND VERSION IV\n");
   PRINTF("Compiler Implemention Version: 2.0\n");
-  PRINTF("Written by Tom Epperly,Kirk Abbott, and Ben Allan\n");
+  PRINTF("Written by Tom Epperly, Kirk Abbott, and Ben Allan\n");
   PRINTF("  Built: %s %s %s\n",__DATE__,__TIME__,build_name);
   PRINTF("Copyright(C) 1990, 1993, 1994 Thomas Guthrie Epperly\n");
   PRINTF("Copyright(C) 1993-1996 Kirk Andre Abbott, Ben Allan\n");

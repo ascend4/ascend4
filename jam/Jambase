@@ -761,7 +761,7 @@ else if $(UNIX)
     C++FLAGS    ?= ;
     CC          ?= gcc ;
     CCFLAGS     ?= ;
-    CP          ?= gpp -f ;
+    CP          ?= cp -f ;
     CRELIB      ?= ;
     DOT         ?= . ;
     DOTDOT      ?= .. ;
@@ -798,7 +798,7 @@ else if $(UNIX)
     YACCFILES   ?= ;
     YACCFLAGS   ?= ;
 
-    HDRPATTERN =
+    HDRPATTERN =        
             "^[     ]*#[    ]*include[  ]*[<\"]([^\">]*)[\">].*$" ;
 
     OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
