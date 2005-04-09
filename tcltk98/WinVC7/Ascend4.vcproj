@@ -38,7 +38,7 @@
 				AdditionalDependencies="libasc_tcltk98.lib libasc_compiler.lib libasc_general.lib libasc_packages.lib libasc_solver.lib libasc_utilities.lib tk80.lib tcl80.lib"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(OutDir);C:\dell\ascend\base\winVC7\Debug;..\..\..\Tcl\lib"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;..\..\base\winVC7\$(ConfigurationName)&quot;;..\..\..\Tcl\lib"
 				GenerateDebugInformation="TRUE"
 				AssemblyDebug="1"/>
 			<Tool
@@ -86,7 +86,7 @@
 				AdditionalDependencies="libasc_tcltk98.lib libasc_compiler.lib libasc_general.lib libasc_packages.lib libasc_solver.lib libasc_utilities.lib tk80.lib tcl80.lib"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir);C:\dell\ascend\base\winVC7\Debug;..\..\..\Tcl\lib"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;..\..\base\winVC7\$(ConfigurationName)&quot;;..\..\..\Tcl\lib"
 				IgnoreAllDefaultLibraries="FALSE"
 				IgnoreDefaultLibraryNames="LIBCMTD.lib"
 				GenerateDebugInformation="TRUE"/>

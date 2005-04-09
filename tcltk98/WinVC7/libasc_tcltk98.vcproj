@@ -105,6 +105,9 @@
 				RelativePath="..\generic\interface\AscBitmaps.c">
 			</File>
 			<File
+				RelativePath="..\generic\interface\AscPrintTcl.c">
+			</File>
+			<File
 				RelativePath="..\generic\interface\BrowLogRel_io.c">
 			</File>
 			<File
@@ -207,6 +210,9 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath="..\generic\interface\AscBitmaps.h">
+			</File>
+			<File
+				RelativePath="..\generic\interface\AscPrintTcl.h">
 			</File>
 			<File
 				RelativePath="..\generic\interface\BrowLogRel_io.h">
