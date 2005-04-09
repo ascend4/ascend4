@@ -401,7 +401,7 @@ typedef	unsigned   uint32;
  * the following patch up IEEE754isms that some systems can't seem to
  * get right.
  */
-#define FPRESET (void)0              
+#define FPRESET (void)0
 #ifdef __WIN32__
    /* renamed in some __WIN32__ compiler systems */
 #  ifndef finite
@@ -415,7 +415,7 @@ typedef	unsigned   uint32;
 #  endif
 #  undef FPRESET
 #  define FPRESET _fpreset()
-#endif  /* __WIN32__ *.
+#endif  /* __WIN32__ */
 
 #ifdef __SUN_SUNOS__
 /* not properly headered in math.h or ieee*.h */

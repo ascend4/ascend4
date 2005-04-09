@@ -62,7 +62,7 @@
 			ManagedExtensions="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\generic;..\..\..\tcltk98\generic"
+				AdditionalIncludeDirectories="..\generic;..\..\tcltk98\generic"
 				PreprocessorDefinitions="WIN32;_WIN32;_X86_=1;NDEBUG"
 				MinimalRebuild="FALSE"
 				RuntimeLibrary="0"
