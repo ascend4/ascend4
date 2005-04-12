@@ -44,7 +44,8 @@ static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 
 int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable)
 {
-	if (	vtable->name == NULL ||
+	if (	vtable == NULL ||
+		vtable->name == NULL ||
 		vtable->print == NULL ||
 		vtable->fflush == NULL
 	   ) {
@@ -54,9 +55,10 @@ int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable)
 	assert(vtable->next == NULL);
 	vtable->next = g_Asc_printVtables;
 	g_Asc_printVtables = vtable;
+	return 0;
 }
 
-extern struct Asc_PrintVTable * Asc_PrintRemoveVTable(CONST char *name)
+struct Asc_PrintVTable * Asc_PrintRemoveVTable(CONST char *name)
 {
 	struct Asc_PrintVTable * prev;
 	struct Asc_PrintVTable * vt;
@@ -66,9 +68,9 @@ extern struct Asc_PrintVTable * Asc_PrintRemoveVTable(CONST char *name)
 		return NULL;
 	}
 	/* LIFO is easy */
+	vt = g_Asc_printVtables;
 	if ( strcmp(vt->name,name) == 0 ) {
-		struct Asc_PrintVTable * vt = g_Asc_printVtables;
-		g_Asc_printVtables = g_Asc_printVtables->next;
+		g_Asc_printVtables = vt->next;
 		return vt;
 	}
 	/* middle chain is worse */
@@ -97,21 +99,21 @@ extern struct Asc_PrintVTable * Asc_PrintRemoveVTable(CONST char *name)
  *  This function just initializes the variable_number_args into a
  *  va_list, and then calls AscPrint to actually do the work.
  */
-extern
 int Asc_Printf(CONST char *format, ...)
 {
   va_list args;    /* the variable number of arguments */
-  int result;      /* the result of the call to AscPrint; our return value */
+  int result = 0;  /* the result of the call to AscPrint; our return value */
 
   struct Asc_PrintVTable * vt = g_Asc_printVtables;
   while (vt != NULL) {
 	  /* create the va_list */
 	  va_start( args, format );
 	  result = vt->print( stdout, format, args );
-	  /* cleanup and return */
+	  /* cleanup */
 	  va_end( args );
 	  vt = vt->next;
   }
+  /* only the result of the last printer makes it out */
   return result;
 }
 
@@ -128,11 +130,10 @@ int Asc_Printf(CONST char *format, ...)
  *  This function just initializes the variable_number_args into a
  *  va_list, and then calls AscPrint to actually do the work.
  */
-extern
 int Asc_FPrintf(FILE *fp, CONST char *format, ...)
 {
   va_list args;    /* the variable number of arguments */
-  int result;      /* the result of the call to AscPrint; our return value */
+  int result=0;    /* the result of the call to AscPrint; our return value */
 
   struct Asc_PrintVTable * vt = g_Asc_printVtables;
   while (vt != NULL) {
@@ -143,6 +144,7 @@ int Asc_FPrintf(FILE *fp, CONST char *format, ...)
 	  va_end( args );
 	  vt = vt->next;
   }
+  /* only the result of the last printer makes it out */
   return result;
 }
 
@@ -156,15 +158,15 @@ int Asc_FPrintf(FILE *fp, CONST char *format, ...)
  *
  *  This is needed for consistency with Asc_FPrintf() and Asc_Printf().
  */
-extern
 int Asc_FFlush( FILE *fileptr )
 {
-  int result;
+  int result = 0;
   struct Asc_PrintVTable * vt = g_Asc_printVtables;
   while (vt != NULL) {
 	  result = vt->fflush(fileptr);
 	  vt = vt->next;
   }
+  /* only the result of the last printer makes it out */
   return result;
 }
 
@@ -179,7 +181,6 @@ int Asc_FFlush( FILE *fileptr )
  *
  *  This is needed for consistency with Asc_FPrintf() and Asc_Printf().
  */
-extern
 int Asc_FPutc( int c, FILE *fileptr )
 {
   /*
@@ -203,7 +204,6 @@ int Asc_FPutc( int c, FILE *fileptr )
  *
  *  This is needed for consistency with Asc_FPrintf() and Asc_Printf().
  */
-extern
 int Asc_Putchar( int c )
 {
   return Asc_Printf( "%c", c );
