@@ -61,7 +61,7 @@ extern int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
  *  Asc_PrintAddVTable() will use ordinary printf().
  *  More than one vtable can be pushed, in which case output will go
  *  to all the outputs setup in the reverse or in which tables were pushed.
- *  The vtable will be rejected if any field in it is null,
+ *  The vtable will be rejected if it or any field in it is null,
  *  other than next which must be null.
  *  If the vtable's name conflicts, return 1 otherwise return 0.
  *
