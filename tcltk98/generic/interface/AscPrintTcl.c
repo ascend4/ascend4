@@ -63,7 +63,6 @@ int Asc_PrintInit_TclVtable(void)
   g_Asc_PrintVTable_Tcl.fflush = Asc_FFlushTcl;
   g_Asc_PrintVTable_Tcl.next = 0;
   return Asc_PrintPushVTable(&g_Asc_PrintVTable_Tcl);
-  return 0;
 }
 
 int Asc_PrintInit_Tcl(void)
