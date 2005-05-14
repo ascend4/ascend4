@@ -113,7 +113,7 @@ if $(NT)
   CCFLAGS += -D_X86_=1 -DWIN32 -D_WIN32 ;
   SUFSHR = .dll ;
 
-  if $(BCCROOT) || ($(TOOLSET) = BORLANDC)
+  if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
   {
     FORTRAN = ;
     CCFLAGS   += -q -d -g0 -j0 -K -DMOD_ASCMALLOC ;
@@ -131,7 +131,7 @@ if $(NT)
     BUILD_SUBDIR = $(BUILD_SUBDIR)$(SLASH)bcc ;
   }
 
-  else if $(MSVCNT) || $(TOOLSET) = VISUALC)
+  else if $(MSVCNT) || ( $(TOOLSET) = VISUALC )
   {
     FORTRAN = ;
     CCFLAGS   += /Ze ;
@@ -155,7 +155,7 @@ if $(NT)
     BUILD_SUBDIR = $(BUILD_SUBDIR)$(SLASH)msvc ;
   }
 
-  else if $(MINGW) || $(TOOLSET) = MINGW)
+  else if $(MINGW) || ( $(TOOLSET) = MINGW )
   {
     FORTRANFLAGS = -c -I4 -O ;
     F77_LIBS += $(MINGW)$(SLASH)lib$(SLASH)libg2c.a ;
@@ -179,7 +179,7 @@ if $(NT)
     BUILD_SUBDIR = $(BUILD_SUBDIR)$(SLASH)mingw ;
   }
 
-  else if $(WATCOM) || $(TOOLSET) = WATCOM)
+  else if $(WATCOM) || ( $(TOOLSET) = WATCOM )
   {
     FORTRANFLAGS = /NOER ;
     CCFLAGS += /fr /dMOD_ASCMALLOC ;

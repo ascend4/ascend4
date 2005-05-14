@@ -50,7 +50,7 @@ INSTALL_ROOT = $(prefix)$(SLASH)Ascend4_install ;
 
 # name of the builder of the executable (in double quotes) 
 BUILD_CREDIT = "anonymous" ;
-                                 
+
 # Root dir of Ascend base library sources.
 ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
 
@@ -85,11 +85,11 @@ ASC_MODELS_DIR = ..$(SLASH)..$(SLASH)models ;
 ASC_TK_DIR     = ..$(SLASH)TK ;
 
 ASC_BASE_LIBS =
-  $(ASC_BASE_LIBDIR)$(SLASH)$(BUILD_SUBDIR)$(SLASH)$(ASC_COMPILER_LIB)
-  $(ASC_BASE_LIBDIR)$(SLASH)$(BUILD_SUBDIR)$(SLASH)$(ASC_GENERAL_LIB)
-  $(ASC_BASE_LIBDIR)$(SLASH)$(BUILD_SUBDIR)$(SLASH)$(ASC_SOLVER_LIB)
-  $(ASC_BASE_LIBDIR)$(SLASH)$(BUILD_SUBDIR)$(SLASH)$(ASC_UTILITIES_LIB)
-  $(ASC_BASE_LIBDIR)$(SLASH)$(BUILD_SUBDIR)$(SLASH)$(ASC_PACKAGES_LIB)
+  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_COMPILER_LIB)
+  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_GENERAL_LIB)
+  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_SOLVER_LIB)
+  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_UTILITIES_LIB)
+  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_PACKAGES_LIB)
   ;
 
 #======================================================================
@@ -171,25 +171,25 @@ TKTABLE_LIB_DIR ?= $(TCL_DIR)$(SLASH)lib ;
 
 if $(NT)
 {
-  if ($(BCCROOT) || ($(TOOLSET) = BORLANDC))
+  if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
   {
     TCL_LIBRARY ?= tcl80_bc$(SUFLIB) ;
     TK_LIBRARY  ?= tk80_bc$(SUFLIB) ;
     TKTABLE_LIB ?= tkTable_bc$(SUFLIB) ;
   }
-  else if $(MSVCNT) || $(TOOLSET) = VISUALC)
+  else if $(MSVCNT) || ( $(TOOLSET) = VISUALC )
   {
     TCL_LIBRARY ?= tcl80$(SUFLIB) ;
     TK_LIBRARY  ?= tk80$(SUFLIB) ;
     TKTABLE_LIB ?= tkTable$(SUFLIB) ;
   }
-  else if $(MINGW) || $(TOOLSET) = MINGW)
+  else if $(MINGW) || ( $(TOOLSET) = MINGW )
   {
     TCL_LIBRARY ?= libtcl80$(SUFLIB) ;
     TK_LIBRARY  ?= libtk80$(SUFLIB) ;
     TKTABLE_LIB ?= libtkTable$(SUFLIB) ;
   }
-  else if $(WATCOM) || $(TOOLSET) = WATCOM)
+  else if $(WATCOM) || ( $(TOOLSET) = WATCOM )
   {
     TCL_LIBRARY ?= tcl80_wat$(SUFLIB) ;
     TK_LIBRARY  ?= tk80_wat$(SUFLIB) ;
