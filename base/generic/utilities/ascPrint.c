@@ -38,6 +38,7 @@ static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 
 
 #include "utilities/ascPrint.h"
+#include "utilities/ascPrintType.h"
 
 
 #define PRINT_BUFFER_SIZE 16380

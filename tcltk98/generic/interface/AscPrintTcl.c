@@ -37,6 +37,7 @@
 #include "tcl.h"
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
+#include "utilities/ascPrintType.h"
 
                                              
 #define PRINT_BUFFER_SIZE 16380

@@ -32,7 +32,6 @@
 
 /**< 
  *  When including this file, you must include:
- *      #include <stdarg.h>
  *      #include "compiler/compiler.h"
  *      #include "utilities/ascprint.h"
  */
@@ -42,14 +41,12 @@
  * Output functions interceptor vtable. This should be constructed
  * and the functions fully operational before it is
  * pushed on the stack of output tables.
+ *
+ * Anyone implementing the vtable and using Asc_PrintPushVTable
+ * to register it will need to include the complete struct
+ * definition in ascPrintType.h.
  */
-struct Asc_PrintVTable {
-	CONST char *name;
-	int (*print)(FILE *fp, CONST char *format, va_list args);
-	int (*fflush)(FILE *);
-	struct Asc_PrintVTable *next;
-};
-
+struct Asc_PrintVTable;
 
 extern int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
 /**< 
