@@ -1,3 +1,4 @@
+#error solver_rootfind_h_seen.
 /**< 
  *  SLV: Ascend Nonlinear Solver
  *  by Kirk Andre' Abbott
