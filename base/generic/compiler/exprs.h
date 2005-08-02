@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Expression Module
  *  by Tom Epperly
  *  Version: $Revision: 1.11 $
@@ -26,140 +26,145 @@
  *  COPYING.
  */
 
-#ifndef __EXPRS_H_SEEN__
-#define __EXPRS_H_SEEN__
-
-/**< 
+/** @file
+ *  Expression Module
+ *  <pre>
  *  When #including exprs.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
+ *  </pre>
  */
 
+#ifndef __EXPRS_H_SEEN__
+#define __EXPRS_H_SEEN__
 
-extern struct Expr *CreateVarExpr(struct Name *);
-/**< 
- *  struct Expr *CreateVarExpr(n)
- *  struct Name *n;
+extern struct Expr *CreateVarExpr(struct Name *n);
+/**<
+ *  <!--  struct Expr *CreateVarExpr(n)                                -->
+ *  <!--  struct Name *n;                                              -->
  *  Create a name type expr node.
  */
 
-extern void InitVarExpr(struct Expr *,CONST struct Name *);
+extern void InitVarExpr(struct Expr *e, CONST struct Name *n);
 /**< 
- *  struct Expr *InitVarExpr(e,n)
- *  struct Expr *e;
- *  CONST struct Name *n;
- *  Given an empty expr node, init it to contain the name.
+ *  <!--  struct Expr *InitVarExpr(e,n)                                -->
+ *  <!--  struct Expr *e;                                              -->
+ *  <!--  CONST struct Name *n;                                        -->
+ *  Given an empty expr node, initialize it to contain the name.
  *  Generally this is only used to init a temporary expr node
  *  that you want to be able to destroy later (or forget later)
  *  without destroying the contents -- in this case name.
  *  How you create and destroy e is your business. using stack space
- *  is suggested.
+ *  is suggested.<br><br>
  *
  *  The problem with creating a varexpr with a name you want to keep
  *  after the node dies is that the name is destroyed when the node is.
  */
 
-extern struct Expr *CreateOpExpr(enum Expr_enum);
+extern struct Expr *CreateOpExpr(enum Expr_enum t);
 /**< 
- *  struct Expr *CreateOpExpr(t)
- *  enum Expr_enum t;
+ *  <!--  struct Expr *CreateOpExpr(t)                                 -->
+ *  <!--  enum Expr_enum t;                                            -->
  *  Create an operator node.
  */
 
-extern struct Expr *CreateSatisfiedExpr(struct Name *,double,CONST dim_type *);
-/**< 
- *  struct Expr *CreateSatisfiedExpr(n,tol,dims)
- *  struct Name *n;
- *  double tol;
- *  const dim_type *dims;
+extern struct Expr *CreateSatisfiedExpr(struct Name *n, 
+                                        double tol, 
+                                        CONST dim_type *dims);
+/**<
+ *  <!--  struct Expr *CreateSatisfiedExpr(n,tol,dims)                 -->
+ *  <!--  struct Name *n;                                              -->
+ *  <!--  double tol;                                                  -->
+ *  <!--  const dim_type *dims;                                        -->
  *  Create an satisfied operator node.
  */
 
-extern struct Expr *CreateFuncExpr(CONST struct Func *);
+extern struct Expr *CreateFuncExpr(CONST struct Func *f);
 /**< 
- *  struct Expr *CreateFuncExpr(f)
- *  const struct Func *f;
+ *  <!--  struct Expr *CreateFuncExpr(f)                               -->
+ *  <!--  const struct Func *f;                                        -->
  *  Create a function node.
  */
 
-extern struct Expr *CreateIntExpr(long);
+extern struct Expr *CreateIntExpr(long i);
 /**< 
- *  struct Expr *CreateIntExpr(i)
- *  long i;
+ *  <!--  struct Expr *CreateIntExpr(i)                                -->
+ *  <!--  long i;                                                      -->
  *  Create an integer node.
  */
 
-extern struct Expr *CreateRealExpr(double,CONST dim_type *);
+extern struct Expr *CreateRealExpr(double r, CONST dim_type *dims);
 /**< 
- *  struct Expr *CreateRealExpr(r,dims)
- *  double r;
- *  const dim_type *dims;
+ *  <!--  struct Expr *CreateRealExpr(r,dims)                          -->
+ *  <!--  double r;                                                    -->
+ *  <!--  const dim_type *dims;                                        -->
  *  Create a real node with value r and dimensions "dims".
  */
 
 extern struct Expr *CreateTrueExpr(void);
 /**< 
- *  struct Expr *CreateTrueExpr();
+ *  <!--  struct Expr *CreateTrueExpr();                               -->
  *  Create a boolean node with value TRUE.
  */
 
 extern struct Expr *CreateFalseExpr(void);
 /**< 
- *  struct Expr *CreateFalseExpr();
+ *  <!--  struct Expr *CreateFalseExpr();                              -->
  *  Create a boolean node with value FALSE.
  */
 
 extern struct Expr *CreateAnyExpr(void);
 /**< 
- *  struct Expr *CreateAnyExpr();
+ *  <!--  struct Expr *CreateAnyExpr();                                -->
  *  Create a boolean node with undefined value. b_value will be 2.
  */
 
-extern struct Expr *CreateSetExpr(struct Set *);
+extern struct Expr *CreateSetExpr(struct Set *set);
 /**< 
- *  struct Expr *CreateSetExpr(set)
- *  struct Set *set.
+ *  <!--  struct Expr *CreateSetExpr(set)                              -->
+ *  <!--  struct Set *set.                                             -->
  *  Create a set node.
  */
 
-extern struct Expr *CreateSymbolExpr(symchar *);
+extern struct Expr *CreateSymbolExpr(symchar *sym);
 /**< 
- *  struct Expr *CreateSymbolExpr(sym)
- *  const char *sym;
+ *  <!--  struct Expr *CreateSymbolExpr(sym)                           -->
+ *  <!--  const char *sym;                                             -->
  *  Create a symbol node.
  */
 
-extern struct Expr *CreateQStringExpr(CONST char *);
+extern struct Expr *CreateQStringExpr(CONST char *qstring);
 /**< 
- *  struct Expr *CreateQStringExpr(sym)
- *  const char *qstring;
- *  Create a string node. The difference is that string may contain 
+ *  <!--  struct Expr *CreateQStringExpr(qstring)                      -->
+ *  <!--  const char *qstring;                                         -->
+ *  Create a string node. The difference is that string may contain
  *  anything and are quoted as "qstring is string", whereas symbols
  *  are of the form 'symbol' and may have content restrictions.
  */
 
-extern struct Expr *CreateBuiltin(enum Expr_enum,struct Set *);
+extern struct Expr *CreateBuiltin(enum Expr_enum t, struct Set *set);
 /**< 
- *  struct Expr *CreateBuiltin(t,set)
- *  enum Expr_enum t;
- *  struct Set *set;
+ *  <!--  struct Expr *CreateBuiltin(t,set)                            -->
+ *  <!--  enum Expr_enum t;                                            -->
+ *  <!--  struct Set *set;                                             -->
  *  Create a node for SUM, PROD, UNION, etc....
  */
 
-extern void LinkExprs(struct Expr *, struct Expr *);
+extern void LinkExprs(struct Expr *cur, struct Expr *next);
 /**< 
- *  void LinkExprs(cur,next)
- *  struct Expr *cur, *next;
+ *  <!--  void LinkExprs(cur,next)                                     -->
+ *  <!--  struct Expr *cur, *next;                                     -->
  *  Link cur to next.
  */
 
-unsigned long ExprListLength(CONST struct Expr *);
+extern unsigned long ExprListLength(CONST struct Expr *e);
 /**< 
- *  unsigned long ExprListLength(e);
- *  CONST struct Expr *e;
- *  Does as you expect. Traverse to list to the end to find the length.
+ *  <!--  unsigned long ExprListLength(e);                             -->
+ *  <!--  CONST struct Expr *e;                                        -->
+ *  Traverse list to the end to find the length.
  *  Sometimes one would like to know the length a priori.
  */
 
@@ -168,12 +173,21 @@ unsigned long ExprListLength(CONST struct Expr *);
 #else
 #define NextExpr(e) NextExprF(e)
 #endif
-extern struct Expr *NextExprF(CONST struct Expr *);
-/**< 
- *  macro NextExpr(e)
- *  struct Expr *NextExprF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro NextExpr(e)                                            -->
  *  Return the expr node linked to e.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the linked node as type <code>struct Expr*</code>.
+ *  @see NextExprF()
+ */
+extern struct Expr *NextExprF(CONST struct Expr *e);
+/**<
+ *  <!--  macro NextExpr(e)                                            -->
+ *  <!--  struct Expr *NextExprF(e)                                    -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the expr node linked to e.                            -->
+ *  Implementation function for NextExpr().  Do not use this function
+ *  directly - use NextExpr() instead.
  */
 
 #ifdef NDEBUG
@@ -181,12 +195,21 @@ extern struct Expr *NextExprF(CONST struct Expr *);
 #else
 #define ExprType(e) ExprTypeF(e)
 #endif
-extern enum Expr_enum ExprTypeF(CONST struct Expr *);
-/**< 
- *  macro ExprType(e)
- *  enum Expr_enum ExprTypeF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprType(e)                                            -->
  *  Return the type of e.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the type as a <code>enum Expr_enum</code>.
+ *  @see ExprTypeF()
+ */
+extern enum Expr_enum ExprTypeF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprType(e)                                            -->
+ *  <!--  enum Expr_enum ExprTypeF(e)                                  -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the type of e.                                        -->
+ *  Implementation function for ExprType().  Do not use this function
+ *  directly - use ExprType() instead.
  */
 
 #ifdef NDEBUG
@@ -194,12 +217,21 @@ extern enum Expr_enum ExprTypeF(CONST struct Expr *);
 #else
 #define ExprName(e) ExprNameF(e)
 #endif
-extern CONST struct Name *ExprNameF(CONST struct Expr *);
-/**< 
- *  macro ExprName(e)
- *  const struct Name *ExprNameF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprName(e)                                            -->
  *  Return the name field of a var type expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the name as a <code>CONST struct Name*</code>.
+ *  @see ExprNameF()
+ */
+extern CONST struct Name *ExprNameF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprName(e)                                            -->
+ *  <!--  const struct Name *ExprNameF(e)                              -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the name field of a var type expr node.               -->
+ *  Implementation function for ExprName().  Do not use this function
+ *  directly - use ExprName() instead.
  */
 
 #ifdef NDEBUG
@@ -207,12 +239,21 @@ extern CONST struct Name *ExprNameF(CONST struct Expr *);
 #else
 #define ExprFunc(e) ExprFuncF(e)
 #endif
-extern CONST struct Func *ExprFuncF(CONST struct Expr *);
-/**< 
- *  macro ExprFunc(e)
- *  const struct Func *ExprFuncF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprFunc(e)                                            -->
  *  Return the func field of a function type expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the func as a <code>CONST struct Func*</code>.
+ *  @see ExprFuncF()
+ */
+extern CONST struct Func *ExprFuncF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprFunc(e)                                            -->
+ *  <!--  const struct Func *ExprFuncF(e)                              -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the func field of a function type expr node.          -->
+ *  Implementation function for ExprFunc().  Do not use this function
+ *  directly - use ExprFunc() instead.
  */
 
 #ifdef NDEBUG
@@ -220,12 +261,21 @@ extern CONST struct Func *ExprFuncF(CONST struct Expr *);
 #else
 #define ExprIValue(e) ExprIValueF(e)
 #endif
-extern long ExprIValueF(CONST struct Expr *);
-/**< 
- *  macro ExprIValue(e)
- *  long ExprIValueF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprIValue(e)                                          -->
  *  Return the integer value of a integer type expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as a <code>long</code>.
+ *  @see ExprIValueF()
+ */
+extern long ExprIValueF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprIValue(e)                                          -->
+ *  <!--  long ExprIValueF(e)                                          -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the integer value of a integer type expr node.        -->
+ *  Implementation function for ExprIValue().  Do not use this function
+ *  directly - use ExprIValue() instead.
  */
 
 #ifdef NDEBUG
@@ -233,12 +283,21 @@ extern long ExprIValueF(CONST struct Expr *);
 #else
 #define ExprRValue(e) ExprRValueF(e)
 #endif
-extern double ExprRValueF(CONST struct Expr *);
-/**< 
+/**<
+ *  <!--  macro ExprRValue(e)                                          -->
+ *  Return the real value of a real type expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as a <code>double</code>.
+ *  @see ExprRValueF()
+ */
+extern double ExprRValueF(CONST struct Expr *e);
+/**<
  *  macro ExprRValue(e)
  *  double ExprRValueF(e)
  *  const struct Expr *e;
  *  Return the real value of a real type expr node.
+ *  Implementation function for ExprRValue().  Do not use this function
+ *  directly - use ExprRValue() instead.
  */
 
 #ifdef NDEBUG
@@ -246,12 +305,21 @@ extern double ExprRValueF(CONST struct Expr *);
 #else
 #define ExprRDimensions(e) ExprRDimensionsF(e)
 #endif
-extern CONST dim_type *ExprRDimensionsF(CONST struct Expr *);
-/**< 
- *  macro ExprRDimensions(e)
- *  const dim_type *ExprRDimensionsF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprRDimensions(e)                                     -->
  *  Return the dimensions of a real type expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as a <code>CONST dim_type*</code>.
+ *  @see ExprRDimensionsF()
+ */
+extern CONST dim_type *ExprRDimensionsF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprRDimensions(e)                                     -->
+ *  <!--  const dim_type *ExprRDimensionsF(e)                          -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the dimensions of a real type expr node.              -->
+ *  Implementation function for ExprRDimensions().  Do not use this function
+ *  directly - use ExprRDimensions() instead.
  */
 
 #ifdef NDEBUG
@@ -259,12 +327,21 @@ extern CONST dim_type *ExprRDimensionsF(CONST struct Expr *);
 #else
 #define SatisfiedExprName(e) SatisfiedExprNameF(e)
 #endif
-extern CONST struct Name *SatisfiedExprNameF(CONST struct Expr *);
-/**< 
- *  macro SatisfiedExprName(e)
- *  const struct Name *SatisfiedExprNameF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro SatisfiedExprName(e)                                   -->
  *  Return the name field of a var type satisfied expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the name as a <code>CONST struct Name*</code>.
+ *  @see SatisfiedExprNameF()
+ */
+extern CONST struct Name *SatisfiedExprNameF(CONST struct Expr *e);
+/**<
+ *  <!--  macro SatisfiedExprName(e)                                   -->
+ *  <!--  const struct Name *SatisfiedExprNameF(e)                     -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the name field of a var type satisfied expr node.     -->
+ *  Implementation function for SatisfiedExprName().  Do not use this function
+ *  directly - use SatisfiedExprName() instead.
  */
 
 #ifdef NDEBUG
@@ -272,12 +349,21 @@ extern CONST struct Name *SatisfiedExprNameF(CONST struct Expr *);
 #else
 #define SatisfiedExprRValue(e) SatisfiedExprRValueF(e)
 #endif
-extern double SatisfiedExprRValueF(CONST struct Expr *);
-/**< 
- *  macro SatisfiedExprRValue(e)
- *  double SatisfiedExprRValueF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro SatisfiedExprRValue(e)                                 -->
  *  Return the real value of a real type satisfied expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as a <code>double</code>.
+ *  @see SatisfiedExprRValueF()
+ */
+extern double SatisfiedExprRValueF(CONST struct Expr *e);
+/**<
+ *  <!--  macro SatisfiedExprRValue(e)                                 -->
+ *  <!--  double SatisfiedExprRValueF(e)                               -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the real value of a real type satisfied expr node.    -->
+ *  Implementation function for SatisfiedExprRValue().  Do not use this function
+ *  directly - use SatisfiedExprRValue() instead.
  */
 
 #ifdef NDEBUG
@@ -285,12 +371,21 @@ extern double SatisfiedExprRValueF(CONST struct Expr *);
 #else
 #define SatisfiedExprRDimensions(e) SatisfiedExprRDimensionsF(e)
 #endif
-extern CONST dim_type *SatisfiedExprRDimensionsF(CONST struct Expr *);
-/**< 
- *  macro SatisfiedExprRDimensions(e)
- *  const dim_type *SatisfiedExprRDimensionsF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro SatisfiedExprRDimensions(e)                            -->
  *  Return the dimensions of a real type satisfied expr node.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the dimension as a <code>CONST dim_type*</code>.
+ *  @see SatisfiedExprRDimensionsF()
+ */
+extern CONST dim_type *SatisfiedExprRDimensionsF(CONST struct Expr *e);
+/**<
+ *  <!--  macro SatisfiedExprRDimensions(e)                            -->
+ *  <!--  const dim_type *SatisfiedExprRDimensionsF(e)                 -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the dimensions of a real type satisfied expr node.    -->
+ *  Implementation function for SatisfiedExprRDimensions().  Do not use this function
+ *  directly - use SatisfiedExprRDimensions() instead.
  */
 
 #ifdef NDEBUG
@@ -298,12 +393,22 @@ extern CONST dim_type *SatisfiedExprRDimensionsF(CONST struct Expr *);
 #else
 #define ExprBValue(e) ExprBValueF(e)
 #endif
-extern int ExprBValueF(CONST struct Expr *);
-/**< 
- *  macro ExprBValue(e)
- *  int ExprBValue(e)
- *  const struct Expr *e;
- *  Return 1 if e is TRUE, 0 if e is FALSE, 2 if e is ANY.
+/**<
+ *  <!--  macro ExprBValue(e)                                          -->
+ *  Return the boolean value of a boolean type satisfied expr node.
+ *  Returns 1 if e is TRUE, 0 if e is FALSE, 2 if e is ANY.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as an <code>int</code>.
+ *  @see ExprBValueF()
+ */
+extern int ExprBValueF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprBValue(e)                                          -->
+ *  <!--  int ExprBValue(e)                                            -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return 1 if e is TRUE, 0 if e is FALSE, 2 if e is ANY.       -->
+ *  Implementation function for ExprBValue().  Do not use this function
+ *  directly - use ExprBValue() instead.
  */
 
 #ifdef NDEBUG
@@ -311,12 +416,21 @@ extern int ExprBValueF(CONST struct Expr *);
 #else
 #define ExprSValue(e) ExprSValueF(e)
 #endif
-extern struct Set *ExprSValueF(CONST struct Expr *);
-/**< 
+/**<
  *  macro ExprSValue(e)
- *  struct Set *ExprSValueF(e)
- *  const struct Expr *e;
  *  Return the set value of a set node type.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as an <code>struct Set*</code>.
+ *  @see ExprSValueF()
+ */
+extern struct Set *ExprSValueF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprSValue(e)                                          -->
+ *  <!--  struct Set *ExprSValueF(e)                                   -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the set value of a set node type.                     -->
+ *  Implementation function for ExprSValue().  Do not use this function
+ *  directly - use ExprSValue() instead.
  */
 
 #ifdef NDEBUG
@@ -324,12 +438,21 @@ extern struct Set *ExprSValueF(CONST struct Expr *);
 #else
 #define ExprSymValue(e) ExprSymValueF(e)
 #endif
-extern symchar *ExprSymValueF(CONST struct Expr *);
-/**< 
- *  macro ExprSymValue(e)
- *  symchar *ExprSymValueF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprSymValue(e)                                        -->
  *  Return the symbol pointer value from a symbol node type.
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as an <code>symchar*</code>.
+ *  @see ExprSymValueF()
+ */
+extern symchar *ExprSymValueF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprSymValue(e)                                        -->
+ *  <!--  symchar *ExprSymValueF(e)                                    -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the symbol pointer value from a symbol node type.     -->
+ *  Implementation function for ExprSymValue().  Do not use this function
+ *  directly - use ExprSymValue() instead.
  */
 
 #ifdef NDEBUG
@@ -337,14 +460,25 @@ extern symchar *ExprSymValueF(CONST struct Expr *);
 #else
 #define ExprQStrValue(e) ExprQStrValueF(e)
 #endif
-extern CONST char *ExprQStrValueF(CONST struct Expr *);
-/**< 
- *  macro ExprQStrValue(e)
- *  const char *ExprQStrValueF(e)
- *  const struct Expr *e;
+/**<
+ *  <!--  macro ExprQStrValue(e)                                       -->
  *  Return the string pointer value from a string node type.
  *  The difference between a string and a symbol, is that the former
  *  may contain whitespace. The type is called e_qstring
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the value as an <code>CONST char*</code>.
+ *  @see ExprQStrValueF()
+ */
+extern CONST char *ExprQStrValueF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprQStrValue(e)                                       -->
+ *  <!--  const char *ExprQStrValueF(e)                                -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the string pointer value from a string node type.     -->
+ *  <!--  The difference between a string and a symbol, is that the former -->
+ *  <!--  may contain whitespace. The type is called e_qstring         -->
+ *  Implementation function for ExprQStrValue().  Do not use this function
+ *  directly - use ExprQStrValue() instead.
  */
 
 #ifdef NDEBUG
@@ -352,49 +486,60 @@ extern CONST char *ExprQStrValueF(CONST struct Expr *);
 #else
 #define ExprBuiltinSet(e) ExprBuiltinSetF(e)
 #endif
-extern CONST struct Set *ExprBuiltinSetF(CONST struct Expr *);
-/**< 
- *  macro ExprBuiltinSet(e)
- *  const struct Set *ExprBuiltinSetF(e)
- *  const struct Expr *e;
- *  Return the set argument for one of the builtin operations.  SUM, PROD,
- *  CARD, etc..
+/**<
+ *  <!--  macro ExprBuiltinSet(e)                                      -->
+ *  Return the set argument for one of the builtin operations.  
+ *  SUM, PROD, CARD, etc..
+ *  @param e <code>CONST struct Expr*</code>, the expr to query.
+ *  @return Returns the set as an <code>CONST struct Set*</code>.
+ *  @see ExprBuiltinSetF()
+ */
+extern CONST struct Set *ExprBuiltinSetF(CONST struct Expr *e);
+/**<
+ *  <!--  macro ExprBuiltinSet(e)                                      -->
+ *  <!--  const struct Set *ExprBuiltinSetF(e)                         -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  <!--  Return the set argument for one of the builtin operations.   -->
+ *  <!--   SUM, PROD, CARD, etc..                                      -->
+ *  Implementation function for ExprBuiltinSet().  Do not use this function
+ *  directly - use ExprBuiltinSet() instead.
  */
 
-extern struct Expr *CopyExprList(CONST struct Expr *);
+extern struct Expr *CopyExprList(CONST struct Expr *e);
 /**< 
- *  struct Expr *CopyExprList(e)
- *  struct Expr *e;
+ *  <!--  struct Expr *CopyExprList(e)                                 -->
+ *  <!--  struct Expr *e;                                              -->
  *  Make and return a copy of e.
  */
 
-extern void DestroyExprList(struct Expr *);
+extern void DestroyExprList(struct Expr *e);
 /**< 
- *  void DestroyExprList(e)
- *  struct Expr *e;
+ *  <!--  void DestroyExprList(e)                                      -->
+ *  <!--  struct Expr *e;                                              -->
  *  Deallocate all the memory associated with e.
  *  Handles NULL input gracefully.
  */
 
-extern struct Expr *JoinExprLists(struct Expr *,struct Expr *);
+extern struct Expr *JoinExprLists(struct Expr *e1, struct Expr *e2);
 /**< 
- *  struct Expr *JoinExprLists(e1,e2)
- *  struct Expr *e1, *e2;
+ *  <!--  struct Expr *JoinExprLists(e1,e2)                            -->
+ *  <!--  struct Expr *e1, *e2;                                        -->
  *  Append list e2 to the end of e1.  This returns e1, unless e1
  *  is NULL in which case it returns e2.
  */
 
-extern int ExprsEqual(CONST struct Expr *,CONST struct Expr *);
+extern int ExprsEqual(CONST struct Expr *e1, CONST struct Expr *e2);
 /**< 
- *  int ExprsEqual(e1,e2)
- *  const struct Expr *e1,*e2;
+ *  <!--  int ExprsEqual(e1,e2)                                        -->
+ *  <!--  const struct Expr *e1,*e2;                                   -->
  *  Return TRUE if and only if e1 and e2 are structurally equivalent.
  */
 
-extern int CompareExprs(CONST struct Expr *,CONST struct Expr *);
+extern int CompareExprs(CONST struct Expr *e1, CONST struct Expr *e2);
 /**< 
- *  int CompareExprs(e1,e2)
- *  const struct Expr *e1,*e2;
+ *  <!--  int CompareExprs(e1,e2)                                      -->
+ *  <!--  const struct Expr *e1,*e2;                                   -->
+ *  Compares2 expressions.
  *  Return -1, 0, 1 as e1 is < == > e2.
  *  Expressions being complicated things, this is not easily
  *  explained. The expressions are being compared in the
@@ -405,17 +550,18 @@ extern int CompareExprs(CONST struct Expr *,CONST struct Expr *);
 
 extern void exprs_init_pool(void);
 /**< 
- * starts memory recycle. do not call twice before stopping recycle.
+ * Starts memory recycle. do not call twice before stopping recycle.
  */
 
 extern void exprs_destroy_pool(void);
 /**< 
- * stops memory recycle. do not call while ANY Expr are outstanding.
+ * Stops memory recycle. do not call while ANY Expr are outstanding.
  */
 
 extern void exprs_report_pool(void);
 /**< 
- * write the pool report to ASCERR for the exprs pool.
+ * Write the pool report to ASCERR for the exprs pool.
  */
 
-#endif /**< __EXPRS_H_SEEN__ */
+#endif /* __EXPRS_H_SEEN__ */
+

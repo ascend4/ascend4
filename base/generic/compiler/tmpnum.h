@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Ascend Instance Tree TmpNum functions.
  *  by Tom Epperly & Kirk Abbott
  *  8/16/89
@@ -26,10 +26,10 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  */
-#ifndef __TMPNUM_H_SEEN__
-#define __TMPNUM_H_SEEN__
 
-/**< 
+/** @file
+ *  Ascend Instance Tree TmpNum functions.
+ *
  *  About tmp numbers. These are a scratch long for use of transient
  *  clients, including the compiler itself. The tmp num should not be
  *  expected to remain the same above the scope of the function in
@@ -38,57 +38,65 @@
  *  know that none of your subroutines will mess with it before you
  *  need it.
  *
- * Note that NULL instances have a tmpnum of LONG_MAX, if anyone
- * is dumb enough to ask. This will generally cause fallout 
- * elsewhere.
+ *  Note that NULL instances have a tmpnum of LONG_MAX, if anyone
+ *  is dumb enough to ask. This will generally cause fallout
+ *  elsewhere.
+ *  <pre>
+ *  When #including tmpnum.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
  */
 
-extern unsigned long GetTmpNum(CONST struct Instance *);
+#ifndef __TMPNUM_H_SEEN__
+#define __TMPNUM_H_SEEN__
+
+extern unsigned long GetTmpNum(CONST struct Instance *i);
 /**< 
- *  l= GetTmpNum(i);
- *  CONST struct Instance *i;
+ *  <!--  l= GetTmpNum(i);                                             -->
+ *  <!--  CONST struct Instance *i;                                    -->
  *  Return the tmp number, or LONG_MAX if i is NULL,
  *  or 0 if i is subatomic, or exits if i enum is wierd.
  */
 
-extern void SetTmpNum(struct Instance *, unsigned long int);
-/**< 
- *  SetTmpNum(i,n);
- *  struct Instance *i;
- *  long n;
+extern void SetTmpNum(struct Instance *i, unsigned long int n);
+/**<
+ *  <!--  SetTmpNum(i,n);                                              -->
+ *  <!--  struct Instance *i;                                          -->
+ *  <!--  long n;                                                      -->
  *  Sets the tmp number, or whines if i bad.
  */
 
-extern unsigned long IncrementTmpNum(struct Instance *);
+extern unsigned long IncrementTmpNum(struct Instance *i);
 /**< 
- *  l= IncrementTmpNum(i);
- *  CONST struct Instance *i;
- *  unsigned long l;
- *  add 1 to and return the tmp number.
+ *  <!--  l= IncrementTmpNum(i);                                       -->
+ *  <!--  CONST struct Instance *i;                                    -->
+ *  <!--  unsigned long l;                                             -->
+ *  Add 1 to and return the tmp number.
  *  Returns LONG_MAX if i is NULL.
  *  or 0 if i is subatomic, or exits if i enum is wierd.
  *  The numeric wisdom of the incrementing is not checked.
  */
 
-extern unsigned long DecrementTmpNum(struct Instance *);
+extern unsigned long DecrementTmpNum(struct Instance *i);
 /**< 
- *  l= DecrementTmpNum(i);
- *  CONST struct Instance *i;
- *  unsigned long l;
+ *  <!--  l= DecrementTmpNum(i);                                       -->
+ *  <!--  CONST struct Instance *i;                                    -->
+ *  <!--  unsigned long l;                                             -->
  *  Subtract 1 from and return the tmp number.
  *  Returns LONG_MAX if i is NULL
  *  or 0 if i is subatomic, or exits if i enum is wierd.
  *  Tmpnum is not decremented if it is already 0.
  */
 
-extern void ZeroTmpNums(struct Instance *,int);
+extern void ZeroTmpNums(struct Instance *i, int order);
 /**< 
- *  ZeroTmpNums(i);
- *  struct Instance *i;
- *  int order;
+ *  <!--  ZeroTmpNums(i,order);                                        -->
+ *  <!--  struct Instance *i;                                          -->
+ *  <!--  int order;                                                   -->
  *  Does a VisitInstanceTree to set all i->tmp_num = 0;
  *  The visit order really is irrelevant though.
  */
 
-#endif
-/**<  __TMPNUM_H_SEEN__  */
+#endif  /*  __TMPNUM_H_SEEN__  */
+

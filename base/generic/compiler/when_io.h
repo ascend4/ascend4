@@ -1,4 +1,4 @@
-/**< 
+/*
  *  When Output Routines
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.7 $
@@ -27,35 +27,40 @@
  *
  */
 
+/** @file
+ *  When Output Routines.
+ *  <pre>
+ *  When #including when_io.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
+ */
+
 #ifndef __WHENINST_IO_H_SEEN__
 #define __WHENINST_IO_H_SEEN__
-/**< requires
-# #include<stdio.h>
-# #include"instance_enum.h"
-*/
 
-/*************************/
+/*===========================*/
 
-extern void WriteWhen(FILE *, CONST struct Instance *,
-                      CONST struct Instance *);
-/**< 
- *  void WriteWhen(f,wheninst,ref);
- *  FILE *f;
- *  CONST struct Instance *wheninst;
- *  CONST struct Instance *ref;
+extern void WriteWhen(FILE *f, CONST struct Instance *wheninst,
+                      CONST struct Instance *ref);
+/**<
+ *  <!--  void WriteWhen(f,wheninst,ref);                              -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  CONST struct Instance *wheninst;                             -->
+ *  <!--  CONST struct Instance *ref;                                  -->
  *  Write a when instance to the file f
  */
 
-extern char *WriteWhenString(CONST struct Instance *,
-                             CONST struct Instance *);
-/**< 
- *  char WriteWhenString(wheninst,ref);
- *  char *result;
- *  CONST struct Instance *wheninst;
- *  CONST struct Instance *ref;
+extern char *WriteWhenString(CONST struct Instance *wheninst,
+                             CONST struct Instance *ref);
+/**<
+ *  <!--  char WriteWhenString(wheninst,ref);                          -->
+ *  <!--  char *result;                                                -->
+ *  <!--  CONST struct Instance *wheninst;                             -->
+ *  <!--  CONST struct Instance *ref;                                  -->
  *  Write a when instance to a char
  */
 
+#endif  /* __WHENINST_IO_H_SEEN__ */
 
-
-#endif /**< __WHENINST_IO_H_SEEN__ */

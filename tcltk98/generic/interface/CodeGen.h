@@ -27,34 +27,43 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Code Generation Routines
+ *  <pre>
+ *  Requires:     #include "tcl.h"
+ *                #include "utilities/ascConfig.h"
+ *                #include "solver/slv_client.h"
+ *                #include "solver/var.h"
+ *                #include "compiler/exprs.h"
+ *                #include "solver/rel.h"
+ *                #include "compiler/interface.h"
+ *                #include "compiler/instance_enum.h"
+ *  </pre>
+ *  @todo Complete documentaion of CodeGen.h.
+ */
+
 #ifndef CodeGen_module_loaded
 #define CodeGen_module_loaded
-/* requires #include "slv_client.h" */
-/* requires #include "var.h" */
-/* requires #include "expr.h" */
-/* requires #include "rel.h" */
-/* requires #include "interface1.h" */
 
-
-#define CG_INCLUDED	0x1
-#define CG_LESS	 	0x2
-#define CG_GREATER  	0x4
+#define CG_INCLUDED   0x1
+#define CG_LESS       0x2
+#define CG_GREATER    0x4
 #define CG_EQUAL	CG_LESS | CG_GREATER
 
-#define CG_FIXED	0x1
-#define CG_INPUT	0x2
-#define CG_OUTPUT	0x4
-#define CG_SLV_CONST 	0x8
-#define CG_SLV_REAL 	0x10
+#define CG_FIXED      0x1
+#define CG_INPUT      0x2
+#define CG_OUTPUT     0x4
+#define CG_SLV_CONST  0x8
+#define CG_SLV_REAL   0x10
 
-#define CG_SLV_OPEN 	0x0
+#define CG_SLV_OPEN   0x0
 
 enum CodeGen_enum {
   CG_ascend, CG_linear, CG_gams, CG_math, CG_c, /* main classes */
-  CG_minos, CG_blackbox, CG_glassbox,		/* subclasses of CG_c */
+  CG_minos, CG_blackbox, CG_glassbox,           /* subclasses of CG_c */
   CG_squarebracket, CG_curlybracket, CG_round,  /* array subsrcripts*/
-  CG_hat_power, CG_dstar_power, CG_func_power,	/* exponentiation */
-  CG_csr, CG_ll, CG_jds				/* matrix formats */
+  CG_hat_power, CG_dstar_power, CG_func_power,  /* exponentiation */
+  CG_csr, CG_ll, CG_jds                         /* matrix formats */
 };
 
 struct CGFormat {
@@ -64,7 +73,6 @@ struct CGFormat {
   enum CodeGen_enum funcs;
   enum CodeGen_enum names;
 };
-
 
 struct CGVar {
   struct Instance *instance;
@@ -80,19 +88,19 @@ struct CGData {
   enum CodeGen_enum matrix_type;
   struct {
     int num_vars;
-    struct CGVar *var_list;	/* an array of structs */
+    struct CGVar *var_list;         /* an array of structs */
   } vars;
   struct {
     int num_pars;
-    struct var_variable **par_list;	/* null terminated array of ptrs */
+    struct var_variable **par_list; /* null terminated array of ptrs */
   } pars;
   struct {
     int num_rels;
-    struct rel_relation **rel_list;	/* null terminated array of ptrs */
+    struct rel_relation **rel_list; /* null terminated array of ptrs */
   } rels;
   struct {
     int num_objs;
-    struct rel_relation **obj_list;	/* null terminated array of ptrs */
+    struct rel_relation **obj_list; /* null terminated array of ptrs */
   } objs;
   struct {
     int num_vars;
@@ -103,8 +111,7 @@ struct CGData {
   } filtered;
 };
 
-extern struct CGData g_cgdata;	/* The main working data structure */
-
+extern struct CGData g_cgdata;	/**< The main working data structure */
 
 /*
  * Some data access routines, which external clients should
@@ -117,7 +124,7 @@ extern int Asc_CGVarFixed(struct CGVar *);
 extern int Asc_CGRelIncluded(struct rel_relation *);
 
 extern struct CGVar *Asc_CodeGenSetUpVariables(struct var_variable **vp,
-                                           int num_vars);
+                                               int num_vars);
 extern struct CGVar *Asc_CodeGenSetUpVariables3(struct gl_list_t *list);
 
 extern struct rel_relation **
@@ -133,33 +140,32 @@ extern int Asc_CodeGenSetupCodeGen(slv_system_t sys,
                                    struct var_variable **pp, int npars,
                                    struct gl_list_t *inputs,
                                    struct gl_list_t *outputs);
-/*
+/**<
  *  This function sets up the main working data structure g_cgdata.
  *  It is being exported so as to make accessible across all the CodeGen
  *  files.
  */
 
 extern void Asc_CodeGenShutDown(void);
-/*
+/**<
  *  This function shuts down the main working data structure g_cgdata.
  *  It is being exported so as to make accessible across all the CodeGen
  *  files.
  */
 
 extern int Asc_CodeGenParseDataCmd(ClientData cdata, Tcl_Interp *interp,
-                               int argc, char *argv[]);
-/*
+                                   int argc, char *argv[]);
+/**<
+ *  This function simply attempts to find all the instance 
+ *  corresponding to the names in the list. This is mainly
+ *  used for debugging.  Where list is a proper tcl list. <br><br>
+ *
  *  registered as __codegen_parsedata list.
- *  where list is a proper tcl list. This function simply attempts to
- *  find all the instance corresponding to the names in the list. This
- *  is mainly used for debugging.
  */
 
 extern int Asc_CodeGenCCmd(ClientData cdata, Tcl_Interp *interp,
-                       int argc, char *argv[]);
-/*
- *  registered as:
- *  __codegen_c filename ?grad?nograd? inputlist outputlist parameterlist
+                           int argc, char *argv[]);
+/**<
  *  Works on g_solvsys_cur, though this may change. The inputlist,
  *  outputlist and parameterlist may be *empty*, but *must* be provided.
  *  These lists are lists of variable that need to be marked specially
@@ -167,56 +173,59 @@ extern int Asc_CodeGenCCmd(ClientData cdata, Tcl_Interp *interp,
  *  grad?nograd tells whether gradients should be generated or not.
  *  filename is a prefix that will be used for all generated files, and
  *  exported functions so as to protect the namespace.
- *  Eg. __codegen_c flash grad {T,P,Feed} {Liq,Vap,phi} {tanksize}
+ *  Eg. __codegen_c flash grad {T,P,Feed} {Liq,Vap,phi} {tanksize}<br><br>
+ *
+ *  registered as:
+ *  __codegen_c filename ?grad?nograd? inputlist outputlist parameterlist
  */
 
 /*
  * This functionality is implemented in file CodeGen2.c
  */
 extern int Asc_CodeGenWriteCmd(ClientData cdata, Tcl_Interp *interp,
-                           int argc, char *argv[]);
-/*
- *  ken needs to put some header here...
+                               int argc, char *argv[]);
+/**<
+ *  @todo ken needs to put some header here...
  */
 
 extern int Asc_CodeGenReadCmd(ClientData cdata, Tcl_Interp *interp,
                           int argc, char *argv[]);
-/*
- *  ken needs to put some header here...
+/**<
+ *  @todo ken needs to put some header here...
  */
 
 extern int Asc_CodeGenGamsCmd(ClientData cdata, Tcl_Interp *interp,
-                          int argc, char *argv[]);
-/*
- *  ken needs to put some header here...
+                              int argc, char *argv[]);
+/**<
+ *  @todo ken needs to put some header here...
  */
 
 extern int Asc_CodeGenGeneralCmd(ClientData cdata, Tcl_Interp *interp,
-                             int argc, char *argv[]);
-/*
- *  registered as __codegen_general filename ?grad?nograd? format.
+                                 int argc, char *argv[]);
+/**<
  *  Generates code in one of the major formats supported i.e.,
  *  ascend (linearized), gams, mathematica.
  *  Works on g_solvsys_cur.
  *  grad?nograd tells whether gradients should be generated or not.
- *  filename is a prefix that will be used for all generated files.
+ *  filename is a prefix that will be used for all generated files.<br><br>
+ *
+ *  Registered as __codegen_general filename ?grad?nograd? format.
  */
 
 extern void Asc_CodeGenWriteAscendFile(slv_system_t sys,
-                                   FILE *fp, char *file_prefix,
-                                   int gradients,
-                                   char *typelist);
-/*
+                                       FILE *fp, 
+                                       char *file_prefix,
+                                       int gradients,
+                                       char *typelist);
+/**<
  *  Start of some codegeneration routine to support the glass-box mode
  *  of pulling in external relations. typelist is a list of types that
  *  may be used to filter the amount of information that is written out.
  */
 
-/* some experimental stuff */
+/** some experimental stuff */
 extern int  Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
-                            int argc, char *argv[]);
+                                int argc, char *argv[]);
 
 #endif /* CodeGen_module_loaded */
-
-
 

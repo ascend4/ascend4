@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Expression Input/Output
  *  by Tom Epperly
  *  Version: $Revision: 1.6 $
@@ -26,61 +26,63 @@
  *  COPYING.
  */
 
-#ifndef __EXPRIO_H_SEEN__
-#define __EXPRIO_H_SEEN__
-
-
-/**< 
+/** @file
+ *  Expression Input/Output
+ *  <pre>
  *  When #including exprio.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
  *         #include "symtab.h"
+ *  </pre>
  */
 
+#ifndef __EXPRIO_H_SEEN__
+#define __EXPRIO_H_SEEN__
 
-extern CONST char *ExprEnumName(CONST enum Expr_enum);
+extern CONST char *ExprEnumName(CONST enum Expr_enum t);
 /**< 
- *  CONST char *ExprEnumName(t);
- *  CONST enum Expr_enum t;
+ *  <!--  CONST char *ExprEnumName(t);                                 -->
+ *  <!--  CONST enum Expr_enum t;                                      -->
  *  Returns a pointer to a string containing the name of the Expr term
  *  given. Do not free this string under any circumstances.
  *  This string is not in the symbol table.
  */
 
-extern void WriteExprNode(FILE *,CONST struct Expr *);
-/**< 
- *  void WriteExprNode(f,e)
- *  FILE *f;
- *  const struct Expr *e;
+extern void WriteExprNode(FILE *f, CONST struct Expr *e);
+/**<
+ *  <!--  void WriteExprNode(f,e)                                      -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  Write a single expression node with no leading or trailing white space.
  */
 
-extern void WriteExpr(FILE *,CONST struct Expr *);
-/**< 
- *  void WriteExpr(f,e)
- *  FILE *f;
- *  const struct Expr *e;
+extern void WriteExpr(FILE *f, CONST struct Expr *e);
+/**<
+ *  <!--  void WriteExpr(f,e)                                          -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Expr *e;                                        -->
  *  Write the expression with no leading or trailing white space.
  */
 
-extern void WriteExprNode2Str(Asc_DString *,CONST struct Expr *);
-/**< 
- *  void WriteExprNode2Str(dstring,e)
- *  Asc_DString *dstring;
- *  const struct Expr *e;
+extern void WriteExprNode2Str(Asc_DString *dstring, CONST struct Expr *e);
+/**<
+ *  <!--  void WriteExprNode2Str(dstring,e)                            -->
+ *  <!--  Asc_DString *dstring;                                        -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  Write a single expression node to a string with no leading
+ *  or trailing white space.
  */
 
-extern void WriteExpr2Str(Asc_DString *,CONST struct Expr *);
-/**< 
- *  void WriteExpr2Str(dstring,e)
- *  Asc_DString *dstring;
- *  const struct Expr *e;
- *  Write the expression with no leading or trailing white space.
+extern void WriteExpr2Str(Asc_DString *dstring, CONST struct Expr *e);
+/**<
+ *  <!--  void WriteExpr2Str(dstring,e)                                -->
+ *  <!--  Asc_DString *dstring;                                        -->
+ *  <!--  const struct Expr *e;                                        -->
+ *  Write the expression to a string with no leading or trailing white space.
  */
-#endif /**< __EXPRIO_H_SEEN__ */
 
-
-
-
+#endif /* __EXPRIO_H_SEEN__ */
 

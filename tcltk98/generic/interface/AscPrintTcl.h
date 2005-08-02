@@ -1,4 +1,4 @@
-/**<
+/*
  *  Tcl Printf Substitutes
  *  by Mark Thomas
  *  Created: 27.May.1997
@@ -27,15 +27,19 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifndef _ASCPRINTTCL_H
-#define _ASCPRINTTCL_H
-
-/**< 
+/** @file
+ *  Tcl Printf Substitutes
+ *  <pre>
  *  When including this file, you must include:
  *      #include <stdarg.h>
+ *      #include "utilities/ascConfig.h"
  *      #include "compiler/compiler.h"
- *      #include "utilities/ascprint.h"
+ *      #include "utilities/ascPrint.h"
+ *  </pre>
  */
+
+#ifndef _ASCPRINTTCL_H
+#define _ASCPRINTTCL_H
 
 extern int Asc_PrintInit_TclVtable(void);
 /**< 
@@ -57,8 +61,7 @@ extern int Asc_PrintInit_Tcl(void);
  */
 
 extern void Asc_PrintFinalize_Tcl(void);
-/**< 
- * Shut down the print channels of Tcl.
- */
+/**<  Shut down the print channels of Tcl. */
 
-#endif /**< _ASCPRINTTCL_H */
+#endif  /* _ASCPRINTTCL_H */
+

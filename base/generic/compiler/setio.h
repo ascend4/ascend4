@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Temporary set output routines
  *  by Tom Epperly
  *  Version: $Revision: 1.4 $
@@ -24,45 +24,53 @@
  *  with the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
+
+/** @file
+ *  Temporary set output routines.
+ *  <pre>
+ *  When #including set_io.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler.h"
+ *         #include "types.h"
+ *         #include "symtab.h"
+ *  </pre>
+ */
+
 #ifndef __SETIO_H_SEEN__
 #define __SETIO_H_SEEN__
-/**< 
-# #include<stdio.h>
-# #include"compiler.h"
-# #include"types.h"
-# #include"symtab.h"
-*/
 
-extern void WriteSetNode(FILE *,CONST struct Set *);
+extern void WriteSetNode(FILE *f, CONST struct Set *s);
 /**< 
- *  void WriteSetNode(f,s)
- *  FILE *f;
- *  const struct Set *s;
+ *  <!--  void WriteSetNode(f,s)                                       -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Set *s;                                         -->
  *  Write this set node without any leading or trailing white space.
  */
 
-extern void WriteSet(FILE *,CONST struct Set *);
+extern void WriteSet(FILE *f, CONST struct Set *s);
 /**< 
- *  void WriteSet(f,s)
- *  FILE *f;
- *  const struct Set *s;
+ *  <!--  void WriteSet(f,s)                                           -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Set *s;                                         -->
  *  Output the set with no leading or trailing white space.
  */
 
-
-extern void WriteSetNode2Str(Asc_DString *,CONST struct Set *);
-/**< 
- *  void WriteSetNode2Str(dstring,s)
- *  Asc_DString *dstring;
- *  const struct Set *s;
+extern void WriteSetNode2Str(Asc_DString *dstring, CONST struct Set *s);
+/**<
+ *  <!--  void WriteSetNode2Str(dstring,s)                             -->
+ *  <!--  Asc_DString *dstring;                                        -->
+ *  <!--  const struct Set *s;                                         -->
  *  Write this set node without any leading or trailing white space.
  */
 
-extern void WriteSet2Str(Asc_DString *,CONST struct Set *);
+extern void WriteSet2Str(Asc_DString *dstring, CONST struct Set *s);
 /**< 
- *  void WriteSet2Str(dsring,s)
- *  Asc_DString *dstring;
- *  const struct Set *s;
+ *  <!--  void WriteSet2Str(dsring,s)                                  -->
+ *  <!--  Asc_DString *dstring;                                        -->
+ *  <!--  const struct Set *s;                                         -->
  *  Output the set with no leading or trailing white space.
  */
-#endif /**< __SETIO_H_SEEN__ */
+
+#endif  /* __SETIO_H_SEEN__ */
+

@@ -26,25 +26,37 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  *  COPYING is found in ../compiler.
  */
+
+/** @file
+ *  lin_utils: Ascend Linear Algebra Utilities.
+ *  <pre>
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "mtx.h"
+ *                #include "linsol.h"
+ *                #include "linsolqr.h"
+ *  </pre>
+ *  @todo Document functions in linutils.h.
+ */
+
 #ifndef linutils_already_included
 #define linutils_already_included
-/* requires #include "mtx.h" */
-/* requires #include "linsol.h" */
-/* requires #include "linsolqr.h" */
 
-extern double linutils_A_1_norm(mtx_matrix_t mtx, mtx_region_t *reg);
+extern double linutils_A_1_norm(mtx_matrix_t mtx,
+                                mtx_region_t *reg);
 
-extern double linutils_A_infinity_norm(mtx_matrix_t mtx, mtx_region_t *reg);
+extern double linutils_A_infinity_norm(mtx_matrix_t mtx,
+                                       mtx_region_t *reg);
 
-extern double linutils_A_Frobenius_norm(mtx_matrix_t mtx, mtx_region_t *reg);
+extern double linutils_A_Frobenius_norm(mtx_matrix_t mtx,
+                                        mtx_region_t *reg);
 
 extern double linutils_A_condqr_kaa(linsolqr_system_t lin_sys,
-				    mtx_matrix_t mtx,
-				    mtx_region_t *reg);
+                                    mtx_matrix_t mtx,
+                                    mtx_region_t *reg);
 
 extern double linutils_A_cond_kaa(linsol_system_t lin_sys,
-				  mtx_matrix_t mtx,
-				  mtx_region_t *reg);
-
+                                  mtx_matrix_t mtx,
+                                  mtx_region_t *reg);
 
 #endif /* linutils_already_included */
+

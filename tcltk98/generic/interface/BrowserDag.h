@@ -27,15 +27,19 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifndef __BrowserDag_module__
-#define __BrowserDag_module__
-
-/*
+/** @file
+ *  Browser Dag Routines
+ *  <pre>
  *  To include this header, you must include the following:
  *      #include "tcl.h"
- *      #include "BrowserDag.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "interface/BrowserDag.h"
+ *  </pre>
+ *  @todo Fix comments in interface/BrowserDag.h
  */
 
+#ifndef __BrowserDag_module__
+#define __BrowserDag_module__
 
 extern int Asc_BrowTreeListCmd(ClientData cdata, Tcl_Interp *interp,
                                int argc, char *argv[]);
@@ -98,4 +102,5 @@ extern int Asc_BrowTreeListCmd2(ClientData cdata, Tcl_Interp *interp,
  *  3) The instance tree is left in the state that it was found.
  */
 
-#endif /*  __BrowserDag_module__ */
+#endif  /*  __BrowserDag_module__ */
+

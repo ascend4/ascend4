@@ -35,15 +35,23 @@
  *  should be included AFTER tcl.h or tk.h, not before.
  */
 
+/** @file
+ *  File redirection for ascend.
+ *  <pre>
+ *  When #including redirectFile.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef __redirectFile_h_seen_
 #define __redirectFile_h_seen_
 
+extern FILE *g_ascend_errors;       /**< File for error messages.  Default is stderr. */
+extern FILE *g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
+extern FILE *g_ascend_information;  /**< File for informational messages.  Default is stderr. */
 
-extern FILE *g_ascend_errors;
-extern FILE *g_ascend_warnings;
-extern FILE *g_ascend_information;
-
-extern void Asc_RedirectCompilerDefault();
-
+extern void Asc_RedirectCompilerDefault(void);
+/**< Set the default files/streams to receive ASCEND messages. */
 
 #endif /* __redirectFile_h_seen_ */
+

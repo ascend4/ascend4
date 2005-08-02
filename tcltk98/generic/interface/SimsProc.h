@@ -27,243 +27,244 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifndef SimsProc_module_loaded
-#define SimsProc_module_loaded
-
-/*
+/** @file
+ *  Simulation procedures.
+ *  <pre>
  *  To include this header, you must include the following:
  *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
  *      #include "compiler/compiler.h"
  *      #include "compiler/instance_enum.h"
  *      #include "interface/SimsProc.h"
+ *  </pre>
  */
+
+#ifndef SimsProc_module_loaded
+#define SimsProc_module_loaded
 
 extern struct Instance *Asc_FindSimulationTop(symchar *str);
-/*
- *  return the sim pointer if there is a sim named *str
- */
+/**<  Return the sim pointer if there is a sim named *str. */
 
 extern struct Instance *Asc_FindSimulationRoot(symchar *str);
-/*
- *  return the top inst pointer if there is a sim named *str
+/**<  Return the top inst pointer if there is a sim named *str. */
+
+extern symchar *Asc_SimsFindSimulationName(CONST struct Instance *sim);
+/**<
+ *  Return the name string of the instance given if it is in the
+ *  global sim list. Return null if not.
  */
 
-extern symchar *Asc_SimsFindSimulationName(CONST struct Instance *);
-/*
- *  return the name string of the instance given if it is in the
- *  global sim list. return null if not.
- */
-
-extern void Asc_SetCurrentSim(struct Instance *);
-/*
- *  void Asc_SetCurrentSim;
- *  struct Instance *sim;
- *  Comments :
+extern void Asc_SetCurrentSim(struct Instance *sim);
+/**<
+ *  <!--  void Asc_SetCurrentSim;                                      -->
+ *  <!--  struct Instance *sim;                                        -->
  *  Sets the current working simulation to the simulation given.
  */
 
 extern struct Instance *Asc_GetCurrentSim(void);
-/*
- *  struct Instance *Asc_GetCurrentSim;
- *  Comments :
+/**<
+ *  <!--  struct Instance *Asc_GetCurrentSim;                          -->
  *  Returns the current working simulation. Makes no checks on the state
  *  of the simulation.
  */
 
-extern int Asc_SimsUniqueName(symchar *);
-/*
- *  int Asc_SimsUniqueName;
- *  symchar *str;
- *  Comments :
+extern int Asc_SimsUniqueName(symchar *str);
+/**<
+ *  <!--  int Asc_SimsUniqueName;                                      -->
+ *  <!--  symchar *str;                                                -->
  *  Searches the simulation list for the name of a simulation.
  *  Returns 0 if the name was found else returns 1;
  */
 
-extern int Asc_SimsCmpSim(struct Instance *, struct Instance *);
-/*
- *  int Asc_SimsCmpSim;
- *  struct Instance *sim1;
- *  struct Instance *sim2;
- *  Comments :
+extern int Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2);
+/**<
+ *  <!--  int Asc_SimsCmpSim;                                          -->
+ *  <!--  struct Instance *sim1;                                       -->
+ *  <!--  struct Instance *sim2;                                       -->
  *  Compares two simulations, based on their name. Returns 0 if the same.
  *  Returns non-zero if different.
  */
 
 extern int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsQueryCmd
+/**<
+ *  <!--  int Asc_SimsQueryCmd                                         -->
+ *  Simulation name utility.
+ *  -# sims getcurrent --
+ *     Returns the name of the current simualation.
+ *     If the simulation is not found then, returns "1" or ""; else it
+ *     returns the name of the simulation.
+ *  -# sims setcurrent simname --
+ *     Searches for the simulation that matches the specified name. If found
+ *     sets the current simulation and returns "0". Otherwise it returns "1".
+ *
  *  Registered as : \"sims arg ?args?\";
- *  Comments :
- *  1) sims getcurrent --
- *  Returns the name of the current simualation.
- *  If the simulation is not found then, returns "1" or ""; else it
- *  returns the name of the simulation.
- *  2) sims setcurrent simname --
- *  Searches for the simulation that matches the specified name. If found
- *  sets the current simulation and returns "0". Otherwise it returns "1".
  */
 
 extern int Asc_SimsUniqueNameCmd(ClientData dummy, Tcl_Interp *interp,
                                  int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsUniqueNameCmd
- *  Comments :
- *  Registered as : unique \"name\";
+/**<
+ *  <!--  int Asc_SimsUniqueNameCmd                                    -->
  *  Returns 1 if name is not a simulation instance or if called with
- *  wrong number of args.  Returns 0 if simulation name exists.
+ *  wrong number of args.  Returns 0 if simulation name exists.<br><br>
+ *
+ *  Registered as : unique \"name\";
  */
 
 extern int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                      int argc, CONST84 char *argv[]);
-/*
- *  int CreateInstance_Callback;
- *  Comments :
+/**<
+ *  <!--  int CreateInstance_Callback;                                 -->
  *  A blatant ripofff of Tom Epperlys CreateInstance.
- *  Registered as : screate \"simname\" \"type\".
  *  Creates a simulation instance and adds to the global simlist.
- *  Returns 0 if failed, 1 if ok;
+ *  Returns 0 if failed, 1 if ok;<br><br>
+ *
+ *  Registered as : screate \"simname\" \"type\".
  */
 
 extern int Asc_SimsResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsResumeInstantiateCmd;
- *  Comments :
+/**<
+ *  <!--  int Asc_SimsResumeInstantiateCmd;                            -->
+ *  Returns "0" if sim not found, 1 if found.
+ *
  *  Registered as : sresume \"simname\";
- *  Returns "0" if sim not found, 1 if found
  */
 
 extern int Asc_BrowResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
-/*
- *  int Asc_BrowResumeInstantiateCmd;
- *  Comments :
+/**<
+ *  <!--  int Asc_BrowResumeInstantiateCmd;                            -->
+ *  Browser callback to resume compilation.
+ *  Assumes instance to be dealt with is in g_root. Returns "".<br><br>
+ *
  *  Registered as : bresume;
- *  browser callback to resume compilation.
- *  assumes instance to be dealt with is in g_root. Returns ""
  */
-
 
 extern int Asc_SimsCopyInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsCopyInstanceCmd;		KAA_DEBUG
- *  Comments :
- *  Registered as : __sims_copy qlfdid;
+/**<
+ *  <!--  int Asc_SimsCopyInstanceCmd;		KAA_DEBUG                      -->
  *  Will attempt to take the given qualified id id and 'copy' it.
  *  It will destroy the information immediately after. This is some
- *  experimental code.
+ *  experimental code.<br><br>
+ *
+ *  Registered as : __sims_copy qlfdid;
  */
 
 extern int Asc_SimsProtoTypeInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsProtoTypeInstanceCmd;		KAA_DEBUG
- *  Comments :
- *  Registered as : __sims_proto qlfdid;
+/**<
+ *  <!--  int Asc_SimsProtoTypeInstanceCmd;		KAA_DEBUG                 -->
  *  Will attempt to take the given qualified id id and prototype it.
- *  It will add the instance to the prototype library. It will copy
+ *  It will add the instance to the prototype library. It will copy<br><br>
+ *
+ *  Registered as : __sims_proto qlfdid;
  */
 
 extern int Asc_SimsSaveInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
-/*
- *  inst Asc_SimsSaveInstanceCmd:		KAA_DEBUG
- *  Comments :
- *  Registered as : __sims_saveinst qlfdid file
+/**<
+ *  <!--  inst Asc_SimsSaveInstanceCmd:		KAA_DEBUG                     -->
  *  Will attemptlt to take the given qualified id and 'save' it to
  *  the specified file. This is still experimental code but hopefully
  *  not for long. The details of the save format may be found in
  *  instance_io.[ch]; If all goes well there will be a matching function
- *  called SimsRestoreInstanceCmd();
+ *  called SimsRestoreInstanceCmd();<br><br>
+ *
+ *  Registered as : __sims_saveinst qlfdid file
  */
 
 extern int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
-     int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsUpdateInstanceCmd;		KAA_DEBUG
- *  Comments :
- *  Registered as : __sims_update qlfdid <file,type>;
+                                     int argc, CONST84 char *argv[]);
+/**<
+ *  <!--  int Asc_SimsUpdateInstanceCmd;		KAA_DEBUG                    -->
  *  Will attempt to take the given qualified id and 'update' it
  *  using the information found in the file 'file', or using the given
  *  type information. At the moment it reads the instructions from a
- *  file. The primitives used may be found in compiler/instantiate.c
+ *  file. The primitives used may be found in compiler/instantiate.c<br><br>
+ *
+ *  Registered as : __sims_update qlfdid <file,type>;
  */
 
-extern void Asc_DeAllocSim(struct Instance *);
-/*
- *  void Asc_DeAllocSim(sim);
- *  NOTE:
- *  sim is the *Top* of the simulation and *not* the root. As such it
- *  works on instances of kind SIM_INST.
+extern void Asc_DeAllocSim(struct Instance *sim);
+/**<
+ *  <!--  void Asc_DeAllocSim(sim);                                    -->
  *  Deallocate a simulation instance, destroying the instnace and its
  *  associated root instance, by  calling DestroyInstance (in instance.h).
  *  It also frees the name string, which it owns, and cleans up any external
- *  vars associated with the simulation.
+ *  vars associated with the simulation.<br><br>
+ *
+ *  NOTE:
+ *  sim is the *Top* of the simulation and *not* the root. As such it
+ *  works on instances of kind SIM_INST.
  */
 
 extern int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
                                         int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimsDestroySimulationCmd;
- *  Comments :
- *  Registered as : sdestroy \"simname\";
+/**<
+ *  <!--  int Asc_SimsDestroySimulationCmd;                            -->
  *  Returns 1 if successful, returns 0 if not.
+ *
+ *  Registered as : sdestroy \"simname\";
  */
 
 extern int Asc_BrowShowPendings(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
-/*
- *  int Asc_BrowShowPendings;
- *  Comments :
- *  Registered as : \"bnumpendings\" ?simulation?instance? ?sim?search?current?
- *  Call is "bnumpendings simulation sim_name". -- checks given sim_name;
- *        or "bnumpendings instance current". -- checks current instance.
- *        or "bnumpendings instance search".  -- checks search instance.
- *  for the number of pending statements. Will return > 1 if there are
- *  any pending statements.
+/**<
+ *  <!--  int Asc_BrowShowPendings;                                    -->
+ *  Returns the number of pending statements.
+ *  Call is:
+ *    - "bnumpendings simulation sim_name" -- checks given sim_name.
+ *    - "bnumpendings instance current" -- checks current instance.
+ *    - "bnumpendings instance search"  -- checks search instance.
+ *  Will return > 1 if there are any pending statements.
  *  Returns a BIG number if no instance.
- *  For more details, use BrowWritePendings.
+ *  For more details, use BrowWritePendings.<br><br>
+ *
+ *  Registered as : \"bnumpendings\" ?simulation?instance? ?sim?search?current?
  */
 
 extern int Asc_BrowWritePendingsSTDOUT(ClientData cdata, Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);
-/*
- *  int Asc_BrowWritePendingsSTDOUT;
- *  Comments : Usage \"bwritependings\" simname.
- *  Will write to stdout, the list of pending statements for the given
+/**<
+ *  <!--  int Asc_BrowWritePendingsSTDOUT;                             -->
+ *  Writes to stdout the list of pending statements for the given
  *  simulation. Will return an error if the simulation does not exist or
- *  the sim->root instance is NULL.
+ *  the sim->root instance is NULL.<br><br>
+ *
+ *  Registered as:  \"bwritependings\" simname.
  */
 
 extern int Asc_SimListPending(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char *argv[]);
-/*
- *  int Asc_SimListPending ()a;
- *  Tcl registration simlistpending
- *  syntax:  simlistpending simname [optional filename]";
+/**<
+ *  <!--  int Asc_SimListPending ()a;                                  -->
  *  Will print all the unassigned constants and undefined structures and
  *  unexecuted statements in a simulation. simname is the name of an
  *  instance in the global simulation list.
  *  Examples:
- *  simlistpendings tf
- *     writes to stdout the pending messages of simulation tf
- *  simlistpendings tf /tmp/asctfpend1374.1
- *     writes to scratch file /tmp/asctfpend1374. the pending messages of
- *     simulation tf.
+ *    - simlistpendings tf
+ *      writes to stdout the pending messages of simulation tf
+ *    - simlistpendings tf /tmp/asctfpend1374.1
+ *      writes to scratch file /tmp/asctfpend1374. the pending messages of
+ *      simulation tf.
+ *
+ *  Registered as:  simlistpending simname [optional filename]";
  */
 
 STDHLF_H(Asc_SimBinTokenSetOptions);
 extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/**  Registered as */
 #define Asc_SimBinTokenSetOptionsHN "sim_BinTokenSetOptions"
-/*  Usage:  */
+/**  Usage */
 #define Asc_SimBinTokenSetOptionsHU \
   Asc_SimBinTokenSetOptionsHN " <src obj lib build delete" \
-  " maxrels verbose housekeep>" 
+  " maxrels verbose housekeep>"
+/**  Short help text */
 #define Asc_SimBinTokenSetOptionsHS \
   "Defines the next set of file names and other misc to build/load with"
+/**  Long help text part 1 */
 #define Asc_SimBinTokenSetOptionsHL "\
  *  Specifies full path names for source, object, and shared object files\n\
  *  to be used in the next compilation of binary token relations.\n\
@@ -275,6 +276,7 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
  *  files to be aggressively deleted. maxrels is the most equations to\n\
  *  be allowed in one generated file. If more are needed, binary will not\n\
  *  be generated. If maxrels = 0, we ignore C generation completely.\n"
+/**  Long help text part 2 */
 #define Asc_SimBinTokenSetOptionsHL2 "\
  *  Bugs: needs to have additional arguments for coping with F77, Java, etc.\n\
  *  Note: This function is called indirectly from sim_create, because\n\
@@ -283,5 +285,5 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
  *  Sim_SetupBinTokenCC in LibraryProc.tcl\n\
 "
 
+#endif  /* SimsProc_module_loaded */
 
-#endif /*SimsProc_module_loaded*/

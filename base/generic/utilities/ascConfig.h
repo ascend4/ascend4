@@ -30,7 +30,10 @@
  *  Ascend and pulls in system headers.
  *  There is not corresponding compiler.c. The variables
  *  declared in this header are defined in ascParse.y.
- *
+ */
+ 
+/** @file
+ *  Global configuration parameters.
  *  This header and tcl/tk headers are known to conflict. This header
  *  should be included AFTER tcl.h or tk.h, not before.
  */
@@ -65,7 +68,7 @@
 #ifndef __WIN32__
 #if defined(_WIN32) || defined(WIN32)
 
-/* Windows */
+/** Standard Windows define used in ASCEND. */
 #define __WIN32__
 
 #else /* _WIN32 || WIN32 */
@@ -73,31 +76,31 @@
 /* Some flavor of Unix */
 
 #ifdef __alpha
-/* DEC Alpha running OSF */
+/** DEC Alpha running OSF */
 #define __ALPHA_OSF__
 #endif /* __alpha */
 
 #ifdef __hpux
-/* HP running HP-UX */
+/** HP running HP-UX */
 #define __HPUX__
 #endif /* __hpux */
 
 #ifdef _AIX
-/* IBM RS6000 or PowerPC running AIX */
+/** IBM RS6000 or PowerPC running AIX */
 #define __IBM_AIX__
 #endif /* _AIX */
 
 #ifdef __sgi
-/* SGI running IRIX */
+/** SGI running IRIX */
 #define __SGI_IRIX__
 #endif /* __sgi */
 
 #if defined(__sun) || defined(sun)
 #ifdef __SVR4
-/* Sparc running Solaris 2.x (SunOS 5.x) */
+/** Sparc running Solaris 2.x (SunOS 5.x) */
 #define __SUN_SOLARIS__
 #else /* __SVR4 */
-/* Sparc running SunOS 4.x (Solaris 1.x) */
+/** Sparc running SunOS 4.x (Solaris 1.x) */
 #define __SUN_SUNOS__
 #endif /* __SVR4 */
 #endif /* __sun || sun */
@@ -105,11 +108,8 @@
 #endif /* _WIN32 || WIN32 */
 #endif /* __WIN32__ */
 
-
 /*
- *
  *  Make certain we have proper limits defined
- *
  */
 #include <stdlib.h>
 #include <limits.h>
@@ -129,9 +129,10 @@
 #endif
 
 #ifndef PATH_MAX
-/* Normally will come from stdio.h or limits.h */
+/** Normally will come from stdio.h or limits.h 
+ * POSIX values of PATH_MAX is 255, traditional is 1023 
+ */
 #define PATH_MAX 1023
-/* POSIX values of PATH_MAX is 255, traditional is 1023 */
 #endif
 
 /* the following numbers should have come through limits.h */
@@ -166,16 +167,14 @@
 #define MAXULONG   UILONG_MAX
 #endif
 
-/*
- * the largest number of digits we'd ever expect to see in a single
+/**
+ * The largest number of digits we'd ever expect to see in a single
  * numeric value, * 3 or so for good measure.
  */
 #define MAXIMUM_NUMERIC_LENGTH 80
 
 /*
- *
  *  Useful Headers
- *
  */
 
 /* for use by ascmalloc, which is also practically everywhere */
@@ -187,9 +186,8 @@
  *  malloc() is defined in <stdlib.h> in ANSI-C
  */
 
-
-#define MAXTOKENLENGTH 1024	/* maximum token size most significant for */
-    /* identifiers and strings */
+#define MAXTOKENLENGTH 1024	/**< Maximum token size.  
+                                 Most significant for identifiers and strings */
 #ifndef FALSE
 #define FALSE 0
 #define TRUE  1
@@ -205,21 +203,19 @@
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #endif
 
-
 #ifndef CONST
 #define CONST const
 #endif
 
 #define VOIDPTR void *
 
-
 #define ASC_MILD_BUGMAIL "ascend+bugs@cs.cmu.edu"
 #define ASC_BIG_BUGMAIL "ascend+developers@cs.cmu.edu"
 
 
-extern FILE *g_ascend_errors;
-extern FILE *g_ascend_warnings;
-extern FILE *g_ascend_information;
+extern FILE *g_ascend_errors;         /**< File stream to receive error messages. */
+extern FILE *g_ascend_warnings;       /**< File stream to receive warning messages. */
+extern FILE *g_ascend_information;    /**< File stream to receive general messages. */
 #ifndef ASCERR
 #define ASCERR g_ascend_errors
 #define ASCWAR g_ascend_warnings
@@ -230,8 +226,6 @@ extern FILE *g_ascend_information;
  *  them, be sure to change them to valid files.
  */
 
-
-
 #define	BYTESIZE   8
 #define	WORDSIZE   (sizeof(unsigned)*BYTESIZE)
 #ifndef TRUE
@@ -240,10 +234,10 @@ extern FILE *g_ascend_information;
 #ifndef FALSE
 #define	FALSE      0
 #endif
-typedef	char       *POINTER;       /* Generic pointer */
-typedef	char       boolean;        /* Boolean type */
-typedef	int        ALIGN;          /* Data alignment */
-/*
+typedef	char       *POINTER;       /**< Generic pointer. */
+typedef	char       boolean;        /**< Boolean type. */
+typedef	int        ALIGN;          /**< Data alignment. */
+/**
  *  real64:
  *  change this typedef and all the solver code should change
  *  precision automatically. The code is predicated on 64bit ieee math.
@@ -256,18 +250,18 @@ typedef	int        ALIGN;          /* Data alignment */
  *  equivalent to -i4 on most f77 compilers.
  */
 typedef double     real64;         /* a value */
-typedef	int        int32;          /* a row/col/var/rel index number */
+typedef	int        int32;          /**< a row/col/var/rel index number */
 typedef	unsigned   uint32;
 
 
-/*
+/**
  * MAXREFCOUNT should always be defined to be the maximum value
  * that the reference count attribute of reference count objects
  * can take. It is unreasonable that a refcount be 64 bits, so
  * it is 32.
  */
-#define REFCOUNT_T unsigned int 
 #define MAXREFCOUNT UINT_MAX
+#define REFCOUNT_T unsigned int
 
 /*
  *  A bit of header magic to address the question of NULL being implementation
@@ -308,9 +302,9 @@ typedef	unsigned   uint32;
 #error "Null not defined by the time ascConfig.h seen"
 #endif
 
-#ifndef UNREFERENCED_PARAMETER
+#ifndef UNUSED_PARAMETER
 /** Standardize the treatment of unreferenced function parameters. */
-#  define UNREFERENCED_PARAMETER(p) (void)(p)
+#  define UNUSED_PARAMETER(p) (void)(p)
 #endif
 
 /*
@@ -336,7 +330,7 @@ typedef	unsigned   uint32;
  *  build the Tk Console
  */
 #ifndef ASC_USE_TK_CONSOLE
-#define ASC_USE_TK_CONSOLE      
+#define ASC_USE_TK_CONSOLE
 #endif /* ASC_USE_TK_CONSOLE */
 
 /*
@@ -344,21 +338,29 @@ typedef	unsigned   uint32;
  * Unix programmers might also use the presence of these macros to figure
  * out which APIs are to be regarded as more stable.
  */
-#define DLEXPORT __declspec(dllexport)
-#define DLIMPORT __declspec(dllimport)
+#if defined(ASC_BUILD_DLL)
+#  define DLEXPORT __declspec(dllexport)
+#elif defined(ASC_BUILD_LIB)
+#  define DLEXPORT
+#else
+#  define DLEXPORT __declspec(dllimport)
+#endif
 
 #else /* not __WIN32__ isms */
 
 #define DLEXPORT
-#define DLIMPORT
 
 #endif /* __WIN32__ */
 
 #ifdef ASC_NO_TRAPS
 /* use signals by default, but disable with configure.
  */
+/** Don't use signals. */
 #define NO_SIGNAL_TRAPS 1
 #else
+/** Use signals.
+ * @todo Should this be an #undefine instead?  Usage in ascSignal.c and bintoken.c imples this.
+ */
 #define NO_SIGNAL_TRAPS 0
 #endif
 
@@ -418,10 +420,9 @@ typedef	unsigned   uint32;
 #endif  /* __WIN32__ */
 
 #ifdef __SUN_SUNOS__
-/* not properly headered in math.h or ieee*.h */
+/** not properly headered in math.h or ieee*.h */
 extern int finite(double);
 #endif
-
 
 #endif /* _ASCCONFIG_H */
 

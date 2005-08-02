@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  mtx2: Ascend Sparse Matrix Package
  *  by Benjamin Andrew Allan
  *  Derived from mtx by Karl Michael Westerberg
@@ -27,46 +27,52 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  *  COPYING is found in ../compiler.
  */
+
+/** @file
+ *  mtx2: Ascend Sparse Matrix Package.
+ *  <pre>
+ *  requires:   #include "utilities/ascConfig.h"
+ *  requires:   #include "mtx.h"
+ *  </pre>
+ */
+
 #ifndef __MTX_LINAL_H_SEEN__
 #define __MTX_LINAL_H_SEEN__
-/**< requires #include "mtx.h" */
 
-extern void         mtx_householder_transform_region(mtx_matrix_t,
-                                                     const real64,
-                                                     const mtx_sparse_t *,
-                                                     const mtx_region_t *,
-                                                     real64,
-                                                     boolean);
-/**< 
- ***
- -$-  mtx_householder_transform_region(mtx,coef,orgsp,reg,droptol,transpose);
- ***  mtx_matrix_t mtx;
- ***  real64 coef,droptol;
- ***  mtx_sparse_t *sp;
- ***  mtx_region_t *reg;
- ***  real64 droptol;
- ***  boolean transpose;
+extern void mtx_householder_transform_region(mtx_matrix_t mtx,
+                                             const real64 coef,
+                                             const mtx_sparse_t *orgsp,
+                                             const mtx_region_t *reg,
+                                             real64 droptol,
+                                             boolean transpose);
+/**<
+ -$-  <!--  mtx_householder_transform_region(mtx,coef,orgsp,reg,droptol,transpose); -->
+ ***  <!--  mtx_matrix_t mtx;                                          -->
+ ***  <!--  real64 coef,droptol;                                       -->
+ ***  <!--  mtx_sparse_t *sp;                                          -->
+ ***  <!--  mtx_region_t *reg;                                         -->
+ ***  <!--  real64 droptol;                                            -->
+ ***  <!--  boolean transpose;                                         -->
  ***
  ***  Does a sparse Householder transformation to the matrix A
- ***  denoted by region, resulting in Anew.
- ***  Mathematically: Anew = (I - coef * u dot Transpose[u]) dot A.
+ ***  denoted by region, resulting in Anew.<br><br>
+ ***  Mathematically: Anew = (I - coef * u dot Transpose[u]) dot A.<br><br>
  ***  Slightly faster in the case of coef = 1.0.
  ***  Returns immediately in the case of coef = 0.0.
  ***  Note following unusual assumptions, however:
- ***  1)The user has already cleared out the leading column in the
- ***    region and we will not be doing anything to it. This is usually
- ***    the case since that column is where u was derived from.
- ***  2)The sparse, sp, supplied by the user contains the nonzero
- ***    elements of u and is indexed by org row number.
- ***    Note that a soft zero in u will not hurt us: we skip it.
- ***  3)There are no elements in the regions to the left and the right
- ***    of the region.
+ ***   -# The user has already cleared out the leading column in the
+ ***      region and we will not be doing anything to it. This is usually
+ ***      the case since that column is where u was derived from.
+ ***   -# The sparse, sp, supplied by the user contains the nonzero
+ ***      elements of u and is indexed by org row number.
+ ***      Note that a soft zero in u will not hurt us: we skip it.
+ ***   -# There are no elements in the regions to the left and the right
+ ***      of the region.
  ***
  ***  mtx_ENTIRE_MATRIX is not a valid region for this function.
  ***
- ***  Current bugs (11/95)
- ***    ignores the transpose and droptol arguments.
- ***    does not remove soft zeroes created when 2 numbers add to zero.
+ ***  @bug (11/95) ignores the transpose and droptol arguments.
+ ***  @bug (11/95) does not remove soft zeroes created when 2 numbers add to zero.
  **/
 
-#endif /**< __MTX_LINAL_H_SEEN__ */
+#endif /* __MTX_LINAL_H_SEEN__ */

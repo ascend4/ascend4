@@ -26,17 +26,17 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
+ */
+
+/** @file
+ *  THE UTILITIES IN THIS HEADER ARE DEPRECATED.
+ *  <pre>
  *  This module defines the dimensionality checking and some other
  *  auxillaries for Ascend.
  *
- *
  *  This file is called old_utils because these utilities are outdated and
- *                      ^^^
  *  need to go away.  DO NOT MAKE ANY MORE REFERENCES TO THESE FUNCTIONS!
- */
-
-/*
+ *
  *  Contents:     ASCEND Utilities module
  *
  *  Authors:      Karl Westerberg
@@ -54,48 +54,50 @@
  *  Description:  This module provides supplementary functions which may
  *                prove useful by any client of the ASCEND system.
  *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "compiler/instance_enum.h"
+ *                #include "compiler/fractions.h"
+ *                #include "compiler/dimen.h"
+ *                #include "compiler/relation_type.h"
+ *  </pre>
  */
+
 #ifndef _OLD_UTILS_H
 #define _OLD_UTILS_H
 
-/* requires
- * #include "instance_enum.h"
- * #include "fractions.h"
- * #include "dimen.h"
-*/
-
-/*
+/**
  * functions that are soon to go away are surrounded with
  * #if (NOLONGERSUPPORTED == 0). These functions should not be used.
  */
 #define NOLONGERSUPPORTED 1
 
-extern char *asc_make_dimensions();
-/*
- *  dimens = asc_make_dimensions(dim)
- *  char *dimens;
- *  dim_type *dim;
+extern char *asc_make_dimensions(dim_type *dim);
+/**<
+ *  <!--  dimens = asc_make_dimensions(dim)                            -->
+ *  <!--  char *dimens;                                                -->
+ *  <!--  dim_type *dim;                                               -->
  *
  *  Prints the dimensions to a sufficiently long string which
  *  is created and returned.  The string should be destroyed when
  *  no longer in use.
+ *
+ * @deprecated No longer supported.
  */
 
 extern int g_check_dimensions_noisy;
-/*
- *  if 0, warnings are suppressed. if 1, warnings are given
- *  from asc_check_dimensions();
+/**<
+ *  If 0, warnings are suppressed. If 1, warnings are given
+ *  from asc_check_dimensions().
+ *
+ * @deprecated No longer supported.
  */
 
-extern int asc_check_dimensions();
-/*
- *  valid = asc_check_dimensions(rel,dimens);
- *  int valid;
- *  struct relation *rel;
- *  dim_type *dimens;
- *
- *  THIS ONLY WORKS ON e_token relations and later for e_opcode
- *  relations. rel is assumed to be valid when called. !!!
+extern int asc_check_dimensions(struct relation *rel, dim_type *dimens);
+/**<
+ *  <!--  valid = asc_check_dimensions(rel,dimens);                    -->
+ *  <!--  int valid;                                                   -->
+ *  <!--  struct relation *rel;                                        -->
+ *  <!--  dim_type *dimens;                                            -->
  *
  *  Scans a relation in postfix and collects all dimensional
  *  information by applying each token.  It returns a value of TRUE
@@ -105,6 +107,13 @@ extern int asc_check_dimensions();
  *  has been determined before.
  *  The address of an allocated dimension type is passed in so that
  *  the dimensions of the relation (or at least what the function
- *  thinks the dimensions ought to be) can be also obtained.
+ *  thinks the dimensions ought to be) can be also obtained.<br><br>
+ *
+ *
+ *  THIS ONLY WORKS ON e_token relations and later for e_opcode
+ *  relations. rel is assumed to be valid when called. !!!
+ * @deprecated No longer supported.
  */
-#endif /* _OLD_UTILS_H */
+
+#endif  /* _OLD_UTILS_H */
+

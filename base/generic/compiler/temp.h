@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Temporary Variable Module
  *  by Tom Epperly
  *  Created: 1/17/90
@@ -26,63 +26,64 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  Temporary Variable Module.
+ *  <pre>
  *  When #including temp.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
  *         #include "value_type.h"
+ *  </pre>
  */
-
-
 
 #ifndef __TEMP_H_SEEN__
 #define __TEMP_H_SEEN__
-/**< requires
-# #include"compiler.h"
-# #include"value_type.h"
-*/
 
-extern void AddTemp(symchar *);
-/**< 
- *  void AddTemp(name)
- *  const char *name;
+extern void AddTemp(symchar *name);
+/**<
+ *  <!--  void AddTemp(name)                                           -->
+ *  <!--  const char *name;                                            -->
  *  Make a temporary variable called name.  Assume that one doesn't
  *  already exist.
  */
 
-extern void SetTemp(symchar *,struct value_t);
+extern void SetTemp(symchar *name, struct value_t value);
 /**< 
- *  void SetTemp(name,value)
- *  const char *name;
- *  struct value_t value;
+ *  <!--  void SetTemp(name,value)                                     -->
+ *  <!--  const char *name;                                            -->
+ *  <!--  struct value_t value;                                        -->
+ *  Set the value of a temporary variable.
  */
 
-extern void RemoveTemp(symchar *);
+extern void RemoveTemp(symchar *name);
 /**< 
- *  void RemoveTemp(name)
- *  const char *name;
+ *  <!--  void RemoveTemp(name)                                        -->
+ *  <!--  const char *name;                                            -->
  *  Remove a temporary variable called name.
  */
 
-extern int TempExists(symchar *);
+extern int TempExists(symchar *name);
 /**< 
- *  int TempExists(name)
- *  const char *name;
+ *  <!--  int TempExists(name)                                         -->
+ *  <!--  const char *name;                                            -->
  *  Return true is a temporary variable of the given name exists.
  */
 
-extern struct value_t TempValue(symchar *);
+extern struct value_t TempValue(symchar *name);
 /**< 
- *  struct value_t TempValue(name)
- *  const char *name;
+ *  <!--  struct value_t TempValue(name)                               -->
+ *  <!--  const char *name;                                            -->
  *  Return the value of a temporary variable.
  */
 
-extern void DestroyTemporaryList();
+extern void DestroyTemporaryList(void);
 /**< 
- *  void DestroyTemporaryList()
+ *  <!--  void DestroyTemporaryList()                                  -->
  *  Free the memory for the temporary variable list.
  */
-#endif /**< __TEMP_H_SEEN__ */
+
+#endif  /* __TEMP_H_SEEN__ */
+

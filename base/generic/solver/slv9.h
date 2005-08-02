@@ -1,5 +1,5 @@
-/**< 
- *  Conditional modeling Solver
+/*
+ *  Conditional Modeling Solver
  *  by Vicente Rico-Ramirez
  *  Created: 04/97
  *  Version: $Revision: 1.4 $
@@ -23,25 +23,30 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
+ */
+
+/** @file
+ *  Conditional Modeling Solver (CMSlv) registration module.
+ *  <pre>
+ *  Contents:     CMSlv module (Conditional Modeling Solver)
  *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
  */
 
 #ifndef slv9__already_included
 #define slv9__already_included
 
-/**< 
- * requires #include "slv_client.h" 
- */
-
 typedef struct slv9_system_structure *slv9_system_t;
 
 int slv9_register(SlvFunctionsT *);
-/**< 
- * This is the function that tells the system about the CMSlv solver.
- * Our index is not necessarily going to be 9. That everything here is
- * named slv9* is just a historical result and a convenient way of
- * shutting up the linker.
+/**<
+ *  This is the function that tells the system about the CMSlv solver.
+ *  Our index is not necessarily going to be 9. That everything here is
+ *  named slv9* is just a historical result and a convenient way of
+ *  shutting up the linker.
  */
 
+#endif  /* slv9__already_included */
 
-#endif /**< slv9__already_included */

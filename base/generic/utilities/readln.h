@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Read line module
  *  by Karl Westerberg
  *  Created: 6/90
@@ -27,7 +27,9 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-/**< 
+/** @file
+ *  Read line module.
+ *  <pre>
  *  Contents:     Read line module
  *
  *  Authors:      Karl Westerberg
@@ -37,48 +39,70 @@
  *  Description:  When possible, use [a]readln instead of [a]freadln,
  *                since [a]readln will provide a better interface to the
  *                terminal.
- */
-/**< requires
-# #include "ascmalloc.h"
-*/
-
-extern int readln();
-extern int freadln(); 
-/**< 
- *  length = readln(s,max)
- *  length = freadln(s,max,input)
- *  int length;
- *  char *s;
- *  int max;
- *  FILE *input;
  *
- *  Reads a line from standard or specified input, given a target string
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "ascMalloc.h"
+ *  </pre>
+ */
+
+#ifndef _READLN_H
+#define _READLN_H
+
+extern int readln(char *s, int max);
+/**<
+ *  Reads a line from standard input, given a target string
+ *  and capacity.  If line read in is too long, the remainder of the line
+ *  is bypassed.  Number returned is the amount read in, excluding newline
+ *  (which is removed from s), or -1 if EOF was encountered.
+ */
+extern int freadln(char *s, int max, FILE *input);
+/**<
+ *  <!--  length = readln(s,max)                                       -->
+ *  <!--  length = freadln(s,max,input)                                -->
+ *  <!--  int length;                                                  -->
+ *  <!--  char *s;                                                     -->
+ *  <!--  int max;                                                     -->
+ *  <!--  FILE *input;                                                 -->
+ *
+ *  Reads a line from specified input, given a target string
  *  and capacity.  If line read in is too long, the remainder of the line
  *  is bypassed.  Number returned is the amount read in, excluding newline
  *  (which is removed from s), or -1 if EOF was encountered.
  */
 
-extern char *areadln();
-extern char *afreadln();
-/**< 
- *  str = areadln()
- *  str = afreadln()
+extern char *areadln(void);
+/**<
+ *  Reads a line from standard input and returns a
+ *  sufficiently large allocated string containing all that was read.
+ *  NULL is returned if EOF is encountered or ascmalloc() fails to create
+ *  string.  String should be destroyed when no longer in use.
+ */
+extern char *afreadln(FILE *fp);
+/**<
+ *  <!--  str = areadln()                                              -->
+ *  <!--  str = afreadln(fp)                                           -->
  *
- *  Reads a line from standard or specified input and returns a
+ *  Reads a line from specified input and returns a
  *  sufficiently large allocated string containing all that was read.
  *  NULL is returned if EOF is encountered or ascmalloc() fails to create
  *  string.  String should be destroyed when no longer in use.
  */
 
-extern long readlong();
-extern double readdouble();
-/**< 
- *  number = readlong(number_default)
- *  value = readdouble(value_default)
- *  long number, number_default;
- *  double value, value_default;
- *
- *  Reads in a line from standard input and extracts a long integer or
- *  double from that line.  If neither is found, then the default is
- *  returned.  
+extern long readlong(long number_default);
+/**<
+ *  Reads in a line from standard input and extracts a long integer 
+ *  from that line.  If none is found, then the default is returned.
  */
+extern double readdouble(double value_default);
+/**<
+ *  <!--  number = readlong(number_default)                            -->
+ *  <!--  value = readdouble(value_default)                            -->
+ *  <!--  long number, number_default;                                 -->
+ *  <!--  double value, value_default;                                 -->
+ *
+ *  Reads in a line from standard input and extracts a double from 
+ *  that line.  If none is found, then the default is returned.
+ */
+
+#endif  /* _READLN_H */
+

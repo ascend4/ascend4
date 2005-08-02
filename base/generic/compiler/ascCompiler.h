@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Basic Initializations for Ascend
  *  by Ben Allan
  *  Version: $Revision: 1.2 $
@@ -29,26 +29,39 @@
  *  This module initializes the fundamental data structures used by the rest of
  *  Ascend and pulls in system headers. Largely this means memory management.
  */
+
+/** @file
+ *  Basic Initializations for Ascend
+ *  <pre>
+ *  When #including ascCompiler.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef __ASCCOMPILER_H_SEEN__
 #define __ASCCOMPILER_H_SEEN__
 
-extern int Asc_CompilerInit(int);
-/**< err = Asc_CompilerInit(simplify_relations);
+extern int Asc_CompilerInit(int simplify_relations);
+/**<
+ *  Initialize any resources used by the ASCEND compiler.
  *
- * If this function returns nonzero, ascend cannot run and a ton
- * of memory might be leaked.
+ *  If this function returns nonzero, ASCEND cannot run and a ton
+ *  of memory might be leaked.
  *
- * The value of simplify_relations sets the initial value of a flag
- * which tells the compiler to simplify compiled equations or not.
- * It has no effect on the success or failure of the call.
+ *  The value of simplify_relations sets the initial value of a flag
+ *  which tells the compiler to simplify compiled equations or not.
+ *  It has no effect on the success or failure of the call.
  *
- * Bugs: at present it needs to more aggressively check the return
- * codes from the functions this calls. currently returns 0 regardless.
+ *  @bug At present it needs to more aggressively check the return codes
+ *       from the functions this calls. Currently returns 0 regardless.
  */
 
 extern void Asc_CompilerDestroy(void);
-/**< This function should not be called while there are any clients
- * with pointers to any compiler structures, including gl_lists.
+/**<
+ *  Clean up any resources used by the compiler.
+ *  This function should not be called while there are any clients
+ *  with pointers to any compiler structures, including gl_lists.
  */
 
-#endif /**< __ASCCOMPILER_H_SEEN__*/
+#endif  /* __ASCCOMPILER_H_SEEN__*/
+

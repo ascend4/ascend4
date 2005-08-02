@@ -1,4 +1,4 @@
-/**< 
+/*
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -29,28 +29,34 @@
  *  COPYING is found in ../compiler.
  */
 
-/***************************************************************************
- ***  Contents:     QRSlv module
- ***
- ***  Authors:      Ben Allan
- ***               
- ***  Dates:        02/95 - original version
- ***                Test bed version of Slv for linear solver changes
- ***                and eventually Slv kernal<-->ASCEND changes.
- ***
- ***************************************************************************/
+/** @file
+ *  QRSlv solver registration module.
+ *  <pre>
+ *  Contents:     QRSlv module
+ *
+ *  Authors:      Ben Allan
+ *
+ *  Dates:        02/95 - original version
+ *                Test bed version of Slv for linear solver changes
+ *                and eventually Slv kernal<-->ASCEND changes.
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
+ */
+
 #ifndef slv3__already_included
 #define slv3__already_included
-/**< requires #include "slv_client.h" */
 
 typedef struct slv3_system_structure *slv3_system_t;
 
-int slv3_register(SlvFunctionsT *);
-/**********************************************************************\
-  This is the function that tells the system about the QRSlv solver.
-  Our index is not necessarily going to be 3. That everything here is
-  named slv3* is just a historical result and a convenient way of
-  shutting up the linker.
-\**********************************************************************/
+int slv3_register(SlvFunctionsT *f);
+/**<
+ *  This is the function that tells the system about the QRSlv solver.
+ *  Our index is not necessarily going to be 3. That everything here is
+ *  named slv3* is just a historical result and a convenient way of
+ *  shutting up the linker.
+ */
 
-#endif
+#endif  /* slv3__already_included */
+

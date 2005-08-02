@@ -27,64 +27,65 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Relation IO Routines
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "interface/BrowserRel_io.h"
+ *  </pre>
+ */
+
 #ifndef relation_io_module
 #define relation_io_module
 
-/*
- *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "interface/BrowserRel_io.h"
- */
-
 extern int Asc_BrowWriteRelListCmd(ClientData cdata,Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
-/*
- *  Registered as: bgetrels
+/**<
  *  Write the relation in infix to the interpreter. This gracefully
  *  handles all the types of relations now supported in ASCEND.
  *  If conditional relations exist,It separates the relation list
  *  in two lists. The list of  normal
  *  relations and the list of conditional relations.
  *  Conditional relations do not have to be solved, they
- *  represent boundaries in conditional modeling.
+ *  represent boundaries in conditional modeling.<br><br>
+ *
+ *  Registered as: bgetrels
  */
 
 extern int Asc_BrowWriteCondRelListCmd(ClientData cdata,Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);
-/*
- *  Registered as: bgetcondrels
+/**<
  *  Write the list of conditional relations in infix to the interpreter.
  *  This gracefully handles all the types of relations now supported in
- *  ASCEND.
+ *  ASCEND.<br><br>
+ *
+ *  Registered as: bgetcondrels
  */
 
 extern int Asc_BrowWriteRelListPostfixCmd(ClientData cdata,Tcl_Interp *interp,
                                           int argc, CONST84 char *argv[]);
-/*
- *  Registered as: bgetrelspf.
+/**<
  *  Writes to the interpreter rather than to a file.
  *  As I can see Kirk did not finish this implementation for all the types
- *  of relations.
+ *  of relations.<br><br>
+ *
+ *  Registered as: bgetrelspf.
  */
 
 extern int Asc_BrowWriteRelsForAtomCmd(ClientData cdata,Tcl_Interp *interp,
                                        int argc, CONST84 char *argv[]);
-/*
- *  Registered as: __brow_relsforatom ?cur?search.
- *
+/**<
  *  Will return a proper Tcl list of all relations associated with
  *  the given atom. Works on the current or the search instance.
  *  Will return TCL_ERROR if the instance is NULL, or the atom is not
  *  a REAL_ATOM_INST. This will be later extended to deal with boolean
  *  atoms. If some of the relations are conditionals, this information
- *  is also provided.
+ *  is also provided.<br><br>
+ *
+ *  Registered as: __brow_relsforatom ?cur?search.
  */
 
-
-#endif /* module loaded */
-
-
-
-
-
+#endif  /* relation_io_module loaded */
 

@@ -1,9 +1,9 @@
-
-/*********************************************************************\
+/*===================================================================*\
  THIS HEADER IS CRAP AND SHOULD BE FIXED UP PROPERLY
  			Created: May 16, 1996
 			Version: $Revision: 1.1 $
 			Date last modified: $Date: 1996/05/17 16:56:32 $
+
 This file is part of the Ascend Language Interpreter.
 
 Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
@@ -21,24 +21,44 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 the program; if not, write to the Free Software Foundation, Inc., 675
 Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
-\*********************************************************************/
+\*===================================================================*/
 
- extern int do_solve_eval(struct Slv_Interp *,
-		  struct Instance *,
-		  struct gl_list_t *,
-		  unsigned long);
-     
-extern int do_finite_diff_eval(struct Slv_Interp *,
-			 struct Instance *,
-			 struct gl_list_t *,
-			 unsigned long);
-     
+/** @file
+ *  Sensitivity analysis routines.
+ *  <pre>
+ *  When #including sensitivity.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler/instance_enum.h"
+ *         #include "compiler/compiler.h"
+ *         #include "general/list.h"
+ *         #include "compiler/extfunc.h"
+ *  </pre>
+ *  @todo Document sensitivity.h functions.
+ *  @todo Do we really need 2 files called [Ss]ensitivity.[ch]?  Other one is in tcltk98.
+ */
+
+#ifndef __SENSITIVITY_H_SEEN__
+#define __SENSITIVITY_H_SEEN__
+
+extern int do_solve_eval(struct Slv_Interp *slv_interp,
+                         struct Instance *i,
+                         struct gl_list_t *arglist,
+                         unsigned long whichvar);
+
+extern int do_finite_diff_eval(struct Slv_Interp *slv_interp,
+                               struct Instance *i,
+                               struct gl_list_t *arglist,
+                               unsigned long whichvar);
+
 extern char sensitivity_help[];
 
-extern int do_sensitivity_eval_all(struct Slv_Interp *,
-			    struct Instance *,
-			    struct gl_list_t *);
-     
-extern int do_sensitivity_eval(struct Slv_Interp *,
-			 struct Instance *,
-			 struct gl_list_t *);
+extern int do_sensitivity_eval_all(struct Slv_Interp *slv_interp,
+                                   struct Instance *i,
+                                   struct gl_list_t *arglist);
+
+extern int do_sensitivity_eval(struct Slv_Interp *slv_interp,
+                               struct Instance *i,
+                               struct gl_list_t *arglist);
+
+#endif  /* __SENSITIVITY_H_SEEN__ */
+

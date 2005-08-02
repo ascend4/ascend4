@@ -27,70 +27,71 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Browser When IO Routines
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "BrowWhen_io.h"
+ *  </pre>
+ */
+
 #ifndef when_io_module
 #define when_io_module
 
-/*
- *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "BrowWhen_io.h"
- */
-
-
 extern int Asc_BrowWriteWhenListCmd(ClientData cdata, Tcl_Interp *interp,
                                     int argc, CONST84 char *argv[]);
-/*
- *  Registered as: bgetwhens  ?cur?search? save
+/**<
  *  Write a list of when statements to the Tcl interpreter. This option
- *  is active when the current instance is a Model or a WHEN.
+ *  is active when the current instance is a Model or a WHEN.<br><br>
  *
  *  If the Instance is a Model, both
  *  the list of WHENs inside the model    and
  *  the list of WHENs which include the Model in some CASE
  *  will be send to the Tcl interpreter, differentiating each of the two
- *  list.
+ *  list.<br><br>
  *
  *  If the Instance is a WHEN, both
  *  the WHEN statement by itself   and
  *  the WHEN statements which include this WHEN recursively
- *  will be send to the Tcl interpreteer.
+ *  will be send to the Tcl interpreteer.<br><br>
  *
  *  If the Instance is an array of WHENs, only the list of WHENs will be
- *  provided (just by simplicity) and send to the Tcl interpreter.
+ *  provided (just by simplicity) and send to the Tcl interpreter.<br><br>
+ *
+ *  Registered as: bgetwhens  ?cur?search? save
  */
-
-
 
 extern int Asc_BrowWriteWhensForInstanceCmd(ClientData cdata,
                                             Tcl_Interp *interp,
                                             int argc,
                                             CONST84 char *argv[]);
-/*
- *  Registered as: __brow_whensforinstance ?cur?search.
- *
+/**<
  *  Will return a proper Tcl list of all whens associated
  *  with the given instance. Works on the current or the search instance.
  *  Will return TCL_ERROR if the instance is NULL, or the atom is not
- *  appropriate.
+ *  appropriate.<br><br>
  *
  *  By "associated" I mean:
  *
- *  1) If the instance is integer, symbol or boolean, this instance
- *  may be part of the list of variables of one/several WHEN statements.
- *  If this is the case, the list of "associated" WHENs will be send to
- *  the Tcl interpreter.
+ *   -# If the instance is integer, symbol or boolean, this instance
+ *      may be part of the list of variables of one/several WHEN statements.
+ *      If this is the case, the list of "associated" WHENs will be send to
+ *      the Tcl interpreter.
  *
- *  2) If the instance is a relation, the list of WHENs which include
- *  that relation in some CASE, will be send to the interpreter.
- *  When the instance is a Model or a WHEN, the previous function
- *  Asc_BrowWriteWhenListCmd is used instead.
+ *   -# If the instance is a relation, the list of WHENs which include
+ *      that relation in some CASE, will be send to the interpreter.
+ *      When the instance is a Model or a WHEN, the previous function
+ *      Asc_BrowWriteWhenListCmd is used instead.
  *
  *  IMPORTANT: For the case of relations, this function works if the
  *  WHEN include the equation explicitly. It will not work if the
  *  WHEN inlcude the equation implicitly by including the model which
- *  contains the relation.
+ *  contains the relation.<br><br>
+ *
+ *  Registered as: __brow_whensforinstance ?cur?search.
  */
 
-#endif /* module loaded */
-
+#endif  /* when_io_module loaded */
 

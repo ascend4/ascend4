@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -27,42 +27,48 @@
  *  COPYING.
  */
 
-#ifndef __COPYINST_H_SEEN__
-#define __COPYINST_H_SEEN__
-/**< 
+/** @file
+ *  Ascend Instance Tree Type Definitions.
+ *  <pre>
  *  When #including copyinst.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "child.h"
  *         #include "type_desc.h"
+ *  </pre>
  */
 
-
+#ifndef __COPYINST_H_SEEN__
+#define __COPYINST_H_SEEN__
 
 enum Copy_enum {
-  c_none, c_reference, c_tomodify
+  c_none, 
+  c_reference, 
+  c_tomodify
 };
 
-extern void CheckChildCopies(unsigned long int, struct Instance **);
-/**< 
- * CheckChildCopies(num,clist);
+extern void CheckChildCopies(unsigned long int num, struct Instance **clist);
+/**<
+ * <!--  CheckChildCopies(num,clist);                                  -->
  * Fixes up the num subatomic children sets copied into clist.
  */
 
-extern void RedoChildPointers(unsigned long int, struct Instance *,
-                              struct Instance **, CONST struct Instance *,
-                              struct Instance * CONST *);
-/**< 
- * RedoChildPointers(num,newparent,newchildptrs, oldparent,oldchildptrs);
+extern void RedoChildPointers(unsigned long int num, 
+                              struct Instance *newparent,
+                              struct Instance **newchildptrs,
+                              CONST struct Instance *oldparent,
+                              struct Instance * CONST *oldchildptrs);
+/**<
+ * <!--  RedoChildPointers(num,newparent,newchildptrs, oldparent,oldchildptrs); -->
  * Fix up the num subatomic child pointers of newparent.
  */
 
-extern struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription*);
-/**< 
- *  struct Instance *ShortCutMakeUniversalInstance(type);
- *  struct TypeDescription *type;
- *
+extern struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription *type);
+/**<
+ *  <!--  struct Instance *ShortCutMakeUniversalInstance(type);        -->
+ *  <!--  struct TypeDescription *type;                                -->
  *  Checks if the given type is universal and if a universal instance
  *  exists. If one does, it will be returned, otherwise this returns NULL.
  *  If the a non-NULL instance is returned, it is the responsibility of
@@ -73,56 +79,59 @@ extern struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription*);
  *  will now *always* create memory.
  */
 
-extern void CollectNodes(struct Instance *,struct gl_list_t *);
-/**< 
- *  CollectNodes(i,l);
+extern void CollectNodes(struct Instance *i, struct gl_list_t *l);
+/**<
+ *  <!--  CollectNodes(i,l);                                           -->
  *  Appends i to l, and sets the tmpnum of i to be the length of l
  *  after i was appended. If i does not have a tmpnum (ATOM children)
  *  this function just returns.
  */
 
-extern struct Instance *ShortCutProtoInstance(struct TypeDescription *);
-/**< 
- *  struct Instance *ShortCutProtoInstance(type);
- *  struct TypeDescription *type;
- *
+extern struct Instance *ShortCutProtoInstance(struct TypeDescription *type);
+/**<
+ *  <!--  struct Instance *ShortCutProtoInstance(type);                -->
+ *  <!--  struct TypeDescription *type;                                -->
  *  Checks if a prototype exists for the given type definition.
  *  If one does, a copy of a prototype is returned.
  *  If the a non NULL instance is returned, it is the responsibility of
  *  the caller to ensure that the instance *knows* about the caller.
- *  See AddParent for example.
+ *  See AddParent() for example.<br><br>
+ *
  *  Historical note: This function has been created such that it may be
  *  called separately from CreateInstance. If it were copied for example
  *  then there is no need to redo default statements etc. And so a caller
  *  can treat a copied instance specially.
  */
 
-extern struct Instance *CopyInstance(CONST struct Instance *);
-/**< 
- *  struct Instance *CopyInstance(i)
- *  const struct Instance *i;
+extern struct Instance *CopyInstance(CONST struct Instance *i);
+/**<
+ *  <!--  struct Instance *CopyInstance(i)                             -->
+ *  <!--  const struct Instance *i;                                    -->
+ *  This will make a copy of instance i.
  *
+ *  This routine is especially good for copying atomic instances, 
+ *  since it is faster to copy an atomic instance rather than 
+ *  instantiating it.
+ *  <pre>
  *  1995
  *  This will make a copy of instance i.  i may not be a fundamental
- *  atomic instance.  At the current time, there are the following additional
- *  restrictions on instance i.
+ *  atomic instance.  At the current time, there are the following 
+ *  additional restrictions on instance i.
  *
- *  1) "i" may not contain instances of universal types
- *  2) all instances in the instance tree "i" must have parent's
- *     only in the instance tree "i".
- *  3) instances in the instance tree "i" may not be ARE_ALIKE'd
- *     to instances outside of instance tree "i".
- *  4) The tree must not have any pending statements, as pendings
- *     and bitlists are basically ignored.
+ *    1) "i" may not contain instances of universal types
+ *    2) all instances in the instance tree "i" must have parent's
+ *       only in the instance tree "i".
+ *    3) instances in the instance tree "i" may not be ARE_ALIKE'd
+ *       to instances outside of instance tree "i".
+ *    4) The tree must not have any pending statements, as pendings
+ *       and bitlists are basically ignored.
  *
- *  1997 (as left by abbott): 
- *  1) is no longer valid,
- *  2&3) only partially correct,
- *  4) is more important than ever. --baa
- *
- *  This routine is especially good for copying atomic instances, since it is
- *  faster to copy an atomic instance rather than instantiating it.
+ *  1997 (as left by abbott):
+ *    1) is no longer valid,
+ *    2&3) only partially correct,
+ *    4) is more important than ever. --baa
+ *  </pre>
  */
 
-#endif
-/**< __COPYINST_H_SEEN__ */
+#endif  /* __COPYINST_H_SEEN__ */
+

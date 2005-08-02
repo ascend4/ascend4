@@ -1,4 +1,4 @@
-/**< 
+/*
  *  User Packages
  *  by Ben Allan & Kirk Abbott
  *  Created: July 4, 1994
@@ -28,45 +28,42 @@
  *
  */
 
-/**< 
+/** @file
+ *  User package management.
+ *  <pre>
  *  When #including packages.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
  *         #include "instance_enum.h"
  *         #include "list.h"
+ *         #include "ascMalloc.h"
  *         #include "extfunc.h" (going away soon)
+ *         #include "type_desc.h" (going away soon)
+ *         #include "module.h" (going away soon)
+ *         #include "library.h" (going away soon)
+ *         #include "relation.h" (going away soon)
+ *  </pre>
+ *  Users of this header should not have to include anything
+ *  except instance_enum.h and list.h and whatever headers those
+ *  may require.
+ *
+ *  @todo Comments about header dependencies are contradictory.
  */
 
 #ifndef __PACKAGES_H_SEEN__
 #define __PACKAGES_H_SEEN__
 
-/**< requires
-# #include<stdio.h>
-# #include"compiler.h"
-# #include"ascmalloc.h"
-# #include"list.h"
-# #include"instance_enum.h"
-# #include"extfunc.h" (going away soon)
-# #include"type_desc.h" (going away soon)
-# #include"module.h" (going away soon)
-# #include"library.h" (going away soon)
-# #include"relation.h" (going away soon)
-*/
-
-/**< 
- * Users of this header should not have to include anything
- * except instance_enum.h and list.h and whatever headers those
- * may require.
- */
 #ifndef _ASCCLIENTDATA
 #   ifdef __STDC__
     typedef void *ascClientData;
 #   else
     typedef int *ascClientData;
-#   endif /**< __STDC__ */
+#   endif /* __STDC__ */
 #define _ASCCLIENTDATA
 #endif
 
-/**< these are for external clients to return to us when they have
+/** these are for external clients to return to us when they have
  * an error or other procedural message to report about flow of
  * control.
  */
@@ -80,13 +77,13 @@ typedef int (Asc_MethodProc) (ascClientData, CONST char *,
                               struct Instance *, struct gl_list_t *);
 
 typedef int (Asc_MethodDelete) (ascClientData, CONST char *, Asc_MethodProc);
-
-/**< Clients should use the operators below to access this enum and
+
+/** Clients should use the operators below to access this enum and
  * associated structure.
  */
 enum argItemEnum {
-  argError,     /**<     should never be seen by client */
-  /**< the first 3 characters of the comment lines are the
+  argError,         /**< should never be seen by client */
+  /* the first 3 characters of the comment lines are the
    * equivalent of C conversion characters in printf when
    * specifying the arguments desired in the parsestring.
    */
@@ -139,9 +136,9 @@ enum argItemEnum {
   argProcName,      /**<  P  maps name of a method/call to a CONST char * */
   argExpr,          /**<  V  maps a reference to an ASCEND Expr into lval */
   argSLit           /**<  Q  a C string literal is expected. */
-  /**< probably need to add type Q for double quoted text */
+  /* probably need to add type Q for double quoted text */
 };
-
+
 struct argItem {
   enum argItemEnum kind;
   int depth;    /**< For Array and list arguments, sets the number of
@@ -149,37 +146,37 @@ struct argItem {
                  * Internal use only.
                  */
   union {
-    double dval;		/**< double value */
-    long lival;			/**< long int value */
-    double dptr;		/**< double pointer */
-    long liptr;			/**< long int pointer */
-    int ival;			/**< int value */
-    int bval;			/**< boolean value */
-    CONST char *cval;		/**< const char * from an ascend set/symbol */
-    CONST char *nval;		/**< string form of the ascend name given */
-    CONST char *fval;		/**< file id string */
+    double dval;        /**< double value */
+    long lival;         /**< long int value */
+    double dptr;        /**< double pointer */
+    long liptr;         /**< long int pointer */
+    int ival;           /**< int value */
+    int bval;           /**< boolean value */
+    CONST char *cval;   /**< const char * from an ascend set/symbol */
+    CONST char *nval;   /**< string form of the ascend name given */
+    CONST char *fval;   /**< file id string */
     CONST struct gl_list_t *lval; /**< list according to enum */
-    struct Instance *i;		/**< instance according to enum */
-  } u;
-  short args;	/**< 0 usually. 1 if item is ... at the end. Internal use. */
-  short exact;	/**< 0 usually. 1 if type specifier to be match. 2 if exactly */
-  symchar *typename; /**< typeidentifier from the symbol table */
+    struct Instance *i; /**< instance according to enum */
+  } u;                  /**< union of possible values */
+  short args;           /**< 0 usually. 1 if item is ... at the end. Internal use. */
+  short exact;          /**< 0 usually. 1 if type specifier to be match. 2 if exactly */
+  symchar *typename;    /**< typeidentifier from the symbol table */
 };
 
-#define Asc_argItemKind(aip)		 ((aip)->kind)
-#define Asc_argItemDepth(aip)		 ((aip)->depth)
-#define Asc_argItemInstance(aip)	 ((aip)->u.i)
-#define Asc_argItemDoublePtr(aip)	 ((aip)->u.dptr)
-#define Asc_argItemLongPtr(aip)		 ((aip)->u.liptr)
-#define Asc_argItemDouble(aip)		 ((aip)->u.dval)
-#define Asc_argItemLongVal(aip)		 ((aip)->u.lival)
-#define Asc_argItemIntVal(aip)		 ((aip)->u.ival)
-#define Asc_argItemBoolVal(aip)		 ((aip)->u.bval)
-#define Asc_argItemStringVal(aip)	 ((aip)->u.cval)
-#define Asc_argItemNameString(aip)	 ((aip)->u.nval)
-#define Asc_argItemTypeName(aip)	 ((aip)->u.nval)
-#define Asc_argItemFileString(aip)	 ((aip)->u.fval)
-#define Asc_argItemListValue(aip)	 ((aip)->u.lval)
+#define Asc_argItemKind(aip)        ((aip)->kind)
+#define Asc_argItemDepth(aip)       ((aip)->depth)
+#define Asc_argItemInstance(aip)    ((aip)->u.i)
+#define Asc_argItemDoublePtr(aip)   ((aip)->u.dptr)
+#define Asc_argItemLongPtr(aip)     ((aip)->u.liptr)
+#define Asc_argItemDouble(aip)      ((aip)->u.dval)
+#define Asc_argItemLongVal(aip)     ((aip)->u.lival)
+#define Asc_argItemIntVal(aip)      ((aip)->u.ival)
+#define Asc_argItemBoolVal(aip)     ((aip)->u.bval)
+#define Asc_argItemStringVal(aip)   ((aip)->u.cval)
+#define Asc_argItemNameString(aip)  ((aip)->u.nval)
+#define Asc_argItemTypeName(aip)    ((aip)->u.nval)
+#define Asc_argItemFileString(aip)  ((aip)->u.fval)
+#define Asc_argItemListValue(aip)   ((aip)->u.lval)
 /**< 
  * All of the data in or referenced directly by an argItem
  * should not be changed or destroyed by the user proc.
@@ -187,25 +184,26 @@ struct argItem {
  * or argItemLongPtr items may be changed.
  */
 
-
-extern int Asc_AddUserMethod(CONST char *,	/**< name */
-                            Asc_MethodProc,	/**< proc (fcn ptr) */
-                            enum inst_t, 	/**< selfKind */
-                            CONST char *,	/**< parseString */
-                            ascClientData, 	/**< your private data */
-                            Asc_MethodDelete,	/**< deleteProc */
-                            CONST char *, 	/**< description */
-                            CONST char *);	/**< details */
-/**< 
- * err = Asc_AddUserMethod(methodname,
- *                         proc, 
- *                         selfKind,
- *                         parseString,
- *                         cData,
- *                         deleteProc,
- *                         description,
- *                         details);
+extern int Asc_AddUserMethod(CONST char *methodname,
+                             Asc_MethodProc proc,
+                             enum inst_t selfKind,
+                             CONST char *parseString,
+                             ascClientData cData,
+                             Asc_MethodDelete deleteProc,
+                             CONST char *description,
+                             CONST char *details);
+/**<
+ * <!--  err = Asc_AddUserMethod(methodname,                           -->
+ * <!--                          proc,                                 -->
+ * <!--                          selfKind,                             -->
+ * <!--                          parseString,                          -->
+ * <!--                          cData,                                -->
+ * <!--                          deleteProc,                           -->
+ * <!--                          description,                          -->
+ * <!--                          details);                             -->
  *
+ * Add a user method.
+ * <pre>
  * methodname is the name to be used in the ASCEND method.
  * proc is the function pointer that will be called.
  * selfKind is the kind of instance that this method must be
@@ -232,7 +230,7 @@ extern int Asc_AddUserMethod(CONST char *,	/**< name */
  * conform to the parse string.
  *
  * Each directive is of the form WXYZ where:
- * W is either the ... or empty 
+ * W is either the ... or empty
  * X is A,L,p or a positive integer decimal number or empty for Instance Y,
  *   or X is O, N, or U for file Y.
  * Y is F, s,ss,d,ld,b,f,g,n,N,T,i,R,B,S,SS,I, or M.
@@ -245,7 +243,7 @@ extern int Asc_AddUserMethod(CONST char *,	/**< name */
  *     is impossible to satisfy because the second slot is always empty
  *     as the first slot eats up all XYZ arguments.
  * X:  A indicates to expect an array of the kind required by the remaining
- *       directive YZ. Applies only to Instance flavors of Y.
+ *      directive YZ. Applies only to Instance flavors of Y.
  *     L indicates to expect a list cooked up from the elements of an array.
  *       The elements of the array must conform to YZ.
  *     O,N,U apply only when Y = "F"
@@ -257,7 +255,7 @@ extern int Asc_AddUserMethod(CONST char *,	/**< name */
  *       This modifier does not work for constant or other types:
  *       anyone wanting to mess with other types must use our detailed headers.
  *       All double values are stored in SI units.
- *     <decimal number> indicates both the minium & maximum string length 
+ *     <decimal number> indicates both the minium & maximum string length
  *       allowed for arguments that are normally C strings (s,ss,n,N,Q,T).
  *       C strings will be padded to this length with trailing blanks
  *       This is for FORTRAN compatibility. Strings too long are invalid
@@ -290,10 +288,8 @@ extern int Asc_AddUserMethod(CONST char *,	/**< name */
  *     +typeidentifier further restricts any instances passing WXY
  *       to be of the type 'typeidentifier' or a refinement of that type.
  *     .intdepth restricts array instances to have intdepth subscripts.
- */
-
-/**< 
- * E.g.
+ *
+ * Example:
  * int ClearWrapper(ascClientData cdata, CONST char *calledAs,
  *                  struct Instance *root, struct gl_list_t *argList)
  * {
@@ -325,11 +321,12 @@ extern int Asc_AddUserMethod(CONST char *,	/**< name */
  *   CALL ClearAllSolverVar(foo,bar); (* ClearWrapper can clear several insts*)
  * ClearWrapper requires no state information saved between calls, so
  * cData and deleteProc are NULL.
+ * </pre>
  */
-
-extern int Asc_DeleteUserMethod(char *);
-/**< 
- * err = Asc_DeleteUserMethod(mname);
+
+extern int Asc_DeleteUserMethod(char *mname);
+/**<
+ * <!--  err = Asc_DeleteUserMethod(mname);                            -->
  * Finds mname among the user defined methods and undefines it.
  * normally returns 0.
  * Call the Asc_MethodDelete function specifed when adding the method.
@@ -342,40 +339,41 @@ extern int Asc_DeleteUserMethod(char *);
  * be unloaded.
  */
 
-extern CONST char *Asc_UserMethodDescription(char *);
-/**< 
- * string = Asc_UserMethodDescription(mname);
- * looks up the one-liner for mname.
+extern CONST char *Asc_UserMethodDescription(char *mname);
+/**<
+ * <!--  string = Asc_UserMethodDescription(mname);                    -->
+ * Looks up the one-liner for mname.
  * Returns NULL if mname is unknown.
  */
 
-extern CONST char *Asc_UserMethodDetails(char *);
+extern CONST char *Asc_UserMethodDetails(char *mname);
 /**< 
- * string = Asc_UserMethodDetails(mname);
- * looks up the detail information for mname.
+ * <!--  string = Asc_UserMethodDetails(mname);                        -->
+ * Looks up the detail information for mname.
  * Returns NULL if mname is unknown.
  */
 
 extern struct gl_list_t *Asc_UserMethodsDefined(void);
-/**< mlist = Asc_UserMethodsDefined();
- * returns a list of CONST char * pointers to names registered.
+/**< 
+ * <!--  mlist = Asc_UserMethodsDefined();                             -->
+ * Returns a list of CONST char * pointers to names registered.
  * The caller should gl_destroy(mlist) when done with looking at it.
  */
 
-extern int Asc_UserMethodArguments(FILE *, char *);
-/**< Asc_UserMethodArguments(fp,mname);
+extern int Asc_UserMethodArguments(FILE *fp, char *mname);
+/**< 
+ * <!--  Asc_UserMethodArguments(fp,mname);                            -->
  * Writes a synopsis of the arguments required, based on information
  * derived from the parse-string to fp.
  */
 
-
-/*********************************************************************/
-/**< 
+/* ********************************************************************/
+/*
  * This whole header is junk below here. Temporarily, it is functioning
-extern * junk. We need to reimplement some and scrap the rest.
+ * extern * junk. We need to reimplement some and scrap the rest.
  */
-/*********************************************************************/
-/**< 
+/* ********************************************************************/
+/*
  *  This file implements an interface to external packages. These
  *  external packages may be invoked from the procedural section, say
  *  for doing external calculations, querying a database, and writing/
@@ -483,25 +481,22 @@ extern * junk. We need to reimplement some and scrap the rest.
  *  so as to allow ease of interfacing to existing standalone packages.
  */
 
-
 extern void Init_Slv_Interp(struct Slv_Interp *slv_interp);
-/**< 
+/**<
  *  Gets the interpreter back to a 'clean' state.
  *  The default settings are guaranteed to be as follows:
- *  nodestamp = 0;
- *  status = calc_all_ok;
- *  first_call  = (unsigned)0;
- *  last_call   = (unsigned)0;
- *  check_args = (unsigned)0;
- *  recalculate = (unsigned)0;
- *  deriv_eval = (unsigned)0;
- *  func_eval = (unsigned)0;
+ *    - nodestamp = 0;
+ *    - status = calc_all_ok;
+ *    - first_call  = (unsigned)0;
+ *    - last_call   = (unsigned)0;
+ *    - check_args = (unsigned)0;
+ *    - recalculate = (unsigned)0;
+ *    - deriv_eval = (unsigned)0;
+ *    - func_eval = (unsigned)0;
  */
 
 extern void Reset_Slv_Interp(struct Slv_Interp *slv_interp);
-/**< 
- *  Resets the interpreter to its initial state.
- */
+/**< Resets the interpreter to its initial state. */
 
 extern void AddUserFunctions(void);
 /**< 
@@ -509,8 +504,8 @@ extern void AddUserFunctions(void);
  *  linked, otherwise it does nothing.
  */
 
-extern int CallExternalProcs(struct Instance *);
-/**< 
+extern int CallExternalProcs(struct Instance *i);
+/**<
  *  This function given a handle to a relation instance which represents
  *  an external relation, will attempt to invoke it and write the results
  *  to stdout.
@@ -520,15 +515,15 @@ extern symchar *MakeArchiveLibraryName(CONST char *prefix);
 /**< 
  *  Given a file prefix, this function will try to construct a platform
  *  dependent name for a dynamically loadable archive. In the case of
- *  sun, alphas, solaris -- lib<prefix>.so.1.0
- *  hpux -- lib<prefix>.sl
- *  mips ???
- *  aix ???
- *  linux ???
- *  Returns symbol table entry.
+ *  - sun, alphas, solaris -- lib<prefix>.so.1.0
+ *  - hpux -- lib<prefix>.sl
+ *  - mips ???
+ *  - aix ???
+ *  - linux ???
+ *  Returns symbol table entry.<br><br>
  *
- * This function is obsolete and should not be used in new code.
- * See ascDynaLoad.h for correct replacement.
+ *  This function is obsolete and should not be used in new code.
+ *  See ascDynaLoad.h for correct replacement.
  */
 
 extern int LoadArchiveLibrary(CONST char *name, CONST char *initfunc);
@@ -540,7 +535,8 @@ extern int LoadArchiveLibrary(CONST char *name, CONST char *initfunc);
  *  of failure. The calling protocol for the init routine is:
  *  void Routine_init(void);
  *  This is a rather pointless wrapper to the ascDynaLoad functions.
- *  See ascDynaLoad.h for correct replacement.
+ *  @see ascDynaLoad.h for correct replacement.
  */
 
-#endif /**< __PACKAGES_H_SEEN__ */
+#endif /* __PACKAGES_H_SEEN__ */
+

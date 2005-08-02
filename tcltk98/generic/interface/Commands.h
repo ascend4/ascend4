@@ -27,33 +27,40 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Command Management Routines
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "interface/HelpProc.h"
+ *      #include "interface/Commands.h"
+ *  </pre>
+ */
+
 #ifndef Commands_module_loaded
 #define Commands_module_loaded
 
-/*
- *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "interface/HelpProc.h"
- *      #include "interface/Commands.h"
- */
-
-
-extern void Asc_CreateCommands(Tcl_Interp *);
-/*
- *  void Asc_CreateCommands(interp);
- *  Comments :
+extern void Asc_CreateCommands(Tcl_Interp *interp);
+/**<
+ *  <!--  void Asc_CreateCommands(interp);                             -->
  *  Registers all C written code so that the
  *  Tcl interpreter can see them. All Tcl commands should be registered
  *  here.
  */
 
-extern void Asc_AddCommand(Tcl_Interp *, char *, Tcl_CmdProc *,
-                           ClientData, Tcl_CmdDeleteProc *,
-                           CONST char *, CONST char *,
-                           CONST char *, HLFunc);
-/*
- * Asc_AddCommand(interp,cmdName,proc,cdata,deleteProc,
- *                group,usage,shorth,longh)
+extern void Asc_AddCommand(Tcl_Interp *interp, 
+                           char *cmdName, 
+                           Tcl_CmdProc *proc,
+                           ClientData cdata, 
+                           Tcl_CmdDeleteProc *deleteProc,
+                           CONST char *group, 
+                           CONST char *usage,
+                           CONST char *shorth,
+                           HLFunc longh);
+/**<
+ * <!--  Asc_AddCommand(interp,cmdName,proc,cdata,deleteProc,          -->
+ * <!--                 group,usage,shorth,longh)                      -->
  * Adds a command to tcl and the ASCEND commandline help data structures.
  * This function should be used for commands created by dynamically
  * linked packages that want to use the ascend help facility.
@@ -63,9 +70,10 @@ extern void Asc_AddCommand(Tcl_Interp *, char *, Tcl_CmdProc *,
   Asc_AddCommand((interp), (cmdName), (proc), \
                  (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL, \
                  (group),(usage),(shorth),(longh))
-/*
+/**<
  * The easier macro form of Asc_AddCommand used for those commands which
  * do not have tk-widget-like behavior or clientdata.
  */
 
-#endif
+#endif  /* Commands_module_loaded */
+

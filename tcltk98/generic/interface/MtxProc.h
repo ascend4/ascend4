@@ -27,23 +27,28 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Incidence matrix routines.
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "interface/MtxProc.h"
+ *  </pre>
+ */
+
 #ifndef MtxProc_module_loaded
 #define MtxProc_module_loaded
 
-/*
- *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "interface/MtxProc.h"
- */
-
-
 extern int Asc_MtxGUIPlotIncidence(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
-/*
- *  mtx_gui_plot_incidence <sf xoff yoff cname bmfg bmbg ra ca va ea>
+/**<
  *  Plot the current incidence matrix based on the solver system following
- *  the parameters given.
+ *  the parameters given.<br><br>
  *
+ *  Registered as:
+ *      mtx_gui_plot_incidence <sf xoff yoff cname bmfg bmbg ra ca va ea>
+ *  <pre>
  *  The inputs are:
  *  sf (1-14): (this range should perhaps be queried about first, but
  *               we are foregoing that nicety at the moment.)
@@ -103,22 +108,18 @@ extern int Asc_MtxGUIPlotIncidence(ClientData cdata, Tcl_Interp *interp,
  *  asc_lrt_h: used for slack variable incident on unincluded relation.
  *
  *  The incidence matrix will contain only active vars and active rels
- */
-
-/*
- */
-/*
- */
-/*
+ *  </pre>
  */
 
 extern int Asc_MtxHelpList(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[]);
-/*
- *  mtxhelp command for tcl
- *  mtxhelp [s,l]
- *  no arg -> return tcl list
- *  "s" -> list names only, "l" -> short explanations also, to stderr
+/**<
+ *  mtxhelp command for tcl.
+ *  no arg -> return tcl list.
+ *  "s" -> list names only, "l" -> short explanations also, to stderr.<br><br>
+ *
+ *  Registered as:  mtxhelp [s,l]
  */
 
-#endif
+#endif  /* MtxProc_module_loaded */
+

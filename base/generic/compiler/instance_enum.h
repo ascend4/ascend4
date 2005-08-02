@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Ascend Instance Tree Type Definitions
  *  by Ben Allan
  *  6/02/96
@@ -31,13 +31,12 @@
 #ifndef __INSTANCE_ENUM_H_SEEN__
 #define __INSTANCE_ENUM_H_SEEN__
 
-/**< 
+/** @file
+ *  Ascend Instance Tree Type Definitions
+ *  <pre>
  *  When #including instance_enum.h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
- */
-
-
-/**< 
+ *
  *  Notes on the instance type scheme.
  *      Ben Allan, Feb. 1996.
  *  We have three types of 'scalar data' instances:
@@ -62,65 +61,70 @@
  *  constant SET.
  *  REAL_ATOM_INST becomes the parametric reals of a model and
  *  a new SOLVER_ATOM_INST becomes the real variables of a model.
+ *  </pre>
  */
-#define IREAL	0x1
-#define IINT	0x2
-#define IBOOL	0x4
-#define ISYM	0x8
-#define ISET	0x10
-#define IARR	0x20
-#define IENUM	0x40
-#define IFUND	0x80
-#define ICONS	0x100
-#define IATOM	0x200
-#define ICOMP	0x400
-#define IMOD 	0x800
-#define IRELN	0x1000
+
+#define IREAL   0x1
+#define IINT    0x2
+#define IBOOL   0x4
+#define ISYM    0x8
+#define ISET    0x10
+#define IARR    0x20
+#define IENUM   0x40
+#define IFUND   0x80
+#define ICONS   0x100
+#define IATOM   0x200
+#define ICOMP   0x400
+#define IMOD    0x800
+#define IRELN   0x1000
 #define ILRELN  0x2000
 #define IWHEN   0x4000
 #define IAUTO   0x8000
 #define IDUMB   0x10000
-/**< future work */
+/** @todo future work */
 #define ICHILDLESS (IFUND | ICONS | IWHEN | IDUMB)
-/**< constants and fundamental types have no child list */
-/**< when's have no children.  Better way of doing this?  */
+/* constants and fundamental types have no child list */
+/* when's have no children.  Better way of doing this?  */
 #define IERRINST ~(IREAL|IINT|IBOOL|ISYM|ISET|IARR|IENUM|IFUND|ICONS|IATOM| \
  ICOMP|IMOD|IRELN|ILRELN|IWHEN|IAUTO|IDUMB)
 /**< any of these bits on is an error */
+
+/** Instance types. */
 enum inst_t {
-  ERROR_INST =		0,		/**< deleted instances get this type*/
-  SIM_INST =		ICOMP,		/**< a simulation instance */
-  MODEL_INST =		ICOMP | IMOD,	/**< model instance */
-  /**< AUTO_INST = ICOMP | IMOD | IAUTO, */ /**< future stack instance */
-  REL_INST =		IRELN,		/**< relation(equality or inequality) */
-  LREL_INST =		ILRELN,		/**< logical relation( == || != ) */
-  WHEN_INST =           IWHEN,          /**< WHEN instance  */
-  ARRAY_INT_INST =	ICOMP | IARR  | IINT,	/**< an array instance integer */
-  ARRAY_ENUM_INST = 	ICOMP | IARR  | ISYM,	/**< an array instance enumed */
-  /**< fundamental instances */
-  REAL_INST =		IFUND | IREAL,
-  INTEGER_INST =	IFUND | IINT,
-  BOOLEAN_INST =	IFUND | IBOOL,
-  SYMBOL_INST =		IFUND | ISYM,
-  SET_INST =		IFUND | ISET,
-  /**< nonfundamental atomic instances */
-  REAL_ATOM_INST =	IATOM | IREAL,
-  INTEGER_ATOM_INST =	IATOM | IINT,
-  BOOLEAN_ATOM_INST =	IATOM | IBOOL,
-  SYMBOL_ATOM_INST =	IATOM | ISYM,
-  SET_ATOM_INST =	IATOM | ISET,
-  /**< nonfundamental constant instances */
-  REAL_CONSTANT_INST =		ICONS | IREAL,
-  BOOLEAN_CONSTANT_INST =	ICONS | IINT,
-  INTEGER_CONSTANT_INST =	ICONS | IBOOL,
-  SYMBOL_CONSTANT_INST =	ICONS | ISYM,
-  /**< dummy instance - unselected IS_A children. */
-  DUMMY_INST =		IDUMB
+  ERROR_INST =        0,                    /**< Deleted instances get this type. */
+  SIM_INST =          ICOMP,                /**< A simulation instance. */
+  MODEL_INST =        ICOMP | IMOD,         /**< Model instance. */
+  /* AUTO_INST = ICOMP | IMOD | IAUTO, */ /* future stack instance */
+  REL_INST =          IRELN,                /**< Relation(equality or inequality). */
+  LREL_INST =         ILRELN,               /**< Logical relation( == || != ). */
+  WHEN_INST =         IWHEN,                /**< WHEN instance  */
+  ARRAY_INT_INST =    ICOMP | IARR | IINT,  /**< Array instance integer */
+  ARRAY_ENUM_INST =   ICOMP | IARR | ISYM,  /**< Array instance enumed */
+  /* fundamental instances */
+  REAL_INST =         IFUND | IREAL,        /**< Real instance. */
+  INTEGER_INST =      IFUND | IINT,         /**< Int instance. */
+  BOOLEAN_INST =      IFUND | IBOOL,        /**< Boolean instance. */
+  SYMBOL_INST =       IFUND | ISYM,         /**< Symbol instance. */
+  SET_INST =          IFUND | ISET,         /**< Set instance. */
+  /* nonfundamental atomic instances */
+  REAL_ATOM_INST =    IATOM | IREAL,        /**< Real atomic instance. */
+  INTEGER_ATOM_INST = IATOM | IINT,         /**< Int atomic instance. */
+  BOOLEAN_ATOM_INST = IATOM | IBOOL,        /**< Boolean atomic instance. */
+  SYMBOL_ATOM_INST =  IATOM | ISYM,         /**< Symbol atomic instance. */
+  SET_ATOM_INST =     IATOM | ISET,         /**< Set atomic instance. */
+  /* nonfundamental constant instances */
+  REAL_CONSTANT_INST =    ICONS | IREAL,    /**< Real constant instance. */
+  BOOLEAN_CONSTANT_INST = ICONS | IINT,     /**< Boolean constant instance. */
+  INTEGER_CONSTANT_INST = ICONS | IBOOL,    /**< Int constant instance. */
+  SYMBOL_CONSTANT_INST =  ICONS | ISYM,     /**< Symbol constant instance. */
+  /* dummy instance - unselected IS_A children. */
+  DUMMY_INST =  IDUMB                       /**< Dummy instance - unselected IS_A children. */
 };
 
-/**< Never, ever, allocate either one of these types */
+/** Never, ever, allocate either one of these types. */
 struct Instance {
   enum inst_t t;
 };
 
-#endif /**< __INSTANCE_ENUM_H_SEEN__ */
+#endif /* __INSTANCE_ENUM_H_SEEN__ */
+

@@ -323,6 +323,9 @@ if $(BUILD_COMPILER)
   MakeLocate $(ASC_COMPILER_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_COMPILER_LIB) ;
+
+#  Main $(ASC_COMPILER_LIBNAME)$(SUFSHR) : $(ASC_COMPILER_SOURCES) ;
+#  MakeLocate $(ASC_COMPILER_LIB)$(SUFSHR) : $(BUILD_DIR) ;
 }
 
 #=========================================================================

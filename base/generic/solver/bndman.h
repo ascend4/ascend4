@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Boundary Manipulator Module
  *  Created: 04/97
  *  Version: $Revision: 1.6 $
@@ -22,53 +22,58 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
- *
  */
 
-
-/**< 
+/** @file
+ *  Boundary Manipulator Module.
+ *  <pre>
  *  Contents:     Boundary manipulator module
  *
  *  Dates:        04/97 - original version
- * 
+ *
  *  Description:  This module will provide supplemental operations for
  *                boundaries such as evaluation.
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *  </pre>
  */
 
 #ifndef bndman__already_included
 #define bndman__already_included
 
-extern real64 bndman_real_eval(struct bnd_boundary *);
-extern int32  bndman_log_eval(struct bnd_boundary *);
-/**< 
- *  value = bndman_real_eval(bnd)
- *  logvalue = bndman_log_eval(bnd)
- *  real64 value;
- *  int32 logvalue;
- *  struct bnd_boundary *bnd;
+extern real64 bndman_real_eval(struct bnd_boundary *bnd);
+/**<  Returns the (real) residual of the boundary. */
+extern int32  bndman_log_eval(struct bnd_boundary *bnd);
+/**<
+ *  <!--  value = bndman_real_eval(bnd)                                -->
+ *  <!--  logvalue = bndman_log_eval(bnd)                              -->
+ *  <!--  real64 value;                                                -->
+ *  <!--  int32 logvalue;                                              -->
+ *  <!--  struct bnd_boundary *bnd;                                    -->
  *
- *  Returns the (real/boolean) residual of the boundary.
+ *  Returns the (boolean) residual of the boundary.
  */
 
-extern int32 bndman_calc_satisfied(struct bnd_boundary *);
-/**< 
- *  value = bndman_calc_satisfied(bnd);
- *  int32 value;
- *  struct bnd_boundary *bnd;
+extern int32 bndman_calc_satisfied(struct bnd_boundary *bnd);
+/**<
+ *  <!--  value = bndman_calc_satisfied(bnd);                          -->
+ *  <!--  int32 value;                                                 -->
+ *  <!--  struct bnd_boundary *bnd;                                    -->
  *
  *  Returns whether the boundary is currently satisfied based on its
  *  calculated residual.
  */
 
-extern int32 bndman_calc_at_zero(struct bnd_boundary *);
-/**< 
- *  value = bndman_calc_at_zero(bnd);
- *  int32 value;
- *  struct bnd_boundary *bnd;
+extern int32 bndman_calc_at_zero(struct bnd_boundary *bnd);
+/**<
+ *  <!--  value = bndman_calc_at_zero(bnd);                            -->
+ *  <!--  int32 value;                                                 -->
+ *  <!--  struct bnd_boundary *bnd;                                    -->
  *
  *  Returns whether the current point lies at the zero of a boundary
  *  based on the calculation of the residual of the boundary
  *  Used only for real(not boolean) boundaries.
  */
 
-#endif  /**< bndman__already_included */
+#endif  /* bndman__already_included */
+

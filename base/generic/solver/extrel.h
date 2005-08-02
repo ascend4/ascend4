@@ -26,27 +26,36 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  *  COPYING is found in ../compiler.
  */
+
+/** @file
+ *  External Relations Cache for solvers.
+ *  <pre>
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "var.h"
+ *                #include "rel.h"
+ *                #include "relation.h"
+ *                #include "instance_enum.h"
+ *  </pre>
+ *  @todo This header is marked for removal.
+ */
+
 #ifndef __EXTREL_H_SEEN__
 #define __EXTREL_H_SEEN__
-/* requires #include "var.h" */
-/* requires #include "rel.h" */
-/* requires #include "relation.h" */
-/* requires #include "instance_enum.h" */
+
 #if 0 /* going away */
 extern double g_external_tolerance;
 
 extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *);
-struct ExtRelCache *CreateCacheFromInstance(struct Instance *);
+extern struct ExtRelCache *CreateCacheFromInstance(struct Instance *);
 extern void ExtRel_DestroyCache(struct ExtRelCache *);
 
 extern int ExtRel_PreSolve(struct ExtRelCache *cache, int setup);
 extern real64 ExtRel_Evaluate_RHS(struct rel_relation *);
 extern real64 ExtRel_Evaluate_LHS(struct rel_relation *);
 extern real64 ExtRel_Diffs_RHS(struct rel_relation *, var_filter_t *,
-				     int32, mtx_matrix_t);
+                               int32, mtx_matrix_t);
 extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
-				     int32, mtx_matrix_t);
-
+                               int32, mtx_matrix_t);
 #endif
 #endif /* __EXTREL_H_SEEN__ */
 

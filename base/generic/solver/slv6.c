@@ -1,4 +1,4 @@
-/*
+/* 
  *  MPS: Ascend MPS file generator
  *  by Craig Schmidt
  *  Created: 2/11/95
@@ -61,7 +61,9 @@
 #include "solver/slv_client.h"
 #include "solver/slv6.h"
 #include "solver/mps.h"
+/*
 #include "interface/old_utils.h"
+*/
 
 
 #if !defined(STATIC_MPS) && !defined(DYNAMIC_MPS)

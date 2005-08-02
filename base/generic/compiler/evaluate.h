@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Expression Evaluation Routine
  *  by Tom Epperly
  *  Created: 1/16/90
@@ -27,64 +27,69 @@
  *  COPYING.
  */
 
-#ifndef __EVALUATE_H_SEEN__
-#define __EVALUATE_H_SEEN__
-
-
-/**< 
+/** @file
+ *  Expression Evaluation Routine
+ *  <pre>
  *  When #including evaluate.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "list.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
+ *  </pre>
  */
 
+#ifndef __EVALUATE_H_SEEN__
+#define __EVALUATE_H_SEEN__
 
-extern struct value_t EvaluateSet(CONST struct Set *,struct value_t (*)());
-/**< 
- *  struct value_t EvaluateSet(sptr,EvaluateName)
- *  const struct Set *sptr;
- *  struct value_t (*EvaluateName)();
+extern struct value_t EvaluateSet(CONST struct Set *sptr,
+                                  struct value_t (*EvaluateName)());
+/**<
+ *  <!--  struct value_t EvaluateSet(sptr,EvaluateName)                -->
+ *  <!--  const struct Set *sptr;                                      -->
+ *  <!--  struct value_t (*EvaluateName)();                            -->
  *
- *  POINTERS TO FUNCTIONS
- *  struct value_t EvaluateName(nptr)
- *  struct Name *nptr;
+ *  <!--  POINTERS TO FUNCTIONS                                        -->
+ *  <!--  struct value_t EvaluateName(nptr)                            -->
+ *  <!--  struct Name *nptr;                                           -->
  *  Return the value of a Set structure, which just might be a set.
  */
 
-extern struct value_t EvaluateExpr(CONST struct Expr *,CONST struct Expr *,
-       struct value_t (*)());
-/**< 
- *  struct value_t EvaluateExpr(expr,stop,EvaluateName)
- *  const struct Expr *expr,*stop;
- *  struct value_t (*EvaluateName)();
+extern struct value_t EvaluateExpr(CONST struct Expr *expr,
+                                   CONST struct Expr *stop,
+                                   struct value_t (*EvaluateName)());
+/**<
+ *  <!--  struct value_t EvaluateExpr(expr,stop,EvaluateName)          -->
+ *  <!--  const struct Expr *expr,*stop;                               -->
+ *  <!--  struct value_t (*EvaluateName)();                            -->
+ *
+ *  <!--  POINTERS TO FUNCTIONS                                        -->
+ *  <!--  struct value_t EvaluateName(nptr)                            -->
+ *  <!--  struct Name *nptr;                                           -->
+ *  Return the value of a name structure.
  *  In most cases stop = NULL.  stop can be used to evaluate just part of
  *  an expression.  If (stop!=NULL) the calling program, must know the
  *  the stack is correctly balanced.
- *
- *  POINTERS TO FUNCTIONS
- *  struct value_t EvaluateName(nptr)
- *  struct Name *nptr;
- *  Return the value of a name structure.
  */
 
-extern struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *,
+extern struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
                                              CONST struct Expr *stop,
-                                             struct gl_list_t *);
-/**< 
- *  list = EvaluateNamesNeeded(e,stop,list);
- *  const struct Expr *expr,*stop;
- *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
- *  Appends all the externally defined names found in e to list.
+                                             struct gl_list_t *list);
+/**<
+ *  <!--  list = EvaluateNamesNeeded(expr,stop,list);                     -->
+ *  <!--  const struct Expr *expr,*stop;                               -->
+ *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
+ *
+ *  Appends all the externally defined names found in expr to list.
  *  (Loop variables defined in the expression are ignored.)
- *  If e is not well formed wrt loops, you may get odd results back.
+ *  If expr is not well formed wrt loops, you may get odd results back.
  *  If the list passed in is NULL, creates a list first.
  *  The list returned may be empty, but should not be NULL.
  *  When e_var are encountered in the expression, DOES dissect the
- *  subscripts separately.
+ *  subscripts separately.<br><br>
  *
- *  Doesn't actually evaluate anything, so no EvaluateName function
+ *  Doesn't actually evaluate anything, so EvaluateName function
  *  is not required. The list will be the set of names you must have
  *  values for in order for the expression to have a chance of
  *  evaluating to a result, including for loop variables, but not
@@ -93,20 +98,21 @@ extern struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *,
  *  a list with duplication already in it, we will not clean it up for you.
  */
 
-extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *,
+extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *expr,
                                                     CONST struct Expr *stop,
-                                                    struct gl_list_t *);
-/**< 
- *  list = EvaluateNamesNeededShallow(e,stop,list);
- *  const struct Expr *expr,*stop;
- *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
- *  Appends all the externally defined names found in e to list.
+                                                    struct gl_list_t *list);
+/**<
+ *  <!--  list = EvaluateNamesNeededShallow(expr,stop,list);           -->
+ *  <!--  const struct Expr *expr,*stop;                               -->
+ *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
+ *
+ *  Appends all the externally defined names found in expr to list.
  *  (Loop variables defined in the expression are ignored.)
  *  If e is not well formed wrt loops, you may get odd results back.
  *  If the list passed in is NULL, creates a list first.
  *  The list returned may be empty, but should not be NULL.
  *  When e_var are encountered in the expression, DOES NOT dissect the
- *  subscripts separately.
+ *  subscripts separately.<br><br>
  *
  *  Doesn't actually evaluate anything, so no EvaluateName function
  *  is not required. The list will be the set of names you must have
@@ -117,20 +123,20 @@ extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *,
  *  a list with duplication already in it, we will not clean it up for you.
  */
 
-extern struct gl_list_t *
-EvaluateSetNamesNeeded(CONST struct Set *,struct gl_list_t *);
-/**< 
- *  list = EvaluateSetNamesNeeded(sptr,list)
- *  const struct Set *sptr;
- *  extern struct gl_list_t *list;
- *  (Analogous to EvaluateSet, but the global EvaluatingSets is irrelevant).
+extern struct gl_list_t
+*EvaluateSetNamesNeeded(CONST struct Set *sptr, struct gl_list_t *list);
+/**<
+ *  <!--  list = EvaluateSetNamesNeeded(sptr,list)                     -->
+ *  <!--  const struct Set *sptr;                                      -->
+ *  <!--  extern struct gl_list_t *list;                               -->
+ *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
  *
  *  Appends all the externally defined names found in sptr to list.
  *  (Loop variables defined in the expression are ignored.)
  *  If sptr  is not well formed wrt loops, you may get odd results back.
  *  If the list passed in is NULL, creates a list first.
  *  The list returned may be empty, but should not be NULL.
- *  DOES investigate subscripts deeply for needed names.
+ *  DOES investigate subscripts deeply for needed names.<br><br>
  *
  *  Doesn't actually evaluate anything, so no EvaluateName function
  *  is not required. The list will be the set of names you must have
@@ -141,20 +147,20 @@ EvaluateSetNamesNeeded(CONST struct Set *,struct gl_list_t *);
  *  a list with duplication already in it, we will not clean it up for you.
  */
 
-extern struct gl_list_t *
-EvaluateSetNamesNeededShallow(CONST struct Set *,struct gl_list_t *);
-/**< 
- *  list = EvaluateSetNamesNeededShallow(sptr,list)
- *  const struct Set *sptr;
- *  extern struct gl_list_t *list;
- *  (Analogous to EvaluateSet, but the global EvaluatingSets is irrelevant).
+extern struct gl_list_t
+*EvaluateSetNamesNeededShallow(CONST struct Set *sptr, struct gl_list_t *list);
+/**<
+ *  <!--  list = EvaluateSetNamesNeededShallow(sptr,list)              -->
+ *  <!--  const struct Set *sptr;                                      -->
+ *  <!--  extern struct gl_list_t *list;                               -->
+ *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
  *
  *  Appends all the externally defined names found in sptr to list.
  *  (Loop variables defined in the expression are ignored.)
  *  If sptr  is not well formed wrt loops, you may get odd results back.
  *  If the list passed in is NULL, creates a list first.
  *  The list returned may be empty, but should not be NULL.
- *  DOES NOT investigate subscripts deeply for needed names.
+ *  DOES NOT investigate subscripts deeply for needed names.<br><br>
  *
  *  Doesn't actually evaluate anything, so no EvaluateName function
  *  is not required. The list will be the set of names you must have
@@ -166,7 +172,7 @@ EvaluateSetNamesNeededShallow(CONST struct Set *,struct gl_list_t *);
  */
 
 extern void ClearRecycleStack(void);
-/**< 
+/**<
  *  Call this function after shutting down the compiler.
  *
  *  The stack seldom gets beyond 2 deep, but we recycle the memory for
@@ -178,4 +184,6 @@ extern void ClearRecycleStack(void);
  *  There is an option inside evaluate.c that causes this function to
  *  report how many recycled stack elements it deallocates.
  */
-#endif /**< __EVALUATE_H_SEEN__ */
+
+#endif /* __EVALUATE_H_SEEN__ */
+

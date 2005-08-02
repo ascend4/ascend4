@@ -1,5 +1,4 @@
-/**< 
- *
+/*
  *  Implementation of Free Store Module
  *  Kirk A. Abbott
  *  Created Dec 18, 1994
@@ -27,42 +26,50 @@
  *  along with the program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
  *  the file named COPYING.
+ */
+
+/** @file
+ *  Implementation of Free Store Module.
  *
  *  Note: this file is specific to relation data structures and should
  *  not be used for anything else. In fact it shouldn't even be used
  *  for those because a much better tested module (pool.h) is
  *  available and in use everywhere else in the compiler.
+ *  <pre>
+ *  When #including freestore.h, make sure these files are #included first:
+ *        #include "utilities/ascConfig.h"
+ *        #include "compiler.h"
+ *        #include "stack.h"
+ *        #include "exprsym.h"
+ *  </pre>
  */
 
 #ifndef __FREESTORE_H_SEEN__
 #define __FREESTORE_H_SEEN__
-/**< requires
-# #include"compiler.h"
-# #include"stack.h"
-# #include"exprsym.h"
-*/
 
+/** Free store data structure. */
 struct FreeStore {
-  union RelationTermUnion **root;			/**< ptr to it all */
-  union RelationTermUnion *next_free;		/**< ptr to next_clean slot */
-  struct gs_stack_t *returned;	/**< stack of returned blocks */
-  int n_buffers;		/**< # of big chunks */
-  int buffer_length;		/**< size of chunks */
-  int row;			/**< index of the next free location's row */
-  int col;			/**< index of the next free locations's col */
+  union RelationTermUnion **root;     /**< ptr to it all */
+  union RelationTermUnion *next_free; /**< ptr to next_clean slot */
+  struct gs_stack_t *returned;        /**< stack of returned blocks */
+  int n_buffers;                      /**< # of big chunks */
+  int buffer_length;                  /**< size of chunks */
+  int row;                            /**< index of the next free location's row */
+  int col;                            /**< index of the next free locations's col */
 };
 
 extern long FreeStore_UnitsAllocated();
-extern void FreeStore__Statistics(FILE *fp,
-      struct FreeStore *store);
+/**< Retrieve the number of free store units allocated. */
+extern void FreeStore__Statistics(FILE *fp, struct FreeStore *store);
+/**< Print stats about the free store to fp. */
 
 extern void FreeStore__BlastMem(struct FreeStore *store);
-/**< 
+/**<
  *  This function deallocates *all* the memory associated with a free
  *  store. The free store should not be referenced after this call.
  */
 
-/**< 
+/*
  *  These are the normal user level routines.
  *
  *  Known Bugs:
@@ -76,7 +83,7 @@ extern void FreeStore__BlastMem(struct FreeStore *store);
  *  variables as it does to pass the store pointer.
  */
 
-extern struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length);
+extern struct FreeStore *FreeStore_Create(int n_buffers, int buffer_length);
 /**< 
  *  Create a new free store with 1 buffer of size buffer length.
  *  The information within the buffer is *not* initialized in any way.
@@ -85,7 +92,7 @@ extern struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length);
 extern void FreeStore_ReInit(struct FreeStore *store);
 /**< 
  *  Reinitializes the free store. This simply tells the free store to
-  *forget* about anything that may have be allotted to a user. In other
+ *  *forget* about anything that may have be allotted to a user. In other
  *  words, after this call the freestore will behave as if it was just
  *  created. Any information that a user wants, had better be copied before
  *  this call, as it is now a candidate to be allotted to someone else.
@@ -118,15 +125,9 @@ extern union RelationTermUnion
  */
 
 extern void FreeStore_SetFreeStore(struct FreeStore *store);
+/**<  Set the current working freestore. */
 extern struct FreeStore *FreeStore_GetFreeStore(void);
-/**< 
- *  These set up and/or retrieve the current working freestore.
- */
+/**<  Retrieve the current working freestore. */
 
-#endif /**< __FREESTORE_H_SEEN__ */
-
-
-
-
-
+#endif /* __FREESTORE_H_SEEN__ */
 

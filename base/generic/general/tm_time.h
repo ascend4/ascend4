@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Time module
  *  by Karl Westerberg
  *  Created: 6/90
@@ -27,8 +27,8 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-
-/**< 
+/** @file
+ *  <pre>
  *  Contents:     Time module
  *
  *  Authors:      Karl Westerberg
@@ -45,36 +45,42 @@
  *  Description:  Provide a function to monitor elapsed time during the
  *                course of execution of a program and standard ANSI
  *                primitives for performing calendar calculations.
- * 
- *                We apologize for the existence of this file and for
- * 		  its name being the same as an ANSI C header which is not
- *		  consistently available, unfortunately. We really
- *		  ought not to need this header.
+ *
+ *  Apology:      We apologize for the existence of this file and for
+ * 		            its name being the same as an ANSI C header which is not
+ *		            consistently available, unfortunately. We really
+ *		            ought not to need this header.
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *  </pre>
  */
+
 #ifndef tm_module_loaded
+#define tm_module_loaded
 
 #ifndef CLOCKS_PER_SEC
 
-/**< case linux */
+/* case linux */
 #ifdef linux
-#define CLOCKS_PER_SEC  100
-#endif /**< linux */
+#define CLOCKS_PER_SEC  100      /**< Typical clock ticks per sec. */
+#endif /* linux */
 
-/**< case windoze */
+/* case windoze */
 #ifdef WIN
-#define CLOCKS_PER_SEC 1000
-#endif /**< windoze */
+#define CLOCKS_PER_SEC 1000      /**< Typical clock ticks per sec. */
+#endif /* windoze */
 
-/**< default */
+/* default */
 #ifndef CLOCKS_PER_SEC
-#define CLOCKS_PER_SEC  1000000         /**< typical clock ticks per sec */
-/**< note that typically clocks have a minimum resolution of 16666, sigh */
-#endif /**< default */
+#define CLOCKS_PER_SEC  1000000   /**< Typical clock ticks per sec.
+                                   * Note that typically clocks have a minimum
+                                   * resolution of 16666, sigh.
+                                   */
+#endif /* default */
 
-#endif /**< CLOCKS_PER_SEC */
+#endif /* CLOCKS_PER_SEC */
 
-extern double tm_cpu_time();
-/**< 
+/**
  *  Returns the number of seconds used during
  *  processing by the CPU since any part of
  *  ASCEND first called tm_cpu_time().
@@ -82,29 +88,31 @@ extern double tm_cpu_time();
  *  their own start time and work by difference as the
  *  solvers do.
  */
+extern double tm_cpu_time();
 
-
-extern void tm_cpu_time_ftn_();
-extern void aftime_();
-extern void tm_cpu_time_ftn();
-extern void aftime();
-extern void TM_CPU_TIME_FTN();
-extern void AFTIME();
-/**< 
- *  double *time;
- *  Does the same thing as tm_cpu_time, with the exception
+/**
+ *  <!--  double *time;                                                -->
+ *  Does the same thing as tm_cpu_time(), with the exception
  *  that this function takes a double * arg, to satisfy
  *  fortran's call by reference semantics. The short name is
- *  to satisfy fortrans 6 char restriction.
- *
+ *  to satisfy fortrans 6 char restriction.<br><br>
+ *  <pre>
  *  f77 usage:  t is real*8 (double precision on most f77)
- *  external aftime, tm_cpu_time_ftn
- *  call tm_cpu_time_ftn(t)
- *  call aftime(t)
+ *      external aftime, tm_cpu_time_ftn
+ *      call tm_cpu_time_ftn(t)
+ *      call aftime(t)
+ *  </pre>
  *  On return t will have a time value (sec) stored in a double.
  *  If your F77 compiler doesn't morph all function calls to
  *  lower case (with or without trailing underbar), you will need
  *  to figure out its morphing convention and modify tm.[ch] so.
  */
+extern void tm_cpu_time_ftn_(double *time);
+extern void aftime_(double *time);           /**< Short name for tm_cpu_time_ftn_(). */
+extern void tm_cpu_time_ftn(double *time);   /**< Variant of tm_cpu_time_ftn_(). */
+extern void aftime(double *time);            /**< Short name for tm_cpu_time_ftn(). */
+extern void TM_CPU_TIME_FTN(double *time);   /**< Variant of tm_cpu_time_ftn_(). */
+extern void AFTIME(double *time);            /**< Short name for TM_CPU_TIME_FTN(). */
 
-#endif
+#endif  /* tm_module_loaded */
+

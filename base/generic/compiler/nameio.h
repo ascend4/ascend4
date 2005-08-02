@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Temporary name output routine
  *  by Tom Epperly
  *  Version: $Revision: 1.5 $
@@ -24,52 +24,61 @@
  *  with the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
+
+/** @file
+ *  Temporary name output routine.
+ *  <pre>
+ *  When #including name_io.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler.h"
+ *         #include "types.h"
+ *         #include "symtab.h"
+ *  </pre>
+ */
+
 #ifndef __NAMEIO_H_SEEN__
 #define __NAMEIO_H_SEEN__
-/**< requires
-# #include<stdio.h>
-# #include"compiler.h"
-# #include"types.h"
-# #include"symtab.h"
-*/
 
-extern void WriteName(FILE *,CONST struct Name *);
-/**< 
- *  void WriteName(f,n)
- *  FILE *f;
- *  const struct Name *n;
- *  No leading or trailing spaces are added, and no trailing newline is
- *  added.
+extern void WriteName(FILE *f, CONST struct Name *n);
+/**<
+ *  <!--  void WriteName(f,n)                                          -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Name *n;                                        -->
+ *  Write n to file f.  No leading or trailing spaces are added, 
+ *  and no trailing newline is added.
  */
 
-extern void WriteNameNode(FILE *,CONST struct Name *);
-/**< 
- *  void WriteNameNode(f,n)
- *  FILE *f;
- *  const struct Name *n;
+extern void WriteNameNode(FILE *f, CONST struct Name *n);
+/**<
+ *  <!--  void WriteNameNode(f,n)                                      -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Name *n;                                        -->
  *  Write just this one name node, and not any of the ones following it.
  */
 
-extern char *WriteNameString(CONST struct Name *);
-/**< 
- * return a string containing the name. user is responsible
- * for freeing string.
+extern char *WriteNameString(CONST struct Name *n);
+/**<
+ * Return a string containing the name.
+ * User is responsible for freeing string.
  */
 
-extern void WriteName2Str(Asc_DString *,CONST struct Name *);
-/**< 
- *  void WriteName2Str(dstring,n)
- *  Asc_DString *dstring;
- *  const struct Name *n;
- *  No leading or trailing spaces are added, and no trailing newline is
- *  added.
+extern void WriteName2Str(Asc_DString *dstring, CONST struct Name *n);
+/**<
+ *  <!--  void WriteName2Str(dstring,n)                                -->
+ *  <!--  Asc_DString *dstring;                                        -->
+ *  <!--  const struct Name *n;                                        -->
+ *  Write n to dstring.  No leading or trailing spaces are added,
+ *  and no trailing newline is added.
  */
 
-extern void WriteNameNode2Str(Asc_DString *,CONST struct Name *);
+extern void WriteNameNode2Str(Asc_DString *dstring,CONST struct Name *n);
 /**< 
- *  void WriteNameNode2Str(dstring,n)
- *  Asc_DString *dstring;
- *  const struct Name *n;
+ *  <!--  void WriteNameNode2Str(dstring,n)                            -->
+ *  <!--  Asc_DString *dstring;                                        -->
+ *  <!--  const struct Name *n;                                        -->
  *  Write just this one name node, and not any of the ones following it.
  */
-#endif /**< __NAMEIO_H_SEEN__ */
+
+#endif  /* __NAMEIO_H_SEEN__ */
+

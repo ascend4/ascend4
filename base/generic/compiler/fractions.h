@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Fraction module for ASCEND
  *  by Tom Epperly
  *  8/18/89
@@ -27,91 +27,99 @@
  *  COPYING.
  */
 
+/** @file
+ *  Fraction module for ASCEND.
+ *  <pre>
+ *  When #including fractions.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig,h"
+ *  </pre>
+ */
+
 #ifndef __FRACTIONS_H_SEEN__
 #define __FRACTIONS_H_SEEN__
 
-
-/**< 
- *  When #including fractions.h, make sure these files are #included first:
- *         NO INCLUDES NEEDED
- */
-
-
+/** The type of a fraction numerator or denominator. */
 #define FRACPART short
+/** The maximum FRACPART value. */
 #define FRACMAX SHRT_MAX
+
+/** Fraction data structure. */
 struct fraction {
-  FRACPART numerator,denominator;
+  FRACPART numerator;
+  FRACPART denominator;
 };
 
-extern struct fraction CreateFraction(short,short);
+extern struct fraction CreateFraction(short n, short d);
 /**< 
- *  struct fraction CreateFraction(n,d)
- *  short n,d;
- *  n - numerator
- *  d - denominator
+ *  <!--  struct fraction CreateFraction(n,d)                          -->
+ *  <!--  short n,d;                                                   -->
+ *  Create a fraction (n/d).
+ *  Specify the numerator (n) and denominator (d).
  */
 
-extern struct fraction Simplify(struct fraction);
-/**< 
- *  struct fraction Simplify(f)
- *  struct fraction f;
+extern struct fraction Simplify(struct fraction f);
+/**<
+ *  <!--  struct fraction Simplify(f)                                  -->
+ *  <!--  struct fraction f;                                           -->
  *  Simplify the fraction.  This forces the denominator to be >= 0; so
  *  if the fraction is negative, the numerator will be negative.
  */
 
 #define Numerator(f) ((f).numerator)
 /**< 
- *  macro Numerator(f)
- *  struct fraction f;
- *  return the numerator of f
+ *  <!--  macro Numerator(f)                                           -->
+ *  <!--  struct fraction f;                                           -->
+ *  Return the numerator of f as a FRACPART.
  */
 
 #define Denominator(f) ((f).denominator)
 /**< 
- *  macro Denominator(f)
- *  struct fraction f;
- *  return the denominator of f.
+ *  <!--  macro Denominator(f)                                         -->
+ *  <!--  struct fraction f;                                           -->
+ *  Return the denominator of f as a FRACPART.
  */
 
-extern struct fraction AddF(struct fraction,struct fraction);
+extern struct fraction AddF(struct fraction f1, struct fraction f2);
 /**< 
- *  struct fraction AddF(f1,f2)
- *  struct fraction f1,f2;
+ *  <!--  struct fraction AddF(f1,f2)                                  -->
+ *  <!--  struct fraction f1,f2;                                       -->
  *  Return f1+f2 simplified.
  */
 
-extern struct fraction SubF(struct fraction,struct fraction);
+extern struct fraction SubF(struct fraction f1, struct fraction f2);
 /**< 
- *  struct fraction SubF(f1,f2)
- *  struct fraction f1,f2;
+ *  <!--  struct fraction SubF(f1,f2)                                  -->
+ *  <!--  struct fraction f1,f2;                                       -->
  *  Return f1-f2 simplified.
  */
 
-extern struct fraction MultF(struct fraction,struct fraction);
+extern struct fraction MultF(struct fraction f1, struct fraction f2);
 /**< 
- *  struct fraction MultF(f1,f2)
- *  struct fraction f1,f2;
+ *  <!--  struct fraction MultF(f1,f2)                                 -->
+ *  <!--  struct fraction f1,f2;                                       -->
  *  Return f1*f2 simplified.
  */
 
-extern struct fraction DivF(struct fraction,struct fraction);
+extern struct fraction DivF(struct fraction f1, struct fraction f2);
 /**< 
- *  struct fraction DivF(f1,f2)
- *  struct fraction f1,f2;
+ *  <!--  struct fraction DivF(f1,f2)                                  -->
+ *  <!--  struct fraction f1,f2;                                       -->
  *  Return f1/f2 simplified.
  */
 
-extern int CmpF(struct fraction,struct fraction);
+extern int CmpF(struct fraction f1, struct fraction f2);
 /**< 
- *  int CmpF(f1,f2)
- *  struct fraction f1,f2;
+ *  <!--  int CmpF(f1,f2)                                              -->
+ *  <!--  struct fraction f1,f2;                                       -->
  *  Return -1,0,1 if f1 is <,=, or > than f2 respectively.
  */
 
-extern struct fraction NegateF(struct fraction);
+extern struct fraction NegateF(struct fraction f);
 /**< 
- *  struct fraction NegateF(f)
- *  struct fraction f;
+ *  <!--  struct fraction NegateF(f)                                   -->
+ *  <!--  struct fraction f;                                           -->
  *  Returned fraction equal -f.
  */
-#endif /**< __FRACTIONS_H_SEEN__ */
+
+#endif /* __FRACTIONS_H_SEEN__ */
+

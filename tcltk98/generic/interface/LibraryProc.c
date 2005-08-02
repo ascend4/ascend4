@@ -88,7 +88,7 @@ struct int_option {
 #define OPTIONCOUNT 4
 static
 struct int_option g_option_list[OPTIONCOUNT] = {
-  {&g_compiler_warnings,"-compilerWarnings",0,INT_MAX}, 
+  {&g_compiler_warnings,"-compilerWarnings",0,INT_MAX},
   {&g_parser_warnings,"-parserWarnings",0,5}, 
   {&g_simplify_relations,"-simplifyRelations",0,1},
   {&g_use_copyanon,"-useCopyAnon",0,1}
@@ -910,7 +910,7 @@ int LibrMatchNotes(Tcl_Interp *interp, char *pattern,
                        (char *)NULL);
       return TCL_ERROR;
     }
-  } 
+  }
   ne = NotesCreateEngine(interp,
                          (NEInitFunc)Tcl_RegExpCompile,
                          (NECompareFunc)Tcl_RegExpExec);
@@ -1155,22 +1155,29 @@ int LibrUnimplemented(Tcl_Interp *interp, CONST84 char **argv)
 }
 
 STDHLF(Asc_LibrQueryTypeCmd,(Asc_LibrQueryTypeCmdHL1,
-  Asc_LibrQueryTypeCmdHL10,
-  Asc_LibrQueryTypeCmdHL20, Asc_LibrQueryTypeCmdHL30,
-  Asc_LibrQueryTypeCmdHL40, Asc_LibrQueryTypeCmdHL50,
-  Asc_LibrQueryTypeCmdHL60, Asc_LibrQueryTypeCmdHL70,
-  Asc_LibrQueryTypeCmdHL80, Asc_LibrQueryTypeCmdHL85,
-  Asc_LibrQueryTypeCmdHL90,
-  Asc_LibrQueryTypeCmdHL100, Asc_LibrQueryTypeCmdHL110,
-  Asc_LibrQueryTypeCmdHL115,
-  Asc_LibrQueryTypeCmdHL120, Asc_LibrQueryTypeCmdHL130,
-  Asc_LibrQueryTypeCmdHL131,
-  Asc_LibrQueryTypeCmdHL132,
-  Asc_LibrQueryTypeCmdHL133,
-  Asc_LibrQueryTypeCmdHL135,
-  Asc_LibrQueryTypeCmdHL136,
-  Asc_LibrQueryTypeCmdHL137,
-  Asc_LibrQueryTypeCmdHL140, HLFSTOP));
+                             Asc_LibrQueryTypeCmdHL10,
+                             Asc_LibrQueryTypeCmdHL20,
+                             Asc_LibrQueryTypeCmdHL30,
+                             Asc_LibrQueryTypeCmdHL40,
+                             Asc_LibrQueryTypeCmdHL50,
+                             Asc_LibrQueryTypeCmdHL60,
+                             Asc_LibrQueryTypeCmdHL70,
+                             Asc_LibrQueryTypeCmdHL80,
+                             Asc_LibrQueryTypeCmdHL85,
+                             Asc_LibrQueryTypeCmdHL90,
+                             Asc_LibrQueryTypeCmdHL100,
+                             Asc_LibrQueryTypeCmdHL110,
+                             Asc_LibrQueryTypeCmdHL115,
+                             Asc_LibrQueryTypeCmdHL120,
+                             Asc_LibrQueryTypeCmdHL130,
+                             Asc_LibrQueryTypeCmdHL131,
+                             Asc_LibrQueryTypeCmdHL132,
+                             Asc_LibrQueryTypeCmdHL133,
+                             Asc_LibrQueryTypeCmdHL135,
+                             Asc_LibrQueryTypeCmdHL136,
+                             Asc_LibrQueryTypeCmdHL137,
+                             Asc_LibrQueryTypeCmdHL140, 
+                             HLFSTOP));
 int Asc_LibrQueryTypeCmd(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char **argv)
 {

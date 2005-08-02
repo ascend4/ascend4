@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Instance Atom Size Functions.
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -28,94 +28,97 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  */
-#ifndef __ATOMSIZE_H_SEEN__
-#define __ATOMSIZE_H_SEEN__
-/**< requires
- *# #include"instance_enum.h"
- *# #include"childinfo.h"
- */
 
-/**< 
+/** @file
  *  Byte length calculation routines for atoms/relations.
  *  Routines provided to fill the byte length field of the type description.
+ *  <pre>
+ *  When #including atomsize.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *         #include "childinfo.h"
+ *  </pre>
  */
 
-extern unsigned long ConstantByteLength(enum inst_t);
-/**< 
- *  unsigned long ConstantByteLength(it)
- *  enum inst_t it;
+#ifndef __ATOMSIZE_H_SEEN__
+#define __ATOMSIZE_H_SEEN__
+
+extern unsigned long ConstantByteLength(enum inst_t it);
+/**<
+ *  <!--  unsigned long ConstantByteLength(it)                         -->
+ *  <!--  enum inst_t it;                                              -->
  *  Returns the number of bytes needed for the Constant instance of type it.
  */
 
-extern unsigned long RealAtomByteLength(unsigned long,
-     CONST struct ChildDesc *);
-/**< 
- *  unsigned long RealAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long RealAtomByteLength(unsigned long num_children,
+                                        CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long RealAtomByteLength(num_children,c)             -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-extern unsigned long IntegerAtomByteLength(unsigned long,
-        CONST struct ChildDesc *);
-/**< 
- *  unsigned long IntegerAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long IntegerAtomByteLength(unsigned long num_children,
+                                           CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long IntegerAtomByteLength(num_children,c)          -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-extern unsigned long BooleanAtomByteLength(unsigned long,
-        CONST struct ChildDesc *);
-/**< 
- *  unsigned long BooleanAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long BooleanAtomByteLength(unsigned long num_children,
+                                           CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long BooleanAtomByteLength(num_children,c)          -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-extern unsigned long SetAtomByteLength(unsigned long,
-           CONST struct ChildDesc *);
-/**< 
- *  unsigned long SetAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long SetAtomByteLength(unsigned long num_children,
+                                       CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long SetAtomByteLength(num_children,c)              -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-extern unsigned long SymbolAtomByteLength(unsigned long,
-       CONST struct ChildDesc *);
-/**< 
- *  unsigned long SymbolAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long SymbolAtomByteLength(unsigned long num_children,
+                                          CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long SymbolAtomByteLength(num_children,c)           -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-extern unsigned long RelationAtomByteLength(unsigned long,
-         CONST struct ChildDesc *);
-/**< 
- *  unsigned long RelationAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long RelationAtomByteLength(unsigned long num_children,
+                                            CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long RelationAtomByteLength(num_children,c)         -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-extern unsigned long LogRelAtomByteLength(unsigned long,
-         CONST struct ChildDesc *);
-/**< 
- *  unsigned long LogRelAtomByteLength(num_children,c)
- *  unsigned long num_children;
- *  const struct ChildDesc *c;
+extern unsigned long LogRelAtomByteLength(unsigned long num_children,
+                                          CONST struct ChildDesc *c);
+/**<
+ *  <!--  unsigned long LogRelAtomByteLength(num_children,c)           -->
+ *  <!--  unsigned long num_children;                                  -->
+ *  <!--  const struct ChildDesc *c;                                   -->
  *  Given the number of children and descriptions of the children, this
  *  routine will calculate the number of bytes needed for the instance.
  */
 
-#endif
-/**< __ATOMSIZE_H_SEEN__ */
+#endif  /* __ATOMSIZE_H_SEEN__ */
+

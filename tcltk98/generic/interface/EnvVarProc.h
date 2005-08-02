@@ -25,39 +25,52 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
+ */
+
+/** @file
+ *  Ascend Environment Variable Imitation Tcl interface.
  *
  *  This file exists because win32, among others, can't keep their
  *  POSIX compliance up. In particular, getting and setting
- *  environment vars is exceedingly unreliable.
- *  This file implements a general way to store and fetch multiple
- *  paths.
+ *  environment vars is exceedingly unreliable.  This file implements 
+ *  a general way to store and fetch multiple paths.
  *  It does not interact in any way the the Tcl global "env" array.
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *  </pre>
  */
+
 #ifndef __ENVVARPROC_H_SEEN__
 #define __ENVVARPROC_H_SEEN__
-
 
 STDHLF_H(Asc_EnvVarCmd);
 
 extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char *argv[]);
-/*
- * Asc_EnvVarCmd(cdata,interp,argc,argv);
+/**<
+ * <!--  Asc_EnvVarCmd(cdata,interp,argc,argv);                        -->
  * This is the tcl callback for our commandline help facility.
- * Registered as: */
+ */
+
+/** Registered as */
 #define Asc_EnvVarCmdHN "asc_env"
-/* Usage: */
+/** Usage */
 #define Asc_EnvVarCmdHU \
  "asc_env option args\n\
   options are append, export, get, import, list, names, put, and set."
+/** Short help text */
 #define Asc_EnvVarCmdHS \
  "asc_env manipulates a database of strings for the ascend application"
+/** Long help text part 1 */
 #define Asc_EnvVarCmdHL1 \
 "\
  * These strings are only loosely tied to either the C or Tcl environment\n\
  * on flakey non-UNIX platforms.\n\
  * The options are as follows:\n\
 "
+/** Long help text part 2 */
 #define Asc_EnvVarCmdHL2 \
 "\
  * 	append	var pathelement\n\
@@ -65,6 +78,7 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  *		Path elements may contain spaces, but should not\n\
  *		contain path dividers.\n\
 "
+/** Long help text part 3 */
 #define Asc_EnvVarCmdHL3 \
 "\
  * 	export	var\n\
@@ -74,6 +88,7 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  *		Whether or not the C environment sees changes to Tcl\n\
  *		env depends entirely on the Tcl core implementation.\n\
 "
+/** Long help text part 4 */
 #define Asc_EnvVarCmdHL4 \
 "\
  * 	get 	var\n\
@@ -82,6 +97,7 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  *		together into a single string using the pathdiv separator.\n\
  *		UNIX pathdiv is : and MS pathdiv is ; .\n\
 "
+/** Long help text part 5 */
 #define Asc_EnvVarCmdHL5 \
 "\
  * 	import	var\n\
@@ -90,12 +106,14 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  * 	list	var\n\
  *		Returns a Tcl list of the elements stored for ascend var.\n\
 "
+/** Long help text part 6 */
 #define Asc_EnvVarCmdHL6 \
 "\
  * 	names	\n\
  *		Takes no arguments and returns the names of known\n\
  *		ascend environment variables as a Tcl list.  \n\
 "
+/** Long help text part 7 */
 #define Asc_EnvVarCmdHL7 \
 "\
  * 	put	input_string\n\
@@ -105,12 +123,14 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  *		as defined for getenv above and split accordingly into\n\
  *		pathelements.\n\
 "
+/** Long help text part 8 */
 #define Asc_EnvVarCmdHL8 \
 "\
  * 	set	var path \n\
  *		Like putenv, but you have done the split on = for us.\n\
  *  \n\
 "
+/** Long help text part 9 */
 #define Asc_EnvVarCmdHL9 \
 "\
  * These commands manage a global array of strings in the process. \n\
@@ -118,6 +138,7 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  * UNIX environment variable implementation for our purposes. \n\
  * These strings are accessible to other clients through the C api \n\
 "
+/** Long help text part 10 */
 #define Asc_EnvVarCmdHL10 \
 "\
  * in utilities/ascEnvVar.h. We do this because we don't want our \n\
@@ -127,4 +148,5 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  * elsewhere.\n\
 "
 
-#endif /* __ENVVARPROC_H_SEEN__ */
+#endif  /* __ENVVARPROC_H_SEEN__ */
+

@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  SlvDOF: Ascend Degrees of Freedom module
  *  by Benjamin A Allan and Vicente Rico-Ramirez
  *  Created: 7/11/94
@@ -22,15 +22,17 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  *  COPYING is found in ../compiler.
  */
 
-/**< 
- *  Contents:     DOF module
+/** @file
+ *  Ascend Degrees of Freedom module
+ *  <pre>
+ *  Contents:     DOF module (Solver Degrees of Freedom)
  *
  *  Authors:      Ben Allan
  *
@@ -43,16 +45,19 @@
  *                of freedom through the user interface. It uses
  *                its own incidence matrix separate from the mtx of
  *                any given solver.
+ *
+ *  Requires:     #include <stdio.h>
+ *                #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
  */
+
 #ifndef slvdof_already_included
 #define slvdof_already_included
 
-/**< requires #include <stdio.h> */
-/**< requires #include "slv_client.h" */
-
-/**< 
+/*
  * The following functions are for use in running DOF analysis and dialog
- * through the interface. The tcl callbacks for them will be coded in 
+ * through the interface. The tcl callbacks for them will be coded in
  * DebugProc.c probably.
  * Partitioning is assumed to be in effect.
  * In general, the lists returned will be longer than number of degrees of
@@ -60,11 +65,12 @@
  * time.
  */
 
-extern int slvDOF_eligible(slv_system_t, int32**);
-/**< 
+extern int slvDOF_eligible(slv_system_t server, int32 **vil);
+/**<
+ * <!--  usage: if(slvDOF_eligible(server,&vil))                       -->
+ * <!--  int32 *vil;                                                   -->
+ *
  * Returns 1 if able to determine lists, 0 otherwise.
- * usage: if(slvDOF_eligible(server,&vil))
- * int32 *vil;
  * That is you send us the address of a pointer to an int32 array
  * and we will fill in the pointer.
  * If return is 1, user should free vil when done with it. Return 0
@@ -78,73 +84,79 @@ extern int slvDOF_eligible(slv_system_t, int32**);
  * since they cannot help the DOF state of the system.
  */
 
-extern int slvDOF_structsing(slv_system_t, int32, int32**, int32**,int32**);
+extern int slvDOF_structsing(slv_system_t server,
+                             int32 relindex, 
+                             int32 **vil, 
+                             int32 **ril, 
+                             int32 **fil);
 /**< 
- * if(slvDOF_structsing(server,relindex,&vil,&ril,&fil)) {.... }
- * int32 *vil, *ril, fil.
- * Returns 1 if able to determine lists, 0 otherwise.
- * relindex should be the sindex of an unassigned, included equation
- * from the solvers_rel_list.
- * If relindex is mtx_FIRST, the list returned will be the intersection of
- * all singularity lists for any unassignable included equations in 
- * the system.
- * If return is 1, user should free r/v/fil when done with
- * them. Return 0 -> lists will be null.
- * The index lists are terminated with a -1.
- * The indices are *_sindex of vars/rels on solvers_*_list.
- * vil is the vars involved in a structural singularity.
- * ril is the rels involved in a structural singularity.
- * fil is the vars which reduce the structural singularity if freed.
+ *  <!--  if(slvDOF_structsing(server,relindex,&vil,&ril,&fil)) {.... } -->
+ *  <!--  int32 *vil, *ril, fil.                                        -->
+ *  Returns 1 if able to determine lists, 0 otherwise.
+ *  relindex should be the sindex of an unassigned, included equation
+ *  from the solvers_rel_list.
+ *  If relindex is mtx_FIRST, the list returned will be the intersection of
+ *  all singularity lists for any unassignable included equations in
+ *  the system.
+ *  If return is 1, user should free r/v/fil when done with
+ *  them. Return 0 -> lists will be null.
+ *  The index lists are terminated with a -1.
+ *  The indices are *_sindex of vars/rels on solvers_*_list.
+ *  @param vil  int32 **, the vars involved in a structural singularity.
+ *  @param ril  int32 **, the rels involved in a structural singularity.
+ *  @param fil  int32 **, the vars which reduce the structural singularity if freed.
  */
 
-extern int32 slvDOF_status(slv_system_t, int32 *, int32 *);
-/**< 
- * Return the status of the current problem.
+extern int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
+/**<
+ *  Return the status of the current problem.
  *
- * status = 1  ==> underspecified
- * status = 2  ==> square
- * status = 3  ==> structurally singular
- * status = 4  ==> overspecifed
- * status = 5  ==> Error !! ( insufficient memory, NULL argument,
- *                            failed to presolve)
+ *  - status = 1  ==> underspecified
+ *  - status = 2  ==> square
+ *  - status = 3  ==> structurally singular
+ *  - status = 4  ==> overspecifed
+ *  - status = 5  ==> Error !! ( insufficient memory, NULL argument, failed to presolve)
  *
- * If the system is underspecified, we will also get the number of the
- * degrees of freedom for the problem.
- *
+ *  If the system is underspecified, we will also get the number of the
+ *  degrees of freedom for the problem.
  */
 
-extern int32 get_globally_consistent_eligible(slv_system_t,int32 **);
-/**< 
- * Returns 1 if able to determine list, 0 otherwise.
- * usage: get_globally_consistent_eligible(server,&(eliset))
- * int32 *eliset
- * That is you send us the address of a pointer to an int32 array
- * and we will fill in the pointer.
- * If return is 1, user should free eliset when done with it. Return 0
- * -> eliset will be null.
- * The index list is terminated with a -1 but may be of any length.
- * The indices are var_mindex of vars on master_var_list.
- * elist is incident vars eligible to be fixed.
+extern int32 get_globally_consistent_eligible(slv_system_t server,
+                                              int32 **eliset);
+/**<
+ *  <!--  usage: get_globally_consistent_eligible(server,&(eliset))     -->
+ *  <!--  int32 *eliset                                                 -->
+ *
+ *  Returns 1 if able to determine list, 0 otherwise.
+ *  That is you send us the address of a pointer to an int32 array
+ *  and we will fill in the pointer.
+ *  If return is 1, user should free eliset when done with it. Return 0
+ *  -> eliset will be null.
+ *  The index list is terminated with a -1 but may be of any length.
+ *  The indices are var_mindex of vars on master_var_list.
+ *  elist is incident vars eligible to be fixed.
  */
 
-extern int32 consistency_analysis(slv_system_t,int32 **);
-/**< 
- * Returns 1 if system is structurally consistent, 0 otherwise.
- * usage: consistency_analysis(server,&(fixed))
- * int32 *fixed
- * That is you send us the address of a pointer to an int32 array
- * and we will fill in the pointer.
- * The function
- * performs an automatized combinatorial consitency analysis to find
- * a partition which causes all the alernatives in the system to be
- * consitent. If the system is consistent, the array 'fixed' will contain
- * the solver var indices of a set of  variables which, if fixed, will
- * result in a consistent partition for all the alternatives in the
- * system.
- * If return is 1, user should free 'fixed' when done with it. Return 0
- * -> fixed will be null.
- * The index list is terminated with a -1 but may be of any length.
- * The indices are var_mindex of vars on master_var_list.
- * 
+extern int32 consistency_analysis(slv_system_t server, int32 **fixed);
+/**<
+ *  <!--  usage: consistency_analysis(server,&(fixed))                  -->
+ *  <!--  int32 *fixed                                                  -->
+ *
+ *  Returns 1 if system is structurally consistent, 0 otherwise.
+ *  That is you send us the address of a pointer to an int32 array
+ *  and we will fill in the pointer.
+ *  The function
+ *  performs an automatized combinatorial consitency analysis to find
+ *  a partition which causes all the alernatives in the system to be
+ *  consitent. If the system is consistent, the array 'fixed' will contain
+ *  the solver var indices of a set of  variables which, if fixed, will
+ *  result in a consistent partition for all the alternatives in the
+ *  system.<br><br>
+ *  If return is 1, user should free 'fixed' when done with it. Return 0
+ *  -> fixed will be null.
+ *  The index list is terminated with a -1 but may be of any length.
+ *  The indices are var_mindex of vars on master_var_list.
  */
-#endif /**< slvdof_already_included */
+
+#endif  /* slvdof_already_included */
+

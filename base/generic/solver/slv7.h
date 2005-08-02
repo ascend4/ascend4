@@ -1,4 +1,4 @@
-/**< 
+/*
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -29,28 +29,32 @@
  *  COPYING is found in ../compiler.
  */
 
-/***************************************************************************
- ***  Contents:     NGSlv module
- ***
- ***  Authors:      Ben Allan, Kenneth Tyner
- ***               
- ***  Dates:        02/96 - copy of QRSlv: Modifications Pending
- ***                
- ***                
- ***
- ***************************************************************************/
+/** @file
+ *  Nonlinear Solver (NGSlv) registration module.
+ *  <pre>
+ *  Contents:     NGSlv module
+ *
+ *  Authors:      Ben Allan, Kenneth Tyner
+ *
+ *  Dates:        02/96 - copy of QRSlv: Modifications Pending
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"  
+ *  </pre>
+ *  @todo Update Dates note when modifactions complete.
+ */
+
 #ifndef slv7__already_included
 #define slv7__already_included
-
-/**< requires #include "slv_client.h" */
 
 typedef struct slv7_system_structure *slv7_system_t;
 
 int slv7_register(SlvFunctionsT *);
-/**********************************************************************\
-  This is the function that tells the system about the QRSlv solver.
-  Our index is not necessarily going to be 0. That everything here is
-  named slv0* is just a historical event.
-\**********************************************************************/
-     
-#endif
+/**<
+ *  This is the function that tells the system about the NGSlv solver.
+ *  Our index is not necessarily going to be 0. That everything here is
+ *  named slv7* is just a historical event.
+ */
+
+#endif  /* slv7__already_included */
+

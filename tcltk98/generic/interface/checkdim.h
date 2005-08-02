@@ -26,56 +26,61 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
+ */
+
+/** @file
  *  This module defines the dimensionality derivation and some other
  *  auxillaries for Ascend.
+ *  <pre>
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "compiler/dimen.h"
+ *                #include "solver/mtx.h"
+ *                #include "solver/linsol.h"
+ *                #include "solver/var.h"
+ *                #include "solver/rel.h"
+ *                #include "solver/slv_client.h"
+ *  </pre>
+ *  @todo checkdim.h appears to be a work in progress - complete or remove.
  */
 
 #ifndef chkdim__already_included
 #define chkdim__already_included
-/* requires
-# #include "dimen.h"
-# #include "mtx.h"
-# #include "linsol.h"
-# #include "var.h"
-# #include "rel.h"
-# #include "slv_client.h"
-*/
+
 #define REIMPLEMENT 0
 
 /* See relman.h for the definition of list of relations/variables */
 
 typedef struct chkdim_system_structure {
    linsol_system_t sys;
-   mtx_matrix_t mtx;                  /* Coefficient matrix                 */
-   real64 *(rhs[NUM_DIMENS]);   /* RHS's (one for each fundamental
-                                         dimension)                         */
-   struct rel_relation **rlist;             /* List of relations corresponding to
-                                         each equation in the linear system */
-   struct var_variable **vlist;             /* List of (wild) variables corresponding
-                                         to each variable in the linear
-                                         system                             */
-   int rhs_cap;                       /* Capacity of the RHS arrays         */
-   int rlist_len,vlist_len;           /* Length of rlist and vlist resp.    */
-   int rlist_cap,vlist_cap;           /* Capacity of rlist and vlist resp.  */
+   mtx_matrix_t mtx;              /**< Coefficient matrix                 */
+   real64 *(rhs[NUM_DIMENS]);     /**< RHS's (one for each fundamental
+                                       dimension)                         */
+   struct rel_relation **rlist;   /**< List of relations corresponding to
+                                       each equation in the linear system */
+   struct var_variable **vlist;   /**< List of (wild) variables corresponding
+                                       to each variable in the linear
+                                       system                             */
+   int rhs_cap;                   /**< Capacity of the RHS arrays         */
+   int rlist_len,vlist_len;       /**< Length of rlist and vlist resp.    */
+   int rlist_cap,vlist_cap;       /**< Capacity of rlist and vlist resp.  */
 } chkdim_system_t;
 
 #if REIMPLEMENT
 
 extern chkdim_create_system();
-/*
- *  chkdim_create_system(chk,rlist)
- *  chkdim_system_t *chk;
- *  struct rel_relation **rlist;
+/**<
+ *  <!--  chkdim_create_system(chk,rlist)                              -->
+ *  <!--  chkdim_system_t *chk;                                        -->
+ *  <!--  struct rel_relation **rlist;                                 -->
  *
  *  Initializes the structure and appends the relations appearing in rlist
  *  in the sense of chkdim_append_rel().
  */
 
 extern chkdim_destroy_system();
-/*
- *  chkdim_destroy_system(chk)
- *  chkdim_system_t *chk;
+/**<
+ *  <!--  chkdim_destroy_system(chk)                                   -->
+ *  <!--  chkdim_system_t *chk;                                        -->
  *
  *  Destroys everything in the structure.  The structure itself is not
  *  deallocated since chkdim_create_system() did not allocate it.
@@ -83,12 +88,12 @@ extern chkdim_destroy_system();
 
 extern chkdim_append_expr();
 extern chkdim_append_rel();
-/*
- *  chkdim_append_expr(chk,expr)
- *  chkdim_append_rel(chk,rel)
- *  chkdim_system_t *chk;
- *  expr_t expr;
- *  struct rel_relation *rel;
+/**<
+ *  <!--  chkdim_append_expr(chk,expr)                                 -->
+ *  <!--  chkdim_append_rel(chk,rel)                                   -->
+ *  <!--  chkdim_system_t *chk;                                        -->
+ *  <!--  expr_t expr;                                                 -->
+ *  <!--  struct rel_relation *rel;                                    -->
  *
  *  Adds the given expression/relation (i.e. all dimensional equations
  *  implied by the expression/relation) to the system of dimensional
@@ -98,10 +103,10 @@ extern chkdim_append_rel();
  */
 
 extern chkdim_assign_dimensions();
-/*
- *  chkdim_assign_dimensions(chk,p)
- *  chkdim_system_t *chk;
- *  slv_parameters_t *p;
+/**<
+ *  <!--  chkdim_assign_dimensions(chk,p)                              -->
+ *  <!--  chkdim_system_t *chk;                                        -->
+ *  <!--  slv_parameters_t *p;                                         -->
  *
  *  Solves the dimensional equations and assigns the dimensions to the
  *  wild-dimensioned variables as directed by the solution, writing the
@@ -110,11 +115,11 @@ extern chkdim_assign_dimensions();
  */
 
 extern int chkdim_check_dimensions();
-/*
- *  nerrs = chkdim_check_dimensions(chk,p)
- *  int nerrs;
- *  chkdim_system_t *chk;
- *  slv_parameters_t *p;
+/**<
+ *  <!--  nerrs = chkdim_check_dimensions(chk,p)                       -->
+ *  <!--  int nerrs;                                                   -->
+ *  <!--  chkdim_system_t *chk;                                        -->
+ *  <!--  slv_parameters_t *p;                                         -->
  *
  *  Solves the dimensional equations and checks the solution for
  *  consistency, writing messages to p->output.more_important.  Returns
@@ -132,4 +137,5 @@ extern int chkdim_check_dimensions();
 
 #endif /* REIMPLEMENT  */
 
-#endif  /* already_included  */
+#endif  /* chkdim__already_included  */
+

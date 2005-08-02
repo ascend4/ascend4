@@ -27,19 +27,29 @@
  *  COPYING.
  */
 
+/** @file
+ *  Interface Implementation - terminal setup.
+ *  <pre>
+ *  When #including termsetup.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *  </pre>
+ *  @todo Complete documentation of termsetup.h.
+ */
+
 #ifndef __TERMSETUP_H_SEEN__
 #define __TERMSETUP_H_SEEN__
 
-extern int OutputChar();
-extern void DeleteBackOne();
-extern void ClearScreen();
-extern void Bell();
-extern void ClearLine();
-extern void SetupTermcapStuff();
-extern void InterfaceError();
-extern void SetupTerminal();
-extern void RestoreTerminal();
-extern void TermSetup_ResetTerminal();
-extern void ReadString();
+extern int  OutputChar(char c);               /**< Print c and return it. */
+extern void DeleteBackOne(void);              /**< Print backspace. */
+extern void ClearScreen(void);                /**< Clear the screen. */
+extern void Bell(void);                       /**< Print bell. */
+extern void ClearLine(void);                  /**< Clear the line. */
+extern void SetupTermcapStuff(void);          /**< Setup terminal characteristics. */
+extern void InterfaceError(void);             /**< Called when an error occurs. */
+extern void SetupTerminal(void);              /**< Setup terminal. */
+extern void RestoreTerminal(void);            /**< Restore terminal settings. */
+extern void TermSetup_ResetTerminal(void);    /**< Reset the terminal. */
+extern void ReadString(char *str, int *len);  /**< Read a string of length len. */
 
 #endif /* __TERMSETUP_H_SEEN__ */
+

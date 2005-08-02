@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Name external definitions
  *  by Tom Epperly
  *  July 31, 1989
@@ -26,51 +26,56 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  Name external definitions.
+ *  <pre>
  *  When #including name.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
+ *  </pre>
+ *  @todo These things need to be pooled to save space and time. baa 3/96
  */
-
 
 #ifndef __NAME_H_SEEN__
 #define __NAME_H_SEEN__
-/**< requires
-# #include"compiler.h"
-# #include"types.h"
-*/
-
-/**< 
- *  These things need to be pooled to save space and time. baa 3/96
- */
 
 #define CreateIdName(s) CreateIdNameF((s),NAMEBIT_IDTY)
-#define CreateSystemIdName(s) CreateIdNameF((s),NAMEBIT_IDTY|NAMEBIT_AUTO)
-extern struct Name *CreateIdNameF(symchar *,int);
 /**< 
- *  macro CreateIdName(s)
- *  macro CreateSystemIdName(s)
- *  Create name with Id or system name Id+Auto flags.
- *  struct Name *CreateIdNameF(s,bits)
- *  symchar *s;
+ *  Create name with Id flag.
+ *  @see CreateIdNameF()
+ */
+#define CreateSystemIdName(s) CreateIdNameF((s),NAMEBIT_IDTY|NAMEBIT_AUTO)
+/**<
+ *  Create system name with Id+Auto flags.
+ *  @see CreateIdNameF()
+ */
+extern struct Name *CreateIdNameF(symchar *s, int bits);
+/**<
+ *  <!--  macro CreateIdName(s)                                        -->
+ *  <!--  macro CreateSystemIdName(s)                                  -->
+ *  <!--  Create name with Id or system name Id+Auto flags.            -->
+ *  <!--  struct Name *CreateIdNameF(s,bits)                           -->
+ *  <!--  symchar *s;                                                  -->
  *  Create a name node with the identifier s
- *  and flag bits associated with it.
+ *  and flag bits associated with it.  Implementation
+ *  function for CreateIdName() and CreateSystemIdName().
  */
 
-extern struct Name *CreateSetName(struct Set *);
+extern struct Name *CreateSetName(struct Set *s);
 /**< 
- *  struct Name *CreateSetName(s)
- *  struct Set *s;
+ *  <!--  struct Name *CreateSetName(s)                                -->
+ *  <!--  struct Set *s;                                               -->
  *  Create a name node of type set with the set s associated with it.
  */
 
-extern void LinkNames(struct Name *, struct Name *);
+extern void LinkNames(struct Name *cur, struct Name *next);
 /**< 
- *  void LinkName(cur,next)
- *  struct Name *cur;
- *  const struct Name *next;
+ *  <!--  void LinkName(cur,next)                                      -->
+ *  <!--  struct Name *cur;                                            -->
+ *  <!--  const struct Name *next;                                     -->
  *  Link "next" to cur so that NextName(cur) = next
  */
 
@@ -79,12 +84,20 @@ extern void LinkNames(struct Name *, struct Name *);
 #else
 #define NextName(n) NextNameF(n)
 #endif
-extern struct Name *NextNameF(CONST struct Name *);
-/**< 
- *  macro NextName(n)
- *  struct Name *NextNameF(n)
- *  const struct Name *n;
+/**<
  *  Return the next attribute of n.
+ *  @param n CONST struct Name*, Name to query.
+ *  @return The next attribute as a struct Name*.
+ *  @see NextNameF()
+ */
+extern struct Name *NextNameF(CONST struct Name *n);
+/**<
+ *  <!--  macro NextName(n)                                            -->
+ *  <!--  struct Name *NextNameF(n)                                    -->
+ *  <!--  const struct Name *n;                                        -->
+ *  <!--  Return the next attribute of n.                              -->
+ *  Implementation function for NextName().  Do not call this
+ *  function directly - use NextName() instead.
  */
 
 #ifdef NDEBUG
@@ -92,14 +105,24 @@ extern struct Name *NextNameF(CONST struct Name *);
 #else
 #define NameId(n) NameIdF(n)
 #endif
-extern int NameIdF(CONST struct Name *);
-/**< 
- *  macro NameId(n)
- *  int NameIdF(n)
- *  const struct Name *n;
- *  Return NAMEBIT_IDTY if n is an identifier type Name or 0 otherwise.
+/**<
+ *  Test whether a Name is an identifier.
  *  We should have analogous functions for CHAT and ATTR, but since no
  *  clients yet use them, they aren't implemented.
+ *  @param n CONST struct Name*, Name to query.
+ *  @return An int:  NAMEBIT_IDTY if n is an identifier type Name or 0 otherwise.
+ *  @see NameIdF()
+ */
+extern int NameIdF(CONST struct Name *n);
+/**< 
+ *  <!--  macro NameId(n)                                              -->
+ *  <!--  int NameIdF(n)                                               -->
+ *  <!--  const struct Name *n;                                        -->
+ *  <!--  Return NAMEBIT_IDTY if n is an identifier type Name or 0 otherwise. -->
+ *  <!--  We should have analogous functions for CHAT and ATTR, but since no  -->
+ *  <!--  clients yet use them, they aren't implemented.                      -->
+ *  Implementation function for NameId().  Do not call this
+ *  function directly - use NameId() instead.
  */
 
 #ifdef NDEBUG
@@ -107,13 +130,22 @@ extern int NameIdF(CONST struct Name *);
 #else
 #define NameAuto(n) NameAutoF(n)
 #endif
-extern int NameAutoF(CONST struct Name *);
-/**< 
- *  macro NameAuto(n)
- *  int NameAutoF(n)
- *  const struct Name *n;
- *  Return NAMEBIT_AUTO if n is an system generated identifier type Name
- *  or 0 otherwise.
+/**<
+ *  Test whether a Name is a system generated identifier.
+ *  @param n CONST struct Name*, Name to query.
+ *  @return An int:  NAMEBIT_AUTO if n is an system generated identifier
+ *          type Name, or 0 otherwise.
+ *  @see NameAutoF()
+ */
+extern int NameAutoF(CONST struct Name *n);
+/**<
+ *  <!--  macro NameAuto(n)                                            -->
+ *  <!--  int NameAutoF(n)                                             -->
+ *  <!--  const struct Name *n;                                        -->
+ *  <!--  Return NAMEBIT_AUTO if n is an system generated identifier   -->
+ *  <!--  type Name, or 0 otherwise.                                   -->
+ *  Implementation function for NameAuto().  Do not call this
+ *  function directly - use NameAuto() instead.
  */
 
 #ifdef NDEBUG
@@ -121,26 +153,35 @@ extern int NameAutoF(CONST struct Name *);
 #else
 #define NameIdPtr(n) NameIdPtrF(n)
 #endif
-extern symchar *NameIdPtrF(CONST struct Name *);
+/**<
+ *  Returns the id pointer for identifier type name node n.
+ *  @param n CONST struct Name*, Name to query.
+ *  @return The id pointer as a symchar*.
+ *  @see NameIdPtrF()
+ */
+extern symchar *NameIdPtrF(CONST struct Name *n);
 /**< 
- *  macro NameIdPtr(n)
- *  extern const char *NameIdPtrF(n)
- *  const struct Name *n;
- *  Assumes that n is a identifier type name node.  Returns the id pointer.
+ *  <!--  macro NameIdPtr(n)                                           -->
+ *  <!--  extern const char *NameIdPtrF(n)                             -->
+ *  <!--  const struct Name *n;                                        -->
+ *  <!--  Assumes that n is a identifier type name node.               -->
+ *  <!--  Returns the id pointer.                                      -->
+ *  Implementation function for NameIdPtr().  Do not call this
+ *  function directly - use NameIdPtr() instead.
  */
 
-extern symchar *SimpleNameIdPtr(CONST struct Name *);
+extern symchar *SimpleNameIdPtr(CONST struct Name *n);
 /**< 
- *  const char *SimpleNameIdPtr(n)
- *  const struct Name *n;
+ *  <!--  const char *SimpleNameIdPtr(n)                               -->
+ *  <!--  const struct Name *n;                                        -->
  *  Return NULL if n is not an NameId or if it has a next field.  Otherwise,
  *  it returns the char pointer.
  */
 
-extern unsigned int NameLength(CONST struct Name *);
+extern unsigned int NameLength(CONST struct Name *n);
 /**< 
- *  unsigned int NameLength(n);
- *  const struct Name *n;
+ *  <!--  unsigned int NameLength(n);                                  -->
+ *  <!--  const struct Name *n;                                        -->
  *  Returns the number of links in a chain of names. May be used in a
  *  similar manner to SimpleNameIdPtr, to determine if a name is a simple
  *  name e.g. "my_var" (len = 1 ) rather than "my_var.your_var[1..3]"
@@ -152,104 +193,117 @@ extern unsigned int NameLength(CONST struct Name *);
 #else
 #define NameSetPtr(n) NameSetPtrF(n)
 #endif
-extern CONST struct Set *NameSetPtrF(CONST struct Name *);
+/**<
+ *  Returns the set pointer for set type name node n.
+ *  @param n CONST struct Name*, Name to query.
+ *  @return The set pointer as a CONST struct Set*.
+ *  @see NameSetPtrF()
+ */
+extern CONST struct Set *NameSetPtrF(CONST struct Name *n);
 /**< 
- *  const struct Set *NameSetPtrF(n)
- *  const struct Name *n;
- *  Assumes that n is a set type name node.  Returns the set pointer.
+ *  <!--  const struct Set *NameSetPtrF(n)                             -->
+ *  <!--  const struct Name *n;                                        -->
+ *  <!--  Assumes that n is a set type name node.                      -->
+ *  <!--  Returns the set pointer.                                     -->
+ *  Implementation function for NameSetPtr().  Do not call this
+ *  function directly - use NameSetPtr() instead.
  */
 
-extern struct Name *CopyName(CONST struct Name *);
+extern struct Name *CopyName(CONST struct Name *n);
 /**< 
- *  struct Name *CopyName(n)
- *  const struct Name *n;
+ *  <!--  struct Name *CopyName(n)                                     -->
+ *  <!--  const struct Name *n;                                        -->
  *  Make and return a copy of the whole name.
  */
 
-extern void DestroyName(struct Name *);
+extern void DestroyName(struct Name *n);
 /**< 
- *  void DestroyName(n)
- *  struct Name *n;
+ *  <!--  void DestroyName(n)                                          -->
+ *  <!--  struct Name *n;                                              -->
  *  Deallocate the whole name linked list
  *  Handles NULL input gracefully.
  */
 
-extern void DestroyNamePtr(struct Name *);
+extern void DestroyNamePtr(struct Name *n);
 /**< 
- *  void DestroyNamePtr(n)
- *  struct Name *n;
+ *  <!--  void DestroyNamePtr(n)                                       -->
+ *  <!--  struct Name *n;                                              -->
  *  Deallocate this name node, and don't change the next node.
  *  Handles NULL input gracefully.
  */
 
-extern struct Name *JoinNames(struct Name *, struct Name *);
+extern struct Name *JoinNames(struct Name *n1, struct Name *n2);
 /**< 
- *  struct Name *JoinNames(n1,n2)
- *  struct Name *n1, *n2;
+ *  <!--  struct Name *JoinNames(n1,n2)                                -->
+ *  <!--  struct Name *n1, *n2;                                        -->
  *  Appends n2 to the end of n1.  This will return n1, unless n1 is NULL in
  *  which case it will return n2.
  */
 
-extern struct Name *ReverseName(struct Name *);
+extern struct Name *ReverseName(struct Name *n);
 /**< 
- *  struct Name *ReverseName(n)
- *  struct Name *n;
+ *  <!--  struct Name *ReverseName(n)                                  -->
+ *  <!--  struct Name *n;                                              -->
  *  Returns the reverse of n.
  */
 
-extern CONST struct Name *NextIdName(CONST struct Name *);
+extern CONST struct Name *NextIdName(CONST struct Name *n);
 /**< 
- *  struct Name *NextIdName(n)
- *  struct Name *n;
+ *  <!--  struct Name *NextIdName(n)                                   -->
+ *  <!--  struct Name *n;                                              -->
  *  Returns the first NameId element in the name after the current element
  *  which is expected to be a NameId. If there is none, returns NULL.
  */
 
-extern int NameCompound(CONST struct Name *);
+extern int NameCompound(CONST struct Name *n);
 /**< 
- *  int NameCompound(n)
- *  const struct Name *n;
- *  If name is compound (i.e. crosses a MODEL/ATOM boundary) this
- *  returns 1, OTHERWISE this returns 0. So array names will return
- *  0.
+ *  <!--  int NameCompound(n)                                          -->
+ *  <!--  const struct Name *n;                                        -->
+ *  Test whether name is compound (i.e. crosses a MODEL/ATOM boundary).
+ *  If so this returns 1, OTHERWISE this returns 0.  So array names 
+ *  will return 0.
  *  The following return 0:
- *  a
- *  a[i]
- *  [i][j]  -- though this isn't a proper name, generally.
+ *  - a
+ *  - a[i]
+ *  - [i][j]  -- though this isn't a proper name, generally.
+ *
  *  The following return 1:
- *  a.b
- *  a[i].b
- *  [i].b
+ *  - a.b
+ *  - a[i].b
+ *  - [i].b
+ *
  *  So basically, if the name is printed with a . this will return 1.
  */
 
-extern int NamesEqual(CONST struct Name *,CONST struct Name *);
+extern int NamesEqual(CONST struct Name *n1, CONST struct Name *n2);
 /**< 
- *  int NamesEqual(n1,n2)
- *  const struct Name *n1,*n2;
+ *  <!--  int NamesEqual(n1,n2)                                        -->
+ *  <!--  const struct Name *n1,*n2;                                   -->
  *  Return TRUE if and only if n1 and n2 are structurally equivalent.
  */
 
-extern int CompareNames(CONST struct Name *,CONST struct Name *);
+extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
 /**< 
- *  int CompareNames(n1,n2)
- *  const struct Name *n1,*n2;
+ *  <!--  int CompareNames(n1,n2)                                      -->
+ *  <!--  const struct Name *n1,*n2;                                   -->
  *  Returns -1 0 1 as n1 < = > n2.
  *  Will need fixing when we have supported attributes.
  */
 
 extern void name_init_pool(void);
 /**< 
- * starts memory recycle. do not call twice before stopping recycle.
+ * Starts memory recycle. Do not call twice before stopping recycle.
  */
 
 extern void name_destroy_pool(void);
 /**< 
- * stops memory recycle. do not call while ANY names are outstanding.
+ * Stops memory recycle. Do not call while ANY names are outstanding.
  */
 
 extern void name_report_pool(void);
 /**< 
- * write the pool report to ASCERR for the name pool.
+ * Write the pool report to ASCERR for the name pool.
  */
-#endif /**< __NAME_H_SEEN__ */
+
+#endif  /* __NAME_H_SEEN__ */
+

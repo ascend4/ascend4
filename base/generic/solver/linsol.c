@@ -1,4 +1,4 @@
-/*
+/* 
  *  linsol: Ascend Linear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -181,10 +181,7 @@ linsol_system_t sys;
   return (sys->inv);
 }
 
-void linsol_add_rhs(sys,rhs,transpose)
-linsol_system_t sys;
-real64 *rhs;
-boolean transpose;
+void linsol_add_rhs(linsol_system_t sys, real64 *rhs, boolean transpose)
 {
   struct rhs_list *rl;
   int32 capacity;

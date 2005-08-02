@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Common Relation Construction Routines
  *  Version: $Revision: 1.4 $
  *  Version control file: $RCSfile: rel_common.h,v $
@@ -24,33 +24,41 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
+/** @file
+ *  Common Relation Construction Routines.
+ *  <pre>
+ *  When #including rel_common.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "types.h"
+ *  </pre>
+ */
+
 #ifndef __REL_COMMON_H_SEEN__
 #define __REL_COMMON_H_SEEN__
 
-
-extern int CmpP(CONST char *, CONST char *);
+extern int CmpP(CONST char *c1, CONST char *c2);
 /**< 
- *  int CmpP(c1,c2)
- *  CONST char *c1;
- *  CONST char *c2;
+ *  <!--  int CmpP(c1,c2)                                              -->
+ *  <!--  CONST char *c1;                                              -->
+ *  <!--  CONST char *c2;                                              -->
  *  Compare two character pointers.
  */
 
-extern void Swap(unsigned long int *, unsigned long int *);
+extern void Swap(unsigned long int *p1, unsigned long int *p2);
 /**< 
- *  void Swap(p1,p2)
- *  unsigned long int *p1
- *  unsigned long int *p2
- *  unsigned long temp
+ *  <!--  void Swap(p1,p2)                                             -->
+ *  <!--  unsigned long int *p1                                        -->
+ *  <!--  unsigned long int *p2                                        -->
+ *  <!--  unsigned long temp                                           -->
  *  Exchange the value of pointers p1 and p2
  */
 
-extern CONST struct Expr *FindLastExpr(register CONST struct Expr *);
+extern CONST struct Expr *FindLastExpr(register CONST struct Expr *ex);
 /**< 
- *  CONST struct Expr *FindLastExpr(ex)
- *  register CONST struct Expr *ex
+ *  <!--  CONST struct Expr *FindLastExpr(ex)                          -->
+ *  <!--  register CONST struct Expr *ex                               -->
  *  Return the next pointer in a link of expressions
  */
 
+#endif  /*__ REL_COMMON_H_SEEN__  */
 
-#endif /*__ REL_COMMON_H_SEEN__  */

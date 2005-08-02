@@ -29,40 +29,30 @@
  *  the file named COPYING.
  */
 
-/*
- * prolog for C to be compiled and dynamically loaded to provide
- * residuals and gradients to token relations. This defines the
- * math functions ascend will provide after loading the
- * necessary system headers.
- * Don't put anything in this prolog which requires access to
- * other ascend sources. This header must be shipped with the
- * binary distribution in some lib directory.
+/** @file
+ *  Prolog for C to be compiled and dynamically loaded to provide
+ *  residuals and gradients to token relations. This defines the
+ *  math functions ascend will provide after loading the
+ *  necessary system headers.<br><br>
  *
- * bintoken.c also includes this so we maintain 1 definition
- * of our structs. bintoken.h must include it AFTER func.h
- * in bintoken.c.
+ *  Don't put anything in this prolog which requires access to
+ *  other ASCEND sources. This header must be shipped with the
+ *  binary distribution in some lib directory.<br><br>
+ *
+ *  bintoken.c also includes this so we maintain 1 definition
+ *  of our structs. bintoken.h must include it AFTER func.h
+ *  in bintoken.c.
+ *  <pre>
+ *  When #including btprolog.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  <pre>
+ *
+ *  @todo Complete documentation of btprolog.h.
  */
+
 #ifndef __BTPROLOG_H_SEEN__
 #define __BTPROLOG_H_SEEN__
-
-#ifndef _ASCCONFIG_H /* then this is being used to build a dynamic library,
-                      * so we reverse the import/export definitions.
-                      */
-#ifdef WIN32
-/* two for use in this file */
-#define DLEXPORT __declspec(dllimport)
-#define DLIMPORT __declspec(dllexport)
-/* two for use in the generated file */
-#define IMPORT __declspec(dllimport)
-#define EXPORT __declspec(dllexport)
-#else /* not win32 */
-/* four for use in either file when the operating system is not brain dead */
-#define DLEXPORT
-#define DLIMPORT
-#define EXPORT
-#define IMPORT
-#endif /* WIN32 */
-#endif /* _ASCCONFIG_H */
 
 #include <math.h>
 #ifndef NULL
@@ -76,21 +66,25 @@
 #define BinTokenGRADIENT 0
 #define BinTokenRESIDUAL 1
 
-/*
- * residual evaluation function pointer.
- * F(vars,resid);
- * gradient evaluation function pointer.
- * G(vars,grad,resid);
- * F77 style interface code (if and big goto required inside)
+#ifdef __STDC__
+/**  Residual evaluation function pointer.  F(vars,resid); */
+typedef void (*BinTokenFPtr)(double *, double *);
+/**  Gradient evaluation function pointer.  G(vars,grad,resid); */
+typedef void (*BinTokenGPtr)(double *, double *, double *);
+/**
+ * F77 style interface code (if and big goto required inside).
  * S(vars,grad,resid,ForG,bindex,status);
  */
-#ifdef __STDC__
-typedef void (*BinTokenFPtr)(double *, double *);
-typedef void (*BinTokenGPtr)(double *, double *, double *);
 typedef void (*BinTokenSPtr)(double *, double *, double *, int *, int *, int *);
 #else
+/**  Residual evaluation function pointer.  F(vars,resid); */
 typedef void (*BinTokenFPtr)();
+/**  Gradient evaluation function pointer.  G(vars,grad,resid); */
 typedef void (*BinTokenGPtr)();
+/**
+ * F77 style interface code (if and big goto required inside).
+ * S(vars,grad,resid,ForG,bindex,status);
+ */
 typedef void (*BinTokenSPtr)();
 #endif /* __STDC__ */
 
@@ -109,7 +103,7 @@ union TableUnion {
 };
 
 #ifdef __STDC__
-extern int DLEXPORT ExportBinTokenCTable(struct TableC *, int);
+extern int DLEXPORT ExportBinTokenCTable(struct TableC *t, int size);
 #else
 extern int DLEXPORT ExportBinTokenCTable();
 #endif /* __STDC__ */
@@ -127,63 +121,63 @@ extern int DLEXPORT ExportBinTokenCTable();
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-extern double DLEXPORT cbrt(double);
+extern double DLEXPORT cbrt(double x);
 #ifdef HAVE_ERF
-extern double DLEXPORT erf(double);
+extern double DLEXPORT erf(double x);
 #endif /* HAVE_ERF */
 #endif /* __STDC__ == 1 */
 /*
  * in the case where __STDC__ is defined but == 0, system headers
  * should provide cbrt, erf.
  */
-extern int DLEXPORT ascnintF(double);
-extern double DLEXPORT dln(double);
-extern double DLEXPORT dln2(double);
-extern double DLEXPORT dlog(double);
-extern double DLEXPORT dlog2(double);
-extern double DLEXPORT lnm(double);
-extern double DLEXPORT dlnm(double);
-extern double DLEXPORT dlnm2(double);
-extern double DLEXPORT dtanh(double);
-extern double DLEXPORT dtanh2(double);
-extern double DLEXPORT arcsinh(double);
-extern double DLEXPORT arccosh(double);
-extern double DLEXPORT arctanh(double);
-extern double DLEXPORT darcsinh(double);
-extern double DLEXPORT darcsinh2(double);
-extern double DLEXPORT darccosh(double);
-extern double DLEXPORT darccosh2(double);
-extern double DLEXPORT darctanh(double);
-extern double DLEXPORT darctanh2(double);
-extern double DLEXPORT sqr(double);
-extern double DLEXPORT dsqr(double);
-extern double DLEXPORT dsqr2(double);
-extern double DLEXPORT cube(double);
-extern double DLEXPORT dcube(double);
-extern double DLEXPORT dcube2(double);
-extern double DLEXPORT asc_ipow(double,int);
-extern double DLEXPORT asc_d1ipow(double,int);
-extern double DLEXPORT asc_d2ipow(double,int);
-extern double DLEXPORT hold(double);
-extern double DLEXPORT dsqrt(double);
-extern double DLEXPORT dsqrt2(double);
-extern double DLEXPORT dcbrt(double);
-extern double DLEXPORT dcbrt2(double);
-extern double DLEXPORT dfabs(double);
-extern double DLEXPORT dfabs2(double);
-extern double DLEXPORT dhold(double);
-extern double DLEXPORT dasin(double);
-extern double DLEXPORT dasin2(double);
-extern double DLEXPORT dcos(double);
-extern double DLEXPORT dcos2(double);
-extern double DLEXPORT dacos(double);
-extern double DLEXPORT dacos2(double);
-extern double DLEXPORT dtan(double);
-extern double DLEXPORT dtan2(double);
-extern double DLEXPORT datan(double);
-extern double DLEXPORT datan2(double);
-extern double DLEXPORT derf(double);
-extern double DLEXPORT derf2(double);
+extern int DLEXPORT ascnintF(double x);
+extern double DLEXPORT dln(double x);
+extern double DLEXPORT dln2(double x);
+extern double DLEXPORT dlog(double x);
+extern double DLEXPORT dlog2(double x);
+extern double DLEXPORT lnm(double x);
+extern double DLEXPORT dlnm(double x);
+extern double DLEXPORT dlnm2(double x);
+extern double DLEXPORT dtanh(double x);
+extern double DLEXPORT dtanh2(double x);
+extern double DLEXPORT arcsinh(double x);
+extern double DLEXPORT arccosh(double x);
+extern double DLEXPORT arctanh(double x);
+extern double DLEXPORT darcsinh(double x);
+extern double DLEXPORT darcsinh2(double x);
+extern double DLEXPORT darccosh(double x);
+extern double DLEXPORT darccosh2(double x);
+extern double DLEXPORT darctanh(double x);
+extern double DLEXPORT darctanh2(double x);
+extern double DLEXPORT sqr(double x);
+extern double DLEXPORT dsqr(double x);
+extern double DLEXPORT dsqr2(double x);
+extern double DLEXPORT cube(double x);
+extern double DLEXPORT dcube(double x);
+extern double DLEXPORT dcube2(double x);
+extern double DLEXPORT asc_ipow(double x, int y);
+extern double DLEXPORT asc_d1ipow(double x, int y);
+extern double DLEXPORT asc_d2ipow(double x, int y);
+extern double DLEXPORT hold(double x);
+extern double DLEXPORT dsqrt(double x);
+extern double DLEXPORT dsqrt2(double x);
+extern double DLEXPORT dcbrt(double x);
+extern double DLEXPORT dcbrt2(double x);
+extern double DLEXPORT dfabs(double x);
+extern double DLEXPORT dfabs2(double x);
+extern double DLEXPORT dhold(double x);
+extern double DLEXPORT dasin(double x);
+extern double DLEXPORT dasin2(double x);
+extern double DLEXPORT dcos(double x);
+extern double DLEXPORT dcos2(double x);
+extern double DLEXPORT dacos(double x);
+extern double DLEXPORT dacos2(double x);
+extern double DLEXPORT dtan(double x);
+extern double DLEXPORT dtan2(double x);
+extern double DLEXPORT datan(double x);
+extern double DLEXPORT datan2(double x);
+extern double DLEXPORT derf(double x);
+extern double DLEXPORT derf2(double x);
 
 #else /* no stdc */
 
@@ -240,6 +234,7 @@ extern double DLEXPORT datan2();
 extern double DLEXPORT derf();
 extern double DLEXPORT derf2();
 
-#endif /* no stdc */
-#endif /* fake__FUNC_H_SEEN__ */
-#endif /* __BTPROLOG_H_SEEN__ */
+#endif  /* no stdc */
+#endif  /* fake__FUNC_H_SEEN__ */
+#endif  /* __BTPROLOG_H_SEEN__ */
+

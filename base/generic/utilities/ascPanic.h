@@ -1,4 +1,4 @@
-/**
+ /*
  *  Ascend Panic
  *  by Mark Thomas
  *  Created: 1997.05.15
@@ -25,26 +25,28 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
+ */
+
+/** @file
+ *  Ascend Panic - Fatal Error Handling.
+ *  <pre>
+ *  To include this header file, you must include the following:
+ *      #include <stdarg.h>
+ *      #include "utilities/ascConfig.h"
+ *      #include "compiler/compiler.h"
+ *      #include "compiler/ascPanic.h"
+ *  </pre>
  */
 
 #ifndef _ASCPANIC_H
 #define _ASCPANIC_H
 
-/** 
- *  To include this header file, you must include the following:
- *      #include <stdarg.h>
- *      #include "compiler/compiler.h"
- *      #include "compiler/ascpanic.h"
- */
-
-
-/** 
- * Asc_Panic( status, function, format, args )
- *      int status;
- *      CONST char *function
- *      CONST char *format
- *      VAR_ARGS args
+/**
+ * <!--  Asc_Panic( status, function, format, args )                   -->
+ * <!--       int status;                                              -->
+ * <!--       CONST char *function                                     -->
+ * <!--       CONST char *format                                       -->
+ * <!--       VAR_ARGS args                                            -->
  *
  *  This function prints the arguments "args" using the format string
  *  "format" to the ASCERR file handle.  The first line of the panic
@@ -53,18 +55,17 @@
  *  valid file pointer, the message will not be printed.  Either way,
  *  if an panic output file location has been specified with the 
  *  Asc_PanicSetOutfile() function, the panic message is also stored 
- *  there.  Under Windows, we also pop up a MessageBox containing the 
- *  message.  Finally, we exit the program with the status "status".
+ *  there.  Under Windows, we also pop up a MessageBox containing the
+ *  message.  Finally, we exit the program with the status "status".<br><br>
  *
  *  Side Effects: Exits the program.
  */
 extern void Asc_Panic(CONST int status, CONST char *function,
                       CONST char *format, ...);
 
-
-/** 
- *  Asc_PanicSetOutfile(filename)
- *      CONST char *filename;
+/**
+ *  <!--  Asc_PanicSetOutfile(filename)                                -->
+ *  <!--      CONST char *filename;                                    -->
  *
  *  Calling this function with a non-NULL "filename" will cause
  *  Asc_Panic() to write panic messages to "filename" in addition to the
@@ -74,4 +75,5 @@ extern void Asc_Panic(CONST int status, CONST char *function,
  */
 extern void Asc_PanicSetOutfile(CONST char *filename);
 
-#endif  /** _ASCPANIC_H */
+#endif  /* _ASCPANIC_H */
+

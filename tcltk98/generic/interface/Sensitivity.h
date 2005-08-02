@@ -27,39 +27,47 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-
-/*
+/** @file
  *  Sensititvity analysis code.
+ *  <pre>
+ *  Requires:     #include "tcl.h"
+ *                #include "utilities/ascConfig.h"
+ *                #include "solver/slv_client.h"
+ *  </pre>
+ *  @todo Do we really need 2 files called sensitivity.[ch]?  Other one in base/packages.
  */
+
 #ifndef _sensitivity_h_seen_
 #define _sensitivity_h_seen_
 
 extern int Asc_BLsodeDerivatives(slv_system_t sys,
-                             double **dy_dx,
-                             int *inputs_ndx_list,
-                             int ninputs,
-                             int *outputs_ndx_list,
-                             int noutputs);
-/*
+                                 double **dy_dx,
+                                 int *inputs_ndx_list,
+                                 int ninputs,
+                                 int *outputs_ndx_list,
+                                 int noutputs);
+/**<
  *  The entry point for the Lsode Integrator.
  *  This needs further explanation, but roughly:
  *  dy_dx IS_A 2d array of sensitivity partial derivatives.
- *  ninputs the the number of fixed state variables in the DAE.
+ *  ninputs  the number of fixed state variables in the DAE.
  *  noutputs the number of derivatives
  *  ndx_list the var indices of the variables in question.
  *
- *  Bugs:
- *  does not pass in a list of var_variables instead of indices, as
- *  it should.
+ *  @todo Asc_BLsodeDerivatives() does not pass in a list of 
+ *        var_variables instead of indices, as it should.
  */
 
 extern int Asc_MtxNormsCmd(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[]);
-/*
+/**<
+ *  Calculates some matrix norms and a condition number.
  *  This code is placed here until we can find a proper home for it.
- *  It should perhaps be in DebugProc[12].[ch]. It simply calculates
- *  some matrix norms and a condition number. In the current incarnation
+ *  It should perhaps be in DebugProc[12].[ch].  In the current incarnation
  *  is to be in conjuction with some sensiticity ananlysis code.
+ *
+ *  @todo Find proper home for Asc_MtxNormsCmd().
  */
 
-#endif /* _sensitivity_h_seen_ */
+#endif  /* _sensitivity_h_seen_ */
+
