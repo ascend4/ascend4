@@ -1,4 +1,4 @@
-/** 
+/*
  *  pretty.h
  *  I/O Formatting Functions
  *  by Ben Allan
@@ -29,30 +29,41 @@
  *  the file named COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  I/O Formatting Functions.
+ *  <pre>
+ *  Requires:
+ *        #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef __pretty_h_seen__
 #define __pretty_h_seen__
 
-/** 
- * count = print_long_string(fp,string,width,indent);
+/**
+ * <!--  count = print_long_string(fp,string,width,indent);            -->
  * Writes a string to a file, splitting it at the blank characters
  * tabs, or returns to attempt keeping line length < width given.
  * each line written is indented by indent characters.
  * this function is not very bright, but works on nonpathological
  * input ok. long words are not broken.
  * width does not include the indent, so pls(f,s,70,2) -> 72 char lines.
- * If width < 4 or indent < 0, gives up and simply prints the string.
+ * If width < 4 or indent < 0, gives up and simply prints the string.<br><br>
  *
  * Note that \n and \t count as a character when determining line length,
  * so you won't get perfect formatting. If you want perfect formatting,
  * fix it. How big is a tab? In particular, \n will cause a missing
  * indent.
  */
-extern int print_long_string(FILE *, char *, int, int);
+extern int print_long_string(FILE *fp, char *string, int width, int indent);
 
-/** Like print_long_string, except instead of breaking at width, it
+/**
+ * Writes a string to a file, splitting it at special delimiter characters.
+ * Like print_long_string(), except instead of breaking at width, it
  * breaks at occurences of /{star}EOL{star}/ (commented EOL).
  * print_long_string(fp,string,indent);
  */
-extern void print_long_string_EOL(FILE *, char *, int);
+extern void print_long_string_EOL(FILE *fp, char *string, int indent);
 
-#endif /** __pretty_h_seen__ */
+#endif /* __pretty_h_seen__ */
+

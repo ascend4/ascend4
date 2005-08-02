@@ -1,4 +1,4 @@
-/**< 
+/*
  *  This Module Store A Copy of Atom Instances
  *  by Tom Epperly
  *  Version: $Revision: 1.7 $
@@ -25,64 +25,61 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
- *  When #including prototype.h, make sure these files are #included first:
- *         #include "compiler.h"
- */
-
-
-#ifndef __PROTOTYPE_H_SEEN__
-#define __PROTOTYPE_H_SEEN__
-/**< requires
-# #include"compiler.h"
-# #include"instance_enum.h"
-*/
-
-
-/**< 
+/** @file
+ *  This Module Store A Copy of Atom Instances.
+ *
  *  Given the amount of time we spend looking for prototypes, we need
  *  to be running distinct prototype libraries for models, atoms, and
  *  possibly constants.
+ *  <pre>
+ *  When #including prototype.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include"instance_enum.h"
+ *         #include "compiler.h"
+ *  </pre>
  */
+
+#ifndef __PROTOTYPE_H_SEEN__
+#define __PROTOTYPE_H_SEEN__
 
 extern void InitializePrototype(void);
-/**< 
- *  Must be called before any other prototype procedure.
- */
+/**<  Must be called before any other prototype procedure. */
 
-extern struct Instance *LookupPrototype(symchar *);
-/**< 
- *  struct Instance *LookupPrototype(t)
- *  symchar *t;
+extern struct Instance *LookupPrototype(symchar *t);
+/**<
+ *  <!--  struct Instance *LookupPrototype(t)                          -->
+ *  <!--  symchar *t;                                                  -->
  *
  *  Check if an instance of type "t" is in the prototype library.  If
  *  no instance of that type exists, NULL is returned.
  *  t is from symbol table.
  */
 
-extern void DeletePrototype(symchar *);
+extern void DeletePrototype(symchar *t);
 /**< 
- *  void DeletePrototype(t)
- *  const char *t;
+ *  <!--  void DeletePrototype(t)                                      -->
+ *  <!--  const char *t;                                               -->
  *
  *  Delete the type t from the prototype library.  This should be done
  *  when the definition of type "t" is changed or when the definition of
  *  an ancestor of type "t" is change.
  */
 
-extern void AddPrototype(struct Instance *);
+extern void AddPrototype(struct Instance *i);
 /**< 
- *  void AddPrototype(i)
- *  struct Instance *i;
+ *  <!--  void AddPrototype(i)                                         -->
+ *  <!--  struct Instance *i;                                          -->
  *
  *  This will add instance i to the prototype library.  If another definition
  *  of type "i" exists, it is deleted and replace with then new one.
  */
 
 extern void DestroyPrototype(void);
-/**< 
- *  void DestroyPrototype()
+/**<
+ *  <!--  void DestroyPrototype()                                      -->
  *  This deletes all the instances in the prototype library.  This should
  *  be done before the program exits.
  */
-#endif /**< __PROTOTYPE_H_SEEN__ */
+
+#endif  /* __PROTOTYPE_H_SEEN__ */
+

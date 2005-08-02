@@ -1,4 +1,4 @@
-/** 
+/*
  *  Model Child list output routines
  *  by Ben Allan
  *  Version: $Revision: 1.3 $
@@ -24,59 +24,57 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
+ */
+
+/** @file
  *  This is a package of routines to process child list io.
- */
-
-/** 
- *  When #including child.h, make sure these files are #included first:
- *         #include "fractions.h"
+ *  <pre>
+ *  When #including childio.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
- *         #include "dimen.h"
+ *         #include "list.h"
+ *         #include "child.h"
+ *  </pre>
  */
-
 
 #ifndef __CHILDIO_H_SEEN__
 #define __CHILDIO_H_SEEN__
-/** requires
- *include"compiler.h"
- *include"list.h"
- *include"child.h"
- */
 
-/** 
+/*
  *  WriteChildList(fp,cl)
+ */
+/**
  *  Write what is known at parse time about the children in the child list
  *  given.  What is known may be surprising. It may be only mildly
  *  accurate.
  */
-extern void WriteChildList(FILE *,ChildListPtr);
+extern void WriteChildList(FILE *fp, ChildListPtr cl);
 
-/** 
- * s = WriteChildDetails(cl,n);
+/**
+ * <!--  s = WriteChildDetails(cl,n);                                  -->
  * Return a string containing buckets o'stuff about the nth child in list.
  * The string will make use of braces as necessary to delimit
  * items. What each item is will be subject to change according
  * to the meta-data given by WriteChildMetaDetails.
- * Items are booleans, integers or strings as explained below.
+ * Items are booleans, integers or strings as explained below.<br><br>
  *
  * The string returned is the caller's responsibility.
  */
-extern char *WriteChildDetails(ChildListPtr,unsigned long);
+extern char *WriteChildDetails(ChildListPtr cl, unsigned long n);
 
-/** 
- * metas = WriteChildMetaDetails();
+/**
+ * <!--  metas = WriteChildMetaDetails();                              -->
  * Returns a string with fields brace delimited. Each field
  * describes the corresponding field of a WriteChildDetails
  * return string. The ordering and size may be expected to shift as
  * ASCEND evolves. The hope is that the contents of metas individual
  * fields will shift much more slowly than the ordering, number of
  * fields and so forth. Using metas, one can expect to write code
- * which survives changes in plain s.
- * 
+ * which survives changes in plain s.<br><br>
+ *
  * The returned string is NOT yours to free. (safe to keep, though).
- * The format is one or more elements in braces like:
- * "{data} {data} {data}"
+ * The format is one or more elements in braces like:  <br>
+ * "{data} {data} {data}"                              <br>
  * where data is a triplet separated by - "name-ctype-{explanation}"
  * Name is a single string with no blanks,
  * ctype is boolean, integer, or string.
@@ -84,14 +82,15 @@ extern char *WriteChildDetails(ChildListPtr,unsigned long);
  */
 extern CONST char *WriteChildMetaDetails(void);
 
-/** 
- * WriteChildMissing(fp,scope,childname);
- * FILE *fp;
- * char *scope;
- * symchar *childname;
- * Issues a child missing error to file if
- * the same childname/scope has not been missing since the last call
- * with any NULL argument.
+/**
+ * <!--  WriteChildMissing(fp,scope,childname);                        -->
+ * <!--  FILE *fp;                                                     -->
+ * <!--  char *scope;                                                  -->
+ * <!--  symchar *childname;                                           -->
+ * Issues a child missing error to file if the same childname/scope
+ * has not been missing since the last call with any NULL argument.
  */
-extern void WriteChildMissing(FILE *, char *, symchar *);
-#endif /** __CHILDIO_H_SEEN__ */
+extern void WriteChildMissing(FILE *fp, char *scope, symchar *childname);
+
+#endif  /* __CHILDIO_H_SEEN__ */
+

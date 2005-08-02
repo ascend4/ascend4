@@ -26,13 +26,20 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
+ */
+
+/** @file
  *  This module defines the plot generation auxillaries for Ascend.
+ *  <pre>
+ *  Requires:   #include "utilities/ascConfig.h"
+ *              #include "compiler/instance_enum.h"
+ *  </pre>
  */
 
 #ifndef plot__already_included
 #define plot__already_included
 
+/** Plot types. */
 enum PlotTypes {
   PLAIN_PLOT,
   GNU_PLOT,
@@ -40,12 +47,10 @@ enum PlotTypes {
 };
 
 extern enum PlotTypes g_plot_type;
-
-
-/*
+/**<
  *  These are the plot types recognized by the code in plot.c
  *  Parameterized equivalents are also recognized.
- *
+ *  <pre>
  *  MODEL plt_point;
  *      x, y IS_A real;
  *  END plt_point;
@@ -73,28 +78,29 @@ extern enum PlotTypes g_plot_type;
  *      Xlow,Xhigh,Ylow,Yhigh IS_A real;
  *      Xlog, Ylog IS_A boolean;
  *  END plt_plot_integer;
- *
- *  Bugs:
- *  Support for all the attributes of a plt_plot_*
- *  is good only for xgraph. gnuplot has been neglected.
+ *  </pre>
+ *  @todo Support for all the attributes of a plt_plot_*
+ *        is good only for xgraph. gnuplot has been neglected.
  */
 
-extern void plot_prepare_file(struct Instance *, char *);
-/*
- *  plot_prepare_file(inst,plotfilename)
- *  struct Instance *inst;
- *  char *plotfilename;
+extern void plot_prepare_file(struct Instance *inst, char *plotfilename);
+/**<
+ *  <!--  plot_prepare_file(inst,plotfilename)                         -->
+ *  <!--  struct Instance *inst;                                       -->
+ *  <!--  char *plotfilename;                                          -->
  *
  *  Writes data points for the given plot instance to the given plot file.
  */
 
-extern boolean plot_allowed(struct Instance *);
-/*
- *  allowed = plot_allowed(inst)
- *  boolean allowed;
- *  struct Instance *inst;
+extern boolean plot_allowed(struct Instance *inst);
+/**<
+ *  <!--  allowed = plot_allowed(inst)                                 -->
+ *  <!--  boolean allowed;                                             -->
+ *  <!--  struct Instance *inst;                                       -->
  *
  *  Determines whether or not the given instance is allowed to be plotted
  *  (i.e. whether it is a refinement of plt_plot).
  */
-#endif
+
+#endif  /* plot__already_included */
+

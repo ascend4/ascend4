@@ -4,19 +4,19 @@
  *  Version control file: $RCSfile: conoptdll.h,v $
  *  Date last modified: $Date: 1998/02/26 15:57:57 $
  *  Last modified by: $Author: mthomas $
- *  
+ *
  *  This file is part of the SLV solver.
- *  
+ *
  *  The SLV solver is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
- *  
+ *
  *  The SLV solver is distributed in hope that it will be
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
@@ -24,10 +24,17 @@
  *
  */
 
+/** @file
+ *  Definitions Required to use the CONOPT.DLL under Windows.
+ *  A public header file to be distributed.
+ *  <pre>
+ *  Requires:   #include "utilities/ascConfig.h"
+ *  </pre>
+ *  @todo Document conoptdll.h.
+ */
+
 #ifndef _CONOPTDLL_H
 #define _CONOPTDLL_H
-
-/* a public header file to be distributed */
 
 #ifndef _ASCCONFIG_H /* only define these if we haven't seen ascConfig.h */
 typedef int int32;
@@ -48,11 +55,11 @@ enum conopt_func_names {
   COIFBL_ENUM,
   COISTA_ENUM,
   COIRS_ENUM,
-  COIUSZ_ENUM, /* NOT IMPLEMENTED */
-  COIUC_ENUM, /* NOT IMPLEMENTED */
-  COIUR_ENUM, /* NOT IMPLEMENTED */
-  COIUNZ_ENUM, /* NOT IMPLEMENTED */
-  COIUNU_ENUM, /* NOT IMPLEMENTED */
+  COIUSZ_ENUM,   /* NOT IMPLEMENTED */
+  COIUC_ENUM,    /* NOT IMPLEMENTED */
+  COIUR_ENUM,    /* NOT IMPLEMENTED */
+  COIUNZ_ENUM,   /* NOT IMPLEMENTED */
+  COIUNU_ENUM,   /* NOT IMPLEMENTED */
   COILF_ENUM,
   COIEC_ENUM,
   COIER_ENUM,
@@ -63,7 +70,7 @@ enum conopt_func_names {
   COIORC_ENUM,
   COIBAN_ENUM,
   COISCR_ENUM,
-  COICF_ENUM, /* NOT IMPLEMENTED */
+  COICF_ENUM,    /* NOT IMPLEMENTED */
   COIOPT_ENUM
 };
 
@@ -141,7 +148,7 @@ typedef void COISTA_FUNC COISTA_ARGS;
       int32 *ysta, int32 *n, int32 *m, real64 *usrmem)
 typedef void COIRS_FUNC COIRS_ARGS;
 
-/* TODO: put chapter 6,7 and 8 functions here! */
+/** @todo: put chapter 6,7 and 8 functions here! */
 
 #define COILF_VARS (flen, fn, usrmem)
 #define COILF_ARGS (int32 *flen, char *fn,real64 *usrmem)
@@ -217,3 +224,4 @@ typedef void COIMEM_FUNC COIMEM_ARGS;
 #define COIXIT_ARGS ()
 
 #endif /* _CONOPTDLL_H */
+

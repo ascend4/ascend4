@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Ascend Interpretter(Instantiator)
  *  by Tom Epperly
  *  Created: 1/24/90
@@ -27,20 +27,22 @@
  *  COPYING.
  */
 
-#ifndef __INSTANTIATE_H_SEEN__
-#define __INSTANTIATE_H_SEEN__
-
-
-/**< 
+/** @file
+ *  Ascend Interpretter(Instantiator).
+ *  <pre>
  *  When #including instantiate.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "instance_enum.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
  *         #include "stattypes.h"
+ *  </pre>
  */
 
+#ifndef __INSTANTIATE_H_SEEN__
+#define __INSTANTIATE_H_SEEN__
 
 #define NORELS 	 0x0
 #define GBOXRELS 0x1
@@ -50,33 +52,39 @@
 #define EXTRELS (GBOXRELS | BBOXRELS)
 
 extern long int g_compiler_counter;
-/**< 
+/**<
  * unique id of calls to instantiator.
  */
 
 
-/**< 
- * vvvvvvvvvvvvvvvvvvvvvvvvv <-- exported to UI via compiler.h.
+/* exported to UI via compiler.h.
  * extern int g_use_copyanon;
  *
  * If TRUE, anonymous type detection is used to enable relation
- * sharing. This variable is declared in instantiate.c and
+ * sharing. This variable is defined in instantiate.c and
  * headered for export in compiler.h.
  */
 
-extern void SetInstantiationRelnFlags(unsigned int);
+extern void SetInstantiationRelnFlags(unsigned int flag);
+/**<
+ *  <!--  void SetInstantiationRelnFlags(flag);                        -->
+ *  Set the state of the instantiator with respect to when/how to do
+ *  instantiation with respect relations. This is for more control
+ *  over the sequence in which instantiation is done, and for
+ *  so-called 'phased-compilation'.
+ */
+
 extern unsigned int GetInstantiationRelnFlags(void);
-/**< 
- *  void SetInstantiationRelnFlags(flag);
- *  GetInstantiationRelnFlags();
- *  These function manipulate the state of the instantiator with respect
- *  to when/how to do instantiation with respect relations. This is for
- *  more control over the sequence in which instantiation is done, and
+/**<
+ *  <!--  GetInstantiationRelnFlags();                                 -->
+ *  Retrieve the state of the instantiator with respect to when/how
+ *  to do instantiation with respect relations. This is for more
+ *  control over the sequence in which instantiation is done, and
  *  for so called 'phased-compilation'.
  */
 
-/**< 
- *  The following defines allow us to manage the development phase of
+/*
+ *  The following define allows us to manage the development phase of
  *  the ASCEND IV instantiator so that the interface is independent
  *  of the absolute latest compiler hacks.
  *  A production interface should be written to use ONLY Instantiate
@@ -85,12 +93,26 @@ extern unsigned int GetInstantiationRelnFlags(void);
  *  It is generally a dumb idea to do mix different types of
  *  Instantiate and  ReInstantiate calls on the same instance.
  */
+#define Instantiate(a,b,c,d) NewInstantiate((a),(b),(c),(d))
 
-extern struct Instance *NewInstantiate(symchar *,symchar *,int,symchar *);
-/**< 
- *  struct Instance *NewInstantiate(type,name,intset,defmethod)
- *  symchar *type,*name;
- *  int intset;
+/*
+ *  The following define allows us to manage the development phase of
+ *  the ASCEND IV instantiator so that the interface is independent
+ *  of the absolute latest compiler hacks.
+ *  A production interface should be written to use ONLY Instantiate
+ *  and ReInstantiate macros.
+ *  Hacker interfaces can define/modify Alt* functions.
+ *  It is generally a dumb idea to do mix different types of
+ *  Instantiate and  ReInstantiate calls on the same instance.
+ */
+#define ReInstantiate(a) NewReInstantiate(a)
+
+extern struct Instance *NewInstantiate(symchar *type, symchar *name, 
+                                       int intset, symchar *defmethod);
+/**<
+ *  <!--  struct Instance *NewInstantiate(type,name,intset,defmethod)  -->
+ *  <!--  symchar *type,*name;                                         -->
+ *  <!--  int intset;                                                  -->
  *  This routine will return an instance of type SIM_INST. It will make
  *  an instance of the given type this will be set as the *root* of the
  *  simulation. To access the root of the instance tree use the functions
@@ -99,7 +121,7 @@ extern struct Instance *NewInstantiate(symchar *,symchar *,int,symchar *);
  *  defmethod is a METHOD name we are to attempt calling
  *  on the created instance at the END of compilation. If it does not
  *  exist, we will return silently after instantiation.
- *
+ *  <pre>
  *  5 phase Algorithm (approximately. here we ignore failure modes):
  *  Phase 1
  *  level
@@ -149,34 +171,31 @@ extern struct Instance *NewInstantiate(symchar *,symchar *,int,symchar *);
  *  4	recursive instantiate, doing whens only.
  *	Explain failed whens.
  *  4	All conditional variables, rels or logrels
- *      referenced by the whens  must be findable or 
+ *      referenced by the whens  must be findable or
  *      they can't be
  *  ...return all the way up eventually.
  *  Phase 5
  *      Execution of default statements. (we would like to delete phase 5).
  *  Phase 6
  * 	Execute defmethod.
+ *  </pre>
  */
 
-#define Instantiate(a,b,c,d) NewInstantiate((a),(b),(c),(d))
-
-extern void NewReInstantiate(struct Instance *);
-/**< 
- *  void NewReInstantiate(i)
- *  struct Instance *i;
+extern void NewReInstantiate(struct Instance *i);
+/**<
+ *  <!--  void NewReInstantiate(i)                                     -->
+ *  <!--  struct Instance *i;                                          -->
  *  This routine is used to resume execution of an instance with unexecuted
  *  statements.  It will reattempt to execute the unexecuted statement.
  *  If it is able to complete the instance, it will execute the DEFAULT
  *  assignments(assignments to reals and booleans).
  */
 
-#define ReInstantiate(a) NewReInstantiate(a)
-
-extern void UpdateInstance(struct Instance *,
-      struct Instance *,
-      CONST struct StatementList *);
-/**< 
- *  void UpdateInstance(root,target,slist);
+extern void UpdateInstance(struct Instance *root,
+                           struct Instance *target,
+                           CONST struct StatementList *slist);
+/**<
+ *  <!--  void UpdateInstance(root,target,slist);                      -->
  *  Update instance takes a pointer to the root of a simulation (ie the
  *  instance tree), and will find instance target. It will then apply
  *  the statementlist to the given to the target instance.
@@ -185,9 +204,9 @@ extern void UpdateInstance(struct Instance *,
  */
 
 extern struct Instance *InstantiatePatch(symchar *patch,
-             symchar *name, int intset);
-/**< 
- *  struct Instance *InstantiatePatch(patch,name,intset, defmethod);
+                                         symchar *name, int intset);
+/**<
+ *  <!--  struct Instance *InstantiatePatch(patch,name,intset, defmethod);  -->
  *  Instantiate patch takes the name of a patch that is supposed to be
  *  applied to a type. It partially instantiates the instance, then
  *  applies the patch. It returns the instance created. It uses
@@ -195,11 +214,12 @@ extern struct Instance *InstantiatePatch(symchar *patch,
  *  hence determined by what that function supports.
  */
 
-extern void ConfigureInstFromArgs(struct Instance *, CONST struct Instance *);
-/**< 
- *  ConfigureInstFromArgs(inst,arginst);
- *  struct Instance *inst;
- *  const struct Instance *arginst;
+extern void ConfigureInstFromArgs(struct Instance *inst,
+                                  CONST struct Instance *arginst);
+/**<
+ *  <!--  ConfigureInstFromArgs(inst,arginst);                         -->
+ *  <!--  struct Instance *inst;                                       -->
+ *  <!--  const struct Instance *arginst;                              -->
  *  inst and arginst must be of the same MODEL type.
  *  inst should have NO executed statements -- it should be fresh
  *  from CreateModelInstance.
@@ -209,11 +229,12 @@ extern void ConfigureInstFromArgs(struct Instance *, CONST struct Instance *);
  *  children of arginst into inst.
  */
 
-extern void ReConfigureInstFromArgs(struct Instance *, CONST struct Instance*);
-/**< 
- *  ReConfigureInstFromArgs(inst,arginst);
- *  struct Instance *inst;
- *  const struct Instance *arginst;
+extern void ReConfigureInstFromArgs(struct Instance *inst, 
+                                             CONST struct Instance *arginst);
+/**<
+ *  <!--  ReConfigureInstFromArgs(inst,arginst);                       -->
+ *  <!--  struct Instance *inst;                                       -->
+ *  <!--  const struct Instance *arginst;                              -->
  *  inst and arginst must be or are about to be of the same MODEL type.
  *  inst should have been created from a less refined version of the type
  *  and is in the process of being refined up to type of arginst.
@@ -224,19 +245,20 @@ extern void ReConfigureInstFromArgs(struct Instance *, CONST struct Instance*);
  *  already occupied.
  */
 
-extern void LinkToParentByPos(struct Instance *, 
-                              struct Instance *, 
-                              unsigned long);
-/**< 
- *  LinkToParentByPos(parent,child,childnum);
+extern void LinkToParentByPos(struct Instance *parent,
+                              struct Instance *child,
+                              unsigned long childnum);
+/**<
+ *  <!--  LinkToParentByPos(parent,child,childnum);                    -->
  *  Add child as childnumth child of parent and add parent to child.
  */
 
-extern int IncompleteArray(CONST struct Instance *);
-/**< 
+extern int IncompleteArray(CONST struct Instance *i);
+/**<
  *  Given an array instance i, returns 1 if incomplete, 0 if ok.
  *  This means all NONNULL children are done, with the possible
  *  exception of arrays of relations/logical_relations.
  */
 
-#endif /**< __INSTANTIATE_H_SEEN__ */
+#endif /* __INSTANTIATE_H_SEEN__ */
+

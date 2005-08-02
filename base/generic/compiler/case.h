@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Case Processing functions
  *  Version: $Revision: 1.6 $
  *  Version control file: $RCSfile: case.h,v $
@@ -23,34 +23,36 @@
  *  with the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#ifndef __CASE_H_SEEN__
-#define __CASE_H_SEEN__
-/**< requires
-# #include"compiler.h"
-# #include"list.h"
-# #include"types.h"
-*/
 
-/**< 
- *                         Case processing
+/** @file
+ *  Case Processing functions.
+ *  <pre>
+ *  When #including case.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler.h"
+ *         #include "list.h"
+ *         #include "types.h"
+ *  </pre>
  */
 
+#ifndef __CASE_H_SEEN__
+#define __CASE_H_SEEN__
+
+/** Case data structure. */
 struct Case {
-    struct Set *ValueList;   /**< List of Values for the Conditions  */
-                             /**< NULL if OTHERWISE  */
-    struct gl_list_t *ref;   /**< References to RelationInstance
-    ModelInstance or WhenInstance */
-    unsigned active;         /**<  1:active   0:inactive  */
+    struct Set *ValueList;  /**< List of Values for the Conditions
+                                 NULL if OTHERWISE  */
+    struct gl_list_t *ref;  /**< References to RelationInstance
+                                 ModelInstance or WhenInstance */
+    unsigned active;        /**<  1:active   0:inactive  */
 };
 
-
-
-extern struct Case *CreateCase(struct Set *, struct gl_list_t *);
-/**< 
- *  struct Case *CreateCase(vl,refinst,cond);
- *  struct Set *vl;
- *  struct gl_list_t *refinst;
- *  Create a Case from information provided for a When data structure
+extern struct Case *CreateCase(struct Set *v1, struct gl_list_t *refinst);
+/**<
+ *  <!--  struct Case *CreateCase(vl,refinst);                         -->
+ *  <!--  struct Set *vl;                                              -->
+ *  <!--  struct gl_list_t *refinst;                                   -->
+ *  Create a Case from information provided for a When data structure.
  */
 
 #ifdef NDEBUG
@@ -58,11 +60,12 @@ extern struct Case *CreateCase(struct Set *, struct gl_list_t *);
 #else
 #define GetCaseValues(c) GetCaseValuesF(c)
 #endif
-extern struct Set *GetCaseValuesF(struct Case *);
-/**< 
- *  struct Set *GetCaseValuesF(case);
- *  struct Case *case;
- *  Return the List of Values of a Case.
+/**<  Return the List of Values of a Case. */
+extern struct Set *GetCaseValuesF(struct Case *cs);
+/**<
+ *  <!--  struct Set *GetCaseValuesF(cs);                              -->
+ *  <!--  struct Case *cs;                                             -->
+ *  Return the List of Values of a Case.  Implementation of GetCaseValues().
  */
 
 #ifdef NDEBUG
@@ -70,11 +73,12 @@ extern struct Set *GetCaseValuesF(struct Case *);
 #else
 #define GetCaseReferences(c) GetCaseReferencesF(c)
 #endif
-extern struct gl_list_t *GetCaseReferencesF(struct Case *);
-/**< 
- *  struct gl_list_t  *GetCaseReferences(case)
- *  struct Case *case;
- *  Return the List of References of a Case.
+/**<  Return the List of References of a Case. */
+extern struct gl_list_t *GetCaseReferencesF(struct Case *cs);
+/**<
+ *  <!--  struct gl_list_t  *GetCaseReferences(cs)                     -->
+ *  <!--  struct Case *cs;                                             -->
+ *  Return the List of References of a Case.  Implementation of GetCaseReferences().
  */
 
 #ifdef NDEBUG
@@ -82,71 +86,67 @@ extern struct gl_list_t *GetCaseReferencesF(struct Case *);
 #else
 #define GetCaseStatus(c) GetCaseStatusF(c)
 #endif
-extern int GetCaseStatusF(struct Case *);
-/**< 
- *  int *GetCaseStatusF(case);
- *  struct Case *case;
- *  Return the Status of a Case.
+/**<  Return the Status of a Case. */
+extern int GetCaseStatusF(struct Case *cs);
+/**<
+ *  <!--  int *GetCaseStatusF(cs);                                     -->
+ *  <!--  struct Case *cs;                                             -->
+ *  Return the Status of a Case.  Implementation of GetCaseStatus().
  */
 
-extern struct Case *SetCaseValues(struct Case *,struct Set *);
-/**< 
- *  struct Case *SetCaseValues(set);
- *  struct Case *case;
- *  struct Set *set;
+extern struct Case *SetCaseValues(struct Case *cs, struct Set *set);
+/**<
+ *  <!--  struct Case *SetCaseValues(cs, set);                         -->
+ *  <!--  struct Case *cs;                                             -->
+ *  <!--  struct Set *set;                                             -->
  *  Set the List of Values of a Case.
  */
 
-extern struct Case *SetCaseReferences(struct Case *,struct gl_list_t *);
-/**< 
- *  struct Case  *SetCaseReferences(list);
- *  struct Case *case;
- *  struct gl_list_t *refinst;
+extern struct Case *SetCaseReferences(struct Case *cs, struct gl_list_t *refinst);
+/**<
+ *  <!--  struct Case  *SetCaseReferences(cs,refinst);                 -->
+ *  <!--  struct Case *cs;                                             -->
+ *  <!--  struct gl_list_t *refinst;                                   -->
  *  Set the List of References of a Case.
  */
 
-
-extern struct Case *SetCaseStatus(struct Case *,int);
-/**< 
- *  extern Case *SetCaseStatus(int);
- *  struct Case *case;
- *  unsigned status;
+extern struct Case *SetCaseStatus(struct Case *cs, int status);
+/**<
+ *  <!--  struct Case *SetCaseStatus(cs,status);                       -->
+ *  <!--  struct Case *cs;                                             -->
+ *  <!--  unsigned status;                                             -->
  *  Return the Status of a Case.
  */
 
-extern unsigned long NumberCaseRefs(struct Case *);
-/**< 
- *  unsigned long NumberCaseRefs(c)
- *  struct Case *c;
+extern unsigned long NumberCaseRefs(struct Case *cs);
+/**<
+ *  <!--  unsigned long NumberCaseRefs(cs)                             -->
+ *  <!--  struct Case *cs;                                             -->
  *  This will indicate the number of distinct instances to which the
  *  reflist of this case points.
  */
 
-extern struct Instance *CaseRef(struct Case *,
-    unsigned long);
-/**< 
- *  struct Instance *CaseRef(c,casenum)
- *  struct Case *c;
- *  unsigned long casenum;
+extern struct Instance *CaseRef(struct Case *cs, unsigned long casenum);
+/**<
+ *  <!--  struct Instance *CaseRef(cs,casenum)                         -->
+ *  <!--  struct Case *cs;                                             -->
+ *  <!--  unsigned long casenum;                                       -->
  *  This will return the casenum'th instance of the case reflist.
  */
 
-extern void DestroyCase(struct Case *);
-/**< 
- *  void DestroyCase(case)
- *  struct Case *case;
+extern void DestroyCase(struct Case *cs);
+/**<
+ *  <!--  void DestroyCase(cs)                                         -->
+ *  <!--  struct Case *cs;                                             -->
  *  Destroy a Case.
  */
 
-
-extern struct Case *CopyCase(struct Case *);
-/**< 
- *  struct Case *CopyCase(case)
- *  struct Case *case;
+extern struct Case *CopyCase(struct Case *cs);
+/**<
+ *  <!--  struct Case *CopyCase(cs)                                    -->
+ *  <!--  struct Case *cs;                                             -->
  *  Copy a Case.
  */
 
-
-#endif /**< __CASE_H_SEEN__ */
-
+#endif  /* __CASE_H_SEEN__ */
 

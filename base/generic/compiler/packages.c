@@ -1,4 +1,4 @@
-/*
+/* 
  *  User Packages
  *  by Kirk Abbott
  *  Created: July 4, 1994
@@ -168,7 +168,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 #elif !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
   (void) name; (void) initfunc;
   /* Has packages but they are statically linked
-   * so do nothing 
+   * so do nothing
    */
   FPRINTF(ASCERR,"This version of ASCEND was built with static linking\n");
   FPRINTF(ASCERR,"Libraries have been preloaded\n");
@@ -226,6 +226,8 @@ static
 int PackSolve_Init(void)
 {
   int result = 0;
+
+#if !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
   char sensitivity_help[] =
     "This function does sensitivity analysis dy/dx. It requires 4 args.\n"
     "The first arg is the name of a reference instance or SELF.\n"
@@ -233,7 +235,6 @@ int PackSolve_Init(void)
     "The third arg y, where y is an array of > solver_var\n. "
     "The fourth arg is dy/dx which dy_dx[1..n_y][1..n_x].\n";
 
-#if !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
   result = CreateUserFunction("do_solve",
                               (ExtEvalFunc *)NULL,
 			      (ExtEvalFunc **)do_solve_eval,
@@ -352,7 +353,7 @@ int CallBlackBox(struct Instance *inst,
 		 CONST struct relation *rel)
 {
   struct Instance *data;
-  struct relation_term *rt;
+/*  struct relation_term *rt; */  /* unused */
   struct Slv_Interp slv_interp;
   struct ExternalFunc *efunc;
   struct ExtCallNode *ext;
@@ -367,26 +368,27 @@ int CallBlackBox(struct Instance *inst,
 /* all these desperately need a typedef in a header someplace */
   int (*init_func) (struct Slv_Interp *,
                     struct Instance *,
-		    struct gl_list_t *);
+                    struct gl_list_t *);
 
   int (*eval_func)(struct Slv_Interp *,
-		   int /* n_inputs */,
+                   int /* n_inputs */,
                    int  /* n_outputs */,
-		   double * /* inputs */,
+                   double * /* inputs */,
                    double * /* outputs */,
-		   double * /* jacobian */);
+                   double * /* jacobian */);
 
   int (*deriv_func)(struct Slv_Interp *,
-		   int /* n_inputs */,
+                   int /* n_inputs */,
                    int /* n_outputs */,
-		   double * /* inputs */,
+                   double * /* inputs */,
                    double * /* outputs */,
-		   double * /* jacobian */);
-
+                   double * /* jacobian */);
 
   /*
    * After this point everything should be ok.
    */
+
+  UNUSED_PARAMETER(inst);   /* Visual C doesn't like this before the func ptr defs. */
 
   ext = BlackBoxExtCall(rel);
   arglist = ExternalCallArgList(ext);

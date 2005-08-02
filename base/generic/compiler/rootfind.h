@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  SLV: Ascend Nonlinear Solver
  *  by Kirk Andre' Abbott
  *  Created: 10/06/95
@@ -27,47 +27,59 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
+ */
+
+/** @file
+ *  Root finding routine for the SLV solver.
+ *  <pre>
+ *  Requires:     #include "utilities/ascConfig.h"
  *
+ *                #ifndef STAND_ALONE
+ *                    #include "extfunc.h"  (for ExtValFunc())
+ *                #else
+ *                    #include "codegen_support.h"
+ *                #endif
+ *  </pre>
+ *  @todo extfunc.h needed only for the definition of ExtEvalFunc -
+ *        This definition should probably be moved to types.h. or compiler.h
+ *  @todo codegen_support.h not in base/generic/solver - need to update include?
  */
 
 #ifndef rootfind_already_included
 #define rootfind_already_included
 
-/**< needed only for the definition of
- * ExtEvalFunc. This definition should probably
- * be moved to types.h. or compiler.h */
-/**< requires
- *# #ifndef STAND_ALONE
- *# #include "extfunc.h"
- *# #else
- *# #include "codegen_support.h"
- *# #endif
- */
-
-
-extern double zbrent(ExtEvalFunc *func,	/**< the evaluation function */
-       double *lowbound,		/**< low bound */
-       double *upbound,		/**< up bound */
-       int *mode,		/**< to pass to the eval func */
-       int *m,			/**< the relation index */
-       int *n,			/**< the variable index */
-       double *x,	/**< the x vector -- needed by eval func */
-       double *u,	/**< the u vector -- needed by eval func */
-       double *f,		/**< vector of residuals */
-       double *g,		/**< vector of gradients */
-       double *tolerance,	/**< accuracy of solution */
-       int *status);		/**< success or failure */
-/**< 
+extern double zbrent(ExtEvalFunc *func,
+                     double *lowbound,
+                     double *upbound,
+                     int *mode,
+                     int *m,
+                     int *n,
+                     double *x,
+                     double *u,
+                     double *f,
+                     double *g,
+                     double *tolerance,
+                     int *status);
+/**<
  *  Using Brents method, find the root of a function known to lie
  *  between x1 and x2. The root, returned as zbrent, will be refined
  *  until its accuracy is tol. The result of status must be monitored
  *  to see if we were successful. A nonzero code means that the result
  *  returned is erroneous. n is the index into the x vector of the variable
  *  that is to be solved for.
+ *  @param func      The evaluation function.
+ *  @param lowbound  Lower bound.
+ *  @param upbound   Upper bound.
+ *  @param mode      Passed to the eval func.
+ *  @param m         The relation index.
+ *  @param n         The variable index.
+ *  @param x         The x vector -- needed by eval func.
+ *  @param u         The u vector -- needed by eval func.
+ *  @param f         Vector of residuals.
+ *  @param g         Vector of gradients.
+ *  @param tolerance Accuracy of solution.
+ *  @param status    Success or failure.
  */
 
-#endif /**< rootfind_already_included */
-
-
-
+#endif  /* rootfind_already_included */
 

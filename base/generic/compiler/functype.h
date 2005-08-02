@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Function module
  *  by Tom Epperly
  *  Version: $Revision: 1.8 $
@@ -31,16 +31,21 @@
  *  10/96 moved safe_err definition into here.
  */
 
+/** @file
+ *  Function module types and data structures.
+ *  <pre>
+ *  When #including functype.h, make sure these files are #included first:
+ *         #include "compiler.h"
+ *  </pre>
+ */
+
 #ifndef __FUNCTYPE_H_SEEN__
 #define __FUNCTYPE_H_SEEN__
 
-
-/**< 
- *  When #including functype.h, make sure these files are #included first:
- *         #include "compiler.h"
+/** 
+ *  Safe math error codes.
+ *  If you add to this enum be sure to add to safe_error_to_stderr 
  */
-
-
 enum safe_err {
   safe_problem = -1,
   safe_ok = 0,
@@ -49,8 +54,9 @@ enum safe_err {
   safe_overflow = 3,
   safe_underflow = 4,
   safe_range_error = 5
-}; /**< if you add to this enum be sure to add to safe_error_to_stderr */
+};
 
+/** Function enumeration. */
 enum Func_enum {
    F_LOG, F_LN, F_EXP,
    F_SIN, F_COS, F_TAN,
@@ -61,40 +67,33 @@ enum Func_enum {
    F_CUBE, F_CBRT, F_ABS, F_HOLD
 };
 
+/** Function data structure. */
 struct Func {
-  CONST char *name;		/**< ASCEND name of function. not symchar */
-  CONST char *cname;		/**< C name of function. not symchar */
-  CONST char *deriv1cname;	/**< C name of first derivative. not symchar */
-  CONST char *deriv2cname;	/**< C name of second derivative. not symchar */
-  enum Func_enum id;            /**< identification of function */
-  double (*value)(double);	/**< pointer to function evaluation */
-  double (*deriv)(double);	/**< pointer to derivative evaluation */
-  double (*deriv2)(double);	/**< pointer to a second derivative evaluation */
-  double (*safevalue)(double,enum safe_err *);
- /**< pointer to function evaluation */
-  double (*safederiv)(double,enum safe_err *);
- /**< pointer to derivative evaluation */
-  double (*safederiv2)(double,enum safe_err *);
- /**< pointer to a second derivative evaluation */
+  CONST char *name;         /**< ASCEND name of function. not symchar */
+  CONST char *cname;        /**< C name of function. not symchar */
+  CONST char *deriv1cname;  /**< C name of first derivative. not symchar */
+  CONST char *deriv2cname;  /**< C name of second derivative. not symchar */
+  enum Func_enum id;        /**< identification of function */
+  double (*value)(double);  /**< pointer to function evaluation */
+  double (*deriv)(double);  /**< pointer to derivative evaluation */
+  double (*deriv2)(double); /**< pointer to a second derivative evaluation */
+  double (*safevalue)(double,enum safe_err *); /**< pointer to function evaluation */
+  double (*safederiv)(double,enum safe_err *); /**< pointer to derivative evaluation */
+  double (*safederiv2)(double,enum safe_err *); /**< pointer to a second derivative evaluation */
 #ifdef CHRIS_FUNC
-  struct Interval (*ivalue)();	/**< interval evaluation of function */
+  struct Interval (*ivalue)();  /**< interval evaluation of function */
   void (*slope)(unsigned long,struct Interval *,struct Interval *,
-  struct Interval *);
-    /**< pointer to slope evaluation routine */
+  struct Interval *);           /**< pointer to slope evaluation routine */
   struct Interval (*ideriv)(struct Interval);
     /**< interval derivative evaluation routine */
-  double (*tmin)(double,double);/**< return the point where the func is a min */
-  double (*tmax)(double,double);/**< return the point where the func is a max */
-  double (*e)(double,double,double,double (*)(double));
-    /**< convex envelope */
-  double (*ed)(double,double,double,double (*)(double));
-    /**< convex envelope derivative */
-  double (*E)(double,double,double,double (*)(double));
-    /**< concave envelope */
-  double (*Ed)(double,double,double,double (*)(double));
-    /**< concave envelope derivative */
+  double (*tmin)(double,double); /**< return the point where the func is a min */
+  double (*tmax)(double,double); /**< return the point where the func is a max */
+  double (*e)(double,double,double,double (*)(double));   /**< convex envelope */
+  double (*ed)(double,double,double,double (*)(double));  /**< convex envelope derivative */
+  double (*E)(double,double,double,double (*)(double));   /**< concave envelope */
+  double (*Ed)(double,double,double,double (*)(double));  /**< concave envelope derivative */
 #endif
 };
 
-#endif
-/**< __FUNCTYPE_H_SEEN__ */
+#endif   /* __FUNCTYPE_H_SEEN__ */
+

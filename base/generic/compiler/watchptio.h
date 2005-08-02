@@ -1,6 +1,6 @@
-/** 
+/*
  *  watchptio.h: An API to ascend methods
- *  by Benjamin Allan
+ *  by Benjamin Allan                          
  *  March 17, 1998
  *  Part of ASCEND
  *  Version: $Revision: 1.2 $
@@ -29,16 +29,27 @@
  *  the file named COPYING.
  */
 
+/** @file
+ *  An API to
+ *  ascend methods via an interactive or external interface
+ *  without knowing about ascend compiler internals.
+ *  <pre>
+ *  When #including watchptio.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "proc.h"
+ *  </pre>
+ */
+
 #ifndef __WATCHPTIO_H_SEEN__
 #define __WATCHPTIO_H_SEEN__
 
-/** 
- *  void WriteProcedure(f,p)
- *  FILE *f;
- *  struct InitProcedure *p;
+/**
+ *  <!--  void WriteProcedure(f,p)                                     -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  struct InitProcedure *p;                                     -->
  *  Write the procedure to the file.
  */
-extern void WriteProcedure(FILE *,struct InitProcedure *);
+extern void WriteProcedure(FILE *f, struct InitProcedure *p);
 
+#endif  /* __WATCHPTIO_H_SEEN__ */
 
-#endif /** __WATCHPTIO_H_SEEN__ */

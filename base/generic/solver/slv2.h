@@ -1,4 +1,4 @@
-/**< 
+/*
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -27,23 +27,34 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  *  COPYING is found in ../compiler.
  */
+
+/** @file
+ *  Opt solver registration module.
+ *  <pre>
+ *  Contents:     OPT module
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
+ *  @todo Remove deprecated declarations from solver/slv2.h.
+ */
+
 #ifndef slv2__already_included
 #define slv2__already_included
-/**< requires #include "slv_client.h" */
 
 typedef struct slv2_system_structure *slv2_system_t;
 
-int slv2_register(SlvFunctionsT *);
-/**********************************************************************\
-  This is the function that tells the system about the Opt solver.
-  Our index is not necessarily going to be 2. That everything here is
-  named slv2* is just a historical event.
-\**********************************************************************/
+int slv2_register(SlvFunctionsT *sft);
+/**<
+ *  This is the function that tells the system about the Opt solver.
+ *  Our index is not necessarily going to be 2. That everything here is
+ *  named slv2* is just a historical event.
+ */
 
-#endif
+#endif  /* slv2__already_included */
 
-/**< REMOVE EVERYTHING BELOW THIS POINT */     
-# if 0 
+/**< REMOVE EVERYTHING BELOW THIS POINT */
+# if 0
 /*********************************************************************
 This file created by make_slv_header, so don't modify it yourself.
 All functions defined in this header have identical protocols to the

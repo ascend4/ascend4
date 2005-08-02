@@ -30,13 +30,12 @@
 #ifndef __INSTANCE_H_SEEN__
 #define __INSTANCE_H_SEEN__
 
-
-/*
+/* @file
+ *  Ascend Instance Tree Type Definitions.
+ *  <pre>
  *  When #including instance.h, make sure these files are #included first:
  *         NO INCLUDES NEEDED
- */
-
-/*
+ *
  * Been gutted (pun intended) because it was too big.
  * We need an API header for instances (for noncompiler clients)
  * in this location.
@@ -45,9 +44,7 @@
  * THOU SHALT NOT PUT ANY INCLUDE STATEMENTS IN THIS FILE!
  * probably we will want atomvalue.h, instance_enum.h,
  * instance_name.h and instance_io.h bundled.
- */
-
-/*
+ *
  *  Notes on the instance type scheme.
  *      Ben Allan, Feb. 1996.
  *  We have three types of 'scalar data' instances:
@@ -72,6 +69,8 @@
  *  constant SET.
  *  REAL_ATOM_INST becomes the parametric reals of a model and
  *  a new SOLVER_ATOM_INST becomes the real variables of a model.
+ *  </pre>
  */
 
 #endif /* __INSTANCE_H_SEEN__ */
+

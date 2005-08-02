@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Atom Child Definition Module
  *  by Benjamin A Allan
  *  Created: 11/20/96
@@ -26,8 +26,11 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  Ascend Atom Child Definition Module
+ *  <pre>
  *  When #including typedef.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "instance_enum.h"
  *         #include "compiler.h"
@@ -37,11 +40,13 @@
  *         #include "dimen.h"
  *         #include "child.h"
  *         #include "type_desc.h"
+ *  </pre>
  */
+
 #ifndef __CHILDDEF_H_SEEN__
 #define __CHILDDEF_H_SEEN__
 
-/**< 
+/**
  * There are 5 allowable ATOM children types, at present.
  * The functions BaseType and GetTypeInfoFromISA rely on a table
  * and the ordering within it. This is a hack to restrict the types
@@ -49,10 +54,10 @@
  */
 #define NUM_FUNDTYPES 5
 
-extern int BaseType(symchar *);
-/**< 
- * int BaseType(name)
- * symchar * name;
+extern int BaseType(symchar *name);
+/**<
+ * <!--  int BaseType(name)                                            -->
+ * <!--  symchar * name;                                               -->
  * Returns the number of the fundamental type, or -1 if not fundamental.
  * The code here is *VERY* dependent upon the number and position
  * of the FundamentalTypeList (internal to childdef.c)!
@@ -62,29 +67,29 @@ extern int BaseType(symchar *);
  * real symbol table.
  */
 
-extern struct ChildDesc *MakeChildDesc(symchar *,
-                                       struct StatementList *,
-                                       ChildListPtr);
-/**< 
- * struct ChildDesc *childd = MakeChildDesc(name,sl,clist);
- * symchar *name;
- * struct StatementList *sl;
- * ChildListPtr clist;
+extern struct ChildDesc *MakeChildDesc(symchar *name,
+                                       struct StatementList *sl,
+                                       ChildListPtr clist);
+/**<
+ * <!--  struct ChildDesc *childd = MakeChildDesc(name,sl,clist);      -->
+ * <!--  symchar *name;                                                -->
+ * <!--  struct StatementList *sl;                                     -->
+ * <!--  ChildListPtr clist;                                           -->
  * Returns the child description array based on legal statements in sl.
  */
 
-extern unsigned long CalcByteSize(enum type_kind,
-                                  ChildListPtr,
-             struct ChildDesc *);
-/**< 
- * len =  CalcByteSize(t,clist,childd);
- * enum type_kind t;
- * ChildListPtr clist;
- * struct ChildDesc *childd;
- * unsigned long len;
+extern unsigned long CalcByteSize(enum type_kind t,
+                                  ChildListPtr clist,
+                                  struct ChildDesc *childd);
+/**<
+ * <!--  len =  CalcByteSize(t,clist,childd);                          -->
+ * <!--  enum type_kind t;                                             -->
+ * <!--  ChildListPtr clist;                                           -->
+ * <!--  struct ChildDesc *childd;                                     -->
+ * <!--  unsigned long len;                                            -->
  * Calculates the byte size of an atomic instance given its
  * child information
  */
 
-#endif
-/**< __CHILDDEF_H_SEEN__ */
+#endif  /* __CHILDDEF_H_SEEN__ */
+

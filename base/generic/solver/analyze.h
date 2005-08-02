@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Problem Analysis Routines
  *  by Benjamin Andrew Allan
  *  5/19/96
@@ -24,8 +24,11 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
- *
- *
+ */
+
+/** @file
+ *  Problem Analysis Routines.
+ *  <pre>
  *  These functions are the start of a new design for feeding
  *  solvers from the ASCEND compiler or any arbitrary backend.
  *
@@ -49,33 +52,34 @@
  *  arbitrary compiler backend to the solver API by replacing the rel
  *  and var and analyze modules.
  *
+ *  Requires:
+ *         #include "utilities/ascConfig.h"
+ *         #include "system.h"
+ *         #include "instance_enum.h"
+ *  </pre>
  */
 
 #ifndef _analyze_h_seen_
 #define _analyze_h_seen_
 
-/**< 
- * requires #include "system.h"
- * requires #include "instance_enum.h" 
- */
-
-/**< used to give an integer value to each symbol used in a when */
+/** Used to give an integer value to each symbol used in a when */
 struct SymbolValues {
   char *name;
   int value;
 };
 
-extern int analyze_make_problem(slv_system_t, struct Instance *);
-/**< 
+extern int analyze_make_problem(slv_system_t sys, struct Instance *inst);
+/**<
  *  Takes a system and populates the guts of it from the instance.
  *  this implementation of analyze is specific to the ascend compiler
  *  back end.
  */
 
-extern int analyze_remake_problem(slv_system_t);
-/**< 
+extern int analyze_remake_problem(slv_system_t sys);
+/**<
  * Reanalyzes the system, reordering solvers var and relation lists
- * if needed. 
+ * if needed.
+ * @todo Not implemented.  Remove from header if not needed.
  */
 
 extern void analyze_free_reused_mem(void);
@@ -83,28 +87,29 @@ extern void analyze_free_reused_mem(void);
  * Resets all internal memory recycles.
  */
 
-extern int varinst_found_in_whenlist(slv_system_t, struct Instance *);
-/**< 
+extern int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst);
+/**<
  * Determine if the conditional variable inst is part of the
  * variable list of some when in the when list of slv_system_t
  */
 
-extern int dis_var_in_a_when(struct Instance *, struct w_when *);
-/**< 
- * return 1 if the discrete var is a member of the when var list, else
+extern int dis_var_in_a_when(struct Instance *var, struct w_when *when);
+/**<
+ * Return 1 if the discrete var is a member of the when var list, else
  * return 0
  */
 
-extern int GetIntFromSymbol(CONST char *,struct gl_list_t *);
-/**< 
- * Creates the gl list of SymboValues struct to asign an integer
- * value to a symbol value 
+extern int GetIntFromSymbol(CONST char *symval, struct gl_list_t *symbol_list);
+/**<
+ * Creates the gl_list of SymboValues struct to asign an integer
+ * value to a symbol value
  */
 
-extern void DestroySymbolValuesList(struct gl_list_t *);
-/**< 
- * Destroy the gl list of SymboValues struct created to asign an integer
+extern void DestroySymbolValuesList(struct gl_list_t *symbol_list);
+/**<
+ * Destroy the gl_list of SymbolValues struct created to asign an integer
  * value to symbol value
  */
 
-#endif /**<  _analyze_h_seen_ */
+#endif /*  _analyze_h_seen_ */
+

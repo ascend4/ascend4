@@ -1,4 +1,4 @@
-/**< 
+/*
  *  When Utility Functions
  *  Version: $Revision: 1.8 $
  *  Version control file: $RCSfile: when_util.h,v $
@@ -26,18 +26,25 @@
  *
  */
 
+/** @file
+ *  When Utility Functions.
+ *  <pre>
+ *  When #including when_util.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *         #include "compiler.h"
+ *         #include "base.h"
+ *             base, say what?
+ *         #include "case.h"
+ *         #include "relation.h"
+ *         #include "relation_type.h"
+ *         #include "instance_types.h"
+ *  </pre>
+ *  @todo Remove reference to base.h?  Appears to have been refactored away.
+ */
+
 #ifndef __WHEN_UTIL_H_SEEN__
 #define __WHEN_UTIL_H_SEEN__
-/**< requires
- *# #include "compiler.h"
- *# #include "base.h"
- *  base, say what?
- *# #include "instance_enum.h"
- *# #include "case.h"
- *# #include "relation.h"
- *# #include "relation_type.h"
- *# #include "instance_types.h"
- */
 
 #ifndef TRUE
 #define TRUE       1
@@ -46,118 +53,116 @@
 #define FALSE      0
 #endif
 
-/**< 
- *                       When utility fuctions
- */
+/* When utility fuctions */
 
-extern unsigned long NumberWhenVariables(CONST struct Instance *);
+extern unsigned long NumberWhenVariables(CONST struct Instance *when);
 /**< 
- *  unsigned long NumberWhenVariables(when)
- *  struct Instance *when;
+ *  <!--  unsigned long NumberWhenVariables(when)                      -->
+ *  <!--  struct Instance *when;                                       -->
  *  This will indicate the number of distinct variables to which the
  *  varlist of this when instance points.
  */
 
-extern struct Instance *WhenVariable(CONST struct Instance *,
-                                     unsigned long);
-/**< 
- *  struct Instance *WhenVariable(when,varnum)
- *  struct Instance *when;
- *  unsigned long varnum;
+extern struct Instance *WhenVariable(CONST struct Instance *when,
+                                     unsigned long varnum);
+/**<
+ *  <!--  struct Instance *WhenVariable(when,varnum)                   -->
+ *  <!--  struct Instance *when;                                       -->
+ *  <!--  unsigned long varnum;                                        -->
  *  This will return the varnum'th variable of the when varlist.
  */
 
-extern int VarFoundInWhen(CONST struct Instance *, CONST struct Instance *);
-/**< 
- *  int VarFoundInWhen(var,when)
- *  struct Instance *var;
- *  struct Instance *when;
+extern int VarFoundInWhen(CONST struct Instance *var, CONST struct Instance *when);
+/**<
+ *  <!--  int VarFoundInWhen(var,when)                                 -->
+ *  <!--  struct Instance *var;                                        -->
+ *  <!--  struct Instance *when;                                       -->
  *  Return 1 if var is a member of the when var list, else return 0.
  */
 
-extern unsigned long NumberWhenCases(CONST struct Instance *);
-/**< 
- *  unsigned long NumberWhenCases(when)
- *  struct Instance *when;
+extern unsigned long NumberWhenCases(CONST struct Instance *when);
+/**<
+ *  <!--  unsigned long NumberWhenCases(when)                          -->
+ *  <!--  struct Instance *when;                                       -->
  *  This will indicate the number of distinct cases to which the
  *  caselist of this when instance points.
  */
 
-extern struct Case *WhenCase(CONST struct Instance *,
-                             unsigned long);
-/**< 
- *  struct Instance *WhenCase(when,casenum)
- *  struct Instance *when;
- *  unsigned long casenum;
+extern struct Case *WhenCase(CONST struct Instance *when,
+                             unsigned long casenum);
+/**<
+ *  <!--  struct Instance *WhenCase(when,casenum)                      -->
+ *  <!--  struct Instance *when;                                       -->
+ *  <!--  unsigned long casenum;                                       -->
  *  This will return the casenum'th case of the when caselist.
  */
 
-extern void ModifyWhenPointers(struct gl_list_t *,
-                               CONST struct Instance *,
-                               CONST struct Instance *);
-/**< 
- *  void ModifyWhenPointers(reforvar,old,new);
- *  struct gl_list_t *reforvar;
- *  CONST struct Instance *old;
- *  CONST struct Instance *new;
+extern void ModifyWhenPointers(struct gl_list_t *reforvar,
+                               CONST struct Instance *old,
+                               CONST struct Instance *new);
+/**<
+ *  <!--  void ModifyWhenPointers(reforvar,old,new);                   -->
+ *  <!--  struct gl_list_t *reforvar;                                  -->
+ *  <!--  CONST struct Instance *old;                                  -->
+ *  <!--  CONST struct Instance *new;                                  -->
  *
  *  Variable List or Case List Maintenance.
  *
  *  This requires some explanation. There are a number of cases
  *  to consider.
  *
- *  1) the old instance does not exist in the reforvar list -- do nothing.
+ *  -# the old instance does not exist in the reforvar list -- do nothing.
  *
- *  2) the old instance exists, but the new does not -- store the
+ *  -# the old instance exists, but the new does not -- store the
  *     the new instance in the slot where the old instance was and
  *     return.
  *
- *  3) the old instance exists, *and* the new instance also exists in
+ *  -# the old instance exists, *and* the new instance also exists in
  *     the reforvar list.
  *
- *   4) the new instance is NULL, which can happen transiently during
- *      some operations. This defaults to case 2).
+ *  -# the new instance is NULL, which can happen transiently during
+ *     some operations. This defaults to case 2).
  */
 
 
-extern struct gl_list_t *CopyWhenBVarList(struct Instance *,
-              struct gl_list_t *);
-/**< 
- *  struct gl_list_t *CopyWhenBVarList(dest_inst,copylist)
- *  struct Instance *dest_inst;
- *  struct gl_list_t *copylist;
+extern struct gl_list_t *CopyWhenBVarList(struct Instance *dest_inst,
+                                          struct gl_list_t *copylist);
+/**<
+ *  <!--  struct gl_list_t *CopyWhenBVarList(dest_inst,copylist)       -->
+ *  <!--  struct Instance *dest_inst;                                  -->
+ *  <!--  struct gl_list_t *copylist;                                  -->
  *
  *  Copy a When list of variables.
  */
 
-extern struct gl_list_t *CopyWhenCaseRefList(struct Instance *,
-                 struct gl_list_t *);
-/**< 
- *  struct gl_list_t *CopyWhenCaseRefList(dest_inst,copylist)
- *  struct Instance *dest_inst;
- *  struct gl_list_t *copylist;
+extern struct gl_list_t *CopyWhenCaseRefList(struct Instance *dest_inst,
+                                             struct gl_list_t *copylist);
+/**<
+ *  <!--  struct gl_list_t *CopyWhenCaseRefList(dest_inst,copylist)    -->
+ *  <!--  struct Instance *dest_inst;                                  -->
+ *  <!--  struct gl_list_t *copylist;                                  -->
  *  Copy the Reference list of a case in a WHEN instance
  */
 
-extern void DestroyWhenVarList(struct gl_list_t *, struct Instance *);
-/**< 
- *  void DestroyWhenVarList(l,inst)
- *  struct gl_list_t *l;
- *  struct Instance *inst;
+extern void DestroyWhenVarList(struct gl_list_t *l, struct Instance *inst);
+/**<
+ *  <!--  void DestroyWhenVarList(l,inst)                              -->
+ *  <!--  struct gl_list_t *l;                                         -->
+ *  <!--  struct Instance *inst;                                       -->
  *  Destroy a When list of variables.
  */
 
 
-extern void DestroyWhenCaseList(struct gl_list_t *, struct Instance *);
-/**< 
- *  void DestroyWhenCaseList(l,inst);
- *  struct gl_list_t *l;
- *  struct Instance *inst;
+extern void DestroyWhenCaseList(struct gl_list_t *l, struct Instance *inst);
+/**<
+ *  <!--  void DestroyWhenCaseList(l,inst);                            -->
+ *  <!--  struct gl_list_t *l;                                         -->
+ *  <!--  struct Instance *inst;                                       -->
  *  Destroy a When list of cases
  */
 
 
-/**< 
+/*
  *  Model Filtration functions. This file will provide a mean to "turn
  *  off" all the models included in a WHEN statement. That will be done
  *  by using a set of binary (one bit) flags. We will provide a set of
@@ -165,71 +170,70 @@ extern void DestroyWhenCaseList(struct gl_list_t *, struct Instance *);
  *  whole set.
  */
 
-extern unsigned int model_flags(struct Instance *);
-extern void model_set_flags(struct Instance *,unsigned int);
-/**< 
- *  struct ModelInstance *mod;
- *  unsigned int anon_ flags;
+extern unsigned int model_flags(struct Instance *mod);
+/**<  Returns the anon_flags field of the model instance. */
+extern void model_set_flags(struct Instance *mod, unsigned int flags);
+/**<
+ *  <!--  struct ModelInstance *mod;                                   -->
+ *  <!--  unsigned int anon_ flags;                                    -->
  *
- *  model_flags(mod) returns the anon_flags field of the model instance.
- *  model_set_flags(mod,flags) sets the entire anon_flags field to the
- *  value of flags given.
+ *  <!--  model_flags(mod) returns the anon_flags field of the model in-->stance.
+ *  <!--  model_set_flags(mod,flags) sets the entire anon_flags field t-->o the
+ *  <!--  value of flags given.                                        -->
+ *  Sets the entire anon_flags field to the value of flags given.
  */
 
-extern unsigned int model_flagbit(CONST struct Instance *, unsigned int);
+extern unsigned int model_flagbit(CONST struct Instance *mod, unsigned int name);
 /**< 
- *  model_flagbit(mod,name);
- *  struct WhenInstance *mod;
- *  unsigned int name;
- *  name should be a MOD_xx flag
+ *  <!--  model_flagbit(mod,name);                                     -->
+ *  <!--  struct WhenInstance *mod;                                    -->
+ *  <!--  unsigned int name;                                           -->
  *  Returns the value of the bit specified from the model instance flags.
+ *  name should be a MOD_xx flag
  */
 
-extern void model_set_flagbit(struct Instance *,unsigned int,
-                              unsigned int);
-/**< 
- *  struct ModelInstance *mod;
- *  unsigned int NAME,oneorzero;
- *  model_set_flagbit(mod,NAME,oneorzero)
+extern void model_set_flagbit(struct Instance *mod,
+                              unsigned int NAME,
+                              unsigned int oneorzero);
+/**<
+ *  <!--  struct ModelInstance *mod;                                   -->
+ *  <!--  unsigned int NAME,oneorzero;                                 -->
+ *  <!--  model_set_flagbit(mod,NAME,oneorzero)                        -->
  *
  *  Sets the bit, which should be referred to by its macro name,
- *  on if oneorzero is >0 and off is oneorzero is 0.
+ *  on if oneorzero is >0 and off is oneorzero is 0.<br><br>
+ *  <pre>
+ *  Example:
+ *    model_set_flags(mod,REL_ON,1) turns on the MODEL_ON bit.
  *
- *  Example: model_set_flags(mod,REL_ON,1) turns on the
- *  MODEL_ON bit.
  *  What it really does is:
- *  if (oneorzero) {
- *    mod->anon_flags |= field;
- *  } else {
- *    mod->anon_flags &= ~field;
- *  }
+ *    if (oneorzero) {
+ *      mod->anon_flags |= field;
+ *    } else {
+ *      mod->anon_flags &= ~field;
+ *    }
+ *  </pre>
  */
 
-/**< the bit flags. explained afterward.*/
-#define MODEL_ON    	0x1
-#define MODEL_IN_WHEN	0x2
-#define MODEL_ACTIVE    0x4
+/* model bit flags.*/
+#define MODEL_ON      0x1   /**< Bit flag - is the model part of my problem ? */
+#define MODEL_IN_WHEN 0x2   /**< Bit flag - is the MODEL inside a WHEN statement ? */
+#define MODEL_ACTIVE  0x4   /**< Bit flag - is the model active in the current iteration ? */
 
-/**< 
- *  MODEL_ON  	     is the model part of my problem ?
- *  MODEL_IN_WHEN	     is the MODEL inside a WHEN statement ?
- *  MODEL_ACTIVE         is the model active in the current iteration ?
- */
+#define model_on(m)      model_flagbit((m),MODEL_ON)
+#define model_in_when(m) model_flagbit((m),MODEL_IN_WHEN)
+#define model_active(m)  model_flagbit((m),MODEL_ACTIVE)
 
-#define model_on(m)            	model_flagbit((m),MODEL_ON)
-#define model_in_when(m)	model_flagbit((m),MODEL_IN_WHEN)
-#define model_active(m)	       	model_flagbit((m),MODEL_ACTIVE)
-
-/**< 
+/*
  * bit flag assignments. any value other than 0 for bv turns the
  * named flag to 1. 0 sets it to 0.
  */
-#define model_set_on(m,bv)	  model_set_flagbit((m),MODEL_ON,(bv))
-#define model_set_in_when(m,bv)   model_set_flagbit((m),MODEL_IN_WHEN,(bv))
-#define model_set_active(m,bv)	  model_set_flagbit((m),MODEL_ACTIVE,(bv))
+#define model_set_on(m,bv)      model_set_flagbit((m),MODEL_ON,(bv))
+#define model_set_in_when(m,bv) model_set_flagbit((m),MODEL_IN_WHEN,(bv))
+#define model_set_active(m,bv)  model_set_flagbit((m),MODEL_ACTIVE,(bv))
 
 
-/**< 
+/*
  *  Log/Relation Filtration functions. This file will provide a mean to "turn
  *  on" all the relations/logrelation  not included in a WHEN statement.
  *  That will be done by using a set of binary (one bit) flags. We will
@@ -238,140 +242,141 @@ extern void model_set_flagbit(struct Instance *,unsigned int,
  *  Conditional will also be provided.
  */
 
-extern unsigned int relinst_flags(struct Instance *);
-extern void relinst_set_flags(struct Instance *,unsigned int);
-/**< 
- *  struct Instance *rel;
- *  unsigned int anon_ flags;
+extern unsigned int relinst_flags(struct Instance *rel);
+/**<  Returns the anon_flags field of the relation instance. */
+extern void relinst_set_flags(struct Instance *rel, unsigned int flags);
+/**<
+ *  <!--  struct Instance *rel;                                        -->
+ *  <!--  unsigned int anon_ flags;                                    -->
  *
- *  relinst_flags(rel) returns the anon_flags field of the relation instance.
- *  relinst_set_flags(rel,flags) sets the entire anon_flags field to the
- *  value of flags given.
+ *  <!--  relinst_flags(rel) returns the anon_flags field of the relati-->on instance.
+ *  <!--  relinst_set_flags(rel,flags) sets the entire anon_flags field--> to the
+ *  <!--  value of flags given.                                        -->
+ *  Sets the entire anon_flags field to the value of flags given.
  */
 
-extern unsigned int relinst_flagbit(CONST struct Instance *,unsigned int);
-/**< 
- *  relinst_flagbit(rel,name);
- *  struct Instance *rel;
- *  unsigned int name;
- *  name should be a REL_xx flag
+extern unsigned int relinst_flagbit(CONST struct Instance *rel, unsigned int name);
+/**<
+ *  <!--  relinst_flagbit(rel,name);                                   -->
+ *  <!--  struct Instance *rel;                                        -->
+ *  <!--  unsigned int name;                                           -->
  *  Returns the value of the bit specified from the relation instance flags.
+ *  name should be a REL_xx flag
  */
 
-extern void relinst_set_flagbit(struct Instance *,unsigned int,
-                                unsigned int);
-/**< 
- *  struct Instance *rel;
- *  unsigned int NAME,oneorzero;
- *  relinst_set_flagbit(rel,NAME,oneorzero)
+extern void relinst_set_flagbit(struct Instance *rel,
+                                unsigned int NAME,
+                                unsigned int oneorzero);
+/**<
+ *  <!--  struct Instance *rel;                                        -->
+ *  <!--  unsigned int NAME,oneorzero;                                 -->
+ *  <!--  relinst_set_flagbit(rel,NAME,oneorzero)                      -->
  *
  *  Sets the bit, which should be referred to by its macro name,
- *  on if oneorzero is >0 and off is oneorzero is 0.
+ *  on if oneorzero is >0 and off is oneorzero is 0.<br><br>
+ *  <pre>
+ *  Example:
+ *    relinst_set_flags(rel,REL_ON,1) turns on the REL_ON bit.
  *
- *  Example: relinst_set_flags(rel,REL_ON,1) turns on the
- *  REL_ON bit.
  *  What it really does is:
- *  if (oneorzero) {
- *    rel->anon_flags |= field;
- *  } else {
- *    rel->anon_flags &= ~field;
- *  }
+ *    if (oneorzero) {
+ *      rel->anon_flags |= field;
+ *    } else {
+ *      rel->anon_flags &= ~field;
+ *    }
+ *  </pre>
  */
 
-extern unsigned int logrelinst_flags(struct Instance *);
-extern void logrelinst_set_flags(struct Instance *,unsigned int);
+extern unsigned int logrelinst_flags(struct Instance *lrel);
+/**<  Returns the anon_flags field of the logical relation instance. */
+extern void logrelinst_set_flags(struct Instance *lrel, unsigned intflags);
 /**< 
- *  struct Instance *lrel;
- *  unsigned int anon_ flags;
+ *  <!--  struct Instance *lrel;                                       -->
+ *  <!--  unsigned int anon_ flags;                                    -->
  *
- *  logrelinst_flags(lrel) returns the anon_flags field of the logical
- *  relation instance.
- *  log relinst_set_flags(lrel,flags) sets the entire anon_flags field to the
- *  value of flags given.
+ *  <!--  logrelinst_flags(lrel) returns the anon_flags field of the lo-->gical
+ *  <!--  relation instance.                                           -->
+ *  <!--  log relinst_set_flags(lrel,flags) sets the entire anon_flags -->field to the
+ *  <!--  value of flags given.                                        -->
+ *  Sets the entire anon_flags field to the value of flags given.
  */
 
-extern unsigned int logrelinst_flagbit(CONST struct Instance *,unsigned int);
-/**< 
- *  logrelinst_flagbit(lrel,name);
- *  struct Instance *lrel;
- *  unsigned int name;
- *  name should be a LOGREL_xx flag
+extern unsigned int logrelinst_flagbit(CONST struct Instance *lrel, unsigned int name);
+/**<
+ *  <!--  logrelinst_flagbit(lrel,name);                               -->
+ *  <!--  struct Instance *lrel;                                       -->
+ *  <!--  unsigned int name;                                           -->
  *  Returns the value of the bit specified from the logical relation
  *  instance flags.
+ *  name should be a LOGREL_xx flag
  */
 
-extern void logrelinst_set_flagbit(struct Instance *,unsigned int,
-                                   unsigned int);
-/**< 
- *  struct Instance *rel;
- *  unsigned int NAME,oneorzero;
- *  logrelinst_set_flagbit(lrel,NAME,oneorzero)
+extern void logrelinst_set_flagbit(struct Instance *rel,
+                                   unsigned int NAME,
+                                   unsigned int oneorzero);
+/**<
+ *  <!--  struct Instance *rel;                                        -->
+ *  <!--  unsigned int NAME,oneorzero;                                 -->
+ *  <!--  logrelinst_set_flagbit(lrel,NAME,oneorzero)                  -->
  *
  *  Sets the bit, which should be referred to by its macro name,
- *  on if oneorzero is >0 and off is oneorzero is 0.
+ *  on if oneorzero is >0 and off is oneorzero is 0.<br><br>
+ *  <pre>
+ *  Example:
+ *    logrelinst_set_flags(lrel,LOGREL_ON,1) turns on the LOGREL_ON bit.
  *
- *  Example: logrelinst_set_flags(lrel,LOGREL_ON,1) turns on the
- *  LOGREL_ON bit.
  *  What it really does is:
- *  if (oneorzero) {
- *    lrel->anon_flags |= field;
- *  } else {
- *    lrel->anon_flags &= ~field;
- *  }
+ *    if (oneorzero) {
+ *      lrel->anon_flags |= field;
+ *    } else {
+ *      lrel->anon_flags &= ~field;
+ *    }
+ *  </pre>
  */
 
-/**< the bit flags. explained afterward.*/
-#define RELINST_ON    	0x1
-#define RELINST_CONDITIONAL	0x2
-#define RELINST_IN_WHEN     0x4
-#define LOGRELINST_ON    	0x8
-#define LOGRELINST_CONDITIONAL	0x10
-#define LOGRELINST_IN_WHEN     0x20
+/**< relation bit flags. explained afterward.*/
+#define RELINST_ON              0x1  /**< Bit flag - is the relation part of my problem? */
+#define RELINST_CONDITIONAL     0x2  /**< Bit flag - is the relation a boundary expression? */
+#define RELINST_IN_WHEN         0x4  /**< Bit flag - is the relation inside a WHEN statement? */
+#define LOGRELINST_ON           0x8  /**< Bit flag - is the logical relation part of my problem? */
+#define LOGRELINST_CONDITIONAL 0x10  /**< Bit flag - is the logical relation a boundary expression? */
+#define LOGRELINST_IN_WHEN     0x20  /**< Bit flag - is the logical relation inside a WHEN statement? */
 
-/**< 
- *  RELINST_ON  	     is the relation part of my problem ?
- *  RELINST_CONDITIONAL  is the relation a boundary expression ?
- *  RELINST_IN_WHEN	     is the relation inside a WHEN statement?
- *  LOGRELINST_ON  	     is the logical relation part of my problem ?
- *  LOGRELINST_CONDITIONAL  is the logical relation a boundary expression ?
- *  LOGRELINST_IN_WHEN	     is the logical relation inside a WHEN statement?
- */
-
-/**< the bit flag lookups */
+/* the bit flag lookups */
 #if 0
-/**< 
- *  need to fix these. r is now an instance, not relation instance
- *  Also, lr is a not a logrelation instance.
+/**
+ *  @todo Need to fix these. r is now an instance, not relation instance
+ *        Also, lr is a not a logrelation instance.
  */
-#define relinst_on(r)	             ((r)->anon_flags & RELINST_ON)
-#define relinst_conditional(r)	     ((r)->anon_flags & RELINST_CONDITIONAL)
-#define relinst_in_when(r)	     ((r)->anon_flags & RELINST_IN_WHEN)
-#define logrelinst_on(lr)	     ((lr)->anon_flags & LOGRELINST_ON)
-#define logrelinst_conditional(lr)  ((lr)->anon_flags & LOGRELINST_CONDITIONAL)
-#define logrelinst_in_when(lr)	     ((lr)->anon_flags & LOGRELINST_IN_WHEN)
+#define relinst_on(r)              ((r)->anon_flags & RELINST_ON)
+#define relinst_conditional(r)     ((r)->anon_flags & RELINST_CONDITIONAL)
+#define relinst_in_when(r)         ((r)->anon_flags & RELINST_IN_WHEN)
+#define logrelinst_on(lr)          ((lr)->anon_flags & LOGRELINST_ON)
+#define logrelinst_conditional(lr) ((lr)->anon_flags & LOGRELINST_CONDITIONAL)
+#define logrelinst_in_when(lr)     ((lr)->anon_flags & LOGRELINST_IN_WHEN)
 #else
-#define relinst_on(r)                relinst_flagbit((r),RELINST_ON)
-#define relinst_conditional(r)	     relinst_flagbit((r),RELINST_CONDITIONAL)
-#define relinst_in_when(r)	     relinst_flagbit((r),RELINST_IN_WHEN)
-#define logrelinst_on(lr)            logrelinst_flagbit((lr),LOGRELINST_ON)
-#define logrelinst_conditional(lr) \
-                                logrelinst_flagbit((lr),LOGRELINST_CONDITIONAL)
-#define logrelinst_in_when(lr)	    logrelinst_flagbit((lr),LOGRELINST_IN_WHEN)
+#define relinst_on(r)              relinst_flagbit((r),RELINST_ON)
+#define relinst_conditional(r)     relinst_flagbit((r),RELINST_CONDITIONAL)
+#define relinst_in_when(r)         relinst_flagbit((r),RELINST_IN_WHEN)
+#define logrelinst_on(lr)          logrelinst_flagbit((lr),LOGRELINST_ON)
+#define logrelinst_conditional(lr) logrelinst_flagbit((lr),LOGRELINST_CONDITIONAL)
+#define logrelinst_in_when(lr)     logrelinst_flagbit((lr),LOGRELINST_IN_WHEN)
 #endif
 
-/**< 
+/*
  *  bit flag assignments. any value other than 0 for bv turns the
  *  named flag to 1. 0 sets it to 0.
  */
-#define relinst_set_on(r,bv)   relinst_set_flagbit((r),RELINST_ON,(bv))
+#define relinst_set_on(r,bv)      relinst_set_flagbit((r),RELINST_ON,(bv))
 #define relinst_set_conditional(r,bv)  \
                        relinst_set_flagbit((r),RELINST_CONDITIONAL,(bv))
 #define relinst_set_in_when(r,bv) relinst_set_flagbit((r),RELINST_IN_WHEN,(bv))
-#define logrelinst_set_on(lr,bv)   \
+#define logrelinst_set_on(lr,bv)    \
                        logrelinst_set_flagbit((lr),LOGRELINST_ON,(bv))
 #define logrelinst_set_conditional(lr,bv)  \
                        logrelinst_set_flagbit((lr),LOGRELINST_CONDITIONAL,(bv))
 #define logrelinst_set_in_when(lr,bv) \
                        logrelinst_set_flagbit((lr),LOGRELINST_IN_WHEN,(bv))
 
-#endif /**< __WHEN_UTIL_H_SEEN__ */
+#endif  /* __WHEN_UTIL_H_SEEN__ */
+

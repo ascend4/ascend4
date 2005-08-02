@@ -25,38 +25,44 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
- *
+ */
+
+/** @file
+ *  Probe procedures.
  *  This probe implementation constitutes a total rework of the probe.
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "interface/ProbeProc.h" (which is sort of obvious)
+ *  </pre>
  */
 
 #ifndef ProbeProc_module_loaded
 #define ProbeProc_module_loaded
 
-/*
- *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "interface/ProbeProc.h" (which is sort of obvious)
- */
-
 STDHLF_H(Asc_ProbeCmd);
-/* Defines a long help string function */
+/**< Defines a long help string function */
 
 extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
                         int argc, CONST84 char *argv[]);
-/*
- * status = Asc_ProbeCmd(cdata,interp,argc,argv);
+/**<
+ * <!--  status = Asc_ProbeCmd(cdata,interp,argc,argv);                -->
+ * This is the tcl callback for our commandline help facility.
  * (I'm tempted to quote Lord of the Rings, but it suffices to
  * say we now have ONE probe command.)
- * This is the tcl callback for our commandline help facility.
- * Registered as: */
+ */
+/** Registered as */
 #define Asc_ProbeCmdHN "__probe"
-/* Usage: */
+/** Usage */
 #define Asc_ProbeCmdHU \
  "__probe option args\noption is one of: add, clear, destroy, expand, " \
  "filters, get,	qlfdid, name, size, trash, update."
+/** Short help text */
 #define Asc_ProbeCmdHS \
  "The probe is a set of instance name collections. Each collection is " \
  "indicated by a number >= 0 contains 0 or more names."
+/** Long help text part 1 */
 #define Asc_ProbeCmdHL1 \
 "\
  * A collection created can be empty, or become empty.\n\
@@ -65,6 +71,7 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  * update. Names are indexed from 0 up in a collection.\n\
  *\n\
 "
+/** Long help text part 2 */
 #define Asc_ProbeCmdHL2 \
 "\
  *	add	<number> <instance-name> [filter-vars]\n\
@@ -73,6 +80,7 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *		resulting from a search in the named instance tree\n\
  *		instead of the instance itself.\n\
 "
+/** Long help text part 3 */
 #define Asc_ProbeCmdHL3 \
 "\
  *	clear	<number> [indices]\n\
@@ -80,6 +88,7 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *		indices are given. Valid indices are from 0 on up.\n\
  *		Ranges are not supported. Indices must be increasing\n\
 "
+/** Long help text part 4 */
 #define Asc_ProbeCmdHL4 \
 "\
  *	destroy\n\
@@ -88,12 +97,14 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *		Adds a collection to the C structures and returns\n\
  *		the number of the new (empty) collection.\n\
 "
+/** Long help text part 5 */
 #define Asc_ProbeCmdHL5 \
 "\
  *	filters\n\
  *		Returns an ordered list of names/explanations for the \n\
  *		filter-vars, each is a boolean flag.\n\
 "
+/** Long help text part 6 */
 #define Asc_ProbeCmdHL6 \
 "\
  *	get	<number> [indices]\n\
@@ -101,6 +112,7 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *		the collection numbered. If no indices given, the complete\n\
  *		collection list is returned.\n\
 "
+/** Long help text part 7 */
 #define Asc_ProbeCmdHL7 \
 "\
  *	invalidate\n\
@@ -109,6 +121,7 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *	name	<number> <index>\n\
  *		Returns the name corresponding to number and index.\n\
 "
+/** Long help text part 8 */
 #define Asc_ProbeCmdHL8 \
 "\
  *	qlfdid	<number> <index>\n\
@@ -117,6 +130,7 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *		If the name is uncertain, g_search_inst will be as if\n\
  *		qlfdid had failed and '0' will be returned, OTHERWISE '1'.\n\
 "
+/** Long help text part 9 */
 #define Asc_ProbeCmdHL9 \
 "\
  *	size	[number]\n\
@@ -126,12 +140,14 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  *		Removes any UNCERTAIN names in the collection specified or\n\
  *		in all collections if no number is given.\n\
 "
+/** Long help text part 10 */
 #define Asc_ProbeCmdHL10 \
 "\
  *	update	[number]\n\
  *		Attempts to resolve all uncertain names in the collection\n\
  *		specified, or in all collections if no number given.\n\
 "
+/** Long help text part 11 */
 #define Asc_ProbeCmdHL11 \
 "\
  *\n\
@@ -144,6 +160,4 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  */
 
 #endif /*ProbeProc_module_loaded*/
-
-
 

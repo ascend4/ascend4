@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Temporary variable list output routines
  *  by Tom Epperly
  *  Version: $Revision: 1.5 $
@@ -26,27 +26,35 @@
  *  COPYING.
  */
 
+/** @file
+ *  Temporary variable list output routines.
+ *  <pre>
+ *  When #including vlistio.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
+ *         #include "vlist.h"
+ *  </pre>
+ */
+
 #ifndef __VLISTIO_H_SEEN__
 #define __VLISTIO_H_SEEN__
-/**< requires
-# #include<stdio.h>
-# #include"vlist.h"
-*/
 
-extern void WriteVariableList(FILE *,CONST struct VariableList *);
-/**< 
- *  void WriteVariableList(f,n)
- *  FILE *f;
- *  struct VariableList *n;
+extern void WriteVariableList(FILE *f, CONST struct VariableList *n);
+/**<
+ *  <!--  void WriteVariableList(f,n)                                  -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  struct VariableList *n;                                      -->
  *  No leading or trailing white space is added
  */
 
-extern void WriteVariableListNode(FILE *, CONST struct VariableList *);
-/**< 
- *  void WriteVariableListNode(f,n);
- *  FILE *f;
- *  struct VariableList *n;
+extern void WriteVariableListNode(FILE *f, CONST struct VariableList *n);
+/**<
+ *  <!--  void WriteVariableListNode(f,n);                             -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  struct VariableList *n;                                      -->
  *  Write just this one variable list node, and not any of the ones
  *  following it.
  */
-#endif /**< __VLISTIO_H_SEEN__ */
+
+#endif /* __VLISTIO_H_SEEN__ */
+

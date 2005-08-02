@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Memory module
  *  by Karl Westerberg, Ben Allan
  *  Created: 6/90
@@ -27,8 +27,9 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-
-/**< 
+/** @file
+ *  Memory module.
+ *  <pre>
  *  Contents:     Memory module
  *
  *  Authors:      Karl Westerberg
@@ -66,60 +67,126 @@
  *                For best results, you must understand your memory
  *                usage pattern and tune the mem_create_store parameters
  *                accordingly.
+ *
+ *  Requires:     #include <stdio.h>
+ *                #include "utilities/ascConfig.h"
+ *  </pre>
  */
-#ifndef mem_NULL
-/**< requires
-# #include <stdio.h>
-*/
 
-#define mem_NULL NULL
+#ifndef mem_NULL
+
+#define mem_NULL      NULL
 #define mem_code_NULL NULL
-#define mem_address(ptr) ((long)(ptr))
+#define mem_address(ptr)      ((long)(ptr))
 #define mem_code_address(ptr) ((long)(ptr))
 
-/**< use the defines below based on these rather than these directly */
-extern void mem_move(POINTER, POINTER, unsigned);
-extern void mem_move_disjoint(POINTER, POINTER, int);
-extern void mem_repl_byte(POINTER, unsigned, unsigned);
-extern void mem_zero_byte(POINTER, unsigned, unsigned);
-extern void mem_repl_word(POINTER, unsigned, unsigned);
-/**< here are the defines */
+/* use the defines below based on these rather than these directly */
+extern void mem_move(POINTER from, POINTER too, unsigned nbytes);
+/**<
+ *  Implementation function for mem_move_cast().  Do not call this
+ *  function directly - use mem_move_cast() instead.
+ */
+extern void mem_move_disjoint(POINTER from, POINTER too, int nbytes);
+/**<
+ *  Implementation function for mem_copy_cast().  Do not call this
+ *  function directly - use mem_copy_cast() instead.
+ */
+extern void mem_repl_byte(POINTER too, unsigned byte, unsigned nbytes);
+/**<
+ *  Implementation function for mem_repl_byte_cast().  Do not call this
+ *  function directly - use mem_repl_byte_cast() instead.
+ */
+extern void mem_zero_byte(POINTER too, unsigned byte, unsigned nbytes);
+/**<
+ *  Implementation function for mem_zero_byte_cast().  Do not call this
+ *  function directly - use mem_zero_byte_cast() instead.
+ */
+extern void mem_repl_word(POINTER too, unsigned word, unsigned nwords);
+/**<
+ *  Implementation function for mem_repl_word_cast().  Do not call this
+ *  function directly - use mem_repl_word_cast() instead.
+ */
+
+/* here are the defines */
 #define mem_move_cast(from,too,nbytes) \
    mem_move((POINTER)(from),(POINTER)(too),(unsigned)(nbytes))
+/**<
+ *  Copies nbytes of data from memory location from to memory location too.
+ *  The memory regions can be overlapping.
+ *  @param from   unsigned, pointer to memory to copy from.
+ *  @param too    unsigned, pointer to memory to receive copy.
+ *  @param nbytes unsigned, the number of bytes to copy.
+ *  @return No return value.
+ *  @see mem_move()
+ */
 
 #define mem_copy_cast(from,too,nbytes) \
    mem_move_disjoint((POINTER)(from),(POINTER)(too),(int)(nbytes))
+/**<
+ *  Copies nbytes of data from memory location from to memory location too.
+ *  The memory regions can NOT be overlapping.
+ *  @param from   unsigned, pointer to memory to copy from.
+ *  @param too    unsigned, pointer to memory to receive copy.
+ *  @param nbytes unsigned, the number of bytes to copy.
+ *  @return No return value.
+ *  @see mem_move_disjoint()
+ */
 
 #define mem_repl_byte_cast(too,byte,nbytes) \
    mem_repl_byte((POINTER)(too),(unsigned)(byte),(unsigned)(nbytes))
+/**<
+ *  Replaces nbytes of data at memory location too with byte.
+ *  @param too    unsigned, pointer to start of block to be modified.
+ *  @param byte   unsigned, the character to write.
+ *  @param nbytes unsigned, the number of bytes to modify.
+ *  @return No return value.
+ *  @see mem_repl_byte()
+ */
 
 #define mem_zero_byte_cast(too,byte,nbytes) \
    mem_zero_byte((POINTER)(too),(unsigned)(byte),(unsigned)(nbytes))
-/**< byte is ignored by mem_zero_byte. It is a placeholder for mem_repl_byte
-   substitutability.
-*/
+/**<
+ *  Zeroes nbytes of data at memory location too.
+ *  byte is ignored - it is a placeholder for mem_repl_byte
+ *  substitutability.
+ *  @param too    unsigned, pointer to start of block to be modified.
+ *  @param byte   unsigned, ignored.
+ *  @param nbytes unsigned, the number of bytes to zero.
+ *  @return No return value.
+ *  @see mem_zero_byte()
+ */
 
 #define mem_repl_word_cast(too,word,nwords) \
    mem_repl_word((POINTER)(too),(unsigned)(word),(unsigned)(nwords))
+/**<
+ *  Replaces nwords of data at memory location too with word.
+ *  @param too    unsigned, pointer to start of block to be modified.
+ *  @param word   unsigned, the word to write.
+ *  @param nbytes unsigned, the number of bytes to modify.
+ *  @return No return value.
+ *  @see mem_repl_word()
+ */
 
-/**< the following are pretty much a monument to Karl. */
+/* the following are pretty much a monument to Karl. */
 #if 0
-extern int mem_get_byte();
+extern int mem_get_byte(long from);       /**< Returns the byte located at from. */
 #endif
-extern int mem_get_int();
-extern long mem_get_long();
-extern double mem_get_float();
-extern double mem_get_double();
-extern void mem_set_byte();
-extern void mem_set_int();
-extern void mem_set_long();
-extern void mem_set_float();
-extern void mem_set_double();
+extern int mem_get_int(long from);        /**< Returns the int located at from. */
+extern long mem_get_long(long from);      /**< Returns the long located at from. */
+extern double mem_get_float(long from);   /**< Returns the float located at from. */
+extern double mem_get_double(long from);  /**< Returns the double located at from. */
+extern void mem_set_byte(long from, int b);       /**< Sets the byte located at from. */
+extern void mem_set_int(long from, int i);        /**< Sets the int located at from. */
+extern void mem_set_long(long from, long l);      /**< Sets the long located at from. */
+extern void mem_set_float(long from, double f);   /**< Sets the float located at from. */
+extern void mem_set_double(long from, double d);  /**< Sets the double located at from. */
 
 #define	mem_get_unsigned(from)	((unsigned)mem_get_int(from))
+/**< Returns the unsigned located at from. */
 #define	mem_set_unsigned(from,u) mem_set_int(from,(int)u)
+/**< Sets the unsigned located at from. */
 
-/***************************************************************************\
+/*---------------------------------------------------------------------------
  The following definitions provide a generic and reasonably efficient memory
  allocation system for situations where many many objects of the same size
  need to be "allocated and deallocated" rapidly and stored efficiently:
@@ -128,7 +195,7 @@ extern void mem_set_double();
  have been created and then used and subsequently "freed" go on a list
  and are handed out again at the next opportunity. The list is run LIFO.
  The list is associated with the mem_store_t.
- 
+
  There is one restriction on the elements: they will be a multiple of the
  size of a pointer, even if you specify otherwise. If this is too large,
  write your own allocator.
@@ -154,34 +221,34 @@ extern void mem_set_double();
  The size characteristics of this scheme are tunable at run time so that
  it can be scaled well when the number of elements and likely amount
  of expansion required are known.
-\***************************************************************************/
+---------------------------------------------------------------------------*/
 
 typedef struct mem_store_header *mem_store_t;
-/**< 
+/**<
   The token for this memory system. malloc doesn't tell you much
   about its internals, and we aren't telling you about ours.
   You can't dereference or free this pointer yourself, so there's
   no need to even know that it IS a pointer, now is there?
 **/
 
+/** The reporting structure for a mem_store_header query. */
 struct mem_statistics {
-  double m_eff;		/**< bytes in use / bytes allocated */
-  double m_recycle;	/**< avg reuses per element */
-  int elt_total;	/**< current elements existing in store*/
-  int elt_taken;	/**< fresh elements handed out */
-  int elt_inuse;	/**< elements the user currently has */
-  int elt_onlist;	/**< elements awaiting reuse */
-  int elt_size;		/**< bytes/element, as mem sees it */
-  int str_len;		/**< length of active pool. */
-  int str_wid;          /**< elements/pointer in pool. */
+  double m_eff;       /**< bytes in use / bytes allocated */
+  double m_recycle;   /**< avg reuses per element */
+  int elt_total;      /**< current elements existing in store*/
+  int elt_taken;      /**< fresh elements handed out */
+  int elt_inuse;      /**< elements the user currently has */
+  int elt_onlist;     /**< elements awaiting reuse */
+  int elt_size;       /**< bytes/element, as mem sees it */
+  int str_len;        /**< length of active pool. */
+  int str_wid;        /**< elements/pointer in pool. */
 };
-/**< The reporting structure for a mem_store_header query. */
 
-extern void mem_get_stats(struct mem_statistics *, mem_store_t);
-/**< 
- *  mem_get_stats(m_stats,ms);
- *  struct mem_statistics *m_stats;
- *  mem_store_t ms;
+extern void mem_get_stats(struct mem_statistics *m_stats, mem_store_t ms);
+/**<
+ *  <!--  mem_get_stats(m_stats,ms);                                   -->
+ *  <!--  struct mem_statistics *m_stats;                              -->
+ *  <!--  mem_store_t ms;                                              -->
  *
  *  Stuffs the user interface structure, m_stats, with info
  *  derived from ms given.
@@ -190,25 +257,26 @@ extern void mem_get_stats(struct mem_statistics *, mem_store_t);
  *  available.
  */
 
-extern mem_store_t mem_create_store(int, int, size_t, int, int);
-/**< 
- *  ms = mem_create_store(length, width, eltsize, deltalen, deltapool);
- *  mem_store_t ms;
- *  int length,width,deltalen,deltapool;
- *  size_t eltsize;
+extern mem_store_t mem_create_store(int length, int width, size_t eltsize,
+                                    int deltalen, int deltapool);
+/**<
+ *  <!--  ms = mem_create_store(length, width, eltsize, deltalen, deltapool); -->
+ *  <!--  mem_store_t ms;                                              -->
+ *  <!--  int length,width,deltalen,deltapool;                         -->
+ *  <!--  size_t eltsize;                                              -->
  *
  *  Returns a mem_store_t which can be used in future. The mem_store_t
  *  contains all the necessary accounting information, but in particular
  *  the eltsize is fixed at creation. All elements requested from ms will be
  *  pointers to eltsize bytes of memory.
  *  Returns NULL if a store of the requested length*width*eltsize
- *  cannot be initially allocated.
- * 
+ *  cannot be initially allocated.<br><br>
+ *
  *  The user may request more than length*width elements from the store:
  *  this will cause it to grow. It will grow (internally) in chunks of
- *  deltalen*width elements. The pool vector above grows in chunks of 
+ *  deltalen*width elements. The pool vector above grows in chunks of
  *  deltapool, the extra pointers in it being NULL until needed.
- *
+ *  <pre>
  *  Info for tuning purposes:
  *
  *  For maximum efficiency, eltsize should be an integer
@@ -217,7 +285,7 @@ extern mem_store_t mem_create_store(int, int, size_t, int, int);
  *  This restriction may or may not help avoid alignment problems with
  *  items inside the user's element structure.
  *
- *  Width should (for some architectures) be such that 
+ *  Width should (for some architectures) be such that
  *  width*eltsize = 2^n - 32 for some n fairly large (heuristic: n= 9..13).
  *  Widths that are too large may be prone to causing excess page faults,
  *  though the process cpu time reported by the clock() can be much
@@ -231,7 +299,7 @@ extern mem_store_t mem_create_store(int, int, size_t, int, int);
  *
  *  Deltalen is the number of additional pointers in the pool that will be
  *  allocated when more elements are needed than are available internally,
- *  as already noted. 
+ *  as already noted.
  *
  *  Deltapool is the size change of the pool array described above: it should
  *  be as large as you are willing to tolerate. The pool array starts out
@@ -240,13 +308,14 @@ extern mem_store_t mem_create_store(int, int, size_t, int, int);
  *  pointers will not automatically have elements allocated to them; rather,
  *  they will be initialized to NULL and filled in only as the chunks of
  *  deltalen*width elements are required.
+ *  </pre>
  */
 
-extern void *mem_get_element(mem_store_t);
-/**< 
- *  eltpointer = (elt_type *)mem_get_element(ms);
- *  mem_store_t ms;
- *  <the elt_type you want is your business> *eltpointer;
+extern void *mem_get_element(mem_store_t ms);
+/**<
+ *  <!--  eltpointer = (elt_type *)mem_get_element(ms);                -->
+ *  <!--  mem_store_t ms;                                              -->
+ *  <<!--  the elt_type you want is your business> *eltpointer;        -->
  *
  *  Returns a void pointer to a blob of memory of the eltsize
  *  set when ms was created. You must cast it appropriately.
@@ -255,13 +324,13 @@ extern void *mem_get_element(mem_store_t);
  *  system is unable to allocate the required memory.
  */
 
-extern void mem_get_element_list(mem_store_t, int, void **);
-/**< 
- *  mem_get_element_list(ms, len, ellist);
- *  int len;
- *  mem_store_t ms;
- *  
- *** NOT IMPLEMENTED.
+extern void mem_get_element_list(mem_store_t ms, int len, void **ellist);
+/**<
+ *  <!--  mem_get_element_list(ms, len, ellist);                       -->
+ *  <!--  int len;                                                     -->
+ *  <!--  mem_store_t ms;                                              -->
+ *
+ *  NOT IMPLEMENTED.
  *
  *  Takes the pointer array, ellist, of length len provided by the user
  *  and fills it with pointers to elements from the store.
@@ -269,7 +338,7 @@ extern void mem_get_element_list(mem_store_t, int, void **);
  *  locations pointed to by successive entries in the ellist returned.
  *  Ellist should point to an array with enough space for len pointers.
  *  Returns NULL in ellist[0] iff store growth is required and the operating
- *  system is unable to allocate the required memory.
+ *  system is unable to allocate the required memory.<br><br>
  *
  *  The user is reminded that if he knows how many elements he needs
  *  ahead of time, he is probably better off mallocing the array himself.
@@ -290,24 +359,24 @@ extern void mem_get_element_list(mem_store_t, int, void **);
    ;-)
    This flag exists to make it easy to test the theory that the
    accounting overhead in this code is not of significant cost.
-   Below 1e5 elements it really isn't bad enough to justify the 
+   Below 1e5 elements it really isn't bad enough to justify the
    assumption that the user is perfect.
 */
 
-extern void mem_free_element(mem_store_t, void *);
-/**< 
- *  mem_free_element(ms,(void *)eltpointer);  
- *  mem_store_t ms;
- *  <your elttype> *eltpointer;
+extern void mem_free_element(mem_store_t ms, void *eltpointer);
+/**<
+ *  <!--  mem_free_element(ms,(void *)eltpointer);                     -->
+ *  <!--  mem_store_t ms;                                              -->
+ *  <!--  <your elttype> *eltpointer;                                  -->
  *
  *  Returns an element to the store.
  *  If you return the same pointer twice, we will have
  *  no qualms about returning it to you twice. We won't necessarily
- *  return it to you twice, though.
+ *  return it to you twice, though.<br><br>
  *  If mem_DEBUG is TRUE, eltpointer will be checked for belonging
  *  to ms. If you call mem_free_element with a pointer the ms does
  *  not recognize, it will not be freed and a message will be
- *  sent to stderr.
+ *  sent to stderr.<br><br>
  *  If mem_DEBUG is FALSE, eltpointer will be assumed to belong
  *  with the ms in question. The implications of handing mem_free_element
  *  an element of the wrong size or from the wrong ms (bearing in
@@ -318,10 +387,10 @@ extern void mem_free_element(mem_store_t, void *);
  *  If you send us a NULL pointer, we will ignore it completely.
  */
 
-extern void mem_clear_store(mem_store_t);
-/**< 
- *  mem_clear_store(ms);
- *  mem_store_t ms;
+extern void mem_clear_store(mem_store_t ms);
+/**<
+ *  <!--  mem_clear_store(ms);                                         -->
+ *  <!--  mem_store_t ms;                                              -->
  *
  *  Clears the books in ms. That is, we reset the ms to think
  *  that __all__ elements are freshly available and have never
@@ -331,7 +400,7 @@ extern void mem_clear_store(mem_store_t);
  *  Get and free calls will be balanced to see if spurious elements
  *  have been handed in. (This is a heuristic check).
  *  The clear process will cause any spurious pointers that were
- *  turned in via mem_free_element to be forgotten about.
+ *  turned in via mem_free_element to be forgotten about.<br><br>
  *
  *  Clearing a store is not necessary for mem_destroy_store.
  *  Recycling is faster from the recycle list than from a cleared store, ~2%.
@@ -339,10 +408,10 @@ extern void mem_clear_store(mem_store_t);
  *  probability of successive elements being near each other.
  */
 
-extern void mem_destroy_store(mem_store_t);
-/**< 
- *  mem_destroy_store(ms);
- *  mem_store_t ms;
+extern void mem_destroy_store(mem_store_t ms);
+/**<
+ *  <!--  mem_destroy_store(ms);                                       -->
+ *  <!--  mem_store_t ms;                                              -->
  *
  *  Deallocates everything associated with the ms.
  *  If mem_DEBUG TRUE, verifies that all elements have been mem_freed
@@ -350,23 +419,24 @@ extern void mem_destroy_store(mem_store_t);
  *  If mem_DEBUG FALSE, just nukes everything unconditionally.
  */
 
-extern void mem_print_store(FILE *, mem_store_t,unsigned);
-/**< 
- *  mem_print_store(fp,ms,detail);
- *  FILE *fp;
- *  mem_store_t ms;
- *  unsigned detail;
+extern void mem_print_store(FILE *fp, mem_store_t ms, unsigned detail);
+/**<
+ *  <!--  mem_print_store(fp,ms,detail);                               -->
+ *  <!--  FILE *fp;                                                    -->
+ *  <!--  mem_store_t ms;                                              -->
+ *  <!--  unsigned detail;                                             -->
  *  Displays a bunch of statistics about a mem_store_t on the file
  *  given. Which ones depends on detail.
- *  If detail 0, displays just summary statistics.
- *  If detail 1, just internal statistics.
- *  If detail >1, displays both.
+ *  - If detail 0, displays just summary statistics.
+ *  - If detail 1, just internal statistics.
+ *  - If detail >1, displays both.
  */
 
-extern size_t mem_sizeof_store(mem_store_t);
-/**< 
- *  mem_sizeof_store(ms);
+extern size_t mem_sizeof_store(mem_store_t ms);
+/**<
+ *  <!--  mem_sizeof_store(ms);                                        -->
  *  Returns the current total byte usage of the store.
  */
 
-#endif
+#endif  /* mem_NULL */
+

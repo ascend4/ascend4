@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -27,20 +27,22 @@
  *  COPYING.
  */
 
+/** @file
+ *  Ascend Instance Tree Type Definitions.
+ *  <pre>
+ *  When #including mergeinst.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
+ */
+
 #ifndef __MERGEINST_H_SEEN__
 #define __MERGEINST_H_SEEN__
 
-
+extern struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2);
 /**< 
- *  When #including mergeinst.h, make sure these files are #included first:
- *     #include "instance_enum.h"
- */
-
-
-extern struct Instance *MergeInstances(struct Instance *,struct Instance *);
-/**< 
- *  struct Instance *MergeInstances(i1,i2)
- *  struct Instance *i1,*i2;
+ *  <!--  struct Instance *MergeInstances(i1,i2)                       -->
+ *  <!--  struct Instance *i1,*i2;                                     -->
  *  This is the ARE_THE_SAME operator.
  *  The return value is the merged instance or NULL if can't be done.
  *  Instances are merged from the bottom up, checking one step ahead
@@ -53,29 +55,30 @@ extern struct Instance *MergeInstances(struct Instance *,struct Instance *);
  *  If the return is NULL, the state of i1 and i2 in structural
  *  terms is highly questionable. They may be partially merged.
  *
- * Bugs: merging two vars in a shared relation will mess up all the
- * other copies of the relation unless all of their corresponding
- * vars are also merged. Fixed for token relations, but not others.
+ *  @bug Merging two vars in a shared relation will mess up all the
+ *       other copies of the relation unless all of their corresponding
+ *       vars are also merged. Fixed for token relations, but not others.
  */
 
-extern void PostMergeCheck(struct Instance *);
+extern void PostMergeCheck(struct Instance *i);
 /**< 
- *  void PostMergeCheck(i)
- *  struct Instance *i;
+ *  <!--  void PostMergeCheck(i)                                       -->
+ *  <!--  struct Instance *i;                                          -->
+ *  Sanity check after a MergeInstances() call.
  *  This should be performed after a MergeInstances call or a sequence of
  *  MergeInstances calls.  This goes through the merged instance tree and
  *  make sure the ARE_ALIKE cliques are being enforced.
  */
 
 
-extern void MergeCliques(struct Instance *,struct Instance *);
+extern void MergeCliques(struct Instance *i1, struct Instance *i2);
 /**< 
- *  void MergeCliques(i1,i2)
- *  struct Instance *i1,*i2;
+ *  <!--  void MergeCliques(i1,i2)                                     -->
+ *  <!--  struct Instance *i1,*i2;                                     -->
  *  Merge the cliques represented by i1 and i2.  This does not enforce
  *  any type consistency between the clicks; it just links them together.
  *  It doesn't matter if i1 and i2 are already in the same clique.
  */
 
-#endif
-/**< __MERGEINST_H_SEEN__ */
+#endif  /* __MERGEINST_H_SEEN__ */
+

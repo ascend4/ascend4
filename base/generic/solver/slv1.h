@@ -1,4 +1,4 @@
-/**< 
+/*
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -28,21 +28,27 @@
  *  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  MINOS solver registration module.
+ *  <pre>
+ *  Contents:     MINOS module
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
+ */
+
 #ifndef slv1__already_included
 #define slv1__already_included
 
-/**< requires #include "slv_client.h" */
-
 typedef struct slv1_system_structure *slv1_system_t;
 
-int slv1_register(SlvFunctionsT *);
-/**********************************************************************\
-  This is the function that tells the system about the MINOS solver.
-  Our index is not necessarily going to be 1. That everything here is
-  named slv1* is just a historical event.
-\**********************************************************************/
+int slv1_register(SlvFunctionsT *sft);
+/**<
+ *  This is the function that tells the system about the MINOS solver.
+ *  Our index is not necessarily going to be 1. That everything here is
+ *  named slv1* is just a historical event.
+ */
      
-#endif
-
-
+#endif  /* slv1__already_included */
 

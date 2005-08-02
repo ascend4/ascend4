@@ -1,4 +1,4 @@
-/**< 
+/*
  *  External Call Module
  *  by Kirk Andre Abbott
  *  Created: Jun 1, 1995.
@@ -26,59 +26,66 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  External Call Module.
+ *  <pre>
  *  When #including extcall.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include <stdlib.h>
+ *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
+ *         #include "ascmalloc.h"
+ *         #include "list.h"
+ *         #include "extfunc.h"
+ *         #include "instance_enum.h"
+ *  </pre>
+ *  @todo Complete documentation of compiler/extcall.h.
  */
-
-
 
 #ifndef __EXTCALL_H_SEEN__
 #define __EXTCALL_H_SEEN__
-/**< requires
-# #include <stdio.h>
-# #include <stdlib.h>
-# #include "compiler.h"
-# #include "ascmalloc.h"
-# #include "list.h"
-# #include "extfunc.h"
-# #include "instance_enum.h"
-*/
 
+/** External call data structure. */
 struct ExtCallNode{
-  struct ExternalFunc *efunc;
-  struct gl_list_t *arglist;    /**< list of Instance pointers */
-  struct Instance **data;      	/**< a hanlde to additional user data*/
-  unsigned long subject;	/**< index into the arglist */
-  int nodestamp;               	/**< a unique id for each call node */
+  struct ExternalFunc *efunc; /**< Pointer to external function. */
+  struct gl_list_t *arglist;  /**< List of Instance pointers. */
+  struct Instance **data;     /**< A handle to additional user data. */
+  unsigned long subject;      /**< Index into the arglist. */
+  int nodestamp;              /**< A unique id for each call node. */
 };
 
 extern struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
-      struct gl_list_t *args,
-      struct Instance *subject,
-      struct Instance *data);
-/**< 
+                                         struct gl_list_t *args,
+                                         struct Instance *subject,
+                                         struct Instance *data);
+/**<
  *
  */
 
 extern void DestroyExtCall(struct ExtCallNode *ext,
-      struct Instance *relinst);
-/**< 
+                           struct Instance *relinst);
+/**<
  *
  */
 
-extern struct Instance *GetSubjectInstance(struct gl_list_t *,unsigned long);
-extern unsigned long GetSubjectIndex(struct gl_list_t *,struct Instance *);
-extern unsigned long CountNumberOfArgs(struct gl_list_t *,
-           unsigned long, unsigned long);
+extern struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
+                                           unsigned long varndx);
 
-extern struct gl_list_t *LinearizeArgList(struct gl_list_t *,
-       unsigned long, unsigned long);
-/**< 
- *  struct gl_list_t *LinearizeArgList(list,start,end)
- *  struct gl_list_t *list;
- *  unsigned long start;
- *  unsigned long end;
+extern unsigned long GetSubjectIndex(struct gl_list_t *arglist,
+                                     struct Instance *subject);
+
+extern unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
+                                       unsigned long start,
+                                       unsigned long end);
+
+extern struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
+                                          unsigned long start,
+                                          unsigned long end);
+/**<
+ *  <!--  struct gl_list_t *LinearizeArgList(list,start,end)           -->
+ *  <!--  struct gl_list_t *list;                                      -->
+ *  <!--  unsigned long start;                                         -->
+ *  <!--  unsigned long end;                                           -->
  *  Given a list of gl_list_t's this function will create a new list which
  *  is a linearized representation,i.e, each of the lists is spliced into
  *  the original list, to create one long list. The user now owns the
@@ -86,28 +93,35 @@ extern struct gl_list_t *LinearizeArgList(struct gl_list_t *,
  *  with the new list.
  */
 
-extern struct gl_list_t *CopySpecialList(struct gl_list_t *);
+extern struct gl_list_t *CopySpecialList(struct gl_list_t *list);
 
-extern void DestroySpecialList(struct gl_list_t *);
-/**< 
- *  void DestroySpecialList(struct gl_list_t *)
- *  struct gl_list_t *list;
+extern void DestroySpecialList(struct gl_list_t *list);
+/**<
+ *  <!--  void DestroySpecialList(struct gl_list_t *list)              -->
+ *  <!--  struct gl_list_t *list;                                      -->
  *  Given a list of gl_list_t's, this function will destroy the lists
  *  structures associated with this complex list. It *will* not destroy
  *  the *leaf* data, but it will destroy all the list structures.
  */
-
 
 #ifdef NDEBUG
 #define ExternalCallExtFunc(ext) ((ext)->efunc)
 #else
 #define ExternalCallExtFunc(ext) ExternalCallExtFuncF(ext)
 #endif
-extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *);
 /**< 
- *  struct ExternalFunc *ExternalCallExtFunc(ext);
- *  struct ExtCallNode *ext;
- *  Return the external function pointer of an external call;
+ *  Return the external function pointer of an external call.
+ *  @param ext <code>struct ExtCallNode*</code>, node to query.
+ *  @return Returns the external function as a <code>struct ExternalFunc*</code>.
+ *  @see ExternalCallExtFuncF()
+ */
+extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *ext);
+/**<
+ *  <!--  struct ExternalFunc *ExternalCallExtFunc(ext);               -->
+ *  <!--  struct ExtCallNode *ext;                                     -->
+ *  <!--  Return the external function pointer of an external call;    -->
+ *  Implementation function for ExternalCallExtFunc().  Do not call this
+ *  function directly - call ExternalCallExtFunc() instead.
  */
 
 #ifdef NDEBUG
@@ -115,19 +129,28 @@ extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *);
 #else
 #define ExternalCallArgList(ext) ExternalCallArgListF(ext)
 #endif
+/**<
+ *  Return the argument list.  This is a List of Lists of struct
+ *  Instances, for an external call.
+ *  @param ext <code>struct ExtCallNode*</code>, node to query.
+ *  @return Returns the arguments as a <code>struct gl_list_t*</code>.
+ *  @see ExternalCallArgListF()
+ */
 extern struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext);
-/**< 
- *  struct gl_list_t *ExternalCallArgList(ext);
- *  struct relation_ExternalCall;
- *  Return the arguement list, which is a List of Lists of struct
- *  Instances, for an external call;
+/**<
+ *  <!--  struct gl_list_t *ExternalCallArgList(ext);                  -->
+ *  <!--  struct relation_ExternalCall;                                -->
+ *  <!--  Return the arguement list, which is a List of Lists of struct -->
+ *  <!--  Instances, for an external call;                             -->
+ *  Implementation function for ExternalCallArgList().  Do not call this
+ *  function directly - call ExternalCallArgList() instead.
  */
 
-extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *);
+extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext);
 /**< 
- *  struct Instance *ExternalCallDataInstance(ext);
- *  struct ExtCallNode *ext;
- *  Return the 'data' instance for an external call. This 'data'
+ *  <!--  struct Instance *ExternalCallDataInstance(ext);              -->
+ *  <!--  struct ExtCallNode *ext;                                     -->
+ *  Return the 'data' instance for an external call.  This 'data'
  *  instance can has to be a MODEL_INST. It is used to convey additional
  *  information to a client who may need it. A NULL result means that no
  *  additional information was requested and is a valid result.
@@ -138,18 +161,26 @@ extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *);
 #else
 #define ExternalCallVarIndex(ext) ExternalCallVarIndexF(ext)
 #endif
-extern unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext);
 /**< 
- *  unsigned long ExternalCallSubjectVarNdx(ext);
- *  struct ExtCallNode *ext;
- *  Return the index in the arguement list of the subject variable.
- *  This function uses the primitives GetWhichVar etc.
+ *  Return the index in the argument list of the subject variable.
+ *  @param ext <code>struct ExtCallNode*</code>, node to query.
+ *  @return Returns the index as an <code>unsigned long</code>.
+ *  @see ExternalCallVarIndexF()
+ */
+extern unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext);
+/**<
+ *  <!--  unsigned long ExternalCallSubjectVarNdx(ext);                -->
+ *  <!--  struct ExtCallNode *ext;                                     -->
+ *  <!--  Return the index in the argument list of the subject variable. -->
+ *  <!--  This function uses the primitives GetWhichVar etc.           -->
+ *  Implementation function for ExternalCallVarIndex().  Do not call this
+ *  function directly - call ExternalCallVarIndex() instead.
  */
 
 extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
 /**< 
- *  struct Instance *ExternalCallSubjectVar(ext);
- *  struct ExtCallNode *ext;
+ *  <!--  struct Instance *ExternalCallSubjectVar(ext);                -->
+ *  <!--  struct ExtCallNode *ext;                                     -->
  *  Return the "subject" variable instance of the external call. This is
  *  the variable that relation was constructed wrt. If NULL, then a user
  *  should consider this as an error.
@@ -160,25 +191,28 @@ extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
 #else
 #define ExternalCallNodeStamp(ext) ExternalCallNodeStampF(ext)
 #endif
-extern int ExternalCallNodeStampF(struct ExtCallNode *ext);
 /**< 
- *  int ExternalCallNodeStamp(ext);
- *  struct ExtCallNode *ext;
- *  Return the nodestamp for the given external node. Valid results
- *  are >= 0.
+ *  Return the nodestamp for the given external node.
+ *  Valid results are >= 0.
+ *  @param ext <code>struct ExtCallNode*</code>, node to query.
+ *  @return Returns the node stamp as an <code>int</code>.
+ *  @see ExternalCallNodeStampF()
+ */
+extern int ExternalCallNodeStampF(struct ExtCallNode *ext);
+/**<
+ *  <!--  int ExternalCallNodeStamp(ext);                              -->
+ *  <!--  struct ExtCallNode *ext;                                     -->
+ *  <!--  Return the nodestamp for the given external node. Valid results -->
+ *  <!--  are >= 0.                                                    -->
+ *  Implementation function for ExternalCallNodeStamp().  Do not call this
+ *  function directly - call ExternalCallNodeStamp() instead.
  */
 
 extern void SetExternalCallNodeStamp(struct ExtCallNode *ext,
-         int nodestamp);
+                                     int nodestamp);
+/**< 
+ *  Set the nodestamp for the given external node.
+ */
 
-#endif /**< __EXTCALL_H_SEEN__ */
-
-
-
-
-
-
-
-
-
+#endif /* __EXTCALL_H_SEEN__ */
 

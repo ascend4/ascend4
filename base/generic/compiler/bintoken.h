@@ -1,4 +1,4 @@
-/** 
+/* 
  *  bintoken.h
  *  By Benjamin A. Allan
  *  Jan 7, 1998.
@@ -29,26 +29,31 @@
  *  the file named COPYING.
  */
 
-/** Note that this header and btprolog.h are a pair.
- * btprolog exists to make the C compiler job simpler -
- * we don't want it to know about struct Instance when
- * building code because we may not have the compiler
- * directory available. btprolog.h is installed with
- * the ascend binaries or scripts.
+/** @file
+ *  Binary tokens implementation for real relation instances.
+ *
+ *  Note that this header and btprolog.h are a pair.
+ *  btprolog exists to make the C compiler job simpler -
+ *  we don't want it to know about struct Instance when
+ *  building code because we may not have the compiler
+ *  directory available. btprolog.h is installed with
+ *  the ascend binaries or scripts.
+ *  <pre>
+ *  When #including bintoken.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
  */
-/** 
- * this header requires:
- * #include "compiler/instance_enum.h"
- */
+
 #ifndef __BINTOKEN_H_SEEN__
 #define __BINTOKEN_H_SEEN__
 
 enum bintoken_kind {
   BT_error,
   BT_C,
-  BT_F77,	/** ansi f77, unimplemented */
-  BT_SunJAVA,	/** Sun JAVA, unimplemented */
-  BT_MsJAVA	/** Microsoft(tm) JAVA(hah!), unimplemented */
+  BT_F77,     /**< ansi f77, unimplemented */
+  BT_SunJAVA, /**< Sun JAVA, unimplemented */
+  BT_MsJAVA   /**< Microsoft(tm) JAVA(hah!), unimplemented */
 };
 
 /** 
@@ -56,10 +61,10 @@ enum bintoken_kind {
  * The string arguments given are kept.
  * They are freed on the next call which specifies a new string or NULL.
  * Strings given should not be allocated from tcl.
- * This function must be called before Create is.
+ * This function must be called before Create is.<br><br>
  *
  * err = BinTokenSetOptions(srcname, objname, libname, buildcommand,
- *                          unlinkcommand, maxreln, verbose, housekeep);
+ *                          unlinkcommand, maxreln, verbose, housekeep);<br><br>
  *
  * srcname, objname, libname, buildcommand, unlinkcommand
  * are all OS/compiler specific.
@@ -70,55 +75,65 @@ enum bintoken_kind {
  * of unneeded files; specifically $srcname, objname will be deleted
  * after a successful link.
  */
-extern int BinTokenSetOptions(char *, char *, char *, char *, char *,
-                              unsigned long, int, int);
+extern int BinTokenSetOptions(char *srcname,
+                              char *objname,
+                              char *libname,
+                              char *buildcommand,
+                              char *unlinkcommand,
+                              unsigned long maxreln,
+                              int verbose,
+                              int housekeep);
 
-/** 
- * BinTokenClearTables();
+/**
+ * <!--  BinTokenClearTables();                                        -->
  * Frees global data allocated during loading.
  * Do not call any previously loaded functions after this is
  * executed. Generally, this should only be called at shutdown.
  */
 extern void BinTokenClearTables(void);
 
-/** 
- * BinTokenDeleteReference(btable);
+/**
+ * <!--  BinTokenDeleteReference(btable);                              -->
  * When all the references expire, we might unload the library.
  * Note there is no AddReference since all the references
  * are made 1 per share at load time.
  * This should be called each time a share that references
  * btable is destroyed, not each time a relation is destroyed.
  */
-extern void BinTokenDeleteReference(int);
+extern void BinTokenDeleteReference(int btable);
 
-/** 
- * BinTokensCreate(root,method);
+/**
+ * <!--  BinTokensCreate(root,method);                                 -->
  * Searches for unbinary equations in the tree of root and
  * compiles them to source, then object, then dynamically loaded
  * library. Then associates the compiled code to the equations.
  * The language and compiler tools are determined from method.
  */
-extern void BinTokensCreate(struct Instance *, enum bintoken_kind);
+extern void BinTokensCreate(struct Instance *root, enum bintoken_kind method);
 
-/** 
- * err = BinTokenCalcResidual(btable,bindex,vars,residual);
- * Returns 1 if can't evaluate function.
- * Vars is assumed already filled with values.
+/**
+ * <!--  err = BinTokenCalcResidual(btable,bindex,vars,residual);      -->
  * Calculates residual of relation indicated by btable and bindex
  * using the data in vars and putting the result in residual.
+ * Vars is assumed already filled with values.
  * This function is SIGFPE safe.
- * Returns 0 if ok, 1 if not.
+ * Returns an error code (0 if ok, 1 if couldn't evaluate function).
  * May be safely called on token relation instances only.
  */
-extern int BinTokenCalcResidual(int, int, double *, double *);
+extern int BinTokenCalcResidual(int btable, int bindex, double *vars, double *residual);
 
-/** 
- * err = BinTokenCalcGradient(int,int,vars,residual,gradient);
+/**
+ * <!--  err = BinTokenCalcGradient(int,int,vars,residual,gradient);   -->
+ * Calculates gradient of relation indicated by btable and bindex
+ * using the data in vars and putting the result in gradient.
  * Returns nonzero if can't evaluate gradient using binary
  * form of token relation.
  * Vars is assumed already filled with values.
- * Residual is free anyway, so we calc it, too.
+ * Residual is free anyway, so we calculate it, too.
  * May be safely called on token relation instances only.
  */
-extern int BinTokenCalcGradient(int, int, double *,double *,double *);
-#endif
+extern int BinTokenCalcGradient(int btable, int bindex, double *vars,
+                                double *residual, double *gradient);
+
+#endif  /* __BINTOKEN_H_SEEN__ */
+

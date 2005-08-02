@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Instance Tree Type Definitions
  *  by Tom Epperly
  *  8/16/89
@@ -27,61 +27,59 @@
  *  COPYING.
  */
 
-#ifndef __REFINEINST_H_SEEN__
-#define __REFINEINST_H_SEEN__
-
-
-/**< 
+/** @file
+ *  Instance Refinement Routine and Clique Management
+ *  <pre>
  *  When #including refineinst.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "child.h"
+ *  </pre>
  */
 
+#ifndef __REFINEINST_H_SEEN__
+#define __REFINEINST_H_SEEN__
 
-/**< 
- *  Instance Refinement Routine and Clique Management
- */
-
-extern struct Instance *RefineInstance(struct Instance *,
-           struct TypeDescription *,
-                                       struct Instance *);
-/**< 
- *  struct Instance *RefineInstance(i,type,arginst)
- *  struct Instance *, *arginsti;
- *  struct TypeDescription *type;
- *  It is assumed that type is conformable with i's current type.
- *  The reference count for type is increased by this procedure.  This
- *  doesn't check for cliques.
- *
+extern struct Instance *RefineInstance(struct Instance *i,
+                                       struct TypeDescription *type,
+                                       struct Instance *arginst);
+/**<
+ *  <!--  struct Instance *RefineInstance(i,type,arginst)              -->
+ *  <!--  struct Instance *, *arginsti;                                -->
+ *  <!--  struct TypeDescription *type;                                -->
  *  This returns the refined instance.  In most cases, the return value equals
  *  i, but sometimes it doesn't.  In general the interface should not
  *  call this routine.  Check RefineClique below.  This may change
  *  the current pending list, adding to it or changing it.
- *  Proper arginst must be supplied if the type is in any way parameterized.
- */
-
-extern struct Instance *RefineClique(struct Instance *,
-         struct TypeDescription *,
-                                     struct Instance *);
-/**< 
- *  void RefineClique(i,type,arginst)
- *  struct Instance *i, *arginst;
- *  struct TypeDescription *type;
+ *  Proper arginst must be supplied if the type is in any way parameterized.<br><br>
+ *
  *  It is assumed that type is conformable with i's current type.
  *  The reference count for type is increased by this procedure.  This
- *  will refine the whole clique.  In general, the interface should always
- *  use this instead of RefineInstance.  This may change the current pending
- *  list, adding to it or changing it.
- *
+ *  doesn't check for cliques.
+ */
+
+extern struct Instance *RefineClique(struct Instance *i,
+                                     struct TypeDescription *type,
+                                     struct Instance *arginst);
+/**<
+ *  <!--  void RefineClique(i,type,arginst)                            -->
+ *  <!--  struct Instance *i, *arginst;                                -->
+ *  <!--  struct TypeDescription *type;                                -->
  *  This returns the refined instance.  In most cases, the return value equals
  *  i, but sometimes it doesn't.
  *  Proper arginst must be supplied if the type is in any way parameterized.
  *  If something bizarre happens, this will return NULL and the instances
  *  in the clique of i may be traumatized -- i should still exist, however
- *  as NULL is just an indicator of extreme angst.
+ *  as NULL is just an indicator of extreme angst.<br><br>
+ *
+ *  It is assumed that type is conformable with i's current type.
+ *  The reference count for type is increased by this procedure.  This
+ *  will refine the whole clique.  In general, the interface should always
+ *  use this instead of RefineInstance.  This may change the current pending
+ *  list, adding to it or changing it.
  */
 
-#endif
-/**< __REFINEINST_H_SEEN__ */
+#endif  /* __REFINEINST_H_SEEN__ */
+

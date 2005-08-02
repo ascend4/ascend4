@@ -27,34 +27,36 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Registration of Tcl/Tk bitmaps.
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *      #include "interface/AscBitmaps.h"
+ *  </pre>
+ */
+
 #ifndef AscBitmap_module_loaded
 #define AscBitmap_module_loaded
 
-/*
- *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "AscBitmaps.h"
- */
-
-
-/*
- *  a file for registering all the bitmaps so we don't have to lug
- *  them around in files.
+/**
+ *  Register all the bitmaps so we don't have to lug them around in files.
  *  For starters we define square type bitmaps in 1x1 -> 14x14 size
  *  named as follows:
- *  asc_sq_N => a solid square NxN
- *  asc_sq_hN => a hollow square NxN
- *  asc_sq_xN => a hollow, diagonally crossed square NxN
- *  asc_sq_cN => a diagonal cross in the space of an NxN square
- *  *(unimplemented)
- *  * asc_lrt_N => solid lower right triangle in the space of an NxN square
- *  * asc_lrt_hN => solid lower right triangle in hollow of an NxN square
- *  * asc_llt_N => solid lower left triangle in the space of an NxN square
- *  * asc_llt_hN => solid lower left triangle in hollow of an NxN square
- *  * asc_urt_N => solid upper right triangle in the space of an NxN square
- *  * asc_urt_hN => solid upper right triangle in hollow of an NxN square
- *  * asc_ult_N => solid upper left triangle in the space of an NxN square
- *  * asc_ult_hN => solid upper left triangle in hollow of an NxN square
+ *  - asc_sq_N => a solid square NxN
+ *  - asc_sq_hN => a hollow square NxN
+ *  - asc_sq_xN => a hollow, diagonally crossed square NxN
+ *  - asc_sq_cN => a diagonal cross in the space of an NxN square
+ *  - *(unimplemented)
+ *  - * asc_lrt_N => solid lower right triangle in the space of an NxN square
+ *  - * asc_lrt_hN => solid lower right triangle in hollow of an NxN square
+ *  - * asc_llt_N => solid lower left triangle in the space of an NxN square
+ *  - * asc_llt_hN => solid lower left triangle in hollow of an NxN square
+ *  - * asc_urt_N => solid upper right triangle in the space of an NxN square
+ *  - * asc_urt_hN => solid upper right triangle in hollow of an NxN square
+ *  - * asc_ult_N => solid upper left triangle in the space of an NxN square
+ *  - * asc_ult_hN => solid upper left triangle in hollow of an NxN square
  *  Each type is registered in all sizes, though in the small N
  *  some types are indistiguishable.
  *  Next toolAttributes (the grill) is registered.
@@ -62,7 +64,7 @@
  *  flying and not flying shoe is registered  wfeet feet
  *  grablock is registered (lock stolen from lire).
  */
-
 extern int Asc_RegisterBitmaps(Tcl_Interp *interp);
 
-#endif
+#endif  /* AscBitmap_module_loaded */
+

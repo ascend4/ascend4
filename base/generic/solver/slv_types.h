@@ -1,4 +1,5 @@
-/**< 
+/*
+ *  SLV type definition for ASCEND solvers
  *  SLV: Ascend Nonlinear Solver
  *  by Benjamin Andrew Allan
  *  Created: 6/1/96
@@ -10,7 +11,7 @@
  *  This file is part of the SLV solver.
  *
  *  Copyright (C) 1996 Benjamin Andrew Allan
- *
+ *                     
  *  The SLV solver is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
@@ -27,29 +28,26 @@
  *  COPYING is found in ../compiler.
  */
 
-/*********************************************************************\
-                        SLV type definition for ASCEND solvers
-                        Version: $Revision: 1.4 $
-                        Date last modified: $Date: 1997/07/18 12:17:21 $
-
- Copyright(C) Benjamin Andrew Allan 1996
-
-\***************************************************************************/
-
-/***************************************************************************
- ***  Contents:     Solver type definitions.
- ***
- ***  Authors:      Ben Allan
- ***
- ***  Dates:        06/96 - original version
- ***  Description:  The types we want system and slv to share are here.
- ***************************************************************************/
+/** @file
+ *  SLV type definition for ASCEND solvers.
+ *  <pre>
+ *  Contents:     Solver type definitions.
+ *
+ *  Authors:      Ben Allan
+ *
+ *  Dates:        06/96 - original version
+ *
+ *  Description:  The types we want system and slv to share are here.
+ *
+ *  Requires:     none
+ *  </pre>
+ */
 
 #ifndef slv_types__already_included
 #define slv_types__already_included
 
 typedef void *SlvBackendToken;
-/**< 
+/**<
  ***  Backends that provide the residuals, gradients, and so forth
  ***  may be object-oriented and associate some sort of pointer
  ***  with each of the variables or relations they are serving up.
@@ -59,7 +57,7 @@ typedef void *SlvBackendToken;
  ***  define our interface in terms of SlvBackendTokens.
  ***  Any backend can be connected by an appropriate set of
  ***  routines conforming to the headers of slv_*, rel.h, var.h
- ***  and system.h.
+ ***  and system.h.<br><br>
  ***
  ***  We haven't yet been able to think through the possibilities of
  ***  having multiple backends operating _simultaneously_, mainly
@@ -68,8 +66,10 @@ typedef void *SlvBackendToken;
  **/
 
 typedef struct slv_system_structure *slv_system_t;
-/**< 
+/**<
  ***  This is the handle which should be used in all of the functions
  ***  in slv and system to reference a mathematical problem.
  **/
-#endif /**< slv_types__already_included */
+
+#endif  /* slv_types__already_included */
+

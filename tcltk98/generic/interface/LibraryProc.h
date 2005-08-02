@@ -27,38 +27,42 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifndef LibraryProc_module_loaded
-#define LibraryProc_module_loaded
-
-
-/*
+/** @file
+ *  Ascend Library Procedures.
+ *  <pre>
  *  To include this header, you must include the following:
  *      #include <stdio.h>
  *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
  *      #include "interface/LibraryProc.h"
+ *  </pre>
  */
 
+#ifndef LibraryProc_module_loaded
+#define LibraryProc_module_loaded
 
-extern int Asc_FileIDCopy(FILE *, FILE *);
-/*
- *  int Asc_FileIDCopy
- *  FILE *filein;
- *  FILE *fileout;
+extern int Asc_FileIDCopy(FILE *filein, FILE *fileout);
+/**<
+ *  <!--  int Asc_FileIDCopy                                           -->
+ *  <!--  FILE *filein;                                                -->
+ *  <!--  FILE *fileout;                                               -->
  *  Copies the input from a file with specified file id to the other.
  *  It is the responsibility of the user to ensure that the files are
  *  open and writable.
  */
 
-
 STDHLF_H(Asc_LibrParseCmd);
-extern int Asc_LibrParseCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/*  Registered as: */
+extern int Asc_LibrParseCmd(ClientData cdata, Tcl_Interp *interp, 
+                            int argc, CONST84 char**argv);
+/**  Registered as */
 #define Asc_LibrParseCmdHN "libr_parsestring"
-/*  Usage: */
+/**  Usage */
 #define Asc_LibrParseCmdHU \
   Asc_LibrParseCmdHN " <ascend code>"
+/**  Short help text */
 #define Asc_LibrParseCmdHS \
   "Opens and parses ascend code, a string containing ASCEND statements"
+/**  Long help text */
 #define Asc_LibrParseCmdHL "\
  * Opens and parses a string.  If the open is successful,\n\
  * the name of the module is returned, otherwise an error is reported.\n\
@@ -68,13 +72,15 @@ extern int Asc_LibrParseCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
 
 STDHLF_H(Asc_LibrReadCmd);
 extern int Asc_LibrReadCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/*  Registered as: */
+/**  Registered as */
 #define Asc_LibrReadCmdHN "librread"
-/*  Usage: */
+/**  Usage */
 #define Asc_LibrReadCmdHU \
   Asc_LibrReadCmdHN " <filename> [parse_relations]"
+/**  Short help text */
 #define Asc_LibrReadCmdHS \
   "Opens and parses filename, a file containing ASCEND type definitions"
+/**  Long help text */
 #define Asc_LibrReadCmdHL "\
  * Opens and parses filename; relations will be parsed unless the\n\
  * optional argument parse_relations is zero.  If the open is successful,\n\
@@ -85,13 +91,15 @@ extern int Asc_LibrReadCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
 
 STDHLF_H(Asc_LibrOptionsCmd);
 extern int Asc_LibrOptionsCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/*  Registered as: */
+/**  Registered as */
 #define Asc_LibrOptionsCmdHN "asc_compiler_option"
-/*  Usage: */
+/**  Usage */
 #define Asc_LibrOptionsCmdHU \
   Asc_LibrOptionsCmdHN " [-<option> [value]]"
+/**  Short help text */
 #define Asc_LibrOptionsCmdHS \
   "gets and sets global options for parsing and compiling"
+/**  Long help text */
 #define Asc_LibrOptionsCmdHL "\
  * If given no arguments, returns list of current options.\n\
  * Given an option and value, sets the option accordingly.\n\
@@ -106,70 +114,74 @@ extern int Asc_LibrOptionsCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
 
 STDHLF_H(Asc_LibrTypeListCmd);
 extern int Asc_LibrTypeListCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/*  Registered as:  */
+/**  Registered as  */
 #define Asc_LibrTypeListCmdHN "libr_types_in_module"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrTypeListCmdHU \
   Asc_LibrTypeListCmdHN " <module>"
+/**  Short help text */
 #define Asc_LibrTypeListCmdHS \
   "Returns a list of types defined in the module named \"module\""
+/**  Long help text */
 #define Asc_LibrTypeListCmdHL "\
   * Returns a list of types defined in the module named \"module\"\n\
 "
 
-
 STDHLF_H(Asc_LibrModuleInfoCmd);
 extern int Asc_LibrModuleInfoCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/** Registered as */
 #define Asc_LibrModuleInfoCmdHN "libr_moduleinfo"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrModuleInfoCmdHU \
   Asc_LibrModuleInfoCmdHN " <module> [<module>...]"
+/**  Short help text */
 #define Asc_LibrModuleInfoCmdHS \
   "For each module, returns  name, file or buffer, time or index, {} or string"
+/**  Long help text */
 #define Asc_LibrModuleInfoCmdHL "\
  *  For each file module, returns the name, filename, time modified and {}.\n\
  *  For each string module, returns the name, name, string parse index, and\n\
  *  string parsed.\n\
 "
 
-
-
 STDHLF_H(Asc_LibrDestroyTypesCmd);
 extern int Asc_LibrDestroyTypesCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/** Registered as */
 #define Asc_LibrDestroyTypesCmdHN "libr_destroy_types"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrDestroyTypesCmdHU \
   Asc_LibrDestroyTypesCmdHN " takes no arguments"
+/**  Short help text */
 #define Asc_LibrDestroyTypesCmdHS \
   "Reinitializes all base types and the module list"
+/**  Long help text */
 #define Asc_LibrDestroyTypesCmdHL "\
  *  calls DestroyLibrary from the compiler, redefines basetypes,\n\
  *  and reinitializes interface module list.\n\
  *  Empties prototype library.\n\
 "
 
-
-extern int Asc_GNUTextCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/*
- *  Asc_GNUTextCmd
- *  Registered as : gnutext
+extern int Asc_GNUTextCmd(ClientData cdata, Tcl_Interp *interp, 
+                          int argc, CONST84 char**argv);
+/**<
+ *  <!--  Asc_GNUTextCmd                                               -->
  *  gnutext [l,w] returns the string requested from
- *  Tom's license.c. defaults to warranty
+ *  Tom's license.c. defaults to warranty<br><br>
+ *
+ *  Registered as:  gnutext
  */
-
-
 
 STDHLF_H(Asc_LibrHideTypeCmd);
 extern int Asc_LibrHideTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/**  Registered as */
 #define Asc_LibrHideTypeCmdHN "libr_hide_type"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrHideTypeCmdHU \
   Asc_LibrHideTypeCmdHN " <type> [part]"
+/**  Short help text */
 #define Asc_LibrHideTypeCmdHS \
   "Causes the instances of type not to be shown when browsing"
+/**  Long help text */
 #define Asc_LibrHideTypeCmdHL "\
  *  Will set to FALSE the bit TYPESHOW of the Type Description type.\n\
  *  This will cause that the instances of type will not be shown for\n\
@@ -179,16 +191,17 @@ extern int Asc_LibrHideTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  *  allowed. Parts of arrays cannot be hidden by subscript.\n\
 "
 
-
 STDHLF_H(Asc_LibrUnHideTypeCmd);
 extern int Asc_LibrUnHideTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/**  Registered as */
 #define Asc_LibrUnHideTypeCmdHN "libr_unhide_type"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrUnHideTypeCmdHU \
   Asc_LibrUnHideTypeCmdHN " <type> [part]"
+/**  Short help text */
 #define Asc_LibrUnHideTypeCmdHS \
   "Causes the instances of type to be shown when browsing"
+/**  Long help text */
 #define Asc_LibrUnHideTypeCmdHL "\
  *  Will set to TRUE the bit TYPESHOW of the Type Description type.\n\
  *  This will cause that the instances of type will be shown for\n\
@@ -199,71 +212,84 @@ extern int Asc_LibrUnHideTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
 
 STDHLF_H(Asc_LibrTypeIsShownCmd);
 extern int Asc_LibrTypeIsShownCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/**  Registered as */
 #define Asc_LibrTypeIsShownCmdHN "libr_type_is_shown"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrTypeIsShownCmdHU \
   Asc_LibrTypeIsShownCmdHN " <type>"
+/**  Short help text */
 #define Asc_LibrTypeIsShownCmdHS \
   "Returns 1 if type is being shown, or 0 if not."
+/**  Long help text */
 #define Asc_LibrTypeIsShownCmdHL "\
  *  Returns 1 is the TYPESHOWN bit of a type description is ON. 0 if is\n\
  *  OFF. Query required for updating the Library Display Buttons.\n\
 "
 
-
 STDHLF_H(Asc_LibrQueryTypeCmd);
 extern int Asc_LibrQueryTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/* Registered as: */
+/**  Registered as */
 #define Asc_LibrQueryTypeCmdHN "libr_query"
-/*  Usage:  */
+/**  Usage  */
 #define Asc_LibrQueryTypeCmdHU \
   Asc_LibrQueryTypeCmdHN " -H for more details."
+/**  Short help text */
 #define Asc_LibrQueryTypeCmdHS \
   "Returns list of all children of type or info on child or info on info"
+/**  Long help text part 1 */
 #define Asc_LibrQueryTypeCmdHL1 "\
  *  Should be expanded to handle many other queries and eliminate\n\
  *  most of the libr_ functions. Some of the following are unimplemented\n\
 "
+/**  Long help text part 10 */
 #define Asc_LibrQueryTypeCmdHL10 "\
  *  -ancestors -type typename\n\
  *    Returns the names of types that type REFINES from most to least.\n\
 "
+/**  Long help text part 20 */
 #define Asc_LibrQueryTypeCmdHL20 "\
  *  -basemethods\n\
  *    Returns the names of methods defined on DEFINITION MODEL.\n\
 "
+/**  Long help text part 30 */
 #define Asc_LibrQueryTypeCmdHL30 "\
  *  -catalog\n\
  *     Returns list of all formal types ATOMic and MODEL.\n\
 "
+/**  Long help text part 40 */
 #define Asc_LibrQueryTypeCmdHL40 "\
  *  -childnames -type typename\n\
  *     Returns list of children of type.\n\
 "
+/**  Long help text part 50 */
 #define Asc_LibrQueryTypeCmdHL50 "\
  *  -childinfo [-type typename [-child childname]]\n\
  *     Returns metasyntactic info if type nor child given.\n\
  *     Returns info for all children if type given but childname omitted.\n\
  *     Returns info for childname if type and child given.\n\
 "
+/**  Long help text part 60 */
 #define Asc_LibrQueryTypeCmdHL60 "\
  *  -definition -type typename [-method methodname]\n\
  *     Returns definition of type in standard string form,unless\n\
  *     methodname is given, in which case just gives method.\n\
 "
+/**  Long help text part 70 */
 #define Asc_LibrQueryTypeCmdHL70 "\
  *  -exists -type typename\n\
  *     Returns 1 if typename exists, or 0 if not.\n\
 "
+/**  Long help text part 80 */
 #define Asc_LibrQueryTypeCmdHL80 "\
  *  -externalfunctions\n\
  *     Returns list of all external functions loaded.\n\
 "
+/**  Long help text part 85 */
 #define Asc_LibrQueryTypeCmdHL85 "\
  *  -findtype -type typename\n\
  *     Returns the module defining type.\n\
 "
+/**  Long help text part 90 */
 #define Asc_LibrQueryTypeCmdHL90 "\
  *  -filetypes\n\
  *     Returns list of expected ASCEND source code filename suffixes.\n\
@@ -272,35 +298,42 @@ extern int Asc_LibrQueryTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  *     name; it is not restricted to any particular extension, or lack of\n\
  *     extension.\n\
 "
+/**  Long help text part 100 */
 #define Asc_LibrQueryTypeCmdHL100 "\
  *  -fundamentals\n\
  *     Returns a list containing the names of the fundamental types.\n\
 "
+/**  Long help text part 110 */
 #define Asc_LibrQueryTypeCmdHL110 "\
  *  -language -type typename [-child childname] [-method methodname]\n\
  *     Returns languages of NOTES on typename if no option other than -type\n\
  *     Returns languages of NOTES on childname if given.\n\
  *     Returns languages of NOTES on methodname if given.\n\
 "
+/**  Long help text part 115 */
 #define Asc_LibrQueryTypeCmdHL115 "\
  *  -methods -type typename\n\
  *     Returns a list containing the names of the methods on type given.\n\
 "
+/**  Long help text part 120 */
 #define Asc_LibrQueryTypeCmdHL120 "\
  *  -modulelist -mtype mt\n\
  *    Returns a list of modules that have types defined if mt == 0\n\
  *    Returns a list of interactive modules if mt == 1\n\
  *    Returns a list of interactive modules with global statements if mt == 2\n\
 "
+/**  Long help text part 130 */
 #define Asc_LibrQueryTypeCmdHL130 "\
  *  -notes -dbid $db -record $noteid\n\
  *     Returns data of noteid given, if it is a known record of db.\n\
  *     Data is a tuple {type language child method text}.\n\
 "
+/**  Long help text part 131 */
 #define Asc_LibrQueryTypeCmdHL131 "\
  *  -notesdblist\n\
  *     Returns known dbids in a list.\n\
 "
+/**  Long help text part 132 */
 #define Asc_LibrQueryTypeCmdHL132 "\
  *  -notes -dbid db -type typename -language keyword \n\
  *     [-child childname] [-method methodname]\n\
@@ -310,11 +343,13 @@ extern int Asc_LibrQueryTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  *       or on methodname in type if methodname given, etc.\n\
  *     The returned token should be destroyed when done with it by\n\
 "
+/**  Long help text part 133 */
 #define Asc_LibrQueryTypeCmdHL133 "\
  *  -notes -dbid $db -destroytoken $token\n\
  *     If you forget, destroytoken will be done automagically when\n\
  *     next you delete all types in the library or exit.\n\
 "
+/**  Long help text part 135 */
 #define Asc_LibrQueryTypeCmdHL135 "\
  *  -notesdump -dbid db [-textwidth n] [-notestoken token]\n\
  *     Returns the list of all notes, with texts abbreviated,\n\
@@ -324,20 +359,24 @@ extern int Asc_LibrQueryTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  *     List is a tuple of identically sorted lists:\n\
  *     {types} {langs} {names} {methods} {textabbrs} {filelines} {recnums}\n\
 "
+/**  Long help text part 136 */
 #define Asc_LibrQueryTypeCmdHL136 "\
  *  -notekinds -dbid db\n\
  *     Returns the list of languages known in the database.\n\
 "
+/**  Long help text part 137 */
 #define Asc_LibrQueryTypeCmdHL137 "\
  *  -notesmatch -dbid -db -pattern string [-notestoken token]\n\
  *     Returns token to the list of notes with text matching string.\n\
  *     If notestoken is not given, searches whole database, else searches\n\
  *     just those notes in the token.\n\
 "
+/**  Long help text part 140 */
 #define Asc_LibrQueryTypeCmdHL140 "\
  *  -roottypes\n\
  *    Returns a list of all types (base or otherwise) that are not\n\
  *    refinements of other types. These may be the roots of hierarchies.\n\
 "
 
-#endif /*LibraryProc_module_loaded*/
+#endif  /* LibraryProc_module_loaded */
+

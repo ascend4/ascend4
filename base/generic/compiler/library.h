@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Type Definition Library
  *  by Tom Epperly
  *  Created: 1/12/90
@@ -26,35 +26,41 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-#ifndef __LIBRARY_H_SEEN__
-#define __LIBRARY_H_SEEN__
-
-
-/**< 
+/** @file
+ *  Type Definition Library.
+ *
  *  The type library will only maintain one definition for a given type
  *  name.  The library will complain if you try to add two types with the
  *  same name unless it happens when reloading a module.
+ *  <pre>
+ *  When #including library.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *  </pre>
  */
 
+#ifndef __LIBRARY_H_SEEN__
+#define __LIBRARY_H_SEEN__
+
+/** For use in constructing hierarchies. */
 struct HierarchyNode {
-  struct TypeDescription *desc;  /**< the type at this node */
-  struct gl_list_t *descendents; /**< the list of refinements of desc */
+  struct TypeDescription *desc;   /**< The type at this node. */
+  struct gl_list_t *descendents;  /**< The list of refinements of desc. */
 };
-/**< for use in constructing hierarchies */
 
 extern void InitializeLibrary(void);
+/**< Initialize the library. */
 
-extern struct TypeDescription *FindType(symchar *);
+extern struct TypeDescription *FindType(symchar *name);
 /**< 
- *  struct TypeDescription *FindType(name)
- *  const char *name;
+ *  <!--  struct TypeDescription *FindType(name)                       -->
+ *  <!--  const char *name;                                            -->
  *  Find the type description associated with name.  Returns NULL if unable
  *  to locate the type. Handles NULL input gracefully.
  */
 
 extern struct TypeDescription *FindRelationType(void);
 /**< 
- *  struct TypeDescription *FindRelationType()
+ *  <!--  struct TypeDescription *FindRelationType()                   -->
  *  Find the type description associated with real relations.
  *  Returns NULL if never defined, which means someone forgot to
  *  load a system.lib equivalent.
@@ -62,7 +68,7 @@ extern struct TypeDescription *FindRelationType(void);
 
 extern struct TypeDescription *FindLogRelType(void);
 /**< 
- *  struct TypeDescription *FindLogRelnType()
+ *  <!--  struct TypeDescription *FindLogRelnType()                    -->
  *  Find the type description associated with logical relations.
  *  Returns NULL if never defined, which means someone forgot to
  *  load a system.lib equivalent.
@@ -70,64 +76,65 @@ extern struct TypeDescription *FindLogRelType(void);
 
 extern struct TypeDescription *FindSetType(void);
 /**< 
- *  struct TypeDescription *FindWhenType()
+ *  <!--  struct TypeDescription *FindWhenType()                       -->
  *  Find the type description associated with set statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
 extern struct TypeDescription *FindDummyType(void);
 /**< 
- *  struct TypeDescription *FindDummyType()
+ *  <!--  struct TypeDescription *FindDummyType()                      -->
  *  Find the type description associated with unselected statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
 extern struct TypeDescription *FindWhenType(void);
 /**< 
- *  struct TypeDescription *FindWhenType()
+ *  <!--  struct TypeDescription *FindWhenType()                       -->
  *  Find the type description associated with WHEN statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
 extern struct TypeDescription *FindExternalType(void);
 /**< 
- *  struct TypeDescription *FindExternalType()
+ *  <!--  struct TypeDescription *FindExternalType()                   -->
  *  Find the type description associated with external statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
-extern int AddType(struct TypeDescription *);
+extern int AddType(struct TypeDescription *desc);
 /**< 
- *  void AddType(desc)
- *  struct TypeDescription *desc;
+ *  <!--  void AddType(desc)                                           -->
+ *  <!--  struct TypeDescription *desc;                                -->
  *  Add a type to the library.
  *  Returns 1 if kept the new type, 0 if already had it and kept old.
  */
 
 extern void DestroyLibrary(void);
+/**<  Clean up after library use. */
 
 extern struct gl_list_t *FindFundamentalTypes(void);
 /**< 
- *  struct gl_list_t *FindFundamentalTypes
- *  return a gl_list containing pointers to the fundamental types
+ *  <!--  struct gl_list_t *FindFundamentalTypes                       -->
+ *  Return a gl_list containing pointers to the fundamental types
  */
 
-extern struct gl_list_t *Asc_TypeByModule(CONST struct module_t *);
+extern struct gl_list_t *Asc_TypeByModule(CONST struct module_t *module);
 /**< 
- *  struct gl_list_t *Asc_TypeByModule(module);
- *      const struct module_t *module;
+ *  <!--  struct gl_list_t *Asc_TypeByModule(module);                  -->
+ *  <!--  const struct module_t *module;                               -->
  *
- *  Comments:
+ *  <!--  Comments:                                                    -->
  *  Accepts a module and searches the main type library defined in
  *  library.c for the all types that were found in that module.
  *  Builds a list of the types found and returns it.
  */
 
-extern struct gl_list_t *TypesThatRefineMe (symchar *);
+extern struct gl_list_t *TypesThatRefineMe (symchar *name);
 /**< 
- *  struct gl_list_t *TypesThatRefineMe(name);
- *  symchar *name;
- *  Comments :
+ *  <!--  struct gl_list_t *TypesThatRefineMe(name);                   -->
+ *  <!--  symchar *name;                                               -->
+ *  <!--  Comments :                                                   -->
  *  Accepts the name of a type and searches the main library defined in
  *  library.c for all the types that refine the given type. Builds a list
  *  of all the types found and returns it. This should be an expensive
@@ -137,11 +144,11 @@ extern struct gl_list_t *TypesThatRefineMe (symchar *);
  *  b is returned.
  */
 
-extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *);
+extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *name);
 /**< 
- *  struct gl_list_t *AllTypesThatRefineMe_Flat(name);
- *  symchar *name;
- *  Comments :
+ *  <!--  struct gl_list_t *AllTypesThatRefineMe_Flat(name);           -->
+ *  <!--  symchar *name;                                               -->
+ *  <!--  Comments :                                                   -->
  *  Accepts the name of a type and searches the main library defined in
  *  library.c for all the types that refine the given type. Builds a list
  *  of all the types found and returns it. This is only slightly more
@@ -151,11 +158,11 @@ extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *);
  *  such as a<-b<-c<-d. if a is input, b,c,d are returned.
  */
 
-extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *);
+extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *name);
 /**< 
- *  struct HierarchyNode *AllTypesThatRefineMe_Tree(name);
- *  const char *name;
- *  Comments :
+ *  <!--  struct HierarchyNode *AllTypesThatRefineMe_Tree(name);       -->
+ *  <!--  const char *name;                                            -->
+ *  <!--  Comments :                                                   -->
  *  Accepts the name of a type and searches the main library defined in
  *  library.c for all the types that refine the given type. Builds a tree
  *  of HierarchyNodes of all the types found and returns it. This is somewhat
@@ -165,18 +172,18 @@ extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *);
  *  the type given was not found.
  */
 
-extern void DestroyHierarchyNode(struct HierarchyNode *);
+extern void DestroyHierarchyNode(struct HierarchyNode *heir);
 /**< 
- *  struct HierarchyNode *hier;
- *  Comments:
+ *  <!--  struct HierarchyNode *hier;                                  -->
+ *  <!--  Comments:                                                    -->
  *  Deallocates (recursively) all the memory associated with a HierarchyNode.
  */
 
-extern int IsTypeRefined(CONST struct TypeDescription *);
+extern int IsTypeRefined(CONST struct TypeDescription *desc);
 /**< 
- *  int IsTypeRefined(desc);
- *  CONST struct TypeDescription *desc;
- *  Comments :
+ *  <!--  int IsTypeRefined(desc);                                     -->
+ *  <!--  CONST struct TypeDescription *desc;                          -->
+ *  <!--  Comments :                                                   -->
  *  Searches the main library defined in library.c to see if the type desc,
  *  is refined by any other type, i.e., if the type is the root of a
  *  hierarchy. Returns 1 if TRUE, 0 otherwise.
@@ -195,4 +202,6 @@ extern unsigned int CheckFundamental(symchar *f);
  *  Return true if string is a fundamental type name.
  *  f must be from the symbol table.
  */
-#endif /**< __LIBRARY_H_SEEN__ */
+
+#endif /* __LIBRARY_H_SEEN__ */
+

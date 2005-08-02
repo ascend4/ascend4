@@ -1,4 +1,4 @@
-/**< 
+/*
  *  MPS: Ascend MPS file generator
  *  by Craig Schmidt
  *  Created: 2/11/95
@@ -30,45 +30,52 @@
  *  COPYING is found in ../compiler.
  */
 
-/***************************************************************************
- ***  Contents:     Slv module
- ***
- ***  Authors:      Karl Westerberg
- ***                Joseph Zaher
- ***
- ***  Dates:        06/90 - original version
- ***                04/91 - fine tuned modified marquadt computation,
- ***                        provided minor iterations for step generation
- ***                        within each major iteration of jacobian
- ***                        updates
- ***                06/93 - eliminated pointer sublists being generated
- ***                        at the beginning of each block
- ***                04/94 - extended scope to equality constrained
- ***                        optimization.
- ***
- ***  Description:  This file is created by make_slv_header, so don't
- ***                modify it yourself.  All functions defined in this
- ***                header have identical protocols to the corresponding
- ***                functions in slv.h except that slv_system_t ==>
- ***                slv6_system_t and slv6_eligible_solver() only takes one
- ***                parameter: the system.  Note also that the select
- ***                solver functions don't exist.
- ***************************************************************************/
+/** @file
+ *  makeMPS solver registration module.
+ *  <pre>
+ *  Contents:     makeMPS module
+ *
+ *  Authors:      Karl Westerberg
+ *                Joseph Zaher
+ *
+ *  Dates:        06/90 - original version
+ *                04/91 - fine tuned modified marquadt computation,
+ *                        provided minor iterations for step generation
+ *                        within each major iteration of jacobian
+ *                        updates
+ *                06/93 - eliminated pointer sublists being generated
+ *                        at the beginning of each block
+ *                04/94 - extended scope to equality constrained
+ *                        optimization.
+ *
+ *  Description:  This file is created by make_slv_header, so don't
+ *                modify it yourself.  All functions defined in this
+ *                header have identical protocols to the corresponding
+ *                functions in slv.h except that slv_system_t ==>
+ *                slv6_system_t and slv6_eligible_solver() only takes one
+ *                parameter: the system.  Note also that the select
+ *                solver functions don't exist.
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
+ *  @todo Remove deprecated declarations from solver/slv6.h.
+ */
+
 #ifndef slv6__already_included
 #define slv6__already_included
-
-/**< requires #include "slv_client.h" */
 
 typedef struct slv6_system_structure *slv6_system_t;
 
 int slv6_register(SlvFunctionsT *);
-/**********************************************************************\
-  This is the function that tells the system about the makeMPS solver.
-  Our index is not necessarily going to be 6. That everything here is
-  named slv6* is just a historical event.
-\**********************************************************************/
+/**<
+ *  This is the function that tells the system about the makeMPS solver.
+ *  Our index is not necessarily going to be 6. That everything here is
+ *  named slv6* is just a historical event.
+ */
 
-#endif
+#endif  /* slv6__already_included */
+
 
 /**< REMOVE EVERYTHING BELOW THIS POINT */     
 # if 0 

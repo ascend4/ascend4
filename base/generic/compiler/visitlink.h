@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Instance Name Tree Visit Implementation
  *  by Benjamin Andrew Allan
  *  9/19/97
@@ -27,60 +27,145 @@
  *  COPYING.
  */
 
-#ifndef __VISITNAME_H_SEEN__
-#define __VISITNAME_H_SEEN__
-
-/**< 
+/** @file
+ *  Ascend Instance Name Tree Visit Implementation.
+ *  <pre>
  *  When #including visitname.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "instance_enum.h"
  *         #include "compiler.h"
+ *  </pre>
  */
+
+#ifndef __VISITNAME_H_SEEN__
+#define __VISITNAME_H_SEEN__
 
 typedef void (*VisitNameProc)(struct Instance *,struct gl_list_t *);
 /**< 
  *  Typedef for a function that takes an instance;
- *  Used with VisitNameTree (if/when implemented).
+ *  Used with VisitNameTree() (if/when implemented).
  */
 
 typedef void (*VisitNameTwoProc)(struct Instance *,
                                  struct gl_list_t *,
                                  VOIDPTR);
-/**< 
- *  func(i,path,userdata);
+/**<
+ *  <!--  func(i,path,userdata);                                       -->
  *  Typedef for a function that takes an instance,
  *  a path to the instance, and a user pointer,
- *  Used with VisitNameTreeTwo.
+ *  Used with VisitNameTreeTwo().
  *  The name path is pairs of childnum/instance* in gl_list_t form
  *  indicating how the current node was reached.
  *  The path is subject to change, so if your function needs it
- *  to persist, copy it to your own data.
- * E.g. the length of the path is 0 at the root instance and
- * at any instance below the root:
+ *  to persist, copy it to your own data.<br><br>
+ *
+ *  For example, the length of the path is 0 at the root instance and
+ *  at any instance below the root:
  *  gl_length(path) == 2*(number links followed),
- *  (unsigned long)gl_fetch(path,1) number of child of root followed 
+ *  (unsigned long)gl_fetch(path,1) number of child of root followed
  *  gl_fetch(path,2) == child of root.
- * The last element of the path will be a parent OF the instance i,
- * and the len-1th element of the path will be the child index of i
- * in last element. 
- * Because ASCEND creates instance trees that are acyclic, no instance
- * will ever appear in the path twice. Child numbers may repeat, obviously.
+ *
+ *  The last element of the path will be a parent OF the instance i,
+ *  and the len-1th element of the path will be the child index of i
+ *  in last element.
+ *  Because ASCEND creates instance trees that are acyclic, no instance
+ *  will ever appear in the path twice. Child numbers may repeat, obviously.
  */
 
-/**< 
+/*
  *  Tree procedures
  */
 #ifdef NDEBUG
 #define VisitNameTreeTwo(a,b,c,d,e,f) \
   SilentVisitNameTreeTwo((a), (b), (c), (d), (e), (f))
+/**<  @see SilentVisitNameTreeTwo(). */
 #else
 #define VisitNameTreeTwo(a,b,c,d,e,f) \
   SlowVisitNameTreeTwo((a), (b), (c), (d), (e), (f))
+/**<  @see SlowVisitNameTreeTwo(). */
 #endif
-extern void SilentVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
-                                   int,int,int,VOIDPTR);
-extern void SlowVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
-                                 int,int,int,VOIDPTR);
-/**< 
+extern void SilentVisitNameTreeTwo(struct Instance *inst,
+                                   VisitNameTwoProc proc,
+                                   int depth,
+                                   int leaf,
+                                   int anon_flags,
+                                   VOIDPTR userdata);
+
+/**<
+ *  <!--  void SilentVisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata); -->
+ *  <!--  struct Instance *inst;                                       -->
+ *  <!--  VisitNameTwoProc proc;                                       -->
+ *  <!--  int depth,leaf,anon_flags;                                   -->
+ *  <!--  VOIDPTR userdata;                                            -->
+ *
+ *  Visit every node of an instance tree and call proc for each node.
+ *  proc will be called on inst even if it matches anon_flags, or is an
+ *  atom or child of an atom regardless of leaf.<br><br>
+ *
+ *  SilentVisitInstanceTree() performs the same actions as
+ *  SlowVisitNameTree().  It is faster, however, since it tells you
+ *  nothing when it encounters NULL.<br><br>
+ *
+ *  This function is an implementation function for VisitNameTreeTwo()
+ *  when NDEBUG is defined.
+ *
+ *  @param inst       The Instance to visit.  Should not be a SIM_INST.
+ *                    Simulation instances appear always visited.
+ *  @param proc       proc to call.  Will not be called with NULL instances.
+ *  @param depth      Controls the order of the call.  If depth is true, the
+ *                    visitation will be bottom up (i.e. children before
+ *                    parents); otherwise, the visitation will be top down
+ *                    (i.e. parents before children).
+ *  @param leaf       Determines if the children on atoms will be visited.
+ *                    If leaf is true, the children of atoms will be visited;
+ *                    otherwise, it won't.
+ *  @param anon_flags Controls whether or not interesting instances are visited.
+ *                    If (anon_flags & GetAnonFlags(i)) != 0 then i is not visited.
+ *  @param userdata   Pointer to data to pass as the last argument to the
+ *                    user-supplied proc.
+*/
+
+extern void SlowVisitNameTreeTwo(struct Instance *inst,
+                                 VisitNameTwoProc proc,
+                                 int depth,
+                                 int leaf,
+                                 int anon_flags,
+                                 VOIDPTR userdata);
+/**<
+ *  <!--  void SlowVisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata); -->
+ *  <!--  struct Instance *inst;                                       -->
+ *  <!--  VisitNameTwoProc proc;                                       -->
+ *  <!--  int depth,leaf,anon_flags;                                   -->
+ *  <!--  VOIDPTR userdata;                                            -->
+ *
+ *  Visit every node of an instance tree and call proc for each node.
+ *  proc will be called on inst even if it matches anon_flags, or is an
+ *  atom or child of an atom regardless of leaf.<br><br>
+ *
+ *  SlowVisitInstanceTree() performs the same actions as
+ *  SilentVisitNameTree().  It is slower, however, since it tells you
+ *  can tell you where it finds NULL children. Information costs time.<br><br>
+ *
+ *  This function is an implementation function for VisitInstanceTree()
+ *  when NDEBUG is not defined (i.e. debug mode).
+ *
+ *  @param inst       The Instance to visit.  Should not be a SIM_INST.
+ *                    Simulation instances appear always visited.
+ *  @param proc       proc to call.  Will not be called with NULL instances.
+ *  @param depth      Controls the order of the call.  If depth is true, the
+ *                    visitation will be bottom up (i.e. children before
+ *                    parents); otherwise, the visitation will be top down
+ *                    (i.e. parents before children).
+ *  @param leaf       Determines if the children on atoms will be visited.
+ *                    If leaf is true, the children of atoms will be visited;
+ *                    otherwise, it won't.
+ *  @param anon_flags Controls whether or not interesting instances are visited.
+ *                    If (anon_flags & GetAnonFlags(i)) != 0 then i is not visited.
+ *  @param userdata   Pointer to data to pass as the last argument to the
+ *                    user-supplied proc.
+*/
+/* OLD GROUP COMMENT */
+/*
  *  macro VisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata);
  *  void SilentVisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata);
  *  void SlowVisitNameTreeTwo(inst,proc,depth,leaf,anon_flags,userdata);
@@ -89,7 +174,7 @@ extern void SlowVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
  *  int depth,leaf,anon_flags;
  *  VOIDPTR userdata;
  *
- *  i should not be a SIM_INST. Simulation instances appear always visited.
+ *  inst should not be a SIM_INST. Simulation instances appear always visited.
  *  This procedure will visit every node of an instance tree and call
  *  proc for each node, subject to the following conditions:
  *
@@ -119,4 +204,5 @@ extern void SlowVisitNameTreeTwo(struct Instance *, VisitNameTwoProc,
  *  userdata is passed as the last argument to the user supplied proc.
  */
 
-#endif /**< __VISITNAME_H_SEEN__ */
+#endif /* __VISITNAME_H_SEEN__ */
+

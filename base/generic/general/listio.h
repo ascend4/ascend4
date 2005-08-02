@@ -1,5 +1,4 @@
-/** 
- *  listio.h
+/*
  *  List I/O Routines
  *  by Ben Allan
  *  Created: 12/97
@@ -29,12 +28,21 @@
  *  the file named COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  List I/O Routines.
+ *  <pre>
+ *  Requires:
+ *        #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef __LISTIO_H_SEEN__
 #define __LISTIO_H_SEEN__
 
-/** gl_write_list(fp,l);
- * write a list l (as ints/pointers) to file fp, or if fp NULL, to stderr.
+/** <!--  gl_write_list(fp,l);                                         -->
+ * Write a list l (as ints/pointers) to file fp, or if fp NULL, to stderr.
  */
-extern void gl_write_list(FILE *,struct gl_list_t *);
+extern void gl_write_list(FILE *fp, struct gl_list_t *l);
 
-#endif
+#endif  /* __LISTIO_H_SEEN__ */
+

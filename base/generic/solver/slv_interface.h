@@ -5,7 +5,7 @@
  *  Copyright (C) 1990 Thomas Guthrie Epperly
  *  Patched 1/94 for ASCEND3C -baa
  *  Only Solve is implemented in slv_interface.c
- *
+ *                            
  *  Version: $Revision: 1.4 $
  *  Version control file: $RCSfile: slv_interface.h,v $
  *  Date last modified: $Date: 1997/07/18 12:17:10 $
@@ -31,18 +31,26 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Interface to the Westerberg's SLV Solver.
+ *  <pre>
+ *  Requires      #include <stdio.h>
+ *                #include "utilities/ascConfig.h"
+ *                #include "compiler/instance_enum.h"
+ *  </pre>
+ *  @todo Clean junk out of solver/slv_interface.h.
+ */
+
 #ifndef slv_interface_module_loaded
 #define slv_interface_module_loaded
-/* requires #include<stdio.h> */
-/* requires #include"instance_enum.h" */
 
-extern void Solve(struct Instance *);
-/*
+extern void Solve(struct Instance *inst);
+/**<
  *  This is the link that the command line interface should call.
  */
 
 /* the rest of this is junk */
-extern unsigned long NumberVars();
+/* extern unsigned long NumberVars(); */
 /*
  *  Returns the number of variables.
  */
@@ -105,23 +113,27 @@ extern unsigned long NumberVars();
  */
 
 #define JACFUNC void (*)(int,int,double)
-/*
+/**<
  *  Type definition for storing Jacobian elements.  The function definition
  *  is as follows:
- *  
+ *
  *  void JacStore(row,col,value)
  *  int row,col;
  *  double value;
+ * 
+ *  @todo If still needed, should it be a typedef?
  */
 
 #define SLOPEFUNC void (*)(int,int,double,double)
-/*
+/**<
  *  Type definition for storing slope matrix elements.  The function
  *  definition is as follows:
- *  
+ *
  *  void SlopeStore(row,col,low,high)
  *  int row,col;
  *  double low,high;
+ *
+ *  @todo If still needed, should it be a typedef?
  */
 
 /* extern void EvaluateJac(double *,JACFUNC); */
@@ -191,4 +203,6 @@ extern unsigned long NumberVars();
  *  Always		Prints equation number, name and residual.
  *   >= 1		Prints the equation
  */
-#endif /* module loaded*/
+
+#endif  /* slv_interface_module_loaded */
+

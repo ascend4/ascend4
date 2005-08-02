@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Logical Relation Solver
  *  by Vicente Rico-Ramirez
  *  Created: 04/97
@@ -23,23 +23,30 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
+ */
+
+/** @file
+ *  Logical Relation Solver registration module.
+ *  <pre>
+ *  Contents:     LRSlv module (Logical Relation Solver)
  *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
  */
 
 #ifndef slv9a__already_included
 #define slv9a__already_included
-/**< 
- * requires #include "slv_client.h" 
- */
 
 typedef struct slv9a_system_structure *slv9a_system_t;
 
-int slv9a_register(SlvFunctionsT *);
-/**< 
- * This is the function that tells the system about the LRSlv solver.
- * Our index is not necessarily going to be 9a. That everything here is
- * named slv9a* is just a historical result and a convenient way of
- * shutting up the linker.
-*/
+int slv9a_register(SlvFunctionsT *sft);
+/**<
+ *  This is the function that tells the system about the LRSlv solver.
+ *  Our index is not necessarily going to be 9a. That everything here is
+ *  named slv9a* is just a historical result and a convenient way of
+ *  shutting up the linker.
+ */
 
-#endif /**< slv9a__already_included */
+#endif  /* slv9a__already_included */
+

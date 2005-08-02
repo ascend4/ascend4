@@ -27,71 +27,87 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Script procedures.
+ *  <pre>
+ *  Requires:     #include "tcl.h"
+ *                #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef ScriptProc_module_loaded
 #define ScriptProc_module_loaded
 
 extern int Asc_ScriptInterrupt;
-/* The C variable corresponding to the script being interrupted
+/**<
+ * The C variable corresponding to the script being interrupted
  * by an interactive user or call with a trapped exception.
  */
 
-extern int Asc_ScriptConfigureInterrupt(int, Tcl_Interp *interp);
-/*
- * err = Asc_ScriptConfigureInterrupt(bool,interp);
- * int err,bool;
- * interp is the interpretter the ascend application is running in.
- * err is 0 if the call is ok, err is 1 if the call is not ok.
- * bool is 1 at startup and 0 at shutdown.
+extern int Asc_ScriptConfigureInterrupt(int bool, Tcl_Interp *interp);
+/**<
+ * <!--  err = Asc_ScriptConfigureInterrupt(bool,interp);              -->
+ * <!--  int err,bool;                                                 -->
  * Configures the script variable ascScripVect(menubreak) to
  * shadow the C int Asc_ScriptInterrupt.
  * Tcl makes sure changes to ascScripVect(menubreak)
  * are reflected in the C variable.
  * See the man pages of Tcl_LinkVar, Tcl_UnlinkVar, Tcl_UpdateLinkedVar
  * for details.
+ *
+ * @param interp The interpretter the ascend application is running in.
+ * @param bool   Is 1 at startup and 0 at shutdown.
+ * @return Returns 0 if the call is ok, 1 if the call is not ok.
  */
 
 extern int Asc_ScriptEvalCmd(ClientData cdata, Tcl_Interp *interp,
                              int argc, CONST84 char *argv[]);
-/*
- *  int Asc_ScriptEvalCmd;
- *  Comments :
+/**<
+ *  <!--  int Asc_ScriptEvalCmd;                                       -->
+ *  Attempts to evaluate in the global sphere rather than locally.<br><br>
+ *
  *  Registered as : \"script_eval\" string";
- *  Attempts to evaluate in the global spher rather than locally.
  */
 
 extern int Asc_ScriptRefineCmd(ClientData cdata, Tcl_Interp *interp,
                                int argc, CONST84 char *argv[]);
-/*
- *  syntax: srefine <type> search <qlfdid>
- *  refines the qlfdid given to type if possible. if qlfdid exists and
- *  is none null, return will be as Asc_BrowInstanceRefineCmd.
+/**<
+ *  Refines the qlfdid given to type if possible. if qlfdid exists and
+ *  is none null, return will be as Asc_BrowInstanceRefineCmd().<br><br>
+ *
+ *  Registered as: srefine <type> search <qlfdid>
  */
 
 extern int Asc_ScriptMergeCmd(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char *argv[]);
-/*
- *  syntax: smerge <qlfdid> <qlfdid>
- *  merges the qlfdid if possible.
+/**<
+ *  Merges the qlfdid if possible.<br><br>
+ *
+ *  Registered as: smerge <qlfdid> <qlfdid>
  */
 
 extern int Asc_FastRaiseCmd(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);
-/*
- *  asc_raise windowname
- *  calls XRaiseWindow rather than the big tk spew which is so slow.
+/**<
+ *  Calls XRaiseWindow rather than the big tk spew which is so slow.<br><br>
+ *
+ *  Registered as:  asc_raise windowname
  */
 
 STDHLF_H(Asc_TimeCmd);
 
 extern int Asc_TimeCmd(ClientData cdata, Tcl_Interp *interp,
                        int argc, CONST84 char *argv[]);
-/*
- *  usage:
- *  asc_clock <string> [n]
+/**<
+ *  Timing function.
  *  string is a valid tcl script to be evaluated globally as script_eval.
  *  n is the number of times to evaluate the script for an average time.
- *  n defaults to 1 since many ASCEND scripts are not repeatable.
+ *  n defaults to 1 since many ASCEND scripts are not repeatable.<br><br>
+ *
+ *  Registered as:  asc_clock <string> [n]
  */
+
+/** Long help text part 1 */
 #define Asc_TimeCmdHL1 \
 "\
  *  Returns a list of numbers: \n\
@@ -99,6 +115,7 @@ extern int Asc_TimeCmd(ClientData cdata, Tcl_Interp *interp,
  *  real_time_avg- average real seconds consumed per evaluation of string. \n\
  *  time_avg- average cpu seconds consumed per evaluation of string. \n\
 "
+/** Long help text part 2 */
 #define Asc_TimeCmdHL2 \
 "\
  *  clock_avg- average clock units consumed per evaluation of string. \n\
@@ -106,18 +123,17 @@ extern int Asc_TimeCmd(ClientData cdata, Tcl_Interp *interp,
  *  clock_min- least clock units consumed by a single call \n\
  *  CPS- CLOCKS_PER_SEC value by which times are computed from clocks. \n\
 "
-/*
- */
 
 extern int Asc_StringCompact(ClientData cdata, Tcl_Interp *interp,
                              int argc, CONST84 char *argv[]);
-/*
- *  stringcompact <string>
+/**<
  *  Takes a string and eats away any extra blanks or tabs that are
  *  not protected by matched {}. replaces unprotected tabs with a
  *  single space. trims leading/trailing blanks/tabs. Doesn't
- *  treat \n as a special character.
+ *  treat \n as a special character.<br><br>
+ *
+ *  Registered as:  stringcompact <string>
  */
 
+#endif  /* ScriptProc_module_loaded */
 
-#endif /* ScriptProc_module_loaded */

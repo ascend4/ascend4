@@ -1,4 +1,4 @@
-/** 
+/*
  *  Dimensions Output Routine
  *  by Tom Epperly
  *  Created: 2/14/90
@@ -27,28 +27,31 @@
  *  COPYING.
  */
 
-#ifndef __DIMEN_IO_H_SEEN__
-#define __DIMEN_IO_H_SEEN__
-
-
-/** 
+/** @file
+ *  Dimensions Output Routine
+ *  <pre>
  *  When #including dimen_io.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
+ *  </pre>
  */
 
+#ifndef __DIMEN_IO_H_SEEN__
+#define __DIMEN_IO_H_SEEN__
 
-/** 
- * write the human readable and parser edible string form of the
+/**
+ * Write the human readable and parser edible string form of the
  * dimen given.
  */
-extern char *WriteDimensionString(CONST dim_type *);
+extern char *WriteDimensionString(CONST dim_type *p);
 
 /** 
  * Write the canonical, indigestible form of the dimen with
  * full numeric details. ugh.
  */
-extern void WriteDimensions(FILE *,CONST dim_type *);
+extern void WriteDimensions(FILE *f, CONST dim_type *dimp);
 
-#endif /** __DIMEN_IO_H_SEEN__ */
+#endif /* __DIMEN_IO_H_SEEN__ */
+

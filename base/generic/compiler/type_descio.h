@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Type Description Output
  *  by Tom Epperly
  *  Created: 1/15/89
@@ -26,35 +26,36 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  Type Description Output.
+ *  <pre>
  *  When #including type_descio.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "child.h"
+ *         #include "type_desc.h"
+ *  </pre>
  */
-
 
 #ifndef __TYPE_DESCIO_H_SEEN__
 #define __TYPE_DESCIO_H_SEEN__
-/**< requires
-# #include<stdio.h>
-# #include"type_desc.h"
-*/
 
-extern void WriteDefinition(FILE *,struct TypeDescription *);
-/**< 
- *  void WriteDefinition(f,desc)
- *  FILE *f;
- *  struct TypeDescription *desc;
+extern void WriteDefinition(FILE *f, struct TypeDescription *desc);
+/**<
+ *  <!--  void WriteDefinition(f,desc)                                 -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  struct TypeDescription *desc;                                -->
  *  Write the type description structure to the given file in text.
  *  May include compiler derived information in comments.
  */
 
-extern char *WriteDefinitionStringList(struct TypeDescription *);
+extern char *WriteDefinitionStringList(struct TypeDescription *d);
 /**< 
- * char *WriteDefinitionString(d); 
- * struct TypeDescription *desc;
+ * <!--  char *WriteDefinitionString(d);                               -->
+ * <!--  struct TypeDescription *desc;                                 -->
  * Returns a string containing in braced list format (compatible
  * with tcl) the contents of a type description.
  * name is an identifier_t, kind is a string indicating base class
@@ -62,50 +63,50 @@ extern char *WriteDefinitionStringList(struct TypeDescription *);
  * or empty implies the field may be {} if no appropriate statement
  * exists, and value is as yet ill defined. statementlist will be
  * written as WriteStatementListString defines.
+ * <pre>
  * family/format:
  * CONSTANTS/
- *    {kind} {UNIVERSAL or empty} {CONSTANT} {name2} {REFINES name1 or empty} 
+ *    {kind} {UNIVERSAL or empty} {CONSTANT} {name2} {REFINES name1 or empty}
  *    {dims or empty} {value or empty}
  * ATOMS/
  *    {kind} {UNIVERSAL or empty} {ATOM} {name2} {REFINES name1 or empty}
  *    {dims or empty} {value or empty} {statementlist}
  * MODELS/
  *    {MODEL} {UNIVERSAL or empty} {MODEL} {name2} {REFINES name1 or empty}
- *    {parameter statements or empty} {where statements or empty} 
+ *    {parameter statements or empty} {where statements or empty}
  *    {refinement assignments or empty} {ancestor body statementlist or empty}
- *    {body statementlist or empty} {method names and type defined in or empty} 
- *
- * Bugs:
- * - Not implemented.
- * - Does not handle 'DEFINITIONs' for relation types. Any user who want's
- * to mess with system.a4l can do it by hand. No GUI idiots need apply.
+ *    {body statementlist or empty} {method names and type defined in or empty}
+ * </pre>
+ * @bug WriteDefinitionStringList() not implemented.
+ * @bug WriteDefinitionStringList() does not handle 'DEFINITIONs' for relation
+ *      types. Any user who want's to mess with system.a4l can do it by hand. 
+ *      No GUI idiots need apply.
  */
 
-extern void WriteDiffDefinition(FILE *,struct TypeDescription *);
+extern void WriteDiffDefinition(FILE *f, struct TypeDescription *desc);
 /**< 
- *  void WriteDiffDefinition(f,desc)
- *  FILE *f;
- *  struct TypeDescription *desc;
+ *  <!--  void WriteDiffDefinition(f,desc)                             -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  struct TypeDescription *desc;                                -->
  *  Write the type description structure to the given file in text but
  *  only those statements that are in the declarative section which are
  *  different from the refinement ancestor of the type. The procedures
  *  are not dealt with as that is messy. If no ancestor, defaults to
- *  writing all declarative statements.
+ *  writing all declarative statements.<br><br>
  *
  *  Note that the parameters, wheres, reductions, and absorbed
  *  statements of desc are NOT written.
  */
 
-extern symchar *GetBaseTypeName(enum type_kind);
+extern symchar *GetBaseTypeName(enum type_kind t);
 /**< 
- * returns the symbol for the kind of type given.
+ * Returns the symbol for the kind of type given.
  * InitBaseTypeNames must have been called first.
  * ascCompiler takes care of that.
  */
 
 extern void InitBaseTypeNames(void);
-/**< 
- * setup the basetypes symbol table.
- */
+/**< Set up the basetypes symbol table. */
 
-#endif /**< __TYPE_DESCIO_H_SEEN__ */
+#endif /* __TYPE_DESCIO_H_SEEN__ */
+

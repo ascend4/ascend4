@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Symbol Table Management
  *  by Tom Epperly
  *  7/24/89
@@ -32,29 +32,29 @@
  *  information store in it.
  */
 
-/**< 
+/** @file
+ *  Symbol Table Management.
+ *  <pre>
  *  When #including symtab.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
+ *  </pre>
  */
-
 
 #ifndef __SYMTAB_H_SEEN__
 #define __SYMTAB_H_SEEN__
-/**< requires
-# #include"compiler.h"
-*/
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 
 extern void DestroyStringSpace(void);
 /**< 
- *  void DestroyStringSpace()
+ *  <!--  void DestroyStringSpace()                                    -->
  *  This deallocates all the memory associated with the string space.
  */
 
 extern void InitSymbolTable(void);
 /**< 
- *  void InitSymbolTable()
+ *  <!--  void InitSymbolTable()                                       -->
  *  This procedure performs all the necessary initialization for the symbol
  *  table manager.  It should be called once and only once, and it must
  *  be called before any of the other symbol table routines have been
@@ -64,18 +64,18 @@ extern void InitSymbolTable(void);
  *  Post: the symbol table is initialized
  */
 
-extern symchar *AddSymbol(CONST char *);
+extern symchar *AddSymbol(CONST char *c);
 /**< 
- *  symchar *AddSymbol(c)
- *  const char *c;
- *  E.g.
- *  symchar *permanentstring = AddSymbol(c);
+ *  <!--  symchar *AddSymbol(c)                                        -->
+ *  <!--  const char *c;                                               -->
+ *  <!--  E.g.                                                         -->
+ *  <!--  symchar *permanentstring = AddSymbol(c);                     -->
  *
  *  This function adds the string c to the symbol table if it is not already
  *  defined.  This uses a copy of c rather than c itself.  c must be a
  *  NULL terminated string. allocation/deallocation of c is the users
  *  responsibility. The symchar pointer returned should never be freed
- *  by the user.
+ *  by the user.<br><br>
  *
  *  Assumptions that must be satisfied before calling:
  *  Symbol table initialized and c is a null terminated string.
@@ -83,28 +83,28 @@ extern symchar *AddSymbol(CONST char *);
  *  Assumptions valid after calling:
  *  The value of c has been added to the symbol table and the symbol table is
  *  not changed in any other way. The symchar * returned will be the same
- *  for the life of the ASCEND process.
+ *  for the life of the ASCEND process.<br><br>
  *
  *  Any size string can be stored in this table, though it's a bad
  *  idea to store very large ones. Strings below MAXIMUM_STRING_LENGTH
  *  we store efficiently.
  */
 
-extern symchar *AddSymbolL(CONST char *,int);
+extern symchar *AddSymbolL(CONST char *c, int len);
 /**< 
- *  symchar *AddSymbolL(c,len)
- *  const char *c;
- *  int len;
- *  symchar *permanentstring = AddSymbolL(c,clen);
+ *  <!--  symchar *AddSymbolL(c,len)                                   -->
+ *  <!--  const char *c;                                               -->
+ *  <!--  int len;                                                     -->
+ *  <!--  symchar *permanentstring = AddSymbolL(c,clen);               -->
  *
  *  This function does exactly what add symbol does except the length of the
  *  string is passed as a parameter.  The length is the number of characters
  *  before the terminating '\0'.
  *  This function is mildly faster than AddSymbol if you already know clen
- *  for some other reason.
+ *  for some other reason.<br><br>
  *
  *  Assumptions to be satisfied before calling:
- *  Symbol table initialized and c is a null terminated string.
+ *  Symbol table initialized and c is a null terminated string.<br><br>
  *
  *  Assumptions valid after calling:
  *  The value of c has been added to the symbol table and the symbol table is
@@ -112,9 +112,9 @@ extern symchar *AddSymbolL(CONST char *,int);
  *  for the life of the ASCEND process.
  */
 
-extern symchar *AscFindSymbol(symchar *);
+extern symchar *AscFindSymbol(symchar *s);
 /**< 
- * s = AscFindSymbol(s);
+ * <!--  s = AscFindSymbol(s);                                         -->
  * Returns NULL if the pointer s given is not from the table.
  * Otherwise returns the pointer given. 
  * This function does not check whether a string with the value
@@ -122,19 +122,20 @@ extern symchar *AscFindSymbol(symchar *);
  * is in the table.
  */
 
-extern void PrintTab(int);
+extern void PrintTab(int noisy);
 /**< 
- *  PrintTab(noisy);
- *  int noisy;
- *  if (noisy) prints lots of goop.
+ *  <!--  PrintTab(noisy);                                             -->
+ *  <!--  int noisy;                                                   -->
  *  Print a report on stdout about the string hash table.
+ *  if (noisy) prints lots of goop.
  */
 
 extern void DestroySymbolTable(void);
 /**< 
- *  void DestroySymbolTable();
+ *  <!--  void DestroySymbolTable();                                   -->
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.
  */
 
-#endif /**< __SYMTAB_H_SEEN__ */
+#endif  /* __SYMTAB_H_SEEN__ */
+

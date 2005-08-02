@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Instance name routines
  *  by Tom Epperly
  *  Part Of Ascend
@@ -27,20 +27,22 @@
  *  COPYING.
  */
 
+/** @file
+ *  Instance name routines.
+ *  <pre>
+ *  When #including instance_name.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler.h"
+ *  </pre>
+ */
+
 #ifndef __INSTANCE_NAME_H_SEEN__
 #define __INSTANCE_NAME_H_SEEN__
 
-
-/**< 
- *  When #including instance_name.h, make sure these files are #included first:
- *         #include "compiler.h"
- */
-
-
 enum NameTypes {
-  IntArrayIndex,		/**< integer array index */
-  StrArrayIndex,		/**< string array index */
-  StrName			/**< string name */
+  IntArrayIndex,  /**< integer array index */
+  StrArrayIndex,  /**< string array index */
+  StrName	        /**< string name */
 };
 
 union InstanceNameUnion {
@@ -55,69 +57,72 @@ struct InstanceName {
 
 #define InstanceNameType(in) ((in).t)
 /**< 
- *  macro InstanceNameType(in)
- *  struct InstanceName in;
+ *  <!--  macro InstanceNameType(in)                                   -->
+ *  <!--  struct InstanceName in;                                      -->
  *
- *  Return the type of instance name structure n.
+ *  Return the type of InstanceName structure in.
  */
 
 #define InstanceNameStr(in) ((in).u.name)
 /**< 
- *  macro InstanceNameStr(in)
- *  struct InstanceName in;
+ *  <!--  macro InstanceNameStr(in)                                    -->
+ *  <!--  struct InstanceName in;                                      -->
  *
+ *  Return the name of InstanceName structure in.
  *  in must be of type StrName.
- *  Return the name.
  */
 
 #define InstanceIntIndex(in) ((in).u.index)
 /**< 
- *  macro InstanceIntIndex(in)
- *  struct InstanceName in;
- *  Return the integer index value.
+ *  <!--  macro InstanceIntIndex(in)                                   -->
+ *  <!--  struct InstanceName in;                                      -->
+ *
+ *  Return the integer index value of InstanceName structure in.
  */
 
 #define InstanceStrIndex(in) ((in).u.name)
 /**< 
- *  macro InstanceStrIndex(in)
- *  struct InstanceName in;
+ *  <!--  macro InstanceStrIndex(in)                                   -->
+ *  <!--  struct InstanceName in;                                      -->
  *
- *  Return the string index value.
+ *  Return the string index value of InstanceName structure in.
  */
 
 #define SetInstanceNameType(in,type) ((in).t) = (type)
 /**< 
- *  macro SetInstanceNameType(in,type)
- *  struct InstanceName in;
- *  enum NameTypes type;
+ *  <!--  macro SetInstanceNameType(in,type)                           -->
+ *  <!--  struct InstanceName in;                                      -->
+ *  <!--  enum NameTypes type;                                         -->
  *
- *  Set the instance name type to type.
+ *  Set the type of InstanceName structure in to type (a NameTypes).
  */
 
 #define SetInstanceNameStrPtr(in,str) ((in).u.name) = (str)
 /**< 
- *  macro SetInstanceNameStrPtr(in,str)
- *  struct InstanceName in;
- *  symchar *str;
+ *  <!--  macro SetInstanceNameStrPtr(in,str)                          -->
+ *  <!--  struct InstanceName in;                                      -->
+ *  <!--  symchar *str;                                                -->
  *
- *  Set the instance string pointer to str.
+ *  Set the string pointer of InstanceName structure in to str (a symchar*).
  */
 
 #define SetInstanceNameStrIndex(in,str) ((in).u.name) = (str)
-/**< 
- *  macro SetInstanceNameStrIndex(in,str)
- *  struct InstanceName in;
- *  symchar *str;
+/**<
+ *  <!--  macro SetInstanceNameStrIndex(in,str)                        -->
+ *  <!--  struct InstanceName in;                                      -->
+ *  <!--  symchar *str;                                                -->
  *
- *  Set the instance name structure string index to str.
+ *  Set the string index of InstanceName structure in to str (a symchar*).
  */
 
 #define SetInstanceNameIntIndex(in,int_index) ((in).u.index) = (int_index)
 /**< 
- *  macro SetInstanceNameIndex(in,int_index)
- *  struct InstanceName in;
- *  long int_index;
+ *  <!--  macro SetInstanceNameIndex(in,int_index)                     -->
+ *  <!--  struct InstanceName in;                                      -->
+ *  <!--  long int_index;                                              -->
  *
- *  Set the instance name structure integer index to int_index.
+ *  Set the integer index of InstanceName structure in to int_index (a long).
  */
-#endif /**< __INSTANCE_NAME_H_SEEN__ */
+
+#endif /* __INSTANCE_NAME_H_SEEN__ */
+

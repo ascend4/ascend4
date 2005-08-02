@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Text of the GNU Public License
  *  by Tom Epperly
  *  Created: 1 February 1994
@@ -27,29 +27,33 @@
  *  COPYING.
  */
 
+/** @file
+ *  Text of the GNU Public License.
+ *  <pre>
+ *  When #including .h, make sure these files are #included first:
+ *         NO INCLUDES NEEDED
+ *  </pre>
+ */
+
 #ifndef __LICENSE_H_SEEN__
 #define __LICENSE_H_SEEN__
 
-
-/**< 
- *  When #including .h, make sure these files are #included first:
- *         NO INCLUDES NEEDED
- */
-
-
 extern const char GPL1[];
+/**< String containing part 1 of the GNU Public License, version 2 text. */
 extern const char GPL2[];
+/**< String containing part 2 of the GNU Public License, version 2 text. */
 extern const char GPL3[];
+/**< String containing part 3 of the GNU Public License, version 2 text. */
 extern const char GPL4[];
+/**< String containing part 4 of the GNU Public License, version 2 text. */
 extern const char GPL5[];
-/**< 
- *  This string set contains the complete text of the GNU Public License
- *  version 2.
- */
+/**< String containing part 5 of the GNU Public License, version 2 text. */
 
 extern const char * const NO_WARRANTY;
 /**< 
- *  This string contains the no warranty section of the GNU Public License
+ *  String containing the no warranty section of the GNU Public License
  *  version 2.  This is a pointer to the last GPL.
  */
-#endif /**< __LICENSE_H_SEEN__ */
+
+#endif /* __LICENSE_H_SEEN__ */
+

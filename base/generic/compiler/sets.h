@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Set routine external definitions
  *  by Tom Epperly
  *  July 31, 1989
@@ -26,42 +26,41 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  Set routine external definitions.
+ *  <pre>
  *  When #including sets.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
+ *         #include "list.h"
+ *  </pre>
  */
-
 
 #ifndef __SETS_H_SEEN__
 #define __SETS_H_SEEN__
-/**< requires
-# #include"compiler.h"
-# #include"types.h"
-# #include"list.h"
-*/
 
-extern struct Set *CreateSingleSet(struct Expr *);
+extern struct Set *CreateSingleSet(struct Expr *ex);
 /**< 
- *  struct Set *CreateSingleSet(ex)
- *  struct Expr *ex;
+ *  <!--  struct Set *CreateSingleSet(ex)                              -->
+ *  <!--  struct Expr *ex;                                             -->
  *  Create a set node of type single with ex as its expression.
  */
 
-extern struct Set *CreateRangeSet(struct Expr *,struct Expr *);
+extern struct Set *CreateRangeSet(struct Expr *lower, struct Expr *upper);
 /**< 
- *  struct Set *CreateRangeSet(lower,upper)
- *  struct Expr *lower,*upper;
+ *  <!--  struct Set *CreateRangeSet(lower,upper)                      -->
+ *  <!--  struct Expr *lower,*upper;                                   -->
  *  Create a set node of type range with lower as its lower bound and
  *  upper as its upper bound.
  */
 
-extern void LinkSets(struct Set *,struct Set *);
+extern void LinkSets(struct Set *cur, struct Set *next);
 /**< 
- *  void LinkSets(cur,next)
- *  struct Set *cur, *next;
+ *  <!--  void LinkSets(cur,next)                                      -->
+ *  <!--  struct Set *cur, *next;                                      -->
  *  Sets the next field of cur to next.
  */
 
@@ -70,12 +69,20 @@ extern void LinkSets(struct Set *,struct Set *);
 #else
 #define NextSet(s) NextSetF(s)
 #endif
-extern struct Set *NextSetF(CONST struct Set *);
-/**< 
- *  macro NextSet(s)
- *  struct Set *NextSetF(s)
- *  const struct Set *s;
+/**<
  *  Return the next set. (if in an expression of Set)
+ *  @param s CONST struct Set*, the set to query.
+ *  @return The next set as a struct Set*.
+ *  @see NextSetF()
+ */
+extern struct Set *NextSetF(CONST struct Set *s);
+/**<
+ *  <!--  macro NextSet(s)                                             -->
+ *  <!--  struct Set *NextSetF(s)                                      -->
+ *  <!--  const struct Set *s;                                         -->
+ *  <!--  Return the next set. (if in an expression of Set)            -->
+ *  Implementation function for NextSet().  Do not call this
+ *  function directly - use NextSet() instead.
  */
 
 #ifdef NDEBUG
@@ -83,12 +90,20 @@ extern struct Set *NextSetF(CONST struct Set *);
 #else
 #define SetType(s) SetTypeF(s)
 #endif
-extern int SetTypeF(CONST struct Set *);
-/**< 
- *  macro SetType(s)
- *  const int SetTypeF(s)
- *  struct Set *s;
- *  return the type of the set. (single expression or range (..))
+/**<
+ *  Return the type of the set. Single expression or range (..).
+ *  @param s CONST struct Set*, the set to query.
+ *  @return The type as an int.
+ *  @see SetTypeF()
+ */
+extern int SetTypeF(CONST struct Set *s);
+/**<
+ *  <!--  macro SetType(s)                                             -->
+ *  <!--  const int SetTypeF(s)                                        -->
+ *  <!--  struct Set *s;                                               -->
+ *  <!--  return the type of the set. (single expression or range (..))-->
+ *  Implementation function for SetType().  Do not call this
+ *  function directly - use SetType() instead.
  */
 
 #ifdef NDEBUG
@@ -96,13 +111,22 @@ extern int SetTypeF(CONST struct Set *);
 #else
 #define GetSingleExpr(s) GetSingleExprF(s)
 #endif
-extern CONST struct Expr *GetSingleExprF(CONST struct Set *);
-/**< 
- *  macro GetSingleExpr(s)
- *  const struct Expr *GetSingleExprF(s)
- *  const struct Set *s;
- *  Assumes that s is not a range.  Returns the expression for the single
- *  value.
+/**<
+ *  Returns the expression for the single value.
+ *  Assumes that s is not a range.
+ *  @param s CONST struct Set*, the set to query.
+ *  @return The expression as an CONST struct Expr*.
+ *  @see GetSingleExprF()
+ */
+extern CONST struct Expr *GetSingleExprF(CONST struct Set *s);
+/**<
+ *  <!--  macro GetSingleExpr(s)                                       -->
+ *  <!--  const struct Expr *GetSingleExprF(s)                         -->
+ *  <!--  const struct Set *s;                                         -->
+ *  <!--  Returns the expression for the single value.                 -->
+ *  <!--  Assumes that s is not a range.                               -->
+ *  Implementation function for GetSingleExpr().  Do not call this
+ *  function directly - use GetSingleExpr() instead.
  */
 
 #ifdef NDEBUG
@@ -110,12 +134,20 @@ extern CONST struct Expr *GetSingleExprF(CONST struct Set *);
 #else
 #define GetLowerExpr(s) GetLowerExprF(s)
 #endif
-extern CONST struct Expr *GetLowerExprF(CONST struct Set *);
-/**< 
- *  macro GetLowerExpr(s)
- *  const struct Expr *GetLowerExprF(s)
- *  const struct Set *s;
- *  Assumes that s is a range.  Returns the lower value expression.
+/**<
+ *  Returns the lower value expression.  Assumes that s is a range.
+ *  @param s CONST struct Set*, the set to query.
+ *  @return The expression as an CONST struct Expr*.
+ *  @see GetLowerExprF()
+ */
+extern CONST struct Expr *GetLowerExprF(CONST struct Set *s);
+/**<
+ *  <!--  macro GetLowerExpr(s)                                        -->
+ *  <!--  const struct Expr *GetLowerExprF(s)                          -->
+ *  <!--  const struct Set *s;                                         -->
+ *  <!--  Assumes that s is a range.  Returns the lower value expression. -->
+ *  Implementation function for GetLowerExpr().  Do not call this
+ *  function directly - use GetLowerExpr() instead.
  */
 
 #ifdef NDEBUG
@@ -123,114 +155,124 @@ extern CONST struct Expr *GetLowerExprF(CONST struct Set *);
 #else
 #define GetUpperExpr(s) GetUpperExprF(s)
 #endif
-extern CONST struct Expr *GetUpperExprF(CONST struct Set *);
-/**< 
- *  macro GetUpperExpr(s)
- *  const struct Expr *GetUpperExprF(s)
- *  const struct Set *s;
- *  Assumes that s is a range.  Returns the upper value expression.
+/**<
+ *  Returns the upper value expression.  Assumes that s is a range.  
+ *  @param s CONST struct Set*, the set to query.
+ *  @return The expression as an CONST struct Expr*.
+ *  @see GetUpperExprF()
+ */
+extern CONST struct Expr *GetUpperExprF(CONST struct Set *s);
+/**<
+ *  <!--  macro GetUpperExpr(s)                                        -->
+ *  <!--  const struct Expr *GetUpperExprF(s)                          -->
+ *  <!--  const struct Set *s;                                         -->
+ *  <!--  Assumes that s is a range.  Returns the upper value expression. -->
+ *  Implementation function for GetUpperExpr().  Do not call this
+ *  function directly - use GetUpperExpr() instead.
  */
 
-extern struct Set *CopySetNode(CONST struct Set *);
+extern struct Set *CopySetNode(CONST struct Set *s);
 /**< 
- *  struct Set *CopySetNode(s)
- *  const struct Set *s;
+ *  <!--  struct Set *CopySetNode(s)                                   -->
+ *  <!--  const struct Set *s;                                         -->
  *  Return a copy of s, but not anything pointed at by s->next.
  *  copy->next = NULL.
  *  Handles NULL input gracefully, returning NULL.
  */
 
-extern struct Set *CopySetList(CONST struct Set *);
+extern struct Set *CopySetList(CONST struct Set *s);
 /**< 
- *  struct Set *CopySetList(s)
- *  const struct Set *s;
+ *  <!--  struct Set *CopySetList(s)                                   -->
+ *  <!--  const struct Set *s;                                         -->
  *  Return a copy of s.
  *  Handles NULL input gracefully.
  */
 
-extern void DestroySetNode(struct Set *);
-/**< 
- *  void DestroySetNode(s)
+extern void DestroySetNode(struct Set *s);
+/**<
+ *  <!--  void DestroySetNode(s)                                       -->
+ *  <!--  struct Set *s;                                               -->
  *  Destroys Set node given and the expression contents of the sets.
- *  struct Set *s;
  *  Pays not the slightest attention to the ref_count B.S.
  */
 
-extern void DestroySetList(struct Set *);
+extern void DestroySetList(struct Set *s);
 /**< 
- *  void DestroySetList(s)
- *  struct Set *s;
+ *  <!--  void DestroySetList(s)                                       -->
+ *  <!--  struct Set *s;                                               -->
  *  Destroys Set chain given and the expression contents of the sets.
  *  Handles NULL input gracefully.
  *  Pays not the slightest attention to the ref_count B.S.
  */
 
-extern void DestroySetHead(struct Set *);
+extern void DestroySetHead(struct Set *s);
 /**< 
- *  void DestroySetHead(s)
+ *  <!--  void DestroySetHead(s)                                       -->
+ *  <!--  struct Set *s;                                               -->
  *  Destroys Set node given but not the expression contents of the node.
- *  struct Set *s;
  *  Normally should not be used.
  */
 
-extern struct Set *CopySetByReference(struct Set *);
+extern struct Set *CopySetByReference(struct Set *s);
 /**< 
- *  struct Set *CopySetByReference(s)
- *  const struct Set *s;
- *  increase ref_count.
+ *  <!--  struct Set *CopySetByReference(s)                            -->
+ *  <!--  const struct Set *s;                                         -->
+ *  Increase ref_count.
  */
 
-extern void DestroySetListByReference(struct Set *);
+extern void DestroySetListByReference(struct Set *s);
 /**< 
- *  void DestroySetListByReference(s)
- *  struct Set *s;
+ *  <!--  void DestroySetListByReference(s)                            -->
+ *  <!--  struct Set *s;                                               -->
+ *  Decrements the reference count and destroys the elements 
+ *  in the set if the count is zero.
  */
 
-extern void DestroySetNodeByReference(struct Set *);
+extern void DestroySetNodeByReference(struct Set *s);
 /**< 
- *  void DestroySetNodeByReference(s)
- *  struct Set *s;
- *  decrease ref_count;
+ *  <!--  void DestroySetNodeByReference(s)                            -->
+ *  <!--  struct Set *s;                                               -->
+ *  Decrease ref_count.
  */
 
-extern struct Set *JoinSetLists(struct Set *,struct Set *);
+extern struct Set *JoinSetLists(struct Set *s1, struct Set *s2);
 /**< 
- *  void JoinSetLists(s1,s2)
- *  struct Set *s1, *s2;
+ *  <!--  void JoinSetLists(s1,s2)                                     -->
+ *  <!--  struct Set *s1, *s2;                                         -->
  *  Append list s2 to the end of s1.  Returns the pointer to the joined list.
  *  If s1 is NULL, it simply returns s2.
  */
 
-extern struct Set *ReverseSetList(struct Set *);
+extern struct Set *ReverseSetList(struct Set *s);
 /**< 
- *  struct Set *ReverseSetList(s)
- *  struct Set *s;
+ *  <!--  struct Set *ReverseSetList(s)                                -->
+ *  <!--  struct Set *s;                                               -->
  *  Reverse the order of the set list.
  */
 
-extern int SetStructuresEqual(CONST struct Set *,CONST struct Set *);
+extern int SetStructuresEqual(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
- *  int SetStructuresEqual(s1,s2)
- *  const struct Set *s1,*s2;
+ *  <!--  int SetStructuresEqual(s1,s2)                                -->
+ *  <!--  const struct Set *s1,*s2;                                    -->
  *  Return TRUE if and only if, s1 and s2 are structurally equivalent.
  */
 
-extern int CompareSetStructures(CONST struct Set *,CONST struct Set *);
+extern int CompareSetStructures(CONST struct Set *s1, CONST struct Set *s2);
 /**< 
- *  int CompareSetStructures(s1,s2)
- *  const struct Set *s1,*s2;
+ *  <!--  int CompareSetStructures(s1,s2)                              -->
+ *  <!--  const struct Set *s1,*s2;                                    -->
  *  Returns -1,0,1 as s1 < = > s2.
  *  compares on length and on content value.
  *  a range > an expression
  *  a NULL Set * > all Sets.
  */
 
-extern unsigned long SetLength(CONST struct Set *);
+extern unsigned long SetLength(CONST struct Set *s);
 /**< 
  *  Returns the number of elements in the set given.
  */
 
-extern struct gl_list_t *SetNameList(CONST struct Set *);
+extern struct gl_list_t *SetNameList(CONST struct Set *s);
 /**< 
  *  Returns a list containing all the names found in the Set given.
  *  The names in the list belong to the set, so you can destroy
@@ -238,27 +280,27 @@ extern struct gl_list_t *SetNameList(CONST struct Set *);
  *  empty. It should never be NULL.
  */
 
-extern char *CreateStrFromSet(CONST struct Set *);
+extern char *CreateStrFromSet(CONST struct Set *set);
 /**< 
- *  char *CreateStrFromSet(set);
- *  const struct Set *set;
+ *  <!--  char *CreateStrFromSet(set);                                 -->
+ *  <!--  const struct Set *set;                                       -->
  *  Returns a copy of the string representation of the given set.
  */
 
-
 extern void sets_init_pool(void);
-/**< 
- * starts memory recycle. do not call twice before stopping recycle.
+/**<
+ *  Starts memory recycle. Do not call twice before stopping recycle.
  */
 
 extern void sets_destroy_pool(void);
 /**< 
- * stops memory recycle. do not call while ANY Expr are outstanding.
+ *  Stops memory recycle. Do not call while ANY Expr are outstanding.
  */
 
 extern void sets_report_pool(void);
 /**< 
- * write the pool report to ASCERR for the sets pool.
+ *  Write the pool report to ASCERR for the sets pool.
  */
 
-#endif /**< __SETS_H_SEEN__ */
+#endif  /* __SETS_H_SEEN__ */
+

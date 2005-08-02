@@ -1,4 +1,4 @@
-/**< 
+/**<
  *  ASCEND Printf stdout/stderr Substitutes Dispatcher data type.
  *  by Benjamin Allan
  *  Created: 4.March.2005
@@ -27,16 +27,19 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifndef _ASCPRINTTYPE_H
-#define _ASCPRINTTYPE_H
-
-/**< 
+/** @file
+ *  ASCEND Printf stdout/stderr Substitutes Dispatcher data type.
+ *  <pre>
  *  When including this file, you must include:
  *      #include <stdarg.h>
+ *      #include "utilities/ascConfig.h"
  *      #include "compiler/compiler.h"
- *      #include "utilities/ascprint.h"
+ *      #include "utilities/ascPrint.h"
+ *  </pre>
  */
 
+#ifndef _ASCPRINTTYPE_H
+#define _ASCPRINTTYPE_H
 
 /**
  * Output functions interceptor vtable. This should be constructed
@@ -44,10 +47,10 @@
  * pushed on the stack of output tables.
  */
 struct Asc_PrintVTable {
-	CONST char *name;
-	int (*print)(FILE *fp, CONST char *format, va_list args);
-	int (*fflush)(FILE *);
-	struct Asc_PrintVTable *next;
+	CONST char *name;              /**< name */
+	int (*print)(FILE *fp, CONST char *format, va_list args);  /**< print function */
+	int (*fflush)(FILE *);         /**< flush function */
+	struct Asc_PrintVTable *next;  /**< next vtable in linked list */
 };
 
 #endif /**< _ASCPRINTTYPE_H */

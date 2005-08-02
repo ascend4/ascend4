@@ -1,4 +1,4 @@
-/**< 
+/*
  *  write_MPS: create the actual MPS file
  *  by Craig Schmidt
  *  Created: 2/19/95
@@ -30,40 +30,40 @@
  *  COPYING is found in ../compiler.
  */
 
-/*********************************************************************\
- ***  Contents:     MPS module
- ***
- ***  Authors:      Craig Schmidt
- ***
- ***  Dates:        02/95 - Original version
- ***
- ***  Description:  This module will create an MPS file representation
- ***                of the current system.  It is passed a mps_data_t
- ***                data structure, the solver subparameters, and the
- ***                name of the file. 
- ***
- ***********************************************************************/
- 
+/** @file
+ *  write_MPS: create the actual MPS file.
+ *  <pre>
+ *  Contents:     MPS module
+ *
+ *  Authors:      Craig Schmidt
+ *
+ *  Dates:        02/95 - Original version
+ *
+ *  Description:  This module will create an MPS file representation
+ *                of the current system.  It is passed a mps_data_t
+ *                data structure, the solver subparameters, and the
+ *                name of the file.
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv6.h"
+ *  </pre>
+ */
+
 #ifndef MPS__already_included
 #define MPS__already_included
 
 #ifdef STATIC_MPS
 
-/**< requires #include "slv6.h" */
+/** Writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names. */
+extern boolean write_name_map(const char *name,             /* file name without .map suffix */
+                              struct var_variable **vlist); /* Variable list (NULL terminated) */
 
-/**< writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names */
+/** Writes out an MPS file. */
+extern boolean write_MPS(const char *name,                /* filename for output */
+                         mps_data_t mps,                  /* the main chunk of data for the problem */
+                         int iarray[slv6_IA_SIZE],        /* Integer subparameters */
+                         double rarray[slv6_RA_SIZE]);    /* Real subparameters */
 
-extern boolean write_name_map(const char *name,          /**< file name without .map suffix */
-                              struct var_variable  **vlist);   /**< Variable list (NULL terminated) */
-
-/**< writes out an MPS file */
-
-extern boolean write_MPS(const char *name,                /**< filename for output */
-                         mps_data_t mps,                  /**< the main chunk of data for the problem */
-                         int iarray[slv6_IA_SIZE],        /**< Integer subparameters */
-                         double rarray[slv6_RA_SIZE]);    /**< Real subparameters */
-
-#endif
-
-#endif
+#endif  /* STATIC_MPS */
+#endif  /* MPS__already_included */
 

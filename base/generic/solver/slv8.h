@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Incorporation of the nonlinear solver CONOPT to ASCEND
  *  by Ken Tyner 
  *  Created: 6/97
@@ -25,35 +25,37 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
- *
  */
 
-/**< 
- * Contents:     CONOPT module
+/** @file
+ *  CONOPT solver registration module.
+ *  <pre>
+ *  Contents:     CONOPT module
  *
- * Authors:      Ken Tyner and Vicente Rico-Ramirez
- *               
- * Dates:        06/97 - original version
- *               07/97 - Creating a structure of function pointers so that
- *                       multiple calls to CONOPT can be made
- *               08/97 - Improving CONOPT message report to ASCEND
+ *  Authors:      Ken Tyner and Vicente Rico-Ramirez
  *
+ *  Dates:        06/97 - original version
+ *                07/97 - Creating a structure of function pointers so that
+ *                        multiple calls to CONOPT can be made
+ *                08/97 - Improving CONOPT message report to ASCEND
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
  */
+
 #ifndef slv8__already_included
 #define slv8__already_included
-
-/**< 
- * requires #include "slv_client.h" 
- */
 
 typedef struct slv8_system_structure *slv8_system_t;
 
 int slv8_register(SlvFunctionsT *);
 /**< 
- * This is the function that tells the system about the CONOPT solver.
- * Our index is not necessarily going to be 8. That everything here is
- * named slv8* is just a historical result and a convenient way of
- * shutting up the linker.
+ *  This is the function that tells the system about the CONOPT solver.
+ *  Our index is not necessarily going to be 8. That everything here is
+ *  named slv8* is just a historical result and a convenient way of
+ *  shutting up the linker.
  */
 
-#endif /**<  ifndef slv8__already_included  */
+#endif  /* ifndef slv8__already_included */
+

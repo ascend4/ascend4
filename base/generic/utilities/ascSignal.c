@@ -57,10 +57,12 @@
 #define TRAPPTR(a) void (*(a))(int)
 /*
  * This macro defines a pointer to a signal handler named a.
+ * 20050528 JDS Use SigHandler instead.
  */
 #define TPCAST void (*)(int)
 /*
  * This macro can be used like  tp = (TPCAST)foo;
+ * 20050528 JDS Use SigHandler instead.
  */
 
 static jmp_buf g_test_env;
@@ -132,7 +134,7 @@ static void testctrlc(int signum)
 static int ascresetneeded(void) {
   static int c=0;
   static int result;
-  TRAPPTR(lasttrap);
+  SigHandler lasttrap;
 
   result = 0;
 
@@ -183,7 +185,7 @@ static int ascresetneeded(void) {
 static
 void initstack (struct gl_list_t *traps, int sig)
 {
-  TRAPPTR(old);
+  SigHandler old;
   old = signal(sig,SIG_DFL);
   if (old != SIG_ERR && old != SIG_DFL) {
     gl_append_ptr(traps,(VOIDPTR)old);
@@ -236,9 +238,9 @@ void Asc_SignalDestroy(void)
 
 static void reset_trap(int signum,struct gl_list_t *tlist)
 {
-  TRAPPTR(tp);
+  SigHandler tp;
   if (tlist != NULL && gl_length(tlist) > 0L) {
-    tp = (TPCAST)gl_fetch(tlist, gl_length(tlist));
+    tp = (SigHandler)gl_fetch(tlist, gl_length(tlist));
     if (tp != SIG_ERR) {
       (void)signal(signum,tp);
     }
@@ -268,7 +270,7 @@ void Asc_SignalRecover(int force) {
 /*
  * append a pointer to the list given, if the list is not full.
  */
-static int push_trap(struct gl_list_t *tlist, TRAPPTR(tp))
+static int push_trap(struct gl_list_t *tlist, SigHandler tp)
 {
   if (tlist == NULL) {
     return -1;
@@ -288,7 +290,7 @@ static int push_trap(struct gl_list_t *tlist, TRAPPTR(tp))
  * On a successful return, the handler has been installed and will
  * remain installed until a Asc_SignalHandlerPop or another push.
  */
-int Asc_SignalHandlerPush(int signum, TRAPPTR(tp))
+int Asc_SignalHandlerPush(int signum, SigHandler tp)
 {
   int err;
   if (tp==NULL) {
@@ -319,9 +321,9 @@ int Asc_SignalHandlerPush(int signum, TRAPPTR(tp))
  * Returns: 0 -ok, 2 NULL list input, 1 empty list input,
  * -1 mismatched input tp and stack data.
  */
-static int pop_trap(struct gl_list_t *tlist, TRAPPTR(tp))
+static int pop_trap(struct gl_list_t *tlist, SigHandler tp)
 {
-  TRAPPTR(oldtrap);
+  SigHandler oldtrap;
 
   if (tlist == NULL) {
     return 2;
@@ -329,12 +331,12 @@ static int pop_trap(struct gl_list_t *tlist, TRAPPTR(tp))
   if (gl_length(tlist) == 0) {
     return 1;
   }
-  oldtrap = (TPCAST)gl_fetch(tlist,gl_length(tlist));
+  oldtrap = (SigHandler)gl_fetch(tlist,gl_length(tlist));
   gl_delete(tlist,gl_length(tlist),0);
   return (-(oldtrap != tp));
 }
 
-int Asc_SignalHandlerPop(int signum, TRAPPTR(tp))
+int Asc_SignalHandlerPop(int signum, SigHandler tp)
 {
   int err;
   switch (signum) {
@@ -359,7 +361,7 @@ int Asc_SignalHandlerPop(int signum, TRAPPTR(tp))
 }
 
 void Asc_SignalTrap(int sigval) {
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   switch(sigval) {
   case SIGFPE:
 #ifndef __WIN32__
@@ -382,5 +384,7 @@ void Asc_SignalTrap(int sigval) {
     break;
   }
   return;
+#else
+   UNUSED_PARAMETER(sigval);
 #endif /* NO_SIGNAL_TRAPS */
 }

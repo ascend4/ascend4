@@ -275,10 +275,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   char *p;
   char buffer[MAX_PATH];
 
-  UNREFERENCED_PARAMETER(hInstance);
-  UNREFERENCED_PARAMETER(hPrevInstance);
-  UNREFERENCED_PARAMETER(lpszCmdLine);
-  UNREFERENCED_PARAMETER(nCmdShow);
+  UNUSED_PARAMETER(hInstance);
+  UNUSED_PARAMETER(hPrevInstance);
+  UNUSED_PARAMETER(lpszCmdLine);
+  UNUSED_PARAMETER(nCmdShow);
 
   /*
    * Set up the default locale to be standard "C" locale so parsing

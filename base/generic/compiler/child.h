@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Model Child list routines
  *  by Tom Epperly
  *  Version: $Revision: 1.21 $
@@ -25,124 +25,116 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
- *  This is a package of routines to process child lists.
  */
 
-/**< 
+/** @file
+ *  This is a package of routines to process child lists.
+ *  <pre>
  *  When #including child.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
+ *         #include "list.h"
+ *  </pre>
  */
-
 
 #ifndef __CHILD_H_SEEN__
 #define __CHILD_H_SEEN__
-/**< requires
- *# #include"compiler.h"
- *# #include"list.h"
- */
 
+/** 
+ *  The ChildListStructure is a private implementation detail.
+ *  All the public interface needs is a pointer thereto.
+ */
 typedef CONST struct ChildListStructure *ChildListPtr;
 
+/**
+ * The ChildListEntry is the interface container for creating
+ * childlists. Storage scheme and usage after that is all
+ * black magic which can only be done by following this header.<br><br>
+ *
+ * As of 9/96 we've added a number of important features to
+ * ChildList, and it's nobody's business how we implement it.
+ */
 struct ChildListEntry {
   symchar *strptr;
-  /**< 
-   * this is the symbol table name of a child, eg "a" of a[i][j]
-   */
+      /**< the symbol table name of a child, eg "a" of a[i][j] */
   CONST struct TypeDescription *typeptr;
-  /**< 
-   * this is the most refined type for the child that can be determined
-   * at parse time. Corresponding instances at run time may be this or
-   * a more refined type. This allows several kinds of sanity checking.
-   * This pointer must not be NULL.
-   */
+      /**< the most refined type for the child that can be determined
+       * at parse time. Corresponding instances at run time may be this or
+       * a more refined type. This allows several kinds of sanity checking.
+       * This pointer must not be NULL.
+       */
   CONST struct Statement *statement;
-  /**< 
-   * statement where child is initially defined.
-   */
+      /**< statement where child is initially defined. */
   unsigned bflags;
-  /**< 
-   * boolean flags, as defined below with CBF_*
-   */
+      /**< boolean flags, as defined below with CBF_* */
   short isarray;
-  /**< 
-   * isarray should be number of subscripts if you firmly
-   * believe the named child is an array. Nobody could possibly
-   * have more than a shorts worth of subscripts.
-   */
+      /**< isarray should be number of subscripts if you firmly
+       * believe the named child is an array. Nobody could possibly
+       * have more than a shorts worth of subscripts.
+       */
   short origin;
-  /**< 
-   * tells how child created (ALIASES, ARR, WILL_BE, IS_A,
-   *                          P-ALIASES, P-ARR, P-IS_A, P-WILL_BE)
-   * P-IS_A and P-WILL_BE indicate that it came through a parameter list.
-   * P-ALIASES indicates an alias of something that came through a
-   * parameter list WILL_BE directly or indirectly (as a part of a parameter).
-   *
-   * The set in the ALIASES-IS_A statement gets
-   * listed as an IS_A origin. The array gets listed as an ARR origin.
-   */
-#define origin_ERR	0
-/**< set 1 */
-#define origin_ALI	1
-#define origin_ARR      2
-#define origin_ISA	3
-#define origin_WB	4
-/**< set 2 should match set 1, except having P and being > by offset */
-#define origin_PALI	5
-#define origin_PARR     6
-#define origin_PISA	7
-#define origin_PWB	8
+      /**< tells how child created (ALIASES, ARR, WILL_BE, IS_A,
+       *                            P-ALIASES, P-ARR, P-IS_A, P-WILL_BE)
+       * P-IS_A and P-WILL_BE indicate that it came through a parameter list.
+       * P-ALIASES indicates an alias of something that came through a
+       * parameter list WILL_BE directly or indirectly (as a part of a parameter).
+       *
+       * The set in the ALIASES-IS_A statement gets
+       * listed as an IS_A origin. The array gets listed as an ARR origin.
+       */
+
+#define origin_ERR  0     /**< Origin code - invalid origin. */
+/* set 1 */
+#define origin_ALI  1     /**< Origin code - ALIASES. */
+#define origin_ARR  2     /**< Origin code - ARR. */
+#define origin_ISA  3     /**< Origin code - IS_A. */
+#define origin_WB   4     /**< Origin code - WILL_BE. */
+/* set 2 should match set 1, except having P and being > by offset */
+#define origin_PALI 5     /**< Origin code - P-ALIASES. */
+#define origin_PARR 6     /**< Origin code - P-ARR. */
+#define origin_PISA 7     /**< Origin code - P-IS_A. */
+#define origin_PWB  8     /**< Origin code - P-WILL_BE. */
 #define origin_PARAMETER_OFFSET (origin_PALI - origin_ALI)
-/**< 
+/**<
  * Distance between corresponding origin and the parametric version.
  * If you mess with these origin defines, fix the macro LegalOrigin
  * in child.c
  */
-/**< child boolean flag bit definitions */
-#define CBF_VISIBLE	0x1	/**< child to be shown in UI among lists */
-#define CBF_SUPPORTED	0x2	/**< child is a '$upported' attribute */
-#define CBF_PASSED	0x4	/**< child is argument to another child */
-/**< Note that because of arrays, CBF_PASSED is approximate. 
- * If a[1] is passed, a gets marked passed, but if a.b is passed, a is not.
- */
-/**< other CBF as required */
-};
-/**< 
- * As of 9/96 we've added a number of important features to
- * ChildList, and it's nobody's business how we implement it.
- * The ChildListEntry is the interface container for creating
- * childlists. Storage scheme and usage after that is all
- * black magic which can only be done by following this header.
- */
+
+/* child boolean flag bit definitions */
+#define CBF_VISIBLE	  0x1 /**< child to be shown in UI among lists */
+#define CBF_SUPPORTED	0x2 /**< child is a '$upported' attribute */
+#define CBF_PASSED    0x4 /**< child is argument to another child.
+                               Note that because of arrays, CBF_PASSED
+                               is approximate.  If a[1] is passed, a gets
+                               marked passed, but if a.b is passed, a is not. */
+/* other CBF as required */
+};  /* struct ChildListEntry */
 
 #define AliasingOrigin(ori) \
   ((ori) == origin_PALI || (ori) == origin_ALI || \
    (ori) == origin_PARR || (ori) == origin_ARR)
-/**< 
- *  Returns 1 if the value given is an alias sort.
- */
+/**< Returns 1 if the value given is an alias sort. */
 
 #define ParametricOrigin(ori) ((ori) >= origin_PALI && (ori) <= origin_PWB)
-/**< 
- *  Returns 1 if the value given is a parametric sort or 0 if not.
- */
+/**< Returns 1 if the value given is a parametric sort or 0 if not. */
 
-extern int CmpChildListEntries(CONST struct ChildListEntry *,
-                               CONST struct ChildListEntry *);
-/**< 
- *  CmpChildListEntries(e1,e2)
- *  CONST struct ChildListEntry *e1, *e2;
+extern int CmpChildListEntries(CONST struct ChildListEntry *e1,
+                               CONST struct ChildListEntry *e2);
+/**<
+ *  <!--  CmpChildListEntries(e1,e2)                                   -->
+ *  <!--  CONST struct ChildListEntry *e1, *e2;                        -->
  *  Returns the result of an alphabetical order comparison
  *  on the names in the two pointers. Not necessarily implemented
  *  with strcmp, however, so you should use this function.
  */
 
-extern ChildListPtr CreateChildList(struct gl_list_t *);
-/**< 
- *  ChildListPtr CreateChildList(l)
- *  struct gl_list_t *l;
+extern ChildListPtr CreateChildList(struct gl_list_t *l);
+/**<
+ *  <!--  ChildListPtr CreateChildList(l)                              -->
+ *  <!--  struct gl_list_t *l;                                         -->
  *  This takes a list of struct ChildListEntry * from a gl_list_t to a
  *  ChildList type.
  *  l must be sorted and should not contain any duplicate entries,
@@ -154,16 +146,16 @@ extern ChildListPtr CreateChildList(struct gl_list_t *);
  *  We will return a ChildListPtr. You don't know what is in that.
  *  We own the memory to it and only we know how to destroy it.
  *  Creating a ChildListPtr causes the type
- *  descriptions of the children to be copied.
+ *  descriptions of the children to be copied.<br><br>
  *
  *  This function should never return a NULL pointer except in the
  *  case where you have specified input with a NULL typeptr.
  */
 
-extern void DestroyChildList(ChildListPtr);
-/**< 
- *  void DestroyChildList(cl)
- *  ChildListPtr cl;
+extern void DestroyChildList(ChildListPtr cl);
+/**<
+ *  <!--  void DestroyChildList(cl)                                    -->
+ *  <!--  ChildListPtr cl;                                             -->
  *  Deallocate the memory associated with the list but not the symchars in
  *  the list. The fact that you're passing a CONST pointer object into
  *  this function is somewhat odd, but it suffices to know that after
@@ -171,12 +163,11 @@ extern void DestroyChildList(ChildListPtr);
  *  really has been disposed of.
  */
 
-extern ChildListPtr AppendChildList(ChildListPtr,
-                                    struct gl_list_t *);
-/**< 
- *  ChildListPtr AppendChildList(cl,l)
- *  ChildListPtr cl;
- *  struct gl_list_t *l;
+extern ChildListPtr AppendChildList(ChildListPtr cl, struct gl_list_t *l);
+/**<
+ *  <!--  ChildListPtr AppendChildList(cl,l)                           -->
+ *  <!--  ChildListPtr cl;                                             -->
+ *  <!--  struct gl_list_t *l;                                         -->
  *  Create and return a new child list which contains all the information
  *  contained in cl or l.  l must be sorted, and it is assumed that there
  *  are no duplicate entries. The new list returned is sorted.
@@ -184,130 +175,137 @@ extern ChildListPtr AppendChildList(ChildListPtr,
  *  The same conditions for l in CreateChildList apply here.
  */
 
-extern unsigned long ChildListLen(ChildListPtr);
-/**< 
- *  unsigned long ChildListLen(cl)
- *  CONST ChildListPtr cl;
+extern unsigned long ChildListLen(ChildListPtr cl);
+/**<
+ *  <!--  unsigned long ChildListLen(cl)                               -->
+ *  <!--  CONST ChildListPtr cl;                                       -->
  *  Return the length of the child list.
  */
 
-extern symchar *ChildStrPtr(ChildListPtr ,unsigned long);
-/**< 
- *  symchar *ChildStrPtr(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+extern symchar *ChildStrPtr(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  symchar *ChildStrPtr(cl,n)                                   -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Return child number n name element 1 string.
  *  Children are numbered 1..ChildListLen(cl).
  */
 
-extern unsigned int ChildIsArray(ChildListPtr ,unsigned long);
-/**< 
- *  unsigned int ChildIsArray(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+extern unsigned int ChildIsArray(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  unsigned int ChildIsArray(cl,n)                              -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Return >= 1 if child number n is determined array type at parse time.
  *  The return value the number of subscripts of child n
  *  needed to reach a single array element of ChildBaseTypePtr type.
  *  Returns 0 if type is not array.
  */
 
-extern unsigned int ChildOrigin(ChildListPtr ,unsigned long);
-/**< 
- *  unsigned int ChildOrigin(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+extern unsigned int ChildOrigin(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  unsigned int ChildOrigin(cl,n)                               -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Return the origin code of the child.
  */
 
-extern unsigned int ChildAliasing(ChildListPtr ,unsigned long);
-/**< 
- *  unsigned int ChildAliasing(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+extern unsigned int ChildAliasing(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  unsigned int ChildAliasing(cl,n)                             -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Return the Aliasness of a child, meaning if the child ALIASES one
  *  passed into the type definition or a part of the definition.
  */
 
-extern unsigned int ChildParametric(ChildListPtr ,unsigned long);
-/**< 
- *  unsigned int ChildParametric(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
- *  Return the parametricness of a child, meaning if the child is one
+extern unsigned int ChildParametric(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  unsigned int ChildParametric(cl,n)                           -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
+ *  Return the parametricness of a child.  That is, if the child is one
  *  passed into the type definition or one aliasing something or a part of
  *  something passed into the definition.
  */
 
-extern CONST struct Statement *ChildStatement(ChildListPtr,unsigned long);
-/**< 
- *  CONST struct Statement *ChildStatement(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+extern CONST struct Statement *ChildStatement(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  CONST struct Statement *ChildStatement(cl,n)                 -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Return child number n initial declaration statement.
  *  Children are numbered 1..ChildListLen(cl).
  */
 
-extern unsigned ChildGetBooleans(ChildListPtr,unsigned long);
-/**< 
- *  unsigned int ChildGetBooleans(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+extern unsigned ChildGetBooleans(ChildListPtr cl, unsigned long n);
+/**<
+ *  <!--  unsigned int ChildGetBooleans(cl,n)                          -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Return child number n current boolean flags.
  *  Children are numbered 1..ChildListLen(cl).
  *  If an improperly large or small n is given, result is 0.
  */
 
 #define ChildVisible(cl,n) ((ChildGetBooleans((cl),(n)) & CBF_VISIBLE)!=0)
-/**< 
- *  macro ChildVisible(clist,childnumber)
+/**<
+ *  <!--  macro ChildVisible(clist,childnumber)                        -->
  *  Returns 1 if child has visibility bit turned on.
  */
 
 #define ChildSupported(cl,n) ((ChildGetBooleans((cl),(n)) & CBF_SUPPORTED)!=0)
-/**< 
- *  macro ChildSupported(clist,childnumber)
+/**<
+ *  <!--  macro ChildSupported(clist,childnumber)                      -->
  *  Returns 1 if child has supported bit turned on.
  */
 
 #define ChildPassed(cl,n) ((ChildGetBooleans((cl),(n)) & CBF_PASSED) !=0)
-/**< 
- *  macro ChildSupported(clist,childnumber)
+/**<
+ *  <!--  macro ChildPassed(clist,childnumber)                      -->
  *  Returns 1 if child has PASSED bit turned on.
  */
 
-extern void ChildSetBoolean(ChildListPtr,unsigned long,unsigned,unsigned);
-/**< 
- *  void ChildSetBoolean(cl,n,cbfname,val)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
- *  unsigned int cbfname; as defined above by CBF_
- *  unsigned int val;   0 or 1 only.
+extern void ChildSetBoolean(ChildListPtr cl, unsigned long n,
+                            unsigned cbfname, unsigned val);
+/**<
+ *  <!--  void ChildSetBoolean(cl,n,cbfname,val)                       -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
+ *  <!--  unsigned int cbfname; as defined above by CBF_               -->
+ *  <!--  unsigned int val;   0 or 1 only.                             -->
  *  Set child number n current boolean flag bit cbfname to val.
  *  Children are numbered 1..ChildListLen(cl).
+ *  cbfname is a child boolean flag CBF_ defined above.
+ *  val is 0 or 1 only.
  */
 
 #define ChildHide(cl,n) ChildSetBoolean((cl),(n),CBF_VISIBLE,0)
-/**< 
- *  macro ChildHide(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+/**<
+ *  <!--  macro ChildHide(cl,n)                                        -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Hide (presumably for display purposes) the nth child in cl.
+ *  @param cl  CONST ChildListPtr*
+ *  @param n   unsigned long
  */
 
 #define ChildShow(cl,n) ChildSetBoolean((cl),(n),CBF_VISIBLE,1)
-/**< 
- *  macro ChildShow(cl,n)
- *  CONST ChildListPtr *cl;
- *  unsigned long n;
+/**<
+ *  <!--  macro ChildShow(cl,n)                                        -->
+ *  <!--  CONST ChildListPtr *cl;                                      -->
+ *  <!--  unsigned long n;                                             -->
  *  Unhide (presumably for display purposes) the nth child in cl.
+ *  @param cl CONST ChildListPtr
+ *  @param n  unsigned long
  */
 
-extern CONST struct TypeDescription *ChildBaseTypePtr(ChildListPtr,
-                                                      unsigned long);
-/**< 
- *  CONST struct TypeDescription *ChildBaseTypePtr(cl,n)
- *  CONST ChildListPtr cl;
- *  unsigned long n;
+extern CONST struct TypeDescription *ChildBaseTypePtr(ChildListPtr cl,
+                                                      unsigned long n);
+/**<
+ *  <!--  CONST struct TypeDescription *ChildBaseTypePtr(cl,n)         -->
+ *  <!--  CONST ChildListPtr cl;                                       -->
+ *  <!--  unsigned long n;                                             -->
  *  Return child number n type determinable at parse time.
  *  If type was not determinable, returns NULL, but this will never be
  *  the case as Something is always determinable.
@@ -317,18 +315,18 @@ extern CONST struct TypeDescription *ChildBaseTypePtr(ChildListPtr,
  *  with array base type info.
  *  If this pointer is not NULL, then any corresponding instance will
  *  be of at least the type returned.
- *  Children are numbered 1..ChildListLen(cl).
+ *  Children are numbered 1..ChildListLen(cl).<br><br>
  *
  *  Note: The children of atoms always return NULL type since they do
  *  not have type descriptions in the system because they are not full
  *  instances.
  */
 
-extern unsigned long ChildPos(ChildListPtr ,symchar *);
-/**< 
- *  unsigned long ChildPos(cl,s)
- *  CONST ChildListPtr cl;
- *  symchar *s;
+extern unsigned long ChildPos(ChildListPtr cl, symchar *s);
+/**<
+ *  <!--  unsigned long ChildPos(cl,s)                                 -->
+ *  <!--  CONST ChildListPtr cl;                                       -->
+ *  <!--  symchar *s;                                                  -->
  *  Search for the string s in child list cl.  If it is not found,
  *  it will return 0; otherwise, it returns the index of the child which
  *  matches s.
@@ -342,22 +340,24 @@ extern unsigned long ChildPos(ChildListPtr ,symchar *);
  *  If you need to guarantee s is in the table, call AddSymbol first.
  */
 
-extern int CompareChildLists(ChildListPtr,ChildListPtr,unsigned long *);
-/**< 
- * cmp = CompareChildLists(GetChildList(d1),GetChildList(d2),&diff);
- * struct TypeDescription *d1,*d2;
- * unsigned long int diff;
- * int cmp;
+extern int CompareChildLists(ChildListPtr cl, ChildListPtr c2, unsigned long *diff);
+/**<
+ * <!--  cmp = CompareChildLists(GetChildList(d1),GetChildList(d2),&dif-->f);
+ * <!--  struct TypeDescription *d1,*d2;                               -->
+ * <!--  unsigned long int diff;                                       -->
+ * <!--  int cmp;                                                      -->
  * Returns -1/0/1 as d1 <,==,> d2 (0). If cmp != 0, diff = position
  * in child list d2 of first difference, i.e. if the lists are m and n
  * long (m > n) and OTHERWISE equivalent, diff = n + 1.
  */
 
-extern void WriteChildList(FILE *,ChildListPtr);
-/**< 
- *  WriteChildList(fp,cl)
+extern void WriteChildList(FILE *fp, ChildListPtr cl);
+/**<
+ *  <!--  WriteChildList(fp,cl)                                        -->
  *  Write what is known at parse time about the children in the child list
  *  given.  What is known may be surprising. It may be only mildly
  *  accurate.
  */
-#endif /**< __CHILD_H_SEEN__ */
+
+#endif  /* __CHILD_H_SEEN__ */
+

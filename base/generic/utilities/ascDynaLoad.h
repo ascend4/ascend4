@@ -1,4 +1,4 @@
-/** 
+/*
  *  -----------------------------------------------------------------
  *    Copyright 1993 D.I.S. - Universita` di Pavia - Italy
  *  -----------------------------------------------------------------
@@ -23,14 +23,13 @@
  *  TION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-/** 
+/* ChangeLog
  * Small changes made by Michael Moore (mdm@cis.ohio-state.edu)
  * December 24th, 1993.
  * The tcl sections ripped out by Kirk Abbott (ka0p@edrc.cmu.edu)
  * September 3rd, 1994.
  * To date the architectures supported are:
- * sun 
+ * sun
  * osf,
  * solaris,
  * hpux
@@ -43,21 +42,22 @@
  * UnLoad alleged for sun, hp, sgi, and alpha/osf. It probably works
  * only as well as their dlclose and shl_unload do.
  */
-
-#ifndef __ASCDYNALOAD_H_SEEN__
-#define __ASCDYNALOAD_H_SEEN__
-/** use of this header requires
- * #include "utilities/ascConfig.h"
+
+/** @file
+ * use of this header requires
+ *        #include "utilities/ascConfig.h"
  */
 
+#ifndef __ASCDYNALOAD_H_SEEN__
+#define __ASCDYNALOAD_H_SEEN__
 
-/** 
- * error = Asc_DynamicLoad(path, initFun);
- * Returns 1 if fails to load the file named in path and find 
+/**
+ * <!--  error = Asc_DynamicLoad(path, initFun);                       -->
+ * Returns 1 if fails to load the file named in path and find
  * the symbol in initFun as an int function.
  * Otherwise returns the result of the call to initFun.
  * If initFun == NULL, calls nothing and returns 0 after opening
- * library.
+ * library.<br><br>
  *
  * This is our wrapping dlopen. It makes
  * provision for dynamic unloading.
@@ -65,49 +65,50 @@
  * scheduled to be removed without further ado, it can be unloaded
  * on most architectures.
  */
-extern int Asc_DynamicLoad(CONST char *,CONST char *);
+extern int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 
-/** 
- * error = DynamicLoad(path, initFun);
- * Returns 1 if fails to load the file named in path and find 
+/**
+ * <!--  error = DynamicLoad(path, initFun);                           -->
+ * Returns 1 if fails to load the file named in path and find
  * the symbol in initFun as an int function.
- * Otherwise returns the result of the call to initFun.
+ * Otherwise returns the result of the call to initFun.<br><br>
  *
  * This is the standard function wrapping dlopen. It makes no
  * provision for dynamic unloading, and therefore should not
  * be used very often.
  */
-extern int DynamicLoad(CONST char *, CONST char *);
-/** 
+extern int DynamicLoad(CONST char *path, CONST char *initFunc);
+/*
  * note on some systems (ultrix) this header hides a lot of non-static
- * function names which don't appear terribly
- * standard.
+ * function names which don't appear terribly standard.
  */
 
 /** 
- * Asc_DynamicUnLoad(path);
+ * <!--  Asc_DynamicUnLoad(path);                                      -->
  * Attempts to find our record of loading a module of the same
- * path and unload it. 
+ * path and unload it. <br><br>
  *
  * This is our wrapping dlclose. It provides unloading.
  * Once all references to the previously loaded library have been
  * scheduled to be removed without further ado, it can be unloaded
  * on most architectures. Once you call this function, you damn
  * well better not reference functions or data that came from
- * the path given.
+ * the path given.<br><br>
  *
  * returns the output of dlclose (shl_unload) or -3 if confused.
  */
-extern int Asc_DynamicUnLoad(CONST char *);
+extern int Asc_DynamicUnLoad(CONST char *path);
 
 /** 
- * yourFuncOrVar = (YOURCAST)Asc_DynamicSymbol(libraryname,symbolname);
- * rPtr =
- *  (double (*)(double *, double *))Asc_DynamicSymbol("lib.dll","calc");
- * returns you a pointer to a symbol exported from the dynamically
+ * <!-- yourFuncOrVar = (YOURCAST)Asc_DynamicSymbol(libraryname,symbolname);  -->
+ * <!-- rPtr =                                                                -->
+ * <!--  (double (*)(double *, double *))Asc_DynamicSymbol("lib.dll","calc"); -->
+ * Returns you a pointer to a symbol exported from the dynamically
  * linked library named, if the library is loaded and the
  * symbol can be found in it.
  */
-extern void *Asc_DynamicSymbol(CONST char *, CONST char *);
+extern void *Asc_DynamicSymbol(CONST char *libraryname, 
+                               CONST char *symbolname);
 
-#endif /** __ASCDYNALOAD_H_SEEN__ */
+#endif /* __ASCDYNALOAD_H_SEEN__ */
+

@@ -1,6 +1,6 @@
-/** 
+/*
  *  watchpt.h: An API to ascend methods
- *  by Benjamin Allan
+ *  by Benjamin Allan                          
  *  March 17, 1998
  *  Part of ASCEND
  *  Version: $Revision: 1.2 $
@@ -29,39 +29,42 @@
  *  the file named COPYING.
  */
 
-/** An API to
- * ascend methods via an interactive or external interface
- * without knowing about ascend compiler internals.
- */
-
-/** 
- * requires general/list.h, compiler/instance_enum.h
+/** @file
+ *  An API to
+ *  ascend methods via an interactive or external interface
+ *  without knowing about ascend compiler internals.
+ *  <pre>
+ *  When #including watchpt.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "general/list.h"
+ *         #include "compiler/instance_enum.h"
+ *  </pre>
  */
 
 #ifndef __WATCHPT_H_SEEN__
 #define __WATCHPT_H_SEEN__
 
-/** this is the most iterations in a WHILE loop we will tolerate.
- * This limit should go away and a user interrupt facility should be
- * installed instead.
+/** 
+ * The most iterations in a WHILE loop we will tolerate.
+ * @todo This limit should go away and a user interrupt facility 
+ *       should be installed instead.
  */
 #define WP_MAXTRIPS 100000
 
 /** 
  * This is the ErrNo listing of method execution.
+ * External binary package calls should return these, probably
+ * by stuffing a pointer. Proc_Call* should line up with the
+ * tcl convention mainly for convenience.
  */
 enum Proc_enum {
   Proc_all_ok = -1,
-  /** external binary package calls should return these, probably
-   * by stuffing a pointer. Proc_Call* should line up with the
-   * tcl convention mainly for convenience.
-   */
   Proc_CallOK,
-  Proc_CallError,	/** error occured in call */
-  Proc_CallReturn,	/** request that caller return. we may ignore it */
-  Proc_CallBreak,	/** break out of enclosing loop, if any */
-  Proc_CallContinue,	/** skip to next iteration of loop if any */
-  /** ascend loop control signals;
+  Proc_CallError,     /** error occured in call */
+  Proc_CallReturn,    /** request that caller return. we may ignore it */
+  Proc_CallBreak,     /** break out of enclosing loop, if any */
+  Proc_CallContinue,  /** skip to next iteration of loop if any */
+  /* ascend loop control signals;
    * these do not affect implicit assignment loops.
    */
   Proc_break,
@@ -73,7 +76,7 @@ enum Proc_enum {
   Proc_stack_exceeded_this_frame,
   Proc_case_matched,
   Proc_case_unmatched,
-  /** ascend errors */
+  /* ascend errors */
   Proc_case_undefined_value,
   Proc_case_boolean_mismatch,
   Proc_case_integer_mismatch,
@@ -108,8 +111,8 @@ enum Proc_enum {
   Proc_user_interrupt,
   Proc_infinite_loop,
   Proc_declarative_constant_assignment,
-  Proc_nonsense_assignment, /** bogus*/
-  Proc_nonconsistent_assignment, /** inconsistent */
+  Proc_nonsense_assignment,       /** bogus*/
+  Proc_nonconsistent_assignment,  /** inconsistent */
   Proc_nonatom_assignment,
   Proc_nonboolean_assignment,
   Proc_noninteger_assignment,
@@ -120,123 +123,137 @@ enum Proc_enum {
   Proc_unknown_error
 };
 
-/** 
+/**
  * Debugging information.
  */
-
 enum wpdest {
-  wp_err,	/** screw up. */
-  wp_log,	/** output to go to a log file */
-  wp_ui,	/** output to go to the ui-defined output */
-  wp_both	/** output to go both log and ui */
+  wp_err,   /** screw up. */
+  wp_log,   /** output to go to a log file */
+  wp_ui,    /** output to go to the ui-defined output */
+  wp_both   /** output to go both log and ui */
 };
 
+/** watchlist data structur. */
 typedef struct gl_list_t watchlist;
 
-/** unsigned int assumed to be >= 32 bit. i/o and memory control. */
+/** Unsigned int assumed to be >= 32 bit. i/o and memory control. */
 typedef unsigned int wpflags;
 
-/** 
+/*
  * Define boolean debug i/o options. watchpoint info wpflags.
  */
-#define WP_EVERYTHING 0xFFFFFFFF /** really dumb thing to set. most possible */
-/** wpeverything can be used to mask off high bits of a long if needed. */
-#define WP_STOPONERR    0x1	/** stop on errors */
-#define WP_BTUIFSTOP    0x4	/** print backtrace to UI file on stopping */
-#define WP_BTLOGSTOP    0x8	/** print backtrace to log on stopping */
-#define WP_LOGEXT      0x10	/** print external calls/returns to log */
-#define WP_UIFEXT      0x20	/** print external calls/returns to UI file */
-#define WP_LOGCOMP     0x40	/** print con/destructor calls to log */
-#define WP_UIFCOMP     0x80	/** print con/destructor calls to UI file */
-#define WP_LOGMULCALL 0x100	/** print recalls of any proc/context to log */
-#define WP_UIFMULCALL 0x200	/** print recalls of any proc/context to UI */
-#define WP_LOGMULASGN 0x400	/** print reassignments of any var to log */
-#define WP_UIFMULASGN 0x800	/** print reassignments of any var to UI */
-/** empty middle bits 0x1000-0x8000 */
-/** Add others in the empty middle bits. high bits are not for UI consumption. */
-/** specific flags not for use by UI clients */
-#define WP_RESERVED 0xFFFF0000  /** internally computed bits affecting memory. */
-#define WP_LOGPROC     0x10000	/** print method entries/returns to log */
-#define WP_UIFPROC     0x20000	/** print method entries/returns to UI file */
-#define WP_LOGSTAT     0x40000	/** print statement record to log */
-#define WP_UIFSTAT     0x80000	/** print statement record to UI file */
-#define WP_LOGVAR     0x100000	/** print specific instance assignments to log */
-#define WP_UIFVAR     0x200000	/** print specific instance assignments to UI */
-#define WP_LOGTYPE    0x400000	/** print assignment to vars of type to log */
-#define WP_UIFTYPE    0x800000	/** print assignment of vars of type to UI */
-#define WP_NAMEWATCH 0x1000000	/** name watches are defined */
-#define WP_PROCWATCH 0x2000000	/** proc watches are defined */
-#define WP_STATWATCH 0x4000000	/** stat watches are defined */
-#define WP_TYPEWATCH 0x8000000	/** type watches are defined */
-#define WP_VARSWATCH 0x10000000	/** single var watches are defined */
-#define WP_LOGNAME   0x20000000	/** print leaf name assignments to log */
-#define WP_UIFNAME   0x40000000	/** print leaf name assignments to UI */
-/** there is no UI call to set DEBUGWATCH. you have to do it from
+#define WP_EVERYTHING 0xFFFFFFFF  /**< really dumb thing to set. most possible
+                                       wpeverything can be used to mask off
+                                       high bits of a long if needed. */
+#define WP_STOPONERR    0x1   /**< stop on errors */
+#define WP_BTUIFSTOP    0x4   /**< print backtrace to UI file on stopping */
+#define WP_BTLOGSTOP    0x8   /**< print backtrace to log on stopping */
+#define WP_LOGEXT      0x10   /**< print external calls/returns to log */
+#define WP_UIFEXT      0x20   /**< print external calls/returns to UI file */
+#define WP_LOGCOMP     0x40   /**< print con/destructor calls to log */
+#define WP_UIFCOMP     0x80   /**< print con/destructor calls to UI file */
+#define WP_LOGMULCALL 0x100   /**< print recalls of any proc/context to log */
+#define WP_UIFMULCALL 0x200   /**< print recalls of any proc/context to UI */
+#define WP_LOGMULASGN 0x400   /**< print reassignments of any var to log */
+#define WP_UIFMULASGN 0x800   /**< print reassignments of any var to UI */
+/* empty middle bits 0x1000-0x8000 */
+/* Add others in the empty middle bits. high bits are not for UI consumption. */
+/* specific flags not for use by UI clients */
+#define WP_RESERVED 0xFFFF0000  /**< internally computed bits affecting memory. */
+#define WP_LOGPROC     0x10000  /**< print method entries/returns to log */
+#define WP_UIFPROC     0x20000  /**< print method entries/returns to UI file */
+#define WP_LOGSTAT     0x40000  /**< print statement record to log */
+#define WP_UIFSTAT     0x80000  /**< print statement record to UI file */
+#define WP_LOGVAR     0x100000  /**< print specific instance assignments to log */
+#define WP_UIFVAR     0x200000  /**< print specific instance assignments to UI */
+#define WP_LOGTYPE    0x400000  /**< print assignment to vars of type to log */
+#define WP_UIFTYPE    0x800000  /**< print assignment of vars of type to UI */
+#define WP_NAMEWATCH 0x1000000  /**< name watches are defined */
+#define WP_PROCWATCH 0x2000000  /**< proc watches are defined */
+#define WP_STATWATCH 0x4000000  /**< stat watches are defined */
+#define WP_TYPEWATCH 0x8000000  /**< type watches are defined */
+#define WP_VARSWATCH 0x10000000 /**< single var watches are defined */
+#define WP_LOGNAME   0x20000000 /**< print leaf name assignments to log */
+#define WP_UIFNAME   0x40000000 /**< print leaf name assignments to UI */
+/* there is no UI call to set DEBUGWATCH. you have to do it from
  * a debugger inside proctype.c!
  */
-#define WP_DEBUGWATCH 0x80000000 /** if set, Asc_wp_stop_here activated */
+#define WP_DEBUGWATCH 0x80000000  /**< if set, Asc_wp_stop_here activated */
 
 
-/** 
+/**
  * This function sets the value of a global interrupt flag.
  * 0 is the normal running value.
  * Set it to 1 to stop as soon as safe.
  * It is automagically reset to 0 when the interpreter receives
- * the message.
+ * the message.<br><br>
  *
  * This value may or may not have an interrupt effect on any external
  * packages being called from ascend methods.
  */
-extern void Asc_SetMethodUserInterrupt(int);
+extern void Asc_SetMethodUserInterrupt(int value);
 
 
-/** return a watchlist *wl of size n.
- * wl = Asc_CreateWatchList(size);
+/** 
+ * <!--  wl = Asc_CreateWatchList(size);                               -->
+ * Return a watchlist *wl of size n.
  * Adding more entries to the list than anticipated at creation is ok.
  */
 #define Asc_CreateWatchList(n) (gl_create(n))
 
-/** Add a local name of var to watch for assignments to wl.
- * Asc_WatchLeafName(wl,leafname,output);
+/** 
+ * <!--  Asc_WatchLeafName(wl,leafname,output);                        -->
+ * Add a local name of var to watch for assignments to wl.
  * E.g. to watch all things named T being assigned via
  * that name, Asc_WatchLeafName(wl,"T",wp_log);
  */
-extern int Asc_WatchLeafName(watchlist *, char *, enum wpdest);
+extern int Asc_WatchLeafName(watchlist *wl, 
+                             char *leafname,
+                             enum wpdest output);
 
-/** Add a method named in type named to watch for execution to wl.
- * Asc_WatchProc(wl,typename,procname,output);
+/** 
+ * <!--  Asc_WatchProc(wl,typename,procname,output);                   -->
+ * Add a method named in type named to watch for execution to wl.
  * E.g. to watch all things named T being assigned via
  * that name, Asc_WatchProc(wl,"column","scale",wp_log);
  */
-extern int Asc_WatchProc(watchlist *, char *, char *, enum wpdest);
-
-/** Add a variable instance to watch for assignments to the watchlist.
- * Asc_WatchInstance(wl,i,dest);
- */
-extern int Asc_WatchInstance(watchlist *, struct Instance *, enum wpdest);
-
-/** Add a statement to watch for execution to the watchlist.
- * Asc_WatchStat(wl,modulename,linenum,dest);
- */
-extern int Asc_WatchStat(watchlist *, char *, int, enum wpdest);
-
-/** Add a type of var to watch for assignments to the watchlist.
- * Asc_WatchType(wl,typename);
- */
-extern int Asc_WatchType(watchlist *, char *, enum wpdest);
-
-/** Add a type of var to watch for assignments of to the watchlist.
- * Asc_WatchRefinements(wl,typename);
- * type and all its refinements are watched.
- */
-extern int Asc_WatchRefinements(watchlist *, char *, enum wpdest);
+extern int Asc_WatchProc(watchlist *wl, char *typename,
+                         char *procname, enum wpdest output);
 
 /** 
- * specify boolean flags for general watchpoint options
- * not requiring specific data.
- * Calls to WatchGeneral are cumulative on a watchlist.
+ * <!--  Asc_WatchInstance(wl,i,dest);                                 -->
+ * Add a variable instance to watch for assignments to the watchlist.
  */
-extern int Asc_WatchGeneral(watchlist *, wpflags);
+extern int Asc_WatchInstance(watchlist *wl,
+                             struct Instance *i,
+                             enum wpdest dest);
+
+/** 
+ * <!--  Asc_WatchStat(wl,modulename,linenum,dest);                    -->
+ * Add a statement to watch for execution to the watchlist.
+ */
+extern int Asc_WatchStat(watchlist *wl, char *modulename,
+                         int linenum, enum wpdest dest);
+
+/** 
+ * <!--  Asc_WatchType(wl,typename);                                   -->
+ * Add a type of var to watch for assignments to the watchlist.
+ */
+extern int Asc_WatchType(watchlist *wl, char *typename, enum wpdest dest);
+
+/** 
+ * <!--  Asc_WatchRefinements(wl,typename);                            -->
+ * Add a type of var to watch for assignments of to the watchlist.
+ * type and all its refinements are watched.
+ */
+extern int Asc_WatchRefinements(watchlist *wl, char *typename, enum wpdest dest);
+
+/**
+ * Specify boolean flags for general watchpoint options
+ * not requiring specific data.
+ * Calls to Asc_WatchGeneral() are cumulative on a watchlist.
+ */
+extern int Asc_WatchGeneral(watchlist *wl, wpflags flags);
 
 /** macros to watch for redundant method calls generally */
 #define Asc_LogRedundantCalls(wl) \
@@ -246,55 +263,55 @@ extern int Asc_WatchGeneral(watchlist *, wpflags);
 #define Asc_RedundantCalls(wl) \
   Asc_WatchGeneral((wl),(WP_UIFMULCALL|WP_LOGMULCALL))
 
-/** Other macros are not defined. the 3 above are designed
+/* Other macros are not defined. the 3 above are designed
  * to give ui programmers the general idea for using wpflags.
  */
 
-/** 
+/*
  * The following functions are called whenever a watch point is hit,
  * so that C debuggers can put a breakpoint at ascend watched events.
  */
 
-/** 
- * Asc_wp_stop_here is called for every watch point event,
+/**
+ * Asc_wp_stop_here() is called for every watch point event,
  * if the controlling frame wpflags WP_DEBUGWATCH is set.
  * It calls also one or more of the following more specific
  * functions according to the wpflags value given.
  * Normally returns 0. If returns 1, the ascend method
  * being evaluated should return up the stack.
  * The only way for this function to return nonzero is to
- * be manually instructed so by something like gdb.
+ * be manually instructed so by something like gdb.<br><br>
  *
  * When more than one of the specific functions applies,
  * all will be hit approximately in order of increasing specificity.
  */
-extern int Asc_wp_stop_here(wpflags);
+extern int Asc_wp_stop_here(wpflags flags);
 
-/** called when an external call is scheduled. */
+/** Called when an external call is scheduled. */
 extern void Asc_wp_stop_external(void);
 
-/** called when a watched leaf name instance is assigned */
+/** Called when a watched leaf name instance is assigned. */
 extern void Asc_wp_stop_name(void);
 
-/** called when a watched proc is entered */
+/** Called when a watched proc is entered. */
 extern void Asc_wp_stop_proc(void);
 
-/** called when a named statement is scheduled */
+/** Called when a named statement is scheduled. */
 extern void Asc_wp_stop_stat(void);
 
-/** called when a var of watched type is assigned */
+/** Called when a var of watched type is assigned. */
 extern void Asc_wp_stop_type(void);
 
-/** called when a named instance is assigned */
+/** Called when a named instance is assigned. */
 extern void Asc_wp_stop_var(void);
 
-/** called when a var is reassigned */
+/** Called when a var is reassigned. */
 extern void Asc_wp_stop_reassign(void);
 
-/** called when a method is recalled on the same instance */
+/** Called when a method is recalled on the same instance. */
 extern void Asc_wp_stop_recall(void);
 
-/** called when a constructor/destroyer is scheduled */
+/** Called when a constructor/destroyer is scheduled. */
 extern void Asc_wp_stop_compiler(void);
 
-#endif /** __WATCHPT_H_SEEN__ */
+#endif /* __WATCHPT_H_SEEN__ */

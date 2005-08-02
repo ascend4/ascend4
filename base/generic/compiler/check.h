@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Instance Checking Routines
  *  by Tom Epperly
  *  Created: 5/4/1990
@@ -27,64 +27,65 @@
  *  COPYING.
  */
 
-/**< 
+/** @file
+ *  Instance Checking Routines.
+ *  <pre>
  *  When #including check.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
  *         #include "instance_enum.h"
  *         #include "compiler.h"
+ *  </pre>
  */
-
 
 #ifndef __CHECK_H_SEEN__
 #define __CHECK_H_SEEN__
-/**< requires
- *# #include<stdio.h>
- *# #include"compiler.h"
- *# #include"instance_enum.h"
- */
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
-extern void CheckInstanceLevel(FILE *,CONST struct Instance *,int);
-/**< 
- *  void CheckInstanceLevel(f,i,pass)
- *  FILE *f;
- *  const struct Instance *i;
- *  int pass;
+extern void CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);
+/**<
+ *  <!--  void CheckInstanceLevel(f,i,pass)                            -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Instance *i;                                    -->
+ *  <!--  int pass;                                                    -->
  *  Perform all the possible consistency checks possible, and check for
  *  as many errors as possible.  This won't modify anything.
  *  The value of pass determines which pending statements will be
  *  printed.
- *  pass == 0: do not print pendings.
- *  pass == 1: IS_As and other constructors only.
- *  pass == 2: relations also
- *  pass == 3: logical relations also
- *  pass == 4: whens also
- *  pass == 5: defaults also
+ *  pass == 0: do not print pendings             <br>
+ *  pass == 1: IS_As and other constructors only <br>
+ *  pass == 2: relations also                    <br>
+ *  pass == 3: logical relations also            <br>
+ *  pass == 4: whens also                        <br>
+ *  pass == 5: defaults also                     <br>
  */
 
-extern void CheckInstanceStructure(FILE *,CONST struct Instance *);
-/**< 
- *  void CheckInstanceStructure(f,i)
- *  FILE *f;
- *  const struct Instance *i;
+extern void CheckInstanceStructure(FILE *f, CONST struct Instance *i);
+/**<
+ *  <!--  void CheckInstanceStructure(f,i)                             -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Instance *i;                                    -->
  *  Perform popular consistency checks possible, and check for
  *  as many errors as possible.  This won't modify anything.
  *  This doesn't warn about unassigned real constants, basically.
  */
 
-extern void InstanceTokenStatistics(FILE *, CONST struct Instance *);
-/**< 
- *  void InstanceTokenStatistics(f,i)
- *  FILE *f;
- *  const struct Instance *i;
+extern void InstanceTokenStatistics(FILE *f, CONST struct Instance *i);
+/**<
+ *  <!--  void InstanceTokenStatistics(f,i)                            -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Instance *i;                                    -->
  *  This compiles and prints various token relation statistics for
  *  this instance tree.
  */
 
-extern void InstanceStatistics(FILE *, CONST struct Instance *);
-/**< 
- *  void InstanceStatistics(f,i)
- *  FILE *f;
- *  const struct Instance *i;
+extern void InstanceStatistics(FILE *f, CONST struct Instance *i);
+/**<
+ *  <!--  void InstanceStatistics(f,i)                                 -->
+ *  <!--  FILE *f;                                                     -->
+ *  <!--  const struct Instance *i;                                    -->
  *  This compiles and prints various statistics about this instance tree.
  */
-#endif /**< __CHECK_H_SEEN__ */
+
+#endif  /* __CHECK_H_SEEN__ */
+

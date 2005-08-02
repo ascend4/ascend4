@@ -1,4 +1,4 @@
-/**< 
+/*
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -29,42 +29,48 @@
  *  COPYING is found in ../compiler.
  */
 
-/***************************************************************************
- ***  Contents:     Slv module
- ***
- ***  Authors:      Karl Westerberg
- ***                Joseph Zaher
- ***
- ***  Dates:        06/90 - original version
- ***                04/91 - fine tuned modified marquadt computation,
- ***                        provided minor iterations for step generation
- ***                        within each major iteration of jacobian
- ***                        updates
- ***                06/93 - eliminated pointer sublists being generated
- ***                        at the beginning of each block
- ***                04/94 - extended scope to equality constrained
- ***                        optimization.
- ***
- ***  Description:  This file is created by make_slv_header, so don't
- ***                modify it yourself.  All functions defined in this
- ***                header have identical protocols to the corresponding
- ***                functions in slv.h except that slv_system_t ==>
- ***                slv0_system_t and slv0_eligible_solver() only takes one
- ***                parameter: the system.  Note also that the select
- ***                solver functions don't exist.
- ***************************************************************************/
+/** @file
+ *  Slv solver registration module.
+ *  <pre>
+ *  Contents:     Slv module
+ *
+ *  Authors:      Karl Westerberg
+ *                Joseph Zaher
+ *
+ *  Dates:        06/90 - original version
+ *                04/91 - fine tuned modified marquadt computation,
+ *                        provided minor iterations for step generation
+ *                        within each major iteration of jacobian
+ *                        updates
+ *                06/93 - eliminated pointer sublists being generated
+ *                        at the beginning of each block
+ *                04/94 - extended scope to equality constrained
+ *                        optimization.
+ *
+ *  Description:  This file is created by make_slv_header, so don't
+ *                modify it yourself.  All functions defined in this
+ *                header have identical protocols to the corresponding
+ *                functions in slv.h except that slv_system_t ==>
+ *                slv0_system_t and slv0_eligible_solver() only takes one
+ *                parameter: the system.  Note also that the select
+ *                solver functions don't exist.
+ *
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "slv_client.h"
+ *  </pre>
+ */
+
 #ifndef slv0__already_included
 #define slv0__already_included
 
-/**< requires #include "slv_client.h" */
-
 typedef struct slv0_system_structure *slv0_system_t;
 
-int slv0_register(SlvFunctionsT *);
-/**********************************************************************\
-  This is the function that tells the system about the QRSlv solver.
-  Our index is not necessarily going to be 0. That everything here is
-  named slv0* is just a historical event.
-\**********************************************************************/
+int slv0_register(SlvFunctionsT *sft);
+/**<
+ *  This is the function that tells the system about the QRSlv solver.
+ *  Our index is not necessarily going to be 0. That everything here is
+ *  named slv0* is just a historical event.
+ */
      
-#endif
+#endif  /* slv0__already_included */
+

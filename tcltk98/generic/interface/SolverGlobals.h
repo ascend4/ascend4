@@ -27,6 +27,19 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Global variables used to maintain a single global solver system.
+ *  This is bad.
+ *  The storage of these variables is in SolverProc.c.
+ *  <pre>
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "solver/slv_client.h"
+ *                #include "compiler/instance_enum.h"
+ *  </pre>
+ *  @todo If this is really bad, rework it.
+ *  @todo Complete documentation of interface/SolverGlobals.h.
+ */
+
 #ifndef SolverGlobals_module_loaded
 #define SolverGlobals_module_loaded
 
@@ -36,9 +49,12 @@
  * This is bad.
  * The storage of these variables is in SolverProc.c.
  */
-extern int g_solvinst_ndx, g_solvinst_limit;
-extern slv_system_t g_browsys_cur, g_solvsys_cur;
-extern struct Instance *g_solvinst_root;      /* solver root instance */
-extern struct Instance *g_solvinst_cur;       /* solver current instance */
+extern int g_solvinst_ndx;
+extern int g_solvinst_limit;
+extern slv_system_t g_browsys_cur;
+extern slv_system_t g_solvsys_cur;
+extern struct Instance *g_solvinst_root;    /**< solver root instance */
+extern struct Instance *g_solvinst_cur;     /**< solver current instance */
 
-#endif /* SolverGlobals_module_loaded */
+#endif  /* SolverGlobals_module_loaded */
+

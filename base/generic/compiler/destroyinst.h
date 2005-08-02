@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Ascend Instance Tree Killing
  *  by Tom Epperly
  *  8/16/89
@@ -28,29 +28,33 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  */
+
+/** @file
+ *  Ascend Instance Tree Killing.
+ *  <pre>
+ *  When #including destroyinst.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
+ */
+
 #ifndef __DESTROYINST_H_SEEN__
 #define __DESTROYINST_H_SEEN__
 
-
-/**< 
- *  When #including destroyinst.h, make sure these files are #included first:
- *         #include "instance_enum.h"
- */
-
-
-extern void DestroyInstance(struct Instance *,struct Instance *);
-/**< 
- *  void DestroyInstance(inst,parent)
- *  struct Instance *inst,*parent;
+extern void DestroyInstance(struct Instance *inst, struct Instance *parent);
+/**<
  *  If parent is NULL, this will destroy all references to inst and deallocate
  *  the memory associated with inst.  It will delete inst's reference to its
  *  children.  If parent is not NULL, this will destroy parent's reference
  *  to inst.  If this is the only reference to inst, it will deallocate the
- *  memory associated with inst.
+ *  memory associated with inst.<br><br>
  *
  *  DestroyInstance will modify the parent's of inst to remove the reference.
  */
+/*
+ *  void DestroyInstance(inst,parent)
+ *  struct Instance *inst,*parent;
+ */
 
+#endif  /* __DESTROYINST_H_SEEN__ */
 
-#endif
-/**< __DESTROYINST_H_SEEN__ */

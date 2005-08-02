@@ -27,23 +27,25 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Main Tcl/Tk Driver (no GUI version).
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef _DRIVER_NO_GUI_H
 #define _DRIVER_NO_GUI_H
 
-
-/*
- *  g_compiler_timing
+/**
+ *  <!--  g_compiler_timing                                            -->
  *
  *  TRUE if compiler timing is to be printed.
  *  default is false, set to TRUE by passing -t on the command line
  */
 extern int g_compiler_timing;
 
-
 #endif /* _DRIVER_NO_GUI_H  */
-
-
-
-
-
 

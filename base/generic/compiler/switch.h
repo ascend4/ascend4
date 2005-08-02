@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  SWITCH List Routines
  *  by Vicente Rico-Ramirez
  *  Version: $Revision: 1.3 $
@@ -24,55 +24,68 @@
  *  with the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
+
+/** @file
+ *  SWITCH List Routines.
+ *  <pre>
+ *  When #including switch.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler.h"
+ *         #include "sets.h"
+ *         #include "exprs.h"
+ *         #include "bit.h"
+ *         #include "stattypes.h"
+ *  </pre>
+ */
+
 #ifndef __SWITCH_H_SEEN__
 #define __SWITCH_H_SEEN__
 
-/**< requires
-# #include"compiler.h"
-# #include"sets.h"
-# #include"exprs.h"
-# #include"bit.h"
-# #include"stattypes.h"
-*/
-
-extern struct SwitchList *CreateSwitch(struct Set *,struct StatementList *);
-/**< 
- *  struct SwitchList *CreateSwitch(set,sl)
- *  struct Set *set;
- *  struct StatementList *sl;
+extern struct SwitchList *CreateSwitch(struct Set *set, struct StatementList *sl);
+/**<
+ *  <!--  struct SwitchList *CreateSwitch(set,sl)                      -->
+ *  <!--  struct Set *set;                                             -->
+ *  <!--  struct StatementList *sl;                                    -->
  *  Create a Switch node.  This will examine the set data structure which
  *  must contain constant boolean expressions, symbols values or integer
  *  values. If set = NULL, this indicates an OTHERWISE case.
  */
 
-extern struct SwitchList *ReverseSwitchCases(struct SwitchList *);
-/**< 
- *  struct SwitchList *ReverseSwitchCases(sw)
- *  struct SwitchList *sw;
+extern struct SwitchList *ReverseSwitchCases(struct SwitchList *sw);
+/**<
+ *  <!--  struct SwitchList *ReverseSwitchCases(sw)                    -->
+ *  <!--  struct SwitchList *sw;                                       -->
  *  Reverse this list.
  */
 
-extern struct SwitchList *LinkSwitchCases(struct SwitchList *,
-                                          struct SwitchList *);
-/**< 
- *  struct SwitchList *LinkSwitchCases(sw1,sw2)
- *  struct SwitchList *sw1,*sw2;
+extern struct SwitchList *LinkSwitchCases(struct SwitchList *sw1,
+                                          struct SwitchList *sw2);
+/**<
+ *  <!--  struct SwitchList *LinkSwitchCases(sw1,sw2)                  -->
+ *  <!--  struct SwitchList *sw1,*sw2;                                 -->
  *  Link two case lists and return the joined list.  This works best when
  *  sw1 is a one element list.
  */
-
 
 #ifdef NDEBUG
 #define NextSwitchCase(sw) ((sw)->next)
 #else
 #define NextSwitchCase(sw) NextSwitchCaseF(sw)
 #endif
-extern struct SwitchList *NextSwitchCaseF(struct SwitchList *);
-/**< 
- *  macro NextSwitchCase(case)
- *  struct SwitchList *NextSwitchCaseF(case)
- *  struct SwitchList *case;
+/**<
  *  Return the next case.
+ *  @param sw struct SwitchList*, the list to query.
+ *  @return The next case as a struct SwitchList*.
+ *  @see NextSwitchCaseF()
+ */
+extern struct SwitchList *NextSwitchCaseF(struct SwitchList *cs);
+/**<
+ *  <!--  macro NextSwitchCase(cs)                                     -->
+ *  <!--  struct SwitchList *NextSwitchCaseF(cs)                       -->
+ *  <!--  struct SwitchList *cs;                                       -->
+ *  <!--  Return the next case.                                        -->
+ *  Implementation function for NextSwitchCase().  Do not call this
+ *  function directly - use NextSwitchCase() instead.
  */
 
 #ifdef NDEBUG
@@ -80,13 +93,22 @@ extern struct SwitchList *NextSwitchCaseF(struct SwitchList *);
 #else
 #define SwitchSetList(sw) SwitchSetListF(sw)
 #endif
-extern struct Set *SwitchSetListF(struct SwitchList *);
-/**< 
- *  macro SwitchSetList(sw)
- *  struct Set *SwitchSetListF(sw)
- *  const struct SwitchList *sw;
+/**<
  *  This will return the set list part of a SwitchList structure. When
  *  the set is NULL, this indicates an OTHERWISE case.
+ *  @param sw struct SwitchList*, the list to query.
+ *  @return The list as a struct Set*.
+ *  @see SwitchSetListF()
+ */
+extern struct Set *SwitchSetListF(struct SwitchList *sw);
+/**<
+ *  <!--  macro SwitchSetList(sw)                                      -->
+ *  <!--  struct Set *SwitchSetListF(sw)                               -->
+ *  <!--  const struct SwitchList *sw;                                 -->
+ *  <!--  This will return the set list part of a SwitchList structure. -->
+ *  <!--  When the set is NULL, this indicates an OTHERWISE case.      -->
+ *  Implementation function for SwitchSetList().  Do not call this
+ *  function directly - use SwitchSetList() instead.
  */
 
 #ifdef NDEBUG
@@ -94,42 +116,49 @@ extern struct Set *SwitchSetListF(struct SwitchList *);
 #else
 #define SwitchStatementList(sw) SwitchStatementListF(sw)
 #endif
-extern struct StatementList *SwitchStatementListF(struct SwitchList *);
-/**< 
- *  macro SwitchStatementList(sw)
- *  const struct StatementList *SwitchStatementListF(sw)
- *  const struct SwitchList *sw;
+/**<
  *  Return the statement list.
+ *  @param sw struct SwitchList*, the list to query.
+ *  @return The list as a struct StatementList*.
+ *  @see SwitchStatementListF()
+ */
+extern struct StatementList *SwitchStatementListF(struct SwitchList *sw);
+/**<
+ *  <!--  macro SwitchStatementList(sw)                                -->
+ *  <!--  const struct StatementList *SwitchStatementListF(sw)         -->
+ *  <!--  const struct SwitchList *sw;                                 -->
+ *  <!--  Return the statement list.                                   -->
+ *  Implementation function for SwitchStatementList().  Do not call this
+ *  function directly - use SwitchStatementList() instead.
  */
 
-extern void DestroySwitchList(struct SwitchList *);
+extern void DestroySwitchList(struct SwitchList *sw);
 /**< 
- *  void DestroySwitchList(sw)
- *  struct SwitchList *sw;
+ *  <!--  void DestroySwitchList(sw)                                   -->
+ *  <!--  struct SwitchList *sw;                                       -->
  *  Destroy a whole list.
  */
 
-extern void DestroySwitchNode(struct SwitchList *);
+extern void DestroySwitchNode(struct SwitchList *sw);
 /**< 
- *  void DestroySwitchNode(sw)
- *  struct SwitchList *sw;
+ *  <!--  void DestroySwitchNode(sw)                                   -->
+ *  <!--  struct SwitchList *sw;                                       -->
  *  Destroy just this node.
  */
 
-extern struct SwitchList *CopySwitchNode(struct SwitchList *);
+extern struct SwitchList *CopySwitchNode(struct SwitchList *sw);
 /**< 
- *  struct SwitchList *CopySwitchNode(sw)
- *  struct SwitchList *sw;
+ *  <!--  struct SwitchList *CopySwitchNode(sw)                        -->
+ *  <!--  struct SwitchList *sw;                                       -->
  *  Copy a case.  The next attribute is initialized to NULL.
  */
 
-extern struct SwitchList *CopySwitchList(struct SwitchList *);
+extern struct SwitchList *CopySwitchList(struct SwitchList *sw);
 /**< 
- *  struct SwitchList *CopySwitchList(sw)
- *  struct SwitchList *sw;
+ *  <!--  struct SwitchList *CopySwitchList(sw)                        -->
+ *  <!--  struct SwitchList *sw;                                       -->
  *  Copy the whole list content. not a reference count change.
  */
-#endif /**< __SWITCH_H_SEEN__ */
 
-
+#endif  /* __SWITCH_H_SEEN__ */
 

@@ -29,18 +29,32 @@
  *  the file named COPYING.
  */
 
+/** @file
+ *  Variable clearing routines.
+ *  <pre>
+ *  When #including ascFreeAllVars.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler/instance_enum.h"
+ *         #include "compiler/compiler.h"
+ *         #include "general/list.h"
+ *         #include "compiler/extfunc.h"
+ *  </pre>
+ */
+
 #ifndef __FREE_ALL_VARS_H_SEEN__
 #define __FREE_ALL_VARS_H_SEEN__
 
-extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *);
+extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *i);
 /**< Asc_ClearVarsInTree(i).
  * A service routine which assumes a solver_var modeling world
  * and clears (set var.fixed := FALSE) all var and refinements
  * of var in the DAG rooted at i.
  */
 
-extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *, struct Instance *,
-                                    struct gl_list_t *, unsigned long);
+extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *dummy1,
+                                    struct Instance *rootinstance,
+                                    struct gl_list_t *arglist,
+                                    unsigned long dummy4);
 /**<
  *  err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);
  *  All arguments except rootinstance are ignored.
@@ -50,3 +64,4 @@ extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *, struct Instance *,
  */
 
 #endif /* __FREE_ALL_VARS_H_SEEN__ */
+

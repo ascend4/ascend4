@@ -1,4 +1,4 @@
-/** 
+/*
  *  Procedure Output
  *  by Benjamin Allan
  *  Created: 3/12/98
@@ -26,21 +26,21 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/** 
+/** @file
+ *  Procedure Output.
+ *  <pre>
  *  When #including procio.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
  *         #include "proc.h"
+ *  </pre>
  */
-
 
 #ifndef __PROCIO_H_SEEN__
 #define __PROCIO_H_SEEN__
-/** requires
-# #include<stdio.h>
-# #include"proc.h"
-*/
 
-/** codes for old-style external call messaging */
+/** Codes for old-style external call messaging. */
 enum ProcExtError {
   PE_unloaded,
   PE_nulleval,
@@ -49,81 +49,95 @@ enum ProcExtError {
   PE_evalerr
 };
 
-/** METHODs equivalent of WSEM. should go away soon. */
-extern  void WriteInitWarn(struct procFrame *, char *);
-extern  void WriteInitErr(struct procFrame *, char *);
+/** METHODs equivalent of WSEM. Should go away soon. */
+extern void WriteInitWarn(struct procFrame *fm, char *str);
+/** METHODs equivalent of WSEM. Should go away soon. */
+extern void WriteInitErr(struct procFrame *fm, char *str);
 
-/** error message services **/
-/** 
- * ProcWriteCaseError(fm,arm,pos);
- * write error encountered while evaluating SWITCH.
+/* error message services */
+
+/**
+ * <!--  ProcWriteCaseError(fm,arm,pos);                               -->
+ * Write error encountered while evaluating SWITCH.
  * arm gives the number of the case in question. pos
  * gives the position of the error in the var list.
  */
-extern void ProcWriteCaseError(struct procFrame *, int, int);
+extern void ProcWriteCaseError(struct procFrame *fm, int arm, int pos);
 
-/** 
- * ProcWriteForError(fm);
- * write error encountered while evaluating FOR/DO.
+/**
+ * <!--  ProcWriteForError(fm);                                        -->
+ * Write error encountered while evaluating FOR/DO.
  */
-extern void ProcWriteForError(struct procFrame *);
+extern void ProcWriteForError(struct procFrame *fm);
 
-/** 
- * ProcWriteAssignmentError(fm);
- * write error encountered while evaluating := assignment.
+/**
+ * <!--  ProcWriteAssignmentError(fm);                                 -->
+ * Write error encountered while evaluating := assignment.
  */
-extern void ProcWriteAssignmentError(struct procFrame *);
+extern void ProcWriteAssignmentError(struct procFrame *fm);
 
-/** 
- * ProcWriteIfError(fm,cname);
- * write error encountered while evaluating boolean flow control.
+/**
+ * <!--  ProcWriteIfError(fm,cname);                                   -->
+ * Write error encountered while evaluating boolean flow control.
  * cname is normally "IF" or "WHILE".
  */
-extern void ProcWriteIfError(struct procFrame *, CONST char *);
+extern void ProcWriteIfError(struct procFrame *fm, CONST char *cname);
 
-/** 
- * ProcWriteRunError(fm);
- * write error encountered while evaluating RUN arguments.
+/**
+ * <!--  ProcWriteRunError(fm);                                        -->
+ * Write error encountered while evaluating RUN arguments.
  */
-extern void ProcWriteRunError(struct procFrame *);
+extern void ProcWriteRunError(struct procFrame *fm);
 
-/** 
- * ProcWriteExtError(fm,funcname,err,pos);
+/**
+ * <!--  ProcWriteExtError(fm,funcname,err,pos);                       -->
+ * Write error encountered while evaluating Ext arguments.
  */
-extern void ProcWriteExtError(struct procFrame *, CONST char *,
-                              enum ProcExtError, int);
+extern void ProcWriteExtError(struct procFrame *fm,
+                              CONST char *funcmane,
+                              enum ProcExtError err,
+                              int pos);
 
+/* backtrace output functions. */
 
-/** backtrace output functions. **/
-
-/** 
+/**
  * Issue a message if we blew the stack limit or are
  * unwinding the stack.
  */
-extern void ProcWriteStackCheck(struct procFrame *,
-                                struct Name *, struct Name *);
+extern void ProcWriteStackCheck(struct procFrame *fm,
+                                struct Name *class,
+                                struct Name *name);
 
-/** 
- * WriteProcedureBlock(fp,initstack,str);
- * Writes a line to file fp in a format resembling:
+/**
+ * <!--  WriteProcedureBlock(fp,initstack,str);                        -->
+ * Writes a line to file fp.  Write format resembles:
  * ("%s %s in %s\n",str,stack->last->proc,stack->last->context)
- * For example: WriteProcedureBlock(ASCERR,stack,"Entering ");
- * --> "Entering METHOD myproc in mysim.myinstance[3]"
+ * For example: 
+ * <pre>
+ * WriteProcedureBlock(ASCERR,stack,"Entering ");
+ *    --> "Entering METHOD myproc in mysim.myinstance[3]"
+ * </pre>
  * str may be empty or NULL.
  * The format is subject to change as this feature is in development.
  */
-extern void WriteProcedureBlock(FILE *, struct gl_list_t *initstack,
-                                CONST char *);
+extern void WriteProcedureBlock(FILE *fp,
+                                struct gl_list_t *initstack,
+                                CONST char *str);
 
-/** 
- * WriteProcedureLine(fp,initstack,str);
- * Writes a line to file fp in a format resembling:
+/**
+ * <!--  WriteProcedureLine(fp,initstack,str);                         -->
+ * Writes a line to file fp.  Write format resembles:
  * ("%s %d: %s in %s\n",str,line,proc,context)
- * For example: WriteProcedureLine(ASCERR,initstack,"Executing line ");
- * --> "Executing line 137 of myprocname in mysim.myinstance[3]"
+ * For example:
+ * <pre>
+ * WriteProcedureLine(ASCERR,initstack,"Executing line ");
+ *    --> "Executing line 137 of myprocname in mysim.myinstance[3]"
+ * </pre>
  * The format is subject to change as this feature is in development.
  */
-extern void WriteProcedureLine(FILE *, struct gl_list_t *initstack,
-                               CONST char *);
-#endif /** __PROCIO_H_SEEN__ */
+extern void WriteProcedureLine(FILE *fp,
+                               struct gl_list_t *initstack,
+                               CONST char *str);
+
+#endif  /* __PROCIO_H_SEEN__ */
 

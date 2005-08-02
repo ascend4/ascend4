@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Syntax Routines
  *  by Tom Epperly
  *  Created: 3/22/1990
@@ -26,54 +26,53 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
+/** @file
+ *  Syntax Routines.
+ *  These routines support the yacc parsing file ascParse.y.  This module
+ *  provides functions to check syntax.
+ *  <pre>
  *  When #including syntax.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "fractions.h"
  *         #include "compiler.h"
  *         #include "dimen.h"
  *         #include "types.h"
+ *         #include "exprs.h"
+ *         #include "stattypes.h"
+ *  </pre>
  */
-
 
 #ifndef __SYNTAX_H_SEEN__
 #define __SYNTAX_H_SEEN__
-/**< 
- *  These routines support the yacc parsing file ascParse.y.  This module
- *  provides functions to check syntax.
- */
 
-/**< requires
-# #include"exprs.h"
-# #include"stattypes.h"
-*/
-
-extern unsigned NumberOfRelOps(struct Expr *);
+extern unsigned NumberOfRelOps(struct Expr *ex);
 /**< 
- *  unsigned NumberOfRelOps(ex)
- *  struct Expr *ex;
+ *  <!--  unsigned NumberOfRelOps(ex)                                  -->
+ *  <!--  struct Expr *ex;                                             -->
  *  Return the number of relation operators in the given Expr.
  */
 
-extern int IsRelation(struct Expr *);
+extern int IsRelation(struct Expr *ex);
 /**< 
- *  unsigned IsRelation(ex)
- *  struct Expr *ex;
+ *  <!--  unsigned IsRelation(ex)                                      -->
+ *  <!--  struct Expr *ex;                                             -->
  *  Return 1 in case of a real relation. 0 if logical relation.
  */
 
 extern int GetParseRelnsFlag(void);
-/**< 
- *  int GetParseRelnsFlag(void);
- *  returns the value of the parse relations flag. If this flag is set to
+/**<
+ *  <!--  int GetParseRelnsFlag(void);                                 -->
+ *  Returns the value of the parse relations flag. If this flag is set to
  *  TRUE, which it is by default, normal ASCEND relations will be parsed;
  *  otherwise they will not be. This does not affect external relations.
  */
 
-extern void SetParseRelnsFlag(int);
+extern void SetParseRelnsFlag(int flag);
 /**< 
- *  void SetParseRelnsFlag(flag);
+ *  <!--  void SetParseRelnsFlag(flag);                                -->
  *  This function sets the parse relations flag. Any nonzero integer will
  *  turn the flag on. Later it may be given more meaning.
  */
 
-#endif /**< __SYNTAX_H_SEEN__ */
+#endif  /* __SYNTAX_H_SEEN__ */
+

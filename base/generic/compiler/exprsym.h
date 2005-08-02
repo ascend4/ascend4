@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Symbolic Expression Manipulation
  *  by Kirk Abbott
  *  Created: Novermber 21, 1994
@@ -27,22 +27,33 @@
  *  COPYING.
  */
 
+/** @file
+ *  Symbolic Expression Manipulation
+ *  <pre>
+ *  When #including .h, make sure these files are #included first:
+ *         #utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
+ *
+ *  The user is reminded that the author of these routines
+ *  could not be bothered with dimensionality, so don't expect
+ *  much in the way of output that dimensionally checks or
+ *  can be converted to real values in non-SI units unless the
+ *  input was correct.
+ *
+ *  The user is also reminded that this code does not deal well
+ *  with e_zero. e_zero should not exist in good models in any
+ *  case.
+ */
+
 #ifndef __EXPRSYM_H_SEEN__
 #define __EXPRSYM_H_SEEN__
 
-
-/**< 
- *  When #including .h, make sure these files are #included first:
- *         #include "instance_enum.h"
- */
-
-
-/**< 
+/**
  * Until we decide whether to let the postfix and
  * infix data structures be shared. we will use these
  * typedefs.
  */
-
 typedef struct Func Func;
 typedef struct relation_term Term;
 /**< note, so now Term has to be treated like A_TERM. */
@@ -51,35 +62,23 @@ typedef struct relation RelationINF;	/**< infix relation */
 #define K_TERM(i) ((Term *)(i))
 /**< Cast the i back to Term */
 
-/**< 
- *  The user is reminded that the author of these routines
- *  could not be bothered with dimensionality, so don't expect
- *  much in the way of output that dimensionally checks or
- *  can be converted to real values in non-SI units unless the
- *         input was correct.
- *
- *         The user is also reminded that this code does not deal well
- *         with e_zero. e_zero should not exist in good models in any
- *         case.
- */
-
 extern Term *TermSimplify(Term *term);
-/**< 
+/**<
  *  Attempts term simplification. Later different levels of simplification
  *  will be made a feature.
  */
 
-extern Term *Derivative(Term *term,unsigned long wrt,
+extern Term *Derivative(Term *term, unsigned long wrt,
                         int (*filter)(struct Instance *));
-/**< 
+/**<
  *  The low level routine which acutally does the symbolic differentiation
  *  with sub epxression simplification/elimination. In general not a safe
  *  place to start as use is made of a free store which has to be set up
  *  before this funcion may be called.
  */
 
-extern void PrepareDerivatives(int setup,int n_buffers,int buffer_length);
-/**< 
+extern void PrepareDerivatives(int setup, int n_buffers, int buffer_length);
+/**<
  *  Call this function before and after doing symbolic derivatives.
  *  If setup is true, a free store of terms will be set up, with the
  *  specified number of buffers and buffer length. I am now using 2
@@ -89,22 +88,25 @@ extern void PrepareDerivatives(int setup,int n_buffers,int buffer_length);
  */
 
 #define ShutDownDerivatives() PrepareDerivatives(0,0,0)
+/**<
+ *  Deallocate memory allocated in the previous call to PrepareDerivatives().
+ */
 
-extern Term *TermDerivative(Term *term,unsigned long wrt,
-                            int (*)(struct Instance *) );
-/**< 
+extern Term *TermDerivative(Term *term, unsigned long wrt,
+                            int (*filter)(struct Instance *) );
+/**<
  *  TermDerivative is the function that is used by RelationDerivative
  *  to generate the derivatives. Again it is perhaps more efficient
  *  to call RelationDerivative.
  */
 
-extern RelationINF *RelDerivative(RelationINF *, unsigned long,
-                                  int (*)(struct Instance *));
-/**< 
- *  RelationINF *RelDeriveSloppy(rel,wrt,filter);
- *  RelationINF *rel;
- *  unsigned long wrt;
- *  int (*filter)(struct Instance *);
+extern RelationINF *RelDerivative(RelationINF *rel, unsigned long wrt,
+                                  int (*filter)(struct Instance *));
+/**<
+ *  <!--  RelationINF *RelDeriveSloppy(rel,wrt,filter);                -->
+ *  <!--  RelationINF *rel;                                            -->
+ *  <!--  unsigned long wrt;                                           -->
+ *  <!--  int (*filter)(struct Instance *);                            -->
  *  Given a infix relation, a index into its variable list and a function
  *  filter used to classify REAL_ATOM_INSTANCES as variables,parmaters or
  *  constants (or for that matter whatever the user pleases), this function
@@ -114,13 +116,14 @@ extern RelationINF *RelDerivative(RelationINF *, unsigned long,
  *  differentiation.
  */
 
-extern void RelDestroySloppy(RelationINF *);
+extern void RelDestroySloppy(RelationINF *rel);
 /**< 
- *  void RelDestroySloppy(rel);
- *  RelationINF *rel;
+ *  <!--  void RelDestroySloppy(rel);                                  -->
+ *  <!--  RelationINF *rel;                                            -->
  *  This function is to be used to deallocate a relation that was returned
  *  as a result of a call to RelDeriveSloppy.
- *  Eg usage;
+ *  <pre>
+ *  Example usage:
  *      ( .... )
  *      RelationINF *rel,*deriv;
  *      unsigned long wrt = 3;
@@ -132,22 +135,23 @@ extern void RelDestroySloppy(RelationINF *);
  *      ShutDownDerivatives();
  *      ( .... )
  *      return;
+ *  </pre>
  */
 
-extern RelationINF *RelDeriveSloppy(RelationINF *rel,unsigned long wrt,
-                                    int (*)(struct Instance *));
-/**< 
- *  RelationINF *RelDeriveSloppy(rel,wrt,filter);
- *  RelationINF *rel;
- *  unsigned long wrt;
- *  int (*filter)(struct Instance *);
+extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
+                                    int (*filter)(struct Instance *));
+/**<
+ *  <!--  RelationINF *RelDeriveSloppy(rel,wrt,filter);                -->
+ *  <!--  RelationINF *rel;                                            -->
+ *  <!--  unsigned long wrt;                                           -->
+ *  <!--  int (*filter)(struct Instance *);                            -->
  *  Given a infix relation, a index into its variable list and a function
  *  filter used to classify REAL_ATOM_INSTANCES as variables,parmaters or
  *  constants (or for that matter whatever the user pleases), this function
  *  will return a relation which is the symbolic derivative of the relation,
- *  with respect to the given variable.
+ *  with respect to the given variable.<br><br>
  *
- *  NOTE 1:
+ *  NOTE 1:<br>
  *  This function is provided for the benefit of users, who would like
  *  access to symbolic derivatives of a TRANSIENT nature. By this
  *  I mean that the derivative is going to be evaluated, written out etc,
@@ -155,9 +159,9 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel,unsigned long wrt,
  *  For example, the returned variable list does not relect the fact
  *  that incidence may have been lost due to the process of doing the
  *  derivatives; but is still a valid list as differentiation can reduce
- *  incidence but not increase it.
+ *  incidence but not increase it.<br><br>
  *
- *  NOTE 2:
+ *  NOTE 2:<br>
  *  The relation structure that is returned *belongs* to the user.
  *  The variable list associated with the relation *belongs* to the user.
  *  The terms that make up the relation *do not belong* to the user.
@@ -168,9 +172,5 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel,unsigned long wrt,
  *  Shutdown.
  */
 
-#endif /**< __EXPRSYM_H_SEEN__ */
-
-
-
-
+#endif /* __EXPRSYM_H_SEEN__ */
 

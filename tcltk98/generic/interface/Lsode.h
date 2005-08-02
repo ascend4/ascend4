@@ -27,26 +27,33 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Lsode Integrator.
+ *  <pre>
+ *  NOTE:         The macro DOTIME is defined inside Lsode.c.
+ *                If its value is TRUE, we spew all sorts of time junk.
+ *                If FALSE we are quiet. Default for this macro is FALSE.
+ *
+ *  Requires      #include "utilities/ascConfig.h"
+ *                #include "solver/slv_client.h"
+ *                #include "interface/Integrators.h"
+ *  </pre>
+ */
+
 #ifndef lsode__already_included
 #define lsode__already_included
 
-/* requires #include "slv_client.h" */
-/* requires #include "Integrators.h" */
-
-extern void Asc_BLsodeIntegrate(slv_system_t, unsigned long ,unsigned long,
-                             struct Integ_system_t *);
-/*
- *  void Asc_BLsodeIntegrate(sys,start_index, finish_index,blsys)
+extern void Asc_BLsodeIntegrate(slv_system_t sys,
+                                unsigned long start_index,
+                                unsigned long finish_index,
+                                struct Integ_system_t *blsys);
+/**<
+ *  <!--  void Asc_BLsodeIntegrate(sys,start_index, finish_index,blsys)  -->
  *  Takes the start and finish index as defined by the user and carries
  *  out the integration using repeated calls to the function lsode.
  *  Assumes sys corresponds to g_solvinst_cur.
  *  works off instances of type blsode taken from blsys.
  */
 
-/*
- *  The macro DOTIME is defined inside Lsode.c.
- *  If its value is TRUE, we spew all sorts of time junk.
- *  If FALSE we are quiet. Default for this macro is FALSE.
- */
+#endif  /* lsode__already_included */
 
-#endif

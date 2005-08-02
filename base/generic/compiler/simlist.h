@@ -1,7 +1,7 @@
-/**< 
+/*
  *  Simulation Management for Ascend
  *  by Ben Allan
- *  Version: $Revision: 1.2 $
+ *  Version: $Revision: 1.2 $                                  
  *  Version control file: $RCSfile: simlist.h,v $
  *  Date last modified: $Date: 1997/07/18 12:34:54 $
  *  Last modified by: $Author: mthomas $
@@ -25,29 +25,39 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
- *  This module initializes manages a global list simulations,
- *  which may be interrelated in very twisty ways due to UNIVERSAL and
- *  parameter passing.
  */
+
+/** @file
+ *  This module initializes manages a global list simulations.
+ *  These may be interrelated in very twisty ways due to UNIVERSAL and
+ *  parameter passing.
+ *  <pre>
+ *  When #including simlist.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "instance_enum.h"
+ *  </pre>
+ */
+
 #ifndef __SIMLIST_H_SEEN__
 #define __SIMLIST_H_SEEN__
 
 extern struct gl_list_t *g_simulation_list;
 /**< 
- * pointer to a simulation list. simulations need much better
+ * Pointer to a simulation list. Simulations need much better
  * management than they currently get, once we start building
  * simulations out of other simulations. For now this
  * file is largely empty.
  */
 
-extern void Asc_DeAllocSim(struct Instance *);
+extern void Asc_DeAllocSim(struct Instance *inst);
 /**< 
- * destroys the instance given. should be a simulation instance.
+ * Destroys the instance given. Should be a simulation instance.
  */
 
 extern void Asc_DestroySimulations(void);
 /**< 
- * destroys all known instances on the simulation list.
+ * Destroys all known instances on the simulation list.
  */
-#endif /**< __SIMLIST_H_SEEN__ */
+
+#endif  /* __SIMLIST_H_SEEN__ */
+

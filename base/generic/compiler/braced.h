@@ -1,4 +1,4 @@
-/** 
+/*
  *  Braced Text Module
  *  By Benjamin Allan
  *  March 20, 1998.
@@ -28,68 +28,76 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
  *  the file named COPYING.
  */
+
+/** @file
+ *  Module for storing braced text of notes and
+ *  some other BRACEDTEXT_T applications.
+ *
+ *  Not everything that is defined as BRACEDTEXT_T in
+ *  the grammar is necessarily kept by using this module.
+ *  For example, some units END up in the symbol table.<br><br>
+ *
+ *  struct bracechar defined first in compiler.h hides the details of
+ *  whatever it is we do with braced text in composing
+ *  NOTES and other persist forms.
+ *  Braced text may be very long.
+ *  <pre>
+ *  When #including braced.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler.h"
+ *  </pre>
+ */
+
 #ifndef __BRACED_H_SEEN__
 #define __BRACED_H_SEEN__
 
-/** Module for storing braced text of notes and
- * some other BRACEDTEXT_T applications.
- */
-/** requires "compiler/compiler.h" */
-/** 
- * Not everything that is defined as BRACEDTEXT_T in
- * the grammar is necessarily kept by using this module.
- * For example, some units END up in the symbol table.
- */
-/** 
- * struct bracechar defined first in compiler.h hides the details of
- * whatever it is we do with braced text in composing
- * NOTES and other persist forms.
- * Braced text may be very long.
- */
-
-/** 
- * bc = AddBraceChar(string,lang);
+/**
+ * <!--  bc = AddBraceChar(string,lang);                               -->
  * Creates a bracechar from a string. We do not keep the string.
  * If a lang is given, it is kept.
  */
-extern struct bracechar *AddBraceChar(CONST char *, symchar *);
+extern struct bracechar *AddBraceChar(CONST char *string, symchar *lang);
 
-/** 
- * cbc = CopyBraceChar(bc);
- * increments a reference count and returns bc.
+/**
+ * <!--  cbc = CopyBraceChar(bc);                                      -->
+ * Increments a reference count and returns bc.
  */
-struct bracechar *CopyBraceChar(struct bracechar *);
+extern struct bracechar *CopyBraceChar(struct bracechar *bc);
 
-/** 
- * DestroyBraceChar(bc);
- * Frees memory associated with bc, (subject to refcounting).
+/**
+ * <!--  DestroyBraceChar(bc);                                         -->
+ * Frees memory associated with bc (subject to refcounting).
  */
-extern void DestroyBraceChar(struct bracechar *);
+extern void DestroyBraceChar(struct bracechar *bc);
 
-/** 
+/**
  * Returns a string of the bracechar content for READ-ONLY
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
  */
-extern CONST char *BraceCharString(struct bracechar *);
+extern CONST char *BraceCharString(struct bracechar *sbc);
+/** Shortcut to BraceCharString(). */
 #define BCS(sbc) BraceCharString(sbc)
 
-/** 
+/**
  * Returns a 'language' of the bracechar content for READ-ONLY
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
  * will not be NULL. To print, wrap in SCP.
  */
-extern symchar *BraceCharLang(struct bracechar *);
+extern symchar *BraceCharLang(struct bracechar *sbc);
+/** Shortcut to BraceCharLang(). */
 #define BCLANG(sbc) BraceCharLang(sbc)
 
-/** 
+/**
  * Returns length of the bracechar content for READ-ONLY
  * use. Since we frequently want to use this inside
  * printf and the like, a short macro form is provided.
  * will not be NULL. (This is not the length of lang).
  */
-extern int BraceCharLen(struct bracechar *);
+extern int BraceCharLen(struct bracechar *sbc);
+/** Shortcut to BraceCharLen(). */
 #define BCL(sbc) BraceCharLen(sbc)
 
-#endif /** __BRACED_H_SEEN__ */
+#endif  /* __BRACED_H_SEEN__ */
+

@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Instance Garbage Dump
  *  by Tom Epperly
  *  10/24/89
@@ -33,64 +33,68 @@
  *  else.  Typically, these restrictions are only met by atoms.
  */
 
-#ifndef __DUMP_H_SEEN__
-#define __DUMP_H_SEEN__
-
-
-/**< 
+/** @file
+ *  Instance Garbage Dump
+ *  <pre>
  *  When #including dump.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "instance_enum.h"
  *         #include "compiler.h"
+ *  </pre>
  */
+
+#ifndef __DUMP_H_SEEN__
+#define __DUMP_H_SEEN__
 
 #define MESSYTHRESH 10
 
 extern void InitDump(void);
 /**< 
- *  void InitDump()
+ *  <!--  void InitDump()                                              -->
  *  Must be called to initialize the dump.
  */
 
 extern void EmptyTrash(void);
 /**< 
- *  void EmptyTrash()
+ *  <!--  void EmptyTrash()                                            -->
  *  Delete all the instances in the dump.  The dump can still be used
  *  after this call.
  */
 
 extern void TendTrash(void);
 /**< 
- *  void TendTrash()
- *  This is a less drastic version of EmptyTrash, which only deletes
+ *  <!--  void TendTrash()                                             -->
+ *  This is a less drastic version of EmptyTrash(), which only deletes
  *  instance with too many copies in the dump.  Too many is more than
  *  MESSYTHRES copies of a given type.
  */
 
-extern void TrashType(symchar *);
+extern void TrashType(symchar *str);
 /**< 
- *  void TrashType(str)
- *  const char *str;
+ *  <!--  void TrashType(str)                                          -->
+ *  <!--  const char *str;                                             -->
  *  Delete any copies of type 'str' from the dump.  This should be called
  *  if for instance the definition of 'str' is being changed.  In such
  *  cases, fetching copies of 'str' from the dump would return the old
- *  version.
+ *  version.<br><br>
  *
  *  str should have no leading blanks and should be a valid identifier.
  */
 
-extern void AddInstance(struct Instance *);
-/**< 
- *  void AddInstance(i,type)
- *  struct Instance *i;
+extern void AddInstance(struct Instance *i);
+/**<
+ *  <!--  void AddInstance(i)                                          -->
+ *  <!--  struct Instance *i;                                          -->
  *  This adds instance i to the trash dump.
  */
 
-extern struct Instance *FindInstance(symchar *);
+extern struct Instance *FindInstance(symchar *str);
 /**< 
- *  struct Instance *FindInstance(str)
- *  symchar *str;
+ *  <!--  struct Instance *FindInstance(str)                           -->
+ *  <!--  symchar *str;                                                -->
  *  This will return an instance if it one is available; otherwise, it
  *  returns NULL.
  */
 
-#endif /**< __DUMP_H_SEEN__ */
+#endif /* __DUMP_H_SEEN__ */
+

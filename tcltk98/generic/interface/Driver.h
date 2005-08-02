@@ -27,36 +27,44 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/** @file
+ *  Main Tcl/Tk Driver.
+ *  <pre>
+ *  To include this header, you must include the following:
+ *      #include "tcl.h"
+ *      #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef _DRIVER_H
 #define _DRIVER_H
 
-
-/*
- *  g_compiler_timing
+extern int g_compiler_timing;
+/**<
+ *  <!--  g_compiler_timing                                            -->
  *
  *  TRUE if compiler timing is to be printed.
  *  default is false, set to TRUE by passing -t on the command line
  */
-extern int g_compiler_timing;
 
-/*
- *  g_interp
+extern Tcl_Interp *g_interp;
+/**<
+ *  <!--  g_interp                                                     -->
  *
  *  Interpreter for this application.  We need tp make it global
  *  so that our signal/floating-porint traps can access it.
  */
-extern Tcl_Interp *g_interp;
 
 extern int Asc_LoadWin(ClientData, Tcl_Interp *, int, CONST84 char**);
-/*
- *  int Asc_LoadWin(cdata, interp, argc, argv)
- *      ClientData cdata;
- *      Tcl_Interp *interp;
- *      int argc;
- *      char **argv;
+/**<
+ *  <!--  int Asc_LoadWin(cdata, interp, argc, argv)                   -->
+ *  <!--      ClientData cdata;                                        -->
+ *  <!--      Tcl_Interp *interp;                                      -->
+ *  <!--      int argc;                                                -->
+ *  <!--      char **argv;                                             -->
  *
  *  Tcl callback to determine if Tcl/Tk should build Tk windows.
- *  Returns 1 if it should, 0 if we only want a command line.
+ *  Returns 1 if it should, 0 if we only want a command line.<br><br>
  *
  *  Currently (06/97), this call is pointless since we do not
  *  support command-line-only operation.
@@ -65,21 +73,16 @@ extern int Asc_LoadWin(ClientData, Tcl_Interp *, int, CONST84 char**);
 
 #ifdef DEBUG_MALLOC
 extern int Asc_DebugMallocCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
-/*
- *  int Asc_DebugMallocCmd(cdata, interp, argc, argv)
- *      ClientData cdata;
- *      Tcl_Interp *interp;
- *      int argc;
- *      char **argv;
+/**<
+ *  <!--  int Asc_DebugMallocCmd(cdata, interp, argc, argv)            -->
+ *  <!--      ClientData cdata;                                        -->
+ *  <!--      Tcl_Interp *interp;                                      -->
+ *  <!--      int argc;                                                -->
+ *  <!--      char **argv;                                             -->
  *
- *  Tcl callback for Tom Epperly's debugging malloc
+ *  Tcl callback for Tom Epperly's debugging malloc.
  */
-#endif /* DEBUG_MALLOC */
+#endif  /* DEBUG_MALLOC */
 
-#endif /* _DRIVER_H  */
-
-
-
-
-
+#endif  /* _DRIVER_H  */
 

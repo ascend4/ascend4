@@ -1,4 +1,4 @@
-/** 
+/*
  *  parpend.h
  *  by Ben Allan
  *  Jan 5, 1998
@@ -29,62 +29,60 @@
  *  the file named COPYING.
  */
 
-/** this file should be resorbed into the parameter list processing
- * code that results when instantiate.c is split up.
- * In the meanwhile...
+/** @file
+ *  Pending parameter management?
+ *  <pre>
+ *  When #including parpend.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *  </pre>
+ *
+ *  @todo This file should be resorbed into the parameter list processing
+ *        code that results when instantiate.c is split up.
+ *        In the meanwhile...
  */
+
 #ifndef __PARPEND_H_SEEN__
 #define __PARPEND_H_SEEN__
 
 enum ppstatus {
   pp_ERR =0,
-  pp_ISA,       /** IS_A of simple to be done, from absorbed. */
-  pp_ISAARR,    /** IS_A of array to do, from absorbed and
-                 * gets converted to asar during processing.
-                 */
-  pp_ARR,       /** array that's constructed but requires range checking */
-  pp_ASGN,      /** assignment to do in absorbed objects */
-  pp_ASSC,      /** scalar assignment to check in absorbed objects */
-  pp_ASAR,      /** Array to be checked for being completely assigned,
-                 * but its subscript range is presumed right.
-                 */
-  pp_WV,        /** WITH_VALUE to be checked */
-  pp_DONE       /** finished statement */
+  pp_ISA,       /**< IS_A of simple to be done, from absorbed. */
+  pp_ISAARR,    /**< IS_A of array to do, from absorbed and
+                     gets converted to asar during processing. */
+  pp_ARR,       /**< array that's constructed but requires range checking */
+  pp_ASGN,      /**< assignment to do in absorbed objects */
+  pp_ASSC,      /**< scalar assignment to check in absorbed objects */
+  pp_ASAR,      /**< Array to be checked for being completely assigned,
+                     but its subscript range is presumed right. */
+  pp_WV,        /**< WITH_VALUE to be checked */
+  pp_DONE       /**< finished statement */
 };
 
 struct parpendingentry {
-  struct Set *arg;      /** parameter given in user's IS_A statement */
+  struct Set *arg;    /**< parameter given in user's IS_A statement */
   struct Statement *s;
   struct Instance *inst;
   struct parpendingentry *next;
   enum ppstatus status;
-  int argn; /** the psl position if >0,  or -(the absorbed position) if <0 */
-  /** argn==0 is an error */
+  int argn;           /**< the psl position if >0,  
+                           or -(the absorbed position) if <0.
+                           argn==0 is an error   */
 };
 
-/** 
- * allocate a parpending entry.
- */
+/** Allocate a parpending entry. */
 extern struct parpendingentry *CreatePPE(void);
 
-/** 
- * destroy a parpending entry.
- */
-extern void DestroyPPE(struct parpendingentry *);
+/** Destroy a parpending entry. */
+extern void DestroyPPE(struct parpendingentry *ppe);
 
-/** 
- * starts memory recycle. do not call twice before stopping recycle.
- */
+/** Starts memory recycle. Do not call twice before stopping recycle. */
 extern void ppe_init_pool(void);
 
-/** 
- * stops memory recycle. do not call while ANY parpending are outstanding.
- */
+/** Stops memory recycle. Do not call while ANY parpending are outstanding. */
 extern void ppe_destroy_pool(void);
 
-/** 
- * write the pool report to ASCERR for the ppe pool.
- */
+/** Write the pool report to ASCERR for the ppe pool. */
 extern void ppe_report_pool(void);
 
-#endif /** __PARPEND_H_SEEN__ */
+#endif /* __PARPEND_H_SEEN__ */
+

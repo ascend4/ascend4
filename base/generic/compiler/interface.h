@@ -1,4 +1,4 @@
-/**< 
+/*
  *  Interface Include File
  *  by Tom Epperly
  *  Created: 1/17/90
@@ -27,16 +27,22 @@
  *  COPYING.
  */
 
+/** @file
+ *  Interface Include File.
+ *  <pre>
+ *  When #including interface.h.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
+ *  </pre>
+ */
+
 #ifndef __INTERFACE_H_SEEN__
 #define __INTERFACE_H_SEEN__
 
-/**< 
- *  When #including interface.h.h, make sure these files are #included first:
- *         NO INCLUDES NEEDED
- */
-
 extern void Interface(void);
 /**< 
- *  Take no parameters
+ *  Initialize compiler interface.
+ *  Takes no parameters.
  */
-#endif /**< __INTERFACE_H_SEEN__ */
+
+#endif /* __INTERFACE_H_SEEN__ */
+

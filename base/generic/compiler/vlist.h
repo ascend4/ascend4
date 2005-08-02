@@ -1,4 +1,4 @@
-/**< 
+/* 
  *  Variable name list
  *  by Tom Epperly
  *  August 8, 1989
@@ -26,20 +26,20 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-/**< 
- *  When #including .h, make sure these files are #included first:
+/** @file
+ *  Variable name list.
+ *  <pre>
+ *  When #including vlist.h, make sure these files are #included first:
+ *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
+ *         #include "types.h"
+ *  </pre>
  */
-
-
 
 #ifndef __VLIST_H_SEEN__
 #define __VLIST_H_SEEN__
-/**< requires
-# #include"types.h"
-*/
 
-/**< 
+/**<
  *  Don't ever access these things yourself.  Use the functions and/or
  *  macros defined in this file.
  */
@@ -48,18 +48,18 @@ struct VariableList {
   struct Name *nptr;
 };
 
-extern struct VariableList *CreateVariableNode(struct Name *);
-/**< 
- *  struct VariableList *CreateVariableNode(n)
- *  struct Name *n;
- *  Create a node with name pointer n.  The next attribute is initialized to
+extern struct VariableList *CreateVariableNode(struct Name *name);
+/**<
+ *  <!--  struct VariableList *CreateVariableNode(name)                -->
+ *  <!--  struct Name *name;                                           -->
+ *  Create a node with Name pointer name.  The next attribute is initialized to
  *  NULL.
  */
 
-extern void LinkVariableNodes(struct VariableList *,struct VariableList *);
+extern void LinkVariableNodes(struct VariableList *cur, struct VariableList *next);
 /**< 
- *  void LinkVariableListNodes(cur,next)
- *  struct VariableList *cur,*next;
+ *  <!--  void LinkVariableListNodes(cur,next)                         -->
+ *  <!--  struct VariableList *cur,*next;                              -->
  *  Set the next attribute of cur to next.  Next can be NULL, but cur cannot.
  */
 
@@ -68,13 +68,21 @@ extern void LinkVariableNodes(struct VariableList *,struct VariableList *);
 #else
 #define NextVariableNode(n) NextVariableNodeF(n)
 #endif
+/**<
+ *  Return the name list node linked to vl.
+ *  @param n CONST struct VariableList*, the list to query.
+ *  @return The node as a CONST struct VariableList*.
+ *  @see NextVariableNodeF()
+ */
 extern CONST struct VariableList
-*NextVariableNodeF(CONST struct VariableList *);
-/**< 
- *  macro NextVariableNode(n)
- *  extern CONST struct VariableList *NextVariableNodeF(n)
- *  struct VariableList *n;
- *  Return the name list node linked to n.
+*NextVariableNodeF(CONST struct VariableList *vl);
+/**<
+ *  <!--  macro NextVariableNode(nvl)                                  -->
+ *  <!--  extern CONST struct VariableList *NextVariableNodeF(vl)      -->
+ *  <!--  struct VariableList *vl;                                     -->
+ *  <!--  Return the name list node linked to vl.                      -->
+ *  Implementation function for NextVariableNode() (debug mode).
+ *  Do not call this function directly - use NextVariableNode() instead.
  */
 
 #ifdef NDEBUG
@@ -82,63 +90,73 @@ extern CONST struct VariableList
 #else
 #define NamePointer(n) NamePointerF(n)
 #endif
-extern CONST struct Name *NamePointerF(CONST struct VariableList *);
-/**< 
- *  struct Name *NamePointer(n)
- *  struct VariableList *n;
- *  Return the name pointer stored in node n.
+/**<
+ *  Return the name pointer stored in node vl.
+ *  @param n CONST struct VariableList*, the list to query.
+ *  @return The name as a CONST struct Name*.
+ *  @see NamePointerF()
+ */
+extern CONST struct Name *NamePointerF(CONST struct VariableList *vl);
+/**<
+ *  <!--  struct Name *NamePointer(vl)                                 -->
+ *  <!--  struct VariableList *vl;                                     -->
+ *  <!--  Return the name pointer stored in node vl.                   -->
+ *  Implementation function for NamePointer() (debug mode).
+ *  Do not call this function directly - use NamePointer() instead.
  */
 
-extern struct VariableList *CopyVariableList(struct VariableList *);
+extern struct VariableList *CopyVariableList(struct VariableList *vl);
 /**< 
- *  struct VariableList *CopyVariableList(n)
- *  struct VariableList *n;
+ *  <!--  struct VariableList *CopyVariableList(vl)                    -->
+ *  <!--  struct VariableList *vl;                                     -->
  *  Make and return a copy of the whole name list.
  */
 
-extern void DestroyVariableList(struct VariableList *);
+extern void DestroyVariableList(struct VariableList *vl);
 /**< 
- *  void DestroyVariableList(n)
- *  struct VariableList *n;
+ *  <!--  void DestroyVariableList(vl)                                 -->
+ *  <!--  struct VariableList *vl;                                     -->
  *  Deallocate the memory associated with the list of names.
  */
 
-extern void DestroyVariableListNode(struct VariableList *);
+extern void DestroyVariableListNode(struct VariableList *vl);
 /**< 
- *  void DestroyVariableListNode(n)
- *  struct VariableList *n;
+ *  <!--  void DestroyVariableListNode(vl)                             -->
+ *  <!--  struct VariableList *vl;                                     -->
  *  Deallocate this name node, and don't change the next one.
  */
 
-extern struct VariableList *JoinVariableLists(struct VariableList *,
-           struct VariableList *);
+extern struct VariableList
+*JoinVariableLists(struct VariableList *vl1, struct VariableList *vl2);
 /**< 
- *  struct VariableList *JoinVariableLists(n1,n2)
- *  struct VariableList *n1,*n2;
- *  Appends n2 to the end of n1.  This will return n1, unless n1 is NULL
- *  in which case it will return n2.
+ *  <!--  struct VariableList *JoinVariableLists(vl1,vl2)              -->
+ *  <!--  struct VariableList *vl1,*vl2;                               -->
+ *  Appends vl2 to the end of vl1.  This will return vl1, unless vl1 is NULL
+ *  in which case it will return vl2.
  */
 
-extern struct VariableList *ReverseVariableList(struct VariableList *);
+extern struct VariableList *ReverseVariableList(struct VariableList *vl);
 /**< 
- *  struct VariableList *ReverseVariableList(n)
- *  struct VariableList *n;
- *  Returns the reverse of n.
+ *  <!--  struct VariableList *ReverseVariableList(vl)                 -->
+ *  <!--  struct VariableList *vl;                                     -->
+ *  Returns the reverse of vl.
  */
 
-extern unsigned long VariableListLength(CONST struct VariableList *);
+extern unsigned long VariableListLength(CONST struct VariableList *vl);
 /**< 
- *  unsigned long VariableListLength(n);
- *  CONST struct VariableList *n;
+ *  <!--  unsigned long VariableListLength(vl);                        -->
+ *  <!--  CONST struct VariableList *vl;                               -->
  *  Returns the length of the variable list. Does not attempt to expand arrays
  *  of variables or anything like that.
  */
 
-extern int CompareVariableLists(CONST struct VariableList *,
-                                CONST struct VariableList *);
-/**< 
- *  int CompareVariableLists(vl1,vl2);
+extern int CompareVariableLists(CONST struct VariableList *vl1,
+                                CONST struct VariableList *vl2);
+/**<
+ *  <!--  int CompareVariableLists(vl1,vl2);                           -->
  *  Returns -1,0,1 as vl1 is < == > vl2 in content.
  *  The NULL list is > all lists.
  */
-#endif /**< __VLIST_H_SEEN__ */
+
+#endif /* __VLIST_H_SEEN__ */
+
