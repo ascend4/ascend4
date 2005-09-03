@@ -12,7 +12,7 @@
  *  Copyright 2005, Benjamin Andrew Allan
  *
  *  The ASCEND utilities is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
+ *  it and/or modify it under the terms of the GNU General Public License as     
  *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
  *
@@ -29,6 +29,7 @@
 
 /** @file
  *  ASCEND Printf stdout/stderr Substitutes Dispatcher.
+ *  Note that these routines are only compiled if USE_ASC_PRINTF is defined.
  *  <pre>
  *  When including this file, you must include:
  *      #include <stdarg.h>

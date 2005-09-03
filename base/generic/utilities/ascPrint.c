@@ -12,7 +12,7 @@
  *  Copyright 1997, Carnegie Mellon University
  *
  *  The ASCEND utilities is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
+ *  it and/or modify it under the terms of the GNU General Public License as            
  *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
  *
@@ -34,7 +34,7 @@ static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 /*
  *  Only compile this file if we are using Asc_Printf()
  */
-#if PRINTF == Asc_PrintF
+#ifdef USE_ASC_PRINTF
 
 
 #include "utilities/ascPrint.h"
@@ -210,4 +210,4 @@ int Asc_Putchar( int c )
   return Asc_Printf( "%c", c );
 }
 
-#endif /*  PRINTF == Asc_Printf  */
+#endif /*  USE_ASC_PRINTF  */

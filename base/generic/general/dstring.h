@@ -1,10 +1,6 @@
 /*
  *  Dynamic String Utilities
  *
- *  The following routines are more or less stolen from TCL by
- *  John Osterhout at Berkeley. See dstring.c for the details. There
- *  are minor differences internally.
- *
  *  Version: $Revision: 1.1 $
  *  Version control file: $RCSfile: dstring.h,v $
  *  Date last modified: $Date: 1997/07/18 11:41:38 $
@@ -30,6 +26,9 @@
 
 /** @file
  *  Dynamic String Utilities.
+ *  These routines are modifications of TCL code by John Osterhout at 
+ *  Berkeley, as allowed by the TCL distribution license.  See dstring.c 
+ *  for the details. There are minor differences internally.
  *  <pre>
  *  Requires:
  *        #include "utilities/ascConfig.h"
@@ -124,7 +123,7 @@ extern void Asc_DStringFree(Asc_DString *dsPtr);
  * <!--  Asc_DStringInit --                                            -->
  *
  *	Initializes a dynamic string, discarding any previous contents
- *	of the string (Asc_DStringFree should have been called already
+ *	of the string (Asc_DStringFree should have been called already               
  *	if the dynamic string was previously in use).
  *
  * Results:

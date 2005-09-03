@@ -1,7 +1,7 @@
 /*
  *  Dynamic String Utilities
  *
- *  Ripped off from the tcl collection. - September 21, 1995
+ *  Taken from the tcl collection. - September 21, 1995
  *  by Kirk Abbott, and lightly modified to suit the neeeds of
  *  ASCEND.
  *
@@ -83,7 +83,7 @@ extern char *Asc_DStringAppend(dsPtr, string, length)
   }
 
   /*
-   * Copy the new string into the buffer at the end of the old
+   * Copy the new string into the buffer at the end of the old                   
    * one.
    */
 

@@ -27,7 +27,7 @@
 # This is a template Jamrules file which supports building the
 # Ascend libraries and executables.  It contains general variable
 # and rule definitions required for execution of jam in any of the
-# source subdirectories.  The Ascend jam build system currently 
+# source subdirectories.  The Ascend jam build system currently
 # supports the MSVC, Borland, MinGW, and Watcom compilers
 # (extension to gcc on Linux is on the TODO: list).
 #
@@ -44,7 +44,7 @@
 #---------------------------------------------------------------------------
 
 # Comment to compile with debugging & assertions enabled
-#NODEBUG = 1 ;
+NODEBUG = 1 ;
 
 # Comment to compile without using the Epperly malloc debugger
 #DEBUG_MALLOC = -DMALLOC_DEBUG ;
@@ -83,6 +83,22 @@ ASC_BASE_LIBS =
   $(ASC_PACKAGES_LIB)
   ;
 
+#  Build ascend with packages.
+#  Packages are bits of compiled code that represent models, or solvers,
+#  or, in general, any bits of external code.  Packages may be dynamically
+#  or statically linked/loaded, or may be turned off.
+#  ALL BUT ONE of the following defines should be commented:
+#
+HAVE_PACKAGES  = STATIC_PACKAGES ;
+#HAVE_PACKAGES = DYNAMIC_PACKAGES ;
+#HAVE_PACKAGES = NO_PACKAGES ;
+
+#  If statically linked, i.e. -DSTATIC_PACKAGES, then set PACK_LIBS
+#  to where your external packages exist. If dynamically linked or
+#  if you are building with NO_PACKAGES, leave PACK_LIBS empty.
+#
+PACK_LIBS = $(ASC_PACKAGES_LIB) ;
+
 # FORTRAN support library names
 ASC_BLAS_LIBNAME    = libblas ;
 ASC_LINPACK_LIBNAME = liblinpack ;
@@ -110,7 +126,7 @@ else
 if $(NT)
 {
   # Windows-specific defines
-  CCFLAGS += -D_X86_=1 -DWIN32 -D_WIN32 ;
+  CCFLAGS += -D_X86_=1 -DWIN32 -D_WIN32 -DASC_BUILD_LIB -D$(HAVE_PACKAGES) ;
   SUFSHR = .dll ;
 
   if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
@@ -201,6 +217,7 @@ if $(NT)
 else if $(OS) = LINUX
 {
   SUFSHR = .so ;
+  CCFLAGS += -D$(HAVE_PACKAGES) ;
   FORTRANFLAGS = -c -I4 -O -lg2c ;
 
   # uncomment to select desired warning level and ansi-strictness

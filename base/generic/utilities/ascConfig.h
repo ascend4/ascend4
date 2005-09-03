@@ -330,7 +330,7 @@ typedef	unsigned   uint32;
  *  build the Tk Console
  */
 #ifndef ASC_USE_TK_CONSOLE
-#define ASC_USE_TK_CONSOLE
+#define ASC_USE_TK_CONSOLE                                                              
 #endif /* ASC_USE_TK_CONSOLE */
 
 /*
@@ -405,15 +405,14 @@ typedef	unsigned   uint32;
  */
 #define FPRESET (void)0
 #ifdef __WIN32__
-   /* renamed in some __WIN32__ compiler systems */
-#  ifndef finite
+/* renamed in some __WIN32__ compiler systems */
+#  ifndef NO_RENAME_IEEE_FUNCTIONS
+#    undef finite
 #    define finite(x) _finite(x)
-#  endif
-#  ifndef isnan
-#    define isnan(x) _isnan(x)
-#  endif
-#  ifndef isinf
-#    define isinf(x) _isinf(x)
+#    undef isnan
+#    define isnan(x)  _isnan(x)
+#    undef isinf
+#    define isinf(x)  _isinf(x)
 #  endif
 #  undef FPRESET
 #  define FPRESET _fpreset()
