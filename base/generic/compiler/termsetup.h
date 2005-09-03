@@ -29,11 +29,13 @@
 
 /** @file
  *  Interface Implementation - terminal setup.
+ *  Note - terminal support is not provide for Windows at this time.
  *  <pre>
  *  When #including termsetup.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
  *  </pre>
  *  @todo Complete documentation of termsetup.h.
+ *  @todo Implement termsetup functions for Windows if needed. 
  */
 
 #ifndef __TERMSETUP_H_SEEN__

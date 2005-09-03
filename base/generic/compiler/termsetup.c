@@ -27,12 +27,16 @@
  *  COPYING.
  *
  */
-#include<stdlib.h>
-#include<stdio.h>
-#include<assert.h>
-#include<string.h>
-#include<limits.h>
-#include<signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include <limits.h>
+#include <signal.h>
+#include "utilities\ascConfig.h"
+ 
+#ifndef __WIN32__
+
 #include<unistd.h>
 #ifndef linux
 #include<sgtty.h>
@@ -216,7 +220,7 @@ void TermSetup_ResetTerminal()
   else
     SetupTerminal();
   ClearScreen();
-#endif
+#endif  /* ! _HPUX_SOURCE */
 }
 
 void ReadString(str,len)
@@ -235,10 +239,64 @@ void ReadString(str,len)
   if (ioctl(filenum,TIOCSETN,&old)==-1) InterfaceError();
 }
 
+#else   /* __WIN32__ */
+
+int OutputChar(char c)
+{
+  fprintf(stderr,"OutputChar() not implemented in Windows.\n");
+  return 0;
+}
+
+void DeleteBackOne(void)
+{
+  fprintf(stderr,"DeleteBackOne() not implemented in Windows.\n");
+}
+
+void ClearScreen(void)
+{
+  fprintf(stderr,"ClearScreen() not implemented in Windows.\n");
+}
+
+void Bell(void)
+{
+  fprintf(stderr,"Bell() not implemented in Windows.\n");
+}
+
+void ClearLine(void)
+{
+  fprintf(stderr,"ClearLine() not implemented in Windows.\n");
+}
+
+void SetupTermcapStuff(void)
+{
+  fprintf(stderr,"SetupTermcapStuff() not implemented in Windows.\n");
+}
+
+void InterfaceError(void)
+{
+  fprintf(stderr,"InterfaceError() not implemented in Windows.\n");
+}
+
+void SetupTerminal(void)
+{
+  fprintf(stderr,"SetupTerminal() not implemented in Windows.\n");
+}
+
+void RestoreTerminal(void)
+{
+  fprintf(stderr,"RestoreTerminal() not implemented in Windows.\n");
+}
+
+void TermSetup_ResetTerminal(void)
+{
+  fprintf(stderr,"TermSetup_ResetTerminal() not implemented in Windows.\n");
+}
+
+void ReadString(char *str, int *len)
+{
+  fprintf(stderr,"ReadString() not implemented in Windows.\n");
+}
 
 
-
-
-
-
+#endif  /* __WIN32__ */
 
