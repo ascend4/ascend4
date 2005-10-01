@@ -31,7 +31,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS */
-#include "tcl.h"
+#include "tcl.h"      /* for Integrators.h, Sensitivity.h*/
 #include "utilities/ascConfig.h"
 #include "utilities/ascSignal.h"
 #include "utilities/ascMalloc.h"
@@ -110,13 +110,13 @@ static CONST char LsodeID[] = "$Id: Lsode.c,v 1.29 2000/01/25 02:26:31 ballan Ex
 #define XASCWV xascwv_
 #endif
 
-#if defined(CRAY) || defined(__WIN32__)
+#if defined(CRAY) || (defined(__WIN32__) && !defined(__MINGW32_VERSION))
 #undef LSODE
 #undef LSODE_JEX
 #undef LSODE_FEX
 #undef GETCOMMON
-#undef XASCWV 
-#define XASCWV XASCWV
+#undef XASCWV
+#define XASCWV XASCWV                                           
 #define LSODE LSODE
 #define LSODE_JEX JEX
 #define LSODE_FEX FEX
@@ -693,8 +693,8 @@ void Asc_BLsodeIntegrate(slv_system_t sys, unsigned long start_index ,
   }
   FPRINTF(stdout, "blsode done.\n");
 
-#else
- 
+#else   /* STATIC_LSOD || DYNAMIC_LSOD */
+
   FPRINTF(stderr, "\n");
   FPRINTF(stderr, "Integration will not be performed.\n");
   FPRINTF(stderr, "LSODE binary not available.\n");

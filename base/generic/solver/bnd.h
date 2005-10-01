@@ -1,4 +1,4 @@
-/* 
+/*
  *  Boundary Module
  *  Created: 04/97
  *  Version: $Revision: 1.10 $
@@ -25,7 +25,7 @@
  */
 
 /** @file
- *  Boundary Module.
+ *  Boundary Module.                           
  *  <pre>
  *  Description: This is the ascend version of the boundary module.
  *               This version should be used by any user who receives
@@ -33,11 +33,9 @@
  *               created by the ASCEND compiler.
  *
  *  Requires:    #include "utilities/ascConfig.h"
- *               #include "base.h"
  *               #include "rel.h"
  *               #include "logrel.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef bnd__already_included

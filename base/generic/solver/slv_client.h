@@ -1,4 +1,4 @@
-/* 
+/*
  *  SLV: Ascend Nonlinear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -18,7 +18,7 @@
  *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
- *
+ *                                                      
  *  The SLV solver is distributed in hope that it will be
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -136,7 +136,6 @@
  *                respective declarations below.
  *
  *  Requires:     #include "utilities/ascConfig.h"
- *                #include "base.h"
  *                #include "compiler/instance_enum.h"
  *                #include "var.h"
  *                #include "rel.h"
@@ -149,7 +148,6 @@
  *                #include "slv_common.h"
  *                #include "slv_types.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  *  @todo Reformat file comments?
  *
  *--------------------------------------------------------------------------

@@ -60,7 +60,7 @@
 /**<
  *  Returns the number of unsigned ints required
  *  to store a set of n bits.
- *  WORDSIZE is computed in base.h
+ *  WORDSIZE is computed in ascConfig.h      
  */
 
 #define	set_create(n) \

@@ -181,6 +181,7 @@ if $(BUILD_COMPILER)
     procframe.c
     procio.c
     prototype.c
+    redirectFile.c
     refineinst.c
     rel_common.c
     relation.c
@@ -208,7 +209,6 @@ if $(BUILD_COMPILER)
     type_descio.c
     typedef.c
     typelint.c
-    redirectFile.c
     units.c
     universal.c
     value_type.c
@@ -319,12 +319,12 @@ if $(BUILD_COMPILER)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)compiler ;
   SEARCH_SOURCE = $(ASC_COMPILER_DIR) ;
 
-  Library $(ASC_COMPILER_LIBNAME) : $(ASC_COMPILER_SOURCES) ;
+  Library $(ASC_COMPILER_LIBROOT) : $(ASC_COMPILER_SOURCES) ;
   MakeLocate $(ASC_COMPILER_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_COMPILER_LIB) ;
 
-#  Main $(ASC_COMPILER_LIBNAME)$(SUFSHR) : $(ASC_COMPILER_SOURCES) ;
+#  Main $(ASC_COMPILER_LIBROOT)$(SUFSHR) : $(ASC_COMPILER_SOURCES) ;
 #  MakeLocate $(ASC_COMPILER_LIB)$(SUFSHR) : $(BUILD_DIR) ;
 }
 
@@ -348,7 +348,7 @@ if $(BUILD_GENERAL)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)general ;
   SEARCH_SOURCE = $(ASC_GENERAL_DIR) ;
 
-  Library $(ASC_GENERAL_LIBNAME) : $(ASC_GENERAL_SOURCES) ;
+  Library $(ASC_GENERAL_LIBROOT) : $(ASC_GENERAL_SOURCES) ;
   MakeLocate $(ASC_GENERAL_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_GENERAL_LIB) ;
@@ -360,7 +360,7 @@ if $(BUILD_GENERAL)
 if $(BUILD_SOLVER)
 {
   ASC_SOLVER_SOURCES =
-    analyze.c
+    analyze.c                                        
     bnd.c
     bndman.c
     calc.c
@@ -405,7 +405,7 @@ if $(BUILD_SOLVER)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)solver ;
   SEARCH_SOURCE = $(ASC_SOLVER_DIR) ;
 
-  Library $(ASC_SOLVER_LIBNAME) : $(ASC_SOLVER_SOURCES) ;
+  Library $(ASC_SOLVER_LIBROOT) : $(ASC_SOLVER_SOURCES) ;
   MakeLocate $(ASC_SOLVER_LIB) : $(BUILD_DIR) ;
   ObjectCcFlags $(ASC_SOLVER_SOURCES) : $(SOLVER_DEFS) ;
 
@@ -435,7 +435,7 @@ if $(BUILD_UTILITIES)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)utilities ;
   SEARCH_SOURCE = $(ASC_UTILITIES_DIR) ;
 
-  Library $(ASC_UTILITIES_LIBNAME) : $(ASC_UTILITIES_SOURCES) ;
+  Library $(ASC_UTILITIES_LIBROOT) : $(ASC_UTILITIES_SOURCES) ;
   MakeLocate $(ASC_UTILITIES_LIB) : $(BUILD_DIR) ;
 
   # TODO:  remove when Tcl/Tk decoupled from base library
@@ -457,62 +457,64 @@ if $(BUILD_PACKAGES)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)packages ;
   SEARCH_SOURCE = $(ASC_PACKAGES_DIR) ;
 
-  Library $(ASC_PACKAGES_LIBNAME) : $(ASC_PACKAGES_SOURCES) ;
+  Library $(ASC_PACKAGES_LIBROOT) : $(ASC_PACKAGES_SOURCES) ;
   MakeLocate $(ASC_PACKAGES_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_PACKAGES_LIB) ;
 }
 
 #======================================================================
-# SOLVERS / INTEGRATORS
-#
-#  If you are linking to MINOS or other external solvers, the solver
-#  interface needs to know about it.
-#  Set the comment flags as appropriate on the following definitions.
-#  If the settings here do not match the libraries you link, you will
-#  almost certainly get runtime errors if not link errors.
+# ASCEND base regression test
 #======================================================================
 
-# >>>>  UNDER CONSTRUCTION  <<<<
+TEST_PROG = test_ascend_base ;
 
-#  to build with slv, uncomment the next line
-#SOLVER_DEFS += -DSTATIC_SLV ;
+# set location for target, source, and temporary files
+LOCATE_TARGET = $(BUILD_DIR)$(SLASH)test ;
+SEARCH_SOURCE =
+  $(ASC_COMPILER_DIR)$(SLASH)test
+  $(ASC_GENERAL_DIR)$(SLASH)test
+  $(ASC_SOLVER_DIR)$(SLASH)test
+  $(ASC_UTILITIES_DIR)$(SLASH)test
+  $(ASC_PACKAGES_DIR)$(SLASH)test
+  $(srcdir)$(SLASH)test
+  $(srcdir)$(SLASH)..$(SLASH)..$(SLASH)test ;
 
-#  to build with optsqp, uncomment the next line
-#SOLVER_DEFS += -DSTATIC_OPTSQP ;
+# extra symbolic targets for building test program
+DEPENDS tests : $(TEST_PROG)$(SUFEXE) ;
+NOTFILE tests ;
 
-#  to build with qrslv, uncomment the next line
-SOLVER_DEFS += -DSTATIC_QRSLV ;
+TEST_SOURCES =
+  assertimpl.c
+  redirectStdStreams.c
+  test_ascend_base.c
+  test_register_general.c
+  test_dstring.c
+  test_hashpjw.c
+  test_list.c
+  test_listio.c
+  test_pool.c
+  test_pretty.c
+  test_stack.c
+  test_table.c
+  test_tm_time.c
+  ;
 
-#  to build with mps, uncomment the next line
-#SOLVER_DEFS += -DSTATIC_MPS ;
+CCFLAGS +=
+  -I..$(SLASH)..$(SLASH)test ;
 
-#  to build with ngslv, uncomment the next line
-#SOLVER_DEFS += -DSTATIC_NGSLV ;
+Main $(TEST_PROG) : $(TEST_SOURCES) ;
+MakeLocate $(TEST_PROG)$(SUFEXE) : $(BUILD_DIR) ;
+LinkLibraries $(TEST_PROG) :
+  $(ASC_BASE_LIBS)
+  ..$(SLASH)..$(SLASH)test$(SLASH)libcunit$(SUFLIB) ;
 
-#  to build with cmslv (requires CONOPT), uncomment the next line
-#SOLVER_DEFS += -DSTATIC_CMSLV ;
-
-#  to build with lrslv, uncomment the next line
-#SOLVER_DEFS += -DSTATIC_LRSLV ;
-
-#  the configure script sets the following depending on its search for minos.
-#  to force a build WITHOUT minos, comment the next line
-#SOLVER_DEFS += -DSTATIC_MINOS ;
-#
-# name & location of the minos library
-#MINOSLIB =  ;
-#LOCATE on $(MINOSLIB) =  ;
-
-# TODO the configure script sets the following depending on its search for conopt.
-#  to force a build WITHOUT conopt, comment the next line
-#SOLVER_DEFS += -DSTATIC_CONOPT ;
-#
-# name & location of the conopt library
-#CONOPTLIB =  ;
-#LOCATE on $(CONOPTLIB) =  ;
-
-# TODO the configure script sets the following depending on its search for lsode.
-#  to force a build WITHOUT lsode, comment the next line
-SOLVER_DEFS += -DSTATIC_LSOD ;
+if $(NT)
+{
+  if ($(BCCROOT) || ($(TOOLSET) = BORLANDC))
+  {
+    # need to fix Borland to include library location
+    LINKFLAGS on $(TEST_PROG)$(SUFEXE) += -L$(STDLIBPATH) -tWC ;
+  }
+}
 

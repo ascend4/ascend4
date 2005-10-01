@@ -1,4 +1,4 @@
-/* 
+/*
  *  linsol II: Ascend Linear Equation Solver
  *  by Karl Westerberg
  *  Created: 2/6/90
@@ -16,7 +16,7 @@
  *
  *  QR options by Ben Allan
  *  based on sqr.pas v1.5: Copyright (C) 1994 Boyd Safrit
- *
+ *                                         
  *  The SLV solver is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
@@ -107,7 +107,6 @@
  *
  *  Requires:     #include <string.h>
  *                #include "utilities/ascConfig.h"
- *                #include "base.h"
  *                #include "mtx.h"
  *
  *  Each method is described here, including the unimplemented ones,
@@ -219,7 +218,6 @@
  *  have semantics varying with the method.
  *  See the header of linsolqr_set_pivot_tolerance below for details.
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef linsolqr__already_included

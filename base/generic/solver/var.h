@@ -1,4 +1,4 @@
-/* 
+/*
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -57,10 +57,8 @@
  *
  *  Requires:     #include <stdio.h>
  *                #include "utilities/ascConfig.h"
- *                #include "base.h"
  *                #include "slv_types.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  *  @todo At present there is some insanity about asking the instance tree
  *        vs asking our data structure about the flag values - This needs to
  *        be fixed (see longer BAA comment in solver/var.h).
@@ -586,15 +584,13 @@ extern void var_set_relaxed(struct var_variable *var, uint32 fixed);
 extern uint32 var_interface(struct var_variable *var);
 /**< Returns the interface flag of var.  Has side effects in the ascend instance. */
 extern void var_set_interface(struct var_variable *var, uint32 fixed);
-/**< 
- *  Sets the interface flag of var.  Has side effects in the ascend instance.
- *
- *  @todo var_set_interface() does not appear to have been implemented.
+/**< Sets the interface flag of var.  Has side effects in the ascend instance.
+ *  @todo solver/var.h: var_set_interface() not implemented.  Implement or remove.
  */
 /*
  *  fixed = var_fixed(var)
  *  var_set_fixed(var,fixed)
- *  uint32 fixed;
+ *  uint32 fixed;                                
  *  struct var_variable *var;
  *
  *  Gets/sets the fixed/relaxed/interface flag of the variable. This

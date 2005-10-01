@@ -1,4 +1,4 @@
-/* 
+/*
  *  Discrete Variable Module
  *  by Vicente Rico-Ramirez
  *  Created: 06/96
@@ -24,7 +24,7 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
  *
- */
+ */                                   
 
 /** @file
  *  Discrete Variable Module.
@@ -40,11 +40,9 @@
  *
  *  Requires:     #include <stdio.h>
  *                #include "utilities/ascConfig.h"
- *                #include "base.h"
  *                #include "slv_types.h"
  *                #include "list.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef dis__already_included

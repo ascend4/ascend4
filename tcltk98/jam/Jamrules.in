@@ -22,7 +22,7 @@
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
 #
-# UNDER CONSTRUCTION
+# UNDER CONSTRUCTION                               
 #
 # This is a template Jamrules file which supports building the
 # Tcl/Tk version of the Ascend modeling system, as well as a static
@@ -46,16 +46,19 @@
 
 # root directory for installation
 prefix =  c:\\dev ;
-INSTALL_ROOT = $(prefix)$(SLASH)Ascend4_install ;
+INSTALL_ROOT = $(prefix)$(SLASH)Ascend4-0.9.5 ;
 
 # name of the builder of the executable (in double quotes) 
 BUILD_CREDIT = "anonymous" ;
 
+# Path to general jam info
+# JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
+
 # Root dir of Ascend base library sources.
-ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
+#ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
 
 # Root dir of Ascend libraries - will be qualified for compiler & build type
-ASC_BASE_LIBDIR = ..$(SLASH)..$(SLASH)base$(SLASH)jam ;
+#ASC_BASE_LIBDIR = ..$(SLASH)..$(SLASH)base$(SLASH)jam ;
 
 # root directories for Tcl and Tk libraries
 TCL_DIR = ..$(SLASH)..$(SLASH)..$(SLASH)Tcl ;
@@ -67,7 +70,11 @@ TK_DIR  = $(TCL_DIR) ;
 # TK_LIBRARY  = tk80$(SUFLIB) ;
 # TKTABLE_LIB = tkTable$(SUFLIB) ;
 
-EXE_NAME = Ascend4 ;
+if $(NODEBUG)
+  { EXE_NAME = ascopt4 ; }
+else
+  { EXE_NAME = ascend4 ; }
+
 ASC_TCLTK98_LIBNAME = libasc_tcltk98 ;
 ASC_TCLTK98_LIB     = $(ASC_TCLTK98_LIBNAME)$(SUFLIB) ;
 
@@ -84,74 +91,19 @@ ASC_DOC_DIR    = ;
 ASC_MODELS_DIR = ..$(SLASH)..$(SLASH)models ;
 ASC_TK_DIR     = ..$(SLASH)TK ;
 
-ASC_BASE_LIBS =
-  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_COMPILER_LIB)
-  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_GENERAL_LIB)
-  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_SOLVER_LIB)
-  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_UTILITIES_LIB)
-  $(ASC_BASE_LIBDIR)$(BUILD_SUBDIR)$(SLASH)$(ASC_PACKAGES_LIB)
+# Paths to base libraries
+ASC_BASE_LIBS_QUAL =
+  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_LIBS_RELPATH)$(ASC_BASE_LIBS) ;
+
+# Paths to FORTRAN libraries
+FOR_LIBS =
+  $(JAM_GENERAL_DIR)$(SLASH)$(LSODLIB_RELPATH)$(SLASH)$(LSODLIB)
+  $(JAM_GENERAL_DIR)$(SLASH)$(MINOSLIB_RELPATH)$(SLASH)$(MINOSLIB)
+  $(JAM_GENERAL_DIR)$(SLASH)$(CONOPTLIB_RELPATH)$(SLASH)$(CONOPTLIB)
+  $(JAM_GENERAL_DIR)$(SLASH)$(LPAKLIB_RELPATH)$(SLASH)$(LPAKLIB)
+  $(JAM_GENERAL_DIR)$(SLASH)$(BLASLIB_RELPATH)$(SLASH)$(BLASLIB)
+  $(F77_LIBS)
   ;
-
-#======================================================================
-# FORTRAN options - set to override compiler defaults
-#
-#  Your FORTRAN compiler
-#FORTRAN = g77 ;
-
-#  Fortran compilation flags & options:
-#  These are used for making the ASCEND libraries based on FORTRAN codes.
-#  These should be set to get the best performance possible out of your
-#  f77 compiler without optimizing away functions that are not obviously
-#  called, as some compilers do by default.
-#
-#FORTRANFLAGS = -c -I4 -O -lg2c ;
-
-#  F77LIBS is for the base f77 libraries. If you are linking no f77
-#  objects to ascend, it may be left undefined.
-#  Set F77LIBS appropriate for your machine and desired loader behavior.
-#
-#F77_LIBS = ;
-
-#======================================================================
-# FORTRAN LIBRARIES
-#
-# Point BLASLIB and LPAKLIB to machine-specific BLAS and LINPACK
-# libraries (if you have them) to get the best speed out of ASCEND.
-# Otherwise, generic versions can be built if FORTRAN is available.
-#======================================================================
-
-# path to the lsode library - will be built if == 'libasc_lsode'
-#LSODLIB = libasc_lsode$(SUFLIB) ;
-
-# path to the blas library - will be built if == 'libasc_blas'
-#BLASLIB = libasc_blas$(SUFLIB) ;
-
-# path to the linpack library - will be built if == 'libasc_lpak'
-#LPAKLIB = libasc_lpak$(SUFLIB) ;
-
-FOR_LIBS = $(LSODLIB) $(MINOSLIB) $(CONOPTLIB) $(LPAKLIB) $(BLASLIB) $(F77_LIBS) ;
-
-#======================================================================
-# PACKAGES
-#
-# Package settings for building Ascend.
-# Packages are bits of compiled code that represent models, or solvers,
-# or, in general, any bits of external code.
-#
-# Choose one of the following, comment out the others:
-#     STATIC_PACKAGES   packages should be statically linked/loaded
-#     DYNAMIC_PACKAGES  packages should be dynamically linked/loaded
-#     NO_PACKAGES       no packages
-#
-# If STATIC_PACKAGES are chosen, also indicate the location of
-# the packages in PACK_LIBS.  Otherwise leave PACK_LIBS empty.
-#======================================================================
-HAVE_PACKAGES = STATIC_PACKAGES ;
-#HAVE_PACKAGES = DYNAMIC_PACKAGES ;
-#HAVE_PACKAGES = NO_PACKAGES ;
-
-PACK_LIBS = $(ASCLIB_PKG)$(SUFLIB) ;
-#PACK_LIBS = ;
 
 #======================================================================
 # TCL / TK
@@ -209,15 +161,13 @@ else
     TKTABLE_LIB ?= tkTable$(SUFLIB) ;
 }
 
-SEARCH on $(TCL_LIBRARY) = $(TCL_LIB_DIR) ;
-SEARCH on $(TK_LIBRARY) = $(TK_LIB_DIR) ;
-SEARCH on $(TKTABLE_LIB) = $(TKTABLE_LIB_DIR) ;
-LOCATE on $(TCL_LIBRARY) = $(TCL_LIB_DIR) ;
-LOCATE on $(TK_LIBRARY) = $(TK_LIB_DIR) ;
-LOCATE on $(TKTABLE_LIB) = $(TKTABLE_LIB_DIR) ;
-
 #  The tcl and tk library files
-TK_LIBS     = $(TK_LIBRARY) $(TCL_LIBRARY) ;
+TK_LIBS =
+  $(TK_LIB_DIR)$(SLASH)$(TK_LIBRARY)
+  $(TCL_LIB_DIR)$(SLASH)$(TCL_LIBRARY)
+  ;
+
+TKTABLE_LIB = $(TKTABLE_LIB_DIR)$(SLASH)$(TKTABLE_LIB) ;
 
 #  Location of the tcl.h and tk.h header files
 TK_HDRS     = $(TK_DIR)$(SLASH)include ;
