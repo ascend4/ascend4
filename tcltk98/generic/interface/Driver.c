@@ -352,8 +352,9 @@ static int AscDriver(int argc, CONST84 char *argv[])
   /* jds20050119:  Initialize ASCERR before any calls to ascPanic(). */
   /* TODO: revisit when interface is decoupled from base - this may change. */
   Asc_RedirectCompilerDefault();
+#ifdef USE_ASC_PRINTF  
   Asc_PrintInit_TclVtable();
-
+#endif  /* USE_ASC_PRINTF */
   /*
    *  Create the Tk Console
    *
@@ -522,7 +523,9 @@ static int AscDriver(int argc, CONST84 char *argv[])
   }
   Tk_MainLoop();
   Asc_ScriptConfigureInterrupt(0,interp);
+#ifdef USE_ASC_PRINTF  
   Asc_PrintFinalize_Tcl();
+#endif  /* USE_ASC_PRINTF */
 #ifdef DEBUG_MALLOC
   ascstatus("Memory status after Tk_MainLoop() exits");
 #endif /* DEBUG_MALLOC */
