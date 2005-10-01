@@ -74,10 +74,14 @@ if $(FORTRAN)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)lsode ;
   SEARCH_SOURCE = $(srcdir) ;
 
-  Library $(ASC_LSODE_LIBNAME) : $(ASC_LSODE_SOURCES) ;
-  MakeLocate $(ASC_LSODE_LIB) : $(BUILD_DIR) ;
-
-  DEPENDS libs lsode : $(ASC_LSODE_LIB) ;
+  Library $(ASC_LSOD_LIBROOT) : $(ASC_LSODE_SOURCES) ;
+  MakeLocate $(ASC_LSOD_LIB) : $(BUILD_DIR) ;
+Echo $(ASC_LSOD_LIBROOT) ;
+Echo $(ASC_LSODE_SOURCES) ;
+Echo $(ASC_LSOD_LIB) ;
+Echo $(BUILD_DIR) ;
+ 
+  DEPENDS libs lsod lsode : $(ASC_LSOD_LIB) ;
 }
 else
 {

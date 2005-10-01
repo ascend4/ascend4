@@ -52,7 +52,7 @@ INSTALL_ROOT = $(prefix)$(SLASH)Ascend4-0.9.5 ;
 BUILD_CREDIT = "anonymous" ;
 
 # Path to general jam info
-# JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
+JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
 
 # Root dir of Ascend base library sources.
 #ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
@@ -75,8 +75,8 @@ if $(NODEBUG)
 else
   { EXE_NAME = ascend4 ; }
 
-ASC_TCLTK98_LIBNAME = libasc_tcltk98 ;
-ASC_TCLTK98_LIB     = $(ASC_TCLTK98_LIBNAME)$(SUFLIB) ;
+ASC_TCLTK98_LIBROOT = libasc_tcltk98 ;
+ASC_TCLTK98_LIB     = $(ASC_TCLTK98_LIBROOT)$(SUFLIB) ;
 
 # Install directories - comment to not install that class of file
 INSTALL_BIN_DIR     = $(INSTALL_ROOT)$(SLASH)ascend4$(SLASH)bin ;
