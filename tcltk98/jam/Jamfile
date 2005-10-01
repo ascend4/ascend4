@@ -96,7 +96,7 @@ LOCATE_TARGET = $(BUILD_DIR)$(SLASH)interface ;
 SEARCH_SOURCE = $(ASC_INTERFACE_DIR) ;
 
 # Build the static libary of interface functions
-Library $(ASC_TCLTK98_LIBNAME) : $(ASC_TCLTK98_SOURCES) ;
+Library $(ASC_TCLTK98_LIBROOT) : $(ASC_TCLTK98_SOURCES) ;
 MakeLocate $(ASC_TCLTK98_LIB) : $(BUILD_DIR) ;
 
 # Build the Ascend executable
