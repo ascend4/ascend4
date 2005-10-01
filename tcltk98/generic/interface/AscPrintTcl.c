@@ -27,21 +27,18 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-/*
- *  Only compile this file if we are using Asc_Printf()
- */
-#if PRINTF == Asc_PrintF
-
-
 #include <stdarg.h>
 #include "tcl.h"
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
 #include "utilities/ascPrintType.h"
 
-                                             
-#define PRINT_BUFFER_SIZE 16380
+/*
+ *  Only compile this file if we are using Asc_Printf()
+ */
+#ifdef USE_ASC_PRINTF
 
+#define PRINT_BUFFER_SIZE 16380
 
 /*
  *  The Tcl channels for stdout and stderr.
@@ -153,4 +150,4 @@ int Asc_FFlushTcl( FILE *fileptr )
   }
 }
 
-#endif /*  PRINTF == Asc_Printf  */
+#endif /*  USE_ASC_PRINTF  */

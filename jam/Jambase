@@ -223,6 +223,10 @@ if $(NT)
     {
       TOOLSET = MINGW ;
     }
+    else if $(WATCOM)
+    {
+      TOOLSET = WATCOM ;
+    }
     else
     {
       ECHO  "Jam cannot be run because you didn't indicate which compilation toolset" ;
