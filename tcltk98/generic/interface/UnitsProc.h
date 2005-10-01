@@ -20,7 +20,7 @@
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
- *
+ *                                                              
  *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
@@ -42,12 +42,10 @@
  *  Requires:   #include "utilities/ascConfig.h"
  *              #include "compiler/interface.h"
  *              #include "compiler/instance_enum.h"
- *              #include "base.h"
  *              #include "general/list.h"
  *              #include "compiler/dimen.h"
  *              #include "compiler/units.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef UnitsProc_module_loaded

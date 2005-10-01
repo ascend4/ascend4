@@ -22,7 +22,7 @@
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
 #
-# UNDER CONSTRUCTION
+# UNDER CONSTRUCTION                                   
 #
 # This Jamfile builds the generic Ascend linpack functionality as a
 # static library.  This library comprises a linpack subset common to
@@ -66,9 +66,6 @@ include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
 
 srcdir = .. ;
 
-ASC_LINPACK_LIBNAME = liblpak ;
-ASC_LINPACK_LIB     = $(ASC_LINPACK_LIBNAME)$(SUFLIB) ;
-
 DEPENDS all : libs linpack ;
 NOTFILE libs linpack ;
 
@@ -78,17 +75,17 @@ NOTFILE libs linpack ;
 if $(FORTRAN)
 {
   ASC_LINPACK_SOURCES =
-    d1mach.c 
-    dgbfa.f 
-    dgbsl.f 
-    dgefa.f 
+    d1mach.c
+    dgbfa.f
+    dgbsl.f
+    dgefa.f
     dgesl.f
     ;
 
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)linpack ;
   SEARCH_SOURCE = $(srcdir) ;
 
-  Library $(ASC_LINPACK_LIBNAME) : $(ASC_LINPACK_SOURCES) ;
+  Library $(ASC_LINPACK_LIBROOT) : $(ASC_LINPACK_SOURCES) ;
   MakeLocate $(ASC_LINPACK_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs linpack : $(ASC_LINPACK_LIB) ;

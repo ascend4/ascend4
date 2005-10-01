@@ -17,7 +17,7 @@
  *  The SLV solver is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
+ *  License, or (at your option) any later version.          
  *
  *  The SLV solver is distributed in hope that it will be
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -33,8 +33,7 @@
 /** @file
  *  Server functions for the SLV solver.
  *  <pre>
- *  Requires:     #include "base.h"
- *                #include "var.h"
+ *  Requires:     #include "var.h"
  *                #include "rel.h"
  *                #include "discrete.h"
  *                #include "conditional.h"
@@ -55,8 +54,6 @@
  ! !  function definition. Basically, expect to have to read ! ! sections
  ! !  carefully and maybne patch calls dependent on them.
  *  </pre>
- *
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef slv_server_h__already_included

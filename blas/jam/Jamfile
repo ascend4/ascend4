@@ -22,7 +22,7 @@
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
 #
-# UNDER CONSTRUCTION
+# UNDER CONSTRUCTION                                 
 #
 # This Jamfile builds the generic Ascend blas functionality as a
 # static library.  This library comprises a blas subset common to
@@ -66,9 +66,6 @@ include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
 
 srcdir = .. ;
 
-ASC_BLAS_LIBNAME = libblas ;
-ASC_BLAS_LIB     = $(ASC_BLAS_LIBNAME)$(SUFLIB) ;
-
 DEPENDS all : libs blas ;
 NOTFILE libs blas ;
 
@@ -97,7 +94,7 @@ if $(FORTRAN)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)blas ;
   SEARCH_SOURCE = $(srcdir) ;
 
-  Library $(ASC_BLAS_LIBNAME) : $(ASC_BLAS_SOURCES) ;
+  Library $(ASC_BLAS_LIBROOT) : $(ASC_BLAS_SOURCES) ;
   MakeLocate $(ASC_BLAS_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs blas : $(ASC_BLAS_LIB) ;

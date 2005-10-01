@@ -1,4 +1,4 @@
-/*                              
+/*
  *  Integrators.h
  *  by Kirk Abbott and Ben Allan
  *  Created: 1/94
@@ -30,7 +30,7 @@
 /** @file
  *  Implementation of the Integration Interface.
  *  <pre>
- *  Author:       Boyd T. Safrit
+ *  Author:       Boyd T. Safrit                                        
  *
  *  Changes:  8/95  Added support code for blsode, an
  *                  experimental user interface
@@ -50,7 +50,8 @@
  *  Description:  This module defines the general integration
  *                auxillaries for Ascend.
  *
- *  Requires      #include "utilities/ascConfig.h
+ *  Requires      #include "tcl.h"
+ *                #include "utilities/ascConfig.h
  *                #include "general/list.h"
  *                #include "compiler/instance_enum.h"
  *                #include "compiler/dimen.h"

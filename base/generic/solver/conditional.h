@@ -1,4 +1,4 @@
-/* 
+/*
  *  Conditional Module
  *  by Vicente Rico-Ramirez
  *  Created: 09/96
@@ -23,7 +23,7 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.  COPYING is found in ../compiler.
- *
+ *                                    
  */
 
 /** @file
@@ -40,9 +40,7 @@
  *
  *  Requires:     #include "utilities/ascConfig.h"
  *                #include "list.h"
- *                #include "base.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef conditional__already_included

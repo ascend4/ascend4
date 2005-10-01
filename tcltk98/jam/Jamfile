@@ -103,12 +103,16 @@ MakeLocate $(ASC_TCLTK98_LIB) : $(BUILD_DIR) ;
 Main $(EXE_NAME) : Driver.c ;
 
 ObjectCcFlags $(ASC_TCLTK98_SOURCES) Driver.c : $(SOLVER_DEFS) -DTIMESTAMP="\"\\\"by $(BUILD_CREDIT)\\\"\"" ;
-ObjectHdrs $(ASC_TCLTK98_SOURCES) Driver.c : $(ASC_BASE_ROOT) $(TK_HDRS) ;
 
-LinkLibraries $(EXE_NAME) : $(ASC_TCLTK98_LIB) $(ASC_BASE_LIBS) $(PACKAGE_LIBS) ;
-NEEDLIBS on $(EXE_NAME)$(SUFEXE) +=
+ObjectHdrs $(ASC_TCLTK98_SOURCES) Driver.c :
+  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_SOURCE_RELPATH)
+  $(TK_HDRS)
+  ;
+
+LinkLibraries $(EXE_NAME) : $(ASC_TCLTK98_LIB) $(ASC_BASE_LIBS_QUAL) $(PACKAGE_LIBS) ;
+LINKLIBS on $(EXE_NAME)$(SUFEXE) +=
     $(FOR_LIBS)
-    $(TK_LIBS)
+    $(TK_LIBS)                                     
     $(TKTABLE_LIB)
     $(X11_LIBS)
     $(PC_LIBS)
@@ -170,7 +174,7 @@ if $(NT)
     ;
   }
 }
-else if $(UNIX)
+else if $(UNIX) || $(OS) = LINUX
 {
   LINKFLAGS on $(EXE_NAME)$(SUFEXE) +=
   -L$(TCL_LIB_DIR)

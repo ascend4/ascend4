@@ -21,7 +21,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
-#
+#                                                      
 # UNDER CONSTRUCTION
 #
 # This Jamfile builds the generic Ascend lsode functionality as a
@@ -58,9 +58,6 @@ JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
 include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
 
 srcdir = .. ;
-
-ASC_LSODE_LIBNAME = liblsode ;
-ASC_LSODE_LIB     = $(ASC_LSODE_LIBNAME)$(SUFLIB) ;
 
 DEPENDS all : libs lsode ;
 NOTFILE libs lsode ;
