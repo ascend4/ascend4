@@ -49,11 +49,18 @@
 #
 # 2. Copy the ../../jam/Jamrules_general.in to ../../jam/Jamrules_general.
 #
-# 3. Manually edit Jamrules_general and (if necessary) the Jamfile to set
+# 3. Manually edit Jamrules_general and (if necessary) this Jamfile to set
 #    configuration and local directory options.
 #
 # 4. Run jam from using the provided Jambase:
 #       jam -f ../../jam/Jambase libs
+#
+# 5. A prototype CUnit test suite may also be built.  At this point it
+#    only covers the general and utilities components.  For maximal
+#    testing, NODEBUG should be commented and DEBUG_MALLOC should be
+#    active in Jamrules_general.  This will require that the ASCEND base
+#    libs be built with these options also.  Build the tests using:
+#       jam -f ../../jam/Jambase tests
 #
 #-------------------------------------------------------------------------
 # Notes:
@@ -66,7 +73,7 @@
 # ** Currently, Open Watcom 1.3 can compile the Ascend sources
 #    and build the libraries.  However, it does not supply the required
 #    IEEE math functions isnan() and copysign().  At present, Ascend does
-#    not supply these, so the use must provide these functions to use
+#    not supply these, so the user must provide these functions to use
 #    the libraries under Watcom.
 #
 #---------------------------------------------------------------------------
@@ -360,7 +367,7 @@ if $(BUILD_GENERAL)
 if $(BUILD_SOLVER)
 {
   ASC_SOLVER_SOURCES =
-    analyze.c                                        
+    analyze.c
     bnd.c
     bndman.c
     calc.c
@@ -486,6 +493,7 @@ NOTFILE tests ;
 
 TEST_SOURCES =
   assertimpl.c
+  printutil.c
   redirectStdStreams.c
   test_ascend_base.c
   test_register_general.c
@@ -498,10 +506,24 @@ TEST_SOURCES =
   test_stack.c
   test_table.c
   test_tm_time.c
+  test_register_utilities.c
+  test_ascDynaLoad.c
+  test_ascEnvVar.c
+  test_ascMalloc.c
+  test_ascPanic.c
+  test_ascPrint.c
+  test_ascSignal.c
+  test_mem.c
+  test_readln.c
+  test_set.c
+#  test_register_solver.c
+#  test_slv_common.c
   ;
 
 CCFLAGS +=
-  -I..$(SLASH)..$(SLASH)test ;
+  -I..$(SLASH)..$(SLASH)test 
+  -DALLOCATED_TESTS
+  ;
 
 Main $(TEST_PROG) : $(TEST_SOURCES) ;
 MakeLocate $(TEST_PROG)$(SUFEXE) : $(BUILD_DIR) ;

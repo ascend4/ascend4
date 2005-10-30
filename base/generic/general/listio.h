@@ -33,16 +33,22 @@
  *  <pre>
  *  Requires:
  *        #include "utilities/ascConfig.h"
+ *        #include "general/list.h"
  *  </pre>
  */
 
-#ifndef __LISTIO_H_SEEN__
-#define __LISTIO_H_SEEN__
+#ifndef __listio_h_seen__
+#define __listio_h_seen__
 
-/** <!--  gl_write_list(fp,l);                                         -->
- * Write a list l (as ints/pointers) to file fp, or if fp NULL, to stderr.
+/**
+ *  Write the data in a list (as ints/pointers) to a file stream.
+ *  If fp is NULL, the the listing is to stderr.  The list pointer
+ *  may not be NULL (checked by assertion).
+ *
+ *  @param fp File stream to receive listing (stderr if fp == NULL).
+ *  @param l  The gl_list_t to write to fp (non-NULL).
  */
 extern void gl_write_list(FILE *fp, struct gl_list_t *l);
 
-#endif  /* __LISTIO_H_SEEN__ */
+#endif  /* __listio_h_seen__ */
 

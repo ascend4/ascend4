@@ -36,6 +36,8 @@
  *  Requires:     #include "utilities/ascConfig.h"
  *                #include "slv_client.h"
  *  </pre>
+ *  @todo MINOS (solver/slv1.c) is out-of-date and will not compile.
+ *        Should be either fixed or archived.
  */
 
 #ifndef slv1__already_included
@@ -45,10 +47,14 @@ typedef struct slv1_system_structure *slv1_system_t;
 
 int slv1_register(SlvFunctionsT *sft);
 /**<
+ *  Registration function for the MINOS solver.
  *  This is the function that tells the system about the MINOS solver.
  *  Our index is not necessarily going to be 1. That everything here is
  *  named slv1* is just a historical event.
+ *
+ *  @param sft SlvFunctionsT to receive the solver registration info.
+ *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
-     
+
 #endif  /* slv1__already_included */
 

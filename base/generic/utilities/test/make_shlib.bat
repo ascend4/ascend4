@@ -1,0 +1,2 @@
+gcc -I..\.. -DASC_BUILD_DLL -c -o test_ascDynaLoad_shlib.o test_ascDynaLoad_shlib.c
+gcc -shared -o test_ascDynaLoad_shlib.dll test_ascDynaLoad_shlib.o test_ascDynaLoad_shlib.def -Wl,--out-implib,libtest_ascDynaLoad_shlib.a

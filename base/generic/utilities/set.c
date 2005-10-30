@@ -28,14 +28,16 @@
  */
 
 #include "utilities/ascConfig.h"
+#include "utilities/ascPanic.h"
 #include "utilities/set.h"
 
 
 void set_change_member(unsigned *set, int k, boolean value)
 {
   int ndx = set_ndx(k);
-  int mask = set_mask(k);
+  unsigned int mask = set_mask(k);
 
+  asc_assert(NULL != set);
   if(value) {
     set[ndx] |= mask;
   } else {
@@ -47,12 +49,13 @@ extern unsigned *set_null(unsigned *set,int n)
 {
   int sz = set_size(n);   /* Size in words */
 
+  asc_assert(NULL != set);
   while( sz-- > 0 )
     set[sz] = 0;
   return set;
 }
 
-#ifdef THIS_IS_UNUSED_CODE
+#ifdef THIS_IS_DEAD_CODE
 #include "utilities/mask.h"
 
 

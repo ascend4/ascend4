@@ -31,14 +31,27 @@
  *  The purpose of this module is to provide a kind of flexible array.
  *  The flexible array has two interesting characteristics.  It allows
  *  contant time(O(1)) retrieval of list items and it is almost infinitely
- *  extendable(i.e. has no preset limit on the number of items in the list.
- *  One disadvanatage is that the list only stores pointers to items.
- *  It does not use much extra memory while providing these services.
- *  This module will also provide some routines which I consider standard
- *  list type operations.  In the comment for each procedure I will make
- *  some predictions about the efficiency of that operation.  Any
- *  modification of these procedures should live up to those claims.
+ *  extendable (i.e. has no preset limit on the number of items in the list).
+ *  It does not use much extra memory while providing these services.<br><br>
+ *
+ *  The list only stores pointers to items as VOIDPTR (void *).  This is
+ *  an advantage, in that the user has the flexibility to store pointers to
+ *  any data type in the list.  It is also a disadvanatage, since the data
+ *  structure is not type safe and the user must carefully keep track of
+ *  what is stored in the list.<br><br>
+ *
+ *  This module provides a standard set of list type operations.  Each includes
+ *  some predictions about the efficiency of that operation.  Any  modification
+ *  of these procedures should live up to those claims.
  *  <pre>
+ *  When #including list.h, make sure these files are #included first:
+ *         #include <stdio.h>
+ *         #include "utilities/ascConfig.h"
+ *         #include "compiler/compiler.h"
+ *  </pre>
+ */
+
+/*
  *  Any bugs or suggestions can be sent to:
  *
  *  te07@edrc.cmu.edu or te07@andrew.cmu.edu or epperly@osnome.che.wisc.edu
@@ -51,33 +64,27 @@
  *  This utility depends on ascmalloc.[ch] and (optionally) pool.[ch]
  *
  *  Change Log
- *  2/26/88	added gl_copy, gl_concat
- *  3/31/88	added additional commenting
- *  2/18/96	added defines when -DNDEBUG is active. We can't
- *  		afford the calls in a production compiler. (Ben Allan)
- *  2/23/96	Added recycling feature to reuse gl_lists. (TGWE)
- *  3/25/96	Improved recycling feature. (Ben Allan)
- *  3/30/96	Took dispose flag off gl_destroy and added a mirror
- *		function gl_free_and_destroy to take its place.
- *                Added pooled list heads (optional) which depends on
- *                pool.[ch] and improves performance substantially.
- *		Tuned to large applications. (Ben Allan)
- *  9/9/96	Changed flags from struct to int.  (Ben Allan)
- *  10/2/96	Added switch over -DMOD_REALLOC to use ascreallocPURE.
- *		If this file is compiled -DMOD_REALLOC, purify leaks of
- *		list->data are real, OTHERWISE it may be noise.
+ *  2/26/88   added gl_copy, gl_concat
+ *  3/31/88   added additional commenting
+ *  2/18/96   added defines when -DNDEBUG is active. We can't
+ *              afford the calls in a production compiler. (Ben Allan)
+ *  2/23/96   Added recycling feature to reuse gl_lists. (TGWE)
+ *  3/25/96   Improved recycling feature. (Ben Allan)
+ *  3/30/96   Took dispose flag off gl_destroy and added a mirror
+ *              function gl_free_and_destroy to take its place.
+ *              Added pooled list heads (optional) which depends on
+ *              pool.[ch] and improves performance substantially.
+ *              Tuned to large applications. (Ben Allan)
+ *  9/9/96    Changed flags from struct to int.  (Ben Allan)
+ *  10/2/96   Added switch over -DMOD_REALLOC to use ascreallocPURE.
+ *              If this file is compiled -DMOD_REALLOC, purify leaks of
+ *              list->data are real, OTHERWISE it may be noise.
  *              Skipping the call to gl_init may also help dianosis.
- *  9/20/97     Added gl_compare_ptrs.
- *
- *  When #including list.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *  </pre>
+ *  9/20/97   Added gl_compare_ptrs.
  */
 
-#ifndef __LIST_H_SEEN__
-#define __LIST_H_SEEN__
+#ifndef __list_h_seen__
+#define __list_h_seen__
 
 #ifndef TRUE
 #define TRUE 1
@@ -109,10 +116,12 @@ typedef void (*DestroyFunc)(VOIDPTR);
 
 extern void gl_init(void);
 /**<
- *  This function initializes a list recycler control table.
+ *  Initializes the list recycler control table.
  *  Until this function is called, no recycling will take place.
  *  This recycler control table should be tuned to your application.
  *  The list recycler is independent of the pool implementation.
+ *  This function may be called more than once, although in general
+ *  there is no reason to do so.
  */
 
 #ifdef ASC_NO_POOL
@@ -132,82 +141,111 @@ extern void gl_init(void);
  *  in some appropriate fashion: gl_init_pool(),  gl_destroy_pool(),
  *  gl_report_pool().
  */
-
+                                          
 extern void gl_init_pool(void);
-/**< 
- *  <!--  gl_init_pool();                                              -->
- *  Sets up list overhead structure data management
- *  before anything can be built, ideally at startup time.
- *  Do not call it again unless gl_destroy_pool is called first.
- *  If insufficient memory to compile anything at all, does exit(2).
- *  Do not call gl_create before this is called if LISTUSESPOOL == TRUE.
+/**<
+ *  Sets up list overhead structure data management.
+ *  This function should be called before anything can be built,
+ *  ideally at startup time.  Do not call it again unless
+ *  gl_destroy_pool() is called first.  If there is insufficient
+ *  memory to compile anything at all, it does exit(2).   Do not
+ *  call gl_create() before this is called if LISTUSESPOOL == TRUE.
  */
 
 extern void gl_destroy_pool(void);
-/**< 
- *  <!--  gl_destroy_pool();                                           -->
- *  Destroy list overhead structure data management. This must be called to
- *  clean up before shutting down you application if gl_init_pool was called.
- *  Do not call this function while there are ANY lists in existence.
- *  Do not attempt to create any lists after you call this unless you
- *  have recalled gl_init_pool.
- *  Do not call this if gl_init_pool has not been called.
+/**<
+ *  Destroys list overhead structure data management.  This must be
+ *  called to clean up before shutting down your application if
+ *  gl_init_pool() was called.  Do not call this function while
+ *  there are ANY lists in existence.  Do not attempt to create
+ *  any lists after you call this unless you have recalled
+ *  gl_init_pool().  Do not call this if gl_init_pool() has not
+ *  been called.
+ */
+
+extern int gl_pool_initialized(void);
+/**<
+ *  Query whether the list pool has been initialized.
+ *  Always returns TRUE if the list does not use pooling.
+ *
+ *  @return Returns TRUE if the pool has already been initialized,
+ *          FALSE otherwise.
  */
 
 extern void gl_report_pool(FILE *f);
-/**< 
- *  <!--  gl_report_pool(f);                                           -->
- *  <!--  FILE *f;                                                     -->
- *  Reports on the recycle pool to f.
+/**<
+ *  Prints a report on the recycle pool to f.
+ *
+ *  @param f Open file stream to which to print report.
  */
 
 extern struct gl_list_t *gl_create(unsigned long capacity);
 /**<
- *  <!--  FUNCTION gl_create(capacity)                                 -->
- *  <!--  unsigned long capacity;                                      -->
+ *  Creates a new empty list having the specified initial capacity.
+ *  If the number of list items later exceeds this size, the
+ *  capacity will be expanded.  It is not crucial, but a good
+ *  guess will increase the performance of this module.  There
+ *  is an implementation-defined minimum list size, so the actual
+ *  initial capacity can be larger than the requested capacity.<br><br>
  *
- *  This function takes one argument which is the anticipated size of the
- *  list.  This size simply sets the initial capacity of the list.  If the
- *  number of items execeeds this size, the capacity is expand.  It is no
- *  crucial, but a good guess will increase the performance of this module.<br><br>
+ *  Note that newly-created lists are both sorted and expandable.
+ *  Destruction of the returned list is the responsibility of the
+ *  caller.  Use gl_free_and_destroy() or gl_destroy() to do this.<br><br>
  *
- *  Complexity: worst case O(capacity)   <br><br>
+ *  Do not call this function unless gl_init_pool() has been called
+ *  if LISTUSESPOOL == TRUE.
+ *
+ *  Complexity: worst case O(capacity)   <br>
  *  Because memory proportional to capacity is allocated, depending on
  *  your memory management system, this could be proportional to the
  *  initial capacity.
+ *
+ *  @param capacity The desired initial list capacity.
+ *  @return Returns a pointer to the new empty gl_list_t.
  */
 
 extern void gl_free_and_destroy(struct gl_list_t *list);
 /**<
- *  <!--  PROCEDURE gl_free_and_destroy(list);                         -->
- *  <!--  struct gl_list_t *list;                                      -->
+ *  Destroys a list and deallocates all list items.
+ *  The specified list will be destroyed (its memory is to be
+ *  returned to free memory or the list pool).  Unlike with
+ *  gl_destroy(), the items in the list WILL BE DEALLOCATED.
+ *  This is appropriate when the list is considered the owner
+ *  of the list items.  The specified list can be NULL.<br><br>
  *
- *  This procedure takes ONE argument, a list that is
- *  to be destroyed(whose memory is to be returned to free memory).
- *  The items in the list WILL BE DEALLOCATED.<br><br>
+ *  DO NOT CALL gl_free_and_destroy() ON BOTH A LIST AND IT'S
+ *  gl_copy().  Since the copy is shallow, this would result in
+ *  double deletion of the pointers and a likely crash.<br><br>
  *
- *  Complexity: worst case O(n)  <br><br>
- *  where n is the size of the list.  I say this because memory proportional
+ *  Complexity: worst case O(n)  <br>
+ *  where n is the size of the list.  This is because memory proportional
  *  to n must be deallocated.  If that time is not proportional to the
  *  size then it should be O(1)
+ *
+ *  @param list A pointer to the gl_list_t to destroy.
  */
 
 extern void gl_destroy(struct gl_list_t *list);
-/**< 
- *  <!--  PROCEDURE gl_destroy(list);                                  -->
- *  <!--  struct gl_list_t *list;                                      -->
- *
- *  This procedure takes ONE argument, a list that is
- *  to be destroyed(whose memory is to be returned to free memory).
- *  The items in the list WILL NOT be deallocated.<br><br>
+/**<
+ *  Destroys a list without deallocating the list items.
+ *  The specified list will be destroyed (its memory is to be
+ *  returned to free memory or the list pool).  Unlike with
+ *  gl_free_and_destroy(), the items in the list WILL NOT be
+ *  deallocated.  This is appropriate when the list is considered
+ *  to be storing pointers to data owned by someone else.  Note that
+ *  the stored pointers are no longer available after calling this
+ *  function, so copies of the pointers must exist somewhere to
+ *  allow deallocation of the data.  The specified list can be NULL.<br><br>
  *
  *  If you want the items to be freed (a la the old gl_destroy(list,1))
- *  call gl_free_and_destroy(list) instead.<br><br>
+ *  call gl_free_and_destroy() instead.<br><br>
  *
- *  Complexity: worst case O(n)  <br><br>
+ *  Complexity: worst case O(n)  <br>
  *  where n is the size of the list.  I say this because memory proportional
  *  to n must be deallocated.  If that time is not proportional to the
  *  size then it should be O(1)
+ *
+ *  @param list A pointer to the gl_list_t to destroy.
  */
 
 #ifndef NDEBUG
@@ -216,15 +254,15 @@ extern void gl_destroy(struct gl_list_t *list);
 #define gl_fetch(list,pos) ((list)->data[((pos)-1)])
 #endif
 /**<
+ *  Retrieves the data item stored at position pos in the list.
  *  This function is used to access the list elements.  It returns the
- *  pointer indexed by pos.
- *  pos must be in the range [1..gl_length(list)].  Otherwise it causes
- *  an error.<br><br>
+ *  pointer indexed by pos, which must be in the range [1..gl_length(list)]
+ *  (checked by assertion).  The specified list may not be NULL
+ *  (checked by assertion).<br><br>
  *
- *  Even though the declared type of this function is void pointer,
- *  it will return a pointer to your data structure.  You must coerce
- *  the type to be correct as shown below.  This is similar with what
- *  you have to do to malloc calls which return pointers to chars.<br><br>
+ *  The returned pointer is of type VOIDPTR (void *).  It will usually be
+ *  necessary to cast the pointer to the correct type before use.  This is
+ *  similar to what needs to be done with the pointer returned be malloc().<br><br>
  *
  *  Example:                                        <pre>
  *	     struct data_t *item;
@@ -232,49 +270,26 @@ extern void gl_destroy(struct gl_list_t *list);
  *
  *  Complexity: O(1)
  *
- *  @param list CONST struct gl_list_t*, the list to query.
+ *  @param list CONST struct gl_list_t*, the list to query (non-NULL).
  *  @param pos  unsigned long, index to fetch [1..gl_length(list)].
  *  @return The list element at index pos as a VOIDPTR.
  *  @see gl_fetchF()
  */
+
 extern VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
 /**<
- *  <!--  FUNCTION gl_fetch(list,pos);                                        -->
- *  <!--  const struct gl_list_t *list;                                       -->
- *  <!--  unsigned long pos;                                                  -->
- *
- *  <!--  This function is used to access the list elements.  It returns the  -->
- *  <!--  pointer indexed by pos.                                             -->
- *  <!--  pos must be in the range [1..gl_length(list)].  Otherwise it causes -->
- *  <!--  an error.                                                           -->
- *
- *  <!--  Even though the declared type of this function is void pointer,     -->
- *  <!--  it will return a pointer to your data structure.  You must coerce   -->
- *  <!--  the type to be correct as shown below.  This is similar with what   -->
- *  <!--  you have to do to malloc calls which return pointers to chars.      -->
- *
- *  <!--  Example:                                                            -->
- * <!--       struct data_t *item;                                            -->
- * <!--       item = (struct data_t *)gl_fetch(datalist,4);                   -->
- *
- *  <!--  Complexity: O(1)                                                    -->
  *  Implementation function for gl_fetch() (debug mode).
  *  Do not call this function directly - use gl_fetch() instead.
  */
 
 extern void gl_store(struct gl_list_t *list, unsigned long pos, VOIDPTR ptr);
-/**< 
- *  <!--  PROCEDURE gl_store(list,pos,ptr);                            -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  unsigned long pos;                                           -->
- *  <!--  VOIDPTR ptr;                                                 -->
+/**<
+ *  Stores an item in the list in position pos.  This procedure can only
+ *  modify existing list items (i.e. 1 <= pos <= gl_length(list)).  It cannot
+ *  expand the list length or capacity.  You must use gl_append_ptr() to
+ *  do that.  The specified list may not be NULL (checked by assertion).<br><br>
  *
- *  This procedure is used to store an item in the list in position
- *  pos.  This procedure can only modify existing list items.  It cannot
- *  expand the list length or capacity.  You must use gl_append_ptr to
- *  do that(see below).<br><br>
- *
- *  Even though the declared type of ptr is a void pointer, you
+ *  Because any pointer type is convertible to a void pointer, you
  *  pass in a pointer to your data structure.  It stores whatever pointer
  *  you give it.<br><br>
  *
@@ -286,25 +301,26 @@ extern void gl_store(struct gl_list_t *list, unsigned long pos, VOIDPTR ptr);
  *
  *  COMPLEXITY: O(1)
  *
- *  @param list  The list to modify.
- *  @param pos   Index of position to modify, in range of [1..gl_length(list)].
+ *  @param list  The list to modify (non-NULL).
+ *  @param pos   Index of position to modify, [1..gl_length(list)].
  *  @param ptr   Pointer to data to store at index pos.
  */
 
 extern void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
-/**< 
+/**<
  *  <!--  PROCEDURE gl_append_ptr(list,ptr);                           -->
  *  <!--  struct gl_list_t *list;                                      -->
  *  <!--  VOIDPTR ptr;                                                 -->
  *
- *  This procedure will append ptr to the end of the list.  If the
- *  addition ptr exceeds the list capacity, the list capacity is increased.
- *  This and gl_append_list() are the only procedures that will expand
- *  the length and/or the capacity of a list.
- *  ptr is always stored in position gl_length(list)+1.<br><br>
+ *  Appends ptr to the end of the list.  If the addition of ptr exceeds
+ *  the list capacity, the list capacity is increased.  This and
+ *  gl_append_list() are the only procedures that will expand the
+ *  length and/or the capacity of a list.  ptr is always stored in
+ *  position gl_length(list)+1.  The specified list may not be
+ *  NULL, and the list must be expandable (checked by assertion).<br><br>
  *
- *  Even though the declared type of ptr is a void pointer, you
- *  pass in a pointer to your data structure.  It store whatever pointer
+ *  Because any pointer type is convertible to a void pointer, you
+ *  pass in a pointer to your data structure.  It stores whatever pointer
  *  you give it.<br><br>
  *
  *  Example:                                                       <pre>
@@ -313,61 +329,64 @@ extern void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
  *      various assignments to item->
  *      gl_append_ptr(list,item);   * This stores item             </pre>
  *
- *  Complexity: worst case O(n)  <br><br>
+ *  Complexity: worst case O(n)  <br>
  *  where n is the capacity of the list.  Normally it is O(1).  It is
  *  only when the list capacity is increased that it takes O(n).  This
  *  may also be an over estimate.
+ *
+ *  @param list  The list to modify (non-NULL).
+ *  @param ptr   Pointer to data to append to the list.
  */
 
 extern void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
 /**<
- *  <!--  PROCEDURE gl_fast_append_ptr(list,ptr);                      -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  VOIDPTR ptr;                                                 -->
+ *  Appends ptr to the end of the list without checking for adequate
+ *  capacity.  If the addition of ptr exceeds the list capacity, the
+ *  memory adjacent will be corrupted.  This function does not expand
+ *  the list length or check it.  ptr is always stored in position
+ *  gl_length(list)+1.   Only use this function in situations where
+ *  you are absolutely sure the gl_length(list) < list->capacity.
+ *  The specified list may not be NULL (checked by assertion).<br><br>
  *
- *  This procedure will append ptr to the end of the list.  If the
- *  addition ptr exceeds the list capacity, the memory adjacent will be
- *  corrupted. This does not expand the length or check it.
- *  ptr is always stored in position * gl_length(list)+1.
- *  Only use this in situations where you are absolutely sure the
- *  appended pointer will not cause list to grow.<br><br>
- *
- *  Even though the declared type of ptr is a void pointer, you
- *  pass in a pointer to your data structure.  It store whatever pointer
+ *  Because any pointer type is convertible to a void pointer, you
+ *  pass in a pointer to your data structure.  It stores whatever pointer
  *  you give it.<br><br>
  *
- *  Example: See gl_append_ptr.<br><br>
+ *  Example: See gl_append_ptr.<br>
  *  Intended use is that you create a list of the size you know you
  *  need (but may want to expand at a later time) and then call this.
- *  This is faster than gl_store.<br><br>
+ *  This is faster than gl_store().<br><br>
  *
  *  Complexity: O(1)
+ *
+ *  @param list  The list to modify (non-NULL).
+ *  @param ptr   Pointer to data to append to the list.
  */
 
-extern void gl_append_list(struct gl_list_t *extendlist, 
+extern void gl_append_list(struct gl_list_t *extendlist,
                            struct gl_list_t *list);
 /**<
- *  <!--  PROCEDURE gl_append_list(extendlist,list);                   -->
- *  <!--  struct gl_list_t *list,*extendlist;                          -->
+ *  Appends the pointers stored in list to the end of extendlist.
+ *  If the addition exceeds the capacity of extendlist, the extendlist
+ *  capacity is increased.  This function and gl_append_ptr() are the
+ *  only procedures that will expand the length and/or the capacity of
+ *  a list.  Neither extendlist nor list may be NULL, and expandlist
+ *  must be expandable (checked by assertion).<br><br>
  *
- *  This procedure will append the pointers of the list to the
- *  extendlist.  If the addition exceeds the extendlist capacity,
- *  the extendlist capacity is increased.
- *  This and gl_append_ptr are the only procedures that will expand
- *  the length and/or the capacity of a list.<br><br>
- *
- *  No new list is created.
- *  extendlist is changed if there is data in list.
+ *  No new list is created.  extendlist is changed if there is data in list.
  *  list is never changed in any case.<br><br>
  *
  *  Example:                                                    <pre>
  *      gl_append_list(oldlist,addlist);
  *      This stores contents of addlist at the end of oldlist   </pre>
  *
- *  Complexity: worst case O(gl_length(list)+gl_length(extendlist))  <br><br>
+ *  Complexity: worst case O(gl_length(list)+gl_length(extendlist))  <br>
  *  Normally it is O(gl_length(list)).  It is
  *  only when the extendlist capacity is increased that it is worst.  This
  *  may also be an over estimate depending on your allocator.
+ *
+ *  @param extendlist  The list to modify (non-NULL).
+ *  @param list        The list to append to extendlist (non-NULL).
  */
 
 #ifndef NDEBUG
@@ -376,59 +395,62 @@ extern void gl_append_list(struct gl_list_t *extendlist,
 #define gl_length(list) ((list)->length)
 #endif
 /**<
- *  This function returns the length of list, the number of items it
- *  is currently holding.<br><br>
+ *  Returns the length of list.  This is the number of items it
+ *  is currently holding.  There is no checking for whether list
+ *  is a valid pointer.  The specified list may not be NULL
+ *  (checked by assertion).  Use gl_safe_length() if the
+ *  list pointer might be NULL.<br><br>
  *
  *  Complexity: O(1)
  *
- *  @param list  CONST struct gl_list_t*. the list to query.
+ *  @param list  CONST struct gl_list_t*. the list to query (non-NULL).
  *  @return The length as an unsigned long.
  *  @see gl_lengthF()
  */
 extern unsigned long gl_lengthF(CONST struct gl_list_t *list);
 /**<
- *  <!--  FUNCTION gl_lengthF(list)                                    -->
- *  <!--  const struct gl_list_t *list;                                -->
- *
- *  <!--  This function returns the length of list, the number of items--> it
- *  <!--  is currently holding.                                        -->
- *
- *  <!--  Complexity: O(1)                                             -->
  *  Implementation function for gl_length() (debug mode).
  *  Do not call this function directly - use gl_length() instead.
+ *
+ *  @param list  CONST struct gl_list_t*. the list to query (non-NULL).
  */
 
 extern unsigned long gl_safe_length(CONST struct gl_list_t *list);
 /**<
- *  <!--  FUNCTION gl_safe_length(list)                                -->
- *  <!--  const struct gl_list_t *list;                                -->
- *
- *  This function returns the length of list, the number of items it
- *  is currently holding.
- *  Tolerates NULL input, for which the return value is 0.<br><br>
+ *  Returns the length of list.  This is the number of items it
+ *  is currently holding.  Unlike gl_length() this function
+ *  tolerates NULL input, for which the return value is 0.<br><br>
  *
  *  Complexity: O(1)
+ *
+ *  @param list The list to query.
+ *  @return The number of items stored in list.
  */
 
 extern unsigned long gl_capacity(CONST struct gl_list_t *list);
 /**<
- *  <!--  FUNCTION gl_length(list)                                     -->
- *  <!--  const struct gl_list_t *list;                                -->
- *
- *  This function returns the *potential* capacity of the list,
- *  at the current time. To find out the number of items in the list
- *  use gl_length(list).<br><br>
+ *  Returns the *potential* capacity of the list at the current time.
+ *  This is the number of items the list can store without having to
+ *  expand its capacity.  To find out the number of items in the list
+ *  use gl_length().  The specified list may be NULL, in which case
+ *  0 is returned.<br><br>
  *
  *  Complexity: O(1)
+ *
+ *  @param list The list to query.
+ *  @return The number of items that can be stored in list without expanding.
  */
 
 extern int gl_sorted(CONST struct gl_list_t *list);
 /**<
- *  <!--  FUNCTION gl_sorted(list);                                    -->
- *  <!--  const struct gl_list_t *list;                                -->
+ *  Query whether the specified list is sorted.  A list having 0 or 1
+ *  element is always sorted.  The specified list may not be NULL 
+ *  (checked by assertion).
  *
- *  Returns 1 if sorted and 0 otherwise.
  *  Complexity: O(1)
+ *
+ *  @param list The list to query (non-NULL).
+ *  @return Non-zero if the list is sorted and 0 otherwise.
  */
 
 #if LISTIMPLEMENTED
@@ -453,24 +475,24 @@ extern void gl_ptr_sort(struct gl_list_t *list, int inc);
 
 extern void gl_sort(struct gl_list_t *list, CmpFunc func);
 /**<
- *  <!--  PROCEDURE gl_sort(list,func);                                -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  CmpFunc func;                                                -->
+ *  Sorts the list in increasing order using Quick Sort.  It
+ *  uses a somewhat intelligent pivot choice, so it is unlikely that the
+ *  worst case of O(n^2) will arise.  This is not, however, guaranteed.
+ *  The caller must furnish a procedure "func" that compares two list items
+ *  and returns an integer > 0 if item1 > item2 and otherwise <= 0.
+ *  NOTE: THE COMPARISON PROCEDURE SHOULD BE ABLE TO HANDLE NULL POINTERS
+ *  GRACEFULLY.  Neither the specified list nor func may not be NULL 
+ *  (checked by assertion).<br><br>
  *
- *  This will sort the list in increasing order using Quick Sort.  It
- *  uses a somewhat inteligent pivot choice, so it is unlikely that the
- *  worst case of O(n^2) will arise.  I however will not guarantee that.
- *  You must furnish a procedure "func" that compares two list items
- *  and returns > 0 if item1 > item2 and otherwise <= 0.<br><br>
- *
- *  <!--  int func(item1,item2);                                       -->
- *  <!--  const struct itemtype *item1,*item2;                         -->
- *
- *  <!--  itemtype is whatever type you are storing in the list.       -->
- *  NOTE: YOUR COMPARISON PROCEDURE SHOULD BE ABLE TO HANDLE NULL POINTERS
- *  GRACEFULLY.<br><br>
+ *  Example:                                                    <pre>
+ *    const struct itemtype *item1, *item2;  // whatever type being stored in the list.
+ *    int func(item1,item2);
+ *    gl_sort(my_list, func);                                   </pre>
  *
  *  Complexity: worst case O(n^2) average case O(n*log(n))
+ *
+ *  @param list The list to sort (non-NULL).
+ *  @param func The comparison function to call during the sort.
  */
 
 #if LISTIMPLEMENTED
@@ -500,22 +522,20 @@ extern void gl_insert_ptr_sorted(struct gl_list_t *list, VOIDPTR ptr, int inc);
 
 extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
 /**<
- *  <!--  PROCEDURE gl_insert_sorted(list,ptr,func);                   -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  VOIDPTR ptr;                                                 -->
- *  <!--  CmpFunc func;                                                -->
- *
- *  This procedure will insert an item into the list in the position
- *  where it belongs to keep the list sorted.  You must pass a function
- *  that will compare to list items in the following way.  If the list is
- *  not sorted the item will be added to the end.
+ *  Inserts an item into a sorted list in the position where it belongs to
+ *  keep the list sorted.  The specified func is used to compare to list items
+ *  in the following way:
  *	- item1 > item2  returns > 0
  *	- item1 = item2  returns = 0
  *	- item1 < item2  returns < 0
- *  This function could also be used in gl_sort() above.<br><br>
+ *  This function should be the same as used to gl_sort() the list
+ *  If the list is not sorted, it will be sorted and the item added 
+ *  in the appropriate location.  Neither the specified list nor 
+ *  func may be NULL, and the list must be expandable (checked 
+ *  by assertion).<br><br>
  *
- *  Even though the declared type of ptr is a pointer to a char, you
- *  pass in a pointer to your data structure.  It store whatever pointer
+ *  Because any pointer type is convertible to a void pointer, you
+ *  pass in a pointer to your data structure.  It stores whatever pointer
  *  you give it.<br><br>
  *
  *  Example:                                                          <pre>
@@ -525,238 +545,306 @@ extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
  *      gl_insert_sorted(list,item,sortfunc); * This stores item      </pre>
  *
  *  Complexity: O(length)
+ *
+ *  @param list The list to modify (non-NULL).
+ *  @param ptr  Pointer to data to append to the list.
+ *  @param func The comparison function to call during the sort.
  */
 
 extern void gl_iterate(struct gl_list_t *list, void (*func)(VOIDPTR) );
 /**<
- *  <!--  PROCEDURE gl_iterate(list,func);                             -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  void (*func)(VOIDPTR);                                       -->
- *
- *  This procedure will execute the function func on all the members of
- *  list.  It will always execute the function on the items in the order
+ *  Executes the function func on all the members of the list.
+ *  It will always execute the function on the items in the order
  *  they appear in the list, 1,2,3..gl_length(list).  The function
- *  should handle nil pointers as input gracefully.
+ *  should handle NULL pointers as input gracefully.  Neither the
+ *  specified list nor the func may be NULL (checked by 
+ *  assertion).<br><br>
+ *
  *  Complexity: O(n*O(func))
+ *
+ *  @param list The list to iterate through (non-NULL).
+ *  @param func The function to execute for each list item.
  */
-
+                                   
 extern unsigned long gl_ptr_search(CONST struct gl_list_t *list,
                                    CONST VOIDPTR match,
-                                   int inc);
+                                   int increasing);
 /**<
- *  <!--  FUNCTION gl_ptr_search(list,match,inc);                      -->
- *  <!--  const struct gl_list_t *list;                                -->
- *  <!--  const VOIDPTR match;                                         -->
- *  <!--  int inc;                                                     -->
- *
- *  This procedure will search a list for a item that matches match and
- *  return the index where it is stored.  If a match is not found it
- *  returns 0.
+ *  Searches the list for a specific item and returns the position
+ *  where it is stored.  If match is not found, the function returns 0.
  *  The definition of match is as follows:
- *  It will return item i iff (gl_fetch(list,i) == match)<br><br>
+ *  It will return item i iff (gl_fetch(list,i) == match).
+ *  The specified list may not be NULL (checked by assertion).<br><br>
  *
  *  If the list is sorted this function will use a binary search,
  *  otherwise it will search linearly. The binary search will proceed
- *  based on inc. If you have the list sorted in increasing ptr order,
- *  give this inc=1, else inc=0. If you give us an incorrect inc, we
- *  may erroneously return 0.<br><br>
+ *  based on increasing. If you have the list sorted in increasing ptr 
+ *  order, give this increasing=1, else increasing=0.<br><br>
+ *
+ *  CAUTION!!  If the list is sorted by some other criteria than 
+ *  pointer address order, this function may erroneously return 0.
+ *  If you give us an incorrect increasing, we may erroneously 
+ *  return 0.  <br><br>
  *
  *  Complexity: if   gl_sorted(list) O(log gl_length(list))
- *              else O(gl_length(list))
- *  Multiplier better than for gl_search.
+ *              else O(gl_length(list))<br>
+ *  Multiplier is better than for gl_search().
+ *
+ *  @param list       The list to search (non-NULL).
+ *  @param match      The pointer to search for in list.
+ *  @param increasing TRUE if the list is sorted in increasing
+ *                    pointer order, FALSE otherwise.
+ *  @return The position of match in the list [1..gl_length(list)],
+ *          0 if match not found.
  */
 
 extern unsigned long gl_search(CONST struct gl_list_t *list,
                                CONST VOIDPTR match,
                                CmpFunc func);
 /**<
- *  <!--  FUNCTION gl_search(list,match,func);                         -->
- *  <!--  const struct gl_list_t *list;                                -->
- *  <!--  const VOIDPTR match;                                         -->
- *  <!--  CmpFunc func;                                                -->
- *
- *  This procedure will search a list for a item that matches match and
- *  return the index where it is stored.  If a match is not found it
- *  returns 0.
+ *  Searches a list for a specified item and returns the position where
+ *  it is stored.  If match is not found, the function returns 0.
  *  The definition of match is as follows:
- *  It will return item i iff (*func)(gl_fetch(list,i),match) = 0<br><br>
+ *  It will return item i iff (*func)(gl_fetch(list,i),match) = 0.
+ *  Neither the specified list nor func may be NULL (checked by
+ *  assertion).<br><br>
  *
  *  If the list is sorted this function will use a binary search, otherwise
- *  it will search linearly.  func should be defined like below(it is
- *  identical to the insert sorted func).  If it cannot find the item
- *  you are searching for it returns 0.<br><br>
- *
- *  <!--  int (*func)(item1,item2);                                    -->
- *  <!--  struct data_t *item1,*item2;                                 -->
- *
- *  The user must provide func, a comparison function returning:
+ *  it will search linearly.  The user must provide func, a comparison
+ *  function returning:
  *  - item1 > item2 ==> 1   (actually it need only be > 0)
  *  - item1 = item2 ==> 0
  *  - item1 < item2 ==> -1  (actually it need only be < 0)
  *
  *  Complexity: if   gl_sorted(list) O(log gl_length(list))
  *              else O(gl_length(list))
+ *
+ *  @param list  The list to search (non-NULL).
+ *  @param match The pointer to search for in list.
+ *  @param func  The comparison function to call during the search.
+ *  @return The position of match in the list[1..gl_length(list)],
+ *          0 if match not found.
  */
 
 extern unsigned long gl_search_reverse(CONST struct gl_list_t *list,
                                        CONST VOIDPTR match,
                                        CmpFunc func);
 /**<
- *  <!--  FUNCTION gl_search(list,match,func);                         -->
- *  <!--  const struct gl_list_t *list;                                -->
- *  <!--  const VOIDPTR match;                                         -->
- *  <!--  CmpFunc func;                                                -->
- *
- *  This function similar to gl_search() except that if the list is NOT
- *  sorted, it does a linear search starting from the last element in
+ *  Searches a list for a specified item and returns the position where
+ *  it is stored.  This is similar to gl_search(), except that if the list
+ *  is NOT sorted, it does a linear search starting from the last element in
  *  the list and working toward the first element.  For sorted lists,
- *  this function calls gl_search() to do a binary search.<br><br>
+ *  this function calls gl_search() to do a binary search.  Neither the 
+ *  specified list nor func may be NULL (checked by assertion).
  *
- *  See the documentation under gl_search() for more information.
+ *  @param list  The list to search (non-NULL).
+ *  @param match The pointer to search for in list.
+ *  @param func  The comparison function to call during the search.
+ *  @return The position of match in the list[1..gl_length(list)],
+ *          0 if match not found.
  */
 
 extern int gl_empty(CONST struct gl_list_t *list);
 /**<
- *  <!--  FUNCTION gl_empty(list)                                      -->
- *  <!--  const struct gl_list_t *list;                                -->
+ *  Query whether the list is empty.  An empty list has no items stored.
+ *  The specified list may not be NULL (checked by assertion).
  *
- *  If the list is empty it returns TRUE otherwise it returns FALSE.<br><br>
  *  Complexity: O(1)
+ *
+ *  @param list The list to query (non-NULL).
+ *  @return TRUE if the list is empty, FALSE otherwise.
  */
 
 extern int gl_unique_list(CONST struct gl_list_t *list);
 /**<
- *  <!--  FUNCTION gl_unique_list(list)                                -->
- *  <!--  const struct gl_list_t *list;                                -->
+ *  Query whether the pointers stored in the list are all unique.
+ *  The specified list may be NULL, in which case TRUE is returned.
  *
- *  If the list is of unique pointers it returns TRUE
- *  otherwise it returns FALSE.<br><br>
  *  Complexity: O(nlogn)
+ *
+ *  @param list The list to query.
+ *  @return TRUE if the pointers in the list are unique, FALSE otherwise.
  */
 
 extern void gl_delete(struct gl_list_t *list,
                       unsigned long pos,
                       int dispose);
 /**<
- *  <!--  PROCEDURE gl_delete(list,pos,dispose);                       -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  unsigned long pos;                                           -->
- *  <!--  int dispose;                                                 -->
+ *  Deletes the item in position pos from the list.
+ *  pos must be in the range [1..gl_length(list)], although pos = 0 is
+ *  tolerated (and has no effect).  The upper bound is checked by assertion.
+ *  If dispose is true then the memory associated with the item will also
+ *  be deallocated.  The specified list may not be NULL (checked by
+ *  asseretion).<br><br>
  *
- *  This procedure will delete the item in position pos from the list.
- *  pos must be in the range [1..gl_length(list)].
- *  If dispose is true then this will deallocate the memory associate
- *  with the item being deleted.  <br><br>
- *  Complexity: O(gl_length(list))  <br><br>
+ *  Complexity: O(gl_length(list))  <br>
  *  This is because all the list items to the right of the deleted
  *  item must be shuffled left one space.
+ *
+ *  @param list    The list to modify (non-NULL).
+ *  @param pos     The position of the item to remove [1..gl_length(list)].
+ *  @param dispose If non-zero the item will be free'd;
+ *                 if 0 the item will not be deallocated.
+ *  @todo Why does general/list:gl_delete() check for pos == 0?  Should
+ *        it be an ASSERTRANGE like other functions, or is there some
+ *        reason to expect this lone function to be called with pos == 0?
  */
 
 extern void gl_reverse(struct gl_list_t *list);
-/**< 
- *  <!--  PROCEDURE gl_reverse(list);                                  -->
- *  <!--  struct gl_list_t *list;                                      -->
- *  <!--  unsigned long pos;                                           -->
- *  <!--  int dispose;                                                 -->
- *
- *  This procedure will reverse the ordering of the list given.
+/**<
+ *  Reverses the ordering of the list.
  *  If the list given is marked as sorted, this function will
  *  leave it marked as sorted, though an inverse CmpFunc is now
- *  required for search/insertion.<br><br>
+ *  required for search/insertion.  The specified list may be
+ *  NULL, in which case no action is taken.<br><br>
+ *
  *  Complexity: O(gl_length(list))
+ *
+ *  @param list The list to modify.
  */
 
 extern void gl_reset(struct gl_list_t *list);
 /**<
- *  <!--  PROCEDURE gl_reset(list);                                    -->
- *  <!--  struct gl_list_t list;                                       -->
+ *  Resets the list to a *clean* state as if it had just been created.
+ *  As such, the list will be considered as expandle and sorted but
+ *  with a length of zero.  The items in the list are NOT deallocated.
+ *  The specified list may not be NULL (checked by assertion).<br><br>
  *
- *  This procedure will reset the list to a *clean* state as if it had
- *  just been created. As such this list will be considered as expandle
- *  and sorted but with a length of zero.<br><br>
- *  Complexity 1.   <br><br>
+ *  Complexity 1.   <br>
  *  This is useful for a list that is being used as a scratch list,
  *  and needs to be *reset* between operations.
+ *
+ *  @param list The list to reset (non-NULL).
  */
 
 extern struct gl_list_t *gl_copy(CONST struct gl_list_t *list);
-/**< 
- *  <!--  FUNCTION gl_copy(list);                                      -->
- *  <!--  const struct gl_list_t *list;                                -->
- *
- *  This function will copy a list.  The copy of the list will have its
- *  own memory associated with it, but the items themselves are shared
- *  between the lists.  What I mean by this is that the i'th item in
- *  each list both point to the same piece of memory which holds the
- *  i'th item.  List is not changed in any way.<br><br>
+/**<
+ *  Copies a list.  The copy of the list will have its own memory
+ *  associated with it, but the items themselves are shared between the
+ *  lists.  That is, the copy of the items is shallow and the 2 lists will
+ *  share pointers to the same memory locations.  The starting list is not
+ *  changed in any way.  The specified list may not be NULL (checked by
+ *  assertion).  Destruction of the returned list is the responsibility 
+ *  of the caller, but be careful not to call gl_free_and_destroy() on both
+ *  the original and copy.  This will result in double deletion of the 
+ *  pointers and likely a crash.<br><br>
  *
  *  Complexity O(gl_length(list))
+ *
+ *  @param list The list to copy (non-NULL).
+ *  @return A shallow copy of the list.
  */
 
 extern struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
                                    CONST struct gl_list_t *list2);
 /**<
- *  <!--  FUNCTION gl_concat(list1,list2);                             -->
- *  <!--  const struct gl_list_t *list1,*list2;                        -->
- *
- *  This function will concatenate two lists neither of which is changed
- *  in any way, shape or form.  The list that is returns will contain
- *  the items in list1 followed by the items in list2.<br><br>
+ *  Concatenates two lists into a new list.  Neither of the original
+ *  lists is changed in any way.  The list that is returned will contain
+ *  the items in list1 followed by the items in list2.  Neither list1
+ *  list 2 may be NULL (checked by assertion).  Destruction of the
+ *  returned list is the responsibility of the caller.<br><br>
  *
  *  Complexity O(gl_length(list1)+gl_length(list2))
+ *
+ *  @param list1 The 1st list to append to the new list (non-NULL).
+ *  @param list2 The 2nd list to append to the new list (non-NULL).
+ *  @return A new list containing the items of list1 and list2 appended.
  */
 
-extern int gl_compare_ptrs(CONST struct gl_list_t *list1, 
+extern int gl_compare_ptrs(CONST struct gl_list_t *list1,
                            CONST struct gl_list_t *list2);
 /**<
- *  <!--  FUNCTION gl_compare_ptrs(list1,list2);                       -->
- *  <!--  const struct gl_list_t *list1,*list2;                        -->
+ *  Compares the data (ptrs or whatever) in two lists.  Returns a code
+ *  as follows:
+ *    - -1 list1 < list2
+ *    -  0 list1 == list2
+ *    -  1 list1 > list2
+ *  The comparison is performed on an item-by-item basis, with the relative
+ *  values of the first different items found determining the "greater" list.
+ *  If all items up to the length of the shorter list have equal values,
+ *  the longer list is considered "greater".  For pointers this is a weird
+ *  function. But, we sometimes store ints in lists and want to sort lists
+ *  of lists.  This function does NOT tolerate NULL inputs.  Calling it with
+ *  a NULL pointer will abort the program.<br><br>
  *
- *  This function will compare the data (ptrs or whatever) in two lists)
- *  returning which ever list has greater data on an item-by-item basis.
- *  Returns -1,0,1. Longer lists are considered > than shorter lists
- *  which are identical up the the length of the shorter.
- *  For pointers this is a weird function. But we sometimes store ints
- *  in lists and want to sort lists of lists.<br><br>
- *  This function does NOT tolerate NULL inputs.<br><br>
  *  Complexity O(SHORTER_OF(list1,list2))
+ *
+ *  @param list1 The 1st list to compare (non-NULL).
+ *  @param list2 The 2st list to compare (non-NULL).
+ *  @return Returns -1 if list1 < list2, 1 if list1 > list 2, and 0 if the
+ *          lists are equal.
+ *  @todo  Why does general/list:gl_compare_ptrs() use Asc_Panic()
+ *         on a NULL pointer?  Assertions used in rest of module.
  */
 
-extern void gl_set_sorted(struct gl_list_t *list);
+extern void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE);
 /**<
- *  Set the sorted flag.  This should be done only when you are sure that
- *  the list is sorted.
+ *  Sets the sorted flag for the list based on TRUE_or_FALSE.  
+ *  Setting a list to sorted should be done only if you are sure 
+ *  that the list is sorted.  The list may not be NULL (checked
+ *  by assertion).
+ *
+ *  @param list The list to modify (non-NULL).
  */
 
-extern void gl_set_notexpandable(struct gl_list_t *list);
+extern int gl_expandable(struct gl_list_t *list);
 /**<
- *  Set the expandable flag.  This should be done only when you are sure
- *  that you dont want the list to be expandable. All lists are expandable
- *  until this flag is explicitly set. It sometimes useful to have a list
- *  not be expandable, as in the case when someone is depending on the
- *  address of a list member.
+ *  Query whether the specified list is expandable.  The specified list
+ *  may not be NULL (checked by assertion).
+ *
+ *  Complexity: O(1)
+ *
+ *  @param list The list to query (non-NULL).
+ *  @return Non-zero if the list is expandable and 0 otherwise.
+ */
+
+extern void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE);
+/**<
+ *  Sets the expandable flag for the list based on TRUE_or_FALSE.
+ *  All lists are expandable until this flag is explicitly cleared.  
+ *  Setting a list to non-expandable should be done only when you are 
+ *  quite sure that you want this. It is sometimes useful to have a 
+ *  list not be expandable, as in the case when someone is depending 
+ *  on the address of a list member.  However, list append and insert 
+ *  functions will fail if the list is not expandable.  The list may 
+ *  not be NULL (checked by assertion).
+ *
+ *  @param list The list to modify (non-NULL).
  */
 
 extern VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list,
                              unsigned long pos);
 /**<
- *  Return the address of the pointer to the information stored at
- *  position pos. This is sometimes useful for ptr to ptr manipulation.
+ *  Returns the address of the pointer stored at position pos.  This
+ *  is sometimes useful for ptr to ptr manipulation.  pos must be in
+ *  the range [1..gl_length(list).  The specified list may not be NULL.
+ *  Both of these conditions are checked by assertion.
+ *
+ *  @param list The list to query (non-NULL).
+ *  @param pos  The position of the data to fetch, [1..gl_length(list).
+ *  @return The address of the pointer as position pos.
  */
 
 extern void gl_emptyrecycler(void);
 /**<
+ *  Empties the list recycler.
  *  To improve runtime performance, this list module trys to reuse destroyed
  *  lists.  However, it may be beneficial to empty recycling bin from time
  *  to time.  The most appropriate time for this is before shutdown and
- *  perhaps after an instantiation.
+ *  perhaps after an instantiation.  If LISTRECYCLERDEBUG is defined, a
+ *  summary of the recycler status is also reported on stdout.
  */
 
 extern void gl_reportrecycler(FILE *fp);
 /**<
+ *  Prints a report of the recycler status to fp.
  *  To improve runtime performance, this list module trys to reuse destroyed
- *  lists. This function reports the recycler status.
+ *  lists. This function reports the recycler status.  Note that the report is
+ *  only printed if LISTRECYCLERDEBUG is defined.  The specified fp may not be
+ *  NULL (checked by assertion).
+ *
+ *  @param fp  Pointer to file stream to receive report.
  */
 
-#endif /* __LIST_H_SEEN__ */
+#endif /* __list_h_seen__ */
 

@@ -30,7 +30,7 @@
  */
 
 /** @file
- *  Stack Module
+ *  Stack Module.
  *
  *  Stacks are occasionally used in the implementation of a compiler
  *  and/or interpreter. This module (in the spirit of the list module)
@@ -45,8 +45,8 @@
  *  </pre>
  */
 
-#ifndef __STACK_H_SEEN__
-#define __STACK_H_SEEN__
+#ifndef __stack_h_seen__
+#define __stack_h_seen__
 
 /** Stack data structure. */
 struct gs_stack_t {
@@ -56,50 +56,54 @@ struct gs_stack_t {
 };
 
 extern struct gs_stack_t *gs_stack_create(unsigned long capacity);
-/**< 
- *  <!--  struct gs_stack_t *gs_stack_create(capacity);                -->
- *  <!--  unsigned long capacity;                                      -->
+/**<
+ *  Creates a new empty stack having the specified initial capacity.
+ *  If the number of stack items later exceeds this size, the
+ *  capacity will be expanded.  It is not crucial, but a good
+ *  guess will increase the performance of this module.  There
+ *  is an implementation-defined minimum stack size, so the actual
+ *  initial capacity can be larger than the requested capacity.<br><br>
  *
- *  This function takes one argument which is the anticipated size of the
- *  stack. This size simply sets the initial capacity of the stack. If the
- *  stack size exceeds the capacity, the stack is expanded. The stack will
- *  be expanded in 50% increments of the capacity when the stack would have
- *  been *overpushed.* If the stack capacity is less than 16, the capacity
- *  will be increased by at least 8 units. All mallocaters have a minimum
- *  overhead, and it makes sense to get a bigger chunk.
+ *  Destruction of the returned stack is the responsibility of the
+ *  caller.  Use gs_destroy() to do this.
+ *
+ *  @param capacity The desired initial stack capacity.
+ *  @return Returns a pointer to the new empty gs_stack_t.
  */
 
 extern void gs_stack_clear(struct gs_stack_t *stack);
-/**< 
- *  <!--  gs_stack_clear(stack);                                       -->
- *  <!--  struct gs_stack_t *stack;                                    -->
- *  This function accepts a stack and resets it to a clean state, as if the
- *  stack had just been created. If the stack had been automatically expanded,
- *  it will retain that stack capacity.
+/**<
+ *  Resets the stack to a *clean* state as if it had just been created.
+ *  The stack will retain whatever capacity it had.  The items in the 
+ *  stack are NOT deallocated.  The specified stack may not be NULL 
+ *  (checked by assertion).<br><br>
+ *
+ *  @param stack The stack to clear (non-NULL).
  */
 
 extern void gs_stack_destroy(struct gs_stack_t *stack, int dispose);
-/**< 
- *  <!--  gs_stack_destroy(stack,dispose);                             -->
- *  <!--  struct gs_stack_t *stack;                                    -->
- *  <!--  int dispose;                                                 -->
+/**<
+ *  Destroys a stack with optional deallocation of the stack items.
+ *  The specified stack will be destroyed (its memory is returned to 
+ *  free memory).  If dispose is non-zero, the items in the stack will
+ *  be deallocated.  This is appropriate when the stack is considered
+ *  to be storing pointers to data it owns.  Otherwise, dispose should
+ *  be zero and the data pointers will not be deallocated.  In this 
+ *  case the stored pointers are no longer available after calling this
+ *  function, so copies of the pointers must exist somewhere to
+ *  allow deallocation of the data.  The specified stack can be NULL.<br><br>
  *
- *  This procedure takes two arguments.  This first is a stack that is
- *  to be destroyed(whose memory is to be returned to free memory).
- *  items is a boolean type value.  If you want the items in the stack to
- *  also be deallocated then you should set dispose to a true value, otherwise
- *  it should be false.
+ *  @param stack   A pointer to the gs_stack_t to destroy.
+ *  @param dispose Non-zero for deallocation of stack data items,
+ *                 0 to have the data preserved.
  */
 
 extern void gs_stack_push(struct gs_stack_t *stack, VOIDPTR ptr);
-/**< 
- *  <!--  gs_stack_push(stack,ptr);                                    -->
- *  <!--  struct gs_stack_t *stack;                                    -->
- *  <!--  VOIDPTR ptr;                                                 -->
- *
- *  This function will push the given ptr onto the stack. It will expand
- *  the capacity of the stack if necessary. One can push any pointer onto
- *  the stack by casting appropriately.<br><br>
+/**<
+ *  Pushes the specified ptr onto the stack.  The stack capacity will
+ *  be expanded if necessary. One can push any pointer (including NULL)
+ *  onto the stack by casting appropriately.  The specified stack may 
+ *  not be NULL (checked by assertion).<br><br>
  *
  *  Example:                                                     <pre>
  *       struct data_t *item;
@@ -108,61 +112,66 @@ extern void gs_stack_push(struct gs_stack_t *stack, VOIDPTR ptr);
  *       * ....... various operations on item ........
  *       gs_stack_push(stack,(VOIDPTR)item);                     </pre>
  *
- *  The same would apply to the return value. See gs_stack_pop().
+ *  @see gs_stack_pop().
+ *  @param stack A pointer to the gs_stack_t to modify (non-NULL).
+ *  @param ptr   Pointer to push onto stack.
  */
 
 extern VOIDPTR gs_stack_pop(struct gs_stack_t *stack);
-/**< 
- *  <!--  gs_stack_pop(stack);                                         -->
- *  <!--  struct gs_stack_t *stack;                                    -->
- *
- *  This function will pop the top most item off the stack. The stack
- *  size will be appropriately accounted for. The return value must be
- *  appropriately cast as in the example below.<br><br>
- *
- *  Example:                                                    <pre>
+/**<
+ *  Pops and returns the top most item from the stack. The stack
+ *  size will be appropriately accounted for.  The return value is a
+ *  (void *), so will need to be cast to the appropriate type before
+ *  use.  If the stack is empty when this function is called, NULL
+ *  will be returned.  The specified stack may not be NULL (checked
+ *  by assertion).
+ *  <pre>
+ *  Example:
  *       struct data_t *item, *result;
  *       struct gs_stack_t = gs_create(100L);
  *       item = (struct data_t)malloc(sizeof(struct data_t));
- *       * ....... various operations on item ........          
+ *       * ....... various operations on item ........
  *
  *       gs_stack_push(stack,(VOIDPTR)item);
  *       result = (struct data_t*)gs_stack_pop(stack);          </pre>
  *
- *  NOTE: If the stack is overpopped, i.e., the stack is empty at the time
- *  of the call of this function, NULL will be returned.
+ *  @see gs_stack_push().
+ *  @param stack A pointer to the gs_stack_t to modify (non-NULL).
+ *  @return Returns the top-most data pointer as a (void *).
  */
 
 extern unsigned long gs_stack_size(CONST struct gs_stack_t *stack);
-/**< 
- *  <!--  unsigned long gs_stack_size(stack);                          -->
- *  <!--  const struct gs_stack_t *stack;                              -->
+/**<
+ *  Returns the current size of the stack.
+ *  Zero is a valid size, meaning that the stack is empty.  The
+ *  specified stack may not be NULL (checked by assertion).
  *
- *  Returns the current size of the stack. Zero is a valid size, meaning
- *  that the stack is empty.
+ *  @param stack A pointer to the gs_stack_t to query (non-NULL).
+ *  @return Returns the number of data items on the stack.
  */
 
 extern int gs_stack_empty(CONST struct gs_stack_t *stack);
-/**< 
- *  <!--  int gs_stack_empty(stack);                                   -->
- *  <!--  const struct gs_stack_t *stack;                              -->
+/**<
+ *  Indicates whether the stack contains any data items.
+ *  Returns TRUE (i.e. a nonzero), if the stack is empty,
+ *  FALSE (zero) otherwise.  The specified stack may not 
+ *  be NULL (checked by assertion).
  *
- *  Returns TRUE (i.e. a nonzero), if the stack is empty.
- *  Returns FALSE (zero) otherwise.
+ *  @param stack A pointer to the gs_stack_t to query (non-NULL).
+ *  @return Returns non-zero if the stack is empty, 0 otherwise.
  */
 
 extern void gs_stack_apply(struct gs_stack_t *stack, void (*func) (VOIDPTR));
 /**<
- *  <!--  void gs_stack_apply(stack,func)                              -->
- *  <!--  struct gs_stack_t *stack;                                    -->
- *  <!--  void (*func) (VOIDPTR);                                      -->
+ *  Executes the function func on all the members of the stack.
+ *  It will always execute the function on the items from the bottom
+ *  of the stack (first-in) to the top (last-in).  The function
+ *  should handle NULL pointers as input gracefully.  Neither the
+ *  specified stack nor the func may be NULL (checked by assertion).
  *
- *  This function will execute the function func on all items currently on
- *  the stack. It will execute the function on the stack items from the
- *  bottom of the stack to the top. The function must be able to handle
- *  NULL pointers as input gracefully. This is potentially useful for
- *  debugging.
+ *  @param stack The stack to apply func to (non-NULL).
+ *  @param func The function to execute for each stack item.
  */
 
-#endif /* __STACK_H_SEEN__ */
+#endif /* __stack_h_seen__ */
 

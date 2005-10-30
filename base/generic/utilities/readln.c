@@ -33,13 +33,11 @@
 
 #define	BUFLEN	1000
 
-static int killnl(s,nl)
-char *s;
-int *nl;
 /**
  ***  Kills newline, returning the new line length.  *nl is set to
  ***  TRUE if there was a newline.
  **/
+static int killnl(char *s, int *nl)
 {
    register char *end;
 
@@ -50,13 +48,12 @@ int *nl;
    return(end-s);
 }
 
-static char *strsave(s)
-char *s;
 /**
  ***  Allocates just enough memory to store s and copies it to
  ***  that location.  Returns pointer to allocated memory, or NULL
  ***  if ascmalloc() fails.
  **/
+static char *strsave(char *s)
 {
    char *sav;
 
@@ -65,22 +62,21 @@ char *s;
    return(sav);
 }
 
-int readln(s,mx)
-char *s;
-int mx;
+int readln(char *s, int mx)
 {
-   return( freadln(s,mx,stdin) );
+   return( freadln(s, mx, stdin) );
 }
 
-int freadln(s,mx,fp)
-char *s;
-int mx;
-FILE *fp;
+int freadln(char *s, int mx, FILE *fp)
 {
    int nl;
    int len;
 
-   if( fgets(s,mx,fp)==NULL )
+   if ((NULL == s) || (NULL == fp))
+      return(-1);
+   if (0 >= mx)
+      return(0);
+   if ( fgets(s,mx,fp)==NULL )
       return(-1);
    len=killnl(s,&nl);
    if( !nl ) { /* Newline not found yet */
@@ -91,21 +87,22 @@ FILE *fp;
    return(len);
 }
 
-char *areadln()
+
+char *areadln(void)
 {
    char	buf[BUFLEN];
    return( readln(buf,BUFLEN)<0 ? NULL : strsave(buf) );
 }
 
-char *afreadln(fp)
-FILE *fp;
+
+char *afreadln(FILE *fp)
 {
    char	buf[BUFLEN];
    return( freadln(buf,BUFLEN,fp)<0 ? NULL : strsave(buf) );
 }
 
-long readlong(def)
-long def;
+
+long readlong(long def)
 {
    char	line[BUFLEN];
    long	val;
@@ -115,8 +112,8 @@ long def;
    return(val);
 }
 
-double readdouble(def)
-double def;
+
+double readdouble(double def)
 {
    char line[BUFLEN];
    double val;

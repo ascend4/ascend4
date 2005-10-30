@@ -28,17 +28,16 @@
  *
  */
 
+/*  ChangeLog
+ *
+ *  10/13/2005  Added callback functionality & ability to cancel exit()
+ *              for use in unit test.  Changed sprintf's to snprintf's
+ *              to avoid buffer overflow (J.D. St.Clair)
+ */
+
 #include <stdarg.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascPanic.h"
-
-/* jds20050119:  windows.h is now included by ascConfig.h
-#ifdef __WIN32__
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#undef WIN32_LEAN_AND_MEAN
-#endif
-*/
 
 /*  PANIC_MSG_MAXLEN
  *    The maximum length of the panic message.  Used to create a buffer
@@ -47,6 +46,7 @@
 #define PANIC_MSG_MAXLEN 2047
 
 
+/*  THIS IS SUPERCEDED BY EXTERNAL UNIT TEST FOR ascPanic.c */
 /*  PANIC_TEST
  *    Define this cpp macro to build a standalone program to test the
  *    panic functions---since they shouldn't be called during normal
@@ -62,6 +62,20 @@ FILE *ASCERR = stderr;
 #define TEST_OUTPUT_BAD  "/foo/bar/baz/cow/grumble/Asc_Panic.out"
 #endif  /*  PANIC_TEST  */
 
+/*
+ *  f_panic_callback_func
+ *     Holds a pointer to a callback function if registered using
+ *     Asc_PanicSetCallback().  If NULL (the default), nothing is called.
+ */
+static PanicCallbackFunc f_panic_callback_func = NULL;
+
+#ifdef __WIN32__
+/*
+ *  On Windows only, flag to enable/disable display of the MessageBox 
+ *  in Asc_Panic(). 
+ */
+static int f_display_MessageBox = TRUE;
+#endif
 
 /*
  *  g_panic_output
@@ -71,40 +85,23 @@ FILE *ASCERR = stderr;
 static char g_panic_outfile[PATH_MAX];
 
 
-/*
- * Asc_Panic( status, function, format, args )
- *      int status;
- *      CONST char *function
- *      CONST char *format
- *      VAR_ARGS args
- *
- *  This function prints the arguments "args" using the format string
- *  "format" to the ASCERR file handle.  The first line of the panic
- *  message will print ``ASCEND PANIC!! in function'' if the argument
- *  "function" is not NULL.  If ASCERR has not been initialized to a
- *  valid file pointer, the message will not be printed.  Either way,
- *  if an panic output file location has been specified with the 
- *  Asc_PanicSetOutfile() function, the panic message is also stored 
- *  there.  Under Windows, we also pop up a MessageBox containing the 
- *  message.  Finally, we exit the program with the status "status".
- *
- *  Side Effects: Exits the program.
- */
-extern void Asc_Panic(CONST int status, CONST char *function,
-                      CONST char *format, ...)
+void Asc_Panic(CONST int status, CONST char *function,
+               CONST char *format, ...)
 {
   char msg[PANIC_MSG_MAXLEN];  /* The message that will be printed */
-  unsigned int p;              /* The current length of the msg array */
+  size_t p;                    /* The current length of the msg array */
   FILE *outfile;               /* The file to save the message into */
   va_list args;                /* The arguments to print */
-assert(NULL != ASCERR);
+  int cancel = FALSE;          /* If non-zero, do not call exit().  Default is to exit() */
+
+  assert(NULL != ASCERR);      /* fail loudly so know can't write msg.  Can't use asc_assert(). */
   /*
    *  Give the name of the function where the panic occurred
    */
   if( function != NULL ) {
-    sprintf( msg, "ASCEND PANIC!!  in function \"%s\"\n", function );
+    snprintf( msg, PANIC_MSG_MAXLEN-2, "ASCEND PANIC!!  in function \"%s\"\n", function );
   } else {
-    sprintf( msg, "ASCEND PANIC!!\n" );
+    snprintf( msg, PANIC_MSG_MAXLEN-2, "ASCEND PANIC!!\n" );
   }
   p = strlen(msg);
 
@@ -112,7 +109,7 @@ assert(NULL != ASCERR);
    *  Add the variable args to the panic message using the format "format"
    */
   va_start(args, format);
-  vsprintf( (msg+p), format, args );
+  vsnprintf( (msg+p), PANIC_MSG_MAXLEN-p-2, format, args );
   va_end(args);
 
   p = strlen(msg);
@@ -122,7 +119,6 @@ assert(NULL != ASCERR);
   /*
    *  Print the message to ASCERR
    */
-  /* TODO:  should ascPanic fail loudly if ASCERR is NULL? */
   if (ASCERR != NULL)
     FPRINTF(ASCERR, msg);
 
@@ -135,47 +131,64 @@ assert(NULL != ASCERR);
      && ( (outfile=fopen(g_panic_outfile,"w")) != NULL ))
   {
     FPRINTF(outfile, msg);
-    if( (fclose(outfile)) == 0 && (ASCERR != NULL)) {
-      sprintf((msg+p),
-              "ASCEND PANIC: Error message stored in %s\n", g_panic_outfile);
-      FPRINTF(ASCERR, "%s", (msg+p));
+    if( ASCERR != NULL ) {
+      FPRINTF(ASCERR, "ASCEND PANIC: Error message written to %s\n", g_panic_outfile);
     }
+    fclose(outfile);
+  }
+
+  /*
+   *  Call the registered callback function, if any.
+   */
+  if (NULL != f_panic_callback_func) {
+    cancel = (*f_panic_callback_func)(status);
   }
 
 #ifdef __WIN32__
   /*
-   *  Display the error in a message box under Windows
+   *  Display msg in a MessageBox under Windows unless turned off
    */
-  MessageBeep(MB_ICONEXCLAMATION);
-  MessageBox(NULL, msg, "Fatal Error in ASCEND",
-             MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-  ExitProcess(status);
+  if (FALSE != f_display_MessageBox) {
+    (void)MessageBeep(MB_ICONEXCLAMATION);
+    MessageBox(NULL, msg, "Fatal Error in ASCEND",
+               (UINT)(MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND));
+  }
+  if (0 == cancel)
+    ExitProcess((UINT)status);
 #endif
 
-  exit(status);
+  if (0 == cancel)
+    exit(status);
 }
 
 
-/*
- *  Asc_PanicSetOutfile(filename)
- *      CONST char *filename;
- *
- *  Calling this function with a non-NULL "filename" will cause
- *  Asc_Panic() to write panic messages to "filename" in addition to the
- *  ASCERR file handle.  Passing in a "filename" of NULL causes panic
- *  messages not to be written to disk---this undoes the effect of
- *  previous calls to Asc_PanicSetOutfile()
- */
-extern void Asc_PanicSetOutfile(CONST char *filename)
+void Asc_PanicSetOutfile(CONST char *filename)
 {
   if( filename != NULL ) {
-    strcpy( g_panic_outfile, filename );
+    strncpy( g_panic_outfile, filename, PANIC_MSG_MAXLEN-1 );
   } else {
     g_panic_outfile[0] = '\0';
   }
 }
 
+PanicCallbackFunc Asc_PanicSetCallback(PanicCallbackFunc func)
+{
+  PanicCallbackFunc old_func = f_panic_callback_func;
+  f_panic_callback_func = func;
+  return old_func;
+}
 
+
+void Asc_PanicDisplayMessageBox(int TRUE_or_FALSE)
+{
+#ifdef __WIN32__
+  f_display_MessageBox = TRUE_or_FALSE;
+#else
+  UNUSED_PARAMETER(TRUE_or_FALSE);
+#endif
+}
+
+/*  THIS IS SUPERCEDED BY EXTERNAL UNIT TEST FOR ascPanic.c */
 #ifdef PANIC_TEST
 /*
  *  main

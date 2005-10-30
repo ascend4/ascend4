@@ -44,71 +44,114 @@
  */
 
 /** @file
- * use of this header requires
+ *  Dynamic library routines.
+ *  <pre>
+ *  Reaquires:
  *        #include "utilities/ascConfig.h"
+ *  </pre>
  */
 
-#ifndef __ASCDYNALOAD_H_SEEN__
-#define __ASCDYNALOAD_H_SEEN__
+#ifndef __ascdynaload_h_seen__
+#define __ascdynaload_h_seen__
 
-/**
- * <!--  error = Asc_DynamicLoad(path, initFun);                       -->
- * Returns 1 if fails to load the file named in path and find
- * the symbol in initFun as an int function.
- * Otherwise returns the result of the call to initFun.
- * If initFun == NULL, calls nothing and returns 0 after opening
- * library.<br><br>
- *
- * This is our wrapping dlopen. It makes
- * provision for dynamic unloading.
- * Once all references to the previously loaded library have been
- * scheduled to be removed without further ado, it can be unloaded
- * on most architectures.
- */
 extern int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
-
-/**
- * <!--  error = DynamicLoad(path, initFun);                           -->
- * Returns 1 if fails to load the file named in path and find
- * the symbol in initFun as an int function.
- * Otherwise returns the result of the call to initFun.<br><br>
+/**<
+ *  Loads a dynamic library and calls its initialization function.
+ *  This is our function wrapping dlopen/LoadLibrary.  It makes
+ *  provision for dynamic unloading using Asc_DynamicUnLoad().<br><br>
  *
- * This is the standard function wrapping dlopen. It makes no
- * provision for dynamic unloading, and therefore should not
- * be used very often.
+ *  Returns 1 if it fails to load the library named in path and find
+ *  the symbol initFunc as an int function.  Otherwise, it returns
+ *  the result of the call to (*initFunc).  If initFunc == NULL,
+ *  nothing is called and 0 is returned after opening the library.
+ *  If path == NULL, 1 is always returned.<br><br>
+ *
+ *  A consequence of this behavior is that initFunc had better not
+ *  return 1, or you won't be able to tell whether the library was
+ *  successfully loaded or not.  If it's under your control, have
+ *  initFunc only return values other than 1 so you can detect the
+ *  proper status.<br><br>
+ *
+ *  @param path     Path to the dynamic library to load (non-NULL).
+ *  @param initFunc The DL initialization function to call.
+ *  @return The return value from initFunc is returned if specified.
+ *          Otherwise, 0 is returned if the library is successfully
+ *          loaded, 1 if it is not.
  */
+
 extern int DynamicLoad(CONST char *path, CONST char *initFunc);
+/**<
+ *  Loads a dynamic library and calls its initialization function.
+ *  This is the standard function wrapping dlopen. It makes no
+ *  provision for dynamic unloading, and therefore should not
+ *  be used very often.  It is not currently implemented for all
+ *  platforms (e.g. Win32).<br><br>
+ *
+ *  This function returns 1 if it fails to load the file named in
+ *  path and find the symbol in initFun as an int function.
+ *  Otherwise it returns the result of the call to initFun.  See 
+ *  the discussion under Asc_DynamicLoad() for more issues 
+ *  arising from this behavior.
+ *
+ *  @param path     Path to the dynamic library to load (non-NULL).
+ *  @param initFunc The DL initialization function to call.
+ *  @return The return value from initFunc is returned if specified.
+ *          Otherwise, 0 is returned if the library is successfully
+ *          loaded, 1 if it is not.
+ */
 /*
  * note on some systems (ultrix) this header hides a lot of non-static
  * function names which don't appear terribly standard.
  */
 
-/** 
- * <!--  Asc_DynamicUnLoad(path);                                      -->
- * Attempts to find our record of loading a module of the same
- * path and unload it. <br><br>
- *
- * This is our wrapping dlclose. It provides unloading.
- * Once all references to the previously loaded library have been
- * scheduled to be removed without further ado, it can be unloaded
- * on most architectures. Once you call this function, you damn
- * well better not reference functions or data that came from
- * the path given.<br><br>
- *
- * returns the output of dlclose (shl_unload) or -3 if confused.
- */
 extern int Asc_DynamicUnLoad(CONST char *path);
-
-/** 
- * <!-- yourFuncOrVar = (YOURCAST)Asc_DynamicSymbol(libraryname,symbolname);  -->
- * <!-- rPtr =                                                                -->
- * <!--  (double (*)(double *, double *))Asc_DynamicSymbol("lib.dll","calc"); -->
- * Returns you a pointer to a symbol exported from the dynamically
- * linked library named, if the library is loaded and the
- * symbol can be found in it.
+/**<
+ *  Attempts to unload a dynamic library.
+ *  This function tries to look up the previously-loaded library
+ *  in path and unload it.  Only libraries successfully loaded using
+ *  Asc_DynamicLoad() may be unloaded using this function.<br><br>
+ *
+ *  This is our function wrapping dlclose/shl_unload/FreeLibrary
+ *  which provides unloading.  Once all references to the
+ *  previously-loaded library have been scheduled to be removed
+ *  without further ado, it can be unloaded on most architectures.
+ *  Once you call this function, you damn well better not reference
+ *  functions or data that came from the path given.  Passing a NULL
+ *  path will always result in an error condition (-3) being returned.
+ *
+ *  @param path     Path to the dynamic library to unload.
+ *  @return The return value of dlclose/shl_unload/FreeLibrary, or
+ *          -3 if there is a problem locating or unloading the library.
  */
-extern void *Asc_DynamicSymbol(CONST char *libraryname, 
-                               CONST char *symbolname);
 
-#endif /* __ASCDYNALOAD_H_SEEN__ */
+extern void *Asc_DynamicSymbol(CONST char *libraryname,
+                               CONST char *symbolname);
+/**<
+ *  Returns a pointer to a symbol exported from a dynamically-linked
+ *  library.  It will generally be necessary to cast the returned pointer
+ *  to the correct function or data type before use.  If either parameter 
+ *  is NULL, or if the library or symbol cannot be located, then NULL will
+ *  be returned.
+ *  <pre>
+ *  Example:
+ *    typedef double (*calcfunc)(double *, double *);
+ *    calcfunc calc;
+ *    calc = (calcfunc))Asc_DynamicSymbol("lib.dll","calc");
+ *  </pre>
+ *  @param libraryname Name of the dynamic library to query.
+ *  @param symbolname  Symbol to look up in the library.
+ *  @return A pointer to the symbol in memory, or NULL if not found.
+ */
+
+#if (defined(__HPUX__) || defined(__ALPHA_OSF__) || \
+     defined(__WIN32__) || defined(__SUN_SOLARIS__) || \
+     defined(__SUN_SUNOS__) || defined(__SGI_IRIX__))
+#define HAVE_DL_UNLOAD 1
+/**<
+ *  Set if a platform has a library unload function.
+ *  We don't know about ultrix, aix, and others.
+ */
+#endif
+
+#endif /* __ascdynaload_h_seen__ */
 

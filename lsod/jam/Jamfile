@@ -21,7 +21,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
-#                                                      
+#
 # UNDER CONSTRUCTION
 #
 # This Jamfile builds the generic Ascend lsode functionality as a
@@ -76,10 +76,6 @@ if $(FORTRAN)
 
   Library $(ASC_LSOD_LIBROOT) : $(ASC_LSODE_SOURCES) ;
   MakeLocate $(ASC_LSOD_LIB) : $(BUILD_DIR) ;
-Echo $(ASC_LSOD_LIBROOT) ;
-Echo $(ASC_LSODE_SOURCES) ;
-Echo $(ASC_LSOD_LIB) ;
-Echo $(BUILD_DIR) ;
  
   DEPENDS libs lsod lsode : $(ASC_LSOD_LIB) ;
 }

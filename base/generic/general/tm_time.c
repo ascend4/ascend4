@@ -28,23 +28,25 @@
  */
 
 #include <time.h>
-#include "utilities/ascConfig.h"
+#include "utilities/ascConfig.h"               
+#include "utilities/ascPanic.h"
 #include "general/tm_time.h"
 
-double tm_cpu_time()
+static boolean f_first = TRUE;
+
+double tm_cpu_time(void)
 {
-   static boolean first = TRUE;
    static clock_t ref;
    static double dref;
    static double dcps;
    clock_t now;
    double dnow;
 
-   if( first ) {
+   if( f_first ) {
       dcps = (double) CLOCKS_PER_SEC;
       ref = clock();
       dref = (double) ref;
-      first = FALSE;
+      f_first = FALSE;
    }
    now = clock();
    dnow = (double) now;
@@ -52,32 +54,44 @@ double tm_cpu_time()
    return( (dnow - dref)/dcps );
 }
 
+double tm_reset_cpu_time(void)
+{
+  f_first = TRUE;
+  return tm_cpu_time();
+}
+
 void tm_cpu_time_ftn_(double *t)
 {
+  asc_assert(NULL != t);
   *t = tm_cpu_time();
 }
 
 void aftime_(double *t)
 {
+  asc_assert(NULL != t);
   *t = tm_cpu_time();
 }
 
 void tm_cpu_time_ftn(double *t)
 {
+  asc_assert(NULL != t);
   *t = tm_cpu_time();
 }
 
 void aftime(double *t)
 {
+  asc_assert(NULL != t);
   *t = tm_cpu_time();
 }
 
 void TM_CPU_TIME_FTN(double *t)
 {
+  asc_assert(NULL != t);
   *t = tm_cpu_time();
 }
 
 void AFTIME(double *t)
 {
+  asc_assert(NULL != t);
   *t = tm_cpu_time();
 }

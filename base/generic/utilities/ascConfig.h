@@ -307,6 +307,20 @@ typedef	unsigned   uint32;
 #  define UNUSED_PARAMETER(p) (void)(p)
 #endif
 
+/* ASCEND assertion defines */
+/** Exit status code for failed assertion. */
+#define ASCERR_ASSERTION_FAILED 100
+/* 
+ *  For now, asc_assert tied to NDEBUG just like regular assert.
+ *  Having a separate assertion deactivator (ASC_NO_ASSERTIONS)
+ *  gives us the ability to decouple from NDEBUG and leave 
+ *  assertions active in release code if desired.
+ */
+#ifdef NDEBUG
+/** If defined, asc_assert() will be removed from code. */
+#define ASC_NO_ASSERTIONS
+#endif
+
 /*
  *
  *  Platform specific fixes
@@ -352,16 +366,13 @@ typedef	unsigned   uint32;
 
 #endif /* __WIN32__ */
 
+/* use signals by default, but disable with configure. */
 #ifdef ASC_NO_TRAPS
-/* use signals by default, but disable with configure.
- */
 /** Don't use signals. */
 #define NO_SIGNAL_TRAPS 1
 #else
-/** Use signals.
- * @todo Should this be an #undefine instead?  Usage in ascSignal.c and bintoken.c imples this.
- */
-#define NO_SIGNAL_TRAPS 0
+/** Use signals. */
+#undef NO_SIGNAL_TRAPS
 #endif
 
 #ifdef USE_ASC_PRINTF

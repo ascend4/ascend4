@@ -23,7 +23,7 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *
+ *                 
  */
 
 /** @file
@@ -33,14 +33,11 @@
  *         #include "utilities/ascConfig.h"
  *         #include "instance_enum.h"
  *         #include "compiler.h"
- *         #include "base.h"
- *             base, say what?
  *         #include "case.h"
  *         #include "relation.h"
  *         #include "relation_type.h"
  *         #include "instance_types.h"
  *  </pre>
- *  @todo Remove reference to base.h?  Appears to have been refactored away.
  */
 
 #ifndef __WHEN_UTIL_H_SEEN__

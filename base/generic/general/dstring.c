@@ -33,37 +33,77 @@
 
 #include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
+#include "utilities/ascPanic.h"
 #include "general/dstring.h"
 
 
-void Asc_DStringInit(dsPtr)
-     register Asc_DString *dsPtr;	/* Pointer to structure for
-	        			 * dynamic string. */
+void Asc_DStringInit(register Asc_DString *dsPtr)
 {
+  asc_assert(NULL != dsPtr);
   dsPtr->string = dsPtr->staticSpace;
   dsPtr->length = 0;
   dsPtr->spaceAvl = ASC_DSTRING_STATIC_SIZE;
-  dsPtr->staticSpace[0] = 0;
+  dsPtr->staticSpace[0] = '\0';
+}
+
+
+char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string)
+{
+  int length;
+  char *newString;
+
+  asc_assert(NULL != dsPtr);
+  asc_assert(NULL != string);
+  asc_assert((int)(MAXINT - strlen(string)) >= 0);
+
+  length = (int)strlen(string);
+
+  /*
+   * Allocate a larger buffer for the string if the current one isn't
+   * large enough.  Allocate extra space in the new buffer so that there
+   * will be room to grow before we have to allocate again.
+   */
+  if (length >= dsPtr->spaceAvl) {
+    dsPtr->spaceAvl = length*2;
+    newString = (char *) ascmalloc((size_t) dsPtr->spaceAvl);
+    if (dsPtr->string != dsPtr->staticSpace) {
+      ascfree(dsPtr->string);
+    }
+    dsPtr->string = newString;
+  }
+
+  /*
+   * Copy the new string into the buffer
+   */
+  strncpy(dsPtr->string, string, (size_t)length);
+  dsPtr->length = length;
+  dsPtr->string[dsPtr->length] = '\0';
+  return dsPtr->string;
 }
 
 
 
-extern char *Asc_DStringAppend(dsPtr, string, length)
-     register Asc_DString *dsPtr;	/* Structure describing dynamic
-	        			 * string. */
-     CONST char *string;		/* String to append.  If length is
-	        			 * -1 then this must be
-        				 * null-terminated. */
-     int length;			/* Number of characters from string
-	        			 * to append.  If < 0, then append all
-        				 * of string, up to null at end. */
+char *Asc_DStringAppend(register Asc_DString *dsPtr,
+                        CONST char *string,
+                        int length)
 {
+  int str_length;
   int newSize;
   char *newString;
 
+  asc_assert(NULL != dsPtr);
+  asc_assert(NULL != string);
+  asc_assert((int)(MAXINT - strlen(string)) >= 0);
+
+  str_length = (int)strlen(string);
+
   if (length < 0) {
-    length = strlen(string);
+    length = str_length;
   }
+  else {
+    length = MIN(length, str_length);
+  }
+
   newSize = length + dsPtr->length;
 
   /*
@@ -71,10 +111,9 @@ extern char *Asc_DStringAppend(dsPtr, string, length)
    * large enough.  Allocate extra space in the new buffer so that there
    * will be room to grow before we have to allocate again.
    */
-
   if (newSize >= dsPtr->spaceAvl) {
     dsPtr->spaceAvl = newSize*2;
-    newString = (char *) malloc((unsigned) dsPtr->spaceAvl);
+    newString = (char *) ascmalloc((size_t) dsPtr->spaceAvl);
     strcpy(newString, dsPtr->string);
     if (dsPtr->string != dsPtr->staticSpace) {
       ascfree(dsPtr->string);
@@ -83,55 +122,50 @@ extern char *Asc_DStringAppend(dsPtr, string, length)
   }
 
   /*
-   * Copy the new string into the buffer at the end of the old                   
-   * one.
+   * Copy the new string into the buffer at the end of the old one.
    */
-
-  strncpy(dsPtr->string + dsPtr->length, string, length);
+  strncpy(dsPtr->string + dsPtr->length, string, (size_t)length);
   dsPtr->length += length;
-  dsPtr->string[dsPtr->length] = 0;
+  dsPtr->string[dsPtr->length] = '\0';
   return dsPtr->string;
 }
 
 
 
-extern void Asc_DStringTrunc(dsPtr, length)
-     register Asc_DString *dsPtr;	/* Structure describing dynamic
-                                         * string. */
-     int length;			/* New length for dynamic string. */
+void Asc_DStringTrunc(register Asc_DString *dsPtr, int length)
 {
+  asc_assert(NULL != dsPtr);
+  
   if (length < 0) {
     length = 0;
   }
   if (length < dsPtr->length) {
     dsPtr->length = length;
-    dsPtr->string[length] = 0;
+    dsPtr->string[length] = '\0';
   }
 }
 
 
 
-extern void Asc_DStringFree(dsPtr)
-     register Asc_DString *dsPtr;	/* Structure describing dynamic
-	        			 * string. */
+void Asc_DStringFree(register Asc_DString *dsPtr)
 {
+  asc_assert(NULL != dsPtr);
   if (dsPtr->string != dsPtr->staticSpace) {
     ascfree(dsPtr->string);
   }
   dsPtr->string = dsPtr->staticSpace;
   dsPtr->length = 0;
   dsPtr->spaceAvl = ASC_DSTRING_STATIC_SIZE;
-  dsPtr->staticSpace[0] = 0;
+  dsPtr->staticSpace[0] = '\0';
 }
 
 
 
-extern char *Asc_DStringResult(dsPtr)
-     Asc_DString *dsPtr;		/* Dynamic string that is to become
-	        			 * the returned result. */
+char *Asc_DStringResult(Asc_DString *dsPtr)
 {
   register char *result;
 
+  asc_assert (NULL != dsPtr);
   result = (char *)ascmalloc(strlen(dsPtr->string)+1);
   strcpy(result,dsPtr->string);
   Asc_DStringFree(dsPtr);

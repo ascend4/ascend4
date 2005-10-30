@@ -49,11 +49,15 @@
 
 typedef struct slv7_system_structure *slv7_system_t;
 
-int slv7_register(SlvFunctionsT *);
+int slv7_register(SlvFunctionsT *f);
 /**<
+ *  Registration function for the ASCEND NGSlv solver.
  *  This is the function that tells the system about the NGSlv solver.
  *  Our index is not necessarily going to be 0. That everything here is
  *  named slv7* is just a historical event.
+ *
+ *  @param f SlvFunctionsT to receive the solver registration info.
+ *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
 #endif  /* slv7__already_included */

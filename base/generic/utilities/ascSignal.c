@@ -38,6 +38,14 @@
  * status flags based on a variable set by the trap
  * and cleared by recipient.
  */
+/*
+ *  ChangeLog
+ *
+ *  10/15/2005  - Changed ascresetneeded() so that any previously
+ *                registered handlers are reset before return.
+ *              - Added Asc_SignalRecover() to standard handler
+ *                Asc_SignalTrap() so handlers are reset if necessary. (JDS)
+ */
 
 #include <stdio.h>
 #include "utilities/ascConfig.h"
@@ -54,18 +62,8 @@
 #include "general/list.h"
 
 
-#define TRAPPTR(a) void (*(a))(int)
-/*
- * This macro defines a pointer to a signal handler named a.
- * 20050528 JDS Use SigHandler instead.
- */
-#define TPCAST void (*)(int)
-/*
- * This macro can be used like  tp = (TPCAST)foo;
- * 20050528 JDS Use SigHandler instead.
- */
+static jmp_buf f_test_env;    /* for local testing of signal handling */
 
-static jmp_buf g_test_env;
 #ifndef NO_SIGNAL_TRAPS 
 /* test buf for initialization */
 jmp_buf g_fpe_env;
@@ -77,14 +75,14 @@ jmp_buf g_foreign_code_call_env;
 
 #endif /* NO_SIGNAL_TRAPS*/
 
-static int g_reset_needed = -2;
+static int f_reset_needed = -2;
 /* has value 0 or 1 after Init is called.
- * and if Init is called without the value -2 in g_reset_needed,
+ * and if Init is called without the value -2 in f_reset_needed,
  * it will fail.
  */
-static struct gl_list_t *g_fpe_traps = NULL;
-static struct gl_list_t *g_int_traps = NULL;
-static struct gl_list_t *g_seg_traps = NULL;
+static struct gl_list_t *f_fpe_traps = NULL;
+static struct gl_list_t *f_int_traps = NULL;
+static struct gl_list_t *f_seg_traps = NULL;
 /*
  * Batch of globals because we don't want an array of
  * all possible signals, most of which are NULL entries.
@@ -102,12 +100,11 @@ static int testdooley2(int sig)
 /* function to catch an interrupt */
 static void testctrlc(int signum)
 {
-  (void) signum;
   FPRINTF(ASCERR," signal %d caught ",signum);
   if (signum == SIGFPE) {
     FPRESET;
   }
-  longjmp(g_test_env,signum);
+  longjmp(f_test_env, signum);
 }
 
 /*
@@ -117,6 +114,7 @@ static void testctrlc(int signum)
  * Solaris cc
  * AIX xlc
  * IRIX cc
+ * Windows
  * 
  * The following retain the last trap set with or without a call to longjmp
  * and so don't need resetting of traps.
@@ -128,20 +126,23 @@ static void testctrlc(int signum)
  * It should not be called except when starting a process.
  * Return 0 for no reset needed, 1 for reset needed, and
  * -1 if the test fails (presuming program doesn't exit first.)
- * Side effects: SIGINT is left in the SIG_DFL state, and
- * a line is sent to ASCERR.
+ * Side effects:  
+ *   - a line is sent to ASCERR
+ *   - SIGINT is set to SIG_DFL if no handler was previously registered
+ *   - SIGFPE may be set to SIG_DFL if no handler was previously registered
  */
 static int ascresetneeded(void) {
   static int c=0;
   static int result;
   SigHandler lasttrap;
+  volatile SigHandler savedtrap;
 
   result = 0;
 
   /* test interrupt */
-  lasttrap=signal(SIGINT,testctrlc);
-  PRINTF("Testing signal %d %p\t%p\t",SIGINT,lasttrap,testctrlc);
-  if (setjmp(g_test_env)==0) {
+  savedtrap = signal(SIGINT, testctrlc);
+  PRINTF("Testing signal %d %p\t%p\t", SIGINT, savedtrap, testctrlc);
+  if (setjmp(f_test_env) == 0) {
     testdooley2(SIGINT);
   } else {
     c++;
@@ -150,7 +151,7 @@ static int ascresetneeded(void) {
     PRINTF("Signal test failed. ASCEND unlikely to work on this hardware.\n");
     result = -1;
   }
-  lasttrap = signal(SIGINT,SIG_DFL);
+  lasttrap = signal(SIGINT, (NULL != savedtrap) ? savedtrap : SIG_DFL);
   PRINTF("%p\n",lasttrap);
   if (lasttrap != testctrlc) {
     result = 1;
@@ -162,9 +163,9 @@ static int ascresetneeded(void) {
 
   c = 0;
   /* passed interrupt, check fpe */
-  lasttrap=signal(SIGFPE,testctrlc);
-  PRINTF("Testing signal %d %p\t%p\t",SIGFPE,lasttrap,testctrlc);
-  if (setjmp(g_test_env)==0) {
+  savedtrap=signal(SIGFPE, testctrlc);
+  PRINTF("Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testctrlc);
+  if (setjmp(f_test_env)==0) {
     testdooley2(SIGFPE);
   } else {
     c++;
@@ -173,7 +174,7 @@ static int ascresetneeded(void) {
     PRINTF("Signal test failed. ASCEND unlikely to work on this hardware.\n");
     result = -1;
   }
-  lasttrap = signal(SIGFPE,SIG_DFL);
+  lasttrap = signal(SIGFPE, (NULL != savedtrap) ? savedtrap : SIG_DFL);
   PRINTF("%p\n",lasttrap);
   if (lasttrap != testctrlc) {
     result = 1;
@@ -189,11 +190,11 @@ void initstack (struct gl_list_t *traps, int sig)
   old = signal(sig,SIG_DFL);
   if (old != SIG_ERR && old != SIG_DFL) {
     gl_append_ptr(traps,(VOIDPTR)old);
-    signal(sig,old);
+    (void)signal(sig,old);
   }
 }
 /*
- * Returns 0 if successful, 1 if out of memory, 2 otherwyse.
+ * Returns 0 if successful, 1 if out of memory, 2 otherwise.
  * Does not establish any traps, just the structures for
  * maintaining them. Pushes the existing traps, if any, on
  * the bottom of the created stacks.
@@ -201,27 +202,27 @@ void initstack (struct gl_list_t *traps, int sig)
  */
 int Asc_SignalInit(void)
 {
-  if (g_reset_needed != -2) {
+  if ((f_reset_needed != -2) || (FALSE == gl_pool_initialized())) {
     return 2;
   }
-  g_fpe_traps = gl_create(MAX_TRAP_DEPTH);
-  g_int_traps = gl_create(MAX_TRAP_DEPTH);
-  g_seg_traps = gl_create(MAX_TRAP_DEPTH);
-#ifndef NO_SIGNAL_TRAPS 
+  f_fpe_traps = gl_create(MAX_TRAP_DEPTH);
+  f_int_traps = gl_create(MAX_TRAP_DEPTH);
+  f_seg_traps = gl_create(MAX_TRAP_DEPTH);
+  if (f_fpe_traps == NULL || f_int_traps == NULL || f_seg_traps == NULL) {
+    return 1;
+  }
+#ifndef NO_SIGNAL_TRAPS
   /* push the old ones if any, on the stack. */
-  initstack(g_fpe_traps,SIGFPE);
-  initstack(g_int_traps,SIGINT);
-  initstack(g_seg_traps,SIGSEGV);
+  initstack(f_fpe_traps, SIGFPE);
+  initstack(f_int_traps, SIGINT);
+  initstack(f_seg_traps, SIGSEGV);
   
-  g_reset_needed = ascresetneeded();
-  if (g_reset_needed < 0) {
-    g_reset_needed = 1;
+  f_reset_needed = ascresetneeded();
+  if (f_reset_needed < 0) {
+    f_reset_needed = 1;
     return 2;
   }
 #endif /* NO_SIGNAL_TRAPS */
-  if (g_fpe_traps == NULL || g_int_traps == NULL || g_seg_traps == NULL) {
-    return 1;
-  }
   return 0;
 }
 
@@ -230,13 +231,13 @@ int Asc_SignalInit(void)
  */
 void Asc_SignalDestroy(void)
 {
-  gl_destroy(g_fpe_traps);
-  gl_destroy(g_int_traps);
-  gl_destroy(g_seg_traps);
-  g_fpe_traps = g_int_traps = g_seg_traps =  NULL;
+  gl_destroy(f_fpe_traps);
+  gl_destroy(f_int_traps);
+  gl_destroy(f_seg_traps);
+  f_fpe_traps = f_int_traps = f_seg_traps =  NULL;
 }
 
-static void reset_trap(int signum,struct gl_list_t *tlist)
+static void reset_trap(int signum, struct gl_list_t *tlist)
 {
   SigHandler tp;
   if (tlist != NULL && gl_length(tlist) > 0L) {
@@ -258,11 +259,11 @@ static void reset_trap(int signum,struct gl_list_t *tlist)
  * our push/pop, theirs is liable to be forgotten.
  */
 void Asc_SignalRecover(int force) {
-  if (force || g_reset_needed > 0) {
+  if (force || f_reset_needed > 0) {
 #ifndef NO_SIGNAL_TRAPS 
-    reset_trap(SIGFPE,g_fpe_traps);
-    reset_trap(SIGINT,g_int_traps);
-    reset_trap(SIGSEGV,g_seg_traps);
+    reset_trap(SIGFPE, f_fpe_traps);
+    reset_trap(SIGINT, f_int_traps);
+    reset_trap(SIGSEGV, f_seg_traps);
 #endif /* NO_SIGNAL_TRAPS */
   }
 }
@@ -293,27 +294,27 @@ static int push_trap(struct gl_list_t *tlist, SigHandler tp)
 int Asc_SignalHandlerPush(int signum, SigHandler tp)
 {
   int err;
-  if (tp==NULL) {
+  if (tp == NULL) {
     return 0;
   }
   switch (signum) {
-  case SIGFPE:
-    err = push_trap(g_fpe_traps,tp);
-    break;
-  case SIGINT:
-    err = push_trap(g_int_traps,tp);
-    break;
-  case SIGSEGV:
-    err = push_trap(g_seg_traps,tp);
-    break;
-  default:
-    return -1;
+    case SIGFPE:
+      err = push_trap(f_fpe_traps,tp);
+      break;
+    case SIGINT:
+      err = push_trap(f_int_traps,tp);
+      break;
+    case SIGSEGV:
+      err = push_trap(f_seg_traps,tp);
+      break;
+    default:
+      return -1;
   }
   if (err != 0) {
     FPRINTF(ASCERR,"Asc_Signal (%d) stack limit exceeded.\n",signum);
     return err;
   }
-  (void)signal(signum,tp); /* install */
+  (void)signal(signum, tp); /* install */
   return 0;
 }
 
@@ -341,13 +342,13 @@ int Asc_SignalHandlerPop(int signum, SigHandler tp)
   int err;
   switch (signum) {
   case SIGFPE:
-    err = pop_trap(g_fpe_traps,tp);
+    err = pop_trap(f_fpe_traps,tp);
     break;
   case SIGINT:
-    err = pop_trap(g_int_traps,tp);
+    err = pop_trap(f_int_traps,tp);
     break;
   case SIGSEGV:
-    err = pop_trap(g_seg_traps,tp);
+    err = pop_trap(f_seg_traps,tp);
     break;
   default:
     return -1;
@@ -379,7 +380,7 @@ void Asc_SignalTrap(int sigval) {
     longjmp(g_seg_env,sigval);
     break;
   default:
-    FPRINTF(ASCERR,"Asc_SignalTrap: Installed on unknown signal %d\n",sigval);
+    FPRINTF(ASCERR,"Asc_SignalTrap: Installed on unknown signal %d.\n", sigval);
     FPRINTF(ASCERR,"Asc_SignalTrap: Returning ... who knows where.");
     break;
   }

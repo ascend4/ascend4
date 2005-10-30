@@ -48,11 +48,9 @@ static CONST char ascEnvVarid[] = "$Id: ascEnvVar.c,v 1.5 1997/07/18 12:04:07 mt
 #ifdef __WIN32__
 #define SLASH '\\'
 #define PATHDIV ';'
-#define QPATHDIV ";"
 #else /* ! __WIN32__ */
 #define SLASH '/'
 #define PATHDIV ':'
-#define QPATHDIV ":"
 #endif
 
 /*
@@ -68,19 +66,21 @@ struct asc_env_t {
  * This list is a list of pointer to struct asc_env_t's
  * that constitute the environment.
  */
-
+                                                                                    
 static
 struct gl_list_t *g_env_list = NULL;
 
+/* This should be switched over to ascstrdup() to avoid duplication. */
 static
 char *ascstringcopy(char *str)
 {
-  int len;
+  size_t len;
   char *result;
+
   if (str==NULL) {
     return NULL;
   }
-  len = strlen(str);
+    len = strlen(str);
   result = ascmalloc(len+1);
   if (result==NULL) {
     return NULL;
@@ -191,17 +191,18 @@ void DeleteEnvVar(char *name)
   DestroyEnvVar(ev);
 }
 
-int Asc_InitEnvironment(int len)
+int Asc_InitEnvironment(unsigned long len)
 {
-  if (g_env_list!=NULL) {
+  if (g_env_list != NULL) {
     return 1;
   }
-  g_env_list = gl_create((unsigned long)len);
-  if (g_env_list ==NULL) {
+  g_env_list = gl_create(len);
+  if (g_env_list == NULL) {
     return 1;
   }
   return 0;
 }
+
 
 void Asc_DestroyEnvironment(void)
 {
@@ -213,26 +214,29 @@ void Asc_DestroyEnvironment(void)
   g_env_list = NULL;
 }
 
+
 int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
 {
-  char g_path_var[4096];
-  unsigned int c,length, spcseen=0;
+  char g_path_var[MAX_ENV_VAR_LENGTH];
+  unsigned int c, length, spcseen=0;
   struct asc_env_t *ev;
   char *keepname;
   CONST char *path;
   char *putenvstring;
 
-  if (g_env_list == NULL ||
-      envvar == NULL || envvar[0]=='\0' ||
-      pathstring == NULL || pathstring[0] == '\0') {
+  if ((g_env_list == NULL) ||
+      (envvar == NULL) ||
+      (strlen(envvar) == 0) ||
+      (pathstring == NULL) ||
+      (strlen(pathstring) == 0) ||
+      (strlen(envvar) >= MAX_ENV_VAR_LENGTH)) {
     return 1;
   }
   /*
-   * transform envvar into a string w/out lead/trail blanks
-   * and copy.
+   * transform envvar into a string w/out lead/trail blanks and copy.
    */
   putenvstring = g_path_var;
-  sprintf(putenvstring,"%s",envvar);
+  snprintf(putenvstring, MAX_ENV_VAR_LENGTH, "%s", envvar);
   /* trim leading whitespace */
   while (isspace(putenvstring[0])) {
     putenvstring++;
@@ -242,7 +246,7 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
       spcseen++;
     }
   }
-  /* backup space before = */
+  /* backup to before last trailing space */
   while (isspace(putenvstring[c-1])) {
     c--;
     spcseen--;
@@ -255,8 +259,9 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
   if (keepname == NULL) {
     return 1;
   }
-  strncpy(keepname,putenvstring,c);
+  strncpy(keepname, putenvstring, c);
   keepname[c] = '\0';
+  /* delete the old variable if it was already assigned */
   ev = FindEnvVar(keepname);
   if (ev!=NULL) {
     DeleteEnvVar(keepname);
@@ -266,47 +271,72 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
     ascfree(keepname);
     return 1;
   }
-  AppendEnvVar(g_env_list,ev);
-  /* copy/split the pathstring */
+  AppendEnvVar(g_env_list, ev);
+
+  /*
+   * copy/split the pathstring 
+   */
   path = pathstring;
 
+  /* strip any leading whitespace */
   while( isspace( *path ) ) {
     path++;
   }
   while( *path != '\0' ) {
     length = 0;
     /* copy the directory from path to the g_path_var */
-    while(( *path != PATHDIV ) && ( *path != '\0' )) {
+    while(( *path != PATHDIV ) &&
+          ( *path != '\0' ) &&
+          ( length < (MAX_ENV_VAR_LENGTH - 1) )) {
       g_path_var[length++] = *(path++);
     }
-    while (isspace(g_path_var[length-1])) {
-      length--;
+    /* if we didn't run out of room, strip trailing whitespace */
+    if (( length > 0) && ( length < (MAX_ENV_VAR_LENGTH - 1) )) {
+      while (isspace(g_path_var[length-1])) {
+        length--;
+      }
     }
-    g_path_var[length++] = '\0';
-    if (Asc_AppendPath(keepname,g_path_var)!=0) {
-      return 1;
+    /* otherwise advance to the next substring in path */
+    else {
+      while(( *path != PATHDIV ) && ( *path != '\0' )) {
+        path++;
+      }
     }
+    /* append the value if not empty */
+    if ( length > 0 ) {
+      g_path_var[length++] = '\0';
+      if ( Asc_AppendPath(keepname,g_path_var) != 0 ) {
+        return 1;
+      }
+    }
+    /* advance path past any whitespace & delimiters */
     while( isspace(*path) || ( *path == PATHDIV ) ) path++;
   }
   return 0;
 }
 
+
 int Asc_PutEnv(char *envstring)
 {
-  char g_path_var[4096];
-  unsigned int c,length, spcseen=0, rhs;
+  char g_path_var[MAX_ENV_VAR_LENGTH];
+  unsigned int c, length, spcseen=0, rhs;
   struct asc_env_t *ev;
   char *keepname, *path, *putenvstring;
 
-  if (g_env_list == NULL || envstring == NULL) {
+  if ((g_env_list == NULL) ||
+      (envstring == NULL) ||
+      (strlen(envstring) == 0) ||
+      (strlen(envstring) >= MAX_ENV_VAR_LENGTH)) {
     return 1;
   }
+
   putenvstring = g_path_var;
-  sprintf(putenvstring,"%s",envstring);
+  snprintf(putenvstring, MAX_ENV_VAR_LENGTH, "%s", envstring);
   /* trim leading whitespace */
   while (isspace(putenvstring[0])) {
     putenvstring++;
   }
+  /* locate '=' or EOS, counting whitespace along the way */
   for (c = 0; putenvstring[c] !='\0' && putenvstring[c] != '='; c++) {
     if (isspace(putenvstring[c])) {
       spcseen++;
@@ -332,6 +362,7 @@ int Asc_PutEnv(char *envstring)
   }
   strncpy(keepname,putenvstring,c);
   keepname[c] = '\0';
+  /* delete the old variable if it was already assigned */
   ev = FindEnvVar(keepname);
   if (ev!=NULL) {
     DeleteEnvVar(keepname);
@@ -342,7 +373,7 @@ int Asc_PutEnv(char *envstring)
     return 1;
   }
   AppendEnvVar(g_env_list,ev);
-  path = putenvstring + rhs + 1; /* got past the = */
+  path = putenvstring + rhs + 1; /* got past the '=' */
 
   while( isspace( *path ) ) {
     path++;
@@ -353,40 +384,48 @@ int Asc_PutEnv(char *envstring)
     while(( *path != PATHDIV ) && ( *path != '\0' )) {
       g_path_var[length++] = *(path++);
     }
-    while (isspace(g_path_var[length-1])) {
+    while (( length > 0 ) && isspace(g_path_var[length-1])) {
       length--;
     }
-    g_path_var[length++] = '\0';
-    if (Asc_AppendPath(keepname,g_path_var)!=0) {
-      return 1;
+    if ( length > 0) {
+      g_path_var[length++] = '\0';
+      if (Asc_AppendPath(keepname,g_path_var)!=0) {
+        return 1;
+      }
     }
     while( isspace(*path) || ( *path == PATHDIV ) ) path++;
   }
   return 0;
 }
 
+
 int Asc_ImportPathList(CONST char *envvar)
 {
-  char *rhs; 
-  int err;
-  if (envvar==NULL) {
+  char *rhs;
+
+  if (( g_env_list == NULL ) ||
+      ( envvar == NULL ) ||
+      ( strlen(envvar) == 0 )) {
     return 1;
   }
   rhs = getenv(envvar);
-  if (rhs == NULL || rhs[0]=='\0') {
+  if (( rhs == NULL ) || ( strlen(rhs) == '\0' )) {
     return 1;
   }
-  err = Asc_SetPathList(envvar,rhs);
-  return err;
+  return Asc_SetPathList(envvar, rhs);
 }
+
 
 int Asc_AppendPath(char *envvar, char *newelement)
 {
   struct asc_env_t *ev;
   char *keepname, *keepval;
-  
-  if (g_env_list == NULL || envvar==NULL || newelement==NULL ||
-       strlen(envvar)==0 || strlen(newelement)==0) {
+
+  if ((g_env_list == NULL) ||
+      (envvar == NULL) ||
+      (newelement == NULL) ||
+      (strlen(envvar) == 0) ||
+      (strlen(newelement) == 0)) {
     return 1;
   }
   ev = FindEnvVar(envvar);
@@ -400,29 +439,34 @@ int Asc_AppendPath(char *envvar, char *newelement)
       ascfree(keepname);
       return 1;
     }
-    AppendEnvVar(g_env_list,ev);
+    AppendEnvVar(g_env_list, ev);
   }
   keepval = ascstringcopy(newelement);
-  
+
   if (keepval == NULL) {
     return 1;
   }
-  gl_append_ptr(ev->data,keepval);
+  gl_append_ptr(ev->data, keepval);
   return 0;
 }
+
 
 char **Asc_GetPathList(char *envvar, int *argc)
 {
   struct asc_env_t *ev;
   char **argv;
   char *tmppos, *val;
-  unsigned int len, c, slen;
+  unsigned long len, c, slen;
 
-  if (g_env_list == NULL || envvar == NULL || argc == NULL) {
+  if ( argc == NULL ) {
+    return NULL;
+  }
+  if (( g_env_list == NULL ) ||
+      ( envvar == NULL )) {
     *argc = -1;
     return NULL;
   }
-  if (strlen(envvar)==0) {
+  if ( strlen(envvar) == 0 ) {
     *argc = 0;
     return NULL;
   }
@@ -431,39 +475,42 @@ char **Asc_GetPathList(char *envvar, int *argc)
     *argc = 0;
     return NULL;
   }
-  len = (int)gl_length(ev->data);
-  slen = (len+1)*sizeof(char *); /* space for argv */
+  len = gl_length(ev->data);
+  slen = (len+1)*sizeof(char *); /* space for argv pointers */
   for (c = 1; c <= len; c++) {
     /* space for the values */
     slen += (strlen((char *)gl_fetch(ev->data,(unsigned long)c)) +1 );
   }
   argv = (char **)ascmalloc(slen);
-  if (argv == NULL) {
+  if ( argv == NULL ) {
     *argc = -1;
     return NULL;
   }
   tmppos = (char *)argv;
   tmppos += (len+1)*sizeof(char *);
-  for (c = 1; c <= len; c++) {
+  for (c = 1 ; c <= len ; c++) {
     val = (char *)gl_fetch(ev->data,(unsigned long)c);
-    sprintf(tmppos,"%s",val);
     argv[c-1] = tmppos;
-    tmppos += (strlen(val) + 1);
+    while ( *val != '\0' ) {
+      *tmppos++ = *val++;
+    }
+    *tmppos++ = *val;   /* include trailing '\0' */
   }
   argv[len] = NULL;
   *argc = (int)len;
   return argv;
 }
 
+
 char *Asc_GetEnv(char *envvar)
 {
   struct asc_env_t *ev;
   char *result, *val, *tmppos;
-  unsigned int slen,c, len, llen;
-  if (g_env_list == NULL || envvar == NULL) {
-    return NULL;
-  }
-  if (strlen(envvar)==0) {
+  unsigned long slen, c, llen;
+
+  if ((g_env_list == NULL) ||
+      (envvar == NULL) ||
+      (strlen(envvar) == 0)) {
     return NULL;
   }
   ev = FindEnvVar(envvar);
@@ -482,18 +529,21 @@ char *Asc_GetEnv(char *envvar)
   tmppos = result;
   for  (c = 1; c <= llen; c++) {
     val = (char *)gl_fetch(ev->data,(unsigned long)c);
-    len = strlen(val);
-    sprintf(tmppos,"%s%s",val,QPATHDIV);
-    tmppos += (len+1);
+    while (*val != '\0') {
+      *tmppos++ = *val++;
+    }
+    *tmppos++ = PATHDIV; /* include delimiter */
   }
-  result[slen-1] = '\0';
+  result[slen-1] = '\0'; /* overwrite final trailing delimiter */
   return result;
 }
+
 
 char **Asc_EnvNames(int *argc)
 {
   char **argv;
   unsigned long c, len;
+
   if (g_env_list == NULL) {
     *argc = -1;
     return NULL;

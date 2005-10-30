@@ -31,15 +31,13 @@
  *  ASCEND Printf stdout/stderr Substitutes Dispatcher data type.
  *  <pre>
  *  When including this file, you must include:
- *      #include <stdarg.h>
+ *      #include <stdio.h>
  *      #include "utilities/ascConfig.h"
- *      #include "compiler/compiler.h"
- *      #include "utilities/ascPrint.h"
  *  </pre>
  */
-
-#ifndef _ASCPRINTTYPE_H
-#define _ASCPRINTTYPE_H
+                                                 
+#ifndef _ascprinttype_h
+#define _ascprinttype_h
 
 /**
  * Output functions interceptor vtable. This should be constructed
@@ -47,11 +45,11 @@
  * pushed on the stack of output tables.
  */
 struct Asc_PrintVTable {
-	CONST char *name;              /**< name */
-	int (*print)(FILE *fp, CONST char *format, va_list args);  /**< print function */
-	int (*fflush)(FILE *);         /**< flush function */
-	struct Asc_PrintVTable *next;  /**< next vtable in linked list */
+  CONST char *name;                                         /**< Vtable name. */
+  int (*print)(FILE *fp, CONST char *format, va_list args); /**< Print function. */
+  int (*fflush)(FILE *);                                    /**< Flush function. */
+  struct Asc_PrintVTable *next;                             /**< Next vtable in linked list. */
 };
 
-#endif /**< _ASCPRINTTYPE_H */
+#endif /**< _ascprinttype_h */
 

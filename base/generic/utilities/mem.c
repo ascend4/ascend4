@@ -31,7 +31,7 @@
 #include "utilities/ascMalloc.h"
 #include "utilities/mem.h"
 
-static void move_fwd(POINTER from, POINTER too, unsigned nbytes)
+static void move_fwd(POINTER from, POINTER too, size_t nbytes)
 /**
  ***  Copies bytes from --> too in forward direction.
  **/
@@ -40,7 +40,7 @@ static void move_fwd(POINTER from, POINTER too, unsigned nbytes)
       *(too++) = *(from++);
 }
 
-static void move_bwd(POINTER from, POINTER too,unsigned nbytes)
+static void move_bwd(POINTER from, POINTER too, size_t nbytes)
 /**
  ***  Copies bytes from --> too in backward direction.
  **/
@@ -51,12 +51,12 @@ static void move_bwd(POINTER from, POINTER too,unsigned nbytes)
       *(--too) = *(--from);
 }
 
-void mem_move_disjoint(POINTER from, POINTER too, int nbytes)
+void mem_move_disjoint(POINTER from, POINTER too, size_t nbytes)
 {
    ascbcopy((char *)from,(char *)too,nbytes);
 }
 
-void mem_move(POINTER from, POINTER too,unsigned nbytes)
+void mem_move(POINTER from, POINTER too,size_t nbytes)
 {
    if( from < too )
       move_bwd(from,too,nbytes);
@@ -67,23 +67,23 @@ void mem_move(POINTER from, POINTER too,unsigned nbytes)
 /*  zeroes nbytes of memory pointed at by too. byte is ignored but
  *  there for interchangability with mem_repl_byte
  */
-void mem_zero_byte(POINTER too, unsigned byte, unsigned nbytes)
+void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes)
 {
   (void)byte;
-  ascbzero((void *)too,(int)nbytes);
+  ascbzero((void *)too,(size_t)nbytes);
   /*
    *   while( nbytes-- > 0 )
    *         *(too++) = 0;
    */
 }
 
-void mem_repl_byte(POINTER too, unsigned byte, unsigned nbytes)
+void mem_repl_byte(POINTER too, unsigned byte, size_t nbytes)
 {
    while( nbytes-- > 0 )
-      *(too++) = byte;
+      *(too++) = (char)byte;
 }
 
-void mem_repl_word(POINTER too,unsigned word, unsigned nwords)
+void mem_repl_word(POINTER too,unsigned word, size_t nwords)
 {
    unsigned *pw = (unsigned *)too;
    while( nwords-- > 0 )
@@ -101,7 +101,12 @@ int	mem_get_byte(long from)
    return( ((int)c) & mask_I_L(BYTESIZE) );
 }
 #endif /*  0  */
-
+unsigned char mem_get_byte(long from)
+{
+   unsigned char c;
+   mv_get(&c, from, 1);
+   return(c);
+}
 
 int	mem_get_int(long from)
 {
@@ -412,15 +417,15 @@ void mem_get_stats(struct mem_statistics *mss,  mem_store_t m)
     return;
   }
   if (check_mem_store(m)>1 ) {
-    ascbzero((void *)mss,(int)sizeof(struct mem_statistics));
+    ascbzero((void *)mss,(size_t)sizeof(struct mem_statistics));
     FPRINTF(stderr,"ERROR: (mem_get_stats)   Bad mem_store_t given.\n");
     FPRINTF(stderr,"                         Returning 0s.\n");
     return;
   }
 #if !mem_LIGHTENING
-  mss->m_eff =  m->inuse*m->eltsize_req/(double)mem_sizeof_store(m);
+  mss->m_eff =  (double)(m->inuse * m->eltsize_req)/(double)mem_sizeof_store(m);
   mss->m_recycle =
-    ( (m->highwater > 0) ? m->active/(double)m->highwater : 0.0 );
+    ( (m->highwater > 0) ? (double)m->active/(double)m->highwater : 0.0 );
   mss->elt_total = m->total;
   mss->elt_taken = m->highwater;
   mss->elt_inuse = m->inuse;
@@ -432,7 +437,7 @@ void mem_get_stats(struct mem_statistics *mss,  mem_store_t m)
   mss->elt_inuse = 0;
 #endif
   mss->elt_onlist = m->onlist;
-  mss->elt_size = m->eltsize;
+  mss->elt_size = (int)m->eltsize;
   mss->str_len = m->len;
   mss->str_wid = m->wid;
 }
@@ -458,7 +463,7 @@ mem_store_t mem_create_store(int length, int width,
   uelt = eltsize;
   /* check for elt padding needed */
   if (eltsize % sizeof(void *)) {
-    int ptrperelt;
+    size_t ptrperelt;
     ptrperelt = eltsize/sizeof(void *) + 1;
 #if mem_DEBUG
     FPRINTF(stderr,"(mem_create_store) Elts of size %d padded to %d\n",
@@ -473,7 +478,7 @@ mem_store_t mem_create_store(int length, int width,
 
 
   newms = (mem_store_t)AMEM_calloc(1,sizeof(struct mem_store_header));
-  if (ISNULL(newms)) {
+  if (ISNULL(newms)) {                                                       
     FPRINTF(stderr,"ERROR: (mem_create_store) : Insufficient memory.\n");
     return NULL;
   }
@@ -502,7 +507,7 @@ mem_store_t mem_create_store(int length, int width,
   newms->eltsize_req = uelt;
 
   /* get pool */
-  newms->pool = (char **)AMEM_calloc(length,sizeof(char *));
+  newms->pool = (char **)AMEM_calloc((size_t)length,sizeof(char *));
   if (ISNULL(newms->pool)) {
     FPRINTF(stderr,"ERROR: (mem_create_store) : Insufficient memory.\n");
     newms->integrity = DESTROYED;
