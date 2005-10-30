@@ -31,12 +31,17 @@
 
 #include <stdio.h>
 #include "utilities/ascConfig.h"
+#include "utilities/ascPanic.h"
 #include "general/list.h"
 #include "general/listio.h"
-void gl_write_list(FILE *fp,struct gl_list_t *l)
+
+void gl_write_list(FILE *fp, struct gl_list_t *l)
 {
   unsigned long c,len;
   FILE *myfp;
+
+  asc_assert(NULL != l);
+
   if (fp==NULL) {
     myfp = stderr;
   } else {

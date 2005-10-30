@@ -34,74 +34,123 @@
 
 /** @file
  *  Signal handling protocol definitions for ASCEND.
+ *
+ *  This module implements limited support for managing signal handlers.
+ *  This includes:
+ *    - a standard signal handler - Asc_SignalTrap()
+ *    - global jmp_buf's for use with Asc_SignalTrap()
+ *    - functions for managing nested signal handlers
+ *
+ *  The following signal types are currently supported:
+ *    - SIGFPE  - floating point exception
+ *    - SIGINT  - CTRL-C interactive attention request
+ *    - SIGSEGV - segmentation fault
+ *
+ *  The signal handler manager uses gl_list_t lists, so the list
+ *  system must be initialized before calling Asc_SignalInit().<br><br>
+ *
+ *  A simple use of these facilities to trap floating point exceptions
+ *  might be as follows:
+ *  <pre>
+ *     Asc_SignalInit();
+ *     Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap);
+ *     if (setjmp(g_fpe_env)==0) {
+ *       y = sqrt(x);
+ *     } else {
+ *       y = sqrt(-x);
+ *     }
+ *     Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
+ *     Asc_SignalDestroy(); 
+ *  </pre>
+ *  This example uses the built-in signal handler Asc_SignalTrap()
+ *  and the global <code>jmp_buf</code> g_fpe_env.  After initializing 
+ *  the signal manager and registering the handler, <code>setjmp</code> 
+ *  is used to select normal and exception paths.  The <code>setjmp</code>
+ *  returns 0 when initially called and the sqrt(x) is calculated.  If
+ *  x is negative, a SIGFPE exception occurs and the handler is called.  It
+ *  uses <code>lngjmp</code> and returns to the if statement, and now
+ *  <setjmp> returns non-zero and the <code>else</code> clause is executed.
+ *  Finally, the handler is removed and the signal manager cleaned up.<br><br>
+ *
+ *  The stack mechanism also allows nested handlers to be registered.  It is
+ *  important to note that nested handlers for the same signal type cannot
+ *  both use Asc_SignalTrap() as the handler.  This is because different
+ *  <code>jmp_buf</code> variables must be used and Asc_SignalTrap() uses
+ *  the same global <code>jmp_buf</code> each time.  However, you can use
+ *  custome <code>jmp_buf</code>'s and handlers:
+ *  <pre>
+ *     Asc_SignalInit();
+ *     Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap);
+ *     if (setjmp(g_fpe_env) == 0) {
+ *         y = sqrt(x);
+ *         Asc_SignalHandlerPush(SIGFPE, my_handler);
+ *         if (setjmp(my_jmp_buf) == 0) {
+ *             y = z/x;
+ *         } else {
+ *             Asc_Panic(1, NULL, "Div by zero error.");
+ *         }
+ *         Asc_SignHandlerPop(SIGFPE, my_handler);
+ *     } else {
+ *       y = sqrt(-x);
+ *     }
+ *     Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
+ *     Asc_SignalDestroy();
+ *  </pre>
+ *  Here, exceptions in the sqrt(x) calculation are handled by the standard
+ *  Asc_SignalTrap(), while the division is handled by my_handler.<br><br>
+ *
+ *  Avoid mixing use of the signal manager with direct calls to signal().  
+ *  Once Asc_SignalInit() has been called, use of signal() directly is likely
+ *  to be lost or to corrupt the managed handlers.<br><br>
+ *
+ *  Another warning: setjmp is expensive if called inside a fast loop.
  *  <pre>
  *  Requires:     #include "utilities/ascConfig.h"
  *  </pre>
  */
 
-#ifndef _ASCSIGNAL_H
-#define _ASCSIGNAL_H
+#ifndef _ascsignal_h_
+#define _ascsignal_h_
+
+#ifndef lint
+static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 ballan Exp $";
+#endif
 
 #include <signal.h>
 #include <setjmp.h>
 #include "utilities/ascConfig.h"
 #ifdef __WIN32__
 #include <process.h>
-#else
+#else                                                        
 #include <unistd.h>
 #endif
 #include "general/list.h"
 
-#ifndef lint
-static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 ballan Exp $";
-#endif
-
 typedef void (*SigHandler)(int);
-/**< Pointer to a signal handler function. */
-
-#define TRAPPTR(a) void (*(a))(int)
-/**<
- * This macro defines a pointer to a signal handler named a.
- * Substitute your variable name and
- * TRAPPTR(yourname); is a function pointer declaration.
- * typedef instead?
- * @deprecated Use SigHandler instead.
- */
-
-#define TPTYPE void (*)(int)
-/**<
- * This macro can be used like  tp = (TPTYPE)foo;
- * or in function prototypes to indicate a signal handling
- * function pointer is the argument.
- * @deprecated Use SigHandler instead.
- */
+/**< Signature of a signal handling function. */
 
 #define MAX_TRAP_DEPTH 40L
-/**< 
- * This is the maximum number of traps that can be nested.
- * with push and pop below.
- */
+/**< The maximum number of traps that can be nested. */
 
-extern jmp_buf g_fpe_env;   /**< Standard signal - floating point error.*/
-extern jmp_buf g_seg_env;   /**< Standard signal - segmentation fault.*/
-extern jmp_buf g_int_env;   /**< Standard signal - integer overflow.*/
-
+extern jmp_buf g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
+extern jmp_buf g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
+extern jmp_buf g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
 
 extern jmp_buf g_foreign_code_call_env;
 /**<
- * Not currently in use, but should be when we get to a unified
+ * Not currently in use.  Should be when we get to a unified
  * standard for signal handling.
  * @todo Implement use of g_foreign_code_call_env?
  */
 
 extern void Asc_SignalTrap(int sigval);
 /**<
- *  <!--  Asc_SignalTrap(sigval);                                       -->
+ *  Standard signal handler.
  *  This is the trap that should be used for most applications in
- *  ASCEND. It calls longjmp(g_SIG_env,sigval)
- *  where SIG is one of fpe, seg, int as listed above.
- *  Note that g_SIG_env is global, so you can't nest calls to
- *  setjmp where both use this trap function.
+ *  ASCEND.  It prints a message then calls longjmp(GLOBAL, sigval)
+ *  where GLOBAL is one of g_fpe_env, g_seg_env, or g_int_env.
+ *  Because the jmp_buf is global, so you can't nest calls to
+ *  setjmp where both use this trap function.<br><br>
  *
  *  Trivial Example:
  *  <pre>
@@ -112,79 +161,125 @@ extern void Asc_SignalTrap(int sigval);
  *       y = sqrt(-x);
  *     }
  *     Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
- *  
+ *
  *  For x < 0 the else is called because setjmp returns nonzero
  *  when the body of the 'if' signals range error.
  *  </pre>
- *  This is one of the really odd things in C; if x > 0
- *  then sqrt is ok and setjmp returns 1.
- *  Remember always to use push and pop. You can
- *  write an alternate function to use instead of
- *  AscSignalTrap if need be.
+ *  Remember always to use Asc_SignalHandlerPush() and 
+ *  Asc_SignalHandlerPop(). You can write an alternate function 
+ *  to use instead of AscSignalTrap() if need be.  The signals
  *  SIGFPE, SIGINT, SIGSEGV are understood.<br><br>
  *
- *  Warning: setjmp is expensive if called inside a fast loop.
+ *  Note - this handler does not reinstall itself.  After an exception,
+ *  you need to reinstall the handler (if desired) using
+ *  Asc_SignalRecover().
+ *
+ *  @todo Should utilities/ascSignal.c:Asc_SignalTrap() reinstall itself
+ *        after it catches an expection using Asc_SignalRecover()?
+ *  @param sigval Holds the signal type code when called during
+ *                an exception.
  */
 
 extern int Asc_SignalInit(void);
 /**< 
- * <!--  int err = Asc_SignalInit();                                   -->
- * Returns 0 if successful, 1 if out of memory, 2 otherwyse.
- * Does not establish any traps, just the stacks for
- * maintaining them. Cannot be called twice successfully.
- * Currently we support stacks for the signals:
- * SIGFPE, SIGINT, SIGSEGV.
+ *  Initializes the signal manager.
+ *  This should be called before using any of the signal handling 
+ *  functions in this module.  It initializes the internal stacks
+ *  for mangaging signal handlers.  This function does not install
+ *  any signal handlers (although any existing handlers are left
+ *  in place).  Calling this function more than once will have no
+ *  effect and an error code will be returned.<br><br>
+ *
+ *  The signal handler manager uses gl_list_t lists, so the list
+ *  system must be initialized before calling Asc_SignalInit().
+ *
+ *  @return Returns 0 if successful, 1 if memory could not be
+ *          allocated, and 2 if an error occurred.
  */
 
 extern void Asc_SignalDestroy(void);
-/**< 
- * <!--  Asc_SignalDestroy();                                          -->
- * Clears and destroys the stacks of signal handlers.
+/**<
+ *  Cleans up and destroys the stacks of signal handlers.
+ *  It does not change the status of any registered signal handlers
+ *  That is, any handlers registered when this function is called
+ *  will still be registered.  It is important to call
+ *  Asc_SignalHandlerPop() for each occurrence of Asc_SignalHandlerPush()
+ *  before calling this function.  Otherwise, any signal handlers
+ *  that were installed before Asc_SignalInit() was called will be lost.
  */
 
 extern void Asc_SignalRecover(int force);
-/**< 
- * <!--  Asc_SignalRecover(force);                                     -->
- * This function reinstalls the most recent signal handlers this module
- * has been informed of. This should be called after every
- * trapped exception and at any other time when the status of
- * exception handlers may have become not well defined.
- * The most recently pushed handler is installed for each supported
- * signal. This call is not particularly cheap if it does the
- * reinstallation.<br><br>
+/**<
+ *  Reinstalls the most recently pushed handler that has been
+ *  installed for each supported signal type.  This should be called
+ *  after every trapped exception and at any other time when the
+ *  status of exception handlers may have become not well-defined.
+ *  If no handler has been pushed for a given signal type, SIG_DFL is
+ *  installed.  Note that the standard handler function Asc_SignalTrap() 
+ *  does not call this function.  If you use the standard handler and 
+ *  you want it reinstalled after an exception, be sure to call this 
+ *  function after the longjmp return.  This call is not particularly 
+ *  cheap if it does the reinstallation.<br><br>
  *
- * This module tests on startup for whether the OS reverts to
- * SIG_DFL when a trap function is called. If it does NOT then
- * this function will simply return unless force != 0. You don't
- * want to call this function with force == 1 normally, but when
- * using gdb or another debugger which intercepts and screws up
- * signals, applying force (manually) ensures that the signals
- * get reinstalled.
+ *  This module tests on startup for whether the OS reverts to
+ *  SIG_DFL when a trap function is called.  If it does NOT then
+ *  this function will simply return unless force != 0. You don't
+ *  want to call this function with force == 1 normally after a
+ *  caught exception.  However, if you're not sure of the handler
+ *  installation status and want to make sure the handlers are 
+ *  installed, call with force == 1.  Also, gdb or other
+ *  debuggers which intercept and screw up signals may require
+ *  applying force (manually) to ensure that the signals get
+ *  reinstalled.
+ *
+ *  @param force If non-zero, the most recent handlers are 
+ *               reinstalled even if not required by the
+ *               compiler/platform.
  */
 
 extern int Asc_SignalHandlerPush(int signum, SigHandler func);
 /**<
- * <!--  err =  Asc_SignalHandlerPush(signum, func)                    -->
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
  * Returns -1 if stack of signal requested does not exist.
  * Pushing a NULL handler func does NOT change anything at all.
  * On a successful return, the handler has been installed and will
- * remain installed until a Asc_SignalHandlerPop or another push.
- * (Remain installed part is TRUE only if Asc_SignalRecover is used
- * properly after every longjmp.)
+ * remain installed until a Asc_SignalHandlerPop() or another push.
+ * The handler will remain installed as long as Asc_SignalRecover()
+ * is used properly after every exception.
+ *
+ *  @param signum The signal type that func should handle.
+ *  @param func   The signal handler to register for signum signal types.
+ *  @return Returns 1 if the stack limit is exceeded, -1 if managing
+ *          of signals for the specified signum is not supported or
+ *          initialized, or 0 if the function completes successfully.
+ *  @todo Shouldn't utilities/ascSignal.c:Asc_SignalHandlerPush() return
+ *        an error code on a NULL func?  It seems too easy for someone to
+ *        accidentally push a NULL without realizing it, and then later 
+ *        popping an unintended handler.
  */
 
 extern int Asc_SignalHandlerPop(int signum, SigHandler func);
 /**<
- * <!--  err = Asc_SignalHandlerPop(signum, func);                     -->
- * Pops the last trap off the stack of signum trap functions and
- * installs the new last trap. Sideeffects: reinstalls all other
- * currently pushed traps, also.
- * If called with func != NULL, checks that the trap popped is the
- * same as func and returns nonzero if it is not.
- * If stack is empty, returns nonzero.
+ *  Removes the last-pushed handler from the stack for signum signal types.
+ *  If the removed handler is the same as func, it is uninstalled and 
+ *  replaced with the handler now at the top of the stack.  If not, non-zero
+ *  is returned and you need to call Asc_SignalRecover() to uninstall the
+ *  current handler if desired.  Note that the top handler is popped off 
+ *  the stack whether it matches func or not.  Non-zero is also returned if 
+ *  the stack is empty.  A side effect is that all managed signal types will 
+ *  have the registered handlers reinstalled.
+ *
+ *  @param signum The signal type whose top-most handler should be replaced.
+ *  @param func   The handler function that should be at the top of the
+ *                stack (and currently installed) for signals of type signum.
+ *  @return Returns non-zero if func is not the replaced handler or if
+ *          the stack is empty, 0 if the function completed successfully.
+ *  @todo Does it make more sense for utilities/ascSignal.c:Asc_SignalHanderPop()
+ *        to fail completely if func is not the top-most handler?  It is not 
+ *        clear why the function should pop the top handler no matter what, but 
+ *        only call Asc_SignalRecover() if it matches func.
  */
 
-#endif  /* _ASCSIGNAL_H */
+#endif  /* _ascsignal_h_ */
 

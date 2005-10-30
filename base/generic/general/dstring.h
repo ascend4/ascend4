@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef _DSTRING_H
-#define _DSTRING_H
+#ifndef __dstring_h_seen__
+#define __dstring_h_seen__
 
 #define ASC_RESULT_SIZE 200
 #define ASC_DSTRING_STATIC_SIZE 200
@@ -55,116 +55,115 @@ typedef struct Asc_DString {
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringLength --                                          -->
- *
- *	Return the current length of the string.
- *
- * Results:
+ *	Returns the current length of the string.
  *	The return value is the number of non-NULL characters in
- *      the string, an integer.<br><br>
+ *  the string, an integer.  dsPtr may not be NULL (not
+ *  checked - crash probable).
  *
- * Side effects:
- *	None.
+ *	@param dsPtr Asc_DString *, pointer to a structure
+ *               describing the dynamic string to query.
  */
 #define Asc_DStringLength(dsPtr) ((dsPtr)->length)
 
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringValue --                                           -->
+ *	Returns the current value of the string.
+ *	The return value is a pointer to the first character in the
+ *  string, a char*.  The client should not free or modify this
+ *  value.  dsPtr may not be NULL (not checked - crash probable).
  *
- *	Return the curent value of the string.
- *
- * Results:
- *	The return value is a pointer to the first character in the string,
- *      a char*.  The client should not free or modify this value.<br><br>
- *
- * Side effects:
- *	None.
+ *	@param dsPtr Asc_DString *, pointer to a structure
+ *               describing the dynamic string to query.
  */
 #define Asc_DStringValue(dsPtr) ((dsPtr)->string)
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringAppend --                                          -->
- *
- *	Append more characters to the current value of a dynamic string.
- *
- * Results:
- *	The return value is a pointer to the dynamic string's new value.<br><br>
- *
- * Side effects:
+ *	Appends more characters to the specified dynamic string.
  *	Length bytes from string (or all of string if length is less
- *	than zero) are added to the current value of the string.  Memory
- *	gets reallocated if needed to accomodate the string's new size.
+ *	than zero) are added to the current value of the string.  If
+ *  string is shorter than length, only the length of string 
+ *  characters are appended.  The resulting value of the
+ *  dynamic string is always null-terminated.
+ *  <p />
+ *  Memory	gets reallocated if needed to accomodate the string's
+ *  new size.  Neither dpPtr nor string may be NULL (checked by
+ *  assertion).
+ *
+ *  @param dsPtr  Structure describing dynamic string (non-NULL).
+ *  @param string String to append (non-NULL).  If length is -1
+ *                then this must be null-terminated.
+ *  @param length Number of characters from string to append. If
+ *                < 0, then append all of string, up to null at end.
+ *  @return Returns the new value of the dynamic string.
  */
-extern char *Asc_DStringAppend(Asc_DString *dsPtr,
+extern char *Asc_DStringAppend(register Asc_DString *dsPtr,
                                CONST char *string,
                                int length);
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringFree --                                            -->
- *
  *	Frees up any memory allocated for the dynamic string and
- *	reinitializes the string to an empty state.
+ *	reinitializes the string to an empty state.  The previous
+ *  contents of the dynamic string are lost, and the new value
+ *  is an empty string.  Note that dsPtr may not be NULL
+ *  (checked by assertion).
  *
- * Results:
- *	None.<br><br>
- *
- * Side effects:
- *	The previous contents of the dynamic string are lost, and
- *	the new value is an empty string.
- */
+ *  @param dsPtr Structure describing dynamic string (non-NULL).
+*/
 extern void Asc_DStringFree(Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringInit --                                            -->
- *
  *	Initializes a dynamic string, discarding any previous contents
- *	of the string (Asc_DStringFree should have been called already               
- *	if the dynamic string was previously in use).
+ *	of the string.  Asc_DStringFree() should have been called already
+ *	if the dynamic string was previously in use.  The dynamic string
+ *  is initialized to be empty.  The passed pointer dsPtr may not
+ *  be NULL (checked by assertion).
  *
- * Results:
- *	None.<br><br>
- *
- * Side effects:
- *	The dynamic string is initialized to be empty.
+ *  @param dsPtr Pointer to structure for dynamic string (non-NULL).
  */
-extern void Asc_DStringInit(Asc_DString *dsPtr);
+extern void Asc_DStringInit(register Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringResult --                                          -->
+ *	Returns a *copy* of the string held within the dynamic string.
+ *  The returned string is owned by the caller, who is responsible
+ *  for free'ing it when done with it.  The dynamic string itself
+ *  is reinitialized to an empty string.  dsPtr may not be NULL
+ *  (checked by assertion).
  *
- *	This procedure returns a *copy* of the string held within the
- *	dynamic string. The string itself is reinitialized
- *	to an empty string.<br><br>
- *
- * Results:
- *	The string held.<br><br>
- *
- * Side effects:
- *	DsPtr is reinitialized to an empty string.
- */
+ *  @param dsPtr dsPtr Dynamic string holding the returned result.
+ *  @return Returns a copy of the original value of the dynamic string.
+*/
 extern char *Asc_DStringResult(Asc_DString *dsPtr);
 
 /*----------------------------------------------------------------------*/
 /**
- * <!--  Asc_DStringTrunc --                                           -->
+ *	Truncates a dynamic string to a given length without freeing
+ *	up its storage. 	The length of dsPtr is reduced to length
+ *  unless it was already shorter than that.  Passing a length
+ *  < 0 sets the new length to zero.  dsPtr may not be NULL
+ *  (checked by assertion).
  *
- *	Truncate a dynamic string to a given length without freeing
- *	up its storage.
- *
- * Results:
- *	None.<br><br>
- *
- * Side effects:
- *	The length of dsPtr is reduced to length unless it was already
- *	shorter than that.
+ *  @param dsPtr  Structure describing dynamic string (non-NULL).
+ *  @param length New maximum length for the dynamic string.
  */
 extern void Asc_DStringTrunc(Asc_DString *dsPtr, int length);
 
-#endif /* _DSTRING_H  */
+/*----------------------------------------------------------------------*/
+/**
+ *	Sets the value of the dynamic string to the specified string.
+ *  String must be null-terminated.
+ *  Memory gets reallocated if needed to accomodate the string's new
+ *  size.  Neither dsPtr nor string may be NULL (checked by assertion).
+ *
+ *  @param dsPtr   Structure describing dynamic string (non-NULL).
+ *  @param string  String to append (non-NULL, null-terminated).
+ *  @return Returns the new value of the dynamic string.
+ */
+extern char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string);
+
+#endif /* __dstring_h_seen__  */
 

@@ -104,7 +104,7 @@ int CmpSim(struct Instance *sim1, struct Instance *sim2)
 void Asc_SetCurrentSim(struct Instance *sim)
 {
   g_cursim = sim;
-  return;
+  return;                                         
 }
 
 struct Instance *Asc_GetCurrentSim()
@@ -783,11 +783,11 @@ int Asc_SimBinTokenSetOptions(ClientData cdata, Tcl_Interp *interp,
     Asc_HelpGetUsage(interp,Asc_SimBinTokenSetOptionsHN);
     return TCL_ERROR;
   };
-  srcname = strdup(argv[1]);
-  objname = strdup(argv[2]);
-  libname = strdup(argv[3]);
-  buildcommand = strdup(argv[4]);
-  unlinkcommand = strdup(argv[5]);
+  srcname = ascstrdup(argv[1]);
+  objname = ascstrdup(argv[2]);
+  libname = ascstrdup(argv[3]);
+  buildcommand = ascstrdup(argv[4]);
+  unlinkcommand = ascstrdup(argv[5]);
   s1 = Tcl_ExprLong(interp,argv[6],&maxrels);
   Tcl_ResetResult(interp);
   s2 = Tcl_GetInt(interp,argv[7],&verbose);

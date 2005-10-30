@@ -26,54 +26,120 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  */
+ 
+/*  ChangeLog
+ *
+ *      10/13/2005  Added PanicCallbackFunc and Asc_PanicSetCallback() to
+ *                  support callback functionality & ability to cancel exit
+ *                  for use in unit test.  Added asc_assert() for handling
+ *                  of assertions through Asc_Panic() & potential decoupling 
+ *                  of assertions from NDEBUG (J.D. St.Clair)
+ */
 
 /** @file
- *  Ascend Panic - Fatal Error Handling.
+ *  Ascend Panic - fatal error handling.
  *  <pre>
  *  To include this header file, you must include the following:
  *      #include <stdarg.h>
  *      #include "utilities/ascConfig.h"
- *      #include "compiler/compiler.h"
- *      #include "compiler/ascPanic.h"
  *  </pre>
  */
 
-#ifndef _ASCPANIC_H
-#define _ASCPANIC_H
+#ifndef _ascpanic_h_seen
+#define _ascpanic_h_seen
 
-/**
- * <!--  Asc_Panic( status, function, format, args )                   -->
- * <!--       int status;                                              -->
- * <!--       CONST char *function                                     -->
- * <!--       CONST char *format                                       -->
- * <!--       VAR_ARGS args                                            -->
- *
- *  This function prints the arguments "args" using the format string
- *  "format" to the ASCERR file handle.  The first line of the panic
- *  message will print ``ASCEND PANIC!! in function'' if the argument
- *  "function" is not NULL.  If ASCERR has not been initialized to a
- *  valid file pointer, the message will not be printed.  Either way,
- *  if an panic output file location has been specified with the 
- *  Asc_PanicSetOutfile() function, the panic message is also stored 
- *  there.  Under Windows, we also pop up a MessageBox containing the
- *  message.  Finally, we exit the program with the status "status".<br><br>
- *
- *  Side Effects: Exits the program.
- */
+#ifdef ASC_NO_ASSERTIONS
+
+#define asc_assert(x) ((void)0)
+/**<  If assertions turned off, asc_assert() does nothing. */
+
+#else /* assertions enabled */
+
+#define asc_assert(cond) \
+  ((cond) ? (void)0 : Asc_Panic(ASCERR_ASSERTION_FAILED, NULL, \
+                                "Assertion failed in %s:%d:  '%s'", \
+                                __FILE__, __LINE__, #cond))
+/**< Our assert macro.  Uses Asc_Panic() to report & handle assertion failure. */
+
+#endif	/* ASC_NO_ASSERTIONS */
+
 extern void Asc_Panic(CONST int status, CONST char *function,
                       CONST char *format, ...);
-
-/**
- *  <!--  Asc_PanicSetOutfile(filename)                                -->
- *  <!--      CONST char *filename;                                    -->
+/**<
+ *  Prints a fatal error message, calls any registered callback
+ *  function, and (usually) exits the program.
+ *  This is the fatal error handler for the ASCEND system.  It prints
+ *  the printf-style variable arguments using the specified format to
+ *  ASCERR file handle.  The message is formatted with a header
+ *  (e.g. 'ASCEND PANIC!!) and the name of the function (if non-NULL),
+ *  followed by the variables & format passed as arguments.  ASCERR
+ *  should have been initialized to a valid file stream or else the
+ *  message will not be printed (checked by assertion).<br><br>
  *
+ *  If a valid file name has been previously set using
+ *  Asc_PanicSetOutfile(), the message is printed to this file also.
+ *  Under Windows, a MessageBox will also be displayed with the
+ *  message.<br><br>
+ *
+ *  If a callback has been set using Asc_PanicSetCallback(), the
+ *  registered function will be called with the specified status.
+ *  If the callback returns non-NULL, then exit() is called to end
+ *  the program.  This is the default behavior.  If the callback
+ *  is able to resolve the problem, then it should return zero and
+ *  Asc_Panic() will just return.  This will be useful mostly for
+ *  testing purposes, and should be used with caution.
+ *
+ *  @param status   Status code passed by the calling function.
+ *  @param function Pointer to the name of the calling function.
+ *  @param format   printf-style format string for VAR_ARGS to follow.
+ */
+
+extern void Asc_PanicSetOutfile(CONST char *filename);
+/**<
+ *  Sets a file name for reporting of Asc_Panic() messages.
  *  Calling this function with a non-NULL "filename" will cause
  *  Asc_Panic() to write panic messages to "filename" in addition to the
  *  ASCERR file handle.  Passing in a "filename" of NULL causes panic
  *  messages not to be written to disk---this undoes the effect of
- *  previous calls to Asc_PanicSetOutfile()
+ *  previous calls to Asc_PanicSetOutfile().
+ *
+ *  @param filename Pointer to the name of the file to print messages to.
  */
-extern void Asc_PanicSetOutfile(CONST char *filename);
 
-#endif  /* _ASCPANIC_H */
+typedef int (*PanicCallbackFunc)(int);
+/**<
+ *  Signature of the callback function called by Asc_Panic().
+ *  The function takes a single argument, the status code passed
+ *  to Asc_Panic() by the original caller.  The function should
+ *  return non-zero if Asc_Panic() should exit() the program, the
+ *  default behavior.  If the function is able to resolve the problem
+ *  somehow, returning 0 will instruct Asc_Panic() to just return.<br><br>
+ *
+ *  This functionality is provided primarily for internal testing
+ *  purposes.  It should be used with extreme caution in release
+ *  code.  Asc_Panic() is called from all over ASCEND for many
+ *  error conditions, and current calls assume no return.
+ */
+
+extern PanicCallbackFunc Asc_PanicSetCallback(PanicCallbackFunc func);
+/**<
+ *  Registers a callback function to be called by Asc_Panic().
+ *  This allows the user to specify a cleanup function to be
+ *  called during a fatal error.  See PanicCallbackFunc for
+ *  more information on the callback function.
+ *
+ *  @param func Pointer to the new function to call during an Asc_Panic().
+ *  @return A pointer to the previously-registered callback, or NULL
+ *          if none was registered.
+ */
+
+extern void Asc_PanicDisplayMessageBox(int TRUE_or_FALSE);
+/**<
+ *  Controls whether a MessageBox is displayed by Asc_Panic() on Windows.
+ *  If TRUE_or_FALSE is non-zero then the MessageBox is displayed (the
+ *  default).  Pass FALSE to disable display of the MessageBox.
+ *  On other platforms, has no effect.
+ */
+
+#endif  /* _ascpanic_h_seen */
 

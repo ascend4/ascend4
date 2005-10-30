@@ -26,34 +26,36 @@
  *  along with the program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
  *  the file named COPYING.
-k
  */
+
 #include "utilities/ascConfig.h"
 #include "compiler/compiler.h"
 #include "utilities/ascMalloc.h"
+#include "utilities/ascPanic.h"
 #include "general/hashpjw.h"
 #include "general/table.h"
 
 struct TableEntry {
-  char *id;
-  void *data;
-  struct TableEntry *next;
+  char *id;                 /* id string used to hash entry */
+  void *data;               /* the actual data */
+  struct TableEntry *next;  /* pointer to next entry in linked list */
 };
 
+
 struct Table {
-  unsigned long hashsize; 	/* number of buckets */
-  unsigned long size;		/* the current number of entries */
-  struct TableEntry **buckets;
-  struct TableEntry *lastfind;	/* a pointer into the last thing found */
+  unsigned long hashsize;       /* number of buckets */
+  unsigned long size;           /* the current number of entries */
+  struct TableEntry **buckets;  /* the actual buckets */
+  struct TableEntry *lastfind;  /* a cached pointer into the last thing found */
 };
+
 
 struct Table *CreateTable(unsigned long hashsize)
 {
   struct Table *result;
   struct TableEntry **buckets;
   result = (struct Table *)ascmalloc(sizeof(struct Table));
-  buckets = (struct TableEntry **)
-    asccalloc(hashsize,sizeof(struct TableEntry *));
+  buckets = (struct TableEntry **)asccalloc(hashsize,sizeof(struct TableEntry *));
   result->buckets = buckets;
   result->size = 0;
   result->hashsize = hashsize;
@@ -61,43 +63,44 @@ struct Table *CreateTable(unsigned long hashsize)
   return result;
 }
 
-static void DestroyTableData(void *data, int info)
+static void DestroyTableData(void *data, int dispose)
 {
-  if (info)
+  if (dispose)
     ascfree((char *)data);
 }
 
-void DestroyTable(struct Table *table,int info)
+void DestroyTable(struct Table *table, int dispose)
 {
   struct TableEntry *ptr, *next;
   unsigned long hashsize,c;
+
   if (table==NULL) return;
   hashsize = table->hashsize;
-  for (c=0;c<hashsize;c++) {
-    if (table->buckets[c]!=NULL) {
+  for (c=0 ; c<hashsize ; c++) {
+    if (table->buckets[c] != NULL) {
       ptr = table->buckets[c];
       while(ptr!=NULL) {
-	DestroyTableData(ptr->data,info);	/* deallocate the data */
-	next = ptr->next;
-	ascfree((char *)ptr->id);		/* deallocate the string */
-	ascfree((char *)ptr);			/* deallocate the node */
-	table->size--;
-	ptr = next;
+        DestroyTableData(ptr->data, dispose); /* deallocate the data */
+        next = ptr->next;
+        ascfree((char *)ptr->id);             /* deallocate the string */
+        ascfree((char *)ptr);                 /* deallocate the node */
+        table->size--;
+        ptr = next;
       }
       table->buckets[c] = NULL;
     }
   }
-  ascfree((char *)table->buckets);		/* deallocate the table */
-  ascfree((char *)table);			/* deallocate the head */
+  ascfree((char *)table->buckets);            /* deallocate the table */
+  ascfree((char *)table);                     /* deallocate the head */
 }
 
 
-void AddTableData(struct Table *table,void *data,CONST char *id)
+void AddTableData(struct Table *table, void *data, CONST char *id)
 {
   unsigned long c;
   struct TableEntry *ptr;
 
-  assert(table&&data);
+  asc_assert((NULL != table) && (NULL != id));
   c = hashpjw(id,table->hashsize);
   ptr = table->buckets[c];
   /* search for name collisions */
@@ -110,7 +113,7 @@ void AddTableData(struct Table *table,void *data,CONST char *id)
   ptr = (struct TableEntry *)
            ascmalloc(sizeof(struct TableEntry));
   ptr->id = (char *)ascmalloc((strlen(id)+1)*sizeof(char));
-  strcpy(ptr->id,id);		/* we will copy the string */
+  strcpy(ptr->id,id);      /* we will copy the string */
   ptr->next = table->buckets[c];
   ptr->data = data;
   table->buckets[c] = ptr;
@@ -118,12 +121,12 @@ void AddTableData(struct Table *table,void *data,CONST char *id)
   table->lastfind = ptr;
 }
 
-void *LookupTableData(struct Table *table,CONST char *id)
+void *LookupTableData(struct Table *table, CONST char *id)
 {
   unsigned long c;
   struct TableEntry *ptr;
 
-  assert(table&&id);
+  asc_assert((NULL != table) && (NULL != id));
   c = hashpjw(id,table->hashsize);
   ptr = table->buckets[c];
   while (ptr) {
@@ -134,16 +137,16 @@ void *LookupTableData(struct Table *table,CONST char *id)
     ptr = ptr->next;
   }
   table->lastfind = NULL;
-  return NULL; /* name not found */
+  return NULL;    /* id not found */
 }
 
-void *RemoveTableData(struct Table *table,char *id)
+void *RemoveTableData(struct Table *table, char *id)
 {
   unsigned long c;
   struct TableEntry *ptr, **tmp;
   void *result;
 
-  assert(table&&id);
+  asc_assert((NULL != table) && (NULL != id));
   c = hashpjw(id,table->hashsize);
   tmp = &table->buckets[c];
   ptr = table->buckets[c];
@@ -152,27 +155,28 @@ void *RemoveTableData(struct Table *table,char *id)
       *tmp = ptr->next;
       result = ptr->data;
       if (table->lastfind==ptr)	table->lastfind = NULL;
-      ascfree((char *)ptr->id);	/* deallocate the string */
-      ascfree((char *)ptr); /* deallocate the node */
+      ascfree((char *)ptr->id); /* deallocate the string */
+      ascfree((char *)ptr);     /* deallocate the node */
       table->size--;
       return result;
     }
     tmp = &ptr->next;
     ptr = ptr->next;
   }
-  return NULL; /* node info not found */
+  return NULL; /* node id not found */
 }
 
 /*
- * Check our cached pointer first. If we dont find a match,
+ * Check our cached pointer first. If we don't find a match,
  * then do a Lookup. The lookup will reset the cached pointer.
  */
-void TableApplyOne(struct Table *table,TableIteratorOne applyfunc,
-		   char *id)
+void TableApplyOne(struct Table *table,
+                   TableIteratorOne applyfunc,
+                   char *id)
 {
   void *data;
 
-  assert(table&&id);
+  asc_assert((NULL != table) && (NULL != applyfunc) && (NULL != id));
   if (table->lastfind) {
     if (strcmp(table->lastfind->id,id)==0) {
       (*applyfunc)(table->lastfind->data);
@@ -185,11 +189,12 @@ void TableApplyOne(struct Table *table,TableIteratorOne applyfunc,
   return;
 }
 
-void TableApplyAll(struct Table *table,TableIteratorOne applyfunc)
+void TableApplyAll(struct Table *table, TableIteratorOne applyfunc)
 {
   unsigned long c,hashsize;
   struct TableEntry *ptr;
-  assert(table!=NULL);
+
+  asc_assert((NULL != table) && (NULL != applyfunc));
 
   hashsize = table->hashsize;
   for (c=0;c<hashsize;c++) {
@@ -201,12 +206,14 @@ void TableApplyAll(struct Table *table,TableIteratorOne applyfunc)
   }
 }
 
-void TableApplyAllTwo(struct Table *table,TableIteratorTwo applyfunc,
-		      void *arg2)
+void TableApplyAllTwo(struct Table *table,
+                      TableIteratorTwo applyfunc,
+                      void *arg2)
 {
   unsigned long c,hashsize;
   struct TableEntry *ptr;
-  assert(table!=NULL);
+
+  asc_assert((NULL != table) && (NULL != applyfunc));
 
   hashsize = table->hashsize;
   for (c=0;c<hashsize;c++) {
@@ -218,40 +225,41 @@ void TableApplyAllTwo(struct Table *table,TableIteratorTwo applyfunc,
   }
 }
 
-void PrintTable(FILE *f,struct Table *table)
+void PrintTable(FILE *f, struct Table *table)
 {
   unsigned long c,hashsize;
   struct TableEntry *ptr;
   unsigned long entrynum = 1;
-  assert(table!=NULL);
+
+  asc_assert((NULL != table) && (NULL != f));
 
   hashsize = table->hashsize;
   for (c=0;c<hashsize;c++) {
     ptr = table->buckets[c];
     while (ptr) {
       FPRINTF(f,"Entry %lu\tBucket %lu\tId %s\n",
-	      entrynum++,c,ptr->id);
+                 entrynum++,c,ptr->id);
       ptr = ptr->next;
     }
   }
 }
 
-
 unsigned long TableSize(struct Table *table)
 {
-  assert(table!=NULL);
+  asc_assert(table!=NULL);
   return table->size;
 }
 
 unsigned long TableHashSize(struct Table *table)
 {
-  assert(table!=NULL);
+  asc_assert(table!=NULL);
   return table->hashsize;
 }
 
 void *TableLastFind(struct Table *table)
 {
-  assert(table!=NULL);
-  return table->lastfind;
+  asc_assert(table!=NULL);
+  return (NULL == table->lastfind) ?
+          NULL : table->lastfind->data;
 }
 

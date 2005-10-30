@@ -23,7 +23,6 @@
  *  TION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
 /*
  * Small changes made by Michael Moore (mdm@cis.ohio-state.edu)
  * December 24th, 1993.
@@ -36,6 +35,7 @@
  * hpux
  * sgi
  * ultrix
+ * Windows
  *
  * Remember that under most systems, profiling does not work
  * with dynamic libraries. !
@@ -47,18 +47,20 @@
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
 #include "utilities/ascMalloc.h"
+
 struct ascend_dlrecord {
-  char *path;   /* library name */
+  char *path;     /* library name */
   void *dlreturn; /* return from dlopen */
   struct ascend_dlrecord *next;
 };
 
+/* Linked list of library names & dlopen() return values. */
 static
 struct ascend_dlrecord *g_ascend_dllist = NULL;
 
 /*
- * adds a record of the path and handle to the list.
- * if it fails to do this, returns 1, else 0.
+ * Adds a record of the path and handle to the list.
+ * If it fails to do this, returns 1, else 0.
  */
 static
 int AscAddRecord(void *dlreturn, CONST char *path)
@@ -68,7 +70,7 @@ int AscAddRecord(void *dlreturn, CONST char *path)
   if (dlreturn == NULL || path == NULL) {
     return 1;
   }
-  keeppath = ascstrdup((char *)path);
+  keeppath = strdup((char *)path);
   if (keeppath==NULL) return 1;
   new = (struct ascend_dlrecord *)malloc(sizeof(struct ascend_dlrecord));
   if (new==NULL) {
@@ -103,15 +105,16 @@ void *AscFindDLRecord(CONST char *path)
 
 /*
  * Finds and returns the handle to path, if one matches, and
- * deletes the record from the list.
+ * deletes the record from the list.  Returns NULL if not found.
  */
 static
 void *AscDeleteRecord(char *path)
 {
   struct ascend_dlrecord *nextptr, *lastptr, *old;
   void *dlreturn = NULL;
-  
-  if (g_ascend_dllist==NULL) return NULL;
+
+  if ((g_ascend_dllist==NULL) || (NULL == path)) return NULL;
+
   if (strcmp(path,g_ascend_dllist->path)==0) {
     /* head case */
     old = g_ascend_dllist;
@@ -141,13 +144,19 @@ void *AscDeleteRecord(char *path)
 }
 
 /*
- * checks the list for a conflicting handle so we can issue
+ * Checks the list for a conflicting handle so we can issue
  * a more helpful warning, if need be, than the standard message.
  */
-static 
+static
 void AscCheckDuplicateLoad(CONST char *path)
 {
   struct ascend_dlrecord *r;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Null path in AscCheckDuplicateLoad\n");
+    return;
+  }
+
   r = g_ascend_dllist;
   while (r != NULL) {
     if (strcmp(path,r->path)==0) {
@@ -165,7 +174,11 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   HINSTANCE xlib;
   int (*install)();
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
   /*
@@ -173,36 +186,23 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *    it does not define the named install proc, report an error
    */
 
-
   xlib = LoadLibrary(path);
   if (xlib == NULL) {
     FPRINTF(stderr,"Asc_DynamicLoad: LoadLibrary failed\n");
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-    return 0;
-  }
-  install = (int (*)())GetProcAddress(xlib,initFun);
-  if (install == NULL) {
-    FPRINTF(stderr,"Asc_DynamicLoad: Required function not found\n");
-        FreeLibrary(xlib);
-        return 1;
-  }
-  /*
-   *    Try to install the exstension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
+  if (NULL != initFun) {
+    install = (int (*)())GetProcAddress(xlib,initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"Asc_DynamicLoad: Required function %s not found\n", initFun);
+      (void)FreeLibrary(xlib);
+      return 1;
     }
   }
-  return result;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
+  }
+  return (initFun == NULL) ? 0 : (*install)();
 }
 #endif /* __WIN32__ */
 #if defined(sun) || defined(linux)
@@ -214,7 +214,11 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   int (*install)();
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
   /*
@@ -228,30 +232,21 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-    return 0;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  /*
-   *	Try to install the exstension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-  }
-  return result;
+  return (initFun == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
   int (*install)();
+
+  if (NULL == path) {
+    FPRINTF(stderr,"DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   /*
    *	If the named library does not exist, if it's not loadable or if
@@ -265,7 +260,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
   /*
-   *	Try to install the exstension and report success or failure
+   *	Try to install the extension and report success or failure
    */
   return (*install)();
 }
@@ -286,7 +281,12 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   int (*install)();
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
+
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
 
   /*
@@ -300,29 +300,20 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-    return 0;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  /*
-   *	Try to install the exstension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-  }
-  return result;
+  return (initFun == NULL) ? 0 : (*install)();
 }
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
   int (*install)();
+
+  if (NULL == path) {
+    FPRINTF(stderr,"DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   /*
    *	If the named library does not exist, if it's not loadable or if
@@ -336,7 +327,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
   /*
-   *	Try to install the exstension and report success or failure
+   *	Try to install the extension and report success or failure
    */
   return (*install)();
 }
@@ -972,7 +963,12 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   int (*install)();
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
+
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
 
   /*
@@ -986,30 +982,21 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-    return 0;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  /*
-   *	Try to install the exstension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-  }
-  return result;
+  return (initFun == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
   int (*install)();
+
+  if (NULL == path) {
+    FPRINTF(stderr,"DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   /*
    *	If the named library does not exist, if it's not loadable or if
@@ -1023,7 +1010,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
   /*
-   *	Try to install the exstension and report success or failure
+   *	Try to install the extension and report success or failure
    */
   return (*install)();
 }
@@ -1037,7 +1024,12 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   int (*install)();
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
+
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
 
   /*
@@ -1051,30 +1043,21 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-    return 0;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  /*
-   *	Try to install the exstension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-  }
-  return result;
+  return (initFun == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
   int (*install)();
+
+  if (NULL == path) {
+    FPRINTF(stderr,"DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   /*
    *	If the named library does not exist, if it's not loadable or if
@@ -1088,7 +1071,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
   /*
-   *	Try to install the exstension and report success or failure
+   *	Try to install the extension and report success or failure
    */
   return (*install)();
 }
@@ -1113,7 +1096,12 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   shl_t xlib;
   int (*install)();
   int i;
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
+
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
 
   /*
@@ -1125,37 +1113,25 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     FPRINTF(stderr,"Unable to load shared library : %s\n",strerror(errno));
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
+  if (NULL != initFun) {
+    i = shl_findsym(&xlib, initFun, TYPE_PROCEDURE, &install);
+    if (i == -1) {
+      FPRINTF(stderr,"Unable to find needed symbol %s %s\n",
+  		       initFun, strerror(errno));
+      shl_unload(xlib); /* baa */
+      return 1;
     }
-    return 0;
-  }
-  i = shl_findsym(&xlib, initFun, TYPE_PROCEDURE, &install);
-  if (i == -1) {
-    FPRINTF(stderr,"Unable to find needed symbol %s %s\n",
-		       initFun, strerror(errno));
-    shl_unload(xlib); /* baa */
-    return 1;
-  }
-  if (install == NULL) {
-    FPRINTF(stderr,"Unable to find needed symbol %s\n",initFun);
-    FPRINTF(stderr,"Error type unknown\n");
-    shl_unload(xlib); /* baa */
-    return 1;
-  }
-  /*
-   *	Try to install the extension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord((void *)xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
+    if (install == NULL) {
+      FPRINTF(stderr,"Unable to find needed symbol %s\n",initFun);
+      FPRINTF(stderr,"Error type unknown\n");
+      shl_unload(xlib); /* baa */
+      return 1;
     }
   }
-  return result;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
+  }
+  return (initFun == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
@@ -1163,6 +1139,11 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
   shl_t xlib;
   int (*install)();
   int i;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   /*
    *	If the named library does not exist, if it's not loadable or if
@@ -1301,7 +1282,11 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   int (*install)();
-  int result, addresult;
+
+  if (NULL == path) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
   /*
@@ -1315,24 +1300,10 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  if (initFun == NULL) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-    return 0;
+  if (0 != AscAddRecord(xlib,path)) {
+    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  /*
-   *	Try to install the exstension and report success or failure
-   */
-  result = (*install)();
-  if (result == 0) {
-    addresult = AscAddRecord(xlib,path);
-    if (addresult) {
-      FPRINTF(stderr,"Asc_DynamicLoad malloc fail (%s)\n",path);
-    }
-  }
-  return result;
+  return (initFun == NULL) ? 0 : (*install)();
 }
 /*
  * This is where we put a wrapper around all of the
@@ -1342,6 +1313,11 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
   int (*install)();
+
+  if (NULL == path) {
+    FPRINTF(stderr,"DynamicLoad failed: Null path\n");
+    return 1;
+  }
 
   /*
    *	If the named library does not exist, if it's not loadable or if
@@ -1355,7 +1331,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
   /*
-   *	Try to install the exstension and report success or failure
+   *	Try to install the extension and report success or failure
    */
   return (*install)();
 }
@@ -2864,12 +2840,18 @@ _dl_setErrmsg( va_alist )
 int Asc_DynamicUnLoad(char *path)
 {
   void *dlreturn;
-  dlreturn = AscDeleteRecord(path);
-  if (dlreturn == NULL) {
-    FPRINTF(stderr, "Asc_DynamicUnLoad: unable to remember %s\n", path);
+
+  if (NULL == path) {
+    FPRINTF(stderr, "Asc_DynamicUnLoad failed: Null path\n");
     return -3;
   }
-  FPRINTF(stderr, "Asc_DynamicUnLoad: forgetting %s \n", path);
+
+  dlreturn = AscDeleteRecord(path);
+  if (dlreturn == NULL) {
+    FPRINTF(stderr, "Asc_DynamicUnLoad: unable to remember or unload %s\n", path);
+    return -3;
+  }
+  FPRINTF(stderr, "Asc_DynamicUnLoad: forgetting & unloading %s \n", path);
   return UNLOAD(DLL_CAST dlreturn);
 }
 
@@ -2878,7 +2860,7 @@ int Asc_DynamicUnLoad(char *path)
  * rPtr =
  *  (double (*)(double *, double *))Asc_DynamicSymbol("lib.dll","calc");
  * returns you a pointer to a symbol exported from the dynamically
- * linked library named, if the library is loaded with Asc_DynamicLoad 
+ * linked library named, if the library is loaded with Asc_DynamicLoad
  * and the symbol can be found in it.
  */
 extern void *Asc_DynamicSymbol(CONST char *libname, CONST char *symbol)
@@ -2889,20 +2871,24 @@ extern void *Asc_DynamicSymbol(CONST char *libname, CONST char *symbol)
   int i;
 #endif
 
-  if (libname == NULL || symbol == NULL) {
-    FPRINTF(stderr,"Unable to find needed library or function (%s) in (%s)\n",
-      symbol,libname);
+  if (libname == NULL) {
+    FPRINTF(stderr,"Asc_DynamicSymbol failed:  Null libname\n");
     return NULL;
   }
+  if (symbol == NULL) {
+    FPRINTF(stderr,"Asc_DynamicSymbol failed:  Null symbol\n");
+    return NULL;
+  }
+
   dlreturn = AscFindDLRecord(libname);
   if (dlreturn == NULL) {
-    FPRINTF(stderr,"Unable to find needed library %s\n", libname);
+    FPRINTF(stderr,"Asc_DynamicSymbol: Unable to find requested library %s\n", libname);
     return NULL;
   }
 #ifdef __hpux
   i = shl_findsym(&dlreturn, symbol, TYPE_UNDEFINED, &symreturn);
   if (i == -1) {
-    FPRINTF(stderr,"Unable to find needed symbol %s in %s (%s)\n",
+    FPRINTF(stderr,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s (%s)\n",
                        symbol, libname, strerror(errno));
     symreturn = NULL;
   }
@@ -2910,7 +2896,7 @@ extern void *Asc_DynamicSymbol(CONST char *libname, CONST char *symbol)
   symreturn = (void *) DLLSYM(DLL_CAST dlreturn,symbol);
 #endif
   if (symreturn == NULL) {
-    FPRINTF(stderr,"Unable to find needed symbol %s in %s\n",symbol,libname);
+    FPRINTF(stderr,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s\n",symbol,libname);
     FPRINTF(stderr,"Error type %s\n",ASC_DLERRSTRING);
   }
   return symreturn;

@@ -423,18 +423,37 @@ extern int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
 
 extern int Asc_SolvSelectSolver(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
-/**< Set solver to N, if N available. return number of selected solver. */
+/**< 
+ *  Sets solver to N, if N available.
+ *  On return the Tcl interpreter result is set to the selected solver number.
+ *
+ *  @param cdata  Not used.
+ *  @param interp The Tcl interpreter.
+ *  @param argc   The number of argv elements - must be 2.
+ *  @param argv   argv[1] should contain the number of the solver
+ *                to select as a string.
+ *  @return TCL_OK if the solver was selected, TCL_ERROR otherwise.
+ */
 
 extern int Asc_SolvGetSelectedSolver(ClientData cdata, Tcl_Interp *interp,
                                      int argc, CONST84 char *argv[]);
-/**< Get solver selected. */
+/**<
+ *  Gets the number of the selected solver.
+ *  On return the Tcl interpreter result is set to the selected solver number.
+ *
+ *  @param cdata  Not used.
+ *  @param interp The Tcl interpreter.
+ *  @param argc   The number of argv elements - must be 1.
+ *  @param argv   Not used.
+ *  @return TCL_OK if the solver was selected, TCL_ERROR otherwise.
+ */
 
 extern int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
 /**<
  *  Import qlfdid to solver context.
  *  Will take a fully qualified ascend name and will search for the
- *  instance with that name. Will leave g_solvsys_cur looking at the
+ *  instance with that name. Will leave g_solvsys_cur looking at the            
  *  named instance if successful.
  *  Uses Asc_BrowQlfdidSearchCmd().
  *  If a called with an id and a third argument, will return 0 if an

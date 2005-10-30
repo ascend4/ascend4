@@ -49,7 +49,9 @@ static CONST char ListID[] = "$Id: list.c,v 1.3 1998/01/06 12:06:55 ballan Exp $
 (((unsigned long)(a) + ((b)*sizeof(VOIDPTR))-sizeof(VOIDPTR)))
 #define GL_LENGTH(l) ((l)->length)
 #define LOWCAPACITY 2
-/* shortest list we will allow. it must not be 0! */
+/* Shortest list we will allow. It must not be 0! */
+static const unsigned long MIN_INCREMENT = 8;
+/* Minimum number of elements to increase when expanding list. */
 
 /*
  * Be a bit more informative when dying on a list range error.
@@ -57,8 +59,8 @@ static CONST char ListID[] = "$Id: list.c,v 1.3 1998/01/06 12:06:55 ballan Exp $
  * just before assertion acts to handle the range error.
  */
 #define ASSERTRANGE(list,pos,n) \
-  assert((pos>=1 && pos <= GL_LENGTH(list)) || \
-         PRINTF("%s called with illegal length %lu",n,pos)== -2);
+  asc_assert(((pos >= 1) && (pos <= GL_LENGTH(list))) || \
+             (PRINTF("%s called with illegal length %lu\n",n,pos) == -2));
 
 #ifndef MOD_REALLOC
 #define REALLOCDEBUG FALSE
@@ -93,7 +95,7 @@ static CONST char ListID[] = "$Id: list.c,v 1.3 1998/01/06 12:06:55 ballan Exp $
 #define MAXRECYCLESIZE 500	/* the maximum list size to be recycled */
 #define MAXRECYCLESMALLITEMS 300/* the maximum number of size < LARGEITEM */
 #define MAXRECYCLELARGEITEMS 25	/* the maximum number of each large size */
-#define MAXRECYCLESEARCH 2	/* how much it will search for a larger list */
+#define MAXRECYCLESEARCH 2	/* how much larger a list will be searched for */
 /* search performance. 0 and 2 are best values, 2 slightly better. alphaosf2 */
 #define LARGEITEM 21		 /* smallest large item */
 /* note: baa, 3/8/96 LARGEITEM and MAXRECYCLELARGEITEMS not in use yet */
@@ -193,14 +195,14 @@ static pool_store_t g_list_head_pool = NULL;
 /* This function is called at compiler startup time and destroy at shutdown. */
 void gl_init_pool(void) {
 #if LISTUSESPOOL
-  if (g_list_head_pool != NULL ) {
+  if (g_list_head_pool != NULL) {
     Asc_Panic(2, NULL, "ERROR: gl_init_pool called twice.\n");
   }
   g_list_head_pool = pool_create_store(GLP_LEN, GLP_WID, GLP_ELT_SIZE,
     GLP_MORE_ELTS, GLP_MORE_BARS);
   if (g_list_head_pool == NULL) {
     Asc_Panic(2, NULL, "ERROR: gl_init_pool unable to allocate pool.\n");
-  }
+  }                     
 #else
   PRINTF("list.[ch] built without pooling of overheads\n");
 #endif
@@ -209,13 +211,26 @@ void gl_init_pool(void) {
 void gl_destroy_pool(void) {
 #if LISTUSESPOOL
   if (g_list_head_pool==NULL) return;
+  gl_emptyrecycler();    /* deallocate data in recycled lists, zero RecycledContents[] */
   pool_clear_store(g_list_head_pool);
   pool_destroy_store(g_list_head_pool);
   g_list_head_pool = NULL;
 #else
   PRINTF("list.[ch] built without pooling of overheads\n");
 #endif
+}                                                              
+
+
+int gl_pool_initialized(void)
+{
+#if LISTUSESPOOL
+  return (g_list_head_pool == NULL) ? FALSE : TRUE;
+#else
+  PRINTF("list.[ch] built without pooling of overheads\n");
+  return TRUE;
+#endif
 }
+
 
 void gl_report_pool(FILE *f)
 {
@@ -229,31 +244,30 @@ void gl_report_pool(FILE *f)
 #endif
 }
 
-struct gl_list_t *gl_create(unsigned long int capacity)
-
 /*
  * Guess of the capacity of the list.  If the
  * list capacity needs to be expanded it will
  * be.  It is good to be close though
  */
+struct gl_list_t *gl_create(unsigned long int capacity)
 {
   struct gl_list_t *new;
-  unsigned i;
-  i = capacity = MAX(2,capacity);
+  unsigned long i;
+  i = capacity = MAX((unsigned long)LOWCAPACITY,capacity);
   while(i <= capacity+MAXRECYCLESEARCH &&
         i <= MAXRECYCLESIZE){
-    assert(RecycledContents[i] >= 0 &&
-           RecycledContents[i] <= AllowedContents[i]);
+    asc_assert(RecycledContents[i] >= 0 &&
+               RecycledContents[i] <= AllowedContents[i]);
     if (RecycledContents[i] > 0){
 #if LISTRECYCLERDEBUG
       RecycledListsUsed++;
 #endif
       new = RecycledList[i]; 		/* fetch last recycled list */
-      assert(new != NULL);
+      asc_assert(new != NULL);
       RecycledList[i] = (struct gl_list_t *)new->data[0]; /* point to next */
       --RecycledContents[i];		/* reduce list count for this size */
       new->length = 0;
-      new->flags = (gsf_SORTED | gsf_EXPANDABLE);
+      new->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
 #ifndef NDEBUG
       if (i>0) new->data[0]=NULL;
 #endif
@@ -273,7 +287,7 @@ struct gl_list_t *gl_create(unsigned long int capacity)
     new->data = (VOIDPTR *)ascmalloc((unsigned)capacity*sizeof(VOIDPTR));
 #endif
     new->capacity = capacity;
-    new->flags = (gsf_SORTED | gsf_EXPANDABLE);
+    new->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
     return new;
   }
   else {
@@ -296,7 +310,7 @@ void gl_free_and_destroy(struct gl_list_t *list)
 #endif
   c = list->capacity; 		/* gonna use it a lot */
   if (c <= MAXRECYCLESIZE && RecycledContents[c] < AllowedContents[c]) {
-    assert(RecycledContents[c] >= 0);
+    asc_assert(RecycledContents[c] >= 0);
     /* push list into LIFO list of lists, and bump the count. */
     list->data[0] = RecycledList[c];
     RecycledList[c] = list;
@@ -326,7 +340,7 @@ void gl_destroy(struct gl_list_t *list)
   AssertAllocatedMemory(list,sizeof(struct gl_list_t));
   c = list->capacity; 		/* gonna use it a lot */
   if (c <= MAXRECYCLESIZE && RecycledContents[c] < AllowedContents[c]) {
-    assert(RecycledContents[c] >= 0);
+    asc_assert(RecycledContents[c] >= 0);
     /* push list into LIFO list of lists, and bump the count. */
     list->data[0] = RecycledList[c];
     RecycledList[c] = list;
@@ -354,7 +368,8 @@ void gl_destroy(struct gl_list_t *list)
 
 VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long int pos)
 {
-  ASSERTRANGE(list,pos,"gl_fetch");
+  asc_assert(NULL != list);
+  ASSERTRANGE(list,pos,"gl_fetchF");
   return list->data[pos-1];
 }
 
@@ -372,6 +387,7 @@ VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long int pos)
 #endif
 void gl_store(struct gl_list_t *list, unsigned long int pos, VOIDPTR ptr)
 {
+  asc_assert(NULL != list);
   if (GL_LENGTH(list)>1) SORTED_OFF(list);
   ASSERTRANGE(list,pos,"gl_store");
   list->data[pos-1] = ptr;
@@ -397,7 +413,7 @@ static void gl_expand_list(struct gl_list_t *list)
   VOIDPTR *tmp;
   unsigned long increment;
   increment = (list->capacity*50)/100; /* 10% is too small. try 50% baa */
-  increment = MAX(8,increment);
+  increment = MAX(MIN_INCREMENT,increment);
   list->capacity += increment;
   tmp = (VOIDPTR *) DATAREALLOC(list,increment);
 
@@ -413,17 +429,17 @@ static void gl_expand_list(struct gl_list_t *list)
 static void gl_expand_list_by(struct gl_list_t *list,unsigned long addlen)
 {
   if (!addlen) return;
-  addlen = MAX(8,addlen); /* expand by at least 8 */
+  addlen = MAX(MIN_INCREMENT,addlen); /* expand by at least 8 */
   list->capacity += addlen;
   list->data = (VOIDPTR *)DATAREALLOC(list,addlen);
 
   if (list->data==NULL) PRINTF("gl_expand_list_by: memory allocation failed\n");
-  assert(list->data!=NULL);
+  asc_assert(list->data!=NULL);
 }
 
 void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr)
 {
-  assert(list->flags & gsf_EXPANDABLE);
+  asc_assert((NULL != list) && (0 != gl_expandable(list)));
   if (list->length > 0) SORTED_OFF(list);
   if (++(list->length) > list->capacity) /* expand list capacity*/
     gl_expand_list(list);
@@ -433,7 +449,10 @@ void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr)
 void gl_append_list(struct gl_list_t *extendlist, struct gl_list_t *list)
 {
   register unsigned long c,len,oldlen,newlen;
-  assert((extendlist->flags & gsf_EXPANDABLE) && list !=NULL);
+
+  asc_assert((NULL != extendlist) &&
+             (0 != gl_expandable(extendlist)) &&
+             (NULL != list));
   if (extendlist->length >0 || list->length > 0) {
     SORTED_OFF(extendlist);
   }
@@ -452,6 +471,7 @@ void gl_append_list(struct gl_list_t *extendlist, struct gl_list_t *list)
 
 void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr)
 {
+  asc_assert(NULL != list);
   SORTED_OFF(list);
   list->data[list->length] = ptr;
   ++(list->length);
@@ -467,6 +487,7 @@ unsigned long gl_safe_length(CONST struct gl_list_t *list)
 }
 unsigned long gl_lengthF(CONST struct gl_list_t *list)
 {
+  asc_assert(NULL != list);
   return list->length;
 }
 
@@ -476,9 +497,11 @@ unsigned long gl_capacity(CONST struct gl_list_t *list)
   return list->capacity;
 }
 
+
 int gl_sorted(CONST struct gl_list_t *list)
 {
-  return list->flags & gsf_SORTED;
+  asc_assert(NULL != list);
+  return (int)(list->flags & gsf_SORTED);
 }
 
 #if LISTIMPLEMENTED
@@ -608,8 +631,8 @@ static void gl_swap(struct gl_list_t *list,
 #if LISTIMPLEMENTED
 /* this function is probably ok */
 void gl_upsort(struct gl_list_t *list,
-	      unsigned long int lower,
-	      unsigned long int upper)
+               unsigned long int lower,
+               unsigned long int upper)
 {
   register unsigned long i,j;
   VOIDPTR pivot_element;
@@ -633,8 +656,8 @@ void gl_upsort(struct gl_list_t *list,
 
 /* this function is not ok */
 void gl_downsort(struct gl_list_t *list,
-	      unsigned long int lower,
-	      unsigned long int upper)
+                 unsigned long int lower,
+                 unsigned long int upper)
 {
   unsigned long pivot,i,j;
   VOIDPTR pivot_element;
@@ -655,9 +678,9 @@ void gl_downsort(struct gl_list_t *list,
 
 static
 void gl_qsort(struct gl_list_t *list,
-	      unsigned long int lower,
-	      unsigned long int upper,
-	      CmpFunc func)
+              unsigned long int lower,
+              unsigned long int upper,
+              CmpFunc func)
 {
   unsigned long pivot,i,j;
   VOIDPTR pivot_element;
@@ -697,8 +720,10 @@ void gl_insert_ptr_sorted(struct gl_list_t *,VOIDPTR,int)
 {
 }
 #endif
+
 void gl_sort(struct gl_list_t *list, CmpFunc func)
 {
+  asc_assert((NULL != list) && (NULL != func));
   if (GL_LENGTH(list) > 1) {
     gl_qsort(list,1,GL_LENGTH(list),func);
   }
@@ -710,6 +735,10 @@ void gl_insert_sorted(struct gl_list_t *list,
 {
   int comparison;
   register unsigned long lower,upper,search=0L;
+  
+  asc_assert((NULL != list) &&
+             (0 != gl_expandable(list)) &&
+             (NULL != func));
   if (list->flags & gsf_SORTED) {
     if (GL_LENGTH(list)==0) {
       gl_append_ptr(list,ptr);
@@ -766,6 +795,8 @@ void gl_iterate(struct gl_list_t *list, void (*func) (VOIDPTR))
     (*func)(list->data[counter]);
 #else
   unsigned long length,counter;
+  asc_assert(NULL != list);
+  asc_assert(NULL != func);
   length = GL_LENGTH(list);
   for (counter=1;counter<=length;counter++)
     (*func)(gl_fetch(list,counter));
@@ -787,6 +818,7 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list,
  */
   register unsigned long lower,upper,search;
 
+  asc_assert(NULL != list);
   if (!GL_LENGTH(list)) return 0;
   if ( (list->flags & gsf_SORTED)
 #if (SHORTSEARCH > 0)
@@ -803,22 +835,35 @@ unsigned long gl_ptr_search(CONST struct gl_list_t *list,
         search = (lower+upper) / 2;
         comparison =
           ((char *)list->data[search]-(char *)match); /* pointer difference */
-        if (comparison==0) return search+1;
-        if (comparison < 0) {
+        if (comparison==0) {
+          return (search + 1);
+        }
+        else if (comparison < 0) {
           lower = search + 1;
-        } else  {
-          upper = search -1;
+        }
+        else if (search > 0) {
+          upper = search - 1;
+        }
+        else {
+          return 0;
         }
       }
     } else {
       while (lower <= upper) {
         search = (lower+upper) / 2;
-        comparison = ((char *)match - (char *)list->data[search]);
-        if (comparison==0) return search+1;
-        if (comparison < 0) {
+        comparison =
+          ((char *)match-(char *)list->data[search]); /* pointer difference */
+        if (comparison==0) {
+          return (search + 1);
+        }
+        else if (comparison < 0) {
           lower = search + 1;
-        } else {
-          upper = search -1;
+        } 
+        else if (search > 0) {
+          upper = search - 1;
+        } 
+        else {
+          return 0;
         }
       }
     }
@@ -841,6 +886,7 @@ unsigned long gl_search(CONST struct gl_list_t *list,
 #else
   int comparison;
 #endif
+  asc_assert((NULL != list) && (NULL != func));
   if (list->flags & gsf_SORTED) {		/* use binary search */
     lower = 1;
     upper = GL_LENGTH(list);
@@ -867,6 +913,7 @@ unsigned long gl_search_reverse(CONST struct gl_list_t *list,
 {
   register unsigned long search;
 
+  asc_assert((NULL != list) && (NULL != func));
   if (list->flags & gsf_SORTED) {	/* use binary search */
     return gl_search(list, match, func);
   } else {				/* use linear search */
@@ -888,6 +935,7 @@ int gl_unique_list(CONST struct gl_list_t *list)
   unsigned long i,j,len,lm1;
   VOIDPTR e;
   VOIDPTR *d;
+
   if (list==NULL || GL_LENGTH(list)<2) {
     return 1;
   }
@@ -907,6 +955,7 @@ int gl_unique_list(CONST struct gl_list_t *list)
 
 int gl_empty(CONST struct gl_list_t *list)
 {
+  asc_assert(NULL != list);
   return(GL_LENGTH(list)==0);
 }
 
@@ -915,8 +964,15 @@ void gl_delete(struct gl_list_t *list, unsigned long int pos, int dispose)
   unsigned long c,length;
   int sorted;
   VOIDPTR ptr;
+
+  asc_assert(NULL != list);
+  /* should be ASSERTRANGE(list,pos,"gl_delete");  
+     The check for (pos > 0) below is suspicious, though.
+     It suggests this function may be called with pos == 0. */
+  asc_assert(pos <= gl_length(list));
+
   if (pos > 0) {
-    sorted = list->flags & gsf_SORTED;
+    sorted = (int)(list->flags & gsf_SORTED);
     if (dispose) {
       ptr = gl_fetch(list,pos);
       ascfree(ptr);
@@ -962,7 +1018,8 @@ void gl_reverse(struct gl_list_t *list)
 
 void gl_reset(struct gl_list_t *list)
 {
-  list->flags = (gsf_SORTED | gsf_EXPANDABLE);
+  asc_assert(NULL != list);
+  list->flags = (unsigned int)(gsf_SORTED | gsf_EXPANDABLE);
   list->length = 0;
 }
 
@@ -971,6 +1028,9 @@ struct gl_list_t *gl_copy(CONST struct gl_list_t *list)
 {
   struct gl_list_t *new;
   unsigned long counter,length;
+
+  asc_assert(NULL != list);
+  
   length = GL_LENGTH(list);
   new = gl_create(length);
   for (counter = 1;counter <= length;counter++)
@@ -983,7 +1043,10 @@ struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
 			    CONST struct gl_list_t *list2)
 {
   struct gl_list_t *new;
-  unsigned counter,length1,length2;
+  unsigned long counter,length1,length2;
+  
+  asc_assert ((NULL != list1) && (NULL != list2));
+
   length1 = GL_LENGTH(list1);
   length2 = GL_LENGTH(list2);
   new = gl_create(length1+length2);
@@ -1019,25 +1082,41 @@ int gl_compare_ptrs(CONST struct gl_list_t *l1, CONST struct gl_list_t *l2)
           (( GL_LENGTH(l2) > len) ? -1 : 1);
 }
 
-void gl_set_sorted(struct gl_list_t *l)
+void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE)
 {
-  l->flags |= gsf_SORTED;
+  asc_assert(NULL != list);
+  if (FALSE == TRUE_or_FALSE)
+    list->flags &= ~gsf_SORTED;
+  else
+    list->flags |= gsf_SORTED;
 }
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
-static
-void gl_set_notexpandable(struct gl_list_t *l)
+int gl_expandable(struct gl_list_t *list)
 {
-  l->flags &= ~gsf_EXPANDABLE;
+  asc_assert(NULL != list);
+  return (int)(list->flags & gsf_EXPANDABLE);
+}
+
+void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE)
+{
+  asc_assert(NULL != list);
+  if (FALSE == TRUE_or_FALSE)
+    list->flags &= ~gsf_EXPANDABLE;
+  else
+    list->flags |= gsf_EXPANDABLE;
 }
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
+
 
 VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list,
 		     unsigned long int pos)
 {
+  asc_assert(NULL != list);
   ASSERTRANGE(list,pos,"gl_fetchaddr");
   return (VOIDPTR *)&(list->data[pos-1]);
 }
+
 
 void gl_emptyrecycler()
 {
@@ -1047,7 +1126,7 @@ void gl_emptyrecycler()
 #endif
   struct gl_list_t *list;
 
-#if LISTRECYCLERDEBUG
+#if LISTRECYCLERDEBUG                                         
   PRINTF("LIST RECYCLER SUMMARY\n");
   PRINTF("=====================\n");
   PRINTF("New lists created  : %d\n", NewListsUsed);
@@ -1083,7 +1162,7 @@ void gl_emptyrecycler()
 #endif
       POOL_FREEHEAD(list);
     }
-    assert(RecycledList[i]==NULL); /* someone forgot to empty the last one */
+    asc_assert(RecycledList[i]==NULL); /* someone forgot to empty the last one */
   }
 #if LISTRECYCLERDEBUG
   bytecount += MAXRECYCLESIZE*sizeof(void *);
@@ -1100,6 +1179,7 @@ void gl_reportrecycler(FILE *fp)
 #endif
 
 #if LISTRECYCLERDEBUG
+  asc_assert(NULL != fp);
   FPRINTF(fp,"LIST RECYCLER SUMMARY\n");
   FPRINTF(fp,"=====================\n");
   FPRINTF(fp,"New lists created  : %d\n", NewListsUsed);

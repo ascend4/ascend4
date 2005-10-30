@@ -33,17 +33,17 @@
 /** @file
  *  Server functions for the SLV solver.
  *  <pre>
- *  Requires:     #include "var.h"
- *                #include "rel.h"
- *                #include "discrete.h"
- *                #include "conditional.h"
- *                #include "logrel.h"
- *                #include "bnd.h"
- *                #include "linsol.h"
- *                #include "linsolqr.h"
- *                #include "slv_common.h"
- *                #include "slv_types.h"
- *                #include "slv_client.h"
+ *  Requires:     #include "solver/var.h"
+ *                #include "solver/rel.h"
+ *                #include "solver/discrete.h"
+ *                #include "solver/conditional.h"
+ *                #include "solver/logrel.h"
+ *                #include "solver/bnd.h"
+ *                #include "solver/linsol.h"
+ *                #include "solver/linsolqr.h"
+ *                #include "solver/slv_common.h"
+ *                #include "solver/slv_types.h"
+ *                #include "solver/slv_client.h"
  *
  *  PLEASE NOTE
  *

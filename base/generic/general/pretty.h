@@ -41,29 +41,56 @@
 #define __pretty_h_seen__
 
 /**
- * <!--  count = print_long_string(fp,string,width,indent);            -->
- * Writes a string to a file, splitting it at the blank characters
- * tabs, or returns to attempt keeping line length < width given.
- * each line written is indented by indent characters.
- * this function is not very bright, but works on nonpathological
- * input ok. long words are not broken.
- * width does not include the indent, so pls(f,s,70,2) -> 72 char lines.
- * If width < 4 or indent < 0, gives up and simply prints the string.<br><br>
+ *  Writes a string to a file, splitting it at whitespace characters to
+ *  try to limit each line to the specified width.  The string is split 
+ *  at the blank characters, tabs, or returns.  Long words are not broken, 
+ *  which can result in lines longer than requested.  The printed string 
+ *  will always have a trailing '\n',  possibly 2 if the original string 
+ *  ends in a '\n'.  This function is not very bright, but works ok on 
+ *  nonpathological input.<br><br>
  *
- * Note that \n and \t count as a character when determining line length,
- * so you won't get perfect formatting. If you want perfect formatting,
- * fix it. How big is a tab? In particular, \n will cause a missing
- * indent.
+ *  Each line written is indented by indent spaces.  Note that width does 
+ *  not include the  indent, so print_long_string(f,s,70,2) -> 72 char 
+ *  lines.  If fp or string is NULL, nothing is printed.  If width < 4 
+ *  or indent < 0, no formatting is attempted and the string is simply 
+ *  printed as-is.<br><br>
+ *
+ *  Note that \n and \t count as a character when determining line length,
+ *  so you won't get perfect formatting. If you want perfect formatting,
+ *  fix it. How big is a tab? In particular, \n will cause a missing
+ *  indent.  See print_long_string_EOL() for somewhat more controlled 
+ *  formatting.<br><br>
+ *
+ *  Passing this function a constant string may result in a crash
+ *  on platforms/compilers in which assigning characters through a
+ *  pointer is disallowed for const strings.
+ *
+ *  @param fp     The file stream to receive the output.  If NULL,
+ *                nothing is printed.
+ *  @param string The string to format into lines and print to fp.
+ *                If NULL, nothing is printed.
+ *  @param width  The maximum requested line length.  If less than 4,
+ *                no formatting is performed.
+ *  @param indent The number of spaces by which to indent each line.
+ *                If less than 0, no formatting is performed.
+ *  @return The total number of characters printed.
  */
 extern int print_long_string(FILE *fp, char *string, int width, int indent);
 
 /**
- * Writes a string to a file, splitting it at special delimiter characters.
- * Like print_long_string(), except instead of breaking at width, it
- * breaks at occurences of /{star}EOL{star}/ (commented EOL).
- * print_long_string(fp,string,indent);
+ *  Writes a string to a file, splitting it at special delimiter
+ *  characters.  This function works like print_long_string(), except
+ *  the string is broken at occurences of /{star}EOL{star}/ (commented EOL).
+ *
+ *  @param fp     The file stream to receive the output.  If NULL,
+ *                nothing is printed.
+ *  @param string The string to format into lines and print to fp.
+ *                If NULL, nothing is printed.
+ *  @param indent The number of spaces by which to indent each line.
+ *                If less than 0, no formatting is performed.
+ *  @return The total number of characters printed.
  */
-extern void print_long_string_EOL(FILE *fp, char *string, int indent);
+extern int print_long_string_EOL(FILE *fp, char *string, int indent);
 
 #endif /* __pretty_h_seen__ */
 

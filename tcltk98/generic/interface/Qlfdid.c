@@ -559,13 +559,13 @@ int Asc_QlfdidSearch3(CONST char *str, int relative)
   if (str==NULL) {
     return 1;
   }
-  temp = strdup((char *)str);
+  temp = ascstrdup((char *)str);
   if (temp==NULL) {
     return 1;
   }
   found = BrowQlfdidSearch3(str,temp,relative);
   ascfree(temp);
-  if (found != NULL) {
+  if (found != NULL) {                            
     return 0;
   } else {
     return 1;

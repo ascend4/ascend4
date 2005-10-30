@@ -41,13 +41,13 @@
  *                        names. deleted all the Karl foo of mem.c.
  *                03/96 - retuned some of the parameters for compiler.
  *
- *  Description:  The generic element memory manager is yet another
+ *  Description:  This generic element memory manager is yet another
  *                implementation of a fixed byte size malloc system
  *                that is more efficient than most standard mallocs. This
  *                is possible because we make the fixed size assumption.
  *                The idea is clearly not original.
  *                For best results, you must understand your memory
- *                usage pattern and tune the pool_create_store parameters
+ *                usage pattern and tune the pool_create_store() parameters
  *                accordingly.
  *
  *                This has similar functionality to free_store.[ch] but
@@ -77,7 +77,8 @@
  *  no more than MAXINT elements. If this is too small, write your own
  *  allocator.
  *
- *  Note for the intelligent:
+ *  Even More Details
+ *
  *  If you specify an element size that is not a nice multiple of your machine
  *  word length, you are *very* likely to get data alignment (bus) errors.
  *  E.g., if your element is not a convenient multiple of
@@ -104,18 +105,20 @@
  *  </pre>
  */
 
-#ifndef __POOL_H_SEEN__
-#define __POOL_H_SEEN__
+#ifndef __pool_h_seen__
+#define __pool_h_seen__
 
 typedef struct pool_store_header *pool_store_t;
-/**< 
- *  The token for this memory system. malloc doesn't tell you much
- *  about its internals, and we aren't telling you about ours.
- *  You can't dereference or free this pointer yourself, so there's
- *  no need to even know that it IS a pointer, now is there?
+/**<
+ *  The token for this memory system.  Internal details of the
+ *  implementation are private.  Do not dereference or free this 
+ *  pointer.
  */
 
-/**  Memory pool statistics data structure. */
+/**
+ *  Memory pool statistics data structure. 
+ *  This is the reporting structure for a pool_store_header query.
+ */
 struct pool_statistics {
   double p_eff;       /**< bytes in use / bytes allocated */
   double p_recycle;   /**< avg reuses per element */
@@ -127,100 +130,105 @@ struct pool_statistics {
   int str_len;        /**< length of active pool. */
   int str_wid;        /**< elements/pointer in pool. */
 };
-/**< The reporting structure for a pool_store_header query. */
 
-extern void pool_get_stats(struct pool_statistics *p_stats, 
+extern void pool_get_stats(struct pool_statistics *p_stats,
                            pool_store_t ps);
 /**<
- *  <!--  pool_get_stats(p_stats,ps);                                  -->
- *  <!--  struct pool_statistics *p_stats;                             -->
- *  <!--  pool_store_t ps;                                             -->
- *
- *  Stuffs the user interface structure, p_stats, with info
+ *  Get statistics about a pool store.
+ *  Stuffs the user's interface structure, p_stats, with info
  *  derived from ps given.
  *  If pool_LIGHTENING (see below) is TRUE, no statistics
  *  except elt_total, elt_taken, elt_onlist, and elt_size are
  *  available.
+ *
+ *  @param p_stats Pointer to a pool_statistics struct to receive 
+ *                 the info.  If p_stats is NULL, an error message
+ *                 is printed and the function returns.
+ *  @param ps      Pointer to the pool store to query.
  */
 
 extern pool_store_t pool_create_store(int length,
                                       int width,
-                                      size_t eltsze,
+                                      size_t eltsize,
                                       int deltalen,
                                       int deltapool);
 /**<
- *  <!--  ps = pool_create_store(length, width, eltsize, deltalen, deltapool);  -->
- *  <!--  pool_store_t ps;                                             -->
- *  <!--  int length,width,deltalen,deltapool;                         -->
- *  <!--  size_t eltsize;                                              -->
- *
- *  Returns a pool_store_t which can be used in future. The pool_store_t
+ *  Creates and returns a new pool store. The returned pool_store_t
  *  contains all the necessary accounting information, but in particular
- *  the eltsize is fixed at creation. All elements requested from ps will be
- *  pointers to eltsize bytes of memory.
+ *  the eltsize is fixed at creation. All elements requested from ps 
+ *  will be pointers to eltsize bytes of memory.
  *  Returns NULL if a store of the requested length*width*eltsize
  *  cannot be initially allocated.<br><br>
  *
  *  The user may request more than length*width elements from the store:
  *  this will cause it to grow. It will grow (internally) in chunks of
  *  deltalen*width elements. The pool vector above grows in chunks of
- *  deltapool, the extra pointers in it being NULL until needed.
- *  <pre>
- *  Info for tuning purposes:
+ *  deltapool, the extra pointers in it being NULL until needed.<br><br>
  *
- *  For maximum efficiency, eltsize should be an integer
- *  multiple of sizeof(void *). If it is not, elts will be padded
- *  so that this is the case. This is to avoid pointer data misalignment.
- *  This restriction may or may not help avoid alignment problems with
- *  items inside the user's element structure.
+ *  @param length    The initial number of width*eltsize blocks that the
+ *                   new pool store will contain.  If length < 1, an error
+ *                   message is printed and NULL is returned.
  *
- *  Width should (for some architectures) be such that
- *  width*eltsize = 2^n - 32 for some n fairly large (heuristic: n= 9..13).
- *  Widths that are too large may be prone to causing excess page faults,
- *  though the process cpu time reported by the clock() can be much
- *  better for extremely large sizes.
- *  Widths that are too small will result in an excessive number of pool
- *  expansions which may severely limit performance on some VM systems.
- *  See deltapool below about pool expansions.
- *  If you know something about the page size of your architecture, fiddling
- *  with width may reduce help you reduce page fault or cache miss count in
- *  some uses.
+ *  @param width     Number of elements in each block.
+ *                   Width should (for some architectures) be such that
+ *                   width*eltsize = 2^n - 32 for some n fairly large
+ *                   (heuristic: n= 9..13).  Widths that are too large may 
+ *                   be prone to causing excess page faults, though the 
+ *                   process cpu time reported by the clock() can be much
+ *                   better for extremely large sizes.  If width < 1, an
+ *                   error message is printed and NULL is returned.<br><br>
+ *                   Widths that are too small will result in an excessive
+ *                   number of pool expansions, which may severely limit
+ *                   performance on some VM systems.  See deltapool below
+ *                   about pool expansions.<br><br>
+ *                   If you know something about the page size of your
+ *                   architecture, fiddling with width may help you reduce 
+ *                   your page fault or cache miss count in some uses.
  *
- *  Deltalen is the number of additional pointers in the pool that will be
- *  allocated when more elements are needed than are available internally,
- *  as already noted.
+ *  @param eltsize   Element size maintained by the pool.
+ *                   For maximum efficiency, eltsize should be an integer
+ *                   multiple of sizeof(void *). If it is not, elts will be
+ *                   padded so that this is the case. This is to avoid
+ *                   pointer data misalignment.  This restriction may or
+ *                   may not help avoid alignment problems with items inside
+ *                   the user's element structure.
  *
- *  Deltapool is the size change of the pool array described above: it should
- *  be as large as you are willing to tolerate. The pool array starts out
- *  completely filled (all pointers allocated). When the pool needs more
- *  pointers it gets them in chunks of at least deltapool. These additional
- *  pointers will not automatically have elements allocated to them; rather,
- *  they will be initialized to NULL and filled in only as the chunks of
- *  deltalen*width elements are required.
- *  </pre>
+ *  @param deltalen  Number of additional pointers in the pool that will be
+ *                   allocated when more elements are needed than are
+ *                   available internally.  deltalen must be at least 1 or
+ *                   creation of the new pool will fail.
+ *
+ *  @param deltapool Size change of the pool array when expanded.  It should
+ *                   be as large as you are willing to tolerate.  The pool 
+ *                   array starts out completely filled (all pointers allocated). 
+ *                   When the pool needs more pointers it gets them in chunks of 
+ *                   at least deltapool.  These additional pointers will not 
+ *                   automatically have elements allocated to them; rather,
+ *                   they will be initialized to NULL and filled in only as the 
+ *                   chunks of deltalen*width elements are required.
+
+ *  @return A pointer to the newly created pool store, NULL if an error occurred.
  */
 
 extern void *pool_get_element(pool_store_t ps);
 /**<
- *  <!--  eltpointer = (elt_type *)pool_get_element(ps);               -->
- *  <!--  pool_store_t ps;                                             -->
- *  <<!--  the elt_type you want is your business> *eltpointer;        -->
- *
+ *  Get a usable element from the pool.
  *  Returns a void pointer to a blob of memory of the eltsize
- *  set when ps was created. You must cast it appropriately.
+ *  set when ps was created.  You must cast it appropriately.
  *  The blob data is not initialized in any particular way.
- *  Returns NULL iff store growth is required and the operating
- *  system is unable to allocate the required memory.
+ *
+ *  @param ps The pool store from which to retrieve an element.
+ *            If ps is NULL, then an error message is printed
+ *            and NULL is returned.
+ *  @return A pointer to the usable element, or NULL iff ps is NULL or
+ *          store growth is required and the operating system is unable 
+ *          to allocate the required memory.
  */
 
-extern void pool_get_element_list(pool_store_t ps, 
+extern void pool_get_element_list(pool_store_t ps,
                                   int len,
                                   void **ellist);
 /**<
- *  <!--  pool_get_element_list(ps, len, ellist);                      -->
- *  <!--  int len;                                                     -->
- *  <!--  pool_store_t ps;                                             -->
- *
  *  NOT IMPLEMENTED.
  *
  *  Takes the pointer array, ellist, of length len provided by the user
@@ -229,26 +237,31 @@ extern void pool_get_element_list(pool_store_t ps,
  *  locations pointed to by successive entries in the ellist returned.
  *  Ellist should point to an array with enough space for len pointers.
  *  Returns NULL in ellist[0] iff store growth is required and the operating
- *  system is unable to allocate the required memory.
+ *  system is unable to allocate the required memory.<br><br>
  *
  *  The user is reminded that if he knows how many elements he needs
  *  ahead of time, he is probably better off mallocing the array himself.
+ *
+ *  @todo Implement general/pool.c:pool_get_element_list() of remove
+ *        it from pool.h.
  */
 
 #define pool_DEBUG FALSE
-/**<  pool_DEBUG set TRUE causes the pool_store routines to do
- *  some RATHER expensive checking. It should be set to
- *  FALSE.
+/**<
+ *  Flag controlling extra checking of the pool management routines.
+ *  Setting pool_DEBUG to TRUE causes the pool_store routines to do
+ *  some RATHER expensive checking. It should be set to FALSE.
  */
 #define pool_LIGHTENING FALSE
-/**<  
- *  pool_LIGHTENING set TRUE causes pool_store routines to assume the
- *  user is perfect: no sanity checks are at all necessary and most
- *  internal accounting can be disabled. Noone with an ounce of sanity
+/**<
+ *  Flag controlling extent of internal sanity checking.
+ *  Setting pool_LIGHTENING to TRUE causes pool_store routines to assume 
+ *  the user is perfect: i.e. no sanity checks are at all necessary and most
+ *  internal accounting can be disabled.  No one with an ounce of sanity
  *  would ever set this flag to TRUE unless the code using the
  *  pool module was proven bug free. It makes the allocator smaller
  *  and faster, though, by ~15%.  <br><br>
- *  ;-)  <br><br>
+ *
  *  This flag exists to make it easy to test the theory that the
  *  accounting overhead in this code is not of significant cost.
  *  Below 1e5 elements it really isn't bad enough to justify the
@@ -261,53 +274,39 @@ extern void pool_get_element_list(pool_store_t ps,
 #define pool_free_element(ps,eltpointer) pool_free_elementF((ps),(eltpointer))
 #endif
 /**<
- *  Returns an element to the store.
+ *  Releases an element back to the store.
  *  If you return the same pointer twice, we will have
  *  no qualms about returning it to you twice. We won't necessarily
- *  return it to you twice, though.
+ *  return it to you twice, though.<br><br>
+ *
  *  If pool_DEBUG is TRUE, eltpointer will be checked for belonging
- *  to ps. If you call pool_free_element with a pointer the ps does
+ *  to ps. If you call pool_free_element() with a pointer the ps does
  *  not recognize, it will not be freed and a message will be
  *  sent to ASCERR.<br><br>
+ *
  *  If pool_DEBUG is FALSE, eltpointer will be assumed to belong
- *  with the ps in question. The implications of handing pool_free_element
- *  an element of the wrong size or from the wrong ps (bearing in
- *  mind the LIFO reuse of elements) should be obvious. If they are
- *  not, stop using these routines.
+ *  with the ps in question.  The implications of handing
+ *  pool_free_element() an element of the wrong size or from the
+ *  wrong ps (bearing in mind the LIFO reuse of elements) should be
+ *  obvious. If they are not, stop using these routines.<br><br>
+ *
  *  If at any time the number of elements freed exceeds the number
- *  handed out, we will whine (unless pool_LIGHTENING).
- *  If you send us a NULL pointer, we will ignore it completely.
+ *  handed out, we will whine (unless pool_LIGHTENING).  If ps is 
+ *  NULL, and error message is printed and the function returns.
+ *  If eltpointer is NULL, we will ignore it completely.
+ *
  *  @param ps          pool_store_t, the pool store to modify.
  *  @param eltpointer  void*, the element to return to the pool.
  *  @return No return value.
  *  @see pool_free_elementF()
  */
+
 extern void pool_free_elementF(pool_store_t ps, void * eltpointer
 #if pool_DEBUG
 ,CONST char *file
 #endif
 );
 /**<
- *  <!--  pool_free_element(ps,(void *)eltpointer[,__FILE__]);         -->
- *  <!--  pool_store_t ps;                                             -->
- *  <<!--  your elttype> *eltpointer;                                  -->
- *
- *  <!--  Returns an element to the store.                                       -->
- *  <!--  If you return the same pointer twice, we will have                     -->
- *  <!--  no qualms about returning it to you twice. We won't necessarily        -->
- *  <!--  return it to you twice, though.                                        -->
- *  <!--  If pool_DEBUG is TRUE, eltpointer will be checked for belonging        -->
- *  <!--  to ps. If you call pool_free_element with a pointer the ps does        -->
- *  <!--  not recognize, it will not be freed and a message will be              -->
- *  <!--  sent to ASCERR.                                                        -->
- *  <!--  If pool_DEBUG is FALSE, eltpointer will be assumed to belong           -->
- *  <!--  with the ps in question. The implications of handing pool_free_element -->
- *  <!--  an element of the wrong size or from the wrong ps (bearing in          -->
- *  <!--  mind the LIFO reuse of elements) should be obvious. If they are        -->
- *  <!--  not, stop using these routines.                                        -->
- *  <!--  If at any time the number of elements freed exceeds the numbe          -->r
- *  <!--  handed out, we will whine (unless pool_LIGHTENING).                    -->
- *  <!--  If you send us a NULL pointer, we will ignore it completely.           -->
  *  Implementation function for pool_free_element().
  *  Do not call this function directly - use pool_free_element() instead.
  */
@@ -320,78 +319,70 @@ extern void pool_free_elementF(pool_store_t ps, void * eltpointer
 /**<
  *  Clears the books in ps. That is, we reset the ps to think
  *  that __all__ elements are freshly available and have never
- *  been handed out.
- *  If pool_DEBUG TRUE, verifies that all elements have been pool_freed
- *  first and whines if not.
+ *  been handed out.  If ps is NULL, an error message is printed 
+ *  and the function returns.<br><br>
+ *
+ *  If pool_DEBUG is TRUE, it first verifies that all elements have
+ *  been pool_freed first and whines if not.
  *  Get and free calls will be balanced to see if spurious elements
  *  have been handed in. (This is a heuristic check).
  *  The clear process will cause any spurious pointers that were
- *  turned in via pool_free_element to be forgotten about.<br><br>
+ *  turned in via pool_free_element() to be forgotten about.<br><br>
  *
- *  Clearing a store is not necessary for pool_destroy_store.
+ *  Clearing a store is not necessary for pool_destroy_store().
  *  Recycling is faster from the recycle list than from a cleared store, ~2%.
  *  Clear is provided for users who want to obtain elements with a higher
  *  probability of successive elements being near each other.
+ *
  *  @param ps pool_store_t, the pool store to clear.
  *  @return No return value.
  *  @see pool_clear_storeF()
  */
+
 extern void pool_clear_storeF(pool_store_t ps
 #if pool_DEBUG
 , CONST char *file
 #endif
 );
 /**<
- *  <!--  pool_clear_store(ps[,__FILE__]);                             -->
- *  <!--  pool_store_t ps;                                             -->
- *
- *  <!--  Clears the books in ps. That is, we reset the ps to think                 -->
- *  <!--  that __all__ elements are freshly available and have never                -->
- *  <!--  been handed out.                                                          -->
- *  <!--  If pool_DEBUG TRUE, verifies that all elements have been pool_freed       -->
- *  <!--  first and whines if not.                                                  -->
- *  <!--  Get and free calls will be balanced to see if spurious elements           -->
- *  <!--  have been handed in. (This is a heuristic check).                         -->
- *  <!--  The clear process will cause any spurious pointers that were              -->
- *  <!--  turned in via pool_free_element to be forgotten about.                    -->
- *
- *  <!--  Clearing a store is not necessary for pool_destroy_store.                 -->
- *  <!--  Recycling is faster from the recycle list than from a cleared store, ~2%. -->
- *  <!--  Clear is provided for users who want to obtain elements with a higher     -->
- *  <!--  probability of successive elements being near each other.                 -->
  *  Implementation function for pool_clear_store().
  *  Do not call this function directly - use pool_clear_store() instead.
  */
 
 extern void pool_destroy_store(pool_store_t ps);
 /**<
- *  <!--  pool_destroy_store(ps);                                      -->
- *  <!--  pool_store_t ps;                                             -->
- *
  *  Deallocates everything associated with the ps.
- *  If pool_DEBUG TRUE, verifies that all elements have been pool_freed
- *  first and whines if not.
- *  If pool_DEBUG FALSE, just nukes everything unconditionally.
- */
+ *  If pool_DEBUG is TRUE, it first verifies that all elements
+ *  have been pool_freed first and whines if not.
+ *  If pool_DEBUG is FALSE, just nukes everything unconditionally.
+ *  If ps is NULL, an error message is printed and the function
+ *  returns.
+ *
+ *  @param ps The pool store to destroy.
+ */                                               
 
 extern void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail);
 /**<
- *  <!--  pool_print_store(fp,ps,detail);                              -->
- *  <!--  FILE *fp;                                                    -->
- *  <!--  pool_store_t ps;                                             -->
- *  <!--  unsigned detail;                                             -->
- *  Displays a bunch of statistics about a pool_store_t on the file
- *  given. Which ones depends on detail.
+ *  Prints statistics about a pool_store_t to the file stream given.
+ *  Which stats get printed depends on detail.
  *  - If detail 0, displays just summary statistics.
  *  - If detail 1, just internal statistics.
  *  - If detail >1, displays both.
+ *
+ *  @param fp     The open file stream on which to print the report.
+ *  @param ps     The pool store on which to report.
+ *  @param detail The level of detail to print:
+ *                0 = summary, 1 = internal stats, >1 = both.
  */
 
 extern size_t pool_sizeof_store(pool_store_t ps);
 /**<
- *  <!--  pool_sizeof_store(ps);                                       -->
- *  Returns the current total byte usage of the store.
+ *  Retrieves the current total byte usage of the store.
+ *  Returns 0 if an invalid pool store is specified.
+ *
+ *  @param ps pool_store_t, the pool store to query.
+ *  @return The total bytes currently used by the pool store.
  */
 
-#endif  /* __POOL_H_SEEN__ */
+#endif  /* __pool_h_seen__ */
 

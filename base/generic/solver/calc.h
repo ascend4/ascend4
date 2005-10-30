@@ -54,6 +54,7 @@
  *                variable calc_print_errors to FALSE.
  *
  *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "compiler/func.h"
  *  </pre>
  *  @todo Complete documentation of solver/calc.h.
  */

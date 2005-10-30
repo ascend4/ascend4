@@ -27,67 +27,84 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+/*  ChangeLog
+ *
+ *  10/13/2005  Added Asc_PrintHasVTable() so user can tell if a vtable
+ *              has already been registered.  (J.D. St.Clair)
+ */
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include "utilities/ascConfig.h"
-static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
-/*
- *  Only compile this file if we are using Asc_Printf()
- */
-#ifdef USE_ASC_PRINTF
-
-
 #include "utilities/ascPrint.h"
 #include "utilities/ascPrintType.h"
 
+static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 
 #define PRINT_BUFFER_SIZE 16380
 
 int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable)
 {
-	if (	vtable == NULL ||
-		vtable->name == NULL ||
-		vtable->print == NULL ||
-		vtable->fflush == NULL
-	   ) {
-		return 1;
-	}
-	/* push it on the stack */
-	assert(vtable->next == NULL);
-	vtable->next = g_Asc_printVtables;
-	g_Asc_printVtables = vtable;
-	return 0;
+  if ((vtable == NULL) ||
+      (vtable->name == NULL) ||
+      (vtable->print == NULL) ||
+      (vtable->fflush == NULL) ||
+      (vtable->next != NULL)) {
+    return 1;
+  }
+  /* push it on the stack */
+  vtable->next = g_Asc_printVtables;
+  g_Asc_printVtables = vtable;
+  return 0;
 }
 
-struct Asc_PrintVTable * Asc_PrintRemoveVTable(CONST char *name)
+struct Asc_PrintVTable *Asc_PrintRemoveVTable(CONST char *name)
 {
-	struct Asc_PrintVTable * prev;
-	struct Asc_PrintVTable * vt;
+	struct Asc_PrintVTable *prev;
+	struct Asc_PrintVTable *vt;
 
-	/* skip notables case */
-	if (g_Asc_printVtables == NULL) {
-		return NULL;
-	}
-	/* LIFO is easy */
-	vt = g_Asc_printVtables;
-	if ( strcmp(vt->name,name) == 0 ) {
-		g_Asc_printVtables = vt->next;
-		return vt;
-	}
-	/* middle chain is worse */
-	prev = g_Asc_printVtables;
-	vt = prev->next;
-	while (vt != NULL) {
-		if ( strcmp(vt->name,name) == 0 ) {
-			prev->next = vt->next;
-			return vt;
-		}
-		vt = vt->next;
-		prev = prev->next;
-	}
-	return NULL;
-
+  /* skip notables cases */
+  if ((g_Asc_printVtables == NULL) || (NULL == name)) {
+    return NULL;
+  }
+  /* LIFO is easy */
+  vt = g_Asc_printVtables;
+  if ( strcmp(vt->name,name) == 0 ) {
+    g_Asc_printVtables = vt->next;
+    return vt;
+  }
+  /* middle chain is worse */
+  prev = g_Asc_printVtables;
+  vt = prev->next;
+  while (vt != NULL) {
+    if ( strcmp(vt->name,name) == 0 ) {
+      prev->next = vt->next;
+      return vt;
+    }
+    vt = vt->next;
+    prev = prev->next;
+  }
+  return NULL;
 }
+
+int Asc_PrintHasVTable(CONST char *name)
+{
+  struct Asc_PrintVTable *vt;
+
+  if ((g_Asc_printVtables == NULL) ||
+      (NULL == name)) {
+		return FALSE;
+  }
+  vt = g_Asc_printVtables;
+  while (vt != NULL) {
+    if (strcmp(vt->name, name) == 0) {
+      return TRUE;
+    }
+    vt = vt->next;
+  }
+  return FALSE;
+}
+
 
 /*
  *  int Asc_Printf(format, variable_number_args)
@@ -107,12 +124,12 @@ int Asc_Printf(CONST char *format, ...)
 
   struct Asc_PrintVTable * vt = g_Asc_printVtables;
   while (vt != NULL) {
-	  /* create the va_list */
-	  va_start( args, format );
-	  result = vt->print( stdout, format, args );
-	  /* cleanup */
-	  va_end( args );
-	  vt = vt->next;
+    /* create the va_list */
+    va_start( args, format );
+    result = vt->print( stdout, format, args );
+    /* cleanup */
+    va_end( args );
+    vt = vt->next;
   }
   /* only the result of the last printer makes it out */
   return result;
@@ -138,12 +155,12 @@ int Asc_FPrintf(FILE *fp, CONST char *format, ...)
 
   struct Asc_PrintVTable * vt = g_Asc_printVtables;
   while (vt != NULL) {
-	  /* create the va_list */
-	  va_start( args, format );
-	  result = vt->print( fp, format, args );
-	  /* cleanup and return */
-	  va_end( args );
-	  vt = vt->next;
+    /* create the va_list */
+    va_start( args, format );
+    result = vt->print( fp, format, args );
+    /* cleanup and return */
+    va_end( args );
+    vt = vt->next;
   }
   /* only the result of the last printer makes it out */
   return result;
@@ -164,8 +181,8 @@ int Asc_FFlush( FILE *fileptr )
   int result = 0;
   struct Asc_PrintVTable * vt = g_Asc_printVtables;
   while (vt != NULL) {
-	  result = vt->fflush(fileptr);
-	  vt = vt->next;
+    result = vt->fflush(fileptr);
+    vt = vt->next;
   }
   /* only the result of the last printer makes it out */
   return result;
@@ -210,4 +227,3 @@ int Asc_Putchar( int c )
   return Asc_Printf( "%c", c );
 }
 
-#endif /*  USE_ASC_PRINTF  */

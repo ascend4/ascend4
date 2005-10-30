@@ -46,9 +46,13 @@ typedef struct slv2_system_structure *slv2_system_t;
 
 int slv2_register(SlvFunctionsT *sft);
 /**<
+ *  Registration function for the Opt solver.
  *  This is the function that tells the system about the Opt solver.
  *  Our index is not necessarily going to be 2. That everything here is
  *  named slv2* is just a historical event.
+ *
+ *  @param sft SlvFunctionsT to receive the solver registration info.
+ *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
 #endif  /* slv2__already_included */

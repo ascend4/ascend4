@@ -471,7 +471,7 @@ static struct gl_list_t *CopyArrayChildPtrs(struct gl_list_t *list)
 	new->inst = NULL;
 	gl_append_ptr(result,(VOIDPTR)new);
       }
-      gl_set_sorted(result); /* because the originals were, by name */
+      gl_set_sorted(result, TRUE); /* because the originals were, by name */
       return result;
     } else {
       return gl_create(AVG_ARY_CHILDREN);

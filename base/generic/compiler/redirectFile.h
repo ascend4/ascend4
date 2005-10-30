@@ -35,6 +35,11 @@
  *  should be included AFTER tcl.h or tk.h, not before.
  */
 
+/*  ChangeLog
+ *  
+ *  10/13/2005  Added Asc_RedirectCompilerStreams()  (J.D. St.Clair)
+ */
+  
 /** @file
  *  File redirection for ascend.
  *  <pre>
@@ -52,6 +57,11 @@ extern FILE *g_ascend_information;  /**< File for informational messages.  Defau
 
 extern void Asc_RedirectCompilerDefault(void);
 /**< Set the default files/streams to receive ASCEND messages. */
+
+extern void Asc_RedirectCompilerStreams(FILE *errfile,
+                                        FILE *warnfile,
+                                        FILE *infofile);
+/**< Set specific files/streams to receive ASCEND messages. */
 
 #endif /* __redirectFile_h_seen_ */
 

@@ -59,7 +59,10 @@
  *  Requires:     #include "utilities/ascConfig.h"
  *                #include "slv_client.h"
  *  </pre>
- *  @todo Remove deprecated declarations from solver/slv6.h.
+ *  @todo makeMPS (solver/slv6.c) is out-of-date and will not compile.
+ *        Should be either fixed or archived.
+ *  @todo Restructure solver/slv6 & mps so can remove declarations in 
+ *        solver/slv6.h out of header.  Currently needed by mps.[ch].
  */
 
 #ifndef slv6__already_included
@@ -67,18 +70,22 @@
 
 typedef struct slv6_system_structure *slv6_system_t;
 
-int slv6_register(SlvFunctionsT *);
+int slv6_register(SlvFunctionsT *sft);
 /**<
+ *  Registration function for the ASCEND makeMPS solver.
  *  This is the function that tells the system about the makeMPS solver.
  *  Our index is not necessarily going to be 6. That everything here is
  *  named slv6* is just a historical event.
+ *
+ *  @param sff SlvFunctionsT to receive the solver registration info.
+ *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv6__already_included */
-
-
-/**< REMOVE EVERYTHING BELOW THIS POINT */     
-# if 0 
+/* WOULD LIKE TO REMOVE EVERYTHING BELOW THIS POINT */
+/* THIS DETAIL SHOULD BE IN SOURCE FILE, BUT IS NEEDED BY mps.[ch] */
+/*
+# if 0
+*/
 #ifdef STATIC_MPS
 #define slv6_solver_name "makeMPS" /**< Solver's name. don't mess with the caps!*/
 #define slv6_solver_number 6   /**< Solver's number */
@@ -123,12 +130,12 @@ extern void slv6_solve();
     This section describes the parameters, subparameters, 
     and status flags as used by the solver.  
     
-    *** See slv6_create for more specific information   ***
+    *** See slv6_create() for more specific information   ***
     *** on parameters and status flags                  ***
     
     *** Note: the parameters can be changed by the user ***
     ***       with the slv6_set_parameters routine      ***
-      
+
 
     Use of subparameters in iarray and rarray:
    
@@ -203,13 +210,13 @@ extern void slv6_solve();
 /**< subscripts for ca */
 #define SP6_FILENAME 0
 
-/***                            
- ***       MPS matrix strucutre           
- ***                                    v  
- ***       min/max cx:  Ax<=b           u  
- ***                                    s 
- ***                                    e 
- ***                       1            d 
+/***
+ ***       MPS matrix strucutre
+ ***                                    v
+ ***       min/max cx:  Ax<=b           u
+ ***                                    s
+ ***                                    e
+ ***                       1            d
  ***
  ***                       |            |  
  ***                       |            |  
@@ -228,14 +235,14 @@ extern void slv6_solve();
 
 typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 
-   int32   rused;     /**< row of last relation (incident or not) */
-   int32   rinc;      /**< number of incident relations */ 
-   int32   crow;      /**< row of cost vector (rused+1)*/
-   int32   vused;     /**< column of last variable (incident or not) */
-   int32   vinc;      /**< number of incident variables */
-   int32   cap;       /**< size of sparse square matrix=max(vused+2+1,rused+4+1) */ 
-   int32   rank;      /**< Symbolic rank of problem */
-   int32   bused;     /**< Included boundaries */
+   int32   rused;           /**< row of last relation (incident or not) */
+   int32   rinc;            /**< number of incident relations */
+   int32   crow;            /**< row of cost vector (rused+1)*/
+   int32   vused;           /**< column of last variable (incident or not) */
+   int32   vinc;            /**< number of incident variables */
+   int32   cap;             /**< size of sparse square matrix=max(vused+2+1,rused+4+1) */
+   int32   rank;            /**< Symbolic rank of problem */
+   int32   bused;           /**< Included boundaries */
 
    int solver_var_used;     /**< values are calculated in calc_svtlist  */
    int solver_relaxed_used; /**< is cache of how many of each vars used */
@@ -247,11 +254,11 @@ typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 
    mtx_matrix_t  Ac_mtx;    /**< Matrix representation of the A matrix and c vector */
 
-   real64  *lbrow;    /**< pointer to array of lower bounds */
-   real64  *ubrow;    /**< pointer to array of upper bounds */
-   real64  *bcol;     /**< pointer to array of RHS b vector */
-   char          *typerow;  /**< pointer to array of variable types */
-   char          *relopcol; /**< pointer to array of relational operators i.e. <=, >=, =  */
+   real64  *lbrow;          /**< pointer to array of lower bounds */
+   real64  *ubrow;          /**< pointer to array of upper bounds */
+   real64  *bcol;           /**< pointer to array of RHS b vector */
+   char    *typerow;        /**< pointer to array of variable types */
+   char    *relopcol;       /**< pointer to array of relational operators i.e. <=, >=, =  */
 
 } mps_data_t;
 
@@ -271,8 +278,8 @@ typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 #define SOLVER_FIXED   6          /**< a fixed or nonincident var */
 
 
-/**< define another token to go with 
-   rel_TOK_less, rel_TOK_equal, and rel_TOK_greater, 
+/**< define another token to go with
+   rel_TOK_less, rel_TOK_equal, and rel_TOK_greater,
    defined in rel.h */
 #define rel_TOK_nonincident 00
 
@@ -281,5 +288,9 @@ typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 #define slv6_solver_number 6        /**< Solver's number */
 #endif
 
+/*
 #endif
+*/
+
+#endif  /* slv6__already_included */
 

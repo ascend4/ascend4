@@ -34,19 +34,20 @@
 #include "utilities/ascMalloc.h"
 #include "general/pretty.h"
 
-static void outstring(FILE *fp, char *s, int loop)
+static int outstring(FILE *fp, char *s, int indent)
 {
+  int loop = indent;
   while(loop>0) {
     FPUTC(' ',(fp));
     loop--;
   }
-  FPRINTF(fp,"%s\n",s);
+  return (indent + FPRINTF(fp,"%s\n",s));
 }
 
 /*
  * remember not to change the content of the string, in the net.
  */
-int print_long_string(FILE *fp,char *string, int width, int indent)
+int print_long_string(FILE *fp, char *string, int width, int indent)
 {
   char oldchar;
   char *head, *tail, *lastspace;
@@ -74,8 +75,7 @@ int print_long_string(FILE *fp,char *string, int width, int indent)
       tail++;
     }
     if (lw < width) { /* found END of line */
-      outstring(fp,head,indent);
-      return count + lw + indent;
+      return (count + outstring(fp,head,indent));
     }
     if (lastspace == NULL) { /* drat, line overrun */
       /* find next space or end */
@@ -86,28 +86,25 @@ int print_long_string(FILE *fp,char *string, int width, int indent)
       if (*tail != '\0') { /* found a break */
         oldchar = *tail;
         *tail = '\0';
-        outstring(fp,head,indent);
-        lw = 0;
-        count += (lw+indent);
+        count += outstring(fp,head,indent);
         *tail = oldchar;
         head = tail;
+        lw = 0;
       } else { /* found  END */
-        outstring(fp,head,indent);
-        return count + lw + indent;
+        return (count + outstring(fp,head,indent));
       }
     } else { /*  found break */
       oldchar = *lastspace;
-      *lastspace = '\0';
-      outstring(fp,head,indent);
-      lw = 0;
-      count += (indent+(lastspace-head)+1);
+      lastspace[0] = '\0';
+      count += outstring(fp,head,indent);
       *lastspace = oldchar;
       head = lastspace;
       lastspace = NULL;
+      lw = 0;
     }
     head++;
   }
-  return 0;
+  return count;
 }
 
 /* Computes whether the string s starts with */
@@ -129,12 +126,13 @@ static int isEOL(char *s) {
 /*
  * remember not to change the content of the string, in the net.
  */
-void print_long_string_EOL(FILE *fp,char *string, int indent)
+int print_long_string_EOL(FILE *fp,char *string, int indent)
 {
   char *head, *tail;
+  int count = 0;
 
   if (fp == NULL || string == NULL) {
-    return;
+    return 0;
   }
   if (indent < 0) {
     FPRINTF(fp,"%s",string);
@@ -146,7 +144,7 @@ void print_long_string_EOL(FILE *fp,char *string, int indent)
     while (*tail != '\0') {
       if (isEOL(tail)) {
         tail[0] = '\0';
-        outstring(fp, head, indent);
+        count += outstring(fp, head, indent);
         tail[0] = '/';
         tail += 6;
         head = tail;
@@ -157,12 +155,12 @@ void print_long_string_EOL(FILE *fp,char *string, int indent)
     }
     if (*tail == '\0') {
       /* end of string with leftovers */
-      outstring(fp, head, indent);
+      count += outstring(fp, head, indent);
       break;
     }
     head++;
   }
-  return;
+  return count;
 }
 
 #ifdef PLSTEST

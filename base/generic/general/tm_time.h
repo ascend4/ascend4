@@ -28,7 +28,7 @@
  */
 
 /** @file
- *  <pre>
+ *  <pre>                                     
  *  Contents:     Time module
  *
  *  Authors:      Karl Westerberg
@@ -66,53 +66,90 @@
 #endif /* linux */
 
 /* case windoze */
-#ifdef WIN
+#ifdef __WIN32__
 #define CLOCKS_PER_SEC 1000      /**< Typical clock ticks per sec. */
 #endif /* windoze */
 
 /* default */
 #ifndef CLOCKS_PER_SEC
-#define CLOCKS_PER_SEC  1000000   /**< Typical clock ticks per sec.
-                                   * Note that typically clocks have a minimum
-                                   * resolution of 16666, sigh.
-                                   */
+#define CLOCKS_PER_SEC  1000000
+/**<
+ *  Typical clock ticks per sec.  Note that typically clocks
+ *  have a minimum resolution of 16666, sigh.
+ */
 #endif /* default */
 
 #endif /* CLOCKS_PER_SEC */
 
-/**
- *  Returns the number of seconds used during
- *  processing by the CPU since any part of
- *  ASCEND first called tm_cpu_time().
- *  Users timing portions of the process should maintain
- *  their own start time and work by difference as the
- *  solvers do.
+extern double tm_cpu_time(void);
+/**<
+ *  Returns elapsed CPU time in seconds since the first call
+ *  to a timing function.  The timing functions that, when
+ *  initially called, set the start time for all others are:
+ *    - tm_cpu_time()
+ *    - tm_cpu_time_ftn_()
+ *    - aftime_()
+ *    - tm_cpu_time_ftn()
+ *    - aftime()
+ *    - TM_CPU_TIME_FTN()
+ *    - AFTIME()
+ *
+ *  Users timing portions of the process should maintain their
+ *  own start time and work by difference as the solvers do.
+ *
+ *  @return The elapsed CPU time since the 1st call to a timing function.
  */
-extern double tm_cpu_time();
 
-/**
- *  <!--  double *time;                                                -->
- *  Does the same thing as tm_cpu_time(), with the exception
- *  that this function takes a double * arg, to satisfy
- *  fortran's call by reference semantics. The short name is
- *  to satisfy fortrans 6 char restriction.<br><br>
+extern double tm_reset_cpu_time(void);
+/**<
+ *  Resets the start time.  Use with caution if there are
+ *  multiple callers depending on a constant start time stamp.
+ *  This function is primarily for testing purposes.
+ *
+ *  @return The initiallized elapsed CPU time.
+ */
+
+extern void tm_cpu_time_ftn_(double *time);
+/**<
+ *  Stores elapsed CPU time in seconds since the first call
+ *  to a timing function in *t*.  The timing functions that, when
+ *  initially called, set the start time for all others are:
+ *    - tm_cpu_time()
+ *    - tm_cpu_time_ftn_()
+ *    - aftime_()
+ *    - tm_cpu_time_ftn()
+ *    - aftime()
+ *    - TM_CPU_TIME_FTN()
+ *    - AFTIME()
+ *
+ *  This function takes a (double *) to satisfy FORTRAN's call
+ *  by reference semantics.
  *  <pre>
  *  f77 usage:  t is real*8 (double precision on most f77)
- *      external aftime, tm_cpu_time_ftn
- *      call tm_cpu_time_ftn(t)
- *      call aftime(t)
+ *              external aftime, tm_cpu_time_ftn
+ *              call tm_cpu_time_ftn(t)
+ *              call aftime(t)
  *  </pre>
  *  On return t will have a time value (sec) stored in a double.
+ *  The specified t may not be NULL (checked by assertion).<br><br>
+ *
  *  If your F77 compiler doesn't morph all function calls to
  *  lower case (with or without trailing underbar), you will need
  *  to figure out its morphing convention and modify tm.[ch] so.
+ *
+ *  @param t Location to store the elapsed CPU time in seconds.
  */
-extern void tm_cpu_time_ftn_(double *time);
-extern void aftime_(double *time);           /**< Short name for tm_cpu_time_ftn_(). */
-extern void tm_cpu_time_ftn(double *time);   /**< Variant of tm_cpu_time_ftn_(). */
-extern void aftime(double *time);            /**< Short name for tm_cpu_time_ftn(). */
-extern void TM_CPU_TIME_FTN(double *time);   /**< Variant of tm_cpu_time_ftn_(). */
-extern void AFTIME(double *time);            /**< Short name for TM_CPU_TIME_FTN(). */
+
+extern void aftime_(double *time);
+/**< Short name for tm_cpu_time_ftn_() to satisfy FORTRAN's 6 char restriction. */
+extern void tm_cpu_time_ftn(double *time);
+/**< Variant of tm_cpu_time_ftn_(). */
+extern void aftime(double *time);
+/**< Short name for tm_cpu_time_ftn() to satisfy FORTRAN's 6 char restriction. */
+extern void TM_CPU_TIME_FTN(double *time);
+/**< Variant of tm_cpu_time_ftn_(). */
+extern void AFTIME(double *time);            
+/**< Short name for TM_CPU_TIME_FTN() to satisfy FORTRAN's 6 char restriction. */
 
 #endif  /* tm_module_loaded */
 

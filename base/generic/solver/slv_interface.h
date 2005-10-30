@@ -32,7 +32,7 @@
  */
 
 /** @file
- *  Interface to the Westerberg's SLV Solver.
+ *  Interface to the Westerberg SLV Solver.
  *  <pre>
  *  Requires      #include <stdio.h>
  *                #include "utilities/ascConfig.h"

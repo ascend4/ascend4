@@ -9,7 +9,10 @@
  *
  *  This file is part of the Ascend Language Interpreter.
  */
+
+#include <stdio.h>
 #include "utilities/ascConfig.h"
+#include "utilities/ascPanic.h"
 #include "general/hashpjw.h"
 
 #ifndef lint
@@ -17,13 +20,16 @@ static CONST char HashpjwID[] = "$Id: hashpjw.c,v 1.1 1997/07/18 11:38:36 mthoma
 #endif
 
 unsigned long hashpjw(register CONST char *str,
-		      register unsigned long int size)
+                      register unsigned long int size)
 {
   register CONST char *p;
   register unsigned long h=0,g;
+
+  asc_assert((NULL != str) && (size > 0));
+
   for(p = str; *p != '\0'; p++) {
     h = (h << 4) + (*p);
-    if ((g = h&0xf0000000)) {
+    if (0 != (g = h&0xf0000000)) {
       h = h ^ (g >> 24);
       h = h ^ g;
     }
@@ -33,25 +39,17 @@ unsigned long hashpjw(register CONST char *str,
 
 /*
  * This is a temporary integer hashing function.
- * It is relatively expensive, as we first do str to int
+ * It is relatively expensive, as we first do int to str
  * transformation. This needs to be fixed with a proper
  * integer hashing function.
  */
 unsigned long hashpjw_int(int id,
-			  register unsigned long int size)
+                          register unsigned long int size)
 {
-  char tmp[64], *p;
-  register unsigned long h=0,g;
+  char tmp[64];
 
-  sprintf(tmp,"%d",id);
-  for(p = tmp; *p != '\0'; p++) {
-    h = (h << 4) + (*p);
-    if ((g = h&0xf0000000)) {
-      h = h ^ (g >> 24);
-      h = h ^ g;
-    }
-  }
-  return h % size;
+  (void)snprintf(tmp, 64, "%d", id);
+  return hashpjw(tmp, size);
 }
 
 

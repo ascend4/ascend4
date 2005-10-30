@@ -29,7 +29,7 @@
  */
 
 /** @file
- *  Table Module.
+ *  Hash Table Module.
  *
  *  Many hash tables are used throughout the implementation of a compiler
  *  and/or interpreter. This module (in the spirit of the list module)
@@ -47,151 +47,183 @@
  *  </pre>
  */
 
-#ifndef __TABLE_H_SEEN__
-#define __TABLE_H_SEEN__
+#ifndef __table_h_seen__
+#define __table_h_seen__
 
 typedef  void (*TableIteratorOne)(void *);
-/**< 
+/**<
  * Typedef for casting of 1-parameter functions
- * being passed to TableApply* functions. 
+ * being passed to TableApply* functions.
  */
 typedef  void (*TableIteratorTwo)(void *,void *);
-/**< 
+/**<
  * Typedef for casting of 2-parameter functions
- * being passed to TableApply* functions. 
+ * being passed to TableApply* functions.
  */
 
 extern struct Table *CreateTable(unsigned long hashsize);
 /**<
- *  <!--  struct Table *CreateTable(hashsize)                          -->
- *  <!--  unsigned long hashsize;                                      -->
- *  Creates a new hash table with the specified hashsize. This ideally
- *  should be a prime number. A good choice will give better performance
- *  without wasting too much memory. Some good prime numbers are:
- *  31, 97, 113, 229, 541, 1023, 3571. Everything is appropriately
- *  initialized.
+ *  Creates a new hash table with the specified hashsize.
+ *  This ideally should be a prime number.  A good choice will give
+ *  better performance without wasting too much memory.  Some good
+ *  prime numbers are: 31, 97, 113, 229, 541, 1023, 3571.
+ *  Everything is appropriately initialized.<br><br>
+ *
+ *  The function returns a pointer to the newly created hash table.
+ *  Deallocation of the table is the responsibility of the caller 
+ *  using DestroyTable().
+ *
+ *  @param hashsize The number of buckets in the new hash table.
+ *  @return A pointer to the new hash table.
+ *  @todo Should general/table:CreateTable have lower limit on hashsize?
  */
 
-extern void DestroyTable(struct Table *table, int info);
+extern void DestroyTable(struct Table *table, int dispose);
 /**<
- *  <!--  void DestroyTable(table,info);                               -->
- *  <!--  struct Table *table;                                         -->
- *  <!--  int info;                                                    -->
- *  Destroys the given table. If info is set to TRUE (nonzero), the
- *  information given stored in the table will be deallocated as well.
- *  Do not refer to a table after it has been destroyed.
+ *  Destroys the given table.  If dispose is set to TRUE (nonzero), 
+ *  the data items stored in the table will be deallocated as well.  
+ *  Do not refer to a table after it has been destroyed.  The 
+ *  specified table may be NULL, in which case this function has no
+ *  effect.
  *
- *  @bug info is ignored. we always destroy the bucketed info.
+ *  @param table   Pointer to the hash table to destroy (non-NULL).
+ *  @param dispose If non-zero deallocate the stored data also,
+ *                 if 0 the data is destroyed as well.
  */
 
 extern void AddTableData(struct Table * table, void *data, CONST char *id);
 /**<
- *  <!--  void AddTableData(table,data,id);                            -->
- *  <!--  struct Table *table;                                         -->
- *  <!--  void *data;                                                  -->
- *  <!--  char *id;                                                    -->
- *  This function will store *data* in the table and will use id as the
- *  key for looking it up. id at the moment must be a NULL terminated
- *  string. In the future, this may be changed to a generic lookup function
- *  which the user will have to provide. The *data* can be anything. On
- *  return the user must appropriately cast his data to be of the correct
- *  type.
+ *  Stores *data* in the hash table using id as the lookup key. 
+ *  Currently id must be a unique NULL-terminated string.  In the 
+ *  future, this may be changed to a generic lookup function 
+ *  supplied by the user.  If the id is not unique in the table,
+ *  the data is not added.  The *data* can be anything, including 
+ *  a NULL pointer.  A pointer to the last item added is cached so 
+ *  that subsequent lookup is fairly fast (see TableLastFind()).  
+ *  Neither table nor id may be NULL (checked by assertion).
+ *
+ *  @param table Pointer to the hash table to add to (non-NULL).
+ *  @param data  The data to store in the table.
+ *  @param id    NULL-terminated string to use for lookup key (non-NULL).
  */
 
 extern void *LookupTableData(struct Table *table, CONST char *id);
 /**<
- *  <!--  void LookupTableData(table,id)                               -->
- *  <!--  struct Table *table;                                         -->
- *  <!--  char *id;                                                    -->
- *  This function will lookup the information associated with id,
- *  in the given table. It will return NULL, if not found, otherwise
- *  it will return the information that was stored in the table.
- *  We cache away a ptr to the last thing looked up so, that a subsequent
- *  lookup is fairly fast.
+ *  Retrieves the data stored in the table under the key *id*.
+ *  It will return NULL if id is not found.  A pointer to the last item
+ *  looked up is cached so that subsequent lookup is fairly fast
+ *  (see TableLastFind()).  The return value will generally need to be
+ *  cast to the correct type.  Neither table nor id may be NULL
+ *  (checked by assertion).
+ *
+ *  @param table Pointer to the hash table to query (non-NULL).
+ *  @param id    NULL-terminated string to use for lookup key (non-NULL).
+ *  @return The data stored under lookup key id, or NULL if not found.
  */
 
 extern void *RemoveTableData(struct Table *table, char *id);
 /**<
- *  <!--  void *RemoveTableData(table,id);                             -->
- *  <!--  struct Table *table;                                         -->
- *  <!--  char *id;                                                    -->
- *  This will remove information stored in the table under the key *id*.
- *  It will return NULL, if the information did not exist, otherwise
- *  it will return that the information that was stored under id.
+ *  Removes the data stored in the table under the key *id*.
+ *  It will return NULL if id is not found.  Otherwise, it will
+ *  return the data that was stored under id.  The data is not
+ *  deallocated.  The return value will generally need to be
+ *  cast to the correct type.  Neither table nor id may be NULL
+ *  (checked by assertion).
+ *
+ *  @param table Pointer to the hash table to query (non-NULL).
+ *  @param id    NULL-terminated string to use for lookup key (non-NULL).
+ *  @return The data stored under lookup key id, or NULL if not found.
  */
 
 extern void TableApplyOne(struct Table *table,
                           TableIteratorOne applyfunc,
                           char *id);
 /**<
- *  <!--  void TableApplyOne(table,applyfunc,id);                      -->
- *  <!--  struct Table *table;                                         -->
- *  <!--  void (*applyfunc)(void *);                                   -->
- *  <!--  char *id;                                                    -->
- *  This function will apply the given function to information matching
- *  the key id stored in the table. All that we do is try to find
- *  the data stored with key *id*, once found we apply your function to it.
- *  Your function is entirely responsible for handling NULL cases.
+ *  Calls the specified function, passing the data stored in the table
+ *  under key *id* as argument.  The lookup is fast if the data item was
+ *  the last searched for, slower otherwise.  The function applyfunc must
+ *  be able to handle NULL pointers gracefully.  Neither table, applyfunc,
+ *  nor id may be NULL (checked by assertion).
+ *
+ *  @param table     Pointer to the hash table to use (non-NULL).
+ *  @param applyfunc Pointer to the function to apply (non-NULL).
+ *  @param id        NULL-terminated string to use for lookup key (non-NULL).
  */
 
 extern void TableApplyAll(struct Table *table, TableIteratorOne applyfunc);
 /**<
- *  <!--  void TableApplyOne(table,applyfunc);                         -->
- *  <!--  struct Table *table;                                         -->
- *  <!--  TableIteratorOne applyfunc;                                  -->
- *  The same as TableApplyOne() except it is applied to every element stored
- *  in the table. The order of operation is given by how things are stored
- *  in the table. Potentially a very useful function and should be alot
- *  faster than fetching each element yourself, and applying your function
- *  to it.
+ *  Calls the specified function for each data item stored in the table.
+ *  The order of operation dependends on internal table structure, so is
+ *  not predictable and should not be relied upon.  Using this function
+ *  should be a lot faster than fetching each element independently and 
+ *  applying applyfunc to it.  The function must be able to handle NULL 
+ *  pointers gracefully.  Neither table nor applyfunc may be NULL 
+ *  (checked by assertion).
+ *
+ *  @param table     Pointer to the hash table to use (non-NULL).
+ *  @param applyfunc Pointer to the function to apply (non-NULL).
  */
 
 extern void TableApplyAllTwo(struct Table *table,
                              TableIteratorTwo applyfunc,
                              void *arg2);
 /**<
- *  <!--  struct Table *table;                                         -->
- *  <!--  TableIteratorTwo applyfunc;                                  -->
- *  <!--  void *arg2;                                                  -->
- *  Same as TableApplyAllTwo() but allows a closure, by allowing a second
- *  arguement to be passed in.
+ *  Calls the specified function for each data item stored in the table.
+ *  This is the same as TableApplyAll(), except that arg2 is passed as a
+ *  second argument to applyfunc allowing a closure.  The order of 
+ *  operation dependends on internal table structure, so is not 
+ *  predictable and should not be relied upon.  Using this function
+ *  should be a lot faster than fetching each element independently and
+ *  applying applyfunc to it.  The function must be able to handle NULL
+ *  pointers gracefully.  Neither table nor applyfunc may be NULL
+ *  (checked by assertion).
+ *
+ *  @param table     Pointer to the hash table to use (non-NULL).
+ *  @param applyfunc Pointer to the function to apply (non-NULL).
+ *  @param arg2      The 2nd argument to pass to applyfunc.
  */
 
-extern void PrintTable(FILE *f, struct Table *table);
+extern void PrintTable(FILE *file, struct Table *table);
 /**<
- *  <!--  void PrintTable(f,table);                                    -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct Table *table;                                         -->
- *  Will print the table to the given file (which must be opened and
- *  writable -- I dont check!!) the following information:
- *  Entry Number, Bucket Number, Entry Id.
- *  Later more statistics could be given, such as bucket, distribution etc.
+ *  Prints information about the table to the given file.  This
+ *  information currently includes an ordered list of bucket
+ *  numbers and id strings for each data item in the table.
+ *  The file must be opened and ready for writing.  Neither table
+ *  nor file may be NULL (checked by assertion).
+ *
+ *  @param file  Open, writable file stream to receive the report (non-NULL).
+ *  @param table Pointer to the hash table to query (non-NULL).
  */
 
 extern unsigned long TableSize(struct Table *table);
 /**<
- *  <!--  unsigned long TableSize(table);                              -->
- *  <!--  struct Table *table;                                         -->
- *  Returns the current number of entries in the table.
+ *  Returns the current number of entries in the table.  The
+ *  specified table may not be NULL (checked by assertion).
+ *
+ *  @param table Pointer to the hash table to query (non-NULL).
  */
 
 extern unsigned long TableHashSize(struct Table *table);
 /**<
- *  <!--  unsigned long TableHashSize(table);                          -->
- *  <!--  struct Table *table;                                         -->
- *  Returns the current hashsize of the table. If internally we change
- *  the hashing/collision algorithm, this may be useful information to
- *  someone. At the moment it is the size requested and hence is not
- *  very useful to a user.
+ *  Returns the current hashsize of the table.  If internally we 
+ *  change the hashing/collision algorithm, this may be useful 
+ *  information to someone.  At the moment it is the size 
+ *  requested and hence is not very useful.  The specified table 
+ *  may not be NULL (checked by assertion).
+ *
+ *  @param table Pointer to the hash table to query (non-NULL).
  */
 
 extern void *TableLastFind(struct Table *table);
 /**<
- *  <!--  void *TableLastFind(table);                                  -->
- *  <!--  struct Table *table;                                         -->
- *  Returns the information that was last requested. Could be useful
- *  for those, "do you exist?; now do something with you".
+ *  Returns the data item that was last added to or retrieved from the 
+ *  table.  Could be useful for those, "do you exist?; now do something 
+ *  with you" situations.  Returns NULL if no item was added or retrieved
+ *  from the table.  The specified table may not be NULL (checked by
+ *  assertion).
+ *
+ *  @param table Pointer to the hash table to query (non-NULL).
  */
 
-#endif /* __TABLE_H_SEEN__ */
+#endif /* __table_h_seen__ */
 

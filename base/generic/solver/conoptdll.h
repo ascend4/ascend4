@@ -155,21 +155,21 @@ typedef void COIRS_FUNC COIRS_ARGS;
 typedef void COILF_FUNC COILF_ARGS;
 
 #define COIEC_VARS (colno, msglen, msg, usrmem)
-#define COIEC_ARGS (int32 *colno, int32 *msglen, char msg[80],real64 *usrmem)
+#define COIEC_ARGS (int32 *colno, int32 *msglen, char msg[/*80*/],real64 *usrmem)
 typedef void COIEC_FUNC COIEC_ARGS;
 
 #define COIER_VARS (rowno, msglen, msg, usrmem)
-#define COIER_ARGS (int32 *rowno, int32 *msglen, char msg[80],real64 *usrmem)
+#define COIER_ARGS (int32 *rowno, int32 *msglen, char msg[/*80*/],real64 *usrmem)
 typedef void COIER_FUNC COIER_ARGS;
 
 #define COIENZ_VARS (colno, rowno, posno, msglen, msg, usrmem)
 #define COIENZ_ARGS (int32 *colno, int32 *rowno, int32 *posno, \
-      int32 *msglen, char msg[80],real64 *usrmem)
+      int32 *msglen, char msg[/*80*/],real64 *usrmem)
 typedef void COIENZ_FUNC COIENZ_ARGS;
 
 #define COIMSG_VARS (nmsg, smsg, llen, msgv, usrmem)
 #define COIMSG_ARGS (int32 *nmsg, int32 *smsg, int32 *llen, \
-      char msgv[80*15],real64 *usrmem)
+      char msgv[/*80*15*/],real64 *usrmem)
 typedef void COIMSG_FUNC COIMSG_ARGS;
 
 #define COIPRG_VARS (nintgr, intrep, nreal, rl, x, usrmem, finish)
@@ -192,7 +192,7 @@ typedef void COIORC_FUNC COIORC_ARGS;
 typedef void COIBAN_FUNC COIBAN_ARGS;
 
 #define COISCR_VARS (msg, len)
-#define COISCR_ARGS (char msg[80], int32 *len)
+#define COISCR_ARGS (char msg[/*80*/], int32 *len)
 typedef void COISCR_FUNC COISCR_ARGS;
 
 #define COIOPT_VARS (name, rval, ival, lval, usrmem)
@@ -203,12 +203,11 @@ typedef void COIOPT_FUNC COIOPT_ARGS;
 
 /* defines and typedefs for conopt supplied functions */
 /* registration functions */
-#define REGISTER_CONOPT_FUNCTION_ARGS (enum conopt_func_names name, \
-                             void *func)
-typedef REGISTER_CONOPT_FUNCTION_FUNC REGISTER_CONOPT_FUNCTION_ARGS;
-#define UNREGISTER_CONOPT_FUNCTION_ARGS (enum conopt_func_names name, \
-                             void *func)
-typedef UNREGISTER_CONOPT_FUNCTION_FUNC UNREGISTER_CONOPT_FUNCTION_ARGS;
+#define REGISTER_CONOPT_FUNCTION_ARGS (enum conopt_func_names name, void *func)
+typedef void REGISTER_CONOPT_FUNCTION_FUNC REGISTER_CONOPT_FUNCTION_ARGS;
+#define UNREGISTER_CONOPT_FUNCTION_ARGS (enum conopt_func_names name, void *func)
+typedef void UNREGISTER_CONOPT_FUNCTION_FUNC UNREGISTER_CONOPT_FUNCTION_ARGS;
+
 /* chapter 2 functions */
 #define COICSU_ARGS (int32 *keep,real64 *usrmem)
 #define COICRS_ARGS (int32 *keep,real64 *usrmem)

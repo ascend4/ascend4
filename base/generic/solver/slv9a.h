@@ -1,4 +1,4 @@
-/* 
+/*
  *  Logical Relation Solver
  *  by Vicente Rico-Ramirez
  *  Created: 04/97
@@ -42,10 +42,14 @@ typedef struct slv9a_system_structure *slv9a_system_t;
 
 int slv9a_register(SlvFunctionsT *sft);
 /**<
+ *  Registration function for the ASCEND LRSlv solver.
  *  This is the function that tells the system about the LRSlv solver.
  *  Our index is not necessarily going to be 9a. That everything here is
  *  named slv9a* is just a historical result and a convenient way of
  *  shutting up the linker.
+ *
+ *  @param sft SlvFunctionsT to receive the solver registration info.
+ *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
 #endif  /* slv9a__already_included */

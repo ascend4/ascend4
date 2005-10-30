@@ -58,6 +58,8 @@
  *  Requires:     #include "utilities/ascConfig.h"
  *                #include "slv_client.h"
  *  </pre>
+ *  @todo Slv (solver/slv0.c) is out-of-date and will not compile.
+ *        Should be either fixed or archived.
  */
 
 #ifndef slv0__already_included
@@ -67,10 +69,14 @@ typedef struct slv0_system_structure *slv0_system_t;
 
 int slv0_register(SlvFunctionsT *sft);
 /**<
+ *  Registration function for the Slv nonlinear solver.
  *  This is the function that tells the system about the QRSlv solver.
  *  Our index is not necessarily going to be 0. That everything here is
  *  named slv0* is just a historical event.
+ *
+ *  @param sft SlvFunctionsT to receive the solver registration info.
+ *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
-     
+
 #endif  /* slv0__already_included */
 

@@ -54,15 +54,30 @@
 
 #ifdef STATIC_MPS
 
-/** Writes out a file mapping the CXXXXXXX variable names with the actual ASCEND names. */
-extern boolean write_name_map(const char *name,             /* file name without .map suffix */
-                              struct var_variable **vlist); /* Variable list (NULL terminated) */
+/** 
+ *  Writes out a map file.
+ *  The VXXXXXXX variable names are mapped to the actual ASCEND names.
+ *
+ *  @param name   File name to receive the output.
+ *  @param vlist  Variable list (NULL terminated).
+ *  @return Returns zero on success, non-zero if an error occurred.
+ */
+extern boolean write_name_map(const char *name,
+                              struct var_variable **vlist);
 
-/** Writes out an MPS file. */
-extern boolean write_MPS(const char *name,                /* filename for output */
-                         mps_data_t mps,                  /* the main chunk of data for the problem */
-                         int iarray[slv6_IA_SIZE],        /* Integer subparameters */
-                         double rarray[slv6_RA_SIZE]);    /* Real subparameters */
+/*
+ *  Writes out the MPS file.
+ *
+ *  @param name   File name to receive the output.
+ *  @param mps    The main chunk of data for the problem.
+ *  @param iarray Integer subparameters, array of size slv6_IA_SIZE.
+ *  @param rarray Real subparameters, array of size slv6_RA_SIZE.
+ *  @return Returns zero on success, non-zero if an error occurred.
+ */
+extern boolean write_MPS(const char *name,
+                         mps_data_t mps,
+                         int iarray[],
+                         double rarray[]);   
 
 #endif  /* STATIC_MPS */
 #endif  /* MPS__already_included */
