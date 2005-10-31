@@ -25,9 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utilities\ascConfig.h"
-#include "compiler\redirectFile.h"
-#include "utilities\ascMalloc.h"
+#include "utilities/ascConfig.h"
+#include "compiler/redirectFile.h"
+#include "utilities/ascMalloc.h"
 #include "printutil.h"
 
 #include "CUnit/Basic.h"

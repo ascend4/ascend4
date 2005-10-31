@@ -384,7 +384,7 @@ typedef	unsigned   uint32;
 #define PUTCHAR Asc_Putchar
 #include <stdarg.h>
 #include "utilities/ascPrint.h"
-#else /* USE_ASC_PRINTF */
+#else /* !USE_ASC_PRINTF */
 #define PRINTF  printf
 #define FPRINTF fprintf
 #define FFLUSH  fflush

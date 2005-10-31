@@ -52,7 +52,6 @@ NODEBUG = 1 ;
 #DEBUG_MALLOC = -DMALLOC_DEBUG ;
 
 #---------------------------------------------------------------------------
-# Options from here on should not require routine tweaking
 
 # Tools required for complete build (comment out if not present).
 # The build system works around their absence if necessary.
@@ -63,6 +62,16 @@ YACC      = yacc ;
 YACCFLAGS = -d ;
 YACCFILES = y.tab ;
 LEX       = flex ;
+
+# Location of system libraries on Linux.  
+# TODO This is a hack and needs to be redone.
+if $(UNIX) || $(OS) = LINUX
+{
+  DL_LIB_DIRS   = /usr/lib ;
+  X11_LIB_DIRS  = /usr/X11R6/lib ;
+  MATH_LIB_DIRS = /usr/lib ;
+  FOR_LIB_DIRS  = /usr/lib/gcc/i586-mandrake-linux-gnu/3.4.1 ;
+}
 
 #======================================================================
 #  General build options
@@ -182,11 +191,11 @@ if $(NT)
   }
 }
 
-else if $(OS) = LINUX
+else if $(UNIX) || $(OS) = LINUX
 {
   SUFSHR = .so ;
   CCFLAGS += -D$(HAVE_PACKAGES) ;
-  FORTRANFLAGS = -c -I4 -O -lg2c ;
+  FORTRANFLAGS = -c -I4 -O ;
 
   # uncomment to select desired warning level and ansi-strictness
   CCWARN += -Wall ;
@@ -226,13 +235,14 @@ ASC_UTILITIES_LIB = $(ASC_UTILITIES_LIBROOT)$(SUFLIB) ;
 ASC_PACKAGES_LIB  = $(ASC_PACKAGES_LIBROOT)$(SUFLIB) ;
 
 ASC_BASE_LIBS =
-  $(ASC_GENERAL_LIB)
-  $(ASC_UTILITIES_LIB)
-  $(ASC_SOLVER_LIB)
   $(ASC_COMPILER_LIB)
+  $(ASC_GENERAL_LIB)
   $(ASC_PACKAGES_LIB)
+  $(ASC_SOLVER_LIB)
+  $(ASC_UTILITIES_LIB)
   ;
 
+# Path to base library sources & libs from top-level jam directory
 ASC_BASE_SOURCE_RELPATH = ..$(SLASH)base$(SLASH)generic ;
 ASC_BASE_LIBS_RELPATH   = ..$(SLASH)base$(SLASH)jam$(SLASH)$(BUILD_DIR)$(SLASH) ;
 
@@ -342,6 +352,10 @@ LSODLIB = $(ASC_LSOD_LIB) ;
 #  Set F77LIBS appropriate for your machine and desired loader behavior.
 #
 #F77_LIBS = ;
+if $(UNIX) || $(OS) = LINUX
+{
+  F77_LIBS = -L$(FOR_LIB_DIRS) -lg2c ;
+}
 
 #======================================================================
 # FORTRAN Support Libraries
@@ -362,6 +376,30 @@ ASC_LINPACK_LIBROOT = liblpak ;
 ASC_LINPACK_LIB     = $(ASC_LINPACK_LIBROOT)$(SUFLIB) ;
 LPAKLIB_RELPATH     = ..$(SLASH)linpack$(SLASH)jam$(SLASH)$(BUILD_DIR) ;
 LPAKLIB = $(ASC_LINPACK_LIB) ;
+
+#======================================================================
+# Math libraries
+#======================================================================
+if $(UNIX) || $(OS) = LINUX
+{
+  MATH_LIBS = -L$(MATH_LIB_DIRS) -lieee -lm  ;
+}
+
+#======================================================================
+# Dynamic loading support
+#======================================================================
+if $(UNIX) || $(OS) = LINUX
+{
+  DL_LIBS = -L$(DL_LIB_DIRS) -ldl ;
+}
+
+#======================================================================
+# X11
+#======================================================================
+if $(UNIX) || $(OS) = LINUX
+{
+  X11_LIBS = -L$(X11_LIB_DIRS) -lX11  ;
+}
 
 #======================================================================
 # Ascend-specific jam instructions

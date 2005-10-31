@@ -6,6 +6,10 @@ typedef int (*initFunc)(void);
 typedef int (*isInitializedFunc)(void);
 typedef void (*cleanupFunc)(void);
 
+#ifndef __WIN32__
+#define DLEXPORT
+#endif
+
 /** A public datum. */
 extern int DLEXPORT value;             
 

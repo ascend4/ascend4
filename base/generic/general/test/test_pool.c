@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include "utilities/ascConfig.h"
-#include "utilities/AscMalloc.h"
+#include "utilities/ascMalloc.h"
 #include "general/pool.h"
 #include "general/list.h"
 #include "CUnit/CUnit.h"

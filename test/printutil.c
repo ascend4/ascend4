@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrintType.h"
 #include "utilities/ascPrint.h"

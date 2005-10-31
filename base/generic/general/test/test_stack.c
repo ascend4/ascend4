@@ -23,8 +23,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "utilities/ascConfig.h"
-#include "utilities/AscMalloc.h"
+#include "utilities/ascMalloc.h"
 #include "utilities/ascPrintType.h"
 #include "utilities/ascPrint.h"
 #include "general/stack.h"

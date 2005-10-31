@@ -22,7 +22,9 @@
  */
 
 #include <stdio.h>
+#ifdef __WIN32__
 #include <io.h>
+#endif
 #include "utilities/ascConfig.h"
 #include "utilities/ascEnvVar.h"
 #include "utilities/ascMalloc.h"

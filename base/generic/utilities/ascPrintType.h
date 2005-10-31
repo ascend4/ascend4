@@ -32,6 +32,7 @@
  *  <pre>
  *  When including this file, you must include:
  *      #include <stdio.h>
+ *      #include <stdarg.h>
  *      #include "utilities/ascConfig.h"
  *  </pre>
  */

@@ -1,0 +1,4 @@
+#! /bin/sh
+
+gcc -I../.. -c -o test_ascDynaLoad_shlib.o test_ascDynaLoad_shlib.c
+gcc -shared -o test_ascDynaLoad_shlib.so test_ascDynaLoad_shlib.o

@@ -516,11 +516,11 @@ TEST_SOURCES =
   test_mem.c
   test_readln.c
   test_set.c
-#  test_register_solver.c
-#  test_slv_common.c
+  test_register_solver.c
+  test_slv_common.c
   ;
 
-CCFLAGS +=
+CCFLAGS on $(TEST_SOURCES) +=
   -I..$(SLASH)..$(SLASH)test 
   -DALLOCATED_TESTS
   ;
@@ -528,6 +528,7 @@ CCFLAGS +=
 Main $(TEST_PROG) : $(TEST_SOURCES) ;
 MakeLocate $(TEST_PROG)$(SUFEXE) : $(BUILD_DIR) ;
 LinkLibraries $(TEST_PROG) :
+  $(ASC_BASE_LIBS)
   $(ASC_BASE_LIBS)
   ..$(SLASH)..$(SLASH)test$(SLASH)libcunit$(SUFLIB) ;
 
@@ -540,3 +541,7 @@ if $(NT)
   }
 }
 
+if $(UNIX) || $(OS) = LINUX
+{
+    LINKFLAGS on $(TEST_PROG)$(SUFEXE) += $(DL_LIBS) $(MATH_LIBS) ;
+}

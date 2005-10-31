@@ -22,7 +22,9 @@
  */
 
 #include <stdio.h>
+#ifdef __WIN32__
 #include <io.h>
+#endif
 #include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
 #include "utilities/ascDynaLoad.h"
@@ -51,18 +53,19 @@
  */
 static void test_ascDynaLoad(void)
 {
-#ifdef __WIN32__
-  const char *shlib_name = "..\\..\\..\\generic\\utilities\\test\\test_ascDynaLoad_shlib.dll";
-#else
-  CU_FAIL("Testing of utilities/ascDynaLoad not implemented for this platform.");
-#endif  /* __WIN32__ */
-
   int open_success;
   initFunc          init_func;
   isInitializedFunc isInitialized_func;
   cleanupFunc       cleanup_func;
   valuetype        *value;
   unsigned long prior_meminuse;
+
+#ifdef __WIN32__
+  const char *shlib_name = "..\\..\\..\\generic\\utilities\\test\\test_ascDynaLoad_shlib.dll";
+#else
+  const char *shlib_name = "..\\..\\..\\generic\\utilities\\test\\test_ascDynaLoad_shlib.so";
+#endif  /* __WIN32__ */
+
 
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
 

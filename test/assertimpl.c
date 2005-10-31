@@ -39,6 +39,7 @@ void enable_assert_longjmp(int TRUE_or_FALSE)
 }
 
 /* Override implementation of assert using the signature of the relevant compiler */
+#ifdef __WIN32__
 #if defined(__GNUC__) || defined(__MINGW32_VERSION)
 _CRTIMP void __cdecl _assert(const char *cond, const char *file, int line)
 
@@ -55,6 +56,15 @@ void _RTLENTRY _EXPFUNC _assert(char *cond, char *file, int line)
 #error Unrecognized compiler.
 
 #endif
+#else    /* !__WIN32__ */
+#if defined(__GNUC__)
+void __assert_fail (const char *cond, const char *file,
+		   unsigned int line, const char *__function)
+/*     __THROW __attribute__ ((__noreturn__)) */ 
+#else
+#error Unrecognized compiler.
+#endif  
+#endif    /* __WIN32__ */
 {
   g_assert_status = ast_failed;
   if (TRUE == f_use_longjump) {
