@@ -54,14 +54,24 @@ BUILD_CREDIT = "anonymous" ;
 # Path to general jam info
 JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
 
+# TODO: Deprecated - remove?
 # Root dir of Ascend base library sources.
 #ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
 
+# TODO: Deprecated - remove?
 # Root dir of Ascend libraries - will be qualified for compiler & build type
 #ASC_BASE_LIBDIR = ..$(SLASH)..$(SLASH)base$(SLASH)jam ;
 
 # root directories for Tcl and Tk libraries
-TCL_DIR = ..$(SLASH)..$(SLASH)..$(SLASH)Tcl ;
+#TCL_DIR =  ;
+if $(NT)
+{
+  TCL_DIR ?= ..$(SLASH)..$(SLASH)..$(SLASH)Tcl ;
+}
+else if $(UNIX) || $(OS) = LINUX
+{
+  TCL_DIR ?= /usr/local ;
+}
 TK_DIR  = $(TCL_DIR) ;
 
 # Set the Tcl/Tk/tkTable import library names here to override the

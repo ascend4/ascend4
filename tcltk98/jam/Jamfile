@@ -117,6 +117,7 @@ LINKLIBS on $(EXE_NAME)$(SUFEXE) +=
     $(X11_LIBS)
     $(PC_LIBS)
     $(MATH_LIBS)
+    $(DL_LIBS)
     $(DEBUG_LIBS)
     ;
 
