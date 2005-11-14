@@ -29,9 +29,7 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-/** @file
- *  SLV Utilities & Structures for ASCEND Solvers
- *  <pre>
+/*
  *  Contents:     slv common utilities and definitions
  *
  *  Authors:      Ben Allan
@@ -40,18 +38,18 @@
  *  Dates:        01/94 - original version
  *
  *  Description:
+ *
  *  General C  utility routines for slv/Slv class interfaces. Abstracted from
  *  slvX.c January 1995. Ben Allan.
  *  slv.h is the header for folks on the ASCEND end, and this is the one for
  *  folks on the Slv math end.
  *  Don't protoize this file for ASCEND types other than mtx, vec, and boolean
- *  real64, and int32.
- *  or we'll have you shot. In particular, not var and rel. People
- *  who aren't supposed to know about var and rel include this.
+ *  real64, and int32 or we'll have you shot. In particular, not var and rel.
+ *  People who aren't supposed to know about var and rel include this.
  *
  *  In particular, this header may be used without knowing about the ASCEND
  *  compiler or any of its annoying insanities so long as you drag out
- *  ascmalloc.
+ *  ascmalloc().
  *  This does commit you to being able to stomach the mtx.h file, however,
  *  even if you choose to ignore the contents of mtx.
  *  Several functions, notably the print suite for rel/var names,
@@ -60,10 +58,85 @@
  *
  *  The parameters and status struct definitions have been moved here,
  *  being of general interest.
- *
+ */
+
+/** @file
+ *  SLV common utilities & structures for ASCEND solvers.
+ *  This includes the following:
+ *    - parameters struct definitions & manipulation routines
+ *    - status struct definitions & retrieval routines
+ *    - vector operations
+ *    - solver print routines
+ *    - lnkmap support functions
+ *  <pre>
  *  Requires:     #include <stdio.h>
  *                #include "utilities/ascConfig.h"
+ *                #include "solver/slv_types.h"
+ *                #include "solver/rel.h"
+ *                #include "solver/logrel.h"
+ *                #include "solver/mtx.h"
+ *                #include "general/list.h"
  *  </pre>
+ *  Details on solver parameter definition:
+ *
+ *  When used together the parameter-related structures, functions, and 
+ *  macros allow us to define all of a solver's parameters in one file
+ *  and notify the interface of these parameters upon startup (dynamic
+ *  interface construction).  The parameters can be defined in any order.
+ *  The only bookkeeping needed is associated with the macros.  You must
+ *  have an array of void pointers large enough for all of the macros
+ *  you define and you must give each of the macros you define a unique
+ *  element of this array. Here is an example using a real parameter
+ *  and a character parameter. (The int and bool are similar to the real).
+ *
+ *  ---------- START EXAMPLE CODE ----------
+ *
+ *  (* these 4 macros can be defined anywhere more or less so long as it
+ *  is before the calls to slv_define_parm. *)
+ *  #define REAL_PTR (sys->parm_array[0])
+ *  #define REAL     ((*(real64 *)REAL_PTR))
+ *  #define CHAR_PTR (sys->parm_array[1])
+ *  #define CHAR     ((*(char **)CHAR_PTR))
+ *
+ *  #define PA_SIZE 2
+ *  struct example {
+ *    struct slv_parameters_t p;
+ *    void *parm_array[PA_SIZE];
+ *    struct slv_parameter padata[PA_SIZE];
+ *  } e;
+ *   ...
+ *    e.p.parms = padata;
+ *    e.p.dynamic_parms = 0;
+ *
+ *  static char *character_names[] = {
+ *     "name_one","name_two"
+ *  }
+ *    (* fill padata with appropriate info *)
+ *  slv_define_parm(&(e.p), real_parm,
+ *                  "r_parm","real parameter" ,
+ *                  "this is an example of a real parameter" ,
+ *                  U_p_real(val,25),U_p_real(lo,0),U_p_real(hi,100),1);
+ *   (* now assign the element of e.parm_array from somewhere in padata *)
+ *  SLV_RPARM_MACRO(REAL_PTR,parameters);
+ *
+ *    (* fill padata with appropriate info *)
+ *  slv_define_parm(&(e.p), char_parm,
+ *                  "c_parm", "character parameter",
+ *                  "this is an example of a character parameter",
+ *                  U_p_string(val,character_names[0]),
+ *                  U_p_strings(lo,character_names),
+ *                  U_p_int(hi,sizeof(character_names)/sizeof(char *)),1);
+ *   (* now assign the element of e.parm_array that matches. *)
+ *  SLV_CPARM_MACRO(CHAR_PTR,parameters);
+ *
+ *  Resetting the value of a parameter can be done directly
+ *  except for string parameters which should be set with, for example,
+ *  slv_set_char_parameter(CHAR_PTR,newvalue);
+ *  or outside a solver where there is no sys->parm_array:
+ *
+ *     slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
+ *
+ *  ---------- END OF EXAMPLE CODE ----------
  */
 
 #ifndef slv_common__already_included
@@ -73,123 +146,135 @@
 #define SLV_INSTANCES TRUE
 /**< SLV_INSTANCES should only be FALSE in a libasc.a free environment */
 
-/**
- * Common data structures for Westerberg derived solvers.
- */
+/*
+ * -------------------------------------------------------
+ *  Common data structures for Westerberg derived solvers
+ * -------------------------------------------------------
+ */                                          
+
+/** Solver output file informationn. */
 struct slv_output_data {
-   FILE *more_important;  /**< NULL ==> no output */
-   FILE *less_important;  /**< NULL ==> no output */
+   FILE *more_important;  /**< More significant output to this file stream.  NULL ==> no output. */
+   FILE *less_important;  /**< Less significant output to this file stream.  NULL ==> no output. */
 };
 
-/**  @todo KHACK THIS SHOULD BE REMOVED */
+/**  
+ *  Solver tolerance data structure.
+ *  @todo KHACK THIS SHOULD BE REMOVED - solver/slv_common:slv_tolerance_data. 
+ */
 struct slv_tolerance_data {
-   real64 drop;         /**< matrix entry drop tolerance during factorization */
-   real64 pivot;        /**< detect pivot too small, of those available */
-   real64 singular;     /**< detect matrix numerically singular */
-   real64 feasible;     /**< detect equality relations satisfied */
-   real64 rootfind;     /**< detect single equality relation satisfied */
-   real64 stationary;   /**< detect lagrange stationary */
-   real64 termination;  /**< detect progress diminished */
+   real64 drop;         /**< Matrix entry drop tolerance during factorization */
+   real64 pivot;        /**< Detect pivot too small, of those available. */
+   real64 singular;     /**< Detect matrix numerically singular. */
+   real64 feasible;     /**< Detect equality relations satisfied. */
+   real64 rootfind;     /**< Detect single equality relation satisfied. */
+   real64 stationary;   /**< Detect lagrange stationary. */
+   real64 termination;  /**< Detect progress diminished. */
 };
 
-/** Solver parameter information. */
+/** Solver sub-parameter data structure. */
 struct slv_sub_parameters {
    /* arrays of parametric data */
-   int32   *iap;    /**< Array of parametric int32 data. */
-   real64  *rap;    /**< Array of parametric real64 data. */
-   char*   *cap;    /**< Array of parametric char* data. */
-   void*   *vap;    /**< Array of parametric void* data. */
+   int32   *iap;      /**< Array of parametric int32 data. */
+   real64  *rap;      /**< Array of parametric real64 data. */
+   char*   *cap;      /**< Array of parametric char* data. */
+   void*   *vap;      /**< Array of parametric void* data. */
    /* symbolic parameter names */
-   char* *ianames;  /**< Symbolic names for iap parameters. */
-   char* *ranames;  /**< Symbolic names for rap parameters. */
-   char* *canames;  /**< Symbolic names for cap parameters. */
-   char* *vanames;  /**< Symbolic names for vap parameters. */
+   char* *ianames;    /**< Array of symbolic names for iap parameters. */
+   char* *ranames;    /**< Array of symbolic names for rap parameters. */
+   char* *canames;    /**< Array of symbolic names for cap parameters. */
+   char* *vanames;    /**< Array of symbolic names for vap parameters. */
    /* longer explanations of the parameter data */
-   char* *iaexpln;  /**< Longer description of iap parameters. */
-   char* *raexpln;  /**< Longer description of rap parameters. */
-   char* *caexpln;  /**< Longer description of cap parameters. */
-   char* *vaexpln;  /**< Longer description of vap parameters. */
+   char* *iaexpln;    /**< Array of longer descriptions of iap parameters. */
+   char* *raexpln;    /**< Array of longer descriptions of rap parameters. */
+   char* *caexpln;    /**< Array of longer descriptions of cap parameters. */
+   char* *vaexpln;    /**< Array of longer descriptions of vap parameters. */
    /* lengths of arrays above */
-   int32 ilen;      /**< Length of iap, ianames, and iaexpln. */
-   int32 rlen;      /**< Length of rap, ranames, and raexpln. */
-   int32 clen;      /**< Length of cap, canames, and caexpln. */
-   int32 vlen;      /**< Length of vap, vanames, and vaexpln. */
+   int32 ilen;        /**< Length of iap, ianames, and iaexpln arrays. */
+   int32 rlen;        /**< Length of rap, ranames, and raexpln arrays. */
+   int32 clen;        /**< Length of cap, canames, and caexpln arrays. */
+   int32 vlen;        /**< Length of vap, vanames, and vaexpln arrays. */
 };
 
+/**
+ *  Data structure for solver statistics.
+ *  This is to collect data for the comparison of algorithms.  All solvers
+ *  should have at least one of these, though the interface will check for 
+ *  NULL before reading the data.  The interpretation of these data is 
+ *  somewhat up to the coder.
+ */
 struct slv_block_cost {
-  int32 size,
-        iterations,
-        funcs,
-        jacs,
-        reorder_method;
-  double time, 
-         resid,
-         functime, 
-         jactime;
+  int32 size,             /**< How big is the block, in terms of variables? */
+        iterations,       /**< How many iterations to convergence/divergence? */
+        funcs,            /**< How many function evaluations were made? */
+        jacs,             /**< How many jacobian evaluations were made? */
+        reorder_method;   /**< Not documented. Up to individual solver? */
+  double time,            /**< How much cpu total time elapsed while in the block? */
+         resid,           /**< Not documented.  The size of the residual? */
+         functime,        /**< Time spent in function evaluations. */
+         jactime;         /**< Time spent in jacobian evaluations, stuffing. */
 };
 
-/** Integer parameter substructure. */
+/** Integer solver parameter substructure. */
 struct slv_int_parameter {
-  int32 value;
-  int32 low;
-  int32 high;
+  int32 value;            /**< Value. */
+  int32 low;              /**< Lower bound. */
+  int32 high;             /**< Upper bound. */
 };
 
-/** Boolean parameter substructure. */
+/** Boolean solver parameter substructure. */
 struct slv_boolean_parameter {
-  int32 value;
-  int32 low;
-  int32 high;
+  int32 value;            /**< Value. */
+  int32 low;              /**< Lower bound. */
+  int32 high;             /**< Upper bound. */
 };
 
-/** Real parameter substructure. */
+/** Real solver parameter substructure. */
 struct slv_real_parameter {
-  double value;
-  double low;
-  double high;
+  double value;           /**< Value. */
+  double low;             /**< Lower bound. */
+  double high;            /**< Upper bound. */
 };
 
-/** Char parameter substructure. */
+/** Char solver parameter substructure. */
 struct slv_char_parameter {
-  char *value;
-  char **argv;
-  int32 high;
+  char *value;            /**< Value. */
+  char **argv;            /**< Lower bound. */
+  int32 high;             /**< Upper bound. */
 };
 
 /** Basic solver parameter types. */
 enum parm_type {
-  int_parm,
-  bool_parm,
-  real_parm,
-  char_parm
+  int_parm,                 /**< Integer type. */
+  bool_parm,                /**< Boolean type. */
+  real_parm,                /**< Real type. */
+  char_parm                 /**< Char type. */
 };
 
+/** Parameter arguments */
 union parm_arg
 {
-  char **argv;
-  char *argc;   /**< huh? */
-  int32 argi;
-  int32 argb;
-  real64 argr;
+  char **argv;              /**< Strings array argument. */
+  char *argc;               /**< Char argument. */
+  int32 argi;               /**< Integer argument. */
+  int32 argb;               /**< Boolean argument. */
+  real64 argr;              /**< Real argument. */
 };
 
-/** 
- *  Solver parameter structure. 
- *  @todo Shouldn't b be a slv_boolean_parameter?
- */
+/** Solver parameter structure. */
 struct slv_parameter {
-  enum parm_type type;    /**< parameter type */
-  int32 number;           /**< index in array */
-  int32 display;          /**< display page */
-  char *name;             /**< scripting short name */
-  char *interface_label;  /**< user interface label */
-  char *description;      /**< modest help string */
+  enum parm_type type;              /**< Parameter type. */
+  int32 number;                     /**< Index in array. */
+  int32 display;                    /**< Display page. */
+  char *name;                       /**< Scripting short name. */
+  char *interface_label;            /**< User interface label. */
+  char *description;                /**< Modest help string. */
   union {
-    struct slv_int_parameter i;
-    struct slv_int_parameter b;
-    struct slv_real_parameter r;
-    struct slv_char_parameter c;
-  } info;                 /**< data */
+    struct slv_int_parameter i;     /**< Integer parameter. */
+    struct slv_boolean_parameter b; /**< Boolean parameter. */
+    struct slv_real_parameter r;    /**< Real parameter. */
+    struct slv_char_parameter c;    /**< Char parameter. */
+  } info;                           /**< Data. */
 };
 
 /*
@@ -203,62 +288,99 @@ struct slv_parameter {
 
 #define U_p_int(parm_u,val)     ((((parm_u).argi = (val))), (parm_u))
 /**<
- *  Sets the argi of the parm_arg parm_u to val and returns parm_u.
- *  For use in calls to slv_define_parm().
+ *  Sets the argi of parm_arg parm_u to val and returns the parm_u.
+ *  This macro is used for setting integer parm_arg arguments in calls
+ *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
+ *  which correspond to local parm_arg variables that should be used
+ *  in client functions calling slv_define_parm().
+ *
+ *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
+ *  @param val    int, the new value for the parm_arg.
+ *  @return Returns parm_u.
  */
 #define U_p_bool(parm_u,val)    ((((parm_u).argb = (val))), (parm_u))
 /**<
- *  Sets the argb of the parm_arg parm_u to val and returns parm_u.
- *  For use in calls to slv_define_parm().
+ *  Sets the argb of parm_arg parm_u to val and returns the parm_u.
+ *  This macro is used for setting boolean parm_arg arguments in calls
+ *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
+ *  which correspond to local parm_arg variables that should be used
+ *  in client functions calling slv_define_parm().
+ *
+ *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
+ *  @param val    boolean, the new value for the parm_arg.
+ *  @return Returns parm_u.
  */
 #define U_p_real(parm_u,val)    ((((parm_u).argr = (val))), (parm_u))
 /**<
- *  Sets the argr of the parm_arg parm_u to val and returns parm_u.
- *  For use in calls to slv_define_parm().
+ *  Sets the argr of parm_arg parm_u to val and returns the parm_u.
+ *  This macro is used for setting real parm_arg arguments in calls
+ *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
+ *  which correspond to local parm_arg variables that should be used
+ *  in client functions calling slv_define_parm().
+ *
+ *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
+ *  @param val    double, the new value for the parm_arg.
+ *  @return Returns parm_u.
  */
 #define U_p_string(parm_u,val)  ((((parm_u).argc = (val))), (parm_u))
 /**<
- *  Sets the argc of the parm_arg parm_u to val and returns parm_u.
+ *  Sets the argc of parm_arg parm_u to val and returns the parm_u.
+ *  This macro is used for setting string parm_arg arguments in calls
+ *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
+ *  which correspond to local parm_arg variables that should be used
+ *  in client functions calling slv_define_parm().
+ *
+ *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
+ *  @param val    char *, the new value for the parm_arg.
+ *  @return Returns parm_u.
  *  For use in calls to slv_define_parm().
  */
 #define U_p_strings(parm_u,val) ((((parm_u).argv = (val))), (parm_u))
 /**<
- *  Sets the argv of the parm_arg parm_u to val and returns parm_u.
+ *  Sets the argv of parm_arg parm_u to val and returns the parm_u.
+ *  This macro is used for setting string array parm_arg arguments in 
+ *  calls to slv_define_parm().  parm_u should be one of { val, lo, hi },
+ *  which correspond to local parm_arg variables that should be used
+ *  in client functions calling slv_define_parm().
+ *
+ *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
+ *  @param val    char **, the new value for the parm_arg.
+ *  @return Returns parm_u.
  *  For use in calls to slv_define_parm().
  */
 
-#define SLV_IPARM_MACRO(X,P) \
+#define SLV_IPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
-     (X)  = &((P)->parms[(P)->num_parms-1].info.i.value); \
+     (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.i.value); \
   }
 /**<
  *  Macro for defining macros of type integer (IPARM).
  *  See SLV_CPARM_MACRO() for more information.
  */
-#define SLV_BPARM_MACRO(X,P) \
+#define SLV_BPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
-     (X)  = &((P)->parms[(P)->num_parms-1].info.b.value); \
+     (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.b.value); \
   }
 /**<
  *  Macro for defining macros of type boolean (BPARM).
  *  See SLV_CPARM_MACRO() for more information.
  */
-#define SLV_RPARM_MACRO(X,P) \
+#define SLV_RPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
-     (X)  = &((P)->parms[(P)->num_parms-1].info.r.value); \
+     (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.r.value); \
   }
 /**<
  *  Macro for defining macros of type real (RPARM).
  *  See SLV_CPARM_MACRO() for more information.
  */
-#define SLV_CPARM_MACRO(X,P) \
+#define SLV_CPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
-     (X)  = &((P)->parms[(P)->num_parms-1].info.c.value); \
+     (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.c.value); \
   }
 /**<
  * Macro for defining macros of type character (CPARM).
- * To use, send in a name (X) for the macro (in caps by convention)
- * and a slv_parameters_t pointer (P). The name (X) should be
+ * To use, provide a NAME for the macro (in caps by convention)
+ * and a slv_parameters_t pointer (slv_parm). The NAME should be
  * defined as an element in an array of void pointers in the
  * module in which the macro is to be used.  This macro uses the
  * current number of registered parameters to link the array of
@@ -393,66 +515,39 @@ struct slv_parameter {
  *  </pre>
  */
 typedef struct slv_parameters_structure {
-   struct slv_output_data output;
-   struct slv_tolerance_data tolerance;
-   struct slv_parameter *parms;
-   int32 num_parms;
-   int32 dynamic_parms;     /**< set 1 if parms is dynamically allocated */
+   struct slv_output_data output;       /**< File streams for solver output. */
+   struct slv_tolerance_data tolerance; /**< Defince various tolerances for the solver. */
+   struct slv_parameter *parms;         /**< Holds the parameters defined for a solver. */
+   int32 num_parms;                     /**< The number of parameters in parms. */
+   int32 dynamic_parms;                 /**< Set to TRUE if parms is dynamically allocated. */
 
    /* we wish the following were on the way out */
-   struct slv_sub_parameters sp;
-   int whose;
-   int32 ignore_bounds;
-   int32 partition;
+   struct slv_sub_parameters sp;        /**< Solver sub-parameters. */
+   int whose;                           /**< Code for where a parameter set came from. */
+   int32 ignore_bounds;                 /**< Set to TRUE to disregard boundary conditions. */
+   int32 partition;                     /**< Set to TRUE if system will be partitioned into blocks. */
 
    /* the following are on the way out */
-   double time_limit;     /**< @todo kill */
-   double rho;            /**< @todo kill */
-   int32 iteration_limit; /**< @todo kill */
-   int32 factor_option;   /**< @todo kill */
+   double time_limit;     /**< Max cpu seconds per block.                   @todo kill */
+   double rho;            /**< Scaler premultiplier of penalty term.        @todo kill */
+   int32 iteration_limit; /**< Max number of iterations.                    @todo kill */
+   int32 factor_option;   /**< Suggests a number for linear factorization.  @todo kill */
 
 } slv_parameters_t;
 
-/**
- *  Deallocates any memory allocated durring parameter creation.
- *  if !(p->dynamic_parms), frees strings in p->parms but not p->parms.
- */
-extern void slv_destroy_parms(slv_parameters_t *p);
 
-/**
- * <!--  slv_define_parm: Function for adding (defining) a new         -->
- * <!--  parameter in your parameter structure.                        -->
- * <!--  err = slv_define_parm(p,type,interface_name,                  -->
- * <!--                        interface_label,description,            -->
- * <!--                        value, lower_bound,upper_bound,         -->
- * <!--                        page);                                  -->
+/* slv_destroy_parms() is defined in slv.c */
+extern void slv_destroy_parms(slv_parameters_t *p);
+/**<
+ *  Deallocates any allocated memory held by a parameter structure.
+ *  Only the held memory is freed, not p itself.  Further, if
+ *  (p->dynamic_parms != 0), the strings in p->parms are freed
+ *  but not p->parms itself.  Does nothing if p is NULL.
  *
- * <!--  int32 err                                                     -->
- * <!--  slv_parameters_t *p                                           -->
- * <!--  enum parm_type type                                           -->
- * <!--  char *interface_name                                          -->
- * <!--  char *interface_label                                         -->
- * <!--  char *description                                             -->
- * <!--  union parm_arg value                                          -->
- * <!--  union parm_arg lower_bound                                    -->
- * <!--  union parm_arg upper_bound                                    -->
- * <!--  int32 page                                                    -->
- *
- *  Adds (defines) a new parameter in the parameter structure.
- *  Returns err = -1 if p is NULL or called with unsupported type.
- *  Returns err = number of registered parameters otherwise.
- *  Supported types are int_parm, bool_parm,real_parm, and char_parm.
- *  interface name should be a very short but descriptive name that
- *  the interface can use to identify the parameter. The interface label
- *  should be a short text string to be displayed on the interface.
- *  The description should be a slightly more detailed string to be
- *  displayed upon request a la balloon help.
- *  The value, lower_bound, and upper_bound fields should be filled
- *  using the appropriate parm_arg union macros defined above.
- *  page should indicate the parameter page number that the parameter
- *  is to be displayed on.  By convention page is set to -1 for parameters
- *  which are not to be displayed on the interface.
+ *  @param p  The parameter structure to destroy.
  */
+
+/* slv_define_parm() is defined in slv.c */
 extern int32 slv_define_parm(slv_parameters_t *p,
                              enum parm_type type,
                              char *interface_name,
@@ -462,89 +557,63 @@ extern int32 slv_define_parm(slv_parameters_t *p,
                              union parm_arg lower_bound,
                              union parm_arg upper_bound,
                              int32 page);
-
-/** <!--  PARM VALUES                                                  -->
- * Resetting the value of a parameter can be done directly
- * except for string parameters which must be set with
- * slv_set_char_parameter(stringpointer,charvalue);
- * slv_set_char_parameter does not keep the charvalue string you pass it.
+/**<
+ *  Adds (defines) a new parameter in a parameter structure.
+ *  Use this function to add & define new parameters for a solver.
+ *
+ *  @param p                Parameter structure to receive the new parameter.
+ *  @param type             Parameter type: int_parm, bool_parm, real_parm, or char_parm.
+ *  @param interface_name   A very short but descriptive name that the interface
+ *                          can use to identify the parameter.
+ *  @param interface_label  A short text string to be displayed on the interface.
+ *  @param description      A slightly more detailed string to be displayed
+ *                          upon request a la balloon help.
+ *  @param value            The value for the parameter, set using one of
+ *                          the U_p_int() style macros defined above.
+ *  @param lower_bound      The lower bound for the parameter, set using one of
+ *                          the U_p_int() style macros defined above.
+ *  @param upper_bound      The upper bound for the parameter, set using one of
+ *                          the U_p_int() style macros defined above.
+ *  @param page             The page of the interface options dialog on which
+ *                          to display this parameter.  Ranges from 1..max_page_no.
+ *                          Set to -1 if this parameter is not to be displayed in
+ *                          the interface.
+ *  @return Returns -1 if p is NULL or called with unsupported type; 
+ *          otherwise returns the number of registered parameters in p.
  */
+
+/* slv_set_char_parameter() is defined in slv.c */
 extern void slv_set_char_parameter(char **cptr, char *newvalue);
-
-/*
- * When used together the above structures, functions, and macros
- * allow us to define all of a solver's parameters in one file and
- * notify the interface of these parameters upon startup (dynamic
- * interface construction).  The parameters can be defined in any order.
- * The only bookkeeping needed is associated with the macros.  You must
- * have an array of void pointers large enough for all of the macros
- * you define and you must give each of the macros you define a unique
- * element of this array. Here is an example using a real parameter
- * and a character parameter. (The int and bool are similar to the real).
+/**<
+ *  Sets a char parameter value to a new string.
+ *  Resetting the value of a parameter can be done directly except
+ *  for string parameters which must be set with this function.  The
+ *  string newvalue is not kept by the function.<br><br>
  *
- * ---------- START EXAMPLE CODE ----------
+ *  Example:   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
  *
- * (* these 4 macros can be defined anywhere more or less so long as it
- * is before the calls to slv_define_parm. *)
- * #define REAL_PTR (sys->parm_array[0])
- * #define REAL     ((*(real64 *)REAL_PTR))
- * #define CHAR_PTR (sys->parm_array[1])
- * #define CHAR     ((*(char **)CHAR_PTR))
- *
- * #define PA_SIZE 2
- * struct example {
- *   struct slv_parameters_t p;
- *   void *parm_array[PA_SIZE];
- *   struct slv_parameter padata[PA_SIZE];
- * } e;
- *  ...
- *   e.p.parms = padata;
- *   e.p.dynamic_parms = 0;
- *
- * static char *character_names[] = {
- *    "name_one","name_two"
- * }
- *   (* fill padata with appropriate info *)
- * slv_define_parm(&(e.p), real_parm,
- *                 "r_parm","real parameter" ,
- *                 "this is an example of a real parameter" ,
- *                 U_p_real(val,25),U_p_real(lo,0),U_p_real(hi,100),1);
- *  (* now assign the element of e.parm_array from somewhere in padata *)
- * SLV_RPARM_MACRO(REAL_PTR,parameters);
- *
- *   (* fill padata with appropriate info *)
- * slv_define_parm(&(e.p), char_parm,
- *                 "c_parm", "character parameter",
- *                 "this is an example of a character parameter",
- *                 U_p_string(val,character_names[0]),
- *                 U_p_strings(lo,character_names),
- *                 U_p_int(hi,sizeof(character_names)/sizeof(char *)),1);
- *  (* now assign the element of e.parm_array that matches. *)
- * SLV_CPARM_MACRO(CHAR_PTR,parameters);
- *
- * Resetting the value of a parameter can be done directly
- * except for string parameters which should be set with, for example,
- * slv_set_char_parameter(CHAR_PTR,newvalue);
- * or outside a solver where there is no sys->parm_array:
- *   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
- *
- * ---------- END OF EXAMPLE CODE ----------
+ *  @param cptr     Pointer to the char array to set.
+ *  @param newvalue New value for *cptr.
  */
 
+/** Solver block status record. */
 struct slv__block_status_structure {
-   int32 number_of;
-   int32 current_block;
-   int32 current_reordered_block;
-   int32 current_size;
-   int32 previous_total_size;
-   int32 previous_total_size_vars;
-   int32 iteration;
-   int32 funcs;
-   int32 jacs;
-   double cpu_elapsed;
-   double functime;
-   double jactime;
-   real64 residual;
+   int32 number_of;                 /**< Number of blocks in system. */
+   int32 current_block;             /**< Block number of the current block that the
+                                         solver is working on.  It is assumed that all
+                                         previous blocks have already converged. */
+   int32 current_reordered_block;   /**< Number of the block most recently reordered. */
+   int32 current_size;              /**< Number of variables/relations in the current block. */
+   int32 previous_total_size;       /**< Total size of previous blocks (= number of
+                                         variables/relations already converged). */
+   int32 previous_total_size_vars;  /**< Not currently implemented. */
+   int32 iteration;                 /**< Number of iterations so far in the current block. */
+   int32 funcs;                     /**< Number of residuals calculated in the current block. */
+   int32 jacs;                      /**< Number of jacobians evaluated in the current block. */
+   double cpu_elapsed;              /**< Number of cpu seconds elapsed in the current block. */
+   double functime;                 /**< Number of cpu seconds elapsed getting residuals. */
+   double jactime;                  /**< Number of cpu seconds elapsed getting jacobians. */
+   real64 residual;                 /**< Current residual (RMS value) for the current block. */
 };
 
 /**
@@ -662,133 +731,271 @@ struct slv__block_status_structure {
  *  </pre>
  */
 typedef struct slv_status_structure {
-   uint32 ok : 1;
-   uint32 over_defined : 1;
-   uint32 under_defined : 1;
-   uint32 struct_singular : 1;
-   uint32 ready_to_solve : 1;
-   uint32 converged : 1;
-   uint32 diverged : 1;
-   uint32 inconsistent : 1;
-   uint32 calc_ok : 1;
-   uint32 iteration_limit_exceeded : 1;
-   uint32 time_limit_exceeded : 1;
-   uint32 panic :1;
-   int32 iteration;
-   int32 costsize;
-   double cpu_elapsed;
-   struct slv_block_cost *cost;
-   struct slv__block_status_structure block;
+   uint32 ok : 1;                       /**< If TRUE, everything is ok. */
+   uint32 over_defined : 1;             /**< Is system over-defined? */
+   uint32 under_defined : 1;            /**< Is system under-defined? */
+   uint32 struct_singular : 1;          /**< Is system structurally singular? */
+   uint32 ready_to_solve : 1;           /**< Is system ready to solve? */
+   uint32 converged : 1;                /**< Has system fully convergeded? */
+   uint32 diverged : 1;                 /**< Has system diverged? */
+   uint32 inconsistent : 1;             /**< Was system was found to be inconsistent? */
+   uint32 calc_ok : 1;                  /**< Were any errors encounted calculating residuals? */
+   uint32 iteration_limit_exceeded : 1; /**< Was the iteraction limit exceeded? */
+   uint32 time_limit_exceeded : 1;      /**< Was the time limit exceeded? */
+   uint32 panic :1;                     /**< Did the user stop the solver interactively? */
+   int32 iteration;                     /**< Total number of iterations so far. */
+   int32 costsize;                      /**< Number of elements in the cost array. */
+   double cpu_elapsed;                  /**< Total elapsed cpu seconds. */
+   struct slv_block_cost *cost;         /**< Array of slv_block_cost records. */
+   struct slv__block_status_structure block;  /**< Block status information. */
 } slv_status_t;
 
-/**  A dense vector class of some utility and the functions for it. */
-struct vector_data {
-   real64       norm2;        /**< 2-norm of vector squared */
-   mtx_range_t  *rng;         /**< Pointer to range */
-   real64       *vec;         /**< NULL => uninitialized */
-   boolean      accurate;     /**< ? is vector currently accurate */
-};
-
 /*
- *  vector_data operations.
+ * --------------------------------
+ *  vector_data class & operations
+ * --------------------------------
  *
  *  If we get brave, we will consider replacing the cores of these
- *  routines with blas calls. We aren't just overeager to go mixed
- *  language call nuts yet, however.
+ *  routines with blas calls. We aren't overeager to go mixed
+ *  language call nuts just yet, however.
+ */
+
+/**  
+ *  A dense vector class of some utility and the functions for it.
+ *  The vector consists of an array of real64 (vec) and a mtx_range_t
+ *  (rng) which refers to subsets of the range of indexes of vec.
+ *  When calling the various vector functions, the range indexes in
+ *  rng are used to calculate offsets in the vec array.  Therefore,
+ *  it is important that your rng->(low,high) refer to valid indexes
+ *  of vec[].  In particular
+ *    - neither rng->low nor rng->high may be negative
+ *    - low <= high
+ *    - high < length of vec
+ *  This means that whatever your maximum high is, you should allocate 
+ *  (high+1) values in vec.
+ *  @todo solver/slv_common:vector_data & operations should be
+ *        moved to a module in general or utilities.
+ */
+struct vector_data {
+   real64       norm2;      /**< 2-norm of vector squared. */
+   mtx_range_t  *rng;       /**< Pointer to range of vector (low..high). */
+   real64       *vec;       /**< Data array (NULL => uninitialized). */
+   boolean      accurate;   /**< Is vector currently accurate?  User-manipulated. */
+};
+
+extern struct vector_data *slv_create_vector(int32 low, int32 high);
+/**<
+ *  Returns a new vector_data initialized to the specified range.
+ *  This function creates, initializes, and returns a new vector_data
+ *  structure.  The vector is initialized using init_vector() and
+ *  a pointer to the new struct is returned.  If the specified range
+ *  is improper (see slv_init_vector()) then a valid vector cannot be
+ *  created and NULL is returned.<br><br>
+ *
+ *  Destruction of the returned vector_data is the responsibility of
+ *  the caller.  slv_destroy_vector() may be used for this purpose.
+ *
+ *  @param low  The lower bound of the vector's range.
+ *  @param high The upper bound of the vector's range.
+ *  @return A new initialized vector_data, or NULL if one could
+ *          not be created.
+ */
+
+extern int slv_init_vector(struct vector_data *vec, int32 low, int32 high);
+/**<
+ *  Initializes a vector_data structure.
+ *  The new range (low..high) is considered proper if both low and
+ *  high are zero or positive, and (low <= high).  If the new range is
+ *  not proper (or if vec itself is NULL), then no modifications are
+ *  made to vec.<br><br>
+ *
+ *  If the range is proper then vec->rng is allocated if NULL and then
+ *  set using low and high.  Then vec->vec is allocated (if NULL) or
+ *  reallocated to size (high+1).  The data in vec->vec is not
+ *  initialized or changed.  The member vec->accurate is set to FALSE.
+ *
+ *  @param vec  Pointer to the vector_data to initialize.
+ *  @param low  The lower bound of the vector's range.
+ *  @param high The upper bound of the vector's range.
+ *  @return Returns 0 if the vector is initialized successfully,
+ *          1 if an improper range was specified, 2 if vec is NULL,
+ *          and 3 if memory cannot be allocated.
+ */
+
+extern void slv_destroy_vector(struct vector_data *vec);
+/**<
+ *  Destroys a vector and its assocated data.
+ *  Deallocates any memory held in vec->rng and vec->vec,
+ *  and then deallocates the vector itself.  NULL is tolerated 
+ *  for vec, vec->rng, or vec->vec.
+ *
+ *  @param vec Pointer to the vector_data to destroy.
  */
 
 extern void slv_zero_vector(struct vector_data *vec);
 /**<
- *  <!--  slv_zero_vector(struct vector_data *vec);                    -->
- *  Assign vector entries between vec->rng.low and  vec->rng.high to 0.0.
+ *  Zeroes a vector.
+ *  The vector entries between vec->rng.low and  vec->rng.high will
+ *  be set to 0.0.  
+ *  The following are not allowed and are checked by assertion:
+ *    - NULL vec
+ *    - NULL vec->rng
+ *    - NULL vec->vec
+ *    - vec->rng->low < 0
+ *    - vec->rng->low > vec->rng->high
+ *
+ *  @param vec The vector to zero.
  */
 
-extern void slv_copy_vector(struct vector_data *vec1,
-                            struct vector_data *vec2);
+extern void slv_copy_vector(struct vector_data *srcvec,
+                            struct vector_data *destvec);
 /**<
- *  <!--  slv_copy_vector(struct vector_data *vec1, struct vector_data *vec2); -->
- *  Copy data [vec1->rng.low .. vec1->rng.high] to vec2 starting
- *  at position vec2->rng.low.
+ *  Copies the data from srcvec to destvec.
+ *  The data in the range [srcvec->rng.low .. srcvec->rng.high]
+ *  is copied to destvec starting at position destvec->rng.low.
+ *  destvec must have at least as many elements in vec as srcvec.
+ *  The following are not allowed and are checked by assertion:
+ *    - NULL srcvec
+ *    - NULL srcvec->rng
+ *    - NULL srcvec->vec
+ *    - srcvec->rng->low < 0
+ *    - srcvec->rng->low > srcvec->rng->high
+ *    - NULL destvec
+ *    - NULL destvec->rng
+ *    - NULL destvec->vec
+ *    - destvec->rng->low < 0
  *
- *  @todo  Copyvector could stand to be optimized.
+ *  @param srcvec  The vector to copy.
+ *  @param destvec The vector to receive the copied data.
  */
 
 extern real64 slv_inner_product(struct vector_data *vec1,
                                 struct vector_data *vec2);
 /**<
- *  <!--  slv_inner_product(struct vector_data *vec1, struct vector_data *vec2); -->
+ *  Calculates the dot product of 2 vectors.
  *  Dot [vec1->rng.low .. vec1->rng.high] with vec2 starting at
  *  position vec2->rng.low.
+ *  The following are not allowed and are checked by assertion:
+ *    - NULL vec1
+ *    - NULL vec1->rng
+ *    - NULL vec1->vec
+ *    - vec1->rng->low < 0
+ *    - vec1->rng->low > vec1->rng->high
+ *    - NULL vec2
+ *    - NULL vec2->rng
+ *    - NULL vec2->vec
+ *    - vec2->rng->low < 0
  *
- *  @todo inner_product could stand to be optimized.
+ *  @param vec1 The 1st vector for the dot product.
+ *  @param vec2 The 2nd vector for the dot product.
+ *  @todo solver/slv_common:slv_inner_product() could stand to be optimized.
  */
 
 extern real64 slv_square_norm(struct vector_data *vec);
 /**<
- *  <!--  slv_square_norm(struct vector_data *vec);                    -->
+ *  Calculates the dot product of a vector with itself.
  *  Dot [vec->rng.low .. vec->rng.high] with itself and store the
  *  result in vec->norm2.
+ *  The following are not allowed and are checked by assertion:
+ *    - NULL vec
+ *    - NULL vec->rng
+ *    - NULL vec->vec
+ *    - vec->rng->low < 0
+ *    - vec->rng->low > vec->rng->high
  *
- *  @todo square_norm could stand to be optimized.
+ *  @param vec The vector for the dot product.
+ *  @todo solver/slv_common:slv_square_norm() could stand to be optimized.
  */
 
-extern void slv_matrix_product(mtx_matrix_t mtx, 
+extern void slv_matrix_product(mtx_matrix_t mtx,
                                struct vector_data *vec,
-                               struct vector_data *prod, 
-                               real64 scale, 
+                               struct vector_data *prod,
+                               real64 scale,
                                boolean transpose);
 /**<
- *  <!--  slv_matrix_product(mtx,vec,prod,scale,transpose)             -->
- *  <!--  mtx_matrix_t mtx;                                            -->
- *  <!--  struct vector_data *vec,*prod;                               -->
- *  <!--  real64 scale;                                                -->
- *  <!--  boolean transpose;                                           -->
- *
- *  Stores prod := (scale)*(mtx)(vec) or (scale)*(mtx-transpose)(vec).
+ *  Calculates the product of a vector, matrix, and scale factor.
+ *  Stores prod := (scale)*(mtx)*(vec) if transpose = FALSE,
+ *  or prod := (scale)*(mtx-transpose)(vec) if transpose = TRUE.
  *  vec and prod must be completely different.
  *  If (!transpose) vec->vec is assumed indexed by current col and
  *                 prod->vec is indexed by current row of mtx.
  *  If (transpose) vec->vec is assumed indexed by current row and
  *                 prod->vec is indexed by current col of mtx.
+ *  The following are not allowed and are checked by assertion:
+ *    - NULL mtx
+ *    - NULL vec
+ *    - NULL vec->rng
+ *    - NULL vec->vec
+ *    - vec->rng->low < 0
+ *    - vec->rng->low > vec->rng->high
+ *    - NULL prod
+ *    - NULL prod->rng
+ *    - NULL prod->vec
+ *    - prod->rng->low < 0
+ *    - prod->rng->low > prod->rng->high
  *
- *  @todo mtx_product needs attention - does it go into mtx?
+ *  @param mtx       The matrix for the product.
+ *  @param vec       The vector for the product.
+ *  @param prod      The vector to receive the matrix product.
+ *  @param scale     The scale factor by which to multiply the matrix product.
+ *  @param transpose Flag for whether to use mtx or its transpose.
+ *
+ *  @todo solver/slv_common:slv_mtx_product needs attention -
+ *        does it go into mtx?
  */
 
 extern void slv_write_vector(FILE *fp, struct vector_data *vec);
 /**<
- *  <!--  slv_write_vector(fp,vec)                                     -->
- *  Write the values in the range of the vector to file fp along with
- *  a few other doodads.
- */
-
-/*
- * Misc. BLAS-like functions.
- */
-
-/**
- *  <!--  sum=slv_dot(len, a1, a2);                                    -->
- *  <!--  real64 *a1, *a2, sum;                                        -->
- *  <!--  int32 len;                                                   -->
- *  Dot product of 2 arrays of real64. Loop unrolled.
- *  Takes advantage of identical vectors.
+ *  Write vector information to a file stream.
+ *  Prints general information about the vector followed by the
+ *  values in the range of the vector to file fp.
  *
- *  Used inside slv_inner_product, so no need to use specially
- *  if you are using the vector_data type.
+ *  @param fp  The file stream to receive the report.
+ *  @param vec The vector on which to report.
  */
-extern real64 slv_dot(int32 len, const real64 *a1, const real64 *a2);
 
 /*
- *  General input/output routines
- *  -----------------------------
+ * ----------------------------
+ *  Misc. BLAS-like functions
+ * ----------------------------
  */
 
-/**
- *  Takes a file pointer, and if it is null returns a pointer to /dev/null.
- *  If you are in environment that doesn't have something like
- *  /dev/null, you'd better be damn sure your sys->p.output.*_important
- *  is not NULL.
+extern real64 slv_dot(int32 len, const real64 *a1, const real64 *a2);
+/**<
+ *  Calculates the dot product of 2 arrays of real64.
+ *  This is an optimized routine (loop unrolled).  It takes
+ *  advantage of identical vectors.  The 2 arrays must have
+ *  at least len elements.
+ *  The following are not allowed and are checked by assertion:
+ *    - NULL a1
+ *    - NULL a2
+ *    - len < 0
+ *
+ *  The same algorithm is used inside slv_inner_product(), so there
+ *  is no need to use this function directly if you are using the
+ *  vector_data type.
+ *
+ *  @param len The length of the 2 arrays.
+ *  @param a1  The 1st array for the dot product.
+ *  @param a2  The 2nd array for the dot product.
  */
+
+/*
+ * --------------------------------
+ *  General input/output routines
+ * --------------------------------
+ */
+
 extern FILE *slv_get_output_file(FILE *fp);
+/**<
+ *  Checks a file pointer, and if NULL returns a pointer to the nul device.
+ *  If you are in environment that doesn't have something like
+ *  /dev/null (nul on Windows), you'd better be damn sure your 
+ *  sys->p.output.*_important are not NULL.
+ *
+ *  @param fp The file stream to check.
+ *  @return fp if it is not NULL, a pointer to the nul device otherwise.
+ */
 
 /*
  * FILE pointer macros.
@@ -798,7 +1005,7 @@ extern FILE *slv_get_output_file(FILE *fp);
  *     fp = PLIF(sys)
  *     or fprintf(MIF(sys),"stuff",data...);
  *  Use of these is requested on grounds of readability but not required.
- *  MIF and LIF are macros, which means any specific solver interface
+ *  All of these are macros, which means any specific solver interface
  *  to ASCEND can use them, since all interfaces are supposed to
  *  support a parameters structure p somewhere in a larger system
  *  structure (sys) they keep privately.
@@ -806,99 +1013,155 @@ extern FILE *slv_get_output_file(FILE *fp);
  *  rather than a in-struct member.
  */
 #define MIF(sys) slv_get_output_file( (sys)->p.output.more_important )
-/**< 
+/**<
  *  Retrieve the "more important" output file for a system.
  *  sys must exist and contain an element p of type slv_parameters_t.
+ *
+ *  @param sys The slv_system_t to query.
+ *  @return A FILE * to the "more important" output file for sys.
  */
 #define LIF(sys) slv_get_output_file( (sys)->p.output.less_important )
-/**< 
+/**<
  *  Retrieve the "less important" output file for a system.
  *  sys must exist and contain an element p of type slv_parameters_t.
+ *
+ *  @param sys The slv_system_t to query.
+ *  @return A FILE * to the "less important" output file for sys.
  */
 #define PMIF(sys) slv_get_output_file( (sys)->p->output.more_important )
-/**< 
+/**<
  *  Retrieve the "more important" output file for a system.
  *  sys must exist and contain an element p of type slv_parameters_t*.
+ *
+ *  @param sys The slv_system_t to query.
+ *  @return A FILE * to the "more important" output file for sys.
  */
 #define PLIF(sys) slv_get_output_file( (sys)->p->output.less_important )
-/**< 
+/**<
  *  Retrieve the "less important" output file for a system.
  *  sys must exist and contain an element p of type slv_parameters_t*.
+ *
+ *  @param sys The slv_system_t to query.
+ *  @return A FILE * to the "less important" output file for sys.
  */
 
 /*------------------- begin compiler dependent functions -------------------*/
 #if SLV_INSTANCES
 
-/**
- *  void slv_print_obj_name(outfile,obj) [1/95: not yet implemented]
- *  void slv_print_rel_name(outfile,sys,rel)
- *  void slv_print_var_name(outfile,sys,var)
- *  void slv_print_logrel_name(outfile,sys,lrel)
- *  void slv_print_dis_name(outfile,sys,dvar)
- *
- *  Prints appropriate name.  If name can't be found by
- *  *_make_name(*), the global index is printed by default.
- *
- *  void slv_print_obj_index(outfile,obj)[1/95: not yet implemented]
- *  void slv_print_rel_sindex(outfile,rel)[1/95: not yet implemented]
- *  void slv_print_var_sindex(outfile,var)[1/95: not yet implemented]
- *  void slv_print_logrel_sindex(outfile,lrel)[1/95: not yet implemented]
- *  void slv_print_dis_sindex(outfile,dvar)[1/95: not yet implemented]
- *
- *  To print the local index of a ***, call slv_print_***_index();
- * 
- *  FILE *outfile;
- *  obj_objective_t obj;
- *  struct rel_relation *rel;
- *  struct var_variable *var;
- *  struct logrel_relation *lrel;
- *  struct dis_discrete *dvar;
- *  slv_system_t sys;
- *
- *  @todo Implement new functions or remove prototypes.
- */
 #ifdef NEWSTUFF
 extern void slv_print_obj_name(FILE *outfile, obj_objective_t obj);
-/**<  Prints the name of obj to outfile. */
+/**<
+ *  Not implemented.
+ *  Prints the name of obj to outfile.  If obj_make_name() can't
+ *  generate a name, the global index is printed instead.
+ *  @todo Implement solver/slv_common:slv_print_obj_name() or remove prototype.
+ */
 #endif
 extern void slv_print_rel_name(FILE *outfile,
                                slv_system_t sys,
                                struct rel_relation *rel);
-/**<  Prints the name of rel to outfile. */
+/**<
+ *  Prints the name of rel to outfile.  If rel_make_name() can't
+ *  generate a name, the global index is printed instead.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param sys     The solver system.
+ *  @param rel     The relation whose name should be printed.
+ *  @todo Move solver/slv_common:slv_print_rel_name() to solver/rel.
+ */
+
 extern void slv_print_var_name(FILE *outfile,
                                slv_system_t sys,
                                struct var_variable *var);
-/**<  Prints the name of var to outfile. */
+/**<
+ *  Prints the name of var to outfile. If var_make_name() can't
+ *  generate a name, the global index is printed instead.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param sys     The solver system.
+ *  @param var     The variable whose name should be printed.
+ *  @todo Move solver/slv_common:slv_print_var_name() to solver/var.
+ */
+
 extern void slv_print_logrel_name(FILE *outfile,
                                   slv_system_t sys,
                                   struct logrel_relation *lrel);
-/**<  Prints the name of lrel to outfile. */
+/**<
+ *  Prints the name of lrel to outfile. If logrel_make_name() can't
+ *  generate a name, the global index is printed instead.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param sys     The solver system.
+ *  @param lrel    The logical relation whose name should be printed.
+ *  @todo Move solver/slv_common:slv_print_logrel_name() to solver/logrel.
+ */
+
 extern void slv_print_dis_name(FILE *outfile,
                                slv_system_t sys,
                                struct dis_discrete *dvar);
-/**<  Prints the name of dvar to outfile. */
+/**<
+ *  Prints the name of dvar to outfile. If dis_make_name() can't
+ *  generate a name, the global index is printed instead.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param sys     The solver system.
+ *  @param dvar    The discrete variable whose name should be printed.
+ *  @todo Move solver/slv_common:slv_print_dis_name() to solver/discrete.
+ */
 
 #ifdef NEWSTUFF
 extern void slv_print_obj_index(FILE *outfile, obj_objective_t obj);
-/**<  Prints the index of obj to outfile. */
+/**<
+ *  Not implemented.
+ *  Prints the index of obj to outfile.
+ *  @todo Implement solver/slv_common:slv_print_obj_index() or remove prototype.
+ */
 #endif
 extern void slv_print_rel_sindex(FILE *outfile, struct rel_relation *rel);
-/**<  Prints the index of rel to outfile. */
-extern void slv_print_var_sindex(FILE *outfile, struct var_variable *var);
-/**<  Prints the index of var to outfile. */
-extern void slv_print_logrel_sindex(FILE *outfile, struct logrel_relation *lrel);
-/**<  Prints the index of lrel to outfile. */
-extern void slv_print_dis_sindex(FILE *outfile, struct dis_discrete *dvar);
-/**<  Prints the index of dvar to outfile. */
-
-/**
- *  <!--  int slv_direct_solve(server,rel,var,file,epsilon,ignore_bounds,scaled) -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  struct var_variable *var;                                    -->
- *  <!--  boolean ignore_bounds;                                       -->
- *  <!--  real64 epsilon;                                              -->
+/**<  
+ *  Prints the index of rel to outfile.
  *
- *  Attempt to directly solve the given relation (equality constraint) for
+ *  @param outfile The stream to receive the output.
+ *  @param rel     The relation whose index should be printed.
+ *  @todo Move solver/slv_common:slv_print_rel_name() to solver/rel.
+ */
+
+extern void slv_print_var_sindex(FILE *outfile, struct var_variable *var);
+/**<
+ *  Prints the index of var to outfile.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param var     The variable whose index should be printed.
+ *  @todo Move solver/slv_common:slv_print_var_name() to solver/var.
+ */
+
+extern void slv_print_logrel_sindex(FILE *outfile, struct logrel_relation *lrel);
+/**<  
+ *  Prints the index of lrel to outfile.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param lrel    The logical relation whose index should be printed.
+ *  @todo Move solver/slv_common:slv_print_logrel_name() to solver/logrel.
+ */
+
+extern void slv_print_dis_sindex(FILE *outfile, struct dis_discrete *dvar);
+/**<
+ *  Prints the index of dvar to outfile.
+ *
+ *  @param outfile The stream to receive the output.
+ *  @param dvar    The discrete variable whose index should be printed.
+ *  @todo Move solver/slv_common:slv_print_dis_name() to solver/discrete.
+ */
+
+extern int slv_direct_solve(slv_system_t server,
+                            struct rel_relation *rel,
+                            struct var_variable *var,
+                            FILE *file,
+                            real64 epsilon,
+                            int ignore_bounds,
+                            int scaled);
+/**<
+ *  Attempts to directly solve the given relation (equality constraint) for
  *  the given variable, leaving the others fixed.  Returns an integer
  *  signifying the status as one of the following three:
  *  <pre>
@@ -912,23 +1175,28 @@ extern void slv_print_dis_sindex(FILE *outfile, struct dis_discrete *dvar);
  *  </pre>
  *  The variable bounds will be upheld, unless ignore_bounds=FALSE.
  *  Residual testing will be against epsilon and either scaled or
- *  unscaled residual according to scaled (no scale <- 0)..
+ *  unscaled residual according to scaled (no scale -> 0).
  *  If file != NULL and there are leftover possible solutions, we
  *  will write about them to file.
- */
-extern int slv_direct_solve(slv_system_t server,
-                            struct rel_relation *rel,
-                            struct var_variable *var,
-                            FILE *file,
-                            real64 epsilon,
-                            int ignore_bounds,
-                            int scaled);
-
-/**
- *  <!--  int slv_direct_log_solve(server,lrel,dvar,file,perturb,insts)-->
- *  <!--  struct logrel_relation *lrel;                                -->
- *  <!--  struct dis_discrete *dvar;                                   -->
  *
+ *  @param server        The slv_system_t (mostly ignored).
+ *  @param rel           The relation to attempt to solve.
+ *  @param var           The variable for which to solve.
+ *  @param file          File stream to receive other possible solutions.
+ *  @param epsilon       Tolerance for testing convergence.
+ *  @param ignore_bounds If TRUE, ignore bounds on variable.
+ *  @param scaled        If TRUE, test scaled residuals against epsilon.
+ *  @todo solver/slv_common:slv_direct_solve() should be in solver/relman
+ *        or solver/slv3.
+ */
+
+extern int slv_direct_log_solve(slv_system_t sys,
+                                struct logrel_relation *lrel,
+                                struct dis_discrete *dvar,
+                                FILE *file,
+                                int perturb,
+                                struct gl_list_t *instances);
+/**<
  *  Attempt to directly solve the given logrelation for the given
  *  discrete variable, leaving the others fixed.  Returns an integer
  *  signifying the status as one of the following three:
@@ -944,93 +1212,105 @@ extern int slv_direct_solve(slv_system_t server,
  *  The flag perturb and the gl_list are used to change the truth
  *  value of some boundaries. This is sometimes useful in
  *  conditional modeling.
+ *
+ *  @param sys        The slv_system_t (mostly ignored).
+ *  @param lrel       The logical relation to attempt to solve.
+ *  @param dvar       The discrete variable for which to solve.
+ *  @param file       File stream to receive other possible solutions.
+ *  @param perturb    If TRUE, perturbs the truth values if necessary to find the solution.
+ *  @param instances  List of instances.
+ *  @todo solver/slv_common:slv_direct_log_solve() should be in solver/logrel
+ *        or solver/slv9.
  */
-extern int slv_direct_log_solve(slv_system_t sys,
-                                struct logrel_relation *lrel,
-                                struct dis_discrete *dvar,
-                                FILE *file,
-                                int perturb,
-                                struct gl_list_t *insts);
 
 #endif
 /*-------------------- END compiler dependent functions --------------------*/
 
 /*
- *  lnkmap functions:
+ * --------------------
+ *  lnkmap functions
+ * --------------------
  */
 
 extern int32 **slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *hj);
 /**<
- *  <!--  map=slv_create_lnkmap(m,n,hl,hi,hj);                         -->
- *  <!--  int32 m, n, hl                                               -->
- *  <!--  int32 *hi, *hj                                               -->
- *  <!--  int32 **map                                                  -->
- *
- *  Builds a row biased mapping array from the hi,hj lists given.
+ *  Builds a row-biased mapping array from the hi,hj lists given.
  *  The map returned has the following format:
  *    - map[i] is a vector describing the incidence in row i of the matrix.
  *    - Let vars=map[i], where vars is int32 *.
  *    - vars[0]=number of incidences in the relation.
  *    - For all 0<=k<vars[0]
- *       - vars[2*k+1]= original column index of some var in the eqn.
- *       - vars[2*k+2]= the lnk list index of element(i,vars[2*k+1])
+ *       - vars[2*k+1] = original column index of some var in the eqn.
+ *       - vars[2*k+2] = the lnk list index of element(i,vars[2*k+1])
  *
- *  The map should only be deallocated by destroy_lnkmap().
- *  The memory allocation for a lnkmap is done efficiently.<br><br>
+ *  The ordering of column data (i.e. vars[2*k+1]) is implementation-defined
+ *  and should not be counted on.  Similarly, the lnk list index (i.e.
+ *  vars[2*k+2]) will be a unique number in the range (0..hl-1), but the
+ *  exact ordering is implementation-defined.  The map should only be
+ *  deallocated by destroy_lnkmap().  The memory allocation for a lnkmap
+ *  is done efficiently.<br><br>
  *
  *  These create an odd compressed row mapping, given the hi and hj
- *  subscript vectors. The primary utility of the lnkmap is that
+ *  subscript vectors.  The primary utility of the lnkmap is that
  *  it can be traversed rapidly when one wants to conditionally map a row of
  *  a Harwell style (arbitrarily ordered) link representation
  *  back into another representation where adding elements to a row
  *  is easily done.<br><br>
  *
- *  hi and hj should specify a unique incidence pattern, that is no
- *  duplicate elements are allowed.  Rowindex and colindex refer to 
- *  the data in hi,hj.
+ *  hi and hj should specify a unique incidence pattern.  That is, duplicate
+ *  (hi, hj) coordinates are not allowed and only 1 of the occurrences will
+ *  end up in the map.  hi should contain row indexes all less than m.  
+ *  hj should contain column indexes all less than n.  If an invalid row/col
+ *  index is encountered, NULL is returned.
  *
- *  @param m  The number of rows expected. The map returned will be this long.
- *  @param n  The number of columns expected.
+ *  @param m  The number of rows expected (> highest index in hi).
+ *            The map returned will be this long.
+ *  @param n  The number of columns expected (> highest index in hj).
  *  @param hl The length of hi and hj.
  *  @param hi The eqn indices of a C numbered sparse matrix list.
  *  @param hj The var indices of a C numbered sparse matrix list.
+ *  @return Pointer to the new lnkmap array, or NULL if an error occurred.
  */
 
-extern int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, int32 len, int32 m);
+extern int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region);
 /**<
- *  <!--  map=slv_lnkmap_from_mtx(mtx,len,m)                           -->
- *  <!--  mtx_matrix_t mtx                                             -->
- *  <!--  int32 len, m                                                 -->
- *  <!--  int32 **map                                                  -->
+ *  Generates a lnkmap from a region of a matrix.
+ *  The length of the map returned will be the order of mtx.  Empty rows
+ *  and columns are allowed in the matrix.  Map entries for rows outside
+ *  the specified region will be 0 even if the row contains non-zero
+ *  elements.  If mtx is NULL, or if the region is invalid for mtx, then
+ *  NULL is returned.<br><br>
  *
- *  Generates a map from a matrix.
- *  Empty rows and columns are allowed in the matrix.
+ *  The map returned has the following format:
+ *    - map[i] is a vector describing the incidence in row i of the matrix.
+ *    - Let vars=map[i], where vars is int32 *.
+ *    - vars[0]=number of non-zeros in the row.
+ *    - For all 0<=k<vars[0]
+ *       - vars[2*k+1] = original column index of some a non-zero element in the row.
+ *       - vars[2*k+2] = the value of the element (i,vars[2*k+1]), cast to int32.
  *
- *  @param mtx  The matrix to map.
- *  @param m    The number of rows expected. The map returned will be this long.
- *  @param len  The number of nonzeros in mtx.
- *
- *  @see slv_create_lnkmap()
+ *  @param mtx    The matrix to map (non-NULL).
+ *  @param region The region of the matrix to map (non-NULL).
+ *  @return Pointer to the new lnkmap array, or NULL if an error occurred.
+ *  @see slv_create_lnkmap() for a more details about lnkmaps.
  */
 
 extern void slv_destroy_lnkmap(int32 **map);
 /**<
- *  <!--  slv_destroy_lnkmap(map);                                     -->
- *  <!--  int32 **map                                                  -->
- *
  *  Deallocate a map created by slv_create_lnkmap() or slv_destroy_lnkmap().
  *  destroy_lnkmap() will tolerate a NULL map as input.
+ *
+ *  @param map The lnkmap to destroy.
  */
 
 extern void slv_write_lnkmap(FILE *fp, int m, int32 **map);
 /**<
- *  <!--  slv_write_lnkmap(fp,m,map);                                  -->
- *  <!--  FILE *fp                                                     -->
- *  <!--  int32 m (same as was created)                                -->
- *  <!--  int32 **map                                                  -->
- *
- *  Print a link map.
+ *  Prints a link map to a file.
  *  write_lnkmap() will tolerate a NULL map as input.
+ *
+ *  @param fp  The file stream to receive the report.
+ *  @param m   The number of rows in map to print.
+ *  @param map The lnkmap to print.
  */
 
 #endif  /* slv_common__already_included */

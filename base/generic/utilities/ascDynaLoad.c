@@ -113,7 +113,7 @@ void *AscDeleteRecord(char *path)
   struct ascend_dlrecord *nextptr, *lastptr, *old;
   void *dlreturn = NULL;
 
-  if ((g_ascend_dllist==NULL) || (NULL == path)) return NULL;
+  if ((g_ascend_dllist == NULL) || (NULL == path)) return NULL;
 
   if (strcmp(path,g_ascend_dllist->path)==0) {
     /* head case */
@@ -173,7 +173,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   HINSTANCE xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -202,9 +202,10 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 #endif /* __WIN32__ */
+
 #if defined(sun) || defined(linux)
 #ifndef MACH
 #include <dlfcn.h>
@@ -213,7 +214,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -226,22 +227,28 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen(path, 1);
-  install = (int (*)())dlsym(xlib, initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
+  }
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib, initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
   }
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"DynamicLoad failed: Null path\n");
@@ -253,16 +260,20 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen(path, 1);
-  install = (int (*)())dlsym(xlib, initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  /*
-   *	Try to install the extension and report success or failure
-   */
-  return (*install)();
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib, initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+  /* Try to install the extension and report success or failure */
+  return (install == NULL) ? 0 : (*install)();
 }
 #else /* MACH */
 int DynamicLoad(CONST char *path, CONST char *initFun)
@@ -273,14 +284,13 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 #endif /* sun */
 
 
-
 #ifdef __osf__
 #include <dlfcn.h>
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -294,21 +304,27 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen((char *)path, 1);
-  install = (int (*)())dlsym(xlib,(char *)initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
+  }
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib,(char *)initFun);
+    if (install==NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
   }
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"DynamicLoad failed: Null path\n");
@@ -320,16 +336,20 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen((char *)path, 1);
-  install = (int (*)())dlsym(xlib,(char *)initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  /*
-   *	Try to install the extension and report success or failure
-   */
-  return (*install)();
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib,(char *)initFun);
+    if (install==NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+  /* Try to install the extension and report success or failure */
+  return (install == NULL) ? 0 : (*install)();
 }
 #endif /* osf */
 
@@ -962,7 +982,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -976,22 +996,29 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen(path, 1);
-  install = (int (*)())dlsym(xlib, initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib, initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+  
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"DynamicLoad failed: Null path\n");
@@ -1003,27 +1030,32 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen(path, 1);
-  install = (int (*)())dlsym(xlib, initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  /*
-   *	Try to install the extension and report success or failure
-   */
-  return (*install)();
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib, initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+  
+  /* Try to install the extension and report success or failure */
+  return (install == NULL) ? 0 : (*install)();
 }
 #endif /* solaris, aix */
 
-
+
 #ifdef _SGI_SOURCE
 #include <dlfcn.h>
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -1037,22 +1069,29 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen(path, 1);
-  install = (int (*)())dlsym(xlib, initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib, initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+  
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"DynamicLoad failed: Null path\n");
@@ -1064,20 +1103,24 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
    *	it does not define the named install proc, report an error
    */
   xlib = dlopen(path, 1);
-  install = (int (*)())dlsym(xlib, initFun);
-  if ((xlib == NULL) || (install==NULL)) {
+  if (xlib == NULL) {
     FPRINTF(stderr,"%s\n",(char *)dlerror());
-    if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  /*
-   *	Try to install the extension and report success or failure
-   */
-  return (*install)();
+  if (NULL != initFun) {
+    install = (int (*)())dlsym(xlib, initFun);
+    if (install == NULL) {
+      FPRINTF(stderr,"%s\n",(char *)dlerror());
+      dlclose(xlib);
+      return 1;
+    }
+  }
+  /* Try to install the extension and report success or failure */
+  return (install == NULL) ? 0 : (*install)();
 }
 #endif /* _SGI_SOURCE */
 
-
+
 #ifdef __hpux
 /*
  * Modified to work with HP/UX 9.X Operating System.
@@ -1094,7 +1137,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   shl_t xlib;
-  int (*install)();
+  int (*install)() = NULL;
   int i;
 
   if (NULL == path) {
@@ -1131,13 +1174,13 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   shl_t xlib;
-  int (*install)();
+  int (*install)() = NULL;
   int i;
 
   if (NULL == path) {
@@ -1168,12 +1211,12 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
   /*
    *	Try to install the extension and report success or failure
    */
-  return (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 #endif /* __hpux */
 
 
-
+
 #ifdef ultrix
 /*
  *  Ultrix 4.x Dynamic Loader Library Version 1.0
@@ -1281,7 +1324,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -1303,7 +1346,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (initFun == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)();
 }
 /*
  * This is where we put a wrapper around all of the
@@ -1312,7 +1355,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
-  int (*install)();
+  int (*install)() = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"DynamicLoad failed: Null path\n");
@@ -1330,10 +1373,8 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
     if ( xlib != NULL ) dlclose(xlib);
     return 1;
   }
-  /*
-   *	Try to install the extension and report success or failure
-   */
-  return (*install)();
+  /* Try to install the extension and report success or failure */
+  return (install == NULL) ? 0 : (*install)();
 }
 
 
@@ -2823,24 +2864,28 @@ _dl_setErrmsg( va_alist )
 #define UNLOAD shl_unload
 #define DLL_CAST (shl_t)
 #define ASC_DLERRSTRING "NULL definition"
+#define UNLOAD_SUCCESS 0
 #endif /* __hpux */
 #ifdef __WIN32__
 #define UNLOAD FreeLibrary
 #define DLLSYM GetProcAddress
 #define DLL_CAST (HINSTANCE)
 #define ASC_DLERRSTRING "unknown"
+#define UNLOAD_SUCCESS TRUE
 #endif /* __WIN32__ */
 #ifndef UNLOAD
 #define UNLOAD dlclose
 #define DLLSYM dlsym
 #define DLL_CAST (void *)
 #define ASC_DLERRSTRING dlerror()
+#define UNLOAD_SUCCESS 0
 #endif /* UNLOAD */
 
 int Asc_DynamicUnLoad(char *path)
 {
   void *dlreturn;
-
+  int retval;
+  
   if (NULL == path) {
     FPRINTF(stderr, "Asc_DynamicUnLoad failed: Null path\n");
     return -3;
@@ -2852,7 +2897,12 @@ int Asc_DynamicUnLoad(char *path)
     return -3;
   }
   FPRINTF(stderr, "Asc_DynamicUnLoad: forgetting & unloading %s \n", path);
-  return UNLOAD(DLL_CAST dlreturn);
+  /* 
+   *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
+   *  A uniform convention is preferable, so trap and return 0 on success.
+   */
+  retval = UNLOAD(DLL_CAST dlreturn);
+  return (retval == UNLOAD_SUCCESS) ? 0 : retval;
 }
 
 /*

@@ -518,6 +518,7 @@ TEST_SOURCES =
   test_set.c
   test_register_solver.c
   test_slv_common.c
+#  test_slv.c
   ;
 
 CCFLAGS on $(TEST_SOURCES) +=
@@ -527,10 +528,8 @@ CCFLAGS on $(TEST_SOURCES) +=
 
 Main $(TEST_PROG) : $(TEST_SOURCES) ;
 MakeLocate $(TEST_PROG)$(SUFEXE) : $(BUILD_DIR) ;
-LinkLibraries $(TEST_PROG) :
-  $(ASC_BASE_LIBS)
-  $(ASC_BASE_LIBS)
-  ..$(SLASH)..$(SLASH)test$(SLASH)libcunit$(SUFLIB) ;
+
+CUNIT_LIB_NAME = libcunit ;
 
 if $(NT)
 {
@@ -539,9 +538,28 @@ if $(NT)
     # need to fix Borland to include library location
     LINKFLAGS on $(TEST_PROG)$(SUFEXE) += -L$(STDLIBPATH) -tWC ;
   }
+  else if $(MINGW) || ( $(TOOLSET) = MINGW )
+  {
+    CUNIT_LIB_NAME = libcunit_mingw ;
+  }
 }
 
 if $(UNIX) || $(OS) = LINUX
 {
     LINKFLAGS on $(TEST_PROG)$(SUFEXE) += $(DL_LIBS) $(MATH_LIBS) ;
 }
+
+LinkLibraries $(TEST_PROG) :
+  $(ASC_BASE_LIBS)
+  $(ASC_BASE_LIBS)
+  ..$(SLASH)..$(SLASH)test$(SLASH)$(CUNIT_LIB_NAME)$(SUFLIB) 
+  ;
+
+#LINKLIBS on $(TEST_PROG)$(SUFEXE) +=
+#    $(FOR_LIBS)
+#    $(PC_LIBS)
+#    $(MATH_LIBS)
+#    $(DL_LIBS)
+#    $(DEBUG_LIBS)
+#    ;
+  

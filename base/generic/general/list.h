@@ -675,7 +675,7 @@ extern void gl_delete(struct gl_list_t *list,
  *  tolerated (and has no effect).  The upper bound is checked by assertion.
  *  If dispose is true then the memory associated with the item will also
  *  be deallocated.  The specified list may not be NULL (checked by
- *  asseretion).<br><br>
+ *  assertion).<br><br>
  *
  *  Complexity: O(gl_length(list))  <br>
  *  This is because all the list items to the right of the deleted

@@ -36,37 +36,59 @@
 #ifndef REDIRECTSTDSTREAMS_H_SEEN
 #define REDIRECTSTDSTREAMS_H_SEEN
 
-/**
+FILE *redirect_stderr(CONST char *filename);
+/**<
  *  Redirects stderr to the specified file.
  *  Returns a pointer to the new stream.  If stderr was already being
  *  redirected to a file, the previous file is closed before the new
- *  redirection is set up.
+ *  redirection is set up.  Returns NULL if stderr could not be
+ *  redirected.
  */
-FILE *redirect_stderr(CONST char *filename);
 
-/**
+FILE *reset_stderr(void);
+/**<
  *  Restores stderr to the console.
  *  This function closes the redirection file (if any) and
  *  restores stderr to console output.  It returns a pointer
- *  to the new stderr stream.
+ *  to the new stderr stream.  Returns NULL if stderr could not
+ *  be reset.
 
  */
-FILE *reset_stderr(void);
 
-/**
+FILE *redirect_stdin(CONST char *filename);
+/**<
  *  Redirects stdin to the specified file.
  *  Returns a pointer to the new stream.  If stdin was already being
  *  redirected to a file, the previous file is closed before the new
- *  redirection is set up.
+ *  redirection is set up.  Returns NULL if stdin could not be
+ *  redirected.
  */
-FILE *redirect_stdin(CONST char *filename);
 
-/**
+FILE *reset_stdin(void);
+/**<
  *  Restores stdin to the console.
  *  This function closes the redirection file (if any) and
  *  restores stdin to console output.  It returns a pointer
- *  to the new stdin stream.
+ *  to the new stdin stream.  Returns NULL if stdin could not 
+ *  be reset.
  */
-FILE *reset_stdin(void);
+
+FILE *redirect_stdout(CONST char *filename);
+/**<
+ *  Redirects stdout to the specified file.
+ *  Returns a pointer to the new stream.  If stdout was already being
+ *  redirected to a file, the previous file is closed before the new
+ *  redirection is set up.  Returns NULL if stdout could not be
+ *  redirected.
+ */
+
+FILE *reset_stdout(void);
+/**<
+ *  Restores stdout to the console.
+ *  This function closes the redirection file (if any) and
+ *  restores stdout to console output.  It returns a pointer
+ *  to the new stdout stream.  Returns NULL if stdout could not
+ *  be reset.
+ */
 
 #endif  /* REDIRECTSTDSTREAMS_H_SEEN */

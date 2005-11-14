@@ -26,6 +26,7 @@
 #include "test_register_solver.h"
 
 #include "test_slv_common.h"
+#include "test_slv.h"
 
 CU_ErrorCode test_register_solver(void)
 {
@@ -37,6 +38,11 @@ CU_ErrorCode test_register_solver(void)
   result = test_register_solver_slv_common();
   if (CUE_SUCCESS != result)
     return result;
+
+  /* solver/slv.c */
+//  result = test_register_solver_slv();
+//  if (CUE_SUCCESS != result)
+//    return result;
 
 
 
