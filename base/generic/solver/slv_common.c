@@ -38,6 +38,7 @@
 #include "utilities/ascSignal.h"
 #include "compiler/compiler.h"
 #include "utilities/ascMalloc.h"
+#include "utilities/ascPanic.h"
 #include "solver/mtx.h"
 #include "solver/slv_types.h"
 #include "solver/rel.h"
@@ -67,6 +68,9 @@
 /**
  ***  Array/vector operations
  ***  ----------------------------
+ ***     slv_create_vector(low,high)
+ ***     slv_init_vector(vec,low,high)
+ ***     slv_destroy_vector(vec)
  ***     slv_zero_vector(vec)
  ***     slv_copy_vector(vec1,vec2)
  ***     prod = slv_inner_product(vec1,vec2)
@@ -75,10 +79,78 @@
  ***     slv_write_vector(file,vec)
  **/
 
+struct vector_data *slv_create_vector(int32 low, int32 high)
+{                                                                
+  struct vector_data *result;
+
+  result = (struct vector_data *)ascmalloc(sizeof(struct vector_data));
+  if (NULL == result)
+    return NULL;
+
+  result->rng = NULL;
+  result->vec = NULL;
+  if (0 != slv_init_vector(result, low, high)) {
+    ascfree(result);
+    result = NULL;
+  }
+  return result;
+}
+
+int slv_init_vector(struct vector_data *vec, int32 low, int32 high)
+{
+  int32 new_size;
+
+  if ((low < 0) || (high < low))
+    return 1;
+
+  if (NULL == vec)
+    return 2;
+
+  if (NULL == vec->rng) {
+    vec->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
+    if (NULL == vec->rng)
+      return 3;
+  }
+  vec->rng = mtx_range(vec->rng, low, high);
+
+  new_size = high + 1;
+  if (NULL == vec->vec) {
+    vec->vec = (real64 *)ascmalloc((new_size)*sizeof(real64));
+    if (NULL == vec->vec) {
+      ascfree(vec->rng);
+      vec->rng = NULL;
+      return 3;
+    }
+  }
+  else {
+    vec->vec = (real64 *)ascrealloc(vec->vec, (new_size)*sizeof(real64));
+  }
+
+  vec->accurate = FALSE;
+  return 0;
+}
+
+void slv_destroy_vector(struct vector_data *vec)
+{
+  if (NULL != vec) {
+    if (NULL != vec->rng)
+      ascfree(vec->rng);
+    if (NULL != vec->vec)
+      ascfree(vec->vec);
+    ascfree(vec);
+  }
+}
+
 void slv_zero_vector( struct vector_data *vec)
 {
   real64 *p;
   int32 len;
+
+  asc_assert((NULL != vec) &&
+             (NULL != vec->rng) &&
+             (NULL != vec->vec) &&
+             (vec->rng->low >= 0) &&
+             (vec->rng->low <= vec->rng->high));
 
   p = vec->vec + vec->rng->low;
   len = vec->rng->high - vec->rng->low + 1;
@@ -90,6 +162,16 @@ void slv_copy_vector( struct vector_data *vec1,struct vector_data *vec2)
   real64 *p1,*p2;
   int32 len;
 
+  asc_assert((NULL != vec1) &&
+             (NULL != vec1->rng) &&
+             (NULL != vec1->vec) &&
+             (vec1->rng->low >= 0) &&
+             (vec1->rng->low <= vec1->rng->high) &&
+             (NULL != vec2) &&
+             (NULL != vec2->rng) &&
+             (NULL != vec2->vec) &&
+             (vec2->rng->low >= 0));
+
   p1 = vec1->vec + vec1->rng->low;
   p2 = vec2->vec + vec2->rng->low;
   len = vec1->rng->high - vec1->rng->low + 1;
@@ -100,7 +182,7 @@ void slv_copy_vector( struct vector_data *vec1,struct vector_data *vec2)
 #define USEDOT TRUE
 /* USEDOT = TRUE is a winner on alphas, hps, and sparc20 */
 real64 slv_inner_product(struct vector_data *vec1 ,
-                               struct vector_data *vec2)
+                         struct vector_data *vec2)
 /**
  ***  Computes inner product between vec1 and vec2, returning result.
  ***  vec1 and vec2 may overlap or even be identical.
@@ -111,6 +193,16 @@ real64 slv_inner_product(struct vector_data *vec1 ,
   real64 sum;
 #endif
   int32 len;
+
+  asc_assert((NULL != vec1) &&
+             (NULL != vec1->rng) &&
+             (NULL != vec1->vec) &&
+             (vec1->rng->low >= 0) &&
+             (vec1->rng->low <= vec1->rng->high) &&
+             (NULL != vec2) &&
+             (NULL != vec2->rng) &&
+             (NULL != vec2->vec) &&
+             (vec2->rng->low >= 0));
 
   p1 = vec1->vec + vec1->rng->low;
   p2 = vec2->vec + vec2->rng->low;
@@ -154,9 +246,21 @@ void slv_matrix_product(mtx_matrix_t mtx, struct vector_data *vec,
   real64 value, *vvec, *pvec;
   int32 lim;
 
-  lim=prod->rng->high;
-  pvec=prod->vec;
-  vvec=vec->vec;
+  asc_assert((NULL != vec) &&
+             (NULL != vec->rng) &&
+             (NULL != vec->vec) &&
+             (vec->rng->low >= 0) &&
+             (vec->rng->low <= vec->rng->high) &&
+             (NULL != prod) &&
+             (NULL != prod->rng) &&
+             (NULL != prod->vec) &&
+             (prod->rng->low >= 0) &&
+             (prod->rng->low <= prod->rng->high) &&
+             (NULL != mtx));
+
+  lim = prod->rng->high;
+  pvec = prod->vec;
+  vvec = vec->vec;
   if( transpose ) {
     for(nz.col = prod->rng->low ; nz.col <= lim ; ++(nz.col) ) {
       pvec[nz.col] = 0.0;
@@ -178,13 +282,27 @@ void slv_matrix_product(mtx_matrix_t mtx, struct vector_data *vec,
   }
 }
 
-void slv_write_vector(FILE *fp,struct vector_data *vec)
+void slv_write_vector(FILE *fp, struct vector_data *vec)
 /**
  ***  Outputs a vector.
  **/
 {
   int32 ndx,hi;
   real64 *vvec;
+
+  if (NULL == fp) {
+    FPRINTF(ASCERR, "Error writing vector in slv_write_vector:  NULL file pointer.\n");
+    return;
+  }
+  if ((NULL == vec) ||
+      (NULL == vec->rng) ||
+      (NULL == vec->vec) ||
+      (vec->rng->low < 0) ||
+      (vec->rng->low > vec->rng->high)) {
+    FPRINTF(ASCERR, "Error writing vector in slv_write_vector:  uninitialized vector.\n");
+    return;
+  }
+
   vvec = vec->vec;
   hi = vec->rng->high;
   FPRINTF(fp,"Norm = %g, Accurate = %s, Vector range = %d to %d\n",
@@ -231,6 +349,9 @@ real64 slv_dot(int32 len, const real64 *p1, const real64 *p2)
 #undef AVMAGIC
 #define AVMAGIC 10
 #endif
+
+  asc_assert((NULL != p1) && (NULL != p2) && (len >= 0));
+
   m = len / AVMAGIC;
   n = len % AVMAGIC;
   if (p1!=p2) {
@@ -342,7 +463,7 @@ real64 slv_dot(int32 len, const real64 *p1, const real64 *p2)
  ***     slv_print_rel_name(out,sys,rel)
  ***     slv_print_dis_name(out,sys,dvar)
  ***     slv_print_logrel_name(out,sys,lrel)
- ***  NOt yet implemented correctly:
+ ***  NOT yet implemented correctly:
  ***     slv_print_obj_name(out,obj)
  ***     slv_print_var_sindex(out,var)
  ***     slv_print_rel_sindex(out,rel)
@@ -351,23 +472,26 @@ real64 slv_dot(int32 len, const real64 *p1, const real64 *p2)
  ***     slv_print_obj_index(out,obj)
  **/
 
-FILE *slv_get_output_file(fp)
-FILE *fp;
 /**
  ***  Returns fp if fp!=NULL, or a file pointer
  ***  open to nul device if fp == NULL.
  **/
+FILE *slv_get_output_file(FILE *fp)
 {
    static FILE *nuldev = NULL;
-   static char fname[] = "/dev/null";
+#ifndef __WIN32__
+   const char fname[] = "/dev/null";
+#else
+   const char fname[] = "nul";
+#endif
 
-   if( fp==NULL ) {
-      if(nuldev==NULL)
-         if( (nuldev=fopen(fname,"w")) == NULL ) {
-            FPRINTF(stderr,"ERROR:  (slv) get_output_file\n");
+   if( fp == NULL ) {
+      if(nuldev == NULL)
+         if( (nuldev = fopen(fname,"w")) == NULL ) {
+            FPRINTF(stderr,"ERROR:  slv_get_output_file\n");
             FPRINTF(stderr,"        Unable to open %s.\n",fname);
          }
-      fp=nuldev;
+      fp = nuldev;
    }
    return(fp);
 }
@@ -378,7 +502,7 @@ FILE *fp;
 
 void slv_print_var_name( FILE *out,slv_system_t sys, struct var_variable *var)
 {
-   char *name=NULL;
+   char *name = NULL;
    if (out == NULL || sys == NULL || var == NULL) return;
    name = var_make_name(sys,var);
    if( *name == '?' ) FPRINTF(out,"%d",var_sindex(var));
@@ -395,7 +519,7 @@ void slv_print_rel_name( FILE *out, slv_system_t sys, struct rel_relation *rel)
    ascfree(name);
 }
 
-void slv_print_dis_name( FILE *out,slv_system_t sys, struct dis_discrete *dvar)
+void slv_print_dis_name( FILE *out, slv_system_t sys, struct dis_discrete *dvar)
 {
    char *name=NULL;
    if (out == NULL || sys == NULL || dvar == NULL) return;
@@ -416,9 +540,7 @@ void slv_print_logrel_name( FILE *out, slv_system_t sys,
 }
 
 #ifdef NEWSTUFF
-void slv_print_obj_name(out,obj)
-FILE *out;
-obj_objective_t obj;
+void slv_print_obj_name(FILE *out, obj_objective_t obj)
 {
    char *name;
    name = obj_make_name(obj);
@@ -428,38 +550,28 @@ obj_objective_t obj;
 }
 #endif
 
-void slv_print_var_sindex(out,var)
-FILE *out;
-struct var_variable *var;
+void slv_print_var_sindex(FILE *out, struct var_variable *var)
 {
    FPRINTF(out,"%d",var_sindex(var));
 }
 
-void slv_print_rel_sindex(out,rel)
-FILE *out;
-struct rel_relation *rel;
+void slv_print_rel_sindex(FILE *out, struct rel_relation *rel)
 {
    FPRINTF(out,"%d",rel_sindex(rel));
 }
 
-void slv_print_dis_sindex(out,dvar)
-FILE *out;
-struct dis_discrete *dvar;
+void slv_print_dis_sindex(FILE *out, struct dis_discrete *dvar)
 {
    FPRINTF(out,"%d",dis_sindex(dvar));
 }
 
-void slv_print_logrel_sindex(out,lrel)
-FILE *out;
-struct logrel_relation *lrel;
+void slv_print_logrel_sindex(FILE *out, struct logrel_relation *lrel)
 {
    FPRINTF(out,"%d",logrel_sindex(lrel));
 }
 
 #ifdef NEWSTUFF
-void slv_print_obj_index(out,obj)
-FILE *out;
-struct rel_relation *rel;
+void slv_print_obj_index(FILE *out, obj_objective_t obj)
 {
    FPRINTF(out,"%d",obj_index(obj));
 }
@@ -468,9 +580,6 @@ struct rel_relation *rel;
 #define destroy_array(p)  \
    if( (p) != NULL ) ascfree((p))
 
-int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
-                     struct var_variable *var, FILE *fp,
-                     real64 epsilon, int ignore_bounds, int scaled)
 /**
  ***  Attempt to directly solve the given relation (equality constraint) for
  ***  the given variable, leaving the others fixed.  Returns an integer
@@ -482,10 +591,13 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
  ***
  ***  The variable bounds will be upheld, unless they are to be ignored.
  **/
+int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
+                     struct var_variable *var, FILE *fp,
+                     real64 epsilon, int ignore_bounds, int scaled)
 {
-  int32 able,status;
-  int nsolns,allsolns;
-  real64 *slist,save;
+  int32 able, status;
+  int nsolns, allsolns;
+  real64 *slist, save;
 
   slist = relman_directly_solve_new(rel,var,&able,&nsolns,epsilon);
   if( !able ) {
@@ -501,7 +613,7 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
       save = var_value(var);
       var_set_value(var,var_lower_bound(var));
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
-      relman_eval(rel,&status,SAFE_FIX_ME);
+      (void)relman_eval(rel,&status,SAFE_FIX_ME);
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
       if (scaled) {
         if( relman_calc_satisfied_scaled(rel,epsilon) ) break;
@@ -513,7 +625,7 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
       save = var_value(var);
       var_set_value(var,var_upper_bound(var));
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
-      relman_eval(rel,&status,SAFE_FIX_ME);
+      (void)relman_eval(rel,&status,SAFE_FIX_ME);
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
       if (scaled) {
         if( relman_calc_satisfied_scaled(rel,epsilon) ) break;
@@ -524,7 +636,7 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
     } else {
       var_set_value(var,slist[nsolns]);
       Asc_SignalHandlerPush(SIGFPE,SIG_IGN);
-      relman_eval(rel,&status,SAFE_FIX_ME);
+      (void)relman_eval(rel,&status,SAFE_FIX_ME);
       Asc_SignalHandlerPop(SIGFPE,SIG_IGN);
       break;
     }
@@ -545,9 +657,6 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
 }
 
 
-int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
-                         struct dis_discrete *dvar, FILE *fp, int perturb,
-			 struct gl_list_t *insts)
 /**
  ***  Attempt to directly solve the given relation (equality constraint) for
  ***  the given variable, leaving the others fixed.  Returns an integer
@@ -559,6 +668,9 @@ int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
  ***             of the variable and display an error message.
  ***    -1  ==>  No solution found.
  **/
+int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
+                         struct dis_discrete *dvar, FILE *fp, int perturb,
+                         struct gl_list_t *insts)
 {
   int32 able;
   int32 nsolns, c;
@@ -587,61 +699,112 @@ int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
   }
 }
 
+#endif    /* SLV_INSTANCES */
 
-#endif
-
-int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, int32 len, int32 m)
+int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *clientregion)
 {
-  int32 **map,*data,rl;
+  int32 **map, *data, rl, order;
   real64 val;
   mtx_coord_t coord;
+  mtx_range_t range;
+  mtx_region_t region;
 
-  if (mtx==NULL) {
+  if (mtx == NULL) {
     FPRINTF(stderr,"Warning: slv_lnkmap_from_mtx called with null mtx\n");
     return NULL;
   }
-  data=(int32 *)ascmalloc((m+2*len)*sizeof(int32));
-  map=(int **)ascmalloc(m*sizeof(void *));
-  for(coord.row=0; coord.row < m; coord.row ++) {
-    rl=mtx_nonzeros_in_row(mtx,coord.row,mtx_ALL_COLS);
-    map[coord.row]=data;
-    data[0]=rl;
-    data++;
-    coord.col=mtx_FIRST;
-    while( val=mtx_next_in_row(mtx,&coord,mtx_ALL_COLS),
-           coord.col != mtx_LAST) {
-      data[0]=coord.col;
-      data[1]= (int32)ascnint(val);
-      data+=2;
+
+  order = mtx_order(mtx);
+  if (clientregion != NULL) {
+    if ((clientregion->row.low < 0) ||
+        (clientregion->row.high > (order-1)) ||
+        (clientregion->col.low < 0) ||
+        (clientregion->col.high > (order-1))) {
+      FPRINTF(stderr,"Warning: slv_lnkmap_from_mtx called with null or invalid region\n");
+      return NULL;
     }
+    mtx_region(&region, clientregion->row.low, clientregion->row.high, 
+                        clientregion->col.low, clientregion->col.high);
+  } else {
+    mtx_region(&region, 0, order-1, 0, order-1);
+  }
+
+  range.low = region.col.low;
+  range.high = region.col.high;
+
+  data = (int32 *)ascmalloc((order+2*mtx_nonzeros_in_region(mtx, &region))*sizeof(int32));
+  if (NULL == data) {
+    return NULL;
+  }
+  map = (int32 **)ascmalloc(order*sizeof(int32 *));
+  if (NULL == map) {
+    ascfree(data);
+    return NULL;
+  }
+  for (coord.row=0 ; coord.row<region.row.low ; ++coord.row) {
+    map[coord.row] = data;
+    data[0] = 0;
+    ++data;
+  }
+  for(coord.row=region.row.low ; coord.row <= region.row.high ; coord.row ++) {
+    rl = mtx_nonzeros_in_row(mtx, coord.row, &range);
+    map[coord.row] = data;
+    data[0] = rl;
+    data++;
+    coord.col = mtx_FIRST;
+    while( val = mtx_next_in_row(mtx, &coord, &range),
+           coord.col != mtx_LAST) {
+      data[0] = coord.col;
+      data[1] = (int32)ascnint(val);
+      data += 2;
+    }
+  }
+  for (coord.row=(region.row.high+1) ; coord.row<order ; ++coord.row) {
+    map[coord.row] = data;
+    data[0] = 0;
+    ++data;
   }
   return map;
 }
-int32 **slv_create_lnkmap(int m, int n, int len, int *hi, int *hj) {
+
+int32 **slv_create_lnkmap(int m, int n, int len, int *hi, int *hj) 
+{
   mtx_matrix_t mtx;
   mtx_coord_t coord;
   int32 i, **map;
 
-  mtx=mtx_create();
+  mtx = mtx_create();
+  if (NULL == mtx) {
+    FPRINTF(stderr,"Warning: slv_create_lnkmap called with null mtx\n");
+    return NULL;
+  }
   mtx_set_order(mtx,MAX(m,n));
-  for (i=0;i <len; i++) {
-    coord.row=hi[i];
-    coord.col=hj[i];
+  for (i=0 ; i<len ; i++) {
+    if ((hi[i] >=  m) || (hj[i] >= n)) {
+      FPRINTF(stderr,"Warning: index out of range in slv_create_lnkmap\n");
+      mtx_destroy(mtx);
+      return NULL;
+    }
+    coord.row = hi[i];
+    coord.col = hj[i];
     mtx_fill_value(mtx,&coord,(real64)i);
   }
-  map=slv_lnkmap_from_mtx(mtx,len,m);
+  map = slv_lnkmap_from_mtx(mtx,mtx_ENTIRE_MATRIX);
   mtx_destroy(mtx);
   return map;
 }
 
-void slv_destroy_lnkmap(int32 **map) {
+
+void slv_destroy_lnkmap(int32 **map) 
+{
   if (NOTNULL(map)) {
     ascfree(map[0]);
     ascfree(map);
   }
 }
 
-void slv_write_lnkmap(FILE *fp, int32 m, int32 **map) {
+void slv_write_lnkmap(FILE *fp, int32 m, int32 **map) 
+{
   int32 i,j,nv, *v;
   if (ISNULL(map)) {
     FPRINTF(stderr,"slv_write_lnkmap: Cannot write NULL lnkmap\n");

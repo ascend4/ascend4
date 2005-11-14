@@ -126,14 +126,14 @@
 #define mem_code_address(ptr) ((long)(ptr))
 
 #define mem_move_cast(from,too,nbytes) \
-   mem_move((POINTER)(from),(POINTER)(too),(unsigned)(nbytes))
+   mem_move((POINTER)(from),(POINTER)(too),(size_t)(nbytes))
 /**<
  *  Copies nbytes of data from memory location from to memory location too.
  *  The memory regions can be overlapping.
  *
- *  @param from   unsigned, pointer to memory to copy from.
- *  @param too    unsigned, pointer to memory to receive copy.
- *  @param nbytes unsigned, the number of bytes to copy.
+ *  @param from   Pointer to memory to copy from.
+ *  @param too    Pointer to memory to receive copy.
+ *  @param nbytes The number of bytes to copy (size_t).
  *  @return No return value.
  *  @see mem_move()
  */
@@ -150,9 +150,9 @@ extern void mem_move(POINTER from, POINTER too, size_t nbytes);
  *  Copies nbytes of data from memory location from to memory location too.
  *  The memory regions can NOT be overlapping.
  *
- *  @param from   unsigned, pointer to memory to copy from.
- *  @param too    unsigned, pointer to memory to receive copy.
- *  @param nbytes size_t, the number of bytes to copy.
+ *  @param from   Pointer to memory to copy from.
+ *  @param too    Pointer to memory to receive copy.
+ *  @param nbytes The number of bytes to copy (size_t).
  *  @return No return value.
  *  @see mem_move_disjoint()
  */
@@ -168,9 +168,9 @@ extern void mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
 /**<
  *  Replaces nbytes of data at memory location too with byte.
  *
- *  @param too    unsigned, pointer to start of block to be modified.
- *  @param byte   unsigned, the character to write.
- *  @param nbytes size_t, the number of bytes to modify.
+ *  @param too    Pointer to start of block to be modified.
+ *  @param byte   The character to write (unsigned int).
+ *  @param nbytes The number of bytes to modify (size_t).
  *  @return No return value.
  *  @see mem_repl_byte()
  */
@@ -188,9 +188,9 @@ extern void mem_repl_byte(POINTER too, unsigned byte, size_t nbytes);
  *  byte is ignored - it is a placeholder for mem_repl_byte
  *  substitutability.
  *
- *  @param too    unsigned, pointer to start of block to be modified.
- *  @param byte   unsigned, ignored.
- *  @param nbytes size_t, the number of bytes to zero.
+ *  @param too    Pointer to start of block to be modified.
+ *  @param byte   Ignored (unsigned).
+ *  @param nbytes The number of bytes to zero (size_t).
  *  @return No return value.
  *  @see mem_zero_byte()
  */
@@ -206,9 +206,9 @@ extern void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes);
 /**<
  *  Replaces nwords of data at memory location too with word.
  *
- *  @param too    unsigned, pointer to start of block to be modified.
- *  @param word   unsigned, the word to write.
- *  @param nbytes size_t, the number of bytes to modify.
+ *  @param too    Pointer to start of block to be modified.
+ *  @param word   The word to write (unsigned).
+ *  @param nbytes The number of bytes to modify (size_t).
  *  @return No return value.
  *  @see mem_repl_word()
  */

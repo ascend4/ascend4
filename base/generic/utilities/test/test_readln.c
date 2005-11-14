@@ -63,7 +63,7 @@ static void test_readln(void)
     infile = redirect_stdin(infilename);
     CU_TEST(-1 == readln(NULL, STR_LEN));             /* NULL str */
     rewind(infile);
-    CU_TEST(0 == readln(str1, 0));                   /* max = 0 */
+    CU_TEST(0 == readln(str1, 0));                    /* max = 0 */
     rewind(infile);
     CU_TEST(-1 == readln(str1, STR_LEN));             /* read, but stream empty */
     reset_stdin();

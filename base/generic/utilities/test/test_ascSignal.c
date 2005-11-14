@@ -33,33 +33,33 @@
 
 static jmp_buf my_jmp_buf1;
 
-static int handler1_called;
-static int handler1_sigval;
+static int f_handler1_called;
+static int f_handler1_sigval;
 /*
  *  Signal handler for unit tests.
- *  Resets the signal handlers and sets handler1_called to
- *  TRUE and handler1_sigval to the signal type code (-1 if
+ *  Resets the signal handlers and sets f_handler1_called to
+ *  TRUE and f_handler1_sigval to the signal type code (-1 if
  *  an unsupported sigval).  Then longjmp's using
  *  my_jmp_buf1 and the sigval.
  */
 void my_handler1(int sigval)
 {
-  handler1_called = TRUE;
+  f_handler1_called = TRUE;
   Asc_SignalRecover(FALSE);
   switch (sigval)
   {
     case SIGFPE:
-      handler1_sigval = SIGFPE;
+      f_handler1_sigval = SIGFPE;
       FPRESET;
       break;
     case SIGINT:
-      handler1_sigval = SIGINT;
+      f_handler1_sigval = SIGINT;
       break;
     case SIGSEGV:
-      handler1_sigval = SIGSEGV;
+      f_handler1_sigval = SIGSEGV;
       break;
     default:
-      handler1_sigval = -1;
+      f_handler1_sigval = -1;
       break;
   }
   longjmp(my_jmp_buf1, sigval);
@@ -67,33 +67,33 @@ void my_handler1(int sigval)
 
 static jmp_buf my_jmp_buf2;
 
-static int handler2_called;
-static int handler2_sigval;
+static int f_handler2_called;
+static int f_handler2_sigval;
 /*
  *  Signal handler for unit tests.
- *  Resets the signal handlers and sets handler1_called to
- *  TRUE and handler1_sigval to the signal type code (-1 if
+ *  Resets the signal handlers and sets f_handler1_called to
+ *  TRUE and f_handler1_sigval to the signal type code (-1 if
  *  an unsupported sigval).  Then longjmp's using
  *  my_jmp_buf1 and the sigval.
  */
 void my_handler2(int sigval)
 {
-  handler2_called = TRUE;
+  f_handler2_called = TRUE;
   Asc_SignalRecover(FALSE);
   switch (sigval)
   {
     case SIGFPE:
-      handler2_sigval = SIGFPE;
+      f_handler2_sigval = SIGFPE;
       FPRESET;
       break;
     case SIGINT:
-      handler2_sigval = SIGINT;
+      f_handler2_sigval = SIGINT;
       break;
     case SIGSEGV:
-      handler2_sigval = SIGSEGV;
+      f_handler2_sigval = SIGSEGV;
       break;
     default:
-      handler2_sigval = -1;
+      f_handler2_sigval = -1;
       break;
   }
   longjmp(my_jmp_buf2, sigval);
@@ -118,12 +118,12 @@ static void test_ascSignal(void)
   /* no point in testing if the functionality is disabled */
   CU_FAIL("Signal handler manager not enabled.");
 #else
-
+  
   old_fpe_handler = signal(SIGFPE, my_handler1);        /* save any pre-existing handlers */
   old_int_handler = signal(SIGINT, my_handler1);
   old_seg_handler = signal(SIGSEGV, my_handler1);
 
-  /* set up pooling & recycling */
+  /* make sure list system is initialized - needed by Asc_SignalInit() */
   if (FALSE == gl_pool_initialized()) {
     gl_init();
     gl_init_pool();
@@ -256,6 +256,8 @@ static void test_ascSignal(void)
   }
   CU_TEST(TRUE == signal1_caught);
 
+Asc_SignalRecover(TRUE);
+
   CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, Asc_SignalTrap));
   CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, Asc_SignalTrap));
@@ -270,10 +272,10 @@ static void test_ascSignal(void)
 
   /* test typical use with nesting of handlers */
 
-  handler1_called = FALSE;                              /* initialize flags for detecting flow */
-  handler1_sigval = 0;
-  handler2_called = FALSE;
-  handler2_sigval = 0;
+  f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
+  f_handler1_sigval = 0;
+  f_handler2_called = FALSE;
+  f_handler2_sigval = 0;
   signal1_caught = FALSE;
   signal2_caught = FALSE;
   signal3_caught = FALSE;
@@ -287,50 +289,50 @@ static void test_ascSignal(void)
          raise(SIGFPE);
       }
       else {
-        CU_TEST(handler1_called == FALSE);
-        CU_TEST(handler1_sigval == 0);
-        CU_TEST(handler2_called == FALSE);
-        CU_TEST(handler2_sigval == 0);
+        CU_TEST(f_handler1_called == FALSE);
+        CU_TEST(f_handler1_sigval == 0);
+        CU_TEST(f_handler2_called == FALSE);
+        CU_TEST(f_handler2_sigval == 0);
         signal3_caught = TRUE;
       }
       CU_TEST(FALSE == signal1_caught);
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
       CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, Asc_SignalTrap));
-      handler1_called = FALSE;
-      handler1_sigval = 0;
-      handler2_called = FALSE;
-      handler2_sigval = 0;
+      f_handler1_called = FALSE;
+      f_handler1_sigval = 0;
+      f_handler2_called = FALSE;
+      f_handler2_sigval = 0;
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
       raise(SIGFPE);
     }
     else {
-      CU_TEST(handler1_called == FALSE);
-      CU_TEST(handler1_sigval == 0);
-      CU_TEST(handler2_called == TRUE);
-      CU_TEST(handler2_sigval == SIGFPE);
+      CU_TEST(f_handler1_called == FALSE);
+      CU_TEST(f_handler1_sigval == 0);
+      CU_TEST(f_handler2_called == TRUE);
+      CU_TEST(f_handler2_sigval == SIGFPE);
       signal2_caught = TRUE;
     }
     CU_TEST(FALSE == signal1_caught);
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
     CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler2));
-    handler1_called = FALSE;
-    handler1_sigval = 0;
-    handler2_called = FALSE;
-    handler2_sigval = 0;
+    f_handler1_called = FALSE;
+    f_handler1_sigval = 0;
+    f_handler2_called = FALSE;
+    f_handler2_sigval = 0;
     signal1_caught = FALSE;
     signal2_caught = FALSE;
     signal3_caught = FALSE;
     raise(SIGFPE);
   }
   else {
-    CU_TEST(handler1_called == TRUE);
-    CU_TEST(handler1_sigval == SIGFPE);
-    CU_TEST(handler2_called == FALSE);
-    CU_TEST(handler2_sigval == 0);
+    CU_TEST(f_handler1_called == TRUE);
+    CU_TEST(f_handler1_sigval == SIGFPE);
+    CU_TEST(f_handler2_called == FALSE);
+    CU_TEST(f_handler2_sigval == 0);
     signal1_caught = TRUE;
   }
   CU_TEST(TRUE == signal1_caught);
@@ -338,10 +340,10 @@ static void test_ascSignal(void)
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGFPE, my_handler1));
 
-  handler1_called = FALSE;                              /* initialize flags for detecting flow */
-  handler1_sigval = 0;
-  handler2_called = FALSE;
-  handler2_sigval = 0;
+  f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
+  f_handler1_sigval = 0;
+  f_handler2_called = FALSE;
+  f_handler2_sigval = 0;
   signal1_caught = FALSE;
   signal2_caught = FALSE;
   signal3_caught = FALSE;
@@ -355,50 +357,50 @@ static void test_ascSignal(void)
          raise(SIGINT);
       }
       else {
-        CU_TEST(handler1_called == TRUE);
-        CU_TEST(handler1_sigval == SIGINT);
-        CU_TEST(handler2_called == FALSE);
-        CU_TEST(handler2_sigval == 0);
+        CU_TEST(f_handler1_called == TRUE);
+        CU_TEST(f_handler1_sigval == SIGINT);
+        CU_TEST(f_handler2_called == FALSE);
+        CU_TEST(f_handler2_sigval == 0);
         signal3_caught = TRUE;
       }
       CU_TEST(FALSE == signal1_caught);
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
       CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler1));
-      handler1_called = FALSE;
-      handler1_sigval = 0;
-      handler2_called = FALSE;
-      handler2_sigval = 0;
+      f_handler1_called = FALSE;
+      f_handler1_sigval = 0;
+      f_handler2_called = FALSE;
+      f_handler2_sigval = 0;
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
       raise(SIGINT);
     }
     else {
-      CU_TEST(handler1_called == FALSE);
-      CU_TEST(handler1_sigval == 0);
-      CU_TEST(handler2_called == FALSE);
-      CU_TEST(handler2_sigval == 0);
+      CU_TEST(f_handler1_called == FALSE);
+      CU_TEST(f_handler1_sigval == 0);
+      CU_TEST(f_handler2_called == FALSE);
+      CU_TEST(f_handler2_sigval == 0);
       signal2_caught = TRUE;
     }
     CU_TEST(FALSE == signal1_caught);
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
     CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, Asc_SignalTrap));
-    handler1_called = FALSE;
-    handler1_sigval = 0;
-    handler2_called = FALSE;
-    handler2_sigval = 0;
+    f_handler1_called = FALSE;
+    f_handler1_sigval = 0;
+    f_handler2_called = FALSE;
+    f_handler2_sigval = 0;
     signal1_caught = FALSE;
     signal2_caught = FALSE;
     signal3_caught = FALSE;
     raise(SIGINT);
   }
   else {
-    CU_TEST(handler1_called == FALSE);
-    CU_TEST(handler1_sigval == 0);
-    CU_TEST(handler2_called == TRUE);
-    CU_TEST(handler2_sigval == SIGINT);
+    CU_TEST(f_handler1_called == FALSE);
+    CU_TEST(f_handler1_sigval == 0);
+    CU_TEST(f_handler2_called == TRUE);
+    CU_TEST(f_handler2_sigval == SIGINT);
     signal1_caught = TRUE;
   }
   CU_TEST(TRUE == signal1_caught);
@@ -406,10 +408,10 @@ static void test_ascSignal(void)
   CU_TEST(FALSE == signal3_caught);
   CU_TEST(0 == Asc_SignalHandlerPop(SIGINT, my_handler2));
 
-  handler1_called = FALSE;                              /* initialize flags for detecting flow */
-  handler1_sigval = 0;
-  handler2_called = FALSE;
-  handler2_sigval = 0;
+  f_handler1_called = FALSE;                              /* initialize flags for detecting flow */
+  f_handler1_sigval = 0;
+  f_handler2_called = FALSE;
+  f_handler2_sigval = 0;
   signal1_caught = FALSE;
   signal2_caught = FALSE;
   signal3_caught = FALSE;
@@ -423,50 +425,50 @@ static void test_ascSignal(void)
          raise(SIGSEGV);
       }
       else {
-        CU_TEST(handler1_called == TRUE);
-        CU_TEST(handler1_sigval == SIGSEGV);
-        CU_TEST(handler2_called == FALSE);
-        CU_TEST(handler2_sigval == 0);
+        CU_TEST(f_handler1_called == TRUE);
+        CU_TEST(f_handler1_sigval == SIGSEGV);
+        CU_TEST(f_handler2_called == FALSE);
+        CU_TEST(f_handler2_sigval == 0);
         signal3_caught = TRUE;
       }
       CU_TEST(FALSE == signal1_caught);
       CU_TEST(FALSE == signal2_caught);
       CU_TEST(TRUE == signal3_caught);
       CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, my_handler1));
-      handler1_called = FALSE;
-      handler1_sigval = 0;
-      handler2_called = FALSE;
-      handler2_sigval = 0;
+      f_handler1_called = FALSE;
+      f_handler1_sigval = 0;
+      f_handler2_called = FALSE;
+      f_handler2_sigval = 0;
       signal1_caught = FALSE;
       signal2_caught = FALSE;
       signal3_caught = FALSE;
       raise(SIGSEGV);
     }
     else {
-      CU_TEST(handler1_called == FALSE);
-      CU_TEST(handler1_sigval == 0);
-      CU_TEST(handler2_called == TRUE);
-      CU_TEST(handler2_sigval == SIGSEGV);
+      CU_TEST(f_handler1_called == FALSE);
+      CU_TEST(f_handler1_sigval == 0);
+      CU_TEST(f_handler2_called == TRUE);
+      CU_TEST(f_handler2_sigval == SIGSEGV);
       signal2_caught = TRUE;
     }
     CU_TEST(FALSE == signal1_caught);
     CU_TEST(TRUE == signal2_caught);
     CU_TEST(FALSE == signal3_caught);
     CU_TEST(0 == Asc_SignalHandlerPop(SIGSEGV, my_handler2));
-    handler1_called = FALSE;
-    handler1_sigval = 0;
-    handler2_called = FALSE;
-    handler2_sigval = 0;
+    f_handler1_called = FALSE;
+    f_handler1_sigval = 0;
+    f_handler2_called = FALSE;
+    f_handler2_sigval = 0;
     signal1_caught = FALSE;
     signal2_caught = FALSE;
     signal3_caught = FALSE;
     raise(SIGSEGV);
   }
   else {
-    CU_TEST(handler1_called == FALSE);
-    CU_TEST(handler1_sigval == 0);
-    CU_TEST(handler2_called == FALSE);
-    CU_TEST(handler2_sigval == 0);
+    CU_TEST(f_handler1_called == FALSE);
+    CU_TEST(f_handler1_sigval == 0);
+    CU_TEST(f_handler2_called == FALSE);
+    CU_TEST(f_handler2_sigval == 0);
     signal1_caught = TRUE;
   }
   CU_TEST(TRUE == signal1_caught);
@@ -492,6 +494,10 @@ static void test_ascSignal(void)
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
 
+  if (TRUE == i_initialized_lists) {
+    gl_destroy_pool();
+  }
+
 #endif  /* NO_SIGNAL_TRAPS */
 
   if (NULL != old_fpe_handler)                /* restore any pre-existing handlers */
@@ -501,9 +507,6 @@ static void test_ascSignal(void)
   if (NULL != old_seg_handler)
     signal(SIGSEGV, old_seg_handler);
 
-  if (TRUE == i_initialized_lists) {          /* clean up list system if necessary */
-    gl_destroy_pool();
-  }
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }
 

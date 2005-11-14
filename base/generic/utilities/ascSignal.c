@@ -357,7 +357,7 @@ int Asc_SignalHandlerPop(int signum, SigHandler tp)
     FPRINTF(ASCERR,"Asc_Signal (%d) stack pop mismatch.\n",signum);
     return err;
   }
-  Asc_SignalRecover(0);
+  Asc_SignalRecover(TRUE);
   return 0;
 }
 
@@ -365,9 +365,7 @@ void Asc_SignalTrap(int sigval) {
 #ifndef NO_SIGNAL_TRAPS
   switch(sigval) {
   case SIGFPE:
-#ifndef __WIN32__
     FPRINTF(ASCERR,"Asc_SignalTrap: SIGFPE caught\n");
-#endif
     FPRESET;
     longjmp(g_fpe_env,sigval);
     break;
@@ -380,7 +378,7 @@ void Asc_SignalTrap(int sigval) {
     longjmp(g_seg_env,sigval);
     break;
   default:
-    FPRINTF(ASCERR,"Asc_SignalTrap: Installed on unknown signal %d.\n", sigval);
+    FPRINTF(ASCERR,"Asc_SignalTrap: Installed on unexpected signal (# %d).\n", sigval);
     FPRINTF(ASCERR,"Asc_SignalTrap: Returning ... who knows where.");
     break;
   }

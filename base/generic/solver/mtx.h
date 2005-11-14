@@ -277,11 +277,11 @@
  **
  **   cur_row,
  **   cur_col, or
- **   row,col:      a int32 denoting the ith(jth) row(column) as the
- **                 the matrix is currently permuted.
+ **   row,col:      an int32 denoting the ith(jth) row(column) as the
+ **                 matrix is currently permuted (range 0..order-1).
  **   org_row, org_col:
- **                 an  int32 denoting the ith(jth) row(col) as the
- **                 matrix is ordered in the unpermuted state.
+ **                 an int32 denoting the ith(jth) row(col) as the matrix
+ **                 is ordered in the unpermuted state (range 0..order-1).
  **
  **   vec:          an array of real64, generally of size
  **                 mtx->order or larger. Indexing scheme is indeterminate.

@@ -120,8 +120,12 @@ extern int Asc_DynamicUnLoad(CONST char *path);
  *  path will always result in an error condition (-3) being returned.
  *
  *  @param path     Path to the dynamic library to unload.
- *  @return The return value of dlclose/shl_unload/FreeLibrary, or
- *          -3 if there is a problem locating or unloading the library.
+ *  @return Returns 0 if the library was successfully located and unloaded,
+ *          -3 if the library was not located, or the return value of 
+ *          dlclose/shl_unload/FreeLibrary otherwise.  Note that the
+ *          return value conventions differ between platforms, so if you
+ *          get a return value that is not 0 or -3, you are in platform-
+ *          specific hell.
  */
 
 extern void *Asc_DynamicSymbol(CONST char *libraryname,

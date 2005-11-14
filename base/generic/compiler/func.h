@@ -152,14 +152,26 @@ extern double erf(double);
 #endif /* HAVE_ERF */
 
 #ifdef NDEBUG
-#define ascnint(a) (((int) (a)>=0.0 ? floor((a) + 0.5) : -floor(0.5 - (a))))
+#define ascnint(d) (((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d))))
+/**< 
+ *  Converts a double to the nearest integer (release version).
+ *  @param d double, the real number to convert.
+ *  @return The nearest integer as an int.
+ */
 #else
 #define ascnint(a) ascnintF(a)
-extern int DLEXPORT ascnintF(double);
-#endif
-/**<
- * int j = ascnint((double) x); converts double in to nearest integer;
+/**< 
+ *  Converts a double to the nearest integer (debug version).
+ *  @param d double, the real number to convert.
+ *  @return The nearest integer as an int.
  */
+extern int DLEXPORT ascnintF(double);
+/**<
+ *  Implementation function for debug version of ascnint().
+ *  Do not call this function directly - use ascnint() instead.
+ */
+
+#endif
 
 extern double DLEXPORT dln(double x);
 extern double DLEXPORT dln2(double x);
