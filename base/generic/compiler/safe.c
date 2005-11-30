@@ -214,9 +214,7 @@ double safe_rec(double x,enum safe_err *safe)
    if( x == 0.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  ((Safe)) safe_rec\n");
-	 FPRINTF(stderr,"        Divide by zero undefined.\n");
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_rec: divide by zero undefined, returning %g",bogus);
       }
       *safe = safe_div_by_zero;
       return( bogus );
@@ -239,16 +237,12 @@ double safe_cube(register double x,enum safe_err *safe)
       if ( fabs(x) > CUBRTHUGE) {
         bogus=BIGNUM;
         if( safe_print_errors ) {
-           FPRINTF(stderr,"ERROR:  ((Safe)) safe_cube\n");
-           FPRINTF(stderr,"        Overflow calculation requested \n");
-           FPRINTF(stderr,"        Returning %g.\n",bogus);
+           error_reporter(ASC_USER_ERROR,NULL,0,"safe_cube: Overflow calculation requested, returning %g.",bogus);
         }
       } else {
         bogus=0.0;
         if( safe_print_errors ) {
-             FPRINTF(stderr,"ERROR:  ((Safe)) safe_cube\n");
-             FPRINTF(stderr,"        Underflow calculation requested \n");
-             FPRINTF(stderr,"        Returning %g.\n",bogus);
+             error_reporter(ASC_USER_ERROR,NULL,0,"safe_cube: Underflow calculation requested, returning %g.",bogus);
         }
       }
       *safe = safe_underflow;
@@ -273,9 +267,7 @@ double safe_erf_inv(double x,enum safe_err *safe)
    if( x >= 1.0 ) {
       double bogus = sign*BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_erf_inv\n");
-	 FPRINTF(stderr,"        Inverse erf is undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_erf_inv: Inverse erf is undefined at %g, returning %g",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -291,8 +283,7 @@ double safe_erf_inv(double x,enum safe_err *safe)
        ***  always be positive (?).
        **/
       if( dy < 0.0 && safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_erf_inv\n");
-	 FPRINTF(stderr,"        Found negative slope of %g on erf.\n",dy);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_erf_inv: Found negative slope of %g on erf.",dy);
       }
    } while( safe_ok && dy > CONV );
    return( y * sign );
@@ -306,9 +297,7 @@ double safe_lnm_inv(double x,enum safe_err *safe)
    if( x > (DBL_MAX > 1.0e308 ? 709.196209 : log(DBL_MAX)) ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-         FPRINTF(stderr,"ERROR:  (safe) safe_lnm_inv\n");
-         FPRINTF(stderr,"        Argument %g too large.\n",x);
-         FPRINTF(stderr,"        Returning %g.\n",bogus);
+         error_reporter(ASC_USER_ERROR,NULL,0,"safe_lnm_inv: Argument %g too large, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -386,9 +375,7 @@ double safe_arcsin_D0(double x,enum safe_err *safe)
    if( x < -1.0 || 1.0 < x ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_arcsin_D0\n");
-	 FPRINTF(stderr,"        Function arcsin is undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_arcsin_D0: Function arcsin is undefined at %g, Returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -407,9 +394,7 @@ double safe_arccos_D0(double x,enum safe_err *safe)
    if( x < -1.0 || 1.0 < x ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_arccos_D0\n");
-	 FPRINTF(stderr,"        Function arccos is undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_arccos_D0: Function arccos is undefined at %g, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -422,9 +407,7 @@ double safe_arccosh_D0(double x,enum safe_err *safe)
    if( x < 1.0 ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_arccosh_D0\n");
-	 FPRINTF(stderr,"        Function arccosh is undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_arccosh_D0: Function arccosh is undefined at %g, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -444,9 +427,7 @@ double safe_arctanh_D0(double x,enum safe_err *safe)
    if( x < -1.0 || 1.0 < x ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_arctanh_D0\n");
-	 FPRINTF(stderr,"        Function arctanh is undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_arctanh_D0: Function arctanh is undefined at %g, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -467,9 +448,7 @@ double safe_exp_D0(double x,enum safe_err *safe)
    if( x > (DBL_MAX > 1.0e308 ? 709.196209 : log(DBL_MAX)) ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_exp_D0\n");
-	 FPRINTF(stderr,"        Argument %g too large.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_exp_D0: Argument %g too large, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -482,9 +461,7 @@ double safe_ln_D0(double x,enum safe_err *safe)
    if( x <= 0.0 ) {
       double bogus = -BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_ln_D0\n");
-	 FPRINTF(stderr,"        Natural log undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_ln_D0: Natural log undefined at %g. Returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -515,9 +492,7 @@ double safe_sqrt_D0(double x,enum safe_err *safe)
       double bogus;
       bogus = -sqrt(-x);
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_sqrt_D0\n");
-	 FPRINTF(stderr,"        Square root undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_sqrt_D0: Square root undefined at %g, returning %g.",x,bogus);
       }
       *safe = safe_complex_result;
       return(bogus);
@@ -713,9 +688,7 @@ double safe_tan_D2(double x,enum safe_err *safe)
    if( fabs(cos(x)) == 0.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-         FPRINTF(stderr,"ERROR:  (safe) safe_tan_D2\n");
-         FPRINTF(stderr,"        Tan derivative infinite at %g.\n",x);
-         FPRINTF(stderr,"        Returning %g.\n",bogus);
+         error_reporter(ASC_USER_ERROR,NULL,0,"safe_tan_D2: Tan derivative infinite at %g, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -752,9 +725,7 @@ double safe_arccosh_D2(double x,enum safe_err *safe)
    if( fabs(x) <= 1.0 ) {
       double bogus = -BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_arccosh_D2\n");
-	 FPRINTF(stderr,"        Arccosh undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_arccosh_D2: Arccosh undefined at %g, returning %g",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -773,9 +744,7 @@ double safe_arctanh_D2(double x,enum safe_err *safe)
    if( fabs(x) == 1.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_arctanh_D2\n");
-	 FPRINTF(stderr,"        Arctanh undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_arctanh_D2: Arctanh undefined at %g, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -833,9 +802,7 @@ double safe_cbrt_D2(double x,enum safe_err *safe)
    if( fabs(x) == 0.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 FPRINTF(stderr,"ERROR:  (safe) safe_cbrt_D2\n");
-	 FPRINTF(stderr,"        Cbrt undefined at %g.\n",x);
-	 FPRINTF(stderr,"        Returning %g.\n",bogus);
+	 error_reporter(ASC_USER_ERROR,NULL,0,"safe_cbrt_D2: Cbrt undefined at %g, returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -878,8 +845,7 @@ double safe_cos_Dn(double x,int n,enum safe_err *safe)
          return( sin(x) );
    }
    if( safe_print_errors ) {
-      FPRINTF(stderr,"ERROR:  (safe) safe_cos_Dn\n");
-      FPRINTF(stderr,"        Unreachable point reached.\n");
+      error_reporter(ASC_USER_ERROR,NULL,0,"safe_cos_D: Unreachable point reached.");
    }
    *safe = safe_range_error;
    return 0.0;
@@ -975,9 +941,7 @@ double safe_pow_D0(double x,double y,enum safe_err *safe)
 	 double bogus;
 	 bogus = y < 0.0 ? BIGNUM : 0.0;
 	 if( safe_print_errors ) {
-	    FPRINTF(stderr,"ERROR:  (safe) safe_pow_D0\n");
-	    FPRINTF(stderr,"        %g raised to %g power undefined.\n",x,y);
-	    FPRINTF(stderr,"        Returning %g.\n",bogus);
+	    error_reporter(ASC_USER_ERROR,NULL,0,"safe_pow_D0: %g raised to %g power undefined, returning %g",x,y,bogus);
 	 }
 	 *safe = safe_range_error;
 	 return(bogus);
@@ -994,9 +958,8 @@ double safe_pow_D0(double x,double y,enum safe_err *safe)
       default: {
 	 double bogus = cheap_pow(-x,y,safe);
 	 if( safe_print_errors ) {
-	    FPRINTF(stderr,"ERROR:  (safe) safe_pow_D0\n");
-	    FPRINTF(stderr,"        %g raised to %g power undefined.\n",x,y);
-	    FPRINTF(stderr,"        Returning %g.\n",bogus);
+	    error_reporter(ASC_USER_ERROR,NULL,0,"safe_pow_D0: %g raised to %g power undefined, returning %g",x,y,bogus);
+
 	 }
 	 *safe = safe_range_error;
 	 return(bogus);

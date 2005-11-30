@@ -142,7 +142,7 @@ extern void RemoveInstance(struct Instance *i);
  *  i should be a MODEL_INST or ARRAY_*_INST
  */
 
-extern void PendingInstanceRealloced(struct Instance *old, struct Instance *new);
+extern void PendingInstanceRealloced(struct Instance *old_inst, struct Instance *new_inst);
 /**< 
  *  <!--  void PendingInstanceRealloced(old,new)                       -->
  *  <!--  struct Instance *old,*new;                                   -->

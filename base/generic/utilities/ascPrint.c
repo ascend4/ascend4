@@ -166,6 +166,18 @@ int Asc_FPrintf(FILE *fp, CONST char *format, ...)
   return result;
 }
 
+/**
+	Var-arg version of the above, used by error.h
+*/
+int Asc_VFPrintf(FILE *fp, CONST char *format, va_list args){
+  int result=0;    /* the result of the call to AscPrint; our return value */
+
+  struct Asc_PrintVTable * vt;
+  for(vt = g_Asc_printVtables; vt != NULL; vt = vt->next) {
+    result = vt->print(fp, format, args);
+  }
+  return result;
+}
 
 /*
  *  int Asc_FFlush(fileptr)

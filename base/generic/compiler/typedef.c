@@ -553,6 +553,8 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
   if (NameId(nptr) !=0){
     name = NameIdPtr(nptr);
     switch (StatementType(stat)) {
+    case EXT:
+	  error_reporter(ASC_PROG_WARNING,__FILE__,__LINE__,"PROCESSING EXTERNAL RELATION\n");
     case ISA:
     case REF: /* IS_A of prototype */
     case WILLBE:
@@ -586,13 +588,11 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
                );
     if (ok < 1) {
       if (ok < 0) {
-        FPRINTF(ASCERR,"%sInsufficient memory during parse.\n",
-          StatioLabel(4));
+        error_reporter(ASC_PROG_FATAL,NULL,0,"Insufficient memory during parse.");
         return DEF_ILLEGAL; /* well, having insufficient memory is illegal */
       }
       if (noisy && ok == 0) {
-        FPRINTF(ASCERR,"%sSame instance name \"%s\" used twice.",
-          StatioLabel(3),SCP(name));
+        error_reporter(ASC_USER_ERROR,NULL,0,"Same instance name \"%s\" used twice.",SCP(name));
         assert(g_lcl_pivot!=NULL);
         if (g_lcl_pivot->e.statement != stat ) {
           WSEM(ASCERR,g_lcl_pivot->e.statement,"  First seen:");
@@ -604,8 +604,7 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
     }
   } else {
     /* should never happen due to new upstream filters. */
-    FPRINTF(ASCERR,"%sBad name structure found in variable list.\n",
-      StatioLabel(3));
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Bad name structure found in variable list.");
     return DEF_NAME_INCORRECT;
   }
   return DEF_OKAY;
@@ -1060,14 +1059,22 @@ int DoExternal(symchar *type,
                struct gl_list_t *ft)
 {
   struct Name *nptr;
+  int doname_status;
+
   (void) type; (void) ft;
+
+  FPRINTF(ASCERR,"DOEXTERNAL\n");
   assert(stat && (StatementType(stat) == EXT));
   /*
    * The grammar specifies that External function calls
    * must be named.
    */
+  FPRINTF(ASCERR,"EXTERNALSTATNAME\n");
   nptr = ExternalStatName(stat);
-  return DoName(nptr,FindExternalType(),stat);
+  FPRINTF(ASCERR,"DONAME\n");
+  doname_status = DoName(nptr,FindExternalType(),stat);
+  FPRINTF(ASCERR,"DONAME STATUS = %d\n",doname_status);
+  return doname_status;
 }
 
 
@@ -1147,6 +1154,7 @@ enum typelinterr DoRelations(symchar *type,
       }
       break;
     case EXT:
+		FPRINTF(ASCERR,"PROCESSING EXTERNAL REL\n");
       error_code = DoExternal(type,stat,ft);
       if (error_code != DEF_OKAY) {
         TypeLintError(ASCERR,stat, error_code);
@@ -1775,7 +1783,7 @@ CONST struct TypeDescription *FindCommonType(CONST struct VariableList *vl,
   CONST struct TypeDescription *rtype=NULL;
   enum e_findrhs rval = FRC_fail;
   int rlen = -1;
-  int parametric;
+  int parametric = 0;
 
   /* temporaries */
   CONST struct Name *nptr;

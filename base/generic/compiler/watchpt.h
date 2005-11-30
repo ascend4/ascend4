@@ -217,7 +217,7 @@ extern int Asc_WatchLeafName(watchlist *wl,
  * E.g. to watch all things named T being assigned via
  * that name, Asc_WatchProc(wl,"column","scale",wp_log);
  */
-extern int Asc_WatchProc(watchlist *wl, char *typename,
+extern int Asc_WatchProc(watchlist *wl, char *type_name,
                          char *procname, enum wpdest output);
 
 /** 
@@ -239,14 +239,14 @@ extern int Asc_WatchStat(watchlist *wl, char *modulename,
  * <!--  Asc_WatchType(wl,typename);                                   -->
  * Add a type of var to watch for assignments to the watchlist.
  */
-extern int Asc_WatchType(watchlist *wl, char *typename, enum wpdest dest);
+extern int Asc_WatchType(watchlist *wl, char *type_name, enum wpdest dest);
 
 /** 
  * <!--  Asc_WatchRefinements(wl,typename);                            -->
  * Add a type of var to watch for assignments of to the watchlist.
  * type and all its refinements are watched.
  */
-extern int Asc_WatchRefinements(watchlist *wl, char *typename, enum wpdest dest);
+extern int Asc_WatchRefinements(watchlist *wl, char *type_name, enum wpdest dest);
 
 /**
  * Specify boolean flags for general watchpoint options

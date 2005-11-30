@@ -28,6 +28,15 @@
  *
  */
 
+/**
+	Code to support dynamic and static loading of user packages.
+
+	The default state is to have packages. As such it takes an explicit
+	definition of NO_PACKAGES, if packages are not to be handled.
+	An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
+	required.
+*/
+
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
 #include "utilities/ascConfig.h"
@@ -55,6 +64,9 @@
 #include "compiler/module.h"
 #include "compiler/packages.h"
 
+/*
+	Initialise the slv data structures used when calling external fns
+*/
 void Init_Slv_Interp(struct Slv_Interp *slv_interp)
 {
   if (slv_interp){
@@ -71,14 +83,9 @@ void Init_Slv_Interp(struct Slv_Interp *slv_interp)
   }
 }
 
-/*********************************************************************\
-  Code to support Dynamic and Static Loading.
-  The default state is to have packages. As such it takes an explicit
-  definition of NO_PACKAGES, if packages are not to be handled.
-  An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
-  required.
-\*********************************************************************/
-
+/*
+	@deprecated, @see packages.h
+*/
 symchar *MakeArchiveLibraryName(CONST char *prefix)
 {
   char *buffer;
@@ -86,7 +93,8 @@ symchar *MakeArchiveLibraryName(CONST char *prefix)
   symchar *result;
 
   len = strlen(prefix);
-  buffer = (char *)ascmalloc(len+12);
+  buffer = (char *)ascmalloc(len+40);
+
 #if defined(sun) || defined(solaris) || defined(__osf__)
   sprintf(buffer,"%s.so.1.0",prefix);
 #elif defined(__hpux)
@@ -94,7 +102,7 @@ symchar *MakeArchiveLibraryName(CONST char *prefix)
 #elif defined(_SGI_SOURCE)
   sprintf(buffer,"%s.so",prefix);
 #elif defined(linux) || defined(ultrix)
-  sprintf(buffer,"%s.o",prefix);
+  sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
 #else
   sprintf(buffer,"%s.so.1.0",prefix);
 #endif
@@ -104,11 +112,50 @@ symchar *MakeArchiveLibraryName(CONST char *prefix)
   return result;              /* owns the string */
 }
 
+/*---------------------------------------------
+  BUILT-IN PACKAGES...
+*/
+
+/**
+	Load builtin packages, unless NO_PACKAGES.
+
+	@return 0 if success, 1 if failure.
+*/
+static
+int Builtins_Init(void)
+{
+  int result = 0;
+
+#ifdef NO_PACKAGES
+  error_reporter(ASC_USER_WARNING,__FILE__,__LINE,"Builtins_Init: DISABLED at compile-time");
+#else
+  ERROR_REPORTER_DEBUG("Builtins_Init: Loading function asc_free_all_variables\n");
+  result = CreateUserFunction("asc_free_all_variables"
+				,(ExtEvalFunc *)NULL
+			    ,(ExtEvalFunc **)Asc_FreeAllVars
+			    ,(ExtEvalFunc **)NULL
+			    ,(ExtEvalFunc **)NULL
+			    ,1, 0, "Unset 'fixed' flag of all items of type 'solver_var'");
+#endif
+  return result;
+}
+
+/*---------------------------------------------
+  DYNAMIC_PACKAGES code only...
+*/
+# ifdef DYNAMIC_PACKAGES
 static char path_var[PATH_MAX];
-/*
- * Returns a pointer to a string space holding the full path
- * name of the file to be opened. The returned ptr may be NULL;
- */
+
+/**
+	Search the archive library path for a file matching the given
+	(platform specific, with extension?) library filename.
+
+	@return a pointer to a string space holding the full path
+	name of the file to be opened. The returned pointer may be NULL
+
+	@TODO won't work correctly on windows
+	@deprecated { see packages.h }
+*/
 static
 char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
 {
@@ -116,6 +163,8 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
   register CONST char *t;
   register unsigned length;
   register FILE *f;
+  /* error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Env var for user packages is '%s'\n",envv); */
+  error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Search path for user packages is '%s'\n",getenv(envv));
   if ((path=getenv(envv))==NULL)
     path=dpath;
   while(isspace(*path)) path++;
@@ -125,27 +174,40 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
       length = 0;
       /* copy next directory into array */
       while((*path!=':')&&(*path!='\0')&&(!isspace(*path)))
-	path_var[length++] = *(path++);
-      if (path_var[length-1]!='/') path_var[length++]='/';
+        path_var[length++] = *(path++);
+      if (path_var[length-1]!='/')
+        path_var[length++]='/';
       /* copy file name into array */
       for(t=name;*t!='\0';)
         path_var[length++] = *(t++);
       path_var[length]='\0';
+      /* error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Searching for for '%s' in dir '%s'\n",name, path_var); */
       if ((f= fopen(path_var,"r"))!=NULL){
-	result = path_var;
-	fclose(f);
-	return result;
+		result = path_var;
+        fclose(f);
+        return result;
       }
     }
     while(isspace(*path)) path++;
   }
   return NULL;
 }
+#endif /* DYNAMIC_PACKAGES */
+/*
+  END of DYNAMIC_PACKAGES-specific code
+  ------------------------------------------*/
 
 int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 {
+#ifdef NO_PACKAGES
+  /** avoid compiler warnings on params: */
+  (void) name; (void) initfunc;
 
-#if !defined(NO_PACKAGES) && defined(DYNAMIC_PACKAGES)
+  error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"LoadArchiveLibrary disabled: NO_PACKAGES");
+  return 1;
+
+#elif defined(DYNAMIC_PACKAGES)
+
   int result;
   char *default_path = ".";
   char *env = PATHENVIRONMENTVAR;
@@ -154,80 +216,66 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 
   full_file_name = SearchArchiveLibraryPath(name,default_path,env);
   if (!full_file_name) {
-    FPRINTF(stdout,"The named library %s was not found\n",name);
+    error_reporter(ASC_USER_ERROR,NULL,0,"The named library '%s' was not found in the search path",name);
     return 1;
   }
   result = DynamicLoad(full_file_name,initfunc);
   if (result) {
     return 1;
-  } else {
-    FPRINTF(ASCERR,"Successfully loaded %s from :\n%s\n",
-	    initfunc,full_file_name);
-    return 0;
   }
-#elif !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
-  (void) name; (void) initfunc;
-  /* Has packages but they are statically linked
-   * so do nothing
-   */
-  FPRINTF(ASCERR,"This version of ASCEND was built with static linking\n");
-  FPRINTF(ASCERR,"Libraries have been preloaded\n");
+  ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc,name);
   return 0;
-#elif defined(NO_PACKAGES)
-  FPRINTF(ASCERR,"This version of ASCEND has no external packages !!\n");
+
+#elif defined(STATIC_PACKAGES)
+
+  /* avoid compiler warnings on params: */
+  (void) name; (void) initfunc;
+
+  error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.");
+  return 0;
+
+#else /* unknown flags */
+
+# error "Invalid package linking flags"
+  (void) name; (void) initfunc;
   return 1;
+
 #endif
 }
 
-#if !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
-/*********************************************************************\
-  User defined functions. The declaration of these is only necessary
-  in the case of statically loaded packages.
-\*********************************************************************/
+/*---------------------------------------------
+  STATIC_PACKAGES code only...
+
+  Declare the functions which we are expected to be able to call.
+*/
+#ifndef NO_PACKAGES
+# ifdef STATIC_PACKAGES
 
 /* kvalues.c */
-
-extern int kvalues_preslv(struct Slv_Interp *,struct Instance *,
-			  struct gl_list_t *);
-extern int kvalues_fex(struct Slv_Interp *, int, int,
-		       double *, double *, double *);
+extern int kvalues_preslv(struct Slv_Interp *,struct Instance *, struct gl_list_t *);
+extern int kvalues_fex(struct Slv_Interp *, int, int, double *, double *, double *);
 
 /* bisect.c */
-
-extern int do_set_values_eval(struct Slv_Interp *,struct Instance *,
-			      struct gl_list_t *);
-
-extern int do_bisection_eval(struct Slv_Interp *,struct Instance *,
-			     struct gl_list_t *);
+extern int do_set_values_eval(struct Slv_Interp *,struct Instance *, struct gl_list_t *);
+extern int do_bisection_eval(struct Slv_Interp *,struct Instance *,struct gl_list_t *);
 
 /* sensitivity.c */
+extern int do_sensitivity_eval(struct Slv_Interp *,struct Instance *, struct gl_list_t *);
 
-extern int do_sensitivity_eval(struct Slv_Interp *,struct Instance *,
-			       struct gl_list_t *);
-
+# endif
 #endif
 
-static
-int Builtins_Init(void)
-{
-  int result = 0;
-#ifndef NO_PACKAGES
-  result = CreateUserFunction("asc_free_all_variables",
-                              (ExtEvalFunc *)NULL,
-			      (ExtEvalFunc **)Asc_FreeAllVars,
-			      (ExtEvalFunc **)NULL,
-			      (ExtEvalFunc **)NULL,
-			      1,0,"the efficient version of ASCEND III clear");
-#endif
-  return result;
-}
+#ifdef STATIC_PACKAGES
+/**
+	Load all statically-linked packages
 
+	@return 0 on success, >0 if any CreateUserFunction calls failed.
+*/
 static
-int PackSolve_Init(void)
+int StaticPackages_Init(void)
 {
   int result = 0;
 
-#if !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
   char sensitivity_help[] =
     "This function does sensitivity analysis dy/dx. It requires 4 args.\n"
     "The first arg is the name of a reference instance or SELF.\n"
@@ -259,76 +307,64 @@ int PackSolve_Init(void)
 			       (ExtEvalFunc **)NULL,
 			       (ExtEvalFunc **)NULL,
 			       4,0,"See do_sensitivity for details");
-#endif
+
   return result;
 }
+#endif
 
+/**
+	This is a general purpose function that will load whatever user
+	functions are required according to the compile-time settings.
+	
+	If NO_PACKAGES, nothing will be loaded. If DYNAMIC_PACKAGES, then
+	just the builtin packages will be loaded. If STATIC_PACKAGES then
+	builtin plus those called in 'StaticPackages_Init' will be loaded.
+*/
 void AddUserFunctions(void)
 {
-#if !defined(NO_PACKAGES) && defined(STATIC_PACKAGES)
-
-
-
-#define DEFUNCT 0 /* 0 = no compile */
-#if DEFUNCT
-  extern ExtEvalFunc *tray6__FuncTable[];
-  extern ExtEvalFunc *tray6__GradTable[];
-  char kvalues_help[] =
-    "This function does a bubble point calculation given \n"
-    "the mole fractions in the feed, a T and P.";
-
-  char set_values_help[] =
-    "This function accepts 3 args, The first 2 arg vectors of equal\n"
-    "length. The second is a multiplier to be applied to each element\n"
-    "of the first vector to yield the second vector.\n"
-    "Example: do_set_values(x[1..n], y[1..n], multiplier[1..n]).\n";
-
-  char bisection_help[] =
-    "This function accepts 3 args, each of which must be vectors.\n"
-    "It will bisect find the midpoint by bisection.\n"
-    "Example: do_bisection(x[1..n],x_par[1..n], y[1..n]). \n";
-
-  char internal_help[] = 	"internal tray, glassbox model.\n";
-  /*
-   * from internal.o -- this is glassbox declarative.
-   */
-  (void)CreateUserFunction("tray6", NULL,
-			   tray6__FuncTable,
-			   tray6__GradTable,
-			   NULL,1,1,internal_help);
-#endif /* defunct */
-
-/*
- * The following need to be reimplemented but are basically useful
- * as is.
- */
-  if (PackSolve_Init()) {
-      FPRINTF(stderr,"Problem in PackSolve_Init:"
-              " Some user functions not created\n");
-  }
-
-  if (Builtins_Init()) {
-      FPRINTF(stderr,"Problem in Builtins_Init:"
-              " Some user functions not created\n");
-  }
-
+#ifdef NO_PACKAGES
+# ifdef __GNUC__
+#  warning "EXTERNAL PACKAGES ARE BEING DISABLED"
+# endif
+  error_reporter(ASC_PROG_NOTE,NULL,0,"AddUserFunctions disabled at compile-time.");
 #else
-  return;
+
+  /* Builtins are always statically linked */
+  if (Builtins_Init()) {
+      error_reporter(ASC_PROG_WARNING,NULL,0,"Problem in Builtins_Init: Some user functions not created");
+  }
+
+# ifdef DYNAMIC_PACKAGES
+  /* do nothing */
+
+# elif defined(STATIC_PACKAGES)
+#  ifdef __GNUC__
+#   warning "DYNAMIC PACKAGES"
+#  endif "STATIC PACKAGES"
+
+  /*The following need to be reimplemented but are basically useful as is. */
+  if (StaticPackages_Init()) {
+      error_reporter(ASC_PROG_WARNING,NULL,0,"Problem in StaticPackages_Init(): Some user functions not created");
+  }
+
+# endif
 #endif
 }
 
-
-/*
- *********************************************************************
- * These functions may be called someone desirous of testing
- * an external relation provided as a package. They are here
- * for convenience, and should be really in a separate file.
- *********************************************************************
- */
+/*---------------------------------------
+	TESTING FUNCTIONS
 
+	The following functions may be called someone desirous of testing
+	an external relation provided as a package. They are here
+	for convenience, and should be really in a separate file.
+*/
+
+/**
+	What's this do? -- JP
+*/
 static void LoadInputVector(struct gl_list_t *arglist,
 			    double *inputs,
-			    int ninputs,
+			    unsigned ninputs,
 			    unsigned long n_input_args)
 {
   struct Instance *inst;
@@ -336,11 +372,13 @@ static void LoadInputVector(struct gl_list_t *arglist,
   unsigned long c,len;
 
   input_list = LinearizeArgList(arglist,1,n_input_args);
-  if (!input_list)
-    return;
+
+  if(!input_list)return;
+
   len = gl_length(input_list);
-  if (len!=ninputs)		/* somehow we have inconsistent data */
-    return;
+
+  if(len!=ninputs)return; /* somehow we had inconsistent data */
+
   for (c=1;c<=len;c++) {
     inst = (struct Instance *)gl_fetch(input_list,c);
     inputs[c-1] = RealAtomValue(inst);
@@ -348,12 +386,14 @@ static void LoadInputVector(struct gl_list_t *arglist,
   gl_destroy(input_list);
 }
 
-
+/**
+	What's a black box, and what's a glass box? -- JP
+*/
 int CallBlackBox(struct Instance *inst,
 		 CONST struct relation *rel)
 {
   struct Instance *data;
-/*  struct relation_term *rt; */  /* unused */
+
   struct Slv_Interp slv_interp;
   struct ExternalFunc *efunc;
   struct ExtCallNode *ext;
@@ -365,7 +405,7 @@ int CallBlackBox(struct Instance *inst,
   double *inputs = NULL, *outputs = NULL;
   double *jacobian = NULL;
 
-/* all these desperately need a typedef in a header someplace */
+  /* All these desperately need a typedef in a header someplace */
   int (*init_func) (struct Slv_Interp *,
                     struct Instance *,
                     struct gl_list_t *);
@@ -384,11 +424,13 @@ int CallBlackBox(struct Instance *inst,
                    double * /* outputs */,
                    double * /* jacobian */);
 
-  /*
-   * After this point everything should be ok.
-   */
+/*------------------------------
+	After this point everything should be ok.
+	<-- says who? when? -- JP
+*/
 
-  UNUSED_PARAMETER(inst);   /* Visual C doesn't like this before the func ptr defs. */
+  /* Visual C doesn't like this before the func ptr defs. */
+  UNUSED_PARAMETER(inst);   
 
   ext = BlackBoxExtCall(rel);
   arglist = ExternalCallArgList(ext);
@@ -399,9 +441,8 @@ int CallBlackBox(struct Instance *inst,
   deriv_func = GetDerivFunc(efunc);
 
   if (init_func && eval_func) {
-    /*
-     * Set up the interpreter.
-     */
+
+    /* set up the interpreter. */
     Init_Slv_Interp(&slv_interp);
     slv_interp.check_args = (unsigned)1;
     slv_interp.first_call = (unsigned)1;
@@ -413,10 +454,7 @@ int CallBlackBox(struct Instance *inst,
     noutputs = CountNumberOfArgs(arglist,n_input_args + 1,
 				 n_input_args+n_output_args);
 
-    /*
-     * Create the work vectors. Load the input vector from
-     * the instance tree.
-     */
+    /* Create the work vectors. Load the input vector from the instance tree. */
     inputs = (double *)asccalloc(ninputs,sizeof(double));
     outputs = (double *)asccalloc(ninputs,sizeof(double));
     jacobian = (double *)asccalloc(ninputs*noutputs,sizeof(double));
@@ -464,24 +502,23 @@ int CallBlackBox(struct Instance *inst,
     return 0;
 }
 
-
-/*
- * When glassbox are registered, they must register a pointer
- * to their function jump table. In other words, they must
- * register a pointer to an 'array of pointers to functions'.
- * This typedef just makes life a little cleaner.
- */
+/**
+	When glassbox are registered, they must register a pointer
+	to their function jump table. In other words, they must
+	register a pointer to an 'array of pointers to functions'.
+	This typedef just makes life a little cleaner.
 
-
+	<-- what typedef?? -- JP
+*/
 int CallGlassBox(struct Instance *relinst, CONST struct relation *rel)
 {
   CONST struct gl_list_t *incidence;
   struct Instance *var;
   struct ExternalFunc *efunc;
   int index;
-  unsigned long i;
+  unsigned long i, n;
   double *f, *x, *g;
-  int n,m,mode,result;
+  int m,mode,result;
 
   ExtEvalFunc **evaltable, *eval_func;
   ExtEvalFunc **derivtable, *deriv_func;
@@ -500,7 +537,7 @@ int CallGlassBox(struct Instance *relinst, CONST struct relation *rel)
   deriv_func = derivtable[index];
 
   m = 0;			  /* FIX not sure what this should be !!! */
-  n = (int)gl_length(incidence);
+  n = gl_length(incidence);
   f = (double *)asccalloc((1 + 2*n),sizeof(double));
   x = &f[1];
   g = &f[n+1];
@@ -516,7 +553,10 @@ int CallGlassBox(struct Instance *relinst, CONST struct relation *rel)
   return result;
 }
 
-
+/**
+	No idea what this does. It's referenced in 'interface.c' only, so it
+	appears to be defunct -- JP
+*/
 int CallExternalProcs(struct Instance *inst)
 {
   CONST struct relation *rel;

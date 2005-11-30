@@ -236,16 +236,16 @@ void ProcWriteForError(struct procFrame *fm)
 {
   switch (fm->ErrNo) {
   case Proc_for_duplicate_index:
-    WriteInitErr(fm,"FOR/DO uses duplicate index variable");
+    WriteInitErr(fm,"FOR/DO uses duplicate index variable.");
     break;
   case Proc_for_set_err:
-    WriteInitErr(fm,"Error evaluating FOR/DO index set");
+    WriteInitErr(fm,"Error evaluating FOR/DO index set.");
     break;
   case Proc_for_not_set:
     WriteInitErr(fm,"FOR/DO index expression is not a set");
     break;
   default:
-    WriteInitErr(fm,"FOR/DO unexpected error message"); 
+    WriteInitErr(fm,"FOR/DO unexpected error message."); 
     break;
   }
 }
@@ -259,10 +259,10 @@ void ProcWriteExtError(struct procFrame *fm, CONST char *funcname,
   errmsg = (char *)ascmalloc(80+strlen(funcname));
   switch (peerr) {
   case PE_unloaded:
-    WriteInitErr(fm,"External function has not been loaded");
+    WriteInitErr(fm,"External function has not been loaded.");
     break;
   case PE_nulleval:
-    WriteInitErr(fm,"Nonexistent Evaluation for old-style external function");
+    WriteInitErr(fm,"Nonexistent Evaluation for old-style external function.");
     break;
   case PE_argswrong:
     WriteInitErr(fm,"Incorrect arguments to old-style external function.");
@@ -271,29 +271,29 @@ void ProcWriteExtError(struct procFrame *fm, CONST char *funcname,
     switch (fm->ErrNo) {
     case Proc_instance_not_found:
       sprintf(errmsg,
-        "EXTERNAL %s: NULL (as yet unmade) instance for argument %d",
+        "EXTERNAL %s: NULL (as yet unmade) instance for argument %d.",
         funcname,pos);
       WriteStatementErrorMessage(fm->err,fm->stat,errmsg, 0,3);
       break;
     case Proc_name_not_found:
-      sprintf(errmsg,"EXTERNAL %s: Undefined name for argument %d",
+      sprintf(errmsg,"EXTERNAL %s: Undefined name for argument %d.",
               funcname, pos);
       WriteStatementErrorMessage(fm->err,fm->stat,errmsg, 0,3);
       break;
     case Proc_illegal_name_use:
       sprintf(errmsg,
-              "EXTERNAL %s: Incorrect name (subscript?) for argument %d",
+              "EXTERNAL %s: Incorrect name (subscript?) for argument %d.",
               funcname, pos);
       WriteStatementErrorMessage(fm->err,fm->stat,errmsg, 0,3);
       break;
     case Proc_bad_name:
-      sprintf(errmsg,"EXTERNAL %s: Unknown error message for argument %u",
+      sprintf(errmsg,"EXTERNAL %s: Unknown error message for argument %u.",
               funcname, pos);
       WriteStatementErrorMessage(fm->err,fm->stat,errmsg, 0,3);
       FPRINTF(fm->err,"  Expect crash soon!\n");
       break;
     case Proc_CallError:
-        sprintf(errmsg,"EXTERNAL %s: Unexpected 'OK' message for argument %u",
+        sprintf(errmsg,"EXTERNAL %s: Unexpected 'OK' message for argument %u.",
                 funcname, pos);
         WriteStatementErrorMessage(fm->err,fm->stat,errmsg, 0,3);
         fm->ErrNo = Proc_CallError;
@@ -315,6 +315,12 @@ void ProcWriteStackCheck(struct procFrame *fm,
   if ( fm->ErrNo == Proc_return) {
     return;
   }
+  if(fm->stat != NULL){
+    error_reporter_start(ASC_PROG_ERROR,SCP(Asc_ModuleBestName(StatementModule(fm->stat))),StatementLineNum(fm->stat));
+  }else{
+	error_reporter_start(ASC_PROG_ERROR,NULL,0);
+  }
+
   if (fm->ErrNo == Proc_stack_exceeded_this_frame) {
     /* stack error message not suppressible */
     unwind = 1;
@@ -336,14 +342,9 @@ void ProcWriteStackCheck(struct procFrame *fm,
   }
   WriteName(fm->err,name);
   FPRINTF(fm->err," (depth %d) in instance %s\n", fm->depth, fm->cname);
-  if (fm->stat != NULL) {
-    FPRINTF(fm->err,"    Line %lu, File: %s.\n",
-            StatementLineNum(fm->stat),
-            SCP(Asc_ModuleBestName(StatementModule(fm->stat))));
-  }
-  
-}
 
+  error_reporter_end_flush();
+}
 
 void ProcWriteRunError(struct procFrame *fm) 
 {
@@ -351,26 +352,26 @@ void ProcWriteRunError(struct procFrame *fm)
   errmsg = "Unexpected RUN statement error";
   switch (fm->ErrNo) {
   case Proc_bad_name:
-    errmsg = "Bad method name in RUN statement\n";
+    errmsg = "Bad method name in RUN statement";
     break;
   case Proc_proc_not_found:
-    errmsg = "Method not found in RUN statement\n";
+    errmsg = "Method not found in RUN statement";
     break;
   case Proc_illegal_name_use:
-    errmsg = "Illegal name use in RUN statement\n";
+    errmsg = "Illegal name use in RUN statement";
     break;
   case Proc_type_not_found:
-    errmsg = "Type name not found in RUN statement\n";
+    errmsg = "Type name not found in RUN statement";
     break;
   case Proc_illegal_type_use:
-    errmsg = "Unconformable types in RUN statement\n";
+    errmsg = "Unconformable types in RUN statement";
     break;
   case Proc_stack_exceeded_this_frame:
   case Proc_stack_exceeded:
     errmsg = "METHOD call too deeply nested in statement";
     break;
   default:
-    errmsg = "Type name not found in RUN statement\n";
+    errmsg = "Type name not found in RUN statement";
     break;
   }
   WriteInitErr(fm,errmsg);

@@ -413,6 +413,6 @@ void WriteChildMissing(FILE *fp, char *fcn, symchar *childname)
   }
   if (gl_ptr_search(g_missing,childname,0)==0) {
     gl_append_ptr(g_missing,(VOIDPTR)childname);
-    FPRINTF(fp,"%s: child %s not found.\n",fcn,SCP(childname));
+    FPRINTF(fp,"%s: child '%s' not found.\n",fcn,SCP(childname));
   }
 }

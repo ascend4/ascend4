@@ -1,3 +1,4 @@
+/* ex:set ts=8: */
 /*
  *  Initialization Routines
  *  by Tom Epperly
@@ -123,13 +124,9 @@ void SetProcStackLimit(unsigned long lim)
  */
 
 
-static 
-void ExecuteInitStatements(struct procFrame *,struct StatementList *);
-static 
-void RealInitialize(struct procFrame *, struct Name *);
-static 
-void ClassAccessRealInitialize(struct procFrame *, 
-                               struct Name *, struct Name *);
+static void ExecuteInitStatements(struct procFrame *,struct StatementList *);
+static void RealInitialize(struct procFrame *, struct Name *);
+static void ClassAccessRealInitialize(struct procFrame *, struct Name *, struct Name *);
 
 /* just forward declarations cause we need it */
 
@@ -142,7 +139,14 @@ void InstanceNamePart(struct Name *n, struct Name **copy,
                       symchar **procname)
 {
   register struct Name *ptr,*tmp;
+  
+  /*FPRINTF(ASCERR,"INSTANCE NAME PART, input is n=");
+  WriteName(ASCERR,n);
+  FPRINTF(ASCERR,"\n");
+   */
+  
   if (n==NULL){
+	  FPRINTF(ASCERR,"n IS NULL");
     *copy = NULL;
     *procname = NULL;
     return;
@@ -286,11 +290,8 @@ void ExecuteInitFlow(struct procFrame *fm)
   }
 }
 
-/*
- * The following functions have been made static as they are very
- * similar to those used in instantiate.c. They really should be
- * rationalized and exported by instantiate.c.
- * As usual, any function with Special in the name is written by KAA.
+/**
+	The following functions have been made static as they are very similar to those used in instantiate.c. They really should be rationalized and exported by instantiate.c. As usual, any function with Special in the name is written by KAA.
  */
 #define SELF_NAME "SELF"
 
@@ -312,12 +313,8 @@ int SpecialSelfName(CONST struct Name *n)
   }
 }
 
-/*
- * produces a list of lists of argument instances.
- * a the list returned is never NULL except when out
- * of memory. Entries in this list may be NULL if
- * some argument search fails. Argument search is successful
- * IFF errlist returned is empty (length 0).
+/**
+	Produces a list of lists of argument instances. a the list returned is never NULL except when out of memory. Entries in this list may be NULL if some argument search fails. Argument search is successful IFF errlist returned is empty (length 0).
  */
 static 
 struct gl_list_t *ProcessArgs(struct Instance *inst,
@@ -410,14 +407,23 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
 
   funcname = ExternalStatFuncName(stat);
   efunc = LookupExtFunc(funcname);
+
+  FPRINTF(ASCERR,"EXECUTEINITEXT, FUNC NAME: %s\n", funcname);	
+
+
   if (efunc == NULL) {
+	FPRINTF(ASCERR,"LOOKUPEXTFUNC NULL\n");
     fm->ErrNo = Proc_CallError;
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_unloaded,0);
     return;
   }
+
+  FPRINTF(ASCERR,"FOUND EXT FUNC, name:%s, in:%d, out:%d\n", efunc->name, efunc->n_inputs, efunc->n_outputs);	
+
   eval_func = GetValueFunc(efunc);
   if (eval_func == NULL) {
+	FPRINTF(ASCERR,"GETVALUEFUNC NULL\n");
     fm->ErrNo = Proc_CallError; 
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_nulleval,0);
@@ -427,6 +433,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   arglist = InitCheckExtCallArgs(fm->i,stat,errlist);
   len = gl_length(errlist);
   if (len != 0) {
+	FPRINTF(ASCERR,"LEN != 0\n");
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_argswrong,0);
     c = 1;
@@ -469,6 +476,9 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     }
     return;
   }
+
+  FPRINTF(ASCERR,"CHECKED EXTERNAL ARGS, OK\n");
+
   Init_Slv_Interp(&slv_interp);
   nok = (*eval_func)(&slv_interp,fm->i,arglist);
   /* this should switch on Proc_CallXXXXX */
@@ -477,6 +487,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
      */
   if (nok) {
     fm->flow = FrameError; /* move write to procio */
+	error_reporter(ASC_USER_NOTE,__FILE__,__LINE__,"NOK");
     ProcWriteExtError(fm,funcname,PE_evalerr,0);
   } else {
     fm->flow = FrameOK;
@@ -1512,6 +1523,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
 
   SetDeclarativeContext(1); /* set up for procedural processing */
   InstanceNamePart(name,&instname,&procname);
+  
   if (procname != NULL) {
     instances = FindInstances(fm->i, instname, &err);
     if (instances != NULL) {
@@ -1567,12 +1579,14 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
           DestroyProcFrame(newfm);
         } else {
           fm->flow = FrameError;
+	  error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (FindProcedure failed).");
           fm->ErrNo = Proc_proc_not_found;
         }
       }
       gl_destroy(instances);
     } else {			/* unable to find instances */
       fm->flow = FrameError;
+      error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (FindInstances failed).");
       fm->ErrNo = Proc_instance_not_found;
     }
   } else {
@@ -1732,6 +1746,7 @@ void ClassAccessRealInitialize(struct procFrame *fm,
               DestroyProcFrame(newfm);
             } else {
               fm->flow = FrameError;
+	      error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (SearchProcList).");
               fm->ErrNo = Proc_proc_not_found;
             }
           } else {
@@ -1740,6 +1755,7 @@ void ClassAccessRealInitialize(struct procFrame *fm,
           }
         } else {
           fm->flow = FrameError;
+	  error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (GetInitializationList is null).");
           fm->ErrNo = Proc_proc_not_found;
         }
       } else {
@@ -1748,6 +1764,7 @@ void ClassAccessRealInitialize(struct procFrame *fm,
       }
     } else {
       fm->flow = FrameError;
+      error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (FindType failed)\n");
       fm->ErrNo = Proc_type_not_found;
     }
   } else {

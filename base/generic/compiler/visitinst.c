@@ -394,7 +394,7 @@ static
 void WriteWhereNull(FILE *f, struct Instance *i)
 {
   (void) i;
-  FPRINTF(f,"Null instance in tree at ????\n");
+  FPRINTF(f,"Null instance in tree at ???? (null child of instance of type '%s')\n", SCP(InstanceType(i)) );
   g_iscomplete=0;
 }
 

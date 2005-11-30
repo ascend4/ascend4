@@ -1,3 +1,4 @@
+/* ex: set ts=8 : */
 /*
  *  bintoken.c
  *  By Benjamin A. Allan
@@ -141,11 +142,11 @@ int bt_string_replace(char *new, char **ptr)
  * They are freed on the next call which specifies a new string or NULL.
  * strings given should not be allocated from tcl.
  */
-int BinTokenSetOptions(char *srcname,
-                       char *objname,
-                       char *libname,
-                       char *buildcommand,
-                       char *unlinkcommand,
+int BinTokenSetOptions(CONST char *srcname,
+                       CONST char *objname,
+                       CONST char *libname,
+                       CONST char *buildcommand,
+                       CONST char *unlinkcommand,
                        unsigned long maxrels,
                        int verbose,
                        int housekeep)
@@ -628,7 +629,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   /* fixme. win32 has getpid but it is bogus as uniquifier. */
   /* so long as makefile deletes previous dll, windows is ok though */
   sprintf(g_bt_data.regname,"BinTokenArch_%d_%d",++(g_bt_data.nextid),(int)pid);
-  FPRINTF(fp,"int EXPORT %s()\n",g_bt_data.regname);
+  FPRINTF(fp,"int DLEXPORT %s()\n",g_bt_data.regname);
   CLINE("{");
   CLINE("  int status;");
   FPRINTF(fp,"  static struct TableC g_ctable[%lu] =\n",len+1);
@@ -666,6 +667,7 @@ static
 enum bintoken_error BinTokenCompileC(char *buildcommand)
 {
   int status;
+  FPRINTF(ASCERR,"\nStarting build, command:\n----\n%s\n----\n\n",buildcommand);
   status = system(buildcommand);
   if (status) {
     FPRINTF(ASCERR,"\nBUILD returned %d\n",status);
@@ -823,11 +825,14 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
         system(cbuf); /* we don't care if the delete fails */
         ascfree(cbuf);
       }
-    }
-    status = BinTokenLoadC(rellist,libname,g_bt_data.regname);
-    if (status != BTE_ok) {
-      BinTokenErrorMessage(status,root,libname,buildcommand);
-      /* leave source,binary files there to debug */
+    
+      status = BinTokenLoadC(rellist,libname,g_bt_data.regname);
+      if (status != BTE_ok) {
+        BinTokenErrorMessage(status,root,libname,buildcommand);
+        /* leave source,binary files there to debug */
+      }else{
+        FPRINTF(ASCERR,"BINTOKENLOADC OK\n");
+      }
     }
     break;
   case BT_F77:

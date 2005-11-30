@@ -1,3 +1,4 @@
+/* ex: set ts=8: */
 /*
  *  Library Implementation
  *  by Tom Epperly
@@ -26,6 +27,7 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  *
+ * 
  */
 
 #include "utilities/ascConfig.h"
@@ -192,6 +194,7 @@ struct TypeDescription *FindExternalType(void)
 struct TypeDescription *FindType(symchar *name)
 {
   struct LibraryStructure *ptr;
+
   if (name==NULL) return NULL;
   assert(AscFindSymbol(name) != NULL);
   ptr = LibraryHashTable[LIBHASHINDEX(SCP(name))];
@@ -202,6 +205,8 @@ struct TypeDescription *FindType(symchar *name)
     }
     ptr = ptr->next;
   }
+  /*error_reporter(ASC_PROG_WARNING,__FILE__,__LINE__,"FindType: failed to locate '%s'", name);
+  FPRINTF(ASCERR,"FindType: failed to locate '%s'\n",name); */
   return NULL;
 }
 
@@ -302,6 +307,7 @@ struct TypeDescription *EquivalentExists(struct TypeDescription *desc)
   if (TypesAreEquivalent(old,desc)) {
     return old;
   }
+  /* FPRINTF(ASCERR,"TYPE FOUND FOR %s BUT NOT EQUIV\n",GetName(desc)); */
   return NULL;
 }
 
@@ -311,6 +317,7 @@ int AddType(struct TypeDescription *desc)
   struct TypeDescription *equiv;
   struct LibraryStructure *ptr;
 
+  /* FPRINTF(ASCERR,"ADD TYPE '%s'...\n",GetName(desc)); */
   assert(desc!=NULL);
 
   equiv = EquivalentExists(desc);
@@ -362,6 +369,7 @@ int AddType(struct TypeDescription *desc)
   while (ptr) {
 
     if (desc == ptr->type) {
+      /* FPRINTF(ASCERR,"...KEEPING OLD TYPE\n"); */
       return 0;
     }
 
@@ -396,12 +404,14 @@ int AddType(struct TypeDescription *desc)
             }
 	    /* keep the old copy. */
 	    DeleteNewTypeDesc(desc);
+	    FPRINTF(ASCERR,"KEEPING OLD TYPE (DELETING)\n");
             return 0;
 	  } else {
             ReplaceType(desc,ptr);
 	    /* the thing this type refines has been modified so the */
 	    /* library needs this new type definition */
 	  }
+	  FPRINTF(ASCERR,"ADDED (REPLACETYPE)\n");
 	  return 1;
 	}
       } else {
@@ -416,6 +426,7 @@ int AddType(struct TypeDescription *desc)
         }
       }
       ReplaceType(desc,ptr);
+      FPRINTF(ASCERR,"ADDING TYPE (REPLACETYPE 2)\n");
       return 1;
     }
 
@@ -428,6 +439,13 @@ int AddType(struct TypeDescription *desc)
   ptr->type = desc;
   ptr->open_count = Asc_ModuleTimesOpened(GetModule(desc));
   LibraryHashTable[bucket] = ptr;
+  /* FPRINTF(ASCERR,"ADDED TYPE '%s'\n",GetName(desc)); */
+  if(FindType(GetName(desc))==NULL){
+    FPRINTF(ASCERR,"UNABLE TO FIND TYPE '%s'\n",GetName(desc));
+  }else{
+	/* FPRINTF(ASCERR,"TYPE '%s' FOUND OK\n",GetName(desc)); */
+  }
+	
   return 1;
 }
 

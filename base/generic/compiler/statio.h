@@ -108,10 +108,14 @@ extern void WriteStatementList(FILE *f, CONST struct StatementList *sl, int i);
  *  printed on file f.
  */
 
+/** Write a ASC_PROG_NOTE message using WriteStatementErrorMessage(). */
+#define WSNM(f,s,m) WriteStatementErrorMessage(f,s,m,1,-1)
+
+/** Write a verbose error message using WriteStatementErrorMessage(). */
 #define WSEM(f,s,m) WriteStatementErrorMessage(f,s,m,1,0)
-/**< Write a verbose error message using WriteStatementErrorMessage(). */
+
+/** Write a brief error message using WriteStatementErrorMessage(). */
 #define WSSM(f,s,m,l) WriteStatementErrorMessage(f,s,m,0,l)
-/**< Write a brief error message using WriteStatementErrorMessage(). */
 extern void WriteStatementErrorMessage(FILE *f,
                                        CONST struct Statement *stat,
                                        CONST char *message,

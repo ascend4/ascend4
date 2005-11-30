@@ -1,3 +1,4 @@
+/* ex: set ts=8 : */
 /*
  *  -----------------------------------------------------------------
  *    Copyright 1993 D.I.S. - Universita` di Pavia - Italy
@@ -169,6 +170,9 @@ void AscCheckDuplicateLoad(CONST char *path)
 
 #ifdef __WIN32__
 #include <windows.h>
+/*
+	WINDOWS
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -197,7 +201,9 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
       FPRINTF(stderr,"Asc_DynamicLoad: Required function %s not found\n", initFun);
       (void)FreeLibrary(xlib);
       return 1;
-    }
+    }else{
+		FPRINTF(ASCERR,"FOUND INITFCN %s AT %d\n",initFcn,install);
+	}
   }
   if (0 != AscAddRecord(xlib,path)) {
     FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
@@ -210,25 +216,48 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 #ifndef MACH
 #include <dlfcn.h>
 
+/*
+	SOLARIS and LINUX
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   int (*install)() = NULL;
+  FILE *fp;
+
+  FPRINTF(ASCERR,"LOADING LIBRARY %s\n",path);
 
   if (NULL == path) {
-    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    FPRINTF(ASCERR,"Asc_DynamicLoad failed: Null path\n");
     return 1;
   }
 
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
-  /*
-   *	If the named library does not exist, if it's not loadable or if
-   *	it does not define the named install proc, report an error
-   */
-  xlib = dlopen(path, 1);
+
+  FPRINTF(ASCERR,"PATH IS NOT A DUPE\n");
+ 
+  fp = fopen(path,"rb");
+  if(fp==NULL){
+    FPRINTF(ASCERR,"FILE %s ISN'T THERE\n",path);
+    return 1;
+  }
+  FPRINTF(ASCERR,"FILE %s IS THERE AND CAN BE OPENED\n",path);
+  fclose(fp);
+  
+  /* clear error message first */
+  dlerror();
+  
+  xlib = dlopen(path,RTLD_GLOBAL|RTLD_NOW);
+  if(xlib==NULL){
+    FPRINTF(ASCERR,"COULDN'T LOAD LIBRARY %s\n",path);
+    FPRINTF(ASCERR,"DLERROR: %s\n\n",dlerror());
+    return 1;
+  }
+
+  FPRINTF(ASCERR,"LIBRARY OPENED; HUNTING FOR initFun %s\n",initFun);
   if (xlib == NULL) {
-    FPRINTF(stderr,"%s\n",(char *)dlerror());
+    FPRINTF(ASCERR,"DLERROR: %s\n",(char *)dlerror());
     return 1;
   }
   if (NULL != initFun) {
@@ -240,7 +269,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     }
   }
   if (0 != AscAddRecord(xlib,path)) {
-    FPRINTF(stderr,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    FPRINTF(ASCERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -286,6 +315,9 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 
 #ifdef __osf__
 #include <dlfcn.h>
+/*
+	OSF (??)
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -321,6 +353,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   return (install == NULL) ? 0 : (*install)();
 }
+
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   void *xlib;
@@ -978,6 +1011,9 @@ static void * findMain(void)
 
 #endif /* solaris or aix dlfcn */
 
+/*
+	???
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -1051,6 +1087,9 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 
 #ifdef _SGI_SOURCE
 #include <dlfcn.h>
+/*
+	SGI
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -1133,6 +1172,9 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 #include <dl.h>
 #include <errno.h>
 
+/*
+	HPUX
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -1320,6 +1362,9 @@ extern void dl_printAllSymbols(/* void *handle */);
 extern void dl_setLibraries(/* char *libs */);
 
 /* here we are in ultrix land */
+/*
+	ULTRIX
+*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */

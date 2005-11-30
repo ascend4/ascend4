@@ -30,6 +30,7 @@
  *
  */
 #include<stdio.h>
+#include<stdarg.h>
 #include<limits.h>		/* need DBL_MAX and LONG_MAX */
 #include<float.h>		/* on a NeXT they are in here */
 #include"utilities/ascConfig.h"
@@ -202,6 +203,7 @@ static void WarnMsg_MismatchEnd(CONST char *, CONST char *,
                                 unsigned long, CONST char *);
 static CONST char *TokenAsString(unsigned long);
 
+static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...);
 /*
  *  NOTES  Explanations  NOTES  Explanations  NOTES  Explanations  NOTES
  *
@@ -423,7 +425,7 @@ definition:
     | global_def
     | error
 	{
-	  ErrMsg_Generic("Error in definition ");
+	  ErrMsg_Generic("Error in definition.");
 	}
     ;
 
@@ -437,8 +439,7 @@ global_def:
 	    stats = gl_create(1L);
 	    gl_append_ptr(stats,(void *)$3);
 	    if (g_untrapped_error) {
-	      ErrMsg_Generic("Because of a syntax error, the "
-               "following statements are being ignored:");
+	      ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
 		WriteStatementList(ASCERR,$3,4);
 	      DestroyStatementList($3);
             } else {
@@ -452,8 +453,7 @@ global_def:
               case 0: /* kept */
 	        break;
               case -1: /* illegal in file */
-	        ErrMsg_Generic("GLOBAL statements can only be made "
-                 "interactively. Ignoring ");
+	        ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
 	        if (stats != NULL) {
 		  WriteStatementList(ASCERR,$3,4);
 	          gl_iterate(stats,(DestroyFunc)DestroyStatementList);
@@ -482,14 +482,12 @@ require_file:
     | REQUIRE_T name ';'
 	{
 	  DestroyName($2);
-	  ErrMsg_Generic("REQUIRE statement syntax is "
-	                 "``REQUIRE \"filename\";'' ");
+	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
 	}
     | REQUIRE_T name
 	{
 	  DestroyName($2);
-	  ErrMsg_Generic("REQUIRE statement syntax is "
-	                 "``REQUIRE \"filename\";'' ");
+	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
 	}
     ;
 
@@ -501,14 +499,12 @@ provide_module:
     | PROVIDE_T name ';'
 	{
 	  DestroyName($2);
-	  ErrMsg_Generic("PROVIDE statement syntax is "
-	                 "``PROVIDE \"filename\";'' ");
+	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
 	}
     | PROVIDE_T name
 	{
 	  DestroyName($2);
-	  ErrMsg_Generic("PROVIDE statement syntax is "
-	                 "``PROVIDE \"filename\";'' ");
+	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
 	}
     ;
 
@@ -672,7 +668,7 @@ atom_def:
 	      ErrMsg_NullDefPointer(SCP(g_type_name));
 	    }
 	  } else {
-	    FPRINTF(ASCERR,
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,
 	            "Atom dimensions don't match in ATOM %s on line %s:%lu.\n",
 	            SCP(g_type_name),
 	            Asc_ModuleBestName(Asc_CurrentModule()),
@@ -766,7 +762,7 @@ constant_def:
 	      ErrMsg_NullDefPointer(SCP(g_type_name));
 	    }
 	  } else {
-	    FPRINTF(ASCERR,
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,
 	            "Constant dimensions don't match in CONSTANT %s"
 	            " on line %s:%lu.\n",
 	            SCP(g_type_name),
@@ -800,7 +796,7 @@ constant_head:
 	    g_default_symbol = $<sym_ptr>6;
 	    break;
 	  default:
-	    ErrMsg_Generic("wierd constant type assign encountered ");
+	    ErrMsg_Generic("Wierd constant type assign encountered.");
 	    break; /* better not be reached. */
 	  }
 	  g_header_linenum = LineNum();
@@ -1024,7 +1020,7 @@ definition_def:
 	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),$1,$2,$3);
 	  }
 	  else {
-	    ErrMsg_Generic("Bad type passed to DEFINITION statement ");
+	    ErrMsg_Generic("Bad type passed to DEFINITION statement.");
 	    def_ptr = NULL;
 	  }
 	  if ( def_ptr != NULL ) {
@@ -1189,7 +1185,7 @@ statements:
 	}
     | statements error ';'
 	{
-	  ErrMsg_Generic("Error in statement input ");
+	  ErrMsg_Generic("Error in statement input.");
 	  $$ = $1;
 	}
     ;
@@ -1230,7 +1226,7 @@ isa_statement:
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($3);
 	  if ($5 != NULL) {
-	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A ");
+	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A.");
 	    g_untrapped_error++;
 	    DestroyVariableList($1);
 	    DestroySetList(g_typeargs);
@@ -1240,12 +1236,8 @@ isa_statement:
 	    if (tmptype != NULL) {
 	      if ((GetBaseType(tmptype) != model_type) &&
 	          (g_typeargs != NULL)) {
-	        FPRINTF(ASCERR,
-	                "%sThe IS_A on line %s:%lu\n"
-	                "  has arguments to the nonmodel type %s.\n",
-	                StatioLabel(3),
-	                Asc_ModuleBestName(Asc_CurrentModule()),
-	                LineNum(),
+	        error_reporter_current_line(ASC_USER_ERROR,
+	                "IS_A has arguments to the nonmodel type %s.\n",
 	                SCP($3));
 	        DestroyVariableList($1);
 	        DestroySetList(g_typeargs);
@@ -1256,10 +1248,7 @@ isa_statement:
 	        $$ = CreateISA($1,$3,g_typeargs,$4);
 	      }
 	    } else {
-	      FPRINTF(ASCERR,"%sThe IS_A on line %s:%lu\n",
-	              StatioLabel(3),Asc_ModuleBestName(Asc_CurrentModule()),
-	              LineNum());
-	      FPRINTF(ASCERR,"  uses the undefined type %s.\n",SCP($3));
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP($3));
 	      DestroyVariableList($1);
 	      DestroySetList(g_typeargs);
 	      DestroyExprList($5);
@@ -1280,11 +1269,7 @@ willbe_statement:
 	  if (tmptype != NULL) {
 	    if ((GetBaseType(tmptype) != model_type) &&
 	        (g_typeargs != NULL)) {
-	      FPRINTF(ASCERR,"%sThe WILL_BE on line %s:%lu\n",
-	              StatioLabel(3),Asc_ModuleBestName(Asc_CurrentModule()),
-	              LineNum());
-	      FPRINTF(ASCERR,
-	              "  has arguments to the nonmodel type %s.\n",SCP($3));
+	      error_reporter_current_line(ASC_USER_ERROR,"WILL_BE has arguments to the nonmodel type '%s'",SCP($3));
 	      DestroyVariableList($1);
 	      DestroySetList(g_typeargs);
 	      DestroyExprList($5);
@@ -1299,9 +1284,7 @@ willbe_statement:
 	    DestroyExprList($5);
 	    g_untrapped_error++;
 	    $$ = NULL;
-	    FPRINTF(ASCERR,"%sThe WILL_BE on line %s:%lu\n",StatioLabel(3),
-	            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	    FPRINTF(ASCERR,"	uses the undefined type %s.\n",SCP($3));
+	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP($3));
 	  }
 	  g_typeargs = NULL;
 	}
@@ -1319,35 +1302,30 @@ aliases_statement:
 	  carray_err = 0;
 	  if (VariableListLength($1) != 1L) {
 	    carray_err = 1;
-	    FPRINTF(ASCERR,
-	            "%sCompound ALIASES allows only 1 LHS name. Found:\n",
-	            StatioLabel(3));
+	    error_reporter_current_line(ASC_USER_ERROR,
+	            "Compound ALIASES allows only 1 LHS name. Found:");
 	    WriteVariableList(ASCERR,$1);
-	    FPRINTF(ASCERR,"\n");
 	  }
 	  if (VariableListLength($7) != 1L) {
 	    carray_err = 1;
-	    FPRINTF(ASCERR,
-	            "%sCompound ALIASES/IS_A allows only "
-	            "1 LHS name. Found:\n",StatioLabel(3));
+	    error_reporter_current_line(ASC_USER_ERROR,
+	            "Compound ALIASES/IS_A allows only one LHS name. Found:");
 	    WriteVariableList(ASCERR,$7);
-	    FPRINTF(ASCERR,"\n");
 	  }
 	  /* verify $9 == "set" */
 	  if (!carray_err && $9 != GetBaseTypeName(set_type)) {
 	    carray_err = 1;
-	    FPRINTF(ASCERR,"%sCompound ALIASES statement requires IS_A %s. ",
-	            StatioLabel(3),SCP(GetBaseTypeName(set_type)));
-	    FPRINTF(ASCERR,"Found %s.\n",SCP($9));
+	    error_reporter_current_line(ASC_USER_ERROR,"Compound ALIASES statement requires IS_A %s. ",SCP(GetBaseTypeName(set_type)));
+	    FPRINTF(ASCERR,"    Found %s.\n",SCP($9));
 	  }
 	  /* verify set type */
 	  if ((!carray_err) &&
 	      ($11 != GetBaseTypeName(symbol_constant_type)) &&
 	      ($11 != GetBaseTypeName(integer_constant_type))) {
 	    carray_err = 1;
-	    FPRINTF(ASCERR,
-	            "%sCompound ALIASES IS_A statement requires %s or %s.\n",
-	            StatioLabel(3),SCP(GetBaseTypeName(integer_constant_type)),
+	    error_reporter_current_line(ASC_USER_ERROR,
+	            "Compound ALIASES IS_A statement requires %s or %s.\n",
+	            SCP(GetBaseTypeName(integer_constant_type)),
 	            SCP(GetBaseTypeName(symbol_constant_type)));
 	    FPRINTF(ASCERR,"	Found %s.\n",SCP($11));
 	  }
@@ -1384,10 +1362,7 @@ is_statement:
 	    $$ = CreateREF($1,$3,$4,1);
 	  } else {
 	    $$ = CreateREF($1,$3,$4,1);
-	    FPRINTF(ASCERR,"%s The _IS_ on line %s:%lu\n",
-	            StatioLabel(2),
-	            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	    FPRINTF(ASCERR,"uses the unbuilt prototype %s.\n",SCP($3));
+	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP($3));
 	  }
 	}
     ;
@@ -1400,11 +1375,7 @@ isrefinedto_statement:
 	  if (tmptype != NULL) {
 	    if ((GetBaseType(tmptype) != model_type) && 
                 (g_typeargs != NULL)) {
-	      FPRINTF(ASCERR,"%sThe IS_REFINED_TO on line %s:%lu\n",
-	              StatioLabel(3),
-	              Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	      FPRINTF(ASCERR,
-	              "  has arguments to the nonmodel type %s.\n",SCP($3));
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_REFINED_TO has arguments to the nonmodel type %s.",SCP($3));
 	      DestroyVariableList($1);
 	      DestroySetList(g_typeargs);
 	      g_untrapped_error++;
@@ -1413,10 +1384,7 @@ isrefinedto_statement:
 	      $$ = CreateIRT($1,$3,g_typeargs);
 	    }
 	  } else {
-	    FPRINTF(ASCERR,"%sThe IS_REFINED_TO on line %s:%lu\n",
-	            StatioLabel(3),
-	            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	    FPRINTF(ASCERR,"	uses the undefined type %s.\n",SCP($3));
+	    error_reporter_current_line(ASC_USER_ERROR,"The IS_REFINED_TO uses the undefined type %s.\n",SCP($3));
 	    DestroyVariableList($1);
 	    DestroySetList(g_typeargs);
 	    g_untrapped_error++;
@@ -1560,10 +1528,8 @@ relation:
 	  $$ = $1;
 	  if (NumberOfRelOps($1) < 1) {
 	    /* want at least 1. restriction to exactly 1 is in typelint */
-	    ErrMsg_Generic("Missing punctuation (,;:) or else\n"
-	                  "expression contains the wrong number of relation\n"
-	                  "operators (=, ==, <, >, <=, >=, !=)"
-	                  " preceeding or ");
+	    ErrMsg_Generic("Missing punctuation (,;:) or else expression contains the \
+wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    g_untrapped_error++;
 	  }
 	}
@@ -1571,8 +1537,7 @@ relation:
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_minimize));
 	  if (NumberOfRelOps($2) > 0) {
-	    ErrMsg_Generic("Objective function contains relation\n"
-	                  "operators (=, ==, <, >, <=, >=, !=) ");
+	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
 	}
@@ -1580,8 +1545,7 @@ relation:
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_maximize));
 	  if (NumberOfRelOps($2)>0) {
-	    ErrMsg_Generic("Objective function contains relation\n"
-	                  "operators (=, ==, <, >, <=, >=, !=) ");
+	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
 	}
@@ -1663,8 +1627,7 @@ for_statement:
 	  }
           if ($6 == fk_create && $5 != f_random) {
             /* create cannot have an order in declarative FOR */
-	    ErrMsg_Generic("FOR loops only accept DECREASING or\n"
-                           "INCREASING in the method section ");
+	    ErrMsg_Generic("FOR loops only accept DECREASING or INCREASING in the method section.");
 	    g_untrapped_error++;
           }
           if ($6 == fk_do && $5 == f_random) {
@@ -1778,7 +1741,7 @@ when_statement:
 	  if( $4 != WHEN_T ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, $4, NULL);
 	  }
-	  ErrMsg_Generic("() missing in WHEN statement ");
+	  ErrMsg_Generic("() missing in WHEN statement.");
 	  DestroyWhenList($3);
 	  DestroyVariableList($2);
 	  g_untrapped_error++;
@@ -1789,7 +1752,7 @@ when_statement:
 	  if( $6 != WHEN_T ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, $6, NULL);
 	  }
-	  ErrMsg_Generic("() missing in WHEN statement ");
+	  ErrMsg_Generic("() missing in WHEN statement.");
 	  DestroyWhenList($5);
 	  DestroyVariableList($4);
 	  DestroyName($1);
@@ -1874,7 +1837,7 @@ select_statement:
 	  if( $4 != SELECT_T ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, $4, NULL);
 	  }
-	  ErrMsg_Generic("() missing in SELECT statement ");
+	  ErrMsg_Generic("() missing in SELECT statement.");
 	  DestroySelectList($3);
 	  DestroyVariableList($2);
 	  g_untrapped_error++;
@@ -1921,7 +1884,7 @@ switch_statement:
 	  if( $4 != SWITCH_T ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, $4, NULL);
 	  }
-	  ErrMsg_Generic("() missing in SWITCH statement ");
+	  ErrMsg_Generic("() missing in SWITCH statement.");
 	  DestroySwitchList($3);
 	  DestroyVariableList($2);
 	  g_untrapped_error++;
@@ -2113,9 +2076,7 @@ name:
     | name '[' set ']'
 	{
 	  if ($3 == NULL) {
-	    FPRINTF(ASCERR,"%ssyntax error at %lu\n",StatioLabel(3),LineNum());
-	    FPRINTF(ASCERR,"  Empty set in name definition\n");
-	    FPRINTF(ASCERR,"  Name: ");
+	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
 	    WriteName(ASCERR,$1);
 	    FPRINTF(ASCERR,"[]\n");
 	    g_untrapped_error++;
@@ -2285,10 +2246,9 @@ realnumber:
             char **errv;
 	    $$ = (double)$1;
 	    g_dim_ptr = WildDimension();
-	    FPRINTF(ASCERR,"%sUndefined units {%s} %s:%lu.\n",StatioLabel(3),
-	            $2,Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", $2);
             errv = UnitsExplainError($2,error_code,pos);
-	    FPRINTF(ASCERR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
+	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
 	}
@@ -2312,10 +2272,9 @@ opunits:
             char **errv;
 	    $$ = 1.0;
 	    g_dim_ptr = WildDimension();
-	    FPRINTF(ASCERR,"%sUndefined units {%s} %s:%lu.\n",StatioLabel(3),
-	            $1,Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",$1);
             errv = UnitsExplainError($1,error_code,pos);
-	    FPRINTF(ASCERR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
+	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
 	}
@@ -2601,11 +2560,7 @@ expr:
 	    $$ = JoinExprLists($3,CreateFuncExpr(fptr));
 	  } else {
 	    $$ = NULL;
-	    FPRINTF(ASCERR,"%sFunction %s is not defined.\n",
-	            StatioLabel(3),SCP($1));
-	    FPRINTF(ASCERR,"  File name: %s:%lu\n",
-	            Asc_ModuleBestName(Asc_CurrentModule()),
-	            LineNum());
+	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP($1));
 	    g_untrapped_error++;
 	  }
 	}
@@ -2662,12 +2617,10 @@ int
 yyerror(char *s)
 {
   g_untrapped_error++;
-  FPRINTF(ASCERR,"%s",s);
   if (Asc_CurrentModule() != NULL) {
-    FPRINTF(ASCERR," %s:%lu.\n",
-            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
+    error_reporter_current_line(ASC_USER_ERROR,"%s",s);
   } else {
-    FPRINTF(ASCERR," at end of input.\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"%s at end of input.\n",s);
   }
   return 0;
 }
@@ -2682,15 +2635,9 @@ Asc_ErrMsgTypeDefnEOF(void)
    *  definition.  If NULL no, otherwise yes.
    */
   if ( g_type_name ) {
-    FPRINTF(ASCERR,
-            "%sEnd of file reached in a type definition.\n"
-            "\tIncomplete definition for %s on line %s:%lu\n",
-            StatioLabel(3),
-            SCP(g_type_name),
-            (Asc_CurrentModule()
-             ? Asc_ModuleBestName(Asc_CurrentModule())
-             : "<UNKNOWN>"),
-            LineNum());
+    error_reporter_current_line(ASC_USER_ERROR,
+            "End of file reached in a type definition. Incomplete definition for '%s'.",
+            SCP(g_type_name));
   }
 }
 
@@ -2706,23 +2653,14 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void
 ErrMsg_Generic(CONST char *string)
 {
-  struct module_t *mod;
+  /* the module may have be already closed, Asc_CurrentModule will be null */
+  error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
-  /* the module may have be already closed */
-  mod = Asc_CurrentModule();
-  FPRINTF(ASCERR,
-          "%s%son line %s:%lu\n",
-          StatioLabel(3),string,
-          (mod ? Asc_ModuleBestName(mod) : "<UNKNOWN>"),
-          LineNum());
   if (g_type_name != NULL) {
-    FPRINTF(ASCERR,"    type %s",SCP(g_type_name));
+    error_reporter_current_line(ASC_USER_ERROR,"    type %s\n",SCP(g_type_name));
   }
   if (g_proc_name != NULL) {
-    FPRINTF(ASCERR,"    METHOD %s",SCP(g_proc_name));
-  }
-  if (g_type_name != NULL || g_proc_name != NULL) {
-    FPRINTF(ASCERR,"\n");
+    error_reporter_current_line(ASC_USER_ERROR,"    METHOD %s\n",SCP(g_proc_name));
   }
 }
 
@@ -2732,12 +2670,9 @@ static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 
   /* the module may have be already closed */
   mod = Asc_CurrentModule();
-  FPRINTF(ASCERR, "ASC-Error: Missing comma or operator before %s ",what);
+
+  error_reporter_current_line(ASC_USER_ERROR, "ASC-Error: Missing comma or operator before %s ",what);
   WriteName(ASCERR,name);
-  FPRINTF(ASCERR,
-          " on line %s:%lu\n",
-          (mod ? Asc_ModuleBestName(mod) : "<UNKNOWN>"),
-          LineNum());
 }
 
 #if COMMAEXPR_NOTBUGGY
@@ -2746,67 +2681,45 @@ static void ErrMsg_CommaExpr(CONST char *what, struct Expr *eptr)
   struct module_t *mod;
 
   /* the module may have be already closed */
-  mod = Asc_CurrentModule();
-  FPRINTF(ASCERR, "ASC-Error: Missing comma before %s ",what);
+  error_reporter_current_line(ASC_USER_ERROR, "ASC-Error: Missing comma before %s ",what);
   WriteExpr(ASCERR,eptr);
-  FPRINTF(ASCERR,
-          " on line %s:%lu\n",
-          (mod ? Asc_ModuleBestName(mod) : "<UNKNOWN>"),
-          LineNum());
 }
 #endif /* COMMAEXPR_NOTBUGGY. delete if can't fix */
 
 static void
 ErrMsg_NullDefPointer(CONST char *object)
 {
-  FPRINTF(ASCERR,
-          "%sRejected \"%s\" at line %s:%lu.\n\n",
-          StatioLabel(3),
-          object,
-          Asc_ModuleBestName(Asc_CurrentModule()),
-          LineNum());
+  error_reporter_current_line(ASC_USER_ERROR,"Rejected '%s'", object);
 }
 
 static void
 ErrMsg_ProcTypeMissing(CONST char *AorR, CONST char *type)
 {
-  FPRINTF(ASCERR,
-	  "%s: %s METHODS called with undefined type (%s) at %s:%d.\n",
-	  StatioLabel(3), AorR, type,
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-          (int)LineNum());
+  error_reporter_current_line(ASC_USER_ERROR,
+	  "%s METHODS called with undefined type (%s)", AorR, type);
 }
 
 static void
 ErrMsg_ProcsRejected(CONST char *AorR, CONST char *type)
 {
-  FPRINTF(ASCERR,
-	  "%s: %s METHODS failed for type %s at %s:%d.\n",
-	  StatioLabel(3), AorR, type,
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-          (int)LineNum());
+  error_reporter_current_line(ASC_USER_ERROR,
+	  "%s METHODS failed for type %s", AorR, type);
 }
 
 static void
 ErrMsg_DuplicateProc(struct InitProcedure *p)
 {
-  FPRINTF(ASCERR,
-	  "%s: Duplicate METHOD %s rejected at %s:%d.\n",
-	  StatioLabel(2),
-	  SCP(ProcName(p)),
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-          (int)LineNum());
+  error_reporter_current_line(ASC_USER_WARNING,
+	  "Duplicate METHOD %s rejected", SCP(ProcName(p)));
 }
 
 static void
 ErrMsg_ParensBrackets(CONST char *operation)
 {
-  FPRINTF(ASCERR,
-          "  You should be using %s[] not %s()\nat line %s:%lu.\n",
+  error_reporter_current_line(ASC_USER_ERROR,
+          "  You should be using %s[] not %s()",
           operation,
-          operation,
-          Asc_ModuleBestName(Asc_CurrentModule()),
-          LineNum());
+          operation);
 }
 
 
@@ -2832,17 +2745,12 @@ static void
 WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
 		    unsigned long end_token, CONST char *expecting)
 {
-  FPRINTF(ASCWAR,
-          "%s %s %s terminated with\n"
-          "  END %s;     ---expecting:  END %s;\n"
-          "  at %s:%lu.\n",
-          StatioLabel(2),
-          statement,
-          ((opt_name != NULL) ? opt_name : "statement"),
-          TokenAsString(end_token),
-          ((expecting != NULL) ? expecting : statement),
-          Asc_ModuleBestName(Asc_CurrentModule()),
-          LineNum());
+  error_reporter_current_line(ASC_USER_WARNING,
+          "%s %s terminated with 'END %s;', expecting 'END %s;'"
+          ,statement
+          ,((opt_name != NULL) ? opt_name : "statement")
+          ,TokenAsString(end_token)
+          ,((expecting != NULL) ? expecting : statement));
 }
 
 
@@ -2935,4 +2843,16 @@ static void CollectNote(struct Note *n)
     return;
   }
   gl_append_ptr(g_notelist,(VOIDPTR)n);
+}
+
+/*
+	This can be called as error_reporter_current_line(ASC_USER_ERROR,...);
+	or error_reporter_current_line(ASC_USER_WARNING,...), or with any of the other 
+	severity flags.
+*/
+static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
+	va_list args;
+	va_start(args,fmt);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),fmt,args);
+	va_end(args);
 }

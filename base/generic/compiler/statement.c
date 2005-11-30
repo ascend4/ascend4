@@ -527,6 +527,10 @@ struct Statement *CreateEXTERN(int mode,
 			       struct Name *scope)
 {
   register struct Statement *result;
+  if(mode==2){
+    ERROR_REPORTER_DEBUG("Found blackbox function statement '%s'\n",funcname);
+  }
+
   result = STMALLOC;
   assert(result!=NULL);
   result->t = EXT;

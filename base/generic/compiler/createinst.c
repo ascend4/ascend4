@@ -682,6 +682,8 @@ struct Instance *CreateRelationInstance(struct TypeDescription *type,
 {
   register struct RelationInstance *result;
   register unsigned long num_children;
+  ERROR_REPORTER_DEBUG("Entered CreateRelationInstance\n");
+
   if ((result=RELN_INST(LookupPrototype(GetName(type))))==NULL){
     CopyTypeDesc(type);
     num_children = ChildListLen(GetChildList(type));

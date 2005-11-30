@@ -97,7 +97,7 @@ double zbrent(ExtEvalFunc *func,	/* the evaluation function */
   }
 
   if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
-    FPRINTF(stderr,"root must be bracketed in zbrent\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"Solver: zbrent: Root must be bracketed.");
     *status = -1;		/* cannot invert */
     return ZBIGNUM;
   }
@@ -167,7 +167,7 @@ double zbrent(ExtEvalFunc *func,	/* the evaluation function */
       return ZBIGNUM;
     }
   }
-  FPRINTF(stderr,"Maximum number of iterations exceeded in zbrent\n");
+  error_reporter(ASC_USER_ERROR,NULL,0,"Solver: zbrent: Maximum number of iterations exceeded.");
   *status = -1;		/* cannot invert */
   return ZBIGNUM;	/* NOTREACHED */
 }

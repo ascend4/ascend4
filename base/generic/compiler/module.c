@@ -46,7 +46,6 @@
 #include "compiler/module.h"
 #include "compiler/library.h"
 
-
 #ifndef lint
 static CONST char ModuleRCSid[] = "$Id: module.c,v 1.25 1998/03/17 22:09:12 ballan Exp $";
 #endif /* RCS ID keyword */
@@ -165,7 +164,6 @@ static int StoreModule(CONST struct module_t *);
 static void WriteWhyNotFound(symchar *,  int);
 
 
-
 /**  See the header file for this function's documentation
  **/
 int Asc_InitModules(unsigned long init_size)
@@ -175,6 +173,7 @@ int Asc_InitModules(unsigned long init_size)
   }
   g_module_list = gl_create(init_size);
   if( g_module_list == NULL ) {
+	FPRINTF(ASCERR,"FAILED TO CREATE MODULE LIST\n");
     return 1;
   }
   return 0;
@@ -438,15 +437,22 @@ struct module_t *FindModuleFile(CONST char *name,
    */
   new_module = NewModule( name );
   if( new_module == NULL ) {
+	/*FPRINTF(ASCERR,"NEW MODULE RETURNED NULL\n");*/
     *status = -3;
     return NULL;
   }
+  /*FPRINTF(ASCERR,"NEW MODULE RETURNED NON-NULL\n");*/
+
 
   /*
    *  Check to see if a module having the same base_name exists.
    *  If so, fetch it.
    */
   dup = SearchForModule( new_module );
+/*  if( dup == NULL ) {
+	FPRINTF(ASCERR,"DID NOT FIND MODULE IN MEMORY\n");
+  }
+  */    
 
   /*
    *  If were we called from RequireModule, return if a module
@@ -463,15 +469,17 @@ struct module_t *FindModuleFile(CONST char *name,
    *  `f', `time_last_modified', and `line_number' fields.
    */
   result = ModuleSearchPath( name, filename, new_module, &error );
-
+ 
   /*
    * Check for a memory error in ModuleSearchPath.
    */
   if( result == -3 ) {
     DeleteModule( new_module );
-    *status = -3;
+    *status = -4;
     return NULL;
-  }
+  }/*else{
+	FPRINTF(ASCERR,"FOUND MODULE FILE, result=%d\n",result);
+  }*/
 
   /*
    *  If we couldn't find the module or a fopen error occurred, print
@@ -495,6 +503,7 @@ struct module_t *FindModuleFile(CONST char *name,
    *  base_name when we created the module.
    */
   new_module->filename = AddSymbol(filename);
+  /* FPRINTF(ASCERR, "ADDED SYMBOL FOR FILENAME %s\n",filename); */
 
   /*
    *  If a module having the same base_name does not exist,
@@ -506,9 +515,13 @@ struct module_t *FindModuleFile(CONST char *name,
     new_module->open_count = 1;
     new_module->version = 0;
     sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
+	/*FPRINTF(ASCERR,"SYMBOL FOR FILE IS %s\n",filename);*/
     new_module->name = AddSymbol(filename);
+
+	
     if( StoreModule( new_module ) != 0 ) {
       DeleteModule( new_module );
+	  FPRINTF(ASCERR,"COULDN'T STORE MODULE %s\n",new_module->filename);
       *status = -3;
       return NULL;
     }
@@ -928,17 +941,20 @@ int ModuleSearchPath(CONST char *name,
     /* The file exists.  Copy "name" into "filename" before we return */
     for( length = 0, t = name; *t != '\0'; filename[length++] = *t++ );
     filename[length] = '\0';
+	/*FPRINTF(ASCERR,"FOUND EXPLICITLY STATED FILENAME\n");*/
     return result;
   }
 
   /* get paths to search */
   path_list = Asc_GetPathList( PATHENVIRONMENTVAR, &path_entries );
   if( path_entries == -1 ) {
+	FPRINTF(ASCERR,"UNABLE TO GETPATHLIST\n");
     /* memory error */
     return -3;
   }
   if( path_entries == 0 ) {
     /* unknown variable: no paths to search, return not found */
+	FPRINTF(ASCERR,"NO PATHS TO SEARCH\n");
     return 1;
   }
 
@@ -1177,7 +1193,6 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
   return -2;
 }
 
-
 /*
  *  struct module_t *NewModule(name);
  *      const char *name;
@@ -1197,6 +1212,7 @@ struct module_t *NewModule(CONST char *name)
 
   new = (struct module_t*)ascmalloc(sizeof(struct module_t));
   if( new == NULL ) {
+	FPRINTF(ASCERR,"ERROR: UNABLE TO MALLOC FOR NEW MODULE\n");
     return NULL;
   }
   new->name = NULL;
@@ -1230,6 +1246,7 @@ struct module_t *NewModule(CONST char *name)
     }
   }
 
+ /* FPRINTF(ASCERR,"OK: MODULE MALLOCED, name is %s\n", new->base_name);*/
   return new;
 }
 
@@ -1289,6 +1306,7 @@ int StoreModule(CONST struct module_t *m)
 {
   /* initialize the global module list if required */
   if((g_module_list==NULL) && (Asc_InitModules(G_MODULE_LIST_INIT_SIZE)!=0)) {
+	FPRINTF(ASCERR,"FAILED TO ASC_INITMODULES\n");
     return 1;
   }
   gl_append_ptr( g_module_list, (VOIDPTR)m );

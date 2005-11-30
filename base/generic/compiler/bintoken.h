@@ -75,11 +75,11 @@ enum bintoken_kind {
  * of unneeded files; specifically $srcname, objname will be deleted
  * after a successful link.
  */
-extern int BinTokenSetOptions(char *srcname,
-                              char *objname,
-                              char *libname,
-                              char *buildcommand,
-                              char *unlinkcommand,
+extern int BinTokenSetOptions(CONST char *srcname,
+                              CONST char *objname,
+                              CONST char *libname,
+                              CONST char *buildcommand,
+                              CONST char *unlinkcommand,
                               unsigned long maxreln,
                               int verbose,
                               int housekeep);
