@@ -44,8 +44,8 @@
  *  </pre>
  */
 
-#ifndef __PENDING_H_SEEN__
-#define __PENDING_H_SEEN__
+#ifndef ASC_PENDING_H
+#define ASC_PENDING_H
 
 struct pending_t {
   struct pending_t *next, *prev;
@@ -195,5 +195,5 @@ extern unsigned long NumberPendingInstances(struct Instance *i);
  *  Returns the total count of pendings.
  */
 
-#endif  /* __PENDING_H_SEEN__ */
+#endif  /* ASC_PENDING_H */
 

@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef __BrowserInst_io_module__
-#define __BrowserInst_io_module__
+#ifndef ASCTK_BROWSERQUERY_H
+#define ASCTK_BROWSERQUERY_H
 
 
 extern int Asc_BrowIsRelationCmd(ClientData cdata, Tcl_Interp *interp,
@@ -359,5 +359,5 @@ extern int Asc_BrowClearVarsCmd(ClientData cdata, Tcl_Interp *interp,
  *  qlfdid given, in the qlfdid instance.
  */
 
-#endif /* __BrowserInst_io_module__ */
+#endif /* ASCTK_BROWSERQUERY_H */
 

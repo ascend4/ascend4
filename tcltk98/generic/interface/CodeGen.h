@@ -42,8 +42,8 @@
  *  @todo Complete documentaion of CodeGen.h.
  */
 
-#ifndef CodeGen_module_loaded
-#define CodeGen_module_loaded
+#ifndef ASCTK_CODEGEN_H
+#define ASCTK_CODEGEN_H
 
 #define CG_INCLUDED   0x1
 #define CG_LESS       0x2
@@ -227,5 +227,5 @@ extern void Asc_CodeGenWriteAscendFile(slv_system_t sys,
 extern int  Asc_CodeGenTypesCmd(ClientData cdata, Tcl_Interp *interp,
                                 int argc, char *argv[]);
 
-#endif /* CodeGen_module_loaded */
+#endif /* ASCTK_CODEGEN_H */
 

@@ -67,8 +67,8 @@
  *  @todo Complete documentation of compiler/safe.h.
  */
 
-#ifndef safe__already_included
-#define safe__already_included
+#ifndef ASC_SAFE_H
+#define ASC_SAFE_H
 
 /*extern int safe_print_errors;*/
 
@@ -301,5 +301,5 @@ safe_pow_Dn(double x, double y, int nwrt0, int nwrt1, enum safe_err *safe);
  *  of x <binop> y.
  */
 
-#endif  /* safe__already_included */
+#endif  /* ASC_SAFE_H */
 

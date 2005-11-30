@@ -36,8 +36,8 @@
  *  </pre>
  */
 
-#ifndef _DRIVER_H
-#define _DRIVER_H
+#ifndef ASCTK_DRIVER_H
+#define ASCTK_DRIVER_H
 
 extern int g_compiler_timing;
 /**<
@@ -84,5 +84,5 @@ extern int Asc_DebugMallocCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  */
 #endif  /* DEBUG_MALLOC */
 
-#endif  /* _DRIVER_H  */
+#endif  /* ASCTK_DRIVER_H  */
 

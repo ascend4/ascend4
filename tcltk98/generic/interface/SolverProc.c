@@ -28,8 +28,8 @@
  */
 
 #include <math.h>
-#include "tcl.h"
-#include "tk.h"
+#include <tcl.h>
+#include <tk.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascSignal.h"
 #include "utilities/ascMalloc.h"
@@ -60,7 +60,6 @@
 #include "compiler/instantiate.h"
 #include "compiler/watchpt.h"
 #include "solver/slv_types.h"
-#include "solver/slv_types.h"
 #include "solver/mtx.h"
 #include "solver/rel.h"
 #include "solver/var.h"
@@ -90,10 +89,10 @@
 #include "interface/SolverProc.h"
 #include "interface/DisplayProc.h"
 #include "interface/Commands.h"
+#include "interface/Qlfdid.h"
 #include "interface/SimsProc.h"
 #include "interface/BrowserProc.h"
 #include "interface/BrowserQuery.h"
-#include "interface/Qlfdid.h"
 #include "interface/UnitsProc.h"   /* KHACK: not sure if this should be here */
 #include "interface/ScriptProc.h"
 #include "interface/Driver.h"

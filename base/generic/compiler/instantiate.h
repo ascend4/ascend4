@@ -41,8 +41,8 @@
  *  </pre>
  */
 
-#ifndef __INSTANTIATE_H_SEEN__
-#define __INSTANTIATE_H_SEEN__
+#ifndef ASC_INSTANTIATE_H
+#define ASC_INSTANTIATE_H
 
 #define NORELS 	 0x0
 #define GBOXRELS 0x1
@@ -260,5 +260,5 @@ extern int IncompleteArray(CONST struct Instance *i);
  *  exception of arrays of relations/logical_relations.
  */
 
-#endif /* __INSTANTIATE_H_SEEN__ */
+#endif /* ASC_INSTANTIATE_H */
 

@@ -33,10 +33,10 @@
  *  @todo Document conoptdll.h.
  */
 
-#ifndef _CONOPTDLL_H
-#define _CONOPTDLL_H
+#ifndef ASC_CONOPTDLL_H
+#define ASC_CONOPTDLL_H
 
-#ifndef _ASCCONFIG_H /* only define these if we haven't seen ascConfig.h */
+#ifndef ASC_ASCCONFIG_H /* only define these if we haven't seen ascConfig.h */
 typedef int int32;
 typedef double real64;
 #endif /* _ASCCONFIG_H */

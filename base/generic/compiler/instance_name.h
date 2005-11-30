@@ -36,8 +36,8 @@
  *  </pre>
  */
 
-#ifndef __INSTANCE_NAME_H_SEEN__
-#define __INSTANCE_NAME_H_SEEN__
+#ifndef ASC_INSTANCE_NAME_H
+#define ASC_INSTANCE_NAME_H
 
 enum NameTypes {
   IntArrayIndex,  /**< integer array index */
@@ -124,5 +124,5 @@ struct InstanceName {
  *  Set the integer index of InstanceName structure in to int_index (a long).
  */
 
-#endif /* __INSTANCE_NAME_H_SEEN__ */
+#endif /* ASC_INSTANCE_NAME_H */
 

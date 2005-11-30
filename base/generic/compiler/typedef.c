@@ -5326,7 +5326,9 @@ static void DefineFType(symchar *sym, enum type_kind t)
   def = CreateAtomTypeDef(sym,NULL,t,NULL,0,EmptyStatementList(),NULL,
         		  0,0.0,WildDimension(),0,NULL,0);
   if (def) {
+    //FPRINTF(ASCERR,"----\nADD FUND TYPE %s...\n",sym);
     AddType(def);
+    //FPRINTF(ASCERR,"... ADD FUND TYPE %s...\n",sym);
   } else {
     FPRINTF(ASCERR,"%sUnable to define fundamental atom %s.\n",
       StatioLabel(3),SCP(sym));

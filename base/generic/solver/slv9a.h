@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef slv9a__already_included
-#define slv9a__already_included
+#ifndef ASC_SLV9A_H
+#define ASC_SLV9A_H
 
 typedef struct slv9a_system_structure *slv9a_system_t;
 
@@ -52,5 +52,5 @@ int slv9a_register(SlvFunctionsT *sft);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv9a__already_included */
+#endif  /* ASC_SLV9A_H */
 

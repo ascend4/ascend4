@@ -61,8 +61,8 @@
  *  </pre>
  */
 
-#ifndef rel__already_included
-#define rel__already_included
+#ifndef ASC_REL_H
+#define ASC_REL_H
 
 /*
  * rel_relation data type and basic type operators.
@@ -893,5 +893,5 @@ extern real64 ExtRel_Diffs_LHS(struct rel_relation *rel,
  *  lhs/rhs has been re-set.
  */
 
-#endif /* rel__already_included  */
+#endif /* ASC_REL_H  */
 

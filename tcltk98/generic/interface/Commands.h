@@ -38,8 +38,8 @@
  *  </pre>
  */
 
-#ifndef Commands_module_loaded
-#define Commands_module_loaded
+#ifndef ASCTK_COMMANDS_H
+#define ASCTK_COMMANDS_H
 
 extern void Asc_CreateCommands(Tcl_Interp *interp);
 /**<
@@ -75,5 +75,5 @@ extern void Asc_AddCommand(Tcl_Interp *interp,
  * do not have tk-widget-like behavior or clientdata.
  */
 
-#endif  /* Commands_module_loaded */
+#endif  /* ASCTK_COMMANDS_H */
 

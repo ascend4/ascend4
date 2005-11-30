@@ -39,8 +39,8 @@
  *  </pre>
  */
 
-#ifndef __INSTQUERY_H_SEEN__
-#define __INSTQUERY_H_SEEN__
+#ifndef ASC_INSTQUERY_H
+#define ASC_INSTQUERY_H
 
 /*
  *  The following InterfacePtr functions are to support a global,
@@ -389,5 +389,5 @@ extern struct Instance *GetSimulationRoot(struct Instance *i);
  *  i must be a sim instance.
  */
 
-#endif  /* __INSTQUERY_H_SEEN__ */
+#endif  /* ASC_INSTQUERY_H */
 

@@ -38,8 +38,8 @@
  *  </pre>
  */
 
-#ifndef BrowserProc_module_loaded
-#define BrowserProc_module_loaded
+#ifndef ASCTK_BROWSERPROC_H
+#define ASCTK_BROWSERPROC_H
 
 extern struct Instance *g_root;
 /**<  The root instance in the Browser */
@@ -232,5 +232,5 @@ extern int Asc_BrowAnonTypesCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  * TCL interpreter on return.\n\
 "
 
-#endif /* BrowserProc_module_loaded */
+#endif /* ASCTK_BROWSERPROC_H */
 

@@ -40,6 +40,13 @@
 #define LOGFILE "memlg"
 #define MAXPOINTERS 1000000
 
+#ifndef TEMPFILE_TEMPLATE
+#  ifdef WINDOWS
+#    error "NEED TO IMPLEMENT TEMPFILE_TEMPLATE FOR WINDOWS"
+#  endif
+#  define TEMPFILE_TEMPLATE "/tmp/asctmpXXXXXX"
+#endif
+
 #ifndef lint
 static CONST char AscendMemoryAllocRCSid[]="$Id: ascMalloc.c,v 1.1 1997/07/18 11:44:49 mthomas Exp $";
 #endif
@@ -189,7 +196,7 @@ int g_memory_length = 0;
 unsigned long g_memory_allocated = 0L;
 unsigned long g_peak_memory_usage = 0L;
 struct memory_rec g_mem_rec[MAXPOINTERS];
-char *g_memlog_filename = NULL;
+char *g_memlog_filename = TEMPFILE_TEMPLATE;
 
 unsigned long ascmeminusef(void)
 {
@@ -256,26 +263,28 @@ static CONST VOIDPTR MemoryMean(void)
  */
 static void OpenLogFile(void)
 {
-  if (NULL == g_memlog_filename){
-    time_t t;
-    g_memlog_filename = tempnam(NULL,LOGFILE);
-    if (g_memlog_filename &&
-       (NULL == (g_memory_log_file = fopen(g_memlog_filename,"w")))) {
+  static int have_fixed_filename;	
+  time_t t;
+
+  if(!have_fixed_filename){
+    g_memory_log_file = (FILE *)mkstemp(g_memlog_filename);
+	if(g_memory_log_file == NULL){
       Asc_Panic(2, NULL, "Unable to open memory log file.\n");
-    }
-    t = time((time_t *)NULL);
-    FPRINTF(g_memory_log_file,"Ascend memory log file opened %s",
-                              asctime(localtime(&t)));
-    FPRINTF(g_memory_log_file,"%16s %13s %16s %13s %6s %s",
-                              "Alloc Range",
-                              "Size",
-                              "Dealloc Range",
-                              "Size",
-                              "Line#",
-                              "Source File\n");
-    fclose(g_memory_log_file);
-    g_memory_log_file = NULL;
+	}  
   }
+	
+  t = time((time_t *)NULL);
+  FPRINTF(g_memory_log_file,"Ascend memory log file opened %s",
+                            asctime(localtime(&t)));
+  FPRINTF(g_memory_log_file,"%16s %13s %16s %13s %6s %s",
+                            "Alloc Range",
+                            "Size",
+                            "Dealloc Range",
+                            "Size",
+                            "Line#",
+                            "Source File\n");
+  fclose(g_memory_log_file);
+  g_memory_log_file = NULL;
 }
 
 static void WriteMemoryStatus(FILE *f, CONST char *msg)

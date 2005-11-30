@@ -45,8 +45,8 @@
  *  @todo Complete documentation of func.h.
  */
 
-#ifndef __FUNC_H_SEEN__
-#define __FUNC_H_SEEN__
+#ifndef ASC_FUNC_H
+#define ASC_FUNC_H
 
 /*
  *  the following should be ifdefed to deal with math.h values
@@ -484,5 +484,5 @@ extern double ConcaveEnvDeriv(CONST struct Func *f, double x,
 
 #endif /* CHRIS_FUNC */
 
-#endif /* __FUNC_H_SEEN__ */
+#endif /* ASC_FUNC_H */
 

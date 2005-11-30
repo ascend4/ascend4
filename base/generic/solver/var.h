@@ -64,8 +64,8 @@
  *        be fixed (see longer BAA comment in solver/var.h).
  */
 
-#ifndef var__already_included
-#define var__already_included
+#ifndef ASC_VAR_H
+#define ASC_VAR_H
 
 /*
  * The first section of flagbit definitions are those flags to be
@@ -780,5 +780,5 @@ extern boolean set_solver_types(void);
  *  Also sets all the related types listed above.
  */
 
-#endif  /* __VAR_H__SEEN__ */
+#endif  /* ASC_VAR_H */
 

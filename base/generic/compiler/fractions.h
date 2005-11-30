@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef __FRACTIONS_H_SEEN__
-#define __FRACTIONS_H_SEEN__
+#ifndef ASC_FRACTIONS_H
+#define ASC_FRACTIONS_H
 
 /** The type of a fraction numerator or denominator. */
 #define FRACPART short
@@ -121,5 +121,5 @@ extern struct fraction NegateF(struct fraction f);
  *  Returned fraction equal -f.
  */
 
-#endif /* __FRACTIONS_H_SEEN__ */
+#endif /* ASC_FRACTIONS_H */
 

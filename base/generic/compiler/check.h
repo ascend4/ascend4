@@ -38,8 +38,8 @@
  *  </pre>
  */
 
-#ifndef __CHECK_H_SEEN__
-#define __CHECK_H_SEEN__
+#ifndef ASC_CHECK_H
+#define ASC_CHECK_H
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
 extern void CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);
@@ -87,5 +87,5 @@ extern void InstanceStatistics(FILE *f, CONST struct Instance *i);
  *  This compiles and prints various statistics about this instance tree.
  */
 
-#endif  /* __CHECK_H_SEEN__ */
+#endif  /* ASC_CHECK_H */
 

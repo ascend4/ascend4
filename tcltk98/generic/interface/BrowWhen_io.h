@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef when_io_module
-#define when_io_module
+#ifndef ASCTK_BROWWHEN_IO_H
+#define ASCTK_BROWWHEN_IO_H
 
 extern int Asc_BrowWriteWhenListCmd(ClientData cdata, Tcl_Interp *interp,
                                     int argc, CONST84 char *argv[]);
@@ -93,5 +93,5 @@ extern int Asc_BrowWriteWhensForInstanceCmd(ClientData cdata,
  *  Registered as: __brow_whensforinstance ?cur?search.
  */
 
-#endif  /* when_io_module loaded */
+#endif  /* ASCTK_BROWWHEN_IO_H */
 

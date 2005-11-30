@@ -61,8 +61,8 @@
  *  </pre>
  */
 
-#ifndef integration_already_included
-#define integration_already_included
+#ifndef ASCTK_INTEGRATORS_H
+#define ASCTK_INTEGRATORS_H
 
 /** 
  *  Define as TRUE to enable debug message printing.
@@ -486,5 +486,5 @@ extern int Asc_IntegCleanupCmd(ClientData cdata, Tcl_Interp *interp,
  *  Registered as:  integrate_cleanup
  */
 
-#endif  /* integration_already_included */
+#endif  /* ASCTK_INTEGRATORS_H */
 

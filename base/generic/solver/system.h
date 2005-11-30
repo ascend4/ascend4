@@ -53,8 +53,8 @@
  *  </pre>
  */
 
-#ifndef system__already_included
-#define system__already_included
+#ifndef ASC_SYSTEM_H
+#define ASC_SYSTEM_H
 
 extern slv_system_t system_build(SlvBackendToken inst);
 /**<
@@ -84,5 +84,5 @@ extern void system_free_reused_mem(void);
  ***  is likely to be fatal: handle with care.
  **/
 
-#endif  /* system__already_included */
+#endif  /* ASC_SYSTEM_H */
 

@@ -42,8 +42,8 @@
  *  </pre>
  */
 
-#ifndef __COMPILER_H_SEEN__
-#define __COMPILER_H_SEEN__
+#ifndef ASC_COMPILER_H
+#define ASC_COMPILER_H
 
 /* some influential defines and where to set them:
 	ATDEBUG anontype.c -- controls anon type/relation sharing spew
@@ -178,5 +178,5 @@ extern int g_use_copyanon;
  * type_descio.h instead.
  */
 
-#endif  /* __COMPILER_H_SEEN__ */
+#endif  /* ASC_COMPILER_H */
 

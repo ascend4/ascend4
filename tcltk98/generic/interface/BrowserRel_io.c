@@ -54,6 +54,7 @@
 #include "compiler/func.h"
 #include "compiler/extcall.h"
 #include "compiler/instance_name.h"
+#include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
 #include "interface/BrowserProc.h"

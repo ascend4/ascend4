@@ -261,8 +261,8 @@
  ! !  carefully and maybe patch calls dependent on them.
  */
 
-#ifndef slv_client_h__already_included
-#define slv_client_h__already_included
+#ifndef ASC_SLV_CLIENT_H
+#define ASC_SLV_CLIENT_H
 
 typedef void *SlvClientToken;
 /**<
@@ -1333,5 +1333,5 @@ extern void slv_print_output(FILE *fp, slv_system_t sys);
  ***  @todo Will be made more general in the future.
  **/
 
-#endif  /* slv_client_h__already_included */
+#endif  /* ASC_SLV_CLIENT_H */
 

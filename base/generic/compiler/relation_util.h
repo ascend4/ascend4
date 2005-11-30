@@ -47,8 +47,8 @@
  *  </pre>
  */
 
-#ifndef __RELATION_UTIL_H_SEEN__
-#define __RELATION_UTIL_H_SEEN__
+#ifndef ASC_RELATION_UTIL_H
+#define ASC_RELATION_UTIL_H
 
 extern int g_check_dimensions_noisy;
 /**< 
@@ -748,5 +748,5 @@ extern struct gl_list_t
  * The list returned should be destroyed by the user (not its content,though).
  */
 
-#endif  /* __RELATION_UTIL_H_SEEN__ */
+#endif  /* ASC_RELATION_UTIL_H */
 

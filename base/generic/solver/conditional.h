@@ -43,8 +43,8 @@
  *  </pre>
  */
 
-#ifndef conditional__already_included
-#define conditional__already_included
+#ifndef ASC_CONDITIONAL_H
+#define ASC_CONDITIONAL_H
 
 /**
  * @todo I have to get rid of this
@@ -548,5 +548,5 @@ extern void when_case_set_flagbit(struct when_case *wc,
  *  @return No return value.
  */
 
-#endif  /* conditional__already_included */
+#endif  /* ASC_CONDITIONAL_H */
 

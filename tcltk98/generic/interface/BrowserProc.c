@@ -71,6 +71,7 @@
 #include "compiler/library.h"
 #include "compiler/simlist.h"
 #include "compiler/anontype.h"
+#include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
 #include "interface/BrowserProc.h"

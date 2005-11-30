@@ -57,8 +57,8 @@
  *  </pre>
  */
 
-#ifndef __RELATION_H_SEEN__
-#define __RELATION_H_SEEN__
+#ifndef ASC_RELATION_H
+#define ASC_RELATION_H
 
 enum relation_errors {
   find_error,                   /**< indicates an error finding an instance */
@@ -524,5 +524,5 @@ extern void RelationSetBinTokens(struct Instance *c,
  * not INT_MAX for btable and bindex.
  */
 
-#endif /* __RELATION_H_SEEN__ */
+#endif /* ASC_RELATION_H */
 

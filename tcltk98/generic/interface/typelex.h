@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef _TYPELEX_H
-#define _TYPELEX_H
+#ifndef ASCTK_TYPELEX_H
+#define ASCTK_TYPELEX_H
 
 STDHLF_H(Asc_ExtractType);
 /**< Help long string function. */
@@ -88,5 +88,5 @@ extern void Asc_PutCode(char *s, FILE *fp);
  *  or the text of a NOTE.
  */
 
-#endif  /* _TYPELEX_H */
+#endif  /* ASCTK_TYPELEX_H */
 

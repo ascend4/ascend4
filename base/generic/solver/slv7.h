@@ -44,8 +44,8 @@
  *  @todo Update Dates note when modifactions complete.
  */
 
-#ifndef slv7__already_included
-#define slv7__already_included
+#ifndef ASC_SLV7_H
+#define ASC_SLV7_H
 
 typedef struct slv7_system_structure *slv7_system_t;
 
@@ -60,5 +60,5 @@ int slv7_register(SlvFunctionsT *f);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv7__already_included */
+#endif  /* ASC_SLV7_H */
 

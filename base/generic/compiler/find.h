@@ -40,8 +40,8 @@
  *  </pre>
  */
 
-#ifndef __FIND_H_SEEN__
-#define __FIND_H_SEEN__
+#ifndef ASC_FIND_H
+#define ASC_FIND_H
 
 /** 
  * Search error codes. 
@@ -209,5 +209,5 @@ extern struct gl_list_t *FindInstances(CONST struct Instance *i,
  *  it indicates that it couldn't find the name.  Check err to discover why.
  */
 
-#endif /* __FIND_H_SEEN__ */
+#endif /* ASC_FIND_H */
 

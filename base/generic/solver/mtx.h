@@ -319,8 +319,8 @@
  *  </pre>
  */
 
-#ifndef __MTX_H_SEEN__
-#define __MTX_H_SEEN__
+#ifndef ASC_MTX_H
+#define ASC_MTX_H
 
 /***********************************************************************\
   public mtx data structures
@@ -511,4 +511,4 @@ typedef struct mtx_block_perm_structure *mtx_block_perm_t;
  ***  file or use those that are in it.
  **/
 
-#endif /**< __MTX_H_SEEN__ */
+#endif /* ASC_MTX_H */

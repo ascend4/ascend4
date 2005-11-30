@@ -38,8 +38,8 @@
  *  @todo Fix comments in interface/BrowserDag.h
  */
 
-#ifndef __BrowserDag_module__
-#define __BrowserDag_module__
+#ifndef ASCTK_BROWSERDAG_H
+#define ASCTK_BROWSERDAG_H
 
 extern int Asc_BrowTreeListCmd(ClientData cdata, Tcl_Interp *interp,
                                int argc, char *argv[]);
@@ -102,5 +102,5 @@ extern int Asc_BrowTreeListCmd2(ClientData cdata, Tcl_Interp *interp,
  *  3) The instance tree is left in the state that it was found.
  */
 
-#endif  /*  __BrowserDag_module__ */
+#endif  /*  ASCTK_BROWSERDAG_H */
 

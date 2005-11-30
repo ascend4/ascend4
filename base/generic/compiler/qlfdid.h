@@ -38,6 +38,8 @@
 #include "general/list.h"
 #include "instance_enum.h"
 
+#define MAXIMUM_ID_LENGTH 80
+
 struct SearchEntry {
   char *name;            /**< name of the instance */
   struct Instance *i;    /**< pointer to the instance */
@@ -157,5 +159,5 @@ extern int Asc_QlfdidSearch3(CONST char *str, int relative);
  *  g_relative_inst NOT to the simulation root.
  */
 
-#endif  /* Qlfdid_module_loaded */
+#endif  /* ASC_QLFDID_H */
 

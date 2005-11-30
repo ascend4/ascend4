@@ -55,7 +55,6 @@ static CONST char QlfdidID[] = "$Id: Qlfdid.c,v 1.22 2003/08/23 18:43:07 ballan 
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 1024
 #endif
-#define MAXIMUM_ID_LENGTH 80
 #define QLFDIDMALLOC \
 (struct SearchEntry *)ascmalloc(sizeof(struct SearchEntry));
 

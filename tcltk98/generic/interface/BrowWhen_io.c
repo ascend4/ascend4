@@ -56,6 +56,7 @@
 #include "compiler/when_util.h"
 #include "compiler/when_io.h"
 #include "compiler/instance_name.h"
+#include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
 #include "interface/BrowWhen_io.h"

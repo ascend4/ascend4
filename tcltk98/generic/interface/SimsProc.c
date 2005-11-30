@@ -69,6 +69,7 @@
 #include "compiler/statio.h"
 #include "compiler/bit.h"
 #include "compiler/simlist.h"
+#include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
 #include "interface/Qlfdid.h"
@@ -222,44 +223,6 @@ int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 #ifndef NDEBUG
   return TCL_OK; /* NOT reached */
 #endif
-}
-
-
-/*
- * This function searches the simulation list for
- * the *root* instance of the simulation.
- */
-struct Instance *Asc_FindSimulationRoot(symchar *str)
-{
-  unsigned long c,len;
-  struct Instance *ptr;
-
-  len = gl_length(g_simulation_list);
-  for (c = len; c >= 1; c--) {
-    ptr = (struct Instance *)gl_fetch(g_simulation_list,c);
-    if (GetSimulationName(ptr) == str) {
-      return GetSimulationRoot(ptr);
-    }
-  }
-  return NULL;
-}
-
-symchar *Asc_SimsFindSimulationName(CONST struct Instance *root)
-{
-  unsigned long len,c;
-  struct Instance *ptr;
-
-  if (!root) {
-    return NULL;
-  }
-  len = gl_length(g_simulation_list);
-  for(c=len;c>=1;c--) {
-    ptr = (struct Instance *)gl_fetch(g_simulation_list,c);
-    if (GetSimulationRoot(ptr)==root) {
-      return GetSimulationName(ptr);
-    }
-  }
-  return NULL;
 }
 
 /*

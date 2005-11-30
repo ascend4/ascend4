@@ -41,8 +41,8 @@
  *  @todo Clean junk out of solver/slv_interface.h.
  */
 
-#ifndef slv_interface_module_loaded
-#define slv_interface_module_loaded
+#ifndef ASC_SLV_INTERFACE_H
+#define ASC_SLV_INTERFACE_H
 
 extern void Solve(struct Instance *inst);
 /**<
@@ -204,5 +204,5 @@ extern void Solve(struct Instance *inst);
  *   >= 1		Prints the equation
  */
 
-#endif  /* slv_interface_module_loaded */
+#endif  /* ASC_SLV_INTERFACE_H */
 

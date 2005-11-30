@@ -26,8 +26,8 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-#ifndef __UNITS_H_SEEN__
-#define __UNITS_H_SEEN__
+#ifndef ASC_UNITS_H
+#define ASC_UNITS_H
 
 /** @file
  *  Ascend Units Type definitions.
@@ -267,5 +267,5 @@ extern char *UnitsStringSI(struct Units *up);
 extern void DumpUnits(FILE *f);
 /**<  Dump all defined units to f. */
 
-#endif /* __UNITS_H_SEEN__ */
+#endif /* ASC_UNITS_H */
 
