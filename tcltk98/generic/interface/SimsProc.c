@@ -77,83 +77,9 @@
 #include "interface/HelpProc.h"
 #include "interface/SimsProc.h"
 
-
 #ifndef lint
 static CONST char SimsProcID[] = "$Id: SimsProc.c,v 1.31 2003/08/23 18:43:08 ballan Exp $";
 #endif
-
-
-#define MAXIMUM_INST_NAME 256
-
-/*
- * unheadered stuff from instantiate.c
- */
-struct Instance *g_cursim;
-struct gl_list_t *ArrayIndices(struct Name *name, struct Instance *parent);
-
-
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
-static
-int CmpSim(struct Instance *sim1, struct Instance *sim2)
-{
-  assert(sim1&&sim2);
-  return strcmp(GetSimulationName(sim1),GetSimulationName(sim2));
-}
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
-
-void Asc_SetCurrentSim(struct Instance *sim)
-{
-  g_cursim = sim;
-  return;                                         
-}
-
-struct Instance *Asc_GetCurrentSim()
-{
-  return g_cursim;
-}
-
-int Asc_SimsUniqueName(symchar *str)
-{
-  unsigned long c;
-  struct Instance *ptr;
-  for(c=gl_length(g_simulation_list);c>=1;c--) {
-    ptr = (struct Instance *)gl_fetch(g_simulation_list,c);
-    if (GetSimulationName(ptr) == str) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-/*
- *
- */
-int Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2)
-{
-  assert(sim1&&sim2);
-  return CmpSymchar(GetSimulationName(sim1),GetSimulationName(sim2));
-}
-
-/*
- * Find the simulation list entry to a named simulation. Return
- * null if no simulation of that name found. Sims are inserted sorted
- * so we should do a gl_search here.
- */
-struct Instance *Asc_FindSimulationTop(symchar *str)
-{
-  unsigned long len,c;
-  struct Instance *ptr;
-
-  len = gl_length(g_simulation_list);
-  for (c=len;c>=1;c--) {
-    ptr = (struct Instance *)gl_fetch(g_simulation_list,c);
-    if (GetSimulationName(ptr) == str) {
-      return ptr;
-    }
-  }
-  return NULL;
-}
-
 
 int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
@@ -207,50 +133,6 @@ int Asc_SimsUniqueNameCmd(ClientData cdata, Tcl_Interp *interp,
   }
   return TCL_OK;
 }
-
-/*
- * This function setups up to call instantiate with different
- * compiler settings. In all cases Instantiate will make a copy of
- * the name that is given. format should perhaps be an array of enums
- * or a bit structure to deal with multiple compilation flags. At the moment
- * it is just an int.
- */
-static
-struct Instance *SimsCreateInstance(symchar *type,
-                                    symchar *name, int format,
-                                    symchar *defmethod)
-{
-  struct Instance *result;
-  unsigned int oldflags;
-  double time;
-
-  g_ExtVariablesTable = NULL;		/* defined in extinst.[ch] */
-  time = tm_cpu_time();
-  switch (format) {
-  case 0:
-    result = Instantiate(type,name,0,defmethod);
-    break;
-  case 1:
-    oldflags = GetInstantiationRelnFlags();
-    SetInstantiationRelnFlags(NORELS);
-    result = Instantiate(type,name,0,defmethod);
-    SetInstantiationRelnFlags(oldflags);
-    break;
-  case 2:
-    result = InstantiatePatch(type,name,0);
-    break;
-  default:
-    FPRINTF(stderr,"Warning: doing standard compilation\n");
-    result = Instantiate(type,name,0,defmethod);
-    break;
-  }
-  time = tm_cpu_time() - time;
-  if (g_compiler_timing) {
-    FPRINTF(stderr,"Instantiation CPU time = %g seconds\n",time);
-  }
-  return result;
-}
-
 
 int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
                               int argc, CONST84 char *argv[])

@@ -101,7 +101,8 @@ static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan 
  *  TRUE if compiler timing is to be printed.
  *  default is false, set to TRUE by passing -t on the command line
  */
-int g_compiler_timing = 0;
+/* int g_compiler_timing = 0; */
+/* moved to compiler/simlist.c */
 
 /**
  *  g_interp
