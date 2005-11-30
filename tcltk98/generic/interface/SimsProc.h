@@ -42,49 +42,6 @@
 #ifndef SimsProc_module_loaded
 #define SimsProc_module_loaded
 
-extern struct Instance *Asc_FindSimulationTop(symchar *str);
-/**<  Return the sim pointer if there is a sim named *str. */
-
-extern struct Instance *Asc_FindSimulationRoot(symchar *str);
-/**<  Return the top inst pointer if there is a sim named *str. */
-
-extern symchar *Asc_SimsFindSimulationName(CONST struct Instance *sim);
-/**<
- *  Return the name string of the instance given if it is in the
- *  global sim list. Return null if not.
- */
-
-extern void Asc_SetCurrentSim(struct Instance *sim);
-/**<
- *  <!--  void Asc_SetCurrentSim;                                      -->
- *  <!--  struct Instance *sim;                                        -->
- *  Sets the current working simulation to the simulation given.
- */
-
-extern struct Instance *Asc_GetCurrentSim(void);
-/**<
- *  <!--  struct Instance *Asc_GetCurrentSim;                          -->
- *  Returns the current working simulation. Makes no checks on the state
- *  of the simulation.
- */
-
-extern int Asc_SimsUniqueName(symchar *str);
-/**<
- *  <!--  int Asc_SimsUniqueName;                                      -->
- *  <!--  symchar *str;                                                -->
- *  Searches the simulation list for the name of a simulation.
- *  Returns 0 if the name was found else returns 1;
- */
-
-extern int Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2);
-/**<
- *  <!--  int Asc_SimsCmpSim;                                          -->
- *  <!--  struct Instance *sim1;                                       -->
- *  <!--  struct Instance *sim2;                                       -->
- *  Compares two simulations, based on their name. Returns 0 if the same.
- *  Returns non-zero if different.
- */
-
 extern int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);
 /**<
@@ -185,19 +142,6 @@ extern int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
  *  file. The primitives used may be found in compiler/instantiate.c<br><br>
  *
  *  Registered as : __sims_update qlfdid <file,type>;
- */
-
-extern void Asc_DeAllocSim(struct Instance *sim);
-/**<
- *  <!--  void Asc_DeAllocSim(sim);                                    -->
- *  Deallocate a simulation instance, destroying the instnace and its
- *  associated root instance, by  calling DestroyInstance (in instance.h).
- *  It also frees the name string, which it owns, and cleans up any external
- *  vars associated with the simulation.<br><br>
- *
- *  NOTE:
- *  sim is the *Top* of the simulation and *not* the root. As such it
- *  works on instances of kind SIM_INST.
  */
 
 extern int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
