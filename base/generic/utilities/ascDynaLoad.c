@@ -202,7 +202,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
       (void)FreeLibrary(xlib);
       return 1;
     }else{
-		FPRINTF(ASCERR,"FOUND INITFCN %s AT %d\n",initFcn,install);
+		FPRINTF(ASCERR,"FOUND INITFCN %s AT %d\n",initFun,install);
 	}
   }
   if (0 != AscAddRecord(xlib,path)) {
