@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef MtxProc_module_loaded
-#define MtxProc_module_loaded
+#ifndef ASCTK_MTXPROC_H
+#define ASCTK_MTXPROC_H
 
 extern int Asc_MtxGUIPlotIncidence(ClientData cdata, Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);

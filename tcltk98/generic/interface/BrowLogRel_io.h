@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef logrel_io_module
-#define logrel_io_module
+#ifndef ASCTK_BROWLOGREL_IO_H
+#define ASCTK_BROWLOGREL_IO_H
 
 extern int Asc_BrowWriteLogRelListCmd(ClientData cdata, Tcl_Interp *interp,
                                       int argc, CONST84 char *argv[]);
@@ -77,5 +77,5 @@ extern int Asc_BrowWriteLogRelsForAtomCmd(ClientData cdata, Tcl_Interp *interp,
  *  this information is also provided.
  */
 
-#endif /* logrel_io_module */
+#endif /* ASCTK_BROWLOGREL_IO_H */
 

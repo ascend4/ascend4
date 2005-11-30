@@ -42,8 +42,8 @@
  *  </pre>
  */
 
-#ifndef logrel__already_included
-#define logrel__already_included
+#ifndef ASC_LOGREL_H
+#define ASC_LOGREL_H
 
 /* ********************************************************************\
   logrel_relation basic type operators.

@@ -40,8 +40,8 @@
  *  @todo Complete documentation of types.h.
  */
 
-#ifndef __TYPES_H_SEEN__
-#define __TYPES_H_SEEN__
+#ifndef ASC_TYPES_H
+#define ASC_TYPES_H
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * Please see usage notes at top of Expr_enum before modifying it.
@@ -238,5 +238,5 @@ struct Name {
  */
 #define MAXINTREAL 100000
 
-#endif /* __TYPES_H_SEEN__ */
+#endif /* ASC_TYPES_H */
 

@@ -65,8 +65,8 @@
  *        solver/slv6.h out of header.  Currently needed by mps.[ch].
  */
 
-#ifndef slv6__already_included
-#define slv6__already_included
+#ifndef ASC_SLV6_H
+#define ASC_SLV6_H
 
 typedef struct slv6_system_structure *slv6_system_t;
 
@@ -292,5 +292,5 @@ typedef struct mps_data {   /**< see more detailed comments in calc_matrix */
 #endif
 */
 
-#endif  /* slv6__already_included */
+#endif  /* ASC_SLV6_H */
 

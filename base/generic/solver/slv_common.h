@@ -139,8 +139,8 @@
  *  ---------- END OF EXAMPLE CODE ----------
  */
 
-#ifndef slv_common__already_included
-#define slv_common__already_included
+#ifndef ASC_SLV_COMMON_H
+#define ASC_SLV_COMMON_H
 
 #undef SLV_INSTANCES
 #define SLV_INSTANCES TRUE
@@ -1313,5 +1313,5 @@ extern void slv_write_lnkmap(FILE *fp, int m, int32 **map);
  *  @param map The lnkmap to print.
  */
 
-#endif  /* slv_common__already_included */
+#endif  /* ASC_SLV_COMMON_H */
 

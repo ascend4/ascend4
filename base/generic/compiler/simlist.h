@@ -73,46 +73,10 @@ extern void Asc_DestroySimulations(void);
  * Destroys all known instances on the simulation list.
  */
 
-#endif  /* __SIMLIST_H_SEEN__ */
 
 /*
- *  SimsProc.h
- *  by Kirk Abbott and Ben Allan
- *  Created: 1/94
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: SimsProc.h,v $
- *  Date last modified: $Date: 2003/08/23 18:43:08 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the ASCEND Tcl/Tk interface
- *
- *  Copyright 1997, Carnegie Mellon University
- *
- *  The ASCEND Tcl/Tk interface is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND Tcl/Tk interface is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
+ *  Stuff from SimsProc.h
  */
-
-/** @file
- *  Simulation procedures.
- *  <pre>
- *  To include this header, you must include the following:
- *  </pre>
- */
-
-#ifndef SimsProc_module_loaded
-#define SimsProc_module_loaded
 
 extern struct Instance *Asc_FindSimulationTop(symchar *str);
 /**<  Return the sim pointer if there is a sim named *str. */
@@ -162,5 +126,4 @@ extern void Asc_DeAllocSim(struct Instance *sim);
  *  works on instances of kind SIM_INST.
  */
 
-#endif
-
+#endif  /* ASC_SIMLIST_H */

@@ -43,8 +43,8 @@
  *  </pre>
  */
 
-#ifndef slv_types__already_included
-#define slv_types__already_included
+#ifndef ASC_SLV_TYPES_H
+#define ASC_SLV_TYPES_H
 
 typedef void *SlvBackendToken;
 /**<
@@ -71,5 +71,5 @@ typedef struct slv_system_structure *slv_system_t;
  ***  in slv and system to reference a mathematical problem.
  **/
 
-#endif  /* slv_types__already_included */
+#endif  /* ASC_SLV_TYPES_H */
 

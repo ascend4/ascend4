@@ -38,8 +38,8 @@
  *  </pre>
  */
 
-#ifndef LibraryProc_module_loaded
-#define LibraryProc_module_loaded
+#ifndef ASCTK_LIBRARYPROC_H
+#define ASCTK_LIBRARYPROC_H
 
 extern int Asc_FileIDCopy(FILE *filein, FILE *fileout);
 /**<
@@ -378,5 +378,5 @@ extern int Asc_LibrQueryTypeCmd(ClientData, Tcl_Interp*, int, CONST84 char**);
  *    refinements of other types. These may be the roots of hierarchies.\n\
 "
 
-#endif  /* LibraryProc_module_loaded */
+#endif  /* ASCTK_LIBRARYPROC_H */
 

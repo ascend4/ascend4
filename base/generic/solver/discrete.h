@@ -45,8 +45,8 @@
  *  </pre>
  */
 
-#ifndef dis__already_included
-#define dis__already_included
+#ifndef ASC_DISCRETE_H
+#define ASC_DISCRETE_H
 
 /** Kinds of discrete variables. */
 enum discrete_kind {
@@ -632,5 +632,5 @@ struct dis_discrete **dis_BackendTokens_to_dis(slv_system_t sys,
  *  optimized, it is however reasonable for 1-off jobs.
  */
 
-#endif /* dis__already_included */
+#endif /* ASC_DISCRETE_H */
 

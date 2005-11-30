@@ -70,6 +70,7 @@
 #include "compiler/setinstval.h"
 #include "compiler/setinst_io.h"
 #include "compiler/units.h"
+#include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
 #include "interface/plot.h"

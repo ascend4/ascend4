@@ -41,8 +41,8 @@
  *  </pre>
  */
 
-#ifndef __SYMTAB_H_SEEN__
-#define __SYMTAB_H_SEEN__
+#ifndef ASC_SYMTAB_H
+#define ASC_SYMTAB_H
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 
@@ -137,5 +137,5 @@ extern void DestroySymbolTable(void);
  *  symbol table and the symbols it contains.
  */
 
-#endif  /* __SYMTAB_H_SEEN__ */
+#endif  /* ASC_SYMTAB_H */
 

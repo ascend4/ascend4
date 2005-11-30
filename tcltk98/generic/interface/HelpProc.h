@@ -36,8 +36,8 @@
  *  </pre>
  */
 
-#ifndef __HELPPROC_H_SEEN__
-#define __HELPPROC_H_SEEN__
+#ifndef ASCTK_HELPPROC_H
+#define ASCTK_HELPPROC_H
 
 /**
  * The largest number of strings that will be used in building a long
@@ -292,5 +292,5 @@ extern int Asc_HelpCmd(ClientData cdata, Tcl_Interp *interp,
  * In this example name is Asc_HelpCmd.
  */
 
-#endif  /* __HELPPROC_H_SEEN__ */
+#endif  /* ASCTK_HELPPROC_H */
 

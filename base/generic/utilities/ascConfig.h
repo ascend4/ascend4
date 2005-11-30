@@ -38,8 +38,8 @@
  *  should be included AFTER tcl.h or tk.h, not before.
  */
 
-#ifndef _ASCCONFIG_H
-#define _ASCCONFIG_H
+#ifndef ASC_ASCCONFIG_H
+#define ASC_ASCCONFIG_H
 
 /*
  * If we are in a tcl-infested file, define
@@ -457,5 +457,5 @@ typedef	unsigned   uint32;
  extern int finite(double);
 #endif
 
-#endif /* _ASCCONFIG_H */
+#endif /* ASC_ASCCONFIG_H */
 

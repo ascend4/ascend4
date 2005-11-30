@@ -37,8 +37,8 @@
  *  @todo Do we really need 2 files called sensitivity.[ch]?  Other one in base/packages.
  */
 
-#ifndef _sensitivity_h_seen_
-#define _sensitivity_h_seen_
+#ifndef ASCTK_SENSITIVITY_H
+#define ASCTK_SENSITIVITY_H
 
 extern int Asc_BLsodeDerivatives(slv_system_t sys,
                                  double **dy_dx,
@@ -69,5 +69,5 @@ extern int Asc_MtxNormsCmd(ClientData cdata, Tcl_Interp *interp,
  *  @todo Find proper home for Asc_MtxNormsCmd().
  */
 
-#endif  /* _sensitivity_h_seen_ */
+#endif  /* _ASCTK_SENSITIVITY_H */
 

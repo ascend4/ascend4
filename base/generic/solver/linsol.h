@@ -67,8 +67,8 @@
  *  </pre>
  */
 
-#ifndef linsol__already_included
-#define linsol__already_included
+#ifndef ASC_LINSOL_H
+#define ASC_LINSOL_H
 
 typedef struct linsol_header *linsol_system_t;
 /**<  linsol_system_t is the linear system handle. */
@@ -410,5 +410,5 @@ extern real64 linsol_eqn_residual(linsol_system_t sys,
  *  be an original row number.
  */
 
-#endif  /* linsol__already_included */
+#endif  /* ASC_LINSOL_H */
 

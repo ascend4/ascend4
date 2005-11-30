@@ -55,8 +55,8 @@
  *  </pre>
  */
 
-#ifndef tm_module_loaded
-#define tm_module_loaded
+#ifndef ASC_TM_TIME_H
+#define ASC_TM_TIME_H
 
 #ifndef CLOCKS_PER_SEC
 
@@ -151,5 +151,5 @@ extern void TM_CPU_TIME_FTN(double *time);
 extern void AFTIME(double *time);            
 /**< Short name for TM_CPU_TIME_FTN() to satisfy FORTRAN's 6 char restriction. */
 
-#endif  /* tm_module_loaded */
+#endif  /* ASC_TM_TIME_H */
 

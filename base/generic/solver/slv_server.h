@@ -56,8 +56,8 @@
  *  </pre>
  */
 
-#ifndef slv_server_h__already_included
-#define slv_server_h__already_included
+#ifndef ASC_SLV_SERVER_H
+#define ASC_SLV_SERVER_H
 
 extern slv_system_t slv_create(void);
 /**<
@@ -381,5 +381,5 @@ extern int32 slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 **rip)
  ***  The calling function must free rip.
  */
 
-#endif  /* slv_server_h__already_included */
+#endif  /* ASC_SLV_SERVER_H */
 

@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef relation_io_module
-#define relation_io_module
+#ifndef ASCTK_BROWSERREL_IO_H
+#define ASCTK_BROWSERREL_IO_H
 
 extern int Asc_BrowWriteRelListCmd(ClientData cdata,Tcl_Interp *interp,
                                    int argc, CONST84 char *argv[]);
@@ -87,5 +87,5 @@ extern int Asc_BrowWriteRelsForAtomCmd(ClientData cdata,Tcl_Interp *interp,
  *  Registered as: __brow_relsforatom ?cur?search.
  */
 
-#endif  /* relation_io_module loaded */
+#endif  /* ASCTK_BROWSERREL_IO_H */
 

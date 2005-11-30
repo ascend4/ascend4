@@ -41,8 +41,8 @@
  *  </pre>
  */
 
-#ifndef __WATCHPT_H_SEEN__
-#define __WATCHPT_H_SEEN__
+#ifndef ASC_WATCHPT_H
+#define ASC_WATCHPT_H
 
 /** 
  * The most iterations in a WHILE loop we will tolerate.
@@ -314,4 +314,4 @@ extern void Asc_wp_stop_recall(void);
 /** Called when a constructor/destroyer is scheduled. */
 extern void Asc_wp_stop_compiler(void);
 
-#endif /* __WATCHPT_H_SEEN__ */
+#endif /* ASC_WATCHPT_H */

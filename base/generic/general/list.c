@@ -1093,13 +1093,13 @@ void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE)
     list->flags |= gsf_SORTED;
 }
 
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
 int gl_expandable(struct gl_list_t *list)
 {
   asc_assert(NULL != list);
   return (int)(list->flags & gsf_EXPANDABLE);
 }
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION 
 void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE)
 {
   asc_assert(NULL != list);

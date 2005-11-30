@@ -41,8 +41,8 @@
  *  </pre>
  */
 
-#ifndef SlvProc_module_loaded
-#define SlvProc_module_loaded
+#ifndef ASCTK_SLVPROC_H
+#define ASCTK_SLVPROC_H
 
 #define SLVMONITORPREFIX "slvmon"
 
@@ -206,5 +206,5 @@ slvmonN slvsysname plotdata <value,speed,residual>\n\
 *		vertical center of the canvas indicates the residual magnitude"
 /* end o spew */
 
-#endif  /* SlvProc_module_loaded*/
+#endif  /* ASCTK_SLVPROC_H */
 

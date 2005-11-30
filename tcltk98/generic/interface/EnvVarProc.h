@@ -42,8 +42,8 @@
  *  </pre>
  */
 
-#ifndef __ENVVARPROC_H_SEEN__
-#define __ENVVARPROC_H_SEEN__
+#ifndef ASCTK_ENVVARPROC_H
+#define ASCTK_ENVVARPROC_H
 
 STDHLF_H(Asc_EnvVarCmd);
 
@@ -148,5 +148,5 @@ extern int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
  * elsewhere.\n\
 "
 
-#endif  /* __ENVVARPROC_H_SEEN__ */
+#endif  /* ASCTK_ENVVARPROC_H */
 

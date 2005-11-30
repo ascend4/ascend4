@@ -108,13 +108,13 @@ DriverNoTickle.o: Driver.date
 
 #  Force an update of Driver.o so we update the value
 #  of TIMESTAMP in the ascend binary
-
-Driver.o: Driver.date
-	$(CC) $(CC_SWITCHES) $(HAVE_TKTABLE) $(TIMESTAMP) -c $(srcdir)/Driver.c
-	$(RM) Driver.date
-
-Driver.date: $(srcdir)/Driver.c
-	$(ECHO) 'A file to force a timestamp update' > Driver.date
+# -- disabled -- Dec 1 2005 -- johnpye
+#Driver.o: Driver.date
+#	$(CC) $(CC_SWITCHES) $(HAVE_TKTABLE) $(TIMESTAMP) -c $(srcdir)/Driver.c
+#	$(RM) Driver.date
+#
+#Driver.date: $(srcdir)/Driver.c
+#	$(ECHO) 'A file to force a timestamp update' > Driver.date
 
 
 

@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef Browser_procedure_io_module
-#define Browser_procedure_io_module
+#ifndef ASCTK_BROWSERMETHOD_H
+#define ASCTK_BROWSERMETHOD_H
 
 STDHLF_H(Asc_BrowInitializeCmd);
 extern int Asc_BrowInitializeCmd(ClientData cdata,
@@ -136,5 +136,5 @@ extern int Asc_BrowSetAtomAttribute(Tcl_Interp *interp,
  * are not in the symbol table, then does not return.
  */
 
-#endif  /* Browser_procedure_io_module loaded */
+#endif  /* ASCTK_BROWSERMETHOD_H */
 

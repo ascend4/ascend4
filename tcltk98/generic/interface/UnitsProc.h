@@ -48,8 +48,8 @@
  *  </pre>
  */
 
-#ifndef UnitsProc_module_loaded
-#define UnitsProc_module_loaded
+#ifndef ASCTK_UNITSPROC_H
+#define ASCTK_UNITSPROC_H
 
 extern struct Units * g_base_units[NUM_DIMENS];
 /**< These are the working base units. */
@@ -376,5 +376,5 @@ extern int Asc_UnitHelpList(ClientData cdata, Tcl_Interp *interp,
  *  Registered as:  uhelp [s,l]
  */
 
-#endif  /* UnitsProc_module_loaded */
+#endif  /* ASCTK_UNITSPROC_H */
 

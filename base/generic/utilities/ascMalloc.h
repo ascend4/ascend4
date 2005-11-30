@@ -27,8 +27,8 @@
  *  COPYING.
  */
 
-#ifndef __ascmalloc_h_seen__
-#define __ascmalloc_h_seen__
+#ifndef ASC_ASCMALLOC_H
+#define ASC_ASCMALLOC_H
 
 /** @file
  *  ASCEND memory allocation & reporting routines.
@@ -554,5 +554,5 @@ extern int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2);
  *  MALLOC_DEBUG and ALLOCATED_TESTS are defined.
  */
 
-#endif /* __ascmalloc_h_seen__ */
+#endif /* ASC_ASCMALLOC_H */
 

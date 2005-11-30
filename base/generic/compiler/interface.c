@@ -1,3 +1,4 @@
+/* ex: set ts=2 : */
 /*
  *  Interface Implementation
  *  by Tom Epperly
@@ -3401,7 +3402,7 @@ void CommandProc(void)
 	lower = upper = 0;
 	if (arg_count < CommandNumArgs(command)) {
 	  state = StateFromArg(command,arg_count);
-	} else {
+	} else {o
 	  state = 6;
         }
       }

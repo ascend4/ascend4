@@ -79,8 +79,8 @@
  *    - DummyInstances have no children.
  */
 
-#ifndef __PARENTCHILD_H_SEEN__
-#define __PARENTCHILD_H_SEEN__
+#ifndef ASC_PARENTCHILD_H
+#define ASC_PARENTCHILD_H
 
 /* Parent routines */
 
@@ -296,5 +296,5 @@ extern void StoreChildPtr(struct Instance *i,
  *  created in a special way.
  */
 
-#endif  /* __PARENTCHILD_H_SEEN__ */
+#endif  /* ASC_PARENTCHILD_H */
 

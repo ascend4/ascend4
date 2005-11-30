@@ -39,8 +39,8 @@
  *  </pre>
  */
 
-#ifndef SimsProc_module_loaded
-#define SimsProc_module_loaded
+#ifndef ASCTK_SIMSPROC_H
+#define ASCTK_SIMSPROC_H
 
 extern int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);
@@ -229,5 +229,5 @@ extern int Asc_SimBinTokenSetOptions(ClientData, Tcl_Interp*, int, CONST84 char*
  *  Sim_SetupBinTokenCC in LibraryProc.tcl\n\
 "
 
-#endif  /* SimsProc_module_loaded */
+#endif  /* ASCTK_SIMSPROC_H */
 

@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef Display_module_loaded
-#define Display_module_loaded
+#ifndef ASCTK_DISPLAYPROC_H
+#define ASCTK_DISPLAYPROC_H
 
 extern int Asc_DispDefineCmd(ClientData cdata, Tcl_Interp *interp,
                              int argc, CONST84 char *argv[]);
@@ -163,5 +163,5 @@ extern int Asc_DispRefinesMeTreeCmd(ClientData cdata, Tcl_Interp *interp,
  *  @todo If ip.h changes, this command should change appropriately.
  */
 
-#endif  /* Display_module_loaded */
+#endif  /* ASCTK_DISPLAYPROC_H */
 

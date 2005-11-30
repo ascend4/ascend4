@@ -39,8 +39,8 @@
  *  </pre>
  */
 
-#ifndef __FUNCTYPE_H_SEEN__
-#define __FUNCTYPE_H_SEEN__
+#ifndef ASC_FUNCTYPE_H
+#define ASC_FUNCTYPE_H
 
 /** 
  *  Safe math error codes.
@@ -95,5 +95,5 @@ struct Func {
 #endif
 };
 
-#endif   /* __FUNCTYPE_H_SEEN__ */
+#endif   /* ASC_FUNCTYPE_H */
 

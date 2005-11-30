@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef SolverProc_module_loaded
-#define SolverProc_module_loaded
+#ifndef ASCTK_SOLVERPROC_H
+#define ASCTK_SOLVERPROC_H
 
 /*
  * The following global definitions (which should be going away)
@@ -531,5 +531,5 @@ extern int Asc_SolvFarFromNominal(ClientData cdata, Tcl_Interp *interp,
  *  Registered as:  slv_far_from_nominals
  */
 
-#endif  /* SolverProc_module_loaded */
+#endif  /* ASCTK_SOLVERPROC_H */
 

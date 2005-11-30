@@ -38,8 +38,8 @@
  *  </pre>
  */
 
-#ifndef ProbeProc_module_loaded
-#define ProbeProc_module_loaded
+#ifndef ASCTK_PROBEPROC_H
+#define ASCTK_PROBEPROC_H
 
 STDHLF_H(Asc_ProbeCmd);
 /**< Defines a long help string function */
@@ -159,5 +159,5 @@ extern int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
  * "__probe" will almost certainly move g_search_inst on most calls.
  */
 
-#endif /*ProbeProc_module_loaded*/
+#endif /* ASCTK_PROBEPROC_H */
 

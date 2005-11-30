@@ -38,8 +38,8 @@
  *  </pre>
  */
 
-#ifndef bnd__already_included
-#define bnd__already_included
+#ifndef ASC_BND_H
+#define ASC_BND_H
 
 /** Need a better way of doing this, dynamic allocation */
 #define MAXNUM_OF_SAT_TERMS 5
@@ -326,5 +326,5 @@ extern int32 bnd_status_pre(struct bnd_boundary *bnd);
  * between the current and the previous status of a boundary.
  */
 
-#endif /* bnd__already_included */
+#endif /* ASC_BND_H */
 

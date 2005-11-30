@@ -28,8 +28,8 @@
  *  COPYING.
  */
 
-#ifndef __INSTANCE_ENUM_H_SEEN__
-#define __INSTANCE_ENUM_H_SEEN__
+#ifndef ASC_INSTANCE_ENUM_H
+#define ASC_INSTANCE_ENUM_H
 
 /** @file
  *  Ascend Instance Tree Type Definitions
@@ -126,5 +126,5 @@ struct Instance {
   enum inst_t t;
 };
 
-#endif /* __INSTANCE_ENUM_H_SEEN__ */
+#endif /* ASC_INSTANCE_ENUM_H */
 

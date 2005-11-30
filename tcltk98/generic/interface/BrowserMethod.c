@@ -52,6 +52,7 @@
 #include "compiler/parentchild.h"
 #include "compiler/type_desc.h"
 #include "compiler/units.h"
+#include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
 #include "interface/BrowserProc.h"

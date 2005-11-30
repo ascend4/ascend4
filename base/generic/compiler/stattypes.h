@@ -43,8 +43,8 @@
  *  @todo Complete documentation of stattypes.h.
  */
 
-#ifndef __STATTYPES_H_SEEN__
-#define __STATTYPES_H_SEEN__
+#ifndef ASC_STATTYPES_H
+#define ASC_STATTYPES_H
 
 /** FOR statement ordering types. */
 enum ForOrder {
@@ -375,5 +375,5 @@ struct StatementList {
   struct gl_list_t *l;
 };
 
-#endif  /* __STATTYPES_H_SEEN__ */
+#endif  /* ASC_STATTYPES_H */
 

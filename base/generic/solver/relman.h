@@ -52,8 +52,8 @@
  *  </pre>
  */
 
-#ifndef relman__already_included
-#define relman__already_included
+#ifndef ASC_RELMAN_H
+#define ASC_RELMAN_H
 
 #define relman_is_linear(a,b) (FALSE)
 /**<
@@ -492,5 +492,5 @@ extern void relman_free_reused_mem(void);
  * Call when desired to free memory cached internally.
  */
 
-#endif  /* relman__already_included */
+#endif  /* ASC_RELMAN_H */
 

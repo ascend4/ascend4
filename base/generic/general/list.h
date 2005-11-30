@@ -83,8 +83,8 @@
  *  9/20/97   Added gl_compare_ptrs.
  */
 
-#ifndef __list_h_seen__
-#define __list_h_seen__
+#ifndef ASC_LIST_H
+#define ASC_LIST_H
 
 #ifndef TRUE
 #define TRUE 1
@@ -846,5 +846,5 @@ extern void gl_reportrecycler(FILE *fp);
  *  @param fp  Pointer to file stream to receive report.
  */
 
-#endif /* __list_h_seen__ */
+#endif /* ASC_LIST_H */
 

@@ -70,7 +70,7 @@ LIB_SRCS = \
 	logrelation.c mathinst.c mergeinst.c module.c name.c \
 	nameio.c notate.c numlist.c packages.c parentchild.c \
 	parpend.c pending.c proc.c procframe.c \
-	procio.c prototype.c refineinst.c rel_common.c relation.c \
+	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c \
 	relation_io.c relation_util.c rootfind.c rounded.c safe.c \
 	scanner.c select.c setinst_io.c setinstval.c setio.c \
 	sets.c slist.c simlist.c statement.c statio.c switch.c \
@@ -94,7 +94,7 @@ LIB_OBJS = \
 	logrelation.o mathinst.o mergeinst.o module.o name.o \
 	nameio.o notate.o numlist.o packages.o parentchild.o \
 	parpend.o pending.o proc.o procframe.o \
-	procio.o prototype.o refineinst.o rel_common.o relation.o \
+	procio.o prototype.o qlfdid.o refineinst.o rel_common.o relation.o \
 	relation_io.o relation_util.o rootfind.o rounded.o safe.o \
 	scanner.o select.o setinst_io.o setinstval.o setio.o \
 	sets.o slist.o simlist.o statement.o statio.o switch.o \

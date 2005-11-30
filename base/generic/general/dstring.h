@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef __dstring_h_seen__
-#define __dstring_h_seen__
+#ifndef ASC_DSTRING_H
+#define ASC_DSTRING_H
 
 #define ASC_RESULT_SIZE 200
 #define ASC_DSTRING_STATIC_SIZE 200
@@ -165,5 +165,5 @@ extern void Asc_DStringTrunc(Asc_DString *dsPtr, int length);
  */
 extern char *Asc_DStringSet(Asc_DString *dsPtr, CONST char *string);
 
-#endif /* __dstring_h_seen__  */
+#endif /* ASC_DSTRING_H */
 

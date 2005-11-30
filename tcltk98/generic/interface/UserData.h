@@ -38,8 +38,8 @@
  *  @todo See note at bottom of interface/UserData.h.
  */
 
-#ifndef UserData_module_loaded
-#define UserData_module_loaded
+#ifndef ASCTK_USERPROC_H
+#define ASCTK_USERPROC_H
 
 extern void Asc_UserDataLibraryInitialize(void);
 /**<
@@ -144,5 +144,5 @@ extern int Asc_UserDataPrintLibrary(ClientData cdata, Tcl_Interp *interp,
  * 	  in the userdata library.
  */
 
-#endif  /* UserData_module_loaded */
+#endif  /* ASCTK_USERPROC_H */
 

@@ -27,7 +27,7 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#ifdef ASCTK_QLFDID_H
+#ifndef ASCTK_QLFDID_H
 #define ASCTK_QLFDID_H
 
 #include "compiler/qlfdid.h"
@@ -45,5 +45,5 @@ extern int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
  *  Registered as : \"qlfdid name\"
  */
 
-#endif  /* Qlfdid_module_loaded */
+#endif  /* ASCTK_QLFDID_H */
 

@@ -34,8 +34,8 @@
  *  </pre>
  */
 
-#ifndef _cond_config_h_seen_
-#define _cond_config_h_seen_
+#ifndef ASC_COND_CONFIG_H
+#define ASC_COND_CONFIG_H
 
 extern void set_rels_status_in_when(struct w_when *when, uint32 value);
 /**<
@@ -262,5 +262,5 @@ extern int32 build_disvar_solver_from_master(struct dis_discrete **masterdl,
  * (INCLUDED or NOT) and ACTIVE vars in the solver lists
  */
 
-#endif /*  _cond_config_h_seen_ */
+#endif /*  ASC_COND_CONFIG_H */
 

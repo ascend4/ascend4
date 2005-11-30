@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef DebugProc_module_loaded
-#define DebugProc_module_loaded
+#ifndef ASCTK_DEBUGPROC_H
+#define ASCTK_DEBUGPROC_H
 
 extern int Asc_DebuGetBlkOfVar(ClientData cdata, Tcl_Interp *interp,
                                int argc, CONST84 char *argv[]);

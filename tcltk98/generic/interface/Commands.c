@@ -30,8 +30,8 @@
 #define KILLBDAG 0
 #define REIMPLEMENT 0
 
-#include "tcl.h"
-#include "tk.h"
+#include <tcl.h>
+#include <tk.h>
 #include "utilities/ascConfig.h"
 #include "general/list.h"
 #include "compiler/compiler.h"
@@ -51,13 +51,18 @@
 #include "interface/Commands.h"
 #include "interface/LibraryProc.h"
 #include "interface/DisplayProc.h"
-#include "interface/SimsProc.h"
+
 #include "interface/Qlfdid.h"
+#ifndef ASCTK_QLFDID_H
+# error "ASCTK_QLFDID_H not defined in Commands.c???"
+#endif
+
+#include "interface/SimsProc.h"
 #include "interface/BrowserProc.h"
 #include "interface/BrowserMethod.h"
 #include "interface/BrowserQuery.h"
 #if KILLBDAG
-#include "interface/BrowserDag.h"
+# include "interface/BrowserDag.h"
 #endif
 #include "interface/BrowserRel_io.h"
 #include "interface/BrowLogRel_io.h"
@@ -70,15 +75,12 @@
 #include "interface/SlvProc.h"
 #include "interface/EnvVarProc.h"
 #if REIMPLEMENT
-#include "interface/CodeGen.h"
+# include "interface/CodeGen.h"
 #endif
 #include "interface/UnitsProc.h"
 #include "interface/ScriptProc.h"
 #include "interface/Integrators.h"
 #include "interface/Sensitivity.h"		/* only for Asc_MtxNormsCmd */
-#ifdef BALLAN
-#include "interface/TempStuff.h"
-#endif
 #include "interface/typelex.h"
 #include "interface/Driver.h"
 
@@ -202,6 +204,10 @@ void Asc_CreateCommands(Tcl_Interp *interp)
   ASCADDCOM(interp, Asc_ExtractTypeHN, Asc_ExtractType,
     "library", Asc_ExtractTypeHU,  Asc_ExtractTypeHS,  Asc_ExtractTypeHLF);
 
+
+#ifndef ASCTK_QLFDID_H
+# error "ASCTK_QLFDID_H not yet defined???"
+#endif
 
   /* Browser Routines */
   ASCADDCOM(interp,"qlfdid",Asc_BrowQlfdidSearchCmd,

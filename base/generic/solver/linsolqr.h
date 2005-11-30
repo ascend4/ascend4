@@ -220,8 +220,8 @@
  *  </pre>
  */
 
-#ifndef linsolqr__already_included
-#define linsolqr__already_included
+#ifndef ASC_LINSOLQR_H
+#define ASC_LINSOLQR_H
 
 #define LINSOLMTX_DEBUG FALSE
 /**< Debug mode. */
@@ -1090,5 +1090,5 @@ extern int linsolqr_setup_ngslv(linsolqr_system_t sys,
 extern real64 *linsolqr_get_varvalue(linsolqr_system_t sys, int n);
 /**<  Returns the value of the nth variable in sys. */
 
-#endif  /* linsolqr__already_included */
+#endif  /* ASC_LINSOLQR_H */
 

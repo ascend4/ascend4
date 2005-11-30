@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef ScriptProc_module_loaded
-#define ScriptProc_module_loaded
+#ifndef ASCTK_SCRIPTPROC_H
+#define ASCTK_SCRIPTPROC_H
 
 extern int Asc_ScriptInterrupt;
 /**<
@@ -135,5 +135,5 @@ extern int Asc_StringCompact(ClientData cdata, Tcl_Interp *interp,
  *  Registered as:  stringcompact <string>
  */
 
-#endif  /* ScriptProc_module_loaded */
+#endif  /* ASCTK_SCRIPTPROC_H */
 

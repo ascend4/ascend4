@@ -109,8 +109,8 @@
  *  </pre>
  */
 
-#ifndef _ascsignal_h_
-#define _ascsignal_h_
+#ifndef ASC_ASCSIGNAL_H
+#define ASC_ASCSIGNAL_H
 
 #ifndef lint
 static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 ballan Exp $";
@@ -281,5 +281,5 @@ extern int Asc_SignalHandlerPop(int signum, SigHandler func);
  *        only call Asc_SignalRecover() if it matches func.
  */
 
-#endif  /* _ascsignal_h_ */
+#endif  /* ASC_ASCSIGNAL_H */
 

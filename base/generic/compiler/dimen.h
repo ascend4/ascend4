@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef __DIMEN_H_SEEN__
-#define __DIMEN_H_SEEN__
+#ifndef ASC_DIMEN_H
+#define ASC_DIMEN_H
 
 /* Keep these defines current with DimNames in dimen.h. */
 #define NUM_DIMENS            10  /**< Number of dimension types. */
@@ -352,5 +352,5 @@ extern void PrintDimen(FILE *f ,CONST dim_type *d);
 extern void DumpDimens(FILE *f);
 /**< Dump all dimensions to a file.  Used in interface */
 
-#endif /* __DIMEN_H_SEEN__ */
+#endif /* ASC_DIMEN_H */
 
