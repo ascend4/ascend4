@@ -52,11 +52,11 @@ EXEC_LIBS =
 
 LIB_SRCS = \
 	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c \
-	ascPrint.c ascSignal.c mem.c readln.c set.c
+	ascPrint.c error.c ascSignal.c mem.c readln.c set.c
 
 LIB_OBJS = \
 	ascDynaLoad.o ascEnvVar.o ascMalloc.o ascPanic.o \
-	ascPrint.o ascSignal.o mem.o readln.o set.o
+	ascPrint.o error.o ascSignal.o mem.o readln.o set.o
 
 
 
