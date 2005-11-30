@@ -184,12 +184,17 @@ acre= {meter^2*4046.856};
 
 (*  volume *)
 
-l = {meter^3/1000};
-liter = {l};
-ml = {liter/1000};
-ul = {liter/1e6};
+L = {meter^3/1000};
+litre = {L};
+liter = {L};
+mL = {L/1000};
+ml = {L/1000};
+ul = {L/1e6};
+uL = {L/1e6};
 milliliter = {ml};
+millilitre = {mL};
 microliter = {ul};
+microlitre = {uL};
 
 hogshead= {2.384809e-1*meter^3};
 cuft = {0.02831698*meter^3};
