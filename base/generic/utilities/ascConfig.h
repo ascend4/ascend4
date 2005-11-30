@@ -47,17 +47,17 @@
  * tcl8.3
  */
 #ifdef TCL_VERSION
-#ifndef CONST84
-#define CONST84
-#define QUIET(x) x
-#define QUIET2(x) x
-#else
+# ifndef CONST84
+#  define CONST84
+#  define QUIET(x) x
+#  define QUIET2(x) x
+# else
 /** use this macro to shut up const when const
     from tcl-land would be going into non-tcl C.
  */
-#define QUIET(x) ((char *)x)
-#define QUIET2(v) ((char **)v)
-#endif
+#  define QUIET(x) ((char *)x)
+#  define QUIET2(v) ((char **)v)
+# endif
 #endif
 
 /*
@@ -66,46 +66,46 @@
  *
  */
 #ifndef __WIN32__
-#if defined(_WIN32) || defined(WIN32)
+# if defined(_WIN32) || defined(WIN32)
 
 /** Standard Windows define used in ASCEND. */
-#define __WIN32__
+#  define __WIN32__
 
-#else /* _WIN32 || WIN32 */
+# else /* _WIN32 || WIN32 */
 
 /* Some flavor of Unix */
 
-#ifdef __alpha
+#  ifdef __alpha
 /** DEC Alpha running OSF */
-#define __ALPHA_OSF__
-#endif /* __alpha */
+#   define __ALPHA_OSF__
+#  endif /* __alpha */
 
-#ifdef __hpux
+#  ifdef __hpux
 /** HP running HP-UX */
-#define __HPUX__
-#endif /* __hpux */
+#   define __HPUX__
+#  endif /* __hpux */
 
-#ifdef _AIX
+#  ifdef _AIX
 /** IBM RS6000 or PowerPC running AIX */
-#define __IBM_AIX__
-#endif /* _AIX */
+#   define __IBM_AIX__
+#  endif /* _AIX */
 
-#ifdef __sgi
+#  ifdef __sgi
 /** SGI running IRIX */
-#define __SGI_IRIX__
-#endif /* __sgi */
+#   define __SGI_IRIX__
+#  endif /* __sgi */
 
-#if defined(__sun) || defined(sun)
-#ifdef __SVR4
+#  if defined(__sun) || defined(sun)
+#   ifdef __SVR4
 /** Sparc running Solaris 2.x (SunOS 5.x) */
-#define __SUN_SOLARIS__
-#else /* __SVR4 */
+#    define __SUN_SOLARIS__
+#   else /* __SVR4 */
 /** Sparc running SunOS 4.x (Solaris 1.x) */
-#define __SUN_SUNOS__
-#endif /* __SVR4 */
-#endif /* __sun || sun */
+#    define __SUN_SUNOS__
+#   endif /* __SVR4 */
+#  endif /* __sun || sun */
 
-#endif /* _WIN32 || WIN32 */
+# endif /* _WIN32 || WIN32 */
 #endif /* __WIN32__ */
 
 /*
@@ -116,55 +116,55 @@
 #include <float.h>
 #include <sys/types.h>
 #ifdef _OSF_SOURCE
-#include <sys/syslimits.h>
+# include <sys/syslimits.h>
 #endif
 /* for use practically everywhere */
 #include<stdio.h>
 
 #ifdef __WIN32__
-#undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. */
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
-#undef WIN32_LEAN_AND_MEAN
+# undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. */
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
+# undef WIN32_LEAN_AND_MEAN
 #endif
 
 #ifndef PATH_MAX
 /** Normally will come from stdio.h or limits.h 
  * POSIX values of PATH_MAX is 255, traditional is 1023 
  */
-#define PATH_MAX 1023
+# define PATH_MAX 1023
 #endif
 
 /* the following numbers should have come through limits.h */
 #ifndef SHRT_MAX
-#define SHRT_MAX 32767
+# define SHRT_MAX 32767
 #endif
 #ifndef INT_MAX
-#define INT_MAX 2147483647
+# define INT_MAX 2147483647
 /* 32 bit machines */
 #endif
 #ifndef LONG_MAX
-#ifdef __alpha
-#define LONG_MAX 9223372036854775807 /* 64 bit machines */
-#else /* __alpha */
-#define LONG_MAX 2147483647 /* 32 bit machines */
-#endif /* __alpha */
+# ifdef __alpha
+#  define LONG_MAX 9223372036854775807 /* 64 bit machines */
+# else /* __alpha */
+#  define LONG_MAX 2147483647 /* 32 bit machines */
+# endif /* __alpha */
 #endif /* LONG_MAX */
 
 #ifndef MAXDOUBLE
-#define MAXDOUBLE  DBL_MAX
+# define MAXDOUBLE  DBL_MAX
 #endif
 #ifndef MAXINT
-#define MAXINT     INT_MAX
+# define MAXINT     INT_MAX
 #endif
 #ifndef MAXUINT
-#define MAXUINT    UINT_MAX
+# define MAXUINT    UINT_MAX
 #endif
 #ifndef MAXLONG
-#define MAXLONG    LONG_MAX
+# define MAXLONG    LONG_MAX
 #endif
 #ifndef MAXULONG
-#define MAXULONG   UILONG_MAX
+# define MAXULONG   UILONG_MAX
 #endif
 
 /**
@@ -189,22 +189,22 @@
 #define MAXTOKENLENGTH 1024	/**< Maximum token size.  
                                  Most significant for identifiers and strings */
 #ifndef FALSE
-#define FALSE 0
-#define TRUE  1
+# define FALSE 0
+# define TRUE  1
 #endif
 
 #ifndef MAX
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+# define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 #ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
+# define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 #ifndef ABS
-#define ABS(x) ((x) > 0 ? (x) : -(x))
+# define ABS(x) ((x) > 0 ? (x) : -(x))
 #endif
 
 #ifndef CONST
-#define CONST const
+# define CONST const
 #endif
 
 #define VOIDPTR void *
@@ -217,9 +217,9 @@ extern FILE *g_ascend_errors;         /**< File stream to receive error messages
 extern FILE *g_ascend_warnings;       /**< File stream to receive warning messages. */
 extern FILE *g_ascend_information;    /**< File stream to receive general messages. */
 #ifndef ASCERR
-#define ASCERR g_ascend_errors
-#define ASCWAR g_ascend_warnings
-#define ASCINF g_ascend_information
+# define ASCERR g_ascend_errors
+# define ASCWAR g_ascend_warnings
+# define ASCINF g_ascend_information
 #endif
 /*
  *  file pointers for whine. they default to stderr. if you change
@@ -229,10 +229,10 @@ extern FILE *g_ascend_information;    /**< File stream to receive general messag
 #define	BYTESIZE   8
 #define	WORDSIZE   (sizeof(unsigned)*BYTESIZE)
 #ifndef TRUE
-#define	TRUE       1
+# define	TRUE       1
 #endif
 #ifndef FALSE
-#define	FALSE      0
+# define	FALSE      0
 #endif
 typedef	char       *POINTER;       /**< Generic pointer. */
 typedef	char       boolean;        /**< Boolean type. */
@@ -291,20 +291,20 @@ typedef	unsigned   uint32;
  */
 #ifdef NULL
 /* ok, so the machine has a NULL defined. */
-#ifndef ISNULL
+# ifndef ISNULL
 /* and we've not got an ISNULL function */
-#define ISNULL(a) ((a) == NULL)
-#define NOTNULL(a) ((a) != NULL)
-#endif /* ISNULL */
-#endif /* NULL */
+#  define ISNULL(a) ((a) == NULL)
+#  define NOTNULL(a) ((a) != NULL)
+#  endif /* ISNULL */
+# endif /* NULL */
 
 #ifndef NULL
-#error "Null not defined by the time ascConfig.h seen"
+# error "Null not defined by the time ascConfig.h seen"
 #endif
 
 #ifndef UNUSED_PARAMETER
 /** Standardize the treatment of unreferenced function parameters. */
-#  define UNUSED_PARAMETER(p) (void)(p)
+# define UNUSED_PARAMETER(p) (void)(p)
 #endif
 
 /* ASCEND assertion defines */
@@ -318,7 +318,7 @@ typedef	unsigned   uint32;
  */
 #ifdef NDEBUG
 /** If defined, asc_assert() will be removed from code. */
-#define ASC_NO_ASSERTIONS
+# define ASC_NO_ASSERTIONS
 #endif
 
 /*
@@ -336,72 +336,95 @@ typedef	unsigned   uint32;
 /*
  *  use the ASCEND printf substitutes
  */
-#ifndef USE_ASC_PRINTF
-#define USE_ASC_PRINTF
-#endif /* USE_ASC_PRINTF */
+# ifndef USE_ASC_PRINTF
+#  define USE_ASC_PRINTF
+# endif /* USE_ASC_PRINTF */
 
 /*
  *  build the Tk Console
  */
-#ifndef ASC_USE_TK_CONSOLE
-#define ASC_USE_TK_CONSOLE                                                              
-#endif /* ASC_USE_TK_CONSOLE */
+# ifndef ASC_USE_TK_CONSOLE
+#  define ASC_USE_TK_CONSOLE                                                              
+# endif /* ASC_USE_TK_CONSOLE */
 
 /*
  * make macros so that DLLs can see nominated internal C functions.
  * Unix programmers might also use the presence of these macros to figure
  * out which APIs are to be regarded as more stable.
  */
-#if defined(ASC_BUILD_DLL)
+# if defined(ASC_BUILD_DLL)
 #  define DLEXPORT __declspec(dllexport)
-#elif defined(ASC_BUILD_LIB)
+# elif defined(ASC_BUILD_LIB)
 #  define DLEXPORT
-#else
+# else
 #  define DLEXPORT __declspec(dllimport)
-#endif
-
+# endif
 #else /* not __WIN32__ isms */
-
-#define DLEXPORT
-
+# ifdef HAVE_GCCVISIBILITYPATCH
+#  define DLEXPORT __attribute__ ((visibility("default")))
+# else
+#  define DLEXPORT
+# endif
 #endif /* __WIN32__ */
 
 /* use signals by default, but disable with configure. */
 #ifdef ASC_NO_TRAPS
 /** Don't use signals. */
-#define NO_SIGNAL_TRAPS 1
+# define NO_SIGNAL_TRAPS 1
 #else
 /** Use signals. */
-#undef NO_SIGNAL_TRAPS
+# undef NO_SIGNAL_TRAPS
 #endif
 
-#ifdef USE_ASC_PRINTF
-#define PRINTF  Asc_Printf
-#define FPRINTF Asc_FPrintf
-#define FFLUSH  Asc_FFlush
-#define PUTC    Asc_FPutc
-#define FPUTC   Asc_FPutc
-#define PUTCHAR Asc_Putchar
-#include <stdarg.h>
-#include "utilities/ascPrint.h"
-#else /* !USE_ASC_PRINTF */
-#define PRINTF  printf
-#define FPRINTF fprintf
-#define FFLUSH  fflush
-#define PUTC    putc
-#define FPUTC   fputc
-#define PUTCHAR putchar
-#endif /* USE_ASC_PRINTF */
+/*------------------------------------*
+	OUTPUT FILE* MAPPINGS
 
+	On Windows, we have to use these special Asc_Printf (etc)
+	routines in order that output can be captured correctly by the GUI.
+
+	On non-Windows platforms, allow error.h to 
+*/
+#ifdef USE_ASC_PRINTF
+#  define ASC_PRINTF  Asc_Printf
+#  define ASC_FPRINTF Asc_FPrintf
+#  define ASC_VFPRINTF Asc_VFPrintf
+#  define ASC_FFLUSH  Asc_FFlush
+#  define ASC_PUTC    Asc_FPutc
+#  define ASC_FPUTC   Asc_FPutc
+#  define ASC_PUTCHAR Asc_Putchar
+#  include <stdarg.h>
+#  include "utilities/ascPrint.h"
+#else
+#  define ASC_PRINTF  printf
+#  define ASC_FPRINTF fprintf
+#  define ASC_VFPRINTF vfprintf
+#  define ASC_FFLUSH  fflush
+#  define ASC_PUTC    putc
+#  define ASC_FPUTC   fputc
+#  define ASC_PUTCHAR putchar
+#endif
+
+/* error.h will define handlers for
+		FPRINTF
+		FPUTC
+		FFLUSH
+*/
+#include "utilities/error.h"
+
+/*	These are the remaining output macros that need to be mapped
+*/
+#define PRINTF ASC_PRINTF
+#define PUTCHAR ASC_PUTCHAR
+/*------------------------------------*/
 
 
 #ifndef __SUN_SUNOS__
 /* do this for non-sun machines and for sun-solaris machines */
-#ifndef roundup
-#define	rounddown(num,mod)	((num)-(num)%(mod))
-#define	roundup(num,mod)	rounddown((num)+(mod)-1,(mod))
-#define	roundoff(num,mod)	rounddown((num)+((mod)/2),(mod))
-#endif /* roundup */
+# ifndef roundup
+#  define	rounddown(num,mod)	((num)-(num)%(mod))
+#  define	roundup(num,mod)	rounddown((num)+(mod)-1,(mod))
+#  define	roundoff(num,mod)	rounddown((num)+((mod)/2),(mod))
+# endif /* roundup */
 #endif /* __SUN_SUNOS__ */
 
 
@@ -430,8 +453,8 @@ typedef	unsigned   uint32;
 #endif  /* __WIN32__ */
 
 #ifdef __SUN_SUNOS__
-/** not properly headered in math.h or ieee*.h */
-extern int finite(double);
+ /** not properly headered in math.h or ieee*.h */
+ extern int finite(double);
 #endif
 
 #endif /* _ASCCONFIG_H */

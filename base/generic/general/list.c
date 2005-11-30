@@ -275,7 +275,9 @@ struct gl_list_t *gl_create(unsigned long int capacity)
     }
     i++;
   }
+  /*FPRINTF(ASCERR,"ABOUT TO ALLOCHEAD\n");*/
   new=POOL_ALLOCHEAD;
+  /*FPRINTF(ASCERR,"GL_CREATE: COULDN'T ALLOC SIZE %d, new = %p\n",sizeof(struct gl_list_t),POOL_ALLOCHEAD);*/
   if (new != NULL) {
     new->length = 0;
 #if LISTRECYCLERDEBUG
@@ -291,7 +293,7 @@ struct gl_list_t *gl_create(unsigned long int capacity)
     return new;
   }
   else {
-    PRINTF("Unable to allocate memory for list\n");
+    FPRINTF(ASCERR,"UNABLE TO ALLOCATE MEMORY FOR LIST\n");
     return NULL;
   }
 }

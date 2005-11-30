@@ -156,6 +156,7 @@ struct asc_env_t *FindEnvVar(char *name)
   dummy.name = name;
   pos = gl_search(g_env_list,&dummy,(CmpFunc)CmpEV);
   if (pos==0) {
+	//FPRINTF(ASCERR,"ENV VAR '%s' NOT FOUND\n",name);
     return NULL;
   }
   return (struct asc_env_t *)gl_fetch(g_env_list,pos);
@@ -463,6 +464,7 @@ char **Asc_GetPathList(char *envvar, int *argc)
   }
   if (( g_env_list == NULL ) ||
       ( envvar == NULL )) {
+  	FPRINTF(ASCERR,"G_ENV_LIST IS NULL LOOKING FOR %s\n",envvar);
     *argc = -1;
     return NULL;
   }
@@ -472,6 +474,8 @@ char **Asc_GetPathList(char *envvar, int *argc)
   }
   ev = FindEnvVar(envvar);
   if (ev==NULL ) {
+  	FPRINTF(ASCERR,"UNABLE TO FINDENVVAR %s\n",envvar);
+
     *argc = 0;
     return NULL;
   }

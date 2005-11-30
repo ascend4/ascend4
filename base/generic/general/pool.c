@@ -27,9 +27,10 @@
  *  COPYING.
  */
 
+#include <stdlib.h>
+
 #include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
 #include "general/pool.h"
 
 #ifndef FALSE
@@ -307,15 +308,15 @@ void pool_get_stats(struct pool_statistics *pss,  pool_store_t m)
     return;
   }
   if (check_pool_store(m)>1 ) {
-    ascbzero((void *)pss, sizeof(struct pool_statistics));
+    ascbzero((void *)pss,(int)sizeof(struct pool_statistics));
     FPRINTF(ASCERR,"ERROR: (pool_get_stats)   Bad pool_store_t given.\n");
     FPRINTF(ASCERR,"                          Returning 0s.\n");
     return;
   }
 #if !pool_LIGHTENING
-  pss->p_eff =  (double)(m->inuse * m->eltsize_req)/(double)pool_sizeof_store(m);
+  pss->p_eff =  m->inuse*m->eltsize_req/(double)pool_sizeof_store(m);
   pss->p_recycle =
-    ( (m->highwater > 0) ? (double)m->active/(double)m->highwater : 0.0 );
+    ( (m->highwater > 0) ? m->active/(double)m->highwater : 0.0 );
   pss->elt_total = m->total;
   pss->elt_taken = m->highwater;
   pss->elt_inuse = m->inuse;
@@ -327,13 +328,13 @@ void pool_get_stats(struct pool_statistics *pss,  pool_store_t m)
   pss->elt_inuse = 0;
 #endif
   pss->elt_onlist = m->onlist;
-  pss->elt_size = (int)m->eltsize;
+  pss->elt_size = m->eltsize;
   pss->str_len = m->len;
   pss->str_wid = m->wid;
 }
 
 pool_store_t pool_create_store(int length, int width,
-                               size_t eltsize, int deltalen, int deltapool)
+                             size_t eltsize, int deltalen, int deltapool)
 {
   int i, punt;
   pool_store_t newps=NULL;
@@ -353,7 +354,7 @@ pool_store_t pool_create_store(int length, int width,
   uelt = eltsize;
   /* check for elt padding needed */
   if (eltsize % sizeof(void *)) {
-    size_t ptrperelt;
+    int ptrperelt;
     ptrperelt = eltsize/sizeof(void *) + 1;
 #if pool_DEBUG
     FPRINTF(ASCERR,"(pool_create_store) Elts of size %d padded to %d\n",
@@ -390,15 +391,14 @@ pool_store_t pool_create_store(int length, int width,
   newps->expand = deltalen;
   newps->eltsize = eltsize;
   newps->barsize = eltsize * width;
-#if !pool_LIGHTENING                                         
+#if !pool_LIGHTENING
   newps->total = length * width;
 #endif
   newps->growpool = PMX(PMEM_MINPOOLGROW,deltapool);
   newps->eltsize_req = uelt;
 
   /* get pool */
-  asc_assert(0 <= length);
-  newps->pool = (char **)PMEM_calloc((size_t)length,sizeof(char *));
+  newps->pool = (char **)PMEM_calloc(length,sizeof(char *));
   if (ISNULL(newps->pool)) {
     FPRINTF(ASCERR,"ERROR: (pool_create_store) : Insufficient memory.\n");
     newps->integrity = DESTROYED;
@@ -508,10 +508,6 @@ void pool_free_elementF(pool_store_t ps, void *ptr
   elt = (struct pool_element *)ptr;
 
 #if !pool_LIGHTENING
-  if (ISNULL(ps)) {
-    FPRINTF(ASCERR,"ERROR: (pool_free_elementF)  Called with NULL store.\n");
-    return;
-  }
 #if pool_DEBUG
   if (check_pool_store(ps)) {
     FPRINTF(ASCERR,"ERROR: (pool_free_element)  Fishy pool_store_t.\n");
@@ -641,7 +637,7 @@ void pool_print_store(FILE *fp, pool_store_t ps, unsigned detail)
   if (check_pool_store(ps)>1) {
     FPRINTF(ASCERR,"ERROR: (pool_print_store) Called with bad pool_store_t\n");
     return;
-  }                                
+  }
   FPRINTF(fp,"pool_store_t statistics:\n");
   if (detail) {
     FPRINTF(fp,"INTERNAL (integrity OK if = %d):\n",OK);

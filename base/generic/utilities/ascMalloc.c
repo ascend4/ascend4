@@ -660,6 +660,8 @@ VOIDPTR ascmallocf(size_t size, CONST char *file, int line)
   	       file,line);
     }
     AddAllocatedMemory(result,size,file,line);
+  }else{
+	FPRINTF(ASCERR,"ASCMALLOC FAILED TO ALLOCATE MEMORY OF SIZE %d, result=%p\n",size,result);
   }
   return result;
 }

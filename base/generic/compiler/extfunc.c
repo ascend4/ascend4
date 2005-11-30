@@ -61,9 +61,9 @@ int CreateUserFunction(CONST char *name,
 		       ExtEvalFunc **value,
 		       ExtEvalFunc **deriv,
 		       ExtEvalFunc **deriv2,
-		       unsigned long n_inputs,
-		       unsigned long n_outputs,
-		       char *help)
+		       CONST unsigned long n_inputs,
+		       CONST unsigned long n_outputs,
+		       CONST char *help)
 {
   struct ExternalFunc *efunc;
   if (!name)
@@ -189,19 +189,19 @@ ExtEvalFunc **GetValueDeriv2Table(struct ExternalFunc *efunc)
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
-CONST char *ExternalFuncName(struct ExternalFunc *efunc)
+CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc)
 {
   assert(efunc!=NULL);
   return efunc->name;
 }
 
-unsigned long NumberInputArgs(struct ExternalFunc *efunc)
+unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc)
 {
   assert(efunc!=NULL);
   return efunc->n_inputs;
 }
 
-unsigned long NumberOutputArgs(struct ExternalFunc *efunc)
+unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc)
 {
   assert(efunc!=NULL);
   return efunc->n_outputs;
@@ -337,4 +337,9 @@ char *WriteExtFuncLibraryString(void)
 		   (void *) dsPtr);
   result = Asc_DStringResult(dsPtr);
   return result;
+}
+
+void 
+TraverseExtFuncLibrary(void (*func)(void *,void *), void *secondparam){
+	TableApplyAllTwo(ExternalFuncLibrary, func, secondparam);
 }

@@ -61,6 +61,8 @@ char *DimNames[NUM_DIMENS]={
 
 void InitDimenList(void)
 {
+  FPRINTF(ASCERR,"INITIALISING DIMENSION LIST\n");
+
   g_dimen_list = gl_create(200L);
   AssertMemory(g_dimen_list);
   g_wild_dimen = (dim_type *)ascmalloc((unsigned)sizeof(dim_type));

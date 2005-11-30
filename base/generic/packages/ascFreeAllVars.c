@@ -80,7 +80,15 @@ int DLEXPORT Asc_ClearVarsInTree(struct Instance *i)
 {
   struct cvpacket cv;
   cv.g_solver_var_type = FindType(AddSymbol("solver_var"));
-  if (cv.g_solver_var_type  == NULL || i == NULL) {
+  if (cv.g_solver_var_type  == NULL){
+	error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"CV.G_SOLVER_VAR_TYPE IS NULL");
+	return 1;
+  }else{
+	ERROR_REPORTER_DEBUG("solver_var was found :)\n");
+  }
+
+  if (i==NULL){
+	error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"INSTANCE IS NULL");
     return 1;
   }
   cv.fixed = AddSymbol("fixed");
@@ -100,8 +108,10 @@ extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *dummy1,
       gl_length(arglist) == 0L ||
       gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
       gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
+	error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"About to call ClearVarsInTree(root)");
     return Asc_ClearVarsInTree(root);
   } else {
+	error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"About to call ClearVarsInTree(arglist[1][1])");
     return Asc_ClearVarsInTree((struct Instance *)gl_fetch(
                                (struct gl_list_t *)gl_fetch(arglist,1),1));
   }

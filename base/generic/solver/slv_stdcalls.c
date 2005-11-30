@@ -280,23 +280,22 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
   if (rank == 0 ) return 1; 	/* nothing to do, eh? */
   /* lot of whining about dof */
   if (rank < nrow) {
-    FPRINTF(stderr,"System is row rank deficient (%d dependent equations)\n",
+    error_reporter(ASC_USER_ERROR,NULL,0,"System is row rank deficient (%d dependent equations)",
             nrow - rank);
   }
   if (rank < ncol) {
     if ( nrow != rank) {
-      FPRINTF(stderr,"System is row rank deficient with %d excess columns.\n",
+      error_reporter(ASC_USER_ERROR,NULL,0,"System is row rank deficient with %d excess columns.",
               ncol - rank);
     } else {
-      FPRINTF(stderr,"System has %d degrees of freedom.\n", ncol - rank);
+      error_reporter(ASC_USER_ERROR,NULL,0,"System has %d degrees of freedom.", ncol - rank);
     }
   }
   if (ncol == nrow) {
-    FPRINTF(stderr,"System is (%d) square",ncol);
     if (ncol != rank) {
-      FPRINTF(stderr,"but rank deficient.\n");
+      error_reporter(ASC_USER_ERROR,NULL,0,"System is (%d) square but rank deficient.",ncol);
     } else {
-      FPRINTF(stderr,".\n");
+      error_reporter(ASC_USER_NOTE,NULL,0,"System is (%d) square.",ncol);
     }
   }
   if (uppertriangular) {

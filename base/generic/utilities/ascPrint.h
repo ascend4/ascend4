@@ -1,3 +1,5 @@
+#ifndef ASC_ASCPRINT_H
+#define ASC_ASCPRINT_H
 /*
  *  ASCEND Printf stdout/stderr Substitutes Dispatcher
  *  by Benjamin Allan
@@ -35,16 +37,13 @@
  *  the case on Linux/unix.  However, in cases where a console is 
  *  not available (e.g. Win32 gui) or you prefer to redirect output 
  *  for other reasons, these routines make it possible.<br><br>
- *  <pre>
- *  When including this file, you must include:
- *      #include <stdio.h>
- *      #include "utilities/ascConfig.h"
- *      #include "utilities/ascPrintType.h"
- *  </pre>
  */
 
-#ifndef _ASCPRINT_H
-#define _ASCPRINT_H
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "utilities/ascConfig.h"
+#include "utilities/ascPrintType.h"
 
 /**
  * Forward declaration of output functions interceptor vtable.
@@ -134,6 +133,13 @@ extern int Asc_FPrintf(FILE *fileptr, CONST char *format, ...);
  *  @param ...     Variable number of arguments to print using the specified format.
  *  @return Returns the number of bytes printed from the final vtable called.
  */
+
+extern int Asc_VFPrintf(FILE *fileptr, CONST char *format, va_list args);
+/**<
+	Var-arg output function, required for calls passed through by error.h
+
+	Follows calling convention of vfprintf from <stdarg.h>, see K&R2, p 245.
+*/
 
 extern int Asc_FFlush(FILE *fileptr);
 /**<

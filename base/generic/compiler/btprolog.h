@@ -54,7 +54,10 @@
 #ifndef __BTPROLOG_H_SEEN__
 #define __BTPROLOG_H_SEEN__
 
+#include <utilities/ascConfig.h>
+#include <compiler/instance_enum.h>
 #include <math.h>
+
 #ifndef NULL
 #ifdef __alpha
 #define NULL 0L

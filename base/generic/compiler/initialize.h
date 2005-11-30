@@ -40,60 +40,52 @@
  *  </pre>
  */
 
-#ifndef __INITIALIZE_H_SEEN__
-#define __INITIALIZE_H_SEEN__
+#ifndef ASC_INITIALIZE_H
+#define ASC_INITIALIZE_H
 
+/** Set the procedure stack limit */
 extern void SetProcStackLimit(unsigned long l);
 /**<
- *  <!--  void SetProcStackLimit(l);                                   -->
- *  Sets the procedure stack limit = l.
- *  The stack limit starts out at INITSTACKLIMIT.
- *  The limit exists to prevent infinite loops from running
- *  the machine out of C automatic variable space.
+	@param l the stack limit value to be set.
+
+	The stack limit starts out at INITSTACKLIMIT. The limit exists to prevent infinite loops from running the machine out of C automatic variable space.
  */
 
 /** Initial stack limit. */
 #define INITSTACKLIMIT 20
 
+/** Get the procedure stack limit currently set. */
 extern unsigned long GetProcStackLimit(void);
-/**<
- *  <!--  int GetProcStackLimit();                                     -->
- *  Gets the procedure stack limit currently set.
- */
 
+/** Run a METHOD on a model. */
 extern enum Proc_enum Initialize(struct Instance *context,
-                                 struct Name *name,
-                                 char *cname,
-                                 FILE *err,
-                                 wpflags options,
-                                 struct gl_list_t *watchpoints,
-                                 FILE *log);
+							    struct Name *name,
+							    char *cname,
+							    FILE *err,
+							    wpflags options,
+							    struct gl_list_t *watchpoints,
+							    FILE *log);
 /**<
- *  <!--  enum Proc_enum Initialize(context,name,cname,err,options,watchpoints,log)  -->
- *  <!--  struct Instance *context;                                    -->
- *  <!--  struct Name *name;                                           -->
- *  <!--  char *cname;                                                 -->
- *  <!--  FILE *err;                                                   -->
- *  <!--  wpflags options;                                             -->
- *  <!--  watchlist watchpoints;                                       -->
- *  <!--  FILE *log;                                                   -->
- *  This procedure will execute the initialization code indicated by name
- *  with respect to the context instance.
- *  cname is the string form of the instance name used in issuing
- *  error messages.
- *  Will return Proc_all_ok if all went well; otherwise it will return
- *  one of the error codes above.<br><br>
- *
- *  If watchlist is NULL or flog is NULL, the debug output options
- *  corresponding to watchlist and flog will be ignored.
- *  flog and ferr should not be the same pointer in a good ui design.
- *  error (and possibly debugging) messages are issued on the files given.
- *  Maximum speed comes from 
- *  Initialize(context,procname,cname,ferr,0,NULL,NULL);
+	@param context instance in which to run the METHOD.
+	@param name initialisation METHOD being called
+	@param cname string form of the METHOD name (used in error messages)
+	@param err file to which error messages are issued
+	@param log file to debugging messages are issued. If NULL, no logging is done (faster).
+	@param wpflags watchpoint settings
+	@param watchpoints list of watchpoints
+
+	@return Proc_all_ok is all went well, else an error code (@see enum Proc_enum)
+
+	This procedure will execute the initialization code indicated by name with respect to the context instance. 
+	If watchlist is NULL or flog is NULL, the debug output options corresponding to watchlist and flog will be ignored.
+	File pointers 'log' and 'err' should not be the same pointer in a good ui design.
+
+	Maximum speed comes from @code Initialize(context,procname,cname,ferr,0,NULL,NULL); @endcode
  */
 
+/** Run a class-access METHOD, eg "RUN MyType::values" */
 extern enum Proc_enum ClassAccessInitialize(struct Instance *context,
-                                            struct Name *class,
+                                            struct Name *class_name,
                                             struct Name *name,
                                             char *cname,
                                             FILE *err,
@@ -101,46 +93,36 @@ extern enum Proc_enum ClassAccessInitialize(struct Instance *context,
                                             struct gl_list_t *watchpoints,
                                             FILE *log);
 /**<
- *  <!--  enum Proc_enum ClassAccessInitialize(context, class, name,   -->
- *  <!--                                       cname, err, options, watchpoints, log);  -->
- *  <!--  struct Instance *context;                                    -->
- *  <!--  struct Name *class;                                          -->
- *  <!--  struct Name *name;                                           -->
- *  <!--  char *cname;                                                 -->
- *  <!--  FILE *err;                                                   -->
- *  <!--  wpflags options;                                             -->
- *  <!--  watchlist watchpoints;                                       -->
- *  <!--  FILE *log;                                                   -->
- *  Will attempt to run the initialization procedure given by using so-called
- *  class access, i.e., deals with syntax such as RUN Mytype::values.
- *  The context instance will be used.
- *  Will return Proc_all_ok if all went well; otherwise it will return
- *  one of the error codes above.<br><br>
- *
- *  If watchlist is NULL or flog is NULL, the debug output options
- *  corresponding to watchlist and flog will be ignored.
- *  error (and possibly debugging) messages are issued on the files given.
- *  Maximum speed comes from 
- *  ClassAccessInitialize(context,class,procname,cname,ferr,0,NULL,NULL);
- */
+	@param class_name the class being called (eg MyType)
+	@param name the METHOD being called (eg values)
+	@param cname string version of method name, for use in error messages
+	@param err file to which error messages will be output
+	@param log file to which debugging messages will be output. NULL if no debug output is deired.
+	@param wpflags watchpoint flags
+	@param watchpoints list of watchpoints. NULL if no watchpoints are required.
 
+	@return Proc_all_ok if success, else an error code.
+
+	Will attempt to run the initialization procedure given by using so-called class access, i.e., deals with syntax such as "RUN Mytype::values."
+
+	If watchlist is NULL or flog is NULL, the debug output options corresponding to watchlist and flog will be ignored. error (and possibly debugging) messages are issued on the files given. Maximum speed comes from @code ClassAccessInitialize(context,class,procname,cname,ferr,0,NULL,NULL); @endcode
+*/
+
+/** Search for a named procedure on an instance */
 extern struct InitProcedure *FindProcedure(CONST struct Instance *i,
                                            symchar *procname);
 /**<
- *  <!--  struct InitProcedure *FindProcedure(i,procname)              -->
- *  Search an Instance for a named procedure.
- *  This will return the pointer to the named procedure if it exists in i.
- *  Returns null if procname not found.
- */
+	@param procname the name of the procedure searched for
+	@return pointer to found procedure, or NULL if none found.
+*/
 
+/** Search a list for a named procedure. */
 extern struct InitProcedure *SearchProcList(CONST struct gl_list_t *list,
                                             symchar *name);
 /**<
- * <!--  struct InitProcedure *proc = SearchProcList(list,name);       -->
- *  Search a list for a named procedure.
- *  list generally comes from GetInitializationList().
- *  Returns null if name not found.
+	@param list (generally you will use the output from @code GetInitializationList() @endcode)
+	@return pointer to found procedure, or NULL if none found.
  */
 
-#endif /* __INITIALIZE_H_SEEN__ */
+#endif /* ASC_INITIALIZE_H */
 

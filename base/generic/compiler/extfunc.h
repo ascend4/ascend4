@@ -36,13 +36,35 @@
  *  @todo Complete documentation of compiler/extfunc.h.
  */
 
-#ifndef __EXTFUNC_H_SEEN__
-#define __EXTFUNC_H_SEEN__
+#ifndef ASC_EXTFUNC_H
+#define ASC_EXTFUNC_H
 
-typedef int ExtEvalFunc(int *mode, int *m, int *n,
+/**
+	ExtEvalFunc type is a function pointer.
+
+	@param mode ???
+	@param m
+	@param n
+	@param x
+	@param u
+	@param f
+	@param g
+*/
+typedef int ExtEvalFunc(int *mode, int *m, unsigned long *n,
    double *x, double *u, double *f, double *g);
 
-typedef int ExtProcFunc(int *mode, int *m, int *n,
+/**
+	ExtProcFunc type is a function pointer.
+
+	@param mode 
+	@param m
+	@param n
+	@param x
+	@param u
+	@param f
+	@param g
+*/
+typedef int ExtProcFunc(int *mode, int *m, unsigned long *n,
    double *x, double *u, double *f, double *g);
 
 
@@ -120,19 +142,18 @@ extern int CreateUserFunction(CONST char *name,
                               ExtEvalFunc **value,
                               ExtEvalFunc **deriv,
                               ExtEvalFunc **deriv2,
-                              unsigned long n_inputs,
-                              unsigned long n_outputs,
-                              char *help);
+                              CONST unsigned long n_inputs,
+                              CONST unsigned long n_outputs,
+                              CONST char *help);
 /**<
- *  This function is used to add external functions to the ASCEND system.
- *  The name of the function is looked up. If it already exists, the
- *  information will be updated. If the name was not found in the external
- *  function library, then an external function node will be created and
- *  added to the external function library. We make a *copy* of the help
- *  string if it is provided. We also make a copy of the name.
- *  Anyone desirous of ASCEND knowing about there functions must use this
- *  protocol.
- */
+	@param name name of the function being added (or updated)
+	@param init initialisation function
+	@param value location where pointer to evaluation function can be found???
+	@param deriv location where pointer to first partial derivative function will be returned???
+	@param deriv2 location where pointer to second derivative function can be found???
+
+	This function is used to add external functions to the ASCEND system. The name of the function is looked up. If it already exists, the information will be updated. If the name was not found in the external function library, then an external function node will be created and added to the external function library. We make a *copy* of the help string if it is provided. We also make a copy of the name. Anyone desirous of ASCEND knowing about there functions must use this protocol.
+*/
 
 extern struct ExternalFunc *RemoveExternalFunc(char *name);
 /**< 
@@ -156,13 +177,13 @@ extern ExtEvalFunc **GetValueJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
 
-extern CONST char *ExternalFuncName(struct ExternalFunc *efunc);
+extern CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc);
 /**< 
  *  Returns the name of an external function.
  */
 
-extern unsigned long NumberInputArgs(struct ExternalFunc *efunc);
-extern unsigned long NumberOutputArgs(struct ExternalFunc *efunc);
+extern unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc);
+extern unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 
 extern void PrintExtFuncLibrary(FILE *f);
@@ -178,5 +199,10 @@ extern char *WriteExtFuncLibraryString(void);
  * The string may be empty/NULL if there are no external functions loaded.
  */
 
-#endif /* __EXTFUNC_H_SEEN__ */
+/**
+	This provides a way for other code to visit the external function list
+*/
+extern void TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
+
+#endif /* ASC_EXTFUNC_H */
 

@@ -1418,9 +1418,7 @@ unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
   if (GetBaseType(d)==boolean_type) {
     return d->u.atom.u.defbool;
   } else {
-    FPRINTF(ASCERR,
-      "Programmer Error: GetBoolDefault called without boolean_type %s:%d\n",
-      file,line);
+    error_reporter(ASC_PROG_ERROR,file,line,"Programmer Error: GetBoolDefault called without boolean_type");
     return 0;
   }
 }
@@ -1434,9 +1432,7 @@ CONST dim_type *GetRealDimensF(CONST struct TypeDescription *d,
   if (BaseTypeIsAtomic(d)) {
     return d->u.atom.dimp;
   } else {
-    FPRINTF(ASCERR,
-      "Programmer Error: GetRealDimens called nonatomic type %s:%d\n",
-      file,line);
+    error_reporter(ASC_PROG_ERROR,file,line,"Programmer Error: GetRealDimens called nonatomic type");
     return WildDimension();
   }
 }
@@ -1453,9 +1449,7 @@ CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *d,
 	GetBaseType(d)==symbol_constant_type) {
     return d->u.constant.dimp;
   } else {
-    FPRINTF(ASCERR,
-      "Programmer Error: GetConstDimens called without constant type %s:%d\n",
-      file,line);
+    error_reporter(ASC_PROG_ERROR,file,line,"Programmer Error: GetConstDimens called without constant type");
     return WildDimension();
   }
 }

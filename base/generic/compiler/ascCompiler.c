@@ -194,13 +194,18 @@ int Asc_CompilerInit(int simp)
 
   InitDump();
   InitializePrototype();
+  FPRINTF(ASCERR,"...PROTO INIT\n");
   InitializeLibrary();
+  FPRINTF(ASCERR,"...LIBRARY INIT\n");
   SetUniversalTable(CreateUniversalTable());
+  FPRINTF(ASCERR,"...UNIV TABLE INIT\n");
   DefineFundamentalTypes();
+  FPRINTF(ASCERR,"...FUND TYPES INIT\n");
 
   InterfaceNotify = InterfaceNotifyProc;
   InterfacePtrDelete = InterfacePtrDeleteProc;
   g_simulation_list = gl_create(10L);
+  FPRINTF(ASCERR,"...COMPILER INIT\n");
 
   return 0;
 }

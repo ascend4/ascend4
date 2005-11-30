@@ -66,14 +66,10 @@
  */
 
 extern int slvDOF_eligible(slv_system_t server, int32 **vil);
-/**<
- * <!--  usage: if(slvDOF_eligible(server,&vil))                       -->
- * <!--  int32 *vil;                                                   -->
- *
- * Returns 1 if able to determine lists, 0 otherwise.
- * That is you send us the address of a pointer to an int32 array
- * and we will fill in the pointer.
- * If return is 1, user should free vil when done with it. Return 0
+/**
+ * @return 1 if able to determine lists, 0 otherwise.
+ * @param vil pointer to an int32 array which will fill in and return
+ * If return is 1, user should ascfree(*vil) when done with it. Return 0
  * -> vil will be null.
  * The index list is terminated with a -1 but may be of any length.
  * The indices are var_sindex of vars on solvers_var_list.

@@ -507,6 +507,7 @@ symchar *GetBaseTypeName(enum type_kind bt)
 
 void InitBaseTypeNames(void)
 {
+  FPRINTF(ASCERR,"INIT BASE TYPE NAMES...\n");
   G_BASE_SYMBOL_NAME 	= AddSymbol(BASE_SYMBOL_NAME);
   G_BASE_REAL_NAME	= AddSymbol(BASE_REAL_NAME);
   G_BASE_INTEGER_NAME	= AddSymbol(BASE_INTEGER_NAME);
@@ -524,4 +525,5 @@ void InitBaseTypeNames(void)
   G_BASE_MODEL_NAME	= AddSymbol("MODEL");
   G_BASE_ARRAY_NAME	= AddSymbol("ARRAY");
   G_BASE_PATCH_NAME	= AddSymbol("PATCH");
+  FPRINTF(ASCERR,"...INIT BASE TYPE NAMES\n");
 }

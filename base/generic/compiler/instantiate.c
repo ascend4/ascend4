@@ -133,6 +133,8 @@
 
 static int g_iteration = 0;	/* the current iteration. */
 
+/* moved from tcltk98/generic/interface/SimsProc.c */
+struct Instance *g_cursim;
 
 /*************************************************************************\
 variable to check agreement in the number of boolean, integer or symbol
@@ -175,7 +177,7 @@ long int g_compiler_counter = 1;
  * which changes the instance tree is called.
  */
 
-#define DEBUG_RELS 1
+#define DEBUG_RELS
 /* undef DEBUG_RELS if you want less spew in pass 2 */
 
 #ifdef DEBUG_RELS
@@ -4744,7 +4746,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
   if (GetInstanceRelation(child,&reltype)==NULL) {
     if ( (g_instantiate_relns & TOKRELS) ==0) {
 #ifdef DEBUG_RELS
-        WSEM(ASCERR,statement, "TOKRELS 0 found in compiling relation.");
+        WSNM(ASCERR,statement, "TOKRELS 0 found in compiling relation.");
 #endif
       return 1;
     }
@@ -4756,7 +4758,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
     if (reln != NULL){
       SetInstanceRelation(child,reln,e_token);
 #ifdef DEBUG_RELS
-      WSEM(ASCERR,statement, "   Created relation.");
+      WSNM(ASCERR,statement, "Created relation.");
 #endif
       return 1;
     } else {
@@ -4811,17 +4813,17 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
       }
     }
 #ifdef DEBUG_RELS
-    WSEM(ASCERR,statement, "   Failed relation -- unexpected scenario.");
+    WSNM(ASCERR,statement, "   Failed relation -- unexpected scenario.");
 #endif
   } else{
     /*  Do nothing, somebody already completed the relation.  */
 #ifdef DEBUG_RELS
-        WSEM(ASCERR,statement, "Already compiled in compiling relation?!.");
+        WSNM(ASCERR,statement, "Already compiled in compiling relation?!.");
 #endif
     return 1;
   }
 #ifdef DEBUG_RELS
-  WSEM(ASCERR,statement, "End of ExecuteREL. huh?");
+  WSNM(ASCERR,statement, "End of ExecuteREL. huh?");
 #endif
 }
 
@@ -5351,6 +5353,8 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
   struct ExternalFunc *efunc;
   CONST char *funcname;
 
+  ERROR_REPORTER_DEBUG("ENTERED ExecuteBlackBoxExt\n");
+
   /* make or find the array head */
   name = ExternalStatName(statement);
   aryinst = MakeExtRelationArray(inst,name,statement);
@@ -5403,6 +5407,8 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
      * loaded at this stage or report an error.
      */
     funcname = ExternalStatFuncName(statement);
+    FPRINTF(ASCERR,">>>>>> ExecuteBlackBoxEXT %s\n",funcname);
+
     efunc = LookupExtFunc(funcname);
     if (!efunc) {
       FPRINTF(ASCERR,"External function %s was not loaded\n",funcname);
@@ -5911,7 +5917,7 @@ int AssignStructuralValue(struct Instance *inst,
     }
     return 0;
   default:
-    WSEM(ASCERR,statement, "Error.  Unknown value type");
+    WSEM(ASCERR,statement, "Error: Unknown value type");
     return 0;
   }
 }

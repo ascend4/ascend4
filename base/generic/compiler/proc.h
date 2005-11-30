@@ -1,3 +1,4 @@
+
 /*
  *  Procedure Data Structure
  *  by Tom Epperly
@@ -72,8 +73,8 @@ extern struct InitProcedure *CopyProcToModify(struct InitProcedure *p);
  *  Make a copy, but this copy can be changed.
  */
 
-extern struct gl_list_t *MergeProcedureLists(struct gl_list_t *old,
-                                             struct gl_list_t *new);
+extern struct gl_list_t *MergeProcedureLists(struct gl_list_t *old_list,
+                                             struct gl_list_t *new_list);
 /**<
  *  <!--  plr = MergeProcedureLists(old,new);                          -->
  *  <!--  struct gl_list_t *plr, *old, *new;                           -->

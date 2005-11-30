@@ -636,48 +636,40 @@ void WriteStatementSuppressed(FILE *f, CONST struct Statement *stat)
 void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
                                 CONST char *message, int noisy,int level)
 {
-  if (level == 0) {
-    /* old behavior */
-    if (message!=NULL) {
-      FPRINTF(f,message);
-    }
-    if (stat!=NULL){
-      FPRINTF(f," %s:%lu\n",
-              Asc_ModuleBestName(StatementModule(stat)),
-              StatementLineNum(stat));
-      g_show_statement_detail = ((noisy!=0) ? 1 : 0);
-      WriteStatement(f,stat,2);
-      g_show_statement_detail = 1;
-      if (GetEvaluationForTable()!=NULL) {
-        WriteForTable(f,GetEvaluationForTable());
-        FPRINTF(f,"\n");
-      }
-    } else {
-      FPRINTF(f,"NULL STATEMENT!!!\n");
-    }
-  } else {
-    /* level > 0 */
-    if (message == NULL) {
-      message = "(No message?)";
-    }
-    if (stat != NULL){
-      FPRINTF(f,"%s Line %lu: %s\n  %s\n",
-	      StatioLabel(level),
-              StatementLineNum(stat),
-              Asc_ModuleBestName(StatementModule(stat)),
-	      message);
-      g_show_statement_detail = ((noisy!=0) ? 1 : 0);
-      WriteStatement(f,stat,2);
-      g_show_statement_detail = 1;
-      if (GetEvaluationForTable()!=NULL) {
-        WriteForTable(f,GetEvaluationForTable());
-        FPRINTF(f,"\n");
-      }
-    } else {
-      FPRINTF(f,"%s \n  ", StatioLabel(level));
-      FPRINTF(f,"NULL STATEMENT!!!\n");
-    }
+  /* old behavior */
+  const char *filename=NULL;
+  int line=0;
+  if(stat!=NULL){
+    filename=Asc_ModuleBestName(StatementModule(stat));
+    line=StatementLineNum(stat);
   }
+
+  if (level == 0) {
+	error_reporter_start(ASC_USER_ERROR,filename,line);
+	FPRINTF(f,"%s\n",message);
+  }else if(level < 0){
+    error_reporter_start(ASC_PROG_NOTE,filename,line);
+	FPRINTF(f,"%s\n",message);
+  }else{
+	error_reporter_start(ASC_USER_ERROR, filename, line);
+	FPRINTF(f,"%s%s\n",StatioLabel(level), message);
+  }
+
+  if(stat!=NULL){
+
+    /* write some more detail */
+    g_show_statement_detail = ((noisy!=0) ? 1 : 0);
+    WriteStatement(ASCERR,stat,2);
+    g_show_statement_detail = 1;
+
+    if (GetEvaluationForTable()!=NULL) {
+      WriteForTable(ASCERR,GetEvaluationForTable());
+    }
+  }else{
+    FPRINTF(f,"NULL STATEMENT!");
+  }
+
+  error_reporter_end_flush();
 }
 
 CONST char *StatioLabel(int level)

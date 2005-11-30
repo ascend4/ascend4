@@ -804,13 +804,13 @@ const char *slv_solver_name(int index)
   static char errname[] = "ErrorSolver";
   if (index >= 0 && index < NORC) {
     if ( SFI(index,name) == NULL ) {
-      FPRINTF(stderr,"ERROR: slv_solver_name called with nameless index\n");
+      error_reporter(ASC_PROG_WARNING,NULL,0,"slv_solver_name called with nameless index\n");
       return errname;
     } else {
       return SFI(index,name);
     }
   } else {
-    FPRINTF(stderr,"ERROR: slv_solver_name called with unregistered index\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_solver_name called with unregistered index");
     return errname;
   }
 }
@@ -818,7 +818,7 @@ const char *slv_solver_name(int index)
 const mtx_block_t *slv_get_solvers_blocks(slv_system_t sys)
 {
   if (sys == NULL) {
-    FPRINTF(stderr,"ERROR: slv_get_solvers_blocks called with NULL system\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_blocks called with NULL system");
     return NULL;
   } else {
     return &(sys->dof.blocks);
@@ -828,8 +828,7 @@ const mtx_block_t *slv_get_solvers_blocks(slv_system_t sys)
 const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys)
 {
   if (sys == NULL) {
-    FPRINTF(stderr,
-            "ERROR: slv_get_solvers_log_blocks called with NULL system\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_log_blocks called with NULL system");
     return NULL;
   } else {
     return &(sys->logdof.blocks);
@@ -839,11 +838,10 @@ const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys)
 void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
 {
   if (sys == NULL || len < 0) {
-    FPRINTF(stderr,
-      "ERROR: slv_set_solvers_blocks called with NULL system or bad len.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_blocks called with NULL system or bad len.\n");
   } else {
     if (len && data==NULL) {
-      FPRINTF(stderr,"ERROR: slv_set_solvers_blocks called with bad data.\n");
+      error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_blocks called with bad data.\n");
     } else {
       if (sys->dof.blocks.nblocks && sys->dof.blocks.block != NULL) {
         ascfree(sys->dof.blocks.block);
@@ -857,12 +855,10 @@ void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
 void slv_set_solvers_log_blocks(slv_system_t sys,int len, mtx_region_t *data)
 {
   if (sys == NULL || len < 0) {
-    FPRINTF(stderr,
-     "ERROR:slv_set_solvers_log_blocks called with NULL system or bad len\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_log_blocks called with NULL system or bad len\n");
   } else {
     if (len && data==NULL) {
-      FPRINTF(stderr,
-              "ERROR: slv_set_solvers_log_blocks called with bad data.\n");
+      error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_log_blocks called with bad data.\n");
     } else {
       if (sys->logdof.blocks.nblocks && sys->logdof.blocks.block != NULL) {
         ascfree(sys->logdof.blocks.block);
@@ -931,8 +927,7 @@ void slv_set_solvers_par_list(slv_system_t sys,
                               struct var_variable **vlist, int size)
 {
   if (sys->pars.master == NULL ) {
-    FPRINTF(stderr,
-      "slv_set_solvers_par_list called before slv_set_master_par_list\n");
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_set_solvers_par_list called before slv_set_master_par_list");
   } /* might be ok */
   sys->pars.snum = size;
   sys->pars.solver = vlist;
@@ -942,8 +937,7 @@ void slv_set_solvers_unattached_list(slv_system_t sys,
                                      struct var_variable **vlist, int size)
 {
   if (sys->unattached.master == NULL) {
-    FPRINTF(stderr,"%s %s\n","slv_set_solvers_unattached_list called",
-      "before slv_set_master_unattached_list");
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_set_solvers_unattached_list called before slv_set_master_unattached_list");
   } /* might be ok */
   sys->unattached.snum = size;
   sys->unattached.solver = vlist;
@@ -953,8 +947,7 @@ void slv_set_solvers_dvar_list(slv_system_t sys,
                               struct dis_discrete **dlist, int size)
 {
   if (sys->dvars.master == NULL) {
-    FPRINTF(stderr,
-      "slv_set_solvers_dvar_list called before slv_set_master_dvar_list\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_dvar_list called before slv_set_master_dvar_list");
     return; /* must be error */
   }
   sys->dvars.snum = size;
@@ -965,8 +958,7 @@ void slv_set_solvers_disunatt_list(slv_system_t sys,
                                    struct dis_discrete **dlist, int size)
 {
   if (sys->disunatt.master == NULL) {
-    FPRINTF(stderr,"%s %s\n","slv_set_solvers_disunatt_list called",
-      "before slv_set_master_disunatt_list");
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_set_solvers_disunatt_list called before slv_set_master_disunatt_list");
   } /* might be ok */
   sys->disunatt.snum = size;
   sys->disunatt.solver = dlist;
@@ -977,8 +969,7 @@ void slv_set_solvers_rel_list(slv_system_t sys,
 {
   /* Give relation list to the system itself. */
   if (sys->rels.master == NULL) {
-    FPRINTF(stderr,
-      "slv_set_solvers_rel_list called before slv_set_master_rel_list\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_rel_list called before slv_set_master_rel_list");
     return; /* can't be right */
   }
   sys->rels.snum = size;
@@ -1893,7 +1884,7 @@ int slv_select_solver(slv_system_t sys,int solver)
 {
   int status_index;
   if (sys ==NULL) {
-    FPRINTF(stderr,"ERROR: slv_select_solver called with NULL system\n");
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver called with NULL system\n");
     return -1;
   }
   if (LSI(solver)) {
@@ -1902,8 +1893,7 @@ int slv_select_solver(slv_system_t sys,int solver)
         SF(sys,cdestroy)(sys,sys->ct);
         sys->ct = NULL;
       } else {
-        FPRINTF(stderr,
-          "ERROR: slv_select_solver destroy failed due to bad client %s\n",
+        error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver destroy failed due to bad client %s\n",
           slv_solver_name(sys->solver));
         return sys->solver;
       }
@@ -1922,20 +1912,18 @@ int slv_select_solver(slv_system_t sys,int solver)
       return sys->solver;
     }
     if (sys->ct==NULL) {
-      FPRINTF(stderr,"ERROR: SlvClientCreate failed in slv_select_solver\n");
+      error_reporter(ASC_PROG_WARNING,NULL,0,"SlvClientCreate failed in slv_select_solver\n");
       sys->solver = -1;
     } else {
       if (status_index) {
-        FPRINTF(stderr,
-          "ERROR: SlvClientCreate succeeded with warning %d %s\n",
+        error_reporter(ASC_PROG_WARNING,NULL,0,"SlvClientCreate succeeded with warning %d %s\n",
           status_index," in slv_select_solver");
       }
       /* we could do a better job explaining the client warnings... */
       sys->solver = solver;
     }
   } else {
-    FPRINTF(stderr,
-            "ERROR: slv_select_solver called with unknown client (%d)\n",
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver called with unknown client (%d)\n",
       solver);
     return -1;
   }
@@ -1948,7 +1936,7 @@ int slv_switch_solver(slv_system_t sys,int solver)
   int status_index;
 
   if (sys ==NULL) {
-    FPRINTF(stderr,"ERROR: slv_switch_solver called with NULL system\n");
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver called with NULL system\n");
     return -1;
   }
   if (LSI(solver)) {
@@ -1957,8 +1945,7 @@ int slv_switch_solver(slv_system_t sys,int solver)
     if ( CF(sys,ccreate) != NULL) {
       sys->ct = SF(sys,ccreate)(sys,&status_index);
     } else {
-      FPRINTF(stderr,
-        "ERROR: slv_switch_solver create failed due to bad client %s\n",
+      error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver create failed due to bad client %s\n",
          slv_solver_name(sys->solver));
       return sys->solver;
     }
@@ -1967,15 +1954,13 @@ int slv_switch_solver(slv_system_t sys,int solver)
       sys->solver = -1;
     } else {
       if (status_index) {
-        FPRINTF(stderr,
-          "ERROR: SlvClientCreate succeeded with warning %d %s\n",
+        error_reporter(ASC_PROG_WARNING,NULL,0,"SlvClientCreate succeeded with warning %d %s\n",
            status_index," in slv_switch_solver");
       }
       sys->solver = solver;
     }
   } else {
-    FPRINTF(stderr,
-    "ERROR: slv_switch_solver called with unknown client (%d)\n",solver);
+    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver called with unknown client (%d)\n",solver);
     return -1;
   }
   return sys->solver;
@@ -2010,7 +1995,7 @@ void slv_destroy_parms(slv_parameters_t *p) {
       ascfree(p->parms[i].description);
       break;
     default:
-      FPRINTF(stderr,"Unrecognized parameter type in slv_destroy_parms\n");
+      error_reporter(ASC_PROG_WARNING,NULL,0,"Unrecognized parameter type in slv_destroy_parms\n");
     }
   }
   if (p->parms && p->dynamic_parms) {

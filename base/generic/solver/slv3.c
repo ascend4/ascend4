@@ -1408,9 +1408,11 @@ static int calc_pivots(slv3_system_t sys)
         org_row = uprows->idata[krow];
         row = mtx_org_to_row(sys->J.mtx,org_row);
         rel = sys->rlist[org_row];
-        FPRINTF(fp,"%-40s ---> ","Relation not pivoted");
-        print_rel_name(fp,sys,rel);
-        PUTC('\n',fp);
+
+		error_reporter_start(ASC_USER_ERROR,NULL,0);
+		FPRINTF(stderr,"Relation not pivoted\n");
+        print_rel_name(stderr,sys,rel);
+        error_reporter_end_flush();
 
         /**
          ***  assign zeros to the corresponding weights
@@ -3839,8 +3841,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   if (server == NULL || sys==NULL) return;
   if (check_system(SLV3(sys))) return;
   if( !sys->s.ready_to_solve ) {
-    FPRINTF(stderr,"ERROR:  (slv3) slv3_iterate\n");
-    FPRINTF(stderr,"        Not ready to solve.\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"(slv3) slv3_iterate: Not ready to solve.");
     return;
   }
 

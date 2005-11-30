@@ -538,8 +538,6 @@ static void InitTreeCounts(struct Instance *i,struct problem_t *p_data)
 #define AVG_RELATIONS 15
 #define AVG_GROWTH 2
 #define PART_THRESHOLD 1000
-
-
 
 /*
  * The following function should be moved out to the compiler
@@ -547,6 +545,7 @@ static void InitTreeCounts(struct Instance *i,struct problem_t *p_data)
  */
 static int BooleanChildValue(struct Instance *i,symchar *sc)
 {
+  /* FPRINTF(ASCERR,"GETTING BOOLEAN CHILD VALUE OF %s\n",SCP(sc)); */
   if (i == NULL || sc == NULL || (i=ChildByChar(i,sc)) == NULL) {
     return 0;
   } else {
@@ -2985,24 +2984,24 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst)
   stat = analyze_make_master_lists(p_data);
   if (stat == 2) {
     analyze_free_lists(p_data);
-    FPRINTF(ASCERR,"Error: (%s) Nothing to make a problem from.\n",__FILE__);
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Analyzer: Nothing to make a problem from in %s.",__FILE__);
     return 2;
   }
   if (stat == 1) {
     analyze_free_lists(p_data);
-    FPRINTF(ASCERR,"Error: (%s) Insufficient master memory.\n",__FILE__);
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Analyser: Insufficient master memoryin %s.",__FILE__);
     return 1;
   }
   /* rearrange all the stuff we found and index things */
   stat = analyze_make_solvers_lists(p_data);
   if (stat == 2) {
     analyze_free_lists(p_data);
-    FPRINTF(ASCERR,"Error: (%s) Nothing to make a problem from.\n",__FILE__);
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Analyzer: Nothing to make a problem from in %s.",__FILE__);
     return 2;
   }
   if (stat == 1) {
     analyze_free_lists(p_data);
-    FPRINTF(ASCERR,"Error: (%s) Insufficient solver memory.\n",__FILE__);
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Analyzer: Insufficient solver memory in %s.",__FILE__);
     return 1;
   }
 
