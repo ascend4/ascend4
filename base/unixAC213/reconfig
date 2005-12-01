@@ -1,12 +1,53 @@
-#! /bin/sh
-tkroot=/home/aw0a/tk
-tkroot=/home/baallan/tk83
-./configure  \
+#! /bin/bash
+
+# Added some new stuff here to allow reconfig to be
+# used without tweaking. Art, you should be able to use
+# it unmodified. Likewise Ben.
+
+# I tweaked it to install to ~/ascroot/bin/ascend4 
+# instead of the default /usr/local/bin
+# so that you can test without having to log in as root.
+
+if [ $TKVERSION ]; then
+	tkver=$TKVERSION
+else
+	tkver=8.3
+fi
+
+if [ $TKTABLEVERSION ]; then
+	tktablever=$TKTABLEVERSION
+else
+	tktablever=2.8
+fi
+
+if [ $TKROOT ]; then
+	tkroot=$TKROOT
+elif [ -d ~/tk ]; then
+	tkroot=~/tk
+elif [ -d ~/tk83 ]; then
+	tkroot=~/tk83
+else
+	tkroot=/usr
+fi
+
+if [ $ASCROOT ]; then
+	ascroot=$ASCROOT;
+else
+	ascroot=~/ascroot
+fi
+
+cmd="./configure  \
+--prefix=$ascroot \
 --with-fortran=g77 \
---with-tcl="$tkroot/lib/libtcl8.3.so,$tkroot/include/tcl.h" \
---with-tk="$tkroot/lib/libtk8.3.so,$tkroot/include/tk.h" \
+--with-gcc \
+--with-tcl="$tkroot/lib/libtcl$tkver.so,$tkroot/include/tcl.h" \
+--with-tk="$tkroot/lib/libtk$tkver.so,$tkroot/include/tk.h" \
 --with-wish="$tkroot/bin/wish" \
---with-tktable=$tkroot/lib/Tktable2.8/libTktable2.8.so
+--with-tktable=$tkroot/lib/Tktable$tktablever/libTktable$tktablever.so"
 
+echo "RUNNING CONFIGURE WITH"
+echo $cmd
+echo ""
 
+$cmd
 
