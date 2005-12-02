@@ -83,7 +83,7 @@ unsigned AtomAssigned(CONST struct Instance *i)
   case BOOLEAN_INST: return B_INST(i)->assigned;
   case BOOLEAN_ATOM_INST: return BA_INST(i)->assigned;
   default:
-    FPRINTF(ASCERR,"AtomAssigned called on non-atomic instance.\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"AtomAssigned called on non-atomic instance.");
     return 0; /* not atomic, so can't very well be assigned, eh? */
     /* used to be exit(2) */
     /*NOTREACHED*/

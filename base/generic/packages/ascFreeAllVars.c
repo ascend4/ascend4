@@ -108,10 +108,10 @@ extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *dummy1,
       gl_length(arglist) == 0L ||
       gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||
       gl_fetch((struct gl_list_t *)gl_fetch(arglist,1),1) == NULL) {
-	error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"About to call ClearVarsInTree(root)");
+	/*error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"About to call ClearVarsInTree(root)");*/
     return Asc_ClearVarsInTree(root);
   } else {
-	error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"About to call ClearVarsInTree(arglist[1][1])");
+	/*error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"About to call ClearVarsInTree(arglist[1][1])\n");*/
     return Asc_ClearVarsInTree((struct Instance *)gl_fetch(
                                (struct gl_list_t *)gl_fetch(arglist,1),1));
   }
