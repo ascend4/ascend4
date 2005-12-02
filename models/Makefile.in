@@ -75,7 +75,7 @@ TAGSFILE = TAGS
 INSTALL_TARGET_DIR = $(MODELS_DIR)
 
 INSTALL_SUBDIR_LIST = \
-	ben
+	ben johnpye
 
 INSTALL_FILE_LIST = \
 	Guthrie_costs.a4l \
