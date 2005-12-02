@@ -83,9 +83,9 @@ int DLEXPORT Asc_ClearVarsInTree(struct Instance *i)
   if (cv.g_solver_var_type  == NULL){
 	error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"CV.G_SOLVER_VAR_TYPE IS NULL");
 	return 1;
-  }else{
+  }/*else{
 	ERROR_REPORTER_DEBUG("solver_var was found :)\n");
-  }
+  }*/
 
   if (i==NULL){
 	error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"INSTANCE IS NULL");
