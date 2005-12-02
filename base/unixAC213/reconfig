@@ -42,7 +42,7 @@ if [ $TKTABLEROOT ]; then
 elif [ -d $tkroot/lib/Tktable$tktablever ]; then
 	tktableroot=$tkroot/lib/Tktable$tktablever
 else
-	tktableroot=$tkroot/share/Tktable$tktablevar
+	tktableroot=$tkroot/share/Tktable$tktablever
 fi
 
 # Install everything in ~/ascroot unless override with envir var
@@ -54,8 +54,8 @@ fi
 
 cmd="./configure  \
 --prefix=$ascroot \
---with-fortran=g77 \
---with-gcc \
+--with-fortran=g77,/usr/lib/libf2c.a \
+--enable-gcc \
 --with-tcl="$tkroot/lib/libtcl$tkver.so,$tkroot/include/tcl.h" \
 --with-tk="$tkroot/lib/libtk$tkver.so,$tkroot/include/tk.h" \
 --with-wish="$tkroot/bin/wish" \
