@@ -159,7 +159,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth)
   switch(i->t) {
   case REAL_CONSTANT_INST:
     if (AtomAssigned(i)) {
-      FPRINTF(ASCERR,"SetRealAtomValue called on Constant instance.\n");
+      error_reporter(ASC_USER_ERROR,NULL,0,"SetRealAtomValue called on Constant instance.");
     } else {
       struct Instance *ptr;
 
@@ -206,7 +206,7 @@ void SetRealAtomDims(struct Instance *i, CONST dim_type *dim)
 	RC_INST(ptr)->dimen = dim;
       }
     } else {
-      FPRINTF(ASCERR,"SetRealAtomDims called on dimensioned constant.\n");
+      error_reporter(ASC_PROG_ERROR,NULL,0,"SetRealAtomDims called on dimensioned constant.");
     }
     break;
   case REAL_INST:
