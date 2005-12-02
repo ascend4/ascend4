@@ -263,8 +263,7 @@ if $(BUILD_COMPILER)
         yy_to_zz_h $(ascParse_h) : $(ascParse_y) ;
       }
       else
-      {
-        Echo Copying ascParse.* from ascParse.*.no.yacc ;
+      {        Echo Copying ascParse.* from ascParse.*.no.yacc ;
       	File $(ascParse_c) : ascParse.c.no.yacc ;
         File $(ascParse_h) : ascParse.h.no.yacc ;
       }
@@ -519,6 +518,7 @@ TEST_SOURCES =
   test_set.c
   test_register_solver.c
   test_slv_common.c
+#  slv_test.c
 #  test_slv.c
   ;
 
