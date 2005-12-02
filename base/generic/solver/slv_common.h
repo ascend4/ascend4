@@ -76,7 +76,7 @@
  *                #include "solver/logrel.h"
  *                #include "solver/mtx.h"
  *                #include "general/list.h"
- *  </pre>
+ *
  *  Details on solver parameter definition:
  *
  *  When used together the parameter-related structures, functions, and 
@@ -137,6 +137,7 @@
  *     slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
  *
  *  ---------- END OF EXAMPLE CODE ----------
+ *  </pre>
  */
 
 #ifndef ASC_SLV_COMMON_H
@@ -150,7 +151,7 @@
  * -------------------------------------------------------
  *  Common data structures for Westerberg derived solvers
  * -------------------------------------------------------
- */                                          
+ */
 
 /** Solver output file informationn. */
 struct slv_output_data {
@@ -721,7 +722,7 @@ struct slv__block_status_structure {
  *                 (for those codes where a function evaluation is
  *                  a byproduct of gradient evaluation, the func cost
  *                  will be billed here.)
- *    The interpretation of these data are somewhat up to the coder.
+ *    The interpretation of these data is somewhat up to the coder.
  *
  *  costsize
  *    This is how big the cost array is. It should in general be the

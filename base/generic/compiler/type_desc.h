@@ -32,25 +32,26 @@
  *  When #including type_desc.h, make sure these files are #included first:
  *         #include <stdio.h>
  *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *         #include "child.h"
- *         #include "list.h"
- *         #include "module.h"
- *         #include "childinfo.h"
- *         #include "slist.h"
+ *         #include "compiler/fractions.h"
+ *         #include "compiler/compiler.h"
+ *         #include "compiler/dimen.h"
+ *         #include "compiler/child.h"
+ *         #include "compiler/list.h"
+ *         #include "compiler/module.h"
+ *         #include "compiler/childinfo.h"
+ *         #include "compiler/slist.h"
  *  </pre>
  */
 
-#ifndef __TYPE_DESC_H_SEEN__
-#define __TYPE_DESC_H_SEEN__
+#ifndef type_desc_h_seen__
+#define type_desc_h_seen__
 
-/** Bad pointer for a patently bogus definition when needed.
- * This token is an illegal address for any type definition,
- * (illegal for alignment reasons) which we can use to denote
- * the UNIVERSAL root MODEL which does not exist as a real
- * type description in the library.
+/**
+ *  Bad pointer for a patently bogus type definition when needed.
+ *  This token is an illegal address for any type definition,
+ *  (illegal for alignment reasons) which we can use to denote
+ *  the UNIVERSAL root MODEL which does not exist as a real
+ *  type description in the library.
  */
 #define ILLEGAL_DEFINITION ((struct TypeDescription *)0xF0F0F0F7)
 
@@ -149,8 +150,8 @@ struct AtomTypeDesc {
  */
 struct IndexType {
   struct Set *set;    /**< the original set */
-  symchar *sptr;      /**< a string representation off the set */
-  unsigned int_index; /**< 0 this index is an enumerate one, 
+  symchar *sptr;      /**< a string representation of the set */
+  unsigned int_index; /**< 0 this index is an enumerate one,
                            1 this index is an integer one */
 };
 
@@ -194,19 +195,20 @@ struct ModelArgs {
   /**< number of args required in an IS_A of this type. */
 };
 
+/** Type definition data structure. */
 struct TypeDescription {
-  symchar *name;                /**< type name */
-  enum type_kind t;             /**< base type of the type */
-  short universal;              /**< TRUE universal type, FALSE non-universal */
-  unsigned short flags;         /**< various boolean flags */
+  symchar *name;                    /**< type name */
+  enum type_kind t;                 /**< base type of the type */
+  short universal;                  /**< TRUE universal type, FALSE non-universal */
+  unsigned short flags;             /**< various boolean flags */
   struct TypeDescription *refines;  /**< the type it refines or NULL */
-  struct module_t *mod;         /**< module where it is defined */
-  ChildListPtr children;        /**< list of children. Never NULL for models */
-  struct gl_list_t *init;       /**< initialization procedures */
-  struct StatementList *stats;  /**< statements */
-  struct gl_list_t *refiners;   /**< list of types that refine this. alpha */
-  unsigned long ref_count;      /**< count includes instances, other types */
-  long int parseid;             /**< n as in 'nth definition made' */
+  struct module_t *mod;             /**< module where it is defined */
+  ChildListPtr children;            /**< list of children. Never NULL for models */
+  struct gl_list_t *init;           /**< initialization procedures */
+  struct StatementList *stats;      /**< statements */
+  struct gl_list_t *refiners;       /**< list of types that refine this. alpha */
+  unsigned long ref_count;          /**< count includes instances, other types */
+  long int parseid;                 /**< n as in 'nth definition made' */
   union {
     struct ArrayDesc array;           /**< description of array things */
     struct AtomTypeDesc atom;         /**< atom description stuff */
@@ -236,10 +238,7 @@ struct TypeDescription {
  */
 extern ChildListPtr GetChildListF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetChildList(d)                                        -->
- *  <!--  const ChildListPtr GetChildListF(d)                          -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the childlist field of d.                             -->
+ *  Returns the childlist field of d.
  *  Implementation function for GetChildList() (debug mode).
  *  Do not call this function directly - use GetChildList() instead.
  */
@@ -257,11 +256,6 @@ extern ChildListPtr GetChildListF(CONST struct TypeDescription *d);
  */
 extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetBaseType(d)                                         -->
- *  <!--  enum type_kind GetBaseTypeF(d)                               -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the base type of a type description.  It returns an   -->
- *  <!--  enum type_kind value.                                        -->
  *  Implementation function for GetBaseType() (debug mode).
  *  Do not call this function directly - use GetBaseType() instead.
  */
@@ -302,58 +296,6 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
  *  and so are not considered simple. Obviously arrays and models are
  *  compound.
  */
-/* OLD GROUP COMMENT */
-/*
- *  const struct d;
- *  int truth;
- *
- *  macro BaseTypeIsReal(d)
- *  truth =  BaseTypeIsReal(d)
- *  Returns TRUE if basetype of d is real valued.
- *
- *  macro BaseTypeIsInteger(d)
- *  truth =  BaseTypeIsInteger(d)
- *  Returns TRUE if basetype of d is integer valued.
- *
- *  macro BaseTypeIsBoolean(d)
- *  truth =  BaseTypeIsBoolean(d)
- *  Returns TRUE if basetype of d is truth valued.
- *
- *  macro BaseTypeIsSymbol(d)
- *  truth =  BaseTypeIsSymbol(d)
- *  Returns TRUE if basetype of d is char * valued.
- *
- *  macro BaseTypeIsSet(d)
- *  truth =  BaseTypeIsSet(d)
- *  Returns TRUE if basetype of d is a set of anything.
- *
- *  macro BaseTypeIsAtomic(d)
- *  truth =  BaseTypeIsAtomic(d)
- *  Returns TRUE if basetype of d is among the atoms.
- *
- *  macro BaseTypeIsConstant(d)
- *  truth =  BaseTypeIsConstant(d)
- *  Returns TRUE if basetype of d is among the constants.
- *
- *  Note on the next two: several types are not simple or compound --
- *  we can't really make up our minds whether relations/whens/etc are
- *  simple or compound. In general simple means having a scalar(set)
- *  value. Relations have several values (satisfaction, residual,etc)
- *  and so are not considered simple. Obviously arrays and models are
- *  compound.
- *
- *  macro BaseTypeIsCompound(d)
- *  truth =  BaseTypeIsCompound(d)
- *  Returns TRUE if basetype of d is among the compound types.
- *
- *  macro BaseTypeIsEquation(d)
- *  truth =  BaseTypeIsEquations(d)
- *  Returns TRUE if basetype of d is among the simple types.
- *
- *  macro BaseTypeIsSimple(d)
- *  truth =  BaseTypeIsSimple(d)
- *  Returns TRUE if basetype of d is among the simple types.
- */
 
 #ifdef NDEBUG
 #define GetStatementList(d) ((d)->stats)
@@ -361,7 +303,7 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
 #define GetStatementList(d) GetStatementListF(d)
 #endif
 /**<
- *  Return the statement list for models and atoms.  In the case of
+ *  Returns the statement list for models and atoms.  In the case of
  *  models this will never return NULL.  In some cases of atoms, this may
  *  return NULL which indicates that the instance doesn't have any
  *  pending statements.
@@ -373,14 +315,6 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
 extern CONST struct StatementList
 *GetStatementListF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetStatementList(d)                                    -->
- *  <!--  const struct StatementList *GetStatementListF(d)             -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the statement list for models and atoms.  In the case of       -->
- *  <!--  models this will never return NULL.  In some cases of atoms, this may -->
- *  <!--  return NULL which indicates that the instance doesn't have any        -->
- *  <!--  pending statements.                                          -->
- *  <!--  A nonNULL list may, however, be an empty list.               -->
  *  Implementation function for GetStatementList() (debug mode).
  *  Do not call this function directly - use GetStatementList() instead.
  */
@@ -399,10 +333,6 @@ extern CONST struct StatementList
 extern struct gl_list_t
 *GetInitializationListF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetInitializationList(d)                               -->
- *  <!--  struct gl_list_t *GetInitializationListF(d)                  -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Returns the list of initialization procedures.               -->
  *  Implementation function for GetInitializationList() (debug mode).
  *  Do not call this function directly - use GetInitializationList() instead.
  */
@@ -419,35 +349,37 @@ extern int AddMethods(struct TypeDescription *d,
                       struct gl_list_t *pl,
                       int err);
 /**<
- *  <!--  struct gl_list_t *AddMethods(d,pl,err)                       -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  struct gl_list_t *pl;                                        -->
- *  Inserts new methods into a type and all its refinements. The methods
- *  named on the list given must not conflict with any method in d or
- *  its refinements. If err != 0, rejects pl.<br><br>
+ *  Inserts new methods into a type and all its refinements. 
+ *  pl should contain (struct InitProcedure *) to the methods to 
+ *  add to d.  The methods named in pl must not conflict with any 
+ *  method in d or its refinements.  If err != 0, rejects pl.<br><br>
  *
- *  Returns 0 if successful, 1 if not.
  *  If return is 1, caller is responsible for pl, OTHERWISE we manage it
- *  from here on. If caller supplied d == ILLEGAL_DEFINITION, the caller
+ *  from here on.  If caller supplied d == ILLEGAL_DEFINITION, the caller
  *  can unconditionally forget pl.
+ *
+ *  @param d   The type to which the methods in pl should be added.
+ *  @param pl  A gl_list_t of (struct InitProcedure *) to add to d.
+ *  @param err If non-zero, pl is rejected and no methods are added.
+ *  @return Returns 0 if successful, 1 if not.
  */
 
 extern int ReplaceMethods(struct TypeDescription *d,
                           struct gl_list_t *pl,
                           int err);
 /**<
- *  <!--  struct gl_list_t *ReplaceMethods(d,pl,err)                   -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  struct gl_list_t *pl;                                        -->
- *  Replaces methods into a type and all its refinements that do not
- *  themselves redefine the methods.
- *  The methods given must all exist in d (?).
- *  Methods not named in pl but are found in d or refinements are left
- *  undisturbed. If err != 0, rejects pl.<br><br>
+ *  Replaces listed methods in a type and all its refinements that do not
+ *  themselves redefine the methods.  The methods in pl must exist in d or
+ *  else an error condition is returned.  Methods not named in pl but found 
+ *  in d or its refinements are left undisturbed. If err != 0, rejects pl.<br><br>
  *
- *  Returns 0 if successful, 1 if not.
  *  If return is 1, caller is responsible for pl, OTHERWISE we manage it
  *  from here on.
+ *
+ *  @param d   The type to which the methods in pl should be replaced.
+ *  @param pl  A gl_list_t of (struct InitProcedure *) to replace in.
+ *  @param err If non-zero, pl is rejected and no methods are replaced.
+ *  @return Returns 0 if successful, 1 if not.
  */
 
 #ifdef NDEBUG
@@ -463,27 +395,19 @@ extern int ReplaceMethods(struct TypeDescription *d,
  */
 extern void CopyTypeDescF(struct TypeDescription *d);
 /**<
- *  <!--  macro CopyTypeDesc(d)                                        -->
- *  <!--  void CopyTypeDescF(d)                                        -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  Increment the reference count.                               -->
  *  Implementation function for CopyTypeDesc() (debug mode).
  *  Do not call this function directly - use CopyTypeDesc() instead.
  */
 
 extern void DeleteTypeDesc(struct TypeDescription *d);
 /**< 
- *  <!--  void DeleteTypeDesc(d)                                       -->
- *  <!--  struct TypeDescription *d;                                   -->
  *  Decrement the reference count.  Eventually, this should delete it
- *  when ref_count == 0.  Note to myself:  Remeber that array type
+ *  when ref_count == 0.  Note to myself:  Remember that array type
  *  descriptions need to be removed from a list too.
  */
 
 extern void DeleteNewTypeDesc(struct TypeDescription *d);
 /**<
- *  <!--  void DeleteNewTypeDesc(d)                                    -->
- *  <!--  struct TypeDescription *d;                                   -->
  *  Checks that the type has a refcount of 1 before passing it on to
  *  DeleteTypeDesc. This is (or should be) the case when deleting
  *  types that are newly parsed but not yet in the type library.
@@ -503,10 +427,6 @@ extern void DeleteNewTypeDesc(struct TypeDescription *d);
  */
 extern unsigned GetByteSizeF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetByteSize(d)                                         -->
- *  <!--  unsigned long GetByteSizeF(d)                                -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the byte size of an atom type description.            -->
  *  Implementation function for GetByteSize() (debug mode).
  *  Do not call this function directly - use GetByteSize() instead.
  */
@@ -524,10 +444,6 @@ extern unsigned GetByteSizeF(CONST struct TypeDescription *d);
  */
 extern CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetChildDesc(d)                                        -->
- *  <!--  const struct ChildDesc *GetChildDescF(d)                     -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the child description field of an atom type description. -->
  *  Implementation function for GetChildDesc() (debug mode).
  *  Do not call this function directly - use GetChildDesc() instead.
  */
@@ -546,11 +462,6 @@ extern CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *d);
  */
 extern int GetUniversalFlagF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetUniversalFlag(d)                                    -->
- *  <!--  short GetUniversalFlagF(d)                                   -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the universal flag of a type definition               -->
- *  <!--  Gets a short all to itself for no apparent reason.           -->
  *  Implementation function for GetUniversalFlag() (debug mode).
  *  Do not call this function directly - use GetUniversalFlag() instead.
  */
@@ -569,11 +480,6 @@ extern int GetUniversalFlagF(CONST struct TypeDescription *d);
  */
 extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetTypeFlags(d)                                        -->
- *  <!--  unsigned short GetTypeFlagsF(d)                              -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the type flags of a type definition                   -->
- *  <!--  There are a number of flags we might want in various bit positions. -->
  *  Implementation function for GetTypeFlags() (debug mode).
  *  Do not call this function directly - use GetTypeFlags() instead.
  */
@@ -603,12 +509,6 @@ extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *d);
  */
 extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro TypeHasDefaultStatements(d)                            -->
- *  <!--  unsigned TypeHasDefaultStatementsF(d)                        -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Tells if the statement list of a type has any default ( := ) statements. -->
- *  <!--  Returns 0 if not.                                            -->
- *  <!--  This does not refer to the DEFAULT keyword in atoms.         -->
  *  Implementation function for TypeHasDefaultStatements() (debug mode).
  *  Do not call this function directly - use TypeHasDefaultStatements() instead.
  */
@@ -630,62 +530,39 @@ extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
  */
 extern unsigned TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro TypeHasParameterizedInsts(d)                           -->
- *  <!--  unsigned TypeHasParameterizedInstsF(d)                       -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Tells if the statement lists of a type involve parameters in any way. -->
- *  <!--  A type that has parameters, or has children that have parameters or  -->
- *  <!--  recursively so returns nonzero result (TYPECONTAINSPARINSTS). -->
- *  <!--  Returns 0 if not.                                            -->
- *  <!--  This does not refer to the DEFAULT keyword in atoms.         -->
  *  Implementation function for TypeHasParameterizedInsts() (debug mode).
  *  Do not call this function directly - use TypeHasParameterizedInsts() instead.
  */
 
 #define AtomDefaulted(d) ((d)->u.atom.defaulted)
 /**< 
- *  <!--  macro AtomDefaulted(d)                                       -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return TRUE if the atom has a default value; otherwise return FALSE.
+ *  Returns TRUE if the atom has a default value; otherwise returns FALSE.
  */
 
 #define ConstantDefaulted(d) ((d)->u.constant.defaulted)
 /**< 
- *  <!--  macro ConstantDefaulted(d)                                   -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return TRUE if the Constant has a default value; otherwise return FALSE.
+ *  Returns TRUE if the Constant has a default value; otherwise returns FALSE.
  */
 
 #define GetIntDefault(d) ((d)->u.atom.u.defint)
-/**<  Return the long default value of TypeDescription *d. */
+/**<  Returns the long default value of TypeDescription *d. */
 #define GetSymDefault(d) ((d)->u.atom.u.defsym)
-/**<  Return the symchar* default value of TypeDescription *d. */
+/**<  Returns the symchar* default value of TypeDescription *d. */
 #ifdef NDEBUG
 #define GetRealDefault(d) ((d)->u.atom.u.defval)
 #else
 #define GetRealDefault(d) GetRealDefaultF((d),__FILE__,__LINE__)
 #endif
-/**<  Return the double default value of TypeDescription *d. */
+/**<  Returns the double default value of TypeDescription *d. */
 #ifdef NDEBUG
 #define GetBoolDefault(d) ((d)->u.atom.u.defbool)
 #else
 #define GetBoolDefault(d) GetBoolDefaultF((d),__FILE__,__LINE__)
 #endif
-/**<  Return the unsigned default value of TypeDescription *d. */
+/**<  Returns the unsigned default value of TypeDescription *d. */
 extern double GetRealDefaultF(CONST struct TypeDescription *d,
                               CONST char *f, CONST int l);
 /**<
- *  <!--  macro GetIntDefault(d)		returns long                         -->
- *  <!--  macro GetSymDefault(d)		returns symchar *                    -->
- *  <!--  macro GetBoolDefault(d)		returns unsigned                    -->
- *  <!--  macro GetRealDefault(d)		returns double                      -->
- *  <!--  double GetRealDefaultF(d,f,l)                                -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  int l;                                                       -->
- *  <!--  Return the double default value of an atom.                  -->
- *  <!--  Given the typedescription, returns the default requested.    -->
- *  <!--  Not to be confused with RealDefault in another file.         -->
  *  Implementation function for GetRealDefault() (debug mode).
  *  Do not call this function directly - use GetRealDefault() instead.
  */
@@ -693,33 +570,18 @@ extern double GetRealDefaultF(CONST struct TypeDescription *d,
 extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
                                 CONST char *f, CONST int l);
 /**<
- *  <!--  unsigned GetBoolDefaultF(d,f,l)                              -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  int l;                                                       -->
- *  <!--  Return the integer default value of an atom.                 -->
- *  <!--  Given the typedescription, returns the default requested.    -->
- *  <!--  Not to be confused with BooleanDefault in another file.      -->
  *  Implementation function for GetBoolDefault() (debug mode).
  *  Do not call this function directly - use GetBoolDefault() instead.
  */
 
 #define GetConstantDefReal(d)    ((d)->u.constant.u.defreal)
-/**<  Return the double default value of a constant. */
+/**<  Returns the double default value of constant TypeDescription *d. */
 #define GetConstantDefInteger(d) ((d)->u.constant.u.definteger)
-/**<  Return the long default value of a constant. */
+/**<  Returns the long default value of constant TypeDescription *d. */
 #define GetConstantDefBoolean(d) ((d)->u.constant.u.defboolean)
-/**<  Return the short default value of a constant. */
+/**<  Returns the short default value of constant TypeDescription *d. */
 #define GetConstantDefSymbol(d)  ((d)->u.constant.u.defsymbol)
-/**<  Return the symchar* default value of a constant. */
-/*
- *  macro GetConstantDefReal(d)
- *  macro GetConstantDefInteger(d)
- *  macro GetConstantDefBoolean(d)
- *  macro GetConstantDefSymbol(d)
- *  struct TypeDescription *d;
- *  Return the default value of a constant.
- */
+/**<  Returns the symchar* default value of constant TypeDescription *d. */
 
 #ifdef NDEBUG
 #define GetRealDimens(d) ((d)->u.atom.dimp)
@@ -727,7 +589,7 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
 #define GetRealDimens(d) GetRealDimensF((d),__FILE__,__LINE__)
 #endif
 /**<
- *  Return the dimensions of the atom.
+ *  Returns the dimensions of the atom.
  *  If atoms is not numeric, return value is uncertain.
  *  Will not work on constants.
  *  @param d CONST struct TypeDescription*, the type description to query.
@@ -737,14 +599,6 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
 extern CONST dim_type *GetRealDimensF(CONST struct TypeDescription *d,
                                       CONST char *f, CONST int l);
 /**<
- *  <!--  macro GetRealDimens(d)                                       -->
- *  <!--  CONST dim_type *GetRealDimensF(d,f,l);                       -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  int l;                                                       -->
- *  <!--  Return the dimensions of the atom.                           -->
- *  <!--  If atoms is not numeric, return value is uncertain.          -->
- *  <!--  Will not work on constants.                                  -->
  *  Implementation function for GetRealDimens() (debug mode).
  *  Do not call this function directly - use GetRealDimens() instead.
  */
@@ -755,7 +609,7 @@ extern CONST dim_type *GetRealDimensF(CONST struct TypeDescription *d,
 #define GetConstantDimens(d) GetConstantDimensF((d),__FILE__,__LINE__)
 #endif
 /**<
- *  Return the dimensions of the constant.
+ *  Returns the dimensions of the constant.
  *  All constants have dimensionality. nonreal constants have the
  *  dim for DIMENSIONLESS. nonconstants and unassigned real constants
  *  will return WildDimension().
@@ -766,15 +620,6 @@ extern CONST dim_type *GetRealDimensF(CONST struct TypeDescription *d,
 extern CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *d,
                                           CONST char *f, CONST int l);
 /**<
- *  <!--  macro GetConstantDimens(d)                                   -->
- *  <!--  CONST dim_type *GetConstantDimensF(d,f,l);                   -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  int l;                                                       -->
- *  <!--  Return the dimensions of the constant.                       -->
- *  <!--  All constants have dimensionality. nonreal constants have the -->
- *  <!--  dim for DIMENSIONLESS. nonconstants and unassigned real constants -->
- *  <!--  will return WildDimension().                                 -->
  *  Implementation function for GetConstantDimens() (debug mode).
  *  Do not call this function directly - use GetConstantDimens() instead.
  */
@@ -785,199 +630,243 @@ extern CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *d,
 #define GetName(d) GetNameF(d)
 #endif
 /**<
- *  Return the name of the type that this structure defines.
+ *  Returns the name of the type that this structure defines.
  *  @param d CONST struct TypeDescription*, the type description to query.
  *  @return The name as a symchar*.
  *  @see GetNameF()
  */
 extern symchar *GetNameF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro GetName(d)                                             -->
- *  <!--  const char *GetNameF(d)                                      -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Return the name of the type that this structure defines.     -->
  *  Implementation function for GetName() (debug mode).
  *  Do not call this function directly - use GetName() instead.
  */
 
 #define GetParseId(d) ((d)->parseid)
 /**<
- *  <!--  macro GetParseId(d)                                          -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return the parseid of d.
+ *  Returns the parseid of type d.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The parseid of d as a long int.
  */
 
 #define GetRefinement(d) ((d)->refines)
-/**< 
- *  <!--  macro GetRefinement(d)                                       -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return the refinement TypeDescription or NULL.
+/**<
+ *  Returns the refinement of type d, or NULL if none.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The refinement of d as a TypeDescription *.
  */
 
 #define GetRefiners(d) ((d)->refiners)
-/**< 
- *  <!--  macro GetRefiners(d)                                         -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return the refiners gl_list of struct TypeDescription * or NULL.
+/**<
+ *  Returns a list of refiners of type d, or NULL if none.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The refiners of d as a gl_list of TypeDescription *.
  */
 
 extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
 /**<
- *  <!--  names = GetAncestorsNames(d);                                -->
- *  <!--  struct gl_list_t *names;                                     -->
  *  Return the names of ancestors of type d given.
- *  If none, list may be empty. The list is of
- *  symchar *. The caller should destroy the list but not
- *  its content.
+ *  If none, list may be empty. The list is of symchar *.
+ *  The caller should destroy the list but not its contents.
+ *
+ *  @param d The type to query.
+ *  @return Pointer to a gl_list_t containing the names of the ancestors of d.
  */
 
 #define GetModelParameterList(d) ((d)->u.modarg.declarations)
-/**< 
- *  <!--  macro GetModelParameterList(d)                               -->
- *  <!--  struct TypeDescription *d;                                   -->
+/**<
  *  Return the statements (forward declarations that constitute the
  *  parameter list for d. The statement list returned will contain
  *  willbes (possibly with value), and isas.
  *  Any attempt to use the type d in a RHS must fill in all the
  *  statements on this list with appropriate instances.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The parameter list of d as a struct StatementList *.
  */
 
 #define GetModelParameterCount(d) ((d)->u.modarg.argcnt)
-/**< 
- *  <!--  macro GetModelParameterCount(d)                              -->
- *  <!--  n =  GetModelParameterCount(d);                              -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  unsigned int n;                                              -->
- *  Return the number of arguments required when IS_A'ing a MODEL type.
+/**<
+ *  Returns the number of arguments required when IS_A'ing a MODEL type.
  *  Any attempt to use the type d in a RHS must fill in this many slots.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The count as an unsigned int.
  */
 
 #define GetModelAbsorbedParameters(d) ((d)->u.modarg.absorbed)
-/**< 
- *  <!--  macro GetModelAbsorbedParameters(d)                          -->
- *  <!--  struct TypeDescription *d;                                   -->
+/**<
  *  Return the list of ISAs and CASGNs that absorbed them.
- *  May return NULL;
+ *  May return NULL.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The list as a struct StatementList *.
  */
 
 #define GetModelParameterReductions(d) ((d)->u.modarg.reductions)
-/**< 
- *  <!--  macro GetModelParameterReductions(d)                         -->
- *  <!--  struct TypeDescription *d;                                   -->
+/**<
  *  Return the list of statements that absorb parameter isas in the
  *  statement of this MODEL. Used for display purposes primarily.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The list as a struct StatementList *.
  */
 
 #define GetModelParameterWheres(d) ((d)->u.modarg.wheres)
 /**< 
- *  <!--  macro GetModelParameterWheres(d)                             -->
- *  <!--  struct TypeDescription *d;                                   -->
  *  Return the list of statements that restrict the structure of
  *  WILL_BE passed arguments in this MODEL.
  *  Used for instantiation-time checks.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The list as a struct StatementList *.
  */
 
 #define GetModelParameterValues(d) ((d)->u.modarg.argdata)
 /**< 
- *  <!--  macro GetModelParameterValues(d)                             -->
- *  <!--  struct gl_list_t *ad;                                        -->
- *  Return the list of values that match the ParameterLists.
+ *  NOT IMPLEMENTED.
+ *  Returns the list of values that match the ParameterLists.
  *  Possibly this is a redundancy.
- *  NOT IMPLEMENTED
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The list as a gl_list_t *.
  */
 
 #define GetArrayBaseType(d) ((d)->u.array.desc)
-/**< 
- *  <!--  macro GetArrayBaseType(d)                                    -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return the base type of the array type description.
+/**<
+ *  Returns the base type of the array type description.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The base type as a TypeDescription *.
  */
 
 #define GetArrayBaseIsRelation(d) ((d)->u.array.isrelation)
-/**< 
- *  <!--  macro GetArrayBaseIsRelation(d)                              -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return TRUE if the array is an array of relations.
+/**<
+ *  Returns TRUE if the array is an array of relations.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return An int indicating whether d is an array of relations.
  */
 
 #define GetArrayBaseIsLogRel(d) ((d)->u.array.islogrel)
-/**< 
- *  <!--  macro GetArrayBaseIsLogRel(d)                                -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return TRUE if the array is an array of logical relations.
+/**<
+ *  Returns TRUE if the array is an array of logical relations.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return An int indicating whether d is an array of logical relations.
  */
 
 #define GetArrayBaseIsWhen(d) ((d)->u.array.iswhen)
-/**< 
- *  <!--  macro GetArrayBaseIsWhen(d)                                  -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return TRUE if the array is an array of WHEN's.
+/**<
+ *  Returns TRUE if the array is an array of WHEN's.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return An int indicating whether d is an array of WHENs.
  */
 
 #define GetArrayBaseIsInt(d) ((d)->u.array.isintset)
 /**<
- *  <!--  macro GetArrayBaseIsInt(d)                                   -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  This is only meaningful when the base type is a refinement of set,
- *  but it is always available.  Its value is inconsequential when the
- *  base type is not a set.
+ *  Returns TRUE if the array is a set.
+ *  This is only meaningful when the base type is a refinement of
+ *  set, but it is always available.  Its value is inconsequential
+ *  when the base type is not a set.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return An int indicating whether d is a set.
  */
 
 #define GetArrayIndexList(d) ((d)->u.array.indices)
+/**<
+ *  Returns a list of the indices of an array.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return A l_list_t * containing the indices of d.
+ */
 
 #define GetModule(d) ((d)->mod)
+/**<
+ *  Returns the module in which type d is defined.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The module associated with d as a module_t *.
+ */
 
 #define GetPatchOriginal(d)  ((d)->refines)
-/**< 
- *  <!--  macro GetPatchOriginal(d)                                    -->
- *  <!--  struct TypeDescription *d;                                   -->
- *  Return the original type of the TypeDescription being patched. NULL
- *  must be treated as an error, as a patch is meaningless without the
- *  original type. Internally it uses the same slot as refines.
+/**<
+ *  Returns the original type of the TypeDescription being patched.
+ *  NULL must be treated as an error, as a patch is meaningless without
+ *  the original type. Internally it uses the same slot as refines.
+ *
+ *  @param d The type to query (TypeDescription *).
+ *  @return The original type of d as a TypeDescription *.
  */
 
 extern struct IndexType *CreateIndexType(struct Set *set, int int_index);
-/**< 
- *  <!--  struct IndexType *CreateIndexType(set,int_index)             -->
- *  <!--  struct Set *set;                                             -->
- *  <!--  int int_index;                                               -->
- *  Create a IndexType. The set is the property of the index.
+/**<
+ *  Creates an IndexType. The set becomes the property of the index.
+ *
+ *  @param set The set to use for the new IndexType.
+ *  @param int_index Flag for whether set is enumerated (0) or int (non-zero).
+ *  @return The new IndexType.
  */
 
 extern struct IndexType *CreateDummyIndexType(int int_index);
-/**< 
- *  <!--  struct IndexType *CreateDummyIndexType(int_index)            -->
- *  Returns the dummy IndexType for int if int_index!=0
- *  or for enum if int_index==0.
- *  There is exactly one of each and you should not do anything with it
- *  except destroy it.
+/**<
+ *  Returns the dummy IndexType for int (int_index != 0) or for enum
+ *  (int_index == 0).  There is exactly one of each and you should not
+ *  do anything with it except destroy it.
+ *
+ *  @param int_index Flag for whether to return dummy for enum (0)
+ *                   or int (non-zero).
+ *  @return The dummy IndexType of the specified kind.
  */
 
 extern struct IndexType *CreateIndexTypeFromStr(char *str, int int_index);
-/**< 
- *  <!--  struct IndexType *CreateIndexType(str,int_index)             -->
- *  <!--  symchar *str;                                                -->
- *  <!--  int int_index;                                               -->
- *  Create a IndexType from a string. We do NOT keep the
+/**<
+ *  Creates an IndexType from a string. We do NOT keep the
  *  string given; we keep the symbol table's version of the string.
  *  This operator is exceedingly redundant and should not be used.
+ *
+ *  @param str The string to use to create the new IndexType.
+ *  @param int_index Flag for whether the set is enumerated (0) or int (non-zero).
+ *  @return The new IndexType.
  */
 
 extern void DestroyIndexType(struct IndexType *ind);
-/**< 
- *  <!--  void DestroyIndexType(ind)                                   -->
- *  <!--  struct IndexType *ind;                                       -->
- *  Deallocate this structure and its internals. The string is assumed
- *  NOT to belong to the main symbol table, and thus freed.
+/**<
+ *  Deallocates this structure and its internals.  The string is
+ *  assumed NOT to belong to the main symbol table, and thus freed.
+ *
+ *  @param ind The IndexType to destroy.
  */
 
 #define GetIndexType(p) ((p)->int_index)
+/**<
+ *  Returns the kind flag for IndexType *p.
+ *
+ *  @param p The type to query (IndexType *).
+ *  @return The kind flag for p as an unsigned (0 => enum, 1 => int).
+ */
 
 #define GetIndexSet(p) ((p)->set)
-/**< Note this may return NULL in odd circumstances. */
+/**<
+ *  Returns the set associated with IndexType *p.
+ *  Note this may return NULL in odd circumstances.
+ *
+ *  @param p The type to query (IndexType *).
+ *  @return The set associated with p as a Set *.
+ */
 
 #define GetIndexSetStr(p) ((p)->sptr)
-/**< Note this may return NULL in odd circumstances. */
+/**<
+ *  Returns the string associated with IndexType *p.
+ *  Note this may return NULL in odd circumstances.
+ *
+ *  @param p The type to query (IndexType *).
+ *  @return The set string associated with p as a symchar *.
+ */
 
 extern struct TypeDescription
 *CreateModelTypeDesc(symchar *name,
@@ -992,23 +881,9 @@ extern struct TypeDescription
                      struct StatementList *tsl,
                      struct StatementList *vsl);
 /**<
- *  <!--  struct TypeDescription *CreateModelTypeDesc(name,rdesc,mod,cl,pl,sl,univ, -->
- *  <!--                                              psl,rsl,tsl,wsl)              -->
- *
- *  <!--  symchar *name;			name of the type                            -->
- *  <!--  struct TypeDescription *rdesc;	type that it refines or NULL  -->
- *  <!--  struct module_t *mod;		module it is defined in               -->
- *  <!--  ChildListPtr cl;		list of the type's child names             -->
- *  <!--  struct gl_list_t *pl;		list of initialization procedures     -->
- *  <!--  struct StatementList *sl;	list of declarative statements     -->
- *  <!--  int univ;			TRUE universal FALSE non-universal               -->
- *  <!--  struct StatementList *psl;	list of parameter statements      -->
- *  <!--  struct StatementList *rsl;	list of parameter reducing statements    -->
- *  <!--  struct StatementList *tsl;	list of reduced statements        -->
- *  <!--  struct StatementList *wsl;	list of parameter constraint statements. -->
- *  Create a Model TypeDescription structure with the parameters given.
- *  sl, psl, rsl, wsl should NEVER be NULL, though they may be the
- *  empty list. tsl may be NULL.
+ *  Creates a Model TypeDescription structure with the parameters given.  
+ *  sl, psl, rsl, wsl should NEVER be NULL, though they may be empty lists.  
+ *  tsl may be NULL.
  *
  *  @param name   Name of the type.
  *  @param rdesc  Type that it refines or NULL.
@@ -1021,13 +896,15 @@ extern struct TypeDescription
  *  @param rsl    List of parameter reducing statements.
  *  @param tsl    List of reduced statements.
  *  @param vsl    List of parameter constraint statements.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription *CreateDummyTypeDesc(symchar *name);
 /**<
- *  <!--  struct TypeDescription *CreateDummyTypeDesc(name)            -->
- *  <!--  symchar *name;			name of the type                            -->
- *  Create the universal dummy type for unselected instances.
+ *  Creates the universal dummy type for unselected instances.
+ *
+ *  @param name The name for the dummy type.
+ *  @return A pointer to the new dummy TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -1043,20 +920,8 @@ extern struct TypeDescription
                         symchar *sval,
                         int univ);
 /**<
- *  <!--  struct TypeDescription *CreateConstantTypeDesc              -->
- *  <!--           (name,t,rdesc,mod,bytesize,defaulted,rval,dim,ival,sval,univ) -->
- *  <!--  symchar *name;			name of type                                -->
- *  <!--  enum type_kind t;		base type of Const(real_constant_type,etc)-->
- *  <!--  struct TypeDescription *rdesc;	type description what it refines -->
- *  <!--  struct module_t *mod;		module where the type is defined      -->
- *  <!--  unsigned long bytesize;		size of an instance in bytes.       -->
- *  <!--  int defaulted;			TRUE indicates default value was assigned.  -->
- *  <!--  double rval;			default value for real atoms                  -->
- *  <!--  const dim_type *dim;		dimensions of default value            -->
- *  <!--  long ival;			default value for int/bool constants            -->
- *  <!--  symchar *sval;			default value for symbol constants          -->
- *  <!--  int univ;			TRUE universal FALSE non-universal               -->
  *  Create a Constant TypeDescription structure with the parameters given.
+ *
  *  @param name         Name of type.
  *  @param t            Base type of Const(real_constant_type,etc).
  *  @param rdesc        Type description what it refines.
@@ -1068,6 +933,7 @@ extern struct TypeDescription
  *  @param ival         Default value for int/bool constants.
  *  @param sval         Default value for symbol constants.
  *  @param univ         TRUE universal FALSE non-universal.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -1087,31 +953,10 @@ extern struct TypeDescription
                     long ival,
                     symchar *sval);
 /**<
- *  <!--  struct TypeDescription *                                     -->
- *  <!--  CreateAtomTypeDesc(name,t,rdesc,mod,childl,procl,statl,      -->
- *  <!--                     bytesize,childd,defaulted,                -->
- *  <!--                     dval,ddim,univ,ival,sval)                 -->
- *  <!--  symchar *name;                      name of type             -->
- *  <!--  enum type_kind t;                   base type of atom(real_type,           -->
- *  <!--                                                        boolean-->_type,etc) -->
- *  <!--  struct TypeDescription *rdesc;      type description what it refines       -->
- *  <!--  struct module_t *mod;               module where the type is defined       -->
- *  <!--  ChildListPtr childl;                list of children names                 -->
- *  <!--  struct gl_list_t *procl;            list of initialization procedures      -->
- *  <!--  struct StatementList *statl;        list of declarative statements         -->
- *  <!--  unsigned long bytesize;             size of an instance in bytes.          -->
- *  <!--  struct ChildDesc *childd;           description of the atom's children     -->
- *  <!--  int defaulted;                      valid only for real atoms              -->
- *  <!--                                      TRUE indicates default value assigned  -->
- *  <!--  double dval;                        default value for real atoms           -->
- *  <!--  const dim_type *ddim;               dimensions of default value            -->
- *  <!--  int univ;                           TRUE universal FALSE non-universal     -->
- *  <!--  long ival;                          defalut value for integer/boolean atoms -->
- *  <!--  symchar *sval;                      default value for symbol atoms.        -->
- *  Create an Atom TypeDescription structure with the parameters given.
- *  @param name;                      name of type
- *  @param t;                   base type of atom(real_type,
- *                                                        boolean_type,etc)
+ *  Creates an Atom TypeDescription structure with the parameters given.
+ *
+ *  @param name       Name of type.
+ *  @param t          Base type of atom (real_type, boolean_type, etc.)
  *  @param rdesc      Type description what it refines.
  *  @param mod        Module where the type is defined.
  *  @param childl     List of children names.
@@ -1125,6 +970,7 @@ extern struct TypeDescription
  *  @param univ       TRUE universal FALSE non-universal.
  *  @param ival       Defalut value for integer/boolean atoms.
  *  @param sval       Default value for symbol atoms.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -1135,21 +981,15 @@ extern struct TypeDescription
                         unsigned long bytesize,
                         struct ChildDesc *childd);
 /**<
- *  <!--  struct TypeDescription *                                     -->
- *  <!--  CreateRelationTypeDesc(mod,clist,plist,statl,bytesize,childd)-->
- *  <!--  struct module_t *mod;		the module where it is define         -->
- *  <!--  ChildListPtr clist;		        the list of children names      -->
- *  <!--  struct gl_list_t *plist;	        the list of initialization procedures  -->
- *  <!--  struct StatementList *statl;	the list of declarative statements         -->
- *  <!--  unsigned long bytesize;		the byte length                                -->
- *  <!--  struct ChildDesc *childd;	        the description of the children        -->
- *  Create a Relation TypeDescription structure with the parameters given.
- *  @param mod        The module where it is define.
+ *  Creates a Relation TypeDescription structure with the parameters given.
+ *
+ *  @param mod        The module where it is definde.
  *  @param clist      The list of children names.
  *  @param plist      The list of initialization procedures.
  *  @param statl      The list of declarative statements.
  *  @param bytesize   The byte length.
  *  @param childd     The description of the children.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -1160,21 +1000,15 @@ extern struct TypeDescription
                       unsigned long bytesize,
                       struct ChildDesc *childd);
 /**<
- *  <!--  struct TypeDescription *                                     -->
- *  <!--  CreateLogRelTypeDesc(mod,clist,plist,statl,bytesize,childd)  -->
- *  <!--  struct module_t *mod;		the module where it is defined        -->
- *  <!--  ChildListPtr clist;		        the list of children names      -->
- *  <!--  struct gl_list_t *plist;	        the list of initialization procedures -->
- *  <!--  struct StatementList *statl;	the list of declarative statements        -->
- *  <!--  unsigned long bytesize;		the byte length                               -->
- *  <!--  struct ChildDesc *childd;	        the description of the children       -->
- *  Create a Logical Relation TypeDescription structure with the parameters given.
- *  @param mod        The module where it is define.
+ *  Creates a Logical Relation TypeDescription structure with the parameters given.
+ *
+ *  @param mod        The module where it is defined.
  *  @param clist      The list of children names.
  *  @param plist      The list of initialization procedures.
  *  @param statl      The list of declarative statements.
  *  @param bytesize   The byte length.
  *  @param childd     The description of the children.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -1182,15 +1016,12 @@ extern struct TypeDescription
                     struct gl_list_t *pl,
                     struct StatementList *sl);
 /**<
- *  <!--  struct TypeDescription *CreateWhenTypeDesc(mod,pl,sl)        -->
+ *  Creates a When TypeDescription structure with the parameters given.
  *
- *  <!--  struct module_t *mod;		the module where it is defined        -->
- *  <!--  struct gl_list_t *plist;	        the list of initialization procedures -->
- *  <!--  struct StatementList *statl;	the list of declarative statements        -->
- *  Create a When TypeDescription structure with the parameters given.
  *  @param mod The module where it is defined.
  *  @param pl  The list of initialization procedures.
  *  @param sl  The list of declarative statements.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -1202,24 +1033,8 @@ extern struct TypeDescription
                      int iswhen,
                      struct gl_list_t *indices);
 /**<
- *  <!--  struct TypeDescription *CreateArrayTypeDesc(mod,desc,isintset,isrel, -->
- *                                             <!--  islogrel,iswhen,indices)  -->
- *  <!--  struct module_t *mod;                                        -->
- *  <!--  struct TypeDescription *desc;                                -->
- *  <!--  int isint;                                                   -->
- *  <!--  int isrel;                                                   -->
- *  <!--  int islogrel;                                                -->
- *  <!--  int iswhen;                                                  -->
- *  <!--  struct gl_list_t *indices;                                   -->
- *  <!--  Parameters                                                   -->
- *  <!--  mod	the module of the statement where the array is instanced -->
- *  <!--  desc	the type description of the base type                   -->
- *  <!--  isint	used only when "desc" is a refinement of set.          -->
- *  <!--  isrel	TRUE only when it is an array of relations.            -->
- *  <!--  islogrel  TRUE only when it is an array of logical relations. -->
- *  <!--  iswhen  TRUE only when it is an array of WHEN's.             -->
- *  <!--  indices	a list of IndexType's this describes each array index -->
- *  Create an Array TypeDescription structure with the parameters given.
+ *  Creates an Array TypeDescription structure with the parameters given.
+ *
  *  @param mod      The module of the statement where the array is instanced.
  *  @param desc     The type description of the base type.
  *  @param isintset Used only when "desc" is a refinement of set.
@@ -1227,6 +1042,7 @@ extern struct TypeDescription
  *  @param islogrel TRUE only when it is an array of logical relations.
  *  @param iswhen   TRUE only when it is an array of WHEN's.
  *  @param indices  A list of IndexType's this describes each array index.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 /*  Patches  */
@@ -1238,19 +1054,7 @@ extern struct TypeDescription
                      struct gl_list_t *pl,
                      struct StatementList *sl);
 /**<
- *  <!--  struct TypeDescripion *CreatePatchTypeDesc(name,rdesc,mod,pl,-->sl);
- *  <!--  symchar *name;                                               -->
- *  <!--  struct TypeDescription *rdesc;                               -->
- *  <!--  struct module_t *mod;                                        -->
- *  <!--  struct StatementList *sl;                                    -->
- *
- *  <!--  Paramters:                                                   -->
- *        <!--  name	the name of the patch.                            -->
- *        <!--  rdesc	the type description of the type being patched   -->
- *        <!--  mod	the module that the patch was defined in           -->
- *        <!--  pl	list of procedural statements                       -->
- *        <!--  sl	list of declarative statements                      -->
- *  Create a Patch TypeDescription structure with the parameters given.
+ *  Creates a Patch TypeDescription structure with the parameters given.
  *
  *  Patches are constructs which are not strictly part of the main
  *  language. They have been developed to enable automatic generation
@@ -1270,49 +1074,45 @@ extern struct TypeDescription
  *  @param mod    The module that the patch was defined in.
  *  @param pl     List of procedural statements.
  *  @param sl     List of declarative statements.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
-extern struct TypeDescription
-*MoreRefined(CONST struct TypeDescription *desc1, CONST struct TypeDescription *desc2);
-/**< 
- *  <!--  struct TypeDescription *MoreRefined(desc1,desc2)             -->
- *  <!--  CONST struct TypeDescription *desc1,*desc2;                  -->
- *  Return the more refined of desc1 or desc2.  Return NULL if they are
- *  unconformable.
+extern struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1, 
+                                           CONST struct TypeDescription *desc2);
+/**<
+ *  Returns the more refined of desc1 or desc2, or
+ *  NULL if they are unconformable.
  */
 
 extern CONST struct TypeDescription
 *GreatestCommonAncestor(CONST struct TypeDescription *desc1,
                         CONST struct TypeDescription *desc2);
 /**< 
- *  <!--  struct TypeDescription *GreatestCommonAncestor(desc1,desc2)  -->
- *  <!--  CONST struct TypeDescription *desc1,*desc2;                  -->
- *  Return the most refined common ancestor type of desc1,desc2.
+ *  Returns the most refined common ancestor type of desc1,desc2.
  *  If either of desc1 or desc2 directly REFINES the other, then
  *  the return value will be the less refined of the two types.
  *  Returns NULL if unconformable.<br><br>
  *
  *  Due to malloc/free calls, this is not the cheapest call to make.
- *  If you need it for a time critical test, then you need to
- *  redo the implementation of internal functions Create/DestroyAncestor
+ *  If you need it for a time critical test, then you need to redo
+ *  the implementation of internal functions Create/DestroyAncestor
  *  to reuse memory.
  */
 
 extern int TypesAreEquivalent(CONST struct TypeDescription *desc1,
                               CONST struct TypeDescription *desc2);
 /**<
- * Returns 1 if types appear to be equivalent semantically.
- * This means comparing statment lists, methods, and so forth.
- * Uses, among others, CompareStatementLists CompareStatement,
- * and CompareProcedureLists, which is broken in a FALSE negative way.
- * Array and patch types are never equivalent.
+ *  Returns 1 if types appear to be equivalent semantically.
+ *  This means comparing statment lists, methods, and so forth.
+ *  Uses, among others, CompareStatementLists CompareStatement,
+ *  and CompareProcedureLists, which is broken in a FALSE negative way.
+ *  Array and patch types are never equivalent.
  */
 
 extern void DifferentVersionCheck(CONST struct TypeDescription *desc1,
                                   CONST struct TypeDescription *desc2);
 /**<
- *  <!--  void DifferentVersionCheck(desc1,desc2)                      -->
- *  <!--  const struct TypeDescription *desc1, *desc2;                 -->
+ *  Checks that desc1 and desc2 are unconformable.
  *  It is assumed that desc1 and desc2 are unconformable.  This routine
  *  tries to check if they are unconformable because of different versions
  *  of the types in their type hierarchy.  This can happen if one of these
@@ -1323,11 +1123,9 @@ extern void DifferentVersionCheck(CONST struct TypeDescription *desc1,
 
 extern struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s);
 /**<
- *  <!--  struct TypeDescription *GetStatTypeDesc(s)                   -->
- *  <!--  const struct Statement *s;                                   -->
- *  Return the type field of an IS_A, WILL_BE, or IS_REFINED_TO statement
- *  converted into a TypeDescription. Note that in some cases the result
- *  may be NULL -- and the user should check. sets and arrays do not
+ *  Returns the type field of an IS_A, WILL_BE, or IS_REFINED_TO statement
+ *  converted into a TypeDescription.  Note that in some cases the result
+ *  may be NULL -- and the user should check.  sets and arrays do not
  *  return a proper type this way -- if you consider proper to be an
  *  array type description or a set description of the relevant base type.
  *  This should also not be used on statements defining children
@@ -1335,14 +1133,16 @@ extern struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s);
  *  It must be passed one of these types of statement.
  *  Other statements will return NULL or crash.
  *  Given all the caveats, this is a darn handy operator.
+ *
+ *  @param s The statement to evaluate.
+ *  @return The type field of the statement, which may be NULL.
  */
 
 extern void WriteArrayTypeList(FILE *fp);
 /**< 
- *  <!--  void WriteArrayTypeList(fp)                                  -->
- *  Writes the internal (implicit) array types to file f.
- *  This is a debugging function. The information written isn't very
- *  meaningful to anyone. It relies on internal variables, so we
+ *  Writes the internal (implicit) array types to file fp.
+ *  This is a debugging function.  The information written isn't likely
+ *  to be very meaningful.  It relies on internal variables, so we
  *  can't put it in type_descio.c.
  */
 
@@ -1354,29 +1154,25 @@ extern void WriteArrayTypeList(FILE *fp);
 /**<
  *  Tells if the type description should be shown or not.
  *  Returns 1 is the type is going to be shown. Returns 0 if not.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return An unsigned.
+ *  @param d The type description to query (CONST struct TypeDescription*).
+ *  @return The result as an unsigned.
  *  @see TypeShowF()
  */
 extern unsigned TypeShowF(CONST struct TypeDescription *d);
 /**<
- *  <!--  macro TypeShow(d)                                            -->
- *  <!--  unsigned TypeShow(d)                                         -->
- *  <!--  const struct TypeDescription *d;                             -->
- *  <!--  Tells if the type descirption should be shown or not.        -->
- *  <!--  Returns 1 is the type is going to be shown. Returns 0 if not.-->
  *  Implementation function for TypeShow() (debug mode).
  *  Do not call this function directly - use TypeShow() instead.
  */
 
 extern void SetTypeShowBit(struct TypeDescription *d, int value);
 /**<
- *  <!--  struct TypeDescription *d;                                   -->
- *  <!--  int value;                                                   -->
- *  Set the bit TYPESHOW. This bit is for browsing purposes.
+ *  Sets the bit TYPESHOW.  This bit is for browsing purposes.
  *  It will tell is the user wants to view the instances of a specific type.
  *  The value of the bit will be selected in the Library window.
+ *
+ *  @param d     The type to modify.
+ *  @param value Flag for whether to set (non-zero) or clear (0) the show bit.
  */
 
-#endif  /* __TYPE_DESC_H_SEEN__ */
+#endif  /* type_desc_h_seen__ */
 

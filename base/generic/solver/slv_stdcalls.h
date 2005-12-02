@@ -173,21 +173,21 @@ extern int slv_spk1_reorder_block(slv_system_t sys,
  *  free, incident solver_vars.
  *  transpose determines if SPK1 is transposed.
  *  If we made a matrix out of the block, it should have a full
- *  <!--  diagonal.                                                    -->
+ *  diagonal.
  *
  *  If this succeeds, return value is 0.
  *  If fail due to insufficient memory, return is 2.
- *  <!--  If fail for any other reason, return is 1.                   -->
+ *  If fail for any other reason, return is 1.
  *
  *  Preconditions of use:
  *    No vars outside the block in the solvers_var list should have
- *    <!--  VAR_INBLOCK set to TRUE.                                   -->
+ *    VAR_INBLOCK set to TRUE.
  *
  *  Sideeffects:
  *  We will diddle with all the vars in the solvers_vars and solver_rels
  *  list so that all rel/vars inside the block respond TRUE to in_block.
  *  We will do this even if we decide to block is too small to be worth
- *  <!--  reordering or is the wrong shape.                            -->
+ *  reordering or is the wrong shape.
  *
  *  @bug This should optionally take a user supplied matrix so it doesn't
  *       allocate a big matrix header+perms every time. This needs some

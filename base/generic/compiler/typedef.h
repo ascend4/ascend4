@@ -29,35 +29,33 @@
 
 /** @file
  *  Ascend Type Definition Module.
+ *  This module provides functions for creating new types.
  *  <pre>
  *  When #including typedef.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "instance_enum.h"
- *         #include "compiler.h"
- *         #include "module.h"
- *         #include "list.h"
- *         #include "slist.h"
- *         #include "dimen.h"
- *         #include "child.h"
- *         #include "type_desc.h"
+ *         #include "compiler/fractions.h"
+ *         #include "compiler/instance_enum.h"
+ *         #include "compiler/compiler.h"
+ *         #include "compiler/module.h"
+ *         #include "compiler/list.h"
+ *         #include "compiler/slist.h"
+ *         #include "compiler/dimen.h"
+ *         #include "compiler/child.h"
+ *         #include "compiler/type_desc.h"
  *  </pre>
  */
 
-#ifndef __TYPEDEF_H_SEEN__
-#define __TYPEDEF_H_SEEN__
+#ifndef typedef_h_seen__
+#define typedef_h_seen__
 
 extern void DestroyTypedefRecycle(void);
 /**< 
- *  <!--  DestroyTypedefRecycle()                                      -->
- *  Clear recycled memory.
- *  To work efficiently the typedef module recycles internally
- *  certain pieces of memory.
- *  This function may be called any time (from outside this file)
- *  to clear out this recycled memory.
- *  The only time it makes _sense_ to do so is after deleting all types
- *  in the library or when shutting down the system, but it is safe
- *  regardless.
+ *  Clears recycled memory.
+ *  To work efficiently the typedef module recycles certain pieces 
+ *  of memory internally.  This function may be called any time (from 
+ *  outside this file) to clear out this recycled memory.  The only 
+ *  time it makes _sense_ to do so is after deleting all types in the
+ *  library or when shutting down the system, but it is safe regardless.
  */
 
 extern struct TypeDescription
@@ -72,24 +70,12 @@ extern struct TypeDescription
                     struct StatementList *wsl, /* parameter wheres */
                     unsigned int err);
 /**<
- *  <!-- struct TypeDescription *CreateModelTypeDef(name,refines,mod,univ,sl,pl, -->
- *  <!--                                            psl,rsl,wsl,err)             -->
- *  <!--  const char *name,		name of the type to define                -->
- *  <!--             *refines,	name of the type it refines or NULL     -->
- *  <!--  struct module_t *mod;	module where the type is defined       -->
- *  <!--  int univ;			FALSE non-universal, TRUE universal type         -->
- *  <!--  struct StatementList *sl;	declarative statements             -->
- *  <!--  struct gl_list_t *pl;	list of procedures or NULL             -->
- *  <!--  struct StatementList *psl;	declarative parameter statements  -->
- *  <!--  struct StatementList *rsl;	parameter reductions              -->
- *  <!--  struct StatementList *wsl;	conditions on WILL_BE parameter structure -->
- *  <!--  unsigned int err;		if !=0, abandon input.                    -->
  *  Creates a model type definition.
  *
  *  Note sl, psl and rsl have restrictions on the statements allowed:
- *  - sl cannot contain WILL_BEs;
- *  - psl cannot contain other than WILL_BEs/IS_As;
- *  - rsl cannot contain other than constant assignments.
+ *  - sl cannot contain WILL_BEs
+ *  - psl cannot contain other than WILL_BEs/IS_As
+ *  - rsl cannot contain other than constant assignments
  *  - wsl cannot contain other than WILL_BE_THE_SAMEs
  *
  *  Note that, per ascParse.y, this function destroys several of its
@@ -107,6 +93,7 @@ extern struct TypeDescription
  *  @param rsl      Parameter reductions.
  *  @param wsl      Conditions on WILL_BE parameter structure.
  *  @param err      If !=0, abandon input.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -121,21 +108,8 @@ extern struct TypeDescription
                        CONST dim_type *dim,  /* default dimensions */
                        unsigned int err);
 /**<
- *  <!--  struct TypeDescription *CreateConstantTypeDef(               -->
- *  <!--      name,refines,mod,univ,defaulted,rval,ival,sval,dim,err)  -->
- *  <!--  const char *name;		name of the type                          -->
- *  <!--  const char *refines;	name of the type it refines             -->
- *  <!--  struct module_t *mod;	module where the type is defined       -->
- *  <!--  int univ;			FALSE non-universal, TRUE universal type         -->
- *  <!--  int defaulted;		FALSE no default assigned, TRUE default      -->
- *  <!--  double rval;		default value for reals only                   -->
- *  <!--  long ival;			default value for integers/booleans             -->
- *  <!--  symchar * sval;		default for symbols                         -->
- *  <!--  CONST dim_type *dim;	dimensions of default real value        -->
- *  <!--  unsigned int err;		if !=0, abandon input.                    -->
- *
  *  Creates a refinement of refines. refines cannot be NULL.
- *  If refines is already defaulted, defaulted must be be FALSE.
+ *  If refines is already defaulted, defaulted must be FALSE.
  *  Only the value (among rval,ival,sval) that matches refines is used.
  *  An appropriate dim should be supplied for all types.
  *
@@ -149,6 +123,7 @@ extern struct TypeDescription
  *  @param sval       Default for symbols.
  *  @param dim        Dimensions of default real value.
  *  @param err        If !=0, abandon input.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -165,22 +140,7 @@ extern struct TypeDescription
                    long ival,                /* default int/bool */
                    symchar *sval,            /* default sym*/
                    unsigned int err);
-/**< 
- *  <!--  struct TypeDescription *CreateAtomTypeDef(name,refines,t,mod,univ,sl,pl, -->
- *  <!--          defaulted,val,dim,ival,sval,err)                     -->
- *  <!--  const char *name,		name of the type                          -->
- *  <!--  const char *refines,	name of the type it refines OR NULL     -->
- *  <!--  enum type_kind t;		ignored when refines!=NULL                -->
- *  <!--  struct module_t *mod;	module where the type is defined       -->
- *  <!--  int univ;			FALSE non-universal, TRUE universal type         -->
- *  <!--  struct StatementList *sl;	list of declarative statements     -->
- *  <!--  struct gl_list_t *pl;	list of initialization procedures OR NU-->LL
- *  <!--  int defaulted;		FALSE no default assigned, TRUE default      -->
- *  <!--  double val;			default value for reals only                   -->
- *  <!--  CONST dim_type *dim;	dimensions of default value             -->
- *  <!--  ival;			default integer or boolean                           -->
- *  <!--  symchar *sval;		default symbol                               -->
- *  <!--  unsigned int err;		!=0 --> abandon input                     -->
+/**<
  *  Creates an atom type definition.
  *  Note: val,ival,sval are digested according to the type_kind.
  *  Those which are irrelevant are ignored.<br><br>
@@ -205,6 +165,7 @@ extern struct TypeDescription
  *  @param ival       Default integer or boolean.
  *  @param sval       Default symbol.
  *  @param err        If !=0 --> abandon input.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -213,16 +174,13 @@ extern struct TypeDescription
                        struct StatementList *sl,
                        struct gl_list_t *pl);
 /**<
- *  <!--  struct TypeDescription *CreateRelationTypeDef(mod,name,sl,pl)-->
- *  <!--  struct module_t *mod;	the module it is defined in            -->
- *  <!--  const char *name;           the name to assign to the relation type -->
- *  <!--  struct StatementList *sl;	the list of declarative statements -->
- *  <!--  struct gl_list_t *pl;	the list of initialization procedures OR NULL -->
  *  Creates a relation type definition.
- *  @param mod    The module it is defined in.
+ *
+ *  @param mod    The module the type is defined in.
  *  @param name   The name to assign to the relation type.
  *  @param sl     The list of declarative statements.
  *  @param pl     The list of initialization procedures OR NULL.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern struct TypeDescription
@@ -231,18 +189,14 @@ extern struct TypeDescription
                      struct StatementList *sl,
                      struct gl_list_t *pl);
 /**<
- *  struct TypeDescription *CreateLogRelTypeDef(mod,name,sl,pl)
- *  struct module_t *mod;	the module it is defined in
- *  symchar *name;              the name to assign to the logrel type
- *  struct StatementList *sl;	the list of declarative statements
- *  struct gl_list_t *pl;	the list of initialization procedures OR NULL
  *  Creates a logical relation type definition.
- *  @param mod    The module it is defined in.
+ *
+ *  @param mod    The module the type is defined in.
  *  @param name   The name to assign to the logical relation type.
  *  @param sl     The list of declarative statements.
  *  @param pl     The list of initialization procedures OR NULL.
+ *  @return A pointer to the new TypeDescription structure.
  */
-
 
 extern struct TypeDescription
 *CreatePatchTypeDef(symchar *patch,
@@ -253,20 +207,11 @@ extern struct TypeDescription
                     struct gl_list_t *pl,
                     unsigned int err);
 /**<
- *  <!--  struct TypeDescription *                                     -->
- *  <!--  CreatePatchTypeDef(patch,original,orig_mod,mod,sl,pl,err);   -->
- *  <!--  const char *name;		name of the patch                         -->
- *  <!--  const char *original;	name of the original type being patched -->
- *  <!--  const char *orig_mode;	name of module for the orig type or NULL  -->
- *  <!--  struct module_t *mod;	the module it is defined in            -->
- *  <!--  struct StatementList *sl;	the list of declarative statements OR NULL -->
- *  <!--  struct gl_list_t *pl;	the list of initialization procedures OR NULL -->
- *  <!--  unsigned int err;		if !=0 abandon input                      -->
  *  Creates a patch type definition.
  *  Note that, per ascParse.y, this function destroys several of its
  *  args if it is going to return NULL. (OTHERWISE the args become
- *  parts of the returned object). These destroyed args are:
- *  sl, pl.
+ *  parts of the returned object). These destroyed args are: sl, pl.
+ *
  *  @param patch      Name of the patch.
  *  @param original   Name of the original type being patched.
  *  @param orig_mod   Name of module for the orig type or NULL.
@@ -274,6 +219,7 @@ extern struct TypeDescription
  *  @param sl         The list of declarative statements OR NULL.
  *  @param pl         The list of initialization procedures OR NULL.
  *  @param err        If !=0 abandon input.
+ *  @return A pointer to the new TypeDescription structure.
  */
 
 extern void DefineFundamentalTypes(void);
@@ -281,9 +227,9 @@ extern void DefineFundamentalTypes(void);
  *  Define the fundamental and constant basetypes used in ascend.
  *  They will be named following the defines in type_desc.h.
  *
- *  @bug Doesn't specify the name "relation". Doing so is problematic
- *       wrt instantiate.c.
+ *  @bug compiler/typedef:DefineFundamentalTypes() doesn't specify the 
+ *       name "relation". Doing so is problematic wrt instantiate.c.
  */
 
-#endif /* __TYPEDEF_H_SEEN__ */
+#endif /* typedef_h_seen__ */
 

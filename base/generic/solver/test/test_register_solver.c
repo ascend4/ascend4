@@ -40,10 +40,11 @@ CU_ErrorCode test_register_solver(void)
     return result;
 
   /* solver/slv.c */
-//  result = test_register_solver_slv();
-//  if (CUE_SUCCESS != result)
-//    return result;
-
+/*
+  result = test_register_solver_slv();
+  if (CUE_SUCCESS != result)
+    return result;
+*/
 
 
 
