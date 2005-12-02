@@ -1852,7 +1852,8 @@ if test ! "X$with_models" = "Xno" ; then
     subdir_output='
 	$subdir_target/Makefile:$subdir_root/Makefile.in
 	$subdir_target/Makefile.Rules:$subdir_root/Makefile.Rules.in
-        $subdir_target/ben/Makefile:$subdir_root/ben/Makefile.in
+	$subdir_target/ben/Makefile:$subdir_root/ben/Makefile.in
+	$subdir_target/johnpye/Makefile:$subdir_root/johnpye/Makefile.in
 	'
 	## $subdir_root/examples/Makefile
 	## $subdir_root/examples/abbott/Makefile
