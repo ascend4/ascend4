@@ -8,18 +8,22 @@
 # instead of the default /usr/local/bin
 # so that you can test without having to log in as root.
 
+# Assume Tcl/Tk version 8.3 unless override with environment var
 if [ $TKVERSION ]; then
 	tkver=$TKVERSION
 else
 	tkver=8.3
 fi
 
+# Assume Tktable version 2.8 unless override with environment var
 if [ $TKTABLEVERSION ]; then
 	tktablever=$TKTABLEVERSION
 else
 	tktablever=2.8
 fi
 
+# Assume Tcl/Tk installed under /usr unless ~/tk or ~/tk83 present
+# or override with environment var
 if [ $TKROOT ]; then
 	tkroot=$TKROOT
 elif [ -d ~/tk ]; then
@@ -30,6 +34,18 @@ else
 	tkroot=/usr
 fi
 
+# Assume Tktable installed under $tkroot/share unless 
+# Tktable present in $tkroot/lib (not as good for non-root builds)
+# or override with environment var
+if [ $TKTABLEROOT ]; then
+	tktableroot=$TKTABLEROOT
+elif [ -d $tkroot/lib/Tktable$tktablever ]; then
+	tktableroot=$tkroot/lib/Tktable$tktablever
+else
+	tktableroot=$tkroot/share/Tktable$tktablevar
+fi
+
+# Install everything in ~/ascroot unless override with envir var
 if [ $ASCROOT ]; then
 	ascroot=$ASCROOT;
 else
@@ -43,7 +59,7 @@ cmd="./configure  \
 --with-tcl="$tkroot/lib/libtcl$tkver.so,$tkroot/include/tcl.h" \
 --with-tk="$tkroot/lib/libtk$tkver.so,$tkroot/include/tk.h" \
 --with-wish="$tkroot/bin/wish" \
---with-tktable=$tkroot/lib/Tktable$tktablever/libTktable$tktablever.so"
+--with-tktable=$tktableroot/libTktable$tktablever.so"
 
 echo "RUNNING CONFIGURE WITH"
 echo $cmd
