@@ -4902,10 +4902,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   }
 
   if (univ==1 && StatementListLength(psl)!=0L) {
-    FPRINTF(ASCERR,"%sUNIVERSAL type %s cannot have parameters\n",
-      StatioLabel(3),SCP(name));
-    FPRINTF(ASCERR,
-      "  because only the first instance of the type could set them.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"UNIVERSAL type %s cannot have parameters because only the first instance of the type could set them.",SCP(name));
     DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
     ClearLCL();
     return NULL;
@@ -4996,9 +4993,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
   enum type_kind t;
 
   if (err) {
-    FPRINTF(ASCERR,
-      "%sConstant definition \"%s\" abandoned due to syntax errors.\n",
-      StatioLabel(3),SCP(name));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Constant definition \"%s\" abandoned due to syntax errors.",SCP(name));
     return NULL;
   }
   if (refines==NULL) {
@@ -5008,8 +5003,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
   }
   rdesc = FindType(refines);
   if (rdesc==NULL){
-    FPRINTF(ASCERR,"%sUnable to locate type %s for %s's type definition.\n",
-      StatioLabel(3),SCP(refines),SCP(name));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to locate type %s for %s's type definition.",SCP(refines),SCP(name));
     return NULL;
   }
   t = GetBaseType(rdesc);
@@ -5017,31 +5011,25 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
        t != integer_constant_type &&
        t != symbol_constant_type &&
        t != boolean_constant_type) {
-    FPRINTF(ASCERR,
-            "%sConstant %s attempts to refine a non-Constant type %s.\n",
-      StatioLabel(3),SCP(name),SCP(refines));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Constant %s attempts to refine a non-Constant type %s.",SCP(name),SCP(refines));
     return NULL;
   }
   if (GetUniversalFlag(rdesc)) univ=1;
   /* if new and old defaulted, error */
   if ( (defaulted) && (ConstantDefaulted(rdesc)) ) {
     /* can't default twice */
-    FPRINTF(ASCERR,"%sConstant refinement %s reassigns value of %s.\n",
-      StatioLabel(3),SCP(name),SCP(refines));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Constant refinement %s reassigns value of %s.",SCP(name),SCP(refines));
     return NULL;
   }
   if (!defaulted && univ && g_compiler_warnings) {
-    FPRINTF(ASCWAR,"%s(%s): Universal Constant should be assigned.\n",
-      StatioLabel(1),SCP(name));
+    error_reporter(ASC_PROG_ERR,NULL,0,"(%s): Universal Constant should be assigned.",SCP(name));
   }
 
   switch (t) {
   case real_constant_type:
     dim = CheckDimensionsMatch(dim,GetConstantDimens(rdesc));
     if (dim==NULL) {
-      FPRINTF(ASCERR,
-        "%sDimensions of constant refinement %s don't match those of %s.\n",
-        StatioLabel(3),SCP(name),SCP(refines));
+      error_reporter(ASC_PROG_ERR,NULL,0,"Dimensions of constant refinement %s don't match those of %s.",SCP(name),SCP(refines));
         return NULL;
     }
     if ( ConstantDefaulted(rdesc) ) {
@@ -5063,7 +5051,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
     }
     break; /* end symbol const */
   default:
-    FPRINTF(ASCERR,"%sCreateConstantTypeDef miscalled\n",StatioLabel(3));
+    error_reporter(ASC_PROG_ERR,NULL,0,"CreateConstantTypeDef miscalled");
     return NULL;
   }
   if (defaulted && !univ && g_compiler_warnings) {
@@ -5094,17 +5082,14 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
   register unsigned long bytesize;
 
   if (err) {
-    FPRINTF(ASCERR,
-            "%sAtom definition \"%s\" abandoned due to syntax errors.\n",
-      StatioLabel(3),SCP(name));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Atom definition \"%s\" abandoned due to syntax errors.",SCP(name));
     DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
     return NULL;
   }
   if (refines!=NULL){
     rdesc = FindType(refines);
     if (rdesc==NULL){
-      FPRINTF(ASCERR,"%sUnable to locate type %s for %s's type definition.\n",
-        StatioLabel(3),SCP(refines),SCP(name));
+      error_reporter(ASC_PROG_ERR,NULL,0,"Unable to locate type %s for %s's type definition.",SCP(refines),SCP(name));
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
@@ -5116,17 +5101,14 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
         (GetBaseType(rdesc)==array_type) ||
         (GetBaseType(rdesc)==relation_type) ||
         (GetBaseType(rdesc)==logrel_type) ){
-      FPRINTF(ASCERR,"%sAtom %s attempts to refine a non-ATOM type %s.\n",
-              StatioLabel(3),SCP(name),SCP(refines));
+      error_reporter(ASC_PROG_ERR,NULL,0,"Atom %s attempts to refine a non-ATOM type %s.",SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
     dim = CheckDimensionsMatch(dim,GetRealDimens(rdesc));
     /* remarkably, dim check won't bother other atom types */
     if (dim==NULL){
-      FPRINTF(ASCERR,
-              "%sDimensions of atom refinement %s don't match those of %s.\n",
-              StatioLabel(3),SCP(name),SCP(refines));
+      error_reporter(ASC_PROG_ERR,NULL,0,"Dimensions of atom refinement %s don't match those of %s.",SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
@@ -5154,14 +5136,12 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
       return CreateAtomTypeDesc(name,t,rdesc,mod,clist,pl,sl,bytesize,
         			childd,defaulted,val,dim,univ,ival,sval);
     } else {
-      FPRINTF(ASCERR,"%sCreateAtomTypeDef: unable to MakeChildDesc\n",
-        StatioLabel(3));
+      error_reporter(ASC_PROG_ERR,NULL,0,"CreateAtomTypeDef: unable to MakeChildDesc");
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
   } else {
-    FPRINTF(ASCERR,"%sCreateAtomTypeDef: unable to MakeAtomChildList\n",
-        StatioLabel(3));
+    error_reporter(ASC_PROG_ERR,NULL,0,"CreateAtomTypeDef: unable to MakeAtomChildList");
     DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
     return NULL;
   }
@@ -5264,7 +5244,7 @@ static void DefineEMType(symchar *sym, enum type_kind t)
   if (def) {
     AddType(def);
   } else {
-    FPRINTF(ASCERR,"%sUnable to define %s.\n",StatioLabel(3),SCP(sym));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define %s.",SCP(sym));
   }
 }
 
@@ -5279,8 +5259,7 @@ static void DefineDType(symchar *sym)
   if (def) {
     AddType(def);
   } else {
-    FPRINTF(ASCERR,"%sUnable to define dummy type %s.\n",
-            StatioLabel(3),SCP(sym));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define dummy type %s.",SCP(sym));
   }
 }
 
@@ -5295,7 +5274,7 @@ static void DefineWhenType(void)
   if (def) {
     AddType(def);
   } else {
-    FPRINTF(ASCERR,"%sUnable to define WHEN type.\n",StatioLabel(3));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define WHEN type.");
   }
 }
 
@@ -5311,8 +5290,8 @@ static void DefineCType(symchar *sym, enum type_kind t)
   if (def) {
     AddType(def);
   } else {
-    FPRINTF(ASCERR,"%sUnable to define fundamental constant %s.\n",
-      StatioLabel(3),SCP(sym));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define fundamental constant %s.",
+      SCP(sym));
   }
 }
 
@@ -5326,12 +5305,10 @@ static void DefineFType(symchar *sym, enum type_kind t)
   def = CreateAtomTypeDef(sym,NULL,t,NULL,0,EmptyStatementList(),NULL,
         		  0,0.0,WildDimension(),0,NULL,0);
   if (def) {
-    //FPRINTF(ASCERR,"----\nADD FUND TYPE %s...\n",sym);
     AddType(def);
-    //FPRINTF(ASCERR,"... ADD FUND TYPE %s...\n",sym);
   } else {
-    FPRINTF(ASCERR,"%sUnable to define fundamental atom %s.\n",
-      StatioLabel(3),SCP(sym));
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to define fundamental atom %s.",
+      SCP(sym));
   }
 }
 

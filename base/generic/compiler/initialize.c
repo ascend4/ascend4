@@ -408,7 +408,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   funcname = ExternalStatFuncName(stat);
   efunc = LookupExtFunc(funcname);
 
-  FPRINTF(ASCERR,"EXECUTEINITEXT, FUNC NAME: %s\n", funcname);	
+  /* FPRINTF(ASCERR,"EXECUTEINITEXT, FUNC NAME: %s\n", funcname); */
 
 
   if (efunc == NULL) {
@@ -419,7 +419,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  FPRINTF(ASCERR,"FOUND EXT FUNC, name:%s, in:%d, out:%d\n", efunc->name, efunc->n_inputs, efunc->n_outputs);	
+  /* FPRINTF(ASCERR,"FOUND EXT FUNC, name:%s, in:%d, out:%d\n", efunc->name, efunc->n_inputs, efunc->n_outputs); */
 
   eval_func = GetValueFunc(efunc);
   if (eval_func == NULL) {
@@ -477,7 +477,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  FPRINTF(ASCERR,"CHECKED EXTERNAL ARGS, OK\n");
+  /* FPRINTF(ASCERR,"CHECKED EXTERNAL ARGS, OK\n"); */
 
   Init_Slv_Interp(&slv_interp);
   nok = (*eval_func)(&slv_interp,fm->i,arglist);

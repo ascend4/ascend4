@@ -77,6 +77,9 @@ typedef enum error_severity_enum{
    ,ASC_PROG_FATAL	   /**< fatal error, program will exit */
 } error_severity_t;
 
+/// An alias for ASC_PROG_ERROR
+#define ASC_PROG_ERR ASC_PROG_ERROR
+
 #define ERROR_REPORTER_MAX_MSG 4096 /* no particular reason */
 
 typedef struct{

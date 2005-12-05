@@ -87,53 +87,52 @@ struct errormessage {
 int g_parser_warnings = 0;
 
 static struct errormessage g_DefinitionErrorMessages[] = {
-  {"No error",0},
+  /*0*/{"No error",0},
   {"Name of a part has been reused (failure)",3},
   {"Name of a part has incorrect structure (failure)",3},
   {"Name of a part/variable that does not exist",3},
   {"Name of undefined function (failure)",3},
-  {"Illegal right hand side type in ALIASES",3},
+  /*5*/{"Illegal right hand side type in ALIASES",3},
   {"Illegal expression encountered (parser, lint or memory error, failure)",3},
   {"Illegal parameter type for WILL_BE (failure)",3},
   {"Statement not allowed in context (failure)",3},
   {"Illegal parameter (more than 1 name per IS_A/WILL_BE - failure)",3},
-  {"Illegal parameter reduction (LHS not defined by ancestral IS_A)",3},
+  /*10*/{"Illegal parameter reduction (LHS not defined by ancestral IS_A)",3},
   {"Illegal parameter reduction (reassigning part - failure)",3},
   {"Illegal parameter type for IS_A (punting). Try WILL_BE?",3},
   {"Unverifiable name or illegal type in a relation",2},
   {"Unverifiable name or illegal type in RHS of :==",2},
-  {"Incorrect number of arguments passed to parameterized type. (failure)",3},
+  /*15*/{"Incorrect number of arguments passed to parameterized type. (failure)",3},
   {"Incorrect argument passed to parameterized type. (failure)",3},
   {"Statement possibly modifies type of parameter. (failure)",3},
   {"Unverifiable LHS of :==, possibly undefined part or non-constant type",2},
   {"Unverifiable LHS of :=, possibly undefined part or non-variable type",2},
-  {"Illegal type or undefined name in RHS of := (failure)",3},
+  /*20*/{"Illegal type or undefined name in RHS of := (failure)",3},
   {"Object with incompatible type specified in refinement",3},
   {"FOR loop index shadows previous declaration (failure)",3},
   {"Unverifiable name or illegal type in ARE_ALIKE",2},
   {"Illegal parameterized type in ARE_ALIKE",3},
-  {"Illegal set of array elements in ARE_ALIKE",3},
+  /*25*/{"Illegal set of array elements in ARE_ALIKE",3},
   {"WILL(_NOT)_BE_THE_SAME contains incorrect names.",3},
   {"WILL_BE in WHERE clause not yet implemented.",3},
   {"Mismatched alias array subscript and set name in ALIASES-ISA.",3},
-  {"Unverifiable FOR loop set, possibly undefined part or non-constant type",
-   2},
-  {"SELECT statements are not allowed inside a FOR loop",3},
+  {"Unverifiable FOR loop set, possibly undefined part or non-constant type", 2},
+  /*30*/{"SELECT statements are not allowed inside a FOR loop",3},
   {"Illegal relation -- too many relational operators (<,>,=,<=,>=,<>)",3},
   {"Illegal logical relation -- too many equality operators (!=,==)",3},
   {"Illegal USE found outside WHEN statement",3},
   {"Illegal FOR used in a method must be FOR/DO",3},
-  {"Illegal FOR used in body must be FOR/CREATE",3},
+  /*35*/{"Illegal FOR used in body must be FOR/CREATE",3},
   {"Illegal ATOM attribute or relation type in ARE_THE_SAME",3},
   {":= used outside METHOD makes models hard to debug or reuse",1},
   {"Illegal BREAK used outside loop or SWITCH.",3},
   {"Illegal CONTINUE used outside loop.",3},
-  {"Illegal FALL_THROUGH used outside SWITCH.",3},
+  /*40*/{"Illegal FALL_THROUGH used outside SWITCH.",3},
   {"Incorrect nested argument definition for MODEL. (failure)",3},
   {"Indexed relation has incorrect subscripts. (failure)",3},
   {"Illegal FOR used in WHERE statements must be FOR/CHECK",3},
   {"Illegal FOR used in parameter definitions must be FOR/EXPECT",3},
-  {"Miscellaneous style",1},
+  /*45*/{"Miscellaneous style",1},
   {"Miscellaneous warning",2},
   {"Miscellaneous error",3},
   {"Unknown error encountered in statement",5}
@@ -180,12 +179,23 @@ void TypeLintNameMsg(FILE *f, CONST struct Name *n, char *m,int level)
   if (level > 0 && level < g_parser_warnings) {
     return;
   }
-  if (level >0 && level <5) {
-    FPRINTF(f,"%s",StatioLabel(level));
+  switch(level){
+	case 2:
+		error_reporter_start(ASC_PROG_WARNING,NULL,0);
+		break;
+	case 3:
+		error_reporter_start(ASC_PROG_ERROR,NULL,0);
+		break;
+	case 4:
+		error_reporter_start(ASC_PROG_FATAL,NULL,0);
+		break;
+	default:
+		error_reporter_start(ASC_PROG_NOTE,NULL,0);
   }
   FPRINTF(f," %s",m);
   WriteName(f,n);
   FPRINTF(f,"\n");
+  error_reporter_end_flush();
 }
 
 void TypeLintNameNode(FILE *f, CONST struct Name *n, char *m)

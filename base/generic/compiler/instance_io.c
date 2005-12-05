@@ -219,12 +219,13 @@ int WriteInstanceName(FILE *f,
 {
   struct gl_list_t *path;
   int count;
-  if (i==ref && i !=NULL) {
+  /*if (i==ref && i !=NULL) {
     FPRINTF(ASCERR,"WriteInstanceName called with i,ref both"
       " pointing to:\n");
     WriteInstanceName(ASCERR,i,NULL);
     FPRINTF(ASCERR,"\n");
   }
+  */
   path = ShortestPath(i,ref,0,UINT_MAX);
   count = WritePath(f,path);
   gl_destroy(path);

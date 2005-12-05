@@ -804,13 +804,13 @@ const char *slv_solver_name(int index)
   static char errname[] = "ErrorSolver";
   if (index >= 0 && index < NORC) {
     if ( SFI(index,name) == NULL ) {
-      error_reporter(ASC_PROG_WARNING,NULL,0,"slv_solver_name called with nameless index\n");
+      error_reporter(ASC_PROG_WARNING,NULL,0,"slv_solver_name called with nameless index %d",index);
       return errname;
     } else {
       return SFI(index,name);
     }
   } else {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_solver_name called with unregistered index");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_solver_name called with unregistered index '%d'", index);
     return errname;
   }
 }
@@ -1855,16 +1855,16 @@ int slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bf)
 
 static void printwarning(const char * fname, slv_system_t sys)
 {
-  FPRINTF(stderr,
-    "WARNING: %s called with bad registered client (%s).\n",fname,
+  error_reporter(ASC_PROG_WARNING,NULL,0,
+    "%s called with bad registered client (%s).",fname,
     slv_solver_name(sys->solver));
 }
 
 static void printinfo(slv_system_t sys, const char *rname)
 {
   if (CF(sys,name) == NULL ) {
-    FPRINTF(stderr,
-      "INFORMATION: Client %s does not support function %s\n",
+    error_reporter(ASC_PROG_NOTE,NULL,0,
+      "Client %s does not support function %s\n",
       slv_solver_name(sys->solver),rname);
   }
 }

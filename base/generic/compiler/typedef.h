@@ -105,7 +105,7 @@ extern struct TypeDescription
                        double rval,          /* default real value */
                        long ival,            /* default integer/boolean value */
                        symchar *sval,        /* default symbol value */
-                       CONST dim_type *dim,  /* default dimensions */
+                       CONST dim_type *dim_thing,  /* default dimensions */
                        unsigned int err);
 /**<
  *  Creates a refinement of refines. refines cannot be NULL.
@@ -136,7 +136,7 @@ extern struct TypeDescription
                    struct gl_list_t *pl,     /* initialization procedures*/
                    int defaulted,
                    double val,               /* default value */
-                   CONST dim_type *dim,      /* default dimensions */
+                   CONST dim_type *dim_thing,      /* default dimensions */
                    long ival,                /* default int/bool */
                    symchar *sval,            /* default sym*/
                    unsigned int err);

@@ -106,7 +106,7 @@ extern struct NoteTmp *CreateNoteTmp(symchar *lang,
                                      int line);
 
 /** Add a notetmp to a lifo (if you follow next) list. */
-extern struct NoteTmp *LinkNoteTmp(struct NoteTmp *new,
+extern struct NoteTmp *LinkNoteTmp(struct NoteTmp *new_thing,
                                    struct NoteTmp *chain);
 
 /** 
@@ -147,7 +147,7 @@ extern void DestroyNotesDatabase(symchar *dbid);
  * database. Useful if replacing a type.
  * <!--  DestroyNotesOnType(dbid,typename);                            -->
  */
-extern void DestroyNotesOnType(symchar *dbid, symchar *typename);
+extern void DestroyNotesOnType(symchar *dbid, symchar *type_name);
 
 /**
  * <!--  list = GetNotes(dbid,typename,language,id,method,nd);         -->

@@ -1097,9 +1097,11 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
       if( GetInstanceRelationOnly(inst) == NULL ||
           GetInstanceRelationType(inst) == e_undefined) {
 	/* guard against null relations, unfinished ones */
-        FPRINTF(ASCERR,"ERROR: CountStuffInTree found bad relation\n");
+        error_reporter_start(ASC_USER_ERROR,NULL,0);
+		FPRINTF(ASCERR,"Found bad (unfinished?) relation '");
         WriteInstanceName(ASCERR,inst,p_data->root);
-        FPRINTF(ASCERR,"\n");
+        FPRINTF(ASCERR,"' (in CountStuffInTree)");
+		error_reporter_end_flush();
         g_bad_rel_in_list = TRUE;
         return;
       }
@@ -2014,8 +2016,11 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         }
       }
       if (p_data->nnz==nnzold) {
-        FPRINTF(ASCWAR,"No free variables in included relation:\n");
-        WriteInstanceName(ASCWAR,rip->i,p_data->root);
+        error_reporter_start(ASC_USER_WARNING,NULL,0);
+		FPRINTF(ASCERR,"No free variables in included relation '");
+        WriteInstanceName(ASCERR,rip->i,p_data->root);
+		FPRINTF(ASCERR,"'");
+		error_reporter_end_flush();
       }
     }
   }
