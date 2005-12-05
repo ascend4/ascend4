@@ -225,7 +225,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   int (*install)() = NULL;
   FILE *fp;
 
-  FPRINTF(ASCERR,"LOADING LIBRARY %s\n",path);
+  /*FPRINTF(ASCERR,"LOADING LIBRARY %s\n",path);*/
 
   if (NULL == path) {
     FPRINTF(ASCERR,"Asc_DynamicLoad failed: Null path\n");
@@ -234,14 +234,14 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
 
-  FPRINTF(ASCERR,"PATH IS NOT A DUPE\n");
+  /*FPRINTF(ASCERR,"PATH IS NOT A DUPE\n");*/
  
   fp = fopen(path,"rb");
   if(fp==NULL){
     FPRINTF(ASCERR,"FILE %s ISN'T THERE\n",path);
     return 1;
   }
-  FPRINTF(ASCERR,"FILE %s IS THERE AND CAN BE OPENED\n",path);
+  /* FPRINTF(ASCERR,"FILE %s IS THERE AND CAN BE OPENED\n",path);*/
   fclose(fp);
   
   /* clear error message first */
@@ -254,7 +254,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
     return 1;
   }
 
-  FPRINTF(ASCERR,"LIBRARY OPENED; HUNTING FOR initFun %s\n",initFun);
+  /*FPRINTF(ASCERR,"LIBRARY OPENED; HUNTING FOR initFun %s\n",initFun);*/
   if (xlib == NULL) {
     FPRINTF(ASCERR,"DLERROR: %s\n",(char *)dlerror());
     return 1;

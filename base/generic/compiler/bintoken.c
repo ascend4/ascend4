@@ -667,7 +667,7 @@ static
 enum bintoken_error BinTokenCompileC(char *buildcommand)
 {
   int status;
-  FPRINTF(ASCERR,"\nStarting build, command:\n----\n%s\n----\n\n",buildcommand);
+  error_reporter(ASC_PROG_NOTE,NULL,0,"Starting build, command:\n%s",buildcommand);
   status = system(buildcommand);
   if (status) {
     FPRINTF(ASCERR,"\nBUILD returned %d\n",status);
@@ -830,9 +830,9 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
       if (status != BTE_ok) {
         BinTokenErrorMessage(status,root,libname,buildcommand);
         /* leave source,binary files there to debug */
-      }else{
+      }/*else{
         FPRINTF(ASCERR,"BINTOKENLOADC OK\n");
-      }
+      }*/
     }
     break;
   case BT_F77:

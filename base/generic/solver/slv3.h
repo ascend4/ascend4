@@ -45,8 +45,8 @@
  *  </pre>
  */
 
-#ifndef slv3__already_included
-#define slv3__already_included
+#ifndef ASC_SLV3_H
+#define ASC_SLV3_H
 
 typedef struct slv3_system_structure *slv3_system_t;
 
@@ -62,5 +62,5 @@ int slv3_register(SlvFunctionsT *f);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv3__already_included */
+#endif  /* ASC_SLV3_H */
 

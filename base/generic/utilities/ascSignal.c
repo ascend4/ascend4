@@ -274,9 +274,11 @@ void Asc_SignalRecover(int force) {
 static int push_trap(struct gl_list_t *tlist, SigHandler tp)
 {
   if (tlist == NULL) {
+	ERROR_REPORTER_DEBUG("TLIST IS NULL");
     return -1;
   }
   if (gl_length(tlist) == gl_capacity(tlist)) {
+  	ERROR_REPORTER_DEBUG("TLIST LENGTH = CAPACITY");
     return 1;
   }
   gl_append_ptr(tlist,(VOIDPTR)tp);
@@ -299,19 +301,22 @@ int Asc_SignalHandlerPush(int signum, SigHandler tp)
   }
   switch (signum) {
     case SIGFPE:
+	  /*ERROR_REPORTER_DEBUG("PUSH SIGFPE");*/
       err = push_trap(f_fpe_traps,tp);
       break;
     case SIGINT:
+	  /*ERROR_REPORTER_DEBUG("PUSH SIGINT");*/
       err = push_trap(f_int_traps,tp);
       break;
     case SIGSEGV:
+	  /*ERROR_REPORTER_DEBUG("PUSH SIGSEGV");*/
       err = push_trap(f_seg_traps,tp);
       break;
     default:
       return -1;
   }
   if (err != 0) {
-    FPRINTF(ASCERR,"Asc_Signal (%d) stack limit exceeded.\n",signum);
+    error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"Asc_Signal (%d) stack limit exceeded.",signum);
     return err;
   }
   (void)signal(signum, tp); /* install */
@@ -342,19 +347,22 @@ int Asc_SignalHandlerPop(int signum, SigHandler tp)
   int err;
   switch (signum) {
   case SIGFPE:
+    /*ERROR_REPORTER_DEBUG("POP SIGFPE");*/
     err = pop_trap(f_fpe_traps,tp);
     break;
   case SIGINT:
+    /*ERROR_REPORTER_DEBUG("POP SIGINT");*/
     err = pop_trap(f_int_traps,tp);
     break;
   case SIGSEGV:
+    /*ERROR_REPORTER_DEBUG("POP SIGSEGV");*/
     err = pop_trap(f_seg_traps,tp);
     break;
   default:
     return -1;
   }
   if (err != 0 && tp != NULL) {
-    FPRINTF(ASCERR,"Asc_Signal (%d) stack pop mismatch.\n",signum);
+    error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
   Asc_SignalRecover(TRUE);

@@ -177,7 +177,7 @@ long int g_compiler_counter = 1;
  * which changes the instance tree is called.
  */
 
-#define DEBUG_RELS
+/* #define DEBUG_RELS */
 /* undef DEBUG_RELS if you want less spew in pass 2 */
 
 #ifdef DEBUG_RELS
@@ -8114,15 +8114,19 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
   switch(StatementType(statement)){
     case REL:
 #ifdef DEBUG_RELS
+	error_reporter_start(ASC_PROG_NOTE,NULL,0);
     FPRINTF(stderr,"Pass2ExecuteCondStatements: case REL");
     WriteStatement(stderr, statement, 3);
+	error_reporter_end_flush();
 #endif
       return ExecuteREL(inst,statement);
     case FOR:
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
+	error_reporter_start(ASC_PROG_NOTE,NULL,0);
     FPRINTF(stderr,"Pass2ExecuteCondStatements: case FOR");
     WriteStatement(stderr, statement, 3);
+	error_reporter_end_flush();
 #endif
         return Pass2ExecuteFOR(inst,statement);
       }
@@ -9644,7 +9648,9 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       return_value = 1;
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
+	  error_reporter_start(ASC_PROG_NOTE,NULL,0);
       WriteStatement(stderr, statement, 6);
+      error_reporter_end_flush();
 #endif
         Pass2RealExecuteFOR(inst,statement);
         /* p2ref expected to succeed or fail permanently.
@@ -9659,7 +9665,9 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       break;
     case REL:
 #ifdef DEBUG_RELS
+	  error_reporter_start(ASC_PROG_NOTE,NULL,0);	  
       WriteStatement(stderr, statement, 6);
+	  error_reporter_end_flush();
 #endif
       return_value = ExecuteREL(inst,statement);
       /* ER expected to succeed or fail permanently,returning 1.
@@ -10946,12 +10954,16 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
   switch(StatementType(statement)){ /* should be an if relinstance */
   case FOR:
 #ifdef DEBUG_RELS
+    error_reporter_start(ASC_PROG_NOTE,NULL,0);
     WriteStatement(stderr, statement, 3);
+	error_reporter_end_flush();
 #endif
     return Pass2ExecuteFOR(inst,statement);
   case REL:
 #ifdef DEBUG_RELS
+    error_reporter_start(ASC_PROG_NOTE,NULL,0);
     WriteStatement(stderr, statement, 3);
+    error_reporter_end_flush();
 #endif
     /* ER expected to succeed or fail permanently. this may change. */
     return ExecuteREL(inst,statement);
@@ -10962,9 +10974,11 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
   case LOGREL:
   case WHEN:
 #ifdef DEBUG_RELS
+    error_reporter_start(ASC_PROG_NOTE,NULL,0);
     FPRINTF(stderr,"-- IGNORING WHEN STAT\n");
     /* write statement */
     WriteStatement(stderr, statement, 3);
+	error_reporter_end_flush();
 #endif
     return 1; /* assumed done  */
   case FNAME:
@@ -11330,8 +11344,10 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
       proto = Asc_GetAnonPrototype(at);
       if (InstanceKind(proto) == MODEL_INST && InstanceInList(proto)) {
 #ifdef DEBUG_RELS
-        FPRINTF(stderr,"Rels in model: ");
+        error_reporter_start(ASC_PROG_NOTE,NULL,0);
+		FPRINTF(stderr,"Rels in model: ");
         WriteInstanceName(stderr,proto,NULL); FPRINTF(stderr,"\n");
+		error_reporter_end_flush();
 #endif
         blist = InstanceBitList(proto);
         if ((blist!=NULL) && !BitListEmpty(blist)) {
@@ -11994,9 +12010,10 @@ void Pass2SetRelationBits(struct Instance *inst)
   if (inst != NULL && InstanceKind(inst)==MODEL_INST) {
     struct BitList *blist;
 #ifdef DEBUG_RELS
+	error_reporter_start(ASC_PROG_NOTE,NULL,0);
     FPRINTF(stderr,"P2SRB: ");
     WriteInstanceName(ASCERR,inst,debug_rels_work);
-    FPRINTF(stderr,"\n");
+	error_reporter_end_flush();
 #endif
 
     blist = InstanceBitList(inst);
@@ -12036,9 +12053,10 @@ void Pass2SetRelationBits(struct Instance *inst)
         AddBelow(NULL,inst);
         /* add PENDING model */
 #ifdef DEBUG_RELS
+		error_reporter_start(ASC_PROG_NOTE,NULL,0);
         FPRINTF(stderr,"Changed: ");
         WriteInstanceName(ASCERR,inst,debug_rels_work);
-        FPRINTF(stderr,"\n");
+        error_reporter_end_flush();
 #endif
       }
     }

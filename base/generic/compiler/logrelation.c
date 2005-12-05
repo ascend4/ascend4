@@ -946,7 +946,7 @@ struct logrelation *CreateLogicalRelation(struct Instance *reference,
     break;
   default:
     *err = incorrect_logstructure;
-    FPRINTF(ASCERR,"Error expression missing logical relation operator.\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"Expression missing logical relation operator.");
     if (g_logrelation_bvar_list!=NULL) {
       DestroyBVarList(g_logrelation_bvar_list,lrelinst);
     }

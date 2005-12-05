@@ -2905,9 +2905,11 @@ static int ConvertExpr(CONST struct Expr *start,
 	} else{
 	  *err = find_error;
           if (*ferr == impossible_instance) {
-            FPRINTF(ASCERR,"Impossible name or subscript : \n");
+			error_reporter_start(ASC_USER_ERROR,NULL,0);
+            FPRINTF(ASCERR,"Impossible name or subscript in '");
             WriteName(ASCERR,ExprName(start));
-            FPRINTF(ASCERR,"\n");
+            FPRINTF(ASCERR,"'");
+			error_reporter_end_flush();
           }
 	  DestroyTermList();
 	  return 0;
@@ -3285,7 +3287,7 @@ struct relation *CreateTokenRelation(struct Instance *reference,
     break;
   default:
     *err = incorrect_structure;
-    FPRINTF(ASCERR,"Error expression missing relational operator.\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"Error expression missing relational operator.");
     if (g_relation_var_list!=NULL) {
        DestroyVarList(g_relation_var_list,relinst);
     }

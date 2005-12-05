@@ -644,7 +644,7 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
     line=StatementLineNum(stat);
   }
 
-  if (level == 0) {
+  if (level == 0 || level ==3 ){
 	error_reporter_start(ASC_USER_ERROR,filename,line);
 	FPRINTF(f,"%s\n",message);
   }else if(level < 0){
