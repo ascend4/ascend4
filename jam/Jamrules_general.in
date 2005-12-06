@@ -51,6 +51,28 @@ NODEBUG = 1 ;
 # Comment to compile without using the Epperly malloc debugger
 #DEBUG_MALLOC = -DMALLOC_DEBUG ;
 
+#======================================================================
+# PACKAGES
+#
+# Package settings for building Ascend.
+# Packages are bits of compiled code that represent models, or solvers,
+# or, in general, any bits of external code.
+#
+# Choose one of the following, comment out the others:
+#			STATIC_PACKAGES		packages should be statically linked/loaded
+#			DYNAMIC_PACKAGES	packages should be dynamically linked/loaded
+#			NO_PACKAGES				no packages
+#
+# If STATIC_PACKAGES are chosen, also indicate the location of
+# the packages in PACK_LIBS.	Otherwise leave PACK_LIBS empty.
+#======================================================================
+
+# PACKAGE_FLAGS should be -DSTATIC_PACKAGES, -DDYNAMIC_PACKAGES or -DNO_PACKAGES
+PACKAGE_FLAGS = -DDYNAMIC_PACKAGES ;
+
+PACK_LIBS = $(ASC_PACKAGES_LIB_PATH) ;
+#PACK_LIBS = ;
+
 #---------------------------------------------------------------------------
 
 # Tools required for complete build (comment out if not present).
@@ -86,7 +108,9 @@ KEEPOBJS = true ;
 # sizeof(void*) - change value if not a typical 32-bit system
 SIZEOF_VOIDPTR = 4 ;
 
-CCFLAGS += -DTHIS_IS_AN_UNUSED_FUNCTION -DSIZEOF_VOID_P=$(SIZEOF_VOIDPTR) ;
+# Removed -DTHIS_IS_AN_UNUSED_FUNCTION -- johnpye
+# Added $(PACKAGE_FLAGS)
+CCFLAGS += $(PACKAGE_FLAGS) -DSIZEOF_VOID_P=$(SIZEOF_VOIDPTR) ;
 
 if $(NODEBUG)
 {
@@ -102,7 +126,7 @@ else
 if $(NT)
 {
   # Windows-specific defines
-  CCFLAGS += -D_X86_=1 -DWIN32 -D_WIN32 -DASC_BUILD_LIB -D$(HAVE_PACKAGES) ;
+  CCFLAGS += -D_X86_=1 -DWIN32 -D_WIN32 -DASC_BUILD_LIB ;
   SUFSHR = .dll ;
 
   if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
@@ -194,7 +218,6 @@ if $(NT)
 else if $(UNIX) || $(OS) = LINUX
 {
   SUFSHR = .so ;
-  CCFLAGS += -D$(HAVE_PACKAGES) ;
   FORTRANFLAGS = -c -I4 -O ;
 
   # uncomment to select desired warning level and ansi-strictness
@@ -245,28 +268,6 @@ ASC_BASE_LIBS =
 # Path to base library sources & libs from top-level jam directory
 ASC_BASE_SOURCE_RELPATH = ..$(SLASH)base$(SLASH)generic ;
 ASC_BASE_LIBS_RELPATH   = ..$(SLASH)base$(SLASH)jam$(SLASH)$(BUILD_DIR)$(SLASH) ;
-
-#======================================================================
-# PACKAGES
-#
-# Package settings for building Ascend.
-# Packages are bits of compiled code that represent models, or solvers,
-# or, in general, any bits of external code.
-#
-# Choose one of the following, comment out the others:
-#     STATIC_PACKAGES   packages should be statically linked/loaded
-#     DYNAMIC_PACKAGES  packages should be dynamically linked/loaded
-#     NO_PACKAGES       no packages
-#
-# If STATIC_PACKAGES are chosen, also indicate the location of
-# the packages in PACK_LIBS.  Otherwise leave PACK_LIBS empty.
-#======================================================================
-HAVE_PACKAGES = STATIC_PACKAGES ;
-#HAVE_PACKAGES = DYNAMIC_PACKAGES ;
-#HAVE_PACKAGES = NO_PACKAGES ;
-
-PACK_LIBS = $(ASC_PACKAGES_LIB_PATH) ;
-#PACK_LIBS = ;
 
 #======================================================================
 # SOLVERS / INTEGRATORS

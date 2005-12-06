@@ -54,8 +54,8 @@
 	of the error won't be reported, because you don't support
 	variadic macros.
 */
-#ifdef __GNUC__
-# define ERROR_REPORTER_DEBUG(ARGS...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,ARGS)
+#ifdef HAVE_C99
+# define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,MSG, ## __VA_ARGS__)
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
 int error_reporter_note_no_line(const char *fmt,...);

@@ -211,7 +211,8 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 }
 #endif /* __WIN32__ */
 
-#if defined(sun) || defined(linux)
+/* NOTE, added defined(__unix__) here, not sure if that's a bad thing or not -- johnpye */
+#if defined(sun) || defined(linux) || defined(__unix__)
 #ifndef MACH
 #include <dlfcn.h>
 
@@ -304,6 +305,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
   return (install == NULL) ? 0 : (*install)();
 }
 #else /* MACH */
+#warning "MACH DEFINED"
 int DynamicLoad(CONST char *path, CONST char *initFun)
 {
   return 0;
@@ -313,6 +315,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 
 
 #ifdef __osf__
+#warning "OSF"
 #include <dlfcn.h>
 /*
 	OSF (??)
@@ -386,6 +389,7 @@ int DynamicLoad(CONST char *path, CONST char *initFun)
 #endif /* osf */
 
 #if defined(solaris) || defined(_AIX)
+#warning "SOLARIS/AIX"
 #if defined(solaris)
 #include <dlfcn.h>
 #else

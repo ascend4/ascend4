@@ -84,6 +84,10 @@ include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
 
 srcdir = ..$(SLASH)generic ;
 
+if $(TOOLSET) = MINGW || $(CC) = gcc {
+	CCFLAGS += -std=c99 ;
+}
+
 # Build flags for Ascend base libraries
 BUILD_COMPILER  = 1 ;
 BUILD_GENERAL   = 1 ;
