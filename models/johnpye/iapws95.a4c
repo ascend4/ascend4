@@ -438,7 +438,9 @@ MODEL steam_state;
 
 METHODS
 METHOD default_self;
-	(* nothing here *)
+	RUN ClearAll;
+	RUN specify;
+	RUN values;
 END default_self;
 
 METHOD specify;
