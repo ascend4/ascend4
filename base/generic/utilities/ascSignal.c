@@ -49,18 +49,20 @@
 
 #include <stdio.h>
 #include "utilities/ascConfig.h"
+
 #ifndef NO_SIGNAL_TRAPS 
-#include <signal.h>
-#include <setjmp.h>
+# include <signal.h>
+# include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS*/
+
 #ifdef __WIN32__
-#include <process.h>
+# include <process.h>
 #else
-#include <unistd.h>
+# include <unistd.h>
 #endif
+
 #include "utilities/ascSignal.h"
 #include "general/list.h"
-
 
 static jmp_buf f_test_env;    /* for local testing of signal handling */
 
@@ -139,20 +141,22 @@ static int ascresetneeded(void) {
 
   result = 0;
 
+#ifndef NO_SIGINT_TRAP
   /* test interrupt */
   savedtrap = signal(SIGINT, testctrlc);
-  PRINTF("Testing signal %d %p\t%p\t", SIGINT, savedtrap, testctrlc);
+  CONSOLE_DEBUG("Testing signal SIGINT (signum = %d) %p\t%p\t", SIGINT, savedtrap, testctrlc);
   if (setjmp(f_test_env) == 0) {
     testdooley2(SIGINT);
   } else {
     c++;
   }
   if (c != 1) {
-    PRINTF("Signal test failed. ASCEND unlikely to work on this hardware.\n");
+	CONSOLE_DEBUG("SIGINT test failed");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Signal (SIGINT) test failed. ASCEND unlikely to work on this hardware.");
     result = -1;
   }
   lasttrap = signal(SIGINT, (NULL != savedtrap) ? savedtrap : SIG_DFL);
-  PRINTF("%p\n",lasttrap);
+  CONSOLE_DEBUG("%p",lasttrap);
   if (lasttrap != testctrlc) {
     result = 1;
   }
@@ -162,23 +166,32 @@ static int ascresetneeded(void) {
   }
 
   c = 0;
+#else
+  CONSOLE_DEBUG("SIGINT trap bypassed: compile-time settings");
+#endif
+
+#ifndef NO_SIGSEGV_TRAP
   /* passed interrupt, check fpe */
   savedtrap=signal(SIGFPE, testctrlc);
-  PRINTF("Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testctrlc);
+  CONSOLE_DEBUG"Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testctrlc);
   if (setjmp(f_test_env)==0) {
     testdooley2(SIGFPE);
   } else {
     c++;
   }
   if (c != 1) {
-    PRINTF("Signal test failed. ASCEND unlikely to work on this hardware.\n");
+	CONSOLE_DEBUG("SIGFPE test failed");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Signal test failed. ASCEND unlikely to work on this hardware.");
     result = -1;
   }
   lasttrap = signal(SIGFPE, (NULL != savedtrap) ? savedtrap : SIG_DFL);
-  PRINTF("%p\n",lasttrap);
+  CONSOLE_DEBUG("%p\n",lasttrap);
   if (lasttrap != testctrlc) {
     result = 1;
   }
+#else
+  CONSOLE_DEBUG("SIGSEGV trap bypassed: compile-time settings\n");
+#endif
 
   return result;
 }
@@ -214,8 +227,14 @@ int Asc_SignalInit(void)
 #ifndef NO_SIGNAL_TRAPS
   /* push the old ones if any, on the stack. */
   initstack(f_fpe_traps, SIGFPE);
+
+# ifndef NO_SIGINT_TRAP
   initstack(f_int_traps, SIGINT);
+# endif
+
+# ifndef NO_SIGSEGV_TRAP
   initstack(f_seg_traps, SIGSEGV);
+# endif
   
   f_reset_needed = ascresetneeded();
   if (f_reset_needed < 0) {
@@ -274,11 +293,11 @@ void Asc_SignalRecover(int force) {
 static int push_trap(struct gl_list_t *tlist, SigHandler tp)
 {
   if (tlist == NULL) {
-	ERROR_REPORTER_DEBUG("TLIST IS NULL");
+	CONSOLE_DEBUG("TLIST IS NULL");
     return -1;
   }
   if (gl_length(tlist) == gl_capacity(tlist)) {
-  	ERROR_REPORTER_DEBUG("TLIST LENGTH = CAPACITY");
+  	CONSOLE_DEBUG("TLIST LENGTH = CAPACITY");
     return 1;
   }
   gl_append_ptr(tlist,(VOIDPTR)tp);
@@ -359,9 +378,11 @@ int Asc_SignalHandlerPop(int signum, SigHandler tp)
     err = pop_trap(f_seg_traps,tp);
     break;
   default:
+	CONSOLE_DEBUG("popping invalid signal type (signum = %d)", signum);
     return -1;
   }
   if (err != 0 && tp != NULL) {
+	CONSOLE_DEBUG("stack pop mismatch");
     error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
@@ -373,21 +394,21 @@ void Asc_SignalTrap(int sigval) {
 #ifndef NO_SIGNAL_TRAPS
   switch(sigval) {
   case SIGFPE:
-    FPRINTF(ASCERR,"Asc_SignalTrap: SIGFPE caught\n");
+	CONSOLE_DEBUG("SIGFPE caught");
     FPRESET;
     longjmp(g_fpe_env,sigval);
     break;
   case SIGINT:
-    FPRINTF(ASCERR,"Asc_SignalTrap: SIGINT (Ctrl-C) caught\n");
+	CONSOLE_DEBUG("SIGINT (Ctrl-C) caught");
     longjmp(g_int_env,sigval);
     break;
   case SIGSEGV:
-    FPRINTF(ASCERR,"Asc_SignalTrap: SIGSEGV (bad address) caught\n");
+	CONSOLE_DEBUG("SIGSEGV caught");
     longjmp(g_seg_env,sigval);
     break;
   default:
-    FPRINTF(ASCERR,"Asc_SignalTrap: Installed on unexpected signal (# %d).\n", sigval);
-    FPRINTF(ASCERR,"Asc_SignalTrap: Returning ... who knows where.");
+    CONSOLE_DEBUG("Installed on unexpected signal (sigval = %d).", sigval);
+    CONSOLE_DEBUG("Returning ... who knows where :-)");
     break;
   }
   return;

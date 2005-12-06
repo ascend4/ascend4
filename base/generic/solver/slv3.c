@@ -62,6 +62,13 @@
 #include "solver/slv3.h"
 #include "solver/slv_stdcalls.h"
 
+#define KILL 0
+/* code that needs to be deleted compiles only with kill = 1 */
+#define CANOPTIMIZE FALSE
+/* TRUE iff optimization code completed, meaning relman_diff fixed. */
+#define DEBUG TRUE
+/* makes lots of extra spew */
+
 #if !defined(STATIC_QRSLV) && !defined(DYNAMIC_QRSLV)
 int slv3_register(SlvFunctionsT *f)
 {
@@ -74,14 +81,6 @@ int slv3_register(SlvFunctionsT *f)
 #ifdef DYNAMIC_QRSLV
 /* do dynamic loading stuff.   yeah, right */
 #else /* following is used if STATIC_QRSLV is defined */
-
-
-#define KILL 0
-/* code that needs to be deleted compiles only with kill = 1 */
-#define CANOPTIMIZE FALSE
-/* TRUE iff optimization code completed, meaning relman_diff fixed. */
-#define DEBUG FALSE
-/* makes lots of extra spew */
 
 #define SLV3(s) ((slv3_system_t)(s))
 #define SERVER (sys->slv)
@@ -375,8 +374,7 @@ static int check_system(slv3_system_t sys)
  **/
 {
   if( sys == NULL ) {
-    FPRINTF(stderr,"ERROR:  (slv3) check_system\n");
-    FPRINTF(stderr,"        NULL system handle.\n");
+	error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::check_system: NULL system handle.");
     return 1;
   }
 
@@ -384,12 +382,10 @@ static int check_system(slv3_system_t sys)
   case OK:
     return 0;
   case DESTROYED:
-    FPRINTF(stderr,"ERROR:  (slv3) check_system\n");
-    FPRINTF(stderr,"        System was recently destroyed.\n");
+	error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::check_system: System was recently destroyed.");
     return 1;
   default:
-    FPRINTF(stderr,"ERROR:  (slv3) check_system\n");
-    FPRINTF(stderr,"        System reused or never allocated.\n");
+	error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::check_system: System reused or never allocated.");
     return 1;
   }
 }
@@ -692,9 +688,7 @@ static boolean calc_residuals( slv3_system_t sys)
     if (!rel) {
       int r;
       r=mtx_row_to_org(sys->J.mtx,row);
-      FPRINTF(stderr,"NULL relation found !!\n");
-      FPRINTF(stderr,"at row %d rel %d in calc_residuals\n",(int)row,r);
-      FFLUSH(stderr);
+      error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::calc_residuals: NULL relation found at ropw %d rel %d !",(int)row,r);
     }
 #endif
     sys->residuals.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
@@ -724,6 +718,8 @@ static boolean calc_J( slv3_system_t sys)
   var_filter_t vfilter;
   double time0;
   real64 resid;
+
+  CONSOLE_DEBUG("jacobian");
 
   if( sys->J.accurate )
     return TRUE;
@@ -757,6 +753,9 @@ static void calc_nominals( slv3_system_t sys)
 {
   int32 col;
   FILE *fp = MIF(sys);
+
+  CONSOLE_DEBUG("nominals...");
+
   if( sys->nominals.accurate ) return;
   fp = MIF(sys);
   col = sys->nominals.rng->low;
@@ -774,19 +773,23 @@ static void calc_nominals( slv3_system_t sys)
       if( n <= 0.0 ) {
 	if( n == 0.0 ) {
 	  n = TOO_SMALL;
-	  FPRINTF(fp,"ERROR:  (slv3) calc_nominals\n");
-	  FPRINTF(fp,"        Variable ");
+
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+	  FPRINTF(fp,"QRSlv::calc_nominals: Variable ");
 	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"        \nhas nominal value of zero.\n");
-	  FPRINTF(fp,"        Resetting to %g.\n",n);
+	  FPRINTF(fp,"has nominal value of zero. Resetting to %g.",n);
+	  error_reporter_end_flush();
+
 	  var_set_nominal(var,n);
 	} else {
 	  n =  -n;
-	  FPRINTF(fp,"ERROR:  (slv3) calc_nominals\n");
-	  FPRINTF(fp,"        Variable ");
+
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+	  FPRINTF(fp,"QRSlv::calc_nominals Variable ");
 	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"        \nhas negative nominal value.\n");
-	  FPRINTF(fp,"        Resetting to %g.\n",n);
+	  FPRINTF(fp,"has negative nominal value. Resetting to %g.",n);
+      error_reporter_end_flush();
+
 	  var_set_nominal(var,n);
 	}
       }
@@ -811,6 +814,8 @@ static void calc_weights( slv3_system_t sys)
 {
   mtx_coord_t nz;
   real64 sum;
+
+  CONSOLE_DEBUG("...");
 
   if( sys->weights.accurate )
     return;
@@ -886,6 +891,7 @@ static void jacobian_scaled(slv3_system_t sys)
 static void scale_variables( slv3_system_t sys)
 {
   int32 col;
+  CONSOLE_DEBUG("...");
 
   if( sys->variables.accurate ) return;
 
@@ -908,6 +914,7 @@ static void scale_residuals( slv3_system_t sys)
  **/
 {
   int32 row;
+  CONSOLE_DEBUG("...");
 
   if( sys->residuals.accurate ) return;
 
@@ -934,6 +941,9 @@ static void calc_relnoms(slv3_system_t sys)
   struct var_variable *var;
   struct rel_relation *rel;
   real64 *var_list;
+
+  CONSOLE_DEBUG("...");
+
   var_list = create_array(sys->cap,real64);
   col = 0;
   var = sys->vlist[col];
@@ -977,6 +987,9 @@ static real64 col_max_ratio(mtx_matrix_t *mtx,
   real64 max_ratio;
   real64 num, denom, dummy;
   mtx_coord_t coord;
+
+  CONSOLE_DEBUG("...");
+
   max_ratio = 0;
   for(coord.col = reg->col.low;
 	coord.col <= reg->col.high; coord.col++) {
@@ -1011,6 +1024,9 @@ static real64 row_max_ratio(mtx_matrix_t *mtx,
   real64 num, denom, dummy;
   mtx_coord_t coord;
   max_ratio = 0;
+
+  CONSOLE_DEBUG("...");
+
   for(coord.row = reg->row.low;
 	coord.row <= reg->row.high; coord.row++) {
     ratio = 0;
@@ -1047,6 +1063,9 @@ static real64 calc_fourer_scale(mtx_matrix_t mtx,
   mtx_coord_t coord;
   real64 min, max, dummy;
   real64 scale;
+
+  CONSOLE_DEBUG("...");
+
   if(option == 0){
     if((loc < reg.row.low) || (loc > reg.row.high)){
       return 1;
@@ -1095,6 +1114,9 @@ static void scale_J_iterative(slv3_system_t sys)
   int32 k;
   int32 done;
   int32 row, col;
+
+  CONSOLE_DEBUG("...");
+
   real64 *colvec = sys->nominals.vec;
   real64 *rowvec = sys->weights.vec;
   real64 rowscale, colscale;
@@ -1143,6 +1165,8 @@ static void scale_system( slv3_system_t sys )
  *** Scale system dependent on interface parameters
  **/
 {
+  CONSOLE_DEBUG("...");
+
   if(strcmp(SCALEOPT,"NONE") == 0){
     if(sys->J.accurate == FALSE){
       calc_nominals(sys);
@@ -1215,6 +1239,8 @@ static boolean calc_gradient(slv3_system_t sys)
  * This entire function needs to be reimplemented with relman_diffs.
  *
  */
+  CONSOLE_DEBUG("...");
+
   if( sys->gradient.accurate ) return TRUE;
 
   calc_ok = TRUE;
@@ -1258,6 +1284,8 @@ static void create_update( slv3_system_t sys)
  **/
 {
   struct hessian_data *update;
+
+  CONSOLE_DEBUG("...");
 
   if( !OPTIMIZING(sys) )
      return;
@@ -1376,6 +1404,8 @@ static int calc_pivots(slv3_system_t sys)
   linsolqr_system_t lsys = sys->J.sys;
   FILE *fp = LIF(sys);
 
+  CONSOLE_DEBUG("...");
+
   oldtiming = g_linsolqr_timing;
   g_linsolqr_timing =LINTIME;
   linsolqr_factor(lsys,sys->J.fm);        	/* factor */
@@ -1410,8 +1440,9 @@ static int calc_pivots(slv3_system_t sys)
         rel = sys->rlist[org_row];
 
 		error_reporter_start(ASC_USER_ERROR,NULL,0);
-		FPRINTF(stderr,"Relation not pivoted\n");
+		FPRINTF(stderr,"Relation '");
         print_rel_name(stderr,sys,rel);
+		FPRINTF(stderr,"' not pivoted.\n");
         error_reporter_end_flush();
 
         /**
@@ -1474,6 +1505,8 @@ static void calc_ZBZ(slv3_system_t sys)
  **/
 {
    mtx_coord_t nz;
+
+  CONSOLE_DEBUG("...");
 
    if( sys->ZBZ.accurate ) return;
 
@@ -1548,6 +1581,8 @@ static void calc_rhs(slv3_system_t sys, struct vector_data *vec,
  ***  rhs.  Caller is responsible for initially zeroing the rhs vector.
  **/
 {
+  CONSOLE_DEBUG("...");
+
   if( transpose ) {     /* vec is indexed by col */
     int32 col;
     for( col=vec->rng->low; col<=vec->rng->high; col++ ) {
@@ -1568,7 +1603,9 @@ static void calc_multipliers(slv3_system_t sys)
  ***  Computes the lagrange multipliers for the equality constraints.
  **/
 {
-   if( sys->multipliers.accurate )
+  CONSOLE_DEBUG("...");
+
+	   if( sys->multipliers.accurate )
       return;
 
    if ( !OPTIMIZING(sys) ) {
@@ -2139,8 +2176,12 @@ static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars)
       vars->coef1[i] + vars->parms.guess * vars->coef2[i];
    det = coef[0]*coef[2] - coef[1]*coef[1];
    if( det < 0.0 )
+
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
       FPRINTF(MIF(sys),"%-40s ---> %g\n",
               "    Unexpected negative determinant!",det);
+      error_reporter_end_flush();
+
    if( det <= DETZERO ) {
       /**
        ***  varstep2 and varstep1 are essentially parallel:
@@ -2654,7 +2695,9 @@ static void move_to_next_block( slv3_system_t sys)
     sys->s.calc_ok = TRUE;
 
     if( !(ok = calc_objective(sys)) ) {
-         FPRINTF(MIF(sys),"Objective calculation errors detected.\n");
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      FPRINTF(MIF(sys),"Objective calculation errors detected.\n");
+	  error_reporter_end_flush();
     }
     if(SHOW_LESS_IMPT && sys->obj) {
       FPRINTF(LIF(sys),"%-40s ---> %g\n", "Objective", sys->objective);
@@ -2668,8 +2711,10 @@ static void move_to_next_block( slv3_system_t sys)
 
     sys->residuals.accurate = FALSE;
     if( !(ok = calc_residuals(sys)) ) {
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
       FPRINTF(MIF(sys),
         "Residual calculation errors detected in move_to_next_block.\n");
+	  error_reporter_end_flush();
     }
     if( SHOW_LESS_IMPT &&
         (sys->s.block.current_size >1 ||
@@ -2818,8 +2863,11 @@ static void reorder_new_block(slv3_system_t sys)
 				  1,mtx_SPK1);
     } else {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
       FPRINTF(MIF(sys),"QRSlv called with unknown reorder option\n");
       FPRINTF(MIF(sys),"QRSlv using single edge tear drop (TEAR_DROP).\n");
+	  error_reporter_end_flush();
+
       slv_tear_drop_reorder_block(SERVER,sys->s.block.current_block,
                                   CUTOFF,0,mtx_SPK1);
     }
@@ -3575,8 +3623,9 @@ void slv3_dump_internals(slv_system_t server, SlvClientToken sys,int level)
   (void) server;
   check_system(sys);
   if (level > 0) {
-    FPRINTF(stderr,"ERROR:  (slv3) slv3_dump_internals\n");
-    FPRINTF(stderr,"        slv3 does not dump its internals.\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(stderr,"QRSlv:slv3_dump_internals: slv3 does not dump its internals.\n");
+    error_reporter_end_flush();
   }
 }
 
@@ -3677,13 +3726,15 @@ void slv3_presolve(slv_system_t server, SlvClientToken asys)
   iteration_begins(sys);
   check_system(sys);
   if( sys->vlist == NULL ) {
-    FPRINTF(stderr,"ERROR:  (slv3) slv3_presolve\n");
-    FPRINTF(stderr,"        Variable list was never set.\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(stderr,"QRSlv::slv3_presolve: Variable list was never set.");
+    error_reporter_end_flush();
     return;
   }
   if( sys->rlist == NULL && sys->obj == NULL ) {
-    FPRINTF(stderr,"ERROR:  (slv3) slv3_presolve\n");
-    FPRINTF(stderr,"        Relation list and objective never set.\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(stderr,"QRSlv::slv3_presolve: Relation list and objective never set.");
+	error_reporter_end_flush();
     return;
   }
 
@@ -3835,6 +3886,9 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
                     new_ok=FALSE, descent_ok=FALSE;
   int               minor = 0,ds_status=0, rank_defect=0;
   double            time0;
+
+  CONSOLE_DEBUG("slv3_iterate: start");
+
   sys = SLV3(asys);
   mif = MIF(sys);
   lif = LIF(sys);
@@ -3862,8 +3916,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 #if !CANOPTIMIZE
   if( OPTIMIZING(sys) ) {
-    FPRINTF(stderr,"ERROR:  (slv3) slv3_iterate\n");
-    FPRINTF(stderr,"        QRSlv cannot presently optimize.\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(stderr,"QRSlv::slv3_iterate: QRSlv cannot presently optimize.");
+    error_reporter_end_flush();
+
     sys->s.diverged = 1;
     iteration_ends(sys);
     update_status(sys);
@@ -3911,27 +3967,36 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
         update_status(sys);
         return;
       }
-      FPRINTF(mif,"Direct solve found numerically impossible equation\n");
-      FPRINTF(mif,"given variables solved in previous blocks.\n");
+	  error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      FPRINTF(mif,"Direct solve found numerically impossible equation given variables solved in previous blocks.\n");
+      error_reporter_end_flush();
     case -1:
       sys->s.inconsistent = TRUE;
-      FPRINTF(mif,"No solution exists within the bounds given for:\n");
-      print_var_name(mif,sys,var); PUTC('\n',mif);
-      FPRINTF(mif,"when inverting relation:\n");
-      print_rel_name(mif,sys,rel); PUTC('\n',mif);
+
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      FPRINTF(mif,"No solution exists within the bounds given for variable '");
+      print_var_name(mif,sys,var); 
+      FPRINTF(mif,"' when inverting relation:\n");
+      print_rel_name(mif,sys,rel);
+	  error_reporter_end_flush();
+
       iteration_ends(sys);
       update_status(sys);
       return;
     }
   } /* if fails with a 0, go on to newton a 1x1 */
   if( !calc_J(sys) ) {
-    FPRINTF(MIF(sys),"Jacobian calculation errors detected.\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(MIF(sys),"Jacobian calculation errors detected.");
+    error_reporter_end_flush();
   }
 
   scale_system(sys);
 
   if( !calc_gradient(sys) )
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
     FPRINTF(MIF(sys),"Gradient calculation errors detected.\n");
+    error_reporter_end_flush();
   set_factor_options(sys); /* KHACK: new call to fix lack of proper update */
   rank_defect = calc_pivots(sys);
   if (SAVLIN) {
@@ -3966,7 +4031,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
   if( !OPTIMIZING(sys) &&
       sys->gamma.norm2 <= TERM_TOL*sys->phi ) {
-    FPRINTF(mif,"\nProblem diverged:  Gamma norm too small.\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(mif,"QRSlv: Problem diverged: Gamma norm too small.");
+    error_reporter_end_flush();
+
     sys->s.diverged = TRUE;
     iteration_ends(sys);
     update_status(sys);
@@ -4004,7 +4072,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 /* 2004.11.5 code by AWW to eliminate runaway minor loop */
     if(minor >= MAX_MINOR){
-      FPRINTF(mif,"\nQRSlv: Exceeded max line search iterations. Check for variables on bounds.\n");
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      FPRINTF(mif,"QRSlv: Exceeded max line search iterations. Check for variables on bounds.");
+	  error_reporter_end_flush();
+
       sys->s.inconsistent = TRUE;
       iteration_ends(sys);
       update_status(sys);
@@ -4079,7 +4150,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     }
 
     if (sys->progress <= TERM_TOL) {
-      FPRINTF(mif,"\nProblem diverged:  Suggested progress too small.\n");
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      FPRINTF(mif,"QRSlv: Problem diverged: Suggested progress too small.");
+	  error_reporter_end_flush();
+
       sys->s.diverged = TRUE;
       iteration_ends(sys);
       update_status(sys);
@@ -4102,7 +4176,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
      **/
     apply_step(sys);
     if (sys->progress <= TERM_TOL) {
-      FPRINTF(mif,"\nProblem diverged:  Applied progress too small.\n");
+      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      FPRINTF(mif,"Problem diverged: Applied progress too small.");
+	  error_reporter_end_flush();
+
       restore_variables(sys);
       sys->s.diverged = TRUE;
       iteration_ends(sys);
@@ -4186,6 +4263,8 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 static void slv3_solve(slv_system_t server, SlvClientToken asys)
 {
+  fprintf(stderr,"slv3_solve starting\n");
+  CONSOLE_DEBUG("starting");
   slv3_system_t sys;
   sys = SLV3(asys);
   if (server == NULL || sys==NULL) return;
@@ -4217,6 +4296,8 @@ static int slv3_destroy(slv_system_t server, SlvClientToken asys)
 
 int slv3_register(SlvFunctionsT *sft)
 {
+  CONSOLE_DEBUG("registering");
+
   if (sft==NULL)  {
     FPRINTF(stderr,"slv3_register called with NULL pointer\n");
     return 1;

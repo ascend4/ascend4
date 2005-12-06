@@ -205,6 +205,8 @@ error_reporter(
 }
 
 #ifndef HAVE_C99
+/* Following are only required on compilers without variadic macros: */
+
 int error_reporter_note_no_line(const char *fmt,...){
 	int res;
 	va_list args;
@@ -215,6 +217,17 @@ int error_reporter_note_no_line(const char *fmt,...){
 
 	return res;
 }
+
+int console_debug(const char *fmt,...){
+	int res;
+	va_list args;
+
+	va_start(args,fmt);
+	res = VFPRINTF(ASCERR,fmt,args);
+	va_end(args);
+
+	return res;
+	
 #endif
 
 /*-------------------------
