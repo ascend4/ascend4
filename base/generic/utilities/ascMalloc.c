@@ -48,7 +48,7 @@
 #endif
 
 #ifndef lint
-static CONST char AscendMemoryAllocRCSid[]="$Id: ascMalloc.c,v 1.1 1997/07/18 11:44:49 mthomas Exp $";
+static CONST char AscendMemoryAllocRCSid[]="$Rev$";
 #endif
 
 /*

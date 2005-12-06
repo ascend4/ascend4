@@ -26,7 +26,7 @@
 #include "test_register_solver.h"
 
 #include "test_slv_common.h"
-#include "test_slv.h"
+/* #include "test_slv.h" */
 
 CU_ErrorCode test_register_solver(void)
 {
