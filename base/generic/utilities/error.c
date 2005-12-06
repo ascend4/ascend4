@@ -2,9 +2,17 @@
 
 #include "error.h"
 
+/* Don't use the XTERM colour coldes in Windows: */
+#ifndef __WIN32__
 #define TEST_DEFAULT_FPRINTF
+#endif
 
 #ifdef TEST_DEFAULT_FPRINTF
+/** XTERM colour codes used to distinguish between errors of different types.
+
+	@TODO some runtime testing to determine if these should be used or not
+	depending on TERM env var.
+*/
 #  define ERR_RED "\033[31;1m"
 #  define ERR_GRN "\033[32;2m"
 #  define ERR_NORM "\033[0m"
@@ -196,7 +204,7 @@ error_reporter(
 	return res;
 }
 
-#ifndef __GNUC
+#ifndef HAVE_C99
 int error_reporter_note_no_line(const char *fmt,...){
 	int res;
 	va_list args;

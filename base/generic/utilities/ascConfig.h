@@ -41,6 +41,20 @@
 #ifndef ASC_ASCCONFIG_H
 #define ASC_ASCCONFIG_H
 
+/**
+	What kind of C compiler do we have?
+
+    Use compiler flag -DDISABLE_C99 to force older ISO C
+	This means no variadic macros, maybe other things too.
+*/
+#if defined(__STDC__) && defined(__STDC_VERSION__)
+#  if __STDC_VERSION__>=199901L
+#    ifndef DISABLE_C99
+#      define HAVE_C99
+#    endif
+#  endif
+#endif
+
 /*
  * If we are in a tcl-infested file, define
  * CONST84 to be empty for back-compatibility with
@@ -209,13 +223,15 @@
 
 #define VOIDPTR void *
 
-#define ASC_MILD_BUGMAIL "ascend+bugs@cs.cmu.edu"
-#define ASC_BIG_BUGMAIL "ascend+developers@cs.cmu.edu"
-
+/* Updated the following to use new Wiki URLS */
+#define ASC_MILD_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
+#define ASC_BIG_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 
 extern FILE *g_ascend_errors;         /**< File stream to receive error messages. */
 extern FILE *g_ascend_warnings;       /**< File stream to receive warning messages. */
 extern FILE *g_ascend_information;    /**< File stream to receive general messages. */
+
+/* NB For error messages to be correctly captured, all output needs to go to stderr in error.h */
 #ifndef ASCERR
 # define ASCERR g_ascend_errors
 # define ASCWAR g_ascend_warnings
