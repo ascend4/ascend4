@@ -1,7 +1,9 @@
 REQUIRE "atoms.a4l";
 REQUIRE "stream_holdup.a4l";
 
-(* atomic mass *)
+CONSTANT specific_gas_constant
+REFINES real_constant DIMENSION L^2/T^2/TMP;
+
 CONSTANT mass_density_constant
 REFINES real_constant DIMENSION M/L^3;
 
