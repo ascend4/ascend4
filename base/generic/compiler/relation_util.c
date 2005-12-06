@@ -1979,6 +1979,7 @@ unsigned long RelationDepth(CONST struct relation *rel)
 static double FindMaxAdditiveTerm(struct relation_term *s)
 {
   enum safe_err serr;
+
   switch (RelationTermType(s)) {
   case e_plus:
   case e_minus:
@@ -2011,6 +2012,12 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
 {
   enum Expr_enum reltype;
   glob_rel = NULL;
+
+  char *iname;
+  iname = WriteInstanceNameString(i,NULL);
+  CONSOLE_DEBUG("with instance %s...",iname);
+  ascfree(iname);
+
   if (i == NULL){
     FPRINTF(ASCERR, "error in CalcRelationNominal routine\n");
     return (double)0;

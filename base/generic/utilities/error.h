@@ -55,10 +55,12 @@
 	variadic macros.
 */
 #ifdef HAVE_C99
-# define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,MSG, ## __VA_ARGS__)
+# define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
+# define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ## __VA_ARGS__)
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
 int error_reporter_note_no_line(const char *fmt,...);
+int console_debug(const char *fmt,...);
 #endif
 
 /**

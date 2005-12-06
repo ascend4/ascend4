@@ -323,12 +323,17 @@ MODEL steam_state;
 
 	END FOR;
 
+	phir_r2[range_r2] IS_A factor;
+	FOR i IN range_r2 CREATE
+		phir_r2[i] = n[i] * delta^d[i] * tau^t[i] *
+                    exp(-delta^c[i]);
+	END FOR;
+
 	phir IS_A factor;
 	phir_expr: phir
 		=
 		SUM[ n[i] * delta^d[i] * tau^t[i]             | i IN [range_r1] ]
-		+ SUM[ n[i] * delta^d[i] * tau^t[i] *
-                    exp(-delta^c[i])                  | i IN [range_r2] ]
+		+ SUM[ phir_r2[i]                             | i IN [range_r2] ]
 		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp(
 				-alpha[i]*d1^2 - beta[i]*
                 (tau - gamma[i])*(tau - gamma[i])
@@ -336,63 +341,92 @@ MODEL steam_state;
 		+ SUM[ n[i] * DELTA[i]^b[i] * delta * PSI[i]  | i IN [range_r4] ];
 
 
+	phirdelta_r2[range_r2] IS_A factor;
+	FOR i IN range_r2 CREATE
+		phirdelta_r2[i] = n[i] * exp(-delta^c[i]) * (delta^(d[i]-1) *
+                   tau^t[i] * (d[i] - c[i] * delta^c[i]) );
+	END FOR;
+
 	phirdelta IS_A factor;
     phirdelta_expr: phirdelta = 
 		SUM[ n[i] * d[i] * delta^(d[i] - 1) * tau^t[i]       | i IN range_r1 ]
-		+ SUM[ n[i] * exp(-delta^c[i]) * (delta^(d[i]-1) *
-                   tau^t[i] * (d[i] - c[i] * delta^c[i]) )   | i IN range_r2 ]
+		+ SUM[ phirdelta_r2[i]   | i IN range_r2 ]
 		+ SUM[ n[i]*delta^d[i] * tau^t[i] * exp( r3_b1[i] ) *
                     (d[i]/delta - 2*alpha[i]*d1)             | i IN range_r3 ]
 		+ SUM[ n[i] * ( 
 					DELTA[i]^b[i] * (PSI[i] + delta * dPSI_ddelta[i] )
 					 + dDELTAbi_ddelta[i] * delta * PSI[i] ) | i IN range_r4 ];
 
+	phirtau_r2[range_r2] IS_A factor;
+	FOR i IN range_r2 CREATE
+		phirtau_r2[i] = n[i]*t[i]*delta^d[i]*tau^(t[i]-1) * exp(-delta^c[i]);
+	END FOR;
+
 	phirtau IS_A factor;
 	phirtau_expr: phirtau = 
 		SUM[ n[i] * t[i] * delta^d[i] * tau^(t[i]-1)                | i IN range_r1 ]
-		+ SUM[ n[i]*t[i]*delta^d[i]*tau^(t[i]-1) * exp(-delta^c[i]) | i IN range_r2 ]
+		+ SUM[  phirtau_r2[i]                                       | i IN range_r2 ]
 		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp( r3_b1[i] )*
                     (t[i]/tau - 2*beta[i]*(tau - gamma[i]))         | i IN range_r3 ]
 		+ SUM[ n[i]*delta*(dDELTAbi_dtau[i] * PSI[i] +
                     DELTA[i]^b[i]*dPSI_dtau[i])                     | i IN range_r4 ];
 
 
-	phirdeltadelta_r1 IS_A factor;
-	pdd_r1: phirdeltadelta_r1 = 
-		SUM[ n[i] * d[i] * (d[i] - 1) * delta^(d[i]-2) * tau^t[i]    | i IN range_r1 ];
+	phirdeltadelta_r1[range_r1] IS_A factor;
+	FOR i IN range_r1 CREATE
+		phirdeltadelta_r1[i] = 
+			n[i] * d[i] * (d[i] - 1) * delta^(d[i]-2) * tau^t[i];
+	END FOR;
 
-	phirdeltadelta_r2 IS_A factor;
-	pdd_r2: phirdeltadelta_r2 = 
-		+ SUM[ n[i] * exp(-delta^c[i]) * ( delta^(d[i]-2) *
-                    (tau^t[i])*((d[i] - c[i]*(delta^c[i]))*
-                    (d[i]-1-c[i]*(delta^c[i])) -
-                    c[i]^2*(delta^c[i])))                           | i IN range_r2 ];
+	phirdeltadelta_r2[range_r2] IS_A factor;
+	FOR i IN range_r2 CREATE
+		phirdeltadelta_r2[i] = 
+			n[i] * exp(-delta^c[i]) * ( 
+					delta^(d[i]-2) *
+                    tau^t[i] * ( 
+						( d[i] - c[i]*delta^c[i] )*(d[i]- 1 - c[i] * delta^c[i] )
+						- c[i]^2 * delta^c[i]
+					)
+				);
+	END FOR;
 
-	phirdeltadelta_r3 IS_A factor;
-	pdd_r3: phirdeltadelta_r3 = 
-		+ SUM[ n[i]*(tau^t[i])*exp( r3_b1[i] )*
+	phirdeltadelta_r3[range_r3] IS_A factor;
+	FOR i IN range_r3 CREATE
+		phirdeltadelta_r3[i] = 
+			n[i]*(tau^t[i])*exp( r3_b1[i] )*
                     (-2*alpha[i]*(delta^d[i]) +
                     4*alpha[i]*alpha[i]*(delta^d[i])*d1^2 -
                     4*d[i]*alpha[i]*(delta^(d[i]-1))*d1 +
-                    d[i]*(d[i]-1)*(delta^(d[i]-1)))				       | i IN range_r3 ];
+                    d[i]*(d[i]-1)*(delta^(d[i]-1)));
+	END FOR;
 
-	phirdeltadelta_r4 IS_A factor;
-	pdd_r4: phirdeltadelta_r4 = 
-		+ SUM[ n[i]*( 
+	phirdeltadelta_r4[range_r4] IS_A factor;
+	FOR i IN range_r4 CREATE
+		phirdeltadelta_r4[i] = 
+			n[i]*( 
 				DELTA[i]^b[i] * (2*dPSI_ddelta[i] + delta*d2PSI_ddelta2[i] )
 				+ 2*dDELTAbi_ddelta[i] * (PSI[i] + delta*dPSI_ddelta[i])
-				+ d2DELTAbi_ddelta2[i] * delta * PSI[i] )              | i IN range_r4 ];
+				+ d2DELTAbi_ddelta2[i] * delta * PSI[i] );
+	END FOR;
 
 	phirdeltadelta IS_A factor;
 	phirdeltadelta_expr: phirdeltadelta =
-			phirdeltadelta_r1 + phirdeltadelta_r2 + phirdeltadelta_r3 + phirdeltadelta_r4;
+		SUM[ phirdeltadelta_r1[i] | i IN range_r1 ]
+		+ SUM [phirdeltadelta_r2[i] | i IN range_r2 ]
+		+ SUM [phirdeltadelta_r3[i] | i IN range_r3 ]
+		+ SUM [phirdeltadelta_r4[i] | i IN range_r4 ];
+
+	phirtautau_r2[range_r2] IS_A factor;
+	FOR i IN range_r2 CREATE
+		phirtautau_r2[i] = n[i]*t[i]*(t[i]-1)* delta^d[i] *
+                    tau^(t[i]-2) * exp(- delta^c[i] );
+	END FOR;
 
 	phirtautau IS_A factor;
 	phirtautau_expr: phirtautau =
 		SUM[ n[i] * t[i] * (t[i]-1) * delta^d[i] *
                     tau^(t[i]-2)                                   | i IN range_r1 ]
-        + SUM[ n[i]*t[i]*(t[i]-1)* delta^d[i] *
-                    tau^(t[i]-2) * exp(- delta^c[i] )              | i IN range_r2 ]
+        + SUM[ phirtautau_r2[i]                                    | i IN range_r2 ]
 		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp( r3_b1[i] ) *
                     ( (t[i]/tau - 2*beta[i]* (tau - gamma[i]) )^2 -
                     t[i]/tau^2 - 2*beta[i] )                       | i IN range_r3 ]
@@ -400,12 +434,19 @@ MODEL steam_state;
                     2 * dDELTAbi_dtau[i] * dPSI_dtau[i] 
                     + DELTA[i]^b[i] * d2PSI_dtau2[i] )             | i IN range_r4 ];
 
+
+	phirdeltatau_r2[range_r2] IS_A factor;
+	FOR i IN range_r2 CREATE	
+		phirdeltatau_r2[i] = 
+			n[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)
+			* (d[i] - c[i] * delta^c[i] * exp(-delta^c[i]) );
+	END FOR;
+
 	phirdeltatau IS_A factor;
 	phirdeltatau_expr: phirdeltatau =
 		SUM[ n[i]*d[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)                  | i IN range_r1 ]
 		
-		+ SUM[ n[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)
-					* (d[i] - c[i] * delta^c[i] * exp(-delta^c[i]) )         | i IN range_r2 ]
+		+ SUM[ phirdeltatau_r2[i]                                            | i IN range_r2 ]
 		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp( r3_b1[i] ) *
                     (d[i]/delta - 2*alpha[i]*d1)
 					* (t[i]/tau - 2*beta[i]* (tau - gamma[i]) )              | i IN range_r3 ]

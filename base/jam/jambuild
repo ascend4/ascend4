@@ -6,7 +6,7 @@
 
 if [ $SMP ]; then
 	smp_flags=$SMP
-elif uname -a | grep "SMP"; then
+elif uname -v | grep "SMP"; then
 	smp_flags=-j2
 else
 	smp_flags=
