@@ -26,7 +26,6 @@ VPATH = @models_topbuilddir@/johnpye
 
 INSTALL_SUBDIR_LIST = 
 
-INSTALL_FILE_LIST = \
-	water4.a4c
+INSTALL_FILE_LIST = water4.a4c iapws95.a4c thermo_types.a4c
 
 include $(RULES_FILE)
