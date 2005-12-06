@@ -1,0 +1,65 @@
+REQUIRE "atoms.a4l";
+REQUIRE "stream_holdup.a4l";
+
+(* atomic mass *)
+CONSTANT mass_density_constant
+REFINES real_constant DIMENSION M/L^3;
+
+ATOM heat_transfer_coefficient REFINES solver_var
+		DIMENSION M/T^3/TMP
+		DEFAULT 5{W/m^2/K};
+
+	lower_bound := 0{W/m^2/K};
+	upper_bound := 1e50{W/m^2/K};
+	nominal := 5{W/m^2/K};
+
+END heat_transfer_coefficient;
+
+ATOM specific_enthalpy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT 1000{kJ/kg};
+
+	lower_bound := 0{kJ/kg};
+	upper_bound := 1e50{kJ/kg};
+	nominal := 1000{kJ/kg};
+
+END specific_enthalpy;
+
+ATOM specific_entropy REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 6{kJ/kg/K};
+	
+	lower_bound := 0{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 6{kJ/kg/K};
+
+END specific_entropy;
+
+ATOM specific_heat_capacity REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 4.0{kJ/kg/K};
+	
+	lower_bound := 0{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 4.2{kJ/kg/K};
+END specific_heat_capacity;
+
+
+ATOM specific_volume REFINES solver_var
+		DIMENSION L^3/M
+		DEFAULT 0.001{m^3/kg};
+	
+	lower_bound := 0{m^3/kg};
+	upper_bound := 1e50{m^3/kg};
+	nominal := 0.001{m^3/kg};
+
+END specific_volume;
+
+ATOM specific_energy REFINES solver_var
+		DIMENSION L^2/T^2
+		DEFAULT 1000{kJ/kg};
+
+	lower_bound := 0{kJ/kg};
+	upper_bound := 1e50{kJ/kg};
+	nominal := 1000{kJ/kg};
+END specific_energy;

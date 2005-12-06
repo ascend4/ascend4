@@ -1,0 +1,455 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+
+(*************************************************************************
+
+The thermodynamic properties of water calculated with the 
+IAPWS95 equations.  Variables and units:
+    
+    T       Temperature, K
+    rho     Density, kg/m^3
+    p       Pressure, MPa
+    u       Specific internal energy, kJ/kg
+    h       Specific enthalpy, kJ/kg
+    s       Specific entropy, kJ/(kg*K)
+    cv      Isochoric specific heat, kJ/(kg*K)
+    cp      Isobaric specific heat, kJ/(kg*K)
+    w       Speed of sound, m/s
+
+References:
+
+    [1] The International Association for the Properties of
+        Water and Steam, "Release on the IAPWS Formulation 1995
+        for the Thermodynamic Properties of Ordinary Water
+        Substance for General and Scientific Use", dated
+        September 1996, Fredericia, Denmark.  See the "Releases"
+        section of the website http://www.iapws.org/.
+
+    [2] NIST Chemistry Webbook:  
+        http://webbook.nist.gov/chemistry/fluid/
+
+----------------------------------------------------------------------
+
+freesteam-ascend - IAPWS-95 steam library for ASCEND
+Copyright (C) John Pye 2005
+derived from work by Don Peterson for freesteam, (C) 2004.
+
+This program is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public
+License along with this program; if not, write to the Free
+Software Foundation, Inc., 59 Temple Place, Suite 330,
+Boston, MA 02111-1307  USA
+
+*)
+
+MODEL steam_state;
+
+	delta IS_A factor;
+	tau IS_A factor;
+	
+	rho IS_A mass_density;
+	T IS_A temperature;
+	
+	(*-------------- CONSTANTS ---------------*)
+	rhoc IS_A mass_density_constant;
+	Tc IS_A temperature_constant;
+
+	rhoc "density of water at the critical point"
+		:== 322 {kg/m^3};
+
+	Tc "temperature of water at the critical point"
+		:== 647.096 {K};
+	
+	tau = Tc / T;
+	delta = rho / rhoc;
+	
+	
+	range_0 IS_A set OF integer_constant;
+	range_0 :== [1..8];
+
+	range_01 IS_A set OF integer_constant;
+	range_01 :== [4..8];
+
+	range_r1 IS_A set OF integer_constant;
+	range_r1 :== [1..7];
+
+	range_r2 IS_A set OF integer_constant;
+	range_r2 :== [8..51];
+
+	range_r3 IS_A set OF integer_constant;
+	range_r3 :== [52..54];
+
+	range_r4 IS_A set OF integer_constant;
+	range_r4 :== [55..56];
+
+	n0[range_0] IS_A real_constant;
+	n0[1] :== -8.32044648201;
+
+	n0[2] :== 6.6832105268;
+	n0[3] :== 3.00632;
+	n0[4] :== 0.012436;
+
+	n0[5] :== 0.97315;
+	n0[6] :== 1.27950;
+	n0[7] :== 0.96956;
+	n0[8] :== 0.24873;
+
+    gamma0[range_01] IS_A real_constant;
+	gamma0[4] :== 1.28728967;
+	gamma0[5] :== 3.53734222;
+	gamma0[6] :== 7.74073708;
+	gamma0[7] :== 9.24437796;
+	gamma0[8] :== 27.5075105;
+
+	n[1..56] IS_A real_constant;
+	n[1] :== 0.12533547935523e-1;	n[2] :== 0.78957634722828e+1;	n[3] :== -0.87803203303561e+1;	n[4] :== 0.31802509345418e+0;
+	n[5] :== -0.26145533859358e+0;	n[6] :== -0.78199751687981e-2;	n[7] :== 0.88089493102134e-2;
+	n[8] :== -0.66856572307965e+0;	n[9] :== 0.20433810950965e+0;	n[10] :== -0.66212605039687e-4;
+	n[11] :== -0.19232721156002e+0;	n[12] :== -0.25709043003438e+0;	n[13] :== 0.16074868486251e+0;	n[14] :== -0.40092828925807e-1;
+	n[15] :== 0.39343422603254e-6;	n[16] :== -0.75941377088144e-5;	n[17] :== 0.56250979351888e-3;
+	n[18] :== -0.15608652257135e-4;	n[19] :== 0.11537996422951e-8;	n[20] :== 0.36582165144204e-6;
+	n[21] :== -0.13251180074668e-11;	n[22] :== -0.62639586912454e-9;	n[23] :== -0.10793600908932e+0;	n[24] :== 0.17611491008752e-1;
+	n[25] :== 0.22132295167546e+0;	n[26] :== -0.40247669763528e+0;	n[27] :== 0.58083399985759e+0;
+	n[28] :== 0.49969146990806e-2;	n[29] :== -0.31358700712549e-1;	n[30] :== -0.74315929710341e+0;
+	n[31] :== 0.47807329915480e+0;	n[32] :== 0.20527940895948e-1;	n[33] :== -0.13636435110343e+0;	n[34] :== 0.14180634400617e-1;
+	n[35] :== 0.83326504880713e-2;	n[36] :== -0.29052336009585e-1;	n[37] :== 0.38615085574206e-1;
+	n[38] :== -0.20393486513704e-1;	n[39] :== -0.16554050063734e-2;	n[40] :== 0.19955571979541e-2;
+	n[41] :== 0.15870308324157e-3;	n[42] :== -0.16388568342530e-4;	n[43] :== 0.43613615723811e-1;	n[44] :== 0.34994005463765e-1;
+	n[45] :== -0.76788197844621e-1;	n[46] :== 0.22446277332006e-1;	n[47] :== -0.62689710414685e-4;
+	n[48] :== -0.55711118565645e-9;	n[49] :== -0.19905718354408e+0;	n[50] :== 0.31777497330738e+0;
+	n[51] :== -0.11841182425981e+0;	n[52] :== -0.31306260323435e+2;	n[53] :== 0.31546140237781e+2;	n[54] :== -0.25213154341695e+4;
+	n[55] :== -0.14874640856724e+0;	n[56] :== 0.31806110878444e+0;
+
+	c[1..51] IS_A integer_constant;
+	c[1] :== 0; c[2] :== 0; c[3] :== 0;	c[4] :== 0;	c[5] :== 0;
+	c[6] :== 0;	c[7] :== 0;	c[8] :== 1;	c[9] :== 1;	c[10] :== 1;
+	c[11] :== 1;	c[12] :== 1;	c[13] :== 1;	c[14] :== 1;	c[15] :== 1;
+	c[16] :== 1;	c[17] :== 1;	c[18] :== 1;	c[19] :== 1;	c[20] :== 1;
+	c[21] :== 1;	c[22] :== 1;	c[23] :== 2;	c[24] :== 2;	c[25] :== 2;
+	c[26] :== 2;	c[27] :== 2;	c[28] :== 2;	c[29] :== 2;	c[30] :== 2;
+	c[31] :== 2;	c[32] :== 2;	c[33] :== 2;	c[34] :== 2;	c[35] :== 2;
+	c[36] :== 2;	c[37] :== 2;	c[38] :== 2;	c[39] :== 2;	c[40] :== 2;
+	c[41] :== 2;	c[42] :== 2;	c[43] :== 3;	c[44] :== 3;	c[45] :== 3;
+	c[46] :== 3;	c[47] :== 4;	c[48] :== 6;	c[49] :== 6;	c[50] :== 6;
+	c[51] :== 6;
+
+	d[1..54] IS_A integer_constant;
+	d[1] :== 1;	d[2] :== 1;	d[3] :== 1;	d[4] :== 2;	d[5] :== 2;
+	d[6] :== 3;	d[7] :== 4;	d[8] :== 1;	d[9] :== 1;	d[10] :== 1;
+	d[11] :== 2;	d[12] :== 2;	d[13] :== 3;	d[14] :== 4;	d[15] :== 4;
+	d[16] :== 5;	d[17] :== 7;	d[18] :== 9;	d[19] :== 10;	d[20] :== 11;
+	d[21] :== 13;	d[22] :== 15;	d[23] :== 1;	d[24] :== 2;	d[25] :== 2;
+	d[26] :== 2;	d[27] :== 3;	d[28] :== 4;	d[29] :== 4;	d[30] :== 4;
+	d[31] :== 5;	d[32] :== 6;	d[33] :== 6;	d[34] :== 7;	d[35] :== 9;
+	d[36] :== 9;	d[37] :== 9;	d[38] :== 9;	d[39] :== 9;	d[40] :== 10;
+	d[41] :== 10;	d[42] :== 12;	d[43] :== 3;	d[44] :== 4;	d[45] :== 4;
+	d[46] :== 5;	d[47] :== 14;	d[48] :== 3;	d[49] :== 6;	d[50] :== 6;
+	d[51] :== 6;	d[52] :== 3;	d[53] :== 3;	d[54] :== 3;
+
+	t[1..54] IS_A real_constant;
+	t[1] :== -0.5;	t[2] :== 0.875;	t[3] :== 1;	t[4] :== 0.5;	t[5] :== 0.75;
+	t[6] :== 0.375;	t[7] :== 1;	t[8] :== 4;	t[9] :== 6;	t[10] :== 12;
+	t[11] :== 1;	t[12] :== 5;	t[13] :== 4;	t[14] :== 2;	t[15] :== 13;
+	t[16] :== 9;	t[17] :== 3;	t[18] :== 4;	t[19] :== 11;	t[20] :== 4;
+	t[21] :== 13;	t[22] :== 1;	t[23] :== 7;	t[24] :== 1;	t[25] :== 9;
+	t[26] :== 10;	t[27] :== 10;	t[28] :== 3;	t[29] :== 7;	t[30] :== 10;
+	t[31] :== 10;	t[32] :== 6;	t[33] :== 10;	t[34] :== 10;	t[35] :== 1;
+	t[36] :== 2;	t[37] :== 3;	t[38] :== 4;	t[39] :== 8;	t[40] :== 6;
+	t[41] :== 9;	t[42] :== 8;	t[43] :== 16;	t[44] :== 22;	t[45] :== 23;
+	t[46] :== 23;	t[47] :== 10;	t[48] :== 50;	t[49] :== 44;	t[50] :== 46;
+	t[51] :== 50;	t[52] :== 0;	t[53] :== 1;	t[54] :== 4;
+
+	(* Correlation parameters *)
+
+	(* TODO convert from C to ASCEND arrays? Note trickiness with 0- and 1-based array indices. *)
+
+	a[range_r4] IS_A real_constant;
+	a[55]:==3.5;
+	a[56]:==3.5;
+
+	b[range_r4] IS_A real_constant;
+	b[55]:== 0.85;
+	b[56]:== 0.95;
+
+	A[range_r4] IS_A real_constant;
+	A[55]:==0.32;
+	A[56]:==0.32;
+	
+	B[range_r4] IS_A real_constant;
+	B[55]:==0.2;
+	B[56]:==0.2;
+
+	C[range_r4] IS_A real_constant;
+	C[55]:==28;
+	C[56]:==32;
+	
+	D[range_r4] IS_A real_constant;
+	D[55]:==700;
+	D[56]:==800;
+
+	beta_r4[range_r4] IS_A real_constant;
+	beta_r4[55]:==0.3;
+	beta_r4[56]:==0.3;
+
+	alpha[range_r3] IS_A integer_constant;
+	alpha[52]:==20;
+	alpha[53]:==20;
+	alpha[54]:==20;
+
+	beta[range_r3] IS_A real_constant;
+	beta[52]:==150;
+	beta[53]:==150;
+	beta[54]:==250;
+
+	gamma[range_r3] IS_A real_constant;
+	gamma[52]:==1.21;
+	gamma[53]:==1.21;
+	gamma[54]:==1.25;
+
+	(*--------------- DIMENSIONLESS PARTIAL DERIVATIVES ---------------- *)
+
+	(*------------ IDEAL PARTS ------------*)
+
+	phi0 IS_A factor;
+	phi0 =
+		SUM[ n0[i]*log(1-exp(-tau*gamma0[i])) | i IN [range_01] ]
+        + log(delta) + n0[1] + n0[2]*tau + n0[3]*log(tau);
+
+	phi0delta IS_A factor;
+    phi0delta = 1.0/delta;
+
+	phi0deltadelta IS_A factor;
+	phi0deltadelta =
+		-1.0/(delta*delta);
+
+
+	phi0tau IS_A factor;
+	phi0tau =
+		n0[2] + n0[3]/tau
+		+ SUM[ n0[i]*gamma0[i]*(1/(1-exp(-tau*gamma0[i])) - 1) | i IN [range_01] ];
+
+	phi0deltatau IS_A real_constant;
+    phi0deltatau :== 0.0;
+
+    phi0tautau IS_A factor;
+	phi0tautau 
+        = -n0[3]/(tau*tau)
+		- SUM [ n0[i] * gamma0[i]^2 * exp(-tau*gamma0[i]) / ( 1 - exp(-tau*gamma0[i]) )^2 | i IN range_01 ];
+
+	(*----------- 'REAL' PARTS -- CLOSE YOUR EYES -----------*)
+
+	d1 IS_A factor;
+	d1 = delta - 1;
+
+	t1 IS_A factor;
+	t1 = tau -1;
+
+	r3_b1[range_r3] IS_A factor;
+	FOR i IN range_r3 CREATE
+    	r3_b1[i] = -alpha[i]*d1^2 - beta[i]* (tau - gamma[i])^2;
+	END FOR;
+
+	PSI[range_r4] IS_A factor;
+	theta[range_r4] IS_A factor;
+	DELTA[range_r4] IS_A factor;
+	dDELTA_ddelta[range_r4] IS_A factor;
+	dPSI_ddelta[range_r4] IS_A factor;
+	dDELTAbi_ddelta[range_r4] IS_A factor;
+	dDELTAbi_dtau[range_r4] IS_A factor;
+	dPSI_dtau[range_r4] IS_A factor;
+	d2DELTA_ddelta2[range_r4] IS_A factor;
+	d2DELTAbi_ddelta2[range_r4] IS_A factor;
+	d2PSI_ddelta2[range_r4] IS_A factor;
+	d2DELTAbi_dtau2[range_r4] IS_A factor;
+	d2PSI_dtau2[range_r4] IS_A factor;
+	d2PSI_ddeltadtau[range_r4] IS_A factor;
+	d2DELTAbi_ddeltadtau[range_r4] IS_A factor;
+
+	FOR i IN range_r4 CREATE
+		PSI[i] = exp(-C[i]*d1^2 - D[i]*t1^2);
+		theta[i] =  1 - tau + A[i] * (d1^2)^( 1/(2 * beta_r4[i]) );
+		DELTA[i] = theta[i]^2 + B[i] * (d1^2)^a[i];
+
+        dDELTA_ddelta[i] = d1*(A[i]*theta[i]*2/beta_r4[i]*
+                (d1^2)^(1/(2*beta_r4[i]) - 1) + 2*B[i]*a[i]*
+                (d1^2)^(a[i] - 1) );
+
+        dPSI_ddelta[i] = -2*C[i]*d1*PSI[i];
+
+        dDELTAbi_ddelta[i] = b[i] * DELTA[i]^(b[i]-1) * dDELTA_ddelta[i];
+
+		dDELTAbi_dtau[i] = -2 * theta[i] * b[i] * DELTA[i]^(b[i]-1);
+        dPSI_dtau[i] = -2 * D[i] * t1 * PSI[i];
+
+		d2PSI_ddelta2[i] = (2 * C[i] * d1^2 - 1) * 2 * C[i] *  PSI[i];
+
+		d2DELTA_ddelta2[i] = 1/d1*dDELTA_ddelta[i] + d1^2*(4*B[i]*a[i]* 
+                (a[i]-1)*(d1^2)^(a[i]-2) + 2*A[i]^2*
+                (1/(beta_r4[i]^2))*((d1^2) ^ (1/(2*beta_r4[i])-1))^2) +
+                A[i]*theta[i]*4/beta_r4[i]*(1/(2*beta_r4[i]) - 1)*
+                (d1^2)^(1/(2*beta_r4[i]) - 2);
+	
+		d2DELTAbi_ddelta2[i] =b[i]*(DELTA[i]^(b[i]-1) *
+                d2DELTA_ddelta2[i] + (b[i]-1)*DELTA[i]^(b[i]-2)*
+                dDELTA_ddelta[i]^2);
+        
+		d2DELTAbi_dtau2[i] = 2*b[i] * DELTA[i]^(b[i]-1) +
+                4*theta[i]^2 * b[i]*(b[i]-1) * DELTA[i]^(b[i]-2);
+	
+		d2PSI_dtau2[i] = (2 * D[i] * t1^2 - 1) * 2 * D[i] * PSI[i];
+
+		d2PSI_ddeltadtau[i] = 4 * C[i] * D[i] * d1 * t1 * PSI[i];
+	
+		d2DELTAbi_ddeltadtau[i] = -A[i] * b[i]*2/beta_r4[i] *
+                DELTA[i]^(b[i]-1) * d1 * (d1^2)^(1/(2*beta_r4[i])-1) -
+                2 * theta[i] * b[i] *(b[i]-1) * DELTA[i]^(b[i]-2) *
+                dDELTA_ddelta[i];
+
+	END FOR;
+
+	phir IS_A factor;
+	phir "phir expr"
+		=
+		SUM[ n[i] * delta^d[i] * tau^t[i]          | i IN [range_r1] ]
+		+
+		SUM[ n[i] * delta^d[i] * tau^t[i] *
+                    exp(-delta^c[i])               | i IN [range_r2] ]
+		+
+		SUM[ n[i] * delta^d[i] * tau^t[i] * exp(
+				-alpha[i]*d1^2 - beta[i]*
+                (tau - gamma[i])*(tau - gamma[i])
+			)									   | i IN [range_r3] ]
+		+
+		SUM[ n[i] * DELTA[i]^b[i] * delta * PSI[i] | i IN [range_r4] ];
+
+
+	phirdelta IS_A factor;
+    phirdelta = 
+		SUM[ n[i] * d[i] * delta^(d[i] - 1) * tau^t[i]       | i IN range_r1 ]
+		+ SUM[ n[i] * exp(-delta^c[i]) * (delta^(d[i]-1) *
+                   tau^t[i] * (d[i] - c[i] * delta^c[i]) )   | i IN range_r2 ]
+		+ SUM[ n[i]*delta^d[i] * tau^t[i] * exp( r3_b1[i] ) *
+                    (d[i]/delta - 2*alpha[i]*d1)             | i IN range_r3 ]
+		+ SUM[ n[i] * ( 
+					DELTA[i]^b[i] * (PSI[i] + delta * dPSI_ddelta[i] )
+					 + dDELTAbi_ddelta[i] * delta * PSI[i] ) | i IN range_r4 ];
+
+	phirtau IS_A factor;
+	phirtau = 
+		SUM[ n[i] * t[i] * delta^d[i] * tau^(t[i]-1)                | i IN range_r1 ]
+		+ SUM[ n[i]*t[i]*delta^d[i]*tau^(t[i]-1) * exp(-delta^c[i]) | i IN range_r2 ]
+		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp( r3_b1[i] )*
+                    (t[i]/tau - 2*beta[i]*(tau - gamma[i]))         | i IN range_r3 ]
+		+ SUM[ n[i]*delta*(dDELTAbi_dtau[i] * PSI[i] +
+                    DELTA[i]^b[i]*dPSI_dtau[i])                      | i IN range_r4 ];
+
+
+	phirdeltadelta IS_A factor;
+	phirdeltadelta =
+		SUM[ n[i] * d[i] * (d[i] - 1) * delta^(d[i]-2) * tau^t[i]    | i IN range_r1 ]
+		+ SUM[ n[i]*exp(-(delta^c[i]))*((delta^(d[i]-2))*
+                    (tau^t[i])*((d[i] - c[i]*(delta^c[i]))*
+                    (d[i]-1-c[i]*(delta^c[i])) -
+                    c[i]*c[i]*(delta^c[i])))                           | i IN range_r2 ]
+		+ SUM[ n[i]*(tau^t[i])*exp( r3_b1[i] )*
+                    (-2*alpha[i]*(delta^d[i]) +
+                    4*alpha[i]*alpha[i]*(delta^d[i])*d1^2 -
+                    4*d[i]*alpha[i]*(delta^(d[i]-1))*d1 +
+                    d[i]*(d[i]-1)*(delta^(d[i]-1)))				       | i IN range_r3 ]
+		+ SUM[ n[i]*( 
+				DELTA[i]^b[i] * (2*dPSI_ddelta[i] + delta*d2PSI_ddelta2[i] )
+				+ 2*dDELTAbi_ddelta[i] * (PSI[i] + delta*dPSI_ddelta[i])
+				+ d2DELTAbi_ddelta2[i] * delta * PSI[i] )              | i IN range_r4 ];
+
+	phirtautau IS_A factor;
+	phirtautau =
+		SUM[ n[i] * t[i] * (t[i]-1) * delta^d[i] *
+                    tau^(t[i]-2)                                   | i IN range_r1 ]
+        + SUM[ n[i]*t[i]*(t[i]-1)* delta^d[i] *
+                    tau^(t[i]-2) * exp(- delta^c[i] )              | i IN range_r2 ]
+		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp( r3_b1[i] ) *
+                    ( (t[i]/tau - 2*beta[i]* (tau - gamma[i]) )^2 -
+                    t[i]/tau^2 - 2*beta[i] )                       | i IN range_r3 ]
+		+ SUM[ n[i] * delta * (d2DELTAbi_dtau2[i] * PSI[i] +
+                    2 * dDELTAbi_dtau[i] * dPSI_dtau[i] + DELTA[i]^b[i] * d2PSI_dtau2[i] ) | i IN range_r4 ];
+
+	phirdeltatau IS_A factor;
+	phirdeltatau =
+		SUM[ n[i]*d[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)  | i IN range_r1 ]
+		
+		+ SUM[ n[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)
+					* (d[i] - c[i] * delta^c[i] * exp(-delta^c[i]) ) | i IN range_r2 ]
+		+ SUM[ n[i] * delta^d[i] * tau^t[i] * exp( r3_b1[i] ) *
+                    (d[i]/delta - 2*alpha[i]*d1) * (t[i]/tau - 2*beta[i]* (tau - gamma[i]) ) | i IN range_r3 ]
+		+ SUM[ n[i]*( DELTA[i]^b[i] * (dPSI_dtau[i] + delta *
+                    d2PSI_ddeltadtau[i] ) + delta * dDELTAbi_ddelta[i] * dPSI_dtau[i] +
+                    dDELTAbi_dtau[i] * (PSI[i] + delta * dPSI_ddelta[i] ) +
+                    d2DELTAbi_ddeltadtau[i] * delta * PSI[i] ) | i IN range_r4 ];
+
+	(*--------- THERMO PROPERTY RELATIONS ----------- *)
+
+	p IS_A pressure;
+	u IS_A specific_energy;
+	h IS_A specific_enthalpy;
+	s IS_A specific_entropy;
+	cp IS_A specific_heat_capacity;
+	cv IS_A specific_heat_capacity;
+	w IS_A speed;
+
+	pressure: p
+		= rho*(1{GAS_C})*T*(1 + delta*phirdelta);
+
+	internal_energy: u
+		= (1{GAS_C})*T*tau*(phi0tau + phirtau);
+
+	enthalpy: h
+		= (1{GAS_C})*T*(1 + tau*(phi0tau + phirtau) + delta*phirdelta);
+
+	entropy: s
+		= (1{GAS_C})*(tau*(phi0tau + phirtau) - phi0 - phir);
+
+	c_isochoric: cv
+		= -(1{GAS_C})*tau*tau*(phi0tautau + phirtautau);
+
+	c_isobaric: cp
+		= (1{GAS_C})*( -tau*tau*(phi0tautau + phirtautau) + 
+			( 1 + delta*phirdelta - delta*tau*phirdeltatau )^2
+			/ (  1 + 2*delta*phirdelta + delta*delta*phirdeltadelta)  
+	);
+
+	spd_sound: w 
+		= sqrt((1{GAS_C})*T* ( 1 + 2*delta*phirdelta + delta*delta*phirdeltadelta - 
+				( 1 + delta*phirdelta - delta*tau*phirdeltatau )^2 
+				/ (  tau*tau*(phi0tautau + phirtautau) )
+			));
+
+
+METHODS
+METHOD default_self;
+	(* nothing here *)
+END default_self;
+
+METHOD specify;
+	T.fixed := TRUE;
+	rho.fixed := TRUE;
+END specify;
+
+METHOD values;
+	T := 290 {K};
+	rho := 997 {kg/m^3};
+END values;
+
+END steam_state;
+
