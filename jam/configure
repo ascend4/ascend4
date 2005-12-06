@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -e Jamrules_general ]; then
+	if [ ! -e Jamrules_general.old ]; then
+		echo "Moving Jamrules_general out of the way..."
+		mv Jamrules_general Jamrules_general.old
+	else
+		echo "Can't move Jamrules_general out of the way..."
+		echo "Jamrules_general.old is already there."
+	fi
+fi
+
+cp Jamrules_general.in Jamrules.general
+echo "Jamrules_general created. Edit for you local configuration"
