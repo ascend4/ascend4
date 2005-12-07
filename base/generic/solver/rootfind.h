@@ -46,8 +46,12 @@
  *  @todo codegen_support.h not in base/generic/solver - need to update include?
  */
 
-#ifndef rootfind_already_included
-#define rootfind_already_included
+#ifndef ASC_SLV_ROOTFIND_H
+#define ASC_SLV_ROOTFIND_H
+
+#ifndef STAND_ALONE
+# error "DON'T INCLUDE THIS FILE UNLESS YOU'RE COMPILING STANDALONE SOLVER"
+#endif
 
 extern double zbrent(ExtEvalFunc *func,
                      double *lowbound,

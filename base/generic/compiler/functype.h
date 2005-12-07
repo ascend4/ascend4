@@ -61,8 +61,11 @@ enum Func_enum {
    F_LOG, F_LN, F_EXP,
    F_SIN, F_COS, F_TAN,
    F_ARCSIN, F_ARCCOS, F_ARCTAN,
-   F_SQR, F_SQRT, F_ERF, F_LNM,
-   F_SINH, F_COSH, F_TANH,
+   F_SQR, F_SQRT,
+ #ifdef HAVE_ERF
+   F_ERF,
+ #endif
+   F_LNM, F_SINH, F_COSH, F_TANH,
    F_ARCSINH, F_ARCCOSH, F_ARCTANH,
    F_CUBE, F_CBRT, F_ABS, F_HOLD
 };

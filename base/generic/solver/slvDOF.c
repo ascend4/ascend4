@@ -739,7 +739,7 @@ int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof)
  */
 static int32 *reorder_cases(int32 *cur_cases, int32 ncases)
 {
-  int32 cur_case,pos,tmp_num,c,ind;
+  int32 cur_case,pos = 0,tmp_num,c,ind;
   int32 *result;
 
   result = create_array(ncases,int32);
@@ -777,7 +777,7 @@ static int32 get_eligible_vars(slv_system_t server,struct gl_list_t *disvars,
   int32 *cur_cases;
   int32 *correct_cases;
   int32 *vars;
-  int32 v, count, ind;
+  int32 v, count = 0, ind;
   int32 ncases;
   int32 mnum;
   int32 status,dof;
@@ -993,7 +993,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
   struct var_variable **vmlist;
   struct var_variable *mvar;
   var_filter_t vfilter;
-  int32 *globeli;
+  int32 *globeli = NULL;
   int32 d, dlen, max_comb, combinations;
   int32 mnum, v, elnum;
   int32 result;

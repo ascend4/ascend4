@@ -1124,6 +1124,7 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
     default:
       Asc_Panic(2, NULL,
                 "Unknown instance type passed to RecursiveMergeInstance.\n");
+	  result = NULL;
       break;
     }
     /*  CheckClique(result); moved to a PostMergeCheck */

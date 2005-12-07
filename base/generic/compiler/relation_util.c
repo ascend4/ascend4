@@ -2894,7 +2894,7 @@ struct relation *RelationCreateTmp(int lhslen, int rhslen,
   if (rel == NULL) {
     rel = CreateRelationStructure(relop,crs_NEWUNION);
   }
-  if (lhscap < lhslen) {
+  if ((int)lhscap < lhslen) {
     lhscap = lhslen;
     if ( RTOKEN(rel).lhs != NULL) {
       ascfree(RTOKEN(rel).lhs);
@@ -3621,7 +3621,7 @@ int RelationInvertTokenTop(struct ds_soln_list *soln_list)
  *  look like an ExtEvalFunc to our rootfinder.
  */
 static
-int CalcResidGivenValue(int *mode, int *m, int *varnum,
+int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
         		double *val, double *u, double *f, double *g)
 {
   double res;

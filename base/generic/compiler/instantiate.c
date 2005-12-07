@@ -1105,7 +1105,7 @@ struct Instance *MakeSparseArray(struct Instance *parent,
                                  struct Instance *arginst,
                                  struct gl_list_t *rhslist)
 {
-  struct TypeDescription *desc;
+  struct TypeDescription *desc = NULL;
   struct Instance *aryinst;
   struct gl_list_t *indices;
   indices = MakeIndices(parent,NextName(name),stat);
@@ -2910,7 +2910,7 @@ int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement)
   struct gl_list_t *instances;
   unsigned long c,len;
   enum find_errors err;
-  struct Instance *head;
+  struct Instance *head = NULL;
 
   instances = FindInsts(tmpinst,GetStatVarList(statement),&err);
   if (instances==NULL) {
@@ -3532,6 +3532,8 @@ int DigestArguments(
     case pp_DONE:
       msg = NULL;
       break;
+    default:
+	  msg = NULL;
     }
     if (msg != NULL) {
       WriteUnexecutedMessage(ASCERR,statement,msg);
@@ -4576,7 +4578,7 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
 {
   struct gl_list_t *instances;
   enum find_errors err;
-  struct TypeDescription *mostrefined;
+  struct TypeDescription *mostrefined = NULL;
   unsigned long c,len;
   struct Instance *inst1,*inst2;
   instances = FindInsts(inst,GetStatVarList(statement),&err);
@@ -4929,6 +4931,7 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
     break;
   default:
     Asc_Panic(2, NULL, "Incorrect argument passed to ExecuteUnSelectedEQN\n");
+	name = NULL;
   }
   instances = FindInstances(inst,name,&ferr);
   /* see if the relation is there already */
@@ -5353,14 +5356,14 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
   struct ExternalFunc *efunc;
   CONST char *funcname;
 
-  ERROR_REPORTER_DEBUG("ENTERED ExecuteBlackBoxExt\n");
+  CONSOLE_DEBUG("ENTERED ExecuteBlackBoxExt\n");
 
   /* make or find the array head */
   name = ExternalStatName(statement);
   aryinst = MakeExtRelationArray(inst,name,statement);
   if (aryinst==NULL) {
     WriteStatementLocation(ASCERR,statement);
-    FPRINTF(ASCERR,"Unable to create external expression structure.\n");
+    CONSOLE_DEBUG("Unable to create external expression structure.\n");
     return 1;
   }
   /* we now have an array head */
@@ -8631,6 +8634,7 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
       WSEM(ASCERR,statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       Asc_Panic(2, NULL, "Expression name refers to more than one object");
+	  child = NULL;
     }
   }
   vlist = WhenStatVL(statement);
@@ -11196,6 +11200,7 @@ void Pass4ProcessPendingInstances(void)
         blist = InstanceBitList(inst);
       } else {
         blist = NULL;   /* this shouldn't be necessary, but is */
+		inst = NULL;
       }
       if ((blist!=NULL)&&!BitListEmpty(blist)){
         /* only models get here */
@@ -11258,6 +11263,7 @@ void Pass3ProcessPendingInstances(void)
         blist = InstanceBitList(inst);
       } else {
         blist = NULL; /* this shouldn't be necessary, but is */
+        inst = NULL;
       }
       if ((blist!=NULL)&&!BitListEmpty(blist)){
         /* only models get here */
@@ -11418,6 +11424,7 @@ void Pass2ProcessPendingInstances(void)
         blist = InstanceBitList(inst);
       } else {
         blist = NULL; /* this shouldn't be necessary, but is */
+        inst = NULL;
       }
       if ((blist!=NULL)&&!BitListEmpty(blist)){
         /* only models get here */
@@ -11854,7 +11861,7 @@ void Pass4SetWhenBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements;
+      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
@@ -11925,7 +11932,7 @@ void Pass3SetLogRelBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements;
+      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
@@ -12019,7 +12026,7 @@ void Pass2SetRelationBits(struct Instance *inst)
     blist = InstanceBitList(inst);
     if (blist!=NULL){
       unsigned long c;
-      struct gl_list_t *statements;
+      struct gl_list_t *statements = NULL;
       enum stat_t st;
       int changed;
 
@@ -12593,6 +12600,7 @@ void UpdateInstance(struct Instance *root, /* the simulation root */
         if (instances) {
           if (gl_length(instances)!=1) {
             FPRINTF(ASCERR,"More than 1 scope instance found !!\n");
+			scope = NULL;
           }
           else{
             scope = (struct Instance *)gl_fetch(instances,1L);

@@ -143,7 +143,7 @@ void FigureOutError(struct value_t value,
   }
 }
 
-
+
 /*********************************************************************\
   Section for creation and management of relation terms.
   It is cheaper to create relation terms in arrays the size of
@@ -430,7 +430,9 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
       } else {
         return -1; /* dimensional incompatibility */
       }
+#ifdef HAVE_ERF
     case F_ERF:
+#endif
     case F_SINH:
     case F_ARCSINH:
     case F_TANH:
@@ -583,7 +585,9 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
     /* things that take any arg, return dimensionless */
     case F_ARCSINH:
     case F_TANH:
-    case F_ERF:
+#ifdef HAVE_ERG
+	case F_ERF:
+#endif
       if (IsWild(TermDimensions(arg)) ||
           SameDimen(TermDimensions(arg),Dimensionless())) {
         newdim = Dimensionless();
@@ -674,7 +678,7 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
   }
   return 1;
 }
-
+
 static int ArgsForToken(enum Expr_enum t) {
   switch (t) {
   case e_nop:
@@ -797,14 +801,14 @@ static int check_gt1(unsigned long i) {
   return 1;
 }
 #endif
-
+
 /*
- * a function to simplify the term buffer before copying it into a
+ * A function to simplify the term buffer before copying it into a
  * postfix array. Only mandatory dim checking is performed.
  * Cost: O(n) where n = blen.
  *
  * This function is rather large, but simply structured, because speed
- * is important. The major divisions within it are marked with ^L.
+ * is important.
  * This is postfix simplification on the cheap. It could be more aggressive,
  * but only at potentially quadratic expense.
  *
@@ -864,7 +868,6 @@ static int check_gt1(unsigned long i) {
  | S | S | S | 0 |
  *             ^----next = next free location to put an index in termstack
  */
-
 static unsigned long SimplifyTermBuf(int level,
 				 register struct relation_term ** CONST b,
 				 CONST unsigned long blen)
@@ -905,32 +908,21 @@ static unsigned long SimplifyTermBuf(int level,
   }
 
 #ifdef NDEBUG
-#define TS_TOP (ts[next-1])
-/* term address last pushed */
-#define TS_LEFT (ts[next-2])
-/* left hand term address IFF current term is binary and the term at TS_TOP
-   is scalar (not operator) */
-#define TS_SHIFTPOP ts[next-2] = ts[next-1]; next--
-/* overwrite ts_left with ts_top and pop */
+# define TS_TOP (ts[next-1]) /* term address last pushed */
+# define TS_LEFT (ts[next-2])
+   /* left hand term address IFF current term is binary and the term at TS_TOP is scalar (not operator) */
+# define TS_SHIFTPOP ts[next-2] = ts[next-1]; next-- /* overwrite ts_left with ts_top and pop */
 #else
-#define TS_TOP (check_gt0(next),ts[next-1])
-/* term address last pushed */
-#define TS_LEFT (check_gt1(next),ts[next-2])
-/* left hand term address IFF current term is binary and the term at TS_TOP
-   is scalar (not operator) */
-#define TS_SHIFTPOP assert(next>1); ts[next-2] = ts[next-1]; next--
-/* overwrite ts_left with ts_top and pop */
+# define TS_TOP (check_gt0(next),ts[next-1]) /* term address last pushed */
+# define TS_LEFT (check_gt1(next),ts[next-2]) /* left hand term address IFF current term is binary and the term at TS_TOP is scalar (not operator) */
+# define TS_SHIFTPOP assert(next>1); ts[next-2] = ts[next-1]; next-- /* overwrite ts_left with ts_top and pop */
 #endif
 /* keep the above definitions in sync. only difference should be assert. */
 
-#define TS_PUSH(index) ts[next]=(index); next++
-/* add a term to the stack */
-#define TS_POP next--
-/* backup the stack */
-#define TS_POP2 next -= 2
-/* backup the stack 2 spots */
-
-/* SimplifyTermBuf CONTINUED */
+#define TS_PUSH(index) ts[next]=(index); next++ /* add a term to the stack */
+#define TS_POP next-- /* backup the stack */
+#define TS_POP2 next -= 2 /* backup the stack 2 spots */
+
   for (next=top=0; top < blen; top++) {
     /* pass through the tokens pointers array */
     if (b[top]==NULL) continue; /* so we can go through again if we like */
@@ -989,8 +981,7 @@ static unsigned long SimplifyTermBuf(int level,
         break;
       }
       break;
-
-/* SimplifyTermBuf CONTINUED */
+
     case e_plus:
       /* A 0 + => NULL NULL A */
       if ( ZEROTERM(b[TS_TOP]) ) {
@@ -1144,8 +1135,7 @@ static unsigned long SimplifyTermBuf(int level,
         break;
       } /* end argtype switch of e_plus */
       break;
-
-/* SimplifyTermBuf CONTINUED */
+
     case e_minus:
       /* A 0 - => NULL NULL A */
       if ( ZEROTERM(b[TS_TOP]) ) {
@@ -1238,6 +1228,7 @@ static unsigned long SimplifyTermBuf(int level,
           TS_PUSH(top);
         }
         break;
+
       case e_real: /* 0 R -, R R -, I R - */
         if ( CONSTANTTERM(b[TS_LEFT]->t) ) {
           /* 2 constant args. mangle C2 R1 - => C3 of appropriate type,if ok.*/
@@ -1303,8 +1294,7 @@ static unsigned long SimplifyTermBuf(int level,
         break;
       } /* end argtype switch of e_minus */
       break;
-
-/* SimplifyTermBuf CONTINUED */
+
     case e_times:
       /* needs completing. only C*C done at present. need A*0 reductions */
       if ( !CONSTANTTERM(b[TS_LEFT]->t) && !CONSTANTTERM(b[TS_TOP]->t) ) {
@@ -1434,8 +1424,7 @@ static unsigned long SimplifyTermBuf(int level,
       /* NOT REACHED */
       break;
 #endif
-
-/* SimplifyTermBuf CONTINUED */
+
     case e_divide: /* note: A1 A2 / postfix => A1/A2 infix */
       /* needs completing only does C/C at present. needs to do 0/A. */
       if ( !CONSTANTTERM(b[TS_LEFT]->t) && !CONSTANTTERM(b[TS_TOP]->t) ) {
@@ -1591,8 +1580,6 @@ static unsigned long SimplifyTermBuf(int level,
       FPRINTF(ASCERR,"Unexpected error in Simplification (6).\n");
       break;
 #endif
-
-/* SimplifyTermBuf CONTINUED */
     case e_power: /* DANGER! WILL ROBINSON, DANGER! possible fall through */
       /* exponents must be dimensionless to make any sense */
       if (b[TS_TOP]->t == e_zero || b[TS_TOP]->t == e_int ||
@@ -1730,8 +1717,7 @@ static unsigned long SimplifyTermBuf(int level,
         break;
       }
       /* FALL THROUGH if morphing to ipower test succeeded */
-
-/* SimplifyTermBuf CONTINUED */
+
     case e_ipower:
       if ( ZEROTERM(b[TS_TOP]) ) {
         /* A^0 */
@@ -1833,8 +1819,7 @@ static unsigned long SimplifyTermBuf(int level,
       break; /* NOT REACHED */
 #endif
     /* end e_ipower */
-
-/* SimplifyTermBuf CONTINUED */
+
    /* all the following are bogus in instantiated tokens at this time. (2/96)
     * e_subexpr,e_const,e_par,
     * e_card,e_choice,e_sum,e_prod,e_union,e_inter,e_in,e_st,
@@ -1867,11 +1852,11 @@ static unsigned long SimplifyTermBuf(int level,
       last++;
     }
   }
-  if (!early && last != next) {
+  if (!early && last != (long)next) {
     FPRINTF(ASCERR,"Confusing token counts in Simplify\n");
   }
   right = last;
-  while (last<blen) { /* null remainder, if any, of pointers */
+  while (last<(long)blen) { /* null remainder, if any, of pointers */
     b[last] = NULL;
     last++;
   }
@@ -2135,7 +2120,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst,
   struct gl_list_t *newarglist;
   struct gl_list_t *newlist;
   struct ExtCallNode *ext;
-  struct Instance *var;
+  struct Instance *var = NULL;
   int *args;
   unsigned long c,len,pos;
   unsigned long n_inputs;
@@ -2211,7 +2196,7 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
   struct relation *result;
   struct Instance *var;
   struct gl_list_t *newlist = NULL;
-  int *tmp, *args = NULL;
+  int *tmp = NULL, *args = NULL;
   unsigned long len,c,pos;
 
   len  = gl_length(varlist);
@@ -2418,7 +2403,7 @@ int ConvertSubExpr(CONST struct Expr *ptr,
 		   enum relation_errors *err,
 		   enum find_errors *ferr)
 {
-  struct relation_term *term;
+  struct relation_term *term = NULL;
   struct gl_list_t *instances;
   unsigned c,len;
   struct Instance *inst;
@@ -2442,34 +2427,32 @@ int ConvertSubExpr(CONST struct Expr *ptr,
     case e_var:
       str = SimpleNameIdPtr(ExprName(ptr));
       if (str&&TempExists(str)){
-	cvalue = TempValue(str);
-	switch(ValueKind(cvalue)){
-	case integer_value:
-	  term = CreateIntegerTerm(IntegerValue(cvalue));
-	  my_added++;
-	  AppendTermBuf(term);
-	  break;
-	default:
-	  FPRINTF(ASCERR,
-		  "Non-integer temporary variable used in expression.\n");
-	  *err = incorrect_inst_type;
-	  return 1;
-	}
-      }
-      else if (GetEvaluationForTable() != NULL &&
-               str !=NULL &&
+        cvalue = TempValue(str);
+        switch(ValueKind(cvalue)){
+        case integer_value:
+          term = CreateIntegerTerm(IntegerValue(cvalue));
+          my_added++;
+          AppendTermBuf(term);
+          break;
+        default:
+          FPRINTF(ASCERR,"Non-integer temporary variable used in expression.\n");
+          *err = incorrect_inst_type;
+          term = NULL;
+          return 1;
+        }
+      }else if (GetEvaluationForTable() != NULL && str !=NULL &&
 	       (fvp=FindForVar(GetEvaluationForTable(),str)) !=NULL ){
-	if (GetForKind(fvp)==f_integer){
-	  term = CreateIntegerTerm(GetForInteger(fvp));
-	  my_added++;
-	  AppendTermBuf(term);
-	}
-	else{
-	  FPRINTF(ASCERR,
+        if (GetForKind(fvp)==f_integer){
+          term = CreateIntegerTerm(GetForInteger(fvp));
+          my_added++;
+          AppendTermBuf(term);
+        }
+        else{
+          FPRINTF(ASCERR,
 		  "Non-integer FOR variable used in expression.\n");
-	  *err = incorrect_inst_type;
-	  return 1;
-	}
+          *err = incorrect_inst_type;
+          return 1;
+         }
       }
       else{
 	instances = FindInstances(ref,ExprName(ptr),ferr);
@@ -2709,7 +2692,7 @@ int ConvertSuchThat(CONST struct Expr *ex,
   unsigned long c,len;
   int my_added=0;
   struct value_t iteration_set,tmp_value;
-  struct relation_term *term;
+  struct relation_term *term = NULL;
   struct set_t *sptr;
   CONST struct Expr *depth_one,*node;
   if (CorrectSuchThat(ex,&depth_one,&node)){
@@ -2806,7 +2789,7 @@ static int AppendList(CONST struct Instance *ref,
 	       enum find_errors *ferr)
 {
   int added_one=0;		/* becomes true when a term is added */
-  struct relation_term *term;
+  struct relation_term *term = NULL;
   while (set!=NULL){
     if (SetType(set)){		/* range of values */
       if (ProcessListRange(ref,GetLowerExpr(set),
@@ -2989,7 +2972,7 @@ static int ConvertExpr(CONST struct Expr *start,
 static
 CONST struct Expr *FindRHS(CONST struct Expr *ex)
 {
-  CONST struct Expr *rhs,*previous=NULL;
+  CONST struct Expr *rhs = NULL, *previous = NULL;
   unsigned depth=0;
   while(ex!=NULL){
     switch(ExprType(ex)){

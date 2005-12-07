@@ -117,8 +117,13 @@ struct bt_data {
   int housekeep; /* if !=0, generated src files are deleted sometimes. */
 } g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,NULL,1,0,0};
 
+/**
+	I can't work out how to fix the warning here. In the C++ interface, I need
+	the arguments of BinTokenSetOptions to be const char*. But here, new can
+	lose its constness in *ptr = new.
+*/
 static
-int bt_string_replace(char *new, char **ptr)
+int bt_string_replace(CONST char *new, char **ptr)
 {
   if (*ptr == new) {
     return 0;
@@ -444,19 +449,16 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   if (verbose) {
     /* put in a little header */
     CLINE("\n/*");
-    FPRINTF(fp," * Relation used %d times prototyped from:\n",timesused);
-    FPRINTF(fp," * ");
+    FPRINTF(fp,"\tRelation used %d times, prototyped from:\n",timesused);
+    FPRINTF(fp,"\t");
     /* Use fastest path to a root */
     WriteAnyInstanceName(fp,i);
-    CLINE("\n */");
+    CLINE("\n*/");
   }
 
   CLINE("static");
-  FPRINTF(fp, "void r_%d(x,residual)\n", nrel);
-  CLINE("double *x;");
-  CLINE("double *residual;");
-  CLINE("{");
-  CLINE("  *residual =");
+  FPRINTF(fp, "void r_%d(double *x,double *residual){", nrel);
+  CLINE("\t*residual =");
 #define FMTNORMAL 1
 #if FMTNORMAL
   print_long_string(fp,streqn,C_WIDTH,C_INDENT); /* human readable, sort of */
@@ -626,33 +628,33 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   }
   /* write the registered function name */
   pid = getpid();
-  /* fixme. win32 has getpid but it is bogus as uniquifier. */
+  /** @TODO FIXME win32 has getpid but it is bogus as uniquifier. */
   /* so long as makefile deletes previous dll, windows is ok though */
   sprintf(g_bt_data.regname,"BinTokenArch_%d_%d",++(g_bt_data.nextid),(int)pid);
-  FPRINTF(fp,"int DLEXPORT %s()\n",g_bt_data.regname);
+  FPRINTF(fp,"int DLEXPORT %s(){\n",g_bt_data.regname);
   CLINE("{");
-  CLINE("  int status;");
-  FPRINTF(fp,"  static struct TableC g_ctable[%lu] =\n",len+1);
-  CLINE("    { {NULL, NULL},");
+  CLINE("\tint status;");
+  FPRINTF(fp,"\tstatic struct TableC g_ctable[%lu] =\n",len+1);
+  CLINE("\t\t{ {NULL, NULL},");
   len--; /* to fudge the final comma */
   for (c=1; c <= len; c++) {
     if (error[c-1] == BTE_ok) {
-      FPRINTF(fp,"      {r_%u, NULL},\n",eql.rel2U[c]);
+      FPRINTF(fp,"\t\t\t{r_%u, NULL},\n",eql.rel2U[c]);
     } else {
-      FPRINTF(fp,"      {NULL, NULL},\n");
+      FPRINTF(fp,"\t\t\t{NULL, NULL},\n");
     }
   }
   len++;
   if (error[len-1] == BTE_ok) {
-    FPRINTF(fp,"      {r_%u, NULL}\n",eql.rel2U[c]);
+    FPRINTF(fp,"\t\t\t{r_%u, NULL}\n",eql.rel2U[c]);
   } else {
-    FPRINTF(fp,"      {NULL, NULL}\n");
+    FPRINTF(fp,"\t\t\t{NULL, NULL}\n");
   }
-  CLINE("    };");
-  FPRINTF(fp,"  status = ExportBinTokenCTable(g_ctable,%lu);\n",len+1);
-  CLINE("  return status;");
+  CLINE("\t\t};");
+  FPRINTF(fp,"\tstatus = ExportBinTokenCTable(g_ctable,%lu);\n",len+1);
+  CLINE("\treturn status;");
   if (verbose) {
-    FPRINTF(fp,"/* %lu unique equations */\n",gl_length(eql.ue));
+    FPRINTF(fp,"\t/* %lu unique equations */\n",gl_length(eql.ue));
     FPRINTF(ASCERR,"C Functions: %lu\n",gl_length(eql.ue));
   }
   CLINE("}");

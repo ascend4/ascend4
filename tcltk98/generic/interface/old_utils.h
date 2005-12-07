@@ -71,7 +71,7 @@
  */
 #define NOLONGERSUPPORTED 1
 
-extern char *asc_make_dimensions(dim_type *dim);
+extern char *asc_make_dimensions(CONST dim_type *dim);
 /**<
  *  <!--  dimens = asc_make_dimensions(dim)                            -->
  *  <!--  char *dimens;                                                -->

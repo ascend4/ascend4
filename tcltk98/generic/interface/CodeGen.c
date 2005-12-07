@@ -979,7 +979,9 @@ int CodeGen_WriteBuiltInFuncs(FILE *f, Term *term,
       count += FPRINTF(f,",2]");
       return;
     case F_SQRT: count += FPRINTF(f,"Sqrt["); break;
-    case F_ERF:  count += FPRINTF(f,"Erf["); break;
+#ifdef HAVE_ERF
+	case F_ERF:  count += FPRINTF(f,"Erf["); break;
+#endif
     case F_LNM:	 count += FPRINTF(f,"Log["); break;
     case F_SINH: count += FPRINTF(f,"Sinh["); break;
     case F_COSH: count += FPRINTF(f,"Cosh["); break;
@@ -1018,7 +1020,9 @@ int CodeGen_WriteBuiltInFuncs(FILE *f, Term *term,
       count = FPRINTF(f,")/SIN("); break;
     case F_SQR: count += FPRINTF(f,"SQR("); break;
     case F_SQRT: count += FPRINTF(f,"SQRT("); break;
+#ifdef HAVE_ERF
     case F_ERF:  count += FPRINTF(f,"ERF("); break;
+#endif
     case F_LNM:	 count += FPRINTF(f,"LOG"); break;
         /* WARNING: lnm not implemented here */
     case F_SINH: count += FPRINTF(f,"0.5*(EXP(");

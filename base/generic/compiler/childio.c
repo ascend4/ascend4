@@ -278,7 +278,7 @@ char *WriteChildDetails(ChildListPtr cl,unsigned long n)
   CONST struct TypeDescription *desc;
   CONST struct Name *name;
   CONST struct Statement *stat;
-  char *result;
+  char *result = NULL;
   CONST char *tmp;
   Asc_DString ds,*dsPtr;
   int origin;

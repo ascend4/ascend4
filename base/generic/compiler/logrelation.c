@@ -617,7 +617,7 @@ static int ConvertLogExpr(CONST struct Expr *start,
 static
 CONST struct Expr *FindLogRHS(CONST struct Expr *ex)
 {
-  CONST struct Expr *rhs,*previous=NULL;
+  CONST struct Expr *rhs = NULL,*previous=NULL;
   unsigned depth=0;
   while(ex!=NULL){
     switch(ExprType(ex)){
@@ -657,9 +657,9 @@ CONST struct Expr *FindLogRHS(CONST struct Expr *ex)
     case e_lesseq:
     case e_greatereq:
       if (NextExpr(ex)==NULL) {
-	return NextExpr(rhs);
+        return NextExpr(rhs);
       } else {
-	return NULL;
+        return NULL;
       }
     case e_func:
     case e_uminus:

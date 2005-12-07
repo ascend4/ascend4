@@ -39,9 +39,6 @@
 #include "general/pool.h"
 #endif
 
-#ifndef lint
-static char NumpairID[]="$Id: numlist.c,v 1.6 1998/06/16 16:38:43 mthomas Exp $";
-#endif
 /*
  * This is an element in a list of
  * numbers and ranges.

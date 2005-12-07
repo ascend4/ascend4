@@ -85,8 +85,7 @@ char *s;
 
 #define SIZE_INCREMENT 16
 #define ROOM_FOR_INT  11    /* a 32-bit int, that is */
-char *asc_make_dimensions(dim)
-dim_type *dim;
+char *asc_make_dimensions(const dim_type *dim)
 {
    boolean first;
    char *dimens;
@@ -276,7 +275,9 @@ static void apply_term_dimensions(struct relation *rel,
     case F_LN:
     case F_LNM:
     case F_LOG:
-    case F_ERF:
+#ifdef HAVE_ERF
+	case F_ERF:
+#endif
     case F_SINH:
     case F_COSH:
     case F_TANH:

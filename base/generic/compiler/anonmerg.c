@@ -501,16 +501,16 @@ void AnonMergeFindPath(struct Instance *i, int target,
 {
 #define AMFPDEBUG 0
   unsigned long c;
-  struct Instance *ch;
+  struct Instance *ch = NULL; /* unnec init to avoid warning */
   struct AnonMergeIP *amip;
   int notfound, notchild;
   ChildListPtr cl;
 #if AMFPDEBUG
   int first = 1;
 #endif
+
   assert(scratch != NULL);
   assert(InstanceChild(i,start) != NULL);
-
 
   /* start out knowing the start child, so we don't search much on 1st one */
   gl_reset(scratch);
@@ -519,10 +519,6 @@ void AnonMergeFindPath(struct Instance *i, int target,
   /* ch will always hit InstanceChild assignment before being used
    * when this function is called with a correct start value.
    */
-#ifndef NDEBUG
-  /* shut up gcc */
-  ch = NULL;
-#endif
   while (notfound) { /* entered at least once */
     notchild = 1;
     if (InstanceKind(i) == MODEL_INST) {
@@ -985,6 +981,8 @@ void DestroySgeltPool(struct mdata *md) {
   md->pool = NULL;
 }
 
+#if 0
+/* UNUSED */
 static
 void ReportSgeltPool(FILE *f,struct mdata *md)
 {
@@ -994,6 +992,7 @@ void ReportSgeltPool(FILE *f,struct mdata *md)
   FPRINTF(f,"SgeltPool ");
   pool_print_store(f,md->pool,0);
 }
+#endif
 
 /* create amipd and init all its bits */
 static
@@ -1114,7 +1113,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blob.");
     return NULL;
   }
-  for (i=0;i <= asize;i++) {
+  for (i=0;i <= (int)asize;i++) {
     /* as we'll never use most of these, create them small and
      * let them grow.
      */

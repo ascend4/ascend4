@@ -241,7 +241,10 @@ extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
                                       ++g_string_modules_processed);
       }
     }
+  }else{
+	keep_string = NULL;
   }
+
   if( status != NULL ) {
     result = OpenModuleInternal(name, status, FALSE, keep_string);
   } else {

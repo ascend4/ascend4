@@ -138,6 +138,7 @@ static double safe_poly(double *poly, int order,
    return( order==-1 ? safe_mul_D0(val,x,safe) : val );
 }
 
+#ifdef HAVE_ERF
 static double exp_msqr_Dn(double x,int n,enum safe_err *safe)
 /**
  ***  Computes n-th derivative of exp(-x^2).
@@ -164,6 +165,7 @@ static double exp_msqr_Dn(double x,int n,enum safe_err *safe)
    }
    return( safe_poly(poly,n,x,x2,safe) );
 }
+#endif
 
 static double sqrt_rec_1_m_sqr_Dn(double x,int n,enum safe_err *safe)
 /**
@@ -182,6 +184,8 @@ static double sqrt_rec_1_m_sqr_Dn(double x,int n,enum safe_err *safe)
    x2 = safe_sqr_D0(x,safe);
    poly = alloc_poly(n);
 
+   (void)safe;
+
    poly[0] = safe_rec(safe_upower(safe_sqrt_D0(1.0-x2,safe),2*n+1,safe),safe);
    for( k=0 ; k<n ; ++k ) {   /* Calculate f[k+1] from f[k] */
       poly[k+1] = 0.0;
@@ -196,14 +200,18 @@ static double sqrt_rec_1_m_sqr_Dn(double x,int n,enum safe_err *safe)
 
 double safe_upower(double x, unsigned n, enum safe_err *safe)
 {
-   double y = 1.0;
-   for( ; n-- > 0 ; y = safe_mul_D0(y,x,safe) );
-   return(y);
+  double y = 1.0;
+  (void)safe;
+
+  for( ; n-- > 0 ; y = safe_mul_D0(y,x,safe) );
+  return(y);
 }
 
 double safe_factorial(unsigned n, enum safe_err *safe)
 {
    double x,y;
+   (void)safe;
+
    for( x = (double)n , y = 1.0 ; x >= 0.5 ; y = safe_mul_D0(y,x--,safe) )
       ;
    return(y);
@@ -294,6 +302,7 @@ double safe_erf_inv(double x,enum safe_err *safe)
 double safe_lnm_inv(double x,enum safe_err *safe)
 {
    register double eps=FuncGetLnmEpsilon();
+
    if( x > (DBL_MAX > 1.0e308 ? 709.196209 : log(DBL_MAX)) ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
@@ -310,6 +319,7 @@ int safe_is_int(double x,enum safe_err *safe)
 {
 #define TOLERANCE (1e-4)
   unsigned n;
+  (void)safe;
 
   if( x<0.0 ) {
     x = -x;
@@ -794,6 +804,7 @@ double safe_sqrt_D2(double x,enum safe_err *safe)
 
 double safe_cube_D2(double x,enum safe_err *safe)
 {
+   (void)safe;
    return( safe_mul_D0(6,x,safe) );
 }
 
@@ -983,6 +994,8 @@ double safe_div_D1(double x,double y,int wrt,enum safe_err *safe)
 
 double safe_ipow_D1( double x,double y, int wrt,enum safe_err *safe)
 {
+  (void)safe;
+
   switch( wrt ) {
   case 0:
     return( safe_mul_D0(y,safe_ipow_D0(x,y-1,safe),safe) );
@@ -1096,6 +1109,8 @@ double safe_sub_Dn(double x,double y,int nwrt0,int nwrt1,enum safe_err *safe)
 
 double safe_mul_Dn(double x,double y,int nwrt0,int nwrt1,enum safe_err *safe)
 {
+   (void)safe;
+
    switch( nwrt0 ) {
       case 0:
          break;

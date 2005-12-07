@@ -37,7 +37,7 @@ struct CG_Problem {
     ((prefix)##__Initialize(p,x,u,lo,up,nom))
 
 #ifdef STAND_ALONE
-typedef int ExtEvalFunc(int *mode, int *m, int *n,
+typedef int ExtEvalFunc(int *mode, int *m, unsigned long *n,
 			double *x, double *u, double *f, double *g);
 #else
 #include "compiler.h"

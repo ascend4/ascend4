@@ -90,7 +90,7 @@ static CONST char BrowserProcID[] = "$Id: BrowserProc.c,v 1.36 2003/08/23 18:43:
 #define MAXIMUM_STRING_LENGTH 1024
 #endif
 #define MAXIMUM_INST_DEPTH 40
-#define MAXIMUM_ID_LENGTH 40
+/* #define MAXIMUM_ID_LENGTH 40 // defined in compiler/qlfdid.h now */
 
 
 unsigned long g_depth = 0;      /* depth of the instance query list */

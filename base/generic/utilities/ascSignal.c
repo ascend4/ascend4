@@ -64,7 +64,9 @@
 #include "utilities/ascSignal.h"
 #include "general/list.h"
 
+#if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
 static jmp_buf f_test_env;    /* for local testing of signal handling */
+#endif
 
 #ifndef NO_SIGNAL_TRAPS 
 /* test buf for initialization */
@@ -91,14 +93,16 @@ static struct gl_list_t *f_seg_traps = NULL;
  * Each list holds the stack of pointers to signal handlers.
  */
 
+#ifndef NO_SIGSEGV_TRAP
 /* function to throw an interrupt. system dependent. */
 static int testdooley2(int sig)
 {
   raise(sig);
-
   return 0;
 }
+#endif
 
+#ifndef NO_SIGINT_TRAP
 /* function to catch an interrupt */
 static void testctrlc(int signum)
 {
@@ -108,6 +112,7 @@ static void testctrlc(int signum)
   }
   longjmp(f_test_env, signum);
 }
+#endif
 
 /*
  * So far the following seem to need reset trapped signals after
@@ -134,14 +139,16 @@ static void testctrlc(int signum)
  *   - SIGFPE may be set to SIG_DFL if no handler was previously registered
  */
 static int ascresetneeded(void) {
-  static int c=0;
-  static int result;
+  static int result = 0;
+
+#if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
   SigHandler lasttrap;
   volatile SigHandler savedtrap;
-
-  result = 0;
+  static int c=0;
+#endif
 
 #ifndef NO_SIGINT_TRAP
+
   /* test interrupt */
   savedtrap = signal(SIGINT, testctrlc);
   CONSOLE_DEBUG("Testing signal SIGINT (signum = %d) %p\t%p\t", SIGINT, savedtrap, testctrlc);

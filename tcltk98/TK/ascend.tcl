@@ -216,11 +216,13 @@ puts "tk sourced"
 # The plot window and the solver window require the
 # TkTable exension package by Roland King
 # mthomas 98.05.07: require 1.8 until we debug the memory errors in 2.0
-if {[catch {package require Tktable } err]} {
+if {[catch {package require Tktable 2.8} err]} {
   # print a message to stderr since a catch further up the call stack
   # eats the call to "error"
   puts stderr "ASCEND cannot locate the tkTable package."
   puts stderr "internal message: $err"
+  puts stderr "tck_pkgPath: $tcl_pkgPath"
+  puts stderr "auto_path: $auto_path"
   error "ASCEND cannot locate the tkTable package.\ninternal message: $err"
 }
 
