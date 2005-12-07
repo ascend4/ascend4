@@ -11,7 +11,7 @@ MODEL heater REFINES steam_equipment;
 
 	(* no mass holdup *)
 	out.mdot, in.mdot ARE_THE_SAME;
-
+	out.p, in.p ARE_THE_SAME;
 METHODS
 METHOD default_self;
 	RUN ClearAll;
