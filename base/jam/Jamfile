@@ -393,7 +393,6 @@ if $(BUILD_SOLVER)
     mtx_use_only.c
     rel.c
     relman.c
-    rootfind.c
     slv.c
     slv0.c
     slv1.c
