@@ -156,7 +156,7 @@ void ClearRecycleStack(void) {
   }
 }
 
-#if 0
+#ifndef NDEBUG
 static
 unsigned long StackSize(struct stack_t *stack)
 {
