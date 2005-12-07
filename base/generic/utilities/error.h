@@ -59,6 +59,7 @@
 # define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ## __VA_ARGS__)
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
+# define CONSOLE_DEBUG console_debug
 int error_reporter_note_no_line(const char *fmt,...);
 int console_debug(const char *fmt,...);
 #endif

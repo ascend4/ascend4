@@ -66,7 +66,7 @@
 /* code that needs to be deleted compiles only with kill = 1 */
 #define CANOPTIMIZE FALSE
 /* TRUE iff optimization code completed, meaning relman_diff fixed. */
-#define DEBUG TRUE
+#define DEBUG FALSE
 /* makes lots of extra spew */
 
 #if !defined(STATIC_QRSLV) && !defined(DYNAMIC_QRSLV)
@@ -2177,10 +2177,10 @@ static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars)
    det = coef[0]*coef[2] - coef[1]*coef[1];
    if( det < 0.0 )
 
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      error_reporter(ASC_PROG_ERROR,NULL,0,"Unexpected negative determinant %g.", det);
+	  
       FPRINTF(MIF(sys),"%-40s ---> %g\n",
               "    Unexpected negative determinant!",det);
-      error_reporter_end_flush();
 
    if( det <= DETZERO ) {
       /**

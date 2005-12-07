@@ -223,11 +223,11 @@ int console_debug(const char *fmt,...){
 	va_list args;
 
 	va_start(args,fmt);
-	res = VFPRINTF(ASCERR,fmt,args);
+	res = Asc_VFPrintf(ASCERR,fmt,args);
 	va_end(args);
 
 	return res;
-	
+}
 #endif
 
 /*-------------------------

@@ -173,7 +173,7 @@ static int ascresetneeded(void) {
 #ifndef NO_SIGSEGV_TRAP
   /* passed interrupt, check fpe */
   savedtrap=signal(SIGFPE, testctrlc);
-  CONSOLE_DEBUG"Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testctrlc);
+  CONSOLE_DEBUG("Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testctrlc);
   if (setjmp(f_test_env)==0) {
     testdooley2(SIGFPE);
   } else {

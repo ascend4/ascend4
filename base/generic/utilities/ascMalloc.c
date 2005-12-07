@@ -96,7 +96,7 @@ char *asc_memcpy(char *to, char *from, size_t size)
  * those systems which do overlapping ranges right.
  */
   char *fill;
-  asc_assert((NULL != to) && (NULL != from));
+  asc_assert( size==0 || ( NULL != to && NULL != from));
   if  (from < to) {
     fill = (to + size) - 1;
     from += (size - 1);

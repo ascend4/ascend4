@@ -3163,12 +3163,14 @@ static void slv0_iterate(slv_system_t server, SlvClientToken asys)
    }
 
    if( !calc_J(sys) )
-      FPRINTF(MIF(sys),"Jacobian calculation errors detected.\n");
+	  error_reporter(ASC_PROG_ERR,NULL,0,"Jacobian calculation errors detected.");
+      Asc_FPrintf(MIF(sys),"Jacobian calculation errors detected.\n");
    scale_J(sys);
    scale_variables(sys);
    scale_residuals(sys);
    if( !calc_gradient(sys) )
-      FPRINTF(MIF(sys),"Gradient calculation errors detected.\n");
+	  error_reporter(ASC_PROG_ERR,NULL,0,"Gradient calculation errors detected.");
+      Asc_FPrintf(MIF(sys),"Gradient calculation errors detected.\n");
 
    calc_pivots(sys);
    if (sys->iarray[SP0_SAVLIN]) {
