@@ -5,7 +5,7 @@ REQUIRE "johnpye/thermo_types.a4c";
 (*************************************************************************
 
 The thermodynamic properties of water calculated with the 
-IAPWS95 equations.  Variables and units:
+IAPWS95 equations.  Variables and (example/possible) units:
     
     T       Temperature, K
     rho     Density, kg/m^3

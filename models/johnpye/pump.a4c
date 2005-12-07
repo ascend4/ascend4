@@ -1,0 +1,83 @@
+REQUIRE "clfr-models/thermo_types.a4c";
+REQUIRE "atoms.a4l";
+	
+MODEL pump(
+		in WILL_BE steam_stream;
+		out WILL_BE steam_stream;
+)WHERE(
+	in.cd, out.cd WILL_BE_THE_SAME;
+	in.pd, out.pd WILL_BE_THE_SAME;
+	in.flow, out.flow WILL_BE_THE_SAME;
+	in.f[in.components], out.f[out.components] WILL_BE_THE_SAME;
+);
+	isen IS_A stream(in.cd, in.pd, in.equilibrated);
+	
+	isen.f[in.components] = in.f[out.components];
+	isen.flow = in.flow;
+
+	H_max IS_A distance;
+	H_2 IS_A distance;
+	H_1 IS_A distance;
+	Q_ref IS_A volume_rate;
+	Q_2 IS_A volume_rate;
+	Q_1 IS_A volume_rate;
+	N IS_A frequency;
+	N_ref IS_A frequency;
+	N_r IS_A factor;
+
+	C_0 IS_A factor;
+	C_1 IS_A factor;
+	C_2 IS_A factor;
+	eta IS_A factor;	
+
+	V IS_A volume;
+
+	M IS_A mass;
+	DP IS_A pressure;
+
+	h_is IS_A specific_enthalpy;
+	T_is IS_A temperature;
+	rho_is IS_A mass_density;
+
+	(* Pump curve, pressure decreases as flow rate increases *)
+	VolFlowRate: Q_2 / in.V_flow = in.flow;
+	VolFlowRate1: Q_1 = Q_2 / N_r;       (* vol flow rate at equivalent conditions at reference speed *)
+	Head1: H_1 = C_0 + C_1*Q_1 + C_2*Q_1^2; (* head at equivalent conditions' speed. C0, C1, C2 are pump curve params (const) *)
+	Head2: H_2 = H_1 * N_r; 			  (* head in metres at actual speed *)
+
+	PressureRise: DP = (in.rho * gravity_constant * H_2);
+	PressureRise2: out.p = (in.P + DP);
+
+	MassHoldUp: M = V / (0.5*(1/in.rho + 1/out.rho));
+
+	(* Isentropic exit state *)
+	isen.S = in.S;
+	isen.P = out.P;
+
+	(* Pump efficiency *)
+	out.h - in.h = (in.h - isen.h)/eta;
+	
+END pump;
+
+MODEL pump_test;
+	cd IS_A components_data(['water'], 'water');
+    pd IS_A phases_data('V', 'Pitzer_vapor_mixture','none', 'none');
+    equilibrated IS_A boolean;
+
+    S1 IS_A stream(cd, pd, equilibrated);
+    S2 IS_A stream(cd, pd, equilibrated);
+	
+	PU IS_A pump(S1,S2);
+
+METHODS
+	METHOD ClearAll;
+	END ClearAll;
+
+	METHOD specify;
+	END specify;
+	
+	METHOD values;
+	END values;
+
+END pump_test;
+
