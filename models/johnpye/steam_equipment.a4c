@@ -1,0 +1,26 @@
+REQUIRE "johnpye/steam_stream.a4c";
+
+(** An abstract model for a steam equipment item *)
+
+MODEL steam_equipment;
+	in IS_A steam_stream;
+	out IS_A steam_stream;
+
+METHODS
+METHOD default_self;
+	RUN ClearAll;
+	RUN specify;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	RUN in.specify;
+	RUN out.specify;
+END specify;
+
+METHOD values;
+	RUN in.values;
+	RUN out.values;
+END values;
+
+END steam_equipment;

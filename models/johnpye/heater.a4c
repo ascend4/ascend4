@@ -1,0 +1,33 @@
+REQUIRE "johnpye/steam_equipment.a4c";
+
+(** An abstract model for a steam equipment item *)
+
+MODEL heater REFINES steam_equipment;
+
+	Qdot IS_A energy_rate;
+
+	(* first law of thermo *)
+	in.mdot * in.h + Qdot = out.mdot * out.h;
+
+	(* no mass holdup *)
+	out.mdot, in.mdot ARE_THE_SAME;
+
+METHODS
+METHOD default_self;
+	RUN ClearAll;
+	RUN specify;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	RUN in.specify;
+	Qdot.fixed := TRUE;
+END specify;
+
+METHOD values;
+	in.T := 400 {K};
+	in.p := 1 {bar};
+	Qdot := 2.4 {kW};
+END values;
+
+END heater;
