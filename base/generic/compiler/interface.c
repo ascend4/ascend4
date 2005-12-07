@@ -147,9 +147,8 @@ union argument {
 /* global variables */
 struct gl_list_t *g_def_list = NULL; /* list of definitions sorted */
 				     /* alphabetically */
-struct Instance
-  *g_root = NULL,		/* root instance */
-  *g_search_inst = NULL;	/* used for searching */
+struct Instance *g_root = NULL; /* root instance */
+struct Instance *g_search_inst = NULL; /* used for searching */
 
 int open_bracket,open_quote;
 

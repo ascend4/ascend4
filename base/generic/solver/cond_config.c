@@ -931,8 +931,8 @@ static int32 *order_incidences_of_relation(struct var_variable **var_list,
   struct var_variable *var;
   int32 *index;
   int32 *ordered_index;
-  int32 v,vind,vcount;
-  int32 aux,vin,vindex;
+  int32 v,vind,vcount = 0;
+  int32 aux,vin,vindex = 0;
 
   index = (int32 *)ascmalloc(vlen*sizeof(int32));
   ordered_index = (int32 *)ascmalloc(vlen*sizeof(int32));
@@ -1199,8 +1199,8 @@ static void order_relations_by_incidences(struct gl_list_t *scratch)
   struct rel_relation *rel;
   struct rel_relation **array_rel;
   struct var_variable **var_list;
-  int32 r,rlen,rin,rind;
-  int32 num_inc, v, vv, vindex, vind;
+  int32 r,rlen,rin,rind = 0;
+  int32 num_inc = 0, v, vv, vindex = 0, vind;
   int32 glob_count, n1, n2;
   int32 *num_rel, *ordered_num_rel;
   int32 **var_ind;
@@ -1296,8 +1296,8 @@ static void order_relations_in_case(struct when_case *cur_case)
   struct rel_relation *rel;
   int32 *num_inc;
   int32 *ordered_num_inc;
-  int32 r, rin, rlen, rcount, rind;
-  int32 index, aux, glob_count;
+  int32 r, rin, rlen, rcount = 0, rind;
+  int32 index = 0, aux, glob_count;
 
   rels = when_case_rels_list(cur_case);
   if (rels != NULL) {

@@ -735,8 +735,8 @@ void CopyLogRelStructures(struct gl_list_t *src_list,
       lrel = CopyLogRelToModify(src,dest,varlist,rellist);
       break;
     default:
-      Asc_Panic(2, "CopyLogRelStructures",
-                "Invalid type in CopyLogRelStructures\n"); /* NOTREACHED */
+      Asc_Panic(2, "CopyLogRelStructures", "Invalid type in CopyLogRelStructures\n"); /* NOTREACHED */
+      lrel = NULL;
     }
     SetInstanceLogRel(dest,lrel);
     gl_reset(varlist);

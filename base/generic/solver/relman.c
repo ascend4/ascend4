@@ -221,14 +221,14 @@ real64 *relman_glassbox_dsolve(struct rel_relation *rel,
   table = GetValueJumpTable(GlassBoxExtFunc(cmplr_reln));
   index = GlassBoxRelIndex(cmplr_reln);
 
-  /*
-   * Call the rootfinder. A note of CAUTION:
-   * zbrent is going to call the evaluation function.
-   * It expects, that the results of this evaluation will be
-   * written to f[m]. GlassBox relations however always
-   * write to slot f[0]. To keep the world happy we send in
-   * a dummy = 0.  This needs to be made cleaner.    !! FIX !!
-   */
+  /** @TODO FIXME
+	Call the rootfinder. A note of CAUTION:
+	zbrent is going to call the evaluation function.
+	It expects, that the results of this evaluation will be
+	written to f[m]. GlassBox relations however always
+	write to slot f[0]. To keep the world happy we send in
+	a dummy = 0.  This needs to be made cleaner.
+  */
   value = zbrent(table[index], &lower, &upper,
 		 &mode, &dummy, &solve_for_index,
 		 x, x , f, g, &tolerance, &result);

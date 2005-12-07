@@ -31,17 +31,20 @@
 
 /*
  * This is the first pass implemenation of some rootfinding codes.
- * See page 360 or nr in C. We will later convert the netlib code
+ * See page 360 of nr in C. We will later convert the netlib code
  * and use this to avoid copyright problems with the nr in C boys.
  */
 #include <math.h>
 #include "utilities/ascConfig.h"
 #include "compiler/compiler.h"
-#ifndef STAND_ALONE
-#include "compiler/extfunc.h"   /* ExtEvalFunc */
+
+#ifdef STAND_ALONE
+# include "codegen_support.h"
 #else
-#include "codegen_support.h"
-#endif /* STAND_ALONE */
+# error "DON'T COMPILE THIS FILE UNLESS YOU ARE IN STANDALONE MODE"
+# include "compiler/extfunc.h"   /* ExtEvalFunc */
+#endif
+
 #include "compiler/rootfind.h"
 
 #define ITMAX 100

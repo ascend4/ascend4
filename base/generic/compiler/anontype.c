@@ -354,7 +354,7 @@ struct AnonType *NearestAnonTypeRC(struct Instance *i, struct AnonType *after,
 {
   struct AnonType *testat;
   CONST dim_type *dim;
-  struct Instance *testi;
+  struct Instance *testi = NULL; /* unnec init to avoid warning */
   double val;
 
   if (after==NULL) {

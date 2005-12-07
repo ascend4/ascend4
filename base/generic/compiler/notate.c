@@ -335,7 +335,7 @@ void DestroyNotesDatabase(symchar *dbid)
  */
 void DestroyNotesOnType(symchar *dbid, symchar *typename)
 {
-  struct note_bucket *b, *prev;
+  struct note_bucket *b, *prev = NULL;
   unsigned long len;
   struct gl_list_t *nl;
   struct Note *n,*p;

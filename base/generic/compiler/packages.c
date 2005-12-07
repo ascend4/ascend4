@@ -339,8 +339,8 @@ void AddUserFunctions(void)
 
 # elif defined(STATIC_PACKAGES)
 #  ifdef __GNUC__
-#   warning "DYNAMIC PACKAGES"
-#  endif "STATIC PACKAGES"
+#   warning "STATIC PACKAGES"
+#  endif
 
   /*The following need to be reimplemented but are basically useful as is. */
   if (StaticPackages_Init()) {
@@ -516,9 +516,10 @@ int CallGlassBox(struct Instance *relinst, CONST struct relation *rel)
   struct Instance *var;
   struct ExternalFunc *efunc;
   int index;
-  unsigned long i, n;
+  long i;
   double *f, *x, *g;
   int m,mode,result;
+  int n;
 
   ExtEvalFunc **evaltable, *eval_func;
   ExtEvalFunc **derivtable, *deriv_func;

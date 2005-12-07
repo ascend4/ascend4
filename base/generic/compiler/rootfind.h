@@ -45,8 +45,8 @@
  *  @todo codegen_support.h not in base/generic/solver - need to update include?
  */
 
-#ifndef rootfind_already_included
-#define rootfind_already_included
+#ifndef ASC_ROOTFIND_H
+#define ASC_ROOTFIND_H
 
 extern double zbrent(ExtEvalFunc *func,
                      double *lowbound,

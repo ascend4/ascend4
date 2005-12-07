@@ -253,7 +253,11 @@ int Asc_SolvIncompleteSim(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp, "error in call to slv_checksim", TCL_STATIC);
     return TCL_ERROR;
   }
+
+
   g_solvinst_root = Asc_FindSimulationRoot(AddSymbol(argv[1]));
+
+
   if (!g_solvinst_root) {
     FPRINTF(ASCERR, "Solve called with NULL root instance.\n");
     Tcl_SetResult(interp, "Simulation specified not found.", TCL_STATIC);

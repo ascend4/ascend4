@@ -41,16 +41,17 @@
 
 /**
 	ExtEvalFunc type is a function pointer.
+	@see rootfind.c:51
 
-	@param mode ???
-	@param m
-	@param n
-	@param x
-	@param u
-	@param f
-	@param g
+	@param mode 'to pass to the eval function' (?)
+	@param m    relation index
+	@param n    variable index
+	@param x    'x' vector (?)
+	@param u    'u' vector (?)
+	@param f    vector of residuals
+	@param g    vector of gradients
 */
-typedef int ExtEvalFunc(int *mode, int *m, unsigned long *n,
+typedef int ExtEvalFunc(int *mode, int *m, int *n,
    double *x, double *u, double *f, double *g);
 
 /**

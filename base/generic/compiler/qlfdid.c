@@ -213,13 +213,14 @@ int CheckChildExist(struct InstanceName name)
 static void HandleLastPart(char *temp)
 {
   struct InstanceName name;
+
   if (g_search_inst) {
     SetInstanceNameType(name,StrName);
     SetInstanceNameStrPtr(name,AddSymbol(temp));
     CheckChildExist(name);            /* sets g_search_inst regardless */
     return;
   } else {
-    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+    g_search_inst = (struct Instance *) Asc_FindSimulationRoot(AddSymbol(temp));
   }
 }
 
@@ -257,7 +258,8 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
             return NULL;
           }
         } else {
-          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+		  /** @TODO FIXME, why is the cast necessary? */
+          g_search_inst = (struct Instance *)Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             Asc_SearchListDestroy(search_list);
             return NULL;
@@ -288,7 +290,8 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
             return NULL;
           }
         } else {
-          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+		  /** @TODO FIXME, why is the cast necessary? */
+          g_search_inst = (struct Instance *) Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             Asc_SearchListDestroy(search_list);
             return NULL;
@@ -385,7 +388,8 @@ void HandleLastPart3(char *temp)
     CheckChildExist(name);            /* sets g_search_inst regardless */
     return;
   } else {
-    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+    /** @TODO FIXME, why is the cast necessary? */
+    g_search_inst = (struct Instance *)Asc_FindSimulationRoot(AddSymbol(temp));
   }
 }
 
@@ -426,7 +430,8 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
             return NULL;
           }
         } else {
-          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+          /** @TODO FIXME, why is the cast necessary? */
+          	g_search_inst = (struct Instance *)Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             return NULL;
           }
@@ -454,7 +459,9 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
             return NULL;
           }
         } else {
-          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
+		  /** @TODO FIXME, why is the cast necessary? */
+          g_search_inst = (struct Instance *) Asc_FindSimulationRoot(AddSymbol(temp));
+
           if (!g_search_inst) {
             return NULL;
           }

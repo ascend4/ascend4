@@ -1399,7 +1399,9 @@ struct value_t ApplyFunction(struct value_t value, CONST struct Func *f)
         case F_LOG:
         case F_LN:
         case F_EXP:
-        case F_ERF:
+#ifdef HAVE_ERF
+		case F_ERF:
+#endif
         case F_LNM:
         case F_SIN:
         case F_COS:

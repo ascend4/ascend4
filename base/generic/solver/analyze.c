@@ -1980,7 +1980,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   struct ExtRelCache *cache;
   struct Instance *i;
   struct Instance *i_r;
-  struct solver_ipdata *rip, *vip;
+  struct solver_ipdata *rip = NULL, *vip;
   struct solver_ipdata *lrip, *dvip, *wip;
   struct var_variable **incidence = NULL;
   struct rel_relation **varincidence = NULL;

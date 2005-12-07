@@ -63,6 +63,7 @@
  * this will give us dy/dx.
  */
 
+#if 0
 static real64 *zero_vector(real64 *vec, int size)
 {
   int c;
@@ -71,6 +72,7 @@ static real64 *zero_vector(real64 *vec, int size)
   }
   return vec;
 }
+#endif
 
 static real64 **make_matrix(int nrows, int ncols)
 {
@@ -161,7 +163,8 @@ static slv_system_t PreSolve(struct Instance *inst)
 #endif
   return sys;
 }
-
+
+#if 0
 static int ReSolve(slv_system_t sys)
 {
   if (!sys)
@@ -169,6 +172,7 @@ static int ReSolve(slv_system_t sys)
   slv_solve(sys);
   return 0;
 }
+#endif 
 
 static int DoSolve(struct Instance *inst)
 {
@@ -195,6 +199,10 @@ int do_solve_eval(struct Slv_Interp *slv_interp,
   int result;
   struct Instance *inst;
   len = gl_length(arglist);
+
+  /* Ignore unused params */
+  (void)slv_interp; (void)i; (void)whichvar;
+
   if (len!=2) {
     FPRINTF(stdout,"Wrong number of args to do_solve_eval\n");
     return 1;
@@ -312,6 +320,9 @@ int do_finite_diff_eval(struct Slv_Interp *slv_interp,
 			 struct gl_list_t *arglist,
 			 unsigned long whichvar)
 {
+  /* Ignore unused params */
+  (void)slv_interp; (void)i; (void)whichvar;
+
   int result;
   if (FiniteDiffCheckArgs(arglist))
     return 1;
@@ -605,7 +616,8 @@ static int Compute_dy_dx_smart(slv_system_t sys,
   if (solution) ascfree((char *)solution);
   return 0;
 }
-
+
+#if 0
 static int ComputeInverse(slv_system_t sys,
 			  real64 *rhs)
 {
@@ -638,8 +650,8 @@ static int ComputeInverse(slv_system_t sys,
   if (solution) ascfree((char *)solution);
   return 0;
 }
+#endif
 
-
 int sensitivity_anal(struct Slv_Interp *slv_interp,
 		     struct Instance *inst, /* not used but will be */
 		     struct gl_list_t *arglist)
@@ -648,20 +660,25 @@ int sensitivity_anal(struct Slv_Interp *slv_interp,
   struct gl_list_t *branch;
   struct var_variable **vlist = NULL;
   int *inputs_ndx_list = NULL, *outputs_ndx_list = NULL;
-  real64 **dy_dx;
+  real64 **dy_dx = NULL;
   slv_system_t sys = NULL;
-  unsigned long c;
-  int noutputs,ninputs;
+  int c;
+  int noutputs = 0;
+  int ninputs;
   int i,j;
   int offset;
   dof_t *dof;
   int num_vars,ind,found;
+
+  /* Ignore unused params */
+  (void)slv_interp; (void) inst;
 
   linsolqr_system_t lqr_sys;	/* stuff for the linear system & matrix */
   mtx_matrix_t mtx;
   int32 capacity;
   real64 *scratch_vector = NULL;
   int result=0;
+
 
   (void)NumberFreeVars(NULL);		/* used to re-init the system */
   (void)NumberRels(NULL);		/* used to re-init the system */
@@ -866,7 +883,8 @@ static int DoDataAnalysis(struct var_variable **inputs,
   fclose(fp);
   return 0;
 }
-
+
+#if 0
 static int DoProject_X(struct var_variable **old_inputs,
 		       struct var_variable **new_inputs, /* new values of u */
 		       double step_length,
@@ -899,13 +917,14 @@ static int DoProject_X(struct var_variable **old_inputs,
     new_y = old_y + step_length*tmp;
     /*    SetRealAtomValue(var,new_y,(unsigned)0);  */
     var_set_value(var,new_y);
-#if  DEBUG
+# if  DEBUG
     FPRINTF(stderr,"Old_y = %12.8g; Nex_y = %12.8g\n",old_y,new_y);
-#endif
+#\endif
   }
   ascfree((char *)delta_x);
   return 0;
 }
+#endif
 
 
 /*
@@ -937,12 +956,15 @@ int sensitivity_anal_all(struct Slv_Interp *slv_interp,
   dof_t *dof;
   struct var_variable **inputs = NULL, **outputs = NULL;
   int *inputs_ndx_list = NULL, *outputs_ndx_list = NULL;
-  real64 **dy_dx;
+  real64 **dy_dx = NULL;
   struct var_variable **vp,**ptr;
   slv_system_t sys = NULL;
-  unsigned long c;
-  int noutputs,ninputs;
+  long c;
+  int noutputs=0, ninputs;
   var_filter_t vfilter;
+
+  /* Ignore unused params */
+  (void)slv_interp; (void)inst; (void)step_length;
 
   struct var_variable **new_inputs = NULL; /* optional stuff for variable
 				      * projection */

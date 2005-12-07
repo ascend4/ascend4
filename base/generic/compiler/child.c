@@ -402,42 +402,13 @@ CONST struct TypeDescription *ChildBaseTypePtr(ChildListPtr cl,
   return CGET(cl,n)->typeptr;
 }
 
-static
-unsigned long CLBinSearch(symchar *s, struct gl_list_t *symbols)
+/*
+Use pointer hash table to locate the string.
+(removed binary search stuff here -- johnpye 20051208 )
+*/
+unsigned long
+ChildPos(ChildListPtr cl, symchar *s)
 {
-  register unsigned long lower,upper,search;
-  register int comp;
-
-  lower = 1;
-  upper = gl_length(symbols);
-  /* CmpSymchar which is smarter than strcmp. */
-  while (lower<=upper) {
-    search = (lower+upper)/2;
-    comp = CmpSymchar((symchar *)gl_fetch(symbols,search),s);
-    if (comp==0) return search;
-    if (comp < 0) {
-      lower = search + 1;
-    } else {
-      upper = search - 1;
-    }
-  }
-  return 0;
-}
-
-#define USECHILDHASH 1
-unsigned long ChildPos(ChildListPtr cl, symchar *s)
-/*********************************************************************\
-Use binary search to locate the string.  This routine will be called
-alot, so it is important to make it quick.
-
-Yah, well, it could be a helluva lot quicker if it just compared
-pointers maybe. Do we have a fundamental breakdown in design here?
-Are we sorting on the right things? Did we ever do profiling?
-If it's so damn important, why don't we reimplement the symbol table?
-Went to pointer hash table 2/98 BAA.
-\*********************************************************************/
-{
-#if USECHILDHASH
   struct ChildHash *chp;
   assert(AscFindSymbol(s) != NULL); /* baa 1/98 */
   chp = cl->table[CHILDHASHINDEX(s)];
@@ -448,50 +419,6 @@ Went to pointer hash table 2/98 BAA.
     chp = chp->next;
   }
   return 0;
-  
-#else /* use linear/binary search instead */
-
-#define PTRSRCHFIRST 1 /* BAA testing. doesn't help on current clist. */
-#define PTRSRCHBINARY 24UL /* BAA testing */
-
-  register unsigned upper;
-
-  upper=gl_length(GL(cl));
-  assert(AscFindSymbol(s) != NULL); /* baa 1/98 */
-
-#if PTRSRCHFIRST
-  /* linear search sucks when childlists are very long. */
-  /* could convert this to a gl_ptr_search by adding a name
-   * list data structure to the child list.
-   */
-  if (upper < PTRSRCHBINARY) {
-    return gl_ptr_search(cl->symbols,(VOIDPTR)s,0);
-  } 
-  /* else binary search */
-  /* if we get here, it's because list is long,
-   * (a less usual case in a good model) and we do the nasty strcmp.
-   * What we really need is a dynamically indexed symbol table so
-   * that we can make symchar comparison fast.
-   * e.g.
-   * struct symchar {
-   *   CONST char *name;
-   *   unsigned long refcount;
-   *   unsigned long index;
-   *   struct symchar *prev;
-   *   struct symchar *next;
-   * };
-   * The symchar should be in a hash table bucket {struct symchar *, next};
-   * and also in a D.L. list with index initially assigned values
-   * ~10000 apart so that we do a minimum of reindexing as we insert.
-   * We should keep an array of pivots too to speed insertion.
-   * Equation labels will give us hell. so clever is at a premium.
-   * and the need for int comparisons is great.
-   * the need for refcount is arguable.
-   */
-#endif /*ptrsrchfirst*/
-
-  return CLBinSearch(s,GN(cl));
-#endif /*usechildhash else*/
 }
 
 extern int CompareChildLists(ChildListPtr cl1,

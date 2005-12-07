@@ -156,12 +156,14 @@ void ClearRecycleStack(void) {
   }
 }
 
+#if 0
 static
 unsigned long StackSize(struct stack_t *stack)
 {
   assert(stack&&stack->ptr);
   return stack->size;
 }
+#endif
 
 static
 struct value_t StackPopTop(struct stack_t *stack)

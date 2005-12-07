@@ -517,9 +517,7 @@ void ExecuteInitFor(struct procFrame *fm, struct Statement *stat)
   struct for_var_t *fv;
   enum FrameControl oldflow;
 
-#ifndef NDEBUG
   c = direction = 1; /* shut up gcc */
-#endif
 
   name = ForStatIndex(stat);
   ex = ForStatExpr(stat);
