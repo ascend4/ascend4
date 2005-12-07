@@ -1,0 +1,909 @@
+REQUIRE "stream_holdup.a4l";
+
+(* => stream_holdup.a4l, thermodynamics.a4l,
+ *    components.a4l, phases.a4l, atoms.a4l, measures.a4l,
+ *    system.a4l, basemodel.a4l *)
+
+ATOM heat_transfer_coefficient REFINES solver_var
+    DIMENSION M/T^3/TMP
+    DEFAULT 10.0 {BTU/ft^2/hr/R};
+    lower_bound := 0.001 {BTU/ft^2/hr/R};
+    upper_bound := 1000 {BTU/ft^2/hr/R};
+    nominal := 10 {BTU/ft^2/hr/R};
+END heat_transfer_coefficient;
+
+ATOM reaction_rate REFINES solver_var
+    DIMENSION Q/M/T
+    DEFAULT 1e-5 {mole/g/s};
+    lower_bound := -1e20 {mole/g/s};
+    upper_bound := 1e20 {mole/g/s};
+    nominal := 1e-5 {mole/g/s};
+END reaction_rate;
+
+ATOM partial_pressure REFINES solver_var
+    DIMENSION M/L/T^2
+    DEFAULT 1.0{atm};
+    lower_bound := 0.00{Pa};
+    upper_bound := 5000{atm};
+    nominal := 1.0{atm};
+END partial_pressure;
+
+ATOM pressure_squared REFINES solver_var
+    DIMENSION M^2/L^2/T^4
+    DEFAULT 1.0{atm^2};
+    lower_bound := 0.00{Pa^2};
+    upper_bound := 5000{atm^2};
+    nominal := 1.0{atm^2};
+END pressure_squared;
+
+ATOM volume_flux_rate REFINES solver_var
+    DIMENSION L^3/L^2/T
+    DEFAULT 10 {cm^3/cm^2/min};
+    lower_bound := 0.0 {cm^3/cm^2/min};
+    upper_bound := 100 {cm^3/cm^2/min};
+    nominal := 10 {cm^3/cm^2/min};
+END volume_flux_rate;
+
+
+MODEL VaporStream;
+    cd IS_A components_data([
+	'nitrogen',
+	'oxygen',
+	'water',
+        'hydrogen',
+	'carbon_monoxide',
+	'carbon_dioxide',
+	'methane',
+	'ethane',
+	'propane',
+	'n_butane'],'methane' );
+    pd IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
+    equil IS_A start_true;
+    str IS_A stream(cd,pd,equil);
+    
+    cost_per_mole 	IS_A cost_per_mole;
+    cost		IS_A cost_per_time;    
+    cost = cost_per_mole * flow;
+    
+    comp ALIASES str.components;
+    P ALIASES str.P;
+    T ALIASES str.T;
+    flow ALIASES str.flow;
+    f ALIASES str.f;
+    y ALIASES str.y;
+    H_flow ALIASES str.H_flow;
+    thermo ALIASES cd.data;  
+    
+    METHODS
+    METHOD seqmod;
+	str.state.slack_PhaseDisappearance['vapor'].fixed := TRUE;
+	cost_per_mole.fixed := TRUE;
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+	T.fixed := TRUE;
+	P.fixed := TRUE;
+	f[comp].fixed := TRUE;
+    END specify;
+    METHOD values;
+	str.state.slack_PhaseDisappearance['vapor'] := 0;
+	T := 800 {K};
+	P := 1 {atm};
+	f[comp] := 1 {mole/min};
+	cost_per_mole := 0 {USdollar/mole};
+    END values;
+END VaporStream;
+
+MODEL ZeroFeedAll REFINES VaporStream;
+    METHODS
+    METHOD seqmod;
+	RUN VaporStream::seqmod;
+	
+	f[comp].fixed := FALSE;
+	y[comp].fixed := TRUE;
+	y['hydrogen'].fixed := FALSE;
+	flow.fixed := TRUE;
+    END seqmod;
+    METHOD specify;
+	RUN VaporStream::specify;
+	RUN seqmod;
+    END specify;
+    METHOD values;
+	RUN VaporStream::values;
+
+	y['nitrogen'] := 0.1;
+	y['oxygen'] := 0.1;
+	y['water'] := 0.1;
+	y['hydrogen'] := 0.1;
+	y['carbon_monoxide'] := 0.1;
+	y['carbon_dioxide'] := 0.1;
+	y['methane'] := 0.1;
+	y['ethane'] := 0.1;
+	y['propane'] := 0.1;
+	y['n_butane'] := 0.1;
+	
+	T := 298 {K};
+	flow := 1e-6 {mole/min};
+    END values;
+END ZeroFeedAll;
+
+MODEL NaturalGasFeed REFINES VaporStream;
+    R IS_A gas_constant;
+
+    METHODS 	    
+    METHOD seqmod;
+	RUN VaporStream::seqmod;
+	
+	f[comp].fixed := FALSE;
+	y[comp].fixed := TRUE;
+	y['hydrogen'].fixed := FALSE;
+    END seqmod;
+    METHOD specify;
+	RUN VaporStream::specify;
+	RUN seqmod;
+    
+	flow.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN VaporStream::values;
+	
+	(* Approx Worst CASE FROM Perry's 7th Ed, p.27-12 *)
+	y['nitrogen'] := 0.0104;
+	y['oxygen'] := 0;
+	y['water'] := 0;
+	y['hydrogen'] := 0;
+	y['carbon_monoxide'] := 0;
+	y['carbon_dioxide'] := 0.011;
+	y['methane'] := 0.863;
+	y['ethane'] := 0.081;
+	y['propane'] := 0.028;
+	y['n_butane'] := 0.0066;
+	
+	T := 298 {K};
+	flow := 1 {mole/min};
+	
+	cost_per_mole := ( 5 {USdollar/ft^3} ) *
+	                 ( 8.3144 {J/mole/K} ) * ( 298 {K} ) / ( 1 {atm} );
+    END values;
+END NaturalGasFeed;
+
+MODEL AirFeed REFINES VaporStream;
+    METHODS 	    
+    METHOD seqmod;
+	RUN VaporStream::seqmod;
+	
+	f[comp].fixed := FALSE;
+	y[comp].fixed := TRUE;
+	y['hydrogen'].fixed := FALSE;
+    END seqmod;
+    METHOD specify;
+	RUN VaporStream::specify;
+	RUN seqmod;
+    
+	flow.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN VaporStream::values;
+	
+	y[comp] := 0;
+	y['nitrogen'] := 0.79;
+	y['oxygen'] := 0.21;
+	
+	T := 298 {K};
+	flow := 1 {mole/min};
+    END values;
+END AirFeed;
+
+MODEL SteamFeed REFINES VaporStream;
+    METHODS 	    
+    METHOD seqmod;
+	RUN VaporStream::seqmod;
+	
+	f[comp].fixed := FALSE;
+	y[comp].fixed := TRUE;
+	y['hydrogen'].fixed := FALSE;
+    END seqmod;
+    METHOD specify;
+	RUN VaporStream::specify;
+	RUN seqmod;
+    
+	flow.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN VaporStream::values;
+	
+	y[comp] := 0;
+	y['water'] := 1;
+    
+	flow := 1 {mole/min};
+	T := 800 {K};
+    END values;
+END SteamFeed;
+
+MODEL HydrogenStream REFINES VaporStream;
+    METHODS 	    
+    METHOD seqmod;
+	RUN VaporStream::seqmod;
+	
+	f[comp].fixed := FALSE;
+	y[comp].fixed := TRUE;
+	y['hydrogen'].fixed := FALSE;
+    END seqmod;
+    METHOD specify;
+	RUN VaporStream::specify;
+	RUN seqmod;
+    
+	flow.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN VaporStream::values;
+	
+	y[comp] := 0;
+	y['hydrogen'] := 1;
+    
+	flow := 1 {mole/min};
+	T := 800 {K};
+    END values;
+END HydrogenStream;
+
+
+MODEL MixerUnit(
+    in1 WILL_BE VaporStream;
+    in2 WILL_BE VaporStream;
+    out WILL_BE VaporStream; );
+    
+    FOR i IN in1.comp CREATE
+	out.f[i] = in1.f[i] + in2.f[i];
+    END FOR;
+    out.H_flow = in1.H_flow + in2.H_flow;
+    out.P = in1.P - (in1.P-in2.P)*(0.5 + arctan(in1.P-in2.P));
+    
+    METHODS
+    METHOD seqmod;
+	RUN in1.seqmod;
+	RUN in2.seqmod;
+	RUN out.seqmod;
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+	
+	RUN in1.specify;
+	RUN in2.specify;
+    END specify;
+    METHOD values;
+	RUN in1.values;
+	RUN in2.values;
+	RUN out.values;
+    END values;
+END MixerUnit;
+
+
+MODEL BurnerUnit(
+    fuel WILL_BE VaporStream;
+    air WILL_BE VaporStream;
+    exhaust WILL_BE VaporStream;);
+    
+    feed IS_A VaporStream;
+    mix IS_A MixerUnit(fuel,air,feed);
+    
+    exhaust.f['nitrogen'] = feed.f['nitrogen'];
+    exhaust.f['oxygen'] = feed.f['oxygen'] - 0.5*feed.f['hydrogen']
+                          - 0.5*feed.f['carbon_monoxide']
+			  - 2.0*feed.f['methane'] - 3.5*feed.f['ethane']
+			  - 5.0*feed.f['propane'] - 6.5*feed.f['n_butane'];
+    exhaust.f['water'] = feed.f['water'] + feed.f['hydrogen']
+			  + 2.0*feed.f['methane'] + 3.0*feed.f['ethane']
+			  + 4.0*feed.f['propane'] + 5.0*feed.f['n_butane'];
+    exhaust.f['hydrogen'] = 0 {mole/hr};
+    exhaust.f['carbon_dioxide'] = feed.f['carbon_dioxide']
+                                  + 1.0*feed.f['carbon_monoxide']
+				  + 1.0*feed.f['methane']
+				  + 2.0*feed.f['ethane']
+				  + 3.0*feed.f['propane']
+				  + 4.0*feed.f['n_butane'];
+    exhaust.f['carbon_monoxide'] = 0 {mole/hr};
+    exhaust.f['methane'] = 0 {mole/hr};
+    exhaust.f['ethane'] = 0 {mole/hr};
+    exhaust.f['propane'] = 0 {mole/hr};
+    exhaust.f['n_butane'] = 0 {mole/hr};
+    
+    exhaust.H_flow = feed.H_flow;
+
+    (* zero pressure drop - unrealistic! *)
+    exhaust.P = feed.P;
+        
+    
+    METHODS
+    METHOD seqmod;
+	RUN mix.seqmod;
+	RUN fuel.seqmod;
+	RUN air.seqmod;
+	RUN feed.seqmod;
+	RUN exhaust.seqmod;
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+
+	RUN fuel.specify;
+	RUN air.specify;
+    END specify;
+    METHOD values;
+	RUN mix.values;
+	RUN fuel.values;
+	RUN air.values;
+	RUN feed.values;
+	RUN exhaust.values;
+	
+	air.flow := 10 * fuel.flow;
+    END values;
+END BurnerUnit;
+
+MODEL PreReformerUnit(
+    Ri WILL_BE VaporStream;
+    Xi WILL_BE VaporStream;
+    Ro WILL_BE VaporStream;
+    Xo WILL_BE VaporStream;
+    A WILL_BE area;
+    );
+
+    Q IS_A energy_rate;
+    U IS_A heat_transfer_coefficient;
+    
+    Q = U*A*(Xo.T-Ro.T);
+    Ro.H_flow = Ri.H_flow + Q;
+    Xo.H_flow = Xi.H_flow - Q;
+    
+    FOR i IN Xi.comp CREATE
+	Xo.f[i] = Xi.f[i];
+    END FOR;
+    
+    Ro.f['nitrogen'] = Ri.f['nitrogen'];
+    Ro.f['oxygen'] = 0;
+    Ro.f['hydrogen'] = Ri.f['hydrogen'] + 4*Ri.f['oxygen']
+                       - Ri.f['ethane'] - 2*Ri.f['propane']
+                       - 3*Ri.f['n_butane'];
+    Ro.f['water'] = Ri.f['water'];
+    Ro.f['carbon_dioxide'] = Ri.f['carbon_dioxide'];
+    Ro.f['carbon_monoxide'] = Ri.f['carbon_monoxide'] + 2*Ri.f['oxygen'];
+    Ro.f['methane'] = Ri.f['methane'] + 2*Ri.f['ethane']
+                      + 3*Ri.f['propane'] + 4*Ri.f['n_butane']
+                      - 2*Ri.f['oxygen'];
+    Ro.f['ethane'] = 0;
+    Ro.f['propane'] = 0;
+    Ro.f['n_butane'] = 0;
+    
+    Xo.P = Xi.P;
+    Ro.P = Ri.P;
+    
+    METHODS
+    METHOD seqmod;
+	RUN Ri.seqmod;
+	RUN Xi.seqmod;
+	RUN Ro.seqmod;
+	RUN Xo.seqmod;
+	
+	U.fixed := TRUE;
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+	
+	RUN Ri.specify;
+	RUN Xi.specify;
+	
+	A.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN Ri.values;
+	RUN Xi.values;
+	RUN Ro.values;
+	RUN Xo.values;
+	
+	A := 40 {cm^2};
+	U := 10 {BTU/ft^2/hr/R}; (* Perry's table 11-5, p.11-26 *)
+    END values;
+END PreReformerUnit;
+
+MODEL ReformerSection(
+    Ri WILL_BE VaporStream;     (* Reactant in *)
+    Hi WILL_BE VaporStream;     (* Pure Hydrogen in *)
+    Xi WILL_BE VaporStream;     (* Burner Exhaust in *)
+    Ro WILL_BE VaporStream;     (* Reactant out *)
+    Ho WILL_BE VaporStream;     (* Pure Hydrogen out *)
+    Xo WILL_BE VaporStream;     (* Burner Exhaust out *)
+    Cat WILL_BE mass;             (* Catalyst Mass *)
+    A_heat WILL_BE area;
+    A_membrane WILL_BE area;
+    );
+    
+    Hx IS_A HydrogenStream;           (* H2 Permeate pseudo-stream *)
+    Q_heat, Q_membrane IS_A energy_rate; (* Heat transfer across walls *)
+    U_heat, U_membrane IS_A heat_transfer_coefficient;  
+    
+    FluxRate IS_A volume_flux_rate;
+    
+    r1, r2, r3 IS_A reaction_rate; 
+    P_me, P_wa, P_co, P_h2, P_co2 IS_A partial_pressure;
+    R IS_A gas_constant;
+    Den, K_p2 IS_A factor;
+    K_p1, K_p3 IS_A pressure_squared;
+    
+    (* Kinetic data *)
+    H_K_co, H_K_h2, H_K_wa IS_A real_constant;
+    A_K_co, A_K_h2_sqr IS_A real_constant;
+    A_K_wa IS_A factor_constant;
+    
+    E1, E2, E3 IS_A real_constant;
+    A1, A2, A3 IS_A factor_constant;
+    Units1, Units2, Units3 IS_A real_constant;
+    
+    H_K_co :== -140.0 {kJ/mole};
+    H_K_wa :==   15.9 {kJ/mole};
+    H_K_h2 :==  -93.4 {kJ/mole};
+    A_K_co :== 5.127e-13 {kPa^-1};
+    A_K_h2_sqr :== 3.22624e-19 {kPa^-1};  (* 5.68e-10 ^ 2 *)
+    A_K_wa :== 9.251;
+    
+    E1 :== 209.2 {kJ/mole};
+    E2 :==  15.4 {kJ/mole};
+    E3 :== 109.4 {kJ/mole};
+    A1 :== 5.922e8;
+    A2 :== 6.028e-4;
+    A3 :== 1.093e3;
+    Units1 :== 1 {kg_mole^4/kg^4/s^4/kPa};
+    Units2 :== 1 {kg_mole/kg/s/kPa};
+    Units3 :== 1 {kg_mole^4/kg^4/s^4/kPa};
+    
+    (* Reaction kinetics *)
+    P_me  = Ro.P * Ro.y['methane'];
+    P_wa  = Ro.P * Ro.y['water'];
+    P_h2  = Ro.P * Ro.y['hydrogen'];
+    P_co  = Ro.P * Ro.y['carbon_monoxide'];
+    P_co2 = Ro.P * Ro.y['carbon_dioxide'];
+    
+    Den = 1 + A_K_co*exp(H_K_co/(R*Ro.T))*P_co
+            + ((A_K_h2_sqr*P_h2)^(0.5))*exp(H_K_h2/(R*Ro.T))
+	    + A_K_wa*exp(H_K_wa/(R*Ro.T))*P_wa/P_h2;
+	    
+    K_p1 = ( 1.198e17 {kPa^2} )*exp( (-26830 {K}) / Ro.T );
+    K_p2 = ( 1.767e-2 {kPa^0} )*exp( (  4400 {K}) / Ro.T );
+    K_p3 = ( 2.117e15 {kPa^2} )*exp( (-22430 {K}) / Ro.T );
+    
+    (* Reaction rates *)
+    r1 = ( Units1 * (P_me*(P_wa^(0.5))/(P_h2^(1.25)))^4 )^(0.25) *
+         (1-P_co *P_h2^3/(K_p1*P_me*P_wa  )) / ( Den^2 );
+    r2 = Units2        * (P_co*(P_wa^(0.5))/(P_h2^(0.50))) *
+         (1-P_co2*P_h2  /(K_p2*P_co*P_wa  )) / ( Den^2 );
+    r3 = ( Units3 * (P_me*(P_wa      )/(P_h2^(1.75)))^4 )^(0.25) *
+         (1-P_co2*P_h2^4/(K_p3*P_me*P_wa^2)) / ( Den^2 );
+	    
+	 
+    (* energy balances *)
+    Xo.H_flow = Xi.H_flow - Q_heat;
+    Ro.H_flow = Ri.H_flow + Q_heat - Q_membrane - Hx.H_flow;
+    Ho.H_flow = Hi.H_flow + Q_membrane + Hx.H_flow;
+    
+    Q_heat = U_heat*A_heat*(Xo.T - Ro.T);
+    Q_membrane = U_membrane*A_membrane*(Ro.T - Ho.T);
+    
+    (* mass balances for Exhaust and Hydrogen streams *)
+    FOR i IN Xi.comp CREATE
+	Xo.f[i] = Xi.f[i];
+    END FOR;
+    FOR i IN Hi.comp CREATE
+	Ho.f[i] = Hi.f[i] + Hx.f[i];
+    END FOR;
+    
+    (* mass balances (+reaction) for the Reactant stream *)
+    Ro.f['nitrogen'] = Ri.f['nitrogen'] - Hx.f['nitrogen'];
+    Ro.f['oxygen'] = Ri.f['oxygen'] - Hx.f['oxygen'];
+    Ro.f['hydrogen'] = Ri.f['hydrogen'] + Cat*(3*r1 + r2 + 4*r3)
+        - Hx.f['hydrogen'];
+    Ro.f['water'] = Ri.f['water'] + Cat*(-1*r1 - r2 - 2*r3) - Hx.f['water'];
+    Ro.f['carbon_monoxide'] = Ri.f['carbon_monoxide'] + Cat*(r1 - r2)
+        - Hx.f['carbon_monoxide'];
+    Ro.f['carbon_dioxide'] = Ri.f['carbon_dioxide'] + Cat*(r2 + r3)
+	- Hx.f['carbon_dioxide'];
+    Ro.f['methane'] = Ri.f['methane'] + Cat*(-1*r1 - r3) - Hx.f['methane'];
+    Ro.f['ethane'] = Ri.f['ethane'] - Hx.f['ethane'];
+    Ro.f['propane'] = Ri.f['propane'] - Hx.f['propane'];
+    Ro.f['n_butane'] = Ri.f['n_butane'] - Hx.f['n_butane'];
+    
+    
+    (* membrane calculations - based on data from www.rebresearch.com.
+      Corrleations derived from data at 400 C.  Units are cm^3 hydrogen
+      per cm^2 membrane per minute.  I *BELIEVE* that the cm^3 are
+      actually Standard cc per minute. *)
+    FluxRate = 0.44557 {cm^3/cm^2/min/psi} * P_h2
+               - 8.509e-4 {cm^3/cm^2/min/psi^2} * P_h2^2;
+    Hx.f['hydrogen'] = FluxRate * A_membrane * 1 {atm} / 298 {K} / R;
+    
+    
+    (* Specs for the Hydrogen Permeate *)
+    Hx.T = Ro.T;
+    Hx.P = Ho.P;
+    
+    (* Zero Pressure Drop - unrealistic! *)
+    Ro.P = Ri.P;
+    Ho.P = Hi.P;
+    Xo.P = Xi.P;
+    
+    Ri_methane ALIASES Ri.f['methane'];
+    Ro_methane ALIASES Ro.f['methane'];
+    Ri_hydrogen ALIASES Ri.f['hydrogen'];
+    Ro_hydrogen ALIASES Ro.f['hydrogen'];
+    
+    METHODS
+    METHOD seqmod;
+	RUN Hi.seqmod;
+	RUN Ri.seqmod;
+	RUN Xi.seqmod;
+	RUN Ho.seqmod;
+	RUN Ro.seqmod;
+	RUN Xo.seqmod;
+	RUN Hx.seqmod;
+    
+	U_heat.fixed := TRUE;
+	U_membrane.fixed := TRUE;
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+
+	RUN Hi.specify;
+	RUN Ri.specify;
+	RUN Xi.specify;
+	
+	Cat.fixed := TRUE;
+	A_heat.fixed := TRUE;
+	A_membrane.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN Hi.values;
+	RUN Ri.values;
+	RUN Xi.values;
+	RUN Ho.values;
+	RUN Ro.values;
+	RUN Xo.values;
+	RUN Hx.values;
+    
+        U_heat     := 10 {BTU/ft^2/hr/R}; (* Perry's table 11-5, p.11-26 *)
+	U_membrane :=  2 {BTU/ft^2/hr/R}; (* Perry's table 11-4, p.11-25 *)
+	
+	Cat := 1 {gram};
+	A_heat := 2 {cm^2};
+	A_membrane := 25 {cm^2};
+	
+	Hi.T := 800 {K};
+	Ho.T := 800 {K};
+	Ri.T := 800 {K};
+	Ro.T := 800 {K};
+	Xi.T := 1800 {K};
+	Xo.T := 1600 {K};
+    END values;
+END ReformerSection;
+
+MODEL CocurrentReformer(
+    Ri WILL_BE VaporStream;     (* Reactant in *)
+    Hi WILL_BE VaporStream;     (* Pure Hydrogen in *)
+    Xi WILL_BE VaporStream;     (* Burner Exhaust in *)
+    Ro WILL_BE VaporStream;     (* Reactant out *)
+    Ho WILL_BE VaporStream;     (* Pure Hydrogen out *)
+    Xo WILL_BE VaporStream;     (* Burner Exhaust out *)
+    NStages WILL_BE integer_constant;
+) WHERE ( NStages >= 3; );
+
+    R[2..NStages] IS_A VaporStream;
+    H[2..NStages] IS_A VaporStream;
+    X[2..NStages] IS_A VaporStream;
+    Cat IS_A mass;
+    A_q[1..NStages], A_mem IS_A area;
+    
+    SectionTemp IS_A temperature;
+    
+    (* Hook up the reformer *)
+    FOR i IN [2..NStages-1] CREATE
+	Section[i] IS_A ReformerSection(R[i], H[i], X[i],
+	    R[i+1], H[i+1], X[i+1], Cat, A_q[i], A_mem);
+	R[i+1].T = SectionTemp;
+    END FOR;
+    
+    (* Attach the inputs and outputs *)
+    Section1 IS_A ReformerSection(Ri, Hi, Xi,
+        R[2], H[2], X[2], Cat, A_q[1], A_mem);
+    SectionN IS_A ReformerSection(R[NStages], H[NStages], X[NStages],
+        Ro, Ho, Xo, Cat, A_q[NStages], A_mem);
+    R[2].T = SectionTemp;
+    Ro.T = SectionTemp;
+    
+    METHODS
+    METHOD seqmod;
+	FOR i IN [2..NStages-1] DO
+	    RUN Section[i].seqmod;
+	END FOR;
+	RUN Section1.seqmod;
+	RUN SectionN.seqmod;
+	
+	SectionTemp.fixed := TRUE;
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+	
+	RUN Ri.specify;
+	RUN Hi.specify;
+	RUN Xi.specify;
+    
+	Cat.fixed := TRUE;
+	A_mem.fixed := TRUE;
+    END specify;
+    METHOD values;
+	FOR i IN [2..NStages-1] DO
+	    RUN Section[i].values;
+	END FOR;
+	RUN Section1.values;
+	RUN SectionN.values;
+
+	SectionTemp := 800 {K};
+	
+	Cat := 1 {gram};
+	A_mem := 30 {cm^2};
+	A_q[1..NStages] := 1 {cm^2};
+    END values;
+END CocurrentReformer;
+
+(* ----- MAIN MODEL -------------------------------------------------- *)
+
+MODEL main;
+    Fuel, Reactant IS_A NaturalGasFeed;
+    Air IS_A AirFeed;
+    Steam IS_A SteamFeed;
+    Hydrogen IS_A HydrogenStream;
+    
+    Hin IS_A HydrogenStream;
+    
+    BurnerExhaust, Xin, Exhaust IS_A VaporStream;
+    Hout IS_A VaporStream;
+    WetGas, Pre_Rin, Rin, OffGas IS_A VaporStream;
+    
+    NS IS_A integer_constant;
+    t_Catalyst IS_A mass;
+    A_pre, t_A_q, t_A_membrane IS_A area;
+    c_CH4_conversion, c_H2_recovery, WaterRatio IS_A factor;
+    WaterOut IS_A molar_rate;
+    
+    Burner IS_A BurnerUnit(Fuel, Air, BurnerExhaust);
+    Mix_r1 IS_A MixerUnit(Reactant, Steam, WetGas);
+    Mix_r2 IS_A MixerUnit(WetGas, Hydrogen, Pre_Rin);
+    PreReformer IS_A PreReformerUnit(Pre_Rin, BurnerExhaust, Rin, Xin, A_pre);
+    Reformer IS_A CocurrentReformer(Rin, Hin, Xin, OffGas, Hout, Exhaust, NS);
+    
+    NS :== 100;
+    
+    Cat ALIASES Reformer.Cat;
+    A_mem ALIASES Reformer.A_mem;
+    
+    Steam.f['water'] = WaterRatio * Rin.f['methane'];
+    
+    (* Excess air for burner - see Perry's p.27-25, fig. 27-12 *)
+    Air.f['oxygen'] = 1.5 * ( Air.f['oxygen'] - BurnerExhaust.f['oxygen'] );
+    
+    (* reaction efficiency *)
+    (* OffGas.f['methane'] = 0.1 * Reactant.f['methane']; *)
+    
+    (* Recovery Efficiency *)
+    Hout.f['hydrogen'] = 9*OffGas.f['hydrogen'];
+    
+    (* some calculated output variables *)
+    c_CH4_conversion = 1 - f_MethaneLost/f_MethaneIn;
+    c_H2_recovery = f_HydrogenOut/(f_HydrogenOut+f_HydrogenLost);
+    t_A_q = SUM[Reformer.A_q[1..NS]];
+    t_A_membrane = A_mem * NS;
+    t_Catalyst = Cat * NS;
+    f_HydrogenOut ALIASES Reformer.Ho.f['hydrogen'];
+    f_HydrogenLost ALIASES Reformer.Ro.f['hydrogen'];
+    f_MethaneIn ALIASES Reformer.Ri.f['methane'];
+    f_MethaneLost ALIASES Reformer.Ro.f['methane'];
+    f_CarbonMonoxide ALIASES Reformer.Ro.f['carbon_monoxide'];
+    WaterOut = f_HydrogenOut - Steam.f['water'];
+    
+    METHODS
+    METHOD default_self;
+    END default_self;
+    METHOD seqmod;
+	RUN Burner.seqmod;
+	RUN Mix_r1.seqmod;
+	RUN Mix_r2.seqmod;
+	RUN PreReformer.seqmod;
+	RUN Reformer.seqmod;
+	
+	WaterOut.lower_bound := -10 {mole/min};
+    END seqmod;
+    METHOD specify;
+	RUN seqmod;
+
+	RUN Fuel.specify;
+	RUN Reactant.specify;
+	RUN Steam.specify;
+	RUN Air.specify;
+	RUN Hin.specify;
+	RUN Hydrogen.specify;
+	
+	Air.flow.fixed := FALSE;
+	Steam.flow.fixed := FALSE;
+	Hydrogen.flow.fixed := FALSE;
+	
+	Rin.T.fixed := TRUE;
+	Rin.y['hydrogen'].fixed := TRUE;
+	Cat.fixed := TRUE; 
+	(*	A_mem.fixed := TRUE; *)
+	WaterRatio.fixed := TRUE;
+    END specify;
+    METHOD values;
+	RUN Burner.values;
+	RUN Mix_r1.values;
+	RUN Mix_r2.values;
+	RUN PreReformer.values;
+	RUN Reformer.values;
+	
+	Fuel.flow := 0.075 {mole/min};
+	Reactant.flow := 0.2 {mole/min};
+	Hin.flow := 1e-7 {mole/min};
+	
+	Steam.P := 150 {psi};
+	Reactant.P := 150 {psi};
+	Hydrogen.P := 150 {psi};
+	
+	Rin.T := 800 {K};
+	Rin.y['hydrogen'] := 0.01;
+	Cat := 1 {gram};
+	A_mem := 40 {cm^2};
+	WaterRatio := 3;
+    END values;
+END main;
+
+(*************************************************************************)
+
+(*  Art's original model ...
+  
+MODEL reformer(
+    cd WILL_BE components_data;
+    CH4in WILL_BE stream;
+    H2Oin WILL_BE stream;
+    PROD WILL_BE stream;)
+    
+    Qin IS_A energy_flow;
+    Qin = PROD.H_flow - CH4in.H_flow - H2Oin.H_flow;
+    
+METHODS
+
+METHOD specify;
+END specify;
+
+END reformer;
+
+MODEL hydrogenPlant;
+
+
+    (* values set in METHOD default_self *)
+
+    pdV  IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
+    pdL  IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture', 'none');
+    pdVL IS_A phases_data('VL', 'ideal_vapor_mixture',
+                             'UNIFAC_liquid_mixture', 'none');
+    equilibrated IS_A start_false;
+    
+
+	(* Qin is unit specific *)
+	Qin     IS_A energy_rate;
+	
+
+	MethaneFeed     IS_A stream(cd, pdV, equilibrated);
+	WaterFeed	IS_A stream(cd, pdV, equilibrated);
+	refOut	        IS_A stream(cd, pdV, equilibrated);
+	
+	ref IS_A reformer(cd, MethaneFeed, WaterFeed, refOut);
+
+METHODS
+
+METHOD default_self;
+    H2  := 'hydrogen';
+    CO  := 'carbon_monoxide';
+    CO2 := 'carbon_dioxide';
+    C1  := 'methane';
+    C2  := 'ethane';
+    C3  := 'propane';
+    H2O := 'water';
+END default_self;
+    
+METHOD specify;
+    
+    RUN MethaneFeed.reset;
+    RUN WaterFeed.reset;
+    RUN refOut.reset;
+    
+END specify;
+
+METHOD values;
+    MethaneFeed.T            := 300 {K};
+    MethaneFeed.P            := 200 {psia};
+    MethaneFeed.state.f[H2]  := 0.0 {kmol/hr};
+    MethaneFeed.state.f[CO]  := 0.0 {kmol/hr};
+    MethaneFeed.state.f[CO2] := 0.0 {kmol/hr};
+    MethaneFeed.state.f[C1]  := 0.93 {kmol/hr};
+    MethaneFeed.state.f[C2]  := 0.06 {kmol/hr};
+    MethaneFeed.state.f[C3]  := 0.01 {kmol/hr};
+    MethaneFeed.state.f[H2O] := 0.0 {kmol/hr};
+
+    WaterFeed.flow           := 1 {kmol/hr};
+    WaterFeed.T              := 300 {K};
+    WaterFeed.P              := 200 {psia};
+    WaterFeed.state.f[H2]    := 0.0 {kmol/hr};
+    WaterFeed.state.f[CO]    := 0.0 {kmol/hr};
+    WaterFeed.state.f[CO2]   := 0.0 {kmol/hr};
+    WaterFeed.state.f[C1]    := 0.0 {kmol/hr};
+    WaterFeed.state.f[C2]    := 0.0 {kmol/hr};
+    WaterFeed.state.f[C3]    := 0.0 {kmol/hr};
+    WaterFeed.state.f[H2O]   := 1.0 {kmol/hr};
+    
+    refOut.T            := 300 {K};
+    refOut.P            := 190 {psia};
+    refOut.state.f[H2]  := 0.0 {kmol/hr};
+    refOut.state.f[CO]  := 0.0 {kmol/hr};
+    refOut.state.f[CO2] := 0.0 {kmol/hr};
+    refOut.state.f[C1]  := 0.93 {kmol/hr};
+    refOut.state.f[C2]  := 0.06 {kmol/hr};
+    refOut.state.f[C3]  := 0.01 {kmol/hr};
+    refOut.state.f[H2O] := 0.0 {kmol/hr};
+
+END values;
+
+END hydrogenPlant;
+
+*)
+
+MODEL test;
+    Q,Q2 IS_A energy_rate;
+
+    pd_w IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
+    pd_w2 IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
+    pd_r IS_A phases_data('V', 'ideal_vapor_mixture', 'none', 'none');
+    
+    cd_w IS_A components_data(['water'],'water');
+    cd_w2 IS_A components_data(['water'],'water');
+    cd_r IS_A components_data(['hydrogen','oxygen'],'oxygen');
+    
+    equil_w IS_A start_false;
+    equil_w2 IS_A start_false;
+    equil_r IS_A start_false;
+    
+    reactant IS_A stream(cd_r, pd_r, equil_r);
+    water    IS_A stream(cd_w, pd_w, equil_w);
+    water2   IS_A stream(cd_w2, pd_w2, equil_w2);
+    
+    reactant.f['oxygen']   = 0.5 {g_mole/s};
+    reactant.f['hydrogen'] = 1 {g_mole/s};
+    water.f['water'] = 1 {g_mole/s};
+    water2.f['water'] = 1 {g_mole/s};
+    
+    reactant.flow = reactant.f['oxygen'] + reactant.f['hydrogen'];
+    water.flow = water.f['water'];
+    water2.flow = water.f['water'];
+    
+    water.T = 380 {K};
+    reactant.T = water.T;
+    water2.T = water.T + 1 {K};
+    
+    water.P = 1 {atm};
+    reactant.P = water.P;
+    water2.P = water.P;
+    
+    Q = water.H_flow - reactant.H_flow;
+    Q2 = water2.H_flow - water.H_flow;
+    
+    METHODS
+    METHOD default_self;
+    END default_self;
+    METHOD specify;
+    END specify;
+    METHOD values;
+    END values;
+END test;
+

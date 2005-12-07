@@ -1,0 +1,72 @@
+DELETE TYPES;
+DELETE ttps;
+READ FILE "stream_holdup.a4l";
+COMPILE ttps OF test_two_phase_stream;
+BROWSE {ttps};
+PROBE current {ttps.t1.state.slack_PhaseDisappearance['liquid1']} {};
+PROBE current {ttps.t1.state.slack_PhaseDisappearance['vapor']} {};
+RUN {ttps.values};
+RUN {ttps.reset};
+ASSIGN {ttps.t1.f['ethanol']} 0.001 {mole/second};
+ASSIGN {ttps.t1.f['methanol']} 0.001 {mole/second};
+SOLVE {ttps} WITH QRSlv;
+
+ASSIGN {ttps.t1.equilibrated} 1 {*};
+RUN {ttps.reset};
+ASSIGN {ttps.t1.T.fixed} 0 {*};
+ASSIGN {ttps.t1.state.phase_fraction['vapor'].fixed} 1 {*};
+SOLVE {ttps} WITH QRSlv;
+
+DELETE SYSTEM;
+ASSIGN {ttps.t1.state.phase_fraction['vapor'].fixed} 0 {*};
+ASSIGN {ttps.t1.T.fixed} 1 {*};
+ASSIGN {ttps.t1.T} 373.5 {Kelvin};
+SOLVE {ttps.t1} WITH QRSlv;
+
+ASSIGN {ttps.t1.T} 380 {Kelvin};
+SOLVE {ttps.t1} WITH QRSlv;
+
+ASSIGN {ttps.t1.T} 370 {Kelvin};
+SOLVE {ttps.t1} WITH QRSlv;
+
+
+######################################
+# Repeat for water as only component #
+######################################
+
+DELETE TYPES;
+DELETE ttps;
+READ FILE "AWWstream_holdup.a4c";
+COMPILE ttps OF test_two_phase_stream;
+BROWSE {ttps};
+PROBE current {ttps.t1.state.slack_PhaseDisappearance['liquid1']} {};
+PROBE current {ttps.t1.state.slack_PhaseDisappearance['vapor']} {};
+RUN {ttps.values};
+RUN {ttps.reset};
+SOLVE {ttps} WITH QRSlv;
+
+ASSIGN {ttps.t1.equilibrated} 1 {*};
+RUN {ttps.reset};
+ASSIGN {ttps.t1.T.fixed} 0 {*};
+ASSIGN {ttps.t1.state.phase_fraction['vapor'].fixed} 1 {*};
+SOLVE {ttps} WITH QRSlv;
+
+DELETE SYSTEM;
+ASSIGN {ttps.t1.state.phase_fraction['vapor'].fixed} 0 {*};
+ASSIGN {ttps.t1.T.fixed} 1 {*};
+ASSIGN {ttps.t1.T} 373.5 {Kelvin};
+SOLVE {ttps.t1} WITH QRSlv;
+
+ASSIGN {ttps.t1.T} 380 {Kelvin};
+SOLVE {ttps.t1} WITH QRSlv;
+
+ASSIGN {ttps.t1.T} 370 {Kelvin};
+SOLVE {ttps.t1} WITH QRSlv;
+
+
+
+
+
+
+
+

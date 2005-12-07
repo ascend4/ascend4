@@ -1,0 +1,28 @@
+REQUIRE "stream_holdup.a4l";
+
+MODEL htbal;
+    cd IS_A components_data(['water'],'water');
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L','none','UNIFAC_liquid_mixture','none');
+    equilibrated IS_A boolean;
+    w IS_A stream(cd,pdL,equilibrated);
+    s IS_A stream(cd,pdV,equilibrated);
+    Q IS_A energy_rate;
+    Q = s.H_flow-w.H_flow;
+    
+METHODS
+    METHOD values;
+	w.P := 1 {atm};
+	w.T := 353.2 {K};
+	w.f['water'] := 1.0 {lb_mole/s}/18;
+	s.P := 1 {atm};
+	s.T := 353.2 {K};
+	s.f['water'] := 1.0 {lb_mole/s}/18;
+	equilibrated := TRUE;
+    END values;
+    
+    METHOD reset;
+	RUN w.reset;
+	RUN s.reset;
+    END reset;
+END htbal;

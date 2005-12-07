@@ -1,0 +1,859 @@
+REQUIRE "thermodynamics.a4l";
+(* => thermodynamics.a4l, components.a4l, phases.a4l, atoms.a4l, measures.a4l,
+ *    system.a4l, basemodel.a4l *)
+PROVIDE "stream_holdup.a4l";
+
+(*
+ *  stream_holdup.a4l
+ *  by Arthur W. Westerberg and Benjamin A. Allan
+ *  Part of the ASCEND Library
+ *  $Date: 98/06/17 19:31:17 $
+ *  $Revision: 1.4 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/stream_holdup.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+MODEL sh_base REFINES cmumodel;
+(* This MODEL anchors the stream-holdup library models. This MODEL
+ * is supposed to be empty except for notes documenting the library.
+ *)
+NOTES
+'licensing' SELF {This library is subject to the GNU Public License v.2.0}
+'new users' SELF {
+The models "stream" and "holdup" provide easy-to-use (really!) interfaces
+to stream and control volume calculations. "detailed_stream" and
+"detailed_holdup" are for advanced modelers who wish to create very
+efficient models.
+}
+'purpose' SELF {
+Models for single and multiphase, multicomponent streams and holdups.
+}
+'created' SELF {November 9, 1997}
+'author' SELF {
+Written by Arthur W. Westerberg and Benjamin A. Allan
+}
+'design goals' SELF {
+We structured these stream/holdup models to allow us to model a
+flash unit by sharing the phase information for the vapor and
+liquid product streams from a flash unit with the state of the
+flash unit.  See the flash model library.  Streams and holdups are
+treated equivalently in these models -- with the former being a set
+of flows and a state and the later a set of amounts and a state.
+}
+'telephone support' SELF {
+You must be kidding. CAPD consortium sponsors can contact the authors
+further consultancy. Everyone else can submit questions, suggestions,
+and bug reports via the World Wide Web.
+}
+'URL' SELF {http://www.cs.cmu.edu/~ascend}
+'last revised' SELF {$Revision: 1.4 $}
+END NOTES;
+END sh_base;
+
+
+MODEL detailed_stream(
+	state WILL_BE thermodynamics;
+) REFINES sh_base;
+
+NOTES 'purpose' SELF {
+A typical user will not use "detailed_stream".  The
+"stream" model given later in this set of models has a part
+which is a detailed_stream. detailed_stream  sets up the
+extensive variables (quantity dependent) and their
+relationships for a stream.
+}
+END NOTES;
+
+	components ALIASES state.cd.components;
+	phases ALIASES state.pd.phases;
+	P ALIASES state.P;
+	T ALIASES state.T;
+
+	flow "total stream flow rate" IS_A molar_rate;
+	f[components] IS_A molar_rate;
+	V_flow IS_A volume_rate;
+	H_flow IS_A energy_rate;
+
+	flowscale "variable (not solved for) used for scaling"
+		IS_A molar_rate_scale;
+	FOR i IN components CREATE
+	f_eqn[i]: f[i]/flowscale = state.y[i]*flow/flowscale;
+	END FOR;
+	(* Do not write "flow = sum(f[i])" because it is redundant with
+ 	* f_eqn and sum(y[i]) = 1.
+ 	*)
+
+	V_flowscale "variable (not solved for) used for scaling"
+		IS_A volume_rate_scale;
+	H_flowscale "variable (not solved for) used for scaling"
+		IS_A energy_rate_scale;
+	V_eqn: V_flow/V_flowscale = state.V*flow/V_flowscale;
+	H_eqn: H_flow/H_flowscale = state.H*flow/H_flowscale;
+
+	checkflow "temporary variable (not solved for) used in methods"
+		IS_A molar_rate_scale;
+	boundwidth IS_A bound_width;
+
+METHODS
+(* inherits ClearAll, reset *)
+
+(* The methods assume something like plant scale flow rates,
+ * and not small equipment laboratory flow rates.
+ * For laboratory flow rates, you may need to replace
+ * these methods or add a new ones.
+ *)
+METHOD check_all;
+	RUN state.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	checkflow := SUM[f[components]];
+	IF ( checkflow <= 0{mole/second} ) THEN
+		STOP {Stream flow <= 0{mole/second}!};
+	END IF;
+	IF (abs((flow - checkflow)/checkflow) > 1.0e-6) THEN
+		STOP {Stream flow not equal to sum of component flows!};
+		(* check must be relative to total, or roundoff gets us *)
+	END IF;
+END check_self;
+
+METHOD default_all;
+	RUN state.default_all;
+	boundwidth := 10;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	checkflow := SUM[f[components]];
+	flowscale := abs(checkflow);
+	H_flowscale := flowscale*state.H;
+	V_flowscale := flowscale*state.V;
+	(* Assuming for now that the ATOM defaults are sufficient.
+	 * Probably not quite TRUE.
+	 *)
+END default_self;
+
+METHOD scale_all;
+	RUN state.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	(* set equation scaling from current values. *)
+	flowscale := abs(SUM[f[components]]) * 1.0001 + 0.01{mole/second};
+	flow.nominal := flowscale;
+	FOR i IN components DO
+		IF (abs(f[i]) > 0.01{mole/second}) THEN
+	    		f[i].nominal := abs(f[i]) * 1.0001;
+		ELSE
+			f[i].nominal := 0.01{mole/second};
+		END IF;
+	END FOR;
+	V_flow.nominal := state.V.nominal * flowscale;
+	H_flow.nominal := state.H.nominal * flowscale;
+END scale_self;
+
+METHOD bound_self;
+	flowscale := abs(SUM[f[components]]) * 1.0001 + 0.01{mole/second};
+	flow.upper_bound := flow + abs(boundwidth*flowscale);
+	FOR i IN components DO
+		f[i].upper_bound := f[i] + boundwidth*f[i].nominal;
+	END FOR;
+	H_flow.lower_bound := H_flow - abs(boundwidth*H_flowscale);
+	H_flow.upper_bound := H_flow + abs(boundwidth*H_flowscale);
+END bound_self;
+
+METHOD bound_all;
+	state.boundwidth := boundwidth;
+	RUN state.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD seqmod;
+	RUN state.specify;
+	state.y[components].fixed := FALSE;
+END seqmod;
+
+METHOD specify;
+	RUN state.specify;
+	state.y[components].fixed := FALSE;
+	f[components].fixed := TRUE;
+END specify;
+
+END detailed_stream;
+
+(* ****************************************************************** *)
+
+MODEL detailed_holdup(
+    state WILL_BE thermodynamics;
+) REFINES sh_base;
+
+NOTES 'purpose' SELF {
+A typical user will not use this model.  The holdup model given
+later in this set of models has a part which is a
+detailed_holdup. This model sets up the extensive variables
+(quantity dependent) and their relationships for a holdup.
+}
+END NOTES;
+
+    components ALIASES state.cd.components;
+    phases ALIASES state.pd.phases;
+    P ALIASES state.P;
+    T ALIASES state.T;
+    holdup IS_A mole;
+    m[components] IS_A mole;
+    holdupscale "variable (not solved for) used for scaling" IS_A mole_scale;
+
+    FOR i IN components CREATE
+	species_holdup[i]: m[i]/holdupscale = state.y[i] * holdup/holdupscale;
+    END FOR;
+
+    V_holdup "holdup volume" IS_A volume;
+    H_holdup "holdup enthalpy (not as useful as U_holdup)" IS_A energy;
+    V_holdupscale "variable (not solved for) used for scaling"
+	IS_A volume_scale;
+    H_holdupscale "variable (not solved for) used for scaling"
+	IS_A energy_scale;
+    Volume_eqn: V_holdup/V_holdupscale = state.V * holdup/V_holdupscale;
+    Enthalpy_eqn: H_holdup/H_holdupscale = state.H * holdup/H_holdupscale;
+    checkholdup "variable (not solved for) used in methods"
+	IS_A mole_scale;
+    boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD check_all;
+	RUN state.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	checkholdup := SUM[m[components]];
+	IF ( checkholdup < 0{mole} ) THEN
+		STOP {Holdup mass < 0{mole}!};
+	END IF;
+	IF (abs((holdup - checkholdup)/checkholdup) > 1.0e-6) THEN
+		STOP {holdup not equal to sum of component masses!};
+		(* check must be relative to total, or roundoff gets us *)
+	END IF;
+END check_self;
+METHOD default_all;
+	RUN state.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	boundwidth := 10;
+	checkholdup := SUM[m[components]];
+	holdupscale := abs(checkholdup);
+	H_holdupscale := holdupscale*state.H;
+	V_holdupscale := holdupscale*state.V;
+	(* Assuming for now that the ATOM defaults are sufficient.
+	 * Probably not quite TRUE.
+	 *)
+END default_self;
+
+METHOD bound_self;
+	holdupscale := abs(SUM[m[components]]) * 1.0001 + 0.01{mole};
+	FOR i IN components DO
+		m[i].upper_bound := m[i] + boundwidth*m[i].nominal;
+	END FOR;
+	holdup.upper_bound := holdup + abs(boundwidth*holdupscale);
+	H_holdup.lower_bound := H_holdup - abs(boundwidth*H_holdupscale);
+	H_holdup.upper_bound := H_holdup + abs(boundwidth*H_holdupscale);
+END bound_self;
+
+METHOD bound_all;
+	state.boundwidth := boundwidth;
+	RUN state.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD scale_all;
+	RUN state.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD scale_self;
+	(* set equation scaling from current values. *)
+	holdupscale := abs(SUM[m[components]]) * 1.0001 + 0.01{mole};
+	holdup.nominal := holdupscale;
+	FOR i IN components DO
+		IF (abs(m[i]) > 0.01{mole/second}) THEN
+	    		m[i].nominal := abs(m[i]) * 1.0001;
+		ELSE
+			m[i].nominal := 0.01{mole/second};
+		END IF;
+	END FOR;
+	V_holdup.nominal := state.V.nominal * holdupscale;
+	H_holdup.nominal := state.H.nominal * holdupscale;
+END scale_self;
+
+
+METHOD specify;
+	RUN state.specify;
+	m[components].fixed := TRUE;
+	state.y[components].fixed := FALSE;
+END specify;
+
+END detailed_holdup;
+
+(* ****************************************************************** *)
+
+MODEL select_mixture_type(
+    cd WILL_BE components_data;
+    type WILL_BE symbol_constant;
+) REFINES sh_base;
+
+NOTES
+'purpose' SELF {
+This model sets up the appropriate model for a phase, based on the
+type of the phase.  This MODEL must be edited to accomodate new
+mixture types.
+}
+END NOTES;
+    phase IS_A phase_partials(cd);
+
+    SELECT (type)
+       CASE 'ideal_vapor_mixture':
+	  phase IS_REFINED_TO ideal_vapor_mixture(cd);
+       CASE 'Pitzer_vapor_mixture':
+	  phase IS_REFINED_TO Pitzer_vapor_mixture(cd);
+       CASE 'UNIFAC_liquid_mixture':
+	  phase IS_REFINED_TO UNIFAC_liquid_mixture(cd);
+       CASE 'Wilson_liquid_mixture':
+	  phase IS_REFINED_TO Wilson_liquid_mixture(cd);
+       OTHERWISE:
+    END SELECT;
+    boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD check_self;
+	RUN phase.check_self;
+END check_self;
+
+METHOD check_all;
+	RUN cd.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD default_self;
+	RUN phase.default_self;
+END default_self;
+
+METHOD default_all;
+	RUN cd.default_all;
+	RUN default_self;
+END default_all;
+
+METHOD scale_self;
+	RUN phase.scale_self;
+END scale_self;
+
+METHOD scale_all;
+	RUN cd.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD bound_self;
+	phase.boundwidth := boundwidth;
+	RUN phase.bound_self;
+END bound_self;
+
+METHOD bound_all;
+	RUN cd.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD specify;
+	RUN phase.specify;
+END specify;
+
+END select_mixture_type;
+
+(* ****************************************************************** *)
+
+MODEL stream(
+   cd WILL_BE components_data;
+   pd WILL_BE phases_data;
+   equilibrated WILL_BE boolean;
+) REFINES sh_base;
+
+NOTES
+'purpose' SELF {
+The stream model for flowsheet models in ASCEND.  This is
+the model that users should use when creating a stream.  It
+sets up the appropropriate phase_partials models for each
+of the phases in the stream (by including a
+select_mixture_type model for each phase). It also sets up
+the extensive variables for the stream by including a
+detailed_steam model as a part.
+}
+END NOTES;
+
+   components ALIASES cd.components;
+   phases ALIASES pd.phases;
+   FOR j IN phases CREATE
+       smt[j] IS_A select_mixture_type(cd, pd.phase_type[j]);
+   END FOR;
+
+   FOR j IN phases CREATE
+       phase[j] ALIASES smt[j].phase;
+   END FOR;
+
+   state IS_A thermodynamics(cd, pd, phase, equilibrated);
+   Details IS_A detailed_stream(state);
+
+   P ALIASES phase[pd.reference_phase].P;
+   T ALIASES phase[pd.reference_phase].T;
+   flow ALIASES Details.flow;
+   f ALIASES Details.f;
+   y ALIASES state.y;
+   V_flow ALIASES Details.V_flow;
+   H_flow ALIASES Details.H_flow;
+
+(* put back in when rest is working
+   (* auxillary quantities about a flowsheet stream of common interest: *)
+   mw_y IS_A molar_mass;
+   mole_weight: mw_y = SUM[cd.data[i].mw * y[i] | i IN components];
+
+   mass_flow[components] IS_A mass_rate;
+   FOR i IN components CREATE
+   mass_eqn[i]: mass_flow[i] / (cd.data[i].mw * Details.flowscale)
+		= f[i] / Details.flowscale;
+   END FOR;
+*)
+
+   boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD check_all;
+	RUN pd.check_all;
+	RUN cd.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN smt[phases].check_self;
+	RUN state.check_self;
+	RUN Details.check_self;
+END check_self;
+
+METHOD default_all;
+	RUN pd.default_all;
+	RUN cd.default_all;
+	equilibrated := FALSE;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	RUN smt[phases].default_self;
+	RUN state.default_self;
+	RUN Details.default_self;
+END default_self;
+
+METHOD bound_all;
+	RUN pd.bound_all;
+	RUN cd.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	smt[phases].boundwidth := boundwidth;
+	state.boundwidth := boundwidth;
+	Details.boundwidth := boundwidth;
+	RUN smt[phases].bound_self;
+	RUN state.bound_self;
+	RUN Details.bound_self;
+END bound_self;
+
+METHOD scale_self;
+	RUN smt[phases].scale_self;
+	RUN state.scale_self;
+	RUN Details.scale_self;
+END scale_self;
+
+METHOD scale_all;
+	RUN pd.scale_all;
+	RUN cd.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD seqmod;
+	RUN Details.seqmod;
+END seqmod;
+
+METHOD specify;
+	P.fixed := TRUE;
+	RUN Details.specify;
+END specify;
+
+END stream;
+
+(* ****************************************************************** *)
+
+MODEL holdup(
+   cd WILL_BE components_data;
+   pd WILL_BE phases_data;
+   equilibrated WILL_BE boolean;
+) REFINES sh_base;
+
+NOTES
+'purpose' SELF {
+The holdup model for flowsheet models in ASCEND.  This is
+the model that users should use when creating a holdup.  It
+sets up the appropropriate phase_partials models for each
+of the phases in the holdup (by including a
+select_mixture_type model for each phase). It also sets up
+the extensive variables for the holdup by including a
+detailed_holdup model as a part.
+}
+END NOTES;
+
+   components ALIASES cd.components;
+   phases ALIASES pd.phases;
+   FOR j IN pd.phases CREATE
+       smt[j] IS_A select_mixture_type(cd, pd.phase_type[j]);
+   END FOR;
+
+   FOR j IN pd.phases CREATE
+       phase[j] ALIASES smt[j].phase;
+   END FOR;
+
+   state "control volume thermodynamic state calculation"
+	IS_A thermodynamics(cd, pd, phase, equilibrated);
+   Details "control volume extensive properties"
+	IS_A detailed_holdup(state);
+
+   P ALIASES phase[pd.reference_phase].P;
+   T ALIASES phase[pd.reference_phase].T;
+   holdup ALIASES Details.holdup;
+   m ALIASES Details.m;
+   y ALIASES state.y;
+   V_holdup ALIASES Details.V_holdup;
+   H_holdup ALIASES Details.H_holdup;
+
+(* put back in when rest is working
+   mw_y IS_A molar_mass;
+   mole_weight: mw_y = SUM[cd.data[i].mw * y[i] | i IN components];
+
+   mass[components] IS_A mass;
+   FOR i IN components CREATE
+   mass_eqn[i]: mass[i] / (cd.data[i].mw * Details.holdupscale)
+		 = m[i] / Details.holdupscale;
+   END FOR;
+*)
+
+   boundwidth IS_A bound_width;
+
+METHODS
+
+METHOD check_all;
+	RUN pd.check_all;
+	RUN cd.check_all;
+	RUN check_self;
+END check_all;
+
+METHOD check_self;
+	RUN smt[phases].check_self;
+	RUN state.check_self;
+	RUN Details.check_self;
+END check_self;
+
+METHOD default_all;
+	RUN pd.default_all;
+	RUN cd.default_all;
+	equilibrated := FALSE;
+	RUN default_self;
+END default_all;
+
+METHOD default_self;
+	RUN smt[phases].default_self;
+	RUN state.default_self;
+	RUN Details.default_self;
+END default_self;
+
+METHOD bound_all;
+	RUN pd.bound_all;
+	RUN cd.bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD bound_self;
+	smt[phases].boundwidth := boundwidth;
+	state.boundwidth := boundwidth;
+	Details.boundwidth := boundwidth;
+	RUN smt[phases].bound_self;
+	RUN state.bound_self;
+	RUN Details.bound_self;
+END bound_self;
+
+METHOD scale_self;
+	RUN smt[phases].scale_self;
+	RUN state.scale_self;
+	RUN Details.scale_self;
+END scale_self;
+
+METHOD scale_all;
+	RUN pd.scale_all;
+	RUN cd.scale_all;
+	RUN scale_self;
+END scale_all;
+
+METHOD specify;
+	P.fixed := TRUE;
+	RUN Details.specify;
+END specify;
+
+END holdup;
+
+(* ****************************************************************** *)
+(* **************** test stream and holdup models ******************* *)
+
+MODEL test_sh_model REFINES testcmumodel;
+
+NOTES
+'purpose' SELF {
+This is an anchor MODEL for test stream and holdup models.
+It defines a bunch of methods, all of which assume that the
+tested part is going to be named t1.
+}
+END NOTES;
+METHODS
+
+METHOD check_self;
+	RUN cd.check_self;
+	RUN pd.check_self;
+	RUN t1.check_self;
+END check_self;
+
+METHOD check_all;
+	(* no parts passed in *)
+	RUN check_self;
+END check_all;
+
+METHOD default_self;
+	RUN cd.default_self;
+	RUN pd.default_self;
+	t1.boundwidth := 10;
+	RUN t1.default_self;
+END default_self;
+
+METHOD default_all;
+	(* no parts passed in *)
+	RUN default_self;
+END default_all;
+
+METHOD scale_all;
+	(* no parts passed in *)
+	RUN scale_self;
+END scale_all;
+
+METHOD bound_self;
+	RUN cd.bound_self;
+	RUN pd.bound_self;
+	t1.boundwidth := boundwidth;
+	RUN t1.bound_self;
+END bound_self;
+
+METHOD bound_all;
+	RUN bound_self;
+END bound_all;
+
+METHOD specify;
+	RUN t1.specify;
+END specify;
+
+END test_sh_model;
+
+
+MODEL test_two_phase_stream REFINES test_sh_model;
+
+NOTES
+'purpose' SELF {
+Test the stream MODEL in VL mode.
+}
+END NOTES;
+
+    cd IS_A components_data(['water'], 'water');
+    pd IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+			'UNIFAC_liquid_mixture', 'none');
+    equilibrated IS_A boolean;
+
+    t1 IS_A stream(cd, pd, equilibrated);
+
+METHODS
+
+(* inherits methods check_all (the error flavor)
+ * boundself/all, scaleall, defaultself/all, specify, reset, ClearAll.
+ * Does not inherit scale_self.
+ *)
+METHOD values;
+	t1.P := 1 {atm};
+	t1.T := 365 {K};
+	t1.f['water'] := 0.02 {kmol/s};
+	t1.phase['vapor'].alpha['water'] := 1;
+	equilibrated := FALSE;
+END values;
+
+METHOD scale_self;
+	RUN cd.check_self;
+	RUN pd.check_self;
+	RUN t1.check_self;
+	t1.flow.nominal := 0.03 {kmol/s};
+	t1.f[cd.components].nominal := 0.03 {kmol/s};
+END scale_self;
+
+END test_two_phase_stream;
+
+(* ****************************************************************** *)
+
+MODEL test_two_phase_holdup REFINES test_sh_model;
+
+NOTES
+'purpose' SELF {
+Test the holdup MODEL in VL mode.
+}
+END NOTES;
+
+	cd IS_A components_data(['methanol','ethanol','water'], 'water');
+	pd IS_A phases_data('VL', 'Pitzer_vapor_mixture',
+				'UNIFAC_liquid_mixture', 'none');
+	equilibrated IS_A boolean;
+
+	t1 IS_A holdup(cd, pd, equilibrated);
+
+METHODS
+
+(* inherits methods check_all (the error flavor)
+ * boundself/all, scaleall, defaultself/all, specify, reset, ClearAll.
+ * Does not inherit scale_self.
+ *)
+
+METHOD values;
+	t1.P := 1 {atm};
+	t1.T := 365 {K};
+	t1.m['methanol'] := 0.01 {kmol};
+	t1.m['ethanol'] := 0.015 {kmol};
+	t1.m['water'] := 0.02 {kmol};
+	t1.phase['vapor'].alpha['methanol'] := 2;
+	t1.phase['vapor'].alpha['ethanol'] := 1.5;
+	t1.phase['vapor'].alpha['water'] := 1;
+	equilibrated := FALSE;
+END values;
+
+METHOD scale_self;
+	RUN cd.check_self;
+	RUN pd.check_self;
+	RUN t1.check_self;
+	t1.holdup.nominal := 0.03 {kmol};
+	t1.m[cd.components].nominal := 0.03 {kmol};
+END scale_self;
+
+END test_two_phase_holdup;
+
+(* ****************************************************************** *)
+
+MODEL test_single_phase_stream REFINES test_sh_model;
+
+NOTES
+'purpose' SELF {
+Test the stream MODEL in vapor mode.
+}
+END NOTES;
+
+    cd IS_A components_data(['methanol','ethanol','water'], 'water');
+    pd IS_A phases_data('V', 'Pitzer_vapor_mixture',
+	'none', 'none');
+    equilibrated IS_A boolean;
+
+    t1 IS_A stream(cd, pd, equilibrated);
+
+METHODS
+
+(* inherits methods check_all (the error flavor)
+ * boundself/all, scaleall, defaultself/all, specify, reset, ClearAll.
+ * Does not inherit scale_self.
+ *)
+METHOD scale_self;
+	RUN cd.check_self;
+	RUN pd.check_self;
+	RUN t1.check_self;
+	t1.flow.nominal := 0.03 {kmol/s};
+	t1.f[cd.components].nominal := 0.03 {kmol/s};
+END scale_self;
+
+METHOD values;
+	t1.P := 1 {atm};
+	t1.T := 365 {K};
+	t1.f['methanol'] := 0.01 {kmol/s};
+	t1.f['ethanol'] := 0.015 {kmol/s};
+	t1.f['water'] := 0.02 {kmol/s};
+	equilibrated := FALSE;
+END values;
+
+END test_single_phase_stream;
+
+(* ****************************************************************** *)
+
+MODEL test_material_stream REFINES test_sh_model;
+
+NOTES
+'purpose' SELF {
+Test the stream MODEL in mass-only mode.
+}
+END NOTES;
+
+	cd IS_A components_data(['methanol','ethanol','water'],'water');
+	pd IS_A phases_data('M', 'none', 'none', 'none');
+	equilibrated IS_A start_false;
+	t1 IS_A stream(cd, pd, equilibrated);
+
+METHODS
+
+(* inherits methods check_all (the error flavor)
+ * boundself/all, scaleall, defaultself/all, specify, reset, ClearAll.
+ * Does not inherit scale_self.
+ *)
+METHOD scale_self;
+	RUN cd.check_self;
+	RUN pd.check_self;
+	RUN t1.check_self;
+	t1.flow.nominal := 0.03 {kmol/s};
+	t1.f[cd.components].nominal := 0.03 {kmol/s};
+END scale_self;
+
+METHOD values;
+	t1.P := 1 {atm};
+	t1.T := 365 {K};
+	t1.f['methanol'] := 0.01 {kmol/s};
+	t1.f['ethanol'] := 0.015 {kmol/s};
+	t1.f['water'] := 0.02 {kmol/s};
+	equilibrated := FALSE;
+END values;
+
+END test_material_stream;
+
+(* ****************************************************************** *)

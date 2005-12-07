@@ -1,0 +1,1440 @@
+REQUIRE "atoms.a4l";
+REQUIRE "plot.a4l";
+
+(*
+ *  ivpStep.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 02/07/28 $
+ *  $Revision: 1.7 $
+ *  $Author:  mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/ivpsystem.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994 - 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*============================================================================
+
+    I V P S T E P  .  A 4 C
+    -----------------------------
+
+    AUTHOR:      Arthur W. Westerberg
+
+    DATES:       07/2002 - Original code (AWW)
+                 07/2003 - Tested code.  Works for simple test problem.
+		 (AWW)
+		 12/2003 - Added Tcl script that runs complete simulation
+		 (AWW)
+
+    CONTENTS:	 Models for the numerical integration equations for
+                 the two multistep methods: a bdf for stiff problems
+		 and the Adams Moulton for non-stiff problems.  There
+		 is also a framework within which one creates the
+		 model for the physical system.  These models are for
+		 taking one step of the independent variable.
+
+============================================================================*)
+
+
+(* ---------------------------------------------------------- *)
+
+MODEL ivpBase() REFINES cmumodel();
+
+    (* ----- ivpBase -----
+       The base model for solving DAE initial value problems using the
+       multistep methods: (a) a bdf method for stiff problems and (b)
+       the Adams Moulton method for non-stiff problems.  A DAE ivp
+       model has two types of sets of equations:
+
+       (1) the model of the physical system at the k-th step
+
+	      f(dydx(k), y(k), z(k), u(k), x(k)) = 0
+	      h(y(k), z(k), u(k), x(k))          = 0
+	      u(k) = u(x(k))
+
+	  where y are the state, z the algebraic and u the forcing
+	  variable vectors and x the scalar independent variable, and
+	  where f is a vector of functions equal to the number of
+	  states, h is a vector of algebraic equations equal in number
+	  to the algebraic variables, and where one typically
+	  specifies the forcing variables as functions only of the
+	  independent variable.
+
+      (2) the numerical multistep integration equations
+      
+	      y(k) = y(k-1) + s(x[k]-x[k-1];
+                                y[k-1],y[k-2],...;
+                                dydx[k],dydx[k-1],...)
+	      
+	  These equations relate the states at the current point to
+	  the time derivatives at current and past points and states
+	  at past points.  They are not related to the model of the
+	  physical system but only to the numerical method being used.
+
+       A common solving approach would be to solve the integration
+       equations in an outside loop, and, for each iteration of that
+       outside loop, use a Newton-based method to solve the physical
+       system model for the state derivatives and the algebraic
+       variables.  Often this approach solves the outer loop using a
+       simple substitution method - which can be very slow to
+       converge.  The following figure illustrates.
+ 
+
+                       ------------------     
+            u(x) ->---|   (inner loop)   |---- z  -->
+                      | solve model eqns |
+            ------>---|                  |-- dydx-->-  
+           |           ------------------            |
+           |                                         |
+           |           ------------------            |
+           |          |   (outer loop)   |           |
+            --- y,x =-|  iterate  inte-  |---<-------
+                      |   gration eqns   |
+                      |                  |
+                       ------------------
+
+
+       By creating both the model and integration equations through
+       ASCEND models, ASCEND can simultaneously converge the model
+       and integration equations using its sparse Newton-based solver
+       - thus making the solving much more efficient.  We wrote this
+       model precisely to gain this efficiency.
+       
+
+       The integration module - degrees of freedom considerations
+       
+       For the q-th order bdf and Adams-Moulton (am) methods used
+       here, we write a q-th order polynomial in the independent
+       variable x for each state variable y[k][i].  This polynomial is
+       written in the form of a Taylor Series expanded around the
+       current point x[k].
+
+       A q-th order polynomial has the q+1 polynomial coefficients in
+       it a[k][i]/i!.  The a[k][i] are estimate the q-th derivative of
+       the function at the current point, with the q-th term being an
+       estimate of the error in the fit.  We determine these
+       coefficients by fitting this polynomial and/or the first
+       derivative of this polynomial to past y[j][i] and dy/dt[j][i],
+       j<k, data, respectively, and to the computed value for
+       dy/dt[k][i] at the current point.  We would need to write
+       precisely q+1 such equations for this fitting.  The bdf and am
+       methods differ in which equations we write to do this fitting.
+       See comments in later in the code for the actual polynomials we
+       write.
+
+       We then use this polynomial evaluated at the current point to
+       estimate the state y[k][i] at the current point x[k].
+
+       Looking back at the two boxes in the previous figure, the lower
+       integration box will have these q+1 equations in it, tabulated
+       values for previous points, and the means to use past data and
+       the current estimate for dy/dt[k][i] (the input we show above
+       for this box) to fit the coefficients for each state variable.
+       It will also write the polynomial one additional time to
+       provide the estimate for y[k][i] at the current point, which is
+       the output from this box.  It thus contains q+2 polynomial
+       equations in it, in terms of q+1 unknown coefficients for each
+       state.  The model equations introduce the states y[k][i] and their
+       derivatives dy/dx[k][i] for the current point and the equation to
+       compute the latter in terms of the former, often in the form
+
+           dy/dt[k][i] = f(all y[k],t).  
+
+       So it introduces, in principle two variables and one equation
+       for each state.
+
+       To summarize, the integration box introduces q+1 equations and
+       q+2 variables per state while the model box introduces 1
+       equation and 2 new variables.  The model is in square and
+       solvable.
+
+
+       Predictor behavior
+
+       The polynomial we fit for the current point can easily be used
+       to predict y[k+1][i], the values for the states i at the next
+       time step.  We can also create polynomials to predict any of
+       the non state variables in the problem.  We can include these
+       non state variables in the integration model and use the
+       current and q past values to determine the coefficients for a
+       Taylor Series polynomial that passes through these points.
+       This polynomial would only be useful for predicting as it play
+       no role in solving the problem.  But often predicting one of
+       the algebraic variables might improve the chance to converge
+       the equations.
+
+
+       Error control
+
+       The package checks periodically to see discover the size step
+       it should take to keep the error at that the user has
+       prescribed.  It can also change the order of the polynomial up
+       or down by one if such a move will allow for a larger step.
+
+       We write the polynomial in the form of a Taylor Series around
+       the current point.  So the error in estimating the current
+       point, as a function of the step size we take, is the highest
+       order term in that series.  We back compute the step size
+       needed to obtain the error we allow and use it as the step size
+       for the next integration step.  We keep this step size for the
+       next q steps before checking again.  Changing the order of the
+       polynomial can also affect the error.  This package will change
+       the order up or down by one (i.e., to q-1 or q+1 (keeping in
+       the limits of 1 and 6) if that change allows it to take a
+       larger step.  The next to last term in the Taylor Series
+       estimates the error when using a polynomial of order q-1.  We
+       estimate the derivative for order q+1 as the difference in the
+       q-th derivative between the current point and the previous
+       point divided by the change in x between these two points -
+       i.e., a divided difference which is essentially a free
+       calculation.
+
+
+       Stopping conditions
+
+       We have created this package so one can stop whenever any of
+       the variables we are predicting (all the states and whichever
+       of the non states we select) crosses through zero.  In taking a
+       normal step in this package, we use the error control criterion
+       to fix the step size in the independent variable, x, prior to
+       taking the next step.  If after we solve the model for this
+       step, any one of the variables we have selected to use as
+       stopping conditions changes sign, we fix its value to zero and
+       resolve the entire model to compute the step size.  As more
+       than one such variable may change sign in this final interval,
+       we test after each solution to see if another variable changed
+       sign in the reduced interval we just computed.  If so, we
+       repeat by fixing this new variable to zero and resolving.  In
+       this manner we will find the variable that changed sign at the
+       earliest point in the final interval.
+
+     *)
+
+     (* ----- ivpBase -----
+       TO USE THIS PACKAGE, the user must provide three models that
+       are refinements of models we provide here.  The first two
+       will be refinements of integrationPoint, while the third must be
+       a refinement of ivpStep.  See the comments for those models.
+       Also see the model ivpStep.testModel.a4c, which is a prototype
+       for what the user must write.
+       
+       NOTE: THE MODELS IN THIS LIBRARY ARE WRITTEN USING DIMENSIONLESS
+       QUANTITIES.  THE USER MUST CONVERT ANY DIMENSIONAL STATES
+       AND PREDICTED ALGEBRAIC VARIABLES, AND ALL STOPPING CONDITIONS,
+       ERRORS, ETC., TO DIMENSIONLESS VARIABLES FOR TYING INTO THESE
+       MODELS.
+       
+     *)
+
+    
+END ivpBase;
+
+(* ---------------------------------------------------------- *)
+
+MODEL factorial(
+    N         IS_A integer_constant;
+    )
+WHERE(
+    N>=0;
+    N<=12;  (* Note that 12! = 0.48E9, 2^31=2.1E9 *)
+) REFINES ivpBase();
+    
+    (* create a vector of factorials, where fac[i] contains
+      i!, where i goes from 0 to N *)
+
+    fac[0..N] IS_A factor;
+
+METHODS
+
+    (* ----- factorial ----- *)
+
+    METHOD default_self;
+	fac[0] := 1;
+
+	(* if N=0, the following loop produces no code *)
+	FOR i IN [1..N] DO
+	    fac[i] := i*fac[i-1];
+	END FOR;
+    END default_self;
+
+    (* ----- factorial ----- *)
+
+    METHOD specify;
+	fac[0..N].fixed := TRUE;
+    END specify;
+
+END factorial;
+
+(* ---------------------------------------------------------- *)
+
+MODEL pTrow(
+    set IS_A set OF integer_constant;
+) REFINES ivpBase();
+
+    (* This model is needed and instanced in
+      "MODEL pascalTriangle."  No user should
+      instance it by itself. *)
+
+    col[set] IS_A factor;
+    
+END pTrow;
+
+(* ---------------------------------------------------------- *)
+
+MODEL pascalTriangle(
+    dim IS_A integer_constant;
+) REFINES ivpBase();
+    
+    (* Creates a Pascal Triangle of dimension "dim."
+      A Pascal triangle gives the coefficients for the
+      polynomials resulting from expanding (x-y)^q,
+      for q = 0..dim.  For dim=5, the triangle we form
+      here is
+      
+      row(1): 1  1  1  1  1  1
+      row(2): 1  2  3  4  5
+      row(3): 1  3  6 10
+      row(4): 1  4 10
+      row(5): 1  5
+      row(6): 1
+      
+      The coefficients for q=4 for (x-y)^4 are then in
+      the next to last place in each row, namely
+      1, 4, 6, 4, 1
+      as in
+      (1)x^4 - (4)x^3y + (6)x^2y^2 - (4)xy^3 + (1)y^4.
+      *)
+ 
+    FOR i IN [0..dim] CREATE
+	row[i] IS_A pTrow([0..dim-i]);
+    END FOR;
+    
+    METHODS
+    
+    (* ----- pascalTriangle ----- *)
+
+    METHOD default_self;
+	FOR i IN [0..dim] DO
+	    row[0].col[i] := 1;
+	    row[i].col[0] := 1;
+	END FOR;
+	FOR i IN [1..dim] DO
+	    FOR j IN [1..dim-i] DO
+		row[i].col[j] := row[i-1].col[j]+row[i].col[j-1];
+	    END FOR;
+	END FOR;
+    END default_self;
+
+    (* ----- pascalTriangle ----- *)
+
+    METHOD specify;
+	FOR i IN [0..dim] DO
+	    FOR j IN [0..dim-i] DO
+		row[i].col[j].fixed := TRUE;
+	    END FOR;
+	END FOR;
+    END specify;
+    
+END pascalTriangle;
+
+(* ---------------------------------------------------------- *)
+
+MODEL integrationPoint() REFINES ivpBase();
+    
+(* ---------------------------------------------------------- *)
+(* ------ the user models should be based on this one ------- *)
+(* ---------------------------------------------------------- *)
+
+    (* this model provides storage for the predicted variables,
+      y, and the state derivatives, dydx, at a point related
+      to the independent variable x.  NOTE: y, dydx, AND x MUST
+      BE DIMENSIONLESS VARIABLES.
+      
+      nStates is the total number of states for the problem.
+      nPredVars is the total of state and algebraic variables
+      that the system should predict when stepping to the next
+      point.  If there are no predicted algebraic variables,
+      set it equal to nStates. You must map the predicted
+      algebraic variables into y[nState+1..nPredVars].
+    
+      dx is this x less the x for the current point.
+      
+      The user should write two forms of a model that refines
+      this one to write the equations for the physical model for
+      the problem.
+      
+      The first form should establish the types for the problem
+      variables by using IS_REFINED_TO statements for x, all y,
+      and all dydt variables.  This form will be used for all
+      points except the current point.
+      
+      The second form should refine the first form and add in the
+      model equations - both the dynamic and the algebraic
+      equations.  This form will be for the current point in
+      the model.  *)
+      
+    (* ------------------------------------------------------
+      -------------- test for index problems ----------------
+      -------------------------------------------------------
+      
+      The user can use (possibly by refining) the method
+      provided below called testForIndexProblem to test the
+      problem to see if it has an index greater than one.  This
+      method should set the degrees of freedom for the currentPoint
+      to fix the independent variable x and the states y and to
+      calculate the time derivatives dydx and all the algebraic
+      variables.  The user should then send only the currentPoint
+      instance to the solver.  If ASCEND reports the instance for
+      the currentPoint to be structurally or numerically singular
+      (use the tool Solver/Analyze/Find dependent eqns), the
+      problem has an index greater than one and must be
+      reformulated as the error control of these numerical
+      methods will be inadequate.  *)
+
+    nStates                IS_A integer_constant;
+    nPredVars              IS_A integer_constant;
+    x                      IS_A factor;
+    y[1..nPredVars]        IS_A factor;
+    dydx[1..nStates]       IS_A factor;
+    dx                     IS_A factor;
+    
+    METHODS
+    
+    (* ----- integrationPoint ----- *)
+
+    METHOD default_self;
+	x                      := 0.0;
+	y[1..nPredVars]        := 0.0;
+	dydx[1..nStates]       := 0.0;
+	dx                     := 0.0;
+    END default_self;
+
+    (* ----- integrationPoint ----- *)
+
+    METHOD specify;
+	x.fixed                := TRUE;
+	y[1..nPredVars].fixed  := TRUE;
+	dydx[1..nStates].fixed := TRUE;
+	dx.fixed               := TRUE;
+    END specify;
+    
+    (* ----- integrationPoint ----- *)
+
+    METHOD testForIndexProblem;
+	RUN specify;
+	dydx[1..nStates].fixed        := FALSE;
+	y[nStates+1..nPredVars].fixed := FALSE;
+    END testForIndexProblem;
+
+END integrationPoint;
+
+(* ---------------------------------------------------------- *)
+
+MODEL coefVect(
+    nPredVars              WILL_BE integer_constant;
+) REFINES ivpBase();
+
+    (* a vector for storing the polynomial coefficient for all
+      state variables *)
+    
+    var[1..nPredVars]      IS_A factor;
+    
+    METHODS
+    
+    (* ----- coefVect ----- *)
+
+    METHOD default_self;
+	var[1..nPredVars]       := 0.0;
+    END default_self;
+    
+    (* ----- coefVect ----- *)
+
+    METHOD specify;
+	var[1..nPredVars].fixed := TRUE;
+    END specify;
+    
+END coefVect;
+
+(* ---------------------------------------------------------- *)
+
+MODEL polyCoefs(
+    nPredVars                     WILL_BE integer_constant;
+) REFINES ivpBase();
+    
+    (* storage for the all polynomial coefficients for the numerical
+      method.  Each predicted variable has one polynomial stored
+      for it.  Storage is in the form: a[j].var[i] for
+      coefficient j of the polynomial for variable i. *)
+
+    a[0..6]                       IS_A coefVect(nPredVars);
+    
+    METHODS
+    
+    (* ----- polyCoefs ----- *)
+
+    METHOD default_self;
+	RUN a[0..6].default_self;
+    END default_self;
+    
+    (* ----- polyCoefs ----- *)
+
+    METHOD specify;
+	RUN a[0..6].specify;
+    END specify;
+    
+END polyCoefs;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly1Value(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+
+    (* a model that produces the equations for a first order
+      polynomial - written in the form of a Taylor Series *)
+      
+    FOR i IN [set] CREATE
+	eqnValue[i]:   iP.y[i]    = p.a[0].var[i]
+	   +iP.dx*(p.a[1].var[i]);
+    END FOR;
+
+END poly1Value;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly1Deriv(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+
+    (* a model that produces the equations for the derivative for a
+      first order derivative polynomial
+      - written in the form of a Taylor Series *)
+      
+    FOR i IN [set] CREATE
+	eqnDeriv[i]: iP.dydx[i] = p.a[1].var[i];
+    END FOR;
+    
+END poly1Deriv;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly2Value(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+
+    (* a model that produces the equations for a second order
+      polynomial  - written in the form of a Taylor Series *)
+    
+    FOR i IN [set] CREATE
+	eqnValue[i]:   iP.y[i]    = p.a[0].var[i]
+	   +iP.dx*(p.a[1].var[i]
+ 	   +iP.dx*(p.a[2].var[i]/2));
+    END FOR;
+    
+END poly2Value;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly2Deriv(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+
+    (* a model that produces the equations for the derivative for a
+      second order derivative polynomial
+      - written in the form of a Taylor Series *)
+    
+    FOR i IN [set] CREATE
+	eqnDeriv[i]: iP.dydx[i] = p.a[1].var[i]
+	+iP.dx*(p.a[2].var[i]);
+    END FOR;
+    
+END poly2Deriv;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly3Value(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+
+    (* a model that produces the equations for a third order
+      polynomial - written in the form of a Taylor Series *)
+    
+    FOR i IN [set] CREATE
+	eqnValue[i]:   iP.y[i]    = p.a[0].var[i]
+	   +iP.dx*(p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]/2
+	   +iP.dx*(p.a[3].var[i]/6)));
+    END FOR;
+
+END poly3Value;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly3Deriv(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+
+    (* a model that produces the equations for the derivative for a
+      third order derivative polynomial
+      - written in the form of a Taylor Series *)
+    
+    FOR i IN [set] CREATE
+	eqnDeriv[i]: iP.dydx[i] = p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]
+	   +iP.dx*(p.a[3].var[i]/2));
+    END FOR;
+
+END poly3Deriv;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly4Value(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+    
+    (* a model that produces the equations for a fourth order
+      polynomial - written in the form of a Taylor Series *)
+
+    FOR i IN [set] CREATE
+	eqnValue[i]:   iP.y[i]    = p.a[0].var[i]
+	   +iP.dx*(p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]/2
+	   +iP.dx*(p.a[3].var[i]/6
+	   +iP.dx*(p.a[4].var[i]/24))));
+    END FOR;
+
+END poly4Value;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly4Deriv(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+    
+    (* a model that produces the equations for the derivative for a
+      fourth order derivative polynomial
+      - written in the form of a Taylor Series *)
+
+    FOR i IN [set] CREATE
+	eqnDeriv[i]: iP.dydx[i] = p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]
+	   +iP.dx*(p.a[3].var[i]/2
+	   +iP.dx*(p.a[4].var[i]/6)));
+    END FOR;
+
+END poly4Deriv;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly5Value(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+    
+    (* a model that produces the equations for a fifth order
+      polynomial - written in the form of a Taylor Series *)
+
+    FOR i IN [set] CREATE
+	eqnValue[i]:   iP.y[i]    = p.a[0].var[i]
+	   +iP.dx*(p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]/2
+	   +iP.dx*(p.a[3].var[i]/6
+	   +iP.dx*(p.a[4].var[i]/24
+	   +iP.dx*(p.a[5].var[i]/120)))));
+    END FOR;
+
+END poly5Value;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly5Deriv(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+    
+    (* a model that produces the equations for the derivative for a
+      fifth order derivative polynomial
+      - written in the form of a Taylor Series *)
+
+    FOR i IN [set] CREATE
+	eqnDeriv[i]: iP.dydx[i] = p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]
+	   +iP.dx*(p.a[3].var[i]/2
+	   +iP.dx*(p.a[4].var[i]/6
+	   +iP.dx*(p.a[5].var[i]/24))));
+    END FOR;
+
+END poly5Deriv;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly6Value(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+    
+    (* a model that produces the equations for a sixth order
+      polynomial - written in the form of a Taylor Series *)
+
+    FOR i IN [set] CREATE
+	eqnValue[i]:   iP.y[i]    = p.a[0].var[i]
+	   +iP.dx*(p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]/2
+	   +iP.dx*(p.a[3].var[i]/6
+	   +iP.dx*(p.a[4].var[i]/24
+	   +iP.dx*(p.a[5].var[i]/120
+	   +iP.dx*(p.a[6].var[i]/720))))));
+    END FOR;
+
+END poly6Value;
+
+(* ---------------------------------------------------------- *)
+
+MODEL poly6Deriv(
+    iP                   WILL_BE integrationPoint;
+    p                    WILL_BE polyCoefs;
+    set                  WILL_BE set OF integer_constant;
+) REFINES ivpBase();
+    
+    (* a model that produces the equations for the derivative for a
+      sixth order derivative polynomial
+      - written in the form of a Taylor Series *)
+
+    FOR i IN [set] CREATE
+	eqnDeriv[i]: iP.dydx[i] = p.a[1].var[i]
+	   +iP.dx*(p.a[2].var[i]
+	   +iP.dx*(p.a[3].var[i]/2
+	   +iP.dx*(p.a[4].var[i]/6
+	   +iP.dx*(p.a[5].var[i]/24
+	   +iP.dx*(p.a[6].var[i]/120)))));
+    END FOR;
+
+END poly6Deriv;
+
+(* ---------------------------------------------------------- *)
+
+MODEL multistepEqns(
+    iP[0..7]           WILL_BE integrationPoint;
+    p                  WILL_BE polyCoefs;
+) REFINES ivpBase();
+
+    (* ----- multistepEqns -----
+      Set aside space for a 6th order multistep integration method.
+      
+      Complicating these models is the need for it to exist for
+      all orders q possible for the polynomials one is fitting.
+      For this model, q is to be selected interactively by the
+      person (or script) solving.
+
+      Define
+      (1) y(x) = poly(coef ai, indep var x, order q)
+      (2) f(y(x)) = derivative of poly(...) wrt x
+      where y(x) and f(y(x)) are values computed by the
+      model.    *)
+    
+    (* ----- multistepEqns -----
+    define the sets we will need *)
+    
+    states,
+    nonStates        IS_A set OF integer_constant;
+    states           :== [1..iP[0].nStates];
+    nonStates        :== [iP[0].nStates+1..iP[0].nPredVars];
+
+    (* ----- multistepEqns -----
+    set up polynomials for all points.  When setting up
+    a model involving polynomials of order j, we need to
+    create equations of type pjDerivS for the current
+    point and j-1 past points.  We also need equations of
+    the type pjValueS and pjValueNS for the current point
+    and j past points. *)
+    
+    
+    FOR q IN [0..0] CREATE
+	p1DerivS[q]  IS_A poly1Deriv(iP[q], p, states);
+    END FOR;
+    FOR q IN [0..1] CREATE
+	p1ValueS[q]  IS_A poly1Value(iP[q], p, states);
+	p1ValueNS[q] IS_A poly1Value(iP[q], p, nonStates); 
+
+	p2DerivS[q]  IS_A poly2Deriv(iP[q], p, states);
+    END FOR; 
+    FOR q IN [0..2] CREATE
+	p2ValueS[q]  IS_A poly2Value(iP[q], p, states);
+	p2ValueNS[q] IS_A poly2Value(iP[q], p, nonStates);
+
+	p3DerivS[q]  IS_A poly3Deriv(iP[q], p, states);
+    END FOR;
+    FOR q IN [0..3] CREATE
+	p3ValueS[q]  IS_A poly3Value(iP[q], p, states);
+	p3ValueNS[q] IS_A poly3Value(iP[q], p, nonStates);
+
+	p4DerivS[q]  IS_A poly4Deriv(iP[q], p, states);
+    END FOR;
+    FOR q IN [0..4] CREATE
+	p4ValueS[q]  IS_A poly4Value(iP[q], p, states);
+	p4ValueNS[q] IS_A poly4Value(iP[q], p, nonStates);
+
+	p5DerivS[q]  IS_A poly5Deriv(iP[q], p, states);
+    END FOR;
+    FOR q IN [0..5] CREATE
+	p5ValueS[q]  IS_A poly5Value(iP[q], p, states);
+	p5ValueNS[q] IS_A poly5Value(iP[q], p, nonStates);
+
+	p6DerivS[q]  IS_A poly6Deriv(iP[q], p, states);
+    END FOR;
+    FOR q IN [0..6] CREATE
+	p6ValueNS[q] IS_A poly6Value(iP[q], p, nonStates);
+	p6ValueS[q]  IS_A poly6Value(iP[q], p, states);
+    END FOR;
+
+    METHODS
+    
+    (* ----- multistepEqns ----- *)
+
+    METHOD default_self;
+    END default_self;
+    
+    (* ----- multistepEqns ----- *)
+
+    METHOD specify;
+    END specify;
+    
+END multistepEqns;
+
+(* ---------------------------------------------------------- *)
+
+MODEL ivpStep() REFINES ivpBase();
+
+    (* ----- ivpStep -----
+      The user should implement a model that refines this model
+      and use it to provide the following methods
+      
+      valuesInitialPt
+      specifyInitialPt
+      valuesStepping
+      specifyStepping
+       
+      suitable for it. *)
+    
+    (* ----- ivpStep -----
+      This model sets up the ivpStep model, allocating all the
+      space needed for all the integration points and polynomial
+      coefficients that the multistep methods need.  It also
+      provides the following methods:
+      
+      stepX
+      start
+      incrementPolyOrder
+      decrementPolyOrder
+      setMethodToBdf
+      setMethodToMs
+      
+      stepX: prepares the model to be used to take the next
+      step in the independent variable.  It shifts all the
+      state variables and their derivatives back one step.
+      The Taylor Series polynomial is always written around
+      the current point, which means we have to alter them
+      to account for their "zero" being shifted by deltaX,
+      the step about to be taken.  This shifting is done
+      here.  Finally, this method uses these shifted
+      polynomials to estimate the values for the states and
+      their derivatives at the new current time point.
+      
+      start: should be run just following setting the values
+      for the initial point to start the model at the first
+      integration step it is to take.
+      
+      incrementPolyOrder: increase the order for the
+      polynomial to be used for integrating, unless it is
+      already at the maximum order allowed - here 6.
+      
+      decrementPolyOrder: decrease the order for the
+      polynomial to be used for integrating, unless the
+      order is already one, the least allowed.
+      
+      setMethodToBdf: set the method to use to be bdf.
+      
+      setMethodToAm: set the method to use to be MS.
+    *)
+
+    (* ----- ivpStep ----- *)
+
+    iP[0..7]             IS_A integrationPoint;
+    nStates              ALIASES iP[0].nStates;
+    nPredVars            ALIASES iP[0].nPredVars;
+    p                    IS_A polyCoefs(nPredVars);
+    ms                   IS_A multistepEqns(iP, p);
+
+    usePolyOrder         IS_A integer;
+    useMethod            IS_A symbol;
+    maxStep, maxStepNew  IS_A factor;
+    maxStepOrder         IS_A symbol;
+
+    
+    (* ----- ivpStep -----
+      Define
+      (1) y(x) = poly(coef ai, indep var x, order q)
+      (2) f(y(x)) = derivative of poly(...) wrt x
+      where y(x) and f(y(x)) are values computed by the
+      model.
+      
+      *)
+      
+    (* ----- ivpStep -----
+      Create the bdf model for stiff problems.
+      
+      CASE 'bdf',j: is for writing a bdf method based
+      on j-th order polynomials.
+
+      Write (1) for all points.  In addition write
+      (2) at the current point for the states.
+      *)
+    
+    WHEN (useMethod, usePolyOrder)
+
+    CASE 'bdf',1:
+	FOR q IN [0..1] CREATE
+ 	    USE ms.p1ValueS[q];
+	    USE ms.p1ValueNS[q];
+	END FOR;
+	USE ms.p1DerivS[0];
+    CASE 'bdf',2:
+	FOR q IN [0..2] CREATE
+	    USE ms.p2ValueS[q];
+	    USE ms.p2ValueNS[q];
+	END FOR;
+	USE ms.p2DerivS[0];
+    CASE 'bdf',3:
+	FOR q IN [0..3] CREATE
+	    USE ms.p3ValueS[q];
+	    USE ms.p3ValueNS[q];
+	END FOR;
+	USE ms.p3DerivS[0];
+    CASE 'bdf',4:
+	FOR q IN [0..4] CREATE
+	    USE ms.p4ValueS[q];
+	    USE ms.p4ValueNS[q];
+	END FOR;
+	USE ms.p4DerivS[0];
+    CASE 'bdf',5:
+	FOR q IN [0..5] CREATE
+	    USE ms.p5ValueS[q];
+	    USE ms.p5ValueNS[q];
+	END FOR;
+	USE ms.p5DerivS[0];
+    CASE 'bdf',6:
+	FOR q IN [0..6] CREATE
+	    USE ms.p6ValueS[q];
+	    USE ms.p6ValueNS[q];
+	END FOR;
+	USE ms.p6DerivS[0];
+
+	(* ----- ivpStep -----
+	  Create the Adams Moulton model for non-stiff problem.
+  
+	  For the states using the Adams Moulton method, write
+	  (1) for the current [0] and previous point [1].  Write
+	  (2) for all points [0..order-1].
+
+	  For predicted non-state variables, write (1) for
+	  all points.
+	  *)
+
+    CASE 'am',1:
+	FOR q IN [0..1] CREATE
+	    USE ms.p1ValueS[q];
+	END FOR;
+	FOR q IN [0..0] CREATE
+	    USE ms.p1DerivS[q];	    
+	    USE ms.p1ValueNS[q];
+	END FOR;
+	USE ms.p1ValueNS[1];
+    CASE 'am',2:
+	FOR q IN [0..1] CREATE
+	    USE ms.p2ValueS[q];
+	END FOR;
+	FOR q IN [0..1] CREATE
+	    USE ms.p2DerivS[q];
+	    USE ms.p2ValueNS[q];
+	END FOR;
+        USE ms.p2ValueNS[2];
+    CASE 'am',3:
+	FOR q IN [0..1] CREATE
+	    USE ms.p3ValueS[q];
+	END FOR;
+	FOR q IN [0..2] CREATE
+	    USE ms.p3DerivS[q];
+	    USE ms.p3ValueNS[q];
+	END FOR;
+	USE ms.p3ValueNS[3];
+    CASE 'am',4:
+	FOR q IN [0..1] CREATE
+	    USE ms.p4ValueS[q];
+	END FOR;
+	FOR q IN [0..3] CREATE
+	    USE ms.p4DerivS[q];
+	    USE ms.p4ValueNS[q];
+	END FOR;
+	USE ms.p4ValueNS[4];
+    CASE 'am',5:
+	FOR q IN [0..1] CREATE
+	    USE ms.p5ValueS[q];
+	END FOR;
+	FOR q IN [0..4] CREATE
+	    USE ms.p5DerivS[q];
+	    USE ms.p5ValueNS[q];
+	END FOR;
+	USE ms.p5ValueNS[5];
+    CASE 'am',6:
+	FOR q IN [0..1] CREATE
+	    USE ms.p6ValueS[q];
+	END FOR;
+	FOR q IN [0..5] CREATE
+	    USE ms.p6DerivS[q];
+	    USE ms.p6ValueNS[q];
+	END FOR;
+	USE ms.p6ValueNS[6];
+    END WHEN;
+
+    currentPt                                  ALIASES iP[0];
+    f                                          IS_A factorial(6);
+    pT                                         IS_A pascalTriangle(6);
+    deltaX                                     IS_A factor;
+    maxDeltaX                                  IS_A factor;
+    stopX                                      IS_A factor;
+    dxPow[0..6]                                IS_A factor;
+    dxMax[['down','same','up']][1..nPredVars]  IS_A factor;
+    maxNominalSteppingError                    IS_A factor;
+    lastHighestDeriv[1..nPredVars]             IS_A factor;
+
+    stopConds                                  IS_A set OF integer_constant;
+    newStopCondHit,
+    stopCondHit,
+    stopXHit,
+    thisIsTheFinalStep                         IS_A integer;
+
+    eps                                        IS_A factor;
+    
+    stepCalcEqn:  iP[0].x = iP[1].x + deltaX + iP[0].dx;
+    
+    (* Note: use ord for ordinate and abs for abscissa *)
+    
+    (* these next two set sizes for plot arrays *)
+    maxPlotPts                                 IS_A integer_constant;
+    plotVars                                   IS_A set OF integer_constant;
+
+    (* the following are for managing the saving of plot points *)
+    plotPt                                     IS_A integer;
+    ordNextPlotting                            IS_A solver_var;
+    deltaOrdPlotting                           IS_A solver_var;
+
+    (* the following are the arrays in which plots are kept *)
+    ordPlotVals[1..maxPlotPts]                 IS_A solver_var;
+    absPlotVals[plotVars][1..maxPlotPts]       IS_A solver_var;
+    FOR i IN plotVars CREATE 
+	plotCurve[i]    IS_A plt_curve(maxPlotPts,ordPlotVals,absPlotVals[i]);
+	plot[i]         IS_A plt_plot_integer([1],plotCurve[i]);
+    END FOR;
+
+    METHODS
+    
+    (* ----- ivpStep ----- *)
+
+    METHOD default_self;
+	RUN iP[0..7].default_self;	
+	RUN p.default_self;
+	RUN ms.default_self;
+	RUN f.default_self;
+	RUN pT.default_self;
+	eps                                             := 1.0e-6;
+    END default_self;
+
+    (* ----- ivpStep ----- *)
+
+    METHOD specify;
+	RUN iP[0..7].specify;
+	RUN p.specify;
+	RUN ms.specify;
+	RUN f.specify;
+	RUN pT.specify;
+	deltaX.fixed                                    := TRUE;
+	dxPow[0..6].fixed                               := TRUE;
+	iP[0].y[1..nPredVars].fixed                     := FALSE;
+	iP[0].dydx[1..nStates].fixed                    := FALSE;
+	p.a[0..usePolyOrder].var[1..nPredVars].fixed    := FALSE;
+	iP[0..usePolyOrder].dx.fixed                    := TRUE;
+	iP[0].x.fixed                                   := FALSE;
+	dxMax[['down','same','up']][1..nPredVars].fixed := TRUE;
+	maxNominalSteppingError.fixed                   := TRUE;
+	lastHighestDeriv[1..nPredVars].fixed            := TRUE;
+	eps.fixed                                       := TRUE;
+    END specify;
+
+    (* ----- ivpStep ----- *)
+    
+    METHOD values;
+	(* ----- ivpStep -----
+	  run this method after establishing the initial
+	  conditions for the model *)
+
+	newStopCondHit                                  := 0;
+	stopCondHit                                     := 0;
+	stopXHit                                        := 0;
+	thisIsTheFinalStep                              := 0;
+	
+	FOR j IN [1..6] DO
+	    iP[j].x                                     := 0;
+	    iP[j].y[1..nPredVars]                       := 0;
+	    iP[j].dydx[1..nStates]                      := 0;
+	END FOR;
+	
+	usePolyOrder                                    := 1;
+	FOR i IN [1..nPredVars] DO
+	    p.a[0].var[i]                               := iP[0].y[i];	
+	END FOR;
+	FOR i IN [1..nStates] DO
+	    p.a[1].var[i]                               := iP[0].dydx[i];
+	END FOR;
+    END values;
+    
+    (* ----- ivpStep ----- *)
+
+    METHOD incrementUsePolyOrder;
+	IF usePolyOrder <= 5 THEN
+	    usePolyOrder                              := usePolyOrder +1;
+	    p.a[usePolyOrder].var[1..nPredVars].fixed := FALSE;
+	END IF;
+    END incrementUsePolyOrder;
+    
+    (* ----- ivpStep ----- *)
+
+    METHOD decrementUsePolyOrder;
+	IF usePolyOrder >= 2 THEN
+	    p.a[usePolyOrder].var[1..nPredVars]       := 0.0;
+	    p.a[usePolyOrder].var[1..nPredVars].fixed := TRUE;
+	    usePolyOrder                              := usePolyOrder -1;
+	END IF;
+    END decrementUsePolyOrder;
+    
+    (* ----- ivpStep ----- *)
+
+    METHOD setUseMethodToBdf;
+	useMethod                                     := 'bdf';
+    END setUseMethodToBdf;
+    
+    (* ----- ivpStep ----- *)
+
+    METHOD setUseMethodToAm;
+	useMethod                                     := 'am';
+    END setUseMethodToAm;
+
+    (* ----- ivpStep ----- *)
+    
+    METHOD stepX;
+	(* ----- ivpStep -----
+	  run stepX to increment the independent variable and estimate
+	  the values for the states and predicted algebraic variables
+	  at that point  *)
+	
+	(* ----- ivpStep -----
+	  remember the last highest derivative, as the difference in
+	  it this time and last allows us to estimate the derivative
+	  that is one higher than we are actually computing.  We need
+	  this derivative estimate for step size control.  We use
+	  nominal values to make this estimate dimensionless.  *)
+
+	FOR i IN [1..nPredVars] DO
+	    lastHighestDeriv[i] := p.a[usePolyOrder].var[i];
+	END FOR;
+
+	(* ----- ivpStep -----
+	  we write the polynomials for the multistep method(s) as
+	  Taylor Series expansions about the current point, which is
+	  the point in iP[0].  When we step to a new current point,
+	  we must shift the polynomial coefficients accordingly so the
+	  shifted polynomial predicts the shifted past points correctly.
+	  Note, that after we shift the polnomial to be a Taylor series
+	  expansion around the new current point, the leading
+	  coefficient (a[0]) for each polynomial is the value
+	  for the corresponding state variable at the current point so
+	  this shifting is in fact a prediction method for the
+	  multistep process.
+	  *)
+	
+	(* ----- ivpStep -----
+	  shift the predicted variables and dydx information and the
+	  time *)
+	
+	FOR j IN [0..usePolyOrder] DO
+	    iP[usePolyOrder-j+1].x           := iP[usePolyOrder-j].x;
+	    FOR i IN [1..nPredVars] DO 
+		iP[usePolyOrder-j+1].y[i]    := iP[usePolyOrder-j].y[i];	
+	    END FOR; (* i *)
+	    FOR i IN [1..nStates] DO
+		iP[usePolyOrder-j+1].dydx[i] := iP[usePolyOrder-j].dydx[i];	
+	    END FOR; (* i *)
+	END FOR; (* j *)
+        
+	iP[0].x                              := iP[1].x + deltaX;
+	IF iP[0].x > stopX THEN
+	    iP[0].x                          := stopX;
+	    deltaX                           := iP[0].x - iP[1].x;
+	END IF;
+	
+	FOR j IN [0..usePolyOrder] DO
+	    iP[j].dx                         := iP[j].x - iP[0].x;
+	END FOR; (* j *)
+	
+	(* ----- ivpStep -----
+	  Estimate the polynomial coefficients for x shifted
+	  so new point is at x=0.
+	  
+	  Update is based on Pascal's triangle and the
+	  shift, deltaX.  The order we do this here allows
+	  us to do the update within the original data space
+	  for the polynomial.
+	  *)
+	
+	FOR k IN [0..usePolyOrder] DO
+	    dxPow[0]                   := deltaX;
+	    FOR j IN [1..usePolyOrder-k] DO
+		FOR i IN [1..nPredVars] DO
+		    p.a[k].var[i]      := p.a[k].var[i]
+		       +dxPow[j-1]*pT.row[j].col[k]
+		       *p.a[k+j].var[i]*f.fac[k]/f.fac[j];
+		END FOR;
+		dxPow[j]               := deltaX*dxPow[j-1]; 
+	    END FOR;
+	END FOR;
+
+		(* ----- ivpStep -----
+	The new coefficients a[0] provide the values for
+	the new point and a[1] their derivatives. *)
+	
+	FOR i IN [1..nPredVars] DO
+	    iP[0].y[i]                 := p.a[0].var[i];
+	END FOR;
+	FOR i IN [1..nStates] DO
+	    iP[0].dydx[i]              := p.a[1].var[i];
+	END FOR;
+	
+    END stepX;
+
+
+    METHOD computeMaxNominalStepsForEachVariable;
+
+	(* ----- ivpStep -----
+	  compute the maximum step size one can use for each state and
+	  predicted algebraic variable.  The highest order term in each
+	  Taylor series expansion estimates error.
+	  
+	  Assume q is the current model order.  We shall do this
+	  prediction for three cases: if we were to reduce the polynomial
+	  order to q-1, leave it at q, and increase it to q+1.  (Yes, the
+	  step size may be larger for a lower polynomial order.) 
+
+	  We use nominal values to keep a correct dimensionality in all
+	  equations.  *)
+
+	(* ----- ivpStep -----
+	  when reducing the polynomial order to q-1, we assume the Taylor
+	  series coefficient one less than we are now using stays constant
+	  *)
+
+	maxStepOrder := 'down';
+
+	maxStep := stopX - iP[1].x;
+	IF maxStep >= maxDeltaX THEN
+	    maxStep := maxDeltaX; 
+	END IF;
+
+	IF usePolyOrder >=2 THEN
+	    FOR i IN [1..nPredVars] DO
+		(*
+		  dxMax['down'][i]  := currentPt.x.nominal
+		  *(abs(f.fac[usePolyOrder-1]
+	                *(maxNominalSteppingError*currentPt.y[i].nominal
+	                /currentPt.x.nominal^(usePolyOrder-1))
+			/p.a[usePolyOrder-1].var[i]))
+			^(1.0/(usePolyOrder-1));
+			*)
+
+		dxMax['down'][i]  := (abs(f.fac[usePolyOrder-1]
+         		*maxNominalSteppingError/p.a[usePolyOrder-1].var[i]))
+		        ^(1.0/(usePolyOrder-1));
+
+                IF dxMax['down'][i] < maxStep THEN
+		   maxStep := dxMax['down'][i];
+                END IF;
+	    END FOR;
+	    
+	ELSE
+	    dxMax['down'][1..nPredVars] := 0.0;
+	    maxStep := 0.0;
+	END IF;
+
+
+	FOR i IN [2..nPredVars] DO
+        END FOR;
+
+	(* ----- ivpStep ----- *)
+
+	maxStepNew := stopX - iP[1].x;
+	IF maxStepNew >= maxDeltaX THEN
+	    maxStepNew := maxDeltaX; 
+	END IF;
+
+	FOR i IN [1..nPredVars] DO
+
+	    dxMax['same'][i] := (abs(f.fac[usePolyOrder]
+	                *maxNominalSteppingError
+			/p.a[usePolyOrder].var[i]))^(1.0/usePolyOrder);
+
+	    (*	    dxMax['same'][i] := currentPt.x.nominal*(abs(f.fac[usePolyOrder]
+	                *(maxNominalSteppingError*currentPt.y[i].nominal
+	                /currentPt.x.nominal^usePolyOrder)
+			/p.a[usePolyOrder].var[i]))^(1.0/usePolyOrder);*)
+
+	    IF dxMax['same'][i] < maxStepNew THEN
+		maxStepNew := dxMax['same'][i];
+            END IF;
+	END FOR;
+	
+       (* Find if 'same' step is better for choosing next step size*)
+
+	IF maxStepNew > maxStep THEN
+	    maxStep := maxStepNew;
+	    maxStepOrder := 'same';
+        END IF;
+				
+	(* ----- ivpStep -----
+	  we estimate the next higher derivative as the difference between
+	  the the q-th derivatives at this and the previous point, divided
+	  by the step size (i.e., delta/delta x approximates d/dx)  *)
+
+        IF usePolyOrder <= 5 THEN
+	    maxStepNew := stopX - iP[1].x;
+	    IF maxStepNew >= maxDeltaX THEN
+		maxStepNew := maxDeltaX;
+	    END IF;
+	    
+	    FOR i IN [1..nPredVars] DO
+
+		dxMax['up'][i]  := (abs(f.fac[usePolyOrder+1]
+		        *maxNominalSteppingError
+		        *deltaX
+		        /(p.a[usePolyOrder].var[i]
+		           -lastHighestDeriv[i])))
+		   ^(1.0/(usePolyOrder+1));
+
+(*		dxMax['up'][i]  := currentPt.x.nominal
+		  *(abs(f.fac[usePolyOrder+1]
+		        *(maxNominalSteppingError*currentPt.y[i].nominal
+	                /currentPt.x.nominal^(usePolyOrder+1))
+		        *deltaX
+		        /(p.a[usePolyOrder].var[i]
+		           -lastHighestDeriv[i]*currentPt.y[i].nominal
+		           /deltaX.nominal^usePolyOrder)))
+		   ^(1.0/(usePolyOrder+1)); *)
+
+	        IF dxMax['up'][i] < maxStepNew THEN
+		    maxStepNew := dxMax['up'][i];
+                END IF;
+	    END FOR;
+
+       (* Find if 'up' step is better for choosing next step size*)
+
+	    IF maxStepNew > maxStep THEN
+	        maxStep := maxStepNew;
+	        maxStepOrder := 'up';
+            END IF;
+	ELSE
+	    dxMax['up'][1..nPredVars] := 0.0;
+	END IF;
+	
+	(* set step size and poly order for next step *)
+	
+	deltaX := maxStep;
+
+	IF maxStepOrder = 'down' THEN
+	    RUN decrementUsePolyOrder;
+	    ELSE
+		IF maxStepOrder = 'up' THEN
+		    RUN incrementUsePolyOrder;
+                END IF;
+	END IF;
+
+    END computeMaxNominalStepsForEachVariable;
+    
+    METHOD setStopConditions;
+
+	newStopCondHit                        := 0;
+	iP[0].x.lower_bound                   := iP[1].x.lower_bound;
+	iP[0].x.upper_bound                   := iP[1].x.upper_bound;
+	
+	FOR i IN stopConds DO
+	    iP[0].y[i].fixed                  := FALSE;
+            IF (newStopCondHit == 0) AND (abs(iP[0].y[i]) >= eps*iP[0].y[i].nominal) THEN 
+                IF (iP[0].y[i]*iP[1].y[i] <= -(eps*iP[0].y[i].nominal)^2) THEN
+		    iP[0].y[i]                := 0.0;
+		    iP[0].dx.lower_bound      := iP[1].dx;
+		    iP[0].dx.upper_bound      := 0.0;
+                    iP[0].y[i].fixed          := TRUE;
+		    iP[0].dx.fixed            := FALSE;
+		    newStopCondHit            := 1;
+		    stopCondHit               := i;
+		END IF;
+	    END IF;
+	END FOR;
+	
+	IF newStopCondHit == 0 THEN
+	    IF maxStep >= (stopX - iP[1].x)*(1.0 - eps) THEN
+		stopXHit                  := 1;
+	    END IF;
+	    IF (stopCondHit >= 1) OR (stopXHit == 1) THEN
+		deltaX := iP[0].x - iP[1].x;		
+		thisIsTheFinalStep        := 1;
+		iP[0].dx.fixed            := TRUE;
+	    END IF;
+	END IF;
+
+    END setStopConditions;
+
+END ivpStep;
+

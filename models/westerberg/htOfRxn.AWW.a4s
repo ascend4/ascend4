@@ -1,0 +1,12 @@
+
+
+DELETE TYPES;
+READ FILE "htOfRxn.a4c";
+COMPILE hr OF htsOfRxn;
+BROWSE {hr};
+RUN {hr.values};
+RUN {hr.reset};
+SOLVE {hr} WITH QRSlv;
+
+
+

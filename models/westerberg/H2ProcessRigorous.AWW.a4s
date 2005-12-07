@@ -1,0 +1,15 @@
+
+DELETE TYPES;
+READ FILE "hydrogenPlant.a4c";
+COMPILE feed OF main;
+BROWSE {feed};
+
+RUN {feed.reset};
+RUN {feed.values};
+
+
+SOLVE {feed} WITH QRSlv;
+
+
+
+

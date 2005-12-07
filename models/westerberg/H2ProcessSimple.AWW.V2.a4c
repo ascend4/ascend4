@@ -1,0 +1,173 @@
+REQUIRE "simpleUnits.AWW.a4c";
+
+(* this REQUIRE statement will lead to many different files
+  being loaded recursively.  simpleUnits REQUIRES other files
+  and so forth.  The easiest way to follow this is to load
+  this file into ASCEND and see all the files that are also
+  loaded as a result.
+  
+  If you load this file into ASCEND, all the various types with which
+  this model is created will be loaded.  You should be able to find
+  the files in which each is defined. *)
+
+(* look in atoms.a4l for list of all defined veriable types *)
+
+MODEL simpleH2Process;
+
+    (* it is tiring to type symbols as strings.  This move defines
+      strings that this model will use throughout *)
+    
+    H2,
+    O2,
+    N2,
+    C1,
+    C2,
+    H2O IS_A symbol_constant;
+    
+    (* look in components.a4l for list of available components.
+      There are several hundred listed -- i.e., all those in Reid,'
+      Prausnitz and Polling. *)
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    H2O :== 'water';
+
+    compsH2,
+    compsCityGas,
+    compsFeed IS_A set OF symbol_constant;
+    compsWater IS_A set OF symbol_constant;
+    
+    compsH2 :== [H2];
+    compsCityGas :== [C1, C2];
+    compsFeed :== [C1, C2, H2];
+    compsWater :== [H2O];
+    
+    (* look in components.a4l for "components_data" model *)
+
+    cdH2 IS_A components_data(compsH2, H2);
+    cdCityGas IS_A components_data(compsCityGas, C1);
+    cdFeed IS_A components_data(compsFeed, C1);
+    cdWater IS_A components_data(compsWater, H2O);
+
+    (* look in phases.a4l for "phases_data" model *)
+
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+        'UNIFAC_liquid_mixture','none');
+    equil IS_A boolean;
+
+    (* look in stream_holdup.a4l for "stream" model *)
+
+
+    (* feed streams *)
+    S0001CityGas IS_A stream(cdCityGas, pdV, equil);
+    S0001H2Recycle IS_A stream(cdH2, pdV, equil);
+
+
+    (* U01FeedMixer *)
+    S0102MixedFeed IS_A stream(cdFeed, pdV, equil);
+    U01FeedMixer_Qin IS_A energy_rate;
+    U01FeedMixer IS_A unitTwoInOneOut(
+    S0001CityGas,
+    S0001H2Recycle,
+    S0102MixedFeed,
+    U01FeedMixer_Qin);
+    
+    (* U02Heater *)
+    S0203HeatedFeed IS_A stream(cdFeed,pdV, equil);
+    
+
+    (* U02CompressorIdeal *)
+    S20IdealCompressedFeed IS_A stream(cdFeed, pdV, equil);
+    U02CompressorIdeal_Qin IS_A energy_rate;
+    U02CompressorIdeal IS_A unitOneInOneOut(
+    S0102HeatedFeed,
+    S20IdealCompressedFeed,
+    U02CompressorIdeal_Qin);
+    U02CompressorIdeal.feedMolarEntropy =
+    U02CompressorIdeal.productMolarEntropy;
+    
+    (* compressorPart2 *)
+    S34CompressedFeed IS_A stream(cdFeed, pdV, equil);
+    U03Compressor_Qin IS_A energy_rate;
+    U03Compressor_eff IS_A positive_factor;
+    U03Compressor IS_A unitOneInOneOut(
+    S0102HeatedFeed,
+    S34CompressedFeed,
+    U03Compressor_Qin);
+    U03Compressor_eff*U03Compressor_Qin =U02CompressorIdeal_Qin;
+    S34CompressedFeed.P = S20IdealCompressedFeed.P;    
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN U01FeedMixer.default_self;
+	RUN U02CompressorIdeal.default_self;
+	RUN U03Compressor.default_self;
+    END default_self;
+    
+    METHOD values;
+	(* basis for this model is one mol/s of city gas feed *)
+	
+	equil := TRUE;
+	
+	(* feed streams *)
+	S0001CityGas.flow := 1 {mol/s};
+	S0001CityGas.y[C1] := 0.95;
+	S0001CityGas.T := 300 {K};
+	S0001CityGas.P := 2 {atm};
+	
+	S0001H2Recycle.flow := 0.01*S0001CityGas.flow;
+	S0001H2Recycle.T := 300 {K};
+	S0001H2Recycle.P := 2 {atm};
+	
+	(* U01FeedMixer *)
+	S0102HeatedFeed.T := 350 {K};
+	S0102HeatedFeed.P := 2 {atm};
+	
+	(* U02CompressorIdeal *)
+	S20IdealCompressedFeed.P := 150 {psi};
+
+	(* U03Compressor *)
+	U03Compressor_eff := 0.9;
+	S34CompressedFeed.P := 150 {psi};
+	
+    END values;
+    
+    METHOD specify;
+
+	(* units *)
+	RUN U01FeedMixer.specify;
+	RUN U02CompressorIdeal.specify;
+	RUN U03Compressor.specify;
+	U03Compressor_eff.fixed := TRUE;
+	
+	(* adjust flags for streams *)
+	(* S0001CityGas *)
+	S0001CityGas.f[compsCityGas].fixed := FALSE;
+	S0001CityGas.flow.fixed := TRUE;
+	S0001CityGas.y[C1].fixed := TRUE;
+
+	(* S0001H2Recycle *)
+	S0001H2Recycle.flow.fixed := TRUE;
+	S0001H2Recycle.f[compsH2].fixed := FALSE;
+
+	(* S0102HeatedFeed *)
+	S0102HeatedFeed.f[compsFeed].fixed := FALSE;
+
+	(* S20IdealCompressedFeed *)
+	S20IdealCompressedFeed.T.fixed := FALSE;
+	S20IdealCompressedFeed.f[compsFeed].fixed := FALSE;
+	
+	(* S34CompressedFeed *)
+	S34CompressedFeed.T.fixed := FALSE;	
+	S34CompressedFeed.P.fixed := FALSE;	
+	S34CompressedFeed.f[compsFeed].fixed := FALSE;
+
+    END specify;
+
+END simpleH2Process;

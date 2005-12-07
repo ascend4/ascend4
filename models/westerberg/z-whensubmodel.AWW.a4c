@@ -1,0 +1,80 @@
+REQUIRE "atoms.a4l";
+
+MODEL test1(
+    n WILL_BE integer_constant;
+    p[1..n] WILL_BE solver_var;
+    q[1..n] WILL_BE solver_var;
+);
+
+    FOR i IN [1..n] CREATE
+	test1Eqn[i]: p[i] = q[i];
+    END FOR;
+    
+METHODS
+METHOD default_self;
+    FOR i IN [1..n] DO
+  		 q[i] := 0.6{atm};
+  		 p[i] := 0.5{atm};
+    END FOR;
+END default_self;
+END test1;
+
+MODEL test2;
+    n IS_A integer_constant;
+    sel IS_A integer;
+    n:==2;
+    p[1..n], q[1..n] IS_A pressure;
+    t1 IS_A test1(n,p,q);
+    
+  WHEN (sel)
+  CASE 1:
+		USE t1.test1Eqn[1];
+  CASE 2:
+		FOR i IN [1..2] CREATE
+			USE t1.test1Eqn[i];
+		END FOR;
+  END WHEN;
+
+METHODS
+METHOD default_self;
+	(* Array parts and variables need subscripts, perhaps FOR/DO loops. *)
+	RUN t1.default_self;
+	(* Default assignments need to be corrected or deleted.
+	 * Assignments to variables are incomplete.
+	 *)
+	sel	:= 2 ;
+END default_self;
+
+END test2;
+
+MODEL test3;
+(* how not to do it. *)
+    n IS_A integer_constant;
+    sel IS_A integer;
+    n:==2;
+    p[1..n], q[1..n] IS_A pressure;
+    t1 IS_A test1(n,p,q);
+    
+  WHEN (sel)
+  CASE 1:
+		USE t1.test1Eqn[1];
+  CASE 2:
+			USE t1.test1Eqn[1..2];
+		(* whether we like it or not, we don't allow eqn arrays
+			or array sections in the USE list. only models and single equations.
+			this appears to be a bit hideous from a user viewpoint. oh well.
+			enabling arrays here is a feature request. see test2 for the
+			standard workaround.*)
+  END WHEN;
+
+METHODS
+METHOD default_self;
+	(* Array parts and variables need subscripts, perhaps FOR/DO loops. *)
+	RUN t1.default_self;
+	(* Default assignments need to be corrected or deleted.
+	 * Assignments to variables are incomplete.
+	 *)
+	sel	:= 2 ;
+END default_self;
+
+END test3;

@@ -1,0 +1,172 @@
+# ------------------------------------------------------------
+# --------------------Normal simulation-----------------------
+# ------------------------------------------------------------
+
+# Run this first set of statements to set up the
+# problem initial state.  The first statement turns
+# off a compiler option to eliminate a compiler
+# bug.  When the bug is gone, we can remove
+# this statement.
+
+asc_compiler_option -useCopyAnon 0;
+DELETE TYPES;
+READ FILE "ivpNondimensional/ivpStepN.dynTank.a4c";
+COMPILE int OF ivpTest;
+BROWSE {int};
+source $env(ASCENDDIST)/../models/ivpNondimensional/ivpStepN.tcl;
+IVP.Integrator int Bdf 0.0001 50 0.001 10.0 20.0;
+
+
+# the parameters for IVP.Integrator are
+#
+# qkfdid          (qualified id) the name of compiled simulation: int
+# method          the name of the integration method to use: Bfd or Am
+# relativeError   the desired relative integration error, e.g., 0.001
+# maxNumberSolves max number of model solves the integrator is allowed
+#                 to perform before forcibly stopping, e.g., 1000
+# initDeltaX      the initial value to use for the stepsize deltaX,
+#		  e.g., 0.0001
+# maxDeltaX       the maximum value for deltaX the integrator should use
+#                 when stepping, e.g. 10.0
+# stopX           the stopping value for x
+
+
+
+# ------------------------------------------------------------
+# -----------Put interesting variables into Probe-------------
+# ------------------------------------------------------------
+
+# Run the following to put variables of interest
+# into the Probe
+
+for {set i 0} { $i <= 7 } { incr i 1} {
+PROBE current "int.iP\[$i\].x" {}
+PROBE current "int.iP\[$i\].y" {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0}
+PROBE current "int.iP\[$i\].dydx" {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0}
+}
+
+for {set i 0} { $i <= 6 } { incr i 1} {
+PROBE current "int.p.a\[$i\].var" {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0}
+}
+
+PROBE current {int.dxMax} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
+
+
+
+# ------------------------------------------------------------
+# ------------------Test for index problem--------------------
+# ------------------------------------------------------------
+
+
+# Run the following steps to test if there is a "index" problem.
+# There is no index problem if the current point is nonsingular
+# with the degrees of freedom set as is done here.  After these
+# steps, go to the solver and run
+# 
+#   Analyze/Find dependent eqns./Structural dependencies
+#   Analyze/Find dependent eqns./Numerical dependencies
+#
+# If both report no problem, there is no "index" problem.
+# If there is an index problem, you should reformulate the
+# problem to eliminate it.  The currentPt model should be able
+# to compute variables dVdx and all algebraic variables when
+# variables V are fixed for all states.
+
+DELETE SYSTEM;
+RUN {int.currentPt.ClearAll};
+RUN {int.currentPt.specifyForStepping};
+RUN {int.currentPt.testForIndexProblem};
+SOLVE {int.currentPt} WITH QRSlv;
+
+
+
+# ------------------------------------------------------------
+# ------------------Manually run simulation-------------------
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# -----------------This first set of commands-----------------
+# ----------------establishes the initial state---------------
+# -----------------and starts the simulation------------------
+# ------------------------------------------------------------
+
+asc_compiler_option -useCopyAnon 0;
+DELETE TYPES;
+READ FILE "ivpNondimensional/ivpStepN.dynTank.a4c";
+COMPILE int OF ivpTest;
+BROWSE {int};
+RUN {int.valuesForInitializing};
+RUN {int.specifyForInitializing};
+SOLVE {int.currentPt} WITH QRSlv;
+DELETE SYSTEM;
+RUN {int.valuesForStepping};
+RUN {int.specifyForStepping};
+
+# Run one of the following to set the method
+
+RUN {int.setUseMethodToAm};
+RUN {int.setUseMethodToBdf};
+
+
+
+# ------------------------------------------------------------
+# ---------------------Step integration-----------------------
+# -----------------Hold polynomial order same ----------------
+# ------------------------------------------------------------
+
+# Edit the number of steps (2 at present) into the next
+# statement and then execute this for loop to take that many
+# integration steps while holding the polynomial order
+# and the integration step size constant.
+
+set ivp_steps 5
+
+for {set ivp_i 1} {$ivp_i <= $ivp_steps} {incr ivp_i} {
+puts "\nstep $ivp_i"
+RUN {int.stepX}
+SOLVE {int} WITH QRSlv}
+
+
+
+# ------------------------------------------------------------
+# ---------------------Step integration-----------------------
+# -------------Increase polynomial order each step -----------
+# ------------------------------------------------------------
+
+# Edit the number of steps into the next statement and
+# then execute this for loop to take that many integration
+# steps.  This script holds the step size constant but
+# increases the polynomial order by one as it takes each
+# step - note that the method "incrementUsePolyOrder limits
+# the order to a maximum value of 6.
+
+set ivp_steps 3
+
+for {set ivp_i 1} {$ivp_i <= $ivp_steps} {incr ivp_i} {
+puts "\nstep $ivp_i"
+RUN {int.incrementUsePolyOrder}
+RUN {int.stepX}
+SOLVE {int} WITH QRSlv}
+
+
+
+# ------------------------------------------------------------
+# ---------------------Change polynomial----------------------
+# -----------------order if it allows larger step ------------
+# ------------------------------------------------------------
+
+RUN {int.computeMaxNominalStepsForEachVariable};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
