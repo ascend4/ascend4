@@ -919,7 +919,7 @@ static int DoProject_X(struct var_variable **old_inputs,
     var_set_value(var,new_y);
 # if  DEBUG
     FPRINTF(stderr,"Old_y = %12.8g; Nex_y = %12.8g\n",old_y,new_y);
-#\endif
+# endif
   }
   ascfree((char *)delta_x);
   return 0;
