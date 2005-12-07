@@ -1,0 +1,202 @@
+REQUIRE "ivpStep.AWW.a4c";
+
+(* The following is a simple tank model used to test ivpStep.AWW.a4c
+
+This model contains the prototype of a set of models a user should
+write when using ivpStep.AWW.a4c to solve initial value mixed DAE
+systems.  *)
+
+
+(* ---------------------------------------------------------- *)
+
+MODEL myIntegrationPoint REFINES integrationPoint;
+    
+    (* This model is for all points EXCEPT the current point.  These
+      points do not require the dynamic model equations as they have
+      already been solved in previous integration steps *)
+
+
+    nStates            :== 2;
+    nPredVars          :== 3;
+    
+    t                  ALIASES x;
+    dt                 ALIASES dx;
+    V                  ALIASES y;
+    dVdt               ALIASES dydx;
+
+
+    t                  IS_REFINED_TO time;
+    V[1]               IS_REFINED_TO mole;
+    dVdt[1]            IS_REFINED_TO delta_molar_rate;
+    dt                 IS_REFINED_TO time;
+    
+    V[2]               IS_REFINED_TO time;
+    dVdt[2]            IS_REFINED_TO factor;
+    
+    V[3]               IS_REFINED_TO time;
+    
+END myIntegrationPoint;
+
+(* ---------------------------------------------------------- *)
+
+MODEL myIvpModel REFINES myIntegrationPoint;
+    
+    (* This model is for the current point.  It requires the dynamic
+      and algebraic model equations for the model. *)
+
+    flowIn, flowOut    IS_A molar_rate;
+    
+    eqnFirstState:      dVdt[1] = flowIn - flowOut;
+    eqnFlowIn:          flowIn  = 2.0{mol/s}*(1+sin(20.0{deg/s}*t));
+    eqnFlowOut:         flowOut = 2.0{mol/s}*(1+cos(15.0{deg/s}*t));
+    eqnSecondState:     dVdt[2] = sin(20.0{deg/s}*t);
+    eqnFirstAlgebraic:  V[3] = V[2]+1.0{s};
+    
+    METHODS
+    
+    (* ----- myIvpModel ----- *)
+
+    METHOD default_self;
+	RUN myIntegrationPoint::default_self;
+    END default_self;
+    
+    (* ----- myIvpModel ----- *)
+
+    METHOD specifyForInitializing;
+	flowIn.fixed     := FALSE;
+	flowOut.fixed    := FALSE;
+	V[1..2].fixed    := TRUE;
+	dVdt[1..2].fixed := FALSE;
+	t.fixed          := TRUE;
+    END specifyForInitializing;
+
+    (* ----- myIvpModel ----- *)
+
+    METHOD valuesForInitializing;
+	V[1]             := 10.0 {mol};
+	V[2]             := 10.0 {s};
+	V[3]             := 11.0 {s};
+	t                := 0.0 {s};
+    END valuesForInitializing;
+
+    (* ----- myIvpModel ----- *)
+
+    METHOD specifyForStepping;
+	RUN specifyForInitializing;
+	V[1..3].fixed    := FALSE;
+	t.fixed          := FALSE;
+    END specifyForStepping;
+
+    (* ----- myIvpModel ----- *)
+
+    METHOD valuesForStepping;
+    END valuesForStepping;
+    
+    METHOD testForIndexProblem;
+
+	(* the following step will set all fixed flags for
+	  the state variables y to TRUE, and all the fixed flags
+	  for the dydx and predicted algebraic variables to
+	  FALSE.  The user should assure that the fixed flags for
+	  the remaining algebraic variables are set to make the
+	  currentPt model square.  *)
+
+	RUN integrationPoint::testForIndexProblem;
+	
+	(* for this simple test problem, there are no other
+	  algebraic variables about which we must be concerned.
+	  
+	  This method should be run only for the instance of the
+	  currentPt.  *)
+	
+    END testForIndexProblem;
+    
+END myIvpModel;
+
+(* ---------------------------------------------------------- *)
+
+MODEL ivpTest REFINES ivpStep;
+    
+    currentPt          IS_REFINED_TO myIvpModel;
+    iP[1..7]           IS_REFINED_TO myIntegrationPoint;
+    deltaT             ALIASES deltaX;
+    deltaT             IS_REFINED_TO time;
+    stopT              ALIASES stopX;
+    stopT              IS_REFINED_TO time;
+    stopConds          :== [2, 3];
+
+    
+    METHODS
+    
+    (* ----- ivpTest ----- *)
+
+    METHOD default_self;
+	(* run first *)
+	RUN ivpStep::default_self;
+	RUN currentPt.default_self;
+	RUN iP[1..7].default_self;
+    END default_self;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD valuesForInitializing;
+	(* run after default_self. *)
+	(* set values for initial point *)
+	RUN currentPt.valuesForInitializing;
+	(* at this point run specifyForInitializing *)
+    END valuesForInitializing;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD specifyForInitializing;
+	(* run after valuesForInitializing *)
+	(* set fixed flags to initialize currentPt *)
+	RUN currentPt.specifyForInitializing;
+
+	(* at this point, solve currentPt *)
+
+    END specifyForInitializing;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD valuesForStepping;
+	(* run after solving currentPt *)
+	eps                        := 1.0e-6;
+	deltaT                     := 0.01 {s};
+	stopT                      := 2.0 {s};
+	maxNominalSteppingError    := 0.001;
+	
+	(* ----- myIvpModel -----
+	  the integration model uses the factor
+	  maxNominalSteppingError times the nominal
+	  value for each variable in the currentPt to set
+	  the allowed step size when integrating.  *)
+
+	currentPt.V[1].nominal     := 10.0 {mol};
+	currentPt.V[2].nominal     := 1 {s};
+	currentPt.V[3].nominal     := 1 {s};
+	currentPt.t.nominal        := 1 {s};
+
+	RUN values;
+    END valuesForStepping;
+
+    (* ----- ivpTest ----- *)
+
+    METHOD specifyForStepping;
+	(* run after valuesForStepping *)
+	RUN ivpStep::specify;
+	RUN currentPt.specifyForStepping;
+	
+	(* at this point select method for solving and then
+	  run stepX.
+	  
+	  From this point on,
+	  1. solve the next step
+	  2. adjust polynomial order and method if needed
+	  3. repeat from 1 to integrate. *)
+	
+    END specifyForStepping;
+    
+END ivpTest;
+
+(* ---------------------------------------------------------- *)

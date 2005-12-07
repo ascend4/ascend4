@@ -1,0 +1,21 @@
+# Units in this file may be changed, saved, and read at any time.
+# To automatically load it, put the line
+# "source D:/ascend4-0.9.0/ascend4/models/H2ProcessSimple.a4u" in your ~/.ascendrc
+# after the line which sources ascend.tcl.
+u_change_baseunit kilogram
+u_change_baseunit mole
+u_change_baseunit m
+u_change_baseunit s
+u_change_baseunit K
+u_change_baseunit currency
+u_change_baseunit ampere
+u_change_baseunit candela
+u_change_baseunit radian
+u_change_baseunit steradian
+u_set_user K
+u_set_user s
+u_set_user m
+u_set_user mol/s
+u_set_user kJ/mol
+u_set_user atm
+u_set_user kW

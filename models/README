@@ -82,6 +82,27 @@ pending:    This directory contains possible additions or changes to the
 	    header is provided in each of the sub-directories to be
 	    added to any models placed in pendings.
 
+westerberg  This directory contains models that Art Westerberg is 
+            developing.  
+
+            Of interest are the simpleUnits.AWW.a4s/c script and
+            models.  These models allow one to develop simple
+            flowsheet models for stream mixing, splitting, pressure
+            changing (compressor, valve) while using rigorous physical
+            properties.  The H2Process models use these models to
+            model a desktop hydrogen plant.  
+
+            The models in SiirolaJohn are also for modeling a desktop
+            hydrogen plant.  
+
+	    The CelayaDemo models mimic the simple_FS models replaced
+            with rigorous units and physical property calculations.
+
+	    The ivp models are for solving initial value DAE models.
+	    See the ASCEND Wiki description for this work at
+
+        https://pse.cheme.cmu.edu/wiki/view/Ascend/InitialValueModeling
+
 
 5) Models are primarily chemical engineering library application
 except as OTHERWISE noted.

@@ -1,0 +1,9 @@
+
+DELETE TYPES;
+READ FILE "/dos/d/Program Files/ascend4-0.9.0/ascend4/models/Art/HtOfVap.a4c
+COMPILE h OF htbal;
+BROWSE {h};
+RUN {h.values};
+RUN {h.reset};
+SOLVE {h} WITH QRSlv;
+

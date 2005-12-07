@@ -1,0 +1,184 @@
+REQUIRE "flash.a4l";
+REQUIRE "simpleUnits.AWW.a4c";
+
+(*
+  
+                                         ------------  
+                                        |            |  
+             -------------------------->|U4: splitter|---> bleed
+            |                           |            |
+            |                            ------------  
+            |                                  ^  
+            V                                  |
+       -----------      -----------      ------------
+      |           |    |           |    |            |
+  --->|U1: mixer  |--->|U2: reactor|--->|U3: flash   |
+      |           |    |           |    |            |
+       -----------      -----------      ------------
+                       2C2H6 -->C4H12          |
+                                               |
+                                                ---------> product       
+						
+*)
+
+
+MODEL simpleFS;
+    (* this demo is a reproduction of simpleFS using
+      the models in simpleUnits along with a rigorous
+      flash for the separation step *)
+    
+    (* Set up the thermo calculations *)
+    
+    compsC3, compsAll IS_A set OF symbol_constant;
+    compsC3 :== ['propylene', 'propane'];
+    compsAll :== ['propylene', 'propane', '2_hexene_cis'];
+    
+    cdC3  IS_A components_data(compsC3, 'propane');
+    cdAll IS_A components_data(compsAll, 'propane');
+  
+    pdV  IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+    'UNIFAC_liquid_mixture','none');
+    
+    equil IS_A boolean;     
+
+    (* define feed streams *)
+    S01C3Feed IS_A stream(cdC3, pdV, equil);
+ 
+    (* define units and their output streams *)
+    
+    (* U1: feed mixer and heater *)
+    Qmix IS_A energy_rate;
+    S12reactFeed IS_A stream(cdAll, pdVL, equil);
+    U1feedMixer IS_A unitTwoInOneOut(Qmix, S01C3Feed, S51recycle, S12reactFeed);
+    
+    (* U2: reactor *)
+    Qreactor IS_A energy_rate;
+    S23reactProd IS_A stream(cdAll, pdV, equil);
+    U2reactor IS_A unitOneInOneOut(Qreactor, S12reactFeed, S23reactProd);
+    conv IS_A fraction;
+    U2reactor.product.f['propylene'] = (1-conv)*U2reactor.feed.f['propylene'];
+    
+    (* U3: flash *)
+    Qflash IS_A energy_rate;
+    S34flashV IS_A stream(cdAll, pdV, equil);
+    S30flashL IS_A stream(cdAll, pdL, equil);
+    U3flash IS_A vapor_liquid_flash(
+      Qflash, equil, S23reactProd, S34flashV, S30flashL);
+    
+    (* U4: splitter *)
+    Qsplitter IS_A energy_rate;
+    S40bleed IS_A stream(cdAll, pdV, equil);
+    S45compFeed IS_A stream(cdAll, pdV, equil);
+    U4splitter IS_A unitOneInTwoOut(Qsplitter, S34flashV, S45compFeed, S40bleed);
+    (* merge all splits for simple stream splitter *)
+    splitRecycle IS_A fraction;
+    splitRecycle, U4splitter.split[compsAll] ARE_THE_SAME;
+    
+    (* U5: compressor *)
+    Qcomp IS_A energy_rate;
+    effU5 IS_A fraction;
+    compRatioU5 IS_A factor;
+    S51recycle IS_A stream(cdAll, pdV, equil);
+    U5compressor IS_A simpleCompressor(Qcomp, compRatioU5, effU5, S45compFeed, S51recycle);
+    
+    (* recycle pressure should be that of the feed *)
+    U5compressor.product.P = U1feedMixer.feed1.P;
+    
+
+    (* various objectives we can optimize *)
+    MaxHexeneProd: MAXIMIZE S30flashL.f['2_hexene_cis'];
+
+    METHODS
+    
+    METHOD default_self;
+	RUN U1feedMixer.default_self;
+	RUN U2reactor.default_self;
+	RUN U3flash.default_self;
+	RUN U4splitter.default_self;
+	RUN U5compressor.default_self;
+    END default_self;
+    
+    METHOD values;
+	equil := FALSE;
+
+	(* feed streams *)
+	S01C3Feed.f['propylene'] := 0.98 {mol/s};
+	S01C3Feed.f['propane']   := 0.02 {mol/s};
+	S01C3Feed.T              := 423.15 {K};  (* 150 degC *)
+	S01C3Feed.P              := 20 {bar};
+	
+	(* U1 feed mixer *)
+	(* set a pressure drop for the unit *)
+	U1feedMixer.delP1 := -5.0 {psia};
+
+	(* U2 reactor *)
+	U2reactor.delP := -5.0 {psia};
+	U2reactor.stoichCoef['propylene']    := -2;
+	U2reactor.stoichCoef['2_hexene_cis'] := 1;
+	conv                                 := 0.8;
+
+	(* U3 flash *)
+	U3flash.liqout.P := 10 {bar};
+	U3flash.liqout.T := 400 {K};
+	U3flash.alpha['propylene'] := 7;
+	U3flash.alpha['propane'] := 8;
+	U3flash.alpha['2_hexene_cis'] := 1;
+	U3flash.state.phase_fraction['vapor'] := 0.5;
+	
+	(* U4 splitter *)
+	splitRecycle                  := 0.98;
+
+	(* U5 compressor *)
+	U5compressor.efficiency := 0.95;
+    END values;
+    
+    METHOD specify;
+	(* Each unit runs the specify method for each of its
+	  streams.  It then releases the fixed flags for
+	  the component flows, T and P of its product
+	  streams.
+	  
+	  Only the recycle stream is overspecified
+	  after running the unit specify methods if
+	  we run them in the reverse order *)	  
+
+	RUN U5compressor.specify;
+	RUN U4splitter.specify;
+	RUN U3flash.specify;
+	RUN U2reactor.specify;
+	RUN U1feedMixer.specify;
+	
+	(* release specs set by splitter for flash vapor *)
+	S34flashV.f[compsAll].fixed  := FALSE;
+
+	(* release specs for recycle stream *)
+	S51recycle.f[compsAll].fixed := FALSE;
+	S51recycle.T.fixed           := FALSE;
+	S51recycle.P.fixed           := FALSE;
+
+	(* U1: feed mixer *)
+	(* fix product temperature of feed mixer *)
+	U1feedMixer.delT1.fixed      := TRUE;
+	U1feedMixer.Qin.fixed        := FALSE;
+	
+	(* U2: reactor *)
+	(* fix conversion *)
+	conv.fixed := TRUE;
+	U2reactor.turnover.fixed     := FALSE;
+	(* product temperature is same as that of feed *)
+	U2reactor.delT.fixed         := TRUE;
+	U2reactor.Qin.fixed          := FALSE;
+	
+	(* U3: flash *)
+	(* flash P and vapor fraction already fixed *)
+
+	(* U4: splitter *)
+
+	(* U5: compressor *)
+	U5compressor.compressionRatio.fixed := FALSE;
+
+    END specify;
+    
+END simpleFS;

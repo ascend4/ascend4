@@ -1,0 +1,29 @@
+
+DELETE TYPES;
+READ FILE "D:/ascend4-0.9.0/ascend4/models/Guthrie_costs.AWW.a4c";
+
+
+COMPILE tcipv OF test_cost_info_pressure_vessel;
+BROWSE {tcipv};
+RUN {tcipv.values};
+RUN {tcipv.reset};
+SOLVE {tcipv} WITH QRSlv;
+
+
+COMPILE tgcpv OF test_Guthrie_cost_pressure_vessel;
+BROWSE {tgcpv};
+RUN {tgcpv.values};
+RUN {tgcpv.reset};
+SOLVE {tgcpv} WITH QRSlv;
+
+
+COMPILE tspvc OF test_simple_pressure_vessel_cost;
+BROWSE {tspvc};
+RUN {tspvc.values};
+RUN {tspvc.reset};
+SOLVE {tspvc} WITH QRSlv;
+
+
+
+
+

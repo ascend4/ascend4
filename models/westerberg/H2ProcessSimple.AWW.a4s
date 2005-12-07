@@ -1,0 +1,27 @@
+
+DELETE TYPES;
+READ FILE "H2ProcessSimple.AWW.a4c";
+COMPILE shp OF testSimpleH2Process;
+BROWSE {shp};
+RUN {shp.values};
+RUN {shp.reset};
+SOLVE {shp} WITH QRSlv;
+
+# put adjustable fixed items into probe
+
+PROBE current {shp.a6.U3.product1.f['hydrogen']} {};
+PROBE current {shp.ratioAirIntoFurnace} {};
+PROBE current {shp.ratioWaterIntoReactor} {};
+PROBE current {shp.a2.U1.product.P} {};
+PROBE current {shp.a1.U2.product.T} {};
+PROBE current {shp.a4.convU2C1} {};
+PROBE current {shp.a4.convU3CM} {};
+
+# put output items into probe
+PROBE current {shp.hydrogenToMethaneRatio} {};
+
+
+
+
+
+

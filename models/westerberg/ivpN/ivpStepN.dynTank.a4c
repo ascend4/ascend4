@@ -1,0 +1,331 @@
+REQUIRE "ivpNondimensional/ivpStepN.a4c";
+
+(* The following is a simple tank model used to test ivpStep.a4c
+
+This model contains the prototype of a set of models a user should
+write when using ivpStep.a4c to solve initial value mixed DAE
+systems.  *)
+
+
+(* ---------------------------------------------------------- *)
+
+MODEL pastPoint() REFINES integrationPoint();
+
+    (* This model is for saving all past points needed for
+      the fitting of the Taylor series *)
+    
+    (* There is one state - the holdup in the tank. We will
+      need one predicted algebraic variable for a stop condition
+      based on too low a tank level. *)
+    
+    nStates            :== 1;
+    nPredVars          :== 2;
+    
+
+    METHODS
+
+    METHOD default_self;
+	RUN integrationPoint::default_self;
+    END default_self;
+    
+END pastPoint;
+
+(* ---------------------------------------------------------- *)
+
+MODEL currentPtDynTank() REFINES pastPoint();
+    
+    (* This model is for the current point.  It requires the dynamic
+      and algebraic model equations for the model.
+      
+      See the comments for MODEL integrationPoint.
+      
+      Define states, state derivatives and dimensionless quantities
+      for the integration package. *)
+    
+    t,tNom             IS_A time;
+    xDefn:	       x*tNom = t;
+    
+    dt,dtNom           IS_A time;
+    dxDefn: 	       dx*dtNom = dt;
+    
+    holdup,holdupNom   IS_A mole;
+    y1Defn:            y[1]*holdupNom = holdup;
+    
+    dholdup_dt         IS_A delta_molar_rate;
+    dydxDefn:          dydx[1]*holdupNom = dholdup_dt*dtNom;
+    
+    flowIn,flowOut,
+    flowStop,flowMin,
+    flowNom            IS_A molar_rate;
+    Cv                 IS_A positive_factor; (* valve constant *)
+    y2Defn:            y[2]*flowNom = flowStop;
+    
+    eqnDynTankholdup:  dholdup_dt = flowIn - flowOut;
+    eqnFlowIn:         flowIn  = 2.0{mol/s}*(1+sin(20.0{deg/s}*t));
+    eqnFlowOut:        (flowOut/1{mol/s})^2 = Cv^2*(holdup/1.0{mol});
+    eqnStoppingCond:   flowStop = flowOut - flowMin;
+
+    METHODS
+    
+    (* ----- currentPtDynTank ----- *)
+
+    METHOD default_self;
+	RUN pastPoint::default_self;
+    END default_self;
+    
+    (* ----- currentPtDynTank ----- *)
+
+    METHOD specifyForInitializing;
+	
+	(* states, state derivatives and predicted algebraics *)
+        (* fix the time for the initial point *)
+	t.fixed          := TRUE;
+	tNom.fixed	 := TRUE;
+	x.fixed          := FALSE; (* computed using xDefn *)  
+
+        (* fix the time step for the initial point *)
+	dt.fixed         := TRUE;
+	dtNom.fixed      := TRUE;
+	dx.fixed         := FALSE; (* computed using dxDefn *)
+
+        (* fix the holdup for the initial point *)
+	holdup.fixed     := TRUE;
+	holdupNom.fixed  := TRUE;
+	y[1].fixed       := FALSE; (* computed using y1Defn *)
+
+        (* compute the time derivative for the holdup *)
+	dholdup_dt.fixed := FALSE; (* computed using eqnDynTankholdup *)
+	dydx[1].fixed    := FALSE; (* computed using dydxDefn *)
+
+        (* algebraic variables *)
+	flowIn.fixed     := FALSE;  (* computed by eqnFlowIn *)
+
+	flowMin.fixed    := TRUE;
+	flowStop.fixed   := FALSE;  (* computed by eqnFlowStop *)
+	flowNom.fixed    := TRUE;
+	y[2].fixed       := FALSE;  (* computed by y2Defn *)
+	
+	(* When initializing, we wish to compute the valve constant
+	  that will give us a desired flowOut *)
+	flowOut.fixed    := TRUE;
+	Cv.fixed         := FALSE;  (* computed by eqnFlowOut *)
+
+    END specifyForInitializing;
+
+    (* ----- currentPtDynTank ----- *)
+
+    METHOD valuesForInitializing;
+       (* provide values for all items whose values are fixed *)
+
+	t                := 0.0{s};
+	tNom	         := 1.0{s};
+
+	dt               := 0.1{s}; (* value not used when initializing *)
+	dtNom            := 1.0{s};
+
+	holdup           := 10.0{mol};
+	holdupNom        := 1.0{mol};
+
+	flowOut          := 1.0{mol/s};
+	flowMin          := 0.2{mol/s};
+	flowNom          := 1.0{mol/s};
+	
+    END valuesForInitializing;
+
+    (* ----- currentPtDynTank ----- *)
+
+    METHOD specifyForStepping;
+	RUN specifyForInitializing;
+
+	(* to allow one to handle stopping conditions, the integration
+	  package includes an equation to compute time for current point.
+	  The dimensionless value for step size has to be fixed when
+	  initializing for stepping. *)
+	
+	t.fixed          := FALSE; (* computed within integration package *)
+	dt.fixed         := FALSE; (* computed by xDefn *)
+	dx.fixed         := TRUE;  (* value has to be fixed for stepping *)
+
+	(* taking a step is to compute the states, their derivatives
+	  and the algebraic variables for the model - in general *)
+	holdup.fixed	 := FALSE; (* computed by the integration eqns *)
+	
+	(* when initializing, we fixed flowOut and computed the
+	  required valve constant, Cv. We need to reverse that for stepping *)
+	flowOut.fixed    := FALSE;
+	Cv.fixed         := TRUE;
+	
+    END specifyForStepping;
+
+    (* ----- currentPtDynTank ----- *)
+
+    METHOD valuesForStepping;
+	(* there are no new values we need to set/estimate for stepping *)
+    END valuesForStepping;
+    
+    METHOD testForIndexProblem;
+
+	(* this method should be run only for the instance of the
+	  currentPt. *)
+
+	(* method testForIndexProblem will set all fixed flags for
+	  the state variables y to TRUE and all the fixed flags
+	  for the dydx and predicted algebraic variables to
+	  FALSE.  The user should assure that the fixed flags for
+	  the remaining algebraic variables are set to make the
+	  currentPt model square.  *)
+
+	RUN integrationPoint::testForIndexProblem;
+	
+	Cv.fixed         := TRUE;
+	
+    END testForIndexProblem;
+    
+END currentPtDynTank;
+
+(* ---------------------------------------------------------- *)
+
+MODEL ivpTest() REFINES ivpStep();
+    
+    currentPt          IS_REFINED_TO currentPtDynTank;
+    iP[1..7]           IS_REFINED_TO pastPoint;
+    deltaTime          IS_A time;
+    stopTime           IS_A time;
+    maxDeltaTime       IS_A time;
+    
+    ordNextPlotting                IS_REFINED_TO time;
+    deltaOrdPlotting               IS_REFINED_TO time;
+    ordPlotVals[1]                 IS_REFINED_TO time;
+    absPlotVals[1][1..maxPlotPts]  IS_REFINED_TO mole;
+    
+    deltaX*currentPt.dtNom         = deltaTime;
+    maxDeltaX*currentPt.dtNom      = maxDeltaTime;
+    stopX*currentPt.tNom           = stopTime;
+
+    (* stopConds is a set containing the indices of the predicted
+      variables (y[stopConds]) whose sign change will cause the
+      integration to stop.*)
+
+    stopConds          :== [2];
+    
+    (* set up to plotting *)
+    
+    maxPlotPts         :== 100;  (* plot against 100 time points    *)
+    plotConds          :== [1];  (* plot the first (state) variable *)
+    
+    METHODS
+    
+    (* ----- ivpTest ----- *)
+
+    METHOD default_self;
+
+	(* run first *)
+
+	RUN ivpStep::default_self;
+	RUN currentPt.default_self;
+	RUN iP[1..7].default_self;
+    END default_self;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD valuesForInitializing;
+
+	(* run after default_self. *)
+
+	(* set values for initial point *)
+	RUN currentPt.valuesForInitializing;
+
+	(* after running this method,
+	  run specifyForInitializing *)
+    END valuesForInitializing;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD specifyForInitializing;
+
+	(* run after valuesForInitializing *)
+
+	(* set fixed flags to initialize currentPt *)
+	RUN currentPt.specifyForInitializing;
+
+    END specifyForInitializing;
+
+    (* after running specifyForInitializing,
+      solve the currentPt to set the initial conditions
+      for the problem*)
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD valuesForStepping;
+
+	(* run after solving for the initial conditions. *)
+	RUN ivpStep::values;
+	
+	eps                        := 1.0e-6;
+
+	(* The values following are default values. The
+	  script running the integration will likely
+	  overwrite these using values the user will supply
+	  when invoking the script. *)
+
+	deltaX                     := 0.01;
+	stopX                      := 2.0;
+	maxNominalSteppingError    := 0.001;
+	
+	
+        (* Set plot information *)	
+	ordNextPlotting            := 0.0{s};
+	deltaOrdPlot               := 1.0{s};
+	plotPt                     := 0;
+	plotCurve[1].legend        := 'Tank Holdup';
+	plot[1].title              := 'Holdup vs. Time';
+	plot[1].XLabel             := 'Time, s';
+	plot[1].YLabel             := 'Holdup, mol';
+	
+	
+    END valuesForStepping;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD specifyForStepping;
+
+        (* run after running the method valuesForStepping *)	
+
+	RUN ivpStep::specify;
+	RUN currentPt.specifyForStepping;
+	
+	maxDeltaX.fixed            := TRUE;
+	stopX.fixed                := TRUE;
+
+    END specifyForStepping;
+
+    (* ----- ivpTest ----- *)
+    
+    METHOD capturePtsForPlotting;
+	
+	(* run just before running stepX *)
+	
+	IF (currentPt.t >= ordNextPlotting) THEN
+	    IF (plotPt < maxPlotPts) THEN
+		plotPt := plotPt + 1;
+		ordPlotVals[plotPt] := currentPt.t;
+		absPlotVals[1][plotPt] := currentPt.holdup;
+		ordNextPlotting := currentPt.t + deltaOrdPlotting;
+	    END IF;
+	END IF;
+    END capturePtsForPlotting;
+    
+    (* ----- ivpTest ----- *)
+
+    (* at this point select method for solving (Adams-Moulton
+      or BDF and then run stepX.
+      
+      Then to march forward one step at a time, carry out the
+      following
+	1. solve the next step
+	2. adjust polynomial order and method if needed
+	3. repeat from 1 to integrate. *)
+
+END ivpTest;
+
+(* ---------------------------------------------------------- *)

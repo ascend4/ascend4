@@ -1,0 +1,60 @@
+REQUIRE "simpleUnits.AWW.a4c";
+REQUIRE "atoms.AWW.a4c";
+
+MODEL H2basis;
+    
+    tmf IS_A traceMoleFraction_constant;
+    comps IS_A set OF symbol_constant;
+    comps :== ['hydrogen','methane','ethane','oxygen','carbon_dioxide','water'];
+    cdComps IS_A components_data(comps, 'water');
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    equil IS_A boolean;
+    
+    Qin IS_A energy_rate;
+    feed IS_A stream(cdComps, pdV, equil);
+    product IS_A stream(cdComps, pdV, equil);
+    react IS_A unitOneInOneOut(Qin, feed, product);
+
+    METHODS
+    
+    METHOD default_self;
+	RUN react.default_self;
+    END default_self;
+    
+    METHOD values;
+	equil                              := TRUE;
+	feed.T                             := 298 {K};
+	feed.P                             := 1.0 {atm};
+	feed.f[comps]                      := tmf*1.0 {mol/hr};
+	react.stoichCoef[comps]            := 0.0;
+	react.turnover                     := 1.0 {mol/hr};
+    END values;
+    
+    METHOD valuesH2Combustion;
+	(* H2 + 0.5O2 = H20 *)
+	RUN values;
+	feed.f['hydrogen']                 := 1.0 {mol/hr};
+	feed.f['oxygen']                   := 0.5 {mol/hr};
+	react.stoichCoef['hydrogen']       := -1.0;
+	react.stoichCoef['oxygen']         := -0.5;
+	react.stoichCoef['water']          := 1.0;
+    END valuesH2Combustion;
+    
+    METHOD valuesCH4Combustion;
+	(* CH4 + 2O2 = C02 + 2H2O *)
+	RUN values;
+	feed.f['methane']                  := 1.0 {mol/hr};
+	feed.f['oxygen']                   := 2.0 {mol/hr};
+	react.stoichCoef['methane']        := -1.0;
+	react.stoichCoef['oxygen']         := -2.0;
+	react.stoichCoef['carbon_dioxide'] := 1.0;
+	react.stoichCoef['water']          := 2.0;
+    END valuesCH4Combustion;
+
+    METHOD specify;
+	RUN react.specify;
+	react.Qin.fixed                    := FALSE;
+	react.delT.fixed                   := TRUE;
+    END specify;
+   
+END H2basis;

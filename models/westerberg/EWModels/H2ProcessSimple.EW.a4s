@@ -1,0 +1,13 @@
+
+DELETE TYPES;
+READ FILE "H2ProcessSimpleEW.a4c";
+COMPILE shp OF simpleH2Process;
+BROWSE {shp};
+RUN {shp.values};
+RUN {shp.reset};
+SOLVE {shp} WITH QRSlv;
+
+
+
+
+

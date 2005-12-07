@@ -1,0 +1,371 @@
+REQUIRE "simpleUnits.AWW.a4c";
+REQUIRE "flash.a4l";
+
+(* this REQUIRE statement will lead to many different files
+  being loaded recursively.  simpleUnits REQUIRES other files
+  and so forth.  The easiest way to follow this is to load
+  this file into ASCEND and see all the files that are also
+  loaded as a result.
+  
+  If you load this file into ASCEND, all the various types with which
+  this model is created will be loaded.  You should be able to find
+  the files in which each is defined. *)
+
+(* look in atoms.a4l for list of all defined veriable types *)
+
+MODEL simpleH2Process;
+
+    (* it is tiring to type symbols as strings.  This move defines
+      strings that this model will use throughout *)
+    
+    H2,
+    O2,
+    N2,
+    CO,
+    CO2,
+    C1,
+    C2,
+    H2O IS_A symbol_constant;
+    
+    (* look in components.a4l for list of available components.
+      There are several hundred listed -- i.e., all those in Reid,'
+      Prausnitz and Polling. *)
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    CO :== 'carbon_monoxide';
+    CO2 :== 'carbon_dioxide';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    H2O :== 'water';
+
+    compsH2,
+    compsCityGas,
+    compsFeed,
+    compsCracked,
+    compsReform,
+    compsWater IS_A set OF symbol_constant;
+
+    compsH2 :== [H2];
+    compsCityGas :== [C1, C2];
+    compsFeed :== [C1, C2, H2];
+    compsCracked :== [C1, H2];   
+    compsReform :== [H2, H2O, CO, CO2, C1];
+    compsWater :== [H2O];
+
+    (* look in components.a4l for "components_data" model *)
+
+    cdH2 IS_A components_data(compsH2, H2);
+    cdCityGas IS_A components_data(compsCityGas, C1);
+    cdFeed IS_A components_data(compsFeed, C1);
+    cdCracked IS_A components_data(compsCracked, C1);
+    cdReform IS_A components_data(compsReform, H2O);
+    cdWater IS_A components_data(compsWater, H2O);
+
+    (* look in phases.a4l for "phases_data" model *)
+
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+        'UNIFAC_liquid_mixture','none');
+    equil IS_A boolean;
+
+    (* look in stream_holdup.a4l for "stream" model *)
+
+
+    (* feed streams *)
+    S01CityGas IS_A stream(cdCityGas, pdV, equil);
+    S01H2Recycle IS_A stream(cdH2, pdV, equil);
+(*    S09Steam IS_A stream(cdWater, pdV, equil);
+    S11TapWater IS_A stream(cdWater, pdV, equil);
+ *)   
+    
+    (* U01FeedMixer - with heating *)
+    S13HeatedFeed IS_A stream(cdFeed, pdV, equil);
+    U01FeedMixer_Qin IS_A energy_rate;
+    U01FeedMixer IS_A unitTwoInOneOut(
+    S01CityGas,
+    S01H2Recycle,
+    S13HeatedFeed,
+    U01FeedMixer_Qin);
+    
+    (* U02CompressorP1 *)
+    S20CompressorIntermediate IS_A stream(cdFeed, pdV, equil);
+    U02CompressorP1_Qin IS_A energy_rate;
+    U02CompressorP1 IS_A unitOneInOneOut(
+    S13HeatedFeed,
+    S20CompressorIntermediate,
+    U02CompressorP1_Qin);
+    U02CompressorP1.feedMolarEntropy =
+    U02CompressorP1.productMolarEntropy;
+    
+    (* compressorPart2 *)
+    S34CompressedFeed IS_A stream(cdFeed, pdV, equil);
+    U03CompressorP2_Qin IS_A energy_rate;
+    U03CompressorP2_eff IS_A positive_factor;
+    U03CompressorP2 IS_A unitOneInOneOut(
+    S13HeatedFeed,
+    S34CompressedFeed,
+    U03CompressorP2_Qin);
+    U03CompressorP2_eff*U03CompressorP2_Qin =U02CompressorP1_Qin;
+    S34CompressedFeed.P = S20CompressorIntermediate.P;    
+   
+    (* U04 Ethane Cracker - gives 100% methane output *)
+    S45AdiabaticMixerFeed IS_A stream(cdCracked, pdV, equil);
+    U04EthaneCracker_Qin IS_A energy_rate;
+    U04EthaneCracker IS_A unitOneInOneOut(
+    S34CompressedFeed,
+    S45AdiabaticMixerFeed,
+    U04EthaneCracker_Qin);
+
+(*    (* U05 Adiabatic Mixer - mixes superheated steam with methane from
+      cracker *)
+    S56ReformerFeed IS_A stream(cdFeed, pdV, equil);
+    U05AdiabaticMixer_Qin IS_A energy_rate;
+    U05AdiabaticMixer IS_A unitTwoInOneOut(
+    S45AdiabaticMixerFeed,
+    S511SuperheatedSteam,
+    S56ReformerFeed,
+    U05AdiabaticMixer_Qin);
+    U05AdiabaticMixer_Qin = 0;
+
+    (* U06 Reformer *)
+    S67WaterGasShiftFeed IS_A stream(cdReformStream, pdV, equil);
+    U06Reformer_Qin IS_A energy_rate;
+    U06Reformer IS_A unitOneInOneOut(
+    S56ReformerFeed,
+    S67WaterGasShiftFeed,
+    U06Reformer_Qin);
+    
+    (* U07 Water Gas Shift *)
+    S78SplitterFeed IS_A stream(cdReformStream, pdV, equil);
+    U07WaterGasShift_Qin IS_A energy_rate;
+    U07WaterGasShift IS_A unitOneInOneOut(
+    S67WaterGasShiftFeed,
+    S78SplitterFeed,
+    U07WaterGasShift_Qin);
+    
+    (* U08 Splitter *)
+    S89SweeperFeed IS_A stream(cdReformStream, pdV, equil);
+    S9SplitterExhaust IS_A stream(cdReformStream, pdV, equil);
+    U08Splitter_Qin IS_A energy_rate;
+    U08Splitter IS_A unitOneInTwoOut(
+    S78SplitterFeed,
+    S9SplitterExhaust,
+    S89SweeperFeed,
+    U08Splitter_Qin);
+
+    (* U09 Sweeper - sweeps hydrogen from hydrogen/water mixture *)
+    S910FlashTankFeed IS_A stream(cdH2, pdV, equil);
+    U09Sweeper_Qin IS_A energy_rate;
+    U09Sweeper IS_A unitTwoInOneOut(
+    S89SweeperFeed,
+    S09Steam, 
+    S910FlashTankFeed,
+    U09Sweeper_Qin);
+  
+    (* U10 Flash Tank  *)
+    S10FuelCellFeed IS_A stream(cdH2, pdV, equil);
+    S1011FlashTankBottoms IS_A stream(cdReformStream, pdVL, equil);
+    U10FlashTank_Qin IS_A energy_rate;
+    U10FlashTank IS_A vapor_liquid_flash(
+    U10FlashTank_Qin,
+    equilbriated,
+    S910FlashTankFeed,
+    S10FuelCellFeed
+    S1011FlashTankBottoms);
+
+    (* U11 Furnace - provides heat to Reformer and Sweeper *)
+    S511SuperheatedSteam IS_A stream(cdWater, pdV, equil);
+    S11ExhaustWater IS_A stream(cdWater, pdV, equil);
+    U11Furnace_Qin IS_A energy_rate;
+    U11Furnace IS_A unitOneInTwoOut(
+    S11TapWater,
+    S511SuperheatedSteam,
+    S11ExhaustWater,
+    U11Furnace_Qin);
+*)
+
+    METHODS
+    
+    METHOD default_self;
+	RUN U01FeedMixer.default_self;
+	RUN U02CompressorP1.default_self;
+	RUN U03CompressorP2.default_self;
+	RUN U04EthaneCracker.default_self;
+(*    RUN U05AdiabaticMixer.default_self;
+	RUN U06Reformer.default_self;
+ 	RUN U07WaterGasShift.default_self;
+	RUN U08Splitter.default_self;
+	RUN U09Sweeper.default_self;
+	RUN U10FlashTank.default_self;
+	RUN U11Furnace.default_self;		*)
+    END default_self;
+    
+    METHOD values;
+	(* basis for this model is one mol/s of city gas feed *)
+	
+	equil := TRUE;
+	
+	(* feed streams *)
+	S01CityGas.flow := 1 {mol/s};
+	S01CityGas.y[C1] := 0.99;
+	S01CityGas.T := 300 {K};
+	S01CityGas.P := 2 {atm};
+	
+	S01H2Recycle.flow := 0.1*S01CityGas.flow;
+	S01H2Recycle.T := 300 {K};
+	S01H2Recycle.P := 2 {atm};
+	
+(*	S09Steam.flow := 1 {mol/s};
+	S09Steam.T := 500 {K};
+	S09Steam.P := 3 {atm};
+
+	S11TapWater.flow := 1 {mol/s};
+	S11TapWater.T := 25 {C};
+	S11TapWater.P := 1 {atm};
+*)
+	(* U01FeedMixer *)
+	S13HeatedFeed.T := 350 {K};
+	S13HeatedFeed.P := 2 {atm};
+	
+	(* U02CompressorP1 *)
+	S20CompressorIntermediate.P := 150 {psi};
+
+	(* U03CompressorP2 *)
+	U03CompressorP2_eff := 0.9;
+	S34CompressedFeed.P := 150 {psi};
+	
+	(* U04EthaneCracker *)
+	S45AdiabaticMixerFeed.P := S34CompressedFeed.P;
+	U04EthaneCracker_Qin := 0.0 {kJ/s};
+	U04EthaneCracker.stoichCoef[C1] := 2;
+	U04EthaneCracker.stoichCoef[C2] := -1;
+	U04EthaneCracker.stoichCoef[H2] := -1;
+	U04EthaneCracker.error_LostFlowOut := 0.0 {mol/s};
+	
+(*	(* U05 Adiabatic Mixer *)
+	S56ReformerFeed.T := 550 {C};
+	S56ReformerFeed.y[CO] := 0;
+	S56ReformerFeed.y[CO2] := 0;
+	
+	(* U06 Reformer *)
+	S67WaterGasShiftFeed.y[C1] := 0.0;
+	
+	(* U07 Water Gas Shift *)
+	S78SplitterFeed.y[CO] := .000001;
+	
+	(* U08 Splitter *)
+	S9SplitterExhaust.y[H2] := .02;
+	S89SweeperFeed.y[CO] := 0;
+	S89SweeperFeed.y[CO2] := 0;
+	
+	(* U09 Sweeper *)
+	S910FlashTankFeed.T := 500 {C};
+	
+	(* U10 Flash Tank *)
+	S10FuelCellFeed.T := 80 {C};
+	S1011FlashTankBottoms.liq.x[H2O] := 1.0;
+	
+	(* U11 Furnace *)
+	S511SuperheatedSteam.T := 550 {C};
+	*)
+	
+    END values;
+    
+    METHOD specify;
+
+	(* units *)
+	RUN U01FeedMixer.specify;
+	RUN U02CompressorP1.specify;
+	RUN U03CompressorP2.specify;
+	RUN U04EthaneCracker.specify;
+(*	RUN U05AdiabaticMixer.specify;
+	RUN U06Reformer.specify;
+ 	RUN U07WaterGasShift.specify;
+	RUN U08Splitter.specify;
+	RUN U09Sweeper.specify;
+	RUN U10FlashTank.specify;
+	RUN U11Furnace.specify;		*)
+	U03CompressorP2_eff.fixed := TRUE;
+	U04EthaneCracker.turnover.fixed := FALSE;
+	U04EthaneCracker.error_LostFlowOut.fixed := TRUE;
+	
+	(* adjust flags for streams *)
+	(* S01CityGas *)
+	S01CityGas.f[compsCityGas].fixed := FALSE;
+	S01CityGas.flow.fixed := TRUE;
+	S01CityGas.y[C1].fixed := TRUE;
+
+	(* S01H2Recycle *)
+	S01H2Recycle.flow.fixed := TRUE;
+	S01H2Recycle.f[compsH2].fixed := FALSE;
+	
+	(* S13HeatedFeed *)
+	S13HeatedFeed.f[compsFeed].fixed := FALSE;
+
+	(* S20CompressorIntermediate *)
+	S20CompressorIntermediate.T.fixed := FALSE;
+	S20CompressorIntermediate.f[compsFeed].fixed := FALSE;
+	
+	(* S34CompressedFeed *)
+	S34CompressedFeed.T.fixed := FALSE;	
+	S34CompressedFeed.P.fixed := FALSE;	
+	S34CompressedFeed.f[compsFeed].fixed := FALSE;
+
+	(* S45AdiabaticMixerFeed *)
+	S45AdiabaticMixerFeed.T.fixed := FALSE;
+	U04EthaneCracker_Qin.fixed := TRUE;
+	S45AdiabaticMixerFeed.f[compsCracked].fixed := FALSE;
+	
+(*	(* S56ReformerFeed *)
+	S56ReformerFeed.T.fixed := FALSE;
+	S56ReformerFeed.P.fixed := FALSE;
+	S56ReformerFeed.y[C1].fixed := TRUE;
+	
+	(* S67WaterGasShiftFeed *)
+	S67WaterGasShiftFeed.T.fixed := FALSE;
+	S67WaterGasShiftFeed.P.fixed := FALSE;
+	S67WaterGasShiftFeed.y[C1].fixed := FALSE;
+	
+	(* S78SplitterFeed *)
+	S78SplitterFeed.T.fixed := FALSE;
+	S78SplitterFeed.P.fixed := FALSE;
+	S78SplitterFeed.y[CO].fixed := TRUE;
+	
+	(* S89SweeperFeed *)
+	S89SweeperFeed.T.fixed := FALSE;
+	S89SweeperFeed.P.fixed := FALSE;
+	S89SweeperFeed.y[CO].fixed := TRUE;
+	S89SweeperFeed.y[CO2].fixed := TRUE;
+	
+	(* S9SplitterExhaust *)
+	S9SplitterExhaust.T.fixed := FALSE;
+	S9SplitterExhaust.P.fixed := FALSE;
+	S9SplitterExhaust.y[H2].fixed := TRUE;
+	
+	(* S910FlashTankFeed *)
+	S910FlashTankFeed.T.fixed := TRUE;
+	S910FlashTankFeed.P.fixed := FALSE;
+	S910FlashTankFeed.f[compsReformStream].fixed := FALSE;
+	
+	(* S10FuelCellFeed *)
+	S10FuelCellFeed.T.fixed := TRUE;
+	S10FuelCellFeed.P.fixed := FALSE;
+	S10FuelCellFeed.f[compsReformStream].fixed := FALSE;
+	
+	(* S1011FlashTankBottoms *)
+	S1011FlashTankBottoms.T.fixed := FALSE;
+	S1011FlashTankBottoms.P.fixed := FALSE;
+	S1011FlashTank.liq.x[H2O].fixed := FALSE;	
+
+	(* S511SuperheatedSteam *)
+	S511SuperheatedSteam.T.fixed := TRUE;
+	S511SuperheatedSteam.P.fixed := FALSE;
+	S511SuperheatedSteam.f[compsWater].fixed := FALSE;
+
+*)  
+    END specify;
+
+END simpleH2Process;

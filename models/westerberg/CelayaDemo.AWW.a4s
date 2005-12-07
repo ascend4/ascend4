@@ -1,0 +1,30 @@
+
+DELETE TYPES;
+READ FILE "CelayaDemo.AWW.a4c";
+
+COMPILE demo OF simpleFS;
+BROWSE {demo};
+RUN {demo.values};
+RUN {demo.reset};
+SOLVE {demo} WITH QRSlv;
+DELETE SYSTEM;
+
+# reset to use rigorous thermo and solve again
+ASSIGN {demo.equil} true {*};
+RUN {demo.reset};
+SOLVE {demo} WITH QRSlv;
+
+PROBE current {demo.conv} {};
+PROBE current {demo.U3flash.liqout.T} {};
+PROBE current {demo.U3flash.liqout.P} {};
+PROBE current {demo.splitRecycle} {};
+PROBE current {demo.S30flashL.f} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
+PROBE current {demo.S30flashL.flow} {};
+PROBE current {demo.S30flashL.y['2_hexene_cis']} {};
+PROBE current {demo.S51recycle.f} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
+PROBE current {demo.S51recycle.flow} {};
+PROBE current {demo.S51recycle.y['2_hexene_cis']} {};
+
+
+
+

@@ -1,0 +1,905 @@
+REQUIRE "simpleUnits.AWW.a4c";
+
+
+(* this REQUIRE statement will lead to many different files
+  being loaded recursively.  simpleUnits REQUIRES other files
+  and so forth.  The easiest way to follow this is to load
+  this file into ASCEND and see all the files that are also
+  loaded as a result.
+  
+  If you load this file into ASCEND, all the various types with which
+  this model is created will be loaded.  You should be able to find
+  the files in which each is defined. *)
+
+(* look in atoms.a4l for list of all defined veriable types *)
+
+MODEL area0(
+    compsSets WILL_BE set OF symbol_constant;
+    comps[compsSets] WILL_BE set OF symbol_constant;
+    cd[compsSets] WILL_BE components_data;
+    phaseTypes WILL_BE set OF symbol_constant;
+    pd[phaseTypes] WILL_BE phases_data;
+    equil WILL_BE boolean;
+);
+
+    (* Area0 is the outside world.  Define feed and broken recycle streams here. *)
+
+    (* it is tiring to type symbols as strings.  This move defines
+      strings that this model will use throughout *)
+    
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+    
+    (* define components and component mixtures for process *)
+    
+    (* look in components.a4l for list of available components.
+      There are several hundred listed -- i.e., all those in Reid,'
+      Prausnitz and Polling. *)
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* define streams for area0.
+      Streams with names ending in x are broken recycle streams *)
+    
+    S0011 IS_A stream(cd['water'], pd['L'], equil);    (* water to process *)
+    S0021 IS_A stream(cd['feed'], pd['V'], equil);     (* city gas to process *)
+    S0041 IS_A stream(cd['air'], pd['V'], equil);      (* air to furnace *)
+    S0042 IS_A stream(cd['feed'], pd['V'], equil);     (* city gas to furnace *)
+
+    S5211x IS_A stream(cd['water'], pd['L'], equil);   (* broken Wa recycle *)
+    S5321x IS_A stream(cd['H2Prod'], pd['V'], equil);  (* broken H2 recycle *)
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN S0011.default_self;
+	RUN S0021.default_self;
+	RUN S0041.default_self;
+	RUN S0042.default_self;
+	RUN S5211x.default_self;
+	RUN S5321x.default_self;
+    END default_self;
+
+    METHOD values;
+	
+	(* water to steam generation system *)
+	S0011.f[Wa] := 5.0 {mol/s};
+	S0011.T := 300 {K};
+	S0011.P := 1000 {psia};
+	
+	(* main city gas feed *)
+	S0021.f[H2] := 0.0 {mol/s};
+	S0021.f[C1] := 0.97 {mol/s};
+	S0021.f[C2] := 0.03 {mol/s};
+	S0021.f[Wa] := 0.0 {mol/s};
+	S0021.T := 300 {K};
+	S0021.P := 1.05 {atm};
+	
+	(* air to furnace *)
+	S0041.f[O2] := 50 {mol/s};
+	S0041.f[N2] := 200 {mol/s};
+	S0041.T := 300 {K};
+	S0041.P := 1.05 {atm};
+
+	(* supplemental city gas to furnace *)
+	S0042.f[H2] := 0.0 {mol/s};
+	S0042.f[C1] := 0.97 {mol/s};
+	S0042.f[C2] := 0.03 {mol/s};
+	S0042.f[Wa] := 0.0 {mol/s};
+	S0042.T := 300 {K};
+	S0042.P := 1.05 {atm};
+
+	(* torn water recycle stream *)
+	S5211x.f[Wa] := 1 {mol/s};
+	S5211x.T := 300 {K};
+	S5211x.P := 1.05 {atm};
+
+	(* torn H2 recycle stream *)
+	S5321x.f[H2] := 0.05 {mol/s};
+	S5321x.f[Wa] := 0.001 {mol/s};
+	S5321x.T := 300 {K};
+	S5321x.P := 1.05 {atm};
+    END values;
+
+    METHOD specify;
+	(* feed streams *)
+	RUN S0011.specify;
+	RUN S0021.specify;
+	RUN S0041.specify;
+	RUN S0042.specify;
+
+	(* recycle streams *)
+	RUN S5211x.specify;
+	RUN S5321xspecify;
+    END specify;
+
+END area0;
+
+
+MODEL area1(
+    compsSets WILL_BE set OF symbol_constant;
+    comps[compsSets] WILL_BE set OF symbol_constant;
+    cd[compsSets] WILL_BE components_data;
+    phaseTypes WILL_BE set OF symbol_constant;
+    pd[phaseTypes] WILL_BE phases_data;
+    equil WILL_BE boolean;
+    strmSet WILL_BE set OF symbol_constant;
+    strms[strmSet] WILL_BE stream;
+);
+
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+    
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* U1 Water Mix *)
+    S1112 IS_A stream(cd['water'], pd['L'], equil);
+    QinU1 IS_A energy_rate;
+    U1 IS_A unitTwoInOneOut(strms['0011'], strms['5211'], S1112, QinU1);
+
+    (* U2 Steam Hx Cold Side *)
+    S1213 IS_A stream(cd['water'], pd['V'], equil);
+    QinU2 IS_A energy_rate;
+    U2 IS_A unitOneInOneOut(S1112, S1213, QinU2);
+
+    (* U3 Steam Split *)
+    S1314 IS_A stream(cd['water'], pd['V'], equil);
+    S1315 IS_A stream(cd['water'], pd['V'], equil);
+    QinU3 IS_A energy_rate;
+    U3 IS_A unitOneInTwoOut(S1112, S1314, S1315, QinU3);
+
+    (* U4 Feed Hx Hot Side *)
+    S1400 IS_A stream(cd['water'], pd['L'], equil);
+    QinU4 IS_A energy_rate;
+    U4 IS_A unitOneInOneOut(S1314, S1400, QinU4);
+
+    (* U5 Steam Split *)
+    S1517 IS_A stream(cd['water'], pd['V'], equil);
+    S1525 IS_A stream(cd['water'], pd['V'], equil);
+    QinU5 IS_A energy_rate;
+    U5 IS_A unitOneInTwoOut(S1315, S1517, S1525, QinU5);
+    
+    (* U6 Expander Ideal*)
+    S1600 IS_A stream(cd['water'], pd['V'], equil);
+    QinU6 IS_A energy_rate;
+    U6 IS_A unitOneInOneOut(S1517, S1600, QinU6);
+
+    (* U7 Expander*)
+    S1751 IS_A stream(cd['water'], pd['V'], equil);
+    QinU7 IS_A energy_rate;
+    U7 IS_A unitOneInOneOut(S1517, S1751, QinU7);
+
+    
+    (* special unit relationships *)
+    (* U1 Water Mix *)
+
+    (* U2 Steam Hx Cold Side *)
+
+    (* U3 Steam Split *)
+    
+    (* U4 Feed Hx Hot Side *)
+
+    (* U5 Steam Split *)
+
+    (* U6  Expander Ideal *)
+    (* Isentropic requirement *)
+    IsentropicExpander: U6.feedMolarEntropy = U6.productMolarEntropy;
+    
+    (* U7 Expander *)
+    EffU7 IS_A fraction;
+    EffU7*U7.Qin = U6.Qin;
+    U7.product.P = U6.product.P;
+
+
+    METHODS
+    
+    METHOD default_self;
+	RUN U1.default_self;
+	RUN U2.default_self;
+	RUN U3.default_self;
+	RUN U4.default_self;
+	RUN U5.default_self;
+	RUN U6.default_self;
+	RUN U7.default_self;
+    END default_self;
+    
+    METHOD values;
+
+	(* U1 Water Mix *)
+
+	(* U2 Steam Hx Cold Side *)
+	U2.product.T := 1000 {K};
+
+	(* U3 Steam Split *)
+	U3.split[Wa] := 0.9;
+    
+	(* U4 Feed Hx Hot Side *)
+	U4.product.T := 400 {K};
+
+	(* U5 Steam Split *)
+	U5.split[Wa] := 0.3;
+	
+	(* U6 Expander Ideal *)
+	U6.product.P := 100 {psia};
+	
+	(* U7 Expander *)
+	EffU7 := 0.95;
+	
+    END values;
+    
+    METHOD specify;
+	RUN U7.specify;
+	RUN U6.specify;
+	RUN U5.specify;
+	RUN U4.specify;
+	RUN U3.specify;
+	RUN U2.specify;
+	RUN U1.specify;
+	
+	(* U1 Water Mix *)
+
+	(* U2 Steam Hx Cold Side *)
+	U2.product.T.fixed := TRUE;
+	U2.Qin.fixed := FALSE;
+
+	(* U3 Steam Split *)
+
+	(* U4 Feed Hx Hot Side *)
+	U4.product.T.fixed := TRUE;
+	U4.Qin.fixed := FALSE;
+	
+	(* U5 Steam Split *)
+	
+	(* U6 Expander Ideal *)
+	U6.product.P.fixed := TRUE;
+	U6.delP.fixed := FALSE;
+	(* release heat input as unit is isentropic *)
+	U6.Qin.fixed := FALSE;
+
+	(* U7 Expander *)
+	EffU7.fixed := TRUE;
+	(* pressure out same as for ideal unit *)
+	U7.delP.fixed := FALSE;
+	(* heat in related to ideal through an efficiency *)
+	U7.Qin.fixed := FALSE;
+
+    END specify;
+
+END area1;
+
+MODEL area2(
+    compsSets WILL_BE set OF symbol_constant;
+    comps[compsSets] WILL_BE set OF symbol_constant;
+    cd[compsSets] WILL_BE components_data;
+    phaseTypes WILL_BE set OF symbol_constant;
+    pd[phaseTypes] WILL_BE phases_data;
+    equil WILL_BE boolean;
+    strmSet WILL_BE set OF symbol_constant;
+    strms[strmSet] WILL_BE stream;
+);
+
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+    
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* feed prep *)
+    
+    (* U1 H2Mix *)
+    S2122 IS_A stream(cd['feed'], pd['V'], equil);
+    QinU1 IS_A energy_rate;
+    U1 IS_A unitTwoInOneOut(strms['0021'], strms['5321'], S2122, QinU1);
+    
+    (* U2 Feed Hx Cold Side *)
+    S2224 IS_A stream(cd['feed'], pd['V'], equil);
+    QinU2 IS_A energy_rate;
+    U2 IS_A unitOneInOneOut(S2122, S2224, QinU2);
+
+    (* U3 Comp Ideal *)
+    S2300 IS_A stream(cd['feed'], pd['V'], equil);
+    QinU3 IS_A energy_rate;
+    U3 IS_A unitOneInOneOut(S2224, S2300, QinU3);
+
+    (* U4 Comp *)
+    S2425 IS_A stream(cd['feed'], pd['V'], equil);
+    QinU4 IS_A energy_rate;
+    U4 IS_A unitOneInOneOut(S2224, S2425, QinU4);
+    
+    (* U5 Add Steam *)
+    S2531 IS_A stream(cd['react'], pd['V'], equil);
+    QinU5 IS_A energy_rate;
+    U5 IS_A unitTwoInOneOut(S2425, strms['1525'], S2531, QinU5);
+    
+
+    (* special unit relationships *)
+    
+    (* U3 Comp Ideal *)
+    (* Isentropic requirement *)
+    IsentropicComp: U3.feedMolarEntropy = U3.productMolarEntropy;
+    
+    (* U4 Comp *)
+    EffU4 IS_A fraction;
+    EffU4*U4.Qin = U3.Qin;
+    U4.product.P = U3.product.P;
+
+
+    METHODS
+    
+    METHOD default_self;
+	RUN U1.default_self;
+	RUN U2.default_self;
+	RUN U3.default_self;
+	RUN U4.default_self;
+	RUN U5.default_self;
+    END default_self;
+    
+    METHOD values;
+
+	(* U1 H2 Mix *)
+	
+	(* U2 Feed Hx Cold Side *)
+	S2224.T := 340 {K};
+	
+	(* U3 Comp Ideal *)
+	U3.product.P := 150 {psia};
+
+	(* U4 Comp *)
+	EffU4 := 0.95;
+	
+	(* U5 Add Steam *)
+
+    END values;
+    
+    METHOD specify;
+	RUN U5.specify;
+	RUN U4.specify;
+	RUN U3.specify;
+	RUN U2.specify;
+	RUN U1.specify;
+
+	(* U1 H2 Mix *)
+
+	(* U2 Feed Hx Cold Side *)
+	QinU2.fixed := FALSE;
+	S2224.T.fixed := TRUE;
+	
+	(* U3 Comp Ideal *)
+	U3.product.P.fixed := TRUE;
+	U3.delP.fixed := FALSE;
+	(* release heat input as unit is isentropic *)
+	U3.Qin.fixed := FALSE;
+	
+	(* U4 Comp *)
+	EffU4.fixed := TRUE;
+	(* pressure out same as for ideal unit *)
+	U4.delP.fixed := FALSE;
+	(* heat in related to ideal through an efficiency *)
+	U4.Qin.fixed := FALSE;
+	
+	(* U5 Add Steam *)
+	
+    END specify;
+
+END area2;
+
+MODEL area3(
+    compsSets WILL_BE set OF symbol_constant;
+    comps[compsSets] WILL_BE set OF symbol_constant;
+    cd[compsSets] WILL_BE components_data;
+    phaseTypes WILL_BE set OF symbol_constant;
+    pd[phaseTypes] WILL_BE phases_data;
+    equil WILL_BE boolean;
+    strmSet WILL_BE set OF symbol_constant;
+    strms[strmSet] WILL_BE stream;
+);
+    
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* U1 React Hx Cold Side - reactor *)
+    S3132 IS_A stream(cd['react'], pd['V'], equil);
+    QinU1 IS_A energy_rate;
+    U1 IS_A unitOneInOneOut(strms['2531'], S3132, QinU1);
+
+    (* U2 Crack: C2 + H2 = 2 C1 - reactor *)
+    S3233 IS_A stream(cd['react'], pd['V'], equil);
+    QinU2 IS_A energy_rate;
+    U2 IS_A unitOneInOneOut(S3132, S3233, QinU2);
+
+    (* U3 Reform: C1 + Wa = CM + 3H2 - reactor *)
+    S3334 IS_A stream(cd['react'], pd['V'], equil);
+    QinU3 IS_A energy_rate;
+    U3 IS_A unitOneInOneOut(S3233, S3334, QinU3);
+
+    (* U4 WGS: water gas shift: CM + Wa = CD + H2 - reactor *)
+    S3435 IS_A stream(cd['react'], pd['V'], equil);
+    QinU4 IS_A energy_rate;
+    U4 IS_A unitOneInOneOut(S3334, S3435, QinU4);
+
+    (* U5 membrane - reactor *)
+    S3541 IS_A stream(cd['react'], pd['V'], equil);
+    S3551 IS_A stream(cd['H2Prod'], pd['V'], equil);
+    QinU5 IS_A energy_rate;
+    U5 IS_A unitOneInTwoOut(S3435, S3541, S3551, QinU5);
+
+    (* special unit relationships *)
+    
+    (* U1 React Hx Cold Side *)
+    
+    (* U2 Crack: C2 + H2 = 2C1 *)
+
+    (* U3 Reform: C1 + Wa = CM + 3H2 *)
+    (* convert specified fraction of C1 *)
+    convU3C1 IS_A fraction;
+    U3.product.f[C1] = (1.0-convU3C1)*U3.feed.f[C1];    
+
+    (* U4 WGS: CM + Wa = CD + H2 *)
+    (* convert specified fraction of CM *)
+    convU4CM IS_A fraction;
+    U4.product.f[CM] = (1.0-convU4CM)*U4.feed.f[CM];    
+
+    (* U5 Membrane *)
+
+    METHODS
+    
+    METHOD default_self;
+	RUN U1.default_self;	
+	RUN U2.default_self;	
+	RUN U3.default_self;	
+	RUN U4.default_self;	
+	RUN U5.default_self;	
+    END default_self;
+    
+    METHOD values;
+
+	(* U1 React Hx Cold Side *)
+	U1.product.T := 1000.0 {K};
+
+	
+	(* U2 Crack: C2 + H2 = 2C1 *)
+	U2.stoichCoef[C2] := -1;
+	U2.stoichCoef[H2] := -1;
+	U2.stoichCoef[C1] := 2;
+	(* completely use up C2 *)
+	U2.product.f[C2] := 0.0 {mol/s};
+	
+	(* U3 Reform: C1 + Wa = CM + 3H2 *)
+	U3.stoichCoef[C1] := -1;
+	U3.stoichCoef[Wa] := -1;
+	U3.stoichCoef[CM] := 1;
+	U3.stoichCoef[H2] := 3;
+	(* convert specified fraction of C1 *)
+	convU3C1 := 0.8;
+
+	(* U4 WGS: CM + Wa = CD + H2 *)
+	U4.stoichCoef[CM] := -1;
+	U4.stoichCoef[Wa] := -1;
+	U4.stoichCoef[CD] := 1;
+	U4.stoichCoef[H2] := 1;
+	(* convert specified fraction of CM *)
+	convU4CM := 0.98;
+	
+	(* U5 Membrane *)
+	U5.split[H2] := 0.8;
+	
+    END values;
+    
+    METHOD specify;
+
+	RUN U5.specify;
+	RUN U4.specify;
+	RUN U3.specify;
+	RUN U2.specify;
+	RUN U1.specify;
+
+	(* U1 React Hx Cold Side *)
+	U1.product.T.fixed := TRUE;
+	U1.Qin.fixed := FALSE;
+	
+	(* U2 Crack: C2 + H2 = 2C1 *)
+	U2.product.f[C2].fixed := TRUE;
+	U2.turnover.fixed := FALSE;
+
+	(* U3 Reform: C1 + Wa = CM + 3H2 *)
+	convU3C1.fixed := TRUE;
+	U3.turnover.fixed := FALSE;
+    
+	(* U4 WGS: CM + Wa = CD + H2 *)
+	convU4CM.fixed := TRUE;
+	U4.turnover.fixed := FALSE;
+	
+	(* U5 Membrane *)
+	
+    END specify;
+
+END area3;
+
+MODEL area4(
+    compsSets WILL_BE set OF symbol_constant;
+    comps[compsSets] WILL_BE set OF symbol_constant;
+    cd[compsSets] WILL_BE components_data;
+    phaseTypes WILL_BE set OF symbol_constant;
+    pd[phaseTypes] WILL_BE phases_data;
+    equil WILL_BE boolean;
+    strmSet WILL_BE set OF symbol_constant;
+    strms[strmSet] WILL_BE stream;
+);
+    
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+    
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* U1 Air Mix - furnace*)
+    S4142 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU1 IS_A energy_rate;
+    U1 IS_A unitTwoInOneOut(strms['0041'], strms['3541'], S4142, QinU1);
+    
+    (* U2 Methane Mix - furnace *)
+    S4243 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU2 IS_A energy_rate;
+    U2 IS_A unitTwoInOneOut(strms['0042'], S4142, S4243, QinU2);
+    
+    (* U3 CM rxn: CM + 0.5O2 = CD - furnace *)
+    S4344 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU3 IS_A energy_rate;
+    U3 IS_A unitOneInOneOut(S4243, S4344, QinU3);
+
+    (* U4 H2 rxn: H2 + 0.5O2 = Wa - furnace *)
+    S4445 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU4 IS_A energy_rate;
+    U4 IS_A unitOneInOneOut(S4344, S4445, QinU4);
+    
+    (* U5 C1 rxn: C1 + 1.5O2 = CD + Wa - furnace *)
+    S4546 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU5 IS_A energy_rate;
+    U5 IS_A unitOneInOneOut(S4445, S4546, QinU5);
+    
+    (* U6 React Hx Hot Side *)
+    S4647 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU6 IS_A energy_rate;
+    U6 IS_A unitOneInOneOut(S4546, S4647, QinU6);
+    
+    (* U7 Steam Hx Hot Side *)
+    S4700 IS_A stream(cd['furnace'], pd['V'], equil);
+    QinU7 IS_A energy_rate;
+    U7 IS_A unitOneInOneOut(S4647, S4700, QinU7);
+
+
+    (* special unit relationships *)
+    (* U1 Air Mix *)
+    (* U2 Methane Mix *)
+    (* U3 CM rxn *)
+    (* U4 H2 rxn *)
+    (* U5 C1 rxn *)
+
+    METHODS
+    
+    METHOD default_self;
+	RUN U1.default_self;	
+	RUN U2.default_self;	
+	RUN U3.default_self;	
+	RUN U4.default_self;	
+	RUN U5.default_self;	
+	RUN U6.default_self;	
+	RUN U7.default_self;	
+    END default_self;
+    
+    METHOD values;
+
+	(* U1 Air Mix *)
+
+	(* U2 Methane Mix *)
+
+	(* U3 CM rxn: CM + 0.5O2 = CD - furnace *)
+	U3.stoichCoef[CM] := -1;
+	U3.stoichCoef[O2] := -0.5;
+	U3.stoichCoef[CD] := 1;
+	U3.product.f[CM] := 0.0 {mol/s};
+
+	(* U4 H2 rxn: H2 + 0.5O2 = Wa - furnace *)
+	U4.stoichCoef[H2] := -1;
+	U4.stoichCoef[O2] := 0.5;
+	U4.stoichCoef[Wa] := 1;
+	U4.product.f[H2] := 0.0 {mol/s};
+
+	(* U5 C1 rxn: C1 + 1.5O2 = CD + Wa - furnace *)
+	U5.stoichCoef[C1] := -1;
+	U5.stoichCoef[O2] := -1.5;
+	U5.stoichCoef[CD] := 1;
+	U5.stoichCoef[Wa] := 1;
+	U5.stoichCoef[C1] := 1;
+    	
+	(* U6 React Hx Hot Side *)
+	(* fix outlet temperature *)
+	U6.product.T := 1000 {K};
+
+	(* U7 Steam Hx Hot Side *)
+	U7.product.T := 400 {K};
+	
+    END values;
+    
+    METHOD specify;
+	
+	RUN U7.specify;
+	RUN U6.specify;
+	RUN U5.specify;
+	RUN U4.specify;
+	RUN U3.specify;
+	RUN U2.specify;
+	RUN U1.specify;
+
+	(* U1 Air Mix *)
+
+	(* U2 Methane Mix *)
+
+	(* U3 CM rxn: CM + 0.5O2 = CD - furnace *)
+	U3.product.f[CM].fixed := TRUE;
+	U3.turnover.fixed := FALSE;
+
+	(* U4 H2 rxn: H2 + 0.5O2 = Wa - furnace *)
+	U4.product.f[H2].fixed := TRUE;
+	U4.turnover.fixed := FALSE;
+
+	(* U5 C1 rxn: C1 + 1.5O2 = CD + Wa - furnace *)
+	U5.product.f[C1].fixed := TRUE;
+	U5.turnover.fixed := FALSE;
+	
+	(* U6 Steam Hx Hot Side *)
+	U6.product.T.fixed := TRUE;
+	U6.Qin.fixed := FALSE;
+	
+	(* U7 React Hx Hot Side *)
+	U7.product.T.fixed := TRUE;
+	U7.Qin.fixed := FALSE;
+	
+    END specify;
+
+END area4;
+
+MODEL area5(
+    compsSets WILL_BE set OF symbol_constant;
+    comps[compsSets] WILL_BE set OF symbol_constant;
+    cd[compsSets] WILL_BE components_data;
+    phaseTypes WILL_BE set OF symbol_constant;
+    pd[phaseTypes] WILL_BE phases_data;
+    equil WILL_BE boolean;
+    strmSet WILL_BE set OF symbol_constant;
+    strms[strmSet] WILL_BE stream;
+);
+
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* U1 Steam Mix *)
+    S5152 IS_A stream(cd['H2Prod'], pd['V'], equil);
+    QinU1 IS_A energy_rate;
+    U1 IS_A unitTwoInOneOut(strms['1751'], strms['3551'], S5152, QinU1);
+
+    (* U2 Flash *)
+    S5211 IS_A stream(cd['water'], pd['L'], equil);
+    S5253 IS_A stream(cd['H2Prod'], pd['V'], equil);
+    QinU2 IS_A energy_rate;
+    U2 IS_A unitOneInTwoOut(S5152, S5253, S5211, QinU2);
+    
+    (* U3 H2 Split *)
+    S5300 IS_A stream(cd['H2Prod'], pd['V'], equil);
+    S5321 IS_A stream(cd['H2Prod'], pd['V'], equil);
+    QinU3 IS_A energy_rate;
+    U3 IS_A unitOneInTwoOut(S5253, S5300, S5321, QinU3);
+    
+    (* special unit relationships *)
+    (* U1 Steam Mix *)
+
+    (* U2 Flash *)
+    area5_flashEqn: U2.product1.y[Wa]*U2.product1.P = U2.product2.phase['liquid1'].pure['water'].VP;
+
+    (* U3 H2 Split *)
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN U1.default_self;
+	RUN U2.default_self;
+	RUN U3.default_self;
+    END default_self;
+    
+    METHOD values;
+	U2.product1.T := 300 {K};
+    END values;
+    
+    METHOD specify;
+	RUN U3.specify;
+	RUN U2.specify;
+	RUN U1.specify;
+
+	(* U1 Steam Mix *)
+
+	(* U2 Flash *)
+	U2.product1.T.fixed := TRUE;
+	U2.Qin.fixed := FALSE;
+	U2.split[Wa].fixed := FALSE;
+
+	(* U3 H2 Split *)
+	
+    END specify;
+
+END area5;
+
+MODEL testSimpleH2Process;
+    
+    H2,O2,N2,C1,C2,CM,CD,Wa  IS_A symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    CM :== 'carbon_monoxide';
+    CD :== 'carbon_dioxide';
+    Wa :== 'water';
+    
+    (* look in components.a4l for "components_data" model *)
+    (* look in phases.a4l for "phases_data" model *)
+
+    compsSets IS_A set OF symbol_constant;
+    comps[compsSets] IS_A set OF symbol_constant;
+    
+    compsSets :== ['water','H2Prod','cityGas','air','feed','react','furnace'];
+   
+    (* all comps         [H2, O2, N2, C1, C2, CM, CD, Wa] *)
+    comps['water']   :== [                            Wa];
+    comps['H2Prod']  :== [H2,                         Wa];
+    comps['cityGas'] :== [            C1, C2            ];
+    comps['air']     :== [    O2, N2                    ];
+    comps['feed']    :== [H2,         C1, C2,         Wa];
+    comps['react']   :== [H2,         C1, C2, CM, CD, Wa];
+    comps['furnace'] :== [H2, O2, N2, C1,     CM, CD, Wa];
+    
+    cdWater   IS_A components_data(comps['water'],   Wa);
+    cdH2Prod  IS_A components_data(comps['H2Prod'],  Wa);
+    cdCityGas IS_A components_data(comps['cityGas'], C1);
+    cdAir     IS_A components_data(comps['air'],     N2);
+    cdFeed    IS_A components_data(comps['feed'],    Wa);
+    cdReact   IS_A components_data(comps['react'],   Wa);
+    cdFurnace IS_A components_data(comps['furnace'], Wa);
+
+    cd[compsSets2] ALIASES (cdWater, cdH2Prod, cdCityGas, cdAir, cdFeed, cdReact, cdFurnace)
+    WHERE compsSets2 IS_A set OF symbol_constant
+    WITH_VALUE ('water','H2Prod','cityGas','air','feed','react','furnace');
+    
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+    'UNIFAC_liquid_mixture','none');
+    
+    pd[phaseTypes] ALIASES (pdV, pdL, pdVL)
+    WHERE phaseTypes IS_A set OF symbol_constant
+    WITH_VALUE ('V','L','VL');
+    
+    equil IS_A boolean;
+
+    a0 IS_A area0(compsSets, comps, cd, phaseTypes, pd, equil);
+
+    a1Strms[a1StrmSet]
+    ALIASES (a0.S0011, a0.S5211x)
+    WHERE a1StrmSet IS_A set OF symbol_constant
+    WITH_VALUE ('0011', '5211');
+
+    a1 IS_A area1(compsSets, comps, cd, phaseTypes, pd, equil,
+    a1StrmSet, a1Strms);
+    
+    a2Strms[a2StrmSet]
+    ALIASES (a0.S0021, a1.S1525, a0.S5321x)
+    WHERE a2StrmSet IS_A set OF symbol_constant
+    WITH_VALUE ('0021', '1525', '5321');
+    
+    a2 IS_A area2(compsSets, comps, cd, phaseTypes, pd, equil,
+    a2StrmSet, a2Strms);
+
+    a3Strms[a3StrmSet]
+    ALIASES (a2.S2531)
+    WHERE a3StrmSet IS_A set OF symbol_constant
+    WITH_VALUE ('2531');
+    
+    a3 IS_A area3(compsSets, comps, cd, phaseTypes, pd, equil,
+    a3StrmSet, a3Strms);
+
+    a4Strms[a4StrmSet]
+    ALIASES (a3.S3541, a0.S0041, a0.S0042)
+    WHERE a4StrmSet IS_A set OF symbol_constant
+    WITH_VALUE ('3541', '0041', '0042');
+    
+    a4 IS_A area4(compsSets, comps, cd, phaseTypes, pd, equil,
+    a4StrmSet, a4Strms);
+
+    a5Strms[a5StrmSet]
+    ALIASES (a1.S1751, a3.S3551)
+    WHERE a5StrmSet IS_A set OF symbol_constant
+    WITH_VALUE ('1751', '3551');
+    
+    a5 IS_A area5(compsSets, comps, cd, phaseTypes, pd, equil,
+    a5StrmSet, a5Strms);
+    
+    (* put heat exchanger equations here *)
+
+
+    METHODS
+	
+    METHOD default_self;
+	RUN a0.default_self;
+	RUN a1.default_self;
+	RUN a2.default_self;
+	RUN a3.default_self;
+	RUN a4.default_self;
+	RUN a5.default_self;
+    END default_self;
+
+    METHOD values;
+	equil := TRUE;
+	RUN a0.values;
+	RUN a1.values;
+	RUN a2.values;
+	RUN a3.values;
+	RUN a4.values;
+	RUN a5.values;
+	
+	(* input nontraditional specs here *)
+
+    END values;
+    
+    METHOD specify;
+	RUN a5.specify;
+	RUN a4.specify;
+	RUN a3.specify;
+	RUN a2.specify;
+	RUN a1.specify;
+	RUN a0.specify;
+	
+	(* input nontraditional specs here *)
+	
+    END specify;
+    
+END testSimpleH2Process;
+
+

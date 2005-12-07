@@ -1,0 +1,252 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "Guthrie_costs.a4l";
+
+(*
+ *  Guthrie_costs.a4l
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 98/06/17 18:45:39 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/Guthrie_costs.a4l,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994-1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+
+MODEL cost_info_pressure_vessel(
+    P WILL_BE pressure;
+    matl WILL_BE symbol_constant;
+    cladSolid WILL_BE symbol_constant;
+    Fc WILL_BE factor;
+    );
+
+    (* Marshall and Swift FOR May 1994 - 990.8 *)
+    MandSindex IS_A factor;
+
+    materials IS_A set OF symbol_constant;
+    cladSolidSet IS_A set OF symbol_constant; 
+
+    materials :== ['CS', 'SS', 'Monel', 'Titanium'];
+    cladSolidSet :== ['clad', 'solid'];
+    
+    FmData[materials][cladSolidSet] IS_A factor_constant;
+    FmData['CS']['clad']        :== 1.0;
+    FmData['SS']['clad']        :== 2.25;
+    FmData['Monel']['clad']     :== 3.89;
+    FmData['Titanium']['clad']  :== 4.25;
+    FmData['CS']['solid']       :== 1.0;
+    FmData['SS']['solid']       :== 3.67;
+    FmData['Monel']['solid']    :== 6.34;
+    FmData['Titanium']['solid'] :== 7.89;
+    
+    Fm IS_A factor;
+    Fm = FmData[matl][cladSolid];
+
+    (* compute pressure factor *)
+    Fp, Pr IS_A factor;
+    Pr = P/100{psia};
+    Fp = 1.0+0.03*Pr+0.012*Pr*Pr;
+
+    Fc = Fp*Fm;
+
+    METHODS
+
+    METHOD default_self;
+	MandSindex := 990.8;
+    END default_self;
+
+    METHOD values;
+    END values;
+
+    METHOD specify;
+	MandSindex.fixed := TRUE;
+	P.fixed          := TRUE;
+    END specify;
+
+END cost_info_pressure_vessel;
+
+
+MODEL Guthrie_cost_pressure_vessel(
+    P WILL_BE pressure;
+    matl WILL_BE symbol_constant;
+    cladSolid WILL_BE symbol_constant;
+    D WILL_BE distance;
+    H WILL_BE distance;
+    installed_cost WILL_BE monetary_unit;
+    );
+
+    Fc IS_A factor;
+    ci IS_A cost_info_pressure_vessel(P, matl, cladSolid, Fc);
+
+    installed_cost = (ci.MandSindex/280)*101.9{dollar}*(D/1{ft})^1.066
+    *(H/1{ft})^0.802*(2.18+ci.Fc);
+    
+    METHODS
+    
+    METHOD default_self;
+    END default_self;
+
+    METHOD values;
+    END values;
+
+    METHOD specify;
+	RUN ci.specify;
+    END specify;
+
+END Guthrie_cost_pressure_vessel;
+
+MODEL simple_pressure_vessel_cost(
+    liq_holdup_time WILL_BE time;
+    vol_flow        WILL_BE volume_rate;
+    P               WILL_BE pressure;
+    matl            WILL_BE symbol_constant;
+    cladSolid       WILL_BE symbol_constant;
+    H_to_D          WILL_BE positive_factor;
+    installed_cost  WILL_BE monetary_unit;
+    );
+
+    cc     IS_A circle_constant;
+    volume IS_A volume;
+    D, H IS_A distance;
+    
+    gc IS_A Guthrie_cost_pressure_vessel(P, matl, cladSolid,
+            D, H, installed_cost);
+
+    volume = vol_flow*liq_holdup_time;
+    volume = cc*D^2/4.0*H;
+    H      = H_to_D*D;
+
+    METHODS
+    
+    METHOD default_self;
+	RUN gc.default_self;
+    END default_self;
+
+    METHOD values;
+    END values;
+
+    METHOD specify;
+	RUN gc.specify;
+	liq_holdup_time.fixed	:= TRUE;
+	vol_flow.fixed		:= TRUE;
+	P.fixed                 := TRUE;
+	H_to_D.fixed            := TRUE;
+    END specify;
+
+END simple_pressure_vessel_cost;
+
+MODEL test_cost_info_pressure_vessel;
+    
+    P IS_A pressure;
+    m, cs IS_A symbol_constant;
+    m :== 'SS';
+    cs:== 'clad';
+
+    Fc IS_A factor;
+    cipv IS_A cost_info_pressure_vessel(P, m, cs, Fc);
+
+
+    METHODS
+
+    METHOD default_self;
+	RUN cipv.default_self;
+	P := 30 {atm};
+    END default_self;
+
+    METHOD values;
+	RUN cipv.values;
+    END values;
+
+    METHOD specify;
+	RUN cipv.specify;
+    END specify;
+
+END test_cost_info_pressure_vessel;
+
+MODEL test_Guthrie_cost_pressure_vessel;
+    P IS_A pressure;
+    m, cs IS_A symbol_constant;
+    D, H IS_A distance;
+    inst_cost IS_A monetary_unit;
+    
+    m :== 'Monel';
+    cs :== 'solid';
+    
+    gcpv IS_A Guthrie_cost_pressure_vessel(P,m,cs,D,H,inst_cost);
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN gcpv.default_self;
+    END default_self;
+
+    METHOD values;
+	P := 30 {atm};
+	D := 3 {m};
+	H := 15 {ft};
+    END values;
+
+    METHOD specify;
+	RUN gcpv.specify;
+	P.fixed := TRUE;
+	D.fixed := TRUE;
+	H.fixed := TRUE;
+    END specify;
+
+END test_Guthrie_cost_pressure_vessel;
+
+MODEL test_simple_pressure_vessel_cost;
+    lht IS_A time;
+    vf IS_A volume_rate;
+    P IS_A pressure;
+    m, cs IS_A symbol_constant;
+    HD IS_A positive_factor;
+    installed_cost IS_A monetary_unit;
+ 
+    m   :== 'Titanium';
+    cs  :== 'solid';
+
+    spvc IS_A simple_pressure_vessel_cost(
+    lht,vf,P,m,cs,HD,installed_cost);
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN spvc.default_self;
+    END default_self;
+
+    METHOD values;
+	lht := 5 {min};
+	vf  := 2 {m^3/s};
+	P   := 500 {psia};
+	HD  := 2;
+    END values;
+
+    METHOD specify;
+	RUN spvc.specify;
+	lht.fixed := TRUE;
+	vf.fixed  := TRUE;
+	P.fixed   := TRUE;
+	HD.fixed  := TRUE;
+    END specify;
+
+END test_simple_pressure_vessel_cost;

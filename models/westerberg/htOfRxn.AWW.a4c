@@ -1,0 +1,73 @@
+REQUIRE "stream_holdup.a4l";
+
+MODEL htsOfRxn;
+    cd IS_A components_data(['hydrogen','carbon_monoxide',
+        'carbon_dioxide','methane','water'],'water');
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    pdL IS_A phases_data('L','none','UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture','UNIFAC_liquid_mixture','none');
+    equilibrated IS_A boolean;
+
+    refReac IS_A stream(cd,pdV,equilibrated);
+    refProd IS_A stream(cd,pdV,equilibrated);
+    wgsReac IS_A stream(cd,pdV,equilibrated);
+    wgsProd IS_A stream(cd,pdV,equilibrated);
+    
+    Q_ref, Q_wgs, Q_overall IS_A energy_rate;
+    Q_ref = refProd.H_flow-refReac.H_flow;
+    Q_wgs = wgsProd.H_flow-wgsReac.H_flow;
+    Q_overall = Q_ref+Q_wgs;
+
+    METHODS
+
+    METHOD values;
+
+	equilibrated := TRUE;
+
+	(* reformer reaction: CH4 + H20 ==> CO + 3H2 *)
+	
+	refReac.P := 1.0 {atm};
+	refReac.T := 773.16 {K};
+	refReac.f['hydrogen'] := 0.0 {mol/s};
+	refReac.f['carbon_monoxide'] := 0.0 {mol/s};
+	refReac.f['carbon_dioxide'] := 0.0 {mol/s};
+	refReac.f['methane'] := 1.0 {mol/s};
+	refReac.f['water'] := 1.0 {mol/s};
+
+	refProd.P := refReac.P;
+	refProd.T := refReac.T;
+	refProd.f['hydrogen'] :=3.0 {mol/s};
+	refProd.f['carbon_monoxide'] := 1.0 {mol/s};
+	refProd.f['carbon_dioxide'] := 0.0 {mol/s};
+	refProd.f['methane'] := 0.0 {mol/s};
+	refProd.f['water'] := 0.0 {mol/s};
+	
+	(* water gas shift reaction: CO + H20 ==> CO2 + H2 *)
+
+	wgsReac.P := refReac.P;
+	wgsReac.T := refReac.T;
+	wgsReac.f['hydrogen'] := 0.0 {mol/s};
+	wgsReac.f['carbon_monoxide'] := 1.0 {mol/s};
+	wgsReac.f['carbon_dioxide'] := 0.0 {mol/s};
+	wgsReac.f['methane'] := 0.0 {mol/s};
+	wgsReac.f['water'] := 1.0 {mol/s};
+
+	wgsProd.P := refReac.P;
+	wgsProd.T := refReac.T;
+	wgsProd.f['hydrogen'] :=1.0 {mol/s};
+	wgsProd.f['carbon_monoxide'] := 0.0 {mol/s};
+	wgsProd.f['carbon_dioxide'] := 1.0 {mol/s};
+	wgsProd.f['methane'] := 0.0 {mol/s};
+	wgsProd.f['water'] := 0.0 {mol/s};
+
+    END values;
+    
+    METHOD reset;
+	RUN refReac.reset;
+	RUN refProd.reset;
+
+	RUN wgsReac.reset;
+	RUN wgsProd.reset;
+    END reset;
+	
+END htsOfRxn;

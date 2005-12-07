@@ -1,0 +1,177 @@
+REQUIRE "thermodynamics.a4l";
+REQUIRE "stream_holdup.a4l";
+
+MODEL clfr_base;
+       (* no variables *)
+METHODS
+METHOD default_self;
+       (* do nothing *)
+END default_self;
+END clfr_base;
+
+ATOM mass_energy REFINES solver_var
+   DIMENSION L^2/T^2
+   DEFAULT 2000 {kJ/kg};
+   lower_bound := -1e50{kJ/kg};
+   upper_bound := 1e50{kJ/kg};
+   nominal := 1000.0{kJ/kg};
+END mass_energy;
+
+ATOM mass_volume REFINES solver_var
+   DIMENSION L^3/M
+   DEFAULT 0.001 {m^3/kg};
+   lower_bound := 0 {m^3/kg};
+   upper_bound := 1e50{m^3/kg};
+   nominal := 0.001 {m^3/kg};
+END mass_volume;
+
+ATOM mass_entropy REFINES solver_var
+       DIMENSION L^2/T^2/TMP
+   DEFAULT 2000 {kJ/kg/K};
+   lower_bound := -1e50{kJ/kg/K};
+   upper_bound := 1e50{kJ/kg/K};
+   nominal := 1000.0{kJ/kg/K};
+END mass_entropy;
+
+(*--------------------
+       Model of two-phase steam state
+
+       We will be modelling with the 'homogeneous' two-phase model, which
+       assumes that vapor and liquid phases are always in equilibrium.
+*)
+MODEL steam_state REFINES clfr_base;
+       (* we're only dealing with water here but we add a trace of methane because
+          otherwise the thermo properties don't converge
+       *)
+       cd IS_A components_data(['water','methane'],'water');
+
+       (* our stream is vapour-and-liquid *)
+       pd IS_A phases_data('VL','Pitzer_vapor_mixture','UNIFAC_liquid_mixture','none');
+
+       (* this value determines whether constant relative volatility
+       (FALSE) or full equilibrium models (TRUE) are used. *)
+       equilibrated IS_A boolean;
+
+       (* set up the thermodynamics object, ripped from stream_holdup.a4l *)
+       phases ALIASES pd.phases;
+       FOR j IN phases CREATE
+               smt[j] IS_A select_mixture_type(cd, pd.phase_type[j]);
+       END FOR;
+
+       FOR j IN phases CREATE
+       phase[j] ALIASES smt[j].phase;
+       END FOR;
+
+       thermo IS_A thermodynamics(cd, pd, phase, equilibrated);
+
+       (* the molar mass of water is 18.015 kg/kg_mole *)
+       M IS_A molar_weight_constant;
+       v IS_A mass_volume;
+       h IS_A mass_energy;
+       g IS_A mass_energy;
+       p IS_A pressure;
+       T IS_A temperature;
+       rho IS_A mass_density;
+
+       u IS_A mass_energy;
+       s IS_A mass_entropy;
+       x IS_A fraction;
+
+       (* link up the local properties with those inside the thermodynamics model *)
+       M, cd.data['water'].mw ARE_THE_SAME;
+       M * v = thermo.V;
+       M * h = thermo.H - cd.data['water'].H0;
+       M * g = thermo.G; (* subtract a correction factor here?? *)
+
+       p, thermo.P ARE_THE_SAME;
+       T, thermo.T ARE_THE_SAME;
+       x, thermo.phase_fraction['vapor'] ARE_THE_SAME; (* can't set this to FIXED, causes struct singularity *)
+
+       (* equations allowing calculation of s and u *)
+       h = u + p*v;
+       h = g + T*s; (* correction factor?? *)
+
+       (* density is the reciprocal of specific volume *)
+       v * rho = 1;
+
+METHODS
+
+METHOD default_self;
+       RUN ClearAll;
+       RUN specify;
+       RUN values;
+END default_self;
+
+METHOD specify;
+       (* this is a 'mode' variable, not a solver_var, so we set it here: *)
+       equilibrated := FALSE;
+
+       (* internal thermodynamics stuff that needs to be fixed *)
+       thermo.phase['vapor'].alpha['water'].fixed := TRUE;
+       thermo.alpha_bar['vapor'].fixed := TRUE;
+       thermo.y['water'].fixed := TRUE;
+       thermo.y['methane'].fixed := TRUE;
+
+       (* unless overridden, steam_state will use p,T to define other properties *)
+       T.fixed := TRUE;
+       rho.fixed := TRUE;
+END specify;
+
+METHOD values;
+       (* internal thermo stuff *)
+       thermo.phase['vapor'].alpha['water'] := 1;
+       thermo.alpha_bar['vapor'] := 1;
+       thermo.y['water'] := 1.0;
+       thermo.y['methane'] := 0.0;
+
+       (* set some typical values for steam *)
+       T := 290 {K};
+       rho := 997 {kg/m^3};
+       (*
+       h := 4864 {kJ/kg_mole};
+       u := 4800 {kJ/kg_mole};
+       v := 0.2 {kg/m^3};
+       s := 7 {kJ/kg/K};
+       *)
+END values;
+
+END steam_state;
+
+(*------------------------
+       Steam Stream
+       Simplified container for any (possibly two phase) water/steam stream.
+       Is a extension of the the 'steam_state' type with the addition of a
+       mass flow rate.
+*)
+MODEL steam_stream REFINES steam_state;
+       mdot IS_A mass_rate;
+
+METHODS
+METHOD specify;
+       (*
+       This method exists to allow checking of completeness; in practise
+       'specify' will be overridden by the model which uses stream_stream
+       as one of its inputs or outputs.
+       *)
+       RUN steam_state::specify;
+       mdot.fixed := TRUE;
+END specify;
+
+METHOD values;
+       mdot := 1.0 {kg/s};
+END values;
+
+END steam_stream;
+
+(*------------------------
+       Steam equipment
+       Single-input, single-output steam component.
+*)
+MODEL steam_equipment(
+       in WILL_BE steam_stream;
+       out WILL_BE steam_stream;
+);
+
+END steam_equipment;
+
+

@@ -1,0 +1,16 @@
+
+DELETE TYPES;
+READ FILE "D:/ascend4-0.9.0/ascend4/models/H2BasisCalcs.AWW.a4c";
+COMPILE h2b OF H2basis;
+BROWSE {h2b};
+RUN {h2b.valuesH2Combustion};
+RUN {h2b.reset};
+SOLVE {h2b} WITH QRSlv;
+PROBE current {h2b.feed.f} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
+PROBE current {h2b.product.f} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
+PROBE current {h2b.Qin} {};
+
+
+RUN {h2b.valuesCH4Combustion};
+SOLVE {h2b} WITH QRSlv;
+
