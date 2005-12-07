@@ -506,7 +506,7 @@ END specify;
 
 METHOD values;
 	T := 290 {K};
-	rho := 997 {kg/m^3};
+	rho := 999 {kg/m^3};
 END values;
 
 END steam_state;

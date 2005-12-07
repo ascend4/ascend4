@@ -643,11 +643,14 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
   }
   if (nsolns<0 && allsolns>0 && fp !=NULL) {
    /* dump the rejected solutions to give the user a clue */
-    FPRINTF(fp,"Ignoring potential solutions for variable\n");
+	error_reporter_start(ASC_PROG_WARNING,NULL,0);
+    FPRINTF(fp,"Ignoring potential solutions for variable '");
     var_write_name(server,var,fp);
-    FPRINTF(fp,"\nin equation\n");
+    FPRINTF(fp,"' in equation '");
     rel_write_name(server,rel,fp);
-    FPRINTF(fp,"\n");
+    FPRINTF(fp,"'");
+	error_reporter_end_flush();
+
     for (--allsolns; allsolns >= 0; allsolns--)  {
       FPRINTF(fp,"Rejected solution: %.18g\n",slist[allsolns]);
     }
