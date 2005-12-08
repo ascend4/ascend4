@@ -457,7 +457,7 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
   }
 
   CLINE("static");
-  FPRINTF(fp, "void r_%d(double *x,double *residual){", nrel);
+  FPRINTF(fp, "void r_%d(double *x,double *residual){\n", nrel);
   CLINE("\t*residual =");
 #define FMTNORMAL 1
 #if FMTNORMAL
@@ -632,7 +632,6 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   /* so long as makefile deletes previous dll, windows is ok though */
   sprintf(g_bt_data.regname,"BinTokenArch_%d_%d",++(g_bt_data.nextid),(int)pid);
   FPRINTF(fp,"int DLEXPORT %s(){\n",g_bt_data.regname);
-  CLINE("{");
   CLINE("\tint status;");
   FPRINTF(fp,"\tstatic struct TableC g_ctable[%lu] =\n",len+1);
   CLINE("\t\t{ {NULL, NULL},");
