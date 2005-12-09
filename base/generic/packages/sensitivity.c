@@ -320,10 +320,11 @@ int do_finite_diff_eval(struct Slv_Interp *slv_interp,
 			 struct gl_list_t *arglist,
 			 unsigned long whichvar)
 {
+  int result;
+
   /* Ignore unused params */
   (void)slv_interp; (void)i; (void)whichvar;
 
-  int result;
   if (FiniteDiffCheckArgs(arglist))
     return 1;
   result = finite_difference(arglist);
@@ -670,15 +671,14 @@ int sensitivity_anal(struct Slv_Interp *slv_interp,
   dof_t *dof;
   int num_vars,ind,found;
 
-  /* Ignore unused params */
-  (void)slv_interp; (void) inst;
-
   linsolqr_system_t lqr_sys;	/* stuff for the linear system & matrix */
   mtx_matrix_t mtx;
   int32 capacity;
   real64 *scratch_vector = NULL;
   int result=0;
 
+  /* Ignore unused params */
+  (void)slv_interp; (void) inst;
 
   (void)NumberFreeVars(NULL);		/* used to re-init the system */
   (void)NumberRels(NULL);		/* used to re-init the system */
@@ -963,9 +963,6 @@ int sensitivity_anal_all(struct Slv_Interp *slv_interp,
   int noutputs=0, ninputs;
   var_filter_t vfilter;
 
-  /* Ignore unused params */
-  (void)slv_interp; (void)inst; (void)step_length;
-
   struct var_variable **new_inputs = NULL; /* optional stuff for variable
 				      * projection */
 
@@ -974,6 +971,9 @@ int sensitivity_anal_all(struct Slv_Interp *slv_interp,
   int32 capacity;
   real64 *scratch_vector = NULL;
   int result=0;
+
+  /* Ignore unused params */
+  (void)slv_interp; (void)inst; (void)step_length;
 
   /*
    * Call the presolve for the system. This should number variables

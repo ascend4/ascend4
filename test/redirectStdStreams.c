@@ -23,12 +23,12 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include "utilities/ascConfig.h"
 #ifdef __WIN32__
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
-#include "utilities/ascConfig.h"
 #include "redirectStdStreams.h"
 
 static FILE *f_stdin_file = NULL;

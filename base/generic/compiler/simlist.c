@@ -286,6 +286,8 @@ symchar *Asc_SimsFindSimulationName(CONST struct Instance *root)
   return NULL;
 }
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
+/*@unused@*/
 static
 void BrowWritePendingStatements(FILE *f, CONST struct Instance *i)
 {
@@ -313,4 +315,4 @@ void BrowWritePendingStatements(FILE *f, CONST struct Instance *i)
     }
   }
 }
-
+#endif  /* THIS_IS_AN_UNUSED_FUNCTION */

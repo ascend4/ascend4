@@ -75,9 +75,9 @@ struct ExternalFunc {
   unsigned long n_outputs;
   char *help;
   ExtEvalFunc *init;
-  ExtEvalFunc **value;
-  ExtEvalFunc **deriv;
-  ExtEvalFunc **deriv2;
+  ExtEvalFunc *value;
+  ExtEvalFunc *deriv;
+  ExtEvalFunc *deriv2;
 };
 
 enum Calc_status {

@@ -95,7 +95,7 @@ struct Instance *ShortCutMakeUniversalInstance(struct TypeDescription *type)
 {
   struct Instance *result;
   if (GetUniversalFlag(type)&&
-      (result=LookupInstance(GetUniversalTable(),type))) {
+      (0 != (result=LookupInstance(GetUniversalTable(),type)))) {
     return result;
   } else {
     return NULL;

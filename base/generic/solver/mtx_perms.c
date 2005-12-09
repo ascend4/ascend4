@@ -323,7 +323,7 @@ extern size_t mtx_block_perm_size(mtx_block_perm_t bp)
 /* DO NOT CALL this on the perm of a matrix that is a slave */
 static void swap( struct permutation_t *perm, int32 cur1,int32 cur2)
 {
-   register org1,org2;
+   register int32 org1,org2;
 
    if( cur1 == cur2 ) return;
    org1 = perm->cur_to_org[cur1];

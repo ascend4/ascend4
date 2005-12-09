@@ -321,7 +321,7 @@ static struct logrel_term *CreateBoolVarTerm(CONST struct Instance *i)
 {
   struct logrel_term *term;
   unsigned long pos;
-  if ((pos = gl_search(g_logrelation_bvar_list,i,(CmpFunc)CmpP))){
+  if (0 != (pos = gl_search(g_logrelation_bvar_list,i,(CmpFunc)CmpP))){
     /* find boolean var if already on logical relations var list */
     term = POOL_ALLOCLOGTERM;
     assert(term!=NULL);
@@ -367,7 +367,7 @@ static struct logrel_term *CreateSatisfiedTerm(CONST struct Name *n,
 {
   struct logrel_term *term;
   unsigned long pos;
-  if ((pos = gl_search(g_logrelation_satrel_list,inst,(CmpFunc)CmpP))){
+  if (0 != (pos = gl_search(g_logrelation_satrel_list,inst,(CmpFunc)CmpP))){
     /* find log/relation if already on logical relations satrel list */
     term = POOL_ALLOCLOGTERM;
     assert(term!=NULL);
@@ -509,8 +509,8 @@ static int ConvertLogExpr(CONST struct Expr *start,
       break;
     case e_var:
       if (GetEvaluationForTable()!= NULL &&
-	  (str = SimpleNameIdPtr(ExprName(start)))&&
-	  (fvp=FindForVar(GetEvaluationForTable(),str))){
+	  (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
+	  (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))){
 	if (GetForKind(fvp)==f_integer){
 	  term = CreateLogIntegerTerm(GetForInteger(fvp));
 	  AppendLogTermBuf(term);
@@ -1021,7 +1021,7 @@ void DestroyBVarList(struct gl_list_t *l, struct Instance *inst)
   register struct Instance *ptr;
   register unsigned long c;
   for(c=gl_length(l);c>=1;c--)
-    if ((ptr = (struct Instance *)gl_fetch(l,c)))
+    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c)))
       RemoveLogRel(ptr,inst);
   gl_destroy(l);
 }
@@ -1031,7 +1031,7 @@ void DestroySatRelList(struct gl_list_t *l, struct Instance *inst)
   register struct Instance *ptr;
   register unsigned long c;
   for(c=gl_length(l);c>=1;c--)
-    if ((ptr = (struct Instance *)gl_fetch(l,c)))
+    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c)))
       RemoveLogRel(ptr,inst);
   gl_destroy(l);
 }
@@ -1164,8 +1164,8 @@ void ModifyLogRelPointers(struct gl_list_t *relorvar,
   if (old==new) return;
 
   if (new){
-    if ((pos = gl_search(relorvar,old,(CmpFunc)CmpP))) {
-      if ((other = gl_search(relorvar,new,(CmpFunc)CmpP))){
+    if (0 != (pos = gl_search(relorvar,old,(CmpFunc)CmpP))) {
+      if (0 != (other = gl_search(relorvar,new,(CmpFunc)CmpP))){
 	gl_store(relorvar,pos,(VOIDPTR)new);     /* case 3 */
         if (new == NULL) {
           inst = old;
@@ -1198,7 +1198,7 @@ void ModifyLogRelPointers(struct gl_list_t *relorvar,
     }
   }
   else						/* case 4 */
-    if ((pos = gl_search(relorvar,old,(CmpFunc)CmpP)))
+    if (0 != (pos = gl_search(relorvar,old,(CmpFunc)CmpP)))
       gl_store(relorvar,pos,(VOIDPTR)new);
 }
 
@@ -1231,7 +1231,7 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
   struct Instance *inst;
   struct for_var_t *fvp;
   enum find_errors err;
-  if((str = SimpleNameIdPtr(name))){
+  if(NULL != (str = SimpleNameIdPtr(name))){
     if (TempExists(str)) {
       if (ValueKind(TempValue(str))==integer_value) {
 	return 1;
@@ -1240,7 +1240,7 @@ static int CheckExprBVar(CONST struct Instance *ref, CONST struct Name *name,
       }
     }
     if (GetEvaluationForTable() != NULL &&
-        (fvp=FindForVar(GetEvaluationForTable(),str)) ) {
+        (NULL != (fvp=FindForVar(GetEvaluationForTable(),str))) ) {
       if (GetForKind(fvp)==f_integer) {
 	return 1;
       } else {

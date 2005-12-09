@@ -236,7 +236,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   AscCheckDuplicateLoad(path); /* whine if we've see it before */
 
   /*FPRINTF(ASCERR,"PATH IS NOT A DUPE\n");*/
- 
+
   fp = fopen(path,"rb");
   if(fp==NULL){
     FPRINTF(ASCERR,"FILE %s ISN'T THERE\n",path);
@@ -244,10 +244,10 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   /* FPRINTF(ASCERR,"FILE %s IS THERE AND CAN BE OPENED\n",path);*/
   fclose(fp);
-  
+
   /* clear error message first */
   dlerror();
-  
+
   xlib = dlopen(path,RTLD_GLOBAL|RTLD_NOW);
   if(xlib==NULL){
     FPRINTF(ASCERR,"COULDN'T LOAD LIBRARY %s\n",path);

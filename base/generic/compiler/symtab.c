@@ -122,7 +122,7 @@ static symchar *CopyString(CONST char *str,int userlen)
   register struct StringSpaceRec *ptr;
   register char *result;
   int *lenptr;
-  assert(userlen == strlen(str));
+  assert(userlen == (int)strlen(str));
   length = (unsigned long)userlen+1;
   if (length > MAXIMUM_STRING_LENGTH) {
     return AddBigString(str);
@@ -144,7 +144,7 @@ static symchar *CopyString(CONST char *str,int userlen)
       while((ptr->used & (unsigned long)(sizeof(int)-1)) != 0 && 
             ptr->used < MAXIMUM_STRING_LENGTH) {
         /* pad string to next word boundary after nul with 0xFF */
-        ptr->data[ptr->used] = UCHAR_MAX;
+        ptr->data[ptr->used] = (char)UCHAR_MAX;
         (ptr->used)++;
       } 
       return (symchar *)result;
@@ -164,7 +164,7 @@ static symchar *CopyString(CONST char *str,int userlen)
   while(((g_string_space->used) & (sizeof(int)-1)) != 0 && 
         g_string_space->used < MAXIMUM_STRING_LENGTH) {
     /* pad string to next word boundary after nul with 0xFF */
-    g_string_space->data[g_string_space->used] = UCHAR_MAX;
+    g_string_space->data[g_string_space->used] = (char)UCHAR_MAX;
     (g_string_space->used)++;
   } 
   return (symchar *)(g_string_space->data+sizeof(int));

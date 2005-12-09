@@ -112,7 +112,7 @@ ObjectHdrs $(ASC_TCLTK98_SOURCES) Driver.c :
 LinkLibraries $(EXE_NAME) : $(ASC_TCLTK98_LIB) $(ASC_BASE_LIBS_QUAL) $(PACKAGE_LIBS) ;
 LINKLIBS on $(EXE_NAME)$(SUFEXE) +=
     $(FOR_LIBS)
-    $(TK_LIBS)                                     
+    $(TK_LIBS)
     $(TKTABLE_LIB)
     $(X11_LIBS)
     $(PC_LIBS)

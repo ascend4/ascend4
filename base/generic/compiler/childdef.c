@@ -330,8 +330,8 @@ static void EvaluateAssignment(struct Statement *stat,
     case real_child:
       if (ValueKind(result)==real_value){
         if (ValueAssigned(rec)){
-          if ((dim = CheckDimensionsMatch(RealValueDimensions(result),
-					  RealDimensions(rec)))){
+          if (0 != (dim = CheckDimensionsMatch(RealValueDimensions(result),
+                                               RealDimensions(rec)))){
             AssignChildArrayElement(childd,place,
                                     MakeRealDesc(1,RealValue(result),
                                                  dim));
@@ -348,8 +348,8 @@ static void EvaluateAssignment(struct Statement *stat,
       }
       else if (ValueKind(result)==integer_value){
         if (ValueAssigned(rec)){
-          if ((dim = CheckDimensionsMatch(Dimensionless(),
-                                         RealDimensions(rec)))){
+          if (0 != (dim = CheckDimensionsMatch(Dimensionless(),
+                                               RealDimensions(rec)))){
             AssignChildArrayElement(childd,place,
                                     MakeRealDesc(1,
                                                  (double)IntegerValue(result),

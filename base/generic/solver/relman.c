@@ -894,6 +894,9 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
 char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style)
 {
   char *result;
+  UNUSED_PARAMETER(sys);
+  UNUSED_PARAMETER(rel);
+  UNUSED_PARAMETER(style);
   result = (char *)ascmalloc(80);
   sprintf(result,"relman_make_*string_*fix not implemented yet");
   return result;

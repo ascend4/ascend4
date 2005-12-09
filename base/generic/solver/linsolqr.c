@@ -308,6 +308,8 @@ static int check_system(linsolqr_system_t sys, char *file, int line)
  ***  Checks the system handle. Return 0 if ok, 1 otherwise.
  **/
 {
+   UNUSED_PARAMETER(file);
+
    if( ISNULL(sys) ) {
       FPRINTF(stderr,"ERROR:  (linsolqr) check_system\n");
       FPRINTF(stderr,"        NULL system handle.\n");
@@ -3250,11 +3252,13 @@ static int qr_cmp_fill(struct qr_fill_t *f1, struct qr_fill_t *f2)
   return (f2->fill > f1->fill);
 }
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 static int qr_cmp_cnts(struct qr_fill_t *f1, struct qr_fill_t *f2)
 {
   if (f1->cnt < f2->cnt) return -1;
   return (f2->cnt > f1->cnt);
 }
+#endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 static void qr_sort_fill(struct qr_fill_t *fill,mtx_range_t *rng)
 /*
@@ -3270,6 +3274,7 @@ static void qr_sort_fill(struct qr_fill_t *fill,mtx_range_t *rng)
         (int (*)(const void *,const  void *))qr_cmp_fill);
 }
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 static void qr_sort_col_cnts(struct qr_fill_t *fill,mtx_range_t *rng)
 /*
  * sort a list portion (rng) by order of increasing cnt.
@@ -3283,6 +3288,7 @@ static void qr_sort_col_cnts(struct qr_fill_t *fill,mtx_range_t *rng)
   qsort((void *)base,n,sizeof(struct qr_fill_t),
         (int (*)(const void *,const void*))qr_cmp_cnts);
 }
+#endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 static int qr_fillable_cols(linsolqr_system_t sys,
                             int32 pivot,
@@ -3555,7 +3561,7 @@ static real64 qr_permute(linsolqr_system_t sys,
   cmax=mtx_col_max(mtx,&coord,rng,&pivot);
   i=coord.row;
 
-  if ( !( found = (cmax >= sys->pivot_zero) ) ) {
+  if ( 0 == ( found = (cmax >= sys->pivot_zero) ) ) {
     FPRINTF(stderr,
       "linsolqr: column %d has no good pivot. Poor pivot= %g accepted\n",
       newcol,pivot);
@@ -4125,6 +4131,8 @@ static int condqr_entry(linsolqr_system_t sys,mtx_region_t *region)
 {
    struct rhs_list *rl;
    boolean rank_deficient;
+
+   UNUSED_PARAMETER(region);
 
    CHECK_SYSTEM(sys);
    if( sys->factored )
@@ -5155,9 +5163,7 @@ mtx_matrix_t linsolqr_get_inverse(linsolqr_system_t sys)
   return sys->inverse;
 }
 
-
 
-
  /*
  *********************************************************************
  *Ken's Playground for NGSlv linear functions
@@ -5169,7 +5175,7 @@ mtx_matrix_t linsolqr_get_inverse(linsolqr_system_t sys)
 int linsolqr_setup_ngslv(linsolqr_system_t sys,
                          real64 *rhs,
                          mtx_range_t *un_p_rng,
-			 real64 *tmpvec)
+                         real64 *tmpvec)
 {
    struct rhs_list *rl;
    int status=0,k;
@@ -5211,6 +5217,7 @@ int linsolqr_setup_ngslv(linsolqr_system_t sys,
        FPRINTF(stderr,"        No rhs exist at all.\n");
      }
    }
+   return 0;  /* Function had no return statement.  Added this line.  OK? */
 }
 
 /* real64 *linsolqr_get_varvalue(linsolqr_system_t sys,real64 *rhs)

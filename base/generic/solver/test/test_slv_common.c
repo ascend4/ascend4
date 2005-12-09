@@ -1163,6 +1163,7 @@ static void test_slv_common(void)
     rewind(file_normal);
     CU_TEST(EOF != fgetc(file_normal)); /* test that file is not empty */
     fclose(file_normal);
+    remove("slvcommontempfile1.tmp");
   }
   else {
     CU_FAIL("Error opening output file 1 in test_slv_common.c");
@@ -1445,6 +1446,7 @@ static void test_slv_common(void)
     rewind(file_normal);
     CU_TEST(EOF != fgetc(file_normal)); /* test that file is not empty */
     fclose(file_normal);
+    remove("slvcommontempfile2.tmp");
   }
   else {
     CU_FAIL("Error opening output file 2 in test_slv_common.c");

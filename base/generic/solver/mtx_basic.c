@@ -620,8 +620,13 @@ static void destroy_slave(mtx_matrix_t master, mtx_matrix_t mtx)
     return;
   }
   /* move the rest of the slaves up the list */
+/* old implementation - possible undefined operation on i - new code follows - JDS
   for (i = sid; i < master->nslaves -1;) {
     master->slaves[i] = master->slaves[++i];
+  }
+*/
+  for (i = sid; i < master->nslaves -1; ++i) {
+    master->slaves[i] = master->slaves[i+1];
   }
   (master->nslaves)--;
   /* we will not realloc smaller. */
@@ -2372,7 +2377,7 @@ void mtx_add_row(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
       elt = mtx->hdr.row[mtx->perm.row.cur_to_org[s_cur]];
       for( ; NOTNULL(elt); elt = elt->next.col ) {
          cur_col=tocur[(org_col=elt->col)];
-         if( in_range(rng,cur_col) )
+         if( in_range(rng,cur_col) ) {
             if( NOTNULL(arr[org_col]) ) {
                arr[org_col]->value += factor * elt->value;
             } else {
@@ -2381,6 +2386,7 @@ void mtx_add_row(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
                                          (factor * elt->value));
                /* hit rate usually lower */
             }
+         }
       }
       mtx_renull_using_row(mtx,t_org,arr);
    }
@@ -2413,8 +2419,8 @@ void mtx_add_col(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
       t_org = mtx->perm.col.cur_to_org[t_cur];
       arr = mtx_expand_col(mtx,t_org);   /* Expand the target col */
       elt = mtx->hdr.col[mtx->perm.col.cur_to_org[s_cur]];
-      for( ; NOTNULL(elt); elt = elt->next.row )
-         if( in_range(rng,tocur[elt->row]) )
+      for( ; NOTNULL(elt); elt = elt->next.row ) {
+         if( in_range(rng,tocur[elt->row]) ) {
             if( NOTNULL(arr[elt->row]) ) {
                arr[elt->row]->value += factor * elt->value;
             } else {
@@ -2422,6 +2428,8 @@ void mtx_add_col(mtx_matrix_t mtx, int32 s_cur, int32 t_cur, real64 factor,
                  mtx_create_element_value(mtx,elt->row,t_org,
                                           (factor * elt->value));
             }
+         }
+      }
       mtx_renull_using_col(mtx,t_org,arr);
    }
    mtx_null_vector_release();

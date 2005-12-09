@@ -1,7 +1,7 @@
 /*
  *  Type Definition Library
  *  by Tom Epperly
- *  Created: 1/12/90
+ *  Created: 1/12/90                                     
  *  Version: $Revision: 1.17 $
  *  Version control file: $RCSfile: library.h,v $
  *  Date last modified: $Date: 1998/04/16 00:43:24 $

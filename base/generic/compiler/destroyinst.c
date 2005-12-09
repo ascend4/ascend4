@@ -186,7 +186,7 @@ static int RemoveParentReferences(struct Instance *inst,
       DeleteParent(inst,pos);
     }
     /* destroy link(s) from parent to inst */
-    while ((pos = ChildIndex(parent,inst))) {
+    while (0 != (pos = ChildIndex(parent,inst))) {
       StoreChildPtr(parent,pos,NULL);
     }
     return (NumberParents(inst) == 0);
@@ -200,7 +200,7 @@ static int RemoveParentReferences(struct Instance *inst,
     }
     for(c=1;c<=length;c++) {
       parent = InstanceParent(inst,c);
-      while ((pos = ChildIndex(parent,inst))) {
+      while (0 != (pos = ChildIndex(parent,inst))) {
 	StoreChildPtr(parent,pos,NULL);
       }
     }

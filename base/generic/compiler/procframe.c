@@ -94,8 +94,8 @@ int WatchConfigureProcDebug(struct procFrame *fm, struct gl_list_t *wl)
 {
   unsigned long c,len;
   struct procDebug *dbi;
-  assert(dbi!=NULL);
   dbi = fm->dbi;
+  assert(dbi!=NULL);
   len = gl_length(wl);
   for (c = 1; c <= len; c++) {
 /* if something or other, set tab ptr and set flags and if needed

@@ -466,6 +466,13 @@ typedef	unsigned   uint32;
 #  endif
 #  undef FPRESET
 #  define FPRESET _fpreset()
+/* MSVC peculiarities */
+#  ifdef _MSC_VER
+#    undef snprintf
+#    define snprintf _snprintf
+#    undef vsnprintf
+#    define vsnprintf _vsnprintf
+#  endif
 #endif  /* __WIN32__ */
 
 #ifdef __SUN_SUNOS__

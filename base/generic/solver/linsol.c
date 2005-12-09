@@ -1,4 +1,4 @@
-/* 
+/*
  *  linsol: Ascend Linear Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -69,8 +69,7 @@ struct linsol_header {
 
 #define OK        ((int)439828676)
 #define DESTROYED ((int)839276847)
-static void check_system(sys)
-linsol_system_t sys;
+static void check_system(linsol_system_t sys)
 /**
  ***  Checks the system handle
  **/
@@ -95,8 +94,7 @@ linsol_system_t sys;
    }
 }
 
-static void destroy_rhs_list(rl)
-struct rhs_list *rl;
+static void destroy_rhs_list(struct rhs_list *rl)
 /**
  ***  Destroys rhs list.
  **/
@@ -111,9 +109,7 @@ struct rhs_list *rl;
    }
 }
 
-static struct rhs_list *find_rhs(rl,rhs)
-struct rhs_list *rl;
-real64 *rhs;
+static struct rhs_list *find_rhs(struct rhs_list *rl, real64 *rhs)
 /**
  ***  Searches for rhs in rhs list, returning it or NULL if not found.
  **/
@@ -147,8 +143,7 @@ linsol_system_t linsol_create()
    return(sys);
 }
 
-void linsol_destroy(sys)
-linsol_system_t sys;
+void linsol_destroy(linsol_system_t sys)
 {
    check_system(sys);
    if( sys->inv != NULL ) {
@@ -159,23 +154,19 @@ linsol_system_t sys;
    ascfree( (POINTER)sys );
 }
 
-void linsol_set_matrix(sys,mtx)
-linsol_system_t sys;
-mtx_matrix_t mtx;
+void linsol_set_matrix(linsol_system_t sys, mtx_matrix_t mtx)
 {
    check_system(sys);
    sys->coef = mtx;
 }
 
-mtx_matrix_t linsol_get_matrix(sys)
-linsol_system_t sys;
+mtx_matrix_t linsol_get_matrix(linsol_system_t sys)
 {
    check_system(sys);
    return( sys->coef );
 }
 
-mtx_matrix_t linsol_get_inverse(sys)
-linsol_system_t sys;
+mtx_matrix_t linsol_get_inverse(linsol_system_t sys)
 {
   check_system(sys);
   return (sys->inv);
@@ -209,9 +200,7 @@ void linsol_add_rhs(linsol_system_t sys, real64 *rhs, boolean transpose)
   }
 }
 
-void linsol_remove_rhs(sys,rhs)
-linsol_system_t sys;
-real64 *rhs;
+void linsol_remove_rhs(linsol_system_t sys, real64 *rhs)
 {
    struct rhs_list **q;
 
@@ -239,9 +228,7 @@ int linsol_number_of_rhs(linsol_system_t sys)
    return( sys->rlength );
 }
 
-real64 *linsol_get_rhs(sys,n)
-linsol_system_t sys;
-int n;
+real64 *linsol_get_rhs(linsol_system_t sys, int n)
 {
    struct rhs_list *rl;
    int count;
@@ -261,9 +248,7 @@ void linsol_matrix_was_changed(linsol_system_t sys)
    sys->inverted = FALSE;
 }
 
-void linsol_rhs_was_changed(sys,rhs)
-linsol_system_t sys;
-real64 *rhs;
+void linsol_rhs_was_changed(linsol_system_t sys,real64 *rhs)
 {
    struct rhs_list *rl;
 
@@ -277,9 +262,7 @@ real64 *rhs;
    }
 }
 
-void linsol_set_pivot_zero(sys,pivot_zero)
-linsol_system_t sys;
-real64 pivot_zero;
+void linsol_set_pivot_zero(linsol_system_t sys,real64 pivot_zero)
 {
    check_system(sys);
    if( pivot_zero < 0.0 ) {
@@ -291,16 +274,13 @@ real64 pivot_zero;
    }
 }
 
-real64 linsol_pivot_zero(sys)
-linsol_system_t sys;
+real64 linsol_pivot_zero(linsol_system_t sys)
 {
    check_system(sys);
    return( sys->pivot_zero );
 }
 
-void linsol_set_pivot_tolerance(sys,ptol)
-linsol_system_t sys;
-real64 ptol;
+void linsol_set_pivot_tolerance(linsol_system_t sys,real64 ptol)
 {
    check_system(sys);
    if( ptol < 0.0 || ptol >= 1.0 ) {
@@ -312,8 +292,7 @@ real64 ptol;
    }
 }
 
-real64 linsol_pivot_tolerance(sys)
-linsol_system_t sys;
+real64 linsol_pivot_tolerance(linsol_system_t sys)
 {
    check_system(sys);
    return( sys->ptol );
@@ -334,9 +313,7 @@ struct reorder_vars {
    int32 *rowcount;        /* rowcount[reg.row.low .. reg.row.high] */
 };
 
-static void adjust_row_count(vars,removed_col)
-struct reorder_vars *vars;
-int32 removed_col;
+static void adjust_row_count(struct reorder_vars *vars,int32 removed_col)
 /**
  ***  Adjusts the row counts to account for the (to be) removed column.
  **/
@@ -350,9 +327,7 @@ int32 removed_col;
       --(vars->rowcount[nz.row]);
 }
 
-static void assign_row_and_col(vars,row,col)
-struct reorder_vars *vars;
-int32 row,col;
+static void assign_row_and_col(struct reorder_vars *vars,int32 row,int32 col)
 /**
  ***  Assigns the given row to the given column, moving the row and column
  ***  to the beginning of the active region and removing them (readjusting
@@ -375,9 +350,7 @@ int32 row,col;
    }
 }
 
-static void push_column_on_stack(vars,col)
-struct reorder_vars *vars;
-int32 col;
+static void push_column_on_stack(struct reorder_vars *vars,int32 col)
 /**
  ***  Pushes the given column onto the stack.  It is assumed that the
  ***  column is active.  Row counts are adjusted.
@@ -388,8 +361,7 @@ int32 col;
    --(vars->reg.col.high);
 }
 
-static int32 pop_column_from_stack(vars)
-struct reorder_vars *vars;
+static int32 pop_column_from_stack(struct reorder_vars *vars)
 /**
  ***  Pops the column on the "top" of the stack off of the stack and
  ***  returns the column index, where it now lies in the active region.
@@ -404,8 +376,7 @@ struct reorder_vars *vars;
       return( mtx_NONE );
 }
 
-static void assign_null_rows(vars)
-struct reorder_vars *vars;
+static void assign_null_rows(struct reorder_vars *vars)
 /**
  ***  Assigns empty rows, moving them to the assigned region.  It is
  ***  assumed that row counts are correct.  Columns are assigned off the
@@ -419,8 +390,7 @@ struct reorder_vars *vars;
          assign_row_and_col(vars , row , pop_column_from_stack(vars));
 }
 
-static void forward_triangularize(vars)
-struct reorder_vars *vars;
+static void forward_triangularize(struct reorder_vars *vars)
 /**
  ***  Forward triangularizes the region, assigning singleton rows with their
  ***  one and only incident column until there are no more.  The row counts
@@ -447,8 +417,7 @@ struct reorder_vars *vars;
    } while( change );
 }
 
-static int32 select_row(vars)
-struct reorder_vars *vars;
+static int32 select_row(struct reorder_vars *vars)
 /**
  ***  Selects a row and returns its index.  It is assumed that there is a
  ***  row.  Row counts must be correct.  vars->tlist will be used.
@@ -501,8 +470,7 @@ struct reorder_vars *vars;
    return(row);
 }
 
-static void reorder(vars)
-struct reorder_vars *vars;
+static void reorder(struct reorder_vars *vars)
 /**
  ***  Reorders the assigned matrix vars->mtx within the specified bounding
  ***  block region vars->reg.  The region is split into 6 subregions during
@@ -610,9 +578,7 @@ struct reorder_vars *vars;
    /*  Not reached. */
 }
 
-static boolean nonempty_row(mtx,row)
-mtx_matrix_t mtx;
-int32 row;
+static boolean nonempty_row(mtx_matrix_t mtx,int32 row)
 /**
  ***  ? row not empty in mtx.
  **/
@@ -623,9 +589,7 @@ int32 row;
    return( nz.col != mtx_LAST );
 }
 
-static boolean nonempty_col(mtx,col)
-mtx_matrix_t mtx;
-int32 col;
+static boolean nonempty_col(mtx_matrix_t mtx,int32 col)
 /**
  ***  ? column not empty in mtx.
  **/
@@ -636,8 +600,7 @@ int32 col;
    return( nz.row != mtx_LAST );
 }
 
-static void determine_pivot_range(sys)
-linsol_system_t sys;
+static void determine_pivot_range(linsol_system_t sys)
 /**
  ***  Calculates sys->rng from sys->coef.
  **/
@@ -670,9 +633,7 @@ linsol_system_t sys;
    }
 }
 
-void linsol_reorder(sys,region)
-linsol_system_t sys;
-mtx_region_t *region;
+void linsol_reorder(linsol_system_t sys,mtx_region_t *region)
 /**
  ***  The region to reorder is first isolated by truncating the region
  ***  provided to the largest square region confined to the matrix diagonal.
@@ -699,9 +660,7 @@ mtx_region_t *region;
 }
 
 
-static void drag(mtx,n1,n2)
-mtx_matrix_t mtx;
-int32 n1,n2;
+static void drag(mtx_matrix_t mtx,int32 n1,int32 n2)
 /**
  ***  Drags row n1 to n2, moving row n1 to n2 and shifting all rows in
  ***  between back toward n1.  Ditto for columns.  This function works
@@ -721,11 +680,7 @@ int32 n1,n2;
    }
 }
 
-static void eliminate_row(mtx,rng,row,tmp)
-mtx_matrix_t mtx;
-mtx_range_t *rng;
-int32 row;   /* row to eliminate */
-real64 *tmp;   /* temporary array */
+static void eliminate_row(mtx_matrix_t mtx,mtx_range_t *rng,int32 row,real64 *tmp)
 /**
  ***  Eliminates the given row to the left of the diagonal element, assuming
  ***  valid pivots for all of the diagonal elements above it (the elements
@@ -778,10 +733,8 @@ real64 *tmp;   /* temporary array */
       if( tmp[nz.col] != 0.0 ) mtx_add_value(mtx,&nz,tmp[nz.col]);
 }
 
-/* not IN use it seems */
-static int32 top_of_spike(sys,col)
-linsol_system_t sys;
-int32 col;
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
+static int32 top_of_spike(linsol_system_t sys,int32 col)
 /**
  ***  Determines the top row (row of lowest index) in a possible spike
  ***  above the diagonal element in the given column.  If there is no spike,
@@ -803,10 +756,9 @@ int32 col;
          top_row = nz.row;
    return( top_row );
 }
+#endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
-static boolean col_is_a_spike(sys,col)
-linsol_system_t sys;
-int32 col;
+static boolean col_is_a_spike(linsol_system_t sys,int32 col)
 /**
  ***  Determines if the col is a spike, characterized by having any
  ***  nonzeros above the diagonal.
@@ -827,8 +779,7 @@ int32 col;
    return( FALSE );
 }
 
-static void invert(sys)
-linsol_system_t sys;
+static void invert(linsol_system_t sys)
 /**
  ***  This is the heart of the linear equation solver.  This function
  ***  factorizes the matrix into a lower (L) and upper (U) triangular
@@ -916,9 +867,7 @@ linsol_system_t sys;
    sys->rank = last_row - sys->rng.low + 1;
 }
 
-static real64 *raise_capacity(vec,oldcap,newcap)
-real64 *vec;
-int32 oldcap,newcap;
+static real64 *raise_capacity(real64 *vec,int32 oldcap,int32 newcap)
 /**
  ***  Raises the capacity of the array and returns a new array.
  ***  It is assumed that oldcap < newcap.  vec is destroyed or
@@ -946,8 +895,7 @@ int32 oldcap,newcap;
   return newvec;
 }
 
-static void insure_capacity(sys)
-linsol_system_t sys;
+static void insure_capacity(linsol_system_t sys)
 /**
  ***  Insures that the capacity of all of the solution vectors
  ***  for each rhs is large enough.
@@ -964,10 +912,7 @@ linsol_system_t sys;
    }
 }
 
-static void forward_substitute(sys,arr,transpose)
-linsol_system_t sys;
-real64 *arr;
-boolean transpose;
+static void forward_substitute(linsol_system_t sys,real64 *arr,boolean transpose)
 /**
  ***  Forward substitute.  It is assumed that the L (or U) part of
  ***  sys->inv is computed.  This function converts c to x in place.  The
@@ -1025,10 +970,7 @@ boolean transpose;
    }
 }
 
-static void backward_substitute(sys,arr,transpose)
-linsol_system_t sys;
-real64 *arr;
-boolean transpose;
+static void backward_substitute(linsol_system_t sys,real64 *arr,boolean transpose)
 /**
  ***  Backward substitute.  It is assumed that the U (or L) part of
  ***  sys->inv is computed.  This function converts rhs to c in place.  The
@@ -1087,8 +1029,7 @@ boolean transpose;
 }
 
 
-static void calc_dependent_rows(sys)
-linsol_system_t sys;
+static void calc_dependent_rows(linsol_system_t sys)
 {
    mtx_coord_t nz;
    real64 value;
@@ -1131,8 +1072,7 @@ linsol_system_t sys;
 }
 
 
-static void calc_dependent_cols(sys)
-linsol_system_t sys;
+static void calc_dependent_cols(linsol_system_t sys)
 {
    mtx_coord_t nz;
    real64 value;
@@ -1174,10 +1114,8 @@ linsol_system_t sys;
    if( lc ) ascfree(lc);
 }
 
-
-static void debug_out_inverse(fp,sys)
-FILE *fp;
-linsol_system_t sys;
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
+static void debug_out_inverse(FILE *fp,linsol_system_t sys)
 /**
  ***  Outputs permutation and values of the nonzero elements in the
  ***  inverse matrix.
@@ -1198,10 +1136,11 @@ linsol_system_t sys;
 		 nz.col, mtx_col_to_org(sys->inv,nz.col), value);
    }
 }
+#endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 /* from joe equivalent to ranki_jz*/
-static void invert_alt(sys)
-linsol_system_t sys;
+static void invert_alt(linsol_system_t sys)
 /**
  ***  This is the heart of the linear equation solver.  This function
  ***  factorizes the matrix into a lower (L) and upper (U) triangular
@@ -1289,11 +1228,10 @@ linsol_system_t sys;
    if( tmp != NULL ) ascfree( (POINTER)tmp );
    sys->rank = candidates.row.high - sys->rng.low + 1;
 }
+#endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 #define KAA_DEBUG 0
-void linsol_invert(sys,region)
-linsol_system_t sys;
-mtx_region_t *region;
+void linsol_invert(linsol_system_t sys,mtx_region_t *region)
 /**
  ***  The region to invert is first isolated by truncating the region
  ***  provided to the largest square region confined to the matrix diagonal.
@@ -1344,8 +1282,7 @@ mtx_region_t *region;
 #endif /* KAA_DEBUG */
 }
 
-int32 linsol_rank(sys)
-linsol_system_t sys;
+int32 linsol_rank(linsol_system_t sys)
 {
    check_system(sys);
    if( !sys->inverted ) {
@@ -1368,9 +1305,7 @@ linsol_system_t sys;
    return(sys->smallest_pivot);
 }
 
-int linsol_get_pivot_sets(sys,org_rowpivots,org_colpivots)
-linsol_system_t sys;
-unsigned *org_rowpivots,*org_colpivots;
+int linsol_get_pivot_sets(linsol_system_t sys,unsigned *org_rowpivots,unsigned *org_colpivots)
 {
    int32 ndx;
 
@@ -1394,9 +1329,7 @@ unsigned *org_rowpivots,*org_colpivots;
 #define org_col_to_org_row(sys,org_col) \
    mtx_row_to_org((sys)->inv,mtx_org_to_col((sys)->inv,org_col))
 
-int32 linsol_org_row_to_org_col(sys,org_row)
-linsol_system_t sys;
-int32 org_row;
+int32 linsol_org_row_to_org_col(linsol_system_t sys,int32 org_row)
 {
    check_system(sys);
    if( !sys->inverted ) {
@@ -1406,9 +1339,7 @@ int32 org_row;
    return( org_row_to_org_col(sys,org_row) );
 }
 
-int32 linsol_org_col_to_org_row(sys,org_col)
-linsol_system_t sys;
-int32 org_col;
+int32 linsol_org_col_to_org_row(linsol_system_t sys,int32 org_col)
 {
    check_system(sys);
    if( !sys->inverted ) {
@@ -1418,9 +1349,7 @@ int32 org_col;
    return( org_col_to_org_row(sys,org_col) );
 }
 
-real64 linsol_org_row_dependency(sys,dep,ind)
-linsol_system_t sys;
-int32 dep,ind;
+real64 linsol_org_row_dependency(linsol_system_t sys,int32 dep,int32 ind)
 {
    mtx_coord_t nz;
 
@@ -1449,9 +1378,7 @@ int32 dep,ind;
    return(mtx_value(sys->inv,&nz));
 }
 
-real64 linsol_org_col_dependency(sys,dep,ind)
-linsol_system_t sys;
-int32 dep,ind;
+real64 linsol_org_col_dependency(linsol_system_t sys,int32 dep,int32 ind)
 {
    mtx_coord_t nz;
 
@@ -1481,10 +1408,7 @@ int32 dep,ind;
 }
 
 
-static void zero_unpivoted_vars(sys,varvalues,transpose)
-linsol_system_t sys;
-real64 *varvalues;
-boolean transpose;
+static void zero_unpivoted_vars(linsol_system_t sys,real64 *varvalues,boolean transpose)
 /**
  ***  Sets the values of unpivoted variables to zero.
  **/
@@ -1505,9 +1429,7 @@ boolean transpose;
        varvalues[mtx_row_to_org(sys->inv,ndx)] = 0.0;
 }
 
-void linsol_solve(sys,rhs)
-linsol_system_t sys;
-real64 *rhs;
+void linsol_solve(linsol_system_t sys,real64 *rhs)
 /**
  ***  Assuming the bounding block region of the matrix has been previously
  ***  inverted, the specified rhs can then be applied.
@@ -1549,10 +1471,7 @@ real64 *rhs;
    }
 }
 
-real64 linsol_var_value(sys,rhs,ndx)
-linsol_system_t sys;
-real64 *rhs;
-int32 ndx;
+real64 linsol_var_value(linsol_system_t sys, real64 *rhs, int32 ndx)
 {
   struct rhs_list *rl;
 
@@ -1578,12 +1497,10 @@ int32 ndx;
     FPRINTF(stderr,"ERROR:  (linsol) linsol_var_value\n");
     FPRINTF(stderr,"        Rhs does not exist.\n");
   }
+  return 0.0; /* Function had no return value.  Added this line.  JDS */
 }
 
-boolean linsol_copy_solution(sys,rhs,vector)
-linsol_system_t sys;
-real64 *rhs;
-real64 *vector;
+boolean linsol_copy_solution(linsol_system_t sys,real64 *rhs,real64 *vector)
 {
   struct rhs_list *rl;
   real64 *varvalue;
@@ -1622,10 +1539,7 @@ real64 *vector;
   return FALSE;
 }
 
-real64 linsol_eqn_residual(sys,rhs,ndx)
-linsol_system_t sys;
-real64 *rhs;
-int32 ndx;
+real64 linsol_eqn_residual(linsol_system_t sys, real64 *rhs, int32 ndx)
 {
    struct rhs_list *rl;
    mtx_coord_t nz;
@@ -1668,4 +1582,5 @@ int32 ndx;
       FPRINTF(stderr,"ERROR:  (linsol) linsol_eqn_residual\n");
       FPRINTF(stderr,"        Rhs does not exist.\n");
    }
+  return 0.0; /* Function had no return value.  Added this line.  JDS */
 }

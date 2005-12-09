@@ -182,7 +182,7 @@ void ChangeWhenPointers(struct Instance *when, struct Instance *old,
         cur_case = (struct Case *)gl_fetch(caselist,c);
         reflist = GetCaseReferences(cur_case);
         if (reflist != NULL) {
-          if ((pos = gl_search(reflist,old,(CmpFunc)CmpP)))
+          if (0 != (pos = gl_search(reflist,old,(CmpFunc)CmpP)))
             ModifyWhenPointers(reflist,old,new);
 	}
       }

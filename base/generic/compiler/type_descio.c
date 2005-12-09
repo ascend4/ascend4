@@ -391,7 +391,7 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
   switch(GetBaseType(desc)){
   case model_type:
     FPRINTF(f,"MODEL %s",SCP(GetName(desc)));
-    if ( ( refines=GetRefinement(desc) ) ) {
+    if ( NULL != ( refines=GetRefinement(desc) ) ) {
       FPRINTF(f," REFINES %s;\n",SCP(GetName(refines)));
       WriteDiffStatementList(f,GetStatementList(refines),
         GetStatementList(desc),4);
@@ -407,7 +407,7 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
   case set_type:
   case symbol_type:
     FPRINTF(f,"ATOM %s",SCP(GetName(desc)));
-    if ( (refines=GetRefinement(desc)) )
+    if ( NULL != (refines=GetRefinement(desc)) )
       FPRINTF(f," REFINES %s",SCP(GetName(refines)));
     if (GetBaseType(desc)==real_type){
       FPRINTF(f," DIMENSION ");
@@ -431,7 +431,7 @@ void WriteDiffDefinition(FILE *f, struct TypeDescription *desc)
   case integer_constant_type:
   case symbol_constant_type:
     FPRINTF(f,"CONSTANT %s",SCP(GetName(desc)));
-    if ( (refines=GetRefinement(desc)) )
+    if ( NULL != (refines=GetRefinement(desc)) )
       FPRINTF(f," REFINES %s",SCP(GetName(refines)));
     if (GetBaseType(desc)==real_type){
       FPRINTF(f," DIMENSION ");
