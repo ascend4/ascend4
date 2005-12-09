@@ -165,7 +165,8 @@ void Asc_Panic(CONST int status, CONST char *function,
 void Asc_PanicSetOutfile(CONST char *filename)
 {
   if( filename != NULL ) {
-    strncpy( g_panic_outfile, filename, PANIC_MSG_MAXLEN-1 );
+    strncpy( g_panic_outfile, filename, PATH_MAX-1 );
+    g_panic_outfile[PATH_MAX-1] = '\0';
   } else {
     g_panic_outfile[0] = '\0';
   }

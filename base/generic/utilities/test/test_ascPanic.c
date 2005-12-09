@@ -22,10 +22,10 @@
  */
 
 #include <stdio.h>
+#include "utilities/ascConfig.h"
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
 #include "compiler/redirectFile.h"
@@ -53,7 +53,7 @@ static int set_flag_and_return(int status)
  *    1. most of its action is text formatting & output
  *    2. it normally exits the program
  *
- *  As a first pass, we will disable exiting and just test 
+ *  As a first pass, we will disable exiting and just test
  *  whether something is getting written to ASCERR and an
  *  output file.
  */
@@ -62,7 +62,7 @@ static void test_ascPanic(void)
   FILE *stdoutfile;
   FILE* outfile;
   int i_enabled_printing = FALSE;
-  FILE *old_errfile;          
+  FILE *old_errfile;
   FILE *old_warnfile;
   FILE *old_infofile;
   unsigned long prior_meminuse;

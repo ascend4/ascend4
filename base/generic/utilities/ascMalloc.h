@@ -35,7 +35,7 @@
  *  These functions provide tracking of memory events and assist 
  *  finding and debugging memory errors.  Memory tracking options are 
  *  selected using the macros MALLOC_DEBUG and ALLOCATED_TESTS discussed 
- *  below.  This allows the enhanced functionality to be used or turned 
+ *  below.  This allows the enhanced functionality to be used or turned
  *  off as desired.  This functionality adds considerable run-time overhead, 
  *  and so should generally be used for debugging purposes only.  There are
  *  also routines for reporting on the status of memory blocks as well as
@@ -119,8 +119,8 @@ extern char *asc_memcpy(char *dest, char *src, size_t n);
  *  Copies n bytes from memory address src to dest.
  *  This version of memcpy handles overlapping memory ranges
  *  properly. It could be more efficient internally. As it is, 
- *  it moves data a char at a time.  Neither dest nor src may
- *  be NULL (checked by assertion).
+ *  it moves data a char at a time.  Unless n is 0, neither dest 
+ *  nor src may be NULL (checked by asc_assertion).
  *
  *  @param dest Pointer to address to which to copy (non-NULL).
  *  @param src  Pointer to address from which to copy (non-NULL).

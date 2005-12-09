@@ -22,10 +22,10 @@
  */
 
 #include <stdio.h>
+#include "utilities/ascConfig.h"
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
 #include "general/list.h"
 #include "general/listio.h"
