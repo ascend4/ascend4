@@ -51,7 +51,7 @@
 #ifdef __WIN32__
 #  define LOGFILE "memlg"
 #else
-#  define TEMPFILE_TEMPLATE "/tmp/asctmpXXXXXX"
+#  define TEMPFILE_TEMPLATE "/tmp/ascmemlog_XXXXXX"
 #endif
 
 #ifndef lint
@@ -264,19 +264,21 @@ static CONST VOIDPTR MemoryMean(void)
 /*
  *  Creates a temporary file for logging memory events.
  *  The file is opened and header information is written to it.
- *  Thereafter, the FILE* is available to other routines in 
- *  f_memory_log_file, which should append to the file as needed.  
+ *  Thereafter, the FILE* is available to other routines in
+ *  f_memory_log_file, which should append to the file as needed.
  *  This function may be called more than once - the file will only be
- *  created and header info written the first time it is called, or 
+ *  created and header info written the first time it is called, or
  *  after ascshutdown() has been called.
  */
 static void OpenLogFile(void)
 {
-  if (NULL == f_memory_log_file){
   time_t t;
+  int handle;
+
+  if (NULL == f_memory_log_file) {
+
 #ifdef __WIN32__
     /* Windows doesn't have mkstemp(), so need to use tempnam() */
-    int handle;
     f_memlog_filename = tempnam(NULL, LOGFILE);
     if (NULL == f_memlog_filename) {
       Asc_Panic(2, NULL, "Unable to create a unique memory log filename.\n");
@@ -287,14 +289,17 @@ static void OpenLogFile(void)
     if ((-1 == handle) ||
         (NULL == (f_memory_log_file = fdopen(handle,"w")))) {
       Asc_Panic(2, NULL, "Unable to open memory log file.\n");
-	}  
+    }
 #else
-    f_memory_log_file = (FILE *)mkstemp(TEMPFILE_TEMPLATE);
-    if (NULL == f_memory_log_file) {
+    char temp_filename[] = TEMPFILE_TEMPLATE;
+    handle = mkstemp(temp_filename);
+    if ((-1 == handle) ||
+        (NULL == (f_memory_log_file = fdopen(handle,"r+")))) {
       Asc_Panic(2, NULL, "Unable to open memory log file.\n");
-  }
+    }
 #endif  /* __WIN32__ */
-  t = time((time_t *)NULL);
+
+    t = time((time_t *)NULL);
     FPRINTF(f_memory_log_file,"Ascend memory log file opened %s",
                             asctime(localtime(&t)));
     FPRINTF(f_memory_log_file,"%16s %13s %16s %13s %6s %s",
@@ -305,7 +310,7 @@ static void OpenLogFile(void)
                             "Line#",
                             "Source File\n");
     fflush(f_memory_log_file);
-}
+  }
 }
 
 static void WriteMemoryStatus(FILE *f, CONST char *msg)

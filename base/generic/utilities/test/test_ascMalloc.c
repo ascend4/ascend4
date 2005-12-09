@@ -22,10 +22,10 @@
  */
 
 #include <stdio.h>
+#include "utilities/ascConfig.h"
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
 #include "CUnit/CUnit.h"
@@ -260,7 +260,8 @@ static void test_ascMalloc(void)
   CU_TEST(1 == AllocatedMemory(p_str1, 0));
 #endif
 
-  /* ascstatus(), ascstatus_detail(), ascshutdown() - reporting functions, not tested */
+  /* ascstatus(), ascstatus_detail() - reporting functions, not tested */
+  /* ascshutdown() - do not call here or will result in closure of test memory log */
   /* ascmeminuse() - tested adequately by other tests */
 
   /* test asccalloc() */
