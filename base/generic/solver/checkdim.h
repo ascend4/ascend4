@@ -128,12 +128,12 @@ extern int chkdim_check_dimensions();
 
 #else
 
-#define chkdim_create_system(a,b) 0
-#define chkdim_destroy_system(a) 0
-#define chkdim_append_expr(a,b) 0
-#define chkdim_append_rel(a,b) 0
+#define chkdim_create_system(a,b)     0
+#define chkdim_destroy_system(a)      0
+#define chkdim_append_expr(a,b)       0
+#define chkdim_append_rel(a,b)        0
 #define chkdim_assign_dimensions(a,b) 0
-#define chkdim_check_dimensions(a,b) 0
+#define chkdim_check_dimensions(a,b)  0
 
 #endif /* REIMPLEMENT  */
 
