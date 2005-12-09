@@ -32,8 +32,8 @@
 #include <time.h>
 #include <malloc.h>
 #include <stdlib.h>
-#include <sys\types.h>
-#include <sys\stat.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include "utilities/ascConfig.h"
 #ifndef __WIN32__
