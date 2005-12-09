@@ -260,6 +260,7 @@ struct Interval DivIntervals(struct Interval i1, struct Interval i2)
     Asc_Panic(2, NULL,
               "Division by zero in DivIntervals routine!\n"
               "Giving up and dying! RIP!\n");
+    exit(2);
   }
   TEST(result);
   return result;

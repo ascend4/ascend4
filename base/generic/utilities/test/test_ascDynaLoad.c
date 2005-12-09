@@ -84,8 +84,9 @@ static void test_ascDynaLoad(void)
     
     if (0 == Asc_DynamicLoad(shlib_name, NULL)) {  /* shared lib with no init func */
       CU_PASS("Opening of shared library succeeded.");
-  
-      CU_TEST(NULL != (init_func          = (initFunc)Asc_DynamicSymbol(shlib_name, "init")));
+
+      init_func = (initFunc)Asc_DynamicSymbol(shlib_name, "init");
+      CU_TEST(NULL != init_func);
       CU_TEST(NULL != (isInitialized_func = (isInitializedFunc)Asc_DynamicSymbol(shlib_name, "isInitialized")));
       CU_TEST(NULL != (cleanup_func       = (cleanupFunc)Asc_DynamicSymbol(shlib_name, "cleanup")));
       CU_TEST(NULL != (value              = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
@@ -111,10 +112,10 @@ static void test_ascDynaLoad(void)
     if (-5 == Asc_DynamicLoad(shlib_name, "init")) {  /* shared lib with init func */
       CU_PASS("Opening of shared library succeeded.");
   
-      CU_TEST(NULL != (init_func =          (initFunc)Asc_DynamicSymbol(shlib_name, "init")));
-      CU_TEST(NULL != (isInitialized_func = (isInitializedFunc)Asc_DynamicSymbol(shlib_name, "isInitialized")));
-      CU_TEST(NULL != (cleanup_func =       (cleanupFunc)Asc_DynamicSymbol(shlib_name, "cleanup")));
-      CU_TEST(NULL != (value              = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
+      CU_TEST(NULL != (void*)(init_func =          (initFunc)Asc_DynamicSymbol(shlib_name, "init")));
+      CU_TEST(NULL != (void*)(isInitialized_func = (isInitializedFunc)Asc_DynamicSymbol(shlib_name, "isInitialized")));
+      CU_TEST(NULL != (void*)(cleanup_func =       (cleanupFunc)Asc_DynamicSymbol(shlib_name, "cleanup")));
+      CU_TEST(NULL != (void*)(value              = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
       if ((NULL != init_func) &&
           (NULL != isInitialized_func) &&
           (NULL != cleanup_func) &&

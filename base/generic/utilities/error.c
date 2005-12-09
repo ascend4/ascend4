@@ -71,7 +71,7 @@ va_error_reporter(
 		const error_severity_t sev
 		, const char *errfile, const int errline
 		, const char *fmt
-		, va_list args
+		, const va_list args
 ){
 	extern error_reporter_callback_t g_error_reporter_callback;
 	int res;
@@ -172,7 +172,6 @@ error_reporter_start(const error_severity_t sev, const char *filename, const int
 int
 error_reporter_end_flush(){
 	extern error_reporter_meta_t g_error_reporter_cache;
-	extern error_reporter_callback_t g_error_reporter_callback;
 
 	error_reporter(
 		g_error_reporter_cache.sev

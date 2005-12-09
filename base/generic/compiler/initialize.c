@@ -1032,9 +1032,9 @@ void AnalyzeSwitchCase(struct procFrame *fm, struct VariableList *vlist,
           break;
         case e_var:
           /* evar ok only if a loop index? */
-          if (GetEvaluationForTable() != NULL &&
-             (str = SimpleNameIdPtr(ExprName(expr))) &&
-             (fvp=FindForVar(GetEvaluationForTable(),str))) {
+          if ((GetEvaluationForTable() != NULL) &&
+              (NULL != (str = SimpleNameIdPtr(ExprName(expr)))) &&
+              (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
             switch (GetForKind(fvp)) {
             case f_integer:
               if ((InstanceKind(inst) & IINT) == 0) {

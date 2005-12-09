@@ -36,6 +36,7 @@
 #include "compiler/compiler.h"
 #include "compiler/instance_enum.h"
 #include "compiler/symtab.h"
+#include "compiler/simlist.h"
 #include "compiler/instance_io.h"
 #include "compiler/instance_name.h"
 #include "compiler/instquery.h"
@@ -213,14 +214,13 @@ int CheckChildExist(struct InstanceName name)
 static void HandleLastPart(char *temp)
 {
   struct InstanceName name;
-
   if (g_search_inst) {
     SetInstanceNameType(name,StrName);
     SetInstanceNameStrPtr(name,AddSymbol(temp));
     CheckChildExist(name);            /* sets g_search_inst regardless */
     return;
   } else {
-    g_search_inst = (struct Instance *) Asc_FindSimulationRoot(AddSymbol(temp));
+    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
   }
 }
 
@@ -253,13 +253,12 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
         if (g_search_inst) {
           SetInstanceNameType(name,StrName);
           SetInstanceNameStrPtr(name,AddSymbol(temp));
-          if(!(ndx=CheckChildExist(name))) {
+          if(0 == (ndx=CheckChildExist(name))) {
             Asc_SearchListDestroy(search_list);
             return NULL;
           }
         } else {
-		  /** @TODO FIXME, why is the cast necessary? */
-          g_search_inst = (struct Instance *)Asc_FindSimulationRoot(AddSymbol(temp));
+          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             Asc_SearchListDestroy(search_list);
             return NULL;
@@ -285,13 +284,12 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
         if (g_search_inst) {
           SetInstanceNameType(name,StrName);
           SetInstanceNameStrPtr(name,AddSymbol(temp));
-          if(!(ndx=CheckChildExist(name))) {
+          if(0 == (ndx=CheckChildExist(name))) {
             Asc_SearchListDestroy(search_list);
             return NULL;
           }
         } else {
-		  /** @TODO FIXME, why is the cast necessary? */
-          g_search_inst = (struct Instance *) Asc_FindSimulationRoot(AddSymbol(temp));
+          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             Asc_SearchListDestroy(search_list);
             return NULL;
@@ -312,7 +310,7 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
       case ARRAY_INT_INST:
         SetInstanceNameType(name,IntArrayIndex);
         SetInstanceNameIntIndex(name,atol(temp));
-        if(!(ndx=CheckChildExist(name))) {
+        if(0 == (ndx=CheckChildExist(name))) {
           Asc_SearchListDestroy(search_list);
           return NULL;
         }
@@ -323,7 +321,7 @@ struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp)
       case ARRAY_ENUM_INST:
         SetInstanceNameType(name,StrArrayIndex);
         SetInstanceNameStrIndex(name,AddSymbol(temp));
-        if(!(ndx=CheckChildExist(name))) {  /* sets g_search_inst */
+        if(0 == (ndx=CheckChildExist(name))) {  /* sets g_search_inst */
           Asc_SearchListDestroy(search_list);
           return NULL;
         }
@@ -388,8 +386,7 @@ void HandleLastPart3(char *temp)
     CheckChildExist(name);            /* sets g_search_inst regardless */
     return;
   } else {
-    /** @TODO FIXME, why is the cast necessary? */
-    g_search_inst = (struct Instance *)Asc_FindSimulationRoot(AddSymbol(temp));
+    g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
   }
 }
 
@@ -430,8 +427,7 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
             return NULL;
           }
         } else {
-          /** @TODO FIXME, why is the cast necessary? */
-          	g_search_inst = (struct Instance *)Asc_FindSimulationRoot(AddSymbol(temp));
+          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             return NULL;
           }
@@ -459,9 +455,7 @@ struct Instance *BrowQlfdidSearch3(CONST char *str, char *temp,int relative)
             return NULL;
           }
         } else {
-		  /** @TODO FIXME, why is the cast necessary? */
-          g_search_inst = (struct Instance *) Asc_FindSimulationRoot(AddSymbol(temp));
-
+          g_search_inst = Asc_FindSimulationRoot(AddSymbol(temp));
           if (!g_search_inst) {
             return NULL;
           }

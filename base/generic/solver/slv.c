@@ -1977,7 +1977,7 @@ void slv_set_char_parameter(char **cp, char *newvalue)
 }
 
 void slv_destroy_parms(slv_parameters_t *p) {
-  int32 i,n,j;
+  int32 i,j;
   for (i = 0; i < p->num_parms; i++) {
     switch(p->parms[i].type) {
     case char_parm:

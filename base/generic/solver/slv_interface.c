@@ -60,7 +60,7 @@
 #include "solver/slv_client.h" /* should be client ... */
 #include "solver/system.h"
 #include "solver/slv_interface.h"   /* Implementation of this */
-#include "interface/checkdim.h"
+#include "solver/checkdim.h"
 #include "interface/plot.h"
 
 #define prompt printf
@@ -146,7 +146,7 @@ static void print_commands()
  ***  Prints out all commands
  **/
 {
-   int ndx;
+   unsigned int ndx;
    for( ndx=0 ; ndx < NCOMMANDS ; ++ndx )
       PRINTF("%-30s%s\n",commands[ndx].name,commands[ndx].descr);
 }
@@ -158,7 +158,7 @@ char *str;
  ***  If non-existent, -1 is returned.
  **/
 {
-   int i;
+   unsigned int i;
    for( i=0 ; i<NCOMMANDS ; ++i )
       if( strcmp(commands[i].name , str) == 0 )
          break; /* found it */
@@ -697,14 +697,17 @@ int command;
          break;
 
       case C_CHECK_DIMENSIONS: {
+/* broken 12/05 - checkdim not implemented */
+        FPRINTF(ASCERR, "Error - checkdim not implemented.\n");
+/*
          chkdim_system_t chk;
          slv_parameters_t p;
-         /*expr_t obj;*/
+         / * expr_t obj; * /
 
          PRINTF("Creating system . . .\n");
          chkdim_create_system(&chk,slv_get_master_rel_list(sys));
-         /* if( (obj=slv_get_obj_function(sys)) != NULL )
-            chkdim_append_expr(&chk,obj); */
+         / * if( (obj=slv_get_obj_function(sys)) != NULL )
+            chkdim_append_expr(&chk,obj); * /
 
          PRINTF(". . . done.  Check system . . .\n");
          slv_get_parameters(sys,&p);
@@ -714,6 +717,7 @@ int command;
          if( input_boolean(FALSE) )
             chkdim_assign_dimensions(&chk,&p);
          chkdim_destroy_system(&chk);
+*/
          break;
       }
 

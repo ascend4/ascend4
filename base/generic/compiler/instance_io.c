@@ -94,7 +94,7 @@ struct gl_list_t *ShortestPath(CONST struct Instance *i,
     gl_append_ptr(shortest,(VOIDPTR)ref);
     return shortest;
   }
-  if ((len=NumberParents(i))){
+  if (0 != (len=NumberParents(i))){
     for(c=len;c>=1;c--){
       path = ShortestPath(InstanceParent(i,c),ref,height+1,mybest);
       if (path!=NULL){
@@ -1436,7 +1436,7 @@ void Save__ComplexInsts(FILE *fp, struct Instance *inst)
     FPRINTF(fp,"\t$BASETYPE %s;\n",SCP(type));		/* the base type */
     if (universal)
       FPRINTF(fp,"\t$UNIVCHILD %d;\n",universal);
-    if ((count=NumberofDereferences(inst)))
+    if (0 != (count=NumberofDereferences(inst)))
       FPRINTF(fp,"\t$INDIRECT %lu;\n",count);
     FPRINTF(fp,"\t$INDEXES  : ");
     Save__ChildrenNames(fp,inst);

@@ -204,7 +204,7 @@ CONST dim_type *PowDimension(long mult, CONST dim_type *dim, int check)
   else {
     dim_type d;
     struct fraction new;
-    new = CreateFraction(mult,(FRACPART)1);
+    new = CreateFraction((FRACPART)mult,(FRACPART)1);
     d = ScaleDimensions(dim,new);
     return (FindOrAddDimen(&d));
   }

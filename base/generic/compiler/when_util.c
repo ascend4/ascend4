@@ -117,8 +117,8 @@ void ModifyWhenPointers(struct gl_list_t *reforvar,
 
   if (old==new) return;
   if (new){
-    if ((pos = gl_search(reforvar,old,(CmpFunc)CmpP))) {
-      if ((other = gl_search(reforvar,new,(CmpFunc)CmpP))){
+    if (0 != (pos = gl_search(reforvar,old,(CmpFunc)CmpP))) {
+      if (0 != (other = gl_search(reforvar,new,(CmpFunc)CmpP))){
 	gl_store(reforvar,pos,(VOIDPTR)new);	       /* case 3 */
         if (pos < other) Swap(&pos,&other);
         /* pos > other now */
@@ -133,7 +133,7 @@ void ModifyWhenPointers(struct gl_list_t *reforvar,
     }
   }
   else						       /* case 4 */
-    if ((pos = gl_search(reforvar,old,(CmpFunc)CmpP)))
+    if (0 != (pos = gl_search(reforvar,old,(CmpFunc)CmpP)))
       gl_store(reforvar,pos,(VOIDPTR)new);
 }
 
@@ -216,7 +216,7 @@ void DestroyWhenVarList(struct gl_list_t *l, struct Instance *inst)
   register struct Instance *ptr;
   register unsigned long c;
   for(c=gl_length(l);c>=1;c--){
-    if ((ptr = (struct Instance *)gl_fetch(l,c))){
+    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c))){
       switch(ptr->t) {
       case BOOLEAN_ATOM_INST:
       case INTEGER_ATOM_INST:
@@ -247,7 +247,7 @@ void DestroyWhenCases(struct Case *cur_case, struct Instance *inst)
   len = gl_length(reflist);
 
   for(c=len;c>=1;c--){
-     if ((ptr = (struct Instance *)gl_fetch(reflist,c))){
+     if (NULL != (ptr = (struct Instance *)gl_fetch(reflist,c))){
       switch(ptr->t) {
       case MODEL_INST:
       case REL_INST:

@@ -39,7 +39,7 @@ static CONST char CommandRCSid[] = "$Id: commands.c,v 1.8 1997/07/29 18:29:26 mt
 
 struct command_t {
   CONST char *str,*help;
-  void (*func)();
+  void (*func)(void);
   int terminate;
   int num_args;
   enum arg_type args[MAX_COMMAND_ARGS];
@@ -83,9 +83,9 @@ extern void AddCommand(int dummy, ...)
   va_start(pvar,dummy);
 
   ptr->str = va_arg(pvar,CONST char *);
-  ptr->func = (void (*)())va_arg(pvar,VOIDPTR);
+  ptr->func = va_arg(pvar, void (*)(void));
   ptr->help = va_arg(pvar,CONST char *);
-  ptr->terminate = va_arg(pvar,int);
+  ptr->terminate = va_arg(pvar,int);                                                 
   ptr->num_args = va_arg(pvar,int);
   if (ptr->num_args > MAX_COMMAND_ARGS) {
     FPRINTF(stderr,"AddCommand called with %d args > Max of %d\n",

@@ -670,7 +670,7 @@ struct AnonType *NearestAnonTypeSA(struct Instance *i,
                                    int *exact)
 {
   struct AnonType *testat;
-  struct Instance *testi;
+  struct Instance *testi = NULL;  /* initialize to satisfy dumb compilers */
   int cmp;
   if (after == NULL) {
     *exact = 0;

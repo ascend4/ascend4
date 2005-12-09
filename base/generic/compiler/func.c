@@ -69,7 +69,7 @@ double DLEXPORT cbrt(register double d)
 
 int DLEXPORT ascnintF(register double d)
 {
-  return ((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d)));
+  return ((d)>=0.0 ? (int)floor((d) + 0.5) : -(int)floor(0.5 - (d)));
 }
 
 

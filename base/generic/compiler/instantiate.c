@@ -871,7 +871,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       Asc_Panic(2, NULL, "Bad index to dense alias array");
       exit(2);/* Needed to keep gcc from whining */
     }
-    return NULL;
+    /* return NULL; */  /* unreachable */
   }
 }
 
@@ -1387,7 +1387,7 @@ symchar *UniquifyString(char *s, struct set_t *strset)
     while ( (oldlen+1) < maxlen) {
       new[oldlen+1] = '\0';
       for(c = 'a'; c <= 'z'; c++){
-        new[oldlen] = c;
+        new[oldlen] = (char)c;
         tmp = AddSymbol(new);
         if (StrMember(tmp,strset)==0) {
           ascfree(new);
@@ -4970,7 +4970,7 @@ struct Instance *MakeLogRelInstance(struct Name *name,
   if ((childname=SimpleNameIdPtr(name))!=NULL){ /* simple name */
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,childname);
-    if((pos = ChildSearch(parent,&rec))){
+    if(0 != (pos = ChildSearch(parent,&rec))){
       /* following assertion should be true */
       assert(InstanceChild(parent,pos)==NULL);
       child = CreateLogRelInstance(def);
@@ -4983,7 +4983,7 @@ struct Instance *MakeLogRelInstance(struct Name *name,
     childname = NameIdPtr(name);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,childname);
-    if((pos = ChildSearch(parent,&rec))){
+    if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
         child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
       } else {			/* need to add array element */
@@ -6940,9 +6940,9 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
     *p2=2;
     return 1;
   case e_var:
-    if (GetEvaluationForTable() != NULL &&
-      (str = SimpleNameIdPtr(ExprName(expr)))&&
-      (fvp=FindForVar(GetEvaluationForTable(),str))){
+    if ((GetEvaluationForTable() != NULL) &&
+        (NULL != (str = SimpleNameIdPtr(ExprName(expr)))) &&
+        (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
       if (GetForKind(fvp)==f_integer){
         *p2=0;
         return 1;
@@ -7447,9 +7447,9 @@ int CheckSelectSetNode(struct Instance *ref, CONST struct Expr *expr,
        *p2=2;
        return 1;
     case e_var:
-      if (GetEvaluationForTable() &&
-         (str = SimpleNameIdPtr(ExprName(expr)))&&
-         (fvp=FindForVar(GetEvaluationForTable(),str))){
+      if ((NULL != GetEvaluationForTable()) &&
+          (NULL != (str = SimpleNameIdPtr(ExprName(expr)))) &&
+          (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
         if (GetForKind(fvp)==f_integer){
           *p2=0;
           return 1;
@@ -8198,7 +8198,7 @@ int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
   struct Statement *stat;
   unsigned long c,len;
   struct gl_list_t *list;
-  int return_value;
+  int return_value = 0;
 
   sl = CondStatList(statement);
   list = GetList(sl);
@@ -8499,7 +8499,7 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
   if ((when_name=SimpleNameIdPtr(name))!=NULL){
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,when_name);
-    if((pos = ChildSearch(parent,&rec))){
+    if(0 != (pos = ChildSearch(parent,&rec))){
       assert(InstanceChild(parent,pos)==NULL);
       desc = FindWhenType();
       child = CreateWhenInstance(desc);
@@ -8511,7 +8511,7 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
     when_name = NameIdPtr(name);
     SetInstanceNameType(rec,StrName);
     SetInstanceNameStrPtr(rec,when_name);
-    if((pos = ChildSearch(parent,&rec))){
+    if(0 != (pos = ChildSearch(parent,&rec))){
       if (InstanceChild(parent,pos)==NULL){ /* need to make array */
         child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
       } else {			/* need to add array element */
@@ -8535,7 +8535,7 @@ void ExecuteWhenStatements(struct Instance *inst,
 {
   struct Statement *statement;
   unsigned long c,len;
-  int return_value;
+  int return_value = 0;
   struct gl_list_t *list;
   list = GetList(sl);
   len = gl_length(list);
@@ -8676,7 +8676,7 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
 {
   struct Statement *statement;
   unsigned long c,len;
-  int return_value;
+  int return_value = 0;
   struct gl_list_t *list;
   list = GetList(sl);
   len = gl_length(list);
@@ -9615,7 +9615,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
 {
   struct Statement *statement;
   unsigned long c,len;
-  int return_value;
+  int return_value = 0;
   struct gl_list_t *list;
   list = GetList(sl);
   len = gl_length(list);
@@ -9705,7 +9705,7 @@ void Pass1ExecuteForStatements(struct Instance *inst,
 {
   struct Statement *statement;
   unsigned long c,len;
-  int return_value;
+  int return_value = 0;
   struct gl_list_t *list;
   list = GetList(sl);
   len = gl_length(list);

@@ -711,7 +711,7 @@ void RemoveArrayTypeDesc(struct TypeDescription *d)
       g_array_desc_list = ptr->next;
       ascfree(ptr);
     } else {
-      while((next = ptr->next)){
+      while(NULL != (next = ptr->next)){
 	if (next->desc == d){
 	  ptr->next = next->next;
 	  ascfree(next);
@@ -1092,8 +1092,8 @@ void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new)
   
   opl = GetInitializationList(d);
   pos = gl_search(opl,new,(CmpFunc)CmpProcs);
-  
-  if (pos == 0 || (old = (struct InitProcedure *)gl_fetch(opl,pos)),
+
+  if ((pos == 0) || (0 != (old = (struct InitProcedure *)gl_fetch(opl,pos))),
       GetProcParseId(old) > GetProcParseId(new)) {
     return; /* type never had it or type redefined it */
   }

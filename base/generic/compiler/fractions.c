@@ -48,7 +48,7 @@ short GCD(register int s1, register int s2)
     s2 = -s2;
   }
   if ((s1==0)||(s2==0)) {
-    return s1+s2;
+    return (short)(s1+s2);
   }
   while (s1!=s2) {
     if (s1>s2) {
@@ -57,7 +57,7 @@ short GCD(register int s1, register int s2)
       s2 -= s1;
     }
   }
-  return s1;
+  return (short)s1;
 }
 
 struct fraction Simplify(struct fraction f)

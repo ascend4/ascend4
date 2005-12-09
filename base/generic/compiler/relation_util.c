@@ -2011,13 +2011,13 @@ static double FindMaxFromTop(struct relation *s)
 double CalcRelationNominal(struct Instance *i)     /* send in relation */
 {
   enum Expr_enum reltype;
-  glob_rel = NULL;
 
   char *iname;
   iname = WriteInstanceNameString(i,NULL);
   CONSOLE_DEBUG("with instance %s...",iname);
   ascfree(iname);
 
+  glob_rel = NULL;
   if (i == NULL){
     FPRINTF(ASCERR, "error in CalcRelationNominal routine\n");
     return (double)0;
@@ -2867,11 +2867,11 @@ void PrintRelationResiduals(struct Instance *i)
  * IF called with all 0/NULL, frees internal recycles.
  */
 static
-struct relation *RelationCreateTmp(int lhslen, int rhslen,
+struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rhslen,
                                    enum Expr_enum relop)
 {
   static struct relation *rel=NULL;
-  static size_t lhscap=0, rhscap=0;
+  static unsigned long lhscap=0, rhscap=0;
 
   /* check for recycle clear and free things if needed. */
   if (lhslen==0 && rhslen == 0 && relop == e_nop) {
@@ -3715,7 +3715,7 @@ double RootFind(struct relation *rel,
   /*
    * Get the evaluation function.
    */
-  func = CalcResidGivenValue;
+  func = (ExtEvalFunc *)CalcResidGivenValue;
   glob_rel = rel;
   return zbrent(func,lower_bound,upper_bound,&(mode),
                 &(m),&(n),x,u,f,g,tolerance,status);
@@ -3751,7 +3751,7 @@ double *RelationFindRoots(struct Instance *i,
   enum Expr_enum reltype;
   static struct ds_soln_list soln_list = {0,0,NULL};
   CONST struct gl_list_t *list;
- 
+
   /* check for recycle shutdown */
   if (i==NULL && varnum == NULL && able == NULL && nsolns == NULL) {
     if (soln_list.soln != NULL) {

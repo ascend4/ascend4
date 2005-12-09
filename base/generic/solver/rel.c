@@ -726,8 +726,8 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel)
  */
 real64 ExtRel_Evaluate_LHS(struct rel_relation *rel)
 {
-  real64 res;
-  res = 1.0; 
+  real64 res = 1.0;
+  UNUSED_PARAMETER(rel);
   FPRINTF(stderr,"Finsished calling ExtRel_Evaluate_LHS result ->%g\n",
 	  res);
   return res;
@@ -815,9 +815,10 @@ static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
   ptr = &jacobian[index];
 
 /* this is totally broken, thanks to kirk making the var=instance assumption */
+  asc_assert(ninputs >= 0);
   Asc_Panic(2, "ExtRel_MapDataToMtx",
             "ExtRel_MapDataToMtx is totally broken");
-  for (c=0;c<ninputs;c++) {
+  for (c=0;c<(unsigned long)ninputs;c++) {
     inst = (struct Instance *)gl_fetch(inputlist,c+1);
 /*
     var = var_instance(inst);
@@ -995,6 +996,10 @@ real64 ExtRel_Diffs_RHS(struct rel_relation *rel,
 real64 ExtRel_Diffs_LHS(struct rel_relation *rel, var_filter_t *filter,
                         int32 row, mtx_matrix_t mtx)
 {
+  UNUSED_PARAMETER(rel);
+  UNUSED_PARAMETER(filter);
+  UNUSED_PARAMETER(row);
+  UNUSED_PARAMETER(mtx);
   return 1.0;
 }
 

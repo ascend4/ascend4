@@ -168,7 +168,8 @@ void numlist_destroy_pool(void) {
   g_numlist_head_pool = NULL;
 }
 
-#ifndef NDEBUG
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
+/*@unused@*/
 static
 void numlist_report_pool(FILE *f)
 {

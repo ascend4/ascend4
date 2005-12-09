@@ -1115,11 +1115,12 @@ static void scale_J_iterative(slv3_system_t sys)
   int32 done;
   int32 row, col;
 
-  CONSOLE_DEBUG("...");
-
   real64 *colvec = sys->nominals.vec;
   real64 *rowvec = sys->weights.vec;
   real64 rowscale, colscale;
+
+  CONSOLE_DEBUG("...");
+
   rho_col_old = col_max_ratio(&(sys->J.mtx),&(sys->J.reg));
   rho_row_old = row_max_ratio(&(sys->J.mtx),&(sys->J.reg));
   k = 0;
@@ -4263,9 +4264,9 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 static void slv3_solve(slv_system_t server, SlvClientToken asys)
 {
+  slv3_system_t sys;
   fprintf(stderr,"slv3_solve starting\n");
   CONSOLE_DEBUG("starting");
-  slv3_system_t sys;
   sys = SLV3(asys);
   if (server == NULL || sys==NULL) return;
   if (check_system(sys)) return;
