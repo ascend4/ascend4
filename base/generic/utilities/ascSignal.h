@@ -46,9 +46,6 @@
  *    - SIGINT  - CTRL-C interactive attention request
  *    - SIGSEGV - segmentation fault
  *
- *  The signal handler manager uses gl_list_t lists, so the list
- *  system must be initialized before calling Asc_SignalInit().<br><br>
- *
  *  A simple use of these facilities to trap floating point exceptions
  *  might be as follows:
  *  <pre>
@@ -107,10 +104,6 @@
  *  <pre>
  *  Requires:     #include "utilities/ascConfig.h"
  *  </pre>
- *  @todo utilities/ascSignal stores function pointers in gl_lists as data
- *        pointers (i.e. VOIDPTR).  These are not guaranteed interchangable
- *        and so arrays of function pointers or some other conforming
- *        implementation should be used.
  */
 
 #ifndef ASC_ASCSIGNAL_H
@@ -124,11 +117,10 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
 #include <setjmp.h>
 #include "utilities/ascConfig.h"
 #ifdef __WIN32__
-#include <process.h>
+#  include <process.h>
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif
-#include "general/list.h"
 
 typedef void (*SigHandler)(int);
 /**< Signature of a signal handling function. */
@@ -193,9 +185,6 @@ extern int Asc_SignalInit(void);
  *  any signal handlers (although any existing handlers are left
  *  in place).  Calling this function more than once will have no
  *  effect and an error code will be returned.<br><br>
- *
- *  The signal handler manager uses gl_list_t lists, so the list
- *  system must be initialized before calling Asc_SignalInit().
  *
  *  @return Returns 0 if successful, 1 if memory could not be
  *          allocated, and 2 if an error occurred.

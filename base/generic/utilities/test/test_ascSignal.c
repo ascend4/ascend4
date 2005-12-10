@@ -109,7 +109,6 @@ static void test_ascSignal(void)
   volatile int signal1_caught;
   volatile int signal2_caught;
   volatile int signal3_caught;
-  volatile int i_initialized_lists = FALSE;
   unsigned long prior_meminuse;
 
   prior_meminuse = ascmeminuse();             /* save meminuse() at start of test function */
@@ -122,13 +121,6 @@ static void test_ascSignal(void)
   old_fpe_handler = signal(SIGFPE, my_handler1);        /* save any pre-existing handlers */
   old_int_handler = signal(SIGINT, my_handler1);
   old_seg_handler = signal(SIGSEGV, my_handler1);
-
-  /* make sure list system is initialized - needed by Asc_SignalInit() */
-  if (FALSE == gl_pool_initialized()) {
-    gl_init();
-    gl_init_pool();
-    i_initialized_lists = TRUE;
-  }
 
   signal(SIGFPE, my_handler1);                          /* install some pre-existing handlers */
   signal(SIGINT, SIG_DFL);
@@ -493,10 +485,6 @@ Asc_SignalRecover(TRUE);
   old_handler = signal(SIGSEGV, SIG_DFL);
   CU_TEST(my_handler2 == old_handler);
   Asc_SignalRecover(TRUE);
-
-  if (TRUE == i_initialized_lists) {
-    gl_destroy_pool();
-  }
 
 #endif  /* NO_SIGNAL_TRAPS */
 

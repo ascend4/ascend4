@@ -45,12 +45,15 @@
  *                registered handlers are reset before return.
  *              - Added Asc_SignalRecover() to standard handler
  *                Asc_SignalTrap() so handlers are reset if necessary. (JDS)
+ *  12/10/2005  - Changed storage of signal handlers from gl_list's 
+ *                to local arrays.  gl_list's can't legally hold
+ *                function pointers. (JDS)
  */
 
 #include <stdio.h>
 #include "utilities/ascConfig.h"
 
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
 # include <signal.h>
 # include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS*/
@@ -61,8 +64,8 @@
 # include <unistd.h>
 #endif
 
+#include "utilities/ascMalloc.h"
 #include "utilities/ascSignal.h"
-#include "general/list.h"
 
 #if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
 static jmp_buf f_test_env;    /* for local testing of signal handling */
@@ -84,14 +87,14 @@ static int f_reset_needed = -2;
  * and if Init is called without the value -2 in f_reset_needed,
  * it will fail.
  */
-static struct gl_list_t *f_fpe_traps = NULL;
-static struct gl_list_t *f_int_traps = NULL;
-static struct gl_list_t *f_seg_traps = NULL;
-/*
- * Batch of globals because we don't want an array of
- * all possible signals, most of which are NULL entries.
- * Each list holds the stack of pointers to signal handlers.
- */
+static SigHandler *f_fpe_traps = NULL;  /**< array for pushed SIGFPE handlers */
+static int f_fpe_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty */
+
+static SigHandler *f_int_traps = NULL;  /**< array for pushed SIGINT handlers */
+static int f_int_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty */
+
+static SigHandler *f_seg_traps = NULL;  /**< array for pushed SIGSEGV handlers */
+static int f_seg_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty */
 
 #ifndef NO_SIGSEGV_TRAP
 /* function to throw an interrupt. system dependent. */
@@ -158,7 +161,7 @@ static int ascresetneeded(void) {
     c++;
   }
   if (c != 1) {
-	CONSOLE_DEBUG("SIGINT test failed");
+    CONSOLE_DEBUG("SIGINT test failed");
     error_reporter(ASC_PROG_ERROR,NULL,0,"Signal (SIGINT) test failed. ASCEND unlikely to work on this hardware.");
     result = -1;
   }
@@ -187,7 +190,7 @@ static int ascresetneeded(void) {
     c++;
   }
   if (c != 1) {
-	CONSOLE_DEBUG("SIGFPE test failed");
+    CONSOLE_DEBUG("SIGFPE test failed");
     error_reporter(ASC_PROG_ERROR,NULL,0,"Signal test failed. ASCEND unlikely to work on this hardware.");
     result = -1;
   }
@@ -204,12 +207,13 @@ static int ascresetneeded(void) {
 }
 
 static
-void initstack (struct gl_list_t *traps, int sig)
+void initstack (SigHandler *traps, int *stackptr, int sig)
 {
   SigHandler old;
   old = signal(sig,SIG_DFL);
   if (old != SIG_ERR && old != SIG_DFL) {
-    gl_append_ptr(traps,(VOIDPTR)old);
+    traps[0] = old;
+    *stackptr = 0;
     (void)signal(sig,old);
   }
 }
@@ -222,25 +226,53 @@ void initstack (struct gl_list_t *traps, int sig)
  */
 int Asc_SignalInit(void)
 {
-  if ((f_reset_needed != -2) || (FALSE == gl_pool_initialized())) {
+  if (f_reset_needed != -2) {
     return 2;
   }
-  f_fpe_traps = gl_create(MAX_TRAP_DEPTH);
-  f_int_traps = gl_create(MAX_TRAP_DEPTH);
-  f_seg_traps = gl_create(MAX_TRAP_DEPTH);
-  if (f_fpe_traps == NULL || f_int_traps == NULL || f_seg_traps == NULL) {
-    return 1;
+
+  /* initialize SIGFPE stack */
+  if (f_fpe_traps == NULL) {
+    f_fpe_traps = (SigHandler *)asccalloc(MAX_TRAP_DEPTH,sizeof(SigHandler));
+    if (f_fpe_traps == NULL) {
+      return 1;
+    }
   }
+  f_fpe_top_of_stack = -1;
+
+  /* initialize SIGINT stack */
+  if (f_int_traps == NULL) {
+    f_int_traps = (SigHandler *)asccalloc(MAX_TRAP_DEPTH,sizeof(SigHandler));
+    if (f_int_traps == NULL) {
+      ascfree(f_fpe_traps);
+      f_fpe_traps = NULL;
+      return 1;
+    }
+  }
+  f_int_top_of_stack = -1;
+
+  /* initialize SIGSEGV stack */
+  if (f_seg_traps == NULL) {
+    f_seg_traps = (SigHandler *)asccalloc(MAX_TRAP_DEPTH,sizeof(SigHandler));
+    if (f_seg_traps == NULL) {
+      ascfree(f_fpe_traps);
+      f_fpe_traps = NULL;
+      ascfree(f_int_traps);
+      f_int_traps = NULL;
+      return 1;
+    }
+  }
+  f_seg_top_of_stack = -1;
+
 #ifndef NO_SIGNAL_TRAPS
   /* push the old ones if any, on the stack. */
-  initstack(f_fpe_traps, SIGFPE);
+  initstack(f_fpe_traps, &f_fpe_top_of_stack, SIGFPE);
 
 # ifndef NO_SIGINT_TRAP
-  initstack(f_int_traps, SIGINT);
+  initstack(f_int_traps, &f_int_top_of_stack, SIGINT);
 # endif
 
 # ifndef NO_SIGSEGV_TRAP
-  initstack(f_seg_traps, SIGSEGV);
+  initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
 # endif
   
   f_reset_needed = ascresetneeded();
@@ -257,17 +289,18 @@ int Asc_SignalInit(void)
  */
 void Asc_SignalDestroy(void)
 {
-  gl_destroy(f_fpe_traps);
-  gl_destroy(f_int_traps);
-  gl_destroy(f_seg_traps);
+  ascfree(f_fpe_traps);
+  ascfree(f_int_traps);
+  ascfree(f_seg_traps);
   f_fpe_traps = f_int_traps = f_seg_traps =  NULL;
+  f_fpe_top_of_stack = f_int_top_of_stack = f_seg_top_of_stack =  -1;
 }
 
-static void reset_trap(int signum, struct gl_list_t *tlist)
+static void reset_trap(int signum, SigHandler *tlist, int tos)
 {
   SigHandler tp;
-  if (tlist != NULL && gl_length(tlist) > 0L) {
-    tp = (SigHandler)gl_fetch(tlist, gl_length(tlist));
+  if ((tlist != NULL) && (tos >= 0) && (tos < MAX_TRAP_DEPTH)) {
+    tp = tlist[tos];
     if (tp != SIG_ERR) {
       (void)signal(signum,tp);
     }
@@ -284,12 +317,13 @@ static void reset_trap(int signum, struct gl_list_t *tlist)
  *_Note that if somebody installs a handler without going through
  * our push/pop, theirs is liable to be forgotten.
  */
-void Asc_SignalRecover(int force) {
+void Asc_SignalRecover(int force) 
+{
   if (force || f_reset_needed > 0) {
 #ifndef NO_SIGNAL_TRAPS 
-    reset_trap(SIGFPE, f_fpe_traps);
-    reset_trap(SIGINT, f_int_traps);
-    reset_trap(SIGSEGV, f_seg_traps);
+    reset_trap(SIGFPE, f_fpe_traps, f_fpe_top_of_stack);
+    reset_trap(SIGINT, f_int_traps, f_int_top_of_stack);
+    reset_trap(SIGSEGV, f_seg_traps, f_seg_top_of_stack);
 #endif /* NO_SIGNAL_TRAPS */
   }
 }
@@ -297,17 +331,26 @@ void Asc_SignalRecover(int force) {
 /*
  * append a pointer to the list given, if the list is not full.
  */
-static int push_trap(struct gl_list_t *tlist, SigHandler tp)
+static int push_trap(SigHandler *tlist, int *stackptr, SigHandler tp)
 {
   if (tlist == NULL) {
-	CONSOLE_DEBUG("TLIST IS NULL");
+    CONSOLE_DEBUG("TLIST IS NULL");
     return -1;
   }
-  if (gl_length(tlist) == gl_capacity(tlist)) {
-  	CONSOLE_DEBUG("TLIST LENGTH = CAPACITY");
+  if (stackptr == NULL) {
+    CONSOLE_DEBUG("STACKPTR IS NULL");
+    return -1;
+  }
+  if (tp == NULL) {
+    CONSOLE_DEBUG("TP IS NULL");
+    return 2;
+  }
+  if (*stackptr > MAX_TRAP_DEPTH-1) {
+    CONSOLE_DEBUG("TLIST LENGTH = CAPACITY");
     return 1;
   }
-  gl_append_ptr(tlist,(VOIDPTR)tp);
+  ++(*stackptr);
+  tlist[*stackptr] = tp;
   return 0;
 }
 
@@ -328,15 +371,15 @@ int Asc_SignalHandlerPush(int signum, SigHandler tp)
   switch (signum) {
     case SIGFPE:
 	  /*ERROR_REPORTER_DEBUG("PUSH SIGFPE");*/
-      err = push_trap(f_fpe_traps,tp);
+      err = push_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
       break;
     case SIGINT:
 	  /*ERROR_REPORTER_DEBUG("PUSH SIGINT");*/
-      err = push_trap(f_int_traps,tp);
+      err = push_trap(f_int_traps, &f_int_top_of_stack, tp);
       break;
     case SIGSEGV:
 	  /*ERROR_REPORTER_DEBUG("PUSH SIGSEGV");*/
-      err = push_trap(f_seg_traps,tp);
+      err = push_trap(f_seg_traps, &f_seg_top_of_stack, tp);
       break;
     default:
       return -1;
@@ -353,18 +396,19 @@ int Asc_SignalHandlerPush(int signum, SigHandler tp)
  * Returns: 0 -ok, 2 NULL list input, 1 empty list input,
  * -1 mismatched input tp and stack data.
  */
-static int pop_trap(struct gl_list_t *tlist, SigHandler tp)
+static int pop_trap(SigHandler *tlist, int *stackptr, SigHandler tp)
 {
   SigHandler oldtrap;
 
-  if (tlist == NULL) {
+  if ((tlist == NULL) || (stackptr == NULL)) {
     return 2;
   } 
-  if (gl_length(tlist) == 0) {
+  if (*stackptr < 0) {
     return 1;
   }
-  oldtrap = (SigHandler)gl_fetch(tlist,gl_length(tlist));
-  gl_delete(tlist,gl_length(tlist),0);
+  oldtrap = tlist[*stackptr];
+  tlist[*stackptr] = NULL;
+  --(*stackptr);
   return (-(oldtrap != tp));
 }
 
@@ -374,15 +418,15 @@ int Asc_SignalHandlerPop(int signum, SigHandler tp)
   switch (signum) {
   case SIGFPE:
     /*ERROR_REPORTER_DEBUG("POP SIGFPE");*/
-    err = pop_trap(f_fpe_traps,tp);
+    err = pop_trap(f_fpe_traps, &f_fpe_top_of_stack, tp);
     break;
   case SIGINT:
     /*ERROR_REPORTER_DEBUG("POP SIGINT");*/
-    err = pop_trap(f_int_traps,tp);
+    err = pop_trap(f_int_traps, &f_int_top_of_stack, tp);
     break;
   case SIGSEGV:
     /*ERROR_REPORTER_DEBUG("POP SIGSEGV");*/
-    err = pop_trap(f_seg_traps,tp);
+    err = pop_trap(f_seg_traps, &f_seg_top_of_stack, tp);
     break;
   default:
 	CONSOLE_DEBUG("popping invalid signal type (signum = %d)", signum);

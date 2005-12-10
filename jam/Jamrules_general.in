@@ -78,8 +78,8 @@ PACK_LIBS = $(ASC_PACKAGES_LIB_PATH) ;
 #======================================================================
 # SIGNAL TRAPS
 #
-# If you want to be able to interrupt ASCEND with ctrl-C, then use the
-# following line. Comment the line for the default (can't interrupt with
+# If you want to be able to interrupt ASCEND with ctrl-C, then comment the
+# following line. Uncomment the line for the default (can't interrupt with
 # ctrl-C) behaviour.
 
 CCFLAGS += -DNO_SIGINT_TRAP -DNO_SIGSEGV_TRAP ;
