@@ -118,15 +118,14 @@ struct bt_data {
 } g_bt_data = {NULL,0,0,NULL,0,"ERRARCHIVE",NULL,NULL,NULL,NULL,NULL,1,0,0};
 
 /**
-	I can't work out how to fix the warning here. In the C++ interface, I need
-	the arguments of BinTokenSetOptions to be const char*. But here, new can
-	lose its constness in *ptr = new.
+ *  In the C++ interface, the arguments of BinTokenSetOptions need to be
+ *  const char*. But here, new can lose its constness in *ptr = new. - JP
 */
 static
 int bt_string_replace(CONST char *new, char **ptr)
 {
   if (*ptr == new) {
-    return 0;
+    return 0;                                          
   }
   if (new == NULL) {
     if (*ptr != NULL) {
@@ -137,10 +136,11 @@ int bt_string_replace(CONST char *new, char **ptr)
     if (*ptr != NULL) {
       ascfree(*ptr);
     }
-    *ptr = new;
+    *ptr = (char *)new;
   }
   return 0;
 }
+
 /*
  * Set the configurations for building code.
  * The string arguments given are kept.

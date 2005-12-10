@@ -47,9 +47,7 @@
 int32 calc_ok = TRUE;
 boolean calc_print_errors = TRUE;
 
-static real64 rec_1_p_sqr_Dn(x,n)
-real64 x;
-int n;
+static real64 rec_1_p_sqr_Dn(real64 x, int n)
 /**
  ***  Calculates n-th derivative of 1/(1+x^2).
  **/
@@ -73,8 +71,7 @@ int n;
    return(prev[1]);
 }
 
-static real64 *alloc_poly(order)
-int order;
+static real64 *alloc_poly(int order)
 /**
  ***  Allocates a polynominal of given order and returns it.  The
  ***  polynominal need not be freed, but this function should not be
@@ -93,13 +90,10 @@ int order;
    return(poly);
 }
 
-static real64 calc_poly(poly,order,x,x2)
-real64 *poly;
-int order;
-real64 x,x2;   /* x2 = x^2 */
+static real64 calc_poly(real64 *poly, int order, real64 x, real64 x2)
 /**
  ***  Calculates the value of the given polynomial, where only the
- ***  (order%1 ? odd : even) degree terms are used.
+ ***  (order%1 ? odd : even) degree terms are used.  x2 = x^2
  **/
 {
    real64 val;
@@ -109,9 +103,7 @@ real64 x,x2;   /* x2 = x^2 */
    return( order==-1 ? calc_mul_D0(val,x) : val );
 }
 
-static real64 exp_msqr_Dn(x,n)
-real64 x;
-int n;
+static real64 exp_msqr_Dn(real64 x, int n)
 /**
  ***  Computes n-th derivative of exp(-x^2).
  **/
@@ -138,9 +130,7 @@ int n;
    return( calc_poly(poly,n,x,x2) );
 }
 
-static real64 sqrt_rec_1_m_sqr_Dn(x,n)
-real64 x;
-int n;
+static real64 sqrt_rec_1_m_sqr_Dn(real64 x, int n)
 /**
  ***  Calculates n-th derivative of (1-x^2)^-.5
  **/
@@ -208,8 +198,7 @@ real64 calc_rec(real64 x)
 #define CUBRTHUGE      5.6438030941223618e102
 /* largest cubeable number in an 8 byte ieee double */
 #endif
-real64 calc_cube(x)
-register real64 x;
+real64 calc_cube(register real64 x)
 {
    if( fabs(x) > CUBRTHUGE || fabs(x) < INV_CUBRTHUGE ) {
       real64 bogus;
@@ -234,16 +223,13 @@ register real64 x;
    return ( x*x*x );
 }
 
-real64 calc_Dn_rec(x,n)
-real64 x;
-int n;
+real64 calc_Dn_rec(real64 x, int n)
 {
    return( -calc_upower(-calc_rec(x),n+1) * calc_factorial(n) );
 }
 
 #ifdef HAVE_ERF
-real64 calc_erf_inv(x)
-real64 x;
+real64 calc_erf_inv(real64 x)
 {
 #define CONV (1e-7)
    real64 y,dy,sign;
@@ -279,8 +265,7 @@ real64 x;
 }
 #endif /* HAVE_ERF */
 
-real64 calc_lnm_inv(x)
-real64 x;
+real64 calc_lnm_inv(real64 x)
 {
    register double eps=FuncGetLnmEpsilon();
    if( x > (MAXDOUBLE > 1.0e308 ? 709.196209 : log(MAXDOUBLE)) ) {
@@ -297,8 +282,7 @@ real64 x;
    return( (x >= log(eps)) ? calc_exp_D0(x) : eps*(x+1.0-log(eps)) );
 }
 
-int calc_is_int(x)
-real64 x;
+int calc_is_int(real64 x)
 {
 #define TOLERANCE (1e-4)
    unsigned n;
@@ -326,14 +310,12 @@ real64 x;
 }
 
 
-real64 calc_tan_D0(x)
-real64 x;
+real64 calc_tan_D0(real64 x)
 {
    return( calc_div_D0( sin(x) , cos(x) ) );
 }
 
-real64 calc_arcsin_D0(x)
-real64 x;
+real64 calc_arcsin_D0(real64 x)
 {
    if( x < -1.0 || 1.0 < x ) {
       real64 bogus = 0.0;
@@ -348,8 +330,7 @@ real64 x;
    return( asin(x) );
 }
 
-real64 calc_arccos_D0(x)
-real64 x;
+real64 calc_arccos_D0(real64 x)
 {
    if( x < -1.0 || 1.0 < x ) {
       real64 bogus = 0.0;
@@ -364,8 +345,7 @@ real64 x;
    return( acos(x) );
 }
 
-real64 calc_arccosh_D0(x)
-real64 x;
+real64 calc_arccosh_D0(real64 x)
 {
    if( x < 1.0 ) {
       real64 bogus = 0.0;
@@ -381,8 +361,7 @@ real64 x;
    return( arccosh(x) );
 }
 
-real64 calc_arctanh_D0(x)
-real64 x;
+real64 calc_arctanh_D0(real64 x)
 {
    if( x < -1.0 || 1.0 < x ) {
       real64 bogus = 0.0;
@@ -397,8 +376,7 @@ real64 x;
    return( arctanh(x) );
 }
 
-real64 calc_exp_D0(x)
-real64 x;
+real64 calc_exp_D0(real64 x)
 {
    if( x > (MAXDOUBLE > 1.0e308 ? 709.196209 : log(MAXDOUBLE)) ) {
       real64 bogus = BIGNUM;
@@ -413,8 +391,7 @@ real64 x;
    return( exp(x) );
 }
 
-real64 calc_ln_D0(x)
-real64 x;
+real64 calc_ln_D0(real64 x)
 {
    if( x <= 0.0 ) {
       real64 bogus = -BIGNUM;
@@ -429,14 +406,12 @@ real64 x;
    return( log(x) );
 }
 
-real64 calc_log_D0(x)
-real64 x;
+real64 calc_log_D0(real64 x)
 {
    return( calc_LOG10_COEF * calc_ln_D0(x) );
 }
 
-real64 calc_sqrt_D0(x)
-real64 x;
+real64 calc_sqrt_D0(real64 x)
 {
    if( x < 0.0 ) {
       real64 bogus;
@@ -452,72 +427,61 @@ real64 x;
    return(sqrt(x));
 }
 
-real64 calc_tan_D1(x)
-register real64 x;
+real64 calc_tan_D1(register real64 x)
 {
    x=cos(x);
    return( calc_rec(calc_sqr_D0(x)) );
 }
 
-real64 calc_arcsin_D1(x)
-real64 x;
+real64 calc_arcsin_D1(real64 x)
 {
    return( calc_rec(calc_sqrt_D0(1.0 - calc_sqr_D0(x))) );
 }
 
-real64 calc_arccos_D1(x)
-real64 x;
+real64 calc_arccos_D1(real64 x)
 {
    return( -calc_arcsin_D1(x) );
 }
 
-real64 calc_arccosh_D1(x)
-real64 x;
+real64 calc_arccosh_D1(real64 x)
 {
    return( calc_rec(calc_sqrt_D0(calc_sqr_D0(x) - 1.0)) );
 }
 
-real64 calc_arctanh_D1(x)
-real64 x;
+real64 calc_arctanh_D1(real64 x)
 {
    return( calc_rec(1.0 - calc_sqr_D0(x)) );
 }
 
 #ifdef HAVE_ERF
-real64 calc_erf_D1(x)
-real64 x;
+real64 calc_erf_D1(real64 x)
 {
    return( calc_ERF_COEF * calc_exp_D0(-calc_sqr_D0(x)) );
 }
 #endif /* HAVE_ERF */
 
-real64 calc_log_D1(x)
-real64 x;
+real64 calc_log_D1(real64 x)
 {
    return( calc_LOG10_COEF * calc_ln_D1(x) );
 }
 
-real64 calc_sqrt_D1(x)
-real64 x;
+real64 calc_sqrt_D1(real64 x)
 {
    return( 0.5 * calc_rec(calc_sqrt_D0(x)) );
 }
 
-real64 calc_cbrt_D1(x)
-real64 x;
+real64 calc_cbrt_D1(real64 x)
 {
    return( 0.3333333333333333*calc_rec(calc_sqr_D0(calc_cbrt_D0(x))) );
 }
 /* KHACK */
-real64 calc_fabs_D1(x)
-real64 x;
+real64 calc_fabs_D1(real64 x)
 {
    (void)x;
    return( 1.0 );
 }
 
-real64 calc_tan_D2(x)
-real64 x;
+real64 calc_tan_D2(real64 x)
 {
    if( fabs(cos(x)) == 0.0 ) {
       real64 bogus = BIGNUM;
@@ -532,22 +496,19 @@ real64 x;
    return dtan2(x);
 }
 
-real64 calc_arcsin_D2(x)
-real64 x;
+real64 calc_arcsin_D2(real64 x)
 {
    register double t;
    t = calc_rec(1.0 - calc_sqr_D0(x));
    return( calc_mul_D0( calc_mul_D0(x,t) , calc_mul_D0(t,t) ) );
 }
 
-real64 calc_arccos_D2(x)
-real64 x;
+real64 calc_arccos_D2(real64 x)
 {
    return( -calc_arcsin_D2(x) );
 }
 
-real64 calc_arccosh_D2(x)
-real64 x;
+real64 calc_arccosh_D2(real64 x)
 {
    if( fabs(x) <= 1.0 ) {
       real64 bogus = -BIGNUM;
@@ -562,8 +523,7 @@ real64 x;
    return darccosh2(x);
 }
 
-real64 calc_arctanh_D2(x)
-real64 x;
+real64 calc_arctanh_D2(real64 x)
 {
    if( fabs(x) == 1.0 ) {
       real64 bogus = BIGNUM;
@@ -579,34 +539,29 @@ real64 x;
 }
 
 #ifdef HAVE_ERF
-real64 calc_erf_D2(x)
-real64 x;
+real64 calc_erf_D2(real64 x)
 {
    return( -ldexp(calc_ERF_COEF * calc_mul_D0(x,calc_exp_D0(-calc_sqr_D0(x))),
                   1) );
 }
 #endif /* HAVE_ERF */
 
-real64 calc_ln_D2(x)
-real64 x;
+real64 calc_ln_D2(real64 x)
 {
    return( -calc_rec(calc_sqr_D0(x)) );
 }
 
-real64 calc_log_D2(x)
-real64 x;
+real64 calc_log_D2(real64 x)
 {
    return( calc_LOG10_COEF * calc_ln_D2(x) );
 }
 
-real64 calc_sqrt_D2(x)
-real64 x;
+real64 calc_sqrt_D2(real64 x)
 {
    return( -ldexp( calc_rec( calc_mul_D0(x,calc_sqrt_D0(x))), -2) );
 }
 
-real64 calc_cbrt_D2(x)
-real64 x;
+real64 calc_cbrt_D2(real64 x)
 {
    if( fabs(x) == 0.0 ) {
       real64 bogus = BIGNUM;
@@ -621,37 +576,28 @@ real64 x;
    return dcbrt2(x);
 }
 /* KHACK */
-real64 calc_fabs_D2(x)
-real64 x;
+real64 calc_fabs_D2(real64 x)
 {
    (void)x;
    return( 0.0 );
 }
 
-real64 calc_arcsin_Dn(x,n)
-real64 x;
-int n;
+real64 calc_arcsin_Dn(real64 x, int n)
 {
    return( n==0 ? calc_arcsin_D0(x) : sqrt_rec_1_m_sqr_Dn(x,n-1) );
 }
 
-real64 calc_arccos_Dn(x,n)
-real64 x;
-int n;
+real64 calc_arccos_Dn(real64 x, int n)
 {
    return( n==0 ? calc_arccos_D0(x) : -sqrt_rec_1_m_sqr_Dn(x,n-1) );
 }
 
-real64 calc_arctan_Dn(x,n)
-real64 x;
-int n;
+real64 calc_arctan_Dn(real64 x, int n)
 {
    return( n==0 ? calc_arctan_D0(x) : rec_1_p_sqr_Dn(x,n-1) );
 }
 
-real64 calc_cos_Dn(x,n)
-real64 x;
-int n;
+real64 calc_cos_Dn(real64 x, int n)
 {
    switch( n%4 ) {
       case 0:
@@ -671,47 +617,35 @@ int n;
    return 0.0;
 }
 
-real64 calc_sin_Dn(x,n)
-real64 x;
-int n;
+real64 calc_sin_Dn(real64 x, int n)
 {
    return( calc_cos_Dn(x,n+3) );
 }
 
 #ifdef HAVE_ERF
-real64 calc_erf_Dn(x,n)
-real64 x;
-int n;
+real64 calc_erf_Dn(real64 x, int n)
 {
    return( n==0 ? calc_erf_D0(x) : calc_ERF_COEF*exp_msqr_Dn(x,n-1) );
 }
 #endif /* HAVE_ERF */
 
-real64 calc_exp_Dn(x,n)
-real64 x;
-int n;
+real64 calc_exp_Dn(real64 x, int n)
 {
    (void)n;
    return( calc_exp_D0(x) );
 }
 
-real64 calc_ln_Dn(x,n)
-real64 x;
-int n;
+real64 calc_ln_Dn(real64 x, int n)
 {
    return( n==0 ? calc_ln_D0(x) : calc_Dn_rec(x,n-1) );
 }
 
-real64 calc_log_Dn(x,n)
-real64 x;
-int n;
+real64 calc_log_Dn(real64 x, int n)
 {
    return( calc_LOG10_COEF * calc_ln_Dn(x,n) );
 }
 
-real64 calc_sqr_Dn(x,n)
-real64 x;
-int n;
+real64 calc_sqr_Dn(real64 x, int n)
 {
    switch(n) {
       case 0:
@@ -725,9 +659,7 @@ int n;
    }
 }
 
-real64 calc_sqrt_Dn(x,n)
-real64 x;
-int n;
+real64 calc_sqrt_Dn(real64 x, int n)
 {
    double a,b;
 

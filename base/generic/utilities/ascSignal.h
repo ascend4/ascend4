@@ -107,6 +107,10 @@
  *  <pre>
  *  Requires:     #include "utilities/ascConfig.h"
  *  </pre>
+ *  @todo utilities/ascSignal stores function pointers in gl_lists as data
+ *        pointers (i.e. VOIDPTR).  These are not guaranteed interchangable
+ *        and so arrays of function pointers or some other conforming
+ *        implementation should be used.
  */
 
 #ifndef ASC_ASCSIGNAL_H
@@ -121,7 +125,7 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
 #include "utilities/ascConfig.h"
 #ifdef __WIN32__
 #include <process.h>
-#else                                                        
+#else
 #include <unistd.h>
 #endif
 #include "general/list.h"

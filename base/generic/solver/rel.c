@@ -805,7 +805,7 @@ static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
 				struct deriv_data *d)
 {
   struct Instance *inst;
-  struct var_variable *var;
+  struct var_variable *var = NULL;
   double value, *ptr;
   boolean used;
   unsigned long c;

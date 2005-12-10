@@ -346,7 +346,8 @@ RefineBooleanConstant(struct BooleanConstantInstance *i,
       SetBooleanAtomValue(INST(i),GetConstantDefBoolean(type),0);
     }
   } else {
-    if (BCV(i) != GetConstantDefBoolean(type) ) {
+    /* the following will fail if your compiler doesn't use 1 for TRUE */
+    if ((unsigned)BCV(i) != GetConstantDefBoolean(type) ) {
       FPRINTF(ASCERR,"Value conflict in RefineBooleanConstant.\n");
       FPRINTF(ASCERR,"Unable to refine instance.\n");
       return INST(i);

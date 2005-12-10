@@ -426,7 +426,7 @@ static int32 select_row(struct reorder_vars *vars)
    int32 min_row_count;
    int32 max_col_count;
    int32 row;
-   int32 i, nties;   /* # elements currently defined in vars->tlist */
+   int32 i, nties = 0;   /* # elements currently defined in vars->tlist */
 
    /* Set to something > any possible value */
    min_row_count = vars->reg.col.high-vars->reg.col.low+2;
