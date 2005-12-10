@@ -1,4 +1,4 @@
-/* 
+/*
  *  User Packages
  *  by Kirk Abbott
  *  Created: July 4, 1994

@@ -29,6 +29,7 @@
 
 #include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
+#include "utilities/ascPanic.h"
 #include "general/hashpjw.h"
 #include "general/list.h"
 #include "general/table.h"
@@ -45,6 +46,9 @@ struct ExternalFunc *CreateExternalFunc(CONST char *name)
 {
   struct ExternalFunc *result;
   result = (struct ExternalFunc *)ascmalloc(sizeof(struct ExternalFunc));
+  if (result == NULL) {
+    return NULL;
+  }
   result->name = name;
   result->n_inputs = 0;
   result->n_outputs = 0;
@@ -66,36 +70,39 @@ int CreateUserFunction(CONST char *name,
 		       CONST char *help)
 {
   struct ExternalFunc *efunc;
-  if (!name)
+  if (name == NULL) {
     return 1;
+  }
   efunc = LookupExtFunc(name);
-  if (efunc) {		/* name was pre-loaded -- just update the info */
+  if (efunc != NULL) {    /* name was pre-loaded -- just update the info */
     efunc->n_inputs = n_inputs;
     efunc->n_outputs = n_outputs;
     efunc->init = init;
-    efunc->value = value;
-    efunc->deriv = deriv;
-    efunc->deriv2 = deriv2;
+    efunc->value = value;   /* should be *value */
+    efunc->deriv = deriv;   /* should be *deriv */
+    efunc->deriv2 = deriv2; /* should be *deriv2 */
     if (help) {
       if (efunc->help) ascfree((char *)efunc->help);
       efunc->help = (char *)ascmalloc((strlen(help)+1)*sizeof(char));
+      asc_assert(efunc->help != NULL);
       strcpy(efunc->help,help);
     }
     else
       efunc->help = NULL;
   } else {
     efunc = (struct ExternalFunc *)ascmalloc(sizeof(struct ExternalFunc));
-    assert(efunc!=NULL);
+    asc_assert(efunc!=NULL);
     efunc->name = SCP(AddSymbol(name));	/* add or find name in symbol table */
                                         /* the main symtab owns the string */
     efunc->n_inputs = n_inputs;
     efunc->n_outputs = n_outputs;
     efunc->init = init;
-    efunc->value = value;
-    efunc->deriv = deriv;
-    efunc->deriv2 = deriv2;
+    efunc->value = value;   /* should be *value */
+    efunc->deriv = deriv;   /* should be *deriv */
+    efunc->deriv2 = deriv2; /* should be *deriv2 */
     if (help) {
       efunc->help = (char *)ascmalloc((strlen(help)+1)*sizeof(char));
+      asc_assert(efunc->help != NULL);
       strcpy(efunc->help,help);
     }
     else
@@ -129,26 +136,26 @@ void DestroyExternalFunc(struct ExternalFunc *efunc)
 
 int (*GetInitFunc(struct ExternalFunc *efunc))(/* */)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return efunc->init;
 }
 
 ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return (ExtBBoxFunc *)efunc->value;
 }
 
 
 ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return (ExtBBoxFunc *)efunc->deriv;
 }
 
 ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return (ExtBBoxFunc *)efunc->deriv2;
 }
 
@@ -169,41 +176,41 @@ ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc)
 
 ExtEvalFunc **GetValueJumpTable(struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
-  return efunc->value;
+  asc_assert(efunc!=NULL);
+  return efunc->value;    /* error, efunc->value is not an array of pointers */
 }
 
 ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
-  return efunc->deriv;
+  asc_assert(efunc!=NULL);
+  return efunc->deriv;    /* error, efunc->value is not an array of pointers */
 }
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
 ExtEvalFunc **GetValueDeriv2Table(struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
-  return efunc->deriv2;
+  asc_assert(efunc!=NULL);
+  return efunc->deriv2;   /* error, efunc->value is not an array of pointers */
 }
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
 CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return efunc->name;
 }
 
 unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return efunc->n_inputs;
 }
 
 unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc)
 {
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   return efunc->n_outputs;
 }
 
@@ -224,7 +231,7 @@ int AddExternalFunc(struct ExternalFunc *efunc, int force)
   struct ExternalFunc *found, *tmp;
   char *name;
 
-  assert(efunc!=NULL);
+  asc_assert(efunc!=NULL);
   name = (char *)efunc->name;
   found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,name);
   if (found) {		/* function name already exists */

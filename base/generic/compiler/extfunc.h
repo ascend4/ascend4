@@ -117,23 +117,27 @@ extern void DestroyExtFuncLibrary(void);
 
 extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
 /**<
- *  Creates and returns and ExternalFunc node, with all attributes
- *  initialized to 0 or NULL.
+ *  Creates a new ExternalFunc node having the specified name.  
+ *  All other attributes are initialized to 0 or NULL.  There is
+ *  no checking for the validity or uniqueness of name.
+ *
+ *  @param name The name for the new ExternalFunc.
+ *  @return A pointer to the new ExternalFunc.
  */
 
 extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
 /**< 
- *  Given an external function node, add it to the external function
- *  library. We look up the external function before adding it to the
- *  library. If force is zero and the function exists then nothing
- *  is done and 0 is returned. If force is true, then the old entry is
- *  removed and the new one is added; 1 is returned. If the name is not
+ *  Adds an external function node to the external function library. 
+ *  We look up the external function before adding it to the
+ *  library.  If force is zero and the function exists then nothing
+ *  is done and 0 is returned.  If force is true, then the old entry is
+ *  removed and the new one is added; 1 is returned.  If the name is not
  *  found then the information is added to the library.
  */
 
 extern struct ExternalFunc *LookupExtFunc(CONST char *funcname);
 /**< 
- *  Returns the external function corresponding to the name, or NULL if
+ *  Returns the external function having the given name, or NULL if
  *  not found.
  */
 
@@ -147,18 +151,39 @@ extern int CreateUserFunction(CONST char *name,
                               CONST unsigned long n_outputs,
                               CONST char *help);
 /**<
-	@param name name of the function being added (or updated)
-	@param init initialisation function
-	@param value location where pointer to evaluation function can be found???
-	@param deriv location where pointer to first partial derivative function will be returned???
-	@param deriv2 location where pointer to second derivative function can be found???
-
-	This function is used to add external functions to the ASCEND system. The name of the function is looked up. If it already exists, the information will be updated. If the name was not found in the external function library, then an external function node will be created and added to the external function library. We make a *copy* of the help string if it is provided. We also make a copy of the name. Anyone desirous of ASCEND knowing about there functions must use this protocol.
-*/
+ *  Adds an external function to the ASCEND system.
+ *  The name of the function is looked up.  If it already exists, the 
+ *  information will be updated.  If the name was not found in the 
+ *  external function library, then an external function node will be 
+ *  created and added to the external function library.  We make a 
+ *  *copy* of the help string if it is provided.  We also make a copy 
+ *  of the name.  Anyone desirous of ASCEND knowing about their 
+ *  functions must use this protocol.
+ *
+ *  @param name Name of the function being added (or updated).
+ *  @param init Pointer to initialisation function, or NULL if none.
+ *  @param value Pointer to a function pointer to the evaluation function, 
+ *               or NULL if none.
+ *  @param deriv Pointer to a function pointer to the first partial 
+ *               derivative function, or NULL if none.
+ *  @param deriv2 Pointer to a function pointer to the second derivative 
+ *                function, or NULL if none.
+ *  @return Returns 0 if the function was successfully added, 
+ *          non-zero otherwise.
+ *
+ *  @todo compiler/extfunc:CreateUserFunction() is broken.  The current
+ *        implementation wants to treat value, deriv, and deriv2 as BOTH
+ *        function pointers and arrays of function pointers.  We need to 
+ *        decide which they are or else provide a mechanism supporting dual
+ *        roles.  This could be a union in ExternalFunc explicitly allowing 
+ *        them to be both.  This would necessitate 2 CreateUserFunction()
+ *        varieties - 1 taking (ExtEvalFunc *) and 1 taking (ExtEvalFunc **)
+ *        to allow the different types of ExternalFunc's to be set up.
+ */
 
 extern struct ExternalFunc *RemoveExternalFunc(char *name);
 /**< 
- *  Given the name of an external function will remove it from the
+ *  Removes the external function having the given name from the
  *  External function library.
  */
 

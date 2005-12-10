@@ -1675,9 +1675,9 @@ void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst)
   int len;
 
   reln = GetInstanceRelation(relinst,&type);
-  len = GlassBoxNumberArgs(reln);
+  len = GlassBoxNumberArgs(reln);                    
   if (len==0) return;
-  if (NumberVariables(reln)!=len) {
+  if (NumberVariables(reln) != (unsigned long)len) {
     FPRINTF(ASCERR,"Corrupted arguements in glassbox relation\n");
     return;
   }

@@ -2894,7 +2894,7 @@ struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rhslen,
   if (rel == NULL) {
     rel = CreateRelationStructure(relop,crs_NEWUNION);
   }
-  if ((int)lhscap < lhslen) {
+  if (lhscap < lhslen) {
     lhscap = lhslen;
     if ( RTOKEN(rel).lhs != NULL) {
       ascfree(RTOKEN(rel).lhs);
