@@ -57,7 +57,7 @@ static void test_ascDynaLoad(void)
   initFunc          init_func;
   isInitializedFunc isInitialized_func;
   cleanupFunc       cleanup_func;
-  valuetype        *value;
+  valuetype        *value1, *value2;
   unsigned long prior_meminuse;
 
 #ifdef __WIN32__
@@ -85,23 +85,27 @@ static void test_ascDynaLoad(void)
     if (0 == Asc_DynamicLoad(shlib_name, NULL)) {  /* shared lib with no init func */
       CU_PASS("Opening of shared library succeeded.");
 
-      init_func = (initFunc)Asc_DynamicSymbol(shlib_name, "init");
-      CU_TEST(NULL != init_func);
-      CU_TEST(NULL != (isInitialized_func = (isInitializedFunc)Asc_DynamicSymbol(shlib_name, "isInitialized")));
-      CU_TEST(NULL != (cleanup_func       = (cleanupFunc)Asc_DynamicSymbol(shlib_name, "cleanup")));
-      CU_TEST(NULL != (value              = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
+      CU_TEST(NULL != (init_func          = (initFunc)Asc_DynamicFunction(shlib_name, "init")));
+      CU_TEST(NULL != (isInitialized_func = (isInitializedFunc)Asc_DynamicFunction(shlib_name, "isInitialized")));
+      CU_TEST(NULL != (cleanup_func       = (cleanupFunc)Asc_DynamicFunction(shlib_name, "cleanup")));
+      CU_TEST(NULL != (value1             = (valuetype*)Asc_DynamicVariable(shlib_name, "value")));
+      CU_TEST(NULL != (value2             = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
       if ((NULL != init_func) &&
           (NULL != isInitialized_func) &&
           (NULL != cleanup_func) &&
-          (NULL != value)) {
+          (NULL != value1) &&
+          (NULL != value2)) {
         CU_TEST(FALSE == (*isInitialized_func)());
-        CU_TEST(FALSE == (*value));
+        CU_TEST(FALSE == (*value1));
+        CU_TEST(FALSE == (*value2));
         CU_TEST(-5 == (*init_func)());
         CU_TEST(TRUE == (*isInitialized_func)());
-        CU_TEST(TRUE == (*value));
+        CU_TEST(TRUE == (*value1));
+        CU_TEST(TRUE == (*value2));
         (*cleanup_func)();
         CU_TEST(FALSE == (*isInitialized_func)());
-        CU_TEST(FALSE == (*value));
+        CU_TEST(FALSE == (*value1));
+        CU_TEST(FALSE == (*value2));
       }
       CU_TEST(0 == Asc_DynamicUnLoad(shlib_name));
     }
@@ -112,19 +116,23 @@ static void test_ascDynaLoad(void)
     if (-5 == Asc_DynamicLoad(shlib_name, "init")) {  /* shared lib with init func */
       CU_PASS("Opening of shared library succeeded.");
   
-      CU_TEST(NULL != (void*)(init_func =          (initFunc)Asc_DynamicSymbol(shlib_name, "init")));
-      CU_TEST(NULL != (void*)(isInitialized_func = (isInitializedFunc)Asc_DynamicSymbol(shlib_name, "isInitialized")));
-      CU_TEST(NULL != (void*)(cleanup_func =       (cleanupFunc)Asc_DynamicSymbol(shlib_name, "cleanup")));
-      CU_TEST(NULL != (void*)(value              = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
+      CU_TEST(NULL != (init_func =          (initFunc)Asc_DynamicFunction(shlib_name, "init")));
+      CU_TEST(NULL != (isInitialized_func = (isInitializedFunc)Asc_DynamicFunction(shlib_name, "isInitialized")));
+      CU_TEST(NULL != (cleanup_func =       (cleanupFunc)Asc_DynamicFunction(shlib_name, "cleanup")));
+      CU_TEST(NULL != (value1             = (valuetype*)Asc_DynamicVariable(shlib_name, "value")));
+      CU_TEST(NULL != (value2             = (valuetype*)Asc_DynamicSymbol(shlib_name, "value")));
       if ((NULL != init_func) &&
           (NULL != isInitialized_func) &&
           (NULL != cleanup_func) &&
-          (NULL != value)) {
+          (NULL != value1) &&
+          (NULL != value2)) {
         CU_TEST(TRUE == (*isInitialized_func)());
-        CU_TEST(TRUE == (*value));
+        CU_TEST(TRUE == (*value1));
+        CU_TEST(TRUE == (*value2));
         (*cleanup_func)();
         CU_TEST(FALSE == (*isInitialized_func)());
-        CU_TEST(FALSE == (*value));
+        CU_TEST(FALSE == (*value1));
+        CU_TEST(FALSE == (*value2));
       }
       CU_TEST(0 == Asc_DynamicUnLoad(shlib_name));
     }
@@ -133,11 +141,20 @@ static void test_ascDynaLoad(void)
     }
   }
   
-  /* test Asc_DynamicSymbol() - normal operation tested in previous tests */
+  /* test Asc_DynamicVariable(), test Asc_DynamicFunction(), test Asc_DynamicSymbol()
+          - normal operation tested in previous tests */
 
-  CU_TEST(NULL == Asc_DynamicSymbol(NULL, "init"));       /* NULL libname */
+  CU_TEST(NULL == Asc_DynamicVariable(NULL, "value"));       /* NULL libname */
+  CU_TEST(NULL == Asc_DynamicVariable(shlib_name, NULL));   /* NULL symbol */
+  CU_TEST(NULL == Asc_DynamicVariable(shlib_name, "value")); /* library not open */
+
+  CU_TEST(NULL == Asc_DynamicSymbol(NULL, "value"));       /* NULL libname */
   CU_TEST(NULL == Asc_DynamicSymbol(shlib_name, NULL));   /* NULL symbol */
-  CU_TEST(NULL == Asc_DynamicSymbol(shlib_name, "init")); /* library not open */
+  CU_TEST(NULL == Asc_DynamicSymbol(shlib_name, "value")); /* library not open */
+
+  CU_TEST(NULL == Asc_DynamicFunction(NULL, "init"));       /* NULL libname */
+  CU_TEST(NULL == Asc_DynamicFunction(shlib_name, NULL));   /* NULL symbol */
+  CU_TEST(NULL == Asc_DynamicFunction(shlib_name, "init")); /* library not open */
 
   CU_TEST(prior_meminuse == ascmeminuse());   /* make sure we cleaned up after ourselves */
 }

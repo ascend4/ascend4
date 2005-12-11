@@ -450,7 +450,7 @@ extern VOIDPTR ascbzerof(VOIDPTR dest, size_t length, CONST char *file, int line
  *  Return values if MALLOC is defined:
  *    -  0       no memory in the block is currently allocated
  *    -  1       the memory block is wholly contained in an allocated block
- *    -  2       the memory block equals a element of the memory list
+ *    -  2       the memory block equals an element of the memory list
  *    - -1       the memory block is partially contained in an allocated block
  *  If MALLOC_DEBUG is not defined, always returns 1.
  *

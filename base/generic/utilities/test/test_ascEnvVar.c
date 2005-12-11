@@ -325,6 +325,7 @@ static void test_ascEnvVar(void)
   CU_TEST(1 == Asc_PutEnv(str_pathbig));                /* var name too big */
 
   Asc_DestroyEnvironment();                             /* start clean in case failure cases left vars */
+
   CU_TEST(0 == Asc_InitEnvironment(10));                /* init with typical number */
 
   snprintf(str_path, STR_LEN-1, "%s", "envar1=ThisStringHasNoSpaces!");

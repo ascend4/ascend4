@@ -181,6 +181,7 @@ static void test_list(void)
     p_used_lists[n_used_lists++] = p_list1;
   }
   gl_destroy(p_list1);                  /* destroy the list and check for deallocation */
+
 #ifdef MALLOC_DEBUG
 #ifdef LISTUSESPOOL
   CU_TEST(0 != AllocatedMemory((VOIDPTR)p_list1, capacity * sizeof(VOIDPTR)));

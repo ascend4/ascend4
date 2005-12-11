@@ -27,6 +27,7 @@
  */
 #include "utilities/ascConfig.h"
 #include "compiler/compiler.h"
+#include "utilities/ascPanic.h"
 #include "utilities/ascMalloc.h"
 #include "compiler/fractions.h"
 #include "compiler/dimen.h"
