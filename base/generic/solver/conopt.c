@@ -553,14 +553,14 @@ int32 conopt_load(void) {
     return 1; /* failure */
   }
   register_conopt_function =
-    (REGISTER_CONOPT_FUNCTION_FUNC *)Asc_DynamicSymbol("dllcnsub.dll",
+    (REGISTER_CONOPT_FUNCTION_FUNC *)Asc_DynamicFunction("dllcnsub.dll",
     "register_conopt_function");
   unregister_conopt_function =
-    (UNREGISTER_CONOPT_FUNCTION_FUNC *)Asc_DynamicSymbol("dllcnsub.dll",
+    (UNREGISTER_CONOPT_FUNCTION_FUNC *)Asc_DynamicFunction("dllcnsub.dll",
     "unregister_conopt_function");
-  COICRM = (COICRM_FUNC *)Asc_DynamicSymbol("dllcnsub.dll","COICRM");
-  COICSM = (COICSM_FUNC *)Asc_DynamicSymbol("dllcnsub.dll","COICSM");
-  COIMEM = (COIMEM_FUNC *)Asc_DynamicSymbol("dllcnsub.dll","COIMEM");
+  COICRM = (COICRM_FUNC *)Asc_DynamicFunction("dllcnsub.dll","COICRM");
+  COICSM = (COICSM_FUNC *)Asc_DynamicFunction("dllcnsub.dll","COICSM");
+  COIMEM = (COIMEM_FUNC *)Asc_DynamicFunction("dllcnsub.dll","COIMEM");
   if (register_conopt_function == NULL ||
     unregister_conopt_function == NULL ||
     COICRM == NULL ||

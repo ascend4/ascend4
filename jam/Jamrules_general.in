@@ -45,10 +45,12 @@
 #
 #---------------------------------------------------------------------------
 
-# Comment to compile with debugging & assertions enabled
+# Comment to compile with debugging & assertions enabled.
+# Should be commented for regression tests to work properly.
 NODEBUG = 1 ;
 
 # Comment to compile without using the Epperly malloc debugger
+# Should be UNcommented for regression tests to work properly.
 #DEBUG_MALLOC = -DMALLOC_DEBUG ;
 
 #======================================================================
@@ -66,8 +68,6 @@ NODEBUG = 1 ;
 # If STATIC_PACKAGES are chosen, also indicate the location of
 # the packages in PACK_LIBS.	Otherwise leave PACK_LIBS empty.
 #======================================================================
-
-# PACKAGE_FLAGS should be -DSTATIC_PACKAGES, -DDYNAMIC_PACKAGES or -DNO_PACKAGES
 #PACKAGE_FLAGS = -DSTATIC_PACKAGES ;
 PACKAGE_FLAGS = -DDYNAMIC_PACKAGES ;
 #PACKAGE_FLAGS = -DNO_PACKAGES ;
@@ -81,7 +81,9 @@ PACK_LIBS = $(ASC_PACKAGES_LIB_PATH) ;
 # If you want to be able to interrupt ASCEND with ctrl-C, then comment the
 # following line. Uncomment the line for the default (can't interrupt with
 # ctrl-C) behaviour.
-
+#
+# Comment the line for regression testing to work properly.
+#======================================================================
 CCFLAGS += -DNO_SIGINT_TRAP -DNO_SIGSEGV_TRAP ;
 
 #---------------------------------------------------------------------------

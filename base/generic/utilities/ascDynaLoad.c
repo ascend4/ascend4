@@ -46,7 +46,9 @@
 #include <stdarg.h>
 #include "utilities/ascConfig.h"
 #include "utilities/ascPrint.h"
+#include "utilities/ascPanic.h"
 #include "utilities/ascMalloc.h"
+#include "utilities/ascDynaLoad.h"
 
 struct ascend_dlrecord {
   char *path;     /* library name */
@@ -70,11 +72,11 @@ int AscAddRecord(void *dlreturn, CONST char *path)
   if (dlreturn == NULL || path == NULL) {
     return 1;
   }
-  keeppath = strdup((char *)path);
+  keeppath = ascstrdup((char *)path);
   if (keeppath==NULL) return 1;
-  new = (struct ascend_dlrecord *)malloc(sizeof(struct ascend_dlrecord));
+  new = (struct ascend_dlrecord *)ascmalloc(sizeof(struct ascend_dlrecord));
   if (new==NULL) {
-    free(keeppath);
+    ascfree(keeppath);
     return 1;
   }
   new->next = g_ascend_dllist; /* insert at head */
@@ -108,7 +110,7 @@ void *AscFindDLRecord(CONST char *path)
  * deletes the record from the list.  Returns NULL if not found.
  */
 static
-void *AscDeleteRecord(char *path)
+void *AscDeleteRecord(CONST char *path)
 {
   struct ascend_dlrecord *nextptr, *lastptr, *old;
   void *dlreturn = NULL;
@@ -120,8 +122,8 @@ void *AscDeleteRecord(char *path)
     old = g_ascend_dllist;
     g_ascend_dllist = old->next;
     dlreturn = old->dlreturn;
-    free(old->path);
-    free(old);
+    ascfree(old->path);
+    ascfree(old);
   } else {
     lastptr = g_ascend_dllist;
     nextptr = lastptr->next;
@@ -136,8 +138,8 @@ void *AscDeleteRecord(char *path)
       old = nextptr;
       lastptr->next = nextptr->next;
       dlreturn = old->dlreturn;
-      free(old->path);
-      free(old);
+      ascfree(old->path);
+      ascfree(old);
     }
   }
   return dlreturn;
@@ -2929,7 +2931,7 @@ _dl_setErrmsg( va_alist )
 #define UNLOAD_SUCCESS 0
 #endif /* UNLOAD */
 
-int Asc_DynamicUnLoad(char *path)
+int Asc_DynamicUnLoad(CONST char *path)
 {
   void *dlreturn;
   int retval;
@@ -2953,15 +2955,8 @@ int Asc_DynamicUnLoad(char *path)
   return (retval == UNLOAD_SUCCESS) ? 0 : retval;
 }
 
-/*
- * yourFuncOrVar = (YOURCAST)Asc_DynamicSymbol(libraryname,symbolname);
- * rPtr =
- *  (double (*)(double *, double *))Asc_DynamicSymbol("lib.dll","calc");
- * returns you a pointer to a symbol exported from the dynamically
- * linked library named, if the library is loaded with Asc_DynamicLoad
- * and the symbol can be found in it.
- */
-extern void *Asc_DynamicSymbol(CONST char *libname, CONST char *symbol)
+
+void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
 {
   void *dlreturn;
   void *symreturn;
@@ -2990,11 +2985,78 @@ extern void *Asc_DynamicSymbol(CONST char *libname, CONST char *symbol)
                        symbol, libname, strerror(errno));
     symreturn = NULL;
   }
+#elif defined(__WIN32__)
+  /*
+   * Here's a bit of possibly-misdirected casting horror.
+   * ISO C forbids casting between function and data pointers, so, naturally,
+   * we cast between function and data pointers.  Well, we don't have much
+   * choice.  GetProcAddress() returns a function pointer for both functions
+   * and variables so we have to do the cast for variables.  This is ok on 
+   * 32 bit Windows since the pointers are compatible.  Then, to avoid 
+   * being reminded by the compiler that we're doing something illegal, 
+   * we apply convoluted casting to shut it up.
+   * Oh, the crap you can find on the internet...    JDS
+   */
+  *(FARPROC*)(&symreturn) = GetProcAddress((HINSTANCE)dlreturn, symbol);
 #else
-  symreturn = (void *) DLLSYM(DLL_CAST dlreturn,symbol);
+  /* no problem on POSIX systems - dlsym() returns a void *. */
+  symreturn = dlsym(dlreturn, symbol);
 #endif
   if (symreturn == NULL) {
     FPRINTF(stderr,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s\n",symbol,libname);
+    FPRINTF(stderr,"Error type %s\n",ASC_DLERRSTRING);
+  }
+  return symreturn;
+}
+
+
+DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
+{
+  void *dlreturn;
+  DynamicF symreturn;
+#ifdef __hpux
+  int i;
+#endif
+
+  if (libname == NULL) {
+    FPRINTF(stderr,"Asc_DynamicFunction failed:  Null library name\n");
+    return NULL;
+  }
+  if (symbol == NULL) {
+    FPRINTF(stderr,"Asc_DynamicFunction failed:  Null function name\n");
+    return NULL;
+  }
+
+  dlreturn = AscFindDLRecord(libname);
+  if (dlreturn == NULL) {
+    FPRINTF(stderr,"Asc_DynamicFunction: Unable to find requested library %s\n", libname);
+    return NULL;
+  }
+#ifdef __hpux
+  i = shl_findsym(&dlreturn, symbol, TYPE_UNDEFINED, &symreturn);
+  if (i == -1) {
+    FPRINTF(stderr,"Asc_DynamicFunction: Unable to find requested function %s in %s (%s)\n",
+                       symbol, libname, strerror(errno));
+    symreturn = NULL;
+  }
+#elif defined(__WIN32__)
+  /* no problem on Windows - GetProcAddress() returns a function pointer. */
+  symreturn = (DynamicF)GetProcAddress((HINSTANCE)dlreturn, symbol);
+#else
+  /*
+   * Here's the corresponding bit of possibly-misdirected casting horror.
+   * ISO C forbids casting between function and data pointers, so, naturally,
+   * we cast between function and data pointers.  Well, we don't have much 
+   * choice.  dlsym() returns a void* for both variables and functions so we
+   * have to do the cast for functions.  This is ok on POSIX systems since the 
+   * pointer types are compatible.  Then, to avoid being reminded by the 
+   * compiler that we're doing something illegal, we apply convoluted casting 
+   * to shut it up.  Oh, the crap you can find on the internet...   JDS
+   */
+  *(void**)(&symreturn) = dlsym(dlreturn, symbol);
+#endif
+  if (symreturn == NULL) {
+    FPRINTF(stderr,"Asc_DynamicFunction: Unable to find requested function %s in %s\n",symbol,libname);
     FPRINTF(stderr,"Error type %s\n",ASC_DLERRSTRING);
   }
   return symreturn;

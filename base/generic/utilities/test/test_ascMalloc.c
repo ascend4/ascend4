@@ -26,8 +26,8 @@
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
+#include "utilities/ascMalloc.h"
 #include "CUnit/CUnit.h"
 #include "test_ascMalloc.h"
 #include "assertimpl.h"
@@ -194,7 +194,7 @@ static void test_ascMalloc(void)
       snprintf(str3, STR_LEN-1, "str1[%lu] != '=' in test_ascMalloc().", i);
       CU_FAIL(str3);
       str1_bad = TRUE;
-    }
+    }                                                                       
   }
   if (!str1_bad) CU_PASS("str1 and str2 check out.");
 

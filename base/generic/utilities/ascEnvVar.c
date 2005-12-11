@@ -35,8 +35,8 @@
 
 #include <ctype.h>
 #include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
+#include "utilities/ascMalloc.h"
 #include "utilities/ascEnvVar.h"
 #include "general/list.h"
 
@@ -70,26 +70,6 @@ struct asc_env_t {
 static
 struct gl_list_t *g_env_list = NULL;
 
-/* This should be switched over to ascstrdup() to avoid duplication. */
-static
-char *ascstringcopy(char *str)
-{
-  size_t len;
-  char *result;
-
-  if (str==NULL) {
-    return NULL;
-  }
-    len = strlen(str);
-  result = ascmalloc(len+1);
-  if (result==NULL) {
-    return NULL;
-  }
-  strncpy(result,str,len);
-  result[len] = '\0';
-  return result;
-}
-
 /*
  * ev = CreateEnvVar(envvar_name_we_own);
  * Returns NULL, or the asc_env_t requested.
@@ -121,7 +101,7 @@ void DestroyEnvVar(struct asc_env_t *ev)
   if (ev==NULL) {
     return;
   }
-  ascfree( ev->name);
+  ascfree(ev->name);
   gl_free_and_destroy(ev->data);
   ascfree(ev);
 }
@@ -373,6 +353,7 @@ int Asc_PutEnv(char *envstring)
     ascfree(keepname);
     return 1;
   }
+
   AppendEnvVar(g_env_list,ev);
   path = putenvstring + rhs + 1; /* got past the '=' */
 
@@ -431,7 +412,7 @@ int Asc_AppendPath(char *envvar, char *newelement)
   }
   ev = FindEnvVar(envvar);
   if (ev == NULL) {
-    keepname = ascstringcopy(envvar);
+    keepname = ascstrdup(envvar);
     if (keepname == NULL) {
       return 1;
     }
@@ -442,7 +423,7 @@ int Asc_AppendPath(char *envvar, char *newelement)
     }
     AppendEnvVar(g_env_list, ev);
   }
-  keepval = ascstringcopy(newelement);
+  keepval = ascstrdup(newelement);
 
   if (keepval == NULL) {
     return 1;

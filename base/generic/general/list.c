@@ -31,8 +31,8 @@
 
 #include <stdarg.h>
 #include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
+#include "utilities/ascMalloc.h"
 #include "general/list.h"
 #if LISTUSESPOOL
 #include "general/pool.h"
@@ -302,9 +302,13 @@ void gl_free_and_destroy(struct gl_list_t *list)
 {
   unsigned long c;
   if (list == NULL) return;
+#if LISTUSESPOOL
+  AssertMemory(list);
+#else
   AssertAllocatedMemory(list,sizeof(struct gl_list_t));
+#endif
   for(c=0;c<GL_LENGTH(list);c++) {
-    AssertContainedMemory(list->data[c],4);
+    AssertContainedMemory(list->data[c],0);
     ascfree(list->data[c]);
   }
 #ifndef NDEBUG
@@ -339,7 +343,11 @@ void gl_destroy(struct gl_list_t *list)
 {
   unsigned long c;
   if (list == NULL) return;
+#if LISTUSESPOOL
+  AssertMemory(list);
+#else
   AssertAllocatedMemory(list,sizeof(struct gl_list_t));
+#endif
   c = list->capacity; 		/* gonna use it a lot */
   if (c <= MAXRECYCLESIZE && RecycledContents[c] < AllowedContents[c]) {
     asc_assert(RecycledContents[c] >= 0);

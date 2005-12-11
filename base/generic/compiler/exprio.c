@@ -27,6 +27,7 @@
  */
 
 #include "utilities/ascConfig.h"
+#include "utilities/ascPanic.h"
 #include "utilities/ascMalloc.h"
 #include "general/dstring.h"
 #include "compiler/compiler.h"

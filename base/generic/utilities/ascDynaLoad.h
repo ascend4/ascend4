@@ -35,12 +35,17 @@
  * hpux
  * sgi
  * ultrix
+ * Windows
  * possibly aix if we plunder it from tcl8
  *
  * Added Asc_DynamicUnLoad. Ben Allan (ballan@cs.cmu.edu) Jan 1998.
  * Your mileage may vary.
  * UnLoad alleged for sun, hp, sgi, and alpha/osf. It probably works
  * only as well as their dlclose and shl_unload do.
+ *
+ * Split Asc_DynamicSymbol() into Asc_DynamicVariable() and
+ * Asc_DynamicFunction() so callers don't have to cast between
+ * data and function pointers (forbidden by ISO C).  JDS Dec 2005
  */
 
 /** @file
@@ -128,23 +133,55 @@ extern int Asc_DynamicUnLoad(CONST char *path);
  *          specific hell.
  */
 
-extern void *Asc_DynamicSymbol(CONST char *libraryname,
-                               CONST char *symbolname);
+#define Asc_DynamicSymbol(a,b) Asc_DynamicVariable((a),(b))
+/**< For backward compatibility to old name of Asc_DynamicVariable() */
+
+extern void *Asc_DynamicVariable(CONST char *libraryname,
+                                 CONST char *varname);
 /**<
- *  Returns a pointer to a symbol exported from a dynamically-linked
+ *  Returns a pointer to a variable exported from a dynamically-linked
+ *  library.  It will generally be necessary to cast the returned 
+ *  pointer to the correct data type before use.  If either parameter 
+ *  is NULL, or if the library or symbol cannot be located, then NULL 
+ *  will be returned.<br><br>
+ *
+ *  This function was previously called Asc_DynamicSymbol() and could 
+ *  be used to retrieve either variables or functions from a library.
+ *  This necessitated casting the returned void* to a function pointer
+ *  for exported functions, which is forbidden by ISO C.  Functions
+ *  may now be retrieved using Asc_DynamicFunction(), thus avoiding the
+ *  need for the caller to cast between data and function pointers.
+ *  Never mind what the implementation does to achieve this.
+ *  <pre>
+ *  Example:
+ *    int *value;
+ *    value = (int *)Asc_DynamicVariable("lib.dll", "g_variable");
+ *  </pre>
+ *  @param libraryname Name of the dynamic library to query.
+ *  @param varname     Name of variable to look up in the library.
+ *  @return A pointer to the variable in memory, or NULL if not found.
+ */
+
+typedef void (*DynamicF)(void);
+/**<  Function pointer type returned by Asc_DynamicFunction(). */
+
+extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
+                                    CONST char *funcname);
+/**<
+ *  Returns a pointer to a function exported from a dynamically-linked
  *  library.  It will generally be necessary to cast the returned pointer
- *  to the correct function or data type before use.  If either parameter 
- *  is NULL, or if the library or symbol cannot be located, then NULL will
- *  be returned.
+ *  to the correct function type before use.  If either parameter
+ *  is NULL, or if the library or function cannot be located, then NULL 
+ *  will be returned.
  *  <pre>
  *  Example:
  *    typedef double (*calcfunc)(double *, double *);
  *    calcfunc calc;
- *    calc = (calcfunc))Asc_DynamicSymbol("lib.dll","calc");
+ *    calc = (calcfunc))Asc_DynamicFunction("lib.dll","calc");
  *  </pre>
  *  @param libraryname Name of the dynamic library to query.
- *  @param symbolname  Symbol to look up in the library.
- *  @return A pointer to the symbol in memory, or NULL if not found.
+ *  @param funcname   Name of function to look up in the library.
+ *  @return A pointer to the function in memory, or NULL if not found.
  */
 
 #if (defined(__HPUX__) || defined(__ALPHA_OSF__) || \

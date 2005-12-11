@@ -29,8 +29,9 @@
  */
 
 #include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
 #include "compiler/compiler.h"
+#include "utilities/ascPanic.h"
+#include "utilities/ascMalloc.h"
 #include "general/list.h"
 #include "compiler/symtab.h"
 #include "compiler/instance_enum.h"
