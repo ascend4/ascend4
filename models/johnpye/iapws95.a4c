@@ -54,13 +54,22 @@ Boston, MA 02111-1307  USA
 
 *)
 
-MODEL iapws95;
+MODEL thermo_state;
+	T IS_A temperature;
+	rho IS_A mass_density;
+	p IS_A pressure;
+	u IS_A specific_energy;
+	h IS_A specific_enthalpy;
+	s IS_A specific_entropy;
+	cp IS_A specific_heat_capacity;
+	cv IS_A specific_heat_capacity;
+	w IS_A speed;
+END thermo_state;
+	
+MODEL iapws95 REFINES thermo_state;
 
 	delta IS_A positive_variable;
 	tau IS_A positive_variable;
-	
-	rho IS_A mass_density;
-	T IS_A temperature;
 	
 	(*-------------- CONSTANTS ---------------*)
 	rhoc IS_A mass_density_constant;
@@ -370,14 +379,6 @@ MODEL iapws95;
 		+ SUM[ n[i]*delta*(dDELTAbi_dtau[i] * PSI[i] +
                     DELTA[i]^b[i]*dPSI_dtau[i])                     | i IN range_r4 ];
 
-
-
-	phirdeltadelta_r1[range_r1] IS_A factor;
-	FOR i IN range_r1 CREATE
-		phirdeltadelta_r1[i] = 
-			n[i] * d[i] * (d[i] - 1) * delta^(d[i]-2) * tau^t[i];
-	END FOR;
-
 	phirdeltadelta_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE
 		phirdeltadelta_r2[i] = 
@@ -390,32 +391,22 @@ MODEL iapws95;
 				);
 	END FOR;
 
-	phirdeltadelta_r3[range_r3] IS_A factor;
-	FOR i IN range_r3 CREATE
-		phirdeltadelta_r3_expr[i]: phirdeltadelta_r3[i] = 
+	phirdeltadelta IS_A factor;
+	phirdeltadelta_expr: phirdeltadelta =
+		SUM[ 
+			n[i] * d[i] * (d[i] - 1) * delta^(d[i]-2) * tau^t[i]         | i IN range_r1 ]
+		+ SUM [phirdeltadelta_r2[i] | i IN range_r2 ]
+		+ SUM [
 			n[i]* tau^t[i] * exp( r3_b1[i] ) * (
                     - 2 * alpha[i] * delta^d[i]
                     + 4 * alpha[i]*alpha[i] * delta^d[i] * d1^2 (* d1 = d-1 = d-eps *)
                     - 4 * d[i] * alpha[i] * delta^(d[i]-1) * d1
                     + d[i] * (d[i]-1) * delta^(d[i]-1) 
-                );
-	END FOR;
-
-	phirdeltadelta_r4[range_r4] IS_A factor;
-	FOR i IN range_r4 CREATE
-		phirdeltadelta_r4[i] = 
-			n[i]*( 
+                )                                                        | i IN range_r3 ]
+		+ SUM [n[i]*( 
 				DELTA[i]^b[i] * (2*dPSI_ddelta[i] + delta*d2PSI_ddelta2[i] )
 				+ 2*dDELTAbi_ddelta[i] * (PSI[i] + delta*dPSI_ddelta[i])
-				+ d2DELTAbi_ddelta2[i] * delta * PSI[i] );
-	END FOR;
-
-	phirdeltadelta IS_A factor;
-	phirdeltadelta_expr: phirdeltadelta =
-		SUM[ phirdeltadelta_r1[i] | i IN range_r1 ]
-		+ SUM [phirdeltadelta_r2[i] | i IN range_r2 ]
-		+ SUM [phirdeltadelta_r3[i] | i IN range_r3 ]
-		+ SUM [phirdeltadelta_r4[i] | i IN range_r4 ];
+				+ d2DELTAbi_ddelta2[i] * delta * PSI[i] )                | i IN range_r4 ];
 
 
 
@@ -460,14 +451,6 @@ MODEL iapws95;
 
 	(*--------- THERMO PROPERTY RELATIONS ----------- *)
 
-	p IS_A pressure;
-	u IS_A specific_energy;
-	h IS_A specific_enthalpy;
-	s IS_A specific_entropy;
-	cp IS_A specific_heat_capacity;
-	cv IS_A specific_heat_capacity;
-	w IS_A speed;
-
 	pressure: p
 		= rho * R * T * (1 + delta*phirdelta);
 
@@ -495,7 +478,6 @@ MODEL iapws95;
 				( 1 + delta*phirdelta - delta*tau*phirdeltatau )^2 
 				/ (  tau^2 * (phi0tautau + phirtautau) )
 		  );
-
 
 METHODS
 METHOD default_self;
@@ -588,7 +570,7 @@ END test_3;
 
 END iapws_saturation_curves;
 
-MODEL iapws95_sat;
+MODEL iapws95_sat REFINES thermo_state;
 	Sf IS_A iapws95;
 	Sg IS_A iapws95;
 	sat IS_A iapws_saturation_curves;
@@ -597,29 +579,20 @@ MODEL iapws95_sat;
 	Sf.T, Sg.T, sat.T ARE_THE_SAME;
 	rhof ALIASES Sf.rho;
 	rhog ALIASES Sg.rho;
-	T ALIASES Sf.T;
-	p ALIASES Sf.p;
+	T, Sf.T ARE_THE_SAME;
+	p, Sf.p ARE_THE_SAME;
 
 	x IS_A factor;
-	rho IS_A mass_density;
 
 	rhog*rhof = rho*rhog + rho*(rhof - rhog) *x;
 
-	u IS_A specific_energy;
 	u = Sf.u + (Sg.u -Sf.u) *x;
-	
-	h IS_A specific_enthalpy;
+
 	h = Sf.h + (Sg.h -Sf.h) *x;
-
-	s IS_A specific_entropy;
 	s = Sf.s + (Sg.s -Sf.s) *x;
-
-	cp IS_A specific_heat_capacity;
 	cp = Sf.cp + (Sg.cp -Sf.cp) *x;
-
-	cv IS_A specific_heat_capacity;
 	cv = Sf.cv + (Sg.cv -Sf.cv) *x;
-
+	w = Sf.w + (Sg.w - Sf.w) *x; (* check this *)
 METHODS
 
 METHOD default_self;
@@ -640,43 +613,3 @@ END values;
 	
 END iapws95_sat;		
 
-(*
-MODEL iapws95_sat(
-		rhof WILL_BE mass_density;
-		rhog WILL_BE mass_density;
-		rho WILL_BE mass_density;
-);
-
-	Sf IS_A iapws95;
-	Sg IS_A iapws95;
-	Sf.T, Sg.T ARE_THE_SAME;
-	Sf.rho, rhof WILL_BE_THE_SAME;
-	Sg.rho, rhog WILL_BE_THE_SAME;
-
-	T ALIASES Sf.T;
-	p ALIASES Sf.p;
-	x IS_A factor;
-
-	rhog*rhof = rho*rhog + rho*(rhof - rhog) *x;
-
-	u IS_A specific_energy;
-	u = Sf.u + (Sg.u -Sf.u) *x;
-	
-	h IS_A specific_enthalpy;
-	h = Sf.h + (Sg.h -Sf.h) *x;
-
-	s IS_A specific_entropy;
-	s = Sf.s + (Sg.s -Sf.s) *x;
-
-	cp IS_A specific_heat_capacity;
-	cp = Sf.cp + (Sg.cp -Sf.cp) *x;
-
-	cv IS_A specific_heat_capacity;
-	cv = Sf.cv + (Sg.cv -Sf.cv) *x;
-
-	* not sure if the following is true... *
-	w IS_A speed;
-	w = Sf.w + (Sg.w -Sf.w) *x;
-
-END iapws95_sat;
-*)
