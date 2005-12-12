@@ -395,7 +395,7 @@ MODEL steam_state;
 		phirdeltadelta_r3[i] = 
 			n[i]* tau^t[i] * exp( r3_b1[i] ) * (
                     - 2 * alpha[i] * delta^d[i]
-                    + 4 * alpha[i]^2 * delta^d[i] * d1^2 (* d1 = d-1 = d-eps *)
+                    + 4 * alpha[i]*alpha[i] * delta^d[i] * d1^2 (* d1 = d-1 = d-eps *)
                     - 4 * d[i] * alpha[i] * delta^(d[i]-1) * d1
                     + d[i] * (d[i]-1) * delta^(d[i]-2) 
                 );
@@ -442,7 +442,7 @@ MODEL steam_state;
 	FOR i IN range_r2 CREATE	
 		phirdeltatau_r2[i] = 
 			n[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)
-			* (d[i] - c[i] * delta^c[i] * exp(-delta^c[i]) );
+			* (d[i] - c[i] * delta^c[i]) * exp(-delta^c[i]);
 	END FOR;
 
 	phirdeltatau IS_A factor;
