@@ -588,6 +588,58 @@ END test_3;
 
 END iapws_saturation_curves;
 
+MODEL iapws95_sat;
+	Sf IS_A iapws95;
+	Sg IS_A iapws95;
+	sat IS_A iapws_saturation_curves;
+	sat.rhof, Sf.rho ARE_THE_SAME;
+	sat.rhog, Sg.rho ARE_THE_SAME;
+	Sf.T, Sg.T, sat.T ARE_THE_SAME;
+	rhof ALIASES Sf.rho;
+	rhog ALIASES Sg.rho;
+	T ALIASES Sf.T;
+	p ALIASES Sf.p;
+
+	x IS_A factor;
+	rho IS_A mass_density;
+
+	rhog*rhof = rho*rhog + rho*(rhof - rhog) *x;
+
+	u IS_A specific_energy;
+	u = Sf.u + (Sg.u -Sf.u) *x;
+	
+	h IS_A specific_enthalpy;
+	h = Sf.h + (Sg.h -Sf.h) *x;
+
+	s IS_A specific_entropy;
+	s = Sf.s + (Sg.s -Sf.s) *x;
+
+	cp IS_A specific_heat_capacity;
+	cp = Sf.cp + (Sg.cp -Sf.cp) *x;
+
+	cv IS_A specific_heat_capacity;
+	cv = Sf.cv + (Sg.cv -Sf.cv) *x;
+
+METHODS
+
+METHOD default_self;
+	RUN ClearAll;
+	RUN specify;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	T.fixed := TRUE;
+	x.fixed := TRUE;
+END specify;
+
+METHOD values;
+	T := 390 {K};
+	x := 0.5;
+END values;
+	
+END iapws95_sat;		
+
 (*
 MODEL iapws95_sat(
 		rhof WILL_BE mass_density;
