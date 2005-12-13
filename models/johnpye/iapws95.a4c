@@ -66,7 +66,7 @@ MODEL thermo_state;
 	w IS_A speed;
 END thermo_state;
 	
-MODEL iapws95 REFINES thermo_state;
+MODEL iapws95_1phase REFINES thermo_state;
 
 	delta IS_A positive_variable;
 	tau IS_A positive_variable;
@@ -497,9 +497,9 @@ METHOD values;
 	rho := 838.025 {kg/m^3};
 END values;
 
-END iapws95;
+END iapws95_1phase;
 
-MODEL iapws_saturation_curves;
+MODEL iapws_sat_curves;
 
 	rhof IS_A mass_density;
 	rhog IS_A mass_density;
@@ -510,7 +510,7 @@ MODEL iapws_saturation_curves;
 	rhoc :== 322 {kg/m^3};
 	Tc :== 647.096 {K};
 
-	tau IS_A positive_variable;
+	tau IS_A factor;
 
 	tau = 1 - T/Tc;
 
@@ -568,12 +568,12 @@ METHOD test_3;
 	T := 647.096 {K};
 END test_3;
 
-END iapws_saturation_curves;
+END iapws_sat_curves;
 
-MODEL iapws95_sat REFINES thermo_state;
-	Sf IS_A iapws95;
-	Sg IS_A iapws95;
-	sat IS_A iapws_saturation_curves;
+MODEL iapws95_2phase REFINES thermo_state;
+	Sf IS_A iapws95_1phase;
+	Sg IS_A iapws95_1phase;
+	sat IS_A iapws_sat_curves;
 	sat.rhof, Sf.rho ARE_THE_SAME;
 	sat.rhog, Sg.rho ARE_THE_SAME;
 	Sf.T, Sg.T, sat.T ARE_THE_SAME;
@@ -582,7 +582,7 @@ MODEL iapws95_sat REFINES thermo_state;
 	T, Sf.T ARE_THE_SAME;
 	p, Sf.p ARE_THE_SAME;
 
-	x IS_A factor;
+	x IS_A fraction;
 
 	rhog*rhof = rho*rhog + rho*(rhof - rhog) *x;
 
@@ -611,5 +611,66 @@ METHOD values;
 	x := 0.5;
 END values;
 	
-END iapws95_sat;		
+END iapws95_2phase;		
 
+MODEL iapws95 REFINES thermo_state;
+	S1 IS_A iapws95_1phase;
+	S2 IS_A iapws95_2phase;
+	sat IS_A iapws_sat_curves;
+
+	T, sat.T, S1.T, S2.T ARE_THE_SAME;
+	rho, S1.rho, S2.rho ARE_THE_SAME;
+	h, S1.h, S2.h ARE_THE_SAME;
+	u, S1.u, S2.u ARE_THE_SAME;
+	p, S1.p, S2.p ARE_THE_SAME;
+	s, S1.s, S2.s ARE_THE_SAME;
+	cp, S1.cp, S2.cp ARE_THE_SAME;
+	cv, S1.cv, S2.cv ARE_THE_SAME;
+	w, S1.w, S2.w ARE_THE_SAME;
+
+    CONDITIONAL
+		sub_test: rho >= sat.rhof;
+		super_test: rho <= sat.rhog;
+		sat1_test: rho < sat.rhof;
+		sat2_test: rho > sat.rhog;
+	END CONDITIONAL;
+
+	issat IS_A boolean_var;
+	saturation_expr: issat == SATISFIED(sat1_test);
+	issub IS_A boolean_var;
+	subcooled_expr: issub == SATISFIED(sub_test);
+	issuper IS_A boolean_var;
+	superheated_expr: issuper == SATISFIED(super_test);
+	
+    saturation_when: WHEN (issat)
+		CASE TRUE:
+			USE S2;
+		CASE FALSE:
+			USE S1;
+	END WHEN;
+
+METHODS
+METHOD default_self;
+	RUN ClearAll;
+	RUN specify;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	T.fixed := TRUE;
+	rho.fixed := TRUE;
+END specify;
+
+METHOD values;
+	(* fixed vars *)
+	T := 300 {K};
+	rho := 100 {kg/m^3};
+	(* initial values *)
+	issat := TRUE;
+	issuper := FALSE;
+	issub := FALSE;
+	p := 1 {atm};
+	h := 400 {kJ/kg};
+END values;
+
+END iapws95;

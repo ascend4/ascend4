@@ -644,16 +644,15 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
   if (nsolns<0 && allsolns>0 && fp !=NULL) {
    /* dump the rejected solutions to give the user a clue */
 	error_reporter_start(ASC_PROG_WARNING,NULL,0);
-    FPRINTF(fp,"Ignoring potential solutions for variable '");
-    var_write_name(server,var,fp);
-    FPRINTF(fp,"' in equation '");
-    rel_write_name(server,rel,fp);
-    FPRINTF(fp,"'");
-	error_reporter_end_flush();
-
+    FPRINTF(ASCERR,"Ignoring potential solutions for variable '");
+    var_write_name(server,var,ASCERR);
+    FPRINTF(ASCERR,"' in equation '");
+    rel_write_name(server,rel,ASCERR);
+    FPRINTF(ASCERR,"'. ");
     for (--allsolns; allsolns >= 0; allsolns--)  {
-      FPRINTF(fp,"Rejected solution: %.18g\n",slist[allsolns]);
+      FPRINTF(ASCERR,"Rejected solution: %.18g\n",slist[allsolns]);
     }
+	error_reporter_end_flush();
   }
   /* destroy_array(slist); do not do this */
   return( nsolns >= 0 ? 1 : -1 );
@@ -679,6 +678,8 @@ int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
   int32 nsolns, c;
   int32 *slist;
 
+  (void)fp;
+
   slist = logrelman_directly_solve(lrel,dvar,&able,&nsolns,perturb,insts);
   if( !able ) return(0);
   if(nsolns == -1) return (-1);
@@ -689,14 +690,17 @@ int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
     destroy_array(slist);
     return 1;
   } else {
-    FPRINTF(fp,"Ignoring potential solutions for discrete variable\n");
-    dis_write_name(server,dvar,fp);
-    FPRINTF(fp,"\nin equation\n");
-    logrel_write_name(server,lrel,fp);
-    FPRINTF(fp,"\n");
+    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    FPRINTF(ASCERR,"Ignoring potential solutions for discrete variable '");
+    dis_write_name(server,dvar,ASCERR);
+    FPRINTF(ASCERR,"' in equation '");
+    logrel_write_name(server,lrel,ASCERR);
+    FPRINTF(ASCERR,"'. ");
     for (c = nsolns; c >= 1; c--)  {
-      FPRINTF(fp,"Rejected solution: %d \n",slist[c]);
+      FPRINTF(ASCERR,"Rejected solution: %d \n",slist[c]);
     }
+	error_reporter_end_flush();
+
     destroy_array(slist); /* should we have to do this? */
     return 2;
   }

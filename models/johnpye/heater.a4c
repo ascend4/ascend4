@@ -7,7 +7,7 @@ MODEL heater REFINES steam_equipment;
 	Qdot IS_A energy_rate;
 
 	(* first law of thermo *)
-	in.mdot * in.h + Qdot = out.mdot * out.h;
+	((out.mdot*out.h) - (in.mdot*in.h)) = Qdot;
 
 	(* no mass holdup *)
 	out.mdot, in.mdot ARE_THE_SAME;
@@ -20,14 +20,19 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	RUN in.specify;
+	in.p.fixed := TRUE;
+	in.h.fixed := TRUE;
 	Qdot.fixed := TRUE;
 END specify;
 
 METHOD values;
-	in.T := 400 {K};
+	(* fixed values *)
 	in.p := 1 {bar};
-	Qdot := 2.4 {kW};
+	in.h := 2500 {kJ/kg};
+	Qdot := 1 {kW};
+	(* initial guesses *)
+	out.h := 2600 {kJ/kg};
+	out.p := 1 {bar};
 END values;
 
 END heater;

@@ -2,7 +2,7 @@ REQUIRE "johnpye/iapws95.a4c";
 
 (** A simple mass-based stream model *)
 MODEL steam_stream;
-	S IS_A steam_state;
+	S IS_A iapws95_1phase;
 	mdot IS_A mass_rate;
 
 	rho ALIASES S.rho;
