@@ -2178,10 +2178,11 @@ static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars)
    det = coef[0]*coef[2] - coef[1]*coef[1];
    if( det < 0.0 )
 
-      error_reporter(ASC_PROG_ERROR,NULL,0,"Unexpected negative determinant %g.", det);
-	  
-      FPRINTF(MIF(sys),"%-40s ---> %g\n",
-              "    Unexpected negative determinant!",det);
+      /* error_reporter(ASC_PROG_ERROR,NULL,0,"Unexpected negative determinant %f.", det); */
+	  fprintf(stderr,"Unexpected negative determinant %f.\n",det);
+
+      /* FPRINTF(MIF(sys),"%-40s ---> %g\n",
+              "    Unexpected negative determinant!",det); */
 
    if( det <= DETZERO ) {
       /**
@@ -3975,10 +3976,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       sys->s.inconsistent = TRUE;
 
       error_reporter_start(ASC_PROG_ERROR,NULL,0);
-      FPRINTF(mif,"No solution exists within the bounds given for variable '");
-      print_var_name(mif,sys,var); 
-      FPRINTF(mif,"' when inverting relation:\n");
-      print_rel_name(mif,sys,rel);
+      FPRINTF(ASCERR,"No solution exists within the bounds given for variable '");
+      print_var_name(ASCERR,sys,var); 
+      FPRINTF(ASCERR,"' when inverting relation:\n");
+      print_rel_name(ASCERR,sys,rel);
 	  error_reporter_end_flush();
 
       iteration_ends(sys);
@@ -3994,10 +3995,11 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
   scale_system(sys);
 
-  if( !calc_gradient(sys) )
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
-    FPRINTF(MIF(sys),"Gradient calculation errors detected.\n");
+  if( !calc_gradient(sys) ){
+    error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv: Gradient calculation errors detected.");
+    FPRINTF(MIF(sys),"QRSlv: Gradient calculation errors detected.\n");
     error_reporter_end_flush();
+  }
   set_factor_options(sys); /* KHACK: new call to fix lack of proper update */
   rank_defect = calc_pivots(sys);
   if (SAVLIN) {
@@ -4265,7 +4267,6 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 static void slv3_solve(slv_system_t server, SlvClientToken asys)
 {
   slv3_system_t sys;
-  fprintf(stderr,"slv3_solve starting\n");
   CONSOLE_DEBUG("starting");
   sys = SLV3(asys);
   if (server == NULL || sys==NULL) return;

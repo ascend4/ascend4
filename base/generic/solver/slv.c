@@ -2208,7 +2208,7 @@ void slv_iterate(slv_system_t sys)
 void slv_solve(slv_system_t sys)
 {
   fprintf(stderr,"STARTING SLV_SOLVE\n");
-  ERROR_REPORTER_DEBUG("started");
+  /*ERROR_REPORTER_DEBUG("started");*/
   if ( CF(sys,solve) == NULL ) {
     printwarning("slv_solve",sys);
     return;
