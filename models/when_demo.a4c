@@ -734,30 +734,30 @@ MODEL test_flowsheet REFINES flowsheet;
 	f1.stream.state.Cpi['D'] := 0.055 {BTU/mole/K};
 
 (* Feed 1 *)
-	f1.cost_factor := 0.026 {dollar/kg_mole};
+	f1.cost_factor := 0.026 {USD/kg_mole};
 
 (* Feed 2 *)
-	f2.cost_factor := 0.033 {dollar/kg_mole};
+	f2.cost_factor := 0.033 {USD/kg_mole};
 
 (* Cooler 1 *)
-	co1.cost_factor  := 0.7e-06 {dollar/kJ};
+	co1.cost_factor  := 0.7e-06 {USD/kJ};
 	co1.heat_removed := 100 {BTU/s};
 
 (* Cooler 2 *)
 	co2.heat_removed := 150 {BTU/s};
-	co2.cost_factor  := 0.7e-06 {dollar/kJ};
+	co2.cost_factor  := 0.7e-06 {USD/kJ};
 
 (* Heater 1 *)
 	h1.heat_supplied := 200 {BTU/s};
-	h1.cost_factor  := 8e-06 {dollar/kJ};
+	h1.cost_factor  := 8e-06 {USD/kJ};
 
 (* Heater 2 *)
 	h2.heat_supplied := 180 {BTU/s};
-	h2.cost_factor  := 8e-06 {dollar/kJ};
+	h2.cost_factor  := 8e-06 {USD/kJ};
 
 (* Heater 3 *)
 	h3.heat_supplied := 190 {BTU/s};
-	h3.cost_factor  := 8e-06 {dollar/kJ};
+	h3.cost_factor  := 8e-06 {USD/kJ};
 
 (* Flash *)
 	fl1.alpha['A'] := 12.0;
@@ -773,22 +773,22 @@ MODEL test_flowsheet REFINES flowsheet;
 	m1.To := 298 {K};
 
 (* Single Compressor 1 *)
-	c1.cost_factor := 8.33333e-06 {dollar/kJ};
+	c1.cost_factor := 8.33333e-06 {USD/kJ};
 	c1.pressure_rate := 2.5;
 
 (* Single Compressor 2 *)
-	c2.cost_factor := 8.33333e-06 {dollar/kJ};
+	c2.cost_factor := 8.33333e-06 {USD/kJ};
 	c2.pressure_rate := 1.5;
 
 (* Staged Compressor 1 *)
-	s1.cost_factor_work := 8.33333e-06 {dollar/kJ};
-	s1.cost_factor_heat := 0.7e-06 {dollar/kJ};
+	s1.cost_factor_work := 8.33333e-06 {USD/kJ};
+	s1.cost_factor_heat := 0.7e-06 {USD/kJ};
 	s1.pressure_rate := 2.5;
         s1.n_stages := 2.0;
 
 (* Staged Compressor 2 *)
-	s2.cost_factor_work := 8.33333e-06 {dollar/kJ};
-	s2.cost_factor_heat := 0.7e-06 {dollar/kJ};
+	s2.cost_factor_work := 8.33333e-06 {USD/kJ};
+	s2.cost_factor_heat := 0.7e-06 {USD/kJ};
 	s2.pressure_rate := 1.5;
         s2.n_stages := 2.0;
 

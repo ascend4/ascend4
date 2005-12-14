@@ -90,7 +90,7 @@ MODEL VaporStream;
 	T := 800 {K};
 	P := 1 {atm};
 	f[comp] := 1 {mole/min};
-	cost_per_mole := 0 {USdollar/mole};
+	cost_per_mole := 0 {USD/mole};
     END values;
 END VaporStream;
 
@@ -162,7 +162,7 @@ MODEL NaturalGasFeed REFINES VaporStream;
 	T := 298 {K};
 	flow := 1 {mole/min};
 	
-	cost_per_mole := ( 5 {USdollar/ft^3} ) *
+	cost_per_mole := ( 5 {USD/ft^3} ) *
 	                 ( 8.3144 {J/mole/K} ) * ( 298 {K} ) / ( 1 {atm} );
     END values;
 END NaturalGasFeed;

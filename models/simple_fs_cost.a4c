@@ -10,8 +10,8 @@ PROVIDE "simple_fs_cost.a4c";
  *)
 
 ATOM cash_flow REFINES cost_per_time;
-    lower_bound := -1.0e50 {USdollar/min};
-    nominal     := 1.0 {USdollar/s};
+    lower_bound := -1.0e50 {USD/min};
+    nominal     := 1.0 {USD/s};
 END cash_flow;
 
 
@@ -109,11 +109,11 @@ MODEL flowsheet_cost;
 	RUN tc.values;
 
 	payout_time.nominal		:=	2{yr};
-	price['A']				:=	0.15{dollar/lbm};
-	price['B']				:=	0.15{dollar/lbm};
-	price['C']				:=	0.30{dollar/lbm};
+	price['A']				:=	0.15{USD/lbm};
+	price['B']				:=	0.15{USD/lbm};
+	price['C']				:=	0.30{USD/lbm};
 
-	fuel_price				:=	0.1 {dollar/lbm};
+	fuel_price				:=	0.1 {USD/lbm};
 	payout_time				:=	3 {yr};
 
 	cm1.gc.ci.MandSindex			:=	990.8;

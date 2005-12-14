@@ -161,9 +161,7 @@ Rankine = {R};
 
 (*  money *)
 
-dollar = {currency};
-US = {currency};
-USdollar= {currency};
+USD = {currency};
 CR = {currency};
 credits= {currency};
 

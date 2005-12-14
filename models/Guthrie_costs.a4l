@@ -90,7 +90,7 @@ MODEL Guthrie_cost_pressure_vessel;
 	installed_cost		IS_A	monetary_unit;
 	D,H			IS_A	distance;
 
-	installed_cost = (ci.MandSindex/280)*101.9{dollar}*(D/1{ft})^1.066
+	installed_cost = (ci.MandSindex/280)*101.9{USD}*(D/1{ft})^1.066
 	                   *(H/1{ft})^0.802*(2.18+ci.Fc);
 
 

@@ -97,7 +97,7 @@ MODEL Guthrie_cost_pressure_vessel(
     Fc IS_A factor;
     ci IS_A cost_info_pressure_vessel(P, matl, cladSolid, Fc);
 
-    installed_cost = (ci.MandSindex/280)*101.9{dollar}*(D/1{ft})^1.066
+    installed_cost = (ci.MandSindex/280)*101.9{USD}*(D/1{ft})^1.066
     *(H/1{ft})^0.802*(2.18+ci.Fc);
     
     METHODS
