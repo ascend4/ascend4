@@ -65,3 +65,15 @@ ATOM specific_energy REFINES solver_var
 	upper_bound := 1e50{kJ/kg};
 	nominal := 1000{kJ/kg};
 END specific_energy;
+
+MODEL thermo_state;
+	T IS_A temperature;
+	rho IS_A mass_density;
+	p IS_A pressure;
+	u IS_A specific_energy;
+	h IS_A specific_enthalpy;
+	s IS_A specific_entropy;
+	cp IS_A specific_heat_capacity;
+	cv IS_A specific_heat_capacity;
+	w IS_A speed;
+END thermo_state;

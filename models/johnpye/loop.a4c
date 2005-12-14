@@ -1,0 +1,275 @@
+REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "johnpye/ideal_steam.a4c";
+REQUIRE "johnpye/iapws_sat_curves.a4c";
+
+MODEL water_and_ideal_steam REFINES thermo_state;
+	S IS_A ideal_steam;
+	W IS_A thermo_state;
+	x IS_A fraction;
+
+	p, S.p, W.p ARE_THE_SAME;
+	T, S.T, W.T ARE_THE_SAME;
+	z01: W.u = (T - 273.15 {K}) * 4.2 {kJ/kg/K};
+	z02:W.h = W.u + p / 1000 {kg/m^3};
+	(* Gibb's free energy needed to create an exprssion for entropy *)
+	z03:W.s = 0 {kJ/kg/K};
+	z04:W.cp = 4.2 {kJ/kg/K};
+	z05:W.cv = 4.2 {kJ/kg/K}; (* correction? *)
+	z06:W.w = 10000 {m/s}; (* correction? *)
+
+	z07:h = S.h * x + W.h * (1-x);
+	z08:s = S.s * x + W.s * (1-x);
+	z09:cp = S.cp * x + W.cp * (1-x);
+	z10:cv = S.cv * x + W.cv * (1-x);
+	z11:w = S.w * x + W.w * (1-x);
+
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	p.fixed := TRUE;
+	h.fixed := TRUE;
+END specify;
+
+METHOD values;
+	p := 1 {bar};
+	h := 1000 {kJ/kg};
+END values;
+
+END water_and_ideal_steam;
+
+MODEL simple_water_stream REFINES water_and_ideal_steam;
+	mdot IS_A mass_rate;
+
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	mdot.fixed := TRUE;
+	RUN water_and_ideal_steam::specify;
+END specify;
+
+METHOD values;
+	mdot := 1 {kg/s};
+	RUN water_and_ideal_steam::values;
+END values;
+
+END simple_water_stream;
+
+(*
+	Here is a fixed volume of gas confined in a volume.
+	We can see that fixing the mass in the vessel then
+	heating it up will increase the pressure.
+*)
+MODEL gas_vessel;
+	S IS_A ideal_steam;
+	T ALIASES S.T;
+	p ALIASES S.p;
+	rho ALIASES S.rho;
+	h ALIASES S.h;
+	m_gas IS_A mass;
+	V_gas IS_A volume;
+	m_gas = S.rho * V_gas;
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+METHOD specify;
+	RUN S.specify;
+	V_gas.fixed := TRUE;
+	m_gas.fixed := TRUE;
+END specify;
+METHOD values;
+	RUN S.values;
+	V_gas := 1 {m^3};
+	m_gas := 0.727101 {kg};
+END values;
+END gas_vessel;
+
+
+MODEL vessel_with_water REFINES gas_vessel;
+	m_water IS_A mass;
+	V_water IS_A volume;
+	V_vessel IS_A volume;
+	V_water + V_gas = V_vessel;
+	m_water = 1000 {kg/m^3} * V_water; (* incompressible water *)
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+METHOD specify;
+	V_vessel.fixed := TRUE;
+	m_gas.fixed := TRUE;
+	m_water.fixed := TRUE;
+END specify;
+METHOD values;
+	V_vessel := 1000 {L};
+	m_gas := 0.727101 {kg};
+	m_water := 200 {kg};
+END values;
+END vessel_with_water;
+
+
+MODEL absorber;
+	(* assumptions: 
+		outlet is saturated steam
+		inlet is saturated water
+		no pressure drop
+		no temperature change
+		all Q is absorbed by water
+		steam generation is constant along length as mass rate, so x rises linearly.
+	*)
+	S IS_A ideal_steam;
+	sat IS_A iapws_sat_curves;
+	T ALIASES S.T;
+	T,sat.T ARE_THE_SAME;
+	rho_gas ALIASES S.rho;
+	rho_gas, sat.rhog ARE_THE_SAME;
+
+	p ALIASES S.p;
+
+	mdot_water_in IS_A mass_rate;
+	mdot_water_out IS_A mass_rate;
+	mdot_gas_out IS_A mass_rate;
+
+	m_water IS_A mass;
+	m_gas IS_A mass;
+
+	Q IS_A energy_rate; (* heat absorbed *)
+
+	(* assume saturated water at inlet, so any heat added immediately creates some steam *)
+	Hdot_in IS_A energy_rate;
+	Hdot_out IS_A energy_rate;
+	h_water IS_A specific_enthalpy;
+	h_water = 400 {kJ/kg} + p / (1000 {kg/m^3});
+
+	Hdot_in = mdot_water_in * h_water;
+	Hdot_out = mdot_water_out * h_water + mdot_gas_out * S.h;
+
+	(* 1st law thermo *)
+	Q = Hdot_out - Hdot_in;
+
+	(* mass conservation *)
+	mdot_water_in = mdot_water_out + mdot_gas_out;
+ 
+	x_exit IS_A fraction;
+	x_exit * mdot_water_in = mdot_gas_out;
+
+	(* assume that steam evolves linearly along length, so average x allow mass of water to be calculated *)
+	x IS_A fraction;
+	x = (0 + x_exit)/2;
+	
+	(* assuming a slip-ratio of 1, we can get the average void ratio, eq 2.13 from Behnia *)
+	alpha IS_A fraction;
+	alpha * S.rho * (1-x) = 1000{kg/m^3} * x * (1-alpha);
+
+	m_water = 1000{kg/m^3} * (1-alpha)*V_total;
+	m_gas = S.rho * alpha*V_total;
+
+	V_total IS_A volume;
+	
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+METHOD specify;
+	V_total.fixed := TRUE;
+	mdot_water_in.fixed := TRUE;
+	Q.fixed := TRUE;
+	p.fixed := TRUE;
+END specify;
+METHOD values;
+	V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
+	mdot_water_in := 1 {kg/s};
+	Q := 400 {W/m^2} * 20 * 40{mm} * 300{m};
+	p := 5 {bar};
+END values;
+END absorber;
+
+MODEL condenser;
+	(* assumptions:
+		inlet is saturated steam. water has already be separated out.
+		outlet is water with enthalpy 400 kJ/kg and same pressure as inlet.
+		we don't need to enforce saturation inlet conditions. we will just query the enthalpy and that's it.
+	*)
+	S IS_A ideal_steam; (* inlet steam state *)
+	
+	mdot_gas_in IS_A mass_rate;
+	mdot_water_out IS_A mass_rate;
+	Q IS_A energy_rate; (* heat taken away by condenser *)
+
+	Q = mdot_gas_in * S.h - mdot_water_out * 400{kJ/kg};
+	mdot_water_out = mdot_gas_in;
+	
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+METHOD specify;
+	mdot_gas_in.fixed := TRUE;
+	S.p.fixed := TRUE;
+	S.T.fixed := TRUE;
+END specify;
+METHOD values;
+	mdot_gas_in := 1 {kg/s};
+	S.p := 5 {bar};
+	S.T := 473.15 {K};
+END values;
+
+END condenser;
+
+MODEL loop;
+	A IS_A absorber;
+	C IS_A condenser;
+	S IS_A vessel_with_water;
+
+	m_water_total IS_A mass;
+
+	A.S, C.S ARE_THE_SAME; (* absorber outlet steam goes to the condenser *)
+	A.p, S.p ARE_THE_SAME; (* absorber pressure equals surge tank pressure *)
+	
+	A.Q, C.Q ARE_THE_SAME; (* heat out of condenser must balance that absorbed *)	
+
+	p ALIASES A.p;
+	Q ALIASES A.Q;
+	T_abs_out ALIASES A.T;
+	m_abs_water ALIASES A.m_water;
+	m_surge_water ALIASES S.m_water;
+	m_gas  ALIASES S.m_gas;
+	V_surge ALIASES S.V_vessel;
+	V_absorber ALIASES A.V_total;
+	absorber_void_fraction ALIASES A.alpha;
+
+	m_surge_water + m_abs_water = m_water_total;
+
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	A.Q.fixed := TRUE;
+	A.V_total.fixed := TRUE;
+	S.V_vessel.fixed := TRUE;
+	S.m_gas.fixed := TRUE;
+	m_water_total.fixed := TRUE;
+END specify;
+
+METHOD values;
+	A.Q := 400 {W/m^2} * 20 * 40{mm} * 300{m};	
+	A.V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
+	S.V_vessel := 10 {m^3};
+	S.m_gas := 7.27101 {kg};
+	m_water_total := 3000 {kg};
+END values;
+
+END loop;
