@@ -614,6 +614,10 @@ MODEL flowsheet;
 	sp1			IS_A splitter;
 	m1			IS_A mixer;
 
+	running_cost IS_A cost_per_time;
+	running_cost = compressor_cost + feed_cost + reactor_cost + compressor2_cost
+		+ co1.cost + co2.cost + h1.cost + h2.cost + h3.cost;
+
 (* boolean variables  *)
 
 	select_feed1		IS_A boolean_var;
@@ -644,32 +648,53 @@ MODEL flowsheet;
 
 (* Conditional statements *)
 
+	feed_cost IS_A cost_per_time;
+	fc1: feed_cost = f1.cost;
+	fc2: feed_cost = f2.cost;
+
 	WHEN (select_feed1)
 	  CASE TRUE:
 		USE f1;
+		USE fc1;
 	  CASE FALSE:
 		USE f2;
+		USE fc2;
 	END WHEN;
 
+	compressor_cost IS_A cost_per_time;
+	c1c1: compressor_cost = c1.cost;
+	c1s1: compressor_cost = s1.cost;
 	WHEN (select_single1)
 	  CASE TRUE:
 		USE c1;
+		USE c1c1;
 	  CASE FALSE:
 		USE s1;
+		USE c1s1;
 	END WHEN;
 
+	reactor_cost IS_A cost_per_time;
+	rc1: reactor_cost = r1.cost;
+	rc2: reactor_cost = r2.cost;
 	WHEN (select_cheapr1)
 	  CASE TRUE:
 		USE r1;
+		USE rc1;
 	  CASE FALSE:
 		USE r2;
+		USE rc2;
 	END WHEN;
 
+	compressor2_cost IS_A cost_per_time;
+	c2c2: compressor2_cost = c2.cost;
+	c2s2: compressor2_cost = s2.cost;
 	WHEN (select_single2)
 	  CASE TRUE:
 		USE c2;
+		USE c2c2;
 	  CASE FALSE:
 		USE s2;
+		USE c2s2;
 	END WHEN;
 
 
@@ -714,6 +739,8 @@ MODEL test_flowsheet REFINES flowsheet;
   METHODS
 
     METHOD default_self;
+		RUN reset;
+		RUN values;
     END default_self;
 
     METHOD values;
