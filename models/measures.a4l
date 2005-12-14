@@ -161,6 +161,7 @@ Rankine = {R};
 
 (*  money *)
 
+(* PLEASE USE ISO 4127 CURRENCY CODES FOR ALL MONEY UNITS *)
 USD = {currency};
 CR = {currency};
 credits= {currency};
@@ -431,7 +432,7 @@ gpm = {gallon/minute};
 
 (* time variant conversions *)
 
-MINIMUMWAGE = {3.35*US/hr}; (* 1987 *)
+MINIMUMWAGE = {5.15*USD/hr}; (* Dec 2005, see http://www.dol.gov/ *)
 (*
 * conversions we'd like to see , but probably won't
 * milliHelen = {beauty/ship};
