@@ -635,8 +635,12 @@ MODEL iapws95 REFINES thermo_state;
 		sat2_test: rho > sat.rhog;
 	END CONDITIONAL;
 
+	issat1 IS_A boolean_var;
+	sat1_expr: issat1 == SATISFIED(sat1_test);
+	issat2 IS_A boolean_var;
+	sat2_expr: issat1 == SATISFIED(sat2_test);
 	issat IS_A boolean_var;
-	saturation_expr: issat == SATISFIED(sat1_test);
+	saturation_expr: issat == issat1 OR issat2;
 	issub IS_A boolean_var;
 	subcooled_expr: issub == SATISFIED(sub_test);
 	issuper IS_A boolean_var;

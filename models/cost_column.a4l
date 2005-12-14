@@ -179,7 +179,7 @@ MODEL cost_calc(
 
 
 
-        c_tot1: cost*1.0{USdollar/yr} = column_cost + condenser_cost
+        c_tot1: cost*1.0{USD/yr} = column_cost + condenser_cost
             + reboiler_cost + water_cost + steam_cost;
 
 
@@ -196,15 +196,15 @@ METHOD default_self;
 	Fp2 := 0.0{};
 	Fm2 := 1.0{};
 
-	M_S := 900{USdollar};
+	M_S := 900{USD};
 
 	Tin := 459.67{R} + 70{R};
 	Tout := 459.67{R} + 90{R};
 	Uc := 100{BTU/hr/ft^2/R};
 	CpW := 1{cal/mole/K};
 	Hs := 933{BTU/lbm};
-	Cw := 0.03{USdollar}/1000{gallon};
-	Cs := 2.5{USdollar}/1000{lbm};
+	Cw := 0.03{USD}/1000{gallon};
+	Cs := 2.5{USD}/1000{lbm};
 	Tray_height := 2.0{ft};
 
 

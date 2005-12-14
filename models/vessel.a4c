@@ -107,7 +107,7 @@ MODEL vessel_optimize REFINES vessel;
 	metal_density		:=   13000 {kg/m^3};
 
 	(* a is the cost per cubic foot of metal. rather arbitrary. *)
-	a			:=   10 {USdollar};
+	a			:=   10 {USD};
     END values;
 
 END vessel_optimize;

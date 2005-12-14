@@ -642,50 +642,50 @@ END length_parameter;
 
     ATOM monetary_unit REFINES solver_var
         DIMENSION C
-        DEFAULT 100.0{USdollar};
-        lower_bound := -1e50{USdollar};
-        upper_bound := 1e50{USdollar};
-        nominal := 100.0{USdollar};
+        DEFAULT 100.0{USD};
+        lower_bound := -1e50{USD};
+        upper_bound := 1e50{USD};
+        nominal := 100.0{USD};
     END monetary_unit;
 
 ATOM cost_per_volume REFINES solver_var
         DIMENSION C/L^3
-        DEFAULT 1.0{USdollar/gallon};
-        lower_bound := 0.0{USdollar/gallon};
-        upper_bound := 1e50{USdollar/gallon};
-        nominal := 1.0{USdollar/gallon};
+        DEFAULT 1.0{USD/gallon};
+        lower_bound := 0.0{USD/gallon};
+        upper_bound := 1e50{USD/gallon};
+        nominal := 1.0{USD/gallon};
 END cost_per_volume;
 
 ATOM cost_per_mass REFINES solver_var
         DIMENSION C/M
-        DEFAULT 1.0{USdollar/lbm};
-        lower_bound := 0.0{USdollar/lbm};
-        upper_bound := 1e50{USdollar/lbm};
-        nominal := 1.0{USdollar/lbm};
+        DEFAULT 1.0{USD/lbm};
+        lower_bound := 0.0{USD/lbm};
+        upper_bound := 1e50{USD/lbm};
+        nominal := 1.0{USD/lbm};
 END cost_per_mass;
 
 ATOM cost_per_mole REFINES solver_var
         DIMENSION C/Q
-        DEFAULT 1.0{USdollar/lb_mole};
-        lower_bound := 0.0{USdollar/lb_mole};
-        upper_bound := 1e50{USdollar/lb_mole};
-        nominal := 1.0{USdollar/lb_mole};
+        DEFAULT 1.0{USD/lb_mole};
+        lower_bound := 0.0{USD/lb_mole};
+        upper_bound := 1e50{USD/lb_mole};
+        nominal := 1.0{USD/lb_mole};
 END cost_per_mole;
 
 ATOM cost_per_time REFINES solver_var
         DIMENSION C/T
-        DEFAULT 1.0{USdollar/min};
-        lower_bound := 0.0{USdollar/min};
-        upper_bound := 1e50{USdollar/min};
-        nominal := 1.0{USdollar/min};
+        DEFAULT 1.0{USD/min};
+        lower_bound := 0.0{USD/min};
+        upper_bound := 1e50{USD/min};
+        nominal := 1.0{USD/min};
 END cost_per_time;
 
 ATOM cost_per_energy REFINES solver_var
         DIMENSION C*T^2/M/L^2
-        DEFAULT 1.0{USdollar/BTU};
-        lower_bound := 0.0{USdollar/BTU};
-        upper_bound := 1e50{USdollar/BTU};
-        nominal := 1.0{USdollar/BTU};
+        DEFAULT 1.0{USD/BTU};
+        lower_bound := 0.0{USD/BTU};
+        upper_bound := 1e50{USD/BTU};
+        nominal := 1.0{USD/BTU};
 END cost_per_energy;
 
 
