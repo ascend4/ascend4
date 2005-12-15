@@ -54,9 +54,17 @@
 extern void Asc_SolvMemoryCleanup(void);
 /**< Invoke system_free_reused_mem to clean up all memory solvers hide. */
 
+extern int Asc_SolvTrapINT(ClientData cdata, Tcl_Interp *interp,
+                          int argc, CONST84 char *argv[]);
+/**< Activate floating point traps for slv/script callbacks  /slv_trapint/ */
+
 extern int Asc_SolvTrapFP(ClientData cdata, Tcl_Interp *interp,
                           int argc, CONST84 char *argv[]);
 /**< Activate floating point traps for slv callbacks  /slv_trapfp/ */
+
+extern int Asc_SolvUnTrapINT(ClientData cdata, Tcl_Interp *interp,
+                            int argc, CONST84 char *argv[]);
+/**< Deactivate floating point traps for slv callbacks /slv_untrapfp/ */
 
 extern int Asc_SolvUnTrapFP(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char *argv[]);

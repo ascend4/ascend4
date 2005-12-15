@@ -150,6 +150,7 @@ entertrace
     set fpe [string tolower $ascSolvVect(trapFPEdefault)]
     if {$fpe=="no" || $fpe=="0" || $fpe=="false"} {
       slv_trapfp
+      slv_trapint
       #side effect sets the interrupt trap. need to fix that.
       slv_untrapfp
     } {

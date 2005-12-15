@@ -940,6 +940,22 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     /* the stuff above should be replaced with header macros. */
   );
 
+  ASCADDCOM(interp,"slv_trapint",Asc_SolvTrapINT,
+    "solver",
+    NULL,
+    NULL,
+    NULL
+    /* the stuff above should be replaced with header macros. */
+  );
+
+  ASCADDCOM(interp,"slv_untrapint",Asc_SolvUnTrapINT,
+    "solver",
+    NULL,
+    NULL,
+    NULL
+    /* the stuff above should be replaced with header macros. */
+  );
+
   ASCADDCOM(interp,"slv_checksim",Asc_SolvIncompleteSim,
     "solver",
     NULL,

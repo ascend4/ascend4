@@ -168,6 +168,32 @@ int Asc_SolvUnTrapFP(ClientData cdata, Tcl_Interp *interp,
   return TCL_OK;
 }
 
+int Asc_SolvTrapINT(ClientData cdata, Tcl_Interp *interp,
+                   int argc, CONST84 char *argv[])
+{
+
+  (void)cdata;    /* stop gcc whine about unused parameter */
+  (void)interp;   /* stop gcc whine about unused parameter */
+  (void)argc;     /* stop gcc whine about unused parameter */
+  (void)argv;     /* stop gcc whine about unused parameter */
+
+  ASCUSE;
+  Asc_SignalHandlerPush(SIGINT,slv_trap_int);
+  return TCL_OK;
+}
+
+int Asc_SolvUnTrapINT(ClientData cdata, Tcl_Interp *interp,
+                     int argc, CONST84 char *argv[])
+{
+  (void)cdata;    /* stop gcc whine about unused parameter */
+  (void)interp;   /* stop gcc whine about unused parameter */
+  (void)argc;     /* stop gcc whine about unused parameter */
+  (void)argv;     /* stop gcc whine about unused parameter */
+
+  Asc_SignalHandlerPop(SIGINT,slv_trap_int);
+  return TCL_OK;
+}
+
 int Asc_SolvGetModKids(ClientData cdata, Tcl_Interp *interp,
                        int argc, CONST84 char *argv[])
 {
@@ -2452,6 +2478,10 @@ int Asc_SolvHelpList(ClientData cdata, Tcl_Interp *interp,
     if (argv[1][0]=='l') {
       detail=1;
     }
+    PRINTF("%-25s%s\n","slv_trapint",
+           LONGHELP(detail,"turn ctrl-c traps on for solver"));
+    PRINTF("%-25s%s\n","slv_untrapint",
+           LONGHELP(detail,"turn ctrl-c traps off."));
     PRINTF("%-25s%s\n","slv_trapfp",
            LONGHELP(detail,"turn floating point traps on for solver"));
     PRINTF("%-25s%s\n","slv_untrapfp",
