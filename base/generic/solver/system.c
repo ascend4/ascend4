@@ -103,8 +103,7 @@ slv_system_t system_build(SlvBackendToken inst)
   return(sys);
 }
 
-void system_destroy(sys)
-slv_system_t sys;
+void system_destroy(slv_system_t sys)
 {
    int i;
    struct var_variable **vp, **pp, **up;

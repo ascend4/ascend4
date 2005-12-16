@@ -100,8 +100,7 @@ static double rec_1_p_sqr_Dn(double x,int n, enum safe_err *safe)
    return(prev[1]);
 }
 
-static double *alloc_poly(order)
-int order;
+static double *alloc_poly(int order)
 /**
  ***  Allocates a polynominal of given order and returns it.  The
  ***  polynominal need not be freed, but this function should not be

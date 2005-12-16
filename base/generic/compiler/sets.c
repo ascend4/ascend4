@@ -7,7 +7,7 @@
  *  Date last modified: $Date: 1998/01/27 11:00:21 $
  *  Last modified by: $Author: ballan $
  *
- *  This file is part of the Ascend Language Interpreter.
+ *  This file is part of the Ascend Language Interpreter.            
  *
  *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
  *
@@ -149,40 +149,40 @@ struct Set *CreateRangeSet(struct Expr *lower, struct Expr *upper)
 
 void LinkSets(struct Set *cur, struct Set *next)
 {
-  assert(cur!=NULL);
+  asc_assert(cur!=NULL);
   cur->next = next;
 }
 
 int SetTypeF(CONST struct Set *s)
 {
-  assert(s!=NULL);
+  asc_assert(s!=NULL);
   return s->range;
 }
 
 struct Set *NextSetF(CONST struct Set *s)
 {
-  assert(s!=NULL);
+  asc_assert(s!=NULL);
   return s->next;
 }
 
 CONST struct Expr *GetSingleExprF(CONST struct Set *s)
 {
-  assert(s!=NULL);
-  assert(!(s->range));
+  asc_assert(s!=NULL);
+  asc_assert(!(s->range));
   return s->val.e;
 }
 
 CONST struct Expr *GetLowerExprF(CONST struct Set *s)
 {
-  assert(s!=NULL);
-  assert(s->range);
+  asc_assert(s!=NULL);
+  asc_assert(s->range);
   return s->val.r.lower;
 }
 
 CONST struct Expr *GetUpperExprF(CONST struct Set *s)
 {
-  assert(s!=NULL);
-  assert(s->range);
+  asc_assert(s!=NULL);
+  asc_assert(s->range);
   return s->val.r.upper;
 }
 
@@ -225,15 +225,19 @@ struct Set *CopySetList(CONST struct Set *s)
 
 struct Set *CopySetByReference(struct Set *s)
 { if (s==NULL) return s;
-  assert(s->ref_count);
+  asc_assert(s->ref_count);
   s->ref_count++;
   return s;
 }
 
 void DestroySetNode(struct Set *s)
 {
-  assert(s!=NULL);
+  asc_assert(s!=NULL);
+#if SETUSESPOOL
+  AssertMemory(s);
+#else
   AssertAllocatedMemory(s,sizeof(struct Set));
+#endif
   if (s->range) {
     DestroyExprList(s->val.r.lower);
     DestroyExprList(s->val.r.upper);
@@ -248,7 +252,11 @@ void DestroySetList(struct Set *s)
 {
   register struct Set *next;
   while (s!=NULL) {
+#if SETUSESPOOL
+    AssertMemory(s);
+#else
     AssertAllocatedMemory(s,sizeof(struct Set));
+#endif
     next = s->next;
     DestroySetNode(s);
     s = next;
@@ -257,8 +265,12 @@ void DestroySetList(struct Set *s)
 
 void DestroySetHead(struct Set *s)
 {
-  assert(s!=NULL);
+  asc_assert(s!=NULL);
+#if SETUSESPOOL
+  AssertMemory(s);
+#else
   AssertAllocatedMemory(s,sizeof(struct Set));
+#endif
   SFREE(s);
 }
 
@@ -267,7 +279,11 @@ void DestroySetListByReference(struct Set *s)
   register struct Set *next;
   if (--s->ref_count == 0){
     while (s!=NULL) {
-      AssertAllocatedMemory(s,sizeof(struct Set));
+#if SETUSESPOOL
+    AssertMemory(s);
+#else
+    AssertAllocatedMemory(s,sizeof(struct Set));
+#endif
       next = s->next;
       if (s->range) {
         DestroyExprList(s->val.r.lower);
@@ -282,8 +298,12 @@ void DestroySetListByReference(struct Set *s)
 
 void DestroySetNodeByReference(struct Set *s)
 {
-  assert(s!=NULL);
+  asc_assert(s!=NULL);
+#if SETUSESPOOL
+  AssertMemory(s);
+#else
   AssertAllocatedMemory(s,sizeof(struct Set));
+#endif
   if (--s->ref_count == 0){
     if (s->range) {
       DestroyExprList(s->val.r.lower);
@@ -398,7 +418,7 @@ struct gl_list_t *SetNameList(CONST struct Set *set)
 {
   struct gl_list_t *list;
   list = gl_create(3L);
-  assert(list!=NULL);
+  asc_assert(list!=NULL);
   while (set!=NULL){
     if (SetType(set)) { /*range*/
       list = EvaluateNamesNeeded(GetLowerExpr(set),NULL,list);

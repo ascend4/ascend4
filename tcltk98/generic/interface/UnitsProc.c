@@ -129,7 +129,7 @@ struct DisplayUnit {
 static int check_units_set(ClientData cdata, Tcl_Interp *interp,
                           int argc, CONST84 char *argv[]) /* args ignored but needed*/
 {
-  static base_units_set;
+  static int base_units_set;
   if (!base_units_set) {
      Asc_UnitDefaultBaseUnits(cdata,interp,argc,argv);
      base_units_set = 1;
@@ -1185,7 +1185,7 @@ int Asc_UnitDump(ClientData cdata, Tcl_Interp *interp,
           ussi = UnitsStringSI(p);
           dimstr = WriteDimensionString(UnitsDimensions(p));
           sprintf(a,"%p %s %.16g %s %s",
-                  UnitsDimensions(p),
+                  (void *)UnitsDimensions(p),
                   SCP(UnitsDescription(p)),
                   UnitsConvFactor(p),
                   UnitsStringSI(p),

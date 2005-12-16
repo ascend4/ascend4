@@ -1291,7 +1291,7 @@ int Asc_BrowInstanceRefineCmd(ClientData cdata, Tcl_Interp *interp,
   if (desc1==desc2) {
     return TCL_OK;
   }
-  if((desc = MoreRefined(desc1,desc2))) {
+  if(0 != (desc = MoreRefined(desc1,desc2))) {
     if (desc == desc1) {             /* desc1 more refined than desc2 */
       return TCL_OK;                /* hence nothing to do */
     } else {
@@ -1356,7 +1356,7 @@ int Asc_BrowMakeAlikeCmd(ClientData cdata, Tcl_Interp *interp,
     if (desc1==desc2) {
       MergeCliques(i1,i2);
     } else {
-      if ((desc = MoreRefined(desc1,desc2))) {
+      if (0 != (desc = MoreRefined(desc1,desc2))) {
         if (desc == desc1) {		/* desc1 more refined than desc2*/
          i2 = RefineClique(i2,desc,NULL);
         } else {

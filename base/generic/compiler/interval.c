@@ -298,7 +298,8 @@ struct Interval SqrtInterval(struct Interval i)
   else{
     Asc_Panic(2, NULL,
               "Square root of an interval which contains negative values.\n"
-              "Giving up and dying! RIP!\n");/*NOTREACHED*/
+              "Giving up and dying! RIP!\n");
+    exit(2);  /*NOTREACHED*/
   }
   TEST(result);
   return result;
@@ -315,7 +316,8 @@ struct Interval LogInterval(struct Interval i)
   else{
     Asc_Panic(2, NULL,
               "Log on zero or negative interval.\n"
-              "Giving up and dying. RIP!\n");/*NOTREACHED*/
+              "Giving up and dying. RIP!\n");
+    exit(2);  /*NOTREACHED*/
   }
   TEST(result);
   return result;
@@ -332,7 +334,8 @@ struct Interval LnInterval(struct Interval i)
   else{
     Asc_Panic(2, NULL,
               "Ln on zero or negative interval.\n"
-              "Giving up and dying. RIP!\n");/*NOTREACHED*/
+              "Giving up and dying. RIP!\n");
+    exit(2);  /*NOTREACHED*/
   }
   TEST(result);
   return result;
@@ -412,6 +415,7 @@ struct Interval PowerInterval(struct Interval i, long int n)
       Asc_Panic(2, NULL,
                 "Interval containing 0 raised to a negative power.\n"
                 "Giving up and dying. RIP!\n");/*NOTREACHED*/
+      exit(2);  /*NOTREACHED*/
     }
   }
   TEST(result);
@@ -456,17 +460,19 @@ struct Interval PowInterval(struct Interval x, struct Interval y)
   struct Interval result;
   if (x.low < 0.0){
     Asc_Panic(2, NULL, "PowInterval call with a argument less than zero.\n");
+    exit(2);  /*NOTREACHED*/
   }
   else{
     if (x.low == 0.0){
       if (y.low <= 0.0){
-	Asc_Panic(2, NULL, "PowInterval called with illegal arguments.\n");
+        Asc_Panic(2, NULL, "PowInterval called with illegal arguments.\n");
+        exit(2);  /*NOTREACHED*/
       }
       else{
-	result.low = 0.0;
-	a = UPow(x.high,y.low);
-	b = UPow(x.high,y.high);
-	result.high = MAX(a,b);
+        result.low = 0.0;
+        a = UPow(x.high,y.low);
+        b = UPow(x.high,y.high);
+        result.high = MAX(a,b);
       }
     }
     else{

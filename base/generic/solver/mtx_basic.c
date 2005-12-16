@@ -3236,7 +3236,7 @@ void mtx_write_region_matlab(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
     for( nz.row = 0; nz.row < mtx->order; nz.row++ ) {
       Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
       elt = &Rewind;
-      for( ; (elt = mtx_next_col(elt,mtx_ALL_COLS,perm)); ) {
+      for( ; NULL != (elt = mtx_next_col(elt,mtx_ALL_COLS,perm)) ; ) {
         FPRINTF(fp,"%d %d %.20g\n",nz.row,perm[elt->col],elt->value);
       }
     }
@@ -3244,7 +3244,7 @@ void mtx_write_region_matlab(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
     for( nz.row = region->row.low; nz.row <= region->row.high; nz.row++ ) {
       Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
       elt = &Rewind;
-      for( ; (elt = mtx_next_col(elt,&(region->col),perm)); ) {
+      for( ; NULL != (elt = mtx_next_col(elt,&(region->col),perm)) ; ) {
         FPRINTF(fp,"%d %d %.20g\n",nz.row,perm[elt->col],elt->value);
       }
     }
@@ -3279,14 +3279,14 @@ void mtx_write_region_plot(FILE *fp,mtx_matrix_t mtx,mtx_region_t *region)
     for( nz.row = 0; nz.row < mtx->order; nz.row++ ) {
       Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
       elt = &Rewind;
-      for( ; (elt = mtx_next_col(elt,mtx_ALL_COLS,perm)); )
+      for( ; NULL != (elt = mtx_next_col(elt,mtx_ALL_COLS,perm)) ; )
         FPRINTF(fp,"%d  %d\n",perm[elt->col],-(nz.row));
     }
   } else {
     for( nz.row = region->row.low; nz.row <= region->row.high; nz.row++ ) {
       Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[nz.row]];
       elt = &Rewind;
-      for( ; (elt = mtx_next_col(elt,&(region->col),perm)); )
+      for( ; NULL != (elt = mtx_next_col(elt,&(region->col),perm)); )
         FPRINTF(fp,"%d  %d\n",perm[elt->col],-(nz.row));
     }
   }

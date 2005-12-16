@@ -1,7 +1,7 @@
 /*
  *  Expression Implementation
  *  by Tom Epperly
- *  Version: $Revision: 1.13 $
+ *  Version: $Revision: 1.13 $                          
  *  Version control file: $RCSfile: exprs.c,v $
  *  Date last modified: $Date: 1998/02/05 16:35:58 $
  *  Last modified by: $Author: ballan $
@@ -133,7 +133,11 @@ struct Expr *CreateVarExpr(struct Name *n)
   result->t = e_var;
   result->v.nptr = n;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -153,7 +157,11 @@ struct Expr *CreateOpExpr(enum Expr_enum t)
   result = EPMALLOC;
   result->t = t;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(enum Expr_enum)+sizeof(struct Expr *));
+#endif
   return result;
 }
 
@@ -167,7 +175,11 @@ struct Expr *CreateSatisfiedExpr(struct Name *n, double tol,
   result->v.se.ser.rvalue = tol;
   result->v.se.ser.dimensions = dims;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -178,7 +190,11 @@ struct Expr *CreateFuncExpr(CONST struct Func *f)
   result->t = e_func;
   result->v.fptr = f;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -189,7 +205,11 @@ struct Expr *CreateIntExpr(long int i)
   result->t = e_int;
   result->v.ivalue = i;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -201,7 +221,11 @@ struct Expr *CreateRealExpr(double r, CONST dim_type *dims)
   result->v.r.rvalue = r;
   result->v.r.dimensions = dims;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -212,7 +236,11 @@ struct Expr *CreateTrueExpr(void)
   result->t = e_boolean;
   result->v.bvalue = 1;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -223,7 +251,11 @@ struct Expr *CreateFalseExpr(void)
   result->t = e_boolean;
   result->v.bvalue = 0;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -234,7 +266,11 @@ struct Expr *CreateAnyExpr(void)
   result->t = e_boolean;
   result->v.bvalue = 2;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -245,7 +281,11 @@ struct Expr *CreateSetExpr(struct Set *set)
   result->t = e_set;
   result->v.s = set;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -258,7 +298,11 @@ struct Expr *CreateSymbolExpr(symchar *sym)
   result->t = e_symbol;
   result->v.sym_ptr = sym;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -269,7 +313,11 @@ struct Expr *CreateQStringExpr(CONST char *qstr)
   result->t = e_qstring;
   result->v.sym_ptr = (symchar *)qstr; /* qstr really not symbol */
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 
@@ -280,7 +328,11 @@ struct Expr *CreateBuiltin(enum Expr_enum t, struct Set *set)
   result->t = t;
   result->v.s = set;
   result->next = NULL;
+#if EXPRSUSESPOOL
+  AssertMemory(result);
+#else
   AssertAllocatedMemory(result,sizeof(struct Expr));
+#endif
   return result;
 }
 

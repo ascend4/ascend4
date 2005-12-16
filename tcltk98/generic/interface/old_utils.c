@@ -66,17 +66,13 @@
 /*int g_check_dimensions_noisy=1;*/
 #define GCDN g_check_dimensions_noisy
 
-static char *write_char(str,slim,c)
-char *str,*slim;
-int c;
+static char *write_char(char *str, char *slim, int c)
 {
    if( str < slim ) *(str++) = c;
    return(str);
 }
 
-static char *write_string(str,slim,s)
-char *str,*slim;
-char *s;
+static char *write_string(char *str, char *slim, char *s)
 {
    for( ; *s != '\0' ; ++s )
       str = write_char(str,slim,*s);
@@ -143,16 +139,14 @@ char *asc_make_dimensions(const dim_type *dim)
 #ifdef THIS_MAY_BE_UNUSED_CODE
 /* commenting out unused functions  mthomas.96.09.20 */
 /* dim checking stuff invokable at any time. */
-static double frac_to_real(frac)
-struct fraction frac;
+static double frac_to_real(struct fraction frac)
 {
    return( (double)Numerator(frac) / (double)Denominator(frac) );
 }
 #endif
 
 #define START 10000  /* largest power of 10 held by a short */
-static struct fraction real_to_frac(real)
-double real;
+static struct fraction real_to_frac(double real)
 {
    short  num, den;
    for( den=START; den>1 && fabs(real)*den>SHRT_MAX; den /= 10 ) ;
@@ -163,8 +157,7 @@ double real;
 #undef START
 
 
-static int nargs(type)
-enum Expr_enum type;
+static int nargs(enum Expr_enum type)
 {
    switch(type) {
    case e_int:
@@ -207,7 +200,7 @@ static int IsZero(struct dimnode *node)
 }
 
 
-static void apply_term_dimensions(struct relation *rel,
+static void apply_term_dimensions(CONST struct relation *rel,
                                   struct relation_term *rt,
                                   struct dimnode *first,
                                   struct dimnode *second,
@@ -521,9 +514,7 @@ static void apply_term_dimensions(struct relation *rel,
 }
 
 
-int asc_check_dimensions(rel,dimens)
-struct relation *rel;
-dim_type *dimens;
+int asc_check_dimensions(CONST struct relation *rel, dim_type *dimens)
 {
    struct dimnode *stack, *sp;
    boolean consistent = TRUE;

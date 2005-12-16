@@ -6015,13 +6015,14 @@ static
 int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
 {
   struct gl_list_t *nl;
-  unsigned long c,len;
-  struct Expr en;
+  unsigned long c,len;                  
+  struct Expr *en;
 
   assert(n!=NULL);
   assert(sub!=NULL);
-  InitVarExpr(&en,n);
-  nl = EvaluateNamesNeededShallow(&en,NULL,NULL);
+  en = (struct Expr *)ascmalloc(sizeof(struct Expr));
+  InitVarExpr(en,n);
+  nl = EvaluateNamesNeededShallow(en,NULL,NULL);
   /* should this function be checking deep instead? can't tell yet. */
   if (nl==NULL || gl_length(nl)==0) {
     return 0; /* should never happen */
@@ -6033,6 +6034,7 @@ int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
     }
   }
   gl_destroy(nl);
+  ascfree(en);
   return 0;
 }
 /*

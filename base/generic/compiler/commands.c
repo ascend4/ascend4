@@ -73,7 +73,6 @@ int CmpCommand(struct command_t *ptr1, struct command_t *ptr2)
   return strcmp(ptr1->str,ptr2->str);
 }
 
-
 extern void AddCommand(int dummy, ...)
 {
   va_list pvar;
@@ -83,9 +82,9 @@ extern void AddCommand(int dummy, ...)
   va_start(pvar,dummy);
 
   ptr->str = va_arg(pvar,CONST char *);
-  ptr->func = va_arg(pvar, void (*)(void));
+  ptr->func = va_arg(pvar, InterfaceCommandF);
   ptr->help = va_arg(pvar,CONST char *);
-  ptr->terminate = va_arg(pvar,int);                                                 
+  ptr->terminate = va_arg(pvar,int);
   ptr->num_args = va_arg(pvar,int);
   if (ptr->num_args > MAX_COMMAND_ARGS) {
     FPRINTF(stderr,"AddCommand called with %d args > Max of %d\n",
@@ -125,7 +124,7 @@ extern CONST char *CommandHelp(unsigned long int u)
 }
 
 
-extern void CommandFunc(unsigned long int u, void (**func) (/* ??? */))
+extern void CommandFunc(unsigned long int u, InterfaceCommandF *func)
 {
   register struct command_t *ptr;
   ptr = (struct command_t *)gl_fetch(global_command_list,u);

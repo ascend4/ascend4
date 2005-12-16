@@ -341,7 +341,7 @@ struct gl_list_t *Asc_BrowShortestPath(CONST struct Instance *i,
     gl_append_ptr(shortest,(char *)ref);
     return shortest;
   }
-  if ((len=NumberParents(i))) {
+  if (0 != (len=NumberParents(i))) {
     for(c=len;c>=1;c--) {
       path = Asc_BrowShortestPath(InstanceParent(i,c),ref,height+1,mybest);
       if (path!=NULL) {
@@ -731,7 +731,7 @@ int BrowWriteInstSet(char *ftorv, CONST struct set_t *s)
       if (SetKind(s)==integer_set) {
         sprintf(mark, (c<len) ? "%ld," : "%ld",FetchIntMember(s,c));
       } else {
-        sprintf(mark, (c<len) ? "'%s'," : "'%s'", FetchStrMember(s,c));
+        sprintf(mark, (c<len) ? "'%s'," : "'%s'", SCP(FetchStrMember(s,c)));
       }
       available = 256 - strlen(tmpstr);
       if (available <= 80) {

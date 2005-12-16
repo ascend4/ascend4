@@ -50,7 +50,7 @@ void CDescInit(struct ChildDesc *v)
  * initialized to 0. Normally it is a do nothing macro.
  * Proper initialization helps us separate signal from noise in
  * gdb and purify.
- */
+ */                                 
 
 struct ChildDesc *CreateChildDescArray(unsigned long int l)
 {
@@ -75,7 +75,7 @@ struct ChildDesc *CreateEmptyChildDescArray(void)
 void DestroyChildDescArray(struct ChildDesc *c, unsigned long int l)
 {
   struct ChildDesc *ptr = c;
-  AssertAllocatedMemory(c,sizeof(struct ChildDesc)*l);
+  AssertAllocatedMemory(c,sizeof(struct ChildDesc)*MAX(l,1));
   while(l--){
     if ((ptr->t == set_child) && (ptr->u.s.slist))
       DestroySet(ptr->u.s.slist);

@@ -1074,9 +1074,7 @@ int Asc_LoadWin(ClientData cdata, Tcl_Interp *interp,
 
     /* ARGSUSED */
 static void
-StdinProc(clientData, mask)
-    ClientData clientData;		/* Not used. */
-    int mask;				/* Not used. */
+StdinProc(ClientData clientData, int mask)
 {
   static int gotPartial = 0;
   char *cmd;
@@ -1167,15 +1165,16 @@ StdinProc(clientData, mask)
  *	A prompt gets output, and a Tcl script may be evaluated
  *	in interp.
  *
+ * Parameters:
+ *   interp    Interpreter to use for prompting.
+ *   partial   Non-zero means there already exists a partial
+ *             command, so use the secondary prompt.
+ *
  *----------------------------------------------------------------------
  */
 
 static void
-Prompt(interp, partial)
-    Tcl_Interp *interp;			/* Interpreter to use for prompting. */
-    int partial;			/* Non-zero means there already
-      * exists a partial command, so use
-      * the secondary prompt. */
+Prompt(Tcl_Interp *interp, int partial)
 {
   CONST84 char *promptCmd;
   int code;
@@ -1292,15 +1291,17 @@ int Asc_DebugMallocCmd(ClientData cdata, Tcl_Interp *interp,
  * Side effects:
  *	Memory allocated.
  *
+ * Parameters:
+ *    argcptr  Filled with number of argument strings.
+ *    argvptr  Filled with argument strings (malloc'd).
+ *
  * This function is from the Tk 8.0 distribution.  See win/winMain.c in
  * their sources.
  *
  *--------------------------------------------------------------------------
  */
 static void
-setargv(argcPtr, argvPtr)
-    int *argcPtr;		/* Filled with number of argument strings. */
-    char ***argvPtr;		/* Filled with argument strings (malloc'd). */
+setargv(int *argcPtr, char ***argvPtr)
 {
     char *cmdLine, *p, *arg, *argSpace;
     char **argv;

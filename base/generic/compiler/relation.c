@@ -1950,7 +1950,7 @@ static struct relation_term *CreateVarTerm(CONST struct Instance *i)
 {
   struct relation_term *term;
   unsigned long pos;
-  if ((pos = gl_search(g_relation_var_list,i,(CmpFunc)CmpP))){
+  if (0 != (pos = gl_search(g_relation_var_list,i,(CmpFunc)CmpP))) {
     /* find var if already on relations var list */
     term = POOL_ALLOCTERM;
     assert(term!=NULL);
@@ -2855,8 +2855,8 @@ static int ConvertExpr(CONST struct Expr *start,
       break;
     case e_var:
       if (GetEvaluationForTable() &&
-	  (str = SimpleNameIdPtr(ExprName(start)))&&
-	  (fvp=FindForVar(GetEvaluationForTable(),str))){
+	  (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
+	  (NULL != (fvp = FindForVar(GetEvaluationForTable(),str)))) {
 	if (GetForKind(fvp)==f_integer){
 	  term = CreateIntegerTerm(GetForInteger(fvp));
 	  AppendTermBuf(term);
@@ -3364,7 +3364,7 @@ void DestroyVarList(struct gl_list_t *l, struct Instance *inst)
   register struct Instance *ptr;
   register unsigned long c;
   for(c=gl_length(l);c>=1;c--)
-    if ((ptr = (struct Instance *)gl_fetch(l,c)))
+    if (NULL != (ptr = (struct Instance *)gl_fetch(l,c)))
       RemoveRelation(ptr,inst);
   gl_destroy(l);
 }
@@ -3594,8 +3594,8 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
 
   if (old==new) return;
   if (new){
-    if ((pos = gl_search(rel->vars,old,(CmpFunc)CmpP))) {
-      if ((other = gl_search(rel->vars,new,(CmpFunc)CmpP))){
+    if (0 != (pos = gl_search(rel->vars,old,(CmpFunc)CmpP))) {
+      if (0 != (other = gl_search(rel->vars,new,(CmpFunc)CmpP))){
 	gl_store(rel->vars,pos,(VOIDPTR)new);
 	FPRINTF(ASCERR,"Incidence for relation is inaccurate\n");
       } else {
@@ -3607,7 +3607,7 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
     }
   }
   else						/* case 4 */
-    if ((pos = gl_search(rel->vars,old,(CmpFunc)CmpP)))
+    if (0 != (pos = gl_search(rel->vars,old,(CmpFunc)CmpP)))
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
 
@@ -3689,7 +3689,7 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
   struct Instance *inst;
   CONST struct for_var_t *fvp;
   enum find_errors err;
-  if((str = SimpleNameIdPtr(name))){
+  if(NULL != (str = SimpleNameIdPtr(name))){
     if (TempExists(str)) {
       if (ValueKind(TempValue(str))==integer_value) {
 	return -1;
@@ -3698,7 +3698,7 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
       }
     }
     if (GetEvaluationForTable() != NULL && 
-        (fvp=FindForVar(GetEvaluationForTable(),str))) {
+        (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
       if (GetForKind(fvp)==f_integer) {
 	return -1;
       } else {

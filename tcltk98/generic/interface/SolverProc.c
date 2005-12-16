@@ -1,6 +1,6 @@
 /*
  *  SolverProc.c
- *  by Kirk Abbott and Ben Allan
+ *  by Kirk Abbott and Ben Allan             
  *  Created: 1/94
  *  Version: $Revision: 1.65 $
  *  Version control file: $RCSfile: SolverProc.c,v $
@@ -50,6 +50,7 @@
 #include "compiler/functype.h"
 #include "compiler/func.h"
 #include "compiler/safe.h"
+#include "compiler/simlist.h"
 #include "compiler/relation_util.h"
 #include "compiler/pending.h"
 #include "compiler/instance_name.h"
@@ -2251,7 +2252,7 @@ int Asc_SolvImportQlfdid(ClientData cdata, Tcl_Interp *interp,
   }
 
   status=Asc_BrowQlfdidSearchCmd(cdata, interp, (int)2, argv);
-  temp = strdup(Tcl_GetStringResult(interp));
+  temp = ascstrdup(Tcl_GetStringResult(interp));
   Tcl_ResetResult(interp);
 
   if (status==TCL_OK) {
