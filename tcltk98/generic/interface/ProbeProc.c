@@ -29,6 +29,7 @@
 
 #include "tcl.h"
 #include "utilities/ascConfig.h"
+#include "utilities/ascPanic.h"
 #include "utilities/ascMalloc.h"
 #include "general/list.h"
 #include "general/dstring.h"
@@ -706,7 +707,7 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
     g_cur_context = ProbeArray(number);
     status = Asc_QlfdidSearch3(argv[3],0);
     if (argc ==4) {
-      name = strdup(argv[3]);
+      name = ascstrdup(argv[3]);
       e = ProbeEntryCreate(name,((status==0) ? g_search_inst : NULL));
       gl_append_ptr(g_cur_context,e);
       break;

@@ -1292,8 +1292,7 @@ int32 linsol_rank(linsol_system_t sys)
    return(sys->rank);
 }
 
-real64 linsol_smallest_pivot(sys)
-linsol_system_t sys;
+real64 linsol_smallest_pivot(linsol_system_t sys)
 {
    check_system(sys);
 #if LINSOL_DEBUG

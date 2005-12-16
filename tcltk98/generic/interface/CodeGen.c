@@ -1298,7 +1298,7 @@ int CodeGen_WriteIncidence(FILE *fp,slv_system_t sys)
    * we know when we are done.
    */
 
-  ip = incident_var_count = (int *)calloc((maxrel+1),sizeof(int));
+  ip = incident_var_count = (int *)asccalloc((maxrel+1),sizeof(int));
 
   rp = g_cgdata.rels.rel_list;
   CG("static int ha[] = {\n");
@@ -1350,7 +1350,7 @@ int CodeGen_WriteIncidence(FILE *fp,slv_system_t sys)
   }
 
   if (incident_var_count) {
-    free(incident_var_count);
+    ascfree(incident_var_count);
   }
   return result;
 }

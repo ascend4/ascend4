@@ -2695,7 +2695,7 @@ void PrintGradients(struct Instance *i)
 
     /*****  use the safe versions  *****/
     for( v = 0; v < vars; v++ ) {
-      if( ! (safe = RelationCalcDerivativeSafe(i, v+1, &res)) ) {
+      if(safe_ok == (safe = RelationCalcDerivativeSafe(i, v+1, &res)) ) {
         PRINTF("safe deriv in%5ld =\t%g\n", v+1, res);
       }
       else {
@@ -2703,7 +2703,7 @@ void PrintGradients(struct Instance *i)
       }
     }
 
-    if( ! (safe = RelationCalcResidGradSafe(i,&res,grads)) ) {
+    if(safe_ok == (safe = RelationCalcResidGradSafe(i,&res,grads)) ) {
       for (v = 0; v < vars; v++) {
         PRINTF("safe grad in%6ld =\t%g\n", v+1, grads[v]);
       }
@@ -2723,7 +2723,7 @@ void PrintGradients(struct Instance *i)
     }
   *****/
 
-    if( ! (safe = RelationCalcResidualPostfixSafe(i,&res)) ) {
+    if(safe_ok == (safe = RelationCalcResidualPostfixSafe(i,&res)) ) {
       PRINTF("safe postfix resid =\t%g\n", res);
     }
     else {

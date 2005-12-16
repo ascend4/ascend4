@@ -85,6 +85,12 @@ struct rel_stack {
 /* default for other tokens. this will cause an array bounds read
  * error if misused, which is nice if you assume purify.
  */
+/* 
+ *  THIS LOOKS LIKE A BUG.
+ *  rel_stack.lhs is unsigned long, so assigning -1 appears wrong
+ *  If the intent is to use the result of (unsigned long)-1, then
+ *  that should at least be commented.  (JDS 12/11/2005)
+ */
 #define NOLHS -1
 
 /* worklist */
@@ -1180,7 +1186,7 @@ void WriteGlassBoxRelation(FILE *f,
   efunc = GlassBoxExtFunc(r);
   name = ExternalFuncName(efunc);
   FPRINTF(f,"%s(",name);
-  if ((list = RelationVarList(r))) {
+  if (NULL != (list = RelationVarList(r))) {
     len = gl_length(list);
     for (c=1;c<len;c++) {			/* the < is intentional */
       var = (struct Instance *)gl_fetch(list,c);
@@ -1213,7 +1219,7 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
   name = ExternalFuncName(efunc);
   Asc_DStringAppend(dsPtr,name,-1);
   Asc_DStringAppend(dsPtr,"(",1);
-  if ((list = RelationVarList(r))) {
+  if (NULL != (list = RelationVarList(r))) {
     len = gl_length(list);
     for (c=1;c<len;c++) {			/* the < is intentional */
       var = (struct Instance *)gl_fetch(list,c);
@@ -1675,7 +1681,7 @@ void SaveGlassBoxRelation(FILE *fp, CONST struct Instance *relinst)
   int len;
 
   reln = GetInstanceRelation(relinst,&type);
-  len = GlassBoxNumberArgs(reln);                    
+  len = GlassBoxNumberArgs(reln);
   if (len==0) return;
   if (NumberVariables(reln) != (unsigned long)len) {
     FPRINTF(ASCERR,"Corrupted arguements in glassbox relation\n");

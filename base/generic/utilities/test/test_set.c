@@ -131,7 +131,7 @@ static void test_set(void)
   if (NULL != set1) {
     set_null(set1, 10);
     CU_TEST(FALSE == set_chk_is_member(set1, -1, 10));  /* error - negative element */
-    CU_TEST(FALSE == set_chk_is_member(set1, 11, 10));  /* error - element lsrger than size */
+    CU_TEST(FALSE == set_chk_is_member(set1, 11, 10));  /* error - element larger than size */
 
     for (i=0 ; i<10 ; ++i) {
       CU_TEST(FALSE == set_chk_is_member(set1, (int)i, 10)); /* set should not contain member */

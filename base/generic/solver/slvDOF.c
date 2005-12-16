@@ -108,8 +108,7 @@ struct slvDOF_system_structure {
 
 #define OK        ((int)13695914)
 #define DESTROYED ((int)15784619)
-static int check_system(sys)
-slvDOF_system_t sys;
+static int check_system(slvDOF_system_t sys)
 /**
  ***  Checks sys for NULL and for integrity.
  **/
@@ -182,8 +181,7 @@ slvDOF_system_t slvDOF_create()
    return(sys);
 }
 
-static void destroy_matrices(sys)
-slvDOF_system_t sys;
+static void destroy_matrices(slvDOF_system_t sys)
 {
   if( sys->J.mtx ) {
     mtx_destroy(sys->J.mtx);
@@ -367,7 +365,7 @@ int slvDOF_eligible(slv_system_t server, int32 **vil) {
   /* nonsingular and not empty; no list */
   rmax = sys->rused;
   rank = sys->rank;
-  if (!(mtx=sys->J.mtx)) return 0; /* there is no jacobian-- wierd */
+  if (NULL == (mtx=sys->J.mtx)) return 0; /* there is no jacobian-- wierd */
   if (!mtx_check_matrix(mtx)) return 0; /* jacobian bad, very wierd */
 
   cmax=sys->vtotal;

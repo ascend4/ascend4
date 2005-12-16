@@ -442,9 +442,7 @@ int32 mtx_row_to_org( mtx_matrix_t mtx, int32 row)
   return( mtx->perm.row.cur_to_org[row] );
 }
 
-int32 mtx_col_to_org(mtx,col)
-mtx_matrix_t mtx;
-int32 col;
+int32 mtx_col_to_org(mtx_matrix_t mtx, int32 col)
 {
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return -1;
@@ -554,7 +552,7 @@ static int32 assign_row( mtx_matrix_t mtx, int32 row,
 
    tocur = mtx->perm.col.org_to_cur;
    Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[row]];
-   if( (elt=mtx_next_col(&Rewind,&(vars->unassigned_cols),tocur)) ) {
+   if( NULL != (elt=mtx_next_col(&Rewind,&(vars->unassigned_cols),tocur)) ) {
       /* Cheap assignment */
       register int32 col;
       col = tocur[elt->col];
@@ -563,7 +561,7 @@ static int32 assign_row( mtx_matrix_t mtx, int32 row,
    }
 
    vars->row_visited[row] = vars->rv_indicator;
-   for( elt = &Rewind ; (elt=mtx_next_col(elt,&(vars->assigned_cols),tocur));) {
+   for( elt = &Rewind ; NULL != (elt=mtx_next_col(elt,&(vars->assigned_cols),tocur)) ;) {
       int32 col;
       col = tocur[elt->col];
       if( vars->row_visited[col] != vars->rv_indicator ) {
@@ -899,7 +897,7 @@ int32 analyze_row(mtx_matrix_t mtx, int32 row, struct analyze_row_vars *vars,
    cols.high = rng->high;
    tocur = mtx->perm.col.org_to_cur;
    Rewind.next.col = mtx->hdr.row[mtx->perm.row.cur_to_org[row]];
-   for( elt = &Rewind ; (elt=mtx_next_col(elt,&cols,tocur)) ; ) {
+   for( elt = &Rewind ; NULL != (elt=mtx_next_col(elt,&cols,tocur)) ; ) {
       int32 col = tocur[elt->col];
       if( vars->done <= col && col < vars->vstack ) {
          /* Column unvisited, compute lowlink[col] */
@@ -979,7 +977,7 @@ int32 analyze_col(mtx_matrix_t mtx, int32 col, struct analyze_row_vars *vars,
    rows.high = rng->high;
    tocur = mtx->perm.row.org_to_cur;
    Rewind.next.row = mtx->hdr.col[mtx->perm.col.cur_to_org[col]];
-   for( elt = &Rewind ; (elt=mtx_next_row(elt,&rows,tocur)) ; ) {
+   for( elt = &Rewind ; NULL != (elt=mtx_next_row(elt,&rows,tocur)) ; ) {
       int32 row = tocur[elt->row];
       if( vars->done <= row && row < vars->vstack ) {
          /* Column unvisited, compute lowlink[col] */

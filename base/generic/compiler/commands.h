@@ -34,8 +34,8 @@
  *  </pre>
  */
 
-#ifndef __COMMANDS_H_SEEN__
-#define __COMMANDS_H_SEEN__
+#ifndef __commands_h_seen__
+#define __commands_h_seen__
 
 /** Command argument types. */
 enum arg_type {
@@ -50,72 +50,83 @@ enum arg_type {
 
 extern void InitializeCommands(void);
 /**<
- *  <!--  void InitializeCommands()                                    -->
- *  Initialize the command list.  This must be called before anything else.
+ *  Initializes the command list.  
+ *  This function must be called before anything else in this module.
+ *  It is a logical error to call this function more than once, but
+ *  will be tolerated.  Call DestroyCommands() when finished using 
+ *  the command facilities.
  */
 
 extern void DestroyCommands(void);
-/**<
- *  <!--  void DestroyCommands()                                       -->
- *  This will destroy the command structure.
- */
+/**<  Destroys the command structure created by InitializeCommands(). */
+
+typedef void (*InterfaceCommandF) (void);
+/**<  Type for command functions added using AddCommand(). */
 
 extern void AddCommand(int dummy, ...);
 /**<
- *  This will add a command to the command list.
- *  <pre>
- *  void AddCommand(dummy, cmd, func, help, terminate, num_args, arg_def*)
- *  char *cmd, *help;
- *  void (*func)();
- *  int terminate, num_args;
- *  arg_def is a list of enum arg_type's.
- *  </pre>
- *  dummy is used to keep some compilers happy.
+ *  Adds a command to the command list.
+ *  The arguments expected are as follows:
+ *    - dummy       not used (present to keep some compilers happy)
+ *    - cmd         the command string (char *)
+ *    - func        the command's function (InterfaceCommandF)
+ *    - help        help string for the command (char *)
+ *    - terminate   Non-zero if the command is a terminate command, 0 if not (int)
+ *    - num_args    number of arguments to follow (int)
+ *    - arg_def     list of arguments (enum arg_type)
  */
 
 extern unsigned long NumberCommands(void);
+/**<  Returns the number of defined commands. */
+
+extern CONST char *CommandName(unsigned long cmd_number);
 /**<
- *  <!--  unsigned long NumberCommands()                               -->
- *  Return the number of defined commands.
+ *  Returns the name of a command.
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().
  */
 
-extern CONST char *CommandName(unsigned long u);
+extern CONST char *CommandHelp(unsigned long cmd_number);
 /**<
- *  Return the command's name.
+ *  Returns the short help message of a command.
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().
  */
 
-extern CONST char *CommandHelp(unsigned long u);
+extern void CommandFunc(unsigned long int cmd_number, InterfaceCommandF *func);
 /**<
- *  Return the command's short help message.
+ *  Returns the function of a command.
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().  func is the address where the pointer to 
+ *  the command's function will be stored.
  */
 
-extern void CommandFunc(unsigned long int u, void (**func) (/* ??? */));
+extern int CommandTerminate(unsigned long cmd_number);
 /**<
- *  <!--  void CommandFunc(u,func)                                     -->
- *  <!--  unsigned long u;                                             -->
- *  <!--  void (**func)();                                             -->
- *  Return the command's function.
+ *  Returns non-zero if a command is a termination command.
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().
  */
 
-extern int CommandTerminate(unsigned long u);
+extern int CommandNumArgs(unsigned long cmd_number);
 /**<
- *  Return true if the command is a termination command.
+ *  Returns the number of arguments for a command.
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().
  */
 
-extern int CommandNumArgs(unsigned long u);
+extern enum arg_type CommandArgument(unsigned long cmd_number, int n);
 /**<
- *  Return the number of arguments.
+ *  Returns the type of the n'th argument for a command.  
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().  n ranges from 0 to CommandNumArgs(pos)-1.
  */
 
-extern enum arg_type CommandArgument(unsigned long u, int i);
+extern void CommandArgsPrint(FILE *fp, unsigned long int cmd_number);
 /**<
- *  Return the argument type.
- */
-
-extern void CommandArgsPrint(FILE *fp, unsigned long int u);
-/**<
- *  <!--  CommandArgsPrint(fp,u);                                      -->
- *  Print the args expected on fp for command u.
+ *  Prints the args expected for a command on fp.
+ *  The cmd_number must be in the range (1 .. NumberCommands()), and may be
+ *  looked up using FindCommand().
  */
 
 extern void LimitCommand(unsigned long *lower,
@@ -123,11 +134,7 @@ extern void LimitCommand(unsigned long *lower,
                          CONST char *str,
                          int place);
 /**<
- *  <!--  void LimitCommand(lower,upper,str,place)                     -->
- *  <!--  unsigned long *lower,*upper;                                 -->
- *  <!--  char *str;                                                   -->
- *  <!--  int place;                                                   -->
- *  Find the best possible upper and lower bound on the command.  It is
+ *  Finds the best possible upper and lower bound on the command.  It is
  *  assumed that on entry that the commands between lower and upper match
  *  up to "place" letters of string.  When str cannot be a command,
  *  *lower > *upper on return.  In such cases, the return *lower and *upper
@@ -139,20 +146,15 @@ extern void CompleteCommand(unsigned long lower,
                             char *str,
                             int *place);
 /**<
- *  <!--  void CompleteCommand(lower,upper,str,place)                  -->
- *  <!--  unsigned long lower,upper;                                   -->
- *  <!--  char *str;                                                   -->
- *  <!--  int *place;                                                  -->
- *  Fill in all the letters that are shared by commands between lower and
+ *  Fills in all the letters that are shared by commands between lower and
  *  upper.  It is assumed that str has enough space to hold any command.
  */
 
 extern unsigned long FindCommand(CONST char *string);
 /**<
- *  <!--  c = FindCommand(string);                                     -->
- *  Return the number of the command matching string, or 0 if none does.
+ *  Returns the number of the command matching string, or 0 if none does.
  *  Exact matches only.
  */
 
-#endif  /* __COMMANDS_H_SEEN__ */
+#endif  /* __commands_h_seen__ */
 

@@ -900,8 +900,10 @@ struct InstanceName ChildName(CONST struct Instance *i, unsigned long int n)
     Asc_Panic(2, NULL,
               "ChildName should not be called"
               " on fundamentaa/const instances.\n");
+    exit(2);  /*NOTREACHED*/
   default:
     Asc_Panic(2, NULL, "Invalid argument passed to ChildName.\n");
+    exit(2);  /*NOTREACHED*/
   }
   return result;
 }
@@ -1020,7 +1022,7 @@ unsigned long ChildIndex(CONST struct Instance *i,
 			 CONST struct Instance *child)
 {
   register unsigned long count=1, num_children=0;
-  register struct Instance **childlist;
+  register struct Instance **childlist = NULL;
   register ChildListPtr clist;
   register struct gl_list_t *arylist;
   register struct ArrayChild *arychild;
@@ -1046,8 +1048,8 @@ unsigned long ChildIndex(CONST struct Instance *i,
   case ARRAY_ENUM_INST:
     if (ARY_INST(i)->children!=NULL){
       for(count=gl_length(arylist = ARY_INST(i)->children);count>0;count--) {
-	arychild = (struct ArrayChild *)gl_fetch(arylist,count);
-	if (arychild->inst == child) return count;
+        arychild = (struct ArrayChild *)gl_fetch(arylist,count);
+        if (arychild->inst == child) return count;
       }
     }
     break;

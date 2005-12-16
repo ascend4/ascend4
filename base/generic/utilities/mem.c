@@ -138,7 +138,7 @@ double	mem_get_double(long from)
 
 void mem_set_byte(long from, int b)
 {
-   char	c=b;
+   char	c = (char)b;
    mv_set(&c,from,1);
 }
 
@@ -154,7 +154,7 @@ void mem_set_long(long from, long l)
 
 void mem_set_float(long from, double f)
 {
-   float	ff=f;
+   float	ff = (float)f;
    mv_set(&ff,from,sizeof(float));
 }
 

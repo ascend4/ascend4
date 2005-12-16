@@ -590,11 +590,11 @@ int Asc_DebuListVars(ClientData cdata, Tcl_Interp *interp,
       case 0: case 1:
       case 2: case 3:
       case 5:
-        vbool = var_apply_filter(vp[c],&vfilter);
+        vbool = (boolean)var_apply_filter(vp[c],&vfilter);
         break;
       case 4: {
         int32 col = mtx_org_to_col(mtx,var_sindex(vp[c]));
-        vbool = ((col < d->structural_rank) && (col >= 0));
+        vbool = (boolean)((col < d->structural_rank) && (col >= 0));
         break;
       }
     }
@@ -689,11 +689,11 @@ int Asc_DebuListRels(ClientData cdata, Tcl_Interp *interp,
     switch( fil ) {
       case 0: case 1:
       case 2: case 3:
-        rbool = rel_apply_filter(rp[c],&rfilter);
+        rbool = (boolean)rel_apply_filter(rp[c],&rfilter);
         break;
       case 4: {
         int32 row = mtx_org_to_row(mtx,rel_sindex(rp[c]));
-        rbool = ((row < d->structural_rank) && (row >= 0));
+        rbool = (boolean)((row < d->structural_rank) && (row >= 0));
         break;
       }
     }
@@ -2606,7 +2606,7 @@ static boolean dbg_calc_jacobian(mtx_matrix_t mtx,
      /* added */
      rel_set_residual(rel,resid);
   }
-  return(calc_ok);
+  return (boolean)calc_ok;
 }
 
 
@@ -3707,20 +3707,20 @@ int Asc_DebuWriteKirkSystem(ClientData cdata, Tcl_Interp *interp,
 #else
     FPRINTF(ASCERR,"Asc_DebuWriteKirkSystem \n");
     FPRINTF(ASCERR,"relman funtions have to be reimplemented \n");
-    exit;
+    break;
 #endif
       FPRINTF(fp,"%s  - (",lhs);
+      if (lhs) {
+        ascfree(lhs);
+      }
 #if REIMPLEMENT
       rhs = relman_make_xstring_infix(g_solvsys_cur,rel_rhs(rp[c]));
 #else
     FPRINTF(ASCERR,"Asc_DebuWriteKirkSystem \n");
     FPRINTF(ASCERR,"relman funtions have to be reimplemented \n");
-    exit;
+    break;
 #endif
       FPRINTF(fp,"%s)  =  0.0;\n",rhs);
-      if (lhs) {
-        ascfree(lhs);
-      }
       if (rhs) {
         ascfree(rhs);
       }
@@ -3848,7 +3848,7 @@ int Asc_DebuWriteGAMSSystem(ClientData cdata, Tcl_Interp *interp,
 #else
     FPRINTF(ASCERR,"Asc_DebuWriteGAMSSystem \n");
     FPRINTF(ASCERR,"relman funtions have to be reimplemented \n");
-    exit;
+    break;
 #endif
       FPRINTF(fp,"rel_%d..   %s",rel_sindex(rp[c]),lhs);
       switch( GetInstanceRelationType(rel_instance(rp[c])) ) {

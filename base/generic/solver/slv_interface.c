@@ -141,7 +141,7 @@ static struct command_list_t {
 };
 #define NCOMMANDS array_length(commands)
 
-static void print_commands()
+static void print_commands(void)
 /**
  ***  Prints out all commands
  **/
@@ -151,8 +151,7 @@ static void print_commands()
       PRINTF("%-30s%s\n",commands[ndx].name,commands[ndx].descr);
 }
 
-static int command_number(str)
-char *str;
+static int command_number(char *str)
 /**
  ***  Returns number corresponding to command string.
  ***  If non-existent, -1 is returned.
@@ -165,8 +164,7 @@ char *str;
    return( i < NCOMMANDS ? commands[i].num : -1 );
 }
 
-static boolean input_boolean(def)
-boolean def;
+static boolean input_boolean(boolean def)
 /**
  ***  Inputs a boolean (true or false)
  **/
@@ -189,7 +187,7 @@ boolean def;
    }
 }
 
-static int input_command()
+static int input_command(void)
 /**
  ***  Inputs command, returns command number.
  **/
@@ -201,10 +199,7 @@ static int input_command()
    return( command_number(s) );
 }
 
-static void write_var(out,sys,var)
-FILE *out;
-slv_system_t sys;
-struct var_variable *var;
+static void write_var(FILE *out, slv_system_t sys, struct var_variable *var)
 /**
  ***  Writes a variable out.
  **/
@@ -216,11 +211,7 @@ struct var_variable *var;
    ascfree(name);
 }
 
-static void write_rel(out,sys,rel,suppress)
-FILE *out;
-slv_system_t sys;
-struct rel_relation *rel;
-boolean suppress;
+static void write_rel(FILE *out, slv_system_t sys, struct rel_relation *rel, boolean suppress)
 /**
  ***  Writes a relation out.
  **/
@@ -237,11 +228,7 @@ boolean suppress;
    ascfree(str);
 }
 
-static void write_varlist(out,sys,vfilter,justwritestats)
-FILE *out;
-slv_system_t sys;
-var_filter_t *vfilter;
-boolean justwritestats;
+static void write_varlist(FILE *out, slv_system_t sys, var_filter_t *vfilter, boolean justwritestats)
 /**
  ***  Writes the variable list for those variables
  ***  passing through filter.
@@ -287,12 +274,8 @@ boolean justwritestats;
 	   num[0][0]+num[0][1],num[1][0]+num[1][1],tnum[0]+tnum[1]);
 }
 
-static void write_rellist(out,sys,rfilter,justwritestats,suppress)
-FILE *out;
-slv_system_t sys;
-rel_filter_t *rfilter;
-boolean justwritestats;
-boolean suppress;
+static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter, 
+                          boolean justwritestats, boolean suppress)
 /**
  ***  Writes the relation list for those relations
  ***  passing through filter.
@@ -336,9 +319,7 @@ boolean suppress;
    calc_ok = old_calc_ok;
 }
 
-static void write_obj(out,sys)
-FILE *out;
-slv_system_t sys;
+static void write_obj(FILE *out, slv_system_t sys)
 /**
  ***  Writes out the objective function. THE SEMANTICS MAY BE WRONG HERE.
  **/
@@ -358,8 +339,7 @@ slv_system_t sys;
    }
 }
 
-static void input_parameters(sys)
-slv_system_t sys;
+static void input_parameters(slv_system_t sys)
 /* Inputs parameters for the given system. */
 {
    slv_parameters_t p;
@@ -397,8 +377,7 @@ slv_system_t sys;
    slv_set_parameters(sys,&p);
 }
 
-static void  output_parameters(sys)
-slv_system_t sys;
+static void  output_parameters(slv_system_t sys)
 /**
  ***  Outputs parameters for the given system.
  **/
@@ -418,8 +397,7 @@ slv_system_t sys;
    PRINTF("Ignore bounds?                 = %s\n",yorn(p.ignore_bounds));
 }
 
-static void output_status(sys)
-slv_system_t sys;
+static void output_status(slv_system_t sys)
 /**
  ***  Outputs status for the given system.
  **/
@@ -466,9 +444,7 @@ struct rock {
    int32 nvars,nrels;
 };
 
-static void output_system(fp,sys)
-FILE *fp;
-slv_system_t sys;
+static void output_system(FILE *fp, slv_system_t sys)
 {
    struct rock vr;
    int32 n;
@@ -537,8 +513,7 @@ static slv_system_t sys = NULL;
 static struct Instance *inst = NULL;
 /* Instance in use */
 
-static boolean do_command(command)
-int command;
+static boolean do_command(int command)
 /**
  ***  Executes given command: returns FALSE if terminate.
  **/
@@ -831,8 +806,7 @@ int command;
  ***  Asks user if system should be kept, and returns response.
  **/
 
-void Solve(i)
-struct Instance *i;
+void Solve(struct Instance *i)
 {
    if( sys != NULL )
       if( inst != i || !USER_SAYS_KEEP ) {

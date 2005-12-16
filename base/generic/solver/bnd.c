@@ -27,6 +27,7 @@
 
 #include <math.h>
 #include "utilities/ascConfig.h"
+#include "utilities/ascPanic.h"
 #include "utilities/ascMalloc.h"
 #include "general/list.h"
 #include "general/dstring.h"
@@ -103,14 +104,14 @@ void bnd_destroy(struct bnd_boundary *bnd)
 
 enum bnd_enum bnd_kind(struct bnd_boundary *bnd)
 {
-  assert(bnd!=NULL);
+  asc_assert(bnd!=NULL);
   return bnd->kind;
 }
 
 
 void bnd_set_kind(struct bnd_boundary *bnd, enum bnd_enum kind)
 {
-  assert(bnd!=NULL);
+  asc_assert(bnd!=NULL);
   bnd->kind = kind;
 }
 
@@ -118,28 +119,28 @@ void bnd_set_kind(struct bnd_boundary *bnd, enum bnd_enum kind)
 void bnd_set_logrels(struct bnd_boundary *bnd,
                             struct gl_list_t *logrels)
 {
-  assert(bnd!=NULL);
+  asc_assert(bnd!=NULL);
   bnd->logrels = logrels;
 }
 
 
 struct gl_list_t *bnd_logrels(struct bnd_boundary *bnd)
 {
-  assert(bnd!=NULL);
+  asc_assert(bnd!=NULL);
   return bnd->logrels;
 }
 
 
 void bnd_set_tolerance(struct bnd_boundary *bnd,real64 tolerance)
 {
-  assert(bnd!=NULL);
+  asc_assert(bnd!=NULL);
   bnd->tolerance = tolerance;
 }
 
 
 real64 bnd_tolerance(struct bnd_boundary *bnd)
 {
-  assert(bnd!=NULL);
+  asc_assert(bnd!=NULL);
   return bnd->tolerance;
 }
 
@@ -150,6 +151,9 @@ char *bnd_make_name(slv_system_t sys,struct bnd_boundary *bnd)
   struct rel_relation *rel;
   struct logrel_relation *lrel;
 
+  if ((NULL == sys) || (NULL == bnd)) {
+    return NULL;
+  }
   kind = bnd_kind(bnd);
   if (kind == e_bnd_rel) {
     rel = bnd_rel(bnd_real_cond(bnd));
@@ -165,36 +169,42 @@ char *bnd_make_name(slv_system_t sys,struct bnd_boundary *bnd)
 
 int32 bnd_mindex( struct bnd_boundary *bnd)
 {
+   asc_assert(bnd!=NULL);
    return( bnd->mindex );
 }
 
 
 void bnd_set_mindex( struct bnd_boundary *bnd, int32 index)
 {
+   asc_assert(bnd!=NULL);
    bnd->mindex = index;
 }
 
 
 int32 bnd_sindex( const struct bnd_boundary *bnd)
 {
+   asc_assert(bnd!=NULL);
    return( bnd->sindex );
 }
 
 
 void bnd_set_sindex( struct bnd_boundary *bnd, int32 index)
 {
+   asc_assert(bnd!=NULL);
    bnd->sindex = index;
 }
 
 
 int32 bnd_model(const struct bnd_boundary *bnd)
 {
+   asc_assert(bnd!=NULL);
    return((const int32) bnd->model );
 }
 
 
 void bnd_set_model( struct bnd_boundary *bnd, int32 index)
 {
+   asc_assert(bnd!=NULL);
    bnd->model = index;
 }
 
@@ -204,7 +214,7 @@ struct var_variable **bnd_real_incidence(struct bnd_boundary *bnd)
   enum bnd_enum kind;
   struct var_variable **incidence;
   struct rel_relation *rel;
-  kind = bnd_kind(bnd);
+  kind = bnd_kind(bnd);     /* check for bnd==NULL done in bnd_kind() */
   if (kind == e_bnd_rel) {
     rel = bnd_rel(bnd_real_cond(bnd));
     incidence = rel_incidence_list_to_modify(rel);
@@ -221,7 +231,7 @@ int32 bnd_n_real_incidences(struct bnd_boundary *bnd)
   enum bnd_enum kind;
   int32 n_incidences;
   struct rel_relation *rel;
-  kind = bnd_kind(bnd);
+  kind = bnd_kind(bnd);     /* check for bnd==NULL done in bnd_kind() */
   if (kind == e_bnd_rel) {
     rel = bnd_rel(bnd_real_cond(bnd));
     n_incidences = rel_n_incidences(rel);
@@ -246,37 +256,28 @@ int32 bnd_apply_filter( const struct bnd_boundary *bnd, bnd_filter_t *filter)
 
 uint32 bnd_flags( struct bnd_boundary *bnd)
 {
-  if (bnd==NULL) {
-    FPRINTF(stderr,"bnd_flags called with NULL boundary\n");
-    return (0x0);
-  } else {
-    return bnd->flags;
-  }
+  asc_assert(bnd!=NULL);
+  return bnd->flags;
 }
 
 
 void bnd_set_flags(struct bnd_boundary *bnd, unsigned int flags)
 {
-  if (bnd==NULL) {
-    FPRINTF(stderr,"bnd_set_flags called with NULL boundary\n");
-    return;
-  }
+  asc_assert(bnd!=NULL);
   bnd->flags = flags;
 }
 
 
 uint32 bnd_flagbit(struct bnd_boundary *bnd, uint32 one)
 {
-  if (bnd==NULL) {
-    FPRINTF(stderr,"ERROR: bnd_flagbit called with bad bnd.\n");
-    return 0;
-  }
+  asc_assert(bnd!=NULL);
   return (bnd->flags & one);
-}
+}                                                     
 
 
 void bnd_set_flagbit(struct bnd_boundary *bnd, uint32 field,uint32 one)
 {
+  asc_assert(bnd!=NULL);
   if (one) {
     bnd->flags |= field;
   } else {
@@ -287,38 +288,21 @@ void bnd_set_flagbit(struct bnd_boundary *bnd, uint32 field,uint32 one)
 
 int32 bnd_status_cur( struct bnd_boundary *bnd)
 {
-  if (bnd==NULL) {
-    FPRINTF(stderr,"bnd_status_cur called with NULL boundary\n");
-    FPRINTF(stderr,"returning 0\n");
-    return 0;
+  asc_assert(bnd!=NULL);
+  if (bnd_cur_status(bnd)) {
+    return 1;
   } else {
-    if (bnd_cur_status(bnd)) {
-      return 1;
-    } else {
-      return 0;
-    }
+    return 0;
   }
 }
 
 
 int32 bnd_status_pre( struct bnd_boundary *bnd)
 {
-  if (bnd==NULL) {
-    FPRINTF(stderr,"bnd_status_pre called with NULL boundary\n");
-    FPRINTF(stderr,"returning 0\n");
-    return 0;
+  asc_assert(bnd!=NULL);
+  if (bnd_pre_status(bnd)) {
+    return 1;
   } else {
-    if (bnd_pre_status(bnd)) {
-      return 1;
-    } else {
-      return 0;
-    }
+    return 0;
   }
 }
-
-
-
-
-
-
-

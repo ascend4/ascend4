@@ -320,9 +320,7 @@ double Ultod(long int l)
 }
 
 #else
-double DIPow(d,n)
-     register double d;
-     long n;
+double DIPow(register double d, long n)
 {
   register double result;
   if (n==0) return 1.0;
@@ -339,9 +337,7 @@ double DIPow(d,n)
   return result;
 }
 
-double UIPow(d,n)
-     register double d;
-     long n;
+double UIPow(register double d, long n)
 {
   register double result;
   if (n==0) return 1.0;

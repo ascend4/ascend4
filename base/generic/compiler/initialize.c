@@ -511,7 +511,8 @@ void ExecuteInitFor(struct procFrame *fm, struct Statement *stat)
   symchar *name;
   struct Expr *ex;
   struct StatementList *sl;
-  unsigned long c,len,direction;
+  unsigned long c,len;
+  int direction;        /* was declared unsigned long, but used as int (JDS 12/11/2005) */
   struct value_t value;
   struct set_t *sptr;
   struct for_var_t *fv;

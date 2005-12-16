@@ -270,9 +270,7 @@ real64 var_upper_bound(struct var_variable *var)
   return( RealAtomValue(c) );
 }
 
-void var_set_upper_bound(var,upper_bound)
-struct var_variable *var;
-real64 upper_bound;
+void var_set_upper_bound(struct var_variable *var, real64 upper_bound)
 {
   struct Instance *c;
   if (var==NULL || var->ratom==NULL) {

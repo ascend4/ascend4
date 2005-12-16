@@ -205,7 +205,7 @@ int Asc_ScriptMergeCmd(ClientData cdata, Tcl_Interp *interp,
 int Asc_FastRaiseCmd(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
 {
-  Tk_Window tkwin,main;
+  Tk_Window tkwin,mainwin;
   Window window;
   Display *display;
 
@@ -215,8 +215,8 @@ int Asc_FastRaiseCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp, "wrong # args to asc_raise", TCL_STATIC);
     return TCL_ERROR;
   }
-  main = Tk_MainWindow(interp);
-  tkwin = Tk_NameToWindow(interp,argv[1],main);
+  mainwin = Tk_MainWindow(interp);
+  tkwin = Tk_NameToWindow(interp,argv[1],mainwin);
   if (!tkwin) {
     return TCL_ERROR; /* a message should be in the interp->result */
   }

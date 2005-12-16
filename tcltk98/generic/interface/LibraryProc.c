@@ -157,7 +157,7 @@ int Asc_LibrReadCmd(ClientData cdata, Tcl_Interp *interp,
   struct module_t *mod;
   int relns_flag = 1;
   int result;
-  int zz_parse();
+  extern int zz_parse();
 
   ASCUSE; /* see if first arg is -help */
 

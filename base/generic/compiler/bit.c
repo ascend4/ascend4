@@ -162,7 +162,7 @@ void SetBit(struct BitList *bl, unsigned long int pos)
   ptr = (byte *)((unsigned long)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
-  *ptr = *ptr | (1 << bit);
+  *ptr = *ptr | (byte)(1 << bit);
 }
 
 void ClearBit(struct BitList *bl, unsigned long int pos)
@@ -173,7 +173,7 @@ void ClearBit(struct BitList *bl, unsigned long int pos)
   ptr = (byte *)((unsigned long)bl+sizeof(struct BitList)+(pos >> 3));
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
-  *ptr = *ptr & (~(1 << bit));
+  *ptr = *ptr & (byte)(~(1 << bit));
 }
 
 void CondSetBit(struct BitList *bl, unsigned long int pos, int cond)
@@ -185,9 +185,9 @@ void CondSetBit(struct BitList *bl, unsigned long int pos, int cond)
   AssertContainedIn(bl,ptr);
   bit = pos & 0x07;
   if (cond)
-    *ptr = *ptr | (1 << bit);
+    *ptr = *ptr | (byte)(1 << bit);
   else
-    *ptr = *ptr & (~(1 << bit));
+    *ptr = *ptr & (byte)(~(1 << bit));
 }
 
 int ReadBit(CONST struct BitList *bl, unsigned long int pos)
