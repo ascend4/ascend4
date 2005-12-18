@@ -1,0 +1,129 @@
+REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+	
+MODEL ideal_steam REFINES thermo_state;
+
+	delta IS_A positive_variable;
+	tau IS_A positive_variable;
+	
+	(*-------------- CONSTANTS ---------------*)
+	rhoc IS_A mass_density_constant;
+	Tc IS_A temperature_constant;
+
+	rhoc "density of water at the critical point"
+		:== 322 {kg/m^3};
+
+	Tc "temperature of water at the critical point"
+		:== 647.096 {K};
+
+    R IS_A specific_gas_constant;
+	R "specific gas constant for water"
+		:== 0.46151805 {kJ/kg/K};
+	
+	tau = Tc / T;
+	delta = rho / rhoc;
+	
+	
+	range_0 IS_A set OF integer_constant;
+	range_0 :== [1..8];
+
+	range_01 IS_A set OF integer_constant;
+	range_01 :== [4..8];
+
+	range_r1 IS_A set OF integer_constant;
+	range_r1 :== [1..7];
+
+	range_r2 IS_A set OF integer_constant;
+	range_r2 :== [8..51];
+
+	range_r3 IS_A set OF integer_constant;
+	range_r3 :== [52..54];
+
+	range_r4 IS_A set OF integer_constant;
+	range_r4 :== [55..56];
+
+	n0[range_0] IS_A real_constant;
+	n0[1] :== -8.32044648201;
+
+	n0[2] :== 6.6832105268;
+	n0[3] :== 3.00632;
+	n0[4] :== 0.012436;
+
+	n0[5] :== 0.97315;
+	n0[6] :== 1.27950;
+	n0[7] :== 0.96956;
+	n0[8] :== 0.24873;
+
+    gamma0[range_01] IS_A real_constant;
+	gamma0[4] :== 1.28728967;
+	gamma0[5] :== 3.53734222;
+	gamma0[6] :== 7.74073708;
+	gamma0[7] :== 9.24437796;
+	gamma0[8] :== 27.5075105;
+
+	(*------------ IDEAL PARTS ------------*)
+
+	phi0 IS_A factor;
+	phi0_expr: phi0 =
+		SUM[ n0[i]*ln(1-exp(-tau*gamma0[i])) | i IN [range_01] ]
+        + ln(delta) + n0[1] + n0[2]*tau + n0[3]*ln(tau);
+
+	phi0delta IS_A factor;
+    phi0delta_expr: phi0delta = 1.0/delta;
+
+	phi0deltadelta IS_A factor;
+	phi0deltadelta_expr: phi0deltadelta =
+		-1.0/(delta*delta);
+
+
+	phi0tau IS_A factor;
+	phi0tau_expr: phi0tau =
+		n0[2] + n0[3]/tau
+		+ SUM[ n0[i]*gamma0[i]*(1/(1-exp(-tau*gamma0[i])) - 1) | i IN [range_01] ];
+
+	phi0deltatau IS_A real_constant;
+    phi0deltatau :== 0.0;
+
+    phi0tautau IS_A factor;
+	phi0tautau_expr: phi0tautau 
+        = -n0[3] / tau^2
+		- SUM [ n0[i] * gamma0[i]^2 * exp(-gamma0[i] * tau) / ( 1 - exp(-gamma0[i] * tau) )^2 | i IN range_01 ];
+
+
+	(*--------- THERMO PROPERTY RELATIONS ----------- *)
+
+	pressure: p = rho * R * T;
+
+	internal_energy: u	= R * T * tau * (phi0tau);
+
+	enthalpy: h = R * T * (1 + tau*(phi0tau));
+
+	entropy: s = R * (tau*(phi0tau) - phi0);
+
+	c_isochoric: cv = - R * tau^2 * (phi0tautau);
+
+	c_isobaric: cp = - R * tau^2 * (phi0tautau);
+
+	spd_sound: w^2 
+		= R * T * (1 - 1/(tau^2 * phi0tautau));
+
+METHODS
+METHOD default_self;
+	RUN ClearAll;
+	RUN specify;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	T.fixed := TRUE;
+	rho.fixed := TRUE;
+END specify;
+
+METHOD values;
+    (* these are the test values from page 14 of the IAPWS-95 release *)
+	T := 500 {K};
+	rho := 838.025 {kg/m^3};
+END values;
+
+END ideal_steam;
