@@ -50,17 +50,12 @@ EXEC_LIBS =
 #  The next variables list the source files (LIB_SCRS) to compile
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
-ifdef STAND_ALONE
-	ROOTFIND_C = rootfind.c
-	ROOTFIND_C = rootfind.c
-endif
-
 LIB_SRCS = \
 	analyze.c bnd.c bndman.c calc.c cond_config.c \
 	conditional.c conopt.c discrete.c extrel.c linsol.c \
 	linsolqr.c linutils.c logrel.c logrelman.c model_reorder.c \
 	mps.c mtx_basic.c mtx_linal.c mtx_perms.c mtx_query.c \
-	mtx_reorder.c mtx_use_only.c rel.c relman.c $(ROOTFIND_C) \
+	mtx_reorder.c mtx_use_only.c rel.c relman.c \
 	slv.c slv0.c slv1.c slv2.c slv3.c slv6.c slv7.c \
 	slv8.c slv9.c slv9a.c slvDOF.c slv_common.c \
 	slv_interface.c slv_stdcalls.c system.c var.c
@@ -70,7 +65,7 @@ LIB_OBJS = \
 	conditional.o conopt.o discrete.o          linsol.o \
 	linsolqr.o linutils.o logrel.o logrelman.o model_reorder.o \
 	mps.o mtx_basic.o mtx_linal.o mtx_perms.o mtx_query.o \
-	mtx_reorder.o mtx_use_only.o rel.o relman.o $(ROOTFIND_O) \
+	mtx_reorder.o mtx_use_only.o rel.o relman.o \
 	slv.o slv0.o slv1.o slv2.o slv3.o slv6.o slv7.o \
 	slv8.o slv9.o slv9a.o slvDOF.o slv_common.o \
 	slv_interface.o slv_stdcalls.o system.o var.o
