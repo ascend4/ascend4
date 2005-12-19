@@ -141,7 +141,7 @@ rounded.o: $(srcdir)/rounded.h $(srcdir)/rounded.c $(srcdir)/compiler.h
 
 scanner.o: $(srcdir)/scanner.l $(srcdir)/scanner.c.no.flex ./ascParse.h
 	$(MAKE) @scanner_src@
-	$(CC) $(CC_SWITCHES) -DYY_USE_CONST -c scanner.c
+	$(CC) $(CC_SWITCHES) -c scanner.c
 
 scanner.c.from.flex: $(srcdir)/scanner.l ./ascParse.h
 	$(LEX) -Pzz_ -t $(srcdir)/scanner.l > scanner.c
