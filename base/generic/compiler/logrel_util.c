@@ -53,6 +53,7 @@
 #include "compiler/instquery.h"
 #include "compiler/visitinst.h"
 #include "compiler/mathinst.h"
+#include "general/mathmacros.h"
 
 #define DEFTOLERANCE 1e-08
 

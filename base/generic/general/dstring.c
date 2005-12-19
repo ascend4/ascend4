@@ -35,6 +35,7 @@
 #include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
 #include "general/dstring.h"
+#include "general/mathmacros.h"
 
 
 void Asc_DStringInit(register Asc_DString *dsPtr)

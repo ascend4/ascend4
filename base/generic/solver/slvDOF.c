@@ -52,7 +52,7 @@
 #include "solver/slv_client.h"
 #include "solver/slv_stdcalls.h"
 #include "solver/slvDOF.h"
-
+#include "general/mathmacros.h"
 
 #define SLVDOF(s) ((slvDOF_system_t)(s))
 

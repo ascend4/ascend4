@@ -87,9 +87,6 @@ static CONST char MtxProcID[] = "$Id: MtxProc.c,v 1.29 2003/08/23 18:43:07 balla
 #define SNULL (char *)NULL
 #define QLFDID_LENGTH 1023
 #define MP_DEBUG TRUE
-#ifndef MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#endif
 
 static int GPI_Error(ClientData cdata, Tcl_Interp *interp,
                      int argc, CONST84 char *argv[])

@@ -34,6 +34,7 @@
 #include "solver/slv_stdcalls.h"
 #include "solver/system.h"
 #include "solver/slv_client.h"
+#include "general/mathmacros.h"
 
 #define DEBUG 1
 

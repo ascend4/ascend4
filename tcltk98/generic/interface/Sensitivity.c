@@ -58,6 +58,7 @@
 #include "interface/Sensitivity.h"
 #include "interface/HelpProc.h"
 #include "interface/SolverGlobals.h"
+#include "general/mathmacros.h"
 
 #ifndef lint
 static CONST char SensitivityID[] = "$Id: Sensitivity.c,v 1.31 2003/08/23 18:43:08 ballan Exp $";

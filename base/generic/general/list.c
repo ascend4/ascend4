@@ -37,16 +37,14 @@
 #if LISTUSESPOOL
 #include "general/pool.h"
 #endif
+#include "general/mathmacros.h"
 
 #ifndef lint
 static CONST char ListID[] = "$Id: list.c,v 1.3 1998/01/06 12:06:55 ballan Exp $";
 #endif
 
-#ifndef MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#endif
-#define address(a,b) \
-(((unsigned long)(a) + ((b)*sizeof(VOIDPTR))-sizeof(VOIDPTR)))
+#define address(a,b) (((unsigned long)(a) + ((b)*sizeof(VOIDPTR))-sizeof(VOIDPTR)))
+
 #define GL_LENGTH(l) ((l)->length)
 #define LOWCAPACITY 2
 /* Shortest list we will allow. It must not be 0! */

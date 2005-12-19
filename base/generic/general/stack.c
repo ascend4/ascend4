@@ -33,9 +33,7 @@
 #include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
 #include "general/stack.h"
-#ifndef MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#endif
+#include "general/mathmacros.h"
 
 #define STACKDEBUG 0
 /* if STACKDEBUG != 0,  we will do a bunch of initializing to 0 */

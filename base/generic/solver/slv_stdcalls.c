@@ -63,6 +63,7 @@
 #include "solver/slv9a.h"
 #include "solver/model_reorder.h"
 #include "solver/slv_stdcalls.h"
+#include "general/mathmacros.h"
 
 #define KILL 0 /* deleteme code. compile old code if kill = 1 */
 #define NEEDSTOBEDONE 0 /* indicates code/comments that are not yet ready */

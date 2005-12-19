@@ -37,6 +37,7 @@
 #include "solver/linsol.h"
 #include "solver/linsolqr.h"
 #include "solver/linutils.h"
+#include "general/mathmacros.h"
 
 /*
  * The A1 norm is:

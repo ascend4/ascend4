@@ -35,6 +35,7 @@
 #include "general/list.h"
 #include "compiler/fractions.h"
 #include "compiler/dimen.h"
+#include "general/mathmacros.h"
 
 struct gl_list_t *g_dimen_list;
 dim_type *g_wild_dimen,*g_trig_dimen,*g_dimensionless;
@@ -178,19 +179,11 @@ CONST dim_type *CubeDimension(CONST dim_type *dim, int check)
   }
 }
 
-/* find the largest dimensionality (+ or -) in the dimension given.
-   assumes denominator is 1 */
-#ifndef MAX
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-#ifndef abs
-#define abs(a) ( ((a)>0) ? (a) : (-(a)) )
-#endif
 static FRACPART topmax(CONST dim_type *dim) {
   int i;
   FRACPART biggest = 0;
   for (i=0;i<NUM_DIMENS;i++) {
-    biggest = MAX(abs(Numerator(GetDimFraction(*dim,i))),biggest);
+    biggest = MAX(ABS(Numerator(GetDimFraction(*dim,i))),biggest);
   }
   return biggest;
 }

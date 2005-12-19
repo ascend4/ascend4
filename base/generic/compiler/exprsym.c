@@ -48,14 +48,6 @@
 #include "compiler/relation_util.h"
 #include "compiler/exprsym.h"
 
-#ifndef MAX
-#define MAX(a,b) ((a) < (b) ? (b) : (a))
-#endif
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
-
 #ifndef NO_FREE_STORE
 /* free store alloc */
 #define TMALLOC (Term *)GetMem()

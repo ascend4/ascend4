@@ -39,6 +39,7 @@
 /* grab our private parts */
 #define __MTX_C_SEEN__
 #include "solver/mtx_use_only.h"
+#include "general/mathmacros.h"
 
 /* this returns an error count */
 int super_check_matrix( mtx_matrix_t mtx)
