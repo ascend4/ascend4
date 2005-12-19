@@ -38,6 +38,7 @@
 #include "general/tm_time.h"
 #include "solver/mtx.h"
 #include "solver/linsol.h"
+#include "general/mathmacros.h"
 
 
 #define LINSOL_DEBUG FALSE

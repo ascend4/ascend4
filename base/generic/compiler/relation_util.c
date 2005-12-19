@@ -81,10 +81,6 @@ static struct fraction real_to_frac(double real)
 #undef START
 
 
-#ifndef MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#endif
-
 /*  Create a static buffer to use for temporary memory storage  */
 
 char *tmpalloc(int nbytes)

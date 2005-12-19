@@ -46,6 +46,7 @@
 #define __CHILD_ILLEGAL_ACCESS__
 #include "compiler/childpriv.h"
 #include "compiler/childio.h"
+#include "general/mathmacros.h"
 
 #ifndef lint
 static CONST char ChildListID[] = "$Id: child.c,v 1.25 1998/03/26 20:39:34 ballan Exp $";

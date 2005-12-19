@@ -37,10 +37,6 @@
 #include "compiler/safe.h"
 #include "compiler/func.h"
 
-#ifndef ABS
-#define ABS(x) (((x) > 0)?(x):(-(x)))
-#endif
-
 #ifndef M_PI
 #define M_PI F_PI
 #endif

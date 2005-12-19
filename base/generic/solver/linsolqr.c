@@ -69,6 +69,7 @@
 #include "general/tm_time.h"
 #include "solver/mtx.h"
 #include "solver/linsolqr.h"
+#include "general/mathmacros.h"
 
 #ifdef __WIN32__
 #define copysign _copysign

@@ -39,6 +39,7 @@
 #include "compiler/types.h"
 #include "compiler/relation_type.h"
 #include "compiler/freestore.h"
+#include "general/mathmacros.h"
 
 /*
  * This is an implementation of a *freestore* which is hoped to
@@ -69,9 +70,6 @@
  *	------>	|	|	|	|	|	|	|	|
  * 		--------------------------------------------------------
  */
-#ifndef MAX
-#define MAX(a,b) ((a>b)?a:b)
-#endif
 
 static struct FreeStore *g_free_store = NULL;
 static long g_units_alloc = 0L;

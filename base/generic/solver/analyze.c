@@ -100,6 +100,7 @@
 #include "solver/slv_client.h"
 #include "solver/cond_config.h"
 #include "solver/analyze.h"
+#include "general/mathmacros.h"
 
 /* stuff to get rid of */
 #ifndef MAX_VAR_IN_LIST

@@ -402,7 +402,8 @@ void WritePrologue(FILE *fp, struct Instance *root,
   /* need to define this for btprolog.h to do the right thing */
   CLINE("#define HAVE_ERF");
 #endif
-  CLINE("#include \"btprolog.h\"");
+
+  CLINE("#include <btprolog.h>");
 }
 
 /* this function should be generalized or duplicated to

@@ -39,6 +39,7 @@
 /* grab our private parts */
 #define __MTX_C_SEEN__
 #include "solver/mtx_use_only.h"
+#include "general/mathmacros.h"
 
 real64 mtx_next_in_row( mtx_matrix_t mtx, mtx_coord_t *coord, mtx_range_t *rng)
 {

@@ -39,6 +39,7 @@
 #include "compiler/statement.h"
 #include "compiler/statio.h"
 #include "compiler/slist.h"
+#include "general/mathmacros.h"
 
 #define SLMALLOC \
 (struct StatementList *)ascmalloc((unsigned)sizeof(struct StatementList))

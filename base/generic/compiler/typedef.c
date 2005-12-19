@@ -73,6 +73,7 @@
 #include "compiler/childdef.h"
 #include "compiler/cmpfunc.h"
 #include "compiler/typedef.h"
+#include "general/mathmacros.h"
 
 #ifndef lint
 static CONST char TypeDefinitionRCSid[] ="$Id: typedef.c,v 1.60 1998/04/21 23:50:02 ballan Exp $";

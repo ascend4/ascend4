@@ -60,6 +60,7 @@
 #include "solver/relman.h"
 #include "compiler/rootfind.h"
 #include "solver/slv_server.h"
+#include "general/mathmacros.h"
 
 #define IPTR(i) ((struct Instance *)(i))
 

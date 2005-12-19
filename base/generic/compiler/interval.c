@@ -36,12 +36,6 @@
 #include "compiler/rounded.h"
 #include "compiler/interval.h"
 #define TEST(x) assert(((x).low) <= ((x).high))
-#ifndef MAX
-#define MAX(x,y) (((x) > (y)) ? (x) : (y))
-#endif
-#ifndef MIN
-#define MIN(x,y) (((x) < (y)) ? (x) : (y))
-#endif
 
 #ifndef lint
 static CONST char IntervalRoutinesRCSid[] = "$Id: interval.c,v 1.7 1998/02/27 16:29:02 mthomas Exp $";

@@ -48,6 +48,8 @@
 #ifndef ASC_FUNC_H
 #define ASC_FUNC_H
 
+#include "general/mathmacros.h"
+
 /*
  *  the following should be ifdefed to deal with math.h values
  */
@@ -60,7 +62,7 @@
 #define F_LIM_SQR     1.0e154                 /**< sqrt(maxdouble) */
 
 #ifdef __STDC__
-#if __STDC__
+# if __STDC__
 /**
  * stdc==1 --> erf, cbrt not defined in headers. user should link
  * against a library that does provide them. ASCEND is research
@@ -68,10 +70,10 @@
  * functions.
  */
 extern double DLEXPORT cbrt(double);
-#ifdef HAVE_ERF
+#  ifdef HAVE_ERF
 extern double erf(double);
-#endif /* HAVE_ERF */
-#endif /* __STDC__ == 1*/
+#  endif /* HAVE_ERF */
+# endif /* __STDC__ == 1*/
 /**<
  * in the case where __STDC__ is defined but == 0, system headers
  * should provide cbrt, erf.
@@ -152,14 +154,14 @@ extern double erf(double);
 #endif /* HAVE_ERF */
 
 #ifdef NDEBUG
-#define ascnint(d) (((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d))))
+# define ascnint(d) (((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d))))
 /**< 
  *  Converts a double to the nearest integer (release version).
  *  @param d double, the real number to convert.
  *  @return The nearest integer as an int.
  */
 #else
-#define ascnint(a) ascnintF(a)
+# define ascnint(a) ascnintF(a)
 /**< 
  *  Converts a double to the nearest integer (debug version).
  *  @param d double, the real number to convert.
