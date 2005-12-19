@@ -11,7 +11,7 @@ MODEL water_and_ideal_steam REFINES thermo_state;
 	T, S.T, W.T ARE_THE_SAME;
 	z01: W.u = (T - 273.15 {K}) * 4.2 {kJ/kg/K};
 	z02:W.h = W.u + p / 1000 {kg/m^3};
-	(* Gibb's free energy needed to create an exprssion for entropy *)
+	(* Gibb's free energy needed to create an expression for entropy *)
 	z03:W.s = 0 {kJ/kg/K};
 	z04:W.cp = 4.2 {kJ/kg/K};
 	z05:W.cv = 4.2 {kJ/kg/K}; (* correction? *)
@@ -188,9 +188,14 @@ END specify;
 METHOD values;
 	V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
 	mdot_water_in := 1 {kg/s};
-	Q := 400 {W/m^2} * 20 * 40{mm} * 300{m};
+	Q := 800 {W/m^2} * 20 * 40{mm} * 300{m};
 	p := 5 {bar};
 END values;
+
+METHOD self_test;
+	RUN reset;
+	RUN values;
+END self_test;
 END absorber;
 
 MODEL condenser;
