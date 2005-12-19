@@ -1979,12 +1979,15 @@ unsigned long RelationDepth(CONST struct relation *rel)
 static double FindMaxAdditiveTerm(struct relation_term *s)
 {
   enum safe_err serr;
+  double lhs, rhs;
 
   switch (RelationTermType(s)) {
   case e_plus:
   case e_minus:
-    return MAX(fabs(FindMaxAdditiveTerm(TermBinLeft(s))),
-               fabs(FindMaxAdditiveTerm(TermBinRight(s))));
+    /** note these used to be inlined with max, but a bug in gcc323 caused it to be split out. */
+    lhs = FindMaxAdditiveTerm(TermBinLeft(s));
+    rhs = FindMaxAdditiveTerm(TermBinRight(s));
+    return MAX(fabs(lhs), fabs(rhs));
   case e_uminus:
     return (FindMaxAdditiveTerm(TermUniLeft(s)));
   case e_times:
@@ -2001,11 +2004,15 @@ static double FindMaxAdditiveTerm(struct relation_term *s)
 
 static double FindMaxFromTop(struct relation *s)
 {
+  double lhs;
+  double rhs;
   if (s == NULL) {
     return 0;
   }
-  return MAX(fabs(FindMaxAdditiveTerm(Infix_LhsSide(s))),
-             fabs(FindMaxAdditiveTerm(Infix_RhsSide(s))));
+  /** note these used to be inlined with max, but a bug in gcc323 caused it to be split out. */
+  lhs = FindMaxAdditiveTerm(Infix_LhsSide(s));
+  rhs = FindMaxAdditiveTerm(Infix_RhsSide(s));
+  return MAX(fabs(lhs), fabs(rhs));
 }
 
 double CalcRelationNominal(struct Instance *i)     /* send in relation */
