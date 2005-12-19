@@ -221,7 +221,7 @@ static void apply_term_dimensions(struct relation *rel,
             case F_EXP:
             case F_LN:
             case F_LNM:
-            case F_LOG:
+            case F_LOG10:
 #ifdef HAVE_ERF
             case F_ERF:
 #endif /* HAVE_ERF */
@@ -3346,7 +3346,7 @@ int RelationInvertToken(struct relation_term **term,
           remove_soln(soln_list,ndx);
         }
         break;
-      case F_LOG:
+      case F_LOG10:
         soln_list->soln[ndx] *= 1.0/safe_LOG10_COEF;
 
       case F_LN:   /* FALL-THROUGH */

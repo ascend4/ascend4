@@ -1396,7 +1396,7 @@ struct value_t ApplyFunction(struct value_t value, CONST struct Func *f)
       return DimensionConflict();
     else
       switch (FuncId(f)) {
-        case F_LOG:
+        case F_LOG10:
         case F_LN:
         case F_EXP:
 #ifdef HAVE_ERF

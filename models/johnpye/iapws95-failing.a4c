@@ -224,8 +224,8 @@ MODEL steam_state;
 
 	phi0 IS_A factor;
 	phi0 =
-		SUM[ n0[i]*log(1-exp(-tau*gamma0[i])) | i IN [range_01] ]
-        + log(delta) + n0[1] + n0[2]*tau + n0[3]*log(tau);
+		SUM[ n0[i]*ln(1-exp(-tau*gamma0[i])) | i IN [range_01] ]
+        + ln(delta) + n0[1] + n0[2]*tau + n0[3]*ln(tau);
 
 	phi0delta IS_A factor;
     phi0delta = 1.0/delta;

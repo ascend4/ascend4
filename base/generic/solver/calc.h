@@ -113,7 +113,7 @@ extern real64 calc_arctanh_D0(real64 x);  /**< Compute hyperbolic arctan(x). */
 extern real64 calc_exp_D0(real64 x);      /**< Compute exp(x). */
 extern real64 calc_ln_D0(real64 x);       /**< Compute ln(x). */
 #define calc_lnm_D0      lnm              /**< Compute lnm. */
-extern real64 calc_log_D0(real64 x);      /**< Compute log(x). */
+extern real64 calc_log10_D0(real64 x);      /**< Compute log(x). */
 #define calc_sqr_D0      sqr              /**< Compute square. */
 extern real64 calc_sqrt_D0(real64 x);     /**< Compute sqrt(x). */
 #define calc_cbrt_D0     cbrt             /**< Compute cube root. */
@@ -143,7 +143,7 @@ extern real64 calc_erf_D1(real64 x);      /**< Computes 1st derivative of erf. *
 #define calc_exp_D1      calc_exp_D0      /**< Computes 1st derivative of exp(x). */
 #define calc_ln_D1       calc_rec         /**< Computes 1st derivative of ln(x). */
 #define calc_lnm_D1      dlnm             /**< Computes 1st derivative of lnm. */
-extern real64 calc_log_D1(real64 x);      /**< Computes 1st derivative of log(x). */
+extern real64 calc_log10_D1(real64 x);      /**< Computes 1st derivative of log(x). */
 #define calc_sqr_D1      dsqr             /**< Computes 1st derivative of square. */
 extern real64 calc_sqrt_D1(real64 x);     /**< Computes 1st derivative of sqrt(x). */
 extern real64 calc_cbrt_D1(real64 x);     /**< Computes 1st derivative of cube root. */
@@ -173,7 +173,7 @@ extern real64 calc_erf_D2(real64 x);      /**< Computes 2nd derivative of erf. *
 #define calc_exp_D2      calc_exp_D0      /**< Computes 2nd derivative of exp(x). */
 extern real64 calc_ln_D2(real64 x);       /**< Computes 2nd derivative of ln(x). */
 #define calc_lnm_D2      dlnm2            /**< Computes 2nd derivative of lnm. */
-extern real64 calc_log_D2(real64 x);      /**< Computes 2nd derivative of log(x). */
+extern real64 calc_log10_D2(real64 x);      /**< Computes 2nd derivative of log(x). */
 #define calc_sqr_D2      dsqr2            /**< Computes 2nd derivative of square. */
 extern real64 calc_sqrt_D2(real64 x);     /**< Computes 2nd derivative of sqrt(x). */
 extern real64 calc_cbrt_D2(real64 x);     /**< Computes 2nd derivative of cube root. */
@@ -195,7 +195,7 @@ extern real64 calc_erf_Dn(real64 x, int n);     /**< Computes nth derivative of 
 #endif /* HAVE_ERF */
 extern real64 calc_exp_Dn(real64 x, int n);     /**< Computes nth derivative of exp(x). */
 extern real64 calc_ln_Dn(real64 x, int n);      /**< Computes nth derivative of ln(x). */
-extern real64 calc_log_Dn(real64 x, int n);     /**< Computes nth derivative of log(x). */
+extern real64 calc_log10_Dn(real64 x, int n);     /**< Computes nth derivative of log(x). */
 extern real64 calc_sqr_Dn(real64 x, int n);     /**< Computes nth derivative of square(x). */
 extern real64 calc_sqrt_Dn(real64 x, int n);    /**< Computes nth derivative of sqrt(x). */
 extern real64 calc_tan_Dn(real64 x, int n);     /**< Computes nth derivative of tan(x). */

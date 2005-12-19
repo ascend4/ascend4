@@ -960,7 +960,7 @@ int CodeGen_WriteBuiltInFuncs(FILE *f, Term *term,
        * special cases which need to be handled. Those that *break*,
        * get closing brackets written after the switch.
        */
-    case F_LOG:
+    case F_LOG10:
       count += FPRINTF(f,"Log[");
       count = CodeGen_WriteSide(f,TermFuncLeft(term),r,format,count) + 1;
       count += FPRINTF(f,",10]");
@@ -1005,7 +1005,7 @@ int CodeGen_WriteBuiltInFuncs(FILE *f, Term *term,
        * special cases which need to be handled. Those that *break*,
        * get closing brackets written after the switch.
        */
-    case F_LOG: count += FPRINTF(f,"LOG10("); break;
+    case F_LOG10: count += FPRINTF(f,"LOG10("); break;
     case F_LN:	count += FPRINTF(f,"LOG("); break;
     case F_EXP: count += FPRINTF(f,"EXP("); break;
     case F_SIN: count += FPRINTF(f,"SIN("); break;

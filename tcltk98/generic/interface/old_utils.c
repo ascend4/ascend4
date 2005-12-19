@@ -267,7 +267,7 @@ static void apply_term_dimensions(CONST struct relation *rel,
     case F_EXP:
     case F_LN:
     case F_LNM:
-    case F_LOG:
+    case F_LOG10:
 #ifdef HAVE_ERF
 	case F_ERF:
 #endif

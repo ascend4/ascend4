@@ -917,7 +917,7 @@ Term *Derivative(Term *term, unsigned long wrt,
     case F_LN:
       e = MakeDivide(du_dx,left);
       return e;
-    case F_LOG:
+    case F_LOG10:
       e = MakeDivide(du_dx,left);
       e = MakeMultiply(e,CreateDTermReal(F_LOG10_COEF,NULL));
       return e;
