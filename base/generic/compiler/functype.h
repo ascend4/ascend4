@@ -58,7 +58,7 @@ enum safe_err {
 
 /** Function enumeration. */
 enum Func_enum {
-   F_LOG, F_LN, F_EXP,
+   F_LOG10, F_LN, F_EXP,
    F_SIN, F_COS, F_TAN,
    F_ARCSIN, F_ARCCOS, F_ARCTAN,
    F_SQR, F_SQRT,

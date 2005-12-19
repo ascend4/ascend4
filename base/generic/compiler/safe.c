@@ -484,7 +484,7 @@ double safe_lnm_D0(double x,enum safe_err *safe)
   return( lnm(x) );
 }
 
-double safe_log_D0(double x,enum safe_err *safe)
+double safe_log10_D0(double x,enum safe_err *safe)
 {
    return( safe_LOG10_COEF * safe_ln_D0(x,safe) );
 }
@@ -627,7 +627,7 @@ double safe_lnm_D1(double x,enum safe_err *safe)
    return( dlnm(x) );
 }
 
-double safe_log_D1(double x,enum safe_err *safe)
+double safe_log10_D1(double x,enum safe_err *safe)
 {
    return( safe_LOG10_COEF * safe_ln_D1(x,safe) );
 }
@@ -785,7 +785,7 @@ double safe_lnm_D2(double x,enum safe_err *safe)
    return( dlnm2(x) );
 }
 
-double safe_log_D2(double x,enum safe_err *safe)
+double safe_log10_D2(double x,enum safe_err *safe)
 {
    return( safe_LOG10_COEF * safe_ln_D2(x,safe) );
 }
@@ -886,7 +886,7 @@ double safe_ln_Dn(double x,int n,enum safe_err *safe)
    return( n==0 ? safe_ln_D0(x,safe) : safe_Dn_rec(x,n-1,safe) );
 }
 
-double safe_log_Dn(double x,int n,enum safe_err *safe)
+double safe_log10_Dn(double x,int n,enum safe_err *safe)
 {
    return( safe_LOG10_COEF * safe_ln_Dn(x,n,safe) );
 }

@@ -96,12 +96,12 @@ double DLEXPORT dlnm2(register double d)
   return (d>g_lnm_epsilon ? (double)-1.0/(d*d) : (double)0.0);
 }
 
-double DLEXPORT dlog(register double d)
+double DLEXPORT dlog10(register double d)
 {
   return M_LOG10E/d;
 }
 
-double DLEXPORT dlog2(register double d)
+double DLEXPORT dlog102(register double d)
 {
   return -M_LOG10E/(d*d);
 }
@@ -682,28 +682,28 @@ struct Func g_lnm_f = {
 #endif
 };
 
-struct Func g_log_f = {
-  "log",
+struct Func g_log10_f = {
   "log10",
-  "dlog",
-  "dlog2",
-  F_LOG,
+  "log10",
+  "dlog10",
+  "dlog102",
+  F_LOG10,
   log10,
-  dlog,
-  dlog2,
-  safe_log_D0,
-  safe_log_D1,
-  safe_log_D2,
+  dlog10,
+  dlog102,
+  safe_log10_D0,
+  safe_log10_D1,
+  safe_log10_D2,
 #ifdef CHRIS_FUNC
-  LogInterval,
-  LogSlope,
-  LogDeriv,
+  Log10Interval,
+  Log10Slope,
+  Log10Deriv,
   MinOfRange,
   MaxOfRange,
   Interpolate,
   InterpolateD,
-  ConcaveOfLog,
-  ConcaveDOfLog
+  ConcaveOfLog10,
+  ConcaveDOfLog10
 #endif
 };
 
@@ -1180,7 +1180,7 @@ struct Func g_cbrt_f = {
 
 
 struct Func *g_func_list[]={
-  &g_log_f,
+  &g_log10_f,
   &g_ln_f,
   &g_exp_f,
   &g_sin_f,
@@ -1259,7 +1259,7 @@ CONST dim_type *FuncDimens(CONST struct Func *f)
 {
   if (!f) return Dimensionless();
   switch (FuncId(f)) {
-    case F_LOG:
+    case F_LOG10:
     case F_LN:
     case F_EXP:
 #ifdef HAVE_ERF

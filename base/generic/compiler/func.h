@@ -177,8 +177,8 @@ extern int DLEXPORT ascnintF(double);
 
 extern double DLEXPORT dln(double x);
 extern double DLEXPORT dln2(double x);
-extern double DLEXPORT dlog(double x);
-extern double DLEXPORT dlog2(double x);
+extern double DLEXPORT dlog10(double x);
+extern double DLEXPORT dlog102(double x);
 extern double DLEXPORT lnm(double x);
 extern double DLEXPORT dlnm(double x);
 extern double DLEXPORT dlnm2(double x);

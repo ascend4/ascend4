@@ -394,7 +394,7 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
   if (ZEROTERM(arg)) {
     switch(FuncId(F_TERM(fn)->fptr)) {
     case F_LN:
-    case F_LOG:
+    case F_LOG10:
     case F_ARCCOSH:
       /* illegal argument. caller will whine. */
       return -1;
@@ -567,7 +567,7 @@ static int SimplifyTermBuf_Func(struct relation_term *arg,
       if( rval < 1.0 ) return -1;
       /* fall through */
     case F_LN:
-    case F_LOG:
+    case F_LOG10:
       if( rval < 0.0 ) return -1;
       if (IsWild(TermDimensions(arg)) ||
           SameDimen(TermDimensions(arg),Dimensionless())) {

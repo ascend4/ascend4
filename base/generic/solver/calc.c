@@ -406,7 +406,7 @@ real64 calc_ln_D0(real64 x)
    return( log(x) );
 }
 
-real64 calc_log_D0(real64 x)
+real64 calc_log10_D0(real64 x)
 {
    return( calc_LOG10_COEF * calc_ln_D0(x) );
 }
@@ -460,7 +460,7 @@ real64 calc_erf_D1(real64 x)
 }
 #endif /* HAVE_ERF */
 
-real64 calc_log_D1(real64 x)
+real64 calc_log10_D1(real64 x)
 {
    return( calc_LOG10_COEF * calc_ln_D1(x) );
 }
@@ -551,7 +551,7 @@ real64 calc_ln_D2(real64 x)
    return( -calc_rec(calc_sqr_D0(x)) );
 }
 
-real64 calc_log_D2(real64 x)
+real64 calc_log10_D2(real64 x)
 {
    return( calc_LOG10_COEF * calc_ln_D2(x) );
 }
@@ -640,7 +640,7 @@ real64 calc_ln_Dn(real64 x, int n)
    return( n==0 ? calc_ln_D0(x) : calc_Dn_rec(x,n-1) );
 }
 
-real64 calc_log_Dn(real64 x, int n)
+real64 calc_log10_Dn(real64 x, int n)
 {
    return( calc_LOG10_COEF * calc_ln_Dn(x,n) );
 }
