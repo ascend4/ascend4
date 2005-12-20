@@ -35,6 +35,8 @@
 #include "utilities/ascPanic.h"
 #include "compiler/rounded.h"
 #include "compiler/interval.h"
+#include "general/mathmacros.h"
+
 #define TEST(x) assert(((x).low) <= ((x).high))
 
 #ifndef lint

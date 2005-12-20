@@ -672,8 +672,82 @@ FPRINTF(fm->err,"\n");
   return;
 }
 
-/*
- */
+static void
+ExecuteInitTest(struct procFrame *fm, struct Statement *stat){
+	struct value_t value;
+	int testerr;
+	assert(GetEvaluationContext()==NULL);
+	SetEvaluationContext(fm->i);
+	value = EvaluateExpr(TestStatExpr(stat),NULL,InstanceEvaluateName);
+	SetEvaluationContext(NULL);
+	testerr = 1; /* set 0 on success */
+	switch(ValueKind(value)){
+		case boolean_value:
+			testerr = 0;
+			if(BooleanValue(value)){
+				ERROR_REPORTER_STAT(ASC_USER_NOTE,stat,"TEST returned 'true'");
+			}else{
+				ERROR_REPORTER_STAT(ASC_USER_ERROR,stat,"Failed test!");
+			}
+			break;
+		case real_value:
+			fm->flow = FrameError;
+			fm->ErrNo = Proc_if_real_expr;
+			break; 
+		case integer_value:
+			fm->flow = FrameError;
+			fm->ErrNo = Proc_if_integer_expr;
+			break; 
+		case symbol_value:
+			fm->flow = FrameError;
+			fm->ErrNo = Proc_if_symbol_expr;
+			break; 
+		case set_value: /* FALLTHROUGH */
+			case list_value:
+			fm->flow = FrameError;
+			fm->ErrNo = Proc_if_set_expr;
+			break; 
+		case error_value:
+			fm->flow = FrameError;
+			fm->ErrNo = Proc_if_expr_error_confused;
+			switch (ErrorValue(value)) {
+				case type_conflict:
+					fm->ErrNo = Proc_if_expr_error_typeconflict;
+					break;
+				case name_unfound:
+					fm->ErrNo = Proc_if_expr_error_nameunfound;
+					break;
+				case incorrect_name:
+					fm->ErrNo = Proc_if_expr_error_incorrectname;
+					break;
+				case undefined_value:
+					fm->ErrNo = Proc_if_expr_error_undefinedvalue;
+					break;
+				case dimension_conflict:
+					fm->ErrNo = Proc_if_expr_error_dimensionconflict;
+					break;
+				case empty_choice:
+					fm->ErrNo = Proc_if_expr_error_emptychoice;
+					break;
+				case empty_intersection:
+					fm->ErrNo = Proc_if_expr_error_emptyintersection;
+					break;
+				default:
+					error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"Unhandled case");
+			}
+			break;
+		default:
+			fm->flow = FrameError;
+			fm->ErrNo = Proc_if_not_logical;
+			break;
+	}
+	if (fm->flow == FrameError && testerr) {
+		ProcWriteIfError(fm,"TEST");
+	}
+	DestroyValue(&value);
+	return;
+}
+
 static 
 void ExecuteInitIf(struct procFrame *fm, struct Statement *stat)
 {
@@ -1360,6 +1434,9 @@ FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
   case WHILE:
     ExecuteInitWhile(fm,stat);
     break;
+  case TEST:
+	ExecuteInitTest(fm,stat);
+	break;
   case IF:
     ExecuteInitIf(fm,stat);
     break;

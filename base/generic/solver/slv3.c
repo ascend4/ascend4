@@ -3626,7 +3626,7 @@ void slv3_dump_internals(slv_system_t server, SlvClientToken sys,int level)
   check_system(sys);
   if (level > 0) {
     error_reporter_start(ASC_PROG_ERROR,NULL,0);
-    FPRINTF(stderr,"QRSlv:slv3_dump_internals: slv3 does not dump its internals.\n");
+    FPRINTF(stderr,"QRSlv:slv3_dump_internals: QRSlv does not dump its internals.\n");
     error_reporter_end_flush();
   }
 }
@@ -3889,7 +3889,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   int               minor = 0,ds_status=0, rank_defect=0;
   double            time0;
 
-  CONSOLE_DEBUG("slv3_iterate: start");
+  CONSOLE_DEBUG("QRSlv start");
 
   sys = SLV3(asys);
   mif = MIF(sys);
@@ -3897,7 +3897,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   if (server == NULL || sys==NULL) return;
   if (check_system(SLV3(sys))) return;
   if( !sys->s.ready_to_solve ) {
-    error_reporter(ASC_USER_ERROR,NULL,0,"(slv3) slv3_iterate: Not ready to solve.");
+    error_reporter(ASC_USER_ERROR,NULL,0,"QRSlv: Not ready to solve.");
     return;
   }
 

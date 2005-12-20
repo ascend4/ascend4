@@ -85,6 +85,7 @@ enum stat_t {
   ASGN,         /**< ASSIGNMENT */
   CASGN,        /**< Structural ASSIGNMENT */
   RUN,          /**< RUN statement */
+  TEST,         /**< TEST statement */
   IF,           /**< IF-ELSE statement */
   WHEN,         /**< WHEN statement */
   FNAME,        /**< Name of model or relation */
@@ -163,6 +164,10 @@ struct SwitchList {
 struct StateRUN {
   struct Name *proc_name; /**< procedure name */
   struct Name *type_name; /**< whether 'class access' eg a::b */
+};
+
+struct StateTEST {
+  struct Expr *test;
 };
 
 struct StateIF {
@@ -349,6 +354,7 @@ union StateUnion {
   struct StateRUN        r;
   struct StateCall       call;
   struct StateIF         ifs;
+  struct StateTEST       tests;
   struct StateWHEN       w;
   struct StateFNAME      n;
   struct StateSELECT     se;

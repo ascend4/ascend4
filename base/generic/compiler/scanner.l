@@ -224,6 +224,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"FOR"			{ return FOR_T			; }
 <INITIAL>"FROM"			{ return FROM_T			; }
 <INITIAL>"GLOBAL"		{ return GLOBAL_T		; }
+<INITIAL>"TEST"			{ return TEST_T			; }
 <INITIAL>"IF"			{ return IF_T			; }
 <INITIAL>"IMPORT"		{ return IMPORT_T		; }
 <INITIAL>"IN"			{ return IN_T			; }

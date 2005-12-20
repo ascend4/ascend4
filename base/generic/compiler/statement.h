@@ -368,6 +368,15 @@ extern struct Statement *CreateCALL(symchar *n, struct Set *arglist);
  *  The statement's line number is set to the current line number.
  */
 
+extern struct Statement *CreateTEST(struct Expr *ex);
+/**
+	@param ex test expression.
+
+	Create a TEST statement with test expression 'ex'. If the expression
+	evaluates to false, an error message will be shown. Implemented for use
+	in 'self_test' functionality.
+*/
+
 extern struct Statement *CreateIF(struct Expr *ex,
                                   struct StatementList *ifblock,
                                   struct StatementList *elseblock);
@@ -1726,6 +1735,23 @@ extern struct StatementList *WhileStatBlockF(CONST struct Statement *s);
  * @todo Needs a function wrapper.
  */
 
+/* * * StateTEST functions * * */
+
+/** Return the TEST expression 
+	@param s the expression to test
+	@see TestStatExprF()
+*/
+#ifdef NDEBUG
+# define TestStatExpr(s) ((s)->v.tests.test)
+#else
+# define TestStatExpr(s) TestStatExprF(s)
+#endif
+
+/** Internal implemention of TEST expression
+	@see IfStatExprF()
+*/
+extern struct Expr *TestStatExprF(CONST struct Statement *s);
+
 /* * * StateIf functions * * */
 
 #ifdef NDEBUG
@@ -1735,7 +1761,7 @@ extern struct StatementList *WhileStatBlockF(CONST struct Statement *s);
 #endif
 /**<
  *  Return the IF expression.
- *  @param s CONST struct Statement*, the statement to query.
+ *  @param s the statement to query.
  *  @return The expression as a struct Expr*.
  *  @see IfStatExprF()
  */
