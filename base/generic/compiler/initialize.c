@@ -685,9 +685,9 @@ ExecuteInitTest(struct procFrame *fm, struct Statement *stat){
 		case boolean_value:
 			testerr = 0;
 			if(BooleanValue(value)){
-				ERROR_REPORTER_STAT(ASC_USER_NOTE,stat,"TEST returned 'true'");
+				ERROR_REPORTER_STAT(ASC_USER_SUCCESS,stat,"TEST passed");
 			}else{
-				ERROR_REPORTER_STAT(ASC_USER_ERROR,stat,"Failed test!");
+				ERROR_REPORTER_STAT(ASC_USER_ERROR,stat,"TEST failed");
 			}
 			break;
 		case real_value:
