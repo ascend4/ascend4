@@ -21,7 +21,8 @@ METHOD default_self;
 	RUN values;
 END default_self;
 METHOD self_test;
-	RUN default_self;
+	TEST abs(y - 1) < 1e-20;
+	TEST abs(z - 2.302585093) < 1e-8;
 END self_test;
 
 END testlog10;
