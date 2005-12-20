@@ -1,12 +1,10 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
-
 #
 # Jamfile to build Ascend Tcl/Tk98 interface
 # (see http://www.freetype.org/jam/index.html)
 #
 # This file is part of the Ascend Build System.
 #
-# Copyright (C) 2004  Jerry D. St.Clair
+# Copyright (C) 2004, 2005  Jerry D. St.Clair
 #
 # The Ascend Build System is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public
@@ -26,27 +24,38 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 #
 # UNDER CONSTRUCTION
 #
-# The jam build depends on specialized Jamrules and Jambase files.
-# A central version of these files is currently maintained in
-# ../../jam.  This may change as work proceeds to decouple the
-# Ascend base from the original Tcl/Tk interface.
+# This Jamfile builds the Tcl/Tk interface static library and executable 
+# subsets of ASCEND using the jam build tool.
 #
-#---------------------------------------------------------------------------
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
 #
-# To compile & install the executable:
+# The jam build depends on a specialized Jamrules_tcltk98 file.
+# This file is currently maintained in the same directory as this
+# Jamfile.  See Jamrules_tcltk98.in for more information.
 #
-# Modify the parameters below and in Jamrules for your system, then:
+#-------------------------------------------------------------------------
 #
-#    jam -f ../../jam/Jambase ascend
+# File-specific Build Instructions
+#
+# 1. Follow the general instructions in ../../jam/ReadMe.txt for your platform.
+#
+# 2. Run:
+#    jam  ascend
 #
 #---------------------------------------------------------------------------
 
-# TODO: remove if end up using SubDir rules
-JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
-include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
-include .$(SLASH)Jamrules ;
+SubDir TOP tcltk98 generic ;
+if ! $(JAMRULES_ALREADY_SEEN)
+{
+  include $(TOP)$(SLASH)jam$(SLASH)Jamrules ;
+}
+if ! $(JAMRULES_TCLTK98_ALREADY_SEEN)
+{
+  include $(TOP)$(SLASH)tcltk98$(SLASH)generic$(SLASH)Jamrules_tcltk98 ;
+}
 
-srcdir = ..$(SLASH)generic ;
+srcdir = $(TOP)$(SLASH)tcltk98$(SLASH)generic ;
 
 ASC_INTERFACE_DIR = $(srcdir)$(SLASH)interface ;
 
@@ -104,14 +113,17 @@ MakeLocate $(ASC_TCLTK98_LIB) : $(BUILD_DIR) ;
 # Build the Ascend executable
 Main $(EXE_NAME) : Driver.c ;
 
-ObjectCcFlags $(ASC_TCLTK98_SOURCES) Driver.c : $(SOLVER_DEFS) -DTIMESTAMP="\"\\\"by $(BUILD_CREDIT)\\\"\"" ;
+ObjectCcFlags $(ASC_TCLTK98_SOURCES) Driver.c : 
+  $(SOLVER_DEFS)
+  -DTIMESTAMP="\"\\\"by $(BUILD_CREDIT)\\\"\"" 
+  ;
 
 ObjectHdrs $(ASC_TCLTK98_SOURCES) Driver.c :
   $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_SOURCE_RELPATH)
   $(TK_HDRS)
   ;
 
-LinkLibraries $(EXE_NAME) : $(ASC_TCLTK98_LIB) $(ASC_BASE_LIBS_QUAL) $(PACKAGE_LIBS) ;
+LinkLibraries $(EXE_NAME) : $(ASC_TCLTK98_LIB) $(ASC_BASE_LIBS) $(PACKAGE_LIBS) ;
 LINKLIBS on $(EXE_NAME)$(SUFEXE) +=
     $(FOR_LIBS)
     $(TK_LIBS)

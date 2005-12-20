@@ -1,5 +1,3 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
-
 #
 # Jamfile to build generic Ascend4 blas library
 # (see http://www.freetype.org/jam/index.html)
@@ -32,41 +30,28 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 #
 # If you have a blas library (e.g. libblas.a or libblas.lib) tuned
 # to your hardware, use it instead.  To do that, set the BLASLIB
-# variable in the corresponding Ascend executable Jamfile
-# (e.g. ../../tcltk98/jam/Jamfile) to point that library's
-# location (e.g., /usr/lib/libblas.a or c:\\blas\\lib\\libblas.lib)
+# variable in ../jam/Jamrules to point that library's location 
+# (e.g., /usr/lib/libblas.a or c:\\blas\\lib\\libblas.lib)
 #
-# The Ascend jam build system currently supports building the library
-# under Linux with gcc/g77, and under Windows with the MinGW and
-# Watcom FORTRAN compilers.  With use of the included Jambase file,
-# it should work with both the original (http://www.perforce.com) and
-# ftjam (http://www.freetype.org/jam/index.html) variants of jam.
-# The system was developed primarily using ftjam.
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
 #
-# The library is built in ./CONFIGTYPE/COMPILER where
-#     CONFIGTYPE = Debug, Release
-#     COMPILER   = mingw, watcom, linux
-#
-# Installation of the library or headers is not supported at this time.
 #-------------------------------------------------------------------------
 #
-# Build Instructions
+# File-specific Build Instructions
 #
-# 1. jam must be installed and configured for the OS/compiler in use.
+# 1. Follow the general instructions in ../../jam/ReadMe.txt for your platform.
 #
-# 2. If necessary, manually edit ../../jam/Jamrules_general and this
-#    Jamfile to set configuration and local directory options.
-#
-# 3. Run jam from using the provided Jambase:
-#       jam -f ../../jam/Jambase_general blas
+# 2. To compile blas only, run:
+#       jam blas
 #
 #---------------------------------------------------------------------------
 
-# TODO: remove if end up using SubDir rules
-JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
-include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
-
-srcdir = .. ;
+SubDir TOP blas ;
+if ! $(JAMRULES_ALREADY_SEEN)
+{
+  include $(TOP)$(SLASH)jam$(SLASH)Jamrules ;
+}
 
 DEPENDS all : libs blas ;
 NOTFILE libs blas ;
@@ -94,7 +79,6 @@ if $(FORTRAN)
     ;
 
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)blas ;
-  SEARCH_SOURCE = $(srcdir) ;
 
   Library $(ASC_BLAS_LIBROOT) : $(ASC_BLAS_SOURCES) ;
   MakeLocate $(ASC_BLAS_LIB) : $(BUILD_DIR) ;
@@ -103,5 +87,5 @@ if $(FORTRAN)
 }
 else
 {
-Echo ERROR bulding blas - FORTRAN is required but not defined. ;
+  Echo ERROR bulding blas - FORTRAN is required but not defined. ;
 }

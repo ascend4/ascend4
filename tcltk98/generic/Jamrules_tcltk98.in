@@ -1,12 +1,10 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
-
 #
 # Jamrules support file for building Ascend4
 # (see http://www.freetype.org/jam/index.html)
 #
 # This file is part of the Ascend Build System.
 #
-# Copyright (C) 2004  Jerry D. St.Clair
+# Copyright (C) 2004, 2005  Jerry D. St.Clair
 #
 # The Ascend Build System is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public 
@@ -24,69 +22,50 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
 #
-# UNDER CONSTRUCTION                               
+# UNDER CONSTRUCTION
 #
 # This is a template Jamrules file which supports building the
 # Tcl/Tk version of the Ascend modeling system, as well as a static
 # library of Tcl/Tk interface functionality. The Ascend jam build 
-# system currently supports building the libraries using the MSVC, 
-# Borland, MinGW, and Watcom compilers.
+# system currently supports building the libraries using the gcc 
+# (unix, linux, mingw), MSVC, Borland, and Watcom compilers.
 #
-# INSTALLATION IS NOT WORKING IN THE CURRENT VERSION.
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
 #
-# It is not currently customized by the Ascend configure mechanism,
-# although this may be implemented in the future.
+# This file is customized on unix/linux by configure.
 #
-# Users should copy/rename this file to 'Jamrules', then modify
-# the settings manually for their particular system.  Ascend
-# cannot be built by jam unless the Jambase file is present.
+# On other platforms, users should copy/rename this file to 
+# 'Jamrules_tcltk98', then modify the settings manually for their 
+# particular system.  ASCEND cannot be built by jam unless the 
+# Jamrules_tcltk98 file is present.
 #
-# User-customized Jamrules files should not be placed in version
-# control.  Only the Jamrules.in template should be versioned.
+# User-customized Jamrules_tcltk98 files should not be placed in 
+# version control.  Only the Jamrules_tcltk98.in template should 
+# be versioned.
 #
 #---------------------------------------------------------------------------
 
+JAMRULES_TCLTK98_ALREADY_SEEN = TRUE ;
+
 # root directory for installation
-prefix =  c:\\dev ;
+if $(UNIX) || $(OS) = LINUX
+{
+  prefix = @prefix@ ;
+}
+prefix ?=  c:\\dev ;
 INSTALL_ROOT = $(prefix)$(SLASH)Ascend4-0.9.5 ;
 
-# name of the builder of the executable (in double quotes) 
+# name of the builder of the executable (in double quotes)
 BUILD_CREDIT = "anonymous" ;
 
-# Path to general jam info
-JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
-
-# TODO: Deprecated - remove?
-# Root dir of Ascend base library sources.
-#ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
-
-# TODO: Deprecated - remove?
-# Root dir of Ascend libraries - will be qualified for compiler & build type
-#ASC_BASE_LIBDIR = ..$(SLASH)..$(SLASH)base$(SLASH)jam ;
-
-# root directories for Tcl and Tk libraries
-#TCL_DIR =  ;
-if $(NT)
-{
-  TCL_DIR ?= ..$(SLASH)..$(SLASH)..$(SLASH)Tcl ;
-}
-else if $(UNIX) || $(OS) = LINUX
-{
-  TCL_DIR ?= /usr/local ;
-}
-TK_DIR  = $(TCL_DIR) ;
-
-# Set the Tcl/Tk/tkTable import library names here to override the
-# default, compiler-specific names.  Comment out to use defaults.
-# TCL_LIBRARY = tcl80$(SUFLIB) ;
-# TK_LIBRARY  = tk80$(SUFLIB) ;
-# TKTABLE_LIB = tkTable$(SUFLIB) ;
-
+# name of the executable to create
 if $(NODEBUG)
   { EXE_NAME = ascopt4 ; }
 else
   { EXE_NAME = ascend4 ; }
 
+# name of the tcltk98 library
 ASC_TCLTK98_LIBROOT = libasc_tcltk98 ;
 ASC_TCLTK98_LIB     = $(ASC_TCLTK98_LIBROOT)$(SUFLIB) ;
 
@@ -100,22 +79,22 @@ INSTALL_TCL_DIR     = $(INSTALL_ROOT)$(SLASH)Tcl ;
 
 # Locations of pre-built install files
 ASC_DOC_DIR    = ;
-ASC_MODELS_DIR = ..$(SLASH)..$(SLASH)models ;
-ASC_TK_DIR     = ..$(SLASH)TK ;
+ASC_MODELS_DIR = $(TOP)(SLASH)models ;
+ASC_TK_DIR     = $(TOP)$(SLASH)tcltk98$(SLASH)TK ;
 
 # Paths to base libraries
-ASC_BASE_LIBS_QUAL =
-  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_LIBS_RELPATH)$(ASC_BASE_LIBS) ;
+#ASC_BASE_LIBS_QUAL =
+#  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_LIBS_RELPATH)$(ASC_BASE_LIBS) ;
 
 # Paths to FORTRAN libraries
-FOR_LIBS =
-  $(JAM_GENERAL_DIR)$(SLASH)$(LSODLIB_RELPATH)$(SLASH)$(LSODLIB)
-  $(JAM_GENERAL_DIR)$(SLASH)$(MINOSLIB_RELPATH)$(SLASH)$(MINOSLIB)
-  $(JAM_GENERAL_DIR)$(SLASH)$(CONOPTLIB_RELPATH)$(SLASH)$(CONOPTLIB)
-  $(JAM_GENERAL_DIR)$(SLASH)$(LPAKLIB_RELPATH)$(SLASH)$(LPAKLIB)
-  $(JAM_GENERAL_DIR)$(SLASH)$(BLASLIB_RELPATH)$(SLASH)$(BLASLIB)
-  $(F77_LIBS)
-  ;
+#FOR_LIBS =
+#  $(JAM_GENERAL_DIR)$(SLASH)$(LSODLIB_RELPATH)$(SLASH)$(LSODLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(MINOSLIB_RELPATH)$(SLASH)$(MINOSLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(CONOPTLIB_RELPATH)$(SLASH)$(CONOPTLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(LPAKLIB_RELPATH)$(SLASH)$(LPAKLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(BLASLIB_RELPATH)$(SLASH)$(BLASLIB)
+#  $(F77_LIBS)
+#  ;
 
 #======================================================================
 # TCL / TK
@@ -129,12 +108,51 @@ FOR_LIBS =
 #
 # If TK_LIBS and TK_HDRS are not properly set, ASCEND cannot build.
 #======================================================================
-TCL_LIB_DIR     ?= $(TCL_DIR)$(SLASH)lib ;
-TK_LIB_DIR      ?= $(TK_DIR)$(SLASH)lib ;
-TKTABLE_LIB_DIR ?= $(TCL_DIR)$(SLASH)lib ;
-
-if $(NT)
+# Here's the unix/Linux version
+if $(UNIX) || $(OS) = LINUX
 {
+  TCL_LIBRARY = @TCL_LIB@ ;
+  TK_LIBRARY  = @TK_LIB@ ;
+  TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) $(DL_LIBS) ;
+
+  #  The location of the tcl.h and tk.h header files
+  TK_INCS  = @TCL_HDR@ @TK_HDR@ ;
+
+  #  We also need the TkTable widget which does not come as a
+  #  standard part of the Tcl/Tk distribution.  This library can
+  #  either be loaded statically or dynamically.  If the configure
+  #  script found libTktable.a, use static loading; otherwise, use
+  #  dynamic loading.
+  #
+  HAVE_TKTABLE = @HAVE_TKTABLE@ ;
+  TKTABLE_LIB = @TKTABLE_LIB@ ;
+}
+
+# And here's the Windows version
+else if $(NT)
+{
+  # The top-level Tcl/Tk directories:
+  TCL_DIR = C:\\dev\\Tcl ;
+  TK_DIR  = $(TCL_DIR) ;
+
+  #  Location of the tcl.h and tk.h header files
+  TK_HDRS = $(TK_DIR)$(SLASH)include ;
+  if $(TCL_DIR) != $(TK_DIR)
+  {
+    TK_HDRS += $(TCL_DIR)$(SLASH)include ;
+  }
+
+  # the locations of the tcl, tk, and tktable libraries
+  TCL_LIB_DIR     = $(TCL_DIR)$(SLASH)lib ;
+  TK_LIB_DIR      = $(TK_DIR)$(SLASH)lib ;
+  TKTABLE_LIB_DIR = $(TCL_DIR)$(SLASH)lib ;
+
+  # Set the Tcl/Tk/tkTable import library names here to override the
+  # default, compiler-specific names below.  Comment out to use defaults.
+#  TCL_LIBRARY = libtcl8.0$(SUFLIB) ;
+#  TK_LIBRARY  = libtk8.0$(SUFLIB) ;
+#  TKTABLE_LIB = libTktable2.8$(SUFLIB) ;
+
   if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
   {
     TCL_LIBRARY ?= tcl80_bc$(SUFLIB) ;
@@ -159,30 +177,16 @@ if $(NT)
     TK_LIBRARY  ?= tk80_wat$(SUFLIB) ;
     TKTABLE_LIB ?= tkTable_wat$(SUFLIB) ;
   }
-}
-else if $(UNIX) || $(OS) = LINUX
-{
-    TCL_LIBRARY ?= libtcl80$(SUFLIB) ;
-    TK_LIBRARY  ?= libtk80$(SUFLIB) ;
-    TKTABLE_LIB ?= libtkTable$(SUFLIB) ;
-}
-else
-{
-    TCL_LIBRARY ?= tcl80$(SUFLIB) ;
-    TK_LIBRARY  ?= tk80$(SUFLIB) ;
-    TKTABLE_LIB ?= tkTable$(SUFLIB) ;
-}
 
-#  The tcl and tk library files
-TK_LIBS =
-  $(TK_LIB_DIR)$(SLASH)$(TK_LIBRARY)
-  $(TCL_LIB_DIR)$(SLASH)$(TCL_LIBRARY)
-  ;
+  #  The tcl and tk library files (derived from variable set above)
+  TK_LIBS =
+    $(TK_LIB_DIR)$(SLASH)$(TK_LIBRARY)
+    $(TCL_LIB_DIR)$(SLASH)$(TCL_LIBRARY)
+    ;
 
-TKTABLE_LIB = $(TKTABLE_LIB_DIR)$(SLASH)$(TKTABLE_LIB) ;
-
-#  Location of the tcl.h and tk.h header files
-TK_HDRS     = $(TK_DIR)$(SLASH)include ;
+  #  The tktable library file (derived from variable set above)
+  TKTABLE_LIB = $(TKTABLE_LIB_DIR)$(SLASH)$(TKTABLE_LIB) ;
+}
 
 # Uncomment to copy Tcl/Tk dynamic libraries to install bin directory
 INSTALL_TCLTK_LIBS = 1 ;

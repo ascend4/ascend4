@@ -453,7 +453,7 @@ extern dof_t *slv_get_log_dofdata(slv_system_t server);
 	some interpretation of the solvers_var/rel lists.
 	The pointer this returns cannot be freed.
 	If server is not NULL, the return value will not be NULL.
-	
+
 	@TODO The DEFAULT interpretation has not yet been established.
 */
 
@@ -604,7 +604,7 @@ extern void slv_set_solvers_rel_list(slv_system_t sys,
 
 	@see slv_set_solvers_bnd_list()
 */
- @par
+
 extern void slv_set_solvers_condrel_list(slv_system_t sys,
                                          struct rel_relation **clist,
                                          int size);

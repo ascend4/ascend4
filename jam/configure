@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "I AM DEPRECATED.  Please use configure in ../base/unixAC231!"
+
 if [ -e Jamrules_general ]; then
 	if [ ! -e Jamrules_general.old ]; then
 		echo "Moving Jamrules_general out of the way..."

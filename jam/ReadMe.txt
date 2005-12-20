@@ -1,54 +1,110 @@
 
-BUILDING ASCEND with JAM
+BUILDING ASCEND WITH JAM
 ------------------------
 
-The files in this directory support building the Ascend
+The files in this directory support building the ASCEND
 libraries and executables using the jam* build tool.
 
 The following files are included:
 
-  Jamrules_general.in - configuration & custom build rules used 
-                        by Jamfiles
-  Jambase             - lightly customized version of standard 
-                        build rules (primarily to shore up support
-                        for different compilers)
+  Jamfile     - top-level Jamfile for building ASCEND
 
-The Ascend jam build system currently supports building under Windows 
-using the MSVC, Borland, MinGW, and Watcom** compilers, and under
-Linux using gcc/g77.  With use of the included Jambase file, it should 
-work with both the original and ftjam variants of jam. However, the
-system was developed primarily using ftjam.
+  Jamrules.in - configuration & custom build rules used by Jamfiles
 
-Automatic processing of Jamrules_general.in to Jamrules_general by
-configure is not currently implemented.  A skeleton script
-'configure' is provided which will copy the 'Jamrules_general.in' file
-to 'Jamrules_general'. This file then needs to be hand-editied for
-your local preferences and configuration.
+  Jambase     - lightly customized version of standard build rules
+              - primarily to shore up support for different compilers
+              - optional in most cases
+
+Other subdirectories of the source trees contain additional files used
+to build ASCEND with jam:
+
+  ../base/generic/Jamfile    - builds the ASCEND base libraries
+  ../blas/Jamfile            - builds the blas library
+  ../linpack/Jamfile         - builds the linpack library
+  ../lsod/Jamfile            - builds the LSODE library
+  ../tcltk98/generic/Jamfile - builds the tcltk98 executable
+  ../tcltk98/generic/Jamrules_tcltk98.in
+                             - configuration & custom build rules used
+                               build the tcltk98 executable
 
 
-Build Instructions - Linux
---------------------------
+The ASCEND jam build system intends to support building under Windows
+using the MinGW/gcc, MSVC, Borland, and Watcom** compilers, and under
+unix/linux using gcc/g77.  With use of the included custom Jambase file,
+it should work with both the original and ftjam variants of jam.
+However, the system was developed primarily using ftjam.  For best
+results using your default Jambase, use of ftjam is recommended and
+probably required.
+
+Automatic processing of Jamrules.in and ../tcltk98/generic/Jamrules_tcltk98.in
+by configure has now been implemented for systems supporting autoconf.
+Configure should automatically set most necessary build options, although
+some manual tweaking may still be necessary.  The configure.in file is
+currently housed in ../base/unixAC213.  This may be relocated to a more
+general location in the future.  For now, it is necessary to run autoconf &
+configure from that directory, and then come back here to run jam.
+
+Building ASCEND requires compatible C and FORTRAN compilers.  The official
+distributions are built using gcc, which provides both of these.
+
+
+Build Instructions - Linux/Unix
+-------------------------------
 
 You can build the Jam static libraries on Linux at present:
 
 1. jam must be installed and configured for the compiler in use.
 
-2. Run ./configure 
-   See above comments -- this script is just a skeleton at the moment
+2. (a) If using autoconf, perform the following steps:
 
-3. Manually edit Jamrules_general to set configuration and local
+      - cd ../base/unixAC213
+      - autoconf (if necessary)
+      - ./configure {using the usual options such as --enable-gcc,
+                     --with-tcl, --with-tk, --with-tktable}
+      - cd ../../jam
+
+   (b) If NOT using autoconf, manually copy the following files:
+   
+      - ./Jamrules.in  -->  ./Jamrules
+      - ../tcltk98/generic/Jamrules_tcltk98.in  --> 
+                    ../tcltk98/generic/Jamrules_tcltk98
+
+3. If necessary or desired, manually edit the generated ./Jamrules and
+   ../tcltk98/generic/Jamrules_tcltk98 files to set configuration and local
    directory options.  These settings are used by all the Jamfiles
-   in the Ascend source tree.
+   in the ASCEND source tree.
 
-4. Change directory to base/generic/jam, type 'jam libs'
+4. Run jam to generate the desired output:
 
-The static libraries will end up in base/generic/jam/Release/linux
+       jam all       builds all libraries, executable, test suite
+       jam libs      builds base, blas, linpack, and lsode static libs
+       jam ascend    builds the ASCEND executable (will build libs as needed)
+       jam test      builds the test suite (will build libs as needed)
+       jam blas      builds the blas library
+       jam linpack   builds the linpack library
+       jam lsode     builds the lsode library
+
+   NOTE - if there is a problem with jam setting basic options (e.g. CC = gcc),
+          there are 2 possible workarounds.  First, use the custom Jambase
+          file (jam -f Jambase ...) which more reliably sets these basic
+          compilation options.  Or, explicitly specify the symbol in
+          question (jam -sCC=gcc ...).  We have not quite figured out how
+          to make sure these get set when defined in other than Jambase.
+
+   All built files will be placed in ./CONFIGTYPE/PLATFORM where
+          CONFIGTYPE = Debug, Release
+          PLATFORM   = linux, mingw, bcc, msvc, mingw, watcom
+
+
+Installation of the executables, libraries and headers is under development.
+Installation should be assumed not to work at this time.
+
 
 Build Instructions - Windows
 ----------------------------
 
-As above, but instead of steam (2.) you need to manualy copy the
-Jamrules_general.in file to Jamrules_general.
+Same as for Linux/Unix above, except you will need to follow 2b since 
+the autotools are not generally available.
 
 
 Notes
@@ -60,10 +116,14 @@ Notes
   (http://www.freetype.org/jam/index.html) variants,
   among others.
 
-** Currently, Open Watcom 1.3 can compile the Ascend sources
+** Currently, Open Watcom 1.3 can compile the ASCEND sources
   and build the libraries.  However, it does not supply the required
-  IEEE math functions isnan() and copysign().  At present, Ascend does
+  IEEE math functions isnan() and copysign().  At present, ASCEND does
   not supply these, so the user must provide these functions to use
   the libraries under Watcom.
 
-Updated Dec 6 2005 -- johnpye
+
+For more information on building ASCEND using JAM
+please see the Wiki document at
+https://pse.cheme.cmu.edu/wiki/view/Ascend/Jam
+

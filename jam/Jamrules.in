@@ -1,5 +1,3 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
-
 #
 # General Jamrules support file for building Ascend4
 # (see http://www.freetype.org/jam/index.html)
@@ -29,31 +27,38 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 # This is a template Jamrules file which supports building the
 # Ascend libraries and executables.  It contains general variable
 # and rule definitions required for execution of jam in any of the
-# source subdirectories.  The Ascend jam build system currently
-# supports the MSVC, Borland, MinGW, and Watcom compilers
-# (extension to gcc on Linux is on the TODO: list).
+# source subdirectories.
 #
-# This file is not currently customized by the configure mechanism,
-# although this may be implemented in the future.
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
 #
-# Users should copy/rename this file to 'Jamrules_general', then
-# modify the settings manually for their particular system.
-# Ascend cannot be built by jam unless the Jamrules_general file
-# is present.
+# This file is customized on unix/linux by configure.
 #
-# User-customized Jamrules_general files should not be placed in
-# version control.  Only the Jamrules_general.in template should
-# be versioned.
+# On other platforms, users should copy/rename this file to 'Jamrules',
+# then modify the settings manually for their particular system.
+# Ascend cannot be built by jam unless the Jamrules file is present.
+#
+# User-customized Jamrules files should not be placed in version
+# control.  Only the Jamrules.in template should be versioned.
 #
 #---------------------------------------------------------------------------
 
+JAMRULES_ALREADY_SEEN = TRUE ;
+
+# The slash thing gets messed up sith SubDir somehow - make sure it's correct!
+SLASH = / ;
+if $(NT)
+{
+  SLASH = \\ ;
+}
+
 # Comment to compile with debugging & assertions enabled.
 # Should be commented for regression tests to work properly.
-NODEBUG = 1 ;
+#NODEBUG = 1 ;
 
 # Comment to compile without using the Epperly malloc debugger
 # Should be UNcommented for regression tests to work properly.
-#DEBUG_MALLOC = -DMALLOC_DEBUG ;
+DEBUG_MALLOC = -DMALLOC_DEBUG -DALLOCATED_TESTS ;
 
 #======================================================================
 # PACKAGES
@@ -63,9 +68,9 @@ NODEBUG = 1 ;
 # or, in general, any bits of external code.
 #
 # Choose one of the following, comment out the others:
-#			STATIC_PACKAGES		packages should be statically linked/loaded
-#			DYNAMIC_PACKAGES	packages should be dynamically linked/loaded
-#			NO_PACKAGES				no packages
+#    STATIC_PACKAGES    packages should be statically linked/loaded
+#    DYNAMIC_PACKAGES   packages should be dynamically linked/loaded
+#    NO_PACKAGES        no packages
 #
 # If STATIC_PACKAGES are chosen, also indicate the location of
 # the packages in PACK_LIBS.	Otherwise leave PACK_LIBS empty.
@@ -81,12 +86,11 @@ PACK_LIBS = $(ASC_PACKAGES_LIB_PATH) ;
 # SIGNAL TRAPS
 #
 # If you want to be able to interrupt ASCEND with ctrl-C, then comment the
-# following line. Uncomment the line for the default (can't interrupt with
-# ctrl-C) behaviour.
+# following line. Uncomment the line for disabling of ctrl-C.
 #
 # Comment the line for regression testing to work properly.
 #======================================================================
-CCFLAGS += -DNO_SIGINT_TRAP -DNO_SIGSEGV_TRAP ;
+#CCFLAGS += -DNO_SIGINT_TRAP -DNO_SIGSEGV_TRAP ;
 
 #---------------------------------------------------------------------------
 
@@ -100,30 +104,20 @@ YACCFLAGS = -d ;
 YACCFILES = y.tab ;
 LEX       = flex ;
 
-# Location of system libraries on Linux.
-# TODO This is a hack and needs to be redone.
-if $(UNIX) || $(OS) = LINUX
-{
-  DL_LIB_DIRS   = /usr/lib ;
-  X11_LIB_DIRS  = /usr/X11R6/lib ;
-  MATH_LIB_DIRS = /usr/lib ;
-  FOR_LIB_DIRS  = /usr/lib/gcc/i586-mandrake-linux-gnu/3.4.1 ;
-}
-
 #======================================================================
 #  General build options
 #======================================================================
 # Build directory - - will be qualified for compiler & build type
-BUILD_DIR_ROOT = $(DOT) ;
+BUILD_DIR_ROOT = $(TOP)$(SLASH)jam ;
 
 # Comment for normal jam deletion of object files after building targets
 KEEPOBJS = true ;
 
+#---------------------------------------------------------------------------
 # platform-independent options
+#---------------------------------------------------------------------------
 # sizeof(void*) - change value if not a typical 32-bit system
 SIZEOF_VOIDPTR = 4 ;
-
-# Added $(PACKAGE_FLAGS)
 CCFLAGS += $(PACKAGE_FLAGS) -DSIZEOF_VOID_P=$(SIZEOF_VOIDPTR) ;
 
 if $(NODEBUG)
@@ -136,15 +130,23 @@ else
   BUILD_SUBDIR = $(SLASH)Debug ;
 }
 
+#---------------------------------------------------------------------------
 # platform- & complier-specific options
+#---------------------------------------------------------------------------
 if $(NT)
 {
+  # Windows-specific commands not done right in Jambase
+  RM = del ;
+  MV = move /Y ;
+
   # Windows-specific defines
   CCFLAGS += -D_X86_=1 -DWIN32 -D_WIN32 -DASC_BUILD_LIB ;
   SUFSHR = .dll ;
 
   if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
   {
+    CC = bcc32 ;
+    C++ = $(CC) ;
     FORTRAN = ;
     CCFLAGS   += -q -d -g0 -j0 -K -DMOD_ASCMALLOC ;
     CCWARN    = -w ;
@@ -157,12 +159,15 @@ if $(NT)
       CCDEBUG = -v -y -Od ;
     }
     C++FLAGS  = $(CCFLAGS) ;
+    LINKFLAGS += -L$(STDLIBPATH) ;
     COFF2OMF = coff2omf ;  # add location if not in path
     BUILD_SUBDIR = $(BUILD_SUBDIR)$(SLASH)bcc ;
   }
 
   else if $(MSVCNT) || ( $(TOOLSET) = VISUALC )
   {
+    CC = cl /nologo ;
+    C++ = $(CC) ;
     FORTRAN = ;
     CCFLAGS   += /Ze ;
     CCWARN    = /W4 ;
@@ -187,8 +192,8 @@ if $(NT)
 
   else if $(MINGW) || ( $(TOOLSET) = MINGW )
   {
-    FORTRANFLAGS = -c -I4 -O ;
-    F77_LIBS += $(MINGW)$(SLASH)lib$(SLASH)libg2c.a ;
+    CC = gcc ;
+    C++ = $(CC) ;
 
     CCFLAGS += -DHAVE_ERF=1 ;
     # uncomment to select desired warning level and ansi-strictness
@@ -209,11 +214,19 @@ if $(NT)
       CCFLAGS += -ggdb ;
     }
     C++FLAGS  = $(CCFLAGS) ;
+
+    FORTRAN = g77 ;
+    FORTRANFLAGS = -c -I4 -O ;
+    F77_LIBS = $(MINGW)$(SLASH)lib$(SLASH)libg2c.a ;
+
     BUILD_SUBDIR = $(BUILD_SUBDIR)$(SLASH)mingw ;
   }
 
   else if $(WATCOM) || ( $(TOOLSET) = WATCOM )
   {
+    CC          = wcc386 ;
+    C++         = wpp386 ;
+    FORTRAN     = wfc386 ;
     FORTRANFLAGS = /NOER ;
     CCFLAGS += /fr /dMOD_ASCMALLOC ;
     CCWARN    = /wx ;
@@ -233,7 +246,12 @@ if $(NT)
 
 else if $(UNIX) || $(OS) = LINUX
 {
-  SUFSHR = .so ;
+  SUFSHR = @SHLIB_SUFFIX@ ;
+  CC = @CC@ ;
+  CPP = @CPP@ ;
+
+  # DEFS = defines generated by configure
+  CCFLAGS += @DEFS@ ;
   if $(CC) = gcc {
 
     if $(NODEBUG)
@@ -254,10 +272,68 @@ else if $(UNIX) || $(OS) = LINUX
     #CCWARN += -Wshadow ;
     #CCWARN += -ansi ;
     CCWARN += -std=c99 ;
-
-    FORTRANFLAGS = -c -I4 -O ;
-
   }
+
+  #  YACC
+  #  On some old systems yacc writes some K&R extern definitions to
+  #  the .c file that it generates. This has caused havoc on at least
+  #  one system. Define your yacc here. For the Suns in particular
+  #  /usr/lang/SC1.0/ansi/yacc was required. If you cannot find an ansi
+  #  compatible yacc, delete the 'extern char *malloc(), realloc() definitions
+  #  if generated at the top of your .c created from the .y file.
+  #
+  YACC = @YACC@ ;
+
+  #  LEX
+  #  We require the flex lexer
+  #
+  LEX = @LEX@ ;
+  LEXLIB = @LEXLIB@ ;
+
+  #  Some compilers need to be told where to find the math libraries
+  #  -L$(MATH_LIB_DIRS) -lieee -lm  ;
+  MATH_LIBS = @MATH_LIBS@ ;
+
+  #  The interface and 1 file in the solver directory need to know where the
+  #  include files and library for X11 are. If your C compiler doesn't know
+  #  automatically where the X files are, or if they are in a non-standard
+  #  place, set the following variables to point at them.  These should be
+  #  the same X files that Tk was built with on your system.
+  #  Most systems do not need these variables to be set.
+  #
+  #  The include and library files for X11:
+  X11_INCS = @X11_INCLUDES@ ;
+  X11_LIBS = @X11_LIBRARIES@ -lX11 @X11_EXTRA_LIBS@ @X11_RUN_PATH@ ;
+
+  #  Library file(s) to link against for dynamic loading to work
+  DL_LIBS = @DL_LIBS@ ;
+
+  #  FORTRAN options
+  #  your f77 compiler
+  FORTRAN = @F77@ ;
+
+  #  Fortran compilation flags:
+  #  These are used for making the ASCEND libraries based on FORTRAN codes.
+  #  These should be set to get the best performance possible out of your
+  #  f77 compiler without optimizing away functions that are not obviously
+  #  called, as some compilers do by default.
+  #
+  F77FLAGS = -c -I4 -O ;
+  #
+  #  F77LIBS is for the base f77 libraries. If you are linking no f77
+  #  objects to ascend, it may be left undefined.
+  #  Set F77LIBS appropriate for your machine and desired loader behavior.
+  #  -L$(FOR_LIB_DIRS) -lg2c ;
+  #
+  F77_LIBS += @F77LIBS@ ;
+  #
+  #  F77_OPTS are for miscellaneous options, such as -tmpdir=
+  #
+  F77_OPTS =  ;
+  #
+  #  All the flags to pass to F77
+  #
+  FORTRANFLAGS = $(F77FLAGS) $(F77_OPTS) ;
 
   BUILD_SUBDIR = $(BUILD_SUBDIR)$(SLASH)linux ;
 }
@@ -290,8 +366,8 @@ ASC_BASE_LIBS =
   ;
 
 # Path to base library sources & libs from top-level jam directory
-ASC_BASE_SOURCE_RELPATH = ..$(SLASH)base$(SLASH)generic ;
-ASC_BASE_LIBS_RELPATH   = ..$(SLASH)base$(SLASH)jam$(SLASH)$(BUILD_DIR)$(SLASH) ;
+ASC_BASE_SOURCE_RELPATH = $(TOP)$(SLASH)base$(SLASH)generic ;
+ASC_BASE_LIBS_RELPATH   = $(BUILD_DIR)$(SLASH) ;
 
 #======================================================================
 # SOLVERS / INTEGRATORS
@@ -303,63 +379,128 @@ ASC_BASE_LIBS_RELPATH   = ..$(SLASH)base$(SLASH)jam$(SLASH)$(BUILD_DIR)$(SLASH) 
 #  almost certainly get runtime errors if not link errors.
 #======================================================================
 
-# >>>>  UNDER CONSTRUCTION  <<<<
-
+#------------------------------------------------------------------------------
 #  Slv is the original ASCEND nonlinear solver.  It is not currently supported.
-#  to build with slv, uncomment the next line.
+#  To build with slv:
+#     - add -DSTATIC_SLV or -DDYNAMIC_SLV (unsupported) to SOLVER_DEFS
+#
 #SOLVER_DEFS += -DSTATIC_SLV ;
 
-#  Opt is not currently supported.
-#  to build with optsqp, uncomment the next line
-#SOLVER_DEFS += -DSTATIC_OPTSQP ;
+#------------------------------------------------------------------------------
+#  OptSQP is an interface to the Larry Biegler OPT code.
+#  It is not currently supported.
+#  To build with optsqp:
+#     - add -DSTATIC_OPTSQP or -DDYNAMIC_OPTSQP (unsupported) to SOLVER_DEFS
+#     - add location of OPT library to FOR_LIBS
+#
+if $(UNIX) || $(OS) = LINUX
+{
+#  SOLVER_DEFS += @HAVE_OPTSQP@ ;
+#  FOR_LIBS += @OPTSQPLIB@ ;
+}
+else
+{
+  #SOLVER_DEFS += -DSTATIC_OPTSQP ;
+  #FOR_LIBS += ;
+}
 
+#------------------------------------------------------------------------------
 #  QRSlv is the current ASCEND nonlinear algebraic solver.
-#  to build with qrslv, uncomment the next line
+#  To build with slv:
+#     - add -DSTATIC_SLV or -DDYNAMIC_SLV (unsupported) to SOLVER_DEFS
+#
 SOLVER_DEFS += -DSTATIC_QRSLV ;
 
+#------------------------------------------------------------------------------
 #  makeMPS is currently not supported.
-#  to build with mps, uncomment the next line
+#  To build with mps:
+#     - add -DSTATIC_MPS or -DDYNAMIC_MPS (unsupported) to SOLVER_DEFS
+#
 #SOLVER_DEFS += -DSTATIC_MPS ;
 
-#  to build with ngslv, uncomment the next line
+#------------------------------------------------------------------------------
+#  NGSlv is an experimental solver (Ken Tyner) that is not currently supported
+#  To build with NGSlv:
+#     - add -DSTATIC_NGSLV or -DDYNAMIC_NGSLV (unsupported) to SOLVER_DEFS
+#
 #SOLVER_DEFS += -DSTATIC_NGSLV ;
 
-#  to build with cmslv (requires CONOPT), uncomment the next line
+#------------------------------------------------------------------------------
+#  CMSlv is the ASCEND conditional modeling solver (requires CONOPT).
+#  To build with cmslv:
+#     - add -DSTATIC_CMSLV or -DDYNAMIC_CMSLV (unsupported) to SOLVER_DEFS
+#
 #SOLVER_DEFS += -DSTATIC_CMSLV ;
 
-#  to build with lrslv, uncomment the next line
+#------------------------------------------------------------------------------
+#  LRSlv is the ASCEND logical relation solver.
+#  To build with lrslv:
+#     - add -DSTATIC_LRSLV or -DDYNAMIC_LRSLV (unsupported) to SOLVER_DEFS
+#
 #SOLVER_DEFS += -DSTATIC_LRSLV ;
 
-#  TODO the configure script sets the following depending on its search for minos.
-#  Minos is an external solver.  It is not currently supported.
-#  to force a build WITHOUT minos, comment the next line
-#SOLVER_DEFS += -DSTATIC_MINOS ;
-#
-# Name & path to the minos library
-#MINOSLIB =  ;
-#MINOSLIB_RELPATH = ;
+#------------------------------------------------------------------------------
+#  MINOS is an interface to the MINOS solver.  It is not currently functional.
+#  To build with minos:
+#     - add -DSTATIC_MINOS or -DDYNAMIC_MINOS (unsupported) to SOLVER_DEFS
+#     - add location of MINOS library to FOR_LIBS
+if $(UNIX) || $(OS) = LINUX
+{
+#  SOLVER_DEFS += @HAVE_MINOS@ ;
+#  FOR_LIBS += @MINOSLIB@ ;
+}
+else
+{
+  #SOLVER_DEFS += -DSTATIC_MINOS ;
+  #FOR_LIBS += ;
+}
 
-# TODO the configure script sets the following depending on its search for conopt.
-#  to force a build WITHOUT conopt, comment the next line
-#SOLVER_DEFS += -DSTATIC_CONOPT ;
-#
-# Path to the conopt library
-#CONOPTLIB =  ;
-#CONOPTLIB_RELPATH = ;
+#------------------------------------------------------------------------------
+#  CONOPT is an interface to the proprietary CONOPT solver.
+#  To build with conopt:
+#     - add -DSTATIC_CONOPT or -DDYNAMIC_CONOPT (unsupported) to SOLVER_DEFS
+#     - add location of CONOPT library to FOR_LIBS
+if $(UNIX) || $(OS) = LINUX
+{
+#  SOLVER_DEFS += @HAVE_CONOPT@ ;
+#  FOR_LIBS += @CONOPTLIB@ ;
+}
+else
+{
+  #SOLVER_DEFS += -DSTATIC_CONOPT ;
+  #FOR_LIBS += ;
+}
 
-# TODO the configure script sets the following depending on its search for lsode.
-# Choose one of the following to build with lsode, comment both to build WITHOUT lsode
-SOLVER_DEFS += -DSTATIC_LSOD ;
-#SOLVER_DEFS += -DDYNAMIC_LSOD ;
+#------------------------------------------------------------------------------
+#  LSODE is an ODE solver.  ASCEND is distributed with a standard lsode
+#  implementation that can be used if you have FORTRAN and don't have an
+#  optimized LSODE library.
+#  To build with lsode:
+#     - add -DSTATIC_LSOD or -DDYNAMIC_LSOD to SOLVER_DEFS
+#     - if you are providing an optimized lsode library:
+#           - add the location of the library to FOR_LIBS
+#           - set BUILD_LSODE = FALSE to disable building of the standard lsode
 #
-# Name & path to the lsode library.  Comment out if not using lsode.
-ASC_LSOD_LIBROOT = liblsode ;
-ASC_LSOD_LIB     = $(ASC_LSOD_LIBROOT)$(SUFLIB) ;
-LSODLIB_RELPATH  = ..$(SLASH)lsod$(SLASH)jam$(SLASH)$(BUILD_DIR) ;
-LSODLIB = $(ASC_LSOD_LIB) ;
+if $(UNIX) || $(OS) = LINUX
+{
+  SOLVER_DEFS += @HAVE_LSOD@ ;
+  if ! @make_lsodlib@
+  {
+    BUILD_LSODE = FALSE ;
+    FOR_LIBS += @LSODLIB@ ;
+  }
+}
+else
+{
+  SOLVER_DEFS += -DSTATIC_LSOD ;
+  FOR_LIBS += ;
+  # uncomment the following if you are providing an external lsode library
+#  BUILD_LSODE = FALSE ;
+}
+BUILD_LSODE ?= TRUE ;
 
 #======================================================================
-# FORTRAN options - set to override compiler defaults
+# FORTRAN options - set to override configure defaults
 #======================================================================
 #  Your FORTRAN compiler
 #FORTRAN = g77 ;
@@ -377,54 +518,38 @@ LSODLIB = $(ASC_LSOD_LIB) ;
 #  Set F77LIBS appropriate for your machine and desired loader behavior.
 #
 #F77_LIBS = ;
-if $(UNIX) || $(OS) = LINUX
-{
-  F77_LIBS = -L$(FOR_LIB_DIRS) -lg2c ;
-}
 
 #======================================================================
 # FORTRAN Support Libraries
 #
 # Point BLASLIB and LPAKLIB to machine-specific BLAS and LINPACK
 # libraries (if you have them) to get the best speed out of ASCEND.
-# Otherwise, generic versions can be built if FORTRAN is available.
+# Otherwise, generic versions will be built if FORTRAN is available.
 #======================================================================
 
 # Name & path to the blas library
 ASC_BLAS_LIBROOT = libblas ;
 ASC_BLAS_LIB     = $(ASC_BLAS_LIBROOT)$(SUFLIB) ;
-BLASLIB_RELPATH  = ..$(SLASH)blas$(SLASH)jam$(SLASH)$(BUILD_DIR) ;
-BLASLIB = $(ASC_BLAS_LIB) ;
+BLASLIB_PATH     = $(BUILD_DIR) ;
+BLASLIB = $(BLASLIB_PATH)$(SLASH)$(ASC_BLAS_LIB) ;
 
 # Name & path to the linpack library
 ASC_LINPACK_LIBROOT = liblpak ;
 ASC_LINPACK_LIB     = $(ASC_LINPACK_LIBROOT)$(SUFLIB) ;
-LPAKLIB_RELPATH     = ..$(SLASH)linpack$(SLASH)jam$(SLASH)$(BUILD_DIR) ;
-LPAKLIB = $(ASC_LINPACK_LIB) ;
+LPAKLIB_PATH        = $(BUILD_DIR) ;
+LPAKLIB = $(LPAKLIB_PATH)$(SLASH)$(ASC_LINPACK_LIB) ;
 
-#======================================================================
-# Math libraries
-#======================================================================
-if $(UNIX) || $(OS) = LINUX
+# Name & path to the internal lsode library.
+if $(BUILD_LSODE) = TRUE
 {
-  MATH_LIBS = -L$(MATH_LIB_DIRS) -lieee -lm  ;
+  Echo Building internal LSODE library ;
+  ASC_LSOD_LIBROOT = liblsode ;
+  ASC_LSOD_LIB     = $(ASC_LSOD_LIBROOT)$(SUFLIB) ;
+  LSODLIB_PATH     = $(BUILD_DIR) ;
+  LSODLIB = $(LSODLIB_PATH)$(SLASH)$(ASC_LSOD_LIB) ;
 }
 
-#======================================================================
-# Dynamic loading support
-#======================================================================
-if $(UNIX) || $(OS) = LINUX
-{
-  DL_LIBS = -L$(DL_LIB_DIRS) -ldl ;
-}
-
-#======================================================================
-# X11
-#======================================================================
-if $(UNIX) || $(OS) = LINUX
-{
-  X11_LIBS = -L$(X11_LIB_DIRS) -lX11  ;
-}
+FOR_LIBS += $(LSODLIB) $(LPAKLIB) $(BLASLIB) $(F77_LIBS) ;
 
 #======================================================================
 # Ascend-specific jam instructions
@@ -470,5 +595,3 @@ actions Lex_with_options
 {
   $(LEX) $(LEXOPTS) -o$(1) $(2)
 }
-
-
