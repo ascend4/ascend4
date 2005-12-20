@@ -30,20 +30,21 @@
  */
 
 /** @file
- *  Root finding routine for the SLV solver.
- *  <pre>
- *  Requires:     #include "utilities/ascConfig.h"
- *
- *                #ifndef STAND_ALONE
- *                    #include "extfunc.h"  (for ExtValFunc())
- *                #else
- *                    #include "codegen_support.h"
- *                #endif
- *  </pre>
- *  @todo extfunc.h needed only for the definition of ExtEvalFunc -
- *        This definition should probably be moved to types.h. or compiler.h
- *  @todo codegen_support.h not in base/generic/solver - need to update include?
- */
+	Root finding routine for the SLV solver.
+	<pre>
+	Requires:     #include "utilities/ascConfig.h"
+	
+	              #ifndef STAND_ALONE
+	                  #include "extfunc.h"  (for ExtValFunc())
+	              #else
+	                  #include "codegen_support.h"
+	              #endif
+	</pre>
+	@todo extfunc.h needed only for the definition of ExtEvalFunc -
+	      This definition should probably be moved to types.h. or compiler.h
+
+	@todo codegen_support.h not in base/generic/solver - need to update include?
+*/
 
 #ifndef ASC_ROOTFIND_H
 #define ASC_ROOTFIND_H
@@ -60,26 +61,29 @@ extern double zbrent(ExtEvalFunc *func,
                      double *g,
                      double *tolerance,
                      int *status);
-/**<
- *  Using Brents method, find the root of a function known to lie
- *  between x1 and x2. The root, returned as zbrent, will be refined
- *  until its accuracy is tol. The result of status must be monitored
- *  to see if we were successful. A nonzero code means that the result
- *  returned is erroneous. n is the index into the x vector of the variable
- *  that is to be solved for.
- *  @param func      The evaluation function.
- *  @param lowbound  Lower bound.
- *  @param upbound   Upper bound.
- *  @param mode      Passed to the eval func.
- *  @param m         The relation index.
- *  @param n         The variable index.
- *  @param x         The x vector -- needed by eval func.
- *  @param u         The u vector -- needed by eval func.
- *  @param f         Vector of residuals.
- *  @param g         Vector of gradients.
- *  @param tolerance Accuracy of solution.
- *  @param status    Success or failure.
- */
+/**< Find a root in a given interval using Brent's method.
 
-#endif  /* rootfind_already_included */
+	Using Brents method, find the root of a function known to lie
+	between x1 and x2. The root, returned as zbrent, will be refined
+	until its accuracy is tol. The result of status must be monitored
+	to see if we were successful. A nonzero code means that the result
+	returned is erroneous. n is the index into the x vector of the variable
+	that is to be solved for.
+
+	@param func      The evaluation function.
+	@param lowbound  Lower bound.
+	@param upbound   Upper bound.
+	@param mode      Passed to the eval func.
+	@param m         The relation index.
+	@param n         The variable index.
+	@param x         The x vector -- needed by eval func.
+	@param u         The u vector -- needed by eval func.
+	@param f         Vector of residuals.
+	@param g         Vector of gradients.
+	@param tolerance Accuracy of solution.
+	@param status    Success or failure.
+	@return          The location of the found root (see also status code)
+*/
+
+#endif  /* ASC_ROOTFIND_H */
 

@@ -746,7 +746,9 @@ static real64 *raise_capacity(real64 *vec,
  **/
 {
   real64 *newvec=NULL;
+#ifndef NDEBUG
   int i;
+#endif
   if (newcap < oldcap) {
 #ifndef NDEBUG
     for (i = 0; i < newcap; i++) {

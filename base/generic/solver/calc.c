@@ -103,6 +103,7 @@ static real64 calc_poly(real64 *poly, int order, real64 x, real64 x2)
    return( order==-1 ? calc_mul_D0(val,x) : val );
 }
 
+#ifdef HAVE_ERF
 static real64 exp_msqr_Dn(real64 x, int n)
 /**
  ***  Computes n-th derivative of exp(-x^2).
@@ -129,6 +130,7 @@ static real64 exp_msqr_Dn(real64 x, int n)
    }
    return( calc_poly(poly,n,x,x2) );
 }
+#endif
 
 static real64 sqrt_rec_1_m_sqr_Dn(real64 x, int n)
 /**

@@ -111,7 +111,7 @@ int mr_bisect_partition(mr_reorder_t *sys, mtx_region_t *reg,
   struct rel_relation **rp;
   mtx_coord_t coord;
   int partition, newpart,size,threshold, status = 0;
-  int32 k,row,mod,rmax,stop,nrows;
+  int32 k,row,mod=0,rmax,stop,nrows;
 
   /* check all our pointers */
 
@@ -319,7 +319,7 @@ int mr_bisect_partition2(mr_reorder_t *sys, mtx_region_t *reg,
   struct rel_relation **rp;
   mtx_coord_t coord;
   int partition, newpart,size,threshold, status = 0;
-  int32 k,row,mod,rmax,stop,nrows,nexttear;
+  int32 k,row,mod=0,rmax,stop,nrows,nexttear;
 
   /* check all our pointers */
 

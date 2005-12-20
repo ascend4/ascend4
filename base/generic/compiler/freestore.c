@@ -98,7 +98,7 @@ struct FreeStore *FreeStore_Create(int n_buffers,int buffer_length)
     root[i] =  (union RelationTermUnion *)
 		malloc(buffer_length*sizeof(union RelationTermUnion));
   }
-  result->returned = gs_stack_create(MAX(8,(unsigned long)0.3*buffer_length));
+  result->returned = gs_stack_create(MAX(8,(long)0.3*buffer_length));
 
   /*
    * Set the structures created to the result; Add the other
@@ -117,7 +117,7 @@ void FreeStore_ReInit(struct FreeStore *store)
 {
   if (store && store->root) {
     gs_stack_destroy(store->returned,0); /* faster to destroy and rebuild */
-    store->returned = gs_stack_create(MAX(8,(unsigned long)0.3*store->buffer_length));
+    store->returned = gs_stack_create(MAX(8,(long)0.3*store->buffer_length));
     store->row = 0;
     store->col = 0;
     store->next_free = store->root[0];

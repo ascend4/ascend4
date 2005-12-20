@@ -33,6 +33,7 @@
 #include "compiler/dimen.h"
 #include "compiler/setinstval.h"
 #include "compiler/childinfo.h"
+#include "general/mathmacros.h"
 
 #ifndef lint
 static CONST char ChildDescID[] = "$Id: childinfo.c,v 1.10 1998/02/05 16:35:39 ballan Exp $";
