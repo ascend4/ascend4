@@ -2968,7 +2968,7 @@ static
 int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys,
 				  slv_parameters_t *parameters)
 {
-  slv3_system_t sys;
+  slv3_system_t sys = NULL;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
   int32 make_macros = 0;
@@ -3260,6 +3260,8 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
 {
   slv3_system_t sys;
 
+  CONSOLE_DEBUG("...");
+
   sys = (slv3_system_t)asccalloc(1, sizeof(struct slv3_system_structure) );
   if (sys==NULL) {
     *statusindex = 1;
@@ -3279,7 +3281,7 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
   sys->s.ok = TRUE;
   sys->s.calc_ok = TRUE;
   sys->s.costsize = 0;
-  sys->s.cost = NULL; /*redundant, but sanity preserving */
+  sys->s.cost = NULL; /* redundant, but sanity preserving */
   sys->vlist = slv_get_solvers_var_list(server);
   sys->rlist = slv_get_solvers_rel_list(server);
   sys->obj = slv_get_obj_relation(server);
@@ -3287,17 +3289,18 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
     ascfree(sys);
     FPRINTF(stderr,"QRSlv called with no variables.\n");
     *statusindex = -2;
-    return NULL; /*_prolly leak here */
+    return NULL; /* FIXME probably a leak here */
   }
   if (sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
     FPRINTF(stderr,"QRSlv called with no relations or objective.\n");
     *statusindex = -1;
-    return NULL; /*_prolly leak here */
+    return NULL; /* FIXME probably a leak here */
   }
   /* we don't give a damn about the objective list or the pars or
    * bounds or extrels or any of the other crap.
    */
+  CONSOLE_DEBUG("...");
   slv_check_var_initialization(server);
   *statusindex = 0;
   return((SlvClientToken)sys);

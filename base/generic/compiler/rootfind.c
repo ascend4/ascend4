@@ -12,6 +12,7 @@
  *  Copyright (C) 1990 Karl Michael Westerberg
  *  Copyright (C) 1993 Joseph Zaher
  *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+    Copyright (C) 2005 Carnegie-Mellon University
  *
  *  The SLV solver is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
@@ -29,10 +30,12 @@
  *  COPYING is found in ../compiler.
  */
 
-/*
- * This is the first pass implemenation of some rootfinding codes.
- * See page 360 or nr in C. We will later convert the netlib code
- * and use this to avoid copyright problems with the nr in C boys.
+/** @file
+	This is the first pass implemenation of some rootfinding codes.
+	@see page 360 of NR in C. 
+
+	@TODO FIXME Use NETLIB code instead of this to avoid copyright 
+	'problems' with the NR in C boys
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,13 +49,13 @@
 #define EPS 1.0e-08
 #define ZBIGNUM 1.0e08
 
-/*
- * We have maintained a consistent calling protocol between
- * the (possibly) different versions of the rootfinding code.
- * In this version, m is not used; n is the index into to
- * the x-vector, of the variable that we are solving for.
- * Our residuals are always written to f[0].
- */
+/**
+	We have maintained a consistent calling protocol between
+	the (possibly) different versions of the rootfinding code.
+	In this version, m is not used; n is the index into to
+	the x-vector, of the variable that we are solving for.
+	Our residuals are always written to f[0].
+*/
 double zbrent(ExtEvalFunc *func,	/* the evaluation function */
 	      double *lowbound,		/* low bound */
 	      double *upbound,		/* up bound */
@@ -65,7 +68,6 @@ double zbrent(ExtEvalFunc *func,	/* the evaluation function */
 	      double *g,		/* vector of gradients */
 	      double *tolerance,	/* accuracy of solution */
 	      int *status)		/* success or failure */
-
 {
   int iter, result;
   double x1, x2;

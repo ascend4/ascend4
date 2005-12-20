@@ -64,7 +64,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   if( function != NULL ) {
     snprintf( msg, PANIC_MSG_MAXLEN-2, "function '%s':", function );
   }else{
-	snprintf(msg, PANIC_MSG_MAXLEN-2, "");
+	snprintf(msg, PANIC_MSG_MAXLEN-2, " ");
   }
   p = strlen(msg);
 

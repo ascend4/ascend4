@@ -1084,7 +1084,7 @@ void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new)
 {
   unsigned long c,pos;
   struct gl_list_t *opl;
-  struct InitProcedure *old, *copy;
+  struct InitProcedure *old = NULL, *copy;
   struct gl_list_t *refiners;
 
   assert(d != NULL);

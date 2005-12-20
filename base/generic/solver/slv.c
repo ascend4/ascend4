@@ -1864,8 +1864,6 @@ int slv_eligible_solver(slv_system_t sys)
   return SF(sys,celigible)(sys);
 }
 
-
-
 int slv_select_solver(slv_system_t sys,int solver){
 
   int status_index;
@@ -1885,16 +1883,24 @@ int slv_select_solver(slv_system_t sys,int solver){
       } else {
         error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver: 'cdestroy' is undefined on solver '%s' (index %d).",
           slv_solver_name(sys->solver), sys->solver);
-        return sys->solver;
+        /* return sys->solver; */
+/** @TODO FIXME HACK this is probably very dodgy... */
+        CONSOLE_DEBUG("No 'cdestroy' method, so just killing sys->ct...");
+		sys->ct = NULL;
       }
     }
+
     if (sys->ct != NULL) {
+      CONSOLE_DEBUG("sys->ct not-null, so returning current solver...");
       return sys->solver;
     }
+    CONSOLE_DEBUG("Updating current solver...");
     status_index = solver;
     sys->solver = solver;
     if ( CF(sys,ccreate) != NULL) {
+      CONSOLE_DEBUG("Running ccreate method for new solver...");
       sys->ct = SF(sys,ccreate)(sys,&status_index);
+      CONSOLE_DEBUG("Done running ccreate");
     } else {
       error_reporter(ASC_PROG_ERROR,NULL,0,"slv_select_solver create failed due to bad client %s\n",
         slv_solver_name(sys->solver));

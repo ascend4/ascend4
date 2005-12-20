@@ -32,6 +32,7 @@
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
 #include "test_list.h"
+#include "general/mathmacros.h"
 
 /* comparison function used in test_list(). */
 static
