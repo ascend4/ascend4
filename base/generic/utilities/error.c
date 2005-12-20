@@ -44,7 +44,7 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	int res=0;
 	switch(sev){
 		case ASC_PROG_FATAL:    sevmsg = ERR_RED "PROGRAM FATAL ERROR: " ERR_NORM; break;
-		case ASC_PROG_ERROR:    sevmsg = "PROGRAM ERROR: "; break;
+		case ASC_PROG_ERROR:    sevmsg = ERR_RED "PROGRAM ERROR: " ERR_NORM; break;
 		case ASC_PROG_WARNING:  sevmsg = "PROGRAM WARNING: "; break;
 		case ASC_PROG_NOTE:     sevmsg = ERR_GRN; endtxt=ERR_NORM; break; /* default, keep unembellished for now */
 		case ASC_USER_ERROR:    sevmsg = "ERROR: "; break;
@@ -111,7 +111,7 @@ fprintf_error_reporter(FILE *file, const char *fmt, ...){
 			len = strlen(msg);
 			res = vsnprintf(msg+len,ERROR_REPORTER_MAX_MSG-len,fmt,args);
 			if(len+res+1>=ERROR_REPORTER_MAX_MSG){
-				snprintf(msg+ERROR_REPORTER_MAX_MSG-15,14,"... (truncate)");
+				snprintf(msg+ERROR_REPORTER_MAX_MSG-16,15,"... (truncated)");
 				ASC_FPRINTF(stderr,"TRUNCATED MESSAGE, FULL MESSAGE FOLLOWS:\n----------START----------\n");
 				ASC_VFPRINTF(stderr,fmt,args);
 				ASC_FPRINTF(stderr,"\n-----------END----------\n");
