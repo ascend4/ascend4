@@ -899,6 +899,10 @@ TypeLintIllegalMethodStatList(FILE *fp,
         } 
       }
       break;
+    case TEST:
+      /* no sublists for TEST */
+      break;
+
     case IF:
       if (IfStatThen(s) != NULL) {
         tmperr = TypeLintIllegalMethodStatList(fp,name,pname,IfStatThen(s),

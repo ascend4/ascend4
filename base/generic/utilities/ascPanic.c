@@ -99,9 +99,9 @@ void Asc_Panic(CONST int status, CONST char *function,
    *  Give the name of the function where the panic occurred
    */
   if( function != NULL ) {
-    snprintf( msg, PANIC_MSG_MAXLEN-2, "ASCEND PANIC!!  in function \"%s\"\n", function );
-  } else {
-    snprintf( msg, PANIC_MSG_MAXLEN-2, "ASCEND PANIC!!\n" );
+    snprintf( msg, PANIC_MSG_MAXLEN-2, "in function '%s':", function );
+  }else{
+	snprintf(msg, PANIC_MSG_MAXLEN-2, "");
   }
   p = strlen(msg);
 
@@ -119,9 +119,8 @@ void Asc_Panic(CONST int status, CONST char *function,
   /*
    *  Print the message to ASCERR
    */
-  if (ASCERR != NULL)
-    FPRINTF(ASCERR, msg);
-
+  error_reporter(ASC_PROG_FATAL,NULL,0,msg);
+	
   /*
    *  Write the message to g_panic_outfile if it is not empty
    *  and we can actually write to that location.  Print a
@@ -132,7 +131,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   {
     FPRINTF(outfile, msg);
     if( ASCERR != NULL ) {
-      FPRINTF(ASCERR, "ASCEND PANIC: Error message written to %s\n", g_panic_outfile);
+      CONSOLE_DEBUG("Error message written to %s\n", g_panic_outfile);
     }
     fclose(outfile);
   }

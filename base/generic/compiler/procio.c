@@ -57,11 +57,13 @@ static CONST char ProcedureIORCSid[] = "$Id: procio.c,v 1.11 1998/05/12 19:57:43
 
 void WriteInitWarn(struct procFrame *fm, char *str)
 {
+  CONSOLE_DEBUG("...");
   WriteStatementErrorMessage(fm->err, fm->stat, str, 0,2);
 }
 
 void WriteInitErr(struct procFrame *fm, char *str)
 {
+  CONSOLE_DEBUG("...");
   WSEM(fm->err,fm->stat,str);
   FFLUSH(fm->err);
 }
@@ -132,6 +134,8 @@ void ProcWriteCaseError(struct procFrame *fm, int arm, int pos)
 
 void ProcWriteIfError(struct procFrame *fm, CONST char *cname)
 {
+  CONSOLE_DEBUG("...");
+
   char em[85];
   char cn[20];
   if (strlen(cname) > 19) {
@@ -190,7 +194,9 @@ void ProcWriteIfError(struct procFrame *fm, CONST char *cname)
     sprintf(em,"%s unexpected error message",cn);
     break;
   }
+  CONSOLE_DEBUG("...");
   WriteInitErr(fm,em);
+  CONSOLE_DEBUG("...");
 }
 
 void ProcWriteAssignmentError(struct procFrame *fm)

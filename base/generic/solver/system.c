@@ -68,6 +68,7 @@ slv_system_t system_build(SlvBackendToken inst)
 #endif
 
   sys = slv_create();
+
   if (set_solver_types()) {
     system_destroy(sys);
     sys = NULL;

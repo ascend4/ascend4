@@ -35,6 +35,7 @@
 	opposed to the sneaky stuff that FPRINTF does in this header)
 */
 #include "utilities/ascConfig.h"
+#include "utilities/ascPrint.h"
 
 /**
 	FPRINTF(ASCERR,...) messages will by default be treated
@@ -54,7 +55,10 @@
 	of the error won't be reported, because you don't support
 	variadic macros.
 */
-#ifdef HAVE_C99
+#ifdef __GNUC__
+# define ERROR_REPORTER_DEBUG(MSG,args...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
+# define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ##args)
+#elif defined(HAVE_C99)
 # define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
 # define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ## __VA_ARGS__)
 #else
@@ -63,6 +67,9 @@
 int error_reporter_note_no_line(const char *fmt,...);
 int console_debug(const char *fmt,...);
 #endif
+
+#define ERROR_REPORTER_STAT(sev,stat,msg) \
+	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,msg)
 
 /**
 	Error severity codes. This will be used to visually 

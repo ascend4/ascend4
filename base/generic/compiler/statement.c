@@ -133,6 +133,9 @@ void AddContext(struct StatementList *slist, unsigned int con)
         AddContext(sublist,con);
       }
       break;
+	case TEST:
+      /* no sublists under a TEST statement */
+	  break;	  
     case IF:
       sublist = IfStatThen(s);
       AddContext(sublist,con);
@@ -178,7 +181,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
       }
       break;
     default:
-      Asc_Panic(2, NULL, "AddContext called with bad statement list.\n");
+      Asc_Panic(2, NULL, "AddContext called with bad statement list.");
       break;
     }
   }
@@ -598,6 +601,18 @@ struct Statement *CreateCALL(symchar *sym,struct Set *args)
   return result;
 }
 
+struct Statement *CreateTEST(struct Expr *ex){
+	register struct Statement *result;
+	result = STMALLOC;
+	result->t = TEST;
+	result->linenum = LineNum();
+	result->mod = Asc_CurrentModule();
+	result->context = context_MODEL;
+	result->ref_count = 1;
+	result->v.tests.test = ex;
+	return result;
+}
+
 struct Statement *CreateIF(struct Expr *ex,
 			   struct StatementList *thenblock,
 			   struct StatementList *elseblock)
@@ -937,6 +952,12 @@ void DestroyStatement(struct Statement *s)
 	DestroyName(s->v.r.type_name);
 	s->v.r.type_name = NULL;
 	break;
+
+      case TEST:
+        DestroyExprList(s->v.tests.test);
+        s->v.tests.test = NULL;
+        break;
+
       case IF:
 	DestroyStatementList(s->v.ifs.thenblock);
 	s->v.ifs.thenblock = NULL;
@@ -1086,6 +1107,9 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.r.proc_name = CopyName(s->v.r.proc_name);
     result->v.r.type_name = CopyName(s->v.r.type_name);
     break;
+  case TEST:
+    result->v.tests.test = CopyExprList(s->v.tests.test);
+    break;
   case IF:
     result->v.ifs.test = CopyExprList(s->v.ifs.test);
     result->v.ifs.thenblock = CopyListToModify(s->v.ifs.thenblock);
@@ -1153,6 +1177,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case EXT:
   case REF:
   case RUN:
+  case TEST:
   case IF:
   case WHEN:
   case FNAME:
@@ -1163,7 +1188,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case FLOW:
     return s->context;
   default:
-    FPRINTF(ASCERR,"GetStatContext called on incorrect statement type.\n");
+	ERROR_REPORTER_STAT(ASC_PROG_ERR,s,"GetStatContext called on incorrect statement type.");
     return context_MODEL;
   }
 }
@@ -1190,6 +1215,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case EXT:
   case REF:
   case RUN:
+  case TEST:
   case IF:
   case WHEN:
   case FNAME:
@@ -1229,6 +1255,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case EXT:
   case REF:
   case RUN:
+  case TEST:
   case IF:
   case WHEN:
   case FNAME:
@@ -1696,6 +1723,11 @@ struct Expr *WhileStatExprF(CONST struct Statement *s)
 {
   assert(s && s->ref_count && (s->t == WHILE));
   return s->v.loop.test;
+}
+
+struct Expr *TestStatExprF(CONST struct Statement *s){
+	assert(s && s->ref_count && (s->t == TEST));
+	return s->v.tests.test;
 }
 
 struct Expr *IfStatExprF(CONST struct Statement *s)
@@ -2260,6 +2292,11 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return ctmp;
     }
     return CompareStatementLists(WhileStatBlock(s1), WhileStatBlock(s2),&ltmp);
+
+  case TEST:
+	ctmp = CompareExprs(TestStatExpr(s1), TestStatExpr(s2));
+	return ctmp;
+
   case IF:
     ctmp = CompareExprs(IfStatExpr(s1), IfStatExpr(s2));
     if (ctmp != 0) {
@@ -2334,7 +2371,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     /* FlowStatMessage is considered comment info and so not compared */
     return 0;
   default:
-    FPRINTF(ASCERR,"CompareStatements called with unknown statement\n");
+	error_reporter(ASC_PROG_ERR,NULL,0,"CompareStatements called with unknown statement");
     return 0;
   }
 }
@@ -2454,6 +2491,7 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case CASGN:
   case RUN:
   case CALL:
+  case TEST:
   case IF:
   case WHEN:
   case FNAME:
@@ -2464,10 +2502,10 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case COND:
   case FLOW:
   case WHILE:
-    FPRINTF(ASCERR,"CompareISStatements called with incorrect statement\n");
+	ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with incorrect statement");
     return -1;
   default:
-    FPRINTF(ASCERR,"CompareISStatements called with unknown statement\n");
+	ERROR_REPORTER_STAT(ASC_PROG_ERR,s1,"CompareISStatements called with unknown statement");
     return 1;
   }
 }
