@@ -1,33 +1,26 @@
 /*
- *  SLV Utilities & Structures for ASCEND Solvers
- *  by Ben Allan 1995
- *  SLV: Ascend Nonlinear Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.23 $
- *  Version control file: $RCSfile: slv_common.h,v $
- *  Date last modified: $Date: 1998/04/26 22:48:25 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1995 Benjamin Allan 1995
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+	SLV: Ascend Nonlinear Solver
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2005 The ASCEND developers
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	This file is part of the SLV solver.
+*/
 
 /*
  *  Contents:     slv common utilities and definitions
@@ -89,7 +82,7 @@
  *  element of this array. Here is an example using a real parameter
  *  and a character parameter. (The int and bool are similar to the real).
  *
- *  ---------- START EXAMPLE CODE ----------
+ *  @code
  *
  *  (* these 4 macros can be defined anywhere more or less so long as it
  *  is before the calls to slv_define_parm. *)
@@ -136,8 +129,7 @@
  *
  *     slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
  *
- *  ---------- END OF EXAMPLE CODE ----------
- *  </pre>
+ *  @endcod
  */
 
 #ifndef ASC_SLV_COMMON_H

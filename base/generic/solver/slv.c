@@ -1,34 +1,26 @@
 /*
- *  SLV: Ascend Nonlinear Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.51 $
- *  Version control file: $RCSfile: slv.c,v $
- *  Date last modified: $Date: 1998/04/26 22:47:53 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+	SLV: Ascend Nonlinear Solver
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2005 The ASCEND developers
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	This file is part of the SLV solver.
+*/
 
 #include <math.h>
 #include <stdarg.h>
@@ -57,7 +49,6 @@
 #include "solver/slv_client.h"
 #include "solver/analyze.h"
 
-
 #define NEEDSTOBEDONE 0
 
 /**
@@ -66,28 +57,28 @@
  ***  Defines are to take care of the unlinked ones.
  **/
 #if 0
-#include "solver/slv0.h"
-#include "solver/slv1.h"
-#include "solver/slv2.h"
-#include "solver/slv3.h"
-#include "solver/slv4.h"
-#include "solver/slv5.h"
-#include "solver/slv6.h"
-#include "solver/slv7.h"
-#include "solver/slv8.h"
-#include "solver/slv9.h"
-
+# include "solver/slv0.h"
+# include "solver/slv1.h"
+# include "solver/slv2.h"
+# include "solver/slv3.h"
+# include "solver/slv4.h"
+# include "solver/slv5.h"
+# include "solver/slv6.h"
+# include "solver/slv7.h"
+# include "solver/slv8.h"
+# include "solver/slv9.h"
 #endif
 
 
 struct slv_system_structure {
   int solver;
-  int serial_id; /* through time, two systems may have the same pointer
-                  * but never simultaneously. The serial_id provides a
-                  * unique tag that will never repeat. Clients concerned
-                  * with identity but not capable of tracking time must
-                  * use the serial_id for checks.
-                  */
+
+  int serial_id; 
+	/**< Through time, two systems may have the same pointer but never
+		simultaneously. The serial_id provides a unique tag that will
+		never repeat. Clients concerned with identity but not capable 
+		of tracking time must use the serial_id for checks. */
+
   SlvBackendToken instance;	/* should be void * in the most generic case */
 
   /* All solver handles.  sysI can't be dereferenced outside slvI.c
@@ -239,31 +230,34 @@ struct slv_system_structure {
 };
 
 
-/*********************************************************************\
+/**
  global variable used to communicate information between solvers and
  an interface, whether a calculation should be halted or not.
  0 means go on. any other value may contain additional information
  content.
-\*********************************************************************/
+*/
 int Solv_C_CheckHalt_Flag = 0;
 
 int g_SlvNumberOfRegisteredClients; /* see header */
 
+/** making ANSI assumption that RegisteredClients is init to 0/NULLs */
 static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];
-/* making ANSI assumption that RegisteredClients is init to 0/NULLs */
 
+/*-----------------------------------------------------------------*/
+/**	
+	Note about g_number_of_whens, g_number_of_dvars and g_number_of_bnds:
+	These numbers are as the same as those given in the solver and master
+	lists, however, these lists are destroyed before the buffers are destroyed,
+	so the information is gone before I can use it. 
+*/
 
-/*
- * global variables used to destroy:
- * the cases and the gllist inside each when,
- * the list of whens in each discrete variable, and
- * the list of logical relations in each boundary, correspondingly.
- * This number are as the same as those given in the solver and master
- * lists, however, these lists are destroyed before the buffers are
- * destroyed, so the information is gone before I can use it.
- */
+/** Global var used to destroy the cases and the gl_list inside each WHEN */
 static int g_number_of_whens;
+
+/** Global var used to destroy the list of whens in each discrete variable */
 static int g_number_of_dvars;
+
+/** Global var used to destroy the list of logical relations in each boundary */
 static int g_number_of_bnds;
 
 /*-------------------------------------------------------------------
@@ -295,16 +289,17 @@ static int g_number_of_bnds;
 /** Free a pointer provided it's not NULL */
 #define SFUN(p) if ((p) != NULL) ascfree(p)
 
-/*********************************************************************\
-  server functions.
-\*********************************************************************/
+/*-----------------------------------------------------------------
+	SERVER FUNCTIONS
+*/
 
+/** Register a new solver.
+	@TODO This needs work still, particularly of the dynamic loading 
+	sort. it would be good if here we farmed out the dynamic loading
+	to another file so we don't have to crap this one all up.
+*/
 int slv_register_client(SlvRegistration registerfunc, char *func, char *file)
 {
-  /* this needs work still, particularly of the dynamic loading sort.
-   * it would be good if here we farmed out the dynamic loading
-   * to another file so we don't have to crap this one all up.
-   */
   int status;
 
   (void)func;  /*  stop gcc whine about unused parameter */
