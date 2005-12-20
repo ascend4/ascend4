@@ -1,0 +1,62 @@
+#
+# Top level Jamfile to build ASCEND
+# (see http://www.freetype.org/jam/index.html)
+#
+# This file is part of the ASCEND Build System.
+#
+# Copyright (C) 2005  Jerry D. St.Clair
+#
+# The Ascend Build System is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This program is distributed in hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
+# Check the file named COPYING.
+#---------------------------------------------------------------------------
+#
+# UNDER CONSTRUCTION                                 
+#
+# This Jamfile builds ASCEND.  This includes the base, blas,
+# linpack, lsod, and tcltk98 static libraries, the tcltk98
+# executable, and a prototype regression test suite.
+#
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
+#
+#-------------------------------------------------------------------------
+#
+# File-specific Build Instructions
+#
+# 1. Follow the general instructions in ../../jam/ReadMe.txt for your platform.
+#
+# 2. Run jam to generate the desired functionality:
+#
+#       jam all       build all libraries, executable, test suite
+#       jam libs      builds base, blas, linpack, and lsode static libs
+#       jam ascend    builds the ASCEND executable (will build libs as needed)
+#       jam test      builds the test suite (will build libs as needed)
+#       jam blas      builds the blas library
+#       jam linpack   builds the linpack library
+#       jam lsode     builds the lsode library
+#
+#---------------------------------------------------------------------------
+
+SubDir TOP jam ;
+if ! $(JAMRULES_ALREADY_SEEN)
+{
+  include $(TOP)$(SLASH)jam$(SLASH)Jamrules ;
+}
+
+SubInclude TOP base generic ;
+SubInclude TOP blas ;
+SubInclude TOP linpack ;
+SubInclude TOP lsod ;
+SubInclude TOP tcltk98 generic ;

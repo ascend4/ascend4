@@ -212,14 +212,14 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   char *default_path = ".";
   char *env = PATHENVIRONMENTVAR;
   char *full_file_name = NULL;
-  extern int DynamicLoad(CONST char *,CONST char *);
+  extern int Asc_DynamicLoad(CONST char *,CONST char *);
 
   full_file_name = SearchArchiveLibraryPath(name,default_path,env);
   if (!full_file_name) {
     error_reporter(ASC_USER_ERROR,NULL,0,"The named library '%s' was not found in the search path",name);
     return 1;
   }
-  result = DynamicLoad(full_file_name,initfunc);
+  result = Asc_DynamicLoad(full_file_name,initfunc);
   if (result) {
     return 1;
   }

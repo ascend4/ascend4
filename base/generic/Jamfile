@@ -1,5 +1,3 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
-
 #
 # Jamfile to build Ascend4 base libraries
 # (see http://www.freetype.org/jam/index.html)
@@ -26,66 +24,33 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 #
 # UNDER CONSTRUCTION
 #
-# This Jamfile builds the Ascend base libraries using the jam* build
-# tool.  Using generic Jambase and Jamrules_general files (located at
-# ../../jam), it builds the Ascend base functionality as a set of static
-# libraries.  It does not currently support building dynamic libraries,
-# executables, or interface libraries.
+# This Jamfile builds the base library subset of ASCEND using the jam
+# build tool as a set of static libraries.  A regression test suite for
+# the base libraries is also built.
 #
-# The Ascend jam build system currently supports building the libraries
-# under Windows using the MSVC, Borland, MinGW, and Watcom** compilers,
-# and under Linux with gcc.  With use of the customized ../.../jam/Jambase
-# file, it should work with both the original and ftjam variants of jam.
-# The system was developed primarily using ftjam.
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
 #
-# The libraries are built in ./CONFIGTYPE/COMPILER where
-#     CONFIGTYPE = Debug, Release
-#     COMPILER   = bcc, msvc, mingw, watcom, unix
-#
-# Installation of the libraries or headers is not supported at this time.
 #-------------------------------------------------------------------------
 #
-# Build Instructions
+# File-specific Build Instructions
 #
-# 1. jam must be installed and configured for the compiler in use.
+# 1. Follow the general instructions in ../../jam/ReadMe.txt for your platform.
 #
-# 2. Copy the ../../jam/Jamrules_general.in to ../../jam/Jamrules_general.
+# 2. To generate the base libraries, run:
+#       jam libs
 #
-# 3. Manually edit Jamrules_general and (if necessary) this Jamfile to set
-#    configuration and local directory options.
-#
-# 4. Run jam from using the provided Jambase:
-#       jam -f ../../jam/Jambase libs
-#
-# 5. A prototype CUnit test suite may also be built.  At this point it
+# 3. A prototype CUnit test suite may also be built.  At this point it
 #    only covers the general and utilities components.  For maximal
 #    testing, NODEBUG should be commented and DEBUG_MALLOC and
-#    ALLOCATED_TESTS should be active in Jamrules.  This will require
-#    that the ASCEND base libs be built with these options also.
+#    ALLOCATED_TESTS should be active in ../../jam/Jamrules.  The
+#    ASCEND base libs should be built with these options also.
 #    Build the tests using:
 #       jam tests
 #
-#    jam will complain "..\Jamrules: No such file or directory"
-#    but this may be disregarded.  We are hiding Jamrules in a
-#    non-standard location that jam can't be told to look.
-#
 #-------------------------------------------------------------------------
-# Notes:
-#
-# * jam is an open source, multi-platform build tool which is
-#   available in several flavors.  These include the original
-#   (http://www.perforce.com) and ftjam
-#   (http://www.freetype.org/jam/index.html) variants, among others.
-#
-# ** Currently, Open Watcom 1.3 can compile the Ascend sources
-#    and build the libraries.  However, it does not supply the required
-#    IEEE math functions isnan() and copysign().  At present, Ascend does
-#    not supply these, so the user must provide these functions to use
-#    the libraries under Watcom.
-#
-#---------------------------------------------------------------------------
 
-SubDir TOP base jam ;
+SubDir TOP base generic ;
 if ! $(JAMRULES_ALREADY_SEEN)
 {
   include $(TOP)$(SLASH)jam$(SLASH)Jamrules ;
@@ -118,7 +83,7 @@ NOTFILE libs ;
 # source is reorganized to decouple the base and interface
 # components, we have to be able to find those headers
 # TODO:  remove/rework when Tcl/Tk decoupled from base library
-ASC_INTERFACE_ROOT = ..$(SLASH)..$(SLASH)tcltk98$(SLASH)generic ;
+ASC_INTERFACE_ROOT = $(TOP)$(SLASH)tcltk98$(SLASH)generic ;
 
 #=========================================================================
 # Compiler module
@@ -238,7 +203,7 @@ if $(BUILD_COMPILER)
   #----------------------------------------------------------------------
   # rounded.c needs a special define
   #----------------------------------------------------------------------
-  CCFLAGS on <base!jam>rounded$(SUFOBJ) += -DSLOPPY ;
+  CCFLAGS on <base!generic>rounded$(SUFOBJ) += -DSLOPPY ;
 
   #----------------------------------------------------------------------
   # ascParse.c & ascParse.h
@@ -252,7 +217,7 @@ if $(BUILD_COMPILER)
   #----------------------------------------------------------------------
 
   # ascParse.c needs a special define
-  CCFLAGS on <base!jam>ascParse$(SUFOBJ) += -DYY_USE_CONST ;
+  CCFLAGS on <base!generic>ascParse$(SUFOBJ) += -DYY_USE_CONST ;
 
   rule make_ascParse
   {
@@ -309,7 +274,7 @@ if $(BUILD_COMPILER)
   #----------------------------------------------------------------------
 
   # scanner.c needs a special define (Watcom requires the '=""'. )
-  CCFLAGS on <base!jam>scanner$(SUFOBJ) += -DYY_USE_CONST="" ;
+  CCFLAGS on <base!generic>scanner$(SUFOBJ) += -DYY_USE_CONST="" ;
 
   scanner_c = [ FGristSourceFiles scanner.c ] ; 
   scanner_h = scanner.h ;
@@ -524,7 +489,7 @@ TEST_SOURCES =
 #  test_slv.c
   ;
 
-CCFLAGS on <base!jam>$(TEST_SOURCES:S=$(SUFOBJ)) +=
+CCFLAGS on <base!generic>$(TEST_SOURCES:S=$(SUFOBJ)) +=
   -I..$(SLASH)..$(SLASH)test
   -DALLOCATED_TESTS
   ;
@@ -539,7 +504,7 @@ if $(NT)
   if ($(BCCROOT) || ($(TOOLSET) = BORLANDC))
   {
     # need to fix Borland to include library location
-    LINKFLAGS on <base!jam>$(TEST_PROG)$(SUFEXE) += -L$(STDLIBPATH) -tWC ;
+    LINKFLAGS on $(TEST_PROG)$(SUFEXE) += -L$(STDLIBPATH) -tWC ;
   }
   else if $(MINGW) || ( $(TOOLSET) = MINGW )
   {
@@ -549,7 +514,7 @@ if $(NT)
 
 if $(UNIX) || $(OS) = LINUX
 {
-    LINKFLAGS on <base!jam>$(TEST_PROG)$(SUFEXE) += $(DL_LIBS) $(MATH_LIBS) ;
+    LINKFLAGS on $(TEST_PROG)$(SUFEXE) += $(DL_LIBS) $(MATH_LIBS) ;
 }
 
 LinkLibraries $(TEST_PROG) :

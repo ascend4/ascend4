@@ -1,3 +1,6 @@
+
+THIS FILE IS DEPRECATED - 20-Dec-2005
+
 The files in this directory support building the Tcl/Tk
 version of ths Ascend modeling system using the jam* build tool.
 

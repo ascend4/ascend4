@@ -1157,7 +1157,7 @@ if test "X$TK_LIB" = X_searching ; then
 	[$TCL_LIB $X11_LIBRARIES -lX11 $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
 fi
 if test "X$TK_LIB" = X_searching ; then
-    AC_CHECK_LIB(tk, Tk_NameOfFont, [TK_LIB="-ltk"] , , 
+    AC_CHECK_LIB(tk, Tk_NameOfFont, [TK_LIB="-ltk"] , ,
 	[$TCL_LIB $X11_LIBRARIES -lX11 $X11_EXTRA_LIBS $DL_LIBS $MATH_LIBS])
 fi
 
@@ -2004,6 +2004,8 @@ AC_OUTPUT(
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in
        utilities/Makefile:../../base/generic/utilities/Makefile.in
+       ../../jam/Jamrules
+       ../../tcltk98/generic/Jamrules_tcltk98
        $tkdir_makefiles
        $models_makefiles
        $help_makefiles
