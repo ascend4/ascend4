@@ -8,18 +8,38 @@
 # instead of the default /usr/local/bin
 # so that you can test without having to log in as root.
 
+# Platform-specific shenanigans
+if [ "$OSTYPE" = "msys" ]; then
+	echo "MINGW CONFIGURATION"
+	versep=
+	libsuff=.lib
+	libpref=
+	tkrootdefault=/c/Tcl
+else
+	echo "LINUX CONFIGURATION"
+	versep=.
+	libsuff=.so
+	libpref=lib
+	tkrootdefault=/usr
+fi
+	
+
 # Assume Tcl/Tk version 8.3 unless override with environment var
 if [ $TKVERSION ]; then
 	tkver=$TKVERSION
 else
-	tkver=8.3
+	tkmajor=8
+	tkminor=3
+	tkver=$tkmajor$versep$tkminor
 fi
 
 # Assume Tktable version 2.8 unless override with environment var
 if [ $TKTABLEVERSION ]; then
 	tktablever=$TKTABLEVERSION
 else
-	tktablever=2.8
+	tktableminor=2
+	tktablemajor=8
+	tktablever=$tktablemajor$versep$tktableminor
 fi
 
 # Assume Tcl/Tk installed under /usr unless ~/tk or ~/tk83 present
@@ -31,7 +51,7 @@ elif [ -d ~/tk ]; then
 elif [ -d ~/tk83 ]; then
 	tkroot=~/tk83
 else
-	tkroot=/usr
+	tkroot=$tkrootdefault
 fi
 
 # Assume Tktable installed under $tkroot/share unless 
@@ -56,10 +76,10 @@ cmd="./configure  \
 --prefix=$ascroot \
 --with-fortran=g77,/usr/lib/libf2c.a \
 --enable-gcc \
---with-tcl="$tkroot/lib/libtcl$tkver.so,$tkroot/include/tcl.h" \
---with-tk="$tkroot/lib/libtk$tkver.so,$tkroot/include/tk.h" \
+--with-tcl="$tkroot/lib/${libpref}tcl$tkver$libsuff,$tkroot/include/tcl.h" \
+--with-tk="$tkroot/lib/${libpref}tk$tkver$libsuff,$tkroot/include/tk.h" \
 --with-wish="$tkroot/bin/wish" \
---with-tktable=$tktableroot/libTktable$tktablever.so"
+--with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff"
 
 echo "RUNNING CONFIGURE WITH"
 echo $cmd
