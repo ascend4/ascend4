@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/sh
 
 # Added some new stuff here to allow reconfig to be
 # used without tweaking. Art, you should be able to use
