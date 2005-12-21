@@ -1,0 +1,121 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.5.4	//
+ASCEND_INCDIR	simulation.h	19;"	d
+ASCEND_LIBDIR	simulation.h	22;"	d
+ASCEND_MAKEFILEDIR	simulation.h	29;"	d
+ASCEND_MAKEFILEDIR_1	simulation.h	28;"	d
+ASCEND_TMPDIR	simulation.h	25;"	d
+ASCXX_DIMENSIONS_H	dimensions.h	2;"	d
+ASCXX_EXTFN_H	extfn.h	2;"	d
+ASCXX_FRACTION_H	fraction.h	2;"	d
+ASCXX_INSTANCE_H	instance.h	2;"	d
+ASCXX_REPORTER_H	reporter.h	2;"	d
+ASCXX_SET_H	set.h	2;"	d
+ASCXX_SIMULATION_H	simulation.h	2;"	d
+ASCXX_SYMCHAR_H	symchar.h	2;"	d
+ASCXX_Set	set.h	/^	ASCXX_Set(){$/;"	f	class:ASCXX_Set
+ASCXX_Set	set.h	/^	ASCXX_Set(const struct set_t *s) : s(s){$/;"	f	class:ASCXX_Set
+ASCXX_Set	set.h	/^class ASCXX_Set{$/;"	c
+ASCXX_UNITS_H	units.h	2;"	d
+ASC_ERROR_H	error.h	2;"	d
+ASC_PROG_ERROR	error.h	/^   ,ASC_PROG_ERROR     \/**< the program has failed but can ignore and continue (maybe) *\/$/;"	e	enum:error_severity_enum
+ASC_PROG_FATAL	error.h	/^   ,ASC_PROG_FATAL	   \/**< fatal error, program will exit *\/$/;"	e	enum:error_severity_enum
+ASC_PROG_NOTE	error.h	/^   ,ASC_PROG_NOTE      \/**< a note for the programmer *\/$/;"	e	enum:error_severity_enum
+ASC_PROG_WARNING	error.h	/^   ,ASC_PROG_WARNING   \/**< the program encounters an unexpected state *\/$/;"	e	enum:error_severity_enum
+ASC_USER_ERROR	error.h	/^   ,ASC_USER_ERROR     \/**< the user has done something wrong *\/$/;"	e	enum:error_severity_enum
+ASC_USER_NOTE	error.h	/^   ,ASC_USER_NOTE=1    \/**< a note to the user *\/$/;"	e	enum:error_severity_enum
+ASC_USER_SUCCESS	error.h	/^    ASC_USER_SUCCESS=0$/;"	e	enum:error_severity_enum
+ASC_USER_WARNING	error.h	/^   ,ASC_USER_WARNING   \/**< the user has done something bad but tolerable *\/$/;"	e	enum:error_severity_enum
+BASEUNITS	dimensions.h	/^	static const std::string BASEUNITS[MAX_DIMS];$/;"	m	class:Dimensions
+Dimensions	dimensions.h	/^class Dimensions{$/;"	c
+ERROR_REPORTER_CALLBACK_ARGS	error.h	110;"	d
+ERROR_REPORTER_CALLBACK_VARS	error.h	120;"	d
+ERROR_REPORTER_MAX_MSG	error.h	66;"	d
+ERR_GRN	error.c	13;"	d	file:
+ERR_GRN	error.c	9;"	d	file:
+ERR_NORM	error.c	10;"	d	file:
+ERR_NORM	error.c	14;"	d	file:
+ERR_RED	error.c	12;"	d	file:
+ERR_RED	error.c	8;"	d	file:
+Empty	set.h	/^class Empty{$/;"	c
+ExtFn	extfn.h	/^class ExtFn {$/;"	c
+FFLUSH	error.h	48;"	d
+FPRINTF	error.h	45;"	d
+FPUTC	error.h	46;"	d
+Fraction	fraction.h	/^class Fraction{$/;"	c
+Instanc	instance.h	/^class Instanc{$/;"	c
+Library	library.h	/^class Library{$/;"	c
+MAX_DIMS	dimensions.h	/^	static const unsigned MAX_DIMS = NUM_DIMENS;$/;"	m	class:Dimensions
+Method	method.h	/^class Method{$/;"	c
+Module	module.h	/^class Module{$/;"	c
+Nam	name.h	/^class Nam{$/;"	c
+PUTC	error.h	47;"	d
+Reporter	reporter.h	/^class Reporter{$/;"	c
+SWIG_LIBRARY_H	library.h	2;"	d
+SWIG_METHOD_H	method.h	2;"	d
+SWIG_MODULE_H	module.h	2;"	d
+SWIG_NAME_H	name.h	2;"	d
+SWIG_TYPE_H	type.h	2;"	d
+SWIG_VARIABLE_H	variable.h	2;"	d
+Simulation	simulation.h	/^class Simulation : public Instanc{$/;"	c
+SymChar	symchar.h	/^class SymChar{$/;"	c
+TEST_DEFAULT_FPRINTF	error.c	5;"	d	file:
+Type	type.h	/^class Type{$/;"	c
+UnitsM	units.h	/^class UnitsM{$/;"	c
+Variable	variable.h	/^class Variable{$/;"	c
+_instance	reporter.h	/^	static Reporter *_instance;$/;"	m	class:Reporter
+at	set.h	/^	inline const T at(const unsigned long &index) const{$/;"	f	class:ASCXX_Set
+bin_cmd	simulation.h	/^	std::string *bin_cmd;$/;"	m	class:Simulation
+bin_libname	simulation.h	/^	std::string *bin_libname;$/;"	m	class:Simulation
+bin_objname	simulation.h	/^	std::string *bin_objname;$/;"	m	class:Simulation
+bin_rm	simulation.h	/^	std::string *bin_rm;$/;"	m	class:Simulation
+bin_srcname	simulation.h	/^	std::string *bin_srcname;$/;"	m	class:Simulation
+children	instance.h	/^	std::vector<Instanc> children;$/;"	m	class:Instanc
+client_data	reporter.h	/^	void *client_data;$/;"	m	class:Reporter
+d	dimensions.h	/^	const dim_type *d;$/;"	m	class:Dimensions
+e	extfn.h	/^	const struct ExternalFunc *e;$/;"	m	class:ExtFn
+error_reporter	error.c	/^error_reporter($/;"	f
+error_reporter_callback_t	error.h	/^typedef int (*error_reporter_callback_t)($/;"	t
+error_reporter_default_callback	error.c	/^int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){$/;"	f
+error_reporter_end_flush	error.c	/^error_reporter_end_flush(){$/;"	f
+error_reporter_meta_t	error.h	/^} error_reporter_meta_t;$/;"	t
+error_reporter_set_callback	error.c	/^error_reporter_set_callback($/;"	f
+error_reporter_start	error.c	/^error_reporter_start(const error_severity_t sev, const char *filename, const int line){$/;"	f
+error_severity_enum	error.h	/^typedef enum error_severity_enum{$/;"	g
+error_severity_t	error.h	/^} error_severity_t;$/;"	t
+extfn_vector	library.h	/^	std::vector<ExtFn> extfn_vector;$/;"	m	class:Library
+f	fraction.h	/^	struct fraction f;$/;"	m	class:Fraction
+fflush_error_reporter	error.c	/^fflush_error_reporter(FILE *file){$/;"	f
+filename	error.h	/^	const char *filename;$/;"	m
+fixedsym	instance.h	/^	static SymChar fixedsym;$/;"	m	class:Instanc
+fprintf_error_reporter	error.c	/^fprintf_error_reporter(FILE *file, const char *fmt, ...){$/;"	f
+fputc_error_reporter	error.c	/^fputc_error_reporter(int c, FILE *file){$/;"	f
+g_error_reporter_cache	error.c	/^static error_reporter_meta_t g_error_reporter_cache;$/;"	v	file:
+g_error_reporter_callback	error.c	/^static error_reporter_callback_t g_error_reporter_callback;$/;"	v	file:
+getSetValue	instance.h	/^	const ASCXX_Set<T> Instanc::getSetValue() const{$/;"	f	class:Instanc::Instanc
+i	instance.h	/^	struct Instance *i;$/;"	m	class:Instanc
+initproc	method.h	/^	struct InitProcedure *initproc;$/;"	m	class:Method
+iscaching	error.h	/^	unsigned char iscaching; \/** set to true for fprintf_error_reporter to do its work *\/$/;"	m
+length	set.h	/^	unsigned long length() const{$/;"	f	class:ASCXX_Set
+line	error.h	/^	int line;$/;"	m
+msg	error.h	/^	char msg[ERROR_REPORTER_MAX_MSG];$/;"	m
+name	instance.h	/^	SymChar name;$/;"	m	class:Instanc
+name	name.h	/^	struct Name *name;$/;"	m	class:Nam
+name	variable.h	/^	std::string name;$/;"	m	class:Variable
+operator <<	set.h	/^std::ostream& operator<< (std::ostream& os, const ASCXX_Set<T>& s){$/;"	f
+s	set.h	/^	const struct set_t *s;$/;"	m	class:ASCXX_Set
+s	variable.h	/^	slv_system_t s;$/;"	m	class:Variable
+sc	symchar.h	/^	const symchar *sc;$/;"	m	class:SymChar
+sev	error.h	/^	error_severity_t sev;$/;"	m
+simroot	simulation.h	/^	Instanc simroot;$/;"	m	class:Simulation
+solver	simulation.h	/^	slv_system_t solver;$/;"	m	class:Simulation
+solvervarsym	instance.h	/^	static SymChar solvervarsym;$/;"	m	class:Instanc
+t	module.h	/^	const module_t *t;$/;"	m	class:Module
+t	type.h	/^	const TypeDescription *t;$/;"	m	class:Type
+u	units.h	/^	const struct Units *u;$/;"	m	class:UnitsM
+va_error_reporter	error.c	/^va_error_reporter($/;"	f
+var	variable.h	/^	struct var_variable *var;$/;"	m	class:Variable

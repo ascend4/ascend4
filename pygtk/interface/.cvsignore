@@ -1,0 +1,7 @@
+.libs
+*.pyc
+*.bz2
+*_wrap.cxx
+ascend.py
+ascend.gladep
+callgrind.out.*
