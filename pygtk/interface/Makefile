@@ -22,7 +22,7 @@ all:
 #-------------------------
 # Linking with ASCEND
 
-ASCEND_CPPFLAGS = -I../../base/generic -I../../base/generic/solver -I../../base/generic/compiler -I../../base/generic/utilities -I../../base/generic/general -I../../base/generic/packages $(PYTHON_CPPFLAGS)
+ASCEND_CPPFLAGS = -I../../base/generic -I../../base/generic/solver -I../../base/generic/compiler -I../../base/generic/utilities -I../../base/generic/general -I../../base/generic/packages
 
 BLAS = /usr/lib/libblas.so.3.0.3
 
@@ -46,13 +46,20 @@ libs:
 #------------------
 # PYTHON STUFF
 
-PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
-
-PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)/
-
-PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
-
 USE_PYTHON := 1
+
+ifeq ($(USE_PYTHON),1)
+	ifeq ($(OSTYPE),msys)
+		PYTHON_VERSION := 24
+		PYTHON_ROOT := /c/Python$(PYTHON_VERSION)
+		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
+		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython($PYTHON_VERSION)
+	else
+		PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
+		PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
+		PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+	endif
+endif
 
 ifdef USE_PYTHON
 	ASCXX_CPPFLAGS := $(ASCEND_CPPFLAGS) $(PYTHON_CPPFLAGS) -DASCXX_USE_PYTHON
@@ -93,7 +100,16 @@ main: main.o $(OBJS) $(ASC_LIBS)
 
 SWIG_MODULE = ascend
 SWIG = swig
-SWIGFLAGS = -c++ -python
+
+ifeq ($(OSTYPE),msys)
+	SWIG_VERSION = 1.3.27
+	SWIG_INCROOT = /usr/local/share/swig/$(SWIG_VERSION)
+	SWIG_INCLUDES = -I$(SWIG_INCROOT) -I$(SWIG_INCROOT)/std -I$(SWIG_INCROOT)/python
+else
+	SWIG_INCLUDES =
+endif
+
+SWIGFLAGS = -c++ -python $(SWIG_INCLUDES)
 SWIG_CFLAGS = -c -fPIC 
 SWIG_CPPFLAGS = $(ASCXX_CPPFLAGS)
 
