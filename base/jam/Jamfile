@@ -1,4 +1,4 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
+#THIS FILE IS DEPRECATED - 20-Dec-2005
 
 #
 # Jamfile to build Ascend4 base libraries
@@ -88,7 +88,7 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 SubDir TOP base jam ;
 if ! $(JAMRULES_ALREADY_SEEN)
 {
-  include $(TOP)$(SLASH)jam$(SLASH)Jamrules ;
+  include $(TOP)$(SLASH)jam$(SLASH)Jamrules_general ;
 }
 
 srcdir = $(TOP)$(SLASH)base$(SLASH)generic ;
