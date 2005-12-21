@@ -1,0 +1,16 @@
+#!/bin/bash
+export ASCENDLIBRARY=~/ascdata:~/src/ascend/trunk/models
+
+args=$@
+
+if [ $ASCEND_GDB ]; then
+	bin="gdb --args python" 
+else
+	bin=python
+fi
+
+dir=`dirname $0`
+cmd="$bin $dir/gtkbrowser.py $args"
+
+$cmd
+

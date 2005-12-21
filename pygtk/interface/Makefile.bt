@@ -1,0 +1,26 @@
+# Makefile for bin-tokens
+
+CC = gcc
+
+#LD = $(CC) -shared -fPIC
+LD = libtool --mode=link gcc -module -shared -fPIC
+
+LDFLAGS = -lm -L$(ASCEND_LIBDIR)
+
+SO_SUF = .so
+
+CPPFLAGS = -I$(ASCEND_INCDIR)
+
+SOURCE_ROOT = /home/john/src/ascend/trunk/
+# btprolog is in /usr/lib, unfortunately, on my machine...
+
+CFLAGS = -O -c
+
+all: $(SO)$(SO_SUF)
+
+%$(SO_SUF): %.o
+	$(LD) -o $@ $^ $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^
+

@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- - - - - - - - - - - - - - - - - -  - - - - - - - - - -  - - - - - - - - - -
+Syntax definition file for ASCEND modelling language.
+Put this file into /usr/share/gtksourceview-[VERSION]/language-specs/ascend.lang
+
+John Pye (C) 2005
+-->
+
+<!-- gtksourceview ASCEND IV language specification -->
+
+<!DOCTYPE language SYSTEM "language.dtd">
+<language _name="ASCEND" version="1.0" _section="Sources" mimetypes="text/x-ascend">
+
+	<escape-char>\</escape-char>
+
+<!-- notes -->
+
+	<block-comment _name = "Note" style= "Others 2" end-at-line-end = "FALSE">
+		<start-regex>^\s*NOTES</start-regex>
+		<end-regex>END\s+NOTES</end-regex>
+	</block-comment>
+
+	<block-comment _name = "Stop" style= "Comment" end-at-line-end = "FALSE">
+		<start-regex>STOP\s+\{</start-regex>
+		<end-regex>\}</end-regex>
+	</block-comment>
+
+<!-- Literals -->
+
+	<string _name="Text" style="String" end-at-line-end="FALSE">
+		<start-regex>&quot;</start-regex>
+		<end-regex>&quot;</end-regex>
+	</string>
+
+	<string _name="String Constant" style="String" end-at-line-end="FALSE">
+		<start-regex>&apos;</start-regex>
+		<end-regex>&apos;</end-regex>
+	</string>
+
+	<pattern-item _name="Integer Literals" style="Decimal">
+		<regex>\b[0-9]+\b</regex>
+	</pattern-item>
+
+	<pattern-item _name="Number Literals" style="Floating Point">
+		<regex>(\b[-+]?[0-9]+(\.[0-9]+)?|\.[0-9]+)([Ee][\+-]?[0-9]+)?\b</regex>
+	</pattern-item>
+
+
+<!-- Comments -->
+
+
+	<block-comment _name="Block Comment" style="Comment">
+		<start-regex>\(\*</start-regex>
+		<end-regex>\*\)</end-regex>
+	</block-comment>
+
+<!-- punctuation -->
+
+<!--
+	<pattern-item _name="Punctuation" style="Keyword">
+		<regex>(:=|[\+\*\/\-\|\^\(\)=;-])</regex>
+	</pattern-item>
+-->
+
+<!-- Reserved Words -->
+
+	<keyword-list _name="Keywords" style="Keyword" case-sensitive="FALSE">
+		<keyword>ADD</keyword>
+		<keyword>AND</keyword>
+		<keyword>ALIASES</keyword>
+		<keyword>ARE_ALIKE</keyword>
+		<keyword>ARE_THE_SAME</keyword>
+		<keyword>ARE_NOT_THE_SAME</keyword>
+		<keyword>ATOM</keyword>
+		<keyword>CALL</keyword>	
+		<keyword>CASE</keyword>	
+		<keyword>CARD</keyword>
+		<keyword>CHECK</keyword>
+		<keyword>CHOICE</keyword>
+		<keyword>CONSTANT</keyword>
+		<keyword>CONDITIONAL</keyword>
+		<keyword>CREATE</keyword>
+		<keyword>DATA</keyword>
+		<keyword>DEFAULT</keyword>
+		<keyword>DEFINITION</keyword>
+		<keyword>DO</keyword>
+		<keyword>ELSE</keyword>
+		<keyword>END</keyword>
+		<keyword>FOR</keyword>
+		<keyword>IF</keyword>
+		<keyword>IN</keyword>
+		<keyword>INTERSECTION</keyword>
+		<keyword>IS_A</keyword>
+		<keyword>IS_REFINED_TO</keyword>
+		<keyword>MAX</keyword>
+		<keyword>MAXIMIZE</keyword>
+		<keyword>METHOD</keyword>
+		<keyword>METHODS</keyword>
+		<keyword>MIN</keyword>
+		<keyword>MINIMIZE</keyword>
+		<keyword>MODEL</keyword>
+		<keyword>NOTES</keyword>
+		<keyword>OR</keyword>
+		<keyword>OTHERWISE</keyword>
+		<keyword>PROVIDE</keyword>
+		<keyword>PROD</keyword>
+		<keyword>REPLACE</keyword>
+		<keyword>REQUIRE</keyword>
+		<keyword>REFINES</keyword>
+		<keyword>RUN</keyword>
+		<keyword>SATISFIED</keyword>
+		<keyword>SELECT</keyword>
+		<keyword>SELF</keyword>
+		<keyword>STUDY</keyword>
+		<keyword>SUCH_THAT</keyword>
+		<keyword>SUM</keyword>
+		<keyword>SWITCH</keyword>
+		<keyword>THEN</keyword>
+		<keyword>UNIVERSAL</keyword>
+		<keyword>UNION</keyword>
+		<keyword>USE</keyword>
+		<keyword>WHEN</keyword>
+		<keyword>WHERE</keyword>
+		<keyword>WILL_BE</keyword>
+		<keyword>WILL_BE_THE_SAME</keyword>
+		<keyword>WILL_NOT_BE_THE_SAME</keyword>
+	</keyword-list>
+
+<!-- units -->
+
+	<pattern-item _name="Units" style="Data Type">
+		<regex>\{[A-Za-z^0-9_/\*\?]+\}</regex>
+	</pattern-item>
+
+<!-- dimension -->
+
+	<pattern-item _name="Dimension" style="Data Type">
+		<regex>\bDIMENSIONLESS|DIMENSION (1/)?(([MQTLCEPS]|TMP|LUM)(\^[0-9]+)?)([\*\/]([MQTLCEPS]|TMP|LUM)(\^[0-9]+)?)*\b</regex>
+	</pattern-item>
+
+<!-- constant -->
+
+	<keyword-list _name="Builtin Constants" style="Preprocessor" case-sensitive="true">
+		<keyword>FALSE</keyword>
+		<keyword>TRUE</keyword>
+		<keyword>real_constant</keyword>
+		<keyword>boolean</keyword>
+		<keyword>symbol</keyword>
+		<keyword>integer</keyword>
+		<keyword>real</keyword>
+	</keyword-list>
+
+	<keyword-list _name="Standard Constants" style="Preprocessor" case-sensitive="true">
+		<keyword>constant</keyword>
+		<keyword>critical_compressibility</keyword>
+		<keyword>acentric_factor</keyword>
+		<keyword>UNIFAC_size</keyword>
+		<keyword>Wilson_constant</keyword>
+		<keyword>vapor_pressure_constant</keyword>
+		<keyword>factor_constant</keyword>
+		<keyword>molar_weight_constant</keyword>
+		<keyword>atomic_mass_constant</keyword>
+		<keyword>temperature_constant</keyword>
+		<keyword>boiling_temperature</keyword>
+		<keyword>critical_temperature</keyword>
+		<keyword>reference_temperature</keyword>
+		<keyword>UNIFAC_a</keyword>
+		<keyword>pressure_constant</keyword>
+		<keyword>critical_pressure</keyword>
+		<keyword>reference_pressure</keyword>
+		<keyword>molar_volume_constant</keyword>
+		<keyword>critical_volume</keyword>
+		<keyword>reference_molar_volume</keyword>
+		<keyword>reference_mass_density</keyword>
+		<keyword>molar_energy_constant</keyword>
+		<keyword>reference_molar_energy</keyword>
+		<keyword>enthalpy_of_formation_constant</keyword>
+		<keyword>enthalpy_of_formation_constant</keyword>
+		<keyword>heat_of_vaporization_constant</keyword>
+		<keyword>Wilson_energy_constant</keyword>
+		<keyword>molar_entropy_constant</keyword>
+		<keyword>reference_molar_entropy</keyword>
+		<keyword>heat_capacity_constant</keyword>
+		<keyword>heat_capacity_a_constant</keyword>
+		<keyword>heat_capacity_b_constant</keyword>
+		<keyword>heat_capacity_c_constant</keyword>
+		<keyword>heat_capacity_d_constant</keyword>
+		<keyword>gas_constant</keyword>
+		<keyword>gravity_constant</keyword>
+		<keyword>circle_constant</keyword>
+		<keyword>speed_of_light</keyword>
+		<keyword>planck_constant</keyword>
+		<keyword>avogadro_constant</keyword>
+		<keyword>permittivity_constant</keyword>
+		<keyword>permeability_constant</keyword>
+		<keyword>electron_charge</keyword>
+		<keyword>electron_mass</keyword>
+		<keyword>proton_mass</keyword>
+		<keyword>boolean_start_true</keyword>
+		<keyword>boolean_start_false</keyword>
+		<keyword>start_true</keyword>
+		<keyword>start_false</keyword>
+		<keyword>free_energy_of_formation_constant</keyword>
+		<keyword>permeability_constant</keyword>
+		<keyword>permeability_constant</keyword>
+		<keyword>permeability_constant</keyword>
+		<keyword>permeability_constant</keyword>
+		<keyword>permeability_constant</keyword>
+		<keyword>permeability_constant</keyword>
+	</keyword-list>
+
+<!-- equation labels -->
+
+	<pattern-item _name="Equation Labels" style="String">
+		<regex>^\s*[a-zA-Z][a-zA-Z0-9_]*\:</regex>
+	</pattern-item>
+
+	
+<!-- Functions -->
+
+	<!-- Single-Row Functions -->
+
+	<keyword-list _name="Numerical Functions" style="Function" case-sensitive="FALSE">
+		<keyword>abs</keyword>
+		<keyword>(arc)?(cos|sin|tan)h?</keyword>
+		<keyword>erf</keyword>
+		<keyword>exp</keyword>
+		<keyword>lnm?</keyword>
+	</keyword-list>
+
+<!-- Default measures -->
+
+	<keyword-list _name = "System Atoms" style="Data Type" case-sensitive="TRUE">
+		<keyword>relation</keyword>
+		<keyword>logic_relation</keyword>
+		<keyword>solver_var</keyword>
+		<keyword>lower_bound</keyword>
+		<keyword>upper_bound</keyword>
+		<keyword>nominal</keyword>
+		<keyword>included</keyword>
+		<keyword>message</keyword>
+		<keyword>fixed</keyword>
+		<keyword>boolean_var</keyword>
+		<keyword>generic_real</keyword>
+		<keyword>solver_int</keyword>
+		<keyword>relaxed</keyword>
+		<keyword>is_zero</keyword>
+		<keyword>solver_binary</keyword>
+		<keyword>solver_semi</keyword>
+	</keyword-list>
+
+	<keyword-list _name = "Standard Atoms" style="Data Type" case-sensitive="TRUE">
+		<keyword>bound_width</keyword>
+		<keyword>scaling_constant</keyword>
+		<keyword>ode_counter</keyword>
+		<keyword>obs_counter</keyword>
+		<keyword>real_parameter</keyword>
+		<keyword>length_parameter</keyword>
+		<keyword>positive_variable</keyword>
+		<keyword>variable</keyword>
+		<keyword>fraction</keyword>
+		<keyword>positive_factor</keyword>
+		<keyword>small_factor</keyword>
+		<keyword>small_positive_factor</keyword>
+		<keyword>reduced_pressure</keyword>
+		<keyword>exp_sub</keyword>
+		<keyword>power_sub</keyword>
+		<keyword>inverse_temperature</keyword>
+		<keyword>force</keyword>
+		<keyword>vapor_pressure</keyword>
+		<keyword>k_constant</keyword>
+		<keyword>molar_mass</keyword>
+		<keyword>molar_rate</keyword>
+		<keyword>mass</keyword>
+		<keyword>mole_scale</keyword>
+		<keyword>mole</keyword>
+		<keyword>mass_rate</keyword>
+		<keyword>molar_rate_scale</keyword>
+		<keyword>conc_rate</keyword>
+		<keyword>mole_fraction</keyword>
+		<keyword>mass_fraction</keyword>
+		<keyword>molar_volume</keyword>
+		<keyword>volume_scale</keyword>
+		<keyword>volume_rate_scale</keyword>
+		<keyword>volume_rate_square</keyword>
+		<keyword>volume_expansivity</keyword>
+		<keyword>molar_density</keyword>
+		<keyword>mass_density</keyword>
+		<keyword>molar_energy</keyword>
+		<keyword>energy_scale</keyword>
+		<keyword>energy_rate_scale</keyword>
+		<keyword>energy_rate</keyword>
+		<keyword>heat_capacity</keyword>
+		<keyword>molar_energy_rate</keyword>
+		<keyword>molar_entropy</keyword>
+		<keyword>entropy</keyword>
+		<keyword>entropy_rate</keyword>
+		<keyword>conc_rate</keyword>
+		<keyword>partition_coefficient</keyword>
+		<keyword>monetary_unit</keyword>
+		<keyword>cost_per_volume</keyword>
+		<keyword>cost_per_mass</keyword>
+		<keyword>cost_per_time</keyword>
+		<keyword>cost_per_energy</keyword>
+		<keyword>inverse_area</keyword>
+		<keyword>angle</keyword>
+		<keyword>solid_angle</keyword>
+		<keyword>time</keyword>
+		<keyword>speed</keyword>
+		<keyword>acceleration</keyword>
+		<keyword>viscosity</keyword>
+		<keyword>thermal_conductivity</keyword>
+		<keyword>diffusivity</keyword>
+		<keyword>voltage</keyword>
+		<keyword>resistance</keyword>
+		<keyword>current</keyword>
+		<keyword>capacitance</keyword>
+		<keyword>inductance</keyword>
+		<keyword>magnetic_field</keyword>
+		<keyword>electric_field</keyword>
+		<keyword>delta_distance</keyword>
+		<keyword>delta_temperature</keyword>
+		<keyword>delta_mass</keyword>
+		<keyword>delta_mole</keyword>
+		<keyword>delta_mass_rate</keyword>
+		<keyword>delta_molar_rate</keyword>
+		<keyword>delta_volume_rate</keyword>
+		<keyword>delta_energy_rate</keyword>
+		<keyword>delta_molar_energy_rate</keyword>
+		<keyword>delta_entropy_rate</keyword>
+		<keyword>mass_sec</keyword>
+		<keyword>mole_sec</keyword>
+	</keyword-list>
+
+	<keyword-list _name = "Data Types" style = "Data Type" case-sensitive="TRUE">
+		<keyword>factor</keyword>
+		<keyword>distance</keyword>
+		<keyword>pressure</keyword>
+		<keyword>area</keyword>
+		<keyword>volume</keyword>
+		<keyword>temperature</keyword>
+		<keyword>energy</keyword>
+		<keyword>volume_rate</keyword>
+		<keyword>frequency</keyword>
+		<keyword>factor</keyword>
+	</keyword-list>
+
+<!-- variables -->
+
+<!--
+	<pattern-item _name="Variables" style="Variable">
+		<regex>[a-zA-Z_][a-zA-Z0-9_]*</regex>
+	</pattern-item>
+-->
+
+</language>
