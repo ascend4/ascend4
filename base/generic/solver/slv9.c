@@ -4872,31 +4872,31 @@ static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
   sys->opt_var_values = NULL;
   if (sys->vlist == NULL) {
     ascfree(sys);
-    FPRINTF(ASCERR,"CMSlv called with no variables.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no variables.");
     *statusindex = -2;
     return NULL;
   }
   if (sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
-    FPRINTF(ASCERR,"CMSlv called with no relations or objective.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no relations or objective.\n");
     *statusindex = -1;
     return NULL;
   }
   if (sys->dvlist == NULL) {
     ascfree(sys);
-    FPRINTF(ASCERR,"CMSlv called with no discrete variables.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no discrete variables.\n");
     *statusindex = -2;
     return NULL;
   }
   if (sys->lrlist == NULL) {
     ascfree(sys);
-    FPRINTF(ASCERR,"CMSlv called with no logrelations.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no logrelations.\n");
     *statusindex = -1;
     return NULL;
   }
   if (sys->blist == NULL) {
     ascfree(sys);
-    FPRINTF(ASCERR,"CMSlv called with no boundaries.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no boundaries.\n");
     *statusindex = -2;
     return NULL;
   }
@@ -4906,10 +4906,7 @@ static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
 
   if (get_solvers_tokens(sys,server)) {
     ascfree(sys);
-    FPRINTF(ASCERR,"\n");
-    FPRINTF(ASCERR,"Solver(s) required by CMSlv were not registered\n");
-    FPRINTF(ASCERR,"System cannot be created \n");
-    FPRINTF(ASCERR,"\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Solver(s) required by CMSlv were not registered. System cannot be created.");
     *statusindex = -1;
     return NULL;
   }

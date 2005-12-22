@@ -673,21 +673,21 @@ FPRINTF(fm->err,"\n");
 }
 
 static void
-ExecuteInitTest(struct procFrame *fm, struct Statement *stat){
+ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 	struct value_t value;
 	int testerr;
 	assert(GetEvaluationContext()==NULL);
 	SetEvaluationContext(fm->i);
-	value = EvaluateExpr(TestStatExpr(stat),NULL,InstanceEvaluateName);
+	value = EvaluateExpr(AssertStatExpr(stat),NULL,InstanceEvaluateName);
 	SetEvaluationContext(NULL);
 	testerr = 1; /* set 0 on success */
 	switch(ValueKind(value)){
 		case boolean_value:
 			testerr = 0;
 			if(BooleanValue(value)){
-				ERROR_REPORTER_STAT(ASC_USER_SUCCESS,stat,"TEST passed");
+				ERROR_REPORTER_STAT(ASC_USER_SUCCESS,stat,"Assertion OK");
 			}else{
-				ERROR_REPORTER_STAT(ASC_USER_ERROR,stat,"TEST failed");
+				ERROR_REPORTER_STAT(ASC_USER_ERROR,stat,"Assertion failed");
 			}
 			break;
 		case real_value:
@@ -1434,8 +1434,8 @@ FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
   case WHILE:
     ExecuteInitWhile(fm,stat);
     break;
-  case TEST:
-	ExecuteInitTest(fm,stat);
+  case ASSERT:
+	ExecuteInitAssert(fm,stat);
 	break;
   case IF:
     ExecuteInitIf(fm,stat);

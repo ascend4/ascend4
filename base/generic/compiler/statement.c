@@ -133,7 +133,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
         AddContext(sublist,con);
       }
       break;
-	case TEST:
+	case ASSERT:
       /* no sublists under a TEST statement */
 	  break;	  
     case IF:
@@ -601,15 +601,15 @@ struct Statement *CreateCALL(symchar *sym,struct Set *args)
   return result;
 }
 
-struct Statement *CreateTEST(struct Expr *ex){
+struct Statement *CreateASSERT(struct Expr *ex){
 	register struct Statement *result;
 	result = STMALLOC;
-	result->t = TEST;
+	result->t = ASSERT;
 	result->linenum = LineNum();
 	result->mod = Asc_CurrentModule();
 	result->context = context_MODEL;
 	result->ref_count = 1;
-	result->v.tests.test = ex;
+	result->v.asserts.test = ex;
 	return result;
 }
 
@@ -953,9 +953,9 @@ void DestroyStatement(struct Statement *s)
 	s->v.r.type_name = NULL;
 	break;
 
-      case TEST:
-        DestroyExprList(s->v.tests.test);
-        s->v.tests.test = NULL;
+      case ASSERT:
+        DestroyExprList(s->v.asserts.test);
+        s->v.asserts.test = NULL;
         break;
 
       case IF:
@@ -1107,8 +1107,8 @@ struct Statement *CopyToModify(struct Statement *s)
     result->v.r.proc_name = CopyName(s->v.r.proc_name);
     result->v.r.type_name = CopyName(s->v.r.type_name);
     break;
-  case TEST:
-    result->v.tests.test = CopyExprList(s->v.tests.test);
+  case ASSERT:
+    result->v.asserts.test = CopyExprList(s->v.asserts.test);
     break;
   case IF:
     result->v.ifs.test = CopyExprList(s->v.ifs.test);
@@ -1177,7 +1177,7 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case EXT:
   case REF:
   case RUN:
-  case TEST:
+  case ASSERT:
   case IF:
   case WHEN:
   case FNAME:
@@ -1215,7 +1215,7 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case EXT:
   case REF:
   case RUN:
-  case TEST:
+  case ASSERT:
   case IF:
   case WHEN:
   case FNAME:
@@ -1255,7 +1255,7 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case EXT:
   case REF:
   case RUN:
-  case TEST:
+  case ASSERT:
   case IF:
   case WHEN:
   case FNAME:
@@ -1725,9 +1725,9 @@ struct Expr *WhileStatExprF(CONST struct Statement *s)
   return s->v.loop.test;
 }
 
-struct Expr *TestStatExprF(CONST struct Statement *s){
-	assert(s && s->ref_count && (s->t == TEST));
-	return s->v.tests.test;
+struct Expr *AssertStatExprF(CONST struct Statement *s){
+	assert(s && s->ref_count && (s->t == ASSERT));
+	return s->v.asserts.test;
 }
 
 struct Expr *IfStatExprF(CONST struct Statement *s)
@@ -2293,8 +2293,8 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     }
     return CompareStatementLists(WhileStatBlock(s1), WhileStatBlock(s2),&ltmp);
 
-  case TEST:
-	ctmp = CompareExprs(TestStatExpr(s1), TestStatExpr(s2));
+  case ASSERT:
+	ctmp = CompareExprs(AssertStatExpr(s1), AssertStatExpr(s2));
 	return ctmp;
 
   case IF:
@@ -2491,7 +2491,7 @@ int CompareISStatements(CONST struct Statement *s1, CONST struct Statement *s2)
   case CASGN:
   case RUN:
   case CALL:
-  case TEST:
+  case ASSERT:
   case IF:
   case WHEN:
   case FNAME:
