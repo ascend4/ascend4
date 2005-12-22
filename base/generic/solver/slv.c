@@ -268,6 +268,12 @@ static int g_number_of_bnds;
 /** Return the solver index for a given slv_system_t */
 #define SNUM(sys) ((sys)->solver)
 
+/** leave it in here John. Unilateral 'housecleaning' of this sort is not appreciated. */
+#define NORC g_SlvNumberOfRegisteredClients
+
+/** leave it in here John. Unilateral 'housecleaning' of this sort is not appreciated. */
+#define SCD(i) SlvClientsData[(i)]
+
 /**	Get the solver index for a system and return TRUE if the solver 
 	index is in the range [0,NORC). 'sys' should not be null
 	@param sys system, slv_system_t.
@@ -293,6 +299,18 @@ static int g_number_of_bnds;
 	SERVER FUNCTIONS
 */
 
+int slv_lookup_client( const char *solverName )
+{
+  int i;
+  if (solverName == NULL) { return -1; }
+  for (i = 0; i < NORC; i++) {
+    if ( strcmp( SCD(i).name, solverName)==0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 /** Register a new solver.
 	@TODO This needs work still, particularly of the dynamic loading 
 	sort. it would be good if here we farmed out the dynamic loading
@@ -305,14 +323,12 @@ int slv_register_client(SlvRegistration registerfunc, char *func, char *file)
   (void)func;  /*  stop gcc whine about unused parameter */
   (void)file;  /*  stop gcc whine about unused parameter */
 
-  status = registerfunc(&(
-	SlvClientsData[g_SlvNumberOfRegisteredClients]
-  ));
+  status = registerfunc(&( SlvClientsData[NORC]));
   if (!status) { /* ok */
-    SlvClientsData[g_SlvNumberOfRegisteredClients].number = g_SlvNumberOfRegisteredClients;
-    g_SlvNumberOfRegisteredClients++;
+    SlvClientsData[NORC].number = NORC;
+    NORC++;
   } else {
-    FPRINTF(stderr,"Client %d registration failure (%d)!\n",g_SlvNumberOfRegisteredClients,status);
+    FPRINTF(stderr,"Client %d registration failure (%d)!\n",NORC,status);
   }
   return status;
 }
@@ -797,7 +813,7 @@ int Solv_C_CheckHalt()
 const char *slv_solver_name(int index)
 {
   static char errname[] = "ErrorSolver";
-  if (index >= 0 && index < g_SlvNumberOfRegisteredClients) {
+  if (index >= 0 && index < NORC) {
     if ( SlvClientsData[index].name == NULL ) {
       error_reporter(ASC_PROG_WARNING,NULL,0,"slv_solver_name: unnamed solver: index='%d'",index);
       return errname;
@@ -1873,7 +1889,7 @@ int slv_select_solver(slv_system_t sys,int solver){
     error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver called with NULL system\n");
     return -1;
   }
-  if ( solver >= 0 && solver < g_SlvNumberOfRegisteredClients ) {
+  if ( solver >= 0 && solver < NORC ) {
     if (sys->ct != NULL && solver != sys->solver) {
 	  CONSOLE_DEBUG("Solver has changed, destroy old data...");
       destroy = SlvClientsData[SNUM(sys)].cdestroy;
@@ -2089,7 +2105,7 @@ int slv_get_selected_solver(slv_system_t sys)
 int32 slv_get_default_parameters(int index,
 				slv_parameters_t *parameters)
 {
-  if (index >= 0 && index < g_SlvNumberOfRegisteredClients) {
+  if (index >= 0 && index < NORC) {
     if ( SlvClientsData[index].getdefparam == NULL ) {
       error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_default_parameters called with parameterless index\n");
       return 0;
