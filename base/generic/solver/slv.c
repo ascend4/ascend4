@@ -1880,16 +1880,6 @@ int slv_eligible_solver(slv_system_t sys)
   return SF(sys,celigible)(sys);
 }
 
-int slv_get_named_solver(CONST char *name){
-	int i;
-	for(i=0;i < g_SlvNumberOfRegisteredClients; i++){
-		if(strcmp(name, slv_solver_name(i))==0){
-			return i;
-		}
-	}
-	return -1;
-}
-
 int slv_select_solver(slv_system_t sys,int solver){
 
   int status_index;
