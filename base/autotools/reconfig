@@ -73,9 +73,11 @@ else
 fi
 
 # Use installed BLAS if it's found in an obvious place
-blaspath=/usr/lib/libblas.a
-if [ -e $blaspath ]; then
-	blasopt=--with-blas=$blaspath
+blaspath=/usr/lib/libblas
+if [ -e $blaspath.a ]; then
+	blasopt=--with-blas=$blaspath.a
+elif [ -e $blaspath.so.3 ]; then
+	blasopt=--with-blas=$blaspath.so.3
 else
 	blasopt=
 fi

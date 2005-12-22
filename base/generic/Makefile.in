@@ -45,6 +45,9 @@ asclibs = compiler general utilities solver packages
 
 all_libs: $(asclibs:%=libasc%.a) libascif.a btlib
 
+# All non-GUI libraries:
+libs: $(asclibs:%=libasc%.a) $(support_libs)
+
 ascend4: support_libs all_libs GUI
 	echo "deprecated, just use 'make all'"
 
