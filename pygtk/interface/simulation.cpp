@@ -55,6 +55,7 @@ extern "C"{
 	@TODO fix mutex on compile command filenames
 */
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
+	is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
 	// it the 'simulation model') and it can be fetched using 'getModel()' 
 	// any time later.
@@ -193,6 +194,7 @@ Simulation::build(){
 	if(sys == NULL){
 		throw runtime_error("Unable to build system");
 	}
+	is_built = true;
 	cerr << "...DONE BUILDING" << endl;
 }
 
@@ -250,6 +252,10 @@ Simulation::getFixableVariables(){
 
 void
 Simulation::solve(Solver solver){
+	if(!is_built){
+		throw runtime_error("Simulation::solver: simulation is not yet built, can't start solving.");
+	}
+
 	cerr << "SIMULATION::SOLVE STARTING..." << endl;
 	enum inst_t k = getModel().getKind();
 	if(k!=MODEL_INST)throw runtime_error("Can't solve: not an instance of type MODEL_INST");

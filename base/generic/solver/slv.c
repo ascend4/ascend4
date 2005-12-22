@@ -1894,8 +1894,12 @@ int slv_select_solver(slv_system_t sys,int solver){
     return -1;
   }
   if ( solver >= 0 && solver < NORC ) {
+	CONSOLE_DEBUG("solver index in range, 0 <= %d < %d" , solver, NORC);
+	CONSOLE_DEBUG("sys->solver = %d",sys->solver);
+	CONSOLE_DEBUG("sys->ct = %p",sys->ct);
     if (sys->ct != NULL && solver != sys->solver) {
 	  CONSOLE_DEBUG("Solver has changed, destroy old data...");
+
       destroy = SlvClientsData[sys->solver].cdestroy;
       if(destroy!=NULL) {
 	    CONSOLE_DEBUG("About to destroy data...");

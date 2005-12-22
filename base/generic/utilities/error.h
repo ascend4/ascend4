@@ -55,7 +55,7 @@
 	of the error won't be reported, because you don't support
 	variadic macros.
 */
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define ERROR_REPORTER_DEBUG(MSG,args...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
 # define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ##args)
 #elif defined(HAVE_C99)
