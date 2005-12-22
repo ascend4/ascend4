@@ -278,19 +278,19 @@ static int g_number_of_bnds;
 	index is in the range [0,NORC). 'sys' should not be null
 	@param sys system, slv_system_t.
  */
-#define LS(sys) ( SNUM(sys) >= 0 && SNUM(sys) < g_SlvNumberOfRegisteredClients )
+#define LS(sys) ( (sys)->solver >= 0 && (sys)->solver < g_SlvNumberOfRegisteredClients )
 
 /** Boolean test that i is in the range [0,NORC) */
 #define LSI(i) ( (i) >= 0 && (i) < g_SlvNumberOfRegisteredClients )
 
 /** Check and return a function pointer. See @SF */
-#define CF(sys,ptr) ( LS(sys) ?  SlvClientsData[SNUM(sys)].ptr : NULL )
+#define CF(sys,ptr) ( LS(sys) ?  SlvClientsData[(sys)->solver].ptr : NULL )
 
 /** Return the pointer to the client-supplied function or char if 
 	the client supplied one, else NULL. This should only be called 
 	with nonNULL sys after CF is happy. @see CF 
 */
-#define SF(sys,ptr) ( SlvClientsData[SNUM(sys)].ptr )
+#define SF(sys,ptr) ( SlvClientsData[(sys)->solver].ptr )
 
 /** Free a pointer provided it's not NULL */
 #define SFUN(p) if ((p) != NULL) ascfree(p)
@@ -327,11 +327,13 @@ int slv_register_client(SlvRegistration registerfunc, CONST char *func
   status = registerfunc(&( SlvClientsData[NORC]));
   if (!status) { /* ok */
     SlvClientsData[NORC].number = NORC;
-	new_client_id = NORC;
+	*new_client_id = NORC;
     NORC++;
   } else {
-    FPRINTF(stderr,"Client %d registration failure (%d)!\n",NORC,status);
+  	*new_client_id = -2;
+    error_reporter(ASC_PROG_ERR,NULL,0,"Client %d registration failure (%d)!\n",NORC,status);
   }
+  /*CONSOLE_DEBUG("status: %d",status);*/
   return status;
 }
 
@@ -1894,7 +1896,7 @@ int slv_select_solver(slv_system_t sys,int solver){
   if ( solver >= 0 && solver < NORC ) {
     if (sys->ct != NULL && solver != sys->solver) {
 	  CONSOLE_DEBUG("Solver has changed, destroy old data...");
-      destroy = SlvClientsData[SNUM(sys)].cdestroy;
+      destroy = SlvClientsData[sys->solver].cdestroy;
       if(destroy!=NULL) {
 	    CONSOLE_DEBUG("About to destroy data...");
         (destroy)(sys,sys->ct);
@@ -1951,11 +1953,13 @@ int slv_switch_solver(slv_system_t sys,int solver)
 {
   int status_index;
 
+  CONSOLE_DEBUG("SLV_SWITH_SOLVER CALLED..............................");
+
   if (sys ==NULL) {
     error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver called with NULL system\n");
     return -1;
   }
-  if (LSI(solver)) {
+  if( solver >= 0 && solver < g_SlvNumberOfRegisteredClients ){
     status_index = solver;
     sys->solver = solver;
     if ( CF(sys,ccreate) != NULL) {
@@ -2254,6 +2258,8 @@ void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
 
 void slv_set_solver_index(slv_system_t sys, int solver)
 {
+  CONSOLE_DEBUG("======================================");
+
   if (sys==NULL) {
     error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solver_index called with NULL system.\n");
     return;

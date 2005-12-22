@@ -1,3 +1,6 @@
+#ifndef ASCXX_SOLVER_H
+#define ASCXX_SOLVER_H
+
 #include <string>
 #include <vector>
 
@@ -43,3 +46,4 @@ public:
 	const std::string& getName() const;
 };
 
+#endif

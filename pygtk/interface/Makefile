@@ -50,7 +50,7 @@ libs:
 #------------------
 # PYTHON STUFF
 
-USE_PYTHON := 1
+USE_PYTHON := 0
 
 ifeq ($(USE_PYTHON),1)
 	ifeq ($(OSTYPE),msys)
@@ -65,7 +65,7 @@ ifeq ($(USE_PYTHON),1)
 	endif
 endif
 
-ifdef USE_PYTHON
+ifeq ($(USE_PYTHON),1)
 	ASCXX_CPPFLAGS := $(ASCEND_CPPFLAGS) $(PYTHON_CPPFLAGS) -DASCXX_USE_PYTHON
 	ASCXX_PYTHON_LDFLAGS := $(PYTHON_LDFLAGS)
 else
@@ -134,7 +134,17 @@ all: $(LIB)
 	$(CC) $(SWIG_CFLAGS) -o $@ $^ $(SWIG_CPPFLAGS)
 
 $(LIB): $(OBJS) $(SWIG_OBJS) $(ASC_LIBS)
-	$(LD) -module -shared -o $(LIB) $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
+	$(LD) -module -shared -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
+
+#------------------------
+# Trying to debug this GDPITA '3' problem, bug #178
+
+testsolverinit.o: testsolverinit.cpp
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) -o $@ $^
+
+testsolverinit: testsolverinit.o $(OBJS) $(ASC_LIBS)
+	$(LD) -o $@ $^ $(LDFLAGS)
+
 
 #------------------------
 # Testing the Python module
