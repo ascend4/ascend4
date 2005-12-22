@@ -419,7 +419,7 @@ public:
 
 class Solver{
 public:
-	Solver(const int &index);
+	Solver(const std::string &name);
 	Solver(const Solver &);
 
 	const int &getIndex() const;

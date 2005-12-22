@@ -192,7 +192,7 @@ METHOD values;
 	p := 5 {bar};
 END values;
 
-METHOD self_test;
+METHOD xself_test;
 	RUN reset;
 	RUN values;
 END self_test;

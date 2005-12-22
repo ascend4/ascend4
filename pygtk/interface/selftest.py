@@ -139,7 +139,7 @@ class AscendTestModel:
 			s = t.getSimulation('testsim');
 			s.check()
 			print "LAUNCHING SOLVER...\n\n"
-			s.solve(ascend.Solver(0))
+			s.solve(ascend.Solver('CMSlv'))
 			s.run(testmethod)
 		except RuntimeError, e:
 			print e
