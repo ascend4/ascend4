@@ -368,11 +368,11 @@ extern struct Statement *CreateCALL(symchar *n, struct Set *arglist);
  *  The statement's line number is set to the current line number.
  */
 
-extern struct Statement *CreateTEST(struct Expr *ex);
+extern struct Statement *CreateASSERT(struct Expr *ex);
 /**
 	@param ex test expression.
 
-	Create a TEST statement with test expression 'ex'. If the expression
+	Create a ASSERT statement with test expression 'ex'. If the expression
 	evaluates to false, an error message will be shown. Implemented for use
 	in 'self_test' functionality.
 */
@@ -1735,22 +1735,22 @@ extern struct StatementList *WhileStatBlockF(CONST struct Statement *s);
  * @todo Needs a function wrapper.
  */
 
-/* * * StateTEST functions * * */
+/* * * StateASSERT functions * * */
 
-/** Return the TEST expression 
+/** Return the ASSERT expression 
 	@param s the expression to test
-	@see TestStatExprF()
+	@see AssertStatExprF()
 */
 #ifdef NDEBUG
-# define TestStatExpr(s) ((s)->v.tests.test)
+# define AssertStatExpr(s) ((s)->v.asserts.test)
 #else
-# define TestStatExpr(s) TestStatExprF(s)
+# define AssertStatExpr(s) AssertStatExprF(s)
 #endif
 
-/** Internal implemention of TEST expression
+/** Internal implemention of ASSERT expression
 	@see IfStatExprF()
 */
-extern struct Expr *TestStatExprF(CONST struct Statement *s);
+extern struct Expr *AssertStatExprF(CONST struct Statement *s);
 
 /* * * StateIf functions * * */
 

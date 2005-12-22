@@ -85,7 +85,7 @@ enum stat_t {
   ASGN,         /**< ASSIGNMENT */
   CASGN,        /**< Structural ASSIGNMENT */
   RUN,          /**< RUN statement */
-  TEST,         /**< TEST statement */
+  ASSERT,         /**< TEST statement */
   IF,           /**< IF-ELSE statement */
   WHEN,         /**< WHEN statement */
   FNAME,        /**< Name of model or relation */
@@ -166,7 +166,7 @@ struct StateRUN {
   struct Name *type_name; /**< whether 'class access' eg a::b */
 };
 
-struct StateTEST {
+struct StateASSERT {
   struct Expr *test;
 };
 
@@ -354,7 +354,7 @@ union StateUnion {
   struct StateRUN        r;
   struct StateCall       call;
   struct StateIF         ifs;
-  struct StateTEST       tests;
+  struct StateASSERT     asserts;
   struct StateWHEN       w;
   struct StateFNAME      n;
   struct StateSELECT     se;

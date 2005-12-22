@@ -1880,6 +1880,16 @@ int slv_eligible_solver(slv_system_t sys)
   return SF(sys,celigible)(sys);
 }
 
+int slv_get_named_solver(CONST char *name){
+	int i;
+	for(i=0;i < g_SlvNumberOfRegisteredClients; i++){
+		if(strcmp(name, slv_solver_name(i))==0){
+			return i;
+		}
+	}
+	return -1;
+}
+
 int slv_select_solver(slv_system_t sys,int solver){
 
   int status_index;
@@ -1894,15 +1904,17 @@ int slv_select_solver(slv_system_t sys,int solver){
 	  CONSOLE_DEBUG("Solver has changed, destroy old data...");
       destroy = SlvClientsData[SNUM(sys)].cdestroy;
       if(destroy!=NULL) {
+	    CONSOLE_DEBUG("About to destroy data...");
         (destroy)(sys,sys->ct);
+	    CONSOLE_DEBUG("Done destroying data.");
         sys->ct = NULL;
       } else {
         error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver: 'cdestroy' is undefined on solver '%s' (index %d).",
           slv_solver_name(sys->solver), sys->solver);
         /* return sys->solver; */
 /** @TODO FIXME HACK this is probably very dodgy... */
-        CONSOLE_DEBUG("No 'cdestroy' method, so just killing sys->ct...");
-		sys->ct = NULL;
+        //CONSOLE_DEBUG("No 'cdestroy' method, so just killing sys->ct...");
+		//sys->ct = NULL;
       }
     }
 
@@ -1910,6 +1922,7 @@ int slv_select_solver(slv_system_t sys,int solver){
       CONSOLE_DEBUG("sys->ct not-null, so returning current solver...");
       return sys->solver;
     }
+
     CONSOLE_DEBUG("Updating current solver...");
     status_index = solver;
     sys->solver = solver;

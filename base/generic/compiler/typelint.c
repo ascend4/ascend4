@@ -899,7 +899,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
         } 
       }
       break;
-    case TEST:
+    case ASSERT:
       /* no sublists for TEST */
       break;
 

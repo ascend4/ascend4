@@ -1,10 +1,6 @@
 %{
 /*
  *  ASCEND Lexing Program
- *  Version: $Revision: 1.39 $
- *  Version control file: $RCSfile: scanner.l,v $
- *  Date last modified: $Date: 1999/01/19 16:15:33 $
- *  Last modified by: $Author: mthomas $
  *
  *  This file is part of the Ascend Language Interpreter.
  *
@@ -194,8 +190,8 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"ALIASES"		{ return ALIASES_T		; }
 <INITIAL>"AND"			{ return AND_T			; }
 <INITIAL>"ANY"			{ return ANY_T			; }
-<INITIAL>"ARE_ALIKE"		{ return AREALIKE_T		; }
-<INITIAL>"ARE_THE_SAME"		{ return ARETHESAME_T		; }
+<INITIAL>"ARE_ALIKE"    { return AREALIKE_T		; }
+<INITIAL>"ARE_THE_SAME" { return ARETHESAME_T   ; }
 <INITIAL>"ARRAY"		{ return ARRAY_T		; }
 <INITIAL>"ATOM"			{ return ATOM_T			; }
 <INITIAL>"BREAK"		{ return BREAK_T		; }
@@ -203,7 +199,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"CARD"			{ return CARD_T			; }
 <INITIAL>"CASE"			{ return CASE_T			; }
 <INITIAL>"CHECK"		{ return CHECK_T		; }
-<INITIAL>"CHOICE"		{ return CHOICE_T		; }
+<INITIAL>"CHOICE"		{ return CHOICE_T	  	; }
 <INITIAL>"CONDITIONAL"		{ return CONDITIONAL_T		; }
 <INITIAL>"CONSTANT"		{ return CONSTANT_T		; }
 <INITIAL>"CONTINUE"		{ return CONTINUE_T		; }
@@ -224,7 +220,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"FOR"			{ return FOR_T			; }
 <INITIAL>"FROM"			{ return FROM_T			; }
 <INITIAL>"GLOBAL"		{ return GLOBAL_T		; }
-<INITIAL>"TEST"			{ return TEST_T			; }
+<INITIAL>"ASSERT"       { return ASSERT_T			; }
 <INITIAL>"IF"			{ return IF_T			; }
 <INITIAL>"IMPORT"		{ return IMPORT_T		; }
 <INITIAL>"IN"			{ return IN_T			; }

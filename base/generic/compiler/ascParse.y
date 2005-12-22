@@ -332,7 +332,7 @@ static void CollectNote(struct Note *);
 %token ELSE_T END_T EXPECT_T EXTERNAL_T
 %token FALSE_T FALLTHRU_T FOR_T FROM_T
 %token GLOBAL_T
-%token TEST_T IF_T IMPORT_T IN_T INPUT_T INCREASING_T INTERACTIVE_T
+%token ASSERT_T IF_T IMPORT_T IN_T INPUT_T INCREASING_T INTERACTIVE_T
 %token INTERSECTION_T ISA_T _IS_T ISREFINEDTO_T
 %token MAXIMIZE_T MAXINTEGER_T MAXREAL_T METHODS_T METHOD_T MINIMIZE_T MODEL_T
 %token NOT_T NOTES_T
@@ -381,7 +381,7 @@ static void CollectNote(struct Note *);
 %type <statptr> willnotbethesame_statement assignment_statement
 %type <statptr> relation_statement glassbox_statement blackbox_statement
 %type <statptr> call_statement units_statement
-%type <statptr> external_statement for_statement run_statement if_statement test_statement
+%type <statptr> external_statement for_statement run_statement if_statement assert_statement
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
@@ -1208,7 +1208,7 @@ statement:
     | external_statement
     | for_statement
     | run_statement
-    | test_statement
+    | assert_statement
     | if_statement
     | while_statement
     | when_statement
@@ -1706,10 +1706,10 @@ call_statement:
 	}
     ;
 
-test_statement:
-	TEST_T expr
+assert_statement:
+	ASSERT_T expr
 	{
-		$$ = CreateTEST($2);
+		$$ = CreateASSERT($2);
 	}	
 
 if_statement:
@@ -2785,8 +2785,8 @@ TokenAsString(unsigned long token)
     return "CONDITIONAL";
   case FOR_T:
     return "FOR";
-  case TEST_T:
-	return "TEST";
+  case ASSERT_T:
+	return "ASSERT";
   case IF_T:
     return "IF";
   case INTERACTIVE_T:
