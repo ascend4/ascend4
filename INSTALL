@@ -1,4 +1,15 @@
 
+WARNING
+Much of this document is out of date. Please consult the following
+webpage for the current information. Presently you can build ASCEND 
+with both autotools (cd ~/src/ascend/trunk/base/autotools && autoconf &&
+./reconfig && make) and Jam (cd ~/src/ascend/trunk/base/autotools
+&& ./reconfig && cd ~/src/ascend/trunk/jam && jam).
+
+We now recommend building ASCEND with Tcl/Tk 8.3.5.
+
+https://pse.cheme.cmu.edu/wiki/view/Ascend/Jam
+
 ========================================================================
                            UNIX Installation
 ========================================================================
