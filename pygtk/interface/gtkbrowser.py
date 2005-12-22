@@ -297,7 +297,7 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
 
-		self.sim.solve(ascend.Solver(0))
+		self.sim.solve(ascend.Solver("QRSlv"))
 		self.refreshtree()
 
 	def do_check(self):

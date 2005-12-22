@@ -1,34 +1,30 @@
 /*
- *  SLV: Ascend Nonlinear Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.87 $
- *  Version control file: $RCSfile: slv3.c,v $
- *  Date last modified: $Date: 2000/01/25 02:27:32 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+	SLV: Ascend Nonlinear Solver
+	by Karl Michael Westerberg
+	Created: 2/6/90
+	
+	This file is part of the SLV solver.
+
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	This file is part of the SLV solver.
+*/
+/* Last *CVS* version ballan 2000/01/25 02:27:32 */
 
 #include <math.h>
 #include <stdarg.h>
@@ -719,8 +715,6 @@ static boolean calc_J( slv3_system_t sys)
   double time0;
   real64 resid;
 
-  CONSOLE_DEBUG("jacobian");
-
   if( sys->J.accurate )
     return TRUE;
 
@@ -753,8 +747,6 @@ static void calc_nominals( slv3_system_t sys)
 {
   int32 col;
   FILE *fp = MIF(sys);
-
-  CONSOLE_DEBUG("nominals...");
 
   if( sys->nominals.accurate ) return;
   fp = MIF(sys);
@@ -814,8 +806,6 @@ static void calc_weights( slv3_system_t sys)
 {
   mtx_coord_t nz;
   real64 sum;
-
-  CONSOLE_DEBUG("...");
 
   if( sys->weights.accurate )
     return;
@@ -891,7 +881,6 @@ static void jacobian_scaled(slv3_system_t sys)
 static void scale_variables( slv3_system_t sys)
 {
   int32 col;
-  CONSOLE_DEBUG("...");
 
   if( sys->variables.accurate ) return;
 
@@ -914,7 +903,6 @@ static void scale_residuals( slv3_system_t sys)
  **/
 {
   int32 row;
-  CONSOLE_DEBUG("...");
 
   if( sys->residuals.accurate ) return;
 
@@ -942,7 +930,6 @@ static void calc_relnoms(slv3_system_t sys)
   struct rel_relation *rel;
   real64 *var_list;
 
-  CONSOLE_DEBUG("...");
 
   var_list = create_array(sys->cap,real64);
   col = 0;
@@ -988,8 +975,6 @@ static real64 col_max_ratio(mtx_matrix_t *mtx,
   real64 num, denom, dummy;
   mtx_coord_t coord;
 
-  CONSOLE_DEBUG("...");
-
   max_ratio = 0;
   for(coord.col = reg->col.low;
 	coord.col <= reg->col.high; coord.col++) {
@@ -1024,8 +1009,6 @@ static real64 row_max_ratio(mtx_matrix_t *mtx,
   real64 num, denom, dummy;
   mtx_coord_t coord;
   max_ratio = 0;
-
-  CONSOLE_DEBUG("...");
 
   for(coord.row = reg->row.low;
 	coord.row <= reg->row.high; coord.row++) {
@@ -1063,8 +1046,6 @@ static real64 calc_fourer_scale(mtx_matrix_t mtx,
   mtx_coord_t coord;
   real64 min, max, dummy;
   real64 scale;
-
-  CONSOLE_DEBUG("...");
 
   if(option == 0){
     if((loc < reg.row.low) || (loc > reg.row.high)){
@@ -1119,8 +1100,6 @@ static void scale_J_iterative(slv3_system_t sys)
   real64 *rowvec = sys->weights.vec;
   real64 rowscale, colscale;
 
-  CONSOLE_DEBUG("...");
-
   rho_col_old = col_max_ratio(&(sys->J.mtx),&(sys->J.reg));
   rho_row_old = row_max_ratio(&(sys->J.mtx),&(sys->J.reg));
   k = 0;
@@ -1166,8 +1145,6 @@ static void scale_system( slv3_system_t sys )
  *** Scale system dependent on interface parameters
  **/
 {
-  CONSOLE_DEBUG("...");
-
   if(strcmp(SCALEOPT,"NONE") == 0){
     if(sys->J.accurate == FALSE){
       calc_nominals(sys);
@@ -1240,8 +1217,6 @@ static boolean calc_gradient(slv3_system_t sys)
  * This entire function needs to be reimplemented with relman_diffs.
  *
  */
-  CONSOLE_DEBUG("...");
-
   if( sys->gradient.accurate ) return TRUE;
 
   calc_ok = TRUE;
@@ -1285,8 +1260,6 @@ static void create_update( slv3_system_t sys)
  **/
 {
   struct hessian_data *update;
-
-  CONSOLE_DEBUG("...");
 
   if( !OPTIMIZING(sys) )
      return;
@@ -1405,8 +1378,6 @@ static int calc_pivots(slv3_system_t sys)
   linsolqr_system_t lsys = sys->J.sys;
   FILE *fp = LIF(sys);
 
-  CONSOLE_DEBUG("...");
-
   oldtiming = g_linsolqr_timing;
   g_linsolqr_timing =LINTIME;
   linsolqr_factor(lsys,sys->J.fm);        	/* factor */
@@ -1507,8 +1478,6 @@ static void calc_ZBZ(slv3_system_t sys)
 {
    mtx_coord_t nz;
 
-  CONSOLE_DEBUG("...");
-
    if( sys->ZBZ.accurate ) return;
 
    for( nz.row = 0; nz.row < sys->ZBZ.order; nz.row++ ) {
@@ -1582,8 +1551,6 @@ static void calc_rhs(slv3_system_t sys, struct vector_data *vec,
  ***  rhs.  Caller is responsible for initially zeroing the rhs vector.
  **/
 {
-  CONSOLE_DEBUG("...");
-
   if( transpose ) {     /* vec is indexed by col */
     int32 col;
     for( col=vec->rng->low; col<=vec->rng->high; col++ ) {
@@ -1604,8 +1571,6 @@ static void calc_multipliers(slv3_system_t sys)
  ***  Computes the lagrange multipliers for the equality constraints.
  **/
 {
-  CONSOLE_DEBUG("...");
-
 	   if( sys->multipliers.accurate )
       return;
 
@@ -3260,8 +3225,6 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
 {
   slv3_system_t sys;
 
-  CONSOLE_DEBUG("...");
-
   sys = (slv3_system_t)asccalloc(1, sizeof(struct slv3_system_structure) );
   if (sys==NULL) {
     *statusindex = 1;
@@ -3300,7 +3263,6 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
   /* we don't give a damn about the objective list or the pars or
    * bounds or extrels or any of the other crap.
    */
-  CONSOLE_DEBUG("...");
   slv_check_var_initialization(server);
   *statusindex = 0;
 
@@ -3893,8 +3855,6 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   int               minor = 0,ds_status=0, rank_defect=0;
   double            time0;
 
-  CONSOLE_DEBUG("QRSlv start");
-
   sys = SLV3(asys);
   mif = MIF(sys);
   lif = LIF(sys);
@@ -4271,7 +4231,6 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 static void slv3_solve(slv_system_t server, SlvClientToken asys)
 {
   slv3_system_t sys;
-  CONSOLE_DEBUG("starting");
   sys = SLV3(asys);
   if (server == NULL || sys==NULL) return;
   if (check_system(sys)) return;
@@ -4302,8 +4261,6 @@ static int slv3_destroy(slv_system_t server, SlvClientToken asys)
 
 int slv3_register(SlvFunctionsT *sft)
 {
-  CONSOLE_DEBUG("registering");
-
   if (sft==NULL)  {
     FPRINTF(stderr,"slv3_register called with NULL pointer\n");
     return 1;

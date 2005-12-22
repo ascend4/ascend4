@@ -393,10 +393,10 @@ void WritePrologue(FILE *fp, struct Instance *root,
                    unsigned long len, int verbose)
 {
   if (verbose) {
-    CLINE("/* BinTokenSharesToC $Revision: 1.12 $");
-    FPRINTF(fp," * %lu relations in\n * ",len);
+    CLINE("/*\n\tBinTokenSharesToC $Revision: 1.12 $");
+    FPRINTF(fp,"\t%lu relations in instance '",len);
     WriteInstanceName(fp,root,NULL);
-    CLINE("\n * (possibly fewer C functions required)\n */");
+    CLINE("'\n\t(possibly fewer C functions required)\n*/");
   }
 #ifdef HAVE_ERF
   /* need to define this for btprolog.h to do the right thing */
@@ -655,7 +655,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   CLINE("\treturn status;");
   if (verbose) {
     FPRINTF(fp,"\t/* %lu unique equations */\n",gl_length(eql.ue));
-    FPRINTF(ASCERR,"C Functions: %lu\n",gl_length(eql.ue));
+    FPRINTF(ASCERR,"Prepared %lu external C functions.\n",gl_length(eql.ue));
   }
   CLINE("}");
 
@@ -669,7 +669,7 @@ static
 enum bintoken_error BinTokenCompileC(char *buildcommand)
 {
   int status;
-  error_reporter(ASC_PROG_NOTE,NULL,0,"Starting build, command:\n%s",buildcommand);
+  error_reporter(ASC_PROG_NOTE,NULL,0,"Starting build, command:\n%s\n",buildcommand);
   status = system(buildcommand);
   if (status) {
     FPRINTF(ASCERR,"\nBUILD returned %d\n",status);
