@@ -316,7 +316,8 @@ int slv_lookup_client( const char *solverName )
 	sort. it would be good if here we farmed out the dynamic loading
 	to another file so we don't have to crap this one all up.
 */
-int slv_register_client(SlvRegistration registerfunc, char *func, char *file)
+int slv_register_client(SlvRegistration registerfunc, CONST char *func
+		,CONST char *file, int *new_client_id)
 {
   int status;
 
@@ -326,6 +327,7 @@ int slv_register_client(SlvRegistration registerfunc, char *func, char *file)
   status = registerfunc(&( SlvClientsData[NORC]));
   if (!status) { /* ok */
     SlvClientsData[NORC].number = NORC;
+	new_client_id = NORC;
     NORC++;
   } else {
     FPRINTF(stderr,"Client %d registration failure (%d)!\n",NORC,status);

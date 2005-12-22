@@ -2,44 +2,48 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 #include "solver.h"
 
 extern "C"{
+#include <solver/slv0.h>
+#include <solver/slv1.h>
+#include <solver/slv2.h>
 #include <solver/slv3.h>
+#include <solver/slv9.h>
 }
 
 /**
-	We're only implementing the 'first' form of solver registration
-	here, where the function pointer is already known (not dynamic
-	loading).
+	Create a solver by name (it must already be registered)
+	Warning, this ctor throws an exception if the name is invalid!
 */
-
-Solver::Solver(const int &index){
-	cerr << "CREATING SOLVER, index = " << index << endl;
-	this->index=index;
+Solver::Solver(const string &name){
+	cerr << "CREATING SOLVER, name = " << name << endl;
+	this->name = name;
 }
 
 Solver::Solver(const Solver &old){
-	this->index = old.index;
-	cerr << "COPIED SOLVER, index = " << index << endl;
+	this->name = old.name;
+	cerr << "COPIED SOLVER, name = " << name << endl;
 }
 
-const int &
+const int
 Solver::getIndex() const{
+	int index = slv_lookup_client(name.c_str());
+	if(index < 0){
+		stringstream ss;
+		ss << "Unknown or unregistered solver '" << name << "'";
+		throw runtime_error(ss.str());
+	}
 	cerr << "SOLVER INDEX RETURNED IS " << index << endl;
 	return index;
 }
 
-const string
+const string &
 Solver::getName() const{
-	const char *name = slv_solver_name(index);
-	if(name==NULL){
-		error_reporter(ASC_PROG_ERROR,NULL,0,"Invalid solver index '%d'",index);
-		throw runtime_error("Solver::getSolverName: Invalid solver index");
-	}
-	return string(name);
+	return name;
 }
 
 //---------------------------------
@@ -47,13 +51,14 @@ Solver::getName() const{
 
 void
 registerSolver(SlvRegistration regfuncptr){
-	int res = slv_register_client(regfuncptr,NULL,NULL);
+	int newclient;
+	int res = slv_register_client(regfuncptr,NULL,NULL,&newclient);
 	if(res!=0){
 		error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register solver");
 		throw runtime_error("Solver::registerSolver: Unable to register solver");
 	}else{
-		Solver s(res);
-		error_reporter(ASC_PROG_NOTE,NULL,0,"Registered solver '%s' (index %d)", s.getName().c_str(), s.getIndex() );
+		string name = slv_solver_name(newclient);
+		error_reporter(ASC_PROG_NOTE,NULL,0,"Registered solver '%s' (index %d)", name.c_str(), newclient );
 	} 
 }
 
@@ -62,7 +67,7 @@ getSolvers(){
 	extern int g_SlvNumberOfRegisteredClients;
 	vector<Solver> v;
 	for(int i=0; i < g_SlvNumberOfRegisteredClients; ++i){
-		v.push_back(Solver(i));
+		v.push_back(Solver(slv_solver_name(i)));
 	}
 	return v;
 }
@@ -76,6 +81,8 @@ getSolvers(){
 */
 void
 registerStandardSolvers(){
+	cerr << "------------- REGISTERING SOLVERS -----------------" << endl;
 	registerSolver(slv3_register);
+	registerSolver(slv9_register);
 }
 

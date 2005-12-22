@@ -34,12 +34,12 @@ const std::vector<Solver> getSolvers();
 */
 class Solver{
 private:
-	int index;
+	std::string name;
 public:
-	Solver(const int &index);
 	Solver(const Solver &);
+	Solver(const std::string &name);
 
-	const int &getIndex() const;
-	const std::string getName() const;
+	const int getIndex() const;
+	const std::string& getName() const;
 };
 

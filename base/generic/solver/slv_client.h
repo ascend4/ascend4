@@ -385,9 +385,10 @@ extern int slv_lookup_client( const char *solverName );
  ***  @return the number of the named client, or -1 if unknown.
  **/
 
-extern int slv_register_client(SlvRegistration slv0_register,
-                               char *yourregisterfuncname,
-                               char *yourbinaryname);
+extern int slv_register_client(SlvRegistration slv0_register
+		,CONST char *yourregisterfuncname
+		,CONST char *yourbinaryname
+		,int *new_client_id);
 /**<
 	Examples: @code
 	slv_register_client(slv0_register,NULL,NULL);

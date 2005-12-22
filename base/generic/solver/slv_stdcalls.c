@@ -1256,91 +1256,92 @@ void slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi,
 int SlvRegisterStandardClients(void)
 {
   int nclients = 0;
+  int newclient=0;
   int status;
 #ifdef STATIC_SLV
-  status = slv_register_client(slv0_register,NULL,NULL);
+  status = slv_register_client(slv0_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv0.\n");
+    FPRINTF(stderr,"Unable to register SLV (slv0).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_MINOS
-  status = slv_register_client(slv1_register,NULL,NULL);
+  status = slv_register_client(slv1_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv1.\n");
+    FPRINTF(stderr,"Unable to register MINOS (slv1).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_QRSLV
-  status = slv_register_client(slv3_register,NULL,NULL);
+  status = slv_register_client(slv3_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv3.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register QRSlv.");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_CSLV
-  status = slv_register_client(slv4_register,NULL,NULL);
+  status = slv_register_client(slv4_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv4.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register CSlv.\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_LSSLV
-  status = slv_register_client(slv5_register,NULL,NULL);
+  status = slv_register_client(slv5_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv5.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register LSSlv (slv5).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_MPS
-  status = slv_register_client(slv6_register,NULL,NULL);
+  status = slv_register_client(slv6_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv6.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register MPS (slv6).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_NGSLV
-  status = slv_register_client(slv7_register,NULL,NULL);
+  status = slv_register_client(slv7_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv7.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register NGSlv (slv7).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_OPTSQP
-  status = slv_register_client(slv2_register,NULL,NULL);
+  status = slv_register_client(slv2_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv2.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register OPTSQP (slv2).\n");
   } else {
     nclients++;
   }
 #endif
 #if (defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT))
-  status = slv_register_client(slv8_register,NULL,NULL);
+  status = slv_register_client(slv8_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv8.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register CONOPT (slv8).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_CMSLV
-  status = slv_register_client(slv9_register,NULL,NULL);
+  status = slv_register_client(slv9_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv9.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register CMSlv (slv9).\n");
   } else {
     nclients++;
   }
 #endif
 #ifdef STATIC_LRSLV
-  status = slv_register_client(slv9a_register,NULL,NULL);
+  status = slv_register_client(slv9a_register,NULL,NULL,&newclient);
   if (status) {
-    FPRINTF(stderr,"Unable to register slv9a.\n");
+    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register LRSlv (9a).\n");
   } else {
     nclients++;
   }

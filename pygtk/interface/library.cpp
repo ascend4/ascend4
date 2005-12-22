@@ -201,7 +201,7 @@ Library::getModuleTypes(const Module &m){
 	struct gl_list_t *l =  Asc_TypeByModule(m.getInternalType());
 	for(int i=0,end=gl_length(l); i<end; ++i){
 		char *name = (char *)gl_fetch(l,i+1);
-		CONSOLE_DEBUG("Found type %s",name);
+		//CONSOLE_DEBUG("Found type %s",name);
 		TypeDescription *t = FindType((const symchar *)name);
 		v.push_back(Type(t));
 	}

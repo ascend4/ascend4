@@ -326,7 +326,7 @@ Simulation::setSolver(Solver &solver){
 	}
 
 	if(selected!=solver.getIndex()){
-		solver = Solver(selected);
+		solver = Solver(slv_solver_name(selected));
 		error_reporter(ASC_PROG_NOTE,NULL,0,"Substitute solver '%s' (index %d) selected.\n", solver.getName().c_str(), selected);
 	}
 	
@@ -342,7 +342,7 @@ Simulation::getSolver() const{
 	cerr << "Simulation::getSolver: index = " << index << endl;
 	if(index<0)throw runtime_error("No solver selected");
 
-	return Solver(index);
+	return Solver(slv_solver_name(index));
 }
 
 
