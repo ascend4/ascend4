@@ -1,12 +1,6 @@
 #  ASCEND Interface Makefile
 #  Kirk Abbott. Ben Allan
 #  November 24, 1993
-#  $Revision: 1.37 $
-#  $Date: 2004/07/13 07:42:31 $
-#  $Author: ballan $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/interface/Makefile.in,v $
-#
-
 
 SHELL = /bin/sh
 #AWW20041206: builddir = ..
@@ -159,7 +153,8 @@ install-binaries::
 #  Files, in addition to the default, to remove when we `make clean'
 
 clean::
-	-$(RM) typelex.c Driver.date
+	-$(RM) typelex.c
+	#-$(RM) Driver.date
 
 
 

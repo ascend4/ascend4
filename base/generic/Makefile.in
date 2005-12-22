@@ -1,10 +1,5 @@
 #  Top Level Ascend Makefile
 #  Ben Allan June 25, 1994.
-#  $Revision: 1.25 $
-#  $Date: 1998/05/18 18:06:36 $
-#  $Author: mthomas $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/Makefile.in,v $
-#
 
 
 SHELL = /bin/sh
@@ -31,6 +26,7 @@ SUBDIRS          = $(ASCEND_SUBDIRS) $(SUPPORT_SUBDIRS) $(EXTERNAL_SUBDIRS)
 #AWW20041129: ASCEND_MAKEFILES = ../config.status ConfigAscend Makefile Makefile.Rules
 ASCEND_MAKEFILES = ConfigAscend Makefile Makefile.Rules
 
+all: ascend
 
 ascend: $(ASCEND_MAKEFILES) support_libs all_libs GUI
 
@@ -45,11 +41,12 @@ support_libs: \
 #AWW20041129: 	$(CONOPTLIB) \
 #AWW20041129: 	$(MINOSLIB)
 
-all_libs: libutils.a libgeneral.a libasc.a libpackages.a libsolver.a \
-	libascif.a btlib
+asclibs = compiler general utilities solver packages
 
-ascend4: support_libs all_libs
-	cd $(IFACE_DIR)/interface; $(MAKE) ascend4
+all_libs: $(asclibs:%=libasc%.a) libascif.a btlib
+
+ascend4: support_libs all_libs GUI
+	echo "deprecated, just use 'make all'"
 
 ascend4p: support_libs all_libs
 	cd $(IFACE_DIR)/interface; $(MAKE) ascend4p
@@ -60,23 +57,12 @@ ascend4q: support_libs all_libs
 GUI:
 	cd $(IFACE_DIR)/interface; $(MAKE) ascend4
 
-libutils.a:
-	cd utilities; $(MAKE) libutils.a
-
-libgeneral.a:
-	cd general; $(MAKE) libgeneral.a
-
-libasc.a:
-	cd compiler; $(MAKE) libasc.a
-
-libpackages.a:
-	cd packages; $(MAKE) libpackages.a
-
-libsolver.a:
-	cd solver; $(MAKE) libsolver.a
-
 libascif.a:
 	cd $(IFACE_DIR)/interface; $(MAKE) libascif.a
+
+libasc%.a: %
+	make -C $^
+
 
 btlib:
 	cd lib; $(MAKE) default

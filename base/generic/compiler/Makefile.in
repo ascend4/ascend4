@@ -1,11 +1,6 @@
 #  ASCEND Compiler Makefile
 #  Tom Epperly
 #  modified Kirk Abbott to accept the interface.
-#  $Date: 2000/01/25 02:25:50 $
-#  $Revision: 1.46 $
-#  $Author: ballan $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/compiler/Makefile.in,v $
-#
 
 
 SHELL = /bin/sh
@@ -25,7 +20,7 @@ PURIFIED_EXEC = ascendp
 
 QUANTIFIED_EXEC = ascendq
 
-LIBRARY = libasc.a
+LIBRARY = libasccompiler.a
 
 
 default: $(LIBRARY)
@@ -46,8 +41,8 @@ DIR_SPECIFIC_INCS =
 EXEC_SRCS = actype.c interface.c license.c main.c termsetup.c
 
 EXEC_OBJS = actype.o interface.o license.o main.o termsetup.o \
-		$(ARCHIVE)/libasc.a $(ARCHIVE)/libutils.a \
-		$(ARCHIVE)/libgeneral.a
+		$(ARCHIVE)/libasccompiler.a $(ARCHIVE)/libascutilities.a \
+		$(ARCHIVE)/libascgeneral.a
 
 EXEC_LIBS = $(DEBUG_MALLOC_LIBS) $(MATH_LIBS) -ltermcap $(DEBUG_LIBS)
 

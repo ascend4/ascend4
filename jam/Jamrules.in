@@ -349,11 +349,11 @@ BUILD_DIR = $(BUILD_DIR_ROOT)$(BUILD_SUBDIR) ;
 #======================================================================
 # Ascend base library names & paths
 #======================================================================
-ASC_COMPILER_LIBROOT  = libasc_compiler ;
-ASC_GENERAL_LIBROOT   = libasc_general ;
-ASC_SOLVER_LIBROOT    = libasc_solver ;
-ASC_UTILITIES_LIBROOT = libasc_utilities ;
-ASC_PACKAGES_LIBROOT  = libasc_packages ;
+ASC_COMPILER_LIBROOT  = libasccompiler ;
+ASC_GENERAL_LIBROOT   = libascgeneral ;
+ASC_SOLVER_LIBROOT    = libascsolver ;
+ASC_UTILITIES_LIBROOT = libascutils ;
+ASC_PACKAGES_LIBROOT  = libascpackages ;
 
 ASC_COMPILER_LIB  = $(ASC_COMPILER_LIBROOT)$(SUFLIB) ;
 ASC_GENERAL_LIB   = $(ASC_GENERAL_LIBROOT)$(SUFLIB) ;
