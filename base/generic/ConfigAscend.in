@@ -268,7 +268,7 @@ HAVE_PACKAGES = -DSTATIC_PACKAGES
 #  to where your external packages exist. If dynamically linked or
 #  if you are building with NO_PACKAGES, leave PACK_LIBS empty.
 #
-PACK_LIBS = ../archive/libpackages.a
+PACK_LIBS = ../archive/libascpackages.a
 #PACK_LIBS = 
 
 #  The default behavor is to have packages, so if you don't want
@@ -539,13 +539,9 @@ ASC_INCS = -I@fullpathsrcdir@/../generic  -I@fullpathsrcdir@/../../tcltk98/gener
 
 #  library files for ascend
 #
-#AWW20041206: ASC_LIBS = ../archive/libascif.a ../archive/libasc.a ../archive/libsolver.a \
-#AWW20041206:	  ../archive/libutils.a ../archive/libgeneral.a $(PACK_LIBS)
-ASC_LIBS = ../archive/libascif.a \
-           ../archive/libasc.a   \
-           ../archive/libsolver.a\
-           ../archive/libutils.a \
-           ../archive/libgeneral.a $(PACK_LIBS)
+ASC_LIB_STEMS=if compiler solver utilities general
+ASC_LIBS=$(ASC_LIB_STEMS:%=../archive/libasc%.a) $(PACK_LIBS)
+
 #  The time/place stamp for the executable.
 #  Reverse the comment flags if your cpp doesn't understand it
 #

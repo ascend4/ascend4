@@ -1,11 +1,6 @@
 #  ASCEND Solver Makefile
 #  Ben Allan
 #  January 4, 1994
-#  $Revision: 1.26 $
-#  $Date: 1997/07/29 17:34:29 $
-#  $Author: mthomas $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/solver/Makefile.in,v $
-#
 
 
 SHELL = /bin/sh
@@ -21,7 +16,7 @@ VPATH := @fullpathsrcdir@/../generic/solver
 
 EXECUTABLE = 
 
-LIBRARY = libsolver.a
+LIBRARY = libascsolver.a
 
 
 default: $(LIBRARY)

@@ -1,11 +1,6 @@
 #  ASCEND general routines Makefile
 #  Ben Allan, Kirk Abbott
 #  January 4, 1993
-#  $Revision: 1.10 $
-#  $Date: 2000/01/25 02:21:23 $
-#  $Author: ballan $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/general/Makefile.in,v $
-#
 
 
 SHELL = /bin/sh
@@ -21,7 +16,7 @@ VPATH := @fullpathsrcdir@/../generic/general
 
 EXECUTABLE = 
 
-LIBRARY = libgeneral.a
+LIBRARY = libascgeneral.a
 
 
 default: $(LIBRARY)

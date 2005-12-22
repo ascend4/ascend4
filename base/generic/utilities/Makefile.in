@@ -1,11 +1,6 @@
 #  ASCEND Utilities Makefile
 #  Ben Allan, Karl Westerberg
 #  January 4, 1994
-#  $Revision: 1.11 $
-#  $Date: 1997/07/29 17:41:46 $
-#  $Author: mthomas $
-#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/utilities/Makefile.in,v $
-#
 
 
 SHELL = /bin/sh
@@ -21,7 +16,7 @@ VPATH := @fullpathsrcdir@/../generic/utilities
 
 EXECUTABLE = 
 
-LIBRARY  = libutils.a
+LIBRARY  = libascutilities.a
 
 
 default: $(LIBRARY)
