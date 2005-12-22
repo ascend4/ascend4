@@ -31,7 +31,7 @@ class Solver;
 #endif
 
 /**
-	@TOD This class is for *Simulation* instances. Should be renamed.
+	@TOD This class is for *Simulation* instances.
 
 	Handle instantiating, running initialisation functions, solving
 	and outputing results of solutions.
@@ -50,6 +50,7 @@ class Simulation : public Instanc{
 private:
 	Instanc simroot;
 	slv_system_t sys;
+	bool is_built;
 
 	// options to pass to BinTokenSetOptions
 	std::string *bin_srcname;

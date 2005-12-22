@@ -90,6 +90,7 @@ cmd="./configure  \
 --with-tk="$tkroot/lib/${libpref}tk$tkver$libsuff,$tkroot/include/tk.h" \
 --with-wish="$tkroot/bin/wish" \
 --with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff
+CFLAGS=-ggdb
 $blasopt"
 
 echo "RUNNING CONFIGURE WITH"

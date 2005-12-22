@@ -58,10 +58,6 @@
 
 extern slv_system_t system_build(SlvBackendToken inst);
 /**<
- ***  <!--  sys = system_build(inst)                                   -->
- ***  <!--  slv_system_t sys;                                          -->
- ***  <!--  SlvBackendToken inst;                                      -->
- ***
  ***  In ascend, backendtoken is a struct Instance *.
  ***  Visits the instance tree and collects all variables,
  ***  relations, and objective functions into pointer lists.

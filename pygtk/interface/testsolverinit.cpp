@@ -12,5 +12,10 @@ int main(void){
 	Type t = L.findType("testlog10");
 	cerr << "Type = " << t.getName() << endl;
 	Simulation S = t.getSimulation("S");
-	S.solve(Solver("CMSlv"));
+	
+	S.build();
+	
+	cerr << "About to solve..." << endl;
+
+	S.solve(Solver("QRSlv"));
 }

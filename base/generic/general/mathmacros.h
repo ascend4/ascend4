@@ -2,7 +2,7 @@
 #define ASC_MATHMACROS_H
 
 /* Macros for MAX, MIN and ABS... */
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define MAX(X,Y) \
 	( { __typeof__ (X) x_ = (X); \
     	__typeof__ (Y) y_ = (Y); \

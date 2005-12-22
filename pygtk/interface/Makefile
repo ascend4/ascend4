@@ -50,7 +50,7 @@ libs:
 #------------------
 # PYTHON STUFF
 
-USE_PYTHON := 0
+USE_PYTHON := 1
 
 ifeq ($(USE_PYTHON),1)
 	ifeq ($(OSTYPE),msys)
@@ -72,9 +72,6 @@ else
 	ASCXX_CPPFLAGS := $(ASCEND_CPPFLAGS)
 	ASCXX_PYTHON_LDFLAGS :=
 endif
-
-
-again: clean all
 
 clean:
 	-rm *.so
@@ -143,7 +140,7 @@ testsolverinit.o: testsolverinit.cpp
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) -o $@ $^
 
 testsolverinit: testsolverinit.o $(OBJS) $(ASC_LIBS)
-	$(LD) -o $@ $^ $(LDFLAGS)
+	$(LD) -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
 
 #------------------------
