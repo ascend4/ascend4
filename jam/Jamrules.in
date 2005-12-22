@@ -116,9 +116,13 @@ KEEPOBJS = true ;
 #---------------------------------------------------------------------------
 # platform-independent options
 #---------------------------------------------------------------------------
+
 # sizeof(void*) - change value if not a typical 32-bit system
-SIZEOF_VOIDPTR = 4 ;
-CCFLAGS += $(PACKAGE_FLAGS) -DSIZEOF_VOID_P=$(SIZEOF_VOIDPTR) ;
+# the following are defined by Autoconf, so uncomment if you don't have that:
+# SIZEOF_VOID_P = 4 ;
+# CCFLAGS += -DSIZEOF_VOID_P=$(SIZEOF_VOID_P) ;
+
+CCFLAGS += $(PACKAGE_FLAGS) ;
 
 if $(NODEBUG)
 {
@@ -268,7 +272,7 @@ else if $(UNIX) || $(OS) = LINUX
     # uncomment to select desired warning level and ansi-strictness
     CCWARN += -Wall ;
     CCWARN += -W ;
-    CCWARN += -pedantic ;
+    #CCWARN += -pedantic ;
     #CCWARN += -Wshadow ;
     #CCWARN += -ansi ;
     CCWARN += -std=c99 ;
