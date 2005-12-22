@@ -375,6 +375,16 @@ typedef int (SlvRegistration)(SlvFunctionsT *our_sft);
 	incompetent solver was registered.
 */
 
+extern int slv_lookup_client( const char *solverName );
+/**<
+ ***  Examples: @code
+ ***  if (slv_lookup_client("QRSlv") < 0) { 
+ ***    slv_register_client(...)
+ ***  }
+ ***  @endcode
+ ***  @return the number of the named client, or -1 if unknown.
+ **/
+
 extern int slv_register_client(SlvRegistration slv0_register,
                                char *yourregisterfuncname,
                                char *yourbinaryname);
