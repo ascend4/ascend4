@@ -314,6 +314,8 @@ Simulation::write(){
 		
 void
 Simulation::setSolver(Solver &solver){
+	cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
+
 	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
 	// Update the solver object because sometimes an alternative solver can be returned, apparently.
 

@@ -37,7 +37,7 @@ Solver::getIndex() const{
 		ss << "Unknown or unregistered solver '" << name << "'";
 		throw runtime_error(ss.str());
 	}
-	cerr << "SOLVER INDEX RETURNED IS " << index << endl;
+	cerr << "))))))))))))))SOLVER INDEX RETURNED IS " << index << endl;
 	return index;
 }
 
@@ -51,14 +51,14 @@ Solver::getName() const{
 
 void
 registerSolver(SlvRegistration regfuncptr){
-	int newclient;
+	int newclient =-1;
 	int res = slv_register_client(regfuncptr,NULL,NULL,&newclient);
 	if(res!=0){
 		error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register solver");
 		throw runtime_error("Solver::registerSolver: Unable to register solver");
 	}else{
 		string name = slv_solver_name(newclient);
-		error_reporter(ASC_PROG_NOTE,NULL,0,"Registered solver '%s' (index %d)", name.c_str(), newclient );
+		error_reporter(ASC_PROG_NOTE,NULL,0,"Registered solver '%s' (index %d)\n", name.c_str(), newclient );
 	} 
 }
 

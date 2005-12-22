@@ -137,7 +137,7 @@ class AscendTestModel:
 				raise RuntimeError("No method '"+TEST_METHOD_NAME+"' found")
 
 			s = t.getSimulation('testsim');
-			s.check()
+			#s.check()
 			print "LAUNCHING SOLVER...\n\n"
 			s.solve(ascend.Solver('CMSlv'))
 			s.run(testmethod)

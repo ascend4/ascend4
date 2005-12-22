@@ -3303,6 +3303,7 @@ static SlvClientToken slv3_create(slv_system_t server, int *statusindex)
   CONSOLE_DEBUG("...");
   slv_check_var_initialization(server);
   *statusindex = 0;
+
   return((SlvClientToken)sys);
 
 }
