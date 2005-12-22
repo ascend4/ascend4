@@ -4,7 +4,7 @@
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 1996 Benjamin Andrew Allan
-	Copyright (C) 2005 The ASCEND developers
+	Copyright (C) 2005 Carnegie-Mellon University
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -333,7 +333,6 @@ int slv_register_client(SlvRegistration registerfunc, CONST char *func
   	*new_client_id = -2;
     error_reporter(ASC_PROG_ERR,NULL,0,"Client %d registration failure (%d)!\n",NORC,status);
   }
-  /*CONSOLE_DEBUG("status: %d",status);*/
   return status;
 }
 
@@ -1894,40 +1893,25 @@ int slv_select_solver(slv_system_t sys,int solver){
     return -1;
   }
   if ( solver >= 0 && solver < NORC ) {
-	CONSOLE_DEBUG("solver index in range, 0 <= %d < %d" , solver, NORC);
-	CONSOLE_DEBUG("sys->solver = %d",sys->solver);
-	CONSOLE_DEBUG("sys->ct = %p",sys->ct);
     if (sys->ct != NULL && solver != sys->solver) {
-	  CONSOLE_DEBUG("Solver has changed, destroy old data...");
-
       destroy = SlvClientsData[sys->solver].cdestroy;
       if(destroy!=NULL) {
-	    CONSOLE_DEBUG("About to destroy data...");
         (destroy)(sys,sys->ct);
-	    CONSOLE_DEBUG("Done destroying data.");
         sys->ct = NULL;
       } else {
         error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver: 'cdestroy' is undefined on solver '%s' (index %d).",
           slv_solver_name(sys->solver), sys->solver);
-        /* return sys->solver; */
-/** @TODO FIXME HACK this is probably very dodgy... */
-        //CONSOLE_DEBUG("No 'cdestroy' method, so just killing sys->ct...");
-		//sys->ct = NULL;
       }
     }
 
     if (sys->ct != NULL) {
-      CONSOLE_DEBUG("sys->ct not-null, so returning current solver...");
       return sys->solver;
     }
 
-    CONSOLE_DEBUG("Updating current solver...");
     status_index = solver;
     sys->solver = solver;
     if ( CF(sys,ccreate) != NULL) {
-      CONSOLE_DEBUG("Running ccreate method for new solver...");
       sys->ct = SF(sys,ccreate)(sys,&status_index);
-      CONSOLE_DEBUG("Done running ccreate");
     } else {
       error_reporter(ASC_PROG_ERROR,NULL,0,"slv_select_solver create failed due to bad client %s\n",
         slv_solver_name(sys->solver));
@@ -1956,8 +1940,6 @@ int slv_select_solver(slv_system_t sys,int solver){
 int slv_switch_solver(slv_system_t sys,int solver)
 {
   int status_index;
-
-  CONSOLE_DEBUG("SLV_SWITH_SOLVER CALLED..............................");
 
   if (sys ==NULL) {
     error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver called with NULL system\n");
@@ -2231,8 +2213,6 @@ void slv_iterate(slv_system_t sys)
 
 void slv_solve(slv_system_t sys)
 {
-  fprintf(stderr,"STARTING SLV_SOLVE\n");
-  /*ERROR_REPORTER_DEBUG("started");*/
   if ( CF(sys,solve) == NULL ) {
     printwarning("slv_solve",sys);
     return;
@@ -2262,8 +2242,6 @@ void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
 
 void slv_set_solver_index(slv_system_t sys, int solver)
 {
-  CONSOLE_DEBUG("======================================");
-
   if (sys==NULL) {
     error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solver_index called with NULL system.\n");
     return;

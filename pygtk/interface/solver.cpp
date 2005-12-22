@@ -20,13 +20,13 @@ extern "C"{
 	Warning, this ctor throws an exception if the name is invalid!
 */
 Solver::Solver(const string &name){
-	cerr << "CREATING SOLVER, name = " << name << endl;
+	//cerr << "CREATING SOLVER, name = " << name << endl;
 	this->name = name;
 }
 
 Solver::Solver(const Solver &old){
 	this->name = old.name;
-	cerr << "COPIED SOLVER, name = " << name << endl;
+	//cerr << "COPIED SOLVER, name = " << name << endl;
 }
 
 const int
@@ -37,7 +37,7 @@ Solver::getIndex() const{
 		ss << "Unknown or unregistered solver '" << name << "'";
 		throw runtime_error(ss.str());
 	}
-	cerr << "))))))))))))))SOLVER INDEX RETURNED IS " << index << endl;
+	//cerr << "))))))))))))))SOLVER INDEX RETURNED IS " << index << endl;
 	return index;
 }
 
@@ -81,7 +81,7 @@ getSolvers(){
 */
 void
 registerStandardSolvers(){
-	cerr << "------------- REGISTERING SOLVERS -----------------" << endl;
+	//cerr << "------------- REGISTERING SOLVERS -----------------" << endl;
 	registerSolver(slv3_register);
 	registerSolver(slv9_register);
 }

@@ -23,7 +23,7 @@ Nam::Nam(struct Name *name) : name(name){
 }
 
 Nam::Nam(const SymChar &sym){
-	cerr << "CREATING NAME from SymChar '" << sym << "'" << endl;
+	//cerr << "CREATING NAME from SymChar '" << sym << "'" << endl;
 	name = CreateIdName(sym.getInternalType());
 }
 

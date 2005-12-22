@@ -2017,7 +2017,6 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
 
   char *iname;
   iname = WriteInstanceNameString(i,NULL);
-  CONSOLE_DEBUG("with instance %s...",iname);
   ascfree(iname);
 
   glob_rel = NULL;

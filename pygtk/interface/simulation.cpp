@@ -94,7 +94,7 @@ void
 Simulation::run(const Method &method){
 	cerr << "RUNNING PROCEDURE " << method.getName() << endl;
 	Nam name = Nam(method.getSym());
-	cerr << "CREATED NAME '" << name.getName() << "'" << endl;
+	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 	Proc_enum pe;
 	pe = Initialize(
 		getModel().getInternalType() ,name.getInternalType(), "__not_named__"
@@ -103,7 +103,7 @@ Simulation::run(const Method &method){
 	);
 
 	if(pe == Proc_all_ok){
-		error_reporter(ASC_PROG_NOTE,NULL,0,"Method '%s' was run (check above for errors)",method.getName());
+		error_reporter(ASC_PROG_NOTE,NULL,0,"Method '%s' was run (check above for errors)\n",method.getName());
 		//cerr << "METHOD " << method.getName() << " COMPLETED OK" << endl;
 	}else{
 		stringstream ss;
@@ -326,7 +326,7 @@ Simulation::setSolver(Solver &solver){
 	// Update the solver object because sometimes an alternative solver can be returned, apparently.
 
 	int selected = slv_select_solver(sys, solver.getIndex());
-	cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
+	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
 
 	if(selected<0){
 		error_reporter(ASC_PROG_ERROR,NULL,0,"Failed to select solver");
@@ -347,7 +347,7 @@ Simulation::setSolver(Solver &solver){
 const Solver
 Simulation::getSolver() const{
 	int index = slv_get_selected_solver(sys);
-	cerr << "Simulation::getSolver: index = " << index << endl;
+	//cerr << "Simulation::getSolver: index = " << index << endl;
 	if(index<0)throw runtime_error("No solver selected");
 
 	return Solver(slv_solver_name(index));
