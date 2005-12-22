@@ -19,29 +19,33 @@ HDRS = $(CLASSES:%=%.h)
 
 all:
 
-#-------------------------
-# Linking with ASCEND
 
 ASCEND_CPPFLAGS = -I../../base/generic -I../../base/generic/solver -I../../base/generic/compiler -I../../base/generic/utilities -I../../base/generic/general -I../../base/generic/packages
 
-BLAS = /usr/lib/libblas.so.3.0.3
+#-------------------------
+# Linking with ASCEND
 
-#BUILDDIR = $(SOURCE_ROOT)/base/unixAC213
-#ARDIR = $(BUILDDIR)/archive
-#ASC_LIBS_STEM = asc packages solver utils general 
-#ASC_LIBS = $(ASC_LIBS_STEM:%=$(ARDIR)/lib%.a)
-BUILDDIR = $(SOURCE_ROOT)/base/jam/Release/linux
-ARDIR = $(BUILDDIR)
+ASC_TOOLS = autotools
+
+ifeq ($(ASCTOOLS),jam)
+	# If you build with jam
+	ARDIR = $(SOURCE_ROOT)/jam/Release/linux	
+	ASC_BUILD_LIBS = cd $(SOURCE_ROOT)/jam; jam libs
+else
+	ARDIR = $(SOURCE_ROOT)/base/autotools/archive
+	ASC_BUILD_LIBS = cd $(SOURCE_ROOT)/base/autotools; make libs
+endif
+
+# Libs now are named the same way on both autotools and jam builds...
 ASC_LIBS_STEM = compiler packages solver utilities general 
-ASC_LIBS = $(ASC_LIBS_STEM:%=$(ARDIR)/libasc_%.a)
+ASC_LIBS = $(ASC_LIBS_STEM:%=$(ARDIR)/libasc%.a)
 
 $(ASC_LIBS): libs
 
 .PHONY: libs
 
 libs:
-	cd $(SOURCE_ROOT)/base/jam; \
-	jam $(_smp_mflags) -f../../jam/Jambase libs; 
+	$(ASC_BUILD_LIBS)
 
 #------------------
 # PYTHON STUFF
@@ -84,8 +88,8 @@ clean:
 	-rmdir .libs
 
 cleanall: clean
-	cd $(SOURCE_ROOT)/base/jam; \
-	jam -f../../jam/Jambase clean; 
+	cd $(SOURCE_ROOT)/jam; \
+	jam clean; 
 	
 #--------------------------
 # Pure C++ testing
