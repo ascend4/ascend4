@@ -38,4 +38,20 @@ METHOD self_test;
 END self_test;
 
 END when_test;
+
+(* test the other branch of the WHEN... *)
 	
+MODEL when_test_2 REFINES when_test;
+	(* nothing here *)
+
+METHODS
+METHOD values;
+	use_linear := TRUE;
+	x := -4;
+END values;
+
+METHOD self_test;
+	ASSERT y == -5;
+END self_test;
+
+END when_test_2;

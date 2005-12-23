@@ -15,10 +15,14 @@
 */
 #  define ERR_RED "\033[31;1m"
 #  define ERR_GRN "\033[32;2m"
+#  define ERR_BLU "\033[34;1m"
+#  define ERR_BRN "\033[33;1m"
 #  define ERR_NORM "\033[0m"
 #else
 #  define ERR_RED ""
 #  define ERR_GRN ""
+#  define ERR_BLU ""
+#  define ERR_BRN ""
 #  define ERR_NORM ""
 #endif
 
@@ -47,10 +51,10 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 		case ASC_PROG_ERROR:    sevmsg = ERR_RED "PROGRAM ERROR: " ERR_NORM; break;
 		case ASC_PROG_WARNING:  sevmsg = "PROGRAM WARNING: "; break;
 		case ASC_PROG_NOTE:     sevmsg = ERR_GRN; endtxt=ERR_NORM; break; /* default, keep unembellished for now */
-		case ASC_USER_ERROR:    sevmsg = "ERROR: "; break;
-		case ASC_USER_WARNING:  sevmsg = "WARNING: "; break;
+		case ASC_USER_ERROR:    sevmsg = ERR_RED "ERROR: " ERR_NORM; break;
+		case ASC_USER_WARNING:  sevmsg = ERR_BRN "WARNING: " ERR_NORM; break;
 		case ASC_USER_NOTE:     sevmsg = "NOTE: "; break;
-		case ASC_USER_SUCCESS:  sevmsg = "SUCCESS: "; break;
+		case ASC_USER_SUCCESS:  sevmsg = ERR_GRN "SUCCESS: " ERR_NORM; break;
 	}
 	
 	res = ASC_FPRINTF(ASCERR,sevmsg);
