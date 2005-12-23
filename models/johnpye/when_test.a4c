@@ -1,0 +1,40 @@
+REQUIRE "atoms.a4l";
+
+MODEL when_test;
+
+	x IS_A solver_var;
+	y IS_A solver_var;
+	
+	lin: y = x - 1;
+	quad: y = x^2 / 4;
+
+	linear IS_A boolean_var;
+	linear == (x > 2);
+
+	WHEN(linear)
+		CASE TRUE:
+			USE lin;
+		CASE FALSE:
+			USE quad;
+	END WHEN;
+
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+
+METHOD specify;
+	x.fixed := TRUE;
+END specify;
+
+METHOD values;
+	x := -4;
+END values;
+
+METHOD self_test;
+	ASSERT y == 4;
+END self_test;
+
+END when_test;
+	

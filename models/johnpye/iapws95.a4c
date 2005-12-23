@@ -487,18 +487,19 @@ METHOD values;
 END values;
 
 METHOD self_test;
-	ASSERT abs(phi0 - 0.204797734e1) < 1e-8;
-	ASSERT abs(phir - (–0.342693206e1)) < 1e-8;
+	(* test the result values from page 14 of the IAPWS-95 release *)
+	ASSERT abs(phi0 - 0.204797734E1) < 1e-8;
+	ASSERT abs(phir - (-0.342693206E1)) < 1e-8;
 	ASSERT abs(phi0delta - (0.384236747)) < 1e-9;
-	ASSERT abs(phirdelta - (–0.364366650)) < 1e-9;
-	ASSERT abs(phi0deltadelta - (–0.147637878)) < 1e-9;
+	ASSERT abs(phirdelta - (-0.364366650)) < 1e-9;
+	ASSERT abs(phi0deltadelta - (-0.147637878)) < 1e-9;
 	ASSERT abs(phirdeltadelta - (0.856063701)) < 1e-9;
 	ASSERT abs(phi0tau - (0.904611106e1)) < 1e-8;
-	ASSERT abs(phirtau - (–0.581403435e1)) < 1e-8;
-	ASSERT abs(phi0tautau - (–0.193249185e1)) < 1e-8;
-	ASSERT abs(phirtautau - (–0.223440737e1)) < 1e-8;
+	ASSERT abs(phirtau - (-0.581403435e1)) < 1e-8;
+	ASSERT abs(phi0tautau - (-0.193249185e1)) < 1e-8;
+	ASSERT abs(phirtautau - (-0.223440737e1)) < 1e-8;
 	ASSERT abs(phi0deltatau - 0) < 1e-20;
-	ASSERT abs(phirdeltatau - (–0.112176915e1)) < 1e-8;
+	ASSERT abs(phirdeltatau - (-0.112176915e1)) < 1e-8;
 END self_test;
 
 END iapws95_1phase;
