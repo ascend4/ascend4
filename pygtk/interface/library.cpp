@@ -253,7 +253,9 @@ Library::clear(){
 	cerr << "... DEFINED FUND TYPES" << endl;
 	/*SetUniversalProcedureList(NULL);
 */
+	error_reporter(ASC_PROG_NOTE,NULL,0,"Clearing library...\n");
 	DestroyNotesDatabase(LibraryNote());
+	SetUniversalProcedureList(NULL);
 	DestroyLibrary();
 	DestroyPrototype();
 	EmptyTrash();

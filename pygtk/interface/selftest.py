@@ -206,7 +206,7 @@ class AscendModelLibraryTester:
 					index, job = heapq.heappop(jobs)
 				except IndexError:
 					jobslock.release()
-					print "No jobs left for thread",self.threadnum
+					#print "No jobs left for thread",self.threadnum
 					return					
 				jobslock.release()
 
