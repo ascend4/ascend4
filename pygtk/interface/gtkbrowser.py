@@ -36,8 +36,9 @@ class Browser:
 		parser = optparse.OptionParser(usage="%prog [[-m typename] file]", version="gtkbrowser $rev$" )
 		# add options here if we want
 
-		parser.add_option("-m", "--model",
-                  action="store", type="string", dest="model",help="specify the model to instantiate upon loading modules")		
+		parser.add_option("-m", "--model"
+            ,action="store", type="string", dest="model"
+			,help="specify the model to instantiate upon loading modules")		
 		(options, args) = parser.parse_args()
 
 		#print "OPTIONS_______________:",options
@@ -285,8 +286,11 @@ class Browser:
 
 		# methods
 		_methods = self.sim.getType().getMethods()
+		_activemethod = None;
 		for _m in _methods:
-			self.methodstore.append ([_m.getName()])
+			_i = self.methodstore.append([_m.getName()])
+			if _m.getName()=="default_self":
+				self.methodsel.set_active_iter(_i)
 
 		# instance hierarchy
 		self.otank = {} # map path -> (name,value)
@@ -554,6 +558,8 @@ class Browser:
 		if depth:
 		    for i in range( self.treestore.iter_n_children( piter ) ):
 		        self.make( path = path+(i,), depth = depth - 1 )
+		else:
+			self.treeview.expand_row("0",False)
 
 	def row_expanded( self, treeview, piter, path ):
 		self.make( path = path )
@@ -574,10 +580,10 @@ class Browser:
 
 	def open_click(self,*args):
 		dialog = gtk.FileChooserDialog("Open file...",
-		                               None,
-		                               gtk.FILE_CHOOSER_ACTION_OPEN,
-		                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-		                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+			None,
+		    gtk.FILE_CHOOSER_ACTION_OPEN,
+		    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+		    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
 		dialog.set_default_response(gtk.RESPONSE_OK)
 
 		filter = gtk.FileFilter()
