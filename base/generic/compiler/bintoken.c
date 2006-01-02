@@ -69,13 +69,6 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
-#if (defined(__HPUX__) || defined(__ALPHA_OSF__) || \
-     defined(__WIN32__) || defined(__SUN_SOLARIS__) || \
-     defined(__SUN_SUNOS__) || defined(__SGI_IRIX__))
-#define HAVE_DL_UNLOAD 1
-#endif
-/* we don't know about ultrix, aix, and others */
-
 enum bintoken_error {
   BTE_ok,
   BTE_badrel,
@@ -227,7 +220,9 @@ void BinTokenDeleteReference(int btable)
   g_bt_data.tables[btable].refcount--;
   if (g_bt_data.tables[btable].refcount == 0) {
     /* unload the library if possible here */
+    error_reporter(ASC_PROG_ERR,NULL,0,"No more references to bintoken");
 #if HAVE_DL_UNLOAD
+    error_reporter(ASC_PROG_ERR,NULL,0,"UNLOADING %s",g_bt_data.tables[btable].name);
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
 #endif /* havedlunload */
     ascfree(g_bt_data.tables[btable].name);
