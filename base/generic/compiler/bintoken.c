@@ -224,11 +224,15 @@ void BinTokenDeleteReference(int btable)
 #if HAVE_DL_UNLOAD
     error_reporter(ASC_PROG_ERR,NULL,0,"UNLOADING %s",g_bt_data.tables[btable].name);
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
+#else
+    error_reporter(ASC_PROG_ERR,NULL,0,"Dynamic Unloading not available in this build");
 #endif /* havedlunload */
     ascfree(g_bt_data.tables[btable].name);
     g_bt_data.tables[btable].name = NULL;
     g_bt_data.tables[btable].tu = NULL;
     g_bt_data.tables[btable].type = BT_error;
+  }else{
+    CONSOLE_DEBUG("Deleting one reference...");
   }
 }
 
@@ -702,7 +706,7 @@ enum bintoken_error BinTokenLoadC(struct gl_list_t *rellist,
   BinTokenCheckCapacity();
   status = Asc_DynamicLoad(libname,regname);
   if (status != 0) {
-    FPRINTF(ASCERR,"Load failure of %s:%s\n",libname,regname);
+    error_reporter(ASC_PROG_WARNING,libname,0,"Failed to load library (init function %s)",regname);
     BinTokenResetHooks();
     /*  could do this maybe, but not needed if we want each
      * relation to get one shot only..
@@ -736,7 +740,6 @@ void BinTokenErrorMessage(enum bintoken_error err,
   char *mess;
 
   (void)root;
-  (void)filename;
   (void)buildcommand;
 
   switch(err) {
@@ -762,7 +765,7 @@ void BinTokenErrorMessage(enum bintoken_error err,
     mess="Unknown error in BinTokenErrorMessage";
     break;
   }
-  FPRINTF(ASCERR,"%s: %s\n",__FILE__,mess);
+  error_reporter(ASC_PROG_ERR,filename,0,"%s",mess);
 }
 
 void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
