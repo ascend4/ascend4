@@ -95,13 +95,13 @@ symchar *MakeArchiveLibraryName(CONST char *prefix)
   len = strlen(prefix);
   buffer = (char *)ascmalloc(len+40);
 
-#if defined(sun) || defined(solaris) || defined(__osf__)
+#if defined(sun) || defined(solaris)
   sprintf(buffer,"%s.so.1.0",prefix);
 #elif defined(__hpux)
   sprintf(buffer,"%s.sl",prefix);
 #elif defined(_SGI_SOURCE)
   sprintf(buffer,"%s.so",prefix);
-#elif defined(linux) || defined(ultrix)
+#elif defined(linux)
   sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
 #else
   sprintf(buffer,"%s.so.1.0",prefix);

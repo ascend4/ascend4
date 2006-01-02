@@ -30,11 +30,9 @@
  * September 3rd, 1994.
  * To date the architectures supported are:
  * sun
- * osf,
  * solaris,
  * hpux
  * sgi
- * ultrix
  * Windows
  * possibly aix if we plunder it from tcl8
  *
@@ -56,8 +54,8 @@
  *  </pre>
  */
 
-#ifndef __ascdynaload_h_seen__
-#define __ascdynaload_h_seen__
+#ifndef ASC_ASCDYNALOAD_H
+#define ASC_ASCDYNALOAD_H
 
 extern int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
@@ -82,31 +80,6 @@ extern int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
  *  @return The return value from initFunc is returned if specified.
  *          Otherwise, 0 is returned if the library is successfully
  *          loaded, 1 if it is not.
- */
-
-extern int DynamicLoad(CONST char *path, CONST char *initFunc);
-/**<
- *  Loads a dynamic library and calls its initialization function.
- *  This is the standard function wrapping dlopen. It makes no
- *  provision for dynamic unloading, and therefore should not
- *  be used very often.  It is not currently implemented for all
- *  platforms (e.g. Win32).<br><br>
- *
- *  This function returns 1 if it fails to load the file named in
- *  path and find the symbol in initFun as an int function.
- *  Otherwise it returns the result of the call to initFun.  See 
- *  the discussion under Asc_DynamicLoad() for more issues 
- *  arising from this behavior.
- *
- *  @param path     Path to the dynamic library to load (non-NULL).
- *  @param initFunc The DL initialization function to call.
- *  @return The return value from initFunc is returned if specified.
- *          Otherwise, 0 is returned if the library is successfully
- *          loaded, 1 if it is not.
- */
-/*
- * note on some systems (ultrix) this header hides a lot of non-static
- * function names which don't appear terribly standard.
  */
 
 extern int Asc_DynamicUnLoad(CONST char *path);
@@ -190,9 +163,9 @@ extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
 #define HAVE_DL_UNLOAD 1
 /**<
  *  Set if a platform has a library unload function.
- *  We don't know about ultrix, aix, and others.
+ *  We don't know about aix, and others.
  */
 #endif
 
-#endif /* __ascdynaload_h_seen__ */
+#endif /* ASC_ASCDYNALOAD_H */
 
