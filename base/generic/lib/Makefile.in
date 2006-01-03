@@ -70,9 +70,11 @@ include $(builddir)/Makefile.Rules
 
 #  Copy the bintoken header file from the compiler directory
 
-btprolog.h: $(srcdir)/../compiler/btprolog.h
-	$(CP) $(srcdir)/../compiler/btprolog.h .
+ascConfig.h: $(srcdir)/../utilities/ascConfig.h
+	$(CP) $^ $@
 
+%.h: $(srcdir)/../compiler/%.h
+	$(CP) $^ $@
 
 #  Build a Makfile suitable for installing
 
@@ -141,12 +143,14 @@ $(BTTARGET) _dummy_target: $(BTTARGET).c
 
 #  Files to install
 
-install-binaries:: btprolog.h Makefile.bt
+LIB_DIR_FILES = btprolog.h Makefile.bt instance_enum.h ascConfig.h
+
+install-binaries:: $(LIB_DIR_FILES)
 	@if test ! -d $(LIB_DIR) ; then \
 	  echo Making directory $(LIB_DIR) ; \
 	  mkdir -p $(LIB_DIR) ; \
 	fi
-	@for i in btprolog.h Makefile.bt /dev/null ; do \
+	@for i in $(LIB_DIR_FILES) /dev/null ; do \
 	  if $(CMP) -s $$i $(LIB_DIR)/$$i ; then \
 	    echo "Skipping $$i (up to date)" ; \
 	  elif test $$i != "/dev/null" ; then \
@@ -156,7 +160,7 @@ install-binaries:: btprolog.h Makefile.bt
 	done
 
 uninstall-binaries::
-	@for i in btprolog.h Makefile.bt /dev/null ; do \
+	@for i in $(LIB_DIR_FILES) /dev/null ; do \
 	  if test -f $(LIB_DIR)/$$i ; then \
 	    echo Removing $(LIB_DIR)/$$i ; \
 	    $(RM) $(LIB_DIR)/$$i ; \
@@ -168,7 +172,7 @@ uninstall-binaries::
 #  Files, in addition to the default, to remove when we `make clean'
 
 clean::
-	-$(RM) btprolog.h Makefile.bt *.so *.sl
+	-$(RM) $(LIB_DIR_FILES) *.so *.sl
 
 
 

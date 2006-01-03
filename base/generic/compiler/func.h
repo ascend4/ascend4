@@ -90,7 +90,7 @@ extern CONST struct Func *LookupFunc(CONST char *name);
  *  Currently defined:
  *         "exp"           e^x
  *         "ln"            natural logarithm of x
- *         "log"           logarithm of x base 10
+ *         "log10"           logarithm of x base 10
  *         "sin"           sine of x
  *         "cos"           cosine of x
  *         "tan"           tangent of x

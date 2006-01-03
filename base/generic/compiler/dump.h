@@ -43,27 +43,24 @@
  *  </pre>
  */
 
-#ifndef __DUMP_H_SEEN__
-#define __DUMP_H_SEEN__
+#ifndef ASC_DUMP_H
+#define ASC_DUMP_H
 
 #define MESSYTHRESH 10
 
 extern void InitDump(void);
 /**< 
- *  <!--  void InitDump()                                              -->
  *  Must be called to initialize the dump.
  */
 
 extern void EmptyTrash(void);
 /**< 
- *  <!--  void EmptyTrash()                                            -->
  *  Delete all the instances in the dump.  The dump can still be used
  *  after this call.
  */
 
 extern void TendTrash(void);
 /**< 
- *  <!--  void TendTrash()                                             -->
  *  This is a less drastic version of EmptyTrash(), which only deletes
  *  instance with too many copies in the dump.  Too many is more than
  *  MESSYTHRES copies of a given type.
@@ -71,8 +68,6 @@ extern void TendTrash(void);
 
 extern void TrashType(symchar *str);
 /**< 
- *  <!--  void TrashType(str)                                          -->
- *  <!--  const char *str;                                             -->
  *  Delete any copies of type 'str' from the dump.  This should be called
  *  if for instance the definition of 'str' is being changed.  In such
  *  cases, fetching copies of 'str' from the dump would return the old
@@ -83,18 +78,14 @@ extern void TrashType(symchar *str);
 
 extern void AddInstance(struct Instance *i);
 /**<
- *  <!--  void AddInstance(i)                                          -->
- *  <!--  struct Instance *i;                                          -->
  *  This adds instance i to the trash dump.
  */
 
 extern struct Instance *FindInstance(symchar *str);
 /**< 
- *  <!--  struct Instance *FindInstance(str)                           -->
- *  <!--  symchar *str;                                                -->
  *  This will return an instance if it one is available; otherwise, it
  *  returns NULL.
  */
 
-#endif /* __DUMP_H_SEEN__ */
+#endif /* ASC_DUMP_H */
 
