@@ -33,9 +33,11 @@
  */
  
 /** @file
- *  Global configuration parameters.
- *  This header and tcl/tk headers are known to conflict. This header
- *  should be included AFTER tcl.h or tk.h, not before.
+	Global configuration parameters.
+	This header and tcl/tk headers are known to conflict. This header
+	should be included AFTER tcl.h or tk.h, not before.
+	
+	If including the file, you should also include utilities/error.h
  */
 
 #ifndef ASC_ASCCONFIG_H
@@ -415,7 +417,13 @@ typedef	unsigned   uint32;
 		FPUTC
 		FFLUSH
 */
-#include "utilities/error.h"
+#ifdef IS_BINTOKEN_COMPILE
+# define FPRINTF ASC_FPRINTF
+# define FPUTC ASC_FPUTC
+# define FFLUSH ASC_FFLUSH
+#else
+# include "utilities/error.h"
+#endif
 
 /*	These are the remaining output macros that need to be mapped
 */

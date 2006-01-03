@@ -51,11 +51,18 @@
  *  @todo Complete documentation of btprolog.h.
  */
 
-#ifndef __BTPROLOG_H_SEEN__
-#define __BTPROLOG_H_SEEN__
+#ifndef ASC_BTPROLOG_H
+#define ASC_BTPROLOG_H
 
-#include <utilities/ascConfig.h>
-#include <compiler/instance_enum.h>
+#ifdef ASC_BINTOKEN_H
+# include "utilities/ascConfig.h"
+# include "compiler/instance_enum.h"
+#else
+# define IS_BINTOKEN_COMPILE
+# include <ascConfig.h>
+# include <instance_enum.h>
+#endif
+
 #include <math.h>
 
 #ifndef NULL
@@ -111,24 +118,26 @@ extern int DLEXPORT ExportBinTokenCTable(struct TableC *t, int size);
 extern int DLEXPORT ExportBinTokenCTable();
 #endif /* __STDC__ */
 
-#ifndef __FUNC_H_SEEN__
-/* The following is stripped from compiler func.h.
- * If a new function is introduced into ASCEND and func.h, fix this.
- */
+/*------------------------------
+  The following is stripped from compiler func.h.
+  If a new function is introduced into ASCEND and func.h, fix this.
+*/
+#ifndef ASC_FUNC_H
 
-#ifdef __STDC__
-#if __STDC__
+#  ifdef __STDC__
+#   if __STDC__
 /*
  * stdc==1 --> erf, cbrt not defined in headers. user should link
  * against a library that does provide them. ASCEND is research
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
+
 extern double DLEXPORT cbrt(double x);
-#ifdef HAVE_ERF
+#    ifdef HAVE_ERF
 extern double DLEXPORT erf(double x);
-#endif /* HAVE_ERF */
-#endif /* __STDC__ == 1 */
+#    endif /* HAVE_ERF */
+#   endif /* __STDC__ == 1 */
 /*
  * in the case where __STDC__ is defined but == 0, system headers
  * should provide cbrt, erf.
@@ -182,12 +191,12 @@ extern double DLEXPORT datan2(double x);
 extern double DLEXPORT derf(double x);
 extern double DLEXPORT derf2(double x);
 
-#else /* no stdc */
+#  else /* no stdc */
 
 extern double DLEXPORT cbrt();
-#ifdef HAVE_ERF
+#   ifdef HAVE_ERF
 extern double DLEXPORT erf();
-#endif /* HAVE_ERF */
+#   endif /* HAVE_ERF */
 extern int DLEXPORT ascnintF();
 extern double DLEXPORT dln();
 extern double DLEXPORT dln2();
@@ -237,7 +246,7 @@ extern double DLEXPORT datan2();
 extern double DLEXPORT derf();
 extern double DLEXPORT derf2();
 
-#endif  /* no stdc */
-#endif  /* fake__FUNC_H_SEEN__ */
-#endif  /* __BTPROLOG_H_SEEN__ */
+#  endif  /* no stdc */
+# endif  /* fake ASC_FUNC_H */
+#endif  /* ASC_BT_PROLOG */
 

@@ -45,8 +45,8 @@
  *  </pre>
  */
 
-#ifndef __BINTOKEN_H_SEEN__
-#define __BINTOKEN_H_SEEN__
+#ifndef ASC_BINTOKEN_H
+#define ASC_BINTOKEN_H
 
 enum bintoken_kind {
   BT_error,
@@ -135,5 +135,5 @@ extern int BinTokenCalcResidual(int btable, int bindex, double *vars, double *re
 extern int BinTokenCalcGradient(int btable, int bindex, double *vars,
                                 double *residual, double *gradient);
 
-#endif  /* __BINTOKEN_H_SEEN__ */
+#endif  /* ASC_BINTOKEN_H */
 

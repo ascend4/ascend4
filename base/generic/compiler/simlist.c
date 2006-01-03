@@ -37,6 +37,7 @@
 #include "compiler/instance_enum.h"
 #include "compiler/destroyinst.h"
 #include "compiler/simlist.h"
+#include "compiler/instquery.h"
  
 #ifndef lint
 static CONST char simlistID[] = "$Id: simlist.c,v 1.3 1997/07/18 12:34:53 mthomas Exp $";
@@ -48,6 +49,7 @@ struct gl_list_t *g_simulation_list = NULL;
 void Asc_DeAllocSim(struct Instance *sim)
 {
   if (sim) {
+	CONSOLE_DEBUG("Destroying instance %s", SCP(GetSimulationName(sim)) );
     DestroyInstance(sim,NULL);
   }
 }
@@ -55,12 +57,13 @@ void Asc_DeAllocSim(struct Instance *sim)
 
 void Asc_DestroySimulations(void)
 {
-  FPRINTF(stderr,"Destroying simulations\n");
   if (g_simulation_list) {
     gl_iterate(g_simulation_list,(void (*)(VOIDPTR))Asc_DeAllocSim);
     gl_destroy(g_simulation_list);      /* Asc_DeAllocSim takes care of the
                                          * memory -- see SimsProc.c */
     g_simulation_list = NULL;
+  }else{
+  	CONSOLE_DEBUG("g_simulation_list is null");
   }
 }
 
@@ -115,7 +118,6 @@ void Asc_DestroySimulations(void)
 #include "compiler/instance_io.h"
 #include "compiler/instance_name.h"
 #include "compiler/parentchild.h"
-#include "compiler/instquery.h"
 #include "compiler/extinst.h"
 #include "compiler/child.h"
 #include "compiler/type_desc.h"
