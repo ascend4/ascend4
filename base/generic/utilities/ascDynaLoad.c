@@ -393,7 +393,7 @@ int Asc_DynamicUnLoad(CONST char *path)
     error_reporter(ASC_PROG_ERR,NULL,0, "Asc_DynamicUnLoad: unable to remember or unload %s\n", path);
     return -3;
   }
-  error_reporter(ASC_PROG_ERR,NULL,0, "Asc_DynamicUnLoad: forgetting & unloading %s \n", path);
+  CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s \n", path);
   /* 
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
