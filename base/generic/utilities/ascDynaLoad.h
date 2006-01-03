@@ -157,7 +157,7 @@ extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
  *  @return A pointer to the function in memory, or NULL if not found.
  */
 
-#if (defined(__HPUX__) || defined(__ALPHA_OSF__) || \
+#if defined(__GNUC__) || (defined(__HPUX__) || defined(__ALPHA_OSF__) || \
      defined(__WIN32__) || defined(__SUN_SOLARIS__) || \
      defined(__SUN_SUNOS__) || defined(__SGI_IRIX__))
 #define HAVE_DL_UNLOAD 1
