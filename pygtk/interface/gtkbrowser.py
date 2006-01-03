@@ -88,6 +88,21 @@ class Browser:
 
 		self.maintabs = glade.get_widget("maintabs")
 
+		self.statusbar = glade.get_widget("statusbar")
+
+		#-------------------
+		# waitwin
+
+		self.waitwin = gtk.gdk.Window(self.window.window,
+			gtk.gdk.screen_width(),
+			gtk.gdk.screen_height(),
+			gtk.gdk.WINDOW_CHILD,
+			0,
+			gtk.gdk.INPUT_ONLY)
+
+		_cursor = gtk.gdk.Cursor(gtk.gdk.WATCH)
+		self.waitwin.set_cursor(_cursor)
+
 		#-------------------
 		# pixbufs to be used in the error listing
 
@@ -225,9 +240,7 @@ class Browser:
 		
 	def run(self):
 		self.window.show()
-		gtk.threads_enter();
 		gtk.main()
-		gtk.threads_leave();
 
 #   --------------------------------------------
 # 	MAJOR GUI COMMANDS
@@ -237,13 +250,18 @@ class Browser:
 		# TODO does the user want to lose their work?
 		# TODO do we need to chdir?
 
+		_context = self.statusbar.get_context_id("do_open")
+
 		self.errorstore.clear()
 
 		self.treestore.clear()
 		self.otank = {}
 	
 		self.library.clear()
+
+		self.statusbar.push(_context,"Loading '"+filename+"'")
 		self.library.load(filename)
+		self.statusbar.pop(_context)
 
 		self.filename = filename
 
@@ -267,18 +285,38 @@ class Browser:
 
 		self.sim = None;
 		self.maintabs.set_current_page(0);
+	
+	def start_waiting(self, message):
+		self.waitcontext = self.statusbar.get_context_id("waiting")
+		self.statusbar.push(self.waitcontext,message)
+
+		if self.waitwin:
+			self.waitwin.show()
+
+		while gtk.events_pending():
+			gtk.main_iteration()
+		
+	def stop_waiting(self):
+		if self.waitwin:
+			self.statusbar.pop(self.waitcontext)
+			self.waitwin.hide()
 		
 	def do_sim(self, type_object):
 		self.sim = None;
 		# TODO: clear out old simulation first!
 
 		print "DO_SIM(%s)" % str(type_object.getName())		
+		self.start_waiting("Compiling...")
+
 		self.sim = type_object.getSimulation(str(type_object.getName())+"_sim")
 		print "...DONE 'getSimulation'"		
+		self.stop_waiting()
 
+		self.start_waiting("Building simulation...")
 		print "BUILDING SIMULATION"
-		self.sim.build();
+		self.sim.build()
 		print "DONE BUILDING"
+		self.stop_waiting()
 
 		# empty things out first
 		self.methodstore.clear()
@@ -301,7 +339,14 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
 
+		_context = self.statusbar.get_context_id("do_solve")
+		self.statusbar.push(_context,"Solving...")
+		while gtk.events_pending():
+			gtk.main_iteration()
+
 		self.sim.solve(ascend.Solver("QRSlv"))
+
+		self.statusbar.pop(_context)
 		self.refreshtree()
 
 	def do_check(self):
@@ -713,7 +758,6 @@ class Browser:
 
 def test():
 	import ascend
-	gtk.threads_init();
 	b = Browser();
 	b.run()
 

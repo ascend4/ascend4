@@ -1448,7 +1448,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
       </child>
 
       <child>
-	<widget class="GtkStatusbar" id="statusbar1">
+	<widget class="GtkStatusbar" id="statusbar">
 	  <property name="visible">True</property>
 	  <property name="has_resize_grip">True</property>
 	</widget>
