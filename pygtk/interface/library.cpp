@@ -31,6 +31,7 @@ extern "C"{
 #include <general/table.h>
 #include <compiler/instance_enum.h>
 #include <compiler/notate.h>
+#include <compiler/simlist.h>
 
 extern int zz_parse();
 }
@@ -253,6 +254,9 @@ Library::clear(){
 	cerr << "... DEFINED FUND TYPES" << endl;
 	/*SetUniversalProcedureList(NULL);
 */
+	error_reporter(ASC_PROG_NOTE,NULL,0,"Destroying simulations...\n");
+	Asc_DestroySimulations();
+
 	error_reporter(ASC_PROG_NOTE,NULL,0,"Clearing library...\n");
 	DestroyNotesDatabase(LibraryNote());
 	SetUniversalProcedureList(NULL);

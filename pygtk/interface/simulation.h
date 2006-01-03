@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+
 #include "symchar.h"
 #include "type.h"
 #include "instance.h"
@@ -31,16 +32,10 @@ class Solver;
 #endif
 
 /**
-	@TOD This class is for *Simulation* instances.
+	@TODO This class is for *Simulation* instances.
 
 	Handle instantiating, running initialisation functions, solving
 	and outputing results of solutions.
-
-	This class has to be called 'Instanc' in C++ to avoid a name clash
-	with C. Maybe coulda done it with namespaces but didn't know how.
-
-	This class is renamed back to 'Instance' by SWIG, so use 'Instance'
-	when you're in Python.
 
 	In ASCEND C-code, a simulation is a special type of Instance. It
 	has a 'simulation root' instance which often needs to be used for
@@ -49,10 +44,11 @@ class Solver;
 class Simulation : public Instanc{
 private:
 	Instanc simroot;
-	slv_system_t sys;
+	slv_system_structure *sys;
 	bool is_built;
 
 	// options to pass to BinTokenSetOptions
+	/// TODO these should probably be put somewhere else
 	std::string *bin_srcname;
 	std::string *bin_objname;
 	std::string *bin_libname;
@@ -60,7 +56,10 @@ private:
 	std::string *bin_rm;
 
 public:
-	Simulation(Instance *i, const SymChar &name);
+	explicit Simulation(Instance *i, const SymChar &name);
+	Simulation(const Simulation &);
+	~Simulation();
+
 	Instanc &getModel();
 	void run(const Method &method);
 	void checkDoF() const;

@@ -62,6 +62,20 @@ Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), sim
 	//simroot = Instanc(GetSimulationRoot(i),name);
 }
 
+Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroot){
+	is_built = old.is_built;
+	sys = old.sys;
+	bin_srcname = old.bin_srcname;
+	bin_objname = old.bin_objname;
+	bin_libname = old.bin_libname;
+	bin_cmd = old.bin_cmd;
+	bin_rm = old.bin_rm;	
+}
+
+Simulation::~Simulation(){
+	//CONSOLE_DEBUG("Deleting simulation %s", getName().toString());
+}
+
 Instanc &
 Simulation::getModel(){
 	if(!simroot.getInternalType()){
@@ -74,7 +88,7 @@ void
 Simulation::checkDoF() const{
 		cerr << "CHECKING DOF..." << endl;
         int dof, status;
-        if(sys==NULL){
+        if(!sys){
                 throw runtime_error("System not yet built");
         }
         slvDOF_status(sys, &status, &dof);
@@ -97,7 +111,7 @@ Simulation::run(const Method &method){
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 	Proc_enum pe;
 	pe = Initialize(
-		getModel().getInternalType() ,name.getInternalType(), "__not_named__"
+		&*(getModel().getInternalType()) ,name.getInternalType(), "__not_named__"
 		,ASCERR
 		,0, NULL, NULL
 	);
@@ -183,15 +197,16 @@ const bool
 Simulation::check(){
 	cerr << "CHECKING SIMULATION" << endl;
 	Instance *i1 = getModel().getInternalType();
-	CheckInstance(stderr, i1);
+	CheckInstance(stderr, &*i1);
 	cerr << "...DONE CHECKING" << endl;
 }		
 
 void
 Simulation::build(){
 	cerr << "BUILDING SIMULATION..." << endl;
-	sys = system_build(getModel().getInternalType());
-	if(sys == NULL){
+	Instance *i1 = getModel().getInternalType();
+	sys = system_build(&*i1);
+	if(!sys){
 		throw runtime_error("Unable to build system");
 	}
 	is_built = true;
@@ -204,7 +219,7 @@ Simulation::getFixableVariables(){
 	vector<Variable> vars;
 	vars.reserve(100);
 
-	if(sys==NULL){
+	if(!sys){
 		throw runtime_error("Simulation system not yet built");
 	}
 
@@ -260,7 +275,8 @@ Simulation::solve(Solver solver){
 	enum inst_t k = getModel().getKind();
 	if(k!=MODEL_INST)throw runtime_error("Can't solve: not an instance of type MODEL_INST");
 	
-	int npend = NumberPendingInstances(getInternalType());
+	Instance *i1 = getInternalType();
+	int npend = NumberPendingInstances(&*i1);
 	if(npend)throw runtime_error("Can't solve: There are still %d pending instances");	
 
 	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");

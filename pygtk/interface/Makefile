@@ -124,7 +124,7 @@ all: $(LIB)
 %_wrap.cxx %.py: %.i $(HDRS)
 	$(SWIG) $(SWIGFLAGS) $<
 
-.precious: $(CLASSES:%=%_wrap.cxx)
+.precious: $(SWIG_MODULE:%=%_wrap.cxx)
 .precious: _ascend.so
 	
 %_wrap.o: %_wrap.cxx
