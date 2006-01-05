@@ -97,8 +97,6 @@ in = {inch};
 
 (* mass *)
 
-metton = {kilogram *1000};
-mton = {kilogram *1000};
 kg = {kilogram};
 g = {kilogram/1000};
 gram = {g};
@@ -110,6 +108,15 @@ ng= {kilogram*1e-12};
 nanogram= {ng};
 pg= {kilogram*1e-15};
 picogram= {pg};
+
+tonne = {kilogram *1000}; (* reference on tonne: http://physics.nist.gov/Pubs/SP811/appenB8.html *)
+t = {tonne};
+kilotonne = {tonne*1000};
+kt = {kilotonne};
+megatonne = {tonne*1e6};
+Mt = {megatonne};
+gigatonne = {tonne*1e9};
+Gt = {gigatonne};
 
 amu = {1.661e-27*kilogram};
 lbm = {4.535924e-1*kilogram};
