@@ -505,8 +505,22 @@ END self_test;
 END iapws95_1phase;
 
 MODEL iapws95_2phase REFINES thermo_state;
+	(* phase components *)
 	Sf IS_A iapws95_1phase;
 	Sg IS_A iapws95_1phase;
+	xf IS_A fraction;
+	xg IS_A fraction;
+	xfslack IS_A fraction;
+	xgslack IS_A fraction;
+	
+	z01: xf + xg = 1.0;
+
+	(* complementarity... ??? *)
+	z02: xf * xfslack = 0.0; (* xfslack must be zero, else xf must be zero (ie no liquid) *)
+	z03: xg * xgslack = 0.0; (* xgslack must be zero, else xg must be zero (ie no gas) *)
+	(* so, if we have a non-zero slack variable, that phase will have disappeared and we don't need to worry! *)
+	
+	(* saturation conditions *)
 	sat IS_A iapws_sat_curves;
 	sat.rhof, Sf.rho ARE_THE_SAME;
 	sat.rhog, Sg.rho ARE_THE_SAME;
@@ -516,17 +530,15 @@ MODEL iapws95_2phase REFINES thermo_state;
 	T, Sf.T ARE_THE_SAME;
 	p, Sf.p ARE_THE_SAME;
 
-	x IS_A fraction;
+	x ALIASES xg;
 
-	rhog*rhof = rho*rhog + rho*(rhof - rhog) *x;
-
-	u = Sf.u + (Sg.u -Sf.u) *x;
-
-	h = Sf.h + (Sg.h -Sf.h) *x;
-	s = Sf.s + (Sg.s -Sf.s) *x;
-	cp = Sf.cp + (Sg.cp -Sf.cp) *x;
-	cv = Sf.cv + (Sg.cv -Sf.cv) *x;
-	w = Sf.w + (Sg.w - Sf.w) *x; (* check this *)
+	z04: rhof * rhog = rho * ( xf * rhog + xg * rhof);
+	z05: u =  xf * Sf.u  + xg * Sg.u;
+	z06: h  = xf * Sf.h  + xg * Sg.h;
+	z07: s  = xf * Sf.s  + xg * Sg.s;
+	z08: cp = xf * Sf.cp + xg * Sg.cp;
+	z09: cv = xf * Sf.cv + xg * Sg.cv;
+	z10: w  = xf * Sf.w  + xg * Sg.w; (* check this *)
 METHODS
 
 METHOD default_self;
@@ -547,6 +559,7 @@ END values;
 	
 END iapws95_2phase;		
 
+(*
 MODEL iapws95 REFINES thermo_state;
 	S1 IS_A iapws95_1phase;
 	S2 IS_A iapws95_2phase;
