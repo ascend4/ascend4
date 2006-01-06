@@ -1,5 +1,3 @@
-REQUIRE "system.a4l";
-REQUIRE "atoms.a4l";
 REQUIRE "johnpye/thermo_types.a4c";
 	
 MODEL ideal_steam REFINES thermo_state;
