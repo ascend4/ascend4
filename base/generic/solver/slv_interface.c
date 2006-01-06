@@ -61,7 +61,7 @@
 #include "solver/system.h"
 #include "solver/slv_interface.h"   /* Implementation of this */
 #include "solver/checkdim.h"
-#include "interface/plot.h"
+#include "compiler/plot.h"
 
 #define prompt printf
 

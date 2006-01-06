@@ -2396,13 +2396,15 @@ enum typelinterr DeriveRefinedTypes(struct StatementList *stats,
                 "%sRefinement can only be done on array elements.\n",
                 StatioLabel(3));
             }
-            FPRINTF(ASCERR,"%sIncompatible type (%s) of LHS name: ",
-              StatioLabel(3),
+            error_reporter_start(ASC_USER_ERROR,NULL,0);
+			FPRINTF(ASCERR,"Incompatible type (%s) of LHS name: ",
               (d!=NULL)?SCP(GetName(d)):"UNDEFINED");
             WriteName(ASCERR,n);
             FPRINTF(ASCERR,"\n");
             error_code = DEF_ILLEGAL_REFINE;
             TypeLintError(ASCERR,s, error_code);
+			error_reporter_end_flush();
+
             if (!g_drt_depth) {
               ClearForInfo(forinfo);
             }
@@ -3687,8 +3689,7 @@ enum typelinterr AddRLE(struct gl_list_t *nspace, struct Statement *s)
     /* in typelint we ensured that vl will be length 1 */
     rle = CREATERLE;
     if (rle==NULL) {
-      FPRINTF(ASCERR,"%s%s (%d) Insufficient memory error.\n",
-        StatioLabel(4),__FILE__,__LINE__);
+      error_reporter(ASC_PROG_FATAL,__FILE__,__LINE__,"Out of memory error");
       return DEF_ILLEGAL;
     }
     rle->assigned = 0;
@@ -3707,8 +3708,7 @@ enum typelinterr AddRLE(struct gl_list_t *nspace, struct Statement *s)
     while (vl != NULL) {
       rle = CREATERLE;
       if (rle==NULL) {
-        FPRINTF(ASCERR,"%s%s (%d) Insufficient memory error.\n",
-          StatioLabel(4),__FILE__,__LINE__);
+        error_reporter(ASC_PROG_FATAL,__FILE__,__LINE__,"Out of memory error");
         return DEF_ILLEGAL;
       }
       rle->assigned = -2; /* or more to the point, we don't care. */
@@ -3763,9 +3763,11 @@ enum typelinterr CheckParameterSubscripts( CONST struct Name *nptr)
     /* n will be a set expression sort of name */
     s = NameSetPtr(n);
     if (SetNamesInLCL(s)==0) {
-      FPRINTF(ASCERR,"%sUndefined subscript: [",StatioLabel(3));
+      error_reporter_start(ASC_USER_ERROR,NULL,0);
+      FPRINTF(ASCERR,"Undefined subscript: [");
       WriteSet(ASCERR,s);
       FPRINTF(ASCERR,"]\n");
+	  error_reporter_end_flush();
       return DEF_NAME_MISSING;
     }
     n = NextName(n);
@@ -3830,33 +3832,31 @@ enum typelinterr DoParamName(CONST struct Name *nptr,
     ok = AddLCL( name,type,isarray, stat, STATPARAMETRIC );
     if (ok < 1) {
       if (ok==0) {
-        FPRINTF(ASCERR,"%sParameter \"%s\" redeclared.",StatioLabel(3),
-                 SCP(name));
+        error_reporter_start(ASC_USER_ERROR,NULL,0);
+        FPRINTF(ASCERR,"Parameter \"%s\" redeclared.",SCP(name));
         assert(g_lcl_pivot!=NULL);
         if (g_lcl_pivot->e.statement != stat ) {
           WSEM(ASCERR,g_lcl_pivot->e.statement,"  First seen:");
-        } else {
-          FPRINTF(ASCERR,"\n");
         }
+		error_reporter_end_flush();
+
         return DEF_NAME_DUPLICATE;
       } else {
-        FPRINTF(ASCERR,"%sInsufficient memory during parameter parse.\n",
-          StatioLabel(4));
+        error_reporter(ASC_PROG_FATAL,NULL,0,"Insufficient memory during parameter parse.");
         return DEF_ILLEGAL; /* well, having insufficient memory is illegal */
       }
     }
     if (isarray && checksubs == CHECKSUBS) {
       if (CheckParameterSubscripts(nptr) != DEF_OKAY) {
-        FPRINTF(ASCERR,"%sArray parameter \"%s\" uses undefined subscript.\n",
-                StatioLabel(3),SCP(name));
-        FPRINTF(ASCERR,
-          "  Subscript must be defined by constant leading parameters.\n");
+        error_reporter(ASC_USER_ERROR,NULL,0,"Array parameter '%s' uses undefined "
+			"subscript. Subscript must be defined by constant leading parameters."
+			,SCP(name)
+		);
         return DEF_NAME_INCORRECT;
       }
     }
   } else{
-    FPRINTF(ASCERR,"%sBad name structure found in parameter list.\n",
-      StatioLabel(3));
+    error_reporter(ASC_USER_ERROR,NULL,0,"Bad name structure found in parameter list.");
     return DEF_NAME_INCORRECT;
   }
   return DEF_OKAY;
@@ -4123,8 +4123,7 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       break;
     case WILLBE:
       if (absorbed != 0) {
-        FPRINTF(ASCERR,"%sIncorrect WILL_BE found in absorbed list.\n",
-          StatioLabel(3));
+        error_reporter(ASC_USER_ERROR,NULL,0,"Incorrect WILL_BE found in absorbed list.");
         *errloc = c;
         return DEF_STAT_MISLOCATED;
       }
@@ -4136,8 +4135,7 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       break;
     case CASGN:
       if (absorbed == 0) {
-        FPRINTF(ASCERR,"%sIncorrect assignment found in parameter list.\n",
-          StatioLabel(3));
+        error_reporter(ASC_USER_ERROR,NULL,0,"Incorrect assignment found in parameter list.");
         *errloc = c;
         return DEF_STAT_MISLOCATED;
       }
@@ -4151,10 +4149,12 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       rle->assigned = 1;
       break;
     default: /* should be impossible due to TypedefIllegal functions */
-      FPRINTF(ASCERR,"%sIncorrect statement found in %s list.\n",
-              StatioLabel(4),
+      error_reporter_start(ASC_PROG_FATAL,NULL,0);
+      FPRINTF(ASCERR,"Incorrect statement found in %s list.\n",
               (absorbed != 0) ? "absorbed" : "parameter");
       TypeLintError(ASCERR,s,DEF_STAT_MISLOCATED);
+	  error_reporter_end_flush();
+
       Asc_Panic(2, NULL, "%sIncorrect statement found in %s list.\n",
                 StatioLabel(4),
                 (absorbed != 0) ? "absorbed" : "parameter");
@@ -4180,9 +4180,11 @@ int FindAssignedStatement(struct gl_list_t *nspace, struct Statement *s)
   test.olddeclstat = s;
   pos = gl_search(nspace,&test,(CmpFunc)CmpRLEStat);
   if (pos==0) {
-    FPRINTF(ASCERR,"%sFindAssignedStatement called with unknown stat:\n",
-            StatioLabel(4));
+	error_reporter_start(ASC_PROG_FATAL,NULL,0);
+	FPRINTF(ASCERR,"FindAssignedStatement called with unknown stat: ");
     WriteStatement(ASCERR,s,2);
+	error_reporter_end_flush();
+
     Asc_Panic(2, NULL, "%sFindAssignedStatement called with unknown stat:\n",
               StatioLabel(4));
   }
@@ -4414,9 +4416,9 @@ enum typelinterr MatchModelParameters(symchar *name, /* goes w/psl */
   newlen = StatementListLength(psl);
   oldlen = StatementListLength(pslbase);
   if (newlen < oldlen) {
-    FPRINTF(ASCERR,"%sParameter list mismatch with %s.\n",
-      StatioLabel(3),SCP(refname));
-    FPRINTF(ASCERR,"  %s is missing declarations:\n",SCP(name));
+	error_reporter_start(ASC_USER_ERROR,NULL,0);
+    FPRINTF(ASCERR,"Parameter list mismatch with '%s': missing declarations in\n  ",
+      SCP(refname));
     for (diff = 1; diff <=oldlen; diff++) {
       if (psl==NULL || gl_search(GetList(psl),
                     GetStatement(pslbase,diff),
@@ -4428,30 +4430,32 @@ enum typelinterr MatchModelParameters(symchar *name, /* goes w/psl */
       }
     }
     if (firsterr!=NULL && StatementType(firsterr)==ISA) {
-      FPRINTF(ASCERR,
-              "  The first missing declaration is an IS_A; it may be\n");
-      FPRINTF(ASCERR,"  that you forgot some :== in the REFINES() list.\n");
+      FPRINTF(ASCERR,"The first missing declaration is an IS_A;"
+		"it may be that you forgot some :== in the REFINES() list.");
     }
-    FPRINTF(ASCERR,"  Hint:\n  %s  %s  %s  %s  %s  %s  %s",
-      "Parameter definitions in a refining MODEL must match in order\n",
-      "the parameters of the MODEL being refined. The type of a parameter\n",
-      "in the new MODEL may be more refined than the corresponding\n",
-      "parameter in the old MODEL.\n",
-      "An IS_A statement in the old MODEL whose variable is assigned\n",
-      "in the REFINES() clause of the new MODEL must not be repeated\n",
-      "in the parameter list of the new MODEL.\n\n");
+	error_reporter_end_flush();
+	
+    error_reporter(ASC_PROG_NOTE,NULL,0,"HINT:\n"
+      "Parameter definitions in a refining MODEL must match in order\n"
+      "the parameters of the MODEL being refined. The type of a parameter\n"
+      "in the new MODEL may be more refined than the corresponding\n"
+      "parameter in the old MODEL.\n"
+      "An IS_A statement in the old MODEL whose variable is assigned\n"
+      "in the REFINES() clause of the new MODEL must not be repeated\n"
+      "in the parameter list of the new MODEL.");
     return DEF_ILLEGAL_PARAM;
   }
   if (newlen==0) return DEF_OKAY; /* no parameters for either */
   c = CompareISLists(pslbase,psl,&diff);
   if (c != 0 && diff <= oldlen) {
-    FPRINTF(ASCERR,"%sParameter %lu mismatch between %s and %s.\n",
-      StatioLabel(3),diff,SCP(name),SCP(refname));
+	error_reporter_start(ASC_USER_ERROR,NULL,0);
+    FPRINTF(ASCERR,"Parameter %lu mismatch between %s and %s.\n",diff,SCP(name),SCP(refname));
     stat = (CONST struct Statement *)gl_fetch(GetList(psl),diff);
     WriteStatement(ASCERR,stat,2);
     FPRINTF(ASCERR,"  Must match:\n");
     stat = (CONST struct Statement *)gl_fetch(GetList(pslbase),diff);
     WriteStatement(ASCERR,stat,2);
+	error_reporter_end_flush();
     return DEF_ILLEGAL_PARAM;
   }
   return DEF_OKAY;
@@ -4476,8 +4480,8 @@ enum typelinterr MatchParameterWheres(symchar *name, /* goes w/wsl */
   newlen = StatementListLength(wsl);
   oldlen = StatementListLength(wslbase);
   if (newlen < oldlen) {
-    FPRINTF(ASCERR,"%sWHERE list mismatch with %s.\n",
-            StatioLabel(3),SCP(refname));
+    error_reporter_start(ASC_USER_ERROR,NULL,0);
+	FPRINTF(ASCERR,"WHERE list mismatch with %s.\n",SCP(refname));
     FPRINTF(ASCERR,"  %s is missing declarations:\n",SCP(name));
     for (diff = 1; diff <=oldlen; diff++) {
       if (wsl==NULL || gl_search(GetList(wsl),
@@ -4486,18 +4490,21 @@ enum typelinterr MatchParameterWheres(symchar *name, /* goes w/wsl */
         WriteStatement(ASCERR,GetStatement(wslbase,diff),2);
       }
     }
+	error_reporter_end_flush();
     return DEF_ILLEGAL_PARAM;
   }
   if (newlen==0) return DEF_OKAY; /* no parameters for either */
   c = CompareISLists(wslbase,wsl,&diff);
   if (c != 0 && diff <= oldlen) {
-    FPRINTF(ASCERR,"%sWHERE statement %lu mismatch between %s and %s.\n",
-      StatioLabel(3),diff,SCP(name),SCP(refname));
+    error_reporter_start(ASC_USER_ERROR,NULL,0);
+    FPRINTF(ASCERR,"WHERE statement %lu mismatch between %s and %s.\n",
+		diff,SCP(name),SCP(refname));
     stat = (CONST struct Statement *)gl_fetch(GetList(wsl),diff);
     WriteStatement(ASCERR,stat,2);
     FPRINTF(ASCERR,"  Must match:\n");
     stat = (CONST struct Statement *)gl_fetch(GetList(wslbase),diff);
     WriteStatement(ASCERR,stat,2);
+	error_reporter_end_flush();
     return DEF_ILLEGAL_PARAM;
   }
   return DEF_OKAY;
@@ -4777,15 +4784,19 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   } else {
     rdesc=FindType(refines);
     if (rdesc==NULL) {
-      FPRINTF(ASCERR,"%sUnable to locate type %s for %s's type definition.\n",
-              StatioLabel(3),SCP(refines),SCP(name));
+      error_reporter_start(ASC_USER_ERROR,NULL,0);
+      FPRINTF(ASCERR,"Unable to locate type %s for %s's type definition.\n",
+              SCP(refines),SCP(name));
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
+	  error_reporter_end_flush();
       return NULL;
     }
     if (GetBaseType(rdesc) != model_type){
-      FPRINTF(ASCERR,"%sModel %s attempts to refine non-MODEL type %s.\n",
-              StatioLabel(3),SCP(name),SCP(refines));
+      error_reporter_start(ASC_USER_ERROR,NULL,0);
+	  FPRINTF(ASCERR,"Model %s attempts to refine non-MODEL type %s.\n",
+              SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
+	  error_reporter_end_flush();
       return NULL;
     }
 
@@ -4814,9 +4825,11 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       /* no parameters in rdesc. */
       if (StatementListLength(rsl) != 0L) {
         /* error. can't reduce what ain't there */
-        FPRINTF(ASCERR,"%sModel %s attempts to reduce non-parameters in %s.\n",
-          StatioLabel(3),SCP(name),SCP(refines));
+	    error_reporter_start(ASC_USER_ERROR,NULL,0);
+        FPRINTF(ASCERR,"Model %s attempts to reduce non-parameters in %s.\n",
+          SCP(name),SCP(refines));
         WriteStatementList(ASCERR,rsl,4);
+		error_reporter_end_flush();
         DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
         return NULL;
       }
@@ -4829,8 +4842,8 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
                                    EmptyStatementList());
         if (ParametricChildList(name,tsl,NOCHECKSUBS) != DEF_OKAY) {
           /* contents of tsl have been checked already */
-          FPRINTF(ASCERR,"%sModel %s victim of bizarre error 1.\n",
-            StatioLabel(3),SCP(name));
+		  error_reporter(ASC_USER_ERROR,NULL,0,"Model %s victim of bizarre error 1.",
+				SCP(name));
           DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         }
       }
@@ -4867,9 +4880,11 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
        */
       if (ParametricChildList(name,tsl,NOCHECKSUBS) != DEF_OKAY) {
         /* contents of tsl, if any, have been checked already */
-        FPRINTF(ASCERR,"%sModel %s victim of bizarre error 2.\n",
-          StatioLabel(3),SCP(name));
+		error_reporter_start(ASC_PROG_ERROR,NULL,0);
+        FPRINTF(ASCERR,"Model %s victim of bizarre error 2.\n",SCP(name));
         WriteStatementList(ASCERR,tsl,2);
+		error_reporter_end_flush();
+
         DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         DestroyStatementList(pslbase);
         return NULL;
@@ -4994,17 +5009,16 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
   enum type_kind t;
 
   if (err) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Constant definition \"%s\" abandoned due to syntax errors.",SCP(name));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Constant definition '%s' abandoned due to syntax errors.",SCP(name));
     return NULL;
   }
   if (refines==NULL) {
-    FPRINTF(ASCERR,"%sConstants must refine constant basetypes.\n",
-      StatioLabel(3));
+    error_reporter(ASC_USER_ERROR,NULL,0,"Constants must refine constant basetypes.");
     return NULL;
   }
   rdesc = FindType(refines);
   if (rdesc==NULL){
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to locate type %s for %s's type definition.",SCP(refines),SCP(name));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to locate type '%s' for definition of type '%s'.",SCP(refines),SCP(name));
     return NULL;
   }
   t = GetBaseType(rdesc);
@@ -5012,7 +5026,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
        t != integer_constant_type &&
        t != symbol_constant_type &&
        t != boolean_constant_type) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Constant %s attempts to refine a non-Constant type %s.",SCP(name),SCP(refines));
+    error_reporter(ASC_PROG_ERR,NULL,0,"Constant '%s' attempts to refine a non-constant type '%s'.",SCP(name),SCP(refines));
     return NULL;
   }
   if (GetUniversalFlag(rdesc)) univ=1;
