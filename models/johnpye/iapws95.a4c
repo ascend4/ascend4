@@ -35,6 +35,7 @@ References:
 freesteam-ascend - IAPWS-95 steam library for ASCEND
 Copyright (C) John Pye 2005
 derived from work by Don Peterson for freesteam, (C) 2004.
+http://freesteam.sourceforge.net/
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public
@@ -510,29 +511,24 @@ MODEL iapws95_2phase REFINES thermo_state;
 	Sg IS_A iapws95_1phase;
 	xf IS_A fraction;
 	xg IS_A fraction;
-	xfslack IS_A fraction;
-	xgslack IS_A fraction;
-	
 	z01: xf + xg = 1.0;
 
-	(* complementarity... ??? *)
-	z02: xf * xfslack = 0.0; (* xfslack must be zero, else xf must be zero (ie no liquid) *)
-	z03: xg * xgslack = 0.0; (* xgslack must be zero, else xg must be zero (ie no gas) *)
-	(* so, if we have a non-zero slack variable, that phase will have disappeared and we don't need to worry! *)
-	
 	(* saturation conditions *)
 	sat IS_A iapws_sat_curves;
-	sat.rhof, Sf.rho ARE_THE_SAME;
-	sat.rhog, Sg.rho ARE_THE_SAME;
 	Sf.T, Sg.T, sat.T ARE_THE_SAME;
-	rhof ALIASES Sf.rho;
-	rhog ALIASES Sg.rho;
+	rhof ALIASES sat.rhof;
+	rhog ALIASES sat.rhog;
+	rhov ALIASES Sg.rho;
+	rhol ALIASES Sf.rho;
 	T, Sf.T ARE_THE_SAME;
 	p, Sf.p ARE_THE_SAME;
 
+	z02: xf * (rhov-rhog) = 0.0 {kg/m^3};
+	z03: xg * (rhol-rhof) = 0.0 {kg/m^3};		
+
 	x ALIASES xg;
 
-	z04: rhof * rhog = rho * ( xf * rhog + xg * rhof);
+	z04: Sf.rho * Sg.rho = rho * ( xf * Sg.rho + xg * Sf.rho);
 	z05: u =  xf * Sf.u  + xg * Sg.u;
 	z06: h  = xf * Sf.h  + xg * Sg.h;
 	z07: s  = xf * Sf.s  + xg * Sg.s;
@@ -559,68 +555,3 @@ END values;
 	
 END iapws95_2phase;		
 
-(*
-MODEL iapws95 REFINES thermo_state;
-	S1 IS_A iapws95_1phase;
-	S2 IS_A iapws95_2phase;
-	sat IS_A iapws_sat_curves;
-
-	T, sat.T, S1.T, S2.T ARE_THE_SAME;
-	rho, S1.rho, S2.rho ARE_THE_SAME;
-	h, S1.h, S2.h ARE_THE_SAME;
-	u, S1.u, S2.u ARE_THE_SAME;
-	p, S1.p, S2.p ARE_THE_SAME;
-	s, S1.s, S2.s ARE_THE_SAME;
-	cp, S1.cp, S2.cp ARE_THE_SAME;
-	cv, S1.cv, S2.cv ARE_THE_SAME;
-	w, S1.w, S2.w ARE_THE_SAME;
-
-    CONDITIONAL
-		sub_test: rho >= sat.rhof;
-		super_test: rho <= sat.rhog;
-		sat1_test: rho < sat.rhof;
-		sat2_test: rho > sat.rhog;
-	END CONDITIONAL;
-
-	issat1 IS_A boolean_var;
-	sat1_expr: issat1 == SATISFIED(sat1_test);
-	issat2 IS_A boolean_var;
-	sat2_expr: issat1 == SATISFIED(sat2_test);
-	issat IS_A boolean_var;
-	saturation_expr: issat == issat1 OR issat2;
-	issub IS_A boolean_var;
-	subcooled_expr: issub == SATISFIED(sub_test);
-	issuper IS_A boolean_var;
-	superheated_expr: issuper == SATISFIED(super_test);
-	
-    saturation_when: WHEN (issat)
-		CASE TRUE:
-			USE S2;
-		CASE FALSE:
-			USE S1;
-	END WHEN;
-
-METHODS
-METHOD default_self;
-	RUN reset;
-	RUN values;
-END default_self;
-
-METHOD specify;
-	T.fixed := TRUE;
-	rho.fixed := TRUE;
-END specify;
-
-METHOD values;
-	(* fixed vars *)
-	T := 300 {K};
-	rho := 100 {kg/m^3};
-	(* initial values *)
-	issat := TRUE;
-	issuper := FALSE;
-	issub := FALSE;
-	p := 1 {atm};
-	h := 400 {kJ/kg};
-END values;
-
-END iapws95;
