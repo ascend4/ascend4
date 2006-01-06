@@ -127,4 +127,3 @@ struct Instance {
 };
 
 #endif /* ASC_INSTANCE_ENUM_H */
-

@@ -51,29 +51,6 @@ EXEC_LIBS = $(DEBUG_MALLOC_LIBS) $(MATH_LIBS) -ltermcap $(DEBUG_LIBS)
 #  The next variables list the source files (LIB_SCRS) to compile
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
-LIB_SRCS = \
-	anoncopy.c anonmerg.c anontype.c arrayinst.c ascCompiler.c \
-	ascParse.c atomsize.c atomvalue.c bintoken.c bit.c braced.c \
-	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c \
-	commands.c copyinst.c createinst.c destroyinst.c \
-	dimen.c dimen_io.c dump.c \
-	evaluate.c exprio.c exprs.c exprsym.c extcall.c \
-	extfunc.c extinst.c find.c forvars.c fractions.c \
-	freestore.c func.c initialize.c instance.c instance_io.c \
-	instantiate.c instmacro.c instquery.c interval.c \
-	library.c linkinst.c logrel_io.c logrel_util.c \
-	logrelation.c mathinst.c mergeinst.c module.c name.c \
-	nameio.c notate.c numlist.c packages.c parentchild.c \
-	parpend.c pending.c proc.c procframe.c \
-	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c \
-	relation_io.c relation_util.c rootfind.c rounded.c safe.c \
-	scanner.c select.c setinst_io.c setinstval.c setio.c \
-	sets.c slist.c simlist.c statement.c statio.c switch.c \
-	symtab.c syntax.c temp.c tmpnum.c type_desc.c \
-	type_descio.c typedef.c typelint.c redirectFile.c \
-    units.c universal.c \
-	value_type.c visitinst.c visitlink.c vlist.c vlistio.c \
-	watchpt.c watchptio.c when.c when_io.c when_util.c
 
 LIB_OBJS = \
 	anoncopy.o anonmerg.o anontype.o arrayinst.o ascCompiler.o \
@@ -88,7 +65,7 @@ LIB_OBJS = \
 	library.o linkinst.o logrel_io.o logrel_util.o \
 	logrelation.o mathinst.o mergeinst.o module.o name.o \
 	nameio.o notate.o numlist.o packages.o parentchild.o \
-	parpend.o pending.o proc.o procframe.o \
+	parpend.o pending.o plot.o proc.o procframe.o \
 	procio.o prototype.o qlfdid.o refineinst.o rel_common.o relation.o \
 	relation_io.o relation_util.o rootfind.o rounded.o safe.o \
 	scanner.o select.o setinst_io.o setinstval.o setio.o \
@@ -98,6 +75,8 @@ LIB_OBJS = \
     units.o universal.o \
 	value_type.o visitinst.o visitlink.o vlist.o vlistio.o \
 	watchpt.o watchptio.o when.o when_io.o when_util.o
+
+LIB_SRCS = $(LIB_OBJS:%.o=%.c)
 
 #  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
 #  

@@ -73,7 +73,7 @@
 #include "compiler/qlfdid.h"
 #include "solver/slv_types.h"
 #include "interface/HelpProc.h"
-#include "interface/plot.h"
+#include "compiler/plot.h"
 #include "interface/BrowserQuery.h"
 #include "interface/Qlfdid.h"
 #include "interface/SimsProc.h"

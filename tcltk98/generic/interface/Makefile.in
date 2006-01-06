@@ -51,16 +51,6 @@ EXEC_LIBS = $(ASC_LIBS) $(FOR_LIBS) $(TK_LIBS) $(TKTABLE_LIB) $(X11_LIBS) \
 #  The next variables list the source files (LIB_SCRS) to compile
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
-LIB_SRCS = \
-	AscBitmaps.c AscPrintTcl.c BrowLogRel_io.c BrowWhen_io.c BrowserDag.c \
-	BrowserMethod.c BrowserProc.c BrowserQuery.c BrowserRel_io.c \
-	CodeGen.c CodeGen2.c Commands.c DebugProc.c DisplayProc.c \
-	EnvVarProc.c HelpProc.c Integrators.c \
-	LibraryProc.c Lsode.c MtxProc.c ProbeProc.c Qlfdid.c \
-	ScriptProc.c Sensitivity.c SimsProc.c SlvProc.c \
-	SolverProc.c UnitsProc.c UserData.c \
-	plot.c tkConsole.c typelex.c old_utils.c
-
 LIB_OBJS = \
 	AscBitmaps.o AscPrintTcl.o BrowLogRel_io.o BrowWhen_io.o \
 	BrowserMethod.o BrowserProc.o BrowserQuery.o BrowserRel_io.o \
@@ -69,9 +59,9 @@ LIB_OBJS = \
 	LibraryProc.o Lsode.o MtxProc.o ProbeProc.o Qlfdid.o \
 	ScriptProc.o Sensitivity.o SimsProc.o SlvProc.o \
 	SolverProc.o UnitsProc.o UserData.o \
-	plot.o tkConsole.o typelex.o old_utils.o
+	tkConsole.o typelex.o old_utils.o
 
-
+LIB_SRCS = $(LIB_OBJS:%.o=%.c)
 
 
 #  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)

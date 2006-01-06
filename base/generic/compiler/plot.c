@@ -46,7 +46,7 @@
 #include "compiler/type_desc.h"
 #include "compiler/module.h"
 #include "compiler/library.h"
-#include "interface/plot.h"
+#include "compiler/plot.h"
 
 /*
  *  ASSUMPTION ASSUMPTION ASSUMPTION:

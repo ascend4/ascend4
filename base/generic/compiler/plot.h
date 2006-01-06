@@ -36,8 +36,8 @@
  *  </pre>
  */
 
-#ifndef plot__already_included
-#define plot__already_included
+#ifndef ASC_PLOT_H
+#define ASC_PLOT_H
 
 /** Plot types. */
 enum PlotTypes {
@@ -102,5 +102,5 @@ extern boolean plot_allowed(struct Instance *inst);
  *  (i.e. whether it is a refinement of plt_plot).
  */
 
-#endif  /* plot__already_included */
+#endif  /* ASCTK_PLOT_H */
 
