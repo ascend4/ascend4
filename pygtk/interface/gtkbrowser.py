@@ -339,6 +339,7 @@ class Browser:
 	def do_solve(self):
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
+			return;
 
 		self.start_waiting("Solving...")
 
@@ -351,9 +352,14 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
 
+		self.start_waiting("Checking system...")
+
 		if self.sim.check():
 			self.reporter.reportNote("System check OK")
+
 		self.sim.checkDoF()
+
+		self.stop_waiting()
 
 		self.refreshtree()
 
