@@ -128,7 +128,7 @@ class Browser:
 		#--------------------
 		# set up the error view
 
-		self.errorview = glade.get_widget("errorview")
+		self.errorview = glade.get_widget("errorview")	
 		errstorecolstypes = [gtk.gdk.Pixbuf,str,str,str,int]
 		self.errorstore = gtk.TreeStore(*errstorecolstypes)
 		errtitles = ["","Location","Message"];
@@ -189,7 +189,6 @@ class Browser:
 
 		self.methodstore = gtk.ListStore(str)
 		self.methodsel.set_model(self.methodstore)
-		self.methodsel.set_text_column(0)
 		_methodrenderer = gtk.CellRendererText()
 		self.methodsel.pack_start(_methodrenderer, True)
 		self.methodsel.add_attribute(_methodrenderer, 'text',0)
@@ -286,6 +285,8 @@ class Browser:
 		self.sim = None;
 		self.maintabs.set_current_page(0);
 	
+	# See http://www.daa.com.au/pipermail/pygtk/2005-October/011303.html
+	# for details on how the 'wait cursor' is done.
 	def start_waiting(self, message):
 		self.waitcontext = self.statusbar.get_context_id("waiting")
 		self.statusbar.push(self.waitcontext,message)
@@ -339,14 +340,11 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
 
-		_context = self.statusbar.get_context_id("do_solve")
-		self.statusbar.push(_context,"Solving...")
-		while gtk.events_pending():
-			gtk.main_iteration()
+		self.start_waiting("Solving...")
 
 		self.sim.solve(ascend.Solver("QRSlv"))
 
-		self.statusbar.pop(_context)
+		self.stop_waiting()
 		self.refreshtree()
 
 	def do_check(self):
@@ -687,9 +685,9 @@ class Browser:
 	
 	def auto_toggle(self,button,*args):
 		if button.get_active():
-			self.reporter.reportError("Auto mode is now ON")
+			self.reporter.reportSuccess("Auto mode is now ON")
 		else:
-			self.reporter.reportError("Auto mode is now OFF")
+			self.reporter.reportSuccess("Auto mode is now OFF")
 
 #   ------------------------------
 #   CONTEXT MENU
