@@ -15,6 +15,7 @@ extern "C"{
 #include <compiler/types.h>
 #include <compiler/instance_enum.h>
 #include <compiler/atomvalue.h>
+#include <compiler/plot.h>
 }
 
 /**
@@ -78,6 +79,8 @@ public:
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
 
+	const bool isPlottable() const;
+
 	void setFixed(const bool &val=true);
 	void setBoolValue(const bool&, const unsigned &depth=0);
 	void setRealValue(const double&, const unsigned &depth=0);
@@ -100,11 +103,6 @@ public:
 	void write();
 	Instance *getInternalType() const;
 };
-
-extern "C"{
-boolean plot_allowed(struct Instance *inst);
-void plot_prepare_file(struct Instance *inst, char *plotfilename);
-}
 
 #endif
 

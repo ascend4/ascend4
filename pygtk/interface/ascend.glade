@@ -966,8 +966,6 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
-  <property name="default_width">768</property>
-  <property name="default_height">690</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">False</property>
   <property name="icon_name">stock_fontwork</property>
@@ -1153,7 +1151,6 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 			    <widget class="GtkComboBox" id="methodsel">
 			      <property name="visible">True</property>
 			      <property name="add_tearoffs">False</property>
-			      <property name="has_frame">True</property>
 			      <property name="focus_on_click">True</property>
 			    </widget>
 			    <packing>
@@ -1474,7 +1471,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
       <accelerator key="f" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
       <child internal-child="image">
-	<widget class="GtkImage" id="image10">
+	<widget class="GtkImage" id="image11">
 	  <property name="visible">True</property>
 	  <property name="stock">gtk-yes</property>
 	  <property name="icon_size">1</property>
@@ -1497,7 +1494,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
       <accelerator key="r" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
       <child internal-child="image">
-	<widget class="GtkImage" id="image11">
+	<widget class="GtkImage" id="image12">
 	  <property name="visible">True</property>
 	  <property name="stock">gtk-no</property>
 	  <property name="icon_size">1</property>
@@ -1507,6 +1504,22 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 	  <property name="ypad">0</property>
 	</widget>
       </child>
+    </widget>
+  </child>
+
+  <child>
+    <widget class="GtkSeparatorMenuItem" id="separator2">
+      <property name="visible">True</property>
+    </widget>
+  </child>
+
+  <child>
+    <widget class="GtkMenuItem" id="plot1">
+      <property name="visible">True</property>
+      <property name="label" translatable="yes">_Plot</property>
+      <property name="use_underline">True</property>
+      <signal name="activate" handler="on_plot1_activate" last_modification_time="Fri, 06 Jan 2006 09:36:45 GMT"/>
+      <accelerator key="p" modifiers="GDK_CONTROL_MASK" signal="activate"/>
     </widget>
   </child>
 </widget>
