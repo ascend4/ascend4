@@ -61,9 +61,14 @@ class Browser:
 		glade = gtk.glade.XML(GLADE_FILE,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
-
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
+
+		_geom=self.prefs.getGeometry(self.window.get_screen().get_display().get_name(),"browserwin")
+		if _geom:
+			self.window.resize(_geom[0],_geom[1]);
+			self.window.move(_geom[2],_geom[3]);
+
 		self.window.connect("delete_event", self.delete_event)
 
 		self.openbutton=glade.get_widget("openbutton")
@@ -117,12 +122,16 @@ class Browser:
 		self.treecontext = gtk.Menu();
 		self.fixmenuitem = gtk.MenuItem("Fix");
 		self.freemenuitem = gtk.MenuItem("Free");
+		self.plotmenuitem = gtk.MenuItem("Plot");
 		self.fixmenuitem.show()
 		self.freemenuitem.show()
+		self.plotmenuitem.show()
 		self.treecontext.append(self.fixmenuitem);
 		self.treecontext.append(self.freemenuitem);
+		self.treecontext.append(self.plotmenuitem);
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
+		self.freemenuitem.connect("activate",self.plot_activate)
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
 		#--------------------
@@ -706,20 +715,34 @@ class Browser:
 			_time = event.time
 			_pthinfo = self.treeview.get_path_at_pos(_x, _y)
 			if _pthinfo != None:
+				_canpop = False;
 				_path, _col, _cellx, _celly = _pthinfo
 				# self.reporter.reportError("Right click on %s" % self.otank[_path][0])
 				_instance = self.otank[_path][1]
 				if _instance.getType().isRefinedSolverVar():
-					self.treeview.grab_focus()
-					self.treeview.set_cursor( _path, _col, 0)
+					_canpop = True;
 					if _instance.isFixed():
 						self.fixmenuitem.hide()
 						self.freemenuitem.show()
 					else:
 						self.fixmenuitem.show()
 						self.freemenuitem.hide()
+
+				if _instance.isPlottable():
+					self.reporter.reportNote("Instance IS plottable");
+					self.plotmenuitem.show()
+					_canpop = True;
+				else:
+					self.reporter.reportNote("Instance is not plottable");
+					self.plotmenuitem.hide()
+
+				if _canpop:
+					self.treeview.grab_focus()
+					self.treeview.set_cursor( _path, _col, 0)
 					self.treecontext.popup( None, None, None, event.button, _time)
 					return 1
+				else:
+					self.reporter.reportNote("No right-click options available here");
 			else:
 				self.reporter.reportError("Invalid selection for right-click")
 
@@ -747,11 +770,26 @@ class Browser:
 			self.refreshtree()
 		return 1
 
+	def plot_activate(self,widget):
+		_path,_col = self.treeview.get_cursor()
+		_instance = self.otank[_path][1]
+		if not _instance.isPlottable():
+			self.reporter.reportError("Can't plot instanct %s" % _instance.getName().toString())
+			return
+
+		self.reporter.reportNote("About to plot instance %s" % _instance.getName().toString())
+		return 1
+
+
+		
 #   ---------------------------------
 #   WINDOW-LEVEL ACTIONS
 
 	def delete_event(self, widget, event, data=None):
 		self.reporter.clearPythonErrorCallback()
+		_w,_h = self.window.get_size()
+		_t,_l = self.window.get_position()
+		self.prefs.setGeometry(self.window.get_screen().get_display().get_name(),"browserwin",_w,_h,_t,_l );
 
 		# causes prefs to be saved unless they are still being used elsewher
 		del(self.prefs)

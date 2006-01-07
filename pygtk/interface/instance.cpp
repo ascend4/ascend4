@@ -24,6 +24,7 @@ extern "C"{
 #include <compiler/instance_name.h>
 #include <compiler/atomvalue.h>
 #include <utilities/readln.h>
+#include <compiler/plot.h>
 }
 
 #include "instance.h"
@@ -369,6 +370,14 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+const bool 
+Instanc::isPlottable() const{
+	if(plot_allowed(i)){
+		return true;
+	}
+	return false;
+}
+
 const enum set_kind 
 Instanc::getSetType() const{
 	if(!isSet() || (!isConst() && !isDefined())){
@@ -493,18 +502,6 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 	}
 
 	SetRealAtomValue(i,val,depth);
-}
-
-//----------------------------
-// global functions:
-boolean
-plot_allowed(struct Instance *inst){
-	throw runtime_error("plot_allowed not implemented");
-}
-
-void
-plot_prepare_file(struct Instance *inst, char *plotfilename){
-	throw runtime_error("plot_prepare_file not implemented");
 }
 
 // static properties

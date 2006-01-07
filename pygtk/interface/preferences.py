@@ -1,6 +1,7 @@
 # Preferences module for ASCPY.
 
 import ConfigParser, os
+import re
 
 class Preferences:
 	__sharedstate = {}
@@ -25,14 +26,32 @@ class Preferences:
 			f = open(self.fname, "w");
 			self.ini.write( f );
 
+	def getGeometry(self,displayname,key):
+		try:
+			_g = self.ini.get("Geometry:"+displayname,key)
+		except ConfigParser.NoSectionError:
+			return None
+		except ConfigParser.NoOptionError:
+			return None
+		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(\d+)\+(\d+)\s*$');
+
+		_m = _p.match(_g)
+		print "MATCH: ",_m.groups()
+		return 	tuple(int(i) for i in _m.groups())
+
+	def setGeometry(self,displayname,key,width,height,top,left):
+		if not self.ini.has_section("Geometry:"+displayname):
+			self.ini.add_section("Geometry:"+displayname)
+		self.ini.set("Geometry:"+displayname,key, "%dx%d+%d+%d" % (width, height, top, left) );
+
 	def getPreferredUnits(self,key):
 		try:
 			_u = self.ini.get("PreferredUnits",key);
 		except ConfigParser.NoSectionError:
-			return None;
+			return None
 		except ConfigParser.NoOptionError:
-			return None;
-		return _u;
+			return None
+		return _u
 
 	def setPreferredUnits(self,key,val):
 		if not self.ini.has_section("PreferredUnits"):

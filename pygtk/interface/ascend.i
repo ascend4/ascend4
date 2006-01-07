@@ -349,6 +349,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const bool isPlottable() const;
 	const ASCXX_Set<long> getSetValue<long>() const;
 	const ASCXX_Set<SymChar> getSetValue<SymChar>() const;
 	const bool isChildless() const;
