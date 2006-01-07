@@ -966,6 +966,8 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
+  <property name="default_width">600</property>
+  <property name="default_height">768</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">False</property>
   <property name="icon_name">stock_fontwork</property>
@@ -1219,7 +1221,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
       </child>
 
       <child>
-	<widget class="GtkVPaned" id="vpaned2">
+	<widget class="GtkVPaned" id="browserpaned">
 	  <property name="height_request">320</property>
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>

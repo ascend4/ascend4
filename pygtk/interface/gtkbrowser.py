@@ -64,12 +64,18 @@ class Browser:
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
 
-		_geom=self.prefs.getGeometry(self.window.get_screen().get_display().get_name(),"browserwin")
+		_display = self.window.get_screen().get_display().get_name();
+		_geom=self.prefs.getGeometrySizePosition(_display,"browserwin")
 		if _geom:
 			self.window.resize(_geom[0],_geom[1]);
 			self.window.move(_geom[2],_geom[3]);
-
+		
 		self.window.connect("delete_event", self.delete_event)
+
+		self.browserpaned=glade.get_widget("browserpaned");
+		_geom2=self.prefs.getGeometryValue(_display,"browserpaned");
+		if _geom2:
+			self.browserpaned.set_position(_geom2);
 
 		self.openbutton=glade.get_widget("openbutton")
 		self.openbutton.connect("clicked",self.open_click)
@@ -789,7 +795,11 @@ class Browser:
 		self.reporter.clearPythonErrorCallback()
 		_w,_h = self.window.get_size()
 		_t,_l = self.window.get_position()
-		self.prefs.setGeometry(self.window.get_screen().get_display().get_name(),"browserwin",_w,_h,_t,_l );
+		_display = self.window.get_screen().get_display().get_name()
+		self.prefs.setGeometrySizePosition(_display,"browserwin",_w,_h,_t,_l );
+
+		_p = self.browserpaned.get_position()
+		self.prefs.setGeometryValue(_display,"browserpaned",_p);
 
 		# causes prefs to be saved unless they are still being used elsewher
 		del(self.prefs)

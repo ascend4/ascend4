@@ -26,7 +26,7 @@ class Preferences:
 			f = open(self.fname, "w");
 			self.ini.write( f );
 
-	def getGeometry(self,displayname,key):
+	def getGeometrySizePosition(self,displayname,key):
 		try:
 			_g = self.ini.get("Geometry:"+displayname,key)
 		except ConfigParser.NoSectionError:
@@ -39,10 +39,24 @@ class Preferences:
 		print "MATCH: ",_m.groups()
 		return 	tuple(int(i) for i in _m.groups())
 
-	def setGeometry(self,displayname,key,width,height,top,left):
+	def setGeometrySizePosition(self,displayname,key,width,height,top,left):
 		if not self.ini.has_section("Geometry:"+displayname):
 			self.ini.add_section("Geometry:"+displayname)
 		self.ini.set("Geometry:"+displayname,key, "%dx%d+%d+%d" % (width, height, top, left) );
+
+	def getGeometryValue(self,displayname,key):
+		try:
+			_g = self.ini.get("Geometry:"+displayname,key)
+		except ConfigParser.NoSectionError:
+			return None
+		except ConfigParser.NoOptionError:
+			return None
+		return int(_g)
+
+	def setGeometryValue(self,displayname,key,value):
+		if not self.ini.has_section("Geometry:"+displayname):
+			self.ini.add_section("Geometry:"+displayname)
+		self.ini.set("Geometry:"+displayname,key,str(value))		
 
 	def getPreferredUnits(self,key):
 		try:
