@@ -3832,14 +3832,24 @@ double *RelationFindRoots(struct Instance *i,
      */
     if (SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
       sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
-      assert(finite(sideval));
-      InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
+      if (finite(sideval)) {
+        InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
+      } else {
+        FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite RHS.\n");
+        glob_rel = NULL;
+        return NULL;
+      }
     }
     assert(Infix_RhsSide(glob_rel) != NULL);
     if (SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
         sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
-        assert(finite(sideval));
-        InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
+        if (finite(sideval)) {
+          InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
+        } else {
+          FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite LHS.\n");
+          glob_rel = NULL;
+          return NULL;
+        }
     }
     if (glob_done < 1) {
       /* RelationInvertToken never found variable */
