@@ -9,6 +9,8 @@
 #include "set.h"
 #include "dimensions.h"
 
+class Plot;
+
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
@@ -79,6 +81,7 @@ public:
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
 	const std::string getValueAsString() const;
+	Plot getPlot() const;
 
 	const bool isPlottable() const;
 

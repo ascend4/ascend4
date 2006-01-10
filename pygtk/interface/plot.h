@@ -5,10 +5,11 @@
 #include <string>
 
 #include "instance.h"
+#include "curve.h"
 
 #define PLOT_TITLE "title"
 #define PLOT_XLABEL "XLabel"
-#define PLOT_YLABEL "XLabel"
+#define PLOT_YLABEL "YLabel"
 #define PLOT_XLOG "Xlog"
 #define PLOT_YLOG "Ylog"
 #define PLOT_XLO "Xlow"
@@ -21,7 +22,6 @@
 #define PLOT_XPOINT "x"
 #define PLOT_YPOINT "y"
 
-class Curve;
 
 /**
 	This is interface for accessing plottable data from ASCEND. It's needed in order
@@ -29,9 +29,12 @@ class Curve;
 	abstract the xgraph plotting code somewhat as well.
 */
 class Plot : public Instanc{
+
+private:
+	friend class Instanc;
+	Plot(const Instanc &);
 	
 public:
-	Plot(const Instanc &);
 	
 	const std::string getTitle() const;
 	const std::string getXLabel() const;

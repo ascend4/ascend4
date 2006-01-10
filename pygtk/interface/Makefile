@@ -121,8 +121,10 @@ LIB = _ascend.so
 
 all: $(LIB)
 
+SWIGS = plot.i
+
 # FIXME add ' $(ASC_LIBS)' to deps once Jam build is fixed:
-%_wrap.cxx %.py: %.i $(HDRS)
+%_wrap.cxx %.py: %.i $(SWIGS) $(HDRS)
 	$(SWIG) $(SWIGFLAGS) $<
 
 .precious: $(SWIG_MODULE:%=%_wrap.cxx)

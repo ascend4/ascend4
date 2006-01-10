@@ -31,6 +31,7 @@ extern "C"{
 #include "variable.h"
 #include "name.h"
 #include "set.h"
+#include "plot.h"
 
 /**
 	Create an instance of a type. @see Simulation for instantiation.
@@ -461,6 +462,14 @@ Instanc::getChild(const SymChar &name) const{
 	struct Instance *c = ChildByChar(i,name.getInternalType());
 	if(c==NULL)throw runtime_error("Child not found");
 	return Instanc(c);
+}
+
+Plot
+Instanc::getPlot() const{
+	if(isPlottable()){
+		return Plot(*this);
+	}
+	throw runtime_error("Not a plottable instance");
 }
 
 void

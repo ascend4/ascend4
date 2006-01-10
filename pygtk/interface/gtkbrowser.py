@@ -802,9 +802,10 @@ class Browser:
 
 		print("Plotting instance '%s'..." % _instance.getName().toString())
 
-		_plot = ascend.Plot(_instance);
-		
-		print "Title: ", _plot.getTitle();
+		_plot = _instance.getPlot()
+
+		print "Title: ", _plot.getTitle()
+		_plot.show()
 
 		return 1
 

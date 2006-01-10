@@ -353,6 +353,8 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	Plot getPlot() const;
+
 	const bool isPlottable() const;
 	const ASCXX_Set<long> getSetValue<long>() const;
 	const ASCXX_Set<SymChar> getSetValue<SymChar>() const;
@@ -466,23 +468,7 @@ public:
 	const unsigned long getNumOutputs() const;
 };
 
-class Plot : public Instanc{
-	
-public:
-	Plot(const Instanc &);
-	
-	const std::string getTitle() const;
-	const std::string getXLabel() const;
-	const std::string getYLabel() const;
-	const bool isXLog() const;
-	const bool isYLog() const;
-	const double getXLow() const;
-	const double getXHigh() const;
-	const double getYLow() const;
-	const double getYHigh() const;
-	
-	std::vector<Curve> curves;
-};
+%include "plot.i"
 
 class Curve : public Instanc{
 
