@@ -22,6 +22,8 @@
 #include "dimensions.h"
 #include "units.h"
 #include "extfn.h"
+#include "plot.h"
+#include "curve.h"
 %}
 
 // All STL runtime_errors caught to Python
@@ -87,6 +89,8 @@ public:
 %template(ExtFnVector) std::vector<ExtFn>;
 %template(SetInt) ASCXX_Set<long>;
 %template(SetString) ASCXX_Set<SymChar>;
+%template(DoubleVector) std::vector<double>;
+%template(CurveVector) std::vector<Curve>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;
@@ -460,5 +464,32 @@ public:
 	const char *getHelp() const;
 	const unsigned long getNumInputs() const;
 	const unsigned long getNumOutputs() const;
+};
+
+class Plot : public Instanc{
+	
+public:
+	Plot(const Instanc &);
+	
+	const std::string getTitle() const;
+	const std::string getXLabel() const;
+	const std::string getYLabel() const;
+	const bool isXLog() const;
+	const bool isYLog() const;
+	const double getXLow() const;
+	const double getXHigh() const;
+	const double getYLow() const;
+	const double getYHigh() const;
+	
+	std::vector<Curve> curves;
+};
+
+class Curve : public Instanc{
+
+public:
+	std::vector<double> x;
+	std::vector<double> y;
+	const std::string getLegend() const;
+
 };
 
