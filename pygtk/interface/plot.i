@@ -24,15 +24,16 @@ public:
 
 %extend Plot{
 	%pythoncode{
-		def show(self):
+		def show(self,mainloop=True):
 			import pylab;
 			pylab.figure()
 			pylab.title(self.getTitle())
+			print "XLabel:",self.getXLabel()
 			pylab.xlabel(self.getXLabel())
+			print "YLabel:",self.getYLabel()
 			pylab.ylabel(self.getYLabel())
 			_l = []
 			for _c in self.curves:
-				print "ADDING CURVE..."
 				if self.isXLog() and self.isYLog():
 					pylab.loglog(_c.x, _c.y)
 				elif self.isXLog():
@@ -40,13 +41,13 @@ public:
 				elif self.isYLog():
 					pylab.semilogy(_c.x, _c.y)
 				else:
-					print "LINEAR..."
-					for x in _c.x:
-						print x
 					pylab.plot(_c.x, _c.y)
 				_l.append(_c.getLegend())
 			pylab.legend(_l)
-			pylab.show()
+
+			print "Mainloop:",mainloop
+			pylab.show(mainloop)
+			
 			# /*
 			# if self.getXLow() and self.getXHigh():
 			#	matplotlib.gca().set_xlim([self.getXLow(), self.getXHigh()])

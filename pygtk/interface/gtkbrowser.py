@@ -805,7 +805,7 @@ class Browser:
 		_plot = _instance.getPlot()
 
 		print "Title: ", _plot.getTitle()
-		_plot.show()
+		_plot.show(False)
 
 		return 1
 
