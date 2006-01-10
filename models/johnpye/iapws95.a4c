@@ -1,6 +1,6 @@
-REQUIRE "system.a4l";
-REQUIRE "atoms.a4l";
-REQUIRE "johnpye/thermo_types.a4c";
+REQUIRE "/home/aw0a/ascend/code/Vxx/trunk/models/system.a4l";
+REQUIRE "/home/aw0a/ascend/code/Vxx/trunk/models/atoms.a4l";
+REQUIRE "/home/aw0a/ascend/code/Vxx/trunk/models/johnpye/thermo_types.a4c";
 REQUIRE "johnpye/iapws_sat_curves.a4c";
 
 (*************************************************************************
