@@ -58,8 +58,9 @@ Library::Library(){
 }
 
 Library::~Library(){
-	//std::cerr << "Destroyed LIBRARY" << std::endl;
-	DestroyLibrary();
+	//error_reporter(ASC_PROG_WARNING,NULL,0,"DESTROYED LIBRARY!");
+	//DestroyLibrary();
+	// ... need to use some kind of reference counting before you can do that... 
 }
 
 void
@@ -268,6 +269,7 @@ Library::clear(){
 	//Asc_CompilerInit(1)
 	DefineFundamentalTypes();
 	InitNotesDatabase(LibraryNote());
+	error_reporter(ASC_PROG_WARNING,NULL,0,"LIBRARY CLEARED!");
 }
 
 

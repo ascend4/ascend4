@@ -78,6 +78,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const std::string getValueAsString() const;
 
 	const bool isPlottable() const;
 

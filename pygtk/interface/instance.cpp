@@ -370,6 +370,27 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+const string
+Instanc::getValueAsString() const{
+	stringstream ss;
+	if(isAssigned()){
+		if(isReal()){
+			ss << getRealValue();
+		}else if(isInt()){
+			ss << getIntValue();
+		}else if(isSymbol()){
+			ss << getSymbolValue();
+		}else if(isBool()){
+			ss << getBoolValue();
+		}else{
+			throw runtime_error("Invalid type in Instanc::getValueAsString");
+		}
+	}else{
+		ss << "undefined";
+	}
+	return ss.str();
+}
+
 const bool 
 Instanc::isPlottable() const{
 	if(plot_allowed(i)){

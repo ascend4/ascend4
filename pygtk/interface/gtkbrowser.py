@@ -137,7 +137,7 @@ class Browser:
 		self.treecontext.append(self.plotmenuitem);
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
-		self.freemenuitem.connect("activate",self.plot_activate)
+		self.plotmenuitem.connect("activate",self.plot_activate)
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
 		#--------------------
@@ -271,7 +271,7 @@ class Browser:
 		self.treestore.clear()
 		self.otank = {}
 	
-		self.library.clear()
+		# self.library.clear()
 
 		self.statusbar.push(_context,"Loading '"+filename+"'")
 		self.library.load(filename)
@@ -733,6 +733,9 @@ class Browser:
 					else:
 						self.fixmenuitem.show()
 						self.freemenuitem.hide()
+				else:
+					self.fixmenuitem.hide()
+					self.freemenuitem.hide()
 
 				if _instance.isPlottable():
 					self.reporter.reportNote("Instance IS plottable");
@@ -740,6 +743,17 @@ class Browser:
 					_canpop = True;
 				else:
 					self.reporter.reportNote("Instance is not plottable");
+					try:
+						self.library.findType('plt_plot_integer')
+						self.reporter.reportNote("Located plt_plot_integer via Library::findType")
+					except RuntimeError, e:
+						self.reporter.reportNote("In right-click... "+str(e))
+						print "Library contains %d modules." % len(self.library.getModules())
+						for _m in self.library.getModules():
+							print "Module %s:", _m.getName()
+							for _t in self.library.getModuleTypes(_m):
+								print "   %s", _t.getName()
+						
 					self.plotmenuitem.hide()
 
 				if _canpop:
@@ -777,13 +791,21 @@ class Browser:
 		return 1
 
 	def plot_activate(self,widget):
+		self.reporter.reportNote("plot_activate...");
 		_path,_col = self.treeview.get_cursor()
 		_instance = self.otank[_path][1]
 		if not _instance.isPlottable():
-			self.reporter.reportError("Can't plot instanct %s" % _instance.getName().toString())
+			self.reporter.reportError("Can't plot instance %s" % _instance.getName().toString())
 			return
+		else:
+			self.reporter.reportNote("Instance %s about to be plotted..." % _instance.getName().toString())
 
-		self.reporter.reportNote("About to plot instance %s" % _instance.getName().toString())
+		print("Plotting instance '%s'..." % _instance.getName().toString())
+
+		_plot = ascend.Plot(_instance);
+		
+		print "Title: ", _plot.getTitle();
+
 		return 1
 
 
