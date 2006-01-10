@@ -191,6 +191,7 @@ acre= {meter^2*4046.856};
 (*  volume *)
 
 L = {meter^3/1000};
+l = {L};
 litre = {L};
 liter = {L};
 mL = {L/1000};
