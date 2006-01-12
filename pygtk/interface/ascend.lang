@@ -64,7 +64,7 @@ John Pye (C) 2005
 
 <!-- Reserved Words -->
 
-	<keyword-list _name="Keywords" style="Keyword" case-sensitive="FALSE">
+	<keyword-list _name="Keywords" style="Keyword" case-sensitive="TRUE">
 		<keyword>ADD</keyword>
 		<keyword>AND</keyword>
 		<keyword>ALIASES</keyword>
@@ -121,6 +121,7 @@ John Pye (C) 2005
 		<keyword>USE</keyword>
 		<keyword>WHEN</keyword>
 		<keyword>WHERE</keyword>
+		<keyword>WITH_VALUE</keyword>
 		<keyword>WILL_BE</keyword>
 		<keyword>WILL_BE_THE_SAME</keyword>
 		<keyword>WILL_NOT_BE_THE_SAME</keyword>
