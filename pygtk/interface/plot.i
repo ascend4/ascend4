@@ -25,7 +25,8 @@ public:
 %extend Plot{
 	%pythoncode{
 		def show(self,mainloop=True):
-			import pylab;
+			import pylab
+			pylab.ion()
 			pylab.figure()
 			pylab.title(self.getTitle())
 			print "XLabel:",self.getXLabel()

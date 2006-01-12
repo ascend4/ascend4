@@ -772,8 +772,6 @@ class Browser:
 					self.treeview.set_cursor( _path, _col, 0)
 					self.treecontext.popup( None, None, None, event.button, _time)
 					return 1
-			else:
-				self.reporter.reportError("Invalid selection for right-click")
 
 	def fix_activate(self,widget):
 		_path,_col = self.treeview.get_cursor()
