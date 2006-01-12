@@ -126,18 +126,42 @@ class Browser:
 		# set up the context menu for fixing/freeing vars
 
 		self.treecontext = gtk.Menu();
-		self.fixmenuitem = gtk.MenuItem("Fix");
-		self.freemenuitem = gtk.MenuItem("Free");
-		self.plotmenuitem = gtk.MenuItem("Plot");
+		self.fixmenuitem = gtk.ImageMenuItem("_Fix",True);
+		_img = gtk.Image()
+		_img.set_from_file('icons/locked.png')
+		self.fixmenuitem.set_image(_img)
+
+		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
+		_img = gtk.Image()
+		_img.set_from_file('icons/unlocked.png')
+		self.freemenuitem.set_image(_img)
+
+		self.plotmenuitem = gtk.ImageMenuItem("P_lot",True);
+		_img = gtk.Image()
+		_img.set_from_file('icons/plot.png')
+		self.plotmenuitem.set_image(_img)
+
+		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
+		_img = gtk.Image()
+		_img.set_from_file('icons/properties.png')
+		self.propsmenuitem.set_image(_img)
+
 		self.fixmenuitem.show()
 		self.freemenuitem.show()
 		self.plotmenuitem.show()
+		self.propsmenuitem.show()
 		self.treecontext.append(self.fixmenuitem);
 		self.treecontext.append(self.freemenuitem);
+		_sep = gtk.SeparatorMenuItem(); _sep.show()
+		self.treecontext.append(_sep);
 		self.treecontext.append(self.plotmenuitem);
+		_sep = gtk.SeparatorMenuItem(); _sep.show()
+		self.treecontext.append(_sep);
+		self.treecontext.append(self.propsmenuitem);
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
 		self.plotmenuitem.connect("activate",self.plot_activate)
+		self.propsmenuitem.connect("activate",self.props_activate)
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
 		#--------------------
@@ -728,41 +752,26 @@ class Browser:
 				if _instance.getType().isRefinedSolverVar():
 					_canpop = True;
 					if _instance.isFixed():
-						self.fixmenuitem.hide()
-						self.freemenuitem.show()
+						self.fixmenuitem.set_sensitive(False)
+						self.freemenuitem.set_sensitive(True)
 					else:
-						self.fixmenuitem.show()
-						self.freemenuitem.hide()
+						self.fixmenuitem.set_sensitive(True)
+						self.freemenuitem.set_sensitive(False)
 				else:
-					self.fixmenuitem.hide()
-					self.freemenuitem.hide()
+					self.fixmenuitem.set_sensitive(False)
+					self.freemenuitem.set_sensitive(False)
 
 				if _instance.isPlottable():
-					self.reporter.reportNote("Instance IS plottable");
-					self.plotmenuitem.show()
+					self.plotmenuitem.set_sensitive(True)
 					_canpop = True;
 				else:
-					self.reporter.reportNote("Instance is not plottable");
-					try:
-						self.library.findType('plt_plot_integer')
-						self.reporter.reportNote("Located plt_plot_integer via Library::findType")
-					except RuntimeError, e:
-						self.reporter.reportNote("In right-click... "+str(e))
-						print "Library contains %d modules." % len(self.library.getModules())
-						for _m in self.library.getModules():
-							print "Module %s:", _m.getName()
-							for _t in self.library.getModuleTypes(_m):
-								print "   %s", _t.getName()
-						
-					self.plotmenuitem.hide()
+					self.plotmenuitem.set_sensitive(False)
 
 				if _canpop:
 					self.treeview.grab_focus()
 					self.treeview.set_cursor( _path, _col, 0)
 					self.treecontext.popup( None, None, None, event.button, _time)
 					return 1
-				else:
-					self.reporter.reportNote("No right-click options available here");
 			else:
 				self.reporter.reportError("Invalid selection for right-click")
 
@@ -809,6 +818,8 @@ class Browser:
 
 		return 1
 
+	def props_activate(self,widget):
+		self.reporter.reportWarning("props_activate not implemented")
 
 		
 #   ---------------------------------
