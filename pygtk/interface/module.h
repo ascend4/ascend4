@@ -10,6 +10,15 @@ extern "C"{
 
 #include "type.h"
 
+/**
+	A Module in ASCEND is an opened version of an A4L or A4C file. You
+	can have multiple versions of a file active in memory at a time, 
+	theoretically, although no serious effort to support this in the 
+	PyGTK interface has yet been made.
+
+	To view what types are present in a given Module, you currently
+	need to query the Library object.
+*/
 class Module{
 private:
 	const module_t *t;

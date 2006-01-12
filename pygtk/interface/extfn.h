@@ -9,6 +9,11 @@ extern "C"{
 
 #include "symchar.h"
 
+/**
+	This is a wrapper for external black box functions as returned
+	by the getExtFns method of the Library object. At this stage it
+	is purely for extracting meta-data about the ExtFn.
+*/
 class ExtFn {
 private:
 	const struct ExternalFunc *e;

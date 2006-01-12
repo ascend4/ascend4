@@ -63,6 +63,13 @@ Library::~Library(){
 	// ... need to use some kind of reference counting before you can do that... 
 }
 
+/**
+	Load an ASCEND model file into the Library. It will be parsed such that
+	its types will be visible to Library::findType.
+
+	@param filename Filename, will be searched for relative to ASCENDLIBRARY environment
+		variable, if necessary.
+*/
 void
 Library::load(const char *filename){
 
@@ -119,6 +126,10 @@ Library::load(const char *filename){
 	std::cerr << "Note: " << gl_length(l) << " library entries loaded from '" << filename << "'" << std::endl;
 }
 
+/**
+	Return a vector of all the Modules which have been loaded into
+	the current library.
+*/
 vector<Module>
 Library::getModules(){
 	//cerr << "GET MODULES\n" << endl;
@@ -141,6 +152,9 @@ Library::getModules(){
 	return v;
 }
 
+/**
+	Output to stderr the names of the modules loaded into the current Library.
+*/
 void
 Library::listModules(const int &module_type) const{
 
@@ -224,6 +238,12 @@ Library::getExtFns(){
 	return extfn_vector;
 }
 
+/**
+	This method exists only to allow the TraverseExtFuncLibrary function
+	to make callbacks to the Library class from C.
+
+	@NOTE there might be issues with C/C++ linking here?
+*/
 void
 Library::extFuncTraverse(void *a1, void *a2){
 	Library *self = (Library *)a2;
