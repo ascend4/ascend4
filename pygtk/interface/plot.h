@@ -5,7 +5,12 @@
 #include <string>
 
 #include "instance.h"
+
+#ifndef ASCXX_CURVE_H
 #include "curve.h"
+#else
+class Curve;
+#endif
 
 #define PLOT_TITLE "title"
 #define PLOT_XLABEL "XLabel"
