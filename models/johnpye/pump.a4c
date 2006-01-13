@@ -1,7 +1,10 @@
 REQUIRE "clfr-models/thermo_types.a4c";
 REQUIRE "atoms.a4l";
 	
-MODEL pump(
+MODEL pump;
+	(* Ignore and changes in enthalpy, just model pressure changes *)
+
+	S1, S2
 		in WILL_BE steam_stream;
 		out WILL_BE steam_stream;
 )WHERE(

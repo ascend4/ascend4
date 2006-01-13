@@ -477,8 +477,7 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	rho.fixed := TRUE;
+	FIX T,rho;
 END specify;
 
 METHOD values;
@@ -505,36 +504,45 @@ END self_test;
 
 END iapws95_1phase;
 
+ATOM density_slack REFINES mass_density;
+    lower_bound := 0.0 {kg/m^3};	
+END density_slack;
+
 MODEL iapws95_2phase REFINES thermo_state;
 	(* phase components *)
-	Sf IS_A iapws95_1phase;
-	Sg IS_A iapws95_1phase;
+	Sl IS_A iapws95_1phase;
+	Sv IS_A iapws95_1phase;
+
+	(* saturation conditions *)
+	sat IS_A iapws_sat_density;
+
+	T, Sl.T, Sv.T, sat.T ARE_THE_SAME;
+	p, Sl.p ARE_THE_SAME;
+
+	rhof ALIASES sat.rhof;
+	rhog ALIASES sat.rhog;
+	rhov ALIASES Sv.rho;
+	rhol ALIASES Sl.rho;
+
+	rhofslack, rhogslack IS_A density_slack;
+	z02a: rhogslack = rhog - rhov; (* rhog >= rhov since gas is most dense at saturation*)
+	z03a: rhofslack = rhol - rhof; (* rhol >= rhof since it's compressed liquid. but what about the density anomaly..??? *)
+
 	xf IS_A fraction;
 	xg IS_A fraction;
 	z01: xf + xg = 1.0;
-
-	(* saturation conditions *)
-	sat IS_A iapws_sat_curves;
-	Sf.T, Sg.T, sat.T ARE_THE_SAME;
-	rhof ALIASES sat.rhof;
-	rhog ALIASES sat.rhog;
-	rhov ALIASES Sg.rho;
-	rhol ALIASES Sf.rho;
-	T, Sf.T ARE_THE_SAME;
-	p, Sf.p ARE_THE_SAME;
-
-	z02: xf * (rhov-rhog) = 0.0 {kg/m^3};
-	z03: xg * (rhol-rhof) = 0.0 {kg/m^3};		
-
+	z02: xf * rhogslack = 0.0 {kg/m^3}; (* xf==0 or rhog==rhov *)
+	z03: xg * rhofslack = 0.0 {kg/m^3}; (* xg==0 or rhof==rhol *)
 	x ALIASES xg;
 
-	z04: Sf.rho * Sg.rho = rho * ( xf * Sg.rho + xg * Sf.rho);
-	z05: u =  xf * Sf.u  + xg * Sg.u;
-	z06: h  = xf * Sf.h  + xg * Sg.h;
-	z07: s  = xf * Sf.s  + xg * Sg.s;
-	z08: cp = xf * Sf.cp + xg * Sg.cp;
-	z09: cv = xf * Sf.cv + xg * Sg.cv;
-	z10: w  = xf * Sf.w  + xg * Sg.w; (* check this *)
+	(* two-phase properties *)
+	z04: Sl.rho * Sv.rho = rho * ( xf * Sv.rho + xg * Sl.rho);
+	z05: u =  xf * Sl.u  + xg * Sv.u;
+	z06: h  = xf * Sl.h  + xg * Sv.h;
+	z07: s  = xf * Sl.s  + xg * Sv.s;
+	z08: cp = xf * Sl.cp + xg * Sv.cp;
+	z09: cv = xf * Sl.cv + xg * Sv.cv;
+	z10: w  = xf * Sl.w  + xg * Sv.w; (* check this *)
 METHODS
 
 METHOD default_self;
@@ -544,8 +552,7 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	x.fixed := TRUE;
+	FIX T,x;
 END specify;
 
 METHOD values;

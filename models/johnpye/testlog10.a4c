@@ -11,7 +11,7 @@ MODEL testlog10;
 
 METHODS
 METHOD specify;
-	x.fixed := TRUE;
+	FIX x;
 END specify;
 METHOD values;
 	x := 10;
