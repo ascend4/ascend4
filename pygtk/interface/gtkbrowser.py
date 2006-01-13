@@ -691,6 +691,7 @@ class Browser:
 
 		if response == gtk.RESPONSE_OK:
 			self.reporter.reportNote("File %s selected." % dialog.get_filename() )
+			self.library.clear()
 			self.do_open( _filename)
 		   
 
@@ -699,6 +700,7 @@ class Browser:
 		if(self.sim):
 			_type = self.sim.getType().getName().toString();
 
+		self.library.clear()
 		self.do_open(self.filename)
 		
 		if _type:
