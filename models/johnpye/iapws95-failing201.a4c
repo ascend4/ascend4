@@ -511,7 +511,7 @@ MODEL iapws95_2phase REFINES thermo_state;
 	Sg IS_A iapws95_1phase;
 
 	(* saturation conditions *)
-	sat IS_A iapws_sat_curves;
+	sat IS_A iapws_sat_density;
 	Sf.T, Sg.T, sat.T ARE_THE_SAME;
 	rhof ALIASES sat.rhof;
 	rhog ALIASES sat.rhog;

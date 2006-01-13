@@ -1,6 +1,47 @@
 REQUIRE "johnpye/thermo_types.a4c";
 
-MODEL iapws_sat_curves;
+MODEL iapws_sat_pressure;
+
+	p IS_A pressure;
+	T IS_A temperature;
+	pc IS_A pressure_constant;
+	Tc IS_A temperature_constant;
+
+	Tc :== 647.096 {K};
+	pc :== 22.064 {MPa};
+
+	tau IS_A factor;
+	tau_eq: tau = 1 - (T/Tc);
+
+	sat_pressure_curve: ln(p/pc) = (Tc/T)*( 
+		a[1]*tau + a[2]*tau^1.5 + a[3]*tau^3 + a[4]*tau^3.5 + a[5]*tau^4 + a[6]*tau^7.5
+	);
+
+	a[1..6] IS_A real_constant;
+	a[1] :== -7.85951783;
+	a[2] :== 1.84408259;
+	a[3] :== -11.7866497;
+	a[4] :== 22.6807411;
+	a[5] :== -15.9618719;
+	a[6] :== 1.80122502;
+
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+METHOD specify;
+	T.fixed := TRUE;
+END specify;
+METHOD values;
+	T := 373.1243 {K};
+END values;
+METHOD self_test;
+	ASSERT abs(p - 101.325 {kPa}) < 1 {Pa};
+END self_test;
+
+END iapws_sat_pressure;
+
+MODEL iapws_sat_density;
 
 	rhof IS_A mass_density;
 	rhog IS_A mass_density;
@@ -69,4 +110,4 @@ METHOD test_3;
 	T := 647.096 {K};
 END test_3;
 
-END iapws_sat_curves;
+END iapws_sat_density;
