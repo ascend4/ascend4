@@ -63,7 +63,6 @@ void WriteInitWarn(struct procFrame *fm, char *str)
 
 void WriteInitErr(struct procFrame *fm, char *str)
 {
-  CONSOLE_DEBUG("...");
   WSEM(fm->err,fm->stat,str);
   FFLUSH(fm->err);
 }
@@ -382,3 +381,27 @@ void ProcWriteRunError(struct procFrame *fm)
   }
   WriteInitErr(fm,errmsg);
 }
+
+void ProcWriteFixError(struct procFrame *fm, struct Name *var){
+	char errmsg[255];
+	char *name;
+	name = WriteNameString(var);
+	strcpy(errmsg,"Unexpected FIX statement error");
+	switch(fm->ErrNo){
+	case  Proc_type_not_found:
+		strcpy(errmsg, "Bad setup for FIX statement (Is 'solver_var' present in the library?)");
+		break;
+	case Proc_illegal_type_use:
+		strcpy(errmsg, "Incorrect type for variable being fixed (must be a refined solver_var)");
+		break;
+	case Proc_bad_name:
+		strcpy(errmsg, "Unknown variable in FIX statement");
+		break;
+	}
+	strcat(errmsg,", for variable '");
+	strncat(errmsg,name,40);
+	strcat(errmsg,"'");
+	ascfree(name);
+	WriteInitErr(fm,errmsg);
+}
+
