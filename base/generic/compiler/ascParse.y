@@ -323,16 +323,16 @@ static void CollectNote(struct Note *);
   enum ForKind fkind;
 }
 
-%token ADD_T ALIASES_T AND_T ANY_T AREALIKE_T ARETHESAME_T ARRAY_T ATOM_T
+%token ADD_T ALIASES_T AND_T ANY_T AREALIKE_T ARETHESAME_T ARRAY_T ASSERT_T ATOM_T
 %token BEQ_T BNE_T BREAK_T
 %token CALL_T CARD_T CASE_T CHOICE_T CHECK_T CONDITIONAL_T CONSTANT_T
 %token CONTINUE_T CREATE_T
 %token DATA_T DECREASING_T DEFAULT_T DEFINITION_T DIMENSION_T
 %token DIMENSIONLESS_T DO_T
 %token ELSE_T END_T EXPECT_T EXTERNAL_T
-%token FALSE_T FALLTHRU_T FOR_T FROM_T
+%token FALSE_T FALLTHRU_T FIX_T FOR_T FROM_T
 %token GLOBAL_T
-%token ASSERT_T IF_T IMPORT_T IN_T INPUT_T INCREASING_T INTERACTIVE_T
+%token IF_T IMPORT_T IN_T INPUT_T INCREASING_T INTERACTIVE_T
 %token INTERSECTION_T ISA_T _IS_T ISREFINEDTO_T
 %token MAXIMIZE_T MAXINTEGER_T MAXREAL_T METHODS_T METHOD_T MINIMIZE_T MODEL_T
 %token NOT_T NOTES_T
@@ -381,7 +381,7 @@ static void CollectNote(struct Note *);
 %type <statptr> willnotbethesame_statement assignment_statement
 %type <statptr> relation_statement glassbox_statement blackbox_statement
 %type <statptr> call_statement units_statement
-%type <statptr> external_statement for_statement run_statement if_statement assert_statement
+%type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
@@ -1208,6 +1208,7 @@ statement:
     | external_statement
     | for_statement
     | run_statement
+    | fix_statement
     | assert_statement
     | if_statement
     | while_statement
@@ -1684,6 +1685,13 @@ run_statement:
 	  $$ = CreateRUN($4,$2);	  /* type :: name */
 	}
     ;
+
+fix_statement:
+	FIX_T fvarlist
+	{
+		$$ = CreateFIX($2);
+	}
+	;
 
 external_statement:
     EXTERNAL_T IDENTIFIER_T '(' fvarlist ')'

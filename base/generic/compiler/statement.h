@@ -200,6 +200,12 @@ extern struct Statement *CreateATS(struct VariableList *vl);
  *  @param vl variable list
  */
 
+extern struct Statement *CreateFIX(struct VariableList *vl);
+/**<
+	Create a 'FIX' statement node. The statements module/line number
+	are stored, and the variable list is also stored.
+*/
+
 extern struct Statement *CreateWBTS(struct VariableList *vl);
 /**<
  *  <!--  struct Statement *CreateWBTS(vl)                             -->
@@ -1632,6 +1638,23 @@ extern struct Name *RunStatAccessF(CONST struct Statement *s);
  *  Implementation function for RunStatAccess().  Do not call this
  *  function directly - use RunStatAccess() instead.
  */
+
+#ifdef NDEBUG
+# define FixStatVars(s) ((s)->v.fx.vars)
+#else
+# define FixStatVars(s) FixStatVarsF(s)
+#endif
+/**<
+	Returns the variable list for a FIX statement
+	@param s CONST struct Statement*, the statement to query.
+	@return struct VariableList*, the list of variables
+	@see FixStatAccessF
+*/
+
+extern struct VariableList *FixStatVarsF(CONST struct Statement *s);
+/**<
+	Implementation function for FixStatVars(). Do not call this directory, use FixStatVars instead.
+*/
 
 /* * * StateCall functions * * */
 

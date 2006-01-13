@@ -32,6 +32,7 @@
  */
 
 #include "utilities/ascConfig.h"
+#include "utilities/error.h"
 #include "general/list.h"
 #include "compiler/instance_enum.h"
 #include "compiler/fractions.h"
@@ -101,20 +102,24 @@ static void init_gstrings(void)
  * returns TRUE if the type of inst is more refined than the type of
  * plt_point_int or plt_point_sym
  */
-boolean plot_allowed(struct Instance *inst) {
+boolean plot_allowed(struct Instance *inst) {	
   struct TypeDescription *type, *plt_type_s, *plt_type_i;
   if (inst==NULL) {
+	error_reporter(ASC_PROG_WARNING,__FILE__,__LINE__,"Instance is null");
     return 0;
   }
+
   init_gstrings(); /* set up symchars for the child queries */
   plt_type_s = FindType(PLOT_POINT_SYM);   /* look for plt_point_sym */
   plt_type_i = FindType(PLOT_POINT_INT);   /* look for plt_point_int */
   if (plt_type_i == NULL && plt_type_s == NULL) {
+    CONSOLE_DEBUG("No plottable types are present in the library");
     return 0;     /* no plots => fail */
   }
   type = InstanceTypeDesc(inst);
   if (type==NULL) {
-     return 0; /* atom children have not type */
+    CONSOLE_DEBUG("type is NULL");
+    return 0; /* atom children have not type */
   }
   /* type is more refined than symbol plot */
   if ((plt_type_s && type == MoreRefined(type,plt_type_s))||
@@ -236,6 +241,13 @@ void do_plot_labels(FILE *fp, struct Instance *i, symchar *label,
   }
 }
 
+/**
+	Plot point and option connecting line, providing values of point are well defined.
+
+	@param point location of new coordinate pair
+	@param drawline should a line be draw from the current location to the new point?
+	@param fp file to which plot commands are output
+*/
 static void write_point(FILE *fp, struct Instance *point, boolean drawline)
 {
 /* ? draw line from previous point
@@ -258,13 +270,17 @@ static void write_point(FILE *fp, struct Instance *point, boolean drawline)
   }
 }
 
+/**
+	Writes the specified curve to the file.
+
+	@param fp file to which output is made
+	@param curve instance containing the curve required
+	@param curve_number disused
+*/
 static void write_curve(FILE *fp,
                         struct Instance *curve,
                         unsigned long curve_number)
 {
-/*
- *  Writes a given curve to the given file with descriptor fp.
- */
 
   struct Instance *point_array_inst, *a_point;
   unsigned long ndx;
@@ -287,6 +303,9 @@ static void write_curve(FILE *fp,
   }
 }
 
+/*
+	Write plotting instructions for plot_inst to the specified plotfilename.
+*/
 void plot_prepare_file(struct Instance *plot_inst, char *plotfilename)
 {
   struct Instance *curve_array_inst, *a_curve;

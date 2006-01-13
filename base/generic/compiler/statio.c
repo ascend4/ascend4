@@ -498,6 +498,11 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
       FPRINTF(f,";\n");
     }
     break;
+  case FIX:
+  	FPRINTF(f,"FIX ");
+	WriteVariableList(f,FixStatVars(s));
+	FPRINTF(f,";\n");
+	break;
   case CALL:
     FPRINTF(f,"CALL %s(",SCP(CallStatId(s)));
     WriteSet(f,CallStatArgs(s));

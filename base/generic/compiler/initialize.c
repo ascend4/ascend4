@@ -255,6 +255,67 @@ void ExecuteInitRun(struct procFrame *fm, struct Statement *stat)
   }
 }
 
+static void
+ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
+  struct VariableList *vars;
+  enum find_errors e;
+  struct gl_list_t *temp;
+  unsigned i, len;
+  struct Instance *i1, *i2;
+  char *instname;
+  struct TypeDescription *t, *st;
+  symchar *fixed;
+  /* setup */
+  fixed = AddSymbol("fixed");
+  st = FindType(AddSymbol("solver_var"));
+  if(st==NULL){
+    CONSOLE_DEBUG("'solver_var' type is not yet in library");
+    return;
+  }
+  
+  /* iterate through the variable list */
+  CONSOLE_DEBUG("STARTING 'FIX' STATEMENT EXECUTION");
+  vars = stat->v.fx.vars;
+  while(vars!=NULL){
+    temp = FindInstances(fm->i, NamePointer(vars), &e);
+    if(temp==NULL){
+      CONSOLE_DEBUG("COULDN'T FIND ANTHING AT NAMEPOINTER");
+      return;
+    }
+    len = gl_length(temp);
+    for(i=1; i<=len; i++){
+    	i1 = (struct Instance *)gl_fetch(temp,i);
+	instname = WriteInstanceNameString(i1,NULL);
+	CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
+	ascfree(instname);
+	if(InstanceKind(i1)!=REAL_ATOM_INST){
+	  CONSOLE_DEBUG("NOT A REAL ATOMIC INSTANCE");
+	  return;
+	}
+	t = InstanceTypeDesc(i1);
+	if(!MoreRefined(t,st)){
+	  CONSOLE_DEBUG("NOT A REFINED SOLVER_VAR");
+	  return;
+	}
+	i2 = ChildByChar(i1,fixed);
+	if(i2==NULL){
+	  error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"Refined solver_var doesn't have a 'fixed' child!");
+	  return;
+	}
+	if(InstanceKind(i2)!=BOOLEAN_INST){
+	  error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"Refined solver_var 'fixed' child is not a boolean!");
+	  return;
+	}
+	SetBooleanAtomValue(i2,TRUE,0);
+    }
+    vars = NextVariableNode(vars);
+  }
+  CONSOLE_DEBUG("DONE WITH VARLIST");
+  
+  /* return 'ok' */
+  fm->ErrNo = Proc_all_ok;
+}
+
 static
 void ExecuteInitFlow(struct procFrame *fm)
 {
@@ -1421,6 +1482,9 @@ FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
     break;
   case RUN:
     ExecuteInitRun(fm,stat);
+    break;
+  case FIX:
+    ExecuteInitFix(fm,stat);
     break;
   case FLOW:
     ExecuteInitFlow(fm);

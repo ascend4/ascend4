@@ -234,6 +234,7 @@ void CheckCompleteness(FILE *f, CONST struct Instance *i,int pass)
   if (pass) {
     blist = InstanceBitList(i);
     if (blist!=NULL && !BitListEmpty(blist)){
+	  error_reporter_start(ASC_PROG_WARNING,NULL,0);
       WriteInstanceName(f,i,NULL);
       FPRINTF(f," has the following unexecuted statements.\n");
       desc = InstanceTypeDesc(i);
@@ -247,11 +248,14 @@ void CheckCompleteness(FILE *f, CONST struct Instance *i,int pass)
           WSEMSPARSE(f,stat,"Unable to execute",g_suppressions);
         }
       }
+	  error_reporter_end_flush();
     }
   }
   if (IncompleteArray(i)) {
+	error_reporter_start(ASC_PROG_WARNING,NULL,0);
     WriteInstanceName(f,i,NULL);
     FPRINTF(f," has the following incomplete arrays.\n");
+    error_reporter_end_flush();
     CheckIncompleteArray(f,i);
   }
   CheckUnassignedConstants(f,i);

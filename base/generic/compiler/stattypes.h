@@ -85,7 +85,8 @@ enum stat_t {
   ASGN,         /**< ASSIGNMENT */
   CASGN,        /**< Structural ASSIGNMENT */
   RUN,          /**< RUN statement */
-  ASSERT,         /**< TEST statement */
+  FIX,          /**< FIX statement */
+  ASSERT,       /**< TEST statement */
   IF,           /**< IF-ELSE statement */
   WHEN,         /**< WHEN statement */
   FNAME,        /**< Name of model or relation */
@@ -164,6 +165,10 @@ struct SwitchList {
 struct StateRUN {
   struct Name *proc_name; /**< procedure name */
   struct Name *type_name; /**< whether 'class access' eg a::b */
+};
+
+struct StateFIX {
+  struct VariableList *vars; /**< Variable(s) to be fixed */
 };
 
 struct StateASSERT {
@@ -352,6 +357,7 @@ union StateUnion {
   struct StateLogicalRel lrel;
   struct StateFOR        f;
   struct StateRUN        r;
+  struct StateFIX		 fx;
   struct StateCall       call;
   struct StateIF         ifs;
   struct StateASSERT     asserts;
