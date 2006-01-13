@@ -198,15 +198,18 @@ struct TypeDescription *FindType(symchar *name)
   if (name==NULL) return NULL;
   assert(AscFindSymbol(name) != NULL);
   ptr = LibraryHashTable[LIBHASHINDEX(SCP(name))];
+  /*if(ptr==NULL){
+    CONSOLE_DEBUG("Found no values in the LibraryHashTable");
+  }*/
   while (ptr!=NULL){
+    /* CONSOLE_DEBUG("Found a type '%s'...",SCP(GetName(ptr->type)) ); */
     if (name == GetName(ptr->type)) { /* pointers == on table symbols */
       assert((ptr->type->t & ERROR_KIND)==0);
       return ptr->type;
     }
     ptr = ptr->next;
   }
-  /*error_reporter(ASC_PROG_WARNING,__FILE__,__LINE__,"FindType: failed to locate '%s'", name);
-  FPRINTF(ASCERR,"FindType: failed to locate '%s'\n",name); */
+  /* CONSOLE_DEBUG("Failed to locate '%s'", name); */
   return NULL;
 }
 

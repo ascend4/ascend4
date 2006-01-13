@@ -4230,9 +4230,11 @@ void MissingInsts(struct Instance *inst,
     while(list!=NULL){
       temp = FindInstances(inst,NamePointer(list),&err);
       if (temp==NULL){
+        error_reporter_start(ASC_USER_ERROR,NULL,0);
         FPRINTF(ASCERR,"Problem finding instance(s): \n");
         WriteName(ASCERR,NamePointer(list));
         FPRINTF(ASCERR,"\n");
+		error_reporter_end_flush();
       } else {
         gl_destroy(temp);
       }
@@ -12240,8 +12242,8 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
       DefaultInstanceTree(result);
     }
     else{
-      FPRINTF(ASCERR,"There are unexecuted statements in the instance.\n");
-      FPRINTF(ASCERR,"Default assignments not executed.\n");
+      error_reporter(ASC_USER_WARNING,NULL,0,"There are unexecuted statements "
+		"in the instance.\nDefault assignments not executed.");
     }
   }
 #if TIMECOMPILER

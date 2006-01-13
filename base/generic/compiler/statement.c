@@ -117,6 +117,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case CALL:
     case EXT:
     case REF:
+	case FIX:
     case RUN:
     case FNAME:
     case FLOW:
@@ -313,6 +314,20 @@ struct Statement *CreateATS(struct VariableList *vl)
   result->ref_count = 1;
   result->v.a.vl = vl;
   return result;
+}
+
+struct Statement *CreateFIX(struct VariableList *vars){
+	register struct Statement *result;
+	CONSOLE_DEBUG("CREATING FIX STMT");
+	result = STMALLOC;
+	assert(result!=NULL);
+	result->t = FIX;
+	result->linenum=LineNum();
+	result->mod = Asc_CurrentModule();
+	result->context = context_MODEL;
+	result->ref_count = 1;
+	result->v.fx.vars = vars;
+	return result;
 }
 
 struct Statement *CreateWBTS(struct VariableList *vl)
@@ -1703,6 +1718,12 @@ struct Name *RunStatAccessF(CONST struct Statement *s)
 {
   assert(s && (s->ref_count) && (s->t == RUN));
   return s->v.r.type_name;
+}
+
+struct VariableList *FixStatVarsF(CONST struct Statement *s){
+	assert(s!=NULL);
+	assert(s->t==FIX);
+	return(s->v.fx.vars);
 }
 
 struct Set *CallStatArgsF(CONST struct Statement *s)

@@ -887,6 +887,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
       break;
     case ASGN:
     case RUN:
+	case FIX:
     case CALL:
       break;
     case WHILE:
