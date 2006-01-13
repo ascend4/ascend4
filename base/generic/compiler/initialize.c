@@ -264,12 +264,14 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
   struct Instance *i1, *i2;
   char *instname;
   struct TypeDescription *t, *st;
+  CONST struct Name *name;
   symchar *fixed;
   /* setup */
   fixed = AddSymbol("fixed");
   st = FindType(AddSymbol("solver_var"));
   if(st==NULL){
-    CONSOLE_DEBUG("'solver_var' type is not yet in library");
+    error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"'solver_var' type is not yet in library");
+	fm->ErrNo = Proc_type_not_found;
     return;
   }
   
@@ -277,9 +279,10 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
   CONSOLE_DEBUG("STARTING 'FIX' STATEMENT EXECUTION");
   vars = stat->v.fx.vars;
   while(vars!=NULL){
-    temp = FindInstances(fm->i, NamePointer(vars), &e);
+    name = NamePointer(vars);
+    temp = FindInstances(fm->i, name, &e);
     if(temp==NULL){
-      CONSOLE_DEBUG("COULDN'T FIND ANTHING AT NAMEPOINTER");
+	  fm->ErrNo = Proc_bad_name;
       return;
     }
     len = gl_length(temp);
@@ -289,21 +292,28 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
 	CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
 	ascfree(instname);
 	if(InstanceKind(i1)!=REAL_ATOM_INST){
-	  CONSOLE_DEBUG("NOT A REAL ATOMIC INSTANCE");
+	  fm->ErrNo = Proc_illegal_type_use;
+	  ProcWriteFixError(fm,name);
 	  return;
 	}
 	t = InstanceTypeDesc(i1);
 	if(!MoreRefined(t,st)){
-	  CONSOLE_DEBUG("NOT A REFINED SOLVER_VAR");
+	  CONSOLE_DEBUG("Attempted to FIX variable that is not a refined solver_var.");
+	  fm->ErrNo = Proc_illegal_type_use;
+	  ProcWriteFixError(fm,name);
 	  return;
 	}
 	i2 = ChildByChar(i1,fixed);
 	if(i2==NULL){
-	  error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"Refined solver_var doesn't have a 'fixed' child!");
+	  CONSOLE_DEBUG(,"Attempted to FIX a solver_var that doesn't have a 'fixed' child!");
+	  fm->ErrNo = Proc_illegal_type_use;
+	  ProcWriteFixError(fm,name);
 	  return;
 	}
 	if(InstanceKind(i2)!=BOOLEAN_INST){
-	  error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"Refined solver_var 'fixed' child is not a boolean!");
+	  CONSOLE_DEBUG("Attempted to FIX a solver_var whose 'fixed' child is not boolean!");
+	  fm->ErrNo = Proc_illegal_type_use;
+	  ProcWriteFixError(fm,name);
 	  return;
 	}
 	SetBooleanAtomValue(i2,TRUE,0);
