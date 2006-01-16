@@ -87,9 +87,9 @@ void SlowVisitTreeTwo(struct Instance *inst,
       }
     }
     if (nullchildren) {
-      FPRINTF(ASCERR,"Found %u NULL children of ",nullchildren);
+      FPRINTF(ASCERR,"Found %u NULL children of '",nullchildren);
       WriteInstanceName(ASCERR,inst,NULL);
-      FPRINTF(ASCERR,".\n");
+      FPRINTF(ASCERR,"'.\n");
     }
   }
   if (depth) {

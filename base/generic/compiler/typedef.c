@@ -455,6 +455,9 @@ int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
     /* all rel/logrel/when are implicitly IS_A'd/typed */
     new->e.origin = origin_ISA;
     break;
+  case EXT:
+    new->e.origin = origin_EXT;
+    break;
   default:
     new->e.origin = origin_ERR;
     break;
@@ -530,7 +533,7 @@ struct LinkChildListEntry *FindLCL(symchar *s)
 end linkchildlistentry memory manipulation functions.
 could we put all the above in the childdef file?
 \**********************************************************/
-
+
 
 #define DoName(n,c,s) DoNameF((n),(c),(s),1)
 #define DoNameQuietly(n,c) DoNameF((n),(c),(s),0)

@@ -207,7 +207,7 @@ error_reporter(
 	return res;
 }
 
-#ifndef HAVE_C99
+#if !(defined(__GNUC__) && !defined(__STRICT_ANSI__)) && !defined(HAVE_C99)
 /* Following are only required on compilers without variadic macros: */
 
 int error_reporter_note_no_line(const char *fmt,...){
@@ -216,6 +216,21 @@ int error_reporter_note_no_line(const char *fmt,...){
 
 	va_start(args,fmt);
 	res = va_error_reporter(ASC_PROG_NOTE,"unknown-file",0,fmt,args);
+	va_end(args);
+
+	return res;
+}
+
+/** 
+	Error reporter 'here' function for compilers not supporting
+	variadic macros.
+*/
+int error_reporter_here(const error_severity_t sev, const char *fmt,...){
+	int res;
+	va_list args;
+
+	va_start(args,fmt);
+	res = va_error_reporter(sev,"unknown-file",0,fmt,args);
 	va_end(args);
 
 	return res;

@@ -113,7 +113,7 @@ boolean plot_allowed(struct Instance *inst) {
   plt_type_s = FindType(PLOT_POINT_SYM);   /* look for plt_point_sym */
   plt_type_i = FindType(PLOT_POINT_INT);   /* look for plt_point_int */
   if (plt_type_i == NULL && plt_type_s == NULL) {
-    CONSOLE_DEBUG("No plottable types are present in the library");
+    /* CONSOLE_DEBUG("No plottable types are present in the library"); */
     return 0;     /* no plots => fail */
   }
   type = InstanceTypeDesc(inst);
