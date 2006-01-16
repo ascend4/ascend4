@@ -3,8 +3,14 @@ export ASCENDLIBRARY=~/ascdata:~/src/ascend/trunk/models
 
 args=$@
 
+if [ "$OSTYPE" = "cygwin" ]; then
+    echo "CYGWIN..."
+fi
+
 if [ $ASCEND_GDB ]; then
 	bin="gdb --args python" 
+elif [ $PYTHON ]; then
+    bin=$PYTHON
 else
 	bin=python
 fi

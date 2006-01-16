@@ -38,7 +38,7 @@ static error_reporter_callback_t g_error_reporter_callback;
 */
 static error_reporter_meta_t g_error_reporter_cache;
 
-/** 
+/**
 	Default error reporter. To use this error reporter, set
 	the callback pointer to NULL.
 */
@@ -56,14 +56,14 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 		case ASC_USER_NOTE:     sevmsg = "NOTE: "; break;
 		case ASC_USER_SUCCESS:  sevmsg = ERR_GRN "SUCCESS: " ERR_NORM; break;
 	}
-	
+
 	res = ASC_FPRINTF(ASCERR,sevmsg);
 	if(filename!=NULL){
 		res += ASC_FPRINTF(ASCERR,"%s:%d: ",filename,line);
 	}
 	res += ASC_VFPRINTF(ASCERR,fmt,args);
 	res += ASC_FPRINTF(ASCERR,endtxt);
-	
+
 	return res;
 }
 
@@ -87,7 +87,7 @@ va_error_reporter(
 		/* fprintf(stderr,"CALLING G_ERROR_REPORTER_CALLBACK\n"); */
 		res = g_error_reporter_callback(sev,errfile,errline,fmt,args);
 	}
-	
+
 	return res;
 }
 
@@ -159,7 +159,7 @@ fflush_error_reporter(FILE *file){
 
 int
 error_reporter_start(const error_severity_t sev, const char *filename, const int line){
-	
+
 	extern error_reporter_meta_t g_error_reporter_cache;
 	if(g_error_reporter_cache.iscaching){
 		error_reporter_end_flush();
@@ -221,7 +221,7 @@ int error_reporter_note_no_line(const char *fmt,...){
 	return res;
 }
 
-/** 
+/**
 	Error reporter 'here' function for compilers not supporting
 	variadic macros.
 */
@@ -231,6 +231,22 @@ int error_reporter_here(const error_severity_t sev, const char *fmt,...){
 
 	va_start(args,fmt);
 	res = va_error_reporter(sev,"unknown-file",0,fmt,args);
+	va_end(args);
+
+	return res;
+}
+
+
+/**
+	Error reporter 'no line' function for compilers not supporting
+	variadic macros.
+*/
+int error_reporter_noline(const error_severity_t sev, const char *fmt,...){
+	int res;
+	va_list args;
+
+	va_start(args,fmt);
+	res = va_error_reporter(sev,NULL,0,fmt,args);
 	va_end(args);
 
 	return res;

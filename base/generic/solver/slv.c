@@ -73,10 +73,10 @@
 struct slv_system_structure {
   int solver;
 
-  int serial_id; 
+  int serial_id;
 	/**< Through time, two systems may have the same pointer but never
 		simultaneously. The serial_id provides a unique tag that will
-		never repeat. Clients concerned with identity but not capable 
+		never repeat. Clients concerned with identity but not capable
 		of tracking time must use the serial_id for checks. */
 
   SlvBackendToken instance;	/* should be void * in the most generic case */
@@ -222,7 +222,7 @@ struct slv_system_structure {
   } data;
 
   int32 nmodels;
-  int32 need_consistency; /* 
+  int32 need_consistency; /*
 			   * consistency analysis required for conditional
 			   * model ?
 			   */
@@ -244,11 +244,11 @@ int g_SlvNumberOfRegisteredClients; /* see header */
 static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];
 
 /*-----------------------------------------------------------------*/
-/**	
+/**
 	Note about g_number_of_whens, g_number_of_dvars and g_number_of_bnds:
 	These numbers are as the same as those given in the solver and master
 	lists, however, these lists are destroyed before the buffers are destroyed,
-	so the information is gone before I can use it. 
+	so the information is gone before I can use it.
 */
 
 /** Global var used to destroy the cases and the gl_list inside each WHEN */
@@ -274,7 +274,7 @@ static int g_number_of_bnds;
 /** leave it in here John. Unilateral 'housecleaning' of this sort is not appreciated. */
 #define SCD(i) SlvClientsData[(i)]
 
-/**	Get the solver index for a system and return TRUE if the solver 
+/**	Get the solver index for a system and return TRUE if the solver
 	index is in the range [0,NORC). 'sys' should not be null
 	@param sys system, slv_system_t.
  */
@@ -286,9 +286,9 @@ static int g_number_of_bnds;
 /** Check and return a function pointer. See @SF */
 #define CF(sys,ptr) ( LS(sys) ?  SlvClientsData[(sys)->solver].ptr : NULL )
 
-/** Return the pointer to the client-supplied function or char if 
-	the client supplied one, else NULL. This should only be called 
-	with nonNULL sys after CF is happy. @see CF 
+/** Return the pointer to the client-supplied function or char if
+	the client supplied one, else NULL. This should only be called
+	with nonNULL sys after CF is happy. @see CF
 */
 #define SF(sys,ptr) ( SlvClientsData[(sys)->solver].ptr )
 
@@ -312,7 +312,7 @@ int slv_lookup_client( const char *solverName )
 }
 
 /** Register a new solver.
-	@TODO This needs work still, particularly of the dynamic loading 
+	@TODO This needs work still, particularly of the dynamic loading
 	sort. it would be good if here we farmed out the dynamic loading
 	to another file so we don't have to crap this one all up.
 */
@@ -331,7 +331,7 @@ int slv_register_client(SlvRegistration registerfunc, CONST char *func
     NORC++;
   } else {
   	*new_client_id = -2;
-    error_reporter(ASC_PROG_ERR,NULL,0,"Client %d registration failure (%d)!\n",NORC,status);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Client %d registration failure (%d)!\n",NORC,status);
   }
   return status;
 }
@@ -393,7 +393,7 @@ int slv_destroy(slv_system_t sys)
   int ret = 0;
   if (sys->ct != NULL) {
     if ( CF(sys,cdestroy) == NULL ) {
-	  error_reporter(ASC_PROG_FATAL,__FILE__,__LINE__,"slv_destroy: SlvClientToken 0x%p not freed by %s",
+	  ERROR_REPORTER_HERE(ASC_PROG_FATAL,"slv_destroy: SlvClientToken 0x%p not freed by %s",
         sys->ct,SF(sys,name));
     } else {
       if ( SF(sys,cdestroy)(sys,sys->ct) ) {
@@ -402,7 +402,7 @@ int slv_destroy(slv_system_t sys)
     }
   }
   if (ret) {
-	error_reporter(ASC_PROG_FATAL,__FILE__,__LINE__,"slv_destroy: slv_system_t 0x%p not freed.",sys);
+	ERROR_REPORTER_HERE(ASC_PROG_FATAL,"slv_destroy: slv_system_t 0x%p not freed.",sys);
   } else {
     if (sys->data.ubuf != NULL) ascfree(sys->data.ubuf);
     sys->data.ubuf = NULL;
@@ -450,11 +450,11 @@ void slv_destroy_client(slv_system_t sys)
 
   if (sys->ct != NULL) {
     if ( CF(sys,cdestroy) == NULL ) {
-      error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,
 		"SlvClientToken 0x%p not freed in slv_destroy_client",sys->ct);
     } else {
       if ( SF(sys,cdestroy)(sys,sys->ct) ) {
-        error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"slv_destroy_client: SlvClientToken not freed");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_destroy_client: SlvClientToken not freed");
       } else {
 	sys->ct = NULL;
       }
@@ -466,7 +466,7 @@ void slv_destroy_client(slv_system_t sys)
 SlvBackendToken slv_instance(slv_system_t sys)
 {
   if (sys == NULL) {
-    error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"slv_instance: called with NULL system.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_instance: called with NULL system.");
     return NULL;
   } else {
     return sys->instance;
@@ -476,7 +476,7 @@ SlvBackendToken slv_instance(slv_system_t sys)
 void slv_set_instance(slv_system_t sys,SlvBackendToken instance)
 {
   if (sys == NULL) {
-    error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"slv_set_instance: called with NULL system.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_set_instance: called with NULL system.");
     return;
   } else {
     sys->instance = instance;
@@ -496,7 +496,7 @@ dof_t *slv_get_log_dofdata(slv_system_t sys)
 int32 slv_get_num_models(slv_system_t sys)
 {
   if (sys == NULL) {
-    error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"slv_get_num_models: called with NULL system.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_get_num_models: called with NULL system.");
     return 0;
   } else {
     return sys->nmodels;
@@ -505,7 +505,7 @@ int32 slv_get_num_models(slv_system_t sys)
 void slv_set_num_models(slv_system_t sys, int32 nmod)
 {
   if (sys == NULL) {
-    error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"slv_set_num_models: called with NULL system.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"slv_set_num_models: called with NULL system.");
   } else {
     sys->nmodels = nmod;
   }
@@ -818,13 +818,13 @@ const char *slv_solver_name(int index)
   static char errname[] = "ErrorSolver";
   if (index >= 0 && index < NORC) {
     if ( SlvClientsData[index].name == NULL ) {
-      error_reporter(ASC_PROG_WARNING,NULL,0,"slv_solver_name: unnamed solver: index='%d'",index);
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_solver_name: unnamed solver: index='%d'",index);
       return errname;
     } else {
 	  return SlvClientsData[index].name;
     }
   } else {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_solver_name: invalid solver index '%d'", index);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_solver_name: invalid solver index '%d'", index);
     return errname;
   }
 }
@@ -832,7 +832,7 @@ const char *slv_solver_name(int index)
 const mtx_block_t *slv_get_solvers_blocks(slv_system_t sys)
 {
   if (sys == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_blocks called with NULL system");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_blocks called with NULL system");
     return NULL;
   } else {
     return &(sys->dof.blocks);
@@ -842,7 +842,7 @@ const mtx_block_t *slv_get_solvers_blocks(slv_system_t sys)
 const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys)
 {
   if (sys == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_log_blocks called with NULL system");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_log_blocks called with NULL system");
     return NULL;
   } else {
     return &(sys->logdof.blocks);
@@ -852,10 +852,10 @@ const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys)
 void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
 {
   if (sys == NULL || len < 0) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_blocks called with NULL system or bad len.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_blocks called with NULL system or bad len.\n");
   } else {
     if (len && data==NULL) {
-      error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_blocks called with bad data.\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_blocks called with bad data.\n");
     } else {
       if (sys->dof.blocks.nblocks && sys->dof.blocks.block != NULL) {
         ascfree(sys->dof.blocks.block);
@@ -869,10 +869,10 @@ void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
 void slv_set_solvers_log_blocks(slv_system_t sys,int len, mtx_region_t *data)
 {
   if (sys == NULL || len < 0) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_log_blocks called with NULL system or bad len\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_log_blocks called with NULL system or bad len\n");
   } else {
     if (len && data==NULL) {
-      error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_log_blocks called with bad data.\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_log_blocks called with bad data.\n");
     } else {
       if (sys->logdof.blocks.nblocks && sys->logdof.blocks.block != NULL) {
         ascfree(sys->logdof.blocks.block);
@@ -928,7 +928,7 @@ void slv_set_solvers_var_list(slv_system_t sys,
                               struct var_variable **vlist, int size)
 {
   if (sys->vars.master == NULL) {
-	error_reporter(ASC_PROG_ERR,NULL,0,"slv_set_solvers_var_list: called before slv_set_master_var_list.");
+	ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"slv_set_solvers_var_list: called before slv_set_master_var_list.");
     return; /* must be error */
   }
   sys->vars.snum = size;
@@ -940,7 +940,7 @@ void slv_set_solvers_par_list(slv_system_t sys,
                               struct var_variable **vlist, int size)
 {
   if (sys->pars.master == NULL ) {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_set_solvers_par_list: called before slv_set_master_par_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_set_solvers_par_list: called before slv_set_master_par_list.");
   } /* might be ok */
   sys->pars.snum = size;
   sys->pars.solver = vlist;
@@ -950,7 +950,7 @@ void slv_set_solvers_unattached_list(slv_system_t sys,
                                      struct var_variable **vlist, int size)
 {
   if (sys->unattached.master == NULL) {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_set_solvers_unattached_list: called before slv_set_master_unattached_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_set_solvers_unattached_list: called before slv_set_master_unattached_list.");
   } /* might be ok */
   sys->unattached.snum = size;
   sys->unattached.solver = vlist;
@@ -960,7 +960,7 @@ void slv_set_solvers_dvar_list(slv_system_t sys,
                               struct dis_discrete **dlist, int size)
 {
   if (sys->dvars.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_dvar_list: called before slv_set_master_dvar_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_dvar_list: called before slv_set_master_dvar_list.");
     return; /* must be error */
   }
   sys->dvars.snum = size;
@@ -971,7 +971,7 @@ void slv_set_solvers_disunatt_list(slv_system_t sys,
                                    struct dis_discrete **dlist, int size)
 {
   if (sys->disunatt.master == NULL) {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_set_solvers_disunatt_list: called before slv_set_master_disunatt_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_set_solvers_disunatt_list: called before slv_set_master_disunatt_list.");
   } /* might be ok */
   sys->disunatt.snum = size;
   sys->disunatt.solver = dlist;
@@ -982,7 +982,7 @@ void slv_set_solvers_rel_list(slv_system_t sys,
 {
   /* Give relation list to the system itself. */
   if (sys->rels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_rel_list: called before slv_set_master_rel_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_rel_list: called before slv_set_master_rel_list.");
     return; /* can't be right */
   }
   sys->rels.snum = size;
@@ -995,7 +995,7 @@ void slv_set_solvers_obj_list(slv_system_t sys,
 {
   /* Give relation list to the system itself. */
   if (sys->objs.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_obj_list: called before slv_set_master_rel_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_obj_list: called before slv_set_master_rel_list.");
     return;
   }
   sys->objs.snum = size;
@@ -1007,7 +1007,7 @@ void slv_set_solvers_condrel_list(slv_system_t sys,
 {
   /* Give relation list to the system itself. */
   if (sys->condrels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_condrel_list: called before slv_set_master_condrel_list");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_condrel_list: called before slv_set_master_condrel_list");
     return;
   }
   sys->condrels.snum = size;
@@ -1020,7 +1020,7 @@ void slv_set_solvers_logrel_list(slv_system_t sys,
 {
   /* Give logrelation list to the system itself. */
   if (sys->logrels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_logrel_list: called before slv_set_master_logrel_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_logrel_list: called before slv_set_master_logrel_list.");
     return; /* can't be right */
   }
   sys->logrels.snum = size;
@@ -1032,7 +1032,7 @@ void slv_set_solvers_condlogrel_list(slv_system_t sys,
 {
   /* Give logrelation list to the system itself. */
   if (sys->condlogrels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,
 		"slv_set_solvers_condlogrel_list: called before slv_set_master_logrel_list.");
     return; /* can't be right */
   }
@@ -1044,7 +1044,7 @@ void slv_set_solvers_when_list(slv_system_t sys,
                                struct w_when **wlist, int size)
 {
   if (sys->whens.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_when_list: called before slv_set_master_when_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_when_list: called before slv_set_master_when_list.");
     return;
   }
   sys->whens.snum = size;
@@ -1055,7 +1055,7 @@ void slv_set_solvers_bnd_list(slv_system_t sys,
                               struct bnd_boundary **blist, int size)
 {
   if (sys->bnds.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solvers_bnd_list: called before slv_set_master_bnd_list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_bnd_list: called before slv_set_master_bnd_list.");
     return;
   }
   sys->bnds.snum = size;
@@ -1065,7 +1065,7 @@ void slv_set_solvers_bnd_list(slv_system_t sys,
 struct var_variable **slv_get_solvers_var_list(slv_system_t sys)
 {
   if (sys->vars.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_var_list: returning NULL (?).");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_var_list: returning NULL (?).");
   }
   return sys->vars.solver;
 }
@@ -1073,7 +1073,7 @@ struct var_variable **slv_get_solvers_var_list(slv_system_t sys)
 struct var_variable **slv_get_solvers_par_list(slv_system_t sys)
 {
   if (sys->pars.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_par_list: returning NULL (?).");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_par_list: returning NULL (?).");
   }
   return sys->pars.solver;
 }
@@ -1081,7 +1081,7 @@ struct var_variable **slv_get_solvers_par_list(slv_system_t sys)
 struct var_variable **slv_get_solvers_unattached_list(slv_system_t sys)
 {
   if (sys->unattached.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_unattached_list: returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_unattached_list: returning NULL?\n");
   }
   return sys->unattached.solver;
 }
@@ -1089,7 +1089,7 @@ struct var_variable **slv_get_solvers_unattached_list(slv_system_t sys)
 struct dis_discrete **slv_get_solvers_dvar_list(slv_system_t sys)
 {
   if (sys->dvars.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"dvar_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"dvar_list is NULL\n");
   }
   return sys->dvars.solver;
 }
@@ -1097,7 +1097,7 @@ struct dis_discrete **slv_get_solvers_dvar_list(slv_system_t sys)
 struct dis_discrete **slv_get_solvers_disunatt_list(slv_system_t sys)
 {
   if (sys->disunatt.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_disunatt_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_disunatt_list returning NULL?\n");
   }
   return sys->disunatt.solver;
 }
@@ -1105,7 +1105,7 @@ struct dis_discrete **slv_get_solvers_disunatt_list(slv_system_t sys)
 struct var_variable **slv_get_master_var_list(slv_system_t sys)
 {
   if (sys->vars.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_master_var_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_var_list returning NULL?\n");
   }
   return sys->vars.master;
 }
@@ -1114,7 +1114,7 @@ struct var_variable **slv_get_master_var_list(slv_system_t sys)
 struct var_variable **slv_get_master_par_list(slv_system_t sys)
 {
   if (sys->pars.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_master_par_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_par_list returning NULL?\n");
   }
   return sys->pars.master;
 }
@@ -1122,7 +1122,7 @@ struct var_variable **slv_get_master_par_list(slv_system_t sys)
 struct var_variable **slv_get_master_unattached_list(slv_system_t sys)
 {
   if (sys->unattached.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_unattached_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_unattached_list returning NULL?\n");
   }
   return sys->unattached.master;
 }
@@ -1130,7 +1130,7 @@ struct var_variable **slv_get_master_unattached_list(slv_system_t sys)
 struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys)
 {
   if (sys->dvars.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"dvar_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"dvar_list is NULL\n");
   }
   return sys->dvars.master;
 }
@@ -1138,7 +1138,7 @@ struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys)
 struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys)
 {
   if (sys->disunatt.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_disunatt_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_disunatt_list returning NULL?\n");
   }
   return sys->disunatt.master;
 }
@@ -1146,7 +1146,7 @@ struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys)
 struct rel_relation **slv_get_solvers_rel_list(slv_system_t sys)
 {
   if (sys->rels.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_rel_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_rel_list returning NULL?\n");
   }
   return sys->rels.solver;
 }
@@ -1154,7 +1154,7 @@ struct rel_relation **slv_get_solvers_rel_list(slv_system_t sys)
 struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys)
 {
   if (sys->condrels.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"condrel_list is NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"condrel_list is NULL?\n");
   }
   return sys->condrels.solver;
 }
@@ -1162,7 +1162,7 @@ struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys)
 struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys)
 {
   if (sys->objs.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_solvers_obj_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_obj_list returning NULL?\n");
   }
   return sys->objs.solver;
 }
@@ -1170,7 +1170,7 @@ struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys)
 struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys)
 {
   if (sys->logrels.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"logrel_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
   }
   return sys->logrels.solver;
 }
@@ -1178,7 +1178,7 @@ struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys)
 struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys)
 {
   if (sys->condlogrels.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"logrel_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
   }
   return sys->condlogrels.solver;
 }
@@ -1186,7 +1186,7 @@ struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys)
 struct w_when **slv_get_solvers_when_list(slv_system_t sys)
 {
   if (sys->whens.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"when_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"when_list is NULL\n");
   }
   return sys->whens.solver;
 }
@@ -1194,7 +1194,7 @@ struct w_when **slv_get_solvers_when_list(slv_system_t sys)
 struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys)
 {
   if (sys->bnds.solver == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"bnd_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"bnd_list is NULL\n");
   }
   return sys->bnds.solver;
 }
@@ -1202,7 +1202,7 @@ struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys)
 struct rel_relation **slv_get_master_rel_list(slv_system_t sys)
 {
   if (sys->rels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_master_rel_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_rel_list returning NULL?\n");
   }
   return sys->rels.master;
 }
@@ -1211,7 +1211,7 @@ struct rel_relation **slv_get_master_rel_list(slv_system_t sys)
 struct rel_relation **slv_get_master_condrel_list(slv_system_t sys)
 {
   if (sys->condrels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"condrel_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"condrel_list is NULL\n");
   }
   return sys->condrels.master;
 }
@@ -1219,7 +1219,7 @@ struct rel_relation **slv_get_master_condrel_list(slv_system_t sys)
 struct rel_relation **slv_get_master_obj_list(slv_system_t sys)
 {
   if (sys->objs.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_master_obj_list returning NULL?\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_obj_list returning NULL?\n");
   }
   return sys->objs.master;
 }
@@ -1228,7 +1228,7 @@ struct rel_relation **slv_get_master_obj_list(slv_system_t sys)
 struct logrel_relation **slv_get_master_logrel_list(slv_system_t sys)
 {
   if (sys->logrels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"logrel_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
   }
   return sys->logrels.master;
 }
@@ -1236,7 +1236,7 @@ struct logrel_relation **slv_get_master_logrel_list(slv_system_t sys)
 struct logrel_relation **slv_get_master_condlogrel_list(slv_system_t sys)
 {
   if (sys->condlogrels.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"logrel_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
   }
   return sys->condlogrels.master;
 }
@@ -1245,7 +1245,7 @@ struct logrel_relation **slv_get_master_condlogrel_list(slv_system_t sys)
 struct w_when **slv_get_master_when_list(slv_system_t sys)
 {
   if (sys->whens.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"when_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"when_list is NULL\n");
   }
   return sys->whens.master;
 }
@@ -1253,7 +1253,7 @@ struct w_when **slv_get_master_when_list(slv_system_t sys)
 struct bnd_boundary **slv_get_master_bnd_list(slv_system_t sys)
 {
   if (sys->bnds.master == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"bnd_list is NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"bnd_list is NULL\n");
   }
   return sys->bnds.master;
 }
@@ -1261,7 +1261,7 @@ struct bnd_boundary **slv_get_master_bnd_list(slv_system_t sys)
 struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_symbol_list called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_symbol_list called with NULL system.\n");
     return NULL;
   }
   return sys->symbollist;
@@ -1271,7 +1271,7 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 int slv_get_num_solvers_vars(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_vars called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_vars called with NULL system.\n");
     return 0;
   }
   return sys->vars.snum;
@@ -1281,7 +1281,7 @@ int slv_get_num_solvers_vars(slv_system_t sys)
 int slv_get_num_solvers_pars(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_pars called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_pars called with NULL system.\n");
     return 0;
   }
   return sys->pars.snum;
@@ -1290,7 +1290,7 @@ int slv_get_num_solvers_pars(slv_system_t sys)
 int slv_get_num_solvers_unattached(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_unattached called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_unattached called with NULL system.\n");
     return 0;
   }
   return sys->unattached.snum;
@@ -1299,7 +1299,7 @@ int slv_get_num_solvers_unattached(slv_system_t sys)
 int slv_get_num_solvers_dvars(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_dvars called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_dvars called with NULL system.\n");
     return 0;
   }
   return sys->dvars.snum;
@@ -1308,7 +1308,7 @@ int slv_get_num_solvers_dvars(slv_system_t sys)
 int slv_get_num_solvers_disunatt(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_disunatt called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_disunatt called with NULL system.\n");
     return 0;
   }
   return sys->disunatt.snum;
@@ -1318,7 +1318,7 @@ int slv_get_num_solvers_disunatt(slv_system_t sys)
 int slv_get_num_solvers_rels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_rels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_rels called with NULL system.\n");
     return 0;
   }
   return sys->rels.snum;
@@ -1328,7 +1328,7 @@ int slv_get_num_solvers_rels(slv_system_t sys)
 int slv_get_num_solvers_condrels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_condrels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_condrels called with NULL system.\n");
     return 0;
   }
   return sys->condrels.snum;
@@ -1337,7 +1337,7 @@ int slv_get_num_solvers_condrels(slv_system_t sys)
 int slv_get_num_solvers_objs(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_objs called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_objs called with NULL system.\n");
     return 0;
   }
   return sys->objs.snum;
@@ -1346,7 +1346,7 @@ int slv_get_num_solvers_objs(slv_system_t sys)
 int slv_get_num_solvers_logrels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_logrels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_logrels called with NULL system.\n");
     return 0;
   }
   return sys->logrels.snum;
@@ -1355,7 +1355,7 @@ int slv_get_num_solvers_logrels(slv_system_t sys)
 int slv_get_num_solvers_condlogrels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_condlogrels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_condlogrels called with NULL system.\n");
     return 0;
   }
   return sys->condlogrels.snum;
@@ -1364,7 +1364,7 @@ int slv_get_num_solvers_condlogrels(slv_system_t sys)
 int slv_get_num_solvers_whens(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_whens called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_whens called with NULL system.\n");
     return 0;
   }
   return sys->whens.snum;
@@ -1373,7 +1373,7 @@ int slv_get_num_solvers_whens(slv_system_t sys)
 int slv_get_num_solvers_bnds(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_solvers_bnds called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_solvers_bnds called with NULL system.\n");
     return 0;
   }
   return sys->bnds.snum;
@@ -1382,7 +1382,7 @@ int slv_get_num_solvers_bnds(slv_system_t sys)
 int slv_get_num_master_vars(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_vars called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_vars called with NULL system.\n");
     return 0;
   }
   return sys->vars.mnum;
@@ -1392,7 +1392,7 @@ int slv_get_num_master_vars(slv_system_t sys)
 int slv_get_num_master_pars(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_pars called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_pars called with NULL system.\n");
     return 0;
   }
   return sys->pars.mnum;
@@ -1400,7 +1400,7 @@ int slv_get_num_master_pars(slv_system_t sys)
 int slv_get_num_master_unattached(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_unattached called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_unattached called with NULL system.\n");
     return 0;
   }
   return sys->unattached.mnum;
@@ -1409,7 +1409,7 @@ int slv_get_num_master_unattached(slv_system_t sys)
 int slv_get_num_master_dvars(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_dvars called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_dvars called with NULL system.\n");
     return 0;
   }
   return sys->dvars.mnum;
@@ -1418,7 +1418,7 @@ int slv_get_num_master_dvars(slv_system_t sys)
 int slv_get_num_master_disunatt(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_disunatt called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_disunatt called with NULL system.\n");
     return 0;
   }
   return sys->disunatt.mnum;
@@ -1427,7 +1427,7 @@ int slv_get_num_master_disunatt(slv_system_t sys)
 int slv_get_num_master_rels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_rels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_rels called with NULL system.\n");
     return 0;
   }
   return sys->rels.mnum;
@@ -1437,7 +1437,7 @@ int slv_get_num_master_rels(slv_system_t sys)
 int slv_get_num_master_condrels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_condrels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_condrels called with NULL system.\n");
     return 0;
   }
   return sys->condrels.mnum;
@@ -1446,7 +1446,7 @@ int slv_get_num_master_condrels(slv_system_t sys)
 int slv_get_num_master_objs(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_objs called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_objs called with NULL system.\n");
     return 0;
   }
   return sys->objs.mnum;
@@ -1455,7 +1455,7 @@ int slv_get_num_master_objs(slv_system_t sys)
 int slv_get_num_master_logrels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_logrels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_logrels called with NULL system.\n");
     return 0;
   }
   return sys->logrels.mnum;
@@ -1464,7 +1464,7 @@ int slv_get_num_master_logrels(slv_system_t sys)
 int slv_get_num_master_condlogrels(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_logrels called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_logrels called with NULL system.\n");
     return 0;
   }
   return sys->condlogrels.mnum;
@@ -1473,7 +1473,7 @@ int slv_get_num_master_condlogrels(slv_system_t sys)
 int slv_get_num_master_whens(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_whens called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_whens called with NULL system.\n");
     return 0;
   }
   return sys->whens.mnum;
@@ -1482,7 +1482,7 @@ int slv_get_num_master_whens(slv_system_t sys)
 int slv_get_num_master_bnds(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_num_master_bnds called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_num_master_bnds called with NULL system.\n");
     return 0;
   }
   return sys->bnds.mnum;
@@ -1491,7 +1491,7 @@ int slv_get_num_master_bnds(slv_system_t sys)
 void slv_set_obj_relation(slv_system_t sys,struct rel_relation *obj)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_obj_relation called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_obj_relation called with NULL system.\n");
     return;
   }
   sys->obj = obj;
@@ -1500,7 +1500,7 @@ void slv_set_obj_relation(slv_system_t sys,struct rel_relation *obj)
 struct rel_relation *slv_get_obj_relation(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_obj_relation called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_relation called with NULL system.\n");
     return NULL;
   }
   return sys->obj;
@@ -1510,7 +1510,7 @@ void slv_set_obj_variable(slv_system_t sys,struct var_variable *objvar,
                           unsigned maximize)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_obj_variable called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_obj_variable called with NULL system.\n");
     return;
   }
   sys->objvar = objvar;
@@ -1528,7 +1528,7 @@ void slv_set_obj_variable(slv_system_t sys,struct var_variable *objvar,
 struct var_variable *slv_get_obj_variable(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_obj_variable called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_variable called with NULL system.\n");
     return NULL;
   }
   return sys->objvar;
@@ -1537,7 +1537,7 @@ struct var_variable *slv_get_obj_variable(slv_system_t sys)
 real64 slv_get_obj_variable_gradient(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_obj_variable_gradient called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_variable_gradient called with NULL system.\n");
     return 0.0;
   }
   return sys->objvargrad;
@@ -1547,7 +1547,7 @@ real64 slv_get_obj_variable_gradient(slv_system_t sys)
 void slv_set_need_consistency(slv_system_t sys, int32 need_consistency)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_need_consistency called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_need_consistency called with NULL system.\n");
     return;
   }
 
@@ -1558,7 +1558,7 @@ void slv_set_need_consistency(slv_system_t sys, int32 need_consistency)
 int32 slv_need_consistency(slv_system_t sys)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_need_consistency called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_need_consistency called with NULL system.\n");
     return 0;
   }
   return sys->need_consistency;
@@ -1641,7 +1641,7 @@ static int slv_count_bnds(bnd_filter_t *bfilter,struct bnd_boundary **blist)
 int slv_count_solvers_vars(slv_system_t sys, var_filter_t *vf)
 {
   if (sys==NULL || sys->vars.solver == NULL || vf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_vars called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_vars called with NULL\n");
     return 0;
   }
   return slv_count_vars(vf,sys->vars.solver);
@@ -1651,7 +1651,7 @@ int slv_count_solvers_vars(slv_system_t sys, var_filter_t *vf)
 int slv_count_solvers_pars(slv_system_t sys, var_filter_t *vf)
 {
   if (sys==NULL || sys->pars.solver == NULL || vf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_pars called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_pars called with NULL\n");
     return 0;
   }
   return slv_count_vars(vf,sys->pars.solver);
@@ -1660,7 +1660,7 @@ int slv_count_solvers_pars(slv_system_t sys, var_filter_t *vf)
 int slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vf)
 {
   if (sys==NULL || sys->unattached.solver == NULL || vf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_unattached called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_unattached called with NULL\n");
     return 0;
   }
   return slv_count_vars(vf,sys->unattached.solver);
@@ -1669,7 +1669,7 @@ int slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vf)
 int slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dvf)
 {
   if (sys==NULL || sys->dvars.solver == NULL || dvf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_dvars called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_dvars called with NULL\n");
     return 0;
   }
   return slv_count_dvars(dvf,sys->dvars.solver);
@@ -1678,7 +1678,7 @@ int slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dvf)
 int slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dvf)
 {
   if (sys==NULL || sys->disunatt.solver == NULL || dvf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_disunatt called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_disunatt called with NULL\n");
     return 0;
   }
   return slv_count_dvars(dvf,sys->disunatt.solver);
@@ -1687,7 +1687,7 @@ int slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dvf)
 int slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rf)
 {
   if (sys==NULL || sys->rels.solver == NULL || rf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_rels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_rels called with NULL\n");
     return 0;
   }
   return slv_count_rels(rf,sys->rels.solver);
@@ -1697,7 +1697,7 @@ int slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rf)
 int slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rf)
 {
   if (sys==NULL || sys->condrels.solver == NULL || rf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_condrels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_condrels called with NULL\n");
     return 0;
   }
   return slv_count_rels(rf,sys->condrels.solver);
@@ -1706,7 +1706,7 @@ int slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rf)
 int slv_count_solvers_objs(slv_system_t sys, rel_filter_t *rf)
 {
   if (sys==NULL || sys->objs.solver == NULL || rf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_objs called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_objs called with NULL\n");
     return 0;
   }
   return slv_count_rels(rf,sys->objs.solver);
@@ -1715,7 +1715,7 @@ int slv_count_solvers_objs(slv_system_t sys, rel_filter_t *rf)
 int slv_count_solvers_logrels(slv_system_t sys, logrel_filter_t *lrf)
 {
   if (sys==NULL || sys->logrels.solver == NULL || lrf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_logrels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_logrels called with NULL\n");
     return 0;
   }
   return slv_count_logrels(lrf,sys->logrels.solver);
@@ -1725,7 +1725,7 @@ int slv_count_solvers_logrels(slv_system_t sys, logrel_filter_t *lrf)
 int slv_count_solvers_condlogrels(slv_system_t sys, logrel_filter_t *lrf)
 {
   if (sys==NULL || sys->condlogrels.solver == NULL || lrf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_condlogrels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_condlogrels called with NULL\n");
     return 0;
   }
   return slv_count_logrels(lrf,sys->condlogrels.solver);
@@ -1734,7 +1734,7 @@ int slv_count_solvers_condlogrels(slv_system_t sys, logrel_filter_t *lrf)
 int slv_count_solvers_whens(slv_system_t sys, when_filter_t *wf)
 {
   if (sys==NULL || sys->whens.solver == NULL || wf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_whens called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_whens called with NULL\n");
     return 0;
   }
   return slv_count_whens(wf,sys->whens.solver);
@@ -1743,7 +1743,7 @@ int slv_count_solvers_whens(slv_system_t sys, when_filter_t *wf)
 int slv_count_solvers_bnds(slv_system_t sys, bnd_filter_t *bf)
 {
   if (sys==NULL || sys->bnds.solver == NULL || bf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_solvers_bnds called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_bnds called with NULL\n");
     return 0;
   }
   return slv_count_bnds(bf,sys->bnds.solver);
@@ -1752,7 +1752,7 @@ int slv_count_solvers_bnds(slv_system_t sys, bnd_filter_t *bf)
 int slv_count_master_vars(slv_system_t sys, var_filter_t *vf)
 {
   if (sys==NULL || sys->vars.master == NULL || vf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_vars called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_vars called with NULL\n");
     return 0;
   }
   return slv_count_vars(vf,sys->vars.master);
@@ -1762,7 +1762,7 @@ int slv_count_master_vars(slv_system_t sys, var_filter_t *vf)
 int slv_count_master_pars(slv_system_t sys, var_filter_t *vf)
 {
   if (sys==NULL || sys->pars.master == NULL || vf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_pars called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_pars called with NULL\n");
     return 0;
   }
   return slv_count_vars(vf,sys->pars.master);
@@ -1771,7 +1771,7 @@ int slv_count_master_pars(slv_system_t sys, var_filter_t *vf)
 int slv_count_master_unattached(slv_system_t sys, var_filter_t *vf)
 {
   if (sys==NULL || sys->unattached.master == NULL || vf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_unattached called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_unattached called with NULL\n");
     return 0;
   }
   return slv_count_vars(vf,sys->unattached.master);
@@ -1780,7 +1780,7 @@ int slv_count_master_unattached(slv_system_t sys, var_filter_t *vf)
 int slv_count_master_dvars(slv_system_t sys, dis_filter_t *dvf)
 {
   if (sys==NULL || sys->dvars.master == NULL || dvf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_dvars called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_dvars called with NULL\n");
     return 0;
   }
   return slv_count_dvars(dvf,sys->dvars.master);
@@ -1789,7 +1789,7 @@ int slv_count_master_dvars(slv_system_t sys, dis_filter_t *dvf)
 int slv_count_master_disunatt(slv_system_t sys, dis_filter_t *dvf)
 {
   if (sys==NULL || sys->disunatt.master == NULL || dvf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_disunatt called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_disunatt called with NULL\n");
     return 0;
   }
   return slv_count_dvars(dvf,sys->disunatt.master);
@@ -1798,7 +1798,7 @@ int slv_count_master_disunatt(slv_system_t sys, dis_filter_t *dvf)
 int slv_count_master_rels(slv_system_t sys, rel_filter_t *rf)
 {
   if (sys==NULL || sys->rels.master == NULL || rf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_rels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_rels called with NULL\n");
     return 0;
   }
   return slv_count_rels(rf,sys->rels.master);
@@ -1807,7 +1807,7 @@ int slv_count_master_rels(slv_system_t sys, rel_filter_t *rf)
 int slv_count_master_condrels(slv_system_t sys, rel_filter_t *rf)
 {
   if (sys==NULL || sys->condrels.master == NULL || rf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_rels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_rels called with NULL\n");
     return 0;
   }
   return slv_count_rels(rf,sys->condrels.master);
@@ -1816,7 +1816,7 @@ int slv_count_master_condrels(slv_system_t sys, rel_filter_t *rf)
 int slv_count_master_objs(slv_system_t sys, rel_filter_t *rf)
 {
   if (sys==NULL || sys->objs.master == NULL || rf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_objs called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_objs called with NULL\n");
     return 0;
   }
   return slv_count_rels(rf,sys->objs.master);
@@ -1825,7 +1825,7 @@ int slv_count_master_objs(slv_system_t sys, rel_filter_t *rf)
 int slv_count_master_logrels(slv_system_t sys, logrel_filter_t *lrf)
 {
   if (sys==NULL || sys->logrels.master == NULL || lrf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_logrels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_logrels called with NULL\n");
     return 0;
   }
   return slv_count_logrels(lrf,sys->logrels.master);
@@ -1834,7 +1834,7 @@ int slv_count_master_logrels(slv_system_t sys, logrel_filter_t *lrf)
 int slv_count_master_condlogrels(slv_system_t sys, logrel_filter_t *lrf)
 {
   if (sys==NULL || sys->condlogrels.master == NULL || lrf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_condlogrels called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_condlogrels called with NULL\n");
     return 0;
   }
   return slv_count_logrels(lrf,sys->condlogrels.master);
@@ -1843,7 +1843,7 @@ int slv_count_master_condlogrels(slv_system_t sys, logrel_filter_t *lrf)
 int slv_count_master_whens(slv_system_t sys, when_filter_t *wf)
 {
   if (sys==NULL || sys->whens.master == NULL || wf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_whens called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_whens called with NULL\n");
     return 0;
   }
   return slv_count_whens(wf,sys->whens.master);
@@ -1852,7 +1852,7 @@ int slv_count_master_whens(slv_system_t sys, when_filter_t *wf)
 int slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bf)
 {
   if (sys==NULL || sys->bnds.master == NULL || bf == NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_count_master_bnds called with NULL\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_bnds called with NULL\n");
     return 0;
   }
   return slv_count_bnds(bf,sys->bnds.master);
@@ -1860,7 +1860,7 @@ int slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bf)
 
 static void printwarning(const char * fname, slv_system_t sys)
 {
-  error_reporter(ASC_PROG_WARNING,NULL,0,
+  ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,
     "%s called with bad registered client (%s).",fname,
     slv_solver_name(sys->solver));
 }
@@ -1868,7 +1868,7 @@ static void printwarning(const char * fname, slv_system_t sys)
 static void printinfo(slv_system_t sys, const char *rname)
 {
   if (CF(sys,name) == NULL ) {
-    error_reporter(ASC_PROG_NOTE,NULL,0,
+    ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,
       "Client %s does not support function %s\n",
       slv_solver_name(sys->solver),rname);
   }
@@ -1889,7 +1889,7 @@ int slv_select_solver(slv_system_t sys,int solver){
   SlvClientDestroyF *destroy;
 
   if (sys ==NULL) {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver called with NULL system\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver called with NULL system\n");
     return -1;
   }
   if ( solver >= 0 && solver < NORC ) {
@@ -1899,7 +1899,7 @@ int slv_select_solver(slv_system_t sys,int solver){
         (destroy)(sys,sys->ct);
         sys->ct = NULL;
       } else {
-        error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver: 'cdestroy' is undefined on solver '%s' (index %d).",
+        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver: 'cdestroy' is undefined on solver '%s' (index %d).",
           slv_solver_name(sys->solver), sys->solver);
       }
     }
@@ -1913,23 +1913,23 @@ int slv_select_solver(slv_system_t sys,int solver){
     if ( CF(sys,ccreate) != NULL) {
       sys->ct = SF(sys,ccreate)(sys,&status_index);
     } else {
-      error_reporter(ASC_PROG_ERROR,NULL,0,"slv_select_solver create failed due to bad client %s\n",
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_select_solver create failed due to bad client %s\n",
         slv_solver_name(sys->solver));
       return sys->solver;
     }
     if (sys->ct==NULL) {
-      error_reporter(ASC_PROG_WARNING,NULL,0,"SlvClientCreate failed in slv_select_solver\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate failed in slv_select_solver\n");
       sys->solver = -1;
     } else {
       if (status_index) {
-        error_reporter(ASC_PROG_WARNING,NULL,0,"SlvClientCreate succeeded with warning %d %s\n",
+        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s\n",
           status_index," in slv_select_solver");
       }
       /* we could do a better job explaining the client warnings... */
       sys->solver = solver;
     }
   } else {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_select_solver: invalid solver index '%d'.",
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver: invalid solver index '%d'.",
       solver);
     return -1;
   }
@@ -1942,7 +1942,7 @@ int slv_switch_solver(slv_system_t sys,int solver)
   int status_index;
 
   if (sys ==NULL) {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver called with NULL system\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with NULL system\n");
     return -1;
   }
   if( solver >= 0 && solver < g_SlvNumberOfRegisteredClients ){
@@ -1951,22 +1951,22 @@ int slv_switch_solver(slv_system_t sys,int solver)
     if ( CF(sys,ccreate) != NULL) {
       sys->ct = SF(sys,ccreate)(sys,&status_index);
     } else {
-      error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver create failed due to bad client %s\n",
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver create failed due to bad client %s\n",
          slv_solver_name(sys->solver));
       return sys->solver;
     }
     if (sys->ct==NULL) {
-      error_reporter(ASC_PROG_ERROR,NULL,0,"SlvClientCreate failed in slv_switch_solver\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"SlvClientCreate failed in slv_switch_solver\n");
       sys->solver = -1;
     } else {
       if (status_index) {
-        error_reporter(ASC_PROG_WARNING,NULL,0,"SlvClientCreate succeeded with warning %d %s\n",
+        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s\n",
            status_index," in slv_switch_solver");
       }
       sys->solver = solver;
     }
   } else {
-    error_reporter(ASC_PROG_WARNING,NULL,0,"slv_switch_solver called with unknown client (%d)\n",solver);
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with unknown client (%d)\n",solver);
     return -1;
   }
   return sys->solver;
@@ -2001,7 +2001,7 @@ void slv_destroy_parms(slv_parameters_t *p) {
       ascfree(p->parms[i].description);
       break;
     default:
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Unrecognized parameter type in slv_destroy_parms\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Unrecognized parameter type in slv_destroy_parms\n");
     }
   }
   if (p->parms && p->dynamic_parms) {
@@ -2102,7 +2102,7 @@ int32 slv_get_default_parameters(int index,
 {
   if (index >= 0 && index < NORC) {
     if ( SlvClientsData[index].getdefparam == NULL ) {
-      error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_default_parameters called with parameterless index\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with parameterless index\n");
       return 0;
     } else {
       /* send NULL system when setting up interface */
@@ -2110,7 +2110,7 @@ int32 slv_get_default_parameters(int index,
       return 1;
     }
   } else {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_get_default_parameters called with unregistered index\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with unregistered index\n");
     return 0;
   }
 }
@@ -2132,7 +2132,7 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
     return;
   }
   if (parameters->whose != sys->solver) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,
 		"slv_set_parameters can give parameters from one client to a different client.");
     return;
   }
@@ -2234,7 +2234,7 @@ SlvClientToken slv_get_client_token(slv_system_t sys)
 void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_client_token called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_client_token called with NULL system.\n");
     return;
   }
   sys->ct = ct;
@@ -2243,7 +2243,7 @@ void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
 void slv_set_solver_index(slv_system_t sys, int solver)
 {
   if (sys==NULL) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"slv_set_solver_index called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solver_index called with NULL system.\n");
     return;
   }
   sys->solver = solver;

@@ -127,7 +127,7 @@ int Builtins_Init(void)
   int result = 0;
 
 #ifdef NO_PACKAGES
-  error_reporter(ASC_USER_WARNING,__FILE__,__LINE,"Builtins_Init: DISABLED at compile-time");
+  ERROR_REPORTER_HERE(ASC_USER_WARNING,"Builtins_Init: DISABLED at compile-time");
 #else
   ERROR_REPORTER_DEBUG("Builtins_Init: Loading function asc_free_all_variables\n");
   result = CreateUserFunction("asc_free_all_variables"
@@ -163,8 +163,8 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
   register CONST char *t;
   register unsigned length;
   register FILE *f;
-  /* error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Env var for user packages is '%s'\n",envv); */
-  error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Search path for user packages is '%s'\n",getenv(envv));
+  /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Env var for user packages is '%s'\n",envv); */
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Search path for user packages is '%s'\n",getenv(envv));
   if ((path=getenv(envv))==NULL)
     path=dpath;
   while(isspace(*path)) path++;
@@ -181,7 +181,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
       for(t=name;*t!='\0';)
         path_var[length++] = *(t++);
       path_var[length]='\0';
-      /* error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Searching for for '%s' in dir '%s'\n",name, path_var); */
+      /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for for '%s' in dir '%s'\n",name, path_var); */
       if ((f= fopen(path_var,"r"))!=NULL){
 		result = path_var;
         fclose(f);
@@ -203,7 +203,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   /** avoid compiler warnings on params: */
   (void) name; (void) initfunc;
 
-  error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"LoadArchiveLibrary disabled: NO_PACKAGES");
+  ERROR_REPORTER_HERE(ASC_PROG_ERROR,"LoadArchiveLibrary disabled: NO_PACKAGES");
   return 1;
 
 #elif defined(DYNAMIC_PACKAGES)
@@ -216,7 +216,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 
   full_file_name = SearchArchiveLibraryPath(name,default_path,env);
   if (!full_file_name) {
-    error_reporter(ASC_USER_ERROR,NULL,0,"The named library '%s' was not found in the search path",name);
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path",name);
     return 1;
   }
   result = Asc_DynamicLoad(full_file_name,initfunc);
@@ -231,7 +231,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   /* avoid compiler warnings on params: */
   (void) name; (void) initfunc;
 
-  error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.");
   return 0;
 
 #else /* unknown flags */
@@ -315,7 +315,7 @@ int StaticPackages_Init(void)
 /**
 	This is a general purpose function that will load whatever user
 	functions are required according to the compile-time settings.
-	
+
 	If NO_PACKAGES, nothing will be loaded. If DYNAMIC_PACKAGES, then
 	just the builtin packages will be loaded. If STATIC_PACKAGES then
 	builtin plus those called in 'StaticPackages_Init' will be loaded.
@@ -326,12 +326,12 @@ void AddUserFunctions(void)
 # ifdef __GNUC__
 #  warning "EXTERNAL PACKAGES ARE BEING DISABLED"
 # endif
-  error_reporter(ASC_PROG_NOTE,NULL,0,"AddUserFunctions disabled at compile-time.");
+  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"AddUserFunctions disabled at compile-time.");
 #else
 
   /* Builtins are always statically linked */
   if (Builtins_Init()) {
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Problem in Builtins_Init: Some user functions not created");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Problem in Builtins_Init: Some user functions not created");
   }
 
 # ifdef DYNAMIC_PACKAGES
@@ -344,7 +344,7 @@ void AddUserFunctions(void)
 
   /*The following need to be reimplemented but are basically useful as is. */
   if (StaticPackages_Init()) {
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Problem in StaticPackages_Init(): Some user functions not created");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Problem in StaticPackages_Init(): Some user functions not created");
   }
 
 # endif
@@ -430,7 +430,7 @@ int CallBlackBox(struct Instance *inst,
 */
 
   /* Visual C doesn't like this before the func ptr defs. */
-  UNUSED_PARAMETER(inst);   
+  UNUSED_PARAMETER(inst);
 
   ext = BlackBoxExtCall(rel);
   arglist = ExternalCallArgList(ext);

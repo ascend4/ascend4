@@ -1,14 +1,19 @@
 SOURCE_ROOT = ../..
 
 CXX = g++
-CC = gcc
+CC = gcc 
+
+SO_SUFF = .dll
+
+PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
 
 CXXFLAGS = -c -g
 
-LD = libtool --mode=link gcc -export-dynamic 
-LD_CXX = libtool --mode=link g++ -export-dynamic
+LD = libtool --mode=link gcc
+LD_CXX = libtool --mode=link g++
 
-LDFLAGS = -g -lieee -lm -lc -ldl -lstdc++
+# -lieee -ldl
+LDFLAGS = -g -lm -lc -lstdc++
 
 # Are you on a dual processor machine?
 _smp_mflags = -j2 
@@ -19,7 +24,7 @@ OBJS = $(CLASSES:%=%.o)
 HDRS = $(CLASSES:%=%.h)
 
 all:
-
+	@echo "OS TYPE: $(OSTYPE)"
 
 ASCEND_CPPFLAGS = -I../../base/generic -I../../base/generic/solver -I../../base/generic/compiler -I../../base/generic/utilities -I../../base/generic/general -I../../base/generic/packages
 
@@ -55,9 +60,16 @@ ifeq ($(USE_PYTHON),1)
 		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
 		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython($PYTHON_VERSION)
 	else
-		PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
-		PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
-		PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+        ifeq ($(TERM),cygwin)
+            PYTHON_VERSION := 24
+            PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
+            PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
+            PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
+        else
+			PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
+            PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
+            PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+        endif
 	endif
 endif
 
@@ -70,7 +82,7 @@ else
 endif
 
 clean:
-	-rm *.so
+	-rm *$(SO_SUFF)
 	-rm *.o
 	-rm *_wrap.cxx
 	-rm *_wrap.c
@@ -87,7 +99,7 @@ cleanall: clean
 #--------------------------
 # Pure C++ testing
 
-CPPFLAGS := $(ASCXX_CPPFLAGS)
+CPPFLAGS := $(ASCXX_CPPFLAGS) $(PLATFORM_CPPFLAGS)
 
 main: main.o $(OBJS) $(ASC_LIBS)
 	$(LD) -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
@@ -108,11 +120,11 @@ endif
 
 SWIGFLAGS = -c++ -python $(SWIG_INCLUDES)
 SWIG_CFLAGS = -c -fPIC 
-SWIG_CPPFLAGS = $(ASCXX_CPPFLAGS)
+SWIG_CPPFLAGS = $(ASCXX_CPPFLAGS) $(PLATFORM_CPPFLAGS)
 
 SWIG_OBJS = $(SWIG_MODULE:%=%_wrap.o)
 
-LIB = _ascend.so
+LIB = _ascend$(SO_SUFF)
 
 all: $(LIB)
 

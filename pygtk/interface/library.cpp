@@ -7,11 +7,11 @@ using namespace std;
 
 //#include <compiler/module.h>
 extern "C"{
-#include <utilities/ascConfig.h> 
+#include <utilities/ascConfig.h>
 #include <general/list.h>
 #include <compiler/slist.h>
-#include <compiler/ascCompiler.h> 
-#include <compiler/fractions.h> 
+#include <compiler/ascCompiler.h>
+#include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/redirectFile.h>
 #include <compiler/module.h>
@@ -58,9 +58,9 @@ Library::Library(){
 }
 
 Library::~Library(){
-	//error_reporter(ASC_PROG_WARNING,NULL,0,"DESTROYED LIBRARY!");
+	//ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"DESTROYED LIBRARY!");
 	//DestroyLibrary();
-	// ... need to use some kind of reference counting before you can do that... 
+	// ... need to use some kind of reference counting before you can do that...
 }
 
 /**
@@ -99,7 +99,7 @@ Library::load(const char *filename){
 			msg = "Module for '%s' created OK."; break;
 		case -1:
 			msg = "Error: File not found for '%s'. (-1)"; break;
-		case -2: 
+		case -2:
 			msg = "Error: Unable to open '%s' for reading. (-2)";break;
 		case -3:
 			msg = "Error: Insuffient memory to create module for '%s'. (-3)"; break;
@@ -275,10 +275,10 @@ Library::clear(){
 	cerr << "... DEFINED FUND TYPES" << endl;
 	/*SetUniversalProcedureList(NULL);
 */
-	error_reporter(ASC_PROG_NOTE,NULL,0,"Destroying simulations...\n");
+	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Destroying simulations...\n");
 	Asc_DestroySimulations();
 
-	error_reporter(ASC_PROG_NOTE,NULL,0,"Clearing library...\n");
+	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Clearing library...\n");
 	DestroyNotesDatabase(LibraryNote());
 	SetUniversalProcedureList(NULL);
 	DestroyLibrary();
@@ -289,7 +289,7 @@ Library::clear(){
 	//Asc_CompilerInit(1)
 	DefineFundamentalTypes();
 	InitNotesDatabase(LibraryNote());
-	error_reporter(ASC_PROG_WARNING,NULL,0,"LIBRARY CLEARED!");
+	ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"LIBRARY CLEARED!");
 }
 
 

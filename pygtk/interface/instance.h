@@ -29,7 +29,7 @@ extern "C"{
 
 	The Right Way to implement this class would be as a base class
 	with lots of diffent subclasses for the different atom types.
-	Maybe even multiple inheritance. 
+	Maybe even multiple inheritance.
 
 	But until the underlying C code is ported to C++ it's not going to be
 	worth the effort.
@@ -90,14 +90,14 @@ public:
 	void setRealValue(const double&, const unsigned &depth=0);
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
 
-	template<class T> 
+	template<class T>
 	const ASCXX_Set<T> Instanc::getSetValue() const{
 		if(!isSet()){
-			error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not set-valued",getName().toString());
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not set-valued",getName().toString());
 			return ASCXX_Set<T>();
 		}
 		if(!isConst() && !isDefined()){
-			error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not defined",getName().toString());
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
 			return ASCXX_Set<T>();
 		}
 		return ASCXX_Set<T>(SetAtomList(i));

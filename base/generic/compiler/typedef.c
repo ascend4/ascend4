@@ -558,7 +558,7 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
     name = NameIdPtr(nptr);
     switch (StatementType(stat)) {
     case EXT:
-	  error_reporter(ASC_PROG_WARNING,__FILE__,__LINE__,"PROCESSING EXTERNAL RELATION\n");
+	  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"PROCESSING EXTERNAL RELATION\n");
     case ISA:
     case REF: /* IS_A of prototype */
     case WILLBE:
@@ -592,11 +592,11 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
                );
     if (ok < 1) {
       if (ok < 0) {
-        error_reporter(ASC_PROG_FATAL,NULL,0,"Insufficient memory during parse.");
+        ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Insufficient memory during parse.");
         return DEF_ILLEGAL; /* well, having insufficient memory is illegal */
       }
       if (noisy && ok == 0) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"Same instance name \"%s\" used twice.",SCP(name));
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Same instance name \"%s\" used twice.",SCP(name));
         assert(g_lcl_pivot!=NULL);
         if (g_lcl_pivot->e.statement != stat ) {
           WSEM(ASCERR,g_lcl_pivot->e.statement,"  First seen:");
@@ -608,7 +608,7 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
     }
   } else {
     /* should never happen due to new upstream filters. */
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Bad name structure found in variable list.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Bad name structure found in variable list.");
     return DEF_NAME_INCORRECT;
   }
   return DEF_OKAY;
@@ -1717,10 +1717,10 @@ CONST struct TypeDescription *FindRHSType(CONST struct Name *nptr,
   }
 }
 
-/* 
+/*
  * Need to watch out for a.b type names and not mark them?
  */
-static 
+static
 void MarkIfPassedArgs(CONST struct Name *nptr, CONST struct gl_list_t *clist)
 {
   CONST struct Name *pnptr;
@@ -3692,7 +3692,7 @@ enum typelinterr AddRLE(struct gl_list_t *nspace, struct Statement *s)
     /* in typelint we ensured that vl will be length 1 */
     rle = CREATERLE;
     if (rle==NULL) {
-      error_reporter(ASC_PROG_FATAL,__FILE__,__LINE__,"Out of memory error");
+      ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Out of memory error");
       return DEF_ILLEGAL;
     }
     rle->assigned = 0;
@@ -3711,7 +3711,7 @@ enum typelinterr AddRLE(struct gl_list_t *nspace, struct Statement *s)
     while (vl != NULL) {
       rle = CREATERLE;
       if (rle==NULL) {
-        error_reporter(ASC_PROG_FATAL,__FILE__,__LINE__,"Out of memory error");
+        ERROR_REPORTER_HERE(ASC_PROG_FATAL,"Out of memory error");
         return DEF_ILLEGAL;
       }
       rle->assigned = -2; /* or more to the point, we don't care. */
@@ -3845,13 +3845,13 @@ enum typelinterr DoParamName(CONST struct Name *nptr,
 
         return DEF_NAME_DUPLICATE;
       } else {
-        error_reporter(ASC_PROG_FATAL,NULL,0,"Insufficient memory during parameter parse.");
+        ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,"Insufficient memory during parameter parse.");
         return DEF_ILLEGAL; /* well, having insufficient memory is illegal */
       }
     }
     if (isarray && checksubs == CHECKSUBS) {
       if (CheckParameterSubscripts(nptr) != DEF_OKAY) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"Array parameter '%s' uses undefined "
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Array parameter '%s' uses undefined "
 			"subscript. Subscript must be defined by constant leading parameters."
 			,SCP(name)
 		);
@@ -3859,7 +3859,7 @@ enum typelinterr DoParamName(CONST struct Name *nptr,
       }
     }
   } else{
-    error_reporter(ASC_USER_ERROR,NULL,0,"Bad name structure found in parameter list.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Bad name structure found in parameter list.");
     return DEF_NAME_INCORRECT;
   }
   return DEF_OKAY;
@@ -4126,7 +4126,7 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       break;
     case WILLBE:
       if (absorbed != 0) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"Incorrect WILL_BE found in absorbed list.");
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Incorrect WILL_BE found in absorbed list.");
         *errloc = c;
         return DEF_STAT_MISLOCATED;
       }
@@ -4138,7 +4138,7 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       break;
     case CASGN:
       if (absorbed == 0) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"Incorrect assignment found in parameter list.");
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Incorrect assignment found in parameter list.");
         *errloc = c;
         return DEF_STAT_MISLOCATED;
       }
@@ -4437,8 +4437,8 @@ enum typelinterr MatchModelParameters(symchar *name, /* goes w/psl */
 		"it may be that you forgot some :== in the REFINES() list.");
     }
 	error_reporter_end_flush();
-	
-    error_reporter(ASC_PROG_NOTE,NULL,0,"HINT:\n"
+
+    ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"HINT:\n"
       "Parameter definitions in a refining MODEL must match in order\n"
       "the parameters of the MODEL being refined. The type of a parameter\n"
       "in the new MODEL may be more refined than the corresponding\n"
@@ -4845,7 +4845,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
                                    EmptyStatementList());
         if (ParametricChildList(name,tsl,NOCHECKSUBS) != DEF_OKAY) {
           /* contents of tsl have been checked already */
-		  error_reporter(ASC_USER_ERROR,NULL,0,"Model %s victim of bizarre error 1.",
+		  ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Model %s victim of bizarre error 1.",
 				SCP(name));
           DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
         }
@@ -4921,7 +4921,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   }
 
   if (univ==1 && StatementListLength(psl)!=0L) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"UNIVERSAL type %s cannot have parameters because only the first instance of the type could set them.",SCP(name));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"UNIVERSAL type %s cannot have parameters because only the first instance of the type could set them.",SCP(name));
     DestroyTypeDefArgs(sl,pl,psl,rsl,tsl,wsl);
     ClearLCL();
     return NULL;
@@ -5012,16 +5012,16 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
   enum type_kind t;
 
   if (err) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Constant definition '%s' abandoned due to syntax errors.",SCP(name));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Constant definition '%s' abandoned due to syntax errors.",SCP(name));
     return NULL;
   }
   if (refines==NULL) {
-    error_reporter(ASC_USER_ERROR,NULL,0,"Constants must refine constant basetypes.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Constants must refine constant basetypes.");
     return NULL;
   }
   rdesc = FindType(refines);
   if (rdesc==NULL){
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to locate type '%s' for definition of type '%s'.",SCP(refines),SCP(name));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to locate type '%s' for definition of type '%s'.",SCP(refines),SCP(name));
     return NULL;
   }
   t = GetBaseType(rdesc);
@@ -5029,25 +5029,25 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
        t != integer_constant_type &&
        t != symbol_constant_type &&
        t != boolean_constant_type) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Constant '%s' attempts to refine a non-constant type '%s'.",SCP(name),SCP(refines));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Constant '%s' attempts to refine a non-constant type '%s'.",SCP(name),SCP(refines));
     return NULL;
   }
   if (GetUniversalFlag(rdesc)) univ=1;
   /* if new and old defaulted, error */
   if ( (defaulted) && (ConstantDefaulted(rdesc)) ) {
     /* can't default twice */
-    error_reporter(ASC_PROG_ERR,NULL,0,"Constant refinement %s reassigns value of %s.",SCP(name),SCP(refines));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Constant refinement %s reassigns value of %s.",SCP(name),SCP(refines));
     return NULL;
   }
   if (!defaulted && univ && g_compiler_warnings) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"(%s): Universal Constant should be assigned.",SCP(name));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"(%s): Universal Constant should be assigned.",SCP(name));
   }
 
   switch (t) {
   case real_constant_type:
     dim = CheckDimensionsMatch(dim,GetConstantDimens(rdesc));
     if (dim==NULL) {
-      error_reporter(ASC_PROG_ERR,NULL,0,"Dimensions of constant refinement %s don't match those of %s.",SCP(name),SCP(refines));
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dimensions of constant refinement %s don't match those of %s.",SCP(name),SCP(refines));
         return NULL;
     }
     if ( ConstantDefaulted(rdesc) ) {
@@ -5069,7 +5069,7 @@ struct TypeDescription *CreateConstantTypeDef(symchar *name,
     }
     break; /* end symbol const */
   default:
-    error_reporter(ASC_PROG_ERR,NULL,0,"CreateConstantTypeDef miscalled");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateConstantTypeDef miscalled");
     return NULL;
   }
   if (defaulted && !univ && g_compiler_warnings) {
@@ -5100,14 +5100,14 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
   register unsigned long bytesize;
 
   if (err) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Atom definition \"%s\" abandoned due to syntax errors.",SCP(name));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Atom definition \"%s\" abandoned due to syntax errors.",SCP(name));
     DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
     return NULL;
   }
   if (refines!=NULL){
     rdesc = FindType(refines);
     if (rdesc==NULL){
-      error_reporter(ASC_PROG_ERR,NULL,0,"Unable to locate type %s for %s's type definition.",SCP(refines),SCP(name));
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to locate type %s for %s's type definition.",SCP(refines),SCP(name));
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
@@ -5119,14 +5119,14 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
         (GetBaseType(rdesc)==array_type) ||
         (GetBaseType(rdesc)==relation_type) ||
         (GetBaseType(rdesc)==logrel_type) ){
-      error_reporter(ASC_PROG_ERR,NULL,0,"Atom %s attempts to refine a non-ATOM type %s.",SCP(name),SCP(refines));
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Atom %s attempts to refine a non-ATOM type %s.",SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
     dim = CheckDimensionsMatch(dim,GetRealDimens(rdesc));
     /* remarkably, dim check won't bother other atom types */
     if (dim==NULL){
-      error_reporter(ASC_PROG_ERR,NULL,0,"Dimensions of atom refinement %s don't match those of %s.",SCP(name),SCP(refines));
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dimensions of atom refinement %s don't match those of %s.",SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
@@ -5154,12 +5154,12 @@ struct TypeDescription *CreateAtomTypeDef(symchar *name,
       return CreateAtomTypeDesc(name,t,rdesc,mod,clist,pl,sl,bytesize,
         			childd,defaulted,val,dim,univ,ival,sval);
     } else {
-      error_reporter(ASC_PROG_ERR,NULL,0,"CreateAtomTypeDef: unable to MakeChildDesc");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateAtomTypeDef: unable to MakeChildDesc");
       DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
       return NULL;
     }
   } else {
-    error_reporter(ASC_PROG_ERR,NULL,0,"CreateAtomTypeDef: unable to MakeAtomChildList");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CreateAtomTypeDef: unable to MakeAtomChildList");
     DestroyTypeDefArgs(sl,pl,NULL,NULL,NULL,NULL);
     return NULL;
   }
@@ -5262,7 +5262,7 @@ static void DefineEMType(symchar *sym, enum type_kind t)
   if (def) {
     AddType(def);
   } else {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define %s.",SCP(sym));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to define %s.",SCP(sym));
   }
 }
 
@@ -5277,7 +5277,7 @@ static void DefineDType(symchar *sym)
   if (def) {
     AddType(def);
   } else {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define dummy type %s.",SCP(sym));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to define dummy type %s.",SCP(sym));
   }
 }
 
@@ -5292,7 +5292,7 @@ static void DefineWhenType(void)
   if (def) {
     AddType(def);
   } else {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define WHEN type.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to define WHEN type.");
   }
 }
 
@@ -5308,7 +5308,7 @@ static void DefineCType(symchar *sym, enum type_kind t)
   if (def) {
     AddType(def);
   } else {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to define fundamental constant %s.",
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to define fundamental constant %s.",
       SCP(sym));
   }
 }
@@ -5325,7 +5325,7 @@ static void DefineFType(symchar *sym, enum type_kind t)
   if (def) {
     AddType(def);
   } else {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to define fundamental atom %s.",
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to define fundamental atom %s.",
       SCP(sym));
   }
 }

@@ -54,12 +54,12 @@ registerSolver(SlvRegistration regfuncptr){
 	int newclient =-1;
 	int res = slv_register_client(regfuncptr,NULL,NULL,&newclient);
 	if(res!=0){
-		error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register solver");
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register solver");
 		throw runtime_error("Solver::registerSolver: Unable to register solver");
 	}else{
 		string name = slv_solver_name(newclient);
-		error_reporter(ASC_PROG_NOTE,NULL,0,"Registered solver '%s' (index %d)\n", name.c_str(), newclient );
-	} 
+		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Registered solver '%s' (index %d)\n", name.c_str(), newclient );
+	}
 }
 
 const vector<Solver>
@@ -73,7 +73,7 @@ getSolvers(){
 }
 
 /**
-	Register the solvers which will be accessible via index number. The order you 
+	Register the solvers which will be accessible via index number. The order you
 	register them determines the resulting index ids, so don't mess around with the
 	order of stuff in this function.
 

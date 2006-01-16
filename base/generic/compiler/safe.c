@@ -59,18 +59,18 @@ void safe_error_to_stderr(enum safe_err *not_safe)
     case safe_ok:
       return;
     case safe_div_by_zero:
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Division by zero");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Division by zero");
     case safe_complex_result:
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Complex result");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Complex result");
       break;
     case safe_overflow:
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Overflow");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Overflow");
       break;
     case safe_underflow:
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Underflow");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Underflow");
       break;
     case safe_range_error:
-      error_reporter(ASC_PROG_WARNING,NULL,0,"Function range error");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Function range error");
       break;
     }
 }
@@ -221,7 +221,7 @@ double safe_rec(double x,enum safe_err *safe)
    if( x == 0.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"Divide by zero in 1/x expr: returning %g",bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Divide by zero in 1/x expr: returning %g",bogus);
       }
       *safe = safe_div_by_zero;
       return( bogus );
@@ -244,12 +244,12 @@ double safe_cube(register double x,enum safe_err *safe)
       if ( fabs(x) > CUBRTHUGE) {
         bogus=BIGNUM;
         if( safe_print_errors ) {
-           error_reporter(ASC_USER_ERROR,NULL,0,"Overflow in x^3 expr: returning %g.",bogus);
+           ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Overflow in x^3 expr: returning %g.",bogus);
         }
       } else {
         bogus=0.0;
         if( safe_print_errors ) {
-             error_reporter(ASC_USER_ERROR,NULL,0,"Underflow in x^3 expr: returning %g.",bogus);
+             ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Underflow in x^3 expr: returning %g.",bogus);
         }
       }
       *safe = safe_underflow;
@@ -274,7 +274,7 @@ double safe_erf_inv(double x,enum safe_err *safe)
    if( x >= 1.0 ) {
       double bogus = sign*BIGNUM;
       if( safe_print_errors ) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"inv_erf undefined at %g: returning %g",x,bogus);
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"inv_erf undefined at %g: returning %g",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -290,7 +290,7 @@ double safe_erf_inv(double x,enum safe_err *safe)
        ***  always be positive (?).
        **/
       if( dy < 0.0 && safe_print_errors ) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"Found negative slope of %g on erf_inv.",dy);
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Found negative slope of %g on erf_inv.",dy);
       }
    } while( safe_ok && dy > CONV );
    return( y * sign );
@@ -305,7 +305,7 @@ double safe_lnm_inv(double x,enum safe_err *safe)
    if( x > (DBL_MAX > 1.0e308 ? 709.196209 : log(DBL_MAX)) ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-         error_reporter(ASC_USER_ERROR,NULL,0,"Argument %g too large in lnm_inv: returning %g.",x,bogus);
+         ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Argument %g too large in lnm_inv: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -384,7 +384,7 @@ double safe_arcsin_D0(double x,enum safe_err *safe)
    if( x < -1.0 || 1.0 < x ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"arcsin_D0: arcsin undefined at %g: Returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"arcsin_D0: arcsin undefined at %g: Returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -403,7 +403,7 @@ double safe_arccos_D0(double x,enum safe_err *safe)
    if( x < -1.0 || 1.0 < x ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"arccos_D0: arccos undefined at %g: returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"arccos_D0: arccos undefined at %g: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -416,7 +416,7 @@ double safe_arccosh_D0(double x,enum safe_err *safe)
    if( x < 1.0 ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"arccosh_D0: undefined at %g: returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"arccosh_D0: undefined at %g: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -436,7 +436,7 @@ double safe_arctanh_D0(double x,enum safe_err *safe)
    if( x < -1.0 || 1.0 < x ) {
       double bogus = 0.0;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"arctanh_D0: undefined at %g: returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"arctanh_D0: undefined at %g: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -457,7 +457,7 @@ double safe_exp_D0(double x,enum safe_err *safe)
    if( x > (DBL_MAX > 1.0e308 ? 709.196209 : log(DBL_MAX)) ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-        error_reporter(ASC_USER_ERROR,NULL,0,"exp_D0: Argument %g too large: returning %g.",x,bogus);
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"exp_D0: Argument %g too large: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -470,7 +470,7 @@ double safe_ln_D0(double x,enum safe_err *safe)
    if( x <= 0.0 ) {
       double bogus = -BIGNUM;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"ln_D0: undefined at %g: Returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"ln_D0: undefined at %g: Returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -501,7 +501,7 @@ double safe_sqrt_D0(double x,enum safe_err *safe)
       double bogus;
       bogus = -sqrt(-x);
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"sqrt_D0: undefined at %g: returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"sqrt_D0: undefined at %g: returning %g.",x,bogus);
       }
       *safe = safe_complex_result;
       return(bogus);
@@ -697,7 +697,7 @@ double safe_tan_D2(double x,enum safe_err *safe)
    if( fabs(cos(x)) == 0.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-         error_reporter(ASC_USER_ERROR,NULL,0,"tan_D2: Infinite at %g: returning %g.",x,bogus);
+         ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"tan_D2: Infinite at %g: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -734,7 +734,7 @@ double safe_arccosh_D2(double x,enum safe_err *safe)
    if( fabs(x) <= 1.0 ) {
       double bogus = -BIGNUM;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"arccosh_D2: Undefined at %g: returning %g",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"arccosh_D2: Undefined at %g: returning %g",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -753,7 +753,7 @@ double safe_arctanh_D2(double x,enum safe_err *safe)
    if( fabs(x) == 1.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"arctanh_D2: undefined at %g: returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"arctanh_D2: undefined at %g: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -812,7 +812,7 @@ double safe_cbrt_D2(double x,enum safe_err *safe)
    if( fabs(x) == 0.0 ) {
       double bogus = BIGNUM;
       if( safe_print_errors ) {
-	 error_reporter(ASC_USER_ERROR,NULL,0,"cbrt_D2: undefined at %g: returning %g.",x,bogus);
+	 ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"cbrt_D2: undefined at %g: returning %g.",x,bogus);
       }
       *safe = safe_range_error;
       return(bogus);
@@ -855,7 +855,7 @@ double safe_cos_Dn(double x,int n,enum safe_err *safe)
          return( sin(x) );
    }
    if( safe_print_errors ) {
-      error_reporter(ASC_USER_ERROR,NULL,0,"cos_D: Unreachable point reached?!?");
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"cos_D: Unreachable point reached?!?");
    }
    *safe = safe_range_error;
    return 0.0;
@@ -951,7 +951,7 @@ double safe_pow_D0(double x,double y,enum safe_err *safe)
 	 double bogus;
 	 bogus = y < 0.0 ? BIGNUM : 0.0;
 	 if( safe_print_errors ) {
-	    error_reporter(ASC_USER_ERROR,NULL,0,"pow_D0: %g raised to power %g undefined: returning %g",x,y,bogus);
+	    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"pow_D0: %g raised to power %g undefined: returning %g",x,y,bogus);
 	 }
 	 *safe = safe_range_error;
 	 return(bogus);
@@ -968,7 +968,7 @@ double safe_pow_D0(double x,double y,enum safe_err *safe)
       default: {
 	 double bogus = cheap_pow(-x,y,safe);
 	 if( safe_print_errors ) {
-	    error_reporter(ASC_USER_ERROR,NULL,0,"pow_D0: %g raised to power %g undefined: returning %g",x,y,bogus);
+	    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"pow_D0: %g raised to power %g undefined: returning %g",x,y,bogus);
 
 	 }
 	 *safe = safe_range_error;

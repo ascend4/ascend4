@@ -57,7 +57,7 @@ extern "C"{
 Simulation::Simulation(Instance *i, const SymChar &name) : Instanc(i, name), simroot(GetSimulationRoot(i),SymChar("simroot")){
 	is_built = false;
 	// Create an Instance object for the 'simulation root' (we'll call
-	// it the 'simulation model') and it can be fetched using 'getModel()' 
+	// it the 'simulation model') and it can be fetched using 'getModel()'
 	// any time later.
 	//simroot = Instanc(GetSimulationRoot(i),name);
 }
@@ -69,7 +69,7 @@ Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroo
 	bin_objname = old.bin_objname;
 	bin_libname = old.bin_libname;
 	bin_cmd = old.bin_cmd;
-	bin_rm = old.bin_rm;	
+	bin_rm = old.bin_rm;
 }
 
 Simulation::~Simulation(){
@@ -93,10 +93,10 @@ Simulation::checkDoF() const{
         }
         slvDOF_status(sys, &status, &dof);
         switch(status){
-                case 1: error_reporter(ASC_USER_ERROR,NULL,0,"Underspecified; %d degrees of freedom",dof); break;
-                case 2: error_reporter(ASC_USER_NOTE,NULL,0,"Square"); break;
-                case 3: error_reporter(ASC_USER_ERROR,NULL,0,"Structurally singular"); break;
-                case 4: error_reporter(ASC_USER_ERROR,NULL,0,"Overspecified"); break;
+                case 1: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Underspecified; %d degrees of freedom",dof); break;
+                case 2: ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Square"); break;
+                case 3: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Structurally singular"); break;
+                case 4: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Overspecified"); break;
                 case 5:
                         throw runtime_error("Unable to resolve degrees of freedom"); break;
                 default:
@@ -117,7 +117,7 @@ Simulation::run(const Method &method){
 	);
 
 	if(pe == Proc_all_ok){
-		error_reporter(ASC_PROG_NOTE,NULL,0,"Method '%s' was run (check above for errors)\n",method.getName());
+		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Method '%s' was run (check above for errors)\n",method.getName());
 		//cerr << "METHOD " << method.getName() << " COMPLETED OK" << endl;
 	}else{
 		stringstream ss;
@@ -199,7 +199,7 @@ Simulation::check(){
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
 	cerr << "...DONE CHECKING" << endl;
-}		
+}
 
 void
 Simulation::build(){
@@ -227,7 +227,7 @@ Simulation::getFixableVariables(){
 
 	// Get IDs of elegible variables in array at vip...
 	if(!slvDOF_eligible(sys,vip)){
-		error_reporter(ASC_USER_NOTE,NULL,0,"No fixable variables found.");
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"No fixable variables found.");
 	}else{
 		//cerr << "FIXABLE VARS FOUND" << endl;
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
@@ -240,7 +240,7 @@ Simulation::getFixableVariables(){
 		if(vp==NULL){
 			throw runtime_error("Simulation variable list is null");
 		}
-	
+
 		// iterate through this list until we find a -1:
 		int i=0;
 		int var_index = (*vip)[i];
@@ -255,7 +255,7 @@ Simulation::getFixableVariables(){
 			++i;
 			var_index = (*vip)[i];
 		}
-		error_reporter(ASC_USER_NOTE,NULL,0,"Found %d fixable variables.",i);
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Found %d fixable variables.",i);
 		//cerr << "END ELEGIBLE VARS LIST" << endl;
 		ascfree(*vip);
 		//cerr << "FREED VIP LIST" << endl;
@@ -274,21 +274,21 @@ Simulation::solve(Solver solver){
 	cerr << "SIMULATION::SOLVE STARTING..." << endl;
 	enum inst_t k = getModel().getKind();
 	if(k!=MODEL_INST)throw runtime_error("Can't solve: not an instance of type MODEL_INST");
-	
+
 	Instance *i1 = getInternalType();
 	int npend = NumberPendingInstances(&*i1);
-	if(npend)throw runtime_error("Can't solve: There are still %d pending instances");	
+	if(npend)throw runtime_error("Can't solve: There are still %d pending instances");
 
 	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
-	
+
 	cerr << "SIMULATION::SOLVE: SET SOLVER..." << endl;
 	setSolver(solver);
-	
-	
+
+
 	cerr << "PRESOLVING SYSTEM..." << endl;
 	slv_presolve(sys);
 	cerr << "... DONE PRESOLVING" << endl;
-	
+
 	cerr << "SOLVING SYSTEM..." << endl;
 	slv_solve(sys);
 
@@ -297,22 +297,22 @@ Simulation::solve(Solver solver){
 	if(slvstat.ok){
 		cerr << "... DONE SOLVING SYSTEM" << endl;
 	}else{
-		error_reporter(ASC_USER_ERROR,NULL,0,"Solver failed");
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver failed");
 	}
 
 	cerr << "SOLVER PERFORMED " << slvstat.iteration << " ITERATIONS IN " << slvstat.cpu_elapsed << "s" << endl;
 
 	if(slvstat.iteration_limit_exceeded){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Exceeded interation limit");
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Exceeded interation limit");
 	}
 
 	if(slvstat.converged){
-		error_reporter(ASC_USER_SUCCESS,NULL,0,"Solver converged: %d iterations, %3.2e s"
+		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations, %3.2e s"
 			,slvstat.iteration,slvstat.cpu_elapsed);
 	}else{
-		error_reporter(ASC_USER_ERROR,NULL,0,"Solver not converged after %d iteratoins.",slvstat.iteration);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged after %d iteratoins.",slvstat.iteration);
 	}
-	
+
 
 	//slv_print_output(stderr,solver);
 
@@ -333,7 +333,7 @@ Simulation::write(){
 
 //------------------------------------------
 // ASSIGNING SOLVER TO SIMULATION
-		
+
 void
 Simulation::setSolver(Solver &solver){
 	cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
@@ -345,17 +345,17 @@ Simulation::setSolver(Solver &solver){
 	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
 
 	if(selected<0){
-		error_reporter(ASC_PROG_ERROR,NULL,0,"Failed to select solver");
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Failed to select solver");
 		throw runtime_error("Failed to select solver");
 	}
 
 	if(selected!=solver.getIndex()){
 		solver = Solver(slv_solver_name(selected));
-		error_reporter(ASC_PROG_NOTE,NULL,0,"Substitute solver '%s' (index %d) selected.\n", solver.getName().c_str(), selected);
+		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Substitute solver '%s' (index %d) selected.\n", solver.getName().c_str(), selected);
 	}
-	
+
 	if( slv_eligible_solver(sys) <= 0){
-		error_reporter(ASC_PROG_ERROR,NULL,0,"Inelegible solver '%s'", solver.getName().c_str() );
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Inelegible solver '%s'", solver.getName().c_str() );
 		throw runtime_error("Inelegible solver");
 	}
 }

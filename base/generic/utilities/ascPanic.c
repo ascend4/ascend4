@@ -26,7 +26,7 @@
 #include "utilities/ascPanic.h"
 
 #define PANIC_MSG_MAXLEN 2047
-/**< The maximum length of the panic message.	
+/**< The maximum length of the panic message.
 	Used to create a buffer to hold the message.
 */
 
@@ -37,8 +37,8 @@ static PanicCallbackFunc f_panic_callback_func = NULL;
 
 #ifdef __WIN32__
 static int f_display_MessageBox = TRUE;
-/**< On Windows only, flag to enable/disable display of the MessageBox 
-	in Asc_Panic(). 
+/**< On Windows only, flag to enable/disable display of the MessageBox
+	in Asc_Panic().
 */
 #endif
 
@@ -58,7 +58,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   int cancel = FALSE;          /* If non-zero, do not call exit().  Default is to exit() */
 
   /* Fail loudly if ASCERR isn't set to a file pointer -- can't use asc_assert here! */
-  assert(NULL != ASCERR);      
+  assert(NULL != ASCERR);
 
   /* Give the name of the function where the panic occurred */
   if( function != NULL ) {
@@ -77,15 +77,15 @@ void Asc_Panic(CONST int status, CONST char *function,
   msg[p++] = '\n';
   msg[p++] = '\0';
 
-  /* 
+  /*
 	Ensure that our messages don't get left in the GUI
 	that is about to vanish...
   */
   error_reporter_set_callback(NULL);
 
   /* Print the message to ASCERR */
-  error_reporter(ASC_PROG_FATAL,NULL,0,msg);
-	
+  ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,msg);
+
   /*
 	Write the message to g_panic_outfile if it is not empty
 	and we can actually write to that location.  Print a

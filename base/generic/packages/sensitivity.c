@@ -74,7 +74,7 @@ static real64 **make_matrix(int nrows, int ncols)
 }
 
 /**
-	Free a matrix from memory 
+	Free a matrix from memory
 	@param matrix Memory location for the matrix
 	@param nrows Number of rows in the matrix
 */
@@ -92,7 +92,7 @@ static void free_matrix(real64 **matrix, int nrows)
   free(matrix);
 }
 
-/**	
+/**
 	Fetch an element from a branch of an arglist...?
 */
 static struct Instance *FetchElement(struct gl_list_t *arglist,
@@ -122,7 +122,7 @@ static slv_system_t PreSolve(struct Instance *inst)
 
   sys = system_build(inst);
   if (sys==NULL) {
-	error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,
       "Something radically wrong in creating solver.");
     return NULL;
   }
@@ -132,7 +132,7 @@ static slv_system_t PreSolve(struct Instance *inst)
   ind = 0;
   while (strcmp(slv_solver_name(ind),"QRSlv")) {
     if (ind >= g_SlvNumberOfRegisteredClients) {
-	  error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,
         "QRSlv must be registered client.");
       return NULL;
     }
@@ -172,7 +172,7 @@ static int ReSolve(slv_system_t sys)
   slv_solve(sys);
   return 0;
 }
-#endif 
+#endif
 
 /**
 	Build then presolve the solve an instance...
@@ -183,7 +183,7 @@ static int DoSolve(struct Instance *inst)
 
   sys = system_build(inst);
   if (!sys) {
-	error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,
       "Something radically wrong in creating solver.");
     return 1;
   }
@@ -213,7 +213,7 @@ int do_solve_eval(struct Slv_Interp *slv_interp,
   (void)slv_interp; (void)i; (void)whichvar;
 
   if (len!=2) {
-	error_reporter(ASC_USER_ERROR,__FILE__,__LINE__,
+	ERROR_REPORTER_HERE(ASC_USER_ERROR,
       "Wrong number of args to do_solve_eval.");
     return 1;
   }

@@ -2045,7 +2045,7 @@ static struct relation_term *CreateNaryTerm(CONST struct Func *f)
  * If copyunion is crs_NOUNION, the share ptr is init to NULL and user
  * must set refcount,relop after the allocate a UNION or whatever.
  * If copyunion is crs_NEWUNION, share ptr is allocated and configured.
- *  
+ *
  */
 struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 {
@@ -2062,7 +2062,7 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
   newrelation->d =(dim_type *)WildDimension();
 
   if (copyunion) {
-    newrelation->share = 
+    newrelation->share =
         (union RelationUnion *)ascmalloc(sizeof(union RelationUnion));
     assert(newrelation->share!=NULL);
     RelationRefCount(newrelation) = 0;
@@ -3270,7 +3270,7 @@ struct relation *CreateTokenRelation(struct Instance *reference,
     break;
   default:
     *err = incorrect_structure;
-    error_reporter(ASC_USER_ERROR,NULL,0,"Error expression missing relational operator.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Error expression missing relational operator.");
     if (g_relation_var_list!=NULL) {
        DestroyVarList(g_relation_var_list,relinst);
     }
@@ -3499,7 +3499,7 @@ union RelationUnion *CopyRelationShare(union RelationUnion *ru,
 {
   struct TokenRelation *result,*src;
   long int delta;
-  
+
   if (type != e_token) {
     FPRINTF(ASCERR,
             "CopyRelationShare not implemented except for token relations\n");
@@ -3697,7 +3697,7 @@ static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
 	return 1;
       }
     }
-    if (GetEvaluationForTable() != NULL && 
+    if (GetEvaluationForTable() != NULL &&
         (NULL != (fvp=FindForVar(GetEvaluationForTable(),str)))) {
       if (GetForKind(fvp)==f_integer) {
 	return -1;
@@ -3949,7 +3949,7 @@ static int CheckExpr(CONST struct Instance *ref,
 }
 
 /* see header. returns 1 if relation expression is fully instantiable
- * ie all vars exist, and, if need be, properly initialized. 
+ * ie all vars exist, and, if need be, properly initialized.
  */
 int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex)
 {
@@ -4231,7 +4231,7 @@ struct relation *CopyRelationByReference(CONST struct Instance *src_inst,
   src = (struct relation *)GetInstanceRelation(src_inst,&type);
   if (!src) return NULL;
 
-  result = CreateRelationStructure(RelRelop(src),crs_NOUNION); 
+  result = CreateRelationStructure(RelRelop(src),crs_NOUNION);
   size = sizeof(struct relation);
   ascbcopy(src,result,sizeof(struct relation));
     /* copy everything. Everything includes the pointer to the rel union. */

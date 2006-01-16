@@ -32,9 +32,9 @@
 
 /** @file
 	This is the first pass implemenation of some rootfinding codes.
-	@see page 360 of NR in C. 
+	@see page 360 of NR in C.
 
-	@TODO FIXME Use NETLIB code instead of this to avoid copyright 
+	@TODO FIXME Use NETLIB code instead of this to avoid copyright
 	'problems' with the NR in C boys
  */
 #include <stdio.h>
@@ -97,7 +97,7 @@ double zbrent(ExtEvalFunc *func,	/* the evaluation function */
   }
 
   if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
-    error_reporter(ASC_USER_ERROR,NULL,0,"Compiler: zbrent: Root must be bracketed.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Compiler: zbrent: Root must be bracketed.");
     *status = -1;		/* cannot invert */
     return ZBIGNUM;
   }
@@ -167,7 +167,7 @@ double zbrent(ExtEvalFunc *func,	/* the evaluation function */
       return ZBIGNUM;
     }
   }
-  error_reporter(ASC_USER_ERROR,NULL,0,"Compiler: zbrent: Maximum number of iterations exceeded.");
+  ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Compiler: zbrent: Maximum number of iterations exceeded.");
   *status = -1;		/* cannot invert */
   return ZBIGNUM;	/* NOTREACHED */
 }

@@ -147,13 +147,13 @@ or symbol values in each of the CASEs
 /*
  * Variables to switch old and new pass 2 instantiation.
  * The condition for using new pass 2 (anonymous type-based
- * relation copying) is g_use_copyanon != 0 
+ * relation copying) is g_use_copyanon != 0
  * || FORCE applied.
  */
 
 int g_use_copyanon = 1;
 /* g_use_copyanon is the user switch for anonymous type based relation
- * copying. if 0, no copying by that method is done. 
+ * copying. if 0, no copying by that method is done.
  */
 
 #if TIMECOMPILER
@@ -395,7 +395,7 @@ int CalcSetType(symchar *c, struct Statement *statement)
  * probably should check constantness too but does not.
  * return 0 if ok, 1 if not.
  */
-static 
+static
 int CheckSetVal(struct value_t setval)
 {
   if (ValueKind(setval) != set_value) {
@@ -519,12 +519,12 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   }
   if (StatInFOR(statement)) {
     MarkStatContext(statement,context_WRONG);
-    WSEM(ASCERR,statement, "Add another FOR index. In FOR loops," 
+    WSEM(ASCERR,statement, "Add another FOR index. In FOR loops,"
          " all array subscripts must be scalar values, not sets.");
     WSS(ASCERR,statement);
   } else {
     MarkStatContext(statement,context_WRONG);
-    WSEM(ASCERR,statement, "Subscripts of conflicting or incorrect types" 
+    WSEM(ASCERR,statement, "Subscripts of conflicting or incorrect types"
          " in rectangular array.");
     WSS(ASCERR,statement);
   }
@@ -1757,7 +1757,7 @@ struct Instance *MakeSimpleInstance(struct TypeDescription *def,
       break;
     case relation_type:
       inst = NULL;
-      FPRINTF(ASCERR,"Type '%s' is not allowed in IS_A.\n", 
+      FPRINTF(ASCERR,"Type '%s' is not allowed in IS_A.\n",
               SCP(GetBaseTypeName(relation_type)));
     case logrel_type:
       inst = NULL;
@@ -1907,9 +1907,9 @@ int ArrayElementsTypeCompatible(CONST struct Instance *ipass,
     if (InstanceKind(i) == SET_ATOM_INST) {
       /* both should be of same type "set" */
       if (atype!=ptype ||
-          (IntegerSetInstance(i)==0 && 
+          (IntegerSetInstance(i)==0 &&
            stype == GetBaseTypeName(integer_constant_type))
-          || (IntegerSetInstance(i)==1 && 
+          || (IntegerSetInstance(i)==1 &&
               stype == GetBaseTypeName(symbol_constant_type))
          ) {
         /* set type mismatch */
@@ -4675,7 +4675,7 @@ struct Instance *MakeRelationInstance(struct Name *name,
       if (InstanceChild(parent,pos)==NULL){
         /* must make array */
         child = MakeSparseArray(parent,name,stat,NULL,0,NULL,NULL,NULL);
-      } else {	
+      } else {
       	/* must add array element */
         child = AddArrayChild(parent,name,stat,NULL,NULL,NULL);
       }
@@ -4795,7 +4795,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
                      "Unmade or Undefined instances in relation",3);
           return 1;
         case impossible_instance:
-          WSSM(ASCERR,statement, 
+          WSSM(ASCERR,statement,
                      "Relation contains an impossible instance",3);
           return 1;
         case correct_instance:
@@ -6017,7 +6017,7 @@ static
 int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
 {
   struct gl_list_t *nl;
-  unsigned long c,len;                  
+  unsigned long c,len;
   struct Expr *en;
 
   assert(n!=NULL);
@@ -6713,7 +6713,7 @@ int CheckRelModName(struct Instance *work, struct Name *name)
      }
     }
     else {
-    FPRINTF(ASCERR,"\n");      
+    FPRINTF(ASCERR,"\n");
     FPRINTF(ASCERR,
     "Error in WHEN statement. Name assigned to more than one %s \n",
     "instance type:");
@@ -6988,7 +6988,7 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
     FPRINTF(ASCERR,"Innapropriate value type in the list of %s\n",
 	    "values of a CASE of a WHEN statement");
     FPRINTF(ASCERR,"Only symbols or integers and booleans are allowed\n");
-    FPRINTF(ASCERR,"\n");    
+    FPRINTF(ASCERR,"\n");
     return 0;
   }
 }
@@ -7029,7 +7029,7 @@ int CheckWhenVariableNode(struct Instance *ref,
       FPRINTF(ASCERR,"\n");
       FPRINTF(ASCERR,"Innapropriate index in the list of %s\n",
 	      "variables of a WHEN statement");
-      FPRINTF(ASCERR,"only symbol or integer allowed\n");      
+      FPRINTF(ASCERR,"only symbol or integer allowed\n");
       FPRINTF(ASCERR,"\n");
       return 0;
     }
@@ -7108,9 +7108,9 @@ int CheckWhenVariableNode(struct Instance *ref,
         FPRINTF(ASCERR,"\n");
         FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
 		"variables of a WHEN statement");
-        FPRINTF(ASCERR,"Only boolean, integer and symbols are allowed\n"); 
+        FPRINTF(ASCERR,"Only boolean, integer and symbols are allowed\n");
         WriteName(ASCERR,name);
-        FPRINTF(ASCERR,"\n");	
+        FPRINTF(ASCERR,"\n");
 	return 0;
       }
     } else {
@@ -7118,9 +7118,9 @@ int CheckWhenVariableNode(struct Instance *ref,
       FPRINTF(ASCERR,"\n");
       FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
 	      "variables of a WHEN statement");
-      FPRINTF(ASCERR,"Multiple instances of\n"); 
+      FPRINTF(ASCERR,"Multiple instances of\n");
       WriteName(ASCERR,name);
-      FPRINTF(ASCERR,"\n");	
+      FPRINTF(ASCERR,"\n");
       return 0;
     }
   }
@@ -7260,7 +7260,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
     WriteInstanceName(ASCERR,inst,NULL);
     FPRINTF(ASCERR,"\n");
     WSEM(ASCERR,statement,"The following statement will not be executed: \n");
-    FPRINTF(ASCERR,"\n");  
+    FPRINTF(ASCERR,"\n");
       return 0;
     }
     if ( CheckWhenName(inst,wname) == -1) return 1;
@@ -7275,7 +7275,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
     FPRINTF(ASCERR,"In ");
     WriteInstanceName(ASCERR,inst,NULL);
     WSEM(ASCERR,statement," the following statement will not be executed:\n");
-    FPRINTF(ASCERR,"\n");    
+    FPRINTF(ASCERR,"\n");
     return 0;
   }
   w1 = WhenStatCases(statement);
@@ -7291,7 +7291,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
             WriteInstanceName(ASCERR,inst,NULL);
             WSEM(ASCERR,statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");    
+            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
           if (!CheckWhenSetList(inst,s,p2)) {
@@ -7300,7 +7300,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
             WriteInstanceName(ASCERR,inst,NULL);
             WSEM(ASCERR,statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");    
+            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
           p1 = &vl[0];
@@ -7313,7 +7313,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
             WriteInstanceName(ASCERR,inst,NULL);
             WSEM(ASCERR,statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");    
+            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
       }
@@ -7326,7 +7326,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
             WriteInstanceName(ASCERR,inst,NULL);
             WSEM(ASCERR,statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");  	    
+            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
       }
@@ -7337,7 +7337,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
         WriteInstanceName(ASCERR,inst,NULL);
         WSEM(ASCERR,statement,
 	     " the following statement will not be executed: \n");
-        FPRINTF(ASCERR,"\n");  
+        FPRINTF(ASCERR,"\n");
 	return 0;
       }
       w1 = NextWhenCase(w1); }
@@ -8400,7 +8400,7 @@ void MakeWhenReference(struct Instance *ref,
     } else {
       gl_destroy(instances);
       FPRINTF(ASCERR,"\n");
-      WriteName(ASCERR,name); 
+      WriteName(ASCERR,name);
       Asc_Panic(2, NULL,
                 "Error in WHEN statement. Name assigned"
                 " to more than one instance type\n");
@@ -9662,7 +9662,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
 #endif
         Pass2RealExecuteFOR(inst,statement);
         /* p2ref expected to succeed or fail permanently.
-         * if it doesn't, this needs fixing. 
+         * if it doesn't, this needs fixing.
          */
       }
       break;
@@ -9673,7 +9673,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       break;
     case REL:
 #ifdef DEBUG_RELS
-	  error_reporter_start(ASC_PROG_NOTE,NULL,0);	  
+	  error_reporter_start(ASC_PROG_NOTE,NULL,0);
       WriteStatement(stderr, statement, 6);
 	  error_reporter_end_flush();
 #endif
@@ -10232,7 +10232,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   case set_value:
     sptr = SetValue(value);
     switch(SetKind(sptr)){
-    case empty_set: 
+    case empty_set:
 #ifdef DEBUG_RELS
       FPRINTF(stderr,"Pass2RealExecuteFOR empty_set.\n");
 #endif
@@ -11212,11 +11212,11 @@ void Pass4ProcessPendingInstances(void)
         /* we do away with TryArrayExpansion because it doesn't do whens */
         if (BitListEmpty(blist)) {
           /*
-	   * delete PENDING model. 
+	   * delete PENDING model.
 	   */
 	  RemoveInstance(PendingInstance(work));
         } else {
-	  /* 
+	  /*
 	   * bitlist is still unhappy, but there's nothing to do about it.
            * Move the instance to the bottom and increase the counter
 	   * so that we do not visit it again.
@@ -12175,7 +12175,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   /* At this point, there may be unexecuted non-relation
    * statements, but they can never be executed. The
    * pending list is therefore empty. We know how many.
-   * The bitlists know which ones. 
+   * The bitlists know which ones.
    */
   if (result!=NULL) {
 #ifdef DEBUG_RELS
@@ -12209,8 +12209,8 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   if (result!=NULL) {
     /* now set the bits for relation statements and add pending models */
     SilentVisitInstanceTree(result,Pass3SetLogRelBits,0,0);
-    /* note, the order of the visit might be better 1 than 0. don't know 
-     * at present order 0, so we do lower models before those near root 
+    /* note, the order of the visit might be better 1 than 0. don't know
+     * at present order 0, so we do lower models before those near root
      */
     result = Pass3InstantiateModel(result,&pass3pendings);
    /* result will not move as currently implemented */
@@ -12242,7 +12242,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
       DefaultInstanceTree(result);
     }
     else{
-      error_reporter(ASC_USER_WARNING,NULL,0,"There are unexecuted statements "
+      ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"There are unexecuted statements "
 		"in the instance.\nDefault assignments not executed.");
     }
   }

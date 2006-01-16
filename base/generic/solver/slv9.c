@@ -237,7 +237,7 @@ struct slv9_system_structure {
   struct dis_discrete    **dvlist;      /* Dis vars list (NULL terminated) */
   struct logrel_relation **lrlist;      /* Logrels list(NULL terminated)*/
   struct bnd_boundary    **blist;       /* Variable list (NULL terminated) */
-  struct var_variable    **mvlist;      
+  struct var_variable    **mvlist;
   struct dis_discrete    **mdvlist;     /* We will not touch the masters list,
 					 * but they can provide very useful
 					 * information to the conditional
@@ -259,22 +259,22 @@ struct slv9_system_structure {
    * For search consistency analysis
    */
    struct ds_subregion_list subregion_list;
-                                        /* 
+                                        /*
 					 * Information about the subregions
 					 * visited during the solution of the
 					 * conditional model
 					 */
    struct ds_subregions_visited subregions_visited;
-                                        /* 
-					 * ID number of the subregions 
-					 * visited 
+                                        /*
+					 * ID number of the subregions
+					 * visited
 					 */
    int32            *bool_mindex;       /* master indices of boolean vars in
-					 * the problem associated with WHENs 
+					 * the problem associated with WHENs
 					 */
    int32 need_consistency_analysis;    /* Is the consistency analysis needed */
 
- 
+
   /*
    *  Solver information
    */
@@ -363,11 +363,11 @@ static int check_system(slv9_system_t sys)
 /*
  *  Search Consistency Analysis during iterative process
  *  ---------------------------------------------------------
- *  The caller of this functions is in charge of 
+ *  The caller of this functions is in charge of
  *  defining the extension of the analysis by passing an integer
- *  which will tell us if 1) the analysis consider only the current 
+ *  which will tell us if 1) the analysis consider only the current
  *  and the previous alternatives or 2) the analysis consider all the
- *  alternatives visited at current the state of the solution 
+ *  alternatives visited at current the state of the solution
  *  algorithm.
  */
 
@@ -385,7 +385,7 @@ static int check_system(slv9_system_t sys)
 /*
  *  Appends the subregion_visited into the list
  */
-static void append_subregion(struct ds_subregion_list *sl, 
+static void append_subregion(struct ds_subregion_list *sl,
 			     struct subregionID sub)
 {
   if( sl->length == sl->capacity ) {
@@ -432,7 +432,7 @@ static unsigned long powoftwo (int32 expo)
 {
   unsigned long val;
   int32 c;
- 
+
   val = 1;
   for (c=1; c<= expo; c++) {
     val = val * 2;
@@ -453,7 +453,7 @@ static void ID_and_storage_subregion_information(slv_system_t server,
   struct dis_discrete **bvlist;
   struct dis_discrete *cur_dis;
   struct ds_subregion_list *sl;
-  struct ds_subregions_visited *sv; 
+  struct ds_subregions_visited *sv;
   struct subregionID *sub;
   dis_filter_t dfilter;
   unsigned long val, visited, sID;
@@ -562,7 +562,7 @@ static void destroy_subregion_information(SlvClientToken asys)
   if (sys->subregion_list.sub_stack != NULL) {
     destroy_array(sys->subregion_list.sub_stack);
   }
-  
+
   if (sys->bool_mindex != NULL) {
     destroy_array(sys->bool_mindex);
   }
@@ -636,7 +636,7 @@ static void cases_reorder(int32 *cur_cases, int32 *correct_cases, int32 ncases)
 /*
  * Restoring orignal configuration of the system
  */
-static void restore_configuration(slv_system_t server, 
+static void restore_configuration(slv_system_t server,
 				  struct gl_list_t *bollist)
 
 {
@@ -690,7 +690,7 @@ static struct gl_list_t *get_list_of_booleans(slv_system_t server,
 
   sys->bool_mindex = (int32 *)(ascmalloc(numdvf*sizeof(int32)));
   boolvars = gl_create(numdvf);
- 
+
   dcount = 0;
   for (d=0; d<numdvs; d++) {
     cur_dis = bvlist[d];
@@ -733,7 +733,7 @@ static int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
   for (v=0; v<mnum; v++) {
     mvar = vmlist[v];
     var_set_eligible_in_subregion(mvar,FALSE);
-  } 
+  }
 
   cur_cases = cases_matching(disvars,&ncases);
   correct_cases = create_array(ncases,int32);
@@ -785,7 +785,7 @@ static int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
         var_set_eligible_in_subregion(mvar,TRUE);
         count++;
       }
-      destroy_array(vars);   
+      destroy_array(vars);
     }
     if (dof > count) {
 #if DEBUG_CONSISTENCY
@@ -812,7 +812,7 @@ static int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
       var_set_eligible(mvar,FALSE);
     }
     var_set_eligible_in_subregion(mvar,FALSE);
-  }   
+  }
 
   return 1;
 }
@@ -844,7 +844,7 @@ static int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
 
   dlen = gl_length(disvars);
   lenv = sys->subregions_visited.length;
-  lens = sys->subregion_list.length; 
+  lens = sys->subregion_list.length;
 
   if (all_sub == 0) { /* current and previous subregion */
     for (v=lenv-2; v<lenv; v++) {
@@ -913,14 +913,14 @@ static int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
 
 /*
  * Perform consistency analysis for the visited/current-previous subregions.
- * If all_subs is 1, the analysis takes in account all of the subregions 
+ * If all_subs is 1, the analysis takes in account all of the subregions
  * visited by the solution algorithm at the current point if the solution
  * procedure. If all_subs is 0, the analysis is only for the current
  * and previous subregion.
  */
 static int32 consistency(slv_system_t server, SlvClientToken asys,
 			 struct gl_list_t *bollist,
-			 int32 all_subs, int32 *terminate) 
+			 int32 all_subs, int32 *terminate)
 {
   slv9_system_t sys;
   struct var_variable **vmlist;
@@ -943,7 +943,7 @@ static int32 consistency(slv_system_t server, SlvClientToken asys,
   for (v=0; v<mnum; v++) {
     mvar = vmlist[v];
     var_set_eligible(mvar,TRUE);
-  } 
+  }
 
   dlen = gl_length(bollist);
 
@@ -957,7 +957,7 @@ static int32 consistency(slv_system_t server, SlvClientToken asys,
     FPRINTF(ASCERR,"returning failed search after S e a r c h \n");
 #endif /* DEBUG_CONSISTENCY */
     return result;
-  }  
+  }
 
   /*
    * Getting the "globally" eligible variables
@@ -1050,7 +1050,7 @@ static int32 consistency(slv_system_t server, SlvClientToken asys,
  */
 static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
 			           struct gl_list_t *bollist,
-			           int32 all_subs, int32 **eliset) 
+			           int32 all_subs, int32 **eliset)
 {
   slv9_system_t sys;
   struct var_variable **vmlist;
@@ -1071,13 +1071,13 @@ static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
   for (v=0; v<mnum; v++) {
     mvar = vmlist[v];
     var_set_eligible(mvar,TRUE);
-  } 
-  
+  }
+
   dlen = gl_length(bollist);
 
   /*
    * initializing
-   */ 
+   */
   *eliset = NULL;
   terminate = 1;
 
@@ -1157,8 +1157,8 @@ static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
  */
 static int32 consistent_eligible_set_for_subregions(slv_system_t server,
 						    SlvClientToken asys,
-				                    int32 **vlist, 
-						    int32 all_subs) 
+				                    int32 **vlist,
+						    int32 all_subs)
 {
   struct gl_list_t *blist;
   struct boolean_values bval;
@@ -1202,7 +1202,7 @@ static int32 consistent_eligible_set_for_subregions(slv_system_t server,
  * and previous subregion.
  */
 static int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
-				int32 **vlist, int32 all_subs) 
+				int32 **vlist, int32 all_subs)
 {
   slv9_system_t sys;
   struct var_variable ** vmlist;
@@ -1258,7 +1258,7 @@ static int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
         var_set_potentially_fixed(mvar,FALSE);
 #if DEBUG_CONSISTENCY
         FPRINTF(ASCERR,"Variable in consistent set: \n");
-        print_var_name(ASCERR,sys,mvar); 
+        print_var_name(ASCERR,sys,mvar);
 #endif /* DEBUG_CONSISTENCY */
         (*vlist)[elnum] = v;
         elnum++;
@@ -1290,9 +1290,9 @@ static int32 analyze_subregions(slv_system_t server,SlvClientToken asys,
  * Finds the globally eligible set of variables only for the current and
  * previous subregions
  */
-static int32 eligible_set_for_neighboring_subregions(slv_system_t server, 
+static int32 eligible_set_for_neighboring_subregions(slv_system_t server,
 					            SlvClientToken asys,
-						    int32 **vlist) 
+						    int32 **vlist)
 {
   slv9_system_t sys;
 
@@ -1310,7 +1310,7 @@ static int32 eligible_set_for_neighboring_subregions(slv_system_t server,
     FPRINTF(ASCERR,"All the subregions have the same structure \n");
     return 0;
   }
- 
+
   if (consistent_eligible_set_for_subregions(server,asys,vlist,0)) {
     return 1;
   }
@@ -1323,9 +1323,9 @@ static int32 eligible_set_for_neighboring_subregions(slv_system_t server,
  * Perform the consistency analysis algorithm only for the current and
  * previous subregions
  */
-static int32 consistency_for_neighboring_subregions(slv_system_t server, 
+static int32 consistency_for_neighboring_subregions(slv_system_t server,
 					            SlvClientToken asys,
-						    int32 **vlist) 
+						    int32 **vlist)
 {
   slv9_system_t sys;
 
@@ -1354,13 +1354,13 @@ static int32 consistency_for_neighboring_subregions(slv_system_t server,
 
 
 /*
- * Consistency analysis for visisted subregions. This function 
- * gets the subregions that the solution algorithm has visited and 
+ * Consistency analysis for visisted subregions. This function
+ * gets the subregions that the solution algorithm has visited and
  * analyzes them.
  */
 static int32 eligible_set_for_subregions(slv_system_t server,
 					 SlvClientToken asys,
-					 int32 **vlist) 
+					 int32 **vlist)
 {
   slv9_system_t sys;
 
@@ -1388,13 +1388,13 @@ static int32 eligible_set_for_subregions(slv_system_t server,
 
 
 /*
- * Consistency analysis for visisted subregions. This function 
- * gets the subregions that the solution algorithm has visited and 
+ * Consistency analysis for visisted subregions. This function
+ * gets the subregions that the solution algorithm has visited and
  * analyzes them.
  */
 static int32 consistency_analysis_for_subregions(slv_system_t server,
 					         SlvClientToken asys,
-						 int32 **vlist) 
+						 int32 **vlist)
 {
   slv9_system_t sys;
 
@@ -3260,7 +3260,7 @@ static void get_multipliers(SlvClientToken asys,
    * dividing rhs
    */
   for (row=0; row<nrel; row++) {
-    grad_obj[mtx_row_to_org(sys->lin_mtx,row)] = 
+    grad_obj[mtx_row_to_org(sys->lin_mtx,row)] =
                     grad_obj[mtx_row_to_org(sys->lin_mtx,row)] * weights[row];
   }
 
@@ -4872,31 +4872,31 @@ static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
   sys->opt_var_values = NULL;
   if (sys->vlist == NULL) {
     ascfree(sys);
-    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no variables.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no variables.");
     *statusindex = -2;
     return NULL;
   }
   if (sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
-    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no relations or objective.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no relations or objective.\n");
     *statusindex = -1;
     return NULL;
   }
   if (sys->dvlist == NULL) {
     ascfree(sys);
-    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no discrete variables.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no discrete variables.\n");
     *statusindex = -2;
     return NULL;
   }
   if (sys->lrlist == NULL) {
     ascfree(sys);
-    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no logrelations.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no logrelations.\n");
     *statusindex = -1;
     return NULL;
   }
   if (sys->blist == NULL) {
     ascfree(sys);
-    error_reporter(ASC_PROG_ERROR,NULL,0,"CMSlv called with no boundaries.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"CMSlv called with no boundaries.\n");
     *statusindex = -2;
     return NULL;
   }
@@ -4906,7 +4906,7 @@ static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
 
   if (get_solvers_tokens(sys,server)) {
     ascfree(sys);
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Solver(s) required by CMSlv were not registered. System cannot be created.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Solver(s) required by CMSlv were not registered. System cannot be created.");
     *statusindex = -1;
     return NULL;
   }

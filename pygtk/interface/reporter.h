@@ -2,7 +2,7 @@
 #define ASCXX_REPORTER_H
 
 #ifdef ASCXX_USE_PYTHON
-#include <Python.h>
+# include <Python.h>
 #endif
 
 #include <cstdarg>
