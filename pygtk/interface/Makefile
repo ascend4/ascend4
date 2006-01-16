@@ -26,16 +26,10 @@ ASCEND_CPPFLAGS = -I../../base/generic -I../../base/generic/solver -I../../base/
 #-------------------------
 # Linking with ASCEND
 
-ASC_TOOLS = autotools
+USE_JAM_LIBS = 1
 
-ifeq ($(ASCTOOLS),jam)
-	# If you build with jam
-	ARDIR = $(SOURCE_ROOT)/jam/Release/linux	
-	ASC_BUILD_LIBS = cd $(SOURCE_ROOT)/jam; jam libs
-else
-	ARDIR = $(SOURCE_ROOT)/base/autotools/archive
-	ASC_BUILD_LIBS = cd $(SOURCE_ROOT)/base/autotools; make libs
-endif
+ARDIR = $(SOURCE_ROOT)/base/autotools/archive
+ASC_BUILD_LIBS = cd $(SOURCE_ROOT)/base/autotools; make libs
 
 # Libs now are named the same way on both autotools and jam builds...
 ASC_LIBS_STEM = compiler packages solver utilities general 
@@ -46,6 +40,7 @@ $(ASC_LIBS): libs
 .PHONY: libs
 
 libs:
+	@echo $(ASC_LIBS)
 	$(ASC_BUILD_LIBS)
 
 #------------------
