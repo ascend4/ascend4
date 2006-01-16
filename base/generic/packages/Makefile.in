@@ -56,11 +56,10 @@ EXEC_LIBS =
 #  The next variables list the source files (LIB_SCRS) to compile
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
-LIB_SRCS = \
-	sensitivity.c ascFreeAllVars.c
-
 LIB_OBJS = \
 	sensitivity.o ascFreeAllVars.o
+
+LIB_SRCS = $(LIB_OBJS:%.o=%.c)
 
 
 

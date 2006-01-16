@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include "utilities/ascConfig.h"
+#include "utilities/error.h"
 #include "compiler/instance_enum.h"
 #include "compiler/compiler.h"
 #include "general/list.h"
@@ -38,31 +39,7 @@
 
 #define DEBUG 1
 
-/*
- * This file attempts to implement the extraction of dy_dx from
- * a system of equations. If one considers a black-box where x are
- * the input variables, u are inuut parameters, y are the output
- * variables, f(x,y,u) is the system of equations that will be solved
- * for given x and u, then one can extract the sensitivity information
- * of y wrt x.
- * One crude but simple way of doing this is to finite-difference the
- * given black box, i.e, perturb x, n\subx times by delta x, resolve
- * the system of equations at the new value of x, and compute
- * dy/dx = (f(x\sub1) - f(x\sub2))/(x\sub1 - x\sub2).
- * This is known to be very expensive.
- *
- * The solution that will be adopted here is to formulate the Jacobian J of
- * the system, (or the system is already solved, to grab the jacobian at
- * the solution. Develop the sensitivity matrix df/dx by exact numnerical
- * differentiation; this will be a n x n\subx matrix. Compute the LU factors
- * for J, and to solve column by column to : LU dz/dx = df/dx. Here
- * z, represents all the internal variables to the system and the strictly
- * output variables y. In other words J = df/dz.
- *
- * Given the solution of the above problem we then simply extract the rows
- * of dz/dx, that pertain to the y variables that we are interested in;
- * this will give us dy/dx.
- */
+/* see documentation in sensitivity.h */
 
 #if 0
 static real64 *zero_vector(real64 *vec, int size)
@@ -75,6 +52,16 @@ static real64 *zero_vector(real64 *vec, int size)
 }
 #endif
 
+/*----------------------------------------------------
+  UTILITY ROUTINES
+*/
+
+/**
+	Allocate memory for a matrix
+	@param nrows Number of rows
+	@param ncols Number of colums
+	@return Pointer to the allocated matrix memory location
+*/
 static real64 **make_matrix(int nrows, int ncols)
 {
   real64 **result;
@@ -86,6 +73,11 @@ static real64 **make_matrix(int nrows, int ncols)
   return result;
 }
 
+/**
+	Free a matrix from memory 
+	@param matrix Memory location for the matrix
+	@param nrows Number of rows in the matrix
+*/
 static void free_matrix(real64 **matrix, int nrows)
 {
   int i;
@@ -100,6 +92,9 @@ static void free_matrix(real64 **matrix, int nrows)
   free(matrix);
 }
 
+/**	
+	Fetch an element from a branch of an arglist...?
+*/
 static struct Instance *FetchElement(struct gl_list_t *arglist,
 				     unsigned long whichbranch,
 				     unsigned long whichelement)
@@ -112,7 +107,10 @@ static struct Instance *FetchElement(struct gl_list_t *arglist,
   element = (struct Instance *)gl_fetch(branch,whichelement);
   return element;
 }
-
+
+/**
+	Build then presolve an instance
+*/
 static slv_system_t PreSolve(struct Instance *inst)
 {
   slv_system_t sys;
@@ -124,8 +122,8 @@ static slv_system_t PreSolve(struct Instance *inst)
 
   sys = system_build(inst);
   if (sys==NULL) {
-    FPRINTF(stdout,
-      "(sensitivity.c): Something radically wrong in creating solver\n");
+	error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+      "Something radically wrong in creating solver.");
     return NULL;
   }
   if (g_SlvNumberOfRegisteredClients == 0) {
@@ -134,7 +132,8 @@ static slv_system_t PreSolve(struct Instance *inst)
   ind = 0;
   while (strcmp(slv_solver_name(ind),"QRSlv")) {
     if (ind >= g_SlvNumberOfRegisteredClients) {
-      FPRINTF(stderr,"(sensitivity.c): QRSlv must be registered client\n");
+	  error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+        "QRSlv must be registered client.");
       return NULL;
     }
     ++ind;
@@ -175,13 +174,17 @@ static int ReSolve(slv_system_t sys)
 }
 #endif 
 
+/**
+	Build then presolve the solve an instance...
+*/
 static int DoSolve(struct Instance *inst)
 {
   slv_system_t sys;
 
   sys = system_build(inst);
   if (!sys) {
-    FPRINTF(stdout,"Something radically wrong in creating solver\n");
+	error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,
+      "Something radically wrong in creating solver.");
     return 1;
   }
   (void)slv_select_solver(sys,0);
@@ -190,7 +193,12 @@ static int DoSolve(struct Instance *inst)
   system_destroy(sys);
   return 0;
 }
-
+
+/**
+	Calls 'DoSolve'
+
+	@see DoSolve
+*/
 int do_solve_eval(struct Slv_Interp *slv_interp,
 		  struct Instance *i,
 		  struct gl_list_t *arglist,
@@ -205,7 +213,8 @@ int do_solve_eval(struct Slv_Interp *slv_interp,
   (void)slv_interp; (void)i; (void)whichvar;
 
   if (len!=2) {
-    FPRINTF(stdout,"Wrong number of args to do_solve_eval\n");
+	error_reporter(ASC_USER_ERROR,__FILE__,__LINE__,
+      "Wrong number of args to do_solve_eval.");
     return 1;
   }
   inst = FetchElement(arglist,1,1);
@@ -214,19 +223,24 @@ int do_solve_eval(struct Slv_Interp *slv_interp,
   result = DoSolve(inst);
   return result;
 }
-
+
+/**
+	Finite-difference Check Arguments...?
+
+	@param arglist list of arguments
+
+	Argument list contains
+	. arg1 - model inst to be solved
+	. arg2 - array of input instances
+	. arg3 - array of output instances
+	. arg4 - matrix of partials to be written to
+*/
 static int FiniteDiffCheckArgs(struct gl_list_t *arglist)
 {
   struct Instance *inst;
   unsigned long len;
   unsigned long ninputs, noutputs;
 
-  /*
-   * arg1 - model inst to be solved.
-   * arg2 - array of input instances.
-   * arg3 - array of output instances.
-   * matrix of partials to be written to.
-   */
   len = gl_length(arglist);
   if (len != 4) {
     FPRINTF(stderr,"wrong number of args -- 4 expected\n");
@@ -250,7 +264,10 @@ static int FiniteDiffCheckArgs(struct gl_list_t *arglist)
   }
   return 0;
 }
-
+
+/**
+	Finite difference...
+*/
 static int finite_difference(struct gl_list_t *arglist)
 {
   struct Instance *model_inst, *xinst, *inst;
@@ -272,9 +289,9 @@ static int finite_difference(struct gl_list_t *arglist)
   (void)slv_select_solver(sys,0);
   slv_presolve(sys);
   slv_solve(sys);
-  /*
-   * Make the necessary vectors.
-   */
+
+  /* Make the necessary vectors */
+
   ninputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,2));
   noutputs = (int)gl_length((struct gl_list_t *)gl_fetch(arglist,3));
   y_old = (real64 *)calloc(noutputs,sizeof(real64));
@@ -315,7 +332,10 @@ static int finite_difference(struct gl_list_t *arglist)
   system_destroy(sys);
   return result;
 }
-
+
+/**
+	Finite different evaluate...
+*/
 int do_finite_diff_eval(struct Slv_Interp *slv_interp,
 			 struct Instance *i,
 			 struct gl_list_t *arglist,
@@ -331,23 +351,27 @@ int do_finite_diff_eval(struct Slv_Interp *slv_interp,
   result = finite_difference(arglist);
   return result;
 }
-
-/*********************************************************************\
-  Sensititvity analysis code.
-\*********************************************************************/
 
+/*-------------------------------------------------
+  SENSITIVITY ANALYSIS CODE
+*/
+
+/**
+	Sensitivity Analysis
+
+	@param arglist List of arguments
+
+	Argument list contains the following:
+	  . arg1 - model inst for which the sensitivity analysis is to be done.
+	  . arg2 - array of input instances.
+	  . arg3 - array of output instances.
+	  . arg4 matrix of partials to be written to.
+*/
 int SensitivityCheckArgs(struct gl_list_t *arglist)
 {
   struct Instance *inst;
   unsigned long len;
   unsigned long ninputs, noutputs;
-
-  /*
-   * arg1 - model inst for which the sensitivity analysis is to be done.
-   * arg2 - array of input instances.
-   * arg3 - array of output instances.
-   * arg4 matrix of partials to be written to.
-   */
 
   len = gl_length(arglist);
   if (len != 4) {
@@ -373,17 +397,26 @@ int SensitivityCheckArgs(struct gl_list_t *arglist)
   return 0;
 }
 
+/**
+	@param arglist List of arguments
+	@param step_length ...?
+
+	The list of arguments should chontain
+
+   	  . arg1 - model inst for which the sensitivity analysis is to be done.
+	  . arg2 - array of input instances.
+	  . arg3 - new_input instances, for variable projection.
+	  . arg4 - instance representing the step_length for projection.
+
+	The result will be written to standard out.
+*/
 int SensitivityAllCheckArgs(struct gl_list_t *arglist, double *step_length)
 {
   struct Instance *inst;
   unsigned long len;
 
   /*
-   * arg1 - model inst for which the sensitivity analysis is to be done.
-   * arg2 - array of input instances.
-   * arg3 - new_input instances, for variable projection.
-   * arg4 - instance representing the step_length for projection.
-   * The result will be written to standard out.
+
    */
 
   len = gl_length(arglist);
@@ -409,7 +442,13 @@ int SensitivityAllCheckArgs(struct gl_list_t *arglist, double *step_length)
   return 0;
 }
 
-
+/**
+	Looks like it returns the number of relations in a solver's system
+
+	@param sys The system in question
+	@return int Number of relations in the system
+	@see slv_count_solvers_rels
+*/
 static int NumberRels(slv_system_t sys)
 {
   static int nrels = -1;
@@ -431,6 +470,14 @@ static int NumberRels(slv_system_t sys)
   else return nrels;
 }
 
+/**
+	Looks like it returns the number of free variables in a solver's system
+
+	@param sys The system in question
+	@return the number of free variables
+
+	@see slv_count_solvers_vars
+*/
 static int NumberFreeVars(slv_system_t sys)
 {
   static int nvars = -1;
@@ -452,9 +499,7 @@ static int NumberFreeVars(slv_system_t sys)
   else return nvars;
 }
 
-
-/***************************************************************/
-/***************************************************************/
+
 /*
  * The following bit of code does the computation of the matrix
  * dz/dx. It accepts a slv_system_t and a list of 'input' variables.
@@ -477,9 +522,8 @@ static int NumberFreeVars(slv_system_t sys)
  * dz/dx, and left them back in the main matrix.
  */
 
-/*******************************************************************/
-/*******************************************************************/
-
+
+/// Calculate the entire Jacobian
 /*
  * At this point we should have an empty jacobian. We now
  * need to call relman_diff over the *entire* matrix.
@@ -526,12 +570,14 @@ static int Compute_J(slv_system_t sys)
 
   return(!calc_ok);
 }
-
-/*
- * Note a rhs would have been previously added
- * to keep the system happy.
- */
 
+
+/*
+	LU Factor Jacobian
+
+	@note The RHS will have been  will already have been added before
+		calling this function.
+*/
 static int LUFactorJacobian(slv_system_t sys,int rank)
 {
   linsolqr_system_t lqr_sys;
@@ -550,14 +596,13 @@ static int LUFactorJacobian(slv_system_t sys,int rank)
 
   return 0;
 }
-
 
-/*
- * At this point the rhs would have already been added.
- *
- */
+/**
+	Compute dy/dx using the 'smart' approach
+	@see sensitivity.c
 
-
+	@note At this point, the RHS would already have been added.
+*/
 static int Compute_dy_dx_smart(slv_system_t sys,
 			       real64 *rhs,
 			       real64 **dy_dx,
@@ -820,7 +865,9 @@ error:
   return result;
 }
 
-
+/**
+	Do Data Analysis
+*/
 static int DoDataAnalysis(struct var_variable **inputs,
 			  struct var_variable **outputs,
 			  int ninputs, int noutputs,
@@ -927,26 +974,26 @@ static int DoProject_X(struct var_variable **old_inputs,
 }
 #endif
 
-
-/*
- * This function is very similar to sensitivity_anal, execept,
- * that it perform the analysis on the entire system, based on
- * the given inputs. Nothing is returned. As such the call from
- * ASCEND is :
- *
- *	EXTERN sensitivity_anal_all(
- *		this_instance,
- *		u_old[1..n_inputs],
- *		u_new[1..n_inputs],
- *		step_length
- *	);
- *
- * The results will be witten to standard out.
- * This function is more expensive from a a memory point of view,
- * as we keep aroung a dense matrix n_outputs * n_inputs, but here
- * n_outputs may be *much* larger depending on problem size.
- */
+/// Sensitivity analysis for an entire system
+/**
+	This function is very similar to sensitivity_anal, execept,
+	that it perform the analysis on the entire system, based on
+	the given inputs. Nothing is returned. As such the call from
+	ASCEND is:
 
+<pre>
+EXTERN sensitivity_anal_all(
+	this_instance,
+	u_old[1..n_inputs],
+	u_new[1..n_inputs],
+	step_length
+);</pre>
+
+	The results will be witten to standard out.
+	This function is more expensive from a a memory point of view,
+	as we keep aroung a dense matrix n_outputs * n_inputs, but here
+	n_outputs may be *much* larger depending on problem size.
+*/
 int sensitivity_anal_all(struct Slv_Interp *slv_interp,
 			 struct Instance *inst,  /* not used but will be */
 			 struct gl_list_t *arglist,
@@ -1100,7 +1147,7 @@ int sensitivity_anal_all(struct Slv_Interp *slv_interp,
   if (sys) system_destroy(sys);
   return result;
 }
-
+
 
 int do_sensitivity_eval(struct Slv_Interp *slv_interp,
 			 struct Instance *i,
@@ -1128,10 +1175,10 @@ int do_sensitivity_eval_all(struct Slv_Interp *slv_interp,
 }
 
 char sensitivity_help[] =
-"This function does sensitivity analysis dy/dx. It requires 4 args.\n\
-The first arg is the name of a reference instance or SELF.\n\
-The second arg is x, where x is an array of > solver_var\n.\
-The third arg y, where y is an array of > solver_var\n. \
-The fourth arg is dy/dx which dy_dx[1..n_y][1..n_x].\n";
+	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
+	"  1. name: name of a reference instance or SELF.\n"
+	"  2. x: x, where x is an array of > solver_var.\n"
+	"  3. y: where y is an array of > solver_var.\n"
+	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
 
 #undef DEBUG
