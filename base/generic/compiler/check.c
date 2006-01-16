@@ -133,7 +133,7 @@ int CheckInstanceType(FILE *f, CONST struct Instance *i,
   case DUMMY_INST:
     return 0;
   default:
-	error_reporter(ASC_PROG_ERROR,NULL,0,"Instance is not of a valid type in CheckInstanceType");
+	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Instance is not of a valid type in CheckInstanceType");
     FPRINTF(f,"A child of ");
     WriteInstanceName(f,parent,NULL);
     FPRINTF(f," is an incorrect data type.\n");

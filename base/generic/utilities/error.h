@@ -3,7 +3,7 @@
 /**
 	This file provides error reporting to a callback function via
 	ASCEND's FPRINTF(ASCERR,...) syntax. It is anticipated that
-	this would gradually be expanded to including richer reporting 
+	this would gradually be expanded to including richer reporting
 	of errors with severity and source file name and line numbers.
 
 	Usage:
@@ -16,7 +16,7 @@
 		error_reporter_start(<error-severity>,<filepath>,<linenumber>
 				,"format string %s %d etc",<printf-args>,...");
 
-	The first form allows you to use multiple FPRINTF statements to 
+	The first form allows you to use multiple FPRINTF statements to
 	generate your error message. The second form assumes that your
 	entire message will be contained in a single statement.
 
@@ -49,7 +49,7 @@
 #define FFLUSH fflush_error_reporter
 
 /**
-	This nice macro on GNU C allows quick-and-dirty debug error 
+	This nice macro on GNU C allows quick-and-dirty debug error
 	messages using the ERROR_REPORTER_DEBUG macro. On non GNU C
 	systems, you will still get the error messages, but the location
 	of the error won't be reported, because you don't support
@@ -58,17 +58,23 @@
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define ERROR_REPORTER_DEBUG(MSG,args...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,MSG,args...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
+# define ERROR_REPORTER_NOLINE(SEV,MSG,args...) error_reporter(SEV,NULL,0,MSG, ##args)
 # define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ##args)
+
 #elif defined(HAVE_C99)
-# define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
+# define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,MSG,...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
+# define ERROR_REPORTER_NOLINE(SEV,MSG,...) error_reporter(SEV,NULL,0,MSG, ## __VA_ARGS__)
 # define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ## __VA_ARGS__)
+
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
 # define ERROR_REPORTER_HERE error_reporter_here
+# define ERROR_REPORTER_NOLINE error_reporter_noline
 # define CONSOLE_DEBUG console_debug
 int error_reporter_note_no_line(const char *fmt,...);
 int error_reporter_here(const error_severity_t sev, const char *fmt,...);
+int error_reporter_noline(const error_severity_t sev, const char *fmt,...);
 int console_debug(const char *fmt,...);
 #endif
 
@@ -76,7 +82,7 @@ int console_debug(const char *fmt,...);
 	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,msg)
 
 /**
-	Error severity codes. This will be used to visually 
+	Error severity codes. This will be used to visually
 	the seriousness of errors. ASC_PROG_ERRORs for example
 	might be red, or be highlighted with a (!) icon, etc.
 */
@@ -152,7 +158,7 @@ int error_reporter_end_flush();
 	sev, filename, line, fmt, args
 
 /*
-	Define the type of the function pointer to be used for all 
+	Define the type of the function pointer to be used for all
 	error reporting functions. The final argument is a va_list.
 	You should use 'vsnprintf' of 'vfprintf' to output your
 	message to the desired file or string, see <stdio.h> for these.
@@ -162,7 +168,7 @@ typedef int (*error_reporter_callback_t)(
 );
 
 /**
-	Use this function directly for 'richer' reporting of 
+	Use this function directly for 'richer' reporting of
 	of error messages.
 
 	@return follows the style of fprintf

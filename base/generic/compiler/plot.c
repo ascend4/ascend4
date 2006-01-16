@@ -102,10 +102,10 @@ static void init_gstrings(void)
  * returns TRUE if the type of inst is more refined than the type of
  * plt_point_int or plt_point_sym
  */
-boolean plot_allowed(struct Instance *inst) {	
+boolean plot_allowed(struct Instance *inst) {
   struct TypeDescription *type, *plt_type_s, *plt_type_i;
   if (inst==NULL) {
-	error_reporter(ASC_PROG_WARNING,__FILE__,__LINE__,"Instance is null");
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Instance is null");
     return 0;
   }
 

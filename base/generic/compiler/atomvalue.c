@@ -83,7 +83,7 @@ unsigned AtomAssigned(CONST struct Instance *i)
   case BOOLEAN_INST: return B_INST(i)->assigned;
   case BOOLEAN_ATOM_INST: return BA_INST(i)->assigned;
   default:
-    error_reporter(ASC_USER_ERROR,NULL,0,"AtomAssigned called on non-atomic instance.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"AtomAssigned called on non-atomic instance.");
     return 0; /* not atomic, so can't very well be assigned, eh? */
     /* used to be exit(2) */
     /*NOTREACHED*/
@@ -159,7 +159,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth)
   switch(i->t) {
   case REAL_CONSTANT_INST:
     if (AtomAssigned(i)) {
-      error_reporter(ASC_USER_ERROR,NULL,0,"SetRealAtomValue called on Constant instance.");
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"SetRealAtomValue called on Constant instance.");
     } else {
       struct Instance *ptr;
 
@@ -206,7 +206,7 @@ void SetRealAtomDims(struct Instance *i, CONST dim_type *dim)
 	RC_INST(ptr)->dimen = dim;
       }
     } else {
-      error_reporter(ASC_PROG_ERROR,NULL,0,"SetRealAtomDims called on dimensioned constant.");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"SetRealAtomDims called on dimensioned constant.");
     }
     break;
   case REAL_INST:

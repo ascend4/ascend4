@@ -139,12 +139,12 @@ void InstanceNamePart(struct Name *n, struct Name **copy,
                       symchar **procname)
 {
   register struct Name *ptr,*tmp;
-  
+
   /*FPRINTF(ASCERR,"INSTANCE NAME PART, input is n=");
   WriteName(ASCERR,n);
   FPRINTF(ASCERR,"\n");
    */
-  
+
   if (n==NULL){
 	  FPRINTF(ASCERR,"n IS NULL");
     *copy = NULL;
@@ -238,7 +238,7 @@ struct InitProcedure *FindProcedure(CONST struct Instance *i,
  * then pretends everything is ok.
  * This behavior should perhaps be better.
  */
-static 
+static
 void ExecuteInitRun(struct procFrame *fm, struct Statement *stat)
 {
   struct Name *typename;
@@ -270,11 +270,11 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
   fixed = AddSymbol("fixed");
   st = FindType(AddSymbol("solver_var"));
   if(st==NULL){
-    error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"'solver_var' type is not yet in library");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"'solver_var' type is not yet in library");
 	fm->ErrNo = Proc_type_not_found;
     return;
   }
-  
+
   /* iterate through the variable list */
   CONSOLE_DEBUG("STARTING 'FIX' STATEMENT EXECUTION");
   vars = stat->v.fx.vars;
@@ -321,7 +321,7 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
     vars = NextVariableNode(vars);
   }
   CONSOLE_DEBUG("DONE WITH VARLIST");
-  
+
   /* return 'ok' */
   fm->ErrNo = Proc_all_ok;
 }
@@ -345,7 +345,7 @@ void ExecuteInitFlow(struct procFrame *fm)
     fm->ErrNo = Proc_fallthru;
     fm->flow = FrameFallthru;
     break;
-  case fc_return: 
+  case fc_return:
     fm->ErrNo = Proc_return;
     fm->flow = FrameReturn; /* needs to be caught automagically to frameok
                              * if errno is proc_return.
@@ -387,7 +387,7 @@ int SpecialSelfName(CONST struct Name *n)
 /**
 	Produces a list of lists of argument instances. a the list returned is never NULL except when out of memory. Entries in this list may be NULL if some argument search fails. Argument search is successful IFF errlist returned is empty (length 0).
  */
-static 
+static
 struct gl_list_t *ProcessArgs(struct Instance *inst,
                               CONST struct VariableList *vl,
                               struct gl_list_t *errlist)
@@ -409,7 +409,7 @@ struct gl_list_t *ProcessArgs(struct Instance *inst,
       /* check for SELF only if find fails, so SELF IS_A foo
        * overrides the normal self.
        */
-      if (SpecialSelfName(n)) {	
+      if (SpecialSelfName(n)) {
         if (branch == NULL) {
           branch = gl_create(1L);
         } else {
@@ -495,7 +495,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   eval_func = GetValueFunc(efunc);
   if (eval_func == NULL) {
 	FPRINTF(ASCERR,"GETVALUEFUNC NULL\n");
-    fm->ErrNo = Proc_CallError; 
+    fm->ErrNo = Proc_CallError;
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_nulleval,0);
     return;
@@ -509,12 +509,12 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     ProcWriteExtError(fm,funcname,PE_argswrong,0);
     c = 1;
     assert((len & 0x1) == 0); /* must be even */
-    while (c < len) { 
+    while (c < len) {
       /* works because error position/code pairs */
       pos = (unsigned long)gl_fetch(errlist,c);
       c++;	/* Wait, who let that dirty word in here!? */
       ferr = (enum find_errors)gl_fetch(errlist,c);
-      c++; 
+      c++;
       switch (ferr) {
       case unmade_instance:
         fm->ErrNo = Proc_instance_not_found;
@@ -538,7 +538,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
         break;
       }
     }
-    fm->ErrNo = Proc_CallError; 
+    fm->ErrNo = Proc_CallError;
     if (arglist != NULL) {
       DestroySpecialList(arglist);
     }
@@ -558,7 +558,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
      */
   if (nok) {
     fm->flow = FrameError; /* move write to procio */
-	error_reporter(ASC_USER_NOTE,__FILE__,__LINE__,"NOK");
+	ERROR_REPORTER_HERE(ASC_USER_NOTE,"NOK");
     ProcWriteExtError(fm,funcname,PE_evalerr,0);
   } else {
     fm->flow = FrameOK;
@@ -569,14 +569,14 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   if (errlist != NULL) {
     gl_destroy(errlist);
   }
-  
+
   return;
 }
 
 /*
  * executes a for loop
  */
-static 
+static
 void ExecuteInitFor(struct procFrame *fm, struct Statement *stat)
 {
   symchar *name;
@@ -614,7 +614,7 @@ void ExecuteInitFor(struct procFrame *fm, struct Statement *stat)
   case set_value:
     sptr = SetValue(value);
     switch(SetKind(sptr)){
-    case empty_set: 
+    case empty_set:
       break;
     case integer_set:
       fv = CreateForVar(name);
@@ -640,7 +640,7 @@ void ExecuteInitFor(struct procFrame *fm, struct Statement *stat)
       fm->flow = FrameLoop;
       for(/* init c in switch above */;
           c >= 1 && c <= len &&
-          fm->flow != FrameBreak && fm->flow != FrameReturn; 
+          fm->flow != FrameBreak && fm->flow != FrameReturn;
           c += direction) {
         SetForInteger(fv,FetchIntMember(sptr,c));
         ExecuteInitStatements(fm,sl);
@@ -660,7 +660,7 @@ void ExecuteInitFor(struct procFrame *fm, struct Statement *stat)
 FPRINTF(fm->err,"ERR-NEVER1: "); WriteStatement(fm->err,stat,0);
 FPRINTF(fm->err,"\n");
 #endif
-          fm->flow = FrameReturn; 
+          fm->flow = FrameReturn;
           break;
         }
       }
@@ -694,9 +694,9 @@ FPRINTF(fm->err,"\n");
       }
       oldflow = fm->flow;
       fm->flow = FrameLoop;
-      for(/* init c in switch above */; 
+      for(/* init c in switch above */;
           c >= 1 && c <= len &&
-          fm->flow != FrameBreak && fm->flow != FrameReturn; 
+          fm->flow != FrameBreak && fm->flow != FrameReturn;
           c += direction) {
         SetForSymbol(fv,FetchStrMember(sptr,c));
         ExecuteInitStatements(fm,sl);
@@ -716,7 +716,7 @@ FPRINTF(fm->err,"\n");
 FPRINTF(fm->err,"ERR-NEVER2: "); WriteStatement(fm->err,stat,0);
 FPRINTF(fm->err,"\n");
 #endif
-          fm->flow = FrameReturn; 
+          fm->flow = FrameReturn;
           break;
         }
       }
@@ -764,20 +764,20 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 		case real_value:
 			fm->flow = FrameError;
 			fm->ErrNo = Proc_if_real_expr;
-			break; 
+			break;
 		case integer_value:
 			fm->flow = FrameError;
 			fm->ErrNo = Proc_if_integer_expr;
-			break; 
+			break;
 		case symbol_value:
 			fm->flow = FrameError;
 			fm->ErrNo = Proc_if_symbol_expr;
-			break; 
+			break;
 		case set_value: /* FALLTHROUGH */
 			case list_value:
 			fm->flow = FrameError;
 			fm->ErrNo = Proc_if_set_expr;
-			break; 
+			break;
 		case error_value:
 			fm->flow = FrameError;
 			fm->ErrNo = Proc_if_expr_error_confused;
@@ -804,7 +804,7 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 					fm->ErrNo = Proc_if_expr_error_emptyintersection;
 					break;
 				default:
-					error_reporter(ASC_PROG_ERR,__FILE__,__LINE__,"Unhandled case");
+					ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unhandled case");
 			}
 			break;
 		default:
@@ -819,7 +819,7 @@ ExecuteInitAssert(struct procFrame *fm, struct Statement *stat){
 	return;
 }
 
-static 
+static
 void ExecuteInitIf(struct procFrame *fm, struct Statement *stat)
 {
   struct value_t value;
@@ -844,20 +844,20 @@ void ExecuteInitIf(struct procFrame *fm, struct Statement *stat)
   case real_value:
     fm->flow = FrameError;
     fm->ErrNo = Proc_if_real_expr;
-    break; 
+    break;
   case integer_value:
     fm->flow = FrameError;
     fm->ErrNo = Proc_if_integer_expr;
-    break; 
+    break;
   case symbol_value:
     fm->flow = FrameError;
     fm->ErrNo = Proc_if_symbol_expr;
-    break; 
+    break;
   case set_value: /* FALLTHROUGH */
   case list_value:
     fm->flow = FrameError;
     fm->ErrNo = Proc_if_set_expr;
-    break; 
+    break;
   case error_value:
     fm->flow = FrameError;
     fm->ErrNo = Proc_if_expr_error_confused;
@@ -886,7 +886,7 @@ void ExecuteInitIf(struct procFrame *fm, struct Statement *stat)
     default:
       break;
     }
-    break; 
+    break;
   default:
     fm->flow = FrameError;
     fm->ErrNo = Proc_if_not_logical;
@@ -901,7 +901,7 @@ void ExecuteInitIf(struct procFrame *fm, struct Statement *stat)
 
 /*
  */
-static 
+static
 void ExecuteInitWhile(struct procFrame *fm, struct Statement *stat)
 {
   struct value_t value;
@@ -944,7 +944,7 @@ void ExecuteInitWhile(struct procFrame *fm, struct Statement *stat)
 FPRINTF(fm->err,"ERR-NEVER3: "); WriteStatement(fm->err,stat,0);
 FPRINTF(fm->err,"\n");
 #endif
-          fm->flow = FrameReturn; 
+          fm->flow = FrameReturn;
           break;
         }
       } else {
@@ -954,20 +954,20 @@ FPRINTF(fm->err,"\n");
     case real_value:
       fm->flow = FrameError;
       fm->ErrNo = Proc_if_real_expr;
-      break; 
+      break;
     case integer_value:
       fm->flow = FrameError;
       fm->ErrNo = Proc_if_integer_expr;
-      break; 
+      break;
     case symbol_value:
       fm->flow = FrameError;
       fm->ErrNo = Proc_if_symbol_expr;
-      break; 
+      break;
     case set_value: /* FALLTHROUGH */
     case list_value:
       fm->flow = FrameError;
       fm->ErrNo = Proc_if_set_expr;
-      break; 
+      break;
     case error_value:
       fm->flow = FrameError;
       fm->ErrNo = Proc_if_expr_error_confused;
@@ -996,7 +996,7 @@ FPRINTF(fm->err,"\n");
       default:
         break;
       }
-      break; 
+      break;
     default:
       fm->flow = FrameError;
       fm->ErrNo = Proc_if_not_logical;
@@ -1029,12 +1029,12 @@ FPRINTF(fm->err,"\n");
 /*
  * Compare current values of the switching variables with
  * the set of values in a CASE of a SWITCH statement, and try to find
- * is such values are the same. 
+ * is such values are the same.
  * If they are, the function will return Proc_case_matched,
  * else, it will return Proc_case_unmatched unless there is an error.
  * The possible error returns are legion, and this function
  * handles issuing error messages for them.
- * 
+ *
  * If s given is NULL AND arm is -1, simply verifies that vlist elements
  * exist/are assigned. Normally this is only of use in checking
  * the OTHERWISE branch of the switch.
@@ -1269,7 +1269,7 @@ void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat)
         /* could put fallthru handling here if in grammar */
         fm->ErrNo = Proc_all_ok;
         fm->flow = FrameLoop;
-        ExecuteInitStatements(fm,sl); 
+        ExecuteInitStatements(fm,sl);
         switch (fm->flow) {
         case FrameLoop:
         case FrameOK:
@@ -1325,7 +1325,7 @@ void ExecuteInitSwitch(struct procFrame *fm, struct Statement *stat)
 }
 
 /* i is generally NOT fm->i, but in the scope of fm->i */
-static 
+static
 void AssignInitValue(struct Instance *i, struct value_t v, struct procFrame *fm)
 {
   CONST dim_type *dim;
@@ -1429,7 +1429,7 @@ void AssignInitValue(struct Instance *i, struct value_t v, struct procFrame *fm)
 }
 
 /* this function always returns ok. 5/96 */
-static 
+static
 void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat)
 {
   struct gl_list_t *instances;
@@ -1475,7 +1475,7 @@ void ExecuteInitAsgn(struct procFrame *fm, struct Statement *stat)
   return /* Proc_all_ok */;
 }
 
-static 
+static
 void ExecuteInitStatement(struct procFrame *fm, struct Statement *stat)
 {
 #if IDB
@@ -1583,7 +1583,7 @@ FPRINTF(fm->err,"\n");
       if (oldflow == FrameLoop) {
         stop = 1;
       } else {
-        /* whine about missing loop/switch context. 
+        /* whine about missing loop/switch context.
          * should be parser enforced.
          */
 #if IDB
@@ -1633,7 +1633,7 @@ FPRINTF(fm->err,"\n");
  * Here's where we unwind the stack in the event of an
  * early return.
  */
-static 
+static
 void ExecuteInitProcedure(struct procFrame *fm, struct InitProcedure *proc)
 {
   struct for_table_t *OldForTable;
@@ -1673,7 +1673,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
 
   SetDeclarativeContext(1); /* set up for procedural processing */
   InstanceNamePart(name,&instname,&procname);
-  
+
   if (procname != NULL) {
     instances = FindInstances(fm->i, instname, &err);
     if (instances != NULL) {
@@ -1688,7 +1688,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
                                (morename!=NULL)?morename:"",
                                proc,FrameInherit);
           /* this usage probably force memory recycle in proctype.c */
-          if (morename != NULL) { 
+          if (morename != NULL) {
             ascfree(morename);
           }
           ExecuteInitProcedure(newfm,proc);
@@ -1729,14 +1729,14 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
           DestroyProcFrame(newfm);
         } else {
           fm->flow = FrameError;
-	  error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (FindProcedure failed).");
+	  ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (FindProcedure failed).");
           fm->ErrNo = Proc_proc_not_found;
         }
       }
       gl_destroy(instances);
     } else {			/* unable to find instances */
       fm->flow = FrameError;
-      error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (FindInstances failed).");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (FindInstances failed).");
       fm->ErrNo = Proc_instance_not_found;
     }
   } else {
@@ -1749,7 +1749,7 @@ void RealInitialize(struct procFrame *fm, struct Name *name)
 }
 
 /* Convert all those messy result to a proc enum for UI consumption. */
-static 
+static
 enum Proc_enum InitCalcReturn(struct procFrame *fm)
 {
   switch(fm->flow) {
@@ -1896,7 +1896,7 @@ void ClassAccessRealInitialize(struct procFrame *fm,
               DestroyProcFrame(newfm);
             } else {
               fm->flow = FrameError;
-	      error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (SearchProcList).");
+	      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (SearchProcList).");
               fm->ErrNo = Proc_proc_not_found;
             }
           } else {
@@ -1905,7 +1905,7 @@ void ClassAccessRealInitialize(struct procFrame *fm,
           }
         } else {
           fm->flow = FrameError;
-	  error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (GetInitializationList is null).");
+	  ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (GetInitializationList is null).");
           fm->ErrNo = Proc_proc_not_found;
         }
       } else {
@@ -1914,7 +1914,7 @@ void ClassAccessRealInitialize(struct procFrame *fm,
       }
     } else {
       fm->flow = FrameError;
-      error_reporter(ASC_PROG_ERROR,NULL,0,"PROCEDURE NOT FOUND (FindType failed)\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"PROCEDURE NOT FOUND (FindType failed)\n");
       fm->ErrNo = Proc_type_not_found;
     }
   } else {

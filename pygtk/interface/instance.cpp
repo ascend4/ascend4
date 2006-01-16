@@ -66,7 +66,7 @@ Instanc::Instanc() : name("unnamed2"){
 /*
 	Create a child instance given the parent
 */
-Instanc::Instanc(const Instanc &parent, const unsigned long &childnum) 
+Instanc::Instanc(const Instanc &parent, const unsigned long &childnum)
 		: i( InstanceChild(parent.i,childnum) ), name( ChildName(parent.i,childnum) ){
 	// cerr << "CREATED CHILD #" << childnum << ", named '" << getName() << "' OF " << parent.getName() << endl;
 }
@@ -79,7 +79,7 @@ Instanc::getName() const{
 void
 Instanc::setName(SymChar name){
 	this->name=name;
-}	
+}
 
 Instance *
 Instanc::getInternalType() const{
@@ -293,16 +293,16 @@ Instanc::getRealValue() const{
 			//cerr << "REAL VALUE FOR " << getName() << endl;
 			break;
 		default:
-			error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not real-valued (%s)", \
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not real-valued (%s)", \
 					getName().toString(),getKindStr().c_str());
 			return 0;
 	}
 	if(!isConst() && !isDefined()){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not defined (%s)", \
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined (%s)", \
 				getName().toString(),getKindStr().c_str());
 		return 0;
 	}
-	return RealAtomValue(i);	
+	return RealAtomValue(i);
 }
 
 const bool
@@ -327,11 +327,11 @@ Instanc::getBoolValue() const{
 			//cerr << "BOOL VALUE FOR " << getName() << endl;
 			break;
 		default:
-			error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not boolean-valued",getName().toString());
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not boolean-valued",getName().toString());
 			return false;
 	}
 	if(!isConst() && !isDefined()){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not defined",getName().toString());
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
 		return false;
 	}
 	return GetBooleanAtomValue(i);
@@ -348,11 +348,11 @@ Instanc::getIntValue() const{
 			//cerr << "INT VALUE FOR " << getName() << endl;
 			break;
 		default:
-			error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not integer-valued",getName().toString());
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not integer-valued",getName().toString());
 			return 0;
 	}
 	if(!isConst() && !isDefined()){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not defined",getName().toString());
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
 		return 0;
 	}
 	return GetIntegerAtomValue(i);
@@ -361,11 +361,11 @@ Instanc::getIntValue() const{
 const SymChar
 Instanc::getSymbolValue() const{
 	if(!isSymbol()){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not symbol-valued",getName().toString());
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not symbol-valued",getName().toString());
 		return SymChar("ERROR");
 	}
 	if(!isConst() && !isDefined()){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not defined",getName().toString());
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not defined",getName().toString());
 		return SymChar("UNDEFINED");
 	}
 	return SCP(GetSymbolAtomValue(i));
@@ -392,7 +392,7 @@ Instanc::getValueAsString() const{
 	return ss.str();
 }
 
-const bool 
+const bool
 Instanc::isPlottable() const{
 	if(plot_allowed(i)){
 		return true;
@@ -400,10 +400,10 @@ Instanc::isPlottable() const{
 	return false;
 }
 
-const enum set_kind 
+const enum set_kind
 Instanc::getSetType() const{
 	if(!isSet() || (!isConst() && !isDefined())){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Variable '%s' is not set-valued or not defined",getName().toString());
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not set-valued or not defined",getName().toString());
 	}
 	return SetKind(SetAtomList(i));
 }
@@ -431,7 +431,7 @@ Instanc::getChildren()
 		return children;
 		/* stringstream ss;
 		ss << "Instance '" << getName() << "' is an array, type '" << t.getName() << "'";
-		error_reporter(ASC_PROG_WARNING,NULL,0,ss.str().c_str()); */
+		ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,ss.str().c_str()); */
 	}
 
 
@@ -440,7 +440,7 @@ Instanc::getChildren()
 		stringstream ss;
 		ss << "Child list of instance '" << getName() << "' of type '" << t.getName() << "' (" << getKindStr() << ") is NULL";
 		ss << " (isChildless=" << isChildless() << ")";
-		error_reporter(ASC_PROG_WARNING,NULL,0,ss.str().c_str());
+		ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,ss.str().c_str());
 		return children;
 		//throw runtime_error(ss.str());
 	}
@@ -494,7 +494,7 @@ Instanc::setBoolValue(const bool &val, const unsigned &depth){
 void
 Instanc::setRealValue(const double &val, const unsigned &depth){
 	SetRealAtomValue(i,val, depth);
-	//error_reporter(ASC_USER_NOTE,__FILE__,__LINE__,"Set %s to %f",getName().toString(),val);
+	//ERROR_REPORTER_HERE(ASC_USER_NOTE,"Set %s to %f",getName().toString(),val);
 }
 
 /**
@@ -504,7 +504,7 @@ void
 Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &depth){
 
 	if(isConst()){
-		error_reporter(ASC_USER_ERROR,NULL,0,"Can't change the value of a constant");
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Can't change the value of a constant");
 		return;
 	}
 
@@ -518,7 +518,7 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 		// We need to parse the units string
 		UnitsM u = UnitsM(units);
 		Dimensions d = u.getDimensions();
-		
+
 		// If no dimensions yet assigned, assign them. Otheriwse check for consistency.
 		if(getDimensions().isWild()){
 			// Set the dimensions for a wildcard atom:
@@ -526,7 +526,7 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 		}else if(d != getDimensions()){
 			throw runtime_error("Dimensionally incompatible units");
 		}
-		
+
 		// Not going to worry about FPEs here, let the program crash if it must.
 		val = val * u.getConversion();
 	}

@@ -2,6 +2,7 @@
 # include <Python.h>
 #endif
 
+#include <cstdio>
 #include <iostream>
 using namespace std;
 
@@ -62,7 +63,7 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	pyfunc = (PyObject *)client_data;
 	
 	char msg[REPORTER_MAX_ERROR_MSG];
-	vsnprintf(msg,REPORTER_MAX_ERROR_MSG,fmt,args);
+	vsprintf(msg,fmt,args);
 
 	//cerr << "reportErrorPython: msg=" << msg ;
 	//cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;

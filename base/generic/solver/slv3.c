@@ -2,7 +2,7 @@
 	SLV: Ascend Nonlinear Solver
 	by Karl Michael Westerberg
 	Created: 2/6/90
-	
+
 	This file is part of the SLV solver.
 
 	Copyright (C) 1990 Karl Michael Westerberg
@@ -222,7 +222,7 @@ char *slv3_raexpln[slv3_RA_SIZE] = {
    SAVLIN  0=>do not append linearizations arising in the newton
               scheme to the file SlvLinsol.dat.
            1=>do.
-   SCALEOPT 
+   SCALEOPT
            0=>Use variable nominals and row two-norms for scaling
               the Jacobian and rhs.
               Use variable nominals and relation nominals for
@@ -232,7 +232,7 @@ char *slv3_raexpln[slv3_RA_SIZE] = {
 	   3=>Prescale by option 1 and then apply Fourer's
 	      iterative scaling routine.
 	   4=>Scale using only Fourer's iterative routine.
-   RELNOMSCALE 
+   RELNOMSCALE
            0=>use Jacobian row scaling for scaling residuals
 	      for purpose of detecting descent.
            1=>use most recently recorded relation nominals
@@ -241,7 +241,7 @@ char *slv3_raexpln[slv3_RA_SIZE] = {
 	      The residuals will also be scaled by the
 	      relation nominals AT THE CURRENT POINT
 	      for determining constraint satisfaction.
-   UPRELNOM 
+   UPRELNOM
            0-INF=> Set number of iterations to wait
 	      before updating vector of relation nominals.
    CUTOFF] MODEL tearing/reordering cutoff number.
@@ -370,7 +370,7 @@ static int check_system(slv3_system_t sys)
  **/
 {
   if( sys == NULL ) {
-	error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::check_system: NULL system handle.");
+	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: NULL system handle.");
     return 1;
   }
 
@@ -378,10 +378,10 @@ static int check_system(slv3_system_t sys)
   case OK:
     return 0;
   case DESTROYED:
-	error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::check_system: System was recently destroyed.");
+	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System was recently destroyed.");
     return 1;
   default:
-	error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::check_system: System reused or never allocated.");
+	ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::check_system: System reused or never allocated.");
     return 1;
   }
 }
@@ -684,7 +684,7 @@ static boolean calc_residuals( slv3_system_t sys)
     if (!rel) {
       int r;
       r=mtx_row_to_org(sys->J.mtx,row);
-      error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv::calc_residuals: NULL relation found at ropw %d rel %d !",(int)row,r);
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv::calc_residuals: NULL relation found at ropw %d rel %d !",(int)row,r);
     }
 #endif
     sys->residuals.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
@@ -2143,7 +2143,7 @@ static void coefs_from_parm( slv3_system_t sys, struct calc_step_vars *vars)
    det = coef[0]*coef[2] - coef[1]*coef[1];
    if( det < 0.0 )
 
-      /* error_reporter(ASC_PROG_ERROR,NULL,0,"Unexpected negative determinant %f.", det); */
+      /* ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unexpected negative determinant %f.", det); */
 	  fprintf(stderr,"Unexpected negative determinant %f.\n",det);
 
       /* FPRINTF(MIF(sys),"%-40s ---> %g\n",
@@ -3094,7 +3094,7 @@ int32 slv3_get_default_parameters(slv_system_t server, SlvClientToken asys,
   SLV_IPARM_MACRO(UPDATE_RELNOMS_PTR,parameters);
 
   slv_define_parm(parameters, int_parm,
-	       "itscalelim", "Iteration lim for iterative scale", IEX(14), 
+	       "itscalelim", "Iteration lim for iterative scale", IEX(14),
 	       U_p_int(val, 10),U_p_int(lo,0),U_p_int(hi,20000), 3);
   SLV_IPARM_MACRO(ITSCALELIM_PTR,parameters);
 
@@ -3861,7 +3861,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   if (server == NULL || sys==NULL) return;
   if (check_system(SLV3(sys))) return;
   if( !sys->s.ready_to_solve ) {
-    error_reporter(ASC_USER_ERROR,NULL,0,"QRSlv: Not ready to solve.");
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"QRSlv: Not ready to solve.");
     return;
   }
 
@@ -3941,7 +3941,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
       error_reporter_start(ASC_PROG_ERROR,NULL,0);
       FPRINTF(ASCERR,"No solution exists within the bounds given for variable '");
-      print_var_name(ASCERR,sys,var); 
+      print_var_name(ASCERR,sys,var);
       FPRINTF(ASCERR,"' when inverting relation:\n");
       print_rel_name(ASCERR,sys,rel);
 	  error_reporter_end_flush();
@@ -3960,7 +3960,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   scale_system(sys);
 
   if( !calc_gradient(sys) ){
-    error_reporter(ASC_PROG_ERROR,NULL,0,"QRSlv: Gradient calculation errors detected.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"QRSlv: Gradient calculation errors detected.");
     FPRINTF(MIF(sys),"QRSlv: Gradient calculation errors detected.\n");
     error_reporter_end_flush();
   }

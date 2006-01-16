@@ -136,7 +136,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
       break;
 	case ASSERT:
       /* no sublists under a TEST statement */
-	  break;	  
+	  break;
     case IF:
       sublist = IfStatThen(s);
       AddContext(sublist,con);
@@ -2356,7 +2356,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
       return CmpSymchar(CallStatId(s1),CallStatId(s2));
     }
     return CompareSetStructures(CallStatArgs(s1),CallStatArgs(s2));
-  case EXT: 
+  case EXT:
     ctmp = strcmp(ExternalStatFuncName(s1),ExternalStatFuncName(s2));
     if (ctmp != 0) {
       return ctmp;
@@ -2392,7 +2392,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     /* FlowStatMessage is considered comment info and so not compared */
     return 0;
   default:
-	error_reporter(ASC_PROG_ERR,NULL,0,"CompareStatements called with unknown statement");
+	ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"CompareStatements called with unknown statement");
     return 0;
   }
 }

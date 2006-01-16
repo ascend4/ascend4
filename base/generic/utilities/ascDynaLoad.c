@@ -160,14 +160,14 @@ void AscCheckDuplicateLoad(CONST char *path)
   struct ascend_dlrecord *r;
 
   if (NULL == path) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Null path in AscCheckDuplicateLoad.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Null path in AscCheckDuplicateLoad.");
     return;
   }
 
   r = g_ascend_dllist;
   while (r != NULL) {
     if (strcmp(path,r->path)==0) {
-      error_reporter(ASC_PROG_ERR,NULL,0,"Attempt to load already loaded '%s'.",path);
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Attempt to load already loaded '%s'.",path);
       return;
     }
     r = r->next;
@@ -202,13 +202,13 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 
   xlib = LoadLibrary(path);
   if (xlib == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad: LoadLibrary failed\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: LoadLibrary failed\n");
     return 1;
   }
   if (NULL != initFun) {
     install = (int (*)())GetProcAddress(xlib,initFun);
     if (install == NULL) {
-      error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad: Required function %s not found\n", initFun);
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: Required function %s not found\n", initFun);
       (void)FreeLibrary(xlib);
       return 1;
     }else{
@@ -216,7 +216,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 	}
   }
   if (0 != AscAddRecord(xlib,path)) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -227,7 +227,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 */
 /* NOTE, added defined(__unix__) here, not sure if that's a bad thing or not -- johnpye */
 /*
-	From a quick Google, it appears that AIX 5.1 now provides dlfcn.h, 
+	From a quick Google, it appears that AIX 5.1 now provides dlfcn.h,
 	so I'll remove the code that was emulating it here. -- johnpye
 */
 #if defined(sun) || defined(linux) || defined(__unix__) || defined(solaris) || defined(_AIX) || defined(_SGI_SOURCE)
@@ -239,7 +239,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 
 /*
 	R.I.P. OSF
-	http://en.wikipedia.org/wiki/Open_Software_Foundation 
+	http://en.wikipedia.org/wiki/Open_Software_Foundation
 */
 
 /*
@@ -252,7 +252,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   int (*install)() = NULL;
 
   if (NULL == path) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad failed: Null path\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed: Null path\n");
     return 1;
   }
 
@@ -264,20 +264,20 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    */
   xlib = dlopen(path, 1);
   if (xlib == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"%s",(char *)dlerror());
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"%s",(char *)dlerror());
     return 1;
   }
   if (NULL != initFun) {
     install = (int (*)())dlsym(xlib, initFun);
     if (install == NULL) {
-      error_reporter(ASC_PROG_ERR,NULL,0,"%s",(char *)dlerror());
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"%s",(char *)dlerror());
       dlclose(xlib);
       return 1;
     }
   }
-  
+
   if (0 != AscAddRecord(xlib,path)) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -307,7 +307,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   int i;
 
   if (NULL == path) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad failed: Null path\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed: Null path\n");
     return 1;
   }
 
@@ -319,34 +319,34 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    */
   xlib = shl_load(path, BIND_IMMEDIATE | BIND_VERBOSE, 0L);
   if (xlib == (shl_t) NULL)  {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Unable to load shared library : %s\n",strerror(errno));
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to load shared library : %s\n",strerror(errno));
     return 1;
   }
   if (NULL != initFun) {
     i = shl_findsym(&xlib, initFun, TYPE_PROCEDURE, &install);
     if (i == -1) {
-      error_reporter(ASC_PROG_ERR,NULL,0,"Unable to find needed symbol %s %s\n",
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to find needed symbol %s %s\n",
   		       initFun, strerror(errno));
       shl_unload(xlib); /* baa */
       return 1;
     }
     if (install == NULL) {
-      error_reporter(ASC_PROG_ERR,NULL,0,"Unable to find needed symbol %s\n",initFun);
-      error_reporter(ASC_PROG_ERR,NULL,0,"Error type unknown\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to find needed symbol %s\n",initFun);
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type unknown\n");
       shl_unload(xlib); /* baa */
       return 1;
     }
   }
   if (0 != AscAddRecord(xlib,path)) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
 
 #endif /* __hpux */
 
-/* 
-	R.I.P. Ultrix 
+/*
+	R.I.P. Ultrix
 	http://en.wikipedia.org/wiki/Ultrix
 */
 
@@ -382,19 +382,19 @@ int Asc_DynamicUnLoad(CONST char *path)
 {
   void *dlreturn;
   int retval;
-  
+
   if (NULL == path) {
-    error_reporter(ASC_PROG_ERR,NULL,0, "Asc_DynamicUnLoad failed: Null path\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR, "Asc_DynamicUnLoad failed: Null path\n");
     return -3;
   }
 
   dlreturn = AscDeleteRecord(path);
   if (dlreturn == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0, "Asc_DynamicUnLoad: unable to remember or unload %s\n", path);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR, "Asc_DynamicUnLoad: unable to remember or unload %s\n", path);
     return -3;
   }
   CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s \n", path);
-  /* 
+  /*
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
    */
@@ -412,23 +412,23 @@ void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
 #endif
 
   if (libname == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicSymbol failed:  Null libname\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol failed:  Null libname\n");
     return NULL;
   }
   if (symbol == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicSymbol failed:  Null symbol\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol failed:  Null symbol\n");
     return NULL;
   }
 
   dlreturn = AscFindDLRecord(libname);
   if (dlreturn == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicSymbol: Unable to find requested library %s\n", libname);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol: Unable to find requested library %s\n", libname);
     return NULL;
   }
 #ifdef __hpux
   i = shl_findsym(&dlreturn, symbol, TYPE_UNDEFINED, &symreturn);
   if (i == -1) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s (%s)\n",
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s (%s)\n",
                        symbol, libname, strerror(errno));
     symreturn = NULL;
   }
@@ -438,9 +438,9 @@ void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
    * ISO C forbids casting between function and data pointers, so, naturally,
    * we cast between function and data pointers.  Well, we don't have much
    * choice.  GetProcAddress() returns a function pointer for both functions
-   * and variables so we have to do the cast for variables.  This is ok on 
-   * 32 bit Windows since the pointers are compatible.  Then, to avoid 
-   * being reminded by the compiler that we're doing something illegal, 
+   * and variables so we have to do the cast for variables.  This is ok on
+   * 32 bit Windows since the pointers are compatible.  Then, to avoid
+   * being reminded by the compiler that we're doing something illegal,
    * we apply convoluted casting to shut it up.
    * Oh, the crap you can find on the internet...    JDS
    */
@@ -450,8 +450,8 @@ void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
   symreturn = dlsym(dlreturn, symbol);
 #endif
   if (symreturn == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s\n",symbol,libname);
-    error_reporter(ASC_PROG_ERR,NULL,0,"Error type %s\n",ASC_DLERRSTRING);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s\n",symbol,libname);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type %s\n",ASC_DLERRSTRING);
   }
   return symreturn;
 }
@@ -466,23 +466,23 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
 #endif
 
   if (libname == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicFunction failed:  Null library name\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction failed:  Null library name\n");
     return NULL;
   }
   if (symbol == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicFunction failed:  Null function name\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction failed:  Null function name\n");
     return NULL;
   }
 
   dlreturn = AscFindDLRecord(libname);
   if (dlreturn == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicFunction: Unable to find requested library %s\n", libname);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction: Unable to find requested library %s\n", libname);
     return NULL;
   }
 #ifdef __hpux
   i = shl_findsym(&dlreturn, symbol, TYPE_UNDEFINED, &symreturn);
   if (i == -1) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicFunction: Unable to find requested function %s in %s (%s)\n",
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction: Unable to find requested function %s in %s (%s)\n",
                        symbol, libname, strerror(errno));
     symreturn = NULL;
   }
@@ -493,18 +493,18 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
   /*
    * Here's the corresponding bit of possibly-misdirected casting horror.
    * ISO C forbids casting between function and data pointers, so, naturally,
-   * we cast between function and data pointers.  Well, we don't have much 
+   * we cast between function and data pointers.  Well, we don't have much
    * choice.  dlsym() returns a void* for both variables and functions so we
-   * have to do the cast for functions.  This is ok on POSIX systems since the 
-   * pointer types are compatible.  Then, to avoid being reminded by the 
-   * compiler that we're doing something illegal, we apply convoluted casting 
+   * have to do the cast for functions.  This is ok on POSIX systems since the
+   * pointer types are compatible.  Then, to avoid being reminded by the
+   * compiler that we're doing something illegal, we apply convoluted casting
    * to shut it up.  Oh, the crap you can find on the internet...   JDS
    */
   *(void**)(&symreturn) = dlsym(dlreturn, symbol);
 #endif
   if (symreturn == NULL) {
-    error_reporter(ASC_PROG_ERR,NULL,0,"Asc_DynamicFunction: Unable to find requested function %s in %s\n",symbol,libname);
-    error_reporter(ASC_PROG_ERR,NULL,0,"Error type %s\n",ASC_DLERRSTRING);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction: Unable to find requested function %s in %s\n",symbol,libname);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type %s\n",ASC_DLERRSTRING);
   }
   return symreturn;
 }

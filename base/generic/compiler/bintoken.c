@@ -118,7 +118,7 @@ static
 int bt_string_replace(CONST char *new, char **ptr)
 {
   if (*ptr == new) {
-    return 0;                                          
+    return 0;
   }
   if (new == NULL) {
     if (*ptr != NULL) {
@@ -221,10 +221,10 @@ void BinTokenDeleteReference(int btable)
   if (g_bt_data.tables[btable].refcount == 0) {
     /* unload the library if possible here */
 #if HAVE_DL_UNLOAD
-    /*error_reporter(ASC_PROG_ERR,NULL,0,"UNLOADING %s",g_bt_data.tables[btable].name);*/
+    /*ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"UNLOADING %s",g_bt_data.tables[btable].name);*/
     Asc_DynamicUnLoad(g_bt_data.tables[btable].name);
 #else
-    error_reporter(ASC_PROG_ERR,NULL,0,"Dynamic Unloading not available in this build");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Dynamic Unloading not available in this build");
 #endif /* havedlunload */
     ascfree(g_bt_data.tables[btable].name);
     g_bt_data.tables[btable].name = NULL;
@@ -667,7 +667,7 @@ static
 enum bintoken_error BinTokenCompileC(char *buildcommand)
 {
   int status;
-  error_reporter(ASC_PROG_NOTE,NULL,0,"Starting build, command:\n%s\n",buildcommand);
+  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Starting build, command:\n%s\n",buildcommand);
   status = system(buildcommand);
   if (status) {
     FPRINTF(ASCERR,"\nBUILD returned %d\n",status);
@@ -824,7 +824,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
         system(cbuf); /* we don't care if the delete fails */
         ascfree(cbuf);
       }
-    
+
       status = BinTokenLoadC(rellist,libname,g_bt_data.regname);
       if (status != BTE_ok) {
         BinTokenErrorMessage(status,root,libname,buildcommand);

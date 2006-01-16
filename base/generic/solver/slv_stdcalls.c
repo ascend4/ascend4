@@ -281,22 +281,22 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
   if (rank == 0 ) return 1; 	/* nothing to do, eh? */
   /* lot of whining about dof */
   if (rank < nrow) {
-    error_reporter(ASC_USER_ERROR,NULL,0,"System is row rank deficient (%d dependent equations)",
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is row rank deficient (%d dependent equations)",
             nrow - rank);
   }
   if (rank < ncol) {
     if ( nrow != rank) {
-      error_reporter(ASC_USER_ERROR,NULL,0,"System is row rank deficient with %d excess columns.",
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is row rank deficient with %d excess columns.",
               ncol - rank);
     } else {
-      error_reporter(ASC_USER_ERROR,NULL,0,"System has %d degrees of freedom.", ncol - rank);
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System has %d degrees of freedom.", ncol - rank);
     }
   }
   if (ncol == nrow) {
     if (ncol != rank) {
-      error_reporter(ASC_USER_ERROR,NULL,0,"System is (%d) square but rank deficient.",ncol);
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is (%d) square but rank deficient.",ncol);
     } else {
-      error_reporter(ASC_USER_NOTE,NULL,0,"System is (%d) square.",ncol);
+      ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"System is (%d) square.",ncol);
     }
   }
   if (uppertriangular) {
@@ -574,7 +574,7 @@ int slv_block_partition_harwell(slv_system_t sys)
 
 /* Fill incidence vectors and place included relations w/o
  * incidence in temporary relation list before the unincluded
- * and inactive relations 
+ * and inactive relations
  */
   col_incidence = 0;
   row_perm_count = 0;
@@ -1277,7 +1277,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_QRSLV
   status = slv_register_client(slv3_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register QRSlv.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register QRSlv.");
   } else {
     nclients++;
   }
@@ -1285,7 +1285,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_CSLV
   status = slv_register_client(slv4_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register CSlv.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register CSlv.\n");
   } else {
     nclients++;
   }
@@ -1293,7 +1293,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_LSSLV
   status = slv_register_client(slv5_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register LSSlv (slv5).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register LSSlv (slv5).\n");
   } else {
     nclients++;
   }
@@ -1301,7 +1301,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_MPS
   status = slv_register_client(slv6_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register MPS (slv6).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register MPS (slv6).\n");
   } else {
     nclients++;
   }
@@ -1309,7 +1309,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_NGSLV
   status = slv_register_client(slv7_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register NGSlv (slv7).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register NGSlv (slv7).\n");
   } else {
     nclients++;
   }
@@ -1317,7 +1317,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_OPTSQP
   status = slv_register_client(slv2_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register OPTSQP (slv2).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register OPTSQP (slv2).\n");
   } else {
     nclients++;
   }
@@ -1325,7 +1325,7 @@ int SlvRegisterStandardClients(void)
 #if (defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT))
   status = slv_register_client(slv8_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register CONOPT (slv8).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register CONOPT (slv8).\n");
   } else {
     nclients++;
   }
@@ -1333,7 +1333,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_CMSLV
   status = slv_register_client(slv9_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register CMSlv (slv9).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register CMSlv (slv9).\n");
   } else {
     nclients++;
   }
@@ -1341,7 +1341,7 @@ int SlvRegisterStandardClients(void)
 #ifdef STATIC_LRSLV
   status = slv_register_client(slv9a_register,NULL,NULL,&newclient);
   if (status) {
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Unable to register LRSlv (9a).\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register LRSlv (9a).\n");
   } else {
     nclients++;
   }

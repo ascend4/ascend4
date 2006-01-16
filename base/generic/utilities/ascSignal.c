@@ -29,7 +29,7 @@
  *
  */
 /*
- * Start of making signal handling in ASCEND 
+ * Start of making signal handling in ASCEND
  * code somewhat sane. Still needs to somehow
  * support the management of jmp_buf's so that
  * handlers will longjmp to the right place.
@@ -45,7 +45,7 @@
  *                registered handlers are reset before return.
  *              - Added Asc_SignalRecover() to standard handler
  *                Asc_SignalTrap() so handlers are reset if necessary. (JDS)
- *  12/10/2005  - Changed storage of signal handlers from gl_list's 
+ *  12/10/2005  - Changed storage of signal handlers from gl_list's
  *                to local arrays.  gl_list's can't legally hold
  *                function pointers. (JDS)
  */
@@ -71,7 +71,7 @@
 static jmp_buf f_test_env;    /* for local testing of signal handling */
 #endif
 
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
 /* test buf for initialization */
 jmp_buf g_fpe_env;
 jmp_buf g_seg_env;
@@ -120,15 +120,15 @@ static void testctrlc(int signum)
 /*
  * So far the following seem to need reset trapped signals after
  * a longjmp, or unconditionally.
- * HPUX cc -Aa -D_HPUX_SOURCE 
+ * HPUX cc -Aa -D_HPUX_SOURCE
  * Solaris cc
  * AIX xlc
  * IRIX cc
  * Windows
- * 
+ *
  * The following retain the last trap set with or without a call to longjmp
  * and so don't need resetting of traps.
- * SunOS4 acc 
+ * SunOS4 acc
  * OSF32 cc
  * NetBSD gcc 2.4.5 -ansi
  */
@@ -136,7 +136,7 @@ static void testctrlc(int signum)
  * It should not be called except when starting a process.
  * Return 0 for no reset needed, 1 for reset needed, and
  * -1 if the test fails (presuming program doesn't exit first.)
- * Side effects:  
+ * Side effects:
  *   - a line is sent to ASCERR
  *   - SIGINT is set to SIG_DFL if no handler was previously registered
  *   - SIGFPE may be set to SIG_DFL if no handler was previously registered
@@ -162,7 +162,7 @@ static int ascresetneeded(void) {
   }
   if (c != 1) {
     CONSOLE_DEBUG("SIGINT test failed");
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Signal (SIGINT) test failed. ASCEND unlikely to work on this hardware.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Signal (SIGINT) test failed. ASCEND unlikely to work on this hardware.");
     result = -1;
   }
   lasttrap = signal(SIGINT, (NULL != savedtrap) ? savedtrap : SIG_DFL);
@@ -191,7 +191,7 @@ static int ascresetneeded(void) {
   }
   if (c != 1) {
     CONSOLE_DEBUG("SIGFPE test failed");
-    error_reporter(ASC_PROG_ERROR,NULL,0,"Signal test failed. ASCEND unlikely to work on this hardware.");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Signal test failed. ASCEND unlikely to work on this hardware.");
     result = -1;
   }
   lasttrap = signal(SIGFPE, (NULL != savedtrap) ? savedtrap : SIG_DFL);
@@ -274,7 +274,7 @@ int Asc_SignalInit(void)
 # ifndef NO_SIGSEGV_TRAP
   initstack(f_seg_traps, &f_seg_top_of_stack, SIGSEGV);
 # endif
-  
+
   f_reset_needed = ascresetneeded();
   if (f_reset_needed < 0) {
     f_reset_needed = 1;
@@ -317,10 +317,10 @@ static void reset_trap(int signum, SigHandler *tlist, int tos)
  *_Note that if somebody installs a handler without going through
  * our push/pop, theirs is liable to be forgotten.
  */
-void Asc_SignalRecover(int force) 
+void Asc_SignalRecover(int force)
 {
   if (force || f_reset_needed > 0) {
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     reset_trap(SIGFPE, f_fpe_traps, f_fpe_top_of_stack);
     reset_trap(SIGINT, f_int_traps, f_int_top_of_stack);
     reset_trap(SIGSEGV, f_seg_traps, f_seg_top_of_stack);
@@ -354,7 +354,7 @@ static int push_trap(SigHandler *tlist, int *stackptr, SigHandler tp)
   return 0;
 }
 
-/* 
+/*
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
  * Returns -1 if stack of signal requested does not exist.
@@ -385,7 +385,7 @@ int Asc_SignalHandlerPush(int signum, SigHandler tp)
       return -1;
   }
   if (err != 0) {
-    error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"Asc_Signal (%d) stack limit exceeded.",signum);
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack limit exceeded.",signum);
     return err;
   }
   (void)signal(signum, tp); /* install */
@@ -402,7 +402,7 @@ static int pop_trap(SigHandler *tlist, int *stackptr, SigHandler tp)
 
   if ((tlist == NULL) || (stackptr == NULL)) {
     return 2;
-  } 
+  }
   if (*stackptr < 0) {
     return 1;
   }
@@ -434,7 +434,7 @@ int Asc_SignalHandlerPop(int signum, SigHandler tp)
   }
   if (err != 0 && tp != NULL) {
 	CONSOLE_DEBUG("stack pop mismatch");
-    error_reporter(ASC_PROG_ERROR,__FILE__,__LINE__,"Asc_Signal (%d) stack pop mismatch.",signum);
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Asc_Signal (%d) stack pop mismatch.",signum);
     return err;
   }
   Asc_SignalRecover(TRUE);
