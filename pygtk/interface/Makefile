@@ -5,7 +5,11 @@ CC = gcc
 
 SO_SUFF = .dll
 
-PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
+ifeq ($(OSTYPE),"cygwin")
+	PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
+else
+	PLATFORM_CPPFLAGS =
+endif
 
 CXXFLAGS = -c -g
 
