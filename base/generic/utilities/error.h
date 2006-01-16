@@ -57,14 +57,18 @@
 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define ERROR_REPORTER_DEBUG(MSG,args...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
+# define ERROR_REPORTER_HERE(SEV,MSG,args...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
 # define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ##args)
 #elif defined(HAVE_C99)
 # define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
+# define ERROR_REPORTER_HERE(SEV,MSG,...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
 # define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ## __VA_ARGS__)
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
+# define ERROR_REPORTER_HERE error_reporter_here
 # define CONSOLE_DEBUG console_debug
 int error_reporter_note_no_line(const char *fmt,...);
+int error_reporter_here(const error_severity_t sev, const char *fmt,...);
 int console_debug(const char *fmt,...);
 #endif
 

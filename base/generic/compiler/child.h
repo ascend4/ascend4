@@ -96,6 +96,7 @@ struct ChildListEntry {
 #define origin_PARR 6     /**< Origin code - P-ARR. */
 #define origin_PISA 7     /**< Origin code - P-IS_A. */
 #define origin_PWB  8     /**< Origin code - P-WILL_BE. */
+#define origin_EXT  9     /**< Origin code - EXT statement */
 #define origin_PARAMETER_OFFSET (origin_PALI - origin_ALI)
 /**<
  * Distance between corresponding origin and the parametric version.

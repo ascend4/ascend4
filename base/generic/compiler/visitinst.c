@@ -443,9 +443,11 @@ static void SlowVisitTree(struct Instance *inst,
         }
       }
       if (nullchildren) {
-        FPRINTF(ASCERR,"Found %u NULL children of ",nullchildren);
+	    error_reporter_start(ASC_PROG_ERR,__FILE__,__LINE__);
+        FPRINTF(ASCERR,"Found %u NULL children of '",nullchildren);
         WriteInstanceName(ASCERR,inst,NULL);
-        FPRINTF(ASCERR,".\n");
+        FPRINTF(ASCERR,"'.\n");
+		error_reporter_end_flush();
       }
     }
     if (depth) (*proc)(inst);		/* Apply on way up, if bottom up.*/
