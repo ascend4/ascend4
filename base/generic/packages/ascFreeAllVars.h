@@ -41,8 +41,8 @@
  *  </pre>
  */
 
-#ifndef __FREE_ALL_VARS_H_SEEN__
-#define __FREE_ALL_VARS_H_SEEN__
+#ifndef ASC_ASCFREEALLVARS_H
+#define ASC_ASCFREEALLVARS_H
 
 extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *i);
 /**< Asc_ClearVarsInTree(i).
@@ -63,5 +63,5 @@ extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *dummy1,
  *  and should be trashed ASAP.
  */
 
-#endif /* __FREE_ALL_VARS_H_SEEN__ */
+#endif /* ASC_ASCFREEALLVARS_H */
 
