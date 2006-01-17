@@ -1174,11 +1174,4 @@ int do_sensitivity_eval_all(struct Slv_Interp *slv_interp,
   return result;
 }
 
-char sensitivity_help[] =
-	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
-	"  1. name: name of a reference instance or SELF.\n"
-	"  2. x: x, where x is an array of > solver_var.\n"
-	"  3. y: where y is an array of > solver_var.\n"
-	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
-
 #undef DEBUG
