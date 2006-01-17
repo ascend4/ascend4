@@ -49,23 +49,23 @@
 #define FFLUSH fflush_error_reporter
 
 /**
-	This nice macro on GNU C allows quick-and-dirty debug error
-	messages using the ERROR_REPORTER_DEBUG macro. On non GNU C
-	systems, you will still get the error messages, but the location
-	of the error won't be reported, because you don't support
-	variadic macros.
+	Variadic macros to allow nice succint logging and error reporting
+	calls from C dialects that support them (GCC, C99 and others)
+
+	If you don't support variadic macros, you will still get the messages
+	but without the file/function/line number.
 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 # define ERROR_REPORTER_DEBUG(MSG,args...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,MSG,args...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,MSG,args...) error_reporter(SEV,NULL,0,MSG, ##args)
-# define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ##args)
+# define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"\33[1m%s:%d (%s): " MSG "\33[0m\n",__FILE__,__LINE__,__func__, ##args)
 
 #elif defined(HAVE_C99)
 # define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,MSG,...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,MSG,...) error_reporter(SEV,NULL,0,MSG, ## __VA_ARGS__)
-# define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"%s:%d (%s): " MSG "\n", __FILE__,__LINE__,__func__, ## __VA_ARGS__)
+# define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"\33[1m%s:%d (%s): " MSG "\33[0m\n",__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line

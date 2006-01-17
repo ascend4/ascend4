@@ -159,6 +159,15 @@ testsolverinit: testsolverinit.o $(OBJS) $(ASC_LIBS)
 
 
 #------------------------
+# Trying to fix implementation of external functions
+
+testextfn.o: testextfn.cpp
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) -o $@ $^
+
+testextfn: testextfn.o $(OBJS) $(ASC_LIBS)
+	$(LD) -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
+
+#------------------------
 # Testing the Python module
 
 test: $(LIB)
