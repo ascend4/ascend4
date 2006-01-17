@@ -277,11 +277,11 @@ int StaticPackages_Init(void)
   int result = 0;
 
   char sensitivity_help[] =
-    "This function does sensitivity analysis dy/dx. It requires 4 args.\n"
-    "The first arg is the name of a reference instance or SELF.\n"
-    "The second arg is x, where x is an array of > solver_var\n."
-    "The third arg y, where y is an array of > solver_var\n. "
-    "The fourth arg is dy/dx which dy_dx[1..n_y][1..n_x].\n";
+	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
+	"  1. name: name of a reference instance or SELF.\n"
+	"  2. x: x, where x is an array of > solver_var.\n"
+	"  3. y: where y is an array of > solver_var.\n"
+	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
 
   result = CreateUserFunction("do_solve",
                               (ExtEvalFunc *)NULL,

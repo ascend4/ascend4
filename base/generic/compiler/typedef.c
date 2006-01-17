@@ -393,39 +393,47 @@ int LocateLCLPivot(symchar *s)
   }
 }
 
-/*
- * On entry assumes g_lcl_pivot != NULL unless there are no children yet.
- * Returns 1 if succeeds in adding a new child record.
- * Returns 0 if fails due to duplicate name.
- * Returns -1 if fails due to malloc fail or bad input.
- * s is the symchar of the childname, d is its type ptr which may be null,
- * nsubs indicates if child is array
- * nsubs > 0 (with total known subscripts)
- * nsubs = 0 not an array
- * nsubs < 0 an aliases, subscripts to be determined at end.
- * so a value of -1 should be given for b ALIASES a; and a value of
- * -2 given for b[1..n] ALIASES a; since we don't know for certain
- * the subscriptedness of a until children are all parsed.
- *   For aliases, the correct value of nsubs must be set before
- * calling MakeChildList.
- * s MUST be from the symbol table.
- * When we have a more useful symchar definition some of this
- * might be better implemented.
- * parametric should be 1 if stat is a parameter decl or 0 if body stat.
- */
 #define STATBODY 0
 #define STATPARAMETRIC 1
+
+/** Store a new 'child record' in the linked list of statements.
+ 
+	@param s name of the child (symchar that's already AddSymbol-ed)
+	@param d type pointer for the childname, which may be null,
+	@param nsubs number of known subscripts (if an array),
+		0 if not an array,
+		<0 if it's an alias (subscripts to be determined at the end).
+		See the 'note' below.
+	@param parametric 1 if stat is a parameter decl, 0 if body stat (...?)
+
+	@return 1 on success, 0 on failure by duplicate name, -1 on MALLOC or bad input.
+
+	This function inserts a named named statement/type into the named-ordered
+	list of statements.
+
+	On entry assumes g_lcl_pivot != NULL unless there are no children yet.
+	
+	For aliases, the correct value of nsubs must be set before
+	calling MakeChildList.
+
+	@note For 'nsubs', a value of '-1' should be given for <tt>b ALIASES a;</tt>
+		and a value of '-2' should be given for <tt>b[1..n] ALIASES a;</tt> since
+		we don't know for certain the subscriptedness of 'a' untill children
+		are all parsed.
+*/
 static
 int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
            CONST struct Statement *stat, int parametric)
 {
   struct LinkChildListEntry *new;
+  
   /* search for insertion location, which means move pivot to the
    * name just before this one so we can insert after pivot.
    */
   if (!LocateLCLPivot(s)) {
     return 0; /* if found the exact name, exit early */
   }
+
   /* get a LCLEntry to fill with data */
   new = GetLCL();
   if (new==NULL) return -1;
@@ -534,17 +542,23 @@ end linkchildlistentry memory manipulation functions.
 could we put all the above in the childdef file?
 \**********************************************************/
 
-
 #define DoName(n,c,s) DoNameF((n),(c),(s),1)
 #define DoNameQuietly(n,c) DoNameF((n),(c),(s),0)
-/*
- * Checks the first element of a name for being in the child list.
- * If not in child list, adds it. returns DEF_OKAY.
- * If in child list, returns DEF_NAME_DUPLICATE, making noise if noisy !=0.
- * Name must be an id.
- * Also checks if name is name of an array.
- * This function should NOT be use on parameter declarations.
- */
+
+/**
+	Checks the first element of a name for being in the child list.
+	
+	@return DEF_OKAY if the child was added to the list
+		DEF_NAME_DUPLICATE if the child was already in the list (can't be added)
+
+	@param nptr name being added. We are only looking at the first 'link' in the name, eg 'a' in 'a[5]'.
+	@param noisy output stuff when child can't be added
+	
+	Name must be an id (ie a variable name like 'my_var')
+	
+	Also checks if name is name of an array.
+	This function should NOT be use on parameter declarations.
+*/
 static
 enum typelinterr DoNameF(CONST struct Name *nptr,
                          CONST struct TypeDescription *type,
@@ -558,7 +572,7 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
     name = NameIdPtr(nptr);
     switch (StatementType(stat)) {
     case EXT:
-	  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"PROCESSING EXTERNAL RELATION\n");
+	  CONSOLE_DEBUG("PROCESSING EXTERNAL RELATION");
     case ISA:
     case REF: /* IS_A of prototype */
     case WILLBE:
@@ -1057,6 +1071,7 @@ int DoLogRel(symchar *type,
 }
 
 
+/** Process an external statement (i.e. add it to the child list, simply) */
 static
 int DoExternal(symchar *type,
                struct Statement *stat,
@@ -1067,17 +1082,21 @@ int DoExternal(symchar *type,
 
   (void) type; (void) ft;
 
-  FPRINTF(ASCERR,"DOEXTERNAL\n");
   assert(stat && (StatementType(stat) == EXT));
   /*
    * The grammar specifies that External function calls
    * must be named.
    */
-  FPRINTF(ASCERR,"EXTERNALSTATNAME\n");
   nptr = ExternalStatName(stat);
-  FPRINTF(ASCERR,"DONAME\n");
+  error_reporter_start(ASC_PROG_NOTE,NULL,0);
+  FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
+  WriteName(ASCERR,nptr);
+  FPRINTF(ASCERR,"\n");
+  error_reporter_end_flush();
+  
+  /* add the name to the child list */
   doname_status = DoName(nptr,FindExternalType(),stat);
-  FPRINTF(ASCERR,"DONAME STATUS = %d\n",doname_status);
+  CONSOLE_DEBUG("DONAME STATUS = %d",doname_status);
   return doname_status;
 }
 
@@ -1158,7 +1177,7 @@ enum typelinterr DoRelations(symchar *type,
       }
       break;
     case EXT:
-		FPRINTF(ASCERR,"PROCESSING EXTERNAL REL\n");
+      CONSOLE_DEBUG("PROCESSING EXTERNAL REL");
       error_code = DoExternal(type,stat,ft);
       if (error_code != DEF_OKAY) {
         TypeLintError(ASCERR,stat, error_code);

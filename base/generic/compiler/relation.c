@@ -2125,6 +2125,8 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst,
   unsigned long c,len,pos;
   unsigned long n_inputs;
 
+  CONSOLE_DEBUG("CREATING BLACK BOX RELATION");
+
   n_inputs = gl_length(inputs);
   len = n_inputs + 1;		/* an extra for the output variable. */
 

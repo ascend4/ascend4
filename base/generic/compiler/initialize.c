@@ -305,7 +305,7 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
 	}
 	i2 = ChildByChar(i1,fixed);
 	if(i2==NULL){
-	  CONSOLE_DEBUG(,"Attempted to FIX a solver_var that doesn't have a 'fixed' child!");
+	  CONSOLE_DEBUG("Attempted to FIX a solver_var that doesn't have a 'fixed' child!");
 	  fm->ErrNo = Proc_illegal_type_use;
 	  ProcWriteFixError(fm,name);
 	  return;
@@ -479,32 +479,32 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   funcname = ExternalStatFuncName(stat);
   efunc = LookupExtFunc(funcname);
 
-  /* FPRINTF(ASCERR,"EXECUTEINITEXT, FUNC NAME: %s\n", funcname); */
-
+  CONSOLE_DEBUG("EXECUTEINITEXT func name:'%s'",funcname);
 
   if (efunc == NULL) {
-	FPRINTF(ASCERR,"LOOKUPEXTFUNC NULL\n");
+    CONSOLE_DEBUG("Failed to look up external function");
     fm->ErrNo = Proc_CallError;
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_unloaded,0);
     return;
   }
 
-  /* FPRINTF(ASCERR,"FOUND EXT FUNC, name:%s, in:%d, out:%d\n", efunc->name, efunc->n_inputs, efunc->n_outputs); */
+  CONSOLE_DEBUG("FOUND EXT FUNC, name:%s, in:%d, out:%d\n", efunc->name, efunc->n_inputs, efunc->n_outputs);
 
   eval_func = GetValueFunc(efunc);
   if (eval_func == NULL) {
-	FPRINTF(ASCERR,"GETVALUEFUNC NULL\n");
+    CONSOLE_DEBUG("GetValueFunc(efunc) returned NULL");
     fm->ErrNo = Proc_CallError;
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_nulleval,0);
     return;
   }
+
   errlist = gl_create(1);
   arglist = InitCheckExtCallArgs(fm->i,stat,errlist);
   len = gl_length(errlist);
   if (len != 0) {
-	FPRINTF(ASCERR,"LEN != 0\n");
+    CONSOLE_DEBUG("InitCheckExtCallArgs returned items in errlist...");
     fm->flow = FrameError;
     ProcWriteExtError(fm,funcname,PE_argswrong,0);
     c = 1;
@@ -548,7 +548,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  /* FPRINTF(ASCERR,"CHECKED EXTERNAL ARGS, OK\n"); */
+  CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");
 
   Init_Slv_Interp(&slv_interp);
   nok = (*eval_func)(&slv_interp,fm->i,arglist);
