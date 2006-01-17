@@ -279,23 +279,15 @@ extern struct Statement *CreateEXTERN(int mode,
                                       struct Name *data,
                                       struct Name *scope);
 /**<
- *  <!--  struct Statement *CreateEXTERN(mode,n,funcname,vl,data,scope); -->
- *  <!--  int mode; -- 0 = procedural;                                 -->
- *  <!--            --  1 = glassbox declarative;                      -->
- *  <!--            --  2 = blackbox declarative                       -->
- *  <!--  struct Name *n;                                              -->
- *  <!--  char *funcname;                                              -->
- *  <!--  struct VariableList *vl;                                     -->
- *  <!--  struct Name *data; -- additional user data or NULL;          -->
- *  <!--  struct Name *scope; -- scope at which external relations are to -->
- *  <!--                        be embedded. Applicable only to glassboxes -->
- *  The statement's module is set to the current open module.
- *  The statement's line number is set to the current line number.
- *  @param mode  0 = procedural; 1 = glassbox declarative; 2 = blackbox declarative
- *  @param data  additional user data or NULL
- *  @param scope scope at which external relations are to be embedded.
- *               Applicable only to glassboxes.
- */
+	Create a blackbox or glassbox function statement or an external method statement.
+	@return The created statement
+
+	@param mode  0 = procedural; 1 = glassbox declarative; 2 = blackbox declarative
+	@param n Name of the relation (not used in procedural calls)
+	@param vl Parameters supplied for the external function/method
+	@param data Data arguments, only used in black/glass box functions, else set NULL.
+	@param scope scope at which external relations are to be embedded. Applicable only to glassboxes.
+*/
 
 extern struct Statement *CreateFlow(enum FlowControl fc,
                                     CONST char *msgtext);

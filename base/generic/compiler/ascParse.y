@@ -204,10 +204,8 @@ static void WarnMsg_MismatchEnd(CONST char *, CONST char *,
 static CONST char *TokenAsString(unsigned long);
 
 static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...);
-/*
- *  NOTES  Explanations  NOTES  Explanations  NOTES  Explanations  NOTES
- *
- *  Mark Thomas  Thursday, 13 March 1997
+
+/** @page ascend-notes About 'NOTES' in ASCEND
  *
  *  The parser will now parse a NOTES block as well as in-lined NOTES.  As
  *  a matter of fact, the parser would probably parse FORTRAN now since it
@@ -269,6 +267,8 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *
  *  Note that if you do the latter, you'll get `statement with no effect'
  *  warnings from gcc -Wall.
+ *
+ * -- Mark Thomas  Thursday, 13 March 1997
  */
 #define DEBUG_NOTES(s) 0
 
