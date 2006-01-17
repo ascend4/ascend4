@@ -9,6 +9,7 @@ extern "C"{
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
+#include <general/tm_time.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
@@ -265,6 +266,7 @@ Simulation::getFixableVariables(){
 	return vars;
 }
 
+	
 void
 Simulation::solve(Solver solver){
 	if(!is_built){
@@ -290,40 +292,51 @@ Simulation::solve(Solver solver){
 	cerr << "... DONE PRESOLVING" << endl;
 
 	cerr << "SOLVING SYSTEM..." << endl;
-	slv_solve(sys);
+	// Add some stuff here for cleverer iteration....
+	unsigned niter = 300;
+	double updateinterval = 0.02;
 
-	slv_status_t slvstat;
-	slv_get_status(sys,&slvstat);
-	if(slvstat.ok){
+	double starttime = tm_cpu_time();
+	double lastupdate = starttime;
+	slv_status_t status;
+	int solved_vars=0;
+	bool stop=false;
+
+	for(int iter = 0; iter < niter && !stop; ++iter){
+		slv_get_status(sys,&status);
+		if(status.ready_to_solve){
+			slv_iterate(sys);
+		}
+		if(tm_cpu_time() - lastupdate > updateinterval && iter > 0){
+			if(solved_vars < status.block.previous_total_size){
+				solved_vars = status.block.previous_total_size;
+				CONSOLE_DEBUG("Solved %5d vars. Now block %3d/%-3d...", solved_vars, status.block.current_block, status.block.number_of);
+			}else{
+				CONSOLE_DEBUG("Total %5d iterations (%5d in current block of %d vars)", iter, status.block.iteration, status.block.current_size);
+			}
+			lastupdate = tm_cpu_time();
+		}
+	}
+
+	if(status.ok){
 		cerr << "... DONE SOLVING SYSTEM" << endl;
 	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver failed");
 	}
 
-	cerr << "SOLVER PERFORMED " << slvstat.iteration << " ITERATIONS IN " << slvstat.cpu_elapsed << "s" << endl;
+	cerr << "SOLVER PERFORMED " << status.iteration << " ITERATIONS IN " << (tm_cpu_time() - starttime) << "s" << endl;
 
-	if(slvstat.iteration_limit_exceeded){
+	if(status.iteration_limit_exceeded){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Exceeded interation limit");
 	}
 
-	if(slvstat.converged){
+	if(status.converged){
 		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations, %3.2e s"
-			,slvstat.iteration,slvstat.cpu_elapsed);
+			,status.iteration,status.cpu_elapsed);
 	}else{
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged after %d iteratoins.",slvstat.iteration);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged after %d iterations.",status.iteration);
 	}
 
-
-	//slv_print_output(stderr,solver);
-
-	/*
-	if(s==NULL){
-		throw runtime_error("System not yet built");
-	}
-	cerr << "PRESOLVING SYSTEM..." << endl;
-	slv_presolve(s);
-	cerr << "... DONE PRESOLVING" << endl;
-	*/
 }
 
 void

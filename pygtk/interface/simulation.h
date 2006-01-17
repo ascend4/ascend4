@@ -71,6 +71,7 @@ public:
 
 	void setSolver(Solver &s);
 	const Solver getSolver() const;
+
 };
 
 
