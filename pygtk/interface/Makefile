@@ -3,12 +3,13 @@ SOURCE_ROOT = ../..
 CXX = g++
 CC = gcc 
 
-SO_SUFF = .dll
 
 ifeq ($(OSTYPE),"cygwin")
 	PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
+    SO_SUFF = .dll
 else
 	PLATFORM_CPPFLAGS =
+	SO_SUFF = .so
 endif
 
 CXXFLAGS = -c -g
