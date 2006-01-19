@@ -1638,225 +1638,54 @@ static int slv_count_bnds(bnd_filter_t *bfilter,struct bnd_boundary **blist)
   return ret;
 }
 
-int slv_count_solvers_vars(slv_system_t sys, var_filter_t *vf)
-{
-  if (sys==NULL || sys->vars.solver == NULL || vf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_vars called with NULL\n");
-    return 0;
-  }
-  return slv_count_vars(vf,sys->vars.solver);
-}
+/*--------------------------------------------------------------
+	The following is some pretty aggressive simplication of the 
+	previously very repetitive 'method' declarations for 
+	returning the numbers of various types of things in the
+	slv_system_t.
+*/
 
+/** This macro automates the declaration of the slv_count_solvers_* methods */
+#define DEFINE_SLV_COUNT_SOLVER_METHOD(NAME,PROP,TYPE,COUNT) \
+	int slv_count_solvers_ ## NAME ( slv_system_t sys, TYPE ##_filter_t *xxx){ \
+		if(sys==NULL || sys->PROP.solver == NULL || xxx==NULL){ \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_cound_solvers_" #NAME " called with NULL"); \
+			return 0; \
+		} \
+		return slv_count_##COUNT(xxx,sys->PROP.solver); \
+	}
 
-int slv_count_solvers_pars(slv_system_t sys, var_filter_t *vf)
-{
-  if (sys==NULL || sys->pars.solver == NULL || vf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_pars called with NULL\n");
-    return 0;
-  }
-  return slv_count_vars(vf,sys->pars.solver);
-}
+/** This macro automates the declaration of the slv_count_master_* methods */
+#define DEFINE_SLV_COUNT_MASTER_METHOD(NAME,PROP,TYPE,COUNT) \
+	int slv_count_master_ ## NAME ( slv_system_t sys, TYPE ##_filter_t *xxx){ \
+		if(sys==NULL || sys->PROP.master == NULL || xxx==NULL){ \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_cound_master_" #NAME " called with NULL"); \
+			return 0; \
+		} \
+		return slv_count_##COUNT(xxx,sys->PROP.master); \
+	}
 
-int slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vf)
-{
-  if (sys==NULL || sys->unattached.solver == NULL || vf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_unattached called with NULL\n");
-    return 0;
-  }
-  return slv_count_vars(vf,sys->unattached.solver);
-}
+/** The macro makes all the various * declarations of the methods of type D (master or solvers) */
+#define DEFINE_COUNT_METHODS(D) \
+	D(vars,vars,var,vars) \
+	D(pars,pars,var,vars) \
+	D(unattached,unattached,var,vars) \
+	D(dvars,dvars,dis,dvars) \
+	D(disunatt,disunatt,dis,dvars) \
+	D(rels,rels,rel,rels) \
+	D(condrels,condrels,rel,rels) \
+	D(objs,objs,rel,rels) \
+	D(logrels,logrels,logrel,logrels) \
+	D(condlogrels,condlogrels,logrel,logrels) \
+	D(whens,whens,when,whens) \
+	D(bnds,bnds,bnd,bnds)
 
-int slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dvf)
-{
-  if (sys==NULL || sys->dvars.solver == NULL || dvf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_dvars called with NULL\n");
-    return 0;
-  }
-  return slv_count_dvars(dvf,sys->dvars.solver);
-}
+/** Invoke the DEFINE_COUNT_METHODS macro for SOLVERS methods */
+DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_SOLVER_METHOD)
+/** Invoke the DEFINE_COUNT_METHODS macro for MASTER methods */
+DEFINE_COUNT_METHODS(DEFINE_SLV_COUNT_MASTER_METHOD)
 
-int slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dvf)
-{
-  if (sys==NULL || sys->disunatt.solver == NULL || dvf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_disunatt called with NULL\n");
-    return 0;
-  }
-  return slv_count_dvars(dvf,sys->disunatt.solver);
-}
-
-int slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rf)
-{
-  if (sys==NULL || sys->rels.solver == NULL || rf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_rels called with NULL\n");
-    return 0;
-  }
-  return slv_count_rels(rf,sys->rels.solver);
-}
-
-
-int slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rf)
-{
-  if (sys==NULL || sys->condrels.solver == NULL || rf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_condrels called with NULL\n");
-    return 0;
-  }
-  return slv_count_rels(rf,sys->condrels.solver);
-}
-
-int slv_count_solvers_objs(slv_system_t sys, rel_filter_t *rf)
-{
-  if (sys==NULL || sys->objs.solver == NULL || rf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_objs called with NULL\n");
-    return 0;
-  }
-  return slv_count_rels(rf,sys->objs.solver);
-}
-
-int slv_count_solvers_logrels(slv_system_t sys, logrel_filter_t *lrf)
-{
-  if (sys==NULL || sys->logrels.solver == NULL || lrf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_logrels called with NULL\n");
-    return 0;
-  }
-  return slv_count_logrels(lrf,sys->logrels.solver);
-}
-
-
-int slv_count_solvers_condlogrels(slv_system_t sys, logrel_filter_t *lrf)
-{
-  if (sys==NULL || sys->condlogrels.solver == NULL || lrf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_condlogrels called with NULL\n");
-    return 0;
-  }
-  return slv_count_logrels(lrf,sys->condlogrels.solver);
-}
-
-int slv_count_solvers_whens(slv_system_t sys, when_filter_t *wf)
-{
-  if (sys==NULL || sys->whens.solver == NULL || wf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_whens called with NULL\n");
-    return 0;
-  }
-  return slv_count_whens(wf,sys->whens.solver);
-}
-
-int slv_count_solvers_bnds(slv_system_t sys, bnd_filter_t *bf)
-{
-  if (sys==NULL || sys->bnds.solver == NULL || bf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_solvers_bnds called with NULL\n");
-    return 0;
-  }
-  return slv_count_bnds(bf,sys->bnds.solver);
-}
-
-int slv_count_master_vars(slv_system_t sys, var_filter_t *vf)
-{
-  if (sys==NULL || sys->vars.master == NULL || vf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_vars called with NULL\n");
-    return 0;
-  }
-  return slv_count_vars(vf,sys->vars.master);
-}
-
-
-int slv_count_master_pars(slv_system_t sys, var_filter_t *vf)
-{
-  if (sys==NULL || sys->pars.master == NULL || vf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_pars called with NULL\n");
-    return 0;
-  }
-  return slv_count_vars(vf,sys->pars.master);
-}
-
-int slv_count_master_unattached(slv_system_t sys, var_filter_t *vf)
-{
-  if (sys==NULL || sys->unattached.master == NULL || vf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_unattached called with NULL\n");
-    return 0;
-  }
-  return slv_count_vars(vf,sys->unattached.master);
-}
-
-int slv_count_master_dvars(slv_system_t sys, dis_filter_t *dvf)
-{
-  if (sys==NULL || sys->dvars.master == NULL || dvf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_dvars called with NULL\n");
-    return 0;
-  }
-  return slv_count_dvars(dvf,sys->dvars.master);
-}
-
-int slv_count_master_disunatt(slv_system_t sys, dis_filter_t *dvf)
-{
-  if (sys==NULL || sys->disunatt.master == NULL || dvf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_disunatt called with NULL\n");
-    return 0;
-  }
-  return slv_count_dvars(dvf,sys->disunatt.master);
-}
-
-int slv_count_master_rels(slv_system_t sys, rel_filter_t *rf)
-{
-  if (sys==NULL || sys->rels.master == NULL || rf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_rels called with NULL\n");
-    return 0;
-  }
-  return slv_count_rels(rf,sys->rels.master);
-}
-
-int slv_count_master_condrels(slv_system_t sys, rel_filter_t *rf)
-{
-  if (sys==NULL || sys->condrels.master == NULL || rf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_rels called with NULL\n");
-    return 0;
-  }
-  return slv_count_rels(rf,sys->condrels.master);
-}
-
-int slv_count_master_objs(slv_system_t sys, rel_filter_t *rf)
-{
-  if (sys==NULL || sys->objs.master == NULL || rf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_objs called with NULL\n");
-    return 0;
-  }
-  return slv_count_rels(rf,sys->objs.master);
-}
-
-int slv_count_master_logrels(slv_system_t sys, logrel_filter_t *lrf)
-{
-  if (sys==NULL || sys->logrels.master == NULL || lrf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_logrels called with NULL\n");
-    return 0;
-  }
-  return slv_count_logrels(lrf,sys->logrels.master);
-}
-
-int slv_count_master_condlogrels(slv_system_t sys, logrel_filter_t *lrf)
-{
-  if (sys==NULL || sys->condlogrels.master == NULL || lrf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_condlogrels called with NULL\n");
-    return 0;
-  }
-  return slv_count_logrels(lrf,sys->condlogrels.master);
-}
-
-int slv_count_master_whens(slv_system_t sys, when_filter_t *wf)
-{
-  if (sys==NULL || sys->whens.master == NULL || wf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_whens called with NULL\n");
-    return 0;
-  }
-  return slv_count_whens(wf,sys->whens.master);
-}
-
-int slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bf)
-{
-  if (sys==NULL || sys->bnds.master == NULL || bf == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_count_master_bnds called with NULL\n");
-    return 0;
-  }
-  return slv_count_bnds(bf,sys->bnds.master);
-}
+/*------------------------------------------------------*/
 
 static void printwarning(const char * fname, slv_system_t sys)
 {
@@ -2115,15 +1944,47 @@ int32 slv_get_default_parameters(int index,
   }
 }
 
-void slv_get_parameters(slv_system_t sys,slv_parameters_t *parameters)
-{
-  if ( CF(sys,getparam) == NULL ) {
-    printwarning("slv_get_parameters",sys);
-    return;
-  }
-  SF(sys,getparam)(sys,sys->ct,parameters);
-}
+/*-----------------------------------------------------------
+	These macros do some more elimination of repetition. Here we're
+	trying to replace some more complex 'method-like' calls on
+	slv_system_t:
 
+	These macros use macro-argument-concatenation and macro stringification.
+	Verified that the former works with Visual C++:
+		getlinso://www.codeproject.com/macro/metamacros.asp
+*/
+
+/** Define a method like 'void slv_METHODNAME(sys)' */
+#define DEFINE_SLV_PROXY_METHOD_VOID(METHOD) \
+	void slv_ ## METHOD (slv_system_t sys){ \
+		if(CF(sys,METHOD)==NULL){ \
+			printwarning(#METHOD,sys); \
+			return; \
+		} \
+		SF(sys,METHOD)(sys,sys->ct); \
+	}
+
+/** Define a method like 'RETURNTYPE slv_METHOD(sys)'; */
+#define DEFINE_SLV_PROXY_METHOD(METHOD,PROP,RETTYPE) \
+	RETTYPE slv_ ## METHOD (slv_system_t sys){ \
+		if(CF(sys,PROP)==NULL){ \
+			printwarning(#METHOD,sys); \
+			return; \
+		} \
+		return SF(sys,PROP)(sys,sys->ct); \
+	}
+
+/** Define a method like 'void slv_METHOD(sys,TYPE PARAMNAME)'; */
+#define DEFINE_SLV_PROXY_METHOD_PARAM(METHOD,PROP,PARAMTYPE,PARAMNAME) \
+	void slv_ ## METHOD (slv_system_t sys, PARAMTYPE PARAMNAME){ \
+		if(CF(sys,PROP)==NULL){ \
+			printwarning(#METHOD,sys); \
+			return; \
+		} \
+		SF(sys,PROP)(sys,sys->ct, PARAMNAME); \
+	}
+
+DEFINE_SLV_PROXY_METHOD_PARAM(get_parameters,getparam,slv_parameters_t*,parameters);
 
 void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
 {
@@ -2139,87 +2000,17 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
   SF(sys,setparam)(sys,sys->ct,parameters);
 }
 
-void slv_get_status(slv_system_t sys, slv_status_t *status)
-{
-  if ( CF(sys,getstatus) == NULL ) {
-    printwarning("slv_get_status",sys);
-    return;
-  }
-  SF(sys,getstatus)(sys,sys->ct,status);
-}
+DEFINE_SLV_PROXY_METHOD_PARAM(get_status,getstatus,slv_status_t*,status);
+DEFINE_SLV_PROXY_METHOD(get_linsolv_sys, getlinsol, linsol_system_t);
+DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t); 
+DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t); 
+DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level);
+DEFINE_SLV_PROXY_METHOD_VOID(presolve);
+DEFINE_SLV_PROXY_METHOD_VOID(resolve);
+DEFINE_SLV_PROXY_METHOD_VOID(iterate);
+DEFINE_SLV_PROXY_METHOD_VOID(solve);
 
-linsol_system_t slv_get_linsol_sys(slv_system_t sys)
-{
-  if (CF(sys,getlinsol) == NULL ) {
-    printinfo(sys,"slv_get_linsol_sys");
-    return NULL;
-  }
-  return SF(sys,getlinsol)(sys,sys->ct);
-}
-
-mtx_matrix_t slv_get_sys_mtx(slv_system_t sys)
-{
-  if (CF(sys,getsysmtx) == NULL ) {
-    printinfo(sys,"slv_get_sys_mtx");
-    return NULL;
-  }
-  return SF(sys,getsysmtx)(sys,sys->ct);
-}
-
-linsolqr_system_t slv_get_linsolqr_sys(slv_system_t sys)
-{
-  if (CF(sys,getlinsys) == NULL ) {
-    printinfo(sys,"slv_get_linsolqr_sys");
-    return NULL;
-  }
-  return SF(sys,getlinsys)(sys,sys->ct);
-}
-
-void slv_dump_internals(slv_system_t sys,int level)
-{
-  if (CF(sys,dumpinternals) == NULL ) {
-    printinfo(sys,"slv_dump_internals");
-    return;
-  }
-  SF(sys,dumpinternals)(sys,sys->ct,level);
-}
-
-void slv_presolve(slv_system_t sys)
-{
-  if ( CF(sys,presolve) == NULL ) {
-    printwarning("slv_presolve",sys);
-    return;
-  }
-  SF(sys,presolve)(sys,sys->ct);
-}
-
-void slv_resolve(slv_system_t sys)
-{
-  if ( CF(sys,resolve) == NULL ) {
-    printwarning("slv_resolve",sys);
-    return;
-  }
-  SF(sys,resolve)(sys,sys->ct);
-}
-
-void slv_iterate(slv_system_t sys)
-{
-  if ( CF(sys,iterate) == NULL ) {
-    printwarning("slv_iterate",sys);
-    return;
-  }
-  SF(sys,iterate)(sys,sys->ct);
-}
-
-void slv_solve(slv_system_t sys)
-{
-  if ( CF(sys,solve) == NULL ) {
-    printwarning("slv_solve",sys);
-    return;
-  }
-  SF(sys,solve)(sys,sys->ct);
-}
-
+/*-----------------------------------------------------------*/
 
 SlvClientToken slv_get_client_token(slv_system_t sys)
 {
