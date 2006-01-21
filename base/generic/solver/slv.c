@@ -4,7 +4,7 @@
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 1996 Benjamin Andrew Allan
-	Copyright (C) 2005 Carnegie-Mellon University
+	Copyright (C) 2005-2006 Carnegie-Mellon University
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -197,6 +197,7 @@ struct slv_system_structure {
   struct gl_list_t *symbollist; /* list of symbol values struct used to */
                                 /* assign an integer value to a symbol value */
   struct {
+	/** @TODO move the 'bufs' into the above structs (disunatt, etc) */
     struct var_variable *ubuf; /* data space for unclassified real ATOMs */
     struct dis_discrete *udbuf; /* data space for unclassified discrete ATOM */
     struct var_variable *pbuf; /* data space for real ATOMs that are pars */
@@ -222,13 +223,9 @@ struct slv_system_structure {
   } data;
 
   int32 nmodels;
-  int32 need_consistency; /*
-			   * consistency analysis required for conditional
-			   * model ?
-			   */
+  int32 need_consistency; /* consistency analysis required for conditional model ? */
   real64 objvargrad; /* maximize -1 minimize 1 noobjvar 0 */
 };
-
 
 /**
  global variable used to communicate information between solvers and
@@ -268,10 +265,12 @@ static int g_number_of_bnds;
 /** Return the solver index for a given slv_system_t */
 #define SNUM(sys) ((sys)->solver)
 
-/** leave it in here John. Unilateral 'housecleaning' of this sort is not appreciated. */
+/** Number of registered clients */
 #define NORC g_SlvNumberOfRegisteredClients
 
-/** leave it in here John. Unilateral 'housecleaning' of this sort is not appreciated. */
+/** Return the pointer to a registered SLV client's data space. @see SF, related.
+	@param i registered solver ID 
+*/
 #define SCD(i) SlvClientsData[(i)]
 
 /**	Get the solver index for a system and return TRUE if the solver
@@ -352,6 +351,9 @@ unsigned slv_serial_id(slv_system_t sys)
   return sys->serial_id;
 }
 
+/*----------------------------------------------------
+	destructors
+*/
 static
 void slv_destroy_dvar_buffer(struct dis_discrete *dbuf)
 {
@@ -462,6 +464,9 @@ void slv_destroy_client(slv_system_t sys)
   }
 }
 
+/*---------------------------------------------------------
+	get/set instance
+*/
 
 SlvBackendToken slv_instance(slv_system_t sys)
 {
@@ -511,106 +516,6 @@ void slv_set_num_models(slv_system_t sys, int32 nmod)
   }
 }
 
-void slv_set_master_var_list(slv_system_t sys,
-                             struct var_variable **vlist, int size)
-{
-  SFUN(sys->vars.master);
-  sys->vars.mnum = size;
-  sys->vars.master = vlist;
-}
-
-void slv_set_master_par_list(slv_system_t sys,
-                             struct var_variable **vlist, int size)
-{
-  SFUN(sys->pars.master);
-  sys->pars.mnum = size;
-  sys->pars.master = vlist;
-}
-
-void slv_set_master_unattached_list(slv_system_t sys,
-                             struct var_variable **vlist, int size)
-{
-  SFUN(sys->unattached.master);
-  sys->unattached.mnum = size;
-  sys->unattached.master = vlist;
-}
-
-void slv_set_master_dvar_list(slv_system_t sys,
-                              struct dis_discrete **dlist, int size)
-{
-  SFUN(sys->dvars.master);
-  sys->dvars.mnum = size;
-  sys->dvars.master = dlist;
-}
-
-void slv_set_master_disunatt_list(slv_system_t sys,
-                                  struct dis_discrete **dlist, int size)
-{
-  SFUN(sys->disunatt.master);
-  sys->disunatt.mnum = size;
-  sys->disunatt.master = dlist;
-}
-
-void slv_set_master_rel_list(slv_system_t sys,struct rel_relation **rlist,
-		      int size)
-{
-  SFUN(sys->rels.master);
-  sys->rels.mnum = size;
-  sys->rels.master = rlist;
-}
-
-
-void slv_set_master_condrel_list(slv_system_t sys,struct rel_relation **rlist,
-		                 int size)
-{
-  SFUN(sys->condrels.master);
-  sys->condrels.mnum = size;
-  sys->condrels.master = rlist;
-}
-
-void slv_set_master_obj_list(slv_system_t sys,struct rel_relation **rlist,
-		             int size)
-{
-  SFUN(sys->objs.master);
-  sys->objs.mnum = size;
-  sys->objs.master = rlist;
-}
-
-void slv_set_master_logrel_list(slv_system_t sys,
-				struct logrel_relation **lrlist,
-		                int size)
-{
-  SFUN(sys->logrels.master);
-  sys->logrels.mnum = size;
-  sys->logrels.master = lrlist;
-}
-
-void slv_set_master_condlogrel_list(slv_system_t sys,
-				struct logrel_relation **lrlist,
-		                int size)
-{
-  SFUN(sys->condlogrels.master);
-  sys->condlogrels.mnum = size;
-  sys->condlogrels.master = lrlist;
-}
-
-void slv_set_master_when_list(slv_system_t sys,
-			      struct w_when **wlist,
-		              int size)
-{
-  SFUN(sys->whens.master);
-  sys->whens.mnum = size;
-  sys->whens.master = wlist;
-}
-
-void slv_set_master_bnd_list(slv_system_t sys,
-			     struct bnd_boundary **blist,
-		             int size)
-{
-  SFUN(sys->bnds.master);
-  sys->bnds.mnum = size;
-  sys->bnds.master = blist;
-}
 
 void slv_set_symbol_list(slv_system_t sys,
 			 struct gl_list_t *sv)
@@ -621,36 +526,73 @@ void slv_set_symbol_list(slv_system_t sys,
   sys->symbollist = sv;
 }
 
-void slv_set_var_buf(slv_system_t sys, struct var_variable *vbuf)
-{
-  if (sys->data.vbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_var_buf",
-              "bad call.");
-  } else {
-    sys->data.vbuf = vbuf;
-  }
-}
+/*--------------------------------------------------------]
+	Macros to declare
+
+	slv_set_master_*_list(slv_system_t sys, string var_variable **list, int size)
+	slv_set_*_buf(slv_system_t sys, string var_variable **list, int size)
+*/
+
+#define DEFINE_SET_MASTER_LIST_METHOD(NAME,PROP,TYPE) \
+	void slv_set_master_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
+		SFUN(sys->PROP.master); \
+		sys->PROP.mnum = size; \
+		sys->PROP.master = vlist; \
+	}
 
 
-void slv_set_par_buf(slv_system_t sys, struct var_variable *pbuf)
-{
-  if (sys->data.pbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_par_buf",
-              "bad call.");
-  } else {
-    sys->data.pbuf = pbuf;
-  }
-}
 
-void slv_set_unattached_buf(slv_system_t sys, struct var_variable *ubuf)
-{
-  if (sys->data.ubuf !=NULL ) {
-    Asc_Panic(2,"slv_set_unattached_buf",
-              "bad call.");
-  } else {
-    sys->data.ubuf = ubuf;
-  }
-}
+#define DEFINE_SET_MASTER_LIST_METHODS(D) \
+	D(var,vars,var_variable) \
+	D(par,pars,var_variable) \
+	D(unattached,unattached,var_variable); \
+	D(dvar,dvars,dis_discrete) \
+	D(disunatt,disunatt,dis_discrete) \
+	D(rel,rels,rel_relation) \
+	D(condrel,condrels,rel_relation) \
+	D(obj,objs,rel_relation) \
+	D(logrel,logrels,logrel_relation) \
+	D(condlogrel,condlogrels,logrel_relation) \
+	D(when,whens,w_when) \
+	D(bnd,bnds,bnd_boundary)
+
+DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
+
+/*------------------------------------------------------------
+	Macros to declare
+
+	slv_set_NAME_buf(slv_system_t sts, struct TYPE *PROP)
+*/
+
+#define DEFINE_SET_BUF_METHOD(NAME,PROP,TYPE) \
+	void slv_set_##NAME##_buf(slv_system_t sys, struct TYPE *PROP){ \
+		if(sys->data.PROP !=NULL ){ \
+			Asc_Panic(2,"slv_set_" #NAME "_buf","bad call."); \
+		}else{ \
+			sys->data.PROP = PROP; \
+		} \
+	}
+
+#define DEFINE_SET_BUF_METHODS(D) \
+	D(var,vbuf,var_variable) \
+	D(par,pbuf,var_variable) \
+	D(unattached,ubuf,var_variable) \
+	D(disunatt,udbuf,dis_discrete) \
+	D(rel,rbuf,rel_relation) \
+	D(condrel,cbuf,rel_relation) \
+	D(obj,obuf,rel_relation) \
+	D(logrel,lbuf,logrel_relation) \
+	D(condlogrel,clbuf,logrel_relation)
+
+DEFINE_SET_BUF_METHODS(DEFINE_SET_BUF_METHOD)
+
+/*
+	Before the following can be placed into the above macro, the globals
+		g_number_of_dvars
+		g_number_of_whens
+		g_number_of_bnds
+	need to be eliminated. They should be entered as properties of the 'sys', presumably?
+*/
 
 void slv_set_dvar_buf(slv_system_t sys, struct dis_discrete *dbuf, int len)
 {
@@ -660,69 +602,6 @@ void slv_set_dvar_buf(slv_system_t sys, struct dis_discrete *dbuf, int len)
   } else {
     sys->data.dbuf = dbuf;
     g_number_of_dvars = len;
-  }
-}
-
-
-void slv_set_disunatt_buf(slv_system_t sys, struct dis_discrete *udbuf)
-{
-  if (sys->data.udbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_disunatt_buf",
-              "bad call.");
-  } else {
-    sys->data.udbuf = udbuf;
-  }
-}
-
-void slv_set_rel_buf(slv_system_t sys, struct rel_relation *rbuf)
-{
-  if (sys->data.rbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_rel_buf",
-              "bad call.");
-  } else {
-    sys->data.rbuf = rbuf;
-  }
-}
-
-
-void slv_set_condrel_buf(slv_system_t sys, struct rel_relation *cbuf)
-{
-  if (sys->data.cbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_condrel_buf",
-              "bad call.");
-  } else {
-    sys->data.cbuf = cbuf;
-  }
-}
-
-void slv_set_obj_buf(slv_system_t sys, struct rel_relation *obuf)
-{
-  if (sys->data.obuf !=NULL ) {
-    Asc_Panic(2,"slv_set_obj_buf",
-              "bad call.");
-  } else {
-    sys->data.obuf = obuf;
-  }
-}
-
-void slv_set_logrel_buf(slv_system_t sys, struct logrel_relation *lbuf)
-{
-  if (sys->data.lbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_logrel_buf",
-              "bad call.");
-  } else {
-    sys->data.lbuf = lbuf;
-  }
-}
-
-
-void slv_set_condlogrel_buf(slv_system_t sys, struct logrel_relation *clbuf)
-{
-  if (sys->data.clbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_condlogrel_buf",
-              "bad call.");
-  } else {
-    sys->data.clbuf = clbuf;
   }
 }
 
@@ -747,6 +626,8 @@ void slv_set_bnd_buf(slv_system_t sys, struct bnd_boundary *bbuf, int len)
   }
 }
 
+/*---------------------------------------------------------------*/
+
 void slv_set_incidence(slv_system_t sys, struct var_variable **incidence,long s)
 {
   if (sys->data.incidence !=NULL || incidence == NULL) {
@@ -769,8 +650,7 @@ void slv_set_var_incidence(slv_system_t sys, struct rel_relation **varincidence,
   }
 }
 
-void slv_set_logincidence(slv_system_t sys, struct dis_discrete **logincidence,
-			  long s)
+void slv_set_logincidence(slv_system_t sys, struct dis_discrete **logincidence,long s)
 {
   if (sys->data.logincidence !=NULL) {
     Asc_Panic(2,"slv_set_logincidence","bad call.");
@@ -923,341 +803,6 @@ void slv_bnd_initialization(slv_system_t sys)
   }
 }
 
-
-void slv_set_solvers_var_list(slv_system_t sys,
-                              struct var_variable **vlist, int size)
-{
-  if (sys->vars.master == NULL) {
-	ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"slv_set_solvers_var_list: called before slv_set_master_var_list.");
-    return; /* must be error */
-  }
-  sys->vars.snum = size;
-  sys->vars.solver = vlist;
-}
-
-
-void slv_set_solvers_par_list(slv_system_t sys,
-                              struct var_variable **vlist, int size)
-{
-  if (sys->pars.master == NULL ) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_set_solvers_par_list: called before slv_set_master_par_list.");
-  } /* might be ok */
-  sys->pars.snum = size;
-  sys->pars.solver = vlist;
-}
-
-void slv_set_solvers_unattached_list(slv_system_t sys,
-                                     struct var_variable **vlist, int size)
-{
-  if (sys->unattached.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_set_solvers_unattached_list: called before slv_set_master_unattached_list.");
-  } /* might be ok */
-  sys->unattached.snum = size;
-  sys->unattached.solver = vlist;
-}
-
-void slv_set_solvers_dvar_list(slv_system_t sys,
-                              struct dis_discrete **dlist, int size)
-{
-  if (sys->dvars.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_dvar_list: called before slv_set_master_dvar_list.");
-    return; /* must be error */
-  }
-  sys->dvars.snum = size;
-  sys->dvars.solver = dlist;
-}
-
-void slv_set_solvers_disunatt_list(slv_system_t sys,
-                                   struct dis_discrete **dlist, int size)
-{
-  if (sys->disunatt.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_set_solvers_disunatt_list: called before slv_set_master_disunatt_list.");
-  } /* might be ok */
-  sys->disunatt.snum = size;
-  sys->disunatt.solver = dlist;
-}
-
-void slv_set_solvers_rel_list(slv_system_t sys,
-                              struct rel_relation **rlist, int size)
-{
-  /* Give relation list to the system itself. */
-  if (sys->rels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_rel_list: called before slv_set_master_rel_list.");
-    return; /* can't be right */
-  }
-  sys->rels.snum = size;
-  sys->rels.solver = rlist;
-}
-
-
-void slv_set_solvers_obj_list(slv_system_t sys,
-                              struct rel_relation **rlist, int size)
-{
-  /* Give relation list to the system itself. */
-  if (sys->objs.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_obj_list: called before slv_set_master_rel_list.");
-    return;
-  }
-  sys->objs.snum = size;
-  sys->objs.solver = rlist;
-}
-
-void slv_set_solvers_condrel_list(slv_system_t sys,
-                              struct rel_relation **rlist, int size)
-{
-  /* Give relation list to the system itself. */
-  if (sys->condrels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_condrel_list: called before slv_set_master_condrel_list");
-    return;
-  }
-  sys->condrels.snum = size;
-  sys->condrels.solver = rlist;
-}
-
-
-void slv_set_solvers_logrel_list(slv_system_t sys,
-                                 struct logrel_relation **lrlist, int size)
-{
-  /* Give logrelation list to the system itself. */
-  if (sys->logrels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_logrel_list: called before slv_set_master_logrel_list.");
-    return; /* can't be right */
-  }
-  sys->logrels.snum = size;
-  sys->logrels.solver = lrlist;
-}
-
-void slv_set_solvers_condlogrel_list(slv_system_t sys,
-                                     struct logrel_relation **lrlist, int size)
-{
-  /* Give logrelation list to the system itself. */
-  if (sys->condlogrels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,
-		"slv_set_solvers_condlogrel_list: called before slv_set_master_logrel_list.");
-    return; /* can't be right */
-  }
-  sys->condlogrels.snum = size;
-  sys->condlogrels.solver = lrlist;
-}
-
-void slv_set_solvers_when_list(slv_system_t sys,
-                               struct w_when **wlist, int size)
-{
-  if (sys->whens.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_when_list: called before slv_set_master_when_list.");
-    return;
-  }
-  sys->whens.snum = size;
-  sys->whens.solver = wlist;
-}
-
-void slv_set_solvers_bnd_list(slv_system_t sys,
-                              struct bnd_boundary **blist, int size)
-{
-  if (sys->bnds.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_bnd_list: called before slv_set_master_bnd_list.");
-    return;
-  }
-  sys->bnds.snum = size;
-  sys->bnds.solver = blist;
-}
-
-struct var_variable **slv_get_solvers_var_list(slv_system_t sys)
-{
-  if (sys->vars.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_var_list: returning NULL (?).");
-  }
-  return sys->vars.solver;
-}
-
-struct var_variable **slv_get_solvers_par_list(slv_system_t sys)
-{
-  if (sys->pars.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_par_list: returning NULL (?).");
-  }
-  return sys->pars.solver;
-}
-
-struct var_variable **slv_get_solvers_unattached_list(slv_system_t sys)
-{
-  if (sys->unattached.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_unattached_list: returning NULL?\n");
-  }
-  return sys->unattached.solver;
-}
-
-struct dis_discrete **slv_get_solvers_dvar_list(slv_system_t sys)
-{
-  if (sys->dvars.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"dvar_list is NULL\n");
-  }
-  return sys->dvars.solver;
-}
-
-struct dis_discrete **slv_get_solvers_disunatt_list(slv_system_t sys)
-{
-  if (sys->disunatt.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_disunatt_list returning NULL?\n");
-  }
-  return sys->disunatt.solver;
-}
-
-struct var_variable **slv_get_master_var_list(slv_system_t sys)
-{
-  if (sys->vars.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_var_list returning NULL?\n");
-  }
-  return sys->vars.master;
-}
-
-
-struct var_variable **slv_get_master_par_list(slv_system_t sys)
-{
-  if (sys->pars.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_par_list returning NULL?\n");
-  }
-  return sys->pars.master;
-}
-
-struct var_variable **slv_get_master_unattached_list(slv_system_t sys)
-{
-  if (sys->unattached.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_unattached_list returning NULL?\n");
-  }
-  return sys->unattached.master;
-}
-
-struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys)
-{
-  if (sys->dvars.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"dvar_list is NULL\n");
-  }
-  return sys->dvars.master;
-}
-
-struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys)
-{
-  if (sys->disunatt.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_disunatt_list returning NULL?\n");
-  }
-  return sys->disunatt.master;
-}
-
-struct rel_relation **slv_get_solvers_rel_list(slv_system_t sys)
-{
-  if (sys->rels.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_rel_list returning NULL?\n");
-  }
-  return sys->rels.solver;
-}
-
-struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys)
-{
-  if (sys->condrels.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"condrel_list is NULL?\n");
-  }
-  return sys->condrels.solver;
-}
-
-struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys)
-{
-  if (sys->objs.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_obj_list returning NULL?\n");
-  }
-  return sys->objs.solver;
-}
-
-struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys)
-{
-  if (sys->logrels.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
-  }
-  return sys->logrels.solver;
-}
-
-struct logrel_relation **slv_get_solvers_condlogrel_list(slv_system_t sys)
-{
-  if (sys->condlogrels.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
-  }
-  return sys->condlogrels.solver;
-}
-
-struct w_when **slv_get_solvers_when_list(slv_system_t sys)
-{
-  if (sys->whens.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"when_list is NULL\n");
-  }
-  return sys->whens.solver;
-}
-
-struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys)
-{
-  if (sys->bnds.solver == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"bnd_list is NULL\n");
-  }
-  return sys->bnds.solver;
-}
-
-struct rel_relation **slv_get_master_rel_list(slv_system_t sys)
-{
-  if (sys->rels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_rel_list returning NULL?\n");
-  }
-  return sys->rels.master;
-}
-
-
-struct rel_relation **slv_get_master_condrel_list(slv_system_t sys)
-{
-  if (sys->condrels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"condrel_list is NULL\n");
-  }
-  return sys->condrels.master;
-}
-
-struct rel_relation **slv_get_master_obj_list(slv_system_t sys)
-{
-  if (sys->objs.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_obj_list returning NULL?\n");
-  }
-  return sys->objs.master;
-}
-
-
-struct logrel_relation **slv_get_master_logrel_list(slv_system_t sys)
-{
-  if (sys->logrels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
-  }
-  return sys->logrels.master;
-}
-
-struct logrel_relation **slv_get_master_condlogrel_list(slv_system_t sys)
-{
-  if (sys->condlogrels.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"logrel_list is NULL\n");
-  }
-  return sys->condlogrels.master;
-}
-
-
-struct w_when **slv_get_master_when_list(slv_system_t sys)
-{
-  if (sys->whens.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"when_list is NULL\n");
-  }
-  return sys->whens.master;
-}
-
-struct bnd_boundary **slv_get_master_bnd_list(slv_system_t sys)
-{
-  if (sys->bnds.master == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"bnd_list is NULL\n");
-  }
-  return sys->bnds.master;
-}
-
 struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 {
   if (sys==NULL) {
@@ -1266,6 +811,79 @@ struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
   }
   return sys->symbollist;
 }
+
+/*---------------------------------------------------------
+	Macros to define
+
+		slv_set_solvers_*_list
+		slv_get_solvers_*_list
+		slv_get_master_*_list
+*/
+#define DEFINE_SET_SOLVERS_LIST_METHOD(NAME,PROP,TYPE) \
+	void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
+		if(sys->PROP.master==NULL){ \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"slv_set_solvers_" #NAME "_list: called before slv_set_master_" #NAME "_list."); \
+			/* might be ok, no return */ \
+		} \
+		sys->PROP.snum = size; \
+		sys->PROP.solver = vlist; \
+	}
+
+#define DEFINE_SET_SOLVERS_LIST_METHOD_RETURN(NAME,PROP,TYPE) \
+	void slv_set_solvers_##NAME##_list(slv_system_t sys, struct TYPE **vlist, int size){ \
+		if(sys->PROP.master==NULL){ \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"slv_set_solvers_" #NAME "_list: called before slv_set_master_" #NAME "_list."); \
+			return; /* can't be OK, so return now */ \
+		} \
+		sys->PROP.snum = size; \
+		sys->PROP.solver = vlist; \
+	}
+
+#define DEFINE_GET_SOLVERS_LIST_METHOD(NAME,PROP,TYPE) \
+	struct TYPE **slv_get_solvers_##NAME##_list(slv_system_t sys){ \
+		if (sys->PROP.solver == NULL) { \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_solvers_" #NAME "_list: returning NULL (?)."); \
+		} \
+		return sys->PROP.solver; \
+	}
+
+#define DEFINE_GETSET_LIST_METHODS(D,D_RETURN) \
+	D_RETURN(var,vars,var_variable) \
+	D(par,pars,var_variable) \
+	D(unattached,unattached,var_variable) \
+	D_RETURN(dvar,dvars,dis_discrete) \
+	D(disunatt,disunatt,dis_discrete) \
+	D_RETURN(rel,rels,rel_relation) \
+	D_RETURN(obj,objs,rel_relation) \
+	D_RETURN(condrel,condrels,rel_relation) \
+	D_RETURN(logrel,logrels,logrel_relation) \
+	D_RETURN(condlogrel,condlogrels,logrel_relation) \
+	D_RETURN(when,whens,w_when) \
+	D_RETURN(bnd,bnds,bnd_boundary)
+
+/* the slv_set_solvers_*_list methods: some have a 'return' when sys->PROP.master==NULL; others do not: */
+DEFINE_GETSET_LIST_METHODS(DEFINE_SET_SOLVERS_LIST_METHOD, DEFINE_SET_SOLVERS_LIST_METHOD_RETURN)
+
+/* the slv_get_solvers_*_list methods: all have the same form so it's DEFINE...(D,D) in this case: */
+DEFINE_GETSET_LIST_METHODS(DEFINE_GET_SOLVERS_LIST_METHOD, DEFINE_GET_SOLVERS_LIST_METHOD)
+
+#define DEFINE_GET_MASTER_LIST_METHOD(NAME,PROP,TYPE) \
+	struct TYPE **slv_get_master_##NAME##_list(slv_system_t sys){ \
+		if (sys->PROP.master == NULL) { \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_" #NAME "_list returning NULL?\n"); \
+		} \
+		return sys->PROP.master; \
+	}
+
+/* the slv_get_master_*_list are also all of the same form, so DEFINE...(D,D) */
+DEFINE_GETSET_LIST_METHODS(DEFINE_GET_MASTER_LIST_METHOD,DEFINE_GET_MASTER_LIST_METHOD)
+
+/*----------------------------------------------------------------------
+	Macros to define:
+
+		slv_get_num_solvers_TYPE
+		slv_get_num_master_TYPE
+*/
 
 #define DEFINE_SOLVERS_GET_NUM_METHOD(TYPE) \
 	int slv_get_num_solvers_##TYPE(slv_system_t sys){ \
@@ -1378,85 +996,42 @@ int32 slv_need_consistency(slv_system_t sys)
   return sys->need_consistency;
 }
 
-/* dont call this with null! */
-static int slv_count_vars(var_filter_t *vfilter, struct var_variable **vlist)
-{
-  int ret = 0;
-  assert(vlist!=NULL);
-  while(*vlist!=NULL) {
-    ret += var_apply_filter(*vlist,vfilter);
-    vlist++;
-  }
-  return ret;
-}
+/*----------------------------------------------------------------
+	Macros to define
 
-/* dont call this with null! */
-static int slv_count_rels(rel_filter_t *rfilter, struct rel_relation **rlist)
-{
-  int ret = 0;
-  assert(rlist!=NULL);
-  while(*rlist!=NULL) {
-    ret += rel_apply_filter(*rlist,rfilter);
-    rlist++;
-  }
-  return ret;
-}
+		slv_count_vars
+		          rels
+		          dvars
+		          logrels
+		          whens
+		          bnds
+*/
 
-/* dont call this with null! */
-static int slv_count_dvars(dis_filter_t *disfilter,
-			   struct dis_discrete **dlist)
-{
-  int ret = 0;
-  assert(dlist!=NULL);
-  while(*dlist!=NULL) {
-    ret += dis_apply_filter(*dlist,disfilter);
-    dlist++;
-  }
-  return ret;
-}
+#define DEFINE_SLV_COUNT_METHOD(NAME,FILTER,TYPE) \
+	static int slv_count_##NAME(FILTER##_filter_t *filter, struct TYPE **list){ \
+		int ret=0; \
+		assert(list!=NULL); \
+		while(*list!=NULL){ \
+			ret += FILTER##_apply_filter(*list,filter); \
+			list++; \
+		} \
+		return ret; \
+	}
 
-/* dont call this with null! */
-static int slv_count_logrels(logrel_filter_t *lrfilter,
-			     struct logrel_relation **lrlist)
-{
-  int ret = 0;
-  assert(lrlist!=NULL);
-  while(*lrlist!=NULL) {
-    ret += logrel_apply_filter(*lrlist,lrfilter);
-    lrlist++;
-  }
-  return ret;
-}
+#define DEFINE_SLV_COUNT_METHODS(D) \
+	D(vars,var,var_variable) \
+	D(rels,rel,rel_relation) \
+	D(dvars,dis,dis_discrete) \
+	D(logrels,logrel,logrel_relation) \
+	D(whens,when,w_when) \
+	D(bnds,bnd,bnd_boundary)
 
-/* dont call this with null! */
-static int slv_count_whens(when_filter_t *wfilter,struct w_when **wlist)
-{
-  int ret = 0;
-  assert(wlist!=NULL);
-  while(*wlist!=NULL) {
-    ret += when_apply_filter(*wlist,wfilter);
-    wlist++;
-  }
-  return ret;
-}
-
-/* dont call this with null! */
-static int slv_count_bnds(bnd_filter_t *bfilter,struct bnd_boundary **blist)
-{
-  int ret = 0;
-  assert(blist!=NULL);
-  while(*blist!=NULL) {
-    ret += bnd_apply_filter(*blist,bfilter);
-    blist++;
-  }
-  return ret;
-}
+DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD)
 
 /*--------------------------------------------------------------
-	The following is some pretty aggressive simplication of the 
-	previously very repetitive 'method' declarations for 
-	returning the numbers of various types of things in the
-	slv_system_t.
+	Methods to define 
+		slv_count_solvers_*
+		slv_count_master_*
 */
 
 /** This macro automates the declaration of the slv_count_solvers_* methods */
