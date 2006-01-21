@@ -103,10 +103,11 @@ struct slv_system_structure {
    * (e_maximize,e_minimize). this list will include the first included obj.
    */
   struct {
-    int snum;			/* length of the solver list */
+    int snum;			/* length of the solver list */ 
     int mnum;			/* length of the master list */
     struct var_variable **solver;
     struct var_variable **master;
+	struct var_variable *buf;
   } vars;
 
   struct {
@@ -114,6 +115,7 @@ struct slv_system_structure {
     int mnum;			       /* length of the master list */
     struct dis_discrete **solver;
     struct dis_discrete **master;
+	struct dis_discrete *buf;
   } dvars;
 
   struct {
@@ -121,6 +123,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct rel_relation **solver;
     struct rel_relation **master;
+    struct rel_relation *buf;
   } rels;
 
   struct {
@@ -128,6 +131,7 @@ struct slv_system_structure {
     int mnum;
     struct rel_relation **solver;
     struct rel_relation **master;
+    struct rel_relation *buf;
   } objs;
 
   struct {
@@ -135,6 +139,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct rel_relation **solver;
     struct rel_relation **master;
+	struct rel_relation *buf;
   } condrels;
 
   struct {
@@ -142,6 +147,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct logrel_relation **solver;
     struct logrel_relation **master;
+	struct logrel_relation *buf;
   } logrels;
 
   struct {
@@ -149,6 +155,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct logrel_relation **solver;
     struct logrel_relation **master;
+	struct logrel_relation *buf;
   } condlogrels;
 
   struct {
@@ -156,6 +163,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct w_when **solver;
     struct w_when **master;
+	struct w_when *buf;
   } whens;
 
   struct {
@@ -163,6 +171,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct bnd_boundary **solver;
     struct bnd_boundary **master;
+	struct bnd_boundary *buf;
   } bnds;
 
   struct {
@@ -170,6 +179,7 @@ struct slv_system_structure {
     int mnum;
     struct var_variable **solver;
     struct var_variable **master;
+	struct var_variable *buf;
   } pars;
 
   struct {
@@ -177,6 +187,7 @@ struct slv_system_structure {
     int mnum;
     struct var_variable **solver;
     struct var_variable **master;
+	struct var_variable *buf;
   } unattached;
 
   struct {
@@ -184,6 +195,7 @@ struct slv_system_structure {
     int mnum;
     struct dis_discrete **solver;
     struct dis_discrete **master;
+	struct dis_discrete *buf;
   } disunatt;
 
   /* the data that follows is for internal consumption only. */
@@ -197,19 +209,6 @@ struct slv_system_structure {
   struct gl_list_t *symbollist; /* list of symbol values struct used to */
                                 /* assign an integer value to a symbol value */
   struct {
-	/** @TODO move the 'bufs' into the above structs (disunatt, etc) */
-    struct var_variable *ubuf; /* data space for unclassified real ATOMs */
-    struct dis_discrete *udbuf; /* data space for unclassified discrete ATOM */
-    struct var_variable *pbuf; /* data space for real ATOMs that are pars */
-    struct var_variable *vbuf; /* data space for real ATOMs that are vars */
-    struct dis_discrete *dbuf; /* data space for discrete ATOMs that are vars*/
-    struct rel_relation *rbuf; /* data space for real rel constraints */
-    struct rel_relation *cbuf; /* data space for conditional rel */
-    struct rel_relation *obuf; /* data space for real relation objectives */
-    struct logrel_relation *lbuf; /* data space for logical rel  */
-    struct logrel_relation *clbuf; /* data space for conditional logical rel*/
-    struct w_when *wbuf;          /* data space for whens */
-    struct bnd_boundary *bbuf;    /* data space for boundaries */
     struct var_variable **incidence; /* all relation incidence list memory */
     struct rel_relation **varincidence; /* all variable incidence list memory */
     struct dis_discrete **logincidence; /* all logrel incidence list memory */
@@ -354,41 +353,65 @@ unsigned slv_serial_id(slv_system_t sys)
 /*----------------------------------------------------
 	destructors
 */
-static
-void slv_destroy_dvar_buffer(struct dis_discrete *dbuf)
-{
-  int c;
-  struct dis_discrete *cur_dis;
-  for (c=0;c<g_number_of_dvars;c++){
-    cur_dis = &(dbuf[c]);
-    dis_destroy(cur_dis);
-  }
-  ascfree(dbuf);
-}
 
-static
-void slv_destroy_when_buffer(struct w_when *wbuf)
-{
-  int c;
-  struct w_when *cur_when;
-  for (c=0;c<g_number_of_whens;c++){
-    cur_when = &(wbuf[c]);
-    when_destroy(cur_when);
-  }
-  ascfree(wbuf);
-}
+#define DEFINE_DESTROY_BUFFER(NAME,PROP,TYPE,DESTROY) \
+	static void slv_destroy_##NAME##_buffer(struct TYPE *buf){ \
+		int c; struct TYPE *cur; \
+		for(c=0;c<g_number_of_##PROP;c++){ \
+			cur = &(buf[c]); \
+			DESTROY(cur); \
+		} \
+		ascfree(buf); \
+	}
 
-static
-void slv_destroy_bnd_buffer(struct bnd_boundary *bbuf)
-{
-  int c;
-  struct bnd_boundary *cur_bnd;
-  for (c=0;c<g_number_of_bnds;c++){
-    cur_bnd = &(bbuf[c]);
-    bnd_destroy(cur_bnd);
-  }
-  ascfree(bbuf);
-}
+#define DEFINE_DESTROY_BUFFERS(D) \
+	D(dvar, dvars, dis_discrete, dis_destroy) \
+	D(when, whens, w_when, when_destroy) \
+	D(bnd, bnds, bnd_boundary, bnd_destroy)
+
+DEFINE_DESTROY_BUFFERS(DEFINE_DESTROY_BUFFER)
+
+#define SLV_FREE_BUF(PROP) \
+	if(sys->PROP.buf !=NULL) ascfree(sys->PROP.buf); \
+	sys->PROP.buf = NULL;
+
+#define SLV_FREE_BUF_GLOBAL(NAME, PROP) \
+	if (sys->PROP.buf != NULL) { \
+		slv_destroy_##NAME##_buffer(sys->PROP.buf); \
+		sys->PROP.buf = NULL; \
+	}
+
+#define SLV_FREE_BUFS(D,D_GLOBAL) \
+	D(vars) \
+	D(rels) \
+	D(objs) \
+	D(condrels) \
+	D(logrels) \
+	D(condlogrels) \
+	D(pars) \
+	D(unattached) \
+	D(disunatt) \
+	D_GLOBAL(dvar, dvars) \
+	D_GLOBAL(when, whens) \
+	D_GLOBAL(bnd, bnds)
+
+#if 0
+	/** @TODO move the 'bufs' into the above structs (disunatt, etc) */
+    struct var_variable *ubuf; /* data space for unclassified real ATOMs */
+    struct dis_discrete *udbuf; /* data space for unclassified discrete ATOM */
+    struct var_variable *pbuf; /* data space for real ATOMs that are pars */
+    struct var_variable *vbuf; /* data space for real ATOMs that are vars */
+    struct dis_discrete *dbuf; /* data space for discrete ATOMs that are vars*/
+    struct rel_relation *rbuf; /* data space for real rel constraints */
+    struct rel_relation *cbuf; /* data space for conditional rel */
+    struct rel_relation *obuf; /* data space for real relation objectives */
+    struct logrel_relation *lbuf; /* data space for logical rel  */
+    struct logrel_relation *clbuf; /* data space for conditional logical rel*/
+    struct w_when *wbuf;          /* data space for whens */
+    struct bnd_boundary *bbuf;    /* data space for boundaries */
+#endif
+
+/* vars dvars rels objs condrels logrels condlogrels whens bnds pars unattached disunatt */
 
 int slv_destroy(slv_system_t sys)
 {
@@ -406,36 +429,9 @@ int slv_destroy(slv_system_t sys)
   if (ret) {
 	ERROR_REPORTER_HERE(ASC_PROG_FATAL,"slv_destroy: slv_system_t 0x%p not freed.",sys);
   } else {
-    if (sys->data.ubuf != NULL) ascfree(sys->data.ubuf);
-    sys->data.ubuf = NULL;
-    if (sys->data.udbuf != NULL) ascfree(sys->data.udbuf);
-    sys->data.udbuf = NULL;
-    if (sys->data.pbuf != NULL) ascfree(sys->data.pbuf);
-    sys->data.pbuf = NULL;
-    if (sys->data.vbuf != NULL) ascfree(sys->data.vbuf);
-    sys->data.vbuf = NULL;
-    if (sys->data.dbuf != NULL) {
-      slv_destroy_dvar_buffer(sys->data.dbuf);
-      sys->data.dbuf = NULL;
-    }
-    if (sys->data.rbuf != NULL) ascfree(sys->data.rbuf);
-    sys->data.rbuf = NULL;
-    if (sys->data.cbuf != NULL) ascfree(sys->data.cbuf);
-    sys->data.cbuf = NULL;
-    if (sys->data.obuf != NULL) ascfree(sys->data.obuf);
-    sys->data.obuf = NULL;
-    if (sys->data.lbuf != NULL) ascfree(sys->data.lbuf);
-    sys->data.lbuf = NULL;
-    if (sys->data.clbuf != NULL) ascfree(sys->data.clbuf);
-    sys->data.clbuf = NULL;
-    if (sys->data.wbuf != NULL) {
-      slv_destroy_when_buffer(sys->data.wbuf);
-      sys->data.wbuf = NULL;
-    }
-    if (sys->data.bbuf != NULL) {
-      slv_destroy_bnd_buffer(sys->data.bbuf);
-      sys->data.bbuf = NULL;
-    }
+
+	SLV_FREE_BUFS(SLV_FREE_BUF, SLV_FREE_BUF_GLOBAL)
+
     if (sys->data.incidence != NULL) ascfree(sys->data.incidence);
     sys->data.incidence = NULL;
     if (sys->data.varincidence != NULL) ascfree(sys->data.varincidence);
@@ -566,99 +562,65 @@ DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
 
 #define DEFINE_SET_BUF_METHOD(NAME,PROP,TYPE) \
 	void slv_set_##NAME##_buf(slv_system_t sys, struct TYPE *PROP){ \
-		if(sys->data.PROP !=NULL ){ \
+		if(sys->PROP.buf !=NULL ){ \
 			Asc_Panic(2,"slv_set_" #NAME "_buf","bad call."); \
 		}else{ \
-			sys->data.PROP = PROP; \
+			sys->PROP.buf = PROP; \
 		} \
 	}
 
-#define DEFINE_SET_BUF_METHODS(D) \
-	D(var,vbuf,var_variable) \
-	D(par,pbuf,var_variable) \
-	D(unattached,ubuf,var_variable) \
-	D(disunatt,udbuf,dis_discrete) \
-	D(rel,rbuf,rel_relation) \
-	D(condrel,cbuf,rel_relation) \
-	D(obj,obuf,rel_relation) \
-	D(logrel,lbuf,logrel_relation) \
-	D(condlogrel,clbuf,logrel_relation)
+#define DEFINE_SET_BUF_METHOD_GLOBAL(NAME,PROP,TYPE) \
+	void slv_set_##NAME##_buf(slv_system_t sys, struct TYPE *buf, int len){ \
+		if(sys->PROP.buf != NULL){ \
+			Asc_Panic(2,"slv_set_" #NAME "_buf","bad call."); \
+		}else{ \
+			sys->PROP.buf = buf; \
+			g_number_of_##PROP = len; \
+		} \
+	}
 
-DEFINE_SET_BUF_METHODS(DEFINE_SET_BUF_METHOD)
+#define DEFINE_SET_BUF_METHODS(D, D_GLOBAL) \
+	D(var,vars,var_variable) \
+	D(par,pars,var_variable) \
+	D(unattached,unattached,var_variable) \
+	D(disunatt,disunatt,dis_discrete) \
+	D(rel,rels,rel_relation) \
+	D(condrel,condrels,rel_relation) \
+	D(obj,objs,rel_relation) \
+	D(logrel,logrels,logrel_relation) \
+	D(condlogrel,condlogrels,logrel_relation) \
+	D_GLOBAL(dvar, dvars, dis_discrete) \
+	D_GLOBAL(when, whens, w_when) \
+	D_GLOBAL(bnd,bnds,bnd_boundary)
+	
 
-/*
-	Before the following can be placed into the above macro, the globals
-		g_number_of_dvars
-		g_number_of_whens
-		g_number_of_bnds
-	need to be eliminated. They should be entered as properties of the 'sys', presumably?
+DEFINE_SET_BUF_METHODS(DEFINE_SET_BUF_METHOD, DEFINE_SET_BUF_METHOD_GLOBAL)
+
+/*---------------------------------------------------------------
+	Macros to define
+		slv_set_incidence
+		slv_set_var_incidence
+		slv_set_logincidence
 */
 
-void slv_set_dvar_buf(slv_system_t sys, struct dis_discrete *dbuf, int len)
-{
-  if (sys->data.dbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_dvar_buf",
-              "bad call.");
-  } else {
-    sys->data.dbuf = dbuf;
-    g_number_of_dvars = len;
-  }
-}
+#define DEFINE_SET_INCIDENCE(NAME,PROP,TYPE,SIZE) \
+	void slv_set_##NAME(slv_system_t sys, struct TYPE **inc, long s){ \
+		if(sys->data.PROP != NULL || inc == NULL){ \
+			Asc_Panic(2,"slv_set_" #NAME,"bad call"); \
+		}else{ \
+			sys->data.PROP = inc; \
+			sys->data.SIZE = s; \
+		} \
+	}
 
-void slv_set_when_buf(slv_system_t sys, struct w_when *wbuf, int len)
-{
-  if (sys->data.wbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_when_buf","bad call.");
-  } else {
-    sys->data.wbuf = wbuf;
-    g_number_of_whens = len;
-  }
-}
+#define DEFINE_SET_INCIDENCES(D) \
+	D(incidence, incidence, var_variable, incsize) \
+	D(var_incidence, varincidence, rel_relation, varincsize) \
+	D(logincidence, logincidence, dis_discrete, incsize)
 
-void slv_set_bnd_buf(slv_system_t sys, struct bnd_boundary *bbuf, int len)
-{
-  if (sys->data.bbuf !=NULL ) {
-    Asc_Panic(2,"slv_set_bnd_buf",
-              "bad call.");
-  } else {
-    sys->data.bbuf = bbuf;
-    g_number_of_bnds = len;
-  }
-}
+DEFINE_SET_INCIDENCES(DEFINE_SET_INCIDENCE)
 
-/*---------------------------------------------------------------*/
-
-void slv_set_incidence(slv_system_t sys, struct var_variable **incidence,long s)
-{
-  if (sys->data.incidence !=NULL || incidence == NULL) {
-    Asc_Panic(2,"slv_set_incidence",
-              "bad call.");
-  } else {
-    sys->data.incidence = incidence;
-    sys->data.incsize = s;
-  }
-}
-
-void slv_set_var_incidence(slv_system_t sys, struct rel_relation **varincidence,long s)
-{
-  if (sys->data.varincidence !=NULL || varincidence == NULL) {
-    Asc_Panic(2,"slv_set_varincidence",
-              "bad call.");
-  } else {
-    sys->data.varincidence = varincidence;
-    sys->data.varincsize = s;
-  }
-}
-
-void slv_set_logincidence(slv_system_t sys, struct dis_discrete **logincidence,long s)
-{
-  if (sys->data.logincidence !=NULL) {
-    Asc_Panic(2,"slv_set_logincidence","bad call.");
-  } else {
-    sys->data.logincidence = logincidence;
-    sys->data.incsize = s;
-  }
-}
+/*-------------------------------------------------------------*/
 
 void slv_set_extrel_list(slv_system_t sys,struct ExtRelCache **erlist,
                          int size)
