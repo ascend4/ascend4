@@ -395,24 +395,6 @@ DEFINE_DESTROY_BUFFERS(DEFINE_DESTROY_BUFFER)
 	D_GLOBAL(when, whens) \
 	D_GLOBAL(bnd, bnds)
 
-#if 0
-	/** @TODO move the 'bufs' into the above structs (disunatt, etc) */
-    struct var_variable *ubuf; /* data space for unclassified real ATOMs */
-    struct dis_discrete *udbuf; /* data space for unclassified discrete ATOM */
-    struct var_variable *pbuf; /* data space for real ATOMs that are pars */
-    struct var_variable *vbuf; /* data space for real ATOMs that are vars */
-    struct dis_discrete *dbuf; /* data space for discrete ATOMs that are vars*/
-    struct rel_relation *rbuf; /* data space for real rel constraints */
-    struct rel_relation *cbuf; /* data space for conditional rel */
-    struct rel_relation *obuf; /* data space for real relation objectives */
-    struct logrel_relation *lbuf; /* data space for logical rel  */
-    struct logrel_relation *clbuf; /* data space for conditional logical rel*/
-    struct w_when *wbuf;          /* data space for whens */
-    struct bnd_boundary *bbuf;    /* data space for boundaries */
-#endif
-
-/* vars dvars rels objs condrels logrels condlogrels whens bnds pars unattached disunatt */
-
 int slv_destroy(slv_system_t sys)
 {
   int ret = 0;
