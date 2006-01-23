@@ -190,7 +190,7 @@ extern void SaveReln2GlassBox(FILE *fp,
  *  format.
  */
 
-extern int ConversionIsValid(enum Expr_enum old, enum Expr_enum new);
+extern int ConversionIsValid(enum Expr_enum old, enum Expr_enum new_enum);
 /**<
  *  Given a relation format will return TRUE if conversion to another
  *  format is valid. It assumes that new is a valid relation type.
