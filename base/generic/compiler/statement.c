@@ -318,7 +318,7 @@ struct Statement *CreateATS(struct VariableList *vl)
 
 struct Statement *CreateFIX(struct VariableList *vars){
 	register struct Statement *result;
-	CONSOLE_DEBUG("CREATING FIX STMT");
+	/* CONSOLE_DEBUG("CREATING FIX STMT"); */
 	result = STMALLOC;
 	assert(result!=NULL);
 	result->t = FIX;

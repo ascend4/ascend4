@@ -1,5 +1,5 @@
 /*
- *  External Call Module
+ *  External functions (ie blackbox relations) Module
  *  by Kirk Andre Abbott
  *  Created: Jun 1, 1995.
  *  Version: $Revision: 1.6 $
@@ -27,7 +27,7 @@
  */
 
 /** @file
-	External Call Module.
+ *  External functions (ie blackbox relations) Module
 
 	@todo Complete documentation of compiler/extcall.h.
 */

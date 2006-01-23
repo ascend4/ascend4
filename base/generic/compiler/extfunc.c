@@ -42,6 +42,7 @@
 
 static struct Table *ExternalFuncLibrary = NULL;
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 struct ExternalFunc *CreateExternalFunc(CONST char *name)
 {
   struct ExternalFunc *result;
@@ -58,6 +59,7 @@ struct ExternalFunc *CreateExternalFunc(CONST char *name)
   result->deriv2 = NULL;
   return result;
 }
+#endif /*THIS_IS_AN_UNUSED_FUNCTION */
 
 
 int CreateUserFunction(CONST char *name,
