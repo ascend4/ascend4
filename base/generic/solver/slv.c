@@ -107,7 +107,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct var_variable **solver;
     struct var_variable **master;
-	struct var_variable *buf;
+	struct dis_discrete *buf;
   } vars;
 
   struct {
@@ -116,6 +116,7 @@ struct slv_system_structure {
     struct dis_discrete **solver;
     struct dis_discrete **master;
 	struct dis_discrete *buf;
+	int bufnum;
   } dvars;
 
   struct {
@@ -164,6 +165,7 @@ struct slv_system_structure {
     struct w_when **solver;
     struct w_when **master;
 	struct w_when *buf;
+	int bufnum;
   } whens;
 
   struct {
@@ -172,6 +174,7 @@ struct slv_system_structure {
     struct bnd_boundary **solver;
     struct bnd_boundary **master;
 	struct bnd_boundary *buf;
+	int bufnum;
   } bnds;
 
   struct {
@@ -246,19 +249,12 @@ static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];
 	lists, however, these lists are destroyed before the buffers are destroyed,
 	so the information is gone before I can use it.
 */
-
-/** Global var used to destroy the cases and the gl_list inside each WHEN */
-static int g_number_of_whens;
-
-/** Global var used to destroy the list of whens in each discrete variable */
-static int g_number_of_dvars;
-
-/** Global var used to destroy the list of logical relations in each boundary */
-static int g_number_of_bnds;
+/*
+	These have been REMOVED and added to the 'sys' type.
+*/
 
 /*-------------------------------------------------------------------
-  A bunch of annoyingly unintuitive macros that probably will save
-  you from developing RSI :-)
+	Convenience macros
 */
 
 /** Return the solver index for a given slv_system_t */
@@ -350,18 +346,53 @@ unsigned slv_serial_id(slv_system_t sys)
   return sys->serial_id;
 }
 
+/*---------------------------------------------------------------
+	Macros to define
+		slv_set_incidence
+		slv_set_var_incidence
+		slv_set_logincidence
+*/
+
+#define DEFINE_SET_INCIDENCE(NAME,PROP,TYPE,SIZE) \
+	void slv_set_##NAME(slv_system_t sys, struct TYPE **inc, long s){ \
+		if(sys->data.PROP != NULL){ \
+			Asc_Panic(2,"slv_set_" #NAME,"bad call: sys->data." #PROP " is already defined!"); \
+		}else if(inc == NULL){ \
+			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"bad call: 'inc' parameter is NULL"); \
+			/*Asc_Panic(2,"slv_set_" #NAME,"bad call: 'inc' parameter is NULL!");*/ \
+		}else{ \
+			sys->data.PROP = inc; \
+			sys->data.SIZE = s; \
+		} \
+	}
+
+#define SLV_FREE_INCIDENCE(NAME,PROP,TYPE,SIZE) \
+    if (sys->data.PROP != NULL) ascfree(sys->data.PROP); \
+    sys->data.PROP = NULL;
+
+#define DEFINE_SET_INCIDENCES(D) \
+	D(incidence, incidence, var_variable, incsize) \
+	D(var_incidence, varincidence, rel_relation, varincsize) \
+	D(logincidence, logincidence, dis_discrete, incsize)
+
+DEFINE_SET_INCIDENCES(DEFINE_SET_INCIDENCE)
+
 /*----------------------------------------------------
 	destructors
 */
 
 #define DEFINE_DESTROY_BUFFER(NAME,PROP,TYPE,DESTROY) \
-	static void slv_destroy_##NAME##_buffer(struct TYPE *buf){ \
+	static void slv_destroy_##NAME##_buffer(slv_system_t sys){ \
 		int c; struct TYPE *cur; \
-		for(c=0;c<g_number_of_##PROP;c++){ \
+		struct TYPE *buf; \
+		buf = sys->PROP.buf; \
+		for(c = 0; c < sys->PROP.bufnum; c++){ \
 			cur = &(buf[c]); \
 			DESTROY(cur); \
 		} \
 		ascfree(buf); \
+		sys->PROP.buf = NULL; \
+		sys->PROP.bufnum = 0; \
 	}
 
 #define DEFINE_DESTROY_BUFFERS(D) \
@@ -377,8 +408,7 @@ DEFINE_DESTROY_BUFFERS(DEFINE_DESTROY_BUFFER)
 
 #define SLV_FREE_BUF_GLOBAL(NAME, PROP) \
 	if (sys->PROP.buf != NULL) { \
-		slv_destroy_##NAME##_buffer(sys->PROP.buf); \
-		sys->PROP.buf = NULL; \
+		slv_destroy_##NAME##_buffer(sys); \
 	}
 
 #define SLV_FREE_BUFS(D,D_GLOBAL) \
@@ -414,16 +444,14 @@ int slv_destroy(slv_system_t sys)
 
 	SLV_FREE_BUFS(SLV_FREE_BUF, SLV_FREE_BUF_GLOBAL)
 
-    if (sys->data.incidence != NULL) ascfree(sys->data.incidence);
-    sys->data.incidence = NULL;
-    if (sys->data.varincidence != NULL) ascfree(sys->data.varincidence);
-    sys->data.varincidence = NULL;
-    if (sys->data.logincidence != NULL) ascfree(sys->data.logincidence);
-    sys->data.incidence = NULL;
+	DEFINE_SET_INCIDENCES(SLV_FREE_INCIDENCE)
+
     ascfree( (POINTER)sys );
   }
   return ret;
 }
+
+/*---------------------------------------------------------------*/
 
 void slv_destroy_client(slv_system_t sys)
 {
@@ -557,7 +585,7 @@ DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
 			Asc_Panic(2,"slv_set_" #NAME "_buf","bad call."); \
 		}else{ \
 			sys->PROP.buf = buf; \
-			g_number_of_##PROP = len; \
+			sys->PROP.bufnum = len; \
 		} \
 	}
 
@@ -577,32 +605,6 @@ DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
 	
 
 DEFINE_SET_BUF_METHODS(DEFINE_SET_BUF_METHOD, DEFINE_SET_BUF_METHOD_GLOBAL)
-
-/*---------------------------------------------------------------
-	Macros to define
-		slv_set_incidence
-		slv_set_var_incidence
-		slv_set_logincidence
-*/
-
-#define DEFINE_SET_INCIDENCE(NAME,PROP,TYPE,SIZE) \
-	void slv_set_##NAME(slv_system_t sys, struct TYPE **inc, long s){ \
-		if(sys->data.PROP != NULL || inc == NULL){ \
-			Asc_Panic(2,"slv_set_" #NAME,"bad call"); \
-		}else{ \
-			sys->data.PROP = inc; \
-			sys->data.SIZE = s; \
-		} \
-	}
-
-#define DEFINE_SET_INCIDENCES(D) \
-	D(incidence, incidence, var_variable, incsize) \
-	D(var_incidence, varincidence, rel_relation, varincsize) \
-	D(logincidence, logincidence, dis_discrete, incsize)
-
-DEFINE_SET_INCIDENCES(DEFINE_SET_INCIDENCE)
-
-/*-------------------------------------------------------------*/
 
 void slv_set_extrel_list(slv_system_t sys,struct ExtRelCache **erlist,
                          int size)
