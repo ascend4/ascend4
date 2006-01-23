@@ -276,7 +276,7 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
   }
 
   /* iterate through the variable list */
-  CONSOLE_DEBUG("STARTING 'FIX' STATEMENT EXECUTION");
+  /* CONSOLE_DEBUG("STARTING 'FIX' STATEMENT EXECUTION"); */
   vars = stat->v.fx.vars;
   while(vars!=NULL){
     name = NamePointer(vars);
@@ -289,7 +289,7 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
     for(i=1; i<=len; i++){
     	i1 = (struct Instance *)gl_fetch(temp,i);
 	instname = WriteInstanceNameString(i1,NULL);
-	CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
+	/* CONSOLE_DEBUG("ABOUT TO FIX %s",instname); */
 	ascfree(instname);
 	if(InstanceKind(i1)!=REAL_ATOM_INST){
 	  fm->ErrNo = Proc_illegal_type_use;
@@ -320,7 +320,7 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
     }
     vars = NextVariableNode(vars);
   }
-  CONSOLE_DEBUG("DONE WITH VARLIST");
+  /* CONSOLE_DEBUG("DONE WITH VARLIST"); */
 
   /* return 'ok' */
   fm->ErrNo = Proc_all_ok;

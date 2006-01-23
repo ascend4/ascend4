@@ -33,7 +33,7 @@
  */
 
 /** @file
- *  Function module.
+ *  Function-of-one-variable module.
  *  <pre>
  *  When #including func.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
@@ -70,6 +70,7 @@
  * functions.
  */
 extern double DLEXPORT cbrt(double);
+
 #  ifdef HAVE_ERF
 extern double erf(double);
 #  endif /* HAVE_ERF */
@@ -82,8 +83,6 @@ extern double erf(double);
 
 extern CONST struct Func *LookupFunc(CONST char *name);
 /**<
- *  <!--  const struct Func *LookupFunc(name)                          -->
- *  <!--  const char *name; (ascend name, not C)                       -->
  *  Lookup the function with the given name.  If no match is found, it
  *  returns NULL.  name is the ASCEND name, not C name.
  *  <pre>
@@ -123,8 +122,6 @@ extern CONST struct Func *LookupFunc(CONST char *name);
 
 extern CONST struct Func *LookupFuncById(enum Func_enum id);
 /**<
- *  <!--  const struct Func *LookupFuncById(id)                        -->
- *  <!--  enum Func_emum id;                                           -->
  *  Lookups a function by its enumerated type rather than by a string as
  *  in the above function.
  */
@@ -294,44 +291,32 @@ extern double DLEXPORT derf2(double x);
 
 extern CONST char *FuncName(CONST struct Func *f);
 /**<
- *  <!--  const char *FuncName(f)                                      -->
- *  <!--  const struct Func *f;                                        -->
  *  Return the ASCEND language name of the function.
  *  Not a symchar.
  */
 
 extern CONST char *FuncCName(CONST struct Func *f);
 /**<
- *  <!--  const char *FuncCName(f)                                     -->
- *  <!--  const struct Func *f;                                        -->
  *  Return the C language name of the function, if any.
  */
 
 extern CONST char *FuncDeriv1CName(CONST struct Func *f);
 /**<
- *  <!--  const char *FuncDerive1CName(f)                              -->
- *  <!--  const struct Func *f;                                        -->
  *  Return the C language name of the function first derivative, if any.
  */
 
 extern CONST char *FuncDeriv2CName(CONST struct Func *f);
 /**<
- *  <!--  const char *FuncName(f)                                      -->
- *  <!--  const struct Func *f;                                        -->
  *  Return the C language name of the function second derivative, if any.
  */
 
 extern enum Func_enum FuncId(CONST struct Func *f);
 /**<
- *  <!--  enum Func_enum FuncId(f)                                     -->
- *  <!--  const struct Func *f;                                        -->
  *  Return the identification of the function.
  */
 
 extern CONST dim_type *FuncDimens(CONST struct Func *f);
 /**<
- *  <!--  dim_type *FuncDimens(f)                                      -->
- *  <!--  const struct Func *f;                                        -->
  *  Return the dimensionality required for the arg of the function.
  *  sin, cos, tan -> P.
  *  arc(sin,cos,tan),exp,ln,log,lnm,erf ->dimensionless.
@@ -342,9 +327,6 @@ extern CONST dim_type *FuncDimens(CONST struct Func *f);
 
 extern double FuncEval(CONST struct Func *f, double u);
 /**<
- *  <!--  double FuncEval(f,u)                                         -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double u;                                                    -->
  *  Return f(u).
  */
 
@@ -352,18 +334,11 @@ extern double FuncEvalSafe(CONST struct Func *f,
                            double u,
                            enum safe_err *not_safe);
 /**<
- *  <!--  double FuncEval(f,u,not_safe)                                -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double u;                                                    -->
- *  <!--  enum safe_err *not_safe;                                     -->
  *  Return f(u) (safe version).
  */
 
 extern double FuncDeriv(CONST struct Func *f, double u);
 /**<
- *  <!--  double FuncDeriv(f,u)                                        -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double u;                                                    -->
  *  Return df/du evaluated at u.
  */
 
@@ -371,18 +346,11 @@ extern double FuncDerivSafe(CONST struct Func *f,
                             double u,
                             enum safe_err *not_safe);
 /**<
- *  <!--  double FuncDerivSafe(f,u,not_safe)                           -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double u;                                                    -->
- *  <!--  enum safe_err *not_safe;                                     -->
  *  Return df/du evaluated at u (safe version).
  */
 
 extern double FuncDeriv2(CONST struct Func *f, double u);
 /**<
- *  <!--  double FuncDeriv2(f,u)                                       -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double u;                                                    -->
  *  Return the second derivative (d^2f/du^2) evaluated at u.
  */
 
@@ -390,10 +358,6 @@ extern double FuncDeriv2Safe(CONST struct Func *f,
                              double u,
                              enum safe_err *not_safe);
 /**<
- *  <!--  double FuncDeriv2(f,u,not_safe)                              -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double u;                                                    -->
- *  <!--  enum safe_err *not_safe;                                     -->
  *  Return the second derivative (d^2f/du^2) evaluated at u (safe version).
  */
 
@@ -401,9 +365,6 @@ extern double FuncDeriv2Safe(CONST struct Func *f,
 
 extern struct Interval FuncRange(CONST struct Func *f, struct Interval i);
 /**<
- *  <!--  struct Interval FuncRange(f,i)                               -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  struct Interval i;                                           -->
  *  Return a bound on the range of the function over the given interval.
  */
 
@@ -413,43 +374,27 @@ extern void FuncSlope(CONST struct Func *f,
                       struct Interval *range,
                       struct Interval *slope);
 /**<
- *  <!--  struct Interval FuncSlope(f,nvar,center,range,slope)         -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  unsigned long nvar;                                          -->
- *  <!--  struct Interval *center,*range;                              -->
- *  <!--  struct Interval slope[];                                     -->
  *  Perform the interval slope calculation.
  */
 
 extern struct Interval FuncIDeriv(CONST struct Func *f, struct Interval i);
 /**<
- *  <!--  struct Interval FuncIDeriv(f,i)                              -->
- *  <!--  const struct Func *f                                         -->
- *  <!--  struct Interval i;                                           -->
+ *  ...
  */
 
 extern double ArgMin(CONST struct Func *f, double lower, double upper);
 /**<
- *  <!--  double ArgMin(f,lower,upper)                                 -->
- *  <!--  const struct Func *f;                                        -->
- *  <!--  double lower,upper;                                          -->
  *  Return the arg min of the function over the range.
  */
 
 extern double ArgMax(CONST struct Func *f, double lower, double upper);
 /**<
- *  <!--  double ArgMax(f,lower,upper)                                 -->
- *  <!--  CONST struct Func *f;                                        -->
- *  <!--  double lower,upper;                                          -->
  *  Return the arg max of the function over the range.
  */
 
 extern double ConvexEnv(CONST struct Func *f, double x,
                         double lower, double upper);
 /**<
- *  <!--  double ConvexEnv(f,x,lower,upper)                            -->
- *  <!--  CONST struct Func *f;                                        -->
- *  <!--  double x,lower,upper;                                        -->
  *  Return the value of the convex envelope of the function at the value
  *  x which ranges from lower to upper.
  */
@@ -457,9 +402,6 @@ extern double ConvexEnv(CONST struct Func *f, double x,
 extern double ConvexEnvDeriv(CONST struct Func *f, double x,
                              double lower, double upper);
 /**<
- *  <!--  double ConvexEnvDeriv(f,x,lower,upper)                       -->
- *  <!--  CONST struct Func *f;                                        -->
- *  <!--  double x,lower,upper;                                        -->
  *  Return the derivative of the convex envelope of the function at the
  *  value x which ranges from lower to upper.
  */
@@ -467,9 +409,6 @@ extern double ConvexEnvDeriv(CONST struct Func *f, double x,
 extern double ConcaveEnv(CONST struct Func *f, double x,
                          double lower, double upper);
 /**<
- *  <!--  double ConcaveEnv(f,x,lower,upper)                           -->
- *  <!--  CONST struct Func *f;                                        -->
- *  <!--  double x,lower,upper;                                        -->
  *  Return the value of the concave envelope of the function at the value
  *  x which ranges from lower to upper.
  */
@@ -477,9 +416,6 @@ extern double ConcaveEnv(CONST struct Func *f, double x,
 extern double ConcaveEnvDeriv(CONST struct Func *f, double x,
                               double lower, double upper);
 /**<
- *  <!--  double ConcaveEnvDeriv(f,x,lower,upper)                      -->
- *  <!--  CONST struct Func *f;                                        -->
- *  <!--  double x,lower,upper;                                        -->
  *  Return the derivative of the concave envelope of the function at the
  *  value x which ranges from lower to upper.
  */

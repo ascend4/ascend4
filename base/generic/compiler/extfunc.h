@@ -115,6 +115,7 @@ extern void DestroyExtFuncLibrary(void);
  */
 
 
+#ifdef THIS_IS_AN_UNUSED_FUNCTION
 extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
 /**<
  *  Creates a new ExternalFunc node having the specified name.  
@@ -124,6 +125,7 @@ extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
  *  @param name The name for the new ExternalFunc.
  *  @return A pointer to the new ExternalFunc.
  */
+#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
 /**< 

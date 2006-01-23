@@ -10,6 +10,7 @@
  *  This file is part of the ASCEND compiler.
  *
  *  Copyright (C) 1994,1995 Kirk Andre Abbott.
+ *  Copyright (C) 2006 Carnegie Mellon University
  *
  *  The Ascend Language Interpreter is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
@@ -46,8 +47,8 @@
  *  case.
  */
 
-#ifndef __EXPRSYM_H_SEEN__
-#define __EXPRSYM_H_SEEN__
+#ifndef ASC_EXPRSYM_H
+#define ASC_EXPRSYM_H
 
 /**
  * Until we decide whether to let the postfix and
@@ -55,8 +56,10 @@
  * typedefs.
  */
 typedef struct Func Func;
+
 typedef struct relation_term Term;
 /**< note, so now Term has to be treated like A_TERM. */
+
 typedef struct relation RelationINF;	/**< infix relation */
 
 #define K_TERM(i) ((Term *)(i))
@@ -71,7 +74,7 @@ extern Term *TermSimplify(Term *term);
 extern Term *Derivative(Term *term, unsigned long wrt,
                         int (*filter)(struct Instance *));
 /**<
- *  The low level routine which acutally does the symbolic differentiation
+ *  The low level routine which actually does the symbolic differentiation
  *  with sub epxression simplification/elimination. In general not a safe
  *  place to start as use is made of a free store which has to be set up
  *  before this funcion may be called.
@@ -103,10 +106,6 @@ extern Term *TermDerivative(Term *term, unsigned long wrt,
 extern RelationINF *RelDerivative(RelationINF *rel, unsigned long wrt,
                                   int (*filter)(struct Instance *));
 /**<
- *  <!--  RelationINF *RelDeriveSloppy(rel,wrt,filter);                -->
- *  <!--  RelationINF *rel;                                            -->
- *  <!--  unsigned long wrt;                                           -->
- *  <!--  int (*filter)(struct Instance *);                            -->
  *  Given a infix relation, a index into its variable list and a function
  *  filter used to classify REAL_ATOM_INSTANCES as variables,parmaters or
  *  constants (or for that matter whatever the user pleases), this function
@@ -118,8 +117,6 @@ extern RelationINF *RelDerivative(RelationINF *rel, unsigned long wrt,
 
 extern void RelDestroySloppy(RelationINF *rel);
 /**< 
- *  <!--  void RelDestroySloppy(rel);                                  -->
- *  <!--  RelationINF *rel;                                            -->
  *  This function is to be used to deallocate a relation that was returned
  *  as a result of a call to RelDeriveSloppy.
  *  <pre>
@@ -141,10 +138,6 @@ extern void RelDestroySloppy(RelationINF *rel);
 extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
                                     int (*filter)(struct Instance *));
 /**<
- *  <!--  RelationINF *RelDeriveSloppy(rel,wrt,filter);                -->
- *  <!--  RelationINF *rel;                                            -->
- *  <!--  unsigned long wrt;                                           -->
- *  <!--  int (*filter)(struct Instance *);                            -->
  *  Given a infix relation, a index into its variable list and a function
  *  filter used to classify REAL_ATOM_INSTANCES as variables,parmaters or
  *  constants (or for that matter whatever the user pleases), this function
@@ -172,5 +165,5 @@ extern RelationINF *RelDeriveSloppy(RelationINF *rel, unsigned long wrt,
  *  Shutdown.
  */
 
-#endif /* __EXPRSYM_H_SEEN__ */
+#endif /* ASC_EXPRSYM_H */
 

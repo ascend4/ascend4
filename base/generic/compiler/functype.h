@@ -1,5 +1,5 @@
 /*
- *  Function module
+ *  Functions-of-one-variable module
  *  by Tom Epperly
  *  Version: $Revision: 1.8 $
  *  Version control file: $RCSfile: functype.h,v $
@@ -32,7 +32,7 @@
  */
 
 /** @file
- *  Function module types and data structures.
+ *  Functions-of-one-variable module types and data structures.
  *  <pre>
  *  When #including functype.h, make sure these files are #included first:
  *         #include "compiler.h"
