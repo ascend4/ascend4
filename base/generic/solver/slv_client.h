@@ -4,7 +4,7 @@
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 1996 Benjamin Andrew Allan
-	Copyright (C) 2005 The ASCEND developers
+	Copyright (C) 2005-2006 Carnegie Mellon University
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -156,6 +156,8 @@
 	C code, or any kind) in a separate process. This is unacceptable from
 	a memory conservation point of view until RAM comes down to ~$1/MByte,
 	especially if ASCEND is to run on PCs any time soon.
+
+	Haha :-) $1/MB! Jan 2006: 118 AUD = 512 MB = ~ 0.15 USD/MB -- johnpye
 	
 	What we really have then is a slv_system_t made up of variables and
 	relations and hiding all the compiler details from the clients.
@@ -194,17 +196,17 @@
 	client needs to know about relations can be found in the rel.h
 	file. We keep master and client lists of relations as well.
 	We provide a variety of interesting services with relations:
-	    residual and gradient calculations
-	    symbolic inversion (where possible)
-	    numeric root finding
-	    scaling based on symbolic arguments
-	    symbolic determination of linearity
+	 - residual and gradient calculations
+	 - symbolic inversion (where possible)
+	 - numeric root finding
+	 - scaling based on symbolic arguments
+	 - symbolic determination of linearity
 	and we expect to add others as they occur to us or you suggest
 	them.
 	
 	 @subsection whatisslvsys What else is a slv_system_t?
 	 It's has a host of interesting properties.
-	 @li One slv_system_t (system, hereafter) can only be used by one
+	  - One slv_system_t (system, hereafter) can only be used by one
 		*registered* client at a time, but if your client is an unregistered manager
 	    of several subclients (for example an NLP code and and MILP code)
 		then you can pass it back and forth to those registered clients to solve
@@ -212,12 +214,12 @@
 		Any number of unregistered clients may share a system, but they
 		must take responsibility for not stepping on each other or the
 		registered client. Registration will be explained further below.
-	 @li From any given ASCEND type definitions, the master lists in the
+	  - From any given ASCEND type definitions, the master lists in the
 	    system will be ordered identically across all invocations of
 	    ASCEND on any hardware that we are aware of. This property is
 	    derived from the way we compile instances and create systems.
 	    This is helpful in benchmarking and other applications.
-	 @li We have a number of standard clients (registered and not)
+	  - We have a number of standard clients (registered and not)
 	    you can use on a the system to precondition it in some way for
 	    your client:
 	      - Degrees of freedom analysis.
