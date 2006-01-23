@@ -346,7 +346,7 @@ extern void DestroyRelation(struct relation *rel, struct Instance *relinst);
 extern void ModifyTokenRelationPointers(struct Instance *relinst,
                                         struct relation *rel,
                                         CONST struct Instance *old,
-                                        CONST struct Instance *new);
+                                        CONST struct Instance *new_inst);
 /**<
  *  Change all references in a token relation from old to new.  
  *  This doesn't do anything to the instances old and new.
@@ -367,7 +367,7 @@ extern void ModifyTokenRelationPointers(struct Instance *relinst,
 extern void ModifyGlassBoxRelPointers(struct Instance *relinst,
                                       struct relation *rel,
                                       CONST struct Instance *old,
-                                      CONST struct Instance *new);
+                                      CONST struct Instance *new_inst);
 /**<
  *  Change all references in a glass box relation from old to new.
  *  This doesn't do anything to the instances old and new.
@@ -378,7 +378,7 @@ extern void ModifyGlassBoxRelPointers(struct Instance *relinst,
 extern void ModifyBlackBoxRelPointers(struct Instance *relinst,
                                       struct relation *rel,
                                       CONST struct Instance *old,
-                                      CONST struct Instance *new);
+                                      CONST struct Instance *new_inst);
 /**<
  *  Change all references in a black box relation from old to new.
  *  This doesn't do anything to the instances old and new.
