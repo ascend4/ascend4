@@ -145,7 +145,7 @@ SWIGS = plot.i
 %_wrap.o: %_wrap.cxx
 	$(CC) $(SWIG_CFLAGS) -o $@ $^ $(SWIG_CPPFLAGS)
 
-$(LIB): $(OBJS) $(SWIG_OBJS) $(ASC_LIBS)
+$(LIB): $(ASC_LIBS) $(OBJS) $(SWIG_OBJS)
 	$(LD) -module -shared -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
 #------------------------

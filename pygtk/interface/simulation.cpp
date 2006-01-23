@@ -287,13 +287,13 @@ Simulation::solve(Solver solver){
 	setSolver(solver);
 
 
-	cerr << "PRESOLVING SYSTEM..." << endl;
+	cerr << "PRESOLVING SYSTEM...";
 	slv_presolve(sys);
-	cerr << "... DONE PRESOLVING" << endl;
+	cerr << "DONE" << endl;
 
 	cerr << "SOLVING SYSTEM..." << endl;
 	// Add some stuff here for cleverer iteration....
-	unsigned niter = 300;
+	unsigned niter = 1000;
 	double updateinterval = 0.02;
 
 	double starttime = tm_cpu_time();
@@ -302,7 +302,7 @@ Simulation::solve(Solver solver){
 	int solved_vars=0;
 	bool stop=false;
 
-	for(int iter = 0; iter < niter && !stop; ++iter){
+	for(int iter = 1; iter <= niter && !stop; ++iter){
 		slv_get_status(sys,&status);
 		if(status.ready_to_solve){
 			slv_iterate(sys);

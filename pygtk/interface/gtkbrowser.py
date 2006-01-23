@@ -146,9 +146,9 @@ class Browser:
 		_img.set_from_file('icons/properties.png')
 		self.propsmenuitem.set_image(_img)
 
-		self.fixmenuitem.show()
-		self.freemenuitem.show()
-		self.plotmenuitem.show()
+		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
+		self.freemenuitem.show(); self.freemenuitem.set_sensitive(False)
+		self.plotmenuitem.show(); self.plotmenuitem.set_sensitive(False)
 		self.propsmenuitem.show()
 		self.treecontext.append(self.fixmenuitem);
 		self.treecontext.append(self.freemenuitem);
@@ -759,6 +759,9 @@ class Browser:
 					else:
 						self.fixmenuitem.set_sensitive(True)
 						self.freemenuitem.set_sensitive(False)
+				elif _instance.isRelation():
+					_canpop = True;
+					self.propsmenuitem.set_sensitive(True)					
 				else:
 					self.fixmenuitem.set_sensitive(False)
 					self.freemenuitem.set_sensitive(False)
@@ -819,7 +822,12 @@ class Browser:
 		return 1
 
 	def props_activate(self,widget):
-		self.reporter.reportWarning("props_activate not implemented")
+		_path,_col = self.treeview.get_cursor()
+		_instance = self.otank[_path][1]
+		if _instance.isRelation():
+			print "Relation '"+_instance.getName().toString()+"':", _instance.getValueAsString()
+		else:
+			self.reporter.reportWarning("props_activate not implemented")
 
 		
 #   ---------------------------------
