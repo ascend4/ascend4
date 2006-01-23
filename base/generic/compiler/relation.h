@@ -3,7 +3,6 @@
  *  by Tom Epperly
  *  Created: 1/30/90
  *  Version: $Revision: 1.14 $
- *  Version control file: $RCSfile: relation.h,v $
  *  Date last modified: $Date: 1998/01/11 17:03:59 $
  *  Last modified by: $Author: ballan $
  *
@@ -30,14 +29,14 @@
 /*
  *  Change log:
  *  1995 Abbott
- *  Added glassbox and blackbox external relations.
- *  Implemented relation sharing.
+ *   - Added glassbox and blackbox external relations.
+ *   - Implemented relation sharing.
  *  1996 Allan
- *  Reduced size, but not content, of relation terms.
- *  Tightened relations semantics for constants.
- *  Improved relation error reporting.
- *  Added compile time relation simplification.
- *  Removed relation query/scaling routines to relation_util.h.
+ *   - Reduced size, but not content, of relation terms.
+ *   - Tightened relations semantics for constants.
+ *   - Improved relation error reporting.
+ *   - Added compile time relation simplification.
+ *   - Removed relation query/scaling routines to relation_util.h.
  */
 
 /** @file
@@ -208,7 +207,6 @@ extern int g_ExternalNodeStamps;
 
 extern void InitRelInstantiator(void);
 /**<
- *  <!--  InitRelInstantiator();                                       -->
  *  Sets up relation instantiation gizmos. This must be called once
  *  before any relations can be built, ideally at startup time.
  *  Do not call it again unless DestroyRelInstantiator is called first.
@@ -217,7 +215,6 @@ extern void InitRelInstantiator(void);
 
 extern void DestroyRelInstantiator(void);
 /**<
- *  <!--  DestroyRelInstantiator();                                    -->
  *  Destroy relation instantiation gizmos. This must be called to
  *  clean up before shutting down ASCEND.
  *  Do attempt to instantiate anything after you call this unless you
@@ -226,8 +223,6 @@ extern void DestroyRelInstantiator(void);
 
 extern void ReportRelInstantiator(FILE *f);
 /**<
- *  <!--  ReportRelInstantiator(f);                                    -->
- *  <!--  FILE *f;                                                     -->
  *  Reports on the relation instantiator to f.
  */
 
@@ -260,9 +255,6 @@ extern void ReportRelInstantiator(FILE *f);
 extern int CheckRelation(CONST struct Instance *reference,
                          CONST struct Expr *ex);
 /**<
- *  <!--  int CheckRelation(reference,ex)                              -->
- *  <!--  const struct Instance *reference;                            -->
- *  <!--  const struct Expr *ex;                                       -->
  *  Return TRUE iff the expression can be created.
  */
 
@@ -271,9 +263,6 @@ extern int CheckRelation(CONST struct Instance *reference,
 extern struct relation *CreateRelationStructure(enum Expr_enum relop,
                                                 int copyunion);
 /**<
- *  <!--  struct relation *CreateRelationStructure(relop,copyunion);   -->
- *  <!--  enum Epxr_enum relop;                                        -->
- *
  *  Create and return a new relation node of relational operator relop.
  *  relop = e_equal, etc etc, not e_token, e_glassbox, etc.
  *  e_token, etc are stored on the instance, not the relation core.
@@ -289,12 +278,6 @@ extern struct relation
                      enum relation_errors *err,
                      enum find_errors *ferr);
 /**<
- *  <!--  struct relation *CreateTokenRelation(reference,relinst,ex,err,ferr)  -->
- *  <!--  struct Instance *reference,*relinst;                         -->
- *  <!--  const struct Expr *ex;                                       -->
- *  <!--  enum relation_errors *err;                                   -->
- *  <!--  enum find_errors *ferr;                                      -->
- *
  *  Create a relation from an expression, a reference instance and a relation
  *  instance.  This modifies the instance tree. The type of relinst will
  *  be set to e_token.<br><br>
@@ -316,12 +299,6 @@ extern struct relation
                       enum relation_errors *err,
                       enum find_errors *ferr);
 /**<
- *  <!--  struct relation *CreateOpCodeRelation(reference,relinst,ex,err,ferr) -->
- *  <!--  struct Instance *reference,*relinst;                         -->
- *  <!--  const struct Expr *ex;                                       -->
- *  <!--  enum relation_errors *err;                                   -->
- *  <!--  enum find_errors *ferr;                                      -->
- *
  *  NOT IMPLEMENTED.
  *
  *  Create a relation from an expression, a reference instance and a relation
@@ -341,13 +318,6 @@ extern struct relation
                         int index,
                         enum Expr_enum relop);
 /**<
- *  <!--  struct relation *CreateGlassBoxRelation(relinst,efunc,varlist,index,relop) -->
- *  <!--  struct Instance *relinst;                                    -->
- *  <!--  struct ExternalFunc *efunc;                                  -->
- *  <!--  struct gl_list_t *varlist;                                   -->
- *  <!--  int index;                                                   -->
- *  <!--  enum Expr_enum relop;                                        -->
- *
  *  Create a relation from an expression, a reference instance and a relation
  *  instance.  This modifies the instance tree.
  */
@@ -360,15 +330,6 @@ extern struct relation
                         struct gl_list_t *inputs,
                         struct Instance *data);
 /**<
- *  <!--  struct relation *CreateBlackBoxRelation(relinst,efunc,arglist,whichvar, -->
- *  <!--                                          inputs,data);                   -->
- *  <!--  struct Instance *relinst;                                    -->
- *  <!--  struct ExternalFunc *efunc;                                  -->
- *  <!--  struct gl_list_t *arglist;                                   -->
- *  <!--  struct Instance *whichvar;                                   -->
- *  <!--  struct gl_list_t *inputs;                                    -->
- *  <!--  struct Instance *data;                                       -->
- *
  *  Construct an external relation from an external statement, a reference
  *  relation instance, a list of lists -- the arglist, a list of inputs,
  *  and a data instance which may be NULL. A copy is made of the arglist.
@@ -376,9 +337,6 @@ extern struct relation
 
 extern void DestroyRelation(struct relation *rel, struct Instance *relinst);
 /**<
- *  <!--  void DestroyRelation(rel,relinst)                            -->
- *  <!--  struct relation *rel;                                        -->
- *  <!--  struct Instance *relinst;                                    -->
  *  Deallocate a relation.  This will notify all the real instances in
  *  the relation that it will no longer be pointing to them.  Therefore,
  *  this routine will have an effect on the instance tree.
@@ -390,10 +348,6 @@ extern void ModifyTokenRelationPointers(struct Instance *relinst,
                                         CONST struct Instance *old,
                                         CONST struct Instance *new);
 /**<
- *  <!--  void ModifyTokenRelationPointers(relintst,rel,old,new);      -->
- *  <!--  const struct Instance *relinst;                              -->
- *  <!--  struct relation *rel;                                        -->
- *  <!--  const struct Instance *old, *new;                            -->
  *  Change all references in a token relation from old to new.  
  *  This doesn't do anything to the instances old and new.
  *  Note that this function will be slower when called on a relation
@@ -415,10 +369,6 @@ extern void ModifyGlassBoxRelPointers(struct Instance *relinst,
                                       CONST struct Instance *old,
                                       CONST struct Instance *new);
 /**<
- *  <!--  void ModifyGlassBoxRelPointers(relintst,rel,old,new);        -->
- *  <!--  const struct Instance *relinst;                              -->
- *  <!--  struct relation *rel;                                        -->
- *  <!--  const struct Instance *old, *new;                            -->
  *  Change all references in a glass box relation from old to new.
  *  This doesn't do anything to the instances old and new.
  *  @see ModifyTokenRelationPointers() for more information which
@@ -430,10 +380,6 @@ extern void ModifyBlackBoxRelPointers(struct Instance *relinst,
                                       CONST struct Instance *old,
                                       CONST struct Instance *new);
 /**<
- *  <!--  void ModifyBlackBoxRelPointers(relintst,rel,old,new);        -->
- *  <!--  const struct Instance *relinst;                              -->
- *  <!--  struct relation *rel;                                        -->
- *  <!--  const struct Instance *old, *new;                            -->
  *  Change all references in a black box relation from old to new.
  *  This doesn't do anything to the instances old and new.
  *  @see ModifyTokenRelationPointers() for more information which
@@ -445,9 +391,6 @@ extern void DoInOrderVisit(struct relation_term *term,
                            void (*func)(struct relation_term *,
                                         struct relation *));
 /**<
- *  <!--  void DoInOrderVisit(term,r,func);                            -->
- *  <!--  struct relation_term *term;                                  -->
- *  <!--  void (*func)(struct relation_term *,struct relation *r);     -->
  *  Will visit an infix tree and apply function func to each term.
  *  It takes the relation corresponding to the tree as an argument, as some
  *  of the operations on terms are dependent upon the relation that the term
@@ -466,7 +409,6 @@ extern struct relation
                          struct Instance *target_instance,
                          struct gl_list_t *targvarlist);
 /**<
- * <!--  CopyRelationByReference(src_instance, target_instance, targvarlist); -->
  * Abbott version of relation reference copying.
  * src_instance is a completed rel instance.
  * target is a new rel instance with no struct relation or varlist at
@@ -480,7 +422,6 @@ extern struct relation
                              struct Instance *target,
                              struct gl_list_t *copyvars);
 /**<
- * <!--  CopyAnonRelationByReference(anonproto,target,copyvars);       -->
  * Version of relation copy-by-reference for use with the AnonType
  * approach to copying relations.
  * The tmpnums of the vars in the relation list of the anonproto instance
@@ -499,10 +440,6 @@ extern struct relation
                       struct Instance *dest_inst,
                       struct gl_list_t *copylist);
 /**<
- *  <!--  struct relation *CopyRelationToModify(src_inst,dest_inst,copylist) -->
- *  <!--  const struct Instance *src_inst;                             -->
- *  <!--  struct Instance *dest_inst;                                  -->
- *  <!--  struct gl_list_t *copylist;                                  -->
  *  Given a source and a destination relation instance, will copy the
  *  relation structure from the source instance and return it. A unique
  *  variable list is required. This variable list represents the new
@@ -517,7 +454,6 @@ extern struct relation
 extern void RelationSetBinTokens(struct Instance *c,
                                  int btable, int bindex);
 /**<
- * <!--  RelationSetBinTokens(i,btable,bindex);                        -->
  * Resets the btable and bindex for the shared in a token
  * relation. If btable and bindex are not 0,0, then
  * this will report an error if the existing share does
@@ -525,4 +461,3 @@ extern void RelationSetBinTokens(struct Instance *c,
  */
 
 #endif /* ASC_RELATION_H */
-

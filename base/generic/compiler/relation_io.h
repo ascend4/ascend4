@@ -3,7 +3,6 @@
  *  by Tom Epperly
  *  Created: 2/8/90
  *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: relation_io.h,v $
  *  Date last modified: $Date: 1998/01/27 11:00:18 $
  *  Last modified by: $Author: ballan $
  *
