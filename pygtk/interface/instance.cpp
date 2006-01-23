@@ -25,6 +25,12 @@ extern "C"{
 #include <compiler/atomvalue.h>
 #include <utilities/readln.h>
 #include <compiler/plot.h>
+#include <compiler/types.h>
+#include <compiler/find.h>
+#include <compiler/relation_type.h>
+#include <compiler/exprs.h>
+#include <compiler/relation.h>
+#include <compiler/relation_io.h>
 }
 
 #include "instance.h"
@@ -371,10 +377,21 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+/**
+	Return the numerical value of an instance if it is an assigned atom.
+	If it is a relation, return the string form of the relation (ie the equation)
+	Else return the string 'undefined'.
+*/
 const string
 Instanc::getValueAsString() const{
 	stringstream ss;
-	if(isAssigned()){
+
+	if(isRelation()){
+		int len;
+		char *str = WriteRelationString(i,NULL,NULL,NULL,relio_ascend,&len);
+		ss << str;
+		ascfree(str);
+	}else if(isAssigned()){
 		if(isReal()){
 			ss << getRealValue();
 		}else if(isInt()){

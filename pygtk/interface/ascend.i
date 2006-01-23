@@ -353,6 +353,7 @@ public:
 	const bool getBoolValue() const;
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
+	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
 	Plot getPlot() const;
 
 	const bool isPlottable() const;
