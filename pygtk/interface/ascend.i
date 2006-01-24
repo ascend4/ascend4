@@ -24,6 +24,7 @@
 #include "extfn.h"
 #include "plot.h"
 #include "curve.h"
+#include "solverparameters.h"
 %}
 
 // All STL runtime_errors caught to Python
@@ -435,6 +436,12 @@ public:
 };
 
 
+class SolverParameters{
+public:
+	const std::string toString();
+	SolverParameters(const SolverParameters &);
+};
+
 class Simulation : public Instanc{
 public:
 	Simulation(Instance *&, const SymChar &name);
@@ -445,6 +452,7 @@ public:
 	void checkDoF() const;
 	void run(const Method &);
 	void solve(Solver s);
+	SolverParameters getSolverParameters() const;
 };
 
 class Variable{

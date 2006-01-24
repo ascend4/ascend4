@@ -987,6 +987,168 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
       <property name="spacing">0</property>
 
       <child>
+	<widget class="GtkMenuBar" id="browsermenu">
+	  <property name="visible">True</property>
+
+	  <child>
+	    <widget class="GtkMenuItem" id="menuitem8">
+	      <property name="visible">True</property>
+	      <property name="label" translatable="yes">_File</property>
+	      <property name="use_underline">True</property>
+
+	      <child>
+		<widget class="GtkMenu" id="menuitem8_menu">
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="open2">
+		      <property name="visible">True</property>
+		      <property name="label">gtk-open</property>
+		      <property name="use_stock">True</property>
+		      <signal name="activate" handler="open_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="reload">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">_Reload</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="reload_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+
+		      <child internal-child="image">
+			<widget class="GtkImage" id="image32">
+			  <property name="visible">True</property>
+			  <property name="stock">gtk-refresh</property>
+			  <property name="icon_size">1</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			</widget>
+		      </child>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkSeparatorMenuItem" id="separatormenuitem2">
+		      <property name="visible">True</property>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="quit2">
+		      <property name="visible">True</property>
+		      <property name="label">gtk-quit</property>
+		      <property name="use_stock">True</property>
+		      <signal name="activate" handler="on_quit2_activate" last_modification_time="Tue, 24 Jan 2006 02:39:15 GMT"/>
+		    </widget>
+		  </child>
+		</widget>
+	      </child>
+	    </widget>
+	  </child>
+
+	  <child>
+	    <widget class="GtkMenuItem" id="simulation">
+	      <property name="visible">True</property>
+	      <property name="label" translatable="yes">_Tools</property>
+	      <property name="use_underline">True</property>
+
+	      <child>
+		<widget class="GtkMenu" id="simulation_menu">
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="solve1">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Sol_ve</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="solve_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+
+		      <child internal-child="image">
+			<widget class="GtkImage" id="image33">
+			  <property name="visible">True</property>
+			  <property name="stock">gtk-media-forward</property>
+			  <property name="icon_size">1</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			</widget>
+		      </child>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="check1">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">_Check</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="check_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+
+		      <child internal-child="image">
+			<widget class="GtkImage" id="image34">
+			  <property name="visible">True</property>
+			  <property name="stock">gtk-spell-check</property>
+			  <property name="icon_size">1</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			</widget>
+		      </child>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkSeparatorMenuItem" id="separator3">
+		      <property name="visible">True</property>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkCheckMenuItem" id="auto1">
+		      <property name="visible">True</property>
+		      <property name="tooltip" translatable="yes">Solve automatically after values change</property>
+		      <property name="label" translatable="yes">_Auto</property>
+		      <property name="use_underline">True</property>
+		      <property name="active">True</property>
+		      <signal name="activate" handler="on_auto1_activate" last_modification_time="Tue, 24 Jan 2006 02:49:31 GMT"/>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkImageMenuItem" id="preferences">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">_Preferences</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="preferences_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+
+		      <child internal-child="image">
+			<widget class="GtkImage" id="image35">
+			  <property name="visible">True</property>
+			  <property name="stock">gtk-preferences</property>
+			  <property name="icon_size">1</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			</widget>
+		      </child>
+		    </widget>
+		  </child>
+		</widget>
+	      </child>
+	    </widget>
+	  </child>
+	</widget>
+	<packing>
+	  <property name="padding">0</property>
+	  <property name="expand">False</property>
+	  <property name="fill">False</property>
+	</packing>
+      </child>
+
+      <child>
 	<widget class="GtkToolbar" id="toolbar3">
 	  <property name="visible">True</property>
 	  <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>

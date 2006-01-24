@@ -47,7 +47,8 @@ Solver::getName() const{
 }
 
 //---------------------------------
-// global functions for registering solvers and querying the complete list
+// >>>> GLOBAL FUNCTIONS <<<< 
+// for registering solvers and querying the complete list
 
 void
 registerSolver(SlvRegistration regfuncptr){
