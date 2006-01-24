@@ -227,15 +227,15 @@ Library::getModuleTypes(const Module &m){
 /**
 	This function is kinda fighting against the Table implementation of the external function library. What we really need is some kind of iterator on the Table struct, but it doesn't seem to be implemented. Instead there is a C-style equivalent of the STL 'bind1st' function which we can use, but it's not exported from the current extfunc.h so we need to add it.
 */
-vector<ExtFn>
-Library::getExtFns(){
+vector<ExtMethod>
+Library::getExtMethods(){
 	// Clear the vector
-	extfn_vector = vector<ExtFn>();
+	extmethod_vector = vector<ExtMethod>();
 
 	// Traverse the vector
-	TraverseExtFuncLibrary(Library::extFuncTraverse, (void *)this);
+	TraverseExtFuncLibrary(Library::extMethodTraverse, (void *)this);
 
-	return extfn_vector;
+	return extmethod_vector;
 }
 
 /**
@@ -245,15 +245,15 @@ Library::getExtFns(){
 	@NOTE there might be issues with C/C++ linking here?
 */
 void
-Library::extFuncTraverse(void *a1, void *a2){
+Library::extMethodTraverse(void *a1, void *a2){
 	Library *self = (Library *)a2;
-	self->appendToExtFnVector(a1);
+	self->appendToExtMethodVector(a1);
 }
 
 void
-Library::appendToExtFnVector(void *a1){
+Library::appendToExtMethodVector(void *a1){
 	struct ExternalFunc *e = (struct ExternalFunc *)a1;
-	extfn_vector.push_back(ExtFn(e));
+	extmethod_vector.push_back(ExtMethod(e));
 }
 
 /**

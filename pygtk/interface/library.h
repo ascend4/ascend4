@@ -6,7 +6,7 @@
 #include "type.h"
 #include "module.h"
 #include "symchar.h"
-#include "extfn.h"
+#include "extmethod.h"
 
 /**
 	Handles the loading of ASCEND a4c files into memory, then the
@@ -26,15 +26,15 @@ public:
 	std::vector<Type> getModuleTypes(const Module&);
 
 	// External Function library
-	std::vector<ExtFn> getExtFns();
-	static void extFuncTraverse(void *,void *);
-	void appendToExtFnVector(void *);
+	std::vector<ExtMethod> getExtMethods();
+	static void extMethodTraverse(void *,void *);
+	void appendToExtMethodVector(void *);
 
 	// Destroy types from the library
 	void clear();
 
 private:
-	std::vector<ExtFn> extfn_vector;
+	std::vector<ExtMethod> extmethod_vector;
 
 	static void displayModule(void *m);
 };
