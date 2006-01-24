@@ -71,6 +71,7 @@ John Pye (C) 2005
 		<keyword>ARE_ALIKE</keyword>
 		<keyword>ARE_THE_SAME</keyword>
 		<keyword>ARE_NOT_THE_SAME</keyword>
+		<keyword>ASSERT</keyword>
 		<keyword>ATOM</keyword>
 		<keyword>CALL</keyword>	
 		<keyword>CASE</keyword>	
@@ -86,6 +87,7 @@ John Pye (C) 2005
 		<keyword>DO</keyword>
 		<keyword>ELSE</keyword>
 		<keyword>END</keyword>
+		<keyword>FIX</keyword>
 		<keyword>FOR</keyword>
 		<keyword>IF</keyword>
 		<keyword>IN</keyword>
