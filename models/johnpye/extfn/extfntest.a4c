@@ -1,0 +1,34 @@
+REQUIRE "system.a4l";
+IMPORT extfntest_register FROM pkgextfntest;
+
+MODEL test_extfntest;
+
+	y IS_A solver_var;
+	x IS_A solver_var;
+	d IS_A real;
+
+	do_addone: add_one(
+		x : INPUT; 
+		y : OUTPUT;
+		d : DATA
+	);
+
+METHODS
+
+METHOD specify;
+	FIX x;
+END specify;
+METHOD values;
+	x := 1.0;
+	d := 3.5;
+END values;
+
+METHOD default_self;
+	RUN specify; RUN values;
+END default_self;
+
+METHOD self_test;
+	ASSERT y == 2;
+END self_test;
+
+END test_extfntest;
