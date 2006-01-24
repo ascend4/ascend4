@@ -48,6 +48,7 @@ extern "C"{
 
 #include "simulation.h"
 #include "solver.h"
+#include "solverparameters.h"
 #include "name.h"
 
 /**
@@ -383,4 +384,15 @@ Simulation::getSolver() const{
 }
 
 
+/**
+	Get solver parameters struct wrapped up as a SolverParameters class.
+*/
+SolverParameters
+Simulation::getSolverParameters() const{
+	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
+
+	slv_parameters_t p;
+	slv_get_parameters(sys,&p);
+	return SolverParameters(p);
+}
 

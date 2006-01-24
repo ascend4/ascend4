@@ -21,19 +21,13 @@ extern "C"{
 #include <solver/slv_client.h>
 }
 
-class Solver;
-
-/**
-	Some global functions
-*/
-void registerStandardSolvers();
-void registerSolver(SlvRegistration regfuncptr);
-const std::vector<Solver> getSolvers();
-
 /**
 	This is a rather problematic wrapper for slv_client.h. It's hard because registerd solvers
 	are referenced primarily by index, not by pointer etc, so given the index, we always have
-	to look up the solver in some way or other.	
+	to look up the solver in some way or other.
+
+	Because the index is changeable from session to session, depending on the order of
+	registration, we'll use the *name* as the primary key and look up the index as needed.
 */
 class Solver{
 private:
@@ -45,5 +39,12 @@ public:
 	const int getIndex() const;
 	const std::string& getName() const;
 };
+
+/**
+	Some global functions
+*/
+void registerStandardSolvers();
+void registerSolver(SlvRegistration regfuncptr);
+const std::vector<Solver> getSolvers();
 
 #endif

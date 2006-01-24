@@ -16,6 +16,7 @@ extern "C"{
 }
 
 class Solver;
+class SolverParameters;
 
 #ifndef ASCEND_INCDIR
 #define ASCEND_INCDIR "/home/john/src/ascend/trunk/base/generic/lib"
@@ -72,6 +73,7 @@ public:
 	void setSolver(Solver &s);
 	const Solver getSolver() const;
 
+	SolverParameters getSolverParameters() const;
 };
 
 

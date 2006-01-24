@@ -61,6 +61,7 @@ class Browser:
 		glade = gtk.glade.XML(GLADE_FILE,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
+
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
 
@@ -100,6 +101,9 @@ class Browser:
 		self.maintabs = glade.get_widget("maintabs")
 
 		self.statusbar = glade.get_widget("statusbar")
+
+		self.menu = glade.get_widget("browsermenu")
+		glade.signal_autoconnect(self)
 
 		#-------------------
 		# waitwin
@@ -714,6 +718,14 @@ class Browser:
 	def check_click(self,*args):
 		self.do_check()
 		#self.reporter.reportError("CHECK clicked")
+
+	def preferences_click(self,*args):
+		if not self.sim:
+			self.reporter.reportError("No simulation created yet!");
+		
+		_params = self.sim.getSolverParameters();
+		print _params.toString();
+		self.reporter.reportSuccess("Check console for solver parameter output")
 
 	def methodrun_click(self,*args):
 		_sel = self.methodsel.get_active_text()

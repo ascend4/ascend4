@@ -23,7 +23,9 @@ LDFLAGS = -g -lm -lc -lstdc++
 # Are you on a dual processor machine?
 _smp_mflags = -j2 
 
-CLASSES = library type module symchar instance variable method name reporter simulation set units dimensions extfn solver curve plot
+CLASSES = library type module symchar instance variable method name \
+	reporter simulation set units dimensions extfn \
+	solver curve plot solverparameters
 
 OBJS = $(CLASSES:%=%.o)
 HDRS = $(CLASSES:%=%.h)
