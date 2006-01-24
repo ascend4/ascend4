@@ -21,7 +21,7 @@
 #include "set.h"
 #include "dimensions.h"
 #include "units.h"
-#include "extfn.h"
+#include "extmethod.h"
 #include "plot.h"
 #include "curve.h"
 #include "solverparameters.h"
@@ -87,7 +87,7 @@ public:
 %template(VariableVector) std::vector<Variable>;
 %template(MethodVector) std::vector<Method>;
 %template(InstancVector) std::vector<Instanc>;
-%template(ExtFnVector) std::vector<ExtFn>;
+%template(ExtMethodVector) std::vector<ExtMethod>;
 %template(SetInt) ASCXX_Set<long>;
 %template(SetString) ASCXX_Set<SymChar>;
 %template(DoubleVector) std::vector<double>;
@@ -251,7 +251,7 @@ public:
 	Type &findType(const char *name);
 	std::vector<Module> getModules();
 	std::vector<Type> getModuleTypes(const Module &);
-	std::vector<ExtFn> getExtFns();
+	std::vector<ExtMethod> getExtMethods();
 	void clear();
 };
 
@@ -468,9 +468,9 @@ public:
 	}
 }
 
-class ExtFn{
+class ExtMethod{
 public:
-	ExtFn(const ExtFn &);
+	ExtMethod(const ExtMethod &);
 	const char *getName() const;
 	const char *getHelp() const;
 	const unsigned long getNumInputs() const;
