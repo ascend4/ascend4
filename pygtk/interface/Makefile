@@ -24,7 +24,7 @@ LDFLAGS = -g -lm -lc -lstdc++
 _smp_mflags = -j2 
 
 CLASSES = library type module symchar instance variable method name \
-	reporter simulation set units dimensions extfn \
+	reporter simulation set units dimensions extmethod \
 	solver curve plot solverparameters
 
 OBJS = $(CLASSES:%=%.o)
