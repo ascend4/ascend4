@@ -1,36 +1,49 @@
 #include <stdexcept>
 using namespace std;
 
-#include "extfn.h"
+#include "extmethod.h"
 
-ExtFn::ExtFn(const struct ExternalFunc *e) : e(e) {
+/*--- WARNING ---
+	In the C++ interface I'm trying to make the nomenclature
+	a bit more systematic. 'ExternalFunc' as listed end up
+	being things that you can call like 'asc_free_all_vars' --
+	they are effectively externally-defined methods on ASCEND
+	models, so I'll call then 'external methods'.
+
+	Meanwhile, external relations I will call 'ExtRelation'.
+
+	External functions, if ever implemented, will be for
+	functions like 'sin', 'exp', etc.
+*/
+
+ExtMethod::ExtMethod(const struct ExternalFunc *e) : e(e) {
 	// nothing else
 }
 
-ExtFn::ExtFn(const ExtFn &old) : e(old.e) {
+ExtMethod::ExtMethod(const ExtMethod &old) : e(old.e) {
 	// nothing else
 }
 
-ExtFn::ExtFn(){
-	throw runtime_error("Can't create empty ExtFn");
+ExtMethod::ExtMethod(){
+	throw runtime_error("Can't create empty ExtMethod");
 }
 
 const char *
-ExtFn::getName() const{
+ExtMethod::getName() const{
 	return ExternalFuncName(e);
 }
 
 const char *
-ExtFn::getHelp() const{
+ExtMethod::getHelp() const{
 	return e->help;
 }
 
 const unsigned long
-ExtFn::getNumInputs() const{
+ExtMethod::getNumInputs() const{
 	return NumberInputArgs(e);
 }
 
 const unsigned long
-ExtFn::getNumOutputs() const{
+ExtMethod::getNumOutputs() const{
 	return NumberOutputArgs(e);
 }
