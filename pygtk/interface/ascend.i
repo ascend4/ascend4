@@ -355,6 +355,7 @@ public:
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
 	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
+	const std::string getRelationAsString(const Instanc &relative_to) const;
 	Plot getPlot() const;
 
 	const bool isPlottable() const;

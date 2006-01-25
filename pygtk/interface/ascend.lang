@@ -223,12 +223,26 @@ John Pye (C) 2005
 
 	<!-- Single-Row Functions -->
 
-	<keyword-list _name="Numerical Functions" style="Function" case-sensitive="FALSE">
+	<keyword-list _name="Numerical Functions" style="Function" case-sensitive="TRUE">
 		<keyword>abs</keyword>
 		<keyword>(arc)?(cos|sin|tan)h?</keyword>
 		<keyword>erf</keyword>
 		<keyword>exp</keyword>
 		<keyword>lnm?</keyword>
+		<keyword>log10</keyword>
+	</keyword-list>
+
+<!-- METHODS -->
+
+	<keyword-list _name="Standard model methods" style="Function" case-sensitive="TRUE">
+		<keyword>default_self</keyword>
+		<keyword>specify</keyword>
+		<keyword>values</keyword>
+		<keyword>self_test</keyword>
+		<keyword>ClearAll</keyword>
+		<keyword>bound_self</keyword>
+		<keyword>scale_self</keyword>
+		<keyword>reset</keyword>
 	</keyword-list>
 
 <!-- Default measures -->

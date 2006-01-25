@@ -837,7 +837,8 @@ class Browser:
 		_path,_col = self.treeview.get_cursor()
 		_instance = self.otank[_path][1]
 		if _instance.isRelation():
-			print "Relation '"+_instance.getName().toString()+"':", _instance.getValueAsString()
+			print "Relation '"+_instance.getName().toString()+"':", \
+				_instance.getRelationAsString(self.sim.getModel())
 		else:
 			self.reporter.reportWarning("props_activate not implemented")
 

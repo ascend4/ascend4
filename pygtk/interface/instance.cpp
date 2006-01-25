@@ -377,6 +377,21 @@ Instanc::getSymbolValue() const{
 	return SCP(GetSymbolAtomValue(i));
 }
 
+const string
+Instanc::getRelationAsString(const Instanc &relative_to) const{
+	stringstream ss;
+	if(isRelation()){
+		int len;
+		char *str = WriteRelationString(i,relative_to.getInternalType()
+				,NULL,NULL,relio_ascend,&len);
+		ss << str;
+		ascfree(str);
+	}else{
+		throw runtime_error("getRelationString: Instance is not a relation");
+	}
+	return ss.str();
+}
+		
 /**
 	Return the numerical value of an instance if it is an assigned atom.
 	If it is a relation, return the string form of the relation (ie the equation)
@@ -386,12 +401,7 @@ const string
 Instanc::getValueAsString() const{
 	stringstream ss;
 
-	if(isRelation()){
-		int len;
-		char *str = WriteRelationString(i,NULL,NULL,NULL,relio_ascend,&len);
-		ss << str;
-		ascfree(str);
-	}else if(isAssigned()){
+	if(isAssigned()){
 		if(isReal()){
 			ss << getRealValue();
 		}else if(isInt()){
