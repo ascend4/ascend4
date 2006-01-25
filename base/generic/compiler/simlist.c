@@ -216,26 +216,30 @@ struct Instance *Asc_FindSimulationTop(symchar *str)
  * it is just an int.
  */
 struct Instance *SimsCreateInstance(symchar *type,
-                                    symchar *name, int format,
+                                    symchar *name, 
+                                    enum CreateInst_format format,
                                     symchar *defmethod)
 {
   struct Instance *result;
   unsigned int oldflags;
   double time;
 
+  if ((NULL == type) ||(NULL == name)) {
+    return NULL;
+  }
   g_ExtVariablesTable = NULL;		/* defined in extinst.[ch] */
   time = tm_cpu_time();
   switch (format) {
-  case 0:
+  case e_normal:
     result = Instantiate(type,name,0,defmethod);
     break;
-  case 1:
+  case e_no_relations:
     oldflags = GetInstantiationRelnFlags();
     SetInstantiationRelnFlags(NORELS);
     result = Instantiate(type,name,0,defmethod);
     SetInstantiationRelnFlags(oldflags);
     break;
-  case 2:
+  case e_patch:
     result = InstantiatePatch(type,name,0);
     break;
   default:

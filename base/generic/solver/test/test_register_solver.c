@@ -25,6 +25,7 @@
 #include "utilities/ascConfig.h"
 #include "test_register_solver.h"
 
+#include "test_bnd.h"
 #include "test_slv_common.h"
 /* #include "test_slv.h" */
 
@@ -33,6 +34,11 @@ CU_ErrorCode test_register_solver(void)
   CU_ErrorCode result = CUE_SUCCESS;
 
   /* for new tests, add the test registration call to the following sequence: */
+
+  /* solver/bnd.c */
+  result = test_register_solver_bnd();
+  if (CUE_SUCCESS != result)
+    return result;
 
   /* solver/slv_common.c */
   result = test_register_solver_slv_common();

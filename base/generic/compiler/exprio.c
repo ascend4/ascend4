@@ -36,6 +36,8 @@
 #include "compiler/functype.h"
 #include "compiler/types.h"
 #include "compiler/func.h"
+#include "compiler/instance_enum.h"
+#include "general/list.h"
 #include "compiler/extfunc.h"
 #include "compiler/exprs.h"
 #include "compiler/exprio.h"

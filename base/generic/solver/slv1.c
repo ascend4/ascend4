@@ -43,6 +43,7 @@
 #include "utilities/set.h"
 #include "utilities/mem.h"
 #include "compiler/compiler.h"
+#include "compiler/instance_enum.h"
 #include "compiler/fractions.h"
 #include "utilities/ascPanic.h"
 #include "general/list.h"

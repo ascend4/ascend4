@@ -534,14 +534,16 @@ BUILD_LSODE ?= TRUE ;
 # Name & path to the blas library
 ASC_BLAS_LIBROOT = libblas ;
 ASC_BLAS_LIB     = $(ASC_BLAS_LIBROOT)$(SUFLIB) ;
-BLASLIB_PATH     = $(BUILD_DIR) ;
-BLASLIB = $(BLASLIB_PATH)$(SLASH)$(ASC_BLAS_LIB) ;
+# uncomment the following if you are providing an external lsode library
+#BUILD_BLAS = FALSE ;
+BLASLIB = $(BUILD_DIR)$(SLASH)blas$(SLASH)$(ASC_BLAS_LIB) ;
 
 # Name & path to the linpack library
 ASC_LINPACK_LIBROOT = liblpak ;
 ASC_LINPACK_LIB     = $(ASC_LINPACK_LIBROOT)$(SUFLIB) ;
-LPAKLIB_PATH        = $(BUILD_DIR) ;
-LPAKLIB = $(LPAKLIB_PATH)$(SLASH)$(ASC_LINPACK_LIB) ;
+# uncomment the following if you are providing an external linpack library
+#BUILD_LPAK = FALSE ;
+LPAKLIB = $(BUILD_DIR)$(SLASH)linpack$(SLASH)$(ASC_LINPACK_LIB) ;
 
 # Name & path to the internal lsode library.
 if $(BUILD_LSODE) = TRUE
@@ -549,8 +551,7 @@ if $(BUILD_LSODE) = TRUE
   Echo Building internal LSODE library ;
   ASC_LSOD_LIBROOT = liblsode ;
   ASC_LSOD_LIB     = $(ASC_LSOD_LIBROOT)$(SUFLIB) ;
-  LSODLIB_PATH     = $(BUILD_DIR) ;
-  LSODLIB = $(LSODLIB_PATH)$(SLASH)$(ASC_LSOD_LIB) ;
+  LSODLIB = $(BUILD_DIR)$(SLASH)lsode$(SLASH)$(ASC_LSOD_LIB) ;
 }
 
 FOR_LIBS += $(LSODLIB) $(LPAKLIB) $(BLASLIB) $(F77_LIBS) ;

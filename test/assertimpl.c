@@ -45,8 +45,13 @@ _CRTIMP void __cdecl _assert(const char *cond, const char *file, int line)
 {
 
 #  elif defined(_MSC_VER)
+#    if _MSC_VER < 1400   /* Visual C versions below 14 */
 _CRTIMP void __cdecl _assert(const char *cond, const char *file, unsigned line)
 {
+#    else
+void __cdecl _wassert(__in_z const wchar_t * cond, __in_z const wchar_t *file, __in unsigned line)
+{
+#    endif  /* Visual C version */
 
 #  elif defined(__BORLANDC__)
 #    ifdef __cplusplus
@@ -56,7 +61,7 @@ void _RTLENTRY _EXPFUNC _assert(char *cond, char *file, int line)
 {
 
 #  else
-#    error Unrecognized compiler.
+#    error Unrecognized Windows compiler.
 
 #  endif
 #else    /* !__WIN32__ */

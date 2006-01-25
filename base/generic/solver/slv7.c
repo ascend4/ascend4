@@ -4072,13 +4072,13 @@ static void slv7_iterate(slv_system_t server, SlvClientToken asys)
     }
   } /* if fails with a 0, go on to newton a 1x1 */
   if( !calc_J(sys) ) {
-    FPRINTF(MIF(sys),"Jacobian calculation errors detected.\n");
+    FPRINTF(MIF(sys),"NGSLV: Jacobian calculation errors detected.\n");
   }
   scale_J(sys);
   scale_variables(sys);
   scale_residuals(sys);
   if( !calc_gradient(sys) )
-    FPRINTF(MIF(sys),"Gradient calculation errors detected.\n");
+    FPRINTF(MIF(sys),"NGSLV: Gradient calculation errors detected.\n");
 
   sys->J.rank_defect=0;
   sys->J.rank_defect = calc_pivots(sys);

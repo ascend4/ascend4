@@ -27,6 +27,7 @@
 
 #include <math.h>
 #include "utilities/ascConfig.h"
+#include "general/list.h"
 #include "compiler/instance_enum.h"
 #include "compiler/fractions.h"
 #include "compiler/compiler.h"
@@ -37,7 +38,6 @@
 #include "compiler/dimen.h"
 #include "compiler/types.h"
 #include "compiler/find.h"
-#include "general/list.h"
 #include "compiler/atomvalue.h"
 #include "compiler/mathinst.h"
 #include "compiler/relation_type.h"

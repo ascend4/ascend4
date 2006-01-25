@@ -81,7 +81,7 @@ if $(FORTRAN)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)blas ;
 
   Library $(ASC_BLAS_LIBROOT) : $(ASC_BLAS_SOURCES) ;
-  MakeLocate $(ASC_BLAS_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_BLAS_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs blas : $(ASC_BLAS_LIB) ;
 }

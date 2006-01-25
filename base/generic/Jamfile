@@ -151,6 +151,7 @@ if $(BUILD_COMPILER)
     parentchild.c
     parpend.c
     pending.c
+    plot.c
     proc.c
     procframe.c
     procio.c
@@ -294,7 +295,7 @@ if $(BUILD_COMPILER)
   SEARCH_SOURCE = $(ASC_COMPILER_DIR) ;
 
   Library $(ASC_COMPILER_LIBROOT) : $(ASC_COMPILER_SOURCES) ;
-  MakeLocate $(ASC_COMPILER_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_COMPILER_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_COMPILER_LIB) ;
 
@@ -323,7 +324,7 @@ if $(BUILD_GENERAL)
   SEARCH_SOURCE = $(ASC_GENERAL_DIR) ;
 
   Library $(ASC_GENERAL_LIBROOT) : $(ASC_GENERAL_SOURCES) ;
-  MakeLocate $(ASC_GENERAL_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_GENERAL_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_GENERAL_LIB) ;
 }
@@ -379,7 +380,7 @@ if $(BUILD_SOLVER)
   SEARCH_SOURCE = $(ASC_SOLVER_DIR) ;
 
   Library $(ASC_SOLVER_LIBROOT) : $(ASC_SOLVER_SOURCES) ;
-  MakeLocate $(ASC_SOLVER_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_SOLVER_LIB) : $(BUILD_DIR) ;
   ObjectCcFlags $(ASC_SOLVER_SOURCES) : $(SOLVER_DEFS) ;
 
   # TODO:  remove when Tcl/Tk interface decoupled from base library
@@ -410,7 +411,7 @@ if $(BUILD_UTILITIES)
   SEARCH_SOURCE = $(ASC_UTILITIES_DIR) ;
 
   Library $(ASC_UTILITIES_LIBROOT) : $(ASC_UTILITIES_SOURCES) ;
-  MakeLocate $(ASC_UTILITIES_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_UTILITIES_LIB) : $(BUILD_DIR) ;
 
   # TODO:  remove when Tcl/Tk decoupled from base library
   ObjectHdrs ascPrint.c : $(TK_HDRS) ;
@@ -424,7 +425,7 @@ if $(BUILD_UTILITIES)
 if $(BUILD_PACKAGES)
 {
   ASC_PACKAGES_SOURCES =
-	  sensitivity.c 
+    sensitivity.c 
     ascFreeAllVars.c
     ;
 
@@ -432,7 +433,7 @@ if $(BUILD_PACKAGES)
   SEARCH_SOURCE = $(ASC_PACKAGES_DIR) ;
 
   Library $(ASC_PACKAGES_LIBROOT) : $(ASC_PACKAGES_SOURCES) ;
-  MakeLocate $(ASC_PACKAGES_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_PACKAGES_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs : $(ASC_PACKAGES_LIB) ;
 }
@@ -485,6 +486,7 @@ TEST_SOURCES =
   test_set.c
   test_register_solver.c
   test_slv_common.c
+  test_bnd.c
 #  slv_test.c
 #  test_slv.c
   ;

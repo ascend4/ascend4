@@ -72,7 +72,7 @@ if $(FORTRAN)
   LOCATE_TARGET = $(BUILD_DIR)$(SLASH)linpack ;
 
   Library $(ASC_LINPACK_LIBROOT) : $(ASC_LINPACK_SOURCES) ;
-  MakeLocate $(ASC_LINPACK_LIB) : $(BUILD_DIR) ;
+#  MakeLocate $(ASC_LINPACK_LIB) : $(BUILD_DIR) ;
 
   DEPENDS libs linpack : $(ASC_LINPACK_LIB) ;
 }

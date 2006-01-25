@@ -1,9 +1,11 @@
+/* This example is outdated and non-functional
 #include "base.h"
 #include "var_normal.h"
 #include "expr_normal.h"
 #include "rel_normal.h"
 #include "slv.h"
 #include "eparse.h"
+*/
 
 /* $##LINK##
 bind -bdir /usr/kw17/utilities/obj -bdir //irawaddy/usr10/newascend/solver/obj example_program.bin var.bin expr.bin rel.bin eparse_from_str.bin eparse_to_str.bin calc.bin relman.bin slv.bin slv0.bin slv1.bin //pelee/misc/ascend-2/minos51/bin/minos51.bin newminos_filename.bin slv_io.bin filter.bin mtx.bin part.bin reorder.bin linsol.bin ls_io.bin tm0.bin set.bin mem.bin readln.bin pl.bin -b example_program

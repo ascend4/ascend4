@@ -1,7 +1,7 @@
 /*
  *  Simulation Management for Ascend
  *  by Ben Allan
- *  Version: $Revision: 1.2 $                                  
+ *  Version: $Revision: 1.2 $
  *  Version control file: $RCSfile: simlist.h,v $
  *  Date last modified: $Date: 1997/07/18 12:34:54 $
  *  Last modified by: $Author: mthomas $
@@ -28,50 +28,70 @@
  */
 
 /** @file
- *  This module initializes manages a global list simulations.
+ *  Simulation Management for Ascend
+ *  This module initializes and manages a global list of simulations.
  *  These may be interrelated in very twisty ways due to UNIVERSAL and
  *  parameter passing.
+ *
+ *  Simulations need much better management than they currently get,
+ *  once we start building simulations out of other simulations.
+ *  For now this file is largely empty.
+ *  <pre>
+ *  Requires:     #include "utilities/ascConfig.h"
+ *                #include "instance_enum.h"
+ *                #include "compiler/compiler.h"
+ *                #include "general/list.h"
+ *  </pre>
  */
 
 #ifndef ASC_SIMLIST_H
 #define ASC_SIMLIST_H
 
-#include "utilities/ascConfig.h"
-#include "instance_enum.h"
-#include "compiler/compiler.h"
-
 extern int g_compiler_timing;
+/**<  Global flag for whether to perform timing of compiler operations. */
 
 extern struct gl_list_t *g_simulation_list;
-/**< 
- * Pointer to a simulation list. Simulations need much better
- * management than they currently get, once we start building
- * simulations out of other simulations. For now this
- * file is largely empty.
- */
+/**<  Global simulation list.*/
 
 extern void Asc_DeAllocSim(struct Instance *inst);
-/**< 
- * Destroys the instance given. Should be a simulation instance.
+/**<
+ *  Destroys the instance given. 
+ *  inst should be a simulation instance, and may be NULL.
  */
 
-/*
-* This function setups up to call instantiate with different
-* compiler settings. In all cases Instantiate will make a copy of
-* the name that is given. format should perhaps be an array of enums
-* or a bit structure to deal with multiple compilation flags. At the moment
-* it is just an int.
-*/
+/** Compilation types for SimsCreateInstance(). */
+enum CreateInst_format {
+  e_normal = 0,     /**< Normal compilation (default). */
+  e_no_relations,   /**< Compile with no relations. */
+  e_patch           /**< Compile a patch. */
+};
+
 extern
-struct Instance *
-SimsCreateInstance(symchar *type,
-	symchar *name, int format,
-	symchar *defmethod);
+struct Instance *SimsCreateInstance(symchar *type,
+                                    symchar *name,
+                                    enum CreateInst_format format,
+                                    symchar *defmethod);
+/*
+ *  Creates a new simulation instance.
+ *  This function sets up the call to instantiate with different
+ *  compiler settings.  In all cases Instantiate() will make a copy
+ *  of the name that is given.  format should perhaps be an array
+ *  of enums or a bit structure to deal with multiple compilation
+ *  flags. At the moment it is just a simple enum.  NULL is 
+ *  returned if either type or name is NULL.
+ *
+ *  The returned instance should be destroyed by the caller using
+ *  Asc_DeAllocSim() or Asc_DestroySimulations().
+ *
+ *  @param type      Name of the model type to create.
+ *  @param name      Name to give the new simulation.
+ *  @param format    Type of compilation to perform.
+ *  @param defmethod The method to call after instantiation, if present.
+ *  @return A pointer to the newly-created simulation instance.
+ */
 
 extern void Asc_DestroySimulations(void);
-/**< 
- * Destroys all known instances on the simulation list.
- */
+/**<  Destroys all known instances on the simulation list. */
 
 
 /*
@@ -91,39 +111,37 @@ extern symchar *Asc_SimsFindSimulationName(CONST struct Instance *sim);
  */
 
 extern void Asc_SetCurrentSim(struct Instance *sim);
-/**<
- *  Sets the current working simulation to the simulation given.
- */
+/**<  Sets the current working simulation to the specified simulation. */
 
 extern struct Instance *Asc_GetCurrentSim(void);
 /**<
- *  Returns the current working simulation. Makes no checks on the state
- *  of the simulation.
+ *  Returns a pointer to the current working simulation.
+ *  Makes no checks on the state of the simulation.
  */
 
 extern int Asc_SimsUniqueName(symchar *str);
 /**<
- *  Searches the simulation list for the name of a simulation.
- *  Returns 0 if the name was found else returns 1;
+ *  Checks whether a simulation exists having specified name.
+ *  Returns 0 if the name was found, 1 otherwise.
  */
 
 extern int Asc_SimsCmpSim(struct Instance *sim1, struct Instance *sim2);
 /**<
- *  Compares two simulations, based on their name. Returns 0 if the same.
- *  Returns non-zero if different.
+ *  Compares two simulations, based on their names.
+ *  Returns 0 if they are the same, non-zero if different.
  */
 
 extern void Asc_DeAllocSim(struct Instance *sim);
 /**<
- *  <!--  void Asc_DeAllocSim(sim);                                    -->
- *  Deallocate a simulation instance, destroying the instnace and its
- *  associated root instance, by  calling DestroyInstance (in instance.h).
- *  It also frees the name string, which it owns, and cleans up any external
- *  vars associated with the simulation.<br><br>
+ *  Deallocates a simulation instance.
+ *  The instance and its associated root instance are destroyed using
+ *  DestroyInstance() (in instance.h).  The name string i(which it owns)
+ *  is also destroyed, any external vars associated with the simulation
+ *  are cleaned up.<br><br>
  *
  *  NOTE:
- *  sim is the *Top* of the simulation and *not* the root. As such it
- *  works on instances of kind SIM_INST.
+ *  sim is the *Top* of the simulation and *not* the root. As such this
+ *  function works on instances of kind SIM_INST.
  */
 
 #endif  /* ASC_SIMLIST_H */

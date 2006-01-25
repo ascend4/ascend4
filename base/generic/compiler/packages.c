@@ -48,7 +48,6 @@
 #include "compiler/dimen.h"
 #include "compiler/functype.h"
 #include "compiler/types.h"
-#include "compiler/extfunc.h"
 #include "compiler/extcall.h"
 #include "compiler/mathinst.h"
 #include "compiler/instance_enum.h"
@@ -59,6 +58,7 @@
 #include "compiler/relation.h"
 #include "compiler/safe.h"
 #include "compiler/relation_util.h"
+#include "compiler/extfunc.h"
 #include "packages/sensitivity.h"
 #include "packages/ascFreeAllVars.h"
 #include "compiler/module.h"
@@ -406,23 +406,28 @@ int CallBlackBox(struct Instance *inst,
   double *jacobian = NULL;
 
   /* All these desperately need a typedef in a header someplace */
+/*  now typedefs in solver/extfunc.h - 1/22/2006 - jds
   int (*init_func) (struct Slv_Interp *,
                     struct Instance *,
                     struct gl_list_t *);
 
   int (*eval_func)(struct Slv_Interp *,
-                   int /* n_inputs */,
-                   int  /* n_outputs */,
-                   double * /* inputs */,
-                   double * /* outputs */,
-                   double * /* jacobian */);
+                   int,         // n_inputs
+                   int,         // n_outputs 
+                   double *,    // inputs 
+                   double * ,   // outputs 
+                   double * );  // jacobian 
 
   int (*deriv_func)(struct Slv_Interp *,
-                   int /* n_inputs */,
-                   int /* n_outputs */,
-                   double * /* inputs */,
-                   double * /* outputs */,
-                   double * /* jacobian */);
+                   int,         // n_inputs
+                   int ,        // n_outputs 
+                   double *,    // inputs 
+                   double * ,   // outputs 
+                   double * );  // jacobian 
+*/
+  ExtBBoxInitFunc *init_func;
+  ExtBBoxFunc *eval_func;
+  ExtBBoxFunc *deriv_func;
 
 /*------------------------------
 	After this point everything should be ok.

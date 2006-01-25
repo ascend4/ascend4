@@ -96,7 +96,6 @@ ASC_TCLTK98_SOURCES =
   SolverProc.c
   UnitsProc.c
   UserData.c
-  plot.c
   tkConsole.c
   typelex.c
   old_utils.c
@@ -108,7 +107,7 @@ SEARCH_SOURCE = $(ASC_INTERFACE_DIR) ;
 
 # Build the static libary of interface functions
 Library $(ASC_TCLTK98_LIBROOT) : $(ASC_TCLTK98_SOURCES) ;
-MakeLocate $(ASC_TCLTK98_LIB) : $(BUILD_DIR) ;
+#MakeLocate $(ASC_TCLTK98_LIB) : $(BUILD_DIR) ;
 
 # Build the Ascend executable
 Main $(EXE_NAME) : Driver.c ;
@@ -136,6 +135,13 @@ LINKLIBS on $(EXE_NAME)$(SUFEXE) +=
     ;
 
 DEPENDS ascend : $(EXE_NAME)$(SUFEXE) ;
+
+if $(BUILD_BLAS) != FALSE
+  { Depends $(EXE_NAME)$(SUFEXE) : $(ASC_BLAS_LIB) ; }
+if $(BUILD_LPAK) != FALSE
+  { Depends $(EXE_NAME)$(SUFEXE) : $(ASC_LINPACK_LIB) ; }
+if $(BUILD_LSODE) != FALSE
+  { Depends $(EXE_NAME)$(SUFEXE) : $(ASC_LSOD_LIB) ; }
 
 #Depends $(EXE_NAME)$(SUFEXE) :
 #    $(FOR_LIBS)

@@ -1,4 +1,4 @@
-/* 
+/*
  *  Instance Output Routines
  *  by Tom Epperly
  *  Created: 2/8/90
@@ -33,9 +33,10 @@
  *  <pre>
  *  When #including instance_io.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "symtab.h"
- *         #include "instance_enum.h"
+ *         #include "general/dstring.h"
+ *         #include "compiler/compiler.h"
+ *         #include "compiler/symtab.h"
+ *         #include "compiler/instance_enum.h"
  *  </pre>
  */
 
@@ -122,7 +123,7 @@ extern int WriteInstanceName(FILE *f,
  *  line breaking.
  */
 
-extern void WriteInstanceNameDS(Asc_DString * dsPtr, 
+extern void WriteInstanceNameDS(Asc_DString * dsPtr,
                                 CONST struct Instance *i,
                                 CONST struct Instance *ref);
 /**<
@@ -228,7 +229,7 @@ extern void WriteClique(FILE *f, CONST struct Instance *i);
  *  Print all the instance's clique members.
  */
 
-extern void WriteInstance(FILE *f, CONST struct Instance *i);
+extern void WriteInstance(FILE *f, CONST struct Instance *i);           
 /**< 
  *  <!--  void WriteInstance(f,i)                                      -->
  *  <!--  FILE *f;                                                     -->

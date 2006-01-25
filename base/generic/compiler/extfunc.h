@@ -31,7 +31,9 @@
  *  <pre>
  *  When #including extfunc.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
+ *         #include "compiler/instance_enum.h"
+ *         #include "general/list.h"
+ *         #include "compiler/compiler.h"
  *  </pre>
  *  @todo Complete documentation of compiler/extfunc.h.
  */
@@ -98,9 +100,16 @@ struct Slv_Interp {
   unsigned single_step  :1;
 };
 
+typedef int ExtBBoxInitFunc(struct Slv_Interp *,
+                            struct Instance *,
+                            struct gl_list_t *);
+
 typedef int ExtBBoxFunc(struct Slv_Interp *,
-   int ninputs, int noutputs,
-   double *inputs, double *outputs, double *jacobian);
+                        int ninputs, 
+                        int noutputs,
+                        double *inputs, 
+                        double *outputs, 
+                        double *jacobian);
 
 extern void InitExternalFuncLibrary(void);
 /**<
@@ -196,7 +205,7 @@ extern void DestroyExternalFunc(struct ExternalFunc *name);
  *  information, then call this function.
  */
 
-extern int (*GetInitFunc(struct ExternalFunc *efunc))(/* */);
+extern ExtBBoxInitFunc *GetInitFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc);

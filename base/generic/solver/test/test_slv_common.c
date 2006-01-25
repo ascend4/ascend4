@@ -202,7 +202,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
@@ -224,7 +228,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   CU_TEST(test_meminuse == ascmeminuse());
@@ -255,7 +263,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
@@ -276,7 +288,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
@@ -303,7 +319,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
@@ -330,7 +350,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   cur_meminuse = ascmeminuse();
@@ -406,7 +430,11 @@ static void test_slv_common(void)
 #endif
 
   slv_destroy_vector(pvec1);
+#ifdef MALLOC_DEBUG
   CU_TEST(0 == AllocatedMemory(pvec1, 0));
+#else
+  CU_TEST(1 == AllocatedMemory(pvec1, 0));
+#endif
   CU_TEST(cur_meminuse == ascmeminuse());
 
   CU_TEST(test_meminuse == ascmeminuse());
