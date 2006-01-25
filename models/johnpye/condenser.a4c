@@ -1,0 +1,54 @@
+REQUIRE "johnpye/ideal_steam.a4c";
+REQUIRE "johnpye/iapws_sat_curves.a4c";
+
+MODEL condenser;
+	(* assumptions:
+		inlet is ideal-gas steam at specified temperature and pressure.
+		output is water of fixed enthalpy.
+		whatever energy is required to be taken away to acheive that is what will be taken away.
+
+		we don't need to enforce saturation inlet conditions. we will just query the enthalpy for the ideal-gas steam
+		and that's it.
+	*)
+	S_in IS_A ideal_steam;
+
+	mdot_gas_in IS_A mass_rate;
+	mdot_water_out IS_A mass_rate;
+	Q IS_A energy_rate; (* heat taken away by condenser *)
+
+	h_in ALIASES S_in.h;
+	p_in ALIASES S_in.p;
+	T_in ALIASES S_in.T;
+
+	(*
+		h2 will be the enthalpy of the condensed water. because we are
+		ignoring pressure effects, we have to assume a constant fixed
+		value for the enthalpy of water at x=0. 
+	*)
+	h_out IS_A specific_enthalpy;
+
+	Q = mdot_gas_in * h_in - mdot_water_out * h_out;
+	mdot_water_out = mdot_gas_in;
+
+	(* 
+		we will assume there is NO water in the condenser for now; the
+		surge tank will play the role of the mass holdup in this case.
+	*)
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+METHOD specify;
+	FIX mdot_gas_in;
+	FIX S_in.p, S_in.T;
+	FIX h_out;
+END specify;
+METHOD values;
+	mdot_gas_in := 1 {kg/s};
+	S_in.p := 5 {bar};
+	S_in.T := 473.15 {K};
+	h_out := 400{kJ/kg};
+END values;
+
+END condenser;

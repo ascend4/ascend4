@@ -12,6 +12,9 @@ MODEL absorber_and_condenser;
 
 	Q_A ALIASES A.Q;
 	Q_C ALIASES C.Q;
+	mdot_water_in ALIASES A.mdot_water_in;
+	mdot_water_out ALIASES C.mdot_water_out;
+	m_water ALIASES A.m_water;
 
 METHODS
 METHOD default_self;
@@ -20,7 +23,7 @@ END default_self;
 
 METHOD specify;
 	RUN A.specify;
-	C.h_out.fixed := TRUE;
+	FIX C.h_out;
 END specify;
 
 METHOD values;
@@ -29,6 +32,69 @@ METHOD values;
 END values;
 
 END absorber_and_condenser;
+
+
+
+(*
+	Open-loop model. given the absorber conditions, what pressure is required
+	in the surge tank in order for the mass to be contained ?
+*)
+MODEL absorber_and_condenser_and_surgetank;
+	A IS_A absorber;
+	C IS_A condenser;
+	S IS_A surgetank;
+
+	(* join absorber and condenser  *)
+	A.mdot_gas_out, C.mdot_gas_in ARE_THE_SAME;
+	A.S_out, C.S_in ARE_THE_SAME;
+
+	(* join condenser and surge tank *)
+	C.mdot_water_out, S.mdot_water_in ARE_THE_SAME;
+
+	Q_A ALIASES A.Q;
+	Q_C ALIASES C.Q;
+	mdot_A_in ALIASES A.mdot_water_in;
+	mdot_C_out ALIASES C.mdot_water_out;
+	
+	m_A ALIASES A.m_water;
+	m_S ALIASES S.m_water;
+
+	m_water IS_A mass;
+
+	m_A + m_S = m_water;
+
+	p_S ALIASES S.p;
+	V_water_S ALIASES S.V_water;
+	
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+
+METHOD specify;
+	RUN A.specify;
+	FIX C.h_out;
+
+	FIX S.T, S.rho_water;
+	FIX S.V_vessel,	S.m_gas;
+	FIX m_water;
+
+END specify;
+
+METHOD values;
+	m_water := 8000 {kg};
+
+	RUN A.values;
+	C.h_out := 400 {kJ/kg};
+
+	S.rho_water := 997 {kg/m^3};
+	S.T := 400 {K};
+	S.V_vessel := 10000 {L};
+	S.m_gas := 60 {kg};
+END values;
+
+END absorber_and_condenser_and_surgetank;
+
 
 
 MODEL loop;
@@ -62,11 +128,10 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	A.Q.fixed := TRUE;
-	A.V_total.fixed := TRUE;
-	S.V_vessel.fixed := TRUE;
-	S.m_gas.fixed := TRUE;
-	m_water_total.fixed := TRUE;
+	FIX A.Q,  A.V_total;
+	FIX S.V_vessel,  S.m_gas;
+	FIX m_water_total;
+	FIX C.h_out;
 END specify;
 
 METHOD values;
@@ -75,6 +140,7 @@ METHOD values;
 	S.V_vessel := 10 {m^3};
 	S.m_gas := 7.27101 {kg};
 	m_water_total := 3000 {kg};
+	C.h_out := 400 {kJ/kg};
 END values;
 
 END loop;

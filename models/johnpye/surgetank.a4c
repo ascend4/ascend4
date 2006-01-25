@@ -1,0 +1,104 @@
+REQUIRE "johnpye/ideal_steam.a4c";
+
+(*
+	Here is a fixed volume of gas confined in a volume.
+	We can see that fixing the mass in the vessel then
+	heating it up will increase the pressure.
+*)
+MODEL gas_vessel;
+	S IS_A ideal_steam;
+	T ALIASES S.T;
+	p ALIASES S.p;
+	rho ALIASES S.rho;
+	h ALIASES S.h;
+	m_gas IS_A mass;
+	V_gas IS_A volume;
+
+	m_gas = S.rho * V_gas;
+
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+METHOD specify;
+	T.fixed := TRUE;
+	p.fixed := TRUE;
+	S.rho.fixed := FALSE;
+	V_gas.fixed := TRUE;
+END specify;
+METHOD values;
+	T := 298 {K};
+	p := 1 {bar};
+	V_gas := 1 {m^3};
+END values;
+METHOD self_test;
+	ASSERT abs(m_gas - 0.727101 {kg}) < 0.0001 {kg};
+END self_test;
+END gas_vessel;
+
+(*
+	This model adds a variable volume of water at the base
+	of the tank, but makes the tank volume fixed. As a result
+	Pumping water into the tank results in higher pressure
+	for a given fixed mass of gas.
+*)
+MODEL vessel_with_water REFINES gas_vessel;
+	m_water IS_A mass;
+	V_water IS_A volume;
+	V_vessel IS_A volume;
+	V_water + V_gas = V_vessel;
+	rho_water IS_A mass_density;
+	m_water = rho_water * V_water; (* incompressible water *)
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+METHOD specify;
+	rho_water.fixed := TRUE;
+	T.fixed := TRUE;
+	V_vessel.fixed := TRUE;
+	m_gas.fixed := TRUE;
+	m_water.fixed := TRUE;
+END specify;
+METHOD values;
+	T := 298 {K};
+	rho_water := 1000 {kg/m^3};
+	V_vessel := 12000 {L};
+	m_gas := 7.27101 {kg};
+	m_water := 2000 {kg};
+END values;
+METHOD self_test;
+	ASSERT abs(p - 1 {bar}) < 10 {Pa};
+END self_test;
+	
+END vessel_with_water;
+
+(*
+	Surge tank: add mass in and out streams. It will be assumed that the mass
+	flow in balances the mass flow out, but there's got to be some effect
+	of pressure...
+*)
+
+MODEL surgetank REFINES vessel_with_water;
+	mdot_water_in IS_A mass_rate;
+	mdot_water_out IS_A mass_rate;
+	
+	mdot_water_in = mdot_water_out;
+
+METHODS
+METHOD specify;
+	RUN vessel_with_water::specify;
+	FIX mdot_water_in;
+END specify;
+
+METHOD values;
+	RUN vessel_with_water::values;
+	mdot_water_in := 1.0 {kg/s};
+END values;
+
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+
+END surgetank;
+
