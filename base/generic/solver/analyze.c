@@ -1,12 +1,12 @@
 /*
 	Problem Analysis Routines
-	by Benjamin Andrew Allan
-	5/19/96
+	by Benjamin Andrew Allan 5/19/96
+
 	Version: $Revision: 1.56 $
-	Version control file: $RCSfile: analyze.c,v $
 	Date last modified: $Date: 2003/08/23 18:43:12 $
 	Last modified by: $Author: ballan $
 	Copyright(C) 1996 Benjamin Andrew Allan
+	Copyright(C) 2006 Carnegie Mellon University
 
 	This file is part of the ASCEND IV math programming system.
 
@@ -28,28 +28,7 @@
 
 /** @file analyze.c
 
-	These functions are the start of a new design for feeding
-	solvers from the ASCEND compiler or any arbitrary backend.
-
-	The intention is that eventually the other code in the solver
-	directory will really be for *solution algorithms* and the
-	definition of a *problem* will come from here. In essence, most
-	of what was solver/system.c will be here. Negotiating directly
-	with the ASCEND instance hierarchy should not be a solver's
-	job.
-	The goal of this module is to CREATE a slv_system_t data structure
-	capable of supporting code generation, an interactive interface, and
-	in-core solvers, while being expandable in the future to out of core
-	solvers/external-process solvers.
-
-	A secondary goal is to have nonlinear solver files be independent of
-	all the compiler directory files except ascmalloc.h.
-	The present fly in the ointment is expr.h because of the objective fcns.
-	The relman and exprman modules go away because they are indicative of
-	functionality that belongs either in the compiler or rel.c.
-	If we meet this goal, then it is a simple matter to connect any
-	arbitrary compiler backend to the solver API by replacing the rel
-	and var and analyze modules.
+	@see analyze.h
 */
 
 #include <stdarg.h>

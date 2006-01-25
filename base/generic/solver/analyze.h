@@ -1,12 +1,12 @@
 /*
 	Problem Analysis Routines
-	by Benjamin Andrew Allan
-	5/19/96
+	by Benjamin Andrew Allan 5/19/96
+
 	Version: $Revision: 1.10 $
-	Version control file: $RCSfile: analyze.h,v $
 	Date last modified: $Date: 1997/07/18 12:13:50 $
 	Last modified by: $Author: mthomas $
 	Copyright(C) 1996 Benjamin Andrew Allan
+	Copyright(C) 2006 Carnegie Mellon University
 
 	This file is part of the ASCEND IV math programming system.
 
