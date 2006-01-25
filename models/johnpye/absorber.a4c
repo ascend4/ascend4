@@ -1,0 +1,82 @@
+REQUIRE "johnpye/ideal_steam.a4c";
+REQUIRE "johnpye/iapws_sat_curves.a4c";
+
+MODEL absorber;
+	(* assumptions: 
+		outlet is saturated steam
+		inlet is saturated water at the specified pressure
+		no pressure drop
+		no temperature change
+		all Q is absorbed by water
+		steam generation is constant along length as mass rate, so x rises linearly.
+	*)
+	S_out IS_A ideal_steam; (* outlet steam state *)
+	sat IS_A iapws_sat_density;
+	T ALIASES S_out.T;
+	T,sat.T ARE_THE_SAME;
+	rho_gas ALIASES S_out.rho;
+	rho_gas, sat.rhog ARE_THE_SAME;
+
+	p ALIASES S_out.p;
+
+	mdot_water_in IS_A mass_rate;
+	mdot_water_out IS_A mass_rate;
+	mdot_gas_out IS_A mass_rate;
+	Vdot_gas_out IS_A volume_rate;
+
+	m_water IS_A mass;
+	m_gas IS_A mass;
+
+	Q IS_A energy_rate; (* heat absorbed *)
+
+	(* assume saturated water at inlet, so any heat added immediately creates some steam *)
+	Hdot_in IS_A energy_rate;
+	Hdot_out IS_A energy_rate;
+	h_water IS_A specific_enthalpy;
+	z01: h_water = 400 {kJ/kg} + p / (1000 {kg/m^3});
+
+	z02: Hdot_in = mdot_water_in * h_water;
+	z03: Hdot_out = mdot_water_out * h_water + mdot_gas_out * S_out.h;
+
+	(* 1st law thermo *)
+	z04: Q = Hdot_out - Hdot_in;
+
+	(* mass conservation *)
+	z05: mdot_water_in = mdot_water_out + mdot_gas_out;
+ 
+	x_exit IS_A fraction;
+	z06: x_exit * mdot_water_in = mdot_gas_out;
+
+	(* assume that steam evolves linearly along length, so average x allow mass of water to be calculated *)
+	x IS_A fraction;
+	z07: x = (0 + x_exit)/2;
+	
+	(* assuming a slip-ratio of 1, we can get the average void ratio, eq 2.13 from Behnia *)
+	alpha IS_A fraction;
+	z08: alpha * S_out.rho * (1-x) = 1000{kg/m^3} * x * (1-alpha);
+
+	z09: m_water = 1000{kg/m^3} * (1-alpha)*V_total;
+	z10: m_gas = S_out.rho * alpha*V_total;
+
+	z11: Vdot_gas_out = mdot_gas_out / rho_gas;
+	V_total IS_A volume;
+	
+METHODS
+METHOD default_self;
+	RUN reset;
+	RUN values;
+END default_self;
+METHOD specify;
+	V_total.fixed := TRUE;
+	mdot_water_in.fixed := TRUE;
+	Q.fixed := TRUE;
+	p.fixed := TRUE;
+END specify;
+METHOD values;
+	V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
+	mdot_water_in := 0.4 {kg/s};
+	Q := 1000 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
+	p := 5 {bar};
+END values;
+
+END absorber;
