@@ -1,4 +1,4 @@
-/* 
+/*
  *  Ascend Interpretter(Instantiator)
  *  by Tom Epperly
  *  Created: 1/24/90
@@ -32,18 +32,23 @@
  *  <pre>
  *  When #including instantiate.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *         #include "types.h"
- *         #include "stattypes.h"
+ *         #include "compiler/instance_enum.h"
+ *         #include "compiler/fractions.h"
+ *         #include "compiler/compiler.h"
+ *         #include "compiler/dimen.h"
+ *         #include "compiler/types.h"
+ *         #include "compiler/stattypes.h"
  *  </pre>
  */
 
 #ifndef ASC_INSTANTIATE_H
 #define ASC_INSTANTIATE_H
 
+/* 
+ *  Relation instantiation flags.
+ *  If you add/remove/change these, update the comments in 
+ *  SetInstantiationRelnFlags().
+ */
 #define NORELS 	 0x0
 #define GBOXRELS 0x1
 #define BBOXRELS 0x2
@@ -52,9 +57,7 @@
 #define EXTRELS (GBOXRELS | BBOXRELS)
 
 extern long int g_compiler_counter;
-/**<
- * unique id of calls to instantiator.
- */
+/**<  Unique id of calls to instantiator. */
 
 
 /* exported to UI via compiler.h.
@@ -67,20 +70,24 @@ extern long int g_compiler_counter;
 
 extern void SetInstantiationRelnFlags(unsigned int flag);
 /**<
- *  <!--  void SetInstantiationRelnFlags(flag);                        -->
- *  Set the state of the instantiator with respect to when/how to do
- *  instantiation with respect relations. This is for more control
- *  over the sequence in which instantiation is done, and for
- *  so-called 'phased-compilation'.
+ *  Sets the relation instantiation state of the instantiator.
+ *  The flags control when and how how relations are instantiated.
+ *  of relations. This allows more control over the sequence in
+ *  which instantiation is done, and for so-called 'phased-compilation'.
+ *
+ *  Valid flags are the following:
+ *    - NORELS 	 No relations should be instantiated
+ *    - GBOXRELS Glassbox relations
+ *    - BBOXRELS Blackbox relations
+ *    - TOKRELS  Token relations
+ *    - ALLRELS  Glassbox, Blackbox, and Token relations
+ *    - EXTRELS Glassbox and Blackbox relations
  */
 
 extern unsigned int GetInstantiationRelnFlags(void);
 /**<
- *  <!--  GetInstantiationRelnFlags();                                 -->
- *  Retrieve the state of the instantiator with respect to when/how
- *  to do instantiation with respect relations. This is for more
- *  control over the sequence in which instantiation is done, and
- *  for so called 'phased-compilation'.
+ *  Retrieves the relation instantiation state of the instantiator.
+ *  See SetInstantiationRelnFlags() for more information.
  */
 
 /*

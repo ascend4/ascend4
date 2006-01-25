@@ -33,8 +33,9 @@
  *               created by the ASCEND compiler.
  *
  *  Requires:    #include "utilities/ascConfig.h"
- *               #include "rel.h"
- *               #include "logrel.h"
+ *               #include "solver/slv_types.h"
+ *               #include "solver/rel.h"
+ *               #include "solver/logrel.h"
  *  </pre>
  */
 
@@ -75,13 +76,13 @@ extern struct bnd_boundary *bnd_create(struct bnd_boundary *bnd);
  *  the returned bnd.  If non-NULL, the memory will be initialized
  *  and returned.   Setting the the information is the job of the
  *  bridge building function between the ascend instance tree and
- *  the slv_system_t.  Destruction of the returned boundary
- *  (e.g using bnd_destroy()) is the responsibility of the caller.
+ *  the slv_system_t.  When finished with it, the caller should 
+ *  bnd_cleanup() and ascfree() the new boundary.
  */
 
-extern void bnd_destroy(struct bnd_boundary *bnd);
+extern void bnd_cleanup(struct bnd_boundary *bnd);
 /**<  
- *  Destroys the specified boundary.
+ *  Deallocates any memory held internally by the specified boundary.
  *  Nothing is done if bnd is NULL.
  */
 

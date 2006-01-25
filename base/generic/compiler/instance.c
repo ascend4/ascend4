@@ -81,3 +81,4 @@ static CONST char InstanceModuleID[] = "$Id: instance.c,v 1.21 1997/07/18 12:30:
 #endif
 
 /* lights out for instance.c */
+/* file should be removed */

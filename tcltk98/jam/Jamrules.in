@@ -1,4 +1,4 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
+# THIS FILE IS DEPRECATED - 20-Dec-2005
 
 #
 # Jamrules support file for building Ascend4
@@ -24,7 +24,7 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 # Check the file named COPYING.
 #---------------------------------------------------------------------------
 #
-# UNDER CONSTRUCTION                               
+# UNDER CONSTRUCTION
 #
 # This is a template Jamrules file which supports building the
 # Tcl/Tk version of the Ascend modeling system, as well as a static
@@ -56,13 +56,11 @@ BUILD_CREDIT = "anonymous" ;
 # Path to general jam info
 JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
 
-# TODO: Deprecated - remove?
 # Root dir of Ascend base library sources.
-#ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
+ASC_BASE_ROOT = ..$(SLASH)..$(SLASH)base$(SLASH)generic ;
 
-# TODO: Deprecated - remove?
 # Root dir of Ascend libraries - will be qualified for compiler & build type
-#ASC_BASE_LIBDIR = ..$(SLASH)..$(SLASH)base$(SLASH)jam ;
+ASC_BASE_LIBDIR = ..$(SLASH)..$(SLASH)base$(SLASH)jam ;
 
 # root directories for Tcl and Tk libraries
 #TCL_DIR =  ;
@@ -105,7 +103,7 @@ ASC_TK_DIR     = ..$(SLASH)TK ;
 
 # Paths to base libraries
 ASC_BASE_LIBS_QUAL =
-  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_LIBS_RELPATH)$(ASC_BASE_LIBS) ;
+  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_LIBS_RELPATH)$(ASC_BASE_LIBS_WITH_RELPATH) ;
 
 # Paths to FORTRAN libraries
 FOR_LIBS =

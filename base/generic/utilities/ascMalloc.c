@@ -287,7 +287,7 @@ static void OpenLogFile(void)
                    O_WRONLY | O_CREAT | O_EXCL | O_TEXT,
                    _S_IREAD | _S_IWRITE);
     if ((-1 == handle) ||
-        (NULL == (f_memory_log_file = fdopen(handle,"w")))) {
+         (NULL == (f_memory_log_file = fdopen(handle,"w")))) {
       Asc_Panic(2, NULL, "Unable to open memory log file.\n");
     }
 #else

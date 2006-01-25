@@ -202,7 +202,8 @@ struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2)
 {
   struct set_t *result;
   register unsigned long c1,l1,c2,l2;
-  register int (*func)(),cmp;
+  register int cmp;
+  CmpFunc func;
   assert(s1&&s2);
   if (s1->kind==empty_set) return CopySet(s2);
   if (s2->kind==empty_set) return CopySet(s1);
@@ -228,8 +229,8 @@ struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2)
     return result;
   }
   result->list = gl_create(l1+l2);
-  if (s1->kind == integer_set) func = SetIntCmp;
-  else func = SetStrCmp;
+  if (s1->kind == integer_set) func = (CmpFunc)SetIntCmp;
+  else func = (CmpFunc)SetStrCmp;
   while((c1<=l1)||(c2<=l2)) {
     if (c1>l1)
       gl_append_ptr(result->list,gl_fetch(s2->list,c2++));
@@ -253,7 +254,8 @@ struct set_t *SetIntersection(CONST struct set_t *s1, CONST struct set_t *s2)
 {
   struct set_t *result;
   register unsigned long c1,l1,c2,l2;
-  register int (*func)(),cmp;
+  register int cmp;
+  CmpFunc func;
   assert(s1&&s2);
   if (s1->kind==empty_set) return CreateEmptySet();
   if (s2->kind==empty_set) return CreateEmptySet();
@@ -275,8 +277,8 @@ struct set_t *SetIntersection(CONST struct set_t *s1, CONST struct set_t *s2)
     return result;
   }
   result->list = gl_create(MYMIN(l1,l2));
-  if (s1->kind == integer_set) func = SetIntCmp;
-  else func = SetStrCmp;
+  if (s1->kind == integer_set) func = (CmpFunc)SetIntCmp;
+  else func = (CmpFunc)SetStrCmp;
   while((c1<=l1)&&(c2<=l2)) {
     cmp = (*func)(gl_fetch(s1->list,c1),gl_fetch(s2->list,c2));
     if (cmp<0) c1++;
@@ -294,7 +296,8 @@ struct set_t *SetDifference(CONST struct set_t *s1, CONST struct set_t *s2)
 {
   struct set_t *result;
   register unsigned long c1,l1,c2,l2;
-  register int (*func)(),cmp;
+  register int cmp;
+  CmpFunc func;
   assert(s1&&s2);
   if (s1->kind==empty_set) return CreateEmptySet();
   if (s2->kind==empty_set) return CopySet(s1);
@@ -309,8 +312,8 @@ struct set_t *SetDifference(CONST struct set_t *s1, CONST struct set_t *s2)
   MALLOCSET(result);
   result->kind = s1->kind;
   result->list = gl_create(l1);
-  if (s1->kind == integer_set) func = SetIntCmp;
-  else func = SetStrCmp;
+  if (s1->kind == integer_set) func = (CmpFunc)SetIntCmp;
+  else func = (CmpFunc)SetStrCmp;
   while(c1<=l1) {
     if (c2>l2)
       gl_append_ptr(result->list,gl_fetch(s1->list,c1++));
@@ -395,7 +398,7 @@ void SetIterate(struct set_t *s, void (*func) (/* ??? */))
 {
   assert(s!=NULL);
   if (s->list!=NULL)
-    gl_iterate(s->list,func);
+    gl_iterate(s->list,(IterateFunc)func);
 }
 
 enum set_kind SetKind(CONST struct set_t *s)

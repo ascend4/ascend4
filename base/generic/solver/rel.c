@@ -603,8 +603,10 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup)
   struct ExternalFunc *efunc;
   struct Slv_Interp slv_interp;
 
-  int32 (*init_func)(struct Slv_Interp *,
-		   struct Instance *,struct gl_list_t *);
+  ExtBBoxInitFunc *init_func;
+/*  now a typedef in solver/extfunc.h - 1/22/2006 - jds
+  int32 (*init_func)(struct Slv_Interp *, struct Instance *, struct gl_list_t *);
+*/
   int32 nok = 0;
 
   if (!cache) return 1;

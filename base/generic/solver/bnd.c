@@ -92,7 +92,7 @@ struct bnd_boundary *bnd_create(struct bnd_boundary *newbnd)
 }
 
 
-void bnd_destroy(struct bnd_boundary *bnd)
+void bnd_cleanup(struct bnd_boundary *bnd)
 {
    if (bnd==NULL) return;
    if (bnd->logrels != NULL) {
@@ -272,7 +272,7 @@ uint32 bnd_flagbit(struct bnd_boundary *bnd, uint32 one)
 {
   asc_assert(bnd!=NULL);
   return (bnd->flags & one);
-}                                                     
+}
 
 
 void bnd_set_flagbit(struct bnd_boundary *bnd, uint32 field,uint32 one)

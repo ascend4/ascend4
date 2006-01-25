@@ -40,8 +40,8 @@ struct CG_Problem {
 typedef int ExtEvalFunc(int *mode, int *m, unsigned long *n,
 			double *x, double *u, double *f, double *g);
 #else
-#include "compiler.h"
-#include "extfunc.h"
+#include "compiler/compiler.h"
+#include "compiler/extfunc.h"
 #endif	/* STAND_ALONE */
 
 

@@ -133,10 +133,11 @@ void ProcWriteCaseError(struct procFrame *fm, int arm, int pos)
 
 void ProcWriteIfError(struct procFrame *fm, CONST char *cname)
 {
-  CONSOLE_DEBUG("...");
-
   char em[85];
   char cn[20];
+
+  CONSOLE_DEBUG("...");
+
   if (strlen(cname) > 19) {
     strncpy(cn,cname,19);
     cn[19] = '\0';

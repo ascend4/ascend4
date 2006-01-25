@@ -114,6 +114,9 @@ typedef int (*CmpFunc)(CONST VOIDPTR, CONST VOIDPTR);
 /** Generic destroyer for iterations. */
 typedef void (*DestroyFunc)(VOIDPTR);
 
+/** Generic function called during iterations. */
+typedef void (*IterateFunc)(VOIDPTR);
+
 extern void gl_init(void);
 /**<
  *  Initializes the list recycler control table.
@@ -551,7 +554,7 @@ extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
  *  @param func The comparison function to call during the sort.
  */
 
-extern void gl_iterate(struct gl_list_t *list, void (*func)(VOIDPTR) );
+extern void gl_iterate(struct gl_list_t *list, IterateFunc func);
 /**<
  *  Executes the function func on all the members of the list.
  *  It will always execute the function on the items in the order

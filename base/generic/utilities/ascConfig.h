@@ -470,6 +470,20 @@ typedef	unsigned   uint32;
 #    define snprintf _snprintf
 #    undef vsnprintf
 #    define vsnprintf _vsnprintf
+#    undef tempnam
+#    define tempnam _tempnam
+#    undef fdopen
+#    define fdopen _fdopen
+#    undef fileno
+#    define fileno _fileno
+#    undef getpid
+#    define getpid _getpid
+#    undef dup
+#    define dup _dup
+#    undef dup2
+#    define dup2 _dup2
+#    undef putenv
+#    define putenv _putenv
 #  endif
 #endif  /* __WIN32__ */
 

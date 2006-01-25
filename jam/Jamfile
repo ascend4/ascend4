@@ -56,7 +56,10 @@ if ! $(JAMRULES_ALREADY_SEEN)
 }
 
 SubInclude TOP base generic ;
-SubInclude TOP blas ;
-SubInclude TOP linpack ;
-SubInclude TOP lsod ;
+if $(BUILD_BLAS) != FALSE
+  { SubInclude TOP blas ; }
+if $(BUILD_LPAK) != FALSE
+  { SubInclude TOP linpack ; }
+if $(BUILD_LSODE) != FALSE
+  { SubInclude TOP lsod ; }
 SubInclude TOP tcltk98 generic ;

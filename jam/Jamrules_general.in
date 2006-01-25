@@ -1,4 +1,4 @@
-THIS FILE IS DEPRECATED - 20-Dec-2005
+# THIS FILE IS DEPRECATED - 20-Dec-2005
 
 #
 # General Jamrules support file for building Ascend4
@@ -287,6 +287,14 @@ ASC_BASE_LIBS =
   $(ASC_PACKAGES_LIB)
   $(ASC_SOLVER_LIB)
   $(ASC_UTILITIES_LIB)
+  ;
+
+ASC_BASE_LIBS_WITH_RELPATH =
+  compiler$(SLASH)$(ASC_COMPILER_LIB)
+  general$(SLASH)$(ASC_GENERAL_LIB)
+  packages$(SLASH)$(ASC_PACKAGES_LIB)
+  solver$(SLASH)$(ASC_SOLVER_LIB)
+  utilities$(SLASH)$(ASC_UTILITIES_LIB)
   ;
 
 # Path to base library sources & libs from top-level jam directory

@@ -1,8 +1,8 @@
 /* ex: set ts=8 : */
-/*
+/* 
  *  bintoken.c
  *  By Benjamin A. Allan
- *  Jan 7, 1998.
+ *  Jan 7, 1998. 
  *  Part of ASCEND
  *  Version: $Revision: 1.12 $
  *  Version control file: $RCSfile: bintoken.c,v $
@@ -783,10 +783,10 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
-    FPRINTF(ASCERR,"%sBinaryTokensCreate called with no options set.",
+    FPRINTF(ASCERR,"%sBinaryTokensCreate called with no options set.\n",
             StatioLabel(3));
     return;
-  }
+  }                                                      
 
   rellist =
     CollectTokenRelationsWithUniqueBINlessShares(root,g_bt_data.maxrels);

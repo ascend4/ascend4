@@ -33,6 +33,7 @@
 #include "utilities/ascMalloc.h"
 #include "compiler/functype.h"
 #include "compiler/safe.h"
+#include "general/list.h"
 #include "compiler/extfunc.h"
 #include "compiler/dimen.h"
 #include "compiler/types.h"

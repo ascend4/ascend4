@@ -2,7 +2,7 @@
  *  ascFreeAllVars.c
  *  by Ben Allan
  *  February 24, 1998
- *  Part of ASCEND
+ *  Part of ASCEND                            
  *  Version: $Revision: 1.4 $
  *  Version control file: $RCSfile: ascFreeAllVars.c,v $
  *  Date last modified: $Date: 1998/06/16 16:42:09 $
