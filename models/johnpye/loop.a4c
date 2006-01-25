@@ -3,43 +3,13 @@ REQUIRE "johnpye/absorber.a4c";
 REQUIRE "johnpye/surgetank.a4c";
 REQUIRE "johnpye/condenser.a4c";
 
-MODEL absorber_and_condenser;
-	A IS_A absorber;
-	C IS_A condenser;
-
-	A.mdot_gas_out, C.mdot_gas_in ARE_THE_SAME;
-	A.S_out, C.S_in ARE_THE_SAME;
-
-	Q_A ALIASES A.Q;
-	Q_C ALIASES C.Q;
-	mdot_water_in ALIASES A.mdot_water_in;
-	mdot_water_out ALIASES C.mdot_water_out;
-	m_water ALIASES A.m_water;
-
-METHODS
-METHOD default_self;
-	RUN reset; RUN values;
-END default_self;
-
-METHOD specify;
-	RUN A.specify;
-	FIX C.h_out;
-END specify;
-
-METHOD values;
-	RUN A.values;
-	C.h_out := 400 {kJ/kg};
-END values;
-
-END absorber_and_condenser;
-
 
 
 (*
 	Open-loop model. given the absorber conditions, what pressure is required
 	in the surge tank in order for the mass to be contained ?
 *)
-MODEL absorber_and_condenser_and_surgetank;
+MODEL loop;
 	A IS_A absorber;
 	C IS_A condenser;
 	S IS_A surgetank;
@@ -64,83 +34,52 @@ MODEL absorber_and_condenser_and_surgetank;
 	m_A + m_S = m_water;
 
 	p_S ALIASES S.p;
+	p_A ALIASES A.p;
+
 	V_water_S ALIASES S.V_water;
 	
+
+	(*A.p = S.p;*)
+	(*A.p = 40 {bar};*)
+
 METHODS
 METHOD default_self;
 	RUN reset; RUN values;
 END default_self;
 
 METHOD specify;
-	RUN A.specify;
+	FIX A.V_total, A.mdot_water_in;
+	FIX A.Q, A.p;
+
 	FIX C.h_out;
 
 	FIX S.T, S.rho_water;
 	FIX S.V_vessel,	S.m_gas;
-	FIX m_water;
 
+	FIX m_water;
 END specify;
 
 METHOD values;
+	(* fixed *)
 	m_water := 8000 {kg};
 
-	RUN A.values;
+	A.V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
+	A.mdot_water_in := 0.4 {kg/s};
+	A.Q := 1000 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
+	A.p := 20 {bar};
+
 	C.h_out := 400 {kJ/kg};
 
 	S.rho_water := 997 {kg/m^3};
 	S.T := 400 {K};
 	S.V_vessel := 10000 {L};
-	S.m_gas := 60 {kg};
-END values;
+	S.m_gas := 40 {kg};
 
-END absorber_and_condenser_and_surgetank;
-
-
-
-MODEL loop;
-	A IS_A absorber;
-	C IS_A condenser;
-	S IS_A vessel_with_water;
-
-	m_water_total IS_A mass;
-
-	A.S_out, C.S_in ARE_THE_SAME; (* absorber outlet steam goes to the condenser *)
-	A.p, S.p ARE_THE_SAME; (* absorber pressure equals surge tank pressure *)
+	(* free *)
+	S.p := A.p;
 	
-	A.Q, C.Q ARE_THE_SAME; (* heat out of condenser must balance that absorbed *)	
-
-	p ALIASES A.p;
-	Q ALIASES A.Q;
-	T_abs_out ALIASES A.T;
-	m_abs_water ALIASES A.m_water;
-	m_surge_water ALIASES S.m_water;
-	m_gas  ALIASES S.m_gas;
-	V_surge ALIASES S.V_vessel;
-	V_absorber ALIASES A.V_total;
-	absorber_void_fraction ALIASES A.alpha;
-
-	m_surge_water + m_abs_water = m_water_total;
-
-METHODS
-METHOD default_self;
-	RUN reset;
-	RUN values;
-END default_self;
-
-METHOD specify;
-	FIX A.Q,  A.V_total;
-	FIX S.V_vessel,  S.m_gas;
-	FIX m_water_total;
-	FIX C.h_out;
-END specify;
-
-METHOD values;
-	A.Q := 400 {W/m^2} * 20 * 40{mm} * 300{m};	
-	A.V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
-	S.V_vessel := 10 {m^3};
-	S.m_gas := 7.27101 {kg};
-	m_water_total := 3000 {kg};
-	C.h_out := 400 {kJ/kg};
 END values;
 
 END loop;
+
+
