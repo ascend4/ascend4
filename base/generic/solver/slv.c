@@ -1336,7 +1336,7 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
 }
 
 DEFINE_SLV_PROXY_METHOD_PARAM(get_status,getstatus,slv_status_t*,status);
-DEFINE_SLV_PROXY_METHOD(get_linsolv_sys, getlinsol, linsol_system_t);
+DEFINE_SLV_PROXY_METHOD(get_linsol_sys, getlinsol, linsol_system_t);
 DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t); 
 DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t); 
 DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level);
