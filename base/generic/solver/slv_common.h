@@ -1,5 +1,8 @@
 /*
-	SLV: Ascend Nonlinear Solver
+	SLV Common utilities and definitions
+	Ben Allan, based on the original slv.h by KW and JZ.
+	01/94. Abstracted from slvX.c January 1995. Ben Allan.
+
 	Copyright (C) 1990 Karl Michael Westerberg
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
@@ -22,115 +25,106 @@
 	This file is part of the SLV solver.
 */
 
-/*
- *  Contents:     slv common utilities and definitions
- *
- *  Authors:      Ben Allan
- *                based on the original slv.h by KW and JZ.
- *
- *  Dates:        01/94 - original version
- *
- *  Description:
- *
- *  General C  utility routines for slv/Slv class interfaces. Abstracted from
- *  slvX.c January 1995. Ben Allan.
- *  slv.h is the header for folks on the ASCEND end, and this is the one for
- *  folks on the Slv math end.
- *  Don't protoize this file for ASCEND types other than mtx, vec, and boolean
- *  real64, and int32 or we'll have you shot. In particular, not var and rel.
- *  People who aren't supposed to know about var and rel include this.
- *
- *  In particular, this header may be used without knowing about the ASCEND
- *  compiler or any of its annoying insanities so long as you drag out
- *  ascmalloc().
- *  This does commit you to being able to stomach the mtx.h file, however,
- *  even if you choose to ignore the contents of mtx.
- *  Several functions, notably the print suite for rel/var names,
- *  assume you are linking against something that does know about
- *  ASCEND instances unless the SLV_INSTANCES flag is set to FALSE.
- *
- *  The parameters and status struct definitions have been moved here,
- *  being of general interest.
- */
-
 /** @file
- *  SLV common utilities & structures for ASCEND solvers.
- *  This includes the following:
- *    - parameters struct definitions & manipulation routines
- *    - status struct definitions & retrieval routines
- *    - vector operations
- *    - solver print routines
- *    - lnkmap support functions
- *  <pre>
- *  Requires:     #include <stdio.h>
- *                #include "utilities/ascConfig.h"
- *                #include "solver/slv_types.h"
- *                #include "solver/rel.h"
- *                #include "solver/logrel.h"
- *                #include "solver/mtx.h"
- *                #include "general/list.h"
- *
- *  Details on solver parameter definition:
- *
- *  When used together the parameter-related structures, functions, and 
- *  macros allow us to define all of a solver's parameters in one file
- *  and notify the interface of these parameters upon startup (dynamic
- *  interface construction).  The parameters can be defined in any order.
- *  The only bookkeeping needed is associated with the macros.  You must
- *  have an array of void pointers large enough for all of the macros
- *  you define and you must give each of the macros you define a unique
- *  element of this array. Here is an example using a real parameter
- *  and a character parameter. (The int and bool are similar to the real).
- *
- *  @code
- *
- *  (* these 4 macros can be defined anywhere more or less so long as it
- *  is before the calls to slv_define_parm. *)
- *  #define REAL_PTR (sys->parm_array[0])
- *  #define REAL     ((*(real64 *)REAL_PTR))
- *  #define CHAR_PTR (sys->parm_array[1])
- *  #define CHAR     ((*(char **)CHAR_PTR))
- *
- *  #define PA_SIZE 2
- *  struct example {
- *    struct slv_parameters_t p;
- *    void *parm_array[PA_SIZE];
- *    struct slv_parameter padata[PA_SIZE];
- *  } e;
- *   ...
- *    e.p.parms = padata;
- *    e.p.dynamic_parms = 0;
- *
- *  static char *character_names[] = {
- *     "name_one","name_two"
- *  }
- *    (* fill padata with appropriate info *)
- *  slv_define_parm(&(e.p), real_parm,
- *                  "r_parm","real parameter" ,
- *                  "this is an example of a real parameter" ,
- *                  U_p_real(val,25),U_p_real(lo,0),U_p_real(hi,100),1);
- *   (* now assign the element of e.parm_array from somewhere in padata *)
- *  SLV_RPARM_MACRO(REAL_PTR,parameters);
- *
- *    (* fill padata with appropriate info *)
- *  slv_define_parm(&(e.p), char_parm,
- *                  "c_parm", "character parameter",
- *                  "this is an example of a character parameter",
- *                  U_p_string(val,character_names[0]),
- *                  U_p_strings(lo,character_names),
- *                  U_p_int(hi,sizeof(character_names)/sizeof(char *)),1);
- *   (* now assign the element of e.parm_array that matches. *)
- *  SLV_CPARM_MACRO(CHAR_PTR,parameters);
- *
- *  Resetting the value of a parameter can be done directly
- *  except for string parameters which should be set with, for example,
- *  slv_set_char_parameter(CHAR_PTR,newvalue);
- *  or outside a solver where there is no sys->parm_array:
- *
- *     slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
- *
- *  @endcod
- */
+
+	General C  utility routines for slv/Slv class interfaces. Abstracted from
+	slvX.c January 1995. Ben Allan.
+
+	slv.h is the header for folks on the ASCEND end, and this is the one for
+	folks on the Slv math end.
+	Don't protoize this file for ASCEND types other than mtx, vec, and boolean
+	real64, and int32 or we'll have you shot. In particular, not var and rel.
+	People who aren't supposed to know about var and rel include this.
+
+	In particular, this header may be used without knowing about the ASCEND
+	compiler or any of its annoying insanities so long as you drag out
+	ascmalloc().
+	This does commit you to being able to stomach the mtx.h file, however,
+	even if you choose to ignore the contents of mtx.
+	Several functions, notably the print suite for rel/var names,
+	assume you are linking against something that does know about
+	ASCEND instances unless the SLV_INSTANCES flag is set to FALSE.
+
+	The parameters and status struct definitions have been moved here,
+	being of general interest.
+
+	SLV common utilities & structures for ASCEND solvers.
+	This includes the following:
+	  - parameters struct definitions & manipulation routines
+	  - status struct definitions & retrieval routines
+	  - vector operations
+	  - solver print routines
+	  - lnkmap support functions
+	<pre>
+	Requires:     #include <stdio.h>
+	              #include "utilities/ascConfig.h"
+	              #include "solver/slv_types.h"
+	              #include "solver/rel.h"
+	              #include "solver/logrel.h"
+	              #include "solver/mtx.h"
+	              #include "general/list.h"
+
+	Details on solver parameter definition:
+
+	When used together the parameter-related structures, functions, and 
+	macros allow us to define all of a solver's parameters in one file
+	and notify the interface of these parameters upon startup (dynamic
+	interface construction).  The parameters can be defined in any order.
+	The only bookkeeping needed is associated with the macros.  You must
+	have an array of void pointers large enough for all of the macros
+	you define and you must give each of the macros you define a unique
+	element of this array. Here is an example using a real parameter
+	and a character parameter. (The int and bool are similar to the real).
+
+	@code
+
+	(* these 4 macros can be defined anywhere more or less so long as it
+	is before the calls to slv_define_parm. *)
+	#define REAL_PTR (sys->parm_array[0])
+	#define REAL     ((*(real64 *)REAL_PTR))
+	#define CHAR_PTR (sys->parm_array[1])
+	#define CHAR     ((*(char **)CHAR_PTR))
+
+	#define PA_SIZE 2
+	struct example {
+	  struct slv_parameters_t p;
+	  void *parm_array[PA_SIZE];
+	  struct slv_parameter padata[PA_SIZE];
+	} e;
+	 ...
+	  e.p.parms = padata;
+	  e.p.dynamic_parms = 0;
+
+	static char *character_names[] = {
+	   "name_one","name_two"
+	}
+	  (* fill padata with appropriate info *)
+	slv_define_parm(&(e.p), real_parm,
+	                "r_parm","real parameter" ,
+	                "this is an example of a real parameter" ,
+	                U_p_real(val,25),U_p_real(lo,0),U_p_real(hi,100),1);
+	 (* now assign the element of e.parm_array from somewhere in padata *)
+	SLV_RPARM_MACRO(REAL_PTR,parameters);
+
+	  (* fill padata with appropriate info *)
+	slv_define_parm(&(e.p), char_parm,
+	                "c_parm", "character parameter",
+	                "this is an example of a character parameter",
+	                U_p_string(val,character_names[0]),
+	                U_p_strings(lo,character_names),
+	                U_p_int(hi,sizeof(character_names)/sizeof(char *)),1);
+	 (* now assign the element of e.parm_array that matches. *)
+	SLV_CPARM_MACRO(CHAR_PTR,parameters);
+
+	Resetting the value of a parameter can be done directly
+	except for string parameters which should be set with, for example,
+	slv_set_char_parameter(CHAR_PTR,newvalue);
+	or outside a solver where there is no sys->parm_array:
+
+	   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
+
+	@endcode
+*/
 
 #ifndef ASC_SLV_COMMON_H
 #define ASC_SLV_COMMON_H
@@ -141,7 +135,7 @@
 
 /*
  * -------------------------------------------------------
- *  Common data structures for Westerberg derived solvers
+	Common data structures for Westerberg derived solvers
  * -------------------------------------------------------
  */
 
@@ -152,8 +146,8 @@ struct slv_output_data {
 };
 
 /**  
- *  Solver tolerance data structure.
- *  @todo KHACK THIS SHOULD BE REMOVED - solver/slv_common:slv_tolerance_data. 
+	Solver tolerance data structure.
+	@todo KHACK THIS SHOULD BE REMOVED - solver/slv_common:slv_tolerance_data. 
  */
 struct slv_tolerance_data {
    real64 drop;         /**< Matrix entry drop tolerance during factorization */
@@ -190,11 +184,11 @@ struct slv_sub_parameters {
 };
 
 /**
- *  Data structure for solver statistics.
- *  This is to collect data for the comparison of algorithms.  All solvers
- *  should have at least one of these, though the interface will check for 
- *  NULL before reading the data.  The interpretation of these data is 
- *  somewhat up to the coder.
+	Data structure for solver statistics.
+	This is to collect data for the comparison of algorithms.  All solvers
+	should have at least one of these, though the interface will check for 
+	NULL before reading the data.  The interpretation of these data is 
+	somewhat up to the coder.
  */
 struct slv_block_cost {
   int32 size,             /**< How big is the block, in terms of variables? */
@@ -231,9 +225,9 @@ struct slv_real_parameter {
 
 /** Char solver parameter substructure. */
 struct slv_char_parameter {
-  char *value;            /**< Value. */
-  char **argv;            /**< Lower bound. */
-  int32 high;             /**< Upper bound. */
+  char *value;            /**< Selected value. */
+  char **argv;            /**< Array of possible values */
+  int32 high;             /**< Length of array of possible values. */
 };
 
 /** Basic solver parameter types. */
@@ -281,65 +275,65 @@ struct slv_parameter {
 
 #define U_p_int(parm_u,val)     ((((parm_u).argi = (val))), (parm_u))
 /**<
- *  Sets the argi of parm_arg parm_u to val and returns the parm_u.
- *  This macro is used for setting integer parm_arg arguments in calls
- *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
- *  which correspond to local parm_arg variables that should be used
- *  in client functions calling slv_define_parm().
+	Sets the argi of parm_arg parm_u to val and returns the parm_u.
+	This macro is used for setting integer parm_arg arguments in calls
+	to slv_define_parm().  parm_u should be one of { val, lo, hi },
+	which correspond to local parm_arg variables that should be used
+	in client functions calling slv_define_parm().
  *
- *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
- *  @param val    int, the new value for the parm_arg.
- *  @return Returns parm_u.
+	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
+	@param val    int, the new value for the parm_arg.
+	@return Returns parm_u.
  */
 #define U_p_bool(parm_u,val)    ((((parm_u).argb = (val))), (parm_u))
 /**<
- *  Sets the argb of parm_arg parm_u to val and returns the parm_u.
- *  This macro is used for setting boolean parm_arg arguments in calls
- *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
- *  which correspond to local parm_arg variables that should be used
- *  in client functions calling slv_define_parm().
+	Sets the argb of parm_arg parm_u to val and returns the parm_u.
+	This macro is used for setting boolean parm_arg arguments in calls
+	to slv_define_parm().  parm_u should be one of { val, lo, hi },
+	which correspond to local parm_arg variables that should be used
+	in client functions calling slv_define_parm().
  *
- *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
- *  @param val    boolean, the new value for the parm_arg.
- *  @return Returns parm_u.
+	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
+	@param val    boolean, the new value for the parm_arg.
+	@return Returns parm_u.
  */
 #define U_p_real(parm_u,val)    ((((parm_u).argr = (val))), (parm_u))
 /**<
- *  Sets the argr of parm_arg parm_u to val and returns the parm_u.
- *  This macro is used for setting real parm_arg arguments in calls
- *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
- *  which correspond to local parm_arg variables that should be used
- *  in client functions calling slv_define_parm().
+	Sets the argr of parm_arg parm_u to val and returns the parm_u.
+	This macro is used for setting real parm_arg arguments in calls
+	to slv_define_parm().  parm_u should be one of { val, lo, hi },
+	which correspond to local parm_arg variables that should be used
+	in client functions calling slv_define_parm().
  *
- *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
- *  @param val    double, the new value for the parm_arg.
- *  @return Returns parm_u.
+	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
+	@param val    double, the new value for the parm_arg.
+	@return Returns parm_u.
  */
 #define U_p_string(parm_u,val)  ((((parm_u).argc = (val))), (parm_u))
 /**<
- *  Sets the argc of parm_arg parm_u to val and returns the parm_u.
- *  This macro is used for setting string parm_arg arguments in calls
- *  to slv_define_parm().  parm_u should be one of { val, lo, hi },
- *  which correspond to local parm_arg variables that should be used
- *  in client functions calling slv_define_parm().
+	Sets the argc of parm_arg parm_u to val and returns the parm_u.
+	This macro is used for setting string parm_arg arguments in calls
+	to slv_define_parm().  parm_u should be one of { val, lo, hi },
+	which correspond to local parm_arg variables that should be used
+	in client functions calling slv_define_parm().
  *
- *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
- *  @param val    char *, the new value for the parm_arg.
- *  @return Returns parm_u.
- *  For use in calls to slv_define_parm().
+	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
+	@param val    char *, the new value for the parm_arg.
+	@return Returns parm_u.
+	For use in calls to slv_define_parm().
  */
 #define U_p_strings(parm_u,val) ((((parm_u).argv = (val))), (parm_u))
 /**<
- *  Sets the argv of parm_arg parm_u to val and returns the parm_u.
- *  This macro is used for setting string array parm_arg arguments in 
- *  calls to slv_define_parm().  parm_u should be one of { val, lo, hi },
- *  which correspond to local parm_arg variables that should be used
- *  in client functions calling slv_define_parm().
+	Sets the argv of parm_arg parm_u to val and returns the parm_u.
+	This macro is used for setting string array parm_arg arguments in 
+	calls to slv_define_parm().  parm_u should be one of { val, lo, hi },
+	which correspond to local parm_arg variables that should be used
+	in client functions calling slv_define_parm().
  *
- *  @param parm_u The parm_arg to modify, one of {val, lo, hi}.
- *  @param val    char **, the new value for the parm_arg.
- *  @return Returns parm_u.
- *  For use in calls to slv_define_parm().
+	@param parm_u The parm_arg to modify, one of {val, lo, hi}.
+	@param val    char **, the new value for the parm_arg.
+	@return Returns parm_u.
+	For use in calls to slv_define_parm().
  */
 
 #define SLV_IPARM_MACRO(NAME,slv_parms) \
@@ -347,24 +341,24 @@ struct slv_parameter {
      (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.i.value); \
   }
 /**<
- *  Macro for defining macros of type integer (IPARM).
- *  See SLV_CPARM_MACRO() for more information.
+	Macro for defining macros of type integer (IPARM).
+	See SLV_CPARM_MACRO() for more information.
  */
 #define SLV_BPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
      (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.b.value); \
   }
 /**<
- *  Macro for defining macros of type boolean (BPARM).
- *  See SLV_CPARM_MACRO() for more information.
+	Macro for defining macros of type boolean (BPARM).
+	See SLV_CPARM_MACRO() for more information.
  */
 #define SLV_RPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
      (NAME)  = &((slv_parms)->parms[(slv_parms)->num_parms-1].info.r.value); \
   }
 /**<
- *  Macro for defining macros of type real (RPARM).
- *  See SLV_CPARM_MACRO() for more information.
+	Macro for defining macros of type real (RPARM).
+	See SLV_CPARM_MACRO() for more information.
  */
 #define SLV_CPARM_MACRO(NAME,slv_parms) \
   if (make_macros == 1) {  \
@@ -385,127 +379,127 @@ struct slv_parameter {
  */
 
 /**
- *  Holds the array of parameters and keeps a count of how many it 
- *  contains.  Also holds various other information which should be 
- *  turned into slv_parameters or moved elsewhere
- *  <pre>
- *  Every registered client should have a slv_parameters_t somewhere in it.
- *
- *  The following is a list of parameters (those parameters that can be
- *  modified during solve without calling slv_presolve() are marked with
- *  "$$$").  It should be noted that some solvers may not be conformable
- *  to some of the parameters.  Default values are subject to change via
- *  experimentation.
- *
- *  output.more_important (default stdout):   $$$
- *  output.less_important (default NULL):     $$$
- *     All output from the solver is written to one of these two files
- *     (except bug messages which are written to stderr).  Common values
- *     are NULL (==> no file) and stdout.  The more important messages
- *     go to output.more_important and less important messages go to
- *     output.less_important.  To shut the solver up, set both files to
- *     NULL.
- *
- *  tolerance.drop         (default 1e-16):
- *  tolerance.pivot        (default 0.1):
- *  tolerance.singular     (default 1e-12):
- *  tolerance.feasible     (default 1e-8):
- *  tolerance.rootfind     (default 1e-12):
- *  tolerance.stationary   (default 1e-8):
- *  tolerance.termination  (default 1e-12):
- *     These define the criterion for selecting pivotable relations,
- *     whether the equations are satisfied, if a local minimum has been
- *     found, or if no further reduction in the augmented lagrange merit
- *     phi can be achieved.
- *   - During jacobian reduction, each equation pivot selected must be
- *     at least a certain fraction given by TOLERANCE.PIVOT of the largest
- *     available.
- *     Also, the largest value in the row must exceed TOLERANCE.SINGULAR
- *     in order to be considered independent.
- *   - The absolute value of each unscaled equation residual is compared
- *     with TOLERANCE.FEASIBLE in order to determine convergence of the
- *     equality constraints during Newton iteration.
- *   - The absolute value of each unscaled equation residual is compared
- *     with TOLERANCE.ROOTFIND in order to determine convergence of the
- *     constraint during rootfinding of single equations.
- *   - Detection of a minimum requires the stationary condition of the
- *     lagrange to be less than TOLERANCE.STATIONARY.
- *   - If the directional derivative of phi along the negative gradient
- *     direction using the suggested iteration step length falls below
- *     TOLERANCE.TERMINATION, iteration is ceased.
- *   - TOLERANCE.DROP is the smallest number magnitude to be allowed
- *     in the Jacobian matrix during factorization. Default is optimistic.
- *
- *  time_limit (default 30.0):   $$$
- *     This defines the time limit expressed as cpu seconds per block.
- *     If the solver requires more time than this in any given block,
- *     then it will stop.
- *
- *  iteration_limit (default 100):   $$$
- *     This defines the maximum number of iterations attempted in a given
- *     block.  The solver will stop after this many iterations if it fails
- *     to converge.
- *
- *  factor_option (default 0):
- *     This sets the number of the linear factorization to suggest.
- *     This does not map directly to linsol numbering of any sort.
- *     The map is: 0 <==> RANKI, 1 <==> RANKI_JZ, 2+ <==> ?.
- *     The solver is free to ignore this suggestion.
- *     In fact, the specific solver is free to define the meaning of factor
- *     option depending on what linear packages it can talk to.
- *
- *  partition (default TRUE):
- *     Specifies whether or not the system will be partitioned into blocks
- *     or not.  If not, then the system will be considered as one large
- *     block.
- *
- *  ignore_bounds (default FALSE):
- *     Specifies whether or not bounds will be considered during solving.
- *     WARNING: if this flag is set, there will be no guarantees that the
- *     solution will lie in bounds.  Suggested use might be to set this
- *     flag to TRUE, solve, reset this flag to FALSE, and resolve.
- *     More often than not, in fact, ignore bounds will lead to floating
- *     point exceptions, halting the solution process.
- *
- *  rho (default 1.0):
- *     Used as a scalar pre-multiplier of the penalty term quantified by one
- *     half the two norm of the equality constraint residuals in an
- *     augmented lagrange merit function.
- *
- *  sp.ia/ra/ca/vap (defaults NULL, READ ONLY):
- *     Is a set of pointers to arrays (int/double/(char*)/void*).
- *     The values of the pointers themselves should not be modified,
- *     though the values pointed at may be modified. Note that this is
- *     _direct_ modification and will take effect immediately, not on
- *     the next call to slv_set_parameters. When the engine gets around
- *     to looking at the values in these arrays is engine dependent.
- *     NULL is the expected value for some or all of these array
- *     pointers, depending on the engine. The sizes of these arrays are
- *     specific to each solver's interface. As being of interest (at
- *     compile time) to both the slvI.c file and the GUI/CLUI, the
- *     sizes of the arrays to be pointed to are part of the slvI.h file.
- *     The implementor of each slvI.c should take care to use as much of
- *     the slv_parameters_t as possible before passing data through the
- *     arrays provided in the sub_parameters. This will make for a
- *     minimal amount of work when adding an engine to the GUI/CLUI.
- *     To further aid reusability/sanity preservation, slvI.h should
- *     be appended with proper defines for subscripting these arrays.
- *
- *  sp.i/r/c/vlen (defaults 0, READ ONLY)
- *     lengths of the sub_parameter arrays.
- *
- *  sp.ia/ra/ca/vanames (defaults NULL, READONLY)
- *     symbolic names for the corresponding entries in ia/ra/ca/vap.
- *
- *  sp.ia/ra/ca/vaexpln (defaults NULL, READONLY)
- *     longer explanations for the corresponding entries in ia/ra/ca/vap.
- *
- *  whose (default 0=>slv0, READ ONLY)
- *     This tells where a parameter set came from, since the default
- *     action of slv_get_parameters is to return a copy of slv0's
- *     parameters if the parameters asked for don't exist because
- *     the solver in question wasn't built/linked.
- *  </pre>
+	Holds the array of parameters and keeps a count of how many it 
+	contains.  Also holds various other information which should be 
+	turned into slv_parameters or moved elsewhere
+	<pre>
+	Every registered client should have a slv_parameters_t somewhere in it.
+
+	The following is a list of parameters (those parameters that can be
+	modified during solve without calling slv_presolve() are marked with
+	"$$$").  It should be noted that some solvers may not be conformable
+	to some of the parameters.  Default values are subject to change via
+	experimentation.
+
+	output.more_important (default stdout):   $$$
+	output.less_important (default NULL):     $$$
+	   All output from the solver is written to one of these two files
+	   (except bug messages which are written to stderr).  Common values
+	   are NULL (==> no file) and stdout.  The more important messages
+	   go to output.more_important and less important messages go to
+	   output.less_important.  To shut the solver up, set both files to
+	   NULL.
+
+	tolerance.drop         (default 1e-16):
+	tolerance.pivot        (default 0.1):
+	tolerance.singular     (default 1e-12):
+	tolerance.feasible     (default 1e-8):
+	tolerance.rootfind     (default 1e-12):
+	tolerance.stationary   (default 1e-8):
+	tolerance.termination  (default 1e-12):
+	   These define the criterion for selecting pivotable relations,
+	   whether the equations are satisfied, if a local minimum has been
+	   found, or if no further reduction in the augmented lagrange merit
+	   phi can be achieved.
+	 - During jacobian reduction, each equation pivot selected must be
+	   at least a certain fraction given by TOLERANCE.PIVOT of the largest
+	   available.
+	   Also, the largest value in the row must exceed TOLERANCE.SINGULAR
+	   in order to be considered independent.
+	 - The absolute value of each unscaled equation residual is compared
+	   with TOLERANCE.FEASIBLE in order to determine convergence of the
+	   equality constraints during Newton iteration.
+	 - The absolute value of each unscaled equation residual is compared
+	   with TOLERANCE.ROOTFIND in order to determine convergence of the
+	   constraint during rootfinding of single equations.
+	 - Detection of a minimum requires the stationary condition of the
+	   lagrange to be less than TOLERANCE.STATIONARY.
+	 - If the directional derivative of phi along the negative gradient
+	   direction using the suggested iteration step length falls below
+	   TOLERANCE.TERMINATION, iteration is ceased.
+	 - TOLERANCE.DROP is the smallest number magnitude to be allowed
+	   in the Jacobian matrix during factorization. Default is optimistic.
+
+	time_limit (default 30.0):   $$$
+	   This defines the time limit expressed as cpu seconds per block.
+	   If the solver requires more time than this in any given block,
+	   then it will stop.
+
+	iteration_limit (default 100):   $$$
+	   This defines the maximum number of iterations attempted in a given
+	   block.  The solver will stop after this many iterations if it fails
+	   to converge.
+
+	factor_option (default 0):
+	   This sets the number of the linear factorization to suggest.
+	   This does not map directly to linsol numbering of any sort.
+	   The map is: 0 <==> RANKI, 1 <==> RANKI_JZ, 2+ <==> ?.
+	   The solver is free to ignore this suggestion.
+	   In fact, the specific solver is free to define the meaning of factor
+	   option depending on what linear packages it can talk to.
+
+	partition (default TRUE):
+	   Specifies whether or not the system will be partitioned into blocks
+	   or not.  If not, then the system will be considered as one large
+	   block.
+
+	ignore_bounds (default FALSE):
+	   Specifies whether or not bounds will be considered during solving.
+	   WARNING: if this flag is set, there will be no guarantees that the
+	   solution will lie in bounds.  Suggested use might be to set this
+	   flag to TRUE, solve, reset this flag to FALSE, and resolve.
+	   More often than not, in fact, ignore bounds will lead to floating
+	   point exceptions, halting the solution process.
+
+	rho (default 1.0):
+	   Used as a scalar pre-multiplier of the penalty term quantified by one
+	   half the two norm of the equality constraint residuals in an
+	   augmented lagrange merit function.
+
+	sp.ia/ra/ca/vap (defaults NULL, READ ONLY):
+	   Is a set of pointers to arrays (int/double/(char*)/void*).
+	   The values of the pointers themselves should not be modified,
+	   though the values pointed at may be modified. Note that this is
+	   _direct_ modification and will take effect immediately, not on
+	   the next call to slv_set_parameters. When the engine gets around
+	   to looking at the values in these arrays is engine dependent.
+	   NULL is the expected value for some or all of these array
+	   pointers, depending on the engine. The sizes of these arrays are
+	   specific to each solver's interface. As being of interest (at
+	   compile time) to both the slvI.c file and the GUI/CLUI, the
+	   sizes of the arrays to be pointed to are part of the slvI.h file.
+	   The implementor of each slvI.c should take care to use as much of
+	   the slv_parameters_t as possible before passing data through the
+	   arrays provided in the sub_parameters. This will make for a
+	   minimal amount of work when adding an engine to the GUI/CLUI.
+	   To further aid reusability/sanity preservation, slvI.h should
+	   be appended with proper defines for subscripting these arrays.
+
+	sp.i/r/c/vlen (defaults 0, READ ONLY)
+	   lengths of the sub_parameter arrays.
+
+	sp.ia/ra/ca/vanames (defaults NULL, READONLY)
+	   symbolic names for the corresponding entries in ia/ra/ca/vap.
+
+	sp.ia/ra/ca/vaexpln (defaults NULL, READONLY)
+	   longer explanations for the corresponding entries in ia/ra/ca/vap.
+
+	whose (default 0=>slv0, READ ONLY)
+	   This tells where a parameter set came from, since the default
+	   action of slv_get_parameters is to return a copy of slv0's
+	   parameters if the parameters asked for don't exist because
+	   the solver in question wasn't built/linked.
+	</pre>
  */
 typedef struct slv_parameters_structure {
    struct slv_output_data output;       /**< File streams for solver output. */
@@ -532,12 +526,12 @@ typedef struct slv_parameters_structure {
 /* slv_destroy_parms() is defined in slv.c */
 extern void slv_destroy_parms(slv_parameters_t *p);
 /**<
- *  Deallocates any allocated memory held by a parameter structure.
- *  Only the held memory is freed, not p itself.  Further, if
- *  (p->dynamic_parms != 0), the strings in p->parms are freed
- *  but not p->parms itself.  Does nothing if p is NULL.
- *
- *  @param p  The parameter structure to destroy.
+	Deallocates any allocated memory held by a parameter structure.
+	Only the held memory is freed, not p itself.  Further, if
+	(p->dynamic_parms != 0), the strings in p->parms are freed
+	but not p->parms itself.  Does nothing if p is NULL.
+
+	@param p  The parameter structure to destroy.
  */
 
 /* slv_define_parm() is defined in slv.c */
@@ -551,42 +545,42 @@ extern int32 slv_define_parm(slv_parameters_t *p,
                              union parm_arg upper_bound,
                              int32 page);
 /**<
- *  Adds (defines) a new parameter in a parameter structure.
- *  Use this function to add & define new parameters for a solver.
- *
- *  @param p                Parameter structure to receive the new parameter.
- *  @param type             Parameter type: int_parm, bool_parm, real_parm, or char_parm.
- *  @param interface_name   A very short but descriptive name that the interface
- *                          can use to identify the parameter.
- *  @param interface_label  A short text string to be displayed on the interface.
- *  @param description      A slightly more detailed string to be displayed
- *                          upon request a la balloon help.
- *  @param value            The value for the parameter, set using one of
- *                          the U_p_int() style macros defined above.
- *  @param lower_bound      The lower bound for the parameter, set using one of
- *                          the U_p_int() style macros defined above.
- *  @param upper_bound      The upper bound for the parameter, set using one of
- *                          the U_p_int() style macros defined above.
- *  @param page             The page of the interface options dialog on which
- *                          to display this parameter.  Ranges from 1..max_page_no.
- *                          Set to -1 if this parameter is not to be displayed in
- *                          the interface.
- *  @return Returns -1 if p is NULL or called with unsupported type; 
- *          otherwise returns the number of registered parameters in p.
+	Adds (defines) a new parameter in a parameter structure.
+	Use this function to add & define new parameters for a solver.
+
+	@param p                Parameter structure to receive the new parameter.
+	@param type             Parameter type: int_parm, bool_parm, real_parm, or char_parm.
+	@param interface_name   A very short but descriptive name that the interface
+	                        can use to identify the parameter.
+	@param interface_label  A short text string to be displayed on the interface.
+	@param description      A slightly more detailed string to be displayed
+	                        upon request a la balloon help.
+	@param value            The value for the parameter, set using one of
+	                        the U_p_int() style macros defined above.
+	@param lower_bound      The lower bound for the parameter, set using one of
+	                        the U_p_int() style macros defined above.
+	@param upper_bound      The upper bound for the parameter, set using one of
+	                        the U_p_int() style macros defined above.
+	@param page             The page of the interface options dialog on which
+	                        to display this parameter.  Ranges from 1..max_page_no.
+	                        Set to -1 if this parameter is not to be displayed in
+	                        the interface.
+	@return Returns -1 if p is NULL or called with unsupported type; 
+	        otherwise returns the number of registered parameters in p.
  */
 
 /* slv_set_char_parameter() is defined in slv.c */
 extern void slv_set_char_parameter(char **cptr, char *newvalue);
 /**<
- *  Sets a char parameter value to a new string.
- *  Resetting the value of a parameter can be done directly except
- *  for string parameters which must be set with this function.  The
- *  string newvalue is not kept by the function.<br><br>
- *
- *  Example:   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
- *
- *  @param cptr     Pointer to the char array to set.
- *  @param newvalue New value for *cptr.
+	Sets a char parameter value to a new string.
+	Resetting the value of a parameter can be done directly except
+	for string parameters which must be set with this function.  The
+	string newvalue is not kept by the function.<br><br>
+
+	Example:   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
+
+	@param cptr     Pointer to the char array to set.
+	@param newvalue New value for *cptr.
  */
 
 /** Solver block status record. */

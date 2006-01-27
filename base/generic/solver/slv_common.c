@@ -637,7 +637,7 @@ int slv_direct_solve(slv_system_t server, struct rel_relation *rel,
   }
   if (nsolns<0 && allsolns>0 && fp !=NULL) {
    /* dump the rejected solutions to give the user a clue */
-	error_reporter_start(ASC_PROG_WARNING,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(ASCERR,"Ignoring potential solutions for variable '");
     var_write_name(server,var,ASCERR);
     FPRINTF(ASCERR,"' in equation '");
@@ -684,7 +684,7 @@ int slv_direct_log_solve(slv_system_t server, struct logrel_relation *lrel,
     destroy_array(slist);
     return 1;
   } else {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(ASCERR,"Ignoring potential solutions for discrete variable '");
     dis_write_name(server,dvar,ASCERR);
     FPRINTF(ASCERR,"' in equation '");

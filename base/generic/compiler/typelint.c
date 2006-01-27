@@ -181,16 +181,16 @@ void TypeLintNameMsg(FILE *f, CONST struct Name *n, char *m,int level)
   }
   switch(level){
 	case 2:
-		error_reporter_start(ASC_PROG_WARNING,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
 		break;
 	case 3:
-		error_reporter_start(ASC_PROG_ERROR,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
 		break;
 	case 4:
-		error_reporter_start(ASC_PROG_FATAL,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_FATAL);
 		break;
 	default:
-		error_reporter_start(ASC_PROG_NOTE,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   }
   FPRINTF(f," %s",m);
   WriteName(f,n);

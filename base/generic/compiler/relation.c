@@ -2890,7 +2890,7 @@ static int ConvertExpr(CONST struct Expr *start,
 	} else{
 	  *err = find_error;
           if (*ferr == impossible_instance) {
-			error_reporter_start(ASC_USER_ERROR,NULL,0);
+			ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
             FPRINTF(ASCERR,"Impossible name or subscript in '");
             WriteName(ASCERR,ExprName(start));
             FPRINTF(ASCERR,"'");

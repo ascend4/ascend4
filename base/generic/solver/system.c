@@ -87,7 +87,7 @@ slv_system_t system_build(SlvBackendToken inst)
     system_destroy(sys);
     sys = NULL;
     if (stat==2) {
-	  error_reporter_start(ASC_USER_ERROR,NULL,0);
+	  ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Models sent to solver: \n");
       FPRINTF(ASCERR,"1 cannot have any pending parts\n");
       FPRINTF(ASCERR,"2 cannot have NULL or unfinished relations.\n");

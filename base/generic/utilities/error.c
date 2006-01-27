@@ -59,8 +59,18 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 
 	res = ASC_FPRINTF(ASCERR,sevmsg);
 	if(filename!=NULL){
-		res += ASC_FPRINTF(ASCERR,"%s:%d: ",filename,line);
+		res += ASC_FPRINTF(ASCERR,"%s:",filename);
 	}
+	if(line!=0){
+		res += ASC_FPRINTF(ASCERR,"%d:",line);
+	}
+	if(funcname!=NULL){
+		res += ASC_FPRINTF(ASCERR,"%s:",funcname);
+	}
+	if ((filename!=NULL) || (line!=0) || (funcname!=NULL)){
+		res += ASC_FPRINTF(ASCERR," ");
+	}
+
 	res += ASC_VFPRINTF(ASCERR,fmt,args);
 	res += ASC_FPRINTF(ASCERR,endtxt);
 
@@ -72,20 +82,22 @@ int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 */
 int
 va_error_reporter(
-		const error_severity_t sev
-		, const char *errfile, const int errline
-		, const char *fmt
-		, const va_list args
+      const error_severity_t sev
+    , const char *errfile
+    , const int errline
+    , const char *errfunc
+    , const char *fmt
+    , const va_list args
 ){
 	extern error_reporter_callback_t g_error_reporter_callback;
 	int res;
 
 	if(g_error_reporter_callback==NULL){
 		/* fprintf(stderr,"CALLING VFPRINTF\n"); */
-		res = error_reporter_default_callback(sev,errfile,errline,fmt,args);
+		res = error_reporter_default_callback(sev,errfile,errline,errfunc,fmt,args);
 	}else{
 		/* fprintf(stderr,"CALLING G_ERROR_REPORTER_CALLBACK\n"); */
-		res = g_error_reporter_callback(sev,errfile,errline,fmt,args);
+		res = g_error_reporter_callback(sev,errfile,errline,errfunc,fmt,args);
 	}
 
 	return res;
@@ -122,7 +134,7 @@ fprintf_error_reporter(FILE *file, const char *fmt, ...){
 			}
 		}else{
 			/* Not caching: output all in one go as a ASC_PROG_NOTE */
-			res = va_error_reporter(ASC_PROG_NOTE,NULL,0,fmt,args);
+			res = va_error_reporter(ASC_PROG_NOTE,NULL,0,NULL,fmt,args);
 		}
 	}else{
 		res = ASC_VFPRINTF(file,fmt,args);
@@ -158,7 +170,7 @@ fflush_error_reporter(FILE *file){
 */
 
 int
-error_reporter_start(const error_severity_t sev, const char *filename, const int line){
+error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func){
 
 	extern error_reporter_meta_t g_error_reporter_cache;
 	if(g_error_reporter_cache.iscaching){
@@ -169,6 +181,7 @@ error_reporter_start(const error_severity_t sev, const char *filename, const int
 	g_error_reporter_cache.sev = sev;
 	g_error_reporter_cache.filename = filename;
 	g_error_reporter_cache.line = line;
+	g_error_reporter_cache.func = func;
 
 	return 1;
 }
@@ -181,6 +194,7 @@ error_reporter_end_flush(){
 		g_error_reporter_cache.sev
 		,g_error_reporter_cache.filename
 		,g_error_reporter_cache.line
+		,g_error_reporter_cache.func
 		,g_error_reporter_cache.msg
 	);
 	g_error_reporter_cache.iscaching = 0;
@@ -193,15 +207,18 @@ error_reporter_end_flush(){
 */
 int
 error_reporter(
-		const error_severity_t sev
-		, const char *errfile, const int errline
-		, const char *fmt, ...
+      const error_severity_t sev
+    , const char *errfile
+    , const int errline
+    , const char *errfunc
+    , const char *fmt
+    , ...
 ){
 	int res;
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(sev,errfile,errline,fmt,args);
+	res = va_error_reporter(sev,errfile,errline,errfunc,fmt,args);
 	va_end(args);
 
 	return res;

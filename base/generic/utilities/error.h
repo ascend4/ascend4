@@ -56,16 +56,20 @@
 	but without the file/function/line number.
 */
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-# define ERROR_REPORTER_DEBUG(MSG,args...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
-# define ERROR_REPORTER_HERE(SEV,MSG,args...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ##args)
-# define ERROR_REPORTER_NOLINE(SEV,MSG,args...) error_reporter(SEV,NULL,0,MSG, ##args)
-# define CONSOLE_DEBUG(MSG,args...) fprintf(stderr,"\33[1m%s:%d (%s): " MSG "\33[0m\n",__FILE__,__LINE__,__func__, ##args)
+# define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
+# define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
+# define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
+# define CONSOLE_DEBUG(args...) (fprintf(stderr,"\33[1m%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+                                 fprintf(stderr, ##args) + \
+                                 fprintf(stderr, "\33[0m\n"))
 
 #elif defined(HAVE_C99)
-# define ERROR_REPORTER_DEBUG(MSG,...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"%s: " MSG,__func__,## __VA_ARGS__)
-# define ERROR_REPORTER_HERE(SEV,MSG,...) error_reporter(SEV,__FILE__,__LINE__,"%s: " MSG, __func__, ## __VA_ARGS__)
-# define ERROR_REPORTER_NOLINE(SEV,MSG,...) error_reporter(SEV,NULL,0,MSG, ## __VA_ARGS__)
-# define CONSOLE_DEBUG(MSG,...) fprintf(stderr,"\33[1m%s:%d (%s): " MSG "\33[0m\n",__FILE__,__LINE__,__func__, ## __VA_ARGS__)
+# define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
+# define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
+# define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
+# define CONSOLE_DEBUG(...) (fprintf(stderr,"\33[1m%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+                             fprintf(stderr, ##__VA_ARGS__) + \
+                             fprintf(stderr, "\33[0m\n"))
 
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
@@ -78,8 +82,11 @@ int error_reporter_noline(const error_severity_t sev, const char *fmt,...);
 int console_debug(const char *fmt,...);
 #endif
 
+#define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
+#define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
+
 #define ERROR_REPORTER_STAT(sev,stat,msg) \
-	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,msg)
+	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 
 /**
 	Error severity codes. This will be used to visually
@@ -107,6 +114,7 @@ typedef struct{
 	error_severity_t sev;
 	const char *filename;
 	int line;
+	const char *func;
 	char msg[ERROR_REPORTER_MAX_MSG];
 } error_reporter_meta_t;
 
@@ -133,7 +141,7 @@ int fflush_error_reporter(FILE *file);
 	Start a cached error report. This means that multiple frprintf_error_reporter calls will
 	be stored in a global string until an error_reporter_end_flush is encountered.
 */
-int error_reporter_start(const error_severity_t sev, const char *filename, const int line);
+int error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
 
 /**
 	Output the contents of the checked global string as an error report
@@ -145,9 +153,12 @@ int error_reporter_end_flush();
 	callback function declarations.
 */
 #define ERROR_REPORTER_CALLBACK_ARGS \
-   const error_severity_t sev \
-	, const char *filename, const int line \
-	, const char *fmt, const va_list args
+    const error_severity_t sev \
+  , const char *filename \
+  , const int line \
+  , const char *funcname \
+  , const char *fmt \
+  , const va_list args
 
 /*
 	In you have functions which pass-through callback parameters,
@@ -155,7 +166,7 @@ int error_reporter_end_flush();
 	you won't have to go hunting and change stuff.
 */
 #define ERROR_REPORTER_CALLBACK_VARS \
-	sev, filename, line, fmt, args
+	sev, filename, line, func, fmt, args
 
 /*
 	Define the type of the function pointer to be used for all
@@ -174,9 +185,12 @@ typedef int (*error_reporter_callback_t)(
 	@return follows the style of fprintf
 */
 int error_reporter(
-		const error_severity_t sev
-		, const char *errfile, const int errline
-		, const char *fmt, ...
+      const error_severity_t sev
+    , const char *errfile
+    , const int errline
+    , const char *errfunc
+    , const char *fmt
+    , ...
 );
 
 /**

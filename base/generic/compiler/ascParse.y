@@ -668,7 +668,7 @@ atom_def:
 	      ErrMsg_NullDefPointer(SCP(g_type_name));
 	    }
 	  } else {
-	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL,
 	            "Atom dimensions don't match in ATOM %s on line %s:%lu.\n",
 	            SCP(g_type_name),
 	            Asc_ModuleBestName(Asc_CurrentModule()),
@@ -762,7 +762,7 @@ constant_def:
 	      ErrMsg_NullDefPointer(SCP(g_type_name));
 	    }
 	  } else {
-	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL,
 	            "Constant dimensions don't match in CONSTANT %s"
 	            " on line %s:%lu.\n",
 	            SCP(g_type_name),
@@ -2870,6 +2870,6 @@ static void CollectNote(struct Note *n)
 static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
 	va_list args;
 	va_start(args,fmt);
-	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),fmt,args);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);
 	va_end(args);
 }

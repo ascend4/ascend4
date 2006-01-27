@@ -443,7 +443,7 @@ static void SlowVisitTree(struct Instance *inst,
         }
       }
       if (nullchildren) {
-	    error_reporter_start(ASC_PROG_ERR,__FILE__,__LINE__);
+	    ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
         FPRINTF(ASCERR,"Found %u NULL children of '",nullchildren);
         WriteInstanceName(ASCERR,inst,NULL);
         FPRINTF(ASCERR,"'.\n");

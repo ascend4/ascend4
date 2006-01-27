@@ -97,13 +97,13 @@ static symchar *g_strings[3];
 
 /*
 	Forward declaration
- */
+*/
 static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
                                  struct gl_list_t *, struct gl_list_t *);
 
 /*
 	Global variable. Set to true by classify if need be
- */
+*/
 static int g_bad_rel_in_list;
 
 
@@ -200,14 +200,15 @@ static struct reuse_t {
   struct solver_ipdata *ipbuf;
 } g_reuse = {0,0,NULL};
 
-/*
-	a data structure for bridge building only. hell of a scaffolding.
+/**
+	a data structure for bridge-building only. hell of a scaffolding.
 	all fields should be empty if construction is not in progress.
 	In particular, do no operations that can throw an exception
 	while manipulating a problem_t, as it is way too big to let leak.
 */
 struct problem_t {
-/* the following are established by CountStuffInTree */
+
+  /* the following are established by CountStuffInTree */
   long nv;              /* number of solvervar/solveratom */
   long np;              /* number of real ATOM instance parameters */
   long nu;              /* number of real ATOM instance uninteresting */
@@ -221,20 +222,22 @@ struct problem_t {
   long nw;              /* number of whens */
   long ne;              /* number of external rels subset overestimate*/
   long nm;              /* number of models */
-/*
-	The following gllists contain pointers to interface ptrs as
-	locally defined.
-	The lists will be in order found by a visit instance tree.
-*/
+
+  /*
+  	The following gllists contain pointers to interface ptrs as
+  	locally defined.
+  	The lists will be in order found by a visit instance tree.
+  */
   struct gl_list_t *vars;	/* solvervar/solveratom. varips */
   struct gl_list_t *pars;	/* real ATOM instance parameters */
   struct gl_list_t *unas;	/* real ATOM instance of no 'apparent' use */
   struct gl_list_t *models;	/* models in tree. modips */
-/*
-	The following gllists contain pointers to interface ptrs as
-	locally defined.
-	The lists will be in order found by running over the models list.
-*/
+
+  /*
+  	The following gllists contain pointers to interface ptrs as
+  	locally defined.
+  	The lists will be in order found by running over the models list.
+  */
   struct gl_list_t *dvars;	/* discrete variables */
   struct gl_list_t *dunas;	/* discrete variables of no use */
   struct gl_list_t *whens;	/* whens */
@@ -243,15 +246,19 @@ struct problem_t {
   struct gl_list_t *rels;	/* ascend relations. relips */
   struct gl_list_t *objrels;	/* objective rels. relips */
   struct gl_list_t *logrels;	/* logical rels */
-/* bridge ip data */
+
+  /* bridge ip data */
   struct gl_list_t *oldips;	/* buffer of oldip crap we're protecting */
-/* misc stuff */
+
+  /* misc stuff */
   struct gl_list_t *tmplist;	/* sort space */
-/* stuff that will end up in the slv_system_t */
+
+  /* stuff that will end up in the slv_system_t */
   struct rel_relation *obj;	       /* DEFAULT objective relation, if any */
   struct Instance *root;	/* instance we construct system from */
   struct gl_list_t *extrels;	/* black box stub list */
-/* stuff that should move elsewhere, but end up in slv_system_t */
+
+  /* stuff that should move elsewhere, but end up in slv_system_t */
   mtx_region_t *blocks;		/* array of partitions in reordered matrix */
   int32 nblocks;		/* size of array of partitions */
   int nnz;	            /* free nonzeros in processed jacobian */
@@ -266,7 +273,8 @@ struct problem_t {
   int nrow;	            /* included relations */
   /* conditional stuff */
   int32 need_consistency;	/* Conistency analysis is required ? */
- /* logical relation stuff */
+
+  /* logical relation stuff */
   int lognnz;           /* Summ of free boolean vars in inc logrels */
   int lognrow;          /* included logrelations */
   int logncol;          /* free and incident boolean vars */
@@ -274,7 +282,8 @@ struct problem_t {
   int lrelincsize;      /* Total summ of incidences (boolean vars)
                            in logrels*/
   int lrelincinuse;		/* incidence given to log relations so far */
-/* data to go to slv_system_t */
+
+  /* data to go to slv_system_t */
   struct rel_relation *reldata;      /* rel data space, mass allocated */
   struct rel_relation *objdata;      /* objrel data space, mass allocated */
   struct rel_relation *condata;      /* cond rel data space, mass allocated*/
@@ -317,6 +326,7 @@ struct problem_t {
 
   struct ExtRelCache **erlist;	/* external rel cache null terminated list */
 };
+
 /* we are making the ANSI assumption that this will be init to 0/NULL*/
 /*
 	container for globals during assembly.
@@ -351,12 +361,15 @@ struct problem_t {
 	having to do if testing while stuffing jacobians.
 	In this scheme stuffing a jacobian row (or whatever) would simply mean
 	calling the compiler's derivative function (wrt RelationVariable list)
+
+	@code
 	which returns a vector d of values and then doing a loop:
 	  for( i = 0 ; i < length; i++) { coord.row fixed already
 	    coord.col = a[i++];
 	    mtx_fill_org_value(mtx,&coord,d[a[i]])
 	  }
 	}
+	@endcode
 
 	One begins to wonder if there isn't a better way to do all this, but
 	so far nothing has occurred.
@@ -601,7 +614,7 @@ static void CollectArrayRelsAndWhens(struct Instance *i, long modindex,
   }
 }
 
-
+
 /*
 	Collect all the logrels/relations at the local scope of the MODEL
 	associated with ip->i. Local scope includes arrays of logrels/relations,
@@ -1071,7 +1084,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
       if( GetInstanceRelationOnly(inst) == NULL ||
           GetInstanceRelationType(inst) == e_undefined) {
 	/* guard against null relations, unfinished ones */
-        error_reporter_start(ASC_USER_ERROR,NULL,0);
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 		FPRINTF(ASCERR,"Found bad (unfinished?) relation '");
         WriteInstanceName(ASCERR,inst,p_data->root);
         FPRINTF(ASCERR,"' (in CountStuffInTree)");
@@ -1989,7 +2002,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         }
       }
       if (p_data->nnz==nnzold) {
-        error_reporter_start(ASC_USER_WARNING,NULL,0);
+        ERROR_REPORTER_START_NOLINE(ASC_USER_WARNING);
 		FPRINTF(ASCERR,"No free variables in included relation '");
         WriteInstanceName(ASCERR,rip->i,p_data->root);
 		FPRINTF(ASCERR,"'");
