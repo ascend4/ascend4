@@ -724,7 +724,10 @@ class Browser:
 			self.reporter.reportError("No simulation created yet!");
 		
 		_params = self.sim.getSolverParameters();
-		print _params.toString();
+		for i in _params:
+			if i.isStr():
+				print "STR:",i.getLabel(),"["+i.getDescription()+"]:",i.getStrValue();
+
 		self.reporter.reportSuccess("Check console for solver parameter output")
 
 	def methodrun_click(self,*args):

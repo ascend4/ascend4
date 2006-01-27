@@ -427,21 +427,7 @@ public:
 	}	
 }
 
-class Solver{
-public:
-	Solver(const std::string &name);
-	Solver(const Solver &);
-
-	const int &getIndex() const;
-	const std::string getName() const;
-};
-
-
-class SolverParameters{
-public:
-	const std::string toString();
-	SolverParameters(const SolverParameters &);
-};
+%include "solver.i"
 
 class Simulation : public Instanc{
 public:

@@ -25,7 +25,8 @@ _smp_mflags = -j2
 
 CLASSES = library type module symchar instance variable method name \
 	reporter simulation set units dimensions extmethod \
-	solver curve plot solverparameters
+	solver curve plot \
+	solverparameters solverparameter solverparameteriterator
 
 OBJS = $(CLASSES:%=%.o)
 HDRS = $(CLASSES:%=%.h)
@@ -135,7 +136,7 @@ LIB = _ascend$(SO_SUFF)
 
 all: $(LIB)
 
-SWIGS = plot.i
+SWIGS = plot.i solver.i
 
 # FIXME add ' $(ASC_LIBS)' to deps once Jam build is fixed:
 %_wrap.cxx %.py: %.i $(SWIGS) $(HDRS)
