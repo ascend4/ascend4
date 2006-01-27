@@ -77,10 +77,10 @@ extern struct bnd_boundary *bnd_create(struct bnd_boundary *bnd);
  *  and returned.   Setting the the information is the job of the
  *  bridge building function between the ascend instance tree and
  *  the slv_system_t.  When finished with it, the caller should 
- *  bnd_cleanup() and ascfree() the new boundary.
+ *  bnd_destroy() and ascfree() the new boundary.
  */
 
-extern void bnd_cleanup(struct bnd_boundary *bnd);
+extern void bnd_destroy(struct bnd_boundary *bnd);
 /**<  
  *  Deallocates any memory held internally by the specified boundary.
  *  Nothing is done if bnd is NULL.

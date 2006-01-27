@@ -92,7 +92,7 @@ struct bnd_boundary *bnd_create(struct bnd_boundary *newbnd)
 }
 
 
-void bnd_cleanup(struct bnd_boundary *bnd)
+void bnd_destroy(struct bnd_boundary *bnd)
 {
    if (bnd==NULL) return;
    if (bnd->logrels != NULL) {

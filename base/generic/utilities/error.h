@@ -166,7 +166,7 @@ int error_reporter_end_flush();
 	you won't have to go hunting and change stuff.
 */
 #define ERROR_REPORTER_CALLBACK_VARS \
-	sev, filename, line, func, fmt, args
+	sev, filename, line, funcname, fmt, args
 
 /*
 	Define the type of the function pointer to be used for all
