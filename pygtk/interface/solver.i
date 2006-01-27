@@ -11,6 +11,21 @@ public:
 	const std::string getName() const;
 };
 
+class Simulation : public Instanc{
+public:
+	Simulation(Instance *&, const SymChar &name);
+	Instanc &getModel();
+	std::vector<Variable> getFixableVariables();
+	void build();
+	const bool check();
+	void checkDoF() const;
+	void run(const Method &);
+	void setSolver(Solver&);
+	void solve(Solver s);
+	SolverParameters getSolverParameters() const;
+	void setSolverParameters(SolverParameters&);
+};
+
 // SOLVE PARAMETERS
 
 %pythoncode{
@@ -62,14 +77,23 @@ public:
 	const int &getIntValue() const;
 	const int &getIntLowerBound() const;
 	const int &getIntUpperBound() const;
+	void setIntValue(const int&);
 
 	const bool getBoolValue() const;
+	void setBoolValue(const bool&);
 
 	const std::string getStrValue() const;
 	const std::vector<std::string> getStrOptions() const;
+	void setStrValue(const std::string &);
+	void setStrOption(const int &opt);
 
 	const double &getRealValue() const;
 	const double &getRealLowerBound() const;
 	const double &getRealUpperBound() const;
+	void setRealValue(const double&);
+
+	const bool isBounded() const;
+
+	const std::string toString() const;
 };
 

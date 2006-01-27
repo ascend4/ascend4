@@ -74,6 +74,7 @@ public:
 	const Solver getSolver() const;
 
 	SolverParameters getSolverParameters() const;
+	void setSolverParameters(SolverParameters &);
 };
 
 

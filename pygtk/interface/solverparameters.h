@@ -31,6 +31,7 @@ private:
 protected:
 	friend class Simulation;
 	explicit SolverParameters(const slv_parameters_t &);
+	slv_parameters_t &getInternalType();
 
 	friend class SolverParameterIterator;
 

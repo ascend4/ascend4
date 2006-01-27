@@ -67,4 +67,8 @@ SolverParameters::getParameter(const int &index) const{
 	return SolverParameter(&(p.parms[index]));
 }
 
+slv_parameters_t &
+SolverParameters::getInternalType(){
+	return p;
+}
 
