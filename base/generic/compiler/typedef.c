@@ -1088,7 +1088,7 @@ int DoExternal(symchar *type,
    * must be named.
    */
   nptr = ExternalStatName(stat);
-  error_reporter_start(ASC_PROG_NOTE,NULL,0);
+  ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
   WriteName(ASCERR,nptr);
   FPRINTF(ASCERR,"\n");
@@ -2418,7 +2418,7 @@ enum typelinterr DeriveRefinedTypes(struct StatementList *stats,
                 "%sRefinement can only be done on array elements.\n",
                 StatioLabel(3));
             }
-            error_reporter_start(ASC_USER_ERROR,NULL,0);
+            ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 			FPRINTF(ASCERR,"Incompatible type (%s) of LHS name: ",
               (d!=NULL)?SCP(GetName(d)):"UNDEFINED");
             WriteName(ASCERR,n);
@@ -3785,7 +3785,7 @@ enum typelinterr CheckParameterSubscripts( CONST struct Name *nptr)
     /* n will be a set expression sort of name */
     s = NameSetPtr(n);
     if (SetNamesInLCL(s)==0) {
-      error_reporter_start(ASC_USER_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Undefined subscript: [");
       WriteSet(ASCERR,s);
       FPRINTF(ASCERR,"]\n");
@@ -3854,7 +3854,7 @@ enum typelinterr DoParamName(CONST struct Name *nptr,
     ok = AddLCL( name,type,isarray, stat, STATPARAMETRIC );
     if (ok < 1) {
       if (ok==0) {
-        error_reporter_start(ASC_USER_ERROR,NULL,0);
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
         FPRINTF(ASCERR,"Parameter \"%s\" redeclared.",SCP(name));
         assert(g_lcl_pivot!=NULL);
         if (g_lcl_pivot->e.statement != stat ) {
@@ -4171,7 +4171,7 @@ enum typelinterr ExtractRLEs(CONST struct StatementList *tmpl,
       rle->assigned = 1;
       break;
     default: /* should be impossible due to TypedefIllegal functions */
-      error_reporter_start(ASC_PROG_FATAL,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_FATAL);
       FPRINTF(ASCERR,"Incorrect statement found in %s list.\n",
               (absorbed != 0) ? "absorbed" : "parameter");
       TypeLintError(ASCERR,s,DEF_STAT_MISLOCATED);
@@ -4202,7 +4202,7 @@ int FindAssignedStatement(struct gl_list_t *nspace, struct Statement *s)
   test.olddeclstat = s;
   pos = gl_search(nspace,&test,(CmpFunc)CmpRLEStat);
   if (pos==0) {
-	error_reporter_start(ASC_PROG_FATAL,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_FATAL);
 	FPRINTF(ASCERR,"FindAssignedStatement called with unknown stat: ");
     WriteStatement(ASCERR,s,2);
 	error_reporter_end_flush();
@@ -4438,7 +4438,7 @@ enum typelinterr MatchModelParameters(symchar *name, /* goes w/psl */
   newlen = StatementListLength(psl);
   oldlen = StatementListLength(pslbase);
   if (newlen < oldlen) {
-	error_reporter_start(ASC_USER_ERROR,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_FATAL);
     FPRINTF(ASCERR,"Parameter list mismatch with '%s': missing declarations in\n  ",
       SCP(refname));
     for (diff = 1; diff <=oldlen; diff++) {
@@ -4470,7 +4470,7 @@ enum typelinterr MatchModelParameters(symchar *name, /* goes w/psl */
   if (newlen==0) return DEF_OKAY; /* no parameters for either */
   c = CompareISLists(pslbase,psl,&diff);
   if (c != 0 && diff <= oldlen) {
-	error_reporter_start(ASC_USER_ERROR,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
     FPRINTF(ASCERR,"Parameter %lu mismatch between %s and %s.\n",diff,SCP(name),SCP(refname));
     stat = (CONST struct Statement *)gl_fetch(GetList(psl),diff);
     WriteStatement(ASCERR,stat,2);
@@ -4502,7 +4502,7 @@ enum typelinterr MatchParameterWheres(symchar *name, /* goes w/wsl */
   newlen = StatementListLength(wsl);
   oldlen = StatementListLength(wslbase);
   if (newlen < oldlen) {
-    error_reporter_start(ASC_USER_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 	FPRINTF(ASCERR,"WHERE list mismatch with %s.\n",SCP(refname));
     FPRINTF(ASCERR,"  %s is missing declarations:\n",SCP(name));
     for (diff = 1; diff <=oldlen; diff++) {
@@ -4518,7 +4518,7 @@ enum typelinterr MatchParameterWheres(symchar *name, /* goes w/wsl */
   if (newlen==0) return DEF_OKAY; /* no parameters for either */
   c = CompareISLists(wslbase,wsl,&diff);
   if (c != 0 && diff <= oldlen) {
-    error_reporter_start(ASC_USER_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
     FPRINTF(ASCERR,"WHERE statement %lu mismatch between %s and %s.\n",
 		diff,SCP(name),SCP(refname));
     stat = (CONST struct Statement *)gl_fetch(GetList(wsl),diff);
@@ -4806,7 +4806,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
   } else {
     rdesc=FindType(refines);
     if (rdesc==NULL) {
-      error_reporter_start(ASC_USER_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
       FPRINTF(ASCERR,"Unable to locate type %s for %s's type definition.\n",
               SCP(refines),SCP(name));
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
@@ -4814,7 +4814,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       return NULL;
     }
     if (GetBaseType(rdesc) != model_type){
-      error_reporter_start(ASC_USER_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
 	  FPRINTF(ASCERR,"Model %s attempts to refine non-MODEL type %s.\n",
               SCP(name),SCP(refines));
       DestroyTypeDefArgs(sl,pl,psl,rsl,NULL,wsl);
@@ -4847,7 +4847,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
       /* no parameters in rdesc. */
       if (StatementListLength(rsl) != 0L) {
         /* error. can't reduce what ain't there */
-	    error_reporter_start(ASC_USER_ERROR,NULL,0);
+	    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
         FPRINTF(ASCERR,"Model %s attempts to reduce non-parameters in %s.\n",
           SCP(name),SCP(refines));
         WriteStatementList(ASCERR,rsl,4);
@@ -4902,7 +4902,7 @@ struct TypeDescription *CreateModelTypeDef(symchar *name,
        */
       if (ParametricChildList(name,tsl,NOCHECKSUBS) != DEF_OKAY) {
         /* contents of tsl, if any, have been checked already */
-		error_reporter_start(ASC_PROG_ERROR,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
         FPRINTF(ASCERR,"Model %s victim of bizarre error 2.\n",SCP(name));
         WriteStatementList(ASCERR,tsl,2);
 		error_reporter_end_flush();

@@ -766,7 +766,7 @@ static void calc_nominals( slv3_system_t sys)
 	if( n == 0.0 ) {
 	  n = TOO_SMALL;
 
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
 	  FPRINTF(fp,"QRSlv::calc_nominals: Variable ");
 	  print_var_name(fp,sys,var);
 	  FPRINTF(fp,"has nominal value of zero. Resetting to %g.",n);
@@ -776,7 +776,7 @@ static void calc_nominals( slv3_system_t sys)
 	} else {
 	  n =  -n;
 
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
 	  FPRINTF(fp,"QRSlv::calc_nominals Variable ");
 	  print_var_name(fp,sys,var);
 	  FPRINTF(fp,"has negative nominal value. Resetting to %g.",n);
@@ -1411,7 +1411,7 @@ static int calc_pivots(slv3_system_t sys)
         row = mtx_org_to_row(sys->J.mtx,org_row);
         rel = sys->rlist[org_row];
 
-		error_reporter_start(ASC_USER_ERROR,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
 		FPRINTF(stderr,"Relation '");
         print_rel_name(stderr,sys,rel);
 		FPRINTF(stderr,"' not pivoted.\n");
@@ -2662,7 +2662,7 @@ static void move_to_next_block( slv3_system_t sys)
     sys->s.calc_ok = TRUE;
 
     if( !(ok = calc_objective(sys)) ) {
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(MIF(sys),"Objective calculation errors detected.\n");
 	  error_reporter_end_flush();
     }
@@ -2678,7 +2678,7 @@ static void move_to_next_block( slv3_system_t sys)
 
     sys->residuals.accurate = FALSE;
     if( !(ok = calc_residuals(sys)) ) {
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(MIF(sys),
         "Residual calculation errors detected in move_to_next_block.\n");
 	  error_reporter_end_flush();
@@ -2830,7 +2830,7 @@ static void reorder_new_block(slv3_system_t sys)
 				  1,mtx_SPK1);
     } else {
       sys->s.cost[sys->s.block.current_block].reorder_method = 1;
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(MIF(sys),"QRSlv called with unknown reorder option\n");
       FPRINTF(MIF(sys),"QRSlv using single edge tear drop (TEAR_DROP).\n");
 	  error_reporter_end_flush();
@@ -3591,7 +3591,7 @@ void slv3_dump_internals(slv_system_t server, SlvClientToken sys,int level)
   (void) server;
   check_system(sys);
   if (level > 0) {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv:slv3_dump_internals: QRSlv does not dump its internals.\n");
     error_reporter_end_flush();
   }
@@ -3694,13 +3694,13 @@ void slv3_presolve(slv_system_t server, SlvClientToken asys)
   iteration_begins(sys);
   check_system(sys);
   if( sys->vlist == NULL ) {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_presolve: Variable list was never set.");
     error_reporter_end_flush();
     return;
   }
   if( sys->rlist == NULL && sys->obj == NULL ) {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_presolve: Relation list and objective never set.");
 	error_reporter_end_flush();
     return;
@@ -3882,7 +3882,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 #if !CANOPTIMIZE
   if( OPTIMIZING(sys) ) {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(stderr,"QRSlv::slv3_iterate: QRSlv cannot presently optimize.");
     error_reporter_end_flush();
 
@@ -3933,13 +3933,13 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
         update_status(sys);
         return;
       }
-	  error_reporter_start(ASC_PROG_ERROR,NULL,0);
+	  ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(mif,"Direct solve found numerically impossible equation given variables solved in previous blocks.\n");
       error_reporter_end_flush();
     case -1:
       sys->s.inconsistent = TRUE;
 
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(ASCERR,"No solution exists within the bounds given for variable '");
       print_var_name(ASCERR,sys,var);
       FPRINTF(ASCERR,"' when inverting relation:\n");
@@ -3952,7 +3952,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     }
   } /* if fails with a 0, go on to newton a 1x1 */
   if( !calc_J(sys) ) {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(MIF(sys),"Jacobian calculation errors detected.");
     error_reporter_end_flush();
   }
@@ -3998,7 +3998,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
   if( !OPTIMIZING(sys) &&
       sys->gamma.norm2 <= TERM_TOL*sys->phi ) {
-    error_reporter_start(ASC_PROG_ERROR,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
     FPRINTF(mif,"QRSlv: Problem diverged: Gamma norm too small.");
     error_reporter_end_flush();
 
@@ -4039,7 +4039,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
 /* 2004.11.5 code by AWW to eliminate runaway minor loop */
     if(minor >= MAX_MINOR){
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(mif,"QRSlv: Exceeded max line search iterations. Check for variables on bounds.");
 	  error_reporter_end_flush();
 
@@ -4117,7 +4117,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     }
 
     if (sys->progress <= TERM_TOL) {
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(mif,"QRSlv: Problem diverged: Suggested progress too small.");
 	  error_reporter_end_flush();
 
@@ -4143,7 +4143,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
      **/
     apply_step(sys);
     if (sys->progress <= TERM_TOL) {
-      error_reporter_start(ASC_PROG_ERROR,NULL,0);
+      ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
       FPRINTF(mif,"Problem diverged: Applied progress too small.");
 	  error_reporter_end_flush();
 

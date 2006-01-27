@@ -4230,7 +4230,7 @@ void MissingInsts(struct Instance *inst,
     while(list!=NULL){
       temp = FindInstances(inst,NamePointer(list),&err);
       if (temp==NULL){
-        error_reporter_start(ASC_USER_ERROR,NULL,0);
+        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
         FPRINTF(ASCERR,"Problem finding instance(s): \n");
         WriteName(ASCERR,NamePointer(list));
         FPRINTF(ASCERR,"\n");
@@ -8121,7 +8121,7 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
   switch(StatementType(statement)){
     case REL:
 #ifdef DEBUG_RELS
-	error_reporter_start(ASC_PROG_NOTE,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(stderr,"Pass2ExecuteCondStatements: case REL");
     WriteStatement(stderr, statement, 3);
 	error_reporter_end_flush();
@@ -8130,7 +8130,7 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
     case FOR:
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
-	error_reporter_start(ASC_PROG_NOTE,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(stderr,"Pass2ExecuteCondStatements: case FOR");
     WriteStatement(stderr, statement, 3);
 	error_reporter_end_flush();
@@ -9656,7 +9656,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       return_value = 1;
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
-	  error_reporter_start(ASC_PROG_NOTE,NULL,0);
+	  ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
       WriteStatement(stderr, statement, 6);
       error_reporter_end_flush();
 #endif
@@ -9673,7 +9673,7 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       break;
     case REL:
 #ifdef DEBUG_RELS
-	  error_reporter_start(ASC_PROG_NOTE,NULL,0);
+	  ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
       WriteStatement(stderr, statement, 6);
 	  error_reporter_end_flush();
 #endif
@@ -10962,14 +10962,14 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
   switch(StatementType(statement)){ /* should be an if relinstance */
   case FOR:
 #ifdef DEBUG_RELS
-    error_reporter_start(ASC_PROG_NOTE,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     WriteStatement(stderr, statement, 3);
 	error_reporter_end_flush();
 #endif
     return Pass2ExecuteFOR(inst,statement);
   case REL:
 #ifdef DEBUG_RELS
-    error_reporter_start(ASC_PROG_NOTE,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     WriteStatement(stderr, statement, 3);
     error_reporter_end_flush();
 #endif
@@ -10982,7 +10982,7 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
   case LOGREL:
   case WHEN:
 #ifdef DEBUG_RELS
-    error_reporter_start(ASC_PROG_NOTE,NULL,0);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(stderr,"-- IGNORING WHEN STAT\n");
     /* write statement */
     WriteStatement(stderr, statement, 3);
@@ -11354,7 +11354,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
       proto = Asc_GetAnonPrototype(at);
       if (InstanceKind(proto) == MODEL_INST && InstanceInList(proto)) {
 #ifdef DEBUG_RELS
-        error_reporter_start(ASC_PROG_NOTE,NULL,0);
+        ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
 		FPRINTF(stderr,"Rels in model: ");
         WriteInstanceName(stderr,proto,NULL); FPRINTF(stderr,"\n");
 		error_reporter_end_flush();
@@ -12021,7 +12021,7 @@ void Pass2SetRelationBits(struct Instance *inst)
   if (inst != NULL && InstanceKind(inst)==MODEL_INST) {
     struct BitList *blist;
 #ifdef DEBUG_RELS
-	error_reporter_start(ASC_PROG_NOTE,NULL,0);
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(stderr,"P2SRB: ");
     WriteInstanceName(ASCERR,inst,debug_rels_work);
 	error_reporter_end_flush();
@@ -12064,7 +12064,7 @@ void Pass2SetRelationBits(struct Instance *inst)
         AddBelow(NULL,inst);
         /* add PENDING model */
 #ifdef DEBUG_RELS
-		error_reporter_start(ASC_PROG_NOTE,NULL,0);
+		ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
         FPRINTF(stderr,"Changed: ");
         WriteInstanceName(ASCERR,inst,debug_rels_work);
         error_reporter_end_flush();

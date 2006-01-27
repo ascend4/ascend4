@@ -322,9 +322,9 @@ void ProcWriteStackCheck(struct procFrame *fm,
     return;
   }
   if(fm->stat != NULL){
-    error_reporter_start(ASC_PROG_ERROR,SCP(Asc_ModuleBestName(StatementModule(fm->stat))),StatementLineNum(fm->stat));
+    error_reporter_start(ASC_PROG_ERROR,SCP(Asc_ModuleBestName(StatementModule(fm->stat))),StatementLineNum(fm->stat),NULL);
   }else{
-	error_reporter_start(ASC_PROG_ERROR,NULL,0);
+	error_reporter_start(ASC_PROG_ERROR,NULL,0,NULL);
   }
 
   if (fm->ErrNo == Proc_stack_exceeded_this_frame) {

@@ -650,13 +650,13 @@ void WriteStatementErrorMessage(FILE *f, CONST struct Statement *stat,
   }
 
   if (level == 0 || level ==3 ){
-	error_reporter_start(ASC_USER_ERROR,filename,line);
+	error_reporter_start(ASC_USER_ERROR,filename,line,NULL);
 	FPRINTF(f,"%s\n",message);
   }else if(level < 0){
-    error_reporter_start(ASC_PROG_NOTE,filename,line);
+    error_reporter_start(ASC_PROG_NOTE,filename,line,NULL);
 	FPRINTF(f,"%s\n",message);
   }else{
-	error_reporter_start(ASC_USER_ERROR, filename, line);
+	error_reporter_start(ASC_USER_ERROR, filename, line,NULL);
 	FPRINTF(f,"%s%s\n",StatioLabel(level), message);
   }
 

@@ -479,7 +479,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   funcname = ExternalStatFuncName(stat);
   efunc = LookupExtFunc(funcname);
 
-  CONSOLE_DEBUG("EXECUTEINITEXT func name:'%s'",funcname);
+  /*CONSOLE_DEBUG("EXECUTEINITEXT func name:'%s'",funcname);*/
 
   if (efunc == NULL) {
     CONSOLE_DEBUG("Failed to look up external function");
@@ -489,7 +489,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  CONSOLE_DEBUG("FOUND EXT FUNC, name:%s, in:%d, out:%d\n", efunc->name, efunc->n_inputs, efunc->n_outputs);
+  CONSOLE_DEBUG("%s: in:%d, out:%d", efunc->name, efunc->n_inputs, efunc->n_outputs);
 
   eval_func = GetValueFunc(efunc);
   if (eval_func == NULL) {
@@ -548,7 +548,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");
+  /*CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");*/
 
   Init_Slv_Interp(&slv_interp);
   nok = (*eval_func)(&slv_interp,fm->i,arglist);

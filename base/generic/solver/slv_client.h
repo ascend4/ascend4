@@ -334,7 +334,7 @@ typedef struct slv_registration_data {
   SlvClientCreateF    *ccreate;       /**<  (required) */
   SlvClientDestroyF   *cdestroy;      /**<  (required) */
   SlvClientEligibleF  *celigible;     /**<  (required) */
-  SlvGetDefParamsF    *getdefparam;   /**<  (required) */
+  SlvGetDefParamsF    *getdefparam;   /**< Function that will create default solver-parameter structure (required) */
   SlvGetParamsF       *getparam;      /**<  (required) */
   SlvSetParamsF       *setparam;      /**<  (required) */
   SlvGetStatusF       *getstatus;     /**<  (required) */
