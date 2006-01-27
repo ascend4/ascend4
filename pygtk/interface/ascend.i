@@ -5,6 +5,7 @@
 
 %module ascend
 
+%include <python/std_string.i>
 %include <python/std_vector.i>
 %include <python/std_except.i>
 
@@ -92,6 +93,7 @@ public:
 %template(SetString) ASCXX_Set<SymChar>;
 %template(DoubleVector) std::vector<double>;
 %template(CurveVector) std::vector<Curve>;
+%template(StringVector) std::vector<std::string>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;
@@ -438,6 +440,7 @@ public:
 	const bool check();
 	void checkDoF() const;
 	void run(const Method &);
+	void setSolver(Solver&);
 	void solve(Solver s);
 	SolverParameters getSolverParameters() const;
 };

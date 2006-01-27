@@ -24,6 +24,9 @@ import ascend
 
 GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/ascend.glade"
 
+#======================================
+# Browser is the main ASCEND library/model browser window
+
 class Browser:
 
 #   ---------------------------------
@@ -280,6 +283,7 @@ class Browser:
 				except RuntimeError, e:
 					self.reporter.reportError("Failed to create instance of '%s': %s" %(options.model, str(e)));
 		
+
 	def run(self):
 		self.window.show()
 		gtk.main()
@@ -361,6 +365,8 @@ class Browser:
 		self.sim.build()
 		print "DONE BUILDING"
 		self.stop_waiting()
+
+		self.sim.setSolver(ascend.Solver("QRSlv"))
 
 		# empty things out first
 		self.methodstore.clear()
@@ -723,12 +729,8 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No simulation created yet!");
 		
-		_params = self.sim.getSolverParameters();
-		for i in _params:
-			if i.isStr():
-				print "STR:",i.getLabel(),"["+i.getDescription()+"]:",i.getStrValue();
-
-		self.reporter.reportSuccess("Check console for solver parameter output")
+		_paramswin = SolverParametersWindow(self.sim, self.reporter)
+		_paramswin.show()
 
 	def methodrun_click(self,*args):
 		_sel = self.methodsel.get_active_text()
@@ -865,6 +867,97 @@ class Browser:
 		gtk.main_quit()
 		print "GTK QUIT"
 		return False
+
+#======================================================
+# SOLVER PARAMETERS WINDOW
+
+class SolverParametersWindow:
+	def __init__(self,sim,reporter):
+		self.sim = sim
+		self.params = self.sim.getSolverParameters();
+		
+		self.reporter = reporter
+
+		_xml = gtk.glade.XML(GLADE_FILE,"paramswin")
+		self.window = _xml.get_widget("paramswin")
+		_xml.signal_autoconnect(self)
+		
+		self.paramsview = _xml.get_widget("paramsview")	
+		self.otank = {}
+		self.paramstore = gtk.TreeStore(str,str,str,bool)
+		self.paramsview.set_model(self.paramstore)
+
+		# name column
+		_renderer0 = gtk.CellRendererText()
+		_col0 = gtk.TreeViewColumn("Name", _renderer0, text=0)
+		self.paramsview.append_column(_col0)
+
+		# value column: 'editable' set by column 3 of the model data.
+		_renderer1 = gtk.CellRendererText()
+		_col1 = gtk.TreeViewColumn("Value", _renderer1, text=1, editable=3)
+		self.paramsview.append_column(_col1)
+
+		# range column
+		_renderer2 = gtk.CellRendererText()
+		_col2 = gtk.TreeViewColumn("Range", _renderer2, text=2)
+		self.paramsview.append_column(_col2)
+
+		self.populate()
+
+	def create_row_data(self,p):
+		_row = [p.getLabel()];
+		if p.isStr():
+			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", True]);
+		elif p.isBool():
+			if p.getBoolValue():
+				_val = 'True'
+			else:
+				_val = 'False'
+			_row.extend([_val,"",False])
+		elif p.isReal():
+			if p.getRealLowerBound()==0 and p.getRealUpperBound():
+				_row.extend([str(p.getRealValue()), "",True])
+			else:
+				_row.extend([str(p.getRealValue()), "[ "+str(p.getRealLowerBound())+", "+str(p.getRealUpperBound())+" ]",True])
+		elif p.isInt():
+			if p.getIntLowerBound()==0 and p.getIntUpperBound():
+				_row.extend([str(p.getIntValue()), "", True])
+			else:
+				_row.extend([str(p.getIntValue()), "[ "+str(p.getIntLowerBound())+", "+str(p.getIntLowerBound())+" ]", True])
+
+		else:
+			raise RuntimeError("invalid type")
+		return _row;
+		
+	def populate(self):
+		# Fill the paramstore with data
+		
+		for i in self.params:
+			_piter = self.paramstore.append( None, self.create_row_data(i) )
+
+			_path = self.paramstore.get_path(_piter)
+			self.otank[ _path ] = i
+
+	def on_paramsview_row_activated(self,*args,**kwargs):
+		print "EDITED"
+
+	def show(self):
+		self.window.show()
+	
+	def on_paramscancel_activate(self,*args,**kwargs):
+		self.do_destroy()
+
+	def on_paramsapply_activate(self,*args,**kwargs):
+		print "SAVE"
+
+	def on_paramswin_destroy(self,*args,**kwargs):
+		self.do_destroy()
+
+	def do_destroy(self):
+		print "DESTROY PARAMS WIN"
+		self.window.hide()
+		del(self.window)
+		del(self.params)
 
 def test():
 	import ascend
