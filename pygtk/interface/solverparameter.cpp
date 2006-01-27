@@ -82,6 +82,17 @@ SolverParameter::getIntUpperBound() const{
 	return p->info.i.high;
 }
 
+void
+SolverParameter::setIntValue(const int &val){
+	if(!isInt()){
+		throw runtime_error("Not an integer parameter");
+	}
+	if(isBounded() && (val > getIntUpperBound() || val < getIntLowerBound())){
+		throw runtime_error("Out of bounds");
+	}
+	p->info.i.value = val;
+}
+
 // Boolean parameters
 
 const bool
@@ -90,6 +101,14 @@ SolverParameter::getBoolValue() const{
 		throw runtime_error("Not an boolean parameter");
 	}
 	return p->info.b.value !=0;
+}
+
+void
+SolverParameter::setBoolValue(const bool &val){
+	if(!isBool()){
+		throw runtime_error("Not a boolean parameter");
+	}
+	p->info.b.value = val;
 }
 
 // Real parameters
@@ -118,6 +137,17 @@ SolverParameter::getRealUpperBound() const{
 	return p->info.r.high;
 }
 
+void
+SolverParameter::setRealValue(const double &val){
+	if(!isReal()){
+		throw runtime_error("Not a real parameter");
+	}
+	if(isBounded() && (val > getRealUpperBound() || val < getRealLowerBound())){
+		throw runtime_error("Out of bounds");
+	}
+	p->info.r.value = val;
+}
+
 // String parameters
 
 const string
@@ -140,11 +170,42 @@ SolverParameter::getStrOptions() const{
 	return v;
 };
 
+void
+SolverParameter::setStrOption(const int &opt){
+	if(!isStr()){
+		throw runtime_error("Not a string parameter");
+	}
+	if(opt < 0 || opt > p->info.c.high){
+		throw runtime_error("Invalid option index");
+	}
+	slv_set_char_parameter(&(p->info.c.value),p->info.c.argv[opt]);
+}
+
+void
+SolverParameter::setStrValue(const std::string &str){
+	if(!isStr()){
+		throw runtime_error("Not a string parameter");
+	}
+	slv_set_char_parameter( &(p->info.c.value),str.c_str() );
+}
+
 // To String
 
 const string
 SolverParameter::toString() const{
 	return "STRING";
+}
+
+// Bounded?
+
+const bool
+SolverParameter::isBounded() const{
+	if(isInt() && getIntLowerBound() < getIntUpperBound()){
+		return true;
+	}else if(isReal() && getRealLowerBound() < getRealUpperBound()){
+		return true;
+	}
+	return false;
 }
 
 

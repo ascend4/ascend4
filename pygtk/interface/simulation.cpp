@@ -389,10 +389,19 @@ Simulation::getSolver() const{
 */
 SolverParameters
 Simulation::getSolverParameters() const{
-	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
+	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
 
 	slv_parameters_t p;
 	slv_get_parameters(sys,&p);
 	return SolverParameters(p);
+}
+
+/**
+	Update the solver parameters by passing a new set back
+*/
+void
+Simulation::setSolverParameters(SolverParameters &P){
+	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
+	slv_set_parameters(sys, &(P.getInternalType()));
 }
 

@@ -38,6 +38,7 @@ MODEL loop;
 
 	V_water_S ALIASES S.V_water;
 	
+	x_exit_A ALIASES A.x_exit;
 
 	(*A.p = S.p;*)
 	(*A.p = 40 {bar};*)

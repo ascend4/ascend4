@@ -1,4 +1,4 @@
-/* ex: set syntax=cpp : */
+/* : set syntax=cpp : */
 /*
 	SWIG interface routines to read a file into the library
 */
@@ -430,20 +430,6 @@ public:
 }
 
 %include "solver.i"
-
-class Simulation : public Instanc{
-public:
-	Simulation(Instance *&, const SymChar &name);
-	Instanc &getModel();
-	std::vector<Variable> getFixableVariables();
-	void build();
-	const bool check();
-	void checkDoF() const;
-	void run(const Method &);
-	void setSolver(Solver&);
-	void solve(Solver s);
-	SolverParameters getSolverParameters() const;
-};
 
 class Variable{
 public:

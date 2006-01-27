@@ -884,25 +884,76 @@ class SolverParametersWindow:
 		
 		self.paramsview = _xml.get_widget("paramsview")	
 		self.otank = {}
-		self.paramstore = gtk.TreeStore(str,str,str,bool)
+		self.paramstore = gtk.TreeStore(str,str,str,bool,str)
 		self.paramsview.set_model(self.paramstore)
 
 		# name column
 		_renderer0 = gtk.CellRendererText()
-		_col0 = gtk.TreeViewColumn("Name", _renderer0, text=0)
+		_col0 = gtk.TreeViewColumn("Name", _renderer0, text=0, background=4)
 		self.paramsview.append_column(_col0)
 
 		# value column: 'editable' set by column 3 of the model data.
-		_renderer1 = gtk.CellRendererText()
-		_col1 = gtk.TreeViewColumn("Value", _renderer1, text=1, editable=3)
+		_renderer1 = gtk.CellRendererText()	
+		_renderer1.connect('edited',self.on_paramsview_edited)
+		_col1 = gtk.TreeViewColumn("Value", _renderer1, text=1, editable=3, background=4)
 		self.paramsview.append_column(_col1)
 
 		# range column
 		_renderer2 = gtk.CellRendererText()
-		_col2 = gtk.TreeViewColumn("Range", _renderer2, text=2)
+		_col2 = gtk.TreeViewColumn("Range", _renderer2, text=2, background=4)
 		self.paramsview.append_column(_col2)
 
 		self.populate()
+
+	def on_paramsview_edited(self, renderer, path, newtext, **kwargs):
+		# get back the Instance object we just edited (having to use this seems like a bug)
+		path = tuple( map(int,path.split(":")) )
+
+		if not self.otank.has_key(path):
+			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
+			return
+		
+		_iter,_param = self.otank[path]
+		print "NEW VALUE OF ",_param.getLabel(),"=",newtext
+		# you can only edit real, int, str:
+
+		_changed = False
+		if _param.isInt():
+			newvalue = int(newtext)
+			if _param.isBounded():
+				if newvalue > _param.getIntUpperBound():
+					self.doErrorDialog("The entered value '%d' is above the upper bound." % newvalue)
+					return False
+				if newvalue < _param.getIntLowerBound():
+					self.doErrorDialog("The entered value '%d' is below the lower bound." % newvalue)
+					return False
+			if _param.getIntValue() != newvalue:
+				_param.setIntValue(newvalue)
+				_changed = True
+		elif _param.isReal():
+			newvalue = float(newtext)
+			if _param.isBounded():
+				if newvalue > _param.getRealUpperBound():
+					self.doErrorDialog("The entered value '%f' is above the upper bound." % newvalue)
+					return False
+				if newvalue < _param.getRealLowerBound():
+					self.doErrorDialog("The entered value '%f' is below the lower bound." % newvalue)
+					return False
+			if _param.getRealValue() != newvalue:
+				_param.setRealValue(newvalue)
+				_changed = True
+		elif _param.isStr():
+			newvalue = str(newtext)
+			if _param.getStrValue() != newvalue:
+				_param.setStrValue(newvalue)
+				_changed = True
+
+		if _changed:
+			self.paramstore.set_value(_iter, 1, newvalue)
+			self.paramstore.set_value(_iter, 4, "#FFFFAA")			
+			print "SET OK"
+		else:
+			print "NO CHANGE"
 
 	def create_row_data(self,p):
 		_row = [p.getLabel()];
@@ -927,6 +978,8 @@ class SolverParametersWindow:
 
 		else:
 			raise RuntimeError("invalid type")
+
+		_row.append("white")
 		return _row;
 		
 	def populate(self):
@@ -936,7 +989,7 @@ class SolverParametersWindow:
 			_piter = self.paramstore.append( None, self.create_row_data(i) )
 
 			_path = self.paramstore.get_path(_piter)
-			self.otank[ _path ] = i
+			self.otank[ _path ] = (_piter, i)
 
 	def on_paramsview_row_activated(self,*args,**kwargs):
 		print "EDITED"
@@ -948,7 +1001,8 @@ class SolverParametersWindow:
 		self.do_destroy()
 
 	def on_paramsapply_activate(self,*args,**kwargs):
-		print "SAVE"
+		self.sim.setSolverParameters(self.params);
+		self.do_destroy()
 
 	def on_paramswin_destroy(self,*args,**kwargs):
 		self.do_destroy()

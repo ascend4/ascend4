@@ -1136,7 +1136,7 @@ int slv_switch_solver(slv_system_t sys,int solver)
   return sys->solver;
 }
 
-void slv_set_char_parameter(char **cp, char *newvalue)
+void slv_set_char_parameter(char **cp, CONST char *newvalue)
 {
   if (cp != NULL) {
     if (*cp != NULL) {

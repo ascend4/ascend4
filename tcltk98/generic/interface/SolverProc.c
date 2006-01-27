@@ -685,7 +685,7 @@ int Asc_SolvSetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
       break;
 
     case char_parm:
-      slv_set_char_parameter(&(p.parms[i].info.c.value),(char *)argv[j]);
+      slv_set_char_parameter(&(p.parms[i].info.c.value),(CONST char *)argv[j]);
       break;
     default:
       FPRINTF(ASCERR,  "slv_get_parmsnew found unrecognized");
