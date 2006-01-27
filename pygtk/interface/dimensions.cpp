@@ -51,7 +51,7 @@ Dimensions::operator<(const Dimensions &d1) const{
 
 const bool 
 Dimensions::operator==(const Dimensions &d1) const{
-	error_reporter_start(ASC_USER_NOTE,__FILE__,__LINE__);
+	ERROR_REPORTER_START_HERE(ASC_USER_NOTE);
 	FPRINTF(stderr,"Comparing dimensions; this=");
 	PrintDimen(stderr,d);
 	FPRINTF(stderr,", d1=");
