@@ -172,6 +172,9 @@ Rankine = {R};
 USD = {currency};
 CR = {currency};
 credits= {currency};
+(* the following two are historic and should not be used in future *)
+USdollar = {currency};
+US = {currency};
 
 (*  reciprocal time (frequency) *)
 
