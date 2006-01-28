@@ -1735,6 +1735,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 	      <property name="hover_expand">False</property>
 	      <signal name="row_activated" handler="on_paramsview_row_activated" last_modification_time="Fri, 27 Jan 2006 05:56:55 GMT"/>
 	      <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row" last_modification_time="Fri, 27 Jan 2006 07:21:36 GMT"/>
+	      <signal name="button_press_event" handler="on_paramsview_button_press_event" last_modification_time="Sat, 28 Jan 2006 01:46:18 GMT"/>
 	    </widget>
 	  </child>
 	</widget>

@@ -24,6 +24,8 @@ import ascend
 
 GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/ascend.glade"
 
+CHANGED_COLOR = "#FFFF88"
+
 #======================================
 # Browser is the main ASCEND library/model browser window
 
@@ -131,6 +133,8 @@ class Browser:
 
 		#--------------------
 		# set up the context menu for fixing/freeing vars
+
+		# TODO import this menu from Glade (this code is a PITA)
 
 		self.treecontext = gtk.Menu();
 		self.fixmenuitem = gtk.ImageMenuItem("_Fix",True);
@@ -905,6 +909,69 @@ class SolverParametersWindow:
 
 		self.populate()
 
+
+	def on_paramsview_row_activated(self,treeview,path,view_column,*args,**kwargs):
+		# get back the object we just clicked
+
+		if not self.otank.has_key(path):
+			raise RuntimeError("cell_edited_callback: invalid path '%s'" % path)
+			return
+		
+		_iter,_param = self.otank[path]
+
+		if _param.isBool():
+			newvalue = not _param.getBoolValue()
+			_param.setBoolValue(newvalue)
+			self.paramstore.set_value(_iter,1,newvalue)
+			self.paramstore.set_value(_iter,4, CHANGED_COLOR)
+
+	def on_paramsview_button_press_event(self,widget,event):
+		if event.button == 1:
+			_x = int(event.x)
+			_y = int(event.y)
+			_time = event.time
+			_pathinfo = self.paramsview.get_path_at_pos(_x, _y)
+			if _pathinfo != None:
+				_path, _col, _cellx, _celly = _pathinfo
+				_iter, _param = self.otank[_path]
+				if _param.isStr():
+					print "EDITING STRING..."
+					_menu = gtk.Menu();
+					_head = gtk.ImageMenuItem("Options",True)
+					_head.show()
+					_head.set_sensitive(False)
+					_img = gtk.Image()
+					_img.set_from_file('icons/folder-open.png')
+					_head.set_image(_img)
+					_menu.append(_head)
+					_sep = gtk.SeparatorMenuItem(); _sep.show()
+					_menu.append(_sep);
+
+					_item = None;
+					for i in _param.getStrOptions():
+						print i;
+						_item = gtk.RadioMenuItem(group=_item, label=i);
+						if i == _param.getStrValue():
+							_item.set_active(True)
+						else:
+							_item.set_active(False)
+						_item.show()
+						_item.connect('activate', self.on_menu_activate, _param, _iter, i);
+						_menu.append(_item)
+									
+					_menu.show()
+					_menu.popup(None, None, None, event.button, _time)
+
+	def on_menu_activate(self, menuitem, param, iter, newvalue):
+		print "NEW VALUE FOR",param.getLabel(),"IS",newvalue;
+		if param.getStrValue() != newvalue:
+			param.setStrValue(newvalue)
+			self.paramstore.set_value(iter, 1, newvalue)
+			self.paramstore.set_value(iter, 4, CHANGED_COLOR)
+		else:
+			print "NOT CHANGED"
+		
+
 	def on_paramsview_edited(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
 		path = tuple( map(int,path.split(":")) )
@@ -950,7 +1017,7 @@ class SolverParametersWindow:
 
 		if _changed:
 			self.paramstore.set_value(_iter, 1, newvalue)
-			self.paramstore.set_value(_iter, 4, "#FFFFAA")			
+			self.paramstore.set_value(_iter, 4, CHANGED_COLOR)			
 			print "SET OK"
 		else:
 			print "NO CHANGE"
@@ -958,7 +1025,7 @@ class SolverParametersWindow:
 	def create_row_data(self,p):
 		_row = [p.getLabel()];
 		if p.isStr():
-			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", True]);
+			_row.extend([p.getStrValue(), str(len(p.getStrOptions()))+" options", False]);
 		elif p.isBool():
 			if p.getBoolValue():
 				_val = 'True'
@@ -990,9 +1057,6 @@ class SolverParametersWindow:
 
 			_path = self.paramstore.get_path(_piter)
 			self.otank[ _path ] = (_piter, i)
-
-	def on_paramsview_row_activated(self,*args,**kwargs):
-		print "EDITED"
 
 	def show(self):
 		self.window.show()
