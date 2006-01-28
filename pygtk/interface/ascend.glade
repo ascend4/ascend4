@@ -1016,7 +1016,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 		      <signal name="activate" handler="reload_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image32">
+			<widget class="GtkImage" id="image35">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -1065,7 +1065,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 		      <signal name="activate" handler="solve_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image33">
+			<widget class="GtkImage" id="image36">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -1086,7 +1086,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 		      <signal name="activate" handler="check_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image34">
+			<widget class="GtkImage" id="image37">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -1119,12 +1119,12 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 		  <child>
 		    <widget class="GtkImageMenuItem" id="preferences">
 		      <property name="visible">True</property>
-		      <property name="label" translatable="yes">_Preferences</property>
+		      <property name="label" translatable="yes">Solver _Parameters...</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="preferences_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image35">
+			<widget class="GtkImage" id="image38">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -1690,6 +1690,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 
 <widget class="GtkWindow" id="paramswin">
   <property name="visible">True</property>
+  <property name="has_default">True</property>
   <property name="title" translatable="yes">Solver Parameters</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
@@ -1714,6 +1715,69 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
       <property name="spacing">0</property>
 
       <child>
+	<widget class="GtkHBox" id="hbox6">
+	  <property name="visible">True</property>
+	  <property name="homogeneous">False</property>
+	  <property name="spacing">0</property>
+
+	  <child>
+	    <widget class="GtkLabel" id="label11">
+	      <property name="visible">True</property>
+	      <property name="label" translatable="yes">&lt;b&gt;Current solver:&lt;/b&gt; </property>
+	      <property name="use_underline">False</property>
+	      <property name="use_markup">True</property>
+	      <property name="justify">GTK_JUSTIFY_LEFT</property>
+	      <property name="wrap">False</property>
+	      <property name="selectable">False</property>
+	      <property name="xalign">0.5</property>
+	      <property name="yalign">0.5</property>
+	      <property name="xpad">0</property>
+	      <property name="ypad">0</property>
+	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+	      <property name="width_chars">-1</property>
+	      <property name="single_line_mode">False</property>
+	      <property name="angle">0</property>
+	    </widget>
+	    <packing>
+	      <property name="padding">0</property>
+	      <property name="expand">False</property>
+	      <property name="fill">False</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkLabel" id="solvername">
+	      <property name="visible">True</property>
+	      <property name="label" translatable="yes">solvername	</property>
+	      <property name="use_underline">False</property>
+	      <property name="use_markup">False</property>
+	      <property name="justify">GTK_JUSTIFY_LEFT</property>
+	      <property name="wrap">False</property>
+	      <property name="selectable">False</property>
+	      <property name="xalign">0.5</property>
+	      <property name="yalign">0.5</property>
+	      <property name="xpad">0</property>
+	      <property name="ypad">0</property>
+	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+	      <property name="width_chars">-1</property>
+	      <property name="single_line_mode">False</property>
+	      <property name="angle">0</property>
+	    </widget>
+	    <packing>
+	      <property name="padding">0</property>
+	      <property name="expand">False</property>
+	      <property name="fill">False</property>
+	    </packing>
+	  </child>
+	</widget>
+	<packing>
+	  <property name="padding">14</property>
+	  <property name="expand">False</property>
+	  <property name="fill">True</property>
+	</packing>
+      </child>
+
+      <child>
 	<widget class="GtkScrolledWindow" id="scrolledwindow14">
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
@@ -1723,26 +1787,118 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 	  <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
 
 	  <child>
-	    <widget class="GtkTreeView" id="paramsview">
+	    <widget class="GtkViewport" id="viewport3">
 	      <property name="visible">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="headers_visible">True</property>
-	      <property name="rules_hint">False</property>
-	      <property name="reorderable">False</property>
-	      <property name="enable_search">True</property>
-	      <property name="fixed_height_mode">False</property>
-	      <property name="hover_selection">False</property>
-	      <property name="hover_expand">False</property>
-	      <signal name="row_activated" handler="on_paramsview_row_activated" last_modification_time="Fri, 27 Jan 2006 05:56:55 GMT"/>
-	      <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row" last_modification_time="Fri, 27 Jan 2006 07:21:36 GMT"/>
-	      <signal name="button_press_event" handler="on_paramsview_button_press_event" last_modification_time="Sat, 28 Jan 2006 01:46:18 GMT"/>
+	      <property name="shadow_type">GTK_SHADOW_IN</property>
+
+	      <child>
+		<widget class="GtkTreeView" id="paramsview">
+		  <property name="visible">True</property>
+		  <property name="can_focus">True</property>
+		  <property name="headers_visible">True</property>
+		  <property name="rules_hint">False</property>
+		  <property name="reorderable">False</property>
+		  <property name="enable_search">True</property>
+		  <property name="fixed_height_mode">False</property>
+		  <property name="hover_selection">False</property>
+		  <property name="hover_expand">False</property>
+		  <signal name="row_activated" handler="on_paramsview_row_activated" last_modification_time="Fri, 27 Jan 2006 05:56:55 GMT"/>
+		  <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row" last_modification_time="Fri, 27 Jan 2006 07:21:36 GMT"/>
+		  <signal name="button_press_event" handler="on_paramsview_button_press_event" last_modification_time="Sat, 28 Jan 2006 01:46:18 GMT"/>
+		  <signal name="cursor_changed" handler="on_paramsview_cursor_changed" last_modification_time="Sat, 28 Jan 2006 03:40:50 GMT"/>
+		</widget>
+	      </child>
 	    </widget>
 	  </child>
 	</widget>
 	<packing>
-	  <property name="padding">7</property>
+	  <property name="padding">0</property>
 	  <property name="expand">True</property>
 	  <property name="fill">True</property>
+	</packing>
+      </child>
+
+      <child>
+	<widget class="GtkHBox" id="hbox4">
+	  <property name="visible">True</property>
+	  <property name="homogeneous">False</property>
+	  <property name="spacing">8</property>
+	</widget>
+	<packing>
+	  <property name="padding">0</property>
+	  <property name="expand">False</property>
+	  <property name="fill">True</property>
+	</packing>
+      </child>
+
+      <child>
+	<widget class="GtkFrame" id="frame2">
+	  <property name="visible">True</property>
+	  <property name="label_xalign">0</property>
+	  <property name="label_yalign">0.5</property>
+	  <property name="shadow_type">GTK_SHADOW_NONE</property>
+
+	  <child>
+	    <widget class="GtkAlignment" id="alignment2">
+	      <property name="visible">True</property>
+	      <property name="xalign">0.5</property>
+	      <property name="yalign">0.5</property>
+	      <property name="xscale">1</property>
+	      <property name="yscale">1</property>
+	      <property name="top_padding">0</property>
+	      <property name="bottom_padding">0</property>
+	      <property name="left_padding">12</property>
+	      <property name="right_padding">0</property>
+
+	      <child>
+		<widget class="GtkLabel" id="paramdescription">
+		  <property name="visible">True</property>
+		  <property name="label" translatable="yes">paramdescription</property>
+		  <property name="use_underline">False</property>
+		  <property name="use_markup">False</property>
+		  <property name="justify">GTK_JUSTIFY_LEFT</property>
+		  <property name="wrap">False</property>
+		  <property name="selectable">False</property>
+		  <property name="xalign">0</property>
+		  <property name="yalign">0.5</property>
+		  <property name="xpad">10</property>
+		  <property name="ypad">10</property>
+		  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+		  <property name="width_chars">-1</property>
+		  <property name="single_line_mode">False</property>
+		  <property name="angle">0</property>
+		</widget>
+	      </child>
+	    </widget>
+	  </child>
+
+	  <child>
+	    <widget class="GtkLabel" id="label13">
+	      <property name="visible">True</property>
+	      <property name="label" translatable="yes">Parameter info</property>
+	      <property name="use_underline">False</property>
+	      <property name="use_markup">True</property>
+	      <property name="justify">GTK_JUSTIFY_LEFT</property>
+	      <property name="wrap">False</property>
+	      <property name="selectable">False</property>
+	      <property name="xalign">0.5</property>
+	      <property name="yalign">0.5</property>
+	      <property name="xpad">0</property>
+	      <property name="ypad">0</property>
+	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+	      <property name="width_chars">-1</property>
+	      <property name="single_line_mode">False</property>
+	      <property name="angle">0</property>
+	    </widget>
+	    <packing>
+	      <property name="type">label_item</property>
+	    </packing>
+	  </child>
+	</widget>
+	<packing>
+	  <property name="padding">8</property>
+	  <property name="expand">False</property>
+	  <property name="fill">False</property>
 	</packing>
       </child>
 
@@ -1760,8 +1916,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
-	      <signal name="activate" handler="on_paramsapply_activate" last_modification_time="Fri, 27 Jan 2006 04:31:02 GMT"/>
-	      <signal name="clicked" handler="on_paramsapply_activate" last_modification_time="Fri, 27 Jan 2006 05:26:20 GMT"/>
+	      <signal name="clicked" handler="on_paramsapply_clicked" last_modification_time="Sat, 28 Jan 2006 04:38:49 GMT"/>
 	    </widget>
 	    <packing>
 	      <property name="padding">0</property>
@@ -1779,8 +1934,7 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
-	      <signal name="activate" handler="on_paramscancel_activate" last_modification_time="Fri, 27 Jan 2006 05:24:59 GMT"/>
-	      <signal name="clicked" handler="on_paramscancel_activate" last_modification_time="Fri, 27 Jan 2006 05:26:10 GMT"/>
+	      <signal name="clicked" handler="on_paramscancel_clicked" last_modification_time="Sat, 28 Jan 2006 04:38:40 GMT"/>
 	    </widget>
 	    <packing>
 	      <property name="padding">0</property>
@@ -1791,22 +1945,9 @@ ASCEND was created by Art Westerberg, Ben Allan, Tom Epperly, Kirk Abbott, and m
 	  </child>
 	</widget>
 	<packing>
-	  <property name="padding">8</property>
-	  <property name="expand">False</property>
-	  <property name="fill">False</property>
-	</packing>
-      </child>
-
-      <child>
-	<widget class="GtkHBox" id="hbox4">
-	  <property name="visible">True</property>
-	  <property name="homogeneous">False</property>
-	  <property name="spacing">8</property>
-	</widget>
-	<packing>
 	  <property name="padding">0</property>
 	  <property name="expand">False</property>
-	  <property name="fill">True</property>
+	  <property name="fill">False</property>
 	</packing>
       </child>
     </widget>
