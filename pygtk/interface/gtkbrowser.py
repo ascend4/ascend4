@@ -890,6 +890,7 @@ class SolverParametersWindow:
 		self.window = _xml.get_widget("paramswin")
 		self.paramdescription = _xml.get_widget("paramdescription")
 		self.solvername = _xml.get_widget("solvername")
+
 		_xml.signal_autoconnect(self)
 
 		self.solvername.set_text(self.sim.getSolver().getName())
@@ -1015,10 +1016,10 @@ class SolverParametersWindow:
 			newvalue = int(newtext)
 			if _param.isBounded():
 				if newvalue > _param.getIntUpperBound():
-					self.doErrorDialog("The entered value '%d' is above the upper bound." % newvalue)
+					self.doErrorDialog()
 					return False
 				if newvalue < _param.getIntLowerBound():
-					self.doErrorDialog("The entered value '%d' is below the lower bound." % newvalue)
+					self.doErrorDialog()
 					return False
 			if _param.getIntValue() != newvalue:
 				_param.setIntValue(newvalue)
@@ -1027,10 +1028,10 @@ class SolverParametersWindow:
 			newvalue = float(newtext)
 			if _param.isBounded():
 				if newvalue > _param.getRealUpperBound():
-					self.doErrorDialog("The entered value '%f' is above the upper bound." % newvalue)
+					self.doErrorDialog()
 					return False
 				if newvalue < _param.getRealLowerBound():
-					self.doErrorDialog("The entered value '%f' is below the lower bound." % newvalue)
+					self.doErrorDialog()
 					return False
 			if _param.getRealValue() != newvalue:
 				_param.setRealValue(newvalue)
@@ -1046,7 +1047,6 @@ class SolverParametersWindow:
 			self.paramstore.set_value(_iter, 4, CHANGED_COLOR)			
 		else:
 			print "NO CHANGE"
-		
 
 	def create_row_data(self,p):
 		_row = [p.getLabel()];
@@ -1067,7 +1067,7 @@ class SolverParametersWindow:
 			if not p.isBounded():
 				_row.extend([str(p.getIntValue()), "", True])
 			else:
-				_row.extend([str(p.getIntValue()), "[ "+str(p.getIntLowerBound())+", "+str(p.getIntLowerBound())+" ]", True])
+				_row.extend([str(p.getIntValue()), "[ "+str(p.getIntLowerBound())+", "+str(p.getIntUpperBound())+" ]", True])
 
 		else:
 			raise RuntimeError("invalid type")
@@ -1094,6 +1094,18 @@ class SolverParametersWindow:
 					_path = self.paramstore.get_path(_piter)
 					self.otank[ _path ] = (_piter, _param)
 				_pagenum = _pagenum + 1
+
+	def doErrorDialog(self,msg=None):
+		_dialog = gtk.Dialog("Out of bounds", parent=self.window, flags=gtk.DIALOG_MODAL, buttons=(gtk.STOCK_OK, gtk.RESPONSE_OK) )	
+		if msg:
+			_label = gtk.Label(msg)
+		else:
+			_label = gtk.Label("Please enter a value that is within the\ndisplayed upper and lower bounds")
+
+		_dialog.vbox.pack_start(_label, True, True, 0)
+		_label.show()
+		_dialog.run()
+		_dialog.destroy()
 
 	def show(self):
 		self.window.show()
