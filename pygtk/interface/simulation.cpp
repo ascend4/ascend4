@@ -318,6 +318,7 @@ Simulation::solve(Solver solver){
 			lastupdate = tm_cpu_time();
 		}
 	}
+	double elapsed = tm_cpu_time() - starttime;
 
 	if(status.ok){
 		cerr << "... DONE SOLVING SYSTEM" << endl;
@@ -325,17 +326,17 @@ Simulation::solve(Solver solver){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver failed");
 	}
 
-	cerr << "SOLVER PERFORMED " << status.iteration << " ITERATIONS IN " << (tm_cpu_time() - starttime) << "s" << endl;
+	cerr << "SOLVER PERFORMED " << status.iteration << " ITERATIONS IN " << elapsed << "s" << endl;
 
 	if(status.iteration_limit_exceeded){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Exceeded interation limit");
 	}
 
 	if(status.converged){
-		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations, %3.2e s"
-			,status.iteration,status.cpu_elapsed);
+		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations (%.2f s)"
+			,status.iteration,elapsed);
 	}else{
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged after %d iterations.",status.iteration);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged after %d iterations (%.2f s).",status.iteration,elapsed);
 	}
 
 }
