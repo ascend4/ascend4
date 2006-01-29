@@ -49,6 +49,8 @@ public:
 	~IncidenceMatrix();
 
 	const std::vector<IncidencePoint> &getIncidenceData();
+	const int &getNumRows() const;
+	const int &getNumCols() const;
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H

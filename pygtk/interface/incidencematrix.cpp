@@ -81,6 +81,16 @@ IncidenceMatrix::buildPlotData(){
 	is_built = TRUE;
 }
 
+const int &
+IncidenceMatrix::getNumRows() const{
+	return i.nprow;
+}
+
+const int &
+IncidenceMatrix::getNumCols() const{
+	return i.npcol;
+}
+
 const vector<IncidencePoint> &
 IncidenceMatrix::getIncidenceData(){
 	cerr << "GET INCIDENCE DATA" << endl;
