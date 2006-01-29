@@ -128,4 +128,6 @@ class IncidenceMatrix{
 public:
 	explicit IncidenceMatrix(Simulation &);
 	const std::vector<IncidencePoint> &getIncidenceData();
+	const int &getNumRows() const;
+	const int &getNumCols() const;
 };

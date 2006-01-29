@@ -457,10 +457,18 @@ class Browser:
 		return False
 
 	def on_tools_sparsity_click(self,*args):
+		import pylab;
 		self.reporter.reportNote("Preparing sparsity matrix...")
 		_im = self.sim.getIncidenceMatrix();
 		_id = _im.getIncidenceData();
-		print repr(_id);
+		
+		data = pylab.zeros((_im.getNumCols(), _im.getNumRows()))*0.
+		for i in _id:
+			data[i.col, i.row] = int(i.type)
+
+		pylab.spy2(data)
+		pylab.ion()
+		pylab.show(False)			
 
 #   --------------------------------------------
 #   MODULE LIST
