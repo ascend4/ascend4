@@ -26,6 +26,7 @@
 #include "plot.h"
 #include "curve.h"
 #include "solverparameters.h"
+#include "incidencematrix.h"
 %}
 
 // All STL runtime_errors caught to Python
@@ -96,7 +97,7 @@ public:
 %template(StringVector) std::vector<std::string>;
 
 %rename(Instance) Instanc;
-%rename(Name) Nam;
+%rename(Name) Nam;#include "incidencematrix.h"
 %rename(getSetIntValue) Instanc::getSetValue<long>;
 %rename(getSetStringValue) Instanc::getSetValue<SymChar>;
 %rename(Units) UnitsM;

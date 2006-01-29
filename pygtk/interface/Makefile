@@ -26,7 +26,8 @@ _smp_mflags = -j2
 CLASSES = library type module symchar instance variable method name \
 	reporter simulation set units dimensions extmethod \
 	solver curve plot \
-	solverparameters solverparameter solverparameteriterator
+	solverparameters solverparameter solverparameteriterator \
+	incidencematrix
 
 OBJS = $(CLASSES:%=%.o)
 HDRS = $(CLASSES:%=%.h)

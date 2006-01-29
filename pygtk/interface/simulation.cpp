@@ -50,6 +50,7 @@ extern "C"{
 #include "solver.h"
 #include "solverparameters.h"
 #include "name.h"
+#include "incidencematrix.h"
 
 /**
 	Create an instance of a type (call compiler etc)
@@ -406,3 +407,13 @@ Simulation::setSolverParameters(SolverParameters &P){
 	slv_set_parameters(sys, &(P.getInternalType()));
 }
 
+slv_system_structure *
+Simulation::getSystem(){
+	if(!sys)throw runtime_error("Can't getSystem: simulation not yet built");
+	return sys;
+}
+
+IncidenceMatrix
+Simulation::getIncidenceMatrix(){
+	return IncidenceMatrix(*this);
+}
