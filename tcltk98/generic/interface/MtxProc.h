@@ -1,9 +1,8 @@
 /*
- *  MtxProc.h
+ *  Incidence matrix routines.
  *  by Kirk Abbott and Ben Allan
  *  Created: 1/94
  *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: MtxProc.h,v $
  *  Date last modified: $Date: 2003/08/23 18:43:07 $
  *  Last modified by: $Author: ballan $
  *

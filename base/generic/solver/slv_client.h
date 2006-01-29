@@ -31,17 +31,17 @@
 	Requires:
 	#include "utilities/ascConfig.h"
 	#include "compiler/instance_enum.h"
-	#include "var.h"
-	#include "rel.h"
-	#include "discrete.h"
-	#include "conditional.h"
-	#include "logrel.h"
-	#include "bnd.h"
-	#include "linsol.h"
-	#include "linsolqr.h"
-	#include "slv_common.h"
-	#include "slv_types.h"
-
+	#include "solver/var.h"
+	#include "solver/rel.h"
+	#include "solver/discrete.h"
+	#include "solver/conditional.h"
+	#include "solver/logrel.h"
+	#include "solver/bnd.h"
+	#include "solver/linsol.h"
+	#include "solver/linsolqr.h"
+	#include "solver/slv_common.h"
+	#include "solver/slv_types.h"
+	... some mtx.h files required as well?
 */
 
 /** @page slv SLV Solver Interface
