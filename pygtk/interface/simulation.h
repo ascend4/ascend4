@@ -17,6 +17,7 @@ extern "C"{
 
 class Solver;
 class SolverParameters;
+class IncidenceMatrix;
 
 #ifndef ASCEND_INCDIR
 #define ASCEND_INCDIR "/home/john/src/ascend/trunk/base/generic/lib"
@@ -43,6 +44,8 @@ class SolverParameters;
 	solving, inspecting, etc, rather than the simulation instance itself.
 */
 class Simulation : public Instanc{
+	friend class IncidenceMatrix;
+
 private:
 	Instanc simroot;
 	slv_system_structure *sys;
@@ -56,6 +59,9 @@ private:
 	std::string *bin_cmd;
 	std::string *bin_rm;
 
+protected:
+	slv_system_structure *getSystem();
+	
 public:
 	explicit Simulation(Instance *i, const SymChar &name);
 	Simulation(const Simulation &);
@@ -75,6 +81,8 @@ public:
 
 	SolverParameters getSolverParameters() const;
 	void setSolverParameters(SolverParameters &);
+
+	IncidenceMatrix getIncidenceMatrix();
 };
 
 

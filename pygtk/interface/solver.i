@@ -25,6 +25,8 @@ public:
 	void solve(Solver s);
 	SolverParameters getSolverParameters() const;
 	void setSolverParameters(SolverParameters&);
+
+	IncidenceMatrix getIncidenceMatrix();
 };
 
 // SOLVE PARAMETERS
@@ -98,3 +100,32 @@ public:
 	const std::string toString() const;
 };
 
+/* Incidence matrix stuff */
+typedef enum{
+	IM_NULL=0, IM_ACTIVE_FIXED, IM_ACTIVE_FREE, IM_DORMANT_FIXED, IM_DORMANT_FREE
+} IncidencePointType;
+
+
+class IncidencePoint{
+public:
+	IncidencePoint(const IncidencePoint &);
+
+	int row;
+	int col;
+	IncidencePointType type;
+};
+
+%extend IncidencePoint{
+	%pythoncode{
+		def __repr__(self):
+			return str([ self.row, self.col, int(self.type) ]);
+	}
+}
+
+%template(IncidencePointVector) std::vector<IncidencePoint>;
+
+class IncidenceMatrix{
+public:
+	explicit IncidenceMatrix(Simulation &);
+	const std::vector<IncidencePoint> &getIncidenceData();
+};
