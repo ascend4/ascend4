@@ -30,39 +30,41 @@
  */
 
 /** @file
- *  Variable module of the SLV solver.
- *  <pre>
- *  Contents:     Variable module (ascend)
- *
- *  Authors:      Karl Westerberg
- *                Joseph Zaher
- *
- *  Dates:        06/90 - original version
- *                01/94 - added var_make_name() to create a copy of the
- *                        instance name
- *                04/94 - added var_apply_filter() which uses the new
- *                        var_filter_t data structure for perfoming all
- *                        variable filtering needs (eliminating the
- *                        filter module)
- *                08/94 - added var_BackendTokens_to_vars. BAA.
- *
- *  Description:  This is the ascend version of the var module.  This
- *                version should be used by any user who receives his/her
- *                equations indirectly from an instance tree created by the
- *                ASCEND compiler.
- *
- *                The idea of a var makes no sense outside the context of
- *                a slv_system_t, so some of the functions here may require
- *                the passing of a slv_system_t with the var.
- *
- *  Requires:     #include <stdio.h>
- *                #include "utilities/ascConfig.h"
- *                #include "slv_types.h"
- *  </pre>
- *  @todo At present there is some insanity about asking the instance tree
- *        vs asking our data structure about the flag values - This needs to
- *        be fixed (see longer BAA comment in solver/var.h).
- */
+	Variable module of the SLV solver.
+	<pre>
+	Contents:     Variable module (ascend)
+	Authors:      Karl Westerberg
+	              Joseph Zaher
+
+	Dates:        06/90 - original version
+	              01/94 - added var_make_name() to create a copy of the
+	                      instance name
+	              04/94 - added var_apply_filter() which uses the new
+	                      var_filter_t data structure for perfoming all
+	                      variable filtering needs (eliminating the
+	                      filter module)
+	              08/94 - added var_BackendTokens_to_vars. BAA.
+
+	Description:  This is the ascend version of the var module.  This
+	              version should be used by any user who receives his/her
+	              equations indirectly from an instance tree created by the
+	              ASCEND compiler.
+
+	              The idea of a var makes no sense outside the context of
+	              a slv_system_t, so some of the functions here may require
+	              the passing of a slv_system_t with the var.
+
+	Requires: 
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "solver/slv_types.h"
+
+	</pre>
+
+	@todo At present there is some insanity about asking the instance tree
+	      vs asking our data structure about the flag values - This needs to
+	      be fixed (see longer BAA comment in solver/var.h).
+*/
 
 #ifndef ASC_VAR_H
 #define ASC_VAR_H

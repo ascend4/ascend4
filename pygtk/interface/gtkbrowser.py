@@ -456,6 +456,9 @@ class Browser:
 		print "GTK QUIT"
 		return False
 
+	def on_tools_sparsity_click(self,*args):
+		self.reporter.reportNote("Preparing sparsity matrix...")
+
 #   --------------------------------------------
 #   MODULE LIST
 
