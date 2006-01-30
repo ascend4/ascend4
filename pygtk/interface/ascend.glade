@@ -59,7 +59,7 @@
 		      <signal name="activate" handler="reload_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image74">
+			<widget class="GtkImage" id="image87">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -108,7 +108,7 @@
 		      <signal name="activate" handler="solve_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image75">
+			<widget class="GtkImage" id="image88">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -129,7 +129,7 @@
 		      <signal name="activate" handler="check_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image76">
+			<widget class="GtkImage" id="image89">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -143,12 +143,23 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkMenuItem" id="sparsity">
+		    <widget class="GtkImageMenuItem" id="sparsity">
 		      <property name="visible">True</property>
-		      <property name="tooltip" translatable="yes">View the sparsity pattern from the solver</property>
-		      <property name="label" translatable="yes">Sp_arsity pattern...</property>
+		      <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
+		      <property name="label" translatable="yes">_Incidence matrix...</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="on_tools_sparsity_click" last_modification_time="Sun, 29 Jan 2006 07:29:07 GMT"/>
+
+		      <child internal-child="image">
+			<widget class="GtkImage" id="image90">
+			  <property name="visible">True</property>
+			  <property name="pixbuf">icons/incidence.png</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			</widget>
+		      </child>
 		    </widget>
 		  </child>
 
@@ -177,7 +188,7 @@
 		      <signal name="activate" handler="preferences_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image77">
+			<widget class="GtkImage" id="image91">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -211,7 +222,7 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image78">
+			<widget class="GtkImage" id="image92">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
 			  <property name="icon_size">1</property>

@@ -7,6 +7,24 @@ using namespace std;
 #include "variable.h"
 #include "relation.h"
 
+extern "C"{
+#include <utilities/ascConfig.h>
+#include <compiler/instance_enum.h>
+
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/mtx.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_common.h>
+#include <solver/slv_types.h>
+#include <solver/slv_client.h>
+}
+
 IncidencePoint::IncidencePoint(const int&row, const int &col, const IncidencePointType &type) : row(row), col(col), type(type){
 	// constructor, IncidencePoint
 }
@@ -121,5 +139,19 @@ IncidenceMatrix::getRelation(const int &row) const{
 	struct rel_relation *rel = i.rlist[rindex];
 	return Relation(&sim, rel);
 }
+
+const int
+IncidenceMatrix::getBlockRow(const int &row) const{
+	if(!is_built)throw runtime_error("Not built");
+	if(row < 0 || row >= getNumRows())throw runtime_error("Row out of range");
+	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
+	for(int i=0; i < bb->nblocks; ++i){
+		if(row >= bb->block[i].row.low && row <= bb->block[i].row.high){
+			return i;
+		}
+	}
+	return -1;
+}
+		
 
 
