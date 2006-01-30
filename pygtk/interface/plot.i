@@ -26,6 +26,7 @@ public:
 	%pythoncode{
 		def show(self,mainloop=True):
 			import pylab
+			pylab.ioff()
 			pylab.figure()
 			pylab.title(self.getTitle())
 			print "XLabel:",self.getXLabel()
@@ -46,8 +47,8 @@ public:
 			pylab.legend(_l)
 
 			print "Mainloop:",mainloop
-			pylab.show(mainloop)
 			pylab.ion()
+			pylab.show(mainloop)
 			
 			# /*
 			# if self.getXLow() and self.getXHigh():

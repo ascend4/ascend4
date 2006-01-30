@@ -57,9 +57,10 @@
 		      <property name="label" translatable="yes">_Reload</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="reload_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+		      <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image87">
+			<widget class="GtkImage" id="image97">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -106,9 +107,10 @@
 		      <property name="label" translatable="yes">Sol_ve</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="solve_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+		      <accelerator key="F9" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image88">
+			<widget class="GtkImage" id="image98">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -127,9 +129,10 @@
 		      <property name="label" translatable="yes">_Check</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="check_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+		      <accelerator key="F7" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image89">
+			<widget class="GtkImage" id="image99">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -149,11 +152,12 @@
 		      <property name="label" translatable="yes">_Incidence matrix...</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="on_tools_sparsity_click" last_modification_time="Sun, 29 Jan 2006 07:29:07 GMT"/>
+		      <accelerator key="I" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image90">
+			<widget class="GtkImage" id="image100">
 			  <property name="visible">True</property>
-			  <property name="pixbuf">icons/incidence.png</property>
+			  <property name="pixbuf">incidence.png</property>
 			  <property name="xalign">0.5</property>
 			  <property name="yalign">0.5</property>
 			  <property name="xpad">0</property>
@@ -177,6 +181,7 @@
 		      <property name="use_underline">True</property>
 		      <property name="active">True</property>
 		      <signal name="activate" handler="on_tools_auto_toggle" last_modification_time="Sun, 29 Jan 2006 06:55:49 GMT"/>
+		      <accelerator key="A" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 		    </widget>
 		  </child>
 
@@ -186,9 +191,10 @@
 		      <property name="label" translatable="yes">Solver _Parameters...</property>
 		      <property name="use_underline">True</property>
 		      <signal name="activate" handler="preferences_click" last_modification_time="Tue, 24 Jan 2006 02:52:29 GMT"/>
+		      <accelerator key="F11" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image91">
+			<widget class="GtkImage" id="image101">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -222,7 +228,7 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image92">
+			<widget class="GtkImage" id="image102">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
 			  <property name="icon_size">1</property>
