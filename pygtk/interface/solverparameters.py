@@ -1,9 +1,18 @@
+import pygtk
+pygtk.require('2.0')
+import gtk
+import gtk.glade
+import pango
+
+CHANGED_COLOR = "#FFFF88"
+SOLVERPARAM_BOOL_TRUE = "Yes"
+SOLVERPARAM_BOOL_FALSE = "No"
 
 #======================================================
 # SOLVER PARAMETERS WINDOW
 
 class SolverParametersWindow:
-	def __init__(self,sim,reporter):
+	def __init__(self,sim,reporter,GLADE_FILE):
 		self.sim = sim
 		self.params = self.sim.getSolverParameters();
 		

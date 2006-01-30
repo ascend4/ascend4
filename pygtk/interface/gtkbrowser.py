@@ -27,10 +27,6 @@ import ascend
 
 GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/ascend.glade"
 
-CHANGED_COLOR = "#FFFF88"
-SOLVERPARAM_BOOL_TRUE = "Yes"
-SOLVERPARAM_BOOL_FALSE = "No"
-
 ESCAPE_KEY = 65307
 
 HELP_ROOT = None
@@ -462,9 +458,9 @@ class Browser:
 		_im = self.sim.getIncidenceMatrix();
 		_id = _im.getIncidenceData();
 		
-		data = pylab.zeros((_im.getNumCols(), _im.getNumRows()))*0.
+		data = pylab.zeros((_im.getNumRows(), _im.getNumCols(), ))*0.
 		for i in _id:
-			data[i.col, i.row] = int(i.type)
+			data[i.row, i.col] = int(i.type)
 
 		pylab.spy2(data)
 		pylab.ion()
@@ -780,7 +776,7 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No simulation created yet!");
 		
-		_paramswin = SolverParametersWindow(self.sim, self.reporter)
+		_paramswin = SolverParametersWindow(self.sim, self.reporter, GLADE_FILE)
 		_paramswin.show()
 
 	def methodrun_click(self,*args):
