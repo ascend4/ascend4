@@ -40,8 +40,8 @@
  *  </pre>
  */
 
-#ifndef __INSTANCE_IO_H_SEEN__
-#define __INSTANCE_IO_H_SEEN__
+#ifndef ASC_INSTANCE_IO_H
+#define ASC_INSTANCE_IO_H
 
 /**
  *  struct NameNode is used by the AllPaths() and WriteAliases() routines to
@@ -418,5 +418,5 @@ extern int ArrayIsModel(struct Instance *i);
  *  or when, 0 OTHERWISE.
  */
 
-#endif /* __INSTANCE_IO_H_SEEN__ */
+#endif /* ASC_INSTANCE_IO_H */
 
