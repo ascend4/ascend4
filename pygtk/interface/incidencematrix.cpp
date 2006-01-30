@@ -5,6 +5,7 @@
 using namespace std;
 
 #include "variable.h"
+#include "relation.h"
 
 IncidencePoint::IncidencePoint(const int&row, const int &col, const IncidencePointType &type) : row(row), col(col), type(type){
 	// constructor, IncidencePoint
@@ -110,6 +111,15 @@ IncidenceMatrix::getVariable(const int &col) const{
 	struct var_variable *var = i.vlist[vindex];
 
 	return Variable(&sim, var);
+}
+
+const Relation
+IncidenceMatrix::getRelation(const int &row) const{
+	if(!is_built)throw runtime_error("Not built");
+	if(row < 0 || row >= getNumRows())throw runtime_error("Row out of range");
+	int rindex = i.pr2e[row];
+	struct rel_relation *rel = i.rlist[rindex];
+	return Relation(&sim, rel);
 }
 
 

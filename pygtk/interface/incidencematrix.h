@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "variable.h"
+#include "relation.h"
 #include "simulation.h"
 
 extern "C"{
@@ -52,6 +54,7 @@ public:
 	const int &getNumRows() const;
 	const int &getNumCols() const;
 	const Variable getVariable(const int &row) const;
+	const Relation getRelation(const int &col) const;
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H
