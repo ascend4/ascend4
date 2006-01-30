@@ -130,4 +130,5 @@ public:
 	const std::vector<IncidencePoint> &getIncidenceData();
 	const int &getNumRows() const;
 	const int &getNumCols() const;
+	const Variable getVariable(const int &col);
 };
