@@ -51,7 +51,7 @@ END default_self;
 
 METHOD specify;
 	FIX A.V_total, A.mdot_water_in;
-	FIX A.Q, A.p;
+	FIX A.Q;
 
 	FIX C.h_out;
 
@@ -68,7 +68,6 @@ METHOD values;
 	A.V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
 	A.mdot_water_in := 0.4 {kg/s};
 	A.Q := 1000 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
-	(*A.p := 20 {bar};*)
 
 	C.h_out := 400 {kJ/kg};
 
@@ -76,9 +75,6 @@ METHOD values;
 	S.T := 400 {K};
 	S.V_vessel := 10000 {L};
 	S.m_gas := 40 {kg};
-
-	(* free *)
-	(* S.p := A.p; *)
 	
 END values;
 
