@@ -1,0 +1,29 @@
+#ifndef ASCXX_RELATION_H
+#define ASCXX_RELATION_H
+
+#include <string>
+
+#include "simulation.h"
+
+extern "C"{
+#include <utilities/ascConfig.h>
+#include <solver/slv_types.h>
+#include <solver/rel.h>
+}
+
+class Relation : public Instance{
+
+private:
+	Simulation *sim;
+	struct rel_relation *rel;
+	
+public:
+	Relation();
+	Relation(const Relation &old);
+	Relation(Simulation *sim, rel_relation *rel);
+
+	const std::string getName() const;
+
+};
+
+#endif /* ASCXX_RELATION_H */

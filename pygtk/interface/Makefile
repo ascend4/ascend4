@@ -23,8 +23,9 @@ LDFLAGS = -g -lm -lc -lstdc++
 # Are you on a dual processor machine?
 _smp_mflags = -j2 
 
-CLASSES = library type module symchar instance variable method name \
+CLASSES = library type module symchar instance method name \
 	reporter simulation set units dimensions extmethod \
+	variable relation \
 	solver curve plot \
 	solverparameters solverparameter solverparameteriterator \
 	incidencematrix

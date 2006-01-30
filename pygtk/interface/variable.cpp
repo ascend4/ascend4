@@ -14,7 +14,6 @@ extern "C"{
 #include <compiler/symtab.h>
 #include <compiler/instance_enum.h>
 #include <compiler/instance_io.h>
-
 }
 
 Variable::Variable(){

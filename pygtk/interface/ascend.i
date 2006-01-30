@@ -14,6 +14,7 @@
 #include "type.h"
 #include "instance.h"
 #include "variable.h"
+#include "relation.h"
 #include "name.h"
 #include "reporter.h"
 #include "simulation.h"
@@ -439,10 +440,25 @@ public:
 };
 
 %extend Variable {
-	const std::string __repr__(){
-		return self->getName();
+	%pythoncode{
+		def __repr__(self):
+			return self.getName()
 	}
 }
+
+class Relation{
+public:
+	explicit Relation(const Relation &old);
+	const std::string &getName();
+};
+
+%extend Relation {
+	%pythoncode{
+		def __repr__(self):
+			return self.getName()
+	}
+}
+
 
 class ExtMethod{
 public:

@@ -131,4 +131,5 @@ public:
 	const int &getNumRows() const;
 	const int &getNumCols() const;
 	const Variable getVariable(const int &col);
+	const Relation getRelation(const int &col);
 };
