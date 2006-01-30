@@ -132,4 +132,5 @@ public:
 	const int &getNumCols() const;
 	const Variable getVariable(const int &col);
 	const Relation getRelation(const int &col);
+	const int getBlockRow(const int &row) const;
 };
