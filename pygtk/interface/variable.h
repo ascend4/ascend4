@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "simulation.h"
+
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <solver/slv_types.h>
@@ -16,16 +18,15 @@ extern "C"{
 */
 class Variable{
 private:
-	slv_system_t s;
+	Simulation *sim;
 	struct var_variable *var;
-	std::string name;
 
-public:
+public:	
 	Variable();
-	Variable(slv_system_t s, var_variable *var);
-	~Variable();
+	Variable(const Variable &old);
+	Variable(Simulation *sim, var_variable *var);
 
-	const std::string &getName();
+	const std::string getName() const;
 };
 
 #endif

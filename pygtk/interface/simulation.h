@@ -4,11 +4,11 @@
 #include <string>
 #include <vector>
 
-
 #include "symchar.h"
 #include "type.h"
 #include "instance.h"
-#include "variable.h"
+
+class Variable;
 
 extern "C"{
 #include <compiler/createinst.h>

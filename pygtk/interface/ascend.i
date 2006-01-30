@@ -434,9 +434,8 @@ public:
 
 class Variable{
 public:
+	explicit Variable(const Variable &old);
 	const std::string &getName();
-	~Variable();
-
 };
 
 %extend Variable {

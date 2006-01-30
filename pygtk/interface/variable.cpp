@@ -3,23 +3,40 @@
 using namespace std;
 
 #include "variable.h"
+#include "simulation.h"
+
+extern "C"{
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_enum.h>
+#include <compiler/instance_io.h>
+
+}
 
 Variable::Variable(){
-	throw runtime_error("Can't create new Variable objects");
+	sim=NULL;
+	var=NULL;
+
+	// default ctor
 }
 
-Variable::Variable(slv_system_t s, struct var_variable *var) : s(s), var(var){
-	//cerr << "CREATED VARIABLE" << endl;
-	char *n=var_make_name(s,var);
-	name=n;
-	delete n;
+Variable::Variable(const Variable &old) : sim(old.sim), var(old.var){
+	// copy ctor
 }
 
-Variable::~Variable(){
-	//cerr << "DESTROYED VARIABLE" << endl;
+Variable::Variable(Simulation *sim, struct var_variable *var) : sim(sim), var(var){
+	if(var==NULL)throw runtime_error("Variable::Variable: var is NULL");
 }
 
-const string &
-Variable::getName(){
+const string
+Variable::getName() const{
+	char *n = WriteInstanceNameString((struct Instance *)var_instance(var),sim->getModel().getInternalType());
+	string name = n;
+	ascfree(n);
+
 	return name;
 }

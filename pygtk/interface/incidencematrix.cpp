@@ -4,6 +4,8 @@
 #include <iostream>
 using namespace std;
 
+#include "variable.h"
+
 IncidencePoint::IncidencePoint(const int&row, const int &col, const IncidencePointType &type) : row(row), col(col), type(type){
 	// constructor, IncidencePoint
 }
@@ -99,3 +101,15 @@ IncidenceMatrix::getIncidenceData(){
 	}
 	return data;
 }
+
+const Variable
+IncidenceMatrix::getVariable(const int &col) const{
+	if(!is_built)throw runtime_error("Not built");
+	if(col < 0 || col >= getNumCols())throw runtime_error("Column out of range");
+	int vindex = i.pc2v[col];
+	struct var_variable *var = i.vlist[vindex];
+
+	return Variable(&sim, var);
+}
+
+

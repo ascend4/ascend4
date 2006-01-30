@@ -51,6 +51,7 @@ extern "C"{
 #include "solverparameters.h"
 #include "name.h"
 #include "incidencematrix.h"
+#include "variable.h"
 
 /**
 	Create an instance of a type (call compiler etc)
@@ -254,7 +255,7 @@ Simulation::getFixableVariables(){
 			char *var_name = var_make_name(sys,var);
 			//cerr << "ELIGIBLE VAR: " << var_name << endl;
 			ascfree(var_name);
-			vars.push_back(Variable( sys,var ));
+			vars.push_back( Variable(this, var) );
 			++i;
 			var_index = (*vip)[i];
 		}

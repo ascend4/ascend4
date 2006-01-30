@@ -12,6 +12,7 @@ import optparse
 
 from solverparameters import * # 'solver parameters' window
 from help import * # viewing help files
+from incidencematrix import * # incidence/sparsity matrix matplotlib window
 
 import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
@@ -453,18 +454,14 @@ class Browser:
 		return False
 
 	def on_tools_sparsity_click(self,*args):
-		import pylab;
-		self.reporter.reportNote("Preparing sparsity matrix...")
-		_im = self.sim.getIncidenceMatrix();
-		_id = _im.getIncidenceData();
-		
-		data = pylab.zeros((_im.getNumRows(), _im.getNumCols(), ))*0.
-		for i in _id:
-			data[i.row, i.col] = int(i.type)
 
-		pylab.spy2(data)
-		pylab.ion()
-		pylab.show(False)			
+		self.reporter.reportNote("Preparing incidence matrix...")
+		_im = self.sim.getIncidenceMatrix();
+
+		self.reporter.reportNote("Plotting incidence matrix...")
+
+		_sp = IncidenceMatrixWindow(_im);
+		_sp.run();
 
 #   --------------------------------------------
 #   MODULE LIST
