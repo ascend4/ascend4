@@ -43,8 +43,8 @@
  *  </pre>
  */
 
-#ifndef _slv_stdclients_h_seen_
-#define _slv_stdclients_h_seen_
+#ifndef ASC_SLV_STDCLIENTS_H
+#define ASC_SLV_STDCLIENTS_H
 
 extern int slv_std_make_incidence_mtx(slv_system_t sys, 
                                       mtx_matrix_t mtx,
@@ -290,5 +290,5 @@ extern int slv_log_block_partition(slv_system_t sys);
  *  If fail for any other reason, return is 1.
  */
 
-#endif  /**<  _slv_stdclients_h_seen_ */
+#endif  /** ASC_SLV_STDCLIENTS_H */
 
