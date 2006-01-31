@@ -463,6 +463,9 @@ class Browser:
 		_sp = IncidenceMatrixWindow(_im);
 		_sp.run();
 
+	def on_add_observer_click(self,*args):
+		self.create_observer();
+
 #   --------------------------------------------
 #   MODULE LIST
 
@@ -817,6 +820,15 @@ class Browser:
 		_help = Help(HELP_ROOT)
 		_help.run()
 
+	def create_observer(self,name=None):
+		if name==None:
+			name="New Observer"
+
+		_xml = gtk.glade.XML(GLADE_FILE,"observervbox");
+		_label = gtk.Label();
+		_label.set_text(name)
+		self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
+		
 #   ------------------------------
 #   CONTEXT MENU
 
