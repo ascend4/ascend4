@@ -75,6 +75,10 @@ METHOD values;
 	S.T := 400 {K};
 	S.V_vessel := 10000 {L};
 	S.m_gas := 40 {kg};
+
+	(* free *)
+	m_A := 1000 {kg};
+	m_S := 7000 {kg};
 	
 END values;
 
