@@ -13,6 +13,7 @@ import optparse
 from solverparameters import * # 'solver parameters' window
 from help import * # viewing help files
 from incidencematrix import * # incidence/sparsity matrix matplotlib window
+from observer import * # observer tab support
 
 import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
@@ -54,6 +55,8 @@ class Browser:
 
 		#print "OPTIONS_______________:",options
 		
+		self.observers = []
+
 		#--------
 		# load up the preferences ini file
 
@@ -170,22 +173,31 @@ class Browser:
 		_img.set_from_file('icons/properties.png')
 		self.propsmenuitem.set_image(_img)
 
+		self.observemenuitem = gtk.ImageMenuItem("_Observe",True);
+		_img = gtk.Image()
+		_img.set_from_file('icons/observe.png')
+		self.observemenuitem.set_image(_img)
+
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
 		self.freemenuitem.show(); self.freemenuitem.set_sensitive(False)
 		self.plotmenuitem.show(); self.plotmenuitem.set_sensitive(False)
+		self.observemenuitem.show(); self.observemenuitem.set_sensitive(False)
 		self.propsmenuitem.show()
-		self.treecontext.append(self.fixmenuitem);
-		self.treecontext.append(self.freemenuitem);
+		self.treecontext.append(self.fixmenuitem)
+		self.treecontext.append(self.freemenuitem)
 		_sep = gtk.SeparatorMenuItem(); _sep.show()
 		self.treecontext.append(_sep);
-		self.treecontext.append(self.plotmenuitem);
+		self.treecontext.append(self.plotmenuitem)
+		self.treecontext.append(self.observemenuitem)
 		_sep = gtk.SeparatorMenuItem(); _sep.show()
-		self.treecontext.append(_sep);
-		self.treecontext.append(self.propsmenuitem);
+		self.treecontext.append(_sep)
+		self.treecontext.append(self.propsmenuitem)
 		self.fixmenuitem.connect("activate",self.fix_activate)
 		self.freemenuitem.connect("activate",self.free_activate)
 		self.plotmenuitem.connect("activate",self.plot_activate)
 		self.propsmenuitem.connect("activate",self.props_activate)
+		self.observemenuitem.connect("activate",self.observe_activate)
+
 		if not self.treecontext:
 			raise RuntimeError("Couldn't create browsercontext")
 		#--------------------
@@ -464,7 +476,10 @@ class Browser:
 		_sp.run();
 
 	def on_add_observer_click(self,*args):
-		self.create_observer();
+		if len(self.observers) >= 1:
+			self.reporter.reportError("Not supported: multiple observers")
+			return
+		self.observers.append(self.create_observer())
 
 #   --------------------------------------------
 #   MODULE LIST
@@ -828,6 +843,7 @@ class Browser:
 		_label = gtk.Label();
 		_label.set_text(name)
 		self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
+		self.observers.append(ObserverTab(_xml,name,self))
 		
 #   ------------------------------
 #   CONTEXT MENU
@@ -846,6 +862,7 @@ class Browser:
 				_instance = self.otank[_path][1]
 				if _instance.getType().isRefinedSolverVar():
 					_canpop = True;
+					self.observemenuitem.set_sensitive(True)
 					if _instance.isFixed():
 						self.fixmenuitem.set_sensitive(False)
 						self.freemenuitem.set_sensitive(True)
@@ -855,9 +872,6 @@ class Browser:
 				elif _instance.isRelation():
 					_canpop = True;
 					self.propsmenuitem.set_sensitive(True)					
-				else:
-					self.fixmenuitem.set_sensitive(False)
-					self.freemenuitem.set_sensitive(False)
 
 				if _instance.isPlottable():
 					self.plotmenuitem.set_sensitive(True)
@@ -923,7 +937,19 @@ class Browser:
 		else:
 			self.reporter.reportWarning("props_activate not implemented")
 
-		
+	def observe_activate(self,widget):
+		_path,_col = self.treeview.get_cursor()
+		_instance = self.otank[_path][1]
+		if _instance.getType().isRefinedSolverVar():
+			print "OBSERVING",_instance.getName().toString()		
+			if len(self.observers) > 1:
+				self.reporter.reportError("Not implemented: multiple observers")
+				return
+			if len(self.observers) ==0:
+				self.create_observer()
+			_observer = self.observers[0]
+			_observer.add_instance(_instance)
+			
 #   ---------------------------------
 #   WINDOW-LEVEL ACTIONS
 
