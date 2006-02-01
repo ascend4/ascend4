@@ -40,13 +40,16 @@ class ObserverTab:
 
 		# create the first row
 		print "Adding row",self.rows[0],"to store"
-		_store.append(None, self.make_row(self.activeimg, self.rows[0]) )
+		_store.append(None, self.make_row(True, self.rows[0]) )
 
 		self.view.set_model(_store)
 
 		self.browser.reporter.reportNote("Created OBSERVER")
 
 	def on_add_clicked(self,*args):
+		self.do_add_row()
+
+	def do_add_row(self):
 		_rownum = len(self.rows)
 
 		# add a copy of the last row
@@ -54,7 +57,7 @@ class ObserverTab:
 		self.activerow = _rownum
 
 		self.view.get_model().set(self.activeiter,0,self.keptimg)
-		self.activeiter = self.view.get_model().append(None,self.make_row(self.activeimg,self.rows[_rownum]))
+		self.activeiter = self.view.get_model().append(None,self.make_row(True,self.rows[_rownum]))
 
 	def on_clear_clicked(self,*args):
 		print "CLEAR"
@@ -77,8 +80,20 @@ class ObserverTab:
 		# keep the data in self.rows as well
 		self.rows[self.activerow] = _r;
 
-	def make_row(self,img,row):
-		_r = [img]
+	def copy_to_clipboard(self):
+		_clip = gtk.Clipboard()
+		_t = ""
+		for _r in self.rows:
+			_t += '\t'.join([`_c` for _c in _r]) + '\n'
+		_clip.set_text(_t,len(_t)) 
+		print "TEXT ON CLIPBOARD IS",_t
+
+	def make_row(self,isactive,row):
+		if isactive:
+			_r = [self.activeimg]
+		else:
+			_r = [self.keptimg]
+
 		for _c in row:
 			_r.append(_c)
 		print "MADE KEPT ROW:",_r
@@ -116,7 +131,7 @@ class ObserverTab:
 		for _r in self.rows:
 			print "ROW",_i
 			_r.append(0)
-			_iter = _store.append(None, self.make_row(self.keptimg,_r) )
+			_iter = _store.append(None, self.make_row(False,_r) )
 			_i = _i + 1
 	
 		self.activeiter = _iter
