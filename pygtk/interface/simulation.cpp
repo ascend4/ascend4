@@ -418,3 +418,13 @@ IncidenceMatrix
 Simulation::getIncidenceMatrix(){
 	return IncidenceMatrix(*this);
 }
+
+const string 
+Simulation::getInstanceName(const Instanc &i) const{
+	char *n;
+	n = WriteInstanceNameString(i.getInternalType(),simroot.getInternalType());
+	string s(n);
+	ascfree(n);
+	return s;
+}
+	
