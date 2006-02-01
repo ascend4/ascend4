@@ -868,8 +868,8 @@ class Browser:
 		_xml = gtk.glade.XML(GLADE_FILE,"observervbox");
 		_label = gtk.Label();
 		_label.set_text(name)
-		self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
-		self.observers.append(ObserverTab(_xml,name,self))
+		_tab = self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
+		self.observers.append(ObserverTab(_xml, name, self, _tab))
 	
 	def sync_observers(self):
 		for _o in self.observers:

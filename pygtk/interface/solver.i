@@ -27,6 +27,7 @@ public:
 	void setSolverParameters(SolverParameters&);
 
 	IncidenceMatrix getIncidenceMatrix();
+	const std::string getInstanceName(const Instanc &) const;
 };
 
 // SOLVE PARAMETERS
