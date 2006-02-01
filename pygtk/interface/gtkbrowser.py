@@ -413,6 +413,15 @@ class Browser:
 		self.otank = {} # map path -> (name,value)
 		self.make( self.sim.getName(),self.sim.getModel() )
 		self.maintabs.set_current_page(1);
+	
+	def do_solve_if_auto(self):
+		if self.is_auto:
+			self.sim.check()
+			self.do_solve()
+		else:
+			self.refreshtree()
+
+		self.sync_observers()
 		
 	def do_solve(self):
 		if not self.sim:
@@ -685,11 +694,7 @@ class Browser:
 		if _instance.getType().isRefinedSolverVar():
 			self.treestore.set_value(_iter,3,"#008800") # set the row green as fixed
 		
-		if self.is_auto:
-			self.sim.check()
-			self.do_solve()
-			#self.reporter.reportError("SOLVER completed")
-
+		self.do_solve_if_auto()
 
 	def make_children(self, value, piter ):
 		if value.isCompound():
@@ -844,7 +849,11 @@ class Browser:
 		_label.set_text(name)
 		self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
 		self.observers.append(ObserverTab(_xml,name,self))
-		
+	
+	def sync_observers(self):
+		for _o in self.observers:
+			_o.sync()
+
 #   ------------------------------
 #   CONTEXT MENU
 
@@ -890,11 +899,7 @@ class Browser:
 		_name, _instance = self.otank[_path]
 		_instance.setFixed(True)
 		self.reporter.reportNote("Fixed variable %s" % _instance.getName().toString())
-		if self.is_auto:
-			self.sim.check()
-			self.do_solve()
-		else:
-			self.refreshtree()
+		self.do_solve_if_auto()
 		return 1
 
 	def free_activate(self,widget):
@@ -902,11 +907,7 @@ class Browser:
 		_instance = self.otank[_path][1]
 		_instance.setFixed(False)
 		self.reporter.reportNote("Freed variable %s" % _instance.getName().toString())
-		if self.is_auto:
-			self.sim.check()
-			self.do_solve()
-		else:
-			self.refreshtree()
+		self.do_solve_if_auto()
 		return 1
 
 	def plot_activate(self,widget):
@@ -949,9 +950,6 @@ class Browser:
 				self.create_observer()
 			_observer = self.observers[0]
 			_observer.add_instance(_instance)
-			
-#   ---------------------------------
-#   WINDOW-LEVEL ACTIONS
 
 	def delete_event(self, widget, event, data=None):
 		self.do_quit()	
