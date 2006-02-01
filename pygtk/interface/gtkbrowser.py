@@ -490,6 +490,23 @@ class Browser:
 			return
 		self.observers.append(self.create_observer())
 
+	def on_keep_observed_click(self,*args):
+		if len(self.observers) > 1:
+			self.reporter.reportError("Not supported: multiple observers")
+			return
+		if len(self.observers) <= 0:
+			self.reporter.reportError("No observer defined!")
+			return
+		self.observers[0].do_add_row()
+
+	def on_copy_observer_matrix_click(self,*args):
+		if len(self.observers) > 1:
+			self.reporter.reportError("Not supported: multiple observers")
+			return
+		if len(self.observers) <= 0:
+			self.reporter.reportError("No observer defined!")
+			return
+		self.observers[0].copy_to_clipboard()
 #   --------------------------------------------
 #   MODULE LIST
 
