@@ -56,6 +56,7 @@ class Browser:
 		#print "OPTIONS_______________:",options
 		
 		self.observers = []
+		self.clip = None
 
 		#--------
 		# load up the preferences ini file
@@ -500,13 +501,16 @@ class Browser:
 		self.observers[0].do_add_row()
 
 	def on_copy_observer_matrix_click(self,*args):
+		if self.clip == None:
+			self.clip = gtk.Clipboard()
+
 		if len(self.observers) > 1:
 			self.reporter.reportError("Not supported: multiple observers")
 			return
 		if len(self.observers) <= 0:
 			self.reporter.reportError("No observer defined!")
 			return
-		self.observers[0].copy_to_clipboard()
+		self.observers[0].copy_to_clipboard(self.clip)
 #   --------------------------------------------
 #   MODULE LIST
 

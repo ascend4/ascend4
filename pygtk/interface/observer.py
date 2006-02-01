@@ -80,12 +80,11 @@ class ObserverTab:
 		# keep the data in self.rows as well
 		self.rows[self.activerow] = _r;
 
-	def copy_to_clipboard(self):
-		_clip = gtk.Clipboard()
+	def copy_to_clipboard(self,clip):
 		_t = ""
 		for _r in self.rows:
 			_t += '\t'.join([`_c` for _c in _r]) + '\n'
-		_clip.set_text(_t,len(_t)) 
+		clip.set_text(_t,len(_t)) 
 		print "TEXT ON CLIPBOARD IS",_t
 
 	def make_row(self,isactive,row):
