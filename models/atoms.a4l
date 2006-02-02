@@ -362,6 +362,14 @@ END length_parameter;
         nominal := 0.00366099{1/K};
     END inverse_temperature;
 
+    ATOM delta_temperature REFINES solver_var
+        DIMENSION TMP
+        DEFAULT 0{K};
+        lower_bound := -1000{K};
+        upper_bound := +1000{K};
+        nominal := 0{K};
+    END delta_temperature;
+
 (* forces *)
     ATOM force REFINES solver_var
 	DIMENSION M*L/T^2
@@ -866,13 +874,13 @@ END cost_per_energy;
         nominal := 10.0{ft};
     END delta_distance;
 
-    ATOM delta_temperature REFINES solver_var
+    ATOM temperature_rate REFINES solver_var
         DIMENSION TMP/T
         DEFAULT 0{K/s};
         lower_bound := -100{K/s};
         upper_bound := 100{K/s};
         nominal := 298.0{K/s};
-    END delta_temperature;
+    END temperature_rate;
 
     ATOM delta_mass REFINES solver_var
         DIMENSION M

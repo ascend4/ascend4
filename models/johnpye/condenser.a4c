@@ -14,8 +14,14 @@ MODEL condenser_lmtd(
 
 	LMTD_fg IS_A delta_temperature;
 
-	(* lmtd: LMTD = (T_c2 - T_c1) / ln((T_in - T_c1)/(T_in - T_c2)) *)
-	lmtd: LMTD_fg * ln((T_in - T_c1)/(T_in - T_c2)) = (T_c2 - T_c1);
+	DT_c_fg, DT_1, DT_2 IS_A delta_temperature;
+	
+	DT_c_fg = T_c2 - T_c1;
+	DT_1 = T_in - T_c1;
+	DT_2 = T_in - T_c2;
+
+	lmtd: LMTD_fg = (DT_c_fg) / ln(DT_1/DT_2);
+	(* lmtd: LMTD_fg * -ln((T_in - T_c1)/(T_in - T_c2)) = (T_c2 - T_c1); *)
 
 	UA_fg IS_A ua_value;
 	q_fg IS_A energy_rate;
@@ -45,7 +51,10 @@ METHOD values;
 	T_c2 := 273.15{K} + 240 {K};	
 END values;
 METHOD bound_self;
-	Sf.tau.upper_bound := 1;
+	Sf.tau.lower_bound := 1;
+	DT_c_fg.lower_bound := 0{K};
+	DT_1.lower_bound := 0{K};
+	DT_2.lower_bound := 0{K};
 END bound_self;
 END condenser_lmtd;
 
@@ -73,7 +82,6 @@ END values;
 METHOD bound_self;
 	RUN C.bound_self;
 	C.Sf.rho.lower_bound := C.Sf.rhoc;
-	C.Sf.delta.lower_bound := sat.rhof / C.Sf.rhoc;
 END bound_self;
 
 END condenser_lmtd_sat_input;
@@ -122,7 +130,7 @@ METHOD specify;
 	FIX h_out;
 END specify;
 METHOD values;
-	mdot_gas_in := 1 {kg/s};
+	mdot_gas_in := 10 {kg/s};
 	S_in.p := 5 {bar};
 	S_in.T := 473.15 {K};
 	h_out := 400{kJ/kg};
