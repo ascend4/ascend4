@@ -28,6 +28,8 @@ public:
 
 	IncidenceMatrix getIncidenceMatrix();
 	const std::string getInstanceName(const Instanc &) const;
+
+	void processVarStatus();
 };
 
 // SOLVE PARAMETERS
@@ -105,7 +107,6 @@ public:
 typedef enum{
 	IM_NULL=0, IM_ACTIVE_FIXED, IM_ACTIVE_FREE, IM_DORMANT_FIXED, IM_DORMANT_FREE
 } IncidencePointType;
-
 
 class IncidencePoint{
 public:

@@ -38,6 +38,7 @@ extern "C"{
 #include "name.h"
 #include "set.h"
 #include "plot.h"
+#include "instanceinterfacedata.h"
 
 /**
 	Create an instance of a type. @see Simulation for instantiation.
@@ -561,9 +562,40 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 	SetRealAtomValue(i,val,depth);
 }
 
+/**
+	Set the instance variable status. See @getVarStatus
+*/
+void 
+Instanc::setVarStatus(const VarStatus &s){
+	InstanceInterfaceData *d;
+	d = (InstanceInterfaceData *)GetInterfacePtr(i);
+	if(d==NULL && s!=ASCXX_VAR_STATUS_UNKNOWN){
+		d = new InstanceInterfaceData();
+		SetInterfacePtr(i,d);
+	}
+	d->status = s;
+}
+
+/** 
+	Return the instance variable status.
+	This data is stored in the 'interface_ptr' of the instance, so
+	that we can be sure we'll get it, regardless of which 
+	instance of an Instanc we have in our hands :-)
+*/
+const VarStatus
+Instanc::getVarStatus() const{
+	InstanceInterfaceData *d;
+	d = (InstanceInterfaceData *)GetInterfacePtr(i);
+	if(d==NULL){
+		return ASCXX_VAR_STATUS_UNKNOWN;
+	}
+	return d->status;
+}
+
 // static properties
 SymChar
 Instanc::fixedsym = SymChar("fixed");
 
 SymChar
 Instanc::solvervarsym = SymChar("solver_var");
+

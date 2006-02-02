@@ -33,6 +33,8 @@ ESCAPE_KEY = 65307
 
 HELP_ROOT = None
 
+BROWSER_FIXED_COLOR = "#008800"
+BROWSER_FREE_COLOR = "#000088"
 #======================================
 # Browser is the main ASCEND library/model browser window
 
@@ -147,6 +149,21 @@ class Browser:
 		self.iconinfo = self.window.render_icon(gtk.STOCK_DIALOG_INFO,gtk.ICON_SIZE_MENU)
 		self.iconwarning = self.window.render_icon(gtk.STOCK_DIALOG_WARNING,gtk.ICON_SIZE_MENU)
 		self.iconerror = self.window.render_icon(gtk.STOCK_DIALOG_ERROR,gtk.ICON_SIZE_MENU)
+
+		#--------------------
+		# pixbufs for solver_var status
+
+		self.iconstatusunknown = None;
+		self.iconsolved = self.window.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
+		self.iconactive = self.window.render_icon(gtk.STOCK_DIALOG_ERROR,gtk.ICON_SIZE_MENU)
+		self.iconunsolved = None
+
+		self.statusicons={
+			ascend.ASCXX_VAR_STATUS_UNKNOWN: self.iconstatusunknown
+			,ascend.ASCXX_VAR_SOLVED: self.iconsolved
+			,ascend.ASCXX_VAR_ACTIVE: self.iconactive
+			,ascend.ASCXX_VAR_UNSOLVED: self.iconunsolved
+		}
 
 		#--------------------
 		# set up the context menu for fixing/freeing vars
@@ -274,7 +291,9 @@ class Browser:
 
 		self.otank = {}
 		self.treeview = glade.get_widget("browserview")
-		columns = [str,str,str,str,int,bool]
+
+		# name, type, value, foreground, weight, editable, status-icon
+		columns = [str,str,str,str,int,bool,gtk.gdk.Pixbuf]
 		self.treestore = gtk.TreeStore(*columns)
 		titles = ["Name","Type","Value"];
 		self.treeview.set_model(self.treestore)
@@ -289,6 +308,12 @@ class Browser:
 		for tvcolumn in self.tvcolumns[:len(titles)]:
 			tvcolumn.set_title(titles[i])
 			self.treeview.append_column(tvcolumn)			
+
+			if(i==2):
+				# add status icon
+				renderer1 = gtk.CellRendererPixbuf()
+				tvcolumn.pack_start(renderer1, True)
+				tvcolumn.add_attribute(renderer1, 'pixbuf', 6)
 
 			renderer = gtk.CellRendererText()
 			tvcolumn.pack_start(renderer, True)
@@ -420,6 +445,7 @@ class Browser:
 			self.sim.check()
 			self.do_solve()
 		else:
+			self.sim.processVarStatus()
 			self.refreshtree()
 
 		self.sync_observers()
@@ -434,6 +460,8 @@ class Browser:
 		self.sim.solve(ascend.Solver("QRSlv"))
 
 		self.stop_waiting()
+		
+		self.sim.processVarStatus()
 		self.refreshtree()
 
 	def do_check(self):
@@ -530,7 +558,7 @@ class Browser:
 #   --------------------------------------------
 #   INSTANCE TREE
 
-	def get_tree_row_data(self,instance):
+	def get_tree_row_data(self,instance): # for instance browser
 		_value = str(instance.getValue())
 		_type = str(instance.getType())
 		_name = str(instance.getName())
@@ -539,58 +567,25 @@ class Browser:
 		_editable = False
 		if instance.getType().isRefinedSolverVar():
 			_editable = True
+			_fontweight = pango.WEIGHT_BOLD
 			if instance.isFixed():
-				_fgcolor = "#008800"
-				_fontweight = pango.WEIGHT_BOLD
+				_fgcolor = BROWSER_FIXED_COLOR
 			else:
-				_fgcolor = "#000088"
+				_fgcolor = BROWSER_FREE_COLOR
 				_fontweight = pango.WEIGHT_BOLD
 		elif instance.isBool() or instance.isReal() or instance.isInt():
 			# TODO can't edit constants that have already been refined
 			_editable = True
+		_status = instance.getVarStatus();
+
+		_statusicon = self.statusicons[_status]
 
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
 		
-		return [_name, _type, _value, _fgcolor, _fontweight, _editable]
+		return [_name, _type, _value, _fgcolor, _fontweight, _editable, _statusicon]
 
-	def get_error_row_data(self,sev,filename,line,msg):
-		_sevicon = {
-			0: self.iconok
-			,1: self.iconinfo
-			,2: self.iconwarning
-			,3: self.iconerror
-			,4: self.iconinfo
-			,5: self.iconwarning
-			,6: self.iconerror
-		}[sev]
-
-		_fontweight = pango.WEIGHT_NORMAL
-		if sev==6:
-			_fontweight = pango.WEIGHT_BOLD
-		
-		_fgcolor = "black"
-		if sev==4:
-			_fgcolor = "#888800"
-		elif sev==5:
-			_fgcolor = "#884400"
-		elif sev==6:
-			_fgcolor = "#880000"
-		elif sev==0:
-			_fgcolor = "#008800"
-		
-		if not filename and not line:
-			_fileline = ""
-		else:
-			if(len(filename) > 25):
-				filename = "..."+filename[-22:]
-			_fileline = filename + ":" + str(line)
-
-		_res = [_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight]
-		#print _res
-		return _res  
-
-	def make_row( self, piter, name, value ):
+	def make_row( self, piter, name, value ): # for instance browser
 
 		_piter = self.treestore.append( piter, self.get_tree_row_data(value) )
 		return _piter
@@ -602,10 +597,11 @@ class Browser:
 			_name, _instance = self.otank[_path]
 			self.treestore.set_value(_iter, 2, _instance.getValue())
 			if _instance.getType().isRefinedSolverVar():
-				if _instance.isFixed() and self.treestore.get_value(_iter,3)=="#000088":
-					self.treestore.set_value(_iter,3,"#008800")
-				elif not _instance.isFixed() and self.treestore.get_value(_iter,3)=="#008800":
-					self.treestore.set_value(_iter,3,"#000088")
+				if _instance.isFixed() and self.treestore.get_value(_iter,3)==BROWSER_FREE_COLOR:
+					self.treestore.set_value(_iter,3,BROWSER_FIXED_COLOR)
+				elif not _instance.isFixed() and self.treestore.get_value(_iter,3)==BROWSER_FIXED_COLOR:
+					self.treestore.set_value(_iter,3,BROWSER_FREE_COLOR)
+			self.treestore.set_value(_iter, 6, self.statusicons[_instance.getVarStatus()])
 
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
@@ -713,7 +709,7 @@ class Browser:
 		self.treestore.set_value(_iter,2,_instance.getValue())
 
 		if _instance.getType().isRefinedSolverVar():
-			self.treestore.set_value(_iter,3,"#008800") # set the row green as fixed
+			self.treestore.set_value(_iter,3,BROWSER_FIXED_COLOR) # set the row green as fixed
 		
 		self.do_solve_if_auto()
 
@@ -752,6 +748,42 @@ class Browser:
 
 #   ----------------------------------
 #   ERROR PANEL
+
+	def get_error_row_data(self,sev,filename,line,msg):
+		_sevicon = {
+			0: self.iconok
+			,1: self.iconinfo
+			,2: self.iconwarning
+			,3: self.iconerror
+			,4: self.iconinfo
+			,5: self.iconwarning
+			,6: self.iconerror
+		}[sev]
+
+		_fontweight = pango.WEIGHT_NORMAL
+		if sev==6:
+			_fontweight = pango.WEIGHT_BOLD
+		
+		_fgcolor = "black"
+		if sev==4:
+			_fgcolor = "#888800"
+		elif sev==5:
+			_fgcolor = "#884400"
+		elif sev==6:
+			_fgcolor = "#880000"
+		elif sev==0:
+			_fgcolor = BROWSER_FIXED_COLOR
+		
+		if not filename and not line:
+			_fileline = ""
+		else:
+			if(len(filename) > 25):
+				filename = "..."+filename[-22:]
+			_fileline = filename + ":" + str(line)
+
+		_res = [_sevicon,_fileline,msg.rstrip(),_fgcolor,_fontweight]
+		#print _res
+		return _res  
 
 	def error_callback(self,sev,filename,line,msg):
 		pos = self.errorstore.append(None, self.get_error_row_data(sev, filename,line,msg))
