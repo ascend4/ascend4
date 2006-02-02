@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "symchar.h"
 #include "type.h"
@@ -85,6 +86,8 @@ public:
 	IncidenceMatrix getIncidenceMatrix();
 
 	const std::string getInstanceName(const Instanc &) const;
+
+	void processVarStatus();
 };
 
 

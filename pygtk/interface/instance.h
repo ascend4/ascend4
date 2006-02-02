@@ -20,6 +20,10 @@ extern "C"{
 #include <compiler/plot.h>
 }
 
+typedef enum{
+	ASCXX_VAR_STATUS_UNKNOWN=0, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
+} VarStatus;
+
 /**
 	This class has to be called 'Instanc' in C++ to avoid a name clash
 	with C. Maybe coulda done it with namespaces but didn't know how.
@@ -107,6 +111,9 @@ public:
 	const enum set_kind getSetType() const;
 	void write();
 	Instance *getInternalType() const;
+
+	void setVarStatus(const VarStatus &); ///< make this one private, just for friend Simulation?
+	const VarStatus getVarStatus() const;
 };
 
 #endif

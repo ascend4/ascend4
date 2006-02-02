@@ -437,3 +437,35 @@ Simulation::getInstanceName(const Instanc &i) const{
 	return s;
 }
 	
+void
+Simulation::processVarStatus(){
+	if(!sys)throw runtime_error("Not yet build");
+
+	// this is a cheap function call:
+	const mtx_block_t *bb = slv_get_solvers_blocks(getSystem());
+	var_variable **vlist = slv_get_solvers_var_list(getSystem());
+	int nvars = slv_get_num_solvers_vars(getSystem());
+
+	slv_status_t status;
+	slv_get_status(getSystem(), &status);
+
+	int activeblock = status.block.current_block;
+	int low = bb->block[activeblock].col.low;
+	int high = bb->block[activeblock].col.high;
+	
+	for(int c=0; c < nvars; ++c){
+		var_variable *v = vlist[c];
+		Instanc i((Instance *)var_instance(v));
+		VarStatus s = ASCXX_VAR_STATUS_UNKNOWN;
+		if(var_incident(v) && var_active(v)){
+			if(c < low){
+				s = ASCXX_VAR_SOLVED;
+			}else if(c <= high){
+				s = ASCXX_VAR_ACTIVE;
+			}else{
+				s = ASCXX_VAR_UNSOLVED;
+			}
+		}
+		i.setVarStatus(s);
+	}
+}

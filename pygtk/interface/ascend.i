@@ -325,6 +325,10 @@ public:
 	}
 }
 
+typedef enum{
+	ASCXX_VAR_STATUS_UNKNOWN=0, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
+} VarStatus;
+
 class Instanc{
 private:
 	Instanc();
@@ -371,6 +375,8 @@ public:
 	void setRealValueWithUnits(const double &, const char *);
 	void setBoolValue(const bool &val);
 	void write();
+
+	const VarStatus getVarStatus() const;
 };
 
 %extend Instanc{
