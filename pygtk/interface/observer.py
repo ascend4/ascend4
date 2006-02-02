@@ -89,8 +89,6 @@ class ObserverTab:
 
 	def on_view_cell_edited(self, renderer, path, newtext, datacolumn):
 		# we can assume it's always the self.activeiter that is edited...
-		print "NEW VALUE",newtext
-		print "COLUMN = ",datacolumn
 		if self.columninstances[datacolumn].isFixed():
 			self.columninstances[datacolumn].setRealValue( float(newtext) * self.units[datacolumn].getConversion() )
 		else:
@@ -126,7 +124,6 @@ class ObserverTab:
 
 	def make_row(self,isactive,row):
 		# add the initial OBSERVER_INITIAL_COLS fields:
-		print "MAKING ROW THAT IS ACTIVE?",isactive
 		if isactive:
 			_r = [self.activeimg, pango.WEIGHT_BOLD, True]
 		else:
@@ -170,7 +167,6 @@ class ObserverTab:
 		_i = 0
 		_active = False
 		for _r in self.rows:
-			print "FIXING ROW",_i
 			_r.append(OBSERVER_NULL)
 			if _i == _rownum:
 				_active = True
@@ -183,22 +179,20 @@ class ObserverTab:
 		_datacol = _colnum - OBSERVER_INITIAL_COLS
 		_dataval = inst.getRealValue() / self.units[_datacol].getConversion() # convert value to units specified when col created
 		self.rows[_rownum][_datacol] = _dataval
-		print "SETTING COLUMN",_colnum
-		print "ROW IS",self.rows[_rownum]
 		_store.set_value(self.activeiter, _colnum, _dataval)
 
 		# re-assign store to TreeView
 		self.view.set_model(_store)
 
 		_renderer = gtk.CellRendererText()
+		_renderer.connect('edited',self.on_view_cell_edited, _datacol)
 		_col = gtk.TreeViewColumn(_title, _renderer)
 		_col.add_attribute(_renderer, 'text', _colnum)
 		_col.add_attribute(_renderer, 'weight', OBSERVER_WEIGHT)
 		_col.add_attribute(_renderer, 'editable', OBSERVER_EDIT)
-		_renderer.connect('edited',self.on_view_cell_edited, _datacol)
 		_col.set_alignment(0.0)
-		#_col.set_reorderable(True)
-		#_col.set_sort_column_id(_colnum)
+		_col.set_reorderable(True)
+		_col.set_sort_column_id(_colnum)
 
 		self.view.append_column(_col);
 
