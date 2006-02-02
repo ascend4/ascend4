@@ -3,8 +3,6 @@ REQUIRE "johnpye/absorber.a4c";
 REQUIRE "johnpye/surgetank.a4c";
 REQUIRE "johnpye/condenser.a4c";
 
-
-
 (*
 	Open-loop model. given the absorber conditions, what pressure is required
 	in the surge tank in order for the mass to be contained ?
