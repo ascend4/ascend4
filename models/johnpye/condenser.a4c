@@ -1,5 +1,82 @@
 REQUIRE "johnpye/ideal_steam.a4c";
 REQUIRE "johnpye/iapws_sat_curves.a4c";
+REQUIRE "johnpye/iapws95.a4c";
+
+MODEL condenser_lmtd(
+	S_in WILL_BE thermo_state;
+);
+	T_in ALIASES S_in.T;
+
+	mdot_in IS_A mass_rate;
+
+	T_c1 IS_A temperature; (* cold inlet *)
+	T_c2 IS_A temperature; (* cold outlet *)
+
+	LMTD_fg IS_A delta_temperature;
+
+	(* lmtd: LMTD = (T_c2 - T_c1) / ln((T_in - T_c1)/(T_in - T_c2)) *)
+	lmtd: LMTD_fg * ln((T_in - T_c1)/(T_in - T_c2)) = (T_c2 - T_c1);
+
+	UA_fg IS_A ua_value;
+	q_fg IS_A energy_rate;
+
+	q_fg = UA_fg * LMTD_fg;
+
+	(* condensation point *)
+	Sf IS_A iapws95_1phase;
+	sat IS_A iapws_sat_density;
+	sat.rhof, Sf.rho ARE_THE_SAME;
+	sat.T, Sf.T ARE_THE_SAME;
+
+	S_in.T = Sf.T;
+
+	q_fg = mdot_in * (S_in.h - Sf.h);
+METHODS
+METHOD specify;
+	FIX UA_fg;
+	FIX T_c1;
+	FIX mdot_in;
+END specify;
+METHOD values;
+	UA_fg := 4000 {W/m^2/K} * 4 {m} * 900 * 2*3.1415926* (0.01 {m})/2;
+	T_c1 := 273.15{K} + 200 {K};
+	mdot_in := 1 {kg/s};
+	(* free values *)
+	T_c2 := 273.15{K} + 240 {K};	
+END values;
+METHOD bound_self;
+	Sf.tau.upper_bound := 1;
+END bound_self;
+END condenser_lmtd;
+
+MODEL condenser_lmtd_sat_input;
+	Sg IS_A iapws95_1phase;
+	sat IS_A iapws_sat_density;
+	sat.rhog, Sg.rho ARE_THE_SAME;
+	sat.T, Sg.T ARE_THE_SAME;
+	T_in ALIASES Sg.T;
+
+	C IS_A condenser_lmtd(Sg);
+
+METHODS
+METHOD default_self;	
+	RUN reset; RUN values; RUN bound_self;
+END default_self;
+METHOD specify;
+	RUN C.specify;
+	FIX T_in;
+END specify;
+METHOD values;
+	RUN C.values;
+	T_in := 273.15{K} + 280 {K};
+END values;
+METHOD bound_self;
+	RUN C.bound_self;
+	C.Sf.rho.lower_bound := C.Sf.rhoc;
+	C.Sf.delta.lower_bound := sat.rhof / C.Sf.rhoc;
+END bound_self;
+
+END condenser_lmtd_sat_input;
 
 MODEL condenser;
 	(* assumptions:
