@@ -58,3 +58,4 @@ class IncidenceMatrixWindow:
 			print "rel:",_rel,"  var:", _var,"  block:",_blk
 			self.lastrow = _row;
 			self.lastcol = _col; 
+

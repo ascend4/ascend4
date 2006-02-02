@@ -27,6 +27,7 @@ public:
 	Variable(Simulation *sim, var_variable *var);
 
 	const std::string getName() const;
+	const double getValue() const;
 };
 
 #endif

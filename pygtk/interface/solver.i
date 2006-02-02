@@ -134,4 +134,35 @@ public:
 	const Variable getVariable(const int &col);
 	const Relation getRelation(const int &col);
 	const int getBlockRow(const int &row) const;
+	const std::vector<Variable> getBlockVars(const int block);
 };
+			
+
+/* Variables and relations belong to solvers, so they're here: */
+
+class Variable{
+public:
+	explicit Variable(const Variable &old);
+	const std::string &getName();
+};
+
+%extend Variable {
+	%pythoncode{
+		def __repr__(self):
+			return self.getName()
+	}
+}
+
+class Relation{
+public:
+	explicit Relation(const Relation &old);
+	const std::string &getName();
+};
+
+%extend Relation {
+	%pythoncode{
+		def __repr__(self):
+			return self.getName()
+	}
+}
+

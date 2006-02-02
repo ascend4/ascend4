@@ -338,7 +338,16 @@ Simulation::solve(Solver solver){
 		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations (%.2f s)"
 			,status.iteration,elapsed);
 	}else{
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged after %d iterations (%.2f s).",status.iteration,elapsed);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged in block %d after overall %d iterations"
+			" (%.2f s).",status.block.current_block,status.iteration,elapsed);
+		IncidenceMatrix inc = getIncidenceMatrix();
+		vector<Variable> v = inc.getBlockVars(status.block.current_block);
+
+		for(vector<Variable>::iterator vi = v.begin(); vi < v.end(); ++vi){
+			cerr << vi->getName() << " = " << vi->getValue() << endl;
+		}
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,
+			"The names of the variables in the current block have been output to the console");
 	}
 
 }

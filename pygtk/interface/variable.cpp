@@ -39,3 +39,8 @@ Variable::getName() const{
 
 	return name;
 }
+
+const double
+Variable::getValue() const{
+	return var_value(var);
+}
