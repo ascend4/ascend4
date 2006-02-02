@@ -46,15 +46,21 @@ class IncidenceMatrixWindow:
 		if event.xdata != None and event.ydata != None:
 			_col = int(event.xdata)
 			_row = (self.im.getNumRows()-1) - int(event.ydata)
-			if self.data[_row, _col] == 0:
+
+			try:
+				if self.data[_row, _col] == 0:
+					return
+	
+				if self.lastrow != None and self.lastcol != None:
+					if self.lastrow == _row and self.lastcol == _col:
+						return
+
+				_var = self.im.getVariable(_col);
+				_rel = self.im.getRelation(_row);
+				_blk = self.im.getBlockRow(_row);
+			except IndexError:
 				return
 
-			if self.lastrow != None and self.lastcol != None:
-				if self.lastrow == _row and self.lastcol == _col:
-					return
-			_var = self.im.getVariable(_col);
-			_rel = self.im.getRelation(_row);
-			_blk = self.im.getBlockRow(_row);
 			print "rel:",_rel,"  var:", _var,"  block:",_blk
 			self.lastrow = _row;
 			self.lastcol = _col; 
