@@ -27,8 +27,8 @@
  *  COPYING.
  */
 
-#ifndef __INSTANCE_TYPES_H_SEEN__
-#define __INSTANCE_TYPES_H_SEEN__
+#ifndef ASC_INSTANCE_TYPES_H
+#define ASC_INSTANCE_TYPES_H
 
 /** @file
  *  Real Ascend Instance Types.
@@ -252,6 +252,7 @@ struct SolverAtomInstance {
 #define SOL_TIGHTLB     0x100000  /**< value at or near lower */
 #define SOL_TIGHTUB     0x200000  /**< value at or near upper */
 #define SOL_NOELIG      0x400000  /**< variable not eligible to be fixed in DOF */
+
 /* note that the above bit positions need to be settled on still. */
 
 /** aligns to 8 on 4 and 8 byte compilers with compiler pad after t, depth */
@@ -656,5 +657,5 @@ struct GlobalDummyInstance {
    */
 };
 
-#endif /* __INSTANCE_TYPES_H_SEEN__ */
+#endif /* ASC_INSTANCE_TYPES_H */
 
