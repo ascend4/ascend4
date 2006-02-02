@@ -153,13 +153,15 @@ class Browser:
 		#--------------------
 		# pixbufs for solver_var status
 
-		self.iconstatusunknown = None;
+		self.iconstatusunknown = None
+		self.iconfixed = None
 		self.iconsolved = self.window.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
-		self.iconactive = self.window.render_icon(gtk.STOCK_DIALOG_ERROR,gtk.ICON_SIZE_MENU)
+		self.iconactive = self.window.render_icon(gtk.STOCK_NO,gtk.ICON_SIZE_MENU)
 		self.iconunsolved = None
 
 		self.statusicons={
 			ascend.ASCXX_VAR_STATUS_UNKNOWN: self.iconstatusunknown
+			,ascend.ASCXX_VAR_FIXED: self.iconfixed
 			,ascend.ASCXX_VAR_SOLVED: self.iconsolved
 			,ascend.ASCXX_VAR_ACTIVE: self.iconactive
 			,ascend.ASCXX_VAR_UNSOLVED: self.iconunsolved
@@ -312,7 +314,7 @@ class Browser:
 			if(i==2):
 				# add status icon
 				renderer1 = gtk.CellRendererPixbuf()
-				tvcolumn.pack_start(renderer1, True)
+				tvcolumn.pack_start(renderer1, False)
 				tvcolumn.add_attribute(renderer1, 'pixbuf', 6)
 
 			renderer = gtk.CellRendererText()

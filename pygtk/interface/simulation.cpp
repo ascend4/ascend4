@@ -452,13 +452,15 @@ Simulation::processVarStatus(){
 	int activeblock = status.block.current_block;
 	int low = bb->block[activeblock].col.low;
 	int high = bb->block[activeblock].col.high;
-	
+	bool allsolved = status.converged;
 	for(int c=0; c < nvars; ++c){
 		var_variable *v = vlist[c];
 		Instanc i((Instance *)var_instance(v));
 		VarStatus s = ASCXX_VAR_STATUS_UNKNOWN;
-		if(var_incident(v) && var_active(v)){
-			if(c < low){
+		if(i.isFixed()){
+			s = ASCXX_VAR_FIXED;
+		}else if(var_incident(v) && var_active(v)){
+			if(allsolved || c < low){
 				s = ASCXX_VAR_SOLVED;
 			}else if(c <= high){
 				s = ASCXX_VAR_ACTIVE;
