@@ -433,33 +433,6 @@ public:
 
 %include "solver.i"
 
-class Variable{
-public:
-	explicit Variable(const Variable &old);
-	const std::string &getName();
-};
-
-%extend Variable {
-	%pythoncode{
-		def __repr__(self):
-			return self.getName()
-	}
-}
-
-class Relation{
-public:
-	explicit Relation(const Relation &old);
-	const std::string &getName();
-};
-
-%extend Relation {
-	%pythoncode{
-		def __repr__(self):
-			return self.getName()
-	}
-}
-
-
 class ExtMethod{
 public:
 	ExtMethod(const ExtMethod &);

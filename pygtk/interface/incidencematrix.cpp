@@ -124,7 +124,7 @@ IncidenceMatrix::getIncidenceData(){
 const Variable
 IncidenceMatrix::getVariable(const int &col) const{
 	if(!is_built)throw runtime_error("Not built");
-	if(col < 0 || col >= getNumCols())throw runtime_error("Column out of range");
+	if(col < 0 || col >= getNumCols())throw range_error("Column out of range");
 	int vindex = i.pc2v[col];
 	struct var_variable *var = i.vlist[vindex];
 
@@ -134,7 +134,7 @@ IncidenceMatrix::getVariable(const int &col) const{
 const Relation
 IncidenceMatrix::getRelation(const int &row) const{
 	if(!is_built)throw runtime_error("Not built");
-	if(row < 0 || row >= getNumRows())throw runtime_error("Row out of range");
+	if(row < 0 || row >= getNumRows())throw range_error("Row out of range");
 	int rindex = i.pr2e[row];
 	struct rel_relation *rel = i.rlist[rindex];
 	return Relation(&sim, rel);
@@ -143,7 +143,7 @@ IncidenceMatrix::getRelation(const int &row) const{
 const int
 IncidenceMatrix::getBlockRow(const int &row) const{
 	if(!is_built)throw runtime_error("Not built");
-	if(row < 0 || row >= getNumRows())throw runtime_error("Row out of range");
+	if(row < 0 || row >= getNumRows())throw range_error("Row out of range");
 	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
 	for(int i=0; i < bb->nblocks; ++i){
 		if(row >= bb->block[i].row.low && row <= bb->block[i].row.high){
@@ -153,5 +153,20 @@ IncidenceMatrix::getBlockRow(const int &row) const{
 	return -1;
 }
 		
+const vector<Variable>
+IncidenceMatrix::getBlockVars(const int &block){
+	if(!is_built){
+		buildPlotData();
+	}
+	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
+	if(block < 0 || block >= bb->nblocks)throw range_error("Block out of range");
+	int low = bb->block[block].col.low;
+	int high = bb->block[block].row.high;
+	vector<Variable> v;
+	for(int j=low; j<=high; ++j){
+		v.push_back(getVariable(j));
+	}
+	return v;
+}
 
 

@@ -56,6 +56,7 @@ public:
 	const Variable getVariable(const int &row) const;
 	const Relation getRelation(const int &col) const;
 	const int getBlockRow(const int & row) const;
+	const std::vector<Variable> getBlockVars(const int &block);
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H
