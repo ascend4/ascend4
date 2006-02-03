@@ -196,7 +196,7 @@ extern int CmpWhensF(CONST struct Instance *i1, CONST struct Instance *i2);
  *                 <tr align="center"><td>    1   </td><td>   p1 >  p2  </td></tr></table>
  */
 
-#ifdef __INSTANCE_TYPES_H_SEEN__
+#ifdef ASC_INSTANCE_TYPES_H
 
 extern int CmpIntIndex(CONST struct ArrayChild *a, CONST struct ArrayChild *b);
 /**<
