@@ -8,46 +8,57 @@ MODEL condenser_lmtd(
 );
 	T_h1 ALIASES S_in.T;
 	T_h2 ALIASES S_out.T;
+	h_h1 ALIASES S_in.h;
+	h_h2 ALIASES S_out.h;
 
 	mdot_in IS_A mass_rate;
 
-	T_c1 IS_A temperature; (* cold inlet *)
-	T_c2 IS_A temperature; (* cold outlet *)
+	T_c1 IS_A temperature;
+	T_c2 IS_A temperature;
+
+	T_c_in ALIASES T_c2;
+	T_c_out ALIASES T_c1;
+
 
 	LMTD IS_A delta_temperature;
 
 	DT_1, DT_2 IS_A delta_temperature;
 	
-	DT_1 = T_h1 - T_c2;
-	DT_2 = T_h2 - T_c1;
+	DT_1 = T_h1 - T_c1;
+	DT_2 = T_h2 - T_c2;
 
-	lmtd: LMTD = (DT_1 - DT_2) / ln(DT_1/DT_2);
+	lmtd: LMTD = (DT_2 - DT_1) / ln(DT_2/DT_1);
 
 	UA IS_A ua_value;
 	q IS_A energy_rate;
 
 	q = UA * LMTD;
 
-	q = mdot_in * (S_in.h - S_out.h);
+	q = mdot_in * (h_h1 - h_h2);
 
 	S_out.p = S_in.p;
 
 METHODS
 METHOD specify;
 	FIX UA;
-	FIX T_c1;
+	FIX T_c_in;
 	FIX mdot_in;
 END specify;
 METHOD values;
 	UA := 1000 {W/m^2/K} * 4 {m} * 900 * 2*3.1415926* (0.01 {m})/2;
-	T_c1 := 273.15{K} + 200 {K};
+	T_c_in := 273.15{K} + 20 {K};
 	mdot_in := 1 {kg/s};
 	(* free values *)
-	T_c2 := 273.15{K} + 240 {K};
+	T_h2 := T_h1 - 20{K};
+	h_h2 := h_h1 - 4.2{kJ/kg/K}*20{K};
 END values;
 METHOD bound_self;
 	DT_1.lower_bound := 0{K};
 	DT_2.lower_bound := 0{K};
+	q.lower_bound := 0{W};
+	T_h2.upper_bound := T_h1;
+	T_h2.lower_bound := T_c_out;
+	h_h2.upper_bound := h_h1;
 END bound_self;
 END condenser_lmtd;
 
@@ -73,13 +84,14 @@ METHOD specify;
 	RUN C.specify;
 	FIX T_in;
 	FIX p_in;
-	FIX q;	
+	FIX C.T_c_out;
 END specify;
 METHOD values;
 	RUN C.values;
 	T_in := 273.15{K} + 280 {K};
 	p_in := 1{bar};
 	q := 4.2{kJ/s};
+	C.T_c_out := 273.15{K} + 25 {K};
 END values;
 METHOD bound_self;
 	RUN C.bound_self;
