@@ -1,0 +1,35 @@
+REQUIRE "johnpye/iapws_sat_curves.a4c";
+REQUIRE "johnpye/iapws95.a4c";
+
+MODEL separator;
+	S_in IS_A iapws95_2phase;
+	S_l ALIASES S_in.Sl;
+	S_v ALIASES S_in.Sv;
+
+	mdot_in,mdot_l, mdot_v IS_A mass_rate;
+
+	mdot_in = mdot_l + mdot_v;
+
+	mdot_v = mdot_in * S_in.x;
+
+	mdot_l = mdot_in * (1 - S_in.x);
+
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+
+METHOD specify;
+	FIX S_in.T;
+	FIX S_in.x;
+	FIX mdot_in;
+END specify;
+
+METHOD values;
+	S_in.T := 400 {K};
+	S_in.x := 0.3;
+	mdot_in := 1 {kg/s};
+END values;
+
+END separator;
+
