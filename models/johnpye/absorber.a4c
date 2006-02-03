@@ -1,4 +1,4 @@
-REQUIRE "johnpye/ideal_steam.a4c";
+REQUIRE "johnpye/iapws95.a4c";
 REQUIRE "johnpye/iapws_sat_curves.a4c";
 
 MODEL absorber;
@@ -10,7 +10,7 @@ MODEL absorber;
 		all Q is absorbed by water
 		steam generation is constant along length as mass rate, so x rises linearly.
 	*)
-	S_out IS_A ideal_steam; (* outlet steam state *)
+	S_out IS_A iapws95_2phase; (* outlet steam state *)
 	sat IS_A iapws_sat_density;
 	T ALIASES S_out.T;
 	T,sat.T ARE_THE_SAME;

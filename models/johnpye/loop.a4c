@@ -2,45 +2,50 @@ REQUIRE "johnpye/ideal_steam.a4c";
 REQUIRE "johnpye/absorber.a4c";
 REQUIRE "johnpye/surgetank.a4c";
 REQUIRE "johnpye/condenser.a4c";
-
+REQUIRE "johnpye/separator.a4c";
 (*
 	Open-loop model. given the absorber conditions, what pressure is required
 	in the surge tank in order for the mass to be contained ?
 *)
 MODEL loop;
+	S1 IS_A thermo_state;
+
 	A IS_A absorber;
-	C IS_A condenser;
-	S IS_A surgetank;
+	S IS_A separator;
+
+	C IS_A condenser_lmtd_sat(S.S_v, S1); (* in, out *)
+	T IS_A surgetank;
 
 	(* join absorber and condenser  *)
-	A.mdot_gas_out, C.mdot_gas_in ARE_THE_SAME;
-	A.S_out, C.S_in ARE_THE_SAME;
+	A.mdot_gas_out, C.mdot_in ARE_THE_SAME;
+	A.S_out, S.S_in ARE_THE_SAME;
+	S.S_v, C.S_in ARE_THE_SAME;
 
 	(* join condenser and surge tank *)
-	C.mdot_water_out, S.mdot_water_in ARE_THE_SAME;
+	C.mdot_out, T.mdot_water_in ARE_THE_SAME;
 
 	Q_A ALIASES A.Q;
-	Q_C ALIASES C.Q;
+	Q_C ALIASES C.q_fg;
 	mdot_A_in ALIASES A.mdot_water_in;
-	mdot_C_out ALIASES C.mdot_water_out;
+	mdot_C_out ALIASES C.mdot_out;
 	
 	m_A ALIASES A.m_water;
-	m_S ALIASES S.m_water;
+	m_T ALIASES T.m_water;
 
 	m_water IS_A mass;
 
-	m_A + m_S = m_water;
+	m_A + m_T = m_water;
 
-	p_S ALIASES S.p;
+	p_T ALIASES T.p;
 	p_A ALIASES A.p;
 
 
-	V_water_S ALIASES S.V_water;
+	V_water_T ALIASES T.V_water;
 	
 	x_exit_A ALIASES A.x_exit;
 
-	A.p = S.p;
-	(*A.p = 40 {bar};*)
+	(*A.p = T.p;*)
+	(* A.p = 40 {bar};*)
 
 METHODS
 METHOD default_self;
@@ -50,11 +55,12 @@ END default_self;
 METHOD specify;
 	FIX A.V_total, A.mdot_water_in;
 	FIX A.Q;
+	FIX A.p;
 
-	FIX C.h_out;
+	FIX C.S_out.h;
 
-	FIX S.T, S.rho_water;
-	FIX S.V_vessel,	S.m_gas;
+	FIX T.T, T.rho_water;
+	FIX T.V_vessel,	T.m_gas;
 
 	FIX m_water;
 END specify;
@@ -66,17 +72,18 @@ METHOD values;
 	A.V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
 	A.mdot_water_in := 0.4 {kg/s};
 	A.Q := 1000 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
+	A.p := 40 {bar};
 
-	C.h_out := 400 {kJ/kg};
+	C.S_out.h := 400 {kJ/kg};
 
-	S.rho_water := 997 {kg/m^3};
-	S.T := 400 {K};
-	S.V_vessel := 10000 {L};
-	S.m_gas := 40 {kg};
+	T.rho_water := 997 {kg/m^3};
+	T.T := 400 {K};
+	T.V_vessel := 10000 {L};
+	T.m_gas := 40 {kg};
 
 	(* free *)
 	m_A := 1000 {kg};
-	m_S := 7000 {kg};
+	m_T := 7000 {kg};
 	
 END values;
 
