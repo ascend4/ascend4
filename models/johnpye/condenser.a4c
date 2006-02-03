@@ -100,6 +100,12 @@ END condenser_lmtd_test;
 	
 
 (*--------------------------*)
+
+(*
+	This model is parameterised in order that we
+	don't end up with multiple assertions about the 
+	saturated state at the inlet, see condenser_lmtd_sat_test
+*)
 MODEL condenser_lmtd_sat(
 	S_in WILL_BE thermo_state;
 	S_out WILL_BE thermo_state;
@@ -112,21 +118,21 @@ MODEL condenser_lmtd_sat(
 	T_c1 IS_A temperature; (* cold inlet *)
 	T_c2 IS_A temperature; (* cold outlet *)
 
-	LMTD_fg IS_A delta_temperature;
+	LMTD IS_A delta_temperature;
 
-	DT_c_fg, DT_1, DT_2 IS_A delta_temperature;
+	DT_c, DT_1, DT_2 IS_A delta_temperature;
 	
-	DT_c_fg = T_c2 - T_c1;
+	DT_c = T_c2 - T_c1;
 	DT_1 = T_in - T_c1;
 	DT_2 = T_in - T_c2;
 
-	lmtd: LMTD_fg = (DT_c_fg) / ln(DT_1/DT_2);
+	lmtd: LMTD = (DT_c) / ln(DT_1/DT_2);
 	(* lmtd: LMTD_fg * -ln((T_in - T_c1)/(T_in - T_c2)) = (T_c2 - T_c1); *)
 
-	UA_fg IS_A ua_value;
-	q_fg IS_A energy_rate;
+	UA IS_A ua_value;
+	q IS_A energy_rate;
 
-	q_fg = UA_fg * LMTD_fg;
+	q = UA * LMTD;
 
 	(* condensation point *)
 	Sf ALIASES S_out;
@@ -137,15 +143,15 @@ MODEL condenser_lmtd_sat(
 
 	S_in.T = Sf.T;
 
-	q_fg = mdot_in * (S_in.h - Sf.h);
+	q = mdot_in * (S_in.h - Sf.h);
 METHODS
 METHOD specify;
-	FIX UA_fg;
+	FIX UA;
 	FIX T_c1;
 	FIX mdot_in;
 END specify;
 METHOD values;
-	UA_fg := 4000 {W/m^2/K} * 4 {m} * 900 * 2*3.1415926* (0.01 {m})/2;
+	UA := 4000 {W/m^2/K} * 4 {m} * 900 * 2*3.1415926* (0.01 {m})/2;
 	T_c1 := 273.15{K} + 200 {K};
 	mdot_in := 10 {kg/s};
 	(* free values *)
@@ -153,7 +159,7 @@ METHOD values;
 END values;
 METHOD bound_self;
 	Sf.tau.lower_bound := 1;
-	DT_c_fg.lower_bound := 0{K};
+	DT_c.lower_bound := 0{K};
 	DT_1.lower_bound := 0{K};
 	DT_2.lower_bound := 0{K};
 	Sf.rho.lower_bound := Sf.rhoc;
@@ -169,9 +175,16 @@ MODEL condenser_lmtd_sat_test;
 	sat IS_A iapws_sat_density;
 	sat.rhog, Sg.rho ARE_THE_SAME;
 	sat.T, Sg.T ARE_THE_SAME;
-	T_in ALIASES Sg.T;
 
 	C IS_A condenser_lmtd_sat(Sg,Sf);
+
+	T_hi ALIASES Sg.T;
+	T_ho ALIASES Sf.T;
+
+	T_ci ALIASES C.T_c1;
+	T_co ALIASES C.T_c2;
+
+	Q ALIASES C.q;
 
 METHODS
 METHOD default_self;	
@@ -179,17 +192,17 @@ METHOD default_self;
 END default_self;
 METHOD specify;
 	RUN C.specify;
-	FIX T_in;
+	FIX T_hi;
 END specify;
 METHOD values;
 	RUN C.values;
-	T_in := 273.15{K} + 280 {K};
+	T_hi := 273.15{K} + 280 {K};
 END values;
 METHOD bound_self;
 	RUN C.bound_self;
 END bound_self;
 METHOD self_test;
-	ASSERT (C.q_fg - 15430{kW}) <  1{kW};
+	ASSERT (C.q - 15430{kW}) <  1{kW};
 END self_test;
 END condenser_lmtd_sat_test;
 
