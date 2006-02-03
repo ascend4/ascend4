@@ -107,6 +107,7 @@ MODEL condenser_lmtd_sat(
 	T_in ALIASES S_in.T;
 
 	mdot_in IS_A mass_rate;
+	mdot_out ALIASES mdot_in;
 
 	T_c1 IS_A temperature; (* cold inlet *)
 	T_c2 IS_A temperature; (* cold outlet *)
