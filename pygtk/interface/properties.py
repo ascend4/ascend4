@@ -9,13 +9,6 @@ class VarPropsWin:
 		self.instance = instance;
 		self.browser = browser;
 
-		# values being edited:
-		self.lower = 0
-		self.upper = 1
-		self.nominal = 0.5
-		self.fixed = True
-		self.status = ascend.ASCXX_VAR_STATUS_UNKNOWN
-
 		# GUI config
 		_xml = gtk.glade.XML(GLADE_FILE,"varpropswin")
 		self.varpropswin = _xml.get_widget("varpropswin")
@@ -25,10 +18,12 @@ class VarPropsWin:
 		self.lowerentry = _xml.get_widget("lowerentry");
 		self.upperentry = _xml.get_widget("upperentry");
 		self.nominalentry = _xml.get_widget("nominalentry");
-			
+		self.fixed = _xml.get_widget("fixed");
+		self.free = _xml.get_widget("free");
+
 		self.statusimg = _xml.get_widget("statusimg"); self.statusimg = None
 
-		self.othernamesbutton = _xml.get_widget("othernamesbutton"); self.othernamesbutton.set_label("100 other names...")
+		self.othernames = _xml.get_widget("othernames"); 
 
 		self.fill_values()
 
@@ -58,7 +53,19 @@ class VarPropsWin:
 		self.varname.set_text(self.browser.sim.getInstanceName(self.instance));
 
 		if self.instance.isFixed():
-			pass
+			self.fixed.set_active(True);
+		else:
+			self.free.set_active(True);
+
+		self.clique = self.instance.getClique()
+		print "CLIQUE:",self.clique
+
+		if len(self.clique) > 1:
+			self.othernames.set_label("%d other names..." % len(self.clique));
+			self.othernames.set_sensitive(True)
+		else:
+			self.othernames.set_label("No other names");
+			self.othernames.set_sensitive(False)
 
 	def apply_changes(self):
 		print "APPLY"
@@ -81,10 +88,12 @@ class VarPropsWin:
 				self.color_entry(_k,"#FFBBBB");
 				failed = True;
 		
-		if failed:
-			raise InputError("Invalid inputs are highlighted in the GUI")
+		self.instance.setFixed(self.fixed.get_active())
 
-		self.browser.refreshtree()
+		if failed:
+			raise InputError(None) # no message
+
+		self.browser.do_solve_if_auto()
 
 	def color_entry(self,entry,color):
 		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
@@ -105,7 +114,14 @@ class VarPropsWin:
 			return True;
 		return False;
 
+	def on_othernames_clicked(self,*args):
+		print "OTHER NAMES..."
+		s = self.instance.getClique();
+		for i in s:
+			print self.browser.sim.getInstanceName(i)
+
 	def run(self):
+		self.valueentry.grab_focus()
 		_continue = True;
 		while _continue:
 			_res = self.varpropswin.run();

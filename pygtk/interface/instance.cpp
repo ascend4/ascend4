@@ -625,12 +625,28 @@ DEFINE_CHILD_METHODS(DEFINE_SET_REAL_CHILD)
 DEFINE_CHILD_METHODS(DEFINE_GET_REAL_CHILD)
 
 //------------------------------------------------------
-	
 
+bool
+InstancCompare::operator()(const Instanc &s1, const Instanc &s2) const{
+	    return (unsigned long)s1.i < (unsigned long)s2.i;
+	}
+
+const Instanc::set
+Instanc::getClique() const{
+	Instanc::set s;
+	struct Instance *i1 = i;
+	do{
+		s.insert(Instanc(i1));
+		i1=NextCliqueMember(i1);
+	}while(i1 != i); // ie we've got around the circuit
+
+	return s;
+}
+
+//------------------------------------------------------
 // static properties
 SymChar
 Instanc::fixedsym = SymChar("fixed");
 
 SymChar
 Instanc::solvervarsym = SymChar("solver_var");
-

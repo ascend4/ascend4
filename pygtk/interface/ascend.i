@@ -8,6 +8,7 @@
 %include <python/std_string.i>
 %include <python/std_vector.i>
 %include <python/std_except.i>
+%include <python/std_set.i>
 
 %{
 #include "library.h"
@@ -96,6 +97,7 @@ public:
 %template(DoubleVector) std::vector<double>;
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
+%template(InstancSet) std::set<Instanc,InstancCompare>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;#include "incidencematrix.h"
@@ -384,6 +386,8 @@ public:
 	const double getLowerBound() const;
 	const double  getUpperBound() const;
 	const double  getNominal() const;
+
+	const std::set<Instanc,InstancCompare> getClique() const;
 };
 
 %extend Instanc{

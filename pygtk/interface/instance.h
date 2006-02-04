@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include "symchar.h"
 #include "type.h"
@@ -24,6 +25,18 @@ typedef enum{
 	ASCXX_VAR_STATUS_UNKNOWN=0, ASCXX_VAR_FIXED, ASCXX_VAR_UNSOLVED, ASCXX_VAR_ACTIVE, ASCXX_VAR_SOLVED
 } VarStatus;
 
+
+/**
+	Comparator for set<Instanc>
+*/
+
+class Instanc;
+
+class InstancCompare{
+public:
+	bool operator()(const Instanc &s1, const Instanc &s2) const;
+};
+
 /**
 	This class has to be called 'Instanc' in C++ to avoid a name clash
 	with C. Maybe coulda done it with namespaces but didn't know how.
@@ -39,6 +52,9 @@ typedef enum{
 	worth the effort.
 */
 class Instanc{
+	typedef std::set<Instanc,InstancCompare> set;
+	friend class InstancCompare;
+
 private:
 	struct Instance *i;
 	SymChar name;
@@ -121,6 +137,8 @@ public:
 	const double getLowerBound() const;
 	const double  getUpperBound() const;
 	const double  getNominal() const;
+
+	const set getClique() const;
 };
 
 #endif

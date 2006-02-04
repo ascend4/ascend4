@@ -60,7 +60,7 @@
 		      <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image135">
+			<widget class="GtkImage" id="image159">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -110,7 +110,7 @@
 		      <accelerator key="C" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image136">
+			<widget class="GtkImage" id="image160">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-copy</property>
 			  <property name="icon_size">1</property>
@@ -120,6 +120,22 @@
 			  <property name="ypad">0</property>
 			</widget>
 		      </child>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkSeparatorMenuItem" id="separator5">
+		      <property name="visible">True</property>
+		    </widget>
+		  </child>
+
+		  <child>
+		    <widget class="GtkMenuItem" id="propsmenuitem">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">_Properties</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="props_activate" last_modification_time="Sat, 04 Feb 2006 08:24:39 GMT"/>
+		      <accelerator key="F4" modifiers="0" signal="activate"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -145,7 +161,7 @@
 		      <accelerator key="F9" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image137">
+			<widget class="GtkImage" id="image161">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -167,7 +183,7 @@
 		      <accelerator key="F7" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image138">
+			<widget class="GtkImage" id="image162">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -190,7 +206,7 @@
 		      <accelerator key="I" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image139">
+			<widget class="GtkImage" id="image163">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">incidence.png</property>
 			  <property name="xalign">0.5</property>
@@ -217,7 +233,7 @@
 		      <accelerator key="O" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image140">
+			<widget class="GtkImage" id="image164">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-add</property>
 			  <property name="icon_size">1</property>
@@ -239,7 +255,7 @@
 		      <accelerator key="K" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image141">
+			<widget class="GtkImage" id="image165">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-indent</property>
 			  <property name="icon_size">1</property>
@@ -279,7 +295,7 @@
 		      <accelerator key="F11" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image142">
+			<widget class="GtkImage" id="image166">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -313,7 +329,7 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image143">
+			<widget class="GtkImage" id="image167">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
 			  <property name="icon_size">1</property>
@@ -1905,7 +1921,7 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 		      <property name="spacing">0</property>
 
 		      <child>
-			<widget class="GtkButton" id="othernamesbutton">
+			<widget class="GtkButton" id="othernames">
 			  <property name="visible">True</property>
 			  <property name="can_focus">True</property>
 			  <property name="label" translatable="yes">Find other names...</property>
