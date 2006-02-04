@@ -862,11 +862,10 @@ class Browser:
 
 	def on_treeview_event(self,widget,event):
 		_contextmenu = False;
-		if event.type==gtk.gdk.KEY_PRESS:
-			if gtk.gdk.keyval_name(event.keyval)=='Menu':
-				_contextmenu = True
-				_path, _col = self.treeview.get_cursor()
-				_button = 3;
+		if event.type==gtk.gdk.KEY_PRESS and gtk.gdk.keyval_name(event.keyval)=='Menu':
+			_contextmenu = True
+			_path, _col = self.treeview.get_cursor()
+			_button = 3;
 		elif event.type==gtk.gdk.BUTTON_PRESS:
 			if event.button == 3:
 				_contextmenu = True
@@ -957,7 +956,7 @@ class Browser:
 			_dia = VarPropsWin(GLADE_FILE,self,_instance);
 			_dia.run();
 		else:
-			self.reporter.reportWarning("props_activate not implemented")
+			self.reporter.reportWarning("Select a variable first...")
 
 	def observe_activate(self,widget):
 		_path,_col = self.treeview.get_cursor()
