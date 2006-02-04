@@ -121,9 +121,8 @@ Type::getSimulation(SymChar sym){
 
 	cerr << "Type " << getName().toString() << ", getSimulation('" << sym.toString() << "')" << endl;
 
-#if 0
 	// Tell ASCEND file locations and compiler commands:
-	if(0 !have_bintoken_setup){
+	if(0 && !have_bintoken_setup){
 		cerr << "SETUP BINTOKENS..." << endl;
 
 		bin_targetstem = ASCEND_TMPDIR "/asc_bintoken";
@@ -131,19 +130,23 @@ Type::getSimulation(SymChar sym){
 		bin_objname = bin_targetstem + ".o";
 		bin_libname = bin_targetstem + ".so";
 		bin_rm = "/bin/rm";
-
+#if 1
 		bin_cmd = "make -C " ASCEND_TMPDIR " -f " ASCEND_MAKEFILEDIR_1 "/Makefile.bt" \
 			" SO=" + bin_targetstem + " ASCEND_INCDIR=\"" ASCEND_INCDIR "\" ASCEND_LIBDIR=\"" ASCEND_LIBDIR "\"";
 
 		cerr << "BINTOKEN COMMAND" << endl << "----" << bin_cmd << endl << "----" << endl;
 
+#else
+# define BTINCLUDES "-I" ASCEND_INCDIR
+		bin_cmd = "cd " ASCEND_INCDIR " && make BTTARGET=" + bin_targetstem + " BTINCLUDES=" BTINCLUDES \
+			" -f " ASCEND_MAKEFILEDIR "/Makefile.bt " + bin_targetstem;
+#endif
 		BinTokenSetOptions(bin_srcname.c_str(), bin_objname.c_str(), bin_libname.c_str()
 							, bin_cmd.c_str(), bin_rm.c_str(), 1000, 1, 0);
 	
 		cerr << "...SETUP BINTOKENS" << endl;
 		have_bintoken_setup = true;
 	}
-#endif
 
 	cerr << "CREATING INSTANCE..." << endl;
 	// Perform the instantiation (C compile etc):

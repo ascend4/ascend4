@@ -11,9 +11,11 @@ import urlparse
 import optparse
 
 from solverparameters import * # 'solver parameters' window
-from help import * # viewing help files
-from incidencematrix import * # incidence/sparsity matrix matplotlib window
-from observer import * # observer tab support
+from help import *             # viewing help files
+from incidencematrix import *  # incidence/sparsity matrix matplotlib window
+from observer import *         # observer tab support
+from properties import *       # solver_var properties dialog
+from varentry import *         # for inputting of variables with units
 
 import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
@@ -153,8 +155,11 @@ class Browser:
 		#--------------------
 		# pixbufs for solver_var status
 
+		self.fixedimg = gtk.Image()
+		self.fixedimg.set_from_file('icons/locked.png')
+
 		self.iconstatusunknown = None
-		self.iconfixed = None
+		self.iconfixed = self.fixedimg.get_pixbuf()
 		self.iconsolved = self.window.render_icon(gtk.STOCK_YES,gtk.ICON_SIZE_MENU)
 		self.iconactive = self.window.render_icon(gtk.STOCK_NO,gtk.ICON_SIZE_MENU)
 		self.iconunsolved = None
@@ -174,9 +179,7 @@ class Browser:
 
 		self.treecontext = gtk.Menu();
 		self.fixmenuitem = gtk.ImageMenuItem("_Fix",True);
-		_img = gtk.Image()
-		_img.set_from_file('icons/locked.png')
-		self.fixmenuitem.set_image(_img)
+		self.fixmenuitem.set_image(self.fixedimg)
 
 		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
 		_img = gtk.Image()
@@ -275,10 +278,6 @@ class Browser:
 			i = i + 1
 		self.moduleview.connect("row-activated", self.module_activated )
 	
-		#-------------------
-		# RE for units matching
-		self.units_re = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
-
 		#--------------------
 		# set up the methods combobox
 
@@ -618,68 +617,15 @@ class Browser:
 		if _instance.isReal():
 			# only real-valued things can have units
 			
+			_e = RealAtomEntry(_instance,newtext);
 			try:
-				# match a float with option text afterwards, optionally separated by whitespace
-				_match = re.match(self.units_re,newtext)
-				if not _match:
-					self.reporter.reportError("Not a valid value-and-optional-units")
-					return
+				_e.checkEntry()
+				_e.setValue()
+				_e.exportPreferredUnits(self.prefs)
+			except InputError, e:
+				self.reporter.reportError(str(e))
+				return;
 
-				_val = _match.group(1)
-				_units = _match.group(5)
-				#_val, _units = re.split("[ \t]+",newtext,2);
-			except RuntimeError:
-				self.reporter.reportError("Unable to split value and units")
-				return
-			print "val = ",_val
-			print "units = ",_units
-
-			# parse the units, throw an error if no good
-			try:
-				_val = float(_val)
-			except RuntimeError:
-				self.reporter.reportError("Unable to convert number part '%s' to float" % _val)
-
-			if _units.strip() == "":
-				_u = _instance.getType().getPreferredUnits()
-				if _u == None:
-					_u = _instance.getDimensions().getDefaultUnits()
-				self.reporter.reportNote("Assuming units '%s'" % _u.getName().toString() )
-			else:
-				try:
-					_u = ascend.Units(_units)
-					self.reporter.reportNote("Parsed units %s" % _units)
-				except RuntimeError:
-					self.reporter.reportError("Unrecognisable units '%s'" % _units)
-					return
-
-				if _instance.getDimensions() != _u.getDimensions():
-
-					if _u.getDimensions().isDimensionless():
-						_units = "[dimensionless]"
-
-					_my_dims = _instance.getDimensions().getDefaultUnits()
-					if _instance.getDimensions().isDimensionless():
-						_my_dims = "[dimensionless]"
-
-					self.reporter.reportError("Incompatible units '%s' (must fit with '%s')" 
-							% (_units, _my_dims) )
-					return
-
-			if _units.strip() != "" and not _instance.getDimensions().isDimensionless():
-				self.prefs.setPreferredUnits(str(_instance.getType().getName()), _units);
-		
-			_conv = float(_u.getConversion())
-			# self.reporter.reportNote("Converting: multiplying '%s %s' by factor %s to get SI units" % (_val, _units, _conv) )
-			_val = _val * _conv;
-
-			self.reporter.reportNote("Setting '%s' to '%f'" % (_name, _val))
-			
-			if _instance.getType().isRefinedSolverVar():
-				# set the 'fixed' flag as well
-				_instance.setFixedValue(float(_val))
-			else:
-				_instance.setRealValue(float(_val))
 		else:
 			if _instance.isBool():
 				_lower = newtext.lower();
@@ -990,6 +936,9 @@ class Browser:
 		if _instance.isRelation():
 			print "Relation '"+_instance.getName().toString()+"':", \
 				_instance.getRelationAsString(self.sim.getModel())
+		elif _instance.getType().isRefinedSolverVar():
+			_dia = VarPropsWin(GLADE_FILE,self,_instance);
+			_dia.run();
 		else:
 			self.reporter.reportWarning("props_activate not implemented")
 

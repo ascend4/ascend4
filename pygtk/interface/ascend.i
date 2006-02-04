@@ -377,6 +377,13 @@ public:
 	void write();
 
 	const VarStatus getVarStatus() const;
+
+	void setLowerBound(const double &);
+	void setUpperBound(const double &);
+	void setNominal(const double &);
+	const double getLowerBound() const;
+	const double  getUpperBound() const;
+	const double  getNominal() const;
 };
 
 %extend Instanc{
