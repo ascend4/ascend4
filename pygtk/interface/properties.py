@@ -59,9 +59,6 @@ class VarPropsWin:
 
 		if self.instance.isFixed():
 			pass
-			
-	def on_varpropswin_destroy_event(self,*args,**kwargs):	
-		self.varpropswin.response(gtk.RESPONSE_CANCEL)
 
 	def apply_changes(self):
 		print "APPLY"
@@ -73,16 +70,40 @@ class VarPropsWin:
 			,self.upperentry: self.instance.setUpperBound
 			,self.nominalentry: self.instance.setNominal
 		}
+		failed = False;
 		for _k,_v in _arr.iteritems():
 			i = RealAtomEntry(self.instance, _k.get_text())
 			try:
 				i.checkEntry()
 				_v(i.getValue())
 			except InputError, e:
-				_k.get_style().bg = "#FFBBBB"
 				print "INPUT ERROR: ",str(e)
+				self.color_entry(_k,"#FFBBBB");
+				failed = True;
 		
+		if failed:
+			raise InputError("Invalid inputs are highlighted in the GUI")
+
 		self.browser.refreshtree()
+
+	def color_entry(self,entry,color):
+		entry.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+		entry.modify_bg(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+		entry.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
+
+	def on_varpropswin_close(self,*args):
+		self.varpropswin.destroy()
+
+	def on_entry_key_press_event(self,widget,event):
+		keyname = gtk.gdk.keyval_name(event.keyval)
+		if keyname=="Return":
+			self.varpropswin.response(gtk.RESPONSE_OK)
+			return True
+		elif keyname=="Escape":
+			self.varpropswin.response(gtk.RESPONSE_CANCEL)
+			return True;
+		return False;
 
 	def run(self):
 		_continue = True;
@@ -98,7 +119,7 @@ class VarPropsWin:
 			if _res == gtk.RESPONSE_OK or _res==gtk.RESPONSE_CANCEL:
 				_continue = False;
 		
-		self.varpropswin.hide();
+		self.varpropswin.destroy();
 
 
 

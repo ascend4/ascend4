@@ -1661,7 +1661,9 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
   <property name="has_separator">True</property>
-  <signal name="destroy_event" handler="on_varpropswin_destroy_event" last_modification_time="Sat, 04 Feb 2006 05:31:13 GMT"/>
+  <signal name="delete_event" handler="on_varpropswin_close" last_modification_time="Sat, 04 Feb 2006 06:47:24 GMT"/>
+  <signal name="close" handler="on_varpropswin_close" last_modification_time="Sat, 04 Feb 2006 06:47:44 GMT"/>
+  <signal name="response" handler="on_varpropswin_response" last_modification_time="Sat, 04 Feb 2006 06:48:00 GMT"/>
 
   <child internal-child="vbox">
     <widget class="GtkVBox" id="dialog-vbox4">
@@ -2093,6 +2095,7 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 	      <property name="has_frame">True</property>
 	      <property name="invisible_char">*</property>
 	      <property name="activates_default">False</property>
+	      <signal name="key_press_event" handler="on_entry_key_press_event" last_modification_time="Sat, 04 Feb 2006 06:57:34 GMT"/>
 	    </widget>
 	    <packing>
 	      <property name="left_attach">1</property>
@@ -2114,33 +2117,13 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 	      <property name="has_frame">True</property>
 	      <property name="invisible_char">*</property>
 	      <property name="activates_default">False</property>
+	      <signal name="key_press_event" handler="on_entry_key_press_event" last_modification_time="Sat, 04 Feb 2006 06:57:18 GMT"/>
 	    </widget>
 	    <packing>
 	      <property name="left_attach">1</property>
 	      <property name="right_attach">2</property>
 	      <property name="top_attach">4</property>
 	      <property name="bottom_attach">5</property>
-	      <property name="y_options"></property>
-	    </packing>
-	  </child>
-
-	  <child>
-	    <widget class="GtkEntry" id="lowerentry">
-	      <property name="visible">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="editable">True</property>
-	      <property name="visibility">True</property>
-	      <property name="max_length">0</property>
-	      <property name="text" translatable="yes"></property>
-	      <property name="has_frame">True</property>
-	      <property name="invisible_char">*</property>
-	      <property name="activates_default">False</property>
-	    </widget>
-	    <packing>
-	      <property name="left_attach">1</property>
-	      <property name="right_attach">2</property>
-	      <property name="top_attach">3</property>
-	      <property name="bottom_attach">4</property>
 	      <property name="y_options"></property>
 	    </packing>
 	  </child>
@@ -2156,6 +2139,7 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 	      <property name="has_frame">True</property>
 	      <property name="invisible_char">*</property>
 	      <property name="activates_default">False</property>
+	      <signal name="key_press_event" handler="on_entry_key_press_event" last_modification_time="Sat, 04 Feb 2006 06:55:45 GMT"/>
 	    </widget>
 	    <packing>
 	      <property name="left_attach">1</property>
@@ -2190,6 +2174,28 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 	      <property name="top_attach">0</property>
 	      <property name="bottom_attach">1</property>
 	      <property name="x_options">fill</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkEntry" id="lowerentry">
+	      <property name="visible">True</property>
+	      <property name="can_focus">True</property>
+	      <property name="editable">True</property>
+	      <property name="visibility">True</property>
+	      <property name="max_length">0</property>
+	      <property name="text" translatable="yes"></property>
+	      <property name="has_frame">True</property>
+	      <property name="invisible_char">*</property>
+	      <property name="activates_default">False</property>
+	      <signal name="key_press_event" handler="on_entry_key_press_event" last_modification_time="Sat, 04 Feb 2006 06:57:01 GMT"/>
+	    </widget>
+	    <packing>
+	      <property name="left_attach">1</property>
+	      <property name="right_attach">2</property>
+	      <property name="top_attach">3</property>
+	      <property name="bottom_attach">4</property>
+	      <property name="y_options"></property>
 	    </packing>
 	  </child>
 	</widget>
