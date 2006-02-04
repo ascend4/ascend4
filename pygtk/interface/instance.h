@@ -114,6 +114,13 @@ public:
 
 	void setVarStatus(const VarStatus &); ///< make this one private, just for friend Simulation?
 	const VarStatus getVarStatus() const;
+
+	void setLowerBound(const double &);
+	void setUpperBound(const double &);
+	void setNominal(const double &);
+	const double getLowerBound() const;
+	const double  getUpperBound() const;
+	const double  getNominal() const;
 };
 
 #endif

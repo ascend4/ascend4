@@ -589,8 +589,43 @@ Instanc::getVarStatus() const{
 	if(d==NULL){
 		return ASCXX_VAR_STATUS_UNKNOWN;
 	}
-	return d->status;
+    return d->status;
 }
+
+
+
+/*------------------------------------------------------
+	Macros to declare
+		setUpperBound
+		setLowerBound
+		setNominal
+	and their 'get' equivalents
+*/
+
+#define DEFINE_GET_REAL_CHILD(METHOD,CHILD) \
+	const double \
+	Instanc::get##METHOD() const{ \
+		Instanc c = getChild(CHILD); \
+		return c.getRealValue(); \
+	}
+
+#define DEFINE_SET_REAL_CHILD(METHOD,CHILD) \
+	void \
+	Instanc::set##METHOD(const double &v){ \
+		Instanc c = getChild(CHILD); \
+		c.setRealValue(v); \
+	}
+
+#define DEFINE_CHILD_METHODS(D) \
+	D(LowerBound,"lower_bound") \
+	D(UpperBound,"upper_bound") \
+	D(Nominal,"nominal")
+
+DEFINE_CHILD_METHODS(DEFINE_SET_REAL_CHILD)
+DEFINE_CHILD_METHODS(DEFINE_GET_REAL_CHILD)
+
+//------------------------------------------------------
+	
 
 // static properties
 SymChar

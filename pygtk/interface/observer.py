@@ -56,6 +56,8 @@ class ObserverTab:
 		print "Adding row",self.rows[0],"to store"
 		_store.append(None, self.make_row(True, self.rows[0]) )
 
+		self.activerow = 0
+
 		self.view.set_model(_store)
 
 		self.browser.reporter.reportNote("Created observer '%s'" % self.name)
