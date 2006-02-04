@@ -301,7 +301,8 @@ class Browser:
 		self.tvcolumns = [ gtk.TreeViewColumn() for _type in columns[:len(titles)] ]
 		
 		self.treeview.connect("row-expanded", self.row_expanded )
-		self.treeview.connect("button-press-event", self.tree_click )
+		self.treeview.connect("button-press-event", self.on_treeview_event )
+		self.treeview.connect("key-press-event",self.on_treeview_event )
 
 		# data columns are: name type value colour weight editable
 		
@@ -540,6 +541,7 @@ class Browser:
 			self.reporter.reportError("No observer defined!")
 			return
 		self.observers[0].copy_to_clipboard(self.clip)
+
 #   --------------------------------------------
 #   MODULE LIST
 
@@ -858,42 +860,57 @@ class Browser:
 #   ------------------------------
 #   CONTEXT MENU
 
-	def tree_click(self,widget,event):
-		# which button was clicked?
-		if event.button == 3:
-			_x = int(event.x)
-			_y = int(event.y)
-			_time = event.time
-			_pthinfo = self.treeview.get_path_at_pos(_x, _y)
-			if _pthinfo != None:
-				_canpop = False;
+	def on_treeview_event(self,widget,event):
+		_contextmenu = False;
+		if event.type==gtk.gdk.KEY_PRESS:
+			if gtk.gdk.keyval_name(event.keyval)=='Menu':
+				_contextmenu = True
+				_path, _col = self.treeview.get_cursor()
+				_button = 3;
+		elif event.type==gtk.gdk.BUTTON_PRESS:
+			if event.button == 3:
+				_contextmenu = True
+				_x = int(event.x)
+				_y = int(event.y)
+				_button = event.button
+				_pthinfo = self.treeview.get_path_at_pos(_x, _y)
+				if _pthinfo == None:
+					return
 				_path, _col, _cellx, _celly = _pthinfo
-				# self.reporter.reportError("Right click on %s" % self.otank[_path][0])
-				_instance = self.otank[_path][1]
-				if _instance.getType().isRefinedSolverVar():
-					_canpop = True;
-					self.observemenuitem.set_sensitive(True)
-					if _instance.isFixed():
-						self.fixmenuitem.set_sensitive(False)
-						self.freemenuitem.set_sensitive(True)
-					else:
-						self.fixmenuitem.set_sensitive(True)
-						self.freemenuitem.set_sensitive(False)
-				elif _instance.isRelation():
-					_canpop = True;
-					self.propsmenuitem.set_sensitive(True)					
+		
+		# which button was clicked?
+		if not _contextmenu:
+			return 
 
-				if _instance.isPlottable():
-					self.plotmenuitem.set_sensitive(True)
-					_canpop = True;
-				else:
-					self.plotmenuitem.set_sensitive(False)
+		_canpop = False;
+		# self.reporter.reportError("Right click on %s" % self.otank[_path][0])
+		_instance = self.otank[_path][1]
+		if _instance.getType().isRefinedSolverVar():
+			_canpop = True;
+			self.observemenuitem.set_sensitive(True)
+			if _instance.isFixed():
+				self.fixmenuitem.set_sensitive(False)
+				self.freemenuitem.set_sensitive(True)
+			else:
+				self.fixmenuitem.set_sensitive(True)
+				self.freemenuitem.set_sensitive(False)
+		elif _instance.isRelation():
+			_canpop = True;
+			self.propsmenuitem.set_sensitive(True)					
 
-				if _canpop:
-					self.treeview.grab_focus()
-					self.treeview.set_cursor( _path, _col, 0)
-					self.treecontext.popup( None, None, None, event.button, _time)
-					return 1
+		if _instance.isPlottable():
+			self.plotmenuitem.set_sensitive(True)
+			_canpop = True;
+		else:
+			self.plotmenuitem.set_sensitive(False)
+
+		if not _canpop:
+			return 
+
+		self.treeview.grab_focus()
+		self.treeview.set_cursor( _path, _col, 0)
+		self.treecontext.popup( None, None, None, _button, event.time)
+		return 1
 
 	def fix_activate(self,widget):
 		_path,_col = self.treeview.get_cursor()
@@ -954,8 +971,8 @@ class Browser:
 				self.create_observer()
 			_observer = self.observers[0]
 			_observer.add_instance(_instance)
-
-	def delete_event(self, widget, event, data=None):
+	
+	def delete_event(self, widget, event):
 		self.do_quit()	
 		return False
 

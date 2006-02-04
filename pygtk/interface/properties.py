@@ -93,7 +93,7 @@ class VarPropsWin:
 		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
 
 	def on_varpropswin_close(self,*args):
-		self.varpropswin.destroy()
+		self.varpropswin.response(gtk.RESPONSE_CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
 		keyname = gtk.gdk.keyval_name(event.keyval)
