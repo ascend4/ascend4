@@ -57,6 +57,7 @@ public:
 	const Relation getRelation(const int &col) const;
 	const int getBlockRow(const int & row) const;
 	const std::vector<Variable> getBlockVars(const int &block);
+	const std::vector<Relation> getBlockRels(const int &block);
 };
 
 #endif // ASCXX_INCIDENCEMATRIX_H
