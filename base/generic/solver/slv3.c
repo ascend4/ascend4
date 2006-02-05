@@ -767,9 +767,9 @@ static void calc_nominals( slv3_system_t sys)
 	  n = TOO_SMALL;
 
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-	  FPRINTF(fp,"QRSlv::calc_nominals: Variable ");
+	  FPRINTF(fp,"QRSlv::calc_nominals: Variable '");
 	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"has nominal value of zero. Resetting to %g.",n);
+	  FPRINTF(fp,"' has nominal value of zero. Resetting to %g.",n);
 	  error_reporter_end_flush();
 
 	  var_set_nominal(var,n);

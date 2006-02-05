@@ -58,9 +58,6 @@ extern struct gl_list_t *ShortestPath(CONST struct Instance *inst,
                                       /* CONST */ unsigned int height,
                                       /* CONST */ unsigned int best);
 /**<
- *  <!--  struct gl_list_t *ShortestPath(inst,ref,height,best)         -->
- *  <!--  const struct Instance *inst, *ref;                           -->
- *  <!--  const unsigned int height,best;                              -->
  *  Collect all instances in path connecting inst with ref and returns
  *  them in a list.  If path doesn't exist, it returns NULL.  Path will
  *  be such that the smallest number of intermediate instances are used.
@@ -73,9 +70,6 @@ extern struct gl_list_t *ShortestPath(CONST struct Instance *inst,
 
 extern struct gl_list_t *AllPaths(CONST struct Instance *inst);
 /**< 
- *  <!--  struct gl_list_t *AllPaths(inst)                             -->
- *  <!--  const struct Instance *i;                                    -->
- *
  *  AllPaths makes and returns a list of lists of NameNode structures.
  *  Each member of list AllPaths returns is a path from the given instance
  *  to root.<br><br>
@@ -96,10 +90,6 @@ extern struct gl_list_t *AllPaths(CONST struct Instance *inst);
 
 extern struct gl_list_t *ISAPaths(CONST struct gl_list_t *pathlist);
 /**< 
- *  <!--  struct gl_list_t *ISAPaths(pathlist)                         -->
- *  <!--  struct gl_list_t *pathlist, *list;                           -->
- *  <!--  isalist = ISAPaths(pathlist);                                -->
- *
  *  Given pathlist, the output of AllPaths, returns the list of
  *  names which are real: that is names which have been constructed
  *  without ALIASES or WILL_BE's intermediate.
@@ -113,9 +103,6 @@ extern int WriteInstanceName(FILE *f,
                              CONST struct Instance *i,
                              CONST struct Instance *ref);
 /**<
- *  <!--  int WriteInstanceName(f,i,ref)                               -->
- *  <!--  const struct Instance *i,*ref;                               -->
- *  <!--  FILE *f;                                                     -->
  *  Print the instance's name to the specified file.  The name that is
  *  printed is derived from the shortest path between i and ref.  If
  *  ref is NULL, the shortest path to root is used. The number of
@@ -127,9 +114,6 @@ extern void WriteInstanceNameDS(Asc_DString * dsPtr,
                                 CONST struct Instance *i,
                                 CONST struct Instance *ref);
 /**<
- *  <!--  WriteInstanceNameDS(dsPtr,i,ref)                             -->
- *  <!--  const struct Instance *i,*ref;                               -->
- *  <!--  Asc_DString *dsPtr;                                          -->
  *  Print the instance's name to the specified dstring.  The name that is
  *  printed is derived from the shortest path between i and ref.  If
  *  ref is NULL, the shortest path to root is used.
@@ -141,9 +125,6 @@ extern void WriteInstanceNameDS(Asc_DString * dsPtr,
 extern char *WriteInstanceNameString(CONST struct Instance *i,
                                      CONST struct Instance *ref);
 /**<
- *  <!--  result = WriteInstanceNameString(i,ref)                      -->
- *  <!--  const struct Instance *i,*ref;                               -->
- *  <!--  char *result;                                                -->
  *  Return a string (that the user must destroy eventually).  The name that is
  *  printed is derived from the shortest path between i and ref.  If
  *  ref is NULL, the shortest path to root is used.
@@ -153,9 +134,6 @@ extern char *WriteInstanceNameString(CONST struct Instance *i,
 
 extern int WriteAnyInstanceName(FILE *f, struct Instance *i);
 /**< 
- *  <!--  int  WriteAnyInstanceName(f,i);                              -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  FILE *f;                                                     -->
  *  Print the instance's name to the specified file.
  *  Very similar to WriteInstanceName().  The name that is
  *  printed is derived from *any* path from i to NULL.
@@ -166,39 +144,27 @@ extern int WriteAnyInstanceName(FILE *f, struct Instance *i);
 
 extern unsigned long CountAliases(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long CountAliases(i)                                -->
  *  Count all the known names of the instance given.
  */
 
 extern unsigned long CountISAs(CONST struct Instance *i);
 /**< 
- *  <!--  unsigned long CountISAs(i)                                   -->
  *  Count the names with which the instance given was created.
  */
 
 extern void WriteAliases(FILE *f, CONST struct Instance *i);
 /**< 
- *  <!--  void WriteAliases(f,i)                                       -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct Instance *i;                                          -->
  *  Print all the instance's names to the specified file.
  */
 
 extern void WriteISAs(FILE *f, CONST struct Instance *i);
 /**< 
- *  <!--  void WriteISAs(f,i)                                          -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct Instance *i;                                          -->
  *  Print the instance's constructed names to the specified file.
  *  (there may not be any in bizarre circumstances).
  */
 
 extern struct gl_list_t *WriteAliasStrings(CONST struct Instance *i);
 /**< 
- *  <!--  aliases=WriteAliasStrings(i);                                -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  struct gl_list_t *aliases;                                   -->
- *
  *  Return a list of strings of all the possible instance names for i.
  *  The list AND the strings on it are the user's responsibility to destroy.
  *  gl_free_and_destroy(aliases) would be convenient.
@@ -206,10 +172,6 @@ extern struct gl_list_t *WriteAliasStrings(CONST struct Instance *i);
 
 extern struct gl_list_t *WriteISAStrings(CONST struct Instance *i);
 /**< 
- *  <!--  aliases=WriteISAStrings(i);                                  -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  struct gl_list_t *aliases;                                   -->
- *
  *  Return a list of strings of all the constructed instance names for i.
  *  Names created by WILL_BE/ALIASES are not returned.
  *  Under bizarre circumstances, the list may be empty.
@@ -223,26 +185,16 @@ extern struct gl_list_t *WriteISAStrings(CONST struct Instance *i);
 
 extern void WriteClique(FILE *f, CONST struct Instance *i);
 /**< 
- *  <!--  void WriteClique(f,i)                                        -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct Instance *i;                                          -->
  *  Print all the instance's clique members.
  */
 
 extern void WriteInstance(FILE *f, CONST struct Instance *i);           
 /**< 
- *  <!--  void WriteInstance(f,i)                                      -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct Instance *i;                                          -->
  *  Print the information contained in i.
  */
 
 extern int WritePath(FILE *f, CONST struct gl_list_t *path);
 /**< 
- *  <!--  l =  WritePath(f,path);                                      -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  CONST struct gl_list_t *path;                                -->
- *  <!--  int l;                                                       -->
  *  Returns the number of name pieces written.
  */
 
@@ -257,10 +209,6 @@ extern char *WritePathString(CONST struct gl_list_t *path);
 
 extern void SaveInstance(FILE *f, CONST struct Instance *inst, int dorelations);
 /**< 
- *  <!--  void SaveInstance(fp,inst,dorelations);                      -->
- *  <!--  FILE *fp,                                                    -->
- *  <!--  const struct Instance *inst;                                 -->
- *  <!--  int dorelations;                                             -->
  *  Save the information contained in inst in a format that will allow
  *  efficient reconstruction of the instance. This will be followed up
  *  with RestoreInstance.
@@ -268,8 +216,6 @@ extern void SaveInstance(FILE *f, CONST struct Instance *inst, int dorelations);
 
 extern void WriteInstanceList(struct gl_list_t *list);
 /**< 
- *  <!--  void WriteInstanceList(list);                                -->
- *  <!--  struct gl_list_t *list;                                      -->
  *  This is a debugging aid and not intended for general use.
  *  It assumes that this is a list of instances and will try to write
  *  out the instance name for each element on the list.
@@ -277,9 +223,6 @@ extern void WriteInstanceList(struct gl_list_t *list);
 
 extern void WriteAtomValue(FILE *fp, CONST struct Instance *i);
 /**<
- *  <!--  void WriteAtomValue(fp,i);                                   -->
- *  <!--  FILE *fp;                                                    -->
- *  <!--  CONST struct Instance *i;                                    -->
  *  Write an instance value to fp.
  */
 
@@ -319,14 +262,6 @@ extern struct gl_list_t *PushInterfacePtrs(struct Instance *i,
                                            int visitorder,
                                            VOIDPTR vp);
 /**<
- *  <!--  oldips = PushInterfacePtrs(i,ipcreatef,iest,visitorder,vp);  -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  IPFunc ipcreatef;                                            -->
- *  <!--  unsigned long iest;                                          -->
- *  <!--  int visitorder;                                              -->
- *  <!--  struct gl_list_t *oldips;                                    -->
- *  <!--  VOIDPTR vp;                                                  -->
- *
  *  Creates a gl_list and returns it to you.
  *  It contains the information needed to restore the state of the
  *  instance interface pointers ipcreatef returns non-NULL values for.
@@ -355,10 +290,6 @@ extern struct gl_list_t *PushInterfacePtrs(struct Instance *i,
 
 typedef VOIDPTR (*IPDeleteFunc)(struct Instance *, VOIDPTR, VOIDPTR);
 /**< 
- *  <!--  func(i,ipdata,vp);                                           -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  VOIDPTR ipdata;   (you gave us with your IPFunc)             -->
- *  <!--  VOIDPTR vp;       (the vp you pass to PopInterfacePtrs)      -->
  *  This is a function you supply. It will be called with the pointer
  *  you returned in IPFunc and the matching instance and the void
  *  you passed to PopInterfacePtrs.
@@ -369,10 +300,6 @@ extern void PopInterfacePtrs(struct gl_list_t *oldips,
                              IPDeleteFunc ipdestroyf,
                              VOIDPTR vp);
 /**<
- *  <!--  PopInterfacePtrs(oldips,ipdestroyf,vp);                      -->
- *  <!--  IPDeleteFunc ipdestroyf;                                     -->
- *  <!--  struct gl_list_t *oldips;                                    -->
- *  <!--  VOIDPTR userdata;                                            -->
  *  This function restores the previous state of interface pointers.
  *  oldips is from a call to PushInterfacePtrs.
  *  ipdestroyf is a function you provide.  If you provide NULL
@@ -384,36 +311,24 @@ extern void PopInterfacePtrs(struct gl_list_t *oldips,
 
 extern int ArrayIsRelation(struct Instance *i);
 /**<
- *  <!--  r = ArrayIsRelation(i);                                      -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int r;                                                       -->
  *  Returns 1 if the instance sent in is a good relation array or relation,
  *  0 OTHERWISE.
  */
 
 extern int ArrayIsLogRel(struct Instance *i);
 /**< 
- *  <!--  r = ArrayIsLogRel(i);                                        -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int r;                                                       -->
  *  Returns 1 if the instance sent in is a good logical relation array
  *  or logical relation, 0 OTHERWISE.
  */
 
 extern int ArrayIsWhen(struct Instance *i);
 /**< 
- *  <!--  r = ArrayIsWhen(i);                                          -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int r;                                                       -->
  *  Returns 1 if the instance sent in is a good when array
  *  or when, 0 OTHERWISE.
  */
 
 extern int ArrayIsModel(struct Instance *i);
 /**< 
- *  <!--  r = ArrayIsModel(i);                                         -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int r;                                                       -->
  *  Returns 1 if the instance sent in is a good model array
  *  or when, 0 OTHERWISE.
  */
