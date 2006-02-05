@@ -4,6 +4,43 @@ import gtk, gtk.glade
 import ascend
 from varentry import *
 
+class RelPropsWin:
+	def __init__(self,GLADE_FILE,browser,instance):
+		self.instance = instance;
+		self.browser = browser;
+
+		# GUI config
+		_xml = gtk.glade.XML(GLADE_FILE,"relpropswin")
+		self.window = _xml.get_widget("relpropswin")
+
+		self.relname = _xml.get_widget("relname")
+		self.residual = _xml.get_widget("residual")
+		self.expr = _xml.get_widget("expr")
+		self.exprbuff = gtk.TextBuffer();
+		self.expr.set_buffer(self.exprbuff)
+
+		self.fill_values()
+		_xml.signal_autoconnect(self)
+
+	def fill_values(self):
+		self.relname.set_text( self.browser.sim.getInstanceName(self.instance) )
+		self.residual.set_text( str( self.instance.getResidual() ) )
+		self.exprbuff.set_text( self.instance.getRelationAsString(self.browser.sim.getModel() ) )
+
+	def on_varpropswin_close(self,*args):
+		self.window.response(gtk.RESPONSE_CANCEL)
+
+	def on_entry_key_press_event(self,widget,event):
+		keyname = gtk.gdk.keyval_name(event.keyval)
+		if keyname=="Escape":
+			self.window.response(gtk.RESPONSE_CLOSE)
+			return True;
+		return False;
+
+	def run(self):
+		self.window.run()
+		self.window.hide()
+
 class VarPropsWin:
 	def __init__(self,GLADE_FILE,browser,instance):
 		self.instance = instance;
@@ -21,7 +58,8 @@ class VarPropsWin:
 		self.fixed = _xml.get_widget("fixed");
 		self.free = _xml.get_widget("free");
 
-		self.statusimg = _xml.get_widget("statusimg"); self.statusimg = None
+		self.statusimg = _xml.get_widget("statusimg");
+		self.statusmessage = _xml.get_widget("statusmessage");
 
 		self.othernames = _xml.get_widget("othernames"); 
 
@@ -35,7 +73,7 @@ class VarPropsWin:
 		_u = self.instance.getType().getPreferredUnits();
 		if _u == None:
 			_conversion = 1
-			_u = self.getDimensions().getDefaultUnits().getName().toString()
+			_u = self.instance.getDimensions().getDefaultUnits().getName().toString()
 		else:
 			_conversion = _u.getConversion() # displayvalue x conversion = SI
 			_u = _u.getName().toString()
@@ -57,15 +95,23 @@ class VarPropsWin:
 		else:
 			self.free.set_active(True);
 
-		self.clique = self.instance.getClique()
-		print "CLIQUE:",self.clique
+		_status = self.instance.getVarStatus()
+		
+		self.statusimg.set_from_pixbuf(self.browser.statusicons[_status]);
+		self.statusmessage.set_text(self.browser.statusmessages[_status]);
 
-		if len(self.clique) > 1:
-			self.othernames.set_label("%d other names..." % len(self.clique));
-			self.othernames.set_sensitive(True)
-		else:
-			self.othernames.set_label("No other names");
-			self.othernames.set_sensitive(False)
+		#self.clique = self.instance.getClique()
+		#print "CLIQUE:",self.clique
+		#
+		#if len(self.clique) > 1:
+		#	self.othernames.set_label("%d other names..." % len(self.clique));
+		#	self.othernames.set_sensitive(True)
+		#else:
+		#	self.othernames.set_label("No other names");
+		#	self.othernames.set_sensitive(False)
+		#
+		self.othernames.set_label("Clique not implemented");
+		self.othernames.set_sensitive(False)
 
 	def apply_changes(self):
 		print "APPLY"
@@ -82,6 +128,7 @@ class VarPropsWin:
 			i = RealAtomEntry(self.instance, _k.get_text())
 			try:
 				i.checkEntry()
+				self.color_entry(_k,"white");
 				_v(i.getValue())
 			except InputError, e:
 				print "INPUT ERROR: ",str(e)

@@ -365,7 +365,10 @@ public:
 	const long getIntValue() const;
 	const SymChar getSymbolValue() const;
 	const std::string getValueAsString() const; ///< Use carefully: rounding will occur for doubles!
+
 	const std::string getRelationAsString(const Instanc &relative_to) const;
+	const double getResidual() const;
+
 	Plot getPlot() const;
 
 	const bool isPlottable() const;
@@ -409,8 +412,10 @@ public:
 			# print "GETTING VALUE OF %s" % self.getName()
 			if self.isCompound():
 				return ""
-			elif self.isRelation() or self.isWhen():
-				return "RELATION"
+			elif self.isRelation():
+				return self.getResidual()
+			elif self.isWhen():
+				return "WHEN"
 			elif self.isSet():
 				_s = set(self.getSetValue());
 				#for _v in self.getSetValue():

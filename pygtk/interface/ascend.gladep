@@ -2,7 +2,8 @@
 <!DOCTYPE glade-project SYSTEM "http://glade.gnome.org/glade-project-2.0.dtd">
 
 <glade-project>
-  <name></name>
-  <program_name></program_name>
+  <name>Interface</name>
+  <program_name>interface</program_name>
+  <pixmaps_directory>icons</pixmaps_directory>
   <gnome_support>FALSE</gnome_support>
 </glade-project>
