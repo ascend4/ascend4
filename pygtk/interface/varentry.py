@@ -94,6 +94,6 @@ class RealAtomEntry:
 		_dim = self.instance.getDimensions()
 
 		if self.units.strip() != "" and not _dim.isDimensionless():
-			prefs.setPreferredUnits(_typename,_units);
+			prefs.setPreferredUnits(_typename,self.units);
 		
 
