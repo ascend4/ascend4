@@ -69,7 +69,11 @@ MODEL condenser_lmtd_test;
 	S1 IS_A iapws95_1phase;
 	S2 IS_A iapws95_1phase;
 
-	T_in ALIASES S1.T;
+	T_hi ALIASES C.S_in.T;
+	T_ho ALIASES C.S_out.T;
+	T_ci ALIASES C.T_c_in;
+	T_co ALIASES C.T_c_out;
+
 	p_in ALIASES S1.p;
 
 	C IS_A condenser_lmtd(S1,S2);
@@ -110,59 +114,59 @@ MODEL condenser_lmtd_sat(
 	S_in WILL_BE thermo_state;
 	S_out WILL_BE thermo_state;
 );
-	T_in ALIASES S_in.T;
-
 	mdot_in IS_A mass_rate;
 	mdot_out ALIASES mdot_in;
 
-	T_c1 IS_A temperature; (* cold inlet *)
-	T_c2 IS_A temperature; (* cold outlet *)
+	T_ci IS_A temperature; (* cold inlet *)
+	T_co IS_A temperature; (* cold outlet *)
+	T_hi ALIASES S_in.T;
+	T_ho ALIASES S_out.T;
 
 	LMTD IS_A delta_temperature;
 
 	DT_c, DT_1, DT_2 IS_A delta_temperature;
 	
-	DT_c = T_c2 - T_c1;
-	DT_1 = T_in - T_c1;
-	DT_2 = T_in - T_c2;
+	z_DT_c: DT_c = T_co - T_ci;
+	z_DT_1: DT_1 = T_hi - T_ci;
+	z_DT_2: DT_2 = T_hi - T_co;
 
-	lmtd: LMTD = (DT_c) / ln(DT_1/DT_2);
-	(* lmtd: LMTD_fg * -ln((T_in - T_c1)/(T_in - T_c2)) = (T_c2 - T_c1); *)
+	(* this is a better-converging form for the LMTD equation *)
+	lmtd: DT_1/DT_2 = exp(DT_c / LMTD);
 
 	UA IS_A ua_value;
 	q IS_A energy_rate;
 
-	q = UA * LMTD;
+	z_q_LMTD: q = UA * LMTD;
 
 	(* condensation point *)
 	Sf ALIASES S_out;
 
 	sat IS_A iapws_sat_density;
-	sat.rhof = Sf.rho;
-	sat.T = Sf.T;
+	z_rhof: sat.rhof = Sf.rho;
+	z_T_sat: sat.T = Sf.T;
 
-	S_in.T = Sf.T;
+	z_T_const: S_in.T = Sf.T;
 
-	q = mdot_in * (S_in.h - Sf.h);
+	z_q_c: q = mdot_in * (S_in.h - Sf.h);
 METHODS
 METHOD specify;
 	FIX UA;
-	FIX T_c1;
+	FIX T_ci;
 	FIX mdot_in;
 END specify;
 METHOD values;
 	UA := 4000 {W/m^2/K} * 4 {m} * 900 * 2*3.1415926* (0.01 {m})/2;
-	T_c1 := 273.15{K} + 200 {K};
+	T_ci := 273.15{K} + 200 {K};
 	mdot_in := 10 {kg/s};
 	(* free values *)
-	T_c2 := 273.15{K} + 240 {K};
+	T_co := 273.15{K} + 240 {K};
 END values;
 METHOD bound_self;
-	Sf.tau.lower_bound := 1;
+(*	Sf.tau.lower_bound := 1;
 	DT_c.lower_bound := 0{K};
 	DT_1.lower_bound := 0{K};
 	DT_2.lower_bound := 0{K};
-	Sf.rho.lower_bound := Sf.rhoc;
+	Sf.rho.lower_bound := Sf.rhoc;*)
 END bound_self;
 END condenser_lmtd_sat;
 
@@ -181,8 +185,10 @@ MODEL condenser_lmtd_sat_test;
 	T_hi ALIASES Sg.T;
 	T_ho ALIASES Sf.T;
 
-	T_ci ALIASES C.T_c1;
-	T_co ALIASES C.T_c2;
+	T_ci ALIASES C.T_ci;
+	T_co ALIASES C.T_co;
+
+	mdot ALIASES C.mdot_in;
 
 	Q ALIASES C.q;
 

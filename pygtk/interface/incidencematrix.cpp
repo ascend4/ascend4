@@ -165,11 +165,31 @@ IncidenceMatrix::getBlockVars(const int &block){
 		return v;
 	}
 	int low = bb->block[block].col.low;
-	int high = bb->block[block].row.high;
+	int high = bb->block[block].col.high;
 	for(int j=low; j<=high; ++j){
 		v.push_back(getVariable(j));
 	}
 	return v;
 }
+
+const vector<Relation>
+IncidenceMatrix::getBlockRels(const int &block){
+	if(!is_built){
+		buildPlotData();
+	}
+	vector<Relation> v;
+	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
+	if(block < 0 || block >= bb->nblocks){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Block out of range");
+		return v;
+	}
+	int low = bb->block[block].row.low;
+	int high = bb->block[block].row.high;
+	for(int j=low; j<=high; ++j){
+		v.push_back(getRelation(j));
+	}
+	return v;
+}
+	
 
 

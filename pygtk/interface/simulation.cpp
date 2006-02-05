@@ -341,10 +341,17 @@ Simulation::solve(Solver solver){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged in block %d after overall %d iterations (see console)"
 			" (%.2f s).",status.block.current_block,status.iteration,elapsed);
 		IncidenceMatrix inc = getIncidenceMatrix();
-		vector<Variable> v = inc.getBlockVars(status.block.current_block);
 
+		cerr << "VARIABLES IN NON-CONVERGED BLOCK:" << endl;
+		vector<Variable> v = inc.getBlockVars(status.block.current_block);
 		for(vector<Variable>::iterator vi = v.begin(); vi < v.end(); ++vi){
 			cerr << vi->getName() << " = " << vi->getValue() << endl;
+		}
+
+		cerr << "RELATIONS IN NON-CONVERGED BLOCK:" << endl;
+		vector<Relation> r = inc.getBlockRels(status.block.current_block);
+		for(vector<Relation>::iterator ri = r.begin(); ri < r.end(); ++ri){
+			cerr << ri->getName() << endl;
 		}
 	}
 
