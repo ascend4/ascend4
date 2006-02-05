@@ -16,7 +16,6 @@ extern "C"{
 #include <compiler/instance_io.h>
 #include <compiler/instantiate.h>
 #include <compiler/bintoken.h>
-#include <compiler/instance_enum.h>
 #include <compiler/instquery.h>
 #include <compiler/check.h>
 #include <compiler/name.h>
@@ -31,6 +30,9 @@ extern "C"{
 #include <compiler/exprs.h>
 #include <compiler/relation.h>
 #include <compiler/relation_io.h>
+#include <compiler/functype.h>
+#include <compiler/instance_types.h>
+#include <compiler/relation_util.h>
 }
 
 #include "instance.h"
@@ -391,6 +393,16 @@ Instanc::getRelationAsString(const Instanc &relative_to) const{
 		throw runtime_error("getRelationString: Instance is not a relation");
 	}
 	return ss.str();
+}
+
+const double
+Instanc::getResidual() const{
+	if(!isRelation()){
+		throw runtime_error("getResidual: not a relation");
+	}
+	struct RelationInstance * const ri = (struct RelationInstance * const)i;
+
+	return RelationResidual( ri->ptr );
 }
 		
 /**

@@ -171,6 +171,13 @@ class Browser:
 			,ascend.ASCXX_VAR_ACTIVE: self.iconactive
 			,ascend.ASCXX_VAR_UNSOLVED: self.iconunsolved
 		}
+		self.statusmessages={
+			ascend.ASCXX_VAR_STATUS_UNKNOWN: "Status unknown"
+			,ascend.ASCXX_VAR_FIXED: "Fixed"
+			,ascend.ASCXX_VAR_SOLVED: "Converged"
+			,ascend.ASCXX_VAR_ACTIVE: "Active (unconverged)"
+			,ascend.ASCXX_VAR_UNSOLVED: "Not yet visited"
+		}		
 
 		#--------------------
 		# set up the context menu for fixing/freeing vars
@@ -568,6 +575,7 @@ class Browser:
 		_fgcolor = "black"
 		_fontweight = pango.WEIGHT_NORMAL
 		_editable = False
+		_statusicon = None
 		if instance.getType().isRefinedSolverVar():
 			_editable = True
 			_fontweight = pango.WEIGHT_BOLD
@@ -576,12 +584,12 @@ class Browser:
 			else:
 				_fgcolor = BROWSER_FREE_COLOR
 				_fontweight = pango.WEIGHT_BOLD
+			_status = instance.getVarStatus();
+			_statusicon = self.statusicons[_status]
+	
 		elif instance.isBool() or instance.isReal() or instance.isInt():
 			# TODO can't edit constants that have already been refined
 			_editable = True
-		_status = instance.getVarStatus();
-
-		_statusicon = self.statusicons[_status]
 
 		#if(len(_value) > 80):
 		#	_value = _value[:80] + "..."
@@ -604,7 +612,7 @@ class Browser:
 					self.treestore.set_value(_iter,3,BROWSER_FIXED_COLOR)
 				elif not _instance.isFixed() and self.treestore.get_value(_iter,3)==BROWSER_FIXED_COLOR:
 					self.treestore.set_value(_iter,3,BROWSER_FREE_COLOR)
-			self.treestore.set_value(_iter, 6, self.statusicons[_instance.getVarStatus()])
+				self.treestore.set_value(_iter, 6, self.statusicons[_instance.getVarStatus()])
 
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)
@@ -952,6 +960,8 @@ class Browser:
 		if _instance.isRelation():
 			print "Relation '"+_instance.getName().toString()+"':", \
 				_instance.getRelationAsString(self.sim.getModel())
+			_dia = RelPropsWin(GLADE_FILE,self,_instance);
+			_dia.run();
 		elif _instance.getType().isRefinedSolverVar():
 			_dia = VarPropsWin(GLADE_FILE,self,_instance);
 			_dia.run();

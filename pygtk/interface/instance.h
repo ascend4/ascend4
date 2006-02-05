@@ -48,8 +48,9 @@ public:
 	with lots of diffent subclasses for the different atom types.
 	Maybe even multiple inheritance.
 
-	But until the underlying C code is ported to C++ it's not going to be
-	worth the effort.
+	But until the underlying C code is ported to C++ or modularised in 
+	some other way, it's not going to be worth the effort. We discussed
+	this in the mailing list.
 */
 class Instanc{
 	typedef std::set<Instanc,InstancCompare> set;
@@ -139,6 +140,8 @@ public:
 	const double  getNominal() const;
 
 	const set getClique() const;
+	
+	const double getResidual() const;
 };
 
 #endif
