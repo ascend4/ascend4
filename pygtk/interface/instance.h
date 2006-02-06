@@ -113,7 +113,7 @@ public:
 	void setRealValueWithUnits(double, const char *, const unsigned &depth=0);
 
 	template<class T>
-	const ASCXX_Set<T> Instanc::getSetValue() const{
+	const ASCXX_Set<T> getSetValue() const{
 		if(!isSet()){
 			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Variable '%s' is not set-valued",getName().toString());
 			return ASCXX_Set<T>();

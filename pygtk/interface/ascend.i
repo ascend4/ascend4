@@ -108,11 +108,11 @@ public:
 
 // Grab a Python function object as a Python object.
 %typemap(python,in) PyObject *pyfunc {
-  if (!PyCallable_Check($source)) {
+  if (!PyCallable_Check($input)) {
       PyErr_SetString(PyExc_TypeError, "Need a callable object!");
       return NULL;
   }
-  $target = $input;
+  $1 = $input;
 }
 
 //----------------------------

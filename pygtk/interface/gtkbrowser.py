@@ -492,10 +492,14 @@ class Browser:
 
 		self.start_waiting("Checking system...")
 
-		if self.sim.check():
-			self.reporter.reportNote("System check OK")
-
-		self.sim.checkDoF()
+		try:
+			if self.sim.check():
+				self.reporter.reportNote("System check OK")
+			self.sim.checkDoF()
+		except RuntimeError, e:
+			self.stop_waiting()
+			self.reporter.reportError(str(e))
+			return
 
 		self.stop_waiting()
 
