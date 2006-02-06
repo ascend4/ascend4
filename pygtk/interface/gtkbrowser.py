@@ -420,13 +420,26 @@ class Browser:
 		print "DO_SIM(%s)" % str(type_object.getName())		
 		self.start_waiting("Compiling...")
 
-		self.sim = type_object.getSimulation(str(type_object.getName())+"_sim")
+		try:
+			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim")
+		except RuntimeError, e:
+			self.stop_waiting()
+			self.reporter.reportError(str(e))
+			return
+
 		print "...DONE 'getSimulation'"		
 		self.stop_waiting()
 
 		self.start_waiting("Building simulation...")
 		print "BUILDING SIMULATION"
-		self.sim.build()
+
+		try:
+			self.sim.build()
+		except RuntimeError, e:
+			self.stop_waiting()
+			self.reporter.reportError(str(e))
+			return;
+
 		print "DONE BUILDING"
 		self.stop_waiting()
 
