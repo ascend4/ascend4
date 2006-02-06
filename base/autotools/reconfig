@@ -84,7 +84,7 @@ fi
 
 cmd="./configure  \
 --prefix=$ascroot \
---with-fortran=g77,/usr/lib/libf2c.a \
+--with-fortran=g77 \
 --enable-gcc \
 --with-tcl="$tkroot/lib/${libpref}tcl$tkver$libsuff,$tkroot/include/tcl.h" \
 --with-tk="$tkroot/lib/${libpref}tk$tkver$libsuff,$tkroot/include/tk.h" \
