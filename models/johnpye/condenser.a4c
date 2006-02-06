@@ -27,7 +27,7 @@ MODEL condenser_lmtd(
 	DT_1 = T_h1 - T_c1;
 	DT_2 = T_h2 - T_c2;
 
-	lmtd: LMTD = (DT_2 - DT_1) / ln(DT_2/DT_1);
+	lmtd: DT_2/DT_1 = exp( (DT_2 - DT_1) / LMTD );
 
 	UA IS_A ua_value;
 	q IS_A energy_rate;
@@ -86,16 +86,16 @@ METHOD default_self;
 END default_self;
 METHOD specify;
 	RUN C.specify;
-	FIX T_in;
+	FIX T_hi;
+	FIX T_co;
 	FIX p_in;
-	FIX C.T_c_out;
 END specify;
 METHOD values;
 	RUN C.values;
-	T_in := 273.15{K} + 280 {K};
+	T_hi := 273.15{K} + 280 {K};
+	T_co := 273.15{K} + 25 {K};
 	p_in := 1{bar};
 	q := 4.2{kJ/s};
-	C.T_c_out := 273.15{K} + 25 {K};
 END values;
 METHOD bound_self;
 	RUN C.bound_self;
@@ -162,11 +162,11 @@ METHOD values;
 	T_co := 273.15{K} + 240 {K};
 END values;
 METHOD bound_self;
-(*	Sf.tau.lower_bound := 1;
+	Sf.tau.lower_bound := 1;
 	DT_c.lower_bound := 0{K};
 	DT_1.lower_bound := 0{K};
 	DT_2.lower_bound := 0{K};
-	Sf.rho.lower_bound := Sf.rhoc;*)
+	Sf.rho.lower_bound := Sf.rhoc;
 END bound_self;
 END condenser_lmtd_sat;
 
