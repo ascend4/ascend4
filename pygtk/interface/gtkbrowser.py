@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+try:
+	import psyco
+	psyco.full()
+	print "Running with PSYCO optimisation"
+except ImportError:
+	pass
+
 import pygtk
 pygtk.require('2.0')
 import gtk
