@@ -18,7 +18,7 @@ class DiagnoseWindow:
 		_xml.signal_autoconnect(self)	
 
 		self.window = _xml.get_widget("diagnosewin")
-		self.view = _xml.get_widget("canvasvbox")
+		self.image = _xml.get_widget("image")
 		self.blockentry = _xml.get_widget("blockentry")
 
 		self.varview = _xml.get_widget("varview")
@@ -55,37 +55,22 @@ class DiagnoseWindow:
 		self.block = block
 		self.blockentry.set_text(str(block))
 		
-		if self.canvas:
-			self.view.remove(self.canvas)
-
-		# This is not going to be very efficient at this stage:
-		mtx = pylab.zeros((self.im.getNumRows(), self.im.getNumCols(), ))*0.
+		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
+		c = chr(255)
+		b = self.im.getNumRows()*self.im.getNumCols()*3*[c]
+		rowstride = 3 * self.im.getNumCols()
 		for i in self.data:
-			mtx[i.row, i.col] = int(i.type)
+			pos = rowstride*i.row + 3*i.col
+			b[pos], b[pos+1], b[pos+2] = [chr(0)]*3
+		
+		d = ''.join(b)
+		pb = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
+				, self.im.getNumCols(), self.im.getNumRows(), rowstride)
+	
+		pb1 = pb.scale_simple(400,400,gtk.gdk.INTERP_BILINEAR)
+		del pb;
 
-		# prepare colour map
-		cmapdata = {
-			          # type = 0     type = 1       type = 2
-			          # norelation   active fixed   active free
-			'red'  :  ((0., 1., 1.), (0.5, 0., 0.), (1., 0., 0.)),
-			'green':  ((0., 1., 1.), (0.5, 1., 1.), (1., 0., 0.)),
-			'blue' :  ((0., 1., 1.), (0.5, 0., 0.), (1., 0.3, 0.3))
-		}
-
-		_im_cmap =  LinearSegmentedColormap('im_cmap',  cmapdata, 4)
-
-		self.figure = pylab.Figure(figsize=(6,4), dpi=72)
-		_axes = self.figure.add_subplot(111)
-		_axes.set_xlabel('Variables') 
-		_axes.set_ylabel('Relations') 
-		_axes.set_title('Block Incidence Matrix') 
-		_axes.grid(True) 
-		_axes.imshow(mtx, cmap=_im_cmap, interpolation='nearest')
-
-		self.canvas = FigureCanvasGTK(self.figure) # a gtk.DrawingArea 
-		self.canvas.show()
-
-		self.view.pack_start(self.canvas, True, True)
+		self.image.set_from_pixbuf(pb1)
 
 		self.fill_var_names()
 		self.fill_rel_names()
