@@ -23,7 +23,7 @@ from incidencematrix import *  # incidence/sparsity matrix matplotlib window
 from observer import *         # observer tab support
 from properties import *       # solver_var properties dialog
 from varentry import *         # for inputting of variables with units
-
+from diagnose import * 	       # for diagnosing block non-convergence
 import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
 # ascend library are made available to libraries dlopened within ASCEND:
@@ -545,6 +545,10 @@ class Browser:
 
 		_sp = IncidenceMatrixWindow(_im);
 		_sp.run();
+
+	def on_diagnose_blocks_click(self,*args):
+		_db = DiagnoseWindow(GLADE_FILE,self)
+		_db.run();
 
 	def on_add_observer_click(self,*args):
 		if len(self.observers) >= 1:
