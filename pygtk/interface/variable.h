@@ -28,6 +28,7 @@ public:
 
 	const std::string getName() const;
 	const double getValue() const;
+	const double getNominal() const;
 };
 
 #endif

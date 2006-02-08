@@ -152,6 +152,26 @@ IncidenceMatrix::getBlockRow(const int &row) const{
 	}
 	return -1;
 }
+
+/**
+	Returns location of specified block
+	@param block the block number
+	@return vector(ve row-low, col-low, row-high, col-high)
+*/
+const vector<int>
+IncidenceMatrix::getBlockLocation(const int &block) const{
+	if(!is_built)throw runtime_error("Not built");
+	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
+	if(block < 0 || block >= bb->nblocks){
+		throw range_error("Invalid block number");
+	}
+	vector<int> v;
+	v.push_back(bb->block[block].row.low);
+	v.push_back(bb->block[block].col.low);
+	v.push_back(bb->block[block].row.high);
+	v.push_back(bb->block[block].col.high);
+	return v;
+}
 		
 const vector<Variable>
 IncidenceMatrix::getBlockVars(const int &block){

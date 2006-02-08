@@ -1,15 +1,9 @@
 import gtk
 import gtk.glade
 import ascend
-import pylab;
-import matplotlib 
-matplotlib.use('GTK') 
-from matplotlib.figure import Figure 
-from matplotlib.axes import Subplot 
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.backends.backend_gtk import FigureCanvasGTK, NavigationToolbar 
 from itertools import groupby
 from operator import itemgetter
+import math
 
 class DiagnoseWindow:
 	def __init__(self,GLADE_FILE,browser):
@@ -52,25 +46,86 @@ class DiagnoseWindow:
 	
 	def fill_values(self, block):
 		print "FILL VALUES %d" % block
+		try:
+			rl,cl,rh,ch = self.im.getBlockLocation(block)
+		except IndexError:
+			print "invalid block"
+			return
 		self.block = block
 		self.blockentry.set_text(str(block))
-		
+
+		nr = int(rh-rl+1);
+		nc = int(ch-cl+1);
+
+		print "STARTING IMAGE CREATION"
 		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
-		b = self.im.getNumRows()*self.im.getNumCols()*3*[c]
-		rowstride = 3 * self.im.getNumCols()
-		for i in self.data:
-			pos = rowstride*i.row + 3*i.col
-			b[pos], b[pos+1], b[pos+2] = [chr(0)]*3
+		b = nr*nc*3*[c]
+		rowstride = 3 * nc
 		
+		blackdot = [chr(0)]*3;
+		reddot = [chr(255), chr(0), chr(0)]
+		pinkdot = [chr(255), chr(127), chr(127)]
+		skydot = [chr(127), chr(127), chr(255)]
+		bluedot = [chr(0), chr(0), chr(255)]
+		
+		for i in self.data:
+			if i.row < rl or i.row > rh or i.col < cl or i.col > ch:
+				continue
+			r = i.row - rl;
+			c = i.col - cl;
+			pos = rowstride*r + 3*c
+			dot = blackdot;
+			var = self.im.getVariable(i.col);
+			try:
+				rat = var.getValue() / var.getNominal()
+				print "SCALE i.col =",rat
+				val = math.log(rat);
+				print "LOG i.col =",val
+				if val > 1:
+					dot = reddot;
+				elif var < -1:
+					dot = bluedot;
+				elif var > 0:
+					dot = pinkdot;
+				elif var < 0:
+					dot = skydot;
+			except ValueError, e:
+				pass
+			print "DOT: ",dot
+			b[pos], b[pos+1], b[pos+2] = dot
+
 		d = ''.join(b)
+
+		print "DONE IMAGE CREATION"
+
 		pb = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
-				, self.im.getNumCols(), self.im.getNumRows(), rowstride)
+				, nc, nr, rowstride)
 	
-		pb1 = pb.scale_simple(400,400,gtk.gdk.INTERP_BILINEAR)
+
+		if nc > nr:
+			w = 400
+			h = 400 * nr / nc;
+		else:
+			h = 400
+			w = 400 * nr / nc;
+
+		if h/nr > 16 or w/nc > 16:
+			h= nr*16
+			w= nc*16
+
+		if nc < 200 and nr < 200:
+			pb1 = pb.scale_simple(w,h,gtk.gdk.INTERP_NEAREST)
+		else:
+			pb1 = pb.scale_simple(w,h,gtk.gdk.INTERP_BILINEAR)
+		
 		del pb;
 
+		print "DONE IMAGE PREPARATION"
+
 		self.image.set_from_pixbuf(pb1)
+
+		print "DONE IMAGE TRANSFER TO SERVER"
 
 		self.fill_var_names()
 		self.fill_rel_names()
@@ -117,8 +172,11 @@ class DiagnoseWindow:
 	def on_prevbutton_clicked(self,*args):
 		self.set_block(self.block - 1)		
 
-	def on_blockentry_changed(self,*args):
-		self.set_block( int(self.blockentry.get_text()) )
+	def on_blockentry_key_press_event(self,widget,event):
+		keyname = gtk.gdk.keyval_name(event.keyval)
+		print "KEY ",keyname
+		if keyname=="Return":
+			self.set_block( int(self.blockentry.get_text()) )
 
 # The following is from 
 # http://www.experts-exchange.com/Programming/Programming_Languages/Python/Q_21719649.html
