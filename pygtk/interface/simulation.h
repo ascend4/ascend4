@@ -88,6 +88,7 @@ public:
 	const std::string getInstanceName(const Instanc &) const;
 
 	void processVarStatus();
+
 };
 
 

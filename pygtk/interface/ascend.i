@@ -96,6 +96,7 @@ public:
 %template(SetInt) ASCXX_Set<long>;
 %template(SetString) ASCXX_Set<SymChar>;
 %template(DoubleVector) std::vector<double>;
+%template(IntVector) std::vector<int>;
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
 %template(InstancSet) std::set<Instanc,InstancCompare>;

@@ -137,6 +137,7 @@ public:
 	const int getBlockRow(const int &row) const;
 	const std::vector<Variable> getBlockVars(const int block);
 	const std::vector<Relation> getBlockRels(const int block);
+	const std::vector<int> getBlockLocation(const int &block) const;
 };
 			
 
@@ -146,6 +147,9 @@ class Variable{
 public:
 	explicit Variable(const Variable &old);
 	const std::string &getName();
+	const double getValue();
+	const double getNominal();
+
 };
 
 %extend Variable {

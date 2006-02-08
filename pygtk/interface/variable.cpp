@@ -44,3 +44,9 @@ const double
 Variable::getValue() const{
 	return var_value(var);
 }
+
+const double
+Variable::getNominal() const{
+	return var_nominal(var);
+}
+
