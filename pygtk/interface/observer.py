@@ -13,6 +13,10 @@ OBSERVER_NULL = 0 # value that gets added to empty cells in a new column
 # difficulty with that was the fact that TreeStores don't support the adding of
 # columns.
 
+
+# Update: there is a technique for doing this, in fact:
+# http://www.daa.com.au/pipermail/pygtk/2006-February/011777.html
+
 class ObserverTab:
 	def __init__(self,xml,name,browser,tab):
 		xml.signal_autoconnect(self);
