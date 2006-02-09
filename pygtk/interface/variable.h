@@ -29,6 +29,8 @@ public:
 	const std::string getName() const;
 	const double getValue() const;
 	const double getNominal() const;
+	const double getUpperBound() const;
+	const double getLowerBound() const;
 };
 
 #endif

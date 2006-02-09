@@ -9,6 +9,7 @@ import re
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = 2000
 MAX_ZOOM_RATIO = 16
+AT_BOUND_TOL = 0.0001;
 
 class DiagnoseWindow:
 	def __init__(self,GLADE_FILE,browser,block=0):
@@ -102,24 +103,29 @@ class DiagnoseWindow:
 			pos = rowstride*r + 3*c
 			dot = blackdot;
 			var = self.im.getVariable(i.col);
-			rat = var.getValue() / var.getNominal()
-			if rat!=0:
-				try:
-					val = abs(rat)
-					if abs(rat) > 1000:
-						dot = hotpinkdot
-					elif abs(rat) > 10:
-						dot = orangedot
-					elif abs(rat) < 0.001:
-						dot = brightbluedot
-					elif abs(rat) < 10 and abs(rat) > 0.1:
-						dot = greendot
-					elif abs(rat) > 0.001 and abs(rat) < 0.1:
-						dot = bluegreendot
-					else:
-						dot = blackdot
-				except ValueError, e:
-					pass
+			if abs( (var.getValue()-var.getUpperBound())/ var.getNominal() )  < AT_BOUND_TOL:
+				dot = reddot
+			elif abs( var.getValue() - var.getLowerBound() ) / var.getNominal() < AT_BOUND_TOL:
+				dot = reddot
+			else:
+				rat = var.getValue() / var.getNominal()
+				if rat!=0:
+					try:
+						val = abs(rat)
+						if abs(rat) > 1000:
+							dot = hotpinkdot
+						elif abs(rat) > 10:
+							dot = orangedot
+						elif abs(rat) < 0.001:
+							dot = brightbluedot
+						elif abs(rat) < 10 and abs(rat) > 0.1:
+							dot = greendot
+						elif abs(rat) > 0.001 and abs(rat) < 0.1:
+							dot = bluegreendot
+						else:
+							dot = blackdot
+					except ValueError, e:
+						pass
 			#print "DOT: ",dot
 			b[pos], b[pos+1], b[pos+2] = dot
 
@@ -177,7 +183,7 @@ class DiagnoseWindow:
 	def fill_var_names(self):
 		names = [str(i) for i in self.im.getBlockVars(self.block)]
 		if self.varcollapsed.get_active():
-			res = collapse(names)
+			res = reduce(names)
 			rows = []
 			for k in res:
 				if k=="":
@@ -193,7 +199,15 @@ class DiagnoseWindow:
 	def fill_rel_names(self):
 		names = [str(i) for i in self.im.getBlockRels(self.block)]
 		if self.relcollapsed.get_active():
-			text = "\n".join(collapse(names))
+			res = reduce(names)
+			rows = []
+			for k in res:
+				if k=="":
+					for r in res[k]:
+						rows.append(r)
+				else:
+					rows.append( '%s:\n\t%s' % (k, "\n\t".join(res[k])) )
+			text = "\n".join(rows)
 		else:
 			text = "\n".join(names)
 		self.relbuf.set_text(text)
@@ -279,7 +293,7 @@ def fold(data):
     '[1,4-6,10,15-18,22,25-28]'
     """
     folded = []
-    for k, g in groupby(enumerate(data), lambda (i,x):i-x):
+    for k, g in groupby(enumerate(sorted(data)), lambda (i,x):i-x):
         seq = map(itemgetter(1), g)
         if len(seq) > 1:
             x = '%s-%s' % (seq[0], seq[-1])
@@ -288,8 +302,8 @@ def fold(data):
         folded.append(x)
     return folded and '[%s]' % ','.join(folded) or ''
 
-def collapse(names):
-    """reduce a list of items into something more readable:
+def reduce(names):
+    """reduce a list of items nto something more readable:
     >>> data = 'C.x C.p C.T C.delta[1] C.delta[2] C.delta[3] C.sat.x C.sat.p C.h C.delta[5]'.split()
     >>> res = reduce(data)
     >>> for k in sorted(res):
@@ -297,17 +311,18 @@ def collapse(names):
     C: T, delta[1-3,5], h, p, x
     C.sat: p, x
     """
-    data = sorted([n.split('.') for n in names], key=len)
+    data = sorted([n.split('.') for n in sorted(names)], key=len)
     res = {}
     for k, g in groupby(data, lambda x: len(x)):
-        item = g.next()
-        assert len(item) == k
-        key = '.'.join(item[:-1]) or ''
-        indexed = {}
-        seq = set([get(indexed, item)])
-        for item in g:
-            seq.add(get(indexed, item))
-        res[key] = [i+fold(indexed.get(i, [])) for i in sorted(seq)]
+        if k == 1:
+            indexed = {}
+            seq = set(get(indexed, item) for item in g)
+            res['[global]'] = [ i+fold(indexed.get(i, [])) for i in sorted(seq) ]
+        else:
+            for key, g1 in groupby(g, lambda x: '.'.join(x[:-1])):
+                indexed = {}
+                seq = set(get(indexed, item) for item in g1)
+                res[key] = [ i+fold(indexed.get(i, [])) for i in sorted(seq) ]
     return res
 
 def get(indexed, item):
