@@ -4,6 +4,11 @@ import ascend
 from itertools import groupby
 from operator import itemgetter
 import math
+import re
+
+ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
+MAX_ZOOM_SIZE = 2000
+MAX_ZOOM_RATIO = 16
 
 class DiagnoseWindow:
 	def __init__(self,GLADE_FILE,browser):
@@ -12,8 +17,10 @@ class DiagnoseWindow:
 		_xml.signal_autoconnect(self)	
 
 		self.window = _xml.get_widget("diagnosewin")
+		self.imagescroll = _xml.get_widget("imagescroll")
 		self.image = _xml.get_widget("image")
 		self.blockentry = _xml.get_widget("blockentry")
+		self.zoomentry = _xml.get_widget("zoomentry")
 
 		self.varview = _xml.get_widget("varview")
 		self.varbuf = gtk.TextBuffer()
@@ -42,10 +49,10 @@ class DiagnoseWindow:
 		self.data = self.im.getIncidenceData()
 		print "DATA LOADED"
 
-		self.canvas = None
+		self.zoom=1;
 	
 	def fill_values(self, block):
-		print "FILL VALUES %d" % block
+		print "FILL VALUES for block %d" % block
 		try:
 			rl,cl,rh,ch = self.im.getBlockLocation(block)
 		except IndexError:
@@ -57,7 +64,7 @@ class DiagnoseWindow:
 		nr = int(rh-rl+1);
 		nc = int(ch-cl+1);
 
-		print "STARTING IMAGE CREATION"
+		#print "STARTING IMAGE CREATION"
 		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
 		b = nr*nc*3*[c]
@@ -77,58 +84,69 @@ class DiagnoseWindow:
 			pos = rowstride*r + 3*c
 			dot = blackdot;
 			var = self.im.getVariable(i.col);
-			try:
-				rat = var.getValue() / var.getNominal()
-				print "SCALE i.col =",rat
-				val = math.log(rat);
-				print "LOG i.col =",val
-				if val > 1:
-					dot = reddot;
-				elif var < -1:
-					dot = bluedot;
-				elif var > 0:
-					dot = pinkdot;
-				elif var < 0:
-					dot = skydot;
-			except ValueError, e:
-				pass
-			print "DOT: ",dot
+			rat = var.getValue() / var.getNominal()
+			if rat!=0:
+				try:
+					#print "SCALE i.col =",rat
+					val = math.log(abs(rat));
+					#print "LOG i.col =",val
+					if val > 1:
+						dot = reddot;
+					elif var < -1:
+						dot = bluedot;
+					elif var > 0:
+						dot = pinkdot;
+					elif var < 0:
+						dot = skydot;
+				except ValueError, e:
+					pass
+			#print "DOT: ",dot
 			b[pos], b[pos+1], b[pos+2] = dot
 
 		d = ''.join(b)
 
-		print "DONE IMAGE CREATION"
-
-		pb = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
-				, nc, nr, rowstride)
+		#print "DONE IMAGE CREATION"
 	
+		self.pixbuf = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
+				, nc, nr, rowstride);
 
-		if nc > nr:
-			w = 400
-			h = 400 * nr / nc;
-		else:
-			h = 400
-			w = 400 * nr / nc;
+		self.nr = nr
+		self.nc = nc
+		self.zoom = -1 # to fit, up to max 16x
+		self.do_zoom()
 
-		if h/nr > 16 or w/nc > 16:
-			h= nr*16
-			w= nc*16
-
-		if nc < 200 and nr < 200:
-			pb1 = pb.scale_simple(w,h,gtk.gdk.INTERP_NEAREST)
-		else:
-			pb1 = pb.scale_simple(w,h,gtk.gdk.INTERP_BILINEAR)
-		
-		del pb;
-
-		print "DONE IMAGE PREPARATION"
-
-		self.image.set_from_pixbuf(pb1)
-
-		print "DONE IMAGE TRANSFER TO SERVER"
+		#print "DONE IMAGE TRANSFER TO SERVER"
 
 		self.fill_var_names()
 		self.fill_rel_names()
+
+	def do_zoom(self):
+		if self.zoom == -1:
+			w, h = self.imagescroll.size_request()
+			#print "SCALE TO FIX, w=%d, h=%d" % (w,h)
+			if self.nc/self.nr > w/h:
+				# a 'wide' image	
+				self.zoom = w / self.nc
+			else:
+				self.zoom = h / self.nr
+
+		if self.zoom > MAX_ZOOM_RATIO:
+			self.zoom = MAX_ZOOM_RATIO
+
+		if self.zoom * self.nc > MAX_ZOOM_SIZE or self.zoom * self.nr > MAX_ZOOM_SIZE:
+			self.zoom = MAX_ZOOM_SIZE / max(self.nc,self.nr)
+
+		w = int(self.zoom * self.nc);
+		h = int(self.zoom * self.nr);
+			
+		self.zoomentry.set_text("%d %%" % (int(self.zoom*100)) )
+
+		if self.zoom < 2:
+			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_BILINEAR)
+		else:
+			pb1 = self.pixbuf.scale_simple(w,h,gtk.gdk.INTERP_NEAREST)
+		
+		self.image.set_from_pixbuf(pb1)
 
 	def fill_var_names(self):
 		names = [str(i) for i in self.im.getBlockVars(self.block)]
@@ -158,6 +176,10 @@ class DiagnoseWindow:
 		self.block = block;
 		self.fill_values(block)
 
+	def set_zoom(self,zoom):
+		self.zoom = zoom
+		self.do_zoom()
+
 	def on_varcollapsed_toggled(self,*args):
 		print "COLLAPSED-TOGGLED"
 		self.fill_var_names()
@@ -178,8 +200,31 @@ class DiagnoseWindow:
 		if keyname=="Return":
 			self.set_block( int(self.blockentry.get_text()) )
 
+	def on_zoominbutton_clicked(self,*args):
+		z = int( math.log(self.zoom)/math.log(2) )
+		z = pow(2,z + 1);
+		self.set_zoom(z)
+
+	def on_zoomoutbutton_clicked(self,*args):
+		z = int( math.log(self.zoom)/math.log(2) + 0.999)
+		z = pow(2,z - 1);
+		self.set_zoom(z)		
+
+	def on_zoomentry_key_press_event(self,widget,event):
+		keyname = gtk.gdk.keyval_name(event.keyval)
+		print "KEY ",keyname
+		if keyname=="Return":
+			t = self.zoomentry.get_text()
+			m = ZOOM_RE.match(t)
+			if not m:
+				self.zoomentry.set_text("%d %%" % int(self.zoom*100))
+			for mm in m:
+				print m
+			self.set_zoom( int(self.zoomentry.get_text()) )
+
 # The following is from 
 # http://www.experts-exchange.com/Programming/Programming_Languages/Python/Q_21719649.html
+# it's still buggy.
 
 def fold(data):
     """ fold sorted numeric sequence data into ranged representation:
