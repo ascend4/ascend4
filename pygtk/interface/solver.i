@@ -147,10 +147,11 @@ public:
 class Variable{
 public:
 	explicit Variable(const Variable &old);
-	const std::string &getName();
-	const double getValue();
-	const double getNominal();
-
+	const std::string &getName() const;
+	const double getValue() const;
+	const double getNominal() const;
+	const double getLowerBound() const;
+	const double getUpperBound() const;
 };
 
 %extend Variable {

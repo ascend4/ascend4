@@ -50,3 +50,12 @@ Variable::getNominal() const{
 	return var_nominal(var);
 }
 
+const double
+Variable::getLowerBound() const{
+	return var_lower_bound(var);
+}
+
+const double
+Variable::getUpperBound() const{
+	return var_upper_bound(var);
+}
