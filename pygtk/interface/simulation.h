@@ -60,6 +60,8 @@ private:
 	std::string *bin_cmd;
 	std::string *bin_rm;
 
+	int activeblock;
+
 protected:
 	slv_system_structure *getSystem();
 	
@@ -88,6 +90,8 @@ public:
 	const std::string getInstanceName(const Instanc &) const;
 
 	void processVarStatus();
+
+	const int getActiveBlock() const;
 
 };
 
