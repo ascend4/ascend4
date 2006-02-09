@@ -345,6 +345,7 @@ Simulation::solve(Solver solver){
 			" (%.2f s).",status.block.current_block,status.iteration,elapsed);
 		IncidenceMatrix inc = getIncidenceMatrix();
 
+		/*
 		cerr << "VARIABLES IN NON-CONVERGED BLOCK:" << endl;
 		vector<Variable> v = inc.getBlockVars(status.block.current_block);
 		for(vector<Variable>::iterator vi = v.begin(); vi < v.end(); ++vi){
@@ -356,6 +357,7 @@ Simulation::solve(Solver solver){
 		for(vector<Relation>::iterator ri = r.begin(); ri < r.end(); ++ri){
 			cerr << ri->getName() << endl;
 		}
+		*/
 	}
 
 }

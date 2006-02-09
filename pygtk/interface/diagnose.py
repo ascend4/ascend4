@@ -22,6 +22,11 @@ class DiagnoseWindow:
 		self.blockentry = _xml.get_widget("blockentry")
 		self.zoomentry = _xml.get_widget("zoomentry")
 
+		self.varname = _xml.get_widget("varname");
+		self.varval = _xml.get_widget("varval");
+		self.relname = _xml.get_widget("relname");
+		self.relresid = _xml.get_widget("relresid");
+
 		self.varview = _xml.get_widget("varview")
 		self.varbuf = gtk.TextBuffer()
 		self.varview.set_buffer(self.varbuf)
@@ -64,6 +69,11 @@ class DiagnoseWindow:
 
 		self.block = block
 		self.blockentry.set_text(str(block))
+
+		self.rl = rl
+		self.cl = cl
+		self.rh = rh
+		self.ch = ch
 
 		nr = int(rh-rl+1);
 		nc = int(ch-cl+1);
@@ -129,6 +139,12 @@ class DiagnoseWindow:
 
 		self.fill_var_names()
 		self.fill_rel_names()
+	
+		self.varname.set_text("");
+		self.varval.set_text("");
+		self.relname.set_text("");
+		self.relresid.set_text("");
+
 
 	def do_zoom(self):
 		if self.zoom == -1:
@@ -189,6 +205,21 @@ class DiagnoseWindow:
 		self.zoom = zoom
 		self.do_zoom()
 
+	def show_cursor(self,x,y):
+		c = self.cl + int(x/self.zoom)
+		r = self.rl + int(y / self.zoom)
+		if c > self.ch or r > self.rh:
+			#print "OUT OF RANGE"
+			return
+		var = self.im.getVariable(c)
+		self.varname.set_text(var.getName())
+		self.varval.set_text(str(var.getValue()))
+		rel = self.im.getRelation(r)
+		self.relname.set_text(rel.getName())
+		self.relresid.set_text(str(rel.getResidual()))
+
+	# GUI EVENT HOOKS-----------------------------------------------------------
+
 	def on_varcollapsed_toggled(self,*args):
 		print "COLLAPSED-TOGGLED"
 		self.fill_var_names()
@@ -231,6 +262,13 @@ class DiagnoseWindow:
 				print m
 			self.set_zoom( int(self.zoomentry.get_text()) )
 
+	def on_imageevent_motion_notify_event(self,widget,event):
+		self.show_cursor(event.x, event.y)
+
+	def on_imageevent_button_press_event(self,widget,event):
+		self.show_cursor(event.x, event.y)
+
+
 # The following is from 
 # http://www.experts-exchange.com/Programming/Programming_Languages/Python/Q_21719649.html
 # it's still buggy.
@@ -264,9 +302,9 @@ def collapse(names):
     for k, g in groupby(data, lambda x: len(x)):
         item = g.next()
         assert len(item) == k
-        key = '.'.join(item[:-1])
+        key = '.'.join(item[:-1]) or ''
         indexed = {}
-        seq = set(get(indexed, item))
+        seq = set([get(indexed, item)])
         for item in g:
             seq.add(get(indexed, item))
         res[key] = [i+fold(indexed.get(i, [])) for i in sorted(seq)]

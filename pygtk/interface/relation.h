@@ -23,6 +23,7 @@ public:
 	Relation(Simulation *sim, rel_relation *rel);
 
 	const std::string getName() const;
+	const double getResidual() const;
 
 };
 
