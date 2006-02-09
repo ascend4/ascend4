@@ -38,3 +38,8 @@ Relation::getName() const{
 
 	return name;
 }
+
+const double
+Relation::getResidual() const{
+	return rel_residual(rel);
+}

@@ -164,6 +164,7 @@ class Relation{
 public:
 	explicit Relation(const Relation &old);
 	const std::string &getName();
+	const double &getResidual();
 };
 
 %extend Relation {
