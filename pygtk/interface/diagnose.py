@@ -11,7 +11,7 @@ MAX_ZOOM_SIZE = 2000
 MAX_ZOOM_RATIO = 16
 
 class DiagnoseWindow:
-	def __init__(self,GLADE_FILE,browser):
+	def __init__(self,GLADE_FILE,browser,block=0):
 		self.browser=browser
 		_xml = gtk.glade.XML(GLADE_FILE,"diagnosewin")
 		_xml.signal_autoconnect(self)	
@@ -35,8 +35,9 @@ class DiagnoseWindow:
 		self.relbuf = gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
 
+		self.block = 0
 		self.prepare_data()
-		self.fill_values(0) # block zero
+		self.fill_values(block) # block zero
 
 	def run(self):
 		self.window.run()
@@ -52,12 +53,15 @@ class DiagnoseWindow:
 		self.zoom=1;
 	
 	def fill_values(self, block):
-		print "FILL VALUES for block %d" % block
 		try:
 			rl,cl,rh,ch = self.im.getBlockLocation(block)
 		except IndexError:
-			print "invalid block"
+			self.blockentry.set_text(str(self.block))
 			return
+		except RuntimeError:
+			self.blockentry.set_text(str(self.block))
+			return
+
 		self.block = block
 		self.blockentry.set_text(str(block))
 
@@ -75,7 +79,11 @@ class DiagnoseWindow:
 		pinkdot = [chr(255), chr(127), chr(127)]
 		skydot = [chr(127), chr(127), chr(255)]
 		bluedot = [chr(0), chr(0), chr(255)]
-		
+		hotpinkdot = [chr(255), chr(47), chr(179)] # very big (+/-)
+		brightbluedot = [chr(71), chr(157), chr(255)] # very small (+/-)
+		greendot = [chr(87), chr(193), chr(70)] # close to 1
+		orangedot = [chr(255), chr(207), chr(61)] # 10-1000
+		bluegreendot = [chr(70), chr(221), chr(181)] # 0.001 - 0.1
 		for i in self.data:
 			if i.row < rl or i.row > rh or i.col < cl or i.col > ch:
 				continue
@@ -87,17 +95,19 @@ class DiagnoseWindow:
 			rat = var.getValue() / var.getNominal()
 			if rat!=0:
 				try:
-					#print "SCALE i.col =",rat
-					val = math.log(abs(rat));
-					#print "LOG i.col =",val
-					if val > 1:
-						dot = reddot;
-					elif var < -1:
-						dot = bluedot;
-					elif var > 0:
-						dot = pinkdot;
-					elif var < 0:
-						dot = skydot;
+					val = abs(rat)
+					if abs(rat) > 1000:
+						dot = hotpinkdot
+					elif abs(rat) > 10:
+						dot = orangedot
+					elif abs(rat) < 0.001:
+						dot = brightbluedot
+					elif abs(rat) < 10 and abs(rat) > 0.1:
+						dot = greendot
+					elif abs(rat) > 0.001 and abs(rat) < 0.1:
+						dot = bluegreendot
+					else:
+						dot = blackdot
 				except ValueError, e:
 					pass
 			#print "DOT: ",dot
@@ -173,7 +183,6 @@ class DiagnoseWindow:
 		self.relbuf.set_text(text)
 
 	def set_block(self, block):
-		self.block = block;
 		self.fill_values(block)
 
 	def set_zoom(self,zoom):

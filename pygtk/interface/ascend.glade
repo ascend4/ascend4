@@ -2818,6 +2818,7 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 			<widget class="GtkEntry" id="zoomentry">
 			  <property name="width_request">59</property>
 			  <property name="visible">True</property>
+			  <property name="sensitive">False</property>
 			  <property name="can_focus">True</property>
 			  <property name="editable">True</property>
 			  <property name="visibility">True</property>

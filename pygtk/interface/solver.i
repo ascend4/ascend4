@@ -30,6 +30,7 @@ public:
 	const std::string getInstanceName(const Instanc &) const;
 
 	void processVarStatus();
+	const int getActiveBlock() const;
 };
 
 // SOLVE PARAMETERS

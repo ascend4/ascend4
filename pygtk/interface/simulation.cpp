@@ -307,6 +307,7 @@ Simulation::solve(Solver solver){
 
 	for(int iter = 1; iter <= niter && !stop; ++iter){
 		slv_get_status(sys,&status);
+
 		if(status.ready_to_solve){
 			slv_iterate(sys);
 		}
@@ -321,6 +322,8 @@ Simulation::solve(Solver solver){
 		}
 	}
 	double elapsed = tm_cpu_time() - starttime;
+
+	activeblock = status.block.current_block;
 
 	if(status.ok){
 		cerr << "... SOLVED, STATUS OK" << endl;
@@ -475,4 +478,9 @@ Simulation::processVarStatus(){
 		}
 		i.setVarStatus(s);
 	}
+}
+
+const int
+Simulation::getActiveBlock() const{
+	return activeblock;
 }

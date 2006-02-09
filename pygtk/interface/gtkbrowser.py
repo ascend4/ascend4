@@ -547,7 +547,12 @@ class Browser:
 		_sp.run();
 
 	def on_diagnose_blocks_click(self,*args):
-		_db = DiagnoseWindow(GLADE_FILE,self)
+		try:
+			_bl = self.sim.getActiveBlock()
+		except RuntimeError, e:
+			self.reporter.reportError(str(e))
+			return
+		_db = DiagnoseWindow(GLADE_FILE,self,_bl)
 		_db.run();
 
 	def on_add_observer_click(self,*args):
