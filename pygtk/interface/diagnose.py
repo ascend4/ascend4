@@ -250,7 +250,7 @@ class DiagnoseWindow:
 
 	def on_prevbigbutton_clicked(self,*args):
 		b = self.block - 1
-		while b > 0:
+		while b >= 0:
 			rl,cl,rh,ch = self.im.getBlockLocation(b)
 			if rh-rl > 0 or ch-cl>0:
 				self.set_block(b)
