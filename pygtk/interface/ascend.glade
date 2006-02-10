@@ -60,7 +60,7 @@
 		      <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image223">
+			<widget class="GtkImage" id="image241">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -110,7 +110,7 @@
 		      <accelerator key="C" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image224">
+			<widget class="GtkImage" id="image242">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-copy</property>
 			  <property name="icon_size">1</property>
@@ -161,7 +161,7 @@
 		      <accelerator key="F9" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image225">
+			<widget class="GtkImage" id="image243">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -183,7 +183,7 @@
 		      <accelerator key="F7" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image226">
+			<widget class="GtkImage" id="image244">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -197,6 +197,16 @@
 		  </child>
 
 		  <child>
+		    <widget class="GtkMenuItem" id="find_fixable_variables">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Show _fixable vars (console)</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="on_find_fixable_variables_activate" last_modification_time="Fri, 10 Feb 2006 01:48:09 GMT"/>
+		      <accelerator key="F" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
+		    </widget>
+		  </child>
+
+		  <child>
 		    <widget class="GtkImageMenuItem" id="sparsity">
 		      <property name="visible">True</property>
 		      <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
@@ -206,7 +216,7 @@
 		      <accelerator key="I" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image227">
+			<widget class="GtkImage" id="image245">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">incidence.png</property>
 			  <property name="xalign">0.5</property>
@@ -227,7 +237,7 @@
 		      <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image228">
+			<widget class="GtkImage" id="image246">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">diagnose.svg</property>
 			  <property name="xalign">0.5</property>
@@ -254,7 +264,7 @@
 		      <accelerator key="O" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image229">
+			<widget class="GtkImage" id="image247">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-add</property>
 			  <property name="icon_size">1</property>
@@ -276,7 +286,7 @@
 		      <accelerator key="K" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image230">
+			<widget class="GtkImage" id="image248">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-indent</property>
 			  <property name="icon_size">1</property>
@@ -316,7 +326,7 @@
 		      <accelerator key="F11" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image231">
+			<widget class="GtkImage" id="image249">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -350,7 +360,7 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image232">
+			<widget class="GtkImage" id="image250">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
 			  <property name="icon_size">1</property>
@@ -2648,6 +2658,23 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 	      <property name="show_arrow">True</property>
 
 	      <child>
+		<widget class="GtkToolButton" id="prevbigbutton">
+		  <property name="visible">True</property>
+		  <property name="label" translatable="yes">Prev Big</property>
+		  <property name="use_underline">True</property>
+		  <property name="stock_id">gtk-media-rewind</property>
+		  <property name="visible_horizontal">True</property>
+		  <property name="visible_vertical">True</property>
+		  <property name="is_important">False</property>
+		  <signal name="clicked" handler="on_prevbigbutton_clicked" last_modification_time="Fri, 10 Feb 2006 03:15:44 GMT"/>
+		</widget>
+		<packing>
+		  <property name="expand">False</property>
+		  <property name="homogeneous">True</property>
+		</packing>
+	      </child>
+
+	      <child>
 		<widget class="GtkToolButton" id="prevbutton">
 		  <property name="visible">True</property>
 		  <property name="stock_id">gtk-media-previous</property>
@@ -2670,6 +2697,23 @@ See &lt;u&gt;http://ascend.pse.cheme.cmu.edu&lt;/u&gt; for more information.</pr
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
 		  <signal name="clicked" handler="on_nextbutton_clicked" last_modification_time="Wed, 08 Feb 2006 06:05:41 GMT"/>
+		</widget>
+		<packing>
+		  <property name="expand">False</property>
+		  <property name="homogeneous">True</property>
+		</packing>
+	      </child>
+
+	      <child>
+		<widget class="GtkToolButton" id="nextbigbutton">
+		  <property name="visible">True</property>
+		  <property name="label" translatable="yes">Next Big</property>
+		  <property name="use_underline">True</property>
+		  <property name="stock_id">gtk-media-forward</property>
+		  <property name="visible_horizontal">True</property>
+		  <property name="visible_vertical">True</property>
+		  <property name="is_important">False</property>
+		  <signal name="clicked" handler="on_nextbigbutton_clicked" last_modification_time="Fri, 10 Feb 2006 03:15:49 GMT"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>

@@ -139,6 +139,7 @@ public:
 	const std::vector<Variable> getBlockVars(const int block);
 	const std::vector<Relation> getBlockRels(const int block);
 	const std::vector<int> getBlockLocation(const int &block) const;
+	const int getNumBlocks();
 };
 			
 

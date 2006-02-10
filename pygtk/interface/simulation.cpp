@@ -221,7 +221,6 @@ vector<Variable>
 Simulation::getFixableVariables(){
 	cerr << "GETTING FIXABLE VARIABLES..." << endl;
 	vector<Variable> vars;
-	vars.reserve(100);
 
 	if(!sys){
 		throw runtime_error("Simulation system not yet built");
