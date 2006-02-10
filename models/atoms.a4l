@@ -364,10 +364,10 @@ END length_parameter;
 
     ATOM delta_temperature REFINES solver_var
         DIMENSION TMP
-        DEFAULT 0{K};
+        DEFAULT 0.1{K};
         lower_bound := -1000{K};
         upper_bound := +1000{K};
-        nominal := 0{K};
+        nominal := 5{K};
     END delta_temperature;
 
 (* forces *)

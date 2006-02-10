@@ -147,19 +147,30 @@ MODEL condenser_lmtd_sat(
 
 	z_T_const: S_in.T = Sf.T;
 
-	z_q_c: q = mdot_in * (S_in.h - Sf.h);
+	C_c IS_A heat_capacity;
+	cp_c IS_A specific_heat_capacity;
+	mdot_c IS_A mass_rate;
+	C_c = cp_c * mdot_c;
+	z_Q_h: q = mdot_in * (S_in.h - Sf.h);
+	z_Q_c: q = C_c * (T_co - T_ci);
+
 METHODS
 METHOD specify;
 	FIX UA;
 	FIX T_ci;
 	FIX mdot_in;
+	FIX cp_c;
 END specify;
 METHOD values;
 	UA := 4000 {W/m^2/K} * 4 {m} * 900 * 2*3.1415926* (0.01 {m})/2;
 	T_ci := 273.15{K} + 200 {K};
 	mdot_in := 10 {kg/s};
+	cp_c := 4.2 {kJ/kg/K};
 	(* free values *)
 	T_co := 273.15{K} + 240 {K};
+	C_c := 200 {kJ/K};
+	q := 15000 {kW};
+	LMTD := 34 {K};
 END values;
 METHOD bound_self;
 	Sf.tau.lower_bound := 1;
@@ -167,6 +178,8 @@ METHOD bound_self;
 	DT_1.lower_bound := 0{K};
 	DT_2.lower_bound := 0{K};
 	Sf.rho.lower_bound := Sf.rhoc;
+	mdot_c.upper_bound := 1000 {kg/s};
+	mdot_c.lower_bound := 0.1 {kg/s};
 END bound_self;
 END condenser_lmtd_sat;
 
@@ -191,6 +204,8 @@ MODEL condenser_lmtd_sat_test;
 	mdot ALIASES C.mdot_in;
 
 	Q ALIASES C.q;
+	C_c ALIASES C.C_c;
+	mdot_c ALIASES C.mdot_c;
 
 METHODS
 METHOD default_self;	
@@ -212,55 +227,3 @@ METHOD self_test;
 END self_test;
 END condenser_lmtd_sat_test;
 
-(*-----------------------------*)
-
-MODEL condenser;
-	(* assumptions:
-		inlet is ideal-gas steam at specified temperature and pressure.
-		output is water of fixed enthalpy.
-		whatever energy is required to be taken away to acheive that is what will be taken away.
-
-		we don't need to enforce saturation inlet conditions. we will just query the enthalpy for the ideal-gas steam
-		and that's it.
-	*)
-	S_in IS_A ideal_steam;
-
-	mdot_gas_in IS_A mass_rate;
-	mdot_water_out IS_A mass_rate;
-	Q IS_A energy_rate; (* heat taken away by condenser *)
-
-	h_in ALIASES S_in.h;
-	p_in ALIASES S_in.p;
-	T_in ALIASES S_in.T;
-
-	(*
-		h2 will be the enthalpy of the condensed water. because we are
-		ignoring pressure effects, we have to assume a constant fixed
-		value for the enthalpy of water at x=0. 
-	*)
-	h_out IS_A specific_enthalpy;
-
-	Q = mdot_gas_in * h_in - mdot_water_out * h_out;
-	mdot_water_out = mdot_gas_in;
-
-	(* 
-		we will assume there is NO water in the condenser for now; the
-		surge tank will play the role of the mass holdup in this case.
-	*)
-METHODS
-METHOD default_self;
-	RUN reset;
-	RUN values;
-END default_self;
-METHOD specify;
-	FIX mdot_gas_in;
-	FIX S_in.p, S_in.T;
-	FIX h_out;
-END specify;
-METHOD values;
-	mdot_gas_in := 1 {kg/s};
-	S_in.p := 5 {bar};
-	S_in.T := 473.15 {K};
-	h_out := 400{kJ/kg};
-END values;
-END condenser;
