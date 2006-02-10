@@ -586,13 +586,13 @@ END length_parameter;
         nominal := 100000.0{BTU/hour};
     END energy_rate;
 
-    ATOM heat_capacity REFINES solver_var
+    ATOM molar_heat_capacity REFINES solver_var
         DIMENSION M*L^2/T^2/Q/TMP
         DEFAULT 1.00e5{J/mole/K};
         lower_bound := 0.0{J/mole/K};
         upper_bound := 1e60{J/mole/K};
         nominal := 1.00e5{J/mole/K};
-    END heat_capacity;
+    END molar_heat_capacity;
 
     ATOM molar_energy_rate REFINES solver_var
         DIMENSION M*L^2/T^3/Q

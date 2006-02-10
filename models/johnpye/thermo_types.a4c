@@ -46,6 +46,13 @@ ATOM specific_heat_capacity REFINES solver_var
 	nominal := 4.2{kJ/kg/K};
 END specific_heat_capacity;
 
+ATOM heat_capacity REFINES solver_var
+    DIMENSION M*L^2/T^2/TMP
+    DEFAULT 100{kJ/K};
+    lower_bound := 0.0{kJ/K};
+    upper_bound := 1e50{kJ/K};
+    nominal := 100{kJ/K};
+END heat_capacity;
 
 ATOM specific_volume REFINES solver_var
 		DIMENSION L^3/M

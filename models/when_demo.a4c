@@ -32,11 +32,11 @@ This model requires:
 MODEL mixture;
 
 	components                      IS_A set OF symbol_constant;
-	Cpi[components]			IS_A heat_capacity;
+	Cpi[components]			IS_A molar_heat_capacity;
         y[components]                   IS_A fraction;
 	P				IS_A pressure;
 	T				IS_A temperature;
-	Cp				IS_A heat_capacity;
+	Cp				IS_A molar_heat_capacity;
 
 
         SUM[y[i] | i IN components] = 1.0;
@@ -67,7 +67,7 @@ MODEL molar_stream;
 	components			IS_A set OF symbol_constant;
 	P				IS_A pressure;
 	T				IS_A temperature;
-	Cp				IS_A heat_capacity;
+	Cp				IS_A molar_heat_capacity;
 
 	components, state.components	ARE_THE_SAME;
 	P, state.P                      ARE_THE_SAME;
