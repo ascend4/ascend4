@@ -884,6 +884,11 @@ class Browser:
 		_help = Help(HELP_ROOT)
 		_help.run()
 
+	def on_find_fixable_variables_activate(self,*args):
+		v = self.sim.getFixableVariables()
+		for var in v:
+			print "FIXABLE:",var
+
 	def create_observer(self,name=None):
 		if name==None:
 			name="New Observer"

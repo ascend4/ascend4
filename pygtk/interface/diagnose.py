@@ -246,8 +246,27 @@ class DiagnoseWindow:
 		self.set_block(self.block + 1)
 
 	def on_prevbutton_clicked(self,*args):
-		self.set_block(self.block - 1)		
+		self.set_block(self.block - 1)	
 
+	def on_prevbigbutton_clicked(self,*args):
+		b = self.block - 1
+		while b > 0:
+			rl,cl,rh,ch = self.im.getBlockLocation(b)
+			if rh-rl > 0 or ch-cl>0:
+				self.set_block(b)
+			b = b - 1
+		print "NO PRECEDING 'BIG' BLOCKS"
+		
+	def on_nextbigbutton_clicked(self,*args):
+		b = self.block + 1
+		n = self.im.getNumBlocks()
+		while b < n:
+			rl,cl,rh,ch = self.im.getBlockLocation(b)
+			if rh-rl > 0 or ch-cl>0:
+				self.set_block(b)
+			b = b + 1
+		print "NO FOLLOWING 'BIG' BLOCKS"
+	
 	def on_blockentry_key_press_event(self,widget,event):
 		keyname = gtk.gdk.keyval_name(event.keyval)
 		print "KEY ",keyname

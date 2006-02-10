@@ -211,5 +211,13 @@ IncidenceMatrix::getBlockRels(const int &block){
 	return v;
 }
 	
-
+const int
+IncidenceMatrix::getNumBlocks(){
+	if(!is_built){
+		buildPlotData();
+	}
+	const mtx_block_t *bb = slv_get_solvers_blocks(sim.getSystem());
+	return bb->nblocks;
+}
+	
 
