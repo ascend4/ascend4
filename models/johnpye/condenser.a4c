@@ -138,20 +138,17 @@ MODEL condenser_lmtd_sat(
 
 	z_q_LMTD: q = UA * LMTD;
 
-	(* condensation point *)
-	Sf ALIASES S_out;
-
 	sat IS_A iapws_sat_density;
-	z_rhof: sat.rhof = Sf.rho;
-	z_T_sat: sat.T = Sf.T;
+	z_rhof: sat.rhof = S_out.rho;
+	z_T_sat: sat.T = S_out.T;
 
-	z_T_const: S_in.T = Sf.T;
+	z_T_const: S_in.T = S_out.T;
 
 	C_c IS_A heat_capacity;
 	cp_c IS_A specific_heat_capacity;
 	mdot_c IS_A mass_rate;
 	C_c = cp_c * mdot_c;
-	z_Q_h: q = mdot_in * (S_in.h - Sf.h);
+	z_Q_h: q = mdot_in * (S_in.h - S_out.h);
 	z_Q_c: q = C_c * (T_co - T_ci);
 
 METHODS
@@ -173,11 +170,11 @@ METHOD values;
 	LMTD := 34 {K};
 END values;
 METHOD bound_self;
-	Sf.tau.lower_bound := 1;
+	(* Sf.tau.lower_bound := 1; *)
 	DT_c.lower_bound := 0{K};
 	DT_1.lower_bound := 0{K};
 	DT_2.lower_bound := 0{K};
-	Sf.rho.lower_bound := Sf.rhoc;
+	(* Sf.rho.lower_bound := Sf.rhoc; *)
 	mdot_c.upper_bound := 1000 {kg/s};
 	mdot_c.lower_bound := 0.1 {kg/s};
 END bound_self;
@@ -224,6 +221,7 @@ METHOD bound_self;
 END bound_self;
 METHOD self_test;
 	ASSERT (C.q - 15430{kW}) <  1{kW};
+	ASSERT T_hi - T_ho < 0.01 {K};
 END self_test;
 END condenser_lmtd_sat_test;
 
