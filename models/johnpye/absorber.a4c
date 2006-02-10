@@ -67,13 +67,14 @@ METHOD default_self;
 	RUN values;
 END default_self;
 METHOD specify;
-	FIX V_total, mdot_water_in, Q, p;
+	FIX V_total, mdot_water_in, Q, T;
 END specify;
 METHOD values;
 	V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
 	mdot_water_in := 0.4 {kg/s};
-	Q := 1000 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
-	p := 5 {bar};
+	Q := 800 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
+	T := 500 {K};
+	(* free vars *)
 END values;
 
 END absorber;

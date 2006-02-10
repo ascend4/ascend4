@@ -8,7 +8,7 @@ REQUIRE "johnpye/separator.a4c";
 	in the surge tank in order for the mass to be contained ?
 *)
 MODEL loop;
-	S1 IS_A thermo_state;
+	S1 IS_A iapws95_1phase;
 
 	A IS_A absorber;
 	S IS_A separator;
@@ -25,7 +25,7 @@ MODEL loop;
 	C.mdot_out, T.mdot_water_in ARE_THE_SAME;
 
 	Q_A ALIASES A.Q;
-	Q_C ALIASES C.q_fg;
+	Q_C ALIASES C.q;
 	mdot_A_in ALIASES A.mdot_water_in;
 	mdot_C_out ALIASES C.mdot_out;
 	
@@ -49,15 +49,17 @@ MODEL loop;
 
 METHODS
 METHOD default_self;
-	RUN reset; RUN values;
+	RUN reset; RUN values; RUN bound_self;
 END default_self;
 
 METHOD specify;
 	FIX A.V_total, A.mdot_water_in;
 	FIX A.Q;
-	FIX A.p;
+	FIX A.T;
 
-	FIX C.S_out.h;
+	FIX C.T_ci;
+	FIX C.T_co;
+	FIX C.cp_c;
 
 	FIX T.T, T.rho_water;
 	FIX T.V_vessel,	T.m_gas;
@@ -72,20 +74,26 @@ METHOD values;
 	A.V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
 	A.mdot_water_in := 0.4 {kg/s};
 	A.Q := 1000 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
-	A.p := 40 {bar};
+	A.T := 500 {K};
 
-	C.S_out.h := 400 {kJ/kg};
+	C.cp_c := 4.2 {kJ/kg/K};
+	C.T_ci := 473.15 {K};
+	C.T_co := 490.15 {K};
 
+	T.T := C.T_co;
 	T.rho_water := 997 {kg/m^3};
-	T.T := 400 {K};
 	T.V_vessel := 10000 {L};
 	T.m_gas := 40 {kg};
 
 	(* free *)
 	m_A := 1000 {kg};
 	m_T := 7000 {kg};
-	
+	C.mdot_c := 10 {kg/s};
 END values;
+
+METHOD bound_self;
+	RUN C.bound_self;
+END bound_self;
 
 END loop;
 
