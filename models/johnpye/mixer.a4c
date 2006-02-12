@@ -1,0 +1,50 @@
+REQUIRE "johnpye/iapws_sat_curves.a4c";
+REQUIRE "johnpye/iapws95.a4c";
+
+MODEL mixer(
+	S_in_1 WILL_BE thermo_state;
+	S_in_2 WILL_BE thermo_state;
+	S_out WILL_BE thermo_state;
+);
+
+	mdot_in_1, mdot_in_2, mdot_out IS_A mass_rate;
+
+	masscons: mdot_in_1 + mdot_in_2 = mdot_out;
+	encons: mdot_in_1*S_in_1.h + mdot_in_2*S_in_2.h = mdot_out*S_out.h;
+	pressure1: S_in_1.p = S_out.p;
+	pressure2: S_in_2.p = S_out.p;
+
+
+END mixer;
+
+MODEL mixer_test;
+	S1 IS_A iapws95_2phase;
+	S2 IS_A iapws95_2phase;
+	S3 IS_A iapws95_2phase;
+
+	M IS_A mixer(S1,S2,S3);
+
+METHODS
+METHOD default_self;
+	RUN reset; RUN values; RUN bound_self;
+END default_self;
+
+METHOD specify;
+	FIX S1.rho, S2.rho;
+	FIX S1.T;
+	FIX M.mdot_in_1, M.mdot_in_2;
+END specify;	
+
+METHOD values;
+	S1.rho := 997 {kg/m^3};
+	S1.T := 323 {K};
+	S2.rho := 2.223 {kg/m^3};
+	M.mdot_in_1 := 10 {kg/s};
+	M.mdot_in_2 := 1 {kg/s};
+END values;
+
+METHOD bound_self;
+	(*pass*)
+END bound_self;
+
+END mixer_test;
