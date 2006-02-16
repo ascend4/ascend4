@@ -91,18 +91,18 @@ class Browser:
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
 
-		_display = self.window.get_screen().get_display().get_name();
+		_display = self.window.get_screen().get_display().get_name()
 		_geom=self.prefs.getGeometrySizePosition(_display,"browserwin")
 		if _geom:
-			self.window.resize(_geom[0],_geom[1]);
-			self.window.move(_geom[2],_geom[3]);
+			self.window.resize(_geom[0],_geom[1])
+			self.window.move(_geom[2],_geom[3])
 		
 		self.window.connect("delete_event", self.delete_event)
 
-		self.browserpaned=glade.get_widget("browserpaned");
-		_geom2=self.prefs.getGeometryValue(_display,"browserpaned");
+		self.browserpaned=glade.get_widget("browserpaned")
+		_geom2=self.prefs.getGeometryValue(_display,"browserpaned")
 		if _geom2:
-			self.browserpaned.set_position(_geom2);
+			self.browserpaned.set_position(_geom2)
 
 		self.openbutton=glade.get_widget("openbutton")
 		self.openbutton.connect("clicked",self.open_click)

@@ -75,6 +75,26 @@ class Preferences:
 		self.ini.set("PreferredUnits",key,val)
 		#print "SET PREFERRED UNITS FOR %s TO %s" % ( key, val )
 
+	def getBoolPref(self,sect,key):
+		try:
+			_u = self.ini.get(sect,key)
+		except ConfigParser.NoSectionError:
+			return None
+		except ConfigParser.NoOptionError:
+			return None
+		if _u:
+			return True
+		return False
+
+	def setBoolPref(self,sect,key,val):
+		if not self.ini.has_section(sect):
+			self.ini.add_section(sect)
+		if val:
+			val = "1"
+		else:
+			val = ""
+		self.ini.set(sect,key,val)
+
 # Test script:
 def main():
 	x = Preferences();
