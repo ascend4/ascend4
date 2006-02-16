@@ -31,6 +31,8 @@ public:
 
 	void processVarStatus();
 	const int getActiveBlock() const;
+	void checkConsistency() const;
+	void checkStructuralSingularity() const;
 };
 
 // SOLVE PARAMETERS

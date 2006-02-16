@@ -93,6 +93,8 @@ public:
 
 	const int getActiveBlock() const;
 
+	void checkConsistency() const;
+	void checkStructuralSingularity() const;
 };
 
 
