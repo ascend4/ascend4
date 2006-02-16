@@ -91,5 +91,5 @@ MODEL thermo_state;
 	s IS_A specific_entropy;
 	cp IS_A specific_heat_capacity;
 	cv IS_A specific_heat_capacity;
-	w IS_A speed;
+	(* w IS_A speed; *)
 END thermo_state;
