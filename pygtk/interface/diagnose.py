@@ -41,13 +41,22 @@ class DiagnoseWindow:
 		self.relbuf = gtk.TextBuffer()
 		self.relview.set_buffer(self.relbuf)
 
+		self.im = None
 		self.block = 0
+		self.apply_prefs()
+
 		self.prepare_data()
 		self.fill_values(block) # block zero
 
 	def run(self):
 		self.window.run()
 		self.window.hide()
+
+	def apply_prefs(self):
+		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed")
+		print "VARCOLLAPSED =",vc
+		self.varcollapsed.set_active(vc)
+		self.relcollapsed.set_active(self.browser.prefs.getBoolPref("Diagnose","relcollapsed"))
 
 	def prepare_data(self):
 		# convert incidence map to pylab numarray type:
@@ -235,12 +244,16 @@ class DiagnoseWindow:
 	# GUI EVENT HOOKS-----------------------------------------------------------
 
 	def on_varcollapsed_toggled(self,*args):
-		print "COLLAPSED-TOGGLED"
-		self.fill_var_names()
+		vc = self.varcollapsed.get_active()
+		self.browser.prefs.setBoolPref("Diagnose","varcollapsed",vc)	
+		if self.im:
+			self.fill_var_names()
 
 	def on_relcollapsed_toggled(self,*args):
-		print "COLLAPSED-TOGGLED"
-		self.fill_rel_names()
+		rc = self.varcollapsed.get_active()
+		self.browser.prefs.setBoolPref("Diagnose","relcollapsed",rc)	
+		if self.im:
+			self.fill_rel_names()
 
 	def on_nextbutton_clicked(self,*args):
 		self.set_block(self.block + 1)
