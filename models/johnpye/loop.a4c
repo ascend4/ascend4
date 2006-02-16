@@ -1,23 +1,29 @@
-REQUIRE "johnpye/ideal_steam.a4c";
 REQUIRE "johnpye/absorber.a4c";
 REQUIRE "johnpye/surgetank.a4c";
 REQUIRE "johnpye/condenser.a4c";
 REQUIRE "johnpye/separator.a4c";
+REQUIRE "johnpye/mixer.a4c";
+
 (*
 	Open-loop model. given the absorber conditions, what pressure is required
 	in the surge tank in order for the mass to be contained ?
 *)
 MODEL loop;
-	S1 IS_A iapws95_1phase;
-	S_tank_in IS_A thermo_state;
 
 	A IS_A absorber;
+
+	S_cond_out IS_A iapws95_2phase;
+	S_tank_in IS_A thermo_state;
+
 	S IS_A separator;
 
-	C IS_A condenser_lmtd_sat(S.S_v, S1); (* in, out *)
+	C IS_A condenser_lmtd_sat(S.S_v, S_cond_out); (* in, out *)
 	T IS_A surgetank;
 
-	M IS_A mixer(S.S.l, C.S_out, S_tank_in);
+	M IS_A mixer;
+	M.S_in_1, S.S_l ARE_THE_SAME; (* connect separated liquid to mixer *)
+	M.S_in_2, C.S_out ARE_THE_SAME; (* connect condenser outlet to mixer *)
+	M.S_out, S_tank_in ARE_THE_SAME; (* connect mixed outlet to surge tank *)
 	M.mdot_in_1, S.mdot_l ARE_THE_SAME;
 	M.mdot_in_2, C.mdot_out ARE_THE_SAME;
 

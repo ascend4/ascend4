@@ -103,8 +103,8 @@ MODEL ideal_steam REFINES thermo_state;
 
 	z_c_isobaric: cp = - R * tau^2 * (phi0tautau);
 
-	z_spd_sound: w^2 
-		= R * T * (1 - 1/(tau^2 * phi0tautau));
+	(* z_spd_sound: w^2 
+		= R * T * (1 - 1/(tau^2 * phi0tautau)); *)
 
 METHODS
 METHOD default_self;

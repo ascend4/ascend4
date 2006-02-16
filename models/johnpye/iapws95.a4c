@@ -463,11 +463,12 @@ MODEL iapws95_1phase REFINES thermo_state;
 		         / (  1 + 2*delta*phirdelta + delta^2 * phirdeltadelta )
 		  );
 
-	spd_sound: w^2 
+	(* spd_sound: w^2 
 		= R * T * ( 1 + 2*delta*phirdelta + delta^2 * phirdeltadelta - 
 				( 1 + delta*phirdelta - delta*tau*phirdeltatau )^2 
 				/ (  tau^2 * (phi0tautau + phirtautau) )
 		  );
+	*)
 
 METHODS
 METHOD default_self;
@@ -542,7 +543,9 @@ MODEL iapws95_2phase REFINES thermo_state;
 	z07: s  = xf * Sl.s  + xg * Sv.s;
 	z08: cp = xf * Sl.cp + xg * Sv.cp;
 	z09: cv = xf * Sl.cv + xg * Sv.cv;
-	z10: w  = xf * Sl.w  + xg * Sv.w; (* check this *)
+	(*
+		z10: w  = xf * Sl.w  + xg * Sv.w; * check this *
+	*)
 METHODS
 
 METHOD default_self;
