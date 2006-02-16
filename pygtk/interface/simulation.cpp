@@ -109,6 +109,69 @@ Simulation::checkDoF() const{
 }
 
 void
+Simulation::checkConsistency() const{
+	cerr << "CHECKING CONSISTENCY..." << endl;
+	int *fixedarrayptr;
+
+	int res = consistency_analysis(sys, &fixedarrayptr);
+	struct var_variable **vp = slv_get_master_var_list(sys);
+
+	if(res==1){
+		cerr << "STRUCTURALLY CONSISTENT" << endl;
+		return;
+	}else{
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Structurally inconsistent. Free the variables listed on the console\nin order to make system consistent.");
+		cerr << "INCONSISTENT: Free these vars:" << endl;
+		for(int i=0; fixedarrayptr[i]!=-1; ++i){
+			Instanc i1((struct Instance *)var_instance(vp[fixedarrayptr[i]]));
+			cerr << "  " << getInstanceName(i1) << endl;
+		}
+	}
+}
+
+void
+Simulation::checkStructuralSingularity() const{
+	cerr << "CHECKING STRUCTURAL SINGULARITY..." << endl;
+
+	int *vil;
+	int *ril;
+	int *fil;
+
+	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
+	struct var_variable **varlist = slv_get_solvers_var_list(sys);
+	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
+
+	if(res==0){
+		cerr << "UNABLE TO DETERMINE SINGULARITY LISTS" << endl;
+		return;
+	}else if(res==1){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Structurally singular. Check the listing on the console.");
+		cerr << "STRUCTURALLY SINGULAR: The found singularity involves these relations:" << endl;
+		for(int i=0; ril[i]!=-1; ++i){
+			Instanc i1((struct Instance *)rel_instance(rellist[ril[i]]));
+			cerr << "  " << getInstanceName(i1) << endl;
+		}
+
+		cerr << "STRUCTURALLY SINGULAR: ... and these variables:" << endl;
+		for(int i=0; vil[i]!=-1; ++i){
+			Instanc i1((struct Instance *)var_instance(varlist[vil[i]]));
+			cerr << "  " << getInstanceName(i1) << endl;
+		}
+
+		cerr << "STRUCTURALLY SINGULAR: ... and may be mitigated by freeing these variables:" << endl;
+		for(int i=0; fil[i]!=-1; ++i){
+			Instanc i1((struct Instance *)var_instance(varlist[fil[i]]));
+			cerr << "  " << getInstanceName(i1) << endl;
+		}
+	}else{
+		throw runtime_error("Invalid return from slvDOF_structsing.");
+	}
+	ascfree(vil);
+	ascfree(ril);
+	ascfree(fil);	
+}
+
+void
 Simulation::run(const Method &method){
 	cerr << "RUNNING PROCEDURE " << method.getName() << endl;
 	Nam name = Nam(method.getSym());
@@ -203,6 +266,8 @@ Simulation::check(){
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
 	cerr << "...DONE CHECKING" << endl;
+	this->checkConsistency();
+	this->checkStructuralSingularity();
 }
 
 void
