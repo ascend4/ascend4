@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.0"
+   width="64"
+   height="64"
+   id="svg1406">
+  <defs
+     id="defs1409" />
+  <g
+     id="g4956">
+    <path
+       d="M 52.091927 9.2081671 A 6.0510826 6.0510826 0 1 1  39.989761,9.2081671 A 6.0510826 6.0510826 0 1 1  52.091927 9.2081671 z"
+       style="fill:#00c8ff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="path1415" />
+    <path
+       d="M 47.00551 18.59173 A 9.295866 9.6466532 0 1 1  28.413778,18.59173 A 9.295866 9.6466532 0 1 1  47.00551 18.59173 z"
+       transform="translate(0.526181,-0.526181)"
+       style="fill:none;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       id="path3198" />
+    <path
+       d="M 52.091927 9.2081671 A 6.0510826 6.0510826 0 1 1  39.989761,9.2081671 A 6.0510826 6.0510826 0 1 1  52.091927 9.2081671 z"
+       transform="matrix(1.468532,0,0,1.468532,-33.28891,2.630761)"
+       style="fill:#00d500;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="path4073" />
+    <path
+       d="M 52.091927 9.2081671 A 6.0510826 6.0510826 0 1 1  39.989761,9.2081671 A 6.0510826 6.0510826 0 1 1  52.091927 9.2081671 z"
+       transform="matrix(2.03077,0,0,2.084316,-66.13695,12.37813)"
+       style="fill:#b900c4;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="path4077" />
+    <path
+       d="M 52.091927 9.2081671 A 6.0510826 6.0510826 0 1 1  39.989761,9.2081671 A 6.0510826 6.0510826 0 1 1  52.091927 9.2081671 z"
+       transform="matrix(2.418594,0,0,2.446112,-73.13532,24.67373)"
+       style="fill:#fb0000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="path4079" />
+  </g>
+</svg>
