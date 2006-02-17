@@ -25,7 +25,7 @@ class ObserverTab:
 		self.tab = tab
 
 		#self.activeimg = gtk.Image()
-		#self.activeimg.set_from_file("icons/active.png")
+		#self.activeimg.set_from_file("glade/active.png")
 		self.activeimg = None
 		self.keptimg = None
 		

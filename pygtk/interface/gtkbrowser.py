@@ -36,7 +36,7 @@ import ascend
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/300304
 # for the original source code on which my implementation was based.
 
-GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/ascend.glade"
+GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/glade/ascend.glade"
 
 ESCAPE_KEY = 65307
 
@@ -163,7 +163,7 @@ class Browser:
 		# pixbufs for solver_var status
 
 		self.fixedimg = gtk.Image()
-		self.fixedimg.set_from_file('icons/locked.png')
+		self.fixedimg.set_from_file('glade/locked.png')
 
 		self.iconstatusunknown = None
 		self.iconfixed = self.fixedimg.get_pixbuf()
@@ -197,22 +197,22 @@ class Browser:
 
 		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
 		_img = gtk.Image()
-		_img.set_from_file('icons/unlocked.png')
+		_img.set_from_file('glade/unlocked.png')
 		self.freemenuitem.set_image(_img)
 
 		self.plotmenuitem = gtk.ImageMenuItem("P_lot",True);
 		_img = gtk.Image()
-		_img.set_from_file('icons/plot.png')
+		_img.set_from_file('glade/plot.png')
 		self.plotmenuitem.set_image(_img)
 
 		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
 		_img = gtk.Image()
-		_img.set_from_file('icons/properties.png')
+		_img.set_from_file('glade/properties.png')
 		self.propsmenuitem.set_image(_img)
 
 		self.observemenuitem = gtk.ImageMenuItem("_Observe",True);
 		_img = gtk.Image()
-		_img.set_from_file('icons/observe.png')
+		_img.set_from_file('glade/observe.png')
 		self.observemenuitem.set_image(_img)
 
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
