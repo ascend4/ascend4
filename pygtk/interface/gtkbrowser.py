@@ -582,6 +582,23 @@ class Browser:
 			return
 		self.observers[0].copy_to_clipboard(self.clip)
 
+	def on_fix_variable_activate(self,*args):
+		_path,_col = self.treeview.get_cursor()
+		_instance = self.otank[_path][1]
+		self.set_fixed(_instance,True)
+
+	def on_free_variable_activate(self,*args):
+		_path,_col = self.treeview.get_cursor()
+		_instance = self.otank[_path][1]
+		self.set_fixed(_instance,False)
+
+	def set_fixed(self,instance,val):
+		if instance.getType().isRefinedSolverVar():
+			f = instance.isFixed();
+			if (f and not val) or (not f and val):
+				instance.setFixed(val)
+				self.do_solve_if_auto()		
+
 #   --------------------------------------------
 #   MODULE LIST
 
@@ -960,17 +977,14 @@ class Browser:
 	def fix_activate(self,widget):
 		_path,_col = self.treeview.get_cursor()
 		_name, _instance = self.otank[_path]
+		self.set_fixed(_instance,True);
 		_instance.setFixed(True)
-		self.reporter.reportNote("Fixed variable %s" % _instance.getName().toString())
-		self.do_solve_if_auto()
 		return 1
 
 	def free_activate(self,widget):
 		_path,_col = self.treeview.get_cursor()
 		_instance = self.otank[_path][1]
-		_instance.setFixed(False)
-		self.reporter.reportNote("Freed variable %s" % _instance.getName().toString())
-		self.do_solve_if_auto()
+		self.set_fixed(_instance,False)
 		return 1
 
 	def plot_activate(self,widget):
