@@ -513,15 +513,20 @@ Simulation::getInstanceName(const Instanc &i) const{
 	
 void
 Simulation::processVarStatus(){
-	if(!sys)throw runtime_error("Not yet build");
 
 	// this is a cheap function call:
 	const mtx_block_t *bb = slv_get_solvers_blocks(getSystem());
+
 	var_variable **vlist = slv_get_solvers_var_list(getSystem());
 	int nvars = slv_get_num_solvers_vars(getSystem());
 
 	slv_status_t status;
 	slv_get_status(getSystem(), &status);
+
+	if(status.block.number_of == 0){
+		cerr << "Variable statuses can't be set: block structure not yet determined." << endl;
+		return;
+	}
 
 	int activeblock = status.block.current_block;
 	int low = bb->block[activeblock].col.low;
