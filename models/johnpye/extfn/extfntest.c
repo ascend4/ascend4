@@ -31,7 +31,7 @@ DLEXPORT extfntest_register(struct Slv_Interp *dummy1,
 
 	(void)dummy1;(void)root;(void)arglist;(void)dummy4;
 
-	error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,"Initialising EXTFNTEST...\n");
+	ERROR_REPORER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
 	result += CreateUserFunction("add_one",
                   (ExtEvalFunc *)addone_prepare,
