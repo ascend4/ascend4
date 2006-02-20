@@ -10,7 +10,7 @@ t = L.findType("test_extfntest")
 sim = t.getSimulation("S")
 
 print chr(27)+"[31;1mEXTERNAL FUNCTIONS:"+chr(27)+"[0m"
-ff = L.getExtFns()
+ff = L.getExtMethods()
 for f in ff:
 	fn = f.getName()
 
