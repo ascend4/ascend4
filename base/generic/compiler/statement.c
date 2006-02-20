@@ -937,22 +937,22 @@ void DestroyStatement(struct Statement *s)
 	break;
       case CALL:
         s->v.call.id = NULL;
-	DestroySetList(s->v.call.args);
-	s->v.call.args = NULL;
+        DestroySetList(s->v.call.args);
+        s->v.call.args = NULL;
 	break;
       case EXT:
         DestroyName(s->v.ext.nptr);
         s->v.ext.nptr = NULL;
-	DestroyVariableList(s->v.ext.vl);
-	s->v.ext.vl = NULL;
-	if (s->v.ext.data) DestroyName(s->v.ext.data);
-	s->v.ext.data = NULL;
-	if (s->v.ext.scope) DestroyName(s->v.ext.scope);
-	s->v.ext.scope = NULL;
-	break;
+        DestroyVariableList(s->v.ext.vl);
+        s->v.ext.vl = NULL;
+        if (s->v.ext.data) DestroyName(s->v.ext.data);
+        s->v.ext.data = NULL;
+	    if (s->v.ext.scope) DestroyName(s->v.ext.scope);
+	    s->v.ext.scope = NULL;
+	    break;
       case REF:
-	DestroyVariableList(s->v.ref.vl);
-	s->v.ref.vl = NULL;
+        DestroyVariableList(s->v.ref.vl);
+        s->v.ref.vl = NULL;
 	break;
       case ASGN:
       case CASGN:

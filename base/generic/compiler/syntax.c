@@ -95,6 +95,9 @@ int IsRelation(struct Expr *ex)
  * This function controls  turning on/off the parse relations
  * flag. By default it is on. This variable is defined in
  * ascParse.y.
+
+ 	Looks like this function is disused -- JP
+
  */
 int GetParseRelnsFlag(void)
 {

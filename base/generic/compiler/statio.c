@@ -439,27 +439,27 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     break;
   case EXT:
     switch (ExternalStatMode(s)) {
-    case 0:				/* Procedural */
-      FPRINTF(f," EXTERNAL %s(",ExternalStatFuncName(s));
-      WriteVariableList(f,ExternalStatVlist(s));
-      FPRINTF(f,")\n");
-      break;
-    case 1:				/* Glassbox Declarative */
-    case 2:				/* Blackbox Declarative */
-      if (ExternalStatName(s)!=NULL) {
-	WriteName(f,ExternalStatName(s));
-	FPRINTF(f," : ");
-      }
-      FPRINTF(f," %s(",ExternalStatFuncName(s));
-      WriteVariableList(f,ExternalStatVlist(s));
-      FPRINTF(f," : INPUT/OUTPUT");
-      if (ExternalStatData(s)!=NULL) {
-	FPRINTF(f,", ");
-	WriteName(f,ExternalStatData(s));
-	FPRINTF(f," : DATA");
-      }
-      FPRINTF(f,")\n");
-      break;
+      case 0:				/* Procedural */
+        FPRINTF(f," EXTERNAL %s(",ExternalStatFuncName(s));
+        WriteVariableList(f,ExternalStatVlist(s));
+        FPRINTF(f,")\n");
+        break;
+      case 1:				/* Glassbox Declarative */
+      case 2:				/* Blackbox Declarative */
+        if (ExternalStatName(s)!=NULL) {
+          WriteName(f,ExternalStatName(s));
+          FPRINTF(f," : ");
+        }
+        FPRINTF(f," %s(",ExternalStatFuncName(s));
+        WriteVariableList(f,ExternalStatVlist(s));
+        FPRINTF(f," : INPUT/OUTPUT");
+        if (ExternalStatData(s)!=NULL) {
+          FPRINTF(f,", ");
+          WriteName(f,ExternalStatData(s));
+          FPRINTF(f," : DATA");
+        }
+        FPRINTF(f,")\n");
+        break;
     }
     break;
   case REF:

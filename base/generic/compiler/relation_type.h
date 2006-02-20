@@ -42,8 +42,8 @@
  *  </pre>
  */
 
-#ifndef __RELATION_TYPE_H_SEEN__
-#define __RELATION_TYPE_H_SEEN__
+#ifndef ASC_RELATION_TYPE_H
+#define ASC_RELATION_TYPE_H
 
 /** If TOKENDOMINANT is 1, then we assume union RelationUnion fields
  * other than relop and ref_count are all going to be initialized
@@ -287,5 +287,5 @@ struct relation {
  */
 #define TERM_ALLOC A_TERM(ascmalloc(sizeof(union RelationTermUnion)))
 
-#endif /* __RELATION_TYPE_H_SEEN__ */
+#endif /* ASC_RELATION_TYPE_H */
 
