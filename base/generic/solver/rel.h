@@ -124,11 +124,6 @@ struct rel_relation {
 extern struct rel_relation *rel_create(SlvBackendToken instance,
                                        struct rel_relation *rel);
 /**<
- *  <!--  rel_create(instance,rel)                                     -->
- *  <!--  rel = rel_create(instance,NULL)                              -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  SlvBackendToken instance;                                    -->
- *
  *  Creates a relation given the relation instance.
  *  If the rel supplied is NULL, we allocate the memory for the
  *  rel we return, else we just init the memory you hand us and
@@ -143,15 +138,11 @@ extern struct rel_relation *rel_create(SlvBackendToken instance,
 
 extern void rel_destroy(struct rel_relation *rel);
 /**<
- *  <!--  rel_destroy(rel)                                             -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Destroys a relation.
  */
 
 extern void rel_write_name(slv_system_t sys, struct rel_relation *rel, FILE *file);
 /**<
- *  <!--  rel_write_name(sys,rel,file);                                -->
  *  Writes a name to the file given. Handles NULL inputs gracefully.
  *  Does not print any whitespace, including carriage returns.
  *  Is faster than slv_print_var_name.
@@ -168,9 +159,6 @@ typedef struct rel_filter_structure {
 
 extern SlvBackendToken rel_instance(struct rel_relation *rel);
 /**<
- *  <!--  rel_instance(rel)                                            -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Returns the instance pointer from a rel.
  */
 
@@ -179,11 +167,6 @@ extern void rel_set_extnodeinfo(struct rel_relation *rel,
 /**< Sets the external node information structure for a relation. */
 extern struct rel_extnode *rel_extnodeinfo(struct rel_relation *rel);
 /**<
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  struct rel_extnode *nodeinfo;                                -->
- *
- *  <!--  struct rel_extnode *nodeinfo = rel_extnodeinfo(rel);         -->
- *  <!--  rel_set_extnodeinfo(rel,nodeinfo);                           -->
  *  Fetches the pointer to the external node information structure for
  *  a relation. If this is NULL, which will be the case for most
  *  relations, then there are no external call nodes present.
@@ -193,9 +176,6 @@ extern void rel_set_extwhichvar(struct rel_relation *rel, int whichvar);
 /**< Sets the argument list index for a relation having external nodes. */
 extern int32 rel_extwhichvar(struct rel_relation *rel);
 /**<
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  int32 whichvar;                                              -->
- *
  *  Returns the index into the argument list from which rel was
  *  constructed.  This applies ONLY to rels that have external nodes !
  *  Relations that have external nodes have associated with them an
@@ -247,19 +227,11 @@ extern boolean rel_greater(struct rel_relation *rel);
 
 extern enum rel_enum rel_relop(struct rel_relation *rel);
 /**<
- * <!--  relop = rel_relop(rel);                                       -->
- * <!--  rel_enum relop;                                               -->
- * <!--  struct rel_relation *rel;                                     -->
  * Returns the type of the relational operator of a given relation.
  */
 
 extern char *rel_make_name(slv_system_t sys, struct rel_relation *rel);
 /**<
- *  <!--  name = rel_make_name(sys,rel)                                -->
- *  <!--  slv_system_t sys;                                            -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  char *name;                                                  -->
- *
  *  Copies of the relation instance name can be made and returned.
  *  The string returned should be freed when no longer in use.
  */
@@ -271,11 +243,6 @@ extern int32 rel_mindex(struct rel_relation *rel);
  */
 extern void rel_set_mindex(struct rel_relation *rel, int32 index);
 /**<
- *  <!--  index = rel_mindex(rel)                                      -->
- *  <!--  rel_set_mindex(rel,index)                                    -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the index number of the given relation as it
  *  appears in a slv_system_t master relation list.
  */
@@ -288,11 +255,6 @@ extern int32 rel_sindex(const struct rel_relation *rel);
  */
 extern void rel_set_sindex(struct rel_relation *rel, int32 index);
 /**<
- *  <!--  index = rel_sindex(rel)                                      -->
- *  <!--  rel_set_sindex(rel,index)                                    -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the index number of the given relation as it
  *  appears in a solvers relation list. The index is most often used
  *  to assign the relation to a specific original row of a matrix.
@@ -306,11 +268,6 @@ extern int32 rel_model(const struct rel_relation *rel);
  */
 extern void rel_set_model(struct rel_relation *rel, int32 index);
 /**<
- *  <!--  index = rel_model(rel)                                       -->
- *  <!--  rel_set_model(rel,index) //SERVER ONLY                       -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the model number of the given relation.
  *  In a hierarchy, relations come in groups associated with
  *  models. Models are numbered from 1 to some upper limit.
@@ -325,20 +282,11 @@ extern real64 rel_residual(struct rel_relation *rel);
  */
 extern void rel_set_residual(struct rel_relation *rel, real64 residual);
 /**<
- *  <!--  residual = rel_residual(rel)                                 -->
- *  <!--  rel_set_residual(rel,residual)                               -->
- *  <!--  real64 residual;                                             -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the residual field of the given relation.
  */
 
 extern real64 rel_nominal(struct rel_relation *rel);
 /**<
- *  <!--  nominal = rel_nominal(rel)                                   -->
- *  <!--  real64 nominal;                                              -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Retrieves the nominal field of the given relation.
  *  No slv client has any business being able to set the nominal,
  *  so no such operator is provided.
@@ -421,10 +369,6 @@ extern struct var_variable
  */
 extern const struct var_variable **rel_incidence_list(struct rel_relation *rel);
 /**<
- *  <!--  va = rel_incidence_list(rel)                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  struct var_variable **va;                                    -->
- *
  *  Returns a pointer to an array rel_n_incidences(rel) long of vars.
  *  Each element of the array is a struct var_variable *.
  *  Check the var sindex to see where each might go in a jacobian.
@@ -446,11 +390,6 @@ extern const struct var_variable **rel_incidence_list(struct rel_relation *rel);
 extern int32 rel_apply_filter(const struct rel_relation *rel,
                               rel_filter_t *filter);
 /**< 
- *  <!--  value = rel_apply_filter(rel,filter)                         -->
- *  <!--  int32 value;                                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  rel_filter_t *filter;                                        -->
- *
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
  *  filter->matchvalue and the relation's flags value.
@@ -474,18 +413,11 @@ extern uint32 rel_flags(struct rel_relation *rel);
  */
 extern void rel_set_flags(struct rel_relation *rel, uint32 flags);
 /**<
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  uint32 flags;                                                -->
- *
- *  <!--  rel_flags(rel) returns the flags field of the relation.      -->
  *  Sets the entire flag field to the value of flags given.
  */
 
 extern uint32 rel_flagbit(struct rel_relation *rel, uint32 name);
 /**<
- *  <!--  rel_flagbit(rel,name);                                       -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  uint32 name;		                                               -->
  *  Returns the value of the bit specified from the relation flags.
  *  name should be a REL_xx flag defined above)
  */
@@ -493,10 +425,6 @@ extern uint32 rel_flagbit(struct rel_relation *rel, uint32 name);
 extern void rel_set_flagbit(struct rel_relation *rel,
                             uint32 NAME, uint32 oneorzero);
 /**<
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  uint32 NAME,oneorzero;                                       -->
- *  <!--  rel_set_flagbit(rel,NAME,oneorzero)                          -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.
  *  The macro names are the defined up at the top of this file.
@@ -679,11 +607,6 @@ extern uint32 rel_included(struct rel_relation *rel);
  */
 extern void rel_set_included(struct rel_relation *rel, uint32 included);
 /**<
- *  <!--  included = rel_included(rel)                                 -->
- *  <!--  rel_set_included(rel,included)                               -->
- *  <!--  uint32 included;                                             -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the included field of the given relation.
  *  <!--  This has side effect on the ascend instance, so it isn't     -->
  *  <!--  implemented with the rest of the macros above. This needs to -->
@@ -739,11 +662,6 @@ extern real64 rel_multiplier(struct rel_relation *rel);
 extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
 /**<
  *  (<!--  won a temporary reprieve. this should be a system property, not rel.) -->
- *  <!--  multiplier = rel_multiplier(rel)                             -->
- *  <!--  rel_set_multiplier(rel,multiplier)                           -->
- *  <!--  real64 multiplier;                                           -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the multiplier field of the given relation.
  *  This is expected to be computed as a lagrange multiplier which will
  *  relate the gradient of the relation rel with that of some objective

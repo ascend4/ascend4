@@ -45,7 +45,6 @@
 
 extern void AddContext(struct StatementList *slist ,unsigned int c);
 /**<
- *  <!--  AddContext(slist,c)                                          -->
  *
  *  Adds the given context flags, c, to the statements in the list
  *  using the | operator, so that existing context
@@ -68,7 +67,6 @@ extern void AddContext(struct StatementList *slist ,unsigned int c);
 
 extern unsigned int SlistHasWhat(struct StatementList *slist);
 /**<
- *  <!--  unsigned int SlistHasWhat(slist);                            -->
  *  Returns an unsigned with the low bits set according to whether or
  *  not there is a statement of the indicated class in the slist given.
  *  The value is determined by examining the list, not by looking up
@@ -79,9 +77,6 @@ extern unsigned int SlistHasWhat(struct StatementList *slist);
 extern struct Statement *CreateALIASES(struct VariableList *vl,
                                        struct Name *n);
 /**<
- *  <!--  struct Statement *CreateALIASES(vl,n)                        -->
- *  <!--  struct VariableList *vl;                                     -->
- *  <!--  struct Name *n;                                              -->
  *  Create an ALIASES statement.
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
@@ -97,12 +92,6 @@ extern struct Statement *CreateARR(struct VariableList *aname,
                                    int intset,
                                    struct Set *setvals);
 /**<
- *  <!--  struct Statement *CreateARR(aname,il,setname,intset,setvals) -->
- *  <!--  struct VariableList *avlname;                                -->
- *  <!--  struct VariableList *il;                                     -->
- *  <!--  struct VariableList *setvlname;                              -->
- *  <!--  int intset;                                                  -->
- *  <!--  struct Set *setvals;                                         -->
  *  Create a compound ALIASES-IS_A statement.
  *  VariableListLength(avlname) and VariableListLength(setname) should
  *  be 1.
@@ -125,10 +114,6 @@ extern struct Statement *CreateISA(struct VariableList *vl,
                                    struct Set *ta,
                                    symchar *st);
 /**<
- *  <!--  struct Statement *CreateISA(vl,t,ta,st)                      -->
- *  <!--  struct VariableList *vl;                                     -->
- *  <!--  struct Set *ta;                                              -->
- *  <!--  const char *t,*st;                                           -->
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -145,11 +130,6 @@ extern struct Statement *CreateWILLBE(struct VariableList *vl,
                                       symchar *st,
                                       struct Expr *cv);
 /**<
- *  <!--  struct Statement *CreateWILLBE(vl,t,ta,st,cv)                -->
- *  <!--  struct VariableList *vl;                                     -->
- *  <!--  struct Set *ta;                                              -->
- *  <!--  const char *t,*st;                                           -->
- *  <!--  struct Expr *cv;                                             -->
  *  Initializes the reference count to one.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -165,10 +145,6 @@ extern struct Statement *CreateIRT(struct VariableList *vl,
                                    symchar *t,
                                    struct Set *ta);
 /**<
- *  <!--  struct Statement *CreateIRT(vl,t,ta)                         -->
- *  <!--  struct VariableList *vl;                                     -->
- *  <!--  const char *t;                                               -->
- *  <!--  struct Set *ta;                                              -->
  *  Create an IS_REFINED_TO statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -180,8 +156,6 @@ extern struct Statement *CreateIRT(struct VariableList *vl,
 
 extern struct Statement *CreateAA(struct VariableList *vl);
 /**<
- *  <!--  struct Statement *CreateAA(vl)                               -->
- *  <!--  struct VariableList *vl;                                     -->
  *  Create an ARE_ALIKE statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -191,8 +165,6 @@ extern struct Statement *CreateAA(struct VariableList *vl);
 
 extern struct Statement *CreateATS(struct VariableList *vl);
 /**<
- *  <!--  struct Statement *CreateATS(vl)                              -->
- *  <!--  struct VariableList *vl;                                     -->
  *  Create an ARE_THE_SAME statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -208,8 +180,6 @@ extern struct Statement *CreateFIX(struct VariableList *vl);
 
 extern struct Statement *CreateWBTS(struct VariableList *vl);
 /**<
- *  <!--  struct Statement *CreateWBTS(vl)                             -->
- *  <!--  struct VariableList *vl;                                     -->
  *  Create an WILL_BE_THE_SAME statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -219,8 +189,6 @@ extern struct Statement *CreateWBTS(struct VariableList *vl);
 
 extern struct Statement *CreateWNBTS(struct VariableList *vl);
 /**<
- *  <!--  struct Statement *CreateWNBTS(vl)                            -->
- *  <!--  struct VariableList *vl;                                     -->
  *  Create an WILL_NOT_BE_THE_SAME statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -234,13 +202,6 @@ extern struct Statement *CreateFOR(symchar *index,
                                    enum ForOrder order,
                                    enum ForKind kind);
 /**<
- *  <!--  struct Statement *CreateFOR(index,expr,stmts,order,kind)     -->
- *  <!--  struct Expr *expr;                                           -->
- *  <!--  const char *index;                                           -->
- *  <!--  struct StatementList *stmts;                                 -->
- *  <!--  enum ForOrder order;                                         -->
- *  <!--  enum ForKind kind;                                           -->
- *
  *  Create a FOR statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -254,9 +215,6 @@ extern struct Statement *CreateFOR(symchar *index,
 extern struct Statement *CreateREL(struct Name *n,
                                    struct Expr *relation);
 /**<
- *  <!--  struct Statement *CreateREL(n,relation);                     -->
- *  <!--  struct Name *n;                                              -->
- *  <!--  struct Expr *relation;                                       -->
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
  */
@@ -264,9 +222,6 @@ extern struct Statement *CreateREL(struct Name *n,
 extern struct Statement *CreateLOGREL(struct Name *n,
                                       struct Expr *logrel);
 /**<
- *  <!--  struct Statement *CreateLOGREL(n,logrel);                    -->
- *  <!--  struct Name *n;                                              -->
- *  <!--  struct Expr *logrel;                                         -->
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
  */
@@ -292,7 +247,6 @@ extern struct Statement *CreateEXTERN(int mode,
 extern struct Statement *CreateFlow(enum FlowControl fc,
                                     CONST char *msgtext);
 /**<
- *  <!--  struct Statement *CreateFlow(fc,msgtext);                    -->
  *  Create a BREAK, CONTINUE, FALL_THROUGH, RETURN, STOP as
  *  indicated by fc. If msgtext is not NULL, it is
  *  converted to a bracechar and stored as the message.
@@ -303,12 +257,6 @@ extern struct Statement *CreateREF(struct VariableList *vl,
                                    symchar *st,
                                    int mode);
 /**<
- *  <!--  struct Statement *CreateREF(vl,ref_name,st,mode)             -->
- *  <!--  struct VariableList *vl;                                     -->
- *  <!--  const char *ref_name;                                        -->
- *  <!--  const char *settype;                                         -->
- *  <!--  int mode; -- 0 = copy semantics; (_IS_)                      -->
- *  <!--          --  1 = pure reference semantics; (_REFERS_)         -->
  *  Creates a new REFERENCE type statement. ref_name is the name of
  *  the type or prototype being referred to.
  *  Initializes the reference count to one.
@@ -323,9 +271,6 @@ extern struct Statement *CreateREF(struct VariableList *vl,
 
 extern void SetRelationName(struct Statement *stat, struct Name *n);
 /**<
- *  <!--  void SetRelationName(stat,n)                                 -->
- *  <!--  struct Statement *stat;                                      -->
- *  <!--  struct Name *n;                                              -->
  *  This procedure provides a mechanism for unnamed relations to be named.
  *  It should only be called on relation statements that are unnamed.  It
  *  will name the relation with the name provided.
@@ -333,9 +278,6 @@ extern void SetRelationName(struct Statement *stat, struct Name *n);
 
 extern void SetLogicalRelName(struct Statement *stat, struct Name *n);
 /**<
- *  <!--  void SetLogicalRelName(stat,n)                               -->
- *  <!--  struct Statement *stat;                                      -->
- *  <!--  struct Name *n;                                              -->
  *  This procedure provides a mechanism for unnamed relations to be named.
  *  It should only be called on logcial relation statements that are unnamed.
  *  It will name the logical relation with the name provided.
@@ -344,9 +286,6 @@ extern void SetLogicalRelName(struct Statement *stat, struct Name *n);
 
 extern struct Statement *CreateRUN(struct Name *n, struct Name *type);
 /**<
- *  <!--  struct Statement *CreateRUN(n,type)                          -->
- *  <!--  struct Name *n;                                              -->
- *  <!--  struct Name *type;                                           -->
  *  Create a run statement with procedure name n, and/or class type.
  *  If type is non NULL, then so called 'class access is to be used to
  *  access the procedure. This is equivalent to the "::" in some object
@@ -357,9 +296,6 @@ extern struct Statement *CreateRUN(struct Name *n, struct Name *type);
 
 extern struct Statement *CreateCALL(symchar *n, struct Set *arglist);
 /**<
- *  <!--  struct Statement *CreateCALL(n,argList)                      -->
- *  <!--  symchar *n;                                                  -->
- *  <!--  struct Set * argList;                                        -->
  *  Create a CALL statement with name n and arguments argList.
  *  argList may be NULL.
  *  The statement's module is set to the current open module.
@@ -379,9 +315,6 @@ extern struct Statement *CreateIF(struct Expr *ex,
                                   struct StatementList *ifblock,
                                   struct StatementList *elseblock);
 /**<
- *  <!--  struct Statement *CreateIF(ex,ifblock,elseblock)             -->
- *  <!--  struct Expr *ex;                                             -->
- *  <!--  struct StatementList *ifblock,*elseblock;                    -->
  *  Create an IF-THEN-ELSE structure.  If the else block is omitted,
  *  pass in NULL for elseblock.
  *  The statement's module is set to the current open module.
@@ -391,9 +324,6 @@ extern struct Statement *CreateIF(struct Expr *ex,
 extern struct Statement *CreateWhile(struct Expr *test,
                                      struct StatementList *body);
 /**<
- *  <!--  struct Statement *CreateWhile(test,body)                     -->
- *  <!--  struct Expr *test;                                           -->
- *  <!--  struct StatementList *body;                                  -->
  *  Create a WHILE-DO structure.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -403,10 +333,6 @@ extern struct Statement *CreateWHEN(struct Name *wname,
                                     struct VariableList *vlist,
                                     struct WhenList *wl);
 /**<
- *  <!--  struct Statement *CreateWHEN(wname,vlist,wl)                 -->
- *  <!--  struct Name *wname;                                          -->
- *  <!--  struct VariableList *vlist;                                  -->
- *  <!--  struct WhenList *wl;                                         -->
  *  Crease a WHEN statement structure.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -414,7 +340,6 @@ extern struct Statement *CreateWHEN(struct Name *wname,
 
 extern struct Statement *CreateFNAME(struct Name *name);
 /**<
- *  <!--  struct Statement *CreateFNAME(name)                          -->
  *  Crease a FNAME statement structure.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -424,9 +349,6 @@ extern struct Statement *CreateFNAME(struct Name *name);
 extern struct Statement *CreateSWITCH(struct VariableList *v,
                                       struct SwitchList *sw);
 /**<
- *  <!--  struct Statement *CreateSWITCH(v,sw)                         -->
- *  <!--  struct VariableList *v;                                      -->
- *  <!--  struct SelectList *sw;                                       -->
  *  Crease a SWITCH statement structure.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -434,8 +356,6 @@ extern struct Statement *CreateSWITCH(struct VariableList *v,
 
 extern struct Statement *CreateCOND(struct StatementList *stat);
 /**<
- *  <!--  struct Statement *CreateCOND(stat)                           -->
- *  <!--  struct StatementList *stmts;                                 -->
  *  Create a CONDITIONAL statement structure.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -444,9 +364,6 @@ extern struct Statement *CreateCOND(struct StatementList *stat);
 extern struct Statement *CreateSELECT(struct VariableList *v,
                                       struct SelectList *sel);
 /**<
- *  <!--  struct Statement *CreateSELECT(v,sel)                        -->
- *  <!--  struct VariableList *v;                                      -->
- *  <!--  struct SelectList *sel;                                      -->
  *  Crease a SELECT statement structure.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -455,9 +372,6 @@ extern struct Statement *CreateSELECT(struct VariableList *v,
 extern struct Statement *CreateASSIGN(struct Name *n,
                                       struct Expr *rhs);
 /**<
- *  <!--  struct Statement *CreateASSIGN(n,rhs);                       -->
- *  <!--  struct Name *n;                                              -->
- *  <!--  struct Expr *rhs;                                            -->
  *  Create a default assignment statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -465,9 +379,6 @@ extern struct Statement *CreateASSIGN(struct Name *n,
 
 extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
 /**<
- *  <!--  struct Statement *CreateCASSIGN(n,rhs);                      -->
- *  <!--  struct Name *n;                                              -->
- *  <!--  struct Expr *rhs;                                            -->
  *  Create a structural assignment statement node.
  *  The statement's module is set to the current open module.
  *  The statement's line number is set to the current line number.
@@ -486,10 +397,6 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  */
 extern enum stat_t StatementTypeF(CONST struct Statement *s);
 /**<
- *  <!--  macro StatementType(s)                                       -->
- *  <!--  enum stat_t StatementTypeF(s)                                -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the statement type of s.                              -->
  *  Implementation function for StatementType().  Do not call this
  *  function directly - use StatementType() instead.
  */
@@ -507,10 +414,7 @@ extern enum stat_t StatementTypeF(CONST struct Statement *s);
  */
 extern struct module_t *StatementModuleF(CONST struct Statement *s);
 /**<
- *  <!--  macro StatementModule(s)                                     -->
- *  <!--  struct module_t *StatementModuleF(s)                         -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the module that statement s was defined in.           -->
+ *  Return the module that statement s was defined in. 
  *  Implementation function for StatementModule().  Do not call this
  *  function directly - use StatementModule() instead.
  */
@@ -528,10 +432,7 @@ extern struct module_t *StatementModuleF(CONST struct Statement *s);
  */
 extern unsigned long StatementLineNumF(CONST struct Statement *s);
 /**<
- *  <!--  macro StatementLineNum(s)                                    -->
- *  <!--  unsigned long StatementLineNumF(s)                           -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the line number where statement s was defined.        -->
+ *  Return the line number where statement s was defined. 
  *  Implementation function for StatementLineNum().  Do not call this
  *  function directly - use StatementLineNum() instead.
  */
@@ -554,22 +455,12 @@ extern unsigned long StatementLineNumF(CONST struct Statement *s);
  */
 extern struct Statement *CopyStatementF(struct Statement *s);
 /**<
- *  <!--  struct Statement *CopyStatementF(s)                          -->
- *  <!--  struct Statement *s;                                         -->
- *  <!--  Make a new reference to statement s.  This does not actually make a new -->
- *  <!--  copy in memory of the data in s: it only increases the reference count. -->
- *  <!--  If you need to modify the statement, you should use CopyToModify which  -->
- *  <!--  is defined below.                                            -->
- *  <!--  You don't need to worry about the count overflowing unless the user is  -->
- *  <!--  utterly insane.                                              -->
  *  Implementation function for CopyStatement().  Do not call this
  *  function directly - use CopyStatement() instead.
  */
 
 extern void DestroyStatement(struct Statement *s);
 /**< 
- *  <!--  void DeleteStatement(s)                                      -->
- *  <!--  struct Statement *s;                                         -->
  *  Delete a reference to statement s.  This make not actually deallocate
  *  the memory associated with s if there are still other references to
  *  the statement.  If there aren't any, remaining references it deallocates
@@ -578,8 +469,6 @@ extern void DestroyStatement(struct Statement *s);
 
 extern struct Statement *CopyToModify(struct Statement *s);
 /**< 
- *  <!--  struct Statement *CopyToModify(s)                            -->
- *  <!--  struct Statement *s;                                         -->
  *  This will always make a new separate copy of the statement, so that
  *  it can be modified.  The statement reference count is initialize to
  *  one.
@@ -600,11 +489,6 @@ extern struct Statement *CopyToModify(struct Statement *s);
  */
 extern unsigned int GetStatContextF(CONST struct Statement *s);
 /**<
- *  <!--  bits = GetStatContext(s);                                    -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Returns the context bits of the statement.                   -->
- *  <!--  If statement is of a type that doesn't have context bits,    -->
- *  <!--  returns context_MODEL and issues warning message.            -->
  *  Implementation function for GetStatContext().  Do not call this
  *  function directly - use GetStatContext() instead.
  */
@@ -665,7 +549,6 @@ extern unsigned int GetStatContextF(CONST struct Statement *s);
 
 extern void SetStatContext(struct Statement *s, unsigned int bits);
 /**< 
- *  <!--  SetStatContext(s,bits)                                       -->
  *  Sets the context field of a statement to the value, bits, given.
  *  E.g. to turn on the FOR context bit,
  *  This function should only be used at parse time, and probably not
@@ -676,7 +559,6 @@ extern void SetStatContext(struct Statement *s, unsigned int bits);
 
 extern void MarkStatContext(struct Statement *s, unsigned int bits);
 /**< 
- *  <!--  MarkStatContext(s,bits)                                      -->
  *  Adds the context bits given in bits to the context field of the
  *  statement given.
  *  E.g. to turn on the FOR context bit,
@@ -689,8 +571,6 @@ extern void MarkStatContext(struct Statement *s, unsigned int bits);
 
 extern struct VariableList *GetStatVarList(CONST struct Statement *s);
 /**< 
- *  <!--  struct VariableList *GetStatVarListF(s)                      -->
- *  <!--  const struct Statement *s;                                   -->
  *  Returns the variable list of a
  *  IS_A, IS_REFINED_TO, WILL_BE, WILL_BE_THE_SAME,
  *  ARE_ALIKE, ARE_THE_SAME, ALIASES or ALIASES-ISA(ARR) statement.
@@ -716,13 +596,6 @@ extern struct VariableList *GetStatVarList(CONST struct Statement *s);
  */
 extern symchar *GetStatTypeF(CONST struct Statement *s);
 /**<
- *  <!--  macro GetStatType(s)                                         -->
- *  <!--  symchar *GetStatTypeF(s)                                     -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the type field of an IS_A, WILL_BE, or IS_REFINED_TO statement. -->
- *  <!--  It must be passed one of these types of statement.           -->
- *  <!--  Other statements will return NULL or crash.                  -->
- *  <!--  See also GetStatTypeDesc, type_desc.h.                       -->
  *  Implementation function for GetStatType().  Do not call this
  *  function directly - use GetStatType() instead.
  */
@@ -743,22 +616,12 @@ extern symchar *GetStatTypeF(CONST struct Statement *s);
  */
 extern CONST struct Set *GetStatTypeArgsF(CONST struct Statement *s);
 /**<
- *  <!--  macro GetStatTypeArgs(s)                                     -->
- *  <!--  const struct Set *GetStatTypeArgsF(s)                        -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the typeargs field of an IS_A, WILL_BE or IS_REFINED_TO statement. -->
- *  <!--  It must be passed one of these types of statement.           -->
- *  <!--  Proper WILLBE statements should always return NULL.          -->
- *  <!--  Other statements will return NULL or crash.                  -->
  *  Implementation function for GetStatTypeArgs().  Do not call this
  *  function directly - use GetStatTypeArgs() instead.
  */
 
 extern unsigned int GetStatNeedsArgs(CONST struct Statement *s);
 /**< 
- *  <!--  len = GetStatNeedsArgs(s);                                   -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  unsigned int len;                                            -->
  *  Returns the number of arguments required to satisfy the type of the
  *  ISA or IRT statement given. Note that this number is not necessarily
  *  the number of arguments actually in the statement as the user wrote it.
@@ -780,12 +643,6 @@ extern unsigned int GetStatNeedsArgs(CONST struct Statement *s);
  */
 extern symchar *GetStatSetTypeF(CONST struct Statement *s);
 /**<
- *  <!--  macro GetStatSetType(s)                                      -->
- *  <!--  symchar *GetStatSetTypeF(s)                                  -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the type of set for an IS_A, WILL_BE.                 -->
- *  <!--  Often this will be NULL, which                               -->
- *  <!--  means that there is no "OF" part to the IS_A/WILL_BE.        -->
  *  Implementation function for GetStatSetType().  Do not call this
  *  function directly - use GetStatSetType() instead.
  */
@@ -804,11 +661,6 @@ extern symchar *GetStatSetTypeF(CONST struct Statement *s);
  */
 extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
 /**<
- *  <!--  macro GetStatCheckValue(s)                                   -->
- *  <!--  const struct Expr *GetStatCheckValueF(s)                     -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the value expression for a WILLBE.  Often this will be NULL, -->
- *  <!--  which means that there is no WITH_VALUE part to the WILL_BE. -->
  *  Implementation function for GetStatCheckValue().  Do not call this
  *  function directly - use GetStatCheckValue() instead.
  */
@@ -829,10 +681,6 @@ extern CONST struct Expr *GetStatCheckValueF(CONST struct Statement *s);
  */
 extern CONST struct Name *AliasStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro AliasStatName(s)                                       -->
- *  <!--  struct Name *AliasStatNameF(s)                               -->
- *  <!--  Return the Name RHS from a simple ALIASES statement.         -->
- *  <!--  See stattypes.h for meaning of Name.                         -->
  *  Implementation function for AliasStatName().  Do not call this
  *  function directly - use AliasStatName() instead.
  */
@@ -860,18 +708,6 @@ extern CONST struct Name *AliasStatNameF(CONST struct Statement *s);
  */
 extern CONST struct VariableList *ArrayStatAvlNamesF(CONST struct Statement *s);
 /**<
- *  <!--  macro ArrayStatAvlNames(s)                                   -->
- *  <!--  CONST struct VariableList *ArrayStatAvlNamesF(s)             -->
- *  <!--  Return the LHS (new array(s)) being defined from an ARR statement. -->
- *  <!--  See stattypes.h for meaning of vlist.                        -->
- *  <!--  syntax is currently:                                         -->
- *
- *  <!--  AvlNames ALIASES (VarList)                                   -->
- *  <!--  WHERE SetName IS_A set OF IntSet WITH_VALUE (SetValues);     -->
- *
- *  <!--  while the standard ALIASES statement is just:                -->
- *
- *  <!--  VarList ALIASES Name;                                        -->
  *  Implementation function for ArrayStatAvlNames().  Do not call this
  *  function directly - use ArrayStatAvlNames() instead.
  */
@@ -889,10 +725,6 @@ extern CONST struct VariableList *ArrayStatAvlNamesF(CONST struct Statement *s);
  */
 extern CONST struct VariableList *ArrayStatSetNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro ArrayStatSetName(s)                                    -->
- *  <!--  struct VariableList *ArrayStatSetNameF(s)                    -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name of set for an ARR statement.                 -->
  *  Implementation function for ArrayStatSetName().  Do not call this
  *  function directly - use ArrayStatSetName() instead.
  */
@@ -912,13 +744,6 @@ extern CONST struct VariableList *ArrayStatSetNameF(CONST struct Statement *s);
  */
 extern int ArrayStatIntSetF(CONST struct Statement *s);
 /**<
- *  <!--  macro ArrayStatIntSet(s)                                     -->
- *  <!--  int ArrayStatIntSetF(s)                                      -->
- *  <!--  const struct Statement *s;                                   -->
- *
- *  <!--  Return 0 or 1 corresponding to set being defined as symbol or integer. -->
- *  <!--  It must be passed an ARR statement.                          -->
- *  <!--  Other statements will return goop or crash.                  -->
  *  Implementation function for ArrayStatIntSet().  Do not call this
  *  function directly - use ArrayStatIntSet() instead.
  */
@@ -939,14 +764,6 @@ extern int ArrayStatIntSetF(CONST struct Statement *s);
  */
 extern CONST struct Set *ArrayStatSetValuesF(CONST struct Statement *s);
 /**<
- *  <!--  macro ArrayStatSetValues(s)                                  -->
- *  <!--  struct Set *ArrayStatSetValuesF(s)                           -->
- *  <!--  const struct Statement *s;                                   -->
- *
- *  <!--  Return the user proposed set of values to use for array names. -->
- *  <!--  It must be passed an ARR statement. May be empty/NULL set.   -->
- *  <!--  (this is the list after WITH_VALUE)                           -->
- *  <!--  Other statements will return goop or crash.                  -->
  *  Implementation function for ArrayStatSetValues().  Do not call this
  *  function directly - use ArrayStatSetValues() instead.
  */
@@ -966,10 +783,6 @@ extern CONST struct Set *ArrayStatSetValuesF(CONST struct Statement *s);
  */
 extern symchar *ForStatIndexF(CONST struct Statement *s);
 /**<
- *  <!--  macro ForStatIndex(s)                                        -->
- *  <!--  symchar *ForStatIndexF(s)                                    -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the FOR index variable identifier.                    -->
  *  Implementation function for ForStatIndex().  Do not call this
  *  function directly - use ForStatIndex() instead.
  */
@@ -987,10 +800,6 @@ extern symchar *ForStatIndexF(CONST struct Statement *s);
  */
 extern struct Expr *ForStatExprF(CONST struct Statement *s);
 /**<
- *  <!--  macro ForStatExpr(s)                                         -->
- *  <!--  struct Expr *ForStatExprF(s)                                 -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the expression of values that the index variable takes. -->
  *  Implementation function for ForStatExpr().  Do not call this
  *  function directly - use ForStatExpr() instead.
  */
@@ -1008,10 +817,6 @@ extern struct Expr *ForStatExprF(CONST struct Statement *s);
  */
 extern struct StatementList *ForStatStmtsF(CONST struct Statement *s);
 /**<
- *  <!--  macro ForStatStmts(s)                                        -->
- *  <!--  struct StatementList *ForStatStmtsF(s)                       -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the list of statements that are in the body of the FOR construct. -->
  *  Implementation function for ForStatStmts().  Do not call this
  *  function directly - use ForStatStmts() instead.
  */
@@ -1029,10 +834,6 @@ extern struct StatementList *ForStatStmtsF(CONST struct Statement *s);
  */
 extern enum ForKind ForLoopKindF(CONST struct Statement *s);
 /**<
- *  <!--  macro ForLoopKind(s)                                         -->
- *  <!--  enum ForOrder ForLoopKindF(s)                                -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the kind of the FOR construct.                        -->
  *  Implementation function for ForLoopKind().  Do not call this
  *  function directly - use ForLoopKind() instead.
  */
@@ -1051,11 +852,6 @@ extern enum ForKind ForLoopKindF(CONST struct Statement *s);
  */
 extern enum ForOrder ForLoopOrderF(CONST struct Statement *s);
 /**<
- *  <!--  macro ForLoopOrder(s)                                        -->
- *  <!--  enum ForOrder ForLoopOrderF(s)                               -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the order of the FOR construct.  For declarative this -->
- *  <!--  should always be random.                                     -->
  *  Implementation function for ForLoopOrder().  Do not call this
  *  function directly - use ForLoopOrder() instead.
  */
@@ -1183,11 +979,6 @@ extern unsigned ForContainsIllegalF(CONST struct Statement *s);
  */
 extern struct Name *DefaultStatVarF(CONST struct Statement *s);
 /**<
- *  <!--  macro DefaultStatVar(s)                                      -->
- *  <!--  struct Name *DefaultStatVarF(s)                              -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name structure which is the left hand side of the -->
- *  <!--  default assignment.                                          -->
  *  Implementation function for DefaultStatVar().  Do not call this
  *  function directly - use DefaultStatVar() instead.
  */
@@ -1205,10 +996,6 @@ extern struct Name *DefaultStatVarF(CONST struct Statement *s);
  */
 extern struct Expr *DefaultStatRHSF(CONST struct Statement *s);
 /**<
- *  <!--  macro DefaultStatRHS(s)                                      -->
- *  <!--  struct Expr *DefaultStatRHSF(s)                              -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the right hand side expression of the default assignment. -->
  *  Implementation function for DefaultStatRHS().  Do not call this
  *  function directly - use DefaultStatRHS() instead.
  */
@@ -1227,11 +1014,6 @@ extern struct Expr *DefaultStatRHSF(CONST struct Statement *s);
  */
 extern struct Name *AssignStatVarF(CONST struct Statement *s);
 /**<
- *  <!--  macro AssignStatVar(s)                                       -->
- *  <!--  struct Name *AssignStatVarF(s)                               -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name structure which is the left hand side of the -->
- *  <!--  structural assignment.                                       -->
  *  Implementation function for AssignStatVar().  Do not call this
  *  function directly - use AssignStatVar() instead.
  */
@@ -1249,10 +1031,6 @@ extern struct Name *AssignStatVarF(CONST struct Statement *s);
  */
 extern struct Expr *AssignStatRHSF(CONST struct Statement *s);
 /**<
- *  <!--  macro AssignStatRHS(s)                                       -->
- *  <!--  struct Expr *AssignStatRHSF(s)                               -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the right hand side expression of the structural assignment. -->
  *  Implementation function for AssignStatRHS().  Do not call this
  *  function directly - use AssignStatRHS() instead.
  */
@@ -1272,10 +1050,6 @@ extern struct Expr *AssignStatRHSF(CONST struct Statement *s);
  */
 extern struct Name *RelationStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro RelationStatName(s)                                    -->
- *  <!--  struct Name *RelationStatNameF(s)                            -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name of the relation.                             -->
  *  Implementation function for RelationStatName().  Do not call this
  *  function directly - use RelationStatName() instead.
  */
@@ -1293,10 +1067,6 @@ extern struct Name *RelationStatNameF(CONST struct Statement *s);
  */
 extern struct Expr *RelationStatExprF(CONST struct Statement *s);
 /**<
- *  <!--  macro RelationStatExpr(s)                                    -->
- *  <!--  struct Expr *RelationStatExprF(s)                            -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the relation expression.                              -->
  *  Implementation function for RelationStatExpr().  Do not call this
  *  function directly - use RelationStatExpr() instead.
  */
@@ -1314,10 +1084,6 @@ extern struct Expr *RelationStatExprF(CONST struct Statement *s);
  */
 extern struct Name *LogicalRelStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro LogicalRelStatName(s)                                  -->
- *  <!--  struct Name *LogicalRelStatNameF(s)                          -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name of the logical relation.                     -->
  *  Implementation function for LogicalRelStatName().  Do not call this
  *  function directly - use LogicalRelStatName() instead.
  */
@@ -1335,10 +1101,6 @@ extern struct Name *LogicalRelStatNameF(CONST struct Statement *s);
  */
 extern struct Expr *LogicalRelStatExprF(CONST struct Statement *s);
 /**<
- *  <!--  macro LogicalRelStatExpr(s)                                  -->
- *  <!--  struct Expr *LogicalRelStatExprF(s)                          -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the logical relation expression.                      -->
  *  Implementation function for LogicalRelStatExpr().  Do not call this
  *  function directly - use LogicalRelStatExpr() instead.
  */
@@ -1359,11 +1121,6 @@ extern struct Expr *LogicalRelStatExprF(CONST struct Statement *s);
  */
 extern int ExternalStatModeF(CONST struct Statement *s);
 /**<
- *  <!--  macro ExternalStatMode(s)                                    -->
- *  <!--  int ExternalStatModeF(s)                                     -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the external statement's mode.                        -->
- *  <!--  0 = Procedural, 1 = Glassbox Declarative, 2 = Blackbox Declarative. -->
  *  Implementation function for ExternalStatMode().  Do not call this
  *  function directly - use ExternalStatMode() instead.
  */
@@ -1381,10 +1138,6 @@ extern int ExternalStatModeF(CONST struct Statement *s);
  */
 extern struct Name *ExternalStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro ExternalStatName(s)                                    -->
- *  <!--  struct Name *ExternalStatNameF(s)                            -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the external statement's name.                        -->
  *  Implementation function for ExternalStatName().  Do not call this
  *  function directly - use ExternalStatName() instead.
  */
@@ -1402,10 +1155,6 @@ extern struct Name *ExternalStatNameF(CONST struct Statement *s);
  */
 extern struct Name *ExternalStatDataF(CONST struct Statement *s);
 /**<
- *  <!--  macro ExternalStatData(s)                                    -->
- *  <!--  struct Name *ExternalStatDataF(s)                            -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the external statement's name of its additional data. -->
  *  Implementation function for ExternalStatData().  Do not call this
  *  function directly - use ExternalStatData() instead.
  */
@@ -1426,13 +1175,6 @@ extern struct Name *ExternalStatDataF(CONST struct Statement *s);
  */
 extern struct Name *ExternalStatScopeF(CONST struct Statement *s);
 /**<
- *  <!--  macro ExternalStatScope(s)                                   -->
- *  <!--  struct Name *ExternalStatScopeF(s)                           -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the external statement's name of its scope. This may be NULL.  -->
- *  <!--  If it is NULL, then the external relation (at this time assumed to be -->
- *  <!--  a glassbox, will added at the scope that it was found; otherwise it   -->
- *  <!--  will be added at the given scope.                            -->
  *  Implementation function for ExternalStatScope().  Do not call this
  *  function directly - use ExternalStatScope() instead.
  */
@@ -1450,10 +1192,6 @@ extern struct Name *ExternalStatScopeF(CONST struct Statement *s);
  */
 extern struct VariableList *ExternalStatVlistF(CONST struct Statement *s);
 /**<
- *  <!--  macro ExternalStatVlist(s)                                   -->
- *  <!--  struct VariableList *ExternalStatVlist(s)                    -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the external statement's variable list -- the argument list. -->
  *  Implementation function for ExternalStatVlist().  Do not call this
  *  function directly - use ExternalStatVlist() instead.
  */
@@ -1472,11 +1210,6 @@ extern struct VariableList *ExternalStatVlistF(CONST struct Statement *s);
  */
 extern CONST char *ExternalStatFuncNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro ExternalStatFuncName(s)                                -->
- *  <!--  struct Name *ExternalStatFuncNameF(s)                        -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the external statement's function call                -->
- *  <!--  name. -- the name invoked with.                              -->
  *  Implementation function for ExternalStatFuncName().  Do not call this
  *  function directly - use ExternalStatFuncName() instead.
  */
@@ -1498,12 +1231,6 @@ extern CONST char *ExternalStatFuncNameF(CONST struct Statement *s);
  */
 extern int ReferenceStatModeF(CONST struct Statement *s);
 /**<
- *  <!--  macro ReferenceStatMode(s)                                   -->
- *  <!--  int ReferenceStatModeF(s)                                    -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the mode of the refernce statement. Mode at the moment:        -->
- *  <!--  0 => copy/clone semantics; 1 => pure reference semantics, such as in  -->
- *  <!--  languages with pointers. Value semantics is handled by ISA statements -->
  *  Implementation function for ReferenceStatMode().  Do not call this
  *  function directly - use ReferenceStatMode() instead.
  */
@@ -1524,13 +1251,6 @@ extern int ReferenceStatModeF(CONST struct Statement *s);
  */
 extern symchar *ReferenceStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro ReferenceStatName(s)                                   -->
- *  <!--  const char *ReferenceStatNameF(s)                            -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name of the thing being referred to. This name is a simple     -->
- *  <!--  such as a type description. Later this may become accept a fully qulafied -->
- *  <!--  id., and will depend upon the semantics of how it was invoked.            -->
- *  <!--  This name may alternatively be called the *referee*          -->
  *  Implementation function for ReferenceStatName().  Do not call this
  *  function directly - use ReferenceStatName() instead.
  */
@@ -1551,13 +1271,6 @@ extern symchar *ReferenceStatNameF(CONST struct Statement *s);
 extern symchar *ReferenceStatSetTypeF(CONST struct Statement *s);
 #endif
 /**<
- *  <!--  macro ReferenceStatSetType(s)                                -->
- *  <!--  symchar *ReferenceStatSetType(s)                             -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the type of set for a REF statement. This may be NULL, which -->
- *  <!--  means that there is no "OF" part to the _IS_ statement.      -->
- *  <!--  Eg: 	foo[thing] _IS_ set OF barobject;	-- not NULL          -->
- *  <!--            foo_other  _IS_ bar_other;		-- NULL.             -->
  *  Implementation function for ReferenceStatSetType().  Do not call this
  *  function directly - use ReferenceStatSetType() instead.
  */
@@ -1575,10 +1288,6 @@ extern symchar *ReferenceStatSetTypeF(CONST struct Statement *s);
  */
 extern struct VariableList *ReferenceStatVlistF(CONST struct Statement *s);
 /**<
- *  <!--  macro ReferenceStatVlist(s)                                  -->
- *  <!--  struct VariableList *ReferenceStatVlistF(s)                  -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the list of variables/models that refer to the given reference. -->
  *  Implementation function for ReferenceStatVlist().  Do not call this
  *  function directly - use ReferenceStatVlist() instead.
  */
@@ -1598,10 +1307,6 @@ extern struct VariableList *ReferenceStatVlistF(CONST struct Statement *s);
  */
 extern struct Name *RunStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro RunStatName(s)                                         -->
- *  <!--  struct Name *RunStatNameF(s)                                 -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Returns the name pointer of a run statement.                 -->
  *  Implementation function for RunStatName().  Do not call this
  *  function directly - use RunStatName() instead.
  */
@@ -1621,12 +1326,6 @@ extern struct Name *RunStatNameF(CONST struct Statement *s);
  */
 extern struct Name *RunStatAccessF(CONST struct Statement *s);
 /**<
- *  <!--  macro RunStatAccess(s)                                       -->
- *  <!--  char *RunStatAccessF(s)                                      -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Returns the type access of a RUN statement. This is to allow the       -->
- *  <!--  use of syntax such as: RUN A::b where 'B' is a class/model/atom, and b -->
- *  <!--  is a name of procedure within that class/atom/model.         -->
  *  Implementation function for RunStatAccess().  Do not call this
  *  function directly - use RunStatAccess() instead.
  */
@@ -1663,10 +1362,6 @@ extern struct VariableList *FixStatVarsF(CONST struct Statement *s);
  */
 extern struct Set *CallStatArgsF(CONST struct Statement *s);
 /**<
- *  <!--  macro CallStatArgs(s)                                        -->
- *  <!--  struct Set *CallStatArgs(s)                                  -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the call statement's argument list.                   -->
  *  Implementation function for CallStatArgs().  Do not call this
  *  function directly - use CallStatArgs() instead.
  */
@@ -1684,10 +1379,6 @@ extern struct Set *CallStatArgsF(CONST struct Statement *s);
  */
 extern symchar *CallStatIdF(CONST struct Statement *s);
 /**<
- *  <!--  macro CallStatId(s)                                          -->
- *  <!--  symchar *CallStatId(s)                                       -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the call statement's function id.                     -->
  *  Implementation function for CallStatId().  Do not call this
  *  function directly - use CallStatId() instead.
  */
@@ -1707,10 +1398,6 @@ extern symchar *CallStatIdF(CONST struct Statement *s);
  */
 extern struct Expr *WhileStatExprF(CONST struct Statement *s);
 /**<
- *  <!--  macro WhileStatExpr(s)                                       -->
- *  <!--  struct Expr *WhileStatExprF(s)                               -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the WHILE expression.                                 -->
  *  Implementation function for WhileStatExpr().  Do not call this
  *  function directly - use WhileStatExpr() instead.
  */
@@ -1728,10 +1415,6 @@ extern struct Expr *WhileStatExprF(CONST struct Statement *s);
  */
 extern struct StatementList *WhileStatBlockF(CONST struct Statement *s);
 /**<
- *  <!--  macro WhileStatBlock(s)                                      -->
- *  <!--  struct StatementList *WhileStatBlockF(s)                     -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the block of a while statement.                       -->
  *  Implementation function for WhileStatBlock().  Do not call this
  *  function directly - use WhileStatBlock() instead.
  */
@@ -1782,10 +1465,6 @@ extern struct Expr *AssertStatExprF(CONST struct Statement *s);
  */
 extern struct Expr *IfStatExprF(CONST struct Statement *s);
 /**<
- *  <!--  macro IfStatExpr(s)                                          -->
- *  <!--  struct Expr *IfStatExprF(s)                                  -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the IF expression.                                    -->
  *  Implementation function for IfStatExpr().  Do not call this
  *  function directly - use IfStatExpr() instead.
  */
@@ -1803,10 +1482,6 @@ extern struct Expr *IfStatExprF(CONST struct Statement *s);
  */
 extern struct StatementList *IfStatThenF(CONST struct Statement *s);
 /**<
- *  <!--  macro IfStatThen(s)                                          -->
- *  <!--  struct StatementList *IfStatThenF(s)                         -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the then block of an if statement.                    -->
  *  Implementation function for IfStatThen().  Do not call this
  *  function directly - use IfStatThen() instead.
  */
@@ -1825,11 +1500,6 @@ extern struct StatementList *IfStatThenF(CONST struct Statement *s);
  */
 extern struct StatementList *IfStatElseF(CONST struct Statement *s);
 /**<
- *  <!--  macro IfStatElse(s)                                          -->
- *  <!--  struct StatementList *IfStatElseF(s)                         -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the else block of an if statement.                    -->
- *  <!--  This is NULL if the else was omitted.                        -->
  *  Implementation function for IfStatElse().  Do not call this
  *  function directly - use IfStatElse() instead.
  */
@@ -1849,19 +1519,12 @@ extern struct StatementList *IfStatElseF(CONST struct Statement *s);
  */
 extern struct Name *WhenStatNameF(CONST struct Statement *s);
 /**<
- *  <!--  macro WhenStatName(s)                                        -->
- *  <!--  struct Name *WhenStatName(s)                                 -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name of a WHEN node.                              -->
  *  Implementation function for WhenStatName().  Do not call this
  *  function directly - use WhenStatName() instead.
  */
 
 extern void SetWhenName(struct Statement *s, struct Name *n);
 /**<
- *  <!--  void SetWhenName(s,n)                                        -->
- *  <!--  struct Statement *s;                                         -->
- *  <!--  struct Name *n;                                              -->
  *  This procedure provides a mechanism for unnamed whens to be named.
  */
 
@@ -1878,10 +1541,6 @@ extern void SetWhenName(struct Statement *s, struct Name *n);
  */
 extern struct VariableList *WhenStatVLF(CONST struct Statement *s);
 /**<
- *  <!--  macro WhenStatVL(s)                                          -->
- *  <!--  struct VariableList *WhenStatVLF(s)                          -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the variable list part of a WHEN statement.           -->
  *  Implementation function for WhenStatVL().  Do not call this
  *  function directly - use WhenStatVL() instead.
  */
@@ -1900,11 +1559,6 @@ extern struct VariableList *WhenStatVLF(CONST struct Statement *s);
  */
 extern struct WhenList *WhenStatCasesF(CONST struct Statement *s);
 /**<
- *  <!--  macro WhenStatCases(s)                                       -->
- *  <!--  struct WhenList *WhenStatCasesF(s)                           -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the list of cases of a WHEN statement. To obtain the  -->
- *  <!--  statement list in each of the CASEs, see when.h              -->
  *  Implementation function for WhenStatCases().  Do not call this
  *  function directly - use WhenStatCases() instead.
  */
@@ -1936,10 +1590,6 @@ extern int CompareWhenStatements(CONST struct Statement *s1,
  */
 extern struct Name *FnameStatF(CONST struct Statement *s);
 /**<
- *  <!--  macro FnameStatcases(s)                                      -->
- *  <!--  struct Name *FnameStatF(s)                                   -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the name of a model or relation (inside WHEN statement) -->
  *  Implementation function for FnameStat().  Do not call this
  *  function directly - use FnameStat() instead.
  */
@@ -1959,10 +1609,6 @@ extern struct Name *FnameStatF(CONST struct Statement *s);
  */
 extern struct StatementList *CondStatListF(CONST struct Statement *s);
 /**<
- *  <!--  macro CondStatList(s)                                        -->
- *  <!--  struct StatementList *CondStatListF(s)                       -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the list of statements in a Conditional statement.    -->
  *  Implementation function for CondStatList().  Do not call this
  *  function directly - use CondStatList() instead.
  */
@@ -2012,10 +1658,6 @@ extern unsigned CondContainsLogRelationsF(CONST struct Statement *s);
  */
 extern struct VariableList *SelectStatVLF(CONST struct Statement *s);
 /**<
- *  <!--  macro SelectStatVL(s)                                        -->
- *  <!--  struct VariableList *SelectStatVLF(s)                        -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the set part of a SELECT statement.                   -->
  *  Implementation function for SelectStatVL().  Do not call this
  *  function directly - use SelectStatVL() instead.
  */
@@ -2033,10 +1675,6 @@ extern struct VariableList *SelectStatVLF(CONST struct Statement *s);
  */
 extern int SelectStatNumberStatsF(CONST struct Statement *s);
 /**<
- *  <!--  macro SelectStatNumberStats(s)                               -->
- *  <!--  int SelectStatNumberStatsF(s)                                -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the number of statements inside a SELECT statement.   -->
  *  Implementation function for SelectStatNumberStats().  Do not call this
  *  function directly - use SelectStatNumberStats() instead.
  */
@@ -2055,11 +1693,6 @@ extern int SelectStatNumberStatsF(CONST struct Statement *s);
  */
 extern struct SelectList *SelectStatCasesF(CONST struct Statement *s);
 /**<
- *  <!--  macro SelectStatCases(s)                                     -->
- *  <!--  struct SelectList *SelectStatCasesF(s)                       -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the list of cases of a SELECT statement. To obtain the -->
- *  <!--  statement list in each of the CASEs, see select.h            -->
  *  Implementation function for SelectStatCases().  Do not call this
  *  function directly - use SelectStatCases() instead.
  */
@@ -2199,10 +1832,6 @@ extern unsigned SelectContainsIllegalF(CONST struct Statement *s);
  */
 extern struct VariableList *SwitchStatVLF(CONST struct Statement *s);
 /**<
- *  <!--  macro SwitchStatVL(s)                                        -->
- *  <!--  struct VariableList *SwitchStatVLF(s)                        -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the set part of a SWITCH statement.                   -->
  *  Implementation function for SwitchStatVL().  Do not call this
  *  function directly - use SwitchStatVL() instead.
  */
@@ -2221,11 +1850,6 @@ extern struct VariableList *SwitchStatVLF(CONST struct Statement *s);
  */
 extern struct SwitchList *SwitchStatCasesF(CONST struct Statement *s);
 /**<
- *  <!--  macro SwitchStatCases(s)                                     -->
- *  <!--  struct SwitchList *SwitchStatCasesF(s)                       -->
- *  <!--  const struct Statement *s;                                   -->
- *  <!--  Return the list of cases of a SWITCH statement. To obtain the -->
- *  <!--  statement list in each of the CASEs, see switch.h            -->
  *  Implementation function for SwitchStatCases().  Do not call this
  *  function directly - use SwitchStatCases() instead.
  */
@@ -2248,7 +1872,6 @@ extern int CompareSwitchStatements(CONST struct Statement *s1,
 extern int CompareStatements(CONST struct Statement *s1,
                              CONST struct Statement *s2);
 /**<
- *  <!--  CompareStatements(s1,s2);                                    -->
  *  Returns -1,0,1 as s1 is <, ==, > s2.
  *  s1 < s2 if type(s1) < type(s2), exception: NULL > all statements.
  *  For statements of the same type, compared according to
@@ -2263,7 +1886,6 @@ extern int CompareStatements(CONST struct Statement *s1,
 extern int CompareISStatements(CONST struct Statement *s1,
                                CONST struct Statement *s2);
 /**<
- *  <!--  CompareISStatements(s1,s2);                                  -->
  *  s1 and s2 must be StateIS or some of the StateARE based statements, i.e.
  *  IS_A WILL_BE IS_REFINED_TO WILL_BE_THE_SAME statements, or
  *  s1 and s2 must be relations.

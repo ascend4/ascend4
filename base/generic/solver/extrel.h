@@ -39,23 +39,5 @@
  *  @todo This header is marked for removal.
  */
 
-#ifndef __EXTREL_H_SEEN__
-#define __EXTREL_H_SEEN__
-
-#if 0 /* going away */
-extern double g_external_tolerance;
-
-extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *);
-extern struct ExtRelCache *CreateCacheFromInstance(struct Instance *);
-extern void ExtRel_DestroyCache(struct ExtRelCache *);
-
-extern int ExtRel_PreSolve(struct ExtRelCache *cache, int setup);
-extern real64 ExtRel_Evaluate_RHS(struct rel_relation *);
-extern real64 ExtRel_Evaluate_LHS(struct rel_relation *);
-extern real64 ExtRel_Diffs_RHS(struct rel_relation *, var_filter_t *,
-                               int32, mtx_matrix_t);
-extern real64 ExtRel_Diffs_LHS(struct rel_relation *, var_filter_t *,
-                               int32, mtx_matrix_t);
-#endif
-#endif /* __EXTREL_H_SEEN__ */
+/* the function definitions here were moved to rel.h not by me, by someone else -- JP */
 

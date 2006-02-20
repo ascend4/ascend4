@@ -61,18 +61,18 @@ build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd){
     return 1; /* ERROR */
   }
 
-  pd->vlist = slv_get_solvers_var_list(sys);
-  pd->rlist = slv_get_solvers_rel_list(sys);
+  pd->vlist = slv_get_solvers_var_list(sys); /* O(1) */
+  pd->rlist = slv_get_solvers_rel_list(sys); /* O(1) */
   if (pd->vlist==NULL || pd->rlist==NULL) {
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Nothing to plot!");
     return 1;
   }
-  pd->neqn = slv_count_solvers_rels(sys,&ractive);
-  pd->nprow = pd->neqn;
-  pd->nvar = slv_get_num_solvers_vars(sys);
-  pd->npcol = slv_count_solvers_vars(sys,&vincident);
+  pd->neqn = slv_count_solvers_rels(sys,&ractive); /* O(neqn) */
+  pd->nprow = pd->neqn; /* number of rows we are plotting */
+  pd->nvar = slv_get_num_solvers_vars(sys); /* O(1) */
+  pd->npcol = slv_count_solvers_vars(sys,&vincident); /* O(npcols) */
   pd->nfakevar = pd->npcol; /* this could change with autoslack solvers */
-  pd->pr2e = (int *)ascmalloc(sizeof(int)*(pd->nprow +1));
+  pd->pr2e = (int *)ascmalloc(sizeof(int)*(pd->nprow +1)); /* speed of these */
   pd->e2pr = (int *)ascmalloc(sizeof(int)*(pd->neqn +1));
   pd->pc2v = (int *)ascmalloc(sizeof(int)*(pd->npcol +1));
   pd->v2pc = (int *)ascmalloc(sizeof(int)*(pd->nvar +1));
@@ -91,7 +91,7 @@ build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd){
   for (row=0;row<mord;row++) {
     rel = row;
     if (rel < pd->neqn) {
-      if (rel_included(pd->rlist[rel]) && rel_active(pd->rlist[rel])) {
+      if (rel_included(pd->rlist[rel]) && rel_active(pd->rlist[rel])) { /* rel_included uses ChildByChar */
         plrow++;
         pd->pr2e[plrow] = rel;
         pd->e2pr[rel] = plrow;
@@ -103,14 +103,14 @@ build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd){
     } /* else skip this row: it is nothing */
   }
 
-  for (col = 0; col < mord; col++) {
+  for (col = 0; col < mord; col++) { /* O(mord) */
     var = col;
     if (var < pd->nvar) {
       /* set fixed flag vector whether incident or not */
-      if (var_fixed(pd->vlist[var])) {
+      if (var_fixed(pd->vlist[var])) { /* uses ChildByChar: not so fast */
         pd->vfixed[var]=1;
       }
-      if (var_incident(pd->vlist[var]) && var_active(pd->vlist[var])) {
+      if (var_incident(pd->vlist[var]) && var_active(pd->vlist[var])) { /* O(1) */
         plcol++;
         pd->pc2v[plcol] = var;
         pd->v2pc[var] = plcol;
