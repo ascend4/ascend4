@@ -231,7 +231,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   /* avoid compiler warnings on params: */
   (void) name; (void) initfunc;
 
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.\n");
   return 0;
 
 #else /* unknown flags */
