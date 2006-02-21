@@ -325,7 +325,7 @@ int slv_register_client(SlvRegistration registerfunc, CONST char *func
     NORC++;
   } else {
   	*new_client_id = -2;
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Client %d registration failure (%d)!\n",NORC,status);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Client %d registration failure (%d)!",NORC,status);
   }
   return status;
 }
@@ -678,10 +678,10 @@ const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys)
 void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
 {
   if (sys == NULL || len < 0) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_blocks called with NULL system or bad len.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_blocks called with NULL system or bad len.");
   } else {
     if (len && data==NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_blocks called with bad data.\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_blocks called with bad data.");
     } else {
       if (sys->dof.blocks.nblocks && sys->dof.blocks.block != NULL) {
         ascfree(sys->dof.blocks.block);
@@ -695,10 +695,10 @@ void slv_set_solvers_blocks(slv_system_t sys,int len, mtx_region_t *data)
 void slv_set_solvers_log_blocks(slv_system_t sys,int len, mtx_region_t *data)
 {
   if (sys == NULL || len < 0) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_log_blocks called with NULL system or bad len\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_log_blocks called with NULL system or bad len.");
   } else {
     if (len && data==NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_log_blocks called with bad data.\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solvers_log_blocks called with bad data.");
     } else {
       if (sys->logdof.blocks.nblocks && sys->logdof.blocks.block != NULL) {
         ascfree(sys->logdof.blocks.block);
@@ -752,7 +752,7 @@ void slv_bnd_initialization(slv_system_t sys)
 struct gl_list_t *slv_get_symbol_list(slv_system_t sys)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_symbol_list called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_symbol_list called with NULL system.");
     return NULL;
   }
   return sys->symbollist;
@@ -816,7 +816,7 @@ DEFINE_GETSET_LIST_METHODS(DEFINE_GET_SOLVERS_LIST_METHOD, DEFINE_GET_SOLVERS_LI
 #define DEFINE_GET_MASTER_LIST_METHOD(NAME,PROP,TYPE) \
 	struct TYPE **slv_get_master_##NAME##_list(slv_system_t sys){ \
 		if (sys->PROP.master == NULL) { \
-			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_" #NAME "_list returning NULL?\n"); \
+			ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_master_" #NAME "_list returning NULL (?)."); \
 		} \
 		return sys->PROP.master; \
 	}
@@ -869,7 +869,7 @@ DEFINE_SLV_METHODS(DEFINE_MASTER_GET_NUM_METHOD)
 void slv_set_obj_relation(slv_system_t sys,struct rel_relation *obj)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_obj_relation called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_obj_relation called with NULL system (?).");
     return;
   }
   sys->obj = obj;
@@ -878,7 +878,7 @@ void slv_set_obj_relation(slv_system_t sys,struct rel_relation *obj)
 struct rel_relation *slv_get_obj_relation(slv_system_t sys)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_relation called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_relation called with NULL system (?)");
     return NULL;
   }
   return sys->obj;
@@ -888,7 +888,7 @@ void slv_set_obj_variable(slv_system_t sys,struct var_variable *objvar,
                           unsigned maximize)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_obj_variable called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_obj_variable called with NULL system.");
     return;
   }
   sys->objvar = objvar;
@@ -906,7 +906,7 @@ void slv_set_obj_variable(slv_system_t sys,struct var_variable *objvar,
 struct var_variable *slv_get_obj_variable(slv_system_t sys)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_variable called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_variable called with NULL system.");
     return NULL;
   }
   return sys->objvar;
@@ -915,7 +915,7 @@ struct var_variable *slv_get_obj_variable(slv_system_t sys)
 real64 slv_get_obj_variable_gradient(slv_system_t sys)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_variable_gradient called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_obj_variable_gradient called with NULL system.");
     return 0.0;
   }
   return sys->objvargrad;
@@ -925,7 +925,7 @@ real64 slv_get_obj_variable_gradient(slv_system_t sys)
 void slv_set_need_consistency(slv_system_t sys, int32 need_consistency)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_need_consistency called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_need_consistency called with NULL system.");
     return;
   }
 
@@ -936,7 +936,7 @@ void slv_set_need_consistency(slv_system_t sys, int32 need_consistency)
 int32 slv_need_consistency(slv_system_t sys)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_need_consistency called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_need_consistency called with NULL system.");
     return 0;
   }
   return sys->need_consistency;
@@ -1033,7 +1033,7 @@ static void printinfo(slv_system_t sys, const char *rname)
 {
   if (CF(sys,name) == NULL ) {
     ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,
-      "Client %s does not support function %s\n",
+      "Client %s does not support function '%s'.",
       slv_solver_name(sys->solver),rname);
   }
 }
@@ -1053,7 +1053,7 @@ int slv_select_solver(slv_system_t sys,int solver){
   SlvClientDestroyF *destroy;
 
   if (sys ==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver called with NULL system\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_select_solver called with NULL system.");
     return -1;
   }
   if ( solver >= 0 && solver < NORC ) {
@@ -1077,16 +1077,16 @@ int slv_select_solver(slv_system_t sys,int solver){
     if ( CF(sys,ccreate) != NULL) {
       sys->ct = SF(sys,ccreate)(sys,&status_index);
     } else {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_select_solver create failed due to bad client %s\n",
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_select_solver create failed due to bad client '%s'.",
         slv_solver_name(sys->solver));
       return sys->solver;
     }
     if (sys->ct==NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate failed in slv_select_solver\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate failed in slv_select_solver.");
       sys->solver = -1;
     } else {
       if (status_index) {
-        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s\n",
+        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s.",
           status_index," in slv_select_solver");
       }
       /* we could do a better job explaining the client warnings... */
@@ -1106,7 +1106,7 @@ int slv_switch_solver(slv_system_t sys,int solver)
   int status_index;
 
   if (sys ==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with NULL system\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with NULL system.");
     return -1;
   }
   if( solver >= 0 && solver < g_SlvNumberOfRegisteredClients ){
@@ -1115,22 +1115,22 @@ int slv_switch_solver(slv_system_t sys,int solver)
     if ( CF(sys,ccreate) != NULL) {
       sys->ct = SF(sys,ccreate)(sys,&status_index);
     } else {
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver create failed due to bad client %s\n",
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver create failed due to bad client '%s'.",
          slv_solver_name(sys->solver));
       return sys->solver;
     }
     if (sys->ct==NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"SlvClientCreate failed in slv_switch_solver\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"SlvClientCreate failed in slv_switch_solver.");
       sys->solver = -1;
     } else {
       if (status_index) {
-        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s\n",
+        ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"SlvClientCreate succeeded with warning %d %s.",
            status_index," in slv_switch_solver");
       }
       sys->solver = solver;
     }
   } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with unknown client (%d)\n",solver);
+    ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"slv_switch_solver called with unknown client '%d'.",solver);
     return -1;
   }
   return sys->solver;
@@ -1165,7 +1165,7 @@ void slv_destroy_parms(slv_parameters_t *p) {
       ascfree(p->parms[i].description);
       break;
     default:
-      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Unrecognized parameter type in slv_destroy_parms\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Unrecognized parameter type in slv_destroy_parms.");
     }
   }
   if (p->parms && p->dynamic_parms) {
@@ -1266,7 +1266,7 @@ int32 slv_get_default_parameters(int index,
 {
   if (index >= 0 && index < NORC) {
     if ( SlvClientsData[index].getdefparam == NULL ) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with parameterless index\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with parameterless index.");
       return 0;
     } else {
       /* send NULL system when setting up interface */
@@ -1274,7 +1274,7 @@ int32 slv_get_default_parameters(int index,
       return 1;
     }
   } else {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with unregistered index\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_get_default_parameters called with unregistered index.");
     return 0;
   }
 }
@@ -1350,7 +1350,7 @@ DEFINE_SLV_PROXY_METHOD_VOID(solve);
 SlvClientToken slv_get_client_token(slv_system_t sys)
 {
   if (sys==NULL) {
-    FPRINTF(stderr,"slv_get_client_token called with NULL system.\n");
+    FPRINTF(stderr,"slv_get_client_token called with NULL system.");
     return NULL;
   }
   return sys->ct;
@@ -1360,7 +1360,7 @@ SlvClientToken slv_get_client_token(slv_system_t sys)
 void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_client_token called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_client_token called with NULL system.");
     return;
   }
   sys->ct = ct;
@@ -1369,7 +1369,7 @@ void slv_set_client_token(slv_system_t sys, SlvClientToken ct)
 void slv_set_solver_index(slv_system_t sys, int solver)
 {
   if (sys==NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solver_index called with NULL system.\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"slv_set_solver_index called with NULL system.");
     return;
   }
   sys->solver = solver;

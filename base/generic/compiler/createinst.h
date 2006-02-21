@@ -38,21 +38,17 @@
  *  </pre>
  */
 
-#ifndef __CREATEINST_H_SEEN__
-#define __CREATEINST_H_SEEN__
+#ifndef ASC_CREATEINST_H
+#define ASC_CREATEINST_H
 
 extern void ZeroNewChildrenEntries(struct Instance **ary, unsigned long int num);
 /**<
- *  <!--  ZeroNewChildrenEntries(ary,num)                              -->
  *  Sets num entries of ary to NULL.
  */
 
 extern struct Instance *CreateSimulationInstance(struct TypeDescription *type,
                                                  symchar *name);
 /**<
- *  <!--  struct Instance *CreateSimulationInstance(type,name)         -->
- *  <!--  struct TypeDescription *type;                                -->
- *  <!--  symchar *name;                                               -->
  *  Create an instance of the type described by "type".  The memory of "type"
  *  is used by the instance structure, so do not dispose or modify the memory.
  *  This initializes the instance with no parents, no clique membership.
@@ -66,8 +62,6 @@ extern struct Instance *CreateSimulationInstance(struct TypeDescription *type,
 
 extern struct Instance *CreateModelInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateModelInstance(type)                   -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create an instance of the type described by "type".  The memory of "type"
  *  is used by the instance structure, so do not dispose or modify the memory.
  *  This initializes the instance with no parents, no clique membership,
@@ -78,8 +72,6 @@ extern struct Instance *CreateModelInstance(struct TypeDescription *type);
 
 extern struct Instance *CreateDummyInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateDummyInstance(type)                   -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Returns a DummyInstance using the type given, which must be
  *  the dummy_type named BASE_UNSELECTED.
  *  The instance returned is UNIVERSAL.<br><br>
@@ -89,8 +81,6 @@ extern struct Instance *CreateDummyInstance(struct TypeDescription *type);
 
 extern struct Instance *CreateRealInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateRealInstance(type)                    -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create a real instance whose type is described by "type".  The instance
  *  struct will use the memory pointed to by type, so don't destroy this
  *  structure.  It is cheaper to copy an instance of a real, than to create
@@ -104,8 +94,6 @@ extern struct Instance *CreateRealInstance(struct TypeDescription *type);
 
 extern struct Instance *CreateIntegerInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateIntegerInstance(type)                 -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create an integer instance whose type is described by "type".  The memory
  *  pointed to by type is used by the instance, so don't destroy it or modify
  *  it.
@@ -119,8 +107,6 @@ extern struct Instance *CreateIntegerInstance(struct TypeDescription *type);
 
 extern struct Instance *CreateBooleanInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateBooleanInstance(type)                 -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create a boolean instance whose type is described by "type".  The
  *  instance structure will use the memory pointed to by type, so don't
  *  modify it or free it.
@@ -132,9 +118,6 @@ extern struct Instance *CreateBooleanInstance(struct TypeDescription *type);
 
 extern struct Instance *CreateSetInstance(struct TypeDescription *type, int intset);
 /**<
- *  <!--  struct Instance *CreateSetInstance(type,intset)              -->
- *  <!--  struct TypeDescription *type;                                -->
- *  <!--  int intset;                                                  -->
  *  Create a set instance whose type is described by "type".  The instance
  *  will use the memory pointed to by type, so don't modify it or free it.
  *  Set instances don't have defaults.<br><br>
@@ -145,8 +128,6 @@ extern struct Instance *CreateSetInstance(struct TypeDescription *type, int ints
 
 extern struct Instance *CreateSymbolInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateSymbolInstance(type)                  -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create a symbol instance whose type is described by "type".  The
  *  instance will use the memory pointed by type type, so don't modify
  *  it or free it.
@@ -158,9 +139,6 @@ extern struct Instance *CreateSymbolInstance(struct TypeDescription *type);
 extern struct Instance *CreateArrayInstance(struct TypeDescription *type,
                                             unsigned long index);
 /**<
- *  <!--  struct Instance *CreateArrayInstance(type,index)             -->
- *  <!--  struct TypeDescription *type;                                -->
- *  <!--  unsigned long index;                                         -->
  *  Create an array instance whose type is described by "set".  The instance
  *  will use the memory pointed to by type, so don't modify it or free it.<br><br>
  *
@@ -171,9 +149,6 @@ extern struct Instance *CreateArrayInstance(struct TypeDescription *type,
 extern struct Instance *CreateRelationInstance(struct TypeDescription *type,
                                                enum Expr_enum reltype);
 /**<
- *  <!--  struct Instance *CreateRelationInstance(type,reltype)        -->
- *  <!--  struct TypeDescription *type;                                -->
- *  <!--  enum Expr_enum reltype;                                      -->
  *  Create a relation instance who type is described by "type".  The instance
  *  will use the memory pointed to by type, so don't modify it or free it.
  *  reltype is one of e_glassbox, e_blackbox, e_opcode, e_tokens and must
@@ -182,8 +157,6 @@ extern struct Instance *CreateRelationInstance(struct TypeDescription *type,
 
 extern struct Instance *CreateLogRelInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateLogRelInstance(type)                  -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create a logical relation instance. The instance will use the memory
  *  pointed to by type, so don't modify it or free it.
  *  the type is always e_bol_token.
@@ -191,11 +164,9 @@ extern struct Instance *CreateLogRelInstance(struct TypeDescription *type);
 
 extern struct Instance *CreateWhenInstance(struct TypeDescription *type);
 /**<
- *  <!--  struct Instance *CreateWhenInstance(type)                    -->
- *  <!--  struct TypeDescription *type;                                -->
  *  Create a when instance. The instance will use the memory
  *  pointed to by type, so don't modify it or free it.
  */
 
-#endif  /* __CREATEINST_H_SEEN__ */
+#endif  /* ASC_CREATEINST_H */
 

@@ -464,6 +464,7 @@ int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
     new->e.origin = origin_ISA;
     break;
   case EXT:
+	CONSOLE_DEBUG("STORING EXT STATEMENT IN LCL");
     new->e.origin = origin_EXT;
     break;
   default:
@@ -559,11 +560,11 @@ could we put all the above in the childdef file?
 	Also checks if name is name of an array.
 	This function should NOT be use on parameter declarations.
 */
-static
-enum typelinterr DoNameF(CONST struct Name *nptr,
-                         CONST struct TypeDescription *type,
-        		 CONST struct Statement *stat,
-                         int noisy)
+static enum typelinterr
+DoNameF(CONST struct Name *nptr,
+        CONST struct TypeDescription *type,
+        CONST struct Statement *stat,
+        int noisy)
 {
   register symchar *name;
   int ok;
@@ -573,6 +574,9 @@ enum typelinterr DoNameF(CONST struct Name *nptr,
     switch (StatementType(stat)) {
     case EXT:
 	  CONSOLE_DEBUG("PROCESSING EXTERNAL RELATION");
+      nsubs = NameLength(nptr) - 1;
+	  CONSOLE_DEBUG("NSUBS = %d",nsubs);
+	  break;
     case ISA:
     case REF: /* IS_A of prototype */
     case WILLBE:

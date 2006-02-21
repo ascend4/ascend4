@@ -5530,7 +5530,7 @@ int CheckGlassBoxIndex(struct Instance *inst,
 
   str = SimpleNameIdPtr(n);
   if (str) {
-    result = atoi(SCP(str));	/* convert to integer. fixme strtod */
+    result = atoi(SCP(str));	/* convert to integer. FIXME strtod */
     *err = okay;
     return result;
   }
@@ -5656,6 +5656,8 @@ static
 int ExecuteEXT(struct Instance *inst, struct Statement *statement)
 {
   int mode;
+
+  CONSOLE_DEBUG("...");
 
   mode = ExternalStatMode(statement);
   switch(mode) {
@@ -7747,9 +7749,9 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
   }
 }
 
-/*
+/**
  * checking statementlist, as in a FOR loop check.
- * BUG!: CheckStatement and New flavors of same ignore the
+ * @TODO FIXME BUG!: CheckStatement and New flavors of same ignore the
  * type EXT. We never use external relations inside a loop?!
  */
 static
@@ -10976,6 +10978,7 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
     /* ER expected to succeed or fail permanently. this may change. */
     return ExecuteREL(inst,statement);
   case EXT:
+	CONSOLE_DEBUG("ABOUT TO EXECUTEEXT");
     return ExecuteEXT(inst,statement);
   case COND:
     return Pass2ExecuteCOND(inst,statement);

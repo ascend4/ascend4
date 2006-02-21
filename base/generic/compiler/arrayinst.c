@@ -572,17 +572,17 @@ struct Instance *CreateArrayChildInst(struct Instance *i,
          * as relations cannot be universal by themselves.
          */
         if (GetArrayBaseIsRelation(desc)) {
-	  return CreateRelationInstance(def,e_undefined);
+          return CreateRelationInstance(def,e_undefined);
         }
         /* fallthrough */
       case logrel_type:
         if (GetArrayBaseIsLogRel(desc)) {
-	  return CreateLogRelInstance(def);
+          return CreateLogRelInstance(def);
         }
         /* fallthrough */
       case when_type:
         if (GetArrayBaseIsWhen(desc)) {
-	  return CreateWhenInstance(def);
+          return CreateWhenInstance(def);
         }
         /* fallthrough */
       default:
