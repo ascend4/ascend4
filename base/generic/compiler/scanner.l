@@ -218,6 +218,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"FALSE"		{ return FALSE_T		; }
 <INITIAL>"FALL_THROUGH" { return FALLTHRU_T		; }
 <INITIAL>"FIX"		    { return FIX_T	        ; }
+<INITIAL>"FREE"		    { return FREE_T	        ; }
 <INITIAL>"FOR"			{ return FOR_T			; }
 <INITIAL>"FROM"			{ return FROM_T			; }
 <INITIAL>"GLOBAL"		{ return GLOBAL_T		; }

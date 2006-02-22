@@ -86,6 +86,7 @@ enum stat_t {
   CASGN,        /**< Structural ASSIGNMENT */
   RUN,          /**< RUN statement */
   FIX,          /**< FIX statement */
+  FREE,			/**< FREE statement */
   ASSERT,       /**< TEST statement */
   IF,           /**< IF-ELSE statement */
   WHEN,         /**< WHEN statement */

@@ -178,6 +178,12 @@ extern struct Statement *CreateFIX(struct VariableList *vl);
 	are stored, and the variable list is also stored.
 */
 
+extern struct Statement *CreateFREE(struct VariableList *vl);
+/**<
+	Create a 'FREE' statement node. The statements module/line number
+	are stored, and the variable list is also stored.
+*/
+
 extern struct Statement *CreateWBTS(struct VariableList *vl);
 /**<
  *  Create an WILL_BE_THE_SAME statement node.
@@ -1331,9 +1337,9 @@ extern struct Name *RunStatAccessF(CONST struct Statement *s);
  */
 
 #ifdef NDEBUG
-# define FixStatVars(s) ((s)->v.fx.vars)
+# define FixFreeStatVars(s) ((s)->v.fx.vars)
 #else
-# define FixStatVars(s) FixStatVarsF(s)
+# define FixFreeStatVars(s) FixFreeStatVarsF(s)
 #endif
 /**<
 	Returns the variable list for a FIX statement
@@ -1342,9 +1348,9 @@ extern struct Name *RunStatAccessF(CONST struct Statement *s);
 	@see FixStatAccessF
 */
 
-extern struct VariableList *FixStatVarsF(CONST struct Statement *s);
+extern struct VariableList *FixFreeStatVarsF(CONST struct Statement *s);
 /**<
-	Implementation function for FixStatVars(). Do not call this directory, use FixStatVars instead.
+	Implementation function for FixFreeStatVars(). Do not call this directory, use FixStatVars instead.
 */
 
 /* * * StateCall functions * * */

@@ -500,7 +500,12 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     break;
   case FIX:
   	FPRINTF(f,"FIX ");
-	WriteVariableList(f,FixStatVars(s));
+	WriteVariableList(f,FixFreeStatVars(s));
+	FPRINTF(f,";\n");
+	break;
+  case FREE:
+  	FPRINTF(f,"FREE ");
+	WriteVariableList(f,FixFreeStatVars(s));
 	FPRINTF(f,";\n");
 	break;
   case CALL:

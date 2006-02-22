@@ -330,7 +330,7 @@ static void CollectNote(struct Note *);
 %token DATA_T DECREASING_T DEFAULT_T DEFINITION_T DIMENSION_T
 %token DIMENSIONLESS_T DO_T
 %token ELSE_T END_T EXPECT_T EXTERNAL_T
-%token FALSE_T FALLTHRU_T FIX_T FOR_T FROM_T
+%token FALSE_T FALLTHRU_T FIX_T FOR_T FREE_T FROM_T
 %token GLOBAL_T
 %token IF_T IMPORT_T IN_T INPUT_T INCREASING_T INTERACTIVE_T
 %token INTERSECTION_T ISA_T _IS_T ISREFINEDTO_T
@@ -381,7 +381,7 @@ static void CollectNote(struct Note *);
 %type <statptr> willnotbethesame_statement assignment_statement
 %type <statptr> relation_statement glassbox_statement blackbox_statement
 %type <statptr> call_statement units_statement
-%type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement
+%type <statptr> external_statement for_statement run_statement if_statement assert_statement fix_statement free_statement
 %type <statptr> when_statement use_statement select_statement
 %type <statptr> conditional_statement notes_statement
 %type <statptr> flow_statement while_statement
@@ -1209,6 +1209,7 @@ statement:
     | for_statement
     | run_statement
     | fix_statement
+    | free_statement
     | assert_statement
     | if_statement
     | while_statement
@@ -1690,6 +1691,13 @@ fix_statement:
 	FIX_T fvarlist
 	{
 		$$ = CreateFIX($2);
+	}
+	;
+
+free_statement:
+	FREE_T fvarlist
+	{
+		$$ = CreateFREE($2);
 	}
 	;
 
