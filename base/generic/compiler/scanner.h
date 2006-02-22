@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef __SCANNER_H_SEEN__
-#define __SCANNER_H_SEEN__
+#ifndef ASC_SCANNER_H
+#define ASC_SCANNER_H
 
 #define ZZ_MAXLEN MAXTOKENLENGTH
 /**< 
@@ -137,5 +137,5 @@ extern void Asc_DestroyScannerInputBuffer(void);
  * startup. Call this only at the final shutdown of the scanner.
  */
 
-#endif /* __SCANNER_H_SEEN__ */
+#endif /* ASC_SCANNER_H */
 

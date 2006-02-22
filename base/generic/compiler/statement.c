@@ -81,6 +81,22 @@ struct Statement *stmallocF()
   return result;
 }
 
+/**
+	Create a statement of the specified type and assign the local context to it
+*/
+static struct Statement *
+create_statement_here(enum stat_t t){
+	struct Statement *result;
+	result=STMALLOC;
+	assert(result!=NULL);
+	result->t=t;
+	result->linenum = LineNum();
+	result->mod = Asc_CurrentModule();
+	result->context = context_MODEL;
+	result->ref_count=1;
+	return result;
+}
+
 void AddContext(struct StatementList *slist, unsigned int con)
 {
   unsigned long c,length;
@@ -118,6 +134,7 @@ void AddContext(struct StatementList *slist, unsigned int con)
     case EXT:
     case REF:
 	case FIX:
+	case FREE:
     case RUN:
     case FNAME:
     case FLOW:
@@ -191,19 +208,13 @@ void AddContext(struct StatementList *slist, unsigned int con)
 struct Statement *CreateALIASES(struct VariableList *vl, struct Name *n)
 {
   struct Statement *result;
-  result=STMALLOC;
-  assert(result!=NULL);
-  result->t = ALIASES;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
+  result=create_statement_here(ALIASES);
   result->v.ali.vl = vl;
   result->v.ali.u.nptr = n;
   result->v.ali.c.setname = NULL;
   result->v.ali.c.intset = -1;
   result->v.ali.c.setvals = NULL;
   /* should check nptr and all vl names here for !contains_at */
-  result->ref_count = 1;
   return result;
 }
 
@@ -213,18 +224,12 @@ struct Statement *CreateARR(struct VariableList *avlname,
                             int intset,
                             struct Set *sv) {
   struct Statement *result;
-  result=STMALLOC;
-  assert(result!=NULL);
-  result->t = ARR;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
+  result=create_statement_here(ARR);
   result->v.ali.u.avlname = avlname;
   result->v.ali.vl = vl;
   result->v.ali.c.setname = sn;
   result->v.ali.c.intset = intset;
   result->v.ali.c.setvals = sv;
-  result->ref_count = 1;
   return result;
 }
 
@@ -234,18 +239,12 @@ struct Statement *CreateISA(struct VariableList *vl,
 			    symchar *st)
 {
   struct Statement *result;
-  result=STMALLOC;
-  assert(result!=NULL);
-  result->t = ISA;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
+  result=create_statement_here(ISA);
   result->v.i.vl = vl;
   result->v.i.type = t;
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = NULL;
-  result->ref_count = 1;
   return result;
 }
 
@@ -254,18 +253,12 @@ struct Statement *CreateWILLBE(struct VariableList *vl, symchar *t,
 			       symchar *st, struct Expr *cv)
 {
   struct Statement *result;
-  result=STMALLOC;
-  assert(result!=NULL);
-  result->t = WILLBE;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
+  result=create_statement_here(WILLBE);
   result->v.i.vl = vl;
   result->v.i.type = t;
   result->v.i.typeargs = ta;
   result->v.i.settype = st;
   result->v.i.checkvalue = cv;
-  result->ref_count = 1;
   return result;
 }
 
@@ -273,31 +266,19 @@ struct Statement *CreateIRT(struct VariableList *vl, symchar *t,
                             struct Set *ta)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = IRT;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
+  result=create_statement_here(IRT);
   result->v.i.type = t;
   result->v.i.typeargs = ta;
   result->v.i.settype = NULL;
   result->v.i.checkvalue = NULL;
   result->v.i.vl = vl;
-  result->ref_count = 1;
   return result;
 }
 
 struct Statement *CreateAA(struct VariableList *vl)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->ref_count = 1;
-  result->t = AA;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
+  result=create_statement_here(AA);
   result->v.a.vl = vl;
   return result;
 }
@@ -305,13 +286,7 @@ struct Statement *CreateAA(struct VariableList *vl)
 struct Statement *CreateATS(struct VariableList *vl)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = ATS;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(ATS);
   result->v.a.vl = vl;
   return result;
 }
@@ -319,27 +294,23 @@ struct Statement *CreateATS(struct VariableList *vl)
 struct Statement *CreateFIX(struct VariableList *vars){
 	register struct Statement *result;
 	/* CONSOLE_DEBUG("CREATING FIX STMT"); */
-	result = STMALLOC;
-	assert(result!=NULL);
-	result->t = FIX;
-	result->linenum=LineNum();
-	result->mod = Asc_CurrentModule();
-	result->context = context_MODEL;
-	result->ref_count = 1;
+	result=create_statement_here(FIX);
 	result->v.fx.vars = vars;
 	return result;
+}
+
+struct Statement *CreateFREE(struct VariableList *vars){
+  register struct Statement *result;
+  CONSOLE_DEBUG("CREATING FREE STMT");
+  result=create_statement_here(FREE);
+  result->v.fx.vars = vars;
+  return result;
 }
 
 struct Statement *CreateWBTS(struct VariableList *vl)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = WBTS;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(WBTS);
   result->v.a.vl = vl;
   return result;
 }
@@ -347,13 +318,7 @@ struct Statement *CreateWBTS(struct VariableList *vl)
 struct Statement *CreateWNBTS(struct VariableList *vl)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = WNBTS;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(WNBTS);
   result->v.a.vl = vl;
   return result;
 }
@@ -443,14 +408,7 @@ struct Statement *CreateFOR(symchar *index,
 			    enum ForOrder order, enum ForKind kind)
 {
   register struct Statement *result;
-
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = FOR;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->ref_count = 1;
-  result->context = context_MODEL;
+  result=create_statement_here(FOR);
   result->v.f.index = index;
   result->v.f.e = expr;
   result->v.f.stmts = stmts;
@@ -477,13 +435,7 @@ struct Statement *CreateFlow(enum FlowControl fc, CONST char *mt)
               "CreateFlow called with unknown flow of control enum");
     break; /*NOTREACHED*/
   }
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = FLOW;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->ref_count = 1;
-  result->context = context_MODEL;
+  result=create_statement_here(FLOW);
   result->v.flow.fc = fc;
   if (mt != NULL) {
     result->v.flow.message = AddBraceChar(mt,AddSymbolL("stop",4));
@@ -503,13 +455,7 @@ void SetRelationName(struct Statement *stat, struct Name *n)
 struct Statement *CreateREL(struct Name *n, struct Expr *relation)
 {
   register struct Statement *result;
-  result= STMALLOC;
-  assert(result!=NULL);
-  result->t = REL;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(REL);
   result->v.rel.nptr = n;
   result->v.rel.relation = relation;
   return result;
@@ -526,13 +472,7 @@ void SetLogicalRelName(struct Statement *stat, struct Name *n)
 struct Statement *CreateLOGREL(struct Name *n, struct Expr *logrel)
 {
   register struct Statement *result;
-  result= STMALLOC;
-  assert(result!=NULL);
-  result->t = LOGREL;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(LOGREL);
   result->v.lrel.nptr = n;
   result->v.lrel.logrel = logrel;
   return result;
@@ -549,13 +489,7 @@ struct Statement *CreateEXTERN(int mode,
     ERROR_REPORTER_DEBUG("Found blackbox function statement '%s'\n",funcname);
   }
 
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = EXT;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(EXT);
   result->v.ext.mode = mode;
   result->v.ext.nptr = n;
   result->v.ext.extcall = funcname;
@@ -572,13 +506,7 @@ struct Statement *CreateREF(struct VariableList *vl,
 			    int mode)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = REF;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(REF);
   result->v.ref.mode = mode;
   result->v.ref.ref_name = ref_name;
   result->v.ref.settype = st;
@@ -589,13 +517,7 @@ struct Statement *CreateREF(struct VariableList *vl,
 struct Statement *CreateRUN(struct Name *n,struct Name *type_access)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = RUN;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(RUN);
   result->v.r.proc_name = n;
   result->v.r.type_name = type_access;	/* NULL is valid */
   return result;
@@ -604,28 +526,17 @@ struct Statement *CreateRUN(struct Name *n,struct Name *type_access)
 struct Statement *CreateCALL(symchar *sym,struct Set *args)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = CALL;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(CALL);
   result->v.call.id = sym;
   result->v.call.args = args;	/* NULL is valid */
   return result;
 }
 
 struct Statement *CreateASSERT(struct Expr *ex){
-	register struct Statement *result;
-	result = STMALLOC;
-	result->t = ASSERT;
-	result->linenum = LineNum();
-	result->mod = Asc_CurrentModule();
-	result->context = context_MODEL;
-	result->ref_count = 1;
-	result->v.asserts.test = ex;
-	return result;
+  register struct Statement *result;
+  result=create_statement_here(ASSERT);
+  result->v.asserts.test = ex;
+  return result;
 }
 
 struct Statement *CreateIF(struct Expr *ex,
@@ -633,13 +544,7 @@ struct Statement *CreateIF(struct Expr *ex,
 			   struct StatementList *elseblock)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = IF;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(IF);
   result->v.ifs.test = ex;
   result->v.ifs.thenblock = thenblock;
   result->v.ifs.elseblock = elseblock; /* this may be NULL */
@@ -656,13 +561,7 @@ struct Statement *CreateWhile(struct Expr *ex,
 			   struct StatementList *thenblock)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = WHILE;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(WHILE);
   result->v.loop.test = ex;
   result->v.loop.block = thenblock;
   if (thenblock != NULL) {
@@ -676,13 +575,7 @@ struct Statement *CreateWHEN(struct Name *wname, struct VariableList *vlist,
 {
   struct StatementList *sl;
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = WHEN;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(WHEN);
   result->v.w.nptr = wname;
   result->v.w.vl = vlist;
   result->v.w.cases = wl;
@@ -697,13 +590,7 @@ struct Statement *CreateWHEN(struct Name *wname, struct VariableList *vlist,
 struct Statement *CreateFNAME(struct Name *name)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = FNAME;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(FNAME);
   result->v.n.wname = name;
   return result;
 }
@@ -713,13 +600,7 @@ struct Statement *CreateSWITCH(struct VariableList *v, struct SwitchList *sw)
 {
   struct StatementList *sl;
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = SWITCH;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(SWITCH);
   result->v.sw.vl = v;
   result->v.sw.cases = sw;
   while (sw!= NULL) {
@@ -772,13 +653,7 @@ struct Statement *CreateSELECT(struct VariableList *v, struct SelectList *sel)
   unsigned int tmp=0;
   struct StatementList *sl;
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = SELECT;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(SELECT);
   result->v.se.vl = v;
   result->v.se.cases = sel;
   result->v.se.n_statements = CountStatementsInSelect(sel);
@@ -796,13 +671,7 @@ struct Statement *CreateSELECT(struct VariableList *v, struct SelectList *sel)
 struct Statement *CreateCOND(struct StatementList *stmts)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = COND;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(COND);
   result->v.cond.stmts = stmts;
   AddContext(stmts,context_COND);
   result->v.cond.contains =  SlistHasWhat(stmts);
@@ -813,13 +682,7 @@ struct Statement *CreateCOND(struct StatementList *stmts)
 struct Statement *CreateASSIGN(struct Name *n, struct Expr *rhs)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = ASGN;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(ASGN);
   result->v.asgn.nptr = n;
   result->v.asgn.rhs = rhs;
   return result;
@@ -828,13 +691,7 @@ struct Statement *CreateASSIGN(struct Name *n, struct Expr *rhs)
 struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs)
 {
   register struct Statement *result;
-  result = STMALLOC;
-  assert(result!=NULL);
-  result->t = CASGN;
-  result->linenum = LineNum();
-  result->mod = Asc_CurrentModule();
-  result->context = context_MODEL;
-  result->ref_count = 1;
+  result=create_statement_here(CASGN);
   result->v.asgn.nptr = n;
   result->v.asgn.rhs = rhs;
   return result;
@@ -1720,9 +1577,9 @@ struct Name *RunStatAccessF(CONST struct Statement *s)
   return s->v.r.type_name;
 }
 
-struct VariableList *FixStatVarsF(CONST struct Statement *s){
+struct VariableList *FixFreeStatVarsF(CONST struct Statement *s){
 	assert(s!=NULL);
-	assert(s->t==FIX);
+	assert(s->t==FIX || s->t==FREE);
 	return(s->v.fx.vars);
 }
 

@@ -255,8 +255,12 @@ void ExecuteInitRun(struct procFrame *fm, struct Statement *stat)
   }
 }
 
+/**
+	Shared function for FIX and FREE execution
+	@param val is TRUE for 'FIX', or FALSE for 'FREE'.
+*/
 static void
-ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
+execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
   struct VariableList *vars;
   enum find_errors e;
   struct gl_list_t *temp;
@@ -276,7 +280,7 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
   }
 
   /* iterate through the variable list */
-  /* CONSOLE_DEBUG("STARTING 'FIX' STATEMENT EXECUTION"); */
+  /*CONSOLE_DEBUG("STARTING 'FIX'/'FREE' STATEMENT EXECUTION");*/
   vars = stat->v.fx.vars;
   while(vars!=NULL){
     name = NamePointer(vars);
@@ -289,7 +293,11 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
     for(i=1; i<=len; i++){
     	i1 = (struct Instance *)gl_fetch(temp,i);
 	instname = WriteInstanceNameString(i1,NULL);
-	/* CONSOLE_DEBUG("ABOUT TO FIX %s",instname); */
+	/*if(val){
+		CONSOLE_DEBUG("ABOUT TO FIX %s",instname);
+	}else{
+		CONSOLE_DEBUG("ABOUT TO FREE %s",instname);
+	}*/		
 	ascfree(instname);
 	if(InstanceKind(i1)!=REAL_ATOM_INST){
 	  fm->ErrNo = Proc_illegal_type_use;
@@ -298,25 +306,25 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
 	}
 	t = InstanceTypeDesc(i1);
 	if(!MoreRefined(t,st)){
-	  CONSOLE_DEBUG("Attempted to FIX variable that is not a refined solver_var.");
+	  CONSOLE_DEBUG("Attempted to FIX or FREE variable that is not a refined solver_var.");
 	  fm->ErrNo = Proc_illegal_type_use;
 	  ProcWriteFixError(fm,name);
 	  return;
 	}
 	i2 = ChildByChar(i1,fixed);
 	if(i2==NULL){
-	  CONSOLE_DEBUG("Attempted to FIX a solver_var that doesn't have a 'fixed' child!");
+	  CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var that doesn't have a 'fixed' child!");
 	  fm->ErrNo = Proc_illegal_type_use;
 	  ProcWriteFixError(fm,name);
 	  return;
 	}
 	if(InstanceKind(i2)!=BOOLEAN_INST){
-	  CONSOLE_DEBUG("Attempted to FIX a solver_var whose 'fixed' child is not boolean!");
+	  CONSOLE_DEBUG("Attempted to FIX or FREE a solver_var whose 'fixed' child is not boolean!");
 	  fm->ErrNo = Proc_illegal_type_use;
 	  ProcWriteFixError(fm,name);
 	  return;
 	}
-	SetBooleanAtomValue(i2,TRUE,0);
+	SetBooleanAtomValue(i2,val,0);
     }
     vars = NextVariableNode(vars);
   }
@@ -325,6 +333,17 @@ ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
   /* return 'ok' */
   fm->ErrNo = Proc_all_ok;
 }
+
+static void
+ExecuteInitFix(struct procFrame *fm, struct Statement *stat){
+	execute_init_fix_or_free(TRUE,fm,stat);
+}
+
+static void
+ExecuteInitFree(struct procFrame *fm, struct Statement *stat){
+	execute_init_fix_or_free(FALSE,fm,stat);
+}
+
 
 static
 void ExecuteInitFlow(struct procFrame *fm)
@@ -1496,6 +1515,9 @@ FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
   case FIX:
     ExecuteInitFix(fm,stat);
     break;
+  case FREE:
+	ExecuteInitFree(fm,stat);
+	break;
   case FLOW:
     ExecuteInitFlow(fm);
     break;
