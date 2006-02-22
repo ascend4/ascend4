@@ -12,6 +12,7 @@ MODEL testlog10;
 METHODS
 METHOD specify;
 	FIX x;
+	FREE y,z;
 END specify;
 METHOD values;
 	x := 10;
