@@ -735,68 +735,68 @@ void DestroyStatement(struct Statement *s)
     if (s->ref_count ==0) {
       switch(s->t) {
       case ALIASES:
-	DestroyVariableList(s->v.ali.vl);
-	DestroyName(s->v.ali.u.nptr);
+        DestroyVariableList(s->v.ali.vl);
+        DestroyName(s->v.ali.u.nptr);
         s->v.ali.vl = NULL;
         s->v.ali.u.nptr = NULL;
         break;
       case ARR:
-	DestroyVariableList(s->v.ali.vl);
-	DestroyVariableList(s->v.ali.u.avlname);
-	DestroyVariableList(s->v.ali.c.setname);
+        DestroyVariableList(s->v.ali.vl);
+        DestroyVariableList(s->v.ali.u.avlname);
+        DestroyVariableList(s->v.ali.c.setname);
         s->v.ali.vl = NULL;
         s->v.ali.u.avlname = NULL;
         s->v.ali.c.setname = NULL;
         s->v.ali.c.intset = -2;
-	if (s->v.ali.c.setvals != NULL) {
+        if (s->v.ali.c.setvals != NULL) {
           DestroySetList(s->v.ali.c.setvals);
           s->v.ali.c.setvals = NULL;
-	}
+        }
         break;
       case ISA:
       case IRT:
       case WILLBE:
-	DestroyVariableList(s->v.i.vl);
-	s->v.i.vl = NULL;
+        DestroyVariableList(s->v.i.vl);
+        s->v.i.vl = NULL;
         if (s->v.i.checkvalue != NULL) {
-	  DestroyExprList(s->v.i.checkvalue);
+          DestroyExprList(s->v.i.checkvalue);
           s->v.i.checkvalue = NULL;
         }
         if (s->v.i.typeargs != NULL) {
           DestroySetList(s->v.i.typeargs);
           s->v.i.typeargs = NULL;
         }
-	break;
+        break;
       case ATS:
       case AA:
       case WBTS:
       case WNBTS:
-	DestroyVariableList(s->v.a.vl);
-	s->v.a.vl = NULL;
-	break;
+        DestroyVariableList(s->v.a.vl);
+        s->v.a.vl = NULL;
+        break;
       case FOR:
-	DestroyExprList(s->v.f.e);
-	s->v.f.e = NULL;
-	DestroyStatementList(s->v.f.stmts);
-	s->v.f.stmts = NULL;
-	break;
+        DestroyExprList(s->v.f.e);
+        s->v.f.e = NULL;
+        DestroyStatementList(s->v.f.stmts);
+        s->v.f.stmts = NULL;
+        break;
       case REL:
-	DestroyName(s->v.rel.nptr);
-	s->v.rel.nptr = NULL;
-	DestroyExprList(s->v.rel.relation);
-	s->v.rel.relation = NULL;
-	break;
+        DestroyName(s->v.rel.nptr);
+        s->v.rel.nptr = NULL;
+        DestroyExprList(s->v.rel.relation);
+        s->v.rel.relation = NULL;
+        break;
       case LOGREL:
-	DestroyName(s->v.lrel.nptr);
-	s->v.lrel.nptr = NULL;
-	DestroyExprList(s->v.lrel.logrel);
-	s->v.lrel.logrel = NULL;
-	break;
+        DestroyName(s->v.lrel.nptr);
+        s->v.lrel.nptr = NULL;
+        DestroyExprList(s->v.lrel.logrel);
+        s->v.lrel.logrel = NULL;
+        break;
       case CALL:
         s->v.call.id = NULL;
         DestroySetList(s->v.call.args);
         s->v.call.args = NULL;
-	break;
+        break;
       case EXT:
         DestroyName(s->v.ext.nptr);
         s->v.ext.nptr = NULL;
@@ -810,20 +810,25 @@ void DestroyStatement(struct Statement *s)
       case REF:
         DestroyVariableList(s->v.ref.vl);
         s->v.ref.vl = NULL;
-	break;
+        break;
       case ASGN:
       case CASGN:
-	DestroyName(s->v.asgn.nptr);
-	s->v.asgn.nptr = NULL;
-	DestroyExprList(s->v.asgn.rhs);
-	s->v.asgn.rhs = NULL;
-	break;
+        DestroyName(s->v.asgn.nptr);
+        s->v.asgn.nptr = NULL;
+        DestroyExprList(s->v.asgn.rhs);
+        s->v.asgn.rhs = NULL;
+        break;
       case RUN:
-	DestroyName(s->v.r.proc_name);
-	s->v.r.proc_name = NULL;
-	DestroyName(s->v.r.type_name);
-	s->v.r.type_name = NULL;
-	break;
+        DestroyName(s->v.r.proc_name);
+        s->v.r.proc_name = NULL;
+        DestroyName(s->v.r.type_name);
+        s->v.r.type_name = NULL;
+        break;
+
+      case FIX:
+	  case FREE:
+        DestroyVariableList(s->v.fx.vars);
+		break;
 
       case ASSERT:
         DestroyExprList(s->v.asserts.test);
@@ -831,54 +836,54 @@ void DestroyStatement(struct Statement *s)
         break;
 
       case IF:
-	DestroyStatementList(s->v.ifs.thenblock);
-	s->v.ifs.thenblock = NULL;
-	if (s->v.ifs.elseblock!=NULL){
-	  DestroyStatementList(s->v.ifs.elseblock);
-	  s->v.ifs.elseblock = NULL;
-	}
-	DestroyExprList(s->v.ifs.test);
-	s->v.ifs.test = NULL;
-	break;
+        DestroyStatementList(s->v.ifs.thenblock);
+        s->v.ifs.thenblock = NULL;
+        if (s->v.ifs.elseblock!=NULL){
+          DestroyStatementList(s->v.ifs.elseblock);
+          s->v.ifs.elseblock = NULL;
+        }
+        DestroyExprList(s->v.ifs.test);
+        s->v.ifs.test = NULL;
+        break;
       case WHEN:
-	DestroyName(s->v.w.nptr);
-	s->v.w.nptr = NULL;
-	DestroyWhenList(s->v.w.cases);
-	s->v.w.cases = NULL;
-	DestroyVariableList(s->v.w.vl);
-	s->v.w.vl = NULL;
-	break;
+        DestroyName(s->v.w.nptr);
+        s->v.w.nptr = NULL;
+        DestroyWhenList(s->v.w.cases);
+        s->v.w.cases = NULL;
+        DestroyVariableList(s->v.w.vl);
+        s->v.w.vl = NULL;
+        break;
       case FNAME:
-	DestroyName(s->v.n.wname);
-	s->v.n.wname = NULL;
-	break;
+        DestroyName(s->v.n.wname);
+        s->v.n.wname = NULL;
+        break;
       case SELECT:
-	DestroySelectList(s->v.se.cases);
-	s->v.se.cases = NULL;
-	DestroyVariableList(s->v.se.vl);
-	s->v.se.vl = NULL;
-	break;
+        DestroySelectList(s->v.se.cases);
+        s->v.se.cases = NULL;
+        DestroyVariableList(s->v.se.vl);
+        s->v.se.vl = NULL;
+        break;
       case SWITCH:
-	DestroySwitchList(s->v.sw.cases);
-	s->v.sw.cases = NULL;
-	DestroyVariableList(s->v.sw.vl);
-	s->v.sw.vl = NULL;
-	break;
+        DestroySwitchList(s->v.sw.cases);
+        s->v.sw.cases = NULL;
+        DestroyVariableList(s->v.sw.vl);
+        s->v.sw.vl = NULL;
+        break;
       case COND:
-	DestroyStatementList(s->v.cond.stmts);
-	s->v.cond.stmts = NULL;
-	break;
+        DestroyStatementList(s->v.cond.stmts);
+        s->v.cond.stmts = NULL;
+        break;
       case FLOW:
         DestroyBraceChar(s->v.flow.message); /* tolerates NULL */
         break;
       case WHILE:
-	if (s->v.loop.block!=NULL){
-	  DestroyStatementList(s->v.loop.block);
-	  s->v.loop.block = NULL;
-	}
-	DestroyExprList(s->v.loop.test);
-	s->v.loop.test = NULL;
-	break;
+        if (s->v.loop.block!=NULL){
+          DestroyStatementList(s->v.loop.block);
+          s->v.loop.block = NULL;
+        }
+        DestroyExprList(s->v.loop.test);
+        s->v.loop.test = NULL;
+        break;
       }
       s->mod = NULL;
       s->linenum = 0;
@@ -1049,6 +1054,8 @@ unsigned int GetStatContextF(CONST struct Statement *s)
   case EXT:
   case REF:
   case RUN:
+  case FIX:
+  case FREE:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1087,6 +1094,8 @@ void SetStatContext(struct Statement *s, unsigned int c)
   case EXT:
   case REF:
   case RUN:
+  case FIX:
+  case FREE:
   case ASSERT:
   case IF:
   case WHEN:
@@ -1127,6 +1136,8 @@ void MarkStatContext(struct Statement *s, unsigned int c)
   case EXT:
   case REF:
   case RUN:
+  case FIX:
+  case FREE:
   case ASSERT:
   case IF:
   case WHEN:
