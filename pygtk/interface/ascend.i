@@ -28,6 +28,7 @@
 #include "plot.h"
 #include "curve.h"
 #include "solverparameters.h"
+#include "solverstatus.h"
 #include "incidencematrix.h"
 %}
 

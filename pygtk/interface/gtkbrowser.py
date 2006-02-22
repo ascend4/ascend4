@@ -38,6 +38,8 @@ import ascend
 
 GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/glade/ascend.glade"
 
+VERSION = "0.9.6-dev"
+
 ESCAPE_KEY = 65307
 
 HELP_ROOT = None
@@ -892,10 +894,11 @@ class Browser:
 		self.autotoggle.set_active(self.is_auto)
 
 	def on_help_about_click(self,*args):
-		_xml = gtk.glade.XML(GLADE_FILE,"aboutdialog");
-		_dialog = _xml.get_widget("aboutdialog")
-		_dialog.run()
-		_dialog.destroy()
+		_xml = gtk.glade.XML(GLADE_FILE,"aboutdialog")
+		_about = _xml.get_widget("aboutdialog")
+		_about.set_version(VERSION)
+		_about.run()
+		_about.destroy()
 
 	def on_help_contents_click(self,*args):
 		_help = Help(HELP_ROOT)

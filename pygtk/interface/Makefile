@@ -30,6 +30,7 @@ CLASSES = library type module symchar \
 	variable relation \
 	solver curve plot \
 	solverparameters solverparameter solverparameteriterator \
+	solverstatus \
 	incidencematrix
 
 OBJS = $(CLASSES:%=%.o)
