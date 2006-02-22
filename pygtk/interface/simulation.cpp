@@ -52,6 +52,7 @@ extern "C"{
 #include "name.h"
 #include "incidencematrix.h"
 #include "variable.h"
+#include "solverstatus.h"
 
 /**
 	Create an instance of a type (call compiler etc)
@@ -365,48 +366,52 @@ Simulation::solve(Solver solver){
 
 	double starttime = tm_cpu_time();
 	double lastupdate = starttime;
-	slv_status_t status;
+	SolverStatus status;
 	int solved_vars=0;
 	bool stop=false;
 
-	for(int iter = 1; iter <= niter && !stop; ++iter){
-		slv_get_status(sys,&status);
+	status.getSimulationStatus(*this);
 
-		if(status.ready_to_solve){
+	for(int iter = 1; iter <= niter && !stop; ++iter){
+
+		if(status.isReadyToSolve()){
 			slv_iterate(sys);
 		}
+
+		status.getSimulationStatus(*this);
+
 		if(tm_cpu_time() - lastupdate > updateinterval && iter > 0){
-			if(solved_vars < status.block.previous_total_size){
-				solved_vars = status.block.previous_total_size;
-				CONSOLE_DEBUG("Solved %5d vars. Now block %3d/%-3d...", solved_vars, status.block.current_block, status.block.number_of);
+			if(solved_vars < status.getNumConverged()){
+				solved_vars = status.getNumConverged();
+				CONSOLE_DEBUG("Solved %5d vars. Now block %3d/%-3d...", solved_vars, status.getCurrentBlockNum(), status.getNumBlocks());
 			}else{
-				CONSOLE_DEBUG("Total %5d iterations (%5d in current block of %d vars)", iter, status.block.iteration, status.block.current_size);
+				CONSOLE_DEBUG("Total %5d iterations (%5d in current block of %d vars)", iter, status.getCurrentBlockIteration(), status.getCurrentBlockSize());
 			}
 			lastupdate = tm_cpu_time();
 		}
 	}
 	double elapsed = tm_cpu_time() - starttime;
 
-	activeblock = status.block.current_block;
+	activeblock = status.getCurrentBlockNum();
 
-	if(status.ok){
+	if(status.isOK()){
 		cerr << "... SOLVED, STATUS OK" << endl;
 	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver failed");
 	}
 
-	cerr << "SOLVER PERFORMED " << status.iteration << " ITERATIONS IN " << elapsed << "s" << endl;
+	cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
 
-	if(status.iteration_limit_exceeded){
+	if(status.hasExceededTimeLimit()){
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Exceeded interation limit");
 	}
 
-	if(status.converged){
+	if(status.isConverged()){
 		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations (%.2f s)"
-			,status.iteration,elapsed);
+			,status.getIterationNum(),elapsed);
 	}else{
 		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged in block %d after overall %d iterations (see console)"
-			" (%.2f s).",status.block.current_block,status.iteration,elapsed);
+			" (%.2f s).",status.getCurrentBlockNum(),status.getIterationNum(),elapsed);
 		IncidenceMatrix inc = getIncidenceMatrix();
 
 		/*

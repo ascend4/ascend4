@@ -178,3 +178,38 @@ public:
 	}
 }
 
+
+class SolverStatus{
+public:
+	SolverStatus();
+	explicit SolverStatus(const SolverStatus &old);
+	void getSimulationStatus(Simulation &);
+
+	const bool isOK() const;
+	const bool isOverDefined() const;
+	const bool isUnderDefined() const;
+	const bool isStructurallySingular() const;
+	const bool isInconsistent() const;
+	const bool isReadyToSolve() const;
+	const bool isConverged() const;
+	const bool isDiverged() const;
+	const bool hasResidualCalculationErrors() const;
+	const bool hasExceededIterationLimit() const;
+	const bool hasExceededTimeLimit() const;
+	const bool isInterrupted() const;
+	const int getIterationNum() const;
+	
+	// block structure stuff...
+
+	const int getNumBlocks() const;
+	const int getCurrentBlockNum() const;
+	const int getCurrentBlockSize() const;
+	const int getCurrentBlockIteration() const;
+	const int getNumConverged() const; /* previous total size */
+	const int getNumJacobianEvals() const;
+	const int getNumResidualEvals() const;
+	const double getBlockResidualRMS() const;
+
+};
+
+

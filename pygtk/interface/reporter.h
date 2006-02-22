@@ -7,12 +7,6 @@
 
 #include <cstdarg>
 
-
-/**
-	Comment out this line if you won't be wanted to link to python.
-	It shouldn't matter if you *don't* comment this though.
-*/
-
 extern "C"{
 	#include "error.h"
 }

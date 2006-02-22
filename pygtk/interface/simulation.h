@@ -18,6 +18,7 @@ extern "C"{
 
 class Solver;
 class SolverParameters;
+class SolverStatus;
 class IncidenceMatrix;
 
 #ifndef ASCEND_INCDIR
@@ -46,6 +47,7 @@ class IncidenceMatrix;
 */
 class Simulation : public Instanc{
 	friend class IncidenceMatrix;
+	friend class SolverStatus;
 
 private:
 	Instanc simroot;
