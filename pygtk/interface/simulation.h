@@ -20,6 +20,7 @@ class Solver;
 class SolverParameters;
 class SolverStatus;
 class IncidenceMatrix;
+class SolverReporter;
 
 #ifndef ASCEND_INCDIR
 #define ASCEND_INCDIR "/home/john/src/ascend/trunk/base/generic/lib"
@@ -77,7 +78,7 @@ public:
 	void checkDoF() const;
 	const bool check();
 	void build();
-	void solve(Solver s);
+	void solve(Solver s, SolverReporter &reporter);
 	std::vector<Variable> getFixableVariables();
 	void write();
 
