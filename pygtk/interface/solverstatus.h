@@ -36,9 +36,9 @@ public:
 	const bool isReadyToSolve() const;
 	const bool isConverged() const;
 	const bool isDiverged() const;
-	const bool hasResidualCalculationErrors() const;
 	const bool hasExceededIterationLimit() const;
 	const bool hasExceededTimeLimit() const;
+	const bool hasResidualCalculationErrors() const;
 	const bool isInterrupted() const;
 	const int getIterationNum() const;
 	

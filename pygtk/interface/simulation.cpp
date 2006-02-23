@@ -385,24 +385,14 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		if(reporter.report(&status)){
 			stop = true;
 		}
-
-
-		/*
-		if(tm_cpu_time() - lastupdate > updateinterval && iter > 0){
-			if(solved_vars < status.getNumConverged()){
-				solved_vars = status.getNumConverged();
-				CONSOLE_DEBUG("Solved %5d vars. Now block %3d/%-3d...", solved_vars, status.getCurrentBlockNum(), status.getNumBlocks());
-			}else{
-				CONSOLE_DEBUG("Total %5d iterations (%5d in current block of %d vars)", iter, status.getCurrentBlockIteration(), status.getCurrentBlockSize());
-			}
-			lastupdate = tm_cpu_time();
-		}
-		*/
 	}
 
 	double elapsed = tm_cpu_time() - starttime;
 
+
 	activeblock = status.getCurrentBlockNum();
+
+	reporter.finalise(&status);
 
 	if(status.isOK()){
 		cerr << "... SOLVED, STATUS OK" << endl;

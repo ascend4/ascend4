@@ -22,7 +22,7 @@ class PythonSolverReporter(ascend.SolverReporter):
 	
 		self.progressbar = _xml.get_widget("progressbar")
 		self.closebutton = _xml.get_widget("closebutton")
-		self.cancelbutton = _xml.get_widget("cancelbutton")
+		self.stopbutton = _xml.get_widget("stopbutton")
 			
 		print "SOLVER REPORTER ---- PYTHON"
 
@@ -49,11 +49,11 @@ class PythonSolverReporter(ascend.SolverReporter):
 	def run(self):
 		self.window.run()
 
-	def on_cancelbutton_clicked(self,*args):
+	def on_stopbutton_clicked(self,*args):
 		print "STOPPING..."
 		self.guiinterrupt = True;
 
-	def on_solverstatusdialog_close(self):
+	def on_solverstatusdialog_close(self,*args):
 		self.window.response(gtk.RESPONSE_CLOSE)
 
 	def on_solverstatusdialog_response(self,response,*args):
@@ -78,19 +78,10 @@ class PythonSolverReporter(ascend.SolverReporter):
 #			print "TRYING..."
 #		except RuntimeError,e:
 #			print "ERROR OF SOME SORT"
-		if status.isConverged():
-			self.progressbar.set_fraction(1.0)
-			self.progressbar.set_text("Converged");
-			self.closebutton.set_sensitive(True)
-			self.cancelbutton.set_sensitive(False)
-		else:
-			_frac = float(status.getNumConverged()) / self.nv
-			print "FRACTION = ",_frac
-			self.progressbar.set_text("%d vars converged..." % status.getNumConverged());
-			self.progressbar.set_fraction(_frac)
-
-		while gtk.events_pending():
-			gtk.main_iteration()		
+		_frac = float(status.getNumConverged()) / self.nv
+		print "FRACTION = ",_frac
+		self.progressbar.set_text("%d vars converged..." % status.getNumConverged());
+		self.progressbar.set_fraction(_frac)
 
 	def report(self,status):
 		_time = time.clock();
@@ -103,8 +94,37 @@ class PythonSolverReporter(ascend.SolverReporter):
 			self.elapsed = _time - self.starttime
 			print "UPDATING!"
 			self.fill_values(status)
+
+		while gtk.events_pending():
+			gtk.main_iteration()		
+
 		if status.isConverged() or status.isDiverged() or status.isInterrupted():
 			return 1
 		if self.guiinterrupt:
 			return 2
 		return 0
+
+	def finalise(self,status):
+		_p = self.browser.prefs;
+		_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged");
+
+		if status.isConverged() and _close_on_converged:
+			self.window.response(gtk.RESPONSE_CLOSE)
+			return		
+
+		self.fill_values(status)
+
+		if status.isConverged():
+			self.progressbar.set_fraction(1.0)
+			self.progressbar.set_text("Converged")
+		elif status.hasExceededTimeLimit():
+			self.progressbar.set_text("Exceeded time limit")
+		elif status.hasExceededIterationLimit():
+			self.progressbar.set_text("Exceeded iteration limit")
+		elif status.isDiverged():
+			self.progressbar.set_text("Diverged")
+				
+		self.closebutton.set_sensitive(True)
+		self.stopbutton.set_sensitive(False)
+		
+			
