@@ -4083,11 +4083,12 @@ Conversion to LyX and other formats:
 	      <property name="tooltip" translatable="yes">Cancel the simulation at the end of the current iteration</property>
 	      <property name="can_default">True</property>
 	      <property name="can_focus">True</property>
-	      <property name="label">gtk-cancel</property>
+	      <property name="label">gtk-stop</property>
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
-	      <property name="response_id">-6</property>
+	      <property name="response_id">0</property>
+	      <signal name="clicked" handler="on_cancelbutton_clicked" last_modification_time="Thu, 23 Feb 2006 10:25:05 GMT"/>
 	    </widget>
 	  </child>
 
