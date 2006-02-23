@@ -22,7 +22,7 @@ public:
 	void run(const Method &);
 	void setSolver(Solver&);
 	const Solver getSolver() const;
-	void solve(Solver s);
+	void solve(Solver s,SolverReporter &);
 	SolverParameters getSolverParameters() const;
 	void setSolverParameters(SolverParameters&);
 
@@ -212,4 +212,12 @@ public:
 
 };
 
+%feature("director") SolverReporter; 
+
+class SolverReporter{
+public:
+	SolverReporter();
+	virtual ~SolverReporter();
+	virtual int report(SolverStatus &) const;
+};
 

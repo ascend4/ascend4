@@ -53,6 +53,7 @@ extern "C"{
 #include "incidencematrix.h"
 #include "variable.h"
 #include "solverstatus.h"
+#include "solverreporter.h"
 
 /**
 	Create an instance of a type (call compiler etc)
@@ -336,7 +337,7 @@ Simulation::getFixableVariables(){
 
 	
 void
-Simulation::solve(Solver solver){
+Simulation::solve(Solver solver, SolverReporter &reporter){
 	if(!is_built){
 		throw runtime_error("Simulation::solver: simulation is not yet built, can't start solving.");
 	}
@@ -371,6 +372,7 @@ Simulation::solve(Solver solver){
 	bool stop=false;
 
 	status.getSimulationStatus(*this);
+	reporter.report(status);
 
 	for(int iter = 1; iter <= niter && !stop; ++iter){
 
@@ -379,6 +381,7 @@ Simulation::solve(Solver solver){
 		}
 
 		status.getSimulationStatus(*this);
+		reporter.report(status);
 
 		if(tm_cpu_time() - lastupdate > updateinterval && iter > 0){
 			if(solved_vars < status.getNumConverged()){

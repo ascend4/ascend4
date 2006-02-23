@@ -3,7 +3,7 @@
 	SWIG interface routines to read a file into the library
 */
 
-%module ascend
+%module(directors=1) ascend
 
 %include <python/std_string.i>
 %include <python/std_vector.i>
@@ -29,6 +29,7 @@
 #include "curve.h"
 #include "solverparameters.h"
 #include "solverstatus.h"
+#include "solverreporter.h"
 #include "incidencematrix.h"
 %}
 
