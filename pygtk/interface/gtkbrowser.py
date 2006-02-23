@@ -490,7 +490,8 @@ class Browser:
 
 		self.start_waiting("Solving...")
 
-		self.sim.solve(ascend.Solver("QRSlv"),ascend.SolverReporter())
+		reporter = PythonSolverReporter()
+		self.sim.solve(ascend.Solver("QRSlv"),reporter)
 
 		self.stop_waiting()
 		
