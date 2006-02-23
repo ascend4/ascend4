@@ -24,6 +24,8 @@ from observer import *         # observer tab support
 from properties import *       # solver_var properties dialog
 from varentry import *         # for inputting of variables with units
 from diagnose import * 	       # for diagnosing block non-convergence
+from solverreporter import * # solver status reporting
+
 import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
 # ascend library are made available to libraries dlopened within ASCEND:
@@ -488,7 +490,7 @@ class Browser:
 
 		self.start_waiting("Solving...")
 
-		self.sim.solve(ascend.Solver("QRSlv"),ascend.SolverReporter())
+		self.sim.solve(ascend.Solver("QRSlv"),PythonSolverReporter())
 
 		self.stop_waiting()
 		
