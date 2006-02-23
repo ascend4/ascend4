@@ -552,6 +552,7 @@ METHOD default_self;
 	RUN ClearAll;
 	RUN specify;
 	RUN values;
+	Sl.rho := 800 {kg/m^3};
 END default_self;
 
 METHOD specify;

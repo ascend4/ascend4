@@ -12,29 +12,33 @@ MODEL loop;
 
 	A IS_A absorber;
 
-	S_cond_out IS_A iapws95_2phase;
-	S_tank_in IS_A thermo_state;
-
 	S IS_A separator;
+	A.S_out, S.S_in ARE_THE_SAME;
+	A.mdot_out, S.mdot_in ARE_THE_SAME;
 
 	C IS_A condenser_lmtd_sat(S.S_v, S_cond_out); (* in, out *)
-	T IS_A surgetank;
+	S.S_v, C.S_in ARE_THE_SAME;
+	S_cond_out IS_A iapws95_2phase;
+
 
 	M IS_A mixer;
 	M.S_in_1, S.S_l ARE_THE_SAME; (* connect separated liquid to mixer *)
 	M.S_in_2, C.S_out ARE_THE_SAME; (* connect condenser outlet to mixer *)
-	M.S_out, S_tank_in ARE_THE_SAME; (* connect mixed outlet to surge tank *)
 	M.mdot_in_1, S.mdot_l ARE_THE_SAME;
 	M.mdot_in_2, C.mdot_out ARE_THE_SAME;
 
-
-	(* join absorber and condenser  *)
-	A.mdot_gas_out, C.mdot_in ARE_THE_SAME;
-	A.S_out, S.S_in ARE_THE_SAME;
-	S.S_v, C.S_in ARE_THE_SAME;
-
-	(* join condenser and surge tank *)
+	(* T IS_A surgetank;
 	C.mdot_out, T.mdot_water_in ARE_THE_SAME;
+	S_tank_in IS_A thermo_state; *)
+	(* M.S_out, S_tank_in ARE_THE_SAME; *)(* connect mixed outlet to surge tank *)
+	(* m_T ALIASES T.m_water; *)
+	(* p_T ALIASES T.p; *)
+	(* V_water_T ALIASES T.V_water;	 *)
+
+	m_water IS_A mass;
+	m_A (* + m_T *) = m_water;
+
+	(* some aliases, for usability *)
 
 	Q_A ALIASES A.Q;
 	Q_C ALIASES C.q;
@@ -42,18 +46,9 @@ MODEL loop;
 	mdot_C_out ALIASES C.mdot_out;
 	
 	m_A ALIASES A.m_water;
-	m_T ALIASES T.m_water;
 
-	m_water IS_A mass;
-
-	m_A + m_T = m_water;
-
-	p_T ALIASES T.p;
 	p_A ALIASES A.p;
 
-
-	V_water_T ALIASES T.V_water;
-	
 	x_exit_A ALIASES A.x_exit;
 
 	(*A.p = T.p;*)
@@ -73,8 +68,8 @@ METHOD specify;
 	FIX C.T_co;
 	FIX C.cp_c;
 
-	FIX T.T, T.rho_water;
-	FIX T.V_vessel,	T.m_gas;
+	(* FIX T.rho_water;
+	FIX T.V_vessel,	T.m_gas; *)
 
 	FIX m_water;
 END specify;
@@ -92,14 +87,14 @@ METHOD values;
 	C.T_ci := 473.15 {K};
 	C.T_co := 490.15 {K};
 
-	T.T := C.T_co;
+	(* T.T := C.T_co;
 	T.rho_water := 997 {kg/m^3};
 	T.V_vessel := 10000 {L};
-	T.m_gas := 40 {kg};
+	T.m_gas := 40 {kg}; *)
 
 	(* free *)
 	m_A := 1000 {kg};
-	m_T := 7000 {kg};
+	(* m_T := 7000 {kg}; *)
 	C.mdot_c := 10 {kg/s};
 END values;
 
