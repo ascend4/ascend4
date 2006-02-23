@@ -4,8 +4,43 @@ import gtk
 import gtk.glade
 
 class PythonSolverReporter(ascend.SolverReporter):
-	def __init__(self,GLADE_FILE,browser,numvars):
+	def __init__(self,browser,interval):
 		self.browser=browser
+		self.updateinterval = interval
+		self.reporter = self.browser.reporter
+		if self.reporter==None:
+			raise RuntimeError("Can't find reporter")
+		self.starttime = time.clock()
+		self.statusbarcontext = self.browser.statusbar.get_context_id("pythonsolverreporter")
+		self.browser.statusbar.push(self.statusbarcontext,"Solving...")
+		ascend.SolverReporter.__init__(self)
+
+	def report_to_browser(self,status):
+		self.browser.statusbar.pop(self.statusbarcontext)
+
+		if status.isConverged():
+			self.reporter.reportSuccess("Converged")
+			return
+		elif status.hasExceededTimeLimit():
+			_msg = "Solver exceeded time limit"
+		elif status.hasExceededIterationLimit():
+			_msg = "Solver exceeded iteration limit"
+		elif status.isDiverged():
+			_msg = "Solver diverged"
+		else:
+			_msg = "Solve failed (unknown reason: check console)"
+
+		_msg = _msg + " while solving block %d/%d (%d vars in block)" % (status.getCurrentBlockNum(),
+				status.getNumBlocks(),status.getCurrentBlockSize() )
+		self.reporter.reportError(_msg)
+
+
+
+class PopupSolverReporter(PythonSolverReporter):
+	def __init__(self,GLADE_FILE,browser,numvars):
+		_updateinterval=0.1
+		PythonSolverReporter.__init__(self,browser,_updateinterval)
+
 		_xml = gtk.glade.XML(GLADE_FILE,"solverstatusdialog")
 		_xml.signal_autoconnect(self)
 
@@ -27,12 +62,9 @@ class PythonSolverReporter(ascend.SolverReporter):
 		print "SOLVER REPORTER ---- PYTHON"
 
 		self.solvedvars = 0;
-		self.updateinterval = 0.1;
 
-		_time = time.clock();
-		self.starttime = _time;
 		self.lasttime = 0;
-		self.blockstart = _time;
+		self.blockstart = self.starttime;
 		self.blocktime = 0;
 		self.elapsed = 0;
 		self.blocknum = 0;
@@ -40,8 +72,6 @@ class PythonSolverReporter(ascend.SolverReporter):
 
 		self.nv = numvars
 		self.numvars.set_text(str(self.nv))
-
-		ascend.SolverReporter.__init__(self)
 
 		while gtk.events_pending():
 			gtk.main_iteration()
@@ -63,8 +93,7 @@ class PythonSolverReporter(ascend.SolverReporter):
 	def fill_values(self,status):
 		print "FILLING VALUES..."
 		self.numblocks.set_text("%d of %d" % (status.getCurrentBlockNum(),status.getNumBlocks()))
-#		try:
-#			
+
 		self.elapsedtime.set_text("%0.1f s" % self.elapsed)
 		self.numiterations.set_text(str(status.getIterationNum()))
 		self.blockvars.set_text(str(status.getCurrentBlockSize()))
@@ -72,12 +101,6 @@ class PythonSolverReporter(ascend.SolverReporter):
 		self.blockresidual.set_text("%8.5e" % status.getBlockResidualRMS())
 		self.blockelapsedtime.set_text("%0.1f s" % self.blocktime)
 
-#			_frac = self.status.getNumConverged() / self.numvars()
-#			self.progressbar.set_text("%d vars converged..." % self.status.getNumConverged())
-#			self.progressbar.set_fraction(_frac)
-#			print "TRYING..."
-#		except RuntimeError,e:
-#			print "ERROR OF SOME SORT"
 		_frac = float(status.getNumConverged()) / self.nv
 		print "FRACTION = ",_frac
 		self.progressbar.set_text("%d vars converged..." % status.getNumConverged());
@@ -106,11 +129,18 @@ class PythonSolverReporter(ascend.SolverReporter):
 
 	def finalise(self,status):
 		_p = self.browser.prefs;
-		_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged");
+		_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
+		_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
 
 		if status.isConverged() and _close_on_converged:
+			self.report_to_browser(status)
 			self.window.response(gtk.RESPONSE_CLOSE)
-			return		
+			return
+		
+		if not status.isConverged() and _close_on_nonconverged:
+			self.report_to_browser(status)
+			self.window.response(gtk.RESPONSE_CLOSE)
+			return
 
 		self.fill_values(status)
 
@@ -126,5 +156,28 @@ class PythonSolverReporter(ascend.SolverReporter):
 				
 		self.closebutton.set_sensitive(True)
 		self.stopbutton.set_sensitive(False)
+
+		self.report_to_browser(status)
+
+
+class SimpleSolverReporter(PythonSolverReporter):
+	def __init__(self,browser):
+		print "CREATING SIMPLESOLVERREPORTER..."
+		_update = 0.1
+		PythonSolverReporter.__init__(self,browser,_update)
+		self.lasttime = self.starttime
+
+	def report(self,status):
+		_time = time.clock()
+		if _time - self.lasttime > self.updateinterval:
+			self.lasttime = _time
+			_msg = "Solved %d vars in %d iterations" % (status.getNumConverged(),status.getIterationNum())
+			self.browser.statusbar.push(self.statusbarcontext, _msg )
+
+		while gtk.events_pending():
+			gtk.main_iteration()
+		return 0
+
+	def finalise(self,status):
+		self.report_to_browser(status)
 		
-			

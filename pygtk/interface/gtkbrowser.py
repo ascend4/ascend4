@@ -142,6 +142,12 @@ class Browser:
 		if self.automenu == None:
 			print "NO AUTOMENU FOUND"
 
+		self.show_solving_popup=glade.get_widget("show_solving_popup")
+		self.show_solving_popup.set_active(self.prefs.getBoolPref("SolverReporter","show_popup",True))
+		self.close_on_converged=glade.get_widget("close_on_converged")
+		self.close_on_converged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_converged",True))
+		self.close_on_nonconverged=glade.get_widget("close_on_nonconverged")
+		self.close_on_nonconverged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_nonconverged",True))
 		#-------------------
 		# waitwin
 
@@ -490,7 +496,11 @@ class Browser:
 
 		self.start_waiting("Solving...")
 
-		reporter = PythonSolverReporter(GLADE_FILE,self,self.sim.getNumVars())
+		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
+			reporter = PopupSolverReporter(GLADE_FILE,self,self.sim.getNumVars())
+		else:
+			reporter = SimpleSolverReporter(self)
+
 		self.sim.solve(ascend.Solver("QRSlv"),reporter)
 
 		self.stop_waiting()
@@ -602,7 +612,20 @@ class Browser:
 			f = instance.isFixed();
 			if (f and not val) or (not f and val):
 				instance.setFixed(val)
-				self.do_solve_if_auto()		
+				self.do_solve_if_auto()
+
+	def on_show_solving_popup_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("SolverReporter","show_popup",_v)
+		print "SET TO",_v
+		
+	def on_close_on_converged_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("SolverReporter","close_on_converged",_v)
+
+	def on_close_on_nonconverged_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("SolverReporter","close_on_nonconverged",_v)
 
 #   --------------------------------------------
 #   MODULE LIST
