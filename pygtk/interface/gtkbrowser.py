@@ -490,7 +490,7 @@ class Browser:
 
 		self.start_waiting("Solving...")
 
-		reporter = PythonSolverReporter()
+		reporter = PythonSolverReporter(GLADE_FILE,self,self.sim.getNumVars())
 		self.sim.solve(ascend.Solver("QRSlv"),reporter)
 
 		self.stop_waiting()
