@@ -120,6 +120,7 @@ main: main.o $(OBJS) $(ASC_LIBS)
 #------------------------
 # SWIG targets
 
+
 SWIG_MODULE = ascend
 SWIG = swig
 
@@ -128,7 +129,22 @@ ifeq ($(OSTYPE),msys)
 	SWIG_INCROOT = /usr/local/share/swig/$(SWIG_VERSION)
 	SWIG_INCLUDES = -I$(SWIG_INCROOT) -I$(SWIG_INCROOT)/std -I$(SWIG_INCROOT)/python
 else
+	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
 	SWIG_INCLUDES =
+endif
+
+# optimize for SWIG 1.3.28 and newer
+SWIG_MAJOR = $(shell echo $(SWIG_VERSION) | sed s/^\\\([0-9]*\\\).*/\\1/)
+SWIG_MINOR = $(shell echo $(SWIG_VERSION) | sed s/^[0-9]*\\.\\\([0-9]*\\\).*/\\1/)
+SWIG_PATCH = $(shell echo $(SWIG_VERSION) | sed s/^[0-9]*\\.[0-9]*\\.\\\([0-9]*\\\).*/\\1/)
+
+SWIG_FEATURES =
+ifeq ($(SWIG_MAJOR),1)
+	ifeq ($(SWIG_MINOR),3)
+		ifeq ($(shell test $(SWIG_PATCH) -ge 28 && echo 1),1)
+			SWIG_FEATURES="-O"
+		endif
+	endif
 endif
 
 SWIGFLAGS = -c++ -python $(SWIG_INCLUDES)
@@ -136,6 +152,7 @@ SWIG_CFLAGS = -c -fPIC
 SWIG_CPPFLAGS = $(ASCXX_CPPFLAGS) $(PLATFORM_CPPFLAGS)
 
 SWIG_OBJS = $(SWIG_MODULE:%=%_wrap.o)
+SWIG_PY = $(SWIG_MODULE:%=%.py)
 
 LIB = _ascend$(SO_SUFF)
 
@@ -145,7 +162,7 @@ SWIGS = plot.i solver.i
 
 # FIXME add ' $(ASC_LIBS)' to deps once Jam build is fixed:
 %_wrap.cxx %.py: %.i $(SWIGS) $(HDRS)
-	$(SWIG) $(SWIGFLAGS) $<
+	SWIG_FEATURES=$(SWIG_FEATURES) $(SWIG) $(SWIGFLAGS) $<
 
 .precious: $(SWIG_MODULE:%=%_wrap.cxx)
 .precious: _ascend.so
@@ -153,8 +170,8 @@ SWIGS = plot.i solver.i
 %_wrap.o: %_wrap.cxx
 	$(CC) $(SWIG_CFLAGS) -o $@ $^ $(SWIG_CPPFLAGS)
 
-$(LIB): $(ASC_LIBS) $(OBJS) $(SWIG_OBJS)
-	$(LD) -module -shared -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
+$(LIB): $(ASC_LIBS) $(OBJS) $(SWIG_OBJS) $(SWIG_PY) 
+	$(LD) -module -shared -o $@ $(ASC_LIBS) $(OBJS) $(SWIG_OBJS) $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
 #------------------------
 # Trying to debug this GDPITA '3' problem, bug #178
