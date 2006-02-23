@@ -8,7 +8,7 @@ public:
 	SolverReporter();
 	virtual ~SolverReporter();
 
-	virtual int report(SolverStatus status);
+	virtual int report(SolverStatus *status);
 		
 };
 
