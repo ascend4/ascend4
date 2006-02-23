@@ -53,10 +53,11 @@ class DiagnoseWindow:
 		self.window.hide()
 
 	def apply_prefs(self):
-		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed")
+		vc = self.browser.prefs.getBoolPref("Diagnose","varcollapsed",True)
+
 		print "VARCOLLAPSED =",vc
 		self.varcollapsed.set_active(vc)
-		self.relcollapsed.set_active(self.browser.prefs.getBoolPref("Diagnose","relcollapsed"))
+		self.relcollapsed.set_active(self.browser.prefs.getBoolPref("Diagnose","relcollapsed",True))
 
 	def prepare_data(self):
 		# convert incidence map to pylab numarray type:
@@ -68,12 +69,19 @@ class DiagnoseWindow:
 		self.zoom=1;
 	
 	def fill_values(self, block):
+		
 		try:
 			rl,cl,rh,ch = self.im.getBlockLocation(block)
 		except IndexError:
-			self.blockentry.set_text(str(self.block))
-			return
-		except RuntimeError:
+			if block >= self.im.getNumBlocks():
+				block = self.im.getNumBlocks() - 1
+				rl,cl,rh,ch = self.im.getBlockLocation(block)
+			else:				
+				print "BLOCK INDEX ERROR: block =",block
+				self.blockentry.set_text(str(self.block))
+				return
+		except RuntimeError,e:
+			print "ERROR GETTING BLOCK LOCATION:",str(e)
 			self.blockentry.set_text(str(self.block))
 			return
 

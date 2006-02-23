@@ -220,5 +220,6 @@ public:
 	SolverReporter();
 	virtual ~SolverReporter();
 	virtual int report(SolverStatus *status);
+	virtual void finalise(SolverStatus *status);
 };
 

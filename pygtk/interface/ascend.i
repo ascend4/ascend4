@@ -39,6 +39,9 @@
 	try {
 		$action
 	}
+	catch (std::range_error &e) {
+		SWIG_exception(SWIG_IndexError,e.what());
+	}
 	catch (std::runtime_error &e) {
 		SWIG_exception(SWIG_RuntimeError,e.what());
 	}

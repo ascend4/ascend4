@@ -75,13 +75,13 @@ class Preferences:
 		self.ini.set("PreferredUnits",key,val)
 		#print "SET PREFERRED UNITS FOR %s TO %s" % ( key, val )
 
-	def getBoolPref(self,sect,key):
+	def getBoolPref(self,sect,key,default=None):
 		try:
 			_u = self.ini.get(sect,key)
 		except ConfigParser.NoSectionError:
-			return None
+			return default
 		except ConfigParser.NoOptionError:
-			return None
+			return default
 		if _u:
 			return True
 		return False
