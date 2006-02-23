@@ -26,8 +26,10 @@ PythonSolverReporter::~PythonSolverReporter(){
 }
 
 int
-PythonSolverReporter::report(const SolverStatus &status) const;
-	pyarglist = Py_BuildValue("(o)",status); // THIS WON'T WORK :-D
+PythonSolverReporter::report(const SolverStatus *status) const;
+	PyObject pystatus, pyarglist, pyresult;
+	pystatus = SWIG_NewPointerObj((void *)status, SWIGTYPE_p_SolverStatus,1);
+	pyarglist = Py_BuildValue("(O)",pystatus); // THIS WON'T WORK :-D
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);
 	Py_DECREF(pyarglist);
 }
