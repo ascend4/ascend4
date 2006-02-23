@@ -25,7 +25,7 @@ private:
 
 public:
 	SolverStatus();
-	explicit SolverStatus(const SolverStatus &old);
+	SolverStatus(const SolverStatus &old);
 	void getSimulationStatus(Simulation &);
 
 	const bool isOK() const;
