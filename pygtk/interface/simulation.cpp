@@ -372,7 +372,12 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	bool stop=false;
 
 	status.getSimulationStatus(*this);
-	reporter.report(status);
+	cerr << "FIRST REPORTER CALL..." << endl;
+	reporter.report(&status);
+	cerr << "SECOND REPORTER CALL..." << endl;
+	reporter.report(&status);
+	cerr << "THIRD REPORTER CALL..." << endl;
+	reporter.report(&status);
 
 	for(int iter = 1; iter <= niter && !stop; ++iter){
 
@@ -381,7 +386,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		}
 
 		status.getSimulationStatus(*this);
-		reporter.report(status);
+		reporter.report(&status);
 
 		if(tm_cpu_time() - lastupdate > updateinterval && iter > 0){
 			if(solved_vars < status.getNumConverged()){

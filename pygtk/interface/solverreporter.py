@@ -6,3 +6,4 @@ class PythonSolverReporter(ascend.SolverReporter):
 		ascend.SolverReporter.__init__(self)
 	def report(self,status):
 		print "Reporting (python)",status.getIterationNum()
+		return 0
