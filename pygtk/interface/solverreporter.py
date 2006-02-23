@@ -71,7 +71,6 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.guiinterrupt = False;
 
 		self.nv = numvars
-		self.numvars.set_text(str(self.nv))
 
 		while gtk.events_pending():
 			gtk.main_iteration()
@@ -93,7 +92,7 @@ class PopupSolverReporter(PythonSolverReporter):
 	def fill_values(self,status):
 		print "FILLING VALUES..."
 		self.numblocks.set_text("%d of %d" % (status.getCurrentBlockNum(),status.getNumBlocks()))
-
+		self.numvars.set_text("%d of %d" % (status.getNumConverged(), self.nv))
 		self.elapsedtime.set_text("%0.1f s" % self.elapsed)
 		self.numiterations.set_text(str(status.getIterationNum()))
 		self.blockvars.set_text(str(status.getCurrentBlockSize()))
