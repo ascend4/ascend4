@@ -394,6 +394,8 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 
 	reporter.finalise(&status);
 
+	// Just a little bit of console output:
+
 	if(status.isOK()){
 		cerr << "... SOLVED, STATUS OK" << endl;
 	}else{
@@ -401,35 +403,6 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	}
 
 	cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
-
-	/*
-	if(status.hasExceededTimeLimit()){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Exceeded interation limit");
-	}
-
-	if(status.isConverged()){
-		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"Solver converged: %d iterations (%.2f s)"
-			,status.getIterationNum(),elapsed);
-	}else{
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Solver not converged in block %d after overall %d iterations (see console)"
-			" (%.2f s).",status.getCurrentBlockNum(),status.getIterationNum(),elapsed);
-		IncidenceMatrix inc = getIncidenceMatrix();
-
-		cerr << "VARIABLES IN NON-CONVERGED BLOCK:" << endl;
-		vector<Variable> v = inc.getBlockVars(status.block.current_block);
-		for(vector<Variable>::iterator vi = v.begin(); vi < v.end(); ++vi){
-			cerr << vi->getName() << " = " << vi->getValue() << endl;
-		}
-
-		cerr << "RELATIONS IN NON-CONVERGED BLOCK:" << endl;
-		vector<Relation> r = inc.getBlockRels(status.block.current_block);
-		for(vector<Relation>::iterator ri = r.begin(); ri < r.end(); ++ri){
-			cerr << ri->getName() << endl;
-		}
-		
-	}
-	*/
-
 }
 
 void
