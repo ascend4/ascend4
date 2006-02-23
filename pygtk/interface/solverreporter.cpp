@@ -11,7 +11,7 @@ SolverReporter::~SolverReporter(){
 }
 
 int
-SolverReporter::report(SolverStatus status){
-	cerr << "Iteration: " << status.getIterationNum() << endl;
+SolverReporter::report(SolverStatus *status){
+	cerr << "Iteration: " << status->getIterationNum() << endl;
 	return 0;
 }

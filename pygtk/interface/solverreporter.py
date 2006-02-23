@@ -5,4 +5,4 @@ class PythonSolverReporter(ascend.SolverReporter):
 		print "SOLVER REPORTER ---- PYTHON"
 		ascend.SolverReporter.__init__(self)
 	def report(self,status):
-		print "Reporting..."
+		print "Reporting (python)",status.getIterationNum()
