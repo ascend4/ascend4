@@ -1,6 +1,7 @@
 REQUIRE "johnpye/iapws95.a4c";
 REQUIRE "johnpye/iapws_sat_curves.a4c";
 
+
 MODEL absorber;
 	(* assumptions: 
 		outlet is saturated steam
@@ -78,3 +79,65 @@ METHOD values;
 END values;
 
 END absorber;
+
+
+(*
+	This model seems completely correct but it won't converge.
+	It's a problem with the S_out converging from defined (p,h).
+
+	Need to investivate
+*)
+MODEL absorber2;
+	S_in IS_A iapws95_2phase;
+	S_out IS_A iapws95_2phase;
+	mdot_in IS_A mass_rate;
+	mdot_out IS_A mass_rate;
+	Q IS_A energy_rate;
+	m_water IS_A mass;
+	V_total IS_A volume;
+
+	H_in IS_A energy_rate;
+	H_in = mdot_in*S_in.h;
+	H_out IS_A energy_rate;
+	H_out = mdot_out*S_out.h;
+	
+	Q = H_out - H_in;
+	
+	mdot_out = mdot_in;
+	S_out.p = S_in.p;
+	
+	x_avg IS_A fraction;
+	alpha IS_A fraction;
+	x_avg = (S_in.x + S_out.x) / 2;
+	alpha * S_out.rho * (1-x_avg) = 1000{kg/m^3} * x_avg * (1-alpha);
+
+	m_water = S_in.rhol * (1-alpha) * V_total;
+
+METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+	RUN scale_self;
+END default_self;
+
+METHOD scale_self;
+	S_out.Sl.rho.nominal := 800 {kg/m^3};
+END scale_self;
+
+METHOD specify;
+	FIX V_total, Q;
+	FIX mdot_in, S_in.T, S_in.rho;
+END specify;
+
+METHOD values;
+	V_total := 300{m} * 16 * 1{PI}*( 40{mm} )^2;
+	mdot_in := 0.4 {kg/s};
+	Q := 800 {W/m^2} * 27(*concentration*) * 500{mm} * 60{m};
+	S_in.T := 175 {K} + 273.15 {K};
+	S_in.rho := 892 {kg/m^3};
+
+	(* free *)
+	S_out.T := S_in.T;
+	S_out.rho := S_in.rho;
+END values;
+
+END absorber2;
