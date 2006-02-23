@@ -36,6 +36,7 @@ class PythonSolverReporter(ascend.SolverReporter):
 		self.blocktime = 0;
 		self.elapsed = 0;
 		self.blocknum = 0;
+		self.guiinterrupt = False;
 
 		self.nv = numvars
 		self.numvars.set_text(str(self.nv))
@@ -47,6 +48,10 @@ class PythonSolverReporter(ascend.SolverReporter):
 
 	def run(self):
 		self.window.run()
+
+	def on_cancelbutton_clicked(self,*args):
+		print "STOPPING..."
+		self.guiinterrupt = True;
 
 	def on_solverstatusdialog_close(self):
 		self.window.response(gtk.RESPONSE_CLOSE)
@@ -98,6 +103,8 @@ class PythonSolverReporter(ascend.SolverReporter):
 			self.elapsed = _time - self.starttime
 			print "UPDATING!"
 			self.fill_values(status)
-		if status.isConverged():
+		if status.isConverged() or status.isDiverged() or status.isInterrupted():
 			return 1
+		if self.guiinterrupt:
+			return 2
 		return 0
