@@ -1,26 +1,103 @@
 import ascend
 import time
+import gtk
+import gtk.glade
 
 class PythonSolverReporter(ascend.SolverReporter):
-	def __init__(self):
+	def __init__(self,GLADE_FILE,browser,numvars):
+		self.browser=browser
+		_xml = gtk.glade.XML(GLADE_FILE,"solverstatusdialog")
+		_xml.signal_autoconnect(self)
+
+		self.window = _xml.get_widget("solverstatusdialog")
+
+		self.numvars = _xml.get_widget("numvarsentry")
+		self.numblocks = _xml.get_widget("numblocksentry")
+		self.elapsedtime = _xml.get_widget("elapsedtimeentry")
+		self.numiterations = _xml.get_widget("numiterationsentry")
+		self.blockvars = _xml.get_widget("blockvarsentry")
+		self.blockiterations = _xml.get_widget("blockiterationsentry")
+		self.blockresidual = _xml.get_widget("blockresidualentry")
+		self.blockelapsedtime = _xml.get_widget("blockelapsedtimeentry")
+	
+		self.progressbar = _xml.get_widget("progressbar")
+		self.closebutton = _xml.get_widget("closebutton")
+		self.cancelbutton = _xml.get_widget("cancelbutton")
+			
 		print "SOLVER REPORTER ---- PYTHON"
+
 		self.solvedvars = 0;
 		self.updateinterval = 0.1;
-		ascend.SolverReporter.__init__(self)
+
 		_time = time.clock();
-		self.startime = _time;
-		self.lasttime = _time;
-		print "Start time = ",self.lasttime
+		self.starttime = _time;
+		self.lasttime = 0;
+		self.blockstart = _time;
+		self.blocktime = 0;
+		self.elapsed = 0;
+		self.blocknum = 0;
+
+		self.nv = numvars
+		self.numvars.set_text(str(self.nv))
+
+		ascend.SolverReporter.__init__(self)
+
+		while gtk.events_pending():
+			gtk.main_iteration()
+
+	def run(self):
+		self.window.run()
+
+	def on_solverstatusdialog_close(self):
+		self.window.response(gtk.RESPONSE_CLOSE)
+
+	def on_solverstatusdialog_response(self,response,*args):
+		self.window.hide()
+		del(self.window)
+		
+	def fill_values(self,status):
+		print "FILLING VALUES..."
+		self.numblocks.set_text("%d of %d" % (status.getCurrentBlockNum(),status.getNumBlocks()))
+#		try:
+#			
+		self.elapsedtime.set_text("%0.1f s" % self.elapsed)
+		self.numiterations.set_text(str(status.getIterationNum()))
+		self.blockvars.set_text(str(status.getCurrentBlockSize()))
+		self.blockiterations.set_text(str(status.getCurrentBlockIteration()))
+		self.blockresidual.set_text("%8.5e" % status.getBlockResidualRMS())
+		self.blockelapsedtime.set_text("%0.1f s" % self.blocktime)
+
+#			_frac = self.status.getNumConverged() / self.numvars()
+#			self.progressbar.set_text("%d vars converged..." % self.status.getNumConverged())
+#			self.progressbar.set_fraction(_frac)
+#			print "TRYING..."
+#		except RuntimeError,e:
+#			print "ERROR OF SOME SORT"
+		if status.isConverged():
+			self.progressbar.set_fraction(1.0)
+			self.progressbar.set_text("Converged");
+			self.closebutton.set_sensitive(True)
+			self.cancelbutton.set_sensitive(False)
+		else:
+			_frac = float(status.getNumConverged()) / self.nv
+			print "FRACTION = ",_frac
+			self.progressbar.set_text("%d vars converged..." % status.getNumConverged());
+			self.progressbar.set_fraction(_frac)
+
+		while gtk.events_pending():
+			gtk.main_iteration()		
 
 	def report(self,status):
-		_solvedvars = status.getNumConverged();
 		_time = time.clock();
 		_sincelast = _time - self.lasttime
-		if _sincelast > self.updateinterval:
-			if _solvedvars > self.solvedvars:
-				print "Solved %d vars" % _solvedvars
-				self.solvedvars = _solvedvars
-
-			print "Iteration ",status.getIterationNum()
+		if status.getCurrentBlockNum() > self.blocknum:
+			self.blocknum = status.getCurrentBlockNum()
+			self.blockstart = _time
+		if self.lasttime==0 or _sincelast > self.updateinterval or status.isConverged():
 			self.lasttime = _time;
+			self.elapsed = _time - self.starttime
+			print "UPDATING!"
+			self.fill_values(status)
+		if status.isConverged():
+			return 1
 		return 0

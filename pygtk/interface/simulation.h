@@ -93,6 +93,7 @@ public:
 	const std::string getInstanceName(const Instanc &) const;
 
 	void processVarStatus();
+	const int getNumVars();
 
 	const int getActiveBlock() const;
 

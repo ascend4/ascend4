@@ -381,7 +381,11 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		}
 
 		status.getSimulationStatus(*this);
-		reporter.report(&status);
+		
+		if(reporter.report(&status)){
+			stop = true;
+		}
+
 
 		/*
 		if(tm_cpu_time() - lastupdate > updateinterval && iter > 0){
@@ -395,6 +399,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		}
 		*/
 	}
+
 	double elapsed = tm_cpu_time() - starttime;
 
 	activeblock = status.getCurrentBlockNum();
@@ -520,7 +525,12 @@ Simulation::getInstanceName(const Instanc &i) const{
 	ascfree(n);
 	return s;
 }
-	
+
+const int
+Simulation::getNumVars(){
+	return slv_get_num_solvers_vars(getSystem());
+}
+
 void
 Simulation::processVarStatus(){
 
