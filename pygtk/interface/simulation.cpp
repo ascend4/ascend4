@@ -293,10 +293,10 @@ Simulation::getFixableVariables(){
 		throw runtime_error("Simulation system not yet built");
 	}
 
-	int32 **vip; /** TODO ensure 32 bit integers are used */
+	int32 *vip; /** TODO ensure 32 bit integers are used */
 
 	// Get IDs of elegible variables in array at vip...
-	if(!slvDOF_eligible(sys,vip)){
+	if(!slvDOF_eligible(sys,&vip)){
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"No fixable variables found.");
 	}else{
 		//cerr << "FIXABLE VARS FOUND" << endl;
@@ -313,7 +313,7 @@ Simulation::getFixableVariables(){
 
 		// iterate through this list until we find a -1:
 		int i=0;
-		int var_index = (*vip)[i];
+		int var_index = vip[i];
 		while(var_index >= 0){
 			//cerr << "FOUND VARIABLE var_index = " << var_index << endl;
 			struct var_variable *var = vp[var_index];
@@ -323,11 +323,11 @@ Simulation::getFixableVariables(){
 			ascfree(var_name);
 			vars.push_back( Variable(this, var) );
 			++i;
-			var_index = (*vip)[i];
+			var_index = vip[i];
 		}
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Found %d fixable variables.",i);
 		//cerr << "END ELEGIBLE VARS LIST" << endl;
-		ascfree(*vip);
+		ascfree(vip);
 		//cerr << "FREED VIP LIST" << endl;
 	}
 
