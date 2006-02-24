@@ -549,8 +549,7 @@ MODEL iapws95_2phase REFINES thermo_state;
 METHODS
 
 METHOD default_self;
-	RUN ClearAll;
-	RUN specify;
+	RUN reset;
 	RUN values;
 	Sl.rho := 800 {kg/m^3};
 END default_self;
@@ -566,3 +565,37 @@ END values;
 	
 END iapws95_2phase;		
 
+
+MODEL iapws95_2phase_ph_test REFINES iapws95_2phase;
+
+METHODS
+METHOD specify;
+	FIX p,h;
+END specify;
+METHOD values;
+	p := 10 {bar};
+	h := 2998 {kJ/kg};
+END values;
+METHOD self_test;
+	ASSERT abs(T - 548.15 {K}) < 1 {K};
+	ASSERT abs(rho - 8.43 {kg/m^3}) < 0.2 {kg/m^3};
+END self_test;
+
+END iapws95_2phase_ph_test;
+
+MODEL iapws95_2phase_ph_test2 REFINES iapws95_2phase;
+
+METHODS
+METHOD specify;
+	FIX p,h;
+END specify;
+METHOD values;
+	p := 10 {bar};
+	h := 418.7 {kJ/kg};
+END values;
+METHOD self_test;
+	ASSERT abs(T - 373.15 {K}) < 1 {K};
+	ASSERT abs(rho - 959 {kg/m^3}) < 3 {kg/m^3};
+END self_test;
+
+END iapws95_2phase_ph_test;
