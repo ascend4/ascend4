@@ -24,6 +24,7 @@ MODEL absorber;
 	mdot_water_out IS_A mass_rate;
 	mdot_gas_out IS_A mass_rate;
 	Vdot_gas_out IS_A volume_rate;
+	mdot_out ALIASES mdot_water_in;
 
 	m_water IS_A mass;
 	m_gas IS_A mass;
