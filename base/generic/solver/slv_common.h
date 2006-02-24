@@ -55,15 +55,17 @@
 	  - vector operations
 	  - solver print routines
 	  - lnkmap support functions
-	<pre>
-	Requires:     #include <stdio.h>
-	              #include "utilities/ascConfig.h"
-	              #include "solver/slv_types.h"
-	              #include "solver/rel.h"
-	              #include "solver/logrel.h"
-	              #include "solver/mtx.h"
-	              #include "general/list.h"
-
+	
+	Requires:<pre>
+#include <stdio.h>
+#include "utilities/ascConfig.h"
+#include "solver/slv_types.h"
+#include "solver/rel.h"
+#include "solver/logrel.h"
+#include "solver/mtx.h"
+#include "general/list.h"
+</pre>
+	
 	Details on solver parameter definition:
 
 	When used together the parameter-related structures, functions, and 

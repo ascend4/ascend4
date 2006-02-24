@@ -4040,7 +4040,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 /* 2004.11.5 code by AWW to eliminate runaway minor loop */
     if(minor >= MAX_MINOR){
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(mif,"QRSlv: Exceeded max line search iterations. Check for variables on bounds.");
+      FPRINTF(ASCERR,"QRSlv: Exceeded max line search iterations. Check for variables on bounds.");
 	  error_reporter_end_flush();
 
       sys->s.inconsistent = TRUE;
