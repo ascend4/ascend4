@@ -16,6 +16,7 @@ public:
 	Simulation(Instance *&, const SymChar &name);
 	Instanc &getModel();
 	std::vector<Variable> getFixableVariables();
+	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
 	void build();
 	const bool check();
 	void checkDoF() const;

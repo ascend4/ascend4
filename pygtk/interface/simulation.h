@@ -80,6 +80,8 @@ public:
 	void build();
 	void solve(Solver s, SolverReporter &reporter);
 	std::vector<Variable> getFixableVariables();
+	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
+
 	void write();
 
 	void setSolver(Solver &s);

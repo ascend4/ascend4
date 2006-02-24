@@ -10,7 +10,7 @@
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
   <property name="default_width">600</property>
-  <property name="default_height">768</property>
+  <property name="default_height">800</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">False</property>
   <property name="icon_name"></property>
@@ -60,7 +60,7 @@
 		      <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image365">
+			<widget class="GtkImage" id="image425">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -110,7 +110,7 @@
 		      <accelerator key="C" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image366">
+			<widget class="GtkImage" id="image426">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-copy</property>
 			  <property name="icon_size">1</property>
@@ -138,7 +138,7 @@
 		      <accelerator key="F" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image367">
+			<widget class="GtkImage" id="image427">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">locked.png</property>
 			  <property name="xalign">0.5</property>
@@ -159,7 +159,7 @@
 		      <accelerator key="R" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image368">
+			<widget class="GtkImage" id="image428">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">unlocked.png</property>
 			  <property name="xalign">0.5</property>
@@ -186,7 +186,7 @@
 		      <accelerator key="F4" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image369">
+			<widget class="GtkImage" id="image429">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">properties.png</property>
 			  <property name="xalign">0.5</property>
@@ -220,7 +220,7 @@
 		      <accelerator key="F9" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image370">
+			<widget class="GtkImage" id="image430">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -242,7 +242,7 @@
 		      <accelerator key="F7" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image371">
+			<widget class="GtkImage" id="image431">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -266,6 +266,16 @@
 		  </child>
 
 		  <child>
+		    <widget class="GtkMenuItem" id="show_variables_near_bounds">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Show variables near _bounds</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="on_show_variables_near_bounds_activate" last_modification_time="Fri, 24 Feb 2006 04:56:30 GMT"/>
+		      <accelerator key="B" modifiers="GDK_CONTROL_MASK" signal="activate"/>
+		    </widget>
+		  </child>
+
+		  <child>
 		    <widget class="GtkImageMenuItem" id="sparsity">
 		      <property name="visible">True</property>
 		      <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
@@ -275,7 +285,7 @@
 		      <accelerator key="I" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image372">
+			<widget class="GtkImage" id="image432">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">incidence.png</property>
 			  <property name="xalign">0.5</property>
@@ -296,7 +306,7 @@
 		      <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image373">
+			<widget class="GtkImage" id="image433">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">diagnose.svg</property>
 			  <property name="xalign">0.5</property>
@@ -323,7 +333,7 @@
 		      <accelerator key="O" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image374">
+			<widget class="GtkImage" id="image434">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-add</property>
 			  <property name="icon_size">1</property>
@@ -345,7 +355,7 @@
 		      <accelerator key="K" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image375">
+			<widget class="GtkImage" id="image435">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-indent</property>
 			  <property name="icon_size">1</property>
@@ -373,7 +383,7 @@
 		      <accelerator key="F11" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image376">
+			<widget class="GtkImage" id="image436">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -420,7 +430,7 @@
 			  <child>
 			    <widget class="GtkCheckMenuItem" id="close_on_converged">
 			      <property name="visible">True</property>
-			      <property name="label" translatable="yes">Close Pop-up on Converged</property>
+			      <property name="label" translatable="yes">Close Pop-up on _Converged</property>
 			      <property name="use_underline">True</property>
 			      <property name="active">False</property>
 			      <signal name="activate" handler="on_close_on_converged_toggle" last_modification_time="Thu, 23 Feb 2006 12:40:46 GMT"/>
@@ -430,7 +440,7 @@
 			  <child>
 			    <widget class="GtkCheckMenuItem" id="close_on_nonconverged">
 			      <property name="visible">True</property>
-			      <property name="label" translatable="yes">Close Pop-up on Non-converged</property>
+			      <property name="label" translatable="yes">Close Pop-up on _Non-converged</property>
 			      <property name="use_underline">True</property>
 			      <property name="active">False</property>
 			      <signal name="activate" handler="on_close_on_nonconverged_toggle" last_modification_time="Thu, 23 Feb 2006 14:12:23 GMT"/>
@@ -462,7 +472,7 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image377">
+			<widget class="GtkImage" id="image437">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
 			  <property name="icon_size">1</property>
@@ -1035,7 +1045,7 @@
   </child>
 </widget>
 
-<widget class="GtkWindow" id="paramswin">
+<widget class="GtkWindow" id="paramswin_old">
   <property name="visible">True</property>
   <property name="has_default">True</property>
   <property name="title" translatable="yes">Solver Parameters</property>
@@ -1378,61 +1388,6 @@ upper and lower bounds displayed.</property>
   </child>
 </widget>
 
-<widget class="GtkDialog" id="dialog1">
-  <property name="visible">True</property>
-  <property name="title" translatable="yes">dialog1</property>
-  <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
-  <property name="modal">False</property>
-  <property name="resizable">True</property>
-  <property name="destroy_with_parent">False</property>
-  <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
-  <property name="skip_pager_hint">False</property>
-  <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
-  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
-  <property name="focus_on_map">True</property>
-  <property name="has_separator">True</property>
-
-  <child internal-child="vbox">
-    <widget class="GtkVBox" id="dialog-vbox2">
-      <property name="visible">True</property>
-      <property name="homogeneous">False</property>
-      <property name="spacing">0</property>
-
-      <child internal-child="action_area">
-	<widget class="GtkHButtonBox" id="dialog-action_area2">
-	  <property name="visible">True</property>
-	  <property name="layout_style">GTK_BUTTONBOX_END</property>
-
-	  <child>
-	    <widget class="GtkButton" id="closebutton1">
-	      <property name="visible">True</property>
-	      <property name="can_default">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="label">gtk-close</property>
-	      <property name="use_stock">True</property>
-	      <property name="relief">GTK_RELIEF_NORMAL</property>
-	      <property name="focus_on_click">True</property>
-	      <property name="response_id">-7</property>
-	    </widget>
-	  </child>
-	</widget>
-	<packing>
-	  <property name="padding">0</property>
-	  <property name="expand">False</property>
-	  <property name="fill">True</property>
-	  <property name="pack_type">GTK_PACK_END</property>
-	</packing>
-      </child>
-
-      <child>
-	<placeholder/>
-      </child>
-    </widget>
-  </child>
-</widget>
-
 <widget class="GtkMenu" id="menu8">
 
   <child>
@@ -1671,13 +1626,13 @@ upper and lower bounds displayed.</property>
   <property name="visible">True</property>
   <property name="title" translatable="yes">Variable</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
+  <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
   <property name="modal">False</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">False</property>
   <property name="icon">properties.png</property>
   <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_taskbar_hint">True</property>
   <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
@@ -2573,7 +2528,7 @@ upper and lower bounds displayed.</property>
   <property name="visible">True</property>
   <property name="title" translatable="yes">Block Diagnosis</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
+  <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
   <property name="modal">False</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
@@ -4095,7 +4050,7 @@ Conversion to LyX and other formats:
   <property name="visible">True</property>
   <property name="title" translatable="yes">Solver Status</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_MOUSE</property>
+  <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
   <property name="modal">True</property>
   <property name="resizable">False</property>
   <property name="destroy_with_parent">False</property>
@@ -4747,6 +4702,276 @@ Conversion to LyX and other formats:
 	    </widget>
 	    <packing>
 	      <property name="padding">0</property>
+	      <property name="expand">False</property>
+	      <property name="fill">False</property>
+	    </packing>
+	  </child>
+	</widget>
+	<packing>
+	  <property name="padding">0</property>
+	  <property name="expand">True</property>
+	  <property name="fill">True</property>
+	</packing>
+      </child>
+    </widget>
+  </child>
+</widget>
+
+<widget class="GtkDialog" id="paramswin">
+  <property name="visible">True</property>
+  <property name="title" translatable="yes">Solver Parameters</property>
+  <property name="type">GTK_WINDOW_TOPLEVEL</property>
+  <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+  <property name="modal">True</property>
+  <property name="default_width">600</property>
+  <property name="default_height">500</property>
+  <property name="resizable">True</property>
+  <property name="destroy_with_parent">False</property>
+  <property name="icon">properties.png</property>
+  <property name="decorated">True</property>
+  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_pager_hint">False</property>
+  <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
+  <property name="focus_on_map">True</property>
+  <property name="has_separator">True</property>
+  <signal name="response" handler="on_paramswin_response" last_modification_time="Fri, 24 Feb 2006 06:01:08 GMT"/>
+  <signal name="close" handler="on_paramswin_close" last_modification_time="Fri, 24 Feb 2006 06:01:12 GMT"/>
+
+  <child internal-child="vbox">
+    <widget class="GtkVBox" id="dialog-vbox8">
+      <property name="visible">True</property>
+      <property name="homogeneous">False</property>
+      <property name="spacing">0</property>
+
+      <child internal-child="action_area">
+	<widget class="GtkHButtonBox" id="dialog-action_area8">
+	  <property name="visible">True</property>
+	  <property name="layout_style">GTK_BUTTONBOX_END</property>
+
+	  <child>
+	    <widget class="GtkButton" id="paramscancel">
+	      <property name="visible">True</property>
+	      <property name="can_default">True</property>
+	      <property name="can_focus">True</property>
+	      <property name="label">gtk-cancel</property>
+	      <property name="use_stock">True</property>
+	      <property name="relief">GTK_RELIEF_NORMAL</property>
+	      <property name="focus_on_click">True</property>
+	      <property name="response_id">-6</property>
+	    </widget>
+	  </child>
+
+	  <child>
+	    <widget class="GtkButton" id="paramsapply">
+	      <property name="visible">True</property>
+	      <property name="can_default">True</property>
+	      <property name="can_focus">True</property>
+	      <property name="label">gtk-ok</property>
+	      <property name="use_stock">True</property>
+	      <property name="relief">GTK_RELIEF_NORMAL</property>
+	      <property name="focus_on_click">True</property>
+	      <property name="response_id">-5</property>
+	    </widget>
+	  </child>
+	</widget>
+	<packing>
+	  <property name="padding">0</property>
+	  <property name="expand">False</property>
+	  <property name="fill">True</property>
+	  <property name="pack_type">GTK_PACK_END</property>
+	</packing>
+      </child>
+
+      <child>
+	<widget class="GtkVBox" id="vbox17">
+	  <property name="visible">True</property>
+	  <property name="homogeneous">False</property>
+	  <property name="spacing">0</property>
+
+	  <child>
+	    <widget class="GtkHBox" id="hbox15">
+	      <property name="visible">True</property>
+	      <property name="homogeneous">False</property>
+	      <property name="spacing">0</property>
+
+	      <child>
+		<widget class="GtkLabel" id="label69">
+		  <property name="visible">True</property>
+		  <property name="label" translatable="yes">&lt;b&gt;Current solver:&lt;/b&gt; </property>
+		  <property name="use_underline">False</property>
+		  <property name="use_markup">True</property>
+		  <property name="justify">GTK_JUSTIFY_LEFT</property>
+		  <property name="wrap">False</property>
+		  <property name="selectable">False</property>
+		  <property name="xalign">0.5</property>
+		  <property name="yalign">0.5</property>
+		  <property name="xpad">0</property>
+		  <property name="ypad">0</property>
+		  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+		  <property name="width_chars">-1</property>
+		  <property name="single_line_mode">False</property>
+		  <property name="angle">0</property>
+		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">False</property>
+		  <property name="fill">False</property>
+		</packing>
+	      </child>
+
+	      <child>
+		<widget class="GtkLabel" id="solvername">
+		  <property name="visible">True</property>
+		  <property name="label" translatable="yes">solvername	</property>
+		  <property name="use_underline">False</property>
+		  <property name="use_markup">False</property>
+		  <property name="justify">GTK_JUSTIFY_LEFT</property>
+		  <property name="wrap">False</property>
+		  <property name="selectable">False</property>
+		  <property name="xalign">0.5</property>
+		  <property name="yalign">0.5</property>
+		  <property name="xpad">0</property>
+		  <property name="ypad">0</property>
+		  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+		  <property name="width_chars">-1</property>
+		  <property name="single_line_mode">False</property>
+		  <property name="angle">0</property>
+		</widget>
+		<packing>
+		  <property name="padding">0</property>
+		  <property name="expand">False</property>
+		  <property name="fill">False</property>
+		</packing>
+	      </child>
+	    </widget>
+	    <packing>
+	      <property name="padding">14</property>
+	      <property name="expand">False</property>
+	      <property name="fill">True</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkScrolledWindow" id="scrolledwindow19">
+	      <property name="visible">True</property>
+	      <property name="can_focus">True</property>
+	      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+	      <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+	      <property name="shadow_type">GTK_SHADOW_IN</property>
+	      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
+
+	      <child>
+		<widget class="GtkViewport" id="viewport4">
+		  <property name="visible">True</property>
+		  <property name="shadow_type">GTK_SHADOW_IN</property>
+
+		  <child>
+		    <widget class="GtkTreeView" id="paramsview">
+		      <property name="visible">True</property>
+		      <property name="can_focus">True</property>
+		      <property name="headers_visible">True</property>
+		      <property name="rules_hint">False</property>
+		      <property name="reorderable">False</property>
+		      <property name="enable_search">True</property>
+		      <property name="fixed_height_mode">False</property>
+		      <property name="hover_selection">False</property>
+		      <property name="hover_expand">False</property>
+		      <signal name="row_activated" handler="on_paramsview_row_activated" last_modification_time="Fri, 27 Jan 2006 05:56:55 GMT"/>
+		      <signal name="select_cursor_row" handler="on_paramsview_select_cursor_row" last_modification_time="Fri, 27 Jan 2006 07:21:36 GMT"/>
+		      <signal name="button_press_event" handler="on_paramsview_button_press_event" last_modification_time="Sat, 28 Jan 2006 01:46:18 GMT"/>
+		      <signal name="cursor_changed" handler="on_paramsview_cursor_changed" last_modification_time="Sat, 28 Jan 2006 03:40:50 GMT"/>
+		    </widget>
+		  </child>
+		</widget>
+	      </child>
+	    </widget>
+	    <packing>
+	      <property name="padding">0</property>
+	      <property name="expand">True</property>
+	      <property name="fill">True</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkHBox" id="hbox16">
+	      <property name="visible">True</property>
+	      <property name="homogeneous">False</property>
+	      <property name="spacing">8</property>
+	    </widget>
+	    <packing>
+	      <property name="padding">0</property>
+	      <property name="expand">False</property>
+	      <property name="fill">True</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkFrame" id="frame9">
+	      <property name="visible">True</property>
+	      <property name="label_xalign">0</property>
+	      <property name="label_yalign">0.5</property>
+	      <property name="shadow_type">GTK_SHADOW_NONE</property>
+
+	      <child>
+		<widget class="GtkAlignment" id="alignment9">
+		  <property name="visible">True</property>
+		  <property name="xalign">0.5</property>
+		  <property name="yalign">0.5</property>
+		  <property name="xscale">1</property>
+		  <property name="yscale">1</property>
+		  <property name="top_padding">0</property>
+		  <property name="bottom_padding">0</property>
+		  <property name="left_padding">12</property>
+		  <property name="right_padding">0</property>
+
+		  <child>
+		    <widget class="GtkLabel" id="paramdescription">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">To edit a paramer, select the row you want then click the 'value' column.</property>
+		      <property name="use_underline">False</property>
+		      <property name="use_markup">False</property>
+		      <property name="justify">GTK_JUSTIFY_LEFT</property>
+		      <property name="wrap">False</property>
+		      <property name="selectable">False</property>
+		      <property name="xalign">0</property>
+		      <property name="yalign">0.5</property>
+		      <property name="xpad">10</property>
+		      <property name="ypad">10</property>
+		      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+		      <property name="width_chars">-1</property>
+		      <property name="single_line_mode">False</property>
+		      <property name="angle">0</property>
+		    </widget>
+		  </child>
+		</widget>
+	      </child>
+
+	      <child>
+		<widget class="GtkLabel" id="label72">
+		  <property name="visible">True</property>
+		  <property name="label" translatable="yes">Parameter info</property>
+		  <property name="use_underline">False</property>
+		  <property name="use_markup">True</property>
+		  <property name="justify">GTK_JUSTIFY_LEFT</property>
+		  <property name="wrap">False</property>
+		  <property name="selectable">False</property>
+		  <property name="xalign">0.5</property>
+		  <property name="yalign">0.5</property>
+		  <property name="xpad">0</property>
+		  <property name="ypad">0</property>
+		  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+		  <property name="width_chars">-1</property>
+		  <property name="single_line_mode">False</property>
+		  <property name="angle">0</property>
+		</widget>
+		<packing>
+		  <property name="type">label_item</property>
+		</packing>
+	      </child>
+	    </widget>
+	    <packing>
+	      <property name="padding">8</property>
 	      <property name="expand">False</property>
 	      <property name="fill">False</property>
 	    </packing>

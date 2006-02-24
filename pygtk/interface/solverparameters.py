@@ -12,14 +12,16 @@ SOLVERPARAM_BOOL_FALSE = "No"
 # SOLVER PARAMETERS WINDOW
 
 class SolverParametersWindow:
-	def __init__(self,sim,reporter,GLADE_FILE):
-		self.sim = sim
-		self.params = self.sim.getSolverParameters();
-		
-		self.reporter = reporter
+	def __init__(self,browser,GLADE_FILE):
+		self.browser = browser
+		self.reporter = self.browser.reporter
+		self.sim = self.browser.sim
+		self.params = self.sim.getSolverParameters();		
 
 		_xml = gtk.glade.XML(GLADE_FILE,"paramswin")
 		self.window = _xml.get_widget("paramswin")
+		self.window.set_transient_for(self.browser.window)
+
 		self.paramdescription = _xml.get_widget("paramdescription")
 		self.solvername = _xml.get_widget("solvername")
 
@@ -242,13 +244,14 @@ class SolverParametersWindow:
 	def show(self):
 		self.window.show()
 	
-	def on_paramscancel_clicked(self,*args,**kwargs):
+	def on_paramswin_response(self,response,*args):
+		if response == gtk.RESPONSE_OK:
+			self.sim.setSolverParameters(self.params);
+		elif response == gtk.RESPONSE_CANCEL or response == gtk.RESPONSE_CLOSE:
+			pass
+		
 		self.do_destroy()
-
-	def on_paramsapply_clicked(self,*args,**kwargs):
-		self.sim.setSolverParameters(self.params);
-		self.do_destroy()
-
+			
 	def on_paramswin_destroy(self,*args,**kwargs):
 		self.do_destroy()
 

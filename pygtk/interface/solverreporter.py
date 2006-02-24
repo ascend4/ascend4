@@ -44,6 +44,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		_xml.signal_autoconnect(self)
 
 		self.window = _xml.get_widget("solverstatusdialog")
+		self.window.set_transient_for(self.browser.window)
 
 		self.numvars = _xml.get_widget("numvarsentry")
 		self.numblocks = _xml.get_widget("numblocksentry")

@@ -44,6 +44,7 @@ extern "C"{
 #include <solver/slvDOF.h>
 #include <solver/slv3.h>
 #include <solver/slv_stdcalls.h>
+#include <solver/slv_server.h>
 }
 
 #include "simulation.h"
@@ -318,9 +319,11 @@ Simulation::getFixableVariables(){
 			//cerr << "FOUND VARIABLE var_index = " << var_index << endl;
 			struct var_variable *var = vp[var_index];
 			//cerr << "VARIABLE " << var_index << " IS ELIGIBLE" << endl;
-			char *var_name = var_make_name(sys,var);
+
+			//char *var_name = var_make_name(sys,var);
 			//cerr << "ELIGIBLE VAR: " << var_name << endl;
-			ascfree(var_name);
+			//ascfree(var_name);
+
 			vars.push_back( Variable(this, var) );
 			++i;
 			var_index = vip[i];
@@ -335,6 +338,42 @@ Simulation::getFixableVariables(){
 	return vars;
 }
 
+vector<Variable>
+Simulation::getVariablesNearBounds(const double &epsilon){
+	cerr << "GETTING VARIABLES NEAR BOUNDS..." << endl;
+	vector<Variable> vars;
+
+	if(!sys){
+		throw runtime_error("Simulation system not yet built");
+	}
+
+	int *vip;
+	if(slv_near_bounds(sys,epsilon,&vip)){
+		struct var_variable **vp = slv_get_solvers_var_list(sys);
+		struct var_variable *var;
+		cerr << "VARS FOUND NEAR BOUNDS" << endl;
+		int nlow = vip[0];
+		int nhigh = vip[1];
+		int lim1 = 2 + nlow;
+		for(int i=2; i<lim1; ++i){
+			var = vp[vip[i]];
+			char *var_name = var_make_name(sys,var);
+			cerr << "AT LOWER BOUND: " << var_name << endl;
+			ascfree(var_name);
+			vars.push_back(Variable(this,var));
+		};
+		int lim2 = lim1 + nhigh;
+		for(int i=lim1; i<lim2; ++i){
+			var = vp[vip[i]];
+			char *var_name = var_make_name(sys,var);
+			cerr << "AT UPPER BOUND: " << var_name << endl;
+			ascfree(var_name);
+			vars.push_back(Variable(this,var));
+		}
+	}
+	ascfree(vip);
+	return vars;
+}
 	
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
