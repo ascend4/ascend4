@@ -75,8 +75,8 @@ MODEL iapws95_1phase REFINES thermo_state;
 	R "specific gas constant for water"
 		:== 0.46151805 {kJ/kg/K};
 	
-	tau = Tc / T;
-	delta = rho / rhoc;
+	z_tau: tau = Tc / T;
+	z_delta: delta = rho / rhoc;
 	
 	
 	range_0 IS_A set OF integer_constant;
@@ -261,7 +261,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	r3_b1[range_r3] IS_A factor;
 	FOR i IN range_r3 CREATE
-    	r3_b1[i] = -alpha[i]*d1^2 - beta[i]* (tau - gamma[i])^2;
+    	z_r3_b1[i]: r3_b1[i] = -alpha[i]*d1^2 - beta[i]* (tau - gamma[i])^2;
 	END FOR;
 
 	PSI[range_r4] IS_A factor;
@@ -281,41 +281,41 @@ MODEL iapws95_1phase REFINES thermo_state;
 	d2DELTAbi_ddeltadtau[range_r4] IS_A factor;
 
 	FOR i IN range_r4 CREATE
-		PSI[i] = exp(-C[i]*d1^2 - D[i]*t1^2);
-		(*theta_expr:*) theta[i] =  1 - tau + A[i] * (d1^2)^( 1/(2 * beta_r4[i]) );
-		(*DELTA_expr:*) DELTA[i] = theta[i]^2 + B[i] * (d1^2)^a[i];
+		z_PSI[i]: PSI[i] = exp(-C[i]*d1^2 - D[i]*t1^2);
+		z_theta[i]: theta[i] =  1 - tau + A[i] * (d1^2)^( 1/(2 * beta_r4[i]) );
+		z_DELTA[i]: DELTA[i] = theta[i]^2 + B[i] * (d1^2)^a[i];
 
-        (*dDELTA_ddelta_expr:*) dDELTA_ddelta[i] = d1*(A[i]*theta[i]*2/beta_r4[i]*
+        z_dDELTA_ddelta[i]: dDELTA_ddelta[i] = d1*(A[i]*theta[i]*2/beta_r4[i]*
                 (d1^2)^(1/(2*beta_r4[i]) - 1) + 2*B[i]*a[i]*
                 (d1^2)^(a[i] - 1) );
 
-        (*dPSI_ddelta_expr:*) dPSI_ddelta[i] = -2*C[i]*d1*PSI[i];
+        z_dPSI_ddelta[i]: dPSI_ddelta[i] = -2*C[i]*d1*PSI[i];
 
-        (*dDELTAbi_ddelta_expr:*) dDELTAbi_ddelta[i] = b[i] * DELTA[i]^(b[i]-1) * dDELTA_ddelta[i];
+        z_dDELTAbi_ddelta[i]: dDELTAbi_ddelta[i] = b[i] * DELTA[i]^(b[i]-1) * dDELTA_ddelta[i];
 
-		(*dDELTAbi_dtau_expr:*) dDELTAbi_dtau[i] = -2 * theta[i] * b[i] * DELTA[i]^(b[i]-1);
-        (*dPSI_dtau_expr:*) dPSI_dtau[i] = -2 * D[i] * t1 * PSI[i];
+		z_dDELTAbi_dtau[i]: dDELTAbi_dtau[i] = -2 * theta[i] * b[i] * DELTA[i]^(b[i]-1);
+        z_dPSI_dtau[i]: dPSI_dtau[i] = -2 * D[i] * t1 * PSI[i];
 
-		(*d2PSI_ddelta2_expr:*) d2PSI_ddelta2[i] = (2 * C[i] * d1^2 - 1) * 2 * C[i] *  PSI[i];
+		z_d2PSI_ddelta2[i]: d2PSI_ddelta2[i] = (2 * C[i] * d1^2 - 1) * 2 * C[i] *  PSI[i];
 
-		(*d2DELTA_ddelta2_expr:*) d2DELTA_ddelta2[i] = 1/d1*dDELTA_ddelta[i] + d1^2*(4*B[i]*a[i]* 
+		z_d2DELTA_ddelta2[i]: d2DELTA_ddelta2[i] = 1/d1*dDELTA_ddelta[i] + d1^2*(4*B[i]*a[i]* 
                 (a[i]-1)*(d1^2)^(a[i]-2) + 2*A[i]^2*
                 (1/(beta_r4[i]^2))*((d1^2) ^ (1/(2*beta_r4[i])-1))^2) +
                 A[i]*theta[i]*4/beta_r4[i]*(1/(2*beta_r4[i]) - 1)*
                 (d1^2)^(1/(2*beta_r4[i]) - 2);
 	
-		(*d2DELTAbi_ddelta2_expr:*) d2DELTAbi_ddelta2[i] =b[i] * (
+		z_d2DELTAbi_ddelta2[i]: d2DELTAbi_ddelta2[i] =b[i] * (
 				DELTA[i]^(b[i]-1) *d2DELTA_ddelta2[i]
                  + (b[i]-1) * DELTA[i]^(b[i]-2) * dDELTA_ddelta[i]^2 );
         
-		(*d2DELTAbi_dtau2_expr:*) d2DELTAbi_dtau2[i] = 2 * b[i] * DELTA[i]^(b[i]-1) +
+		z_d2DELTAbi_dtau2[i]: d2DELTAbi_dtau2[i] = 2 * b[i] * DELTA[i]^(b[i]-1) +
                 4 * theta[i]^2 * b[i]*(b[i]-1) * DELTA[i]^(b[i]-2);
 	
-		(*d2PSI_dtau2_expr:*) d2PSI_dtau2[i] = (2 * D[i] * t1^2 - 1) * 2 * D[i] * PSI[i];
+		z_d2PSI_dtau2[i]: d2PSI_dtau2[i] = (2 * D[i] * t1^2 - 1) * 2 * D[i] * PSI[i];
 
-		(*d2PSI_ddeltadtau_expr:*) d2PSI_ddeltadtau[i] = 4 * C[i] * D[i] * d1 * t1 * PSI[i];
+		z_d2PSI_ddeltadtau[i]: d2PSI_ddeltadtau[i] = 4 * C[i] * D[i] * d1 * t1 * PSI[i];
 	
-		(*d2DELTAbi_ddeltadtau_expr:*) d2DELTAbi_ddeltadtau[i] = 
+		z_d2DELTAbi_ddeltadtau[i]: d2DELTAbi_ddeltadtau[i] = 
                 - A[i] * b[i]* (2/beta_r4[i]) * DELTA[i]^(b[i]-1) * d1 * (d1^2)^(1/(2*beta_r4[i])-1)
 				- 2 * theta[i] * b[i] *(b[i]-1) * DELTA[i]^(b[i]-2) * dDELTA_ddelta[i];
 
@@ -323,7 +323,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	phir_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE
-		phir_r2[i] = n[i] * delta^d[i] * tau^t[i] *
+		z_phir_r2[i]: phir_r2[i] = n[i] * delta^d[i] * tau^t[i] *
                     exp(-delta^c[i]);
 	END FOR;
 
@@ -341,7 +341,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	phirdelta_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE
-		phirdelta_r2[i] = n[i] * exp(-delta^c[i]) * (delta^(d[i]-1) *
+		z_phirdelta_r2[i]: phirdelta_r2[i] = n[i] * exp(-delta^c[i]) * (delta^(d[i]-1) *
                    tau^t[i] * (d[i] - c[i] * delta^c[i]) );
 	END FOR;
 
@@ -357,7 +357,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	phirtau_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE
-		phirtau_r2[i] = n[i]*t[i]*delta^d[i]*tau^(t[i]-1) * exp(-delta^c[i]);
+		z_phirtau_r2[i]: phirtau_r2[i] = n[i]*t[i]*delta^d[i]*tau^(t[i]-1) * exp(-delta^c[i]);
 	END FOR;
 
 	phirtau IS_A factor;
@@ -371,7 +371,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	phirdeltadelta_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE
-		phirdeltadelta_r2[i] = 
+		z_phirdeltadelta_r2[i]: phirdeltadelta_r2[i] = 
 			n[i] * exp(-delta^c[i]) * ( 
 					delta^(d[i]-2) *
                     tau^t[i] * ( 
@@ -402,7 +402,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	phirtautau_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE
-		phirtautau_r2[i] = n[i]*t[i]*(t[i]-1)* delta^d[i] *
+		z_phirtautau_r2[i]: phirtautau_r2[i] = n[i]*t[i]*(t[i]-1)* delta^d[i] *
                     tau^(t[i]-2) * exp(- delta^c[i] );
 	END FOR;
 
@@ -421,7 +421,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	phirdeltatau_r2[range_r2] IS_A factor;
 	FOR i IN range_r2 CREATE	
-		phirdeltatau_r2[i] = 
+		z_phirdeltatau_r2[i]: phirdeltatau_r2[i] = 
 			n[i]*t[i] * delta^(d[i]-1) * tau^(t[i]-1)
 			* (d[i] - c[i] * delta^c[i]) * exp(-delta^c[i]);
 	END FOR;
@@ -441,22 +441,22 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 	(*--------- THERMO PROPERTY RELATIONS ----------- *)
 
-	pressure: p
+	za_pressure: p
 		= rho * R * T * (1 + delta*phirdelta);
 
-	internal_energy: u
+	za_internal_energy: u
 		= R * T * tau * (phi0tau + phirtau);
 
-	enthalpy: h
+	za_enthalpy: h
 		= R * T * (1 + tau*(phi0tau + phirtau) + delta*phirdelta);
 
-	entropy: s
+	za_entropy: s
 		= R * (tau*(phi0tau + phirtau) - phi0 - phir);
 
-	c_isochoric: cv
+	za_c_isochoric: cv
 		= - R * tau^2 * (phi0tautau + phirtautau);
 
-	c_isobaric: cp
+	za_c_isobaric: cp
 		= - R * (
 		      tau^2 * (phi0tautau + phirtautau)
 		      +  ( ( 1 + delta*phirdelta - delta*tau*phirdeltatau )^2 )
@@ -472,8 +472,7 @@ MODEL iapws95_1phase REFINES thermo_state;
 
 METHODS
 METHOD default_self;
-	RUN ClearAll;
-	RUN specify;
+	RUN reset;
 	RUN values;
 END default_self;
 
@@ -552,6 +551,12 @@ METHOD default_self;
 	RUN reset;
 	RUN values;
 	Sl.rho := 800 {kg/m^3};
+	Sl.delta := 2.48;
+	Sl.d1 := 1.48;
+	Sv.delta := 0.012;
+	Sv.d1 := -0.987;
+	RUN scale_self;
+	RUN bound_self;
 END default_self;
 
 METHOD specify;
@@ -562,7 +567,20 @@ METHOD values;
 	T := 390 {K};
 	x := 0.5;
 END values;
+
+METHOD scale_self;
+	Sl.rho.nominal := 800 {kg/m^3};
+	Sv.rho.nominal := 1 {kg/m^3};
+END scale_self;	
+
+METHOD bound_self;
+	(*Sl.tau.lower_bound := 1; *)(* T = T_c *)
+	(*Sl.tau.upper_bound :=  2.3690133; *)(* T = 273.15 *)
 	
+	Sl.d1.lower_bound := -1;
+	Sv.d1.lower_bound := -1;
+END bound_self;
+
 END iapws95_2phase;		
 
 
@@ -576,11 +594,12 @@ METHOD values;
 	p := 10 {bar};
 	h := 2998 {kJ/kg};
 END values;
+	
 METHOD self_test;
 	ASSERT abs(T - 548.15 {K}) < 1 {K};
 	ASSERT abs(rho - 8.43 {kg/m^3}) < 0.2 {kg/m^3};
 END self_test;
-
+	
 END iapws95_2phase_ph_test;
 
 MODEL iapws95_2phase_ph_test2 REFINES iapws95_2phase;
@@ -598,4 +617,33 @@ METHOD self_test;
 	ASSERT abs(rho - 959 {kg/m^3}) < 3 {kg/m^3};
 END self_test;
 
-END iapws95_2phase_ph_test;
+END iapws95_2phase_ph_test2;
+
+(* 
+	This last model *will* converge with careful coaxing
+	You need to alternate between ROW2NORM scaling
+	and RELNOM scaling using the QRSlv engine.
+	Some tweaking of delta/d1 values may be necessary as
+	well.
+*)
+MODEL iapws95_2phase_ph_test3 REFINES iapws95_1phase;
+
+METHODS
+METHOD specify;
+	FIX p,h;
+END specify;
+METHOD values;
+	p := 1 {bar};
+	h := 104.9 {kJ/kg};
+	(* free vars *)
+	delta := 3;
+	d1 := 2;
+	rho := 900;
+END values;
+METHOD self_test;
+	ASSERT abs(T - 298.15 {K}) < 1 {K};
+	ASSERT abs(rho - 997 {kg/m^3}) < 3 {kg/m^3};
+END self_test;
+
+END iapws95_2phase_ph_test3;
+
