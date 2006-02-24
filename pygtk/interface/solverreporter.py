@@ -4,9 +4,9 @@ import gtk
 import gtk.glade
 
 class PythonSolverReporter(ascend.SolverReporter):
-	def __init__(self,browser,interval):
+	def __init__(self,browser):
 		self.browser=browser
-		self.updateinterval = interval
+		self.updateinterval = self.browser.prefs.getBoolPref("SolverReporter","update_interval", 0.5)
 		self.reporter = self.browser.reporter
 		if self.reporter==None:
 			raise RuntimeError("Can't find reporter")
@@ -38,8 +38,7 @@ class PythonSolverReporter(ascend.SolverReporter):
 
 class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,GLADE_FILE,browser,numvars):
-		_updateinterval=0.1
-		PythonSolverReporter.__init__(self,browser,_updateinterval)
+		PythonSolverReporter.__init__(self,browser)
 
 		_xml = gtk.glade.XML(GLADE_FILE,"solverstatusdialog")
 		_xml.signal_autoconnect(self)
@@ -69,6 +68,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.elapsed = 0;
 		self.blocknum = 0;
 		self.guiinterrupt = False;
+		self.guitime = 0;
 
 		self.nv = numvars
 
@@ -90,7 +90,6 @@ class PopupSolverReporter(PythonSolverReporter):
 		del(self.window)
 		
 	def fill_values(self,status):
-		print "FILLING VALUES..."
 		self.numblocks.set_text("%d of %d" % (status.getCurrentBlockNum(),status.getNumBlocks()))
 		self.numvars.set_text("%d of %d" % (status.getNumConverged(), self.nv))
 		self.elapsedtime.set_text("%0.1f s" % self.elapsed)
@@ -101,7 +100,6 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.blockelapsedtime.set_text("%0.1f s" % self.blocktime)
 
 		_frac = float(status.getNumConverged()) / self.nv
-		print "FRACTION = ",_frac
 		self.progressbar.set_text("%d vars converged..." % status.getNumConverged());
 		self.progressbar.set_fraction(_frac)
 
@@ -111,14 +109,17 @@ class PopupSolverReporter(PythonSolverReporter):
 		if status.getCurrentBlockNum() > self.blocknum:
 			self.blocknum = status.getCurrentBlockNum()
 			self.blockstart = _time
+
 		if self.lasttime==0 or _sincelast > self.updateinterval or status.isConverged():
 			self.lasttime = _time;
 			self.elapsed = _time - self.starttime
-			print "UPDATING!"
+			#print "UPDATING!"
 			self.fill_values(status)
 
 		while gtk.events_pending():
 			gtk.main_iteration()		
+
+		self.guitime = self.guitime + (time.clock() - _time)
 
 		if status.isConverged() or status.isDiverged() or status.isInterrupted():
 			return 1
@@ -127,9 +128,12 @@ class PopupSolverReporter(PythonSolverReporter):
 		return 0
 
 	def finalise(self,status):
+		_time = time.clock()
+
 		_p = self.browser.prefs;
 		_close_on_converged = _p.getBoolPref("SolverReporter","close_on_converged",True);
 		_close_on_nonconverged = _p.getBoolPref("SolverReporter","close_on_nonconverged",False);
+
 
 		if status.isConverged() and _close_on_converged:
 			self.report_to_browser(status)
@@ -158,12 +162,14 @@ class PopupSolverReporter(PythonSolverReporter):
 
 		self.report_to_browser(status)
 
+		self.guitime = self.guitime + (time.clock() - _time)
+		print "TIME SPENT UPDATING SOLVER: %0.2f s" % self.guitime
+
 
 class SimpleSolverReporter(PythonSolverReporter):
 	def __init__(self,browser):
 		print "CREATING SIMPLESOLVERREPORTER..."
-		_update = 0.1
-		PythonSolverReporter.__init__(self,browser,_update)
+		PythonSolverReporter.__init__(self,browser)
 		self.lasttime = self.starttime
 
 	def report(self,status):
