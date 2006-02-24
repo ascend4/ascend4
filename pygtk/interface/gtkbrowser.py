@@ -846,6 +846,8 @@ class Browser:
 		    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
 		    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
 		dialog.set_default_response(gtk.RESPONSE_OK)
+		dialog.set_transient_for(self.window)
+		dialog.set_modal(True)
 
 		filter = gtk.FileFilter()
 		filter.set_name("*.a4c, *.a4l")
@@ -860,13 +862,13 @@ class Browser:
 
 		response = dialog.run()
 		_filename = dialog.get_filename()
-		dialog.destroy()
+		print "FILENAME SELECTED:",_filename
+		dialog.hide()
 
 		if response == gtk.RESPONSE_OK:
 			self.reporter.reportNote("File %s selected." % dialog.get_filename() )
 			self.library.clear()
-			self.do_open( _filename)
-		   
+			self.do_open( _filename)		   
 
 	def reload_click(self,*args):
 		_type = None
