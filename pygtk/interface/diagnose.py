@@ -18,6 +18,8 @@ class DiagnoseWindow:
 		_xml.signal_autoconnect(self)	
 
 		self.window = _xml.get_widget("diagnosewin")
+		self.window.set_transient_for(self.browser.window)
+
 		self.imagescroll = _xml.get_widget("imagescroll")
 		self.image = _xml.get_widget("image")
 		self.blockentry = _xml.get_widget("blockentry")

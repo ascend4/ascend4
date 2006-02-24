@@ -627,6 +627,13 @@ class Browser:
 		_v = checkmenuitem.get_active()
 		self.prefs.setBoolPref("SolverReporter","close_on_nonconverged",_v)
 
+	def on_show_variables_near_bounds_activate(self,*args):
+		_epsilon = 1e-4;
+		_vars = self.sim.getVariablesNearBounds(_epsilon)
+		print "VARIABLES NEAR BOUNDS"
+		for _v in _vars:
+			print _v.getName();
+
 #   --------------------------------------------
 #   MODULE LIST
 
@@ -885,7 +892,7 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No simulation created yet!");
 		
-		_paramswin = SolverParametersWindow(self.sim, self.reporter, GLADE_FILE)
+		_paramswin = SolverParametersWindow(self, GLADE_FILE)
 		_paramswin.show()
 
 	def methodrun_click(self,*args):
@@ -922,6 +929,8 @@ class Browser:
 	def on_help_about_click(self,*args):
 		_xml = gtk.glade.XML(GLADE_FILE,"aboutdialog")
 		_about = _xml.get_widget("aboutdialog")
+		_about.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+		_about.set_transient_for(self.window);
 		_about.set_version(VERSION)
 		_about.run()
 		_about.destroy()

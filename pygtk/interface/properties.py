@@ -12,6 +12,7 @@ class RelPropsWin:
 		# GUI config
 		_xml = gtk.glade.XML(GLADE_FILE,"relpropswin")
 		self.window = _xml.get_widget("relpropswin")
+		self.window.set_transient_for(self.browser.window)
 
 		self.relname = _xml.get_widget("relname")
 		self.residual = _xml.get_widget("residual")
@@ -27,7 +28,7 @@ class RelPropsWin:
 		self.residual.set_text( str( self.instance.getResidual() ) )
 		self.exprbuff.set_text( self.instance.getRelationAsString(self.browser.sim.getModel() ) )
 
-	def on_varpropswin_close(self,*args):
+	def on_relpropswin_close(self,*args):
 		self.window.response(gtk.RESPONSE_CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
@@ -48,7 +49,8 @@ class VarPropsWin:
 
 		# GUI config
 		_xml = gtk.glade.XML(GLADE_FILE,"varpropswin")
-		self.varpropswin = _xml.get_widget("varpropswin")
+		self.window = _xml.get_widget("varpropswin")
+		self.window.set_transient_for(self.browser.window)
 
 		self.varname = _xml.get_widget("varname")
 		self.valueentry= _xml.get_widget("valueentry");
@@ -154,10 +156,10 @@ class VarPropsWin:
 	def on_entry_key_press_event(self,widget,event):
 		keyname = gtk.gdk.keyval_name(event.keyval)
 		if keyname=="Return":
-			self.varpropswin.response(gtk.RESPONSE_OK)
+			self.window.response(gtk.RESPONSE_OK)
 			return True
 		elif keyname=="Escape":
-			self.varpropswin.response(gtk.RESPONSE_CANCEL)
+			self.window.response(gtk.RESPONSE_CANCEL)
 			return True;
 		return False;
 
@@ -171,7 +173,7 @@ class VarPropsWin:
 		self.valueentry.grab_focus()
 		_continue = True;
 		while _continue:
-			_res = self.varpropswin.run();
+			_res = self.window.run();
 			try:
 				if _res == gtk.RESPONSE_APPLY or _res == gtk.RESPONSE_OK:
 					self.apply_changes();
@@ -182,7 +184,7 @@ class VarPropsWin:
 			if _res == gtk.RESPONSE_OK or _res==gtk.RESPONSE_CANCEL:
 				_continue = False;
 		
-		self.varpropswin.destroy();
+		self.window.destroy();
 
 
 
