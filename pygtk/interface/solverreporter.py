@@ -113,6 +113,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		if self.lasttime==0 or _sincelast > self.updateinterval or status.isConverged():
 			self.lasttime = _time;
 			self.elapsed = _time - self.starttime
+			self.blocktime = _time - self.blockstart
 			#print "UPDATING!"
 			self.fill_values(status)
 

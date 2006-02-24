@@ -4279,7 +4279,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="numvarsentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">500</property>
+			  <property name="label" translatable="yes">Starting...</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4307,7 +4307,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="numblocksentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">300/420	</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4335,7 +4335,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="numiterationsentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">123	</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4391,7 +4391,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="elapsedtimeentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">25 s</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4593,7 +4593,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="blockvarsentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">34</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4621,7 +4621,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="blockiterationsentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">28</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4649,7 +4649,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="blockresidualentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">1.534351e8</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4677,7 +4677,7 @@ Conversion to LyX and other formats:
 		      <child>
 			<widget class="GtkLabel" id="blockelapsedtimeentry">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">12 s</property>
+			  <property name="label" translatable="yes"></property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">False</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -4740,9 +4740,9 @@ Conversion to LyX and other formats:
 	    <widget class="GtkProgressBar" id="progressbar">
 	      <property name="visible">True</property>
 	      <property name="orientation">GTK_PROGRESS_LEFT_TO_RIGHT</property>
-	      <property name="fraction">0.40000000596</property>
+	      <property name="fraction">0</property>
 	      <property name="pulse_step">0.10000000149</property>
-	      <property name="text" translatable="yes">340 variables converged...</property>
+	      <property name="text" translatable="yes">Starting...</property>
 	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
 	    </widget>
 	    <packing>
