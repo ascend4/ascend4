@@ -583,18 +583,45 @@ END bound_self;
 
 END iapws95_2phase;		
 
+(*
+	the following models are me trying to work out a robust way of calculating
+	properties in terms of (p,h).
 
+	Art suggested that I must first solve for a related point in terms (T,rho)
+	(the 'natural parameters' then reorganise and solve for (p,h) at the 
+	point I need.
+*)
+
+(*
+	Superheaded region in terms of (p,h).
+	First load and run 'default_self' then solve. Then run 'default_ph' and
+	try to solve again -- fails.
+*)
 MODEL iapws95_2phase_ph_test REFINES iapws95_2phase;
 
 METHODS
 METHOD specify;
-	FIX p,h;
+	FIX T, rho;
 END specify;
+
 METHOD values;
+	T := 452 {K};
+	x := 1;
+	rho := 4 {kg/m^3};
+END values;
+
+METHOD specify_ph;
+	FIX p,h;
+END specify_ph;
+METHOD values_ph;
 	p := 10 {bar};
 	h := 2998 {kJ/kg};
-END values;
-	
+END values_ph;
+
+METHOD default_ph;
+	RUN ClearAll; RUN specify_ph; RUN values_ph;
+END default_ph;
+
 METHOD self_test;
 	ASSERT abs(T - 548.15 {K}) < 1 {K};
 	ASSERT abs(rho - 8.43 {kg/m^3}) < 0.2 {kg/m^3};
@@ -602,16 +629,30 @@ END self_test;
 	
 END iapws95_2phase_ph_test;
 
+(*
+	Subcooled. This one works: run the 'default_self' then solve. Then
+	run 'default_ph' and solve: it converges fine.
+*)
 MODEL iapws95_2phase_ph_test2 REFINES iapws95_2phase;
 
 METHODS
 METHOD specify;
-	FIX p,h;
+	FIX T,rho;
 END specify;
 METHOD values;
+	T := 290 {K};
+	rho := 999 {kg/m^3};
+END values;
+METHOD default_ph;
+	RUN ClearAll; RUN specify_ph; RUN values_ph;
+END default_ph;
+METHOD specify_ph;
+	FIX p,h;
+END specify_ph;
+METHOD values_ph;
 	p := 10 {bar};
 	h := 418.7 {kJ/kg};
-END values;
+END values_ph;
 METHOD self_test;
 	ASSERT abs(T - 373.15 {K}) < 1 {K};
 	ASSERT abs(rho - 959 {kg/m^3}) < 3 {kg/m^3};
