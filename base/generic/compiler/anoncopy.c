@@ -28,11 +28,13 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
  *  the file named COPYING.
  */
+
 /*
  * we really need to ditch some of this crap.
  */
 #include <time.h>
 #include <stdarg.h>
+
 #include "utilities/ascConfig.h"
 #include "utilities/ascMalloc.h"
 #include "utilities/ascPanic.h"
@@ -291,7 +293,7 @@ void Pass2AddAnonProtoVar(struct Instance *i,
     }
     FPRINTF(ASCERR,"\n");
 #endif
-    
+
   }
 }
 

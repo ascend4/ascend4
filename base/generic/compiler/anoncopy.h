@@ -39,12 +39,12 @@
  *  </pre>
  */
 
-#ifndef __ANONCOPY_H_SEEN__
-#define __ANONCOPY_H_SEEN__
+#ifndef ASC_ANONCOPY_H
+#define ASC_ANONCOPY_H
 
 extern struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i);
 /**<
- * Returns a gl_list of index paths through i to reach the vars 
+ * Returns a gl_list of index paths through i to reach the vars
  * occurring in relations (or relation arrays) of i.
  * i must be a MODEL.
  * Each var will only occur once in the path list returned.
@@ -75,5 +75,5 @@ extern void Pass2CopyAnonProto(struct Instance *proto,
  * so we can avoid extra 0ing of them.
  */
 
-#endif /* __ANONCOPY_H_SEEN__ */
+#endif /* ASC_ANONCOPY_H */
 

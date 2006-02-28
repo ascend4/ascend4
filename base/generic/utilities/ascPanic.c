@@ -107,7 +107,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   }
 
   /* Display msg in a MessageBox under Windows unless turned off */
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__MINGW32__)
   if (FALSE != f_display_MessageBox) {
     (void)MessageBeep(MB_ICONEXCLAMATION);
     MessageBox(NULL, msg, "Fatal Error in ASCEND",

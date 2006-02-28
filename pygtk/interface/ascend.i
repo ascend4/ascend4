@@ -5,10 +5,10 @@
 
 %module(directors=1) ascend
 
-%include <python/std_string.i>
-%include <python/std_vector.i>
-%include <python/std_except.i>
-%include <python/std_set.i>
+%include <typemaps/std_string.swg>
+%include <typemaps/std_except.swg>
+//%include <std/std_vector.i>
+//%include <std/std_set.i>
 
 %{
 #include "library.h"
