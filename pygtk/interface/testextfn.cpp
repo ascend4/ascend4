@@ -1,6 +1,7 @@
 #include "simulation.h"
 #include "library.h"
 #include "solver.h"
+#include "solverreporter.h"
 
 #include <iostream>
 using namespace std;
@@ -17,5 +18,6 @@ int main(void){
 	
 	cerr << "About to solve..." << endl;
 
-	S.solve(Solver("QRSlv"));
+	SolverReporter r = SolverReporter();
+	S.solve(Solver("QRSlv"),r);
 }
