@@ -15,6 +15,8 @@ if [ "$OSTYPE" = "msys" ]; then
 	libsuff=.lib
 	libpref=
 	tkrootdefault=/c/Tcl
+	# *** INSTALL GnuWin32 'flex' in the default location... ***
+	export PATH=$PATH:/c/Program\ Files/GnuWin32/bin
 else
 	echo "LINUX CONFIGURATION"
 	versep=.
@@ -22,7 +24,7 @@ else
 	libpref=lib
 	tkrootdefault=/usr
 fi
-	
+
 
 # Assume Tcl/Tk version 8.3 unless override with environment var
 if [ $TKVERSION ]; then
@@ -82,15 +84,17 @@ else
 	blasopt=
 fi
 
+#--with-tcl="$tkroot/lib/${libpref}tcl$tkver$libsuff,$tkroot/include/tcl.h" \
+#--with-tk="$tkroot/lib/${libpref}tk$tkver$libsuff,$tkroot/include/tk.h" \
+#--with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff
+#--with-wish="$tkroot/bin/wish" \
+
 cmd="./configure  \
 --prefix=$ascroot \
 --with-fortran=g77 \
 --enable-gcc \
---with-tcl="$tkroot/lib/${libpref}tcl$tkver$libsuff,$tkroot/include/tcl.h" \
---with-tk="$tkroot/lib/${libpref}tk$tkver$libsuff,$tkroot/include/tk.h" \
---with-wish="$tkroot/bin/wish" \
---with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff
-CFLAGS=-ggdb
+--without-tcl \
+CFLAGS=-ggdb \
 $blasopt"
 
 echo "RUNNING CONFIGURE WITH"

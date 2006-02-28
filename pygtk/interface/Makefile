@@ -125,7 +125,7 @@ SWIG_MODULE = ascend
 SWIG = swig
 
 ifeq ($(OSTYPE),msys)
-	SWIG_VERSION = 1.3.27
+	SWIG_VERSION = 1.3.28
 	SWIG_INCROOT = /usr/local/share/swig/$(SWIG_VERSION)
 	SWIG_INCLUDES = -I$(SWIG_INCROOT) -I$(SWIG_INCROOT)/std -I$(SWIG_INCROOT)/python
 else

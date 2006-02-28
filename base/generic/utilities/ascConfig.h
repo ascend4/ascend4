@@ -31,12 +31,12 @@
  *  There is not corresponding compiler.c. The variables
  *  declared in this header are defined in ascParse.y.
  */
- 
+
 /** @file
 	Global configuration parameters.
 	This header and tcl/tk headers are known to conflict. This header
 	should be included AFTER tcl.h or tk.h, not before.
-	
+
 	If including the file, you should also include utilities/error.h
  */
 
@@ -81,48 +81,44 @@
  *  Determine the Operating System we are building on
  *
  */
-#ifndef __WIN32__
-# if defined(_WIN32) || defined(WIN32)
 
-/** Standard Windows define used in ASCEND. */
+/* windows */
+#if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
+# ifndef __WIN32__
 #  define __WIN32__
+# endif
+#endif
 
-# else /* _WIN32 || WIN32 */
-
-/* Some flavor of Unix */
-
-#  ifdef __alpha
+#ifdef __alpha
 /** DEC Alpha running OSF */
-#   define __ALPHA_OSF__
-#  endif /* __alpha */
+# define __ALPHA_OSF__
+#endif /* __alpha */
 
-#  ifdef __hpux
+#ifdef __hpux
 /** HP running HP-UX */
-#   define __HPUX__
-#  endif /* __hpux */
+# define __HPUX__
+#endif /* __hpux */
 
-#  ifdef _AIX
+#ifdef _AIX
 /** IBM RS6000 or PowerPC running AIX */
-#   define __IBM_AIX__
-#  endif /* _AIX */
+# define __IBM_AIX__
+#endif /* _AIX */
 
-#  ifdef __sgi
+#ifdef __sgi
 /** SGI running IRIX */
-#   define __SGI_IRIX__
-#  endif /* __sgi */
+# define __SGI_IRIX__
+#endif /* __sgi */
 
-#  if defined(__sun) || defined(sun)
-#   ifdef __SVR4
+#if defined(__sun) || defined(sun)
+# ifdef __SVR4
 /** Sparc running Solaris 2.x (SunOS 5.x) */
-#    define __SUN_SOLARIS__
-#   else /* __SVR4 */
+#  define __SUN_SOLARIS__
+# else /* __SVR4 */
 /** Sparc running SunOS 4.x (Solaris 1.x) */
-#    define __SUN_SUNOS__
-#   endif /* __SVR4 */
-#  endif /* __sun || sun */
+#  define __SUN_SUNOS__
+# endif /* __SVR4 */
+#endif /* __sun || sun */
 
-# endif /* _WIN32 || WIN32 */
-#endif /* __WIN32__ */
 
 /*
  *  Make certain we have proper limits defined
@@ -137,7 +133,8 @@
 /* for use practically everywhere */
 #include<stdio.h>
 
-#ifdef __WIN32__
+
+#if defined(__WIN32__) && !defined(__MINGW32__)
 # undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. */
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
@@ -145,8 +142,8 @@
 #endif
 
 #ifndef PATH_MAX
-/** Normally will come from stdio.h or limits.h 
- * POSIX values of PATH_MAX is 255, traditional is 1023 
+/** Normally will come from stdio.h or limits.h
+ * POSIX values of PATH_MAX is 255, traditional is 1023
  */
 # define PATH_MAX 1023
 #endif
@@ -202,7 +199,7 @@
  *  malloc() is defined in <stdlib.h> in ANSI-C
  */
 
-#define MAXTOKENLENGTH 1024	/**< Maximum token size.  
+#define MAXTOKENLENGTH 1024	/**< Maximum token size.
                                  Most significant for identifiers and strings */
 #ifndef FALSE
 # define FALSE 0
@@ -318,10 +315,10 @@ typedef	unsigned   uint32;
 /* ASCEND assertion defines */
 /** Exit status code for failed assertion. */
 #define ASCERR_ASSERTION_FAILED 100
-/* 
+/*
  *  For now, asc_assert tied to NDEBUG just like regular assert.
  *  Having a separate assertion deactivator (ASC_NO_ASSERTIONS)
- *  gives us the ability to decouple from NDEBUG and leave 
+ *  gives us the ability to decouple from NDEBUG and leave
  *  assertions active in release code if desired.
  */
 #ifdef NDEBUG
@@ -335,11 +332,7 @@ typedef	unsigned   uint32;
  *
  */
 
-/*
- * The following definitions set up the proper options for Windows
- * compilers.  We use this method because there is no autoconf equivalent.
- */
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__MINGW32__)
 
 /*
  *  use the ASCEND printf substitutes
@@ -352,7 +345,7 @@ typedef	unsigned   uint32;
  *  build the Tk Console
  */
 # ifndef ASC_USE_TK_CONSOLE
-#  define ASC_USE_TK_CONSOLE                                                              
+#  define ASC_USE_TK_CONSOLE
 # endif /* ASC_USE_TK_CONSOLE */
 
 /*
@@ -375,6 +368,10 @@ typedef	unsigned   uint32;
 # endif
 #endif /* __WIN32__ */
 
+#ifndef DLEXPORT
+# error "NO DLEXPORT DEFINED"
+#endif
+
 /* use signals by default, but disable with configure. */
 #ifdef ASC_NO_TRAPS
 /** Don't use signals. */
@@ -390,7 +387,7 @@ typedef	unsigned   uint32;
 	On Windows, we have to use these special Asc_Printf (etc)
 	routines in order that output can be captured correctly by the GUI.
 
-	On non-Windows platforms, allow error.h to 
+	On non-Windows platforms, allow error.h to
 */
 #ifdef USE_ASC_PRINTF
 #  define ASC_PRINTF  Asc_Printf

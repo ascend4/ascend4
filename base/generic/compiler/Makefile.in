@@ -8,7 +8,7 @@ builddir = ..
 srcdir = @fullpathsrcdir@/../generic/compiler
 VPATH := @fullpathsrcdir@/../generic/compiler
 
-
+LEX = @LEX@
 
 #  The next variables are the primary executables and/or libraries that
 #  this makefile is responsible for, and the default target of this
