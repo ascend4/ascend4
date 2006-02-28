@@ -3999,7 +3999,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   if( !OPTIMIZING(sys) &&
       sys->gamma.norm2 <= TERM_TOL*sys->phi ) {
     ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-    FPRINTF(mif,"QRSlv: Problem diverged: Gamma norm too small.");
+    FPRINTF(ASCERR,"QRSlv: Problem diverged: Gamma norm too small.");
     error_reporter_end_flush();
 
     sys->s.diverged = TRUE;
@@ -4118,7 +4118,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
     if (sys->progress <= TERM_TOL) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(mif,"QRSlv: Problem diverged: Suggested progress too small.");
+      FPRINTF(ASCERR,"QRSlv: Problem diverged: Suggested progress too small.");
 	  error_reporter_end_flush();
 
       sys->s.diverged = TRUE;
@@ -4144,7 +4144,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     apply_step(sys);
     if (sys->progress <= TERM_TOL) {
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(mif,"Problem diverged: Applied progress too small.");
+      FPRINTF(ASCERR,"Problem diverged: Applied progress too small.");
 	  error_reporter_end_flush();
 
       restore_variables(sys);
@@ -4217,10 +4217,11 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   iteration_ends(sys);
   if( !OPTIMIZING(sys) && block_feasible(sys) )  {
     if (rank_defect) {
-      FPRINTF(mif,"Block %d singular one step before convergence.\n",
+	  ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+      FPRINTF(ASCERR,"Block %d singular one step before convergence.\n",
         sys->s.block.current_block);
-      FPRINTF(mif,
-        "You may wish to check for numeric dependency at solution.\n");
+      FPRINTF(ASCERR,"You may wish to check for numeric dependency at solution.");
+	  error_reporter_end_flush();
     }
     find_next_unconverged_block(sys);
   }
