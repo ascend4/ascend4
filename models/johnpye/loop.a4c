@@ -60,7 +60,7 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	FIX A.V_total, A.mdot_water_in;
+	FIX A.V_total (*, A.mdot_water_in*);
 	FIX A.Q;
 	FIX A.T;
 
@@ -71,7 +71,7 @@ METHOD specify;
 	(* FIX T.rho_water;
 	FIX T.V_vessel,	T.m_gas; *)
 
-	FIX m_water;
+	(* without surgetank, can't... FIX m_water; *)
 END specify;
 
 METHOD values;
@@ -100,6 +100,7 @@ END values;
 
 METHOD bound_self;
 	RUN C.bound_self;
+	S_cond_out.h.lower_bound := -500 {kJ/kg}; (* aids convergence *)
 END bound_self;
 
 END loop;
