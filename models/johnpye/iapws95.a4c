@@ -75,8 +75,8 @@ MODEL iapws95_1phase REFINES thermo_state;
 	R "specific gas constant for water"
 		:== 0.46151805 {kJ/kg/K};
 	
-	z_tau: tau = Tc / T;
-	z_delta: delta = rho / rhoc;
+	z_tau: tau * T = Tc;
+	z_delta: delta * rhoc = rho;
 	
 	
 	range_0 IS_A set OF integer_constant;
