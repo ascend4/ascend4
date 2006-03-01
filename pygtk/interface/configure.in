@@ -26,7 +26,4 @@ AC_SUBST(HELPROOT)
 AC_SUBST(WEBHELPROOT)
 AC_SUBST(GLADE_FILE)
 
-AC_OUTPUT(
-       config.h:config.in
-       config.py:configpy.in
-)
+AC_OUTPUT(config.h:config.in config.py:configpy.in)

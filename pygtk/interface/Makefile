@@ -8,13 +8,13 @@ ifeq ($(OSTYPE),"msys")
 	PLATFORM_CPPFLAGS =
 	SO_SUFF = .dll
 else
-	ifeq ($(OSTYPE),"cygwin")
-		PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
-		SO_SUFF = .dll
-	else
-		PLATFORM_CPPFLAGS =
-		SO_SUFF = .dll
-	endif
+ifeq ($(TERM),"cygwin")
+	PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
+	SO_SUFF = .dll
+else
+	PLATFORM_CPPFLAGS =
+	SO_SUFF = .so
+endif
 endif
 
 CXXFLAGS = -c -g
