@@ -79,14 +79,14 @@ ifeq ($(USE_PYTHON),1)
 		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython$(PYTHON_VERSION)
 	else
         ifeq ($(TERM),cygwin)
-            PYTHON_VERSION := 24
-            PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
-            PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
-            PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
+		PYTHON_VERSION := 24
+		PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
+		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
+		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
         else
-			PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
-            PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
-            PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+		PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
+		PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
+		PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
         endif
 	endif
 endif
@@ -113,27 +113,20 @@ clean:
 cleanall: clean
 	cd $(SOURCE_ROOT)/jam; \
 	jam clean; 
-	
-#--------------------------
-# Pure C++ testing
 
-CPPFLAGS := $(ASCXX_CPPFLAGS) $(PLATFORM_CPPFLAGS)
-
-main: main.o $(OBJS) $(ASC_LIBS)
-	$(LD) -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
 #------------------------
 # SWIG targets
 
-
 SWIG_MODULE = ascend
-SWIG = ~/swigwin-1.3.28/swig
 
 ifeq ($(OSTYPE),msys)
+	SWIG = ~/swigwin-1.3.28/swig
 	SWIG_LIB = $(shell $(SWIG) -swiglib)
 	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
 	SWIG_INCLUDES = -I$(SWIG_LIB)
 else
+	SWIG = swig
 	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
 	SWIG_INCLUDES =
 endif
@@ -182,6 +175,15 @@ $(LIB): $(ASC_LIBS) $(OBJS) $(SWIG_OBJS) $(SWIG_PY)
 	@echo "CREATING LIBRARY FILE '$(LIB)'"
 	$(LD) -module -shared -o $@ $(ASC_LIBS) $(OBJS) $(SWIG_OBJS) $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
+
+#--------------------------
+# Pure C++ tests (no swigging required)
+
+CPPFLAGS := $(ASCXX_CPPFLAGS) $(PLATFORM_CPPFLAGS)
+
+main: main.o $(OBJS) $(ASC_LIBS)
+	$(LD) -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
+
 #------------------------
 # Trying to debug this GDPITA '3' problem, bug #178
 
@@ -201,6 +203,7 @@ testextfn.o: testextfn.cpp
 testextfn: testextfn.o $(OBJS) $(ASC_LIBS)
 	$(LD) -o $@ $^ $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
+
 #------------------------
 # Testing the Python module
 
@@ -212,6 +215,7 @@ test: $(LIB)
 	@echo "Can python load the $(LIB) file?"
 	python -c "import _ascend"
 	python librarytest.py
+
 
 #--------------------------
 # tarfile

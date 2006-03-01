@@ -25,6 +25,7 @@ from properties import *       # solver_var properties dialog
 from varentry import *         # for inputting of variables with units
 from diagnose import * 	       # for diagnosing block non-convergence
 from solverreporter import * # solver status reporting
+import config
 
 #import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
@@ -38,7 +39,7 @@ import ascend
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/300304
 # for the original source code on which my implementation was based.
 
-GLADE_FILE = "glade/ascend.glade"
+GLADE_FILE = config.GLADE_FILE
 
 VERSION = "0.9.6-dev"
 
@@ -88,6 +89,7 @@ class Browser:
 		#-------------------
 		# Set up the window and main widget actions
 
+		print "GLADE_FILE:",GLADE_FILE
 		glade = gtk.glade.XML(GLADE_FILE,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
@@ -396,6 +398,17 @@ class Browser:
 		self.modtank = {}
 		self.modulestore.clear()
 		modules = self.library.getModules()
+		self.library.listModules()
+		try:
+			_lll=len(modules)
+		except:
+			_msg = "UNABLE TO ACCESS MODULES LIST. This is bad.\n"+\
+			"Check your SWIG configuration (check for warnings during build)."+\
+			"\nThis is a known problem with the MinGW build at present."
+			
+			self.reporter.reportError(_msg)
+			raise RuntimeError(_msg)
+			
 		for m in reversed(modules):
 			_n = str( m.getName() )
 			_f = str( m.getFilename() )
