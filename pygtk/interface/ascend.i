@@ -114,7 +114,7 @@ public:
 
 
 // Grab a Python function object as a Python object.
-%typemap(python,in) PyObject *pyfunc {
+%typemap(in) PyObject *pyfunc {
   if (!PyCallable_Check($input)) {
       PyErr_SetString(PyExc_TypeError, "Need a callable object!");
       return NULL;
@@ -256,7 +256,7 @@ str = ur'\u00b7'.join(numparts)
 
 class Library{
 public:
-	Library();
+	Library(std::string defaultpath=NULL);
 	~Library();
 
 	void load(char *filename);

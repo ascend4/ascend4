@@ -9,6 +9,10 @@ ASCEND_TMPDIR="/tmp"
 ASCEND_MAKEFILEDIR_1="$PWD"
 ASCEND_MAKEFILEDIR="$PWD/../../base/generic/lib"
 
+# Default library location
+# can be overridden by a value in ~/.ascend.ini
+ASCEND_DEFAULTLIBRARY="$PWD/../../models"
+
 # Where the final-installed documentation files are:
 HELPROOT="$HOME/ascend-doc/"
 
@@ -16,6 +20,29 @@ HELPROOT="$HOME/ascend-doc/"
 WEBHELPROOT="http://pye.dyndns.org/ascend/manual/"
 
 GLADE_FILE="glade/ascend.glade"
+
+AC_CANONICAL_TARGET
+
+case $target in
+	*-*-cygwin*)
+		echo "CYGWIN BUILD"
+		PLATFORM_CPPFLAGS=-DPY_LONG_LONG="long long"
+		SO_SUFF=.dll
+		;;
+	*-*-mingw32*)
+		echo "MINGW BUILD"
+		PLATFORM_CPPFLAGS=
+		SO_SUFF=.dll
+		;;
+	*)
+		echo "OTHER BUILD"
+		PLATFORM_CPPFLAGS=
+		SO_SUFF=.so
+		;;
+esac
+
+AC_SUBST([MUMBLE_INIT])
+
 
 AC_SUBST(ASCEND_INCDIR)
 AC_SUBST(ASCEND_LIBDIR)
@@ -25,5 +52,9 @@ AC_SUBST(ASCEND_MAKEFILEDIR)
 AC_SUBST(HELPROOT)
 AC_SUBST(WEBHELPROOT)
 AC_SUBST(GLADE_FILE)
+AC_SUBST(ASCEND_PREFFILE)
+AC_SUBST(SO_SUFF)
+AC_SUBST(PLATFORM_CPPFLAGS)
+AC_SUBST(ASCEND_DEFAULTLIBRARY)
 
-AC_OUTPUT(config.h:config.in config.py:configpy.in)
+AC_OUTPUT(config.h:config.in config.py:configpy.in Makefile)

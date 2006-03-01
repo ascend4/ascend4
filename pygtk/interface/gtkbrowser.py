@@ -65,7 +65,7 @@ class Browser:
 		# add options here if we want
 
 		parser.add_option("-m", "--model"
-            ,action="store", type="string", dest="model"
+			,action="store", type="string", dest="model"
 			,help="specify the model to instantiate upon loading modules")		
 		(options, args) = parser.parse_args()
 
@@ -82,7 +82,9 @@ class Browser:
 		#--------
 		# initialise ASCEND
 
-		self.library = ascend.Library()
+		_defaultpath = config.DEFAULT_LIBRARY
+		print "PYTHON SAYS DEFAULT LIBRARY IS",_defaultpath
+		self.library = ascend.Library(_defaultpath)
 
 		self.sim = None
 
