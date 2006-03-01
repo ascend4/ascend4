@@ -4,12 +4,17 @@ CXX = g++
 CC = gcc 
 
 
-ifeq ($(OSTYPE),"cygwin")
-	PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
-    SO_SUFF = .dll
-else
+ifeq ($(OSTYPE),"msys")
 	PLATFORM_CPPFLAGS =
-	SO_SUFF = .so
+	SO_SUFF = .dll
+else
+	ifeq ($(OSTYPE),"cygwin")
+		PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
+		SO_SUFF = .dll
+	else
+		PLATFORM_CPPFLAGS =
+		SO_SUFF = .dll
+	endif
 endif
 
 CXXFLAGS = -c -g
@@ -18,7 +23,7 @@ LD = libtool --mode=link gcc
 LD_CXX = libtool --mode=link g++
 
 # -lieee -ldl
-LDFLAGS = -g -lm -lc -lstdc++
+LDFLAGS = -g -lm -lstdc++
 
 # Are you on a dual processor machine?
 _smp_mflags = -j2 
@@ -71,7 +76,7 @@ ifeq ($(USE_PYTHON),1)
 		PYTHON_VERSION := 24
 		PYTHON_ROOT := /c/Python$(PYTHON_VERSION)
 		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
-		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython($PYTHON_VERSION)
+		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython$(PYTHON_VERSION)
 	else
         ifeq ($(TERM),cygwin)
             PYTHON_VERSION := 24
@@ -122,12 +127,12 @@ main: main.o $(OBJS) $(ASC_LIBS)
 
 
 SWIG_MODULE = ascend
-SWIG = swig
+SWIG = ~/swigwin-1.3.28/swig
 
 ifeq ($(OSTYPE),msys)
-	SWIG_VERSION = 1.3.28
-	SWIG_INCROOT = /usr/local/share/swig/$(SWIG_VERSION)
-	SWIG_INCLUDES = -I$(SWIG_INCROOT) -I$(SWIG_INCROOT)/std -I$(SWIG_INCROOT)/python
+	SWIG_LIB = $(shell $(SWIG) -swiglib)
+	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
+	SWIG_INCLUDES = -I$(SWIG_LIB)
 else
 	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
 	SWIG_INCLUDES =
@@ -162,15 +167,19 @@ SWIGS = plot.i solver.i
 
 # FIXME add ' $(ASC_LIBS)' to deps once Jam build is fixed:
 %_wrap.cxx %.py: %.i $(SWIGS) $(HDRS)
+	@echo "SWIG = $(SWIG), VERSION = $(SWIG_VERSION)"
 	SWIG_FEATURES=$(SWIG_FEATURES) $(SWIG) $(SWIGFLAGS) $<
 
 .precious: $(SWIG_MODULE:%=%_wrap.cxx)
-.precious: _ascend.so
+.precious: _ascend$(SO_SUFF)
 	
 %_wrap.o: %_wrap.cxx
 	$(CC) $(SWIG_CFLAGS) -o $@ $^ $(SWIG_CPPFLAGS)
 
 $(LIB): $(ASC_LIBS) $(OBJS) $(SWIG_OBJS) $(SWIG_PY) 
+	@echo "OS TYPE = $(OSTYPE)"
+	@echo "SO_SUFF = $(SO_SUFF)"
+	@echo "CREATING LIBRARY FILE '$(LIB)'"
 	$(LD) -module -shared -o $@ $(ASC_LIBS) $(OBJS) $(SWIG_OBJS) $(LDFLAGS) $(ASCXX_PYTHON_LDFLAGS)
 
 #------------------------

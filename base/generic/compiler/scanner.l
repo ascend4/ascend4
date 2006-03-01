@@ -850,7 +850,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
    * SHOULD never reach here with a string buffer as they cannot be
    * REQUIREd.
    */
-  PRINTF("REQUIREing file \"%s\"\n", filename);
+  Asc_FPrintf(stderr,"REQUIREing file \"%s\"\n", filename);
   yy_switch_to_buffer(yy_create_buffer(zz_in,YY_BUF_SIZE));
   BEGIN (INITIAL);
   return 0;

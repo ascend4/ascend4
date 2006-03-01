@@ -26,10 +26,10 @@ from varentry import *         # for inputting of variables with units
 from diagnose import * 	       # for diagnosing block non-convergence
 from solverreporter import * # solver status reporting
 
-import sys, dl
+#import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
 # ascend library are made available to libraries dlopened within ASCEND:
-sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+#sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 import ascend
 
 # This is my first ever GUI code so please be nice :)
@@ -38,7 +38,7 @@ import ascend
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/300304
 # for the original source code on which my implementation was based.
 
-GLADE_FILE = "/home/john/src/ascend/trunk/pygtk/interface/glade/ascend.glade"
+GLADE_FILE = "glade/ascend.glade"
 
 VERSION = "0.9.6-dev"
 

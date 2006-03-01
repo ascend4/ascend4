@@ -1,0 +1,9 @@
+// This file will be processed by autoconf and output as config.h.
+// If the file you are looking at now is named 'config.h' then be
+// aware that you changes will be lost if you run './configure'.
+
+#define ASCEND_INCDIR "@ASCEND_INCDIR@"
+#define ASCEND_LIBDIR "@ASCEND_LIBDIR@"
+#define ASCEND_TMPDIR "@ASCEND_TMPDIR@"
+#define ASCEND_MAKEFILEDIR_1 "@ASCEND_MAKEFILEDIR_1@"
+#define ASCEND_MAKEFILEDIR "@ASCEND_MAKEFILEDIR@"

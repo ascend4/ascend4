@@ -22,19 +22,7 @@ class SolverStatus;
 class IncidenceMatrix;
 class SolverReporter;
 
-#ifndef ASCEND_INCDIR
-#define ASCEND_INCDIR "/home/john/src/ascend/trunk/base/generic/lib"
-#endif
-#ifndef ASCEND_LIBDIR
-#define ASCEND_LIBDIR "/home/john/src/ascend/trunk/base/jam/Release/linux"
-#endif
-#ifndef ASCEND_TMPDIR
-#define ASCEND_TMPDIR "/tmp"
-#endif
-#ifndef ASCEND_MAKEFILEDIR
-#define ASCEND_MAKEFILEDIR_1 "/home/john/src/ascend/trunk/pygtk/interface"
-#define ASCEND_MAKEFILEDIR "/home/john/src/ascend/trunk/base/generic/lib"
-#endif
+#include "config.h"
 
 /**
 	@TODO This class is for *Simulation* instances.
@@ -67,7 +55,7 @@ private:
 
 protected:
 	slv_system_structure *getSystem();
-	
+
 public:
 	explicit Simulation(Instance *i, const SymChar &name);
 	Simulation(const Simulation &);
