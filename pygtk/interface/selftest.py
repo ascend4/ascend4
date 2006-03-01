@@ -140,7 +140,8 @@ class AscendTestModel:
 			#s.check()
 			s.build();
 			print "LAUNCHING SOLVER...\n\n"
-			s.solve(ascend.Solver('QRSlv'))
+			r = ascend.SolverReporter()
+			s.solve(ascend.Solver('QRSlv'),r)
 			s.run(testmethod)
 		except RuntimeError, e:
 			print e
