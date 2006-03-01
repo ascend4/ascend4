@@ -111,12 +111,12 @@ cleanall: clean
 SWIG_MODULE = ascend
 
 ifeq ($(OSTYPE),msys)
-	SWIG = ~/swigwin-1.3.28/swig
+	SWIG=~/swigwin-1.3.28/swig
 	SWIG_LIB = $(shell $(SWIG) -swiglib)
 	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
 	SWIG_INCLUDES = -I$(SWIG_LIB)
 else
-	SWIG = swig
+	SWIG=swig
 	SWIG_VERSION = $(shell $(SWIG) -version | grep "^SWIG Version " | sed s/SWIG\ Version\ \\\([0-9][0-9]*\\\(\\.[0-9][0-9]*\\\)*\\\).*/\\1/)
 	SWIG_INCLUDES =
 endif

@@ -1,4 +1,5 @@
 import pylab;
+import platform
 from matplotlib.colors import LinearSegmentedColormap
 
 class IncidenceMatrixWindow:
@@ -40,7 +41,10 @@ class IncidenceMatrixWindow:
 		pylab.ylabel("Relations")
 		pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
 		pylab.ion()
-		pylab.show(False)
+		if platform.system()=="Windows":
+			pylab.show()
+		else:
+			pylab.show(False)
 
 	def on_sparsity_motion_notify(self, event):
 		if event.xdata != None and event.ydata != None:

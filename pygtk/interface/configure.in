@@ -11,7 +11,7 @@ ASCEND_MAKEFILEDIR="$PWD/../../base/generic/lib"
 
 # Default library location
 # can be overridden by a value in ~/.ascend.ini
-ASCEND_DEFAULTLIBRARY="$PWD/../../models"
+ASCEND_DEFAULTLIBRARY="../../models"
 
 # Where the final-installed documentation files are:
 HELPROOT="$HOME/ascend-doc/"
