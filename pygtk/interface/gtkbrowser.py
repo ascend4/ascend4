@@ -84,7 +84,8 @@ class Browser:
 
 		_defaultpath = config.DEFAULT_LIBRARY
 		print "PYTHON SAYS DEFAULT LIBRARY IS",_defaultpath
-		self.library = ascend.Library(_defaultpath)
+		print "WE WILL LET THE ENGINE DECIDE..."
+		self.library = ascend.Library()
 
 		self.sim = None
 

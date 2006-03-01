@@ -1,8 +1,6 @@
 #!/bin/sh
 
 if [ "x$ASCENDLIBRARY" = "x" ]; then
-	export ASCENDLIBRARY=~/ascdata:~/src/ascend/trunk/models
-else
 	echo "USING ASCENDLIBRARY=$ASCENDLIBRARY"
 fi
 

@@ -26,6 +26,7 @@ public:
 	%pythoncode{
 		def show(self,mainloop=True):
 			import pylab
+			import platform
 			pylab.ioff()
 			pylab.figure()
 			pylab.title(self.getTitle())
@@ -48,7 +49,11 @@ public:
 
 			print "Mainloop:",mainloop
 			pylab.ion()
-			pylab.show(mainloop)
+			if platform.system()=="Windows":
+				pylab.show()
+			else:
+				pylab.show(mainloop)
+				
 			
 			# /*
 			# if self.getXLow() and self.getXHigh():
