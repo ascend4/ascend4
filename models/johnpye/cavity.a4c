@@ -114,15 +114,16 @@ END specify;
 METHOD values;
 	T['W'] := 550 {K};
 	T['B'] := 373.15 {K};
-	q['L'] := 0 {W/m};
-	q['R'] := 0 {W/m};
+	q['L','R'] := 0 {W/m};
 	
 	W := 500 {mm};
 	D := 300 {mm};
 	theta := 30 {deg};
-	FOR i IN n DO
-		eps[i] := 0.4;
-	END FOR;
+	
+	eps['W'] := 0.49;
+	eps['B'] := 0.9;
+	eps['L','R'] := 0.1;
+	
 END values;
 
 END cavity;
