@@ -1,10 +1,18 @@
-#!/bin/bash
-export ASCENDLIBRARY=~/ascdata:~/src/ascend/trunk/models
+#!/bin/sh
+
+if [ "x$ASCENDLIBRARY" = "x" ]; then
+	export ASCENDLIBRARY=~/ascdata:~/src/ascend/trunk/models
+else
+	echo "USING ASCENDLIBRARY=$ASCENDLIBRARY"
+fi
 
 args=$@
 
 if [ "$OSTYPE" = "cygwin" ]; then
     echo "CYGWIN..."
+elif [ "$OSTYPE" = "msys" ]; then
+    echo "MSYS..."
+    PYTHON=/c/Python24/python
 fi
 
 if [ $ASCEND_GDB ]; then

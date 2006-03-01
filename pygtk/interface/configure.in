@@ -1,0 +1,29 @@
+AC_INIT(simulation.h)
+
+echo "user home: $HOME"
+echo "current dir: $PWD"
+
+ASCEND_INCDIR="$PWD/../../base/generic/lib"
+ASCEND_LIBDIR="$PWD/../../base/jam/Release/linux"
+ASCEND_TMPDIR="/tmp"
+ASCEND_MAKEFILEDIR_1="$PWD"
+ASCEND_MAKEFILEDIR="$PWD/../../base/generic/lib"
+
+# Where the final-installed documentation files are:
+HELPROOT="$HOME/ascend-doc/"
+
+# Where the online documentation is:
+WEBHELPROOT="http://pye.dyndns.org/ascend/manual/"
+
+AC_SUBST(ASCEND_INCDIR)
+AC_SUBST(ASCEND_LIBDIR)
+AC_SUBST(ASCEND_TMPDIR)
+AC_SUBST(ASCEND_MAKEFILEDIR_1)
+AC_SUBST(ASCEND_MAKEFILEDIR)
+AC_SUBST(HELPROOT)
+AC_SUBST(WEBHELPROOT)
+
+AC_OUTPUT(
+       config.h:config.in
+       config.py:configpy.in
+)
