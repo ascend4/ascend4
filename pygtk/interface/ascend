@@ -13,12 +13,17 @@ elif [ "$OSTYPE" = "msys" ]; then
     PYTHON=/c/Python24/python
 fi
 
-if [ $ASCEND_GDB ]; then
-	bin="gdb --args python" 
-elif [ $PYTHON ]; then
-    bin=$PYTHON
+if [ $PYTHON ]; then 
+    python=$PYTHON
 else
-	bin=python
+    bin=python
+fi
+
+
+if [ $ASCEND_GDB ]; then
+    bin="gdb --args $PYTHON" 
+else
+    bin=$PYTHON
 fi
 
 dir=`dirname $0`
