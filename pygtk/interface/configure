@@ -272,7 +272,7 @@ PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
 ac_unique_file="simulation.h"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS ASCEND_INCDIR ASCEND_LIBDIR ASCEND_TMPDIR ASCEND_MAKEFILEDIR_1 ASCEND_MAKEFILEDIR HELPROOT WEBHELPROOT LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS ASCEND_INCDIR ASCEND_LIBDIR ASCEND_TMPDIR ASCEND_MAKEFILEDIR_1 ASCEND_MAKEFILEDIR HELPROOT WEBHELPROOT GLADE_FILE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1231,6 +1231,9 @@ HELPROOT="$HOME/ascend-doc/"
 # Where the online documentation is:
 WEBHELPROOT="http://pye.dyndns.org/ascend/manual/"
 
+GLADE_FILE="glade/ascend.glade"
+
+
 
 
 
@@ -1882,6 +1885,7 @@ s,@ASCEND_MAKEFILEDIR_1@,$ASCEND_MAKEFILEDIR_1,;t t
 s,@ASCEND_MAKEFILEDIR@,$ASCEND_MAKEFILEDIR,;t t
 s,@HELPROOT@,$HELPROOT,;t t
 s,@WEBHELPROOT@,$WEBHELPROOT,;t t
+s,@GLADE_FILE@,$GLADE_FILE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
