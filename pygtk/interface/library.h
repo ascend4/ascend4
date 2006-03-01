@@ -2,22 +2,24 @@
 #define SWIG_LIBRARY_H
 
 #include <vector>
+#include <string>
 
 #include "type.h"
 #include "module.h"
 #include "symchar.h"
 #include "extmethod.h"
+#include "config.h"
 
 /**
 	Handles the loading of ASCEND a4c files into memory, then the
 	listing of the contents of those loaded files. Creates output
 	when loaded files contain errors, although a standardised
-	method for reporting errors is desired for reporting back 
+	method for reporting errors is desired for reporting back
 	via SWIG.
 */
 class Library{
 public:
-	Library();
+	Library(std::string defaultpath=ASCEND_DEFAULTLIBRARY);
 	~Library();
 	void load(const char *filename);
 	void listModules(const int &module_type=0) const;

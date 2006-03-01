@@ -3,19 +3,8 @@ SOURCE_ROOT = ../..
 CXX = g++
 CC = gcc 
 
-
-ifeq ($(OSTYPE),"msys")
-	PLATFORM_CPPFLAGS =
-	SO_SUFF = .dll
-else
-ifeq ($(TERM),"cygwin")
-	PLATFORM_CPPFLAGS = -DPY_LONG_LONG="long long"
-	SO_SUFF = .dll
-else
-	PLATFORM_CPPFLAGS =
-	SO_SUFF = .so
-endif
-endif
+SO_SUFF = .dll
+PLATFORM_CPPFLAGS = 
 
 CXXFLAGS = -c -g
 
@@ -42,6 +31,7 @@ OBJS = $(CLASSES:%=%.o)
 HDRS = $(CLASSES:%=%.h)
 
 all:
+	@echo "SO SUFF: $(SO_SUFF)"
 	@echo "OS TYPE: $(OSTYPE)"
 
 ASCEND_CPPFLAGS = -I../../base/generic -I../../base/generic/solver -I../../base/generic/compiler -I../../base/generic/utilities -I../../base/generic/general -I../../base/generic/packages
@@ -100,7 +90,7 @@ else
 endif
 
 clean:
-	-rm *$(SO_SUFF)
+	-rm *$(SO_SUFF) *.so *.dll
 	-rm *.o
 	-rm *_wrap.cxx
 	-rm *_wrap.c

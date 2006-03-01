@@ -32,7 +32,7 @@
  *
  *  This file exists because win32, among others, can't keep their
  *  POSIX compliance up. In particular, getting and setting
- *  environment vars is exceedingly unreliable.  This file implements 
+ *  environment vars is exceedingly unreliable.  This file implements
  *  a general way to store and fetch multiple paths.
  *  <pre>
  *  Requires:
@@ -118,19 +118,19 @@ extern int Asc_SetPathList(CONST char *var, CONST char *path);
  *          1 otherwise.
  */
 
-extern int Asc_PutEnv(char *putenv_input_string);
+extern int Asc_PutEnv(CONST char *putenv_input_string);
 /**<
  *  Creates an ASCEND environment variable from a putenv()-type string.
  *  The input string should have the form "varname=path".  The path
  *  portion should contain one or more substrings delimited with :
- *  (Linux/unix) or ; (Windows).  Leading and trailing whitespace is 
- *  stripped, as is whitespace around any delimiters.  Spaces may not 
- *  be embedded in the varname part of the string.  Spaces embedded in 
+ *  (Linux/unix) or ; (Windows).  Leading and trailing whitespace is
+ *  stripped, as is whitespace around any delimiters.  Spaces may not
+ *  be embedded in the varname part of the string.  Spaces embedded in
  *  the path string(s) are assumed significant and left in place.
- *  Leading, trailing, and embedded double delimiters will be parsed 
- *  as empty strings at the beginning, end, or middle of the list of 
- *  paths.  Empty strings will not be stored, so if all substrings 
- *  parse to empty, you will have an environment variable registered 
+ *  Leading, trailing, and embedded double delimiters will be parsed
+ *  as empty strings at the beginning, end, or middle of the list of
+ *  paths.  Empty strings will not be stored, so if all substrings
+ *  parse to empty, you will have an environment variable registered
  *  that has no path values.<br><br>
  *
  *  Note that putenv_input_string may not be longer than
@@ -169,8 +169,8 @@ extern int Asc_ImportPathList(CONST char *osEnvVar);
 /**<
  *  Imports a system environment variable into the ASCEND environment.
  *  If osEnvVar is already a variable in the ASCEND environment space,
- *  it's value is replaced with the system version.  The imported path 
- *  is parsed into substrings delimited by ':' or ';' depending on 
+ *  it's value is replaced with the system version.  The imported path
+ *  is parsed into substrings delimited by ':' or ';' depending on
  *  platform.<br><br>
  *
  *  Returns non-zero if the variable is not found or empty, memory cannot
@@ -185,7 +185,7 @@ extern int Asc_AppendPath(char *envvar, char *newelement);
 /**<
  *  Adds a new element to the list of values for an ASCEND environment
  *  variable.  If envvar does not exist, it is created.  newelement is
- *  not parsed into substrings or checked for validity.  The input strings 
+ *  not parsed into substrings or checked for validity.  The input strings
  *  are not kept by this routine; internal copies are made as needed.<br><br>
  *
  *  An error condition occurs and non-zero is returned if:
@@ -204,11 +204,11 @@ extern char **Asc_GetPathList(char *envvar, int *argcPtr);
  *  Retrieve the current value(s) for ASCEND environment variable envvar.
  *  The values are returned as an array of pointers to the value strings.
  *  On return, argcPtr will be set to the number of elements in the
- *  returned array.  If envar or argcPtr is NULL, or Asc_InitEnvironment() 
- *  has not been called, *argcPtr will be -1.  If envar cannot be found 
- *  (including if envvar is empty), *argcPtr will be 0.  In either of 
- *  these cases, the returned array will be NULL.  Otherwise, the caller 
- *  is responsible for freeing argv;  when argv is freed all the data it 
+ *  returned array.  If envar or argcPtr is NULL, or Asc_InitEnvironment()
+ *  has not been called, *argcPtr will be -1.  If envar cannot be found
+ *  (including if envvar is empty), *argcPtr will be 0.  In either of
+ *  these cases, the returned array will be NULL.  Otherwise, the caller
+ *  is responsible for freeing argv;  when argv is freed all the data it
  *  contains is simultaneously freed.
  *
  *  @param envvar  Name of the ASCEND environment variable to query.
@@ -225,8 +225,8 @@ extern char *Asc_GetEnv(char *envvar);
  *  as a delimited string.  The elements of envvar are assembled
  *  into a single string delimited by ':' or ';' depending on
  *  platform.  The returned pointer will be NULL if an error occurs,
- *  including envvar being NULL or empty, or Asc_InitEnvironment() 
- *  not having been called.  The caller is responsible for freeing 
+ *  including envvar being NULL or empty, or Asc_InitEnvironment()
+ *  not having been called.  The caller is responsible for freeing
  *  the returned pointer.
  *
  *  @param envvar  Name of the ASCEND environment variable to query.

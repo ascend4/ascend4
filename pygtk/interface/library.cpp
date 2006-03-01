@@ -40,16 +40,23 @@ extern int zz_parse();
 #include "simulation.h"
 #include "solver.h"
 
-Library::Library(){
+Library::Library(string defaultpath){
 	static int have_init;
 	if(!have_init){
+		cerr << "Initialising ASCEND library..." << endl;
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
 		Asc_CompilerInit(1);
 		Asc_ImportPathList(PATHENVIRONMENTVAR);
 		char *x = Asc_GetEnv(PATHENVIRONMENTVAR);
-		std::cerr << PATHENVIRONMENTVAR << " = " << x << std::endl;
-		std::cerr << "Created LIBRARY" << std::endl;
-		std::cerr << "----------------------------" << std::endl;
+		if(x==NULL || strcmp(x,"")==0){
+			string s = string(PATHENVIRONMENTVAR "=") + defaultpath;
+			cerr << "SETTING " << s << endl;
+			Asc_PutEnv(s.c_str());
+		}
+		Asc_ImportPathList(PATHENVIRONMENTVAR);
+		cerr << PATHENVIRONMENTVAR << " = " << x << endl;
+		cerr << "Created LIBRARY" << endl;
+		cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
 	}/*else{
 		std::cerr << "Reusing LIBRARY" << std::endl;

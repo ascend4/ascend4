@@ -66,7 +66,7 @@ struct asc_env_t {
  * This list is a list of pointer to struct asc_env_t's
  * that constitute the environment.
  */
-                                                                                    
+
 static
 struct gl_list_t *g_env_list = NULL;
 
@@ -255,7 +255,7 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
   AppendEnvVar(g_env_list, ev);
 
   /*
-   * copy/split the pathstring 
+   * copy/split the pathstring
    */
   path = pathstring;
 
@@ -297,7 +297,7 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
 }
 
 
-int Asc_PutEnv(char *envstring)
+int Asc_PutEnv(CONST char *envstring)
 {
   char g_path_var[MAX_ENV_VAR_LENGTH];
   unsigned int c, length, spcseen=0, rhs;
