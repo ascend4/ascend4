@@ -3,7 +3,7 @@ SOURCE_ROOT = ../..
 CXX = g++
 CC = gcc 
 
-SO_SUFF = .so
+SO_SUFF = .dll
 PLATFORM_CPPFLAGS = 
 
 CXXFLAGS = -c -g
