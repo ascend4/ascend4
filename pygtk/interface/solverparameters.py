@@ -4,6 +4,8 @@ import gtk
 import gtk.glade
 import pango
 
+import config
+
 CHANGED_COLOR = "#FFFF88"
 SOLVERPARAM_BOOL_TRUE = "Yes"
 SOLVERPARAM_BOOL_FALSE = "No"
@@ -12,13 +14,13 @@ SOLVERPARAM_BOOL_FALSE = "No"
 # SOLVER PARAMETERS WINDOW
 
 class SolverParametersWindow:
-	def __init__(self,browser,GLADE_FILE):
+	def __init__(self,browser):
 		self.browser = browser
 		self.reporter = self.browser.reporter
 		self.sim = self.browser.sim
 		self.params = self.sim.getSolverParameters();		
 
-		_xml = gtk.glade.XML(GLADE_FILE,"paramswin")
+		_xml = gtk.glade.XML(config.GLADE_FILE,"paramswin")
 		self.window = _xml.get_widget("paramswin")
 		self.window.set_transient_for(self.browser.window)
 

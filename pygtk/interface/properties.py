@@ -3,14 +3,15 @@
 import gtk, gtk.glade
 import ascend
 from varentry import *
+import config
 
 class RelPropsWin:
-	def __init__(self,GLADE_FILE,browser,instance):
+	def __init__(self,browser,instance):
 		self.instance = instance;
 		self.browser = browser;
 
 		# GUI config
-		_xml = gtk.glade.XML(GLADE_FILE,"relpropswin")
+		_xml = gtk.glade.XML(config.GLADE_FILE,"relpropswin")
 		self.window = _xml.get_widget("relpropswin")
 		self.window.set_transient_for(self.browser.window)
 
@@ -43,12 +44,12 @@ class RelPropsWin:
 		self.window.hide()
 
 class VarPropsWin:
-	def __init__(self,GLADE_FILE,browser,instance):
+	def __init__(self,browser,instance):
 		self.instance = instance;
 		self.browser = browser;
 
 		# GUI config
-		_xml = gtk.glade.XML(GLADE_FILE,"varpropswin")
+		_xml = gtk.glade.XML(config.GLADE_FILE,"varpropswin")
 		self.window = _xml.get_widget("varpropswin")
 		self.window.set_transient_for(self.browser.window)
 

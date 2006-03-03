@@ -6,15 +6,17 @@ from operator import itemgetter
 import math
 import re
 
+import config
+
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = 2000
 MAX_ZOOM_RATIO = 16
 AT_BOUND_TOL = 0.0001;
 
 class DiagnoseWindow:
-	def __init__(self,GLADE_FILE,browser,block=0):
+	def __init__(self,browser,block=0):
 		self.browser=browser
-		_xml = gtk.glade.XML(GLADE_FILE,"diagnosewin")
+		_xml = gtk.glade.XML(config.GLADE_FILE,"diagnosewin")
 		_xml.signal_autoconnect(self)	
 
 		self.window = _xml.get_widget("diagnosewin")

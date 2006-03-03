@@ -39,8 +39,6 @@ import ascend
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/300304
 # for the original source code on which my implementation was based.
 
-GLADE_FILE = config.GLADE_FILE
-
 VERSION = "0.9.6-dev"
 
 ESCAPE_KEY = 65307
@@ -89,13 +87,23 @@ class Browser:
 
 		self.sim = None
 
+		#--------
+		# Prepare the ASCEND icon
+
+		if config.ASCEND_ICON:
+			_icon = gtk.Image()
+			_icon.set_from_file(config.ASCEND_ICON)
+			self.icon = _icon.get_pixbuf()		
+		
 		#-------------------
 		# Set up the window and main widget actions
 
-		print "GLADE_FILE:",GLADE_FILE
-		glade = gtk.glade.XML(GLADE_FILE,"browserwin")
+		print "GLADE_FILE:",config.GLADE_FILE
+		glade = gtk.glade.XML(config.GLADE_FILE,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
+		if self.icon:
+			self.window.set_icon(self.icon)
 
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
@@ -513,7 +521,7 @@ class Browser:
 		self.start_waiting("Solving...")
 
 		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
-			reporter = PopupSolverReporter(GLADE_FILE,self,self.sim.getNumVars())
+			reporter = PopupSolverReporter(self,self.sim.getNumVars())
 		else:
 			reporter = SimpleSolverReporter(self)
 
@@ -583,7 +591,7 @@ class Browser:
 		except RuntimeError, e:
 			self.reporter.reportError(str(e))
 			return
-		_db = DiagnoseWindow(GLADE_FILE,self,_bl)
+		_db = DiagnoseWindow(self,_bl)
 		_db.run();
 
 	def on_add_observer_click(self,*args):
@@ -910,7 +918,7 @@ class Browser:
 		if not self.sim:
 			self.reporter.reportError("No simulation created yet!");
 		
-		_paramswin = SolverParametersWindow(self, GLADE_FILE)
+		_paramswin = SolverParametersWindow(self)
 		_paramswin.show()
 
 	def methodrun_click(self,*args):
@@ -945,7 +953,7 @@ class Browser:
 		self.autotoggle.set_active(self.is_auto)
 
 	def on_help_about_click(self,*args):
-		_xml = gtk.glade.XML(GLADE_FILE,"aboutdialog")
+		_xml = gtk.glade.XML(config.GLADE_FILE,"aboutdialog")
 		_about = _xml.get_widget("aboutdialog")
 		_about.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 		_about.set_transient_for(self.window);
@@ -966,7 +974,7 @@ class Browser:
 		if name==None:
 			name="New Observer"
 
-		_xml = gtk.glade.XML(GLADE_FILE,"observervbox");
+		_xml = gtk.glade.XML(config.GLADE_FILE,"observervbox");
 		_label = gtk.Label();
 		_label.set_text(name)
 		_tab = self.maintabs.append_page(_xml.get_widget("observervbox"),_label);
@@ -1068,10 +1076,10 @@ class Browser:
 		if _instance.isRelation():
 			print "Relation '"+_instance.getName().toString()+"':", \
 				_instance.getRelationAsString(self.sim.getModel())
-			_dia = RelPropsWin(GLADE_FILE,self,_instance);
+			_dia = RelPropsWin(self,_instance);
 			_dia.run();
 		elif _instance.getType().isRefinedSolverVar():
-			_dia = VarPropsWin(GLADE_FILE,self,_instance);
+			_dia = VarPropsWin(self,_instance);
 			_dia.run();
 		else:
 			self.reporter.reportWarning("Select a variable first...")
