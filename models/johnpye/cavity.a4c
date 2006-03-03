@@ -16,6 +16,16 @@ ATOM energy_flux REFINES solver_var
 	nominal := 1000{W/m^2};
 END energy_flux;
 
+ATOM heat_transfer_coefficient REFINES solver_var
+		DIMENSION M/T^3/TMP
+		DEFAULT 5{W/m^2/K};
+
+	lower_bound := 0{W/m^2/K};
+	upper_bound := 1e50{W/m^2/K};
+	nominal := 5{W/m^2/K};
+
+END heat_transfer_coefficient;
+
 MODEL cavity;
 	W,B,S,N,C,E,D IS_A distance;
 	theta, phi, psi IS_A angle;
@@ -33,7 +43,7 @@ MODEL cavity;
 	C^2 = E^2 + S^2 - 2* E * S * cos(psi);
 	
 	F_WN = (W+N-C)/2/W;
-	F_WW = (2*E-2*D)/2/W;
+	F_WW = (2*E-2*D)/2/W; (* from top to directly opp part of bottom *)
 	F_WB = 1 - 2 * F_WN;
 	F_WS = (1 - 2 * F_WN - F_WB)/2;
 	F_NB = (N+B-C)/2/N;
@@ -42,7 +52,7 @@ MODEL cavity;
 	F_BN = F_NB*N/B;
 	F_NN = 1 - F_NW - F_NB;
 	F_BW = F_WB*W/B;
-	
+		
 	n IS_A set OF symbol_constant;
 	n :== ['W','B','L','R'];
 
@@ -91,7 +101,7 @@ MODEL cavity;
 	FOR i IN n CREATE
 		q[i] * (1-eps[i]) = (E_b[i] - J[i]) * (eps[i]*A[i]);
 	END FOR;
-	
+		
 METHODS
 METHOD default_self;
 	RUN reset; RUN values; RUN bound_self;
@@ -127,3 +137,51 @@ METHOD values;
 END values;
 
 END cavity;
+
+(*========================================
+	This model adds external convection
+	coefficients to the model, and an
+	ambient temperature.
+	
+	We also calculate the F_rad correlation
+	parameter.
+*)
+MODEL cavity_losses REFINES cavity;
+	h_B, h_N IS_A heat_transfer_coefficient;
+	T_amb IS_A temperature;
+	
+	- q['B'] = h_B * B * (T['B'] - T_amb);
+	- q['L'] = h_N * N * (T['L'] - T_amb);
+	- q['R'] = h_N * N * (T['L'] - T_amb);
+
+	F_rad IS_A factor;
+	F_rad_1 IS_A factor;
+	
+	- q['B'] = F_rad * eps['W'] * 1{SIGMA_C} * (T['W']^4 - T['B']^4);
+	
+	- q['B'] = F_rad_1 * 1{SIGMA_C} * (T['W']^4 - T['B']^4) /
+		(1/eps['B'] + 1/eps['W'] - 1);
+
+METHODS
+METHOD specify;
+	FIX T['W'], T_amb;
+	FIX h_B, h_N;
+	FIX W,D,theta;
+	FIX eps[n];
+END specify;
+METHOD values;
+	T['W'] := 550 {K};
+	T_amb := 290 {K};
+	W := 500 {mm};
+	D := 300 {mm};
+	theta := 30 {deg};
+	eps['W'] := 0.49;
+	eps['B'] := 0.9;
+	eps['L','R'] := 0.1;
+	h_B := 10 {W/m^2/K};
+	h_N := 0.5 {W/m^2/K};
+	(* free values *)
+	T['L','R'] := 500 {K};
+	T['B'] := 400 {K};
+END values;
+END cavity_losses;
