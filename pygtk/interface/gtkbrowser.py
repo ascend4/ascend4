@@ -80,10 +80,17 @@ class Browser:
 		#--------
 		# initialise ASCEND
 
-		_defaultpath = config.DEFAULT_LIBRARY
-		print "PYTHON SAYS DEFAULT LIBRARY IS",_defaultpath
-		print "WE WILL LET THE ENGINE DECIDE..."
-		self.library = ascend.Library()
+		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
+		
+		if _prefpath:
+			_path = _prefpath
+			print "SETTING ASCENDLIBRARY from preferences:",_path
+			self.library = ascend.Library(_prefpath)
+		else:
+			_defaultpath = config.DEFAULT_LIBRARY
+			print "PYTHON SAYS DEFAULT LIBRARY IS",_defaultpath
+			print "WE WILL LET THE ENGINE DECIDE..."
+			self.library = ascend.Library()	
 
 		self.sim = None
 
