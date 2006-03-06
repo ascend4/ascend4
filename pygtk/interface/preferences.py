@@ -94,6 +94,15 @@ class Preferences:
 		else:
 			val = ""
 		self.ini.set(sect,key,val)
+		
+	def getStringPref(self,sect,key,default=None):
+		try:
+			_u = self.ini.get(sect,key)
+		except ConfigParser.NoSectionError:
+			return default
+		except ConfigParser.NoOptionError:
+			return default
+		return _u;
 
 # Test script:
 def main():
