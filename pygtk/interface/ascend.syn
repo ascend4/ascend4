@@ -1,0 +1,315 @@
+; TextPad syntax definition file for ASCEND 0.9.6
+; Copyright (C) 2006 Carnegie Mellon University
+; John Pye <john.pye@student.unsw.edu.au>
+;
+;
+; Copy this file to c:\Program Files\TextPad 4\samples
+; then add a new document class to TextPad, and select this
+; file as the syntax definition.
+;
+; Please inform John Pye about errors or omissions at the address above.
+;
+
+C=1
+
+[Syntax]
+Namespace1 = 6
+IgnoreCase = No
+KeyWordLength =
+BracketChars = {[()]}
+;;;;;;;; Operator and then Delimiter characters ;;;; @ is first delimiter char
+OperatorChars = -+*/<>!~%^&|=@`.:,;
+PreprocStart =
+SyntaxStart =
+SyntaxEnd =
+HexPrefix = 0x
+CommentStart = (*
+CommentEnd = *)
+CommentStartAlt = NOTES
+CommentEndAlt = END NOTES
+SingleComment =
+SingleCommentCol =
+SingleCommentAlt =
+SingleCommentColAlt =
+SingleCommentEsc =
+StringsSpanLines = No
+StringStart = {
+StringEnd = }
+StringAlt = "
+StringEsc = \
+CharStart =
+CharEnd =
+CharEsc =
+
+[Keywords 1]
+ADD
+AND
+ALIASES
+ARE_ALIKE
+ARE_THE_SAME
+ARE_NOT_THE_SAME
+ASSERT
+ATOM
+CALL	
+CASE	
+CARD
+CHECK
+CHOICE
+CONSTANT
+CONDITIONAL
+CREATE
+DATA
+DEFAULT
+DEFINITION
+DIMENSIONLESS
+DIMENSION
+DO
+ELSE
+END
+FIX
+FOR
+IF
+IN
+INTERSECTION
+IS_A
+IS_REFINED_TO
+MAX
+MAXIMIZE
+METHOD
+METHODS
+MIN
+MINIMIZE
+MODEL
+NOTES
+OR
+OTHERWISE
+PROVIDE
+PROD
+REPLACE
+REQUIRE
+REFINES
+RUN
+SATISFIED
+SELECT
+SELF
+STUDY
+STOP
+SUCH_THAT
+SUM
+SWITCH
+THEN
+UNIVERSAL
+UNION
+USE
+WHEN
+WHERE
+WITH_VALUE
+WILL_BE
+WILL_BE_THE_SAME
+WILL_NOT_BE_THE_SAME
+
+[Keywords 2]
+;;; names from standard library
+constant
+critical_compressibility
+acentric_factor
+UNIFAC_size
+Wilson_constant
+vapor_pressure_constant
+factor_constant
+molar_weight_constant
+atomic_mass_constant
+temperature_constant
+boiling_temperature
+critical_temperature
+reference_temperature
+UNIFAC_a
+pressure_constant
+critical_pressure
+reference_pressure
+molar_volume_constant
+critical_volume
+reference_molar_volume
+reference_mass_density
+molar_energy_constant
+reference_molar_energy
+enthalpy_of_formation_constant
+enthalpy_of_formation_constant
+heat_of_vaporization_constant
+Wilson_energy_constant
+molar_entropy_constant
+reference_molar_entropy
+heat_capacity_constant
+heat_capacity_a_constant
+heat_capacity_b_constant
+heat_capacity_c_constant
+heat_capacity_d_constant
+gas_constant
+gravity_constant
+circle_constant
+speed_of_light
+planck_constant
+avogadro_constant
+permittivity_constant
+permeability_constant
+electron_charge
+electron_mass
+proton_mass
+boolean_start_true
+boolean_start_false
+start_true
+start_false
+free_energy_of_formation_constant
+permeability_constant
+factor
+distance
+pressure
+area
+volume
+temperature
+energy
+volume_rate
+frequency
+factor
+
+[Keywords 3]
+;;;; standard methods
+default_self
+specify
+values
+self_test
+ClearAll
+bound_self
+scale_self
+reset
+
+[Keywords 4]
+;;; builtin constants		
+FALSE
+TRUE
+real_constant
+boolean
+symbol
+integer
+real
+;;; builtin atomsrelation
+logic_relation
+solver_var
+lower_bound
+upper_bound
+nominal
+included
+message
+fixed
+boolean_var
+generic_real
+solver_int
+relaxed
+is_zero
+solver_binary
+solver_semi		
+
+[Keywords 5]
+;;; math functions
+abs
+arccos
+arcsin
+arctan
+sin
+cos
+tan
+sinh
+cosh
+tanh
+arcsinh
+arccosh
+arctanh
+erf
+exp
+ln
+lnm
+log10
+
+[Keywords 6]
+;;; standard atoms
+bound_width
+scaling_constant
+ode_counter
+obs_counter
+real_parameter
+length_parameter
+positive_variable
+variable
+fraction
+positive_factor
+small_factor
+small_positive_factor
+reduced_pressure
+exp_sub
+power_sub
+inverse_temperature
+force
+vapor_pressure
+k_constant
+molar_mass
+molar_rate
+mass
+mole_scale
+mole
+mass_rate
+molar_rate_scale
+conc_rate
+mole_fraction
+mass_fraction
+molar_volume
+volume_scale
+volume_rate_scale
+volume_rate_square
+volume_expansivity
+molar_density
+mass_density
+molar_energy
+energy_scale
+energy_rate_scale
+energy_rate
+heat_capacity
+molar_energy_rate
+molar_entropy
+entropy
+entropy_rate
+conc_rate
+partition_coefficient
+monetary_unit
+cost_per_volume
+cost_per_mass
+cost_per_time
+cost_per_energy
+inverse_area
+angle
+solid_angle
+time
+speed
+acceleration
+viscosity
+thermal_conductivity
+diffusivity
+voltage
+resistance
+current
+capacitance
+inductance
+magnetic_field
+electric_field
+delta_distance
+delta_temperature
+delta_mass
+delta_mole
+delta_mass_rate
+delta_molar_rate
+delta_volume_rate
+delta_energy_rate
+delta_molar_energy_rate
+delta_entropy_rate
+mass_sec
+mole_sec
+
