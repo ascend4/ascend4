@@ -2,6 +2,7 @@
 
 import ConfigParser, os
 import re
+import platform
 
 class Preferences:
 	__sharedstate = {}
@@ -11,7 +12,13 @@ class Preferences:
 
 		if not hasattr(self,'n'):
 			self.n = 0;
-			self.fname = os.path.expanduser("~/.ascend.ini");
+			if platform.system()=="Windows":
+				self.fname = os.path.join(os.environ['APPDATA'],".ascend.ini")
+			else:
+				self.fname = os.path.expanduser("~/.ascend.ini");
+
+			print "PREFERENCES FILE:",self.fname
+				
 		self.n = self.n + 1;
 
 		if not hasattr(self,'ini'):
