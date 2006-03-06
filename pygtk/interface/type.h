@@ -46,6 +46,7 @@ public:
 	const bool isRefinedAtom() const;
 	const bool isRefinedReal() const;
 	const bool isRefinedConstant() const;
+	const bool hasParameters() const;
 };
 
 #endif

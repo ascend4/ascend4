@@ -47,7 +47,7 @@ Type::Type(){
 	//cerr << "CREATED EMPTY TYPE" << endl;
 	// throw runtime_error("Type::Type: Can't create new Types via C++ interface");
 }
-	
+
 Type::Type(const TypeDescription *t) : t(t){
 	//cerr << "CREATED TYPE '" << getName() << "'" << endl;
 }
@@ -143,7 +143,7 @@ Type::getSimulation(SymChar sym){
 #endif
 		BinTokenSetOptions(bin_srcname.c_str(), bin_objname.c_str(), bin_libname.c_str()
 							, bin_cmd.c_str(), bin_rm.c_str(), 1000, 1, 0);
-	
+
 		cerr << "...SETUP BINTOKENS" << endl;
 		have_bintoken_setup = true;
 	}
@@ -153,13 +153,13 @@ Type::getSimulation(SymChar sym){
 	/*Instance *i = Instantiate(getInternalType()->name, sym.getInternalType(),
 								 0, SymChar("default_self").getInternalType()); */
 	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, SymChar("default_self").getInternalType());
-	
+
 	if(i==NULL){
 		throw runtime_error("Failed to create instance");
 	}
 
 	cerr << "CREATED INSTANCE " << sym << " OF " << getName() << endl;
-	return Simulation(i,sym);	
+	return Simulation(i,sym);
 }
 
 vector<Method>
@@ -189,3 +189,7 @@ Type::isRefinedSolverVar() const{
 }
 
 
+const bool
+Type::hasParameters() const{
+	return TypeHasParameterizedInsts(t);
+}
