@@ -300,7 +300,7 @@ class Browser:
 
 		self.modtank = {}
 		self.moduleview = glade.get_widget("moduleview")
-		modulestorecoltypes = [str, str]
+		modulestorecoltypes = [str, str, int] # bool=can-be-instantiated
 		self.modulestore = gtk.TreeStore(*modulestorecoltypes)
 		moduleviewtitles = ["Module name", "Filename"]
 		self.moduleview.set_model(self.modulestore)
@@ -312,6 +312,7 @@ class Browser:
 			_renderer = gtk.CellRendererText()
 			modcol.pack_start(_renderer, True)
 			modcol.add_attribute(_renderer, 'text', i)
+			modcol.add_attribute(_renderer,'weight',2)
 			i = i + 1
 		self.moduleview.connect("row-activated", self.module_activated )
 	
@@ -424,11 +425,17 @@ class Browser:
 			_n = str( m.getName() )
 			_f = str( m.getFilename() )
 			#print "ADDING ROW name %s, file = %s" % (_n, _f)
-			_r = self.modulestore.append(None,  [ _n, _f ])
+			_r = self.modulestore.append(None,  [ _n, _f, pango.WEIGHT_NORMAL ])
 			for t in self.library.getModuleTypes(m):
 				_n = t.getName()
+				_hasparams = t.hasParameters()
+				if _hasparams:
+					_w = pango.WEIGHT_NORMAL
+				else:
+					_w = pango.WEIGHT_BOLD
+				
 				#print "ADDING TYPE %s" % _n
-				_piter = self.modulestore.append(_r , [ _n, "" ])
+				_piter = self.modulestore.append(_r , [ _n, "", _w ])
 				_path = self.modulestore.get_path(_piter)
 				self.modtank[_path]=t
 

@@ -43,8 +43,8 @@
  *  </pre>
  */
 
-#ifndef type_desc_h_seen__
-#define type_desc_h_seen__
+#ifndef ASC_TYPE_DESC_H
+#define ASC_TYPE_DESC_H
 
 /**
  *  Bad pointer for a patently bogus type definition when needed.
@@ -287,7 +287,7 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
 #define BaseTypeIsEquation(d) ((d)->t & EQN_KIND)
 /**<  Returns TRUE (int) if basetype of TypeDescription *d is among the equation types. */
 #define BaseTypeIsSimple(d)   ((d)->t & SIMPLE_KINDS)
-/**<  
+/**<
  *  Returns TRUE (int) if basetype of TypeDescription *d is among the simple types.
  *  Note that several types are not simple or compound --
  *  we can't really make up our minds whether relations/whens/etc are
@@ -349,9 +349,9 @@ extern int AddMethods(struct TypeDescription *d,
                       struct gl_list_t *pl,
                       int err);
 /**<
- *  Inserts new methods into a type and all its refinements. 
- *  pl should contain (struct InitProcedure *) to the methods to 
- *  add to d.  The methods named in pl must not conflict with any 
+ *  Inserts new methods into a type and all its refinements.
+ *  pl should contain (struct InitProcedure *) to the methods to
+ *  add to d.  The methods named in pl must not conflict with any
  *  method in d or its refinements.  If err != 0, rejects pl.<br><br>
  *
  *  If return is 1, caller is responsible for pl, OTHERWISE we manage it
@@ -370,7 +370,7 @@ extern int ReplaceMethods(struct TypeDescription *d,
 /**<
  *  Replaces listed methods in a type and all its refinements that do not
  *  themselves redefine the methods.  The methods in pl must exist in d or
- *  else an error condition is returned.  Methods not named in pl but found 
+ *  else an error condition is returned.  Methods not named in pl but found
  *  in d or its refinements are left undisturbed. If err != 0, rejects pl.<br><br>
  *
  *  If return is 1, caller is responsible for pl, OTHERWISE we manage it
@@ -400,7 +400,7 @@ extern void CopyTypeDescF(struct TypeDescription *d);
  */
 
 extern void DeleteTypeDesc(struct TypeDescription *d);
-/**< 
+/**<
  *  Decrement the reference count.  Eventually, this should delete it
  *  when ref_count == 0.  Note to myself:  Remember that array type
  *  descriptions need to be removed from a list too.
@@ -486,12 +486,12 @@ extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *d);
 
 #define TYPECONTAINSDEFAULTS 0x1
 #define TYPECONTAINSPARINSTS 0x2
-/**< 
+/**<
  *  We can add more, up to the minimum number of bits we expect a short
  *  to have under any C compiler.
  *  Universal really should be under this protocol.
  */
-#define TYPESHOW 0x100              
+#define TYPESHOW 0x100
 /**< For browsing purposes */
 
 #ifdef NDEBUG
@@ -535,12 +535,12 @@ extern unsigned TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
  */
 
 #define AtomDefaulted(d) ((d)->u.atom.defaulted)
-/**< 
+/**<
  *  Returns TRUE if the atom has a default value; otherwise returns FALSE.
  */
 
 #define ConstantDefaulted(d) ((d)->u.constant.defaulted)
-/**< 
+/**<
  *  Returns TRUE if the Constant has a default value; otherwise returns FALSE.
  */
 
@@ -715,7 +715,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
  */
 
 #define GetModelParameterWheres(d) ((d)->u.modarg.wheres)
-/**< 
+/**<
  *  Return the list of statements that restrict the structure of
  *  WILL_BE passed arguments in this MODEL.
  *  Used for instantiation-time checks.
@@ -725,7 +725,7 @@ extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
  */
 
 #define GetModelParameterValues(d) ((d)->u.modarg.argdata)
-/**< 
+/**<
  *  NOT IMPLEMENTED.
  *  Returns the list of values that match the ParameterLists.
  *  Possibly this is a redundancy.
@@ -881,8 +881,8 @@ extern struct TypeDescription
                      struct StatementList *tsl,
                      struct StatementList *vsl);
 /**<
- *  Creates a Model TypeDescription structure with the parameters given.  
- *  sl, psl, rsl, wsl should NEVER be NULL, though they may be empty lists.  
+ *  Creates a Model TypeDescription structure with the parameters given.
+ *  sl, psl, rsl, wsl should NEVER be NULL, though they may be empty lists.
  *  tsl may be NULL.
  *
  *  @param name   Name of the type.
@@ -1077,7 +1077,7 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
-extern struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1, 
+extern struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1,
                                            CONST struct TypeDescription *desc2);
 /**<
  *  Returns the more refined of desc1 or desc2, or
@@ -1087,7 +1087,7 @@ extern struct TypeDescription *MoreRefined(CONST struct TypeDescription *desc1,
 extern CONST struct TypeDescription
 *GreatestCommonAncestor(CONST struct TypeDescription *desc1,
                         CONST struct TypeDescription *desc2);
-/**< 
+/**<
  *  Returns the most refined common ancestor type of desc1,desc2.
  *  If either of desc1 or desc2 directly REFINES the other, then
  *  the return value will be the less refined of the two types.
@@ -1139,7 +1139,7 @@ extern struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s);
  */
 
 extern void WriteArrayTypeList(FILE *fp);
-/**< 
+/**<
  *  Writes the internal (implicit) array types to file fp.
  *  This is a debugging function.  The information written isn't likely
  *  to be very meaningful.  It relies on internal variables, so we
@@ -1174,5 +1174,5 @@ extern void SetTypeShowBit(struct TypeDescription *d, int value);
  *  @param value Flag for whether to set (non-zero) or clear (0) the show bit.
  */
 
-#endif  /* type_desc_h_seen__ */
+#endif  /* ASC_TYPE_DESC_H */
 

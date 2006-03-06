@@ -307,6 +307,7 @@ public:
 	const bool isRefinedSolverVar() const;
 	const bool isRefinedReal() const;
 	const Dimensions getDimensions() const;
+	const bool hasParameters() const;
 };
 %extend Type{
 	const char *__repr__(){
