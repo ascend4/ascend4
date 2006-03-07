@@ -16,14 +16,14 @@ fi
 if [ $PYTHON ]; then 
     python=$PYTHON
 else
-    bin=python
+    python=python
 fi
 
 
 if [ $ASCEND_GDB ]; then
-    bin="gdb --args $PYTHON" 
+    bin="gdb --args $python" 
 else
-    bin=$PYTHON
+    bin=$python
 fi
 
 dir=`dirname $0`
