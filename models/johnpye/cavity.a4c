@@ -150,10 +150,18 @@ MODEL cavity_losses REFINES cavity;
 	h_B, h_N IS_A heat_transfer_coefficient;
 	T_amb IS_A temperature;
 	
-	- q['B'] = h_B * B * (T['B'] - T_amb);
+	(* external heat loss *)
+	
+	q_ext_rad IS_A energy_rate;
+	q_ext_conv IS_A energy_rate;
+	q_ext_conv = h_B * B * (T['B'] - T_amb);
+	q_ext_rad = B * eps['B'] * 1{SIGMA_C} * (T['B']^4 - T_amb^4);
+	- q['B'] = q_ext_conv + q_ext_rad;
 	- q['L'] = h_N * N * (T['L'] - T_amb);
 	- q['R'] = h_N * N * (T['L'] - T_amb);
 
+	(* Determine 'F_rad' from overall heatloss... *)
+	
 	F_rad IS_A factor;
 	F_rad_1 IS_A factor;
 	
