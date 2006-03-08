@@ -791,7 +791,7 @@ case $host in
 esac
 
 #--------------------------------------------------------------------
-# Look for Tcl
+# Look for Tcl/Tk
 #--------------------------------------------------------------------
 
 TCLINCLUDE=
@@ -895,8 +895,8 @@ fi
 
 # Cygwin (Windows) needs the library for dynamic linking
 case $host in
-*-*-cygwin* | *-*-mingw*) TCLDYNAMICLINKING="$TCLLIB";;
-*)TCLDYNAMICLINKING="";;
+    *-*-cygwin* | *-*-mingw*) TCLDYNAMICLINKING="$TCLLIB";;
+    *)TCLDYNAMICLINKING="";;
 esac
 fi
 
