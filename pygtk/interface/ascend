@@ -1,7 +1,7 @@
 #!/bin/sh
 
-if [ "x$ASCENDLIBRARY" = "x" ]; then
-	echo "USING ASCENDLIBRARY=$ASCENDLIBRARY"
+if [ "x$ASCENDLIBRARY" != "x" ]; then
+    echo "USING ASCENDLIBRARY=$ASCENDLIBRARY"
 fi
 
 args=$@
@@ -9,7 +9,7 @@ args=$@
 if [ "$OSTYPE" = "cygwin" ]; then
     echo "CYGWIN..."
 elif [ "$OSTYPE" = "msys" ]; then
-    echo "MSYS..."
+    #echo "MSYS..."
     PYTHON=/c/Python24/python
 fi
 

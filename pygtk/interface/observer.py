@@ -13,7 +13,6 @@ OBSERVER_NULL = 0 # value that gets added to empty cells in a new column
 # difficulty with that was the fact that TreeStores don't support the adding of
 # columns.
 
-
 # Update: there is a technique for doing this, in fact:
 # http://www.daa.com.au/pipermail/pygtk/2006-February/011777.html
 
@@ -162,7 +161,10 @@ class ObserverTab:
 		if _uname.find("/")!=-1:
 			_uname = "["+_uname+"]"
 
-		_title = "%s / %s" % (_colname, _uname) 
+		if _uname == "":
+			_title = "%s" % (_colname)
+		else:
+			_title = "%s / %s" % (_colname, _uname) 
 
 		self.titles.append(_title);
 		self.units.append(_units) # we keep a track of the preferred units for the column at the time of the column creation

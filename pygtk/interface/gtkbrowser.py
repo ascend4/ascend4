@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
+import sys
+sys.stderr.write("Loading...\r")
+sys.stderr.flush()
+
 try:
 	import psyco
 	psyco.full()
-	print "Running with PSYCO optimisation"
+	print "Running with PSYCO optimisation..."
 except ImportError:
 	pass
 
@@ -27,13 +31,20 @@ from diagnose import * 	       # for diagnosing block non-convergence
 from solverreporter import * # solver status reporting
 import config
 
-#import sys, dl
-# This sets the flags for dlopen used by python so that the symbols in the
-# ascend library are made available to libraries dlopened within ASCEND:
-#sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+import platform
+if platform.system() != "Windows":
+	import sys, dl
+	# This sets the flags for dlopen used by python so that the symbols in the
+	# ascend library are made available to libraries dlopened within ASCEND:
+	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+
 import ascend
 
 # This is my first ever GUI code so please be nice :)
+# But I *have* at least read 
+# http://www.joelonsoftware.com/uibook/chapters/fog0000000057.html
+# and leafed through
+# http://developer.gnome.org/projects/gup/hig/
 
 # The fancy tree-view gizmo is the GtkTreeView object. See the article
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/300304
@@ -609,10 +620,10 @@ class Browser:
 		_db.run();
 
 	def on_add_observer_click(self,*args):
-		if len(self.observers) >= 1:
+		if len(self.observers) > 0:
 			self.reporter.reportError("Not supported: multiple observers")
 			return
-		self.observers.append(self.create_observer())
+		self.create_observer()
 
 	def on_keep_observed_click(self,*args):
 		if len(self.observers) > 1:
@@ -1104,7 +1115,8 @@ class Browser:
 		if _instance.getType().isRefinedSolverVar():
 			print "OBSERVING",_instance.getName().toString()		
 			if len(self.observers) > 1:
-				self.reporter.reportError("Not implemented: multiple observers")
+				self.reporter.reportError("Not implemented: multiple observers (currently %d observers)" % 
+					len(self.observers) )
 				return
 			if len(self.observers) ==0:
 				self.create_observer()
