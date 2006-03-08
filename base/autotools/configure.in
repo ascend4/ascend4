@@ -132,6 +132,8 @@ fi
 #AWW    to reside (call this objTree) and from there run 
 #AWW    ../base/unixAC213/configure.
 #AWW    In the following code asc_include is set to the path from
+#JP   I think that the current recommendation is to install from
+#JP   run ./configure (ie from this directory)
 
 ascpwd=`pwd`
 fullpathsrcdir=`cd $srcdir ; pwd`
@@ -179,7 +181,6 @@ esac
 #--------------------------------------------------------------------
 AC_CANONICAL_HOST
 
-
 #--------------------------------------------------------------------
 #	Check for the C compiler: set CC and CFLAGS.
 #	If the user does NOT specify `--enable-gcc' on the configure
@@ -202,87 +203,11 @@ AC_CANONICAL_HOST
 #	If we do not find an ANSI C compiler, print a warning and
 #	use the first value of CC we tried.
 #--------------------------------------------------------------------
+#JP  removed the lengthy CC tests, since ANSI C is pretty universal
+#JP  these days, and GCC can pretty much be assumed if we're using
+#JP  Autotools.
 
-AC_ARG_ENABLE(gcc,
-    [
-ASCEND specific options
-
-Compiler options:
-  --enable-gcc            allow use of gcc if avaiable],
-    [asc_gcc_ok=$enableval], [asc_gcc_ok=no])
-if test ! "$asc_gcc_ok" = "yes"; then
-    CC=${CC-cc}
-fi
-asc_orig_cc=$CC
-
-if test "X$asc_gcc_ok" = "Xyes" ; then
-    asc_ansi_ok=yes
-else
-    AC_MSG_CHECKING(
-        [whether $CC understands const, void*, and function prototypes])
-    AC_TRY_COMPILE( , [
-          int tstproto(int arg1, char * arg2);
-          int tstconst(const int arg1, const char *arg2);
-          int tstvoidp(const int arg1, const void *arg2); ],
-        [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
-    AC_MSG_RESULT($asc_ansi_ok)
-fi
-
-if test "$asc_ansi_ok" = no ; then
-    AC_CHECK_PROG(asc_cc1, c89, c89, NONE)
-    if test ! "$asc_cc1" = NONE ; then
-        CC=$asc_cc1
-        AC_MSG_CHECKING(
-            [whether $CC understands const, void*, and function prototypes])
-        AC_TRY_COMPILE( , [
-              int tstproto(int arg1, char * arg2);
-              int tstconst(const int arg1, const char *arg2);
-              int tstvoidp(const int arg1, const void *arg2); ],
-            [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
-        AC_MSG_RESULT($asc_ansi_ok)
-    fi
-fi
-
-if test "$asc_ansi_ok" = no ; then
-    AC_CHECK_PROG(asc_cc2, xlc, xlc, NONE)
-    if test ! "$asc_cc2" = NONE ; then
-        CC=$asc_cc2
-        AC_MSG_CHECKING(
-            [whether $CC understands const, void*, and function prototypes])
-        AC_TRY_COMPILE( , [
-              int tstproto(int arg1, char * arg2);
-              int tstconst(const int arg1, const char *arg2);
-              int tstvoidp(const int arg1, const void *arg2); ],
-            [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
-        AC_MSG_RESULT($asc_ansi_ok)
-    fi
-fi
-
-if test "$asc_ansi_ok" = no ; then
-    AC_CHECK_PROG(asc_cc3, acc, acc, NONE)
-    if test ! "$asc_cc3" = NONE ; then
-        CC=$asc_cc3
-        AC_MSG_CHECKING(
-            [whether $CC understands const, void*, and function prototypes])
-        AC_TRY_COMPILE( , [
-              int tstproto(int arg1, char * arg2);
-              int tstconst(const int arg1, const char *arg2);
-              int tstvoidp(const int arg1, const void *arg2); ],
-            [ asc_ansi_ok=yes ], [ asc_ansi_ok=no ])
-        AC_MSG_RESULT($asc_ansi_ok)
-    fi
-fi
-
-AC_PROG_CC
-
-if test "$asc_ansi_ok" = no ; then
-    CC=$asc_orig_cc
-    AC_MSG_ERROR([Cannot find an ANSI C compiler.  ASCEND will not build
-	without an ANSI compiler.  If you have an ANSI compiler which
-	configure is not finding, set the CC environment variable to
-	the full path fo the compiler and rerun configure.])
-fi
-
+AC_PROG_CC(gcc)
 
 #--------------------------------------------------------------------
 #	Do other misc checks with CC and CFLAGS.
@@ -307,6 +232,7 @@ AC_PROG_CPP
 AC_ARG_ENABLE(optimization,
     [  --enable-optimization   optimize the C code while building ascend],
     [asc_do_opt="$enableval"], [asc_do_opt=no])
+    
 if test "$asc_do_opt" = yes; then
     CFLAGS=`echo "-O $CFLAGS " | sed 's/ -g / /g'`
     AC_DEFINE(NDEBUG)
@@ -338,16 +264,11 @@ AC_CHECK_SIZEOF(void *, 4)
 
 #--------------------------------------------------------------------
 #	Set YACC.
-#	See if we can find `yacc' ourselves; if not, call the
+#	call the
 #	autoconf macro which looks for `bison' and then for `yacc'
 #--------------------------------------------------------------------
 
-asc_found_yacc=0
-AC_CHECK_PROG(YACC, yacc, yacc, [asc_found_yacc=no])
-if test "$asc_found_yacc" = no ; then
-    AC_PROG_YACC
-fi
-
+AC_PROG_YACC
 
 #--------------------------------------------------------------------
 #	Set LEX.
@@ -437,7 +358,7 @@ AC_CHECK_FUNCS(erf)
 LIBS="$asc_keep_LIBS"
 
 #----------------------------------------------
-# Check for 'vsnprintf' -- there seems to be a problem with in
+# Check for 'vsnprintf' -- there seems to be a problem with it in
 # on cygwin.
 
 dnl -------------------------------------
@@ -779,27 +700,6 @@ case $host in
 	ASC_UNSHARED_LIB_SUFFIX='`echo ${VERSION} | tr -d .`.a'
 	ASC_LIB_VERSIONS_OK=nodots
 	;;
-    *-nextstep*)
-	SHLIB_CFLAGS=""
-	SHLIB_LD="cc -nostdlib -r"
-	SHLIB_LD_LIBS=""
-	SHLIB_SUFFIX=".so"
-	DL_OBJS=""
-	DL_LIBS=""
-	LD_FLAGS=""
-	LD_SEARCH_FLAGS=""
-	;;
-    alpha-dec-osf*)
-        # Digital OSF/1
-	SHLIB_CFLAGS=""
-	SHLIB_LD='ld -shared -expect_unresolved "*"'
-	SHLIB_LD_LIBS=""
-	SHLIB_SUFFIX=".so"
-	DL_OBJS=""
-	DL_LIBS=""
-	LD_FLAGS=""
-	LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
-	;;
     *-riscos*)
 	SHLIB_CFLAGS="-G 0"
 	SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r -G 0"
@@ -865,16 +765,6 @@ case $host in
 	DL_LIBS="-ldl"
 	LD_FLAGS=""
 	LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
-	;;
-    *-ultrix4*)
-	SHLIB_CFLAGS="-G 0"
-	SHLIB_SUFFIX=".a"
-	SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r -G 0"
-	SHLIB_LD_LIBS='${LIBS}'
-	DL_OBJS=""
-	DL_LIBS=""
-	LD_FLAGS="-Wl,-D,08000000"
-	LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	;;
     mips-dde-sysv*)
 	SHLIB_CFLAGS="-KPIC"
