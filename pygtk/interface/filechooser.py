@@ -1,3 +1,4 @@
+
 import platform, os
 import gtk
 
@@ -21,6 +22,7 @@ class FileChooser:
 				pass
 		self.iswin = False
 		self.chooser = gtk.FileChooserDialog()
+		self.chooser.add_buttons(gtk.STOCK_OPEN,42)
 
 	
 	def add_filter(self,name,patternarray):
@@ -68,7 +70,11 @@ class FileChooser:
 		return fname
 
 	def do_gtk(self):
-		import gtk;
+		print "LAUNCHING..."
+		self.add_filter("Other files",["*.*"])
+		self.chooser.run()
+		print "DONE..."
+		return self.chooser.get_filename()
 		
 
 f = FileChooser()
