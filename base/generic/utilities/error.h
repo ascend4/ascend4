@@ -184,7 +184,7 @@ typedef int (*error_reporter_callback_t)(
 
 	@return follows the style of fprintf
 */
-int error_reporter(
+DLEXPORT int error_reporter(
       const error_severity_t sev
     , const char *errfile
     , const int errline
