@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/dimen.h>
@@ -31,7 +32,7 @@ DLEXPORT extfntest_register(struct Slv_Interp *dummy1,
 
 	(void)dummy1;(void)root;(void)arglist;(void)dummy4;
 
-	ERROR_REPORER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
 	result += CreateUserFunction("add_one",
                   (ExtEvalFunc *)addone_prepare,
@@ -65,7 +66,7 @@ int addone_calc(struct Slv_Interp *slv_interp,
 	FPRINTF(ASCERR,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs);
 
 	double *x = &(inputs[0]);
-	
+
 	double *y = &(outputs[0]);
 
 	y = x + 1;
