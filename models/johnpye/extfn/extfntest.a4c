@@ -1,5 +1,5 @@
 REQUIRE "system.a4l";
-IMPORT extfntest_register FROM pkgextfntest;
+IMPORT extfntest_register FROM extfntest;
 
 MODEL test_extfntest;
 
