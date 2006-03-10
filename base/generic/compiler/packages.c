@@ -177,13 +177,17 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
         path_var[length++] = *(path++);
       if (path_var[length-1]!='/')
         path_var[length++]='/';
+
       /* copy file name into array */
-      for(t=name;*t!='\0';)
+      for(t=name;*t!='\0';){
         path_var[length++] = *(t++);
+      }
       path_var[length]='\0';
-      /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for for '%s' in dir '%s'\n",name, path_var); */
+
+	  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for for '%s' at '%s'\n",name, path_var);
+
       if ((f= fopen(path_var,"r"))!=NULL){
-		result = path_var;
+        result = path_var;
         fclose(f);
         return result;
       }
@@ -413,17 +417,17 @@ int CallBlackBox(struct Instance *inst,
 
   int (*eval_func)(struct Slv_Interp *,
                    int,         // n_inputs
-                   int,         // n_outputs 
-                   double *,    // inputs 
-                   double * ,   // outputs 
-                   double * );  // jacobian 
+                   int,         // n_outputs
+                   double *,    // inputs
+                   double * ,   // outputs
+                   double * );  // jacobian
 
   int (*deriv_func)(struct Slv_Interp *,
                    int,         // n_inputs
-                   int ,        // n_outputs 
-                   double *,    // inputs 
-                   double * ,   // outputs 
-                   double * );  // jacobian 
+                   int ,        // n_outputs
+                   double *,    // inputs
+                   double * ,   // outputs
+                   double * );  // jacobian
 */
   ExtBBoxInitFunc *init_func;
   ExtBBoxFunc *eval_func;
