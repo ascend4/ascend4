@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef __EXTINST_H_SEEN__
-#define __EXTINST_H_SEEN__
+#ifndef ASC_EXTINST_H
+#define ASC_EXTINST_H
 
 extern struct Instance **g_ExtVariablesTable;
 /**<
@@ -49,9 +49,6 @@ extern struct Instance **g_ExtVariablesTable;
 
 extern struct Instance **AddVarToTable(struct Instance *inst, int *added);
 /**<
- *  <!--  struct Instance **AddVarToTable(inst, added);                -->
- *  <!--  struct Instane *inst;                                        -->
- *  <!--  int *added;                                                  -->
  *  Given an instance will store it in the ExtVariablesTable and will return
  *  the 'handle' to the instance. If variable existed already, it will not
  *  be added. If there was a failure then the variable will not be added.
@@ -60,20 +57,16 @@ extern struct Instance **AddVarToTable(struct Instance *inst, int *added);
 
 extern void FixExternalVars(struct Instance *old, struct Instance *new);
 /**< 
- *  <!--  FixExternalVars(old,new)                                     -->
  *  Replaces old with new in the table.
  *  This will be called only for MODEL_INSTS.
  */
 
 extern void SetSimulationExtVars(struct Instance *i, struct Instance **extvars);
 /**< 
- *  <!--  void SetSimulationExtVars(i,extvars);                        -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  struct Instance **extvars;                                   -->
  *  Will set the given extvar table to the instance. Not for the casual user !!
  *  Could not avoid exporting this one. I would rather have not.
  *  However instantiate needs to be able to set this table when finished.
  */
 
-#endif  /* __EXTINST_H_SEEN__ */
+#endif  /* ASC_EXTINST_H */
 

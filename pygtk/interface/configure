@@ -272,7 +272,7 @@ PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
 ac_unique_file="simulation.h"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MUMBLE_INIT ASCEND_INCDIR ASCEND_LIBDIR ASCEND_TMPDIR ASCEND_MAKEFILEDIR_1 ASCEND_MAKEFILEDIR ASCEND_ICON HELPROOT WEBHELPROOT GLADE_FILE ASCEND_PREFFILE SO_SUFF PLATFORM_CPPFLAGS ASCEND_DEFAULTLIBRARY LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os MUMBLE_INIT ASCEND_INCDIR ASCEND_LIBDIR ASCEND_TMPDIR ASCEND_MAKEFILEDIR_1 ASCEND_MAKEFILEDIR ASCEND_ICON HELPROOT WEBHELPROOT GLADE_FILE ASCEND_PREFFILE SO_SUFF PLATFORM_CPPFLAGS ASCEND_DEFAULTLIBRARY COVERAGE_FLAGS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1255,6 +1255,9 @@ ASCEND_TMPDIR="/tmp"
 ASCEND_MAKEFILEDIR_1="$PWD"
 ASCEND_MAKEFILEDIR="$PWD/../../base/generic/lib"
 
+# Coverage testing
+COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage"
+
 # Default library location
 # can be overridden by a value in ~/.ascend.ini
 ASCEND_DEFAULTLIBRARY="../../models"
@@ -1364,12 +1367,12 @@ case $target in
 		ASCEND_ICON=glade/ascend.png
 		;;
 	*)
-		echo "OTHER BUILD"
 		PLATFORM_CPPFLAGS=
 		SO_SUFF=.so
 		ASCEND_ICON=glade/ascend.svg
 		;;
 esac
+
 
 
 
@@ -2051,6 +2054,7 @@ s,@ASCEND_PREFFILE@,$ASCEND_PREFFILE,;t t
 s,@SO_SUFF@,$SO_SUFF,;t t
 s,@PLATFORM_CPPFLAGS@,$PLATFORM_CPPFLAGS,;t t
 s,@ASCEND_DEFAULTLIBRARY@,$ASCEND_DEFAULTLIBRARY,;t t
+s,@COVERAGE_FLAGS@,$COVERAGE_FLAGS,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

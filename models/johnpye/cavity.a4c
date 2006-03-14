@@ -1,3 +1,43 @@
+(*
+	ASCEND model library: radiation heat transfer model
+	Copyright (C) John Pye 2006
+	http://pye.dyndns.org/
+
+	This program is free software; you can redistribute it
+	and/or modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later
+	version.
+
+	This program is distributed in the hope that it will be
+	useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+	PURPOSE.  See the GNU General Public License for more
+	details.
+
+	You should have received a copy of the GNU General Public
+	License along with this program; if not, write to the Free
+	Software Foundation, Inc., 59 Temple Place, Suite 330,
+	Boston, MA 02111-1307  USA
+	-------------------------------------------------------------------
+
+	This is a radiation heat transfer model that is being used
+	to simulate (just a rough model) the absorber of a large solar
+	thermal energy system. For more information see 
+	http://pye.dyndns.org or google for 'CLFR'. This is a linear
+	concentrator, so the cavity is simulated with a two-dimensional 
+	model. The cavity is trapezoidal in shape, wider at the base
+	through which radiation enters.
+
+	The upper inside surface 'W' is the absorber. The cavity has a flat
+	base 'B', and side walls 'L' and 'R' (of length N). This model
+	calculates view factors between these surfaces then implements a
+	'network' model to determine the equilibrium temperatures and
+	heat transfer between the surfaces inside the cavity. External heat
+	losses are allowed for: radiation and convention at the cavity
+	base, plus convection off the side-walls.
+*)
+
 REQUIRE "atoms.a4l";
 
 ATOM energy_rate_per_length REFINES solver_var
@@ -23,8 +63,16 @@ ATOM heat_transfer_coefficient REFINES solver_var
 	lower_bound := 0{W/m^2/K};
 	upper_bound := 1e50{W/m^2/K};
 	nominal := 5{W/m^2/K};
-
 END heat_transfer_coefficient;
+
+ATOM specific_heat_capacity REFINES solver_var
+		DIMENSION L^2/T^2/TMP
+		DEFAULT 4.0{kJ/kg/K};
+	
+	lower_bound := 0{kJ/kg/K};
+	upper_bound := 1e50{kJ/kg/K};
+	nominal := 4.2{kJ/kg/K};
+END specific_heat_capacity;
 
 MODEL cavity;
 	W,B,S,N,C,E,D IS_A distance;
@@ -34,24 +82,24 @@ MODEL cavity;
 	F_NB, F_NW, F_NN, F_BW, F_BN IS_A factor;
 	F_WS IS_A factor;
 	
-	N * sin(theta) = D;
-	S * tan(theta) = D;
-	B = W + 2 * S;
-	E^2 = W^2 + D^2;
-	phi = arctan(D/W);
-	psi = 1{PI} - phi;
-	C^2 = E^2 + S^2 - 2* E * S * cos(psi);
+	z_N: N * sin(theta) = D;
+	z_S: S * tan(theta) = D;
+	z_B: B = W + 2 * S;
+	z_E: E^2 = W^2 + D^2;
+	z_phi: phi = arctan(D/W);
+	z_psi: psi = 1{PI} - phi;
+	z_C: C^2 = E^2 + S^2 - 2* E * S * cos(psi);
 	
-	F_WN = (W+N-C)/2/W;
-	F_WW = (2*E-2*D)/2/W; (* from top to directly opp part of bottom *)
-	F_WB = 1 - 2 * F_WN;
-	F_WS = (1 - 2 * F_WN - F_WB)/2;
-	F_NB = (N+B-C)/2/N;
-	F_NW = (N+W-C)/2/N;
+	z_F_WN: F_WN = (W+N-C)/2/W;
+	z_F_WW: F_WW = (2*E-2*D)/2/W; (* from top to directly opp part of bottom *)
+	z_F_WB: F_WB = 1 - 2 * F_WN;
+	z_F_WS: F_WS = (1 - 2 * F_WN - F_WB)/2;
+	z_F_NB: F_NB = (N+B-C)/2/N;
+	z_F_NW: F_NW = (N+W-C)/2/N;
 	
-	F_BN = F_NB*N/B;
-	F_NN = 1 - F_NW - F_NB;
-	F_BW = F_WB*W/B;
+	z_F_BN: F_BN = F_NB*N/B;
+	z_F_NN: F_NN = 1 - F_NW - F_NB;
+	z_F_BW: F_BW = F_WB*W/B;
 		
 	n IS_A set OF symbol_constant;
 	n :== ['W','B','L','R'];
@@ -70,17 +118,17 @@ MODEL cavity;
 	
 	F['W']['L'], F['W']['R'], F_WN ARE_THE_SAME;
 	F['W']['B'], F_WB ARE_THE_SAME;
-	F['W']['W'] = 0;
+	z_F_WW1: F['W']['W'] = 0;
 	
 	F['B']['L'], F['B']['R'], F_BN ARE_THE_SAME;
 	F['B']['W'], F_BW ARE_THE_SAME;
-	F['B']['B'] = 0;
+	z_F_BB1: F['B']['B'] = 0;
 	
 	F['L']['R'], F['R']['L'], F_NN ARE_THE_SAME;
 	F['L']['B'], F['R']['B'], F_NB ARE_THE_SAME;
 	F['L']['W'], F['R']['W'], F_NW ARE_THE_SAME;
-	F['L']['L'] = 0;
-	F['R']['R'] = 0;
+	z_F_LL: F['L']['L'] = 0;
+	z_F_RR: F['R']['R'] = 0;
 
 	(* Radiation equations *)
 	q[n] IS_A energy_rate_per_length;
@@ -91,15 +139,15 @@ MODEL cavity;
 	eps[n] IS_A factor; (* emissivity *)
 	
 	FOR i IN n CREATE
-		q[i] =  SUM[ (J[i]-J[j])*(A[i]*F[i][j]) | j IN n];
+		z_q[i]: q[i] =  SUM[ (J[i]-J[j])*(A[i]*F[i][j]) | j IN n];
 	END FOR;
 	
 	FOR i IN n CREATE
-		E_b[i] = 1{SIGMA_C} * T[i]^4;
+		z_E_b[i]: E_b[i] = 1{SIGMA_C} * T[i]^4;
 	END FOR;
 
 	FOR i IN n CREATE
-		q[i] * (1-eps[i]) = (E_b[i] - J[i]) * (eps[i]*A[i]);
+		z_J[i]: q[i] * (1-eps[i]) = (E_b[i] - J[i]) * (eps[i]*A[i]);
 	END FOR;
 		
 METHODS
@@ -138,13 +186,12 @@ END values;
 
 END cavity;
 
-(*========================================
-	This model adds external convection
-	coefficients to the model, and an
-	ambient temperature.
+(*
+	The following model adds external convection coefficients to
+	the model, and an ambient temperature.
 	
-	We also calculate the F_rad correlation
-	parameter.
+	We also calculate the 'F_rad' correlation parameter (see
+	http://pye.dyndns.org for more information).
 *)
 MODEL cavity_losses REFINES cavity;
 	h_B, h_N IS_A heat_transfer_coefficient;
@@ -152,22 +199,22 @@ MODEL cavity_losses REFINES cavity;
 	
 	(* external heat loss *)
 	
-	q_ext_rad IS_A energy_rate;
-	q_ext_conv IS_A energy_rate;
+	q_ext_rad IS_A energy_rate_per_length;
+	q_ext_conv IS_A energy_rate_per_length;
 	q_ext_conv = h_B * B * (T['B'] - T_amb);
 	q_ext_rad = B * eps['B'] * 1{SIGMA_C} * (T['B']^4 - T_amb^4);
-	- q['B'] = q_ext_conv + q_ext_rad;
-	- q['L'] = h_N * N * (T['L'] - T_amb);
-	- q['R'] = h_N * N * (T['L'] - T_amb);
+	z_q_B: - q['B'] = q_ext_conv + q_ext_rad;
+	z_q_L: - q['L'] = h_N * N * (T['L'] - T_amb);
+	z_q_R:- q['R'] = h_N * N * (T['L'] - T_amb);
 
 	(* Determine 'F_rad' from overall heatloss... *)
 	
 	F_rad IS_A factor;
 	F_rad_1 IS_A factor;
 	
-	- q['B'] = F_rad * eps['W'] * 1{SIGMA_C} * (T['W']^4 - T['B']^4);
+	z_F_rad: q['W'] = F_rad * W * eps['W'] * 1{SIGMA_C} * (T['W']^4 - T['B']^4);
 	
-	- q['B'] = F_rad_1 * 1{SIGMA_C} * (T['W']^4 - T['B']^4) /
+	z_F_rad_1: q['W'] = F_rad_1 * W * 1{SIGMA_C} * (T['W']^4 - T['B']^4) /
 		(1/eps['B'] + 1/eps['W'] - 1);
 
 METHODS
@@ -193,3 +240,47 @@ METHOD values;
 	T['B'] := 400 {K};
 END values;
 END cavity_losses;
+
+(*
+	This final model will examine the possible convection
+	behaviour inside the stratified cavity
+*)
+MODEL cavity_convection;
+	W, D_strat IS_A distance;
+	k IS_A thermal_conductivity;
+	Q IS_A energy_rate_per_length;
+	T[1,2] IS_A temperature;
+	
+	Q * D_strat = W * k * (T[1] - T[2]); (* conduction through stratified zone*)
+
+(*	rho IS_A mass_density;
+	cp IS_A specific_heat_capacity;
+	
+	Pr IS_A factor;
+	Pr = mu / rho / alpha;
+	
+	mu IS_A viscosity;
+	alpha IS_A diffusivity;
+	alpha = k / rho / cp;
+*)
+	
+METHODS
+METHOD specify;
+	FIX k, mu, cp, rho;
+	FIX T[1,2];
+	FIX W, D_strat;
+END specify;
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+METHOD values;
+	D_strat := 0.15 {m};
+	W := 0.5 {m};
+	k := 0.039 {W/m/K};
+	T[1] := 550 {K};
+	T[2] := 332 {K};
+END values;
+END cavity_convection;
+
+	
+

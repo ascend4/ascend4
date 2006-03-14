@@ -89,7 +89,9 @@ fi
 #--with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff
 #--with-wish="$tkroot/bin/wish" \
 
-export CFLAGS="-ggdb -fprofile-arcs -ftest-coverage"
+if [ $COVERAGE ]; then
+	export CFLAGS="-ggdb -fprofile-arcs -ftest-coverage"
+fi
 
 cmd="./configure  \
 --prefix=$ascroot \
