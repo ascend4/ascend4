@@ -164,7 +164,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
   register unsigned length;
   register FILE *f;
   /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Env var for user packages is '%s'\n",envv); */
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Search path for user packages is '%s'\n",getenv(envv));
+  /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Search path for user packages is '%s'\n",getenv(envv)); */
   if ((path=getenv(envv))==NULL)
     path=dpath;
   while(isspace(*path)) path++;
@@ -184,7 +184,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
       }
       path_var[length]='\0';
 
-	  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for for '%s' at '%s'\n",name, path_var);
+	  /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for for '%s' at '%s'\n",name, path_var); */
 
       if ((f= fopen(path_var,"r"))!=NULL){
         result = path_var;

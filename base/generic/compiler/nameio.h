@@ -37,23 +37,17 @@
  *  </pre>
  */
 
-#ifndef __NAMEIO_H_SEEN__
-#define __NAMEIO_H_SEEN__
+#ifndef ASC_NAMEIO_H
+#define ASC_NAMEIO_H
 
 extern void WriteName(FILE *f, CONST struct Name *n);
 /**<
- *  <!--  void WriteName(f,n)                                          -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Name *n;                                        -->
  *  Write n to file f.  No leading or trailing spaces are added, 
  *  and no trailing newline is added.
  */
 
 extern void WriteNameNode(FILE *f, CONST struct Name *n);
 /**<
- *  <!--  void WriteNameNode(f,n)                                      -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  const struct Name *n;                                        -->
  *  Write just this one name node, and not any of the ones following it.
  */
 
@@ -65,20 +59,14 @@ extern char *WriteNameString(CONST struct Name *n);
 
 extern void WriteName2Str(Asc_DString *dstring, CONST struct Name *n);
 /**<
- *  <!--  void WriteName2Str(dstring,n)                                -->
- *  <!--  Asc_DString *dstring;                                        -->
- *  <!--  const struct Name *n;                                        -->
  *  Write n to dstring.  No leading or trailing spaces are added,
  *  and no trailing newline is added.
  */
 
 extern void WriteNameNode2Str(Asc_DString *dstring,CONST struct Name *n);
 /**< 
- *  <!--  void WriteNameNode2Str(dstring,n)                            -->
- *  <!--  Asc_DString *dstring;                                        -->
- *  <!--  const struct Name *n;                                        -->
  *  Write just this one name node, and not any of the ones following it.
  */
 
-#endif  /* __NAMEIO_H_SEEN__ */
+#endif  /* ASC_NAMEIO_H */
 
