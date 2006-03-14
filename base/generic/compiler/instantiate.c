@@ -3866,10 +3866,10 @@ void MakeInstance(CONST struct Name *name,
   struct TypeDescription *arydef;
   struct gl_list_t *indices;
   int tce;
-  char *nstr;
+  /*char *nstr;
   nstr = WriteNameString(name);
   CONSOLE_DEBUG(nstr);
-  ascfree(nstr);
+  ascfree(nstr); */
   if ((childname = SimpleNameIdPtr(name))!=NULL){ /* simple 1 element name */
     if (StatInFOR(statement) && StatWrong(statement)==0) {
       MarkStatContext(statement,context_WRONG);

@@ -570,10 +570,10 @@ DoNameF(CONST struct Name *nptr,
   int ok;
   int nsubs=0;
 
-  char *nstr;
+  /*char *nstr;
   nstr = WriteNameString(nptr);
   CONSOLE_DEBUG(nstr);
-  ascfree(nstr);
+  ascfree(nstr);*/
 
   if (NameId(nptr) !=0){
     name = NameIdPtr(nptr);

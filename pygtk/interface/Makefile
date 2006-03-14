@@ -6,13 +6,15 @@ CC = gcc
 SO_SUFF = .so
 PLATFORM_CPPFLAGS = 
 
-CXXFLAGS := -c -fprofile-arcs -ftest-coverage
+COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
+
+CXXFLAGS = -c -g $(COVERAGE_FLAGS)
 
 LD = libtool --mode=link gcc
-LD_CXX = libtool --mode=link g++
+LD_CXX = libtool --mode=link g++ 
 
 # -lieee -ldl
-LDFLAGS = -lm -lstdc++  -fprofile-arcs -ftest-coverage
+LDFLAGS = -g -lm -lstdc++ $(COVERAGE_FLAGS)
 
 # Are you on a dual processor machine?
 _smp_mflags = -j2 
@@ -232,9 +234,4 @@ patchapplybase: clean
 	pushd $(SOURCE_ROOT)/base && \
 	patch -p0 < ../pygtk/interface/ascend-base.patch && \
     popd
-
-#---------------------------
-
-%.o: %.cpp %.h
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
-
+ 

@@ -6,13 +6,15 @@ CC = gcc
 SO_SUFF = @SO_SUFF@
 PLATFORM_CPPFLAGS = @PLATFORM_CPPFLAGS@
 
-CXXFLAGS = -c -g
+COVERAGE_FLAGS = @COVERAGE_FLAGS@
+
+CXXFLAGS = -c -g $(COVERAGE_FLAGS)
 
 LD = libtool --mode=link gcc
-LD_CXX = libtool --mode=link g++
+LD_CXX = libtool --mode=link g++ 
 
 # -lieee -ldl
-LDFLAGS = -g -lm -lstdc++
+LDFLAGS = -g -lm -lstdc++ $(COVERAGE_FLAGS)
 
 # Are you on a dual processor machine?
 _smp_mflags = -j2 

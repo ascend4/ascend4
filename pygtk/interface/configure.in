@@ -10,6 +10,19 @@ ASCEND_TMPDIR="/tmp"
 ASCEND_MAKEFILEDIR_1="$PWD"
 ASCEND_MAKEFILEDIR="$PWD/../../base/generic/lib"
 
+# Coverage testing
+AC_ARG_ENABLE([coverage-testing],
+	AC_HELP_STRING([--enable-coverage-testing],
+		[Instrument files with gcov coverage testing code])
+,
+	if test $enableval; then
+		COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage"
+	else
+		COVERAGE_FLAGS=""
+,
+	COVERAGE_FLAGS=""
+)
+
 # Default library location
 # can be overridden by a value in ~/.ascend.ini
 ASCEND_DEFAULTLIBRARY="../../models"
@@ -38,7 +51,6 @@ case $target in
 		ASCEND_ICON=glade/ascend.png
 		;;
 	*)
-		echo "OTHER BUILD"
 		PLATFORM_CPPFLAGS=
 		SO_SUFF=.so
 		ASCEND_ICON=glade/ascend.svg
@@ -61,5 +73,6 @@ AC_SUBST(ASCEND_PREFFILE)
 AC_SUBST(SO_SUFF)
 AC_SUBST(PLATFORM_CPPFLAGS)
 AC_SUBST(ASCEND_DEFAULTLIBRARY)
+AC_SUBST(COVERAGE_FLAGS)
 
 AC_OUTPUT(config.h:config.in config.py:configpy.in Makefile)
