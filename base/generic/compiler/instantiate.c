@@ -3866,6 +3866,10 @@ void MakeInstance(CONST struct Name *name,
   struct TypeDescription *arydef;
   struct gl_list_t *indices;
   int tce;
+  char *nstr;
+  nstr = WriteNameString(name);
+  CONSOLE_DEBUG(nstr);
+  ascfree(nstr);
   if ((childname = SimpleNameIdPtr(name))!=NULL){ /* simple 1 element name */
     if (StatInFOR(statement) && StatWrong(statement)==0) {
       MarkStatContext(statement,context_WRONG);
@@ -4648,6 +4652,7 @@ struct Instance *MakeRelationInstance(struct Name *name,
                                       struct Statement *stat,
                                       enum Expr_enum type)
 {
+  CONSOLE_DEBUG("...");
   symchar *childname;
   struct Instance *child;
   struct InstanceName rec;
@@ -11317,7 +11322,7 @@ void Pass3ProcessPendingInstances(void)
  * This is the singlepass phase2 with anontype sharing of
  * relations implemented. If relations can depend on other
  * relations (as in future differential work) then this function
- * Needs to be slightly more sophisticated.
+ * needs to be slightly more sophisticated.
  */
 static
 void Pass2ProcessPendingInstancesAnon(struct Instance *result)
@@ -11333,6 +11338,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
 #if TIMECOMPILER
   clock_t start,classt;
 #endif
+  CONSOLE_DEBUG("...");
 
   /* pending will have at least one instance, or quick return. */
   assert(PASS2MAXNUMBER==1);
@@ -11989,8 +11995,10 @@ static
 struct Instance *Pass2InstantiateModel(struct Instance *result,
                                        unsigned long *pcount)
 {
+  CONSOLE_DEBUG("starting...");
   /* do we need a ForTable on the stack here? don't think so. np2ppi does it */
   if (result!=NULL) {
+    CONSOLE_DEBUG("result!=NULL...");
     /* pass2 pendings already set by visit */
     if (ANONFORCE || g_use_copyanon != 0) {
 #if TIMECOMPILER
@@ -12014,6 +12022,7 @@ struct Instance *Pass2InstantiateModel(struct Instance *result,
     }
     ClearList();
   }
+  CONSOLE_DEBUG("...done");
   return result;
 }
 
@@ -12025,8 +12034,9 @@ void Pass2SetRelationBits(struct Instance *inst)
     struct BitList *blist;
 #ifdef DEBUG_RELS
 	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-    FPRINTF(stderr,"P2SRB: ");
+    FPRINTF(ASCERR,"P2SRB: ");
     WriteInstanceName(ASCERR,inst,debug_rels_work);
+    FPRINTF(ASCERR,"\n");
 	error_reporter_end_flush();
 #endif
 
@@ -12204,6 +12214,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   FPRINTF(ASCERR,"Phase 2 relations \t\t%lu\n",
     (unsigned long)(phase2t-phase1t));
 #endif
+  CONSOLE_DEBUG("Starting phase 3...");
   /* at this point, there may be unexecuted non-logical relation
    * statements, but they can never be executed. The
    * pending list is therefore empty. We know how many.
@@ -12326,6 +12337,7 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
                                  int intset)
 {
   struct Instance *result;
+  CONSOLE_DEBUG("...");
 
   result = ShortCutMakeUniversalInstance(def); /*does quick Universal check */
   if (result) return result;

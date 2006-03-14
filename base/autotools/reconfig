@@ -89,12 +89,15 @@ fi
 #--with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff
 #--with-wish="$tkroot/bin/wish" \
 
+export CFLAGS="-ggdb -fprofile-arcs -ftest-coverage"
+
 cmd="./configure  \
 --prefix=$ascroot \
 --with-fortran=g77 \
 --enable-gcc \
 --without-tcl \
-CFLAGS=-ggdb \
+--enable-relation-debugging \
+--enable-compiler-timing \
 $blasopt"
 
 echo "RUNNING CONFIGURE WITH"

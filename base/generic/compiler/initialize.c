@@ -1522,6 +1522,7 @@ FPRINTF(fm->err,"EIS: "); WriteStatement(fm->err,stat,2);
     ExecuteInitFlow(fm);
     break;
   case EXT:
+    CONSOLE_DEBUG("ABOUT TO ExecuteInitExt");
     ExecuteInitExt(fm,stat);
     break;
   case CALL:

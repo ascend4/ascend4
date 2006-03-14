@@ -117,9 +117,6 @@ extern unsigned int GetInstantiationRelnFlags(void);
 extern struct Instance *NewInstantiate(symchar *type, symchar *name, 
                                        int intset, symchar *defmethod);
 /**<
- *  <!--  struct Instance *NewInstantiate(type,name,intset,defmethod)  -->
- *  <!--  symchar *type,*name;                                         -->
- *  <!--  int intset;                                                  -->
  *  This routine will return an instance of type SIM_INST. It will make
  *  an instance of the given type this will be set as the *root* of the
  *  simulation. To access the root of the instance tree use the functions
@@ -190,8 +187,6 @@ extern struct Instance *NewInstantiate(symchar *type, symchar *name,
 
 extern void NewReInstantiate(struct Instance *i);
 /**<
- *  <!--  void NewReInstantiate(i)                                     -->
- *  <!--  struct Instance *i;                                          -->
  *  This routine is used to resume execution of an instance with unexecuted
  *  statements.  It will reattempt to execute the unexecuted statement.
  *  If it is able to complete the instance, it will execute the DEFAULT
@@ -202,7 +197,6 @@ extern void UpdateInstance(struct Instance *root,
                            struct Instance *target,
                            CONST struct StatementList *slist);
 /**<
- *  <!--  void UpdateInstance(root,target,slist);                      -->
  *  Update instance takes a pointer to the root of a simulation (ie the
  *  instance tree), and will find instance target. It will then apply
  *  the statementlist to the given to the target instance.
@@ -213,7 +207,6 @@ extern void UpdateInstance(struct Instance *root,
 extern struct Instance *InstantiatePatch(symchar *patch,
                                          symchar *name, int intset);
 /**<
- *  <!--  struct Instance *InstantiatePatch(patch,name,intset, defmethod);  -->
  *  Instantiate patch takes the name of a patch that is supposed to be
  *  applied to a type. It partially instantiates the instance, then
  *  applies the patch. It returns the instance created. It uses
@@ -224,9 +217,6 @@ extern struct Instance *InstantiatePatch(symchar *patch,
 extern void ConfigureInstFromArgs(struct Instance *inst,
                                   CONST struct Instance *arginst);
 /**<
- *  <!--  ConfigureInstFromArgs(inst,arginst);                         -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  const struct Instance *arginst;                              -->
  *  inst and arginst must be of the same MODEL type.
  *  inst should have NO executed statements -- it should be fresh
  *  from CreateModelInstance.
@@ -239,9 +229,6 @@ extern void ConfigureInstFromArgs(struct Instance *inst,
 extern void ReConfigureInstFromArgs(struct Instance *inst, 
                                              CONST struct Instance *arginst);
 /**<
- *  <!--  ReConfigureInstFromArgs(inst,arginst);                       -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  const struct Instance *arginst;                              -->
  *  inst and arginst must be or are about to be of the same MODEL type.
  *  inst should have been created from a less refined version of the type
  *  and is in the process of being refined up to type of arginst.
@@ -256,7 +243,6 @@ extern void LinkToParentByPos(struct Instance *parent,
                               struct Instance *child,
                               unsigned long childnum);
 /**<
- *  <!--  LinkToParentByPos(parent,child,childnum);                    -->
  *  Add child as childnumth child of parent and add parent to child.
  */
 

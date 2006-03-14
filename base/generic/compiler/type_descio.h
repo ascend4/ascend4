@@ -40,22 +40,17 @@
  *  </pre>
  */
 
-#ifndef __TYPE_DESCIO_H_SEEN__
-#define __TYPE_DESCIO_H_SEEN__
+#ifndef ASC_TYPE_DESCIO_H
+#define ASC_TYPE_DESCIO_H
 
 extern void WriteDefinition(FILE *f, struct TypeDescription *desc);
 /**<
- *  <!--  void WriteDefinition(f,desc)                                 -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct TypeDescription *desc;                                -->
  *  Write the type description structure to the given file in text.
  *  May include compiler derived information in comments.
  */
 
 extern char *WriteDefinitionStringList(struct TypeDescription *d);
 /**< 
- * <!--  char *WriteDefinitionString(d);                               -->
- * <!--  struct TypeDescription *desc;                                 -->
  * Returns a string containing in braced list format (compatible
  * with tcl) the contents of a type description.
  * name is an identifier_t, kind is a string indicating base class
@@ -85,9 +80,6 @@ extern char *WriteDefinitionStringList(struct TypeDescription *d);
 
 extern void WriteDiffDefinition(FILE *f, struct TypeDescription *desc);
 /**< 
- *  <!--  void WriteDiffDefinition(f,desc)                             -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct TypeDescription *desc;                                -->
  *  Write the type description structure to the given file in text but
  *  only those statements that are in the declarative section which are
  *  different from the refinement ancestor of the type. The procedures
@@ -108,5 +100,4 @@ extern symchar *GetBaseTypeName(enum type_kind t);
 extern void InitBaseTypeNames(void);
 /**< Set up the basetypes symbol table. */
 
-#endif /* __TYPE_DESCIO_H_SEEN__ */
-
+#endif /* ASC_TYPE_DESCIO_H */

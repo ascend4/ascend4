@@ -192,7 +192,7 @@ DoRelations(symchar *, CONST struct StatementList *, struct gl_list_t *);
 struct LinkChildListEntry {
   struct ChildListEntry e; /* must be first! */
   /* the next 3 are not yet in use, really. */
-  struct LinkChildListEntry *alike;
+  /* struct LinkChildListEntry *alike; -- removed, JP */
   /* pointer to aliked child list entries, which will all have the same type.
    * This will be NULL unless an ARE_ALIKE has been seen or the CLE is a
    * scalar. Array names in particular unless a statement aliking the
@@ -200,8 +200,8 @@ struct LinkChildListEntry {
    * ARE_ALIKE of individual array elements will not show up here.
    * Circularly linked list.
    */
-  struct LinkChildListEntry *arrthesame;
-  struct LinkChildListEntry *eltsthesame;
+  /* struct LinkChildListEntry *arrthesame; --removed, JP */
+  /* struct LinkChildListEntry *eltsthesame; -- removed, JP */
   /* pointer to merged child list entries, which will all have the same type.
    * This will be NULL unless an ARE_THE_SAME has been seen or the CLE is a
    * scalar. Array names in particular unless a statement merging the
@@ -569,6 +569,12 @@ DoNameF(CONST struct Name *nptr,
   register symchar *name;
   int ok;
   int nsubs=0;
+
+  char *nstr;
+  nstr = WriteNameString(nptr);
+  CONSOLE_DEBUG(nstr);
+  ascfree(nstr);
+
   if (NameId(nptr) !=0){
     name = NameIdPtr(nptr);
     switch (StatementType(stat)) {
@@ -1018,6 +1024,7 @@ int DoRelation(symchar *type,
                struct gl_list_t *ft)
 {
   struct Name *nptr;
+  CONSOLE_DEBUG("...");
   assert(stat && (StatementType(stat) == REL));
   g_number++;
   nptr = RelationStatName(stat);

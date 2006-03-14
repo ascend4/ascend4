@@ -572,6 +572,7 @@ struct Instance *CreateArrayChildInst(struct Instance *i,
          * as relations cannot be universal by themselves.
          */
         if (GetArrayBaseIsRelation(desc)) {
+		  CONSOLE_DEBUG("...");
           return CreateRelationInstance(def,e_undefined);
         }
         /* fallthrough */

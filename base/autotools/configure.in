@@ -1567,6 +1567,54 @@ else
 	AC_MSG_RESULT([STATIC])
 fi
 
+#-----------------------------------------------
+# DEBUG_RELS or not?
+
+AC_MSG_CHECKING([for relation debugging])
+
+AC_ARG_ENABLE(relation-debugging, AC_HELP_STRING([--enable-relation-debugging],
+	[Enable debug output for relation compilation (default is NO)])
+,
+	if test $enableval; then
+		debugrels=1
+	else
+		debugrels=0
+	fi
+,
+	debugrels=0
+)
+
+if test "X$debugrels" = "X1"; then
+	AC_MSG_RESULT([YES])
+	AC_DEFINE(DEBUG_RELS)
+else
+	AC_MSG_RESULT([no])
+fi
+
+#-----------------------------------------------
+# TIME the compiler?
+
+AC_MSG_CHECKING([whether to time the compiler])
+
+AC_ARG_ENABLE(compiler-timing, AC_HELP_STRING([--enable-compiler-timing],
+	[Enable timing of the compiler (default is NO)])
+,
+	if test $enableval; then
+		timecompiler=1
+	else
+		timecompiler=0
+	fi
+,
+	timecompiler=0
+)
+
+if test "X$timecompiler" = "X1"; then
+	AC_MSG_RESULT([YES])
+	AC_DEFINE(TIMECOMPILER)
+else
+	AC_MSG_RESULT([no])
+fi
+
 
 #--------------------------------------------------------------------
 #	The variables we substitute into the Makefile.in files
