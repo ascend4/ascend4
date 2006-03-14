@@ -3,16 +3,16 @@ SOURCE_ROOT = ../..
 CXX = g++
 CC = gcc 
 
-SO_SUFF = .dll
+SO_SUFF = .so
 PLATFORM_CPPFLAGS = 
 
-CXXFLAGS = -c -g
+CXXFLAGS := -c -fprofile-arcs -ftest-coverage
 
 LD = libtool --mode=link gcc
 LD_CXX = libtool --mode=link g++
 
 # -lieee -ldl
-LDFLAGS = -g -lm -lstdc++
+LDFLAGS = -lm -lstdc++  -fprofile-arcs -ftest-coverage
 
 # Are you on a dual processor machine?
 _smp_mflags = -j2 
@@ -232,4 +232,9 @@ patchapplybase: clean
 	pushd $(SOURCE_ROOT)/base && \
 	patch -p0 < ../pygtk/interface/ascend-base.patch && \
     popd
- 
+
+#---------------------------
+
+%.o: %.cpp %.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+

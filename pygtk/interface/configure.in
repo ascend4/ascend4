@@ -1,4 +1,5 @@
 AC_INIT(simulation.h)
+AC_CONFIG_AUX_DIR(../../base/autotools/config)
 
 echo "user home: $HOME"
 echo "current dir: $PWD"
