@@ -19,6 +19,7 @@ AC_ARG_ENABLE([coverage-testing],
 		COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage"
 	else
 		COVERAGE_FLAGS=""
+	fi
 ,
 	COVERAGE_FLAGS=""
 )
