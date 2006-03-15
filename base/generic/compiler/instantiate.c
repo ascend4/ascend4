@@ -4652,7 +4652,7 @@ struct Instance *MakeRelationInstance(struct Name *name,
                                       struct Statement *stat,
                                       enum Expr_enum type)
 {
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
   symchar *childname;
   struct Instance *child;
   struct InstanceName rec;
