@@ -98,9 +98,10 @@ cmd="./configure  \
 --with-fortran=g77 \
 --enable-gcc \
 --without-tcl \
---enable-relation-debugging \
---enable-compiler-timing \
 $blasopt"
+
+#--enable-relation-debugging 
+#--enable-compiler-timing 
 
 echo "RUNNING CONFIGURE WITH"
 echo $cmd
