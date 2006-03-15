@@ -48,6 +48,32 @@
 #define PUTC fputc_error_reporter
 #define FFLUSH fflush_error_reporter
 
+/*
+	By default, don't use coloured output on any terminals. We will reintroduce
+	this later, hopefully. It should be done using CURSES, instead of directly
+	using xterm codes. But that brings its own problems on MinGW and Windows...
+*/
+
+#ifdef USE_XTERM_COLOR_CODES
+/** XTERM colour codes used to distinguish between errors of different types.
+
+	@TODO some runtime testing to determine if these should be used or not
+	depending on TERM env var.
+*/
+#  define ERR_RED "\033[31;1m"
+#  define ERR_GRN "\033[32;2m"
+#  define ERR_BLU "\033[34;1m"
+#  define ERR_BRN "\033[33;1m"
+#  define ERR_NORM "\033[0m"
+#  define ERR_BOLD "\033[1m"
+#else
+#  define ERR_RED ""
+#  define ERR_GRN ""
+#  define ERR_BLU ""
+#  define ERR_BRN ""
+#  define ERR_NORM ""
+#  define ERR_BOLD ""
+#endif
 /**
 	Variadic macros to allow nice succint logging and error reporting
 	calls from C dialects that support them (GCC, C99 and others)
@@ -59,17 +85,17 @@
 # define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
-# define CONSOLE_DEBUG(args...) (fprintf(stderr,"\33[1m%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+# define CONSOLE_DEBUG(args...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
                                  fprintf(stderr, ##args) + \
-                                 fprintf(stderr, "\33[0m\n"))
+                                 fprintf(stderr, ERR_NORM "\n"))
 
 #elif defined(HAVE_C99)
 # define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
-# define CONSOLE_DEBUG(...) (fprintf(stderr,"\33[1m%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+# define CONSOLE_DEBUG(...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
                              fprintf(stderr, ##__VA_ARGS__) + \
-                             fprintf(stderr, "\33[0m\n"))
+                             fprintf(stderr, ERR_NORM "\n"))
 
 #else
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line

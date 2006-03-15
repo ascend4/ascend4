@@ -100,6 +100,8 @@ clean:
 	-rm ascend.py
 	-rm main
 	-rm *.pyc
+	-rm *.gcda
+	-rm *.gcno
 	-rmdir .libs
 
 cleanall: clean
