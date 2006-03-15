@@ -397,7 +397,7 @@ int LocateLCLPivot(symchar *s)
 #define STATPARAMETRIC 1
 
 /** Store a new 'child record' in the linked list of statements.
- 
+
 	@param s name of the child (symchar that's already AddSymbol-ed)
 	@param d type pointer for the childname, which may be null,
 	@param nsubs number of known subscripts (if an array),
@@ -412,7 +412,7 @@ int LocateLCLPivot(symchar *s)
 	list of statements.
 
 	On entry assumes g_lcl_pivot != NULL unless there are no children yet.
-	
+
 	For aliases, the correct value of nsubs must be set before
 	calling MakeChildList.
 
@@ -426,7 +426,7 @@ int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
            CONST struct Statement *stat, int parametric)
 {
   struct LinkChildListEntry *new;
-  
+
   /* search for insertion location, which means move pivot to the
    * name just before this one so we can insert after pivot.
    */
@@ -548,15 +548,15 @@ could we put all the above in the childdef file?
 
 /**
 	Checks the first element of a name for being in the child list.
-	
+
 	@return DEF_OKAY if the child was added to the list
 		DEF_NAME_DUPLICATE if the child was already in the list (can't be added)
 
 	@param nptr name being added. We are only looking at the first 'link' in the name, eg 'a' in 'a[5]'.
 	@param noisy output stuff when child can't be added
-	
+
 	Name must be an id (ie a variable name like 'my_var')
-	
+
 	Also checks if name is name of an array.
 	This function should NOT be use on parameter declarations.
 */
@@ -1024,7 +1024,7 @@ int DoRelation(symchar *type,
                struct gl_list_t *ft)
 {
   struct Name *nptr;
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
   assert(stat && (StatementType(stat) == REL));
   g_number++;
   nptr = RelationStatName(stat);
@@ -1104,7 +1104,7 @@ int DoExternal(symchar *type,
   WriteName(ASCERR,nptr);
   FPRINTF(ASCERR,"\n");
   error_reporter_end_flush();
-  
+
   /* add the name to the child list */
   doname_status = DoName(nptr,FindExternalType(),stat);
   CONSOLE_DEBUG("DONAME STATUS = %d",doname_status);
