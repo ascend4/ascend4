@@ -60,13 +60,13 @@
 #include "general/list.h"
 #include "extfunc.h"
 
-#ifndef _ASCCLIENTDATA
-#   ifdef __STDC__
-    typedef void *ascClientData;
-#   else
-    typedef int *ascClientData;
-#   endif /* __STDC__ */
-#define _ASCCLIENTDATA
+#ifndef ASC_CLIENTDATA_DECLARED
+# ifdef __STDC__
+   typedef void *ascClientData;
+# else
+   typedef int *ascClientData;
+# endif
+# define ASC_CLIENTDATA_DECLARED
 #endif
 
 /** these are for external clients to return to us when they have

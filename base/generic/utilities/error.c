@@ -200,6 +200,23 @@ error_reporter(
 	return res;
 }
 
+/*-------------------------
+  SET the callback function
+*/
+void
+error_reporter_set_callback(
+		const error_reporter_callback_t new_callback
+){
+	extern error_reporter_callback_t g_error_reporter_callback;
+	g_error_reporter_callback = new_callback;
+}
+
+/*-------------------------
+  OPTIONAL code for systems not supporting variadic macros.
+  You know, your system probably does support variadic macros, it's just
+  a question of checking what your particular syntax is...
+*/
+
 #if !(defined(__GNUC__) && !defined(__STRICT_ANSI__)) && !defined(HAVE_C99)
 /* Following are only required on compilers without variadic macros: */
 
@@ -256,15 +273,3 @@ int console_debug(const char *fmt,...){
 	return res;
 }
 #endif
-
-/*-------------------------
-  SET the callback function
-*/
-void
-error_reporter_set_callback(
-		const error_reporter_callback_t new_callback
-){
-	extern error_reporter_callback_t g_error_reporter_callback;
-	g_error_reporter_callback = new_callback;
-}
-

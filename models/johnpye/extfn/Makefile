@@ -27,7 +27,7 @@ CC = gcc
 
 LD = libtool --mode=link $(CC) -module -shared
 
-LDFLAGS = -lm 
+LDFLAGS = -lm -Wl,-no-undefined
 
 CPPFLAGS = -I$(ASCEND_INCDIR)
 CFLAGS = -O -c
