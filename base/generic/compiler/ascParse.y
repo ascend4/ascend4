@@ -512,9 +512,11 @@ provide_module:
 import:
     IMPORT_T IDENTIFIER_T FROM_T IDENTIFIER_T ';'
 	{
-	  symchar *path;
-	  path = MakeArchiveLibraryName(SCP($4));
-	  (void)LoadArchiveLibrary(SCP(path),SCP($2));
+	  (void)LoadArchiveLibrary(SCP($4),SCP($2));
+	}
+	| IMPORT_T IDENTIFIER_T ';'
+	{
+	  (void)LoadArchiveLibrary(SCP($2),NULL);
 	}
     ;
 

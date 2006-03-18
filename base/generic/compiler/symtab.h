@@ -48,13 +48,11 @@
 
 extern void DestroyStringSpace(void);
 /**< 
- *  <!--  void DestroyStringSpace()                                    -->
  *  This deallocates all the memory associated with the string space.
  */
 
 extern void InitSymbolTable(void);
 /**< 
- *  <!--  void InitSymbolTable()                                       -->
  *  This procedure performs all the necessary initialization for the symbol
  *  table manager.  It should be called once and only once, and it must
  *  be called before any of the other symbol table routines have been
@@ -66,11 +64,6 @@ extern void InitSymbolTable(void);
 
 extern symchar *AddSymbol(CONST char *c);
 /**< 
- *  <!--  symchar *AddSymbol(c)                                        -->
- *  <!--  const char *c;                                               -->
- *  <!--  E.g.                                                         -->
- *  <!--  symchar *permanentstring = AddSymbol(c);                     -->
- *
  *  This function adds the string c to the symbol table if it is not already
  *  defined.  This uses a copy of c rather than c itself.  c must be a
  *  NULL terminated string. allocation/deallocation of c is the users
@@ -88,15 +81,12 @@ extern symchar *AddSymbol(CONST char *c);
  *  Any size string can be stored in this table, though it's a bad
  *  idea to store very large ones. Strings below MAXIMUM_STRING_LENGTH
  *  we store efficiently.
+ *
+ *  @example symchar *permanentstring = AddSymbol(c);
  */
 
 extern symchar *AddSymbolL(CONST char *c, int len);
 /**< 
- *  <!--  symchar *AddSymbolL(c,len)                                   -->
- *  <!--  const char *c;                                               -->
- *  <!--  int len;                                                     -->
- *  <!--  symchar *permanentstring = AddSymbolL(c,clen);               -->
- *
  *  This function does exactly what add symbol does except the length of the
  *  string is passed as a parameter.  The length is the number of characters
  *  before the terminating '\0'.
@@ -114,7 +104,6 @@ extern symchar *AddSymbolL(CONST char *c, int len);
 
 extern symchar *AscFindSymbol(symchar *s);
 /**< 
- * <!--  s = AscFindSymbol(s);                                         -->
  * Returns NULL if the pointer s given is not from the table.
  * Otherwise returns the pointer given. 
  * This function does not check whether a string with the value
@@ -124,15 +113,12 @@ extern symchar *AscFindSymbol(symchar *s);
 
 extern void PrintTab(int noisy);
 /**< 
- *  <!--  PrintTab(noisy);                                             -->
- *  <!--  int noisy;                                                   -->
  *  Print a report on stdout about the string hash table.
  *  if (noisy) prints lots of goop.
  */
 
 extern void DestroySymbolTable(void);
 /**< 
- *  <!--  void DestroySymbolTable();                                   -->
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.
  */

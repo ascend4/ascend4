@@ -59,7 +59,7 @@ typedef int ExtEvalFunc(int *mode, int *m, int *n,
 /**
 	ExtProcFunc type is a function pointer.
 
-	@param mode 
+	@param mode
 	@param m
 	@param n
 	@param x
@@ -105,10 +105,10 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
                             struct gl_list_t *);
 
 typedef int ExtBBoxFunc(struct Slv_Interp *,
-                        int ninputs, 
+                        int ninputs,
                         int noutputs,
-                        double *inputs, 
-                        double *outputs, 
+                        double *inputs,
+                        double *outputs,
                         double *jacobian);
 
 extern void InitExternalFuncLibrary(void);
@@ -127,7 +127,7 @@ extern void DestroyExtFuncLibrary(void);
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
 /**<
- *  Creates a new ExternalFunc node having the specified name.  
+ *  Creates a new ExternalFunc node having the specified name.
  *  All other attributes are initialized to 0 or NULL.  There is
  *  no checking for the validity or uniqueness of name.
  *
@@ -137,8 +137,8 @@ extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
-/**< 
- *  Adds an external function node to the external function library. 
+/**<
+ *  Adds an external function node to the external function library.
  *  We look up the external function before adding it to the
  *  library.  If force is zero and the function exists then nothing
  *  is done and 0 is returned.  If force is true, then the old entry is
@@ -147,11 +147,19 @@ extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
  */
 
 extern struct ExternalFunc *LookupExtFunc(CONST char *funcname);
-/**< 
+/**<
  *  Returns the external function having the given name, or NULL if
  *  not found.
  */
 
+typedef int (*CreateUserFunction_fptr_t)(CONST char *name,
+                              ExtEvalFunc *init,
+                              ExtEvalFunc **value,
+                              ExtEvalFunc **deriv,
+                              ExtEvalFunc **deriv2,
+                              CONST unsigned long n_inputs,
+                              CONST unsigned long n_outputs,
+                              CONST char *help);
 
 extern int CreateUserFunction(CONST char *name,
                               ExtEvalFunc *init,
@@ -163,43 +171,43 @@ extern int CreateUserFunction(CONST char *name,
                               CONST char *help);
 /**<
  *  Adds an external function to the ASCEND system.
- *  The name of the function is looked up.  If it already exists, the 
- *  information will be updated.  If the name was not found in the 
- *  external function library, then an external function node will be 
- *  created and added to the external function library.  We make a 
- *  *copy* of the help string if it is provided.  We also make a copy 
- *  of the name.  Anyone desirous of ASCEND knowing about their 
+ *  The name of the function is looked up.  If it already exists, the
+ *  information will be updated.  If the name was not found in the
+ *  external function library, then an external function node will be
+ *  created and added to the external function library.  We make a
+ *  *copy* of the help string if it is provided.  We also make a copy
+ *  of the name.  Anyone desirous of ASCEND knowing about their
  *  functions must use this protocol.
  *
  *  @param name Name of the function being added (or updated).
  *  @param init Pointer to initialisation function, or NULL if none.
- *  @param value Pointer to a function pointer to the evaluation function, 
+ *  @param value Pointer to a function pointer to the evaluation function,
  *               or NULL if none.
- *  @param deriv Pointer to a function pointer to the first partial 
+ *  @param deriv Pointer to a function pointer to the first partial
  *               derivative function, or NULL if none.
- *  @param deriv2 Pointer to a function pointer to the second derivative 
+ *  @param deriv2 Pointer to a function pointer to the second derivative
  *                function, or NULL if none.
- *  @return Returns 0 if the function was successfully added, 
+ *  @return Returns 0 if the function was successfully added,
  *          non-zero otherwise.
  *
  *  @todo compiler/extfunc:CreateUserFunction() is broken.  The current
  *        implementation wants to treat value, deriv, and deriv2 as BOTH
- *        function pointers and arrays of function pointers.  We need to 
+ *        function pointers and arrays of function pointers.  We need to
  *        decide which they are or else provide a mechanism supporting dual
- *        roles.  This could be a union in ExternalFunc explicitly allowing 
+ *        roles.  This could be a union in ExternalFunc explicitly allowing
  *        them to be both.  This would necessitate 2 CreateUserFunction()
  *        varieties - 1 taking (ExtEvalFunc *) and 1 taking (ExtEvalFunc **)
  *        to allow the different types of ExternalFunc's to be set up.
  */
 
 extern struct ExternalFunc *RemoveExternalFunc(char *name);
-/**< 
+/**<
  *  Removes the external function having the given name from the
  *  External function library.
  */
 
 extern void DestroyExternalFunc(struct ExternalFunc *name);
-/**< 
+/**<
  *  Destroys an external function, but does *not* remove it from the
  *  library. Use the RemoveExternalFunc library first to retrieve the
  *  information, then call this function.
@@ -215,7 +223,7 @@ extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
 
 extern CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc);
-/**< 
+/**<
  *  Returns the name of an external function.
  */
 
@@ -224,13 +232,13 @@ extern unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 
 extern void PrintExtFuncLibrary(FILE *f);
-/**< 
+/**<
  *  Prints the contents of the external function library to the given
  *  file. The file must be opened for writing.
  */
 
 extern char *WriteExtFuncLibraryString(void);
-/**< 
+/**<
  * Returns a string of formatted information about the external functions
  * defined. the string looks like "{{name1} {help1}} {{name2} {help2}} "
  * The string may be empty/NULL if there are no external functions loaded.

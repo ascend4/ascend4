@@ -46,10 +46,21 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "utilities/ascConfig.h"
+#include "utilities/error.h"
 #include "utilities/ascPrint.h"
 #include "utilities/ascPanic.h"
 #include "utilities/ascMalloc.h"
 #include "utilities/ascDynaLoad.h"
+
+#include "compiler/instance_enum.h"
+#include "general/list.h"
+#include "compiler/compiler.h"
+#include "compiler/extfunc.h"
+
+typedef int (*ExternalLibraryRegister_fptr_t)(
+	const CreateUserFunction_fptr_t
+	,const ErrorReporter_fptr_t
+);
 
 /*--------------------------------------
   GENERIC STUFF
@@ -187,7 +198,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   HINSTANCE xlib;
-  int (*install)() = NULL;
+  ExternalLibraryRegister_fptr_t install = NULL;
 
   if (NULL == path) {
     FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
@@ -218,7 +229,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (install == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
 }
 #endif /* __WIN32__ */
 
@@ -249,7 +260,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
-  int (*install)() = NULL;
+  ExternalLibraryRegister_fptr_t install = NULL;
 
   if (NULL == path) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed: Null path\n");
@@ -279,7 +290,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (install == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
 }
 
 #endif /* posix: linux, unix, solaris,sgi */
@@ -303,7 +314,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 # define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   shl_t xlib;
-  int (*install)() = NULL;
+  ExternalLibraryRegister_fptr_t install = NULL;
   int i;
 
   if (NULL == path) {
@@ -340,7 +351,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (install == NULL) ? 0 : (*install)();
+  return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
 }
 
 #endif /* __hpux */

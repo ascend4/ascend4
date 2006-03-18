@@ -785,6 +785,13 @@ if test -n "$ac_init_help"; then
 
   cat <<\_ACEOF
 
+Optional Features:
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-coverage-testing
+                          Instrument files with gcov coverage testing code
+
+
 _ACEOF
 fi
 
@@ -1256,7 +1263,19 @@ ASCEND_MAKEFILEDIR_1="$PWD"
 ASCEND_MAKEFILEDIR="$PWD/../../base/generic/lib"
 
 # Coverage testing
-COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage"
+# Check whether --enable-coverage-testing or --disable-coverage-testing was given.
+if test "${enable_coverage_testing+set}" = set; then
+  enableval="$enable_coverage_testing"
+  if test $enableval; then
+		COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage"
+	else
+		COVERAGE_FLAGS=""
+	fi
+
+else
+  COVERAGE_FLAGS=""
+
+fi;
 
 # Default library location
 # can be overridden by a value in ~/.ascend.ini
