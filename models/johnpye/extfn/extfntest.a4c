@@ -1,5 +1,5 @@
 REQUIRE "system.a4l";
-IMPORT extfntest_register FROM extfntest;
+IMPORT extfntest;
 
 MODEL test_extfntest;
 

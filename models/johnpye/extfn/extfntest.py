@@ -10,8 +10,8 @@ print "\n\n\n\nLOADING EXTERNAL TEST...\n\n\n"
 L.load("extfntest.a4c")
 
 #--------------------------------
-print "\n\n\n\nLOADING INTERNAL TEST...\n\n\n"
-L.load("intfntest.a4c")
+#print "\n\n\n\nLOADING INTERNAL TEST...\n\n\n"
+#L.load("intfntest.a4c")
 
 #--------------------------------
 print "\n\n\n\nINSTANTIATING TEST...\n\n\n"

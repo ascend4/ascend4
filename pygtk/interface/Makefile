@@ -6,7 +6,7 @@ CC = gcc
 SO_SUFF = .so
 PLATFORM_CPPFLAGS = 
 
-COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
+COVERAGE_FLAGS = 
 
 CXXFLAGS = -c -g $(COVERAGE_FLAGS)
 
@@ -100,8 +100,8 @@ clean:
 	-rm ascend.py
 	-rm main
 	-rm *.pyc
-	-rm *.gcda
 	-rm *.gcno
+	-rm *.gcda
 	-rmdir .libs
 
 cleanall: clean

@@ -1,7 +1,11 @@
 #include <stdio.h>
 
-#include <utilities/ascConfig.h>
+#define ASC_USE_IMPORTED_ERROR_REPORTER
 #include <utilities/error.h>
+
+
+#include <utilities/ascConfig.h>
+
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/dimen.h>
@@ -21,27 +25,28 @@ int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double
 
 	It sets up the functions in this external function library
 */
+
 extern int
-DLEXPORT extfntest_register(struct Slv_Interp *dummy1,
-                      struct Instance *root,
-                      struct gl_list_t *arglist,
-                      unsigned long dummy4
+DLEXPORT extfntest_register(
+	const CreateUserFunction_fptr_t CreateUserFunction_fptr
+	,const ErrorReporter_fptr_t ErrorReporter_fptr
 ){
 	const char *addone_help = "This is a test of the dynamic user packages functionality";
 	int result = 0;
 
-	(void)dummy1;(void)root;(void)arglist;(void)dummy4;
+	extern ErrorReporter_fptr_t g_ErrorReporter_fptr;
+	g_ErrorReporter_fptr = ErrorReporter_fptr;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n",5,6,7,8);
 
-	result += CreateUserFunction("add_one",
+	result += (CreateUserFunction_fptr)("add_one",
                   (ExtEvalFunc *)addone_prepare,
 			      (ExtEvalFunc **)addone_calc,
 			      (ExtEvalFunc **)NULL,
 			      (ExtEvalFunc **)NULL,
 			      1,1,addone_help);
 
-	FPRINTF(ASCERR,"CreateUserFunction result = %d\n",result);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
 	return result;
 }
 
@@ -49,7 +54,7 @@ int addone_prepare(struct Slv_Interp *slv_interp,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
-	FPRINTF(ASCERR,"PREPARING PKG EXTFNTEST...\n");
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING PKG EXTFNTEST...\n");
 	const char *mystring = "MY STRING IS HERE";
 	slv_interp->user_data = (void *)mystring;
 }
@@ -61,9 +66,9 @@ int addone_calc(struct Slv_Interp *slv_interp,
 ){
 	char *mystring = (char *)slv_interp->user_data;
 
-	FPRINTF(ASCERR,"ADDONE_CALC: mystring = %s\n",mystring);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ADDONE_CALC: mystring = %s\n",mystring);
 
-	FPRINTF(ASCERR,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs);
 
 	double *x = &(inputs[0]);
 

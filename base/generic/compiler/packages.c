@@ -2,10 +2,6 @@
  *  User Packages
  *  by Kirk Abbott
  *  Created: July 4, 1994
- *  Version: $Revision: 1.14 $
- *  Version control file: $RCSfile: packages.c,v $
- *  Date last modified: $Date: 1998/03/06 15:47:14 $
- *  Last modified by: $Author: ballan $
  *
  *  This file is part of the Ascend Language Interpreter.
  *
@@ -26,6 +22,7 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  *
+ *  Last rev in old CVS: 1.14 ballan 1998/03/06 15:47:14
  */
 
 /**
@@ -212,18 +209,33 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 
 #elif defined(DYNAMIC_PACKAGES)
 
+  symchar *name_with_extn;
+  name_with_extn = MakeArchiveLibraryName(name);
+
   int result;
   char *default_path = ".";
   char *env = PATHENVIRONMENTVAR;
   char *full_file_name = NULL;
   extern int Asc_DynamicLoad(CONST char *,CONST char *);
 
-  full_file_name = SearchArchiveLibraryPath(name,default_path,env);
+  char initfunc_generated_name[255];
+
+  full_file_name = SearchArchiveLibraryPath(name_with_extn,default_path,env);
   if (!full_file_name) {
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path",name);
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path",name_with_extn);
     return 1;
   }
-  result = Asc_DynamicLoad(full_file_name,initfunc);
+
+  if(initfunc==NULL){
+	CONSOLE_DEBUG("GENERATING NAME OF INITFUNC");
+	CONSOLE_DEBUG("NAME STEM = %s",name);
+	strcpy(name,initfunc_generated_name);
+	strcat(initfunc_generated_name,"_register");
+	result = Asc_DynamicLoad(full_file_name,initfunc_generated_name);
+  }else{
+	result = Asc_DynamicLoad(full_file_name,initfunc);
+  }
+
   if (result) {
     return 1;
   }
