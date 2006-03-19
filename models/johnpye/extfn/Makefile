@@ -1,8 +1,6 @@
 # Makefile for add-ins in the current directory; for each .c file you will get a separate .so file.
 
 PACKAGES = extfntest
-SO_SUF = .so
-SO_PREF = lib
 
 ASCEND_BASE_REL = ../../..
 
@@ -12,13 +10,37 @@ ASCEND_INCDIR = $(ASCEND_BASE)/base/generic
 
 LIBS = $(PACKAGES:%=$(SO_PREF)%$(SO_SUF))
 
+ifeq ($(OSTYPE),msys)
+	PYTHON_VERSION := 24
+	PYTHON_ROOT := /c/Python$(PYTHON_VERSION)
+	PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
+	PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython$(PYTHON_VERSION)
+	SO_SUF = .dll
+	SO_PREF = 
+else
+	ifeq ($(TERM),cygwin)
+		PYTHON_VERSION := 24
+		PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
+		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
+		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
+		SO_SUF = .dll
+		SO_PREF = 
+	else
+		PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
+		PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
+		PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+		SO_SUF = .so
+		SO_PREF = lib
+	endif
+endif
+
 all: ascend makelibs test
 
 makelibs: $(LIBS) 
 	@echo "Compiled libraries $(LIBS)"
 
 test: $(LIBS)
-	PYTHONPATH=$(ASCEND_BASE)/pygtk/interface/ python extfntest.py
+	PYTHONPATH=$(ASCEND_BASE)/pygtk/interface/ $(PYTHON_ROOT)/python extfntest.py
 
 ascend:
 	make -j2 -C $(ASCEND_BASE)/pygtk/interface/

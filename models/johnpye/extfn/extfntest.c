@@ -21,7 +21,7 @@ int addone_prepare(struct Slv_Interp *slv_interp, struct Instance *data, struct 
 int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double *inputs, double *outputs, double *jacobian);
 
 /**
-	This is the function called from "IMPORT extfntest_register FROM extfntest"
+	This is the function called from "IMPORT extfntest"
 
 	It sets up the functions in this external function library
 */
@@ -37,7 +37,7 @@ DLEXPORT extfntest_register(
 	extern ErrorReporter_fptr_t g_ErrorReporter_fptr;
 	g_ErrorReporter_fptr = ErrorReporter_fptr;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n",5,6,7,8);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
 	result += (CreateUserFunction_fptr)("add_one",
                   (ExtEvalFunc *)addone_prepare,

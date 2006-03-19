@@ -1,6 +1,8 @@
 #!/usr/bin/python
-import sys, dl, re
-sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+import platform
+if platform.system() != "Windows":
+	import sys, re, dl
+	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 
 import ascend
 L = ascend.Library()
