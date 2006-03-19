@@ -15,6 +15,7 @@ ifeq ($(OSTYPE),msys)
 	PYTHON_ROOT := /c/Python$(PYTHON_VERSION)
 	PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
 	PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython$(PYTHON_VERSION)
+	PYTHON := $(PYTHON_ROOT)/python
 	SO_SUF = .dll
 	SO_PREF = 
 else
@@ -23,12 +24,14 @@ else
 		PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
 		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
 		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
+		PYTHON := $(PYTHON_ROOT)/python
 		SO_SUF = .dll
 		SO_PREF = 
 	else
 		PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
 		PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
 		PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+		PYTHON := python
 		SO_SUF = .so
 		SO_PREF = lib
 	endif
@@ -40,7 +43,7 @@ makelibs: $(LIBS)
 	@echo "Compiled libraries $(LIBS)"
 
 test: $(LIBS)
-	PYTHONPATH=$(ASCEND_BASE)/pygtk/interface/ $(PYTHON_ROOT)/python extfntest.py
+	PYTHONPATH=$(ASCEND_BASE)/pygtk/interface/ $(PYTHON) extfntest.py
 
 ascend:
 	make -j2 -C $(ASCEND_BASE)/pygtk/interface/
