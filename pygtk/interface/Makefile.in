@@ -70,16 +70,16 @@ ifeq ($(USE_PYTHON),1)
 		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
 		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython$(PYTHON_VERSION)
 	else
-        ifeq ($(TERM),cygwin)
-		PYTHON_VERSION := 24
-		PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
-		PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
-		PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
-        else
-		PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
-		PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
-		PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
-        endif
+		ifeq ($(TERM),cygwin)
+			PYTHON_VERSION := 24
+			PYTHON_ROOT := /cygdrive/c/Python$(PYTHON_VERSION)
+			PYTHON_CPPFLAGS := -I$(PYTHON_ROOT)/include
+			PYTHON_LDFLAGS := -L$(PYTHON_ROOT)/libs -lpython24
+		else
+			PYTHON_VERSION := $(shell python -V 2>&1 | sed s/Python\ // | sed s/^\\\([0-9][0-9]*\\.[0-9][0-9]*\\\).*/\\1/ )
+			PYTHON_CPPFLAGS := -I/usr/include/python$(PYTHON_VERSION)
+			PYTHON_LDFLAGS := -lpython$(PYTHON_VERSION)
+		endif
 	endif
 endif
 

@@ -34,6 +34,10 @@
 	required.
 */
 
+#ifndef DYNAMIC_PACKAGES
+# error "WHERE IS THE DYNAMICS PACKAGES #DEF?!"
+#endif
+
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
 #include "utilities/ascConfig.h"
@@ -92,14 +96,16 @@ symchar *MakeArchiveLibraryName(CONST char *prefix)
   len = strlen(prefix);
   buffer = (char *)ascmalloc(len+40);
 
-#if defined(sun) || defined(solaris)
+#ifdef __WIN32__
+  sprintf(buffer,"%s.dll",prefix);
+#elif defined(linux)
+  sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
+#elif defined(sun) || defined(solaris)
   sprintf(buffer,"%s.so.1.0",prefix);
 #elif defined(__hpux)
   sprintf(buffer,"%s.sl",prefix);
 #elif defined(_SGI_SOURCE)
   sprintf(buffer,"%s.so",prefix);
-#elif defined(linux)
-  sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
 #else
   sprintf(buffer,"%s.so.1.0",prefix);
 #endif
@@ -229,8 +235,9 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   if(initfunc==NULL){
 	CONSOLE_DEBUG("GENERATING NAME OF INITFUNC");
 	CONSOLE_DEBUG("NAME STEM = %s",name);
-	strcpy(name,initfunc_generated_name);
+	sprintf(initfunc_generated_name,"%s",name);
 	strcat(initfunc_generated_name,"_register");
+	CONSOLE_DEBUG("GENERATED NAME = %s",initfunc_generated_name);
 	result = Asc_DynamicLoad(full_file_name,initfunc_generated_name);
   }else{
 	result = Asc_DynamicLoad(full_file_name,initfunc);
@@ -239,7 +246,11 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   if (result) {
     return 1;
   }
-  ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc,name);
+  if(initfunc==NULL){
+  	ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc_generated_name,name);
+  }else{
+  	ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc,name);
+  }
   return 0;
 
 #elif defined(STATIC_PACKAGES)
