@@ -378,7 +378,7 @@ LIGHT_C = {2.99793e8 * meter/second};     (* Speed of light in vacuum *)
 MU0 = {4e-7*PI*kg*m/C/C};                 (* Permeability of free space *)
 EPSILON0 = {1/LIGHT_C/LIGHT_C/MU0};       (* Permittivity of free space *)
 BOLTZMAN_C = {1.3805e-23 * J/K};          (* Boltzman's constant *)
-SIGMA_C = {5.670e-8 * W/m^2*K^4 };        (* Stefan-Boltzmann constant
+SIGMA_C = {5.670e-8 * W/m^2/K^4 };        (* Stefan-Boltzmann constant
 											 - blackbody radiation *)
 AVOGADRO_C = {6.022045e23 *molecule/mole};(* Avogadro's number of molecules *)
 GRAVITY_C = {6.673e-11 * N*m*m/kg/kg};    (* Newtons gravitational constant *)
