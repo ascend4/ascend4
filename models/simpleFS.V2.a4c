@@ -1,0 +1,501 @@
+REQUIRE "atoms.a4l";
+(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "simpleFS.V2.a4c";
+(*
+ * This file is part of the ASCEND Modeling Library and is released
+ * under the GNU Public License as described at the end of this file.
+ *
+ * Use of this module is demonstrated by the associated script file
+ * simple_fs.a4s.
+ *)
+
+(*
+  
+This file contains code to model the same flowsheet as
+  
+    simpleFS.V1.a4c
+  
+EXCEPT we have modified most of the models to be parameterized.  We
+strongly recommend creating parameterized models as they tend to be
+much easier to reuse.  The model simple_fs.a4c uses a modeling style
+based on ARE_THE_SAME statements to configure the flowsheet, a style
+that can often be easier to write initially.  However, reuse is not
+its strength.
+  
+We have included this model to aid new ASCEND users to understand
+better how to write parameterized models.
+  
+------------------------------------------------------------------
+
+The following example illustrates equation based modeling using the
+ASCEND system.  The process is a simple recycle process.
+
+
+
+                                          -------
+                                         |       |
+                   ----------------------| split |----> purge
+                  |                      |       |
+                  |                       -------
+                  |                          ^
+                  v                          |
+                -----      ---------      -------
+               |     |    |         |    |       |
+         ----->| mix |--->| reactor |--->| flash |
+               |     |    |         |    |       |
+                -----      ---------      -------
+                                             |
+                                             |
+                                              ----->  C
+
+This model requires:    "system.a4l"
+                        "atoms.a4l"
+*)
+
+
+(* ************************************************* *)
+
+
+MODEL mixture(
+    components                      WILL_BE set OF symbol_constant;
+);
+
+    y[components]                   IS_A fraction;
+    sumy: SUM[y[i] | i IN components]     =    1.0;
+
+METHODS
+
+    METHOD specify;
+        y[components].fixed := TRUE;
+        y[CHOICE[components]].fixed := FALSE;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+END mixture;
+
+(* ************************************************* *)
+
+
+MODEL molar_stream(
+    components                  WILL_BE set OF symbol_constant;
+);
+
+    (* Note: we now pass the set components into this model *)
+
+    state                       IS_A mixture(components);
+    
+    (* and we pass it on into the defining of state.  In this
+      manner we assure that the same set is used in both places
+      when defining the model.  We had to use ARE_THE_SAME in
+      the earlier model to guarantee both used the same
+      components set.
+    *)
+
+    Ftot,f[components]          IS_A molar_rate;
+
+    FOR i IN components CREATE
+        f_def[i]: f[i] = Ftot*state.y[i];
+    END FOR;
+
+METHODS
+
+    METHOD seqmod;
+        RUN state.specify;
+        state.y[components].fixed   := FALSE;
+    END seqmod;
+
+    METHOD specify;
+        RUN seqmod;
+        f[components].fixed         := TRUE;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        FOR i IN components DO
+            f[i].nominal := f[i] + 0.1{mol/s};
+        END FOR;
+        Ftot.nominal := Ftot + 0.1{mol/s};
+    END scale;
+
+END molar_stream;
+
+(* ************************************************* *)
+
+
+MODEL mixer(
+    n_inputs                    WILL_BE integer_constant;
+    feed[1..n_inputs]           WILL_BE molar_stream;
+    out                         WILL_BE molar_stream;
+);
+
+   (* We pass all the streams into this model definition.
+     as opposed to defining them within this model.
+   *)
+
+
+    FOR i IN out.components CREATE
+        cmb[i]: out.f[i] = SUM[feed[1..n_inputs].f[i]];
+    END FOR;
+
+METHODS
+
+    METHOD seqmod;
+    END seqmod;
+
+    METHOD specify;
+        RUN seqmod;
+        RUN feed[1..n_inputs].specify;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        RUN feed[1..n_inputs].scale;
+        RUN out.scale;
+    END scale;
+
+END mixer;
+
+(* ************************************************* *)
+
+
+MODEL reactor(
+    feed                        WILL_BE molar_stream;
+    out                         WILL_BE molar_stream;
+);
+
+    turnover                        IS_A            molar_rate;
+    stoich_coef[feed.components]    IS_A            factor;
+
+    FOR i IN feed.components CREATE
+        cmb[i]: out.f[i] = feed.f[i] + stoich_coef[i]*turnover;
+    END FOR;
+
+METHODS
+
+    METHOD seqmod;
+        turnover.fixed                          :=      TRUE;
+        stoich_coef[feed.components].fixed      :=      TRUE;
+    END seqmod;
+
+    METHOD specify;
+        RUN seqmod;
+        RUN feed.specify;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        RUN feed.scale;
+        RUN out.scale;
+        turnover.nominal := turnover.nominal+0.0001 {kg_mole/s};
+    END scale;
+
+END reactor;
+
+(* ************************************************* *)
+
+
+MODEL flash(
+    feed                        WILL_BE molar_stream;
+    vap                         WILL_BE molar_stream;
+    liq                         WILL_BE molar_stream;
+);
+
+    alpha[feed.components],
+    ave_alpha               IS_A            factor;
+    vap_to_feed_ratio       IS_A            fraction;
+
+    VFratio: vap_to_feed_ratio*feed.Ftot = vap.Ftot;
+
+    FOR i IN feed.components CREATE
+        cmb[i]: feed.f[i] = vap.f[i] + liq.f[i];
+        eq[i]:  vap.state.y[i]*ave_alpha = alpha[i]*liq.state.y[i];
+    END FOR;
+
+  METHODS
+
+    METHOD seqmod;
+        alpha[feed.components].fixed    :=      TRUE;
+        vap_to_feed_ratio.fixed         :=      TRUE;
+    END seqmod;
+
+    METHOD specify;
+        RUN seqmod;
+        RUN feed.specify;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        RUN feed.scale;
+        RUN vap.scale;
+        RUN liq.scale;
+    END scale;
+
+END flash;
+
+(* ************************************************* *)
+
+
+MODEL splitter(
+    n_outputs                   WILL_BE        integer_constant;
+    feed                        WILL_BE        molar_stream;
+    out[1..n_outputs]           WILL_BE        molar_stream;
+);
+
+    split[1..n_outputs]         IS_A           fraction;
+
+    compsLessOne                IS_A           set OF symbol_constant;
+    compsLessOne :== feed.components - [CHOICE[feed.components]];
+    
+    FOR j IN [1..n_outputs] CREATE
+	FOR i IN compsLessOne CREATE
+	    splitState[j][i]: out[j].state.y[i] = feed.state.y[i];
+	END FOR;
+        cmb[j]: out[j].Ftot = split[j]*feed.Ftot;
+    END FOR;
+
+    sumSplits: SUM[split[1..n_outputs]] = 1.0;
+
+METHODS
+
+    METHOD seqmod;
+        split[1..n_outputs-1].fixed             :=      TRUE;
+    END seqmod;
+
+    METHOD specify;
+        RUN seqmod;
+        RUN feed.specify;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        RUN feed.scale;
+        RUN out[1..n_outputs].scale;
+    END scale;
+
+END splitter;
+
+(* ************************************************* *)
+
+
+MODEL flowsheet;
+    
+(*
+      
+It is in this model that the largest changes occur to create
+parameterized models.  We now define the set named components and all
+the streams in this model and pass those definitions into the model
+parts that require them.  We do not and need not use any ARE_THE_SAME
+statements.
+      
+Note in particular the use of the ALIASES statements below to allow
+the two feeds to the mixer and the two output streams from the
+splitter to be given array names as aliases.  The mixer unit expects
+to receive an array of n_inputs input streams.  The splitter expects
+an array of output streams.  One of the inputs to the mixer is also
+one of the outputs from the splitter.  An array element such as a[1]
+is simply the name for that element, to distinguish it from a[2].
+Such naming does not imply contiguous storage.
+
+*)
+
+
+
+(* define sets *)
+    
+    components           IS_A            set OF symbol_constant;
+    n_inputs, n_outputs  IS_A            integer_constant;
+    n_inputs             :==             2;
+    n_outputs            :==             2;
+
+(* define streams *)
+
+    fsFeed,
+    recycle,
+    mixOut,
+    reactOut,
+    liqOut,
+    vapOut,
+    bleed                 IS_A           molar_stream(components);
+    
+    mixFeed[mixInputs] ALIASES (fsFeed,recycle)
+        WHERE mixInputs IS_A set OF integer_constant
+        WITH_VALUE (1..n_inputs);
+
+    splitOut[splitOutputs] ALIASES (bleed,recycle)
+        WHERE splitOutputs IS_A set OF integer_constant
+        WITH_VALUE (1..n_outputs);
+    
+(* define and wireup flowsheet *)
+    m1                   IS_A            mixer(n_inputs,mixFeed,mixOut);
+    r1                   IS_A            reactor(mixOut, reactOut);
+    fl1                  IS_A            flash(reactOut, vapOut, liqOut);
+    sp1                  IS_A            splitter(n_outputs, vapOut, splitOut);
+
+METHODS
+
+    METHOD seqmod;
+        RUN m1.seqmod;
+        RUN r1.seqmod;
+        RUN fl1.seqmod;
+        RUN sp1.seqmod;
+    END seqmod;
+
+    METHOD specify;
+        RUN seqmod;
+        RUN m1.feed[1].specify;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        RUN m1.scale;
+        RUN r1.scale;
+        RUN fl1.scale;
+        RUN sp1.scale;
+    END scale;
+
+END flowsheet;
+
+(* ************************************************* *)
+
+
+MODEL controller;
+
+    fs                   IS_A            flowsheet;
+    conv                 IS_A            fraction;
+    key_components       IS_A            symbol_constant;
+
+    convControl: fs.r1.out.f[key_components] =
+        (1 - conv)*fs.r1.feed.f[key_components];
+
+  METHODS
+
+    METHOD specify;
+        RUN fs.specify;
+        fs.r1.turnover.fixed            :=      FALSE;
+        conv.fixed                      :=      TRUE;
+    END specify;
+
+    METHOD reset;
+        RUN ClearAll;
+        RUN specify;
+    END reset;
+
+    METHOD scale;
+        RUN fs.scale;
+    END scale;
+
+END controller;
+
+(* ************************************************* *)
+
+
+MODEL test_flowsheet REFINES flowsheet;
+
+    components                          :==     ['A','B','C'];
+
+METHODS
+
+    METHOD default_self;
+        (* no-op. here to avoid STOP statement. *)
+    END default_self;
+    
+    METHOD values;
+        m1.feed[1].f['A']               :=      0.005  {kg_mole/s};
+        m1.feed[1].f['B']               :=      0.095 {kg_mole/s};
+        m1.feed[1].f['C']               :=      0.0  {kg_mole/s};
+
+        r1.stoich_coef['A']             :=      0;
+        r1.stoich_coef['B']             :=      -1;
+        r1.stoich_coef['C']             :=      1;
+
+        fl1.alpha['A']                  :=      12.0;
+        fl1.alpha['B']                  :=      10.0;
+        fl1.alpha['C']                  :=      1.0;
+        fl1.vap_to_feed_ratio           :=      0.9;
+        fl1.ave_alpha                   :=      5.0;
+
+        sp1.split[1]                    :=      0.01;
+
+        fl1.liq.Ftot                    :=      m1.feed[1].f['B'];
+    END values;
+
+END test_flowsheet;
+
+(* ************************************************* *)
+
+
+MODEL test_controller REFINES controller;
+
+    fs                   IS_REFINED_TO   test_flowsheet;
+    key_components       :==             'B';
+
+METHODS
+
+    METHOD default_self;
+        (* no-op. here to avoid STOP statement. *)
+    END default_self;
+    
+    METHOD values;
+        RUN fs.values;
+        conv              :=             0.07;
+    END values;
+
+END test_controller;
+
+
+(*
+ *  simple_fs.V3.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 1998/06/17 19:28:37 $
+ *  $Revision: 1.2 $
+ *  $Author: mthomas $
+ *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs.a4c,v $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994 - 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)

@@ -1,9 +1,9 @@
-REQUIRE "simple_fs_ext.a4c";
-(* => simple_fs_ext.a4c, simple_fs.a4c, atoms.a4l, measures.a4l,
+REQUIRE "simpleFS.V1.mass.a4c";
+(* => simpleFS.V1.mass.a4c, simpleFS.V1.a4c, atoms.a4l, measures.a4l,
  *    system.a4l, basemodel.a4l *)
 REQUIRE "Guthrie_costs.a4l";
 (* => Guthrie_costs.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "simple_fs_cost.a4c";
+PROVIDE "simpleFS.V1.cost.a4c";
 (*
  * This file is part of the ASCEND Modeling Library and is released
  * under the GNU Public License as described at the end of this file.

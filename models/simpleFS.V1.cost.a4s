@@ -7,7 +7,7 @@ DELETE TYPES;
 # The following read statement will cause lots OF warnings,
 # because the modeling style is NOT particularly clean. The
 # models work, however.
-READ FILE "simple_fs_cost.a4c";
+READ FILE "simpleFS.V1.cost.a4c";
 
 COMPILE tfc OF flowsheet_cost;
 BROWSE {tfc};

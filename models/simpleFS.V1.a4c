@@ -1,12 +1,12 @@
 REQUIRE "atoms.a4l";
 (* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "simple_fs.a4c";
+PROVIDE "simpleFS.V1.a4c";
 (*
  * This file is part of the ASCEND Modeling Library and is released
  * under the GNU Public License as described at the end of this file.
  *
  * Use of this module is demonstrated by the associated script file
- * simple_fs.a4s.
+ * simpleFS.V1V2.a4s.
  *)
 
 (*
@@ -49,17 +49,13 @@ MODEL mixture;
 
   METHODS
 
-    METHOD clear;
-        y[components].fixed := FALSE;
-    END clear;
-
     METHOD specify;
         y[components].fixed := TRUE;
         y[CHOICE[components]].fixed := FALSE;
     END specify;
 
     METHOD reset;
-        RUN clear;
+        RUN ClearAll;
         RUN specify;
     END reset;
 
@@ -82,12 +78,6 @@ MODEL molar_stream;
 	END FOR;
 
   METHODS
-  
-    METHOD clear;
-	RUN state.clear;
-	Ftot.fixed				:= FALSE;
-	f[components].fixed			:= FALSE;
-    END clear;
 
     METHOD seqmod;
 	RUN state.specify;
@@ -100,7 +90,7 @@ MODEL molar_stream;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -130,11 +120,6 @@ MODEL mixer;
 
   METHODS
 
-    METHOD clear;
-	RUN feed[1..n_inputs].clear;
-	RUN out.clear;
-    END clear;
-
     METHOD seqmod;
     END seqmod;
 
@@ -144,7 +129,7 @@ MODEL mixer;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -172,13 +157,6 @@ MODEL reactor;
 
   METHODS
 
-    METHOD clear;
-	RUN feed.clear;
-	RUN out.clear;
-	turnover.fixed				:=	FALSE;
-	stoich_coef[feed.components].fixed	:=	FALSE;
-    END clear;
-
     METHOD seqmod;
 	turnover.fixed				:=	TRUE;
 	stoich_coef[feed.components].fixed	:=	TRUE;
@@ -190,7 +168,7 @@ MODEL reactor;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -227,15 +205,6 @@ MODEL flash;
 
   METHODS
 
-    METHOD clear;
-	RUN feed.clear;
-	RUN vap.clear;
-	RUN liq.clear;
-	alpha[feed.components].fixed	:=	FALSE;
-	ave_alpha.fixed			:=	FALSE;
-	vap_to_feed_ratio.fixed		:=	FALSE;
-    END clear;
-
     METHOD seqmod;
 	alpha[feed.components].fixed	:=	TRUE;
 	vap_to_feed_ratio.fixed		:=	TRUE;
@@ -247,7 +216,7 @@ MODEL flash;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -281,12 +250,6 @@ MODEL splitter;
 
   METHODS
 
-    METHOD clear;
-	RUN feed.clear;
-	RUN out[1..n_outputs].clear;
-	split[1..n_outputs-1].fixed		:=	FALSE;
-    END clear;
-
     METHOD seqmod;
 	split[1..n_outputs-1].fixed		:=	TRUE;
     END seqmod;
@@ -297,7 +260,7 @@ MODEL splitter;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -332,13 +295,6 @@ MODEL flowsheet;
 
   METHODS
 
-    METHOD clear;
-	RUN m1.clear;
-	RUN r1.clear;
-	RUN fl1.clear;
-	RUN sp1.clear;
-    END clear;
-
     METHOD seqmod;
 	RUN m1.seqmod;
 	RUN r1.seqmod;
@@ -352,7 +308,7 @@ MODEL flowsheet;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -377,11 +333,6 @@ MODEL controller;
 
   METHODS
 
-    METHOD clear;
-	RUN fs.clear;
-	conv.fixed			:=	FALSE;
-    END clear;
-
     METHOD specify;
 	RUN fs.specify;
 	fs.r1.turnover.fixed		:=	FALSE;
@@ -389,7 +340,7 @@ MODEL controller;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
