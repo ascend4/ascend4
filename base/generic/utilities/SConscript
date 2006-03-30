@@ -1,6 +1,6 @@
 Import('env')
 
-env.Library('ascgeneral',Split("""
+env.Library('ascutilities',Split("""
 
 	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c
 	ascPrint.c error.c ascSignal.c mem.c readln.c set.c

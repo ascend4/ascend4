@@ -39,7 +39,7 @@ scanner = env.CFile(target=['scanner.c'],source=['scanner.l']
 
 env.Depends(scanner,['ascParse.h'])
 
-env.Library('ascgeneral',objs+rounded+parser+scanner)
+env.Library('asccompiler',objs+rounded+parser+scanner)
 
 
 
