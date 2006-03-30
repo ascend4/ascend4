@@ -1,0 +1,35 @@
+Import('env')
+
+srcs = Split("""
+
+	library.cpp type.cpp module.cpp symchar.cpp
+	instance.cpp instanceinterfacedata.cpp
+	method.cpp name.cpp
+	reporter.cpp simulation.cpp set.cpp units.cpp dimensions.cpp extmethod.cpp
+	variable.cpp relation.cpp
+	solver.cpp curve.cpp plot.cpp
+	solverparameters.cpp solverparameter.cpp solverparameteriterator.cpp
+	solverstatus.cpp solverreporter.cpp
+	incidencematrix.cpp
+
+""")
+
+libs = Split("""
+	asccompiler ascpackages ascsolver ascutilities ascgeneral 
+	python
+""")
+
+libpath = Split("""
+	../../../base/generic/compiler
+	../../../base/generic/packages
+	../../../base/generic/solver
+	../../../base/generic/utilities
+	../../../base/generic/general
+""")
+
+env.SharedLibrary("ascend",srcs
+	, LIBS = libs
+	, LIBPATH = libpath
+	, CPPPATH = ['../../base/generic','$CPPPATH']
+	, CPPDEFINES = ['ASCXX_USE_PYTHON']
+)
