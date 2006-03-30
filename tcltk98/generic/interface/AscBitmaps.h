@@ -31,9 +31,9 @@
  *  Registration of Tcl/Tk bitmaps.
  *  <pre>
  *  To include this header, you must include the following:
- *      #include "tcl.h"
- *      #include "utilities/ascConfig.h"
- *      #include "interface/AscBitmaps.h"
+ *      #include <tcl.h>
+ *      #include <utilities/ascConfig.h>
+ *      #include "AscBitmaps.h"
  *  </pre>
  */
 
