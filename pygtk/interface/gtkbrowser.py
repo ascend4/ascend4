@@ -56,6 +56,8 @@ ESCAPE_KEY = 65307
 
 HELP_ROOT = None
 
+ASCEND_ICON = 'glade/ascend.png'
+
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
 #======================================

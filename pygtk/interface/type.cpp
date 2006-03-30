@@ -125,21 +125,31 @@ Type::getSimulation(SymChar sym){
 	if(0 && !have_bintoken_setup){
 		cerr << "SETUP BINTOKENS..." << endl;
 
-		bin_targetstem = ASCEND_TMPDIR "/asc_bintoken";
+/*
+	THE FOLLOWING STUFF IS CURRENTLY BROKEN.
+	The reason is that we need to add configuration options with SCons that
+	pass in the correct values here. These values need to correspond with 
+	the *installed* location of things like 'Makefile.bt' (if that is what is
+	to be used, that is), where the ASCEND libs are, etc, whatever.
+*/
+//		bin_targetstem = ASCEND_TMPDIR "/asc_bintoken";
+		bin_targetstem = "/tmp/asc_bintoken";
 		bin_srcname = bin_targetstem + ".c";
 		bin_objname = bin_targetstem + ".o";
 		bin_libname = bin_targetstem + ".so";
 		bin_rm = "/bin/rm";
-#if 1
-		bin_cmd = "make -C " ASCEND_TMPDIR " -f " ASCEND_MAKEFILEDIR_1 "/Makefile.bt" \
-			" SO=" + bin_targetstem + " ASCEND_INCDIR=\"" ASCEND_INCDIR "\" ASCEND_LIBDIR=\"" ASCEND_LIBDIR "\"";
+#if 0
+//		bin_cmd = "make -C " ASCEND_TMPDIR " -f " ASCEND_MAKEFILEDIR_1 "/Makefile.bt" \
+	//		" SO=" + bin_targetstem + " ASCEND_INCDIR=\"" ASCEND_INCDIR "\" ASCEND_LIBDIR=\"" ASCEND_LIBDIR "\"";
+//
+	//	cerr << "BINTOKEN COMMAND" << endl << "----" << bin_cmd << endl << "----" << endl;
 
-		cerr << "BINTOKEN COMMAND" << endl << "----" << bin_cmd << endl << "----" << endl;
-
+#elif 0
+//# define BTINCLUDES "-I" ASCEND_INCDIR
+	//	bin_cmd = "cd " ASCEND_INCDIR " && make BTTARGET=" + bin_targetstem + " BTINCLUDES=" BTINCLUDES \
+	//		" -f " ASCEND_MAKEFILEDIR "/Makefile.bt " + bin_targetstem;
 #else
-# define BTINCLUDES "-I" ASCEND_INCDIR
-		bin_cmd = "cd " ASCEND_INCDIR " && make BTTARGET=" + bin_targetstem + " BTINCLUDES=" BTINCLUDES \
-			" -f " ASCEND_MAKEFILEDIR "/Makefile.bt " + bin_targetstem;
+		bin_cmd = "echo \"FIXME: BINTOKEN COMMANDLINE PARAMETERS\" && exit 1";
 #endif
 		BinTokenSetOptions(bin_srcname.c_str(), bin_objname.c_str(), bin_libname.c_str()
 							, bin_cmd.c_str(), bin_rm.c_str(), 1000, 1, 0);

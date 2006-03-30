@@ -22,8 +22,6 @@ class SolverStatus;
 class IncidenceMatrix;
 class SolverReporter;
 
-#include "config.h"
-
 /**
 	@TODO This class is for *Simulation* instances.
 
