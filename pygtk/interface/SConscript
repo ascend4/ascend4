@@ -16,8 +16,12 @@ srcs = Split("""
 
 libs = Split("""
 	asccompiler ascpackages ascsolver ascutilities ascgeneral 
-	$PYTHON_LIB
 """)
+
+swig = CFile(target=['ascend_wrap.cc'],source=['ascend.i']
+	, SWIGFLAGS=['-python','-c++']
+)
+env.Depends('ascend.py',swig);
 
 libpath = [
 	'../../base/generic/compiler'
@@ -25,12 +29,14 @@ libpath = [
 	,'../../base/generic/solver'
 	,'../../base/generic/utilities'
 	,'../../base/generic/general'
-	,'$PYTHON_LIBPATH'
 ]
 
-env.SharedLibrary("ascend",srcs
-	, LIBS = libs
-	, LIBPATH = libpath
-	, CPPPATH = ['../../base/generic','$CPPPATH']
+lib = env.SharedLibrary("ascend",srcs+swig
+	, LIBS = libs #+env['PYTHON_LIB']
+	, LIBPATH = libpath+env['PYTHON_LIBPATH']
+	, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
 	, CPPDEFINES = ['ASCXX_USE_PYTHON']
+	, SHLIBPREFIX = '_'
 )
+
+env.Depends(lib,'ascend.py')

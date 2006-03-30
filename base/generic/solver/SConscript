@@ -1,6 +1,6 @@
 Import('env')
 
-env.Library('ascsolver',Split("""
+srcs = Split("""
 
 	analyze.c bnd.c bndman.c calc.c cond_config.c
 	conditional.c conopt.c discrete.c incidence.c linsol.c
@@ -11,5 +11,13 @@ env.Library('ascsolver',Split("""
 	slv8.c slv9.c slv9a.c slvDOF.c slv_common.c
 	slv_interface.c slv_stdcalls.c system.c var.c
 
-"""))
+""")
+
+defs = []
+for i in env['WITH_SOLVERS']:
+	defs.append("STATIC_"+i)
+
+env.Library('ascsolver',srcs
+	, CPPDEFINES=defs
+)
 

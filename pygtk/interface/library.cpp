@@ -33,7 +33,7 @@ extern "C"{
 #include <compiler/notate.h>
 #include <compiler/simlist.h>
 
-extern int zz_parse();
+int yyparse();
 }
 
 #include "library.h"
@@ -125,9 +125,9 @@ Library::load(const char *filename){
 		std::cerr << "Note: Module " << Asc_ModuleName(m) << ": " << msg1 << std::endl;
 	}
 
-	std::cerr << "Note: Beginning zz_parse of " << Asc_ModuleName(m) << "..." << std::endl;
-	zz_parse();
-	std::cerr << "Note: ...zz_parse of " << Asc_ModuleName(m) << " completed." << std::endl;
+	std::cerr << "Note: Beginning yyparse of " << Asc_ModuleName(m) << "..." << std::endl;
+	yyparse();
+	std::cerr << "Note: ...yyparse of " << Asc_ModuleName(m) << " completed." << std::endl;
 
 	struct gl_list_t *l = Asc_TypeByModule(m);
 	std::cerr << "Note: " << gl_length(l) << " library entries loaded from '" << filename << "'" << std::endl;
