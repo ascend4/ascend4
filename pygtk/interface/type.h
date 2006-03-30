@@ -5,7 +5,7 @@
 
 extern "C"{
 #include <utilities/ascConfig.h>
-#include <fractions.h>
+#include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/dimen.h>
 #include <compiler/child.h>
