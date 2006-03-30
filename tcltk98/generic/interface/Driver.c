@@ -31,9 +31,9 @@
 #include <ctype.h>
 #include <signal.h>
 #include <time.h>
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
 #ifndef __WIN32__
 #include <unistd.h>
 #else
@@ -42,36 +42,36 @@
 #include <windows.h>
 */
 #include <locale.h>
-#include "interface/tkConsole.h"
+#include "tkConsole.h"
 #undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
-#include "utilities/ascMalloc.h"    /* for ascshutdown */
-#include "utilities/ascPanic.h"     /* for Asc_Panic */
-#include "utilities/ascEnvVar.h"
-#include "compiler/compiler.h"
-#include "compiler/ascCompiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/compiler.h"      /* for symchar for units.h */
-#include "compiler/units.h"
-#include "compiler/redirectFile.h"  /* for Asc_RedirectCompilerDefault() */
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/logrel.h"
-#include "solver/discrete.h"
-#include "solver/mtx.h"
-#include "solver/slv_stdcalls.h"
-#include "interface/AscBitmaps.h"
-#include "utilities/ascPrint.h"
-#include "interface/AscPrintTcl.h"
-#include "interface/HelpProc.h"
-#include "interface/Commands.h"
-#include "interface/Driver.h"
-#include "interface/ScriptProc.h"
-#include "interface/SolverProc.h"
-#include "interface/UnitsProc.h"
+#include <utilities/ascMalloc.h>    /* for ascshutdown */
+#include <utilities/ascPanic.h>     /* for Asc_Panic */
+#include <utilities/ascEnvVar.h>
+#include <compiler/compiler.h>
+#include <compiler/ascCompiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/compiler.h>      /* for symchar for units.h */
+#include <compiler/units.h>
+#include <compiler/redirectFile.h>  /* for Asc_RedirectCompilerDefault() */
+#include <solver/slv_types.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/logrel.h>
+#include <solver/discrete.h>
+#include <solver/mtx.h>
+#include <solver/slv_stdcalls.h>
+#include "AscBitmaps.h"
+#include <utilities/ascPrint.h>
+#include "AscPrintTcl.h"
+#include "HelpProc.h"
+#include "Commands.h"
+#include "Driver.h"
+#include "ScriptProc.h"
+#include "SolverProc.h"
+#include "UnitsProc.h"
 
 #ifndef lint
 static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan Exp $";
@@ -348,12 +348,12 @@ static int AscDriver(int argc, CONST84 char *argv[])
 {
   Tcl_Interp *interp;                   /* local version of global g_interp */
   Tcl_Channel inChannel;
-  Tcl_Channel outChannel;         
- 
+  Tcl_Channel outChannel;
+
   /* jds20050119:  Initialize ASCERR before any calls to ascPanic(). */
   /* TODO: revisit when interface is decoupled from base - this may change. */
   Asc_RedirectCompilerDefault();
-#ifdef USE_ASC_PRINTF  
+#ifdef USE_ASC_PRINTF
   Asc_PrintInit_TclVtable();
 #endif  /* USE_ASC_PRINTF */
   /*
@@ -395,7 +395,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
    */
   tty = 1;
   Tcl_SetVar(interp, "tcl_interactive", "1", TCL_GLOBAL_ONLY);
- 
+
   /*
    *  Initialize Tcl and Tk
    */
@@ -524,7 +524,7 @@ static int AscDriver(int argc, CONST84 char *argv[])
   }
   Tk_MainLoop();
   Asc_ScriptConfigureInterrupt(0,interp);
-#ifdef USE_ASC_PRINTF  
+#ifdef USE_ASC_PRINTF
   Asc_PrintFinalize_Tcl();
 #endif  /* USE_ASC_PRINTF */
 #ifdef DEBUG_MALLOC
@@ -970,7 +970,7 @@ static int AscProcessCommandLine(Tcl_Interp *interp, int argc, CONST84 char **ar
       argv[++new_argc] = argv[i];
     }
   }
- 
+
   /*
    *  Make command-line arguments available in the Tcl variables "argc"
    *  and "argv".

@@ -31,47 +31,47 @@
 #include <signal.h>
 #include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS */
-#include "tcl.h"      /* for Integrators.h, Sensitivity.h*/
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/tm_time.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/parentchild.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/instance_name.h"
-#include "compiler/atomvalue.h"
-#include "solver/slv_types.h"
-#include "solver/mtx.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "compiler/types.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/extfunc.h"
-#include "compiler/extcall.h"
-#include "compiler/relation_type.h"
-#include "interface/old_utils.h"
-#include "interface/Integrators.h"
-#include "interface/Lsode.h"
-#include "interface/Sensitivity.h"		/* see the packages dir */
+#include <tcl.h>      /* for Integrators.h, Sensitivity.h*/
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/symtab.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/parentchild.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/instance_name.h>
+#include <compiler/atomvalue.h>
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/slv_common.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_client.h>
+#include <compiler/types.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include <compiler/extfunc.h>
+#include <compiler/extcall.h>
+#include <compiler/relation_type.h>
+#include "old_utils.h"
+#include "Integrators.h"
+#include "Lsode.h"
+#include "Sensitivity.h"		/* see the packages dir */
 
 #ifndef lint
 static CONST char LsodeID[] = "$Id: Lsode.c,v 1.29 2000/01/25 02:26:31 ballan Exp $";
@@ -116,7 +116,7 @@ static CONST char LsodeID[] = "$Id: Lsode.c,v 1.29 2000/01/25 02:26:31 ballan Ex
 #undef LSODE_FEX
 #undef GETCOMMON
 #undef XASCWV
-#define XASCWV XASCWV                                           
+#define XASCWV XASCWV
 #define LSODE LSODE
 #define LSODE_JEX JEX
 #define LSODE_FEX FEX
@@ -780,14 +780,14 @@ void XASCWV( char *msg, /* array of char/int not NULL ended, len *nmes */
            )
 {
   (void)nerr;
-  /*   ignore 
+  /*   ignore
    *   integer i,lun, lunit, mesflg, ncpw, nch, nwds
-   *   common /eh0001/ mesflg, lunit 
+   *   common /eh0001/ mesflg, lunit
    *   data ncpw/4/
    *
    *   ncpw = sizeof(int);
-   *   if (mesflg .eq. 0) go to 100 !ignore io suppresion 
-   *   lun = lunit 
+   *   if (mesflg .eq. 0) go to 100 !ignore io suppresion
+   *   lun = lunit
    *
    *   nch = min0(nmes,60)
    *   nwds = nch/ncpw

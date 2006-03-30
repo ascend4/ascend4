@@ -32,59 +32,59 @@
 #include <setjmp.h>
 #endif
 #include <stdarg.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/dimen_io.h"
-#include "compiler/units.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "compiler/atomvalue.h"
-#include "compiler/instquery.h"
-#include "compiler/types.h"
-#include "compiler/mathinst.h"
-#include "compiler/instance_name.h"
-#include "compiler/relation_type.h"
-#include "compiler/extfunc.h"
-#include "compiler/find.h"
-#include "compiler/relation.h"
-#include "compiler/functype.h"
-#include "compiler/safe.h"
-#include "compiler/relation_util.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/mtx.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "interface/old_utils.h"
-#include "interface/HelpProc.h"
-#include "interface/UnitsProc.h"
-#include "interface/BrowserQuery.h"
-#include "interface/BrowserProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/Driver.h"
-#include "interface/HelpProc.h"
-#include "interface/SolverGlobals.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/cmpfunc.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/dimen_io.h>
+#include <compiler/units.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_io.h>
+#include <compiler/atomvalue.h>
+#include <compiler/instquery.h>
+#include <compiler/types.h>
+#include <compiler/mathinst.h>
+#include <compiler/instance_name.h>
+#include <compiler/relation_type.h>
+#include <compiler/extfunc.h>
+#include <compiler/find.h>
+#include <compiler/relation.h>
+#include <compiler/functype.h>
+#include <compiler/safe.h>
+#include <compiler/relation_util.h>
+#include <solver/slv_types.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/mtx.h>
+#include <solver/slv_common.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_client.h>
+#include "old_utils.h"
+#include "HelpProc.h"
+#include "UnitsProc.h"
+#include "BrowserQuery.h"
+#include "BrowserProc.h"
+#include "Qlfdid.h"
+#include "Driver.h"
+#include "HelpProc.h"
+#include "SolverGlobals.h"
 
 #ifndef lint
 static CONST char UnitsProcID[] = "$Id: UnitsProc.c,v 1.41 2003/08/23 18:43:08 ballan Exp $";
@@ -460,7 +460,7 @@ void uconversion_trap(int sigval)
 }
 
 /* respects any already active fp_trap
- * retval is the display value in the units specified by u 
+ * retval is the display value in the units specified by u
  */
 static int Unit_ConvertReal(double val, struct Units *u, double *retval)
 {

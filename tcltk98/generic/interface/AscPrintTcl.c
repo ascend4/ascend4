@@ -28,10 +28,10 @@
  */
 
 #include <stdarg.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascPrint.h"
-#include "utilities/ascPrintType.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascPrint.h>
+#include <utilities/ascPrintType.h>
 
 /*
  *  Only compile this file if we are using Asc_Printf()

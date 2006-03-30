@@ -32,57 +32,57 @@
 
 #include <tcl.h>
 #include <tk.h>
-#include "utilities/ascConfig.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/instance_name.h"
-#include "compiler/units.h"
-#include "solver/slv_types.h"
-#include "solver/mtx.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/logrel.h"
-#include "solver/slv_common.h"
-#include "interface/HelpProc.h"
-#include "interface/Commands.h"
-#include "interface/LibraryProc.h"
-#include "interface/DisplayProc.h"
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/instance_name.h>
+#include <compiler/units.h>
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/logrel.h>
+#include <solver/slv_common.h>
+#include "HelpProc.h"
+#include "Commands.h"
+#include "LibraryProc.h"
+#include "DisplayProc.h"
 
-#include "interface/Qlfdid.h"
+#include "Qlfdid.h"
 #ifndef ASCTK_QLFDID_H
 # error "ASCTK_QLFDID_H not defined in Commands.c???"
 #endif
 
-#include "interface/SimsProc.h"
-#include "interface/BrowserProc.h"
-#include "interface/BrowserMethod.h"
-#include "interface/BrowserQuery.h"
+#include "SimsProc.h"
+#include "BrowserProc.h"
+#include "BrowserMethod.h"
+#include "BrowserQuery.h"
 #if KILLBDAG
 # include "interface/BrowserDag.h"
 #endif
-#include "interface/BrowserRel_io.h"
-#include "interface/BrowLogRel_io.h"
-#include "interface/BrowWhen_io.h"
-#include "interface/ProbeProc.h"
-#include "interface/UserData.h"
-#include "interface/SolverProc.h"
-#include "interface/DebugProc.h"
-#include "interface/MtxProc.h"
-#include "interface/SlvProc.h"
-#include "interface/EnvVarProc.h"
+#include "BrowserRel_io.h"
+#include "BrowLogRel_io.h"
+#include "BrowWhen_io.h"
+#include "ProbeProc.h"
+#include "UserData.h"
+#include "SolverProc.h"
+#include "DebugProc.h"
+#include "MtxProc.h"
+#include "SlvProc.h"
+#include "EnvVarProc.h"
 #if REIMPLEMENT
 # include "interface/CodeGen.h"
 #endif
-#include "interface/UnitsProc.h"
-#include "interface/ScriptProc.h"
-#include "interface/Integrators.h"
-#include "interface/Sensitivity.h"		/* only for Asc_MtxNormsCmd */
-#include "interface/typelex.h"
-#include "interface/Driver.h"
+#include "UnitsProc.h"
+#include "ScriptProc.h"
+#include "Integrators.h"
+#include "Sensitivity.h"		/* only for Asc_MtxNormsCmd */
+#include "typelex.h"
+#include "Driver.h"
 
 
 #ifndef lint
@@ -2001,7 +2001,7 @@ void Asc_CreateCommands(Tcl_Interp *interp)
     "library", Asc_LibrAnonTypesCmdHU,  Asc_LibrAnonTypesCmdHS,
     Asc_LibrAnonTypesCmdHLF);
 
-  ASCADDCOM(interp, Asc_DotCmdHN, Asc_DotCmd, "browser", 
+  ASCADDCOM(interp, Asc_DotCmdHN, Asc_DotCmd, "browser",
     Asc_DotCmdHU,  Asc_DotCmdHS, Asc_DotCmdHLF);
 
 #endif /* ballan */

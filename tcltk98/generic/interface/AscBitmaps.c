@@ -28,10 +28,10 @@
  */
 
 
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
-#include "interface/AscBitmaps.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
+#include "AscBitmaps.h"
 
 
 #ifndef lint

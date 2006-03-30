@@ -27,27 +27,27 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/instquery.h"
-#include "compiler/visitinst.h"
-#include "compiler/instance_name.h"
-#include "compiler/instance_io.h"
-#include "interface/HelpProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/BrowserQuery.h"
-#include "interface/ProbeProc.h"
-#include "interface/UnitsProc.h"
-#include "interface/ProbeProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/instquery.h>
+#include <compiler/visitinst.h>
+#include <compiler/instance_name.h>
+#include <compiler/instance_io.h>
+#include "HelpProc.h"
+#include "Qlfdid.h"
+#include "BrowserQuery.h"
+#include "ProbeProc.h"
+#include "UnitsProc.h"
+#include "ProbeProc.h"
 
 #ifndef lint
 static CONST char ProbeProcID[] = "$Id: ProbeProc.c,v 1.38 2003/08/23 18:43:07 ballan Exp $";
@@ -116,7 +116,7 @@ struct ProbeFilterFlags {
  * a list, though the list may be empty or change identity.
  * Eventually, should become an array of userdata, perhaps.
  */
-static struct gl_list_t **g_probe_array = NULL;  
+static struct gl_list_t **g_probe_array = NULL;
 /*
  * The size of this array. valid entries 0..size-1.
  */
@@ -128,11 +128,11 @@ static unsigned g_probe_array_size = 0;
  */
 static struct Instance *g_visit_root = NULL;
 
-/* The current context for visit consumption. 
+/* The current context for visit consumption.
  */
-static struct gl_list_t *g_cur_context = NULL;  
+static struct gl_list_t *g_cur_context = NULL;
 
-/* The root name for visit consumption. 
+/* The root name for visit consumption.
  */
 static char *g_visit_root_name = NULL;
 
@@ -154,7 +154,7 @@ struct gl_list_t *GetProbeList(unsigned int n)
 {
   if (g_probe_array == NULL || n >= g_probe_array_size) {
     return NULL;
-  } 
+  }
   return g_probe_array[n];
 }
 
@@ -264,7 +264,7 @@ int Asc_ProbeArrayGrow()
 {
   struct gl_list_t **tmp;
   if (g_probe_array==NULL) {
-    g_probe_array = 
+    g_probe_array =
       (struct gl_list_t **)ascmalloc(sizeof(struct gl_list_t *));
     if (g_probe_array==NULL) {
       g_probe_array_size = 0;
@@ -382,7 +382,7 @@ int ProbeNumEntries(unsigned int context)
     return -1;
   }
   p = ProbeArray(context);
-  
+
   return ((p!=NULL)? (int) gl_length(p) : -1);
 }
 
@@ -396,7 +396,7 @@ void ProbeVisitAll_Filtered(struct Instance *i)
 #define PVAFAdd(flag) add = (g_probe_filter.flag) ? 1 : 0
   if (i!=NULL) {
     switch(InstanceKind(i)) {
-    case BOOLEAN_INST: 
+    case BOOLEAN_INST:
       PVAFAdd(VisitSABooleans);
       break;
     case BOOLEAN_ATOM_INST:
@@ -453,8 +453,8 @@ void ProbeVisitAll_Filtered(struct Instance *i)
       if (nametail==NULL) { /* out of memory */
         return;
       }
-      wholename = (char *)ascmalloc(g_visit_root_name_len + 
-                                    strlen(nametail) + 3);   
+      wholename = (char *)ascmalloc(g_visit_root_name_len +
+                                    strlen(nametail) + 3);
       if (wholename ==NULL) {
         ascfree(nametail);
         return;
@@ -663,7 +663,7 @@ void ProbeGarbageCollect(int number)
   }
 
 STDHLF(Asc_ProbeCmd,(Asc_ProbeCmdHL1, Asc_ProbeCmdHL2, Asc_ProbeCmdHL3,
-  Asc_ProbeCmdHL4, Asc_ProbeCmdHL5, Asc_ProbeCmdHL6, Asc_ProbeCmdHL7, 
+  Asc_ProbeCmdHL4, Asc_ProbeCmdHL5, Asc_ProbeCmdHL6, Asc_ProbeCmdHL7,
   Asc_ProbeCmdHL8, Asc_ProbeCmdHL9, Asc_ProbeCmdHL10, Asc_ProbeCmdHL11,
   HLFSTOP));
 
@@ -813,13 +813,13 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
     break;
   case 'g': /* get */
     ParseCollectionNumber(0);
-    if (argc==3) { 
+    if (argc==3) {
       /* get whole list */
       ProbeAppendAll(interp,ProbeArray(number));
-    } else { 
+    } else {
       /* get the given indices. */
       pos = 3;
-      while(pos < argc) { 
+      while(pos < argc) {
         ParseCollectionIndex(number,pos);
         AppendEntryItem(interp,ProbeGetEntry(number,index));
         pos++; /* next index */
@@ -848,7 +848,7 @@ int Asc_ProbeCmd(ClientData cdata, Tcl_Interp *interp,
     }
     ParseCollectionNumber(0);
     ParseCollectionIndex(number,3);
-    g_relative_inst = g_search_inst = 
+    g_relative_inst = g_search_inst =
       ProbeEntryInst(ProbeGetEntry(number,index));
     if (g_search_inst==NULL) {
       Tcl_AppendResult(interp,"0",(char *)NULL);

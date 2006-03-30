@@ -28,20 +28,20 @@
  */
 
 #include <time.h>
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instquery.h"
-#include "compiler/mergeinst.h"
-#include "interface/HelpProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/BrowserProc.h"
-#include "interface/ScriptProc.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_enum.h>
+#include <compiler/instquery.h>
+#include <compiler/mergeinst.h>
+#include "HelpProc.h"
+#include "Qlfdid.h"
+#include "BrowserProc.h"
+#include "ScriptProc.h"
 
 #ifndef lint
 static CONST char ScriptProcID[] = "$Id: ScriptProc.c,v 1.22 2003/08/23 18:43:07 ballan Exp $";

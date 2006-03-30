@@ -28,37 +28,37 @@
 #include <setjmp.h>
 #include <signal.h>
 #endif  /* NO_SIGNAL_TRAPS */
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/mem.h"
-#include "utilities/set.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_name.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/mem.h>
+#include <utilities/set.h>
+#include <general/list.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_name.h>
 
-#include "solver/incidence.h"
+#include <solver/incidence.h>
 
-#include "compiler/types.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/extfunc.h"
-#include "compiler/extcall.h"
-#include "compiler/relation_type.h"
+#include <compiler/types.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include <compiler/extfunc.h>
+#include <compiler/extcall.h>
+#include <compiler/relation_type.h>
 
-#include "interface/old_utils.h"
-#include "interface/HelpProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/MtxProc.h"
-#include "interface/DisplayProc.h"
-#include "interface/HelpProc.h"
-#include "interface/SolverGlobals.h"
+#include "old_utils.h"
+#include "HelpProc.h"
+#include "Qlfdid.h"
+#include "MtxProc.h"
+#include "DisplayProc.h"
+#include "HelpProc.h"
+#include "SolverGlobals.h"
 
 
 #ifndef lint

@@ -30,12 +30,12 @@
 
 
 #include <stdarg.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/pool.h"
-#include "interface/HelpProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/pool.h>
+#include "HelpProc.h"
 
 #ifndef lint
 static CONST char HelpProcRCS[] = "$Id: HelpProc.c,v 1.12 2003/08/23 18:43:06 ballan Exp $";

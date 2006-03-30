@@ -1,6 +1,6 @@
 /*
  *  SolverProc.c
- *  by Kirk Abbott and Ben Allan             
+ *  by Kirk Abbott and Ben Allan
  *  Created: 1/94
  *  Version: $Revision: 1.65 $
  *  Version control file: $RCSfile: SolverProc.c,v $
@@ -30,73 +30,73 @@
 #include <math.h>
 #include <tcl.h>
 #include <tk.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascMalloc.h"
-#include "general/tm_time.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/relation_type.h"
-#include "compiler/extfunc.h"
-#include "compiler/find.h"
-#include "compiler/relation.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/safe.h"
-#include "compiler/simlist.h"
-#include "compiler/relation_util.h"
-#include "compiler/pending.h"
-#include "compiler/instance_name.h"
-#include "compiler/instquery.h"
-#include "compiler/parentchild.h"
-#include "compiler/check.h"
-#include "compiler/stattypes.h"
-#include "compiler/instantiate.h"
-#include "compiler/watchpt.h"
-#include "solver/slv_types.h"
-#include "solver/mtx.h"
-#include "solver/rel.h"
-#include "solver/var.h"
-#include "solver/relman.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "solver/slv_server.h"   /* KHACK: not sure if this should be here */
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascMalloc.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_io.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <compiler/relation_type.h>
+#include <compiler/extfunc.h>
+#include <compiler/find.h>
+#include <compiler/relation.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include <compiler/safe.h>
+#include <compiler/simlist.h>
+#include <compiler/relation_util.h>
+#include <compiler/pending.h>
+#include <compiler/instance_name.h>
+#include <compiler/instquery.h>
+#include <compiler/parentchild.h>
+#include <compiler/check.h>
+#include <compiler/stattypes.h>
+#include <compiler/instantiate.h>
+#include <compiler/watchpt.h>
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/rel.h>
+#include <solver/var.h>
+#include <solver/relman.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/slv_common.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_client.h>
+#include <solver/slv_server.h>   /* KHACK: not sure if this should be here */
 /* #include "solver/slv0.h" */
 /* #include "solver/slv1.h" */
 /* #include "solver/slv2.h" */
 /* #include "solver/slv3.h" */
-#include "solver/slv6.h"             /*  modified by CWS 5/95 */
-#include "solver/slv7.h"
-#include "solver/slv9a.h"
-#include "solver/slv_interface.h"
-#include "solver/system.h"
-#include "solver/cond_config.h"
-#include "interface/old_utils.h"
-#include "interface/HelpProc.h"
-#include "interface/SolverGlobals.h"
-#include "interface/SolverProc.h"
-#include "interface/DisplayProc.h"
-#include "interface/Commands.h"
-#include "interface/Qlfdid.h"
-#include "interface/SimsProc.h"
-#include "interface/BrowserProc.h"
-#include "interface/BrowserQuery.h"
-#include "interface/UnitsProc.h"   /* KHACK: not sure if this should be here */
-#include "interface/ScriptProc.h"
-#include "interface/Driver.h"
+#include <solver/slv6.h>             /*  modified by CWS 5/95 */
+#include <solver/slv7.h>
+#include <solver/slv9a.h>
+#include <solver/slv_interface.h>
+#include <solver/system.h>
+#include <solver/cond_config.h>
+#include "old_utils.h"
+#include "HelpProc.h"
+#include "SolverGlobals.h"
+#include "SolverProc.h"
+#include "DisplayProc.h"
+#include "Commands.h"
+#include "Qlfdid.h"
+#include "SimsProc.h"
+#include "BrowserProc.h"
+#include "BrowserQuery.h"
+#include "UnitsProc.h"   /* KHACK: not sure if this should be here */
+#include "ScriptProc.h"
+#include "Driver.h"
 
 #ifndef lint
 static CONST char SolverProcID[] = "$Id: SolverProc.c,v 1.65 2003/08/23 18:43:08 ballan Exp $";
@@ -443,7 +443,7 @@ int Asc_SolvGetObjNumCmd(ClientData cdata, Tcl_Interp *interp,
   FILE *fp;
 
   ASCUSE;  /* see if first arg is -help */
-  
+
   (void)cdata;    /* stop gcc whine about unused parameter */
 
   if ( argc != 2 ) {
@@ -552,7 +552,7 @@ int Asc_SolvGetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
 
     Tcl_AppendElement(interp,p.parms[i].name);
     Tcl_AppendElement(interp,p.parms[i].interface_label);
-    
+
     switch (p.parms[i].type) {
     case int_parm:
       sprintf(tmps,"%d",p.parms[i].info.i.value);
@@ -627,7 +627,7 @@ int Asc_SolvSetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
 
   if ( solver != i ) {
     /* THIS WHOLE CONTROL STRUCTURE IS SCREWED UP AT BOTH THE
-     * C AND THE TCL LEVEL!!! 
+     * C AND THE TCL LEVEL!!!
      */
     slv_select_solver(g_solvsys_cur,solver);
 /*    FPRINTF(ASCERR,"Warning: Solv_Set_Slv_Parms called ");
@@ -1375,11 +1375,11 @@ int Asc_Sims2Solve(ClientData cdata, Tcl_Interp *interp,
       return TCL_ERROR;
     }
     FPRINTF(ASCERR,"Presolving . . .\n");
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
       slv_presolve(g_solvsys_cur);
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     } else {
       FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_presolve. Help!",
@@ -1455,11 +1455,11 @@ int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
       return TCL_ERROR;
     }
     FPRINTF(ASCERR,"Presolving . . .\n");
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
       slv_presolve(g_solvsys_cur);
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     } else {
         FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
         Tcl_SetResult(interp,
@@ -1737,7 +1737,7 @@ int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
@@ -1748,7 +1748,7 @@ int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
       Tcl_SetResult(interp, "empty solver context.", TCL_STATIC);
       return TCL_ERROR;
     }
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   } else {
       FPRINTF(ASCERR, "Floating point exception in slv_presolve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_presolve. Help!",
@@ -1825,7 +1825,7 @@ int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
@@ -1836,7 +1836,7 @@ int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
       Tcl_SetResult(interp, "empty solver context.", TCL_STATIC);
       return TCL_ERROR;
     }
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   } else {
       FPRINTF(ASCERR, "Floating point exception in slv_resolve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_resolve. Help!",
@@ -1858,7 +1858,7 @@ int Asc_SolvSlvSolve(ClientData cdata, Tcl_Interp *interp,
     Tcl_SetResult(interp, "no arguments allowed for slv_solve", TCL_STATIC);
     return TCL_ERROR;
   }
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
     if (g_solvsys_cur!=NULL) {
@@ -1869,7 +1869,7 @@ int Asc_SolvSlvSolve(ClientData cdata, Tcl_Interp *interp,
       Tcl_SetResult(interp, " empty solver context.", TCL_STATIC);
       return TCL_ERROR;
     }
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
   } else {
       FPRINTF(ASCERR, "Floating point exception in slv_solve!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_solve. Help!",
@@ -1929,14 +1929,14 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
 
   start=tm_cpu_time();
   for (safe_status=0;safe_status<steps && delta <time;safe_status++) {
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     if (setjmp(g_fpe_env)==0) {
 #endif /* NO_SIGNAL_TRAPS */
       slv_get_status(g_solvsys_cur,&s);
       if (s.ready_to_solve && !Solv_C_CheckHalt_Flag) {
         slv_iterate(g_solvsys_cur);
       }
-#ifndef NO_SIGNAL_TRAPS 
+#ifndef NO_SIGNAL_TRAPS
     } else {
       FPRINTF(ASCERR, "Floating point exception in slv_iterate!!\n");
       Tcl_SetResult(interp, " Floating point exception in slv_iterate. Help!",

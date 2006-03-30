@@ -28,25 +28,25 @@
  */
 
 #include <stdarg.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/hashpjw.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/atomvalue.h"
-#include "compiler/instquery.h"
-#include "compiler/visitinst.h"
-#include "compiler/units.h"
-#include "interface/HelpProc.h"
-#include "interface/UserData.h"
-#include "interface/Qlfdid.h"
-#include "interface/UnitsProc.h"
-#include "interface/BrowserProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/hashpjw.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/atomvalue.h>
+#include <compiler/instquery.h>
+#include <compiler/visitinst.h>
+#include <compiler/units.h>
+#include "HelpProc.h"
+#include "UserData.h"
+#include "Qlfdid.h"
+#include "UnitsProc.h"
+#include "BrowserProc.h"
 
 #ifndef lint
 static CONST char UserDataID[] = "$Id: UserData.c,v 1.19 2003/08/23 18:43:09 ballan Exp $";
