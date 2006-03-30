@@ -35,8 +35,16 @@ lib = env.SharedLibrary("ascend",srcs+swig
 	, LIBS = libs #+env['PYTHON_LIB']
 	, LIBPATH = libpath+env['PYTHON_LIBPATH']
 	, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
-	, CPPDEFINES = ['ASCXX_USE_PYTHON']
+	, CPPDEFINES = {
+		'ASCXX_USE_PYTHON':None
+		,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
+	  }
 	, SHLIBPREFIX = '_'
 )
 
 env.Depends(lib,'ascend.py')
+
+print env['SUBST_DICT']
+
+env.SubstInFile(source='config.py.in')
+

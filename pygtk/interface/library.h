@@ -8,7 +8,6 @@
 #include "module.h"
 #include "symchar.h"
 #include "extmethod.h"
-#include "config.h"
 
 /**
 	Handles the loading of ASCEND a4c files into memory, then the
@@ -19,7 +18,7 @@
 */
 class Library{
 public:
-	Library(std::string defaultpath=ASCEND_DEFAULTLIBRARY);
+	Library(std::string defaultpath=DEFAULT_ASCENDLIBRARY);
 	~Library();
 	void load(const char *filename);
 	void listModules(const int &module_type=0) const;

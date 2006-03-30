@@ -1,4 +1,4 @@
-import os, commands, platform, distutils.sysconfig
+import os, commands, platform, distutils.sysconfig, os.path
 
 #------------------------------------------------------
 # OPTIONS
@@ -37,7 +37,8 @@ opts.Add(BoolOption(
 # Which solvers will we allow?
 opts.Add(ListOption(
 	'WITH_SOLVERS'
-	,"List of the solvers you want to build"
+	,"List of the solvers you want to build. The default is the minimum that"	
+		+" works."
 	,["QRSLV","CMSLV"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
@@ -45,11 +46,37 @@ opts.Add(ListOption(
 	 ]
 ))
 
+# Where will the local copy of the help files be kept?
+opts.Add(PackageOption(
+	'WITH_LOCAL_HELP'
+	, "Directory containing the local copy of the help files (optional)"
+	, "no"
+))
+
+# Will bintoken support be enabled?
+opts.Add(BoolOption(
+	'WITH_BINTOKEN'
+	,"Enable bintoken support? This means compiling models as C-code before"
+		+" running them, to increase solving speed for large models."
+	,False
+))
+
+opts.Add(
+	'DEFAULT_ASCENDLIBRARY'
+	,"Set the default value of the ASCENDLIBRARY -- the location where"
+		+" ASCEND will look for models when running ASCEND"
+	,os.path.expanduser("~/src/ascend/trunk/models")
+)
+
+# Where will the 'Makefile.bt' file be installed
+
 # TODO: add install options
 
 # TODO: OTHER OPTIONS?
 
 # TODO: flags for optimisation
+
+# TODO: turning on/off bintoken functionality
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -63,7 +90,24 @@ with_tcltk_gui = (env['WITHOUT_TCLTK_GUI']==False)
 with_python = (env['WITHOUT_PYTHON']==False)
 
 print "SOLVERS:",env['WITH_SOLVERS']
-	
+
+print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
+print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
+print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
+
+subst_dict = {
+	'@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
+	, '@GLADE_FILE@':'glade/ascend.glade'
+	, '@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
+	, '@ASCEND_ICON@':'glade/ascend.png'
+	, '@HELP_ROOT@':''
+}
+
+if env['WITH_LOCAL_HELP']:
+	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
+		
+env.Append(SUBST_DICT=subst_dict)
+
 #------------------------------------------------------
 # CONFIGURATION
 
@@ -129,8 +173,66 @@ else:
 
 # TODO: check size of void*
 
+# TODO: detect if dynamic libraries are possible or not
+
+#------------------------------------------------------
+# RECIPE: 'SubstInFile', used in pygtk SConscript
+
+import SCons.Util
+import re
+
+def do_subst_in_file(targetfile, sourcefile, dict):
+    """Replace all instances of the keys of dict with their values.
+    For example, if dict is {'%VERSION%': '1.2345', '%BASE%': 'MyProg'},
+    then all instances of %VERSION% in the file will be replaced with 1.2345 etc.
+    """
+    try:
+        f = open(sourcefile, 'rb')
+        contents = f.read()
+        f.close()
+    except:
+        raise RuntimeError("Can't read source file %s" % sourcefile)
+    for (k,v) in dict.items():
+        contents = re.sub(k, v, contents)
+    try:
+        f = open(targetfile, 'wb')
+        f.write(contents)
+        f.close()
+    except:
+        raise RuntimeError("Can't write target file %s" % targetfile)
+    return 0 # success
+
+def subst_in_file(target, source, env):
+    if not env.has_key('SUBST_DICT'):
+        raise RuntimeError("SubstInFile requires SUBST_DICT to be set.")
+    d = dict(env['SUBST_DICT']) # copy it
+    for (k,v) in d.items():
+        if callable(v):
+            d[k] = env.subst(v())
+        elif SCons.Util.is_String(v):
+            d[k]=env.subst(v)
+        else:
+            raise RuntimeError(
+				"SubstInFile: key %s: %s must be a string or callable" % (
+					k, repr(v)
+			))
+    for (t,s) in zip(target, source):
+        return do_subst_in_file(str(t), str(s), d)
+
+def subst_in_file_string(target, source, env):
+    """This is what gets printed on the console."""
+    return '\n'.join(['Substituting vars from %s into %s'%(str(s), str(t))
+                        for (t,s) in zip(target, source)])
+
+env['BUILDERS']['SubstInFile'] = Builder(
+	action = subst_in_file
+	, suffix = ''
+	, src_suffix = '.in'
+)
+
 #------------------------------------------------------
 # SUBDIRECTORIES....
+
 
 env.Append(CPPPATH=['..'])
 
@@ -153,4 +255,5 @@ if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
 else:
 	print "Skipping... Python GUI isn't being built"
+
 
