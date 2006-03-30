@@ -73,7 +73,7 @@
  *  WORKBUF_INIT_SIZE is the initial size of g_workbuf
  */
 
-static unsigned long zz_line = 1;
+static unsigned long yy_line = 1;
 /*  The current line number;
  *  every match of newline (\n) needs to ++ this variable.
  */
@@ -297,7 +297,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   */
 				  BEGIN (Comment);
 				  CommentNestLevel = 1;
-				  start_line = zz_line;
+				  start_line = yy_line;
 				  break;
 				}
 <Comment>\(\*[^*(\n]*		{
@@ -313,7 +313,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  anything that's not "(" nor "*".
 				   *  Increase the commment nesting level.
 				   */
-				  zz_line++;
+				  yy_line++;
 				  CommentNestLevel++;
 				  break;
 				}
@@ -339,7 +339,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  that is followed by a newline.
 				   *  This rule also matches empty line.
 				   */
-				  zz_line++;
+				  yy_line++;
 				  break;
 				}
 <Comment>\(+[^*(\n]*		{
@@ -350,7 +350,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <Comment>\(+[^*(\n]*\n		{
 				  /*  Eat "("s not followed by "*" plus a "\n"
 				   */
-				  zz_line++;
+				  yy_line++;
 				  break;
 				}
 <Comment>\*+[^*()\n]*		{
@@ -361,7 +361,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <Comment>\*+[^*()\n]*\n		{
 				  /*  Eat "*" not followed by ")" plus a "\n"
 				   */
-				  zz_line++;
+				  yy_line++;
 				  break;
 				}
 <Comment><<EOF>>		{
@@ -404,11 +404,11 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  /*  strip off the final (')
 				   */
 				  yytext[--yyleng] = '\0';
-				  if (yyleng > ZZ_MAXLEN) {
+				  if (yyleng > YY_MAXLEN) {
 				    ErrMsg_LongSymbol();
 				    break;
 				  }
-				  zz_lval.sym_ptr = AddSymbolL(yytext,yyleng);
+				  yylval.sym_ptr = AddSymbolL(yytext,yyleng);
 				  return SYMBOL_T;
 				}
 <Symbol>[^'\n]*\n		{
@@ -417,7 +417,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  message and return to the INITIAL state.
 				   */
 				  ErrMsg_SymbolEOL();
-				  zz_line++;
+				  yy_line++;
 				  BEGIN(INITIAL);
 				  break;
 				}
@@ -456,7 +456,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  number for error reporting.
 				   */
 				  BEGIN (DoubleQuote);
-				  start_line = zz_line;
+				  start_line = yy_line;
 				  break;
 				}
 <DoubleQuote>[^\\"\n]*\\.	{
@@ -472,7 +472,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  state protects a newline.
 				   */
 				  MatchedBackslash++;
-				  zz_line++;
+				  yy_line++;
 				  yymore();
 				  break;
 				}
@@ -494,7 +494,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    Process_Backslashes();
 				    MatchedBackslash = 0;
 				  }
-				  zz_lval.dquote_ptr =
+				  yylval.dquote_ptr =
 				      CopyIntoWorkBuffer(yytext,yyleng);
 				  return DQUOTE_T;
 				}
@@ -510,7 +510,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  doublequote and add it to the text.
 				   *  This also matches an empty line.
 				   */
-				  zz_line++;
+				  yy_line++;
 				  yymore();
 				  break;
 				}
@@ -553,8 +553,8 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   */
 				  BEGIN (BracedText);
 				  BracesNestLevel = 1;
-				  start_line = zz_line;
-				  zz_line++;
+				  start_line = yy_line;
+				  yy_line++;
 				  break;
 				}
 <INITIAL>\{			{
@@ -565,7 +565,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   */
 				  BEGIN (BracedText);
 				  BracesNestLevel = 1;
-				  start_line = zz_line;
+				  start_line = yy_line;
 				  break;
 				}
 <BracedText>[^\\{}\n]*\\.	{
@@ -582,7 +582,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  protects a newline.
 				   */
 				  MatchedBackslash++;
-				  zz_line++;
+				  yy_line++;
 				  yymore();
 				  break;
 				}
@@ -598,7 +598,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  /*  A "{" in the braces state gets added to
 				   *  the text and increase the nesting level.
 				   */
-				  zz_line++;
+				  yy_line++;
 				  BracesNestLevel++;
 				  yymore();
 				  break;
@@ -625,7 +625,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				      Process_Backslashes();
 				      MatchedBackslash = 0;
 				    }
-				    zz_lval.braced_ptr =
+				    yylval.braced_ptr =
 				        CopyIntoWorkBuffer(yytext,yyleng);
 				    return BRACEDTEXT_T;
 				  }
@@ -645,7 +645,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  and add it to text.
 				   *  This also matches an empty line.
 				   */
-				  zz_line++;
+				  yy_line++;
 				  yymore();
 				  break;
 				}
@@ -673,7 +673,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>{integer}		{
 				  /*  An integer.  Defn near top of file.
 				   */
-				  zz_lval.int_value = atol(yytext);
+				  yylval.int_value = atol(yytext);
 				  return INTEGER_T;
 				}
 
@@ -682,25 +682,25 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  range (need to avoid parsing "1..2"
 				   *  as the real numbers 1.0 and 0.2).
 				   */
-				  zz_lval.int_value = atol(yytext);
+				  yylval.int_value = atol(yytext);
 				  return INTEGER_T;
 				}
 
 <INITIAL>{real}			{
 				  /*  A real number.  Defn near top of file.
 				   */
-				  zz_lval.real_value = atof(yytext);
+				  yylval.real_value = atof(yytext);
 				  return REAL_T;
 				}
 
 <INITIAL>{IDChar}+		{
 				  /*  An identifier.  Defn near top of file.
 				   */
-				  if (yyleng >ZZ_MAXLEN) {
+				  if (yyleng >YY_MAXLEN) {
 				    ErrMsg_LongID();
 				    break;
 				  }
-				  zz_lval.id_ptr = AddSymbolL(yytext,yyleng);
+				  yylval.id_ptr = AddSymbolL(yytext,yyleng);
 				  return IDENTIFIER_T;
 				}
 
@@ -710,7 +710,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				}
 <INITIAL>{blank}*\n		{
 				  /*  Ignore whitespace.  */
-				  zz_line++;
+				  yy_line++;
 				  break;
 				}
 
@@ -739,14 +739,14 @@ IDChar       {letter}({integer}|{letter}|_)*
 
 %%
 /*
- *  int zz_wrap(void);
+ *  int yy_wrap(void);
  *
  *  This returns 1 if the scanner should stop parsing, or
  *  0 if the scanner should continue.  Flex requires this
  *  function unless %option noyywrap is defined.
  */
 int
-zz_wrap(void)
+yy_wrap(void)
 {
   return 1;
 }
@@ -758,7 +758,7 @@ zz_wrap(void)
 unsigned long
 LineNum(void)
 {
-  return zz_line;
+  return yy_line;
 }
 
 
@@ -769,7 +769,7 @@ void
 Asc_ScannerAssignFile(FILE *f, unsigned long linenum)
 {
   yyin = f;
-  zz_line = linenum;
+  yy_line = linenum;
   if ( RequireIndex == 0 ) {
     yyrestart(f);
   }
@@ -782,7 +782,7 @@ void
 Asc_ScannerAssignString(void *yybs, unsigned long linenum, int first)
 {
   /* yyin = f; */
-  zz_line = linenum;
+  yy_line = linenum;
   yy_switch_to_buffer((YY_BUFFER_STATE)yybs);
   if (first) {
     BEGIN(INITIAL);
@@ -807,7 +807,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
 	    "\tFile \"%s\" not read.\n",
 	    RequireIndex,
 	    Asc_ModuleBestName(Asc_CurrentModule()),
-	    zz_line,
+	    yy_line,
 	    filename);
     return 1;
   }
@@ -841,7 +841,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
 	    "Error:\tREQUIRE cannot open module \"%s\" on line %s:%lu\n",
 	    filename,
 	    Asc_ModuleBestName(Asc_CurrentModule()),
-	    zz_line);
+	    yy_line);
     return 2;
   }
 
@@ -851,7 +851,7 @@ Asc_ScannerPushBuffer(CONST char *filename)
    * REQUIREd.
    */
   Asc_FPrintf(stderr,"REQUIREing file \"%s\"\n", filename);
-  yy_switch_to_buffer(yy_create_buffer(zz_in,YY_BUF_SIZE));
+  yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
   BEGIN (INITIAL);
   return 0;
 }
@@ -1090,9 +1090,9 @@ ErrMsg_LongID(void)
 	  "Error:\tIdentifier too long on line %s:%lu.\n"
 	  "\tIdentifier \"%s\" exceeds the maximum identifier size of %d\n",
 	  Asc_ModuleBestName(Asc_CurrentModule()),
-	  zz_line,
+	  yy_line,
 	  yytext,
-	  ZZ_MAXLEN);
+	  YY_MAXLEN);
 }
 
 
@@ -1103,9 +1103,9 @@ ErrMsg_LongSymbol(void)
 	  "Error:\tSymbol too long on line %s:%lu.\n"
 	  "\tSymbol %s exceeds the maximum symbol size of %d\n",
 	  Asc_ModuleBestName(Asc_CurrentModule()),
-	  zz_line,
+	  yy_line,
 	  yytext,
-	  ZZ_MAXLEN);
+	  YY_MAXLEN);
 }
 
 
@@ -1125,7 +1125,7 @@ ErrMsg_SymbolEOF(void)
   FPRINTF(ASCERR,
           "Error:\tEnd of file reached within a symbol.\n"
 	  "\tNo close quote found for symbol on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), zz_line);
+	  Asc_ModuleBestName(Asc_CurrentModule()), yy_line);
 }
 
 
@@ -1135,7 +1135,7 @@ ErrMsg_SymbolEOL(void)
   FPRINTF(ASCERR,
           "Error:\tEnd of line reached within a symbol.\n"
 	  "\tNo close quote found for symbol on line %s:%lu\n",
-	  Asc_ModuleBestName(Asc_CurrentModule()), zz_line);
+	  Asc_ModuleBestName(Asc_CurrentModule()), yy_line);
 }
 
 
@@ -1146,5 +1146,5 @@ ErrMsg_UnexpectedChar()
 	  "Error:\tUnexpected character \"%s\" in input on line %s:%lu.\n",
 	  yytext,
 	  Asc_ModuleBestName(Asc_CurrentModule()),
-	  zz_line);
+	  yy_line);
 }

@@ -1,0 +1,45 @@
+Import('env')
+
+objs = Split("""
+	anoncopy.c anonmerg.c anontype.c arrayinst.c ascCompiler.c
+	atomsize.c atomvalue.c bintoken.c bit.c braced.c
+	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
+	commands.c copyinst.c createinst.c destroyinst.c
+	dimen.c dimen_io.c dump.c
+	evaluate.c exprio.c exprs.c exprsym.c extcall.c
+	extfunc.c extinst.c find.c forvars.c fractions.c
+	freestore.c func.c initialize.c instance.c instance_io.c
+	instantiate.c instmacro.c instquery.c interval.c
+	library.c linkinst.c logrel_io.c logrel_util.c
+	logrelation.c mathinst.c mergeinst.c module.c name.c
+	nameio.c notate.c numlist.c packages.c parentchild.c
+	parpend.c pending.c plot.c proc.c procframe.c
+	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
+	relation_io.c relation_util.c rootfind.c safe.c
+	select.c setinst_io.c setinstval.c setio.c
+	sets.c slist.c simlist.c statement.c statio.c switch.c
+	symtab.c syntax.c temp.c tmpnum.c type_desc.c
+	type_descio.c typedef.c typelint.c redirectFile.c
+    units.c universal.c
+	value_type.c visitinst.c visitlink.c vlist.c vlistio.c
+	watchpt.c watchptio.c when.c when_io.c when_util.c
+""")
+
+rounded = env.Object('rounded.c'
+	,CPPDEFINES=['SLOPPY']
+)
+
+parser = env.CFile(target=['ascParse'], source='ascParse.y'
+	, YACCFLAGS='-d'
+)
+
+scanner = env.CFile(target=['scanner.c'],source=['scanner.l']
+#	, LEXFLAGS=['-ll', '-Pzz_']
+)
+
+env.Depends(scanner,['ascParse.h'])
+
+env.Library('ascgeneral',objs+rounded+parser+scanner)
+
+
+

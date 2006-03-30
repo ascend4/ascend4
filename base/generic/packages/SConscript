@@ -1,0 +1,14 @@
+# This SConscript builds out static packages -- the ones that
+# don't need to be loaded, becuase they're built in.
+# It would be a good idea to staticly link ALL packages
+# on those platforms that don't support dlopening.
+
+Import('env')
+
+env.Library('ascpackages',Split("""
+
+	sensitivity.c ascFreeAllVars.c
+
+"""))
+
+
