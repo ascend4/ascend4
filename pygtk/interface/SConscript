@@ -16,7 +16,7 @@ srcs = Split("""
 
 libs = Split("""
 	asccompiler ascpackages ascsolver ascutilities ascgeneral 
-	$PYTHONLIB
+	$PYTHON_LIB
 """)
 
 libpath = [
@@ -25,6 +25,7 @@ libpath = [
 	,'../../base/generic/solver'
 	,'../../base/generic/utilities'
 	,'../../base/generic/general'
+	,'$PYTHON_LIBPATH'
 ]
 
 env.SharedLibrary("ascend",srcs

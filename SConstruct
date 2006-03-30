@@ -79,13 +79,24 @@ if not conf.CheckLib('tcl'):
 if not conf.CheckLib('tk'):
 	with_tcktk_gui = False
 
+if platform.system()=="Windows":
+	conf.env.Append(LIBPATH='c:\Python24\libs')
+	conf.env.Append(CPPPATH='c:\Python24\include')
+	python_header='Python.h'
+	python_lib='python24'
+	python_libpath='c:\\Python24\\libs'
+else:
+	python_header='python2.4/Python.h'
+	python_lib='python2.4'
+	python_libpath='/usr/include/python2.4'
+
 # Python
-if not conf.CheckLibWithHeader('python2.4','python2.4/Python.h','C'):
-	print "Didn't find Python 2.4"
+if not conf.CheckLibWithHeader(python_lib,python_header,'C'):
+	print "Didn't find Python 2.4 ("+python_lib+")"
 	with_python = False
 else:
-	env.Append(CPPPATH=['/usr/include/python2.4'])
-	env.Append(PYTHONLIB='python2.4')
+	env.Append(PYTHON_LIBPATH=[python_libpath])
+	env.Append(PYTHON_LIB=python_lib)
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -108,6 +119,11 @@ env.SConscript(['base/generic/packages/SConscript'],'env')
 
 if with_tcltk_gui:
 	env.SConscript(['tcltk98/generic/interface/SConscript'],'env')
+else:
+	print "Skipping... Tcl/Tk GUI isn't being built"
 
 if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
+else:
+	print "Skipping... Python GUI isn't being built"
+
