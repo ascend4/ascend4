@@ -32,53 +32,53 @@
  */
 
 #include <time.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/readln.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/units.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/types.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/atomvalue.h"
-#include "compiler/instance_name.h"
-#include "compiler/instquery.h"
-#include "compiler/parentchild.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "solver/slv_types.h"
-#include "solver/mtx.h"
-#include "solver/var.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/readln.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/units.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/types.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/atomvalue.h>
+#include <compiler/instance_name.h>
+#include <compiler/instquery.h>
+#include <compiler/parentchild.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_io.h>
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/var.h>
 /*
  * note: the analytic jacobian routines (state matrix) depend on the
  * assumption that struct var_variable *<--> struct Instance *.
  */
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "interface/HelpProc.h"
-#include "interface/Integrators.h"
-#include "interface/BrowserQuery.h"
-#include "interface/Qlfdid.h"
-#include "interface/UnitsProc.h"
-#include "interface/BrowserProc.h"
-#include "interface/HelpProc.h" 
-#include "interface/SolverGlobals.h"
-#include "interface/Lsode.h"
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/slv_common.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_client.h>
+#include "HelpProc.h"
+#include "Integrators.h"
+#include "BrowserQuery.h"
+#include "Qlfdid.h"
+#include "UnitsProc.h"
+#include "BrowserProc.h"
+#include "HelpProc.h"
+#include "SolverGlobals.h"
+#include "Lsode.h"
 
 #ifndef lint
 static CONST char IntegratorsID[] = "$Id: Integrators.c,v 1.32 2003/08/23 18:43:06 ballan Exp $";
@@ -1764,7 +1764,7 @@ int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
     Tcl_AppendResult(interp," ",engine,SNULL);
     return TCL_ERROR;
   }
-  if (ci0 != NULL && ci1 != NULL) { 
+  if (ci0 != NULL && ci1 != NULL) {
     /* get i0, i1 if both supplied. */
     long i;
     if (Tcl_ExprLong(interp,ci0,&i)==TCL_ERROR|| i<0) {

@@ -41,23 +41,23 @@ static CONST char CodeGen2ID[] = "$Id: CodeGen2.c,v 1.22 2003/08/23 18:43:05 bal
  *                         Copyright (C) 1995 Kirk Andre Abbott, CMU.
  */
 #include <math.h>
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/table.h"
-#include "general/dstring.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/exprsym.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_enum.h"
-#include "compiler/relation_io.h"
-#include "solver/system.h"
-#include "solver/var.h"
-#include "interface/Qlfdid.h"
-#include "interface/UnitsProc.h"
-#include "interface/CodeGen.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/table.h>
+#include <general/dstring.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/exprsym.h>
+#include <compiler/instance_io.h>
+#include <compiler/instance_enum.h>
+#include <compiler/relation_io.h>
+#include <solver/system.h>
+#include <solver/var.h>
+#include "Qlfdid.h"
+#include "UnitsProc.h"
+#include "CodeGen.h"
 
 
 #undef CG_OFFSET

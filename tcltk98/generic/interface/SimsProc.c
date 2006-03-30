@@ -29,54 +29,54 @@
 
 
 #include <ctype.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/tm_time.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/slist.h"
-#include "compiler/syntax.h"
-#include "compiler/prototype.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_name.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/extinst.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/copyinst.h"
-#include "compiler/destroyinst.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/name.h"
-#include "compiler/pending.h"
-#include "compiler/check.h"
-#include "compiler/stattypes.h"
-#include "compiler/relation_type.h"
-#include "compiler/bintoken.h"
-#include "compiler/instantiate.h"
-#include "compiler/value_type.h"
-#include "compiler/statio.h"
-#include "compiler/bit.h"
-#include "compiler/simlist.h"
-#include "compiler/qlfdid.h"
-#include "solver/slv_types.h"
-#include "interface/HelpProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/Driver.h"
-#include "interface/BrowserProc.h"
-#include "interface/HelpProc.h"
-#include "interface/SimsProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/cmpfunc.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <compiler/stattypes.h>
+#include <compiler/statement.h>
+#include <compiler/slist.h>
+#include <compiler/syntax.h>
+#include <compiler/prototype.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_io.h>
+#include <compiler/instance_name.h>
+#include <compiler/parentchild.h>
+#include <compiler/instquery.h>
+#include <compiler/extinst.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/copyinst.h>
+#include <compiler/destroyinst.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/name.h>
+#include <compiler/pending.h>
+#include <compiler/check.h>
+#include <compiler/stattypes.h>
+#include <compiler/relation_type.h>
+#include <compiler/bintoken.h>
+#include <compiler/instantiate.h>
+#include <compiler/value_type.h>
+#include <compiler/statio.h>
+#include <compiler/bit.h>
+#include <compiler/simlist.h>
+#include <compiler/qlfdid.h>
+#include <solver/slv_types.h>
+#include "HelpProc.h"
+#include "Qlfdid.h"
+#include "Driver.h"
+#include "BrowserProc.h"
+#include "HelpProc.h"
+#include "SimsProc.h"
 
 #ifndef lint
 static CONST char SimsProcID[] = "$Id: SimsProc.c,v 1.31 2003/08/23 18:43:08 ballan Exp $";
@@ -640,7 +640,7 @@ int Asc_SimBinTokenSetOptions(ClientData cdata, Tcl_Interp *interp,
   s3 = Tcl_GetInt(interp,argv[8],&housekeep);
   Tcl_ResetResult(interp);
   if (srcname == NULL || objname == NULL || libname == NULL ||
-      buildcommand == NULL || unlinkcommand == NULL || 
+      buildcommand == NULL || unlinkcommand == NULL ||
       s1 != TCL_OK || s2 != TCL_OK || s3 != TCL_OK) {
     Tcl_AppendResult(interp,argv[0],": Error converting input",(char *)NULL);
     return TCL_ERROR;

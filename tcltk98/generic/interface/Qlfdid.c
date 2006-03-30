@@ -27,9 +27,9 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#include "tcl.h"
-#include "tk.h"
-#include "compiler/qlfdid.h"
+#include <tcl.h>
+#include <tk.h>
+#include <compiler/qlfdid.h>
 
 int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
                         int argc, CONST84 char *argv[])

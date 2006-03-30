@@ -28,37 +28,37 @@
  */
 
 
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/slist.h"
-#include "compiler/statio.h"
-#include "compiler/proc.h"
-#include "compiler/watchpt.h"
-#include "compiler/watchptio.h"
-#include "compiler/name.h"
-#include "compiler/instquery.h"
-#include "compiler/atomvalue.h"
-#include "compiler/initialize.h"
-#include "compiler/child.h"
-#include "compiler/parentchild.h"
-#include "compiler/type_desc.h"
-#include "compiler/units.h"
-#include "compiler/qlfdid.h"
-#include "solver/slv_types.h"
-#include "interface/HelpProc.h"
-#include "interface/BrowserProc.h"
-#include "interface/BrowserMethod.h"
-#include "interface/UnitsProc.h"
-#include "interface/Qlfdid.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/symtab.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <compiler/stattypes.h>
+#include <compiler/slist.h>
+#include <compiler/statio.h>
+#include <compiler/proc.h>
+#include <compiler/watchpt.h>
+#include <compiler/watchptio.h>
+#include <compiler/name.h>
+#include <compiler/instquery.h>
+#include <compiler/atomvalue.h>
+#include <compiler/initialize.h>
+#include <compiler/child.h>
+#include <compiler/parentchild.h>
+#include <compiler/type_desc.h>
+#include <compiler/units.h>
+#include <compiler/qlfdid.h>
+#include <solver/slv_types.h>
+#include "HelpProc.h"
+#include "BrowserProc.h"
+#include "BrowserMethod.h"
+#include "UnitsProc.h"
+#include "Qlfdid.h"
 
 #ifndef lint
 static CONST char BrowserMethodID[] = "$Id: BrowserMethod.c,v 1.24 2003/08/23 18:43:04 ballan Exp $";
@@ -171,7 +171,7 @@ int Asc_BrowInitializeCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_AppendResult(interp,Asc_BrowInitializeCmdHN,
                      "-method <method name> not given",(char *)NULL);
     return TCL_ERROR;
-  } 
+  }
   if (filename != NULL) {
     output = fopen(filename,"w+");
     if (output == NULL) {
@@ -191,7 +191,7 @@ int Asc_BrowInitializeCmd(ClientData cdata, Tcl_Interp *interp,
     Tcl_AppendResult(interp, "Error executing method ",method,
                      " in ",qlfdid,(char *)NULL);
     return TCL_ERROR;
-  } 
+  }
   return TCL_OK;
 }
 

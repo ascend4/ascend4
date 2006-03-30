@@ -31,58 +31,58 @@
 #include <signal.h>
 #include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS */
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/instance_name.h"
-#include "compiler/atomvalue.h"
-#include "compiler/instquery.h"
-#include "compiler/types.h"
-#include "compiler/mathinst.h"
-#include "compiler/relation_type.h"
-#include "compiler/extfunc.h"
-#include "compiler/find.h"
-#include "compiler/functype.h"
-#include "compiler/safe.h"
-#include "compiler/relation.h"
-#include "compiler/relation_util.h"
-#include "compiler/pending.h"
-#include "compiler/symtab.h"
-#include "solver/slv_types.h"
-#include "solver/mtx.h"
-#include "solver/calc.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/relman.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "solver/slv_interface.h"
-#include "solver/slv_stdcalls.h"
-#include "solver/system.h"
-#include "solver/slvDOF.h"
-#include "interface/old_utils.h"
-#include "interface/HelpProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/BrowserQuery.h"
-#include "interface/DebugProc.h"
-#include "interface/BrowserMethod.h"
-#include "interface/DisplayProc.h"
-#include "interface/HelpProc.h"
-#include "interface/DebugProc.h"
-#include "interface/SolverGlobals.h"
-#include "interface/BrowserProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/instance_name.h>
+#include <compiler/atomvalue.h>
+#include <compiler/instquery.h>
+#include <compiler/types.h>
+#include <compiler/mathinst.h>
+#include <compiler/relation_type.h>
+#include <compiler/extfunc.h>
+#include <compiler/find.h>
+#include <compiler/functype.h>
+#include <compiler/safe.h>
+#include <compiler/relation.h>
+#include <compiler/relation_util.h>
+#include <compiler/pending.h>
+#include <compiler/symtab.h>
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/calc.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/relman.h>
+#include <solver/slv_common.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_client.h>
+#include <solver/slv_interface.h>
+#include <solver/slv_stdcalls.h>
+#include <solver/system.h>
+#include <solver/slvDOF.h>
+#include "old_utils.h"
+#include "HelpProc.h"
+#include "Qlfdid.h"
+#include "BrowserQuery.h"
+#include "DebugProc.h"
+#include "BrowserMethod.h"
+#include "DisplayProc.h"
+#include "HelpProc.h"
+#include "DebugProc.h"
+#include "SolverGlobals.h"
+#include "BrowserProc.h"
 /* #include "slv5.h" *//* this is a sloppy mess due to slv5_calc_J */
 
 #ifndef lint
@@ -1931,7 +1931,7 @@ int Asc_DebuFindEligible(ClientData cdata, Tcl_Interp *interp,
     for (i=0; i < len; i++) {
     Asc_BrowSetAtomAttribute(interp,(struct Instance *)var_instance(vp[i]),
                              message,SYMBOL_INST,&none);
-  } 
+  }
   if (slvDOF_eligible(g_solvsys_cur,&vip)) {
     switch (dev) {
     case 0:
@@ -2089,9 +2089,9 @@ int Asc_DebuInstEligible(ClientData cdata, Tcl_Interp *interp,
 
 /*
  * Get a "globally" (several alternatives in conditional model) consistent
- * set of variables to be fixed which, if fixed, would let all the 
+ * set of variables to be fixed which, if fixed, would let all the
  * alternatives square and structurally consistent
- * 
+ *
  */
 int Asc_DebuConsistencyAnalysis(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[])
@@ -2154,7 +2154,7 @@ int Asc_DebuConsistencyAnalysis(ClientData cdata, Tcl_Interp *interp,
   for (i=0; i < len; i++) {
     Asc_BrowSetAtomAttribute(interp,(struct Instance *)var_instance(vp[i]),
                              message,SYMBOL_INST,&none);
-  } 
+  }
   if (consistency_analysis(g_solvsys_cur,&vip)) {
     switch (dev) {
     case 0:
@@ -2179,7 +2179,7 @@ int Asc_DebuConsistencyAnalysis(ClientData cdata, Tcl_Interp *interp,
     for (i=0;vip[i]>-1;i++) {
       Asc_BrowSetAtomAttribute(interp,var_instance(vp[vip[i]]),
                                message,SYMBOL_INST,&consistent);
-    } 
+    }
     ascfree(vip);
   } else {
     Tcl_SetResult(interp, "{}", TCL_STATIC);

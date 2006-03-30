@@ -36,21 +36,21 @@
  *                         Copyright (C) 1995 Kirk Andre Abbott, CMU.
  */
 #include <math.h>
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/dstring.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_enum.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/exprsym.h"
-#include "compiler/relation_util.h"
-#include "compiler/relation_io.h"
-#include "solver/system.h"
-#include "interface/Qlfdid.h"
-#include "interface/CodeGen.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/dstring.h>
+#include <compiler/instance_io.h>
+#include <compiler/instance_enum.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/exprsym.h>
+#include <compiler/relation_util.h>
+#include <compiler/relation_io.h>
+#include <solver/system.h>
+#include "Qlfdid.h"
+#include "CodeGen.h"
 
 #ifndef lint
 static CONST char CodeGenID[] = "$Id: CodeGen.c,v 1.24 2003/08/23 18:43:05 ballan Exp $";

@@ -28,38 +28,38 @@
  */
 
 #include <time.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/dstring.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/braced.h"
-#include "compiler/notate.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/syntax.h"
-#include "compiler/module.h"
-#include "compiler/instance_enum.h"
-#include "compiler/dump.h"
-#include "compiler/stattypes.h"
-#include "compiler/slist.h"
-#include "compiler/child.h"
-#include "compiler/childio.h"
-#include "compiler/type_desc.h"
-#include "compiler/typedef.h"
-#include "compiler/extfunc.h"
-#include "compiler/library.h"
-#include "compiler/prototype.h"
-#include "compiler/proc.h"
-#include "compiler/nameio.h"
-#include "solver/slv_types.h"
-#include "interface/HelpProc.h"
-#include "interface/LibraryProc.h"
-#include "interface/Commands.h"
-#include "interface/SimsProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/dstring.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/braced.h>
+#include <compiler/notate.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <compiler/syntax.h>
+#include <compiler/module.h>
+#include <compiler/instance_enum.h>
+#include <compiler/dump.h>
+#include <compiler/stattypes.h>
+#include <compiler/slist.h>
+#include <compiler/child.h>
+#include <compiler/childio.h>
+#include <compiler/type_desc.h>
+#include <compiler/typedef.h>
+#include <compiler/extfunc.h>
+#include <compiler/library.h>
+#include <compiler/prototype.h>
+#include <compiler/proc.h>
+#include <compiler/nameio.h>
+#include <solver/slv_types.h>
+#include "HelpProc.h"
+#include "LibraryProc.h"
+#include "Commands.h"
+#include "SimsProc.h"
 
 #ifndef lint
 static CONST char LibraryProcID[] = "$Id: LibraryProc.c,v 1.44 2003/08/23 18:43:06 ballan Exp $";
@@ -89,7 +89,7 @@ struct int_option {
 static
 struct int_option g_option_list[OPTIONCOUNT] = {
   {&g_compiler_warnings,"-compilerWarnings",0,INT_MAX},
-  {&g_parser_warnings,"-parserWarnings",0,5}, 
+  {&g_parser_warnings,"-parserWarnings",0,5},
   {&g_simplify_relations,"-simplifyRelations",0,1},
   {&g_use_copyanon,"-useCopyAnon",0,1}
 };
@@ -257,7 +257,7 @@ int LibrModelDefinitionMethods(Tcl_Interp *interp)
 {
   struct gl_list_t *pl;
   unsigned long c,len;
-  
+
   pl = GetUniversalProcedureList();
   if (pl == NULL) {
     return TCL_OK;
@@ -737,7 +737,7 @@ int LibrNoteDBList(Tcl_Interp *interp)
   return TCL_OK;
 }
 
-static 
+static
 int LibrNoteLangs(Tcl_Interp *interp, symchar *dbid)
 {
   struct gl_list_t *langs;
@@ -764,7 +764,7 @@ int LibrNoteLangs(Tcl_Interp *interp, symchar *dbid)
  * This function is conceptually several functions, arg!
  * The empty symchar "" is treated as NULL.
  */
-static 
+static
 int LibrGetNotes(Tcl_Interp *interp,symchar *type, symchar *lang,
                  symchar *child, symchar *method, long noteptr, long tokenptr,
                  symchar *dbid)
@@ -943,7 +943,7 @@ int LibrMatchNotes(Tcl_Interp *interp, char *pattern,
 /* this function returns the notes on everything in more or less
  * easily sortable columns form.
  */
-static 
+static
 int LibrDumpNotes(Tcl_Interp *interp, int tmax, long heldlist, symchar *dbid)
 {
   struct gl_list_t *notes;
@@ -963,7 +963,7 @@ int LibrDumpNotes(Tcl_Interp *interp, int tmax, long heldlist, symchar *dbid)
   if (tmax < 5) {
     tmax = 5;
   }
- 
+
   if (heldlist != (long)NULL) {
     notes = HeldNotes(dbid,(void *)heldlist);
     if (notes == NULL) {
@@ -1046,7 +1046,7 @@ int LibrDumpNotes(Tcl_Interp *interp, int tmax, long heldlist, symchar *dbid)
     row++;
   }
   Tcl_AppendResult(interp,"} {",(char *)NULL);
-  
+
   /* process method names */
   row = 0;
   len = gl_length(notes);
@@ -1176,7 +1176,7 @@ STDHLF(Asc_LibrQueryTypeCmd,(Asc_LibrQueryTypeCmdHL1,
                              Asc_LibrQueryTypeCmdHL135,
                              Asc_LibrQueryTypeCmdHL136,
                              Asc_LibrQueryTypeCmdHL137,
-                             Asc_LibrQueryTypeCmdHL140, 
+                             Asc_LibrQueryTypeCmdHL140,
                              HLFSTOP));
 int Asc_LibrQueryTypeCmd(ClientData cdata, Tcl_Interp *interp,
                          int argc, CONST84 char **argv)
@@ -1218,7 +1218,7 @@ int Asc_LibrQueryTypeCmd(ClientData cdata, Tcl_Interp *interp,
   struct TypeDescription *desc=NULL;
 
   ASCUSE;  /* see if first arg is -help */
-  
+
   if (argc < 2) {
     Tcl_AppendResult(interp,Asc_LibrQueryTypeCmdHN " called without arguments",
                      (char *)NULL);

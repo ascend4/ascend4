@@ -27,26 +27,26 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statio.h"
-#include "solver/slv_types.h"
-#include "interface/HelpProc.h"
-#include "interface/DisplayProc.h"
-#include "interface/Commands.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/type_descio.h>
+#include <compiler/types.h>
+#include <compiler/stattypes.h>
+#include <compiler/statio.h>
+#include <solver/slv_types.h>
+#include "HelpProc.h"
+#include "DisplayProc.h"
+#include "Commands.h"
 
 #ifndef lint
 static CONST char DisplayProcID[] = "$Id: DisplayProc.c,v 1.19 2003/08/23 18:43:05 ballan Exp $";
@@ -146,7 +146,7 @@ int Asc_DispDiffDefineCmd(ClientData cdata, Tcl_Interp *interp,
           return TCL_ERROR;
         }
         closefile=1;
-     
+
     } else {
       ddef_outfile=stderr;
     }
@@ -334,7 +334,7 @@ int Asc_DispFileByTypeCmd(ClientData cdata, Tcl_Interp *interp,
                   TCL_STATIC);
     return TCL_ERROR;
   }
-  
+
   tablename = AddSymbol(argv[1]);
   /* Fundamental types are not defined externally -- hence no file */
   if (CheckFundamental(tablename)) {

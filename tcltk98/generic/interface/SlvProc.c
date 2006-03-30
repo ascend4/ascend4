@@ -28,27 +28,27 @@
  */
 
 #include <math.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"		/* needed? */
-#include "compiler/instance_enum.h"
-#include "solver/slv_types.h"
-#include "solver/mtx.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "interface/HelpProc.h"
-#include "interface/SolverGlobals.h"
-#include "interface/Commands.h" /* for registration function */
-#include "interface/SlvProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>		/* needed? */
+#include <compiler/instance_enum.h>
+#include <solver/slv_types.h>
+#include <solver/mtx.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/slv_common.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_client.h>
+#include "HelpProc.h"
+#include "SolverGlobals.h"
+#include "Commands.h" /* for registration function */
+#include "SlvProc.h"
 
 #ifndef lint
 static CONST char SlvProcID[] = "$Id: SlvProc.c,v 1.6 2003/08/23 18:43:08 ballan Exp $";
@@ -93,7 +93,7 @@ static CONST char SlvProcID[] = "$Id: SlvProc.c,v 1.6 2003/08/23 18:43:08 ballan
  * our basic data package.
  * Functions using the package should pay attention to the
  * update flag and if it is set, clear it while doing the appropriate
- * action. 
+ * action.
  */
 struct SlvMonitor {
   char *interface_id;	/* a constant symbolic handle for this object */
@@ -451,7 +451,7 @@ int Asc_RelAnalyzeCmd(ClientData cdata, Tcl_Interp *interp,
 static
 void MonDestroy(struct SlvMonitor *m)
 {
-  if (m==NULL) { 
+  if (m==NULL) {
     return;
   }
   free_unless_null(m->interface_id);
@@ -957,7 +957,7 @@ int MonPlotData (struct SlvMonitor *m, Tcl_Interp *interp,
  * s plotdata value 	return plot info for scaled values that changed
  * s plotdata speed 	return plot info for scaled rates of value change
  * s plotdata residual	return plot info for scaled residuals that changed
- * 
+ *
  * The change and plotdata subcommands return information only for those
  * relations or variables that changed since we last recorded their values
  * or we last changed geometry in the case of plotdata.
@@ -966,7 +966,7 @@ int MonPlotData (struct SlvMonitor *m, Tcl_Interp *interp,
  * slv_system. At present the value of s is ignored and g_solvsys_cur
  * is assumed. The solver needs to define symbolic handles and a lookup
  * function for us to interpret s properly.
- * 
+ *
  * Most of the internals of this function and downstream use of
  * the data it returns in the interpreter could be much faster
  * if reimplemented in the tcl Object functions when those functions
@@ -1003,9 +1003,9 @@ int SolveMonitor(ClientData cdata,Tcl_Interp *interp, int argc, CONST84 char *ar
     return TCL_ERROR;
   }
 
-  sys = g_solvsys_cur; 
+  sys = g_solvsys_cur;
   /* this needs to be generalized to lookup sys based on argv[1].*/
-  
+
   switch (argv[2][0]) {
   case 'c':
     if (sys==NULL) {
@@ -1048,7 +1048,7 @@ STDHLF(SolveMonitor,(SolveMonitorHL1,
  * Creates a monitor and returns its symbolic handle.
  * Multiple monitors can exist and are manipulated by their
  * symbolic handles.
- * A monitor may be used on a series of unrelated slv_system_t. 
+ * A monitor may be used on a series of unrelated slv_system_t.
  * Currently, this function gets its slv_system_t from g_solvsys_cur,
  * but it should be changed to take a slvsys interface id when
  * the solver interface is changed to work by name.
@@ -1064,7 +1064,7 @@ int Asc_SolveMonitorCmd(ClientData cdata,Tcl_Interp *interp,
     Tcl_AppendResult(interp,argv[0],": no arguments allowed yet",(char *)NULL);
     return TCL_ERROR;
   }
-  
+
   result = SMC(asccalloc(1,sizeof(struct SlvMonitor)));
   if (result==NULL) {
     Tcl_AppendResult(interp,argv[0],": insufficient memory",(char *)NULL);
@@ -1087,7 +1087,7 @@ int Asc_SolveMonitorCmd(ClientData cdata,Tcl_Interp *interp,
   result->w = result->h = 1;
   MONALLSET(result->updated);
 
-  Asc_AddCommand(interp, result->interface_id, SolveMonitor, 
+  Asc_AddCommand(interp, result->interface_id, SolveMonitor,
     (ClientData)result, (Tcl_CmdDeleteProc *)MonDestroy, "solver-monitor",
     SolveMonitorHU, SolveMonitorHS, SolveMonitorHLF);
 

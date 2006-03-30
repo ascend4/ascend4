@@ -34,7 +34,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <time.h>
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #ifndef __WIN32__
 #include <unistd.h>
 #else
@@ -43,23 +43,23 @@
 #include <locale.h>
 #undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
-#include "utilities/ascMalloc.h" /* for ascshutdown */
-#include "utilities/ascPanic.h"  /* for Asc_Panic */
-#include "utilities/ascEnvVar.h"
-#include "compiler/compiler.h"
-#include "compiler/ascCompiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/compiler.h" /* for symchar for units.h */
-#include "compiler/units.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/logrel.h"
-#include "solver/discrete.h"
-#include "solver/mtx.h"
-#include "solver/slv_stdcalls.h"
+#include <utilities/ascMalloc.h> /* for ascshutdown */
+#include <utilities/ascPanic.h>  /* for Asc_Panic */
+#include <utilities/ascEnvVar.h>
+#include <compiler/compiler.h>
+#include <compiler/ascCompiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/compiler.h> /* for symchar for units.h */
+#include <compiler/units.h>
+#include <solver/slv_types.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/logrel.h>
+#include <solver/discrete.h>
+#include <solver/mtx.h>
+#include <solver/slv_stdcalls.h>
 
 #ifndef lint
 static CONST char DriverID[] = "$Id: DriverNoTickle.c,v 1.1 2004/07/13 07:42:30 ballan Exp $";
@@ -414,7 +414,7 @@ static int AscProcessCommandLine( int argc, CONST84 char **argv)
       argv[++new_argc] = argv[i];
     }
   }
- 
+
   return 0;
 }
 

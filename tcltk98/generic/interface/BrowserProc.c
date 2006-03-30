@@ -29,57 +29,57 @@
 
 #include <stdarg.h>
 #include <time.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/tm_time.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/check.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/relation_type.h"
-#include "compiler/setinstval.h"
-#include "compiler/extfunc.h"
-#include "compiler/find.h"
-#include "compiler/functype.h"
-#include "compiler/safe.h"
-#include "compiler/relation.h"
-#include "compiler/relation_util.h"
-#include "compiler/logical_relation.h"
-#include "compiler/logrelation.h"
-#include "compiler/logrel_util.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_name.h"
-#include "compiler/instquery.h"
-#include "compiler/parentchild.h"
-#include "compiler/atomvalue.h"
-#include "compiler/mathinst.h"
-#include "compiler/mergeinst.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/refineinst.h"
-#include "compiler/stattypes.h"
-#include "compiler/instantiate.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/simlist.h"
-#include "compiler/anontype.h"
-#include "compiler/qlfdid.h"
-#include "solver/slv_types.h"
-#include "interface/HelpProc.h"
-#include "interface/BrowserProc.h"
-#include "interface/Qlfdid.h"
-#include "interface/UnitsProc.h"
-#include "interface/SimsProc.h"
-#include "interface/Commands.h"
-#include "interface/Driver.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/cmpfunc.h>
+#include <compiler/check.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <compiler/relation_type.h>
+#include <compiler/setinstval.h>
+#include <compiler/extfunc.h>
+#include <compiler/find.h>
+#include <compiler/functype.h>
+#include <compiler/safe.h>
+#include <compiler/relation.h>
+#include <compiler/relation_util.h>
+#include <compiler/logical_relation.h>
+#include <compiler/logrelation.h>
+#include <compiler/logrel_util.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_io.h>
+#include <compiler/instance_name.h>
+#include <compiler/instquery.h>
+#include <compiler/parentchild.h>
+#include <compiler/atomvalue.h>
+#include <compiler/mathinst.h>
+#include <compiler/mergeinst.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/refineinst.h>
+#include <compiler/stattypes.h>
+#include <compiler/instantiate.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/simlist.h>
+#include <compiler/anontype.h>
+#include <compiler/qlfdid.h>
+#include <solver/slv_types.h>
+#include "HelpProc.h"
+#include "BrowserProc.h"
+#include "Qlfdid.h"
+#include "UnitsProc.h"
+#include "SimsProc.h"
+#include "Commands.h"
+#include "Driver.h"
 
 #ifndef lint
 static CONST char BrowserProcID[] = "$Id: BrowserProc.c,v 1.36 2003/08/23 18:43:04 ballan Exp $";
@@ -479,7 +479,7 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
       case IntArrayIndex:
         PRINTF("[%ld]\n",InstanceIntIndex(name)); break;
       case StrArrayIndex:
-        PRINTF("['%s']\n",SCP(InstanceStrIndex(name))); 
+        PRINTF("['%s']\n",SCP(InstanceStrIndex(name)));
         break;
       case StrName:
         PRINTF("%s\n",SCP(InstanceNameStr(name)));
@@ -911,7 +911,7 @@ int BrowOperands(Tcl_Interp *interp, struct Instance *i)
     ascfree(name);
   }
   gl_destroy(ol);
-  
+
   return TCL_OK;
 }
 

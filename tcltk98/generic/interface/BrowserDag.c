@@ -28,18 +28,18 @@
  */
 
 
-#include "tcl.h"
-#include "tk.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/slv_client.h"
-#include "interface/BrowserQuery.h"
-#include "interface/BrowserDag.h"
-#include "general/mathmacros.h"
+#include <tcl.h>
+#include <tk.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <compiler/instance_enum.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/slv_client.h>
+#include "BrowserQuery.h"
+#include "BrowserDag.h"
+#include <general/mathmacros.h>
 
 #ifndef lint
 static CONST char BrowserDagID[] = "$Id: BrowserDag.c,v 1.15 2003/08/23 18:43:04 ballan Exp $";

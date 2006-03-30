@@ -34,12 +34,12 @@
  *  It does not interact in any way the the Tcl global "env" array.
  */
 
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascEnvVar.h"
-#include "interface/HelpProc.h"
-#include "interface/EnvVarProc.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascEnvVar.h>
+#include "HelpProc.h"
+#include "EnvVarProc.h"
 
 #ifndef lint
 CONST char *EnvVarProcID = "$Id: EnvVarProc.c,v 1.7 2003/08/23 18:43:06 ballan Exp $";
@@ -157,7 +157,7 @@ int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
     ascfree(envargv);
     break;
   case 'n':
-    /* 	names	
+    /* 	names
      */
     if (argc != 2) {
       Tcl_AppendResult(interp,"wrong number of args : ",
@@ -192,7 +192,7 @@ int Asc_EnvVarCmd(ClientData cdata, Tcl_Interp *interp,
     }
     break;
   case 's':
-    /* 	set	var path 
+    /* 	set	var path
      */
     if (argc != 4) {
       Tcl_AppendResult(interp,"wrong number of args : ",

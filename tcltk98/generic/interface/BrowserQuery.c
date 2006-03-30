@@ -29,57 +29,57 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/instance_name.h"
-#include "compiler/dimen.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/statio.h"
-#include "compiler/extfunc.h"
-#include "compiler/find.h"
-#include "compiler/relation_type.h"
-#include "compiler/relation_io.h"
-#include "compiler/functype.h"
-#include "compiler/safe.h"
-#include "compiler/relation_util.h"
-#include "compiler/logical_relation.h"
-#include "compiler/logrel_io.h"
-#include "compiler/logrel_util.h"
-#include "compiler/dimen_io.h"
-#include "compiler/instance_name.h"
-#include "compiler/instquery.h"
-#include "compiler/parentchild.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/mathinst.h"
-#include "compiler/visitinst.h"
-#include "compiler/atomvalue.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/setinstval.h"
-#include "compiler/setinst_io.h"
-#include "compiler/units.h"
-#include "compiler/qlfdid.h"
-#include "solver/slv_types.h"
-#include "interface/HelpProc.h"
-#include "compiler/plot.h"
-#include "interface/BrowserQuery.h"
-#include "interface/Qlfdid.h"
-#include "interface/SimsProc.h"
-#include "interface/BrowserProc.h"
-#include "interface/UnitsProc.h"
-#include "packages/ascFreeAllVars.h"
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/instance_name.h>
+#include <compiler/dimen.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_io.h>
+#include <compiler/types.h>
+#include <compiler/stattypes.h>
+#include <compiler/statement.h>
+#include <compiler/statio.h>
+#include <compiler/extfunc.h>
+#include <compiler/find.h>
+#include <compiler/relation_type.h>
+#include <compiler/relation_io.h>
+#include <compiler/functype.h>
+#include <compiler/safe.h>
+#include <compiler/relation_util.h>
+#include <compiler/logical_relation.h>
+#include <compiler/logrel_io.h>
+#include <compiler/logrel_util.h>
+#include <compiler/dimen_io.h>
+#include <compiler/instance_name.h>
+#include <compiler/instquery.h>
+#include <compiler/parentchild.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/mathinst.h>
+#include <compiler/visitinst.h>
+#include <compiler/atomvalue.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/setinstval.h>
+#include <compiler/setinst_io.h>
+#include <compiler/units.h>
+#include <compiler/qlfdid.h>
+#include <solver/slv_types.h>
+#include "HelpProc.h"
+#include <compiler/plot.h>
+#include "BrowserQuery.h"
+#include "Qlfdid.h"
+#include "SimsProc.h"
+#include "BrowserProc.h"
+#include "UnitsProc.h"
+#include <packages/ascFreeAllVars.h>
 
 #ifndef lint
 static CONST char BrowserQueryID[] = "$Id: BrowserQuery.c,v 1.51 2003/08/23 18:43:04 ballan Exp $";
@@ -1170,7 +1170,7 @@ int BrowTypeOfArrayIsShown(struct Instance *child)
 /*
  * Modified to consider the types with bit TYPESHOW set to zero. VRR
  * and child list visibility bit. BAA.
- * and ATOM invisibility and MODEL part passing (baa) 
+ * and ATOM invisibility and MODEL part passing (baa)
  * unless fetching specific child.
  */
 static
@@ -1203,13 +1203,13 @@ void BrowListModelChildren(Tcl_Interp *interp, struct Instance *i, int atoms,
       /* check for any part with VISIBILITY bit set to zero,
        * or passed set to 1
        */
-      if (( ChildVisible(clist,c)==0 || 
-            (ChildPassed(clist,c) == 1 && !show_passed_parts) 
+      if (( ChildVisible(clist,c)==0 ||
+            (ChildPassed(clist,c) == 1 && !show_passed_parts)
           ) &&
           !g_do_onechild) {
         continue;
       }
-      /* check for any type with TYPESHOW bit set to zero 
+      /* check for any type with TYPESHOW bit set to zero
        * or atoms we don't want to see.
        */
       child = InstanceChild(i,c);
@@ -1643,7 +1643,7 @@ int Asc_BrowWriteValues(ClientData cdata, Tcl_Interp *interp,
   int nok = 0;
 
   (void)cdata;    /* stop gcc whine about unused parameter */
-  
+
   if (argc<5|| argc>6) {
     Tcl_AppendResult(interp,"wrong # args: Usage : \"bwritevalues\" ",
                      "filename  acmd  current?root?search?qualified ",
@@ -1692,7 +1692,7 @@ int Asc_BrowWriteValues(ClientData cdata, Tcl_Interp *interp,
   /* use BrowWriteRBValue which has been fixed up to use relative
      names */
   fast_but_sloppy = 0;
-  
+
   if (fast_but_sloppy) {			/* write the file */
     VisitInstanceTree(i,BrowWriteRBValues2,0,1);
   } else {
@@ -2050,7 +2050,7 @@ static struct Instance *FilterSets(struct Instance *i, int argc, char **argv)
 
 /* filters the list sent, creating a new one. the old one is destroyed */
 /* this code is a piece of garbage that needs to be cleaned up to reduce
- * all the strcmp that goes on, among other things. more kirkisms. 
+ * all the strcmp that goes on, among other things. more kirkisms.
  */
 static struct gl_list_t *Brow_FilterFindList(struct gl_list_t *list,
                                              int argc, char **argv)
