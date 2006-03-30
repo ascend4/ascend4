@@ -118,7 +118,7 @@ scanner.o: $(srcdir)/scanner.l $(srcdir)/scanner.c.no.flex ./ascParse.h
 	$(CC) $(CC_SWITCHES) -c scanner.c
 
 scanner.c.from.flex: $(srcdir)/scanner.l ./ascParse.h
-	$(LEX) -Pzz_ -t $(srcdir)/scanner.l > scanner.c
+	$(LEX) -t $(srcdir)/scanner.l > scanner.c
 
 scanner.c.from.c: $(srcdir)/scanner.c.no.flex
 	$(CP) $(srcdir)/scanner.c.no.flex scanner.c

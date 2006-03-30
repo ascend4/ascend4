@@ -280,7 +280,7 @@ if $(BUILD_COMPILER)
   scanner_c = [ FGristSourceFiles scanner.c ] ; 
   scanner_h = scanner.h ;
   scanner_l = scanner.l ;
-  LEXOPTS on $(scanner_c) = -Pzz_ ;
+  # LEXOPTS on $(scanner_c) = -Pzz_ ; --- NOT REQUIRED, CHANGED scanner.l --JP
 
   LOCATE on $(scanner_c) = $(ASC_COMPILER_DIR) ;
   LOCATE on $(scanner_h) = $(ASC_COMPILER_DIR) ;

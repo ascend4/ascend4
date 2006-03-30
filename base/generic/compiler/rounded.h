@@ -34,8 +34,8 @@
  *  </pre>
  */
 
-#ifndef __ROUNDED_H_SEEN__
-#define __ROUNDED_H_SEEN__
+#ifndef ASC_ROUNDED_H
+#define ASC_ROUNDED_H
 
 extern double DIPow(register double d, long int n);
 /**< 
@@ -253,5 +253,5 @@ extern double Ultod(long int l);
 #define UPow(d1,d2) (pow(d1,d2))
 #endif /* SLOPPY */
 
-#endif /* __ROUNDED_H_SEEN__ */
+#endif /* ASC_ROUNDED_H */
 

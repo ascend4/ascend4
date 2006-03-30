@@ -1,0 +1,10 @@
+Import('env')
+
+env.Library('ascgeneral',Split("""
+
+	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c
+	ascPrint.c error.c ascSignal.c mem.c readln.c set.c
+
+"""))
+
+
