@@ -1,10 +1,8 @@
 Import('env')
 
 env.Library('ascgeneral',Split("""
-
 	dstring.c hashpjw.c list.c listio.c pool.c pretty.c
 	stack.c table.c tm_time.c
-
 """))
 
 
