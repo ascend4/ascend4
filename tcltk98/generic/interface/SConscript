@@ -1,8 +1,6 @@
 Import('env')
 
 srcs = Split("""
-	Driver.c
-
 	AscBitmaps.c AscPrintTcl.c BrowLogRel_io.c BrowWhen_io.c
 	BrowserMethod.c BrowserProc.c BrowserQuery.c BrowserRel_io.c
 	Commands.c DebugProc.c DisplayProc.c
@@ -15,20 +13,38 @@ srcs = Split("""
 
 
 typelex = env.CFile(target='typelex.c',source='typelex.l'
-	, LEXFLAGS = '-Pzz'
+	, LEXFLAGS = '-ll -Pzz'
 )
 
+#----------------
 libs = Split("""
 	asccompiler ascpackages ascsolver ascutilities ascgeneral 
 	tcl tk
 """)
 
-env.Program('ascend4',srcs+typelex
-	, CPPPATH=['../../../base/generic','..']
-	, LIBS=libs
-	, LIBPATH=['../../../base/generic/compiler'
-		,'../../../base/generic/packages'
-		,'../../../base/generic/solver'
-		,'../../../base/generic/utilities'
-		,'../../../base/generic/general']
+libpath = [
+	'../../../base/generic/compiler'
+	,'../../../base/generic/packages'
+	,'../../../base/generic/solver'
+	,'../../../base/generic/utilities'
+	,'../../../base/generic/general'
+]
+
+env.Program("ascend4",srcs+typelex+['Driver.c']
+	, LIBS = libs
+	, LIBPATH = libpath+['$LIBPATH']
+	, CPPPATH = ['../../../base/generic']
 )
+
+if 0:
+	env.Program('ascend4',driver
+		, CPPPATH=cpppath
+		, LIBS=libs
+		, LIBPATH=['../../../base/generic/compiler'
+			,'../../../base/generic/packages'
+			,'../../../base/generic/solver'
+			,'../../../base/generic/utilities'
+			,'../../../base/generic/general'
+			,'.'
+		  ]
+	)

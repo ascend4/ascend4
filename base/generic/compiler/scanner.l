@@ -739,14 +739,14 @@ IDChar       {letter}({integer}|{letter}|_)*
 
 %%
 /*
- *  int yy_wrap(void);
+ *  int yywrap(void);
  *
  *  This returns 1 if the scanner should stop parsing, or
  *  0 if the scanner should continue.  Flex requires this
  *  function unless %option noyywrap is defined.
  */
 int
-yy_wrap(void)
+yywrap(void)
 {
   return 1;
 }

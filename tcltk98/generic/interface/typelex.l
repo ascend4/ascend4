@@ -46,32 +46,35 @@
  *
  */
 
-#include "tcl.h"
-#include "utilities/ascConfig.h"
-#include "general/list.h"
+#define MY_YYMORE() yymore()
+
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+#include <general/list.h>
 #ifndef TYPER_TEST
 /* for handling string modules and results in interp */
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/library.h"
-#include "compiler/module.h"
-#include "interface/HelpProc.h" /* help is not necessary for test */
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/library.h>
+#include <compiler/module.h>
+#include "HelpProc.h" /* help is not necessary for test */
 #endif /*!typertest*/
-#include "interface/typelex.h"
+
+#include "typelex.h"
 
 
 #ifndef lint
 static const char TyperID[] = "$Id: typelex.l,v 1.20 2003/08/23 18:43:09 ballan Exp $";
 #endif
 
-#define ZZ_BREAK
+#define YY_BREAK
 /*
- *  Defining zzbreak as above (empty) means that all of our matches must end
- *  in break or return because the normal flex supplied zzbreak will
+ *  Defining yybreak as above (empty) means that all of our matches must end
+ *  in break or return because the normal flex supplied yybreak will
  *  be preempted by our empty one.
  *  In cases where matches contain a conditional return, make sure a
  *  break follows in the failure case.
@@ -111,7 +114,7 @@ static int ShowComments = 0;
 static unsigned long StartId = 0;
 /*
  *  The location in the `zztext' array where the MODEL, ATOM, or CONSTANT
- *  identifierbegins.  We save this value and call zzmore() when we find
+ *  identifierbegins.  We save this value and call MY_YYMORE() when we find
  *  a MODEL, ATOM, or CONSTANT keyword; StartId tells us where the
  *  Identifier will go.
  */
@@ -469,7 +472,7 @@ constant	CONSTANT{ws}+
 	 *  Once we've found the start of the matching MODEL, ATOM, or
          *  DEFINITION, print the text until we find the END token.
          *  When we find END, save the current length of zztext and use
-         *  zzmore() to append the identifier, then check the identifier
+         *  MY_YYMORE() to append the identifier, then check the identifier
          *  (in the CheckID state) to see if it is what we want.  If so,
 	 *  this is the end of this MODEL, ATOM, or DEFINITION.
 	 */
@@ -484,7 +487,7 @@ constant	CONSTANT{ws}+
 				  StartId = zzleng;
                                   MatchedToken = MODEL_END;
 				  BEGIN(CheckID);
-				  zzmore();
+				  MY_YYMORE();
 				  break;
 				}
 <Model>[^({A-Z]+		|
@@ -538,10 +541,10 @@ constant	CONSTANT{ws}+
 	/*
 	 *  Code to look for [UNIVERSAL ]{MODEL|ATOM|CONSTANT|DEFINITION}.
 	 *
-	 *  If we find UNIVERSAL, use zzmore() to append the next
+	 *  If we find UNIVERSAL, use yymore() to append the next
 	 *  keyword---probably MODEL, ATOM, or CONSTANT.
 	 *  If we find MODEL, ATOM, CONSTANT, or DEFINITION save the
-	 *  current length and use zzmore() to append the identifier,
+	 *  current length and use yymore() to append the identifier,
 	 *  then check the identifier (in the CheckID state) to see if
 	 *  it is what we're looking for.
 	 */
@@ -552,7 +555,7 @@ constant	CONSTANT{ws}+
 				   *  the following ATOM/MODEL/CONSTANT
 				   *  keyword.
 				   */
-				  zzmore();
+				  MY_YYMORE();
 				  break;
 				}
 <INITIAL>{model}		|
@@ -569,7 +572,7 @@ constant	CONSTANT{ws}+
 				  StartId = zzleng;
 				  MatchedToken = MODEL;
 				  BEGIN(CheckID);
-				  zzmore();
+				  MY_YYMORE();
 				  break;
 				}
 <INITIAL>{constant}		{
@@ -583,7 +586,7 @@ constant	CONSTANT{ws}+
 				  StartId = zzleng;
 				  MatchedToken = CONSTANT;
 				  BEGIN(CheckID);
-				  zzmore();
+				  MY_YYMORE();
 				  break;
 				}
 

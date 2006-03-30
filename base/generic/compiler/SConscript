@@ -1,6 +1,6 @@
 Import('env')
 
-objs = Split("""
+srcs = Split("""
 	anoncopy.c anonmerg.c anontype.c arrayinst.c ascCompiler.c
 	atomsize.c atomvalue.c bintoken.c bit.c braced.c
 	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
@@ -39,7 +39,7 @@ scanner = env.CFile(target=['scanner.c'],source=['scanner.l']
 
 env.Depends(scanner,['ascParse.h'])
 
-env.Library('asccompiler',objs+rounded+parser+scanner)
+env.Library('asccompiler',srcs+rounded+parser+scanner)
 
 
 
