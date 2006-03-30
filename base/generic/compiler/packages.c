@@ -33,7 +33,6 @@
 	An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
 	required.
 */
-
 #ifndef DYNAMIC_PACKAGES
 # error "WHERE IS THE DYNAMICS PACKAGES #DEF?!"
 #endif
@@ -216,7 +215,6 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 #elif defined(DYNAMIC_PACKAGES)
 
   symchar *name_with_extn;
-  name_with_extn = MakeArchiveLibraryName(name);
 
   int result;
   char *default_path = ".";
@@ -225,6 +223,8 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
   extern int Asc_DynamicLoad(CONST char *,CONST char *);
 
   char initfunc_generated_name[255];
+
+  name_with_extn = MakeArchiveLibraryName(name);
 
   full_file_name = SearchArchiveLibraryPath(name_with_extn,default_path,env);
   if (!full_file_name) {
