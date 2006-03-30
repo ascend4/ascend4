@@ -80,11 +80,12 @@ if not conf.CheckLib('tk'):
 	with_tcktk_gui = False
 
 # Python
-if not conf.CheckHeader('python2.4/Python.h'):
+if not conf.CheckLibWithHeader('python2.4','python2.4/Python.h','C'):
 	print "Didn't find Python 2.4"
 	with_python = False
 else:
 	env.Append(CPPPATH=['/usr/include/python2.4'])
+	env.Append(PYTHONLIB='python2.4')
 
 # TODO: -D_HPUX_SOURCE is needed
 
