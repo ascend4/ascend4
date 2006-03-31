@@ -33,37 +33,37 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/relman.h"
-#include "solver/logrelman.h"
-#include "solver/bnd.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
+#include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "mtx.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "relman.h"
+#include "logrelman.h"
+#include "bnd.h"
+#include "slv_common.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_client.h"
 /* header of registered clients */
-#include "solver/slv0.h"
-#include "solver/slv1.h"
-#include "solver/slv2.h"
-#include "solver/slv3.h"
-#include "solver/slv6.h"
-#include "solver/slv7.h"
-#include "solver/slv8.h"
-#include "solver/slv9.h"
-#include "solver/slv9a.h"
-#include "solver/model_reorder.h"
-#include "solver/slv_stdcalls.h"
-#include "general/mathmacros.h"
+#include "slv0.h"
+#include "slv1.h"
+#include "slv2.h"
+#include "slv3.h"
+#include "slv6.h"
+#include "slv7.h"
+#include "slv8.h"
+#include "slv9.h"
+#include "slv9a.h"
+#include "model_reorder.h"
+#include "slv_stdcalls.h"
+#include <general/mathmacros.h>
 
 #define KILL 0 /* deleteme code. compile old code if kill = 1 */
 #define NEEDSTOBEDONE 0 /* indicates code/comments that are not yet ready */

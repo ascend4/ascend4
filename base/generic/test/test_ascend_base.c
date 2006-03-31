@@ -25,15 +25,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utilities/ascConfig.h"
-#include "compiler/redirectFile.h"
-#include "utilities/ascMalloc.h"
+#include <utilities/ascConfig.h>
+#include <compiler/redirectFile.h>
+#include <utilities/ascMalloc.h>
 #include "printutil.h"
 
 #include "CUnit/Basic.h"
-#include "general/test/test_register_general.h"
-#include "utilities/test/test_register_utilities.h"
-#include "solver/test/test_register_solver.h"
+#include <general/test/test_register_general.h>
+#include <utilities/test/test_register_utilities.h>
+#include <solver/test/test_register_solver.h>
 
 int main(int argc, char* argv[])
 {

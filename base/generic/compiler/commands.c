@@ -27,10 +27,10 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/commands.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "commands.h"
 
 
 #ifndef lint

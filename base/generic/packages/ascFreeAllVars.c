@@ -29,23 +29,23 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascPrint.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instquery.h"
-#include "compiler/atomvalue.h"
-#include "compiler/visitinst.h"
-#include "compiler/extfunc.h"
-#include "compiler/parentchild.h"
-#include "compiler/library.h"
-#include "packages/ascFreeAllVars.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPrint.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_enum.h>
+#include <compiler/instquery.h>
+#include <compiler/atomvalue.h>
+#include <compiler/visitinst.h>
+#include <compiler/extfunc.h>
+#include <compiler/parentchild.h>
+#include <compiler/library.h>
+#include <packages/ascFreeAllVars.h>
 
 
 /*

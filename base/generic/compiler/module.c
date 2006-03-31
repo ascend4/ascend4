@@ -33,18 +33,18 @@
 #include <time.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascEnvVar.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "compiler/scanner.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/symtab.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascEnvVar.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include "scanner.h"
+#include "compiler.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "symtab.h"
+#include "module.h"
+#include "library.h"
 
 #ifndef lint
 static CONST char ModuleRCSid[] = "$Id: module.c,v 1.25 1998/03/17 22:09:12 ballan Exp $";

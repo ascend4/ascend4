@@ -27,9 +27,9 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/readln.h"
+#include "ascConfig.h"
+#include "ascMalloc.h"
+#include "readln.h"
 
 #define	BUFLEN	1000
 

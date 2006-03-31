@@ -21,10 +21,10 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/tm_time.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/tm_time.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
 #include "test_tm_time.h"

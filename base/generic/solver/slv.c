@@ -24,30 +24,30 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "compiler/dimen.h"
-#include "compiler/atomvalue.h"
-#include "solver/mtx.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/logrel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/bnd.h"
-#include "solver/bndman.h"
-#include "solver/system.h"
-#include "solver/slv_server.h"
-#include "solver/slv_common.h"
-#include "solver/slv_client.h"
-#include "solver/analyze.h"
+#include <utilities/ascConfig.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <compiler/dimen.h>
+#include <compiler/atomvalue.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "logrel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "bnd.h"
+#include "bndman.h"
+#include "system.h"
+#include "slv_server.h"
+#include "slv_common.h"
+#include "slv_client.h"
+#include "analyze.h"
 
 #define NEEDSTOBEDONE 0
 
@@ -57,16 +57,16 @@
  ***  Defines are to take care of the unlinked ones.
  **/
 #if 0
-# include "solver/slv0.h"
-# include "solver/slv1.h"
-# include "solver/slv2.h"
-# include "solver/slv3.h"
-# include "solver/slv4.h"
-# include "solver/slv5.h"
-# include "solver/slv6.h"
-# include "solver/slv7.h"
-# include "solver/slv8.h"
-# include "solver/slv9.h"
+# include "slv0.h"
+# include "slv1.h"
+# include "slv2.h"
+# include "slv3.h"
+# include "slv4.h"
+# include "slv5.h"
+# include "slv6.h"
+# include "slv7.h"
+# include "slv8.h"
+# include "slv9.h"
 #endif
 
 
@@ -103,7 +103,7 @@ struct slv_system_structure {
    * (e_maximize,e_minimize). this list will include the first included obj.
    */
   struct {
-    int snum;			/* length of the solver list */ 
+    int snum;			/* length of the solver list */
     int mnum;			/* length of the master list */
     struct var_variable **solver;
     struct var_variable **master;
@@ -264,7 +264,7 @@ static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];
 #define NORC g_SlvNumberOfRegisteredClients
 
 /** Return the pointer to a registered SLV client's data space. @see SF, related.
-	@param i registered solver ID 
+	@param i registered solver ID
 */
 #define SCD(i) SlvClientsData[(i)]
 
@@ -602,7 +602,7 @@ DEFINE_SET_MASTER_LIST_METHODS(DEFINE_SET_MASTER_LIST_METHOD)
 	D_GLOBAL(dvar, dvars, dis_discrete) \
 	D_GLOBAL(when, whens, w_when) \
 	D_GLOBAL(bnd,bnds,bnd_boundary)
-	
+
 
 DEFINE_SET_BUF_METHODS(DEFINE_SET_BUF_METHOD, DEFINE_SET_BUF_METHOD_GLOBAL)
 
@@ -975,7 +975,7 @@ int32 slv_need_consistency(slv_system_t sys)
 DEFINE_SLV_COUNT_METHODS(DEFINE_SLV_COUNT_METHOD)
 
 /*--------------------------------------------------------------
-	Methods to define 
+	Methods to define
 		slv_count_solvers_*
 		slv_count_master_*
 */
@@ -1337,8 +1337,8 @@ void slv_set_parameters(slv_system_t sys,slv_parameters_t *parameters)
 
 DEFINE_SLV_PROXY_METHOD_PARAM(get_status,getstatus,slv_status_t*,status);
 DEFINE_SLV_PROXY_METHOD(get_linsol_sys, getlinsol, linsol_system_t);
-DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t); 
-DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t); 
+DEFINE_SLV_PROXY_METHOD(get_sys_mtx, getsysmtx, mtx_matrix_t);
+DEFINE_SLV_PROXY_METHOD(get_linsolqr_sys, getlinsys, linsolqr_system_t);
 DEFINE_SLV_PROXY_METHOD_PARAM(dump_internals,dumpinternals,int,level);
 DEFINE_SLV_PROXY_METHOD_VOID(presolve);
 DEFINE_SLV_PROXY_METHOD_VOID(resolve);

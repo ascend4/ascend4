@@ -26,23 +26,23 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/func.h"
-#include "compiler/instance_enum.h"
-#include "general/list.h"
-#include "compiler/extfunc.h"
-#include "compiler/exprs.h"
-#include "compiler/exprio.h"
-#include "compiler/nameio.h"
-#include "compiler/setio.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "func.h"
+#include "instance_enum.h"
+#include <general/list.h>
+#include "extfunc.h"
+#include "exprs.h"
+#include "exprio.h"
+#include "nameio.h"
+#include "setio.h"
 
 #ifndef lint
 static CONST char ExprIOId[] = "$Id: exprio.c,v 1.14 1998/04/10 23:25:42 ballan Exp $";

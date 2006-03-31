@@ -27,10 +27,10 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/mem.h"
-#include "general/mathmacros.h"
+#include "ascConfig.h"
+#include "ascMalloc.h"
+#include "mem.h"
+#include <general/mathmacros.h>
 
 static void move_fwd(POINTER from, POINTER too, size_t nbytes)
 /**

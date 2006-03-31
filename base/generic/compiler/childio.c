@@ -29,31 +29,31 @@
  *  Implementation of Child list output
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/statio.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/name.h"
-#include "compiler/nameio.h"
-#include "compiler/vlist.h"
-#include "compiler/module.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statement.h"
+#include "statio.h"
+#include "child.h"
+#include "type_desc.h"
+#include "type_descio.h"
+#include "cmpfunc.h"
+#include "name.h"
+#include "nameio.h"
+#include "vlist.h"
+#include "module.h"
 #define __CHILD_ILLEGAL_ACCESS__
-#include "compiler/childpriv.h"
-#include "compiler/childio.h"
+#include "childpriv.h"
+#include "childio.h"
 
 #ifndef lint
 static CONST char ChildIOID[] = "$Id: childio.c,v 1.6 1998/06/11 17:36:22 ballan Exp $";

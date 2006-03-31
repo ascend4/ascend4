@@ -28,12 +28,12 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/stack.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include "stack.h"
+#include "mathmacros.h"
 
 #define STACKDEBUG 0
 /* if STACKDEBUG != 0,  we will do a bunch of initializing to 0 */

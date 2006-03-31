@@ -29,17 +29,17 @@
  *  Implementation of instance garbage dump using hash tables.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/symtab.h"
-#include "compiler/destroyinst.h"
-#include "compiler/instquery.h"
-#include "compiler/dump.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "symtab.h"
+#include "destroyinst.h"
+#include "instquery.h"
+#include "dump.h"
 
 #ifndef lint
 static CONST char GarbageDumpID[] = "$Id: dump.c,v 1.10 1998/02/05 22:23:24 ballan Exp $";

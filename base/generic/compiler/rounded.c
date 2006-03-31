@@ -29,10 +29,10 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "compiler/rounded.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include "rounded.h"
 #define IsOdd(i) ((i & 1)!=0)
 
 #ifndef lint

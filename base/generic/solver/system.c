@@ -29,31 +29,31 @@
  *  COPYING is found in ../compiler.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/instance_enum.h"
-#include "compiler/compiler.h"
-#include "compiler/check.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/tm_time.h"
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/linsolqr.h"
+#include <utilities/ascConfig.h>
+#include <compiler/instance_enum.h>
+#include <compiler/compiler.h>
+#include <compiler/check.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/tm_time.h>
+#include "mtx.h"
+#include "slv_types.h"
+#include "var.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "linsolqr.h"
 #define _SLV_SERVER_C_SEEN_
-#include "compiler/extcall.h"
-#include "solver/rel.h"
-#include "solver/relman.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_server.h"
-#include "solver/system.h"
-#include "solver/analyze.h"
-#include "solver/linsol.h"
-#include "solver/slv_common.h"
-#include "solver/slv_client.h"
+#include <compiler/extcall.h>
+#include "rel.h"
+#include "relman.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "slv_server.h"
+#include "system.h"
+#include "analyze.h"
+#include "linsol.h"
+#include "slv_common.h"
+#include "slv_client.h"
 
 #define IPTR(i) ((struct Instance *) (i))
 #define DOTIME 1

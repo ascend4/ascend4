@@ -31,28 +31,28 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "utilities/set.h"
-#include "general/tm_time.h"
-#include "utilities/mem.h"
-#include "solver/mtx.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/calc.h"
-#include "solver/relman.h"
-#include "solver/slv_common.h"
-#include "solver/slv_client.h"
-#include "solver/slv0.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <utilities/set.h>
+#include <general/tm_time.h>
+#include <utilities/mem.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "calc.h"
+#include "relman.h"
+#include "slv_common.h"
+#include "slv_client.h"
+#include "slv0.h"
 #if !defined(STATIC_SLV) && !defined(DYNAMIC_SLV)
 /* do nothing */
 int slv0_register(SlvFunctionsT *f)

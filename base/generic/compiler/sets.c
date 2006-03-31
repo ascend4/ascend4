@@ -29,21 +29,21 @@
  *  This is the implementation of the set routines
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/pool.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/sets.h"
-#include "compiler/setio.h"
-#include "compiler/evaluate.h"
-#include "compiler/exprs.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/pool.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "sets.h"
+#include "setio.h"
+#include "evaluate.h"
+#include "exprs.h"
 
 #ifndef TRUE
 #define TRUE 1

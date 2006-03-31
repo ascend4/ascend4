@@ -28,19 +28,19 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/value_type.h"
-#include "compiler/temp.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "value_type.h"
+#include "temp.h"
 
 #ifndef lint
 static CONST char TemporaryRCSid[] = "$Id: temp.c,v 1.8 1998/04/19 18:45:34 ballan Exp $";

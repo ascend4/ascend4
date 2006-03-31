@@ -35,15 +35,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "utilities/ascConfig.h"
+#include "ascConfig.h"
 #ifndef __WIN32__
 #  include <unistd.h>
 #else
 #  include <io.h>     /* _open() declared here in MSVC */
 #endif
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
+#include <compiler/compiler.h>
+#include "ascPanic.h"
+#include "ascMalloc.h"
 
 #define MAXPOINTERS 1000000
 

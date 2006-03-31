@@ -26,12 +26,12 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  *  COPYING is found in ../compiler.
  */
-#include "utilities/ascConfig.h"
-#include "compiler/packages.h"
+#include <utilities/ascConfig.h>
+#include <compiler/packages.h>
 /* #include "solver/exprman.h" */
-#include "solver/rel.h"
-#include "solver/extrel.h"
-#include "compiler/extcall.h"
+#include "rel.h"
+#include "extrel.h"
+#include <compiler/extcall.h>
 
 double g_external_tolerance = 1.0e-12;
 

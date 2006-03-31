@@ -23,9 +23,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/set.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/set.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
 #include "test_set.h"

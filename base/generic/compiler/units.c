@@ -29,19 +29,19 @@
 
 #include <math.h>
 #include <ctype.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/hashpjw.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/dimen_io.h"
-#include "compiler/units.h"
-#include "compiler/compiler.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/hashpjw.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "dimen_io.h"
+#include "units.h"
+#include "compiler.h"
 
 #ifndef lint
 static CONST char UnitsModuleID[] = "$Id: units.c,v 1.18 1998/04/11 01:32:11 ballan Exp $";

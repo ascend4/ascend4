@@ -30,14 +30,14 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include "list.h"
 #if LISTUSESPOOL
-#include "general/pool.h"
+#include "pool.h"
 #endif
-#include "general/mathmacros.h"
+#include "mathmacros.h"
 
 #ifndef lint
 static CONST char ListID[] = "$Id: list.c,v 1.3 1998/01/06 12:06:55 ballan Exp $";

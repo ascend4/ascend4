@@ -25,15 +25,15 @@
  *  the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/setinstval.h"
-#include "compiler/childinfo.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "setinstval.h"
+#include "childinfo.h"
+#include <general/mathmacros.h>
 
 #ifndef lint
 static CONST char ChildDescID[] = "$Id: childinfo.c,v 1.10 1998/02/05 16:35:39 ballan Exp $";

@@ -24,16 +24,16 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/instance_types.h"
-#include "compiler/cmpfunc.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "instance_types.h"
+#include "cmpfunc.h"
 
 /* it would be really nice if we implemented this some other way
  * on a proper symbol table structure so we need only compare ints

@@ -10,8 +10,8 @@
  *
  *  Putting the GPL in a C string was accomplished by Tom Epperly.
  */
-#include "utilities/ascConfig.h"
-#include "compiler/license.h"
+#include <utilities/ascConfig.h>
+#include "license.h"
 
 const char GPL1[] =
 "\t\t    GNU GENERAL PUBLIC LICENSE\n\

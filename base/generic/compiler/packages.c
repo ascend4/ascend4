@@ -39,30 +39,30 @@
 
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/extcall.h"
-#include "compiler/mathinst.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instquery.h"
-#include "compiler/atomvalue.h"
-#include "compiler/find.h"
-#include "compiler/relation_type.h"
-#include "compiler/relation.h"
-#include "compiler/safe.h"
-#include "compiler/relation_util.h"
-#include "compiler/extfunc.h"
-#include "packages/sensitivity.h"
-#include "packages/ascFreeAllVars.h"
-#include "compiler/module.h"
-#include "compiler/packages.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "extcall.h"
+#include "mathinst.h"
+#include "instance_enum.h"
+#include "instquery.h"
+#include "atomvalue.h"
+#include "find.h"
+#include "relation_type.h"
+#include "relation.h"
+#include "safe.h"
+#include "relation_util.h"
+#include "extfunc.h"
+#include <packages/sensitivity.h>
+#include <packages/ascFreeAllVars.h>
+#include "module.h"
+#include "packages.h"
 
 /*
 	Initialise the slv data structures used when calling external fns

@@ -26,11 +26,11 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "solver/conopt.h"
+#include <utilities/ascConfig.h>
+#include "conopt.h"
 #if defined(DYNAMIC_CONOPT)
-#include "utilities/ascDynaLoad.h"
-#include "solver/conoptdll.h"
+#include <utilities/ascDynaLoad.h>
+#include "conoptdll.h"
 #endif
 
 /*

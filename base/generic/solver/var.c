@@ -30,36 +30,36 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/dstring.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/atomvalue.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/instance_io.h"
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/rel.h"
-#include "solver/var.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_server.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/dstring.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/module.h>
+#include <compiler/library.h>
+#include <compiler/dimen.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/atomvalue.h>
+#include <compiler/parentchild.h>
+#include <compiler/instquery.h>
+#include <compiler/instance_io.h>
+#include "mtx.h"
+#include "slv_types.h"
+#include "rel.h"
+#include "var.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "slv_server.h"
+#include "slv_common.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_client.h"
 
 /* useful cast */
 #define IPTR(i) ((struct Instance *)(i))

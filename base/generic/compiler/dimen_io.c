@@ -25,13 +25,13 @@
  *  the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/dimen_io.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "dimen_io.h"
 
 #ifndef lint
 static CONST char DimenIORCSid[] = "$Id: dimen_io.c,v 1.8 1998/04/11 01:31:06 ballan Exp $";

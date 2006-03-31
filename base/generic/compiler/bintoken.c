@@ -1,8 +1,8 @@
 /* ex: set ts=8 : */
-/* 
+/*
  *  bintoken.c
  *  By Benjamin A. Allan
- *  Jan 7, 1998. 
+ *  Jan 7, 1998.
  *  Part of ASCEND
  *  Version: $Revision: 1.12 $
  *  Version control file: $RCSfile: bintoken.c,v $
@@ -38,34 +38,34 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
  * much of this goes in bintoken.h.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPrint.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascDynaLoad.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "general/pretty.h"
-#include "compiler/compiler.h" /* for symchar */
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statio.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instquery.h"
-#include "compiler/instance_io.h"
-#include "compiler/relation_type.h"
-#include "compiler/relation_io.h"
-#include "compiler/find.h"
-#include "compiler/relation.h"
-#include "compiler/relation_util.h"
-#include "compiler/mathinst.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPrint.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascDynaLoad.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <general/pretty.h>
+#include "compiler.h" /* for symchar */
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statio.h"
+#include "instance_enum.h"
+#include "instquery.h"
+#include "instance_io.h"
+#include "relation_type.h"
+#include "relation_io.h"
+#include "find.h"
+#include "relation.h"
+#include "relation_util.h"
+#include "mathinst.h"
 /* last */
-#include "compiler/bintoken.h"
-#include "compiler/btprolog.h"
+#include "bintoken.h"
+#include "btprolog.h"
 
 #define CLINE(a) FPRINTF(fp,"%s\n",(a))
 
@@ -786,7 +786,7 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
     FPRINTF(ASCERR,"%sBinaryTokensCreate called with no options set.\n",
             StatioLabel(3));
     return;
-  }                                                      
+  }
 
   rellist =
     CollectTokenRelationsWithUniqueBINlessShares(root,g_bt_data.maxrels);

@@ -28,10 +28,10 @@
 #include <stdio.h>
 
 /* The includes required just for this *header* to load */
-#include "utilities/ascConfig.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
+#include <utilities/ascConfig.h>
+#include <solver/slv_types.h>
+#include <solver/var.h>
+#include <solver/rel.h>
 
 /* Note, removed 'own' attribute from mplotvars struct since it was unused */
 

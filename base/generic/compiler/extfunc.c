@@ -27,17 +27,17 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/hashpjw.h"
-#include "general/list.h"
-#include "general/table.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/extfunc.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/hashpjw.h>
+#include <general/list.h>
+#include <general/table.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "extfunc.h"
 
 #define EXTFUNCHASHSIZE 31
 

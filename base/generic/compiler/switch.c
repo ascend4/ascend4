@@ -24,19 +24,19 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/switch.h"
-#include "compiler/sets.h"
-#include "compiler/exprs.h"
-#include "compiler/slist.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "func.h"
+#include "types.h"
+#include "stattypes.h"
+#include "switch.h"
+#include "sets.h"
+#include "exprs.h"
+#include "slist.h"
 #define SWMALLOC(x) \
         (x) = (struct SwitchList *)ascmalloc(sizeof(struct SwitchList))
 

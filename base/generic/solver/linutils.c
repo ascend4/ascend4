@@ -29,15 +29,15 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/tm_time.h"
-#include "solver/mtx.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/linutils.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <general/tm_time.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "linutils.h"
+#include <general/mathmacros.h>
 
 /*
  * The A1 norm is:

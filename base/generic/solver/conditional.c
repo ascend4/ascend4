@@ -26,29 +26,29 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/instance_enum.h"
-#include "compiler/compiler.h"
-#include "compiler/child.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/type_desc.h"
-#include "compiler/atomvalue.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/instance_io.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/slv_server.h"
-#include "solver/analyze.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/instance_enum.h>
+#include <compiler/compiler.h>
+#include <compiler/child.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/type_desc.h>
+#include <compiler/atomvalue.h>
+#include <compiler/parentchild.h>
+#include <compiler/instquery.h>
+#include <compiler/instance_io.h>
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "slv_server.h"
+#include "analyze.h"
 
 
 #ifndef IPTR

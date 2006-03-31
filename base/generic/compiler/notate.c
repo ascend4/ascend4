@@ -36,22 +36,22 @@
  * This implementation is not optimized for anything -- the
  * intent here is to learn if it can be done at all.
  */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/pool.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/braced.h"
-#include "compiler/vlist.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/sets.h"
-#include "compiler/name.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/notate.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/pool.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "braced.h"
+#include "vlist.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "sets.h"
+#include "name.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "notate.h"
 
 struct Note {
   symchar *typename;	/* ascend type library name, if any, for context. */

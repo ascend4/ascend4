@@ -30,24 +30,24 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/childinfo.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_name.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_types.h"
-#include "compiler/instmacro.h"
-#include "compiler/atomsize.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "childinfo.h"
+#include "instance_enum.h"
+#include "instance_name.h"
+#include "instance_io.h"
+#include "instance_types.h"
+#include "instmacro.h"
+#include "atomsize.h"
 
 #ifndef lint
 static CONST char AtomSizeModuleID[] = "$Id: atomsize.c,v 1.6 1997/07/18 12:28:01 mthomas Exp $";

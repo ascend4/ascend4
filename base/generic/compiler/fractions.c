@@ -25,9 +25,9 @@
  *  the program; if not, write to the Free Software Foundation, Inc., 675
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "fractions.h"
 
 #ifndef lint
 static CONST char FractionsID[] = "$Id: fractions.c,v 1.5 1997/07/18 12:29:44 mthomas Exp $";

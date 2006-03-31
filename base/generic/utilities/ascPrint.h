@@ -42,8 +42,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascPrintType.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPrintType.h>
 
 /**
  * Forward declaration of output functions interceptor vtable.

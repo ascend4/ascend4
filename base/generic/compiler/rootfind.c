@@ -40,12 +40,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "general/list.h"
-#include "compiler/extfunc.h"
-#include "compiler/rootfind.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include <general/list.h>
+#include "extfunc.h"
+#include "rootfind.h"
 
 #define ITMAX 100
 #define EPS 1.0e-08

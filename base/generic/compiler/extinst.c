@@ -28,21 +28,21 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/instquery.h"
-#include "compiler/instance_types.h"
-#include "compiler/instmacro.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/extinst.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "instance_enum.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "instquery.h"
+#include "instance_types.h"
+#include "instmacro.h"
+#include "cmpfunc.h"
+#include "extinst.h"
 
 #ifndef lint
 static CONST char ExtInstModuleID[] = "$Id: extinst.c,v 1.7 1997/07/18 12:29:34 mthomas Exp $";

@@ -22,13 +22,13 @@
  */
 
 #include <stdio.h>
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "compiler/redirectFile.h"
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <compiler/redirectFile.h>
 #include "CUnit/CUnit.h"
 #include "test_ascPanic.h"
 #include "assertimpl.h"

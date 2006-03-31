@@ -29,19 +29,19 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/slist.h"
-#include "compiler/proc.h"
-#include "compiler/instance_enum.h"
-#include "compiler/watchpt.h"
-#include "compiler/procframe.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "slist.h"
+#include "proc.h"
+#include "instance_enum.h"
+#include "watchpt.h"
+#include "procframe.h"
 
 /* The following goo all goes to slow down the method execution.
  * need to be smarter about these macros.

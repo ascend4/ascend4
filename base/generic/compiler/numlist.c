@@ -29,14 +29,14 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascPrint.h"
-#include "general/list.h"
-#include "compiler/numlist.h" /* should be in general/ */
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascPrint.h>
+#include <general/list.h>
+#include "numlist.h" /* should be in general/ */
 #if NUMLISTUSESPOOL
-#include "general/pool.h"
+#include <general/pool.h>
 #endif
 
 /*
@@ -58,9 +58,9 @@ struct numpair {
  * but they don't need to know that.
  */
 struct numpair_list {
-  struct numpair_list *head;  
+  struct numpair_list *head;
   struct numpair *list; /* array of pairs */
-  /* if not NULL, list is piece of core rooted in list of head. 
+  /* if not NULL, list is piece of core rooted in list of head.
    * if NULL this list's data is referenced by refcount pointers.
    * When refcount is 0, destroying the numpair_list
    * should entail destroying its data and head list as well.
@@ -245,7 +245,7 @@ void NLPWrite(FILE *fp, Numlist_p nlp)
  * If insufficient memory to create or expand to size
  * required, returns NULL.
  */
-Numlist_p NumpairExpandableList(Numlist_p nlp, int newsize) 
+Numlist_p NumpairExpandableList(Numlist_p nlp, int newsize)
 {
   struct numpair *newdata;
   if (nlp == NULL) {
@@ -291,7 +291,7 @@ Numlist_p NumpairExpandableList(Numlist_p nlp, int newsize)
  * Destroy a list. list may have come from
  * NumpairCopyList or NumpairExpandableList.
  */
-void NumpairDestroyList(Numlist_p nlp) 
+void NumpairDestroyList(Numlist_p nlp)
 {
   if (nlp == NULL) {
     return;
@@ -383,7 +383,7 @@ int GetHead(int need)
   int len,i;
   len = GRN.shared_len;
   i = 0;
-  while (i<len && GRN.shared[i].headfree < need) { 
+  while (i<len && GRN.shared[i].headfree < need) {
     i++;
   }
   if (i == len) {
@@ -398,7 +398,7 @@ int GetHead(int need)
 static
 void AddToGRN(Numlist_p nlp, int cap)
 {
-  struct shared_data *resize; 
+  struct shared_data *resize;
   int newsize;
   if (nlp==NULL) {
     return;
@@ -435,7 +435,7 @@ Numlist_p NumpairElementary(int num)
 
   /* fake list not allocated, the use copy operator */
   nl.len = 1;
-  nl.list = &np; 
+  nl.list = &np;
   nl.head = NULL;
   nl.refcount=0;
   np.lo = np.hi = num;
@@ -517,7 +517,7 @@ Numlist_p NumpairCopyList(Numlist_p nlp)
       AddToGRN(result,SHRSIZE);
     }
     return result;
-  } 
+  }
   /* not reached */
 }
 
@@ -535,11 +535,11 @@ int ExtendResult(struct numpair *r, CONST int rlen, CONST struct numpair p)
       r[rlen].lo = p.lo;
       r[rlen].hi = p.hi;
       return rlen + 1;
-    } 
+    }
     /* extend range to p.hi if needed. no len change. */
     if (p.hi > r[idx].hi) {
       r[idx].hi = p.hi;
-    } 
+    }
     return rlen;
   } else {
     /* first ever element */
@@ -559,7 +559,7 @@ int ExtendResult(struct numpair *r, CONST int rlen, CONST struct numpair p)
  * Result is overwritten even if it already has nonzero length.
  */
 static
-void NumpairMergeLists(Numlist_p nlp1, Numlist_p nlp2, Numlist_p nlpr) 
+void NumpairMergeLists(Numlist_p nlp1, Numlist_p nlp2, Numlist_p nlpr)
 {
   int n1,len1, n2,len2,lenr; /* lengths of lists */
   struct numpair *p1, *p2, *r; /* data from lists */
@@ -595,7 +595,7 @@ void NumpairMergeLists(Numlist_p nlp1, Numlist_p nlp2, Numlist_p nlpr)
     lenr = ExtendResult(r,lenr,p2[n2]);
     n2++;
   }
-  nlpr->len = lenr; 
+  nlpr->len = lenr;
 }
 
 
@@ -674,9 +674,9 @@ void NumpairCalcIntersection(Numlist_p nlp1, Numlist_p nlp2, Numlist_p enlp3)
 
   NumpairClearList(enlp3);
   /* skip the nobrainers */
-  if (!l1 || 
-      !l2 || 
-      s2[0].lo > s1[l1-1].hi || 
+  if (!l1 ||
+      !l2 ||
+      s2[0].lo > s1[l1-1].hi ||
       s1[0].lo > s2[l2-1].hi) {
     return;
   }
@@ -686,7 +686,7 @@ void NumpairCalcIntersection(Numlist_p nlp1, Numlist_p nlp2, Numlist_p enlp3)
               "NumpairCalcIntersection");
   }
   lenr = i = j = 0;
-  while (j < l2 && i < l1) { 
+  while (j < l2 && i < l1) {
     /* could we test elsewhere for i,j and break? */
     while (i < l1 && s1[i].hi < s2[j].lo) {
       /* move i up to next j it might overlap */
@@ -787,7 +787,7 @@ Numlist_p NumpairCombineLists(struct gl_list_t *gl,
   return NumpairCopyList(s1);
 }
 
-/* 
+/*
  * We trust that no number difference is actually ever > INT_MAX.
  * This is a loose comparator. One argument must be a singleton
  * with lo =0 and hi the value. This is the key value we want
@@ -795,7 +795,7 @@ Numlist_p NumpairCombineLists(struct gl_list_t *gl,
  * The other must be a normal element i..i or i..j,j>i.
  * This is for use with bsearch.
  */
-static 
+static
 int CmpNumpairs(CONST void *c1, CONST void *c2)
 {
   CONST struct numpair *n1, *n2;
@@ -936,9 +936,9 @@ void NumpairAppendList(Numlist_p enlp, int num)
   search = upper;
   upper = lower;
   lower = search;
-  if (data[lower].hi+1 == num) { 
+  if (data[lower].hi+1 == num) {
     /* b,d */
-    if (data[upper].lo - 1 != num) { 
+    if (data[upper].lo - 1 != num) {
       data[lower].hi = num; /*b*/
     } else {
       data[lower].hi = data[upper].hi; /* merge adjacent cells, d */
@@ -952,7 +952,7 @@ void NumpairAppendList(Numlist_p enlp, int num)
     return;
   } else {
     /* a,c */
-    if (data[upper].lo - 1 != num) { 
+    if (data[upper].lo - 1 != num) {
       /*a, insert element */
       for (search = enlp->len; search > upper; search--) {
         data[search].lo = data[search-1].lo;
@@ -998,7 +998,7 @@ int NumpairNumberInList(Numlist_p nlp, int num)
   case 2:
     if (num < nlp->list[0].lo || num > nlp->list[1].hi) {
       return 0;
-    } 
+    }
     if (num <= nlp->list[0].hi || num >= nlp->list[1].lo) {
       return 1;
     } else {
@@ -1007,7 +1007,7 @@ int NumpairNumberInList(Numlist_p nlp, int num)
   case 3:
     if (num < nlp->list[0].lo || num > nlp->list[2].hi) {
       return 0;
-    } 
+    }
     /* num is now within combined range of the 3 elements */
     if (num <= nlp->list[0].hi || num >= nlp->list[2].lo) {
       /* num is in element 0 or 2 */
@@ -1087,7 +1087,7 @@ int NumpairNumberInListHintedDecreasing(Numlist_p nlp, int num, int *hint)
   case 2:
     if (num < nlp->list[0].lo || num > nlp->list[1].hi) {
       return 0;
-    } 
+    }
     if (num <= nlp->list[0].hi || num >= nlp->list[1].lo) {
       return 1;
     } else {
@@ -1096,7 +1096,7 @@ int NumpairNumberInListHintedDecreasing(Numlist_p nlp, int num, int *hint)
   case 3:
     if (num < nlp->list[0].lo || num > nlp->list[2].hi) {
       return 0;
-    } 
+    }
     /* num is now within combined range of the 3 elements */
     if (num <= nlp->list[0].hi || num >= nlp->list[2].lo) {
       /* num is in element 0 or 2 */
@@ -1108,7 +1108,7 @@ int NumpairNumberInListHintedDecreasing(Numlist_p nlp, int num, int *hint)
     } else {
       return 1;
     }
-  default: 
+  default:
     return InListDecreasingHint(nlp,num,hint);
   }
 }
@@ -1206,7 +1206,7 @@ int NumpairPrevNumber(Numlist_p nlp, int last, int *hint)
 int NumpairNextNumber(Numlist_p nlp,int last,int *hint)
 {
   struct numpair test;
-  char *location; 
+  char *location;
 
   if (last < 1) {
     *hint = 0;
@@ -1348,14 +1348,14 @@ int NumpairGTIntersection(Numlist_p nlp1, Numlist_p nlp2, int low)
   if (ilo <= low) {
     ilo = low + 1;
   }
-  if (ilo > ihi) { 
+  if (ilo > ihi) {
     return 0;
   }
   return ilo;
 }
 
 int NumpairIntersectionLTHinted(Numlist_p nlp1, int *hint1,
-                                Numlist_p nlp2, int *hint2, 
+                                Numlist_p nlp2, int *hint2,
                                 int high)
 {
   int i,j;	/* indices into the lists of nlp1, nlp2 */
@@ -1424,7 +1424,7 @@ int NumpairIntersectionLTHinted(Numlist_p nlp1, int *hint1,
   if (ihi >= high) {
     ihi = high - 1;
   }
-  if (ihi < ilo) { 
+  if (ihi < ilo) {
     return 0;
   }
   *hint1 = i;
@@ -1445,11 +1445,11 @@ int NumpairCardinality(Numlist_p nlp)
   for (i = 0 ; i < len; i++) {
     count += (s[i].hi - s[i].lo); /* to be complete, add 1 at each iteration */
   }
-  /* since we didn't add 1 at each iteration, we can add len at the END 
+  /* since we didn't add 1 at each iteration, we can add len at the END
    * to save len-1 additions.
    */
   count += len;
-  return count; 
+  return count;
 }
 
 void NumpairClearPuddle(void)
@@ -1457,7 +1457,7 @@ void NumpairClearPuddle(void)
   int len,i;
   len = GRN.shared_len;
   i = 0;
-  for (i = 0; i < len ;i++) { 
+  for (i = 0; i < len ;i++) {
     NumpairDestroyList(GRN.shared[i].headlist);
     GRN.shared[i].headlist = NULL;
   }

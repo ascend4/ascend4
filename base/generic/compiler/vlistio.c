@@ -25,17 +25,17 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/symtab.h"
-#include "compiler/vlist.h"
-#include "compiler/vlistio.h"
-#include "compiler/nameio.h"
+#include <utilities/ascConfig.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "symtab.h"
+#include "vlist.h"
+#include "vlistio.h"
+#include "nameio.h"
 
 #ifndef lint
 static CONST char VariableListIOID[] = "$Id: vlistio.c,v 1.8 1997/12/02 12:00:21 ballan Exp $";

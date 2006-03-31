@@ -26,28 +26,28 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/find.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_io.h"
-#include "compiler/logical_relation.h"
-#include "compiler/logrelation.h"
-#include "compiler/logrel_util.h"
-#include "compiler/logrel_io.h"
-#include "compiler/instquery.h"
-#include "compiler/parentchild.h"
-#include "compiler/mathinst.h"
-#include "compiler/visitinst.h"
-#include "compiler/tmpnum.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "find.h"
+#include "instance_enum.h"
+#include "instance_io.h"
+#include "logical_relation.h"
+#include "logrelation.h"
+#include "logrel_util.h"
+#include "logrel_io.h"
+#include "instquery.h"
+#include "parentchild.h"
+#include "mathinst.h"
+#include "visitinst.h"
+#include "tmpnum.h"
 
 
 static char g_log_shortbuf[256];

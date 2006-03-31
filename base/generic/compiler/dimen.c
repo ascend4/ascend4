@@ -28,14 +28,14 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include <general/mathmacros.h>
 
 struct gl_list_t *g_dimen_list;
 dim_type *g_wild_dimen,*g_trig_dimen,*g_dimensionless;

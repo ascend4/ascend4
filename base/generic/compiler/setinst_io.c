@@ -26,10 +26,10 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include<stdio.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/setinstval.h"
-#include "compiler/setinst_io.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "setinstval.h"
+#include "setinst_io.h"
 
 #ifndef lint
 static CONST char SetInstIORCSid[]="$Id: setinst_io.c,v 1.7 1997/10/28 19:20:43 mthomas Exp $";

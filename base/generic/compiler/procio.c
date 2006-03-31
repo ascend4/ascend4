@@ -27,28 +27,28 @@
  */
 #include<math.h>
 #include<stdio.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
-#include "general/dstring.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/slist.h"
-#include "compiler/statio.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_io.h"
-#include "compiler/nameio.h"
-#include "compiler/module.h"
-#include "compiler/proc.h"
-#include "compiler/watchpt.h"
-#include "compiler/procframe.h"
-#include "compiler/initialize.h"
-#include "compiler/procio.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
+#include <general/dstring.h>
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statement.h"
+#include "slist.h"
+#include "statio.h"
+#include "instance_enum.h"
+#include "instance_io.h"
+#include "nameio.h"
+#include "module.h"
+#include "proc.h"
+#include "watchpt.h"
+#include "procframe.h"
+#include "initialize.h"
+#include "procio.h"
 
 #ifndef lint
 static CONST char ProcedureIORCSid[] = "$Id: procio.c,v 1.11 1998/05/12 19:57:43 ballan Exp $";

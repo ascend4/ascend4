@@ -28,27 +28,27 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/instance_enum.h"
-#include "compiler/case.h"
-#include "compiler/extfunc.h"
-#include "compiler/find.h"
-#include "compiler/relation_type.h"
-#include "compiler/relation.h"
-#include "compiler/relation_type.h"
-#include "compiler/instance_types.h"
-#include "compiler/instquery.h"
-#include "compiler/mathinst.h"
-#include "compiler/rel_common.h"
-#include "compiler/instmacro.h"
-#include "compiler/when_util.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "instance_enum.h"
+#include "case.h"
+#include "extfunc.h"
+#include "find.h"
+#include "relation_type.h"
+#include "relation.h"
+#include "relation_type.h"
+#include "instance_types.h"
+#include "instquery.h"
+#include "mathinst.h"
+#include "rel_common.h"
+#include "instmacro.h"
+#include "when_util.h"
 
 
 /********************************************************************\

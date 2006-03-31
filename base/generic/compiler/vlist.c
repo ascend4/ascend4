@@ -28,15 +28,15 @@
 
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/vlist.h"
-#include "compiler/name.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "vlist.h"
+#include "name.h"
 
 #define NLMALLOC \
 (struct VariableList *)ascmalloc((unsigned)sizeof(struct VariableList))

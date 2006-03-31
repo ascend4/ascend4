@@ -28,16 +28,16 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/pool.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/setinstval.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/pool.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "setinstval.h"
 
 #ifndef lint
 static CONST char SetInstValID[] = "$Id: setinstval.c,v 1.9 1998/02/05 16:37:50 ballan Exp $";

@@ -27,19 +27,19 @@
  */
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/select.h"
-#include "compiler/sets.h"
-#include "compiler/exprs.h"
-#include "compiler/slist.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "func.h"
+#include "types.h"
+#include "stattypes.h"
+#include "select.h"
+#include "sets.h"
+#include "exprs.h"
+#include "slist.h"
 
 #define SELMALLOC(x) \
         (x) = (struct SelectList *)ascmalloc(sizeof(struct SelectList))

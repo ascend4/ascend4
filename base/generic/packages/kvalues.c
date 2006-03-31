@@ -22,12 +22,12 @@ You should have received a copy of the GNU General Public License along with
 the program; if not, write to the Free Software Foundation, Inc., 675
 Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
 \*********************************************************************/
-#include "utilities/ascConfig.h"
-#include "compiler/packages.h"
-#include "compiler/atomvalue.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/instance_name.h"
+#include <utilities/ascConfig.h>
+#include <compiler/packages.h>
+#include <compiler/atomvalue.h>
+#include <compiler/parentchild.h>
+#include <compiler/instquery.h>
+#include <compiler/instance_name.h>
 
 #define KVALUES_DEBUG 1
 

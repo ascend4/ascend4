@@ -28,18 +28,18 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/universal.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "child.h"
+#include "type_desc.h"
+#include "universal.h"
 
 #ifndef lint
 static CONST char UniversalModuleRCSid[] = "$Id: universal.c,v 1.7 1997/07/18 12:36:19 mthomas Exp $";

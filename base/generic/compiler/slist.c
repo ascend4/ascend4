@@ -27,19 +27,19 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/statio.h"
-#include "compiler/slist.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statement.h"
+#include "statio.h"
+#include "slist.h"
+#include <general/mathmacros.h>
 
 #define SLMALLOC \
 (struct StatementList *)ascmalloc((unsigned)sizeof(struct StatementList))

@@ -31,11 +31,11 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/dstring.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include "dstring.h"
+#include "mathmacros.h"
 
 
 void Asc_DStringInit(register Asc_DString *dsPtr)
