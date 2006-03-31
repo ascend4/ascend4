@@ -156,10 +156,10 @@ def CheckSwigVersion(context):
 	output = cout.read()
 	err = cerr.read()
 	if err:
-		context.Result("Error running -version cmd:"+err)
+		context.Result("Error running -version cmd:\n-----\n"+err+"\n----\n")
 		return 0
 	
-	expr = re.compile("^SWIG Version (?P<maj>[0-9]+)\.(?P<min>[0-9]+)\.(?P<pat>[0-9]+)$",re.M);
+	expr = re.compile("^SWIG\\s+Version\\s+(?P<maj>[0-9]+)\\.(?P<min>[0-9]+)\\.(?P<pat>[0-9]+)\\s*$",re.M);
 	m = expr.search(output);
 	if not m:
 		context.Result("Couldn't detect version")
