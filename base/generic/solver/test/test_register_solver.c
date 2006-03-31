@@ -25,7 +25,7 @@
 #include <utilities/ascConfig.h>
 #include "test_register_solver.h"
 
-#include "test_bnd.h"
+/* #include "test_bnd.h" */
 #include "test_slv_common.h"
 /* #include "test_slv.h" */
 
