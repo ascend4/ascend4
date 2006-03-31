@@ -40,10 +40,9 @@ lib = env.Library("ascxx",srcs
 	, CPPFLAGS = ['-O3']
 )	
 
-#import platform
-#if platform.system()=="Windows":
-#	#
-#	# 
+#----------------------------------------------
+# SWIG Builder
+
 def swig_modify_targets(target, source, env):
 	target.append('ascend.py')
 	target.append('ascend_wrap.h')
@@ -54,19 +53,13 @@ swig_builder = Builder(
 	, emitter=swig_modify_targets
 )
 env.Append(BUILDERS={'Swig':swig_builder})
+#---------------------------------------------
+
 
 swig = env.Swig(target=['ascend_wrap.cc'],source=['ascend.i']
 	, SWIGFLAGS=['-python','-c++']
 	, CPPFLAGS = ['-O3']
 )
-#else:	
-#swig = env.CFile(target=['ascend_wrap.cc'],source=['ascend.i']
-#		, SWIGFLAGS=['-python','-c++']
-#		, ENV={'SWIGFEATURES':'-O'}
-#		, CPPFLAGS = ['-O3']
-#	)
-
-#env.Depends('ascend.py',swig);
 
 
 swiglib = env.SharedLibrary("ascend",['ascend_wrap.cc']

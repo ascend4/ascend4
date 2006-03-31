@@ -61,11 +61,21 @@ opts.Add(BoolOption(
 	,False
 ))
 
+# What should the default ASCENDLIBRARY path be?
+# Note: users can change it by editing their ~/.ascend.ini
 opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
 	,os.path.expanduser("~/src/ascend/trunk/models")
+)
+
+# Where is SWIG?
+opts.Add(
+	'SWIG'
+	,"SWIG location, probably only required for MinGW and MSVC users."
+		+" Enter the location as a Windows-style path, for example"
+		+" 'c:\msys\1.0\home\john\swigwin-1.3.29\swig.exe'."
 )
 
 # Where will the 'Makefile.bt' file be installed
@@ -109,15 +119,52 @@ if env['WITH_LOCAL_HELP']:
 env.Append(SUBST_DICT=subst_dict)
 
 #------------------------------------------------------
+# SPECIAL CONFIGURATION TESTS
+
+import os,re
+
+def CheckSwigVersion(context):
+	context.Message("Checking version of SWIG")
+	(cin,cout,cerr) = os.popen3(env['SWIG']+' -version');
+	output = cout.read()
+	err = cerr.read()
+	if err:
+		context.Result("Error running -version cmd:"+err)
+		return 0
+	
+	expr = re.compile("^SWIG Version (?P<maj>[0-9]+)\.(?P<min>[0-9]+)\.(?P<pat>[0-9]+)$",re.M);
+	m = expr.search(output);
+	if not m:
+		context.Result("Couldn't detect version")
+		return 0
+	maj = int(m.group('maj'))
+	min = int(m.group('min'))
+	pat = int(m.group('pat'))
+	
+	if maj == 1 and (
+			min > 1
+			or (min == 1 and pat >= 24)
+		):
+		context.Result("ok, %d.%d.%d" % (maj,min,pat))
+		return 1;
+	context.Result("ok, %d.%d.%d" % (maj,min,pat))
+	return 0;
+
+#------------------------------------------------------
 # CONFIGURATION
 
 conf = Configure(env
 	, custom_tests = { 
 #		'CheckIsNan' : CheckIsNan
 #		,'CheckCppUnitConfig' : CheckCppUnitConfig
+		'CheckSwigVersion' : CheckSwigVersion
 	} 
 	, config_h = "config.h"
 )
+
+if not conf.CheckSwigVersion():
+	print 'SWIG version is not OK'
+	Exit(1)
 
 # Math library
 if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
@@ -172,7 +219,7 @@ else:
 # SWIG version
 
 if platform.system()=="Windows":
-	env['SWIG']=['c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe']
+	#env['SWIG']=['c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe']
 	env['ENV']['SWIGFEATURES']='-O'
 else:
 	env['ENV']['SWIGFEATURES']='-O'	
@@ -295,5 +342,3 @@ if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
 else:
 	print "Skipping... Python GUI isn't being built"
-
-
