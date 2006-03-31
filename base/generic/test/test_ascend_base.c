@@ -15,7 +15,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License                     
+ *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
@@ -28,7 +28,7 @@
 #include <utilities/ascConfig.h>
 #include <compiler/redirectFile.h>
 #include <utilities/ascMalloc.h>
-#include "printutil.h"
+#include <printutil.h>
 
 #include "CUnit/Basic.h"
 #include <general/test/test_register_general.h>
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
   CU_set_error_action(error_action);
   result = CU_basic_run_tests();
   CU_cleanup_registry();
-  
+
   if (CU_BRM_VERBOSE == mode) {
     ascshutdown("Testing completed.");    /* shut down memory manager */
   }

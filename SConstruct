@@ -78,15 +78,37 @@ opts.Add(
 		+" 'c:\msys\1.0\home\john\swigwin-1.3.29\swig.exe'."
 )
 
-# Where will the 'Makefile.bt' file be installed
+# Build the test suite?
+opts.Add(BoolOption(
+	'WITH_CUNIT_TESTS'
+	,"Whether to build the CUnit tests. Default is off. If set to on,"
+		+" you must have CUnit installed somewhere that SCons can"
+		+" find it."
+	,False
+))
 
-# TODO: add install options
+# Where are the CUnit includes?
+opts.Add(PackageOption(
+	'CUNIT_CPPPATH'
+	,"Where are your CUnit include files?"
+	,"off"
+))
+
+# Where are the CUnit includes?
+opts.Add(PackageOption(
+	'CUNIT_LIBPATH'
+	,"Where are your CUnit include files?"
+	,"off"
+))
 
 # TODO: OTHER OPTIONS?
 
 # TODO: flags for optimisation
 
 # TODO: turning on/off bintoken functionality
+
+# TODO: Where will the 'Makefile.bt' file be installed
+# ....
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -98,6 +120,8 @@ env.Append(CPPDEFINES=env['PACKAGE_LINKING'])
 with_tcltk_gui = (env['WITHOUT_TCLTK_GUI']==False)
 
 with_python = (env['WITHOUT_PYTHON']==False)
+
+with_cunit_tests = env['WITH_CUNIT_TESTS']
 
 print "SOLVERS:",env['WITH_SOLVERS']
 
@@ -121,6 +145,9 @@ env.Append(SUBST_DICT=subst_dict)
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
 
+#----------------
+# SWIG
+
 import os,re
 
 def CheckSwigVersion(context):
@@ -142,22 +169,88 @@ def CheckSwigVersion(context):
 	pat = int(m.group('pat'))
 	
 	if maj == 1 and (
-			min > 1
-			or (min == 1 and pat >= 24)
+			min > 3
+			or (min == 3 and pat >= 24)
 		):
 		context.Result("ok, %d.%d.%d" % (maj,min,pat))
 		return 1;
 	context.Result("ok, %d.%d.%d" % (maj,min,pat))
 	return 0;
 
+#----------------
+# General purpose library-and-header test
+
+
+def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
+	"""This method will check for variables LIBNAME_LIBPATH
+	and LIBNAME_CPPPATH and try to compile and link the 
+	file with the provided text, linking with the 
+	library libname."""
+
+	context.Message( 'Checking for '+libname+'...' )
+	
+	if varprefix==None:
+		varprefix = libname.upper()
+	
+	keep = {}
+	for k in ['LIBS','LIBPATH','CPPPATH']:
+		if context.env.has_key(k):
+			keep[k] = context.env[k]
+	
+	libpath_add = []
+	if context.env.has_key(varprefix+'_LIBPATH'):
+		libpath_add = [env[varprefix+'_LIBPATH']]
+
+	cpppath_add = []
+	if context.env.has_key(varprefix+'_CPPPATH'):
+		cpppath_add = [env[varprefix+'_CPPPATH']]
+	
+	context.env.Append(
+		LIBS = libname
+		, LIBPATH = libpath_add
+		, CPPPATH = cpppath_add
+	)
+	ret = context.TryLink(cunit_test_text,ext)
+
+	for k in keep:
+		context.env[k]=keep[k];
+
+	context.Result( ret )
+	return ret
+
+cunit_test_text = """
+#include <CUnit/Cunit.h>
+int maxi(int i1, int i2){
+	return (i1 > i2) ? i1 : i2;
+}
+
+void test_maxi(void){
+	CU_ASSERT(maxi(0,2) == 2);
+	CU_ASSERT(maxi(0,-2) == 0);
+	CU_ASSERT(maxi(2,2) == 2);
+
+}
+int main(void){
+/* 	CU_initialize_registry() */
+}
+"""
+
+def CheckCUnit(context):
+	return CheckExtLib(context
+		,'cunit'
+		,cunit_test_text
+	)
+
+		
 #------------------------------------------------------
 # CONFIGURATION
 
 conf = Configure(env
 	, custom_tests = { 
-#		'CheckIsNan' : CheckIsNan
-#		,'CheckCppUnitConfig' : CheckCppUnitConfig
 		'CheckSwigVersion' : CheckSwigVersion
+		, 'CheckCUnit' : CheckCUnit
+#		, 'CheckIsNan' : CheckIsNan
+#		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
 	, config_h = "config.h"
 )
@@ -190,7 +283,6 @@ if not conf.CheckLib('tcl'):
 if not conf.CheckLib('tk'):
 	with_tcktk_gui = False
 
-
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
 
@@ -215,7 +307,6 @@ else:
 #	with_python = False
 #else:
 
-
 # SWIG version
 
 if platform.system()=="Windows":
@@ -223,6 +314,11 @@ if platform.system()=="Windows":
 	env['ENV']['SWIGFEATURES']='-O'
 else:
 	env['ENV']['SWIGFEATURES']='-O'	
+
+# CUnit
+
+if with_cunit_tests:
+	conf.CheckCUnit()
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -342,3 +438,20 @@ if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
 else:
 	print "Skipping... Python GUI isn't being built"
+
+if with_cunit_tests:
+	testdirs = ['general','solver','utilities']
+	for testdir in testdirs:
+		path = 'base/generic/'+testdir+'/test/'
+		env.SConscript([path+'SConscript'],'env')
+	env.SConscript(['test/SConscript'],'env')
+	env.SConscript(['base/generic/test/SConscript'],'env')
+	
+	
+else:
+	print "Skipping... CUnit tests aren't being built"
+
+#------------------------------------------------------
+# INSTALLATION
+
+# TODO: add install options

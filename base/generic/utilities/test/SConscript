@@ -1,0 +1,15 @@
+Import('env')
+
+import glob
+
+srcs = glob.glob("*.c")
+
+test_cpppath = [
+	'#base/generic'
+	, '#test'
+	, env['CUNIT_CPPPATH']
+]
+
+env.Library('asctestutilities',srcs
+	, CPPPATH=test_cpppath
+)

@@ -1,0 +1,29 @@
+Import('env')
+
+env.Program('test','test_ascend_base.c'
+	, CPPPATH = [
+		'#test'
+		, '#base/generic'
+		, env['CUNIT_CPPPATH']
+	  ]
+	, LIBS = [
+		'cunit'
+		, 'asctestsolver'
+		, 'asctestgeneral'
+		, 'asctestutilities'
+		, 'asctest'
+		, 'ascsolver'
+		, 'ascgeneral'
+		, 'ascutilities'
+	  ]
+	, LIBPATH = [
+		env['CUNIT_LIBPATH']
+		, '#base/generic/solver/test'
+		, '#base/generic/utilities/test'
+		, '#base/generic/general/test'
+		, '#base/generic/solver'
+		, '#base/generic/utilities'
+		, '#base/generic/general'
+		, '#test'
+	  ]
+)
