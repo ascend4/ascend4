@@ -34,11 +34,11 @@
  */
 
 #include <ctype.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascEnvVar.h"
-#include "general/list.h"
+#include "ascConfig.h"
+#include "ascPanic.h"
+#include "ascMalloc.h"
+#include "ascEnvVar.h"
+#include <general/list.h>
 
 #ifndef lint
 static CONST char ascEnvVarid[] = "$Id: ascEnvVar.c,v 1.5 1997/07/18 12:04:07 mthomas Exp $";

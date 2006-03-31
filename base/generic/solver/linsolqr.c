@@ -61,15 +61,15 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "utilities/mem.h"
-#include "utilities/set.h"
-#include "general/tm_time.h"
-#include "solver/mtx.h"
-#include "solver/linsolqr.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <utilities/mem.h>
+#include <utilities/set.h>
+#include <general/tm_time.h>
+#include "mtx.h"
+#include "linsolqr.h"
+#include <general/mathmacros.h>
 
 #ifdef __WIN32__
 #define copysign _copysign

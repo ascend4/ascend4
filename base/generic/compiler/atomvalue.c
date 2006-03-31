@@ -30,30 +30,30 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_name.h"
-#include "compiler/instance_io.h"
-#include "compiler/instmacro.h"
-#include "compiler/instquery.h"
-#include "compiler/setinstval.h"
-#include "compiler/setinst_io.h"
-#include "compiler/instance_types.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/atomvalue.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "child.h"
+#include "type_desc.h"
+#include "type_descio.h"
+#include "instance_enum.h"
+#include "instance_name.h"
+#include "instance_io.h"
+#include "instmacro.h"
+#include "instquery.h"
+#include "setinstval.h"
+#include "setinst_io.h"
+#include "instance_types.h"
+#include "cmpfunc.h"
+#include "atomvalue.h"
 
 #ifndef lint
 static CONST char AtomValueModuleID[] = "$Id: atomvalue.c,v 1.18 1998/03/26 20:39:31 ballan Exp $";

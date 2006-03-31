@@ -29,34 +29,34 @@
  */
 
 #include <limits.h> /* for LONG_MAX */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascPrint.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascPrint.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
 #if TIMECOMPILER
 #include <time.h>
-#include "general/tm_time.h"
+#include <general/tm_time.h>
 #endif
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/instance_enum.h"
-#include "compiler/types.h"
-#include "compiler/instance_types.h"
-#include "compiler/tmpnum.h"
-#include "compiler/atomvalue.h"
-#include "compiler/mathinst.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/visitinst.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_name.h"
-#include "compiler/anonmerg.h"
-#include "compiler/anontype.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "child.h"
+#include "type_desc.h"
+#include "instance_enum.h"
+#include "types.h"
+#include "instance_types.h"
+#include "tmpnum.h"
+#include "atomvalue.h"
+#include "mathinst.h"
+#include "parentchild.h"
+#include "instquery.h"
+#include "visitinst.h"
+#include "instance_io.h"
+#include "instance_name.h"
+#include "anonmerg.h"
+#include "anontype.h"
 
 #ifndef lint
 static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:55 ballan Exp $";

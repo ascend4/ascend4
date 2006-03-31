@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "compiler/redirectFile.h"
+#include "redirectFile.h"
 FILE *g_ascend_errors=NULL;
 FILE *g_ascend_warnings=NULL;
 FILE *g_ascend_information=NULL;

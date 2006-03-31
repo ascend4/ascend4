@@ -34,8 +34,8 @@
 #ifndef ASC_QLFDID_H
 #define ASC_QLFDID_H
 
-#include "utilities/ascConfig.h"
-#include "general/list.h"
+#include <utilities/ascConfig.h>
+#include <general/list.h>
 #include "instance_enum.h"
 
 #define MAXIMUM_ID_LENGTH 80

@@ -22,8 +22,8 @@
 /* removed changelog -- please consult commit comments in ViewCVS */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
+#include "ascConfig.h"
+#include "ascPanic.h"
 
 #define PANIC_MSG_MAXLEN 2047
 /**< The maximum length of the panic message.

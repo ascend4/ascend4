@@ -55,9 +55,9 @@
 	Have included the follow here to simplify instructions for people 
 	writing their own external packages:
 */
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #include "instance_enum.h"
-#include "general/list.h"
+#include <general/list.h>
 #include "extfunc.h"
 
 #ifndef ASC_CLIENTDATA_DECLARED

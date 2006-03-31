@@ -28,24 +28,24 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/pool.h"
-#include "compiler/bit.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_types.h"
-#include "compiler/instquery.h"
-#include "compiler/visitinst.h"
-#include "compiler/instantiate.h"
-#include "compiler/pending.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/pool.h>
+#include "bit.h"
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "stattypes.h"
+#include "instance_enum.h"
+#include "instance_types.h"
+#include "instquery.h"
+#include "visitinst.h"
+#include "instantiate.h"
+#include "pending.h"
 
 #ifndef lint
 static CONST char PendingRCSid[] = "$Id: pending.c,v 1.9 1998/01/27 11:00:08 ballan Exp $";

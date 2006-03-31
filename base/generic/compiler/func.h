@@ -48,7 +48,7 @@
 #ifndef ASC_FUNC_H
 #define ASC_FUNC_H
 
-#include "general/mathmacros.h"
+#include <general/mathmacros.h>
 
 /*
  *  the following should be ifdefed to deal with math.h values

@@ -29,28 +29,28 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_name.h"
-#include "compiler/instquery.h"
-#include "compiler/instance_io.h"
-#include "compiler/instmacro.h"
-#include "compiler/parentchild.h"
-#include "compiler/when_util.h"
-#include "compiler/instance_types.h"
-#include "compiler/visitlink.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "child.h"
+#include "type_desc.h"
+#include "instance_enum.h"
+#include "instance_name.h"
+#include "instquery.h"
+#include "instance_io.h"
+#include "instmacro.h"
+#include "parentchild.h"
+#include "when_util.h"
+#include "instance_types.h"
+#include "visitlink.h"
 
 #ifndef lint
 static CONST char NameVisitModuleID[] = "$Id: visitlink.c,v 1.3 1997/12/20 17:51:57 ballan Exp $";

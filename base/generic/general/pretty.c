@@ -30,9 +30,9 @@
  */
 
 #include <ctype.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/pretty.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "pretty.h"
 
 static int outstring(FILE *fp, char *s, int indent)
 {

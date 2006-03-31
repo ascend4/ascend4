@@ -51,7 +51,7 @@
  */
 
 #include <stdio.h>
-#include "utilities/ascConfig.h"
+#include "ascConfig.h"
 
 #ifndef NO_SIGNAL_TRAPS
 # include <signal.h>
@@ -64,8 +64,8 @@
 # include <unistd.h>
 #endif
 
-#include "utilities/ascMalloc.h"
-#include "utilities/ascSignal.h"
+#include "ascMalloc.h"
+#include "ascSignal.h"
 
 #if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
 static jmp_buf f_test_env;    /* for local testing of signal handling */

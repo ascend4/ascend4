@@ -29,34 +29,34 @@
  */
 
 #include <math.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/set.h"
-#include "general/tm_time.h"
-#include "utilities/mem.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "solver/mtx.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/calc.h"
-#include "solver/relman.h"
-#include "solver/slv_common.h"
-#include "solver/slv_client.h"
-#include "solver/conopt.h"
-#include "solver/slv8.h"
-#include "solver/slv_stdcalls.h"
-#include "solver/conoptdll.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/set.h>
+#include <general/tm_time.h>
+#include <utilities/mem.h>
+#include <general/list.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "calc.h"
+#include "relman.h"
+#include "slv_common.h"
+#include "slv_client.h"
+#include "conopt.h"
+#include "slv8.h"
+#include "slv_stdcalls.h"
+#include "conoptdll.h"
 
 #define slv8_register_conopt_function register_conopt_function
 #define slv8_coicsm coicsm

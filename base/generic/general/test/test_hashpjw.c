@@ -21,9 +21,9 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/hashpjw.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/hashpjw.h>
 #include "CUnit/CUnit.h"
 #include "test_hashpjw.h"
 #include "assertimpl.h"

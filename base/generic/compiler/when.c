@@ -27,19 +27,19 @@
  */
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/sets.h"
-#include "compiler/exprs.h"
-#include "compiler/slist.h"
-#include "compiler/vlist.h"
-#include "compiler/when.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "stattypes.h"
+#include "sets.h"
+#include "exprs.h"
+#include "slist.h"
+#include "vlist.h"
+#include "when.h"
 
 #define WMALLOC(x) x = (struct WhenList *)ascmalloc(sizeof(struct WhenList))
 

@@ -30,17 +30,17 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/pool.h"
-#include "compiler/fractions.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/pool.h>
+#include "fractions.h"
 #include "compiler.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/instance_enum.h"
-#include "compiler/parpend.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "instance_enum.h"
+#include "parpend.h"
 
 
 static pool_store_t g_ppe_pool = NULL;

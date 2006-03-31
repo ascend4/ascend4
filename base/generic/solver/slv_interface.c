@@ -36,32 +36,32 @@
  ***  much of slv_interface.h is not yet implemented for SLV.
  **/
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/dimen.h"
-#include "utilities/readln.h"
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/calc.h"
-#include "solver/relman.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h" /* should be client ... */
-#include "solver/system.h"
-#include "solver/slv_interface.h"   /* Implementation of this */
-#include "solver/checkdim.h"
-#include "compiler/plot.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <compiler/dimen.h>
+#include <utilities/readln.h>
+#include "mtx.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "calc.h"
+#include "relman.h"
+#include "slv_common.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_client.h" /* should be client ... */
+#include "system.h"
+#include "slv_interface.h"   /* Implementation of this */
+#include "checkdim.h"
+#include <compiler/plot.h>
 
 #define prompt printf
 
@@ -274,7 +274,7 @@ static void write_varlist(FILE *out, slv_system_t sys, var_filter_t *vfilter, bo
 	   num[0][0]+num[0][1],num[1][0]+num[1][1],tnum[0]+tnum[1]);
 }
 
-static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter, 
+static void write_rellist(FILE *out, slv_system_t sys, rel_filter_t *rfilter,
                           boolean justwritestats, boolean suppress)
 /**
  ***  Writes the relation list for those relations

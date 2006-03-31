@@ -26,37 +26,37 @@
  */
 
 #include <math.h>
-#include "utilities/ascConfig.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/functype.h"
-#include "compiler/safe.h"
-#include "compiler/extfunc.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/find.h"
-#include "compiler/atomvalue.h"
-#include "compiler/mathinst.h"
-#include "compiler/relation_type.h"
-#include "compiler/relation.h"
-#include "compiler/relation_util.h"
-#include "compiler/relation_io.h"
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <compiler/functype.h>
+#include <compiler/safe.h>
+#include <compiler/extfunc.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <compiler/find.h>
+#include <compiler/atomvalue.h>
+#include <compiler/mathinst.h>
+#include <compiler/relation_type.h>
+#include <compiler/relation.h>
+#include <compiler/relation_util.h>
+#include <compiler/relation_io.h>
 #define _SLV_SERVER_C_SEEN_
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/relman.h"
-#include "solver/logrelman.h"
-#include "solver/bndman.h"
-#include "solver/slv_server.h"
+#include "mtx.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "relman.h"
+#include "logrelman.h"
+#include "bndman.h"
+#include "slv_server.h"
 
 
 real64 bndman_real_eval(struct bnd_boundary *bnd)

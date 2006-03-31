@@ -31,23 +31,23 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/error.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/dimen.h"
-#include "compiler/atomvalue.h"
-#include "compiler/instance_name.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/plot.h"
+#include <utilities/ascConfig.h>
+#include <utilities/error.h>
+#include <general/list.h>
+#include "instance_enum.h"
+#include "fractions.h"
+#include "compiler.h"
+#include "symtab.h"
+#include "dimen.h"
+#include "atomvalue.h"
+#include "instance_name.h"
+#include "parentchild.h"
+#include "instquery.h"
+#include "child.h"
+#include "type_desc.h"
+#include "module.h"
+#include "library.h"
+#include "plot.h"
 
 /*
  *  ASSUMPTION ASSUMPTION ASSUMPTION:

@@ -1,4 +1,4 @@
-/* 
+/*
  *  MPS: Ascend MPS file generator
  *  by Craig Schmidt
  *  Created: 2/11/95
@@ -33,36 +33,36 @@
 /*  known bugs
  *  still uses pl_ functions and assumes the old slv protocol.
  */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/set.h"
-#include "utilities/mem.h"
-#include "general/tm_time.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/module.h"
-#include "compiler/compiler.h"
-#include "compiler/library.h"
-#include "compiler/instance.h"
-#include "compiler/instance_io.h"
-#include "solver/mtx.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/calc.h"
-#include "solver/relman.h"
-#include "solver/slv_common.h"
-#include "solver/slv_client.h"
-#include "solver/slv6.h"
-#include "solver/mps.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/set.h>
+#include <utilities/mem.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/module.h>
+#include <compiler/compiler.h>
+#include <compiler/library.h>
+#include <compiler/instance.h>
+#include <compiler/instance_io.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "calc.h"
+#include "relman.h"
+#include "slv_common.h"
+#include "slv_client.h"
+#include "slv6.h"
+#include "mps.h"
 /*
-#include "interface/old_utils.h"
+#  include "interface/old_utils.h"
 */
 
 

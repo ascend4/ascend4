@@ -27,23 +27,23 @@
 
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/pool.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/func.h"
-#include "compiler/name.h"
-#include "compiler/sets.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/exprs.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/pool.h>
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "func.h"
+#include "name.h"
+#include "sets.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "exprs.h"
 
 
 #ifndef lint

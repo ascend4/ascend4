@@ -30,27 +30,27 @@
  * 
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/notate.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/prototype.h"
-#include "compiler/dump.h"
-#include "compiler/typedef.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include <general/list.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "notate.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "child.h"
+#include "type_desc.h"
+#include "type_descio.h"
+#include "prototype.h"
+#include "dump.h"
+#include "typedef.h"
+#include "module.h"
+#include "library.h"
 
 #ifndef lint
 static CONST char LibraryRCSid[]="$Id: library.c,v 1.28 1998/06/23 22:02:08 ballan Exp $";

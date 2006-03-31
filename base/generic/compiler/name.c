@@ -28,20 +28,20 @@
 
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/pool.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/sets.h"
-#include "compiler/name.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/pool.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "func.h"
+#include "types.h"
+#include "sets.h"
+#include "name.h"
 
 
 #ifndef lint

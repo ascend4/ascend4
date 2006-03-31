@@ -22,9 +22,9 @@
  */
 
 #include <string.h>
-#include "utilities/ascConfig.h"
-#include "general/dstring.h"
-#include "utilities/ascMalloc.h"
+#include <utilities/ascConfig.h>
+#include <general/dstring.h>
+#include <utilities/ascMalloc.h>
 #include "CUnit/CUnit.h"
 #include "test_dstring.h"
 #include "assertimpl.h"

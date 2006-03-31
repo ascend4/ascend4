@@ -30,18 +30,18 @@
  *
  */
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/instance_types.h"
-#include "compiler/instmacro.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include "instance_enum.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "instance_types.h"
+#include "instmacro.h"
 
 #ifndef lint
 static CONST char InstanceMacroModuleID[] = "$Id: instmacro.c,v 1.6 1997/07/18 12:30:43 mthomas Exp $";

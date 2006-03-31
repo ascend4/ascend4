@@ -27,9 +27,9 @@
  *  COPYING.  COPYING is in ../compiler.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/set.h"
+#include "ascConfig.h"
+#include "ascPanic.h"
+#include "set.h"
 
 
 void set_change_member(unsigned *set, int k, boolean value)
@@ -56,7 +56,7 @@ extern unsigned *set_null(unsigned *set,int n)
 }
 
 #ifdef THIS_IS_DEAD_CODE
-#include "utilities/mask.h"
+#include "mask.h"
 
 
 #define	last_bits_used(n)	       (((n)-1)%WORDSIZE + 1)

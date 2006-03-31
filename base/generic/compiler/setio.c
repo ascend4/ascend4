@@ -26,16 +26,16 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/functype.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/sets.h"
-#include "compiler/setio.h"
-#include "compiler/exprio.h"
+#include <utilities/ascConfig.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "functype.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "sets.h"
+#include "setio.h"
+#include "exprio.h"
 
 #ifndef lint
 static CONST char SetIOID[] = "$Id: setio.c,v 1.9 1997/12/02 12:00:23 ballan Exp $";

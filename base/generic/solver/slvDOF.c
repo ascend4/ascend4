@@ -29,30 +29,30 @@
  */
 
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "utilities/mem.h"
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/relman.h"
-#include "solver/cond_config.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "solver/slv_stdcalls.h"
-#include "solver/slvDOF.h"
-#include "general/mathmacros.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <utilities/mem.h>
+#include "mtx.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "relman.h"
+#include "cond_config.h"
+#include "slv_common.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_client.h"
+#include "slv_stdcalls.h"
+#include "slvDOF.h"
+#include <general/mathmacros.h>
 
 #define SLVDOF(s) ((slvDOF_system_t)(s))
 

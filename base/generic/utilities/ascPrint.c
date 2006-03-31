@@ -35,9 +35,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPrint.h"
-#include "utilities/ascPrintType.h"
+#include "ascConfig.h"
+#include "ascPrint.h"
+#include "ascPrintType.h"
 
 static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 

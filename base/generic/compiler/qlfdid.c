@@ -28,25 +28,25 @@
 
 #include "qlfdid.h"
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/symtab.h"
-#include "compiler/simlist.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_name.h"
-#include "compiler/instquery.h"
-#include "compiler/parentchild.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/instantiate.h"
-#include "solver/slv_types.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include "symtab.h"
+#include "simlist.h"
+#include "instance_io.h"
+#include "instance_name.h"
+#include "instquery.h"
+#include "parentchild.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "instantiate.h"
+#include <solver/slv_types.h>
 
 #ifndef lint
 static CONST char QlfdidID[] = "$Id: Qlfdid.c,v 1.22 2003/08/23 18:43:07 ballan Exp $";

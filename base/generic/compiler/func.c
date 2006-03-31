@@ -29,13 +29,13 @@
  */
 
 #include<math.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/safe.h"
-#include "compiler/func.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "safe.h"
+#include "func.h"
 
 #ifndef M_PI
 #define M_PI F_PI

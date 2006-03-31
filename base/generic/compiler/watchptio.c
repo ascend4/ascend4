@@ -29,13 +29,13 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/stattypes.h"
-#include "compiler/slist.h"
-#include "compiler/statio.h"
-#include "compiler/proc.h"
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+#include "compiler.h"
+#include "stattypes.h"
+#include "slist.h"
+#include "statio.h"
+#include "proc.h"
 
 /* move this function to watchpt.h, add WriteProcedureString */
 void WriteProcedure(FILE *f, struct InitProcedure *p)

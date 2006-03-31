@@ -26,18 +26,18 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/name.h"
-#include "compiler/nameio.h"
-#include "compiler/sets.h"
-#include "compiler/setio.h"
+#include <utilities/ascConfig.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "func.h"
+#include "types.h"
+#include "name.h"
+#include "nameio.h"
+#include "sets.h"
+#include "setio.h"
 
 #ifndef lint
 static CONST char NameIOId[] = "$Id: nameio.c,v 1.10 1998/04/16 00:43:27 ballan Exp $";

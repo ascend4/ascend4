@@ -23,12 +23,12 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascMalloc.h"
-#include "utilities/readln.h"
+#include <utilities/ascMalloc.h>
+#include <utilities/readln.h>
 #include "CUnit/CUnit.h"
 #include "test_readln.h"
 #include "printutil.h"

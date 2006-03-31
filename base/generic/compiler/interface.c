@@ -37,82 +37,82 @@
 #if (defined(__alpha) || defined(sun))
 #include <malloc.h>
 #endif
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascSignal.h"
-#include "general/pool.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/notate.h"
-#include "compiler/braced.h"
-#include "compiler/ascCompiler.h"
-#include "compiler/commands.h"
-#include "compiler/termsetup.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/visitinst.h"
-#include "compiler/name.h"
-#include "compiler/bit.h"
-#include "compiler/instance_io.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/prototype.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/name.h"		/* these three included to do */
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"		/* Interactive processing */
-#include "compiler/vlist.h"
-#include "compiler/vlistio.h"
-#include "compiler/slist.h"
-#include "compiler/statio.h"
-#include "compiler/setinstval.h"
-#include "compiler/extinst.h"
-#include "compiler/arrayinst.h"
-#include "compiler/instquery.h"
-#include "compiler/copyinst.h"
-#include "compiler/parentchild.h"
-#include "compiler/mergeinst.h"
-#include "compiler/refineinst.h"
-#include "compiler/mathinst.h"
-#include "compiler/atomvalue.h"
-#include "compiler/destroyinst.h"
-#include "compiler/instance_name.h"
-#include "compiler/instantiate.h"
-#include "compiler/value_type.h"
-#include "compiler/watchpt.h"
-#include "compiler/proc.h"
-#include "compiler/initialize.h"
-#include "compiler/check.h"
-#include "compiler/pending.h"
-#include "compiler/license.h"
-#include "compiler/extfunc.h"
-#include "compiler/packages.h"
-#include "compiler/find.h"
-#include "compiler/relation_type.h"
-#include "compiler/relation.h"
-#include "compiler/relation_util.h"
-#include "compiler/relation_io.h"
-#include "compiler/logical_relation.h"
-#include "compiler/logrelation.h"
-#include "compiler/logrel_util.h"
-#include "compiler/logrel_io.h"
-#include "compiler/setinstval.h"
-#include "compiler/syntax.h"
-#include "compiler/anontype.h"
-#include "compiler/actype.h"           /*  required for isidchar()  */
-#include "compiler/simlist.h"
-#include "compiler/tmpnum.h"
-#include "compiler/bintoken.h"
-#include "compiler/interface.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascSignal.h>
+#include <general/pool.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "notate.h"
+#include "braced.h"
+#include "ascCompiler.h"
+#include "commands.h"
+#include "termsetup.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "visitinst.h"
+#include "name.h"
+#include "bit.h"
+#include "instance_io.h"
+#include "module.h"
+#include "library.h"
+#include "prototype.h"
+#include "child.h"
+#include "type_desc.h"
+#include "type_descio.h"
+#include "name.h"		/* these three included to do */
+#include "stattypes.h"
+#include "statement.h"		/* Interactive processing */
+#include "vlist.h"
+#include "vlistio.h"
+#include "slist.h"
+#include "statio.h"
+#include "setinstval.h"
+#include "extinst.h"
+#include "arrayinst.h"
+#include "instquery.h"
+#include "copyinst.h"
+#include "parentchild.h"
+#include "mergeinst.h"
+#include "refineinst.h"
+#include "mathinst.h"
+#include "atomvalue.h"
+#include "destroyinst.h"
+#include "instance_name.h"
+#include "instantiate.h"
+#include "value_type.h"
+#include "watchpt.h"
+#include "proc.h"
+#include "initialize.h"
+#include "check.h"
+#include "pending.h"
+#include "license.h"
+#include "extfunc.h"
+#include "packages.h"
+#include "find.h"
+#include "relation_type.h"
+#include "relation.h"
+#include "relation_util.h"
+#include "relation_io.h"
+#include "logical_relation.h"
+#include "logrelation.h"
+#include "logrel_util.h"
+#include "logrel_io.h"
+#include "setinstval.h"
+#include "syntax.h"
+#include "anontype.h"
+#include "actype.h"           /*  required for isidchar()  */
+#include "simlist.h"
+#include "tmpnum.h"
+#include "bintoken.h"
+#include "interface.h"
 
 #ifndef lint
 static CONST char InterfaceRCSid[]="$Id: interface.c,v 1.53 1998/06/17 15:33:21 mthomas Exp $";
@@ -727,13 +727,13 @@ void LeavesInstance(union argument *args, int argc)
       PRINTF("Incorrect instance.\n");
     }
   }
-  if (i == NULL || 
-      (InstanceKind(i)!= ARRAY_INT_INST && 
+  if (i == NULL ||
+      (InstanceKind(i)!= ARRAY_INT_INST &&
        InstanceKind(i)!= ARRAY_ENUM_INST)) {
     Bell();
     PRINTF("Incorrect nonarray instance.\n");
   }
-  ArrayVisitLocalLeaves(i,TestLeaf); 
+  ArrayVisitLocalLeaves(i,TestLeaf);
 }
 
 static
@@ -1033,7 +1033,7 @@ void TypeNotes(union argument *args, int argc)
   struct TypeDescription *desc;
   struct gl_list_t *nlist;
   if (argc==1) {
-    nlist = 
+    nlist =
       GetNotes(LibraryNote(),GetName(args[0].desc),NOTESWILD,NOTESWILD,NOTESWILD,nd_empty);
     WriteNotes(nlist);
     gl_destroy(nlist);
@@ -1341,7 +1341,7 @@ void RequireModule(union argument *args, int argc)
     GetDefinitionList();
   }
   ascfree((char *)args[0].id); /* this id was made my strcpy, not addsymbol */
-}  
+}
 
 
 #define NEWINSTTEST 1

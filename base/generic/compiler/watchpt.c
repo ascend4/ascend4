@@ -29,24 +29,24 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPrint.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/watchpt.h"
-#include "compiler/proc.h"
-#include "compiler/procframe.h"
-#include "compiler/types.h"
-#include "compiler/initialize.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPrint.h>
+#include <general/list.h>
+#include "instance_enum.h"
+#include "compiler.h"
+#include "symtab.h"
+#include "module.h"
+#include "library.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "child.h"
+#include "type_desc.h"
+#include "watchpt.h"
+#include "proc.h"
+#include "procframe.h"
+#include "types.h"
+#include "initialize.h"
 
 void Asc_SetMethodUserInterrupt(int val)
 {

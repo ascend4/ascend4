@@ -1,7 +1,7 @@
-#include "utilities/ascConfig.h"
-#include "compiler/packages.h"
-#include "compiler/atomvalue.h"
-#include "compiler/instquery.h"
+#include <utilities/ascConfig.h>
+#include <compiler/packages.h>
+#include <compiler/atomvalue.h>
+#include <compiler/instquery.h>
 
 static int CheckArgTypes(struct gl_list_t *branch)
 {

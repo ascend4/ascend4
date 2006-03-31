@@ -29,9 +29,9 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
 
 /* We expect things in this file to get much more complicated
  * to deal with notes.

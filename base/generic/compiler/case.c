@@ -25,16 +25,16 @@
  */
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/sets.h"
-#include "compiler/case.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "sets.h"
+#include "case.h"
 
 #define CAMALLOC(x) x = (struct Case *)ascmalloc(sizeof(struct Case))
 

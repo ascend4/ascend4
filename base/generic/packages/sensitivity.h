@@ -56,11 +56,11 @@
 
 /** @file
 Requires:
-#include "utilities/ascConfig.h"
-#include "compiler/instance_enum.h"
-#include "compiler/compiler.h"
-#include "general/list.h"
-#include "compiler/extfunc.h"
+#include <utilities/ascConfig.h>
+#include <compiler/instance_enum.h>
+#include <compiler/compiler.h>
+#include <general/list.h>
+#include <compiler/extfunc.h>
 */
 
 #ifndef ASC_SENSITIVITY_H

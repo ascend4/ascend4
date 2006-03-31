@@ -29,24 +29,24 @@
  *  Implementation of Child list stuff.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statio.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/cmpfunc.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statio.h"
+#include "child.h"
+#include "type_desc.h"
+#include "cmpfunc.h"
 #define __CHILD_ILLEGAL_ACCESS__
-#include "compiler/childpriv.h"
-#include "compiler/childio.h"
-#include "general/mathmacros.h"
+#include "childpriv.h"
+#include "childio.h"
+#include <general/mathmacros.h>
 
 #ifndef lint
 static CONST char ChildListID[] = "$Id: child.c,v 1.25 1998/03/26 20:39:34 ballan Exp $";

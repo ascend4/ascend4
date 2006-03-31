@@ -11,9 +11,9 @@
  */
 
 #include <stdio.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "general/hashpjw.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include "hashpjw.h"
 
 #ifndef lint
 static CONST char HashpjwID[] = "$Id: hashpjw.c,v 1.1 1997/07/18 11:38:36 mthomas Exp $";

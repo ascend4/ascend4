@@ -31,14 +31,14 @@
 
 #include<string.h>
 #include<stdio.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/prototype.h"
-#include "compiler/instquery.h"
-#include "compiler/destroyinst.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include "symtab.h"
+#include "instance_enum.h"
+#include "prototype.h"
+#include "instquery.h"
+#include "destroyinst.h"
 
 #ifndef lint
 static CONST char PrototypeID[] = "$Id: prototype.c,v 1.9 1998/02/05 22:23:32 ballan Exp $";

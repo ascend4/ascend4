@@ -25,9 +25,9 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  */
 #include<limits.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "compiler/actype.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include "actype.h"
 
 #ifndef lint
 static CONST char AcTypeId[] = "$Id: actype.c,v 1.4 1997/07/18 12:27:43 mthomas Exp $";

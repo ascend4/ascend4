@@ -31,22 +31,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>		/* !!! dont ever forget this and -lm */
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/instance_enum.h"
-#include "compiler/freestore.h"
-#include "compiler/relation_type.h"
-#include "compiler/find.h"
-#include "compiler/relation.h"
-#include "compiler/relation_util.h"
-#include "compiler/exprsym.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "func.h"
+#include "types.h"
+#include "instance_enum.h"
+#include "freestore.h"
+#include "relation_type.h"
+#include "find.h"
+#include "relation.h"
+#include "relation_util.h"
+#include "exprsym.h"
 
 #ifndef NO_FREE_STORE
 /* free store alloc */

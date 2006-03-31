@@ -28,35 +28,35 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/set.h"
-#include "general/tm_time.h"
-#include "utilities/mem.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/set.h>
+#include <general/tm_time.h>
+#include <utilities/mem.h>
 /* #include "compiler/compiler.h" */
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "solver/mtx.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/calc.h"
-#include "solver/relman.h"
-#include "solver/slv_common.h"
-#include "solver/slv_client.h"
-#include "solver/slv3.h"
-#include "solver/slv_stdcalls.h"
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include "mtx.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "calc.h"
+#include "relman.h"
+#include "slv_common.h"
+#include "slv_client.h"
+#include "slv3.h"
+#include "slv_stdcalls.h"
 
 #define KILL 0
 /* code that needs to be deleted compiles only with kill = 1 */

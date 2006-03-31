@@ -36,23 +36,23 @@
  *  COPYING is found in ../compiler.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "solver/slv_types.h"
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/mtx.h"
-#include "solver/slv_common.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_client.h"
-#include "solver/model_reorder.h"
+#include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "slv_types.h"
+#include "var.h"
+#include "rel.h"
+#include "discrete.h"
+#include "conditional.h"
+#include "logrel.h"
+#include "bnd.h"
+#include "mtx.h"
+#include "slv_common.h"
+#include "linsol.h"
+#include "linsolqr.h"
+#include "slv_client.h"
+#include "model_reorder.h"
 
 
 mr_reorder_t *mr_reorder_create(slv_system_t slv, mtx_matrix_t mtx, int32 size)

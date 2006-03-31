@@ -29,13 +29,13 @@
  *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
  *  COPYING is found in ../compiler.
  */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/mem.h"
-#include "solver/mtx.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/mem.h>
+#include "mtx.h"
 /* grab our private parts */
 #define __MTX_C_SEEN__
-#include "solver/mtx_use_only.h"
+#include "mtx_use_only.h"
 
 
 static mtx_block_perm_t alloc_block_perm()

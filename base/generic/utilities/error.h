@@ -34,8 +34,8 @@
 	default 'real' printf behaviour on this platform. (As
 	opposed to the sneaky stuff that FPRINTF does in this header)
 */
-#include "utilities/ascConfig.h"
-#include "utilities/ascPrint.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPrint.h>
 
 /**
 	FPRINTF(ASCERR,...) messages will by default be treated

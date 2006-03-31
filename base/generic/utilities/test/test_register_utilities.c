@@ -22,7 +22,7 @@
  */
 
 #include "CUnit/CUnit.h"
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #include "test_register_utilities.h"
 
 #include "test_ascDynaLoad.h"

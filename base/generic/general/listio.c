@@ -30,10 +30,10 @@
  */
 
 #include <stdio.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/listio.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+#include "list.h"
+#include "listio.h"
 
 void gl_write_list(FILE *fp, struct gl_list_t *l)
 {

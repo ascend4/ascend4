@@ -26,11 +26,11 @@
  */
 #include<stdio.h>
 #include<assert.h>
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "compiler/bit.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include "bit.h"
 
 #define BLENGTH(bl) ((bl)->length)
 

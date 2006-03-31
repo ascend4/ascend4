@@ -28,27 +28,27 @@
 */
 
 #include <math.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascSignal.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "solver/mtx.h"
-#include "solver/slv_types.h"
-#include "solver/rel.h"
-#include "solver/var.h"
-#include "solver/discrete.h"
-#include "solver/logrel.h"
-#include "solver/slv_common.h"
-#include "utilities/mem.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascSignal.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include "mtx.h"
+#include "slv_types.h"
+#include "rel.h"
+#include "var.h"
+#include "discrete.h"
+#include "logrel.h"
+#include "slv_common.h"
+#include <utilities/mem.h>
 /* if libasc.a running around, the following: */
 #if SLV_INSTANCES
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "solver/relman.h"
-#include "solver/logrelman.h"
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include "relman.h"
+#include "logrelman.h"
 #else
 #ifdef NDEBUG
 #define ascnint(a) (((int) (a)>=0.0 ? floor((a) + 0.5) : -floor(0.5 - (a))))

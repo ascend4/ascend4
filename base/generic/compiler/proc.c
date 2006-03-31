@@ -29,21 +29,21 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/slist.h"
-#include "compiler/proc.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statement.h"
+#include "slist.h"
+#include "proc.h"
 
 #define PMALLOC(x) \
   x = (struct InitProcedure *)ascmalloc(sizeof(struct InitProcedure))

@@ -22,13 +22,13 @@
  */
 
 #include <stdio.h>
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascEnvVar.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
+#include <utilities/ascEnvVar.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
 #include "CUnit/CUnit.h"
 #include "test_ascEnvVar.h"
 

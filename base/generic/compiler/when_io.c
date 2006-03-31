@@ -26,25 +26,25 @@
  *  COPYING.
  *
  */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/instance_enum.h"
-#include "compiler/instance_types.h"
-#include "compiler/mathinst.h"
-#include "compiler/case.h"
-#include "compiler/when_util.h"
-#include "compiler/instance_io.h"
-#include "compiler/setio.h"
-#include "compiler/exprio.h"
-#include "compiler/when_io.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "symtab.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "instance_enum.h"
+#include "instance_types.h"
+#include "mathinst.h"
+#include "case.h"
+#include "when_util.h"
+#include "instance_io.h"
+#include "setio.h"
+#include "exprio.h"
+#include "when_io.h"
 
 
 static

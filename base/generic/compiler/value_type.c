@@ -30,27 +30,27 @@
  */
 #include <math.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/list.h"
-#include "general/pool.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <general/list.h>
+#include <general/pool.h>
 #ifndef FIRSTCHOICE 
-#include "general/hashpjw.h"
+#include <general/hashpjw.h>
 #endif
-#include "compiler/compiler.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/setinstval.h"
+#include "compiler.h"
+#include "symtab.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "func.h"
+#include "setinstval.h"
 /* stuf for ListMode */
-#include "compiler/types.h"
-#include "compiler/find.h"
-#include "compiler/value_type.h"
+#include "types.h"
+#include "find.h"
+#include "value_type.h"
 
 #ifndef lint
 static CONST char ValueTypeRCSid[] = "$Id: value_type.c,v 1.20 1998/02/05 22:23:36 ballan Exp $";

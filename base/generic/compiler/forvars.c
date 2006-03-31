@@ -28,17 +28,17 @@
  *
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/forvars.h"
-#include "compiler/setinstval.h"
-#include "compiler/setinst_io.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <utilities/ascPanic.h>
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include "symtab.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "forvars.h"
+#include "setinstval.h"
+#include "setinst_io.h"
 
 #ifndef lint
 static CONST char ForVarRCSid[] = "$Id: forvars.c,v 1.11 1998/02/05 16:36:06 ballan Exp $";

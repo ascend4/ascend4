@@ -28,14 +28,14 @@
  */
 
 #include <math.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/mem.h"
-#include "solver/mtx.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/mem.h>
+#include "mtx.h"
 #define __MTX_C_SEEN__
-#include "solver/mtx_use_only.h"
+#include "mtx_use_only.h"
 #define R_DEBUG FALSE
-#include "general/mathmacros.h"
+#include <general/mathmacros.h>
 
 /*
  * All I know for sure is that reordering shouldn't be the

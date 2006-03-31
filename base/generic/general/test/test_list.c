@@ -24,15 +24,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPrintType.h"
-#include "utilities/ascPrint.h"
-#include "general/list.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPrintType.h>
+#include <utilities/ascPrint.h>
+#include <general/list.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
 #include "test_list.h"
-#include "general/mathmacros.h"
+#include <general/mathmacros.h>
 
 /* comparison function used in test_list(). */
 static

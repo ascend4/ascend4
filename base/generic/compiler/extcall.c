@@ -28,17 +28,17 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "compiler/compiler.h"
-#include "general/list.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/extinst.h"
-#include "compiler/mathinst.h"
-#include "compiler/extcall.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include "compiler.h"
+#include <general/list.h>
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "extinst.h"
+#include "mathinst.h"
+#include "extcall.h"
 
 
 struct Instance *GetSubjectInstance(struct gl_list_t *arglist,

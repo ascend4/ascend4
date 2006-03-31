@@ -31,13 +31,13 @@
  *  parameter passing.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "general/list.h"
-#include "compiler/instance_enum.h"
-#include "compiler/destroyinst.h"
-#include "compiler/simlist.h"
-#include "compiler/instquery.h"
+#include <utilities/ascConfig.h>
+#include "compiler.h"
+#include <general/list.h>
+#include "instance_enum.h"
+#include "destroyinst.h"
+#include "simlist.h"
+#include "instquery.h"
  
 #ifndef lint
 static CONST char simlistID[] = "$Id: simlist.c,v 1.3 1997/07/18 12:34:53 mthomas Exp $";
@@ -98,45 +98,45 @@ void Asc_DestroySimulations(void)
 
 
 #include <ctype.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/tm_time.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/instance_enum.h"
-#include "compiler/cmpfunc.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/types.h"
-#include "compiler/stattypes.h"
-#include "compiler/statement.h"
-#include "compiler/slist.h"
-#include "compiler/syntax.h"
-#include "compiler/prototype.h"
-#include "compiler/symtab.h"
-#include "compiler/instance_io.h"
-#include "compiler/instance_name.h"
-#include "compiler/parentchild.h"
-#include "compiler/extinst.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/copyinst.h"
-#include "compiler/destroyinst.h"
-#include "compiler/module.h"
-#include "compiler/library.h"
-#include "compiler/name.h"
-#include "compiler/pending.h"
-#include "compiler/check.h"
-#include "compiler/stattypes.h"
-#include "compiler/relation_type.h"
-#include "compiler/bintoken.h"
-#include "compiler/instantiate.h"
-#include "compiler/value_type.h"
-#include "compiler/statio.h"
-#include "compiler/bit.h"
-#include "compiler/simlist.h"
-#include "solver/slv_types.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <general/tm_time.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "instance_enum.h"
+#include "cmpfunc.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "types.h"
+#include "stattypes.h"
+#include "statement.h"
+#include "slist.h"
+#include "syntax.h"
+#include "prototype.h"
+#include "symtab.h"
+#include "instance_io.h"
+#include "instance_name.h"
+#include "parentchild.h"
+#include "extinst.h"
+#include "child.h"
+#include "type_desc.h"
+#include "copyinst.h"
+#include "destroyinst.h"
+#include "module.h"
+#include "library.h"
+#include "name.h"
+#include "pending.h"
+#include "check.h"
+#include "stattypes.h"
+#include "relation_type.h"
+#include "bintoken.h"
+#include "instantiate.h"
+#include "value_type.h"
+#include "statio.h"
+#include "bit.h"
+#include "simlist.h"
+#include <solver/slv_types.h>
 
 int g_compiler_timing=0;
 

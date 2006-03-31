@@ -22,13 +22,13 @@
  */
 
 #include <stdio.h>
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #ifdef __WIN32__
 #include <io.h>
 #endif
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/listio.h"
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/listio.h>
 #include "CUnit/CUnit.h"
 #include "assertimpl.h"
 #include "test_listio.h"

@@ -28,12 +28,12 @@
  *  the file named COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "compiler/compiler.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "general/hashpjw.h"
-#include "general/table.h"
+#include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include "hashpjw.h"
+#include "table.h"
 
 struct TableEntry {
   char *id;                 /* id string used to hash entry */

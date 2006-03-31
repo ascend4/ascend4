@@ -27,29 +27,29 @@
  *  COPYING.
  */
 
-#include "utilities/ascConfig.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/types.h"
-#include "compiler/symtab.h"
-#include "compiler/setinstval.h"
-#include "compiler/stattypes.h"
-#include "compiler/statio.h"
-#include "compiler/proc.h"
-#include "compiler/dimen_io.h"
-#include "compiler/child.h"
-#include "compiler/childinfo.h"
-#include "compiler/instance_enum.h"
-#include "compiler/watchptio.h"
-#include "compiler/setinst_io.h"
-#include "compiler/setio.h"
-#include "compiler/type_desc.h"
-#include "compiler/module.h"
-#include "compiler/type_descio.h"
+#include <utilities/ascConfig.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include "compiler.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "functype.h"
+#include "types.h"
+#include "symtab.h"
+#include "setinstval.h"
+#include "stattypes.h"
+#include "statio.h"
+#include "proc.h"
+#include "dimen_io.h"
+#include "child.h"
+#include "childinfo.h"
+#include "instance_enum.h"
+#include "watchptio.h"
+#include "setinst_io.h"
+#include "setio.h"
+#include "type_desc.h"
+#include "module.h"
+#include "type_descio.h"
 
 #ifndef lint
 static CONST char TypeDescIORCSid[] = "$Id: type_descio.c,v 1.24 1998/04/10 23:25:52 ballan Exp $";

@@ -24,12 +24,12 @@
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
- *  
- *  The idea is to find and mark all the merges that need to be 
+ *
+ *  The idea is to find and mark all the merges that need to be
  *  marked to disambiguate the anontype classification scheme
  *  which can be mislead into believing identical anontypes when
  *  one instance has some children merged but the other doesn't.
- *  Put another way, we want to record the minimum set of merges 
+ *  Put another way, we want to record the minimum set of merges
  *  that can account for the identity of all variables/constants
  *  in any relation,logical relation, or when statement.
  *
@@ -67,7 +67,7 @@
  *  left which is unacceptable. This is the same as an io NameNode,
  *  unless we decide to play a reference count game to avoid memory
  *  consumption.
- *  
+ *
  *  Much of this process is readily explained in terms of a global
  *  list of childnumber/context pairs which maps the entire namespace.
  *  Fortunately we don't need to build this list, we can build parts
@@ -86,41 +86,41 @@
 
 
 #include <limits.h> /* for INT_MAX */
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascPrint.h"
-#include "general/pool.h"
-#include "general/list.h"
-#include "general/listio.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
+#include <utilities/ascConfig.h>
+#include <utilities/ascMalloc.h>
+#include <utilities/ascPanic.h>
+#include <utilities/ascPrint.h>
+#include <general/pool.h>
+#include <general/list.h>
+#include <general/listio.h>
+#include <general/dstring.h>
+#include "compiler.h"
 #if TIMECOMPILER
 #include <time.h>
-#include "general/tm_time.h"
+#include <general/tm_time.h>
 #endif
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/instance_enum.h"
-#include "compiler/types.h"
-#include "compiler/instance_types.h"
-#include "compiler/instance_name.h"
-#include "compiler/tmpnum.h"
-#include "compiler/parentchild.h"
-#include "compiler/instquery.h"
-#include "compiler/visitinst.h"
-#include "compiler/instance_io.h"
-#include "compiler/visitinst.h"
-#include "compiler/visitlink.h"
-#include "compiler/arrayinst.h" /* for arrayvisitlocalleaves only */
-#include "compiler/anonmerg.h"
+#include "fractions.h"
+#include "dimen.h"
+#include "child.h"
+#include "type_desc.h"
+#include "instance_enum.h"
+#include "types.h"
+#include "instance_types.h"
+#include "instance_name.h"
+#include "tmpnum.h"
+#include "parentchild.h"
+#include "instquery.h"
+#include "visitinst.h"
+#include "instance_io.h"
+#include "visitinst.h"
+#include "visitlink.h"
+#include "arrayinst.h" /* for arrayvisitlocalleaves only */
+#include "anonmerg.h"
 #if AMSTAT
 /* need numlistio to write debugging info */
 #define NUMLISTEXPORTIO
 #endif
-#include "compiler/numlist.h"
+#include "numlist.h"
 #if AMSTAT
 #undef NUMLISTEXPORTIO
 #endif
@@ -179,7 +179,7 @@ static CONST char AnonMergeModuleID[] = "$Id: anonmerg.c,v 1.9 2000/01/25 02:25:
  * where each path is the gllist of childnumbers that is followed
  * to reach the shared instance di.
  */
-/* 
+/*
  */
 struct AnonMergeIP {    /* Hangs off all instances with amipflag=1 */
   struct gl_list_t *amlist;
@@ -334,7 +334,7 @@ struct AnonMergeIP *AMGetIP(struct AnonMergeIPData *amipd)
  * and arrays thereof since these always have 1 parent and couldn't
  * be merged in any case. Likewise for dummy instance, which are UNIVERSAL.
  */
-static 
+static
 int IsIgnorableInstance(struct Instance *ch)
 {
   assert(ch!=NULL);
@@ -368,14 +368,14 @@ int IsIgnorableInstance(struct Instance *ch)
  * This function does not collect as 'reachable' constant and set
  * instance types since the 'identity' or lack thereof does not
  * change the semantics of these structural parameter instances.
- * We don't need to know about their mergedness. 
+ * We don't need to know about their mergedness.
  * Because we are numbering only the mergednodes we care about,
- * ignoring constants does not fill the maps with holes. 
+ * ignoring constants does not fill the maps with holes.
  *
  * shared is the list described above. This function also collects
  * subgraph, the list of both merged and compound nodes reachable
  * from i.
- * 
+ *
  * We handle each child of i once and double up the other operations.
  */
 static
@@ -442,7 +442,7 @@ void CollectSubgraphNumlist(struct Instance *i,
 
 /* Grabs an ip from the buffer and inits/returns it.
  * When used with pushIP, decorates all instances that are marked with
- * AMIPFLAG which should only be models/arrays and shared variables. 
+ * AMIPFLAG which should only be models/arrays and shared variables.
  * As an interesting side effect, we collect the list of mergednodes in the
  * subgraph of i (in numlist_p form).  Should be applied bottom-up.
  * We also add i's number to the lists of parents in its children.
@@ -472,7 +472,7 @@ struct AnonMergeIP *AnonMergeCreateIP(struct Instance *i,
     amip->glp = gl_create(NumberParents(i)+2);
     amip->parentslist = NULL;
 
-    amip->node_number = (int)GetTmpNum(i); 
+    amip->node_number = (int)GetTmpNum(i);
     amip->ip_number = amipd->ipused; /* array loc in ipbuf +1 */
     gl_append_ptr(amip->glp,(void *)amip->ip_number);
     assert(amip->node_number >= 0);
@@ -530,7 +530,7 @@ void AnonMergeFindPath(struct Instance *i, int target,
       /* must succeed on first trip if start is correct */
       /* hunt for next child of i which has target as a merged descendant */
       ch = InstanceChild(i,c);
-      if (ch != NULL && 
+      if (ch != NULL &&
           (GetAnonFlags(ch) & AMIPFLAG) != 0 &&
           (cl == NULL || ChildAliasing(cl,c) == 0)) {
         amip = (struct AnonMergeIP *)GetInterfacePtr(ch);
@@ -565,7 +565,7 @@ void AnonWritePath(FILE *fp, struct Instance *i, struct gl_list_t *path)
 {
 #define AWPDB 0 /* debugging for this function */
   struct Instance *root;
-  unsigned long c,len, cn; 
+  unsigned long c,len, cn;
 #if AWPDB
   int ip,im;
   struct AnonMergeIP *amip;
@@ -591,7 +591,7 @@ void AnonWritePath(FILE *fp, struct Instance *i, struct gl_list_t *path)
     }
     FPRINTF(fp,"(%d){%d}",ip,im);
 #endif
-    name = ChildName(root,cn); 
+    name = ChildName(root,cn);
     switch (InstanceNameType(name)){
     case StrName:
       if (c>1) {
@@ -614,8 +614,8 @@ static
 void WriteMList(FILE *fp, struct gl_list_t *aml, struct Instance *i)
 {
   struct gl_list_t *pathlist, *path;
-  unsigned long c,len; 
-  unsigned long d,dlen; 
+  unsigned long c,len;
+  unsigned long d,dlen;
   unsigned long elen;
 
   if (aml !=NULL) {
@@ -775,7 +775,7 @@ void AnonMergeMarkUniversals(struct AnonMergeVisitInfo *amvi)
  * AnonMergeCountTree(i,amvi);
  * This must be applied bottom up.
  * Sets the anonflags to 0 for all i.
- * Sets the tmpnum of i to zero. 
+ * Sets the tmpnum of i to zero.
  * Increment tmpnum in each child of compound i which is not an alias child of
  * i or a constant type. Constants are fully accounted for in their individual
  * anontype, so sharedness does not further affect instance semantics -- at
@@ -844,7 +844,7 @@ void AnonMergeCountTree(struct Instance *i, struct AnonMergeVisitInfo *amvi)
                * reference counts on the leaves of the array, but not on the
                * array_insts, unless those leaves happen to be other arrays.
                * It may happen that there are no leaves if the array is
-               * defined over a NULL set in some portion.  So for example if 
+               * defined over a NULL set in some portion.  So for example if
                * c[8][9] IS_A real; b[1..2][4..5] ALIASES c;
                * then the instance b has 4 subscripts to the end user,
                * but the 'leaves' of b which we don't want to
@@ -887,7 +887,7 @@ void AnonMergeLabelNodes(struct Instance *i, struct AnonMergeVisitInfo *amvi)
 {
   assert(GetTmpNum(i) <10000000);
   switch (GetTmpNum(i)) {
-  case 0: 
+  case 0:
     /* all ignorable stuff should fall in here */
     break;
   case 1:
@@ -905,7 +905,7 @@ void AnonMergeLabelNodes(struct Instance *i, struct AnonMergeVisitInfo *amvi)
     assert(GetTmpNum(i) <100000000);
     /* compound or not it gets an IP */
     (amvi->nip)++;
-    SetAnonFlags(i,(GetAnonFlags(i) | AMIPFLAG)); 
+    SetAnonFlags(i,(GetAnonFlags(i) | AMIPFLAG));
     return;
   }
   if (IsCompoundInstance(i)) {
@@ -913,7 +913,7 @@ void AnonMergeLabelNodes(struct Instance *i, struct AnonMergeVisitInfo *amvi)
      * as even uninteresting, unmerged compound instances need a space
      * to hang their subgraph numlist. universals included.
      */
-    SetAnonFlags(i,(GetAnonFlags(i) | AMIPFLAG)); 
+    SetAnonFlags(i,(GetAnonFlags(i) | AMIPFLAG));
     (amvi->nip)++;
   }
 }
@@ -1051,18 +1051,18 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   }
   amipd->oldips = PushInterfacePtrs(amvi->root,(IPFunc)AnonMergeCreateIP,
                                     amvi->nip,1, (VOIDPTR)amipd);
-  
+
   asize = amvi->maxchildren; /* now some buffers of this size */
 
   amipd->listhints = (int *)ascmalloc(asize*sizeof(int));
   amipd->graphs = (Numlist_p *)ascmalloc(asize*sizeof(Numlist_p));
   amipd->mergegraphs = (Numlist_p *)ascmalloc(asize*sizeof(Numlist_p));
-  amipd->graphchildnum = 
+  amipd->graphchildnum =
       (unsigned long *)ascmalloc(asize*sizeof(unsigned long));
   amipd->routes = (Numlist_p *)ascmalloc(asize*sizeof(Numlist_p));
-  amipd->routechildnum = 
+  amipd->routechildnum =
       (unsigned long *)ascmalloc(asize*sizeof(unsigned long));
-  amipd->finalchildnum = 
+  amipd->finalchildnum =
       (unsigned long *)ascmalloc(asize*sizeof(unsigned long));
   /* totfinal, totroute, totgraph are all 'in use' counters, not
    * the size of allocation. amvi->maxchildren is the capacity.
@@ -1242,7 +1242,7 @@ void MergeBlobs(struct mdata *md, int bigblob, struct gl_list_t *bl)
       old = md->blob[oldblob];
       for (c=1, len = gl_length(old); c <= len; c++) {
         oldsg = (int)gl_fetch(old,c);
-#if 1 
+#if 1
         /* check the supposition that we are keeping lists nonoverlapping */
         assert(gl_ptr_search(keep,(VOIDPTR)oldsg,0)==0);
 #endif
@@ -1275,7 +1275,7 @@ void add_matrix_incidence(int parent, struct mdata *md)
     elt->next = md->header[parent];
     md->header[parent] = elt;
     md->colcount[parent]++;
-  } else { 
+  } else {
 #if (CFI && 0)
     FPRINTF(ASCERR,"ign row %d col %d\n",md->sg,parent);
 #endif
@@ -1284,7 +1284,7 @@ void add_matrix_incidence(int parent, struct mdata *md)
 
 /* can we move some of this into md? */
 static
-void CalcFinalIndependentRoutes(struct mdata *md, 
+void CalcFinalIndependentRoutes(struct mdata *md,
                                 Numlist_p parentsini,
                                 Numlist_p CONST *routes,
                                 Numlist_p parentsinchild,
@@ -1379,7 +1379,7 @@ void CalcFinalIndependentRoutes(struct mdata *md,
               }
               gl_append_ptr(blobsincol,(VOIDPTR)blob);
               md->blobcollected[blob] = 1;
-            } 
+            }
             /* else saw blob before. */
           }
           elt = elt->next;
@@ -1388,14 +1388,14 @@ void CalcFinalIndependentRoutes(struct mdata *md,
          * is also the lowest sg in col because sg are inserted in
          * increasing order at header in the matrix assembly.
          */
-        if (gl_length(blobsincol) == 0L) { 
+        if (gl_length(blobsincol) == 0L) {
           assert(bigblob == -1);
           /* get list index of least sg to use as new blob */
-          bllen = (int)gl_length(newsgincol); 
+          bllen = (int)gl_length(newsgincol);
 #if CFI
           FPRINTF(ASCERR,"No blobs. %lu newsg\n",bllen);
 #endif
-          assert(bllen > 0); 
+          assert(bllen > 0);
             /* fails mysteriously when all sg in first blob.
              * Why is blobsincol empty? because someone left blobcollected 1.
              */
@@ -1447,7 +1447,7 @@ void CalcFinalIndependentRoutes(struct mdata *md,
     } else {
       if (md->blobcollected[md->sg2blob[sg]] == 0) {
         /* sg is leftmost route through blob it is in.
-         * collect sg and mark blob collected. 
+         * collect sg and mark blob collected.
          */
         md->blobcollected[md->sg2blob[sg]] = 1;
         finalchildnum[*totfinal] = routechildnum[sg];
@@ -1480,17 +1480,17 @@ void AnonMergeDetect(struct Instance *i,
   unsigned int aflags;
   Numlist_p mergednodes;                /* interesting descendants of i */
   Numlist_p parents;                	/* interesting descendants of i */
-  struct gl_list_t *scratchpath, *scratchpathlist, *scratchamlist; 
+  struct gl_list_t *scratchpath, *scratchpathlist, *scratchamlist;
   struct gl_list_t *path, *pathlist;
   ChildListPtr cl;
   /* probably want to make totroutes, totgraphs, totfinal local ints */
 
-  /* Here we take the subgraph map of merged nodes in i 
+  /* Here we take the subgraph map of merged nodes in i
    * and try to find nonintersecting paths to each of the
-   * merged nodes starting from each of the immediate 
+   * merged nodes starting from each of the immediate
    * children of i. All compound or merged instances have a subgraph
    * map (or NULL if they have no merged descendants of
-   * interest) of mergednode numbers. 
+   * interest) of mergednode numbers.
    */
 
   aflags = GetAnonFlags(i);
@@ -1541,7 +1541,7 @@ void AnonMergeDetect(struct Instance *i,
        * the type definition.
        */
       ch = InstanceChild(i,c);
-      if (ch != NULL && 
+      if (ch != NULL &&
           (GetAnonFlags(ch)&AMIPFLAG) != 0 &&
           (cl == NULL || ChildAliasing(cl,c)==0)) {
         chamip = (struct AnonMergeIP *)GetInterfacePtr(ch);
@@ -1552,7 +1552,7 @@ void AnonMergeDetect(struct Instance *i,
           amipd->graphchildnum[amipd->totgraphs] = c; /* track origin */
           amipd->totgraphs++;
 #if (AMSTAT && 0)
-          if (chamip->subgraph != NULL && 
+          if (chamip->subgraph != NULL &&
               NumpairListLen(chamip->subgraph) > 0) {
             FPRINTF(ASCERR,"root ip %d, child number %lu, subgraph:\n",
                     amip->ip_number,c);
@@ -1571,12 +1571,12 @@ void AnonMergeDetect(struct Instance *i,
     if (amipd->totgraphs < 2) {
       /* one child has all the merged nodes, so we will never be able
        * to find two independent paths to any merged descendant. quit now.
-       */ 
+       */
       amipd->totgraphs = 0;
       return;
     }
 
-    /* Foreach merged descendant of i, find merges recordable on i. 
+    /* Foreach merged descendant of i, find merges recordable on i.
      * There can never be more than n=totgraphs independent paths.
      * Process in descending node order,
      * though this is not required as what is recorded about one descendant
@@ -1586,7 +1586,7 @@ void AnonMergeDetect(struct Instance *i,
      */
     scratchpath = amipd->scratchpath;
     scratchpathlist = amipd->scratchpathlist;
-    scratchamlist = amipd->scratchamlist; 
+    scratchamlist = amipd->scratchamlist;
     gl_reset(scratchamlist);
     nphint = -1;
     len = amipd->totgraphs;
@@ -1627,7 +1627,7 @@ void AnonMergeDetect(struct Instance *i,
           /* one child has all the routes, there are not
            * two independent paths to this merged descendant.
            * quit this descendant now.
-           */ 
+           */
           continue; /* go on to nextnode */
         }
 #if (AMSTAT && 0)
@@ -1649,7 +1649,7 @@ void AnonMergeDetect(struct Instance *i,
         FPRINTF(ASCERR,"Parents of ip#%d\n",nextnode_ip);
         NLPWrite(NULL,parents);
 #endif
-        NumpairCalcIntersection(amip->subgraph, parents, amipd->enlp0); 
+        NumpairCalcIntersection(amip->subgraph, parents, amipd->enlp0);
         amipd->totfinal = 0;
 #if CFI
         FPRINTF(ASCERR,"Checking merged ip# %d\n",nextnode_ip);
@@ -1725,7 +1725,7 @@ static int g_ammarking = 0;
  * On return, all InterfacePointers in the tree of root are either
  * NULL or point to some data we understand.
  * When done using these IPs, the caller should call
- * AnonMergeDestroyIPs(vp); 
+ * AnonMergeDestroyIPs(vp);
  * This function uses the push/pop protocol for ips, so ip data
  * of other clients may be lost if Unmark is not called properly.
  * Generally, both functions should be called from the same scope.
@@ -1733,7 +1733,7 @@ static int g_ammarking = 0;
  * ! ! Assumes that tmpnums are all 0 on entry, and leaves any
  * it has touched 0 on exit.
  *
- * Does not record recursive merges, i.e. if a,b ARE_THE_SAME, 
+ * Does not record recursive merges, i.e. if a,b ARE_THE_SAME,
  * don't record a.i,b.i ARE_THE_SAME. This is simple to detect
  * as a.i,b.i have the same childnumber/instanceparent pair.
  */
@@ -1805,7 +1805,7 @@ VOIDPTR Asc_AnonMergeMarkIPs(struct Instance *root)
 #endif
   /* do the magic bottom up. */
   SilentVisitInstanceTreeTwo(root,(VisitTwoProc)AnonMergeDetect,1,0,amipd);
-  
+
 #if (AMSTAT || AMBKDN)
   FPRINTF(ASCERR,"%ld mergedetect done\n\n",clock());
 #endif
@@ -1840,7 +1840,7 @@ int AnonMergeCmpMLists(CONST struct gl_list_t *aml1,
 
   if (aml1==aml2) {
     /* includes NULL == NULL case. */
-    return 0; 
+    return 0;
   }
   if (aml1 == NULL) {
     return -1;

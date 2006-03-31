@@ -115,7 +115,7 @@ static CONST char ascSignalRCS[] = "$Id: ascSignal.h,v 1.6 1998/01/10 18:00:05 b
 
 #include <signal.h>
 #include <setjmp.h>
-#include "utilities/ascConfig.h"
+#include <utilities/ascConfig.h>
 #ifdef __WIN32__
 #  include <process.h>
 #else

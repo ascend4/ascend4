@@ -45,17 +45,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/error.h"
-#include "utilities/ascPrint.h"
-#include "utilities/ascPanic.h"
-#include "utilities/ascMalloc.h"
-#include "utilities/ascDynaLoad.h"
+#include "ascConfig.h"
+#include "error.h"
+#include "ascPrint.h"
+#include "ascPanic.h"
+#include "ascMalloc.h"
+#include "ascDynaLoad.h"
 
-#include "compiler/instance_enum.h"
-#include "general/list.h"
-#include "compiler/compiler.h"
-#include "compiler/extfunc.h"
+#include <compiler/instance_enum.h>
+#include <general/list.h>
+#include <compiler/compiler.h>
+#include <compiler/extfunc.h>
 
 typedef int (*ExternalLibraryRegister_fptr_t)(
 	const CreateUserFunction_fptr_t

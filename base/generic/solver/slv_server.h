@@ -29,17 +29,17 @@
 Server functions for the SLV solver.
 
 Requires:
-#include "solver/var.h"
-#include "solver/rel.h"
-#include "solver/discrete.h"
-#include "solver/conditional.h"
-#include "solver/logrel.h"
-#include "solver/bnd.h"
-#include "solver/linsol.h"
-#include "solver/linsolqr.h"
-#include "solver/slv_common.h"
-#include "solver/slv_types.h"
-#include "solver/slv_client.h"
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_common.h>
+#include <solver/slv_types.h>
+#include <solver/slv_client.h>
 
 @NOTE
 	We are going through a solver API definition restructuring.
