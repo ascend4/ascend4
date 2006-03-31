@@ -18,10 +18,6 @@ libs = Split("""
 	asccompiler ascpackages ascsolver ascutilities ascgeneral 
 """)
 
-swig = CFile(target=['ascend_wrap.cc'],source=['ascend.i']
-	, SWIGFLAGS=['-python','-c++']
-)
-env.Depends('ascend.py',swig);
 
 libpath = [
 	'../../base/generic/compiler'
@@ -31,18 +27,61 @@ libpath = [
 	,'../../base/generic/general'
 ]
 
-lib = env.SharedLibrary("ascend",srcs+swig
-	, LIBS = libs #+env['PYTHON_LIB']
-	, LIBPATH = libpath+env['PYTHON_LIBPATH']
+# Build a static library with all the sources
+
+lib = env.Library("ascxx",srcs
+	, LIBS = libs
+	, LIBPATH = libpath
 	, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
 	, CPPDEFINES = {
 		'ASCXX_USE_PYTHON':None
 		,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
 	  }
+	, CPPFLAGS = ['-O3']
+)	
+
+#import platform
+#if platform.system()=="Windows":
+#	#
+#	# 
+def swig_modify_targets(target, source, env):
+	target.append('ascend.py')
+	target.append('ascend_wrap.h')
+	return target, source
+
+swig_builder = Builder(
+	action='$SWIG $SWIGFLAGS -o $TARGET $SOURCE'
+	, emitter=swig_modify_targets
+)
+env.Append(BUILDERS={'Swig':swig_builder})
+
+swig = env.Swig(target=['ascend_wrap.cc'],source=['ascend.i']
+	, SWIGFLAGS=['-python','-c++']
+	, CPPFLAGS = ['-O3']
+)
+#else:	
+#swig = env.CFile(target=['ascend_wrap.cc'],source=['ascend.i']
+#		, SWIGFLAGS=['-python','-c++']
+#		, ENV={'SWIGFEATURES':'-O'}
+#		, CPPFLAGS = ['-O3']
+#	)
+
+#env.Depends('ascend.py',swig);
+
+
+swiglib = env.SharedLibrary("ascend",['ascend_wrap.cc']
+	, LIBS = ['ascxx']+libs+env['PYTHON_LIB']
+	, LIBPATH = ['.']+libpath+env['PYTHON_LIBPATH']
+	, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
+	, CPPDEFINES = {
+		'ASCXX_USE_PYTHON':None
+		,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
+	  }
+	, CPPFLAGS = ['-O3']
 	, SHLIBPREFIX = '_'
 )
 
-env.Depends(lib,'ascend.py')
+env.Depends(swiglib,'ascend.py')
 
 print env['SUBST_DICT']
 
