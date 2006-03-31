@@ -170,9 +170,12 @@ else:
 
 
 # SWIG version
-env['SWIG']=['c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe']
-env['ENV']['SWIGFEATURES']='-O'
 
+if platform.system()=="Windows":
+	env['SWIG']=['c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe']
+	env['ENV']['SWIGFEATURES']='-O'
+else:
+	env['ENV']['SWIGFEATURES']='-O'	
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -187,6 +190,10 @@ env.Append(PYTHON_LIB=[python_lib])
 env.Append(PYTHON_CPPPATH=[distutils.sysconfig.get_python_inc()])
 print "PYTHON_LIBPATH =",env['PYTHON_LIBPATH']
 print "PYTHON_CPPPATH =",env['PYTHON_CPPPATH']
+
+if not with_python:
+	print "Can't build python interface"
+	Exit(1)
 
 #------------------------------------------------------
 # RECIPE: 'SubstInFile', used in pygtk SConscript
