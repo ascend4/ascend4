@@ -174,8 +174,9 @@ def CheckSwigVersion(context):
 		):
 		context.Result("ok, %d.%d.%d" % (maj,min,pat))
 		return 1;
-	context.Result("ok, %d.%d.%d" % (maj,min,pat))
-	return 0;
+	else:
+		context.Result("too old, %d.%d.%d" % (maj,min,pat))
+		return 0;
 
 #----------------
 # General purpose library-and-header test
