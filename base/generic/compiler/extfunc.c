@@ -81,9 +81,9 @@ int CreateUserFunction(CONST char *name,
     efunc->n_inputs = n_inputs;
     efunc->n_outputs = n_outputs;
     efunc->init = init;
-    efunc->value = value;   /* should be *value */
-    efunc->deriv = deriv;   /* should be *deriv */
-    efunc->deriv2 = deriv2; /* should be *deriv2 */
+    efunc->value = value;   
+    efunc->deriv = deriv;  
+    efunc->deriv2 = deriv2; 
     if (help) {
       if (efunc->help) ascfree((char *)efunc->help);
       efunc->help = (char *)ascmalloc((strlen(help)+1)*sizeof(char));
@@ -100,9 +100,9 @@ int CreateUserFunction(CONST char *name,
     efunc->n_inputs = n_inputs;
     efunc->n_outputs = n_outputs;
     efunc->init = init;
-    efunc->value = value;   /* should be *value */
-    efunc->deriv = deriv;   /* should be *deriv */
-    efunc->deriv2 = deriv2; /* should be *deriv2 */
+    efunc->value = value;   
+    efunc->deriv = deriv;  
+    efunc->deriv2 = deriv2;
     if (help) {
       efunc->help = (char *)ascmalloc((strlen(help)+1)*sizeof(char));
       asc_assert(efunc->help != NULL);
@@ -137,10 +137,10 @@ void DestroyExternalFunc(struct ExternalFunc *efunc)
  * In this case the evaluation function. see Harbison&Steele p 258. :^)
  */
 
-int (*GetInitFunc(struct ExternalFunc *efunc))(/* */)
+ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
-  return efunc->init;
+  return (ExtBBoxInitFunc*)efunc->init;
 }
 
 ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc)

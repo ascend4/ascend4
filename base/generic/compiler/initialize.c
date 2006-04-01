@@ -72,6 +72,7 @@
 #include "switch.h"
 #include "exprs.h"
 #include "sets.h"
+#include "parentchild.h"
 
 
 #ifndef lint
@@ -261,7 +262,7 @@ void ExecuteInitRun(struct procFrame *fm, struct Statement *stat)
 */
 static void
 execute_init_fix_or_free(int val, struct procFrame *fm, struct Statement *stat){
-  struct VariableList *vars;
+  CONST struct VariableList *vars;
   enum find_errors e;
   struct gl_list_t *temp;
   unsigned i, len;

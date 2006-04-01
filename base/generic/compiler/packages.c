@@ -226,7 +226,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 
   name_with_extn = MakeArchiveLibraryName(name);
 
-  full_file_name = SearchArchiveLibraryPath(name_with_extn,default_path,env);
+  full_file_name = SearchArchiveLibraryPath(SCP(name_with_extn),default_path,env);
   if (!full_file_name) {
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path",name_with_extn);
     return 1;
