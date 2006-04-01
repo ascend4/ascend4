@@ -115,6 +115,20 @@ opts.Add(PackageOption(
 	,None
 ))
 
+# Where are the Tk includes?
+opts.Add(PackageOption(
+	'TK_CPPPATH'
+	,"Where are your Tk include files?"
+	,None
+))
+
+# Where are the Tk libs?
+opts.Add(PackageOption(
+	'TK_LIBPATH'
+	,"Where are your Tk libraries?"
+	,None
+))
+
 
 # TODO: OTHER OPTIONS?
 
@@ -166,7 +180,7 @@ env.Append(SUBST_DICT=subst_dict)
 import os,re
 
 def CheckSwigVersion(context):
-	context.Message("Checking version of SWIG")
+	context.Message("Checking version of SWIG... ")
 	cmd = env['SWIG']+' -version'
 	(cin,coutcerr) = os.popen4(cmd);
 	output = coutcerr.read()
@@ -208,6 +222,11 @@ class KeepContext:
 		cpppath_add = []
 		if context.env.has_key(varprefix+'_CPPPATH'):
 			cpppath_add = [env[varprefix+'_CPPPATH']]
+	
+		context.env.Append(
+			LIBPATH = libpath_add
+			, CPPPATH = cpppath_add
+		)
 
 	def restore(self,context):
 		for k in self.keep:
@@ -219,22 +238,18 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	file with the provided text, linking with the 
 	library libname."""
 
-	context.Message( 'Checking for '+libname+'...' )
+	context.Message( 'Checking for '+libname+'... ' )
 	
 	if varprefix==None:
 		varprefix = libname.upper()
 	
 	keep = KeepContext(context,varprefix)
-	
-	context.env.Append(
-		LIBS = libname
-		, LIBPATH = libpath_add
-		, CPPPATH = cpppath_add
-	)
+
+	context.env.Append(LIBS=[libname])
 
 	is_ok = context.TryLink(text,ext)
 
-	keep.restore()
+	keep.restore(context)
 
 	context.Result(is_ok)
 	return is_ok
@@ -267,7 +282,7 @@ def CheckCUnit(context):
 	)
 
 #----------------
-# Tcl/Tk test
+# Tcl test
 
 tcl_check_text = r"""
 #include <tcl.h>
@@ -281,19 +296,44 @@ int main(void){
 tcl_test_text = open('checktcl.c').read()
 
 def CheckTcl(context):
-	keep = KeepContext(context,'TCL')
-	context.Message("Checking for Tcl library... ")
-	is_ok = context.TryLink(tcl_check_text,'.c')
-	context.Result(is_ok)
-	keep.restore(context)
-	if not is_ok:
-		return 0
-	return 1
+	return CheckExtLib(context,'tcl',tcl_check_text)
 
 def CheckTclVersion(context):
 	keep = KeepContext(context,'TCL')
 	context.Message("Checking Tcl version... ")
 	(is_ok,output) = context.TryRun(tcl_check_text,'.c')
+	keep.restore(context)
+	if not is_ok:
+		context.Result("failed to run check")
+		return 0
+	context.Result(output)
+
+	major,minor,patch = tuple(int(i) for i in output.split("."))
+	if major != 8 or minor > 3:
+		# bad version
+		return 0
+		
+	# good version
+	return 1
+
+#----------------
+# Tcl test
+
+tk_check_text = r"""
+#include <tk.h>
+#include <stdio.h>
+int main(void){
+    printf("%s",TK_PATCH_LEVEL);
+	return 0;
+}
+"""
+def CheckTk(context):
+	return CheckExtLib(context,'tk',tk_check_text)
+
+def CheckTkVersion(context):
+	keep = KeepContext(context,'TK')
+	context.Message("Checking Tk version... ")
+	(is_ok,output) = context.TryRun(tk_check_text,'.c')
 	keep.restore(context)
 	if not is_ok:
 		context.Result("failed to run check")
@@ -317,6 +357,8 @@ conf = Configure(env
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
+		, 'CheckTk' : CheckTk
+		, 'CheckTkVersion' : CheckTkVersion
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -340,42 +382,23 @@ if not conf.CheckFunc('isnan'):
 
 # Tcl/Tk
 
-if conf.CheckTcl():
+if conf.CheckTcl() and conf.CheckTk():
 	if with_tcltk_gui and not conf.CheckTclVersion():
-		print "Wrong Tcl version used. Please specify you 8.3 Tcl installation"\
-			+" via the TCL_CPPPATH and TCL_LIBPATH options, or use"\
-			+" WITHOUT_TCLTK_GUI=1 to prevent build of Tcl/Tk components.\n"
+		without_tcltk_reason = "Require Tcl <= 8.3 Tcl."
 		with_tcltk_gui = False
 
-if with_tcltk_gui and not conf.CheckHeader('tk.h'):
-	with_tcltk_gui = False
-
-if with_tcltk_gui and not conf.CheckLib('tk'):
-	with_tcktk_gui = False
-
+	if with_tcltk_gui and not conf.CheckTkVersion():
+		without_tcltk_reason += "Require Tk version <= 8.3. See 'scons -h'"
+		with_tcltk_gui = False
+else:
+	without_tcltk_reason = "Tcl/Tk not found."
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
 
 if platform.system()=="Windows":
-	#conf.env.Append(LIBPATH='c:\Python24\libs')
-	#conf.env.Append(CPPPATH='c:\Python24\include')
-	#python_header='Python.h'
 	python_lib='python24'
-	#python_libpath=['c:\\Python24\\libs']
-	#python_cpppath=['c:\\Python24\\include']
 else:
-	#python_header='python2.4/Python.h'
 	python_lib='python2.4'
-	#python_libpath=[]
-	#python_cpppath=['/usr/include/python2.4']
-
-#if not conf.CheckLibWithHeader(python_lib,python_header,'C'
-#		, LIBPATH=[distutils.sysconfig.PREFIX+"/libs"]
-#		, CPPPATH=[distutils.sysconfig.get_python_inc()]
-#):
-#	print "Didn't find Python 2.4 ("+python_lib+")"
-#	with_python = False
-#else:
 
 # SWIG version
 
@@ -403,8 +426,6 @@ conf.Finish()
 env.Append(PYTHON_LIBPATH=[distutils.sysconfig.PREFIX+"/libs"])
 env.Append(PYTHON_LIB=[python_lib])
 env.Append(PYTHON_CPPPATH=[distutils.sysconfig.get_python_inc()])
-print "PYTHON_LIBPATH =",env['PYTHON_LIBPATH']
-print "PYTHON_CPPPATH =",env['PYTHON_CPPPATH']
 
 if not with_python:
 	print "Can't build python interface"
@@ -504,7 +525,7 @@ env.SConscript(['base/generic/packages/SConscript'],'env')
 if with_tcltk_gui:
 	env.SConscript(['tcltk98/generic/interface/SConscript'],'env')
 else:
-	print "Skipping... Tcl/Tk GUI isn't being built"
+	print "Skipping... Tcl/Tk GUI isn't being built:",without_tcltk_reason
 
 if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
