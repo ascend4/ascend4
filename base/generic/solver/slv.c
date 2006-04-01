@@ -107,7 +107,7 @@ struct slv_system_structure {
     int mnum;			/* length of the master list */
     struct var_variable **solver;
     struct var_variable **master;
-	struct dis_discrete *buf;
+	struct var_variable *buf;
   } vars;
 
   struct {
