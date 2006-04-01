@@ -293,8 +293,6 @@ int main(void){
 }
 """
 
-tcl_test_text = open('checktcl.c').read()
-
 def CheckTcl(context):
 	return CheckExtLib(context,'tcl',tcl_check_text)
 
