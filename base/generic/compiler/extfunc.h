@@ -77,9 +77,9 @@ struct ExternalFunc {
   unsigned long n_outputs;
   char *help;
   ExtEvalFunc *init;
-  ExtEvalFunc *value;
-  ExtEvalFunc *deriv;
-  ExtEvalFunc *deriv2;
+  ExtEvalFunc **value; /**< array of relation residual functions. */
+  ExtEvalFunc **deriv; /**< array of relation gradient functions. */
+  ExtEvalFunc **deriv2; /**< array of relation hessian functions. */
 };
 
 enum Calc_status {
@@ -213,10 +213,20 @@ extern void DestroyExternalFunc(struct ExternalFunc *name);
  *  information, then call this function.
  */
 
+#if 0 
+/* don't know where the hell the return type came from.
+will check.*/ 
+extern ExtEvalFunc *GetInitFunc(struct ExternalFunc *efunc);
+#endif
 extern ExtBBoxInitFunc *GetInitFunc(struct ExternalFunc *efunc);
+
+/* black box stuff */
+
 extern ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc);
 extern ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc);
+
+/* glass box stuff */
 
 extern ExtEvalFunc **GetValueJumpTable(struct ExternalFunc *efunc);
 extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
