@@ -75,7 +75,7 @@ opts.Add(
 	'SWIG'
 	,"SWIG location, probably only required for MinGW and MSVC users."
 		+" Enter the location as a Windows-style path, for example"
-		+" 'c:\msys\1.0\home\john\swigwin-1.3.29\swig.exe'."
+		+" 'c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe'."
 )
 
 # Build the test suite?
@@ -94,12 +94,27 @@ opts.Add(PackageOption(
 	,"off"
 ))
 
-# Where are the CUnit includes?
+# Where are the CUnit libraries?
 opts.Add(PackageOption(
 	'CUNIT_LIBPATH'
-	,"Where are your CUnit include files?"
+	,"Where are your CUnit libraries?"
 	,"off"
 ))
+
+# Where are the Tcl includes?
+opts.Add(PackageOption(
+	'TCL_CPPPATH'
+	,"Where are your Tcl include files?"
+	,None
+))
+
+# Where are the Tcl libs?
+opts.Add(PackageOption(
+	'TCL_LIBPATH'
+	,"Where are your Tcl libraries?"
+	,None
+))
+
 
 # TODO: OTHER OPTIONS?
 
@@ -179,6 +194,24 @@ def CheckSwigVersion(context):
 #----------------
 # General purpose library-and-header test
 
+class KeepContext:
+	def __init__(self,context,varprefix):
+		self.keep = {}
+		for k in ['LIBS','LIBPATH','CPPPATH']:
+			if context.env.has_key(k):
+				self.keep[k] = context.env[k]
+		
+		libpath_add = []
+		if context.env.has_key(varprefix+'_LIBPATH'):
+			libpath_add = [env[varprefix+'_LIBPATH']]
+
+		cpppath_add = []
+		if context.env.has_key(varprefix+'_CPPPATH'):
+			cpppath_add = [env[varprefix+'_CPPPATH']]
+
+	def restore(self,context):
+		for k in self.keep:
+			context.env[k]=self.keep[k];
 
 def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	"""This method will check for variables LIBNAME_LIBPATH
@@ -191,31 +224,23 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	if varprefix==None:
 		varprefix = libname.upper()
 	
-	keep = {}
-	for k in ['LIBS','LIBPATH','CPPPATH']:
-		if context.env.has_key(k):
-			keep[k] = context.env[k]
-	
-	libpath_add = []
-	if context.env.has_key(varprefix+'_LIBPATH'):
-		libpath_add = [env[varprefix+'_LIBPATH']]
-
-	cpppath_add = []
-	if context.env.has_key(varprefix+'_CPPPATH'):
-		cpppath_add = [env[varprefix+'_CPPPATH']]
+	keep = KeepContext(context,varprefix)
 	
 	context.env.Append(
 		LIBS = libname
 		, LIBPATH = libpath_add
 		, CPPPATH = cpppath_add
 	)
-	ret = context.TryLink(cunit_test_text,ext)
 
-	for k in keep:
-		context.env[k]=keep[k];
+	is_ok = context.TryLink(text,ext)
 
-	context.Result( ret )
-	return ret
+	keep.restore()
+
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
+# CUnit test
 
 cunit_test_text = """
 #include <CUnit/Cunit.h>
@@ -231,16 +256,58 @@ void test_maxi(void){
 }
 int main(void){
 /* 	CU_initialize_registry() */
+	return 0;
 }
 """
 
 def CheckCUnit(context):
-	return CheckExtLib(context
+	return CheckLib(context
 		,'cunit'
 		,cunit_test_text
 	)
 
+#----------------
+# Tcl/Tk test
+
+tcl_check_text = r"""
+#include <tcl.h>
+#include <stdio.h>
+int main(void){
+    printf("%s",TCL_PATCH_LEVEL);
+	return 0;
+}
+"""
+
+tcl_test_text = open('checktcl.c').read()
+
+def CheckTcl(context):
+	keep = KeepContext(context,'TCL')
+	context.Message("Checking for Tcl library... ")
+	is_ok = context.TryLink(tcl_check_text,'.c')
+	context.Result(is_ok)
+	keep.restore(context)
+	if not is_ok:
+		return 0
+	return 1
+
+def CheckTclVersion(context):
+	keep = KeepContext(context,'TCL')
+	context.Message("Checking Tcl version... ")
+	(is_ok,output) = context.TryRun(tcl_check_text,'.c')
+	keep.restore(context)
+	if not is_ok:
+		context.Result("failed to run check")
+		return 0
+	context.Result(output)
+
+	major,minor,patch = tuple(int(i) for i in output.split("."))
+	if major != 8 or minor > 3:
+		# bad version
+		return 0
 		
+	# good version
+	return 1
+	
 #------------------------------------------------------
 # CONFIGURATION
 
@@ -248,6 +315,8 @@ conf = Configure(env
 	, custom_tests = { 
 		'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckCUnit' : CheckCUnit
+		, 'CheckTcl' : CheckTcl
+		, 'CheckTclVersion' : CheckTclVersion
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -270,16 +339,18 @@ if not conf.CheckFunc('isnan'):
 	Exit(1)
 
 # Tcl/Tk
-if not conf.CheckHeader('tcl.h'):
+
+if conf.CheckTcl():
+	if with_tcltk_gui and not conf.CheckTclVersion():
+		print "Wrong Tcl version used. Please specify you 8.3 Tcl installation"\
+			+" via the TCL_CPPPATH and TCL_LIBPATH options, or use"\
+			+" WITHOUT_TCLTK_GUI=1 to prevent build of Tcl/Tk components.\n"
+		with_tcltk_gui = False
+
+if with_tcltk_gui and not conf.CheckHeader('tk.h'):
 	with_tcltk_gui = False
 
-if not conf.CheckHeader('tk.h'):
-	with_tcltk_gui = False
-
-if not conf.CheckLib('tcl'):
-	with_tcltk_gui = False
-
-if not conf.CheckLib('tk'):
+if with_tcltk_gui and not conf.CheckLib('tk'):
 	with_tcktk_gui = False
 
 # Python... obviously we're already running python, so we just need to
@@ -317,7 +388,9 @@ else:
 # CUnit
 
 if with_cunit_tests:
-	conf.CheckCUnit()
+	if not conf.CheckCUnit():
+		print "CUnit not found. Use 'scons WITH_CUNIT_TESTS=0'"
+		Exit(1)
 
 # TODO: -D_HPUX_SOURCE is needed
 

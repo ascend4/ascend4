@@ -76,7 +76,7 @@ swiglib = env.SharedLibrary("ascend",['ascend_wrap.cc']
 
 env.Depends(swiglib,'ascend.py')
 
-print env['SUBST_DICT']
+#print env['SUBST_DICT']
 
 env.SubstInFile(source='config.py.in')
 
