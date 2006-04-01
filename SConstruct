@@ -152,17 +152,15 @@ import os,re
 
 def CheckSwigVersion(context):
 	context.Message("Checking version of SWIG")
-	(cin,cout,cerr) = os.popen3(env['SWIG']+' -version');
-	output = cout.read()
-	err = cerr.read()
-	if err:
-		context.Result("Error running -version cmd:\n-----\n"+err+"\n----\n")
-		return 0
+	cmd = env['SWIG']+' -version'
+	(cin,coutcerr) = os.popen4(cmd);
+	output = coutcerr.read()
 	
-	expr = re.compile("^SWIG\\s+Version\\s+(?P<maj>[0-9]+)\\.(?P<min>[0-9]+)\\.(?P<pat>[0-9]+)\\s*$",re.M);
+	restr = "SWIG\\s+Version\\s+(?P<maj>[0-9]+)\\.(?P<min>[0-9]+)\\.(?P<pat>[0-9]+)\\s*$"
+	expr = re.compile(restr,re.M);
 	m = expr.search(output);
 	if not m:
-		context.Result("Couldn't detect version")
+		context.Result("error running SWIG or detecting SWIG version")
 		return 0
 	maj = int(m.group('maj'))
 	min = int(m.group('min'))
