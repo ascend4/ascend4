@@ -75,7 +75,7 @@ double zbrent(ExtEvalFunc *func,	/* the evaluation function */
   double x1, x2;
   double a, b, c;
   double fa, fb;
-  double d, e, min1, min2;
+  double d=0.0, e=0.0, min1, min2;
   double fc, p, q, r, s, tol1, xm;
 
   x1 = *lowbound;		/* initialization */

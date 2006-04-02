@@ -55,6 +55,7 @@
 #include <compiler/prototype.h>
 #include <compiler/proc.h>
 #include <compiler/nameio.h>
+#include <compiler/parser.h>
 #include <solver/slv_types.h>
 #include "HelpProc.h"
 #include "LibraryProc.h"
@@ -157,7 +158,6 @@ int Asc_LibrReadCmd(ClientData cdata, Tcl_Interp *interp,
   struct module_t *mod;
   int relns_flag = 1;
   int result;
-  extern int yyparse();
 
   ASCUSE; /* see if first arg is -help */
 
@@ -183,7 +183,7 @@ int Asc_LibrReadCmd(ClientData cdata, Tcl_Interp *interp,
      * the open was successful.  parse the file.
      */
     Tcl_SetResult(interp, (char*)SCP(Asc_ModuleName(mod)), TCL_VOLATILE);
-    yyparse();
+    zz_parse(); /*FIXME*/
     result = TCL_OK;
   }
   SetParseRelnsFlag(1);	  /* always reset */
@@ -197,7 +197,6 @@ int Asc_LibrParseCmd(ClientData cdata, Tcl_Interp *interp,
   struct module_t *mod;
   int osmerr;
   int result;
-  int yyparse();
 
   ASCUSE; /* see if first arg is -help */
 
@@ -219,7 +218,7 @@ int Asc_LibrParseCmd(ClientData cdata, Tcl_Interp *interp,
      * the open was successful.  parse the string.
      */
     Tcl_SetResult(interp, (char*)SCP(Asc_ModuleName(mod)), TCL_VOLATILE);
-    yyparse();
+    zz_parse(); /*FIXME*/
     Asc_CloseCurrentModule();
     result = TCL_OK;
   }

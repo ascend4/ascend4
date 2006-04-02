@@ -95,8 +95,10 @@ fi
 
 cmd="./configure  \
 --prefix=$ascroot \
---with-fortran=g77 \
+--with-fortran=g77,-lg2c \
 --enable-gcc \
+--enable-optimization \
+--enable-dynamic-packages \
 --without-tcl \
 $blasopt"
 

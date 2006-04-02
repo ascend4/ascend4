@@ -21,6 +21,11 @@
 #  this file and then type 'make'.
 #
 
+# tcl/tk basis
+LIB_RUNTIME_DIR=@TCLCONFIG@
+@NOTCLCONFIG@include $(LIB_RUNTIME_DIR)/tclConfig.sh
+@NOTCLCONFIG@include $(LIB_RUNTIME_DIR)/tkConfig.sh
+
 ####>>>  C  <<<###############################################################
 
 #  CC
@@ -171,11 +176,11 @@ X11_LIBS = @X11_LIBRARIES@ -lX11 @X11_EXTRA_LIBS@ @X11_RUN_PATH@
 #  The location of the libtk.a and libtcl.a libraries.
 #  The order should be -ltk -ltcl
 TCL_LIBRARY = @TCLLIB@
-TK_LIBRARY  = @TK_LIB@
-TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) $(DL_LIBS)
+TK_LIBRARY  = @TKLIB@
+TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) $(TK_LD_SEARCH_FLAGS) $(DL_LIBS)
 
 #  The location of the tcl.h and tk.h header files
-TK_INCS  = @TCLINCLUDE@ @TK_HDR@
+TK_INCS  = -I@TCLINCLUDE@ @TK_HDR@
 
 # If TK_LIBS and TK_INCS are not properly set, ASCEND cannot build.
 
@@ -261,7 +266,7 @@ SOLVER_DEFS = $(EXT_QRSLV) $(EXT_LSOD) $(EXT_CMSLV) $(EXT_LRSLV) $(EXT_NGSLV) $(
 #  Packages may be dynamically or statically linked/loaded. Add one or
 #  the other defines : -DSTATIC_PACKAGES or -DDYNAMIC_PACKAGES
 #
-HAVE_PACKAGES = -DSTATIC_PACKAGES
+#HAVE_PACKAGES = -DSTATIC_PACKAGES
 #HAVE_PACKAGES = -DDYNAMIC_PACKAGES
 
 #  If statically linked, i.e. -DSTATIC_PACKAGES, then set PACK_LIBS

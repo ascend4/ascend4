@@ -111,7 +111,7 @@ DriverNoTickle.o: Driver.date
 
 typelex.o: $(srcdir)/typelex.l $(srcdir)/typelex.c.no.flex
 	$(MAKE) @typer_src@
-	$(CC) $(CC_SWITCHES) -DYY_USE_CONST -c typelex.c
+	$(CC) $(CC_SWITCHES) -I$(srcdir) -DYY_USE_CONST -c typelex.c
 
 typelex.c.from.flex: $(srcdir)/typelex.l
 	$(LEX) -Ptyp_ -t $(srcdir)/typelex.l > typelex.c

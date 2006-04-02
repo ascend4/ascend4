@@ -509,7 +509,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
     return;
   }
 
-  CONSOLE_DEBUG("%s: in:%d, out:%d", efunc->name, efunc->n_inputs, efunc->n_outputs);
+  CONSOLE_DEBUG("%s: in:%ld, out:%ld", efunc->name, efunc->n_inputs, efunc->n_outputs);
 
   eval_func = GetValueFunc(efunc);
   if (eval_func == NULL) {

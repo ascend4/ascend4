@@ -100,14 +100,14 @@
  *  @return A new copy of str as a char *, or NULL if an error occurs.
  */
 
-extern char *ascstrdupf(char *str);
+extern char *ascstrdupf(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
  *  is not defined.  Do not call this function directly - use 
  *  ascstrdup() instead.
  */
 
-extern char *ascstrdupf_dbg(char *str);
+extern char *ascstrdupf_dbg(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define

@@ -74,8 +74,8 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
  *  source_file may be an interactive string module when in ASCEND.\n\
 "
 
-extern void Asc_PutCode(char *s, FILE *fp);
 /**<
+extern void Asc_PutCode(char *s, FILE *fp);
  * Intended for internal use only. Puts the echoed code out to
  * file or string as determined by -s instead of output file.
  *

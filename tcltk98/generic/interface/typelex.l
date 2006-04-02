@@ -113,7 +113,7 @@ static int ShowComments = 0;
 
 static unsigned long StartId = 0;
 /*
- *  The location in the `zztext' array where the MODEL, ATOM, or CONSTANT
+ *  The location in the `typ_text' array where the MODEL, ATOM, or CONSTANT
  *  identifierbegins.  We save this value and call MY_YYMORE() when we find
  *  a MODEL, ATOM, or CONSTANT keyword; StartId tells us where the
  *  Identifier will go.
@@ -125,7 +125,9 @@ static char *reqType = "";
  *  to Asc_ExtractType() in the argv vector.
  */
 
-static Tcl_Interp *g_zz_interp;
+static void Asc_PutCode(char *s,FILE *fp);
+
+static Tcl_Interp *g_typ__interp;
 /* during parse, set to caller's interp if string result is wanted
  * instead of file.
  */
@@ -159,6 +161,7 @@ constant	CONSTANT{ws}+
 %x Constant
 %x CheckID
 
+%option yymore
 %%
 
 	/*
@@ -184,7 +187,7 @@ constant	CONSTANT{ws}+
 				  BEGIN(Comment);
 				  CommentNestLevel = 1;
 				  if( ShowComments && MatchedToken!=NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -198,7 +201,7 @@ constant	CONSTANT{ws}+
 				   */
 				  CommentNestLevel++;
 				  if( ShowComments && MatchedToken!=NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -221,7 +224,7 @@ constant	CONSTANT{ws}+
                                     break;
                                   }
                                   if( ShowComments ) {
-                                    Asc_PutCode( zztext, zzout );
+                                    Asc_PutCode( typ_text, typ_out );
                                   }
                                   switch( MatchedToken ) {
                                   case MODEL:
@@ -249,7 +252,7 @@ constant	CONSTANT{ws}+
                                    *  MatchedToken is not NONE
 				   */
 				  if( ShowComments && MatchedToken!=NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -274,7 +277,7 @@ constant	CONSTANT{ws}+
 				  BEGIN(BracedText);
 				  BracesNestLevel = 1;
 				  if( MatchedToken != NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -286,7 +289,7 @@ constant	CONSTANT{ws}+
 				   *  Print if MatchedToken is not NONE.
 				   */
 				  if( MatchedToken != NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -298,7 +301,7 @@ constant	CONSTANT{ws}+
 				   *  Print if MatchedToken is not NONE.
 				   */
 				  if( MatchedToken != NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -311,7 +314,7 @@ constant	CONSTANT{ws}+
 				   */
 				  BracesNestLevel++;
 				  if( MatchedToken != NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -332,7 +335,7 @@ constant	CONSTANT{ws}+
                                     BEGIN(INITIAL);
                                     break;
                                   }
-                                  Asc_PutCode( zztext, zzout );
+                                  Asc_PutCode( typ_text, typ_out );
                                   switch( MatchedToken ) {
 				  case MODEL:
                                     BEGIN(Model);
@@ -353,7 +356,7 @@ constant	CONSTANT{ws}+
 				   *  Print if MatchedToken is not NONE.
 				   */
 				  if( MatchedToken != NONE ) {
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
 				  }
 				  break;
 				}
@@ -388,12 +391,12 @@ constant	CONSTANT{ws}+
 				     *  text and see if matches reqType, if
 				     *  so, we're at the end of the MODEL
 				     *  (or ATOM or DEFINITION)
-				     *  and should exit zzlex()---return to
+				     *  and should exit typ_lex()---return to
 				     *  our caller, else stay in the Model
 				     *  state.
 				     */
-				    Asc_PutCode( zztext, zzout );
-				    if(strcmp((zztext+StartId),reqType) == 0) {
+				    Asc_PutCode( typ_text, typ_out );
+				    if(strcmp((typ_text+StartId),reqType) == 0) {
 				      return 0;
 				    } else {
                                       MatchedToken = MODEL;
@@ -401,7 +404,7 @@ constant	CONSTANT{ws}+
 				    }
                                     break;
 				  }
-                                  if(strcmp((zztext+StartId),reqType)==0){
+                                  if(strcmp((typ_text+StartId),reqType)==0){
 				    /*
 				     *  We're in the INITIAL state, and we
 				     *  found the beginning of the
@@ -412,7 +415,7 @@ constant	CONSTANT{ws}+
 				     *  appropriate State by checking
 				     *  MatchedToken.
 				     */
-				    Asc_PutCode( zztext, zzout );
+				    Asc_PutCode( typ_text, typ_out );
                                     switch( MatchedToken ) {
 				    case MODEL:
 				      BEGIN(Model);
@@ -448,7 +451,7 @@ constant	CONSTANT{ws}+
                                     BEGIN(INITIAL);
                                     break;
                                   }
-                                  Asc_PutCode( zztext, zzout );
+                                  Asc_PutCode( typ_text, typ_out );
                                   switch( MatchedToken ) {
                                   case MODEL:
 				    BEGIN(Model);
@@ -471,7 +474,7 @@ constant	CONSTANT{ws}+
 	 *
 	 *  Once we've found the start of the matching MODEL, ATOM, or
          *  DEFINITION, print the text until we find the END token.
-         *  When we find END, save the current length of zztext and use
+         *  When we find END, save the current length of typ_text and use
          *  MY_YYMORE() to append the identifier, then check the identifier
          *  (in the CheckID state) to see if it is what we want.  If so,
 	 *  this is the end of this MODEL, ATOM, or DEFINITION.
@@ -480,11 +483,11 @@ constant	CONSTANT{ws}+
 <Model>{end}			{
 				  /*
 				   *  Found the END keyword.  Save the
-				   *  current location in the zztext array,
+				   *  current location in the typ_text array,
 				   *  then enter the CheckID state to see if
 				   *  the identifier matches what we want.
 				   */
-				  StartId = zzleng;
+				  StartId = typ_leng;
                                   MatchedToken = MODEL_END;
 				  BEGIN(CheckID);
 				  MY_YYMORE();
@@ -502,7 +505,7 @@ constant	CONSTANT{ws}+
 				   *       semicolon or whitespace.
 				   *  Print the text.
 				   */
-				  Asc_PutCode( zztext, zzout );
+				  Asc_PutCode( typ_text, typ_out );
 				  break;
 				}
 
@@ -532,7 +535,7 @@ constant	CONSTANT{ws}+
 				   *    -- "("s not followed by "*"s
 				   *  Print the text.
 				   */
-				  Asc_PutCode( zztext, zzout );
+				  Asc_PutCode( typ_text, typ_out );
 				  break;
 				}
 
@@ -565,11 +568,11 @@ constant	CONSTANT{ws}+
 				   *  Found an MODEL, ATOM, or DEFINITION
 				   *  keyword--perhaps with a UNIVERSAL
 				   *  modifier.  Save the current location
-				   *  in the zztext array, then enter the
+				   *  in the typ_text array, then enter the
 				   *  CheckID state to see if the identifier
                                    *  matches what we want.
 				   */
-				  StartId = zzleng;
+				  StartId = typ_leng;
 				  MatchedToken = MODEL;
 				  BEGIN(CheckID);
 				  MY_YYMORE();
@@ -579,11 +582,11 @@ constant	CONSTANT{ws}+
 				  /*
 				   *  Found a CONSTANT keyword--perhaps
 				   *  with a UNIVERSAL modifier.  Save the
-				   *  current location in the zztext array,
+				   *  current location in the typ_text array,
 				   *  then enter the CheckID state to see if
 				   *  the identifier matches what we want.
 				   */
-				  StartId = zzleng;
+				  StartId = typ_leng;
 				  MatchedToken = CONSTANT;
 				  BEGIN(CheckID);
 				  MY_YYMORE();
@@ -621,7 +624,7 @@ constant	CONSTANT{ws}+
 
 %%
 /*
- *  int zzwrap(void);
+ *  int typ_wrap(void);
  *
  *  This returns 1 if the scanner should stop parsing, or 0 if
  *  the scanner should continue.  Flex requires this function
@@ -629,7 +632,7 @@ constant	CONSTANT{ws}+
  *  `%option' directives are a recent addition to flex and for
  *  maximum portability should not be used.
  */
-int zzwrap(void)
+int typ_wrap(void)
 {
   return 1;
 }
@@ -659,7 +662,7 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char **argv)
 {
   int ndx = 1;   /* index into the argv array */
-  int result;    /* result from zzlex and value to return to caller */
+  int result;    /* result from typ_lex and value to return to caller */
 #ifndef TYPER_TEST
   struct TypeDescription *desc=NULL;
   struct module_t *mod=NULL;
@@ -754,7 +757,7 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
       }
     }
 #endif /*!typertest*/
-    if(scanstring == NULL && (zzin = fopen(argv[ndx],"r")) == NULL) {
+    if(scanstring == NULL && (typ_in = fopen(argv[ndx],"r")) == NULL) {
 #ifdef TYPER_TEST
       FPRINTF(ASCERR, "Error opening source file \'%s\'\n", argv[ndx]);
       return 2;
@@ -766,19 +769,19 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
     }
     ndx++;
   } else {
-    zzin = stdin;
+    typ_in = stdin;
   }
 
   if( argc > ndx ) {
 #ifndef TYPER_TEST
     if (argv[ndx][0] == '-' && argv[ndx][1] == 's') {
-      g_zz_interp = interp;
-      zzout = NULL;
+      g_typ__interp = interp;
+      typ_out = NULL;
     } else {
 #endif /* !typertest*/
-      g_zz_interp = NULL;
+      g_typ__interp = NULL;
       /*  The destination file; stdout if not specified  */
-      if((zzout = fopen(argv[ndx],"a+")) == NULL) {
+      if((typ_out = fopen(argv[ndx],"a+")) == NULL) {
 #ifdef TYPER_TEST
         FPRINTF(ASCERR, "Error opening destination file \'%s\'\n", argv[ndx]);
         return 2;
@@ -793,29 +796,29 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
 #endif /* !typertest*/
     ndx++;
   } else {
-    zzout = stdout;
+    typ_out = stdout;
   }
 
 
   /*
-   *  Call zzlex() to process the input
+   *  Call typ_lex() to process the input
    */
 #ifndef TYPER_TEST
   if (scanstring != NULL) {
     oldbuf = YY_CURRENT_BUFFER;
-    scanbuf = zz_scan_string(scanstring);
-    zz_switch_to_buffer(scanbuf);
+    scanbuf = typ__scan_string(scanstring);
+    typ__switch_to_buffer(scanbuf);
     BEGIN(INITIAL);
-    /* zzrestart((FILE *)NULL); */
+    /* typ_restart((FILE *)NULL); */
   }
 #else
-  zzrestart(zzin);
+  typ_restart(typ_in);
 #endif /* !typertest */
-  if( (result = zzlex()) != 0 ) {
+  if( (result = typ_lex()) != 0 ) {
 #ifdef TYPER_TEST
     FPRINTF(ASCERR, "Could not find type \'%s\'\n", reqType);
 #else /* ! TYPER_TEST */
-    if (g_zz_interp!=NULL) {
+    if (g_typ__interp!=NULL) {
       Tcl_ResetResult(interp);
     }
     Tcl_AppendResult(interp, "Could not find type \'", reqType, "\'",
@@ -824,7 +827,7 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
 #endif /* TYPER_TEST */
   } else {
     /* add a closing semicolon and newline */
-    Asc_PutCode( ";\n", zzout );
+    Asc_PutCode( ";\n", typ_out );
 #ifndef TYPER_TEST
     result = TCL_OK;
 #endif /* ! TYPER_TEST */
@@ -835,26 +838,27 @@ extern int Asc_ExtractType(ClientData cdata, Tcl_Interp *interp,
    */
 #ifndef TYPER_TEST
   if (scanstring != NULL) {
-    zz_delete_buffer(YY_CURRENT_BUFFER);
-    zz_switch_to_buffer(oldbuf);
+    typ__delete_buffer(YY_CURRENT_BUFFER);
+    typ__switch_to_buffer(oldbuf);
     BEGIN(INITIAL);
   }
 #endif
-  if ( zzin != stdin && zzin != NULL) {
-    fclose(zzin);
+  if ( typ_in != stdin && typ_in != NULL) {
+    fclose(typ_in);
   }
-  if ( zzout != stdout && zzout != NULL) {
-    fclose(zzout);
+  if ( typ_out != stdout && typ_out != NULL) {
+    fclose(typ_out);
   }
 
   return result;
 }
 
-void Asc_PutCode(char *s,FILE *fp)
+static void Asc_PutCode(char *s,FILE *fp)
+/** into string or screen */
 {
 #ifndef TYPER_TEST
-  if (g_zz_interp != NULL) {
-    Tcl_AppendResult(g_zz_interp,s,(char *)NULL);
+  if (g_typ__interp != NULL) {
+    Tcl_AppendResult(g_typ__interp,s,(char *)NULL);
   } else {
 #endif /* typertest */
     fputs(s,fp);

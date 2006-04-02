@@ -516,7 +516,7 @@ int Asc_DebuListVars(ClientData cdata, Tcl_Interp *interp,
   int32 maxvar,c;
   mtx_matrix_t mtx;
   dof_t *d;
-  boolean vbool;
+  boolean vbool = FALSE;
   char tmps[MAXIMUM_NUMERIC_LENGTH+1];
 
   (void)cdata;    /* stop gcc whine about unused parameter */
@@ -620,7 +620,7 @@ int Asc_DebuListRels(ClientData cdata, Tcl_Interp *interp,
   int32 maxrel,c;
   mtx_matrix_t mtx;
   dof_t *d;
-  boolean rbool;
+  boolean rbool = FALSE;
   char tmps[MAXIMUM_NUMERIC_LENGTH+1];
 
   (void)cdata;    /* stop gcc whine about unused parameter */
@@ -3912,7 +3912,7 @@ int Asc_DebuMtxWritePlotCmd(ClientData cdata, Tcl_Interp *interp,
   linsolqr_system_t linsysqr;
   mtx_matrix_t mtx = NULL;
   mtx_region_t reg;
-  real64 *rhs;
+  real64 *rhs = NULL;
 
   (void)cdata;    /* stop gcc whine about unused parameter */
 

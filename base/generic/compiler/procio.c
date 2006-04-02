@@ -383,7 +383,7 @@ void ProcWriteRunError(struct procFrame *fm)
   WriteInitErr(fm,errmsg);
 }
 
-void ProcWriteFixError(struct procFrame *fm, struct Name *var){
+void ProcWriteFixError(struct procFrame *fm, CONST struct Name *var){
 	char errmsg[255];
 	char *name;
 	name = WriteNameString(var);
@@ -397,6 +397,9 @@ void ProcWriteFixError(struct procFrame *fm, struct Name *var){
 		break;
 	case Proc_bad_name:
 		strcpy(errmsg, "Unknown variable in FIX statement");
+		break;
+	default:
+		strcpy(errmsg, "Unexpected error in FIX statement");
 		break;
 	}
 	strcat(errmsg,", for variable '");

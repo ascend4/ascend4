@@ -257,7 +257,7 @@ STDHLF(Asc_TimeCmd,(Asc_TimeCmdHL1,Asc_TimeCmdHL2,HLFSTOP));
 int Asc_TimeCmd(ClientData cdata, Tcl_Interp *interp,
                   int argc, CONST84 char *argv[])
 {
-  clock_t max_clocks,min_clocks,avg_clocks,start,stop,dc,all_start,all_stop;
+  clock_t max_clocks=0,min_clocks=0,avg_clocks=0,start=0,stop=0,dc=0,all_start=0,all_stop=0;
   double time_avg, real_time_avg;
   time_t time0, time1;
   int i,n=1, status=TCL_OK;

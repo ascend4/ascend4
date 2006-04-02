@@ -77,6 +77,13 @@ extern void ProcWriteForError(struct procFrame *fm);
 extern void ProcWriteAssignmentError(struct procFrame *fm);
 
 /**
+ * <!--  ProcWriteFixError(fm,var);                                 -->
+ * Write error encountered while evaluating var.fixed assignment.
+ */
+extern void ProcWriteFixError(struct procFrame *fm, CONST struct Name *var);
+
+
+/**
  * <!--  ProcWriteIfError(fm,cname);                                   -->
  * Write error encountered while evaluating boolean flow control.
  * cname is normally "IF" or "WHILE".
