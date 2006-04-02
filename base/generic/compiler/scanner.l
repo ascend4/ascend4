@@ -48,6 +48,7 @@
 #include "compiler/module.h"
 #include "compiler/scanner.h"
 #include "compiler/symtab.h"
+#include "compiler/parser.h"
 
 #define YY_BREAK
 /*  Defining yybreak as above means that all of our matches must end

@@ -647,7 +647,7 @@ int Asc_IntegGetXSamplesCmd(ClientData cdata, Tcl_Interp *interp,
   double *uvalues = NULL;
   char *ustring;
   double *uv;
-  int trydu=0, prec,stat;
+  int trydu=0, prec, stat=0;
 
   (void)cdata;    /* stop gcc whine about unused parameter */
 
@@ -1699,7 +1699,7 @@ static int Integ_setup(enum Integrator_type integrator,
 int Asc_IntegSetupCmd(ClientData cdata,Tcl_Interp *interp,
                    int argc, CONST84 char *argv[])
 {
-  enum Integrator_type integrator;
+  enum Integrator_type integrator = UNKNOWN;
   char buf[MAXIMUM_NUMERIC_LENGTH];         /* string to hold integer */
   CONST84 char *engine = NULL;
   int result = 0;         /* 0 = FALSE; 1 = TRUE */

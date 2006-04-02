@@ -382,6 +382,7 @@ static int check_system(slv9_system_t sys)
 #define copy_subregions(from,too,nsubs)  \
    asc_memcpy((from),(too),(nsubs)*sizeof(struct subregionID))
 
+#if TEST_CONSISTENCY
 /*
  *  Appends the subregion_visited into the list
  */
@@ -532,6 +533,7 @@ static void ID_and_storage_subregion_information(slv_system_t server,
 
   return;
 }
+#endif
 
 /*
  * Destroys subregion information
@@ -568,6 +570,9 @@ static void destroy_subregion_information(SlvClientToken asys)
   }
 }
 
+
+#if 0 /** unused function eligible_set_for_neighboring_subregions */
+/* might be used if DEBUG_CONSISTENCY on */
 
 /*
  * Storing original values of boolean variables
@@ -608,6 +613,7 @@ static void restore_original_bool_values(struct gl_list_t *bollist,
   destroy_array(bval->pre_val);
 }
 
+#endif /* if 0 */
 
 /*
  * the first element of cur_cases is in position one. The result is
@@ -615,7 +621,7 @@ static void restore_original_bool_values(struct gl_list_t *bollist,
  */
 static void cases_reorder(int32 *cur_cases, int32 *correct_cases, int32 ncases)
 {
-  int32 cur_case,pos,tmp_num,c,ind;
+  int32 cur_case,pos=0,tmp_num,c,ind;
 
   for (c=1; c<=ncases; c++) {
     tmp_num = 0;
@@ -633,6 +639,8 @@ static void cases_reorder(int32 *cur_cases, int32 *correct_cases, int32 ncases)
   return;
 }
 
+#if 0 /** unused function eligible_set_for_neighboring_subregions */
+/* might appear if debug_consistency is true. */
 /*
  * Restoring orignal configuration of the system
  */
@@ -704,6 +712,7 @@ static struct gl_list_t *get_list_of_booleans(slv_system_t server,
   return boolvars;
 }
 
+#endif /* 0*/
 
 /*
  * Get the eligible var list for each alternative
@@ -722,7 +731,7 @@ static int32 get_eligible_set(slv_system_t server,struct gl_list_t *disvars,
   int32 *cur_cases;
   int32 *correct_cases;
   int32 *vars;
-  int32 v, count, ind;
+  int32 v, count=0, ind;
   int32 ncases;
   int32 mnum;
   int32 status,dof;
@@ -833,7 +842,7 @@ static int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
   slv9_system_t sys;
   struct dis_discrete *cur_dis;
   struct subregionID *sub;
-  int32 *values;
+  int32 *values = NULL;
   int32 dlen, test;
   int32 lens, lenv, v, s, d;
   int32 result;
@@ -870,6 +879,7 @@ static int32 do_search_alternatives(slv_system_t server, SlvClientToken asys,
       FPRINTF(ASCERR,"Alternative = %ul \n", vID);
 #endif /* DEBUG_CONSISTENCY */
       for (d=0; d<dlen; d++) {
+	assert(values != NULL); /* if null, test was 0 above and we returned, in theory */
         cur_dis = (struct dis_discrete *)(gl_fetch(disvars,d+1));
 	 if (values[d] == 1) {
            dis_set_boolean_value(cur_dis,TRUE);
@@ -926,7 +936,7 @@ static int32 consistency(slv_system_t server, SlvClientToken asys,
   struct var_variable **vmlist;
   struct var_variable *mvar;
   var_filter_t vfilter;
-  int32 *globeli;
+  int32 *globeli = NULL;
   int32 dlen;
   int32 mnum, v, elnum;
   int32 result;
@@ -1043,6 +1053,8 @@ static int32 consistency(slv_system_t server, SlvClientToken asys,
   }
 }
 
+#if 0 /** unused function eligible_set_for_neighboring_subregions */
+/* might appear if debug_consistency is true. */
 
 /*
  * Get a set of globally eligible variables. Eligible for all the subregions
@@ -1145,6 +1157,7 @@ static int32 get_globally_eligible(slv_system_t server, SlvClientToken asys,
   }
   return 1;
 }
+
 
 
 /*
@@ -1420,6 +1433,7 @@ static int32 consistency_analysis_for_subregions(slv_system_t server,
   return 0;
 }
 
+#endif /*#if 0 unused functions */
 
 
 /*
@@ -1798,7 +1812,7 @@ static void do_dvar_values_combinations(struct gl_list_t *disvars,
  */
 static void order_case(int32 *case_list, int32 *newcaselist, int ncases)
 {
-  int32 cur_case,pos,tmp_num,c,ind;
+  int32 cur_case,pos=0,tmp_num,c,ind;
 
   for (c=1; c<=ncases; c++) {
     tmp_num = 0;
@@ -2197,7 +2211,7 @@ static real64 return_to_first_boundary(slv_system_t server,
   struct var_variable *cur_var;
   bnd_filter_t bfilter;
   struct boolean_values bval;
-  real64 factor,fup,flo,newvalue;
+  real64 factor=0.0,fup,flo,newvalue;
   int32 *bndcrossed;
   int32 *inc_vars;
   int32 count,n_incidences,inc,conv_flag,still_crossed;
@@ -2501,6 +2515,7 @@ static void update_relations_residuals(slv_system_t server)
 }
 
 
+#if CONOPT_ACTIVE
 /*
  *  Optimization subroutines for CONOPT
  *  ---------------------------------
@@ -3028,6 +3043,7 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 }
 
 
+
 /*
  * slv_conopt iterate calls conopt start, which calls coicsm
  * to starts CONOPT. The use of conopt_start is a hack to avoid
@@ -3093,6 +3109,7 @@ static void slv_conopt_iterate(slv9_system_t sys)
   ascfree(usrmem);
 }
 
+#endif /* #if CONOPT_ACTIVE  */
 
 /*
  * Creates an array of columns (containing an array of real elements
@@ -4077,8 +4094,8 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   int32 num_vars,num_opt_eqns, num_opt_vars;
   int32 n, return_value, niter;
   int32 global_decrease, red_step;
-  real64 obj_val, factor;
-  real64 invnorm, *varnorm, *testnorm;
+  real64 obj_val=0.0, factor;
+  real64 invnorm=0.0, *varnorm, *testnorm;
   int32 ntotvar, ntotrel, cr, cv;
   int32 *var_ind, *rel_ind;
 
@@ -4481,7 +4498,7 @@ static int32 slv9_get_default_parameters(slv_system_t server,
 					 SlvClientToken asys,
 					 slv_parameters_t *parameters)
 {
-  slv9_system_t sys;
+  slv9_system_t sys = NULL;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
   int32 make_macros = 0;

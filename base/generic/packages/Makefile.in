@@ -58,6 +58,7 @@ EXEC_LIBS =
 
 LIB_OBJS = \
 	sensitivity.o ascFreeAllVars.o
+# kvalues.o
 
 LIB_SRCS = $(LIB_OBJS:%.o=%.c)
 

@@ -239,7 +239,7 @@ int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
 int Asc_SimsResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
                              int argc, CONST84 char *argv[])
 {
-  double start_time;
+  double start_time =0;
   struct Instance *xisting;
 
   (void)cdata;    /* stop gcc whine about unused parameter */
@@ -494,7 +494,7 @@ int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
 int Asc_BrowShowPendings(ClientData cdata, Tcl_Interp *interp,
                     int argc, CONST84 char *argv[])
 {
-  struct Instance *i;
+  struct Instance *i = NULL;
   char buf[MAXIMUM_NUMERIC_LENGTH];       /* string to hold long */
   unsigned long p=0L;
 

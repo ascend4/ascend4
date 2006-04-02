@@ -1,19 +1,288 @@
+/* A Bison parser, made by GNU Bison 2.0.  */
 
-/* # line 2 "ascParse.y" */
+/* Skeleton parser for Yacc-like parsing with Bison,
+   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
+
+/* As a special exception, when this file is copied by Bison into a
+   Bison output file, you may use that output file without restriction.
+   This special exception was added by the Free Software Foundation
+   in version 1.24 of Bison.  */
+
+/* Written by Richard Stallman by simplifying the original so called
+   ``semantic'' parser.  */
+
+/* All symbols defined below should begin with zz_ or ZZ_, to avoid
+   infringing on user name space.  This should be done even for local
+   variables, as they might otherwise be expanded by user macros.
+   There are some unavoidable exceptions within include files to
+   define necessary library symbols; they are noted "INFRINGES ON
+   USER NAME SPACE" below.  */
+
+/* Identify Bison output.  */
+#define ZZ_BISON 1
+
+/* Skeleton name.  */
+#define ZZ_SKELETON_NAME "yacc.c"
+
+/* Pure parsers.  */
+#define ZZ_PURE 0
+
+/* Using locations.  */
+#define ZZ_LSP_NEEDED 0
+
+
+
+/* Tokens.  */
+#ifndef ZZ_TOKENTYPE
+# define ZZ_TOKENTYPE
+   /* Put the tokens into the symbol table, so that GDB and other debuggers
+      know about them.  */
+   enum zz_tokentype {
+     ADD_T = 258,
+     ALIASES_T = 259,
+     AND_T = 260,
+     ANY_T = 261,
+     AREALIKE_T = 262,
+     ARETHESAME_T = 263,
+     ARRAY_T = 264,
+     ASSERT_T = 265,
+     ATOM_T = 266,
+     BEQ_T = 267,
+     BNE_T = 268,
+     BREAK_T = 269,
+     CALL_T = 270,
+     CARD_T = 271,
+     CASE_T = 272,
+     CHOICE_T = 273,
+     CHECK_T = 274,
+     CONDITIONAL_T = 275,
+     CONSTANT_T = 276,
+     CONTINUE_T = 277,
+     CREATE_T = 278,
+     DATA_T = 279,
+     DECREASING_T = 280,
+     DEFAULT_T = 281,
+     DEFINITION_T = 282,
+     DIMENSION_T = 283,
+     DIMENSIONLESS_T = 284,
+     DO_T = 285,
+     ELSE_T = 286,
+     END_T = 287,
+     EXPECT_T = 288,
+     EXTERNAL_T = 289,
+     FALSE_T = 290,
+     FALLTHRU_T = 291,
+     FIX_T = 292,
+     FOR_T = 293,
+     FREE_T = 294,
+     FROM_T = 295,
+     GLOBAL_T = 296,
+     IF_T = 297,
+     IMPORT_T = 298,
+     IN_T = 299,
+     INPUT_T = 300,
+     INCREASING_T = 301,
+     INTERACTIVE_T = 302,
+     INTERSECTION_T = 303,
+     ISA_T = 304,
+     _IS_T = 305,
+     ISREFINEDTO_T = 306,
+     MAXIMIZE_T = 307,
+     MAXINTEGER_T = 308,
+     MAXREAL_T = 309,
+     METHODS_T = 310,
+     METHOD_T = 311,
+     MINIMIZE_T = 312,
+     MODEL_T = 313,
+     NOT_T = 314,
+     NOTES_T = 315,
+     OF_T = 316,
+     OR_T = 317,
+     OTHERWISE_T = 318,
+     OUTPUT_T = 319,
+     PATCH_T = 320,
+     PROD_T = 321,
+     PROVIDE_T = 322,
+     REFINES_T = 323,
+     REPLACE_T = 324,
+     REQUIRE_T = 325,
+     RETURN_T = 326,
+     RUN_T = 327,
+     SATISFIED_T = 328,
+     SELECT_T = 329,
+     SIZE_T = 330,
+     STOP_T = 331,
+     SUCHTHAT_T = 332,
+     SUM_T = 333,
+     SWITCH_T = 334,
+     THEN_T = 335,
+     TRUE_T = 336,
+     UNION_T = 337,
+     UNITS_T = 338,
+     UNIVERSAL_T = 339,
+     WHEN_T = 340,
+     WHERE_T = 341,
+     WHILE_T = 342,
+     WILLBE_T = 343,
+     WILLBETHESAME_T = 344,
+     WILLNOTBETHESAME_T = 345,
+     ASSIGN_T = 346,
+     CASSIGN_T = 347,
+     DBLCOLON_T = 348,
+     USE_T = 349,
+     LEQ_T = 350,
+     GEQ_T = 351,
+     NEQ_T = 352,
+     DOTDOT_T = 353,
+     WITH_T = 354,
+     VALUE_T = 355,
+     WITH_VALUE_T = 356,
+     REAL_T = 357,
+     INTEGER_T = 358,
+     IDENTIFIER_T = 359,
+     BRACEDTEXT_T = 360,
+     SYMBOL_T = 361,
+     DQUOTE_T = 362,
+     UPLUS_T = 363,
+     UMINUS_T = 364
+   };
+#endif
+#define ADD_T 258
+#define ALIASES_T 259
+#define AND_T 260
+#define ANY_T 261
+#define AREALIKE_T 262
+#define ARETHESAME_T 263
+#define ARRAY_T 264
+#define ASSERT_T 265
+#define ATOM_T 266
+#define BEQ_T 267
+#define BNE_T 268
+#define BREAK_T 269
+#define CALL_T 270
+#define CARD_T 271
+#define CASE_T 272
+#define CHOICE_T 273
+#define CHECK_T 274
+#define CONDITIONAL_T 275
+#define CONSTANT_T 276
+#define CONTINUE_T 277
+#define CREATE_T 278
+#define DATA_T 279
+#define DECREASING_T 280
+#define DEFAULT_T 281
+#define DEFINITION_T 282
+#define DIMENSION_T 283
+#define DIMENSIONLESS_T 284
+#define DO_T 285
+#define ELSE_T 286
+#define END_T 287
+#define EXPECT_T 288
+#define EXTERNAL_T 289
+#define FALSE_T 290
+#define FALLTHRU_T 291
+#define FIX_T 292
+#define FOR_T 293
+#define FREE_T 294
+#define FROM_T 295
+#define GLOBAL_T 296
+#define IF_T 297
+#define IMPORT_T 298
+#define IN_T 299
+#define INPUT_T 300
+#define INCREASING_T 301
+#define INTERACTIVE_T 302
+#define INTERSECTION_T 303
+#define ISA_T 304
+#define _IS_T 305
+#define ISREFINEDTO_T 306
+#define MAXIMIZE_T 307
+#define MAXINTEGER_T 308
+#define MAXREAL_T 309
+#define METHODS_T 310
+#define METHOD_T 311
+#define MINIMIZE_T 312
+#define MODEL_T 313
+#define NOT_T 314
+#define NOTES_T 315
+#define OF_T 316
+#define OR_T 317
+#define OTHERWISE_T 318
+#define OUTPUT_T 319
+#define PATCH_T 320
+#define PROD_T 321
+#define PROVIDE_T 322
+#define REFINES_T 323
+#define REPLACE_T 324
+#define REQUIRE_T 325
+#define RETURN_T 326
+#define RUN_T 327
+#define SATISFIED_T 328
+#define SELECT_T 329
+#define SIZE_T 330
+#define STOP_T 331
+#define SUCHTHAT_T 332
+#define SUM_T 333
+#define SWITCH_T 334
+#define THEN_T 335
+#define TRUE_T 336
+#define UNION_T 337
+#define UNITS_T 338
+#define UNIVERSAL_T 339
+#define WHEN_T 340
+#define WHERE_T 341
+#define WHILE_T 342
+#define WILLBE_T 343
+#define WILLBETHESAME_T 344
+#define WILLNOTBETHESAME_T 345
+#define ASSIGN_T 346
+#define CASSIGN_T 347
+#define DBLCOLON_T 348
+#define USE_T 349
+#define LEQ_T 350
+#define GEQ_T 351
+#define NEQ_T 352
+#define DOTDOT_T 353
+#define WITH_T 354
+#define VALUE_T 355
+#define WITH_VALUE_T 356
+#define REAL_T 357
+#define INTEGER_T 358
+#define IDENTIFIER_T 359
+#define BRACEDTEXT_T 360
+#define SYMBOL_T 361
+#define DQUOTE_T 362
+#define UPLUS_T 363
+#define UMINUS_T 364
+
+
+
+
+/* Copy the first part of user declarations.  */
+#line 1 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+
 /*
  *  Ascend Grammar file
  *  by Tom Epperly
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: ascParse.c.no.yacc,v $
- *  Date last modified: $Date: 1998/05/18 17:55:56 $
- *  Last modified by: $Author: mthomas $
- *
- *  Generated by 'yacc -d ascParse.y' on baker.edrc.cmu.edu
- *  ascParse.y CVS info:
- *  Version: Revision: 1.22 
- *  Version control file: RCSfile: ascParse.y,v 
- *  Date last modified: Date: 98/05/18 16:36:42 
- *  Last modified by: Author: ballan 
+ *  Version: $Revision: 1.23 $
+ *  Version control file: $RCSfile: ascParse.y,v $
+ *  Date last modified: $Date: 2000/01/25 02:25:59 $
+ *  Last modified by: $Author: ballan $
  *
  *  This file is part of the Ascend Language Interpreter.
  *
@@ -37,50 +306,53 @@
  *  COPYING.
  *
  */
-#include<stdio.h>
-#include<limits.h>		/* need DBL_MAX and LONG_MAX */
-#include<float.h>		/* on a NeXT they are in here */
-#include"utilities/ascConfig.h"
-#include"utilities/ascMalloc.h"
-#include"general/list.h"
-#include"general/dstring.h"
-#include"compiler/compiler.h"
-#include"compiler/scanner.h"
-#include"compiler/symtab.h"		/* the global string/symbol table */
-#include"compiler/notate.h"		/* notes database wrapper */
-#include"compiler/braced.h"
-#include"compiler/fractions.h"
-#include"compiler/dimen.h"
-#include"compiler/functype.h"
-#include"compiler/func.h"
-#include"compiler/types.h"
-#include"compiler/name.h"
-#include"compiler/nameio.h"
-#include"compiler/instance_enum.h"
-#include"compiler/extfunc.h"
-#include"compiler/packages.h"
-#include"compiler/sets.h"
-#include"compiler/exprs.h"
-#include"compiler/exprio.h"
-#include"compiler/vlist.h"
-#include"compiler/vlistio.h"		/* for debugging only */
-#include"compiler/stattypes.h"
-#include"compiler/slist.h"
-#include"compiler/statement.h"
-#include"compiler/statio.h"
-#include"compiler/units.h"
-#include"compiler/when.h"
-#include"compiler/select.h"
-#include"compiler/switch.h"
-#include"compiler/proc.h"
-#include"compiler/watchpt.h"
-#include"compiler/module.h"
-#include"compiler/child.h"
-#include"compiler/type_desc.h"
-#include"compiler/type_descio.h"
-#include"compiler/typedef.h"
-#include"compiler/library.h"
-#include"compiler/syntax.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <limits.h>		/* need DBL_MAX and LONG_MAX */
+#include <float.h>		/* on a NeXT they are in here */
+
+#include "utilities/ascConfig.h"
+#include "utilities/ascMalloc.h"
+#include "general/list.h"
+#include "general/dstring.h"
+#include "compiler/compiler.h"
+#include "compiler/scanner.h"
+#include "compiler/symtab.h"		/* the global string/symbol table */
+#include "compiler/notate.h"		/* notes database wrapper */
+#include "compiler/braced.h"
+#include "compiler/fractions.h"
+#include "compiler/dimen.h"
+#include "compiler/functype.h"
+#include "compiler/func.h"
+#include "compiler/types.h"
+#include "compiler/name.h"
+#include "compiler/nameio.h"
+#include "compiler/instance_enum.h"
+#include "compiler/extfunc.h"
+#include "compiler/packages.h"
+#include "compiler/sets.h"
+#include "compiler/exprs.h"
+#include "compiler/exprio.h"
+#include "compiler/vlist.h"
+#include "compiler/vlistio.h"		/* for debugging only */
+#include "compiler/stattypes.h"
+#include "compiler/slist.h"
+#include "compiler/statement.h"
+#include "compiler/statio.h"
+#include "compiler/units.h"
+#include "compiler/when.h"
+#include "compiler/select.h"
+#include "compiler/switch.h"
+#include "compiler/proc.h"
+#include "compiler/watchpt.h"
+#include "compiler/module.h"
+#include "compiler/child.h"
+#include "compiler/type_desc.h"
+#include "compiler/type_descio.h"
+#include "compiler/typedef.h"
+#include "compiler/library.h"
+#include "compiler/syntax.h"
+#include "compiler/lexer.h"
 /* 1 ==> expr can find missing , w/o  shift/reduce conflicts */
 #define COMMAEXPR_NOTBUGGY 0 
 #if COMMAEXPR_NOTBUGGY
@@ -88,14 +360,12 @@
 #endif /* for CommaExpr if working. */
 
 #ifndef lint
-static CONST char ParserID[] = "$Id: ascParse.c.no.yacc,v 1.10 1998/05/18 17:55:56 mthomas Exp $";
+static CONST char ParserID[] = "$Id: ascParse.y,v 1.23 2000/01/25 02:25:59 ballan Exp $";
 #endif
 
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
-FILE *g_ascend_errors = stderr;		/* error file */
-FILE *g_ascend_warnings = stderr;	/* whine file */
-FILE *g_ascend_information = stderr;	/* note file */
+#include "compiler/redirectFile.h"
 #ifndef ASCERR
 #define ASCERR g_ascend_errors
 #define ASCWAR g_ascend_warnings
@@ -212,10 +482,9 @@ static void WarnMsg_MismatchEnd(CONST char *, CONST char *,
                                 unsigned long, CONST char *);
 static CONST char *TokenAsString(unsigned long);
 
-/*
- *  NOTES  Explanations  NOTES  Explanations  NOTES  Explanations  NOTES
- *
- *  Mark Thomas  Thursday, 13 March 1997
+static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...);
+
+/** @page ascend-notes About 'NOTES' in ASCEND
  *
  *  The parser will now parse a NOTES block as well as in-lined NOTES.  As
  *  a matter of fact, the parser would probably parse FORTRAN now since it
@@ -277,6 +546,8 @@ static CONST char *TokenAsString(unsigned long);
  *
  *  Note that if you do the latter, you'll get `statement with no effect'
  *  warnings from gcc -Wall.
+ *
+ * -- Mark Thomas  Thursday, 13 March 1997
  */
 #define DEBUG_NOTES(s) 0
 
@@ -302,8 +573,23 @@ static void CollectNote(struct Note *);
  * keep it.
  */
 
-/* # line 298 "ascParse.y" */
-typedef union  {
+
+/* Enabling traces.  */
+#ifndef ZZ_DEBUG
+# define ZZ_DEBUG 0
+#endif
+
+/* Enabling verbose error messages.  */
+#ifdef ZZ_ERROR_VERBOSE
+# undef ZZ_ERROR_VERBOSE
+# define ZZ_ERROR_VERBOSE 1
+#else
+# define ZZ_ERROR_VERBOSE 0
+#endif
+
+#if ! defined (ZZ_STYPE) && ! defined (ZZ_STYPE_IS_DECLARED)
+#line 300 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+typedef union ZZ_STYPE {
   double real_value;
   long   int_value;
   struct fraction frac_value;
@@ -330,138 +616,4499 @@ typedef union  {
   enum ForOrder order;
   enum ForKind fkind;
 } ZZ_STYPE;
-#ifdef __cplusplus
-#  include <stdio.h>
-#  include <yacc.h>
-#endif	/* __cplusplus */ 
-# define ADD_T 257
-# define ALIASES_T 258
-# define AND_T 259
-# define ANY_T 260
-# define AREALIKE_T 261
-# define ARETHESAME_T 262
-# define ARRAY_T 263
-# define ATOM_T 264
-# define BEQ_T 265
-# define BNE_T 266
-# define BREAK_T 267
-# define CALL_T 268
-# define CARD_T 269
-# define CASE_T 270
-# define CHOICE_T 271
-# define CHECK_T 272
-# define CONDITIONAL_T 273
-# define CONSTANT_T 274
-# define CONTINUE_T 275
-# define CREATE_T 276
-# define DATA_T 277
-# define DECREASING_T 278
-# define DEFAULT_T 279
-# define DEFINITION_T 280
-# define DIMENSION_T 281
-# define DIMENSIONLESS_T 282
-# define DO_T 283
-# define ELSE_T 284
-# define END_T 285
-# define EXPECT_T 286
-# define EXTERNAL_T 287
-# define FALSE_T 288
-# define FALLTHRU_T 289
-# define FOR_T 290
-# define FROM_T 291
-# define GLOBAL_T 292
-# define IF_T 293
-# define IMPORT_T 294
-# define IN_T 295
-# define INPUT_T 296
-# define INCREASING_T 297
-# define INTERACTIVE_T 298
-# define INTERSECTION_T 299
-# define ISA_T 300
-# define _IS_T 301
-# define ISREFINEDTO_T 302
-# define MAXIMIZE_T 303
-# define MAXINTEGER_T 304
-# define MAXREAL_T 305
-# define METHODS_T 306
-# define METHOD_T 307
-# define MINIMIZE_T 308
-# define MODEL_T 309
-# define NOT_T 310
-# define NOTES_T 311
-# define OF_T 312
-# define OR_T 313
-# define OTHERWISE_T 314
-# define OUTPUT_T 315
-# define PATCH_T 316
-# define PROD_T 317
-# define PROVIDE_T 318
-# define REFINES_T 319
-# define REPLACE_T 320
-# define REQUIRE_T 321
-# define RETURN_T 322
-# define RUN_T 323
-# define SATISFIED_T 324
-# define SELECT_T 325
-# define SIZE_T 326
-# define STOP_T 327
-# define SUCHTHAT_T 328
-# define SUM_T 329
-# define SWITCH_T 330
-# define THEN_T 331
-# define TRUE_T 332
-# define UNION_T 333
-# define UNITS_T 334
-# define UNIVERSAL_T 335
-# define WHEN_T 336
-# define WHERE_T 337
-# define WHILE_T 338
-# define WILLBE_T 339
-# define WILLBETHESAME_T 340
-# define WILLNOTBETHESAME_T 341
-# define ASSIGN_T 342
-# define CASSIGN_T 343
-# define DBLCOLON_T 344
-# define USE_T 345
-# define LEQ_T 346
-# define GEQ_T 347
-# define NEQ_T 348
-# define DOTDOT_T 349
-# define WITH_T 350
-# define VALUE_T 351
-# define WITH_VALUE_T 352
-# define REAL_T 353
-# define INTEGER_T 354
-# define IDENTIFIER_T 355
-# define BRACEDTEXT_T 356
-# define SYMBOL_T 357
-# define DQUOTE_T 358
-# define UMINUS_T 359
-# define UPLUS_T 360
-#define zz_clearin zz_char = -1
-#define zz_errok zz_errflag = 0
-extern int zz_char;
+/* Line 190 of yacc.c.  */
+#line 621 "y.tab.c"
+# define zz_stype ZZ_STYPE /* obsolescent; will be withdrawn */
+# define ZZ_STYPE_IS_DECLARED 1
+# define ZZ_STYPE_IS_TRIVIAL 1
+#endif
+
+
+
+/* Copy the second part of user declarations.  */
+
+
+/* Line 213 of yacc.c.  */
+#line 633 "y.tab.c"
+
+#if ! defined (zz_overflow) || ZZ_ERROR_VERBOSE
+
+# ifndef ZZ_FREE
+#  define ZZ_FREE free
+# endif
+# ifndef ZZ_MALLOC
+#  define ZZ_MALLOC malloc
+# endif
+
+/* The parser invokes alloca or malloc; define the necessary symbols.  */
+
+# ifdef ZZ_STACK_USE_ALLOCA
+#  if ZZ_STACK_USE_ALLOCA
+#   ifdef __GNUC__
+#    define ZZ_STACK_ALLOC __builtin_alloca
+#   else
+#    define ZZ_STACK_ALLOC alloca
+#   endif
+#  endif
+# endif
+
+# ifdef ZZ_STACK_ALLOC
+   /* Pacify GCC's `empty if-body' warning. */
+#  define ZZ_STACK_FREE(Ptr) do { /* empty */; } while (0)
+# else
+#  if defined (__STDC__) || defined (__cplusplus)
+#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#   define ZZ_SIZE_T size_t
+#  endif
+#  define ZZ_STACK_ALLOC ZZ_MALLOC
+#  define ZZ_STACK_FREE ZZ_FREE
+# endif
+#endif /* ! defined (zz_overflow) || ZZ_ERROR_VERBOSE */
+
+
+#if (! defined (zz_overflow) \
+     && (! defined (__cplusplus) \
+	 || (defined (ZZ_STYPE_IS_TRIVIAL) && ZZ_STYPE_IS_TRIVIAL)))
+
+/* A type that is properly aligned for any stack member.  */
+union zz_alloc
+{
+  short int zz_ss;
+  ZZ_STYPE zz_vs;
+  };
+
+/* The size of the maximum gap between one aligned stack and the next.  */
+# define ZZ_STACK_GAP_MAXIMUM (sizeof (union zz_alloc) - 1)
+
+/* The size of an array large to enough to hold all stacks, each with
+   N elements.  */
+# define ZZ_STACK_BYTES(N) \
+     ((N) * (sizeof (short int) + sizeof (ZZ_STYPE))			\
+      + ZZ_STACK_GAP_MAXIMUM)
+
+/* Copy COUNT objects from FROM to TO.  The source and destination do
+   not overlap.  */
+# ifndef ZZ_COPY
+#  if defined (__GNUC__) && 1 < __GNUC__
+#   define ZZ_COPY(To, From, Count) \
+      __builtin_memcpy (To, From, (Count) * sizeof (*(From)))
+#  else
+#   define ZZ_COPY(To, From, Count)		\
+      do					\
+	{					\
+	  register ZZ_SIZE_T zz_i;		\
+	  for (zz_i = 0; zz_i < (Count); zz_i++)	\
+	    (To)[zz_i] = (From)[zz_i];		\
+	}					\
+      while (0)
+#  endif
+# endif
+
+/* Relocate STACK from its old location to the new one.  The
+   local variables ZZ_SIZE and ZZ_STACKSIZE give the old and new number of
+   elements in the stack, and ZZ_PTR gives the new location of the
+   stack.  Advance ZZ_PTR to a properly aligned location for the next
+   stack.  */
+# define ZZ_STACK_RELOCATE(Stack)					\
+    do									\
+      {									\
+	ZZ_SIZE_T zz_newbytes;						\
+	ZZ_COPY (&zz_ptr->Stack, Stack, zz_size);				\
+	Stack = &zz_ptr->Stack;						\
+	zz_newbytes = zz_stacksize * sizeof (*Stack) + ZZ_STACK_GAP_MAXIMUM; \
+	zz_ptr += zz_newbytes / sizeof (*zz_ptr);				\
+      }									\
+    while (0)
+
+#endif
+
+#if defined (__STDC__) || defined (__cplusplus)
+   typedef signed char zz_signed_char;
+#else
+   typedef short int zz_signed_char;
+#endif
+
+/* ZZ_FINAL -- State number of the termination state. */
+#define ZZ_FINAL  2
+/* ZZ_LAST -- Last index in ZZ_TABLE.  */
+#define ZZ_LAST   1180
+
+/* ZZ_NTOKENS -- Number of terminals. */
+#define ZZ_NTOKENS  127
+/* ZZ_NNTS -- Number of nonterminals. */
+#define ZZ_NNTS  116
+/* ZZ_NRULES -- Number of rules. */
+#define ZZ_NRULES  307
+/* ZZ_NRULES -- Number of states. */
+#define ZZ_NSTATES  615
+
+/* ZZ_TRANSLATE(ZZ_LEX) -- Bison symbol number corresponding to ZZ_LEX.  */
+#define ZZ_UNDEFTOK  2
+#define ZZ_MAXUTOK   364
+
+#define ZZ_TRANSLATE(ZZ_X) 						\
+  ((unsigned int) (ZZ_X) <= ZZ_MAXUTOK ? zz_translate[ZZ_X] : ZZ_UNDEFTOK)
+
+/* ZZ_TRANSLATE[ZZ_LEX] -- Bison symbol number corresponding to ZZ_LEX.  */
+static const unsigned char zz_translate[] =
+{
+       0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     121,   122,   116,   113,   108,   114,   124,   115,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,   123,   120,
+     110,   111,   112,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,   125,     2,   126,   119,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,   109,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
+      25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
+      35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
+      45,    46,    47,    48,    49,    50,    51,    52,    53,    54,
+      55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
+      65,    66,    67,    68,    69,    70,    71,    72,    73,    74,
+      75,    76,    77,    78,    79,    80,    81,    82,    83,    84,
+      85,    86,    87,    88,    89,    90,    91,    92,    93,    94,
+      95,    96,    97,    98,    99,   100,   101,   102,   103,   104,
+     105,   106,   107,   117,   118
+};
+
+#if ZZ_DEBUG
+/* ZZ_PRHS[ZZ_N] -- Index of the first RHS symbol of rule number ZZ_N in
+   ZZ_RHS.  */
+static const unsigned short int zz_prhs[] =
+{
+       0,     0,     3,     4,     7,     9,    11,    13,    15,    17,
+      19,    21,    23,    25,    27,    29,    31,    33,    35,    41,
+      45,    49,    52,    56,    60,    63,    69,    73,    78,    85,
+      90,    96,   103,   108,   114,   121,   128,   135,   138,   139,
+     143,   146,   149,   152,   155,   164,   165,   169,   172,   175,
+     178,   185,   190,   198,   201,   202,   206,   207,   212,   213,
+     217,   223,   229,   230,   232,   238,   241,   244,   248,   249,
+     252,   257,   258,   259,   263,   265,   266,   269,   275,   278,
+     280,   281,   285,   289,   291,   293,   295,   297,   299,   301,
+     303,   305,   307,   309,   311,   313,   315,   317,   319,   321,
+     323,   325,   327,   329,   331,   333,   335,   337,   339,   341,
+     343,   345,   347,   349,   355,   361,   365,   378,   379,   384,
+     389,   393,   395,   400,   402,   407,   408,   411,   412,   415,
+     416,   419,   422,   425,   428,   431,   435,   439,   441,   445,
+     447,   450,   453,   463,   467,   471,   472,   477,   487,   488,
+     491,   500,   501,   503,   505,   507,   509,   511,   513,   516,
+     521,   524,   527,   533,   536,   539,   546,   552,   553,   556,
+     561,   568,   575,   584,   586,   591,   595,   601,   606,   608,
+     610,   612,   614,   617,   620,   625,   632,   634,   639,   643,
+     649,   654,   659,   666,   668,   673,   677,   683,   688,   692,
+     696,   699,   703,   706,   710,   712,   714,   718,   721,   724,
+     726,   730,   735,   738,   741,   744,   747,   750,   753,   756,
+     759,   762,   765,   768,   771,   774,   776,   777,   779,   780,
+     782,   784,   785,   787,   791,   795,   801,   803,   805,   808,
+     811,   812,   814,   817,   819,   820,   822,   824,   826,   828,
+     832,   836,   840,   844,   847,   849,   855,   856,   858,   860,
+     862,   864,   866,   868,   870,   872,   874,   876,   878,   882,
+     886,   890,   894,   898,   902,   906,   910,   913,   917,   921,
+     925,   929,   933,   936,   939,   946,   951,   956,   961,   966,
+     971,   976,   981,   986,   991,   996,  1001,  1006,  1011,  1016,
+    1020,  1022,  1024,  1026,  1028,  1030,  1032,  1034
+};
+
+/* ZZ_RHS -- A `-1'-separated list of the rules' RHS. */
+static const short int zz_rhs[] =
+{
+     128,     0,    -1,    -1,   128,   129,    -1,   131,    -1,   132,
+      -1,   133,    -1,   136,    -1,   138,    -1,   134,    -1,   144,
+      -1,   140,    -1,   147,    -1,   156,    -1,   153,    -1,   158,
+      -1,   130,    -1,     1,    -1,    41,   120,   168,   226,   120,
+      -1,    70,   107,   120,    -1,    70,   225,   120,    -1,    70,
+     225,    -1,    67,   107,   120,    -1,    67,   225,   120,    -1,
+      67,   225,    -1,    43,   104,    40,   104,   120,    -1,    43,
+     104,   120,    -1,   135,   220,   226,   120,    -1,     3,    60,
+      44,   104,   179,   120,    -1,   137,   164,   226,   120,    -1,
+       3,    55,    44,   104,   120,    -1,     3,    55,    44,    27,
+      58,   120,    -1,   139,   164,   226,   120,    -1,    69,    55,
+      44,   104,   120,    -1,    69,    55,    44,    27,    58,   120,
+      -1,   155,   141,   168,   162,   226,   120,    -1,   142,    68,
+     104,   234,   143,   120,    -1,    11,   104,    -1,    -1,    26,
+     239,   231,    -1,    26,    35,    -1,    26,    81,    -1,    26,
+     106,    -1,   155,   145,    -1,    21,   104,    68,   104,   234,
+     146,   228,   120,    -1,    -1,    92,   239,   231,    -1,    92,
+      81,    -1,    92,    35,    -1,    92,   106,    -1,   155,   148,
+     168,   162,   226,   120,    -1,   149,   150,   151,   120,    -1,
+     149,   150,   151,    68,   104,   152,   120,    -1,    58,   104,
+      -1,    -1,   121,   168,   122,    -1,    -1,    86,   121,   168,
+     122,    -1,    -1,   121,   168,   122,    -1,   154,   168,   162,
+     226,   120,    -1,    65,   104,    38,   104,   120,    -1,    -1,
+      84,    -1,   157,   168,   162,   226,   120,    -1,    27,   104,
+      -1,   159,   120,    -1,    83,   160,   226,    -1,    -1,   160,
+     161,    -1,   104,   111,   105,   120,    -1,    -1,    -1,    55,
+     163,   164,    -1,   165,    -1,    -1,   165,   166,    -1,   167,
+     120,   168,   226,   120,    -1,    56,   104,    -1,   169,    -1,
+      -1,   169,   170,   120,    -1,   169,     1,   120,    -1,   171,
+      -1,   172,    -1,   173,    -1,   175,    -1,   176,    -1,   182,
+      -1,   183,    -1,   184,    -1,   185,    -1,   186,    -1,   187,
+      -1,   193,    -1,   189,    -1,   202,    -1,   201,    -1,   195,
+      -1,   198,    -1,   199,    -1,   200,    -1,   203,    -1,   204,
+      -1,   205,    -1,   207,    -1,   211,    -1,   210,    -1,   212,
+      -1,   215,    -1,   218,    -1,   219,    -1,   159,    -1,   222,
+      49,   178,   180,   181,    -1,   222,    88,   178,   180,   181,
+      -1,   222,     4,   224,    -1,   222,     4,   121,   222,   122,
+      86,   222,    49,   104,    61,   104,   174,    -1,    -1,   101,
+     121,   229,   122,    -1,   222,    50,   104,   180,    -1,   222,
+      51,   178,    -1,   104,    -1,   104,   121,   229,   122,    -1,
+     104,    -1,   104,   121,   229,   122,    -1,    -1,    56,   104,
+      -1,    -1,    61,   104,    -1,    -1,   101,   240,    -1,   222,
+       7,    -1,   222,     8,    -1,   222,    89,    -1,   222,    90,
+      -1,   224,    91,   240,    -1,   224,    92,   240,    -1,   188,
+      -1,   224,   123,   188,    -1,   240,    -1,    57,   240,    -1,
+      52,   240,    -1,   224,   123,   104,   121,   190,   120,   191,
+     192,   122,    -1,   222,   123,    45,    -1,   222,   123,    64,
+      -1,    -1,   120,   224,   123,    24,    -1,   224,   123,   104,
+     121,   222,   120,   103,   122,   194,    -1,    -1,    44,   224,
+      -1,    38,   104,    44,   240,   196,   197,   168,   226,    -1,
+      -1,    46,    -1,    25,    -1,    23,    -1,    33,    -1,    19,
+      -1,    30,    -1,    72,   224,    -1,    72,   224,    93,   224,
+      -1,    37,   222,    -1,    39,   222,    -1,    34,   104,   121,
+     222,   122,    -1,    15,   177,    -1,    10,   240,    -1,    42,
+     240,    80,   168,   206,   226,    -1,    87,   240,    30,   168,
+     226,    -1,    -1,    31,   168,    -1,    85,   222,   208,   226,
+      -1,   224,   123,    85,   222,   208,   226,    -1,    85,   121,
+     222,   122,   208,   226,    -1,   224,   123,    85,   121,   222,
+     122,   208,   226,    -1,   209,    -1,    17,   229,   123,   168,
+      -1,    63,   123,   168,    -1,   209,    17,   229,   123,   168,
+      -1,   209,    63,   123,   168,    -1,    14,    -1,    22,    -1,
+      36,    -1,    71,    -1,    76,   227,    -1,    94,   224,    -1,
+      74,   222,   213,   226,    -1,    74,   121,   222,   122,   213,
+     226,    -1,   214,    -1,    17,   229,   123,   168,    -1,    63,
+     123,   168,    -1,   214,    17,   229,   123,   168,    -1,   214,
+      63,   123,   168,    -1,    79,   222,   216,   226,    -1,    79,
+     121,   222,   122,   216,   226,    -1,   217,    -1,    17,   229,
+     123,   168,    -1,    63,   123,   168,    -1,   217,    17,   229,
+     123,   168,    -1,   217,    63,   123,   168,    -1,    20,   168,
+     226,    -1,    60,   220,   226,    -1,   106,   221,    -1,   220,
+     106,   221,    -1,   222,   105,    -1,   221,   222,   105,    -1,
+     223,    -1,   224,    -1,   223,   108,   224,    -1,   223,   224,
+      -1,   225,   228,    -1,   104,    -1,   225,   124,   104,    -1,
+     225,   125,   229,   126,    -1,    32,    20,    -1,    32,    38,
+      -1,    32,    42,    -1,    32,    47,    -1,    32,    55,    -1,
+      32,    60,    -1,    32,    74,    -1,    32,    79,    -1,    32,
+      83,    -1,    32,    41,    -1,    32,    85,    -1,    32,    87,
+      -1,    32,   104,    -1,    32,    -1,    -1,   105,    -1,    -1,
+     107,    -1,   230,    -1,    -1,   240,    -1,   240,    98,   240,
+      -1,   230,   108,   240,    -1,   230,   108,   240,    98,   240,
+      -1,   103,    -1,   232,    -1,   102,   233,    -1,   103,   105,
+      -1,    -1,   105,    -1,    28,   235,    -1,    29,    -1,    -1,
+     116,    -1,   236,    -1,   104,    -1,   103,    -1,   236,   115,
+     236,    -1,   236,   116,   236,    -1,   236,   119,   237,    -1,
+     121,   236,   122,    -1,   239,   238,    -1,   103,    -1,   121,
+     103,   115,   103,   122,    -1,    -1,   113,    -1,   114,    -1,
+     103,    -1,    53,    -1,   232,    -1,    54,    -1,    81,    -1,
+      35,    -1,     6,    -1,   106,    -1,   224,    -1,   125,   229,
+     126,    -1,   240,   113,   240,    -1,   240,   114,   240,    -1,
+     240,   116,   240,    -1,   240,   115,   240,    -1,   240,   119,
+     240,    -1,   240,     5,   240,    -1,   240,    62,   240,    -1,
+      59,   240,    -1,   240,   241,   240,    -1,   240,   242,   240,
+      -1,   240,    44,   240,    -1,   240,   109,   240,    -1,   240,
+      77,   240,    -1,   113,   240,    -1,   114,   240,    -1,    73,
+     121,   224,   108,   232,   122,    -1,    73,   121,   224,   122,
+      -1,    78,   121,   229,   122,    -1,    78,   125,   229,   126,
+      -1,    66,   121,   229,   122,    -1,    66,   125,   229,   126,
+      -1,    82,   121,   229,   122,    -1,    82,   125,   229,   126,
+      -1,    48,   121,   229,   122,    -1,    48,   125,   229,   126,
+      -1,    16,   121,   229,   122,    -1,    16,   125,   229,   126,
+      -1,    18,   121,   229,   122,    -1,    18,   125,   229,   126,
+      -1,   104,   121,   240,   122,    -1,   121,   240,   122,    -1,
+     111,    -1,   110,    -1,   112,    -1,    95,    -1,    96,    -1,
+      97,    -1,    12,    -1,    13,    -1
+};
+
+/* ZZ_RLINE[ZZ_N] -- source line where rule number ZZ_N was defined.  */
+static const unsigned short int zz_rline[] =
+{
+       0,   409,   409,   411,   415,   416,   417,   418,   419,   420,
+     421,   422,   423,   424,   425,   426,   427,   428,   435,   480,
+     484,   489,   497,   501,   506,   514,   518,   525,   556,   564,
+     584,   594,   602,   620,   629,   637,   690,   701,   710,   715,
+     720,   727,   734,   744,   783,   818,   823,   828,   835,   842,
+     852,   893,   902,   915,   924,   927,   935,   938,   946,   949,
+     956,   988,  1002,  1005,  1012,  1042,  1051,  1056,  1076,  1079,
+    1087,  1097,  1101,  1100,  1114,  1122,  1125,  1148,  1162,  1171,
+    1179,  1182,  1190,  1198,  1199,  1200,  1201,  1202,  1203,  1204,
+    1205,  1206,  1207,  1208,  1209,  1210,  1211,  1212,  1213,  1214,
+    1215,  1216,  1217,  1218,  1219,  1220,  1221,  1222,  1223,  1224,
+    1225,  1226,  1227,  1231,  1272,  1301,  1305,  1356,  1359,  1366,
+    1378,  1405,  1410,  1418,  1423,  1432,  1435,  1443,  1446,  1454,
+    1457,  1464,  1471,  1478,  1485,  1492,  1496,  1503,  1516,  1533,
+    1543,  1551,  1562,  1574,  1581,  1589,  1592,  1599,  1619,  1622,
+    1629,  1651,  1654,  1658,  1665,  1669,  1673,  1677,  1684,  1688,
+    1695,  1702,  1709,  1719,  1730,  1736,  1746,  1756,  1759,  1766,
+    1777,  1789,  1796,  1806,  1813,  1817,  1821,  1825,  1832,  1836,
+    1840,  1844,  1848,  1855,  1862,  1873,  1883,  1890,  1894,  1898,
+    1902,  1909,  1920,  1930,  1937,  1941,  1945,  1949,  1956,  1966,
+    2003,  2012,  2027,  2032,  2041,  2052,  2056,  2061,  2074,  2094,
+    2098,  2103,  2118,  2123,  2128,  2133,  2138,  2143,  2148,  2153,
+    2158,  2163,  2168,  2173,  2178,  2183,  2192,  2195,  2203,  2206,
+    2213,  2218,  2224,  2228,  2232,  2237,  2245,  2251,  2260,  2264,
+    2286,  2290,  2311,  2315,  2320,  2326,  2330,  2337,  2341,  2345,
+    2349,  2353,  2357,  2364,  2371,  2375,  2383,  2386,  2390,  2397,
+    2401,  2405,  2409,  2413,  2417,  2421,  2425,  2429,  2433,  2437,
+    2442,  2447,  2452,  2457,  2462,  2467,  2472,  2476,  2481,  2486,
+    2491,  2496,  2501,  2505,  2509,  2513,  2517,  2524,  2528,  2535,
+    2539,  2546,  2550,  2557,  2561,  2568,  2572,  2579,  2583,  2594,
+    2601,  2605,  2609,  2613,  2617,  2621,  2628,  2632
+};
+#endif
+
+#if ZZ_DEBUG || ZZ_ERROR_VERBOSE
+/* ZZ_TNME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
+   First, the terminals, then, starting at ZZ_NTOKENS, nonterminals. */
+static const char *const zz_tname[] =
+{
+  "$end", "error", "$undefined", "ADD_T", "ALIASES_T", "AND_T", "ANY_T",
+  "AREALIKE_T", "ARETHESAME_T", "ARRAY_T", "ASSERT_T", "ATOM_T", "BEQ_T",
+  "BNE_T", "BREAK_T", "CALL_T", "CARD_T", "CASE_T", "CHOICE_T", "CHECK_T",
+  "CONDITIONAL_T", "CONSTANT_T", "CONTINUE_T", "CREATE_T", "DATA_T",
+  "DECREASING_T", "DEFAULT_T", "DEFINITION_T", "DIMENSION_T",
+  "DIMENSIONLESS_T", "DO_T", "ELSE_T", "END_T", "EXPECT_T", "EXTERNAL_T",
+  "FALSE_T", "FALLTHRU_T", "FIX_T", "FOR_T", "FREE_T", "FROM_T",
+  "GLOBAL_T", "IF_T", "IMPORT_T", "IN_T", "INPUT_T", "INCREASING_T",
+  "INTERACTIVE_T", "INTERSECTION_T", "ISA_T", "_IS_T", "ISREFINEDTO_T",
+  "MAXIMIZE_T", "MAXINTEGER_T", "MAXREAL_T", "METHODS_T", "METHOD_T",
+  "MINIMIZE_T", "MODEL_T", "NOT_T", "NOTES_T", "OF_T", "OR_T",
+  "OTHERWISE_T", "OUTPUT_T", "PATCH_T", "PROD_T", "PROVIDE_T", "REFINES_T",
+  "REPLACE_T", "REQUIRE_T", "RETURN_T", "RUN_T", "SATISFIED_T", "SELECT_T",
+  "SIZE_T", "STOP_T", "SUCHTHAT_T", "SUM_T", "SWITCH_T", "THEN_T",
+  "TRUE_T", "UNION_T", "UNITS_T", "UNIVERSAL_T", "WHEN_T", "WHERE_T",
+  "WHILE_T", "WILLBE_T", "WILLBETHESAME_T", "WILLNOTBETHESAME_T",
+  "ASSIGN_T", "CASSIGN_T", "DBLCOLON_T", "USE_T", "LEQ_T", "GEQ_T",
+  "NEQ_T", "DOTDOT_T", "WITH_T", "VALUE_T", "WITH_VALUE_T", "REAL_T",
+  "INTEGER_T", "IDENTIFIER_T", "BRACEDTEXT_T", "SYMBOL_T", "DQUOTE_T",
+  "','", "'|'", "'<'", "'='", "'>'", "'+'", "'-'", "'/'", "'*'", "UPLUS_T",
+  "UMINUS_T", "'^'", "';'", "'('", "')'", "':'", "'.'", "'['", "']'",
+  "$accept", "definitions", "definition", "global_def", "require_file",
+  "provide_module", "import", "add_notes_def", "add_notes_head",
+  "add_method_def", "add_method_head", "replace_method_def",
+  "replace_method_head", "atom_def", "atom_head", "atom_id", "default_val",
+  "constant_def", "constant_head", "constant_val", "model_def",
+  "model_head", "model_id", "optional_model_parameters",
+  "optional_parameter_wheres", "optional_parameter_reduction", "patch_def",
+  "patch_head", "universal", "definition_def", "definition_id",
+  "units_def", "units_statement", "unitdeflist", "unitdef", "methods",
+  "@1", "proclist", "proclistf", "procedure", "procedure_id",
+  "fstatements", "statements", "statement", "isa_statement",
+  "willbe_statement", "aliases_statement", "optional_set_values",
+  "is_statement", "isrefinedto_statement", "call_identifier",
+  "type_identifier", "optional_method", "optional_of",
+  "optional_with_value", "arealike_statement", "arethesame_statement",
+  "willbethesame_statement", "willnotbethesame_statement",
+  "assignment_statement", "relation_statement", "relation",
+  "blackbox_statement", "input_args", "output_args", "data_args",
+  "glassbox_statement", "optional_scope", "for_statement",
+  "optional_direction", "forexprend", "run_statement", "fix_statement",
+  "free_statement", "external_statement", "call_statement",
+  "assert_statement", "if_statement", "while_statement", "optional_else",
+  "when_statement", "whenlist", "whenlistf", "flow_statement",
+  "use_statement", "select_statement", "selectlist", "selectlistf",
+  "switch_statement", "switchlist", "switchlistf", "conditional_statement",
+  "notes_statement", "notes_body", "noteslist", "fvarlist", "varlist",
+  "fname", "name", "end", "optional_bracedtext", "optional_notes", "set",
+  "setexprlist", "number", "realnumber", "opunits", "dims", "dimensions",
+  "dimexpr", "fraction", "fractail", "optional_sign", "expr", "relop",
+  "logrelop", 0
+};
+#endif
+
+# ifdef ZZ_PRINT
+/* ZZ_TOKNUM[ZZ_LEX-NUM] -- Internal token number corresponding to
+   token ZZ_LEX-NUM.  */
+static const unsigned short int zz_toknum[] =
+{
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
+     285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
+     295,   296,   297,   298,   299,   300,   301,   302,   303,   304,
+     305,   306,   307,   308,   309,   310,   311,   312,   313,   314,
+     315,   316,   317,   318,   319,   320,   321,   322,   323,   324,
+     325,   326,   327,   328,   329,   330,   331,   332,   333,   334,
+     335,   336,   337,   338,   339,   340,   341,   342,   343,   344,
+     345,   346,   347,   348,   349,   350,   351,   352,   353,   354,
+     355,   356,   357,   358,   359,   360,   361,   362,    44,   124,
+      60,    61,    62,    43,    45,    47,    42,   363,   364,    94,
+      59,    40,    41,    58,    46,    91,    93
+};
+# endif
+
+/* ZZ_R1[ZZ_N] -- Symbol number of symbol that rule ZZ_N derives.  */
+static const unsigned char zz_r1[] =
+{
+       0,   127,   128,   128,   129,   129,   129,   129,   129,   129,
+     129,   129,   129,   129,   129,   129,   129,   129,   130,   131,
+     131,   131,   132,   132,   132,   133,   133,   134,   135,   136,
+     137,   137,   138,   139,   139,   140,   141,   142,   143,   143,
+     143,   143,   143,   144,   145,   146,   146,   146,   146,   146,
+     147,   148,   148,   149,   150,   150,   151,   151,   152,   152,
+     153,   154,   155,   155,   156,   157,   158,   159,   160,   160,
+     161,   162,   163,   162,   164,   165,   165,   166,   167,   168,
+     169,   169,   169,   170,   170,   170,   170,   170,   170,   170,
+     170,   170,   170,   170,   170,   170,   170,   170,   170,   170,
+     170,   170,   170,   170,   170,   170,   170,   170,   170,   170,
+     170,   170,   170,   171,   172,   173,   173,   174,   174,   175,
+     176,   177,   177,   178,   178,   179,   179,   180,   180,   181,
+     181,   182,   183,   184,   185,   186,   186,   187,   187,   188,
+     188,   188,   189,   190,   191,   192,   192,   193,   194,   194,
+     195,   196,   196,   196,   197,   197,   197,   197,   198,   198,
+     199,   200,   201,   202,   203,   204,   205,   206,   206,   207,
+     207,   207,   207,   208,   209,   209,   209,   209,   210,   210,
+     210,   210,   210,   211,   212,   212,   213,   214,   214,   214,
+     214,   215,   215,   216,   217,   217,   217,   217,   218,   219,
+     220,   220,   221,   221,   222,   223,   223,   223,   224,   225,
+     225,   225,   226,   226,   226,   226,   226,   226,   226,   226,
+     226,   226,   226,   226,   226,   226,   227,   227,   228,   228,
+     229,   229,   230,   230,   230,   230,   231,   231,   232,   232,
+     233,   233,   234,   234,   234,   235,   235,   236,   236,   236,
+     236,   236,   236,   237,   238,   238,   239,   239,   239,   240,
+     240,   240,   240,   240,   240,   240,   240,   240,   240,   240,
+     240,   240,   240,   240,   240,   240,   240,   240,   240,   240,
+     240,   240,   240,   240,   240,   240,   240,   240,   240,   240,
+     240,   240,   240,   240,   240,   240,   240,   240,   240,   240,
+     241,   241,   241,   241,   241,   241,   242,   242
+};
+
+/* ZZ_R2[ZZ_N] -- Number of symbols composing right hand side of rule ZZ_N.  */
+static const unsigned char zz_r2[] =
+{
+       0,     2,     0,     2,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     5,     3,
+       3,     2,     3,     3,     2,     5,     3,     4,     6,     4,
+       5,     6,     4,     5,     6,     6,     6,     2,     0,     3,
+       2,     2,     2,     2,     8,     0,     3,     2,     2,     2,
+       6,     4,     7,     2,     0,     3,     0,     4,     0,     3,
+       5,     5,     0,     1,     5,     2,     2,     3,     0,     2,
+       4,     0,     0,     3,     1,     0,     2,     5,     2,     1,
+       0,     3,     3,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     5,     5,     3,    12,     0,     4,     4,
+       3,     1,     4,     1,     4,     0,     2,     0,     2,     0,
+       2,     2,     2,     2,     2,     3,     3,     1,     3,     1,
+       2,     2,     9,     3,     3,     0,     4,     9,     0,     2,
+       8,     0,     1,     1,     1,     1,     1,     1,     2,     4,
+       2,     2,     5,     2,     2,     6,     5,     0,     2,     4,
+       6,     6,     8,     1,     4,     3,     5,     4,     1,     1,
+       1,     1,     2,     2,     4,     6,     1,     4,     3,     5,
+       4,     4,     6,     1,     4,     3,     5,     4,     3,     3,
+       2,     3,     2,     3,     1,     1,     3,     2,     2,     1,
+       3,     4,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     1,     0,     1,     0,     1,
+       1,     0,     1,     3,     3,     5,     1,     1,     2,     2,
+       0,     1,     2,     1,     0,     1,     1,     1,     1,     3,
+       3,     3,     3,     2,     1,     5,     0,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     3,     3,
+       3,     3,     3,     3,     3,     3,     2,     3,     3,     3,
+       3,     3,     2,     2,     6,     4,     4,     4,     4,     4,
+       4,     4,     4,     4,     4,     4,     4,     4,     4,     3,
+       1,     1,     1,     1,     1,     1,     1,     1
+};
+
+/* ZZ_DEFACT[STATE-NAME] -- Default rule to reduce with in state
+   STATE-NUM when ZZ_TABLE doesn't specify something else to do.  Zero
+   means the default is an error.  */
+static const unsigned short int zz_defact[] =
+{
+       2,     0,     1,    17,     0,     0,     0,     0,     0,     0,
+       0,     0,    68,    63,     3,    16,     4,     5,     6,     9,
+       0,     7,    75,     8,    75,    11,    10,    12,    14,    80,
+       0,    13,    80,    15,     0,     0,     0,    65,    80,     0,
+       0,   209,     0,    24,     0,     0,    21,     0,     0,     0,
+       0,    74,     0,    71,     0,     0,     0,     0,    80,     0,
+      43,    80,    54,    71,    66,     0,     0,     0,     0,    26,
+       0,    22,    23,     0,   231,     0,    19,    20,   225,     0,
+      69,    67,   200,     0,   204,   205,   228,     0,     0,     0,
+       0,    76,     0,     0,    72,     0,     0,   265,     0,   178,
+       0,     0,     0,    80,   179,     0,   264,   180,     0,     0,
+       0,     0,     0,     0,   260,   262,     0,     0,     0,     0,
+     181,     0,     0,     0,   226,     0,     0,   263,     0,     0,
+       0,     0,   240,   259,   209,   266,     0,     0,     0,   231,
+     112,     0,    83,    84,    85,    86,    87,    88,    89,    90,
+      91,    92,    93,   137,    95,    94,    98,    99,   100,   101,
+      97,    96,   102,   103,   104,   105,   107,   106,   108,   109,
+     110,   111,     0,   267,   261,   139,    37,     0,    53,    71,
+       0,    71,    80,    56,     0,     0,     0,   125,     0,     0,
+       0,   210,   267,     0,   230,   232,     0,     0,   212,   213,
+     221,   214,   215,   216,   217,   218,   219,   220,   222,   223,
+     224,     0,     0,   202,     0,   207,   229,   208,   201,    27,
+      29,    78,    80,    32,    75,     0,    82,   164,   121,   163,
+     231,   231,   231,   231,     0,     0,   160,     0,   161,     0,
+     231,   231,   141,   140,   276,     0,   231,   231,   158,     0,
+       0,     0,   227,   182,   231,   231,     0,     0,   231,   231,
+       0,     0,     0,   183,   241,   238,   239,     0,   282,   283,
+       0,     0,    81,     0,   131,   132,     0,     0,     0,     0,
+     133,   134,     0,     0,     0,     0,   306,   307,     0,     0,
+       0,   303,   304,   305,     0,   301,   300,   302,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,   244,     0,     0,
+       0,     0,     0,     0,    30,     0,     0,    18,    25,    61,
+     211,     0,     0,     0,    33,     0,   203,   206,     0,    73,
+      60,   231,     0,     0,     0,     0,   198,     0,     0,    80,
+       0,     0,   199,     0,     0,     0,     0,     0,   231,     0,
+       0,   186,     0,     0,     0,   231,     0,     0,   193,     0,
+       0,     0,   231,     0,     0,   173,    80,     0,   299,   268,
+       0,   115,   123,   127,   127,   120,   127,   135,   136,     0,
+     209,   138,   274,   279,   275,   281,   280,   269,   270,   272,
+     271,   273,   277,   278,   244,     0,     0,   243,    38,     0,
+      55,    80,     0,    51,    64,    31,   126,    28,   234,   233,
+      34,    70,     0,     0,   294,   295,   296,   297,     0,   151,
+     167,   292,   293,   288,   289,   159,     0,   285,     0,     0,
+      80,   184,   231,     0,   286,   287,     0,     0,    80,   191,
+     231,     0,   290,   291,     0,     0,    80,   169,   231,     0,
+       0,   298,     0,   231,     0,   129,   119,   129,     0,     0,
+       0,    45,    35,   248,   247,   245,     0,   242,   246,   256,
+       0,    50,     0,    58,     0,    77,   122,   162,   153,   152,
+       0,    80,     0,     0,     0,     0,    80,   188,     0,    80,
+       0,    80,   195,     0,    80,     0,    80,   175,     0,    80,
+     166,     0,     0,   128,     0,   113,   114,     0,     0,     0,
+       0,   267,   256,   228,     0,     0,     0,   256,    40,    41,
+      42,   257,   258,     0,    36,    57,    80,     0,   235,   156,
+     154,   157,   155,    80,   168,   165,   284,   185,   187,    80,
+     190,   192,   194,    80,   197,   171,   174,    80,   177,     0,
+     124,   130,     0,   170,     0,     0,     0,    48,    47,    49,
+       0,     0,   252,   249,   250,   251,     0,   236,    39,   237,
+       0,    52,     0,   189,   196,   176,     0,     0,   145,     0,
+       0,   143,    46,    44,   254,     0,   253,    59,   150,     0,
+     172,     0,     0,     0,   148,     0,     0,     0,   142,   144,
+       0,   147,     0,     0,     0,   149,     0,   117,   146,   255,
+       0,   116,   231,     0,   118
+};
+
+/* ZZ_DEFGOTO[NTERM-NUM]. */
+static const short int zz_defgoto[] =
+{
+      -1,     1,    14,    15,    16,    17,    18,    19,    20,    21,
+      22,    23,    24,    25,    58,    59,   470,    26,    60,   513,
+      27,    61,    62,   183,   311,   527,    28,    29,    30,    31,
+      32,    33,    34,    47,    80,    95,   224,    50,    51,    91,
+      92,    53,    54,   141,   142,   143,   144,   611,   145,   146,
+     229,   373,   316,   455,   505,   147,   148,   149,   150,   151,
+     152,   153,   154,   509,   578,   592,   155,   601,   156,   480,
+     533,   157,   158,   159,   160,   161,   162,   163,   164,   482,
+     165,   364,   365,   166,   167,   168,   350,   351,   169,   357,
+     358,   170,   171,    49,    82,    83,    84,   192,    86,    81,
+     253,   217,   193,   194,   568,   174,   265,   398,   467,   468,
+     565,   586,   523,   195,   303,   304
+};
+
+/* ZZ_PACT[STATE-NUM] -- Index in ZZ_TABLE of the portion describing
+   STATE-NUM.  */
+#define ZZ_PACT_NINF -437
+static const short int zz_pact[] =
+{
+    -437,  1096,  -437,  -437,    81,   -59,     2,    25,    38,    57,
+       1,    82,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+      71,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+      10,  -437,  -437,  -437,    77,   167,   179,  -437,  -437,   -30,
+     202,  -437,   130,    43,   204,   133,    60,   -18,   150,   -19,
+     223,   206,   223,   203,   593,   156,   159,   160,  -437,   197,
+    -437,  -437,   145,   203,  -437,   -11,   166,   223,   168,  -437,
+     169,  -437,  -437,   170,   165,   -10,  -437,  -437,   476,   164,
+    -437,  -437,   150,   171,   -61,  -437,     0,   150,   157,   162,
+     176,  -437,   163,   172,  -437,   223,   173,  -437,   165,  -437,
+     180,    33,    44,  -437,  -437,   181,  -437,  -437,   150,   183,
+     150,   165,    89,   165,  -437,  -437,   165,   165,    71,    96,
+    -437,   150,   174,   -72,   186,   105,   -64,  -437,   108,   -62,
+     165,   150,   189,   191,   177,  -437,   165,   165,   165,   165,
+    -437,   182,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,    59,    84,  -437,   960,  -437,   231,  -437,   203,
+     196,   203,  -437,   215,   223,   247,   193,   251,   194,   195,
+     198,  -437,  -437,   185,   208,   801,   261,   207,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,   218,   219,  -437,   150,  -437,  -437,  -437,   150,  -437,
+    -437,  -437,  -437,  -437,  -437,   212,  -437,   960,   205,  -437,
+     165,   165,   165,   165,   223,   213,  -437,   289,  -437,   844,
+     165,   165,   960,   960,  -437,   -19,   165,   165,   243,   150,
+     150,    -5,  -437,  -437,   165,   165,   150,    -2,   165,   165,
+     150,     7,   874,  -437,  -437,  -437,  -437,   165,   242,   242,
+     244,   211,  -437,    -4,  -437,  -437,   246,   258,   246,   246,
+    -437,  -437,   165,   165,   694,   165,  -437,  -437,   165,   165,
+     165,  -437,  -437,  -437,   165,  -437,  -437,  -437,   165,   165,
+     165,   165,   165,   165,   165,   260,   223,   187,   223,   245,
+     248,   -49,   252,   253,  -437,   264,   254,  -437,  -437,  -437,
+    -437,   165,   165,   255,  -437,   256,  -437,  -437,   223,  -437,
+    -437,   165,   249,   239,   257,   259,  -437,   150,   165,  -437,
+     262,   263,  -437,   268,   265,   150,     6,   270,   165,   271,
+     223,    16,   274,   267,   276,   165,   279,   223,    36,   282,
+     280,   283,   165,   285,   223,    48,  -437,   715,  -437,  -437,
+     150,  -437,   288,   316,   316,  -437,   316,   960,   960,    11,
+     290,  -437,   233,   233,   233,   375,   375,    63,    63,   242,
+     242,   242,    80,   990,   187,   266,   -66,  -437,   352,   293,
+    -437,  -437,   277,  -437,  -437,  -437,  -437,  -437,   917,   960,
+    -437,  -437,   296,   295,  -437,  -437,  -437,  -437,   301,   758,
+     387,  -437,  -437,  -437,  -437,  -437,   -26,  -437,    -5,   302,
+    -437,  -437,   165,   303,  -437,  -437,    -2,   304,  -437,  -437,
+     165,   305,  -437,  -437,     7,   306,  -437,  -437,   165,   308,
+     223,  -437,   311,   165,   320,   333,  -437,   333,   150,     7,
+     165,   291,  -437,  -437,  -437,  -437,   -52,  -437,    90,   -17,
+     319,  -437,   314,   321,   165,  -437,  -437,  -437,  -437,  -437,
+     127,  -437,   223,   191,   318,   223,  -437,  -437,   322,  -437,
+     223,  -437,  -437,   323,  -437,   223,  -437,  -437,   324,  -437,
+    -437,   355,   327,  -437,   165,  -437,  -437,   329,   223,   332,
+     116,   -79,    39,   337,    40,   -52,   -52,   128,  -437,  -437,
+    -437,  -437,  -437,   142,  -437,  -437,  -437,   334,   960,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,   150,
+    -437,   960,     7,  -437,   150,   350,   411,  -437,  -437,  -437,
+     142,   339,  -437,   338,   338,  -437,   -75,   191,  -437,  -437,
+     340,  -437,   223,  -437,  -437,  -437,   415,   223,   346,   344,
+     347,  -437,  -437,  -437,  -437,   370,  -437,  -437,  -437,   371,
+    -437,   150,   354,   410,   433,   363,   418,   357,  -437,  -437,
+     150,  -437,   378,   379,   458,  -437,   376,   391,  -437,  -437,
+     372,  -437,   165,   377,  -437
+};
+
+/* ZZ_PGOTO[NTERM-NUM].  */
+static const short int zz_pgoto[] =
+{
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,   443,  -437,  -437,   -41,  -437,   -20,  -437,  -437,
+    -437,   -31,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,   -27,  -437,  -253,    46,  -437,  -437,  -437,  -437,  -437,
+    -437,   216,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,  -436,  -437,  -437,  -437,  -437,    76,  -437,  -437,    69,
+    -437,  -437,  -437,   389,   422,   -28,  -437,   -48,   226,   -47,
+    -437,    -3,  -128,  -437,   -45,  -417,  -437,   117,  -437,  -431,
+    -437,  -437,  -373,   284,  -437,  -437
+};
+
+/* ZZ_TABLE[ZZ_PACT[STATE-NUM]].  What to do in state STATE-NUM.  If
+   positive, shift that token.  If negative, reduce the rule which
+   number is the opposite.  If zero, do what ZZ_DEFACT says.
+   If ZZ_TABLE_NINF, syntax error.  */
+#define ZZ_TABLE_NINF -206
+static const short int zz_table[] =
+{
+      85,    63,    88,    89,    52,    93,   173,    67,   495,   484,
+      68,   271,   348,    78,    78,   355,   185,   196,   518,   402,
+     188,    55,   184,   508,   362,  -205,   172,   179,   584,  -205,
+     181,    56,    41,   432,    85,   514,   215,   463,   464,    85,
+      41,  -205,    41,    41,  -205,    37,   585,   214,   225,   250,
+     465,   463,   464,   440,   212,   466,    44,   256,   349,   260,
+      85,   356,    85,   273,   519,   448,   274,   275,    57,   466,
+     363,   403,   234,   248,   557,    85,   132,   483,    85,   433,
+     236,    85,   238,   263,   563,   564,    79,    87,  -205,   520,
+      69,  -205,  -205,   186,   197,   251,   521,   522,   257,   441,
+      41,   261,   332,   333,   334,   335,   569,   216,   276,   277,
+     278,   449,   340,   341,   426,    41,   577,   370,   343,   344,
+     558,   456,    38,   457,    73,    74,   352,   353,   427,    39,
+     359,   360,   458,  -205,  -205,  -205,    35,   312,   306,   560,
+     308,    36,    40,   569,   566,   559,   529,   279,   280,   281,
+     530,   309,   521,   522,   230,   515,   516,   531,   231,   517,
+     532,    41,   562,    72,    42,   232,   327,    73,    74,   233,
+      85,    97,  -205,  -205,  -205,   282,   283,    48,   300,   301,
+      77,   101,   302,   102,    73,    74,    41,   336,  -205,    45,
+     212,   328,  -205,   298,   299,   300,   301,    64,   342,   302,
+     106,   346,    85,   413,   329,   515,   516,   284,    85,   517,
+     240,    65,    85,   112,   241,   396,   397,   246,   114,   115,
+     429,   247,   347,    66,   117,   371,   254,   437,   354,   258,
+     255,   119,   361,   259,   445,    43,   555,    46,   122,   556,
+      70,   521,   522,   125,   132,   567,   127,   128,    75,   285,
+      71,   375,   376,    76,    41,    78,   286,   287,    94,   395,
+     176,   399,    90,   177,   178,   180,   182,   132,   133,   134,
+     187,   135,   189,   190,   191,   211,   213,   219,   136,   137,
+     221,   412,   220,   222,   228,   235,   138,   237,   288,    85,
+     139,   252,   223,   226,   264,   249,   266,   425,   267,   305,
+     307,   310,   272,   431,   488,   313,   289,   315,   420,   418,
+     439,   320,   493,   314,   317,   318,   321,   447,   319,   323,
+     498,   290,    85,   325,   326,   502,   331,   324,   291,   292,
+     293,    85,   330,   338,   337,   450,   345,   369,   175,   291,
+     292,   293,   452,   295,   296,   297,   298,   299,   300,   301,
+     372,   459,   302,   294,   295,   296,   297,   298,   299,   300,
+     301,   302,   374,   302,   394,   415,   368,   400,   406,   401,
+     472,   414,   404,   405,   407,   410,   411,   454,   469,   416,
+     285,   473,   227,   512,   421,   417,   462,   286,   287,   422,
+     423,   424,   428,   435,   430,   239,   434,   242,   436,   487,
+     243,   244,   438,   500,   442,   444,   443,   492,   446,   453,
+      85,   460,   511,   471,   262,   497,   475,   476,   481,   288,
+     268,   269,   270,   477,   503,   486,   489,   491,   494,   496,
+     507,   499,   510,   501,   504,   535,   525,   289,   537,   524,
+     536,   549,   526,   541,   216,   539,   543,   547,   545,   550,
+     534,   552,   554,   580,   571,   538,   581,   517,   540,   583,
+     542,   553,   587,   544,   589,   546,   591,   593,   548,   594,
+     291,   292,   293,   595,   599,   596,   598,   600,   602,   603,
+     604,   606,   608,   607,   613,   295,   296,   297,   298,   299,
+     300,   301,   610,   612,   302,   570,   198,   140,   609,   614,
+     381,    85,   572,   506,   485,   490,    85,   245,   573,   218,
+     561,   461,   574,     0,   199,   582,   575,   200,   201,     0,
+       0,   576,     0,   202,     0,   588,   579,     0,     0,     0,
+     590,   203,     0,     0,     0,     0,   204,     0,     0,     0,
+       0,     0,     0,   597,     0,     0,     0,     0,     0,     0,
+     205,   367,   605,     0,     0,   206,     0,     0,     0,   207,
+       0,   208,     0,   209,     0,     0,   377,   378,   175,   382,
+       0,     0,   383,   384,   385,     0,     0,     0,   386,     0,
+     210,     0,   387,   388,   389,   390,   391,   392,   393,     0,
+       0,     0,     0,     0,    96,     0,     0,     0,     0,    97,
+       0,     0,     0,    98,     0,   408,   409,    99,   100,   101,
+     -79,   102,     0,   103,     0,   104,     0,     0,     0,     0,
+       0,     0,   419,     0,   -79,   -79,     0,   105,   106,   107,
+     108,   109,   110,     0,     0,   111,     0,     0,     0,     0,
+       0,   112,     0,     0,     0,   113,   114,   115,   -79,     0,
+     116,     0,   117,   118,     0,     0,   -79,     0,     0,   119,
+       0,     0,     0,     0,   120,   121,   122,   123,     0,   124,
+       0,   125,   126,     0,   127,   128,    12,     0,   129,     0,
+     130,     0,     0,     0,     0,     0,     0,   131,     0,     0,
+       0,     0,     0,     0,     0,   132,   133,   134,     0,   135,
+      97,     0,     0,     0,     0,     0,   136,   137,     0,     0,
+     101,     0,   102,     0,   138,   -79,     0,     0,   139,     0,
+     285,     0,     0,     0,     0,     0,     0,   286,   287,   106,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,   112,     0,   367,     0,   113,   114,   115,     0,
+       0,   116,     0,   117,     0,     0,     0,     0,   528,   288,
+     119,     0,     0,   285,     0,     0,     0,   122,     0,     0,
+     286,   287,   125,     0,     0,   127,   128,   289,     0,   379,
+       0,     0,     0,   478,     0,     0,     0,     0,   551,     0,
+       0,     0,   290,     0,     0,     0,   132,   133,   380,     0,
+     135,     0,   288,     0,   479,     0,   285,   136,   137,     0,
+     291,   292,   293,   286,   287,   138,     0,     0,     0,   139,
+     289,     0,     0,     0,   294,   295,   296,   297,   298,   299,
+     300,   301,     0,     0,   302,   290,     0,   451,     0,     0,
+       0,     0,     0,     0,     0,   288,     0,     0,     0,   285,
+       0,     0,     0,   291,   292,   293,   286,   287,     0,     0,
+       0,     0,     0,   289,     0,     0,     0,   294,   295,   296,
+     297,   298,   299,   300,   301,     0,     0,   302,   290,   285,
+       0,     0,     0,     0,     0,     0,   286,   287,   288,     0,
+       0,     0,     0,     0,     0,     0,   291,   292,   293,   322,
+       0,     0,     0,     0,   366,     0,   289,     0,     0,     0,
+     294,   295,   296,   297,   298,   299,   300,   301,   288,     0,
+     302,   290,   285,     0,   339,     0,     0,     0,     0,   286,
+     287,     0,     0,     0,     0,     0,   289,     0,     0,   291,
+     292,   293,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,   290,     0,   294,   295,   296,   297,   298,   299,   300,
+     301,   288,     0,   302,     0,   285,     0,     0,     0,   291,
+     292,   293,   286,   287,     0,     0,     0,     0,     0,   289,
+       0,     0,     0,   294,   295,   296,   297,   298,   299,   300,
+     301,     0,     0,   302,   290,   285,     0,     0,     0,     0,
+       0,     0,     0,     0,   288,     0,     0,     0,     0,     0,
+       0,     0,   291,   292,   293,   474,     0,     0,     0,     0,
+       0,     0,   289,     0,     0,     0,   294,   295,   296,   297,
+     298,   299,   300,   301,   288,     0,   302,   290,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,   289,     0,     0,   291,   292,   293,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,   294,
+     295,   296,   297,   298,   299,   300,   301,     0,     0,   302,
+       0,     0,     0,     0,     0,   291,   292,   293,     0,     0,
+       0,     0,     0,     0,     0,     0,     2,     3,     0,     4,
+     295,   296,   297,   298,   299,   300,   301,   -62,     0,   302,
+       0,     0,     0,     0,     0,     0,     0,   -62,     0,     0,
+       0,     0,     0,     5,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     6,     0,     7,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,   -62,     0,     0,     0,     0,     0,
+       0,     8,     0,     9,     0,    10,    11,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    12,
+      13
+};
+
+static const short int zz_check[] =
+{
+      48,    32,    49,    50,    24,    52,    54,    38,   444,   426,
+      40,   139,    17,    32,    32,    17,    27,    27,    35,    68,
+      67,    11,    63,   459,    17,   104,    54,    58,   103,   108,
+      61,    21,   104,    17,    82,   466,    84,   103,   104,    87,
+     104,   120,   104,   104,   123,   104,   121,   108,    95,   121,
+     116,   103,   104,    17,    82,   121,    55,   121,    63,   121,
+     108,    63,   110,     4,    81,    17,     7,     8,    58,   121,
+      63,   120,   103,   121,    35,   123,   102,   103,   126,    63,
+     108,   129,   110,   131,   515,   516,   104,   106,     4,   106,
+     120,     7,     8,   104,   104,   123,   113,   114,   126,    63,
+     104,   129,   230,   231,   232,   233,   523,   107,    49,    50,
+      51,    63,   240,   241,   108,   104,   552,   121,   246,   247,
+      81,   374,   120,   376,   124,   125,   254,   255,   122,   104,
+     258,   259,   121,    49,    50,    51,    55,   184,   179,   512,
+     181,    60,   104,   560,   517,   106,    19,    88,    89,    90,
+      23,   182,   113,   114,   121,   115,   116,    30,   125,   119,
+      33,   104,   122,   120,   107,   121,   214,   124,   125,   125,
+     218,     6,    88,    89,    90,    91,    92,   106,   115,   116,
+     120,    16,   119,    18,   124,   125,   104,   234,   104,   107,
+     218,   222,   108,   113,   114,   115,   116,   120,   245,   119,
+      35,   249,   250,   331,   224,   115,   116,   123,   256,   119,
+     121,    44,   260,    48,   125,    28,    29,   121,    53,    54,
+     348,   125,   250,    44,    59,   273,   121,   355,   256,   121,
+     125,    66,   260,   125,   362,     9,   120,    11,    73,   123,
+      38,   113,   114,    78,   102,   103,    81,    82,    44,     5,
+     120,   278,   279,   120,   104,    32,    12,    13,    55,   306,
+     104,   308,    56,   104,   104,    68,   121,   102,   103,   104,
+     104,   106,   104,   104,   104,   111,   105,   120,   113,   114,
+     104,   328,   120,   120,   104,   104,   121,   104,    44,   337,
+     125,   105,   120,   120,   105,   121,   105,   345,   121,    68,
+     104,    86,   120,   350,   432,    58,    62,    56,   339,   337,
+     357,   126,   440,   120,   120,   120,   108,   364,   120,    58,
+     448,    77,   370,   105,   105,   453,   121,   120,    95,    96,
+      97,   379,   120,    44,   121,   366,    93,   126,    54,    95,
+      96,    97,   370,   110,   111,   112,   113,   114,   115,   116,
+     104,   379,   119,   109,   110,   111,   112,   113,   114,   115,
+     116,   119,   104,   119,   104,   126,   122,   122,   104,   121,
+     401,   122,   120,   120,   120,   120,   120,    61,    26,   122,
+       5,   104,    98,    92,   122,   126,   120,    12,    13,   126,
+     122,   126,   122,   126,   123,   111,   122,   113,   122,   430,
+     116,   117,   123,   450,   122,   122,   126,   438,   123,   121,
+     458,   121,   460,   120,   130,   446,   120,   122,    31,    44,
+     136,   137,   138,   122,   104,   123,   123,   123,   123,   123,
+     458,   123,   460,   122,   101,   482,   122,    62,   485,   120,
+     122,    86,   121,   490,   107,   123,   123,   123,   495,   122,
+     481,   122,   120,   103,   120,   486,    45,   119,   489,   120,
+     491,   508,   122,   494,    49,   496,   120,   123,   499,   122,
+      95,    96,    97,   103,    64,   104,   122,    44,   115,    61,
+     123,   103,    24,   104,   612,   110,   111,   112,   113,   114,
+     115,   116,   101,   121,   119,   526,    20,    54,   122,   122,
+     284,   549,   533,   457,   428,   436,   554,   118,   539,    87,
+     513,   394,   543,    -1,    38,   560,   547,    41,    42,    -1,
+      -1,   549,    -1,    47,    -1,   572,   554,    -1,    -1,    -1,
+     577,    55,    -1,    -1,    -1,    -1,    60,    -1,    -1,    -1,
+      -1,    -1,    -1,   591,    -1,    -1,    -1,    -1,    -1,    -1,
+      74,   267,   600,    -1,    -1,    79,    -1,    -1,    -1,    83,
+      -1,    85,    -1,    87,    -1,    -1,   282,   283,   284,   285,
+      -1,    -1,   288,   289,   290,    -1,    -1,    -1,   294,    -1,
+     104,    -1,   298,   299,   300,   301,   302,   303,   304,    -1,
+      -1,    -1,    -1,    -1,     1,    -1,    -1,    -1,    -1,     6,
+      -1,    -1,    -1,    10,    -1,   321,   322,    14,    15,    16,
+      17,    18,    -1,    20,    -1,    22,    -1,    -1,    -1,    -1,
+      -1,    -1,   338,    -1,    31,    32,    -1,    34,    35,    36,
+      37,    38,    39,    -1,    -1,    42,    -1,    -1,    -1,    -1,
+      -1,    48,    -1,    -1,    -1,    52,    53,    54,    55,    -1,
+      57,    -1,    59,    60,    -1,    -1,    63,    -1,    -1,    66,
+      -1,    -1,    -1,    -1,    71,    72,    73,    74,    -1,    76,
+      -1,    78,    79,    -1,    81,    82,    83,    -1,    85,    -1,
+      87,    -1,    -1,    -1,    -1,    -1,    -1,    94,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,   102,   103,   104,    -1,   106,
+       6,    -1,    -1,    -1,    -1,    -1,   113,   114,    -1,    -1,
+      16,    -1,    18,    -1,   121,   122,    -1,    -1,   125,    -1,
+       5,    -1,    -1,    -1,    -1,    -1,    -1,    12,    13,    35,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    48,    -1,   460,    -1,    52,    53,    54,    -1,
+      -1,    57,    -1,    59,    -1,    -1,    -1,    -1,   474,    44,
+      66,    -1,    -1,     5,    -1,    -1,    -1,    73,    -1,    -1,
+      12,    13,    78,    -1,    -1,    81,    82,    62,    -1,    85,
+      -1,    -1,    -1,    25,    -1,    -1,    -1,    -1,   504,    -1,
+      -1,    -1,    77,    -1,    -1,    -1,   102,   103,   104,    -1,
+     106,    -1,    44,    -1,    46,    -1,     5,   113,   114,    -1,
+      95,    96,    97,    12,    13,   121,    -1,    -1,    -1,   125,
+      62,    -1,    -1,    -1,   109,   110,   111,   112,   113,   114,
+     115,   116,    -1,    -1,   119,    77,    -1,   122,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    44,    -1,    -1,    -1,     5,
+      -1,    -1,    -1,    95,    96,    97,    12,    13,    -1,    -1,
+      -1,    -1,    -1,    62,    -1,    -1,    -1,   109,   110,   111,
+     112,   113,   114,   115,   116,    -1,    -1,   119,    77,     5,
+      -1,    -1,    -1,    -1,    -1,    -1,    12,    13,    44,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    95,    96,    97,    98,
+      -1,    -1,    -1,    -1,    30,    -1,    62,    -1,    -1,    -1,
+     109,   110,   111,   112,   113,   114,   115,   116,    44,    -1,
+     119,    77,     5,    -1,    80,    -1,    -1,    -1,    -1,    12,
+      13,    -1,    -1,    -1,    -1,    -1,    62,    -1,    -1,    95,
+      96,    97,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    77,    -1,   109,   110,   111,   112,   113,   114,   115,
+     116,    44,    -1,   119,    -1,     5,    -1,    -1,    -1,    95,
+      96,    97,    12,    13,    -1,    -1,    -1,    -1,    -1,    62,
+      -1,    -1,    -1,   109,   110,   111,   112,   113,   114,   115,
+     116,    -1,    -1,   119,    77,     5,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    44,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    95,    96,    97,    98,    -1,    -1,    -1,    -1,
+      -1,    -1,    62,    -1,    -1,    -1,   109,   110,   111,   112,
+     113,   114,   115,   116,    44,    -1,   119,    77,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    62,    -1,    -1,    95,    96,    97,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,   109,
+     110,   111,   112,   113,   114,   115,   116,    -1,    -1,   119,
+      -1,    -1,    -1,    -1,    -1,    95,    96,    97,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,     0,     1,    -1,     3,
+     110,   111,   112,   113,   114,   115,   116,    11,    -1,   119,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    21,    -1,    -1,
+      -1,    -1,    -1,    27,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    41,    -1,    43,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    58,    -1,    -1,    -1,    -1,    -1,
+      -1,    65,    -1,    67,    -1,    69,    70,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    83,
+      84
+};
+
+/* ZZ_STOS[STATE-NUM] -- The (internal number of the) accessing
+   symbol of state STATE-NUM.  */
+static const unsigned char zz_stos[] =
+{
+       0,   128,     0,     1,     3,    27,    41,    43,    65,    67,
+      69,    70,    83,    84,   129,   130,   131,   132,   133,   134,
+     135,   136,   137,   138,   139,   140,   144,   147,   153,   154,
+     155,   156,   157,   158,   159,    55,    60,   104,   120,   104,
+     104,   104,   107,   225,    55,   107,   225,   160,   106,   220,
+     164,   165,   164,   168,   169,    11,    21,    58,   141,   142,
+     145,   148,   149,   168,   120,    44,    44,   168,    40,   120,
+      38,   120,   120,   124,   125,    44,   120,   120,    32,   104,
+     161,   226,   221,   222,   223,   224,   225,   106,   226,   226,
+      56,   166,   167,   226,    55,   162,     1,     6,    10,    14,
+      15,    16,    18,    20,    22,    34,    35,    36,    37,    38,
+      39,    42,    48,    52,    53,    54,    57,    59,    60,    66,
+      71,    72,    73,    74,    76,    78,    79,    81,    82,    85,
+      87,    94,   102,   103,   104,   106,   113,   114,   121,   125,
+     159,   170,   171,   172,   173,   175,   176,   182,   183,   184,
+     185,   186,   187,   188,   189,   193,   195,   198,   199,   200,
+     201,   202,   203,   204,   205,   207,   210,   211,   212,   215,
+     218,   219,   222,   224,   232,   240,   104,   104,   104,   168,
+      68,   168,   121,   150,   162,    27,   104,   104,   226,   104,
+     104,   104,   224,   229,   230,   240,    27,   104,    20,    38,
+      41,    42,    47,    55,    60,    74,    79,    83,    85,    87,
+     104,   111,   222,   105,   108,   224,   107,   228,   221,   120,
+     120,   104,   120,   120,   163,   226,   120,   240,   104,   177,
+     121,   125,   121,   125,   168,   104,   222,   104,   222,   240,
+     121,   125,   240,   240,   240,   220,   121,   125,   224,   121,
+     121,   222,   105,   227,   121,   125,   121,   222,   121,   125,
+     121,   222,   240,   224,   105,   233,   105,   121,   240,   240,
+     240,   229,   120,     4,     7,     8,    49,    50,    51,    88,
+      89,    90,    91,    92,   123,     5,    12,    13,    44,    62,
+      77,    95,    96,    97,   109,   110,   111,   112,   113,   114,
+     115,   116,   119,   241,   242,    68,   162,   104,   162,   168,
+      86,   151,   226,    58,   120,    56,   179,   120,   120,   120,
+     126,   108,    98,    58,   120,   105,   105,   224,   168,   164,
+     120,   121,   229,   229,   229,   229,   226,   121,    44,    80,
+     229,   229,   226,   229,   229,    93,   224,   222,    17,    63,
+     213,   214,   229,   229,   222,    17,    63,   216,   217,   229,
+     229,   222,    17,    63,   208,   209,    30,   240,   122,   126,
+     121,   224,   104,   178,   104,   178,   178,   240,   240,    85,
+     104,   188,   240,   240,   240,   240,   240,   240,   240,   240,
+     240,   240,   240,   240,   104,   226,    28,    29,   234,   226,
+     122,   121,    68,   120,   120,   120,   104,   120,   240,   240,
+     120,   120,   226,   229,   122,   126,   122,   126,   222,   240,
+     168,   122,   126,   122,   126,   224,   108,   122,   122,   229,
+     123,   226,    17,    63,   122,   126,   122,   229,   123,   226,
+      17,    63,   122,   126,   122,   229,   123,   226,    17,    63,
+     168,   122,   222,   121,    61,   180,   180,   180,   121,   222,
+     121,   234,   120,   103,   104,   116,   121,   235,   236,    26,
+     143,   120,   168,   104,    98,   120,   122,   122,    25,    46,
+     196,    31,   206,   103,   232,   213,   123,   168,   229,   123,
+     216,   123,   168,   229,   123,   208,   123,   168,   229,   123,
+     226,   122,   229,   104,   101,   181,   181,   222,   208,   190,
+     222,   224,    92,   146,   236,   115,   116,   119,    35,    81,
+     106,   113,   114,   239,   120,   122,   121,   152,   240,    19,
+      23,    30,    33,   197,   168,   226,   122,   226,   168,   123,
+     168,   226,   168,   123,   168,   226,   168,   123,   168,    86,
+     122,   240,   122,   226,   120,   120,   123,    35,    81,   106,
+     239,   228,   122,   236,   236,   237,   239,   103,   231,   232,
+     168,   120,   168,   168,   168,   168,   222,   208,   191,   222,
+     103,    45,   231,   120,   103,   121,   238,   122,   226,    49,
+     226,   120,   192,   123,   122,   103,   104,   224,   122,    64,
+      44,   194,   115,    61,   123,   224,   103,   104,    24,   122,
+     101,   174,   121,   229,   122
+};
+
+#if ! defined (ZZ_SIZE_T) && defined (__SIZE_TYPE__)
+# define ZZ_SIZE_T __SIZE_TYPE__
+#endif
+#if ! defined (ZZ_SIZE_T) && defined (size_t)
+# define ZZ_SIZE_T size_t
+#endif
+#if ! defined (ZZ_SIZE_T)
+# if defined (__STDC__) || defined (__cplusplus)
+#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  define ZZ_SIZE_T size_t
+# endif
+#endif
+#if ! defined (ZZ_SIZE_T)
+# define ZZ_SIZE_T unsigned int
+#endif
+
+#define zz_errok		(zz_errstatus = 0)
+#define zz_clearin	(zz_char = ZZ_EMPTY)
+#define ZZ_EMPTY		(-2)
+#define ZZ_EOF		0
+
+#define ZZ_ACCEPT	goto zz_acceptlab
+#define ZZ_ABORT		goto zz_abortlab
+#define ZZ_ERROR		goto zz_errorlab
+
+
+/* Like ZZ_ERROR except do call zz_error.  This remains here temporarily
+   to ease the transition to the new meaning of ZZ_ERROR, for GCC.
+   Once GCC version 2 has supplanted version 1, this can go.  */
+
+#define ZZ_FAIL		goto zz_errlab
+
+#define ZZ_RECOVERING()  (!!zz_errstatus)
+
+#define ZZ_BACKUP(Token, Value)					\
+do								\
+  if (zz_char == ZZ_EMPTY && zz_len == 1)				\
+    {								\
+      zz_char = (Token);						\
+      zz_lval = (Value);						\
+      zz_token = ZZ_TRANSLATE (zz_char);				\
+      ZZ_POPSTACK;						\
+      goto zz_backup;						\
+    }								\
+  else								\
+    { 								\
+      zz_error ("syntax error: cannot back up");\
+      ZZ_ERROR;							\
+    }								\
+while (0)
+
+
+#define ZZ_TERROR	1
+#define ZZ_ERRCODE	256
+
+
+/* ZZ_LLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
+   If N is 0, then set CURRENT to the empty location which ends
+   the previous symbol: RHS[0] (always defined).  */
+
+#define ZZ_RHSLOC(Rhs, K) ((Rhs)[K])
+#ifndef ZZ_LLOC_DEFAULT
+# define ZZ_LLOC_DEFAULT(Current, Rhs, N)				\
+    do									\
+      if (N)								\
+	{								\
+	  (Current).first_line   = ZZ_RHSLOC (Rhs, 1).first_line;	\
+	  (Current).first_column = ZZ_RHSLOC (Rhs, 1).first_column;	\
+	  (Current).last_line    = ZZ_RHSLOC (Rhs, N).last_line;		\
+	  (Current).last_column  = ZZ_RHSLOC (Rhs, N).last_column;	\
+	}								\
+      else								\
+	{								\
+	  (Current).first_line   = (Current).last_line   =		\
+	    ZZ_RHSLOC (Rhs, 0).last_line;				\
+	  (Current).first_column = (Current).last_column =		\
+	    ZZ_RHSLOC (Rhs, 0).last_column;				\
+	}								\
+    while (0)
+#endif
+
+
+/* ZZ__LOCATION_PRINT -- Print the location on the stream.
+   This macro was not mandated originally: define only if we know
+   we won't break user code: when these are the locations we know.  */
+
+#ifndef ZZ__LOCATION_PRINT
+# if ZZ_LTYPE_IS_TRIVIAL
+#  define ZZ__LOCATION_PRINT(File, Loc)			\
+     fprintf (File, "%d.%d-%d.%d",			\
+              (Loc).first_line, (Loc).first_column,	\
+              (Loc).last_line,  (Loc).last_column)
+# else
+#  define ZZ__LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
+#endif
+
+
+/* ZZ_LEX -- calling `zz_lex' with the right arguments.  */
+
+#ifdef ZZ_LEX_PARAM
+# define ZZ_LEX zz_lex (ZZ_LEX_PARAM)
+#else
+# define ZZ_LEX zz_lex ()
+#endif
+
+/* Enable debugging if requested.  */
+#if ZZ_DEBUG
+
+# ifndef ZZ_FPRINTF
+#  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
+#  define ZZ_FPRINTF fprintf
+# endif
+
+# define ZZ_DPRINTF(Args)			\
+do {						\
+  if (zz_debug)					\
+    ZZ_FPRINTF Args;				\
+} while (0)
+
+# define ZZ__SYMBOL_PRINT(Title, Type, Value, Location)		\
+do {								\
+  if (zz_debug)							\
+    {								\
+      ZZ_FPRINTF (stderr, "%s ", Title);				\
+      zz_symprint (stderr, 					\
+                  Type, Value);	\
+      ZZ_FPRINTF (stderr, "\n");					\
+    }								\
+} while (0)
+
+/*------------------------------------------------------------------.
+| zz__stack_print -- Print the state stack from its BOTTOM up to its |
+| TOP (included).                                                   |
+`------------------------------------------------------------------*/
+
+#if defined (__STDC__) || defined (__cplusplus)
+static void
+zz__stack_print (short int *bottom, short int *top)
+#else
+static void
+zz__stack_print (bottom, top)
+    short int *bottom;
+    short int *top;
+#endif
+{
+  ZZ_FPRINTF (stderr, "Stack now");
+  for (/* Nothing. */; bottom <= top; ++bottom)
+    ZZ_FPRINTF (stderr, " %d", *bottom);
+  ZZ_FPRINTF (stderr, "\n");
+}
+
+# define ZZ__STACK_PRINT(Bottom, Top)				\
+do {								\
+  if (zz_debug)							\
+    zz__stack_print ((Bottom), (Top));				\
+} while (0)
+
+
+/*------------------------------------------------.
+| Report that the ZZ_RULE is going to be reduced.  |
+`------------------------------------------------*/
+
+#if defined (__STDC__) || defined (__cplusplus)
+static void
+zz__reduce_print (int zz_rule)
+#else
+static void
+zz__reduce_print (zz_rule)
+    int zz_rule;
+#endif
+{
+  int zz_i;
+  unsigned int zz_lno = zz_rline[zz_rule];
+  ZZ_FPRINTF (stderr, "Reducing stack by rule %d (line %u), ",
+             zz_rule - 1, zz_lno);
+  /* Print the symbols being reduced, and their result.  */
+  for (zz_i = zz_prhs[zz_rule]; 0 <= zz_rhs[zz_i]; zz_i++)
+    ZZ_FPRINTF (stderr, "%s ", zz_tname [zz_rhs[zz_i]]);
+  ZZ_FPRINTF (stderr, "-> %s\n", zz_tname [zz_r1[zz_rule]]);
+}
+
+# define ZZ__REDUCE_PRINT(Rule)		\
+do {					\
+  if (zz_debug)				\
+    zz__reduce_print (Rule);		\
+} while (0)
+
+/* Nonzero means print parse trace.  It is left uninitialized so that
+   multiple parsers can coexist.  */
+int zz_debug;
+#else /* !ZZ_DEBUG */
+# define ZZ_DPRINTF(Args)
+# define ZZ__SYMBOL_PRINT(Title, Type, Value, Location)
+# define ZZ__STACK_PRINT(Bottom, Top)
+# define ZZ__REDUCE_PRINT(Rule)
+#endif /* !ZZ_DEBUG */
+
+
+/* ZZ_INITDEPTH -- initial size of the parser's stacks.  */
+#ifndef	ZZ_INITDEPTH
+# define ZZ_INITDEPTH 200
+#endif
+
+/* ZZ_MAXDEPTH -- maximum size the stacks can grow to (effective only
+   if the built-in stack extension method is used).
+
+   Do not make this value too large; the results are undefined if
+   SIZE_MAX < ZZ_STACK_BYTES (ZZ_MAXDEPTH)
+   evaluated with infinite-precision integer arithmetic.  */
+
 #ifndef ZZ_MAXDEPTH
-#define ZZ_MAXDEPTH 150
+# define ZZ_MAXDEPTH 10000
 #endif
 
-/* __ZZ_SCLASS defines the scoping/storage class for global objects
- * that are NOT renamed by the -p option.  By default these names
- * are going to be 'static' so that multi-definition errors
- * will not occur with multiple parsers.
- * If you want (unsupported) access to internal names you need
- * to define this to be null so it implies 'extern' scope.
- * This should not be used in conjunction with -p.
- */
-#ifndef __ZZ_SCLASS
-# define __ZZ_SCLASS static
+
+
+#if ZZ_ERROR_VERBOSE
+
+# ifndef zz_strlen
+#  if defined (__GLIBC__) && defined (_STRING_H)
+#   define zz_strlen strlen
+#  else
+/* Return the length of ZZ_STR.  */
+static ZZ_SIZE_T
+#   if defined (__STDC__) || defined (__cplusplus)
+zz_strlen (const char *zz_str)
+#   else
+zz_strlen (zz_str)
+     const char *zz_str;
+#   endif
+{
+  register const char *zz_s = zz_str;
+
+  while (*zz_s++ != '\0')
+    continue;
+
+  return zz_s - zz_str - 1;
+}
+#  endif
+# endif
+
+# ifndef zz_stpcpy
+#  if defined (__GLIBC__) && defined (_STRING_H) && defined (_GNU_SOURCE)
+#   define zz_stpcpy stpcpy
+#  else
+/* Copy ZZ_SRC to ZZ_DEST, returning the address of the terminating '\0' in
+   ZZ_DEST.  */
+static char *
+#   if defined (__STDC__) || defined (__cplusplus)
+zz_stpcpy (char *zz_dest, const char *zz_src)
+#   else
+zz_stpcpy (zz_dest, zz_src)
+     char *zz_dest;
+     const char *zz_src;
+#   endif
+{
+  register char *zz_d = zz_dest;
+  register const char *zz_s = zz_src;
+
+  while ((*zz_d++ = *zz_s++) != '\0')
+    continue;
+
+  return zz_d - 1;
+}
+#  endif
+# endif
+
+#endif /* !ZZ_ERROR_VERBOSE */
+
+
+
+#if ZZ_DEBUG
+/*--------------------------------.
+| Print this symbol on ZZ_OUTPUT.  |
+`--------------------------------*/
+
+#if defined (__STDC__) || defined (__cplusplus)
+static void
+zz_symprint (FILE *zz_output, int zz_type, ZZ_STYPE *zz_valuep)
+#else
+static void
+zz_symprint (zz_output, zz_type, zz_valuep)
+    FILE *zz_output;
+    int zz_type;
+    ZZ_STYPE *zz_valuep;
 #endif
+{
+  /* Pacify ``unused variable'' warnings.  */
+  (void) zz_valuep;
+
+  if (zz_type < ZZ_NTOKENS)
+    ZZ_FPRINTF (zz_output, "token %s (", zz_tname[zz_type]);
+  else
+    ZZ_FPRINTF (zz_output, "nterm %s (", zz_tname[zz_type]);
+
+
+# ifdef ZZ_PRINT
+  if (zz_type < ZZ_NTOKENS)
+    ZZ_PRINT (zz_output, zz_toknum[zz_type], *zz_valuep);
+# endif
+  switch (zz_type)
+    {
+      default:
+        break;
+    }
+  ZZ_FPRINTF (zz_output, ")");
+}
+
+#endif /* ! ZZ_DEBUG */
+/*-----------------------------------------------.
+| Release the memory associated to this symbol.  |
+`-----------------------------------------------*/
+
+#if defined (__STDC__) || defined (__cplusplus)
+static void
+zz_destruct (const char *zz_msg, int zz_type, ZZ_STYPE *zz_valuep)
+#else
+static void
+zz_destruct (zz_msg, zz_type, zz_valuep)
+    const char *zz_msg;
+    int zz_type;
+    ZZ_STYPE *zz_valuep;
+#endif
+{
+  /* Pacify ``unused variable'' warnings.  */
+  (void) zz_valuep;
+
+  if (!zz_msg)
+    zz_msg = "Deleting";
+  ZZ__SYMBOL_PRINT (zz_msg, zz_type, zz_valuep, zz_locationp);
+
+  switch (zz_type)
+    {
+
+      default:
+        break;
+    }
+}
+
+
+/* Prevent warnings from -Wmissing-prototypes.  */
+
+#ifdef ZZ_PARSE_PARAM
+# if defined (__STDC__) || defined (__cplusplus)
+int zz_parse (void *ZZ_PARSE_PARAM);
+# else
+int zz_parse ();
+# endif
+#else /* ! ZZ_PARSE_PARAM */
+#if defined (__STDC__) || defined (__cplusplus)
+int zz_parse (void);
+#else
+int zz_parse ();
+#endif
+#endif /* ! ZZ_PARSE_PARAM */
+
+
+
+/* The look-ahead symbol.  */
+int zz_char;
+
+/* The semantic value of the look-ahead symbol.  */
 ZZ_STYPE zz_lval;
-__ZZ_SCLASS ZZ_STYPE zz_val;
-typedef int zz_tabelem;
-# define ZZ_ERRCODE 256
 
-/* # line 2657 "ascParse.y" */
+/* Number of syntax errors so far.  */
+int zz_nerrs;
+
+
+
+/*----------.
+| zz_parse.  |
+`----------*/
+
+#ifdef ZZ_PARSE_PARAM
+# if defined (__STDC__) || defined (__cplusplus)
+int zz_parse (void *ZZ_PARSE_PARAM)
+# else
+int zz_parse (ZZ_PARSE_PARAM)
+  void *ZZ_PARSE_PARAM;
+# endif
+#else /* ! ZZ_PARSE_PARAM */
+#if defined (__STDC__) || defined (__cplusplus)
+int
+zz_parse (void)
+#else
+int
+zz_parse ()
+
+#endif
+#endif
+{
+  
+  register int zz_state;
+  register int zz_n;
+  int zz_result;
+  /* Number of tokens to shift before error messages enabled.  */
+  int zz_errstatus;
+  /* Look-ahead token as an internal (translated) token number.  */
+  int zz_token = 0;
+
+  /* Three stacks and their tools:
+     `zz_ss': related to states,
+     `zz_vs': related to semantic values,
+     `zz_ls': related to locations.
+
+     Refer to the stacks thru separate pointers, to allow zz_overflow
+     to reallocate them elsewhere.  */
+
+  /* The state stack.  */
+  short int zz_ssa[ZZ_INITDEPTH];
+  short int *zz_ss = zz_ssa;
+  register short int *zz_ssp;
+
+  /* The semantic value stack.  */
+  ZZ_STYPE zz_vsa[ZZ_INITDEPTH];
+  ZZ_STYPE *zz_vs = zz_vsa;
+  register ZZ_STYPE *zz_vsp;
+
+
+
+#define ZZ_POPSTACK   (zz_vsp--, zz_ssp--)
+
+  ZZ_SIZE_T zz_stacksize = ZZ_INITDEPTH;
+
+  /* The variables used to return semantic value and location from the
+     action routines.  */
+  ZZ_STYPE zz_val;
+
+
+  /* When reducing, the number of symbols on the RHS of the reduced
+     rule.  */
+  int zz_len;
+
+  ZZ_DPRINTF ((stderr, "Starting parse\n"));
+
+  zz_state = 0;
+  zz_errstatus = 0;
+  zz_nerrs = 0;
+  zz_char = ZZ_EMPTY;		/* Cause a token to be read.  */
+
+  /* Initialize stack pointers.
+     Waste one element of value and location stack
+     so that they stay on the same level as the state stack.
+     The wasted elements are never initialized.  */
+
+  zz_ssp = zz_ss;
+  zz_vsp = zz_vs;
+
+
+  zz_vsp[0] = zz_lval;
+
+  goto zz_setstate;
+
+/*------------------------------------------------------------.
+| zz_newstate -- Push a new state, which is found in zz_state.  |
+`------------------------------------------------------------*/
+ zz_newstate:
+  /* In all cases, when you get here, the value and location stacks
+     have just been pushed. so pushing a state here evens the stacks.
+     */
+  zz_ssp++;
+
+ zz_setstate:
+  *zz_ssp = zz_state;
+
+  if (zz_ss + zz_stacksize - 1 <= zz_ssp)
+    {
+      /* Get the current used size of the three stacks, in elements.  */
+      ZZ_SIZE_T zz_size = zz_ssp - zz_ss + 1;
+
+#ifdef zz_overflow
+      {
+	/* Give user a chance to reallocate the stack. Use copies of
+	   these so that the &'s don't force the real ones into
+	   memory.  */
+	ZZ_STYPE *zz_vs1 = zz_vs;
+	short int *zz_ss1 = zz_ss;
+
+
+	/* Each stack pointer address is followed by the size of the
+	   data in use in that stack, in bytes.  This used to be a
+	   conditional around just the two extra args, but that might
+	   be undefined if zz_overflow is a macro.  */
+	zz_overflow ("parser stack overflow",
+		    &zz_ss1, zz_size * sizeof (*zz_ssp),
+		    &zz_vs1, zz_size * sizeof (*zz_vsp),
+
+		    &zz_stacksize);
+
+	zz_ss = zz_ss1;
+	zz_vs = zz_vs1;
+      }
+#else /* no zz_overflow */
+# ifndef ZZ_STACK_RELOCATE
+      goto zz_overflowlab;
+# else
+      /* Extend the stack our own way.  */
+      if (ZZ_MAXDEPTH <= zz_stacksize)
+	goto zz_overflowlab;
+      zz_stacksize *= 2;
+      if (ZZ_MAXDEPTH < zz_stacksize)
+	zz_stacksize = ZZ_MAXDEPTH;
+
+      {
+	short int *zz_ss1 = zz_ss;
+	union zz_alloc *zz_ptr =
+	  (union zz_alloc *) ZZ_STACK_ALLOC (ZZ_STACK_BYTES (zz_stacksize));
+	if (! zz_ptr)
+	  goto zz_overflowlab;
+	ZZ_STACK_RELOCATE (zz_ss);
+	ZZ_STACK_RELOCATE (zz_vs);
+
+#  undef ZZ_STACK_RELOCATE
+	if (zz_ss1 != zz_ssa)
+	  ZZ_STACK_FREE (zz_ss1);
+      }
+# endif
+#endif /* no zz_overflow */
+
+      zz_ssp = zz_ss + zz_size - 1;
+      zz_vsp = zz_vs + zz_size - 1;
+
+
+      ZZ_DPRINTF ((stderr, "Stack size increased to %lu\n",
+		  (unsigned long int) zz_stacksize));
+
+      if (zz_ss + zz_stacksize - 1 <= zz_ssp)
+	ZZ_ABORT;
+    }
+
+  ZZ_DPRINTF ((stderr, "Entering state %d\n", zz_state));
+
+  goto zz_backup;
+
+/*-----------.
+| zz_backup.  |
+`-----------*/
+zz_backup:
+
+/* Do appropriate processing given the current state.  */
+/* Read a look-ahead token if we need one and don't already have one.  */
+/* zz_resume: */
+
+  /* First try to decide what to do without reference to look-ahead token.  */
+
+  zz_n = zz_pact[zz_state];
+  if (zz_n == ZZ_PACT_NINF)
+    goto zz_default;
+
+  /* Not known => get a look-ahead token if don't already have one.  */
+
+  /* ZZ_CHAR is either ZZ_EMPTY or ZZ_EOF or a valid look-ahead symbol.  */
+  if (zz_char == ZZ_EMPTY)
+    {
+      ZZ_DPRINTF ((stderr, "Reading a token: "));
+      zz_char = ZZ_LEX;
+    }
+
+  if (zz_char <= ZZ_EOF)
+    {
+      zz_char = zz_token = ZZ_EOF;
+      ZZ_DPRINTF ((stderr, "Now at end of input.\n"));
+    }
+  else
+    {
+      zz_token = ZZ_TRANSLATE (zz_char);
+      ZZ__SYMBOL_PRINT ("Next token is", zz_token, &zz_lval, &zz_lloc);
+    }
+
+  /* If the proper action on seeing token ZZ_TOKEN is to reduce or to
+     detect an error, take that action.  */
+  zz_n += zz_token;
+  if (zz_n < 0 || ZZ_LAST < zz_n || zz_check[zz_n] != zz_token)
+    goto zz_default;
+  zz_n = zz_table[zz_n];
+  if (zz_n <= 0)
+    {
+      if (zz_n == 0 || zz_n == ZZ_TABLE_NINF)
+	goto zz_errlab;
+      zz_n = -zz_n;
+      goto zz_reduce;
+    }
+
+  if (zz_n == ZZ_FINAL)
+    ZZ_ACCEPT;
+
+  /* Shift the look-ahead token.  */
+  ZZ__SYMBOL_PRINT ("Shifting", zz_token, &zz_lval, &zz_lloc);
+
+  /* Discard the token being shifted unless it is eof.  */
+  if (zz_char != ZZ_EOF)
+    zz_char = ZZ_EMPTY;
+
+  *++zz_vsp = zz_lval;
+
+
+  /* Count tokens shifted since error; after three, turn off error
+     status.  */
+  if (zz_errstatus)
+    zz_errstatus--;
+
+  zz_state = zz_n;
+  goto zz_newstate;
+
+
+/*-----------------------------------------------------------.
+| zz_default -- do the default action for the current state.  |
+`-----------------------------------------------------------*/
+zz_default:
+  zz_n = zz_defact[zz_state];
+  if (zz_n == 0)
+    goto zz_errlab;
+  goto zz_reduce;
+
+
+/*-----------------------------.
+| zz_reduce -- Do a reduction.  |
+`-----------------------------*/
+zz_reduce:
+  /* zz_n is the number of a rule to reduce with.  */
+  zz_len = zz_r2[zz_n];
+
+  /* If ZZ_LEN is nonzero, implement the default value of the action:
+     `$$ = $1'.
+
+     Otherwise, the following line sets ZZ_VAL to garbage.
+     This behavior is undocumented and Bison
+     users should not rely upon it.  Assigning to ZZ_VAL
+     unconditionally makes the parser a bit smaller, and it avoids a
+     GCC warning that ZZ_VAL may be used uninitialized.  */
+  zz_val = zz_vsp[1-zz_len];
+
+
+  ZZ__REDUCE_PRINT (zz_n);
+  switch (zz_n)
+    {
+        case 17:
+#line 429 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  ErrMsg_Generic("Error in definition.");
+	}
+    break;
+
+  case 18:
+#line 436 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          /* the following steps apply to string buffers only, not files */
+	  struct gl_list_t *stats;
+          int dispose;
+	  if ((zz_vsp[-2].slptr) != NULL) {
+	    stats = gl_create(1L);
+	    gl_append_ptr(stats,(void *)(zz_vsp[-2].slptr));
+	    if (g_untrapped_error) {
+	      ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
+		WriteStatementList(ASCERR,(zz_vsp[-2].slptr),4);
+	      DestroyStatementList((zz_vsp[-2].slptr));
+            } else {
+	      dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
+              switch (dispose) {
+              case 1: /* appended */
+	        if (stats != NULL) {
+	          gl_destroy(stats);
+	        }
+	        break;
+              case 0: /* kept */
+	        break;
+              case -1: /* illegal in file */
+	        ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
+	        if (stats != NULL) {
+		  WriteStatementList(ASCERR,(zz_vsp[-2].slptr),4);
+	          gl_iterate(stats,(DestroyFunc)DestroyStatementList);
+	          gl_destroy(stats);
+	        }
+	        break;
+              default:
+	        break;
+              }
+            }
+	  }
+	  /* don't let any bizarreness in string parsing hang around */
+	  g_type_name = g_refines_name = g_proc_name = NULL;
+	  g_model_parameters =
+	    g_parameter_reduction =
+	    g_parameter_wheres = NULL;
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 19:
+#line 481 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  Asc_ScannerPushBuffer((zz_vsp[-1].dquote_ptr));
+	}
+    break;
+
+  case 20:
+#line 485 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroyName((zz_vsp[-1].nptr));
+	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
+	}
+    break;
+
+  case 21:
+#line 490 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroyName((zz_vsp[0].nptr));
+	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
+	}
+    break;
+
+  case 22:
+#line 498 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          Asc_ModuleCreateAlias(Asc_CurrentModule(),(zz_vsp[-1].dquote_ptr));
+        }
+    break;
+
+  case 23:
+#line 502 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroyName((zz_vsp[-1].nptr));
+	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
+	}
+    break;
+
+  case 24:
+#line 507 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroyName((zz_vsp[0].nptr));
+	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
+	}
+    break;
+
+  case 25:
+#line 515 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (void)LoadArchiveLibrary(SCP((zz_vsp[-1].id_ptr)),SCP((zz_vsp[-3].id_ptr)));
+	}
+    break;
+
+  case 26:
+#line 519 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (void)LoadArchiveLibrary(SCP((zz_vsp[-1].id_ptr)),NULL);
+	}
+    break;
+
+  case 27:
+#line 526 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*  see comments for notes statement.  */
+	  if( (zz_vsp[-1].int_value) != NOTES_T ) {
+	    WarnMsg_MismatchEnd("NOTES", NULL, (zz_vsp[-1].int_value), NULL);
+	  }
+	  if ((zz_vsp[-2].notesptr) != NULL) {
+	    struct NoteTmp *nt;
+	    symchar *lang=NULL; /* dummy */
+	    nt = (zz_vsp[-2].notesptr);
+	    while (nt != NULL) {
+	      if (nt->lang != NULL) {
+	        lang = nt->lang;
+	      }
+	      /* save exploding vardata to simple entries until we keep */
+	      CollectNote(CreateNote(g_type_name, lang, NULL, g_proc_name,
+	                             Asc_ModuleBestName(Asc_CurrentModule()),
+	                             nt->bt,
+	                             nt->line, nt->vardata, nd_vlist));
+	      nt = nt->next;
+	    }
+	    /* now keep them */
+	    ProcessNotes(1);
+	    DestroyNoteTmpList((zz_vsp[-2].notesptr));
+          }
+          g_type_name = g_proc_name = NULL;
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 28:
+#line 557 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  g_type_name = (zz_vsp[-2].id_ptr);
+	  g_proc_name = (zz_vsp[-1].id_ptr);
+	}
+    break;
+
+  case 29:
+#line 565 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if ((zz_vsp[-3].tptr) == NULL) {
+	    DestroyProcedureList((zz_vsp[-2].listp));
+	  } else {
+	    if( (zz_vsp[-1].int_value) != METHODS_T ) {
+	      WarnMsg_MismatchEnd("ADD METHODS", NULL, (zz_vsp[-1].int_value), "METHODS");
+	    }
+	    if (AddMethods((zz_vsp[-3].tptr),(zz_vsp[-2].listp),g_untrapped_error) != 0) {
+	      if ((zz_vsp[-3].tptr) != ILLEGAL_DEFINITION) {
+                ErrMsg_ProcsRejected("ADD",SCP(GetName((zz_vsp[-3].tptr))));
+	        DestroyProcedureList((zz_vsp[-2].listp));
+	      } /* else adding in DEFINITION MODEL may have misgone */
+	    }
+	  }
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 30:
+#line 585 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *tmptype;
+	  tmptype = FindType((zz_vsp[-1].id_ptr));
+	  if (tmptype == NULL) {
+            ErrMsg_ProcTypeMissing("ADD", SCP((zz_vsp[-1].id_ptr)));
+	  }
+	  (zz_val.tptr) = tmptype; /* parent should check for NULL */
+	  g_type_name = (zz_vsp[-1].id_ptr); /* scope for notes */
+	}
+    break;
+
+  case 31:
+#line 595 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.tptr) = ILLEGAL_DEFINITION;
+	  /* need a bit of global state here to tag base methods */
+	}
+    break;
+
+  case 32:
+#line 603 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if ((zz_vsp[-3].tptr) == NULL) {
+	    DestroyProcedureList((zz_vsp[-2].listp));
+	  } else {
+	    if( (zz_vsp[-1].int_value) != METHODS_T ) {
+	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, (zz_vsp[-1].int_value), "METHODS");
+	    }
+	    if (ReplaceMethods((zz_vsp[-3].tptr),(zz_vsp[-2].listp),g_untrapped_error) != 0) {
+              ErrMsg_ProcsRejected("REPLACE",SCP(GetName((zz_vsp[-3].tptr))));
+	      DestroyProcedureList((zz_vsp[-2].listp));
+	    }
+	  }
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 33:
+#line 621 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *tmptype;
+	  tmptype = FindType((zz_vsp[-1].id_ptr));
+	  if (tmptype == NULL) {
+            ErrMsg_ProcTypeMissing("REPLACE", SCP((zz_vsp[-1].id_ptr)));
+	  }
+	  (zz_val.tptr) = tmptype; /* parent should check for NULL */
+	}
+    break;
+
+  case 34:
+#line 630 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.tptr) = ILLEGAL_DEFINITION;
+	  /* need a bit of global state here to tag base methods */
+	}
+    break;
+
+  case 35:
+#line 638 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *def_ptr;
+	  int keepnotes = 0;
+
+          if(( (zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	    /* all identifier_t are from symbol table, so ptr match
+	     * is sufficient for equality.
+	     */
+	    WarnMsg_MismatchEnd("ATOM", SCP(g_type_name),
+	                        (zz_vsp[-1].int_value), SCP(g_type_name));
+	  }
+	  g_atom_dim_ptr = CheckDimensionsMatch(g_default_dim_ptr,
+	                                        g_atom_dim_ptr);
+	  if (g_atom_dim_ptr != NULL) {
+	    def_ptr = CreateAtomTypeDef(g_type_name,
+	                                g_refines_name,
+	                                real_type, /* ignored..really */
+	                                Asc_CurrentModule(),
+	                                (zz_vsp[-5].int_value),
+	                                (zz_vsp[-3].slptr),
+	                                (zz_vsp[-2].listp),
+	                                g_defaulted,
+	                                g_default_double,
+	                                g_atom_dim_ptr,
+	                                g_default_long,
+	                                g_default_symbol,
+	                                g_untrapped_error);
+	    if (def_ptr != NULL) {
+	      keepnotes = AddType(def_ptr);
+	    } else {
+	      /* CreateAtomTypeDef is responsible for freeing (if needed)
+	       * all args sent to it event of failure so we don't have to.
+	       * In particular $3 $4 should be killed before returning NULL.
+	       */
+	      ErrMsg_NullDefPointer(SCP(g_type_name));
+	    }
+	  } else {
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL,
+	            "Atom dimensions don't match in ATOM %s on line %s:%lu.\n",
+	            SCP(g_type_name),
+	            Asc_ModuleBestName(Asc_CurrentModule()),
+	            g_header_linenum);
+	    DestroyStatementList((zz_vsp[-3].slptr));
+	    DestroyProcedureList((zz_vsp[-2].listp));
+	  }
+	  ProcessNotes(keepnotes);
+	  g_type_name = g_refines_name = g_proc_name = NULL;
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 36:
+#line 691 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /* g_type_name = $1; */
+	  g_refines_name = (zz_vsp[-3].id_ptr);
+	  g_atom_dim_ptr = (zz_vsp[-2].dimp);
+	  g_default_double = (zz_vsp[-1].real_value);
+	  g_header_linenum = LineNum();
+	}
+    break;
+
+  case 37:
+#line 702 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
+	}
+    break;
+
+  case 38:
+#line 710 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = 0.0;
+	  g_default_dim_ptr = WildDimension();
+	  g_defaulted = 0;
+	}
+    break;
+
+  case 39:
+#line 716 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = (zz_vsp[-1].int_value) ? -(zz_vsp[0].real_value) : (zz_vsp[0].real_value);
+	  g_defaulted = 1;
+	}
+    break;
+
+  case 40:
+#line 721 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = 0.0;
+	  g_default_dim_ptr = Dimensionless();
+	  g_default_long = 0;
+	  g_defaulted = 1;
+	}
+    break;
+
+  case 41:
+#line 728 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = 0.0;
+	  g_default_dim_ptr = Dimensionless();
+	  g_default_long = 1;
+	  g_defaulted = 1;
+	}
+    break;
+
+  case 42:
+#line 735 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = 0.0;
+	  g_default_dim_ptr = Dimensionless();
+	  g_default_symbol = (zz_vsp[0].sym_ptr);
+	  g_defaulted = 0;
+	}
+    break;
+
+  case 43:
+#line 745 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *def_ptr;
+	  int keepnotes = 0;
+	  if (g_defaulted) {
+	    g_atom_dim_ptr = CheckDimensionsMatch(g_default_dim_ptr,
+	                                          g_atom_dim_ptr);
+	  }
+	  if (g_atom_dim_ptr != NULL) {
+	    def_ptr = CreateConstantTypeDef(g_type_name,
+	                                    g_refines_name,
+	                                    Asc_CurrentModule(),
+	                                    (zz_vsp[-1].int_value),
+	                                    g_defaulted,
+	                                    g_default_double,
+	                                    g_default_long,
+	                                    g_default_symbol,
+	                                    g_atom_dim_ptr,
+	                                    g_untrapped_error);
+	    if (def_ptr != NULL) {
+	      keepnotes = AddType(def_ptr);
+	    } else {
+	      ErrMsg_NullDefPointer(SCP(g_type_name));
+	    }
+	  } else {
+	    error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(Asc_CurrentModule()),g_header_linenum,NULL,
+	            "Constant dimensions don't match in CONSTANT %s"
+	            " on line %s:%lu.\n",
+	            SCP(g_type_name),
+	            Asc_ModuleBestName(Asc_CurrentModule()),
+	            g_header_linenum);
+	  }
+	  ProcessNotes(keepnotes);
+	  g_type_name = g_refines_name = NULL;
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 44:
+#line 785 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  g_type_name = (zz_vsp[-6].id_ptr);
+	  g_refines_name = (zz_vsp[-4].id_ptr);
+	  g_atom_dim_ptr = (zz_vsp[-3].dimp);
+	  switch (g_constant_type) {
+	  case DOUBLECONSTANT:
+	    g_default_double = (zz_vsp[-2].real_value);
+	    break;
+	  case LONGCONSTANT:
+	    g_default_long = (zz_vsp[-2].real_value);
+	    break;
+	  case BOOLEANCONSTANT:
+	    g_default_long = (zz_vsp[-2].int_value);
+	    break;
+	  case SYMBOLCONSTANT:
+	    g_default_symbol = (zz_vsp[-2].sym_ptr);
+	    break;
+	  default:
+	    ErrMsg_Generic("Wierd constant type assign encountered.");
+	    break; /* better not be reached. */
+	  }
+	  g_header_linenum = LineNum();
+	  if ((zz_vsp[-1].dquote_ptr) != NULL) {
+	    CollectNote(CreateNote(g_type_name,InlineNote(),SelfNote(),NULL,
+	                           Asc_ModuleBestName(Asc_CurrentModule()),
+	                           AddBraceChar((zz_vsp[-1].dquote_ptr),InlineNote()),
+	                           g_header_linenum,NULL,nd_empty));
+	  }
+	}
+    break;
+
+  case 45:
+#line 818 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = 0.0;
+	  g_default_dim_ptr = WildDimension();
+	  g_defaulted = 0;
+	}
+    break;
+
+  case 46:
+#line 824 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = (zz_vsp[-1].int_value) ? -(zz_vsp[0].real_value) : (zz_vsp[0].real_value);
+	  g_defaulted = 1;
+	}
+    break;
+
+  case 47:
+#line 829 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 1;
+	  g_defaulted = 1;
+	  g_default_dim_ptr = Dimensionless();
+	  g_constant_type = BOOLEANCONSTANT;
+	}
+    break;
+
+  case 48:
+#line 836 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 0;
+	  g_defaulted = 1;
+	  g_default_dim_ptr = Dimensionless();
+	  g_constant_type = BOOLEANCONSTANT;
+	}
+    break;
+
+  case 49:
+#line 843 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sym_ptr) = (zz_vsp[0].sym_ptr);
+	  g_defaulted = 1;
+	  g_default_dim_ptr = Dimensionless();
+	  g_constant_type = SYMBOLCONSTANT;
+	}
+    break;
+
+  case 50:
+#line 853 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *def_ptr;
+	  int keepnotes = 0;
+	  if(( (zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	    /* all identifier_t are from symbol table, so ptr match
+	     * is sufficient for equality.
+	     */
+	    WarnMsg_MismatchEnd("MODEL", SCP(g_type_name),
+	                        (zz_vsp[-1].int_value), SCP(g_type_name));
+	  }
+	  def_ptr = CreateModelTypeDef(g_type_name,
+	                               g_refines_name,
+	                               Asc_CurrentModule(),
+	                               (zz_vsp[-5].int_value),
+	                               (zz_vsp[-3].slptr),
+	                               (zz_vsp[-2].listp),
+	                               g_model_parameters,
+	                               g_parameter_reduction,
+	                               g_parameter_wheres,
+	                               g_untrapped_error);
+	  if (def_ptr != NULL) {
+	    keepnotes = AddType(def_ptr);
+	  } else {
+	    /* CreateModelTypeDef is responsible for freeing (if needed)
+	     * all args sent to it so we don't have to here.
+	     * in particular $3 $4 g_model_parameters, g_parameter_reduction,
+	     * and g_parameter_wheres.
+	     */
+	    ErrMsg_NullDefPointer(SCP(g_type_name));
+	  }
+	  ProcessNotes(keepnotes);
+	  g_type_name = g_refines_name = NULL;
+	  g_model_parameters =
+	    g_parameter_reduction =
+	    g_parameter_wheres = NULL;
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 51:
+#line 895 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /* g_type_name = $1; */
+	  g_model_parameters = (zz_vsp[-2].slptr);
+	  g_parameter_wheres = (zz_vsp[-1].slptr);
+	  g_refines_name = NULL;
+	  g_header_linenum = LineNum();
+	}
+    break;
+
+  case 52:
+#line 904 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /* g_type_name = $1; */
+	  g_model_parameters = (zz_vsp[-5].slptr);
+	  g_parameter_wheres = (zz_vsp[-4].slptr);
+	  g_refines_name = (zz_vsp[-2].id_ptr);
+	  g_parameter_reduction = (zz_vsp[-1].slptr);
+	  g_header_linenum = LineNum();
+	}
+    break;
+
+  case 53:
+#line 916 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
+	}
+    break;
+
+  case 54:
+#line 924 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = NULL;
+	}
+    break;
+
+  case 55:
+#line 928 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
+	}
+    break;
+
+  case 56:
+#line 935 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = NULL;
+	}
+    break;
+
+  case 57:
+#line 939 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
+	}
+    break;
+
+  case 58:
+#line 946 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = NULL;
+	}
+    break;
+
+  case 59:
+#line 950 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
+	}
+    break;
+
+  case 60:
+#line 957 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *def_ptr;
+	  if (((zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	    /* all identifier_t are from symbol table, so ptr match
+	     * is sufficient for equality.
+	     */
+	    WarnMsg_MismatchEnd("PATCH", SCP(g_type_name),
+	                        (zz_vsp[-1].int_value), SCP(g_type_name));
+	  }
+	  def_ptr = CreatePatchTypeDef(g_type_name,
+	                               g_refines_name,
+	                               NULL,
+	                               Asc_CurrentModule(),
+	                               (zz_vsp[-3].slptr),
+	                               (zz_vsp[-2].listp),
+	                               g_untrapped_error);
+	  g_untrapped_error = 0;
+	  if (def_ptr != NULL) {
+	    AddType(def_ptr);
+	  } else {
+	    /* CreatePatchTypeDef is responsible for freeing (if needed)
+	     * all args sent to it so we don't have to here.
+	     * in particular $2 $3
+	     */
+	    ErrMsg_NullDefPointer(SCP(g_type_name));
+	  }
+	  g_type_name = g_refines_name = g_proc_name = NULL;
+	}
+    break;
+
+  case 61:
+#line 989 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*
+	   * A patch definition looks just like a model def.
+	   * with the original name <=> refine name.
+	   */
+	  g_type_name = (zz_vsp[-3].id_ptr);
+	  g_refines_name = (zz_vsp[-1].id_ptr);
+	  g_header_linenum = LineNum();
+	}
+    break;
+
+  case 62:
+#line 1002 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 0;
+	}
+    break;
+
+  case 63:
+#line 1006 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 1;
+	}
+    break;
+
+  case 64:
+#line 1013 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *def_ptr;
+	  int keepnotes = 0;
+
+	  if(( (zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != (zz_vsp[-4].id_ptr) )) {
+	    WarnMsg_MismatchEnd("DEFINITION", SCP((zz_vsp[-4].id_ptr)), (zz_vsp[-1].int_value), SCP((zz_vsp[-4].id_ptr)));
+	  }
+	  if( (zz_vsp[-4].id_ptr) == GetBaseTypeName(relation_type)) {
+	    def_ptr = CreateRelationTypeDef(Asc_CurrentModule(),(zz_vsp[-4].id_ptr),(zz_vsp[-3].slptr),(zz_vsp[-2].listp));
+	  }
+	  else if( (zz_vsp[-4].id_ptr) == GetBaseTypeName(logrel_type) ) {
+	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),(zz_vsp[-4].id_ptr),(zz_vsp[-3].slptr),(zz_vsp[-2].listp));
+	  }
+	  else {
+	    ErrMsg_Generic("Bad type passed to DEFINITION statement.");
+	    def_ptr = NULL;
+	  }
+	  if ( def_ptr != NULL ) {
+	    keepnotes = AddType(def_ptr);
+	  } else {
+	    ErrMsg_NullDefPointer(SCP((zz_vsp[-4].id_ptr)));
+	  }
+	  ProcessNotes(keepnotes);
+	  g_type_name = NULL;
+	  g_untrapped_error = 0;
+	}
+    break;
+
+  case 65:
+#line 1043 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
+	}
+    break;
+
+  case 66:
+#line 1052 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    { /* nothing to do. just cruft to fix ; problem */ }
+    break;
+
+  case 67:
+#line 1057 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          struct UnitDefinition *ud;
+          unsigned long c,len;
+
+	  if( (zz_vsp[0].int_value) != UNITS_T ) {
+	    WarnMsg_MismatchEnd("UNITS", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+          len = gl_length((zz_vsp[-1].listp));
+          for (c=1; c <= len; c++) {
+            ud = (struct UnitDefinition *)gl_fetch((zz_vsp[-1].listp),c);
+            ProcessUnitDef(ud);
+            DestroyUnitDef(ud);
+          }
+          gl_destroy((zz_vsp[-1].listp));
+          (zz_val.statptr) = NULL;
+	}
+    break;
+
+  case 68:
+#line 1076 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.listp) = gl_create(100L);
+	}
+    break;
+
+  case 69:
+#line 1080 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  gl_append_ptr((zz_vsp[-1].listp),(char *)(zz_vsp[0].udefptr));
+	  (zz_val.listp) = (zz_vsp[-1].listp);
+	}
+    break;
+
+  case 70:
+#line 1088 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.udefptr) = CreateUnitDef((zz_vsp[-3].id_ptr),(zz_vsp[-1].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
+                             LineNum());
+	}
+    break;
+
+  case 71:
+#line 1097 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.listp) = NULL;
+	}
+    break;
+
+  case 72:
+#line 1101 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    { /* To get rid of this, we will need a global proclist
+           * that accumulates procs until a MODEL production is
+           * completed. If any other sort of production is started,
+           * and proclist is not NULL, it should be discarded.
+           */
+	}
+    break;
+
+  case 73:
+#line 1108 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.listp) = (zz_vsp[0].listp);
+	}
+    break;
+
+  case 74:
+#line 1115 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.listp) = (zz_vsp[0].listp);
+	  gl_sort((zz_val.listp),(CmpFunc)CmpProcs);
+	}
+    break;
+
+  case 75:
+#line 1122 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.listp) = gl_create(7L);
+	}
+    break;
+
+  case 76:
+#line 1126 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  unsigned long c;
+	  struct InitProcedure *oldproc;
+	  c = gl_length((zz_vsp[-1].listp));
+          while (c > 0) {
+            oldproc = (struct InitProcedure *)gl_fetch((zz_vsp[-1].listp),c);
+            if (ProcName((zz_vsp[0].procptr)) == ProcName(oldproc)) {
+	      ErrMsg_DuplicateProc((zz_vsp[0].procptr));
+              break;
+            }
+            c--;
+          }
+	  if (c) { /* broke early */
+	    DestroyProcedure((zz_vsp[0].procptr));
+	  } else {
+	    gl_append_ptr((zz_vsp[-1].listp),(char *)(zz_vsp[0].procptr));
+	  }
+	  (zz_val.listp) = (zz_vsp[-1].listp);
+	}
+    break;
+
+  case 77:
+#line 1149 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if (((zz_vsp[-1].int_value) != IDENTIFIER_T) || ((zz_vsp[-4].id_ptr) != g_end_identifier)) {
+	    /* all identifier_t are from symbol table, so ptr match
+	     * is sufficient for equality.
+	     */
+	    WarnMsg_MismatchEnd("METHOD", SCP((zz_vsp[-4].id_ptr)), (zz_vsp[-1].int_value), SCP((zz_vsp[-4].id_ptr)));
+	  }
+	  (zz_val.procptr) = CreateProcedure((zz_vsp[-4].id_ptr),(zz_vsp[-2].slptr));
+	  g_proc_name = NULL;
+	}
+    break;
+
+  case 78:
+#line 1163 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  g_proc_name = (zz_vsp[0].id_ptr);
+	}
+    break;
+
+  case 79:
+#line 1172 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = CreateStatementList((zz_vsp[0].listp));
+	}
+    break;
+
+  case 80:
+#line 1179 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.listp) = gl_create(7L);
+	}
+    break;
+
+  case 81:
+#line 1183 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /* this is appending to a gllist of statements, not yet slist. */
+	  if ((zz_vsp[-1].statptr) != NULL) {
+	    gl_append_ptr((zz_vsp[-2].listp),(char *)(zz_vsp[-1].statptr));
+	  }
+	  (zz_val.listp) = (zz_vsp[-2].listp);
+	}
+    break;
+
+  case 82:
+#line 1191 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  ErrMsg_Generic("Error in statement input.");
+	  (zz_val.listp) = (zz_vsp[-2].listp);
+	}
+    break;
+
+  case 113:
+#line 1232 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *tmptype;
+	  tmptype = FindType((zz_vsp[-2].id_ptr));
+	  if ((zz_vsp[0].eptr) != NULL) {
+	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A.");
+	    g_untrapped_error++;
+	    DestroyVariableList((zz_vsp[-4].lptr));
+	    DestroySetList(g_typeargs);
+	    DestroyExprList((zz_vsp[0].eptr));
+	    (zz_val.statptr) = NULL;
+	  } else {
+	    if (tmptype != NULL) {
+	      if ((GetBaseType(tmptype) != model_type) &&
+	          (g_typeargs != NULL)) {
+	        error_reporter_current_line(ASC_USER_ERROR,
+	                "IS_A has arguments to the nonmodel type %s.\n",
+	                SCP((zz_vsp[-2].id_ptr)));
+	        DestroyVariableList((zz_vsp[-4].lptr));
+	        DestroySetList(g_typeargs);
+	        DestroyExprList((zz_vsp[0].eptr));
+	        g_untrapped_error++;
+	        (zz_val.statptr) = NULL;
+	      } else {
+	        (zz_val.statptr) = CreateISA((zz_vsp[-4].lptr),(zz_vsp[-2].id_ptr),g_typeargs,(zz_vsp[-1].id_ptr));
+	      }
+	    } else {
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP((zz_vsp[-2].id_ptr)));
+	      DestroyVariableList((zz_vsp[-4].lptr));
+	      DestroySetList(g_typeargs);
+	      DestroyExprList((zz_vsp[0].eptr));
+	      g_untrapped_error++;
+	      (zz_val.statptr) = NULL;
+	    }
+	  }
+	  g_typeargs = NULL;
+
+	}
+    break;
+
+  case 114:
+#line 1273 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *tmptype;
+	  tmptype = FindType((zz_vsp[-2].id_ptr));
+	  if (tmptype != NULL) {
+	    if ((GetBaseType(tmptype) != model_type) &&
+	        (g_typeargs != NULL)) {
+	      error_reporter_current_line(ASC_USER_ERROR,"WILL_BE has arguments to the nonmodel type '%s'",SCP((zz_vsp[-2].id_ptr)));
+	      DestroyVariableList((zz_vsp[-4].lptr));
+	      DestroySetList(g_typeargs);
+	      DestroyExprList((zz_vsp[0].eptr));
+	      g_untrapped_error++;
+	      (zz_val.statptr) = NULL;
+	    } else {
+	      (zz_val.statptr) = CreateWILLBE((zz_vsp[-4].lptr),(zz_vsp[-2].id_ptr),g_typeargs,(zz_vsp[-1].id_ptr),(zz_vsp[0].eptr));
+	    }
+	  } else {
+	    DestroyVariableList((zz_vsp[-4].lptr));
+	    DestroySetList(g_typeargs);
+	    DestroyExprList((zz_vsp[0].eptr));
+	    g_untrapped_error++;
+	    (zz_val.statptr) = NULL;
+	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP((zz_vsp[-2].id_ptr)));
+	  }
+	  g_typeargs = NULL;
+	}
+    break;
+
+  case 115:
+#line 1302 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateALIASES((zz_vsp[-2].lptr),(zz_vsp[0].nptr));
+	}
+    break;
+
+  case 116:
+#line 1307 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  int carray_err;
+	  carray_err = 0;
+	  if (VariableListLength((zz_vsp[-11].lptr)) != 1L) {
+	    carray_err = 1;
+	    error_reporter_current_line(ASC_USER_ERROR,
+	            "Compound ALIASES allows only 1 LHS name. Found:");
+	    WriteVariableList(ASCERR,(zz_vsp[-11].lptr));
+	  }
+	  if (VariableListLength((zz_vsp[-5].lptr)) != 1L) {
+	    carray_err = 1;
+	    error_reporter_current_line(ASC_USER_ERROR,
+	            "Compound ALIASES/IS_A allows only one LHS name. Found:");
+	    WriteVariableList(ASCERR,(zz_vsp[-5].lptr));
+	  }
+	  /* verify $9 == "set" */
+	  if (!carray_err && (zz_vsp[-3].id_ptr) != GetBaseTypeName(set_type)) {
+	    carray_err = 1;
+	    error_reporter_current_line(ASC_USER_ERROR,"Compound ALIASES statement requires IS_A %s. ",SCP(GetBaseTypeName(set_type)));
+	    FPRINTF(ASCERR,"    Found %s.\n",SCP((zz_vsp[-3].id_ptr)));
+	  }
+	  /* verify set type */
+	  if ((!carray_err) &&
+	      ((zz_vsp[-1].id_ptr) != GetBaseTypeName(symbol_constant_type)) &&
+	      ((zz_vsp[-1].id_ptr) != GetBaseTypeName(integer_constant_type))) {
+	    carray_err = 1;
+	    error_reporter_current_line(ASC_USER_ERROR,
+	            "Compound ALIASES IS_A statement requires %s or %s.\n",
+	            SCP(GetBaseTypeName(integer_constant_type)),
+	            SCP(GetBaseTypeName(symbol_constant_type)));
+	    FPRINTF(ASCERR,"	Found %s.\n",SCP((zz_vsp[-1].id_ptr)));
+	  }
+	  if (carray_err) {
+	    DestroyVariableList((zz_vsp[-11].lptr));
+	    DestroyVariableList((zz_vsp[-8].lptr));
+	    DestroyVariableList((zz_vsp[-5].lptr));
+	    DestroySetList((zz_vsp[0].sptr));
+	    g_untrapped_error++;
+	    (zz_val.statptr) = NULL;
+	  } else {
+	    int intset;
+	    intset = ((zz_vsp[-1].id_ptr) == GetBaseTypeName(integer_constant_type));
+	    (zz_val.statptr) = CreateARR((zz_vsp[-11].lptr),(zz_vsp[-8].lptr),(zz_vsp[-5].lptr),intset,(zz_vsp[0].sptr));
+	  }
+	}
+    break;
+
+  case 117:
+#line 1356 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = NULL;
+	}
+    break;
+
+  case 118:
+#line 1360 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = (zz_vsp[-1].sptr);
+	}
+    break;
+
+  case 119:
+#line 1367 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if (FindType((zz_vsp[-1].id_ptr))) {
+	    (zz_val.statptr) = CreateREF((zz_vsp[-3].lptr),(zz_vsp[-1].id_ptr),(zz_vsp[0].id_ptr),1);
+	  } else {
+	    (zz_val.statptr) = CreateREF((zz_vsp[-3].lptr),(zz_vsp[-1].id_ptr),(zz_vsp[0].id_ptr),1);
+	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP((zz_vsp[-1].id_ptr)));
+	  }
+	}
+    break;
+
+  case 120:
+#line 1379 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct TypeDescription *tmptype;
+	  tmptype = FindType((zz_vsp[0].id_ptr));
+	  if (tmptype != NULL) {
+	    if ((GetBaseType(tmptype) != model_type) && 
+                (g_typeargs != NULL)) {
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_REFINED_TO has arguments to the nonmodel type %s.",SCP((zz_vsp[0].id_ptr)));
+	      DestroyVariableList((zz_vsp[-2].lptr));
+	      DestroySetList(g_typeargs);
+	      g_untrapped_error++;
+	      (zz_val.statptr) = NULL;
+	    } else {
+	      (zz_val.statptr) = CreateIRT((zz_vsp[-2].lptr),(zz_vsp[0].id_ptr),g_typeargs);
+	    }
+	  } else {
+	    error_reporter_current_line(ASC_USER_ERROR,"The IS_REFINED_TO uses the undefined type %s.\n",SCP((zz_vsp[0].id_ptr)));
+	    DestroyVariableList((zz_vsp[-2].lptr));
+	    DestroySetList(g_typeargs);
+	    g_untrapped_error++;
+	    (zz_val.statptr) = NULL;
+	  }
+	  g_typeargs = NULL;
+	}
+    break;
+
+  case 121:
+#line 1406 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  g_callargs = NULL;
+	}
+    break;
+
+  case 122:
+#line 1411 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[-3].id_ptr);
+	  g_callargs = (zz_vsp[-1].sptr);
+	}
+    break;
+
+  case 123:
+#line 1419 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  g_typeargs = NULL;
+	}
+    break;
+
+  case 124:
+#line 1424 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[-3].id_ptr);
+	  g_typeargs = (zz_vsp[-1].sptr);
+	}
+    break;
+
+  case 125:
+#line 1432 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = NULL;
+	}
+    break;
+
+  case 126:
+#line 1436 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	}
+    break;
+
+  case 127:
+#line 1443 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = NULL;
+	}
+    break;
+
+  case 128:
+#line 1447 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	}
+    break;
+
+  case 129:
+#line 1454 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = NULL;
+	}
+    break;
+
+  case 130:
+#line 1458 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = (zz_vsp[0].eptr);
+	}
+    break;
+
+  case 131:
+#line 1465 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateAA((zz_vsp[-1].lptr));
+	}
+    break;
+
+  case 132:
+#line 1472 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateATS((zz_vsp[-1].lptr));
+	}
+    break;
+
+  case 133:
+#line 1479 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateWBTS((zz_vsp[-1].lptr));
+	}
+    break;
+
+  case 134:
+#line 1486 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateWNBTS((zz_vsp[-1].lptr));
+	}
+    break;
+
+  case 135:
+#line 1493 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateASSIGN((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 136:
+#line 1497 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateCASSIGN((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 137:
+#line 1504 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if (IsRelation((zz_vsp[0].eptr))) {
+	    if (g_parse_relns == 0) {
+	      DestroyExprList((zz_vsp[0].eptr));
+	      (zz_val.statptr) = NULL;
+	    } else {
+	      (zz_val.statptr) = CreateREL(NULL,(zz_vsp[0].eptr));
+	    }
+	  } else {
+	    (zz_val.statptr) = CreateLOGREL(NULL,(zz_vsp[0].eptr));
+	  }
+	}
+    break;
+
+  case 138:
+#line 1517 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if (IsRelation((zz_vsp[0].eptr))) {
+	    if (g_parse_relns == 0) {
+	      DestroyExprList((zz_vsp[0].eptr));
+	      DestroyName((zz_vsp[-2].nptr));
+	      (zz_val.statptr) = NULL;
+	    } else {
+	      (zz_val.statptr) = CreateREL((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
+	    }
+	  } else {
+	    (zz_val.statptr) = CreateLOGREL((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
+	  }
+	}
+    break;
+
+  case 139:
+#line 1534 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = (zz_vsp[0].eptr);
+	  if (NumberOfRelOps((zz_vsp[0].eptr)) < 1) {
+	    /* want at least 1. restriction to exactly 1 is in typelint */
+	    ErrMsg_Generic("Missing punctuation (,;:) or else expression contains the \
+wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
+	    g_untrapped_error++;
+	  }
+	}
+    break;
+
+  case 140:
+#line 1544 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_minimize));
+	  if (NumberOfRelOps((zz_vsp[0].eptr)) > 0) {
+	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
+	    g_untrapped_error++;
+	  }
+	}
+    break;
+
+  case 141:
+#line 1552 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_maximize));
+	  if (NumberOfRelOps((zz_vsp[0].eptr))>0) {
+	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
+	    g_untrapped_error++;
+	  }
+	}
+    break;
+
+  case 142:
+#line 1563 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*
+	   * This is the blackbox declarative external relation.
+	   */
+	  struct VariableList *vl;
+	  vl = JoinVariableLists((zz_vsp[-4].lptr),(zz_vsp[-2].lptr));
+	  (zz_val.statptr) = CreateEXTERN(2,(zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,(zz_vsp[-1].nptr),NULL);
+	}
+    break;
+
+  case 143:
+#line 1575 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.lptr) = (zz_vsp[-2].lptr);
+	}
+    break;
+
+  case 144:
+#line 1582 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.lptr) = (zz_vsp[-2].lptr);
+	}
+    break;
+
+  case 145:
+#line 1589 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.nptr) = NULL;
+	}
+    break;
+
+  case 146:
+#line 1593 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.nptr) = (zz_vsp[-2].nptr);
+	}
+    break;
+
+  case 147:
+#line 1600 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*
+	   * This is the glassbox declarative external relation.
+	   * This now allows a scope for placement of the relations
+	   */
+	  struct VariableList *vl = (zz_vsp[-4].lptr);
+	  struct Name *nptr;
+	  char tmp[32]; 
+	  symchar *str;
+
+	  sprintf(tmp,"%ld",(zz_vsp[-2].int_value));
+	  str = AddSymbol(tmp);
+	  nptr = CreateIdName(str);
+	  (zz_val.statptr) = CreateEXTERN(1,(zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,nptr,(zz_vsp[0].nptr));
+	}
+    break;
+
+  case 148:
+#line 1619 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.nptr) = NULL;
+	}
+    break;
+
+  case 149:
+#line 1623 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.nptr) = (zz_vsp[0].nptr);
+	}
+    break;
+
+  case 150:
+#line 1631 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != FOR_T ) {
+	    WarnMsg_MismatchEnd("FOR", SCP((zz_vsp[-6].id_ptr)), (zz_vsp[0].int_value), NULL);
+	  }
+          if ((zz_vsp[-2].fkind) == fk_create && (zz_vsp[-3].order) != f_random) {
+            /* create cannot have an order in declarative FOR */
+	    ErrMsg_Generic("FOR loops only accept DECREASING or INCREASING in the method section.");
+	    g_untrapped_error++;
+          }
+          if ((zz_vsp[-2].fkind) == fk_do && (zz_vsp[-3].order) == f_random) {
+            /* all FOR/DO default to increasing */
+	    (zz_val.statptr) = CreateFOR((zz_vsp[-6].id_ptr),(zz_vsp[-4].eptr),(zz_vsp[-1].slptr),f_increasing,(zz_vsp[-2].fkind));
+          } else {
+	    (zz_val.statptr) = CreateFOR((zz_vsp[-6].id_ptr),(zz_vsp[-4].eptr),(zz_vsp[-1].slptr),(zz_vsp[-3].order),(zz_vsp[-2].fkind));
+          }
+	}
+    break;
+
+  case 151:
+#line 1651 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.order) = f_random;
+	}
+    break;
+
+  case 152:
+#line 1655 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.order) = f_increasing;
+	}
+    break;
+
+  case 153:
+#line 1659 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.order) = f_decreasing;
+	}
+    break;
+
+  case 154:
+#line 1666 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          (zz_val.fkind) = fk_create; /* declarative FOR */
+	}
+    break;
+
+  case 155:
+#line 1670 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          (zz_val.fkind) = fk_expect; /* parameter FOR */
+	}
+    break;
+
+  case 156:
+#line 1674 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          (zz_val.fkind) = fk_check; /* WHERE FOR */
+	}
+    break;
+
+  case 157:
+#line 1678 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          (zz_val.fkind) = fk_do; /* method FOR */
+	}
+    break;
+
+  case 158:
+#line 1685 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateRUN((zz_vsp[0].nptr),NULL);
+	}
+    break;
+
+  case 159:
+#line 1689 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateRUN((zz_vsp[0].nptr),(zz_vsp[-2].nptr));	  /* type :: name */
+	}
+    break;
+
+  case 160:
+#line 1696 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+		(zz_val.statptr) = CreateFIX((zz_vsp[0].lptr));
+	}
+    break;
+
+  case 161:
+#line 1703 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+		(zz_val.statptr) = CreateFREE((zz_vsp[0].lptr));
+	}
+    break;
+
+  case 162:
+#line 1710 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*
+	   * This is procedural external code.
+	   */
+	  (zz_val.statptr) = CreateEXTERN(0,NULL,SCP((zz_vsp[-3].id_ptr)),(zz_vsp[-1].lptr),NULL,NULL);
+	}
+    break;
+
+  case 163:
+#line 1720 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*
+	   * This is proper procedural external method code.
+	   */
+	  (zz_val.statptr) = CreateCALL((zz_vsp[0].id_ptr),g_callargs);
+          g_callargs = NULL;
+	}
+    break;
+
+  case 164:
+#line 1731 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+		(zz_val.statptr) = CreateASSERT((zz_vsp[0].eptr));
+	}
+    break;
+
+  case 165:
+#line 1737 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != IF_T ) {
+	    WarnMsg_MismatchEnd("IF", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateIF((zz_vsp[-4].eptr),(zz_vsp[-2].slptr),(zz_vsp[-1].slptr));
+	}
+    break;
+
+  case 166:
+#line 1747 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != WHILE_T ) {
+	    WarnMsg_MismatchEnd("WHILE", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateWhile((zz_vsp[-3].eptr),(zz_vsp[-1].slptr));
+	}
+    break;
+
+  case 167:
+#line 1756 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = NULL;
+	}
+    break;
+
+  case 168:
+#line 1760 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.slptr) = (zz_vsp[0].slptr);
+	}
+    break;
+
+  case 169:
+#line 1767 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  ErrMsg_Generic("() missing in WHEN statement.");
+	  DestroyWhenList((zz_vsp[-1].wptr));
+	  DestroyVariableList((zz_vsp[-2].lptr));
+	  g_untrapped_error++;
+	  (zz_val.statptr) = NULL;
+	}
+    break;
+
+  case 170:
+#line 1778 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  ErrMsg_Generic("() missing in WHEN statement.");
+	  DestroyWhenList((zz_vsp[-1].wptr));
+	  DestroyVariableList((zz_vsp[-2].lptr));
+	  DestroyName((zz_vsp[-5].nptr));
+	  g_untrapped_error++;
+	  (zz_val.statptr) = NULL;
+	}
+    break;
+
+  case 171:
+#line 1790 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateWHEN(NULL,(zz_vsp[-3].lptr),(zz_vsp[-1].wptr));
+	}
+    break;
+
+  case 172:
+#line 1797 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateWHEN((zz_vsp[-7].nptr),(zz_vsp[-3].lptr),(zz_vsp[-1].wptr));
+	}
+    break;
+
+  case 173:
+#line 1807 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.wptr) = ReverseWhenCases((zz_vsp[0].wptr));
+	}
+    break;
+
+  case 174:
+#line 1814 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.wptr) = CreateWhen((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
+	}
+    break;
+
+  case 175:
+#line 1818 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.wptr) = CreateWhen(NULL,(zz_vsp[0].slptr));
+	}
+    break;
+
+  case 176:
+#line 1822 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.wptr) = LinkWhenCases(CreateWhen((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].wptr));
+	}
+    break;
+
+  case 177:
+#line 1826 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.wptr) = LinkWhenCases(CreateWhen(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].wptr));
+	}
+    break;
+
+  case 178:
+#line 1833 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateFlow(fc_break,NULL);
+	}
+    break;
+
+  case 179:
+#line 1837 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateFlow(fc_continue,NULL);
+	}
+    break;
+
+  case 180:
+#line 1841 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateFlow(fc_fallthru,NULL);
+	}
+    break;
+
+  case 181:
+#line 1845 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateFlow(fc_return,NULL);
+	}
+    break;
+
+  case 182:
+#line 1849 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateFlow(fc_stop,(zz_vsp[0].braced_ptr));
+	}
+    break;
+
+  case 183:
+#line 1856 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.statptr) = CreateFNAME((zz_vsp[0].nptr));
+	}
+    break;
+
+  case 184:
+#line 1863 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != SELECT_T ) {
+	    WarnMsg_MismatchEnd("SELECT", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  ErrMsg_Generic("() missing in SELECT statement.");
+	  DestroySelectList((zz_vsp[-1].septr));
+	  DestroyVariableList((zz_vsp[-2].lptr));
+	  g_untrapped_error++;
+	  (zz_val.statptr) = NULL;
+	}
+    break;
+
+  case 185:
+#line 1874 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != SELECT_T ) {
+	    WarnMsg_MismatchEnd("SELECT", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateSELECT((zz_vsp[-3].lptr),(zz_vsp[-1].septr));
+	}
+    break;
+
+  case 186:
+#line 1884 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.septr) = ReverseSelectCases((zz_vsp[0].septr));
+	}
+    break;
+
+  case 187:
+#line 1891 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.septr) = CreateSelect((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
+	}
+    break;
+
+  case 188:
+#line 1895 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.septr) = CreateSelect(NULL,(zz_vsp[0].slptr));
+	}
+    break;
+
+  case 189:
+#line 1899 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.septr) = LinkSelectCases(CreateSelect((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].septr));
+	}
+    break;
+
+  case 190:
+#line 1903 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.septr) = LinkSelectCases(CreateSelect(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].septr));
+	}
+    break;
+
+  case 191:
+#line 1910 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != SWITCH_T ) {
+	    WarnMsg_MismatchEnd("SWITCH", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  ErrMsg_Generic("() missing in SWITCH statement.");
+	  DestroySwitchList((zz_vsp[-1].swptr));
+	  DestroyVariableList((zz_vsp[-2].lptr));
+	  g_untrapped_error++;
+	  (zz_val.statptr) = NULL;
+	}
+    break;
+
+  case 192:
+#line 1921 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != SWITCH_T ) {
+	    WarnMsg_MismatchEnd("SWITCH", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateSWITCH((zz_vsp[-3].lptr),(zz_vsp[-1].swptr));
+	}
+    break;
+
+  case 193:
+#line 1931 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.swptr) = ReverseSwitchCases((zz_vsp[0].swptr));
+	}
+    break;
+
+  case 194:
+#line 1938 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.swptr) = CreateSwitch((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
+	}
+    break;
+
+  case 195:
+#line 1942 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.swptr) = CreateSwitch(NULL,(zz_vsp[0].slptr));
+	}
+    break;
+
+  case 196:
+#line 1946 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.swptr) = LinkSwitchCases(CreateSwitch((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].swptr));
+	}
+    break;
+
+  case 197:
+#line 1950 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.swptr) = LinkSwitchCases(CreateSwitch(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].swptr));
+	}
+    break;
+
+  case 198:
+#line 1957 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if( (zz_vsp[0].int_value) != CONDITIONAL_T ) {
+	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  (zz_val.statptr) = CreateCOND((zz_vsp[-1].slptr));
+	}
+    break;
+
+  case 199:
+#line 1967 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*  All processing of notes takes place on the notes_body here.
+	   *  Notes should NOT be added to the statement list.
+	   *  Here we know the current type and method names.
+	   */
+	  if( (zz_vsp[0].int_value) != NOTES_T ) {
+	    WarnMsg_MismatchEnd("NOTES", NULL, (zz_vsp[0].int_value), NULL);
+	  }
+	  if ((zz_vsp[-1].notesptr) != NULL) {
+	    struct NoteTmp *nt;
+	    symchar *lang=NULL; /* dummy */
+	    nt = (zz_vsp[-1].notesptr);
+	    while (nt != NULL) {
+	      if (nt->lang != NULL) {
+	        /* this logic works because of the reverse sort that
+	         * yacc does via noteslist and the forward sort that
+	         * we do via notesbody. lang recorded last appears
+	         * before other entries that need it.
+	         */
+	        lang = nt->lang;
+	      }
+
+	      /* save exploding vardata to simple entries until we keep */
+	      CollectNote(CreateNote(g_type_name, lang, NULL, g_proc_name,
+	                             Asc_ModuleBestName(Asc_CurrentModule()),
+	                             nt->bt,
+	                             nt->line, nt->vardata, nd_vlist));
+	      nt = nt->next;
+	    }
+	    DestroyNoteTmpList((zz_vsp[-1].notesptr));
+          }
+	  (zz_val.statptr) = NULL;
+	}
+    break;
+
+  case 200:
+#line 2004 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*  At this point we have the "language", the names of the
+	   *  objects we are explaining, and the explanation/notes itself.
+	   */
+	  (zz_val.notesptr) = (zz_vsp[0].notesptr);
+	  assert((zz_val.notesptr)->lang == NULL);
+	  (zz_val.notesptr)->lang = (zz_vsp[-1].sym_ptr);
+	}
+    break;
+
+  case 201:
+#line 2013 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  struct NoteTmp *nt;
+	  (zz_val.notesptr) = (zz_vsp[-2].notesptr);
+	  assert((zz_vsp[0].notesptr)->lang == NULL);
+	  (zz_vsp[0].notesptr)->lang = (zz_vsp[-1].sym_ptr);
+	  nt = (zz_val.notesptr);
+	  while (nt->next != NULL) {
+	    nt = nt->next;
+	  }
+	  LinkNoteTmp(nt,(zz_vsp[0].notesptr));
+	}
+    break;
+
+  case 202:
+#line 2028 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.notesptr) = CreateNoteTmp(NULL, AddBraceChar((zz_vsp[0].braced_ptr),NULL),
+                             (void *)(zz_vsp[-1].lptr), LineNum());
+	}
+    break;
+
+  case 203:
+#line 2033 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.notesptr) = CreateNoteTmp(NULL, AddBraceChar((zz_vsp[0].braced_ptr),NULL),
+	                     (void *)(zz_vsp[-1].lptr), LineNum());
+	  LinkNoteTmp((zz_val.notesptr),(zz_vsp[-2].notesptr));
+	}
+    break;
+
+  case 204:
+#line 2042 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  /*
+	   * Reversing the variable list is now essential to deal with
+	   * external procedures and other things where order is important.
+	   */
+	  (zz_val.lptr) = ReverseVariableList((zz_vsp[0].lptr));
+	}
+    break;
+
+  case 205:
+#line 2053 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
+	}
+    break;
+
+  case 206:
+#line 2057 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
+	  LinkVariableNodes((zz_val.lptr),(zz_vsp[-2].lptr));
+	}
+    break;
+
+  case 207:
+#line 2062 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  ErrMsg_CommaName("name",(zz_vsp[0].nptr));
+	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
+	  LinkVariableNodes((zz_val.lptr),(zz_vsp[-1].lptr));
+	  /* trash the definition. keep the loose fname around because
+	   * destroying here is inconvenient
+	   */
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 208:
+#line 2075 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  symchar *simple;
+	  void *data;
+	  enum NoteData nd;
+	  (zz_val.nptr) = ReverseName((zz_vsp[-1].nptr));
+	  if ((zz_vsp[0].dquote_ptr) != NULL && (zz_vsp[-1].nptr) != NULL) {
+            simple = SimpleNameIdPtr((zz_val.nptr));
+	    data = (simple == NULL ? (void *)(zz_val.nptr) : NULL);
+	    nd = (data == NULL ? nd_empty : nd_name);
+	    CollectNote(CreateNote(g_type_name, InlineNote(), simple,
+	                           g_proc_name,
+	                           Asc_ModuleBestName(Asc_CurrentModule()),
+	                           AddBraceChar((zz_vsp[0].dquote_ptr),InlineNote()),
+	                           LineNum(), data, nd));
+	  }
+	}
+    break;
+
+  case 209:
+#line 2095 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.nptr) = CreateIdName((zz_vsp[0].id_ptr));
+	}
+    break;
+
+  case 210:
+#line 2099 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.nptr) = CreateIdName((zz_vsp[0].id_ptr));
+	  LinkNames((zz_val.nptr),(zz_vsp[-2].nptr));
+	}
+    break;
+
+  case 211:
+#line 2104 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  if ((zz_vsp[-1].sptr) == NULL) {
+	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
+	    WriteName(ASCERR,(zz_vsp[-3].nptr));
+	    FPRINTF(ASCERR,"[]\n");
+	    g_untrapped_error++;
+	  } else {
+	    (zz_val.nptr) = CreateSetName((zz_vsp[-1].sptr));
+	    LinkNames((zz_val.nptr),(zz_vsp[-3].nptr));
+	  }
+	}
+    break;
+
+  case 212:
+#line 2119 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = CONDITIONAL_T;
+        }
+    break;
+
+  case 213:
+#line 2124 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = FOR_T;
+        }
+    break;
+
+  case 214:
+#line 2129 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = IF_T;
+        }
+    break;
+
+  case 215:
+#line 2134 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = INTERACTIVE_T;
+        }
+    break;
+
+  case 216:
+#line 2139 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = METHODS_T;
+        }
+    break;
+
+  case 217:
+#line 2144 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = NOTES_T;
+        }
+    break;
+
+  case 218:
+#line 2149 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = SELECT_T;
+        }
+    break;
+
+  case 219:
+#line 2154 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = SWITCH_T;
+        }
+    break;
+
+  case 220:
+#line 2159 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = UNITS_T;
+        }
+    break;
+
+  case 221:
+#line 2164 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = GLOBAL_T;
+        }
+    break;
+
+  case 222:
+#line 2169 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = WHEN_T;
+        }
+    break;
+
+  case 223:
+#line 2174 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = WHILE_T;
+        }
+    break;
+
+  case 224:
+#line 2179 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = (zz_vsp[0].id_ptr);
+          (zz_val.int_value) = IDENTIFIER_T;
+        }
+    break;
+
+  case 225:
+#line 2184 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+          g_end_identifier = NULL;
+          (zz_val.int_value) = END_T;
+        }
+    break;
+
+  case 226:
+#line 2192 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.braced_ptr) = NULL;
+	}
+    break;
+
+  case 227:
+#line 2196 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.braced_ptr) = (zz_vsp[0].braced_ptr);
+	}
+    break;
+
+  case 228:
+#line 2203 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dquote_ptr) = NULL;
+	}
+    break;
+
+  case 229:
+#line 2207 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dquote_ptr) = (zz_vsp[0].dquote_ptr);
+	}
+    break;
+
+  case 230:
+#line 2214 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = ReverseSetList((zz_vsp[0].sptr));
+	}
+    break;
+
+  case 231:
+#line 2218 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = NULL;
+	}
+    break;
+
+  case 232:
+#line 2225 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = CreateSingleSet((zz_vsp[0].eptr));
+	}
+    break;
+
+  case 233:
+#line 2229 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = CreateRangeSet((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 234:
+#line 2233 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = CreateSingleSet((zz_vsp[0].eptr));
+	  LinkSets((zz_val.sptr),(zz_vsp[-2].sptr));
+	}
+    break;
+
+  case 235:
+#line 2238 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.sptr) = CreateRangeSet((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	  LinkSets((zz_val.sptr),(zz_vsp[-4].sptr));
+	}
+    break;
+
+  case 236:
+#line 2246 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = (zz_vsp[0].int_value);
+	  g_constant_type = LONGCONSTANT;
+	  g_default_dim_ptr = Dimensionless();
+	}
+    break;
+
+  case 237:
+#line 2252 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = (zz_vsp[0].real_value);
+	  g_constant_type = DOUBLECONSTANT;
+	  g_default_dim_ptr = g_dim_ptr;
+	}
+    break;
+
+  case 238:
+#line 2261 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.real_value) = (zz_vsp[-1].real_value)*(zz_vsp[0].real_value);
+	}
+    break;
+
+  case 239:
+#line 2265 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  unsigned long pos;
+	  int error_code;
+	  g_units_ptr = FindOrDefineUnits((zz_vsp[0].braced_ptr),&pos,&error_code);
+	  if (g_units_ptr != NULL) {
+	    (zz_val.real_value) = (double)(zz_vsp[-1].int_value)*UnitsConvFactor(g_units_ptr);
+	    g_dim_ptr = UnitsDimensions(g_units_ptr);
+	  } else {
+            char **errv;
+	    (zz_val.real_value) = (double)(zz_vsp[-1].int_value);
+	    g_dim_ptr = WildDimension();
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", (zz_vsp[0].braced_ptr));
+            errv = UnitsExplainError((zz_vsp[0].braced_ptr),error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
+	    g_untrapped_error++;
+	  }
+	}
+    break;
+
+  case 240:
+#line 2286 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  g_dim_ptr = Dimensionless();
+	  (zz_val.real_value) = 1.0;
+	}
+    break;
+
+  case 241:
+#line 2291 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  unsigned long pos;
+	  int error_code;
+	  g_units_ptr = FindOrDefineUnits((zz_vsp[0].braced_ptr),&pos,&error_code);
+	  if (g_units_ptr != NULL) {
+	    (zz_val.real_value) = UnitsConvFactor(g_units_ptr);
+	    g_dim_ptr = UnitsDimensions(g_units_ptr);
+	  } else {
+            char **errv;
+	    (zz_val.real_value) = 1.0;
+	    g_dim_ptr = WildDimension();
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",(zz_vsp[0].braced_ptr));
+            errv = UnitsExplainError((zz_vsp[0].braced_ptr),error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
+	    g_untrapped_error++;
+	  }
+	}
+    break;
+
+  case 242:
+#line 2312 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimp) = (zz_vsp[0].dimp);
+	}
+    break;
+
+  case 243:
+#line 2316 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimp) = Dimensionless();
+	}
+    break;
+
+  case 244:
+#line 2320 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimp) = WildDimension();
+	}
+    break;
+
+  case 245:
+#line 2327 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimp) = WildDimension();
+	}
+    break;
+
+  case 246:
+#line 2331 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimp) = FindOrAddDimen(&((zz_vsp[0].dimen)));
+	}
+    break;
+
+  case 247:
+#line 2338 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  ParseDim(&((zz_val.dimen)),SCP((zz_vsp[0].id_ptr)));
+	}
+    break;
+
+  case 248:
+#line 2342 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  ClearDimensions(&((zz_val.dimen)));
+	}
+    break;
+
+  case 249:
+#line 2346 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimen) = SubDimensions(&((zz_vsp[-2].dimen)),&((zz_vsp[0].dimen)));
+	}
+    break;
+
+  case 250:
+#line 2350 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimen) = AddDimensions(&((zz_vsp[-2].dimen)),&((zz_vsp[0].dimen)));
+	}
+    break;
+
+  case 251:
+#line 2354 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.dimen) = ScaleDimensions(&((zz_vsp[-2].dimen)),(zz_vsp[0].frac_value));
+	}
+    break;
+
+  case 252:
+#line 2358 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  CopyDimensions(&((zz_vsp[-1].dimen)),&((zz_val.dimen)));
+	}
+    break;
+
+  case 253:
+#line 2365 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.frac_value) = (zz_vsp[-1].int_value) ? NegateF((zz_vsp[0].frac_value)) : (zz_vsp[0].frac_value);
+	}
+    break;
+
+  case 254:
+#line 2372 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.frac_value) = CreateFraction((short)(zz_vsp[0].int_value),(short)1);
+	}
+    break;
+
+  case 255:
+#line 2376 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.frac_value) = CreateFraction((short)(zz_vsp[-3].int_value),(short)(zz_vsp[-1].int_value));
+	}
+    break;
+
+  case 256:
+#line 2383 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 0;
+	}
+    break;
+
+  case 257:
+#line 2387 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 0;
+	}
+    break;
+
+  case 258:
+#line 2391 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.int_value) = 1;
+	}
+    break;
+
+  case 259:
+#line 2398 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateIntExpr((zz_vsp[0].int_value));
+	}
+    break;
+
+  case 260:
+#line 2402 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateIntExpr(LONG_MAX-1);
+	}
+    break;
+
+  case 261:
+#line 2406 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateRealExpr((zz_vsp[0].real_value),g_dim_ptr);
+	}
+    break;
+
+  case 262:
+#line 2410 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
+	}
+    break;
+
+  case 263:
+#line 2414 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateTrueExpr();
+	}
+    break;
+
+  case 264:
+#line 2418 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateFalseExpr();
+	}
+    break;
+
+  case 265:
+#line 2422 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateAnyExpr();
+	}
+    break;
+
+  case 266:
+#line 2426 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateSymbolExpr((zz_vsp[0].sym_ptr));
+	}
+    break;
+
+  case 267:
+#line 2430 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateVarExpr((zz_vsp[0].nptr));
+	}
+    break;
+
+  case 268:
+#line 2434 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateSetExpr((zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 269:
+#line 2438 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_plus));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 270:
+#line 2443 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_minus));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 271:
+#line 2448 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_times));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 272:
+#line 2453 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_divide));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 273:
+#line 2458 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_power));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 274:
+#line 2463 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_and));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 275:
+#line 2468 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_or));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 276:
+#line 2473 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_not));
+	}
+    break;
+
+  case 277:
+#line 2477 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),(zz_vsp[-1].eptr));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 278:
+#line 2482 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),(zz_vsp[-1].eptr));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 279:
+#line 2487 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_in));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 280:
+#line 2492 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_st));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 281:
+#line 2497 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_st));
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
+	}
+    break;
+
+  case 282:
+#line 2502 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = (zz_vsp[0].eptr);
+	}
+    break;
+
+  case 283:
+#line 2506 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_uminus));
+	}
+    break;
+
+  case 284:
+#line 2510 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateSatisfiedExpr((zz_vsp[-3].nptr),(zz_vsp[-1].real_value),g_dim_ptr);
+	}
+    break;
+
+  case 285:
+#line 2514 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateSatisfiedExpr((zz_vsp[-1].nptr),DBL_MAX,NULL);
+	}
+    break;
+
+  case 286:
+#line 2518 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroySetList((zz_vsp[-1].sptr));
+	  (zz_val.eptr) = NULL;
+	  ErrMsg_ParensBrackets("SUM");
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 287:
+#line 2525 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateBuiltin(e_sum,(zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 288:
+#line 2529 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroySetList((zz_vsp[-1].sptr));
+	  (zz_val.eptr) = NULL;
+	  ErrMsg_ParensBrackets("PROD");
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 289:
+#line 2536 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateBuiltin(e_prod,(zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 290:
+#line 2540 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroySetList((zz_vsp[-1].sptr));
+	  (zz_val.eptr) = NULL;
+	  ErrMsg_ParensBrackets("UNION");
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 291:
+#line 2547 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateBuiltin(e_union,(zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 292:
+#line 2551 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroySetList((zz_vsp[-1].sptr));
+	  (zz_val.eptr) = NULL;
+	  ErrMsg_ParensBrackets("INTERSECTION");
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 293:
+#line 2558 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateBuiltin(e_inter,(zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 294:
+#line 2562 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroySetList((zz_vsp[-1].sptr));
+	  (zz_val.eptr) = NULL;
+	  ErrMsg_ParensBrackets("CARD");
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 295:
+#line 2569 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateBuiltin(e_card,(zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 296:
+#line 2573 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  DestroySetList((zz_vsp[-1].sptr));
+	  (zz_val.eptr) = NULL;
+	  ErrMsg_ParensBrackets("CHOICE");
+	  g_untrapped_error++;
+	}
+    break;
+
+  case 297:
+#line 2580 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateBuiltin(e_choice,(zz_vsp[-1].sptr));
+	}
+    break;
+
+  case 298:
+#line 2584 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  CONST struct Func *fptr;
+	  if ((fptr = LookupFunc(SCP((zz_vsp[-3].id_ptr))))!=NULL) {
+	    (zz_val.eptr) = JoinExprLists((zz_vsp[-1].eptr),CreateFuncExpr(fptr));
+	  } else {
+	    (zz_val.eptr) = NULL;
+	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP((zz_vsp[-3].id_ptr)));
+	    g_untrapped_error++;
+	  }
+	}
+    break;
+
+  case 299:
+#line 2595 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = (zz_vsp[-1].eptr);
+	}
+    break;
+
+  case 300:
+#line 2602 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_equal);
+	}
+    break;
+
+  case 301:
+#line 2606 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_less);
+	}
+    break;
+
+  case 302:
+#line 2610 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_greater);
+	}
+    break;
+
+  case 303:
+#line 2614 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_lesseq);
+	}
+    break;
+
+  case 304:
+#line 2618 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_greatereq);
+	}
+    break;
+
+  case 305:
+#line 2622 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_notequal);
+	}
+    break;
+
+  case 306:
+#line 2629 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_boolean_eq);
+	}
+    break;
+
+  case 307:
+#line 2633 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+    {
+	  (zz_val.eptr) = CreateOpExpr(e_boolean_neq);
+	}
+    break;
+
+
+    }
+
+/* Line 1037 of yacc.c.  */
+#line 4884 "y.tab.c"
+
+  zz_vsp -= zz_len;
+  zz_ssp -= zz_len;
+
+
+  ZZ__STACK_PRINT (zz_ss, zz_ssp);
+
+  *++zz_vsp = zz_val;
+
+
+  /* Now `shift' the result of the reduction.  Determine what state
+     that goes to, based on the state we popped back to and the rule
+     number reduced by.  */
+
+  zz_n = zz_r1[zz_n];
+
+  zz_state = zz_pgoto[zz_n - ZZ_NTOKENS] + *zz_ssp;
+  if (0 <= zz_state && zz_state <= ZZ_LAST && zz_check[zz_state] == *zz_ssp)
+    zz_state = zz_table[zz_state];
+  else
+    zz_state = zz_defgoto[zz_n - ZZ_NTOKENS];
+
+  goto zz_newstate;
+
+
+/*------------------------------------.
+| zz_errlab -- here on detecting error |
+`------------------------------------*/
+zz_errlab:
+  /* If not already recovering from an error, report this error.  */
+  if (!zz_errstatus)
+    {
+      ++zz_nerrs;
+#if ZZ_ERROR_VERBOSE
+      zz_n = zz_pact[zz_state];
+
+      if (ZZ_PACT_NINF < zz_n && zz_n < ZZ_LAST)
+	{
+	  ZZ_SIZE_T zz_size = 0;
+	  int zz_type = ZZ_TRANSLATE (zz_char);
+	  const char* zz_prefix;
+	  char *zz_msg;
+	  int zz_x;
+
+	  /* Start ZZ_X at -ZZ_N if negative to avoid negative indexes in
+	     ZZ_CHECK.  */
+	  int zz_xbegin = zz_n < 0 ? -zz_n : 0;
+
+	  /* Stay within bounds of both zz_check and zz_tname.  */
+	  int zz_checklim = ZZ_LAST - zz_n;
+	  int zz_xend = zz_checklim < ZZ_NTOKENS ? zz_checklim : ZZ_NTOKENS;
+	  int zz_count = 0;
+
+	  zz_prefix = ", expecting ";
+	  for (zz_x = zz_xbegin; zz_x < zz_xend; ++zz_x)
+	    if (zz_check[zz_x + zz_n] == zz_x && zz_x != ZZ_TERROR)
+	      {
+		zz_size += zz_strlen (zz_prefix) + zz_strlen (zz_tname [zz_x]);
+		zz_count += 1;
+		if (zz_count == 5)
+		  {
+		    zz_size = 0;
+		    break;
+		  }
+	      }
+	  zz_size += (sizeof ("syntax error, unexpected ")
+		     + zz_strlen (zz_tname[zz_type]));
+	  zz_msg = (char *) ZZ_STACK_ALLOC (zz_size);
+	  if (zz_msg != 0)
+	    {
+	      char *zz_p = zz_stpcpy (zz_msg, "syntax error, unexpected ");
+	      zz_p = zz_stpcpy (zz_p, zz_tname[zz_type]);
+
+	      if (zz_count < 5)
+		{
+		  zz_prefix = ", expecting ";
+		  for (zz_x = zz_xbegin; zz_x < zz_xend; ++zz_x)
+		    if (zz_check[zz_x + zz_n] == zz_x && zz_x != ZZ_TERROR)
+		      {
+			zz_p = zz_stpcpy (zz_p, zz_prefix);
+			zz_p = zz_stpcpy (zz_p, zz_tname[zz_x]);
+			zz_prefix = " or ";
+		      }
+		}
+	      zz_error (zz_msg);
+	      ZZ_STACK_FREE (zz_msg);
+	    }
+	  else
+	    zz_error ("syntax error; also virtual memory exhausted");
+	}
+      else
+#endif /* ZZ_ERROR_VERBOSE */
+	zz_error ("syntax error");
+    }
+
+
+
+  if (zz_errstatus == 3)
+    {
+      /* If just tried and failed to reuse look-ahead token after an
+	 error, discard it.  */
+
+      if (zz_char <= ZZ_EOF)
+        {
+          /* If at end of input, pop the error token,
+	     then the rest of the stack, then return failure.  */
+	  if (zz_char == ZZ_EOF)
+	     for (;;)
+	       {
+
+		 ZZ_POPSTACK;
+		 if (zz_ssp == zz_ss)
+		   ZZ_ABORT;
+		 zz_destruct ("Error: popping",
+                             zz_stos[*zz_ssp], zz_vsp);
+	       }
+        }
+      else
+	{
+	  zz_destruct ("Error: discarding", zz_token, &zz_lval);
+	  zz_char = ZZ_EMPTY;
+	}
+    }
+
+  /* Else will try to reuse look-ahead token after shifting the error
+     token.  */
+  goto zz_errlab1;
+
+
+/*---------------------------------------------------.
+| zz_errorlab -- error raised explicitly by ZZ_ERROR.  |
+`---------------------------------------------------*/
+zz_errorlab:
+
+#ifdef __GNUC__
+  /* Pacify GCC when the user code never invokes ZZ_ERROR and the label
+     zz_errorlab therefore never appears in user code.  */
+  if (0)
+     goto zz_errorlab;
+#endif
+
+zz_vsp -= zz_len;
+  zz_ssp -= zz_len;
+  zz_state = *zz_ssp;
+  goto zz_errlab1;
+
+
+/*-------------------------------------------------------------.
+| zz_errlab1 -- common code for both syntax error and ZZ_ERROR.  |
+`-------------------------------------------------------------*/
+zz_errlab1:
+  zz_errstatus = 3;	/* Each real token shifted decrements this.  */
+
+  for (;;)
+    {
+      zz_n = zz_pact[zz_state];
+      if (zz_n != ZZ_PACT_NINF)
+	{
+	  zz_n += ZZ_TERROR;
+	  if (0 <= zz_n && zz_n <= ZZ_LAST && zz_check[zz_n] == ZZ_TERROR)
+	    {
+	      zz_n = zz_table[zz_n];
+	      if (0 < zz_n)
+		break;
+	    }
+	}
+
+      /* Pop the current state because it cannot handle the error token.  */
+      if (zz_ssp == zz_ss)
+	ZZ_ABORT;
+
+
+      zz_destruct ("Error: popping", zz_stos[zz_state], zz_vsp);
+      ZZ_POPSTACK;
+      zz_state = *zz_ssp;
+      ZZ__STACK_PRINT (zz_ss, zz_ssp);
+    }
+
+  if (zz_n == ZZ_FINAL)
+    ZZ_ACCEPT;
+
+  *++zz_vsp = zz_lval;
+
+
+  /* Shift the error token. */
+  ZZ__SYMBOL_PRINT ("Shifting", zz_stos[zz_n], zz_vsp, zz_lsp);
+
+  zz_state = zz_n;
+  goto zz_newstate;
+
+
+/*-------------------------------------.
+| zz_acceptlab -- ZZ_ACCEPT comes here.  |
+`-------------------------------------*/
+zz_acceptlab:
+  zz_result = 0;
+  goto zz_return;
+
+/*-----------------------------------.
+| zz_abortlab -- ZZ_ABORT comes here.  |
+`-----------------------------------*/
+zz_abortlab:
+  zz_destruct ("Error: discarding lookahead",
+              zz_token, &zz_lval);
+  zz_char = ZZ_EMPTY;
+  zz_result = 1;
+  goto zz_return;
+
+#ifndef zz_overflow
+/*----------------------------------------------.
+| zz_overflowlab -- parser overflow comes here.  |
+`----------------------------------------------*/
+zz_overflowlab:
+  zz_error ("parser stack overflow");
+  zz_result = 2;
+  /* Fall through.  */
+#endif
+
+zz_return:
+#ifndef zz_overflow
+  if (zz_ss != zz_ssa)
+    ZZ_STACK_FREE (zz_ss);
+#endif
+  return zz_result;
+}
+
+
+#line 2637 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
 
 /*
  * We really need to do something about freeing up the productions
@@ -472,12 +5119,10 @@ int
 zz_error(char *s)
 {
   g_untrapped_error++;
-  FPRINTF(ASCERR,"%s",s);
   if (Asc_CurrentModule() != NULL) {
-    FPRINTF(ASCERR," %s:%lu.\n",
-            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
+    error_reporter_current_line(ASC_USER_ERROR,"%s",s);
   } else {
-    FPRINTF(ASCERR," at end of input.\n");
+    error_reporter(ASC_USER_ERROR,NULL,0,"%s at end of input.\n",s);
   }
   return 0;
 }
@@ -492,15 +5137,9 @@ Asc_ErrMsgTypeDefnEOF(void)
    *  definition.  If NULL no, otherwise yes.
    */
   if ( g_type_name ) {
-    FPRINTF(ASCERR,
-            "%sEnd of file reached in a type definition.\n"
-            "\tIncomplete definition for %s on line %s:%lu\n",
-            StatioLabel(3),
-            SCP(g_type_name),
-            (Asc_CurrentModule()
-             ? Asc_ModuleBestName(Asc_CurrentModule())
-             : "<UNKNOWN>"),
-            LineNum());
+    error_reporter_current_line(ASC_USER_ERROR,
+            "End of file reached in a type definition. Incomplete definition for '%s'.",
+            SCP(g_type_name));
   }
 }
 
@@ -516,23 +5155,14 @@ Asc_ErrMsgTypeDefnEOF(void)
 static void
 ErrMsg_Generic(CONST char *string)
 {
-  struct module_t *mod;
+  /* the module may have be already closed, Asc_CurrentModule will be null */
+  error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
-  /* the module may have be already closed */
-  mod = Asc_CurrentModule();
-  FPRINTF(ASCERR,
-          "%s%son line %s:%lu\n",
-          StatioLabel(3),string,
-          (mod ? Asc_ModuleBestName(mod) : "<UNKNOWN>"),
-          LineNum());
   if (g_type_name != NULL) {
-    FPRINTF(ASCERR,"    type %s",SCP(g_type_name));
+    error_reporter_current_line(ASC_USER_ERROR,"    type %s\n",SCP(g_type_name));
   }
   if (g_proc_name != NULL) {
-    FPRINTF(ASCERR,"    METHOD %s",SCP(g_proc_name));
-  }
-  if (g_type_name != NULL || g_proc_name != NULL) {
-    FPRINTF(ASCERR,"\n");
+    error_reporter_current_line(ASC_USER_ERROR,"    METHOD %s\n",SCP(g_proc_name));
   }
 }
 
@@ -542,12 +5172,9 @@ static void ErrMsg_CommaName(CONST char *what, struct Name *name)
 
   /* the module may have be already closed */
   mod = Asc_CurrentModule();
-  FPRINTF(ASCERR, "ASC-Error: Missing comma or operator before %s ",what);
+
+  error_reporter_current_line(ASC_USER_ERROR, "ASC-Error: Missing comma or operator before %s ",what);
   WriteName(ASCERR,name);
-  FPRINTF(ASCERR,
-          " on line %s:%lu\n",
-          (mod ? Asc_ModuleBestName(mod) : "<UNKNOWN>"),
-          LineNum());
 }
 
 #if COMMAEXPR_NOTBUGGY
@@ -556,67 +5183,45 @@ static void ErrMsg_CommaExpr(CONST char *what, struct Expr *eptr)
   struct module_t *mod;
 
   /* the module may have be already closed */
-  mod = Asc_CurrentModule();
-  FPRINTF(ASCERR, "ASC-Error: Missing comma before %s ",what);
+  error_reporter_current_line(ASC_USER_ERROR, "ASC-Error: Missing comma before %s ",what);
   WriteExpr(ASCERR,eptr);
-  FPRINTF(ASCERR,
-          " on line %s:%lu\n",
-          (mod ? Asc_ModuleBestName(mod) : "<UNKNOWN>"),
-          LineNum());
 }
 #endif /* COMMAEXPR_NOTBUGGY. delete if can't fix */
 
 static void
 ErrMsg_NullDefPointer(CONST char *object)
 {
-  FPRINTF(ASCERR,
-          "%sRejected \"%s\" at line %s:%lu.\n\n",
-          StatioLabel(3),
-          object,
-          Asc_ModuleBestName(Asc_CurrentModule()),
-          LineNum());
+  error_reporter_current_line(ASC_USER_ERROR,"Rejected '%s'", object);
 }
 
 static void
 ErrMsg_ProcTypeMissing(CONST char *AorR, CONST char *type)
 {
-  FPRINTF(ASCERR,
-	  "%s: %s METHODS called with undefined type (%s) at %s:%d.\n",
-	  StatioLabel(3), AorR, type,
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-          (int)LineNum());
+  error_reporter_current_line(ASC_USER_ERROR,
+	  "%s METHODS called with undefined type (%s)", AorR, type);
 }
 
 static void
 ErrMsg_ProcsRejected(CONST char *AorR, CONST char *type)
 {
-  FPRINTF(ASCERR,
-	  "%s: %s METHODS failed for type %s at %s:%d.\n",
-	  StatioLabel(3), AorR, type,
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-          (int)LineNum());
+  error_reporter_current_line(ASC_USER_ERROR,
+	  "%s METHODS failed for type %s", AorR, type);
 }
 
 static void
 ErrMsg_DuplicateProc(struct InitProcedure *p)
 {
-  FPRINTF(ASCERR,
-	  "%s: Duplicate METHOD %s rejected at %s:%d.\n",
-	  StatioLabel(2),
-	  SCP(ProcName(p)),
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-          (int)LineNum());
+  error_reporter_current_line(ASC_USER_WARNING,
+	  "Duplicate METHOD %s rejected", SCP(ProcName(p)));
 }
 
 static void
 ErrMsg_ParensBrackets(CONST char *operation)
 {
-  FPRINTF(ASCERR,
-          "  You should be using %s[] not %s()\nat line %s:%lu.\n",
+  error_reporter_current_line(ASC_USER_ERROR,
+          "  You should be using %s[] not %s()",
           operation,
-          operation,
-          Asc_ModuleBestName(Asc_CurrentModule()),
-          LineNum());
+          operation);
 }
 
 
@@ -642,17 +5247,12 @@ static void
 WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
 		    unsigned long end_token, CONST char *expecting)
 {
-  FPRINTF(ASCWAR,
-          "%s %s %s terminated with\n"
-          "  END %s;     ---expecting:  END %s;\n"
-          "  at %s:%lu.\n",
-          StatioLabel(2),
-          statement,
-          ((opt_name != NULL) ? opt_name : "statement"),
-          TokenAsString(end_token),
-          ((expecting != NULL) ? expecting : statement),
-          Asc_ModuleBestName(Asc_CurrentModule()),
-          LineNum());
+  error_reporter_current_line(ASC_USER_WARNING,
+          "%s %s terminated with 'END %s;', expecting 'END %s;'"
+          ,statement
+          ,((opt_name != NULL) ? opt_name : "statement")
+          ,TokenAsString(end_token)
+          ,((expecting != NULL) ? expecting : statement));
 }
 
 
@@ -680,6 +5280,8 @@ TokenAsString(unsigned long token)
     return "CONDITIONAL";
   case FOR_T:
     return "FOR";
+  case ASSERT_T:
+	return "ASSERT";
   case IF_T:
     return "IF";
   case INTERACTIVE_T:
@@ -746,3498 +5348,16 @@ static void CollectNote(struct Note *n)
   }
   gl_append_ptr(g_notelist,(VOIDPTR)n);
 }
-__ZZ_SCLASS zz_tabelem zz_exca[] ={
--1, 1,
-	0, -1,
-	264, 60,
-	274, 60,
-	309, 60,
-	-2, 0,
--1, 54,
-	270, 77,
-	284, 77,
-	285, 77,
-	306, 77,
-	314, 77,
-	41, 77,
-	-2, 0,
--1, 124,
-	258, 197,
-	261, 197,
-	262, 197,
-	300, 197,
-	301, 197,
-	302, 197,
-	339, 197,
-	340, 197,
-	341, 197,
-	355, 197,
-	44, 197,
-	-2, 259,
--1, 489,
-	355, 197,
-	44, 197,
-	59, 197,
-	58, 197,
-	-2, 259,
-	};
-# define ZZ_NPROD 300
-# define ZZ_LAST 1291
-__ZZ_SCLASS zz_tabelem zz_act[]={
-
-   178,   149,   518,   339,   466,   349,   206,   344,   481,   207,
-   470,   403,   471,   181,    44,    72,    71,   470,    66,   471,
-   272,   393,   406,   251,   249,    53,   250,    36,   252,    36,
-    37,   307,    34,   299,   418,   292,   297,   242,   325,   246,
-   244,   262,   261,   263,   406,   239,   402,   203,   597,    72,
-    36,    55,   586,   563,   204,    80,   167,   519,    82,    76,
-    77,   167,   516,    67,   483,   459,   408,   322,   124,   184,
-   326,    84,   314,    85,   300,   253,   295,   234,   233,   232,
-   174,   210,   198,   169,   182,   592,   185,    78,   193,   186,
-   177,    91,    82,    82,   187,   205,    90,    87,   251,   249,
-    62,   250,   188,   252,    61,   259,    39,   189,   298,   215,
-   123,   296,   577,   571,   600,   214,   262,   261,   263,   176,
-   482,   190,   230,   336,   477,   535,   191,   213,   211,   410,
-   192,   315,   194,    86,   195,   202,   589,   341,   351,   346,
-   438,   593,   311,   235,   411,   432,    82,   240,   391,   426,
-   253,   196,    59,    82,    82,   221,   273,    58,   224,   225,
-    51,   389,   387,    75,    93,    60,   578,   247,   570,   591,
-    49,   443,   251,   249,    72,   250,   335,   252,   172,   171,
-   259,   342,   352,   347,   439,   293,   294,   170,   238,   433,
-   262,   261,   263,   427,    70,   243,   245,   219,   222,   223,
-   173,   498,   312,   313,   400,    52,   544,   598,   474,   125,
-   542,   251,   249,   253,   250,    82,   252,   545,   308,    40,
-   543,   321,   457,   306,   253,   309,   310,    43,   455,   262,
-   261,   263,   453,   451,   449,   324,   220,   226,   227,   447,
-   254,    42,   369,   525,   473,   473,   267,   268,   302,   472,
-   472,   251,   301,    82,   259,   529,   252,   202,    82,   496,
-    82,    79,   467,   253,   354,   355,   251,   249,   288,   250,
-   580,   252,   537,   538,   564,   286,   258,   536,   495,   371,
-   372,   373,   374,   375,   376,   377,   378,   379,   380,   381,
-   382,   370,   531,   284,   255,   343,   474,   474,   465,   528,
-   348,   464,   353,   253,   462,   461,   468,   460,   458,   260,
-   398,   282,    66,   397,   392,   254,   390,   280,   253,   289,
-   278,   267,   268,   396,   530,    69,   287,   264,   265,   266,
-   207,   469,    66,   388,   419,   385,   405,   404,    92,    82,
-   201,   384,   428,   409,   285,    65,    82,   434,    82,    36,
-   422,   258,   440,    36,    36,    36,   425,    67,   405,   404,
-    36,   431,   283,   423,   424,    36,   437,   562,   281,   255,
-   248,   279,   319,   305,   218,   217,   200,    67,   199,   197,
-   183,   414,    68,    64,   260,    57,    56,   594,   417,   254,
-   420,   316,   581,   556,   168,   267,   268,   552,   548,   512,
-   511,   507,   264,   265,   266,   463,   228,   229,   506,   502,
-   501,   441,   435,   484,   180,   429,    26,   585,   475,   303,
-   603,   490,   485,   208,   209,   258,   470,   500,   471,   596,
-   489,   587,    82,   505,   504,   445,   320,   582,   444,   510,
-   330,   499,   323,   255,   509,   327,   515,   566,   514,   560,
-   540,   534,   493,   413,   492,   503,   415,   407,   260,   486,
-   480,   508,   456,   454,   452,   450,   448,   513,   520,   143,
-   446,   122,   488,   442,   491,   436,   264,   265,   266,   524,
-   430,   318,   527,   526,   521,   522,   601,   479,   416,   412,
-   334,   333,   317,   277,   271,    89,   166,   216,    25,   157,
-    83,   158,    47,   476,    46,   532,    45,   539,    22,    14,
-    13,    12,    11,    10,   546,   264,   265,   266,    35,    38,
-     9,   551,     8,     7,   547,     6,   555,   549,   550,   520,
-   565,   559,   553,   554,     5,     4,     3,   557,   558,    16,
-    28,     2,    24,    74,   572,   236,   237,   155,    48,    82,
-    82,    50,   175,    21,    20,   494,   401,    73,    63,   269,
-   270,    54,    41,    31,   340,   350,   345,   573,   212,   478,
-    88,   274,   275,   276,   574,    27,   497,    19,   575,    15,
-   119,   290,   576,   114,   117,   121,   120,   118,   116,   583,
-   584,   567,   569,   115,   588,   166,   113,   112,   157,    32,
-   158,    18,   602,    29,    17,   595,   111,   110,   109,   108,
-   107,   106,   105,   104,   103,   102,   101,    33,    30,   100,
-    99,    98,    97,    96,    94,    81,   568,   487,   599,   251,
-   249,   179,   250,   257,   252,   256,   590,   166,   579,   241,
-   157,   231,   158,   328,   329,   143,   155,   262,   261,   263,
-   386,   561,   523,   541,    23,   291,   399,     1,     0,     0,
-     0,     0,     0,     0,   356,   357,   358,   359,   360,   361,
-   362,   363,   364,   365,   366,   367,     0,     0,     0,     0,
-     0,   253,     0,     0,     0,     0,   368,     0,   155,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,   259,    95,     0,     0,     0,   153,     0,   394,   395,
-     0,     0,     0,   134,   126,   164,     0,   165,     0,   141,
-     0,   135,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,   127,   152,   136,   128,     0,     0,   130,
-   421,     0,     0,     0,     0,   163,     0,     0,     0,   145,
-   148,   150,     0,     0,   144,     0,   156,   142,     0,     0,
-     0,     0,     0,   161,     0,     0,     0,     0,   137,   129,
-   159,   139,     0,   138,     0,   160,   140,     0,   151,   162,
-    33,     0,   132,     0,   131,     0,     0,     0,   383,   251,
-   249,   133,   250,     0,   252,     0,     0,     0,     0,   167,
-   147,   146,     0,   154,     0,   153,     0,   262,   261,   263,
-     0,     0,   251,   249,   164,   250,   165,   252,     0,     0,
-     0,   368,     0,     0,     0,     0,     0,     0,     0,     0,
-   262,   261,   263,   152,     0,     0,   254,     0,     0,     0,
-     0,   253,   267,   268,   163,     0,     0,   153,   145,   148,
-   150,     0,     0,   144,     0,   156,   164,     0,   165,     0,
-     0,     0,   161,     0,   253,     0,     0,     0,   517,   159,
-     0,   259,   258,     0,   160,   152,     0,   151,   162,     0,
-     0,   332,     0,     0,     0,     0,   163,   533,     0,     0,
-   255,   148,   150,     0,   259,     0,     0,   156,   167,   147,
-   331,     0,   154,     0,   161,   260,     0,     0,     0,   251,
-   249,   159,   250,     0,   252,     0,   160,     0,     0,   151,
-   162,     0,     0,   264,   265,   266,   304,   262,   261,   263,
-     0,     0,   251,   249,     0,   250,     0,   252,     0,     0,
-   167,   147,   146,     0,   154,     0,     0,     0,     0,     0,
-   262,   261,   263,   251,   249,     0,   250,     0,   252,     0,
-     0,   253,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,   262,   261,   263,   251,   249,     0,   250,     0,   252,
-     0,     0,     0,     0,   253,     0,     0,     0,     0,     0,
-     0,   259,   262,   261,   263,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,   253,   254,     0,     0,     0,
-     0,     0,   267,   268,   259,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,   253,     0,     0,   254,
-     0,     0,     0,     0,     0,   267,   268,     0,     0,     0,
-     0,     0,   258,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,   338,     0,     0,     0,     0,     0,     0,
-   255,     0,     0,     0,     0,   258,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,   260,     0,     0,     0,     0,
-     0,     0,     0,   255,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,   264,   265,   266,     0,     0,   260,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,   264,   265,   266,     0,
-     0,     0,     0,     0,     0,     0,   254,     0,     0,     0,
-     0,     0,   267,   268,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,   254,
-     0,     0,     0,     0,     0,   267,   268,     0,     0,     0,
-     0,     0,   258,     0,     0,     0,     0,     0,     0,     0,
-   254,     0,     0,     0,     0,     0,   267,   268,     0,     0,
-   255,     0,     0,     0,     0,   258,     0,     0,     0,     0,
-     0,   254,     0,     0,     0,   260,     0,     0,   337,     0,
-     0,     0,     0,   255,     0,     0,   258,     0,     0,     0,
-     0,     0,     0,   264,   265,   266,     0,     0,   260,     0,
-     0,     0,     0,     0,   255,     0,     0,   258,     0,     0,
-     0,     0,     0,     0,     0,     0,   264,   265,   266,     0,
-     0,     0,     0,     0,     0,   255,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,   264,   265,   266,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,   264,   265,
-   266 };
-__ZZ_SCLASS zz_tabelem zz_pact[]={
-
- -3000,   283, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000, -3000, -3000,  -326,  -328,  -249,
- -3000, -3000,  -343,  -104, -3000, -3000,   327,   326,  -154,  -141,
- -3000,  -251,  -255, -3000,   324,   286, -3000,   323,   266,   -97,
-  -111,  -144,  -111,  -270,  -305, -3000, -3000, -3000,  -186,  -258,
-   455,  -259,  -264,  -142,   456,  -142, -3000, -3000,  -108,  -116,
-  -117, -3000,   -90,  -236, -3000, -3000,  -265,   597, -3000, -3000,
-  -271,   321,  -204, -3000,   320,  -273,   319,   317,  -305,  -305,
-  -309,    10, -3000,   -28,  -142,  -142,  -274,  -191,  -210, -3000,
- -3000, -3000,  -111, -3000,   316,   315, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000,  -103,    64, -3000,  -276,  -277,  -278,  -305,
-   597,   597,     5,  -305, -3000, -3000, -3000, -3000,  -319,     0,
-    -1, -3000,  -343,   900,   597,   597,   454,  -336, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000,   597,   597,   597,   597,   453,
-   280,   277,   271,   253,   235,   228,   597,  -321,  -111,  -111,
-  -279,  -244,  -247,  -281, -3000, -3000,   191, -3000,   155,   375,
-   587, -3000,   314, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000,  -305,  -325, -3000,  -305, -3000, -3000, -3000,  -111,  -111,
-   -79,  -283,    72,   452,   440,   313, -3000, -3000, -3000,  -288,
-  -288,    -2,  -285,  -288, -3000, -3000, -3000, -3000,   597,   597,
-   555, -3000,   451,   450,  -119,  -221,   877,   780,  -133,  -305,
- -3000, -3000, -3000,  -131,  -305,  -132,  -305,  -111,  -270,   597,
-   597,   597,   597,   597,   597,   597,   597,   597,   597,   597,
-   597, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,   900,
-   900,   597, -3000,   149, -3000,   119,   119,  -305,   597,   597,
-   597,   597,   597,   597,   597,   597,   597,   597,   597,   597,
-   757, -3000, -3000,   282,   276,  -145,   274,  -148,   257,  -161,
-   255,  -335, -3000,   597,   597, -3000,  -111, -3000, -3000,   254,
-   251,   -75,     4, -3000,   -79, -3000,  -289, -3000, -3000, -3000,
- -3000,  -168,   449,  -168, -3000,  -305,  -168, -3000,   900,   900,
- -3000,   448,    -6,   597,  -305,   597,  -305, -3000, -3000,  -111,
-  -121,   597,   357,   439,  -111,  -125,   597,   354,   434,  -111,
-  -130,   597,   353,   432, -3000, -3000,   209,   209,   119,   119,
-   119,   169,   169,   224,   942,   169,   921,   921,   130, -3000,
-   394,   429,   146,   425,   141,   424,   140,   423,   139,   422,
-   135,   421,   129, -3000, -3000, -3000,   249,  -290, -3000,   248,
- -3000,   246, -3000,   245,    56,   900,   242, -3000, -3000,   239,
-   -26, -3000, -3000,   203, -3000, -3000,   -18,  -219,   447,   419,
-  -232,  -291,   597,  -232,   418, -3000,   597,  -133,  -305,   413,
-   411,   -19, -3000,   -83,  -111, -3000,   597,   352,   351, -3000,
-  -133, -3000,   597,   350,   343, -3000,  -131, -3000,   597,   342,
-   341, -3000,  -132, -3000,  -292, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000,   597, -3000, -3000,  -297, -3000, -3000, -3000,
- -3000, -3000,   -18,   -18,   383,   202,  -349,   -33,   233, -3000,
- -3000, -3000,   597, -3000,   410, -3000,  -212,   218,   214, -3000,
-  -111,   409, -3000, -3000,   -66, -3000, -3000,  -111, -3000, -3000,
-   340, -3000, -3000, -3000,  -111,   339, -3000, -3000, -3000,  -111,
-   335, -3000, -3000, -3000,  -111,   408,  -336,   900, -3000,  -336,
- -3000,   114,   114, -3000,    13, -3000,   215,  -297, -3000, -3000,
- -3000, -3000,   406,   900, -3000,  -305,  -305,  -128,  -241, -3000,
-  -133, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000, -3000,
- -3000, -3000, -3000,  -242, -3000, -3000, -3000,  -134,   211,   334,
- -3000,   396,  -111,  -111, -3000, -3000, -3000,   370,  -303,   390,
-  -305,  -179,  -126, -3000, -3000,  -269,  -171, -3000,   329, -3000,
- -3000,  -305,   388,  -307,   -70, -3000, -3000,  -238, -3000, -3000,
-   446,   597,   379, -3000 };
-__ZZ_SCLASS zz_tabelem zz_pgo[]={
-
-     0,   657,   656,     2,     1,   655,    16,     4,   654,   653,
-   652,   651,   129,   650,   221,   641,     6,   639,   638,    13,
-   500,   636,   209,   414,   635,   633,     8,     0,   631,   628,
-    55,   627,   626,   625,   624,   623,   622,   621,   620,   619,
-   616,   615,   614,   613,   612,   611,   610,   609,   608,   416,
-   607,   606,   597,   596,   593,   588,   587,   586,   585,   584,
-   583,   580,    25,   579,   576,   570,   569,   568,     7,   566,
-     5,   565,     3,   564,   227,   261,   338,   219,   562,   561,
-   558,   557,   142,   556,    11,   555,   554,   553,   552,   551,
-   548,   543,   542,   541,   536,   535,   534,   525,   523,   522,
-   520,   513,   512,   511,   510,   509,   508,   506,   504,   503,
-   502,   498,   497 };
-__ZZ_SCLASS zz_tabelem zz_r1[]={
-
-     0,     1,     1,    93,    93,    93,    93,    93,    93,    93,
-    93,    93,    93,    93,    93,    93,    93,    63,    94,    94,
-    94,    95,    95,    95,    96,    99,   106,    97,    86,    86,
-    98,    87,    87,   101,   107,    90,     2,     2,     2,     2,
-     2,   100,   108,   109,   109,   109,   109,   109,   102,   110,
-   110,    89,    65,    65,    67,    67,    66,    66,   104,   111,
-     8,     8,   103,    92,   105,    49,    80,    80,    88,    76,
-   112,    76,    77,    78,    78,    81,    91,    62,    79,    79,
-    79,    34,    34,    34,    34,    34,    34,    34,    34,    34,
-    34,    34,    34,    34,    34,    34,    34,    34,    34,    34,
-    34,    34,    34,    34,    34,    34,    34,    34,    35,    36,
-    37,    37,    29,    29,    38,    39,    15,    15,    14,    14,
-    13,    13,    12,    12,    26,    26,    40,    41,    42,    43,
-    44,    44,    45,    45,    22,    22,    22,    47,    31,    32,
-    18,    18,    46,    21,    21,    51,    85,    85,    85,     9,
-     9,     9,     9,    52,    52,    50,    48,    53,    60,    64,
-    64,    54,    54,    54,    54,    72,    73,    73,    73,    73,
-    59,    59,    59,    59,    59,    55,    56,    56,    68,    69,
-    69,    69,    69,    61,    61,    70,    71,    71,    71,    71,
-    57,    58,    74,    74,    75,    75,    30,    33,    33,    33,
-    19,    20,    20,    20,     6,     6,     6,     6,     6,     6,
-     6,     6,     6,     6,     6,     6,     6,     6,    17,    17,
-    16,    16,    27,    27,    28,    28,    28,    28,     3,     3,
-     4,     4,     5,     5,    82,    82,    82,    83,    83,    84,
-    84,    84,    84,    84,    84,    10,    11,    11,     7,     7,
-     7,    23,    23,    23,    23,    23,    23,    23,    23,    23,
-    23,    23,    23,    23,    23,    23,    23,    23,    23,    23,
-    23,    23,    23,    23,    23,    23,    23,    23,    23,    23,
-    23,    23,    23,    23,    23,    23,    23,    23,    23,    23,
-    23,    23,    24,    24,    24,    24,    24,    24,    25,    25 };
-__ZZ_SCLASS zz_tabelem zz_r2[]={
-
-     0,     0,     4,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     3,    11,     7,     7,
-     5,     7,     7,     5,    11,     9,    13,     9,    11,    13,
-     9,    11,    13,    13,    13,     5,     1,     7,     5,     5,
-     5,     5,    17,     1,     7,     5,     5,     5,    13,     9,
-    15,     5,     1,     7,     1,     9,     1,     7,    11,    11,
-     1,     3,    11,     5,     5,     7,     1,     5,     9,     1,
-     1,     7,     3,     1,     5,    11,     5,     3,     1,     7,
-     7,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     2,     2,     2,    11,    11,
-     7,    25,     1,     9,     9,     7,     3,     9,     3,     9,
-     1,     5,     1,     5,     1,     5,     5,     5,     5,     5,
-     7,     7,     3,     7,     3,     5,     5,    19,     7,     7,
-     1,     9,    19,     1,     5,    17,     1,     3,     3,     3,
-     3,     3,     3,     5,     9,    11,     5,    13,    11,     1,
-     5,     9,    13,    13,    17,     3,     9,     7,    11,     9,
-     3,     3,     3,     3,     5,     5,     9,    13,     3,     9,
-     7,    11,     9,     9,    13,     3,     9,     7,    11,     9,
-     7,     7,     5,     7,     5,     7,     3,     3,     7,     5,
-     5,     3,     7,     9,     5,     5,     5,     5,     5,     5,
-     5,     5,     5,     5,     5,     5,     5,     3,     1,     3,
-     1,     3,     3,     1,     3,     7,     7,    11,     3,     3,
-     5,     5,     1,     3,     5,     3,     1,     3,     3,     3,
-     3,     7,     7,     7,     7,     5,     3,    11,     1,     3,
-     3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-     7,     7,     7,     7,     7,     7,     7,     7,     5,     7,
-     7,     7,     7,     7,     5,     5,    13,     9,     9,     9,
-     9,     9,     9,     9,     9,     9,     9,     9,     9,     9,
-     9,     7,     3,     3,     3,     3,     3,     3,     3,     3 };
-__ZZ_SCLASS zz_tabelem zz_chk[]={
-
- -3000,    -1,   -93,   -94,   -95,   -96,   -97,   -98,   -99,  -100,
-  -101,  -102,  -103,  -104,  -105,   -63,   256,   321,   318,   294,
-   -86,   -87,  -106,    -8,   -92,  -111,   -49,   292,   257,   320,
-   335,   280,   316,   334,   358,   -20,   355,   358,   -20,   355,
-   -77,   -78,   -77,   -74,   357,  -107,  -108,  -110,   -90,   274,
-   -89,   264,   309,   -62,   -79,   -62,    59,    59,   311,   306,
-   306,   355,   355,   -80,    59,    59,    46,    91,    59,    59,
-   291,    -6,   285,   -81,   -91,   307,    -6,    -6,   357,   -75,
-   -30,   -33,   -19,   -20,   -62,   -62,   319,   355,   -65,    40,
-   355,   355,   -76,   306,   -34,   256,   -35,   -36,   -37,   -38,
-   -39,   -40,   -41,   -42,   -43,   -44,   -45,   -46,   -47,   -48,
-   -50,   -51,   -52,   -53,   -60,   -54,   -55,   -59,   -56,   -61,
-   -57,   -58,   -49,   -30,   -19,   -22,   268,   287,   290,   323,
-   293,   338,   336,   345,   267,   275,   289,   322,   327,   325,
-   330,   273,   311,   -23,   308,   303,   355,   354,   304,    -4,
-   305,   332,   288,   260,   357,    91,   310,    43,    45,   324,
-   329,   317,   333,   299,   269,   271,    40,   353,   -76,   -62,
-   295,   295,   295,   290,    -6,   -88,   355,   355,   -27,   -28,
-   -23,   -19,   355,    59,   273,   290,   293,   298,   306,   311,
-   325,   330,   334,   292,   336,   338,   355,    59,   355,    59,
-    59,   -75,   -30,   356,    44,   -19,   -16,   358,   -76,   -76,
-   355,   319,   -67,   337,   -62,    -6,  -112,    59,    59,   300,
-   339,   258,   301,   302,   261,   262,   340,   341,   342,   343,
-    58,   -15,   355,   355,   355,   -19,   -23,   -23,   -30,    40,
-   -19,   -17,   356,   -30,    40,   -30,    40,   -62,   -74,    43,
-    45,    42,    47,    94,   259,   313,   -24,   -25,   295,   124,
-   328,    61,    60,    62,   346,   347,   348,   265,   266,   -23,
-   -23,    40,   356,   -27,   -23,   -23,   -23,    40,    40,    91,
-    40,    91,    40,    91,    40,    91,    40,    91,    40,    91,
-   -23,    -5,   356,    -6,    -6,   355,   355,   280,   355,   280,
-   355,    61,    93,    44,   349,    59,   -62,   356,   -19,    -6,
-    -6,   -82,   281,   282,   355,    59,   319,    40,    41,    59,
-   -77,   -14,   355,   -14,   -19,    40,   355,   -14,   -23,   -23,
-   -22,   355,   336,    40,    40,   295,   344,   331,   283,   -72,
-   -73,   270,   314,   -30,   -68,   -69,   270,   314,   -30,   -70,
-   -71,   270,   314,   -30,    -6,    -6,   -23,   -23,   -23,   -23,
-   -23,   -23,   -23,   -23,   -23,   -23,   -23,   -23,   -23,    93,
-   -19,   -27,   -27,   -27,   -27,   -27,   -27,   -27,   -27,   -27,
-   -27,   -27,   -27,    41,    59,    59,   -13,   307,    59,   309,
-    59,   309,    59,   356,   -23,   -23,    -6,    59,    59,    -2,
-   279,   -83,    42,   -84,   355,   354,    40,   -82,   355,   -62,
-   -12,   312,    40,   -12,   -30,   -12,    40,   -30,    40,   -27,
-   -30,   -23,   -19,   -62,   -62,    -6,   270,   314,   -27,    58,
-    41,    -6,   270,   314,   -27,    58,    41,    -6,   270,   314,
-   -27,    58,    41,    41,    44,    41,    41,    93,    41,    93,
-    41,    93,    41,    93,    41,    93,    41,    93,    59,   355,
-    59,    59,    59,   349,    59,    59,    -7,   288,   332,   357,
-    43,    45,    47,    42,    94,   -84,  -109,   343,   -66,    40,
-    41,   -26,   352,   355,   -27,   -26,    41,   -31,   -30,   -19,
-   -72,   -30,    41,    41,   -85,   297,   278,   -64,   284,    -6,
-   -27,    58,    58,   -62,   -72,   -27,    58,    58,   -62,   -68,
-   -27,    58,    58,   -62,   -70,    -4,   354,   -23,    -3,   354,
-    -4,   -84,   -84,   -10,    -7,    41,   -16,    -7,   332,   288,
-   357,    59,   -62,   -23,    41,   337,    59,    58,    59,    -6,
-    41,    -9,   276,   286,   272,   283,    -6,   -62,    58,   -62,
-   -62,    -6,    58,   -62,   -62,    -6,    58,   -62,   -62,    -6,
-    41,   -11,   354,    40,    59,    -3,    41,   -30,   -32,   -30,
-   296,   354,   -72,   -62,   -62,   -62,   -62,   354,   300,   -18,
-    59,    58,    41,    -6,    -6,    47,   355,    41,   -19,   315,
-   -21,   295,   354,   312,    58,   -19,    41,   355,   277,   -29,
-   352,    40,   -27,    41 };
-__ZZ_SCLASS zz_tabelem zz_def[]={
-
-     1,    -2,     2,     3,     4,     5,     6,     7,     8,     9,
-    10,    11,    12,    13,    14,    15,    16,     0,     0,     0,
-    73,    73,     0,     0,    78,    78,     0,     0,     0,     0,
-    61,     0,     0,    66,     0,    20,   201,     0,    23,     0,
-     0,    72,     0,     0,     0,    78,    41,    78,     0,     0,
-    52,     0,     0,    69,    -2,    69,    64,    78,     0,     0,
-     0,    63,     0,     0,    18,    19,     0,   223,    21,    22,
-     0,     0,   217,    74,     0,     0,     0,     0,     0,   192,
-     0,   196,   197,   220,    69,    69,     0,     0,    54,    78,
-    35,    51,     0,    70,     0,     0,    81,    82,    83,    84,
-    85,    86,    87,    88,    89,    90,    91,    92,    93,    94,
-    95,    96,    97,    98,    99,   100,   101,   102,   103,   104,
-   105,   106,   107,     0,    -2,   132,     0,     0,     0,     0,
-     0,     0,     0,     0,   170,   171,   172,   173,   218,     0,
-     0,    78,     0,   134,     0,     0,   201,   251,   252,   253,
-   254,   255,   256,   257,   258,   223,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,   232,     0,     0,
-     0,     0,     0,     0,    65,    67,     0,   202,     0,   222,
-   224,   259,     0,    27,   204,   205,   206,   207,   208,   209,
-   210,   211,   212,   213,   214,   215,   216,    78,    76,    30,
-    25,   193,     0,   194,     0,   199,   200,   221,     0,     0,
-   236,     0,     0,     0,     0,     0,    73,    79,    80,     0,
-     0,     0,     0,     0,   126,   127,   128,   129,     0,     0,
-     0,   156,   116,     0,     0,   153,     0,     0,     0,     0,
-   175,   174,   219,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,   292,   293,   294,   295,   296,   297,   298,   299,   135,
-   136,     0,   231,     0,   268,   274,   275,     0,   223,   223,
-   223,   223,   223,   223,   223,   223,   223,   223,   223,   223,
-     0,   230,   233,     0,     0,   120,     0,     0,     0,     0,
-     0,     0,   203,     0,     0,    24,     0,   195,   198,     0,
-     0,    36,     0,   235,   236,    49,     0,    78,    53,    62,
-    71,   122,   118,   122,   110,     0,   122,   115,   130,   131,
-   133,   201,     0,   223,     0,     0,     0,    78,    78,     0,
-   165,   223,     0,     0,     0,   178,   223,     0,     0,     0,
-   185,   223,     0,     0,   190,   191,   261,   262,   263,   264,
-   265,   266,   267,   269,   270,   271,   272,   273,     0,   260,
-     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     0,     0,     0,   291,    58,    17,     0,     0,    28,     0,
-    31,     0,    59,     0,   226,   225,     0,    33,    48,     0,
-   248,   234,   237,   238,   239,   240,     0,    43,    56,     0,
-   124,     0,   223,   124,     0,   114,     0,     0,     0,     0,
-     0,   146,   154,   159,     0,   161,   223,     0,     0,    78,
-     0,   176,   223,     0,     0,    78,     0,   183,   223,     0,
-     0,    78,     0,   290,     0,   277,   278,   279,   280,   281,
-   282,   283,   284,   285,   286,   287,   288,   289,    26,   121,
-    29,    32,    68,     0,    75,    34,     0,    38,    39,    40,
-   249,   250,     0,     0,   248,     0,   220,   248,     0,    78,
-    55,   108,     0,   123,     0,   109,     0,     0,     0,    -2,
-     0,     0,   117,   155,     0,   147,   148,     0,    78,   158,
-     0,    78,    78,   167,     0,     0,    78,    78,   180,     0,
-     0,    78,    78,   187,     0,     0,     0,   227,    37,   228,
-   229,   241,   242,   243,     0,   244,     0,     0,    45,    46,
-    47,    50,     0,   125,   119,     0,     0,     0,     0,   162,
-     0,    78,   149,   150,   151,   152,   157,   160,    78,   169,
-   166,   163,    78,   182,   179,   177,    78,   189,   186,   184,
-   276,   245,   246,     0,    42,    44,    57,     0,   140,     0,
-   138,     0,     0,     0,   168,   181,   188,     0,     0,     0,
-     0,     0,   143,   164,   145,     0,     0,   137,     0,   139,
-   142,     0,     0,     0,     0,   144,   247,   112,   141,   111,
-     0,   223,     0,   113 };
-typedef struct { char *t_name; int t_val; } zz_toktype;
-#ifndef ZZ_DEBUG
-#	define ZZ_DEBUG	0	/* don't allow debugging */
-#endif
-
-#if ZZ_DEBUG
-
-__ZZ_SCLASS zz_toktype zz_toks[] =
-{
-	"ADD_T",	257,
-	"ALIASES_T",	258,
-	"AND_T",	259,
-	"ANY_T",	260,
-	"AREALIKE_T",	261,
-	"ARETHESAME_T",	262,
-	"ARRAY_T",	263,
-	"ATOM_T",	264,
-	"BEQ_T",	265,
-	"BNE_T",	266,
-	"BREAK_T",	267,
-	"CALL_T",	268,
-	"CARD_T",	269,
-	"CASE_T",	270,
-	"CHOICE_T",	271,
-	"CHECK_T",	272,
-	"CONDITIONAL_T",	273,
-	"CONSTANT_T",	274,
-	"CONTINUE_T",	275,
-	"CREATE_T",	276,
-	"DATA_T",	277,
-	"DECREASING_T",	278,
-	"DEFAULT_T",	279,
-	"DEFINITION_T",	280,
-	"DIMENSION_T",	281,
-	"DIMENSIONLESS_T",	282,
-	"DO_T",	283,
-	"ELSE_T",	284,
-	"END_T",	285,
-	"EXPECT_T",	286,
-	"EXTERNAL_T",	287,
-	"FALSE_T",	288,
-	"FALLTHRU_T",	289,
-	"FOR_T",	290,
-	"FROM_T",	291,
-	"GLOBAL_T",	292,
-	"IF_T",	293,
-	"IMPORT_T",	294,
-	"IN_T",	295,
-	"INPUT_T",	296,
-	"INCREASING_T",	297,
-	"INTERACTIVE_T",	298,
-	"INTERSECTION_T",	299,
-	"ISA_T",	300,
-	"_IS_T",	301,
-	"ISREFINEDTO_T",	302,
-	"MAXIMIZE_T",	303,
-	"MAXINTEGER_T",	304,
-	"MAXREAL_T",	305,
-	"METHODS_T",	306,
-	"METHOD_T",	307,
-	"MINIMIZE_T",	308,
-	"MODEL_T",	309,
-	"NOT_T",	310,
-	"NOTES_T",	311,
-	"OF_T",	312,
-	"OR_T",	313,
-	"OTHERWISE_T",	314,
-	"OUTPUT_T",	315,
-	"PATCH_T",	316,
-	"PROD_T",	317,
-	"PROVIDE_T",	318,
-	"REFINES_T",	319,
-	"REPLACE_T",	320,
-	"REQUIRE_T",	321,
-	"RETURN_T",	322,
-	"RUN_T",	323,
-	"SATISFIED_T",	324,
-	"SELECT_T",	325,
-	"SIZE_T",	326,
-	"STOP_T",	327,
-	"SUCHTHAT_T",	328,
-	"SUM_T",	329,
-	"SWITCH_T",	330,
-	"THEN_T",	331,
-	"TRUE_T",	332,
-	"UNION_T",	333,
-	"UNITS_T",	334,
-	"UNIVERSAL_T",	335,
-	"WHEN_T",	336,
-	"WHERE_T",	337,
-	"WHILE_T",	338,
-	"WILLBE_T",	339,
-	"WILLBETHESAME_T",	340,
-	"WILLNOTBETHESAME_T",	341,
-	"ASSIGN_T",	342,
-	"CASSIGN_T",	343,
-	"DBLCOLON_T",	344,
-	"USE_T",	345,
-	"LEQ_T",	346,
-	"GEQ_T",	347,
-	"NEQ_T",	348,
-	"DOTDOT_T",	349,
-	"WITH_T",	350,
-	"VALUE_T",	351,
-	"WITH_VALUE_T",	352,
-	"REAL_T",	353,
-	"INTEGER_T",	354,
-	"IDENTIFIER_T",	355,
-	"BRACEDTEXT_T",	356,
-	"SYMBOL_T",	357,
-	"DQUOTE_T",	358,
-	",",	44,
-	"|",	124,
-	"<",	60,
-	"=",	61,
-	">",	62,
-	"+",	43,
-	"-",	45,
-	"/",	47,
-	"*",	42,
-	"UMINUS_T",	359,
-	"UPLUS_T",	360,
-	"^",	94,
-	"-unknown-",	-1	/* ends search */
-};
-
-__ZZ_SCLASS char * zz_reds[] =
-{
-	"-no such reduction-",
-	"definitions : /* empty */",
-	"definitions : definitions definition",
-	"definition : require_file",
-	"definition : provide_module",
-	"definition : import",
-	"definition : add_method_def",
-	"definition : replace_method_def",
-	"definition : add_notes_def",
-	"definition : constant_def",
-	"definition : atom_def",
-	"definition : model_def",
-	"definition : definition_def",
-	"definition : patch_def",
-	"definition : units_def",
-	"definition : global_def",
-	"definition : error",
-	"global_def : GLOBAL_T ';' fstatements end ';'",
-	"require_file : REQUIRE_T DQUOTE_T ';'",
-	"require_file : REQUIRE_T name ';'",
-	"require_file : REQUIRE_T name",
-	"provide_module : PROVIDE_T DQUOTE_T ';'",
-	"provide_module : PROVIDE_T name ';'",
-	"provide_module : PROVIDE_T name",
-	"import : IMPORT_T IDENTIFIER_T FROM_T IDENTIFIER_T ';'",
-	"add_notes_def : add_notes_head notes_body end ';'",
-	"add_notes_head : ADD_T NOTES_T IN_T IDENTIFIER_T optional_method ';'",
-	"add_method_def : add_method_head proclist end ';'",
-	"add_method_head : ADD_T METHODS_T IN_T IDENTIFIER_T ';'",
-	"add_method_head : ADD_T METHODS_T IN_T DEFINITION_T MODEL_T ';'",
-	"replace_method_def : replace_method_head proclist end ';'",
-	"replace_method_head : REPLACE_T METHODS_T IN_T IDENTIFIER_T ';'",
-	"replace_method_head : REPLACE_T METHODS_T IN_T DEFINITION_T MODEL_T ';'",
-	"atom_def : universal atom_head fstatements methods end ';'",
-	"atom_head : atom_id REFINES_T IDENTIFIER_T dims default_val ';'",
-	"atom_id : ATOM_T IDENTIFIER_T",
-	"default_val : /* empty */",
-	"default_val : DEFAULT_T optional_sign number",
-	"default_val : DEFAULT_T FALSE_T",
-	"default_val : DEFAULT_T TRUE_T",
-	"default_val : DEFAULT_T SYMBOL_T",
-	"constant_def : universal constant_head",
-	"constant_head : CONSTANT_T IDENTIFIER_T REFINES_T IDENTIFIER_T dims constant_val optional_notes ';'",
-	"constant_val : /* empty */",
-	"constant_val : CASSIGN_T optional_sign number",
-	"constant_val : CASSIGN_T TRUE_T",
-	"constant_val : CASSIGN_T FALSE_T",
-	"constant_val : CASSIGN_T SYMBOL_T",
-	"model_def : universal model_head fstatements methods end ';'",
-	"model_head : model_id optional_model_parameters optional_parameter_wheres ';'",
-	"model_head : model_id optional_model_parameters optional_parameter_wheres REFINES_T IDENTIFIER_T optional_parameter_reduction ';'",
-	"model_id : MODEL_T IDENTIFIER_T",
-	"optional_model_parameters : /* empty */",
-	"optional_model_parameters : '(' fstatements ')'",
-	"optional_parameter_wheres : /* empty */",
-	"optional_parameter_wheres : WHERE_T '(' fstatements ')'",
-	"optional_parameter_reduction : /* empty */",
-	"optional_parameter_reduction : '(' fstatements ')'",
-	"patch_def : patch_head fstatements methods end ';'",
-	"patch_head : PATCH_T IDENTIFIER_T FOR_T IDENTIFIER_T ';'",
-	"universal : /* empty */",
-	"universal : UNIVERSAL_T",
-	"definition_def : definition_id fstatements methods end ';'",
-	"definition_id : DEFINITION_T IDENTIFIER_T",
-	"units_def : units_statement ';'",
-	"units_statement : UNITS_T unitdeflist end",
-	"unitdeflist : /* empty */",
-	"unitdeflist : unitdeflist unitdef",
-	"unitdef : IDENTIFIER_T '=' BRACEDTEXT_T ';'",
-	"methods : /* empty */",
-	"methods : METHODS_T",
-	"methods : METHODS_T proclist",
-	"proclist : proclistf",
-	"proclistf : /* empty */",
-	"proclistf : proclistf procedure",
-	"procedure : procedure_id ';' fstatements end ';'",
-	"procedure_id : METHOD_T IDENTIFIER_T",
-	"fstatements : statements",
-	"statements : /* empty */",
-	"statements : statements statement ';'",
-	"statements : statements error ';'",
-	"statement : isa_statement",
-	"statement : willbe_statement",
-	"statement : aliases_statement",
-	"statement : is_statement",
-	"statement : isrefinedto_statement",
-	"statement : arealike_statement",
-	"statement : arethesame_statement",
-	"statement : willbethesame_statement",
-	"statement : willnotbethesame_statement",
-	"statement : assignment_statement",
-	"statement : relation_statement",
-	"statement : glassbox_statement",
-	"statement : blackbox_statement",
-	"statement : call_statement",
-	"statement : external_statement",
-	"statement : for_statement",
-	"statement : run_statement",
-	"statement : if_statement",
-	"statement : while_statement",
-	"statement : when_statement",
-	"statement : use_statement",
-	"statement : flow_statement",
-	"statement : select_statement",
-	"statement : switch_statement",
-	"statement : conditional_statement",
-	"statement : notes_statement",
-	"statement : units_statement",
-	"isa_statement : fvarlist ISA_T type_identifier optional_of optional_with_value",
-	"willbe_statement : fvarlist WILLBE_T type_identifier optional_of optional_with_value",
-	"aliases_statement : fvarlist ALIASES_T fname",
-	"aliases_statement : fvarlist ALIASES_T '(' fvarlist ')' WHERE_T fvarlist ISA_T IDENTIFIER_T OF_T IDENTIFIER_T optional_set_values",
-	"optional_set_values : /* empty */",
-	"optional_set_values : WITH_VALUE_T '(' set ')'",
-	"is_statement : fvarlist _IS_T IDENTIFIER_T optional_of",
-	"isrefinedto_statement : fvarlist ISREFINEDTO_T type_identifier",
-	"call_identifier : IDENTIFIER_T",
-	"call_identifier : IDENTIFIER_T '(' set ')'",
-	"type_identifier : IDENTIFIER_T",
-	"type_identifier : IDENTIFIER_T '(' set ')'",
-	"optional_method : /* empty */",
-	"optional_method : METHOD_T IDENTIFIER_T",
-	"optional_of : /* empty */",
-	"optional_of : OF_T IDENTIFIER_T",
-	"optional_with_value : /* empty */",
-	"optional_with_value : WITH_VALUE_T expr",
-	"arealike_statement : fvarlist AREALIKE_T",
-	"arethesame_statement : fvarlist ARETHESAME_T",
-	"willbethesame_statement : fvarlist WILLBETHESAME_T",
-	"willnotbethesame_statement : fvarlist WILLNOTBETHESAME_T",
-	"assignment_statement : fname ASSIGN_T expr",
-	"assignment_statement : fname CASSIGN_T expr",
-	"relation_statement : relation",
-	"relation_statement : fname ':' relation",
-	"relation : expr",
-	"relation : MINIMIZE_T expr",
-	"relation : MAXIMIZE_T expr",
-	"blackbox_statement : fname ':' IDENTIFIER_T '(' input_args ';' output_args data_args ')'",
-	"input_args : fvarlist ':' INPUT_T",
-	"output_args : fvarlist ':' OUTPUT_T",
-	"data_args : /* empty */",
-	"data_args : ';' fname ':' DATA_T",
-	"glassbox_statement : fname ':' IDENTIFIER_T '(' fvarlist ';' INTEGER_T ')' optional_scope",
-	"optional_scope : /* empty */",
-	"optional_scope : IN_T fname",
-	"for_statement : FOR_T IDENTIFIER_T IN_T expr optional_direction forexprend fstatements end",
-	"optional_direction : /* empty */",
-	"optional_direction : INCREASING_T",
-	"optional_direction : DECREASING_T",
-	"forexprend : CREATE_T",
-	"forexprend : EXPECT_T",
-	"forexprend : CHECK_T",
-	"forexprend : DO_T",
-	"run_statement : RUN_T fname",
-	"run_statement : RUN_T fname DBLCOLON_T fname",
-	"external_statement : EXTERNAL_T IDENTIFIER_T '(' fvarlist ')'",
-	"call_statement : CALL_T call_identifier",
-	"if_statement : IF_T expr THEN_T fstatements optional_else end",
-	"while_statement : WHILE_T expr DO_T fstatements end",
-	"optional_else : /* empty */",
-	"optional_else : ELSE_T fstatements",
-	"when_statement : WHEN_T fvarlist whenlist end",
-	"when_statement : fname ':' WHEN_T fvarlist whenlist end",
-	"when_statement : WHEN_T '(' fvarlist ')' whenlist end",
-	"when_statement : fname ':' WHEN_T '(' fvarlist ')' whenlist end",
-	"whenlist : whenlistf",
-	"whenlistf : CASE_T set ':' fstatements",
-	"whenlistf : OTHERWISE_T ':' fstatements",
-	"whenlistf : whenlistf CASE_T set ':' fstatements",
-	"whenlistf : whenlistf OTHERWISE_T ':' fstatements",
-	"flow_statement : BREAK_T",
-	"flow_statement : CONTINUE_T",
-	"flow_statement : FALLTHRU_T",
-	"flow_statement : RETURN_T",
-	"flow_statement : STOP_T optional_bracedtext",
-	"use_statement : USE_T fname",
-	"select_statement : SELECT_T fvarlist selectlist end",
-	"select_statement : SELECT_T '(' fvarlist ')' selectlist end",
-	"selectlist : selectlistf",
-	"selectlistf : CASE_T set ':' fstatements",
-	"selectlistf : OTHERWISE_T ':' fstatements",
-	"selectlistf : selectlistf CASE_T set ':' fstatements",
-	"selectlistf : selectlistf OTHERWISE_T ':' fstatements",
-	"switch_statement : SWITCH_T fvarlist switchlist end",
-	"switch_statement : SWITCH_T '(' fvarlist ')' switchlist end",
-	"switchlist : switchlistf",
-	"switchlistf : CASE_T set ':' fstatements",
-	"switchlistf : OTHERWISE_T ':' fstatements",
-	"switchlistf : switchlistf CASE_T set ':' fstatements",
-	"switchlistf : switchlistf OTHERWISE_T ':' fstatements",
-	"conditional_statement : CONDITIONAL_T fstatements end",
-	"notes_statement : NOTES_T notes_body end",
-	"notes_body : SYMBOL_T noteslist",
-	"notes_body : notes_body SYMBOL_T noteslist",
-	"noteslist : fvarlist BRACEDTEXT_T",
-	"noteslist : noteslist fvarlist BRACEDTEXT_T",
-	"fvarlist : varlist",
-	"varlist : fname",
-	"varlist : varlist ',' fname",
-	"varlist : varlist fname",
-	"fname : name optional_notes",
-	"name : IDENTIFIER_T",
-	"name : name '.' IDENTIFIER_T",
-	"name : name '[' set ']'",
-	"end : END_T CONDITIONAL_T",
-	"end : END_T FOR_T",
-	"end : END_T IF_T",
-	"end : END_T INTERACTIVE_T",
-	"end : END_T METHODS_T",
-	"end : END_T NOTES_T",
-	"end : END_T SELECT_T",
-	"end : END_T SWITCH_T",
-	"end : END_T UNITS_T",
-	"end : END_T GLOBAL_T",
-	"end : END_T WHEN_T",
-	"end : END_T WHILE_T",
-	"end : END_T IDENTIFIER_T",
-	"end : END_T",
-	"optional_bracedtext : /* empty */",
-	"optional_bracedtext : BRACEDTEXT_T",
-	"optional_notes : /* empty */",
-	"optional_notes : DQUOTE_T",
-	"set : setexprlist",
-	"set : /* empty */",
-	"setexprlist : expr",
-	"setexprlist : expr DOTDOT_T expr",
-	"setexprlist : setexprlist ',' expr",
-	"setexprlist : setexprlist ',' expr DOTDOT_T expr",
-	"number : INTEGER_T",
-	"number : realnumber",
-	"realnumber : REAL_T opunits",
-	"realnumber : INTEGER_T BRACEDTEXT_T",
-	"opunits : /* empty */",
-	"opunits : BRACEDTEXT_T",
-	"dims : DIMENSION_T dimensions",
-	"dims : DIMENSIONLESS_T",
-	"dims : /* empty */",
-	"dimensions : '*'",
-	"dimensions : dimexpr",
-	"dimexpr : IDENTIFIER_T",
-	"dimexpr : INTEGER_T",
-	"dimexpr : dimexpr '/' dimexpr",
-	"dimexpr : dimexpr '*' dimexpr",
-	"dimexpr : dimexpr '^' fraction",
-	"dimexpr : '(' dimexpr ')'",
-	"fraction : optional_sign fractail",
-	"fractail : INTEGER_T",
-	"fractail : '(' INTEGER_T '/' INTEGER_T ')'",
-	"optional_sign : /* empty */",
-	"optional_sign : '+'",
-	"optional_sign : '-'",
-	"expr : INTEGER_T",
-	"expr : MAXINTEGER_T",
-	"expr : realnumber",
-	"expr : MAXREAL_T",
-	"expr : TRUE_T",
-	"expr : FALSE_T",
-	"expr : ANY_T",
-	"expr : SYMBOL_T",
-	"expr : fname",
-	"expr : '[' set ']'",
-	"expr : expr '+' expr",
-	"expr : expr '-' expr",
-	"expr : expr '*' expr",
-	"expr : expr '/' expr",
-	"expr : expr '^' expr",
-	"expr : expr AND_T expr",
-	"expr : expr OR_T expr",
-	"expr : NOT_T expr",
-	"expr : expr relop expr",
-	"expr : expr logrelop expr",
-	"expr : expr IN_T expr",
-	"expr : expr '|' expr",
-	"expr : expr SUCHTHAT_T expr",
-	"expr : '+' expr",
-	"expr : '-' expr",
-	"expr : SATISFIED_T '(' fname ',' realnumber ')'",
-	"expr : SATISFIED_T '(' fname ')'",
-	"expr : SUM_T '(' set ')'",
-	"expr : SUM_T '[' set ']'",
-	"expr : PROD_T '(' set ')'",
-	"expr : PROD_T '[' set ']'",
-	"expr : UNION_T '(' set ')'",
-	"expr : UNION_T '[' set ']'",
-	"expr : INTERSECTION_T '(' set ')'",
-	"expr : INTERSECTION_T '[' set ']'",
-	"expr : CARD_T '(' set ')'",
-	"expr : CARD_T '[' set ']'",
-	"expr : CHOICE_T '(' set ')'",
-	"expr : CHOICE_T '[' set ']'",
-	"expr : IDENTIFIER_T '(' expr ')'",
-	"expr : '(' expr ')'",
-	"relop : '='",
-	"relop : '<'",
-	"relop : '>'",
-	"relop : LEQ_T",
-	"relop : GEQ_T",
-	"relop : NEQ_T",
-	"logrelop : BEQ_T",
-	"logrelop : BNE_T",
-};
-#endif /* ZZ_DEBUG */
-#define ZZ_FLAG  (-3000)
-/* @(#) $Revision: 1.10 $ */    
 
 /*
-** Skeleton parser driver for yacc output
+	This can be called as error_reporter_current_line(ASC_USER_ERROR,...);
+	or error_reporter_current_line(ASC_USER_WARNING,...), or with any of the other 
+	severity flags.
 */
-
-#if defined(NLS) && !defined(NL_SETN)
-#include <msgbuf.h>
-#endif
-
-#ifndef nl_msg
-#define nl_msg(i,s) (s)
-#endif
-
-/*
-** yacc user known macros and defines
-*/
-#define ZZ_ERROR		goto zz_errlab
-
-#ifndef __RUNTIME_ZZ_MAXDEPTH
-#define ZZ_ACCEPT	return(0)
-#define ZZ_ABORT		return(1)
-#else
-#define ZZ_ACCEPT	{free_stacks(); return(0);}
-#define ZZ_ABORT		{free_stacks(); return(1);}
-#endif
-
-#define ZZ_BACKUP( newtoken, newvalue )\
-{\
-	if ( zz_char >= 0 || ( zz_r2[ zz_tmp ] >> 1 ) != 1 )\
-	{\
-		zz_error( (nl_msg(30001,"syntax error - cannot backup")) );\
-		goto zz_errlab;\
-	}\
-	zz_char = newtoken;\
-	zz_state = *zz_ps;\
-	zz_lval = newvalue;\
-	goto zz_newstate;\
+static void error_reporter_current_line(const error_severity_t sev, const char *fmt,...){
+	va_list args;
+	va_start(args,fmt);
+	va_error_reporter(sev,Asc_ModuleBestName(Asc_CurrentModule()),(int)LineNum(),NULL,fmt,args);
+	va_end(args);
 }
-#define ZZ_RECOVERING()	(!!zz_errflag)
-#ifndef ZZ_DEBUG
-#	define ZZ_DEBUG	1	/* make debugging available */
-#endif
-
-/*
-** user known globals
-*/
-int zz_debug;			/* set to 1 to get debugging */
-
-/*
-** driver internal defines
-*/
-/* define for ZZ_FLAG now generated by yacc program. */
-/*#define ZZ_FLAG		(FLAGVAL)*/
-
-/*
-** global variables used by the parser
-*/
-# ifndef __RUNTIME_ZZ_MAXDEPTH
-__ZZ_SCLASS ZZ_STYPE zz_v[ ZZ_MAXDEPTH ];	/* value stack */
-__ZZ_SCLASS int zz_s[ ZZ_MAXDEPTH ];		/* state stack */
-# else
-__ZZ_SCLASS ZZ_STYPE *zz_v;			/* pointer to malloc'ed value stack */
-__ZZ_SCLASS int *zz_s;			/* pointer to malloc'ed stack stack */
-
-#if defined(__STDC__) || defined (__cplusplus)
-#include <stdlib.h>
-#else
-	extern char *malloc();
-	extern char *realloc();
-	extern void free();
-#endif /* __STDC__ or __cplusplus */
-
-
-static int allocate_stacks(); 
-static void free_stacks();
-# ifndef ZZ_INCREMENT
-# define ZZ_INCREMENT (ZZ_MAXDEPTH/2) + 10
-# endif
-# endif	/* __RUNTIME_ZZ_MAXDEPTH */
-long  zz_maxdepth = ZZ_MAXDEPTH;
-
-__ZZ_SCLASS ZZ_STYPE *zz_pv;			/* top of value stack */
-__ZZ_SCLASS int *zz_ps;			/* top of state stack */
-
-__ZZ_SCLASS int zz_state;			/* current state */
-__ZZ_SCLASS int zz_tmp;			/* extra var (lasts between blocks) */
-
-int zz_nerrs;			/* number of errors */
-__ZZ_SCLASS int zz_errflag;			/* error recovery flag */
-int zz_char;			/* current input token number */
-
-
-
-/*
-** zz_parse - return 0 if worked, 1 if syntax error not recovered from
-*/
-int
-zz_parse()
-{
-	register ZZ_STYPE *zz_pvt;	/* top of value stack for $vars */
-
-	/*
-	** Initialize externals - zz_parse may be called more than once
-	*/
-# ifdef __RUNTIME_ZZ_MAXDEPTH
-	if (allocate_stacks()) ZZ_ABORT;
-# endif
-	zz_pv = &zz_v[-1];
-	zz_ps = &zz_s[-1];
-	zz_state = 0;
-	zz_tmp = 0;
-	zz_nerrs = 0;
-	zz_errflag = 0;
-	zz_char = -1;
-
-	goto zz_stack;
-	{
-		register ZZ_STYPE *zz__pv;	/* top of value stack */
-		register int *zz__ps;		/* top of state stack */
-		register int zz__state;		/* current state */
-		register int  zz__n;		/* internal state number info */
-
-		/*
-		** get globals into registers.
-		** branch to here only if ZZ_BACKUP was called.
-		*/
-	zz_newstate:
-		zz__pv = zz_pv;
-		zz__ps = zz_ps;
-		zz__state = zz_state;
-		goto zz__newstate;
-
-		/*
-		** get globals into registers.
-		** either we just started, or we just finished a reduction
-		*/
-	zz_stack:
-		zz__pv = zz_pv;
-		zz__ps = zz_ps;
-		zz__state = zz_state;
-
-		/*
-		** top of for (;;) loop while no reductions done
-		*/
-	zz__stack:
-		/*
-		** put a state and value onto the stacks
-		*/
-#if ZZ_DEBUG
-		/*
-		** if debugging, look up token value in list of value vs.
-		** name pairs.  0 and negative (-1) are special values.
-		** Note: linear search is used since time is not a real
-		** consideration while debugging.
-		*/
-		if ( zz_debug )
-		{
-			register int zz__i;
-
-			printf( "State %d, token ", zz__state );
-			if ( zz_char == 0 )
-				printf( "end-of-file\n" );
-			else if ( zz_char < 0 )
-				printf( "-none-\n" );
-			else
-			{
-				for ( zz__i = 0; zz_toks[zz__i].t_val >= 0;
-					zz__i++ )
-				{
-					if ( zz_toks[zz__i].t_val == zz_char )
-						break;
-				}
-				printf( "%s\n", zz_toks[zz__i].t_name );
-			}
-		}
-#endif /* ZZ_DEBUG */
-		if ( ++zz__ps >= &zz_s[ zz_maxdepth ] )	/* room on stack? */
-		{
-# ifndef __RUNTIME_ZZ_MAXDEPTH
-			zz_error( (nl_msg(30002,"yacc stack overflow")) );
-			ZZ_ABORT;
-# else
-			/* save old stack bases to recalculate pointers */
-			ZZ_STYPE * zz_v_old = zz_v;
-			int * zz_s_old = zz_s;
-			zz_maxdepth += ZZ_INCREMENT;
-			zz_s = (int *) realloc(zz_s, zz_maxdepth * sizeof(int));
-			zz_v = (ZZ_STYPE *) realloc(zz_v, zz_maxdepth * sizeof(ZZ_STYPE));
-			if (zz_s==0 || zz_v==0) {
-			    zz_error( (nl_msg(30002,"yacc stack overflow")) );
-			    ZZ_ABORT;
-			    }
-			/* Reset pointers into stack */
-			zz__ps = (zz__ps - zz_s_old) + zz_s;
-			zz_ps = (zz_ps - zz_s_old) + zz_s;
-			zz__pv = (zz__pv - zz_v_old) + zz_v;
-			zz_pv = (zz_pv - zz_v_old) + zz_v;
-# endif
-
-		}
-		*zz__ps = zz__state;
-		*++zz__pv = zz_val;
-
-		/*
-		** we have a new state - find out what to do
-		*/
-	zz__newstate:
-		if ( ( zz__n = zz_pact[ zz__state ] ) <= ZZ_FLAG )
-			goto zz_default;		/* simple state */
-#if ZZ_DEBUG
-		/*
-		** if debugging, need to mark whether new token grabbed
-		*/
-		zz_tmp = zz_char < 0;
-#endif
-		if ( ( zz_char < 0 ) && ( ( zz_char = zz_lex() ) < 0 ) )
-			zz_char = 0;		/* reached EOF */
-#if ZZ_DEBUG
-		if ( zz_debug && zz_tmp )
-		{
-			register int zz__i;
-
-			printf( "Received token " );
-			if ( zz_char == 0 )
-				printf( "end-of-file\n" );
-			else if ( zz_char < 0 )
-				printf( "-none-\n" );
-			else
-			{
-				for ( zz__i = 0; zz_toks[zz__i].t_val >= 0;
-					zz__i++ )
-				{
-					if ( zz_toks[zz__i].t_val == zz_char )
-						break;
-				}
-				printf( "%s\n", zz_toks[zz__i].t_name );
-			}
-		}
-#endif /* ZZ_DEBUG */
-		if ( ( ( zz__n += zz_char ) < 0 ) || ( zz__n >= ZZ_LAST ) )
-			goto zz_default;
-		if ( zz_chk[ zz__n = zz_act[ zz__n ] ] == zz_char )	/*valid shift*/
-		{
-			zz_char = -1;
-			zz_val = zz_lval;
-			zz__state = zz__n;
-			if ( zz_errflag > 0 )
-				zz_errflag--;
-			goto zz__stack;
-		}
-
-	zz_default:
-		if ( ( zz__n = zz_def[ zz__state ] ) == -2 )
-		{
-#if ZZ_DEBUG
-			zz_tmp = zz_char < 0;
-#endif
-			if ( ( zz_char < 0 ) && ( ( zz_char = zz_lex() ) < 0 ) )
-				zz_char = 0;		/* reached EOF */
-#if ZZ_DEBUG
-			if ( zz_debug && zz_tmp )
-			{
-				register int zz__i;
-
-				printf( "Received token " );
-				if ( zz_char == 0 )
-					printf( "end-of-file\n" );
-				else if ( zz_char < 0 )
-					printf( "-none-\n" );
-				else
-				{
-					for ( zz__i = 0;
-						zz_toks[zz__i].t_val >= 0;
-						zz__i++ )
-					{
-						if ( zz_toks[zz__i].t_val
-							== zz_char )
-						{
-							break;
-						}
-					}
-					printf( "%s\n", zz_toks[zz__i].t_name );
-				}
-			}
-#endif /* ZZ_DEBUG */
-			/*
-			** look through exception table
-			*/
-			{
-				register int *zz_xi = zz_exca;
-
-				while ( ( *zz_xi != -1 ) ||
-					( zz_xi[1] != zz__state ) )
-				{
-					zz_xi += 2;
-				}
-				while ( ( *(zz_xi += 2) >= 0 ) &&
-					( *zz_xi != zz_char ) )
-					;
-				if ( ( zz__n = zz_xi[1] ) < 0 )
-					ZZ_ACCEPT;
-			}
-		}
-
-		/*
-		** check for syntax error
-		*/
-		if ( zz__n == 0 )	/* have an error */
-		{
-			/* no worry about speed here! */
-			switch ( zz_errflag )
-			{
-			case 0:		/* new error */
-				zz_error( (nl_msg(30003,"syntax error")) );
-				zz_nerrs++;
-				goto skip_init;
-			zz_errlab:
-				/*
-				** get globals into registers.
-				** we have a user generated syntax type error
-				*/
-				zz__pv = zz_pv;
-				zz__ps = zz_ps;
-				zz__state = zz_state;
-				zz_nerrs++;
-			skip_init:
-			case 1:
-			case 2:		/* incompletely recovered error */
-					/* try again... */
-				zz_errflag = 3;
-				/*
-				** find state where "error" is a legal
-				** shift action
-				*/
-				while ( zz__ps >= zz_s )
-				{
-					zz__n = zz_pact[ *zz__ps ] + ZZ_ERRCODE;
-					if ( zz__n >= 0 && zz__n < ZZ_LAST &&
-						zz_chk[zz_act[zz__n]] == ZZ_ERRCODE)					{
-						/*
-						** simulate shift of "error"
-						*/
-						zz__state = zz_act[ zz__n ];
-						goto zz__stack;
-					}
-					/*
-					** current state has no shift on
-					** "error", pop stack
-					*/
-#if ZZ_DEBUG
-#	define _POP_ "Error recovery pops state %d, uncovers state %d\n"
-					if ( zz_debug )
-						printf( _POP_, *zz__ps,
-							zz__ps[-1] );
-#	undef _POP_
-#endif
-					zz__ps--;
-					zz__pv--;
-				}
-				/*
-				** there is no state on stack with "error" as
-				** a valid shift.  give up.
-				*/
-				ZZ_ABORT;
-			case 3:		/* no shift yet; eat a token */
-#if ZZ_DEBUG
-				/*
-				** if debugging, look up token in list of
-				** pairs.  0 and negative shouldn't occur,
-				** but since timing doesn't matter when
-				** debugging, it doesn't hurt to leave the
-				** tests here.
-				*/
-				if ( zz_debug )
-				{
-					register int zz__i;
-
-					printf( "Error recovery discards " );
-					if ( zz_char == 0 )
-						printf( "token end-of-file\n" );
-					else if ( zz_char < 0 )
-						printf( "token -none-\n" );
-					else
-					{
-						for ( zz__i = 0;
-							zz_toks[zz__i].t_val >= 0;
-							zz__i++ )
-						{
-							if ( zz_toks[zz__i].t_val
-								== zz_char )
-							{
-								break;
-							}
-						}
-						printf( "token %s\n",
-							zz_toks[zz__i].t_name );
-					}
-				}
-#endif /* ZZ_DEBUG */
-				if ( zz_char == 0 )	/* reached EOF. quit */
-					ZZ_ABORT;
-				zz_char = -1;
-				goto zz__newstate;
-			}
-		}/* end if ( zz__n == 0 ) */
-		/*
-		** reduction by production zz__n
-		** put stack tops, etc. so things right after switch
-		*/
-#if ZZ_DEBUG
-		/*
-		** if debugging, print the string that is the user's
-		** specification of the reduction which is just about
-		** to be done.
-		*/
-		if ( zz_debug )
-			printf( "Reduce by (%d) \"%s\"\n",
-				zz__n, zz_reds[ zz__n ] );
-#endif
-		zz_tmp = zz__n;			/* value to switch over */
-		zz_pvt = zz__pv;			/* $vars top of value stack */
-		/*
-		** Look in goto table for next state
-		** Sorry about using zz__state here as temporary
-		** register variable, but why not, if it works...
-		** If zz_r2[ zz__n ] doesn't have the low order bit
-		** set, then there is no action to be done for
-		** this reduction.  So, no saving & unsaving of
-		** registers done.  The only difference between the
-		** code just after the if and the body of the if is
-		** the goto zz__stack in the body.  This way the test
-		** can be made before the choice of what to do is needed.
-		*/
-		{
-			/* length of production doubled with extra bit */
-			register int zz__len = zz_r2[ zz__n ];
-
-			if ( !( zz__len & 01 ) )
-			{
-				zz__len >>= 1;
-				zz_val = ( zz__pv -= zz__len )[1];	/* $$ = $1 */
-				zz__state = zz_pgo[ zz__n = zz_r1[ zz__n ] ] +
-					*( zz__ps -= zz__len ) + 1;
-				if ( zz__state >= ZZ_LAST ||
-					zz_chk[ zz__state =
-					zz_act[ zz__state ] ] != -zz__n )
-				{
-					zz__state = zz_act[ zz_pgo[ zz__n ] ];
-				}
-				goto zz__stack;
-			}
-			zz__len >>= 1;
-			zz_val = ( zz__pv -= zz__len )[1];	/* $$ = $1 */
-			zz__state = zz_pgo[ zz__n = zz_r1[ zz__n ] ] +
-				*( zz__ps -= zz__len ) + 1;
-			if ( zz__state >= ZZ_LAST ||
-				zz_chk[ zz__state = zz_act[ zz__state ] ] != -zz__n )
-			{
-				zz__state = zz_act[ zz_pgo[ zz__n ] ];
-			}
-		}
-					/* save until reenter driver code */
-		zz_state = zz__state;
-		zz_ps = zz__ps;
-		zz_pv = zz__pv;
-	}
-	/*
-	** code supplied by user is placed in this switch
-	*/
-	switch( zz_tmp )
-	{
-		
-case 16:
-/* # line 427 "ascParse.y" */
-{
-	  ErrMsg_Generic("Error in definition ");
-	} break;
-case 17:
-/* # line 434 "ascParse.y" */
-{
-          /* the following steps apply to string buffers only, not files */
-	  struct gl_list_t *stats;
-          int dispose;
-	  if (zz_pvt[-2].slptr != NULL) {
-	    stats = gl_create(1L);
-	    gl_append_ptr(stats,(void *)zz_pvt[-2].slptr);
-	    if (g_untrapped_error) {
-	      ErrMsg_Generic("Because of a syntax error, the "
-               "following statements are being ignored:");
-		WriteStatementList(ASCERR,zz_pvt[-2].slptr,4);
-	      DestroyStatementList(zz_pvt[-2].slptr);
-            } else {
-	      dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
-              switch (dispose) {
-              case 1: /* appended */
-	        if (stats != NULL) {
-	          gl_destroy(stats);
-	        }
-	        break;
-              case 0: /* kept */
-	        break;
-              case -1: /* illegal in file */
-	        ErrMsg_Generic("GLOBAL statements can only be made "
-                 "interactively. Ignoring ");
-	        if (stats != NULL) {
-		  WriteStatementList(ASCERR,zz_pvt[-2].slptr,4);
-	          gl_iterate(stats,(DestroyFunc)DestroyStatementList);
-	          gl_destroy(stats);
-	        }
-	        break;
-              default:
-	        break;
-              }
-            }
-	  }
-	  /* don't let any bizarreness in string parsing hang around */
-	  g_type_name = g_refines_name = g_proc_name = NULL;
-	  g_model_parameters =
-	    g_parameter_reduction =
-	    g_parameter_wheres = NULL;
-	  g_untrapped_error = 0;
-	} break;
-case 18:
-/* # line 481 "ascParse.y" */
-{
-	  Asc_ScannerPushBuffer(zz_pvt[-1].dquote_ptr);
-	} break;
-case 19:
-/* # line 485 "ascParse.y" */
-{
-	  DestroyName(zz_pvt[-1].nptr);
-	  ErrMsg_Generic("REQUIRE statement syntax is "
-	                 "``REQUIRE \"filename\";'' ");
-	} break;
-case 20:
-/* # line 491 "ascParse.y" */
-{
-	  DestroyName(zz_pvt[-0].nptr);
-	  ErrMsg_Generic("REQUIRE statement syntax is "
-	                 "``REQUIRE \"filename\";'' ");
-	} break;
-case 21:
-/* # line 500 "ascParse.y" */
-{
-          Asc_ModuleCreateAlias(Asc_CurrentModule(),zz_pvt[-1].dquote_ptr);
-        } break;
-case 22:
-/* # line 504 "ascParse.y" */
-{
-	  DestroyName(zz_pvt[-1].nptr);
-	  ErrMsg_Generic("PROVIDE statement syntax is "
-	                 "``PROVIDE \"filename\";'' ");
-	} break;
-case 23:
-/* # line 510 "ascParse.y" */
-{
-	  DestroyName(zz_pvt[-0].nptr);
-	  ErrMsg_Generic("PROVIDE statement syntax is "
-	                 "``PROVIDE \"filename\";'' ");
-	} break;
-case 24:
-/* # line 519 "ascParse.y" */
-{
-	  symchar *path;
-	  path = MakeArchiveLibraryName(SCP(zz_pvt[-1].id_ptr));
-	  (void)LoadArchiveLibrary(SCP(path),SCP(zz_pvt[-3].id_ptr));
-	} break;
-case 25:
-/* # line 528 "ascParse.y" */
-{
-	  /*  see comments for notes statement.  */
-	  if( zz_pvt[-1].int_value != NOTES_T ) {
-	    WarnMsg_MismatchEnd("NOTES", NULL, zz_pvt[-1].int_value, NULL);
-	  }
-	  if (zz_pvt[-2].notesptr != NULL) {
-	    struct NoteTmp *nt;
-	    symchar *lang=NULL; /* dummy */
-	    nt = zz_pvt[-2].notesptr;
-	    while (nt != NULL) {
-	      if (nt->lang != NULL) {
-	        lang = nt->lang;
-	      }
-	      /* save exploding vardata to simple entries until we keep */
-	      CollectNote(CreateNote(g_type_name, lang, NULL, g_proc_name,
-	                             Asc_ModuleBestName(Asc_CurrentModule()),
-	                             nt->bt,
-	                             nt->line, nt->vardata, nd_vlist));
-	      nt = nt->next;
-	    }
-	    /* now keep them */
-	    ProcessNotes(1);
-	    DestroyNoteTmpList(zz_pvt[-2].notesptr);
-          }
-          g_type_name = g_proc_name = NULL;
-	  g_untrapped_error = 0;
-	} break;
-case 26:
-/* # line 559 "ascParse.y" */
-{
-	  g_type_name = zz_pvt[-2].id_ptr;
-	  g_proc_name = zz_pvt[-1].id_ptr;
-	} break;
-case 27:
-/* # line 567 "ascParse.y" */
-{
-	  if (zz_pvt[-3].tptr == NULL) {
-	    DestroyProcedureList(zz_pvt[-2].listp);
-	  } else {
-	    if( zz_pvt[-1].int_value != METHODS_T ) {
-	      WarnMsg_MismatchEnd("ADD METHODS", NULL, zz_pvt[-1].int_value, "METHODS");
-	    }
-	    if (AddMethods(zz_pvt[-3].tptr,zz_pvt[-2].listp,g_untrapped_error) != 0) {
-	      if (zz_pvt[-3].tptr != ILLEGAL_DEFINITION) {
-                ErrMsg_ProcsRejected("ADD",SCP(GetName(zz_pvt[-3].tptr)));
-	        DestroyProcedureList(zz_pvt[-2].listp);
-	      } /* else adding in DEFINITION MODEL may have misgone */
-	    }
-	  }
-	  g_untrapped_error = 0;
-	} break;
-case 28:
-/* # line 587 "ascParse.y" */
-{
-	  struct TypeDescription *tmptype;
-	  tmptype = FindType(zz_pvt[-1].id_ptr);
-	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("ADD", SCP(zz_pvt[-1].id_ptr));
-	  }
-	  zz_val.tptr = tmptype; /* parent should check for NULL */
-	  g_type_name = zz_pvt[-1].id_ptr; /* scope for notes */
-	} break;
-case 29:
-/* # line 597 "ascParse.y" */
-{
-	  zz_val.tptr = ILLEGAL_DEFINITION;
-	  /* need a bit of global state here to tag base methods */
-	} break;
-case 30:
-/* # line 605 "ascParse.y" */
-{
-	  if (zz_pvt[-3].tptr == NULL) {
-	    DestroyProcedureList(zz_pvt[-2].listp);
-	  } else {
-	    if( zz_pvt[-1].int_value != METHODS_T ) {
-	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, zz_pvt[-1].int_value, "METHODS");
-	    }
-	    if (ReplaceMethods(zz_pvt[-3].tptr,zz_pvt[-2].listp,g_untrapped_error) != 0) {
-              ErrMsg_ProcsRejected("REPLACE",SCP(GetName(zz_pvt[-3].tptr)));
-	      DestroyProcedureList(zz_pvt[-2].listp);
-	    }
-	  }
-	  g_untrapped_error = 0;
-	} break;
-case 31:
-/* # line 623 "ascParse.y" */
-{
-	  struct TypeDescription *tmptype;
-	  tmptype = FindType(zz_pvt[-1].id_ptr);
-	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("REPLACE", SCP(zz_pvt[-1].id_ptr));
-	  }
-	  zz_val.tptr = tmptype; /* parent should check for NULL */
-	} break;
-case 32:
-/* # line 632 "ascParse.y" */
-{
-	  zz_val.tptr = ILLEGAL_DEFINITION;
-	  /* need a bit of global state here to tag base methods */
-	} break;
-case 33:
-/* # line 640 "ascParse.y" */
-{
-	  struct TypeDescription *def_ptr;
-	  int keepnotes = 0;
-
-          if(( zz_pvt[-1].int_value != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
-	    /* all identifier_t are from symbol table, so ptr match
-	     * is sufficient for equality.
-	     */
-	    WarnMsg_MismatchEnd("ATOM", SCP(g_type_name),
-	                        zz_pvt[-1].int_value, SCP(g_type_name));
-	  }
-	  g_atom_dim_ptr = CheckDimensionsMatch(g_default_dim_ptr,
-	                                        g_atom_dim_ptr);
-	  if (g_atom_dim_ptr != NULL) {
-	    def_ptr = CreateAtomTypeDef(g_type_name,
-	                                g_refines_name,
-	                                real_type, /* ignored..really */
-	                                Asc_CurrentModule(),
-	                                zz_pvt[-5].int_value,
-	                                zz_pvt[-3].slptr,
-	                                zz_pvt[-2].listp,
-	                                g_defaulted,
-	                                g_default_double,
-	                                g_atom_dim_ptr,
-	                                g_default_long,
-	                                g_default_symbol,
-	                                g_untrapped_error);
-	    if (def_ptr != NULL) {
-	      keepnotes = AddType(def_ptr);
-	    } else {
-	      /* CreateAtomTypeDef is responsible for freeing (if needed)
-	       * all args sent to it event of failure so we don't have to.
-	       * In particular $3 $4 should be killed before returning NULL.
-	       */
-	      ErrMsg_NullDefPointer(SCP(g_type_name));
-	    }
-	  } else {
-	    FPRINTF(ASCERR,
-	            "Atom dimensions don't match in ATOM %s on line %s:%lu.\n",
-	            SCP(g_type_name),
-	            Asc_ModuleBestName(Asc_CurrentModule()),
-	            g_header_linenum);
-	    DestroyStatementList(zz_pvt[-3].slptr);
-	    DestroyProcedureList(zz_pvt[-2].listp);
-	  }
-	  ProcessNotes(keepnotes);
-	  g_type_name = g_refines_name = g_proc_name = NULL;
-	  g_untrapped_error = 0;
-	} break;
-case 34:
-/* # line 693 "ascParse.y" */
-{
-	  /* g_type_name = $1; */
-	  g_refines_name = zz_pvt[-3].id_ptr;
-	  g_atom_dim_ptr = zz_pvt[-2].dimp;
-	  g_default_double = zz_pvt[-1].real_value;
-	  g_header_linenum = LineNum();
-	} break;
-case 35:
-/* # line 704 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	  g_type_name = zz_pvt[-0].id_ptr; /* want this set early so parm lists see it */
-	} break;
-case 36:
-/* # line 712 "ascParse.y" */
-{
-	  zz_val.real_value = 0.0;
-	  g_default_dim_ptr = WildDimension();
-	  g_defaulted = 0;
-	} break;
-case 37:
-/* # line 718 "ascParse.y" */
-{
-	  zz_val.real_value = zz_pvt[-1].int_value ? -zz_pvt[-0].real_value : zz_pvt[-0].real_value;
-	  g_defaulted = 1;
-	} break;
-case 38:
-/* # line 723 "ascParse.y" */
-{
-	  zz_val.real_value = 0.0;
-	  g_default_dim_ptr = Dimensionless();
-	  g_default_long = 0;
-	  g_defaulted = 1;
-	} break;
-case 39:
-/* # line 730 "ascParse.y" */
-{
-	  zz_val.real_value = 0.0;
-	  g_default_dim_ptr = Dimensionless();
-	  g_default_long = 1;
-	  g_defaulted = 1;
-	} break;
-case 40:
-/* # line 737 "ascParse.y" */
-{
-	  zz_val.real_value = 0.0;
-	  g_default_dim_ptr = Dimensionless();
-	  g_default_symbol = zz_pvt[-0].sym_ptr;
-	  g_defaulted = 0;
-	} break;
-case 41:
-/* # line 747 "ascParse.y" */
-{
-	  struct TypeDescription *def_ptr;
-	  int keepnotes = 0;
-	  if (g_defaulted) {
-	    g_atom_dim_ptr = CheckDimensionsMatch(g_default_dim_ptr,
-	                                          g_atom_dim_ptr);
-	  }
-	  if (g_atom_dim_ptr != NULL) {
-	    def_ptr = CreateConstantTypeDef(g_type_name,
-	                                    g_refines_name,
-	                                    Asc_CurrentModule(),
-	                                    zz_pvt[-1].int_value,
-	                                    g_defaulted,
-	                                    g_default_double,
-	                                    g_default_long,
-	                                    g_default_symbol,
-	                                    g_atom_dim_ptr,
-	                                    g_untrapped_error);
-	    if (def_ptr != NULL) {
-	      keepnotes = AddType(def_ptr);
-	    } else {
-	      ErrMsg_NullDefPointer(SCP(g_type_name));
-	    }
-	  } else {
-	    FPRINTF(ASCERR,
-	            "Constant dimensions don't match in CONSTANT %s"
-	            " on line %s:%lu.\n",
-	            SCP(g_type_name),
-	            Asc_ModuleBestName(Asc_CurrentModule()),
-	            g_header_linenum);
-	  }
-	  ProcessNotes(keepnotes);
-	  g_type_name = g_refines_name = NULL;
-	  g_untrapped_error = 0;
-	} break;
-case 42:
-/* # line 787 "ascParse.y" */
-{
-	  g_type_name = zz_pvt[-6].id_ptr;
-	  g_refines_name = zz_pvt[-4].id_ptr;
-	  g_atom_dim_ptr = zz_pvt[-3].dimp;
-	  switch (g_constant_type) {
-	  case DOUBLECONSTANT:
-	    g_default_double = zz_pvt[-2].real_value;
-	    break;
-	  case LONGCONSTANT:
-	    g_default_long = zz_pvt[-2].real_value;
-	    break;
-	  case BOOLEANCONSTANT:
-	    g_default_long = zz_pvt[-2].int_value;
-	    break;
-	  case SYMBOLCONSTANT:
-	    g_default_symbol = zz_pvt[-2].sym_ptr;
-	    break;
-	  default:
-	    ErrMsg_Generic("wierd constant type assign encountered ");
-	    break; /* better not be reached. */
-	  }
-	  g_header_linenum = LineNum();
-	  if (zz_pvt[-1].dquote_ptr != NULL) {
-	    CollectNote(CreateNote(g_type_name,InlineNote(),SelfNote(),NULL,
-	                           Asc_ModuleBestName(Asc_CurrentModule()),
-	                           AddBraceChar(zz_pvt[-1].dquote_ptr,InlineNote()),
-	                           g_header_linenum,NULL,nd_empty));
-	  }
-	} break;
-case 43:
-/* # line 820 "ascParse.y" */
-{
-	  zz_val.real_value = 0.0;
-	  g_default_dim_ptr = WildDimension();
-	  g_defaulted = 0;
-	} break;
-case 44:
-/* # line 826 "ascParse.y" */
-{
-	  zz_val.real_value = zz_pvt[-1].int_value ? -zz_pvt[-0].real_value : zz_pvt[-0].real_value;
-	  g_defaulted = 1;
-	} break;
-case 45:
-/* # line 831 "ascParse.y" */
-{
-	  zz_val.int_value = 1;
-	  g_defaulted = 1;
-	  g_default_dim_ptr = Dimensionless();
-	  g_constant_type = BOOLEANCONSTANT;
-	} break;
-case 46:
-/* # line 838 "ascParse.y" */
-{
-	  zz_val.int_value = 0;
-	  g_defaulted = 1;
-	  g_default_dim_ptr = Dimensionless();
-	  g_constant_type = BOOLEANCONSTANT;
-	} break;
-case 47:
-/* # line 845 "ascParse.y" */
-{
-	  zz_val.sym_ptr = zz_pvt[-0].sym_ptr;
-	  g_defaulted = 1;
-	  g_default_dim_ptr = Dimensionless();
-	  g_constant_type = SYMBOLCONSTANT;
-	} break;
-case 48:
-/* # line 855 "ascParse.y" */
-{
-	  struct TypeDescription *def_ptr;
-	  int keepnotes = 0;
-	  if(( zz_pvt[-1].int_value != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
-	    /* all identifier_t are from symbol table, so ptr match
-	     * is sufficient for equality.
-	     */
-	    WarnMsg_MismatchEnd("MODEL", SCP(g_type_name),
-	                        zz_pvt[-1].int_value, SCP(g_type_name));
-	  }
-	  def_ptr = CreateModelTypeDef(g_type_name,
-	                               g_refines_name,
-	                               Asc_CurrentModule(),
-	                               zz_pvt[-5].int_value,
-	                               zz_pvt[-3].slptr,
-	                               zz_pvt[-2].listp,
-	                               g_model_parameters,
-	                               g_parameter_reduction,
-	                               g_parameter_wheres,
-	                               g_untrapped_error);
-	  if (def_ptr != NULL) {
-	    keepnotes = AddType(def_ptr);
-	  } else {
-	    /* CreateModelTypeDef is responsible for freeing (if needed)
-	     * all args sent to it so we don't have to here.
-	     * in particular $3 $4 g_model_parameters, g_parameter_reduction,
-	     * and g_parameter_wheres.
-	     */
-	    ErrMsg_NullDefPointer(SCP(g_type_name));
-	  }
-	  ProcessNotes(keepnotes);
-	  g_type_name = g_refines_name = NULL;
-	  g_model_parameters =
-	    g_parameter_reduction =
-	    g_parameter_wheres = NULL;
-	  g_untrapped_error = 0;
-	} break;
-case 49:
-/* # line 897 "ascParse.y" */
-{
-	  /* g_type_name = $1; */
-	  g_model_parameters = zz_pvt[-2].slptr;
-	  g_parameter_wheres = zz_pvt[-1].slptr;
-	  g_refines_name = NULL;
-	  g_header_linenum = LineNum();
-	} break;
-case 50:
-/* # line 906 "ascParse.y" */
-{
-	  /* g_type_name = $1; */
-	  g_model_parameters = zz_pvt[-5].slptr;
-	  g_parameter_wheres = zz_pvt[-4].slptr;
-	  g_refines_name = zz_pvt[-2].id_ptr;
-	  g_parameter_reduction = zz_pvt[-1].slptr;
-	  g_header_linenum = LineNum();
-	} break;
-case 51:
-/* # line 918 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	  g_type_name = zz_pvt[-0].id_ptr; /* want this set early so parm lists see it */
-	} break;
-case 52:
-/* # line 926 "ascParse.y" */
-{
-	  zz_val.slptr = NULL;
-	} break;
-case 53:
-/* # line 930 "ascParse.y" */
-{
-	  zz_val.slptr = zz_pvt[-1].slptr; /* this could be much more sophisticated */
-	} break;
-case 54:
-/* # line 937 "ascParse.y" */
-{
-	  zz_val.slptr = NULL;
-	} break;
-case 55:
-/* # line 941 "ascParse.y" */
-{
-	  zz_val.slptr = zz_pvt[-1].slptr; /* this could be much more sophisticated */
-	} break;
-case 56:
-/* # line 948 "ascParse.y" */
-{
-	  zz_val.slptr = NULL;
-	} break;
-case 57:
-/* # line 952 "ascParse.y" */
-{
-	  zz_val.slptr = zz_pvt[-1].slptr; /* this could be much more sophisticated */
-	} break;
-case 58:
-/* # line 959 "ascParse.y" */
-{
-	  struct TypeDescription *def_ptr;
-	  if ((zz_pvt[-1].int_value != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
-	    /* all identifier_t are from symbol table, so ptr match
-	     * is sufficient for equality.
-	     */
-	    WarnMsg_MismatchEnd("PATCH", SCP(g_type_name),
-	                        zz_pvt[-1].int_value, SCP(g_type_name));
-	  }
-	  def_ptr = CreatePatchTypeDef(g_type_name,
-	                               g_refines_name,
-	                               NULL,
-	                               Asc_CurrentModule(),
-	                               zz_pvt[-3].slptr,
-	                               zz_pvt[-2].listp,
-	                               g_untrapped_error);
-	  g_untrapped_error = 0;
-	  if (def_ptr != NULL) {
-	    AddType(def_ptr);
-	  } else {
-	    /* CreatePatchTypeDef is responsible for freeing (if needed)
-	     * all args sent to it so we don't have to here.
-	     * in particular $2 $3
-	     */
-	    ErrMsg_NullDefPointer(SCP(g_type_name));
-	  }
-	  g_type_name = g_refines_name = g_proc_name = NULL;
-	} break;
-case 59:
-/* # line 991 "ascParse.y" */
-{
-	  /*
-	   * A patch definition looks just like a model def.
-	   * with the original name <=> refine name.
-	   */
-	  g_type_name = zz_pvt[-3].id_ptr;
-	  g_refines_name = zz_pvt[-1].id_ptr;
-	  g_header_linenum = LineNum();
-	} break;
-case 60:
-/* # line 1004 "ascParse.y" */
-{
-	  zz_val.int_value = 0;
-	} break;
-case 61:
-/* # line 1008 "ascParse.y" */
-{
-	  zz_val.int_value = 1;
-	} break;
-case 62:
-/* # line 1015 "ascParse.y" */
-{
-	  struct TypeDescription *def_ptr;
-	  int keepnotes = 0;
-
-	  if(( zz_pvt[-1].int_value != IDENTIFIER_T ) || ( g_end_identifier != zz_pvt[-4].id_ptr )) {
-	    WarnMsg_MismatchEnd("DEFINITION", SCP(zz_pvt[-4].id_ptr), zz_pvt[-1].int_value, SCP(zz_pvt[-4].id_ptr));
-	  }
-	  if( zz_pvt[-4].id_ptr == GetBaseTypeName(relation_type)) {
-	    def_ptr = CreateRelationTypeDef(Asc_CurrentModule(),zz_pvt[-4].id_ptr,zz_pvt[-3].slptr,zz_pvt[-2].listp);
-	  }
-	  else if( zz_pvt[-4].id_ptr == GetBaseTypeName(logrel_type) ) {
-	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),zz_pvt[-4].id_ptr,zz_pvt[-3].slptr,zz_pvt[-2].listp);
-	  }
-	  else {
-	    ErrMsg_Generic("Bad type passed to DEFINITION statement ");
-	    def_ptr = NULL;
-	  }
-	  if ( def_ptr != NULL ) {
-	    keepnotes = AddType(def_ptr);
-	  } else {
-	    ErrMsg_NullDefPointer(SCP(zz_pvt[-4].id_ptr));
-	  }
-	  ProcessNotes(keepnotes);
-	  g_type_name = NULL;
-	  g_untrapped_error = 0;
-	} break;
-case 63:
-/* # line 1045 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	  g_type_name = zz_pvt[-0].id_ptr; /* want this set early so parm lists see it */
-	} break;
-case 64:
-/* # line 1054 "ascParse.y" */
-{ /* nothing to do. just cruft to fix ; problem */ } break;
-case 65:
-/* # line 1059 "ascParse.y" */
-{
-          struct UnitDefinition *ud;
-          unsigned long c,len;
-
-	  if( zz_pvt[-0].int_value != UNITS_T ) {
-	    WarnMsg_MismatchEnd("UNITS", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-          len = gl_length(zz_pvt[-1].listp);
-          for (c=1; c <= len; c++) {
-            ud = (struct UnitDefinition *)gl_fetch(zz_pvt[-1].listp,c);
-            ProcessUnitDef(ud);
-            DestroyUnitDef(ud);
-          }
-          gl_destroy(zz_pvt[-1].listp);
-          zz_val.statptr = NULL;
-	} break;
-case 66:
-/* # line 1078 "ascParse.y" */
-{
-	  zz_val.listp = gl_create(100L);
-	} break;
-case 67:
-/* # line 1082 "ascParse.y" */
-{
-	  gl_append_ptr(zz_pvt[-1].listp,(char *)zz_pvt[-0].udefptr);
-	  zz_val.listp = zz_pvt[-1].listp;
-	} break;
-case 68:
-/* # line 1090 "ascParse.y" */
-{
-	  zz_val.udefptr = CreateUnitDef(zz_pvt[-3].id_ptr,zz_pvt[-1].braced_ptr,Asc_ModuleBestName(Asc_CurrentModule()),
-                             LineNum());
-	} break;
-case 69:
-/* # line 1099 "ascParse.y" */
-{
-	  zz_val.listp = NULL;
-	} break;
-case 70:
-/* # line 1103 "ascParse.y" */
-{ /* To get rid of this, we will need a global proclist
-           * that accumulates procs until a MODEL production is
-           * completed. If any other sort of production is started,
-           * and proclist is not NULL, it should be discarded.
-           */
-	} break;
-case 71:
-/* # line 1110 "ascParse.y" */
-{
-	  zz_val.listp = zz_pvt[-0].listp;
-	} break;
-case 72:
-/* # line 1117 "ascParse.y" */
-{
-	  zz_val.listp = zz_pvt[-0].listp;
-	  gl_sort(zz_val.listp,(CmpFunc)CmpProcs);
-	} break;
-case 73:
-/* # line 1124 "ascParse.y" */
-{
-	  zz_val.listp = gl_create(7L);
-	} break;
-case 74:
-/* # line 1128 "ascParse.y" */
-{
-	  unsigned long c;
-	  struct InitProcedure *oldproc;
-	  c = gl_length(zz_pvt[-1].listp);
-          while (c > 0) {
-            oldproc = (struct InitProcedure *)gl_fetch(zz_pvt[-1].listp,c);
-            if (ProcName(zz_pvt[-0].procptr) == ProcName(oldproc)) {
-	      ErrMsg_DuplicateProc(zz_pvt[-0].procptr);
-              break;
-            }
-            c--;
-          }
-	  if (c) { /* broke early */
-	    DestroyProcedure(zz_pvt[-0].procptr);
-	  } else {
-	    gl_append_ptr(zz_pvt[-1].listp,(char *)zz_pvt[-0].procptr);
-	  }
-	  zz_val.listp = zz_pvt[-1].listp;
-	} break;
-case 75:
-/* # line 1151 "ascParse.y" */
-{
-	  if ((zz_pvt[-1].int_value != IDENTIFIER_T) || (zz_pvt[-4].id_ptr != g_end_identifier)) {
-	    /* all identifier_t are from symbol table, so ptr match
-	     * is sufficient for equality.
-	     */
-	    WarnMsg_MismatchEnd("METHOD", SCP(zz_pvt[-4].id_ptr), zz_pvt[-1].int_value, SCP(zz_pvt[-4].id_ptr));
-	  }
-	  zz_val.procptr = CreateProcedure(zz_pvt[-4].id_ptr,zz_pvt[-2].slptr);
-	  g_proc_name = NULL;
-	} break;
-case 76:
-/* # line 1165 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	  g_proc_name = zz_pvt[-0].id_ptr;
-	} break;
-case 77:
-/* # line 1174 "ascParse.y" */
-{
-	  zz_val.slptr = CreateStatementList(zz_pvt[-0].listp);
-	} break;
-case 78:
-/* # line 1181 "ascParse.y" */
-{
-	  zz_val.listp = gl_create(7L);
-	} break;
-case 79:
-/* # line 1185 "ascParse.y" */
-{
-	  /* this is appending to a gllist of statements, not yet slist. */
-	  if (zz_pvt[-1].statptr != NULL) {
-	    gl_append_ptr(zz_pvt[-2].listp,(char *)zz_pvt[-1].statptr);
-	  }
-	  zz_val.listp = zz_pvt[-2].listp;
-	} break;
-case 80:
-/* # line 1193 "ascParse.y" */
-{
-	  ErrMsg_Generic("Error in statement input ");
-	  zz_val.listp = zz_pvt[-2].listp;
-	} break;
-case 108:
-/* # line 1231 "ascParse.y" */
-{
-	  struct TypeDescription *tmptype;
-	  tmptype = FindType(zz_pvt[-2].id_ptr);
-	  if (zz_pvt[-0].eptr != NULL) {
-	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A ");
-	    g_untrapped_error++;
-	    DestroyVariableList(zz_pvt[-4].lptr);
-	    DestroySetList(g_typeargs);
-	    DestroyExprList(zz_pvt[-0].eptr);
-	    zz_val.statptr = NULL;
-	  } else {
-	    if (tmptype != NULL) {
-	      if ((GetBaseType(tmptype) != model_type) &&
-	          (g_typeargs != NULL)) {
-	        FPRINTF(ASCERR,
-	                "%sThe IS_A on line %s:%lu\n"
-	                "  has arguments to the nonmodel type %s.\n",
-	                StatioLabel(3),
-	                Asc_ModuleBestName(Asc_CurrentModule()),
-	                LineNum(),
-	                SCP(zz_pvt[-2].id_ptr));
-	        DestroyVariableList(zz_pvt[-4].lptr);
-	        DestroySetList(g_typeargs);
-	        DestroyExprList(zz_pvt[-0].eptr);
-	        g_untrapped_error++;
-	        zz_val.statptr = NULL;
-	      } else {
-	        zz_val.statptr = CreateISA(zz_pvt[-4].lptr,zz_pvt[-2].id_ptr,g_typeargs,zz_pvt[-1].id_ptr);
-	      }
-	    } else {
-	      FPRINTF(ASCERR,"%sThe IS_A on line %s:%lu\n",
-	              StatioLabel(3),Asc_ModuleBestName(Asc_CurrentModule()),
-	              LineNum());
-	      FPRINTF(ASCERR,"  uses the undefined type %s.\n",SCP(zz_pvt[-2].id_ptr));
-	      DestroyVariableList(zz_pvt[-4].lptr);
-	      DestroySetList(g_typeargs);
-	      DestroyExprList(zz_pvt[-0].eptr);
-	      g_untrapped_error++;
-	      zz_val.statptr = NULL;
-	    }
-	  }
-	  g_typeargs = NULL;
-
-	} break;
-case 109:
-/* # line 1279 "ascParse.y" */
-{
-	  struct TypeDescription *tmptype;
-	  tmptype = FindType(zz_pvt[-2].id_ptr);
-	  if (tmptype != NULL) {
-	    if ((GetBaseType(tmptype) != model_type) &&
-	        (g_typeargs != NULL)) {
-	      FPRINTF(ASCERR,"%sThe WILL_BE on line %s:%lu\n",
-	              StatioLabel(3),Asc_ModuleBestName(Asc_CurrentModule()),
-	              LineNum());
-	      FPRINTF(ASCERR,
-	              "  has arguments to the nonmodel type %s.\n",SCP(zz_pvt[-2].id_ptr));
-	      DestroyVariableList(zz_pvt[-4].lptr);
-	      DestroySetList(g_typeargs);
-	      DestroyExprList(zz_pvt[-0].eptr);
-	      g_untrapped_error++;
-	      zz_val.statptr = NULL;
-	    } else {
-	      zz_val.statptr = CreateWILLBE(zz_pvt[-4].lptr,zz_pvt[-2].id_ptr,g_typeargs,zz_pvt[-1].id_ptr,zz_pvt[-0].eptr);
-	    }
-	  } else {
-	    DestroyVariableList(zz_pvt[-4].lptr);
-	    DestroySetList(g_typeargs);
-	    DestroyExprList(zz_pvt[-0].eptr);
-	    g_untrapped_error++;
-	    zz_val.statptr = NULL;
-	    FPRINTF(ASCERR,"%sThe WILL_BE on line %s:%lu\n",StatioLabel(3),
-	            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	    FPRINTF(ASCERR,"	uses the undefined type %s.\n",SCP(zz_pvt[-2].id_ptr));
-	  }
-	  g_typeargs = NULL;
-	} break;
-case 110:
-/* # line 1314 "ascParse.y" */
-{
-	  zz_val.statptr = CreateALIASES(zz_pvt[-2].lptr,zz_pvt[-0].nptr);
-	} break;
-case 111:
-/* # line 1319 "ascParse.y" */
-{
-	  int carray_err;
-	  carray_err = 0;
-	  if (VariableListLength(zz_pvt[-11].lptr) != 1L) {
-	    carray_err = 1;
-	    FPRINTF(ASCERR,
-	            "%sCompound ALIASES allows only 1 LHS name. Found:\n",
-	            StatioLabel(3));
-	    WriteVariableList(ASCERR,zz_pvt[-11].lptr);
-	    FPRINTF(ASCERR,"\n");
-	  }
-	  if (VariableListLength(zz_pvt[-5].lptr) != 1L) {
-	    carray_err = 1;
-	    FPRINTF(ASCERR,
-	            "%sCompound ALIASES/IS_A allows only "
-	            "1 LHS name. Found:\n",StatioLabel(3));
-	    WriteVariableList(ASCERR,zz_pvt[-5].lptr);
-	    FPRINTF(ASCERR,"\n");
-	  }
-	  /* verify $9 == "set" */
-	  if (!carray_err && zz_pvt[-3].id_ptr != GetBaseTypeName(set_type)) {
-	    carray_err = 1;
-	    FPRINTF(ASCERR,"%sCompound ALIASES statement requires IS_A %s. ",
-	            StatioLabel(3),SCP(GetBaseTypeName(set_type)));
-	    FPRINTF(ASCERR,"Found %s.\n",SCP(zz_pvt[-3].id_ptr));
-	  }
-	  /* verify set type */
-	  if ((!carray_err) &&
-	      (zz_pvt[-1].id_ptr != GetBaseTypeName(symbol_constant_type)) &&
-	      (zz_pvt[-1].id_ptr != GetBaseTypeName(integer_constant_type))) {
-	    carray_err = 1;
-	    FPRINTF(ASCERR,
-	            "%sCompound ALIASES IS_A statement requires %s or %s.\n",
-	            StatioLabel(3),SCP(GetBaseTypeName(integer_constant_type)),
-	            SCP(GetBaseTypeName(symbol_constant_type)));
-	    FPRINTF(ASCERR,"	Found %s.\n",SCP(zz_pvt[-1].id_ptr));
-	  }
-	  if (carray_err) {
-	    DestroyVariableList(zz_pvt[-11].lptr);
-	    DestroyVariableList(zz_pvt[-8].lptr);
-	    DestroyVariableList(zz_pvt[-5].lptr);
-	    DestroySetList(zz_pvt[-0].sptr);
-	    g_untrapped_error++;
-	    zz_val.statptr = NULL;
-	  } else {
-	    int intset;
-	    intset = (zz_pvt[-1].id_ptr == GetBaseTypeName(integer_constant_type));
-	    zz_val.statptr = CreateARR(zz_pvt[-11].lptr,zz_pvt[-8].lptr,zz_pvt[-5].lptr,intset,zz_pvt[-0].sptr);
-	  }
-	} break;
-case 112:
-/* # line 1373 "ascParse.y" */
-{
-	  zz_val.sptr = NULL;
-	} break;
-case 113:
-/* # line 1377 "ascParse.y" */
-{
-	  zz_val.sptr = zz_pvt[-1].sptr;
-	} break;
-case 114:
-/* # line 1384 "ascParse.y" */
-{
-	  if (FindType(zz_pvt[-1].id_ptr)) {
-	    zz_val.statptr = CreateREF(zz_pvt[-3].lptr,zz_pvt[-1].id_ptr,zz_pvt[-0].id_ptr,1);
-	  } else {
-	    zz_val.statptr = CreateREF(zz_pvt[-3].lptr,zz_pvt[-1].id_ptr,zz_pvt[-0].id_ptr,1);
-	    FPRINTF(ASCERR,"%s The _IS_ on line %s:%lu\n",
-	            StatioLabel(2),
-	            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	    FPRINTF(ASCERR,"uses the unbuilt prototype %s.\n",SCP(zz_pvt[-1].id_ptr));
-	  }
-	} break;
-case 115:
-/* # line 1399 "ascParse.y" */
-{
-	  struct TypeDescription *tmptype;
-	  tmptype = FindType(zz_pvt[-0].id_ptr);
-	  if (tmptype != NULL) {
-	    if ((GetBaseType(tmptype) != model_type) && 
-                (g_typeargs != NULL)) {
-	      FPRINTF(ASCERR,"%sThe IS_REFINED_TO on line %s:%lu\n",
-	              StatioLabel(3),
-	              Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	      FPRINTF(ASCERR,
-	              "  has arguments to the nonmodel type %s.\n",SCP(zz_pvt[-0].id_ptr));
-	      DestroyVariableList(zz_pvt[-2].lptr);
-	      DestroySetList(g_typeargs);
-	      g_untrapped_error++;
-	      zz_val.statptr = NULL;
-	    } else {
-	      zz_val.statptr = CreateIRT(zz_pvt[-2].lptr,zz_pvt[-0].id_ptr,g_typeargs);
-	    }
-	  } else {
-	    FPRINTF(ASCERR,"%sThe IS_REFINED_TO on line %s:%lu\n",
-	            StatioLabel(3),
-	            Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-	    FPRINTF(ASCERR,"	uses the undefined type %s.\n",SCP(zz_pvt[-0].id_ptr));
-	    DestroyVariableList(zz_pvt[-2].lptr);
-	    DestroySetList(g_typeargs);
-	    g_untrapped_error++;
-	    zz_val.statptr = NULL;
-	  }
-	  g_typeargs = NULL;
-	} break;
-case 116:
-/* # line 1433 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	  g_callargs = NULL;
-	} break;
-case 117:
-/* # line 1438 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-3].id_ptr;
-	  g_callargs = zz_pvt[-1].sptr;
-	} break;
-case 118:
-/* # line 1446 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	  g_typeargs = NULL;
-	} break;
-case 119:
-/* # line 1451 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-3].id_ptr;
-	  g_typeargs = zz_pvt[-1].sptr;
-	} break;
-case 120:
-/* # line 1459 "ascParse.y" */
-{
-	  zz_val.id_ptr = NULL;
-	} break;
-case 121:
-/* # line 1463 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	} break;
-case 122:
-/* # line 1470 "ascParse.y" */
-{
-	  zz_val.id_ptr = NULL;
-	} break;
-case 123:
-/* # line 1474 "ascParse.y" */
-{
-	  zz_val.id_ptr = zz_pvt[-0].id_ptr;
-	} break;
-case 124:
-/* # line 1481 "ascParse.y" */
-{
-	  zz_val.eptr = NULL;
-	} break;
-case 125:
-/* # line 1485 "ascParse.y" */
-{
-	  zz_val.eptr = zz_pvt[-0].eptr;
-	} break;
-case 126:
-/* # line 1492 "ascParse.y" */
-{
-	  zz_val.statptr = CreateAA(zz_pvt[-1].lptr);
-	} break;
-case 127:
-/* # line 1499 "ascParse.y" */
-{
-	  zz_val.statptr = CreateATS(zz_pvt[-1].lptr);
-	} break;
-case 128:
-/* # line 1506 "ascParse.y" */
-{
-	  zz_val.statptr = CreateWBTS(zz_pvt[-1].lptr);
-	} break;
-case 129:
-/* # line 1513 "ascParse.y" */
-{
-	  zz_val.statptr = CreateWNBTS(zz_pvt[-1].lptr);
-	} break;
-case 130:
-/* # line 1520 "ascParse.y" */
-{
-	  zz_val.statptr = CreateASSIGN(zz_pvt[-2].nptr,zz_pvt[-0].eptr);
-	} break;
-case 131:
-/* # line 1524 "ascParse.y" */
-{
-	  zz_val.statptr = CreateCASSIGN(zz_pvt[-2].nptr,zz_pvt[-0].eptr);
-	} break;
-case 132:
-/* # line 1531 "ascParse.y" */
-{
-	  if (IsRelation(zz_pvt[-0].eptr)) {
-	    if (g_parse_relns == 0) {
-	      DestroyExprList(zz_pvt[-0].eptr);
-	      zz_val.statptr = NULL;
-	    } else {
-	      zz_val.statptr = CreateREL(NULL,zz_pvt[-0].eptr);
-	    }
-	  } else {
-	    zz_val.statptr = CreateLOGREL(NULL,zz_pvt[-0].eptr);
-	  }
-	} break;
-case 133:
-/* # line 1544 "ascParse.y" */
-{
-	  if (IsRelation(zz_pvt[-0].eptr)) {
-	    if (g_parse_relns == 0) {
-	      DestroyExprList(zz_pvt[-0].eptr);
-	      DestroyName(zz_pvt[-2].nptr);
-	      zz_val.statptr = NULL;
-	    } else {
-	      zz_val.statptr = CreateREL(zz_pvt[-2].nptr,zz_pvt[-0].eptr);
-	    }
-	  } else {
-	    zz_val.statptr = CreateLOGREL(zz_pvt[-2].nptr,zz_pvt[-0].eptr);
-	  }
-	} break;
-case 134:
-/* # line 1561 "ascParse.y" */
-{
-	  zz_val.eptr = zz_pvt[-0].eptr;
-	  if (NumberOfRelOps(zz_pvt[-0].eptr) < 1) {
-	    /* want at least 1. restriction to exactly 1 is in typelint */
-	    ErrMsg_Generic("Missing punctuation (,;:) or else\n"
-	                  "expression contains the wrong number of relation\n"
-	                  "operators (=, ==, <, >, <=, >=, !=)"
-	                  " preceeding or ");
-	    g_untrapped_error++;
-	  }
-	} break;
-case 135:
-/* # line 1573 "ascParse.y" */
-{
-	  zz_val.eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_minimize));
-	  if (NumberOfRelOps(zz_pvt[-0].eptr) > 0) {
-	    ErrMsg_Generic("Objective function contains relation\n"
-	                  "operators (=, ==, <, >, <=, >=, !=) ");
-	    g_untrapped_error++;
-	  }
-	} break;
-case 136:
-/* # line 1582 "ascParse.y" */
-{
-	  zz_val.eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_maximize));
-	  if (NumberOfRelOps(zz_pvt[-0].eptr)>0) {
-	    ErrMsg_Generic("Objective function contains relation\n"
-	                  "operators (=, ==, <, >, <=, >=, !=) ");
-	    g_untrapped_error++;
-	  }
-	} break;
-case 137:
-/* # line 1594 "ascParse.y" */
-{
-	  /*
-	   * This is the blackbox declarative external relation.
-	   */
-	  struct VariableList *vl;
-	  vl = JoinVariableLists(zz_pvt[-4].lptr,zz_pvt[-2].lptr);
-	  zz_val.statptr = CreateEXTERN(2,zz_pvt[-8].nptr,SCP(zz_pvt[-6].id_ptr),vl,zz_pvt[-1].nptr,NULL);
-	} break;
-case 138:
-/* # line 1606 "ascParse.y" */
-{
-	  zz_val.lptr = zz_pvt[-2].lptr;
-	} break;
-case 139:
-/* # line 1613 "ascParse.y" */
-{
-	  zz_val.lptr = zz_pvt[-2].lptr;
-	} break;
-case 140:
-/* # line 1620 "ascParse.y" */
-{
-	  zz_val.nptr = NULL;
-	} break;
-case 141:
-/* # line 1624 "ascParse.y" */
-{
-	  zz_val.nptr = zz_pvt[-2].nptr;
-	} break;
-case 142:
-/* # line 1631 "ascParse.y" */
-{
-	  /*
-	   * This is the glassbox declarative external relation.
-	   * This now allows a scope for placement of the relations
-	   */
-	  struct VariableList *vl = zz_pvt[-4].lptr;
-	  struct Name *nptr;
-	  char tmp[32]; 
-	  symchar *str;
-
-	  sprintf(tmp,"%ld",zz_pvt[-2].int_value);
-	  str = AddSymbol(tmp);
-	  nptr = CreateIdName(str);
-	  zz_val.statptr = CreateEXTERN(1,zz_pvt[-8].nptr,SCP(zz_pvt[-6].id_ptr),vl,nptr,zz_pvt[-0].nptr);
-	} break;
-case 143:
-/* # line 1650 "ascParse.y" */
-{
-	  zz_val.nptr = NULL;
-	} break;
-case 144:
-/* # line 1654 "ascParse.y" */
-{
-	  zz_val.nptr = zz_pvt[-0].nptr;
-	} break;
-case 145:
-/* # line 1662 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != FOR_T ) {
-	    WarnMsg_MismatchEnd("FOR", SCP(zz_pvt[-6].id_ptr), zz_pvt[-0].int_value, NULL);
-	  }
-          if (zz_pvt[-2].fkind == fk_create && zz_pvt[-3].order != f_random) {
-            /* create cannot have an order in declarative FOR */
-	    ErrMsg_Generic("FOR loops only accept DECREASING or\n"
-                           "INCREASING in the method section ");
-	    g_untrapped_error++;
-          }
-          if (zz_pvt[-2].fkind == fk_do && zz_pvt[-3].order == f_random) {
-            /* all FOR/DO default to increasing */
-	    zz_val.statptr = CreateFOR(zz_pvt[-6].id_ptr,zz_pvt[-4].eptr,zz_pvt[-1].slptr,f_increasing,zz_pvt[-2].fkind);
-          } else {
-	    zz_val.statptr = CreateFOR(zz_pvt[-6].id_ptr,zz_pvt[-4].eptr,zz_pvt[-1].slptr,zz_pvt[-3].order,zz_pvt[-2].fkind);
-          }
-	} break;
-case 146:
-/* # line 1683 "ascParse.y" */
-{
-	  zz_val.order = f_random;
-	} break;
-case 147:
-/* # line 1687 "ascParse.y" */
-{
-	  zz_val.order = f_increasing;
-	} break;
-case 148:
-/* # line 1691 "ascParse.y" */
-{
-	  zz_val.order = f_decreasing;
-	} break;
-case 149:
-/* # line 1698 "ascParse.y" */
-{
-          zz_val.fkind = fk_create; /* declarative FOR */
-	} break;
-case 150:
-/* # line 1702 "ascParse.y" */
-{
-          zz_val.fkind = fk_expect; /* parameter FOR */
-	} break;
-case 151:
-/* # line 1706 "ascParse.y" */
-{
-          zz_val.fkind = fk_check; /* WHERE FOR */
-	} break;
-case 152:
-/* # line 1710 "ascParse.y" */
-{
-          zz_val.fkind = fk_do; /* method FOR */
-	} break;
-case 153:
-/* # line 1717 "ascParse.y" */
-{
-	  zz_val.statptr = CreateRUN(zz_pvt[-0].nptr,NULL);
-	} break;
-case 154:
-/* # line 1721 "ascParse.y" */
-{
-	  zz_val.statptr = CreateRUN(zz_pvt[-0].nptr,zz_pvt[-2].nptr);	  /* type :: name */
-	} break;
-case 155:
-/* # line 1728 "ascParse.y" */
-{
-	  /*
-	   * This is procedural external code.
-	   */
-	  zz_val.statptr = CreateEXTERN(0,NULL,SCP(zz_pvt[-3].id_ptr),zz_pvt[-1].lptr,NULL,NULL);
-	} break;
-case 156:
-/* # line 1738 "ascParse.y" */
-{
-	  /*
-	   * This is proper procedural external method code.
-	   */
-	  zz_val.statptr = CreateCALL(zz_pvt[-0].id_ptr,g_callargs);
-          g_callargs = NULL;
-	} break;
-case 157:
-/* # line 1749 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != IF_T ) {
-	    WarnMsg_MismatchEnd("IF", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateIF(zz_pvt[-4].eptr,zz_pvt[-2].slptr,zz_pvt[-1].slptr);
-	} break;
-case 158:
-/* # line 1759 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != WHILE_T ) {
-	    WarnMsg_MismatchEnd("WHILE", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateWhile(zz_pvt[-3].eptr,zz_pvt[-1].slptr);
-	} break;
-case 159:
-/* # line 1768 "ascParse.y" */
-{
-	  zz_val.slptr = NULL;
-	} break;
-case 160:
-/* # line 1772 "ascParse.y" */
-{
-	  zz_val.slptr = zz_pvt[-0].slptr;
-	} break;
-case 161:
-/* # line 1779 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  ErrMsg_Generic("() missing in WHEN statement ");
-	  DestroyWhenList(zz_pvt[-1].wptr);
-	  DestroyVariableList(zz_pvt[-2].lptr);
-	  g_untrapped_error++;
-	  zz_val.statptr = NULL;
-	} break;
-case 162:
-/* # line 1790 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  ErrMsg_Generic("() missing in WHEN statement ");
-	  DestroyWhenList(zz_pvt[-1].wptr);
-	  DestroyVariableList(zz_pvt[-2].lptr);
-	  DestroyName(zz_pvt[-5].nptr);
-	  g_untrapped_error++;
-	  zz_val.statptr = NULL;
-	} break;
-case 163:
-/* # line 1802 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateWHEN(NULL,zz_pvt[-3].lptr,zz_pvt[-1].wptr);
-	} break;
-case 164:
-/* # line 1809 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateWHEN(zz_pvt[-7].nptr,zz_pvt[-3].lptr,zz_pvt[-1].wptr);
-	} break;
-case 165:
-/* # line 1819 "ascParse.y" */
-{
-	  zz_val.wptr = ReverseWhenCases(zz_pvt[-0].wptr);
-	} break;
-case 166:
-/* # line 1826 "ascParse.y" */
-{
-	  zz_val.wptr = CreateWhen(zz_pvt[-2].sptr,zz_pvt[-0].slptr);
-	} break;
-case 167:
-/* # line 1830 "ascParse.y" */
-{
-	  zz_val.wptr = CreateWhen(NULL,zz_pvt[-0].slptr);
-	} break;
-case 168:
-/* # line 1834 "ascParse.y" */
-{
-	  zz_val.wptr = LinkWhenCases(CreateWhen(zz_pvt[-2].sptr,zz_pvt[-0].slptr),zz_pvt[-4].wptr);
-	} break;
-case 169:
-/* # line 1838 "ascParse.y" */
-{
-	  zz_val.wptr = LinkWhenCases(CreateWhen(NULL,zz_pvt[-0].slptr),zz_pvt[-3].wptr);
-	} break;
-case 170:
-/* # line 1845 "ascParse.y" */
-{
-	  zz_val.statptr = CreateFlow(fc_break,NULL);
-	} break;
-case 171:
-/* # line 1849 "ascParse.y" */
-{
-	  zz_val.statptr = CreateFlow(fc_continue,NULL);
-	} break;
-case 172:
-/* # line 1853 "ascParse.y" */
-{
-	  zz_val.statptr = CreateFlow(fc_fallthru,NULL);
-	} break;
-case 173:
-/* # line 1857 "ascParse.y" */
-{
-	  zz_val.statptr = CreateFlow(fc_return,NULL);
-	} break;
-case 174:
-/* # line 1861 "ascParse.y" */
-{
-	  zz_val.statptr = CreateFlow(fc_stop,zz_pvt[-0].braced_ptr);
-	} break;
-case 175:
-/* # line 1868 "ascParse.y" */
-{
-	  zz_val.statptr = CreateFNAME(zz_pvt[-0].nptr);
-	} break;
-case 176:
-/* # line 1875 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != SELECT_T ) {
-	    WarnMsg_MismatchEnd("SELECT", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  ErrMsg_Generic("() missing in SELECT statement ");
-	  DestroySelectList(zz_pvt[-1].septr);
-	  DestroyVariableList(zz_pvt[-2].lptr);
-	  g_untrapped_error++;
-	  zz_val.statptr = NULL;
-	} break;
-case 177:
-/* # line 1886 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != SELECT_T ) {
-	    WarnMsg_MismatchEnd("SELECT", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateSELECT(zz_pvt[-3].lptr,zz_pvt[-1].septr);
-	} break;
-case 178:
-/* # line 1896 "ascParse.y" */
-{
-	  zz_val.septr = ReverseSelectCases(zz_pvt[-0].septr);
-	} break;
-case 179:
-/* # line 1903 "ascParse.y" */
-{
-	  zz_val.septr = CreateSelect(zz_pvt[-2].sptr,zz_pvt[-0].slptr);
-	} break;
-case 180:
-/* # line 1907 "ascParse.y" */
-{
-	  zz_val.septr = CreateSelect(NULL,zz_pvt[-0].slptr);
-	} break;
-case 181:
-/* # line 1911 "ascParse.y" */
-{
-	  zz_val.septr = LinkSelectCases(CreateSelect(zz_pvt[-2].sptr,zz_pvt[-0].slptr),zz_pvt[-4].septr);
-	} break;
-case 182:
-/* # line 1915 "ascParse.y" */
-{
-	  zz_val.septr = LinkSelectCases(CreateSelect(NULL,zz_pvt[-0].slptr),zz_pvt[-3].septr);
-	} break;
-case 183:
-/* # line 1922 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != SWITCH_T ) {
-	    WarnMsg_MismatchEnd("SWITCH", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  ErrMsg_Generic("() missing in SWITCH statement ");
-	  DestroySwitchList(zz_pvt[-1].swptr);
-	  DestroyVariableList(zz_pvt[-2].lptr);
-	  g_untrapped_error++;
-	  zz_val.statptr = NULL;
-	} break;
-case 184:
-/* # line 1933 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != SWITCH_T ) {
-	    WarnMsg_MismatchEnd("SWITCH", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateSWITCH(zz_pvt[-3].lptr,zz_pvt[-1].swptr);
-	} break;
-case 185:
-/* # line 1943 "ascParse.y" */
-{
-	  zz_val.swptr = ReverseSwitchCases(zz_pvt[-0].swptr);
-	} break;
-case 186:
-/* # line 1950 "ascParse.y" */
-{
-	  zz_val.swptr = CreateSwitch(zz_pvt[-2].sptr,zz_pvt[-0].slptr);
-	} break;
-case 187:
-/* # line 1954 "ascParse.y" */
-{
-	  zz_val.swptr = CreateSwitch(NULL,zz_pvt[-0].slptr);
-	} break;
-case 188:
-/* # line 1958 "ascParse.y" */
-{
-	  zz_val.swptr = LinkSwitchCases(CreateSwitch(zz_pvt[-2].sptr,zz_pvt[-0].slptr),zz_pvt[-4].swptr);
-	} break;
-case 189:
-/* # line 1962 "ascParse.y" */
-{
-	  zz_val.swptr = LinkSwitchCases(CreateSwitch(NULL,zz_pvt[-0].slptr),zz_pvt[-3].swptr);
-	} break;
-case 190:
-/* # line 1969 "ascParse.y" */
-{
-	  if( zz_pvt[-0].int_value != CONDITIONAL_T ) {
-	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  zz_val.statptr = CreateCOND(zz_pvt[-1].slptr);
-	} break;
-case 191:
-/* # line 1979 "ascParse.y" */
-{
-	  /*  All processing of notes takes place on the notes_body here.
-	   *  Notes should NOT be added to the statement list.
-	   *  Here we know the current type and method names.
-	   */
-	  if( zz_pvt[-0].int_value != NOTES_T ) {
-	    WarnMsg_MismatchEnd("NOTES", NULL, zz_pvt[-0].int_value, NULL);
-	  }
-	  if (zz_pvt[-1].notesptr != NULL) {
-	    struct NoteTmp *nt;
-	    symchar *lang=NULL; /* dummy */
-	    nt = zz_pvt[-1].notesptr;
-	    while (nt != NULL) {
-	      if (nt->lang != NULL) {
-	        /* this logic works because of the reverse sort that
-	         * yacc does via noteslist and the forward sort that
-	         * we do via notesbody. lang recorded last appears
-	         * before other entries that need it.
-	         */
-	        lang = nt->lang;
-	      }
-
-	      /* save exploding vardata to simple entries until we keep */
-	      CollectNote(CreateNote(g_type_name, lang, NULL, g_proc_name,
-	                             Asc_ModuleBestName(Asc_CurrentModule()),
-	                             nt->bt,
-	                             nt->line, nt->vardata, nd_vlist));
-	      nt = nt->next;
-	    }
-	    DestroyNoteTmpList(zz_pvt[-1].notesptr);
-          }
-	  zz_val.statptr = NULL;
-	} break;
-case 192:
-/* # line 2016 "ascParse.y" */
-{
-	  /*  At this point we have the "language", the names of the
-	   *  objects we are explaining, and the explanation/notes itself.
-	   */
-	  zz_val.notesptr = zz_pvt[-0].notesptr;
-	  assert(zz_val.notesptr->lang == NULL);
-	  zz_val.notesptr->lang = zz_pvt[-1].sym_ptr;
-	} break;
-case 193:
-/* # line 2025 "ascParse.y" */
-{
-	  struct NoteTmp *nt;
-	  zz_val.notesptr = zz_pvt[-2].notesptr;
-	  assert(zz_pvt[-0].notesptr->lang == NULL);
-	  zz_pvt[-0].notesptr->lang = zz_pvt[-1].sym_ptr;
-	  nt = zz_val.notesptr;
-	  while (nt->next != NULL) {
-	    nt = nt->next;
-	  }
-	  LinkNoteTmp(nt,zz_pvt[-0].notesptr);
-	} break;
-case 194:
-/* # line 2040 "ascParse.y" */
-{
-	  zz_val.notesptr = CreateNoteTmp(NULL, AddBraceChar(zz_pvt[-0].braced_ptr,NULL),
-                             (void *)zz_pvt[-1].lptr, LineNum());
-	} break;
-case 195:
-/* # line 2045 "ascParse.y" */
-{
-	  zz_val.notesptr = CreateNoteTmp(NULL, AddBraceChar(zz_pvt[-0].braced_ptr,NULL),
-	                     (void *)zz_pvt[-1].lptr, LineNum());
-	  LinkNoteTmp(zz_val.notesptr,zz_pvt[-2].notesptr);
-	} break;
-case 196:
-/* # line 2054 "ascParse.y" */
-{
-	  /*
-	   * Reversing the variable list is now essential to deal with
-	   * external procedures and other things where order is important.
-	   */
-	  zz_val.lptr = ReverseVariableList(zz_pvt[-0].lptr);
-	} break;
-case 197:
-/* # line 2065 "ascParse.y" */
-{
-	  zz_val.lptr = CreateVariableNode(zz_pvt[-0].nptr);
-	} break;
-case 198:
-/* # line 2069 "ascParse.y" */
-{
-	  zz_val.lptr = CreateVariableNode(zz_pvt[-0].nptr);
-	  LinkVariableNodes(zz_val.lptr,zz_pvt[-2].lptr);
-	} break;
-case 199:
-/* # line 2074 "ascParse.y" */
-{
-	  ErrMsg_CommaName("name",zz_pvt[-0].nptr);
-	  zz_val.lptr = CreateVariableNode(zz_pvt[-0].nptr);
-	  LinkVariableNodes(zz_val.lptr,zz_pvt[-1].lptr);
-	  /* trash the definition. keep the loose fname around because
-	   * destroying here is inconvenient
-	   */
-	  g_untrapped_error++;
-	} break;
-case 200:
-/* # line 2087 "ascParse.y" */
-{
-	  symchar *simple;
-	  void *data;
-	  enum NoteData nd;
-	  zz_val.nptr = ReverseName(zz_pvt[-1].nptr);
-	  if (zz_pvt[-0].dquote_ptr != NULL && zz_pvt[-1].nptr != NULL) {
-            simple = SimpleNameIdPtr(zz_val.nptr);
-	    data = (simple == NULL ? (void *)zz_val.nptr : NULL);
-	    nd = (data == NULL ? nd_empty : nd_name);
-	    CollectNote(CreateNote(g_type_name, InlineNote(), simple,
-	                           g_proc_name,
-	                           Asc_ModuleBestName(Asc_CurrentModule()),
-	                           AddBraceChar(zz_pvt[-0].dquote_ptr,InlineNote()),
-	                           LineNum(), data, nd));
-	  }
-	} break;
-case 201:
-/* # line 2107 "ascParse.y" */
-{
-	  zz_val.nptr = CreateIdName(zz_pvt[-0].id_ptr);
-	} break;
-case 202:
-/* # line 2111 "ascParse.y" */
-{
-	  zz_val.nptr = CreateIdName(zz_pvt[-0].id_ptr);
-	  LinkNames(zz_val.nptr,zz_pvt[-2].nptr);
-	} break;
-case 203:
-/* # line 2116 "ascParse.y" */
-{
-	  if (zz_pvt[-1].sptr == NULL) {
-	    FPRINTF(ASCERR,"%ssyntax error at %lu\n",StatioLabel(3),LineNum());
-	    FPRINTF(ASCERR,"  Empty set in name definition\n");
-	    FPRINTF(ASCERR,"  Name: ");
-	    WriteName(ASCERR,zz_pvt[-3].nptr);
-	    FPRINTF(ASCERR,"[]\n");
-	    g_untrapped_error++;
-	  } else {
-	    zz_val.nptr = CreateSetName(zz_pvt[-1].sptr);
-	    LinkNames(zz_val.nptr,zz_pvt[-3].nptr);
-	  }
-	} break;
-case 204:
-/* # line 2133 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = CONDITIONAL_T;
-        } break;
-case 205:
-/* # line 2138 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = FOR_T;
-        } break;
-case 206:
-/* # line 2143 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = IF_T;
-        } break;
-case 207:
-/* # line 2148 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = INTERACTIVE_T;
-        } break;
-case 208:
-/* # line 2153 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = METHODS_T;
-        } break;
-case 209:
-/* # line 2158 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = NOTES_T;
-        } break;
-case 210:
-/* # line 2163 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = SELECT_T;
-        } break;
-case 211:
-/* # line 2168 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = SWITCH_T;
-        } break;
-case 212:
-/* # line 2173 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = UNITS_T;
-        } break;
-case 213:
-/* # line 2178 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = GLOBAL_T;
-        } break;
-case 214:
-/* # line 2183 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = WHEN_T;
-        } break;
-case 215:
-/* # line 2188 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = WHILE_T;
-        } break;
-case 216:
-/* # line 2193 "ascParse.y" */
-{
-          g_end_identifier = zz_pvt[-0].id_ptr;
-          zz_val.int_value = IDENTIFIER_T;
-        } break;
-case 217:
-/* # line 2198 "ascParse.y" */
-{
-          g_end_identifier = NULL;
-          zz_val.int_value = END_T;
-        } break;
-case 218:
-/* # line 2206 "ascParse.y" */
-{
-	  zz_val.braced_ptr = NULL;
-	} break;
-case 219:
-/* # line 2210 "ascParse.y" */
-{
-	  zz_val.braced_ptr = zz_pvt[-0].braced_ptr;
-	} break;
-case 220:
-/* # line 2217 "ascParse.y" */
-{
-	  zz_val.dquote_ptr = NULL;
-	} break;
-case 221:
-/* # line 2221 "ascParse.y" */
-{
-	  zz_val.dquote_ptr = zz_pvt[-0].dquote_ptr;
-	} break;
-case 222:
-/* # line 2228 "ascParse.y" */
-{
-	  zz_val.sptr = ReverseSetList(zz_pvt[-0].sptr);
-	} break;
-case 223:
-/* # line 2232 "ascParse.y" */
-{
-	  zz_val.sptr = NULL;
-	} break;
-case 224:
-/* # line 2239 "ascParse.y" */
-{
-	  zz_val.sptr = CreateSingleSet(zz_pvt[-0].eptr);
-	} break;
-case 225:
-/* # line 2243 "ascParse.y" */
-{
-	  zz_val.sptr = CreateRangeSet(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 226:
-/* # line 2247 "ascParse.y" */
-{
-	  zz_val.sptr = CreateSingleSet(zz_pvt[-0].eptr);
-	  LinkSets(zz_val.sptr,zz_pvt[-2].sptr);
-	} break;
-case 227:
-/* # line 2252 "ascParse.y" */
-{
-	  zz_val.sptr = CreateRangeSet(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	  LinkSets(zz_val.sptr,zz_pvt[-4].sptr);
-	} break;
-case 228:
-/* # line 2260 "ascParse.y" */
-{
-	  zz_val.real_value = zz_pvt[-0].int_value;
-	  g_constant_type = LONGCONSTANT;
-	  g_default_dim_ptr = Dimensionless();
-	} break;
-case 229:
-/* # line 2266 "ascParse.y" */
-{
-	  zz_val.real_value = zz_pvt[-0].real_value;
-	  g_constant_type = DOUBLECONSTANT;
-	  g_default_dim_ptr = g_dim_ptr;
-	} break;
-case 230:
-/* # line 2275 "ascParse.y" */
-{
-	  zz_val.real_value = zz_pvt[-1].real_value*zz_pvt[-0].real_value;
-	} break;
-case 231:
-/* # line 2279 "ascParse.y" */
-{
-	  unsigned long pos;
-	  int error_code;
-	  g_units_ptr = FindOrDefineUnits(zz_pvt[-0].braced_ptr,&pos,&error_code);
-	  if (g_units_ptr != NULL) {
-	    zz_val.real_value = (double)zz_pvt[-1].int_value*UnitsConvFactor(g_units_ptr);
-	    g_dim_ptr = UnitsDimensions(g_units_ptr);
-	  } else {
-            char **errv;
-	    zz_val.real_value = (double)zz_pvt[-1].int_value;
-	    g_dim_ptr = WildDimension();
-	    FPRINTF(ASCERR,"%sUndefined units {%s} %s:%lu.\n",StatioLabel(3),
-	            zz_pvt[-0].braced_ptr,Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-            errv = UnitsExplainError(zz_pvt[-0].braced_ptr,error_code,pos);
-	    FPRINTF(ASCERR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
-	    g_untrapped_error++;
-	  }
-	} break;
-case 232:
-/* # line 2301 "ascParse.y" */
-{
-	  g_dim_ptr = Dimensionless();
-	  zz_val.real_value = 1.0;
-	} break;
-case 233:
-/* # line 2306 "ascParse.y" */
-{
-	  unsigned long pos;
-	  int error_code;
-	  g_units_ptr = FindOrDefineUnits(zz_pvt[-0].braced_ptr,&pos,&error_code);
-	  if (g_units_ptr != NULL) {
-	    zz_val.real_value = UnitsConvFactor(g_units_ptr);
-	    g_dim_ptr = UnitsDimensions(g_units_ptr);
-	  } else {
-            char **errv;
-	    zz_val.real_value = 1.0;
-	    g_dim_ptr = WildDimension();
-	    FPRINTF(ASCERR,"%sUndefined units {%s} %s:%lu.\n",StatioLabel(3),
-	            zz_pvt[-0].braced_ptr,Asc_ModuleBestName(Asc_CurrentModule()),LineNum());
-            errv = UnitsExplainError(zz_pvt[-0].braced_ptr,error_code,pos);
-	    FPRINTF(ASCERR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
-	    g_untrapped_error++;
-	  }
-	} break;
-case 234:
-/* # line 2328 "ascParse.y" */
-{
-	  zz_val.dimp = zz_pvt[-0].dimp;
-	} break;
-case 235:
-/* # line 2332 "ascParse.y" */
-{
-	  zz_val.dimp = Dimensionless();
-	} break;
-case 236:
-/* # line 2336 "ascParse.y" */
-{
-	  zz_val.dimp = WildDimension();
-	} break;
-case 237:
-/* # line 2343 "ascParse.y" */
-{
-	  zz_val.dimp = WildDimension();
-	} break;
-case 238:
-/* # line 2347 "ascParse.y" */
-{
-	  zz_val.dimp = FindOrAddDimen(&(zz_pvt[-0].dimen));
-	} break;
-case 239:
-/* # line 2354 "ascParse.y" */
-{
-	  ParseDim(&(zz_val.dimen),SCP(zz_pvt[-0].id_ptr));
-	} break;
-case 240:
-/* # line 2358 "ascParse.y" */
-{
-	  ClearDimensions(&(zz_val.dimen));
-	} break;
-case 241:
-/* # line 2362 "ascParse.y" */
-{
-	  zz_val.dimen = SubDimensions(&(zz_pvt[-2].dimen),&(zz_pvt[-0].dimen));
-	} break;
-case 242:
-/* # line 2366 "ascParse.y" */
-{
-	  zz_val.dimen = AddDimensions(&(zz_pvt[-2].dimen),&(zz_pvt[-0].dimen));
-	} break;
-case 243:
-/* # line 2370 "ascParse.y" */
-{
-	  zz_val.dimen = ScaleDimensions(&(zz_pvt[-2].dimen),zz_pvt[-0].frac_value);
-	} break;
-case 244:
-/* # line 2374 "ascParse.y" */
-{
-	  CopyDimensions(&(zz_pvt[-1].dimen),&(zz_val.dimen));
-	} break;
-case 245:
-/* # line 2381 "ascParse.y" */
-{
-	  zz_val.frac_value = zz_pvt[-1].int_value ? NegateF(zz_pvt[-0].frac_value) : zz_pvt[-0].frac_value;
-	} break;
-case 246:
-/* # line 2388 "ascParse.y" */
-{
-	  zz_val.frac_value = CreateFraction((short)zz_pvt[-0].int_value,(short)1);
-	} break;
-case 247:
-/* # line 2392 "ascParse.y" */
-{
-	  zz_val.frac_value = CreateFraction((short)zz_pvt[-3].int_value,(short)zz_pvt[-1].int_value);
-	} break;
-case 248:
-/* # line 2399 "ascParse.y" */
-{
-	  zz_val.int_value = 0;
-	} break;
-case 249:
-/* # line 2403 "ascParse.y" */
-{
-	  zz_val.int_value = 0;
-	} break;
-case 250:
-/* # line 2407 "ascParse.y" */
-{
-	  zz_val.int_value = 1;
-	} break;
-case 251:
-/* # line 2414 "ascParse.y" */
-{
-	  zz_val.eptr = CreateIntExpr(zz_pvt[-0].int_value);
-	} break;
-case 252:
-/* # line 2418 "ascParse.y" */
-{
-	  zz_val.eptr = CreateIntExpr(LONG_MAX-1);
-	} break;
-case 253:
-/* # line 2422 "ascParse.y" */
-{
-	  zz_val.eptr = CreateRealExpr(zz_pvt[-0].real_value,g_dim_ptr);
-	} break;
-case 254:
-/* # line 2426 "ascParse.y" */
-{
-	  zz_val.eptr = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
-	} break;
-case 255:
-/* # line 2430 "ascParse.y" */
-{
-	  zz_val.eptr = CreateTrueExpr();
-	} break;
-case 256:
-/* # line 2434 "ascParse.y" */
-{
-	  zz_val.eptr = CreateFalseExpr();
-	} break;
-case 257:
-/* # line 2438 "ascParse.y" */
-{
-	  zz_val.eptr = CreateAnyExpr();
-	} break;
-case 258:
-/* # line 2442 "ascParse.y" */
-{
-	  zz_val.eptr = CreateSymbolExpr(zz_pvt[-0].sym_ptr);
-	} break;
-case 259:
-/* # line 2446 "ascParse.y" */
-{
-	  zz_val.eptr = CreateVarExpr(zz_pvt[-0].nptr);
-	} break;
-case 260:
-/* # line 2450 "ascParse.y" */
-{
-	  zz_val.eptr = CreateSetExpr(zz_pvt[-1].sptr);
-	} break;
-case 261:
-/* # line 2454 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_plus));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 262:
-/* # line 2459 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_minus));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 263:
-/* # line 2464 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_times));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 264:
-/* # line 2469 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_divide));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 265:
-/* # line 2474 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_power));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 266:
-/* # line 2479 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_and));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 267:
-/* # line 2484 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_or));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 268:
-/* # line 2489 "ascParse.y" */
-{
-	  zz_val.eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_not));
-	} break;
-case 269:
-/* # line 2493 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,zz_pvt[-1].eptr);
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 270:
-/* # line 2498 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,zz_pvt[-1].eptr);
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 271:
-/* # line 2503 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_in));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 272:
-/* # line 2508 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_st));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 273:
-/* # line 2513 "ascParse.y" */
-{
-	  zz_pvt[-0].eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_st));
-	  zz_val.eptr = JoinExprLists(zz_pvt[-2].eptr,zz_pvt[-0].eptr);
-	} break;
-case 274:
-/* # line 2518 "ascParse.y" */
-{
-	  zz_val.eptr = zz_pvt[-0].eptr;
-	} break;
-case 275:
-/* # line 2522 "ascParse.y" */
-{
-	  zz_val.eptr = JoinExprLists(zz_pvt[-0].eptr,CreateOpExpr(e_uminus));
-	} break;
-case 276:
-/* # line 2526 "ascParse.y" */
-{
-	  zz_val.eptr = CreateSatisfiedExpr(zz_pvt[-3].nptr,zz_pvt[-1].real_value,g_dim_ptr);
-	} break;
-case 277:
-/* # line 2530 "ascParse.y" */
-{
-	  zz_val.eptr = CreateSatisfiedExpr(zz_pvt[-1].nptr,DBL_MAX,NULL);
-	} break;
-case 278:
-/* # line 2534 "ascParse.y" */
-{
-	  DestroySetList(zz_pvt[-1].sptr);
-	  zz_val.eptr = NULL;
-	  ErrMsg_ParensBrackets("SUM");
-	  g_untrapped_error++;
-	} break;
-case 279:
-/* # line 2541 "ascParse.y" */
-{
-	  zz_val.eptr = CreateBuiltin(e_sum,zz_pvt[-1].sptr);
-	} break;
-case 280:
-/* # line 2545 "ascParse.y" */
-{
-	  DestroySetList(zz_pvt[-1].sptr);
-	  zz_val.eptr = NULL;
-	  ErrMsg_ParensBrackets("PROD");
-	  g_untrapped_error++;
-	} break;
-case 281:
-/* # line 2552 "ascParse.y" */
-{
-	  zz_val.eptr = CreateBuiltin(e_prod,zz_pvt[-1].sptr);
-	} break;
-case 282:
-/* # line 2556 "ascParse.y" */
-{
-	  DestroySetList(zz_pvt[-1].sptr);
-	  zz_val.eptr = NULL;
-	  ErrMsg_ParensBrackets("UNION");
-	  g_untrapped_error++;
-	} break;
-case 283:
-/* # line 2563 "ascParse.y" */
-{
-	  zz_val.eptr = CreateBuiltin(e_union,zz_pvt[-1].sptr);
-	} break;
-case 284:
-/* # line 2567 "ascParse.y" */
-{
-	  DestroySetList(zz_pvt[-1].sptr);
-	  zz_val.eptr = NULL;
-	  ErrMsg_ParensBrackets("INTERSECTION");
-	  g_untrapped_error++;
-	} break;
-case 285:
-/* # line 2574 "ascParse.y" */
-{
-	  zz_val.eptr = CreateBuiltin(e_inter,zz_pvt[-1].sptr);
-	} break;
-case 286:
-/* # line 2578 "ascParse.y" */
-{
-	  DestroySetList(zz_pvt[-1].sptr);
-	  zz_val.eptr = NULL;
-	  ErrMsg_ParensBrackets("CARD");
-	  g_untrapped_error++;
-	} break;
-case 287:
-/* # line 2585 "ascParse.y" */
-{
-	  zz_val.eptr = CreateBuiltin(e_card,zz_pvt[-1].sptr);
-	} break;
-case 288:
-/* # line 2589 "ascParse.y" */
-{
-	  DestroySetList(zz_pvt[-1].sptr);
-	  zz_val.eptr = NULL;
-	  ErrMsg_ParensBrackets("CHOICE");
-	  g_untrapped_error++;
-	} break;
-case 289:
-/* # line 2596 "ascParse.y" */
-{
-	  zz_val.eptr = CreateBuiltin(e_choice,zz_pvt[-1].sptr);
-	} break;
-case 290:
-/* # line 2600 "ascParse.y" */
-{
-	  CONST struct Func *fptr;
-	  if ((fptr = LookupFunc(SCP(zz_pvt[-3].id_ptr)))!=NULL) {
-	    zz_val.eptr = JoinExprLists(zz_pvt[-1].eptr,CreateFuncExpr(fptr));
-	  } else {
-	    zz_val.eptr = NULL;
-	    FPRINTF(ASCERR,"%sFunction %s is not defined.\n",
-	            StatioLabel(3),SCP(zz_pvt[-3].id_ptr));
-	    FPRINTF(ASCERR,"  File name: %s:%lu\n",
-	            Asc_ModuleBestName(Asc_CurrentModule()),
-	            LineNum());
-	    g_untrapped_error++;
-	  }
-	} break;
-case 291:
-/* # line 2615 "ascParse.y" */
-{
-	  zz_val.eptr = zz_pvt[-1].eptr;
-	} break;
-case 292:
-/* # line 2622 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_equal);
-	} break;
-case 293:
-/* # line 2626 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_less);
-	} break;
-case 294:
-/* # line 2630 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_greater);
-	} break;
-case 295:
-/* # line 2634 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_lesseq);
-	} break;
-case 296:
-/* # line 2638 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_greatereq);
-	} break;
-case 297:
-/* # line 2642 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_notequal);
-	} break;
-case 298:
-/* # line 2649 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_boolean_eq);
-	} break;
-case 299:
-/* # line 2653 "ascParse.y" */
-{
-	  zz_val.eptr = CreateOpExpr(e_boolean_neq);
-	} break;
-	}
-	goto zz_stack;		/* reset registers in driver code */
-}
-
-# ifdef __RUNTIME_ZZ_MAXDEPTH
-
-static int allocate_stacks() {
-	/* allocate the zz_s and zz_v stacks */
-	zz_s = (int *) malloc(zz_maxdepth * sizeof(int));
-	zz_v = (ZZ_STYPE *) malloc(zz_maxdepth * sizeof(ZZ_STYPE));
-
-	if (zz_s==0 || zz_v==0) {
-	   zz_error( (nl_msg(30004,"unable to allocate space for yacc stacks")) );
-	   return(1);
-	   }
-	else return(0);
-
-}
-
-
-static void free_stacks() {
-	if (zz_s!=0) free((char *) zz_s);
-	if (zz_v!=0) free((char *) zz_v);
-}
-
-# endif  /* defined(__RUNTIME_ZZ_MAXDEPTH) */
 

@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS RANLIB ac_ct_RANLIB LN_S SET_MAKE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP DEBUG_LIBS EGREP YACC LEX LEXLIB LEX_OUTPUT_ROOT LIBOBJS TCLINCLUDE TCLLIB TCLDYNAMICLINKING F77 BLASLIB LPAKLIB LSODLIB ascpwd fullpathsrcdir asc_include scanner_src typer_src MATH_LIBS X11_INCLUDES X11_LIBRARIES X11_RUN_PATH X11_EXTRA_LIBS DL_LIBS LD_FLAGS LD_SEARCH_FLAGS SHLIB_CFLAGS SHLIB_LD SHLIB_LD_LIBS SHLIB_SUFFIX ASC_LIB_SUFFIX TK_LIB TK_HDR TKTABLE_LIB ASC_TK_LIBRARY ASC_TCL_LIBRARY HAVE_TKTABLE asc_subdirs F77LIBS make_blaslib make_lpaklib make_lsodlib HAVE_LSOD tkdir_root tkdir_topbuilddir models_dir_root models_topbuilddir help_dir_root help_topbuilddir LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS RANLIB ac_ct_RANLIB LN_S SET_MAKE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP DEBUG_LIBS EGREP YACC LEX LEXLIB LEX_OUTPUT_ROOT LIBOBJS TCLINCLUDE NOTCLCONFIG TCLCONFIG TCLLIB TCLDYNAMICLINKING TKINCLUDE TKLIB TKDYNAMICLINKING F77 BLASLIB LPAKLIB LSODLIB ascpwd fullpathsrcdir asc_include scanner_src typer_src MATH_LIBS X11_INCLUDES X11_LIBRARIES X11_RUN_PATH X11_EXTRA_LIBS DL_LIBS LD_FLAGS LD_SEARCH_FLAGS SHLIB_CFLAGS SHLIB_LD SHLIB_LD_LIBS SHLIB_SUFFIX ASC_LIB_SUFFIX TK_LIB TK_HDR TKTABLE_LIB ASC_TK_LIBRARY ASC_TCL_LIBRARY HAVE_TKTABLE asc_subdirs F77LIBS make_blaslib make_lpaklib make_lsodlib HAVE_LSOD tkdir_root tkdir_topbuilddir models_dir_root models_topbuilddir help_dir_root help_topbuilddir LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -867,10 +867,15 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-x                use the X Window System
   --without-tcl           Disable Tcl
-  --with-tclconfig=path   Set location of tclConfig.sh
+  --with-tclconfig=path   Set directory location of tclConfig.sh
   --with-tcl=path         Set location of Tcl package
   --with-tclincl=path     Set location of Tcl include directory
   --with-tcllib=path      Set location of Tcl library directory
+  --without-tk            Disable Tk
+  --with-tkconfig=path    Set directory location of tkConfig.sh
+  --with-tk=path         Set location of Tk package
+  --with-tkincl=path     Set location of Tk include directory
+  --with-tklib=path      Set location of Tk library directory
 Fortran compiler and libraries:
   --with-fortran=F77,F77LIBS
                           The location of your Fortran compiler and its
@@ -6129,6 +6134,16 @@ esac
 # Look for Tcl/Tk
 #--------------------------------------------------------------------
 
+# moved to config, acsite setup
+# find tcl
+TCLINCLUDE=
+TCLLIB=
+TCLPACKAGE=
+
+#--------------------------------------------------------------------
+# Look for Tcl
+#--------------------------------------------------------------------
+
 TCLINCLUDE=
 TCLLIB=
 TCLPACKAGE=
@@ -6307,6 +6322,207 @@ case $host in
     *)TCLDYNAMICLINKING="";;
 esac
 fi
+
+NOTCLCONFIG=
+if test x"${TCLCONFIG}" = x ; then
+NOTCLCONFIG="# tclConfig.sh dir not found"
+fi
+
+
+
+
+
+
+
+# find tk
+TKINCLUDE=
+TKLIB=
+TKPACKAGE=
+
+#--------------------------------------------------------------------
+# Look for Tk
+#--------------------------------------------------------------------
+
+TKINCLUDE=
+TKLIB=
+TKPACKAGE=
+
+
+# Check whether --with-tkconfig or --without-tkconfig was given.
+if test "${with_tkconfig+set}" = set; then
+  withval="$with_tkconfig"
+  with_tkconfig="$withval"
+else
+  with_tkconfig=
+fi;
+
+# Check whether --with-tk or --without-tk was given.
+if test "${with_tk+set}" = set; then
+  withval="$with_tk"
+
+	TKPACKAGE="$withval"
+else
+  TKPACKAGE=yes
+fi;
+
+# Check whether --with-tkincl or --without-tkincl was given.
+if test "${with_tkincl+set}" = set; then
+  withval="$with_tkincl"
+
+	TKINCLUDE="$ISYSTEM$withval"
+else
+  TKINCLUDE=
+fi;
+
+# Check whether --with-tklib or --without-tklib was given.
+if test "${with_tklib+set}" = set; then
+  withval="$with_tklib"
+
+	TKLIB="-L$withval"
+else
+  TKLIB=
+fi;
+
+# First, check for "--without-tk" or "--with-tk=no".
+if test x"${TKPACKAGE}" = xno -o x"${with_alllang}" = xno; then
+{ echo "$as_me:$LINENO: Disabling Tk" >&5
+echo "$as_me: Disabling Tk" >&6;}
+else
+echo "$as_me:$LINENO: checking for Tk configuration" >&5
+echo $ECHO_N "checking for Tk configuration... $ECHO_C" >&6
+# First check to see if --with-tkconfig was specified.
+if test x"${with_tkconfig}" != x ; then
+   if test -f "${with_tkconfig}/tkConfig.sh" ; then
+      TKCONFIG=`(cd ${with_tkconfig}; pwd)`
+   else
+      { { echo "$as_me:$LINENO: error: ${with_tk} directory doesn't contain tkConfig.sh" >&5
+echo "$as_me: error: ${with_tk} directory doesn't contain tkConfig.sh" >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+fi
+# check in a few common install locations
+if test x"${TKCONFIG}" = x ; then
+    for i in `ls -d /usr/lib 2>/dev/null` \
+	    `ls -d /usr/local/lib 2>/dev/null` ; do
+	if test -f "$i/tkConfig.sh" ; then
+	    TKCONFIG=`(cd $i; pwd)`
+	    break
+	fi
+    done
+fi
+if test x"${TKCONFIG}" = x ; then
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+else
+    echo "$as_me:$LINENO: result: found $TKCONFIG/tkConfig.sh" >&5
+echo "${ECHO_T}found $TKCONFIG/tkConfig.sh" >&6
+    . $TKCONFIG/tkConfig.sh
+    if test -z "$TKINCLUDE"; then
+        TKINCLUDE=$ISYSTEM$TK_PREFIX/include
+    fi
+    if test -z "$TKLIB"; then
+        TKLIB=$TK_LIB_SPEC
+    fi
+fi
+
+if test -z "$TKINCLUDE"; then
+   if test "x$TKPACKAGE" != xyes; then
+	TKINCLUDE="$ISYSTEM$TKPACKAGE/include"
+   fi
+fi
+
+if test -z "$TKLIB"; then
+   if test "x$TKPACKAGE" != xyes; then
+	TKLIB="-L$TKPACKAGE/lib -ltk"
+   fi
+fi
+
+echo "$as_me:$LINENO: checking for Tk header files" >&5
+echo $ECHO_N "checking for Tk header files... $ECHO_C" >&6
+if test -z "$TKINCLUDE"; then
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <tk.h>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  :
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  TKINCLUDE=""
+fi
+rm -f conftest.err conftest.$ac_ext
+if test -z "$TKINCLUDE"; then
+	dirs="/usr/local/include /usr/include /opt/local/include"
+	for i in $dirs ; do
+		if test -r $i/tk.h; then
+			echo "$as_me:$LINENO: result: $i" >&5
+echo "${ECHO_T}$i" >&6
+			TKINCLUDE="$ISYSTEM$i"
+			break
+		fi
+	done
+fi
+if test -z "$TKINCLUDE"; then
+    	echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+fi
+else
+        echo "$as_me:$LINENO: result: $TKINCLUDE" >&5
+echo "${ECHO_T}$TKINCLUDE" >&6
+fi
+
+echo "$as_me:$LINENO: checking for Tk library" >&5
+echo $ECHO_N "checking for Tk library... $ECHO_C" >&6
+if test -z "$TKLIB"; then
+dirs="/usr/local/lib /usr/lib /opt/local/lib"
+for i in $dirs ; do
+	if test -r $i/libtk.a; then
+	    echo "$as_me:$LINENO: result: $i" >&5
+echo "${ECHO_T}$i" >&6
+	    TKLIB="-L$i -ltk"
+	    break
+	fi
+done
+if test -z "$TKLIB"; then
+	echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+fi
+else
+echo "$as_me:$LINENO: result: $TKLIB" >&5
+echo "${ECHO_T}$TKLIB" >&6
+fi
+
+# Cygwin (Windows) needs the library for dynamic linking
+case $host in
+    *-*-cygwin* | *-*-mingw*) TKDYNAMICLINKING="$TKLIB";;
+    *)TKDYNAMICLINKING="";;
+esac
+fi
+
+
 
 
 
@@ -8608,6 +8824,10 @@ _ACEOF
 else
 	echo "$as_me:$LINENO: result: STATIC" >&5
 echo "${ECHO_T}STATIC" >&6
+	cat >>confdefs.h <<\_ACEOF
+#define STATIC_PACKAGES 1
+_ACEOF
+
 fi
 
 #-----------------------------------------------
@@ -9372,8 +9592,13 @@ s,@LEXLIB@,$LEXLIB,;t t
 s,@LEX_OUTPUT_ROOT@,$LEX_OUTPUT_ROOT,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@TCLINCLUDE@,$TCLINCLUDE,;t t
+s,@NOTCLCONFIG@,$NOTCLCONFIG,;t t
+s,@TCLCONFIG@,$TCLCONFIG,;t t
 s,@TCLLIB@,$TCLLIB,;t t
 s,@TCLDYNAMICLINKING@,$TCLDYNAMICLINKING,;t t
+s,@TKINCLUDE@,$TKINCLUDE,;t t
+s,@TKLIB@,$TKLIB,;t t
+s,@TKDYNAMICLINKING@,$TKDYNAMICLINKING,;t t
 s,@F77@,$F77,;t t
 s,@BLASLIB@,$BLASLIB,;t t
 s,@LPAKLIB@,$LPAKLIB,;t t

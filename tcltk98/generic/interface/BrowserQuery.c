@@ -1182,7 +1182,7 @@ void BrowListModelChildren(Tcl_Interp *interp, struct Instance *i, int atoms,
   struct Instance *child;
   struct Instance *arraychild;
   CONST struct TypeDescription *d;
-  enum inst_t childkind;
+  enum inst_t childkind = ERROR_INST;
   char *fname, *ftorv, *fdims;
   ChildListPtr clist;
   unsigned int flag; /* if 1, attempt to show child */

@@ -1245,7 +1245,7 @@ int Asc_BrowInstanceRefineCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct TypeDescription *desc, *desc1, *desc2;
   struct Instance *i, *top, *inst;
-  double start_time;
+  double start_time =0.0;
 
   (void)cdata;    /* stop gcc whine about unused parameter */
 

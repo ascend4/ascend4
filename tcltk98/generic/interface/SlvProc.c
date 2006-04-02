@@ -202,7 +202,7 @@ static void DoVarAnalyze(Tcl_Interp *interp,
                          int relative_check)
 {
   enum Bounds_Enum b_result;		/* result of the query */
-  real64 value,checkvalue;
+  real64 value =0,checkvalue =0;
   unsigned long c;
   char tmp[80];
 
@@ -227,7 +227,7 @@ static void DoVarAnalyze(Tcl_Interp *interp,
       default:
         b_result = b_invalid;	/* should not be here */
         break;
-      }
+    }
     b_result = CloseToBound(value,checkvalue,tolerance,
                                b_type,relative_check);
     if (b_result==b_close) {

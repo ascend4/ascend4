@@ -62,7 +62,7 @@ static CONST char AscendMemoryAllocRCSid[]="$Rev$";
  *  The "non-debug" version of ascstrdupf -
  *  all memory calls should be to the system versions.
  */
-char *ascstrdupf(char *s)
+char *ascstrdupf(CONST char *s)
 {
 	char *result;
 
@@ -81,7 +81,7 @@ char *ascstrdupf(char *s)
  *  Here's the debug version of ascstrdup -
  *  all memory calls should be to the local debug versions.
  */
-char *ascstrdupf_dbg(char *s)
+char *ascstrdupf_dbg(CONST char *s)
 {
 	char *result;
 
