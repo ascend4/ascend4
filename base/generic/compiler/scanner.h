@@ -137,6 +137,5 @@ extern void Asc_DestroyScannerInputBuffer(void);
  * startup. Call this only at the final shutdown of the scanner.
  */
 
-#define yylval zz_lval
 #endif /* ASC_SCANNER_H */
 
