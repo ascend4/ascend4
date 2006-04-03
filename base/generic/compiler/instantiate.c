@@ -136,6 +136,8 @@ static int g_iteration = 0;	/* the current iteration. */
 /* moved from tcltk98/generic/interface/SimsProc.c */
 struct Instance *g_cursim;
 
+#define NEW_ext 1
+#define OLD_ext 0
 /*************************************************************************\
 variable to check agreement in the number of boolean, integer or symbol
 variables in the WHEN/SELECT statement with the number of boolean, integer
@@ -8817,9 +8819,11 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         if (return_value) ClearBit(blist,*count);
         break;
       case EXT:
+#if OLD_ext
         return_value = ExecuteEXT(inst,statement);
         if (return_value) ClearBit(blist,*count);
         break;
+#endif
       case ASGN:
       case REL:
       case LOGREL:
@@ -12063,7 +12067,11 @@ void Pass2SetRelationBits(struct Instance *inst)
           }
         }
         else {
-          if ( st == REL || (st == COND && CondContainsRelations(stat)) ||
+          if ( st == REL || 
+#if NEW_ext
+		st == EXT ||
+#endif
+	     (st == COND && CondContainsRelations(stat)) ||
              (st == FOR && ForContainsRelations(stat)) ){
             SetBit(blist,c);
             changed++;

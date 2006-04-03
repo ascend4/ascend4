@@ -99,7 +99,8 @@ cmd="./configure  \
 --enable-gcc \
 --enable-optimization \
 --enable-dynamic-packages \
---without-tcl \
+--with-tkconfig=$tkroot/lib \
+--with-tclconfig=$tkroot/lib \
 $blasopt"
 
 #--enable-relation-debugging 
