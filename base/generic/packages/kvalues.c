@@ -23,11 +23,21 @@ the program; if not, write to the Free Software Foundation, Inc., 675
 Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
 \*********************************************************************/
 #include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
 #include <compiler/packages.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/compiler.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <general/list.h>
+#include <compiler/sets.h>
 #include <compiler/atomvalue.h>
 #include <compiler/parentchild.h>
 #include <compiler/instquery.h>
 #include <compiler/instance_name.h>
+#include <compiler/symtab.h>
+#include <math.h>
 
 #define KVALUES_DEBUG 1
 
@@ -135,8 +145,10 @@ static int GetComponentData(struct Instance *data,
   unsigned long pos,c;
   unsigned long nch;
   char *component;
+  symchar *s_component = NULL;
 
-  SetInstanceNameStrPtr(name,"components");
+  s_component = AddSymbol("components");
+  SetInstanceNameStrPtr(name,s_component);
   SetInstanceNameType(name,StrName);
 
   if (!data) {

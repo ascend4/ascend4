@@ -511,9 +511,9 @@ provide_module:
     ;
 
 import:
-    IMPORT_T IDENTIFIER_T FROM_T IDENTIFIER_T ';'
+    IMPORT_T IDENTIFIER_T FROM_T DQUOTE_T ';'
 	{
-	  (void)LoadArchiveLibrary(SCP($4),SCP($2));
+	  (void)LoadArchiveLibrary($4,SCP($2));
 	}
 	| IMPORT_T IDENTIFIER_T ';'
 	{
