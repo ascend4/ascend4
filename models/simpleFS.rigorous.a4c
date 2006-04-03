@@ -1,5 +1,5 @@
 REQUIRE "flash.a4l";
-REQUIRE "simpleUnits.AWW.a4c";
+REQUIRE "simpleUnits.a4c";
 
 (*
   

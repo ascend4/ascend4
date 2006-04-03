@@ -389,6 +389,14 @@ END length_parameter;
         upper_bound := 5000{atm};
         nominal := 1.0{atm};
     END pressure;
+    
+    ATOM delta_pressure REFINES solver_var
+        DIMENSION M/L/T^2
+        DEFAULT 1.0{atm};
+	lower_bound := -1000{atm};
+        upper_bound := 1000{atm};
+        nominal := 1.0{atm};
+    END delta_pressure;
 
     ATOM vapor_pressure REFINES pressure
         DIMENSION M/L/T^2
