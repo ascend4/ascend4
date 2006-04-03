@@ -1,15 +1,12 @@
 REQUIRE "atoms.a4l";
 (* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "Guthrie_costs.a4l";
+PROVIDE "guthriecosts.a4l";
 
 (*
- *  Guthrie_costs.a4l
+ *  guthriecosts.a4l
  *  by Arthur W. Westerberg
  *  Part of the ASCEND Library
- *  $Date: 1998/06/17 18:45:39 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/Guthrie_costs.a4l,v $
+ *  $Date: 2006/03/03 10:39:19 $
  *
  *  This file is part of the ASCEND Modeling Library.
  *

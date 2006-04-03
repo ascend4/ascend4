@@ -1,0 +1,709 @@
+REQUIRE "stream_holdup.a4l";
+REQUIRE "atomssimpleunits.a4c";
+
+(*
+  
+This file (simpleUnits.a4c) contains models useful for developing heat
+and material balances quickly for a flowsheet, when using simple unit
+operation models and accurate physical property models.
+
+This file contains three "basic" models with varying numbers of
+streams in and out as suggested by the unit name:
+  
+     unitOneInOneOut
+     unitOneInTwoOut
+     unitTwoInTwoOut
+     
+It also contains a simpleCompressor model built from two instances of
+unitOneInOneOut.
+  
+What is different in these models is that the components listed for
+the input and output streams need not be the same.
+
+If a component leaves but does not enter the unit, then its flow out
+is equated to zero.
+
+If it enters but does not leave, then its flow is accumulated into the
+variable "error_LostFlowOut."  It is up to the user to decide if a
+value greater than zero for this variable is to be interpreted as an
+actual error.
+
+For the model unitOneInTwoOut, each component that appears in all
+three streams is split using a split factor, which is part of the
+model.  If a component enters but leaves in only one product stream,
+all of it leaves in that stream.
+
+All three units have a heat input possible for them.  Thus each can be
+used to heat or cool the input stream(s).
+
+
+Default initial assumptions
+
+Specifying a unit assumes all the input streams are specified.  Output
+stream flows are computed by the unit.
+
+The basic models add delP variables to compute the output stream
+pressures.  The default is to fix these delP variables at zero; thus
+the output pressures are by default equal to the input pressures.  For
+the unitTwoInOneOut, output pressure is related to the first input
+stream only.
+
+The units are also assumed to be adiabatic.  For unitOneInTwoOut, the
+product temperatures are assumed to be equal by setting the slack
+delT12 on the equation relating them to zero.  There are delT
+variables, which are equivalent in use to the delP variables.
+However, their default is to be calculated rather than fixed.  If one
+wishes to fix the outlet temperature equal to the inlet, fix the delT
+variable at its default of zero and release Qin for the unit.
+
+In the following we describe how one can use the first model in a
+variety of useful ways to model all sorts of units in a flowsheet.
+Similar ways of thinking can allow the other units to be used in a
+variety of ways.
+
+
+unitOneInOneOut
+
+One can use this model to carry out a single reaction described by a
+turnover rate and the reaction stoichiometric coefficients.  Look
+inside the model to find these variables.  Use two units in a row to
+model two reactions.
+
+This unit can also represent one side of a heat exchanger.  Two such
+units can be a heat exchanger if one requires the heat into one to
+equal the negative of the heat into the other.  To be safe one should
+adds constraints to prevent temperature crossover or monitor that
+crossover does not occur.
+
+
+simpleCompressor (two unitOneInOnOut units)
+
+We modeled the simpleCompressor unit as follows.
+
+1. We used two units of this type; the first part is used to compute
+reversible behavior and the second part actual behavior.
+
+2. The first part is a reversible isentropic gas compressor.  It
+computes the work needed for this type of compression and reports it
+as the heat input requirement, Qin.
+
+3. The second part is fed with the same input stream as used to feed
+the first part, only it processes this stream irreversibly.
+
+4. The overall model includes the equation Qin2*eff = Qin1 to relate
+the heat input of the second unit to that of the first.  As eff is
+less than unity, Qin2 will be larger than Qin1 to accomplish the same
+compression, reflecting the irreversibility of the compressor.
+
+5. We set the outlet pressure of the second unit to be the same as
+that of the first.
+
+
+The unitOneInOneOut unit can approximate an adiabatic valve by
+requiring Qin to be zero, setting the pressure out at the desired
+lower value, and letting the unit compute the temperature out.
+
+By now you should get the idea of how versatile these units can be in
+creating a simple heat and material balance for a flowsheet.
+*)
+
+MODEL unitOneInOneOut
+    (
+    Qin WILL_BE energy_rate;
+    feed WILL_BE stream;
+    product WILL_BE stream;
+    );
+
+    compsFeed ALIASES feed.cd.components;
+    compsProduct ALIASES product.cd.components;
+    compsAll, compsCommon, compsNotInProd, compsNotInFeed
+        IS_A set OF symbol_constant;
+    
+    compsAll :== compsFeed + compsProduct;
+    compsCommon :== compsFeed*compsProduct;	
+    compsNotInFeed :== compsProduct - compsFeed;
+    compsNotInProd :== compsFeed - compsProduct;
+    
+    stoichCoef[compsAll] IS_A factor;
+    turnover, error_LostFlowOut IS_A molar_rate;
+    delP IS_A delta_pressure;
+    delT IS_A delta_temperature;
+    
+    (* material balance *)
+    
+    FOR i IN compsCommon CREATE
+	cmbCommon[i]: product.f[i] = feed.f[i] + turnover*stoichCoef[i];
+    END FOR;
+
+    traceMF IS_A traceMoleFraction_constant;
+    FOR i IN compsNotInFeed CREATE
+	cmbNotInFeed[i]: product.f[i] = traceMF*product.flow + turnover*stoichCoef[i];
+    END FOR;
+    
+    missingTotal: error_LostFlowOut = 0 {mol/s} + SUM[feed.f[i]+turnover*stoichCoef[i]
+        | i IN compsNotInProd];
+        
+    (* heat balance *)
+    hb: feed.H_flow + Qin = product.H_flow;
+    
+    (* pressure *)
+    eqnP: product.P = feed.P + delP;
+
+    (* temperature *)
+    eqnT: product.T = feed.T + delT;
+
+    (* computing molar entropies for streams *)
+    feedMolarEntropy, productMolarEntropy IS_A molar_entropy;
+    feedMolarEntropy*feed.T = feed.state.H - feed.state.G;
+    productMolarEntropy*product.T = product.state.H - product.state.G; 
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN feed.default_self;	
+	RUN product.default_self;
+	stoichCoef[compsAll] := 0.0;
+	turnover := 0.0 {mol/s};
+	delP := 0.0 {atm};
+	delT := 0.0 {K};
+	Qin := 0.0 {kW};
+    END default_self;
+    
+    METHOD specify;
+        (* first run specify on all parts *)
+        RUN feed.specify;
+    	RUN product.specify;
+	stoichCoef[compsAll].fixed := TRUE;
+	turnover.fixed := TRUE;
+	delP.fixed := TRUE;
+	(* then patch up things such that this model is square *)
+	product.f[compsProduct].fixed := FALSE;
+	product.T.fixed := FALSE;
+	product.P.fixed := FALSE;
+	Qin.fixed := TRUE;
+    END specify;
+    
+END unitOneInOneOut;
+
+
+(* ********************************************* *)
+
+MODEL unitOneInTwoOut
+    (
+    Qin WILL_BE energy_rate;
+    feed WILL_BE stream;
+    product1 WILL_BE stream;
+    product2 WILL_BE stream;
+    );
+
+    compsFeed ALIASES feed.cd.components;
+    compsProduct1 ALIASES product1.cd.components;
+    compsProduct2 ALIASES product2.cd.components;
+    
+    compsInFeedOnly,
+    compsInProd1NotInFeed,
+    compsInProd2NotInFeed,
+    compsInFeedProd1Only,
+    compsInFeedProd2Only,
+    compsInAll IS_A set OF symbol_constant;
+    
+    compsInFeedOnly :== compsFeed - compsProduct1 - compsProduct2;
+    compsInProd1NotInFeed :== compsProduct1 - compsFeed;
+    compsInProd2NotInFeed :== compsProduct2 - compsFeed;
+    compsInFeedProd1Only :== compsFeed*compsProduct1 - compsProduct2;
+    compsInFeedProd2Only :== compsFeed*compsProduct2 - compsProduct1;
+    compsInAll :== compsFeed*compsProduct1*compsProduct2;
+	
+    error_LostFlowOut IS_A molar_rate;
+    split[compsInAll] IS_A fraction;
+    delP1, delP12 IS_A delta_pressure;
+    delT1, delT12 IS_A delta_temperature;    
+
+    (* material balances *)
+    
+    (* in Feed only - flows lost *)
+    missingTotal: error_LostFlowOut = 0 {mol/s} + SUM[feed.f[i] | i IN compsInFeedOnly];
+
+    (* in products only - flows in products are zero *)
+    traceMF IS_A traceMoleFraction_constant;
+    FOR i IN compsInProd1NotInFeed CREATE
+	zeroProd1[i]: product1.y[i] = traceMF;
+    END FOR;
+    FOR i IN compsInProd2NotInFeed CREATE
+	zeroProd2[i]: product2.y[i] = traceMF;
+    END FOR;
+
+    (* in feed and product1 only - all flow goes to product1 *)
+    FOR i IN compsInFeedProd1Only CREATE
+	cmbInFeedProd1Only[i]: product1.f[i] = feed.f[i]; 
+    END FOR;
+
+    (* in feed and product2 only - all flow goes to product2 *)
+    FOR i IN compsInFeedProd2Only CREATE
+	cmbInFeedProd2Only[i]: product2.f[i] = feed.f[i]; 
+    END FOR;
+    
+    (* in feed and both products *)
+    FOR i IN compsInAll CREATE
+	cmbCompsInAll[i]: feed.f[i] = product1.f[i]+product2.f[i];
+	splitMBEqn[i]: product1.f[i] = split[i]*feed.f[i];
+    END FOR;
+    
+    (* heat balance *)
+    hb: feed.H_flow + Qin = product1.H_flow + product2.H_flow;
+
+
+    (* pressure *)
+    eqnP1: product1.P = feed.P + delP1;
+    eqnP2: product2.P = product1.P + delP12;
+
+    (* temperature *)
+    eqnT1: product1.T = feed.T + delT1;
+    eqnT2: product2.T = product1.T + delT12;
+
+    METHODS
+    
+    METHOD default_self;
+	RUN feed.default_self;
+	RUN product1.default_self;
+	RUN product2.default_self;
+	delP1 := 0.0 {atm};
+	delP12 := 0.0 {atm};
+	delT1 := 0.0 {K};
+	delT12 := 0.0 {K};
+	Qin := 0.0 {kW};
+    END default_self;
+    
+    METHOD specify;
+	RUN feed.specify;
+	RUN product1.specify;
+	RUN product2.specify;
+	split[compsInAll].fixed := TRUE;
+	delP1.fixed := TRUE;
+	delP12.fixed := TRUE;
+	delT12.fixed := TRUE;
+	product1.f[compsProduct1].fixed := FALSE;
+	product2.f[compsProduct2].fixed := FALSE;
+	product1.P.fixed := FALSE;
+	product1.T.fixed := FALSE;
+	product2.P.fixed := FALSE;
+	product2.T.fixed := FALSE;
+	Qin.fixed := TRUE;
+    END specify;
+
+END unitOneInTwoOut;
+
+MODEL unitTwoInOneOut
+    (
+    Qin WILL_BE energy_rate;
+    feed1 WILL_BE stream;
+    feed2 WILL_BE stream;
+    product WILL_BE stream;
+    );
+    
+    compsFeed1 ALIASES feed1.cd.components;
+    compsFeed2 ALIASES feed2.cd.components;
+    compsProduct ALIASES product.cd.components;
+    
+    compsInFeed1NotInProd,
+    compsInFeed2NotInProd,
+    compsInProdOnly,
+    compsInFeed1ProdOnly,
+    compsInFeed2ProdOnly,
+    compsInAll IS_A set OF symbol_constant;
+    
+    compsInFeed1NotInProd :== compsFeed1 - compsProduct;
+    compsInFeed2NotInProd :== compsFeed2 - compsProduct;
+    compsInProdOnly :== compsProduct - compsFeed1 - compsFeed2;
+    compsInFeed1ProdOnly :== compsFeed1*compsProduct - compsFeed2;
+    compsInFeed2ProdOnly :== compsFeed2*compsProduct - compsFeed1;
+    compsInAll :== compsFeed1*compsFeed2*compsProduct;
+	
+    error_LostFlowOut IS_A molar_rate;
+    delP1 IS_A delta_pressure;
+    delT1 IS_A delta_temperature;    
+
+    (* material balance *)
+    (* in Feeds only - flows lost *)
+    missingTotal: error_LostFlowOut = 0 {mol/s}+
+        SUM[feed1.f[i] | i IN compsInFeed1NotInProd] +
+	SUM[feed2.f[i] | i IN compsInFeed2NotInProd];
+
+    (* in product only - flows in products are zero *)
+    traceMF IS_A traceMoleFraction_constant;	
+    FOR i IN compsInProdOnly CREATE
+	zeroProd[i]: product.y[i] = traceMF;
+    END FOR;
+
+    (* in feed1 and product only - flow goes to product *)
+    FOR i IN compsInFeed1ProdOnly CREATE
+	cmbInFeed1ProdOnly[i]: product.f[i] = feed1.f[i]; 
+    END FOR;
+
+    (* in feed2 and product only - flow goes to product *)
+    FOR i IN compsInFeed2ProdOnly CREATE
+	cmbInFeed2ProdOnly[i]: product.f[i] = feed2.f[i]; 
+    END FOR;
+    
+    (* in both feeds and product*)
+    FOR i IN compsInAll CREATE
+	cmbCompsInAll[i]: product.f[i] = feed1.f[i]+feed2.f[i];
+    END FOR;
+    
+    (* heat balance *)
+    hb: feed1.H_flow + feed2.H_flow + Qin = product.H_flow;
+
+    (* pressure *)
+    eqnP1: product.P = feed1.P + delP1;
+
+    (* temperature *)
+    eqnT1: product.T = feed1.T + delT1;
+
+    METHODS
+    
+    METHOD default_self;
+	RUN feed1.default_self;
+	RUN feed2.default_self;
+	RUN product.default_self;
+	delP1 := 0.0 {atm};
+	delT1 := 0.0 {K};
+	Qin := 0.0 {kW};
+    END default_self;
+    
+    METHOD specify;
+	RUN feed1.specify;
+	RUN feed2.specify;
+	RUN product.specify;
+	delP1.fixed := TRUE;
+	product.f[compsProduct].fixed := FALSE;
+	product.P.fixed := FALSE;
+	product.T.fixed := FALSE;
+	Qin.fixed := TRUE;
+    END specify;
+
+END unitTwoInOneOut;
+
+MODEL simpleCompressor
+    (
+    Qin WILL_BE energy_rate;
+    compressionRatio WILL_BE factor;
+    efficiency WILL_BE fraction;
+    feed WILL_BE stream;
+    product WILL_BE stream;
+    );
+
+    idealOut IS_A stream(feed.cd,feed.pd,feed.equilibrated);
+    Qideal IS_A energy_rate;
+    idealCompressor IS_A unitOneInOneOut(Qideal, feed, idealOut);
+    realCompressor IS_A unitOneInOneOut(Qin, feed, product);
+    idealOut.P = compressionRatio*feed.P;
+    product.P = idealOut.P;
+    idealCompressor.productMolarEntropy = idealCompressor.feedMolarEntropy;
+    Qin*efficiency = Qideal;
+
+    METHODS
+    
+    METHOD default_self;
+	RUN idealCompressor.default_self;
+	RUN realCompressor.default_self;	
+    END default_self;
+
+    METHOD specify;
+	RUN idealCompressor.specify;
+	RUN realCompressor.specify;
+	idealCompressor.delP.fixed := FALSE;
+	realCompressor.delP.fixed := FALSE;
+	idealCompressor.Qin.fixed := FALSE;
+	Qin.fixed := FALSE;
+	compressionRatio.fixed := TRUE;
+	efficiency.fixed := TRUE;
+    END specify;
+
+END simpleCompressor;
+
+
+(* ******************************************** *)
+(* ***************** testing ****************** *)
+(* ******************************************** *)
+
+MODEL testUnitOneInOneOut;
+    
+    H2, O2, N2, CO, C1, H2O IS_A symbol_constant;
+    compsAll, allButC1, allButN2 IS_A set OF symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    CO :== 'carbon_monoxide';
+    C1 :== 'methane';
+    H2O :== 'water';
+
+    compsAll :==  [H2, O2, N2, CO, C1, H2O];
+    allButC1 :==  [H2, O2, N2, CO, H2O];
+    allButN2 :==  [H2, O2, CO, C1, H2O];
+    
+    cdAll IS_A components_data(compsAll, H2O);
+    cdAllButC1 IS_A components_data(allButC1, H2O);
+    cdAllButN2 IS_A components_data(allButN2, H2O);
+
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    equilibrated IS_A boolean;
+
+    (* the following are not used in this model.  They are included
+      here to be helpful to anyone using this test model as a guide to
+      producing their model.
+
+    pdL IS_A phases_data('L', 'none', 'UNIFAC_liquid_mixture','none');
+    pdVL IS_A phases_data('VL','Pitzer_vapor_mixture',
+        'UNIFAC_liquid_mixture','none');
+    *)
+
+    feedNormal IS_A stream(cdAll, pdV, equilibrated);
+    prodNormal IS_A stream(cdAll, pdV, equilibrated);
+    Normal_Qin IS_A energy_rate;
+
+    unitNormal IS_A unitOneInOneOut(Normal_Qin, feedNormal, prodNormal);
+        
+    feedMissing IS_A stream(cdAllButC1, pdV, equilibrated);
+    prodMissing IS_A stream (cdAllButN2, pdV, equilibrated);
+    Missing_Qin IS_A energy_rate;
+
+    unitMissing IS_A unitOneInOneOut(Missing_Qin, feedMissing, prodMissing);
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN unitNormal.default_self;
+	RUN unitMissing.default_self;
+    END default_self;
+    
+    METHOD values;
+	feedNormal.T := 600 {K};
+	feedNormal.P := 1 {atm};
+	feedNormal.f[compsAll] := 10.0 {mol/s};
+	feedMissing.T := 600 {K};
+	feedMissing.P := 1 {atm};
+	feedMissing.f[allButC1] := 20.0 {mol/s};
+	equilibrated := TRUE;
+
+	(* set up reaction in reactor: C1 + H2O = CO + 3H2 *)
+	unitNormal.stoichCoef[C1] := -1.0;
+	unitNormal.stoichCoef[H2O] := -1.0;
+	unitNormal.stoichCoef[CO] := 1.0;
+	unitNormal.stoichCoef[H2] := 3.0;
+	unitNormal.turnover := 1.0 {mol/s};
+
+	(* set up reaction: 2H2 + O2 = 2H2O *)
+	unitMissing.stoichCoef[H2] := -2.0;
+	unitMissing.stoichCoef[O2] := -1.0;
+	unitMissing.stoichCoef[H2O] := 2.0;
+	unitMissing.turnover := 1.0 {mol/s};
+    END values;
+    
+    METHOD specify;
+	RUN unitNormal.specify;
+	prodNormal.f[compsAll].fixed := FALSE;
+	RUN unitMissing.specify;
+	prodMissing.f[allButN2].fixed := FALSE;	
+    END specify;
+
+END testUnitOneInOneOut;
+
+
+MODEL testUnitOneInTwoOut;
+    H2, O2, N2, C1, C2, nC3, H2O IS_A symbol_constant;
+    compsF, compsP1, compsP2 IS_A set OF symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    nC3 :== 'propane';
+    H2O :== 'water';
+
+    (* create component lists where all combinations of components
+      in feed and products exist for testing missing components
+      code in model *)
+    
+    compsF :==  [H2, O2, N2, C1];
+    compsP1 :== [H2, O2, C2, nC3];
+    compsP2 :== [H2, N2, C2, H2O];
+    cdCompsF IS_A components_data(compsF, O2);
+    cdCompsP1 IS_A components_data(compsP1, O2);
+    cdCompsP2 IS_A components_data(compsP2, H2O);
+
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    equilibrated IS_A boolean;
+
+    feedNormal IS_A stream(cdCompsF, pdV, equilibrated);
+    Normal_Qin IS_A energy_rate;
+
+    prod1Normal IS_A stream (cdCompsF, pdV, equilibrated);
+    prod2Normal IS_A stream (cdCompsF, pdV, equilibrated);
+
+    unitNormal IS_A unitOneInTwoOut(Normal_Qin, feedNormal, prod1Normal, prod2Normal);
+        
+    feedMissing IS_A stream(cdCompsF, pdV, equilibrated);
+    prod1Missing IS_A stream (cdCompsP1, pdV, equilibrated);
+    prod2Missing IS_A stream (cdCompsP2, pdV, equilibrated);
+    Missing_Qin IS_A energy_rate;
+
+    unitMissing IS_A unitOneInTwoOut(Missing_Qin, feedMissing, prod1Missing, prod2Missing);
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN unitNormal.default_self;
+	RUN unitMissing.default_self;
+    END default_self;
+    
+    METHOD values;
+	feedNormal.T := 600 {K};
+	feedNormal.P := 1 {atm};
+	feedNormal.f[compsF] := 10.0 {mol/s};
+	unitNormal.split[H2] := 0.5;
+	unitNormal.split[O2] := 0.3;
+	unitNormal.split[N2] := 0.2;
+	feedMissing.T := 600 {K};
+	feedMissing.P := 1 {atm};
+	feedMissing.f[compsF] := 10.0 {mol/s};
+	unitMissing.product1.T := 550.0 {K};
+	equilibrated := TRUE;
+    END values;
+
+    METHOD specify;
+	RUN unitNormal.specify;
+	RUN feedNormal.specify;
+	RUN unitMissing.specify;
+	RUN feedMissing.specify;
+	unitMissing.Qin.fixed := FALSE;
+	unitMissing.product1.T.fixed := TRUE;
+    END specify;
+
+END testUnitOneInTwoOut;
+
+MODEL testUnitTwoInOneOut;
+    H2, O2, N2, C1, C2, nC3, H2O IS_A symbol_constant;
+    compsF1, compsF2, compsP IS_A set OF symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    C1 :== 'methane';
+    C2 :== 'ethane';
+    nC3 :== 'propane';
+    H2O :== 'water';
+
+    (* create component lists where all combinations of components
+      in feed and products exist for testing missing components
+      code in model *)
+    
+    compsF1 :== [H2, O2, C2, nC3];
+    compsF2 :== [H2, N2, C2, H2O];
+    compsP :==  [O2, N2, C1, C2];
+    cdCompsF1 IS_A components_data(compsF1, O2);
+    cdCompsF2 IS_A components_data(compsF2, H2O);
+    cdCompsP IS_A components_data(compsP, O2);
+
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    equilibrated IS_A boolean;
+
+    feed1Normal IS_A stream(cdCompsF1, pdV, equilibrated);
+    feed2Normal IS_A stream(cdCompsF1, pdV, equilibrated);
+    Normal_Qin IS_A energy_rate;
+
+    prodNormal IS_A stream (cdCompsF1, pdV, equilibrated);
+
+    unitNormal IS_A unitTwoInOneOut(Normal_Qin, feed1Normal, feed2Normal, prodNormal);
+        
+    feed1Missing IS_A stream(cdCompsF1, pdV, equilibrated);
+    feed2Missing IS_A stream(cdCompsF2, pdV, equilibrated);
+    prodMissing IS_A stream (cdCompsP, pdV, equilibrated);
+    Missing_Qin IS_A energy_rate;
+
+    unitMissing IS_A unitTwoInOneOut(Missing_Qin, feed1Missing, feed2Missing, prodMissing);
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN unitNormal.default_self;
+	RUN unitMissing.default_self;
+    END default_self;
+    
+    METHOD values;
+	feed1Normal.T := 600 {K};
+	feed1Normal.P := 1 {atm};
+	feed1Normal.f[compsF1] := 10.0 {mol/s};
+	feed2Normal.T := 610 {K};
+	feed2Normal.P := 2 {atm};
+	feed2Normal.f[compsF1] := 15.0 {mol/s};
+	feed1Missing.T := 600 {K};
+	feed1Missing.P := 1 {atm};
+	feed1Missing.f[compsF1] := 3 {mol/s};
+	feed2Missing.T := 610 {K};
+	feed2Missing.P := 2 {atm};
+	feed2Missing.f[compsF2] := 6 {mol/s};
+	unitMissing.product.T := 550 {K};
+	equilibrated := TRUE;
+    END values;
+
+    METHOD specify;
+	RUN unitNormal.specify;
+	RUN feed1Normal.specify;
+	RUN feed2Normal.specify;
+	RUN unitMissing.specify;
+	RUN feed1Missing.specify;
+	RUN feed2Missing.specify;
+	unitMissing.Qin.fixed := FALSE;
+	unitMissing.product.T.fixed := TRUE;
+    END specify;
+
+END testUnitTwoInOneOut;
+
+MODEL testSimpleCompressor;
+    H2, O2, N2, H2O IS_A symbol_constant;
+    comps IS_A set OF symbol_constant;
+
+    H2 :== 'hydrogen';
+    O2 :== 'oxygen';
+    N2 :== 'nitrogen';
+    H2O :== 'water';
+
+    (* create component lists where all combinations of components
+      in feed and products exist for testing missing components
+      code in model *)
+    
+    comps :==  [H2, O2, N2, H2O];
+    cdComps IS_A components_data(comps, H2O);
+    pdV IS_A phases_data('V','Pitzer_vapor_mixture','none','none');
+    equil IS_A boolean;
+
+    feed IS_A stream(cdComps, pdV, equil);
+    product IS_A stream(cdComps, pdV, equil);
+    Qin IS_A energy_rate;
+    compressionRatio IS_A factor;
+    eff IS_A fraction;
+    
+    sC IS_A simpleCompressor(Qin, compressionRatio, eff, feed, product);
+    
+    METHODS
+    
+    METHOD default_self;
+	RUN sC.default_self;
+    END default_self;
+
+    METHOD values;
+	equil := FALSE;
+	compressionRatio := 2.5;
+	eff := 0.95;
+	feed.T := 350 {K};
+	feed.P := 2 {atm};
+	feed.f[comps] := 1 {mol/s};
+    END values;
+
+    METHOD specify;
+	RUN sC.specify;
+    END specify;
+
+END testSimpleCompressor;

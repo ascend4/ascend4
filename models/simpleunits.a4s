@@ -1,0 +1,50 @@
+# common set of statements to set up testing.  These load
+# the correct files for all subsequent testing.
+#
+# These models allow the streams to have different
+# components in them.
+
+DELETE TYPES;
+READ FILE "simpleUnits.a4c";
+
+
+# remaining statements needed to test unit with
+# one feed, one product 
+
+COMPILE t11 OF testUnitOneInOneOut;
+BROWSE {t11};
+RUN {t11.values};
+RUN {t11.specify};
+SOLVE {t11} WITH QRSlv;
+
+
+# remaining statements needed to test unit with
+# one feed, two products
+ 
+COMPILE t12 OF testUnitOneInTwoOut;
+BROWSE {t12};
+RUN {t12.values};
+RUN {t12.specify};
+SOLVE {t12} WITH QRSlv;
+
+
+# remaining statements needed to test unit with 
+# two feeds, one product
+
+COMPILE t21 OF testUnitTwoInOneOut;
+BROWSE {t21};
+RUN {t21.values};
+RUN {t21.specify};
+SOLVE {t21} WITH QRSlv;
+
+
+# test simple compressor
+
+COMPILE tsc OF testSimpleCompressor;
+BROWSE {tsc};
+RUN {tsc.values};
+RUN {tsc.reset};
+SOLVE {tsc} WITH QRSlv;
+ASSIGN {tsc.equil} true {*};
+SOLVE {tsc} WITH QRSlv;
+

@@ -1,0 +1,5 @@
+UNIVERSAL CONSTANT traceMoleFraction_constant
+(* DIMENSTIONLESS *)
+REFINES real_constant :== 1.0e-7;
+  
+

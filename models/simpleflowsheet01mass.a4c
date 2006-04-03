@@ -1,12 +1,12 @@
-REQUIRE "simple_fs.V1.a4c";
-(* => simple_fs.a4c, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "simpleFS.V1.mass.a4c";
+REQUIRE "simpleflowsheet01.a4c";
+(* => simpleflowsheet01.a4c, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "simpleflowsheet01mass.a4c";
 (*
  * This file is part of the ASCEND Modeling Library and is released
  * under the GNU Public License as described at the end of this file.
  *
  * Use of this module is demonstrated by the associated script file
- * simpleFS.V1.cost.a4s.
+ * simpleflowsheet01cost.a4s.
  *)
 
 UNIVERSAL MODEL stream_parameters;
@@ -112,13 +112,10 @@ END mod_stream;
 
 
 (*
- *  simple_fs_ext.a4c
+ *  simpleflowsheet01mass.a4c
  *  by Arthur W. Westerberg
  *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:43:48 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs_ext.a4c,v $
+ *  $Date: 2006/03/03 10:45:21 $
  *
  *  This file is part of the ASCEND Modeling Library.
  *

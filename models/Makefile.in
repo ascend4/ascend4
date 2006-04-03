@@ -78,7 +78,7 @@ INSTALL_SUBDIR_LIST = \
 	ben johnpye
 
 INSTALL_FILE_LIST = \
-	Guthrie_costs.a4l \
+	guthriecosts.a4l \
 	KenPendings.a4l \
 	README \
 	README.html \
