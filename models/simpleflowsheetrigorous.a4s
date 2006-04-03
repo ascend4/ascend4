@@ -1,8 +1,8 @@
 
 DELETE TYPES;
-READ FILE "simpleFS.rigorous.a4c";
+READ FILE "simpleflowsheetrigorous.a4c";
 
-COMPILE demo OF simpleFS;
+COMPILE demo OF simpleflowsheet;
 BROWSE {demo};
 RUN {demo.values};
 RUN {demo.reset};

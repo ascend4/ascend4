@@ -22,7 +22,7 @@ REQUIRE "simpleUnits.a4c";
 *)
 
 
-MODEL simpleFS;
+MODEL simpleflowsheet;
     (* this demo is a reproduction of simpleFS using
       the models in simpleUnits along with a rigorous
       flash for the separation step *)
@@ -181,4 +181,4 @@ MODEL simpleFS;
 
     END specify;
     
-END simpleFS;
+END simpleflowsheet;

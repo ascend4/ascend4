@@ -1,19 +1,19 @@
 REQUIRE "atoms.a4l";
 (* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "simpleFS.V2.a4c";
+PROVIDE "simpleflowsheet02.a4c";
 (*
  * This file is part of the ASCEND Modeling Library and is released
  * under the GNU Public License as described at the end of this file.
  *
  * Use of this module is demonstrated by the associated script file
- * simple_fs.a4s.
+ * simpleflowsheet.a4s.
  *)
 
 (*
   
 This file contains code to model the same flowsheet as
   
-    simpleFS.V1.a4c
+    simpleflowsheet01.a4c
   
 EXCEPT we have modified most of the models to be parameterized.  We
 strongly recommend creating parameterized models as they tend to be
@@ -472,13 +472,10 @@ END test_controller;
 
 
 (*
- *  simple_fs.V3.a4c
+ *  simpleflowsheet02.a4c
  *  by Arthur W. Westerberg
  *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:28:37 $
- *  $Revision: 1.2 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs.a4c,v $
+ *  $Date: 2006/03/03 10:47:16 $
  *
  *  This file is part of the ASCEND Modeling Library.
  *

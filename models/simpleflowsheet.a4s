@@ -1,4 +1,4 @@
-# script for executing simpleFS.V1.a4c or simpleFS.V2.a4c
+# script for executing simpleflowsheet01.a4c or simpleflowsheet02.a4c
 
 #execute the first three commands
 DELETE TYPES;
@@ -6,8 +6,8 @@ DELETE SYSTEM;
 DELETE tc;
 
 # execute one of the following READ FILE commands
-READ FILE "simpleFS.V1.a4c";
-READ FILE "simpleFS.V2.a4c";
+READ FILE "simpleflowsheet01.a4c";
+READ FILE "simpleflowsheet02.a4c";
 
 # execute the remaining commands
 COMPILE tc OF test_controller;

@@ -1,9 +1,9 @@
-REQUIRE "simpleFS.V1.mass.a4c";
-(* => simpleFS.V1.mass.a4c, simpleFS.V1.a4c, atoms.a4l, measures.a4l,
+REQUIRE "simpleflowsheet01mass.a4c";
+(* => simpleflowsheet01mass.a4c, simpleflowsheet01.a4c, atoms.a4l, measures.a4l,
  *    system.a4l, basemodel.a4l *)
-REQUIRE "Guthrie_costs.a4l";
-(* => Guthrie_costs.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "simpleFS.V1.cost.a4c";
+REQUIRE "guthrie_costs.a4l";
+(* => guthrie_costs.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+PROVIDE "simpleflowsheet01cost.a4c";
 (*
  * This file is part of the ASCEND Modeling Library and is released
  * under the GNU Public License as described at the end of this file.
@@ -133,13 +133,10 @@ END flowsheet_cost;
 
 
 (*
- *  simple_fs_cost.a4c
+ *  simpleflowsheet01cost.a4c
  *  by Arthur W. Westerberg
  *  Part of the ASCEND Library
- *  $Date: 1998/06/17 19:43:47 $
- *  $Revision: 1.3 $
- *  $Author: mthomas $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/simple_fs_cost.a4c,v $
+ *  $Date: 2006/03/03 10:31:53$
  *
  *  This file is part of the ASCEND Modeling Library.
  *
