@@ -149,6 +149,7 @@ env.Append(CPPDEFINES=env['PACKAGE_LINKING'])
 with_tcltk_gui = (env['WITHOUT_TCLTK_GUI']==False)
 
 with_python = (env['WITHOUT_PYTHON']==False)
+without_python_reason = None
 
 with_cunit_tests = env['WITH_CUNIT_TESTS']
 
@@ -179,8 +180,7 @@ env.Append(SUBST_DICT=subst_dict)
 
 import os,re
 
-def CheckSwigVersion(context):
-	context.Message("Checking version of SWIG... ")
+def get_swig_version(env):
 	cmd = env['SWIG']+' -version'
 	(cin,coutcerr) = os.popen4(cmd);
 	output = coutcerr.read()
@@ -189,11 +189,22 @@ def CheckSwigVersion(context):
 	expr = re.compile(restr,re.M);
 	m = expr.search(output);
 	if not m:
-		context.Result("error running SWIG or detecting SWIG version")
-		return 0
+		return None
 	maj = int(m.group('maj'))
 	min = int(m.group('min'))
 	pat = int(m.group('pat'))
+
+	return (maj,min,pat)
+	
+
+def CheckSwigVersion(context):
+	
+	try:
+		context.Message("Checking version of SWIG... ")
+		maj,min,pat = get_swig_version(context.env)
+	except:
+		context.Result("Failed to detect version, or failed to run SWIG")
+		return 0;
 	
 	if maj == 1 and (
 			min > 3
@@ -363,9 +374,6 @@ conf = Configure(env
 	, config_h = "config.h"
 )
 
-if not conf.CheckSwigVersion():
-	print 'SWIG version is not OK'
-	Exit(1)
 
 # Math library
 #if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
@@ -403,10 +411,14 @@ else:
 # SWIG version
 
 if platform.system()=="Windows":
-	#env['SWIG']=['c:\\msys\\1.0\\home\\john\\swigwin-1.3.29\\swig.exe']
 	env['ENV']['SWIGFEATURES']='-O'
 else:
 	env['ENV']['SWIGFEATURES']='-O'	
+
+
+if not conf.CheckSwigVersion():
+	without_python_reason = 'SWIG >= 1.3.24 is required'
+	with_python = False
 
 # CUnit
 
@@ -426,10 +438,6 @@ conf.Finish()
 env.Append(PYTHON_LIBPATH=[distutils.sysconfig.PREFIX+"/libs"])
 env.Append(PYTHON_LIB=[python_lib])
 env.Append(PYTHON_CPPPATH=[distutils.sysconfig.get_python_inc()])
-
-if not with_python:
-	print "Can't build python interface"
-	Exit(1)
 
 #------------------------------------------------------
 # RECIPE: 'SubstInFile', used in pygtk SConscript
@@ -530,7 +538,7 @@ else:
 if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
 else:
-	print "Skipping... Python GUI isn't being built"
+	print "Skipping... Python GUI isn't being built:",without_python_reason
 
 if with_cunit_tests:
 	testdirs = ['general','solver','utilities']
