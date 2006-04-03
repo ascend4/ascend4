@@ -95,7 +95,7 @@ int g_compiler_warnings = 1;		/* level of whine to allow */
 #define ASCINF g_ascend_information
 #endif
 
-extern int yyerror(char *);
+extern int zz_error(char *);
 /*  provided at the end of this file.
  *  it increments g_untrapped_error, the global defined below
  */

@@ -276,7 +276,7 @@ int main(void){
 """
 
 def CheckCUnit(context):
-	return CheckLib(context
+	return context.CheckExtLib(context
 		,'cunit'
 		,cunit_test_text
 	)
@@ -368,9 +368,9 @@ if not conf.CheckSwigVersion():
 	Exit(1)
 
 # Math library
-if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
-	print 'Did not find libm.a or m.lib, exiting!'
-	Exit(1)
+#if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
+#	print 'Did not find math library, exiting!'
+#	Exit(1)
 
 # Where is 'isnan'?
 
@@ -390,6 +390,8 @@ if conf.CheckTcl() and conf.CheckTk():
 		with_tcltk_gui = False
 else:
 	without_tcltk_reason = "Tcl/Tk not found."
+	with_tcltk_gui = False
+
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:
 

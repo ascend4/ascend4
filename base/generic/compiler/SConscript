@@ -30,11 +30,11 @@ rounded = env.Object('rounded.c'
 )
 
 parser = env.CFile(target=['ascParse'], source='ascParse.y'
-	, YACCFLAGS='-d'
+	, YACCFLAGS=['-d','-pzz_']
 )
 
 scanner = env.CFile(target=['scanner.c'],source=['scanner.l']
-#	, LEXFLAGS=['-ll', '-Pzz_']
+	, LEXFLAGS=['-Pzz_']
 )
 
 env.Depends(scanner,['ascParse.h'])

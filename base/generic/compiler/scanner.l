@@ -409,7 +409,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    ErrMsg_LongSymbol();
 				    break;
 				  }
-				  yylval.sym_ptr = AddSymbolL(yytext,yyleng);
+				  zz_lval.sym_ptr = AddSymbolL(yytext,yyleng);
 				  return SYMBOL_T;
 				}
 <Symbol>[^'\n]*\n		{
@@ -495,7 +495,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    Process_Backslashes();
 				    MatchedBackslash = 0;
 				  }
-				  yylval.dquote_ptr =
+				  zz_lval.dquote_ptr =
 				      CopyIntoWorkBuffer(yytext,yyleng);
 				  return DQUOTE_T;
 				}
@@ -626,7 +626,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				      Process_Backslashes();
 				      MatchedBackslash = 0;
 				    }
-				    yylval.braced_ptr =
+				    zz_lval.braced_ptr =
 				        CopyIntoWorkBuffer(yytext,yyleng);
 				    return BRACEDTEXT_T;
 				  }
@@ -674,7 +674,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>{integer}		{
 				  /*  An integer.  Defn near top of file.
 				   */
-				  yylval.int_value = atol(yytext);
+				  zz_lval.int_value = atol(yytext);
 				  return INTEGER_T;
 				}
 
@@ -683,14 +683,14 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  range (need to avoid parsing "1..2"
 				   *  as the real numbers 1.0 and 0.2).
 				   */
-				  yylval.int_value = atol(yytext);
+				  zz_lval.int_value = atol(yytext);
 				  return INTEGER_T;
 				}
 
 <INITIAL>{real}			{
 				  /*  A real number.  Defn near top of file.
 				   */
-				  yylval.real_value = atof(yytext);
+				  zz_lval.real_value = atof(yytext);
 				  return REAL_T;
 				}
 
@@ -701,7 +701,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    ErrMsg_LongID();
 				    break;
 				  }
-				  yylval.id_ptr = AddSymbolL(yytext,yyleng);
+				  zz_lval.id_ptr = AddSymbolL(yytext,yyleng);
 				  return IDENTIFIER_T;
 				}
 

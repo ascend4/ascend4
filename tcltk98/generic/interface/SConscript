@@ -13,7 +13,7 @@ srcs = Split("""
 
 
 typelex = env.CFile(target='typelex.c',source='typelex.l'
-	, LEXFLAGS = '-ll -Pzz'
+	, LEXFLAGS = '-ll -Ptyp_'
 )
 
 #----------------
