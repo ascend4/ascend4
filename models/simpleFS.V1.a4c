@@ -50,8 +50,12 @@ MODEL mixture;
   METHODS
 
     METHOD specify;
-        y[components].fixed := TRUE;
-        y[CHOICE[components]].fixed := FALSE;
+	(*
+	  y[components].fixed := TRUE;
+          y[CHOICE[components]].fixed := FALSE;
+        *)
+	FIX y[components];
+	FREE y[CHOICE[components]];
     END specify;
 
     METHOD reset;
