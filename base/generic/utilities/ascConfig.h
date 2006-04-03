@@ -134,13 +134,14 @@
 #include<stdio.h>
 
 
+/* trying without this...
 #if defined(__WIN32__) && !defined(__MINGW32__)
-# undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. */
+# undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. *
 # define WIN32_LEAN_AND_MEAN
-# include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
+# include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). *
 # undef WIN32_LEAN_AND_MEAN
 #endif
-
+*/
 #ifndef PATH_MAX
 /** Normally will come from stdio.h or limits.h
  * POSIX values of PATH_MAX is 255, traditional is 1023
@@ -358,14 +359,18 @@ typedef	unsigned   uint32;
 # elif defined(ASC_BUILD_LIB)
 #  define DLEXPORT
 # else
-#  define DLEXPORT __declspec(dllimport)
+/* changed this coz of errors with MSVC 2003 */
+#  define DLEXPORT
 # endif
+
 #else /* not __WIN32__ isms */
+
 # ifdef HAVE_GCCVISIBILITYPATCH
 #  define DLEXPORT __attribute__ ((visibility("default")))
 # else
 #  define DLEXPORT
 # endif
+
 #endif /* __WIN32__ */
 
 #ifndef DLEXPORT

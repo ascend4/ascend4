@@ -12,6 +12,11 @@ print "PLATFORM = ",platform.system()
 # Import the outside environment
 env = Environment(ENV=os.environ)
 
+if platform.system()=='Windows':
+	print "INCLUDE =",env['ENV']['INCLUDE']
+	env.Append(CPPPATH=env['ENV']['INCLUDE'])
+	env.Append(LIBPATH=env['ENV']['LIB'])
+
 # Package linking option
 opts.Add(EnumOption(
 	'PACKAGE_LINKING'
@@ -376,15 +381,15 @@ conf = Configure(env
 
 
 # Math library
-#if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
-#	print 'Did not find math library, exiting!'
-#	Exit(1)
+if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
+	print 'Did not find math library, exiting!'
+	Exit(1)
 
 # Where is 'isnan'?
 
 if not conf.CheckFunc('isnan'):
 	print "Didn't find isnan"
-	Exit(1)
+#	Exit(1)
 
 # Tcl/Tk
 

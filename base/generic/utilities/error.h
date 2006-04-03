@@ -74,45 +74,6 @@
 #  define ERR_NORM ""
 #  define ERR_BOLD ""
 #endif
-/**
-	Variadic macros to allow nice succint logging and error reporting
-	calls from C dialects that support them (GCC, C99 and others)
-
-	If you don't support variadic macros, you will still get the messages
-	but without the file/function/line number.
-*/
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-# define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
-# define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
-# define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
-# define CONSOLE_DEBUG(args...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
-                                 fprintf(stderr, ##args) + \
-                                 fprintf(stderr, ERR_NORM "\n"))
-
-#elif defined(HAVE_C99)
-# define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
-# define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
-# define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
-# define CONSOLE_DEBUG(...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
-                             fprintf(stderr, ##__VA_ARGS__) + \
-                             fprintf(stderr, ERR_NORM "\n"))
-
-#else
-# define ERROR_REPORTER_DEBUG error_reporter_note_no_line
-# define ERROR_REPORTER_HERE error_reporter_here
-# define ERROR_REPORTER_NOLINE error_reporter_noline
-# define CONSOLE_DEBUG console_debug
-int error_reporter_note_no_line(const char *fmt,...);
-int error_reporter_here(const error_severity_t sev, const char *fmt,...);
-int error_reporter_noline(const error_severity_t sev, const char *fmt,...);
-int console_debug(const char *fmt,...);
-#endif
-
-#define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
-#define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
-
-#define ERROR_REPORTER_STAT(sev,stat,msg) \
-	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 
 /**
 	Error severity codes. This will be used to visually
@@ -129,6 +90,51 @@ typedef enum error_severity_enum{
    ,ASC_PROG_ERROR     /**< the program has failed but can ignore and continue (maybe) */
    ,ASC_PROG_FATAL	   /**< fatal error, program will exit */
 } error_severity_t;
+
+
+/**
+	Variadic macros to allow nice succint logging and error reporting
+	calls from C dialects that support them (GCC, C99 and others)
+
+	If you don't support variadic macros, you will still get the messages
+	but without the file/function/line number.
+*/
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+# define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
+# define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
+# define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
+# define CONSOLE_DEBUG(args...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+                                 fprintf(stderr, ##args) + \
+                                 fprintf(stderr, ERR_NORM "\n"))
+
+# define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
+
+#elif defined(HAVE_C99)
+# define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
+# define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
+# define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
+# define CONSOLE_DEBUG(...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+                             fprintf(stderr, ##__VA_ARGS__) + \
+                             fprintf(stderr, ERR_NORM "\n"))
+
+#define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
+
+#else
+# define ERROR_REPORTER_DEBUG error_reporter_note_no_line
+# define ERROR_REPORTER_HERE error_reporter_here
+# define ERROR_REPORTER_NOLINE error_reporter_noline
+# define CONSOLE_DEBUG console_debug
+# define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);
+int error_reporter_note_no_line(const char *fmt,...);
+int error_reporter_here(const error_severity_t sev, const char *fmt,...);
+int error_reporter_noline(const error_severity_t sev, const char *fmt,...);
+int console_debug(const char *fmt,...);
+#endif
+
+#define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
+
+#define ERROR_REPORTER_STAT(sev,stat,msg) \
+	error_reporter(sev,Asc_ModuleFileName(stat->mod),stat->linenum,NULL,msg)
 
 /** An alias for ASC_PROG_ERROR */
 #define ASC_PROG_ERR ASC_PROG_ERROR
@@ -218,7 +224,7 @@ typedef int (*ErrorReporter_fptr_t)(
 	If we're using a 'imported error reporter' then this means that we're in
 	a different DLL to the main ASCEND code. In that case, we will have a
 	pointer to our error reporter function, which will be back in the main
-	DLL in fact. We need this header file to refer to that global-variable 
+	DLL in fact. We need this header file to refer to that global-variable
 	function pointer instead of assuming that the function is here locally.
 */
 static ErrorReporter_fptr_t g_ErrorReporter_fptr;
