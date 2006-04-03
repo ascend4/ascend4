@@ -17,10 +17,10 @@ This file contains code to model the same flowsheet as
   
 EXCEPT we have modified most of the models to be parameterized.  We
 strongly recommend creating parameterized models as they tend to be
-much easier to reuse.  The model simple_fs.a4c uses a modeling style
-based on ARE_THE_SAME statements to configure the flowsheet, a style
-that can often be easier to write initially.  However, reuse is not
-its strength.
+much easier to reuse.  The model simpleflowsheet01.a4c uses a modeling
+style based on ARE_THE_SAME statements to configure the flowsheet, a
+style that can often be easier to write initially.  However, reuse is
+not its strength.
   
 We have included this model to aid new ASCEND users to understand
 better how to write parameterized models.
@@ -59,6 +59,8 @@ This model requires:    "system.a4l"
 MODEL mixture(
     components                      WILL_BE set OF symbol_constant;
 );
+
+    (* Note: we now pass the set components into this model *)
 
     y[components]                   IS_A fraction;
     sumy: SUM[y[i] | i IN components]     =    1.0;
