@@ -1,0 +1,10 @@
+
+DELETE TYPES;
+READ FILE "/home/ballan/cmu/acinst/models/atoms.a4l";
+READ FILE "/home/ballan/cmu/acinst/models/kvalues.a4c";
+COMPILE t2n OF test2_normal;
+BROWSE {t2n};
+RUN {t2n.t1.reset};
+SOLVE {t2n.t1} WITH QRSlv;
+PROBE current {t2n.t1} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
+
