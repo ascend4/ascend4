@@ -12,7 +12,7 @@ print "PLATFORM = ",platform.system()
 # Import the outside environment
 env = Environment(ENV=os.environ)
 
-if platform.system()=='Windows':
+if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "INCLUDE =",env['ENV']['INCLUDE']
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
