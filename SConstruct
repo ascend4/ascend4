@@ -14,6 +14,11 @@ env = Environment(ENV=os.environ)
 
 if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "INCLUDE =",env['ENV']['INCLUDE']
+	print "LIB =",env['ENV']['LIB']
+	print "LINK =",env['LINK']
+	print "LINKCOM =",env['LINKCOM']
+	print "AR =",env['AR']
+	print "ARCOM =",env['ARCOM']
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
 
