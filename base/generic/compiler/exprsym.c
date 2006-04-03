@@ -350,8 +350,8 @@ static Term *MakeAdd(Term *left, Term *right)
 {
   Term *result = NULL;
 
-  if (left==K_TERM(&Zero)) return right;	/* 0 + u = u */
-  if (right==K_TERM(&Zero)) return left;	/* u + 0 = u */
+  if (left == K_TERM(&Zero)) return right;	/* 0 + u = u */
+  if (right == K_TERM(&Zero)) return left;	/* u + 0 = u */
 
   if (left->t == e_real && right->t == e_real)
     return CreateDTermReal(R_TERM(left)->value + R_TERM(right)->value, NULL);

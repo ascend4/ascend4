@@ -378,6 +378,12 @@ unsigned int SlistHasWhat(struct StatementList *slist)
     case REL:
       what |= contains_REL;
       break;
+#define NEW_ext 1
+#if NEW_ext
+    case EXT:
+      what |= contains_REL;
+      break;
+#endif
     case LOGREL:
       what |= contains_LREL;
       break;
