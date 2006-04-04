@@ -16,10 +16,16 @@ Packager:	Automatic
 Vendor:		The Inkscape Project
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
+BuildRequires: python >= 2.4
 BuildRequires:  python-devel
+BuildRequires:  scons >= 0.96
 BuildRequires:  desktop-file-utils
 Requires(post):   desktop-file-utils
 Requires(postun): desktop-file-utils
+
+Requires: python >= 2.4
+Requires: pygtk2 >= 2.6, pygtk2-libglade
+Requires: python-matplotlib, python-numeric
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
