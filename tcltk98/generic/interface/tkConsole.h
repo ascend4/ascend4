@@ -34,9 +34,9 @@
 
 # ifndef ASC_USE_TK_CONSOLE
 #  ifdef __WIN32__
-#   define ASC_USE_TK_CONSOLE
-#  endif /* __WIN32__ */
-# endif /* ! ASC_USE_TK_CONSOLE */
+/* #   define ASC_USE_TK_CONSOLE */
+#  endif
+# endif
 
 extern void TkConsoleCreate(void);
 /**<
