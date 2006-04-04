@@ -187,11 +187,14 @@ typedef void (*jex_t)(int *, double *, double *, int *, int *,
                       double *, int *);
 
 /*
- *  void LSODE(&fex, &neq, y, &x, &xend, &itol, reltol, abtol, &itask,
- *               &istate, &iopt ,rwork, &lrw, iwork, &liw, &jex, &mf);
- *  This is the FORTRAN call to LSODE.
+	void LSODE(&fex, &neq, y, &x, &xend, &itol, reltol, abtol, &itask,
+		&istate, &iopt ,rwork, &lrw, iwork, &liw, &jex, &mf);
+
+	This is the FORTRAN call to LSODE.
+
+	Removed 'extern' so that linker will complain if it's not there.
  */
-extern void LSODE( fex_t
+void LSODE( fex_t
                   ,int *
                   ,double *
                   ,double *

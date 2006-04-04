@@ -127,6 +127,13 @@ opts.Add(PackageOption(
 	,None
 ))
 
+# What is the name of the Tcl lib?
+opts.Add(
+	'TCL_LIB'
+	,"Name of Tcl lib (eg 'tcl' or 'tcl83')"
+	,'tcl'
+)
+
 # Where are the Tk includes?
 opts.Add(PackageOption(
 	'TK_CPPPATH'
@@ -140,6 +147,13 @@ opts.Add(PackageOption(
 	,"Where are your Tk libraries?"
 	,None
 ))
+
+# What is the name of the Tk lib?
+opts.Add(
+	'TK_LIB'
+	,"Name of Tk lib (eg 'tk' or 'tk83')"
+	,'tk'
+)
 
 # TODO: OTHER OPTIONS?
 # TODO: flags for optimisation
@@ -237,14 +251,22 @@ class KeepContext:
 		libpath_add = []
 		if context.env.has_key(varprefix+'_LIBPATH'):
 			libpath_add = [env[varprefix+'_LIBPATH']]
+			#print "Adding '"+str(libpath_add)+"' to lib path"
 
 		cpppath_add = []
 		if context.env.has_key(varprefix+'_CPPPATH'):
 			cpppath_add = [env[varprefix+'_CPPPATH']]
-	
+			#print "Adding '"+str(cpppath_add)+"' to cpp path"
+
+		libs_add = []
+		if context.env.has_key(varprefix+'_LIB'):
+			libs_add = [env[varprefix+'_LIB']]
+			#print "Adding '"+str(libs_add)+"' to libs"	
+
 		context.env.Append(
 			LIBPATH = libpath_add
 			, CPPPATH = cpppath_add
+			, LIBS = libs_add
 		)
 
 	def restore(self,context):
@@ -264,11 +286,22 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	
 	keep = KeepContext(context,varprefix)
 
-	context.env.Append(LIBS=[libname])
+#	print "TryLink with CPPPATH="+str(context.env['CPPPATH'])
+#	print "TryLink with LIBS="+str(context.env['LIBS'])
+#	print "TryLink with LIBPATH="+str(context.env['LIBPATH'])
+
+	if not context.env.has_key(varprefix+'_LIB'):
+		context.env.AppendUnique(LIBS=libname)
 
 	is_ok = context.TryLink(text,ext)
+	
+#	print "Link success? ",(is_ok != 0)
 
 	keep.restore(context)
+
+#	print "Restored CPPPATH="+str(context.env['CPPPATH'])
+#	print "Restored LIBS="+libname
+#	print "Restored LIBPATH="+str(context.env['LIBPATH'])
 
 	context.Result(is_ok)
 	return is_ok
@@ -323,14 +356,15 @@ def CheckTclVersion(context):
 	if not is_ok:
 		context.Result("failed to run check")
 		return 0
-	context.Result(output)
 
 	major,minor,patch = tuple(int(i) for i in output.split("."))
 	if major != 8 or minor > 3:
+		context.Result(output+" (bad version)")
 		# bad version
 		return 0
 		
 	# good version
+	context.Result(output+" (good)")
 	return 1
 
 #----------------
@@ -345,7 +379,8 @@ int main(void){
 }
 """
 def CheckTk(context):
-	return CheckExtLib(context,'tk',tk_check_text)
+	return CheckExtLib(context,'tk',tcl_check_text)
+
 
 def CheckTkVersion(context):
 	keep = KeepContext(context,'TK')
@@ -397,16 +432,21 @@ if not conf.CheckFunc('isnan'):
 
 # Tcl/Tk
 
-if conf.CheckTcl() and conf.CheckTk():
-	if with_tcltk_gui and not conf.CheckTclVersion():
+if conf.CheckTcl():
+	if with_tcltk_gui and conf.CheckTclVersion():
+		if conf.CheckTk():
+			if with_tcltk_gui and not conf.CheckTkVersion():
+				without_tcltk_reason = "Require Tk version <= 8.3. See 'scons -h'"
+				with_tcltk_gui = False
+		else:
+			without_tcltk_reason = "Tk not found."
+			with_tcltk_gui = False
+	else:
 		without_tcltk_reason = "Require Tcl <= 8.3 Tcl."
 		with_tcltk_gui = False
 
-	if with_tcltk_gui and not conf.CheckTkVersion():
-		without_tcltk_reason += "Require Tk version <= 8.3. See 'scons -h'"
-		with_tcltk_gui = False
 else:
-	without_tcltk_reason = "Tcl/Tk not found."
+	without_tcltk_reason = "Tcl not found."
 	with_tcltk_gui = False
 
 # Python... obviously we're already running python, so we just need to
@@ -457,9 +497,9 @@ if need_fortran:
 			conf.env.Replace(F77=detect_fortran)
 			conf.env.Replace(F77COM='$F77 $F77FLAGS -c -o $TARGET $SOURCE')
 			conf.env.Replace(F77FLAGS='')
-			print "F77:",conf.env['F77']
-			print "F77COM:",conf.env['F77COM']
-			print "F77FLAGS:",conf.env['F77FLAGS']
+			#print "F77:",conf.env['F77']
+			#print "F77COM:",conf.env['F77COM']
+			#print "F77FLAGS:",conf.env['F77FLAGS']
 			fortran_builder = Builder(
 				action='$F77COM'
 				, suffix='.o'

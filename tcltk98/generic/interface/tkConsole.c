@@ -19,7 +19,13 @@
 
 #ifdef ASC_USE_TK_CONSOLE
 
-#include "tkInt.h"
+#ifndef __WIN32__
+# include <tkInt.h>
+#else
+# include <X11/Xlib.h>
+# include <tkIntXlibDecls.h>
+# include <tk.h>
+#endif
 
 /*
  * A data structure of the following type holds information for each console
