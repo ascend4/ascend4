@@ -8,7 +8,7 @@ Release:	0.jdpipe
 
 License:	GPL
 Group:		Applications/Graphics
-Source:		%{name}-%{version}.tar.gz
+Source:		%{name}-%{version}.tar.bz2
 URL:		http://inkscape.sourceforge.net/
 
 Prefix:		%{_prefix}
