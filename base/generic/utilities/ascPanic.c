@@ -35,7 +35,14 @@ static PanicCallbackFunc f_panic_callback_func = NULL;
 	Asc_PanicSetCallback().  If NULL (the default), nothing is called.
 */
 
-#ifdef __WIN32__
+/*
+	disable the windows message box...
+#if defined(__WIN32__)
+# define USE_WIN32_FATAL_MSGBOX
+#endif
+*/
+
+#ifdef USE_WIN32_FATAL_MSGBOX
 static int f_display_MessageBox = TRUE;
 /**< On Windows only, flag to enable/disable display of the MessageBox
 	in Asc_Panic().
@@ -107,7 +114,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   }
 
   /* Display msg in a MessageBox under Windows unless turned off */
-#if defined(__WIN32__) && !defined(__MINGW32__)
+#ifdef USE_WIN32_FATAL_MSGBOX
   if (FALSE != f_display_MessageBox) {
     (void)MessageBeep(MB_ICONEXCLAMATION);
     MessageBox(NULL, msg, "Fatal Error in ASCEND",
@@ -142,7 +149,7 @@ PanicCallbackFunc Asc_PanicSetCallback(PanicCallbackFunc func)
 
 void Asc_PanicDisplayMessageBox(int is_displayed)
 {
-#ifdef __WIN32__
+#ifdef USE_WIN32_FATAL_MSGBOX
   f_display_MessageBox = is_displayed;
 #else
   UNUSED_PARAMETER(is_displayed);

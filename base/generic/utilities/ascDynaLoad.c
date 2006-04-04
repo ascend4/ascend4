@@ -25,22 +25,20 @@
  */
 
 /*
-	Small changes made by Michael Moore (mdm@cis.ohio-state.edu)
-	December 24th, 1993.
-	The tcl sections ripped out by Kirk Abbott (ka0p@edrc.cmu.edu)
-	September 3rd, 1994.
-	Removed OSF, Ultrix sections from this file -- johnpye, Mon 2 Jan 2005
+	This file *should* support unix/linux-style systems (dlfcn.h)
+	and Windows.
 
-	To date the architectures supported are:
-		sun - pure sunos, defines also handle MACH.
-		solaris,
-		hpux
-		sgi
-		Windows
-
-	Remember that under most systems, profiling does not work
-	with dynamic libraries. !
+	Note that under many systems, profiling does not work
+	with dynamic libraries!
 */
+
+
+
+
+#ifdef DYNAMIC_PACKAGES
+
+
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -185,15 +183,12 @@ void AscCheckDuplicateLoad(CONST char *path)
   }
 }
 
-/*---------------------------------------
-  PLATFORM-SPECIFIC STUFF
-*/
-
-#ifdef __WIN32__
-# include <windows.h>
-/*
+/*-----------------------------------------------
 	WINDOWS
 */
+#if defined(__WIN32__)
+# include <windows.h>
+
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -231,8 +226,18 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
 }
+
+# define UNLOAD FreeLibrary
+# define DLLSYM GetProcAddress
+# define DLL_CAST (HINSTANCE)
+# define ASC_DLERRSTRING "unknown"
+# define UNLOAD_SUCCESS TRUE
+
 #endif /* __WIN32__ */
 
+/*-----------------------------------------------
+	UNIX/LINUX
+*/
 /*
 	SOLARIS and LINUX
 */
@@ -241,21 +246,14 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 	From a quick Google, it appears that AIX 5.1 now provides dlfcn.h,
 	so I'll remove the code that was emulating it here. -- johnpye
 */
-#if defined(sun) || defined(linux) || defined(__unix__) || defined(solaris) || defined(_AIX) || defined(_SGI_SOURCE)
+#if defined(sun) || defined(linux) || defined(__unix__) \
+	|| defined(solaris) || defined(_AIX) || defined(_SGI_SOURCE)
 # ifndef MACH
 #  include <dlfcn.h>
 # else
 #  error "MACH unsupported"
 # endif
 
-/*
-	R.I.P. OSF
-	http://en.wikipedia.org/wiki/Open_Software_Foundation
-*/
-
-/*
-	POSIX-type systems (see above)
-*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -293,23 +291,28 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
 }
 
+# define UNLOAD dlclose
+# define DLLSYM dlsym
+# define DLL_CAST (void *)
+# define ASC_DLERRSTRING dlerror()
+# define UNLOAD_SUCCESS 0
+
 #endif /* posix: linux, unix, solaris,sgi */
 
+/*-----------------------------------------------
+	HPUX
+*/
 #ifdef __hpux
 /*
- * Modified to work with HP/UX 9.X Operating System.
- * Michael Moore (mdm@cis.ohio-state.edu)
- * December 24th, 1993.
- * Further modified by Kirk Abbott (ka0p@edrc.cmu.edu)
- * to fit in with the ASCEND system.
- */
+	Kirk Abbott last fiddled with the following, which was
+	originally put in place my Michael Moore for an
+	HP/UX 9.X Operating Sys back in 1993. Arrr. No idea if
+	it still works.
+*/
 
 # include <dl.h>
 # include <errno.h>
 
-/*
-	HPUX
-*/
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 # define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
@@ -354,39 +357,23 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
 }
 
-#endif /* __hpux */
-
-/*
-	R.I.P. Ultrix
-	http://en.wikipedia.org/wiki/Ultrix
-*/
-
-#ifndef ASCDL_OK
-# error "Unable to build ascDynaload.o. Turn off strict ansi cc options."
-#endif /* adlok */
-#ifdef __hpux
 # define UNLOAD shl_unload
 # define DLL_CAST (shl_t)
 # define ASC_DLERRSTRING "NULL definition"
 # define UNLOAD_SUCCESS 0
-#endif /* __hpux */
-#ifdef __WIN32__
-# define UNLOAD FreeLibrary
-# define DLLSYM GetProcAddress
-# define DLL_CAST (HINSTANCE)
-# define ASC_DLERRSTRING "unknown"
-# define UNLOAD_SUCCESS TRUE
-#endif /* __WIN32__ */
-#ifndef UNLOAD
-# define UNLOAD dlclose
-# define DLLSYM dlsym
-# define DLL_CAST (void *)
-# define ASC_DLERRSTRING dlerror()
-# define UNLOAD_SUCCESS 0
-#endif /* UNLOAD */
 
-/*--------------------------------------
-  MORE MOSTLY-GENERIC STUFF
+#endif /* __hpux */
+
+/*-----------------------------------------------
+	Did we get something from the above?
+*/
+
+#if !defined(ASCDL_OK)
+# error "Unable to define an Asc_DynamicLoad function. Check your compiler options and installed system libraries."
+#endif
+
+/**-----------------------------------------------
+	DYNAMIC UNLOADING
 */
 
 int Asc_DynamicUnLoad(CONST char *path)
@@ -413,7 +400,9 @@ int Asc_DynamicUnLoad(CONST char *path)
   return (retval == UNLOAD_SUCCESS) ? 0 : retval;
 }
 
-
+/**-----------------------------------------------
+	DYNAMIC VARIABLE LINKING
+*/
 void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
 {
   void *dlreturn;
@@ -467,7 +456,9 @@ void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
   return symreturn;
 }
 
-
+/**-----------------------------------------------
+	DYNAMIC FUNCTION LINKING
+*/
 DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
 {
   void *dlreturn;
@@ -519,3 +510,9 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
   }
   return symreturn;
 }
+
+
+
+#endif
+
+
