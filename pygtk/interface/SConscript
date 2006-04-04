@@ -80,10 +80,12 @@ env.Depends(swiglib,'ascend.py')
 
 env.SubstInFile(source='config.py.in')
 
+ascendcmd = env.SubstInFile(source='ascend.in')
+
 #---------------------------------------------
 # INSTALLATION
 
-env.Install(env['INSTALL_BIN'],'ascend')
+env.InstallProgram(env['INSTALL_BIN'],ascendcmd)
 
 import glob
 pythonfiles = glob.glob("*.py")

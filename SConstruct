@@ -205,10 +205,13 @@ print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
 
 subst_dict = {
 	'@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
-	, '@GLADE_FILE@':'glade/ascend.glade'
+	, '@GLADE_FILE@':'ascend.glade'
 	, '@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
-	, '@ASCEND_ICON@':'glade/ascend.png'
+	, '@ASCEND_ICON@':'ascend.png'
 	, '@HELP_ROOT@':''
+	, '@INSTALL_DATA@':env['INSTALL_DATA']
+	, '@INSTALL_BIN@':env['INSTALL_BIN']
+	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 }
 
 if env['WITH_LOCAL_HELP']:
@@ -636,6 +639,25 @@ def TOOL_SUBST(env):
 TOOL_SUBST(env)
 
 #------------------------------------------------------
+# Recipe for 'CHMOD' ACTION
+
+import SCons
+from SCons.Script.SConscript import SConsEnvironment
+SConsEnvironment.Chmod = SCons.Action.ActionFactory(os.chmod,
+        lambda dest, mode: 'Chmod("%s", 0%o)' % (dest, mode))
+
+def InstallPerm(env, dest, files, perm):
+    obj = env.Install(dest, files)
+    for i in obj:
+        env.AddPostAction(i, env.Chmod(str(i), perm))
+
+SConsEnvironment.InstallPerm = InstallPerm
+
+# define wrappers
+SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755)
+SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
+
+#------------------------------------------------------
 # SUBDIRECTORIES....
 
 
@@ -690,4 +712,3 @@ install_dirs = [env['INSTALL_BIN']]+[env['INSTALL_DATA']]
 
 # TODO: add install options
 env.Alias('install',install_dirs)
-
