@@ -43,7 +43,7 @@ scons %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
-scons INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} install
+scons INSTALL_PREFIX=%{_buildroot}%{_prefix} INSTALL_DATA=%{_buildroot}%{_datadir} INSTALL_BIN=%{_buildroot}%{_bindir} install
 
 %clean
 rm -rf %{buildroot}
