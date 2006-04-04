@@ -639,25 +639,6 @@ def TOOL_SUBST(env):
 TOOL_SUBST(env)
 
 #------------------------------------------------------
-# Recipe for 'CHMOD' ACTION
-
-import SCons
-from SCons.Script.SConscript import SConsEnvironment
-SConsEnvironment.Chmod = SCons.Action.ActionFactory(os.chmod,
-        lambda dest, mode: 'Chmod("%s", 0%o)' % (dest, mode))
-
-def InstallPerm(env, dest, files, perm):
-    obj = env.Install(dest, files)
-    for i in obj:
-        env.AddPostAction(i, env.Chmod(str(i), perm))
-
-SConsEnvironment.InstallPerm = InstallPerm
-
-# define wrappers
-SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755)
-SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
-
-#------------------------------------------------------
 # SUBDIRECTORIES....
 
 
@@ -712,3 +693,8 @@ install_dirs = [env['INSTALL_BIN']]+[env['INSTALL_DATA']]
 
 # TODO: add install options
 env.Alias('install',install_dirs)
+
+#------------------------------------------------------
+# CREATE the SPEC file for generation of RPM packages
+
+env.SubsInFile('ascend.spec.in')
