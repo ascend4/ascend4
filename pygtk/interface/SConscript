@@ -80,3 +80,17 @@ env.Depends(swiglib,'ascend.py')
 
 env.SubstInFile(source='config.py.in')
 
+#---------------------------------------------
+# INSTALLATION
+
+env.Install(env['INSTALL_BIN'],'ascend')
+
+import glob
+pythonfiles = glob.glob("*.py")
+
+env.Install(env['INSTALL_DATA']+"/ascend/",pythonfiles)
+
+gladefiles = glob.glob("glade/*")
+env.Install(env['INSTALL_DATA']+"/ascend/glade/",gladefiles)
+
+env.Install(env['INSTALL_DATA']+"/ascend/",swiglib)

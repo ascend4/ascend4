@@ -153,6 +153,30 @@ opts.Add(
 	'TK_LIB'
 	,"Name of Tk lib (eg 'tk' or 'tk83')"
 	,'tk'
+)	
+
+opts.Add(
+	'INSTALL_PREFIX'
+	,'Root location for installed files'
+	,'/usr'
+)
+
+opts.Add(
+	'INSTALL_BIN'
+	,'Location to put binaries during installation'
+	,"$INSTALL_PREFIX/bin"
+)
+
+opts.Add(
+	'INSTALL_DATA'
+	,'Location to put data files during installation'
+	,"$INSTALL_PREFIX/share"
+)
+
+opts.Add(
+	'INSTALL_INCLUDE'
+	,'Location to put header files during installation'
+	,"$INSTALL_PREFIX/include"
 )
 
 # TODO: OTHER OPTIONS?
@@ -662,4 +686,8 @@ env.SConscript(['linpack/SConscript'],'env')
 #------------------------------------------------------
 # INSTALLATION
 
+install_dirs = [env['INSTALL_BIN']]+[env['INSTALL_DATA']]
+
 # TODO: add install options
+env.Alias('install',install_dirs)
+
