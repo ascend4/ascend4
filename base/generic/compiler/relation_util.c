@@ -2084,6 +2084,7 @@ void RelationLoadDoubles(struct gl_list_t *varlist, double *vars)
   }
 }
 
+/* only called on token relations. */
 int RelationCalcResidualBinary(CONST struct relation *r, double *res)
 {
   double *vars;
@@ -2172,12 +2173,25 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res)
     safe_error_to_stderr(&not_safe);
     return not_safe;
   } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
-    FPRINTF(ASCERR, "reltype not implemented yet\n");
+    if (reltype == e_blackbox)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidualPostfixSafe:\n");
+      FPRINTF(ASCERR, "blackbox not implemented yet.\n");
+    }
+    if (reltype == e_glassbox)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidualPostfixSafe:\n");
+      FPRINTF(ASCERR, "glassbox not implemented yet.\n");
+    }
+    if (reltype == e_opcode)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidualPostfixSafe:\n");
+      FPRINTF(ASCERR, "opcode not supported.\n");
+    }
     not_safe = safe_problem;
     return not_safe;
   } else {
-    Asc_Panic(2, NULL, "error in RelationCalcResidualPostfix:\n"
+    Asc_Panic(2, NULL, "error in RelationCalcResidualPostfixSafe:\n"
               "reached end of routine\n");
     exit(2);/* Needed to keep gcc from whining */
   }
@@ -2227,8 +2241,21 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
     }
     return 0;
   } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
-    FPRINTF(ASCERR, "reltype not implemented yet\n");
+    if (reltype == e_blackbox)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
+      FPRINTF(ASCERR, "blackbox not implemented yet.\n");
+    }
+    if (reltype == e_glassbox)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
+      FPRINTF(ASCERR, "glassbox not implemented yet.\n");
+    }
+    if (reltype == e_opcode)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
+      FPRINTF(ASCERR, "opcode not supported.\n");
+    }
     return 1;
   } else {
     Asc_Panic(2, NULL,
@@ -2515,8 +2542,21 @@ RelationCalcResidGradSafe(struct Instance *i,
     return not_safe;
   }
   else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGradSafe %s\n",
-            "reltype not implemented");
+    if (reltype == e_blackbox)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidGradSafe:\n");
+      FPRINTF(ASCERR, "blackbox not implemented yet.\n");
+    }
+    if (reltype == e_glassbox)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidGradSafe:\n");
+      FPRINTF(ASCERR, "glassbox not implemented yet.\n");
+    }
+    if (reltype == e_opcode)
+    {
+      FPRINTF(ASCERR, "error in RelationCalcResidGradSafe:\n");
+      FPRINTF(ASCERR, "opcode not supported.\n");
+    }
     not_safe = safe_problem;
     return not_safe;
   }
