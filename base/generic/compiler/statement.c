@@ -993,6 +993,10 @@ struct Statement *CopyToModify(struct Statement *s)
   case ASSERT:
     result->v.asserts.test = CopyExprList(s->v.asserts.test);
     break;
+  case FIX:
+  case FREE:
+    result->v.fx.vars = CopyVariableList(s->v.fx.vars);
+	break;
   case IF:
     result->v.ifs.test = CopyExprList(s->v.ifs.test);
     result->v.ifs.thenblock = CopyListToModify(s->v.ifs.thenblock);
