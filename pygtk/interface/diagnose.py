@@ -16,7 +16,7 @@ AT_BOUND_TOL = 0.0001;
 class DiagnoseWindow:
 	def __init__(self,browser,block=0):
 		self.browser=browser
-		_xml = gtk.glade.XML(config.GLADE_FILE,"diagnosewin")
+		_xml = gtk.glade.XML(browser.glade_file,"diagnosewin")
 		_xml.signal_autoconnect(self)	
 
 		self.window = _xml.get_widget("diagnosewin")
