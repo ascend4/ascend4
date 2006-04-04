@@ -1,5 +1,7 @@
 import os, commands, platform, distutils.sysconfig, os.path
 
+version = "0.9.6rc0"
+
 #------------------------------------------------------
 # OPTIONS
 #
@@ -212,6 +214,7 @@ subst_dict = {
 	, '@INSTALL_DATA@':env['INSTALL_DATA']
 	, '@INSTALL_BIN@':env['INSTALL_BIN']
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
+	, '@VERSION@':version
 }
 
 if env['WITH_LOCAL_HELP']:
@@ -639,6 +642,25 @@ def TOOL_SUBST(env):
 TOOL_SUBST(env)
 
 #------------------------------------------------------
+ # Recipe for 'CHMOD' ACTION 	 
+  	 
+import SCons 	 
+from SCons.Script.SConscript import SConsEnvironment 	 
+SConsEnvironment.Chmod = SCons.Action.ActionFactory(os.chmod, 	 
+	lambda dest, mode: 'Chmod("%s", 0%o)' % (dest, mode)) 	 
+  	 
+def InstallPerm(env, dest, files, perm): 	 
+	obj = env.Install(dest, files) 	 
+	for i in obj: 	 
+		env.AddPostAction(i, env.Chmod(str(i), perm)) 	 
+  	 
+SConsEnvironment.InstallPerm = InstallPerm 	 
+  	 
+# define wrappers 	 
+SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755) 	 
+SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644) 	 
+  	 
+#------------------------------------------------------
 # SUBDIRECTORIES....
 
 
@@ -697,4 +719,4 @@ env.Alias('install',install_dirs)
 #------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages
 
-env.SubsInFile('ascend.spec.in')
+env.SubstInFile('ascend.spec.in')
