@@ -1,0 +1,12 @@
+Import('env')
+
+srcs = Split("""
+	d1mach.c
+	
+	dgbfa.f
+	dgbsl.f
+	dgefa.f
+	dgesl.f
+""")
+
+env.Library('linpack',srcs)

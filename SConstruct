@@ -19,8 +19,10 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "LINKCOM =",env['LINKCOM']
 	print "AR =",env['AR']
 	print "ARCOM =",env['ARCOM']
+	#env['AR']='link /lib'
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
+	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
 
 # Package linking option
 opts.Add(EnumOption(
@@ -139,32 +141,26 @@ opts.Add(PackageOption(
 	,None
 ))
 
-
 # TODO: OTHER OPTIONS?
-
 # TODO: flags for optimisation
-
 # TODO: turning on/off bintoken functionality
-
-# TODO: Where will the 'Makefile.bt' file be installed
-# ....
+# TODO: Where will the 'Makefile.bt' file be installed?
 
 opts.Update(env)
 opts.Save('options.cache',env)
 
 Help(opts.GenerateHelpText(env))
 
-env.Append(CPPDEFINES=env['PACKAGE_LINKING'])
-
 with_tcltk_gui = (env['WITHOUT_TCLTK_GUI']==False)
+without_tcltk_reason = "disabled by options/config.py"
 
 with_python = (env['WITHOUT_PYTHON']==False)
-without_python_reason = None
+without_python_reason = "disabled by options/config.py"
 
 with_cunit_tests = env['WITH_CUNIT_TESTS']
+without_cunit_reason = "not requested"
 
 print "SOLVERS:",env['WITH_SOLVERS']
-
 print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
 print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
 print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
@@ -190,9 +186,11 @@ env.Append(SUBST_DICT=subst_dict)
 
 import os,re
 
+need_fortran = False
+
 def get_swig_version(env):
 	cmd = env['SWIG']+' -version'
-	(cin,coutcerr) = os.popen4(cmd);
+	(cin,coutcerr) = os.popen4(cmd)
 	output = coutcerr.read()
 	
 	restr = "SWIG\\s+Version\\s+(?P<maj>[0-9]+)\\.(?P<min>[0-9]+)\\.(?P<pat>[0-9]+)\\s*$"
@@ -386,9 +384,10 @@ conf = Configure(env
 
 
 # Math library
-if not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
-	print 'Did not find math library, exiting!'
-	Exit(1)
+
+#if not conf.CheckFunc('sinh') and not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
+#	print 'Did not find math library, exiting!'
+#	Exit(1)
 
 # Where is 'isnan'?
 
@@ -434,14 +433,62 @@ if not conf.CheckSwigVersion():
 
 if with_cunit_tests:
 	if not conf.CheckCUnit():
-		print "CUnit not found. Use 'scons WITH_CUNIT_TESTS=0'"
+		without_cunit_reason = 'CUnit not found'
+
+# BLAS
+
+if conf.CheckLib('blas'):
+	print "FOUND BLAS"
+	with_local_blas = False
+	without_local_blas_reason = "Found BLAS installed on system"
+else:
+	print "DIDN'T FIND BLAS"
+	with_local_blas = True
+	need_fortran = True
+
+# FORTRAN
+
+if need_fortran:
+	conf.env.Tool('f77')
+	detect_fortran = conf.env.Detect(['g77','f77'])
+	if detect_fortran:
+		# For some reason, g77 doesn't get detected properly on MinGW
+		if not env.has_key('F77'):
+			conf.env.Replace(F77=detect_fortran)
+			conf.env.Replace(F77COM='$F77 $F77FLAGS -c -o $TARGET $SOURCE')
+			conf.env.Replace(F77FLAGS='')
+			print "F77:",conf.env['F77']
+			print "F77COM:",conf.env['F77COM']
+			print "F77FLAGS:",conf.env['F77FLAGS']
+			fortran_builder = Builder(
+				action='$F77COM'
+				, suffix='.o'
+				, src_suffix='.f'
+			)
+			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
+	else:
+		print "FORTRAN-77 required but not found"
 		Exit(1)
+else:
+	print "FORTRAN not required"
 
 # TODO: -D_HPUX_SOURCE is needed
 
 # TODO: check size of void*
 
 # TODO: detect if dynamic libraries are possible or not
+
+if platform.system()=="Windows" and env.has_key('MSVS'):
+	if not conf.CheckHeader('windows.h') and env['PACKAGE_LINKING']=='DYNAMIC_PACKAGES':
+		print "Reverting to STATIC_PACKAGES since windows.h is not available. Probably you "\
+			+"need to install the Microsoft Windows Server 2003 Platform SDK, or similar."
+		env['PACKAGE_LINKING']='STATIC_PACKAGES'
+		
+	if with_python and not conf.CheckHeader('basetsd.h'):
+		with_python = 0;
+		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
+
+conf.env.Append(CPPDEFINES=env['PACKAGE_LINKING'])
 
 conf.Finish()
 
@@ -560,7 +607,17 @@ if with_cunit_tests:
 	
 	
 else:
-	print "Skipping... CUnit tests aren't being built"
+	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
+
+#if with_tcltk_gui:
+if with_local_blas:
+	env.SConscript(['blas/SConscript'],'env')
+else:
+	print "Skipping... BLAS won't be build:", without_local_blas_reason
+
+env.SConscript(['lsod/SConscript'],'env')		
+
+env.SConscript(['linpack/SConscript'],'env')
 
 #------------------------------------------------------
 # INSTALLATION

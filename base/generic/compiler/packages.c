@@ -33,8 +33,8 @@
 	An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
 	required.
 */
-#ifndef DYNAMIC_PACKAGES
-# error "WHERE IS THE DYNAMICS PACKAGES #DEF?!"
+#if !defined(DYNAMIC_PACKAGES) && !defined(STATIC_PACKAGES) && !defined(NO_PACKAGES)
+# error "Package linking option not set!"
 #endif
 
 #include <math.h>

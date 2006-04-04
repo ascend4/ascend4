@@ -217,7 +217,7 @@ error_reporter_set_callback(
   a question of checking what your particular syntax is...
 */
 
-#if !(defined(__GNUC__) && !defined(__STRICT_ANSI__)) && !defined(HAVE_C99)
+#ifdef NO_VARIADIC_MACROS
 /* Following are only required on compilers without variadic macros: */
 
 int error_reporter_note_no_line(const char *fmt,...){
@@ -272,4 +272,4 @@ int console_debug(const char *fmt,...){
 
 	return res;
 }
-#endif
+#endif /* NO_VARIADIC_MACROS */
