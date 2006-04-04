@@ -31,10 +31,18 @@ libpath = [
 	,'../../../base/generic/utilities'
 	,'../../../base/generic/general'
 ]
-libpath.append(env['TCL_LIBPATH'])
-libpath.append(env['TK_LIBPATH'])
 
-cpppath = ['../../../base/generic']+[env['TCL_CPPPATH'], env['TK_CPPPATH']]
+if env.has_key('TCL_LIBPATH'):
+	libpath.append(env['TCL_LIBPATH'])
+if env.has_key('TK_LIBPATH'):
+	libpath.append(env['TK_LIBPATH'])
+
+cpppath = ['../../../base/generic']
+if env.has_key('TCL_CPPPATH'):
+	cpppath.append(env['TCL_CPPPATH'])
+
+if env.has_key('TK_CPPPATH'):
+	cpppath.append(env['TK_CPPPATH'])
 
 env.Program("ascend4",srcs+typelex+['Driver.c']
 	, LIBS = libs
