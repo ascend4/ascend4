@@ -34,17 +34,21 @@
 #include <tcl.h>
 #include <tk.h>
 #include <utilities/ascConfig.h>
+
 #ifndef __WIN32__
-#include <unistd.h>
+# include <unistd.h>
 #else
-#define WIN32_LEAN_AND_MEAN
-/* jds20041229 - windows.h now included in ascConfig.h.
-#include <windows.h>
-*/
-#include <locale.h>
-#include "tkConsole.h"
-#undef WIN32_LEAN_AND_MEAN
+
+/* jds20041229 - windows.h now included in ascConfig.h. */
+/* jp - no, i took it out of ascConfig.h - Apr 2005 */
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+
+# include <locale.h>
+# include "tkConsole.h"
+# undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
+
 #include <utilities/ascMalloc.h>    /* for ascshutdown */
 #include <utilities/ascPanic.h>     /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>

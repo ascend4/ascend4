@@ -40,8 +40,8 @@
  *  </pre>
  */
 
-#ifndef lsode__already_included
-#define lsode__already_included
+#ifndef ASCTK_LSODE_H
+#define ASCTK_LSODE_H
 
 extern void Asc_BLsodeIntegrate(slv_system_t sys,
                                 unsigned long start_index,
@@ -55,5 +55,5 @@ extern void Asc_BLsodeIntegrate(slv_system_t sys,
  *  works off instances of type blsode taken from blsys.
  */
 
-#endif  /* lsode__already_included */
+#endif  /* ASCTK_LSODE_H */
 

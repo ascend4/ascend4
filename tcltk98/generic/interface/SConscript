@@ -19,8 +19,10 @@ typelex = env.CFile(target='typelex.c',source='typelex.l'
 #----------------
 libs = Split("""
 	asccompiler ascpackages ascsolver ascutilities ascgeneral 
-	tcl tk
 """)
+
+libs.append(env['TCL_LIB'])
+libs.append(env['TK_LIB'])
 
 libpath = [
 	'../../../base/generic/compiler'
@@ -29,22 +31,15 @@ libpath = [
 	,'../../../base/generic/utilities'
 	,'../../../base/generic/general'
 ]
+libpath.append(env['TCL_LIBPATH'])
+libpath.append(env['TK_LIBPATH'])
+
+cpppath = ['../../../base/generic']+[env['TCL_CPPPATH'], env['TK_CPPPATH']]
 
 env.Program("ascend4",srcs+typelex+['Driver.c']
 	, LIBS = libs
-	, LIBPATH = libpath+['$LIBPATH']
-	, CPPPATH = ['../../../base/generic']
+	, LIBPATH = libpath
+	, CPPPATH = cpppath
+#	, RPATH = ["C:\\Tcl\\lib"]
 )
 
-if 0:
-	env.Program('ascend4',driver
-		, CPPPATH=cpppath
-		, LIBS=libs
-		, LIBPATH=['../../../base/generic/compiler'
-			,'../../../base/generic/packages'
-			,'../../../base/generic/solver'
-			,'../../../base/generic/utilities'
-			,'../../../base/generic/general'
-			,'.'
-		  ]
-	)

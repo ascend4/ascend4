@@ -30,13 +30,13 @@
  */
 
 #ifndef _TKCONSOLE_H
-#define _TKCONSOLE_H
+# define _TKCONSOLE_H
 
-#ifndef ASC_USE_TK_CONSOLE
-#ifdef __WIN32__
-#define ASC_USE_TK_CONSOLE
-#endif /* __WIN32__ */
-#endif /* ! ASC_USE_TK_CONSOLE */
+# ifndef ASC_USE_TK_CONSOLE
+#  ifdef __WIN32__
+#   define ASC_USE_TK_CONSOLE
+#  endif /* __WIN32__ */
+# endif /* ! ASC_USE_TK_CONSOLE */
 
 extern void TkConsoleCreate(void);
 /**<
