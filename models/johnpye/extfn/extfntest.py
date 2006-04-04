@@ -22,7 +22,7 @@ t = L.findType("test_extfntest")
 sim = t.getSimulation("S")
 
 print "\n--------------------------\n"
-raise RuntimeError("stop")
+
 #--------------------------------
 print "\n\n\n\nLISTING EXTERNAL METHODS...\n\n\n"
 print chr(27)+"[31;1mEXTERNAL METHODS (!):"+chr(27)+"[0m"
