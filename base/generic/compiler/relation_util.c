@@ -2046,6 +2046,21 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
       return temp;
     }
   }
+  if (reltype == e_blackbox)
+  {
+    FPRINTF(ASCERR, "error in CalcRelationNominal:\n");
+    FPRINTF(ASCERR, "blackbox not implemented yet. Assuming 1.0\n");
+  }
+  if (reltype == e_glassbox)
+  {
+    FPRINTF(ASCERR, "error in CalcRelationNominal:\n");
+    FPRINTF(ASCERR, "glassbox not implemented yet. Assuming 1.0\n");
+  }
+  if (reltype == e_opcode)
+  {
+    FPRINTF(ASCERR, "error in CalcRelationNominal:\n");
+    FPRINTF(ASCERR, "opcode not supported.\n");
+  }
   glob_rel = NULL;
   return (double)1;
 }

@@ -181,12 +181,12 @@ extern int CreateUserFunction(CONST char *name,
  *
  *  @param name Name of the function being added (or updated).
  *  @param init Pointer to initialisation function, or NULL if none.
- *  @param value Pointer to a function pointer to the evaluation function,
+ *  @param value array of evaluation function pointers,
  *               or NULL if none.
- *  @param deriv Pointer to a function pointer to the first partial
- *               derivative function, or NULL if none.
- *  @param deriv2 Pointer to a function pointer to the second derivative
- *                function, or NULL if none.
+ *  @param deriv array of first partial
+ *               derivative functions, or NULL if none.
+ *  @param deriv2 array of second derivative
+ *                functions, or NULL if none.
  *  @return Returns 0 if the function was successfully added,
  *          non-zero otherwise.
  *
