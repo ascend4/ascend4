@@ -113,6 +113,8 @@ class Browser:
 		if config.ASCEND_ICON:
 			_icon = gtk.Image()
 			_icon.set_from_file(config.ASCEND_ICON)
+			print "ASCEND_ICON="+config.ASCEND_ICON
+			print "_icon="+repr(_icon)
 			self.icon = _icon.get_pixbuf()		
 		
 		#-------------------
