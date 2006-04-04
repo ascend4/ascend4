@@ -2,7 +2,6 @@ import ascend
 import time
 import gtk
 import gtk.glade
-import config
 
 class PythonSolverReporter(ascend.SolverReporter):
 	def __init__(self,browser):
@@ -41,7 +40,7 @@ class PopupSolverReporter(PythonSolverReporter):
 	def __init__(self,browser,numvars):
 		PythonSolverReporter.__init__(self,browser)
 
-		_xml = gtk.glade.XML(config.GLADE_FILE,"solverstatusdialog")
+		_xml = gtk.glade.XML(browser.glade_file,"solverstatusdialog")
 		_xml.signal_autoconnect(self)
 
 		self.window = _xml.get_widget("solverstatusdialog")

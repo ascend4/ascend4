@@ -78,6 +78,14 @@ class Browser:
 		parser.add_option("-m", "--model"
 			,action="store", type="string", dest="model"
 			,help="specify the model to instantiate upon loading modules")		
+
+		parser.add_option("--pygtk-assets"
+			,action="store", type="string", dest="assetsdir"
+			,help="override the configuration value for the location of assets"\
+				+" required by PyGTK for the ASCEND GUI, optional"
+			,default=config.PYGTK_ASSETS
+		)
+
 		(options, args) = parser.parse_args()
 
 		#print "OPTIONS_______________:",options
@@ -112,16 +120,17 @@ class Browser:
 
 		if config.ASCEND_ICON:
 			_icon = gtk.Image()
-			_icon.set_from_file(config.ASCEND_ICON)
-			print "ASCEND_ICON="+config.ASCEND_ICON
+			_icon.set_from_file(options.assetsdir+config.ASCEND_ICON)
+			print "ASCEND_ICON="+options.assetsdir+config.ASCEND_ICON
 			print "_icon="+repr(_icon)
 			self.icon = _icon.get_pixbuf()		
 		
 		#-------------------
 		# Set up the window and main widget actions
 
-		print "GLADE_FILE:",config.GLADE_FILE
-		glade = gtk.glade.XML(config.GLADE_FILE,"browserwin")
+		self.glade_file = options.assetsdir+config.GLADE_FILE
+		print "GLADE_FILE:",self.glade_file
+		glade = gtk.glade.XML(self.glade_file,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
 		if self.icon:
@@ -208,7 +217,7 @@ class Browser:
 		# pixbufs for solver_var status
 
 		self.fixedimg = gtk.Image()
-		self.fixedimg.set_from_file('glade/locked.png')
+		self.fixedimg.set_from_file(options.assetsdir+'locked.png')
 
 		self.iconstatusunknown = None
 		self.iconfixed = self.fixedimg.get_pixbuf()
@@ -242,22 +251,22 @@ class Browser:
 
 		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
 		_img = gtk.Image()
-		_img.set_from_file('glade/unlocked.png')
+		_img.set_from_file(options.assetsdir+'unlocked.png')
 		self.freemenuitem.set_image(_img)
 
 		self.plotmenuitem = gtk.ImageMenuItem("P_lot",True);
 		_img = gtk.Image()
-		_img.set_from_file('glade/plot.png')
+		_img.set_from_file(options.assetsdir+'plot.png')
 		self.plotmenuitem.set_image(_img)
 
 		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
 		_img = gtk.Image()
-		_img.set_from_file('glade/properties.png')
+		_img.set_from_file(options.assetsdir+'properties.png')
 		self.propsmenuitem.set_image(_img)
 
 		self.observemenuitem = gtk.ImageMenuItem("_Observe",True);
 		_img = gtk.Image()
-		_img.set_from_file('glade/observe.png')
+		_img.set_from_file(options.assetsdir+'observe.png')
 		self.observemenuitem.set_image(_img)
 
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
@@ -982,7 +991,7 @@ class Browser:
 		self.autotoggle.set_active(self.is_auto)
 
 	def on_help_about_click(self,*args):
-		_xml = gtk.glade.XML(config.GLADE_FILE,"aboutdialog")
+		_xml = gtk.glade.XML(self.glade_file,"aboutdialog")
 		_about = _xml.get_widget("aboutdialog")
 		_about.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 		_about.set_transient_for(self.window);
@@ -1003,7 +1012,7 @@ class Browser:
 		if name==None:
 			name="New Observer"
 
-		_xml = gtk.glade.XML(config.GLADE_FILE,"observervbox");
+		_xml = gtk.glade.XML(self.glade_file,"observervbox");
 		_label = gtk.Label();
 		_label.set_text(name)
 		_tab = self.maintabs.append_page(_xml.get_widget("observervbox"),_label);

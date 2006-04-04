@@ -26,8 +26,13 @@ else
     bin=$python
 fi
 
-dir=`dirname $0`
-cmd="$bin $dir/gtkbrowser.py $args"
+if [ "x$ASC_DEVELOPING" != "x" ]; then
+	# set the 'ASC_DEVELOPING' environment variable
+	# if you don't want to run ASCEND from the installed location
+	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ $args"
+else
+	cmd="$bin /home/john/share/ascend/gtkbrowser.py $args"
+fi
 
 $cmd
 
