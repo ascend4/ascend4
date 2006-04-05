@@ -25,8 +25,10 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <assert.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPanic.h"
+
+#include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
+
 #include "assertimpl.h"
 
 enum assert_status_t g_assert_status = ast_passed;

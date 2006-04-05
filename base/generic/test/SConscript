@@ -1,29 +1,23 @@
 Import('env')
 
-env.Program('test','test_ascend_base.c'
+testsrcs = ['#test/'+i for i in Split("""
+  assertimpl.c
+  printutil.c
+  redirectStdStreams.c
+""")]
+
+basesrcs = ['test_ascend_base.c']
+
+srcs = []
+for dir in ['general','utilities','solver']:
+	srcs += ['#base/generic/'+dir+'/test/'+i for i in env['TESTSRCS_'+dir.upper()]]
+
+env.Program('test',srcs+basesrcs
 	, CPPPATH = [
 		'#test'
 		, '#base/generic'
 		, env['CUNIT_CPPPATH']
 	  ]
-	, LIBS = [
-		'cunit'
-		, 'asctestsolver'
-		, 'asctestgeneral'
-		, 'asctestutilities'
-		, 'asctest'
-		, 'ascsolver'
-		, 'ascgeneral'
-		, 'ascutilities'
-	  ]
-	, LIBPATH = [
-		env['CUNIT_LIBPATH']
-		, '#base/generic/solver/test'
-		, '#base/generic/utilities/test'
-		, '#base/generic/general/test'
-		, '#base/generic/solver'
-		, '#base/generic/utilities'
-		, '#base/generic/general'
-		, '#test'
-	  ]
+	, LIBS = ['ascutilities','ascgeneral','ascsolver','asccompiler','ascpackages','asctest','m','cunit','dl']
+	, LIBPATH = ['#base/generic/utilities', '#base/generic/general', '#base/generic/solver', '#base/generic/compiler', '#base/generic/packages', '#test', env['CUNIT_LIBPATH']]
 )

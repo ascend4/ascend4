@@ -24,12 +24,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "utilities/ascConfig.h"
-#include "utilities/ascPrintType.h"
-#include "utilities/ascPrint.h"
-#include "compiler/redirectFile.h"
+
+#include <utilities/ascConfig.h>
+#include <utilities/ascPrintType.h>
+#include <utilities/ascPrint.h>
+#include <compiler/redirectFile.h>
 
 #define f_vtable_name "asc_test_vtable"
+
 static struct Asc_PrintVTable f_vtable = {f_vtable_name, vfprintf, fflush, NULL};
 static int f_vtable_registered = FALSE;
 
