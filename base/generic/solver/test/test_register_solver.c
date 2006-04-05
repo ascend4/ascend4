@@ -36,9 +36,10 @@ CU_ErrorCode test_register_solver(void)
   /* for new tests, add the test registration call to the following sequence: */
 
   /* solver/bnd.c */
-  result = test_register_solver_bnd();
+  /* result = test_register_solver_bnd();
   if (CUE_SUCCESS != result)
     return result;
+  */
 
   /* solver/slv_common.c */
   result = test_register_solver_slv_common();

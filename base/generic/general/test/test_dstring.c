@@ -22,12 +22,14 @@
  */
 
 #include <string.h>
+#include <CUnit/CUnit.h>
+
 #include <utilities/ascConfig.h>
 #include <general/dstring.h>
 #include <utilities/ascMalloc.h>
-#include "CUnit/CUnit.h"
+
 #include "test_dstring.h"
-#include "assertimpl.h"
+#include <assertimpl.h>
 
 static void test_dstring(void)
 {

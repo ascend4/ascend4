@@ -1,4 +1,6 @@
 #include <stdio.h>
+
+#include <utilities/ascConfig.h>
 #include "redirectFile.h"
 FILE *g_ascend_errors=NULL;
 FILE *g_ascend_warnings=NULL;

@@ -112,7 +112,7 @@ opts.Add(PackageOption(
 opts.Add(PackageOption(
 	'CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,"off"
+	,"/usr/local/lib"
 ))
 
 # Where are the Tcl includes?
@@ -327,7 +327,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 #	print "TryLink with LIBPATH="+str(context.env['LIBPATH'])
 
 	if not context.env.has_key(varprefix+'_LIB'):
-		context.env.AppendUnique(LIBS=libname)
+		context.env.Append(LIBS=libname)
 
 	is_ok = context.TryLink(text,ext)
 	
@@ -346,7 +346,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 # CUnit test
 
 cunit_test_text = """
-#include <CUnit/Cunit.h>
+#include <CUnit/CUnit.h>
 int maxi(int i1, int i2){
 	return (i1 > i2) ? i1 : i2;
 }
@@ -364,10 +364,7 @@ int main(void){
 """
 
 def CheckCUnit(context):
-	return context.CheckExtLib(context
-		,'cunit'
-		,cunit_test_text
-	)
+	return CheckExtLib(context,'cunit',cunit_test_text)
 
 #----------------
 # Tcl test
