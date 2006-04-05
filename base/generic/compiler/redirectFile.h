@@ -36,10 +36,10 @@
  */
 
 /*  ChangeLog
- *  
+ *
  *  10/13/2005  Added Asc_RedirectCompilerStreams()  (J.D. St.Clair)
  */
-  
+
 /** @file
  *  File redirection for ascend.
  *  <pre>
@@ -48,8 +48,8 @@
  *  </pre>
  */
 
-#ifndef __redirectFile_h_seen_
-#define __redirectFile_h_seen_
+#ifndef ASC_REDIRECTFILE_H
+#define ASC_REDIRECTFILE_H
 
 extern FILE *g_ascend_errors;       /**< File for error messages.  Default is stderr. */
 extern FILE *g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
@@ -63,5 +63,5 @@ extern void Asc_RedirectCompilerStreams(FILE *errfile,
                                         FILE *infofile);
 /**< Set specific files/streams to receive ASCEND messages. */
 
-#endif /* __redirectFile_h_seen_ */
+#endif /* ASC_REDIRECTFILE_H*/
 
