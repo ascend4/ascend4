@@ -48,8 +48,14 @@ scons %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 scons INSTALL_PREFIX=%{buildroot}%{_prefix} INSTALL_DATA=%{buildroot}%{_datadir} INSTALL_BIN=%{buildroot}%{_bindir} install
-install -m 644 -o root pygtk/interface/ascend.desktop %{buildroot}%{_datadir}/applications/
-install -m 644 -o root pygtk/interface/ascend.lang %{buildroot}%{_datadir}/gtksourceview-1.0/language-specs/
+
+pushd pygtk/interface/gnome
+install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
+install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
+install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
+install -o root -g root -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
+install -o root -g root -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+popd
 
 %clean
 rm -rf %{buildroot}
