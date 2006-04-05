@@ -43,11 +43,11 @@ fields from Architecture to (computational) Zoology.
 %setup -q
 
 %build
-scons %{?_smp_mflags}
+scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models
 
 %install
 rm -rf %{buildroot}
-scons DEFAULT_ASCENDLIBRARY=~/ascdata:%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} install
+scons DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} install
 
 pushd pygtk/interface/gnome
 install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
