@@ -40,14 +40,14 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 %prep
-%setup
+%setup -q
 
 %build
 scons %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
-scons INSTALL_PREFIX=%{buildroot}%{_prefix} INSTALL_DATA=%{buildroot}%{_datadir} INSTALL_BIN=%{buildroot}%{_bindir} install
+scons INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} install
 
 pushd pygtk/interface/gnome
 install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
@@ -60,12 +60,25 @@ popd
 %clean
 rm -rf %{buildroot}
 
+%post
+update-desktop-database
+update-mime-database /usr/share/mime
+
+%postun
+update-desktop-database
+update-mime-database /usr/share/mime
+
 %files
 %defattr(-, root, root)
-%doc INSTALL tcltk98/license.txt
+%doc INSTALL tcltk98/release_notes/license.txt
 %{_bindir}/ascend
 %{_datadir}/applications/ascend.desktop
 %{_datadir}/ascend/*
+%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+%{_datadir}/icons/ascend-app.png
+%{_datadir}/icons/hicolor/64x64/ascend.png
+%{_datadir}/mime/packages/ascend.xml
+
 
 %changelog
 * Thu Apr 04 2006 John Pye <john.pye@student.unsw.edu.au>
