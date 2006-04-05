@@ -31,7 +31,7 @@ if [ "x$ASC_DEVELOPING" != "x" ]; then
 	# if you don't want to run ASCEND from the installed location
 	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ $args"
 else
-	cmd="$bin /home/john/share/ascend/gtkbrowser.py $args"
+	cmd="$bin /usr/local/share/ascend/gtkbrowser.py $args"
 fi
 
 $cmd

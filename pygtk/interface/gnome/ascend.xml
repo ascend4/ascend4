@@ -6,5 +6,9 @@
          <glob pattern="*.a4l"/>
          <glob pattern="*.a4c"/>
   </mime-type>
+  <mime-type type="text/x-ascend-script">
+         <comment xml:lang="en">ASCEND script</comment>
+         <glob pattern="*.a4s"/>
+  </mime-type>
 </mime-info>
 

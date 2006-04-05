@@ -1,0 +1,15 @@
+Import('env')
+
+import glob
+
+a4c = glob.glob("*.a4c")
+a4s = glob.glob("*.a4s")
+
+env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models",a4c+a4s)
+
+subdirs = ['johnpye']
+
+for subdir in subdirs:
+	files = glob.glob("johnpye/*.a4c")
+
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models/"+subdir,files)

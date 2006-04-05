@@ -1,10 +1,10 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=ASCEND IV
-GenericName=ASCEND IV
+Name=ASCEND
+GenericName=ASCEND
 Comment=Solve difficult simulation problems
-TryExec=ascend4
-Exec=ascend4
+TryExec=ascend
+Exec=ascend
 StartupNotify=true
 Terminal=true
 Type=Application
