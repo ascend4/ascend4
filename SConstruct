@@ -160,7 +160,7 @@ opts.Add(
 opts.Add(
 	'INSTALL_PREFIX'
 	,'Root location for installed files'
-	,'/usr'
+	,'/usr/local'
 )
 
 opts.Add(
@@ -704,15 +704,18 @@ if with_cunit_tests:
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
 
-#if with_tcltk_gui:
-if with_local_blas:
-	env.SConscript(['blas/SConscript'],'env')
-else:
-	print "Skipping... BLAS won't be build:", without_local_blas_reason
+if with_tcltk_gui:
+	if with_local_blas:
+		env.SConscript(['blas/SConscript'],'env')
+	else:
+		print "Skipping... BLAS won't be build:", without_local_blas_reason
 
-env.SConscript(['lsod/SConscript'],'env')		
+	env.SConscript(['lsod/SConscript'],'env')		
 
-env.SConscript(['linpack/SConscript'],'env')
+	env.SConscript(['linpack/SConscript'],'env')
+
+# the models directory only needs to be processed for installation
+env.SConscript(['models/SConscript'],'env')
 
 #------------------------------------------------------
 # INSTALLATION
