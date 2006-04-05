@@ -181,6 +181,19 @@ opts.Add(
 	,"$INSTALL_PREFIX/include"
 )
 
+if platform.system()=="Windows":
+	default_install_assets = "glade/"
+	icon_extension = '.png'
+else:
+	default_install_assets = "$INSTALL_DATA/ascend/glade/"
+	icon_extension = '.svg'
+
+opts.Add(
+	'PYGTK_ASSETS'
+	,'Default location for Glade assets (placed in pygtk/interface/config.py)'
+	,default_install_assets
+)
+
 opts.Add(
 	'INSTALL_ROOT'
 	,'For use by RPM only: location of %{buildroot} during rpmbuild'
@@ -215,11 +228,12 @@ subst_dict = {
 	'@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
 	, '@GLADE_FILE@':'ascend.glade'
 	, '@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
-	, '@ASCEND_ICON@':'ascend.png'
+	, '@ICON_EXTENSION@':icon_extension
 	, '@HELP_ROOT@':''
 	, '@INSTALL_DATA@':env['INSTALL_DATA']
 	, '@INSTALL_BIN@':env['INSTALL_BIN']
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
+	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 }
 

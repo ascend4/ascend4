@@ -43,7 +43,7 @@ class Preferences:
 		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(\d+)\+(\d+)\s*$');
 
 		_m = _p.match(_g)
-		print "MATCH: ",_m.groups()
+		#print "MATCH: ",_m.groups()
 		
 		_i = [int(i) for i in _m.groups()]
 		return tuple(_i)
