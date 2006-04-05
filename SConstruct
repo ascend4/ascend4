@@ -105,14 +105,14 @@ opts.Add(BoolOption(
 opts.Add(PackageOption(
 	'CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
-	,"off"
+	,None
 ))
 
 # Where are the CUnit libraries?
 opts.Add(PackageOption(
 	'CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,"/usr/local/lib"
+	,None
 ))
 
 # Where are the Tcl includes?
