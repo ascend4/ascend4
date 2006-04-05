@@ -43,7 +43,7 @@ Section "ASCEND (required)"
   
   ; Put file there
   File "_ascend.dll"
-  File "ascend.bat"
+
   File "config.py"
   File "*.py"
   SetOutPath $INSTDIR\glade
@@ -58,6 +58,24 @@ Section "ASCEND (required)"
   File "ascend.syn"
 
   WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
+
+  ClearErrors
+  FileOpen $0 $INSTDIR\ascend.bat w
+  IfErrors done
+  FileWrite $0 "@echo off"
+  FileWriteByte $0 "13"
+  FileWriteByte $0 "10"
+  FileWrite $0 "cd "
+  FileWrite $0 $INSTDIR 
+  FileWriteByte $0 "13"
+  FileWriteByte $0 "10"
+  FileWrite $0 "c:\Python24\python gtkbrowser.py"
+  FileWriteByte $0 "13"
+  FileWriteByte $0 "10"
+
+  FileClose $0
+  done:
+
   
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\ASCEND "Install_Dir" "$INSTDIR"

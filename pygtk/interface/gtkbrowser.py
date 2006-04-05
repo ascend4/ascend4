@@ -56,8 +56,6 @@ ESCAPE_KEY = 65307
 
 HELP_ROOT = None
 
-ASCEND_ICON = 'glade/ascend.png'
-
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
 #======================================
@@ -80,7 +78,7 @@ class Browser:
 			,help="specify the model to instantiate upon loading modules")		
 
 		parser.add_option("--pygtk-assets"
-			,action="store", type="string", dest="assetsdir"
+			,action="store", type="string", dest="assets_dir"
 			,help="override the configuration value for the location of assets"\
 				+" required by PyGTK for the ASCEND GUI, optional"
 			,default=config.PYGTK_ASSETS
@@ -101,6 +99,8 @@ class Browser:
 		#--------
 		# initialise ASCEND
 
+		self.assets_dir = options.assets_dir
+		
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
 		
 		if _prefpath:
@@ -118,18 +118,16 @@ class Browser:
 		#--------
 		# Prepare the ASCEND icon
 
-		if config.ASCEND_ICON:
+		if config.ICON_EXTENSION:
 			_icon = gtk.Image()
-			_icon.set_from_file(options.assetsdir+config.ASCEND_ICON)
-			print "ASCEND_ICON="+options.assetsdir+config.ASCEND_ICON
-			print "_icon="+repr(_icon)
+			_iconpath = self.assets_dir+'ascend'+config.ICON_EXTENSION
+			_icon.set_from_file(_iconpath)
 			self.icon = _icon.get_pixbuf()		
 		
 		#-------------------
 		# Set up the window and main widget actions
 
-		self.glade_file = options.assetsdir+config.GLADE_FILE
-		print "GLADE_FILE:",self.glade_file
+		self.glade_file = self.assets_dir+config.GLADE_FILE
 		glade = gtk.glade.XML(self.glade_file,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
@@ -217,7 +215,7 @@ class Browser:
 		# pixbufs for solver_var status
 
 		self.fixedimg = gtk.Image()
-		self.fixedimg.set_from_file(options.assetsdir+'locked.png')
+		self.fixedimg.set_from_file(options.assets_dir+'locked.png')
 
 		self.iconstatusunknown = None
 		self.iconfixed = self.fixedimg.get_pixbuf()
@@ -251,22 +249,22 @@ class Browser:
 
 		self.freemenuitem = gtk.ImageMenuItem("F_ree",True);
 		_img = gtk.Image()
-		_img.set_from_file(options.assetsdir+'unlocked.png')
+		_img.set_from_file(options.assets_dir+'unlocked.png')
 		self.freemenuitem.set_image(_img)
 
 		self.plotmenuitem = gtk.ImageMenuItem("P_lot",True);
 		_img = gtk.Image()
-		_img.set_from_file(options.assetsdir+'plot.png')
+		_img.set_from_file(options.assets_dir+'plot.png')
 		self.plotmenuitem.set_image(_img)
 
 		self.propsmenuitem = gtk.ImageMenuItem("_Properties",True);
 		_img = gtk.Image()
-		_img.set_from_file(options.assetsdir+'properties.png')
+		_img.set_from_file(options.assets_dir+'properties.png')
 		self.propsmenuitem.set_image(_img)
 
 		self.observemenuitem = gtk.ImageMenuItem("_Observe",True);
 		_img = gtk.Image()
-		_img.set_from_file(options.assetsdir+'observe.png')
+		_img.set_from_file(options.assets_dir+'observe.png')
 		self.observemenuitem.set_image(_img)
 
 		self.fixmenuitem.show(); self.fixmenuitem.set_sensitive(False)
