@@ -67,6 +67,9 @@ MODEL mixture(
 
 METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD specify;
         y[components].fixed := TRUE;
         y[CHOICE[components]].fixed := FALSE;
@@ -104,6 +107,9 @@ MODEL molar_stream(
     END FOR;
 
 METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
         RUN state.specify;
@@ -149,6 +155,9 @@ MODEL mixer(
 
 METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD seqmod;
     END seqmod;
 
@@ -185,6 +194,9 @@ MODEL reactor(
     END FOR;
 
 METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
         turnover.fixed                          :=      TRUE;
@@ -230,6 +242,9 @@ MODEL flash(
     END FOR;
 
   METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
         alpha[feed.components].fixed    :=      TRUE;
@@ -278,6 +293,9 @@ MODEL splitter(
     sumSplits: SUM[split[1..n_outputs]] = 1.0;
 
 METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
         split[1..n_outputs-1].fixed             :=      TRUE;
@@ -359,6 +377,9 @@ Such naming does not imply contiguous storage.
 
 METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD seqmod;
         RUN m1.seqmod;
         RUN r1.seqmod;
@@ -398,6 +419,9 @@ MODEL controller;
         (1 - conv)*fs.r1.feed.f[key_components];
 
   METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD specify;
         RUN fs.specify;

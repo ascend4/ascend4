@@ -60,13 +60,6 @@ MODEL cost_info_pressure_vessel;
 
   METHODS
 
-    METHOD clear;
-	MandSindex.fixed	:=	FALSE;
-	Fc.fixed		:=	FALSE;
-	Fm.fixed		:=	FALSE;
-	Fp.fixed		:=	FALSE;
-    END clear;
-
     METHOD specify;
 	MandSindex.fixed	:=	TRUE;
 	Fm.fixed		:=	TRUE;
@@ -74,7 +67,7 @@ MODEL cost_info_pressure_vessel;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -92,12 +85,6 @@ MODEL Guthrie_cost_pressure_vessel;
 
 
   METHODS
-    METHOD clear;
-	RUN ci.clear;
-	installed_cost.fixed	:=	FALSE;
-	D.fixed			:=	FALSE;
-	H.fixed			:=	FALSE;
-    END clear;
 
     METHOD specify;
 	RUN ci.specify;
@@ -106,7 +93,7 @@ MODEL Guthrie_cost_pressure_vessel;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
@@ -136,14 +123,6 @@ MODEL simple_pressure_vessel_cost;
 
   METHODS
 
-    METHOD clear;
-	RUN gc.clear;
-	liq_holdup_time.fixed	:=	FALSE;
-	vol_flow.fixed		:=	FALSE;
-	volume.fixed		:=	FALSE;
-	H_to_D.fixed		:=	FALSE;
-    END clear;
-
     METHOD specify;
 	RUN gc.specify;
 	D.fixed			:=	FALSE;
@@ -154,7 +133,7 @@ MODEL simple_pressure_vessel_cost;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 

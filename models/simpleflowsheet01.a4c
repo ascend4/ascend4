@@ -49,13 +49,12 @@ MODEL mixture;
 
   METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD specify;
-	(*
-	  y[components].fixed := TRUE;
-          y[CHOICE[components]].fixed := FALSE;
-        *)
-	FIX y[components];
-	FREE y[CHOICE[components]];
+        y[components].fixed := TRUE;
+        y[CHOICE[components]].fixed := FALSE;
     END specify;
 
     METHOD reset;
@@ -82,6 +81,9 @@ MODEL molar_stream;
 	END FOR;
 
   METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
 	RUN state.specify;
@@ -124,6 +126,9 @@ MODEL mixer;
 
   METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD seqmod;
     END seqmod;
 
@@ -160,6 +165,9 @@ MODEL reactor;
 	END FOR;
 
   METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
 	turnover.fixed				:=	TRUE;
@@ -209,6 +217,9 @@ MODEL flash;
 
   METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD seqmod;
 	alpha[feed.components].fixed	:=	TRUE;
 	vap_to_feed_ratio.fixed		:=	TRUE;
@@ -253,6 +264,9 @@ MODEL splitter;
 	SUM[split[1..n_outputs]] = 1.0;
 
   METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD seqmod;
 	split[1..n_outputs-1].fixed		:=	TRUE;
@@ -299,6 +313,9 @@ MODEL flowsheet;
 
   METHODS
 
+    METHOD default_self;
+    END default_self;
+
     METHOD seqmod;
 	RUN m1.seqmod;
 	RUN r1.seqmod;
@@ -336,6 +353,9 @@ MODEL controller;
 	fs.r1.out.f[key_components] = (1 - conv)*fs.r1.feed.f[key_components];
 
   METHODS
+
+    METHOD default_self;
+    END default_self;
 
     METHOD specify;
 	RUN fs.specify;

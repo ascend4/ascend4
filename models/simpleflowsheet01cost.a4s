@@ -11,6 +11,7 @@ READ FILE "simpleflowsheet01cost.a4c";
 
 COMPILE tfc OF flowsheet_cost;
 BROWSE {tfc};
+
 RUN {tfc.values};
 RUN {tfc.reset};
 SOLVE {tfc} WITH QRSlv;
@@ -21,7 +22,6 @@ PROBE current {tfc.tc.fs.sp1.split[1]} {};
 PROBE current {tfc.tc.fs.fl1.vap_to_feed_ratio} {};
 PROBE current {tfc.tc.fs.fl1.liq.w} {};
 BROWSE {tfc.tc.fs.fl1.vap_to_feed_ratio};
-ASSIGN {tfc.tc.fs.fl1.vap_to_feed_ratio.fixed} FALSE {};
 
 # Now run some case studies
 STUDY {annual_profit} {tc.conv} {tc.fs.fl1.vap_to_feed_ratio} \
@@ -63,3 +63,7 @@ SOLVE {tfc} WITH CONOPT;
 #  along with the program.  If not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
 #  the file named COPYING.
+
+
+
+

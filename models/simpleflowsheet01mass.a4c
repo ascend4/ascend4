@@ -53,15 +53,11 @@ MODEL mod_mixture REFINES mixture;
 
   METHODS
 
-    METHOD clear;
-	y[components].fixed		:=	FALSE;
-	yw[components].fixed		:=	FALSE;
-	yv_liq[components].fixed		:=	FALSE;
-	MW_ave.fixed			:=	FALSE;
-	SpGr_ave.fixed			:=	FALSE;
-    END clear;
+    METHOD default_self;
+    END default_self;
 
     METHOD specify;
+	RUN ClearAll;
         y[components].fixed 		:= TRUE;
         y[CHOICE[components]].fixed 	:= FALSE;
     END specify;
@@ -91,20 +87,11 @@ MODEL mod_stream REFINES molar_stream;
 
   METHODS
 
-    METHOD clear;
-
-	RUN state.clear;
-	Ftot.fixed			:= FALSE;
-	f[components].fixed		:= FALSE;
-	Wtot.fixed			:= FALSE;
-	w[components].fixed		:= FALSE;
-	Vtot_liq.fixed			:= FALSE;
-	v_liq[components].fixed		:= FALSE;
-	Wtot.fixed			:= FALSE;
-
-    END clear;
+    METHOD default_self;
+    END default_self;
 
     METHOD specify;
+	RUN ClearAll;
 	f[components].fixed		:= TRUE;
     END specify;
 
