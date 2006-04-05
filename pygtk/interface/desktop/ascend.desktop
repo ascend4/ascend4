@@ -1,0 +1,14 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=ASCEND IV
+GenericName=ASCEND IV
+Comment=Solve difficult simulation problems
+TryExec=ascend4
+Exec=ascend4
+StartupNotify=true
+Terminal=true
+Type=Application
+Icon=ascend-app.png
+Categories=Application;Engineering;Development;Math
+MimeType=text/x-ascend;
+
