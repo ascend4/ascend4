@@ -14806,7 +14806,7 @@ CASE '1_hexene':
 
 CASE '2_hexene_cis':
 	 formula :== 'C6H12';
-	 subgroups :== [];
+	 subgroups :== ['CH3','CH=CH','CH2'];
 	 wilson_set :== [];
 
 	 mw :== 84.162 {g/g_mole};
@@ -14832,6 +14832,9 @@ CASE '2_hexene_cis':
 	 Hvb :== 0;
 	 Tliq :== 293 {K};
 	 lden :== 0.687 {g/cm^3};
+	 nu['CH3'] :== 2;
+	 nu['CH=CH'] :== 1;
+	 nu['CH2'] :== 2;
 
 CASE '2_hexene_trans':
 	 formula :== 'C6H12';

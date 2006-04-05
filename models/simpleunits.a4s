@@ -5,7 +5,7 @@
 # components in them.
 
 DELETE TYPES;
-READ FILE "simpleUnits.a4c";
+READ FILE "simpleunits.a4c";
 
 
 # remaining statements needed to test unit with
@@ -47,4 +47,6 @@ RUN {tsc.reset};
 SOLVE {tsc} WITH QRSlv;
 ASSIGN {tsc.equil} true {*};
 SOLVE {tsc} WITH QRSlv;
+
+
 

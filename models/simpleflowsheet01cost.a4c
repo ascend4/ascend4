@@ -1,8 +1,8 @@
 REQUIRE "simpleflowsheet01mass.a4c";
 (* => simpleflowsheet01mass.a4c, simpleflowsheet01.a4c, atoms.a4l, measures.a4l,
  *    system.a4l, basemodel.a4l *)
-REQUIRE "guthrie_costs.a4l";
-(* => guthrie_costs.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
+REQUIRE "guthriecosts.a4l";
+(* => guthriecosts.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
 PROVIDE "simpleflowsheet01cost.a4c";
 (*
  * This file is part of the ASCEND Modeling Library and is released
@@ -69,20 +69,8 @@ MODEL flowsheet_cost;
 
   METHODS
 
-    METHOD clear;
-	RUN tc.clear;
-	RUN cm1.clear;
-	RUN cr1.clear;
-	RUN cfl1.clear;
-
-	feed_cost.fixed				:=	FALSE;
-	bleed_value.fixed			:=	FALSE;
-	product_value.fixed			:=	FALSE;
-	price[tc.fs.m1.out.components].fixed    :=	FALSE;
-	fuel_price.fixed			:=	FALSE;
-	payout_time.fixed			:=	FALSE;
-
-    END clear;
+    METHOD default_self;
+    END default_self;
 
     METHOD specify;
 	RUN tc.specify;
@@ -100,7 +88,7 @@ MODEL flowsheet_cost;
     END specify;
 
     METHOD reset;
-	RUN clear;
+	RUN ClearAll;
 	RUN specify;
     END reset;
 
