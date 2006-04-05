@@ -181,6 +181,12 @@ opts.Add(
 	,"$INSTALL_PREFIX/include"
 )
 
+opts.Add(
+	'INSTALL_ROOT'
+	,'For use by RPM only: location of %{buildroot} during rpmbuild'
+	,""
+)
+
 # TODO: OTHER OPTIONS?
 # TODO: flags for optimisation
 # TODO: turning on/off bintoken functionality
@@ -711,7 +717,7 @@ env.SConscript(['linpack/SConscript'],'env')
 #------------------------------------------------------
 # INSTALLATION
 
-install_dirs = [env['INSTALL_BIN']]+[env['INSTALL_DATA']]
+install_dirs = [env['INSTALL_ROOT']+env['INSTALL_BIN']]+[env['INSTALL_ROOT']+env['INSTALL_DATA']]
 
 # TODO: add install options
 env.Alias('install',install_dirs)

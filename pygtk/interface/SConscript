@@ -85,14 +85,14 @@ ascendcmd = env.SubstInFile(source='ascend.in')
 #---------------------------------------------
 # INSTALLATION
 
-env.InstallProgram(env['INSTALL_BIN'],ascendcmd)
+env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendcmd)
 
 import glob
 pythonfiles = glob.glob("*.py")
 
-env.Install(env['INSTALL_DATA']+"/ascend/",pythonfiles)
+env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",pythonfiles)
 
 gladefiles = glob.glob("glade/*")
-env.Install(env['INSTALL_DATA']+"/ascend/glade/",gladefiles)
+env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/glade/",gladefiles)
 
-env.Install(env['INSTALL_DATA']+"/ascend/",swiglib)
+env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",swiglib)
