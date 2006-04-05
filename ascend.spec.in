@@ -49,7 +49,7 @@ scons %{?_smp_mflags}
 rm -rf %{buildroot}
 scons INSTALL_PREFIX=%{buildroot}%{_prefix} INSTALL_DATA=%{buildroot}%{_datadir} INSTALL_BIN=%{buildroot}%{_bindir} install
 
-pushd pygtk/interface/desktop
+pushd pygtk/interface/gnome
 install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
 install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
 install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
