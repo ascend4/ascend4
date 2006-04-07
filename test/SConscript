@@ -9,8 +9,9 @@ srcs = Split("""
 test_cpppath = [
 	'#base/generic'
 	, '#test'
-	, env['CUNIT_CPPPATH']
 ]
+if env.has_key('CUNIT_CPPPATH'):
+	test_cpppath.append(env['CUNIT_CPPPATH'])
 
 env.Library('asctest',srcs
 	, CPPPATH=test_cpppath

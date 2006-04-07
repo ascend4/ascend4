@@ -12,12 +12,16 @@ srcs = []
 for dir in ['general','utilities','solver']:
 	srcs += ['#base/generic/'+dir+'/test/'+i for i in env['TESTSRCS_'+dir.upper()]]
 
+cpppath = ['#test','#base/generic']
+if env.has_key('CUNIT_CPPPATH'):
+	cpppath.append(env['CUNIT_CPPPATH'])
+
+libpath = ['#base/generic/utilities', '#base/generic/general', '#base/generic/solver', '#base/generic/compiler', '#base/generic/packages', '#test']
+if env.has_key('CUNIT_LIBPATH'):
+	libpath.append(env['CUNIT_LIBPATH'])
+
 env.Program('test',srcs+basesrcs
-	, CPPPATH = [
-		'#test'
-		, '#base/generic'
-		, env['CUNIT_CPPPATH']
-	  ]
+	, CPPPATH = cpppath
 	, LIBS = ['ascutilities','ascgeneral','ascsolver','asccompiler','ascpackages','asctest','m','cunit','dl']
-	, LIBPATH = ['#base/generic/utilities', '#base/generic/general', '#base/generic/solver', '#base/generic/compiler', '#base/generic/packages', '#test', env['CUNIT_LIBPATH']]
+	, LIBPATH = libpath
 )
