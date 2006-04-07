@@ -84,6 +84,12 @@ class Browser:
 			,default=config.PYGTK_ASSETS
 		)
 
+		parser.add_option("--library"
+			,action="store", type="string", dest="library_path"
+			,help="overried the configuration value for the library path"
+			,default=config.LIBRARY_PATH
+		)
+
 		(options, args) = parser.parse_args()
 
 		#print "OPTIONS_______________:",options
@@ -108,10 +114,10 @@ class Browser:
 			print "SETTING ASCENDLIBRARY from preferences:",_path
 			self.library = ascend.Library(_prefpath)
 		else:
-			_defaultpath = config.DEFAULT_LIBRARY
-			print "PYTHON SAYS DEFAULT LIBRARY IS",_defaultpath
+			options.library_path
+			print "PYTHON SAYS DEFAULT LIBRARY IS",options.library_path
 			print "WE WILL LET THE ENGINE DECIDE..."
-			self.library = ascend.Library()	
+			self.library = ascend.Library(options.library_path)	
 
 		self.sim = None
 

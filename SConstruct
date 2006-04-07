@@ -81,7 +81,7 @@ opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
-	,os.path.expanduser("~/src/ascend/trunk/models")
+	,"$INSTALL_DATA/models"
 )
 
 # Where is SWIG?
@@ -105,28 +105,28 @@ opts.Add(BoolOption(
 opts.Add(PackageOption(
 	'CUNIT_CPPPATH'
 	,"Where are your CUnit include files?"
-	,None
+	,'off'
 ))
 
 # Where are the CUnit libraries?
 opts.Add(PackageOption(
 	'CUNIT_LIBPATH'
 	,"Where are your CUnit libraries?"
-	,None
+	,'off'
 ))
 
 # Where are the Tcl includes?
 opts.Add(PackageOption(
 	'TCL_CPPPATH'
 	,"Where are your Tcl include files?"
-	,None
+	,'off'
 ))
 
 # Where are the Tcl libs?
 opts.Add(PackageOption(
 	'TCL_LIBPATH'
 	,"Where are your Tcl libraries?"
-	,None
+	,'off'
 ))
 
 # What is the name of the Tcl lib?
@@ -140,14 +140,14 @@ opts.Add(
 opts.Add(PackageOption(
 	'TK_CPPPATH'
 	,"Where are your Tk include files?"
-	,None
+	,'off'
 ))
 
 # Where are the Tk libs?
 opts.Add(PackageOption(
 	'TK_LIBPATH'
 	,"Where are your Tk libraries?"
-	,None
+	,'off'
 ))
 
 # What is the name of the Tk lib?
@@ -461,7 +461,7 @@ conf = Configure(env
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
-	, config_h = "config.h"
+#	, config_h = "config.h"
 )
 
 
@@ -524,14 +524,18 @@ if with_cunit_tests:
 
 # BLAS
 
-if conf.CheckLib('blas'):
-	print "FOUND BLAS"
-	with_local_blas = False
-	without_local_blas_reason = "Found BLAS installed on system"
-else:
-	print "DIDN'T FIND BLAS"
-	with_local_blas = True
-	need_fortran = True
+need_blas=False
+if with_tcltk_gui:
+	need_blas=True
+if need_blas:
+	if conf.CheckLib('blas'):
+		print "FOUND BLAS"
+		with_local_blas = False
+		without_local_blas_reason = "Found BLAS installed on system"
+	else:
+		print "DIDN'T FIND BLAS"
+		with_local_blas = True
+		need_fortran = True
 
 # FORTRAN
 
