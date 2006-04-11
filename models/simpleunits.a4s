@@ -1,7 +1,11 @@
-# common set of statements to set up testing.  These load
-# the correct files for all subsequent testing.
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
 #
-# These models allow the streams to have different
+# This file demonstrates the use of simpleunits.a4c
+
+# common set of statements to set up testing of models in
+# simpleunits.a4c.  These load the correct files for all subsequent
+# testing.  These models allow the streams to have different
 # components in them.
 
 DELETE TYPES;
@@ -48,5 +52,30 @@ SOLVE {tsc} WITH QRSlv;
 ASSIGN {tsc.equil} true {*};
 SOLVE {tsc} WITH QRSlv;
 
-
-
+##########  simpleunits.a4s ends here  ##########
+#
+#  simpleunits.a4s
+#  by Arthur W. Westerberg
+#  Part of the ASCEND Library
+#  $Date: 2006/04/10 10:08:42 $
+#  $Revision: 1.95 $
+#  $Author: a.westerberg $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.

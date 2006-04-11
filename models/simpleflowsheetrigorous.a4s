@@ -1,3 +1,7 @@
+# This file is part of the ASCEND Modeling Library and is released
+# under the GNU Public License as described at the end of this file.
+#
+# This file demonstrates the use of simpleflowsheetrigorous.a4c
 
 DELETE TYPES;
 READ FILE "simpleflowsheetrigorous.a4c";
@@ -25,6 +29,33 @@ PROBE current {demo.S51recycle.f} {0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0};
 PROBE current {demo.S51recycle.flow} {};
 PROBE current {demo.S51recycle.y['2_hexene_cis']} {};
 
+##########  simpleflowsheetrigorous.a4s ends here  ##########
+#
+#  simpleflowsheetrigorous.a4s
+#  by Arthur W. Westerberg
+#  Part of the ASCEND Library
+#  $Date: 2006/04/10 10:08:42 $
+#  $Revision: 1.95 $
+#  $Author: a.westerberg $
+#
+#  This file is part of the ASCEND Modeling Library.
+#
+#  Copyright (C) 1998 Carnegie Mellon University
+#
+#  The ASCEND Modeling Library is free software. You can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation---either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  The ASCEND Modeling Library is distributed in hope that it
+#  will be useful, but WITHOUT ANY WARRANTY--without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#  See the GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with the program.  If not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+#  the file named COPYING.
 
 
 
