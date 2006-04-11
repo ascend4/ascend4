@@ -1,13 +1,35 @@
 REQUIRE "simpleflowsheet01.a4c";
 (* => simpleflowsheet01.a4c, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
 PROVIDE "simpleflowsheet01mass.a4c";
+
 (*
- * This file is part of the ASCEND Modeling Library and is released
- * under the GNU Public License as described at the end of this file.
+ *  simpleflowsheet01mass.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 2006/04/10 10:08:42 $
+ *  $Revision: 1.95 $
+ *  $Author: a.westerberg $
  *
- * Use of this module is demonstrated by the associated script file
- * simpleflowsheet01cost.a4s.
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1998 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
  *)
+
 
 UNIVERSAL MODEL stream_parameters;
 
@@ -96,30 +118,3 @@ MODEL mod_stream REFINES molar_stream;
     END specify;
 
 END mod_stream;
-
-
-(*
- *  simpleflowsheet01mass.a4c
- *  by Arthur W. Westerberg
- *  Part of the ASCEND Library
- *  $Date: 2006/03/03 10:45:21 $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1994-1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
