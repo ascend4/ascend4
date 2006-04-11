@@ -37,6 +37,12 @@ if env.has_key('TCL_LIBPATH'):
 if env.has_key('TK_LIBPATH'):
 	libpath.append(env['TK_LIBPATH'])
 
+cppdefines = []
+if env.has_key('STATIC_TKTABLE'):
+	libpath.append(env['TKTABLE_LIBPATH'])
+	libs.append(env['TKTABLE_LIB'])
+	cppdefines.append('STATIC_TKTABLE')
+
 cpppath = ['../../../base/generic']
 if env.has_key('TCL_CPPPATH'):
 	cpppath.append(env['TCL_CPPPATH'])
@@ -45,6 +51,7 @@ if env.has_key('TK_CPPPATH'):
 	cpppath.append(env['TK_CPPPATH'])
 
 env.Program("ascend4",srcs+typelex+['Driver.c']
+	, CPPDEFINES = cppdefines
 	, LIBS = libs
 	, LIBPATH = libpath
 	, CPPPATH = cpppath
