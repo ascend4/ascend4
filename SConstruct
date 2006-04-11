@@ -157,6 +157,26 @@ opts.Add(
 	,'tk'
 )	
 
+# Static linking to TkTable
+
+opts.Add(BoolOption(
+	'STATIC_TKTABLE'
+	,'Use static linking to TkTable or not'
+	,False
+))
+
+opts.Add(PackageOption(
+	'TKTABLE_LIBPATH'
+	,'Location of TkTable static library'
+	,'off'
+))
+
+opts.Add(
+	'TKTABLE_LIB'
+	,'Name of TkTable static library (excluding suffix/prefix, eg libtktable2.8.so -> tktable2.8)'
+	,'Tktable2.8'
+)
+
 opts.Add(
 	'INSTALL_PREFIX'
 	,'Root location for installed files'
