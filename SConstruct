@@ -46,7 +46,7 @@ opts.Add(EnumOption(
 
 # You can turn off building of Tcl/Tk interface
 opts.Add(BoolOption(
-	'WITHOUT_TCLTK_GUI'
+	'WITHOUT_TCLTK'
 	,"Set to True if you don't want to build the original Tcl/Tk GUI."
 	, False
 ))
@@ -246,7 +246,7 @@ opts.Save('options.cache',env)
 
 Help(opts.GenerateHelpText(env))
 
-with_tcltk_gui = (env['WITHOUT_TCLTK_GUI']==False)
+with_tcltk_gui = (env['WITHOUT_TCLTK']==False)
 without_tcltk_reason = "disabled by options/config.py"
 
 with_python = (env['WITHOUT_PYTHON']==False)
