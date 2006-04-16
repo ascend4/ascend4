@@ -40,8 +40,8 @@
  *        Should be either fixed or archived.
  */
 
-#ifndef slv1__already_included
-#define slv1__already_included
+#ifndef ASC_SLV1_H
+#define ASC_SLV1_H
 
 typedef struct slv1_system_structure *slv1_system_t;
 

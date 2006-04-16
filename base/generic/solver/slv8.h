@@ -1,6 +1,6 @@
 /*
  *  Incorporation of the nonlinear solver CONOPT to ASCEND
- *  by Ken Tyner 
+ *  by Ken Tyner
  *  Created: 6/97
  *  Version: $Revision: 1.3 $
  *  Version control file: $RCSfile: slv8.h,v $
@@ -44,13 +44,13 @@
  *  </pre>
  */
 
-#ifndef slv8__already_included
-#define slv8__already_included
+#ifndef ASC_SLV8_H
+#define ASC_SLV8_H
 
 typedef struct slv8_system_structure *slv8_system_t;
 
 int slv8_register(SlvFunctionsT *f);
-/**< 
+/**<
  *  Registration function for the CONOPT solver.
  *  This is the function that tells the system about the CONOPT solver.
  *  Our index is not necessarily going to be 8. That everything here is
@@ -61,5 +61,5 @@ int slv8_register(SlvFunctionsT *f);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* ifndef slv8__already_included */
+#endif  /* ASC_SLV8_H */
 

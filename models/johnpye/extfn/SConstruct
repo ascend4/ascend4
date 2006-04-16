@@ -8,6 +8,8 @@ srcs = Split("""
 env.SharedLibrary("extfntest",srcs
 	, CPPPATH=['../../../base/generic']
 	, LIBPREFIX=''
+	, LIBS=['ascend']
+	, LIBPATH=['../../..']
 )
 
 # To run the test

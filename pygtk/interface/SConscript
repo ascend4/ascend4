@@ -86,3 +86,8 @@ if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
 	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/glade/",gladefiles)
 
 	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",swiglib)
+
+if env['WITH_INSTALLER']:
+	import platform
+	if platform.system()=="Windows":
+		env.Nsis('create.nsi')

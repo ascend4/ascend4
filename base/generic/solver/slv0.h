@@ -62,8 +62,8 @@
  *        Should be either fixed or archived.
  */
 
-#ifndef slv0__already_included
-#define slv0__already_included
+#ifndef ASC_SLV0_H
+#define ASC_SLV0_H
 
 typedef struct slv0_system_structure *slv0_system_t;
 
@@ -78,5 +78,5 @@ int slv0_register(SlvFunctionsT *sft);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv0__already_included */
+#endif /* ASC_SLV0_H */
 

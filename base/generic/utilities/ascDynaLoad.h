@@ -1,41 +1,22 @@
-/*
- *  -----------------------------------------------------------------
- *    Copyright 1993 D.I.S. - Universita` di Pavia - Italy
- *  -----------------------------------------------------------------
- *
- *  Permission to  use,  copy,   modify,   distribute  this  software
- *  and  its  documentation foar any purpose is hereby granted without
- *  fee, provided that the above copyright  notice   appear   in  all
- *  copies   and  that both that copyright notice and this permission
- *  notice appear in supporting documentation, and that the  name  of
- *  D.I.S.   not  be  used  in advertising or publicity pertaining to
- *  distribution of the software without specific, written prior per-
- *  mission.   D.I.S.  makes no representations about the suitability
- *  of this software for any purpose.  It is provided "as is" without
- *  express or implied warranty.
- *
- *  D.I.S. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, IN-
- *  CLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
- *  NO EVENT SHALL D.I.S.  BE LIABLE FOR  ANY  SPECIAL,  INDIRECT  OR
- *  CONSEQUENTIAL  DAMAGES  OR  ANY DAMAGES WHATSOEVER RESULTING FROM
- *  LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION  OF  CONTRACT,
- *  NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNEC-
- *  TION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
+/* ASCEND modelling environment
+   Copyright (C) 2006 Carnegie Mellon University
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 /* ChangeLog
- * Small changes made by Michael Moore (mdm@cis.ohio-state.edu)
- * December 24th, 1993.
- * The tcl sections ripped out by Kirk Abbott (ka0p@edrc.cmu.edu)
- * September 3rd, 1994.
- * To date the architectures supported are:
- * sun
- * solaris,
- * hpux
- * sgi
- * Windows
- * possibly aix if we plunder it from tcl8
- *
  * Added Asc_DynamicUnLoad. Ben Allan (ballan@cs.cmu.edu) Jan 1998.
  * Your mileage may vary.
  * UnLoad alleged for sun, hp, sgi, and alpha/osf. It probably works
@@ -56,6 +37,8 @@
 
 #ifndef ASC_ASCDYNALOAD_H
 #define ASC_ASCDYNALOAD_H
+
+#ifdef DYNAMIC_PACKAGES
 
 extern int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
@@ -99,7 +82,7 @@ extern int Asc_DynamicUnLoad(CONST char *path);
  *
  *  @param path     Path to the dynamic library to unload.
  *  @return Returns 0 if the library was successfully located and unloaded,
- *          -3 if the library was not located, or the return value of 
+ *          -3 if the library was not located, or the return value of
  *          dlclose/shl_unload/FreeLibrary otherwise.  Note that the
  *          return value conventions differ between platforms, so if you
  *          get a return value that is not 0 or -3, you are in platform-
@@ -113,12 +96,12 @@ extern void *Asc_DynamicVariable(CONST char *libraryname,
                                  CONST char *varname);
 /**<
  *  Returns a pointer to a variable exported from a dynamically-linked
- *  library.  It will generally be necessary to cast the returned 
- *  pointer to the correct data type before use.  If either parameter 
- *  is NULL, or if the library or symbol cannot be located, then NULL 
+ *  library.  It will generally be necessary to cast the returned
+ *  pointer to the correct data type before use.  If either parameter
+ *  is NULL, or if the library or symbol cannot be located, then NULL
  *  will be returned.<br><br>
  *
- *  This function was previously called Asc_DynamicSymbol() and could 
+ *  This function was previously called Asc_DynamicSymbol() and could
  *  be used to retrieve either variables or functions from a library.
  *  This necessitated casting the returned void* to a function pointer
  *  for exported functions, which is forbidden by ISO C.  Functions
@@ -144,7 +127,7 @@ extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
  *  Returns a pointer to a function exported from a dynamically-linked
  *  library.  It will generally be necessary to cast the returned pointer
  *  to the correct function type before use.  If either parameter
- *  is NULL, or if the library or function cannot be located, then NULL 
+ *  is NULL, or if the library or function cannot be located, then NULL
  *  will be returned.
  *  <pre>
  *  Example:
@@ -165,6 +148,8 @@ extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
  *  Set if a platform has a library unload function.
  *  We don't know about aix, and others.
  */
+#endif
+
 #endif
 
 #endif /* ASC_ASCDYNALOAD_H */
