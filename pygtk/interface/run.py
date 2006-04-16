@@ -1,8 +1,8 @@
 import sys, dl
 sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-import ascend, gtkbrowser
+import ascpy, gtkbrowser
 
-L = ascend.Library()
+L = ascpy.Library()
 L.load("clfr-models/water4.a4c")
 t = L.findType("steam_state")
 t2 = L.findType("solver_var")

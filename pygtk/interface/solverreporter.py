@@ -1,9 +1,9 @@
-import ascend
+import ascpy
 import time
 import gtk
 import gtk.glade
 
-class PythonSolverReporter(ascend.SolverReporter):
+class PythonSolverReporter(ascpy.SolverReporter):
 	def __init__(self,browser):
 		self.browser=browser
 		self.updateinterval = self.browser.prefs.getBoolPref("SolverReporter","update_interval", 0.5)
@@ -13,7 +13,7 @@ class PythonSolverReporter(ascend.SolverReporter):
 		self.starttime = time.clock()
 		self.statusbarcontext = self.browser.statusbar.get_context_id("pythonsolverreporter")
 		self.browser.statusbar.push(self.statusbarcontext,"Solving...")
-		ascend.SolverReporter.__init__(self)
+		ascpy.SolverReporter.__init__(self)
 
 	def report_to_browser(self,status):
 		self.browser.statusbar.pop(self.statusbarcontext)

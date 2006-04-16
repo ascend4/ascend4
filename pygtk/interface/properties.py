@@ -1,7 +1,7 @@
 # GUI for ASCEND solver_var properties
 
 import gtk, gtk.glade
-import ascend
+import ascpy
 from varentry import *
 
 class RelPropsWin:

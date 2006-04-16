@@ -1,8 +1,12 @@
 Import('env')
 
-env.Library('ascgeneral',Split("""
+csrcs = Split("""
 	dstring.c hashpjw.c list.c listio.c pool.c pretty.c
 	stack.c table.c tm_time.c
-"""))
+""")
 
+objs =[]
+for c in csrcs:
+	objs += env.SharedObject(c)
 
+Return('objs')

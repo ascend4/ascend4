@@ -3,7 +3,7 @@
 	SWIG interface routines to read a file into the library
 */
 
-%module(directors=1) ascend
+%module(directors=1) ascpy
 
 %include <python/std_string.i>
 %include <python/std_except.i>

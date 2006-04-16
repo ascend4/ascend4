@@ -14,38 +14,25 @@ srcs = Split("""
 
 """)
 
-libs = Split("""
-	asccompiler ascpackages ascsolver ascutilities ascgeneral 
-""")
-
-
-libpath = [
-	'../../base/generic/compiler'
-	,'../../base/generic/packages'
-	,'../../base/generic/solver'
-	,'../../base/generic/utilities'
-	,'../../base/generic/general'
-]
-
 # Build a static library with all the sources
 
-lib = env.Library("ascxx",srcs
-	, LIBS = libs
-	, LIBPATH = libpath
-	, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
-	, CPPDEFINES = {
-		'ASCXX_USE_PYTHON':None
-		,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
-	  }
-	, CPPFLAGS = ['-O3']
-)	
+objs = []
+for s in srcs:
+	objs += env.SharedObject(s
+		, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
+		, CPPDEFINES = {
+			'ASCXX_USE_PYTHON':None
+			,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
+		  }
+		, CPPFLAGS = ['-O3']
+	)	
 
 #----------------------------------------------
 # SWIG Builder
 
 def swig_modify_targets(target, source, env):
-	target.append('ascend.py')
-	target.append('ascend_wrap.h')
+	target.append('ascpy.py')
+	target.append('ascpy_wrap.h')
 	return target, source
 
 swig_builder = Builder(
@@ -53,19 +40,21 @@ swig_builder = Builder(
 	, emitter=swig_modify_targets
 )
 env.Append(BUILDERS={'Swig':swig_builder})
+
 #---------------------------------------------
 
 
-swig = env.Swig(target=['ascend_wrap.cc'],source=['ascend.i']
+#swig = env.Swig(target=['ascpy_wrap.cc'],source=['ascpy.i']
+#	, SWIGFLAGS=['-python','-c++']
+#	, CPPFLAGS = ['-O3']
+#)
+
+
+swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
+	, LIBS = ['ascend'] + env['PYTHON_LIB']
+	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SWIGFLAGS=['-python','-c++']
-	, CPPFLAGS = ['-O3']
-)
-
-
-swiglib = env.SharedLibrary("ascend",['ascend_wrap.cc']
-	, LIBS = ['ascxx']+libs+env['PYTHON_LIB']
-	, LIBPATH = ['.']+libpath+env['PYTHON_LIBPATH']
-	, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
+	, CPPPATH = ['../../base/generic'] + env['PYTHON_CPPPATH']
 	, CPPDEFINES = {
 		'ASCXX_USE_PYTHON':None
 		,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
@@ -74,7 +63,7 @@ swiglib = env.SharedLibrary("ascend",['ascend_wrap.cc']
 	, SHLIBPREFIX = '_'
 )
 
-env.Depends(swiglib,'ascend.py')
+#env.Depends(swiglib,'ascpy.py')
 
 #print env['SUBST_DICT']
 
@@ -85,14 +74,15 @@ ascendcmd = env.SubstInFile(source='ascend.in')
 #---------------------------------------------
 # INSTALLATION
 
-env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendcmd)
+if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
+	env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendcmd)
 
-import glob
-pythonfiles = glob.glob("*.py")
+	import glob
+	pythonfiles = glob.glob("*.py")
 
-env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",pythonfiles)
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",pythonfiles)
 
-gladefiles = glob.glob("glade/*")
-env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/glade/",gladefiles)
+	gladefiles = glob.glob("glade/*")
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/glade/",gladefiles)
 
-env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",swiglib)
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",swiglib)
