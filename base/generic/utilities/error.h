@@ -227,18 +227,6 @@ typedef int (*ErrorReporter_fptr_t)(
     , ...
 );
 
-#ifdef ASC_USE_IMPORTED_ERROR_REPORTER
-/*
-	If we're using a 'imported error reporter' then this means that we're in
-	a different DLL to the main ASCEND code. In that case, we will have a
-	pointer to our error reporter function, which will be back in the main
-	DLL in fact. We need this header file to refer to that global-variable
-	function pointer instead of assuming that the function is here locally.
-*/
-static ErrorReporter_fptr_t g_ErrorReporter_fptr;
-# define error_reporter (*g_ErrorReporter_fptr)
-#else
-
 /**
 	Use this function directly for 'richer' reporting of
 	of error messages.
@@ -253,8 +241,6 @@ DLEXPORT int error_reporter(
     , const char *fmt
     , ...
 );
-
-#endif
 
 /**
 	This format of the error reporter is useful if you must call it

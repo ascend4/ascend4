@@ -35,8 +35,8 @@
  *  </pre>
  */
 
-#ifndef slv9__already_included
-#define slv9__already_included
+#ifndef ASC_SLV9_H
+#define ASC_SLV9_H
 
 typedef struct slv9_system_structure *slv9_system_t;
 
@@ -52,5 +52,5 @@ int slv9_register(SlvFunctionsT *f);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv9__already_included */
+#endif  /* ASC_SLV9_H */
 

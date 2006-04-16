@@ -55,10 +55,7 @@
 #include <compiler/compiler.h>
 #include <compiler/extfunc.h>
 
-typedef int (*ExternalLibraryRegister_fptr_t)(
-	const CreateUserFunction_fptr_t
-	,const ErrorReporter_fptr_t
-);
+typedef int (*ExternalLibraryRegister_fptr_t)(void);
 
 /*--------------------------------------
   GENERIC STUFF
@@ -224,7 +221,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
+  return (install == NULL) ? 0 : (*install)();
 }
 
 # define UNLOAD FreeLibrary
@@ -288,7 +285,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
+  return (install == NULL) ? 0 : (*install)();
 }
 
 # define UNLOAD dlclose
@@ -354,7 +351,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   if (0 != AscAddRecord(xlib,path)) {
     ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
   }
-  return (install == NULL) ? 0 : (*install)(CreateUserFunction,error_reporter);
+  return (install == NULL) ? 0 : (*install)();
 }
 
 # define UNLOAD shl_unload

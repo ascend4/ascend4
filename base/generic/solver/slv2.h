@@ -39,8 +39,8 @@
  *  @todo Remove deprecated declarations from solver/slv2.h.
  */
 
-#ifndef slv2__already_included
-#define slv2__already_included
+#ifndef ASC_SLV2_H
+#define ASC_SLV2_H
 
 typedef struct slv2_system_structure *slv2_system_t;
 
@@ -55,7 +55,7 @@ int slv2_register(SlvFunctionsT *sft);
  *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
  */
 
-#endif  /* slv2__already_included */
+#endif  /* ASC_SLV2_H */
 
 /**< REMOVE EVERYTHING BELOW THIS POINT */
 # if 0

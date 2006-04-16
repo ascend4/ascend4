@@ -1,8 +1,6 @@
 #include <stdio.h>
 
-#define ASC_USE_IMPORTED_ERROR_REPORTER
 #include <utilities/error.h>
-
 
 #include <utilities/ascConfig.h>
 
@@ -27,19 +25,13 @@ int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double
 */
 
 extern int
-DLEXPORT extfntest_register(
-	const CreateUserFunction_fptr_t CreateUserFunction_fptr
-	,const ErrorReporter_fptr_t ErrorReporter_fptr
-){
+DLEXPORT extfntest_register(){
 	const char *addone_help = "This is a test of the dynamic user packages functionality";
 	int result = 0;
 
-	extern ErrorReporter_fptr_t g_ErrorReporter_fptr;
-	g_ErrorReporter_fptr = ErrorReporter_fptr;
-
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
-	result += (CreateUserFunction_fptr)("add_one",
+	result += CreateUserFunction("add_one",
                   (ExtEvalFunc *)addone_prepare,
 			      (ExtEvalFunc **)addone_calc,
 			      (ExtEvalFunc **)NULL,
