@@ -13,6 +13,8 @@ Name "ASCEND PyGTK"
 ; The file to write
 OutFile "ascend-0.9.6.exe"
 
+SetCompressor /SOLID lzma
+
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
 
@@ -64,6 +66,9 @@ Section "ASCEND (required)"
   FileOpen $0 $INSTDIR\ascend.bat w
   IfErrors done
   FileWrite $0 "@echo off"
+  FileWriteByte $0 "13"
+  FileWriteByte $0 "10"
+  FileWrite $0 "set PATH=c:\Python24;c:\GTK\bin"
   FileWriteByte $0 "13"
   FileWriteByte $0 "10"
   FileWrite $0 "cd "
