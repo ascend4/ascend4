@@ -1,6 +1,6 @@
 import gtk
 import gtk.glade
-import ascend
+import ascpy
 from itertools import groupby
 from operator import itemgetter
 import math

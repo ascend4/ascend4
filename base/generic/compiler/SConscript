@@ -1,6 +1,6 @@
 Import('env')
 
-srcs = Split("""
+csrcs = Split("""
 	anoncopy.c anonmerg.c anontype.c arrayinst.c ascCompiler.c
 	atomsize.c atomvalue.c bintoken.c bit.c braced.c
 	case.c check.c child.c childdef.c childio.c childinfo.c cmpfunc.c
@@ -9,7 +9,7 @@ srcs = Split("""
 	evaluate.c exprio.c exprs.c exprsym.c extcall.c
 	extfunc.c extinst.c find.c forvars.c fractions.c
 	freestore.c func.c initialize.c instance.c instance_io.c
-	instantiate.c instmacro.c instquery.c interval.c
+	instantiate.c instmacro.c instquery.c
 	library.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
 	nameio.c notate.c numlist.c packages.c parentchild.c
@@ -25,9 +25,16 @@ srcs = Split("""
 	watchpt.c watchptio.c when.c when_io.c when_util.c
 """)
 
-rounded = env.Object('rounded.c'
+# SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
+
+sloppy_csrcs = ['rounded.c','interval.c']
+
+objs = []
+
+for s in sloppy_csrcs:
+	objs += env.SharedObject(s
 	,CPPDEFINES=['SLOPPY']
-)
+)	
 
 parser = env.CFile(target=['ascParse'], source='ascParse.y'
 	, YACCFLAGS=['-d','-pzz_']
@@ -39,7 +46,7 @@ scanner = env.CFile(target=['scanner.c'],source=['scanner.l']
 
 env.Depends(scanner,['ascParse.h'])
 
-env.Library('asccompiler',srcs+rounded+['ascParse.c']+scanner)
+for s in [csrcs, 'ascParse.c',scanner]:
+	objs += env.SharedObject(s)
 
-
-
+Return('objs')

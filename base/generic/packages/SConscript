@@ -5,10 +5,14 @@
 
 Import('env')
 
-env.Library('ascpackages',Split("""
+srcs = Split("""
 
 	sensitivity.c ascFreeAllVars.c
 
-"""))
+""")
 
+objs = []
+for s in srcs:
+	objs += env.SharedObject(s)
 
+Return('objs')

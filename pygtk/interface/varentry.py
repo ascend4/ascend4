@@ -3,7 +3,7 @@
 #
 
 import re
-import ascend
+import ascpy
 
 # RE for units matching
 UNITS_RE = re.compile("([-+]?(\d+(\.\d*)?|\d*\.d+)([eE][-+]?\d+)?)\s*(.*)");
@@ -56,7 +56,7 @@ class RealAtomEntry:
 			print "Assuming units '%s'" % _u.getName().toString()
 		else:
 			try:
-				_u = ascend.Units(self.units)
+				_u = ascpy.Units(self.units)
 				print "Parsed units '%s'" % self.units
 			except RuntimeError:
 				raise InputError("Unrecognisable units '%s'" % self.units)

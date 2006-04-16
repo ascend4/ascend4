@@ -42,12 +42,13 @@ Section "ASCEND (required)"
   SetOutPath $INSTDIR
   
   ; Put file there
-  File "_ascend.dll"
-
+  File "_ascpy.dll"
+  File "..\..\ascend.dll"
   File "config.py"
   File "*.py"
   SetOutPath $INSTDIR\glade
-  File "glade\*"
+  File "glade\*.glade"
+  File "glade\*.png"
   SetOutPath $INSTDIR\models
   File "..\..\models\*.a4c"
   File "..\..\models\*.a4l"

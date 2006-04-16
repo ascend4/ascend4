@@ -13,7 +13,7 @@ print "PLATFORM = ",platform.system()
 
 # Import the outside environment
 env = Environment(ENV=os.environ)
-
+	
 if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "INCLUDE =",env['ENV']['INCLUDE']
 	print "LIB =",env['ENV']['LIB']
@@ -25,6 +25,8 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
 	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
+
+	
 
 # Package linking option
 opts.Add(EnumOption(
@@ -97,7 +99,7 @@ opts.Add(BoolOption(
 	'WITH_CUNIT_TESTS'
 	,"Whether to build the CUnit tests. Default is off. If set to on,"
 		+" you must have CUnit installed somewhere that SCons can"
-		+" find it."
+		+" find it, or else use the CUNIT_* options to specify."
 	,False
 ))
 
@@ -119,7 +121,7 @@ opts.Add(PackageOption(
 opts.Add(PackageOption(
 	'TCL_CPPPATH'
 	,"Where are your Tcl include files?"
-	,'off'
+	,"disable"
 ))
 
 # Where are the Tcl libs?
@@ -187,6 +189,12 @@ opts.Add(
 	'INSTALL_BIN'
 	,'Location to put binaries during installation'
 	,"$INSTALL_PREFIX/bin"
+)
+
+opts.Add(
+	'INSTALL_LIB'
+	,'Location to put binaries during installation'
+	,"$INSTALL_PREFIX/lib"
 )
 
 opts.Add(
@@ -259,18 +267,24 @@ subst_dict = {
 
 if env['WITH_LOCAL_HELP']:
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
-		
+
+can_install = True
+if platform.system()=='Windows':
+	can_install = False
+
+env['CAN_INSTALL']=can_install
+
 env.Append(SUBST_DICT=subst_dict)
 
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
 
+need_fortran = False
+
 #----------------
 # SWIG
 
 import os,re
-
-need_fortran = False
 
 def get_swig_version(env):
 	cmd = env['SWIG']+' -version'
@@ -317,6 +331,8 @@ class KeepContext:
 		for k in ['LIBS','LIBPATH','CPPPATH']:
 			if context.env.has_key(k):
 				self.keep[k] = context.env[k]
+			else:
+				self.keep[k] = None
 		
 		libpath_add = []
 		if context.env.has_key(varprefix+'_LIBPATH'):
@@ -331,7 +347,7 @@ class KeepContext:
 		libs_add = []
 		if context.env.has_key(varprefix+'_LIB'):
 			libs_add = [env[varprefix+'_LIB']]
-			#print "Adding '"+str(libs_add)+"' to libs"	
+			print "Adding '"+str(libs_add)+"' to libs"	
 
 		context.env.Append(
 			LIBPATH = libpath_add
@@ -340,8 +356,16 @@ class KeepContext:
 		)
 
 	def restore(self,context):
+		print "RESTORING CONTEXT"
+		print self.keep
+		print "..."
 		for k in self.keep:
-			context.env[k]=self.keep[k];
+			if self.keep[k]==None:
+				print "Clearing "+str(k)
+				del context.env[k];
+			else:
+				print "Restoring "+str(k)+" to '"+self.keep[k]+"'"				
+				context.env[k]=self.keep[k];
 
 def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	"""This method will check for variables LIBNAME_LIBPATH
@@ -356,11 +380,9 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	
 	keep = KeepContext(context,varprefix)
 
-#	print "TryLink with CPPPATH="+str(context.env['CPPPATH'])
-#	print "TryLink with LIBS="+str(context.env['LIBS'])
-#	print "TryLink with LIBPATH="+str(context.env['LIBPATH'])
-
 	if not context.env.has_key(varprefix+'_LIB'):
+		# if varprefix_LIB were in env, KeepContext would 
+		# have appended it already
 		context.env.Append(LIBS=libname)
 
 	is_ok = context.TryLink(text,ext)
@@ -435,7 +457,7 @@ def CheckTclVersion(context):
 	return 1
 
 #----------------
-# Tcl test
+# Tk test
 
 tk_check_text = r"""
 #include <tk.h>
@@ -683,7 +705,7 @@ def TOOL_SUBST(env):
 TOOL_SUBST(env)
 
 #------------------------------------------------------
- # Recipe for 'CHMOD' ACTION 	 
+# Recipe for 'CHMOD' ACTION 	 
   	 
 import SCons 	 
 from SCons.Script.SConscript import SConsEnvironment 	 
@@ -700,32 +722,82 @@ SConsEnvironment.InstallPerm = InstallPerm
 # define wrappers 	 
 SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755) 	 
 SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644) 	 
-  	 
+
 #------------------------------------------------------
-# SUBDIRECTORIES....
+# Recipe for NSIS build
 
+#import re
+#
+#nsis_re = re.compile(r'^\s*OutFile\s+(\S+)\s*$', re.M)
+#
+#def nsis_scan(node, env):
+#	print dict(node[0])
+#	f = file(node,'r');
+#	contents = f.read()
+#	f.close()
+#	return nsis_re.findall(contents)
+#    
+#env.Append(SCANNERS=nsis_scan)
+#
+#def nsis_modify_targets(target, source, env):
+#	scan = nsis_scan(source, env)
+#	print "SCAN NSIS:",scan
+#	target.append(scan)
+#	return target, source
+#
+#nsis_builder = Builder(
+#	action='$NSIS /X\"OutFile $TARGET\" $NSISFLAGS $SOURCE'
+#	, emitter=nsis_modify_targets
+#)
+#env.Append(BUILDERS={'Nsis':nsis_builder})
 
-env.Append(CPPPATH=['..'])
+#------------------------------------------------------
+# BUILD...
 
-env.SConscript(['base/generic/general/SConscript'],'env')
+# so that #include <modulename/headername.h> works across all modules...
+env.Append(CPPPATH=['#base/generic'])
 
-env.SConscript(['base/generic/utilities/SConscript'],'env')
-
-env.SConscript(['base/generic/compiler/SConscript'],'env')
-
-env.SConscript(['base/generic/solver/SConscript'],'env')
-
-env.SConscript(['base/generic/packages/SConscript'],'env')
+#-------------
+# TCL/TK GUI
 
 if with_tcltk_gui:
+	if with_local_blas:
+		env.SConscript(['blas/SConscript'],'env')
+	else:
+		print "Skipping... BLAS won't be build:", without_local_blas_reason
+
+	env.SConscript(['lsod/SConscript'],'env')		
+
+	env.SConscript(['linpack/SConscript'],'env')
 	env.SConscript(['tcltk98/generic/interface/SConscript'],'env')
 else:
 	print "Skipping... Tcl/Tk GUI isn't being built:",without_tcltk_reason
+
+#-------------
+# PYTHON INTERFACE
 
 if with_python:
 	env.SConscript(['pygtk/interface/SConscript'],'env')
 else:
 	print "Skipping... Python GUI isn't being built:",without_python_reason
+
+#------------
+# BASE/GENERIC SUBDIRECTORIES
+
+dirs = ['general','utilities','compiler','solver','packages']
+
+srcs = []
+for d in dirs:
+	heresrcs = env.SConscript('base/generic/'+d+'/SConscript','env')
+	srcs += heresrcs
+
+#-------------
+# LIBASCEND -- all base/generic functionality
+
+libascend = env.SharedLibrary('ascend',srcs)
+
+#-------------
+# UNIT TESTS
 
 if with_cunit_tests:
 	testdirs = ['general','solver','utilities']
@@ -739,28 +811,27 @@ if with_cunit_tests:
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
 
-if with_tcltk_gui:
-	if with_local_blas:
-		env.SConscript(['blas/SConscript'],'env')
-	else:
-		print "Skipping... BLAS won't be build:", without_local_blas_reason
-
-	env.SConscript(['lsod/SConscript'],'env')		
-
-	env.SConscript(['linpack/SConscript'],'env')
-
-# the models directory only needs to be processed for installation
-env.SConscript(['models/SConscript'],'env')
 
 #------------------------------------------------------
 # INSTALLATION
 
-install_dirs = [env['INSTALL_ROOT']+env['INSTALL_BIN']]+[env['INSTALL_ROOT']+env['INSTALL_DATA']]
+if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
+	# the models directory only needs to be processed for installation, no other processing required.
+	env.SConscript(['models/SConscript'],'env')
 
-# TODO: add install options
-env.Alias('install',install_dirs)
+	dirs = ['INSTALL_BIN','INSTALL_DATA','INSTALL_LIB']
+	install_dirs = [env['INSTALL_ROOT']+env[d] for d in dirs]
+
+	# TODO: add install options
+	env.Alias('install',install_dirs)
+
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_LIB'],libascend)
 
 #------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages
 
-env.SubstInFile('ascend.spec.in')
+if platform.system()=="Linux":
+	env.SubstInFile('ascend.spec.in')
+
+#if platform.system()=="Windows":
+#	env.Nsis("create.nsi")

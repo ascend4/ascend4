@@ -11,10 +11,11 @@ try:
 except ImportError:
 	pass
 
-import pygtk
-pygtk.require('2.0')
+import pygtk 
+pygtk.require('2.0') 
 import gtk
 import gtk.glade
+
 import pango
 import re
 import preferences # loading/saving of .ini options
@@ -38,7 +39,7 @@ if platform.system() != "Windows":
 	# ascend library are made available to libraries dlopened within ASCEND:
 	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 
-import ascend
+import ascpy
 
 # This is my first ever GUI code so please be nice :)
 # But I *have* at least read 
@@ -112,12 +113,12 @@ class Browser:
 		if _prefpath:
 			_path = _prefpath
 			print "SETTING ASCENDLIBRARY from preferences:",_path
-			self.library = ascend.Library(_prefpath)
+			self.library = ascpy.Library(_prefpath)
 		else:
 			options.library_path
 			print "PYTHON SAYS DEFAULT LIBRARY IS",options.library_path
 			print "WE WILL LET THE ENGINE DECIDE..."
-			self.library = ascend.Library(options.library_path)	
+			self.library = ascpy.Library(options.library_path)	
 
 		self.sim = None
 
@@ -230,18 +231,18 @@ class Browser:
 		self.iconunsolved = None
 
 		self.statusicons={
-			ascend.ASCXX_VAR_STATUS_UNKNOWN: self.iconstatusunknown
-			,ascend.ASCXX_VAR_FIXED: self.iconfixed
-			,ascend.ASCXX_VAR_SOLVED: self.iconsolved
-			,ascend.ASCXX_VAR_ACTIVE: self.iconactive
-			,ascend.ASCXX_VAR_UNSOLVED: self.iconunsolved
+			ascpy.ASCXX_VAR_STATUS_UNKNOWN: self.iconstatusunknown
+			,ascpy.ASCXX_VAR_FIXED: self.iconfixed
+			,ascpy.ASCXX_VAR_SOLVED: self.iconsolved
+			,ascpy.ASCXX_VAR_ACTIVE: self.iconactive
+			,ascpy.ASCXX_VAR_UNSOLVED: self.iconunsolved
 		}
 		self.statusmessages={
-			ascend.ASCXX_VAR_STATUS_UNKNOWN: "Status unknown"
-			,ascend.ASCXX_VAR_FIXED: "Fixed"
-			,ascend.ASCXX_VAR_SOLVED: "Converged"
-			,ascend.ASCXX_VAR_ACTIVE: "Active (unconverged)"
-			,ascend.ASCXX_VAR_UNSOLVED: "Not yet visited"
+			ascpy.ASCXX_VAR_STATUS_UNKNOWN: "Status unknown"
+			,ascpy.ASCXX_VAR_FIXED: "Fixed"
+			,ascpy.ASCXX_VAR_SOLVED: "Converged"
+			,ascpy.ASCXX_VAR_ACTIVE: "Active (unconverged)"
+			,ascpy.ASCXX_VAR_UNSOLVED: "Not yet visited"
 		}		
 
 		#--------------------
@@ -327,7 +328,7 @@ class Browser:
 
 		#--------------------
 		# set up the error reporter callback
-		self.reporter = ascend.getReporter()
+		self.reporter = ascpy.getReporter()
 		self.reporter.setPythonErrorCallback(self.error_callback)
 
 		#-------------------
@@ -526,7 +527,7 @@ class Browser:
 		print "DONE BUILDING"
 		self.stop_waiting()
 
-		self.sim.setSolver(ascend.Solver("QRSlv"))
+		self.sim.setSolver(ascpy.Solver("QRSlv"))
 
 		# empty things out first
 		self.methodstore.clear()
@@ -567,7 +568,7 @@ class Browser:
 		else:
 			reporter = SimpleSolverReporter(self)
 
-		self.sim.solve(ascend.Solver("QRSlv"),reporter)
+		self.sim.solve(ascpy.Solver("QRSlv"),reporter)
 
 		self.stop_waiting()
 		
@@ -1145,7 +1146,7 @@ class Browser:
 		return False
 
 def test():
-	import ascend
+	import ascpy
 	b = Browser();
 	b.run()
 

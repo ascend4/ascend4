@@ -1,6 +1,6 @@
 Import('env')
 
-srcs = Split("""
+csrcs = Split("""
 
 	analyze.c bnd.c bndman.c calc.c cond_config.c
 	conditional.c conopt.c discrete.c incidence.c linsol.c
@@ -17,7 +17,10 @@ defs = []
 for i in env['WITH_SOLVERS']:
 	defs.append("STATIC_"+i)
 
-env.Library('ascsolver',srcs
-	, CPPDEFINES=defs
-)
-
+objs = []
+for c in csrcs:
+	objs += env.SharedObject(c
+		, CPPDEFINES=defs
+	)
+	
+Return('objs')

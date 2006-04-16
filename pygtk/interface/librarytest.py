@@ -4,7 +4,7 @@ import sys
 import dl
 sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 
-import ascend
+import ascpy
 
 import gtkbrowser
 
@@ -86,12 +86,12 @@ def show(i,level=0):
 			sys.stderr.write(" = "); sys.stderr.write("%f" % i.getRealValue()); sys.stderr.write("\n")
 #-------------------------------
 
-reporter = ascend.getReporter()
+reporter = ascpy.getReporter()
 reporter.setPythonErrorCallback(error_reporter)
 
 #reporter.reportError("STUFF")
 
-l = ascend.Library()
+l = ascpy.Library()
 
 l.listModules()
 

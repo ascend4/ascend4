@@ -6,14 +6,14 @@ import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
 # ascend library are made available to libraries dlopened within ASCEND:
 sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-import ascend
+import ascpy
 
 if os.getenv('ASCENDLIBRARY')==None:
 	path = '~/src/ascend/trunk/models'
 	print "Setting ASCEND path to",path
 	os.putenv('ASCENDLIBRARY',path)
 
-L = ascend.Library();
+L = ascpy.Library();
 L.load(filepath);
 for M in L.getModules():
 	print "Looking at module '"+M.getName()+"'"

@@ -6,7 +6,7 @@ import sys, dl
 # This sets the flags for dlopen used by python so that the symbols in the
 # ascend library are made available to libraries dlopened within ASCEND:
 sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-import ascend
+import ascpy
 
 # Our input will be the ASCENDLIBRARY environment variable
 # plus perhaps some commandline options relating to exclusions and inclusions.
@@ -99,7 +99,7 @@ class AscendTestFile:
 	
 	def run(self):
 		ascendlock.acquire()
-		L = ascend.Library()
+		L = ascpy.Library()
 		L.clear()
 		L.load(self.filepath)
 		for M in L.getModules():
@@ -125,7 +125,7 @@ class AscendTestModel:
 	def run(self):
 		ascendlock.acquire()
 		try:
-			L = ascend.Library()
+			L = ascpy.Library()
 			L.clear()
 			L.load(self.filepath)
 			t = L.findType(self.modelname)
@@ -140,8 +140,8 @@ class AscendTestModel:
 			#s.check()
 			s.build();
 			print "LAUNCHING SOLVER...\n\n"
-			r = ascend.SolverReporter()
-			s.solve(ascend.Solver('QRSlv'),r)
+			r = ascpy.SolverReporter()
+			s.solve(ascpy.Solver('QRSlv'),r)
 			s.run(testmethod)
 		except RuntimeError, e:
 			print e
