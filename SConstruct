@@ -9,7 +9,7 @@ version = "0.9.6rc0"
 # remembered in the file 'options.cache'. It's a feature ;-)
 
 opts = Options(['options.cache', 'config.py'])
-print "PLATFORM = ",platform.system()
+#print "PLATFORM = ",platform.system()
 
 # Import the outside environment
 env = Environment(ENV=os.environ)
@@ -26,6 +26,14 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 	env.Append(LIBPATH=env['ENV']['LIB'])
 	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
 
+if platform.system()=="Windows":
+	default_tcl_lib = "tcl83"
+	default_tk_lib = "tk83"
+	default_tktable_lib = "Tktable28"
+else:
+	default_tcl_lib = "tcl"
+	default_tk_lib = "tk"
+	default_tktable_lib = "Tktable2.8"
 	
 
 # Package linking option
@@ -135,28 +143,28 @@ opts.Add(PackageOption(
 opts.Add(
 	'TCL_LIB'
 	,"Name of Tcl lib (eg 'tcl' or 'tcl83')"
-	,'tcl'
+	,default_tcl_lib
 )
 
 # Where are the Tk includes?
 opts.Add(PackageOption(
 	'TK_CPPPATH'
 	,"Where are your Tk include files?"
-	,'off'
+	,'$TCL_CPPPATH'
 ))
 
 # Where are the Tk libs?
 opts.Add(PackageOption(
 	'TK_LIBPATH'
 	,"Where are your Tk libraries?"
-	,'off'
+	,'$TCL_LIBPATH'
 ))
 
 # What is the name of the Tk lib?
 opts.Add(
 	'TK_LIB'
 	,"Name of Tk lib (eg 'tk' or 'tk83')"
-	,'tk'
+	,default_tk_lib
 )	
 
 # Static linking to TkTable
@@ -167,16 +175,16 @@ opts.Add(BoolOption(
 	,False
 ))
 
-opts.Add(PackageOption(
+opts.Add(
 	'TKTABLE_LIBPATH'
 	,'Location of TkTable static library'
-	,'off'
-))
+	,'$TCL_LIBPATH/Tktable2.8'
+)
 
 opts.Add(
 	'TKTABLE_LIB'
 	,'Name of TkTable static library (excluding suffix/prefix, eg libtktable2.8.so -> tktable2.8)'
-	,'Tktable2.8'
+	,default_tktable_lib
 )
 
 opts.Add(
@@ -247,10 +255,9 @@ without_python_reason = "disabled by options/config.py"
 with_cunit_tests = env['WITH_CUNIT_TESTS']
 without_cunit_reason = "not requested"
 
-print "SOLVERS:",env['WITH_SOLVERS']
-print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
-print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
-print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
+#print "SOLVERS:",env['WITH_SOLVERS']
+#print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
+#print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
 
 subst_dict = {
 	'@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
@@ -266,6 +273,7 @@ subst_dict = {
 }
 
 if env['WITH_LOCAL_HELP']:
+	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
 
 can_install = True
@@ -347,7 +355,7 @@ class KeepContext:
 		libs_add = []
 		if context.env.has_key(varprefix+'_LIB'):
 			libs_add = [env[varprefix+'_LIB']]
-			print "Adding '"+str(libs_add)+"' to libs"	
+			#print "Adding '"+str(libs_add)+"' to libs"	
 
 		context.env.Append(
 			LIBPATH = libpath_add
@@ -356,15 +364,15 @@ class KeepContext:
 		)
 
 	def restore(self,context):
-		print "RESTORING CONTEXT"
-		print self.keep
-		print "..."
+		#print "RESTORING CONTEXT"
+		#print self.keep
+		#print "..."
 		for k in self.keep:
 			if self.keep[k]==None:
-				print "Clearing "+str(k)
+				#print "Clearing "+str(k)
 				del context.env[k];
 			else:
-				print "Restoring "+str(k)+" to '"+self.keep[k]+"'"				
+				#print "Restoring "+str(k)+" to '"+self.keep[k]+"'"				
 				context.env[k]=self.keep[k];
 
 def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
@@ -602,8 +610,8 @@ if need_fortran:
 	else:
 		print "FORTRAN-77 required but not found"
 		Exit(1)
-else:
-	print "FORTRAN not required"
+#else:
+#	print "FORTRAN not required"
 
 # TODO: -D_HPUX_SOURCE is needed
 
