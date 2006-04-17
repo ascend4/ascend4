@@ -8,7 +8,7 @@ https://pse.cheme.cmu.edu/wiki/view/Ascend/WebHome
 
 There are older versions of this document, which include instructions
 on how to build ASCEND with GNU Autotools. This may or may not work
-with the version are currently looking at.
+with the version you are currently looking at.
 https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/INSTALL?view=log
 
 -----
@@ -59,17 +59,25 @@ SCons configuration. You can then type
 ------
 INSTALLING ON WINDOWS
 
-More details to come here. For the PyGTK GUI, you can install
-ASCEND by running the 'create.nsi' script (using the NSIS
-installer-creator from http://nsis.sf.net/ which is free)
-then running the created installation package.
+To build a Windows installer (a 'setup.exe') for the PyGTK GUI,
+you will need to have the NSIS installer-creator installed on
+your system (which is free, at http://nsis.sf.net/). Then you 
+should simply need to type
+
+    scons WITH_INSTALLER=1
+
+This will leave an installer package named 'ascend-setup.exe'
+in the pygtk/interface directory.
 
 ------
 CREATING AN RPM/DEB PACKAGE
 
 Many users prefer to keep their systems clear of unpackaged
 software. For this reason, we aim to provide the ability to build 
-SCons as an RPM package. If you are in your home directory, type
+ASCEND as an RPM package. There is a "SPEC" file includes in the
+source tree. If you have a source package, such as for example
+ascend-NNNNN.tar.bz2, place it in your home directory, then
+type the following
 
     rpmbuild -ta ascend-NNNNN.tar.bz2
 
@@ -84,6 +92,10 @@ You will then be able to install ASCEND using something like
 Debian/Unbuntu users should find that they can create a usable
 .deb package using the tool 'alien'. We haven't got native
 support for the generation of .deb packages at this stage.
+
+NOTE: occasionally the 'ascend.spec' file may need to be updated
+if changes have been made to the 'ascend.spec.in' file. Check
+the implementation details in the SConstruct file.
 
 ------
 GETTING SUPPORT AND FURTHER INFORMATION

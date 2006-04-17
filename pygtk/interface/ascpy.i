@@ -4,6 +4,7 @@
 */
 
 %module(directors=1) ascpy
+%feature("compactdefaultargs");
 
 %include <python/std_string.i>
 %include <python/std_except.i>

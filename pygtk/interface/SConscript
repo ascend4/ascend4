@@ -53,7 +53,7 @@ env.Append(BUILDERS={'Swig':swig_builder})
 swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
 	, LIBS = ['ascend'] + env['PYTHON_LIB']
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
-	, SWIGFLAGS=['-python','-c++']
+	, SWIGFLAGS=['-python','-c++','-O','-fvirtual']
 	, CPPPATH = ['../../base/generic'] + env['PYTHON_CPPPATH']
 	, CPPDEFINES = {
 		'ASCXX_USE_PYTHON':None
@@ -87,7 +87,7 @@ if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
 
 	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/",swiglib)
 
-if env['WITH_INSTALLER']:
+if env.has_key('WITH_INSTALLER') and env['WITH_INSTALLER']:
 	import platform
 	if platform.system()=="Windows":
 		env.Nsis('create.nsi')
