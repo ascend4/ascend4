@@ -2,6 +2,8 @@
 	SWIG interface for accessing Solver and choosing solver parameters
 */
 
+%feature("compactdefaultargs");
+
 class Solver{
 public:
 	Solver(const std::string &name);
