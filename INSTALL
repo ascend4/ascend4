@@ -15,7 +15,9 @@ https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/INSTALL?view=log
 BUILDING ON LINUX AND WINDOWS
 
 To build ASCEND we now recommend using SCons. This is supported
-both on Windows (using the MinGW toolset) and Linux.
+both on Windows (using the MinGW toolset) and Linux. Their fans
+will also find build tools for jam and autotools. The autotools
+build is still maintained for at least the tcl/tk interface version.
 
 ASCEND provides two possible interfaces. The older, more mature
 GUI is based on Tcl/Tk. A newer interface that is more in keeping
