@@ -38,7 +38,7 @@
 #ifndef ASC_ASCDYNALOAD_H
 #define ASC_ASCDYNALOAD_H
 
-extern int DLEXPORT Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
+extern int ASC_DLLSPEC Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.
  *  This is our function wrapping dlopen/LoadLibrary.  It makes

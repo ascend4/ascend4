@@ -18,7 +18,7 @@
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
- *                                                 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
@@ -248,7 +248,7 @@ extern int32 logrel_nominal(struct logrel_relation *logrel);
 #define logrel_n_incidences(lr) ((lr)->n_incidences)
 #else
 #define logrel_n_incidences(lr) logrel_n_incidencesF(lr)
-#endif 
+#endif
 /**<
  *  Returns the length of the incidence_list.
  *  @param  lr  struct logrel_relation*, the incidence list to query.
@@ -262,7 +262,7 @@ extern int32 logrel_nominal(struct logrel_relation *logrel);
 #else
 #define logrel_set_incidences(lr,n,ilist) \
    logrel_set_incidencesF((lr),(n),(ilist))
-#endif 
+#endif
 /**<
  *  Sets the length of the incidence_list.
  *  Solver clients should not call logrel_set_incidences(),
@@ -298,8 +298,9 @@ extern void logrel_set_incidencesF(struct logrel_relation *logrel,
  *  Do not call this function directly - use logrel_set_incidences() instead.
  */
 
-extern const struct dis_discrete
-**logrel_incidence_list(struct logrel_relation *logrel);
+extern const struct dis_discrete** ASC_DLLSPEC logrel_incidence_list(
+	struct logrel_relation *logrel
+);
 /**<
  *  Returns a pointer to an array logrel_n_incidences(logrel) long of bvars.
  *  Each element of the array is a struct dis_discrete *.
@@ -405,7 +406,7 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
  */
 
 /*
- * the bit flags. several are for use of transient clients 
+ * the bit flags. several are for use of transient clients
  * and should be ignored by solver engines
  */
 #define LOGREL_INCLUDED      0x1
@@ -434,8 +435,8 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
 #define LOGREL_CONDITIONAL  0x20
 /**< Is logrelation conditional? Readonly for clients. */
 #define LOGREL_IN_BLOCK     0x40
-/**< 
- * Is the logrelation in the current block of registered client? 
+/**<
+ * Is the logrelation in the current block of registered client?
  * for clients.
  */
 
@@ -475,7 +476,7 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
 #define logrel_set_in_block(lr,bv)    \
         logrel_set_flagbit((lr),LOGREL_IN_BLOCK,(bv))
 
-extern uint32 logrel_included(struct logrel_relation *logrel);
+extern uint32 ASC_DLLSPEC logrel_included(struct logrel_relation *logrel);
 /**<
  *  Retrieves the included field of the given logrelation.
  *  This has side effect on the ascend instance, so it isn't

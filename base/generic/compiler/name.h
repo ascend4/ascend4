@@ -33,15 +33,15 @@
 	By any other name would smell as sweet.
 
 	A name is [or seems to JP to be] a linked list of symchars, integers
-	or so on that gives the complete global context for a variable or 
-	a relation. So if you have something's name, it tells you how to 
+	or so on that gives the complete global context for a variable or
+	a relation. So if you have something's name, it tells you how to
 	find it in the instance hierarchy. Is that right?
 
 	Actually I'm not sure if linked-up Names actually make discrete lists
 	or maybe form a tree structure?
 
 	@todo Clarify what is a name of type 'set'.
-	
+
 	<pre>
 	When #including name.h, make sure these files are #included first:
 	   #include "utilities/ascConfig.h"
@@ -58,7 +58,7 @@
 #define ASC_NAME_H
 
 #define CreateIdName(s) CreateIdNameF((s),NAMEBIT_IDTY)
-/**< 
+/**<
 	Create name with Id flag.
 	@see CreateIdNameF()
 */
@@ -67,7 +67,7 @@
 	Create system name with Id+Auto flags.
 	@see CreateIdNameF()
 */
-extern struct Name *CreateIdNameF(symchar *s, int bits);
+extern struct Name* ASC_DLLSPEC CreateIdNameF(symchar *s, int bits);
 /**<
 	Create a name node with the identifier s
 	and flag bits associated with it.  Implementation
@@ -75,12 +75,12 @@ extern struct Name *CreateIdNameF(symchar *s, int bits);
 */
 
 extern struct Name *CreateSetName(struct Set *s);
-/**< 
+/**<
 	Create a name node of type set with the set s associated with it.
 */
 
 extern void LinkNames(struct Name *cur, struct Name *next);
-/**< 
+/**<
 	Link "next" to cur so that NextName(cur) = next
 */
 
@@ -97,7 +97,7 @@ extern void LinkNames(struct Name *cur, struct Name *next);
 */
 extern struct Name *NextNameF(CONST struct Name *n);
 /**<
-	Return the next attribute of n. 
+	Return the next attribute of n.
 	Implementation function for NextName().  Do not call this
 	function directly - use NextName() instead.
 */
@@ -120,10 +120,10 @@ extern struct Name *NextNameF(CONST struct Name *n);
 */
 
 extern int NameIdF(CONST struct Name *n);
-/**< 
+/**<
 	Return NAMEBIT_IDTY if n is an identifier type Name or 0 otherwise.
-	We should have analogous functions for CHAT and ATTR, but since no 
-	clients yet use them, they aren't implemented. 
+	We should have analogous functions for CHAT and ATTR, but since no
+	clients yet use them, they aren't implemented.
 	Implementation function for NameId().  Do not call this
 	function directly - use NameId() instead.
 */
@@ -144,7 +144,7 @@ extern int NameIdF(CONST struct Name *n);
 extern int NameAutoF(CONST struct Name *n);
 /**<
 	Return NAMEBIT_AUTO if n is an system generated identifier
-	type Name, or 0 otherwise. 
+	type Name, or 0 otherwise.
 	Implementation function for NameAuto().  Do not call this
 	function directly - use NameAuto() instead.
 */
@@ -161,26 +161,26 @@ extern int NameAutoF(CONST struct Name *n);
 	@see NameIdPtrF()
 */
 extern symchar *NameIdPtrF(CONST struct Name *n);
-/**< 
-	Assumes that n is a identifier type name node. 
-	@return the id pointer. 
+/**<
+	Assumes that n is a identifier type name node.
+	@return the id pointer.
 	Implementation function for NameIdPtr().  Do not call this
 	function directly - use NameIdPtr() instead.
 */
 
 extern symchar *SimpleNameIdPtr(CONST struct Name *n);
-/**< 
+/**<
 	Return NULL if n is not an NameId or if it has a next field.  Otherwise,
 	it returns the char pointer.
 */
 
 extern unsigned int NameLength(CONST struct Name *n);
-/**< 
-	Returns the number of links in a name. 
-	
+/**<
+	Returns the number of links in a name.
+
 	@note May be used in a similar manner to SimpleNameIdPtr,
 		to determine if a name is a simple name
-	
+
 	@example
 		<tt>my_var</tt> has length 1.
 		<tt>my_var.your_var[1..3]</tt> has length 3.
@@ -198,7 +198,7 @@ extern unsigned int NameLength(CONST struct Name *n);
 	@see NameSetPtrF()
 */
 extern CONST struct Set *NameSetPtrF(CONST struct Name *n);
-/**< 
+/**<
 	Assumes that n is a set type name node.
 	Returns the set pointer.
 	Implementation function for NameSetPtr().  Do not call this
@@ -206,44 +206,44 @@ extern CONST struct Set *NameSetPtrF(CONST struct Name *n);
 */
 
 extern struct Name *CopyName(CONST struct Name *n);
-/**< 
+/**<
 	Make and return a copy of the whole name.
 */
 
-extern void DestroyName(struct Name *n);
-/**< 
+extern void ASC_DLLSPEC DestroyName(struct Name *n);
+/**<
 	Deallocate the whole name linked list
 	Handles NULL input gracefully.
 */
 
 extern void DestroyNamePtr(struct Name *n);
-/**< 
+/**<
 	Deallocate this name node, and don't change the next node.
 	Handles NULL input gracefully.
  */
 
 extern struct Name *JoinNames(struct Name *n1, struct Name *n2);
-/**< 
+/**<
 	Appends n2 to the end of n1.  This will return n1, unless n1 is NULL in
 	which case it will return n2.
  */
 
 extern struct Name *ReverseName(struct Name *n);
-/**< 
-	Returns the reverse of n. 
+/**<
+	Returns the reverse of n.
 	@todo Clarify how exactly, and for what purpose.
 */
 
 extern CONST struct Name *NextIdName(CONST struct Name *n);
-/**< 
+/**<
 	Returns the first NameId element in the name after the current element
 	which is expected to be a NameId. If there is none, returns NULL.
  */
 
 extern int NameCompound(CONST struct Name *n);
-/**< 
+/**<
 	Test whether name is compound (i.e. crosses a MODEL/ATOM boundary).
-	If so this returns 1, OTHERWISE this returns 0.  So array names 
+	If so this returns 1, OTHERWISE this returns 0.  So array names
 	will return 0.
 
 	The following return 0:
@@ -260,28 +260,28 @@ extern int NameCompound(CONST struct Name *n);
 */
 
 extern int NamesEqual(CONST struct Name *n1, CONST struct Name *n2);
-/**< 
+/**<
 	Return TRUE if and only if n1 and n2 are structurally equivalent.
 */
 
 extern int CompareNames(CONST struct Name *n1, CONST struct Name *n2);
-/**< 
+/**<
 	Returns -1 0 1 as n1 < = > n2.
 	Will need fixing when we have supported attributes.
 */
 
 extern void name_init_pool(void);
-/**< 
+/**<
 	Starts memory recycle. Do not call twice before stopping recycle.
 */
 
 extern void name_destroy_pool(void);
-/**< 
+/**<
 	Stops memory recycle. Do not call while ANY names are outstanding.
 */
 
 extern void name_report_pool(void);
-/**< 
+/**<
 	Write the pool report to ASCERR for the name pool.
 */
 

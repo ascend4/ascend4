@@ -1,7 +1,7 @@
 /*
  *  Type Definition Library
  *  by Tom Epperly
- *  Created: 1/12/90                                     
+ *  Created: 1/12/90
  *  Version: $Revision: 1.17 $
  *  Version control file: $RCSfile: library.h,v $
  *  Date last modified: $Date: 1998/04/16 00:43:24 $
@@ -13,7 +13,7 @@
  *
  *  The Ascend Language Interpreter is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the                         
+ *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
  *
  *  The Ascend Language Interpreter is distributed in hope that it will be
@@ -62,17 +62,17 @@ extern void InitializeLibrary(void);
  *  finished with the library.
  */
 
-extern void DestroyLibrary(void);
-/**<  
- *  Cleans up after library use. 
+extern void ASC_DLLSPEC DestroyLibrary(void);
+/**<
+ *  Cleans up after library use.
  *  Do not use any other functions or globals in this module after
- *  using this function until InitializeLibrary() is called.  
+ *  using this function until InitializeLibrary() is called.
  */
 
-extern struct TypeDescription *FindType(symchar *name);
+extern struct TypeDescription* ASC_DLLSPEC FindType(symchar *name);
 /**<
- *  Finds the type description associated with name.  
- *  Returns NULL if unable to locate the type. 
+ *  Finds the type description associated with name.
+ *  Returns NULL if unable to locate the type.
  *  Handles NULL input gracefully.
  *
  *  @param name The type name to look up.
@@ -81,7 +81,7 @@ extern struct TypeDescription *FindType(symchar *name);
  */
 
 extern struct TypeDescription *FindRelationType(void);
-/**< 
+/**<
  *  Finds the type description associated with real relations.
  *  Returns NULL if never defined, which means someone forgot to
  *  load a system.lib equivalent.
@@ -101,47 +101,47 @@ extern struct TypeDescription *FindSetType(void);
  */
 
 extern struct TypeDescription *FindDummyType(void);
-/**< 
+/**<
  *  Finds the type description associated with unselected statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
 extern struct TypeDescription *FindWhenType(void);
-/**< 
+/**<
  *  Finds the type description associated with WHEN statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
 extern struct TypeDescription *FindExternalType(void);
-/**< 
+/**<
  *  Finds the type description associated with external statements.
  *  Returns NULL if never defined, which is an extreme error.
  */
 
 extern int AddType(struct TypeDescription *desc);
-/**< 
+/**<
  *  Adds a type to the library.
  *  The type is not added if it is already present in the
  *  type library.  Otherwise, the library takes ownership of
  *  desc and adds it to the library.
- *  
+ *
  *  @param desc The type to add to the library.
- *  @return Returns 1 if the new type is added and kept, 
+ *  @return Returns 1 if the new type is added and kept,
  *          0 if it was already present.
  */
 
 extern struct gl_list_t *FindFundamentalTypes(void);
-/**< 
- *  Creates a gl_list_t containing pointers to the fundamental 
- *  types.  Destruction of the returned list (but not it's 
+/**<
+ *  Creates a gl_list_t containing pointers to the fundamental
+ *  types.  Destruction of the returned list (but not it's
  *  contents) is the responsibility of the caller.
  *
  *  @return A gl_list_t of (struct TypeDescription *) to the
  *          fundamental types.
  */
 
-extern struct gl_list_t *Asc_TypeByModule(CONST struct module_t *module);
-/**< 
+extern struct gl_list_t* ASC_DLLSPEC Asc_TypeByModule(CONST struct module_t *module);
+/**<
  *  Builds a list of type names defined in module that are already
  *  present in the main type library.  Destruction of the returned
  *  list (but not its contents) is the responsibility of the caller.
@@ -152,12 +152,12 @@ extern struct gl_list_t *Asc_TypeByModule(CONST struct module_t *module);
  */
 
 extern struct gl_list_t *TypesThatRefineMe (symchar *name);
-/**< 
+/**<
  *  Builds a list of type names in the main type library which refine
- *  the type having the specified name.  The returned list includes 
- *  immediate refinements only, not all of the refinements in a chain 
+ *  the type having the specified name.  The returned list includes
+ *  immediate refinements only, not all of the refinements in a chain
  *  such as a<-b<-c<-d.  Given a, only b is included in the list.
- *  This should be an expensive function and could be made more 
+ *  This should be an expensive function and could be made more
  *  efficient for certain atomic types.  Destruction of the returned
  *  list (but not its contents) is the responsibility of the caller.
  *
@@ -172,7 +172,7 @@ extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *name);
  *  refine the type having the specified name.  The returned list
  *  includes all refinements in a chain such as a<-b<-c<-d.  Given a,
  *  b, c, and d are all included in the list.  This is only slightly
- *  more expensive than TypesThatRefineMe().  For efficiency atoms 
+ *  more expensive than TypesThatRefineMe().  For efficiency atoms
  *  and models are handled differently.  Destruction of the returned
  *  list (but not its contents) is the responsibility of the caller.
  *
@@ -182,15 +182,15 @@ extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *name);
  */
 
 extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *name);
-/**< 
- *  Builds a tree of HierarchyNodes all types in the main type library 
+/**<
+ *  Builds a tree of HierarchyNodes all types in the main type library
  *  which refine the type having the specified name.  This is similar to
  *  AllTypesThatRefineMe_Flat() except that the results are returned in
- *  a HierarchyNodes tree.  This is somewhat pricey in terms of the number 
- *  of pointer comparisons.   For efficiency atoms and models are handled 
- *  separately.  The first node returned is the node of the type given. 
- *  If it is null, the type given was not found.  Destruction of the 
- *  returned tree is the responsibility of the caller.  Use 
+ *  a HierarchyNodes tree.  This is somewhat pricey in terms of the number
+ *  of pointer comparisons.   For efficiency atoms and models are handled
+ *  separately.  The first node returned is the node of the type given.
+ *  If it is null, the type given was not found.  Destruction of the
+ *  returned tree is the responsibility of the caller.  Use
  *  DestroyHierarchyNode() for this purpose.
  *
  *  @param name The type name to check for registered refinements.
@@ -199,8 +199,8 @@ extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *name);
  */
 
 extern void DestroyHierarchyNode(struct HierarchyNode *heir);
-/**< 
- *  Deallocates (recursively) all the memory associated with a 
+/**<
+ *  Deallocates (recursively) all the memory associated with a
  *  HierarchyNode.  Use this function to destroy the tree returned
  *  by AllTypesThatRefineMe_Tree().
  *
@@ -209,8 +209,8 @@ extern void DestroyHierarchyNode(struct HierarchyNode *heir);
 
 extern int IsTypeRefined(CONST struct TypeDescription *desc);
 /**<
- *  Check whether the specified type is refined by any other type in 
- *  the main type library.  
+ *  Check whether the specified type is refined by any other type in
+ *  the main type library.
  *
  *  @param desc The type to check for refinements.
  *  @return Returns 1 if desc is refined, 0 otherwise.

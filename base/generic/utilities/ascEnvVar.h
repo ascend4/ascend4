@@ -118,7 +118,7 @@ extern int Asc_SetPathList(CONST char *var, CONST char *path);
  *          1 otherwise.
  */
 
-extern int Asc_PutEnv(CONST char *putenv_input_string);
+extern int ASC_DLLSPEC Asc_PutEnv(CONST char *putenv_input_string);
 /**<
  *  Creates an ASCEND environment variable from a putenv()-type string.
  *  The input string should have the form "varname=path".  The path
@@ -165,7 +165,7 @@ extern int Asc_PutEnv(CONST char *putenv_input_string);
  *          1 otherwise.
  */
 
-extern int Asc_ImportPathList(CONST char *osEnvVar);
+extern int ASC_DLLSPEC Asc_ImportPathList(CONST char *osEnvVar);
 /**<
  *  Imports a system environment variable into the ASCEND environment.
  *  If osEnvVar is already a variable in the ASCEND environment space,
@@ -219,7 +219,7 @@ extern char **Asc_GetPathList(char *envvar, int *argcPtr);
  *          the returned array pointer will be NULL.
  */
 
-extern char *Asc_GetEnv(char *envvar);
+extern char* ASC_DLLSPEC Asc_GetEnv(char *envvar);
 /**<
  *  Retrieve the value(s) of ASCEND environment variable envvar
  *  as a delimited string.  The elements of envvar are assembled

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>

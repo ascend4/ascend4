@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "config.h"
 extern "C"{
 #include <stdio.h>
 #include "utilities/ascConfig.h"
@@ -32,7 +33,7 @@ public:
 	const bool isBool() const;
 	const bool isStr() const;
 	const bool isReal() const;
-	
+
 	// The following throw execeptions unless the parameter type is correct
 	const int &getIntValue() const;
 	const int &getIntLowerBound() const;

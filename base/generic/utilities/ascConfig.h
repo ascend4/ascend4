@@ -43,6 +43,41 @@
 #ifndef ASC_ASCCONFIG_H
 #define ASC_ASCCONFIG_H
 
+#ifndef ASC_BUILDING_INTERFACE
+# define ASC_BUILDING_LIBASCEND
+#endif
+
+/*
+	ASCEND code in base/generic only EXPORTS symbols, no imports.
+	The ASC_DLLSPEC macro will, depending on whether we are
+	ASC_BUILDING_LIBASCEND (building libascend.so aka ascend.dll)
+	or ASC_BUILDING_INTERFACE (building for example _ascpy.dll or
+	ascendtcl.dll), act respectively to declare symbols as being
+	*exported* or *imported*.
+
+	New versions of GCC are able to make use of these declarations
+	as well.
+*/
+#if defined(__WIN32__)
+# if defined(ASC_BUILDING_LIBASCEND)
+#  define ASC_DLLSPEC __declspec(dllexport)
+# elif defined(ASC_BUILDING_INTERFACE)
+#  define ASC_DLLSPEC __declspec(dllimport)
+# else
+#  define ASC_DLLSPEC
+# endif
+#else /* ie not WIN32 */
+# ifdef HAVE_GCCVISIBILITYPATCH
+#  define ASC_DLLSPEC __attribute__ ((visibility("default")))
+# else
+#  define ASC_DLLSPEC
+# endif
+#endif
+
+#ifndef ASC_DLLSPEC
+# error "NO ASC_DLLSPEC DEFINED"
+#endif
+
 /**
 	What kind of C compiler do we have?
 
@@ -221,9 +256,9 @@ if 0 block is broken. */
 #define ASC_MILD_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 #define ASC_BIG_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 
-extern FILE *g_ascend_errors;         /**< File stream to receive error messages. */
-extern FILE *g_ascend_warnings;       /**< File stream to receive warning messages. */
-extern FILE *g_ascend_information;    /**< File stream to receive general messages. */
+extern FILE* ASC_DLLSPEC g_ascend_errors;         /**< File stream to receive error messages. */
+extern FILE* ASC_DLLSPEC g_ascend_warnings;       /**< File stream to receive warning messages. */
+extern FILE* ASC_DLLSPEC g_ascend_information;    /**< File stream to receive general messages. */
 
 /* NB For error messages to be correctly captured, all output needs to go to stderr in error.h */
 #ifndef ASCERR
@@ -353,32 +388,6 @@ typedef	unsigned   uint32;
 #  define ASC_USE_TK_CONSOLE
 # endif /* ASC_USE_TK_CONSOLE */
 
-/*
- * make macros so that DLLs can see nominated internal C functions.
- * Unix programmers might also use the presence of these macros to figure
- * out which APIs are to be regarded as more stable.
- */
-# if defined(ASC_BUILD_DLL)
-#  define DLEXPORT __declspec(dllexport)
-# elif defined(ASC_BUILD_LIB)
-#  define DLEXPORT
-# else
-/* changed this coz of errors with MSVC 2003 */
-#  define DLEXPORT
-# endif
-
-#else /* not __WIN32__ isms */
-
-# ifdef HAVE_GCCVISIBILITYPATCH
-#  define DLEXPORT __attribute__ ((visibility("default")))
-# else
-#  define DLEXPORT
-# endif
-
-#endif /* __WIN32__ */
-
-#ifndef DLEXPORT
-# error "NO DLEXPORT DEFINED"
 #endif
 
 /* use signals by default, but disable with configure. */

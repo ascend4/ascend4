@@ -42,7 +42,7 @@
 
 extern void WriteName(FILE *f, CONST struct Name *n);
 /**<
- *  Write n to file f.  No leading or trailing spaces are added, 
+ *  Write n to file f.  No leading or trailing spaces are added,
  *  and no trailing newline is added.
  */
 
@@ -51,7 +51,7 @@ extern void WriteNameNode(FILE *f, CONST struct Name *n);
  *  Write just this one name node, and not any of the ones following it.
  */
 
-extern char *WriteNameString(CONST struct Name *n);
+extern char* ASC_DLLSPEC WriteNameString(CONST struct Name *n);
 /**<
  * Return a string containing the name.
  * User is responsible for freeing string.
@@ -64,7 +64,7 @@ extern void WriteName2Str(Asc_DString *dstring, CONST struct Name *n);
  */
 
 extern void WriteNameNode2Str(Asc_DString *dstring,CONST struct Name *n);
-/**< 
+/**<
  *  Write just this one name node, and not any of the ones following it.
  */
 

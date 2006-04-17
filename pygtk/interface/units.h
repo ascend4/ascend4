@@ -1,6 +1,7 @@
 #ifndef ASCXX_UNITS_H
 #define ASCXX_UNITS_H
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/fractions.h>

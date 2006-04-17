@@ -6,6 +6,7 @@
 
 #include "symchar.h"
 
+#include "config.h"
 extern "C"{
 #include "utilities/ascConfig.h"
 #include "compiler/compiler.h"
@@ -37,7 +38,7 @@ public:
 	ASCXX_Set(){
 		throw std::runtime_error("Can't create new ASCXX_Set objects");
 	}
-	
+
 	ASCXX_Set(const struct set_t *s) : s(s){
 		if(!isCorrectType()){
 			throw std::runtime_error("Invalid set creation");
@@ -56,13 +57,13 @@ public:
 	}
 };
 
-template<> 
+template<>
 extern const bool ASCXX_Set<long>::isCorrectType() const;
 
-template<> 
+template<>
 extern const bool ASCXX_Set<SymChar>::isCorrectType() const;
 
-template<> 
+template<>
 extern const bool ASCXX_Set<void>::isCorrectType() const;
 
 template<class T>

@@ -7,6 +7,7 @@
 
 #include <cstdarg>
 
+#include "config.h"
 extern "C"{
 #include <utilities/error.h>
 }

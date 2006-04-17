@@ -139,7 +139,7 @@ int slv9_register(SlvFunctionsT *f)
 #define OPT_ITER_LIMIT_PTR (sys->parm_array[13])
 #define OPT_ITER_LIMIT     ((*(int32 *)OPT_ITER_LIMIT_PTR))
 #define INFINITY_PTR (sys->parm_array[14])
-#define INFINITY  ((*(real64 *)INFINITY_PTR))
+#define ASC_INFINITY  ((*(real64 *)INFINITY_PTR))
 #define OBJ_TOL_PTR (sys->parm_array[15])
 #define OBJ_TOL  ((*(real64 *)OBJ_TOL_PTR))
 #define RTMAXJ_PTR (sys->parm_array[16])
@@ -2587,7 +2587,7 @@ static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
    * Variables: Current Value, lower value and upper value. Note that for
    * this problem the variables are the vector of steps dx. So we "invent"
    * approximations for the bounds based on the bounds of the real
-   * variables of the problem. The use of the parameter INFINITY is
+   * variables of the problem. The use of the parameter ASC_INFINITY is
    * Hack to keep CONOPT from complaining for large bounds.
    */
 
@@ -2599,8 +2599,8 @@ static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
       low = var_lower_bound(var);
       up = var_upper_bound(var);
       uplow = fabs( up - low);
-      lower[count] = -uplow > -INFINITY ? -uplow : -0.5*INFINITY;
-      upper[count] = uplow < INFINITY ? uplow : 0.5*INFINITY;
+      lower[count] = -uplow > -ASC_INFINITY ? -uplow : -0.5*ASC_INFINITY;
+      upper[count] = uplow < ASC_INFINITY ? uplow : 0.5*ASC_INFINITY;
       curr[count] = 0.5 * nominal;
       count++;
     }
@@ -3032,8 +3032,8 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
   /*
    * Real array
    */
-  rpsz[F2C(1)] = INFINITY;       /* infinity */
-  rpsz[F2C(2)] = -INFINITY;      /* -infinity */
+  rpsz[F2C(1)] = ASC_INFINITY;       /* infinity */
+  rpsz[F2C(2)] = -ASC_INFINITY;      /* -infinity */
   rpsz[F2C(3)] = UNDEFINED;      /* undefined */
   rpsz[F2C(6)] = 0;              /* work space allocated by conopt */
   rpsz[F2C(7)] = TIME_LIMIT;     /* resource limit (time) */

@@ -13,7 +13,7 @@
  *  The SLV solver is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.          
+ *  License, or (at your option) any later version.
  *
  *  The SLV solver is distributed in hope that it will be
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -61,7 +61,7 @@ extern slv_system_t slv_create(void);
 extern int slv_destroy(slv_system_t sys);
 /**<
 	Destroys all currently created systems in sys.
-	
+
 	@sys a system
 	@return 0 on success, or else the number of solvers with trouble destroying if there were problems.
 */
@@ -78,14 +78,14 @@ extern void slv_set_instance(slv_system_t sys, SlvBackendToken root);
 
 	All naming within the context of the slv_system_t is
 	done relative to this instance pointer.
-	
+
 	NOTE: THESE TWO FUNCTIONS SHOULD TAKE A VOID * AND
 	THEN THE USER SHOULD CAST IT BACK TO WHATEVER IS
 	NEEDED GIVEN THE KNOWLEDGE OF THE BACK END IN QUESTION.
 */
 
 extern void slv_set_num_models(slv_system_t sys, int32 nmod);
-/**<	
+/**<
 	Sets the number of models associated with a system.
 
 	@param sys a system
@@ -170,7 +170,7 @@ extern void slv_set_master_bnd_list(slv_system_t sys,
 
 extern void slv_set_symbol_list(slv_system_t sys, struct gl_list_t *sv);
 /**<
-	Set gllist of SymbolValues struct to sys. 
+	Set gllist of SymbolValues struct to sys.
 	They are used to assign an integer value to a symbol value
 */
 
@@ -243,18 +243,18 @@ extern void slv_set_when_buf(slv_system_t sys, struct w_when *wbuf, int len);
 extern void slv_set_bnd_buf(slv_system_t sys, struct bnd_boundary *bbuf, int len);
 /**<
 	Set the array of boundaries for the system.
-	
+
 	slv_set_*_buf(sys,array);
 	You should give these functions a pointer to an array of
 	the var or rel structure. These arrays should contain the
 	memory pointed to by any and all pointers in the var/rel/when/bdn
 	lists associated with the slv_system_t. If you have none
 	of a particular type, its buf may be NULL.
-	
+
 	There is no way to RETRIEVE these -- they are destroyed with
 	the slv_system_t. You should have no individually allocated
 	vars/rels in the system: these are the only ones we will free.
-	
+
 	Calling any of these twice on the system is an extreme error.
 */
 
@@ -263,7 +263,7 @@ extern void slv_set_incidence(slv_system_t sys,
                               long size);
 /**<
 	Set the list of variables incident in a relation.
-	
+
 	You should give this function a pointer to an array of
 	struct var_variable *. This array should contain the
 	memory pointed to by any and all pointers in rel incidence
@@ -272,7 +272,7 @@ extern void slv_set_incidence(slv_system_t sys,
 	the slv_system_t. You should have no individually allocated
 	rel incidence in the system: this is the only one we will free.
 	Size is the length of the array, which we want for accounting.
-	
+
 	Calling this function twice on the system is an extreme error.
 */
 
@@ -321,7 +321,7 @@ extern int slv_get_num_extrels(slv_system_t sys);
 
 extern int32 slv_obj_select_list(slv_system_t sys, int32 **rip);
 /**<
-	Allocates rip and fills it with solver objective list 
+	Allocates rip and fills it with solver objective list
 	positions of included objectives.
 	The rip list is terminated with a -1.
 	Returns number of objectives found.
@@ -330,11 +330,11 @@ extern int32 slv_obj_select_list(slv_system_t sys, int32 **rip);
 
 extern int32 slv_get_obj_num(slv_system_t sys);
 /**<
-	Returns the solver list index of the current objective.  
+	Returns the solver list index of the current objective.
 	If the objective is NULL then -1 is returned.
 */
 
-extern int32 slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
+extern int32 ASC_DLLSPEC slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
 /**<
 	Allocates rip and fills it with:
 	-#  the number of vars close to lower bounds
@@ -342,10 +342,10 @@ extern int32 slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
 	-#  solver variable list positions of close to UB.
 	-#  solver variable list positions of close to LB.
 	-#  Returns number of variables close to bounds.
-	
+
 	A variable is close to its bound if
 	abs(value - bound)/nominal < epsilon
-	
+
 	@par The calling function must free rip.
 */
 
@@ -354,7 +354,7 @@ extern int32 slv_far_from_nominals(slv_system_t sys, real64 bignum, int32 **rip)
 	Allocates rip and fills it with
 	solver variable list positions of variables far
 	from nominal values.
-	
+
 	Test used: abs(value - nominal)/nominal > bignum
 	<br><br>
 	The calling function must free rip.

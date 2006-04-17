@@ -43,7 +43,7 @@
 
 static struct Table *ExternalFuncLibrary = NULL;
 
-int DLEXPORT CreateUserFunctionBlackBox(CONST char *name,
+int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
 		       ExtBBoxInitFunc *init,
 		       ExtBBoxFunc *value,
 		       ExtBBoxFunc *deriv,
@@ -92,7 +92,7 @@ int DLEXPORT CreateUserFunctionBlackBox(CONST char *name,
   return 0;
 }
 
-int DLEXPORT CreateUserFunctionGlassBox(CONST char *name,
+int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
 		       ExtEvalFunc *init,
 		       ExtEvalFunc **value,
 		       ExtEvalFunc **deriv,
@@ -141,7 +141,7 @@ int DLEXPORT CreateUserFunctionGlassBox(CONST char *name,
   return 0;
 }
 
-int DLEXPORT CreateUserFunctionMethod(CONST char *name,
+int ASC_DLLSPEC CreateUserFunctionMethod(CONST char *name,
 	/* 	       ExtMethodInit *init, */
 		       ExtMethodRun *run, 
 	/*	       ExtMethodInitEvalFunc *final, */

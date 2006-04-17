@@ -6,6 +6,7 @@ using namespace std;
 #undef NDEBUG
 
 //#include <compiler/module.h>
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <general/list.h>
@@ -32,8 +33,7 @@ extern "C"{
 #include <compiler/instance_enum.h>
 #include <compiler/notate.h>
 #include <compiler/simlist.h>
-
-int zz_parse();
+#include <compiler/parser.h>
 }
 
 #include "library.h"
@@ -58,9 +58,9 @@ Library::Library(string defaultpath){
 		cerr << "Created LIBRARY" << endl;
 		cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
-	}/*else{
+	}else{
 		std::cerr << "Reusing LIBRARY" << std::endl;
-	}*/
+	}
 	have_init=1;
 }
 

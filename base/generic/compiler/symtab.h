@@ -1,4 +1,4 @@
-/* 
+/*
  *  Symbol Table Management
  *  by Tom Epperly
  *  7/24/89
@@ -47,12 +47,12 @@
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 
 extern void DestroyStringSpace(void);
-/**< 
+/**<
  *  This deallocates all the memory associated with the string space.
  */
 
 extern void InitSymbolTable(void);
-/**< 
+/**<
  *  This procedure performs all the necessary initialization for the symbol
  *  table manager.  It should be called once and only once, and it must
  *  be called before any of the other symbol table routines have been
@@ -62,8 +62,8 @@ extern void InitSymbolTable(void);
  *  Post: the symbol table is initialized
  */
 
-extern symchar *AddSymbol(CONST char *c);
-/**< 
+extern symchar* ASC_DLLSPEC AddSymbol(CONST char *c);
+/**<
  *  This function adds the string c to the symbol table if it is not already
  *  defined.  This uses a copy of c rather than c itself.  c must be a
  *  NULL terminated string. allocation/deallocation of c is the users
@@ -86,7 +86,7 @@ extern symchar *AddSymbol(CONST char *c);
  */
 
 extern symchar *AddSymbolL(CONST char *c, int len);
-/**< 
+/**<
  *  This function does exactly what add symbol does except the length of the
  *  string is passed as a parameter.  The length is the number of characters
  *  before the terminating '\0'.
@@ -102,23 +102,23 @@ extern symchar *AddSymbolL(CONST char *c, int len);
  *  for the life of the ASCEND process.
  */
 
-extern symchar *AscFindSymbol(symchar *s);
-/**< 
+extern symchar* ASC_DLLSPEC AscFindSymbol(symchar *s);
+/**<
  * Returns NULL if the pointer s given is not from the table.
- * Otherwise returns the pointer given. 
+ * Otherwise returns the pointer given.
  * This function does not check whether a string with the value
  * that s points to is in the table; this function checks that _s_
  * is in the table.
  */
 
 extern void PrintTab(int noisy);
-/**< 
+/**<
  *  Print a report on stdout about the string hash table.
  *  if (noisy) prints lots of goop.
  */
 
 extern void DestroySymbolTable(void);
-/**< 
+/**<
  *  This function will deallocate all the memory associated with the
  *  symbol table and the symbols it contains.
  */

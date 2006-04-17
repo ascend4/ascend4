@@ -7,7 +7,7 @@ Import('env')
 
 srcs = Split("""
 
-	sensitivity.c ascFreeAllVars.c
+	sensitivity.c ascFreeAllVars.c bisect.c kvalues.c
 
 """)
 

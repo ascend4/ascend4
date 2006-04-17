@@ -109,18 +109,18 @@ extern void InitUnitsTable(void);
 /**<
  *  <!--  void InitUnitsTable()                                        -->
  *  This routine initializes some internal variables, so that all the
- *  other units functions may be called.  It must be called once and 
- *  only once when the program is starting up.  
+ *  other units functions may be called.  It must be called once and
+ *  only once when the program is starting up.
  *  Must be called after dimensions table initiatialization.
  */
-                       
+
 extern void DestroyUnitsTable(void);
-/**< 
+/**<
  *  <!--  void DestroyUnitsTable()                                     -->
  *  This routine can be called to deallocate all of the units in the table.
  */
 
-extern struct UnitDefinition *CreateUnitDef(symchar *new_name, 
+extern struct UnitDefinition *CreateUnitDef(symchar *new_name,
                                             CONST char *unitsexpr,
                                             CONST char *filename,
                                             int linenum);
@@ -151,7 +151,7 @@ extern void ProcessUnitDef(struct UnitDefinition *udp);
  * messages to ascerr if not possible.
  */
 
-extern CONST struct Units *LookupUnits(CONST char *c);
+extern CONST struct Units* ASC_DLLSPEC LookupUnits(CONST char *c);
 /**<
  *  <!--  const struct Units *LookupUnits(c)                           -->
  *  <!--  const char *c;                                               -->
@@ -183,7 +183,7 @@ extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *
  *       know where to fix it. BAA 6-94
  */
 
-extern CONST struct Units *FindOrDefineUnits(CONST char *c,
+extern CONST struct Units* ASC_DLLSPEC FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
@@ -222,8 +222,8 @@ extern CONST struct Units *FindOrDefineUnits(CONST char *c,
  *  </pre>
  */
 
-extern char **UnitsExplainError(CONST char *unitsexpr, int code, int pos);
-/**< 
+extern char** ASC_DLLSPEC UnitsExplainError(CONST char *unitsexpr, int code, int pos);
+/**<
  *  <!--  errv = UnitsExplainError(unitsexpr,code,pos);                -->
  *  Returns an array of strings which may be helpful in
  *  explaining the error.

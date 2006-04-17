@@ -57,7 +57,7 @@
  */
 
 extern void (*InterfacePtrDelete)();
-/**< 
+/**<
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  This procedure will be called
  *  when an instance is deleted.  Its purpose is to dispose of the
@@ -82,7 +82,7 @@ extern void (*InterfacePtrDelete)();
  */
 
 extern void (*InterfaceNotify)();
-/**< 
+/**<
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  This procedure will be called
  *  when an instance is moved in memory.  It is provided in case the
@@ -108,7 +108,7 @@ extern void (*InterfaceNotify)();
  */
 
 extern void (*InterfacePtrATS)();
-/**< 
+/**<
  *  This global variable should be provided by the interface.  It is a
  *  pointer to a void function(procedure).  The function will be called
  *  when two instances are going to be ARE_THE_SAME'd.  The function's
@@ -138,7 +138,7 @@ extern void (*InterfacePtrATS)();
  *  </pre>
  */
 
-/**< 
+/**<
  *  General instance interogation routines
  */
 
@@ -151,13 +151,13 @@ extern void (*InterfacePtrATS)();
  *  Return the enumerated inst_t that indicates the type of Instance* i.
  *  @see InstanceKindF()
  */
-extern enum inst_t InstanceKindF(CONST struct Instance *i);
+extern enum inst_t ASC_DLLSPEC InstanceKindF(CONST struct Instance *i);
 /**<
  *  <!--  enum inst_t InstanceKind(i);                                 -->
  *  <!--  const struct Instance *i;                                    -->
  *
  *  <!--  Return the enumerated type that indicates the type of i.     -->
- *  Implementation function for InstanceKind().  Do not use 
+ *  Implementation function for InstanceKind().  Do not use
  *  this function directly - use InstanceKind() instead.
  */
 
@@ -180,7 +180,7 @@ extern enum inst_t InstanceKindF(CONST struct Instance *i);
  */
 
 extern unsigned long InstanceDepth(CONST struct Instance *i);
-/**< 
+/**<
  *  <!--  unsigned long InstanceDepth(i)                               -->
  *  <!--  const struct Instance *i;                                    -->
  *  Return the longest distance between i and root.  The depth of NULL is 0.
@@ -188,7 +188,7 @@ extern unsigned long InstanceDepth(CONST struct Instance *i);
  */
 
 extern unsigned long InstanceShortDepth(CONST struct Instance *i);
-/**< 
+/**<
  *  <!--  unsigned long InstanceShortDepth(i)                          -->
  *  <!--  const struct Instance *i;                                    -->
  *  Return the shortest distance between i and root.  The depth of NULL
@@ -197,7 +197,7 @@ extern unsigned long InstanceShortDepth(CONST struct Instance *i);
 
 
 extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
-/**< 
+/**<
  *  <!--  SetNextCliqueMember(i,ptr)                                   -->
  *  Sets i->alike_ptr to ptr for types that have alike_ptrs.
  *  Exits on types that don't or bad input.
@@ -205,8 +205,8 @@ extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
  *  This is not an intelligent function.
  */
 
-extern struct Instance *NextCliqueMember(CONST struct Instance *i);
-/**< 
+extern struct Instance* ASC_DLLSPEC NextCliqueMember(CONST struct Instance *i);
+/**<
  *  <!--  struct Instance *NextCliqueMember(i);                        -->
  *  <!--  const struct Instance *i;                                    -->
  *
@@ -228,8 +228,8 @@ extern struct Instance *NextCliqueMember(CONST struct Instance *i);
  *  This function can be call on *any* type of instance.
  */
 
-extern VOIDPTR GetInterfacePtr(CONST struct Instance *i);
-/**< 
+extern VOIDPTR ASC_DLLSPEC GetInterfacePtr(CONST struct Instance *i);
+/**<
  *  <!--  VOIDPTR GetInterfacePtr(i)                                   -->
  *  <!--  const struct Instance *i;                                    -->
  *  Return the interface pointer.  The compiler initializes this to NULL
@@ -268,8 +268,8 @@ extern VOIDPTR GetInterfacePtr(CONST struct Instance *i);
  *  instance_io.h.
  */
 
-extern void SetInterfacePtr(struct Instance *i, VOIDPTR c);
-/**< 
+extern void ASC_DLLSPEC SetInterfacePtr(struct Instance *i, VOIDPTR c);
+/**<
  *  <!--  void SetInterfacePtr(i,c)                                    -->
  *  <!--  struct Instance *i;                                          -->
  *  <!--  VOIDPTR c;                                                   -->
@@ -289,7 +289,7 @@ extern unsigned int GetAnonFlags(CONST struct Instance *i);
  */
 
 extern void SetAnonFlags(struct Instance *i, unsigned int flags);
-/**< 
+/**<
  *  <!--  void SetAnonFlags(i,flags)                                   -->
  *  <!--  const struct Instance *i;                                    -->
  *  <!--  unsigned int flags;                                          -->
@@ -299,7 +299,7 @@ extern void SetAnonFlags(struct Instance *i, unsigned int flags);
  */
 
 extern struct BitList *InstanceBitList(CONST struct Instance *i);
-/**< 
+/**<
  *  <!--  struct BitList *InstanceBitList(i)                           -->
  *  <!--  const struct Instance *i;                                    -->
  *  Return the bit list which indicates which statements have and have not
@@ -314,7 +314,7 @@ extern struct BitList *InstanceBitList(CONST struct Instance *i);
  */
 
 extern symchar *InstanceType(CONST struct Instance *i);
-/**< 
+/**<
  *  <!--  symchar *InstanceType(i)                                     -->
  *  <!--  CONST struct Instance *i;                                    -->
  *  Return a string indicating the type of instance i.  This works for
@@ -322,7 +322,7 @@ extern symchar *InstanceType(CONST struct Instance *i);
  *  relations though.
  */
 
-extern struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i);
+extern struct TypeDescription* ASC_DLLSPEC InstanceTypeDesc(CONST struct Instance *i);
 /**<
  *  <!--  struct TypeDescription *InstanceTypeDesc(i)                  -->
  *  <!--  const struct Instance *i;                                    -->
@@ -331,14 +331,14 @@ extern struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i);
  */
 
 extern unsigned long InstanceIndirected(CONST struct Instance *i);
-/**< 
+/**<
  * Returns the indirected field of array instances and LONG_MAX
  * for other kinds of instances.
  * Does not tolerate NULL.
  */
 
 extern unsigned long InstanceSize(CONST struct Instance *i);
-/**< 
+/**<
  *  <!--  unsigned long InstanceSize(i);                               -->
  *  <!--  CONST struct Instance *i;                                    -->
  *  Returns the number of bytes chargeable to the given instance i.
@@ -358,30 +358,30 @@ extern unsigned long InstanceSize(CONST struct Instance *i);
  */
 
 extern int IntegerSetInstance(CONST struct Instance *i);
-/**< 
+/**<
  *  <!--  int IntegerSetInstance(i)                                    -->
  *  <!--  const struct Instance *i;                                    -->
- *  It will return true if the set is of integers and false otherwise.  
+ *  It will return true if the set is of integers and false otherwise.
  *  This should only be called on set instances.
  */
 
 extern symchar *GetSimulationName(struct Instance *i);
-/**< 
+/**<
  *  <!--  const char *GetSimulationName(i);                            -->
  *  <!--  struct Instance *i;                                          -->
- *  Returns the name of the simulation instance. 
+ *  Returns the name of the simulation instance.
  *  i must be a SIM_INST kind.
  */
 
 extern struct gl_list_t *FindSimulationAncestors(struct Instance *i);
-/**< 
+/**<
  * <!--  sl = FindSimulationAncestors(i);                              -->
  * Returns a list of all the simulation ancestors of i.
  * Caller should destroy the list (but obviously not its content).
  */
 
-extern struct Instance *GetSimulationRoot(struct Instance *i);
-/**< 
+extern struct Instance* ASC_DLLSPEC GetSimulationRoot(struct Instance *i);
+/**<
  *  <!--  struct Instance *GetSimulationRoot(i);                       -->
  *  <!--  struct Instance *i;                                          -->
  *  Returns the root instance of the simulation. This is where most if not

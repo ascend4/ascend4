@@ -75,6 +75,7 @@ swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
 #print env['SUBST_DICT']
 
 env.SubstInFile(source='config.py.in')
+env.SubstInFile(source='config.h.in')
 
 ascendcmd = env.SubstInFile(source='ascend.in')
 

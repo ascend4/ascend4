@@ -5,6 +5,7 @@
 
 #include "simulation.h"
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <solver/slv_types.h>
@@ -16,7 +17,7 @@ class Relation : public Instance{
 private:
 	Simulation *sim;
 	struct rel_relation *rel;
-	
+
 public:
 	Relation();
 	Relation(const Relation &old);

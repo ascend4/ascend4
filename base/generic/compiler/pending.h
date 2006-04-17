@@ -53,7 +53,7 @@ struct pending_t {
 };
 
 extern void InitPendingPool(void);
-/**< 
+/**<
  *  <!--  InitPendingPool();                                           -->
  *  Sets up pending structure data management
  *  before anything can be built, ideally at startup time.
@@ -62,7 +62,7 @@ extern void InitPendingPool(void);
  */
 
 extern void DestroyPendingPool(void);
-/**< 
+/**<
  *  <!--  DestroyPendingPool();                                        -->
  *  Destroy pending structure data management. This must be called to
  *  clean up before shutting down ASCEND.
@@ -73,7 +73,7 @@ extern void DestroyPendingPool(void);
  */
 
 extern void ReportPendingPool(FILE *f);
-/**< 
+/**<
  *  <!--  ReportPendingPool(f);                                        -->
  *  <!--  FILE *f;                                                     -->
  *  Reports on the pending pool to f.
@@ -102,7 +102,7 @@ extern struct Instance *PendingInstanceF(CONST struct pending_t *pt);
  */
 
 extern void ClearList(void);
-/**< 
+/**<
  *  <!--  void ClearList()                                             -->
  *  Prepare an empty list.  This gets rid of any remaining list and makes
  *  a new empty list ready for use.
@@ -111,7 +111,7 @@ extern void ClearList(void);
  */
 
 extern unsigned long NumberPending(void);
-/**< 
+/**<
  *  <!--  unsigned long NumberPending()                                -->
  *  Return the number of instances in the pending instance list.
  */
@@ -135,7 +135,7 @@ extern void AddToEnd(struct Instance *i);
  */
 
 extern void RemoveInstance(struct Instance *i);
-/**< 
+/**<
  *  <!--  void RemoveInstance(i)                                       -->
  *  <!--  struct Instance *i;                                          -->
  *  Remove instance i from the pending instance list if it is in it.
@@ -143,7 +143,7 @@ extern void RemoveInstance(struct Instance *i);
  */
 
 extern void PendingInstanceRealloced(struct Instance *old_inst, struct Instance *new_inst);
-/**< 
+/**<
  *  <!--  void PendingInstanceRealloced(old,new)                       -->
  *  <!--  struct Instance *old,*new;                                   -->
  *  Change references to old to new.
@@ -152,7 +152,7 @@ extern void PendingInstanceRealloced(struct Instance *old_inst, struct Instance 
  */
 
 extern int InstanceInList(struct Instance *i);
-/**< 
+/**<
  *  <!--  int InstanceInList(i)                                        -->
  *  <!--  struct Instance *i;                                          -->
  *  Return true iff i is in the list.
@@ -167,7 +167,7 @@ extern struct pending_t *TopEntry(void);
  */
 
 extern struct pending_t *ListEntry(unsigned long n);
-/**< 
+/**<
  *  <!--  struct pending_t *ListEntry(n)                               -->
  *  <!--  unsigned long n;                                             -->
  *  Return the n'th entry in the list.  This returns NULL if n is less
@@ -175,19 +175,19 @@ extern struct pending_t *ListEntry(unsigned long n);
  */
 
 extern struct pending_t *BottomEntry(void);
-/**< 
+/**<
  *  <!--  struct pending_t *BottomEntry()                              -->
  *  Return the bottom item in the pending list.
  */
 
 extern void MoveToBottom(struct pending_t *pt);
-/**< 
+/**<
  *  <!--  void MoveToBottom(struct pending_t *pt)                      -->
  *  Move the item pt to the bottom of the list.
  */
 
-extern unsigned long NumberPendingInstances(struct Instance *i);
-/**< 
+extern unsigned long ASC_DLLSPEC NumberPendingInstances(struct Instance *i);
+/**<
  *  <!--  unsigned long NumberPendingInstances;                        -->
  *  <!--  struct Instance *i;                                          -->
  *  Visits the Instance Tree seatch for instances with pending statements.

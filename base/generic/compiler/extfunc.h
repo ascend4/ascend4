@@ -263,7 +263,7 @@ typedef int (*CreateUserFunction_fptr_t)(CONST char *name,
                               CONST unsigned long n_outputs,
                               CONST char *help);
 
-extern int DLEXPORT CreateUserFunctionBlackBox(CONST char *name,
+extern int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
                               ExtBBoxInitFunc *init,
                               ExtBBoxFunc *value,
                               ExtBBoxFunc *deriv,
@@ -292,7 +292,7 @@ extern int DLEXPORT CreateUserFunctionBlackBox(CONST char *name,
 	        non-zero otherwise.
 */
 
-extern int DLEXPORT CreateUserFunctionGlassBox(CONST char *name,
+extern int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
                               ExtEvalFunc *init,
                               ExtEvalFunc **value,
                               ExtEvalFunc **deriv,
@@ -323,7 +323,7 @@ extern int DLEXPORT CreateUserFunctionGlassBox(CONST char *name,
 	        non-zero otherwise.
 */
 
-extern int DLEXPORT CreateUserFunctionMethod(CONST char *name,
+extern int ASC_DLLSPEC CreateUserFunctionMethod(CONST char *name,
                              /*  ExtMethodInit *initial, */
                               ExtMethodRun *run,
                              /*  ExtMethodInit *final, */
@@ -388,15 +388,15 @@ extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
 extern ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc);
 
 
-extern CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc);
+extern CONST char* ASC_DLLSPEC ExternalFuncName(CONST struct ExternalFunc *efunc);
 /**<
 	Returns the name of an external function.
 */
 
 /** fetch the required input count for glass, black, or method. */
-extern unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc);
+extern unsigned long ASC_DLLSPEC NumberInputArgs(CONST struct ExternalFunc *efunc);
 /** fetch the required output count for glass, black, or method. */
-extern unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc);
+extern unsigned long ASC_DLLSPEC NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 
 extern void PrintExtFuncLibrary(FILE *f);
@@ -415,6 +415,6 @@ extern char *WriteExtFuncLibraryString(void);
 /**
 	This provides a way for other code to visit the external function list
 */
-extern void TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
+extern void ASC_DLLSPEC TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
 
 #endif /* ASC_EXTFUNC_H */

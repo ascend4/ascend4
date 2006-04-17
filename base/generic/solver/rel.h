@@ -1,4 +1,4 @@
-/* 
+/*
  *  SLV: Ascend Numeric Solver
  *  by Karl Michael Westerberg
  *  Created: 2/6/90
@@ -76,7 +76,7 @@ struct rel_extnode {
   int32 whichvar;
   struct ExtRelCache *cache;  /**< pointer to private structure */
 };
-  
+
 /** The exact operator of a relation. */
 enum rel_enum {
   e_rel_minimize,
@@ -157,12 +157,12 @@ typedef struct rel_filter_structure {
 } rel_filter_t;
 /**< Relation filter type */
 
-extern SlvBackendToken rel_instance(struct rel_relation *rel);
+extern SlvBackendToken ASC_DLLSPEC rel_instance(struct rel_relation *rel);
 /**<
  *  Returns the instance pointer from a rel.
  */
 
-extern void rel_set_extnodeinfo(struct rel_relation *rel, 
+extern void rel_set_extnodeinfo(struct rel_relation *rel,
                                 struct rel_extnode *nodeinfo);
 /**< Sets the external node information structure for a relation. */
 extern struct rel_extnode *rel_extnodeinfo(struct rel_relation *rel);
@@ -273,7 +273,7 @@ extern void rel_set_model(struct rel_relation *rel, int32 index);
  *  models. Models are numbered from 1 to some upper limit.
  */
 
-extern real64 rel_residual(struct rel_relation *rel);
+extern real64 ASC_DLLSPEC rel_residual(struct rel_relation *rel);
 /**<
  *  Retrieves the residual field of the given relation.
  *  Note that the residual is not actually computed by rel_residual:
@@ -302,7 +302,7 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
 #define rel_n_incidences(rel) ((rel)->n_incidences)
 #else
 #define rel_n_incidences(rel) rel_n_incidencesF(rel)
-#endif 
+#endif
 /**<
  *  Returns the length of the incidence_list for a relation.
  *  Not everything in the incidence list is necessarily a
@@ -317,7 +317,7 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
   (rel)->n_incidences=(n); (rel)->incidence = (ilist)
 #else
 #define rel_set_incidences(rel,n,ilist) rel_set_incidencesF((rel),(n),(ilist))
-#endif 
+#endif
 /**<
  *  Sets the length and incidence_list for a relation.
  *  Not everything in the incidence list is necessarily a
@@ -332,7 +332,7 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
  *  @see rel_set_incidencesF()
  */
 
-extern int32 rel_n_incidencesF(struct rel_relation *rel);
+extern int32 ASC_DLLSPEC rel_n_incidencesF(struct rel_relation *rel);
 /**<
  *  Implementation function for rel_n_incidences().  Do not call
  *  this function directly - use rel_n_incidences() instead.
@@ -346,10 +346,10 @@ extern void rel_set_incidencesF(struct rel_relation *rel,
  */
 /* OLD GROUP COMMENTS */
 /*
- *  rel_n_incidences(rel)                                        
- *  rel_set_incidences(rel,n,ilist) //SERVER ONLY                
- *  struct rel_relation *rel;                                    
- *  struct var_variable **ilist;                                 
+ *  rel_n_incidences(rel)
+ *  rel_set_incidences(rel,n,ilist) //SERVER ONLY
+ *  struct rel_relation *rel;
+ *  struct var_variable **ilist;
  *  int32 n;
  *
  *  rel_n_incidences returns the length of the incidence_list.
@@ -363,11 +363,11 @@ extern void rel_set_incidencesF(struct rel_relation *rel,
 extern struct var_variable
 **rel_incidence_list_to_modify(struct rel_relation *rel);
 /**<
- *  Returns a non-const pointer to an array rel_n_incidences(rel) 
+ *  Returns a non-const pointer to an array rel_n_incidences(rel)
  *  long of vars.
  *  @see rel_incidence_list().
  */
-extern const struct var_variable **rel_incidence_list(struct rel_relation *rel);
+extern const struct var_variable** ASC_DLLSPEC rel_incidence_list(struct rel_relation *rel);
 /**<
  *  Returns a pointer to an array rel_n_incidences(rel) long of vars.
  *  Each element of the array is a struct var_variable *.
@@ -389,7 +389,7 @@ extern const struct var_variable **rel_incidence_list(struct rel_relation *rel);
 
 extern int32 rel_apply_filter(const struct rel_relation *rel,
                               rel_filter_t *filter);
-/**< 
+/**<
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
  *  filter->matchvalue and the relation's flags value.
@@ -406,7 +406,7 @@ extern int32 rel_apply_filter(const struct rel_relation *rel,
  *  setting filt.matchbits = (| of all your interesting bits) and
  *  setting filt.matchvalue = (| of the bits you want to be TRUE).
  */
-  
+
 extern uint32 rel_flags(struct rel_relation *rel);
 /**<
  * Returns the flags field of the relation.
@@ -416,7 +416,7 @@ extern void rel_set_flags(struct rel_relation *rel, uint32 flags);
  *  Sets the entire flag field to the value of flags given.
  */
 
-extern uint32 rel_flagbit(struct rel_relation *rel, uint32 name);
+extern uint32 ASC_DLLSPEC rel_flagbit(struct rel_relation *rel, uint32 name);
 /**<
  *  Returns the value of the bit specified from the relation flags.
  *  name should be a REL_xx flag defined above)
@@ -466,7 +466,7 @@ extern void rel_set_flagbit(struct rel_relation *rel,
 #define REL_BLACKBOX  0x20
 /**<  Read_only for clients.  Rel module. */
 #define REL_SATISFIED 0x40
-/**< 
+/**<
  *  Has rel been pronounced satisfied by someone?
  *  Bit should be treated as readonly. use rel_set_* to change.
  */
@@ -598,7 +598,7 @@ extern void rel_set_flagbit(struct rel_relation *rel,
         rel_set_flagbit((rel),REL_IN_CUR_SUBREGION,(bitval))
 #define rel_set_generated(rel,bitval)		rel_set_flagbit((rel),REL_GENERATED,(bitval))
 
-extern uint32 rel_included(struct rel_relation *rel);
+extern uint32 ASC_DLLSPEC rel_included(struct rel_relation *rel);
 /**<
  *  Retrieves the included field of the given relation.
  *  @todo This has side effects on the ascend instance, so it isn't
@@ -737,7 +737,7 @@ extern void rel_set_extcache(struct rel_relation *rel, struct ExtRelCache *cache
 
 /*
  * The following aren't commented because Kirk Abbott didn't comment them.
- * It's all server magic anyway? 
+ * It's all server magic anyway?
  */
 
 extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext);
@@ -746,13 +746,13 @@ extern void ExtRel_DestroyCache(struct ExtRelCache *cache);
 extern int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup);
 extern real64 ExtRel_Evaluate_RHS(struct rel_relation *rel);
 extern real64 ExtRel_Evaluate_LHS(struct rel_relation *rel);
-extern real64 ExtRel_Diffs_RHS(struct rel_relation *rel, 
+extern real64 ExtRel_Diffs_RHS(struct rel_relation *rel,
                                var_filter_t *filter,
-                               int32 row, 
+                               int32 row,
                                mtx_matrix_t matrix);
-extern real64 ExtRel_Diffs_LHS(struct rel_relation *rel, 
+extern real64 ExtRel_Diffs_LHS(struct rel_relation *rel,
                                var_filter_t *filter,
-                               int32 row, 
+                               int32 row,
                                mtx_matrix_t matrix); /**< not implemented */
 
 #endif /* _SLV_SERVER_C_SEEN_ */

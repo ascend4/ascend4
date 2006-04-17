@@ -3,7 +3,7 @@
 	Copyright (C) 1990 Karl Michael Westerberg
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
-	Copyright (C) 2006 Carnegie Mellon University    
+	Copyright (C) 2006 Carnegie Mellon University
 
 	The SLV solver is free software; you can redistribute
 	it and/or modify it under the terms of the GNU General Public License as
@@ -50,7 +50,7 @@
 	Date last modified: $Date: 1998/03/30 22:07:10 $
 	Last modified by: $Author: rv2a $
 
-	Requires: 
+	Requires:
 	#include <stdio.h>
 	#include "utilities/ascConfig.h"
 	#include "solver/slv_types.h"
@@ -155,7 +155,7 @@ typedef struct var_filter_structure {
 # define var_instance(var) ((var)->ratom)
 #else
 # define var_instance(var) var_instanceF(var)
-#endif 
+#endif
 /**<
 	Returns the ATOM instance associated with the variable.
 	@param var const struct var_variable *, the variable to query.
@@ -167,7 +167,7 @@ typedef struct var_filter_structure {
 # define var_set_instance(var,inst) ((var)->ratom = (inst))
 #else
 # define var_set_instance(var,inst) var_set_instanceF((var),(inst))
-#endif 
+#endif
 /**<
 	Sets the ATOM instance associated with the variable.
 	@param var  struct var_variable *, the variable to modify.
@@ -176,7 +176,7 @@ typedef struct var_filter_structure {
 	@see var_instanceF()
 */
 
-extern SlvBackendToken var_instanceF(const struct var_variable *var);
+extern SlvBackendToken ASC_DLLSPEC var_instanceF(const struct var_variable *var);
 /**<
 	Implementation function for var_instance().  Do not call this
 	function directly - use var_instance() instead.
@@ -192,8 +192,10 @@ extern char *var_make_xname(const struct var_variable *var);
 	Returns the index name, eg x23 rather than full name.
 	See var_make_name() for more information.
 */
-extern char *var_make_name(const slv_system_t sys,
-                           const struct var_variable *var);
+extern char* ASC_DLLSPEC var_make_name(
+	const slv_system_t sys,
+	const struct var_variable *var
+);
 /**<
 	Creates and returns a sufficiently large string storing the
 	qualified name of var as known by the solver instance tree.
@@ -225,7 +227,7 @@ void var_destroy(struct var_variable *var);
 # define var_mindex(var) (var)->mindex
 #else
 # define var_mindex(var) var_mindexF(var)
-#endif 
+#endif
 /**<
 	Returns the index of the variable as it appears in a variable list.
 	The index is also used to assign the variable to a specific
@@ -239,7 +241,7 @@ void var_destroy(struct var_variable *var);
 # define var_set_mindex(var,index) (var)->mindex = (index)
 #else
 # define var_set_mindex(var,index) var_set_mindexF((var),(index))
-#endif 
+#endif
 /**<
 	Sets the index of the variable as it appears in a variable list.
 	@param var   struct var_variable *, the variable to modify.
@@ -263,7 +265,7 @@ extern void var_set_mindexF(struct var_variable *var, int32 index);
 # define var_sindex(var) (var)->sindex
 #else
 # define var_sindex(var) var_sindexF(var)
-#endif 
+#endif
 /**<
 	Returns the index of the variable as it appears in a solvers
 	variable list.  The index is also used to assign the variable
@@ -277,7 +279,7 @@ extern void var_set_mindexF(struct var_variable *var, int32 index);
 # define var_set_sindex(var,index) (var)->sindex = (index)
 #else
 # define var_set_sindex(var,index) var_set_sindexF((var),(index))
-#endif 
+#endif
 /**<
 	Sets the index of the variable as it appears in a solver's
 	variable list.
@@ -287,7 +289,7 @@ extern void var_set_mindexF(struct var_variable *var, int32 index);
 	@see var_set_sindexF().
 */
 
-extern int32 var_sindexF(const struct var_variable *var);
+extern int32 ASC_DLLSPEC var_sindexF(const struct var_variable *var);
 /**<
 	Implementation function for var_sindex().  Do not call this
 	function directly - use var_sindex() instead.
@@ -298,29 +300,29 @@ extern void var_set_sindexF(struct var_variable *var, int32 index);
 	function directly - use var_set_sindex() instead.
 */
 
-extern real64 var_value(const struct var_variable *var);
+extern real64 ASC_DLLSPEC var_value(const struct var_variable *var);
 /**<  Returns the value of the variable. */
 extern void var_set_value(struct var_variable *var, real64 value);
 /**<
 	Sets the value of the variable.
 */
 
-extern real64 var_nominal(struct var_variable *var);
+extern real64 ASC_DLLSPEC var_nominal(struct var_variable *var);
 /**<  Returns the nominal value of the variable, or 1.0 if it has none. */
 extern void var_set_nominal(struct var_variable *var, real64 nominal);
 /**<
 	Sets the nominal value of the variable.
-	If no nominal field in var, returns 1.0. 
+	If no nominal field in var, returns 1.0.
 */
 
-extern real64 var_lower_bound(struct var_variable *var);
+extern real64 ASC_DLLSPEC var_lower_bound(struct var_variable *var);
 /**<  Returns the lower bound value of the variable. */
 extern void var_set_lower_bound(struct var_variable *var, real64 lower_bound);
 /**<
 	Sets the lower bound value of the variable.
 */
 
-extern real64 var_upper_bound(struct var_variable *var);
+extern real64 ASC_DLLSPEC var_upper_bound(struct var_variable *var);
 /**<  Returns the upper bound value of the variable. */
 extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 /**<
@@ -346,7 +348,7 @@ extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
   (var)->n_incidences=(n); (var)->incidence = (ilist)
 #else
 # define var_set_incidences(var,n,ilist) var_set_incidencesF((var),(n),(ilist))
-#endif  
+#endif
 /**<
 	Sets the incidence list for a variable.
 	Solver clients should not call var_set_incidences().  It is
@@ -390,7 +392,7 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 # define var_flags(var) ((var)->flags)
 #else
 # define var_flags(var) var_flagsF(var)
-#endif 
+#endif
 /**<
 	Returns the flags field of the var.  This flags value should
 	be composed of the var_xxx values defined above.
@@ -403,10 +405,10 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 # define var_set_flags(var,flags) ((var)->flags = (flags))
 #else
 # define var_set_flags(var,flags) var_set_flagsF((var),(flags))
-#endif 
+#endif
 /**<
-	Sets the entire flag field to the value of flags given. 
-	This flags value should be composed of the var_xxx values 
+	Sets the entire flag field to the value of flags given.
+	This flags value should be composed of the var_xxx values
 	defined above.
 	@param var   struct var_variable *, the variable to query.
 	@param flags uint32, the new flags value.
@@ -414,7 +416,7 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 	@see var_set_flagsF().
 */
 
-extern uint32 var_flagsF(const struct var_variable *var);
+extern uint32 ASC_DLLSPEC var_flagsF(const struct var_variable *var);
 /**<
 	Implementation function for var_flags().  Do not call this
 	function directly - use var_flags() instead.
@@ -425,7 +427,7 @@ extern void var_set_flagsF(struct var_variable *var, uint32 flags);
 	function directly - use var_set_flags() instead.
 */
 
-extern uint32 var_flagbit(const struct var_variable *rel, const uint32 name);
+extern uint32 ASC_DLLSPEC var_flagbit(const struct var_variable *rel, const uint32 name);
 /**<
 	Returns the value of the bit specified from the variable flags.
 	name should be a VAR_xx flag defined above.
@@ -454,8 +456,8 @@ extern void var_set_flagbit(struct var_variable *var,
 /*
  * At present there is some insanity about asking the instance tree
  * vs asking our data structure about the flag values. This needs to
- * be fixed. In the process of that fix, we should establish a 
- * protocol that means vars/rels never need to look back at ATOM 
+ * be fixed. In the process of that fix, we should establish a
+ * protocol that means vars/rels never need to look back at ATOM
  * instances to be queried during the solution process. Rather, we
  * need to establish a process in which the var list tells all its
  * atoms about the solver derived values or the var list updates

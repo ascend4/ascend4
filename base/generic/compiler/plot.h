@@ -85,19 +85,11 @@ extern enum PlotTypes g_plot_type;
 
 extern void plot_prepare_file(struct Instance *inst, char *plotfilename);
 /**<
- *  <!--  plot_prepare_file(inst,plotfilename)                         -->
- *  <!--  struct Instance *inst;                                       -->
- *  <!--  char *plotfilename;                                          -->
- *
  *  Writes data points for the given plot instance to the given plot file.
  */
 
-extern boolean plot_allowed(struct Instance *inst);
+extern boolean ASC_DLLSPEC plot_allowed(struct Instance *inst);
 /**<
- *  <!--  allowed = plot_allowed(inst)                                 -->
- *  <!--  boolean allowed;                                             -->
- *  <!--  struct Instance *inst;                                       -->
- *
  *  Determines whether or not the given instance is allowed to be plotted
  *  (i.e. whether it is a refinement of plt_plot).
  */

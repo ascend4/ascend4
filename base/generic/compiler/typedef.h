@@ -45,15 +45,15 @@
  *  </pre>
  */
 
-#ifndef typedef_h_seen__
-#define typedef_h_seen__
+#ifndef ASC_TYPEDEF_H
+#define ASC_TYPEDEF_H
 
 extern void DestroyTypedefRecycle(void);
-/**< 
+/**<
  *  Clears recycled memory.
- *  To work efficiently the typedef module recycles certain pieces 
- *  of memory internally.  This function may be called any time (from 
- *  outside this file) to clear out this recycled memory.  The only 
+ *  To work efficiently the typedef module recycles certain pieces
+ *  of memory internally.  This function may be called any time (from
+ *  outside this file) to clear out this recycled memory.  The only
  *  time it makes _sense_ to do so is after deleting all types in the
  *  library or when shutting down the system, but it is safe regardless.
  */
@@ -222,14 +222,13 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
-extern void DefineFundamentalTypes(void);
-/**< 
+extern void ASC_DLLSPEC DefineFundamentalTypes(void);
+/**<
  *  Define the fundamental and constant basetypes used in ascend.
  *  They will be named following the defines in type_desc.h.
  *
- *  @bug compiler/typedef:DefineFundamentalTypes() doesn't specify the 
+ *  @bug compiler/typedef:DefineFundamentalTypes() doesn't specify the
  *       name "relation". Doing so is problematic wrt instantiate.c.
  */
 
-#endif /* typedef_h_seen__ */
-
+#endif /* ASC_TYPEDEF_H */

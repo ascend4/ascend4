@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <general/list.h>
@@ -26,7 +27,7 @@ extern "C"{
 
 	This class acts as a holder for these funtions, so that they
 	can be passed from a type to an instance via instanc.run(method).
-	
+
 	(@TODO rename this class to Method or similar)
 */
 class Method{

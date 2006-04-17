@@ -11,6 +11,7 @@
 
 class Variable;
 
+#include "config.h"
 extern "C"{
 #include <compiler/createinst.h>
 #include <solver/slv_types.h>

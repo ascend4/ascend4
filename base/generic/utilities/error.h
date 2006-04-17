@@ -163,30 +163,30 @@ typedef struct{
 	to print to stderr will be captured and passed to the error_reporter_callback
 	function for handling.
 */
-int fprintf_error_reporter(FILE *file, const char *fmt, ...);
+int ASC_DLLSPEC fprintf_error_reporter(FILE *file, const char *fmt, ...);
 
 /**
 	If file!=stderr, this will do the usual thing. If file==stderr, it will output
 	the character via fprintf_error_reporter.
 */
-int fputc_error_reporter(int c, FILE *file); /* just calls fprintf_error_reporter */
+int ASC_DLLSPEC fputc_error_reporter(int c, FILE *file); /* just calls fprintf_error_reporter */
 
 /**
 	This replaces the standard 'fflush' of Asc_FFlush. If file!=stderr, it will
 	call the standard fflush. If file==stderr, it will call error_reporter_end_flush.
 */
-int fflush_error_reporter(FILE *file);
+int ASC_DLLSPEC fflush_error_reporter(FILE *file);
 
 /**
 	Start a cached error report. This means that multiple frprintf_error_reporter calls will
 	be stored in a global string until an error_reporter_end_flush is encountered.
 */
-int error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
+int ASC_DLLSPEC error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
 
 /**
 	Output the contents of the checked global string as an error report
 */
-int error_reporter_end_flush();
+int ASC_DLLSPEC error_reporter_end_flush();
 
 /**
 	This #define saves you typing the list of arguments in your
@@ -233,7 +233,7 @@ typedef int (*ErrorReporter_fptr_t)(
 
 	@return follows the style of fprintf
 */
-DLEXPORT int error_reporter(
+ASC_DLLSPEC int error_reporter(
       const error_severity_t sev
     , const char *errfile
     , const int errline
@@ -246,7 +246,7 @@ DLEXPORT int error_reporter(
 	This format of the error reporter is useful if you must call it
 	from another variable-argument-list function.
 */
-int va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
+int ASC_DLLSPEC va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 
 /**
 	Set error reporting callback function using this
@@ -254,7 +254,7 @@ int va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 	to standard error, which is effectively what the
 	hitherto FPRINTF has done.
 */
-void error_reporter_set_callback(
+void ASC_DLLSPEC error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 );
 

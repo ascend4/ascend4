@@ -40,7 +40,7 @@
 
 typedef struct slv9_system_structure *slv9_system_t;
 
-int slv9_register(SlvFunctionsT *f);
+int ASC_DLLSPEC slv9_register(SlvFunctionsT *f);
 /**<
  *  Registration function for the ASCEND CMSlv solver.
  *  This is the function that tells the system about the CMSlv solver.

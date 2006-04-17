@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/fractions.h>

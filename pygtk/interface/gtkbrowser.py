@@ -143,7 +143,11 @@ class Browser:
 			"From %s, using ASCENDLIBRARY = %s" % (_pathsrc,_path)
 
 		)
-		self.library = ascpy.Library(_path)
+		try:
+			self.library = ascpy.Library(_path)
+		except:
+			print "FAILED TO EXECUTE ascpy.Library("+_path+")"
+			exit(1)
 
 		self.sim = None
 

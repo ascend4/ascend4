@@ -99,15 +99,15 @@ extern struct gl_list_t *GetUniversalProcedureList(void);
  * unless they redefine the methods themselves.
  */
 
-extern void SetUniversalProcedureList(struct gl_list_t *l);
-/**< 
+extern void ASC_DLLSPEC SetUniversalProcedureList(struct gl_list_t *l);
+/**<
  * Sets the list of procedures defined for all MODELs.
  * If a UPL already exists, it will be destroyed unless it
  * is the same. If the same, it is resorted.
  */
 
 extern void DestroyProcedure(struct InitProcedure *p);
-/**< 
+/**<
  *  <!--  void DestroyProcedure(p)                                     -->
  *  <!--  struct InitProcedure *p;                                     -->
  *  Destroy this reference to p.  This won't necessary destroy all the parts
@@ -115,7 +115,7 @@ extern void DestroyProcedure(struct InitProcedure *p);
  */
 
 extern void DestroyProcedureList(struct gl_list_t *pl);
-/**< 
+/**<
  *  <!--  void DestroyProcedureList(pl)                                -->
  *  <!--  struct gl_list_t *pl contain pointers to                     -->
  *  <!--  struct InitProcedure *p                                      -->
@@ -193,7 +193,7 @@ extern struct StatementList *ProcStatementListF(CONST struct InitProcedure *p);
  *  @see GetProcParseIdF()
  */
 extern long GetProcParseIdF(CONST struct InitProcedure *p);
-/**< 
+/**<
  *  <!--  id = GetProcParseIdF(p);                                     -->
  *  <!--  const struct InitProcedure *p;                               -->
  *  <!--  long id;                                                     -->

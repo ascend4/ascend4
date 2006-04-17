@@ -86,19 +86,12 @@
 
 extern unsigned long NumberParents(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long NumberParents(i)                               -->
- *  <!--  const struct Instance *i;                                    -->
- *
  *  Return the number of parents that instance i has.
  *  DummyInstances have no parents, apparently.
  */
 
 extern struct Instance *InstanceParent(CONST struct Instance *i, unsigned long n);
 /**<
- *  <!--  struct Instance *InstanceParent(i,n);                        -->
- *  <!--  const struct Instance *i;                                    -->
- *  <!--  unsigned long n;                                             -->
- *
  *  Return a pointer to parent number n.  Parents are numbered from
  *  1 to NumberParents(i).  0(zero) is not a valid parent number.
  *  DummyInstances have no parents, apparently.
@@ -107,9 +100,6 @@ extern struct Instance *InstanceParent(CONST struct Instance *i, unsigned long n
 extern unsigned long SearchForParent(CONST struct Instance *i,
                                      CONST struct Instance *p);
 /**<
- *  <!--  unsigned long SearchForParent(i,p)                           -->
- *  <!--  const struct Instance *i,*p;                                 -->
- *
  *  Look in instance "i"'s parent list for parent "p".  If "p" is not
  *  found, it will return 0; otherwise, it will return the parent number of
  *  "p" in instance "i"'s parent list.
@@ -118,7 +108,6 @@ extern unsigned long SearchForParent(CONST struct Instance *i,
 
 extern void DeleteParent(struct Instance *i, unsigned long pos);
 /**<
- *  <!--  void DeleteParent(i,pos)                                     -->
  *  Remove parent in pos from i's parent list.
  *  DummyInstance just reduces its reference count.
  */
@@ -126,9 +115,6 @@ extern void DeleteParent(struct Instance *i, unsigned long pos);
 extern struct InstanceName ParentsName(CONST struct Instance *p,
                                        CONST struct Instance *c);
 /**<
- *  <!--  struct InstanceName ParentsName(p,c)                         -->
- *  <!--  const struct Instance *p,*c;                                 -->
- *
  *  This will returns parent "p"'s name for "c".  This assumes that
  *  "c" is actually a child of "p", and it will return a bad value if
  *  "c" is not a child of "p".  Note this is actually a combination of
@@ -141,9 +127,6 @@ extern struct InstanceName ParentsName(CONST struct Instance *p,
 
 extern void AddParent(struct Instance *i, struct Instance *p);
 /**<
- *  <!--  void AddParent(i,p)                                          -->
- *  <!--  struct Instance *i,*p;                                       -->
- *
  *  This will add parent "p" to instance "i"'s parent list.  This only
  *  creates the link from "i" to "p"; it doesn't create the link from
  *  "p" to "i" which must be done with the routines below.
@@ -158,22 +141,15 @@ extern void AddParent(struct Instance *i, struct Instance *p);
 
 /* Children routines */
 
-extern unsigned long NumberChildren(CONST struct Instance *i);
+extern unsigned long ASC_DLLSPEC NumberChildren(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long NumberChildren(i)                              -->
- *  <!--  const struct Instance *i;                                    -->
- *
  *  Return the number of children that instance i has.
  */
 
 
-extern struct Instance *InstanceChild(CONST struct Instance *i,
+extern struct Instance* ASC_DLLSPEC InstanceChild(CONST struct Instance *i,
                                       unsigned long n);
 /**<
- *  <!--  struct Instance *InstanceChild(i,n)                          -->
- *  <!--  const struct Instance *i;                                    -->
- *  <!--  unsigned long n;                                             -->
- *
  *  Return a pointer to children number n.  Do not confuse the child number
  *  n with an integer index.  The two numbers may have no correlation.
  *  Child number range from 1 to NumberChildren(i).  0(zero) is not a valid
@@ -181,12 +157,8 @@ extern struct Instance *InstanceChild(CONST struct Instance *i,
  *  May exit on improper i.
  */
 
-extern struct InstanceName ChildName(CONST struct Instance *i, unsigned long n);
+extern struct InstanceName ASC_DLLSPEC ChildName(CONST struct Instance *i, unsigned long n);
 /**<
- *  <!--  struct InstanceName ChildName(i,n)                           -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  unsigned long n;                                             -->
- *
  *  Returns the name of the n'th child of i.  Assumes that i has an
  *  n'th child.
  */
@@ -194,9 +166,6 @@ extern struct InstanceName ChildName(CONST struct Instance *i, unsigned long n);
 extern CONST struct Statement *ChildDeclaration(CONST struct Instance *i,
                                                 unsigned long n);
 /**<
- *  <!--  CONST struct Statement *ChildDeclaration(i,n)                -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  unsigned long n;                                             -->
  *  Returns the declaration statement (IS_A,ALIASE,ARRAY) of the n'th child
  *  of i, if i has an n'th child. May return NULL under very odd circumstances.
  *  Does not return redeclarations (refinement) statements.
@@ -208,10 +177,6 @@ extern CONST struct Statement *ChildDeclaration(CONST struct Instance *i,
 extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *i,
                                                   unsigned long n);
 /**<
- *  <!--  CONST struct TypeDescription *ChildRefines(i,n)              -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  unsigned long n;                                             -->
- *
  *  Returns the type of the n'th child of i as determined at parse time.
  *  The nth child of the instance i doesn't need to exist yet. (may be null)
  *  The nth child of the instance will be of at least this type if the
@@ -228,10 +193,6 @@ extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *i,
 extern unsigned long ChildSearch(CONST struct Instance *i,
                                  CONST struct InstanceName *name);
 /**<
- *  <!--  unsigned long ChildSearch(i,name)                            -->
- *  <!--  struct Instance *sreli;                                      -->
- *  <!--  struct InstanceName *name;                                   -->
- *
  *  This procedure will search instance i for a child that matches "name".
  *  It it is unsuccessful, it will return 0; otherwise, it will return the
  *  index of the child that matches.  It is assumed that all children have
@@ -240,14 +201,9 @@ extern unsigned long ChildSearch(CONST struct Instance *i,
  *  error. The strings in the InstanceName must come from the symbol table.
  */
 
-extern struct Instance *ChildByChar(CONST struct Instance *i,
+extern struct Instance* ASC_DLLSPEC ChildByChar(CONST struct Instance *i,
                                     symchar *str);
 /**<
- *  <!--  c = ChildByChar(p,str);                                      -->
- *  <!--  struct Instance *p;                                          -->
- *  <!--  char *str;                                                   -->
- *  <!--  struct Instance *c;                                          -->
- *
  *  This returns to the pointer to a child, c, of parent,p, named by str.
  *  str must be a simple name. If child not found, returns NULL.
  *  str must be from the symbol table. If AscFindSymbol(str)==NULL,
@@ -275,8 +231,6 @@ extern struct Instance *ChildByChar(CONST struct Instance *i,
 extern unsigned long ChildIndex(CONST struct Instance *i,
                                 CONST struct Instance *child);
 /**<
- *  <!--  unsigned long ChildIndex(i,child)                            -->
- *  <!--  const struct Instance *i,*child;                             -->
  *  This procedure searches through the child list of instance i for child.
  *  If it does not find a match, it returns 0; otherwise, it will return
  *  the child number of "child".
@@ -286,10 +240,6 @@ extern void StoreChildPtr(struct Instance *i,
                           unsigned long n,
                           struct Instance *child);
 /**<
- *  <!--  void StoreChildPtr(i,n,child)                                -->
- *  <!--  struct Instance *i,*child;                                   -->
- *  <!--  unsigned long n;                                             -->
- *
  *  Store the child pointer "child" in position n of i.  This only creates
  *  the link from i to child, and not the back link which is created by
  *  add parent.  Instance "i" cannot be a fundamental atom; atoms are

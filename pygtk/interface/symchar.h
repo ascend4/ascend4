@@ -1,9 +1,10 @@
 #ifndef ASCXX_SYMCHAR_H
-#define ASCXX_SYMCHAR_H 
+#define ASCXX_SYMCHAR_H
 
 #include <iostream>
 #include <string>
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>

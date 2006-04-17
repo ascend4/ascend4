@@ -7,17 +7,17 @@ typedef int (*isInitializedFunc)(void);
 typedef void (*cleanupFunc)(void);
 
 #ifndef __WIN32__
-#define DLEXPORT
+#define ASC_DLLSPEC
 #endif
 
 /** A public datum. */
-extern int DLEXPORT value;             
+extern int ASC_DLLSPEC value;             
 
 /** Initializes the library. Returns -5. */
-int DLEXPORT init(void);
+int ASC_DLLSPEC init(void);
 /** Returns TRUE if library has been initialized, FALSE otherwise. */
-int DLEXPORT isInitialized(void);
+int ASC_DLLSPEC isInitialized(void);
 /** Cleans up the library. */
-void DLEXPORT cleanup(void);
+void ASC_DLLSPEC cleanup(void);
 
 #endif  /* TEST_ASCDYNALOAD_SHLIB_H_SEEN */

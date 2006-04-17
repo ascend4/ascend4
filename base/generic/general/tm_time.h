@@ -28,7 +28,7 @@
  */
 
 /** @file
- *  <pre>                                     
+ *  <pre>
  *  Contents:     Time module
  *
  *  Authors:      Karl Westerberg
@@ -81,7 +81,7 @@
 
 #endif /* CLOCKS_PER_SEC */
 
-extern double tm_cpu_time(void);
+extern double ASC_DLLSPEC tm_cpu_time(void);
 /**<
  *  Returns elapsed CPU time in seconds since the first call
  *  to a timing function.  The timing functions that, when
@@ -148,7 +148,7 @@ extern void aftime(double *time);
 /**< Short name for tm_cpu_time_ftn() to satisfy FORTRAN's 6 char restriction. */
 extern void TM_CPU_TIME_FTN(double *time);
 /**< Variant of tm_cpu_time_ftn_(). */
-extern void AFTIME(double *time);            
+extern void AFTIME(double *time);
 /**< Short name for TM_CPU_TIME_FTN() to satisfy FORTRAN's 6 char restriction. */
 
 #endif  /* ASC_TM_TIME_H */

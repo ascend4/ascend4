@@ -49,25 +49,25 @@
 #define MESSYTHRESH 10
 
 extern void InitDump(void);
-/**< 
+/**<
  *  Must be called to initialize the dump.
  */
 
-extern void EmptyTrash(void);
-/**< 
+extern void ASC_DLLSPEC EmptyTrash(void);
+/**<
  *  Delete all the instances in the dump.  The dump can still be used
  *  after this call.
  */
 
 extern void TendTrash(void);
-/**< 
+/**<
  *  This is a less drastic version of EmptyTrash(), which only deletes
  *  instance with too many copies in the dump.  Too many is more than
  *  MESSYTHRES copies of a given type.
  */
 
 extern void TrashType(symchar *str);
-/**< 
+/**<
  *  Delete any copies of type 'str' from the dump.  This should be called
  *  if for instance the definition of 'str' is being changed.  In such
  *  cases, fetching copies of 'str' from the dump would return the old
@@ -82,7 +82,7 @@ extern void AddInstance(struct Instance *i);
  */
 
 extern struct Instance *FindInstance(symchar *str);
-/**< 
+/**<
  *  This will return an instance if it one is available; otherwise, it
  *  returns NULL.
  */
