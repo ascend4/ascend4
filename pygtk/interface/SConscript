@@ -49,11 +49,18 @@ env.Append(BUILDERS={'Swig':swig_builder})
 #	, CPPFLAGS = ['-O3']
 #)
 
+def get_new_swig_flags(env):
+	min,maj,pat = env['SWIGVERSION']
+	flags = []
+	if min==1 and maj==3 and pat>=28:
+		flags += ['-O','-fvirtual']
+	return flags
 
+	
 swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
 	, LIBS = ['ascend'] + env['PYTHON_LIB']
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
-	, SWIGFLAGS=['-python','-c++','-O','-fvirtual']
+	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	, CPPPATH = ['../../base/generic'] + env['PYTHON_CPPPATH']
 	, CPPDEFINES = {
 		'ASCXX_USE_PYTHON':None

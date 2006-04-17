@@ -327,6 +327,8 @@ def CheckSwigVersion(context):
 		context.Result("Failed to detect version, or failed to run SWIG")
 		return 0;
 	
+	context.env['SWIGVERSION']=tuple([maj,min,pat])
+	
 	if maj == 1 and (
 			min > 3
 			or (min == 3 and pat >= 24)

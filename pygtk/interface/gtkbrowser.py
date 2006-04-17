@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 
 import sys
-sys.stderr.write("Loading...\r")
-sys.stderr.flush()
+def print_loading_status(status,msg=None):
+	sys.stderr.write("\r                                                 \r")
+	if msg!=None:
+		sys.stderr.write(msg+"\n")
+	sys.stderr.write(status+"...")
+	sys.stderr.flush()
+
+print_loading_status("Loading PSYCO")
 
 try:
 	import psyco
@@ -11,16 +17,31 @@ try:
 except ImportError:
 	pass
 
-import pygtk 
-pygtk.require('2.0') 
-import gtk
-import gtk.glade
 
-import pango
+print_loading_status("Loading python standard libraries")
+
 import re
 import preferences # loading/saving of .ini options
 import urlparse
 import optparse
+import platform
+import sys
+
+if platform.system() != "Windows":
+	import dl
+	# This sets the flags for dlopen used by python so that the symbols in the
+	# ascend library are made available to libraries dlopened within ASCEND:
+	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+	
+print_loading_status("Loading PyGTK, glade, pango")
+
+import pygtk 
+pygtk.require('2.0') 
+import gtk
+import gtk.glade
+import pango
+
+print_loading_status("Loading ASCEND python modules...")
 
 from solverparameters import * # 'solver parameters' window
 from help import *             # viewing help files
@@ -32,14 +53,10 @@ from diagnose import * 	       # for diagnosing block non-convergence
 from solverreporter import * # solver status reporting
 import config
 
-import platform
-if platform.system() != "Windows":
-	import sys, dl
-	# This sets the flags for dlopen used by python so that the symbols in the
-	# ascend library are made available to libraries dlopened within ASCEND:
-	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-
+print_loading_status("Loading LIBASCEND/ascpy")
 import ascpy
+
+print_loading_status("Starting GUI")
 
 # This is my first ever GUI code so please be nice :)
 # But I *have* at least read 
@@ -50,8 +67,6 @@ import ascpy
 # The fancy tree-view gizmo is the GtkTreeView object. See the article
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/300304
 # for the original source code on which my implementation was based.
-
-VERSION = "0.9.6-dev"
 
 ESCAPE_KEY = 65307
 
@@ -71,6 +86,8 @@ class Browser:
 		#--------
 		# load the file referenced in the command line, if any
 
+		print_loading_status("Parsing options")
+		
 		parser = optparse.OptionParser(usage="%prog [[-m typename] file]", version="gtkbrowser $rev$" )
 		# add options here if we want
 
@@ -101,10 +118,14 @@ class Browser:
 		#--------
 		# load up the preferences ini file
 
+		print_loading_status("Loading preferences")
+
 		self.prefs = preferences.Preferences()
 
 		#--------
 		# initialise ASCEND
+
+		print_loading_status("Creating ASCEND 'Library' object")
 
 		self.assets_dir = options.assets_dir
 		
@@ -124,6 +145,8 @@ class Browser:
 
 		#--------
 		# Prepare the ASCEND icon
+
+		print_loading_status("Setting up windows")
 
 		if config.ICON_EXTENSION:
 			_icon = gtk.Image()
@@ -1000,7 +1023,7 @@ class Browser:
 		_about = _xml.get_widget("aboutdialog")
 		_about.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 		_about.set_transient_for(self.window);
-		_about.set_version(VERSION)
+		_about.set_version(config.VERSION)
 		_about.run()
 		_about.destroy()
 
@@ -1145,10 +1168,6 @@ class Browser:
 		self.do_quit()	
 		return False
 
-def test():
-	import ascpy
+if __name__ == "__main__":
 	b = Browser();
 	b.run()
-
-if __name__ == "__main__":
-    test()
