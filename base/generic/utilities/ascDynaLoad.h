@@ -38,9 +38,7 @@
 #ifndef ASC_ASCDYNALOAD_H
 #define ASC_ASCDYNALOAD_H
 
-#ifdef DYNAMIC_PACKAGES
-
-extern int Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
+extern int DLEXPORT Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.
  *  This is our function wrapping dlopen/LoadLibrary.  It makes
@@ -148,9 +146,8 @@ extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
  *  Set if a platform has a library unload function.
  *  We don't know about aix, and others.
  */
-#endif
+#endif /* gnu,hp,alpha,win,solaris,sunos,irix */
 
-#endif
 
 #endif /* ASC_ASCDYNALOAD_H */
 

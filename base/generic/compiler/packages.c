@@ -132,12 +132,10 @@ int Builtins_Init(void)
   ERROR_REPORTER_HERE(ASC_USER_WARNING,"Builtins_Init: DISABLED at compile-time");
 #else
   ERROR_REPORTER_DEBUG("Builtins_Init: Loading function asc_free_all_variables\n");
-  result = CreateUserFunction("asc_free_all_variables"
-				,(ExtEvalFunc *)NULL
-			    ,(ExtEvalFunc **)Asc_FreeAllVars
-			    ,(ExtEvalFunc **)NULL
-			    ,(ExtEvalFunc **)NULL
-			    ,1, 0, "Unset 'fixed' flag of all items of type 'solver_var'");
+  result = CreateUserFunctionMethod("asc_free_all_variables",
+			Asc_FreeAllVars,
+			1,
+		 "Unset 'fixed' flag of all items of type 'solver_var'");
 #endif
   return result;
 }
@@ -278,16 +276,9 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 #ifndef NO_PACKAGES
 # ifdef STATIC_PACKAGES
 
-/* kvalues.c */
-extern int kvalues_preslv(struct Slv_Interp *,struct Instance *, struct gl_list_t *);
-extern int kvalues_fex(struct Slv_Interp *, int, int, double *, double *, double *);
-
-/* bisect.c */
-extern int do_set_values_eval(struct Slv_Interp *,struct Instance *, struct gl_list_t *);
-extern int do_bisection_eval(struct Slv_Interp *,struct Instance *,struct gl_list_t *);
-
-/* sensitivity.c */
-extern int do_sensitivity_eval(struct Slv_Interp *,struct Instance *, struct gl_list_t *);
+#include <packages/kvalues.h>
+#include <packages/bisect.h>
+#include <packages/sensitivity.h>
 
 # endif
 #endif
@@ -310,30 +301,20 @@ int StaticPackages_Init(void)
 	"  3. y: where y is an array of > solver_var.\n"
 	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
 
-  result = CreateUserFunction("do_solve",
-                              (ExtEvalFunc *)NULL,
-			      (ExtEvalFunc **)do_solve_eval,
-			      (ExtEvalFunc **)NULL,
-			      (ExtEvalFunc **)NULL,
-			      2,0,NULL);
-  result += CreateUserFunction("do_finite_difference",
-                               (ExtEvalFunc *)NULL,
-			       (ExtEvalFunc **)do_finite_diff_eval,
-			       (ExtEvalFunc **)NULL,
-			       (ExtEvalFunc **)NULL,
-			       4,0,NULL);
-  result += CreateUserFunction("do_sensitivity",
-			       (ExtEvalFunc *)NULL,
-			       (ExtEvalFunc **)do_sensitivity_eval,
-			       (ExtEvalFunc **)NULL,
-			       (ExtEvalFunc **)NULL,
-			       4,0,sensitivity_help);
-  result += CreateUserFunction("do_sensitivity_all",
-			       (ExtEvalFunc *)NULL,
-			       (ExtEvalFunc **)do_sensitivity_eval_all,
-			       (ExtEvalFunc **)NULL,
-			       (ExtEvalFunc **)NULL,
-			       4,0,"See do_sensitivity for details");
+  result = CreateUserFunctionMethod("do_solve",
+			      do_solve_eval,
+			      2,NULL); /* was 2,0,null */
+  result += CreateUserFunctionMethod("do_finite_difference",
+			       do_finite_diff_eval,
+			       4,NULL); /* 4,0,null */
+  result += CreateUserFunctionMethod("do_sensitivity",
+			       do_sensitivity_eval,
+			       4,sensitivity_help);
+  result += CreateUserFunctionMethod("do_sensitivity_all",
+			       do_sensitivity_eval_all,
+			       4,"See do_sensitivity_eval for details");
+
+  result += KValues_Init();
 
   return result;
 }

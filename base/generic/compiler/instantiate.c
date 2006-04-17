@@ -179,7 +179,7 @@ long int g_compiler_counter = 1;
  * which changes the instance tree is called.
  */
 
-/* #define DEBUG_RELS */
+#define DEBUG_RELS
 /* undef DEBUG_RELS if you want less spew in pass 2 */
 
 #ifdef DEBUG_RELS
@@ -5297,7 +5297,7 @@ struct gl_list_t *ProcessArgs(struct Instance *inst,
   return arglist;
 }
 
-static
+static /* blackbox only */
 struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
                                    struct Statement *stat,
                                    enum find_errors *ferr)
@@ -5305,7 +5305,7 @@ struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
   struct VariableList *vl;
   struct gl_list_t *result;
 
-  vl = ExternalStatVlist(stat);
+  vl = ExternalStatVlistBlackBox(stat);
   result = ProcessArgs(inst,vl,ferr);
   if (result==NULL){
     return NULL;
@@ -5313,7 +5313,7 @@ struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
   return result;
 }
 
-static
+static /* blackbox only */
 struct Instance *CheckExtCallData(struct Instance *inst,
                                   struct Statement *stat,
                                   enum find_errors *ferr)
@@ -5322,7 +5322,7 @@ struct Instance *CheckExtCallData(struct Instance *inst,
   struct Instance *result;
   struct gl_list_t *instances;
 
-  n = ExternalStatData(stat);
+  n = ExternalStatDataBlackBox(stat);
   if (n) {
     instances = FindInstances(inst,n,ferr);
     if (instances){ /* only 1 data instance is allowed */
@@ -5368,7 +5368,7 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
   CONSOLE_DEBUG("ENTERED ExecuteBlackBoxExt\n");
 
   /* make or find the array head */
-  name = ExternalStatName(statement);
+  name = ExternalStatNameBlackBox(statement);
   aryinst = MakeExtRelationArray(inst,name,statement);
   if (aryinst==NULL) {
     WriteStatementLocation(ASCERR,statement);
@@ -5377,8 +5377,8 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
   }
   /* we now have an array head */
   if (!RectangleArrayExpanded(aryinst)){        /* need to make children */
-    if (ExternalStatData(statement)){
-      data = CheckExtCallData(inst,statement,&ferr); /* check data */
+    if (ExternalStatDataBlackBox(statement)){
+      data = CheckExtCallData(inst,statement,&ferr); /* check data bbox*/
       switch(ferr){
       case correct_instance:
         break;
@@ -5396,7 +5396,7 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
         return 1;
       }
     }
-    arglist = CheckExtCallArgs(inst,statement,&ferr); /* check main args */
+    arglist = CheckExtCallArgs(inst,statement,&ferr); /* check main args bbox*/
     if (arglist==NULL){
       switch(ferr){
       case unmade_instance:
@@ -5477,7 +5477,7 @@ struct gl_list_t *CheckGlassBoxArgs(struct Instance *inst,
   unsigned long len,c;
   int error = 0;
 
-  vl = ExternalStatVlist(stat);
+  vl = ExternalStatVlistGlassBox(stat);
   if (!vl) {
     *ferr = impossible_instance; /* a relation with no incidence ! */
     return NULL;
@@ -5529,7 +5529,7 @@ int CheckGlassBoxIndex(struct Instance *inst,
 
   (void)inst;  /*  stop gcc whine about unused parameter  */
 
-  n = ExternalStatData(stat);
+  n = ExternalStatDataGlassBox(stat);
   if (!n) {
     *err = incorrect_num_args;		/* we must have an index */
     return -1;
@@ -5574,7 +5574,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
     return 1;
   }
 
-  name = ExternalStatName(statement);
+  name = ExternalStatNameGlassBox(statement);
   instances = FindInstances(inst,name,&ferr);
   if (instances==NULL){
     if (ferr == unmade_instance){			/* glassbox reln */
@@ -5668,15 +5668,18 @@ int ExecuteEXT(struct Instance *inst, struct Statement *statement)
 
   mode = ExternalStatMode(statement);
   switch(mode) {
-  default:
-  case 0:
+  case ek_method:
     WriteStatementLocation(ASCERR,statement);
     FPRINTF(ASCERR,"Invalid external statement in declarative section. \n");
     return 1;
-  case 1:
+  case ek_glass:
     return ExecuteGlassBoxEXT(inst,statement);
-  case 2:
+  case ek_black:
     return ExecuteBlackBoxEXT(inst,statement);
+  default:
+    WriteStatementLocation(ASCERR,statement);
+    FPRINTF(ASCERR,"Invalid external statement in declarative section. \n");
+    return 1;
   }
 }
 
@@ -6827,7 +6830,7 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case ATS:
     case AA:
     case CALL:
-    case EXT:
+    case EXT: /** FIXME probably need a check and action here */
     case ASGN:
     case CASGN:
     case COND:
@@ -7386,11 +7389,11 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
     return CheckCASGN(inst,statement);
   case SELECT:
     return CheckSELECT(inst,statement);
-  case REL: /* broken */
-  case LOGREL: /* broken */
-  case EXT: /* broken */
-  case CALL: /* broken */
-  case WHEN:  /* broken */
+  case REL: /* not broken. equations disallowed. */
+  case LOGREL: 
+  case EXT: 
+  case CALL: 
+  case WHEN: 
   case FNAME:
     if (g_iteration>=MAXNUMBER) { /* see WriteUnexecutedMessage */
        WSEM(ASCERR,statement,
@@ -7758,8 +7761,7 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
 
 /**
  * checking statementlist, as in a FOR loop check.
- * @TODO FIXME BUG!: CheckStatement and New flavors of same ignore the
- * type EXT. We never use external relations inside a loop?!
+ * relations are not handled in pass 1
  */
 static
 int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)

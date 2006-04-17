@@ -35,7 +35,8 @@
 
 
 
-#ifdef DYNAMIC_PACKAGES
+/*#ifdef DYNAMIC_PACKAGES*/
+/* no, no, no. This is used regardless of whether we have dynamic packages. */
 
 
 
@@ -186,7 +187,7 @@ void AscCheckDuplicateLoad(CONST char *path)
 #if defined(__WIN32__)
 # include <windows.h>
 
-int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
+int DLEXPORT Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   HINSTANCE xlib;
@@ -243,13 +244,12 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 	From a quick Google, it appears that AIX 5.1 now provides dlfcn.h,
 	so I'll remove the code that was emulating it here. -- johnpye
 */
-#if defined(sun) || defined(linux) || defined(__unix__) \
-	|| defined(solaris) || defined(_AIX) || defined(_SGI_SOURCE)
+#if (defined(sun) || defined(linux) || defined(__unix__) || defined(solaris) || defined(_AIX) || defined(_SGI_SOURCE))
 # ifndef MACH
 #  include <dlfcn.h>
 # else
 #  error "MACH unsupported"
-# endif
+# endif /* mach */
 
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
@@ -365,7 +365,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 	Did we get something from the above?
 */
 
-#if !defined(ASCDL_OK)
+#ifndef ASCDL_OK 
 # error "Unable to define an Asc_DynamicLoad function. Check your compiler options and installed system libraries."
 #endif
 
@@ -510,6 +510,6 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
 
 
 
-#endif
+/* #endif */
 
 

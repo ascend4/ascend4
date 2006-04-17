@@ -484,27 +484,54 @@ struct Statement *CreateLOGREL(struct Name *n, struct Expr *logrel)
   return result;
 }
 
-struct Statement *CreateEXTERN(int mode,
+struct Statement *CreateEXTERNGlassBox(
 			       struct Name *n, CONST char *funcname,
 			       struct VariableList *vl,
 			       struct Name *data,
 			       struct Name *scope)
 {
   register struct Statement *result;
-  if(mode==2){
-    ERROR_REPORTER_DEBUG("Found blackbox function statement '%s'\n",funcname);
-  }
+  ERROR_REPORTER_DEBUG("Found glassbox equation statement '%s'\n",funcname);
 
   result=create_statement_here(EXT);
-  result->v.ext.mode = mode;
-  result->v.ext.nptr = n;
+  result->v.ext.mode = ek_glass;
   result->v.ext.extcall = funcname;
-  result->v.ext.vl = vl;
-  result->v.ext.data = data; 	/* NULL is valid */
-  result->v.ext.scope = scope;	/* NULL is valid */
+  result->v.ext.u.glass.nptr = n;
+  result->v.ext.u.glass.vl = vl;
+  result->v.ext.u.glass.data = data; 	/* NULL is valid */
+  result->v.ext.u.glass.scope = scope;	/* NULL is valid */
   return result;
 }
 
+struct Statement *CreateEXTERNBlackBox(
+			       struct Name *n, CONST char *funcname,
+			       struct VariableList *vl,
+			       struct Name *data)
+{
+  register struct Statement *result;
+  ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname);
+
+  result=create_statement_here(EXT);
+  result->v.ext.mode = ek_black;
+  result->v.ext.extcall = funcname;
+  result->v.ext.u.black.nptr = n;
+  result->v.ext.u.black.vl = vl;
+  result->v.ext.u.black.data = data; 	/* NULL is valid */
+  return result;
+}
+
+struct Statement *CreateEXTERNMethod(
+			       CONST char *funcname,
+			       struct VariableList *vl)
+{
+  register struct Statement *result;
+  ERROR_REPORTER_DEBUG("Found external method statement '%s'\n",funcname);
+  result=create_statement_here(EXT);
+  result->v.ext.mode = ek_method;
+  result->v.ext.extcall = funcname;
+  result->v.ext.u.method.vl = vl;
+  return result;
+}
 
 struct Statement *CreateREF(struct VariableList *vl,
 			    symchar *ref_name,
@@ -804,15 +831,32 @@ void DestroyStatement(struct Statement *s)
         s->v.call.args = NULL;
         break;
       case EXT:
-        DestroyName(s->v.ext.nptr);
-        s->v.ext.nptr = NULL;
-        DestroyVariableList(s->v.ext.vl);
-        s->v.ext.vl = NULL;
-        if (s->v.ext.data) DestroyName(s->v.ext.data);
-        s->v.ext.data = NULL;
-	    if (s->v.ext.scope) DestroyName(s->v.ext.scope);
-	    s->v.ext.scope = NULL;
-	    break;
+	s->v.ext.extcall = NULL;
+	switch (s->v.ext.mode) {
+        case ek_method:
+          DestroyVariableList(s->v.ext.u.method.vl);
+          s->v.ext.u.method.vl = NULL;
+          break;
+        case ek_glass:
+          DestroyName(s->v.ext.u.glass.nptr);
+          s->v.ext.u.glass.nptr = NULL;
+          DestroyVariableList(s->v.ext.u.glass.vl);
+          s->v.ext.u.glass.vl = NULL;
+          if (s->v.ext.u.glass.data) DestroyName(s->v.ext.u.glass.data);
+          s->v.ext.u.glass.data = NULL;
+          if (s->v.ext.u.glass.scope) DestroyName(s->v.ext.u.glass.scope);
+          s->v.ext.u.glass.scope = NULL;
+	  break;
+        case ek_black:
+          DestroyName(s->v.ext.u.black.nptr);
+          s->v.ext.u.black.nptr = NULL;
+          DestroyVariableList(s->v.ext.u.black.vl);
+          s->v.ext.u.black.vl = NULL;
+          if (s->v.ext.u.black.data) DestroyName(s->v.ext.u.black.data);
+          s->v.ext.u.black.data = NULL;
+          break;
+        }
+        break;
       case REF:
         DestroyVariableList(s->v.ref.vl);
         s->v.ref.vl = NULL;
@@ -970,11 +1014,23 @@ struct Statement *CopyToModify(struct Statement *s)
     break;
   case EXT:
     result->v.ext.mode = s->v.ext.mode;
-    result->v.ext.nptr = CopyName(s->v.ext.nptr);
     result->v.ext.extcall = s->v.ext.extcall;
-    result->v.ext.vl = CopyVariableList(s->v.ext.vl);
-    result->v.ext.data = CopyName(s->v.ext.data);
-    result->v.ext.scope = CopyName(s->v.ext.scope);
+    switch (s->v.ext.mode) {
+    case ek_glass:
+      result->v.ext.u.glass.nptr = CopyName(s->v.ext.u.glass.nptr);
+      result->v.ext.u.glass.vl = CopyVariableList(s->v.ext.u.glass.vl);
+      result->v.ext.u.glass.data = CopyName(s->v.ext.u.glass.data);
+      result->v.ext.u.glass.scope = CopyName(s->v.ext.u.glass.scope);
+      break;
+    case ek_black:
+      result->v.ext.u.black.nptr = CopyName(s->v.ext.u.black.nptr);
+      result->v.ext.u.black.vl = CopyVariableList(s->v.ext.u.black.vl);
+      result->v.ext.u.black.data = CopyName(s->v.ext.u.black.data);
+      break;
+    case ek_method:
+      result->v.ext.u.method.vl = CopyVariableList(s->v.ext.u.method.vl);
+      break;
+    }
     break;
   case REF:
     result->v.ref.mode = s->v.ref.mode;
@@ -1515,39 +1571,75 @@ struct Expr *LogicalRelStatExprF(CONST struct Statement *s)
   return s->v.lrel.logrel;
 }
 
-int ExternalStatModeF(CONST struct Statement *s)
+enum ExternalKind ExternalStatModeF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
   return(s->v.ext.mode);
 }
 
-struct Name *ExternalStatNameF(CONST struct Statement *s)
+struct Name *ExternalStatNameBlackBoxF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  return(s->v.ext.nptr);
+  assert(s->v.ext.mode == ek_black);
+  return(s->v.ext.u.black.nptr);
 }
 
-struct Name *ExternalStatDataF(CONST struct Statement *s)
+struct Name *ExternalStatNameGlassBoxF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  return(s->v.ext.data);
+  assert(s->v.ext.mode == ek_glass);
+  return(s->v.ext.u.black.nptr);
 }
 
-struct Name *ExternalStatScopeF(CONST struct Statement *s)
+struct Name *ExternalStatDataBlackBoxF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  return(s->v.ext.scope);
+  assert(s->v.ext.mode == ek_black);
+  return(s->v.ext.u.black.data);
 }
 
-struct VariableList *ExternalStatVlistF(CONST struct Statement *s)
+struct Name *ExternalStatDataGlassBoxF(CONST struct Statement *s)
 {
   assert(s!=NULL);
   assert(s->t==EXT);
-  return(s->v.ext.vl);
+  assert(s->v.ext.mode == ek_glass);
+  return(s->v.ext.u.glass.data);
+}
+
+struct Name *ExternalStatScopeGlassBoxF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EXT);
+  assert(s->v.ext.mode == ek_glass);
+  return(s->v.ext.u.glass.scope);
+}
+
+struct VariableList *ExternalStatVlistBlackBoxF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EXT);
+  assert(s->v.ext.mode == ek_black);
+  return(s->v.ext.u.black.vl);
+}
+
+struct VariableList *ExternalStatVlistMethodF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EXT);
+  assert(s->v.ext.mode == ek_method);
+  return(s->v.ext.u.method.vl);
+}
+
+struct VariableList *ExternalStatVlistGlassBoxF(CONST struct Statement *s)
+{
+  assert(s!=NULL);
+  assert(s->t==EXT);
+  assert(s->v.ext.mode == ek_glass);
+  return(s->v.ext.u.glass.vl);
 }
 
 CONST char *ExternalStatFuncNameF(CONST struct Statement *s)
@@ -2242,19 +2334,44 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
     if (ExternalStatMode(s1) != ExternalStatMode(s2)) {
       return (ExternalStatMode(s1) > ExternalStatMode(s2)) ? 1 : -1;
     }
-    ctmp = CompareNames(ExternalStatName(s1),ExternalStatName(s2));
-    if (ctmp != 0) {
-      return ctmp;
+    if (ExternalStatMode(s1) == ek_glass ) {
+      ctmp = CompareNames(ExternalStatNameGlassBox(s1),ExternalStatNameGlassBox(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
     }
-    ctmp = CompareNames(ExternalStatScope(s1),ExternalStatScope(s2));
-    if (ctmp != 0) {
-      return ctmp;
+    if (ExternalStatMode(s1) == ek_black ) {
+      ctmp = CompareNames(ExternalStatNameBlackBox(s1),ExternalStatNameBlackBox(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
     }
-    ctmp = CompareNames(ExternalStatData(s1),ExternalStatData(s2));
-    if (ctmp != 0) {
-      return ctmp;
+    if (ExternalStatMode(s1) == ek_glass) {
+      ctmp = CompareNames(ExternalStatScope(s1),ExternalStatScope(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
     }
-    return CompareVariableLists(ExternalStatVlist(s1),ExternalStatVlist(s2));
+    if (ExternalStatMode(s1) == ek_glass) {
+      ctmp = CompareNames(ExternalStatDataGlassBox(s1),ExternalStatDataGlassBox(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    if (ExternalStatMode(s1) == ek_black) {
+      ctmp = CompareNames(ExternalStatDataBlackBox(s1),ExternalStatDataBlackBox(s2));
+      if (ctmp != 0) {
+        return ctmp;
+      }
+    }
+    switch (ExternalStatMode(s1)) {
+    case ek_method:
+      return CompareVariableLists(ExternalStatVlistMethod(s1),ExternalStatVlistMethod(s2));
+    case ek_glass:
+      return CompareVariableLists(ExternalStatVlistGlassBox(s1),ExternalStatVlistGlassBox(s2));
+    case ek_black:
+      return CompareVariableLists(ExternalStatVlistBlackBox(s1),ExternalStatVlistBlackBox(s2));
+    }
   case REF:
     /* need fixing. since both are ill defined, they
      * will not be fixed until the definitions are really known.

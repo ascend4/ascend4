@@ -66,25 +66,20 @@ Requires:
 #ifndef ASC_SENSITIVITY_H
 #define ASC_SENSITIVITY_H
 
-extern int do_solve_eval(struct Slv_Interp *slv_interp,
-                         struct Instance *i,
-                         struct gl_list_t *arglist,
-                         unsigned long whichvar);
+/* ignores: interp, i, whichvar */
+extern int do_solve_eval( struct Instance *i, struct gl_list_t *arglist);
 
-extern int do_finite_diff_eval(struct Slv_Interp *slv_interp,
-                               struct Instance *i,
-                               struct gl_list_t *arglist,
-                               unsigned long whichvar);
+/* ignores: interp, i, whichvar */
+extern int do_finite_diff_eval( struct Instance *i, struct gl_list_t *arglist);
+                               
 
 extern char sensitivity_help[];
 
-extern int do_sensitivity_eval_all(struct Slv_Interp *slv_interp,
-                                   struct Instance *i,
-                                   struct gl_list_t *arglist);
+/* ignores: interp, i,  */
+extern int do_sensitivity_eval_all( struct Instance *i, struct gl_list_t *arglist);
 
-extern int do_sensitivity_eval(struct Slv_Interp *slv_interp,
-                               struct Instance *i,
-                               struct gl_list_t *arglist);
+/* ignores: interp, i,  */
+extern int do_sensitivity_eval( struct Instance *i, struct gl_list_t *arglist);
 
 #endif  /* ASC_SENSITIVITY_H */
 

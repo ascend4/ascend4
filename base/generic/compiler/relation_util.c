@@ -3347,7 +3347,7 @@ int RelationInvertToken(struct relation_term **term,
         		enum safe_err *not_safe)
 {
   int side,ndx;
-  double value;
+  double value = 0.0;
   struct relation_term *invert_side;
   assert(term!=NULL);
   side = SetUpInvertToken(*term,&(invert_side),&value);

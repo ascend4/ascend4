@@ -95,7 +95,7 @@ fi
 
 cmd="./configure  \
 --prefix=$ascroot \
---with-fortran=g77,-lg2c \
+--with-fortran=g77,/usr/lib/libg2c.so.0 \
 --enable-gcc \
 --enable-optimization \
 --enable-dynamic-packages \

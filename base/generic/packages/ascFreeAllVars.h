@@ -51,10 +51,9 @@ extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *i);
  * of var in the DAG rooted at i.
  */
 
-extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *dummy1,
-                                    struct Instance *rootinstance,
-                                    struct gl_list_t *arglist,
-                                    unsigned long dummy4);
+extern int DLEXPORT Asc_FreeAllVars( struct Instance *rootinstance,
+                                    struct gl_list_t *arglist);
+                                   
 /**<
  *  err = Asc_FreeAllVars(NULL,rootinstance,arglist,0);
  *  All arguments except rootinstance are ignored.

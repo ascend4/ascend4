@@ -233,21 +233,43 @@ extern struct Statement *CreateLOGREL(struct Name *n,
  */
 
 
-extern struct Statement *CreateEXTERN(int mode,
-                                      struct Name *n,
+extern struct Statement *CreateEXTERNGlassBox(
+				      struct Name *n,
                                       CONST char *funcname,
                                       struct VariableList *vl,
                                       struct Name *data,
                                       struct Name *scope);
 /**<
-	Create a blackbox or glassbox function statement or an external method statement.
+	Create a glassbox function statement.
 	@return The created statement
-
-	@param mode  0 = procedural; 1 = glassbox declarative; 2 = blackbox declarative
 	@param n Name of the relation (not used in procedural calls)
+	@param funcname
 	@param vl Parameters supplied for the external function/method
 	@param data Data arguments, only used in black/glass box functions, else set NULL.
-	@param scope scope at which external relations are to be embedded. Applicable only to glassboxes.
+	@param scope scope at which external relations are to be embedded.
+*/
+
+extern struct Statement *CreateEXTERNBlackBox(
+                                      struct Name *n,
+                                      CONST char *funcname,
+                                      struct VariableList *vl,
+                                      struct Name *data);
+/**<
+	Create a blackbox  statement.
+	@return The created statement
+	@param n Name of the relation .
+	@param funcname Name of called function.
+	@param vl Parameters supplied for the external function/method
+	@param data Data arguments, possibly  null.
+
+*/
+
+extern struct Statement *CreateEXTERNMethod( CONST char *funcname, struct VariableList *vl);
+/**<
+	Create a blackbox statement.
+	@return The created statement
+	@param funcname External function.
+	@param vl Parameters supplied for the external function/method
 */
 
 extern struct Statement *CreateFlow(enum FlowControl fc,
@@ -1125,50 +1147,84 @@ extern struct Expr *LogicalRelStatExprF(CONST struct Statement *s);
  *  @return The mode as an int.
  *  @see ExternalStatModeF()
  */
-extern int ExternalStatModeF(CONST struct Statement *s);
+extern enum ExternalKind  ExternalStatModeF(CONST struct Statement *s);
 /**<
  *  Implementation function for ExternalStatMode().  Do not call this
  *  function directly - use ExternalStatMode() instead.
  */
 
 #ifdef NDEBUG
-#define ExternalStatName(s) ((s)->v.ext.nptr)
+#define ExternalStatNameBlackBox(s) ((s)->v.ext.u.black.nptr)
 #else
-#define ExternalStatName(s) ExternalStatNameF(s)
+#define ExternalStatNameBlackBox(s) ExternalStatNameBlackBoxF(s)
 #endif
 /**<
  *  Return the external statement's name.
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The name as a struct Name*.
- *  @see ExternalStatNameF()
+ *  @see ExternalStatNameBlackBoxF()
  */
-extern struct Name *ExternalStatNameF(CONST struct Statement *s);
+extern struct Name *ExternalStatNameBlackBoxF(CONST struct Statement *s);
 /**<
- *  Implementation function for ExternalStatName().  Do not call this
- *  function directly - use ExternalStatName() instead.
+ *  Implementation function for ExternalStatNameBlackBox().  Do not call this
+ *  function directly - use ExternalStatNameBlackBox() instead.
  */
 
 #ifdef NDEBUG
-#define ExternalStatData(s) ((s)->v.ext.data)
+#define ExternalStatNameGlassBox(s) ((s)->v.ext.u.glass.nptr)
 #else
-#define ExternalStatData(s) ExternalStatDataF(s)
+#define ExternalStatNameGlassBox(s) ExternalStatNameGlassBoxF(s)
+#endif
+/**<
+ *  Return the external statement's name.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The name as a struct Name*.
+ *  @see ExternalStatNameGlassBoxF()
+ */
+extern struct Name *ExternalStatNameGlassBoxF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ExternalStatNameGlassBox().  Do not call this
+ *  function directly - use ExternalStatNameGlassBox() instead.
+ */
+
+#ifdef NDEBUG
+#define ExternalStatDataBlackBox(s) ((s)->v.ext.u.black.data)
+#else
+#define ExternalStatDataBlackBox(s) ExternalStatDataBlackBoxF(s)
 #endif
 /**<
  *  Return the external statement's name of its additional data.
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The name as a struct Name*.
- *  @see ExternalStatDataF()
+ *  @see ExternalStatDataBlackBoxF()
  */
-extern struct Name *ExternalStatDataF(CONST struct Statement *s);
+extern struct Name *ExternalStatDataBlackBoxF(CONST struct Statement *s);
 /**<
- *  Implementation function for ExternalStatData().  Do not call this
- *  function directly - use ExternalStatData() instead.
+ *  Implementation function for ExternalStatDataBlackBox().  Do not call this
+ *  function directly - use ExternalStatDataBlackBox() instead.
  */
 
 #ifdef NDEBUG
-#define ExternalStatScope(s) ((s)->v.ext.scope)
+#define ExternalStatDataGlassBox(s) ((s)->v.ext.u.glass.data)
 #else
-#define ExternalStatScope(s) ExternalStatScopeF(s)
+#define ExternalStatDataGlassBox(s) ExternalStatDataGlassBoxF(s)
+#endif
+/**<
+ *  Return the external statement's name of its additional data.
+ *  @param s CONST struct Statement*, the statement to query.
+ *  @return The name as a struct Name*.
+ *  @see ExternalStatDataGlassBoxF()
+ */
+extern struct Name *ExternalStatDataGlassBoxF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ExternalStatDataGlassBox().  Do not call this
+ *  function directly - use ExternalStatDataGlassBox() instead.
+ */
+
+#ifdef NDEBUG
+#define ExternalStatScope(s) ((s)->v.ext.u.glass.scope)
+#else
+#define ExternalStatScope(s) ExternalStatScopeGlassBoxF(s)
 #endif
 /**<
  *  Return the external statement's name of its scope. This may be NULL.
@@ -1179,27 +1235,41 @@ extern struct Name *ExternalStatDataF(CONST struct Statement *s);
  *  @return The name as a struct Name*.
  *  @see ExternalStatScopeF()
  */
-extern struct Name *ExternalStatScopeF(CONST struct Statement *s);
+extern struct Name *ExternalStatScopeGlassBoxF(CONST struct Statement *s);
 /**<
  *  Implementation function for ExternalStatScope().  Do not call this
  *  function directly - use ExternalStatScope() instead.
  */
 
 #ifdef NDEBUG
-#define ExternalStatVlist(s) ((s)->v.ext.vl)
+#define ExternalStatVlistMethod(s) ((s)->v.ext.u.method.vl)
+#define ExternalStatVlistGlassBox(s) ((s)->v.ext.u.glass.vl)
+#define ExternalStatVlistBlackBox(s) ((s)->v.ext.u.black.vl)
 #else
-#define ExternalStatVlist(s) ExternalStatVlistF(s)
+#define ExternalStatVlistGlassBox(s) ExternalStatVlistGlassBoxF(s)
+#define ExternalStatVlistMethod(s) ExternalStatVlistMethodF(s)
+#define ExternalStatVlistBlackBox(s) ExternalStatVlistBlackBoxF(s)
 #endif
 /**<
  *  Return the external statement's variable list -- the argument list.
  *  @param s CONST struct Statement*, the statement to query.
  *  @return The list as a struct VariableList*.
- *  @see ExternalStatVlistF()
+ *  @see ExternalStatVlistBlackBoxF()
  */
-extern struct VariableList *ExternalStatVlistF(CONST struct Statement *s);
+extern struct VariableList *ExternalStatVlistGlassBoxF(CONST struct Statement *s);
 /**<
- *  Implementation function for ExternalStatVlist().  Do not call this
- *  function directly - use ExternalStatVlist() instead.
+ *  Implementation function for ExternalStatVlistGlassBox().  Do not call this
+ *  function directly - use ExternalStatVlistGlassBox() instead.
+ */
+extern struct VariableList *ExternalStatVlistBlackBoxF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ExternalStatVlistBlackBox().  Do not call this
+ *  function directly - use ExternalStatVlistBlackBox() instead.
+ */
+extern struct VariableList *ExternalStatVlistMethodF(CONST struct Statement *s);
+/**<
+ *  Implementation function for ExternalStatVlistMethod().  Do not call this
+ *  function directly - use ExternalStatVlistMethod() instead.
  */
 
 #ifdef NDEBUG

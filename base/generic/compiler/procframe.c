@@ -54,6 +54,13 @@
   (new) = (char *)ascmalloc(((old!=NULL)?strlen(old):0)+strlen(incr)+ \
                             + strlen(join)+1); \
   sprintf((new),"%s%s%s",((old)!=NULL?(old):""),(join),(incr))
+char * fmncreate(char *old, char *incr, char* join)
+{
+  char *new = (char *)ascmalloc(((old!=NULL)?strlen(old):0)+strlen(incr)+ 
+                            + strlen(join)+1);
+  sprintf(new, "%s%s%s", ( old!=NULL ? old : ""), join , incr );
+  return new;
+}
 /* destroy said name when done with it. */
 #define FMNFREE(n) ascfree(n)
 
@@ -164,7 +171,7 @@ struct procFrame *AddProcFrame(struct procFrame *parent,
     fm->depth = 1;
     fm->err = ASCERR;
     fm->gen = 0; /* tell the user nothing...? */
-    FMNCREATE(fm->cname,NULL,incrname,"");
+    fm->cname =fmncreate(NULL,incrname,"");
   } else {
     fm = FMALLOC;
     assert(fm!=NULL);
@@ -175,7 +182,7 @@ struct procFrame *AddProcFrame(struct procFrame *parent,
     }
     fm->err = parent->err;
     fm->depth = parent->depth + 1;
-    FMNCREATE(fm->cname,parent->cname,incrname,((context==parent->i)?"":"."));
+    fm->cname = fmncreate(parent->cname,incrname,((context==parent->i)?"":"."));
     fm->gen = parent->gen;
   }
   fm->i = context;

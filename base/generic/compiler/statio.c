@@ -439,23 +439,37 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
     break;
   case EXT:
     switch (ExternalStatMode(s)) {
-      case 0:				/* Procedural */
+      case ek_method:				/* Procedural */
         FPRINTF(f," EXTERNAL %s(",ExternalStatFuncName(s));
-        WriteVariableList(f,ExternalStatVlist(s));
+        WriteVariableList(f,ExternalStatVlistMethod(s));
         FPRINTF(f,")\n");
         break;
-      case 1:				/* Glassbox Declarative */
-      case 2:				/* Blackbox Declarative */
-        if (ExternalStatName(s)!=NULL) {
-          WriteName(f,ExternalStatName(s));
+      case ek_glass:		/* Glassbox Declarative */
+        if (ExternalStatNameGlassBox(s)!=NULL) {
+          WriteName(f,ExternalStatNameGlassBox(s));
           FPRINTF(f," : ");
         }
         FPRINTF(f," %s(",ExternalStatFuncName(s));
-        WriteVariableList(f,ExternalStatVlist(s));
+        WriteVariableList(f,ExternalStatVlistGlassBox(s));
         FPRINTF(f," : INPUT/OUTPUT");
-        if (ExternalStatData(s)!=NULL) {
+        if (ExternalStatDataGlassBox(s)!=NULL) {
           FPRINTF(f,", ");
-          WriteName(f,ExternalStatData(s));
+          WriteName(f,ExternalStatDataGlassBox(s));
+          FPRINTF(f," : DATA");
+        }
+        FPRINTF(f,")\n");
+        break;
+      case ek_black:		/* Blackbox Declarative */
+        if (ExternalStatNameBlackBox(s)!=NULL) {
+          WriteName(f,ExternalStatNameBlackBox(s));
+          FPRINTF(f," : ");
+        }
+        FPRINTF(f," %s(",ExternalStatFuncName(s));
+        WriteVariableList(f,ExternalStatVlistBlackBox(s));
+        FPRINTF(f," : INPUT/OUTPUT");
+        if (ExternalStatDataBlackBox(s)!=NULL) {
+          FPRINTF(f,", ");
+          WriteName(f,ExternalStatDataBlackBox(s));
           FPRINTF(f," : DATA");
         }
         FPRINTF(f,")\n");

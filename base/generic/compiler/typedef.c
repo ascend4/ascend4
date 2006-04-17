@@ -1098,7 +1098,17 @@ int DoExternal(symchar *type,
    * The grammar specifies that External function calls
    * must be named.
    */
-  nptr = ExternalStatName(stat);
+  switch (ExternalStatMode(stat) ) {
+  case ek_black:
+    nptr = ExternalStatNameBlackBox(stat);
+    break;
+  case ek_glass:
+    nptr = ExternalStatNameGlassBox(stat);
+    break;
+  default:
+    nptr = NULL;
+    break;
+  }
   ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
   WriteName(ASCERR,nptr);

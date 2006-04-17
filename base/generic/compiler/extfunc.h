@@ -1,6 +1,6 @@
 /*
  *  External Functions Module
- *  by Kirk Andre Abbott
+ *  by Kirk Andre Abbott and Ben Allan
  *  Created: July 4, 1994.
  *  Version: $Revision: 1.5 $
  *  Version control file: $RCSfile: extfunc.h,v $
@@ -10,6 +10,7 @@
  *  This file is part of the Ascend Language Interpreter.
  *
  *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
+ *  Copyright (C) 2006 Benjamin Allan
  *
  *  The Ascend Language Interpreter is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public License as
@@ -41,6 +42,7 @@
 #ifndef ASC_EXTFUNC_H
 #define ASC_EXTFUNC_H
 
+
 /**
 	ExtEvalFunc type is a function pointer.
 	@see rootfind.c:51
@@ -71,17 +73,6 @@ typedef int ExtProcFunc(int *mode, int *m, unsigned long *n,
    double *x, double *u, double *f, double *g);
 
 
-struct ExternalFunc {
-  CONST char *name;
-  unsigned long n_inputs;
-  unsigned long n_outputs;
-  char *help;
-  ExtEvalFunc *init;
-  ExtEvalFunc **value; /**< array of relation residual functions. */
-  ExtEvalFunc **deriv; /**< array of relation gradient functions. */
-  ExtEvalFunc **deriv2; /**< array of relation hessian functions. */
-};
-
 enum Calc_status {
   calc_converged, calc_diverged, calc_fp_error, calc_incorrect_args,
   calc_error, calc_all_ok
@@ -100,6 +91,23 @@ struct Slv_Interp {
   unsigned single_step  :1;
 };
 
+/** Setup/teardown, if any needed, for a particular instance.
+We don't actually support this method anywhere right now, as
+we're not sure what it can logically be used for that the
+init function in dlopening shouldn't be doing.
+@param context the instance on which the method may be run.
+*/
+typedef int ExtMethodInit( struct Instance *context);
+
+/** Run method a particular instance.
+@param context the instance on which the method is run.
+  context may also appear explicitly in the arg list as SELF.
+@param args Each element of args is a list of instances; each
+name in the ascend-language argument list is expanded to a list
+(which may contain 0 or more Instances) and appended to args.
+*/
+typedef int ExtMethodRun( struct Instance *context, struct gl_list_t *args);
+
 typedef int ExtBBoxInitFunc(struct Slv_Interp *,
                             struct Instance *,
                             struct gl_list_t *);
@@ -110,6 +118,70 @@ typedef int ExtBBoxFunc(struct Slv_Interp *,
                         double *inputs,
                         double *outputs,
                         double *jacobian);
+
+
+/** this is an enum to clarify and make type-safer the
+the variation of external functions circa 1995.
+Blackboxes might be callable from methods as well, but
+this is dependent on their code registration to setup.
+*/
+enum ExternalFuncType {
+	efunc_ERR = 0, /**< err value (Traps old mode errors too) */
+	efunc_BlackBox = 10, /**< remainder of struct is blackbox */
+	efunc_GlassBox = 20, /**< remainder of struct is glassbox */
+	efunc_Method = 30 /**< remainder of struct is method */
+};
+
+struct GlassBoxExternalFunc {
+  ExtEvalFunc *initial;
+  ExtEvalFunc **value; /**< array of relation residual functions. */
+  ExtEvalFunc **deriv; /**< array of relation gradient functions. */
+  ExtEvalFunc **deriv2; /**< array of relation hessian functions. */
+  ExtEvalFunc *final; /**< cleanup function. */
+};
+
+struct BlackBoxExternalFunc {
+  ExtBBoxInitFunc *initial;
+  ExtBBoxFunc *value; /**< relation residual function. */
+  ExtBBoxFunc *deriv; /**< relation gradient function. */
+  ExtBBoxFunc *deriv2; /**< relation hessian function. */
+  ExtBBoxFunc *final; /**< cleanup function. */
+};
+
+struct MethodExternalFunc {
+  ExtMethodRun *run; /**< the method invoked. */
+#if 0 /* have no use for these currently. */
+  ExtMethodInit *initial; /**< allowed to be null if not needed. */
+  ExtMethodInit *final; /**< allowed to be null if not needed. */
+#endif
+};
+
+struct ExternalFunc {
+  enum ExternalFuncType etype;
+  CONST char *name; /**< a string we own. */
+  CONST char *help; /**< a string we own. */
+  unsigned long n_inputs; /**< expected # of inputs. */
+  unsigned long n_outputs; /**< expected # of outputs. */
+  union {
+	struct GlassBoxExternalFunc glass;
+	struct BlackBoxExternalFunc black;
+	struct MethodExternalFunc method;
+  } u;
+};
+
+
+/** retired struct. */
+struct RetiredExternalFunc {
+  CONST char *name; /**< a string we own. */
+  char *help; /**< a string we own. */
+  ExtEvalFunc *init;
+  ExtEvalFunc **value; /**< array of relation residual functions. */
+  ExtEvalFunc **deriv; /**< array of relation gradient functions. */
+  ExtEvalFunc **deriv2; /**< array of relation hessian functions. */
+  unsigned long n_inputs;
+  unsigned long n_outputs;
+};
+
 
 extern void InitExternalFuncLibrary(void);
 /**<
@@ -123,18 +195,6 @@ extern void DestroyExtFuncLibrary(void);
  *  information associated with it.
  */
 
-
-#ifdef THIS_IS_AN_UNUSED_FUNCTION
-extern struct ExternalFunc *CreateExternalFunc(CONST char *name);
-/**<
- *  Creates a new ExternalFunc node having the specified name.
- *  All other attributes are initialized to 0 or NULL.  There is
- *  no checking for the validity or uniqueness of name.
- *
- *  @param name The name for the new ExternalFunc.
- *  @return A pointer to the new ExternalFunc.
- */
-#endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
 extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
 /**<
@@ -161,11 +221,12 @@ typedef int (*CreateUserFunction_fptr_t)(CONST char *name,
                               CONST unsigned long n_outputs,
                               CONST char *help);
 
-extern int CreateUserFunction(CONST char *name,
-                              ExtEvalFunc *init,
-                              ExtEvalFunc **value,
-                              ExtEvalFunc **deriv,
-                              ExtEvalFunc **deriv2,
+extern int DLEXPORT CreateUserFunctionBlackBox(CONST char *name,
+                              ExtBBoxInitFunc *init,
+                              ExtBBoxFunc *value,
+                              ExtBBoxFunc *deriv,
+                              ExtBBoxFunc *deriv2,
+                              ExtBBoxFunc *final,
                               CONST unsigned long n_inputs,
                               CONST unsigned long n_outputs,
                               CONST char *help);
@@ -190,14 +251,63 @@ extern int CreateUserFunction(CONST char *name,
  *  @return Returns 0 if the function was successfully added,
  *          non-zero otherwise.
  *
- *  @todo compiler/extfunc:CreateUserFunction() is broken.  The current
- *        implementation wants to treat value, deriv, and deriv2 as BOTH
- *        function pointers and arrays of function pointers.  We need to
- *        decide which they are or else provide a mechanism supporting dual
- *        roles.  This could be a union in ExternalFunc explicitly allowing
- *        them to be both.  This would necessitate 2 CreateUserFunction()
- *        varieties - 1 taking (ExtEvalFunc *) and 1 taking (ExtEvalFunc **)
- *        to allow the different types of ExternalFunc's to be set up.
+ */
+
+extern int DLEXPORT CreateUserFunctionGlassBox(CONST char *name,
+                              ExtEvalFunc *init,
+                              ExtEvalFunc **value,
+                              ExtEvalFunc **deriv,
+                              ExtEvalFunc **deriv2,
+                              ExtEvalFunc *final,
+                              CONST unsigned long n_inputs,
+                              CONST unsigned long n_outputs,
+                              CONST char *help);
+/**<
+ *  Adds an external function to the ASCEND system.
+ *  The name of the function is looked up.  If it already exists, the
+ *  information will be updated.  If the name was not found in the
+ *  external function library, then an external function node will be
+ *  created and added to the external function library.  We make a
+ *  *copy* of the help string if it is provided.  We also make a copy
+ *  of the name.  Anyone desirous of ASCEND knowing about their
+ *  functions must use this protocol.
+ *
+ *  @param name Name of the function being added (or updated).
+ *  @param init Pointer to initialisation function, or NULL if none.
+ *  @param value array of evaluation function pointers,
+ *               or NULL if none.
+ *  @param deriv array of first partial
+ *               derivative functions, or NULL if none.
+ *  @param deriv2 array of second derivative
+ *                functions, or NULL if none.
+ *  @return Returns 0 if the function was successfully added,
+ *          non-zero otherwise.
+ *
+ */
+
+extern int DLEXPORT CreateUserFunctionMethod(CONST char *name,
+                             /*  ExtMethodInit *initial, */
+                              ExtMethodRun *run,
+                             /*  ExtMethodInit *final, */
+                              CONST long n_args,
+                              CONST char *help);
+/**<
+ *  Adds an external method call to the ASCEND system.
+ *  The name of the function is looked up.  If it already exists, the
+ *  information will be updated.  If the name was not found in the
+ *  external function library, then an external function node will be
+ *  created and added to the external function library.  We make a
+ *  *copy* of the help string if it is provided.  We also make a copy
+ *  of the name.  Anyone desirous of ASCEND knowing about their
+ *  external methods must use this protocol.
+ *
+ *  @param name Name of the function being added (or updated).
+ *  @param initial Pointer to initialisation function, or NULL if none.
+ *  @param run Pointer to the method.
+ *  @param final Pointer to cleanup function, or NULL if none.
+ *  @param n_args number of arguments expected as input, or -1 if any number is allowed.
+ *  @return Returns 0 if the function was successfully added,
+ *          non-zero otherwise.
  */
 
 extern struct ExternalFunc *RemoveExternalFunc(char *name);
@@ -213,31 +323,41 @@ extern void DestroyExternalFunc(struct ExternalFunc *name);
  *  information, then call this function.
  */
 
-#if 0 
-/* don't know where the hell the return type came from.
-will check.*/ 
-extern ExtEvalFunc *GetInitFunc(struct ExternalFunc *efunc);
-#endif
+/** Fetch black initialization function. */
 extern ExtBBoxInitFunc *GetInitFunc(struct ExternalFunc *efunc);
-
-/* black box stuff */
-
+/** Fetch black residual function. */
 extern ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc);
+/** Fetch black sensitivity gradient function. */
 extern ExtBBoxFunc *GetDerivFunc(struct ExternalFunc *efunc);
+/** Fetch black hessian function. */
 extern ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc);
+/** Fetch black cleanup function. */
+extern ExtBBoxInitFunc *GetFinalFunc(struct ExternalFunc *efunc);
 
-/* glass box stuff */
 
+/** Fetch glass initialization function. */
+extern ExtEvalFunc *GetGlassBoxInit(struct ExternalFunc *efunc);
+/** Get glass box residual function array. */
 extern ExtEvalFunc **GetValueJumpTable(struct ExternalFunc *efunc);
+/** Get glass box gradient function array. */
 extern ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc);
+/** Get glass box hessian function array. */
 extern ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc);
+/** Fetch black initialization function. */
+extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
+
+/** Fetch method run function. */
+extern ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc);
+
 
 extern CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc);
 /**<
  *  Returns the name of an external function.
  */
 
+/** fetch the required input count for glass, black, or method. */
 extern unsigned long NumberInputArgs(CONST struct ExternalFunc *efunc);
+/** fetch the required output count for glass, black, or method. */
 extern unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 

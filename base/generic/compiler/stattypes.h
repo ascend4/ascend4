@@ -70,6 +70,12 @@ enum FlowControl {
   fc_stop     /**< this one must be last or fix statio.c */
 };
 
+enum ExternalKind {
+  ek_method = 0, /**< method call */
+  ek_glass = 1, /**< glass box relations */
+  ek_black = 2 /**< black box relations */
+};
+
 /** Statement types. */
 enum stat_t {
   ALIASES = 0,  /**< ALIASES */
@@ -280,14 +286,36 @@ struct StateLogicalRel {
   struct Expr *logrel;
 };
 
-/** used for external statements */
-struct StateExternal {
-  int mode;                 /**< 0=procedural, 1=glassbox, 2=blackbox */
+/** legacy external methods in METHODS section */
+struct StateExternalMethod {
+	struct VariableList *vl; /**< list of arguments */
+};
+
+/** Black box equation model. */ 
+struct StateExternalBlackBox {
   struct Name *nptr;        /**< name of the statement */
-  CONST char *extcall;      /**< name of the function */
+  struct VariableList *vl;  /**< list of arguments */
+  struct Name *data;        /**< additional user data */
+};
+  
+/** Glassbox equation model. */ 
+struct StateExternalGlassBox {
+  struct Name *nptr;        /**< name of the statement */
   struct VariableList *vl;  /**< list of arguments */
   struct Name *data;        /**< additional user data */
   struct Name *scope;       /**< scope to add the external relations for glassboxes */
+};
+  
+
+/** used for external statements */
+struct StateExternal {
+  enum ExternalKind mode;     /**< 0=procedural, 1=glassbox, 2=blackbox */
+  CONST char *extcall;      /**< name of the function */
+  union {
+    struct StateExternalGlassBox glass;
+    struct StateExternalBlackBox black;
+    struct StateExternalMethod method;
+  } u;
 };
 
 struct StateReference {
