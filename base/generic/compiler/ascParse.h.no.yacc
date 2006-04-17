@@ -250,7 +250,7 @@
 
 
 #if ! defined (ZZ_STYPE) && ! defined (ZZ_STYPE_IS_DECLARED)
-#line 300 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 300 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
 typedef union ZZ_STYPE {
   double real_value;
   long   int_value;

@@ -900,9 +900,9 @@ static int yy_more_len = 0;
 #define YY_MORE_ADJ yy_more_len
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 1 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 #define INITIAL 0
-#line 2 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 2 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 /*
  *  ASCEND Lexing Program
  *
@@ -1201,7 +1201,7 @@ YY_DECL
 	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 158 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 158 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 
 
 
@@ -1294,568 +1294,568 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 160 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 160 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return LEQ_T; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 161 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 161 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return GEQ_T; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 162 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 162 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return NEQ_T; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 163 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 163 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DOTDOT_T; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 164 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 164 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DBLCOLON_T;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 165 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 165 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ASSIGN_T; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 166 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 166 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CASSIGN_T; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 167 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 167 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return BEQ_T ; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 168 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 168 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return BNE_T ; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 170 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 170 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '=' ;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 171 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 171 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '>' ;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 172 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 172 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '<' ;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 173 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 173 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ',' ;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 174 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 174 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '.' ;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 175 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 175 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ';' ;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 176 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 176 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ':' ;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 177 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 177 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '[' ;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 178 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 178 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ']' ;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 179 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 179 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '(' ;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 180 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 180 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ')' ;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 181 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 181 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '+' ;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 182 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 182 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '-' ;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 183 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 183 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '*' ;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 184 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 184 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '/' ;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 185 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 185 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '^' ;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 186 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 186 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return '|' ;}
 	YY_BREAK
 /****  Reserved Keywords  ****/
 case 27:
 YY_RULE_SETUP
-#line 190 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 190 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ADD_T			; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 191 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 191 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ALIASES_T		; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 192 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 192 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return AND_T			; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 193 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 193 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ANY_T			; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 194 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 194 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return AREALIKE_T		; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 195 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 195 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ARETHESAME_T   ; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 196 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 196 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ARRAY_T		; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 197 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 197 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ATOM_T			; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 198 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 198 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return BREAK_T		; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 199 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 199 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CALL_T			; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 200 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 200 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CARD_T			; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 201 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 201 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CASE_T			; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 202 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 202 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CHECK_T		; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 203 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 203 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CHOICE_T	  	; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 204 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 204 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CONDITIONAL_T		; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 205 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 205 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CONSTANT_T		; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 206 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 206 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CONTINUE_T		; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 207 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 207 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return CREATE_T		; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 208 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 208 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DATA_T			; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 209 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 209 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DECREASING_T		; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 210 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 210 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DEFAULT_T		; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 211 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 211 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DEFINITION_T		; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 212 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 212 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DIMENSION_T		; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 213 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 213 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DIMENSIONLESS_T	; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 214 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 214 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return DO_T			; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 215 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 215 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ELSE_T			; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 216 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 216 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return END_T			; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 217 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 217 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return EXPECT_T		; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 218 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 218 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return EXTERNAL_T		; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 219 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 219 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return FALSE_T		; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 220 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 220 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return FALLTHRU_T		; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 221 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 221 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return FIX_T	        ; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 222 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 222 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return FREE_T	        ; }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 223 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 223 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return FOR_T			; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 224 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 224 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return FROM_T			; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 225 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 225 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return GLOBAL_T		; }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 226 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 226 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ASSERT_T			; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 227 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 227 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return IF_T			; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 228 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 228 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return IMPORT_T		; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 229 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 229 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return IN_T			; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 230 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 230 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return INCREASING_T		; }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 231 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 231 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return INPUT_T		; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 232 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 232 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return INTERSECTION_T		; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 233 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 233 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ISA_T			; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 234 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 234 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return ISREFINEDTO_T		; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 235 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 235 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return MAXIMIZE_T		; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 236 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 236 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return MAXINTEGER_T		; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 237 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 237 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return MAXREAL_T		; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 238 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 238 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return METHOD_T		; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 239 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 239 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return METHODS_T		; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 240 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 240 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return MINIMIZE_T		; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 241 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 241 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return MODEL_T		; }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 242 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 242 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return NOT_T			; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 243 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 243 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return NOTES_T		; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 244 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 244 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return OF_T			; }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 245 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 245 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return OR_T			; }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 246 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 246 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return OTHERWISE_T		; }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 247 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 247 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return OUTPUT_T		; }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 248 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 248 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return PROD_T			; }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 249 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 249 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return PROVIDE_T		; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 250 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 250 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return REFINES_T		; }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 251 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 251 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return REPLACE_T		; }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 252 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 252 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return REQUIRE_T		; }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 253 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 253 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return RETURN_T		; }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 254 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 254 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return RUN_T			; }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 255 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 255 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return SATISFIED_T		; }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 256 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 256 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return SELECT_T		; }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 257 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 257 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return SUCHTHAT_T		; }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 258 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 258 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return SUM_T			; }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 259 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 259 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return SIZE_T			; }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 260 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 260 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return SWITCH_T		; }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 261 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 261 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return STOP_T			; }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 262 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 262 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return THEN_T			; }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 263 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 263 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return TRUE_T			; }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 264 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 264 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return UNION_T		; }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 265 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 265 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return UNITS_T		; }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 266 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 266 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return UNIVERSAL_T		; }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 267 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 267 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return USE_T			; }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 268 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 268 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return VALUE_T		; }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 269 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 269 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WHEN_T			; }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 270 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 270 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WHERE_T		; }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 271 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 271 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WHILE_T		; }
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 272 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 272 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WILLBE_T		; }
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 273 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 273 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WILLBETHESAME_T	; }
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 274 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 274 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WILLNOTBETHESAME_T	; }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 275 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 275 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WITH_T			; }
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 276 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 276 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { return WITH_VALUE_T		; }
 	YY_BREAK
 /*
@@ -1873,7 +1873,7 @@ YY_RULE_SETUP
 	 */
 case 114:
 YY_RULE_SETUP
-#line 292 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 292 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match "(" followed by "*" puts us into
 				   *  the COMMENT state.  Don't use \*+ since
@@ -1889,7 +1889,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
-#line 304 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 304 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match "(" followed "*" followed by
 				   *  anything that's not "(" nor "*".
@@ -1901,7 +1901,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 312 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 312 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match "(" followed by "*" followed by
 				   *  anything that's not "(" nor "*".
@@ -1914,7 +1914,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 321 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 321 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match anything not "*" or "(" followed
 				   *  by one or more "*"s followed by ")".
@@ -1930,7 +1930,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 333 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 333 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Eat anything that's not a "*" nor a "("
 				   */
@@ -1939,7 +1939,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 338 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 338 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Eat anything that's not a "*" nor a "("
 				   *  that is followed by a newline.
@@ -1951,7 +1951,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 346 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 346 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Eat "("s not followed by "*"
 				   */
@@ -1960,7 +1960,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
-#line 351 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 351 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Eat "("s not followed by "*" plus a "\n"
 				   */
@@ -1970,7 +1970,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 357 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 357 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Eat "*"s not followed by ")"
 				   */
@@ -1979,7 +1979,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 362 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 362 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Eat "*" not followed by ")" plus a "\n"
 				   */
@@ -1988,7 +1988,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(Comment):
-#line 368 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 368 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  An EOF in a Comment means bad nesting.
 				   *  Print an error and pop back a level
@@ -2011,7 +2011,7 @@ case YY_STATE_EOF(Comment):
 	 */
 case 124:
 YY_RULE_SETUP
-#line 390 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 390 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A single quote (') in the INITIAL state
 				   *  puts us into the Symbol state.
@@ -2022,7 +2022,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 397 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 397 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Anything that is not a (') nor a newline
 				   *  followed by a (') is the symbol's text.
@@ -2038,13 +2038,13 @@ YY_RULE_SETUP
 				    ErrMsg_LongSymbol();
 				    break;
 				  }
-				  yylval.sym_ptr = AddSymbolL(yytext,yyleng);
+				  zz_lval.sym_ptr = AddSymbolL(yytext,yyleng);
 				  return SYMBOL_T;
 				}
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 415 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 415 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  If we find a newline before a ('), the
 				   *  symbol is unterminated.  Print an error
@@ -2057,7 +2057,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(Symbol):
-#line 425 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 425 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  If we find an EOF before a ('), the
 				   *  symbol is unterminated.  Print an error
@@ -2087,7 +2087,7 @@ case YY_STATE_EOF(Symbol):
 	 */
 case 127:
 YY_RULE_SETUP
-#line 454 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 454 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A double quote puts us into the
 				   *  DoubleQuote state.  Save the line
@@ -2100,7 +2100,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 463 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 463 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A backslash \ in the DoubleQuote
 				   *  state protects any character.
@@ -2112,7 +2112,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-#line 471 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 471 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A backslash \ in the DoubleQuote
 				   *  state protects a newline.
@@ -2125,7 +2125,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 480 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 480 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A double quote in the DoubleQuote state
 				   *  (that is not protected by backslash)
@@ -2144,14 +2144,14 @@ YY_RULE_SETUP
 				    Process_Backslashes();
 				    MatchedBackslash = 0;
 				  }
-				  yylval.dquote_ptr =
+				  zz_lval.dquote_ptr =
 				      CopyIntoWorkBuffer(yytext,yyleng);
 				  return DQUOTE_T;
 				}
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 502 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 502 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match anything that is not backslash nor
 				   *  doublequote and add it to the text.
@@ -2162,7 +2162,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 509 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 509 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match anything that is not backslash nor
 				   *  doublequote and add it to the text.
@@ -2174,7 +2174,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(DoubleQuote):
-#line 518 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 518 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  End of File in a DoubleQuote state
 				   *  means no matching double quote.
@@ -2204,7 +2204,7 @@ case YY_STATE_EOF(DoubleQuote):
 	 */
 case 133:
 YY_RULE_SETUP
-#line 547 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 547 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 { /*  A "{" puts us into the BracedText state.
 				   *  If from the opening "{" to the first
 				   *  newline is all whitespace, then ignore
@@ -2222,7 +2222,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 561 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 561 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A "{" puts us into the BracedText state.
 				   *  Initialize the nesting level.
@@ -2237,7 +2237,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 572 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 572 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A backslash \ in the BracedText state
 				   *  protects any character and does not
@@ -2250,7 +2250,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 581 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 581 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A backslash \ in the BracedText state
 				   *  protects a newline.
@@ -2263,7 +2263,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 590 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 590 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A "{" in the braces state gets added to
 				   *  the text and increase the nesting level.
@@ -2275,7 +2275,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
-#line 598 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 598 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A "{" in the braces state gets added to
 				   *  the text and increase the nesting level.
@@ -2288,7 +2288,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 607 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 607 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A "}" will reduce the nesting level.
 				   *  If the nesting level is zero, go back to
@@ -2311,7 +2311,7 @@ YY_RULE_SETUP
 				      Process_Backslashes();
 				      MatchedBackslash = 0;
 				    }
-				    yylval.braced_ptr =
+				    zz_lval.braced_ptr =
 				        CopyIntoWorkBuffer(yytext,yyleng);
 				    return BRACEDTEXT_T;
 				  }
@@ -2321,7 +2321,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 636 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 636 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match anything that is not "{" nor "}"
 				   *  nor "\\"(backslash) and add it to text.
@@ -2332,7 +2332,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 643 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 643 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Match anything that is not "{" nor "}"
 				   *  nor "\\"(backslash) followed by a "\n"
@@ -2345,7 +2345,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(BracedText):
-#line 653 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 653 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  End of File in braces means bad nesting.
 				   *  Print an error message and pop to the
@@ -2367,11 +2367,11 @@ case YY_STATE_EOF(BracedText):
 	 */
 case 142:
 YY_RULE_SETUP
-#line 674 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 674 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  An integer.  Defn near top of file.
 				   */
-				  yylval.int_value = atol(yytext);
+				  zz_lval.int_value = atol(yytext);
 				  return INTEGER_T;
 				}
 	YY_BREAK
@@ -2380,29 +2380,29 @@ case 143:
 yy_c_buf_p = yy_cp -= 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 681 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 681 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  An integer as the first number in a
 				   *  range (need to avoid parsing "1..2"
 				   *  as the real numbers 1.0 and 0.2).
 				   */
-				  yylval.int_value = atol(yytext);
+				  zz_lval.int_value = atol(yytext);
 				  return INTEGER_T;
 				}
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
-#line 690 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 690 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  A real number.  Defn near top of file.
 				   */
-				  yylval.real_value = atof(yytext);
+				  zz_lval.real_value = atof(yytext);
 				  return REAL_T;
 				}
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-#line 697 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 697 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  An identifier.  Defn near top of file.
 				   */
@@ -2410,13 +2410,13 @@ YY_RULE_SETUP
 				    ErrMsg_LongID();
 				    break;
 				  }
-				  yylval.id_ptr = AddSymbolL(yytext,yyleng);
+				  zz_lval.id_ptr = AddSymbolL(yytext,yyleng);
 				  return IDENTIFIER_T;
 				}
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 708 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 708 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Ignore whitespace.  */
 				  break;
@@ -2424,7 +2424,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 712 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 712 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Ignore whitespace.  */
 				  yy_line++;
@@ -2433,7 +2433,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 719 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 719 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Unknown character.  Print error
 				   *  message and keep going.
@@ -2443,7 +2443,7 @@ YY_RULE_SETUP
 				}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 727 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 727 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 {
 				  /*  Print an error message if we
 				   *  reached EOF in the middle of a
@@ -2460,7 +2460,7 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 741 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 741 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 ECHO;
 	YY_BREAK
 
@@ -3342,7 +3342,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 741 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/scanner.l"
+#line 741 "/tmp/trunk/base/autotools/../generic/compiler/scanner.l"
 
 /*
  *  int yywrap(void);

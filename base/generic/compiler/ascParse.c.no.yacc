@@ -274,7 +274,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
 
 /*
  *  Ascend Grammar file
@@ -588,7 +588,7 @@ static void CollectNote(struct Note *);
 #endif
 
 #if ! defined (ZZ_STYPE) && ! defined (ZZ_STYPE_IS_DECLARED)
-#line 300 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 300 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
 typedef union ZZ_STYPE {
   double real_value;
   long   int_value;
@@ -838,7 +838,7 @@ static const short int zz_rhs[] =
       -1,   130,    -1,     1,    -1,    41,   120,   168,   226,   120,
       -1,    70,   107,   120,    -1,    70,   225,   120,    -1,    70,
      225,    -1,    67,   107,   120,    -1,    67,   225,   120,    -1,
-      67,   225,    -1,    43,   104,    40,   104,   120,    -1,    43,
+      67,   225,    -1,    43,   104,    40,   107,   120,    -1,    43,
      104,   120,    -1,   135,   220,   226,   120,    -1,     3,    60,
       44,   104,   179,   120,    -1,   137,   164,   226,   120,    -1,
        3,    55,    44,   104,   120,    -1,     3,    55,    44,    27,
@@ -955,23 +955,23 @@ static const unsigned short int zz_rline[] =
     1225,  1226,  1227,  1231,  1272,  1301,  1305,  1356,  1359,  1366,
     1378,  1405,  1410,  1418,  1423,  1432,  1435,  1443,  1446,  1454,
     1457,  1464,  1471,  1478,  1485,  1492,  1496,  1503,  1516,  1533,
-    1543,  1551,  1562,  1574,  1581,  1589,  1592,  1599,  1619,  1622,
-    1629,  1651,  1654,  1658,  1665,  1669,  1673,  1677,  1684,  1688,
-    1695,  1702,  1709,  1719,  1730,  1736,  1746,  1756,  1759,  1766,
-    1777,  1789,  1796,  1806,  1813,  1817,  1821,  1825,  1832,  1836,
-    1840,  1844,  1848,  1855,  1862,  1873,  1883,  1890,  1894,  1898,
-    1902,  1909,  1920,  1930,  1937,  1941,  1945,  1949,  1956,  1966,
-    2003,  2012,  2027,  2032,  2041,  2052,  2056,  2061,  2074,  2094,
-    2098,  2103,  2118,  2123,  2128,  2133,  2138,  2143,  2148,  2153,
-    2158,  2163,  2168,  2173,  2178,  2183,  2192,  2195,  2203,  2206,
-    2213,  2218,  2224,  2228,  2232,  2237,  2245,  2251,  2260,  2264,
-    2286,  2290,  2311,  2315,  2320,  2326,  2330,  2337,  2341,  2345,
-    2349,  2353,  2357,  2364,  2371,  2375,  2383,  2386,  2390,  2397,
-    2401,  2405,  2409,  2413,  2417,  2421,  2425,  2429,  2433,  2437,
-    2442,  2447,  2452,  2457,  2462,  2467,  2472,  2476,  2481,  2486,
-    2491,  2496,  2501,  2505,  2509,  2513,  2517,  2524,  2528,  2535,
-    2539,  2546,  2550,  2557,  2561,  2568,  2572,  2579,  2583,  2594,
-    2601,  2605,  2609,  2613,  2617,  2621,  2628,  2632
+    1543,  1551,  1562,  1575,  1582,  1590,  1593,  1600,  1621,  1624,
+    1631,  1653,  1656,  1660,  1667,  1671,  1675,  1679,  1686,  1690,
+    1697,  1704,  1711,  1722,  1733,  1739,  1749,  1759,  1762,  1769,
+    1780,  1792,  1799,  1809,  1816,  1820,  1824,  1828,  1835,  1839,
+    1843,  1847,  1851,  1858,  1865,  1876,  1886,  1893,  1897,  1901,
+    1905,  1912,  1923,  1933,  1940,  1944,  1948,  1952,  1959,  1969,
+    2006,  2015,  2030,  2035,  2044,  2055,  2059,  2064,  2077,  2097,
+    2101,  2106,  2121,  2126,  2131,  2136,  2141,  2146,  2151,  2156,
+    2161,  2166,  2171,  2176,  2181,  2186,  2195,  2198,  2206,  2209,
+    2216,  2221,  2227,  2231,  2235,  2240,  2248,  2254,  2263,  2267,
+    2289,  2293,  2314,  2318,  2323,  2329,  2333,  2340,  2344,  2348,
+    2352,  2356,  2360,  2367,  2374,  2378,  2386,  2389,  2393,  2400,
+    2404,  2408,  2412,  2416,  2420,  2424,  2428,  2432,  2436,  2440,
+    2445,  2450,  2455,  2460,  2465,  2470,  2475,  2479,  2484,  2489,
+    2494,  2499,  2504,  2508,  2512,  2516,  2520,  2527,  2531,  2538,
+    2542,  2549,  2553,  2560,  2564,  2571,  2575,  2582,  2586,  2597,
+    2604,  2608,  2612,  2616,  2620,  2624,  2631,  2635
 };
 #endif
 
@@ -1225,19 +1225,19 @@ static const short int zz_pact[] =
      202,  -437,   130,    43,   204,   133,    60,   -18,   150,   -19,
      223,   206,   223,   203,   593,   156,   159,   160,  -437,   197,
     -437,  -437,   145,   203,  -437,   -11,   166,   223,   168,  -437,
-     169,  -437,  -437,   170,   165,   -10,  -437,  -437,   476,   164,
+     169,  -437,  -437,   170,   165,   -10,  -437,  -437,   476,   161,
     -437,  -437,   150,   171,   -61,  -437,     0,   150,   157,   162,
-     176,  -437,   163,   172,  -437,   223,   173,  -437,   165,  -437,
-     180,    33,    44,  -437,  -437,   181,  -437,  -437,   150,   183,
+     176,  -437,   163,   164,  -437,   223,   172,  -437,   165,  -437,
+     181,    33,    44,  -437,  -437,   183,  -437,  -437,   150,   189,
      150,   165,    89,   165,  -437,  -437,   165,   165,    71,    96,
-    -437,   150,   174,   -72,   186,   105,   -64,  -437,   108,   -62,
-     165,   150,   189,   191,   177,  -437,   165,   165,   165,   165,
-    -437,   182,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
+    -437,   150,   173,   -72,   186,   105,   -64,  -437,   108,   -62,
+     165,   150,   190,   191,   177,  -437,   165,   165,   165,   165,
+    -437,   180,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,    59,    84,  -437,   960,  -437,   231,  -437,   203,
-     196,   203,  -437,   215,   223,   247,   193,   251,   194,   195,
-     198,  -437,  -437,   185,   208,   801,   261,   207,  -437,  -437,
+     198,   203,  -437,   215,   223,   247,   193,   251,   194,   195,
+     196,  -437,  -437,   185,   210,   801,   261,   207,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,   218,   219,  -437,   150,  -437,  -437,  -437,   150,  -437,
     -437,  -437,  -437,  -437,  -437,   212,  -437,   960,   205,  -437,
@@ -1333,11 +1333,11 @@ static const short int zz_table[] =
       70,   521,   522,   125,   132,   567,   127,   128,    75,   285,
       71,   375,   376,    76,    41,    78,   286,   287,    94,   395,
      176,   399,    90,   177,   178,   180,   182,   132,   133,   134,
-     187,   135,   189,   190,   191,   211,   213,   219,   136,   137,
-     221,   412,   220,   222,   228,   235,   138,   237,   288,    85,
-     139,   252,   223,   226,   264,   249,   266,   425,   267,   305,
-     307,   310,   272,   431,   488,   313,   289,   315,   420,   418,
-     439,   320,   493,   314,   317,   318,   321,   447,   319,   323,
+     187,   135,   211,   190,   191,   189,   213,   219,   136,   137,
+     221,   412,   220,   222,   223,   228,   138,   235,   288,    85,
+     139,   252,   226,   237,   249,   264,   266,   425,   267,   305,
+     272,   310,   307,   431,   488,   313,   289,   315,   420,   418,
+     439,   320,   493,   314,   317,   318,   319,   447,   321,   323,
      498,   290,    85,   325,   326,   502,   331,   324,   291,   292,
      293,    85,   330,   338,   337,   450,   345,   369,   175,   291,
      292,   293,   452,   295,   296,   297,   298,   299,   300,   301,
@@ -1456,11 +1456,11 @@ static const short int zz_check[] =
       38,   113,   114,    78,   102,   103,    81,    82,    44,     5,
      120,   278,   279,   120,   104,    32,    12,    13,    55,   306,
      104,   308,    56,   104,   104,    68,   121,   102,   103,   104,
-     104,   106,   104,   104,   104,   111,   105,   120,   113,   114,
-     104,   328,   120,   120,   104,   104,   121,   104,    44,   337,
-     125,   105,   120,   120,   105,   121,   105,   345,   121,    68,
-     104,    86,   120,   350,   432,    58,    62,    56,   339,   337,
-     357,   126,   440,   120,   120,   120,   108,   364,   120,    58,
+     104,   106,   111,   104,   104,   107,   105,   120,   113,   114,
+     104,   328,   120,   120,   120,   104,   121,   104,    44,   337,
+     125,   105,   120,   104,   121,   105,   105,   345,   121,    68,
+     120,    86,   104,   350,   432,    58,    62,    56,   339,   337,
+     357,   126,   440,   120,   120,   120,   120,   364,   108,    58,
      448,    77,   370,   105,   105,   453,   121,   120,    95,    96,
       97,   379,   120,    44,   121,   366,    93,   126,    54,    95,
       96,    97,   370,   110,   111,   112,   113,   114,   115,   116,
@@ -1572,7 +1572,7 @@ static const unsigned char zz_stos[] =
      185,   186,   187,   188,   189,   193,   195,   198,   199,   200,
      201,   202,   203,   204,   205,   207,   210,   211,   212,   215,
      218,   219,   222,   224,   232,   240,   104,   104,   104,   168,
-      68,   168,   121,   150,   162,    27,   104,   104,   226,   104,
+      68,   168,   121,   150,   162,    27,   104,   104,   226,   107,
      104,   104,   224,   229,   230,   240,    27,   104,    20,    38,
       41,    42,    47,    55,    60,    74,    79,    83,    85,    87,
      104,   111,   222,   105,   108,   224,   107,   228,   221,   120,
@@ -2256,14 +2256,14 @@ zz_reduce:
   switch (zz_n)
     {
         case 17:
-#line 429 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 429 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  ErrMsg_Generic("Error in definition.");
 	}
     break;
 
   case 18:
-#line 436 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 436 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           /* the following steps apply to string buffers only, not files */
 	  struct gl_list_t *stats;
@@ -2308,14 +2308,14 @@ zz_reduce:
     break;
 
   case 19:
-#line 481 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 481 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  Asc_ScannerPushBuffer((zz_vsp[-1].dquote_ptr));
 	}
     break;
 
   case 20:
-#line 485 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 485 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroyName((zz_vsp[-1].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
@@ -2323,7 +2323,7 @@ zz_reduce:
     break;
 
   case 21:
-#line 490 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 490 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroyName((zz_vsp[0].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
@@ -2331,14 +2331,14 @@ zz_reduce:
     break;
 
   case 22:
-#line 498 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 498 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           Asc_ModuleCreateAlias(Asc_CurrentModule(),(zz_vsp[-1].dquote_ptr));
         }
     break;
 
   case 23:
-#line 502 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 502 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroyName((zz_vsp[-1].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
@@ -2346,7 +2346,7 @@ zz_reduce:
     break;
 
   case 24:
-#line 507 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 507 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroyName((zz_vsp[0].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
@@ -2354,21 +2354,21 @@ zz_reduce:
     break;
 
   case 25:
-#line 515 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 515 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
-	  (void)LoadArchiveLibrary(SCP((zz_vsp[-1].id_ptr)),SCP((zz_vsp[-3].id_ptr)));
+	  (void)LoadArchiveLibrary((zz_vsp[-1].dquote_ptr),SCP((zz_vsp[-3].id_ptr)));
 	}
     break;
 
   case 26:
-#line 519 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 519 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (void)LoadArchiveLibrary(SCP((zz_vsp[-1].id_ptr)),NULL);
 	}
     break;
 
   case 27:
-#line 526 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 526 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*  see comments for notes statement.  */
 	  if( (zz_vsp[-1].int_value) != NOTES_T ) {
@@ -2399,7 +2399,7 @@ zz_reduce:
     break;
 
   case 28:
-#line 557 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 557 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  g_type_name = (zz_vsp[-2].id_ptr);
 	  g_proc_name = (zz_vsp[-1].id_ptr);
@@ -2407,7 +2407,7 @@ zz_reduce:
     break;
 
   case 29:
-#line 565 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 565 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if ((zz_vsp[-3].tptr) == NULL) {
 	    DestroyProcedureList((zz_vsp[-2].listp));
@@ -2427,7 +2427,7 @@ zz_reduce:
     break;
 
   case 30:
-#line 585 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 585 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((zz_vsp[-1].id_ptr));
@@ -2440,7 +2440,7 @@ zz_reduce:
     break;
 
   case 31:
-#line 595 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 595 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
@@ -2448,7 +2448,7 @@ zz_reduce:
     break;
 
   case 32:
-#line 603 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 603 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if ((zz_vsp[-3].tptr) == NULL) {
 	    DestroyProcedureList((zz_vsp[-2].listp));
@@ -2466,7 +2466,7 @@ zz_reduce:
     break;
 
   case 33:
-#line 621 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 621 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((zz_vsp[-1].id_ptr));
@@ -2478,7 +2478,7 @@ zz_reduce:
     break;
 
   case 34:
-#line 630 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 630 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
@@ -2486,7 +2486,7 @@ zz_reduce:
     break;
 
   case 35:
-#line 638 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 638 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2539,7 +2539,7 @@ zz_reduce:
     break;
 
   case 36:
-#line 691 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 691 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /* g_type_name = $1; */
 	  g_refines_name = (zz_vsp[-3].id_ptr);
@@ -2550,7 +2550,7 @@ zz_reduce:
     break;
 
   case 37:
-#line 702 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 702 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
@@ -2558,7 +2558,7 @@ zz_reduce:
     break;
 
   case 38:
-#line 710 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 710 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
@@ -2567,7 +2567,7 @@ zz_reduce:
     break;
 
   case 39:
-#line 716 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 716 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = (zz_vsp[-1].int_value) ? -(zz_vsp[0].real_value) : (zz_vsp[0].real_value);
 	  g_defaulted = 1;
@@ -2575,7 +2575,7 @@ zz_reduce:
     break;
 
   case 40:
-#line 721 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 721 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
@@ -2585,7 +2585,7 @@ zz_reduce:
     break;
 
   case 41:
-#line 728 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 728 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
@@ -2595,7 +2595,7 @@ zz_reduce:
     break;
 
   case 42:
-#line 735 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 735 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
@@ -2605,7 +2605,7 @@ zz_reduce:
     break;
 
   case 43:
-#line 745 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 745 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2644,7 +2644,7 @@ zz_reduce:
     break;
 
   case 44:
-#line 785 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 785 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  g_type_name = (zz_vsp[-6].id_ptr);
 	  g_refines_name = (zz_vsp[-4].id_ptr);
@@ -2677,7 +2677,7 @@ zz_reduce:
     break;
 
   case 45:
-#line 818 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 818 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
@@ -2686,7 +2686,7 @@ zz_reduce:
     break;
 
   case 46:
-#line 824 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 824 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = (zz_vsp[-1].int_value) ? -(zz_vsp[0].real_value) : (zz_vsp[0].real_value);
 	  g_defaulted = 1;
@@ -2694,7 +2694,7 @@ zz_reduce:
     break;
 
   case 47:
-#line 829 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 829 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 1;
 	  g_defaulted = 1;
@@ -2704,7 +2704,7 @@ zz_reduce:
     break;
 
   case 48:
-#line 836 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 836 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 0;
 	  g_defaulted = 1;
@@ -2714,7 +2714,7 @@ zz_reduce:
     break;
 
   case 49:
-#line 843 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 843 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sym_ptr) = (zz_vsp[0].sym_ptr);
 	  g_defaulted = 1;
@@ -2724,7 +2724,7 @@ zz_reduce:
     break;
 
   case 50:
-#line 853 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 853 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2765,7 +2765,7 @@ zz_reduce:
     break;
 
   case 51:
-#line 895 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 895 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /* g_type_name = $1; */
 	  g_model_parameters = (zz_vsp[-2].slptr);
@@ -2776,7 +2776,7 @@ zz_reduce:
     break;
 
   case 52:
-#line 904 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 904 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /* g_type_name = $1; */
 	  g_model_parameters = (zz_vsp[-5].slptr);
@@ -2788,7 +2788,7 @@ zz_reduce:
     break;
 
   case 53:
-#line 916 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 916 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
@@ -2796,49 +2796,49 @@ zz_reduce:
     break;
 
   case 54:
-#line 924 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 924 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = NULL;
 	}
     break;
 
   case 55:
-#line 928 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 928 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
 	}
     break;
 
   case 56:
-#line 935 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 935 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = NULL;
 	}
     break;
 
   case 57:
-#line 939 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 939 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
 	}
     break;
 
   case 58:
-#line 946 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 946 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = NULL;
 	}
     break;
 
   case 59:
-#line 950 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 950 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
 	}
     break;
 
   case 60:
-#line 957 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 957 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  if (((zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
@@ -2870,7 +2870,7 @@ zz_reduce:
     break;
 
   case 61:
-#line 989 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 989 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*
 	   * A patch definition looks just like a model def.
@@ -2883,21 +2883,21 @@ zz_reduce:
     break;
 
   case 62:
-#line 1002 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1002 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 0;
 	}
     break;
 
   case 63:
-#line 1006 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1006 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 1;
 	}
     break;
 
   case 64:
-#line 1013 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1013 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2927,7 +2927,7 @@ zz_reduce:
     break;
 
   case 65:
-#line 1043 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1043 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
@@ -2935,12 +2935,12 @@ zz_reduce:
     break;
 
   case 66:
-#line 1052 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1052 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     { /* nothing to do. just cruft to fix ; problem */ }
     break;
 
   case 67:
-#line 1057 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1057 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           struct UnitDefinition *ud;
           unsigned long c,len;
@@ -2960,14 +2960,14 @@ zz_reduce:
     break;
 
   case 68:
-#line 1076 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1076 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.listp) = gl_create(100L);
 	}
     break;
 
   case 69:
-#line 1080 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1080 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  gl_append_ptr((zz_vsp[-1].listp),(char *)(zz_vsp[0].udefptr));
 	  (zz_val.listp) = (zz_vsp[-1].listp);
@@ -2975,7 +2975,7 @@ zz_reduce:
     break;
 
   case 70:
-#line 1088 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1088 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.udefptr) = CreateUnitDef((zz_vsp[-3].id_ptr),(zz_vsp[-1].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
                              LineNum());
@@ -2983,14 +2983,14 @@ zz_reduce:
     break;
 
   case 71:
-#line 1097 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1097 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.listp) = NULL;
 	}
     break;
 
   case 72:
-#line 1101 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1101 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     { /* To get rid of this, we will need a global proclist
            * that accumulates procs until a MODEL production is
            * completed. If any other sort of production is started,
@@ -3000,14 +3000,14 @@ zz_reduce:
     break;
 
   case 73:
-#line 1108 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1108 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.listp) = (zz_vsp[0].listp);
 	}
     break;
 
   case 74:
-#line 1115 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1115 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.listp) = (zz_vsp[0].listp);
 	  gl_sort((zz_val.listp),(CmpFunc)CmpProcs);
@@ -3015,14 +3015,14 @@ zz_reduce:
     break;
 
   case 75:
-#line 1122 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1122 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.listp) = gl_create(7L);
 	}
     break;
 
   case 76:
-#line 1126 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1126 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  unsigned long c;
 	  struct InitProcedure *oldproc;
@@ -3045,7 +3045,7 @@ zz_reduce:
     break;
 
   case 77:
-#line 1149 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1149 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if (((zz_vsp[-1].int_value) != IDENTIFIER_T) || ((zz_vsp[-4].id_ptr) != g_end_identifier)) {
 	    /* all identifier_t are from symbol table, so ptr match
@@ -3059,7 +3059,7 @@ zz_reduce:
     break;
 
   case 78:
-#line 1163 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1163 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	  g_proc_name = (zz_vsp[0].id_ptr);
@@ -3067,21 +3067,21 @@ zz_reduce:
     break;
 
   case 79:
-#line 1172 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1172 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = CreateStatementList((zz_vsp[0].listp));
 	}
     break;
 
   case 80:
-#line 1179 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1179 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.listp) = gl_create(7L);
 	}
     break;
 
   case 81:
-#line 1183 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1183 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /* this is appending to a gllist of statements, not yet slist. */
 	  if ((zz_vsp[-1].statptr) != NULL) {
@@ -3092,7 +3092,7 @@ zz_reduce:
     break;
 
   case 82:
-#line 1191 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1191 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  ErrMsg_Generic("Error in statement input.");
 	  (zz_val.listp) = (zz_vsp[-2].listp);
@@ -3100,7 +3100,7 @@ zz_reduce:
     break;
 
   case 113:
-#line 1232 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1232 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((zz_vsp[-2].id_ptr));
@@ -3141,7 +3141,7 @@ zz_reduce:
     break;
 
   case 114:
-#line 1273 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1273 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((zz_vsp[-2].id_ptr));
@@ -3170,14 +3170,14 @@ zz_reduce:
     break;
 
   case 115:
-#line 1302 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1302 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateALIASES((zz_vsp[-2].lptr),(zz_vsp[0].nptr));
 	}
     break;
 
   case 116:
-#line 1307 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1307 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  int carray_err;
 	  carray_err = 0;
@@ -3226,21 +3226,21 @@ zz_reduce:
     break;
 
   case 117:
-#line 1356 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1356 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = NULL;
 	}
     break;
 
   case 118:
-#line 1360 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1360 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = (zz_vsp[-1].sptr);
 	}
     break;
 
   case 119:
-#line 1367 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1367 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if (FindType((zz_vsp[-1].id_ptr))) {
 	    (zz_val.statptr) = CreateREF((zz_vsp[-3].lptr),(zz_vsp[-1].id_ptr),(zz_vsp[0].id_ptr),1);
@@ -3252,7 +3252,7 @@ zz_reduce:
     break;
 
   case 120:
-#line 1379 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1379 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType((zz_vsp[0].id_ptr));
@@ -3279,7 +3279,7 @@ zz_reduce:
     break;
 
   case 121:
-#line 1406 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1406 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	  g_callargs = NULL;
@@ -3287,7 +3287,7 @@ zz_reduce:
     break;
 
   case 122:
-#line 1411 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1411 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[-3].id_ptr);
 	  g_callargs = (zz_vsp[-1].sptr);
@@ -3295,7 +3295,7 @@ zz_reduce:
     break;
 
   case 123:
-#line 1419 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1419 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	  g_typeargs = NULL;
@@ -3303,7 +3303,7 @@ zz_reduce:
     break;
 
   case 124:
-#line 1424 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1424 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[-3].id_ptr);
 	  g_typeargs = (zz_vsp[-1].sptr);
@@ -3311,91 +3311,91 @@ zz_reduce:
     break;
 
   case 125:
-#line 1432 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1432 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = NULL;
 	}
     break;
 
   case 126:
-#line 1436 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1436 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	}
     break;
 
   case 127:
-#line 1443 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1443 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = NULL;
 	}
     break;
 
   case 128:
-#line 1447 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1447 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
 	}
     break;
 
   case 129:
-#line 1454 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1454 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = NULL;
 	}
     break;
 
   case 130:
-#line 1458 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1458 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = (zz_vsp[0].eptr);
 	}
     break;
 
   case 131:
-#line 1465 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1465 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateAA((zz_vsp[-1].lptr));
 	}
     break;
 
   case 132:
-#line 1472 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1472 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateATS((zz_vsp[-1].lptr));
 	}
     break;
 
   case 133:
-#line 1479 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1479 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateWBTS((zz_vsp[-1].lptr));
 	}
     break;
 
   case 134:
-#line 1486 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1486 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateWNBTS((zz_vsp[-1].lptr));
 	}
     break;
 
   case 135:
-#line 1493 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1493 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateASSIGN((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
 	}
     break;
 
   case 136:
-#line 1497 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1497 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateCASSIGN((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
 	}
     break;
 
   case 137:
-#line 1504 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1504 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if (IsRelation((zz_vsp[0].eptr))) {
 	    if (g_parse_relns == 0) {
@@ -3411,7 +3411,7 @@ zz_reduce:
     break;
 
   case 138:
-#line 1517 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1517 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if (IsRelation((zz_vsp[0].eptr))) {
 	    if (g_parse_relns == 0) {
@@ -3428,7 +3428,7 @@ zz_reduce:
     break;
 
   case 139:
-#line 1534 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1534 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = (zz_vsp[0].eptr);
 	  if (NumberOfRelOps((zz_vsp[0].eptr)) < 1) {
@@ -3441,7 +3441,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 140:
-#line 1544 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1544 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_minimize));
 	  if (NumberOfRelOps((zz_vsp[0].eptr)) > 0) {
@@ -3452,7 +3452,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 141:
-#line 1552 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1552 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_maximize));
 	  if (NumberOfRelOps((zz_vsp[0].eptr))>0) {
@@ -3463,47 +3463,48 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 142:
-#line 1563 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1563 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is the blackbox declarative external relation.
 	   */
 	  struct VariableList *vl;
 	  vl = JoinVariableLists((zz_vsp[-4].lptr),(zz_vsp[-2].lptr));
-	  (zz_val.statptr) = CreateEXTERN(2,(zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,(zz_vsp[-1].nptr),NULL);
+	  /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
+	  (zz_val.statptr) = CreateEXTERNBlackBox((zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,(zz_vsp[-1].nptr));
 	}
     break;
 
   case 143:
-#line 1575 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1576 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.lptr) = (zz_vsp[-2].lptr);
 	}
     break;
 
   case 144:
-#line 1582 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1583 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.lptr) = (zz_vsp[-2].lptr);
 	}
     break;
 
   case 145:
-#line 1589 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1590 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.nptr) = NULL;
 	}
     break;
 
   case 146:
-#line 1593 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1594 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.nptr) = (zz_vsp[-2].nptr);
 	}
     break;
 
   case 147:
-#line 1600 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1601 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is the glassbox declarative external relation.
@@ -3517,26 +3518,27 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	  sprintf(tmp,"%ld",(zz_vsp[-2].int_value));
 	  str = AddSymbol(tmp);
 	  nptr = CreateIdName(str);
-	  (zz_val.statptr) = CreateEXTERN(1,(zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,nptr,(zz_vsp[0].nptr));
+	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
+	  (zz_val.statptr) = CreateEXTERNGlassBox((zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,nptr,(zz_vsp[0].nptr));
 	}
     break;
 
   case 148:
-#line 1619 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1621 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.nptr) = NULL;
 	}
     break;
 
   case 149:
-#line 1623 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1625 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.nptr) = (zz_vsp[0].nptr);
 	}
     break;
 
   case 150:
-#line 1631 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1633 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != FOR_T ) {
 	    WarnMsg_MismatchEnd("FOR", SCP((zz_vsp[-6].id_ptr)), (zz_vsp[0].int_value), NULL);
@@ -3556,94 +3558,95 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 151:
-#line 1651 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1653 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.order) = f_random;
 	}
     break;
 
   case 152:
-#line 1655 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1657 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.order) = f_increasing;
 	}
     break;
 
   case 153:
-#line 1659 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1661 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.order) = f_decreasing;
 	}
     break;
 
   case 154:
-#line 1666 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1668 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           (zz_val.fkind) = fk_create; /* declarative FOR */
 	}
     break;
 
   case 155:
-#line 1670 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1672 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           (zz_val.fkind) = fk_expect; /* parameter FOR */
 	}
     break;
 
   case 156:
-#line 1674 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1676 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           (zz_val.fkind) = fk_check; /* WHERE FOR */
 	}
     break;
 
   case 157:
-#line 1678 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1680 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           (zz_val.fkind) = fk_do; /* method FOR */
 	}
     break;
 
   case 158:
-#line 1685 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1687 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateRUN((zz_vsp[0].nptr),NULL);
 	}
     break;
 
   case 159:
-#line 1689 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1691 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateRUN((zz_vsp[0].nptr),(zz_vsp[-2].nptr));	  /* type :: name */
 	}
     break;
 
   case 160:
-#line 1696 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1698 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 		(zz_val.statptr) = CreateFIX((zz_vsp[0].lptr));
 	}
     break;
 
   case 161:
-#line 1703 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1705 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 		(zz_val.statptr) = CreateFREE((zz_vsp[0].lptr));
 	}
     break;
 
   case 162:
-#line 1710 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1712 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*
-	   * This is procedural external code.
+	   * This is procedural external code. Was:
+	  $$ = CreateEXTERN(0,NULL,SCP($2),$4,NULL,NULL);
 	   */
-	  (zz_val.statptr) = CreateEXTERN(0,NULL,SCP((zz_vsp[-3].id_ptr)),(zz_vsp[-1].lptr),NULL,NULL);
+	  (zz_val.statptr) = CreateEXTERNMethod(SCP((zz_vsp[-3].id_ptr)),(zz_vsp[-1].lptr));
 	}
     break;
 
   case 163:
-#line 1720 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1723 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*
 	   * This is proper procedural external method code.
@@ -3654,14 +3657,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 164:
-#line 1731 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1734 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 		(zz_val.statptr) = CreateASSERT((zz_vsp[0].eptr));
 	}
     break;
 
   case 165:
-#line 1737 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1740 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != IF_T ) {
 	    WarnMsg_MismatchEnd("IF", NULL, (zz_vsp[0].int_value), NULL);
@@ -3671,7 +3674,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 166:
-#line 1747 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1750 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != WHILE_T ) {
 	    WarnMsg_MismatchEnd("WHILE", NULL, (zz_vsp[0].int_value), NULL);
@@ -3681,21 +3684,21 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 167:
-#line 1756 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1759 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = NULL;
 	}
     break;
 
   case 168:
-#line 1760 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1763 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.slptr) = (zz_vsp[0].slptr);
 	}
     break;
 
   case 169:
-#line 1767 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1770 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != WHEN_T ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
@@ -3709,7 +3712,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 170:
-#line 1778 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1781 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != WHEN_T ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
@@ -3724,7 +3727,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 171:
-#line 1790 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1793 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != WHEN_T ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
@@ -3734,7 +3737,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 172:
-#line 1797 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1800 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != WHEN_T ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
@@ -3744,84 +3747,84 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 173:
-#line 1807 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1810 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.wptr) = ReverseWhenCases((zz_vsp[0].wptr));
 	}
     break;
 
   case 174:
-#line 1814 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1817 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.wptr) = CreateWhen((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
 	}
     break;
 
   case 175:
-#line 1818 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1821 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.wptr) = CreateWhen(NULL,(zz_vsp[0].slptr));
 	}
     break;
 
   case 176:
-#line 1822 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1825 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.wptr) = LinkWhenCases(CreateWhen((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].wptr));
 	}
     break;
 
   case 177:
-#line 1826 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1829 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.wptr) = LinkWhenCases(CreateWhen(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].wptr));
 	}
     break;
 
   case 178:
-#line 1833 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1836 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateFlow(fc_break,NULL);
 	}
     break;
 
   case 179:
-#line 1837 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1840 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateFlow(fc_continue,NULL);
 	}
     break;
 
   case 180:
-#line 1841 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1844 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateFlow(fc_fallthru,NULL);
 	}
     break;
 
   case 181:
-#line 1845 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1848 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateFlow(fc_return,NULL);
 	}
     break;
 
   case 182:
-#line 1849 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1852 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateFlow(fc_stop,(zz_vsp[0].braced_ptr));
 	}
     break;
 
   case 183:
-#line 1856 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1859 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.statptr) = CreateFNAME((zz_vsp[0].nptr));
 	}
     break;
 
   case 184:
-#line 1863 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1866 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != SELECT_T ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, (zz_vsp[0].int_value), NULL);
@@ -3835,7 +3838,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 185:
-#line 1874 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1877 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != SELECT_T ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, (zz_vsp[0].int_value), NULL);
@@ -3845,42 +3848,42 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 186:
-#line 1884 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1887 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.septr) = ReverseSelectCases((zz_vsp[0].septr));
 	}
     break;
 
   case 187:
-#line 1891 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1894 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.septr) = CreateSelect((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
 	}
     break;
 
   case 188:
-#line 1895 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1898 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.septr) = CreateSelect(NULL,(zz_vsp[0].slptr));
 	}
     break;
 
   case 189:
-#line 1899 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1902 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.septr) = LinkSelectCases(CreateSelect((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].septr));
 	}
     break;
 
   case 190:
-#line 1903 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1906 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.septr) = LinkSelectCases(CreateSelect(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].septr));
 	}
     break;
 
   case 191:
-#line 1910 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1913 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != SWITCH_T ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, (zz_vsp[0].int_value), NULL);
@@ -3894,7 +3897,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 192:
-#line 1921 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1924 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != SWITCH_T ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, (zz_vsp[0].int_value), NULL);
@@ -3904,42 +3907,42 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 193:
-#line 1931 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1934 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.swptr) = ReverseSwitchCases((zz_vsp[0].swptr));
 	}
     break;
 
   case 194:
-#line 1938 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1941 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.swptr) = CreateSwitch((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
 	}
     break;
 
   case 195:
-#line 1942 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1945 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.swptr) = CreateSwitch(NULL,(zz_vsp[0].slptr));
 	}
     break;
 
   case 196:
-#line 1946 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1949 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.swptr) = LinkSwitchCases(CreateSwitch((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].swptr));
 	}
     break;
 
   case 197:
-#line 1950 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1953 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.swptr) = LinkSwitchCases(CreateSwitch(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].swptr));
 	}
     break;
 
   case 198:
-#line 1957 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1960 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if( (zz_vsp[0].int_value) != CONDITIONAL_T ) {
 	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (zz_vsp[0].int_value), NULL);
@@ -3949,7 +3952,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 199:
-#line 1967 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1970 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*  All processing of notes takes place on the notes_body here.
 	   *  Notes should NOT be added to the statement list.
@@ -3986,7 +3989,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 200:
-#line 2004 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2007 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*  At this point we have the "language", the names of the
 	   *  objects we are explaining, and the explanation/notes itself.
@@ -3998,7 +4001,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 201:
-#line 2013 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2016 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  struct NoteTmp *nt;
 	  (zz_val.notesptr) = (zz_vsp[-2].notesptr);
@@ -4013,7 +4016,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 202:
-#line 2028 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2031 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.notesptr) = CreateNoteTmp(NULL, AddBraceChar((zz_vsp[0].braced_ptr),NULL),
                              (void *)(zz_vsp[-1].lptr), LineNum());
@@ -4021,7 +4024,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 203:
-#line 2033 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2036 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.notesptr) = CreateNoteTmp(NULL, AddBraceChar((zz_vsp[0].braced_ptr),NULL),
 	                     (void *)(zz_vsp[-1].lptr), LineNum());
@@ -4030,7 +4033,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 204:
-#line 2042 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2045 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  /*
 	   * Reversing the variable list is now essential to deal with
@@ -4041,14 +4044,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 205:
-#line 2053 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2056 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
 	}
     break;
 
   case 206:
-#line 2057 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2060 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
 	  LinkVariableNodes((zz_val.lptr),(zz_vsp[-2].lptr));
@@ -4056,7 +4059,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 207:
-#line 2062 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2065 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  ErrMsg_CommaName("name",(zz_vsp[0].nptr));
 	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
@@ -4069,7 +4072,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 208:
-#line 2075 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2078 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  symchar *simple;
 	  void *data;
@@ -4089,14 +4092,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 209:
-#line 2095 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2098 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.nptr) = CreateIdName((zz_vsp[0].id_ptr));
 	}
     break;
 
   case 210:
-#line 2099 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2102 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.nptr) = CreateIdName((zz_vsp[0].id_ptr));
 	  LinkNames((zz_val.nptr),(zz_vsp[-2].nptr));
@@ -4104,7 +4107,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 211:
-#line 2104 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2107 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  if ((zz_vsp[-1].sptr) == NULL) {
 	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
@@ -4119,7 +4122,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 212:
-#line 2119 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2122 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = CONDITIONAL_T;
@@ -4127,7 +4130,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 213:
-#line 2124 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2127 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = FOR_T;
@@ -4135,7 +4138,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 214:
-#line 2129 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2132 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = IF_T;
@@ -4143,7 +4146,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 215:
-#line 2134 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2137 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = INTERACTIVE_T;
@@ -4151,7 +4154,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 216:
-#line 2139 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2142 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = METHODS_T;
@@ -4159,7 +4162,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 217:
-#line 2144 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2147 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = NOTES_T;
@@ -4167,7 +4170,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 218:
-#line 2149 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2152 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = SELECT_T;
@@ -4175,7 +4178,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 219:
-#line 2154 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2157 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = SWITCH_T;
@@ -4183,7 +4186,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 220:
-#line 2159 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2162 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = UNITS_T;
@@ -4191,7 +4194,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 221:
-#line 2164 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2167 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = GLOBAL_T;
@@ -4199,7 +4202,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 222:
-#line 2169 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2172 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = WHEN_T;
@@ -4207,7 +4210,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 223:
-#line 2174 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2177 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = WHILE_T;
@@ -4215,7 +4218,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 224:
-#line 2179 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2182 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = (zz_vsp[0].id_ptr);
           (zz_val.int_value) = IDENTIFIER_T;
@@ -4223,7 +4226,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 225:
-#line 2184 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2187 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
           g_end_identifier = NULL;
           (zz_val.int_value) = END_T;
@@ -4231,63 +4234,63 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 226:
-#line 2192 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2195 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.braced_ptr) = NULL;
 	}
     break;
 
   case 227:
-#line 2196 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2199 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.braced_ptr) = (zz_vsp[0].braced_ptr);
 	}
     break;
 
   case 228:
-#line 2203 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2206 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dquote_ptr) = NULL;
 	}
     break;
 
   case 229:
-#line 2207 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2210 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dquote_ptr) = (zz_vsp[0].dquote_ptr);
 	}
     break;
 
   case 230:
-#line 2214 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2217 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = ReverseSetList((zz_vsp[0].sptr));
 	}
     break;
 
   case 231:
-#line 2218 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2221 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = NULL;
 	}
     break;
 
   case 232:
-#line 2225 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2228 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = CreateSingleSet((zz_vsp[0].eptr));
 	}
     break;
 
   case 233:
-#line 2229 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2232 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = CreateRangeSet((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
 	}
     break;
 
   case 234:
-#line 2233 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2236 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = CreateSingleSet((zz_vsp[0].eptr));
 	  LinkSets((zz_val.sptr),(zz_vsp[-2].sptr));
@@ -4295,7 +4298,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 235:
-#line 2238 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2241 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.sptr) = CreateRangeSet((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
 	  LinkSets((zz_val.sptr),(zz_vsp[-4].sptr));
@@ -4303,7 +4306,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 236:
-#line 2246 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2249 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = (zz_vsp[0].int_value);
 	  g_constant_type = LONGCONSTANT;
@@ -4312,7 +4315,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 237:
-#line 2252 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2255 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = (zz_vsp[0].real_value);
 	  g_constant_type = DOUBLECONSTANT;
@@ -4321,14 +4324,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 238:
-#line 2261 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2264 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.real_value) = (zz_vsp[-1].real_value)*(zz_vsp[0].real_value);
 	}
     break;
 
   case 239:
-#line 2265 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2268 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
@@ -4349,7 +4352,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 240:
-#line 2286 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2289 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  g_dim_ptr = Dimensionless();
 	  (zz_val.real_value) = 1.0;
@@ -4357,7 +4360,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 241:
-#line 2291 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2294 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
@@ -4378,196 +4381,196 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 242:
-#line 2312 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2315 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimp) = (zz_vsp[0].dimp);
 	}
     break;
 
   case 243:
-#line 2316 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2319 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimp) = Dimensionless();
 	}
     break;
 
   case 244:
-#line 2320 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2323 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimp) = WildDimension();
 	}
     break;
 
   case 245:
-#line 2327 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2330 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimp) = WildDimension();
 	}
     break;
 
   case 246:
-#line 2331 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2334 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimp) = FindOrAddDimen(&((zz_vsp[0].dimen)));
 	}
     break;
 
   case 247:
-#line 2338 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2341 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  ParseDim(&((zz_val.dimen)),SCP((zz_vsp[0].id_ptr)));
 	}
     break;
 
   case 248:
-#line 2342 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2345 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  ClearDimensions(&((zz_val.dimen)));
 	}
     break;
 
   case 249:
-#line 2346 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2349 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimen) = SubDimensions(&((zz_vsp[-2].dimen)),&((zz_vsp[0].dimen)));
 	}
     break;
 
   case 250:
-#line 2350 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2353 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimen) = AddDimensions(&((zz_vsp[-2].dimen)),&((zz_vsp[0].dimen)));
 	}
     break;
 
   case 251:
-#line 2354 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2357 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.dimen) = ScaleDimensions(&((zz_vsp[-2].dimen)),(zz_vsp[0].frac_value));
 	}
     break;
 
   case 252:
-#line 2358 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2361 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  CopyDimensions(&((zz_vsp[-1].dimen)),&((zz_val.dimen)));
 	}
     break;
 
   case 253:
-#line 2365 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2368 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.frac_value) = (zz_vsp[-1].int_value) ? NegateF((zz_vsp[0].frac_value)) : (zz_vsp[0].frac_value);
 	}
     break;
 
   case 254:
-#line 2372 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2375 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.frac_value) = CreateFraction((short)(zz_vsp[0].int_value),(short)1);
 	}
     break;
 
   case 255:
-#line 2376 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2379 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.frac_value) = CreateFraction((short)(zz_vsp[-3].int_value),(short)(zz_vsp[-1].int_value));
 	}
     break;
 
   case 256:
-#line 2383 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2386 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 0;
 	}
     break;
 
   case 257:
-#line 2387 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2390 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 0;
 	}
     break;
 
   case 258:
-#line 2391 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2394 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.int_value) = 1;
 	}
     break;
 
   case 259:
-#line 2398 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2401 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateIntExpr((zz_vsp[0].int_value));
 	}
     break;
 
   case 260:
-#line 2402 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2405 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateIntExpr(LONG_MAX-1);
 	}
     break;
 
   case 261:
-#line 2406 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2409 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateRealExpr((zz_vsp[0].real_value),g_dim_ptr);
 	}
     break;
 
   case 262:
-#line 2410 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2413 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
 	}
     break;
 
   case 263:
-#line 2414 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2417 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateTrueExpr();
 	}
     break;
 
   case 264:
-#line 2418 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2421 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateFalseExpr();
 	}
     break;
 
   case 265:
-#line 2422 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2425 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateAnyExpr();
 	}
     break;
 
   case 266:
-#line 2426 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2429 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateSymbolExpr((zz_vsp[0].sym_ptr));
 	}
     break;
 
   case 267:
-#line 2430 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2433 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateVarExpr((zz_vsp[0].nptr));
 	}
     break;
 
   case 268:
-#line 2434 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2437 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateSetExpr((zz_vsp[-1].sptr));
 	}
     break;
 
   case 269:
-#line 2438 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2441 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_plus));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4575,7 +4578,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 270:
-#line 2443 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2446 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_minus));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4583,7 +4586,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 271:
-#line 2448 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2451 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_times));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4591,7 +4594,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 272:
-#line 2453 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2456 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_divide));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4599,7 +4602,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 273:
-#line 2458 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2461 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_power));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4607,7 +4610,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 274:
-#line 2463 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2466 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_and));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4615,7 +4618,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 275:
-#line 2468 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2471 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_or));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4623,14 +4626,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 276:
-#line 2473 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2476 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_not));
 	}
     break;
 
   case 277:
-#line 2477 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2480 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),(zz_vsp[-1].eptr));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4638,7 +4641,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 278:
-#line 2482 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2485 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),(zz_vsp[-1].eptr));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4646,7 +4649,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 279:
-#line 2487 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2490 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_in));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4654,7 +4657,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 280:
-#line 2492 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2495 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_st));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4662,7 +4665,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 281:
-#line 2497 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2500 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_st));
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
@@ -4670,35 +4673,35 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 282:
-#line 2502 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2505 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = (zz_vsp[0].eptr);
 	}
     break;
 
   case 283:
-#line 2506 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2509 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_uminus));
 	}
     break;
 
   case 284:
-#line 2510 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2513 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateSatisfiedExpr((zz_vsp[-3].nptr),(zz_vsp[-1].real_value),g_dim_ptr);
 	}
     break;
 
   case 285:
-#line 2514 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2517 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateSatisfiedExpr((zz_vsp[-1].nptr),DBL_MAX,NULL);
 	}
     break;
 
   case 286:
-#line 2518 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2521 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroySetList((zz_vsp[-1].sptr));
 	  (zz_val.eptr) = NULL;
@@ -4708,14 +4711,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 287:
-#line 2525 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2528 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateBuiltin(e_sum,(zz_vsp[-1].sptr));
 	}
     break;
 
   case 288:
-#line 2529 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2532 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroySetList((zz_vsp[-1].sptr));
 	  (zz_val.eptr) = NULL;
@@ -4725,14 +4728,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 289:
-#line 2536 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2539 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateBuiltin(e_prod,(zz_vsp[-1].sptr));
 	}
     break;
 
   case 290:
-#line 2540 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2543 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroySetList((zz_vsp[-1].sptr));
 	  (zz_val.eptr) = NULL;
@@ -4742,14 +4745,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 291:
-#line 2547 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2550 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateBuiltin(e_union,(zz_vsp[-1].sptr));
 	}
     break;
 
   case 292:
-#line 2551 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2554 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroySetList((zz_vsp[-1].sptr));
 	  (zz_val.eptr) = NULL;
@@ -4759,14 +4762,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 293:
-#line 2558 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2561 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateBuiltin(e_inter,(zz_vsp[-1].sptr));
 	}
     break;
 
   case 294:
-#line 2562 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2565 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroySetList((zz_vsp[-1].sptr));
 	  (zz_val.eptr) = NULL;
@@ -4776,14 +4779,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 295:
-#line 2569 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2572 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateBuiltin(e_card,(zz_vsp[-1].sptr));
 	}
     break;
 
   case 296:
-#line 2573 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2576 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  DestroySetList((zz_vsp[-1].sptr));
 	  (zz_val.eptr) = NULL;
@@ -4793,14 +4796,14 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 297:
-#line 2580 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2583 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateBuiltin(e_choice,(zz_vsp[-1].sptr));
 	}
     break;
 
   case 298:
-#line 2584 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2587 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  CONST struct Func *fptr;
 	  if ((fptr = LookupFunc(SCP((zz_vsp[-3].id_ptr))))!=NULL) {
@@ -4814,63 +4817,63 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     break;
 
   case 299:
-#line 2595 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2598 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = (zz_vsp[-1].eptr);
 	}
     break;
 
   case 300:
-#line 2602 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2605 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_equal);
 	}
     break;
 
   case 301:
-#line 2606 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2609 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_less);
 	}
     break;
 
   case 302:
-#line 2610 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2613 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_greater);
 	}
     break;
 
   case 303:
-#line 2614 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2617 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_lesseq);
 	}
     break;
 
   case 304:
-#line 2618 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2621 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_greatereq);
 	}
     break;
 
   case 305:
-#line 2622 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2625 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_notequal);
 	}
     break;
 
   case 306:
-#line 2629 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2632 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_boolean_eq);
 	}
     break;
 
   case 307:
-#line 2633 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2636 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
     {
 	  (zz_val.eptr) = CreateOpExpr(e_boolean_neq);
 	}
@@ -4880,7 +4883,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     }
 
 /* Line 1037 of yacc.c.  */
-#line 4884 "y.tab.c"
+#line 4887 "y.tab.c"
 
   zz_vsp -= zz_len;
   zz_ssp -= zz_len;
@@ -5108,7 +5111,7 @@ zz_return:
 }
 
 
-#line 2637 "/home/ballan/cmu/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2640 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
 
 /*
  * We really need to do something about freeing up the productions
