@@ -21,7 +21,6 @@ except ImportError:
 print_loading_status("Loading python standard libraries")
 
 import re
-import preferences # loading/saving of .ini options
 import urlparse
 import optparse
 import platform
@@ -43,6 +42,7 @@ import pango
 
 print_loading_status("Loading ASCEND python modules...")
 
+from preferences import *      # loading/saving of .ini options
 from solverparameters import * # 'solver parameters' window
 from help import *             # viewing help files
 from incidencematrix import *  # incidence/sparsity matrix matplotlib window
@@ -120,12 +120,10 @@ class Browser:
 
 		print_loading_status("Loading preferences")
 
-		self.prefs = preferences.Preferences()
+		self.prefs = Preferences()
 
 		#--------
 		# initialise ASCEND
-
-		print_loading_status("Creating ASCEND 'Library' object")
 
 		self.assets_dir = options.assets_dir
 		
@@ -133,13 +131,19 @@ class Browser:
 		
 		if _prefpath:
 			_path = _prefpath
-			print "SETTING ASCENDLIBRARY from preferences:",_path
-			self.library = ascpy.Library(_prefpath)
+			_pathsrc = "user preferences"
 		else:
-			options.library_path
-			print "PYTHON SAYS DEFAULT LIBRARY IS",options.library_path
-			print "WE WILL LET THE ENGINE DECIDE..."
-			self.library = ascpy.Library(options.library_path)	
+			_path = options.library_path
+			if options.library_path==config.LIBRARY_PATH:
+				_pathsrc = "default (config.py)"
+			else:
+				_pathsrc = "commandline"
+			
+		print_loading_status("Creating ASCEND 'Library' object",
+			"From %s, using ASCENDLIBRARY = %s" % (_pathsrc,_path)
+
+		)
+		self.library = ascpy.Library(_path)
 
 		self.sim = None
 

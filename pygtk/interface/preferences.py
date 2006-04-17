@@ -17,12 +17,12 @@ class Preferences:
 			else:
 				self.fname = os.path.expanduser("~/.ascend.ini");
 
-			print "PREFERENCES FILE:",self.fname
+			#print "PREFERENCES FILE =",self.fname
 				
 		self.n = self.n + 1;
 
 		if not hasattr(self,'ini'):
-			print "CREATING CONFIG"
+			#print "CREATING CONFIG"
 			self.ini = ConfigParser.SafeConfigParser();
 			self.ini.read( [ self.fname ] );
 
