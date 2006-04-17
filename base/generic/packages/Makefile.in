@@ -57,8 +57,7 @@ EXEC_LIBS =
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
 LIB_OBJS = \
-	sensitivity.o ascFreeAllVars.o
-# kvalues.o
+	sensitivity.o ascFreeAllVars.o bisect.o kvalues.o
 
 LIB_SRCS = $(LIB_OBJS:%.o=%.c)
 

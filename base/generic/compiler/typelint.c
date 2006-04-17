@@ -505,7 +505,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       }
       break;
     case EXT:
-      if (ExternalStatMode(s) == 0) {
+      if (ExternalStatMode(s) == ek_method) {
         Asc_StatErrMsg_NotAllowedDeclarative(fp,s);
         rval = DEF_STAT_MISLOCATED;
       }
@@ -880,7 +880,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
       }
       break;
     case EXT:
-      if (ExternalStatMode(s) != 0) {
+      if (ExternalStatMode(s) != ek_method) {
         Asc_StatErrMsg_NotAllowedMethod(fp,s);
         rval = DEF_STAT_MISLOCATED;
       }

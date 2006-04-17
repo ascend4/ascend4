@@ -199,10 +199,8 @@ static int DoSolve(struct Instance *inst)
 
 	@see DoSolve
 */
-int do_solve_eval(struct Slv_Interp *slv_interp,
-		  struct Instance *i,
-		  struct gl_list_t *arglist,
-		  unsigned long whichvar)
+int do_solve_eval( struct Instance *i,
+		  struct gl_list_t *arglist)
 {
   unsigned long len;
   int result;
@@ -210,7 +208,7 @@ int do_solve_eval(struct Slv_Interp *slv_interp,
   len = gl_length(arglist);
 
   /* Ignore unused params */
-  (void)slv_interp; (void)i; (void)whichvar;
+  (void)i; 
 
   if (len!=2) {
 	ERROR_REPORTER_HERE(ASC_USER_ERROR,
@@ -336,15 +334,13 @@ static int finite_difference(struct gl_list_t *arglist)
 /**
 	Finite different evaluate...
 */
-int do_finite_diff_eval(struct Slv_Interp *slv_interp,
-			 struct Instance *i,
-			 struct gl_list_t *arglist,
-			 unsigned long whichvar)
+int do_finite_diff_eval( struct Instance *i,
+			 struct gl_list_t *arglist)
 {
   int result;
 
   /* Ignore unused params */
-  (void)slv_interp; (void)i; (void)whichvar;
+  (void)i; 
 
   if (FiniteDiffCheckArgs(arglist))
     return 1;
@@ -699,7 +695,7 @@ static int ComputeInverse(slv_system_t sys,
 }
 #endif
 
-int sensitivity_anal(struct Slv_Interp *slv_interp,
+int sensitivity_anal(
 		     struct Instance *inst, /* not used but will be */
 		     struct gl_list_t *arglist)
 {
@@ -724,7 +720,7 @@ int sensitivity_anal(struct Slv_Interp *slv_interp,
   int result=0;
 
   /* Ignore unused params */
-  (void)slv_interp; (void) inst;
+  (void) inst;
 
   (void)NumberFreeVars(NULL);		/* used to re-init the system */
   (void)NumberRels(NULL);		/* used to re-init the system */
@@ -994,8 +990,7 @@ EXTERN sensitivity_anal_all(
 	as we keep aroung a dense matrix n_outputs * n_inputs, but here
 	n_outputs may be *much* larger depending on problem size.
 */
-int sensitivity_anal_all(struct Slv_Interp *slv_interp,
-			 struct Instance *inst,  /* not used but will be */
+int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
 			 struct gl_list_t *arglist,
 			 real64 step_length)
 {
@@ -1021,7 +1016,7 @@ int sensitivity_anal_all(struct Slv_Interp *slv_interp,
   int result=0;
 
   /* Ignore unused params */
-  (void)slv_interp; (void)inst; (void)step_length;
+  (void)inst; (void)step_length;
 
   /*
    * Call the presolve for the system. This should number variables
@@ -1149,20 +1144,18 @@ int sensitivity_anal_all(struct Slv_Interp *slv_interp,
 }
 
 
-int do_sensitivity_eval(struct Slv_Interp *slv_interp,
-			 struct Instance *i,
+int do_sensitivity_eval( struct Instance *i,
 			 struct gl_list_t *arglist)
 {
   int result;
   if (SensitivityCheckArgs(arglist)) {
     return 1;
   }
-  result = sensitivity_anal(slv_interp,i,arglist);
+  result = sensitivity_anal(i,arglist);
   return result;
 }
 
-int do_sensitivity_eval_all(struct Slv_Interp *slv_interp,
-			    struct Instance *i,
+int do_sensitivity_eval_all( struct Instance *i,
 			    struct gl_list_t *arglist)
 {
   int result;
@@ -1170,7 +1163,7 @@ int do_sensitivity_eval_all(struct Slv_Interp *slv_interp,
   if (SensitivityAllCheckArgs(arglist,&step_length)) {
     return 1;
   }
-  result = sensitivity_anal_all(slv_interp,i,arglist,step_length);
+  result = sensitivity_anal_all(i,arglist,step_length);
   return result;
 }
 

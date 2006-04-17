@@ -462,7 +462,7 @@ struct gl_list_t *InitCheckExtCallArgs(struct Instance *inst,
   struct VariableList *vl;
   struct gl_list_t *result;
 
-  vl = ExternalStatVlist(stat);
+  vl = ExternalStatVlistMethod(stat);
   result = ProcessArgs(inst,vl,errs);
   return result;
 }
@@ -492,8 +492,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
   enum find_errors ferr;
   unsigned long c,len,pos;
 
-  struct Slv_Interp slv_interp;
-  int (*eval_func) ();
+  ExtMethodRun *eval_func;
   int nok;
 
   funcname = ExternalStatFuncName(stat);
@@ -511,7 +510,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
 
   CONSOLE_DEBUG("%s: in:%ld, out:%ld", efunc->name, efunc->n_inputs, efunc->n_outputs);
 
-  eval_func = GetValueFunc(efunc);
+  eval_func = GetExtMethodRun(efunc);
   if (eval_func == NULL) {
     CONSOLE_DEBUG("GetValueFunc(efunc) returned NULL");
     fm->ErrNo = Proc_CallError;
@@ -570,8 +569,7 @@ void ExecuteInitExt(struct procFrame *fm, struct Statement *stat)
 
   /*CONSOLE_DEBUG("CHECKED EXTERNAL ARGS, OK");*/
 
-  Init_Slv_Interp(&slv_interp);
-  nok = (*eval_func)(&slv_interp,fm->i,arglist);
+  nok = (*eval_func)(fm->i,arglist);
   /* this should switch on Proc_CallXXXXX */
     /* should switch on proc_enum call bits to translate Proc_Call
      * flow of control to our fm->flow.

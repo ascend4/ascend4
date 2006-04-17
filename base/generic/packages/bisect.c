@@ -1,7 +1,17 @@
 #include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
 #include <compiler/packages.h>
+#include <compiler/instance_enum.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/types.h>
+#include <general/list.h>
+#include <compiler/sets.h>
+
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
+#include <compiler/extcall.h>
+#include "bisect.h"
 
 static int CheckArgTypes(struct gl_list_t *branch)
 {
@@ -103,9 +113,7 @@ static int CheckArgs_SetValues(struct gl_list_t *arglist)
 }
 
 
-int do_set_values_eval(struct Slv_Interp *slv_interp,
-		     struct Instance *i,
-		     struct gl_list_t *arglist)
+int do_set_values_eval( struct Instance *i, struct gl_list_t *arglist)
 {
   unsigned long dimension,c;
   struct gl_list_t *inputs, *outputs, *branch;
@@ -183,9 +191,7 @@ static int CheckArgs_Bisection(struct gl_list_t *arglist)
   return 1;
 }
 
-int do_bisection_eval(struct Slv_Interp *slv_interp,
-		     struct Instance *i,
-		     struct gl_list_t *arglist)
+int do_bisection_eval( struct Instance *i, struct gl_list_t *arglist)
 {
   unsigned long dimension,c;
   struct gl_list_t *vector1, *vector2, *outputs;
@@ -225,12 +231,12 @@ It will bisect find the midpoint by bisection.\n\
 Example: do_bisection(x[1..n],x_par[1..n], y[1..n]). \n";
 
   int result;
-  result = CreateUserFunction("do_set_values",NULL,
-			      do_set_values_eval,NULL,NULL,
-			      3,0,set_values_help);
-  result += CreateUserFunction("do_bisection",NULL,
-			      do_bisection_eval,NULL,NULL,
-			       3,0,bisection_help);
+  result = CreateUserFunctionMethod("do_set_values",
+			      do_set_values_eval,
+			      3,set_values_help);
+  result += CreateUserFunctionMethod("do_bisection",
+			      do_bisection_eval,
+			       3,bisection_help);
   return result;
 }
 

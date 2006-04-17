@@ -1423,7 +1423,7 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
 {
   struct AnonType  *at, *after;
   struct AnonBucket *b;
-  int exact, exactfamily;
+  int exact =0, exactfamily;
 
   if (i==NULL) {
     info->errors++;

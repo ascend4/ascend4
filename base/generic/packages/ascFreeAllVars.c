@@ -96,14 +96,10 @@ int DLEXPORT Asc_ClearVarsInTree(struct Instance *i)
   return 0;
 }
 
-extern int DLEXPORT Asc_FreeAllVars(struct Slv_Interp *dummy1,
-                                  struct Instance *root,
-                                  struct gl_list_t *arglist,
-                                  unsigned long dummy4)
+extern int DLEXPORT Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist)
+                                  
 {
   /* arglist is a list of gllist of instances */
-  (void)dummy1;
-  (void)dummy4;
   if (arglist == NULL ||
       gl_length(arglist) == 0L ||
       gl_length((struct gl_list_t *)gl_fetch(arglist,1)) != 1 ||

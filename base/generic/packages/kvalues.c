@@ -27,7 +27,6 @@ Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
 #include <compiler/packages.h>
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
-#include <compiler/compiler.h>
 #include <compiler/dimen.h>
 #include <compiler/types.h>
 #include <general/list.h>
@@ -37,7 +36,9 @@ Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
 #include <compiler/instquery.h>
 #include <compiler/instance_name.h>
 #include <compiler/symtab.h>
+#include <compiler/extcall.h>
 #include <math.h>
+#include "kvalues.h"
 
 #define KVALUES_DEBUG 1
 
@@ -55,11 +56,11 @@ struct Vpdata {
 };
 
 static struct Vpdata VpTable[] = {
-  "benzene", 15.5381, 2032.73, -33.15,
-  "chloro" , 15.8333, 2477.07, -39.94,
-  "acetone", 15.8737, 2911.32, -56.51,
-  "hexane" , 15.3866, 2697.55, -46.78,
-  "",        0.0,     0.0    , 0.0
+  { "benzene", 15.5381, 2032.73, -33.15 },
+  { "chloro" , 15.8333, 2477.07, -39.94 },
+  { "acetone", 15.8737, 2911.32, -56.51 },
+  { "hexane" , 15.3866, 2697.55, -46.78 },
+  { "",        0.0,     0.0    , 0.0 }
 };
 
 struct KVALUES_problem {
@@ -83,7 +84,7 @@ static struct KVALUES_problem *CreateProblem(void)
 
 static int LookupData(struct Vpdata *vp)
 {
-  char *component;
+  /* char *component; */
   unsigned long c=0L;
 
   while (strcmp(VpTable[c].component,"")!=0) {
@@ -252,9 +253,9 @@ int kvalues_preslv(struct Slv_Interp *slv_interp,
 		   struct gl_list_t *arglist)
 {
   struct KVALUES_problem *problem;
-  struct Instance *arg;
   int workspace;
-  int nok,c;
+  /*struct Instance *arg;
+   int nok,c; */
 
 
   if (slv_interp->first_call) {
@@ -407,8 +408,8 @@ int KValues_Init (void)
   char kvalues_help[] = "This function does a bubble point calculation\
 given the mole fractions in the feed, a T and P.";
 
-  result = CreateUserFunction("bubblepnt",kvalues_preslv, kvalues_fex,
-			      NULL,NULL,3,1,kvalues_help);
+  result = CreateUserFunctionBlackBox("bubblepnt", kvalues_preslv, kvalues_fex,
+			      NULL,NULL,NULL,N_INPUT_ARGS,N_OUTPUT_ARGS,kvalues_help);
   return  result;
 }
 

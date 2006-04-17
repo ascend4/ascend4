@@ -1566,7 +1566,8 @@ blackbox_statement:
 	   */
 	  struct VariableList *vl;
 	  vl = JoinVariableLists($5,$7);
-	  $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL);
+	  /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
+	  $$ = CreateEXTERNBlackBox($1,SCP($3),vl,$8);
 	}
     ;
 
@@ -1610,7 +1611,8 @@ glassbox_statement:
 	  sprintf(tmp,"%ld",$7);
 	  str = AddSymbol(tmp);
 	  nptr = CreateIdName(str);
-	  $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9);
+	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
+	  $$ = CreateEXTERNGlassBox($1,SCP($3),vl,nptr,$9);
 	}
     ;
 
@@ -1709,9 +1711,10 @@ external_statement:
     EXTERNAL_T IDENTIFIER_T '(' fvarlist ')'
 	{
 	  /*
-	   * This is procedural external code.
-	   */
+	   * This is procedural external code. Was:
 	  $$ = CreateEXTERN(0,NULL,SCP($2),$4,NULL,NULL);
+	   */
+	  $$ = CreateEXTERNMethod(SCP($2),$4);
 	}
     ;
 
