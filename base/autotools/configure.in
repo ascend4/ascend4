@@ -265,10 +265,24 @@ AC_CHECK_SIZEOF(void *, 4)
 #--------------------------------------------------------------------
 #	Set YACC.
 #	call the
-#	autoconf macro which looks for `bison' and then for `yacc'
+#	autoconf macro which looks for `bison' and then for `yacc'.
+#       note it isn't bright enough to check that yacc really exists,
+#       so we allow the user to disable it.
 #--------------------------------------------------------------------
 
+YACCSAVE="$YACC"
 AC_PROG_YACC
+
+AC_ARG_WITH(yacc,
+    [  --without-yacc        do not generate parser from yacc file],
+    , [with_yacc=yes])
+if test ! "X$with_yacc" = "Xyes" ; then
+    YACC=": configured without yacc"
+    parser_src="ascParse.c.from.c"
+else
+    parser_src="ascParse.c.from.yacc"
+fi
+AC_SUBST(parser_src)
 
 #--------------------------------------------------------------------
 #	Set LEX.
