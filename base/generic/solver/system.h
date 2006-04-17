@@ -56,7 +56,7 @@
 #ifndef ASC_SYSTEM_H
 #define ASC_SYSTEM_H
 
-extern slv_system_t system_build(SlvBackendToken inst);
+extern slv_system_t ASC_DLLSPEC system_build(SlvBackendToken inst);
 /**<
  ***  In ascend, backendtoken is a struct Instance *.
  ***  Visits the instance tree and collects all variables,
@@ -64,7 +64,7 @@ extern slv_system_t system_build(SlvBackendToken inst);
  **/
 
 extern void system_destroy(slv_system_t sys);
-/**< 
+/**<
  ***  <!--  system_destroy(sys)                                        -->
  ***  <!--  slv_system_t sys;                                          -->
  ***
@@ -72,7 +72,7 @@ extern void system_destroy(slv_system_t sys);
  **/
 
 extern void system_free_reused_mem(void);
-/**< 
+/**<
  ***  <!--  system_free_reused_mem()                                   -->
  ***
  ***  Deallocates any memory that solvers may be squirrelling away for

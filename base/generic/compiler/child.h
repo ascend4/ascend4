@@ -42,7 +42,7 @@
 #ifndef __CHILD_H_SEEN__
 #define __CHILD_H_SEEN__
 
-/** 
+/**
  *  The ChildListStructure is a private implementation detail.
  *  All the public interface needs is a pointer thereto.
  */
@@ -239,7 +239,7 @@ extern CONST struct Statement *ChildStatement(ChildListPtr cl, unsigned long n);
  *  Children are numbered 1..ChildListLen(cl).
  */
 
-extern unsigned ChildGetBooleans(ChildListPtr cl, unsigned long n);
+extern unsigned ASC_DLLSPEC ChildGetBooleans(ChildListPtr cl, unsigned long n);
 /**<
  *  <!--  unsigned int ChildGetBooleans(cl,n)                          -->
  *  <!--  CONST ChildListPtr *cl;                                      -->

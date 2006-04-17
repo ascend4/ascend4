@@ -51,7 +51,7 @@
 	the that problem. ASCEND (the interface) exists to give the user as
 	much (or as little) control over the compilation and solution of their
 	problem as they want. @par
-	
+
 	The problems expressible in the language cannot (and indeed should not)
 	be reduced to a single formulation if the solutions are to be
 	implemented in a robust, efficient, and user controllable manner.
@@ -61,7 +61,7 @@
 	alternative is to make all engines talk through an interface defined
 	by the intersection of the engines' individual interfaces. This
 	alternative is unacceptable from a software engineering point of view. @par
-	
+
 	This portion of the interface, then, has the task of making every
 	engine conform to a minimum set of semantics (thus enabling the GUI/
 	CLUI to support the user wanting very little control over a host of
@@ -73,7 +73,7 @@
 	solver. @par
 
 	@see slv_common.h for the data structures we desire to have common to all the solvers.
-	
+
 	<pre>
 	Dates:        06/90 - original version KMW
 	              01/94 - modified tolerances, eliminated var_to_name
@@ -92,7 +92,7 @@
 	</pre>
 
 	@section desc Description
-	
+
     The inputs to any solver consist of a formulation of
     the problem to solve along with a set of parameters to
     allow user control of the solution process.  The
@@ -141,14 +141,14 @@
     respective declarations below. @par
 
 	@section arch Architecture
-	
+
 	Right, so we're going to have a client-server, object-oriented,
 	open-architecture system designed to handle multiple clients in a
 	single-thread process. Furthermore, the clients will NOT have to
 	know anything at all about the ASCEND IV compiler hidden out back
 	some place -- in fact our compiler may not BE out back, it may be
 	on another machine or swapped to disk or whatever.
-	
+
 	That's the ideal. In most applications of ASCEND, particularly the
 	interactive one, the compiler is never very far away. Isolating the
 	compiler data completely (meaning no looking back at it for anything)
@@ -158,7 +158,7 @@
 	especially if ASCEND is to run on PCs any time soon.
 
 	Haha :-) $1/MB! Jan 2006: 118 AUD = 512 MB = ~ 0.15 USD/MB -- johnpye
-	
+
 	What we really have then is a slv_system_t made up of variables and
 	relations and hiding all the compiler details from the clients.
 	Clients will operate directly on the slv_system_t only through real
@@ -168,7 +168,7 @@
 	and the rel_relation type in this C code sometimes require that
 	the system pointer be provided when asking for certain properties
 	or services.
-	
+
 	@section faq FAQ
 
 	@subsection whatisvar What is a variable?
@@ -188,7 +188,7 @@
 	another for clients that clients may rearrange (or even delete)
 	as suits their needs. The former version is called a master list,
 	and the latter version is called a solvers list.
-	
+
 	@subsection whatisrel What is a relation?
 	At present a relation in ASCEND is either an objective function
 	(a one-sided relation) or a constraining equation. We have a
@@ -203,7 +203,7 @@
 	 - symbolic determination of linearity
 	and we expect to add others as they occur to us or you suggest
 	them.
-	
+
 	 @subsection whatisslvsys What else is a slv_system_t?
 	 It's has a host of interesting properties.
 	  - One slv_system_t (system, hereafter) can only be used by one
@@ -230,17 +230,17 @@
 	      - Generation of GAMS code for an old, slow compiler of an
 	        extremely awkward modeling language that does happen to
 	        have a lot of really good optimizers connected.
-	
+
 	@TODO Short term, we expect to construct a client that takes the partitioned
 	problem and hands off the blocks in sequence to one or more
 	solvers designed to handle only 1 block.
-	
+
 	@TODO Long term, we anticipate that the structure laid out so far is capable of
 	expansion (probably by intermediate clients which add additional
 	semantic content) to provide standardized (mtx and harwellian)
 	sparse matrix support and memory management for codes that don't
 	care to think about such things directly.
-	
+
 	@NOTE
 		We are going through a solver API definition restructuring.
 		The appearance of NOTEs in the header means the code in question
@@ -258,7 +258,7 @@ typedef void *SlvClientToken;
 	client simultaneously. Clients shouldn't have to use any
 	global variables to save their state information -- they
 	should put such info with their token.
-	
+
 	@NOTE to present (6/96) developers: SlvClientToken is an alias for
 	all the old slv*_system_t pointers. cast it to be the type you want.
 */
@@ -285,8 +285,8 @@ typedef struct dof_data_structure {
 #define slv_number_of_solvers g_SlvNumberOfRegisteredClients
 /**< Alias for the number of solver's that have ever registered. */
 
-extern int g_SlvNumberOfRegisteredClients;
-/**< 
+extern int ASC_DLLSPEC g_SlvNumberOfRegisteredClients;
+/**<
 	The number of solver's that have ever registered.
 	Once a solver is registered, we keep track of its name,
 	a number which is the order it was registered in, and
@@ -302,7 +302,7 @@ extern int g_SlvNumberOfRegisteredClients;
 */
 
 /*-----------------------------------------------------------------------
-	Type declarations for registered client functions 
+	Type declarations for registered client functions
 */
 
 /** @todo We will explain all these later in this file someday soon. */
@@ -328,8 +328,8 @@ typedef struct slv_registration_data {
 		client sets all the rest, starting with a symbolic name */
 
   const char *name;                   /**< symbolic name for solver (required). */
-  /* 
-	Required functions 
+  /*
+	Required functions
   */
   SlvClientCreateF    *ccreate;       /**<  (required) */
   SlvClientDestroyF   *cdestroy;      /**<  (required) */
@@ -339,7 +339,7 @@ typedef struct slv_registration_data {
   SlvSetParamsF       *setparam;      /**<  (required) */
   SlvGetStatusF       *getstatus;     /**<  (required) */
   SlvSolveF           *solve;         /**<  (required) */
-  /* 
+  /*
 	Functions we really want, but can live without if your solver is old
 	and klunky. Your solver may not 'look good' in an interactive environment,
 	but then those nasty batch codes seldom do anyway.
@@ -377,17 +377,17 @@ typedef int (SlvRegistration)(SlvFunctionsT *our_sft);
 	incompetent solver was registered.
 */
 
-extern int slv_lookup_client( const char *solverName );
+extern int ASC_DLLSPEC slv_lookup_client( const char *solverName );
 /**<
  ***  Examples: @code
- ***  if (slv_lookup_client("QRSlv") < 0) { 
+ ***  if (slv_lookup_client("QRSlv") < 0) {
  ***    slv_register_client(...)
  ***  }
  ***  @endcode
  ***  @return the number of the named client, or -1 if unknown.
  **/
 
-extern int slv_register_client(SlvRegistration slv0_register
+extern int ASC_DLLSPEC slv_register_client(SlvRegistration slv0_register
 		,CONST char *yourregisterfuncname
 		,CONST char *yourbinaryname
 		,int *new_client_id);
@@ -401,13 +401,13 @@ extern int slv_register_client(SlvRegistration slv0_register
 	from your solver or with 2 strings, but not both.
 	The 2 char strings will be used in dynamically loading
 	a solver. @par
-	
+
 	@return 0 if registration succeeds, nonzero OTHERWISE.
 
 	@todo Note: the second syntax is NOT YET IMPLEMENTED.
 */
 
-extern const char *slv_solver_name(int index);
+extern const char* ASC_DLLSPEC slv_solver_name(int index);
 /**<
 	@param index index of the solver in question (the index depends on the order in which the solvers have been registered)
 	@return name of the solver
@@ -447,8 +447,8 @@ extern int Solv_C_CheckHalt(void);
 
 extern unsigned int slv_serial_id(slv_system_t sys);
 /**< Return the system serial number.
- 
-	@return serial id number of given system. 
+
+	@return serial id number of given system.
 
 	The id is unique within the life of the program.
 */
@@ -470,11 +470,11 @@ extern dof_t *slv_get_log_dofdata(slv_system_t server);
 	@TODO The DEFAULT interpretation has not yet been established.
 */
 
-extern const mtx_block_t *slv_get_solvers_blocks(slv_system_t sys);
+extern const mtx_block_t* ASC_DLLSPEC slv_get_solvers_blocks(slv_system_t sys);
 /**< Decomposition information for the nonlinear solver.
 
-	The blocks of the return value contain decomposition information 
-	about the Jacobian of the equations(included) and variables(free 
+	The blocks of the return value contain decomposition information
+	about the Jacobian of the equations(included) and variables(free
 	and incident) if it is constructed in the ordering of relations/
 	variables in the solvers_rel/var_lists. @par
 
@@ -503,8 +503,8 @@ extern const mtx_block_t *slv_get_solvers_log_blocks(slv_system_t sys);
 	our equation gradients to suit any factorization method
 	you choose. We strongly recommend that you not do this. @par
 
-	The return value is a pointer to the struct with the number of 
-	blocks and the data for the blocks. Each block but the last 
+	The return value is a pointer to the struct with the number of
+	blocks and the data for the blocks. Each block but the last
 	one will be square and will contain a set of rows/columns that
 	should be solved simultaneously. The last block may be
 	rectangular. Rectangular last blocks will be wider.<br><br>
@@ -525,8 +525,8 @@ extern void slv_set_solvers_blocks(slv_system_t sys,
                                    int32 len,
                                    mtx_region_t *data);
 /**<
-	Set the block data for the nonlinear solver to the array 
-	given which should be of length len. 
+	Set the block data for the nonlinear solver to the array
+	given which should be of length len.
 
 	@see slv_set_solvers_log_blocks()
 */
@@ -580,7 +580,7 @@ extern void slv_set_solvers_par_list(slv_system_t sys,
                                      int size);
 /**<
 	Sets the system's parameters list to vlist.
-	
+
 	@see slv_set_solvers_bnd_list()
 */
 extern void slv_set_solvers_unattached_list(slv_system_t sys,
@@ -666,7 +666,7 @@ extern void slv_set_solvers_bnd_list(slv_system_t sys,
 	The list should be NULL terminated and the size should be the length
 	of the list  EXCLUDING  the terminal NULL.
 
-	@NOTE 
+	@NOTE
 		There are now 2 var lists: the master var list pulled of the instance
 		tree, and the solvers var list is to be fetched by the solvers.
 		Eventually the solvers_varlist will only include those vars the specific
@@ -676,7 +676,7 @@ extern void slv_set_solvers_bnd_list(slv_system_t sys,
 		is reordered in some useful fashion defined elsewhere.
 */
 
-extern struct var_variable **slv_get_solvers_var_list(slv_system_t sys);
+extern struct var_variable** ASC_DLLSPEC slv_get_solvers_var_list(slv_system_t sys);
 /**< Returns the most recently set variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
@@ -698,7 +698,7 @@ extern struct dis_discrete **slv_get_solvers_disunatt_list(slv_system_t sys);
 /**< Returns the most recently set unattached discrete variable list (never NULL)  from the system.
 	@see slv_get_master_disunatt_list()
 */
-extern struct var_variable **slv_get_master_var_list(slv_system_t sys);
+extern struct var_variable ** ASC_DLLSPEC slv_get_master_var_list(slv_system_t sys);
 /**< Returns the most recently set master variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
@@ -715,7 +715,7 @@ extern struct dis_discrete **slv_get_master_dvar_list(slv_system_t sys);
 	@see slv_get_master_disunatt_list()
 */
 extern struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys);
-/** Returns the most recently set master unattached discrete variable list 
+/** Returns the most recently set master unattached discrete variable list
 	(never NULL) for the convenience of those who need it.<br><br>
 
 	@NOTE
@@ -733,7 +733,7 @@ extern struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys);
 	same MODEL.
 */
 
-extern struct rel_relation **slv_get_solvers_rel_list(slv_system_t sys);
+extern struct rel_relation** ASC_DLLSPEC slv_get_solvers_rel_list(slv_system_t sys);
 /**<  Returns the (NULL-terminated) list of solver relations. */
 
 extern struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
@@ -781,7 +781,7 @@ extern struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
 extern int32 slv_need_consistency(slv_system_t sys);
 /**< Gets the int need_consitency associated with the system. */
 
-extern int32 slv_get_num_solvers_vars(slv_system_t sys);
+extern int32 ASC_DLLSPEC slv_get_num_solvers_vars(slv_system_t sys);
 /**< Returns the length of the solver variable list.
 	The length does NOT include the terminating NULL.
 */
@@ -979,8 +979,8 @@ extern int32 slv_count_master_whens(slv_system_t sys, when_filter_t *wfilter);
 extern int32 slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bfilter);
 /**< Returns the number of master boundaries matching the specified filter. */
 
-/**	@file slv_client.h 
-	@NOTE 
+/**	@file slv_client.h
+	@NOTE
 		Efficiency note relating to slv_count_master_*: if you are using this with a match anything
 		filter, you would be better off just calling the slv_get_num_*
 		function for the list in question.
@@ -1014,7 +1014,7 @@ extern void slv_set_obj_variable(slv_system_t sys,
 	Specifies the var to use for an objective and whether it should
 	be maximized or minimized. Var must be from the slv_system or
 	complete insanity may result.
-	
+
 	There is no value function here. just use var_value
 	Client solvers should minimize this variable.
 
@@ -1034,7 +1034,7 @@ extern real64 slv_get_obj_variable_gradient(slv_system_t sys);
 	if no var is set.
 */
 
-extern int slv_eligible_solver(slv_system_t sys);
+extern int ASC_DLLSPEC slv_eligible_solver(slv_system_t sys);
 /**<
 	Determines whether or not the current solver.
 	is capable of solving the given system as it is currently set up
@@ -1047,7 +1047,7 @@ extern int slv_eligible_solver(slv_system_t sys);
 	If no solver is registered, this returns FALSE.
 */
 
-extern int slv_select_solver(slv_system_t sys, int solver);
+extern int ASC_DLLSPEC slv_select_solver(slv_system_t sys, int solver);
 /**<
 	Sets the given solver to be the current solver
 	for the system.  The intelligence or stupidity of this move is not
@@ -1058,7 +1058,7 @@ extern int slv_select_solver(slv_system_t sys, int solver);
 	@return number of solver actually selected or -1 on failure
 */
 
-extern int slv_get_selected_solver(slv_system_t sys);
+extern int ASC_DLLSPEC slv_get_selected_solver(slv_system_t sys);
 /**<
 	Returns the current solver number for a system.
 */
@@ -1073,14 +1073,14 @@ extern int slv_switch_solver(slv_system_t sys, int solver);
 extern int32 slv_get_default_parameters(int32 index, slv_parameters_t *parameters);
 /**< @TODO needs commenting, KHACK */
 
-extern void slv_get_parameters(slv_system_t sys, slv_parameters_t *parameters);
+extern void ASC_DLLSPEC slv_get_parameters(slv_system_t sys, slv_parameters_t *parameters);
 /**<
 	Copies the current system parameters to the given structure.
 
 	Do not confuse these parameters [algorithm control variables]
 	with the parameter list which is a list of pointers to var_variable.
 */
-extern void slv_set_parameters(slv_system_t sys, slv_parameters_t *parameters);
+extern void ASC_DLLSPEC slv_set_parameters(slv_system_t sys, slv_parameters_t *parameters);
 /**<
 	Sets the current system parameters to the values contained
 	in the given structure.  It is recommended that one
@@ -1091,7 +1091,7 @@ extern void slv_set_parameters(slv_system_t sys, slv_parameters_t *parameters);
 	accepted by an engine if they came from that engine, so fetching
 	before setting is not only a good idea, it's the law (gas engines
 	don't run on diesel very well...). @par
-	
+
 	Do not confuse these parameters [algorithm control variables]
 	with the parameter list which is a list of pointers to var_variable.
 */
@@ -1109,7 +1109,7 @@ extern void slv_set_solver_index(slv_system_t sys, int index);
 	Sets the solver index of the slv_system_t.
 */
 
-extern void slv_get_status(slv_system_t sys, slv_status_t *status);
+extern void ASC_DLLSPEC slv_get_status(slv_system_t sys, slv_status_t *status);
 /**<
 	Copies the current system status into the given structure.
 */
@@ -1129,7 +1129,7 @@ extern linsol_system_t slv_get_linsol_sys(slv_system_t sys);
 extern mtx_matrix_t slv_get_sys_mtx(slv_system_t sys);
 /**<
 	Returns the mtx used, or NULL if none. The user should check.
-	
+
 	@deprecated {THIS CALL SHOULD GO AWAY}
  **/
 
@@ -1144,7 +1144,7 @@ extern void slv_dump_internals(slv_system_t sys, int level);
 	@TODO fix dubious documentation (return type is void...)
 */
 
-extern void slv_presolve(slv_system_t sys);
+extern void ASC_DLLSPEC slv_presolve(slv_system_t sys);
 /**<
 	Prepares the system for solving.  This must be called before the
 	system is solved, but after everything about the system is set up
@@ -1181,7 +1181,7 @@ extern void slv_resolve(slv_system_t sys);
 
 	@li  variable fixed flag.
 	@li  relation included flag.
-	@li  variable/relation list contents, including order.  Also, the 
+	@li  variable/relation list contents, including order.  Also, the
 		variable/relation indices must continue to be consistent with
 		the list.
 	@li  definition of relations, objective function, and boundaries:
@@ -1191,7 +1191,7 @@ extern void slv_resolve(slv_system_t sys);
 	This function is considerably more efficient when it is usable.
 */
 
-extern void slv_iterate(slv_system_t sys);
+extern void ASC_DLLSPEC slv_iterate(slv_system_t sys);
 /**<
 	Performs one iteration toward the ultimate solution (or
 	failure thereof) of the system.  The user can obtain information
@@ -1221,7 +1221,7 @@ extern boolean slv_change_basis(slv_system_t,int32,mtx_range_t *);
 	of the solver matrix if possible. returns FALSE if impossible
 	because structural infeasibility would occur or because solver selected
 	won't do it.
-	
+
 	@deprecated THIS CALL SHOULD GO AWAY
 */
 

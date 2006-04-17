@@ -44,14 +44,14 @@
 #ifndef ASC_ASCFREEALLVARS_H
 #define ASC_ASCFREEALLVARS_H
 
-extern int DLEXPORT Asc_ClearVarsInTree(struct Instance *i);
+extern int ASC_DLLSPEC Asc_ClearVarsInTree(struct Instance *i);
 /**< Asc_ClearVarsInTree(i).
  * A service routine which assumes a solver_var modeling world
  * and clears (set var.fixed := FALSE) all var and refinements
  * of var in the DAG rooted at i.
  */
 
-extern int DLEXPORT Asc_FreeAllVars( struct Instance *rootinstance,
+extern int ASC_DLLSPEC Asc_FreeAllVars( struct Instance *rootinstance,
                                     struct gl_list_t *arglist);
                                    
 /**<

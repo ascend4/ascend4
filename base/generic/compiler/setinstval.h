@@ -56,7 +56,7 @@ struct set_t {
 };
 
 extern void InitSetManager(void);
-/**< 
+/**<
  *  This function initializes the pool.
  *  We pool the set stubs for reuse, since there are so many used in
  *  most ASCEND models of any complexity.
@@ -71,25 +71,25 @@ extern void InitSetManager(void);
  */
 
 extern void DestroySetManager(void);
-/**< 
+/**<
  *  Destroys the set pool. Bombs if no pool exists.
  */
 
 extern void ReportSetManager(FILE*f);
-/**< 
+/**<
  *  <!--  ReportSetManager(f);                                         -->
  *  <!--  FILE *f;                                                     -->
  *  Reports on the set pool to f.
  */
 
 extern struct set_t *CreateEmptySet(void);
-/**< 
+/**<
  *  <!--  struct set_t *CreateEmptySet()                               -->
  *  Creates an empty set.
  */
 
 extern void InsertInteger(struct set_t *set, long i);
-/**< 
+/**<
  *  <!--  void InsertInteger(set,i)                                    -->
  *  <!--  struct set_t *set;                                           -->
  *  <!--  long i;                                                      -->
@@ -100,7 +100,7 @@ extern void InsertInteger(struct set_t *set, long i);
  */
 
 extern void InsertIntegerRange(struct set_t *set, long lower, long upper);
-/**< 
+/**<
  *  <!--  struct InsertIntegerRange(set,lower,upper)                   -->
  *  <!--  struct set_t *set;                                           -->
  *  <!--  long lower, upper;                                           -->
@@ -110,7 +110,7 @@ extern void InsertIntegerRange(struct set_t *set, long lower, long upper);
  */
 
 extern void InsertString(struct set_t *set, symchar *str);
-/**< 
+/**<
  *  <!--  struct InsertString(set,str)                                 -->
  *  <!--  struct set_t *set;                                           -->
  *  <!--  symchar *str;                                                -->
@@ -119,7 +119,7 @@ extern void InsertString(struct set_t *set, symchar *str);
  */
 
 extern struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2);
-/**< 
+/**<
  *  <!--  struct set_t *SetUnion(s1,s2)                                -->
  *  <!--  const struct set_t *s1,*s2;                                  -->
  *  Create a set which is the union of s1 and s2.  s1 and s2 are uneffected.
@@ -174,19 +174,19 @@ extern void DestroySet(struct set_t *set);
 extern int NullSet(CONST struct set_t *set);
 /**<  Testing if the set is empty.  TRUE if set is empty. */
 
-extern unsigned long Cardinality(CONST struct set_t *set);
+extern unsigned long ASC_DLLSPEC Cardinality(CONST struct set_t *set);
 /**<  Return the number of members. */
 
-extern symchar *FetchStrMember(CONST struct set_t *set, unsigned long n);
+extern symchar* ASC_DLLSPEC FetchStrMember(CONST struct set_t *set, unsigned long n);
 /**<  Returns the nth (internal sort order ) member symbol. */
 
-extern long FetchIntMember(CONST struct set_t *set, unsigned long n);
+extern long ASC_DLLSPEC FetchIntMember(CONST struct set_t *set, unsigned long n);
 /**<  Returns the nth (internal sort order ) member number. */
 
 extern void SetIterate(struct set_t *set, void (*func)());
 /**<  Calls func for every element in set. */
 
-extern enum set_kind SetKind(CONST struct set_t *set);
+extern enum set_kind ASC_DLLSPEC SetKind(CONST struct set_t *set);
 /**<  Returns the type of the set. */
 
 extern int SetsEqual(CONST struct set_t *s1, CONST struct set_t *s2);
@@ -211,7 +211,7 @@ extern int Subset(CONST struct set_t *s1, CONST struct set_t *s2);
  */
 
 extern int CmpSetInstVal(CONST struct set_t *s1, CONST struct set_t *s2);
-/**< 
+/**<
  *  <!--  int CmpSetInstVal(s1,s2)                                     -->
  *  <!--  struct set_t *s1,*s2;                                        -->
  *  Returns -1, 0, 1 from comparing s1,s2.
@@ -225,7 +225,7 @@ extern int CmpSetInstVal(CONST struct set_t *s1, CONST struct set_t *s2);
  */
 
 extern void AppendIntegerElement(struct set_t *set, long int i );
-/**< 
+/**<
  *  <!--  void AppendIntegerElement(set,i);                            -->
  *  <!--  struct set_t *set;                                           -->
  *  <!--  long int i;                                                  -->
@@ -235,7 +235,7 @@ extern void AppendIntegerElement(struct set_t *set, long int i );
  */
 
 extern void AppendStringElement(struct set_t *set, symchar *str);
-/**< 
+/**<
  *  <!--  struct set_t *set;                                           -->
  *  <!--  symchar *str;                                                -->
  *  This function will append an string to a set. In so doing it will NOT

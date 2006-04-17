@@ -144,7 +144,7 @@ extern void gl_init(void);
  *  in some appropriate fashion: gl_init_pool(),  gl_destroy_pool(),
  *  gl_report_pool().
  */
-                                          
+
 extern void gl_init_pool(void);
 /**<
  *  Sets up list overhead structure data management.
@@ -279,7 +279,7 @@ extern void gl_destroy(struct gl_list_t *list);
  *  @see gl_fetchF()
  */
 
-extern VOIDPTR gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
+extern VOIDPTR ASC_DLLSPEC gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
 /**<
  *  Implementation function for gl_fetch() (debug mode).
  *  Do not call this function directly - use gl_fetch() instead.
@@ -410,7 +410,7 @@ extern void gl_append_list(struct gl_list_t *extendlist,
  *  @return The length as an unsigned long.
  *  @see gl_lengthF()
  */
-extern unsigned long gl_lengthF(CONST struct gl_list_t *list);
+extern unsigned long ASC_DLLSPEC gl_lengthF(CONST struct gl_list_t *list);
 /**<
  *  Implementation function for gl_length() (debug mode).
  *  Do not call this function directly - use gl_length() instead.
@@ -447,7 +447,7 @@ extern unsigned long gl_capacity(CONST struct gl_list_t *list);
 extern int gl_sorted(CONST struct gl_list_t *list);
 /**<
  *  Query whether the specified list is sorted.  A list having 0 or 1
- *  element is always sorted.  The specified list may not be NULL 
+ *  element is always sorted.  The specified list may not be NULL
  *  (checked by assertion).
  *
  *  Complexity: O(1)
@@ -484,7 +484,7 @@ extern void gl_sort(struct gl_list_t *list, CmpFunc func);
  *  The caller must furnish a procedure "func" that compares two list items
  *  and returns an integer > 0 if item1 > item2 and otherwise <= 0.
  *  NOTE: THE COMPARISON PROCEDURE SHOULD BE ABLE TO HANDLE NULL POINTERS
- *  GRACEFULLY.  Neither the specified list nor func may not be NULL 
+ *  GRACEFULLY.  Neither the specified list nor func may not be NULL
  *  (checked by assertion).<br><br>
  *
  *  Example:                                                    <pre>
@@ -532,9 +532,9 @@ extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
  *	- item1 = item2  returns = 0
  *	- item1 < item2  returns < 0
  *  This function should be the same as used to gl_sort() the list
- *  If the list is not sorted, it will be sorted and the item added 
- *  in the appropriate location.  Neither the specified list nor 
- *  func may be NULL, and the list must be expandable (checked 
+ *  If the list is not sorted, it will be sorted and the item added
+ *  in the appropriate location.  Neither the specified list nor
+ *  func may be NULL, and the list must be expandable (checked
  *  by assertion).<br><br>
  *
  *  Because any pointer type is convertible to a void pointer, you
@@ -554,13 +554,13 @@ extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
  *  @param func The comparison function to call during the sort.
  */
 
-extern void gl_iterate(struct gl_list_t *list, IterateFunc func);
+extern void ASC_DLLSPEC gl_iterate(struct gl_list_t *list, IterateFunc func);
 /**<
  *  Executes the function func on all the members of the list.
  *  It will always execute the function on the items in the order
  *  they appear in the list, 1,2,3..gl_length(list).  The function
  *  should handle NULL pointers as input gracefully.  Neither the
- *  specified list nor the func may be NULL (checked by 
+ *  specified list nor the func may be NULL (checked by
  *  assertion).<br><br>
  *
  *  Complexity: O(n*O(func))
@@ -568,7 +568,7 @@ extern void gl_iterate(struct gl_list_t *list, IterateFunc func);
  *  @param list The list to iterate through (non-NULL).
  *  @param func The function to execute for each list item.
  */
-                                   
+
 extern unsigned long gl_ptr_search(CONST struct gl_list_t *list,
                                    CONST VOIDPTR match,
                                    int increasing);
@@ -581,12 +581,12 @@ extern unsigned long gl_ptr_search(CONST struct gl_list_t *list,
  *
  *  If the list is sorted this function will use a binary search,
  *  otherwise it will search linearly. The binary search will proceed
- *  based on increasing. If you have the list sorted in increasing ptr 
+ *  based on increasing. If you have the list sorted in increasing ptr
  *  order, give this increasing=1, else increasing=0.<br><br>
  *
- *  CAUTION!!  If the list is sorted by some other criteria than 
+ *  CAUTION!!  If the list is sorted by some other criteria than
  *  pointer address order, this function may erroneously return 0.
- *  If you give us an incorrect increasing, we may erroneously 
+ *  If you give us an incorrect increasing, we may erroneously
  *  return 0.  <br><br>
  *
  *  Complexity: if   gl_sorted(list) O(log gl_length(list))
@@ -637,7 +637,7 @@ extern unsigned long gl_search_reverse(CONST struct gl_list_t *list,
  *  it is stored.  This is similar to gl_search(), except that if the list
  *  is NOT sorted, it does a linear search starting from the last element in
  *  the list and working toward the first element.  For sorted lists,
- *  this function calls gl_search() to do a binary search.  Neither the 
+ *  this function calls gl_search() to do a binary search.  Neither the
  *  specified list nor func may be NULL (checked by assertion).
  *
  *  @param list  The list to search (non-NULL).
@@ -727,9 +727,9 @@ extern struct gl_list_t *gl_copy(CONST struct gl_list_t *list);
  *  lists.  That is, the copy of the items is shallow and the 2 lists will
  *  share pointers to the same memory locations.  The starting list is not
  *  changed in any way.  The specified list may not be NULL (checked by
- *  assertion).  Destruction of the returned list is the responsibility 
+ *  assertion).  Destruction of the returned list is the responsibility
  *  of the caller, but be careful not to call gl_free_and_destroy() on both
- *  the original and copy.  This will result in double deletion of the 
+ *  the original and copy.  This will result in double deletion of the
  *  pointers and likely a crash.<br><br>
  *
  *  Complexity O(gl_length(list))
@@ -782,8 +782,8 @@ extern int gl_compare_ptrs(CONST struct gl_list_t *list1,
 
 extern void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE);
 /**<
- *  Sets the sorted flag for the list based on TRUE_or_FALSE.  
- *  Setting a list to sorted should be done only if you are sure 
+ *  Sets the sorted flag for the list based on TRUE_or_FALSE.
+ *  Setting a list to sorted should be done only if you are sure
  *  that the list is sorted.  The list may not be NULL (checked
  *  by assertion).
  *
@@ -804,12 +804,12 @@ extern int gl_expandable(struct gl_list_t *list);
 extern void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE);
 /**<
  *  Sets the expandable flag for the list based on TRUE_or_FALSE.
- *  All lists are expandable until this flag is explicitly cleared.  
- *  Setting a list to non-expandable should be done only when you are 
- *  quite sure that you want this. It is sometimes useful to have a 
- *  list not be expandable, as in the case when someone is depending 
- *  on the address of a list member.  However, list append and insert 
- *  functions will fail if the list is not expandable.  The list may 
+ *  All lists are expandable until this flag is explicitly cleared.
+ *  Setting a list to non-expandable should be done only when you are
+ *  quite sure that you want this. It is sometimes useful to have a
+ *  list not be expandable, as in the case when someone is depending
+ *  on the address of a list member.  However, list append and insert
+ *  functions will fail if the list is not expandable.  The list may
  *  not be NULL (checked by assertion).
  *
  *  @param list The list to modify (non-NULL).

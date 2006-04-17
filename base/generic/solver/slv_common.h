@@ -55,7 +55,7 @@
 	  - vector operations
 	  - solver print routines
 	  - lnkmap support functions
-	
+
 	Requires:<pre>
 #include <stdio.h>
 #include <utilities/ascConfig.h>
@@ -65,10 +65,10 @@
 #include <solver/mtx.h>
 #include <general/list.h>
 </pre>
-	
+
 	Details on solver parameter definition:
 
-	When used together the parameter-related structures, functions, and 
+	When used together the parameter-related structures, functions, and
 	macros allow us to define all of a solver's parameters in one file
 	and notify the interface of these parameters upon startup (dynamic
 	interface construction).  The parameters can be defined in any order.
@@ -147,9 +147,9 @@ struct slv_output_data {
    FILE *less_important;  /**< Less significant output to this file stream.  NULL ==> no output. */
 };
 
-/**  
+/**
 	Solver tolerance data structure.
-	@todo KHACK THIS SHOULD BE REMOVED - solver/slv_common:slv_tolerance_data. 
+	@todo KHACK THIS SHOULD BE REMOVED - solver/slv_common:slv_tolerance_data.
  */
 struct slv_tolerance_data {
    real64 drop;         /**< Matrix entry drop tolerance during factorization */
@@ -188,8 +188,8 @@ struct slv_sub_parameters {
 /**
 	Data structure for solver statistics.
 	This is to collect data for the comparison of algorithms.  All solvers
-	should have at least one of these, though the interface will check for 
-	NULL before reading the data.  The interpretation of these data is 
+	should have at least one of these, though the interface will check for
+	NULL before reading the data.  The interpretation of these data is
 	somewhat up to the coder.
  */
 struct slv_block_cost {
@@ -327,7 +327,7 @@ struct slv_parameter {
 #define U_p_strings(parm_u,val) ((((parm_u).argv = (val))), (parm_u))
 /**<
 	Sets the argv of parm_arg parm_u to val and returns the parm_u.
-	This macro is used for setting string array parm_arg arguments in 
+	This macro is used for setting string array parm_arg arguments in
 	calls to slv_define_parm().  parm_u should be one of { val, lo, hi },
 	which correspond to local parm_arg variables that should be used
 	in client functions calling slv_define_parm().
@@ -381,8 +381,8 @@ struct slv_parameter {
  */
 
 /**
-	Holds the array of parameters and keeps a count of how many it 
-	contains.  Also holds various other information which should be 
+	Holds the array of parameters and keeps a count of how many it
+	contains.  Also holds various other information which should be
 	turned into slv_parameters or moved elsewhere
 	<pre>
 	Every registered client should have a slv_parameters_t somewhere in it.
@@ -567,12 +567,12 @@ extern int32 slv_define_parm(slv_parameters_t *p,
 	                        to display this parameter.  Ranges from 1..max_page_no.
 	                        Set to -1 if this parameter is not to be displayed in
 	                        the interface.
-	@return Returns -1 if p is NULL or called with unsupported type; 
+	@return Returns -1 if p is NULL or called with unsupported type;
 	        otherwise returns the number of registered parameters in p.
  */
 
 /* slv_set_char_parameter() is defined in slv.c */
-extern void slv_set_char_parameter(char **cptr, CONST char *newvalue);
+extern void ASC_DLLSPEC slv_set_char_parameter(char **cptr, CONST char *newvalue);
 /**<
 	Sets a char parameter value to a new string.
 	Resetting the value of a parameter can be done directly except
@@ -749,7 +749,7 @@ typedef struct slv_status_structure {
  *  language call nuts just yet, however.
  */
 
-/**  
+/**
  *  A dense vector class of some utility and the functions for it.
  *  The vector consists of an array of real64 (vec) and a mtx_range_t
  *  (rng) which refers to subsets of the range of indexes of vec.
@@ -760,7 +760,7 @@ typedef struct slv_status_structure {
  *    - neither rng->low nor rng->high may be negative
  *    - low <= high
  *    - high < length of vec
- *  This means that whatever your maximum high is, you should allocate 
+ *  This means that whatever your maximum high is, you should allocate
  *  (high+1) values in vec.
  *  @todo solver/slv_common:vector_data & operations should be
  *        moved to a module in general or utilities.
@@ -815,7 +815,7 @@ extern void slv_destroy_vector(struct vector_data *vec);
 /**<
  *  Destroys a vector and its assocated data.
  *  Deallocates any memory held in vec->rng and vec->vec,
- *  and then deallocates the vector itself.  NULL is tolerated 
+ *  and then deallocates the vector itself.  NULL is tolerated
  *  for vec, vec->rng, or vec->vec.
  *
  *  @param vec Pointer to the vector_data to destroy.
@@ -825,7 +825,7 @@ extern void slv_zero_vector(struct vector_data *vec);
 /**<
  *  Zeroes a vector.
  *  The vector entries between vec->rng.low and  vec->rng.high will
- *  be set to 0.0.  
+ *  be set to 0.0.
  *  The following are not allowed and are checked by assertion:
  *    - NULL vec
  *    - NULL vec->rng
@@ -979,7 +979,7 @@ extern FILE *slv_get_output_file(FILE *fp);
 /**<
  *  Checks a file pointer, and if NULL returns a pointer to the nul device.
  *  If you are in environment that doesn't have something like
- *  /dev/null (nul on Windows), you'd better be damn sure your 
+ *  /dev/null (nul on Windows), you'd better be damn sure your
  *  sys->p.output.*_important are not NULL.
  *
  *  @param fp The file stream to check.
@@ -1107,7 +1107,7 @@ extern void slv_print_obj_index(FILE *outfile, obj_objective_t obj);
  */
 #endif
 extern void slv_print_rel_sindex(FILE *outfile, struct rel_relation *rel);
-/**<  
+/**<
  *  Prints the index of rel to outfile.
  *
  *  @param outfile The stream to receive the output.
@@ -1125,7 +1125,7 @@ extern void slv_print_var_sindex(FILE *outfile, struct var_variable *var);
  */
 
 extern void slv_print_logrel_sindex(FILE *outfile, struct logrel_relation *lrel);
-/**<  
+/**<
  *  Prints the index of lrel to outfile.
  *
  *  @param outfile The stream to receive the output.
@@ -1248,7 +1248,7 @@ extern int32 **slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *h
  *
  *  hi and hj should specify a unique incidence pattern.  That is, duplicate
  *  (hi, hj) coordinates are not allowed and only 1 of the occurrences will
- *  end up in the map.  hi should contain row indexes all less than m.  
+ *  end up in the map.  hi should contain row indexes all less than m.
  *  hj should contain column indexes all less than n.  If an invalid row/col
  *  index is encountered, NULL is returned.
  *

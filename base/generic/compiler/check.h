@@ -42,7 +42,7 @@
 #define ASC_CHECK_H
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
-extern void CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);
+extern void ASC_DLLSPEC CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);
 /**<
  *  <!--  void CheckInstanceLevel(f,i,pass)                            -->
  *  <!--  FILE *f;                                                     -->

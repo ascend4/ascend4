@@ -55,7 +55,7 @@ extern struct gl_list_t *g_simulation_list;
 
 extern void Asc_DeAllocSim(struct Instance *inst);
 /**<
- *  Destroys the instance given. 
+ *  Destroys the instance given.
  *  inst should be a simulation instance, and may be NULL.
  */
 
@@ -67,7 +67,7 @@ enum CreateInst_format {
 };
 
 extern
-struct Instance *SimsCreateInstance(symchar *type,
+struct Instance* ASC_DLLSPEC SimsCreateInstance(symchar *type,
                                     symchar *name,
                                     enum CreateInst_format format,
                                     symchar *defmethod);
@@ -77,7 +77,7 @@ struct Instance *SimsCreateInstance(symchar *type,
  *  compiler settings.  In all cases Instantiate() will make a copy
  *  of the name that is given.  format should perhaps be an array
  *  of enums or a bit structure to deal with multiple compilation
- *  flags. At the moment it is just a simple enum.  NULL is 
+ *  flags. At the moment it is just a simple enum.  NULL is
  *  returned if either type or name is NULL.
  *
  *  The returned instance should be destroyed by the caller using
@@ -90,7 +90,7 @@ struct Instance *SimsCreateInstance(symchar *type,
  *  @return A pointer to the newly-created simulation instance.
  */
 
-extern void Asc_DestroySimulations(void);
+extern void ASC_DLLSPEC Asc_DestroySimulations(void);
 /**<  Destroys all known instances on the simulation list. */
 
 

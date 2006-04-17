@@ -41,7 +41,7 @@
 #ifndef __ASCCOMPILER_H_SEEN__
 #define __ASCCOMPILER_H_SEEN__
 
-extern int Asc_CompilerInit(int simplify_relations);
+extern int ASC_DLLSPEC Asc_CompilerInit(int simplify_relations);
 /**<
  *  Initialize any resources used by the ASCEND compiler.
  *

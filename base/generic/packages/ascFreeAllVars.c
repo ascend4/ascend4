@@ -76,7 +76,7 @@ void Asc_ClearVars(struct Instance *i, struct cvpacket *cv)
 }
 
 
-int DLEXPORT Asc_ClearVarsInTree(struct Instance *i)
+int ASC_DLLSPEC Asc_ClearVarsInTree(struct Instance *i)
 {
   struct cvpacket cv;
   cv.g_solver_var_type = FindType(AddSymbol("solver_var"));
@@ -96,7 +96,7 @@ int DLEXPORT Asc_ClearVarsInTree(struct Instance *i)
   return 0;
 }
 
-extern int DLEXPORT Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist)
+extern int ASC_DLLSPEC Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist)
                                   
 {
   /* arglist is a list of gllist of instances */

@@ -1,4 +1,4 @@
-/* 
+/*
  *  SlvDOF: Ascend Degrees of Freedom module
  *  by Benjamin A Allan and Vicente Rico-Ramirez
  *  Created: 7/11/94
@@ -52,8 +52,8 @@
  *  </pre>
  */
 
-#ifndef slvdof_already_included
-#define slvdof_already_included
+#ifndef ASC_SLVDOF_H
+#define ASC_SLVDOF_H
 
 /*
  * The following functions are for use in running DOF analysis and dialog
@@ -65,7 +65,7 @@
  * time.
  */
 
-extern int slvDOF_eligible(slv_system_t server, int32 **vil);
+extern int ASC_DLLSPEC slvDOF_eligible(slv_system_t server, int32 **vil);
 /**
  * @return 1 if able to determine lists, 0 otherwise.
  * @param vil pointer to an int32 array which will fill in and return
@@ -80,14 +80,12 @@ extern int slvDOF_eligible(slv_system_t server, int32 **vil);
  * since they cannot help the DOF state of the system.
  */
 
-extern int slvDOF_structsing(slv_system_t server,
-                             int32 relindex, 
-                             int32 **vil, 
-                             int32 **ril, 
+extern int ASC_DLLSPEC slvDOF_structsing(slv_system_t server,
+                             int32 relindex,
+                             int32 **vil,
+                             int32 **ril,
                              int32 **fil);
-/**< 
- *  <!--  if(slvDOF_structsing(server,relindex,&vil,&ril,&fil)) {.... } -->
- *  <!--  int32 *vil, *ril, fil.                                        -->
+/**<
  *  Returns 1 if able to determine lists, 0 otherwise.
  *  relindex should be the sindex of an unassigned, included equation
  *  from the solvers_rel_list.
@@ -103,7 +101,7 @@ extern int slvDOF_structsing(slv_system_t server,
  *  @param fil  int32 **, the vars which reduce the structural singularity if freed.
  */
 
-extern int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
+extern int32 ASC_DLLSPEC slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 /**<
  *  Return the status of the current problem.
  *
@@ -120,9 +118,6 @@ extern int32 slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 extern int32 get_globally_consistent_eligible(slv_system_t server,
                                               int32 **eliset);
 /**<
- *  <!--  usage: get_globally_consistent_eligible(server,&(eliset))     -->
- *  <!--  int32 *eliset                                                 -->
- *
  *  Returns 1 if able to determine list, 0 otherwise.
  *  That is you send us the address of a pointer to an int32 array
  *  and we will fill in the pointer.
@@ -133,11 +128,8 @@ extern int32 get_globally_consistent_eligible(slv_system_t server,
  *  elist is incident vars eligible to be fixed.
  */
 
-extern int32 consistency_analysis(slv_system_t server, int32 **fixed);
+extern int32 ASC_DLLSPEC consistency_analysis(slv_system_t server, int32 **fixed);
 /**<
- *  <!--  usage: consistency_analysis(server,&(fixed))                  -->
- *  <!--  int32 *fixed                                                  -->
- *
  *  Returns 1 if system is structurally consistent, 0 otherwise.
  *  That is you send us the address of a pointer to an int32 array
  *  and we will fill in the pointer.
@@ -154,5 +146,4 @@ extern int32 consistency_analysis(slv_system_t server, int32 **fixed);
  *  The indices are var_mindex of vars on master_var_list.
  */
 
-#endif  /* slvdof_already_included */
-
+#endif  /* ASC_SLVDOF_H */

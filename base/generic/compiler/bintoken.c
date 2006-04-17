@@ -479,7 +479,7 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
  * relations represented +1 since element 0 is {NULL,NULL}
  * by convention.
  */
-int DLEXPORT ExportBinTokenCTable(struct TableC *t,int size)
+int ASC_DLLSPEC ExportBinTokenCTable(struct TableC *t,int size)
 {
   if (g_bt_data.newtable != NULL || t == NULL || size < 1) {
     return 1;
@@ -630,7 +630,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
   /** @TODO FIXME win32 has getpid but it is bogus as uniquifier. */
   /* so long as makefile deletes previous dll, windows is ok though */
   sprintf(g_bt_data.regname,"BinTokenArch_%d_%d",++(g_bt_data.nextid),(int)pid);
-  FPRINTF(fp,"int DLEXPORT %s(){\n",g_bt_data.regname);
+  FPRINTF(fp,"int ASC_DLLSPEC %s(){\n",g_bt_data.regname);
   CLINE("\tint status;");
   FPRINTF(fp,"\tstatic struct TableC g_ctable[%lu] =\n",len+1);
   CLINE("\t\t{ {NULL, NULL},");

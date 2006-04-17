@@ -12,6 +12,7 @@
 
 class Plot;
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
@@ -48,7 +49,7 @@ public:
 	with lots of diffent subclasses for the different atom types.
 	Maybe even multiple inheritance.
 
-	But until the underlying C code is ported to C++ or modularised in 
+	But until the underlying C code is ported to C++ or modularised in
 	some other way, it's not going to be worth the effort. We discussed
 	this in the mailing list.
 */
@@ -140,7 +141,7 @@ public:
 	const double  getNominal() const;
 
 	const set getClique() const;
-	
+
 	const double getResidual() const;
 };
 

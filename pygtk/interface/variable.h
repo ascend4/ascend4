@@ -5,6 +5,7 @@
 
 #include "simulation.h"
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <solver/slv_types.h>
@@ -21,7 +22,7 @@ private:
 	Simulation *sim;
 	struct var_variable *var;
 
-public:	
+public:
 	Variable();
 	Variable(const Variable &old);
 	Variable(Simulation *sim, var_variable *var);

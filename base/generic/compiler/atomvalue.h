@@ -1,4 +1,4 @@
-/* 
+/*
  *  Ascend Instance Atom Value Functions
  *  by Tom Epperly & Ben Allan
  *  8/16/89
@@ -48,7 +48,7 @@
 #ifndef __ATOMVALUE_H_SEEN__
 #define __ATOMVALUE_H_SEEN__
 
-extern unsigned AtomAssigned(CONST struct Instance *i);
+extern unsigned ASC_DLLSPEC AtomAssigned(CONST struct Instance *i);
 /**<
  *  <!--  unsigned AtomAssigned(i)                                     -->
  *  <!--  const struct Instance *i;                                    -->
@@ -85,7 +85,7 @@ extern unsigned DepthAssigned(CONST struct Instance *i);
  *  RealValue is a name used in value_type.h.
  */
 
-extern double RealAtomValue(CONST struct Instance *i);
+extern double ASC_DLLSPEC RealAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  double RealAtomValue(i)                                      -->
  *  <!--  const struct Instance *i;                                    -->
@@ -93,7 +93,7 @@ extern double RealAtomValue(CONST struct Instance *i);
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCE.
  */
 
-extern void SetRealAtomValue(struct Instance *i, double d, unsigned depth);
+extern void ASC_DLLSPEC SetRealAtomValue(struct Instance *i, double d, unsigned depth);
 /**<
  *  <!--  void SetRealAtomValue(i,d,depth)                             -->
  *  <!--  struct Instance *i;                                          -->
@@ -108,7 +108,7 @@ extern void SetRealAtomValue(struct Instance *i, double d, unsigned depth);
  *  precidence over every other assignment.
  */
 
-extern CONST dim_type *RealAtomDims(CONST struct Instance *i);
+extern CONST dim_type* ASC_DLLSPEC RealAtomDims(CONST struct Instance *i);
 /**<
  *  <!--  const dim_type *RealAtomDims(i)                              -->
  *  <!--  const struct Instance *i;                                    -->
@@ -117,7 +117,7 @@ extern CONST dim_type *RealAtomDims(CONST struct Instance *i);
  *  This should never return a NULL pointer.
  */
 
-extern void SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
+extern void ASC_DLLSPEC SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
 /**<
  *  <!--  void SetRealAtomDims(i,dim)                                  -->
  *  <!--  struct Instance *i;                                          -->
@@ -128,7 +128,7 @@ extern void SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCEs not dimensioned.
  */
 
-extern long GetIntegerAtomValue(CONST struct Instance *i);
+extern long ASC_DLLSPEC GetIntegerAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  long GetIntegerAtomValue(i)                                  -->
  *  <!--  const struct Instance *i;                                    -->
@@ -149,7 +149,7 @@ extern void SetIntegerAtomValue(struct Instance *i, long v, unsigned depth);
  *  Calling on an improper integer will cause a crash.
  */
 
-extern int GetBooleanAtomValue(CONST struct Instance *i);
+extern int ASC_DLLSPEC GetBooleanAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  int GetBooleanAtomValue(i)                                   -->
  *  <!--  struct Instance *i;                                          -->
@@ -158,7 +158,7 @@ extern int GetBooleanAtomValue(CONST struct Instance *i);
  *  or BOOLEAN_CONSTANT_INST type instances.
  */
 
-extern void SetBooleanAtomValue(struct Instance *i, int truth, unsigned depth);
+extern void ASC_DLLSPEC SetBooleanAtomValue(struct Instance *i, int truth, unsigned depth);
 /**<
  *  <!--  void SetBooleanAtomValue(i,truth,depth)                      -->
  *  <!--  struct Instance *i;                                          -->
@@ -173,7 +173,7 @@ extern void SetBooleanAtomValue(struct Instance *i, int truth, unsigned depth);
  *  override every other assignment.
  */
 
-extern CONST struct set_t *SetAtomList(CONST struct Instance *i);
+extern CONST struct set_t* ASC_DLLSPEC SetAtomList(CONST struct Instance *i);
 /**<
  *  <!--  struct set_t *SetAtomList(i)                                 -->
  *  <!--  struct Instance *i;                                          -->
@@ -201,7 +201,7 @@ extern int GetSetAtomKind(CONST struct Instance *i);
  *  Return the kind of the set. 1 ==> integer set; 0 ==> string set.
  */
 
-extern symchar *GetSymbolAtomValue(CONST struct Instance *i);
+extern symchar* ASC_DLLSPEC GetSymbolAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  symchar *GetSymbolAtomValue(i)                               -->
  *  <!--  const struct Instance *i;                                    -->

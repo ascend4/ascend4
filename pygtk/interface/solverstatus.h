@@ -3,6 +3,7 @@
 
 #include <cstdio>
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <solver/slv_types.h>
@@ -41,7 +42,7 @@ public:
 	const bool hasResidualCalculationErrors() const;
 	const bool isInterrupted() const;
 	const int getIterationNum() const;
-	
+
 	// block structure stuff...
 
 	const int getNumBlocks() const;

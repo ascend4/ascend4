@@ -69,7 +69,7 @@
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-extern double DLEXPORT cbrt(double);
+extern double ASC_DLLSPEC cbrt(double);
 
 #  ifdef HAVE_ERF
 extern double erf(double);
@@ -145,7 +145,7 @@ extern double g_lnm_epsilon;
  *  declare cbrt() and erf() since some vendors put
  *  these functions in odd headers
  */
-extern double DLEXPORT cbrt(double);
+extern double ASC_DLLSPEC cbrt(double);
 #ifdef HAVE_ERF
 extern double erf(double);
 #endif /* HAVE_ERF */
@@ -164,7 +164,7 @@ extern double erf(double);
  *  @param d double, the real number to convert.
  *  @return The nearest integer as an int.
  */
-extern int DLEXPORT ascnintF(double);
+extern int ASC_DLLSPEC ascnintF(double);
 /**<
  *  Implementation function for debug version of ascnint().
  *  Do not call this function directly - use ascnint() instead.
@@ -172,13 +172,13 @@ extern int DLEXPORT ascnintF(double);
 
 #endif
 
-extern double DLEXPORT dln(double x);
-extern double DLEXPORT dln2(double x);
-extern double DLEXPORT dlog10(double x);
-extern double DLEXPORT dlog102(double x);
-extern double DLEXPORT lnm(double x);
-extern double DLEXPORT dlnm(double x);
-extern double DLEXPORT dlnm2(double x);
+extern double ASC_DLLSPEC dln(double x);
+extern double ASC_DLLSPEC dln2(double x);
+extern double ASC_DLLSPEC dlog10(double x);
+extern double ASC_DLLSPEC dlog102(double x);
+extern double ASC_DLLSPEC lnm(double x);
+extern double ASC_DLLSPEC dlnm(double x);
+extern double ASC_DLLSPEC dlnm2(double x);
 /**<
  *  Modified natural log function and derivatives.
  *  <pre>
@@ -201,34 +201,34 @@ extern double DLEXPORT dlnm2(double x);
  *  </pre>
  */
 
-extern double DLEXPORT dtanh(double x);
-extern double DLEXPORT dtanh2(double x);
-extern double DLEXPORT arcsinh(double x);
-extern double DLEXPORT arccosh(double x);
-extern double DLEXPORT arctanh(double x);
-extern double DLEXPORT darcsinh(double x);
-extern double DLEXPORT darcsinh2(double x);
-extern double DLEXPORT darccosh(double x);
-extern double DLEXPORT darccosh2(double x);
-extern double DLEXPORT darctanh(double x);
-extern double DLEXPORT darctanh2(double x);
+extern double ASC_DLLSPEC dtanh(double x);
+extern double ASC_DLLSPEC dtanh2(double x);
+extern double ASC_DLLSPEC arcsinh(double x);
+extern double ASC_DLLSPEC arccosh(double x);
+extern double ASC_DLLSPEC arctanh(double x);
+extern double ASC_DLLSPEC darcsinh(double x);
+extern double ASC_DLLSPEC darcsinh2(double x);
+extern double ASC_DLLSPEC darccosh(double x);
+extern double ASC_DLLSPEC darccosh2(double x);
+extern double ASC_DLLSPEC darctanh(double x);
+extern double ASC_DLLSPEC darctanh2(double x);
 /**<
  *  Zero, first and second partials of (inverse) hyperbolic functions.
  */
 
-extern double DLEXPORT sqr(double x);
-extern double DLEXPORT dsqr(double x);
-extern double DLEXPORT dsqr2(double x);
-extern double DLEXPORT cube(double x);
-extern double DLEXPORT dcube(double x);
-extern double DLEXPORT dcube2(double x);
+extern double ASC_DLLSPEC sqr(double x);
+extern double ASC_DLLSPEC dsqr(double x);
+extern double ASC_DLLSPEC dsqr2(double x);
+extern double ASC_DLLSPEC cube(double x);
+extern double ASC_DLLSPEC dcube(double x);
+extern double ASC_DLLSPEC dcube2(double x);
 /**<
  *  Zero, first and second partials of x for sqr, cube.
  */
 
-extern double DLEXPORT asc_ipow(double a, int n);
-extern double DLEXPORT asc_d1ipow(double a, int n);
-extern double DLEXPORT asc_d2ipow(double a, int n);
+extern double ASC_DLLSPEC asc_ipow(double a, int n);
+extern double ASC_DLLSPEC asc_d1ipow(double a, int n);
+extern double ASC_DLLSPEC asc_d2ipow(double a, int n);
 /**<
  *  Integer power function, a^n, and its first and second derivatives.
  *  d = asc_ipow(a,n);
@@ -242,7 +242,7 @@ extern double DLEXPORT asc_d2ipow(double a, int n);
  *  Special cases d1ipow,d2ipow:
  */
 
-extern double DLEXPORT hold(double x);
+extern double ASC_DLLSPEC hold(double x);
 /**<
  *  Returns the value it is passed.
  *  The primary purpose is as an operator so we can write
@@ -252,13 +252,13 @@ extern double DLEXPORT hold(double x);
  *  hold(x) is a constant value, so its derivatives are 0.
  */
 
-extern double DLEXPORT dsqrt(double x);
-extern double DLEXPORT dsqrt2(double x);
-extern double DLEXPORT dcbrt(double x);
-extern double DLEXPORT dcbrt2(double x);
-extern double DLEXPORT dfabs(double x);
-extern double DLEXPORT dfabs2(double x);
-extern double DLEXPORT dhold(double x);
+extern double ASC_DLLSPEC dsqrt(double x);
+extern double ASC_DLLSPEC dsqrt2(double x);
+extern double ASC_DLLSPEC dcbrt(double x);
+extern double ASC_DLLSPEC dcbrt2(double x);
+extern double ASC_DLLSPEC dfabs(double x);
+extern double ASC_DLLSPEC dfabs2(double x);
+extern double ASC_DLLSPEC dhold(double x);
 #define dhold2 dhold
 /**<
  *  first and second partials of sqrt cbrt fabs hold
@@ -267,23 +267,23 @@ extern double DLEXPORT dhold(double x);
  *  dhold, dhold2 = 0 for all x.
  */
 
-extern double DLEXPORT dasin(double x);
-extern double DLEXPORT dasin2(double x);
-extern double DLEXPORT dcos(double x);
-extern double DLEXPORT dcos2(double x);
-extern double DLEXPORT dacos(double x);
-extern double DLEXPORT dacos2(double x);
-extern double DLEXPORT dtan(double x);
-extern double DLEXPORT dtan2(double x);
-extern double DLEXPORT datan(double x);
-extern double DLEXPORT datan2(double x);
+extern double ASC_DLLSPEC dasin(double x);
+extern double ASC_DLLSPEC dasin2(double x);
+extern double ASC_DLLSPEC dcos(double x);
+extern double ASC_DLLSPEC dcos2(double x);
+extern double ASC_DLLSPEC dacos(double x);
+extern double ASC_DLLSPEC dacos2(double x);
+extern double ASC_DLLSPEC dtan(double x);
+extern double ASC_DLLSPEC dtan2(double x);
+extern double ASC_DLLSPEC datan(double x);
+extern double ASC_DLLSPEC datan2(double x);
 /**<
  *  First and second partials of the cosine, tangent, arctangent functions
  */
 
 #ifdef HAVE_ERF
-extern double DLEXPORT derf(double x);
-extern double DLEXPORT derf2(double x);
+extern double ASC_DLLSPEC derf(double x);
+extern double ASC_DLLSPEC derf2(double x);
 #endif /* HAVE_ERF */
 /**<
  *  First and second derivatives of erf()

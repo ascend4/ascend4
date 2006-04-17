@@ -1,6 +1,7 @@
 #ifndef ASCXX_EXTMETHOD_H
 #define ASCXX_EXTMETHOD_H
 
+#include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>

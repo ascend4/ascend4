@@ -37,8 +37,8 @@
  *  </pre>
  */
 
-#ifndef __CHILDIO_H_SEEN__
-#define __CHILDIO_H_SEEN__
+#ifndef ASC_CHILDIO_H
+#define ASC_CHILDIO_H
 
 /*
  *  WriteChildList(fp,cl)
@@ -51,7 +51,6 @@
 extern void WriteChildList(FILE *fp, ChildListPtr cl);
 
 /**
- * <!--  s = WriteChildDetails(cl,n);                                  -->
  * Return a string containing buckets o'stuff about the nth child in list.
  * The string will make use of braces as necessary to delimit
  * items. What each item is will be subject to change according
@@ -63,7 +62,6 @@ extern void WriteChildList(FILE *fp, ChildListPtr cl);
 extern char *WriteChildDetails(ChildListPtr cl, unsigned long n);
 
 /**
- * <!--  metas = WriteChildMetaDetails();                              -->
  * Returns a string with fields brace delimited. Each field
  * describes the corresponding field of a WriteChildDetails
  * return string. The ordering and size may be expected to shift as
@@ -83,14 +81,10 @@ extern char *WriteChildDetails(ChildListPtr cl, unsigned long n);
 extern CONST char *WriteChildMetaDetails(void);
 
 /**
- * <!--  WriteChildMissing(fp,scope,childname);                        -->
- * <!--  FILE *fp;                                                     -->
- * <!--  char *scope;                                                  -->
- * <!--  symchar *childname;                                           -->
  * Issues a child missing error to file if the same childname/scope
  * has not been missing since the last call with any NULL argument.
  */
-extern void WriteChildMissing(FILE *fp, char *scope, symchar *childname);
+extern void ASC_DLLSPEC WriteChildMissing(FILE *fp, char *scope, symchar *childname);
 
-#endif  /* __CHILDIO_H_SEEN__ */
+#endif  /* ASC_CHILDIO_H */
 

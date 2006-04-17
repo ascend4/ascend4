@@ -4,6 +4,7 @@
 #include <string>
 
 #include "units.h"
+#include "config.h"
 
 extern "C"{
 #include <utilities/ascConfig.h>
@@ -20,7 +21,7 @@ map<Dimensions,UnitsM> defaultUnits
 multimaps<Dimensions,UnitsM> allUnits
 */
 
-/** 
+/**
 	A 'dimensions object'. This is a wrapper to the 'dim_type' in ASCEND.
 	This object allows querying to find suitable units for outputting
 	or inputting data from/for a given type.

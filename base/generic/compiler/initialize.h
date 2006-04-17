@@ -1,4 +1,4 @@
-/* 
+/*
  *  Initialization Routines
  *  by Tom Epperly
  *  Created: 3/24/1990
@@ -58,7 +58,7 @@ extern void SetProcStackLimit(unsigned long l);
 extern unsigned long GetProcStackLimit(void);
 
 /** Run a METHOD on a model. */
-extern enum Proc_enum Initialize(struct Instance *context,
+extern enum Proc_enum ASC_DLLSPEC Initialize(struct Instance *context,
 							    struct Name *name,
 							    char *cname,
 							    FILE *err,
@@ -76,7 +76,7 @@ extern enum Proc_enum Initialize(struct Instance *context,
 
 	@return Proc_all_ok is all went well, else an error code (@see enum Proc_enum)
 
-	This procedure will execute the initialization code indicated by name with respect to the context instance. 
+	This procedure will execute the initialization code indicated by name with respect to the context instance.
 	If watchlist is NULL or flog is NULL, the debug output options corresponding to watchlist and flog will be ignored.
 	File pointers 'log' and 'err' should not be the same pointer in a good ui design.
 

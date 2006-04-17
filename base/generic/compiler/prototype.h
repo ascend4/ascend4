@@ -56,7 +56,7 @@ extern struct Instance *LookupPrototype(symchar *t);
  */
 
 extern void DeletePrototype(symchar *t);
-/**< 
+/**<
  *  <!--  void DeletePrototype(t)                                      -->
  *  <!--  const char *t;                                               -->
  *
@@ -66,7 +66,7 @@ extern void DeletePrototype(symchar *t);
  */
 
 extern void AddPrototype(struct Instance *i);
-/**< 
+/**<
  *  <!--  void AddPrototype(i)                                         -->
  *  <!--  struct Instance *i;                                          -->
  *
@@ -74,7 +74,7 @@ extern void AddPrototype(struct Instance *i);
  *  of type "i" exists, it is deleted and replace with then new one.
  */
 
-extern void DestroyPrototype(void);
+extern void ASC_DLLSPEC DestroyPrototype(void);
 /**<
  *  <!--  void DestroyPrototype()                                      -->
  *  This deletes all the instances in the prototype library.  This should

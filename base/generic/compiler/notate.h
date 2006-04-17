@@ -96,7 +96,7 @@ struct NoteTmp {
 
 /*-- tmp notes functions --*/
 
-/** 
+/**
  * Create a notetmp for parsing NOTES statements. need this in order to
  * capture multiple fvarlist/bracedtext pairs for a single language key.
  */
@@ -109,7 +109,7 @@ extern struct NoteTmp *CreateNoteTmp(symchar *lang,
 extern struct NoteTmp *LinkNoteTmp(struct NoteTmp *new_thing,
                                    struct NoteTmp *chain);
 
-/** 
+/**
  * Destroy a chain of struct NoteTmp following the next pointers.
  * The bt and vardata fields contained (if any) are not destroyed.
  */
@@ -117,7 +117,7 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
 
 /*== regular notes functions ==*/
 
-/** 
+/**
  * Initialize the notes database. Returns 0 if successful.
  * Input is the symchar by which the database will be addressed.
  * The very first call to this function should be made with
@@ -126,7 +126,7 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
  * returns 1.
  * <!--  err = InitNotesDatabase(dbid);                                -->
  */
-extern int InitNotesDatabase(symchar *dbid);
+extern int ASC_DLLSPEC InitNotesDatabase(symchar *dbid);
 
 /**
  * <!--  list  = ListNotesDatabases();                                 -->
@@ -135,14 +135,14 @@ extern int InitNotesDatabase(symchar *dbid);
  */
 extern struct gl_list_t *ListNotesDatabases(void);
 
-/** 
+/**
  * Destroy the database, and necessarily all tokens being held.
  * if dbid is 0x1, destroys all databases.
  * <!--  DestroyNotesDatabase(dbid);                                   -->
  */
-extern void DestroyNotesDatabase(symchar *dbid);
+extern void ASC_DLLSPEC DestroyNotesDatabase(symchar *dbid);
 
-/** 
+/**
  * Clear any notes associated with the type named out of
  * database. Useful if replacing a type.
  * <!--  DestroyNotesOnType(dbid,typename);                            -->
@@ -210,13 +210,13 @@ extern struct gl_list_t *GetNotesList(symchar *dbid,
                                       struct gl_list_t *methods,
                                       struct gl_list_t *nds);
 
-/** 
+/**
  * Return id of note. id is normally a child name or SELF.
  * Might be NULL.
  */
 extern symchar *GetNoteId(struct Note *n);
 
-/** 
+/**
  * Return method of note.  Method is normally NULL unless note
  * is in scope of a method.  A note with nonNULL method might
  * also have a nonnull id.
@@ -224,8 +224,8 @@ extern symchar *GetNoteId(struct Note *n);
  */
 extern symchar *GetNoteMethod(struct Note *n);
 
-/** 
- * Return typename of note. 
+/**
+ * Return typename of note.
  * typename is normally something in the library.
  * Might be NULL.
  */
@@ -234,8 +234,8 @@ extern symchar *GetNoteType(struct Note *n);
 /** Return language of note.  Might be NULL. */
 extern symchar *GetNoteLanguage(struct Note *n);
 
-/** 
- * Return best module name of note. 
+/**
+ * Return best module name of note.
  * Might be NULL.  Name is string from a symchar.
  */
 extern CONST char *GetNoteFilename(struct Note *n);
@@ -290,7 +290,7 @@ extern struct gl_list_t *GetNotesAllLanguages(symchar *dbid);
  */
 
 /** Returns the 'Loaded Libraries' symchar, which is useful for the parser. */
-extern symchar *LibraryNote(void);
+extern symchar* ASC_DLLSPEC LibraryNote(void);
 
 /** Returns the 'All Known Files' symchar, which is useful for the parser. */
 extern symchar *GlobalNote(void);
@@ -324,7 +324,7 @@ extern struct Note *CreateNote(symchar *type,
                                VOIDPTR data,
                                enum NoteData nd);
 
-/** 
+/**
  * Destroys the note given, subject to reference counting.
  * Do not externally destroy a note once it has been committed to
  * the database.

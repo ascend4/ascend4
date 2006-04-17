@@ -7,6 +7,7 @@
 #include "relation.h"
 #include "simulation.h"
 
+#include "config.h"
 extern "C"{
 #include <solver/incidence.h>
 }

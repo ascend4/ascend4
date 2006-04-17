@@ -1,0 +1,10 @@
+// This file will be processed by SCons and output as config.h.
+// Don't edit this file unless it's named 'config.h.in' unless
+// it doesn't bother you that your changes will be IGNORED!
+
+#ifndef ASCXX_CONFIG_H
+#define ASCXX_CONFIG_H
+
+#define ASC_BUILDING_INTERFACE
+
+#endif

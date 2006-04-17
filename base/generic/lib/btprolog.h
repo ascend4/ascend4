@@ -50,14 +50,14 @@
                       */
 #ifdef WIN32
 /* two for use in this file */
-#define DLEXPORT __declspec(dllimport)
+#define ASC_DLLSPEC __declspec(dllimport)
 #define DLIMPORT __declspec(dllexport)
 /* two for use in the generated file */
 #define IMPORT __declspec(dllimport)
 #define EXPORT __declspec(dllexport)
 #else /* not win32 */
 /* four for use in either file when the operating system is not brain dead */
-#define DLEXPORT
+#define ASC_DLLSPEC
 #define DLIMPORT
 #define EXPORT
 #define IMPORT
@@ -109,9 +109,9 @@ union TableUnion {
 };
 
 #ifdef __STDC__
-extern int DLEXPORT ExportBinTokenCTable(struct TableC *, int);
+extern int ASC_DLLSPEC ExportBinTokenCTable(struct TableC *, int);
 #else
-extern int DLEXPORT ExportBinTokenCTable();
+extern int ASC_DLLSPEC ExportBinTokenCTable();
 #endif /* __STDC__ */
 
 #ifndef __FUNC_H_SEEN__
@@ -127,118 +127,118 @@ extern int DLEXPORT ExportBinTokenCTable();
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-extern double DLEXPORT cbrt(double);
+extern double ASC_DLLSPEC cbrt(double);
 #ifdef HAVE_ERF
-extern double DLEXPORT erf(double);
+extern double ASC_DLLSPEC erf(double);
 #endif /* HAVE_ERF */
 #endif /* __STDC__ == 1 */
 /*
  * in the case where __STDC__ is defined but == 0, system headers
  * should provide cbrt, erf.
  */
-extern int DLEXPORT ascnintF(double);
-extern double DLEXPORT dln(double);
-extern double DLEXPORT dln2(double);
-extern double DLEXPORT dlog10(double);
-extern double DLEXPORT dlog102(double);
-extern double DLEXPORT lnm(double);
-extern double DLEXPORT dlnm(double);
-extern double DLEXPORT dlnm2(double);
-extern double DLEXPORT dtanh(double);
-extern double DLEXPORT dtanh2(double);
-extern double DLEXPORT arcsinh(double);
-extern double DLEXPORT arccosh(double);
-extern double DLEXPORT arctanh(double);
-extern double DLEXPORT darcsinh(double);
-extern double DLEXPORT darcsinh2(double);
-extern double DLEXPORT darccosh(double);
-extern double DLEXPORT darccosh2(double);
-extern double DLEXPORT darctanh(double);
-extern double DLEXPORT darctanh2(double);
-extern double DLEXPORT sqr(double);
-extern double DLEXPORT dsqr(double);
-extern double DLEXPORT dsqr2(double);
-extern double DLEXPORT cube(double);
-extern double DLEXPORT dcube(double);
-extern double DLEXPORT dcube2(double);
-extern double DLEXPORT asc_ipow(double,int);
-extern double DLEXPORT asc_d1ipow(double,int);
-extern double DLEXPORT asc_d2ipow(double,int);
-extern double DLEXPORT hold(double);
-extern double DLEXPORT dsqrt(double);
-extern double DLEXPORT dsqrt2(double);
-extern double DLEXPORT dcbrt(double);
-extern double DLEXPORT dcbrt2(double);
-extern double DLEXPORT dfabs(double);
-extern double DLEXPORT dfabs2(double);
-extern double DLEXPORT dhold(double);
-extern double DLEXPORT dasin(double);
-extern double DLEXPORT dasin2(double);
-extern double DLEXPORT dcos(double);
-extern double DLEXPORT dcos2(double);
-extern double DLEXPORT dacos(double);
-extern double DLEXPORT dacos2(double);
-extern double DLEXPORT dtan(double);
-extern double DLEXPORT dtan2(double);
-extern double DLEXPORT datan(double);
-extern double DLEXPORT datan2(double);
-extern double DLEXPORT derf(double);
-extern double DLEXPORT derf2(double);
+extern int ASC_DLLSPEC ascnintF(double);
+extern double ASC_DLLSPEC dln(double);
+extern double ASC_DLLSPEC dln2(double);
+extern double ASC_DLLSPEC dlog10(double);
+extern double ASC_DLLSPEC dlog102(double);
+extern double ASC_DLLSPEC lnm(double);
+extern double ASC_DLLSPEC dlnm(double);
+extern double ASC_DLLSPEC dlnm2(double);
+extern double ASC_DLLSPEC dtanh(double);
+extern double ASC_DLLSPEC dtanh2(double);
+extern double ASC_DLLSPEC arcsinh(double);
+extern double ASC_DLLSPEC arccosh(double);
+extern double ASC_DLLSPEC arctanh(double);
+extern double ASC_DLLSPEC darcsinh(double);
+extern double ASC_DLLSPEC darcsinh2(double);
+extern double ASC_DLLSPEC darccosh(double);
+extern double ASC_DLLSPEC darccosh2(double);
+extern double ASC_DLLSPEC darctanh(double);
+extern double ASC_DLLSPEC darctanh2(double);
+extern double ASC_DLLSPEC sqr(double);
+extern double ASC_DLLSPEC dsqr(double);
+extern double ASC_DLLSPEC dsqr2(double);
+extern double ASC_DLLSPEC cube(double);
+extern double ASC_DLLSPEC dcube(double);
+extern double ASC_DLLSPEC dcube2(double);
+extern double ASC_DLLSPEC asc_ipow(double,int);
+extern double ASC_DLLSPEC asc_d1ipow(double,int);
+extern double ASC_DLLSPEC asc_d2ipow(double,int);
+extern double ASC_DLLSPEC hold(double);
+extern double ASC_DLLSPEC dsqrt(double);
+extern double ASC_DLLSPEC dsqrt2(double);
+extern double ASC_DLLSPEC dcbrt(double);
+extern double ASC_DLLSPEC dcbrt2(double);
+extern double ASC_DLLSPEC dfabs(double);
+extern double ASC_DLLSPEC dfabs2(double);
+extern double ASC_DLLSPEC dhold(double);
+extern double ASC_DLLSPEC dasin(double);
+extern double ASC_DLLSPEC dasin2(double);
+extern double ASC_DLLSPEC dcos(double);
+extern double ASC_DLLSPEC dcos2(double);
+extern double ASC_DLLSPEC dacos(double);
+extern double ASC_DLLSPEC dacos2(double);
+extern double ASC_DLLSPEC dtan(double);
+extern double ASC_DLLSPEC dtan2(double);
+extern double ASC_DLLSPEC datan(double);
+extern double ASC_DLLSPEC datan2(double);
+extern double ASC_DLLSPEC derf(double);
+extern double ASC_DLLSPEC derf2(double);
 
 #else /* no stdc */
 
-extern double DLEXPORT cbrt();
+extern double ASC_DLLSPEC cbrt();
 #ifdef HAVE_ERF
-extern double DLEXPORT erf();
+extern double ASC_DLLSPEC erf();
 #endif /* HAVE_ERF */
-extern int DLEXPORT ascnintF();
-extern double DLEXPORT dln();
-extern double DLEXPORT dln2();
-extern double DLEXPORT dlog10();
-extern double DLEXPORT dlog102();
-extern double DLEXPORT lnm();
-extern double DLEXPORT dlnm();
-extern double DLEXPORT dlnm2();
-extern double DLEXPORT dtanh();
-extern double DLEXPORT dtanh2();
-extern double DLEXPORT arcsinh();
-extern double DLEXPORT arccosh();
-extern double DLEXPORT arctanh();
-extern double DLEXPORT darcsinh();
-extern double DLEXPORT darcsinh2();
-extern double DLEXPORT darccosh();
-extern double DLEXPORT darccosh2();
-extern double DLEXPORT darctanh();
-extern double DLEXPORT darctanh2();
-extern double DLEXPORT sqr();
-extern double DLEXPORT dsqr();
-extern double DLEXPORT dsqr2();
-extern double DLEXPORT cube();
-extern double DLEXPORT dcube();
-extern double DLEXPORT dcube2();
-extern double DLEXPORT asc_ipow();
-extern double DLEXPORT asc_d1ipow();
-extern double DLEXPORT asc_d2ipow();
-extern double DLEXPORT hold();
-extern double DLEXPORT dsqrt();
-extern double DLEXPORT dsqrt2();
-extern double DLEXPORT dcbrt();
-extern double DLEXPORT dcbrt2();
-extern double DLEXPORT dfabs();
-extern double DLEXPORT dfabs2();
-extern double DLEXPORT dhold();
-extern double DLEXPORT dasin();
-extern double DLEXPORT dasin2();
-extern double DLEXPORT dcos();
-extern double DLEXPORT dcos2();
-extern double DLEXPORT dacos();
-extern double DLEXPORT dacos2();
-extern double DLEXPORT dtan();
-extern double DLEXPORT dtan2();
-extern double DLEXPORT datan();
-extern double DLEXPORT datan2();
-extern double DLEXPORT derf();
-extern double DLEXPORT derf2();
+extern int ASC_DLLSPEC ascnintF();
+extern double ASC_DLLSPEC dln();
+extern double ASC_DLLSPEC dln2();
+extern double ASC_DLLSPEC dlog10();
+extern double ASC_DLLSPEC dlog102();
+extern double ASC_DLLSPEC lnm();
+extern double ASC_DLLSPEC dlnm();
+extern double ASC_DLLSPEC dlnm2();
+extern double ASC_DLLSPEC dtanh();
+extern double ASC_DLLSPEC dtanh2();
+extern double ASC_DLLSPEC arcsinh();
+extern double ASC_DLLSPEC arccosh();
+extern double ASC_DLLSPEC arctanh();
+extern double ASC_DLLSPEC darcsinh();
+extern double ASC_DLLSPEC darcsinh2();
+extern double ASC_DLLSPEC darccosh();
+extern double ASC_DLLSPEC darccosh2();
+extern double ASC_DLLSPEC darctanh();
+extern double ASC_DLLSPEC darctanh2();
+extern double ASC_DLLSPEC sqr();
+extern double ASC_DLLSPEC dsqr();
+extern double ASC_DLLSPEC dsqr2();
+extern double ASC_DLLSPEC cube();
+extern double ASC_DLLSPEC dcube();
+extern double ASC_DLLSPEC dcube2();
+extern double ASC_DLLSPEC asc_ipow();
+extern double ASC_DLLSPEC asc_d1ipow();
+extern double ASC_DLLSPEC asc_d2ipow();
+extern double ASC_DLLSPEC hold();
+extern double ASC_DLLSPEC dsqrt();
+extern double ASC_DLLSPEC dsqrt2();
+extern double ASC_DLLSPEC dcbrt();
+extern double ASC_DLLSPEC dcbrt2();
+extern double ASC_DLLSPEC dfabs();
+extern double ASC_DLLSPEC dfabs2();
+extern double ASC_DLLSPEC dhold();
+extern double ASC_DLLSPEC dasin();
+extern double ASC_DLLSPEC dasin2();
+extern double ASC_DLLSPEC dcos();
+extern double ASC_DLLSPEC dcos2();
+extern double ASC_DLLSPEC dacos();
+extern double ASC_DLLSPEC dacos2();
+extern double ASC_DLLSPEC dtan();
+extern double ASC_DLLSPEC dtan2();
+extern double ASC_DLLSPEC datan();
+extern double ASC_DLLSPEC datan2();
+extern double ASC_DLLSPEC derf();
+extern double ASC_DLLSPEC derf2();
 
 #endif /* no stdc */
 #endif /* fake__FUNC_H_SEEN__ */

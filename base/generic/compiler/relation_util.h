@@ -51,7 +51,7 @@
 #define ASC_RELATION_UTIL_H
 
 extern int g_check_dimensions_noisy;
-/**< 
+/**<
  *  If 0, warnings are suppressed.  If 1, warnings are given
  *  from RelationCheckDimensions();
  */
@@ -81,7 +81,7 @@ extern int RelationCheckDimensions(struct relation *rel, dim_type *dimens);
  */
 
 extern enum Expr_enum RelationRelop(CONST struct relation *rel);
-/**< 
+/**<
  *  <!--  enum Expr_enum RelationRelop(rel)                            -->
  *  <!--  CONST struct relation *rel;                                  -->
  *  Return the type of the relation operator of the relation.
@@ -235,21 +235,21 @@ extern enum Expr_enum RelationTermTypeF(CONST struct relation_term *term);
  */
 
 extern unsigned long TermVarNumber(CONST struct relation_term *term);
-/**< 
+/**<
  *  <!--  unsigned long TermVarNumber(term)                            -->
  *  <!--  const struct relation_term *term;                            -->
  *  Return the index into the relations variable list.
  */
 
 extern long TermInteger(CONST struct relation_term *term);
-/**< 
+/**<
  *  <!--  long TermInteger(term)                                       -->
  *  <!--  const struct relation_term *term;                            -->
  *  Return the integer value from a e_int type relation term.
  */
 
 extern double TermReal(CONST struct relation_term *term);
-/**< 
+/**<
  *  <!--  double TermReal(term)                                        -->
  *  <!--  const struct relation_term *term;                            -->
  *  Return the double value from a e_real type relation term.
@@ -280,7 +280,7 @@ extern CONST struct Func *TermFunc(CONST struct relation_term *term);
  */
 
 extern unsigned long RelationDepth(CONST struct relation *rel);
-/**< 
+/**<
  *  <!--  unsigned long RelationDepth(rel)                             -->
  *  <!--  struct relation *rel;                                        -->
  *  Return the depth of stack required to evaluate this relation.
@@ -305,13 +305,13 @@ extern unsigned long RelationDepth(CONST struct relation *rel);
 #define TermBinRight(t) ( ((struct RelationBinary *)t) -> right)
 
 extern struct relation_term *RelationINF_Lhs(CONST struct relation *rel);
-/**< 
+/**<
  *  Returns the lhs of an infix relation. This may be NULL,
  *  if the relation has not been set for infix scanning.
  */
 
 extern struct relation_term *RelationINF_Rhs(CONST struct relation *rel);
-/**< 
+/**<
  *  Return the rhs of an infix relation. This may be NULL
  *  if the relation has not been set up for infix scanning, or if
  *  the relation is an objective relation.
@@ -366,7 +366,7 @@ extern CONST struct gl_list_t *RelationVarList(CONST struct relation *r);
  */
 
 extern dim_type *RelationDim(CONST struct relation *rel);
-/**< 
+/**<
  *  <!--  dim_type *RelationDim(rel)                                   -->
  *  <!--  const struct relation *rel;                                  -->
  *  Return the derived dimensionality of the relation.
@@ -374,22 +374,22 @@ extern dim_type *RelationDim(CONST struct relation *rel);
  */
 
 extern int SetRelationDim(struct relation *rel, dim_type *d);
-/**< 
+/**<
  *  <!--  int SetRelationDim(rel,d)                                    -->
  *  <!--  const struct relation *rel;                                  -->
  *  Set the  dimensionality of the relation. return 0 unless there is a
  *  problem (rel was null, for instance.)
  */
 
-extern double RelationResidual(CONST struct relation *rel);
-/**< 
+extern double ASC_DLLSPEC RelationResidual(CONST struct relation *rel);
+/**<
  *  <!--  double RelationResidual(rel)                                 -->
  *  <!--  const struct relation *rel;                                  -->
  *  Return the residual of the relation.
  */
 
 extern void SetRelationResidual(struct relation *rel, double value);
-/**< 
+/**<
  *  <!--  void SetRelationResidual(rel,value)                          -->
  *  <!--  struct relation *rel;                                        -->
  *  <!--  double value;                                                -->
@@ -397,7 +397,7 @@ extern void SetRelationResidual(struct relation *rel, double value);
  */
 
 extern double RelationMultiplier(CONST struct relation *rel);
-/**< 
+/**<
  *  <!--  double RelationMultiplier(rel)                               -->
  *  <!--  const struct relation *rel;                                  -->
  *  Return the langrage multiplier of the relation. This will have some
@@ -406,7 +406,7 @@ extern double RelationMultiplier(CONST struct relation *rel);
  */
 
 extern void SetRelationMultiplier(struct relation *rel, double value);
-/**< 
+/**<
  *  <!--  void SetRelationMultiplier(rel,value)                        -->
  *  <!--  struct relation *rel;                                        -->
  *  <!--  double value;                                                -->
@@ -415,7 +415,7 @@ extern void SetRelationMultiplier(struct relation *rel, double value);
  */
 
 extern int RelationIsCond(CONST struct relation *rel);
-/**< 
+/**<
  *  <!--  int RelationIsCond(rel)                                      -->
  *  <!--  const struct relation *rel;                                  -->
  *  Return the value of the iscond flag of the relation.
@@ -423,7 +423,7 @@ extern int RelationIsCond(CONST struct relation *rel);
  */
 
 extern void SetRelationIsCond(struct relation *rel);
-/**< 
+/**<
  *  <!--  void SetRelationIsCond(rel)                                  -->
  *  <!--  struct relation *rel;                                        -->
  *  Sets the value of the iscond field of the relation to 1
@@ -431,7 +431,7 @@ extern void SetRelationIsCond(struct relation *rel);
  */
 
 extern double RelationNominal(CONST struct relation *rel);
-/**< 
+/**<
  *  <!--  double RelationNominal(rel)                                  -->
  *  <!--  const struct relation *rel;                                  -->
  *  Return the nominal of the relation.
@@ -447,7 +447,7 @@ extern void SetRelationNominal(struct relation *rel, double d);
  */
 
 extern double CalcRelationNominal(struct Instance *i);
-/**< 
+/**<
  *    <!--  d = CalcRelationNominal(i);                                -->
  *    <!--  struct Instance *i;                                        -->
  *    <!--  double d;                                                  -->
@@ -475,13 +475,13 @@ extern double CalcRelationNominal(struct Instance *i);
  */
 
 extern void PrintRelationNominals(struct Instance *i);
-/**< 
+/**<
  *   Perform a visit instance tree starting at i and calc/print consts.
  *   This function doesn't belong here.
  */
 
 extern char *tmpalloc(int nbytes);
-/**< 
+/**<
  *   Temporarily allocates a given number of bytes.  The memory need
  *   not be freed, but the next call to this function will reuse the
  *   previous allocation. Memory returned will NOT be zeroed.
@@ -489,12 +489,12 @@ extern char *tmpalloc(int nbytes);
  */
 
 #define tmpalloc_array(nelts,type)  ((type *)tmpalloc((nelts)*sizeof(type)))
-/**< 
+/**<
  *  Creates an array of "nelts" objects, each with type "type".
  */
 
 /*
- *   The following mess of functions 
+ *   The following mess of functions
  *   migrated out of the solver directory into this file. Who
  *   ever heard of a math modeling language that doesn't supply
  *   evaluation functions for its equations?
@@ -507,7 +507,7 @@ extern char *tmpalloc(int nbytes);
  */
 
 extern int RelationCalcResidualBinary(CONST struct relation *rel, double *res);
-/**< 
+/**<
  * <!--  err = RelationCalcResidualBinary(rel,res);                    -->
  * Returns 0 if it calculates a valid residual, 1 if
  * for any reason it cannot. Reasons include:
@@ -533,7 +533,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res);
  */
 
 extern int RelationCalcResidualPostfix(struct Instance *i, double *res);
-/**< 
+/**<
  *  <!--  status = RelationCalcResidualPostfix(i,res);                 -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  double *res;                                                 -->
@@ -563,7 +563,7 @@ extern int RelationCalcResidualPostfix(struct Instance *i, double *res);
 #define RCE_ERR_RHSNAN  0x80  /**< right side returns NaN */
 
 extern int RelationCalcExceptionsInfix(struct Instance *i);
-/**< 
+/**<
  *  <!--  status = RelationCalcExceptionsInfix(i);                     -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  int status;                                                  -->
@@ -585,7 +585,7 @@ extern int RelationCalcExceptionsInfix(struct Instance *i);
  */
 
 extern int RelationCalcResidualInfix(struct Instance *i, double *res);
-/**< 
+/**<
  *  <!--  status = RelationCalcResidualInfix(i,res);                   -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  double *res;                                                 -->
@@ -622,7 +622,7 @@ extern int RelationCalcGradient(struct Instance *i, double *grad);
  */
 
 extern enum safe_err RelationCalcGradientSafe(struct Instance *i, double *grad);
-/**< 
+/**<
  *  <!--  status = RelationCalcGradientSafe(i,grad);                   -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  double grad[];                                               -->
@@ -636,7 +636,7 @@ extern enum safe_err RelationCalcGradientSafe(struct Instance *i, double *grad);
  */
 
 extern int RelationCalcResidGrad(struct Instance *i, double *res, double *grad);
-/**< 
+/**<
  *  <!--  status = RelationCalcResidGrad(i,res,grad);                  -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  double *res;                                                 -->
@@ -652,7 +652,7 @@ extern int RelationCalcResidGrad(struct Instance *i, double *res, double *grad);
 
 extern enum safe_err
 RelationCalcResidGradSafe(struct Instance *i, double *res, double *grad);
-/**< 
+/**<
  *  <!--  status = RelationCalcResidGradSafe(i,res,grad);              -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  double *res;                                                 -->
@@ -704,7 +704,7 @@ extern double *RelationFindRoots(struct Instance *i,
  */
 
 extern int RelationCalcDerivative(struct Instance *i, unsigned long index, double *grad);
-/**< 
+/**<
  *  <!--  status = RelationCalcDerivative(i,index,grad);               -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  unsigned long index;                                         -->
@@ -722,7 +722,7 @@ extern int RelationCalcDerivative(struct Instance *i, unsigned long index, doubl
 
 extern enum safe_err
 RelationCalcDerivativeSafe(struct Instance *i, unsigned long index, double *grad);
-/**< 
+/**<
  *  <!--  status = RelationCalcDerivativeSafe(i,index,grad);           -->
  *  <!--  struct RelationInstance *i;                                  -->
  *  <!--  unsigned long index;                                         -->
@@ -736,7 +736,7 @@ RelationCalcDerivativeSafe(struct Instance *i, unsigned long index, double *grad
 
 extern struct gl_list_t
 *CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i, unsigned long maxlen);
-/**< 
+/**<
  * <!--  rlist = CollectTokenRelationsWithUniqueBINlessShares(i,maxlen); -->
  * Collect the token relation 'shares' in i which have not been compiled
  * (or at least attempted so) to binary form yet.

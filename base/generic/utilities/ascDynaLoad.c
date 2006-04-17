@@ -170,7 +170,7 @@ void AscCheckDuplicateLoad(CONST char *path)
 #if defined(__WIN32__)
 # include <windows.h>
 
-int DLEXPORT Asc_DynamicLoad(CONST char *path, CONST char *initFun)
+int ASC_DLLSPEC Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
 #define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   HINSTANCE xlib;
