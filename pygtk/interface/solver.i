@@ -2,8 +2,6 @@
 	SWIG interface for accessing Solver and choosing solver parameters
 */
 
-%feature("compactdefaultargs");
-
 class Solver{
 public:
 	Solver(const std::string &name);
@@ -67,7 +65,7 @@ public:
 		def __iter__(self):
 			return SolverParameterIter(self)
 		def getitem(self,index):
-			return 
+			return
 	}
 }
 
@@ -85,7 +83,7 @@ public:
 	const bool isBool() const;
 	const bool isStr() const;
 	const bool isReal() const;
-	
+
 	// The following throw execeptions unless the parameter type is correct
 	const int &getIntValue() const;
 	const int &getIntLowerBound() const;
@@ -147,7 +145,7 @@ public:
 	const std::vector<int> getBlockLocation(const int &block) const;
 	const int getNumBlocks();
 };
-			
+
 
 /* Variables and relations belong to solvers, so they're here: */
 
@@ -202,7 +200,7 @@ public:
 	const bool hasExceededTimeLimit() const;
 	const bool isInterrupted() const;
 	const int getIterationNum() const;
-	
+
 	// block structure stuff...
 
 	const int getNumBlocks() const;
@@ -216,7 +214,7 @@ public:
 
 };
 
-%feature("director") SolverReporter; 
+%feature("director") SolverReporter;
 
 class SolverReporter{
 public:
