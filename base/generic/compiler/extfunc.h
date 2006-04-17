@@ -78,16 +78,41 @@ enum Calc_status {
   calc_error, calc_all_ok
 };
 
+/**
+ * Each blackbox equation may show up more than once in a simulation
+ * if models repeat in the structure. For each occurence of the
+ * blackbox, a unique Slv_Interp object is given when the set of 
+ * corresponding relations is created.
+ * It is used for the blackbox to communicate to the rest of the system.
+ * If the blackbox retains internal state between evaluation calls,
+ * it should store this state in the user_data pointer.
+ */
 struct Slv_Interp {
+  /* unique identifier tied to instance tree. */
   int nodestamp;
+  /* status is set by evaluation calls before returning. */
   enum Calc_status status;
+  /* user_data is set by the external library if it has any persistent state
+     during calls to ExtBBoxInitFunc initial and final given in 
+     CreateUserFunctionBlackBox.
+   */
   void *user_data;
+  /* first call will be true when the initial function pointer is called. */
   unsigned first_call  :1;
+  /* first call will be true when the final function pointer is called. */
   unsigned last_call   :1;
+  /* If check_args, blackbox should do any argument checking of the variables, data. */
   unsigned check_args  :1;
+  /* If recalculate, the caller thinks the input may have changed. */
   unsigned recalculate :1;
-  unsigned deriv_eval  :1;
+  /* If func_eval, the caller is using the residual function pointer. */
   unsigned func_eval   :1;
+  /* If deriv_eval, the caller is using the deriv function pointer. */
+  unsigned deriv_eval  :1;
+  /* If hess_eval, the caller is using the hessian function pointer. */
+  unsigned hess_eval   :1;
+  /* If single_step, the caller would like one step toward the solution;
+     usually this is meaningless and should be answered with calc_diverged. */
   unsigned single_step  :1;
 };
 
@@ -95,6 +120,10 @@ struct Slv_Interp {
 We don't actually support this method anywhere right now, as
 we're not sure what it can logically be used for that the
 init function in dlopening shouldn't be doing.
+In principal, we could add and cache a client-data pointer
+in each instance so that the external method may be stateful.
+Presently, the external methods must be clever to do that
+on their own or must use ascend instances for state instead.
 @param context the instance on which the method may be run.
 */
 typedef int ExtMethodInit( struct Instance *context);
@@ -112,6 +141,7 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
                             struct Instance *,
                             struct gl_list_t *);
 
+/* this one may need splitting/rework for hessian */
 typedef int ExtBBoxFunc(struct Slv_Interp *,
                         int ninputs,
                         int noutputs,
@@ -242,12 +272,10 @@ extern int DLEXPORT CreateUserFunctionBlackBox(CONST char *name,
  *
  *  @param name Name of the function being added (or updated).
  *  @param init Pointer to initialisation function, or NULL if none.
- *  @param value array of evaluation function pointers,
- *               or NULL if none.
- *  @param deriv array of first partial
- *               derivative functions, or NULL if none.
- *  @param deriv2 array of second derivative
- *                functions, or NULL if none.
+ *  @param final Pointer to shutdown function. May be same as init.
+ *  @param value  evaluation function pointers, or NULL if none.
+ *  @param deriv first partial derivative functions, or NULL if none.
+ *  @param deriv2 second derivative functions, or NULL if none.
  *  @return Returns 0 if the function was successfully added,
  *          non-zero otherwise.
  *
