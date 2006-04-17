@@ -26,17 +26,28 @@ int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double
 
 extern int
 DLEXPORT extfntest_register(){
-	const char *addone_help = "This is a test of the dynamic user packages functionality";
+	const char *addone_help = "This is a test of the dynamic user packages functionality"; 
 	int result = 0;
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
+/*
 	result += CreateUserFunction("add_one",
                   (ExtEvalFunc *)addone_prepare,
 			      (ExtEvalFunc **)addone_calc,
 			      (ExtEvalFunc **)NULL,
 			      (ExtEvalFunc **)NULL,
 			      1,1,addone_help);
+*/
+	result += CreateUserFunctionBlackBox(
+			"add_one",
+			addone_prepare,
+			addone_calc,
+			(ExtBBoxFunc*)NULL, /* no grad */
+			(ExtBBoxFunc*)NULL, /* no hess */
+			(ExtBBoxFunc*)NULL, /* no final */
+			1,1,addone_help);
+
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
 	return result;
