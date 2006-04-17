@@ -40,7 +40,7 @@ extern "C"{
 #include "simulation.h"
 #include "solver.h"
 
-Library::Library(string defaultpath){
+Library::Library(const char *defaultpath){
 	static int have_init;
 	if(!have_init){
 		cerr << "Initialising ASCEND library..." << endl;

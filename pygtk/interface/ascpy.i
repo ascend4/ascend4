@@ -4,7 +4,6 @@
 */
 
 %module(directors=1) ascpy
-%feature("compactdefaultargs");
 
 %include <python/std_string.i>
 %include <python/std_except.i>
@@ -229,12 +228,12 @@ public:
 							denparts.append("%s^%d" % (baseunit, -num) )
 					else:
 						denparts.append("%s^(%d/%d)" % (baseunit, -num, den) )
-			
+
 			if len(numparts):
 				str = "*".join(numparts)
 			else:
 				str = "1"
-			
+
 			if len(denparts):
 				str = str + "/" + "/".join(denparts)
 
@@ -257,7 +256,7 @@ str = ur'\u00b7'.join(numparts)
 
 class Library{
 public:
-	Library(std::string defaultpath=NULL);
+	Library(const char *defaultpath=NULL);
 	~Library();
 
 	void load(char *filename);
@@ -327,11 +326,11 @@ public:
 				# no preferred units set
 				return None
 			_units = Units(_u);
-			
+
 			if _units.getDimensions() != self.getDimensions():
 				getReporter().reportWarning("Preferred units '%s' for type '%s' are not dimensionally correct: ignoring." % (_u, self.getName()) );
 				return None
-			
+
 			return _units;
 	}
 }
@@ -430,7 +429,7 @@ public:
 				#for _v in self.getSetValue():
 				#	_s.add( _v )
 				return _s
-				
+
 			elif ( self.isAtom() or self.isFund() ) and not self.isDefined():
 				return "undefined"
 			elif self.isReal():
@@ -456,10 +455,10 @@ public:
 
 		def setFixedValue(self,val):
 			if not self.isFixed():
-				self.setFixed();	
+				self.setFixed();
 			# getReporter().reportError("Setting value of %s to %s" % (self.getName().toString(),val))
 			self.setRealValue(val);
-	}	
+	}
 }
 
 %include "solver.i"
