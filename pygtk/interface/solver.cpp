@@ -47,7 +47,7 @@ Solver::getName() const{
 }
 
 //---------------------------------
-// >>>> GLOBAL FUNCTIONS <<<< 
+// >>>> GLOBAL FUNCTIONS <<<<
 // for registering solvers and querying the complete list
 
 void
@@ -59,7 +59,7 @@ registerSolver(SlvRegistration regfuncptr){
 		throw runtime_error("Solver::registerSolver: Unable to register solver");
 	}else{
 		string name = slv_solver_name(newclient);
-		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Registered solver '%s' (index %d)\n", name.c_str(), newclient );
+		cerr << "Registered solver '" << name << "' (index " << newclient << ")" << endl;
 	}
 }
 

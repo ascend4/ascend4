@@ -29,7 +29,7 @@ class Preferences:
 	def __del__(self):
 		self.n = self.n - 1;
 		if self.n==0:
-			print "WRITING CONFIG to",self.fname
+			print "\rSaving preferences in ",self.fname
 			f = open(self.fname, "w");
 			self.ini.write( f );
 
@@ -110,6 +110,13 @@ class Preferences:
 		except ConfigParser.NoOptionError:
 			return default
 		return _u;
+
+	def setStringPref(self,sect,key,value):
+		if not self.ini.has_section(sect):
+			self.ini.add_section(sect)
+		self.ini.set(sect,key,str(value))
+		
+
 
 # Test script:
 def main():

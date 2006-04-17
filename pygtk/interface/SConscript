@@ -43,17 +43,11 @@ env.Append(BUILDERS={'Swig':swig_builder})
 
 #---------------------------------------------
 
-
-#swig = env.Swig(target=['ascpy_wrap.cc'],source=['ascpy.i']
-#	, SWIGFLAGS=['-python','-c++']
-#	, CPPFLAGS = ['-O3']
-#)
-
 def get_new_swig_flags(env):
 	min,maj,pat = env['SWIGVERSION']
 	flags = []
 	if min==1 and maj==3 and pat>=28:
-		flags += ['-O','-fvirtual']
+		flags += ['-O']
 	return flags
 
 	

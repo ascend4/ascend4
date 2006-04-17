@@ -105,12 +105,14 @@ class Browser:
 		parser.add_option("--library"
 			,action="store", type="string", dest="library_path"
 			,help="overried the configuration value for the library path"
-			,default=config.LIBRARY_PATH
+			,default=None
 		)
 
 		(options, args) = parser.parse_args()
 
 		#print "OPTIONS_______________:",options
+
+		self.assets_dir = options.assets_dir
 		
 		self.observers = []
 		self.clip = None
@@ -122,35 +124,41 @@ class Browser:
 
 		self.prefs = Preferences()
 
-		#--------
-		# initialise ASCEND
-
-		self.assets_dir = options.assets_dir
-		
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
+		_preffileopenpath = self.prefs.getStringPref("Directories","loadfileopenpath",None)
+
+		#--------
+		# set up library path and the path to use for File->Open dialogs
 		
-		if _prefpath:
-			_path = _prefpath
-			_pathsrc = "user preferences"
-		else:
+		if options.library_path != None:
 			_path = options.library_path
-			if options.library_path==config.LIBRARY_PATH:
-				_pathsrc = "default (config.py)"
+			_pathsrc = "commandline"
+			# when a special path is specified, use that as the file-open location
+			self.fileopenpath = options.library_path
+		else:
+			if _prefpath:
+				_path = _prefpath
+				_pathsrc = "user preferences"
 			else:
-				_pathsrc = "commandline"
+				_path = config.LIBRARY_PATH
+				_pathsrc = "default (config.py)"
 			
+			if _preffileopenpath:
+				self.fileopenpath = _preffileopenpath
+			else:
+				self.fileopenpath = _path
+					
+		#--------
+		# Create the ASCXX 'Library' object
+		
 		print_loading_status("Creating ASCEND 'Library' object",
 			"From %s, using ASCENDLIBRARY = %s" % (_pathsrc,_path)
 
 		)
-		try:
-			self.library = ascpy.Library(_path)
-		except:
-			print "FAILED TO EXECUTE ascpy.Library("+_path+")"
-			exit(1)
+		self.library = ascpy.Library(_path)
 
 		self.sim = None
-
+			
 		#--------
 		# Prepare the ASCEND icon
 
@@ -633,7 +641,9 @@ class Browser:
 		self.refreshtree()
 
 	def do_quit(self):
+		print_loading_status("Saving window location")		
 		self.reporter.clearPythonErrorCallback()
+
 		_w,_h = self.window.get_size()
 		_t,_l = self.window.get_position()
 		_display = self.window.get_screen().get_display().get_name()
@@ -642,11 +652,20 @@ class Browser:
 		_p = self.browserpaned.get_position()
 		self.prefs.setGeometryValue(_display,"browserpaned",_p);
 
+		print_loading_status("Saving current directory")			
+		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
+
+		print_loading_status("Saving preferences")
 		# causes prefs to be saved unless they are still being used elsewher
 		del(self.prefs)
 
+		print_loading_status("Closing down GTK")
 		gtk.main_quit()
-		print "GTK QUIT"
+
+		print_loading_status("Clearing error callback")		
+		self.reporter.clearPythonErrorCallback()
+		
+		print_loading_status("Quitting")
 		return False
 
 	def on_tools_sparsity_click(self,*args):
@@ -938,11 +957,13 @@ class Browser:
 #   BUTTON METHODS
 
 	def open_click(self,*args):
-		dialog = gtk.FileChooserDialog("Open file...",
-			None,
-		    gtk.FILE_CHOOSER_ACTION_OPEN,
-		    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-		    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+		print_loading_status("CURRENT FILEOPENPATH is",self.fileopenpath)
+		dialog = gtk.FileChooserDialog("Open ASCEND model...",
+			self.window,
+			gtk.FILE_CHOOSER_ACTION_OPEN,
+			(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK)
+		)
+		dialog.set_current_folder(self.fileopenpath)
 		dialog.set_default_response(gtk.RESPONSE_OK)
 		dialog.set_transient_for(self.window)
 		dialog.set_modal(True)
@@ -961,6 +982,11 @@ class Browser:
 		response = dialog.run()
 		_filename = dialog.get_filename()
 		print "FILENAME SELECTED:",_filename
+		
+		_path = dialog.get_current_folder()
+		if _path:
+			self.fileopenpath = _path
+		
 		dialog.hide()
 
 		if response == gtk.RESPONSE_OK:
