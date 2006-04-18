@@ -32,6 +32,9 @@ if platform.system() != "Windows":
 	# ascend library are made available to libraries dlopened within ASCEND:
 	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 	
+print_loading_status("Loading LIBASCEND/ascpy")
+import ascpy
+
 print_loading_status("Loading PyGTK, glade, pango")
 
 import pygtk 
@@ -52,9 +55,6 @@ from varentry import *         # for inputting of variables with units
 from diagnose import * 	       # for diagnosing block non-convergence
 from solverreporter import * # solver status reporting
 import config
-
-print_loading_status("Loading LIBASCEND/ascpy")
-import ascpy
 
 print_loading_status("Starting GUI")
 
