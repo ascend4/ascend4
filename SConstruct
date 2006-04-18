@@ -241,9 +241,6 @@ else:
 	Tool('fortran')(env)
 	Tool('swig')(env)
 
-env['HAVE_LEX']=True
-env['HAVE_YACC']=True
-
 if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "INCLUDE =",env['ENV']['INCLUDE']
 	print "LIB =",env['ENV']['LIB']
@@ -427,6 +424,25 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	return is_ok
 
 #----------------
+# GCC
+
+gcc_test_text = """
+#ifndef __GNUC__
+# error "Not using GCC"
+#endif
+
+int main(void){
+	return __GNUC__;
+}
+"""
+
+def CheckGcc(context):
+	context.Message("Checking for GCC... ")
+	is_ok = context.TryCompile(gcc_test_text,".c")
+	context.Result(is_ok)
+	return is_ok
+
+#----------------
 # GCC VISIBILITY feature
 
 gccvisibility_test_text = """
@@ -447,7 +463,26 @@ def CheckGccVisibility(context):
 	is_ok = context.TryCompile(gccvisibility_test_text,".c")
 	context.Result(is_ok)
 	return is_ok
-	
+
+#----------------
+# YACC
+
+yacc_test_text = """
+%start ROOT
+   %token MSG
+   %%
+
+   ROOT:
+     MSG { print("HELLO"); } 
+   ;
+"""
+
+def CheckYacc(context):
+	context.Message("Checking for Yacc... ")
+	is_ok = context.TryCompile(yacc_test_text,".y")
+	context.Result(is_ok)
+	return is_ok
+
 #----------------
 # CUnit test
 
@@ -557,7 +592,9 @@ conf = Configure(env
 		, 'CheckTclVersion' : CheckTclVersion
 		, 'CheckTk' : CheckTk
 		, 'CheckTkVersion' : CheckTkVersion
+		, 'CheckGcc' : CheckGcc
 		, 'CheckGccVisibility' : CheckGccVisibility
+		, 'CheckYacc' : CheckYacc
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -579,9 +616,20 @@ if not conf.CheckFunc('isnan'):
 
 # GCC visibility
 
-if conf.CheckGccVisibility():
-	conf.env['HAVE_GCCVISIBILITY']=True;
+if conf.CheckGcc():
+	conf.env['HAVE_GCC']=True;
+	if conf.CheckGccVisibility():
+		conf.env['HAVE_GCCVISIBILITY']=True;
 	conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
+
+
+# YACC
+
+
+if conf.CheckYacc():
+	conf.env['HAVE_YACC']=True
+
+conf.env['HAVE_LEX']=True
 
 # Tcl/Tk
 

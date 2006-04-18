@@ -45,9 +45,9 @@
 
 #include <utilities/ascConfig.h>
 
-extern FILE *g_ascend_errors;       /**< File for error messages.  Default is stderr. */
-extern FILE *g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
-extern FILE *g_ascend_information;  /**< File for informational messages.  Default is stderr. */
+ASC_DLLSPEC(FILE *) g_ascend_errors;       /**< File for error messages.  Default is stderr. */
+ASC_DLLSPEC(FILE *) g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
+ASC_DLLSPEC(FILE *) g_ascend_information;  /**< File for informational messages.  Default is stderr. */
 
 ASC_DLLSPEC(void) Asc_RedirectCompilerDefault(void);
 /**< Set the default files/streams to receive ASCEND messages. */

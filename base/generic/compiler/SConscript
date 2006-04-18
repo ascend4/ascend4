@@ -28,14 +28,14 @@ csrcs = Split("""
 # SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
 
 import platform
-if env['HAVE_YACC']:
+if env.has_key('HAVE_YACC'):
 	parsersource = 'ascParse.y'
 	parserheader = 'ascParse.h'
 else:
 	parsersource = 'ascParse_no_yacc.c'
 	parserheader = 'ascParse_no_yacc.h'
 
-if env['HAVE_LEX']:
+if env.has_key('HAVE_LEX'):
 	scannersource = 'scanner.l'
 else:
 	scannersource = 'scanner_no_flex.c'

@@ -81,6 +81,8 @@
 #define ASC_PARENTCHILD_H
 
 #include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
+#include <compiler/instance_name.h>
 
 /* Parent routines */
 
