@@ -130,7 +130,7 @@
 	An attempt to prevent unexported symbols from slipping through
 	the net when developing with GCC on linux:
 */
-#ifdef __GNUC__ && __GNUC__ >= 4
+#if defined(__GNUC__) && __GNUC__ >= 4
 # pragma GCC visibility push(hidden)
 #endif
 
