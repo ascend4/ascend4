@@ -24,11 +24,11 @@
    in version 1.24 of Bison.  */
 
 /* Tokens.  */
-#ifndef ZZ_TOKENTYPE
-# define ZZ_TOKENTYPE
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
-   enum zz_tokentype {
+   enum yytokentype {
      ADD_T = 258,
      ALIASES_T = 259,
      AND_T = 260,
@@ -249,9 +249,9 @@
 
 
 
-#if ! defined (ZZ_STYPE) && ! defined (ZZ_STYPE_IS_DECLARED)
-#line 300 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
-typedef union ZZ_STYPE {
+#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
+#line 299 "base\\generic\\compiler\\ascParse.y"
+typedef union YYSTYPE {
   double real_value;
   long   int_value;
   struct fraction frac_value;
@@ -277,15 +277,15 @@ typedef union ZZ_STYPE {
   dim_type dimen;
   enum ForOrder order;
   enum ForKind fkind;
-} ZZ_STYPE;
+} YYSTYPE;
 /* Line 1318 of yacc.c.  */
-#line 283 "y.tab.h"
-# define zz_stype ZZ_STYPE /* obsolescent; will be withdrawn */
-# define ZZ_STYPE_IS_DECLARED 1
-# define ZZ_STYPE_IS_TRIVIAL 1
+#line 283 "base\\generic\\compiler\\ascParse.h"
+# define yystype YYSTYPE /* obsolescent; will be withdrawn */
+# define YYSTYPE_IS_DECLARED 1
+# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
-extern ZZ_STYPE zz_lval;
+extern YYSTYPE zz_lval;
 
 
 

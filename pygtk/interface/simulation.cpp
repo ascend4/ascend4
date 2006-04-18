@@ -4,8 +4,11 @@
 #include <sstream>
 using namespace std;
 
+#include "config.h"
+
 extern "C"{
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
 #include <general/dstring.h>
