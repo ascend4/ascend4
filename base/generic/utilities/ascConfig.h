@@ -101,7 +101,6 @@
 */
 
 #ifdef __GNUC__
-# define HAVE_DECLSPEC_DLL
 #else
 # ifdef __WIN32__
 #  define HAVE_DECLSPEC_DLL
@@ -109,11 +108,11 @@
 #endif
 
 #ifdef HAVE_DECLSPEC_DLL
-# define ASC_EXPORT(TYPE)  __declspec(dllexport)  TYPE
-# define ASC_IMPORT(TYPE)  __declspec(dllimport)  TYPE
+# define ASC_EXPORT(TYPE) extern __declspec(dllexport)  TYPE
+# define ASC_IMPORT(TYPE) extern __declspec(dllimport)  TYPE
 #else
-# define ASC_EXPORT(TYPE) TYPE
-# define ASC_IMPORT(TYPE) TYPE
+# define ASC_EXPORT(TYPE) extern TYPE
+# define ASC_IMPORT(TYPE) extern TYPE
 #endif
 
 #ifdef ASC_BUILDING_LIBASCEND
@@ -269,9 +268,9 @@ if 0 block is broken. */
 #define ASC_MILD_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 #define ASC_BIG_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 
-extern ASC_DLLSPEC(FILE*) g_ascend_errors;         /**< File stream to receive error messages. */
-extern ASC_DLLSPEC(FILE*) g_ascend_warnings;       /**< File stream to receive warning messages. */
-extern ASC_DLLSPEC(FILE*) g_ascend_information;    /**< File stream to receive general messages. */
+ASC_DLLSPEC(FILE*) g_ascend_errors;         /**< File stream to receive error messages. */
+ASC_DLLSPEC(FILE*) g_ascend_warnings;       /**< File stream to receive warning messages. */
+ASC_DLLSPEC(FILE*) g_ascend_information;    /**< File stream to receive general messages. */
 
 /* NB For error messages to be correctly captured, all output needs to go to stderr in error.h */
 #ifndef ASCERR

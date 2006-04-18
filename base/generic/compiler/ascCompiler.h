@@ -38,7 +38,7 @@
 
 #include <utilities/ascConfig.h>
 
-extern ASC_DLLSPEC(int) Asc_CompilerInit(int simplify_relations);
+ASC_DLLSPEC(int) Asc_CompilerInit(int simplify_relations);
 /**<
  *  Initialize any resources used by the ASCEND compiler.
  *
