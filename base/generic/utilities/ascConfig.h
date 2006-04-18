@@ -121,14 +121,6 @@
 # error "NO ASC_DLLSPEC DEFINED"
 #endif
 
-/*
-	An attempt to prevent unexported symbols from slipping through
-	the net when developing with GCC on linux:
-*/
-#ifdef HAVE_GCCVISIBILITY
-# pragma GCC visibility push(hidden)
-#endif
-
 /**
 	What kind of C compiler do we have?
 
