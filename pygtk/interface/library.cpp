@@ -9,6 +9,7 @@ using namespace std;
 #include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>
+#include <compiler/compiler.h>
 #include <general/list.h>
 #include <compiler/slist.h>
 #include <compiler/ascCompiler.h>
@@ -34,6 +35,7 @@ extern "C"{
 #include <compiler/notate.h>
 #include <compiler/simlist.h>
 #include <compiler/parser.h>
+#include <utilities/error.h>
 }
 
 #include "library.h"

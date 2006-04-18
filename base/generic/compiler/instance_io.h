@@ -1,47 +1,47 @@
-/*
- *  Instance Output Routines
- *  by Tom Epperly
- *  Created: 2/8/90
- *  Version: $Revision: 1.21 $
- *  Version control file: $RCSfile: instance_io.h,v $
- *  Date last modified: $Date: 1998/01/11 17:03:34 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Weidner Epperly
- *  Copyright 1996 Benjamin Andrew Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Weidner Epperly
+	Copyright 1996 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Instance Output Routines.
- *  <pre>
- *  When #including instance_io.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "general/dstring.h"
- *         #include "compiler/compiler.h"
- *         #include "compiler/symtab.h"
- *         #include "compiler/instance_enum.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Instance Output Routines.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "general/dstring.h"
+	#include "compiler/compiler.h"
+	#include "compiler/symtab.h"
+	#include "compiler/instance_enum.h"
+*//*
+	by Tom Epperly
+	Created: 2/8/90
+	Version: $Revision: 1.21 $
+	Version control file: $RCSfile: instance_io.h,v $
+	Date last modified: $Date: 1998/01/11 17:03:34 $
+	Last modified by: $Author: ballan $
+*/
+/* blimey tom epperly you keep gaining middle-names */
+
 
 #ifndef ASC_INSTANCE_IO_H
 #define ASC_INSTANCE_IO_H
+
+#include <utilities/ascConfig.h>
 
 /**
  *  struct NameNode is used by the AllPaths() and WriteAliases() routines to
@@ -122,7 +122,7 @@ extern void WriteInstanceNameDS(Asc_DString * dsPtr,
  *  relative names instead, where the context is assumed to be ref.
  */
 
-extern char* ASC_DLLSPEC WriteInstanceNameString(CONST struct Instance *i,
+extern ASC_DLLSPEC(char*) WriteInstanceNameString(CONST struct Instance *i,
                                      CONST struct Instance *ref);
 /**<
  *  Return a string (that the user must destroy eventually).  The name that is
@@ -188,7 +188,7 @@ extern void WriteClique(FILE *f, CONST struct Instance *i);
  *  Print all the instance's clique members.
  */
 
-extern void ASC_DLLSPEC WriteInstance(FILE *f, CONST struct Instance *i);
+extern ASC_DLLSPEC(void) WriteInstance(FILE *f, CONST struct Instance *i);
 /**<
  *  Print the information contained in i.
  */

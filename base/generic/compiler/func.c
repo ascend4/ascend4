@@ -57,129 +57,129 @@ double g_lnm_epsilon = 1.0e-8;
 
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
-double ASC_DLLSPEC cbrt(register double d)
+double cbrt(register double d)
 {
   return pow(d,(double)0.3333333333333333333333);
 }
 #endif
 
-int ASC_DLLSPEC ascnintF(register double d)
+int ascnintF(register double d)
 {
   return ((d)>=0.0 ? (int)floor((d) + 0.5) : -(int)floor(0.5 - (d)));
 }
 
 
-double ASC_DLLSPEC dln(register double d)
+double dln(register double d)
 {
   return 1.0/d;
 }
 
-double ASC_DLLSPEC dln2(register double d)
+double dln2(register double d)
 {
   return -1.0/(d*d);
 }
 
 
-double ASC_DLLSPEC lnm(register double d)
+double lnm(register double d)
 {
   return (d>g_lnm_epsilon?log(d):d/g_lnm_epsilon + (log(g_lnm_epsilon) -1));
 
 }
 
-double ASC_DLLSPEC dlnm(register double d)
+double dlnm(register double d)
 {
   return ( d>g_lnm_epsilon ? (double)1.0/d : 1/g_lnm_epsilon);
 }
 
-double ASC_DLLSPEC dlnm2(register double d)
+double dlnm2(register double d)
 {
   return (d>g_lnm_epsilon ? (double)-1.0/(d*d) : (double)0.0);
 }
 
-double ASC_DLLSPEC dlog10(register double d)
+double dlog10(register double d)
 {
   return M_LOG10E/d;
 }
 
-double ASC_DLLSPEC dlog102(register double d)
+double dlog102(register double d)
 {
   return -M_LOG10E/(d*d);
 }
 
-double ASC_DLLSPEC dcos(register double d)
+double dcos(register double d)
 {
   return -sin(d);
 }
 
-double ASC_DLLSPEC dcos2(register double d)
+double dcos2(register double d)
 {
   return -cos(d);
 }
 
-double ASC_DLLSPEC dtan(register double d)
+double dtan(register double d)
 {
   register double t;
   t=cos(d);
   return 1.0/(t*t);
 }
 
-double ASC_DLLSPEC dtan2(register double d)
+double dtan2(register double d)
 {
   register double t;
   t=cos(d);
   return ldexp(tan(d)/(t*t),1);
 }
 
-double ASC_DLLSPEC sqr(register double d)
+double sqr(register double d)
 {
   return d*d;
 }
 
-double ASC_DLLSPEC dsqr(register double d)
+double dsqr(register double d)
 {
   return ldexp(d,1);
 }
 
-double ASC_DLLSPEC dsqr2(register double d)
+double dsqr2(register double d)
 {
   (void)d;  /*  stop gcc whine about unused parameter */
   return 2.0;
 }
 
-double ASC_DLLSPEC hold(double d)
+double hold(double d)
 {
   return d;
 }
 
-double ASC_DLLSPEC dsqrt(register double d)
+double dsqrt(register double d)
 {
   return 1.0/(ldexp(sqrt(d),1));
 }
 
-double ASC_DLLSPEC dsqrt2(register double d)
+double dsqrt2(register double d)
 {
   return -1.0/ldexp(sqrt(d)*d,2);
 }
 
-double ASC_DLLSPEC dfabs(register double d)
+double dfabs(register double d)
 {
   return ((d > 0.0) ? 1.0 : ((d<0.0 ) ? -1 : 0));
 }
 
-double ASC_DLLSPEC dfabs2(register double d)
+double dfabs2(register double d)
 {
   (void)d;  /*  stop gcc whine about unused parameter */
   return 0.0;
 }
 
-double ASC_DLLSPEC dhold(double d)
+double dhold(double d)
 {
   (void)d;  /*  stop gcc whine about unused parameter */
   return 0;
 }
 
  /* The next 4 are new */
-double ASC_DLLSPEC asc_ipow(register double d, int i) {
+double asc_ipow(register double d, int i) {
   unsigned negative = 0;
   negative = (i<0);
   if (negative) i = (-i);
@@ -214,7 +214,7 @@ double ASC_DLLSPEC asc_ipow(register double d, int i) {
  * double checking now -> this should be fixed
  */
 
-double ASC_DLLSPEC asc_d1ipow(double d, int i) {
+double asc_d1ipow(double d, int i) {
     if (d == 0 && i <= 1) {
 	FPRINTF(stderr,"ERROR:\t(calc) calc_ipow_D1\n");
 	FPRINTF(stderr,
@@ -226,7 +226,7 @@ double ASC_DLLSPEC asc_d1ipow(double d, int i) {
     return( i * asc_ipow(d,i-1));
 }
 
-double ASC_DLLSPEC asc_d2ipow(double d, int i) {
+double asc_d2ipow(double d, int i) {
     if (d == 0 && i <= 2) {
 	FPRINTF(stderr,"ERROR:\t(calc) calc_ipow_D2\n");
 	FPRINTF(stderr,
@@ -239,80 +239,80 @@ double ASC_DLLSPEC asc_d2ipow(double d, int i) {
 }
 
 
-double ASC_DLLSPEC cube(register double d)
+double cube(register double d)
 {
   return d*d*d;
 }
-double ASC_DLLSPEC dcube(register double d)
+double dcube(register double d)
 {
   return 3.0*d*d;
 }
-double ASC_DLLSPEC dcube2(register double d)
+double dcube2(register double d)
 {
   return 6.0*d;
 }
 
-double ASC_DLLSPEC dcbrt(register double d)
+double dcbrt(register double d)
 {
   register double c;
   c=cbrt(d);
   return (double)0.3333333333333333/(c*c);
 }
 
-double ASC_DLLSPEC dcbrt2(register double d)
+double dcbrt2(register double d)
 {
   register double c;
   c=cbrt(d);
   return (double)-0.2222222222222222/pow(c,5.0);
 }
 
-double ASC_DLLSPEC dasin(register double d)
+double dasin(register double d)
 {
   return 1.0/sqrt(1.0-d*d);
 }
 
-double ASC_DLLSPEC dasin2(register double d)
+double dasin2(register double d)
 {
   register double c;
   c=1.0-d*d;
   return d/(c*sqrt(c));
 }
 
-double ASC_DLLSPEC dacos(register double d)
+double dacos(register double d)
 {
   return -1.0/sqrt(1-d*d);
 }
 
-double ASC_DLLSPEC dacos2(register double d)
+double dacos2(register double d)
 {
   register double c;
   c=1.0-d*d;
   return -d/(c*sqrt(c));
 }
 
-double ASC_DLLSPEC datan(register double d)
+double datan(register double d)
 {
   return 1.0/(1.0+d*d);
 }
 
-double ASC_DLLSPEC datan2(register double d)
+double datan2(register double d)
 {
   return -ldexp(d/(1.0+d*d),1);
 }
 
 #ifdef HAVE_ERF
-double ASC_DLLSPEC derf(register double d)
+double derf(register double d)
 {
   return ldexp(exp(-(d*d))/sqrt(M_PI),1);
 }
 
-double ASC_DLLSPEC derf2(register double d)
+double derf2(register double d)
 {
   return -ldexp(d*exp(-(d*d))/sqrt(M_PI),2);
 }
 #endif /* HAVE_ERF */
 
-double ASC_DLLSPEC dtanh(register double d)
+double dtanh(register double d)
 {
   register double c;
   c = cosh(d);
@@ -320,48 +320,48 @@ double ASC_DLLSPEC dtanh(register double d)
   return c;
 }
 
-double ASC_DLLSPEC dtanh2(register double d)
+double dtanh2(register double d)
 {
   register double c;
   c = cosh(d);
   return -ldexp(tanh(d),1)/(c*c);
 }
 
-double ASC_DLLSPEC arcsinh(register double d)
+double arcsinh(register double d)
 {
   return log(d+sqrt(d*d+1.0));
 }
 
-double ASC_DLLSPEC darcsinh(register double d)
+double darcsinh(register double d)
 {
   return 1.0/sqrt(d*d+1.0);
 }
 
-double ASC_DLLSPEC darcsinh2(register double d)
+double darcsinh2(register double d)
 {
   register double c;
   c=d*d+1.0;
   return -d/sqrt(c*c*c);
 }
 
-double ASC_DLLSPEC arccosh(register double d)
+double arccosh(register double d)
 {
   return log(d+sqrt(d*d-1.0));
 }
 
-double ASC_DLLSPEC darccosh(register double d)
+double darccosh(register double d)
 {
   return 1.0/sqrt(d*d-1.0);
 }
 
-double ASC_DLLSPEC darccosh2(register double d)
+double darccosh2(register double d)
 {
   register double c;
   c=d*d-1.0;
   return -d/sqrt(c*c*c);
 }
 
-double ASC_DLLSPEC arctanh(register double d)
+double arctanh(register double d)
 {
   return  ldexp( log((d+1.0)/(1.0-d)) ,-1);
 /* an alternative, more expensive but perhaps less exception prone
@@ -373,12 +373,12 @@ double ASC_DLLSPEC arctanh(register double d)
 */
 }
 
-double ASC_DLLSPEC darctanh(register double d)
+double darctanh(register double d)
 {
   return  1.0/(1-d*d);
 }
 
-double ASC_DLLSPEC darctanh2(register double d)
+double darctanh2(register double d)
 {
   register double c;
   c=1.0-d*d;

@@ -1,44 +1,44 @@
-/* ASCEND modelling environment
-   Copyright (C) 2006 Carnegie Mellon University
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Dynamic library routines.
 
-/* ChangeLog
- * Added Asc_DynamicUnLoad. Ben Allan (ballan@cs.cmu.edu) Jan 1998.
- * Your mileage may vary.
- * UnLoad alleged for sun, hp, sgi, and alpha/osf. It probably works
- * only as well as their dlclose and shl_unload do.
- *
- * Split Asc_DynamicSymbol() into Asc_DynamicVariable() and
- * Asc_DynamicFunction() so callers don't have to cast between
- * data and function pointers (forbidden by ISO C).  JDS Dec 2005
- */
-
-/** @file
- *  Dynamic library routines.
- *  <pre>
- *  Reaquires:
- *        #include "utilities/ascConfig.h"
- *  </pre>
- */
+	Requires:
+	      #include "utilities/ascConfig.h"
+	</pre>
+*//*
+	ChangeLog
+	Added Asc_DynamicUnLoad. Ben Allan (ballan@cs.cmu.edu) Jan 1998.
+	Your mileage may vary.
+	UnLoad alleged for sun, hp, sgi, and alpha/osf. It probably works
+	only as well as their dlclose and shl_unload do.
+	Split Asc_DynamicSymbol() into Asc_DynamicVariable() and
+	Asc_DynamicFunction() so callers don't have to cast between
+	data and function pointers (forbidden by ISO C).  JDS Dec 2005
+*/
 
 #ifndef ASC_ASCDYNALOAD_H
 #define ASC_ASCDYNALOAD_H
 
-extern int ASC_DLLSPEC Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
+#include <utilities/ascConfig.h>
+
+extern ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.
  *  This is our function wrapping dlopen/LoadLibrary.  It makes
@@ -148,6 +148,4 @@ extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
  */
 #endif /* gnu,hp,alpha,win,solaris,sunos,irix */
 
-
 #endif /* ASC_ASCDYNALOAD_H */
-

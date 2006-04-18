@@ -1,49 +1,44 @@
-/* <br><br>
- *  Logical Relation Module
- *  by Vicente Rico-Ramirez
- *  Created: 09/96
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: logrel.h,v $
- *  Date last modified: $Date: 1997/07/29 15:47:43 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Logical Relation Module.
- *  <pre>
- *  Contents:     Logical Relation module (ascend)
- *
- *  Dates:        09/96 - original version
- *
- *  Description:  This is the ascend version of the logrel module.  This
- *                version should be used by any user who receives his/her
- *                equations directly from an instance tree created by the
- *                ASCEND compiler.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "solver/discrete.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//**
+	@file
+	Logical Relation Module.
+
+	This is the ASCEND version of the logrel module.  This
+	version should be used by any user who receives his/her
+	equations directly from an instance tree created by the
+	ASCEND compiler.
+
+	Requires
+	#include "utilities/ascConfig.h"
+	#include "solver/discrete.h"
+*//*
+	by Vicente Rico-Ramirez
+	Created: 09/96
+	Version: $Revision: 1.6 $
+	Version control file: $RCSfile: logrel.h,v $
+	Date last modified: $Date: 1997/07/29 15:47:43 $
+	Last modified by: $Author: rv2a $
+*/
 
 #ifndef ASC_LOGREL_H
 #define ASC_LOGREL_H
+
+#include <utilities/ascConfig.h>
 
 /* ********************************************************************\
   logrel_relation basic type operators.
@@ -75,10 +70,6 @@ struct logrel_relation {
 extern struct logrel_relation *logrel_create(SlvBackendToken instance,
                                              struct logrel_relation *newlogrel);
 /**<
- *  <!--  logrel_create(instance,newlogrel)                            -->
- *  <!--  struct logrel_relation *newlogrel;                           -->
- *  <!--  SlvBackendToken instance;                                    -->
- *
  *  Creates a logrelation given the logrelation instance.
  *  If the logrel supplied is NULL, we allocate the memory for the
  *  logrel we return, else we just init the memory you hand us and
@@ -93,9 +84,6 @@ extern struct logrel_relation *logrel_create(SlvBackendToken instance,
 
 extern SlvBackendToken logrel_instance(struct logrel_relation *logrel);
 /**<
- *  <!--  logrel_instance(logrel)                                      -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Returns the instance pointer from a logrel.
  */
 
@@ -103,8 +91,6 @@ extern void logrel_write_name(slv_system_t sys,
                               struct logrel_relation *logrel,
                               FILE *file);
 /**<
- *  <!--  logrel_write_name(sys,logrel,file);                          -->
- *
  *  Writes a name to the file given.
  *  If sys is NULL, writes full ascend name. If file or logrel is NULL
  *  does not write.
@@ -112,9 +98,6 @@ extern void logrel_write_name(slv_system_t sys,
 
 extern void logrel_destroy(struct logrel_relation *logrel);
 /**<
- *  <!--  logrel_destroy(logrel)                                       -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Destroys a logrelation.
  */
 
@@ -126,16 +109,6 @@ extern boolean logrel_equal(struct logrel_relation *logrel);
  */
 extern boolean logrel_not_equal(struct logrel_relation *logrel);
 /**<
- *  <!--  eq = logrel_equal(logrel)                                    -->
- *  <!--  neq = logrel_not_equal(logrel)                               -->
- *  <!--  boolean eq,neq;                                              -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
- *  <!--  Returns true if the given logrelation is satisfied if the    -->
- *  <!--  operator in question is among those that make up the         -->
- *  <!--  comparator of the logrelation.                               -->
- *  <!--  neq==TRUE implies logrel would be satisfied if lhs != rhs    -->
- *  <!--  eq==TRUE implies logrel would be satisfied if lhs == rhs     -->
  *  Returns true if the given logrelation would be
  *  satisfied when lhs != rhs.
  *  @see logrel_equal()
@@ -143,20 +116,12 @@ extern boolean logrel_not_equal(struct logrel_relation *logrel);
 
 extern enum logrel_enum logrel_relop(struct logrel_relation *logrel);
 /**<
- * <!--  relop = logrel_relop(logrel);                                 -->
- * <!--  logrel_enum relop;                                            -->
- * <!--  struct logrel_relation *logrel;                               -->
  * Returns the type of the operator of a given logrelation.
  */
 
 extern char *logrel_make_name(slv_system_t sys,
                               struct logrel_relation *logrel);
 /**<
- *  <!--  name = logrel_make_name(sys,logrel)                          -->
- *  <!--  slv_system_t sys;                                            -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  char *name;                                                  -->
- *
  *  Copies of the logrelation instance name can be made and returned.
  *  The string returned should be freed when no longer in use.
  */
@@ -169,11 +134,6 @@ extern int32 logrel_mindex(struct logrel_relation *logrel);
 extern void logrel_set_mindex(struct logrel_relation *logrel,
                               int32 index);
 /**<
- *  <!--  index = logrel_mindex(logrel)                                -->
- *  <!--  logrel_set_mindex(logrel,index)                              -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Sets the index number of the given logrelation as it
  *  appears in a slv_system_t master logrelation list.
  */
@@ -186,11 +146,6 @@ extern int32 logrel_sindex(struct logrel_relation *logrel);
 extern void logrel_set_sindex(struct logrel_relation *logrel,
                               int32 index);
 /**<
- *  <!--  index = logrel_sindex(logrel)                                -->
- *  <!--  logrel_set_sindex(logrel,index)                              -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Sets he index number of the given logrelation as it
  *  appears in a solvers logrelation list.
  */
@@ -203,11 +158,6 @@ extern int32 logrel_model(const struct logrel_relation *logrel);
 extern void logrel_set_model(struct logrel_relation *logrel,
                              int32 index);
 /**<
- *  <!--  index = logrel_model(logrel)                                 -->
- *  <!--  logrel_set_model(logrel,index)                               -->
- *  <!--  int32 index;                                                 -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Sets the model number of the given logrelation.
  *  Models are numbered from 1 to some upper limit.
  */
@@ -222,11 +172,6 @@ extern int32 logrel_residual(struct logrel_relation *logrel);
 extern void logrel_set_residual(struct logrel_relation *logrel,
                                 int32 residual);
 /**<
- *  <!--  residual = logrel_residual(logrel)                           -->
- *  <!--  logrel_set_residual(logrel,residual)                         -->
- *  <!--  int32 residual;                                              -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Sets the logical residual field of the given logrelation.
  *  <!--  Note that the residual is not actually computed by logrel_residual: -->
  *  <!--  there is no guarantee (from this function) that the residual is     -->
@@ -235,10 +180,6 @@ extern void logrel_set_residual(struct logrel_relation *logrel,
 
 extern int32 logrel_nominal(struct logrel_relation *logrel);
 /**<
- *  <!--  nominal = logrel_nominal(logrel)                             -->
- *  <!--  int32 nominal;                                               -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Retrieves the nominal field of the given logrelation.
  *  No slv client has any business being able to set the nominal,
  *  so no such operator is provided.
@@ -284,21 +225,11 @@ extern void logrel_set_incidencesF(struct logrel_relation *logrel,
                                    int32 n,
                                    struct dis_discrete **ilist);
 /**<
- *  <!--  logrel_n_incidences(logrel)                                  -->
- *  <!--  logrel_set_incidences(logrel,n,ilist)                        -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  struct dis_discrete **ilist;                                 -->
- *  <!--  int32 n;                                                     -->
- *
- *  <!--  logrel_n_incidences returns the length of the incidence_list.-->
- *  <!--  Solver clients should not call logrel_set_incidences,        -->
- *  <!--  it is only for use by constructors of bridges to logrelation -->
- *  <!--  back ends.                                                   -->
  *  Implementation function for logrel_set_incidences() (debug mode).
  *  Do not call this function directly - use logrel_set_incidences() instead.
  */
 
-extern const struct dis_discrete** ASC_DLLSPEC logrel_incidence_list(
+extern ASC_DLLSPEC(const struct dis_discrete**) logrel_incidence_list(
 	struct logrel_relation *logrel
 );
 /**<
@@ -314,10 +245,6 @@ extern const struct dis_discrete** ASC_DLLSPEC logrel_incidence_list(
 extern struct dis_discrete
 **logrel_incidence_list_to_modify(struct logrel_relation *logrel);
 /**<
- *  <!--  bv = logrel_incidence_list(logrel)                           -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  struct dis_discrete **bv;                                    -->
- *
  *  Returns a pointer to an array logrel_n_incidences(logrel) long of bvars.
  *  Each element of the array is a struct dis_discrete *.
  *  If there is no incidence, NULL is returned.
@@ -346,11 +273,6 @@ typedef struct logrel_filter_structure {
 extern int logrel_apply_filter(struct logrel_relation *logrel,
                                logrel_filter_t *filter);
 /**<
- *  <!--  value = logrel_apply_filter(logrel,filter)                   -->
- *  <!--  int value;                                                   -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  logrel_filter_t *filter;                                     -->
- *
  *  Returns 1 only if all of the positions specified in
  *  filter->matchbits have the same values in
  *  filter->matchvalue and the logrelation's flags value.
@@ -363,20 +285,11 @@ extern uint32 logrel_flags(struct logrel_relation *logrel);
  */
 extern void logrel_set_flags(struct logrel_relation *logrel, uint32 flags);
 /**<
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  uint32 flags;                                                -->
- *
- * <!--  logrel_flags(logrel) returns the flags field of the logrelation. -->
- * <!--  logrel_set_flags(logrel,flags) sets the entire flag field to the -->
- * <!--  value of flags given.                                         -->
  * Sets the entire flag field to the value of flags given.
  */
 
 extern uint32 logrel_flagbit(struct logrel_relation *logrel, uint32 name);
 /**<
- *  <!--  logrel_flagbit(logrel,name);                                 -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  uint32 name;                                                 -->
  *  Returns the value of the bit specified from the logrelation flags.
  *  name should be a LOGREL_xx flag defined above)
  */
@@ -384,10 +297,6 @@ extern uint32 logrel_flagbit(struct logrel_relation *logrel, uint32 name);
 extern void logrel_set_flagbit(struct logrel_relation *logrel,
                                uint32 NAME, uint32 oneorzero);
 /**<
- *  <!--  struct logrel_relation *logrel;                              -->
- *  <!--  unsigned int NAME,oneorzero;                                 -->
- *  <!--  logrel_set_flagbit(logrel,NAME,oneorzero)                    -->
- *
  *  Sets the bit, which should be referred to by its macro name,
  *  on if oneorzero is >0 and off is oneorzero is 0.
  *  The macro names are the defined up at the top of this file.
@@ -405,10 +314,13 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
  *  In unix, see also man 3f bit or man not.
  */
 
-/*
- * the bit flags. several are for use of transient clients
- * and should be ignored by solver engines
- */
+/*-------------------------
+  THE BIT FLAGS.
+
+  Several are for use of transient clients
+  and should be ignored by solver engines
+*/
+
 #define LOGREL_INCLUDED      0x1
 /**<
  * User wants eqn in problem (solvers, ui clients).
@@ -419,30 +331,39 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
  * bit manipulation functions. It is here in the bits because
  * it is useful in filters sometimes.
  */
+
 #define LOGREL_SATISFIED     0x2
 /**<
  * Has logrel been pronounced satisfied by someone?
  * Bit should be treated as readonly. use logrel_set_* to change.
  */
+
 #define LOGREL_EQUALITY      0x4
 /**<* Is logrelation an equality? Readonly for clients. */
+
 /* Conditional Modeling */
+
 #define LOGREL_INWHEN        0x8
 /**< Is logrelation in a when? Readonly for clients. */
+
 #define LOGREL_ACTIVE       0x10
 /**< Is this logrelation currently a part of my problem? */
+
 /* Conditional LogRelations (Boundaries) */
+
 #define LOGREL_CONDITIONAL  0x20
 /**< Is logrelation conditional? Readonly for clients. */
+
 #define LOGREL_IN_BLOCK     0x40
 /**<
  * Is the logrelation in the current block of registered client?
  * for clients.
  */
 
-/*
- * the bit flag lookups
- */
+/*-------------------------
+  BIT FLAG LOOKUPS
+*/
+
 #ifdef NDEBUG
 #define logrel_satisfied(lr)    ((lr)->flags & LOGREL_SATISFIED)
 #define logrel_equality(lr)     ((lr)->flags & LOGREL_EQUALITY)
@@ -459,10 +380,12 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
 #define logrel_in_bolck(lr)     logrel_flagbit((lr),LOGREL_IN_BLOCK)
 #endif /* NDEBUG */
 
-/*
- * bit flag assignments. any value other than 0 for bv turns the
- * named flag to 1. 0 sets it to 0.
- */
+/*-------------------------
+  BIT FLAG ASSIGNMENTS.
+  Any value other than 0 for bv turns the
+  named flag to 1. 0 sets it to 0.
+*/
+
 #define logrel_set_satisfied(lr,bv)   \
         logrel_set_flagbit((lr),LOGREL_SATISFIED,(bv))
 #define logrel_set_equality(lr,bv)    \
@@ -476,7 +399,7 @@ extern void logrel_set_flagbit(struct logrel_relation *logrel,
 #define logrel_set_in_block(lr,bv)    \
         logrel_set_flagbit((lr),LOGREL_IN_BLOCK,(bv))
 
-extern uint32 ASC_DLLSPEC logrel_included(struct logrel_relation *logrel);
+extern ASC_DLLSPEC(uint32) logrel_included(struct logrel_relation *logrel);
 /**<
  *  Retrieves the included field of the given logrelation.
  *  This has side effect on the ascend instance, so it isn't
@@ -484,14 +407,10 @@ extern uint32 ASC_DLLSPEC logrel_included(struct logrel_relation *logrel);
  *  change.
  *  @todo  Modify logrel_included() per comment in solver/logrel.h?
  */
+
 extern void logrel_set_included(struct logrel_relation *logrel,
                                 uint32 included);
 /**<
- *  <!--  included = logrel_included(logrel)                           -->
- *  <!--  logrel_set_included(logrel,included)                         -->
- *  <!--  uint32 included;                                             -->
- *  <!--  struct logrel_relation *logrel;                              -->
- *
  *  Sets the included field of the given logrelation.
  *  This has side effect on the ascend instance, so it isn't
  *  implemented with the rest of the macros above. This needs to
@@ -499,5 +418,5 @@ extern void logrel_set_included(struct logrel_relation *logrel,
  *  @todo  Modify logrel_set_included() per comment in solver/logrel.h?
  */
 
-#endif  /* logrel_already_included  */
+#endif  /* ASC_LOGREL_H  */
 

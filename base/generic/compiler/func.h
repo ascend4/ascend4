@@ -1,53 +1,49 @@
-/*
- *  Function module
- *  by Tom Epperly
- *  Version: $Revision: 1.16 $
- *  Version control file: $RCSfile: func.h,v $
- *  Date last modified: $Date: 2001/01/31 22:23:57 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- *  Revision notes:
- *  If CHRIS_FUNC defined, auxillary quantities to func structure.
- *  2/96 baa Probably somebody should properly set these evaluation
- *  defined below based on math.h when possible.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+ 	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Function-of-one-variable module.
- *  <pre>
- *  When #including func.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *         #include "functype.h"
- *  </pre>
- *  @todo Complete documentation of func.h.
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Function-of-one-variable module.
+
+	@TODO Complete documentation of func.h.
+
+	Revision notes: If CHRIS_FUNC defined, auxillary quantities to func structure.
+
+	@TODO 2/96 baa Probably somebody should properly set these evaluation
+	defined below based on math.h when possible.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "dimen.h"
+	#include "functype.h"
+*//*
+	by Tom Epperly
+	Version: $Revision: 1.16 $
+	Version control file: $RCSfile: func.h,v $
+	Date last modified: $Date: 2001/01/31 22:23:57 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_FUNC_H
 #define ASC_FUNC_H
 
+#include <utilities/ascConfig.h>
 #include <general/mathmacros.h>
 
 /*
@@ -69,7 +65,7 @@
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-extern double ASC_DLLSPEC cbrt(double);
+extern ASC_DLLSPEC(double) cbrt(double);
 
 #  ifdef HAVE_ERF
 extern double erf(double);
@@ -145,26 +141,26 @@ extern double g_lnm_epsilon;
  *  declare cbrt() and erf() since some vendors put
  *  these functions in odd headers
  */
-extern double ASC_DLLSPEC cbrt(double);
+extern ASC_DLLSPEC(double) cbrt(double);
 #ifdef HAVE_ERF
 extern double erf(double);
 #endif /* HAVE_ERF */
 
 #ifdef NDEBUG
 # define ascnint(d) (((int) (d)>=0.0 ? floor((d) + 0.5) : -floor(0.5 - (d))))
-/**< 
+/**<
  *  Converts a double to the nearest integer (release version).
  *  @param d double, the real number to convert.
  *  @return The nearest integer as an int.
  */
 #else
 # define ascnint(a) ascnintF(a)
-/**< 
+/**<
  *  Converts a double to the nearest integer (debug version).
  *  @param d double, the real number to convert.
  *  @return The nearest integer as an int.
  */
-extern int ASC_DLLSPEC ascnintF(double);
+extern ASC_DLLSPEC(int) ascnintF(double);
 /**<
  *  Implementation function for debug version of ascnint().
  *  Do not call this function directly - use ascnint() instead.
@@ -172,13 +168,13 @@ extern int ASC_DLLSPEC ascnintF(double);
 
 #endif
 
-extern double ASC_DLLSPEC dln(double x);
-extern double ASC_DLLSPEC dln2(double x);
-extern double ASC_DLLSPEC dlog10(double x);
-extern double ASC_DLLSPEC dlog102(double x);
-extern double ASC_DLLSPEC lnm(double x);
-extern double ASC_DLLSPEC dlnm(double x);
-extern double ASC_DLLSPEC dlnm2(double x);
+extern ASC_DLLSPEC(double) dln(double x);
+extern ASC_DLLSPEC(double) dln2(double x);
+extern ASC_DLLSPEC(double) dlog10(double x);
+extern ASC_DLLSPEC(double) dlog102(double x);
+extern ASC_DLLSPEC(double) lnm(double x);
+extern ASC_DLLSPEC(double) dlnm(double x);
+extern ASC_DLLSPEC(double) dlnm2(double x);
 /**<
  *  Modified natural log function and derivatives.
  *  <pre>
@@ -201,34 +197,34 @@ extern double ASC_DLLSPEC dlnm2(double x);
  *  </pre>
  */
 
-extern double ASC_DLLSPEC dtanh(double x);
-extern double ASC_DLLSPEC dtanh2(double x);
-extern double ASC_DLLSPEC arcsinh(double x);
-extern double ASC_DLLSPEC arccosh(double x);
-extern double ASC_DLLSPEC arctanh(double x);
-extern double ASC_DLLSPEC darcsinh(double x);
-extern double ASC_DLLSPEC darcsinh2(double x);
-extern double ASC_DLLSPEC darccosh(double x);
-extern double ASC_DLLSPEC darccosh2(double x);
-extern double ASC_DLLSPEC darctanh(double x);
-extern double ASC_DLLSPEC darctanh2(double x);
+extern ASC_DLLSPEC(double) dtanh(double x);
+extern ASC_DLLSPEC(double) dtanh2(double x);
+extern ASC_DLLSPEC(double) arcsinh(double x);
+extern ASC_DLLSPEC(double) arccosh(double x);
+extern ASC_DLLSPEC(double) arctanh(double x);
+extern ASC_DLLSPEC(double) darcsinh(double x);
+extern ASC_DLLSPEC(double) darcsinh2(double x);
+extern ASC_DLLSPEC(double) darccosh(double x);
+extern ASC_DLLSPEC(double) darccosh2(double x);
+extern ASC_DLLSPEC(double) darctanh(double x);
+extern ASC_DLLSPEC(double) darctanh2(double x);
 /**<
  *  Zero, first and second partials of (inverse) hyperbolic functions.
  */
 
-extern double ASC_DLLSPEC sqr(double x);
-extern double ASC_DLLSPEC dsqr(double x);
-extern double ASC_DLLSPEC dsqr2(double x);
-extern double ASC_DLLSPEC cube(double x);
-extern double ASC_DLLSPEC dcube(double x);
-extern double ASC_DLLSPEC dcube2(double x);
+extern ASC_DLLSPEC(double) sqr(double x);
+extern ASC_DLLSPEC(double) dsqr(double x);
+extern ASC_DLLSPEC(double) dsqr2(double x);
+extern ASC_DLLSPEC(double) cube(double x);
+extern ASC_DLLSPEC(double) dcube(double x);
+extern ASC_DLLSPEC(double) dcube2(double x);
 /**<
  *  Zero, first and second partials of x for sqr, cube.
  */
 
-extern double ASC_DLLSPEC asc_ipow(double a, int n);
-extern double ASC_DLLSPEC asc_d1ipow(double a, int n);
-extern double ASC_DLLSPEC asc_d2ipow(double a, int n);
+extern ASC_DLLSPEC(double) asc_ipow(double a, int n);
+extern ASC_DLLSPEC(double) asc_d1ipow(double a, int n);
+extern ASC_DLLSPEC(double) asc_d2ipow(double a, int n);
 /**<
  *  Integer power function, a^n, and its first and second derivatives.
  *  d = asc_ipow(a,n);
@@ -242,7 +238,7 @@ extern double ASC_DLLSPEC asc_d2ipow(double a, int n);
  *  Special cases d1ipow,d2ipow:
  */
 
-extern double ASC_DLLSPEC hold(double x);
+extern ASC_DLLSPEC(double) hold(double x);
 /**<
  *  Returns the value it is passed.
  *  The primary purpose is as an operator so we can write
@@ -252,13 +248,13 @@ extern double ASC_DLLSPEC hold(double x);
  *  hold(x) is a constant value, so its derivatives are 0.
  */
 
-extern double ASC_DLLSPEC dsqrt(double x);
-extern double ASC_DLLSPEC dsqrt2(double x);
-extern double ASC_DLLSPEC dcbrt(double x);
-extern double ASC_DLLSPEC dcbrt2(double x);
-extern double ASC_DLLSPEC dfabs(double x);
-extern double ASC_DLLSPEC dfabs2(double x);
-extern double ASC_DLLSPEC dhold(double x);
+extern ASC_DLLSPEC(double) dsqrt(double x);
+extern ASC_DLLSPEC(double) dsqrt2(double x);
+extern ASC_DLLSPEC(double) dcbrt(double x);
+extern ASC_DLLSPEC(double) dcbrt2(double x);
+extern ASC_DLLSPEC(double) dfabs(double x);
+extern ASC_DLLSPEC(double) dfabs2(double x);
+extern ASC_DLLSPEC(double) dhold(double x);
 #define dhold2 dhold
 /**<
  *  first and second partials of sqrt cbrt fabs hold
@@ -267,23 +263,23 @@ extern double ASC_DLLSPEC dhold(double x);
  *  dhold, dhold2 = 0 for all x.
  */
 
-extern double ASC_DLLSPEC dasin(double x);
-extern double ASC_DLLSPEC dasin2(double x);
-extern double ASC_DLLSPEC dcos(double x);
-extern double ASC_DLLSPEC dcos2(double x);
-extern double ASC_DLLSPEC dacos(double x);
-extern double ASC_DLLSPEC dacos2(double x);
-extern double ASC_DLLSPEC dtan(double x);
-extern double ASC_DLLSPEC dtan2(double x);
-extern double ASC_DLLSPEC datan(double x);
-extern double ASC_DLLSPEC datan2(double x);
+extern ASC_DLLSPEC(double) dasin(double x);
+extern ASC_DLLSPEC(double) dasin2(double x);
+extern ASC_DLLSPEC(double) dcos(double x);
+extern ASC_DLLSPEC(double) dcos2(double x);
+extern ASC_DLLSPEC(double) dacos(double x);
+extern ASC_DLLSPEC(double) dacos2(double x);
+extern ASC_DLLSPEC(double) dtan(double x);
+extern ASC_DLLSPEC(double) dtan2(double x);
+extern ASC_DLLSPEC(double) datan(double x);
+extern ASC_DLLSPEC(double) datan2(double x);
 /**<
  *  First and second partials of the cosine, tangent, arctangent functions
  */
 
 #ifdef HAVE_ERF
-extern double ASC_DLLSPEC derf(double x);
-extern double ASC_DLLSPEC derf2(double x);
+extern ASC_DLLSPEC(double) derf(double x);
+extern ASC_DLLSPEC(double) derf2(double x);
 #endif /* HAVE_ERF */
 /**<
  *  First and second derivatives of erf()
@@ -423,4 +419,3 @@ extern double ConcaveEnvDeriv(CONST struct Func *f, double x,
 #endif /* CHRIS_FUNC */
 
 #endif /* ASC_FUNC_H */
-

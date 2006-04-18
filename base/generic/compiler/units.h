@@ -1,45 +1,43 @@
-/*
- *  Ascend Units Type definitions
- *  by Tom Epperly
- *  8/18/89
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: units.h,v $
- *  Date last modified: $Date: 1998/02/05 16:38:40 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Ascend Units Type definitions.
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "dimen.h"
+*//*
+	by Tom Epperly
+	8/18/89
+	Version: $Revision: 1.10 $
+	Version control file: $RCSfile: units.h,v $
+	Date last modified: $Date: 1998/02/05 16:38:40 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_UNITS_H
 #define ASC_UNITS_H
 
-/** @file
- *  Ascend Units Type definitions.
- *  <pre>
- *  When #including units.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *  </pre>
- */
+#include <utilities/ascConfig.h>
 
 #ifdef _HPUX_SOURCE
 #define ACAST char *
@@ -151,7 +149,7 @@ extern void ProcessUnitDef(struct UnitDefinition *udp);
  * messages to ascerr if not possible.
  */
 
-extern CONST struct Units* ASC_DLLSPEC LookupUnits(CONST char *c);
+extern ASC_DLLSPEC(CONST struct Units*) LookupUnits(CONST char *c);
 /**<
  *  <!--  const struct Units *LookupUnits(c)                           -->
  *  <!--  const char *c;                                               -->
@@ -183,7 +181,7 @@ extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *
  *       know where to fix it. BAA 6-94
  */
 
-extern CONST struct Units* ASC_DLLSPEC FindOrDefineUnits(CONST char *c,
+extern ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
@@ -222,7 +220,7 @@ extern CONST struct Units* ASC_DLLSPEC FindOrDefineUnits(CONST char *c,
  *  </pre>
  */
 
-extern char** ASC_DLLSPEC UnitsExplainError(CONST char *unitsexpr, int code, int pos);
+extern ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
  *  <!--  errv = UnitsExplainError(unitsexpr,code,pos);                -->
  *  Returns an array of strings which may be helpful in

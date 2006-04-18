@@ -1,44 +1,41 @@
-/*
- *  Basic Definitions for Ascend
- *  by Mark Thomas
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: ascConfig.h,v $
- *  Date last modified: $Date: 2003/08/23 18:43:13 $
- *  Last modified by: $Author: ballan $
- *  Part of Ascend
- *
- *  This file is part of the Ascend
- *
- *  Copyright (C) 1997  Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- *  This module defines the fundamental constants used by the rest of
- *  Ascend and pulls in system headers.
- *  There is not corresponding compiler.c. The variables
- *  declared in this header are defined in ascParse.y.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997  Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
 	Global configuration parameters.
+
+	This module defines the fundamental constants used by the rest of
+	Ascend and pulls in system headers.
+	There is not corresponding compiler.c. The variables
+	declared in this header are defined in ascParse.y.
+
 	This header and tcl/tk headers are known to conflict. This header
 	should be included AFTER tcl.h or tk.h, not before.
 
 	If including the file, you should also include utilities/error.h
- */
+*//*
+	by Mark Thomas
+	Version: $Revision: 1.12 $
+	Version control file: $RCSfile: ascConfig.h,v $
+	Date last modified: $Date: 2003/08/23 18:43:13 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_ASCCONFIG_H
 #define ASC_ASCCONFIG_H
@@ -58,23 +55,30 @@
 	New versions of GCC are able to make use of these declarations
 	as well.
 */
-#if defined(__WIN32__)
-# if defined(ASC_BUILDING_LIBASCEND)
-#  define ASC_DLLSPEC __declspec(dllexport)
-# elif defined(ASC_BUILDING_INTERFACE)
-#  define ASC_DLLSPEC __declspec(dllimport)
-# else
-#  define ASC_DLLSPEC
-# endif
-#else /* ie not WIN32 */
-# ifdef HAVE_GCCVISIBILITYPATCH
-#  define ASC_DLLSPEC __attribute__ ((visibility("default")))
-# else
-#  define ASC_DLLSPEC
+
+#ifdef __GNUC__
+# define HAVE_DECLSPEC_DLL
+#else
+# ifdef __WIN32__
+#  define HAVE_DECLSPEC_DLL
 # endif
 #endif
 
-#ifndef ASC_DLLSPEC
+#ifdef HAVE_DECLSPEC_DLL
+# define ASC_EXPORT(TYPE) TYPE __declspec(dllexport)
+# define ASC_IMPORT(TYPE) TYPE __declspec(dllimport)
+#else
+# define ASC_EXPORT(TYPE) TYPE
+# define ASC_IMPORT(TYPE) TYPE
+#endif
+
+#ifdef ASC_BUILDING_LIBASCEND
+# define ASC_DLLSPEC(TYPE) ASC_EXPORT(TYPE)
+#else
+# define ASC_DLLSPEC(TYPE) ASC_IMPORT(TYPE)
+#endif
+
+#if !defined(ASC_DLLSPEC) || !defined(ASC_EXPORT) || !defined(ASC_IMPORT)
 # error "NO ASC_DLLSPEC DEFINED"
 #endif
 
@@ -256,9 +260,9 @@ if 0 block is broken. */
 #define ASC_MILD_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 #define ASC_BIG_BUGMAIL "https://pse.cheme.cmu.edu/wiki/view/Ascend/BugReport"
 
-extern FILE* ASC_DLLSPEC g_ascend_errors;         /**< File stream to receive error messages. */
-extern FILE* ASC_DLLSPEC g_ascend_warnings;       /**< File stream to receive warning messages. */
-extern FILE* ASC_DLLSPEC g_ascend_information;    /**< File stream to receive general messages. */
+extern ASC_DLLSPEC(FILE*) g_ascend_errors;         /**< File stream to receive error messages. */
+extern ASC_DLLSPEC(FILE*) g_ascend_warnings;       /**< File stream to receive warning messages. */
+extern ASC_DLLSPEC(FILE*) g_ascend_information;    /**< File stream to receive general messages. */
 
 /* NB For error messages to be correctly captured, all output needs to go to stderr in error.h */
 #ifndef ASCERR

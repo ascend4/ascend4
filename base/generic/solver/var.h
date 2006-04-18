@@ -1,69 +1,65 @@
-/*
-	SLV: Ascend Numeric Solver
+/*	ASCEND modelling environment
 	Copyright (C) 1990 Karl Michael Westerberg
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 2006 Carnegie Mellon University
 
-	The SLV solver is free software; you can redistribute
-	it and/or modify it under the terms of the GNU General Public License as
-	published by the Free Software Foundation; either version 2 of the
-	License, or (at your option) any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-	The SLV solver is distributed in hope that it will be
-	useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with the program; if not, write to the Free Software Foundation,
-	Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
-	COPYING.  COPYING is found in ../compiler.
- */
-
-/** @file
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+ *//**
+ 	@file
 	Variable module of the SLV solver.
-	<pre>
-	Contents:     Variable module (ascend)
-	Authors:      Karl Westerberg
-	              Joseph Zaher
 
-	Dates:        06/90 - original version
-	              01/94 - added var_make_name() to create a copy of the
-	                      instance name
-	              04/94 - added var_apply_filter() which uses the new
-	                      var_filter_t data structure for perfoming all
-	                      variable filtering needs (eliminating the
-	                      filter module)
-	              08/94 - added var_BackendTokens_to_vars. BAA.
+	This is the ascend version of the var module.  This
+	version should be used by any user who receives his/her
+	equations indirectly from an instance tree created by the
+	ASCEND compiler.
 
-	Description:  This is the ascend version of the var module.  This
-	              version should be used by any user who receives his/her
-	              equations indirectly from an instance tree created by the
-	              ASCEND compiler.
+	The idea of a var makes no sense outside the context of
+	a slv_system_t, so some of the functions here may require
+	the passing of a slv_system_t with the var.
 
-	              The idea of a var makes no sense outside the context of
-	              a slv_system_t, so some of the functions here may require
-	              the passing of a slv_system_t with the var.
-
-	Version: $Revision: 1.26 $
-	Date last modified: $Date: 1998/03/30 22:07:10 $
-	Last modified by: $Author: rv2a $
+	06/90 - original version
+	01/94 - added var_make_name() to create a copy of the
+			instance name
+	04/94 - added var_apply_filter() which uses the new
+			var_filter_t data structure for perfoming all
+			variable filtering needs (eliminating the
+			filter module)
+	08/94 - added var_BackendTokens_to_vars. BAA.
 
 	Requires:
 	#include <stdio.h>
 	#include "utilities/ascConfig.h"
 	#include "solver/slv_types.h"
 
-	</pre>
-
-	@todo At present there is some insanity about asking the instance tree
-	      vs asking our data structure about the flag values - This needs to
-	      be fixed (see longer BAA comment in solver/var.h).
+	@TODO
+	At present there is some insanity about asking the instance tree
+	vs asking our data structure about the flag values - This needs to
+	be fixed (see longer BAA comment in solver/var.h).
+*//*
+	Authors: Karl Westerberg and Joseph Zaher
+	Version: $Revision: 1.26 $
+	Date last modified: $Date: 1998/03/30 22:07:10 $
+	Last modified by: $Author: rv2a $
 */
 
 #ifndef ASC_VAR_H
 #define ASC_VAR_H
+
+#include <utilities/ascConfig.h>
 
 /*
 	The first section of flagbit definitions are those flags to be
@@ -176,7 +172,7 @@ typedef struct var_filter_structure {
 	@see var_instanceF()
 */
 
-extern SlvBackendToken ASC_DLLSPEC var_instanceF(const struct var_variable *var);
+extern ASC_DLLSPEC(SlvBackendToken) var_instanceF(const struct var_variable *var);
 /**<
 	Implementation function for var_instance().  Do not call this
 	function directly - use var_instance() instead.
@@ -192,7 +188,7 @@ extern char *var_make_xname(const struct var_variable *var);
 	Returns the index name, eg x23 rather than full name.
 	See var_make_name() for more information.
 */
-extern char* ASC_DLLSPEC var_make_name(
+extern ASC_DLLSPEC(char*) var_make_name(
 	const slv_system_t sys,
 	const struct var_variable *var
 );
@@ -289,7 +285,7 @@ extern void var_set_mindexF(struct var_variable *var, int32 index);
 	@see var_set_sindexF().
 */
 
-extern int32 ASC_DLLSPEC var_sindexF(const struct var_variable *var);
+extern ASC_DLLSPEC(int32) var_sindexF(const struct var_variable *var);
 /**<
 	Implementation function for var_sindex().  Do not call this
 	function directly - use var_sindex() instead.
@@ -300,14 +296,14 @@ extern void var_set_sindexF(struct var_variable *var, int32 index);
 	function directly - use var_set_sindex() instead.
 */
 
-extern real64 ASC_DLLSPEC var_value(const struct var_variable *var);
+extern ASC_DLLSPEC(real64) var_value(const struct var_variable *var);
 /**<  Returns the value of the variable. */
 extern void var_set_value(struct var_variable *var, real64 value);
 /**<
 	Sets the value of the variable.
 */
 
-extern real64 ASC_DLLSPEC var_nominal(struct var_variable *var);
+extern ASC_DLLSPEC(real64) var_nominal(struct var_variable *var);
 /**<  Returns the nominal value of the variable, or 1.0 if it has none. */
 extern void var_set_nominal(struct var_variable *var, real64 nominal);
 /**<
@@ -315,14 +311,14 @@ extern void var_set_nominal(struct var_variable *var, real64 nominal);
 	If no nominal field in var, returns 1.0.
 */
 
-extern real64 ASC_DLLSPEC var_lower_bound(struct var_variable *var);
+extern ASC_DLLSPEC(real64) var_lower_bound(struct var_variable *var);
 /**<  Returns the lower bound value of the variable. */
 extern void var_set_lower_bound(struct var_variable *var, real64 lower_bound);
 /**<
 	Sets the lower bound value of the variable.
 */
 
-extern real64 ASC_DLLSPEC var_upper_bound(struct var_variable *var);
+extern ASC_DLLSPEC(real64) var_upper_bound(struct var_variable *var);
 /**<  Returns the upper bound value of the variable. */
 extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 /**<
@@ -416,7 +412,7 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 	@see var_set_flagsF().
 */
 
-extern uint32 ASC_DLLSPEC var_flagsF(const struct var_variable *var);
+extern ASC_DLLSPEC(uint32) var_flagsF(const struct var_variable *var);
 /**<
 	Implementation function for var_flags().  Do not call this
 	function directly - use var_flags() instead.
@@ -427,7 +423,7 @@ extern void var_set_flagsF(struct var_variable *var, uint32 flags);
 	function directly - use var_set_flags() instead.
 */
 
-extern uint32 ASC_DLLSPEC var_flagbit(const struct var_variable *rel, const uint32 name);
+extern ASC_DLLSPEC(uint32) var_flagbit(const struct var_variable *rel, const uint32 name);
 /**<
 	Returns the value of the bit specified from the variable flags.
 	name should be a VAR_xx flag defined above.

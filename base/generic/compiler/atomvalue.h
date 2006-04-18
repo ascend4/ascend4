@@ -1,54 +1,53 @@
-/*
- *  Ascend Instance Atom Value Functions
- *  by Tom Epperly & Ben Allan
- *  8/16/89
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: atomvalue.h,v $
- *  Date last modified: $Date: 1998/02/05 16:35:24 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Ben Allan
- *  based on instance.c
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 1996 Ben Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Atom value querying and assignment routines.
- *
- *  These routines provide access to atom values and related attributes.
- *  All of the following routines may only be called on atomic instances.
- *  <pre>
- *  When #including atomvalue.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *         #include "sets.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Atom value querying and assignment routines.
+
+	based on instance.c
+
+	These routines provide access to atom values and related attributes.
+	All of the following routines may only be called on atomic instances.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "instance_enum.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "dimen.h"
+	#include "sets.h"
+*//*
+	by Tom Epperly & Ben Allan
+	8/16/89
+	Version: $Revision: 1.10 $
+	Version control file: $RCSfile: atomvalue.h,v $
+	Date last modified: $Date: 1998/02/05 16:35:24 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef __ATOMVALUE_H_SEEN__
 #define __ATOMVALUE_H_SEEN__
 
-extern unsigned ASC_DLLSPEC AtomAssigned(CONST struct Instance *i);
+#include <utilities/ascConfig.h>
+
+extern ASC_DLLSPEC(unsigned) AtomAssigned(CONST struct Instance *i);
 /**<
  *  <!--  unsigned AtomAssigned(i)                                     -->
  *  <!--  const struct Instance *i;                                    -->
@@ -85,7 +84,7 @@ extern unsigned DepthAssigned(CONST struct Instance *i);
  *  RealValue is a name used in value_type.h.
  */
 
-extern double ASC_DLLSPEC RealAtomValue(CONST struct Instance *i);
+extern ASC_DLLSPEC(double) RealAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  double RealAtomValue(i)                                      -->
  *  <!--  const struct Instance *i;                                    -->
@@ -93,7 +92,7 @@ extern double ASC_DLLSPEC RealAtomValue(CONST struct Instance *i);
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCE.
  */
 
-extern void ASC_DLLSPEC SetRealAtomValue(struct Instance *i, double d, unsigned depth);
+extern ASC_DLLSPEC(void) SetRealAtomValue(struct Instance *i, double d, unsigned depth);
 /**<
  *  <!--  void SetRealAtomValue(i,d,depth)                             -->
  *  <!--  struct Instance *i;                                          -->
@@ -108,7 +107,7 @@ extern void ASC_DLLSPEC SetRealAtomValue(struct Instance *i, double d, unsigned 
  *  precidence over every other assignment.
  */
 
-extern CONST dim_type* ASC_DLLSPEC RealAtomDims(CONST struct Instance *i);
+extern ASC_DLLSPEC(CONST dim_type*) RealAtomDims(CONST struct Instance *i);
 /**<
  *  <!--  const dim_type *RealAtomDims(i)                              -->
  *  <!--  const struct Instance *i;                                    -->
@@ -117,7 +116,7 @@ extern CONST dim_type* ASC_DLLSPEC RealAtomDims(CONST struct Instance *i);
  *  This should never return a NULL pointer.
  */
 
-extern void ASC_DLLSPEC SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
+extern ASC_DLLSPEC(void) SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
 /**<
  *  <!--  void SetRealAtomDims(i,dim)                                  -->
  *  <!--  struct Instance *i;                                          -->
@@ -128,7 +127,7 @@ extern void ASC_DLLSPEC SetRealAtomDims(struct Instance *i, CONST dim_type *dim)
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCEs not dimensioned.
  */
 
-extern long ASC_DLLSPEC GetIntegerAtomValue(CONST struct Instance *i);
+extern ASC_DLLSPEC(long) GetIntegerAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  long GetIntegerAtomValue(i)                                  -->
  *  <!--  const struct Instance *i;                                    -->
@@ -149,7 +148,7 @@ extern void SetIntegerAtomValue(struct Instance *i, long v, unsigned depth);
  *  Calling on an improper integer will cause a crash.
  */
 
-extern int ASC_DLLSPEC GetBooleanAtomValue(CONST struct Instance *i);
+extern ASC_DLLSPEC(int) GetBooleanAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  int GetBooleanAtomValue(i)                                   -->
  *  <!--  struct Instance *i;                                          -->
@@ -158,7 +157,7 @@ extern int ASC_DLLSPEC GetBooleanAtomValue(CONST struct Instance *i);
  *  or BOOLEAN_CONSTANT_INST type instances.
  */
 
-extern void ASC_DLLSPEC SetBooleanAtomValue(struct Instance *i, int truth, unsigned depth);
+extern ASC_DLLSPEC(void) SetBooleanAtomValue(struct Instance *i, int truth, unsigned depth);
 /**<
  *  <!--  void SetBooleanAtomValue(i,truth,depth)                      -->
  *  <!--  struct Instance *i;                                          -->
@@ -173,7 +172,7 @@ extern void ASC_DLLSPEC SetBooleanAtomValue(struct Instance *i, int truth, unsig
  *  override every other assignment.
  */
 
-extern CONST struct set_t* ASC_DLLSPEC SetAtomList(CONST struct Instance *i);
+extern ASC_DLLSPEC(CONST struct set_t*) SetAtomList(CONST struct Instance *i);
 /**<
  *  <!--  struct set_t *SetAtomList(i)                                 -->
  *  <!--  struct Instance *i;                                          -->
@@ -201,7 +200,7 @@ extern int GetSetAtomKind(CONST struct Instance *i);
  *  Return the kind of the set. 1 ==> integer set; 0 ==> string set.
  */
 
-extern symchar* ASC_DLLSPEC GetSymbolAtomValue(CONST struct Instance *i);
+extern ASC_DLLSPEC(symchar*) GetSymbolAtomValue(CONST struct Instance *i);
 /**<
  *  <!--  symchar *GetSymbolAtomValue(i)                               -->
  *  <!--  const struct Instance *i;                                    -->

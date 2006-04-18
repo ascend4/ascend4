@@ -1,43 +1,41 @@
-/*
- *  Ascend Module Control
- *  by Tom Epperly
- *  Created: 1/10/90
- *  Version: $Revision: 1.11 $
- *  Version control file: $RCSfile: module.h,v $
- *  Date last modified: $Date: 1998/04/16 00:43:26 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Module Control.
- *  <pre>
- *  When #including module.h, make sure these files are #included first:
- *        #include "utilities/ascConfig.h"
- *       #include "compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Ascend Module Control.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler.h"
+*//*
+	by Tom Epperly
+	Created: 1/10/90
+	Version: $Revision: 1.11 $
+	Version control file: $RCSfile: module.h,v $
+	Date last modified: $Date: 1998/04/16 00:43:26 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_MODULE_H
 #define ASC_MODULE_H
+
+#include <utilities/ascConfig.h>
 
 #define PATHENVIRONMENTVAR "ASCENDLIBRARY"
 /**<
@@ -86,7 +84,7 @@ extern int Asc_InitModules(unsigned long init_length);
  */
 
 
-extern void ASC_DLLSPEC Asc_DestroyModules(DestroyFunc func);
+extern ASC_DLLSPEC(void) Asc_DestroyModules(DestroyFunc func);
 /**<
  *  Deallocate all of the modules.  This should be done when all types
  *  are destroyed and just before exiting.
@@ -113,7 +111,7 @@ extern struct module_t *Asc_OpenModule(CONST char *name, int *status);
  *  name is based on `name'.
  *  @see Asc_RequireModule() for additional information.
  */
-extern struct module_t* ASC_DLLSPEC Asc_RequireModule(CONST char *name, int *status);
+extern ASC_DLLSPEC(struct module_t*) Asc_RequireModule(CONST char *name, int *status);
 /**<
  *  Attempt to find and open (for reading) a file whose
  *  name is based on `name'.
@@ -298,7 +296,7 @@ extern int Asc_ModuleAddStatements(struct module_t *mod, struct gl_list_t *stats
  *  </pre>
  */
 
-extern CONST struct module_t* ASC_DLLSPEC Asc_GetModuleByName(CONST char *name);
+extern ASC_DLLSPEC(CONST struct module_t*) Asc_GetModuleByName(CONST char *name);
 /**<
  *  Return the module whose name is `name.'  `name' should be in the
  *  style returned by Asc_ModuleName(), namely, a base-name and a
@@ -311,7 +309,7 @@ extern CONST struct module_t* ASC_DLLSPEC Asc_GetModuleByName(CONST char *name);
  *  If a module with the requested name is not found, ruturn NULL.
  */
 
-extern struct gl_list_t* ASC_DLLSPEC Asc_ModuleList(int module_type);
+extern ASC_DLLSPEC(struct gl_list_t*) Asc_ModuleList(int module_type);
 /**<
  *  <pre>
  *  module_type 0;
@@ -362,7 +360,7 @@ extern struct module_t *g_current_module;
 /**<  Returns a pointer to the current module (release mode). */
 #endif /* NDEBUG */
 
-extern CONST char* ASC_DLLSPEC Asc_ModuleName(CONST struct module_t *m);
+extern ASC_DLLSPEC(CONST char*) Asc_ModuleName(CONST struct module_t *m);
 /**<
  *  Return the name of module m.
  */
@@ -386,7 +384,7 @@ extern CONST char *Asc_ModuleString(CONST struct module_t *m);
  *  string module, or NULL if it is a file module.
  */
 
-extern CONST char* ASC_DLLSPEC Asc_ModuleFileName(CONST struct module_t *m);
+extern ASC_DLLSPEC(CONST char*) Asc_ModuleFileName(CONST struct module_t *m);
 /**<
  *  Return the filename of module m.
  */
@@ -407,7 +405,7 @@ extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *m);
  */
 
 
-extern struct tm* ASC_DLLSPEC Asc_ModuleTimeModified(CONST struct module_t *m);
+extern ASC_DLLSPEC(struct tm*) Asc_ModuleTimeModified(CONST struct module_t *m);
 /**<
  *  Return the time that the module was last modified.  The time is
  *  coverted to the local time.

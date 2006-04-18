@@ -1,47 +1,44 @@
-/*
- *  Basic Initializations for Ascend
- *  by Ben Allan
- *  Version: $Revision: 1.2 $
- *  Version control file: $RCSfile: ascCompiler.h,v $
- *  Date last modified: $Date: 1997/07/18 12:27:56 $
- *  Last modified by: $Author: mthomas $
- *  Part of Ascend
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1997 Benjamin Andrew Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- *  This module initializes the fundamental data structures used by the rest of
- *  Ascend and pulls in system headers. Largely this means memory management.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Basic Initializations for Ascend
- *  <pre>
- *  When #including ascCompiler.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef __ASCCOMPILER_H_SEEN__
-#define __ASCCOMPILER_H_SEEN__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-extern int ASC_DLLSPEC Asc_CompilerInit(int simplify_relations);
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Basic Initializations for Ascend
+
+	This module initializes the fundamental data structures used by the rest of
+	Ascend and pulls in system headers. Largely this means memory management.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+*//*
+	by Ben Allan
+	Version: $Revision: 1.2 $
+	Version control file: $RCSfile: ascCompiler.h,v $
+	Date last modified: $Date: 1997/07/18 12:27:56 $
+	Last modified by: $Author: mthomas $
+*/
+
+#ifndef ASC_ASCCOMPILER_H
+#define ASC_ASCCOMPILER_H
+
+#include <utilities/ascConfig.h>
+
+extern ASC_DLLSPEC(int) Asc_CompilerInit(int simplify_relations);
 /**<
  *  Initialize any resources used by the ASCEND compiler.
  *
@@ -52,7 +49,7 @@ extern int ASC_DLLSPEC Asc_CompilerInit(int simplify_relations);
  *  which tells the compiler to simplify compiled equations or not.
  *  It has no effect on the success or failure of the call.
  *
- *  @bug At present it needs to more aggressively check the return codes
+ *  @BUG At present it needs to more aggressively check the return codes
  *       from the functions this calls. Currently returns 0 regardless.
  */
 
@@ -63,5 +60,4 @@ extern void Asc_CompilerDestroy(void);
  *  with pointers to any compiler structures, including gl_lists.
  */
 
-#endif  /* __ASCCOMPILER_H_SEEN__*/
-
+#endif /* ASC_ASCCOMPILER_H */

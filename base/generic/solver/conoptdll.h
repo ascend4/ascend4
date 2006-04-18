@@ -39,7 +39,7 @@
 #ifndef ASC_ASCCONFIG_H /* only define these if we haven't seen ascConfig.h */
 typedef int int32;
 typedef double real64;
-#endif /* _ASCCONFIG_H */
+#endif /* ASC_ASCCONFIG_H */
 
 
 /* defines and typedefs for user supplied functions */

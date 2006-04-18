@@ -1,32 +1,23 @@
-/*
- *  Name external definitions
- *  by Tom Epperly
- *  July 31, 1989
- *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: name.h,v $
- *  Date last modified: $Date: 1998/06/16 16:36:28 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
 	Name external definitions.
 
 	@todo WHAT'S IN A NAME??? That which we call a rose
@@ -40,22 +31,28 @@
 	Actually I'm not sure if linked-up Names actually make discrete lists
 	or maybe form a tree structure?
 
-	@todo Clarify what is a name of type 'set'.
+	@TODO Clarify what is a name of type 'set'.
+	@TODO These things need to be pooled to save space and time. baa 3/96
 
-	<pre>
-	When #including name.h, make sure these files are #included first:
-	   #include "utilities/ascConfig.h"
-	   #include "fractions.h"
-	   #include "compiler.h"
-	   #include "dimen.h"
-	   #include "types.h"
-	</pre>
-
-	@todo These things need to be pooled to save space and time. baa 3/96
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "dimen.h"
+	#include "types.h"
+*//*
+	by Tom Epperly
+	July 31, 1989
+	Version: $Revision: 1.13 $
+	Version control file: $RCSfile: name.h,v $
+	Date last modified: $Date: 1998/06/16 16:36:28 $
+	Last modified by: $Author: mthomas $
 */
 
 #ifndef ASC_NAME_H
 #define ASC_NAME_H
+
+#include <utilities/ascConfig.h>
 
 #define CreateIdName(s) CreateIdNameF((s),NAMEBIT_IDTY)
 /**<
@@ -67,7 +64,7 @@
 	Create system name with Id+Auto flags.
 	@see CreateIdNameF()
 */
-extern struct Name* ASC_DLLSPEC CreateIdNameF(symchar *s, int bits);
+extern ASC_DLLSPEC(struct Name*) CreateIdNameF(symchar *s, int bits);
 /**<
 	Create a name node with the identifier s
 	and flag bits associated with it.  Implementation
@@ -210,7 +207,7 @@ extern struct Name *CopyName(CONST struct Name *n);
 	Make and return a copy of the whole name.
 */
 
-extern void ASC_DLLSPEC DestroyName(struct Name *n);
+extern ASC_DLLSPEC(void) DestroyName(struct Name *n);
 /**<
 	Deallocate the whole name linked list
 	Handles NULL input gracefully.
@@ -286,4 +283,3 @@ extern void name_report_pool(void);
 */
 
 #endif  /* ASC_NAME_H */
-

@@ -1,44 +1,41 @@
-/*
- *  Model Child list output routines
- *  by Ben Allan
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: childio.h,v $
- *  Date last modified: $Date: 1998/06/11 17:36:23 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998 Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  This is a package of routines to process child list io.
- *  <pre>
- *  When #including childio.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "list.h"
- *         #include "child.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	This is a package of routines to process child list I/O.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler.h"
+	#include "list.h"
+	#include "child.h"
+*//*
+	by Ben Allan
+	Version: $Revision: 1.3 $
+	Version control file: $RCSfile: childio.h,v $
+	Date last modified: $Date: 1998/06/11 17:36:23 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_CHILDIO_H
 #define ASC_CHILDIO_H
+
+#include <utilities/ascConfig.h>
 
 /*
  *  WriteChildList(fp,cl)
@@ -84,7 +81,7 @@ extern CONST char *WriteChildMetaDetails(void);
  * Issues a child missing error to file if the same childname/scope
  * has not been missing since the last call with any NULL argument.
  */
-extern void ASC_DLLSPEC WriteChildMissing(FILE *fp, char *scope, symchar *childname);
+extern ASC_DLLSPEC(void) WriteChildMissing(FILE *fp, char *scope, symchar *childname);
 
 #endif  /* ASC_CHILDIO_H */
 

@@ -1,55 +1,54 @@
- /*
- *  Ascend Environment Variable Imitation
- *  by Ben Allan
- *  Created: 6/3/97
- *  Version: $Revision: 1.4 $
- *  Version control file: $RCSfile: ascEnvVar.h,v $
- *  Date last modified: $Date: 1997/07/18 12:04:08 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1997 Benjamin Andrew Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Environment Variable Imitation.
- *
- *  This file exists because win32, among others, can't keep their
- *  POSIX compliance up. In particular, getting and setting
- *  environment vars is exceedingly unreliable.  This file implements
- *  a general way to store and fetch multiple paths.
- *  <pre>
- *  Requires:
- *         #include "utilities/ascConfig.h"
- *  </pre>
- *  Linking against this header requires linking optionally
- *  (depending on defines in list.h and the makefile):
- *      - ascmalloc.o,
- *      - pool.o,
- *  and definitely
- *      - list.o
- *      - ascPanic.o
- *      - ascEnvVar.o
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef __ascenv_h_seen__
-#define __ascenv_h_seen__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Ascend Environment Variable Imitation.
+
+	This file exists because win32, among others, aren't POSIX
+	compliant. In particular, getting and setting environment vars
+	is exceedingly unreliable.  This file implements a general way
+	to store and fetch multiple paths.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+
+	Linking against this header requires linking optionally
+	(depending on defines in list.h and the makefile):
+	    - ascmalloc.o,
+	    - pool.o,
+	and definitely
+	    - list.o
+	    - ascPanic.o
+	    - ascEnvVar.o
+ *//*
+	by Ben Allan
+	Created: 6/3/97
+	Version: $Revision: 1.4 $
+	Version control file: $RCSfile: ascEnvVar.h,v $
+	Date last modified: $Date: 1997/07/18 12:04:08 $
+	Last modified by: $Author: mthomas $
+*/
+
+#ifndef ASC_ENVVAR_H
+#define ASC_ENVVAR_H
+
+#include <utilities/ascConfig.h>
 
 #define MAX_ENV_VAR_LENGTH 4096
 /**< Maximum length of an environment variable string. */
@@ -118,7 +117,7 @@ extern int Asc_SetPathList(CONST char *var, CONST char *path);
  *          1 otherwise.
  */
 
-extern int ASC_DLLSPEC Asc_PutEnv(CONST char *putenv_input_string);
+extern ASC_DLLSPEC(int) Asc_PutEnv(CONST char *putenv_input_string);
 /**<
  *  Creates an ASCEND environment variable from a putenv()-type string.
  *  The input string should have the form "varname=path".  The path
@@ -165,7 +164,7 @@ extern int ASC_DLLSPEC Asc_PutEnv(CONST char *putenv_input_string);
  *          1 otherwise.
  */
 
-extern int ASC_DLLSPEC Asc_ImportPathList(CONST char *osEnvVar);
+extern ASC_DLLSPEC(int) Asc_ImportPathList(CONST char *osEnvVar);
 /**<
  *  Imports a system environment variable into the ASCEND environment.
  *  If osEnvVar is already a variable in the ASCEND environment space,
@@ -219,7 +218,7 @@ extern char **Asc_GetPathList(char *envvar, int *argcPtr);
  *          the returned array pointer will be NULL.
  */
 
-extern char* ASC_DLLSPEC Asc_GetEnv(char *envvar);
+extern ASC_DLLSPEC(char*) Asc_GetEnv(char *envvar);
 /**<
  *  Retrieve the value(s) of ASCEND environment variable envvar
  *  as a delimited string.  The elements of envvar are assembled
@@ -256,5 +255,5 @@ extern char **Asc_EnvNames(int *argc);
  *          the caller should free the array when finished with it.
  */
 
-#endif /* __ascenv_h_seen__ */
+#endif /* ASC_ENVVAR_H */
 

@@ -1,62 +1,57 @@
-/*
- *  btprolog.h
- *  By Benjamin A. Allan
- *  Jan 7, 1998.
- *  Part of ASCEND
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: btprolog.h,v $
- *  Date last modified: $Date: 1998/06/16 16:38:40 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998 Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Prolog for C to be compiled and dynamically loaded to provide
- *  residuals and gradients to token relations. This defines the
- *  math functions ascend will provide after loading the
- *  necessary system headers.<br><br>
- *
- *  Don't put anything in this prolog which requires access to
- *  other ASCEND sources. This header must be shipped with the
- *  binary distribution in some lib directory.<br><br>
- *
- *  bintoken.c also includes this so we maintain 1 definition
- *  of our structs. bintoken.h must include it AFTER func.h
- *  in bintoken.c.
- *  <pre>
- *  When #including btprolog.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *  <pre>
- *
- *  @todo Complete documentation of btprolog.h.
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Prolog for C to be compiled and dynamically loaded to provide
+	residuals and gradients to token relations. This defines the
+	math functions ascend will provide after loading the
+	necessary system headers.
+
+	Don't put anything in this prolog which requires access to
+	other ASCEND sources. This header must be shipped with the
+	binary distribution in some lib directory.
+
+	bintoken.c also includes this so we maintain 1 definition
+	of our structs. bintoken.h must include it AFTER func.h
+	in bintoken.c.
+
+	@TODO Complete documentation of btprolog.h.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "instance_enum.h"
+*//*
+	By Benjamin A. Allan
+	Jan 7, 1998.
+	Part of ASCEND
+	Version: $Revision: 1.3 $
+	Version control file: $RCSfile: btprolog.h,v $
+	Date last modified: $Date: 1998/06/16 16:38:40 $
+	Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_BTPROLOG_H
 #define ASC_BTPROLOG_H
 
 #ifdef ASC_BINTOKEN_H
-# include "utilities/ascConfig.h"
-# include "compiler/instance_enum.h"
+# include <utilities/ascConfig.h>
+# include <compiler/instance_enum.h>
 #else
 # define IS_BINTOKEN_COMPILE
 # include <ascConfig.h>
@@ -113,9 +108,9 @@ union TableUnion {
 };
 
 #ifdef __STDC__
-extern int ASC_DLLSPEC ExportBinTokenCTable(struct TableC *t, int size);
+extern ASC_DLLSPEC(int) ExportBinTokenCTable(struct TableC *t, int size);
 #else
-extern int ASC_DLLSPEC ExportBinTokenCTable();
+extern ASC_DLLSPEC(int) ExportBinTokenCTable();
 #endif /* __STDC__ */
 
 /*------------------------------
@@ -133,118 +128,118 @@ extern int ASC_DLLSPEC ExportBinTokenCTable();
  * functions.
  */
 
-extern double ASC_DLLSPEC cbrt(double x);
+extern ASC_DLLSPEC(double) cbrt(double x);
 #    ifdef HAVE_ERF
-extern double ASC_DLLSPEC erf(double x);
+extern ASC_DLLSPEC(double) erf(double x);
 #    endif /* HAVE_ERF */
 #   endif /* __STDC__ == 1 */
 /*
  * in the case where __STDC__ is defined but == 0, system headers
  * should provide cbrt, erf.
  */
-extern int ASC_DLLSPEC ascnintF(double x);
-extern double ASC_DLLSPEC dln(double x);
-extern double ASC_DLLSPEC dln2(double x);
-extern double ASC_DLLSPEC dlog10(double x);
-extern double ASC_DLLSPEC dlog102(double x);
-extern double ASC_DLLSPEC lnm(double x);
-extern double ASC_DLLSPEC dlnm(double x);
-extern double ASC_DLLSPEC dlnm2(double x);
-extern double ASC_DLLSPEC dtanh(double x);
-extern double ASC_DLLSPEC dtanh2(double x);
-extern double ASC_DLLSPEC arcsinh(double x);
-extern double ASC_DLLSPEC arccosh(double x);
-extern double ASC_DLLSPEC arctanh(double x);
-extern double ASC_DLLSPEC darcsinh(double x);
-extern double ASC_DLLSPEC darcsinh2(double x);
-extern double ASC_DLLSPEC darccosh(double x);
-extern double ASC_DLLSPEC darccosh2(double x);
-extern double ASC_DLLSPEC darctanh(double x);
-extern double ASC_DLLSPEC darctanh2(double x);
-extern double ASC_DLLSPEC sqr(double x);
-extern double ASC_DLLSPEC dsqr(double x);
-extern double ASC_DLLSPEC dsqr2(double x);
-extern double ASC_DLLSPEC cube(double x);
-extern double ASC_DLLSPEC dcube(double x);
-extern double ASC_DLLSPEC dcube2(double x);
-extern double ASC_DLLSPEC asc_ipow(double x, int y);
-extern double ASC_DLLSPEC asc_d1ipow(double x, int y);
-extern double ASC_DLLSPEC asc_d2ipow(double x, int y);
-extern double ASC_DLLSPEC hold(double x);
-extern double ASC_DLLSPEC dsqrt(double x);
-extern double ASC_DLLSPEC dsqrt2(double x);
-extern double ASC_DLLSPEC dcbrt(double x);
-extern double ASC_DLLSPEC dcbrt2(double x);
-extern double ASC_DLLSPEC dfabs(double x);
-extern double ASC_DLLSPEC dfabs2(double x);
-extern double ASC_DLLSPEC dhold(double x);
-extern double ASC_DLLSPEC dasin(double x);
-extern double ASC_DLLSPEC dasin2(double x);
-extern double ASC_DLLSPEC dcos(double x);
-extern double ASC_DLLSPEC dcos2(double x);
-extern double ASC_DLLSPEC dacos(double x);
-extern double ASC_DLLSPEC dacos2(double x);
-extern double ASC_DLLSPEC dtan(double x);
-extern double ASC_DLLSPEC dtan2(double x);
-extern double ASC_DLLSPEC datan(double x);
-extern double ASC_DLLSPEC datan2(double x);
-extern double ASC_DLLSPEC derf(double x);
-extern double ASC_DLLSPEC derf2(double x);
+extern ASC_DLLSPEC(int) ascnintF(double x);
+extern ASC_DLLSPEC(double) dln(double x);
+extern ASC_DLLSPEC(double) dln2(double x);
+extern ASC_DLLSPEC(double) dlog10(double x);
+extern ASC_DLLSPEC(double) dlog102(double x);
+extern ASC_DLLSPEC(double) lnm(double x);
+extern ASC_DLLSPEC(double) dlnm(double x);
+extern ASC_DLLSPEC(double) dlnm2(double x);
+extern ASC_DLLSPEC(double) dtanh(double x);
+extern ASC_DLLSPEC(double) dtanh2(double x);
+extern ASC_DLLSPEC(double) arcsinh(double x);
+extern ASC_DLLSPEC(double) arccosh(double x);
+extern ASC_DLLSPEC(double) arctanh(double x);
+extern ASC_DLLSPEC(double) darcsinh(double x);
+extern ASC_DLLSPEC(double) darcsinh2(double x);
+extern ASC_DLLSPEC(double) darccosh(double x);
+extern ASC_DLLSPEC(double) darccosh2(double x);
+extern ASC_DLLSPEC(double) darctanh(double x);
+extern ASC_DLLSPEC(double) darctanh2(double x);
+extern ASC_DLLSPEC(double) sqr(double x);
+extern ASC_DLLSPEC(double) dsqr(double x);
+extern ASC_DLLSPEC(double) dsqr2(double x);
+extern ASC_DLLSPEC(double) cube(double x);
+extern ASC_DLLSPEC(double) dcube(double x);
+extern ASC_DLLSPEC(double) dcube2(double x);
+extern ASC_DLLSPEC(double) asc_ipow(double x, int y);
+extern ASC_DLLSPEC(double) asc_d1ipow(double x, int y);
+extern ASC_DLLSPEC(double) asc_d2ipow(double x, int y);
+extern ASC_DLLSPEC(double) hold(double x);
+extern ASC_DLLSPEC(double) dsqrt(double x);
+extern ASC_DLLSPEC(double) dsqrt2(double x);
+extern ASC_DLLSPEC(double) dcbrt(double x);
+extern ASC_DLLSPEC(double) dcbrt2(double x);
+extern ASC_DLLSPEC(double) dfabs(double x);
+extern ASC_DLLSPEC(double) dfabs2(double x);
+extern ASC_DLLSPEC(double) dhold(double x);
+extern ASC_DLLSPEC(double) dasin(double x);
+extern ASC_DLLSPEC(double) dasin2(double x);
+extern ASC_DLLSPEC(double) dcos(double x);
+extern ASC_DLLSPEC(double) dcos2(double x);
+extern ASC_DLLSPEC(double) dacos(double x);
+extern ASC_DLLSPEC(double) dacos2(double x);
+extern ASC_DLLSPEC(double) dtan(double x);
+extern ASC_DLLSPEC(double) dtan2(double x);
+extern ASC_DLLSPEC(double) datan(double x);
+extern ASC_DLLSPEC(double) datan2(double x);
+extern ASC_DLLSPEC(double) derf(double x);
+extern ASC_DLLSPEC(double) derf2(double x);
 
 #  else /* no stdc */
 
-extern double ASC_DLLSPEC cbrt();
+extern ASC_DLLSPEC(double) cbrt();
 #   ifdef HAVE_ERF
-extern double ASC_DLLSPEC erf();
+extern ASC_DLLSPEC(double) erf();
 #   endif /* HAVE_ERF */
-extern int ASC_DLLSPEC ascnintF();
-extern double ASC_DLLSPEC dln();
-extern double ASC_DLLSPEC dln2();
-extern double ASC_DLLSPEC dlog();
-extern double ASC_DLLSPEC dlog2();
-extern double ASC_DLLSPEC lnm();
-extern double ASC_DLLSPEC dlnm();
-extern double ASC_DLLSPEC dlnm2();
-extern double ASC_DLLSPEC dtanh();
-extern double ASC_DLLSPEC dtanh2();
-extern double ASC_DLLSPEC arcsinh();
-extern double ASC_DLLSPEC arccosh();
-extern double ASC_DLLSPEC arctanh();
-extern double ASC_DLLSPEC darcsinh();
-extern double ASC_DLLSPEC darcsinh2();
-extern double ASC_DLLSPEC darccosh();
-extern double ASC_DLLSPEC darccosh2();
-extern double ASC_DLLSPEC darctanh();
-extern double ASC_DLLSPEC darctanh2();
-extern double ASC_DLLSPEC sqr();
-extern double ASC_DLLSPEC dsqr();
-extern double ASC_DLLSPEC dsqr2();
-extern double ASC_DLLSPEC cube();
-extern double ASC_DLLSPEC dcube();
-extern double ASC_DLLSPEC dcube2();
-extern double ASC_DLLSPEC asc_ipow();
-extern double ASC_DLLSPEC asc_d1ipow();
-extern double ASC_DLLSPEC asc_d2ipow();
-extern double ASC_DLLSPEC hold();
-extern double ASC_DLLSPEC dsqrt();
-extern double ASC_DLLSPEC dsqrt2();
-extern double ASC_DLLSPEC dcbrt();
-extern double ASC_DLLSPEC dcbrt2();
-extern double ASC_DLLSPEC dfabs();
-extern double ASC_DLLSPEC dfabs2();
-extern double ASC_DLLSPEC dhold();
-extern double ASC_DLLSPEC dasin();
-extern double ASC_DLLSPEC dasin2();
-extern double ASC_DLLSPEC dcos();
-extern double ASC_DLLSPEC dcos2();
-extern double ASC_DLLSPEC dacos();
-extern double ASC_DLLSPEC dacos2();
-extern double ASC_DLLSPEC dtan();
-extern double ASC_DLLSPEC dtan2();
-extern double ASC_DLLSPEC datan();
-extern double ASC_DLLSPEC datan2();
-extern double ASC_DLLSPEC derf();
-extern double ASC_DLLSPEC derf2();
+extern ASC_DLLSPEC(int) ascnintF();
+extern ASC_DLLSPEC(double) dln();
+extern ASC_DLLSPEC(double) dln2();
+extern ASC_DLLSPEC(double) dlog();
+extern ASC_DLLSPEC(double) dlog2();
+extern ASC_DLLSPEC(double) lnm();
+extern ASC_DLLSPEC(double) dlnm();
+extern ASC_DLLSPEC(double) dlnm2();
+extern ASC_DLLSPEC(double) dtanh();
+extern ASC_DLLSPEC(double) dtanh2();
+extern ASC_DLLSPEC(double) arcsinh();
+extern ASC_DLLSPEC(double) arccosh();
+extern ASC_DLLSPEC(double) arctanh();
+extern ASC_DLLSPEC(double) darcsinh();
+extern ASC_DLLSPEC(double) darcsinh2();
+extern ASC_DLLSPEC(double) darccosh();
+extern ASC_DLLSPEC(double) darccosh2();
+extern ASC_DLLSPEC(double) darctanh();
+extern ASC_DLLSPEC(double) darctanh2();
+extern ASC_DLLSPEC(double) sqr();
+extern ASC_DLLSPEC(double) dsqr();
+extern ASC_DLLSPEC(double) dsqr2();
+extern ASC_DLLSPEC(double) cube();
+extern ASC_DLLSPEC(double) dcube();
+extern ASC_DLLSPEC(double) dcube2();
+extern ASC_DLLSPEC(double) asc_ipow();
+extern ASC_DLLSPEC(double) asc_d1ipow();
+extern ASC_DLLSPEC(double) asc_d2ipow();
+extern ASC_DLLSPEC(double) hold();
+extern ASC_DLLSPEC(double) dsqrt();
+extern ASC_DLLSPEC(double) dsqrt2();
+extern ASC_DLLSPEC(double) dcbrt();
+extern ASC_DLLSPEC(double) dcbrt2();
+extern ASC_DLLSPEC(double) dfabs();
+extern ASC_DLLSPEC(double) dfabs2();
+extern ASC_DLLSPEC(double) dhold();
+extern ASC_DLLSPEC(double) dasin();
+extern ASC_DLLSPEC(double) dasin2();
+extern ASC_DLLSPEC(double) dcos();
+extern ASC_DLLSPEC(double) dcos2();
+extern ASC_DLLSPEC(double) dacos();
+extern ASC_DLLSPEC(double) dacos2();
+extern ASC_DLLSPEC(double) dtan();
+extern ASC_DLLSPEC(double) dtan2();
+extern ASC_DLLSPEC(double) datan();
+extern ASC_DLLSPEC(double) datan2();
+extern ASC_DLLSPEC(double) derf();
+extern ASC_DLLSPEC(double) derf2();
 
 #  endif  /* no stdc */
 # endif  /* fake ASC_FUNC_H */

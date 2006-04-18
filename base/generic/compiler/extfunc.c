@@ -43,7 +43,7 @@
 
 static struct Table *ExternalFuncLibrary = NULL;
 
-int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
+int CreateUserFunctionBlackBox(CONST char *name,
 		       ExtBBoxInitFunc *init,
 		       ExtBBoxFunc *value,
 		       ExtBBoxFunc *deriv,
@@ -75,9 +75,9 @@ int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
   efunc->n_inputs = n_inputs;
   efunc->n_outputs = n_outputs;
   efunc->u.black.initial = init;
-  efunc->u.black.value = value;   
-  efunc->u.black.deriv = deriv;  
-  efunc->u.black.deriv2 = deriv2; 
+  efunc->u.black.value = value;
+  efunc->u.black.deriv = deriv;
+  efunc->u.black.deriv2 = deriv2;
   efunc->u.black.final = final;
   if (help) {
     if (efunc->help) ascfree((char *)efunc->help);
@@ -92,7 +92,7 @@ int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
   return 0;
 }
 
-int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
+int CreateUserFunctionGlassBox(CONST char *name,
 		       ExtEvalFunc *init,
 		       ExtEvalFunc **value,
 		       ExtEvalFunc **deriv,
@@ -124,9 +124,9 @@ int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
   efunc->n_inputs = n_inputs;
   efunc->n_outputs = n_outputs;
   efunc->u.glass.initial = init;
-  efunc->u.glass.value = value;   
-  efunc->u.glass.deriv = deriv;  
-  efunc->u.glass.deriv2 = deriv2; 
+  efunc->u.glass.value = value;
+  efunc->u.glass.deriv = deriv;
+  efunc->u.glass.deriv2 = deriv2;
   efunc->u.glass.final = final;
   if (help) {
     if (efunc->help) ascfree((char *)efunc->help);
@@ -141,9 +141,9 @@ int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
   return 0;
 }
 
-int ASC_DLLSPEC CreateUserFunctionMethod(CONST char *name,
+int CreateUserFunctionMethod(CONST char *name,
 	/* 	       ExtMethodInit *init, */
-		       ExtMethodRun *run, 
+		       ExtMethodRun *run,
 	/*	       ExtMethodInitEvalFunc *final, */
 		       CONST long n_args,
 	/*	       CONST unsigned long n_outputs, */
@@ -155,7 +155,7 @@ int ASC_DLLSPEC CreateUserFunctionMethod(CONST char *name,
     return 1;
   }
   efunc = LookupExtFunc(name);
-  if (efunc != NULL) { 
+  if (efunc != NULL) {
     isNew = 0;
    /* name was pre-loaded -- just update the info. This may cause user
       insanity if it wasn't a reload of the same thing. */
@@ -171,10 +171,10 @@ int ASC_DLLSPEC CreateUserFunctionMethod(CONST char *name,
   efunc->etype = efunc_Method;
   efunc->n_inputs = n_args;
   efunc->n_outputs = 0;
-  efunc->u.method.run = run;   
+  efunc->u.method.run = run;
 #if 0
   efunc->u.method.initial = init;
-  efunc->u.method.final = final;  
+  efunc->u.method.final = final;
 #endif
   if (help) {
     if (efunc->help) { ascfree((char *)efunc->help); }
@@ -213,7 +213,7 @@ ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
   /* return (ExtBBoxInitFunc*)efunc->u.black.init; */
-  return efunc->u.black.initial; 
+  return efunc->u.black.initial;
 }
 
 ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc)
@@ -258,28 +258,28 @@ ExtEvalFunc **GetValueJumpTable(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_GlassBox);
-  return efunc->u.glass.value;    
+  return efunc->u.glass.value;
 }
 
 ExtEvalFunc **GetDerivJumpTable(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_GlassBox);
-  return efunc->u.glass.deriv;   
+  return efunc->u.glass.deriv;
 }
 
 ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_GlassBox);
-  return efunc->u.glass.deriv2; 
+  return efunc->u.glass.deriv2;
 }
 
 ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_Method);
-  return efunc->u.method.run; 
+  return efunc->u.method.run;
 }
 
 CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc)
@@ -432,7 +432,7 @@ char *WriteExtFuncLibraryString(void)
   return result;
 }
 
-void 
+void
 TraverseExtFuncLibrary(void (*func)(void *,void *), void *secondparam){
 	TableApplyAllTwo(ExternalFuncLibrary, func, secondparam);
 }

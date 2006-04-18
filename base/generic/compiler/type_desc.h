@@ -1,50 +1,49 @@
-/*
- *  Atom description structure data type
- *  by Tom Epperly
- *  9/3/89
- *  Version: $Revision: 1.37 $
- *  Version control file: $RCSfile: type_desc.h,v $
- *  Date last modified: $Date: 1998/05/18 16:36:52 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Atom description structure data type.
- *  <pre>
- *  When #including type_desc.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "compiler/fractions.h"
- *         #include "compiler/compiler.h"
- *         #include "compiler/dimen.h"
- *         #include "compiler/child.h"
- *         #include "compiler/list.h"
- *         #include "compiler/module.h"
- *         #include "compiler/childinfo.h"
- *         #include "compiler/slist.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Atom description structure data type.
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "compiler/fractions.h"
+	#include "compiler/compiler.h"
+	#include "compiler/dimen.h"
+	#include "compiler/child.h"
+	#include "compiler/list.h"
+	#include "compiler/module.h"
+	#include "compiler/childinfo.h"
+	#include "compiler/slist.h"
+*//*
+	by Tom Epperly
+	9/3/89
+	Version: $Revision: 1.37 $
+	Version control file: $RCSfile: type_desc.h,v $
+	Date last modified: $Date: 1998/05/18 16:36:52 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_TYPE_DESC_H
 #define ASC_TYPE_DESC_H
+
+#include <utilities/ascConfig.h>
 
 /**
  *  Bad pointer for a patently bogus type definition when needed.
@@ -236,7 +235,7 @@ struct TypeDescription {
  *  @return The childlist field as a ChildListPtr.
  *  @see GetChildListF()
  */
-extern ChildListPtr ASC_DLLSPEC GetChildListF(CONST struct TypeDescription *d);
+extern ASC_DLLSPEC(ChildListPtr) GetChildListF(CONST struct TypeDescription *d);
 /**<
  *  Returns the childlist field of d.
  *  Implementation function for GetChildList() (debug mode).
@@ -330,7 +329,7 @@ extern CONST struct StatementList
  *  @return The list as a CONST struct gl_list_t*.
  *  @see GetInitializationListF()
  */
-extern struct gl_list_t ASC_DLLSPEC
+extern ASC_DLLSPEC(struct gl_list_t)
 *GetInitializationListF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetInitializationList() (debug mode).
@@ -528,7 +527,7 @@ extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
  *  @return An unsigned.
  *  @see TypeHasParameterizedInstsF()
  */
-extern unsigned ASC_DLLSPEC TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
+extern ASC_DLLSPEC(unsigned) TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for TypeHasParameterizedInsts() (debug mode).
  *  Do not call this function directly - use TypeHasParameterizedInsts() instead.
@@ -596,7 +595,7 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
  *  @return The dimensions as a CONST dim_type*.
  *  @see GetRealDimensF()
  */
-extern CONST dim_type* ASC_DLLSPEC GetRealDimensF(CONST struct TypeDescription *d,
+extern ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
                                       CONST char *f, CONST int l);
 /**<
  *  Implementation function for GetRealDimens() (debug mode).
@@ -617,7 +616,7 @@ extern CONST dim_type* ASC_DLLSPEC GetRealDimensF(CONST struct TypeDescription *
  *  @return The dimensions as a CONST dim_type*.
  *  @see GetConstantDimensF()
  */
-extern CONST dim_type* ASC_DLLSPEC GetConstantDimensF(CONST struct TypeDescription *d,
+extern ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
                                           CONST char *f, CONST int l);
 /**<
  *  Implementation function for GetConstantDimens() (debug mode).
@@ -635,7 +634,7 @@ extern CONST dim_type* ASC_DLLSPEC GetConstantDimensF(CONST struct TypeDescripti
  *  @return The name as a symchar*.
  *  @see GetNameF()
  */
-extern symchar* ASC_DLLSPEC GetNameF(CONST struct TypeDescription *d);
+extern ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetName() (debug mode).
  *  Do not call this function directly - use GetName() instead.
@@ -1077,7 +1076,7 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
-extern struct TypeDescription* ASC_DLLSPEC MoreRefined(CONST struct TypeDescription *desc1,
+extern ASC_DLLSPEC(struct TypeDescription*) MoreRefined(CONST struct TypeDescription *desc1,
                                            CONST struct TypeDescription *desc2);
 /**<
  *  Returns the more refined of desc1 or desc2, or
@@ -1158,7 +1157,7 @@ extern void WriteArrayTypeList(FILE *fp);
  *  @return The result as an unsigned.
  *  @see TypeShowF()
  */
-extern unsigned ASC_DLLSPEC TypeShowF(CONST struct TypeDescription *d);
+extern ASC_DLLSPEC(unsigned) TypeShowF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for TypeShow() (debug mode).
  *  Do not call this function directly - use TypeShow() instead.

@@ -1,45 +1,44 @@
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/*
- *  Procedure Data Structure
- *  by Tom Epperly
- *  Created: 1/10/90
- *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: proc.h,v $
- *  Date last modified: $Date: 1998/04/11 01:31:54 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-/** @file
- *  Procedure Data Structure.
- *  <pre>
- *  When #including proc.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include"list.h"
- *         #include"slist.h"
- *  </pre>
- */
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-#ifndef __PROC_H_SEEN__
-#define __PROC_H_SEEN__
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
+/**
+	@file
+	Procedure Data Structure.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler.h"
+	#include"list.h"
+	#include"slist.h"
+*//*
+	by Tom Epperly
+	Created: 1/10/90
+	Version: $Revision: 1.13 $
+	Version control file: $RCSfile: proc.h,v $
+	Date last modified: $Date: 1998/04/11 01:31:54 $
+	Last modified by: $Author: ballan $
+*/
+
+#ifndef ASC_PROC_H
+#define ASC_PROC_H
+
+#include <utilities/ascConfig.h>
 
 struct InitProcedure {
   symchar *name;                /**< procedure's name */
@@ -99,7 +98,7 @@ extern struct gl_list_t *GetUniversalProcedureList(void);
  * unless they redefine the methods themselves.
  */
 
-extern void ASC_DLLSPEC SetUniversalProcedureList(struct gl_list_t *l);
+extern ASC_DLLSPEC(void) SetUniversalProcedureList(struct gl_list_t *l);
 /**<
  * Sets the list of procedures defined for all MODELs.
  * If a UPL already exists, it will be destroyed unless it
@@ -250,5 +249,5 @@ extern int CmpProcs(CONST struct InitProcedure *p1, CONST struct InitProcedure *
  *  Simply alphabetizing.
  */
 
-#endif  /* __PROC_H_SEEN__ */
+#endif  /* ASC_PROC_H */
 

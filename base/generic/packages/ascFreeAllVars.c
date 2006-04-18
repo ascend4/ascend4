@@ -2,7 +2,7 @@
  *  ascFreeAllVars.c
  *  by Ben Allan
  *  February 24, 1998
- *  Part of ASCEND                            
+ *  Part of ASCEND
  *  Version: $Revision: 1.4 $
  *  Version control file: $RCSfile: ascFreeAllVars.c,v $
  *  Date last modified: $Date: 1998/06/16 16:42:09 $
@@ -76,8 +76,7 @@ void Asc_ClearVars(struct Instance *i, struct cvpacket *cv)
 }
 
 
-int ASC_DLLSPEC Asc_ClearVarsInTree(struct Instance *i)
-{
+int Asc_ClearVarsInTree(struct Instance *i){
   struct cvpacket cv;
   cv.g_solver_var_type = FindType(AddSymbol("solver_var"));
   if (cv.g_solver_var_type  == NULL){
@@ -96,9 +95,7 @@ int ASC_DLLSPEC Asc_ClearVarsInTree(struct Instance *i)
   return 0;
 }
 
-extern int ASC_DLLSPEC Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist)
-                                  
-{
+int Asc_FreeAllVars( struct Instance *root, struct gl_list_t *arglist){
   /* arglist is a list of gllist of instances */
   if (arglist == NULL ||
       gl_length(arglist) == 0L ||

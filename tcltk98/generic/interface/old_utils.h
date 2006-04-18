@@ -4,7 +4,6 @@
  *  Version control file: $RCSfile: old_utils.h,v $
  *  Date last modified: $Date: 1998/01/29 01:04:09 $
  *  Last modified by: $Author: ballan $
- *  Part of Ascend
  *
  *  This file is part of the Ascend Programming System.
  *
@@ -85,7 +84,7 @@ extern char *asc_make_dimensions(CONST dim_type *dim);
  */
 
 extern int g_check_dimensions_noisy;
-/**<                                                  
+/**<
  *  If 0, warnings are suppressed. If 1, warnings are given
  *  from asc_check_dimensions().
  *

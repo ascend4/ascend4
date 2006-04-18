@@ -1,43 +1,40 @@
-/*
- *  General Plot Functions
- *  Interface pointer functions for Ascend
- *  Version: $Revision: 1.1 $
- *  Version control file: $RCSfile: plot.h,v $
- *  Date last modified: $Date: 1997/07/18 11:47:38 $
- *  Last modified by: $Author: mthomas $
- *  Part of Ascend
- *
- *  This file is part of the Ascend Programming System.
- *
- *  Copyright (C) 1990 Thomas Guthrie Epperly, Karl Michael Westerberg
- *  Copyright (C) 1994 Kirk Andre Abbott, Benjamin Andrew Allan
- *
- *  The Ascend Programming System is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  ASCEND is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Thomas Guthrie Epperly, Karl Michael Westerberg
+	Copyright (C) 1994 Kirk Andre Abbott, Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  This module defines the plot generation auxillaries for Ascend.
- *  <pre>
- *  Requires:   #include "utilities/ascConfig.h"
- *              #include "compiler/instance_enum.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	This module defines the plot generation auxillaries for Ascend.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler/instance_enum.h"
+*//*
+	Version: $Revision: 1.1 $
+	Version control file: $RCSfile: plot.h,v $
+	Date last modified: $Date: 1997/07/18 11:47:38 $
+	Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_PLOT_H
 #define ASC_PLOT_H
+
+#include <utilities/ascConfig.h>
 
 /** Plot types. */
 enum PlotTypes {
@@ -88,7 +85,7 @@ extern void plot_prepare_file(struct Instance *inst, char *plotfilename);
  *  Writes data points for the given plot instance to the given plot file.
  */
 
-extern boolean ASC_DLLSPEC plot_allowed(struct Instance *inst);
+extern ASC_DLLSPEC(boolean) plot_allowed(struct Instance *inst);
 /**<
  *  Determines whether or not the given instance is allowed to be plotted
  *  (i.e. whether it is a refinement of plt_plot).

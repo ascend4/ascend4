@@ -1,68 +1,60 @@
-/*
- *  SLV: Ascend Numeric Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.41 $
- *  Version control file: $RCSfile: rel.h,v $
- *  Date last modified: $Date: 1998/02/05 15:59:24 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Relation module for the SLV solver.
- *  <pre>
- *  Contents:     Relation module (ascend)
- *
- *  Authors:      Karl Westerberg
- *                Joseph Zaher
- *
- *  Dates:        06/90 - original version
- *                04/94 - added rel_apply_filter() which uses the new
- *                        rel_filter_t data structure for perfoming all
- *                        relation filtering needs (eliminating the
- *                        filter module)
- *
- *  Description:  This is the ascend version of the rel module.  This
- *                version should be used by any user who receives his/her
- *                equations directly from an instance tree created by the
- *                ASCEND compiler.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "var.h"
- *
- *  SERVER ONLY:  #include "expr.h"
- *                #include "types.h"
- *                #include "extfunc.h"
- *                #include "relation.h"
- *                #include "packages.h"
- *                #include "extcall.h"
- *                #include "mtx.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//**
+	@file
+	Relation module for the SLV solver.
+
+	This is the ascend version of the rel module.  This
+	version should be used by any user who receives his/her
+	equations directly from an instance tree created by the
+	ASCEND compiler.
+
+	Dates:        06/90 - original version
+				  04/94 - added rel_apply_filter() which uses the new
+						  rel_filter_t data structure for perfoming all
+						  relation filtering needs (eliminating the
+						  filter module)
+
+	Requires:     #include "utilities/ascConfig.h"
+				  #include "var.h"
+
+	SERVER ONLY:  #include "expr.h"
+				  #include "types.h"
+				  #include "extfunc.h"
+				  #include "relation.h"
+				  #include "packages.h"
+				  #include "extcall.h"
+				  #include "mtx.h"
+*//*
+	by Karl Michael Westerberg and Joseph Zaher
+	Created: 2/6/90
+	Version: $Revision: 1.41 $
+	Version control file: $RCSfile: rel.h,v $
+	Date last modified: $Date: 1998/02/05 15:59:24 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_REL_H
 #define ASC_REL_H
+
+#include <utilities/ascConfig.h>
 
 /*
  * rel_relation data type and basic type operators.
@@ -157,7 +149,7 @@ typedef struct rel_filter_structure {
 } rel_filter_t;
 /**< Relation filter type */
 
-extern SlvBackendToken ASC_DLLSPEC rel_instance(struct rel_relation *rel);
+extern ASC_DLLSPEC(SlvBackendToken) rel_instance(struct rel_relation *rel);
 /**<
  *  Returns the instance pointer from a rel.
  */
@@ -273,7 +265,7 @@ extern void rel_set_model(struct rel_relation *rel, int32 index);
  *  models. Models are numbered from 1 to some upper limit.
  */
 
-extern real64 ASC_DLLSPEC rel_residual(struct rel_relation *rel);
+extern ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
 /**<
  *  Retrieves the residual field of the given relation.
  *  Note that the residual is not actually computed by rel_residual:
@@ -332,7 +324,7 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
  *  @see rel_set_incidencesF()
  */
 
-extern int32 ASC_DLLSPEC rel_n_incidencesF(struct rel_relation *rel);
+extern ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
 /**<
  *  Implementation function for rel_n_incidences().  Do not call
  *  this function directly - use rel_n_incidences() instead.
@@ -367,7 +359,7 @@ extern struct var_variable
  *  long of vars.
  *  @see rel_incidence_list().
  */
-extern const struct var_variable** ASC_DLLSPEC rel_incidence_list(struct rel_relation *rel);
+extern ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation *rel);
 /**<
  *  Returns a pointer to an array rel_n_incidences(rel) long of vars.
  *  Each element of the array is a struct var_variable *.
@@ -416,7 +408,7 @@ extern void rel_set_flags(struct rel_relation *rel, uint32 flags);
  *  Sets the entire flag field to the value of flags given.
  */
 
-extern uint32 ASC_DLLSPEC rel_flagbit(struct rel_relation *rel, uint32 name);
+extern ASC_DLLSPEC(uint32) rel_flagbit(struct rel_relation *rel, uint32 name);
 /**<
  *  Returns the value of the bit specified from the relation flags.
  *  name should be a REL_xx flag defined above)
@@ -598,7 +590,7 @@ extern void rel_set_flagbit(struct rel_relation *rel,
         rel_set_flagbit((rel),REL_IN_CUR_SUBREGION,(bitval))
 #define rel_set_generated(rel,bitval)		rel_set_flagbit((rel),REL_GENERATED,(bitval))
 
-extern uint32 ASC_DLLSPEC rel_included(struct rel_relation *rel);
+extern ASC_DLLSPEC(uint32) rel_included(struct rel_relation *rel);
 /**<
  *  Retrieves the included field of the given relation.
  *  @todo This has side effects on the ascend instance, so it isn't

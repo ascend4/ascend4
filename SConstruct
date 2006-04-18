@@ -505,7 +505,14 @@ def CheckTkVersion(context):
 		
 	# good version
 	return 1
-	
+
+#----------------
+# GCC Version sniffing
+
+# TODO FIXME
+
+gcc_version4 = False
+
 #------------------------------------------------------
 # CONFIGURATION
 
@@ -938,6 +945,9 @@ env['NSIS'] = find_nsis(env)
 
 # so that #include <modulename/headername.h> works across all modules...
 env.Append(CPPPATH=['#base/generic'])
+
+if gcc_version4:
+	env.Append(CCFLAGS=['-fvisibility=hidden'])
 
 #-------------
 # TCL/TK GUI
