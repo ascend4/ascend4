@@ -18,6 +18,17 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	External Functions Module.
+
+	@todo Complete documentation of compiler/extfunc.h.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler/instance_enum.h"
+	#include "general/list.h"
+	#include "compiler/compiler.h"
 *//*
 	by Kirk Andre Abbott and Ben Allan
 	Created: July 4, 1994.
@@ -27,20 +38,10 @@
 	Last modified by: $Author: mthomas $
 */
 
-/** @file
-	External Functions Module.
-	<pre>
-	When #including extfunc.h, make sure these files are #included first:
-	       #include "utilities/ascConfig.h"
-	       #include "compiler/instance_enum.h"
-	       #include "general/list.h"
-	       #include "compiler/compiler.h"
-	</pre>
-	@todo Complete documentation of compiler/extfunc.h.
- */
-
 #ifndef ASC_EXTFUNC_H
 #define ASC_EXTFUNC_H
+
+#include <utilities/ascConfig.h>
 
 /**
 	ExtEvalFunc type is a function pointer.
@@ -263,7 +264,7 @@ typedef int (*CreateUserFunction_fptr_t)(CONST char *name,
                               CONST unsigned long n_outputs,
                               CONST char *help);
 
-extern int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
+extern ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
                               ExtBBoxInitFunc *init,
                               ExtBBoxFunc *value,
                               ExtBBoxFunc *deriv,
@@ -292,7 +293,7 @@ extern int ASC_DLLSPEC CreateUserFunctionBlackBox(CONST char *name,
 	        non-zero otherwise.
 */
 
-extern int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
+extern ASC_DLLSPEC(int) CreateUserFunctionGlassBox(CONST char *name,
                               ExtEvalFunc *init,
                               ExtEvalFunc **value,
                               ExtEvalFunc **deriv,
@@ -323,7 +324,7 @@ extern int ASC_DLLSPEC CreateUserFunctionGlassBox(CONST char *name,
 	        non-zero otherwise.
 */
 
-extern int ASC_DLLSPEC CreateUserFunctionMethod(CONST char *name,
+extern ASC_DLLSPEC(int) CreateUserFunctionMethod(CONST char *name,
                              /*  ExtMethodInit *initial, */
                               ExtMethodRun *run,
                              /*  ExtMethodInit *final, */
@@ -388,15 +389,15 @@ extern ExtEvalFunc *GetGlassBoxFinal(struct ExternalFunc *efunc);
 extern ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc);
 
 
-extern CONST char* ASC_DLLSPEC ExternalFuncName(CONST struct ExternalFunc *efunc);
+extern ASC_DLLSPEC(CONST char*) ExternalFuncName(CONST struct ExternalFunc *efunc);
 /**<
 	Returns the name of an external function.
 */
 
 /** fetch the required input count for glass, black, or method. */
-extern unsigned long ASC_DLLSPEC NumberInputArgs(CONST struct ExternalFunc *efunc);
+extern ASC_DLLSPEC(unsigned long) NumberInputArgs(CONST struct ExternalFunc *efunc);
 /** fetch the required output count for glass, black, or method. */
-extern unsigned long ASC_DLLSPEC NumberOutputArgs(CONST struct ExternalFunc *efunc);
+extern ASC_DLLSPEC(unsigned long) NumberOutputArgs(CONST struct ExternalFunc *efunc);
 
 
 extern void PrintExtFuncLibrary(FILE *f);
@@ -415,6 +416,6 @@ extern char *WriteExtFuncLibraryString(void);
 /**
 	This provides a way for other code to visit the external function list
 */
-extern void ASC_DLLSPEC TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
+extern ASC_DLLSPEC(void) TraverseExtFuncLibrary(void (*)(void *,void *),void *secondparam);
 
 #endif /* ASC_EXTFUNC_H */

@@ -1,51 +1,50 @@
-/*
- *  Ascend Pending Instance Routines
- *  by Tom Epperly
- *  Created: 1/24/90
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: pending.h,v $
- *  Date last modified: $Date: 1997/07/18 12:32:40 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Pending Instance Routines.
- *
- *  The pending list is implemented as a doubly linked list.
- *  Clients of this module should NOT access the internals of this list.
- *  They should not access next and prev in particular.
- *  Note that only complex types (models, arrays) and not atomic ones
- *  (atoms, relations, constants) should ever be put on the list.
- *  No client should ever free a struct pending_t *. That is our job.
- *  <pre>
- *  When #including pending.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *         #include "compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Ascend Pending Instance Routines.
+
+	The pending list is implemented as a doubly linked list.
+	Clients of this module should NOT access the internals of this list.
+	They should not access next and prev in particular.
+	Note that only complex types (models, arrays) and not atomic ones
+	(atoms, relations, constants) should ever be put on the list.
+	No client should ever free a struct pending_t *. That is our job.
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "instance_enum.h"
+	#include "compiler.h"
+*//*
+	by Tom Epperly
+	Created: 1/24/90
+	Version: $Revision: 1.6 $
+	Version control file: $RCSfile: pending.h,v $
+	Date last modified: $Date: 1997/07/18 12:32:40 $
+	Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_PENDING_H
 #define ASC_PENDING_H
+
+#include <utilities/ascConfig.h>
 
 struct pending_t {
   struct pending_t *next, *prev;
@@ -186,7 +185,7 @@ extern void MoveToBottom(struct pending_t *pt);
  *  Move the item pt to the bottom of the list.
  */
 
-extern unsigned long ASC_DLLSPEC NumberPendingInstances(struct Instance *i);
+extern ASC_DLLSPEC(unsigned long) NumberPendingInstances(struct Instance *i);
 /**<
  *  <!--  unsigned long NumberPendingInstances;                        -->
  *  <!--  struct Instance *i;                                          -->

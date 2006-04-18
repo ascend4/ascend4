@@ -5,7 +5,6 @@
  *  Version control file: $RCSfile: compiler.h,v $
  *  Date last modified: $Date: 2000/01/25 02:26:02 $
  *  Last modified by: $Author: ballan $
- *  Part of Ascend
  *
  *  This file is part of the Ascend Language Interpreter.
  *
@@ -63,7 +62,7 @@
 #endif
 /**<
  * Define to check internal and client compliance with symbol
- * table requirements. 0 for production code. 
+ * table requirements. 0 for production code.
  */
 
 #if CHECK_SYMBOL_USE
@@ -88,10 +87,10 @@ typedef CONST char symchar;
  * or your code will most likely not compile and not run.<br><br>
  *
  * Compile with CHECK_SYMBOL_USE defined to check for proper symchar
- * usage.  This non-integral typedef forces all the whines on 
- * virtually all compilers.  The only way to shut it up is to use 
- * AddSymbol() , symchars, and SCP() correctly. The visible typedef 
- * does not change the actual symchar semantics, which is just a 
+ * usage.  This non-integral typedef forces all the whines on
+ * virtually all compilers.  The only way to shut it up is to use
+ * AddSymbol() , symchars, and SCP() correctly. The visible typedef
+ * does not change the actual symchar semantics, which is just a
  * string.  Dereferencing a symchar when typedef'd as double will
  * usually cause a bus error unless the string happens to
  * occur at an 8-byte round address. It's very easy to spot
@@ -125,7 +124,7 @@ extern int g_compiler_warnings;
  */
 
 extern int g_parser_warnings;
-/**< 
+/**<
  *  Flag to turn on lint-like ASCEND whinings in various ways.
  *  higher values mean less spew. 0 = no warnings.
  *  Variable is declared in typelint.c.
@@ -176,7 +175,7 @@ extern int g_use_copyanon;
  *  revision of ASCEND models.
  *
  * Don't strcmp with these to a SCP(symchar) string: use
- * CmpSymchar(GetBaseTypeName(enum type_kind),symchar) instead from 
+ * CmpSymchar(GetBaseTypeName(enum type_kind),symchar) instead from
  * type_descio.h instead.
  */
 

@@ -1,51 +1,50 @@
-/*
- *  Simulation Management for Ascend
- *  by Ben Allan
- *  Version: $Revision: 1.2 $
- *  Version control file: $RCSfile: simlist.h,v $
- *  Date last modified: $Date: 1997/07/18 12:34:54 $
- *  Last modified by: $Author: mthomas $
- *  Part of Ascend
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1997 Benjamin Andrew Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Simulation Management for Ascend
- *  This module initializes and manages a global list of simulations.
- *  These may be interrelated in very twisty ways due to UNIVERSAL and
- *  parameter passing.
- *
- *  Simulations need much better management than they currently get,
- *  once we start building simulations out of other simulations.
- *  For now this file is largely empty.
- *  <pre>
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "instance_enum.h"
- *                #include "compiler/compiler.h"
- *                #include "general/list.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Simulation Management for Ascend
+
+	This module initializes and manages a global list of simulations.
+	These may be interrelated in very twisty ways due to UNIVERSAL and
+	parameter passing.
+
+	@TODO Simulations need much better management than they currently get,
+	once we start building simulations out of other simulations.
+	For now this file is largely empty.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "instance_enum.h"
+	#include "compiler/compiler.h"
+	#include "general/list.h"
+*//*
+	by Ben Allan
+	Version: $Revision: 1.2 $
+	Version control file: $RCSfile: simlist.h,v $
+	Date last modified: $Date: 1997/07/18 12:34:54 $
+	Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_SIMLIST_H
 #define ASC_SIMLIST_H
+
+#include <utilities/ascConfig.h>
 
 extern int g_compiler_timing;
 /**<  Global flag for whether to perform timing of compiler operations. */
@@ -66,31 +65,32 @@ enum CreateInst_format {
   e_patch           /**< Compile a patch. */
 };
 
-extern
-struct Instance* ASC_DLLSPEC SimsCreateInstance(symchar *type,
-                                    symchar *name,
-                                    enum CreateInst_format format,
-                                    symchar *defmethod);
-/*
- *  Creates a new simulation instance.
- *  This function sets up the call to instantiate with different
- *  compiler settings.  In all cases Instantiate() will make a copy
- *  of the name that is given.  format should perhaps be an array
- *  of enums or a bit structure to deal with multiple compilation
- *  flags. At the moment it is just a simple enum.  NULL is
- *  returned if either type or name is NULL.
- *
- *  The returned instance should be destroyed by the caller using
- *  Asc_DeAllocSim() or Asc_DestroySimulations().
- *
- *  @param type      Name of the model type to create.
- *  @param name      Name to give the new simulation.
- *  @param format    Type of compilation to perform.
- *  @param defmethod The method to call after instantiation, if present.
- *  @return A pointer to the newly-created simulation instance.
- */
+extern struct ASC_DLLSPEC(Instance *) SimsCreateInstance(
+	symchar *type,
+	symchar *name,
+	enum CreateInst_format format,
+	symchar *defmethod
+);
+/**<
+	Creates a new simulation instance.
+	This function sets up the call to instantiate with different
+	compiler settings.  In all cases Instantiate() will make a copy
+	of the name that is given.  format should perhaps be an array
+	of enums or a bit structure to deal with multiple compilation
+	flags. At the moment it is just a simple enum.  NULL is
+	returned if either type or name is NULL.
 
-extern void ASC_DLLSPEC Asc_DestroySimulations(void);
+	The returned instance should be destroyed by the caller using
+	Asc_DeAllocSim() or Asc_DestroySimulations().
+
+	@param type      Name of the model type to create.
+	@param name      Name to give the new simulation.
+	@param format    Type of compilation to perform.
+	@param defmethod The method to call after instantiation, if present.
+	@return A pointer to the newly-created simulation instance.
+*/
+
+extern ASC_DLLSPEC(void) Asc_DestroySimulations(void);
 /**<  Destroys all known instances on the simulation list. */
 
 

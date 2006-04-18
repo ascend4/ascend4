@@ -1,59 +1,54 @@
-/*
- *  SlvDOF: Ascend Degrees of Freedom module
- *  by Benjamin A Allan and Vicente Rico-Ramirez
- *  Created: 7/11/94
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: slvDOF.h,v $
- *  Date last modified: $Date: 1998/03/30 22:07:03 $
- *  Last modified by: $Author: rv2a $
- *
- *  This file is part of the ASCEND solver interface.
- *
- *  Copyright (C) 1994 Benjamin Andrew Allan
- *  Copyright (C) 1998 Vicente Rico-Ramirez
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1994 Benjamin Andrew Allan
+	Copyright (C) 1998 Vicente Rico-Ramirez
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Degrees of Freedom module
- *  <pre>
- *  Contents:     DOF module (Solver Degrees of Freedom)
- *
- *  Authors:      Ben Allan
- *
- *  Dates:        07/94 - original version
- *                06/96 - reimplementation
- *                03/98 - Added the consistency analysis for conditional
- *                        models
- *
- *  Description:  This file contains routines for managing degrees
- *                of freedom through the user interface. It uses
- *                its own incidence matrix separate from the mtx of
- *                any given solver.
- *
- *  Requires:     #include <stdio.h>
- *                #include "utilities/ascConfig.h"
- *                #include "slv_client.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	ASCEND Degrees of Freedom module
+
+	This file contains routines for managing degrees
+	of freedom through the user interface. It uses
+	its own incidence matrix separate from the mtx of
+	any given solver.
+
+	<pre>
+	Dates:        07/94 - original version
+	              06/96 - reimplementation
+	              03/98 - Added the consistency analysis for conditional
+	                      models</pre>
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "slv_client.h"
+*//*
+	by Benjamin A Allan and Vicente Rico-Ramirez and Ben Allan
+	Created: 7/11/94
+	Version: $Revision: 1.10 $
+	Version control file: $RCSfile: slvDOF.h,v $
+	Date last modified: $Date: 1998/03/30 22:07:03 $
+	Last modified by: $Author: rv2a $
+*/
 
 #ifndef ASC_SLVDOF_H
 #define ASC_SLVDOF_H
+
+#include <utilities/ascConfig.h>
 
 /*
  * The following functions are for use in running DOF analysis and dialog
@@ -65,7 +60,7 @@
  * time.
  */
 
-extern int ASC_DLLSPEC slvDOF_eligible(slv_system_t server, int32 **vil);
+extern ASC_DLLSPEC(int) slvDOF_eligible(slv_system_t server, int32 **vil);
 /**
  * @return 1 if able to determine lists, 0 otherwise.
  * @param vil pointer to an int32 array which will fill in and return
@@ -80,7 +75,7 @@ extern int ASC_DLLSPEC slvDOF_eligible(slv_system_t server, int32 **vil);
  * since they cannot help the DOF state of the system.
  */
 
-extern int ASC_DLLSPEC slvDOF_structsing(slv_system_t server,
+extern ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
                              int32 relindex,
                              int32 **vil,
                              int32 **ril,
@@ -101,7 +96,7 @@ extern int ASC_DLLSPEC slvDOF_structsing(slv_system_t server,
  *  @param fil  int32 **, the vars which reduce the structural singularity if freed.
  */
 
-extern int32 ASC_DLLSPEC slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
+extern ASC_DLLSPEC(int32) slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 /**<
  *  Return the status of the current problem.
  *
@@ -128,7 +123,7 @@ extern int32 get_globally_consistent_eligible(slv_system_t server,
  *  elist is incident vars eligible to be fixed.
  */
 
-extern int32 ASC_DLLSPEC consistency_analysis(slv_system_t server, int32 **fixed);
+extern ASC_DLLSPEC(int32) consistency_analysis(slv_system_t server, int32 **fixed);
 /**<
  *  Returns 1 if system is structurally consistent, 0 otherwise.
  *  That is you send us the address of a pointer to an int32 array

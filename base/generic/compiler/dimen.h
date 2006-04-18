@@ -1,44 +1,42 @@
-/*
- *  Ascend Dimensions Data Structure
- *  by Tom Epperly
- *  8/18/89
- *  Version: $Revision: 1.7 $
- *  Version control file: $RCSfile: dimen.h,v $
- *  Date last modified: $Date: 1997/07/18 12:28:58 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Dimensions Data Structure.
- *  <pre>
- *  When #including dimen.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Ascend Dimensions Data Structure.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "fractions.h"
+	#include "compiler.h"
+*//*
+	by Tom Epperly
+	8/18/89
+	Version: $Revision: 1.7 $
+	Version control file: $RCSfile: dimen.h,v $
+	Date last modified: $Date: 1997/07/18 12:28:58 $
+	Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_DIMEN_H
 #define ASC_DIMEN_H
+
+#include <utilities/ascConfig.h>
 
 /* Keep these defines current with DimNames in dimen.h. */
 #define NUM_DIMENS            10  /**< Number of dimension types. */
@@ -115,7 +113,7 @@ extern void ClearDimensions(dim_type *d);
  *  Initialize all the dimension fractions to zero.
  */
 
-extern CONST dim_type* ASC_DLLSPEC Dimensionless(void);
+extern ASC_DLLSPEC(CONST dim_type*) Dimensionless(void);
 /**<
  *  Return a pointer to the dimensionless structure.
  */
@@ -172,7 +170,7 @@ extern void SetWild(dim_type *dim);
  *  Set the wild flag of dimensions dim.
  */
 
-extern int ASC_DLLSPEC IsWild(CONST dim_type *d);
+extern ASC_DLLSPEC(int) IsWild(CONST dim_type *d);
 /**<
  *  Return a true value if d is wild, and otherwise return a false value.
  */
@@ -195,7 +193,7 @@ extern int SameDimen(CONST dim_type *d1, CONST dim_type *d2);
  *  Wild and any non-wild are NOT the same.
  */
 
-extern int ASC_DLLSPEC CmpDimen(CONST dim_type *d1, CONST dim_type *d2);
+extern ASC_DLLSPEC(int) CmpDimen(CONST dim_type *d1, CONST dim_type *d2);
 /**<
  *  Return 1,0,-1 if d1 is >,=, or < d2 respectively.
  */
@@ -302,10 +300,9 @@ extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *
  *  - Otherwise return NULL
  */
 
-extern void ASC_DLLSPEC PrintDimen(FILE *f ,CONST dim_type *d);
+extern ASC_DLLSPEC(void) PrintDimen(FILE *f ,CONST dim_type *d);
 /**< Print a dimension to a file.  Used in interface */
 extern void DumpDimens(FILE *f);
 /**< Dump all dimensions to a file.  Used in interface */
 
 #endif /* ASC_DIMEN_H */
-

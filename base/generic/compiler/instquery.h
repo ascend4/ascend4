@@ -1,46 +1,44 @@
-/*
- *  Ascend Instance Miscellaneous Queries
- *  by Tom Epperly & Ben Allan
- *  8/16/89
- *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: instquery.h,v $
- *  Date last modified: $Date: 1998/02/05 16:36:48 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Ben Allan
- *  based on instance.c
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1996 Ben Allan
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Instance Miscellaneous Queries.
- *  <pre>
- *  When #including instquery.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *         #include "compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Ascend Instance Miscellaneous Queries.
+
+	based on instance.c
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "instance_enum.h"
+	#include "compiler.h"
+*//*
+	by Tom Epperly & Ben Allan
+	8/16/89
+	Version: $Revision: 1.13 $
+	Version control file: $RCSfile: instquery.h,v $
+	Date last modified: $Date: 1998/02/05 16:36:48 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_INSTQUERY_H
 #define ASC_INSTQUERY_H
+
+#include <utilities/ascConfig.h>
 
 /*
  *  The following InterfacePtr functions are to support a global,
@@ -151,7 +149,7 @@ extern void (*InterfacePtrATS)();
  *  Return the enumerated inst_t that indicates the type of Instance* i.
  *  @see InstanceKindF()
  */
-extern enum inst_t ASC_DLLSPEC InstanceKindF(CONST struct Instance *i);
+extern ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
 /**<
  *  <!--  enum inst_t InstanceKind(i);                                 -->
  *  <!--  const struct Instance *i;                                    -->
@@ -205,7 +203,7 @@ extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
  *  This is not an intelligent function.
  */
 
-extern struct Instance* ASC_DLLSPEC NextCliqueMember(CONST struct Instance *i);
+extern ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
 /**<
  *  <!--  struct Instance *NextCliqueMember(i);                        -->
  *  <!--  const struct Instance *i;                                    -->
@@ -228,7 +226,7 @@ extern struct Instance* ASC_DLLSPEC NextCliqueMember(CONST struct Instance *i);
  *  This function can be call on *any* type of instance.
  */
 
-extern VOIDPTR ASC_DLLSPEC GetInterfacePtr(CONST struct Instance *i);
+extern ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
 /**<
  *  <!--  VOIDPTR GetInterfacePtr(i)                                   -->
  *  <!--  const struct Instance *i;                                    -->
@@ -268,7 +266,7 @@ extern VOIDPTR ASC_DLLSPEC GetInterfacePtr(CONST struct Instance *i);
  *  instance_io.h.
  */
 
-extern void ASC_DLLSPEC SetInterfacePtr(struct Instance *i, VOIDPTR c);
+extern ASC_DLLSPEC(void) SetInterfacePtr(struct Instance *i, VOIDPTR c);
 /**<
  *  <!--  void SetInterfacePtr(i,c)                                    -->
  *  <!--  struct Instance *i;                                          -->
@@ -322,7 +320,7 @@ extern symchar *InstanceType(CONST struct Instance *i);
  *  relations though.
  */
 
-extern struct TypeDescription* ASC_DLLSPEC InstanceTypeDesc(CONST struct Instance *i);
+extern ASC_DLLSPEC(struct TypeDescription*) InstanceTypeDesc(CONST struct Instance *i);
 /**<
  *  <!--  struct TypeDescription *InstanceTypeDesc(i)                  -->
  *  <!--  const struct Instance *i;                                    -->
@@ -380,7 +378,7 @@ extern struct gl_list_t *FindSimulationAncestors(struct Instance *i);
  * Caller should destroy the list (but obviously not its content).
  */
 
-extern struct Instance* ASC_DLLSPEC GetSimulationRoot(struct Instance *i);
+extern ASC_DLLSPEC(struct Instance*) GetSimulationRoot(struct Instance *i);
 /**<
  *  <!--  struct Instance *GetSimulationRoot(i);                       -->
  *  <!--  struct Instance *i;                                          -->

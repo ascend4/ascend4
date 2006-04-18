@@ -25,8 +25,8 @@ int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double
 */
 
 extern int
-DLEXPORT extfntest_register(){
-	const char *addone_help = "This is a test of the dynamic user packages functionality"; 
+ASC_EXPORT extfntest_register(){
+	const char *addone_help = "This is a test of the dynamic user packages functionality";
 	int result = 0;
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");

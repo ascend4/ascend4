@@ -4,7 +4,6 @@
  *  Version control file: $RCSfile: checkdim.h,v $
  *  Date last modified: $Date: 1997/07/18 11:48:39 $
  *  Last modified by: $Author: mthomas $
- *  Part of Ascend
  *
  *  This file is part of the Ascend Programming System
  *

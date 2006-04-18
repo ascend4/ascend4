@@ -1,53 +1,51 @@
-/*
- *  notate.h
- *  By Ben Allan
- *  4/98
- *  Part of ASCEND
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: notate.h,v $
- *  Date last modified: $Date: 1998/06/16 16:38:42 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998 Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  This file defines and manages a little (we hope)
- *  database system for storing NOTES in-core in a variety
- *  of quickly accessible ways.
- *  If scale gets to be an issue, this could become a wrapper
- *  for a real database someday.
- *  This implementation is not optimized for anything -- the
- *  intent here is to learn if it can be done at all.
- *  <pre>
- *  When #including notate.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "general/list.h"
- *         #include "compiler/compiler.h"
- *         #include "compiler/braced.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef __NOTATE_H_SEEN__
-#define __NOTATE_H_SEEN__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	This file defines and manages a little (we hope)
+	database system for storing NOTES in-core in a variety
+	of quickly accessible ways.
+
+	If scale gets to be an issue, this could become a wrapper
+	for a real database someday.
+
+	This implementation is not optimized for anything -- the
+	intent here is to learn if it can be done at all.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "general/list.h"
+	#include "compiler/compiler.h"
+	#include "compiler/braced.h"
+*//*
+	By Ben Allan
+	4/98
+	Version: $Revision: 1.3 $
+	Version control file: $RCSfile: notate.h,v $
+	Date last modified: $Date: 1998/06/16 16:38:42 $
+	Last modified by: $Author: mthomas $
+*/
+
+#ifndef ASC_NOTATE_H
+#define ASC_NOTATE_H
+
+#include <utilities/ascConfig.h>
 
 /**
  * A wildcard pointer value for database queries.
@@ -126,10 +124,9 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
  * returns 1.
  * <!--  err = InitNotesDatabase(dbid);                                -->
  */
-extern int ASC_DLLSPEC InitNotesDatabase(symchar *dbid);
+extern ASC_DLLSPEC(int) InitNotesDatabase(symchar *dbid);
 
 /**
- * <!--  list  = ListNotesDatabases();                                 -->
  * Returns a gl_list containing symchar * of names (dbid)
  * of databases currently in existence.
  */
@@ -138,19 +135,16 @@ extern struct gl_list_t *ListNotesDatabases(void);
 /**
  * Destroy the database, and necessarily all tokens being held.
  * if dbid is 0x1, destroys all databases.
- * <!--  DestroyNotesDatabase(dbid);                                   -->
  */
-extern void ASC_DLLSPEC DestroyNotesDatabase(symchar *dbid);
+extern ASC_DLLSPEC(void) DestroyNotesDatabase(symchar *dbid);
 
 /**
  * Clear any notes associated with the type named out of
  * database. Useful if replacing a type.
- * <!--  DestroyNotesOnType(dbid,typename);                            -->
  */
 extern void DestroyNotesOnType(symchar *dbid, symchar *type_name);
 
 /**
- * <!--  list = GetNotes(dbid,typename,language,id,method,nd);         -->
  * Returns a list of notes matching the keys specified.
  * NOTESWILD key values are wildcards.
  * This list returned is yours to destroy. The contents of the
@@ -196,7 +190,6 @@ extern struct gl_list_t *GetNotes(symchar *dbid,
 extern struct gl_list_t *GetExactNote(symchar *dbid, struct Note *n);
 
 /**
- * <!--  GetNotesList(dbid,typelist,langlist,idlist,methodlist,ndlist);  -->
  * Returns the list of notes matching any combination of the
  * keys stored in the gl_lists given. So, for example,
  * if you want the notes on id in typename or any ancestor,
@@ -253,7 +246,6 @@ extern enum NoteData GetNoteEnum(struct Note *n);
 extern void *GetNoteData(struct Note *n, enum NoteData nd);
 
 /**
- * <!--  token = HoldNoteData(dbid,nl);                                -->
  * Puts the list of note pointers on an internal tracking list.
  * token returned may be passed to Note functions which take a
  * token. Returns NULL on memory failure or on list nl not appearing
@@ -263,13 +255,11 @@ extern void *GetNoteData(struct Note *n, enum NoteData nd);
 extern void *HoldNoteData(symchar *dbid, struct gl_list_t *nl);
 
 /**
- * <!--  list = HeldNotes(dbid,token);                                 -->
  * Returns NULL if token given is invalid in dbid.
  */
 extern struct gl_list_t *HeldNotes(symchar *dbid, void *token);
 
 /**
- * <!--  ReleaseNoteData(dbid,token);                                  -->
  * Removes the list of note pointers associated with token
  * from internal tracking list.
  * Calling with a 0x1 token releases all held lists and all
@@ -280,7 +270,6 @@ extern void ReleaseNoteData(symchar *dbid, void *token);
 
 /**
  * Return the languages found in any committed note as a list of symchars.
- * <!--  GetNotesAllLanguages(dbid);                                   -->
  */
 extern struct gl_list_t *GetNotesAllLanguages(symchar *dbid);
 
@@ -290,7 +279,7 @@ extern struct gl_list_t *GetNotesAllLanguages(symchar *dbid);
  */
 
 /** Returns the 'Loaded Libraries' symchar, which is useful for the parser. */
-extern symchar* ASC_DLLSPEC LibraryNote(void);
+extern ASC_DLLSPEC(symchar*) LibraryNote(void);
 
 /** Returns the 'All Known Files' symchar, which is useful for the parser. */
 extern symchar *GlobalNote(void);
@@ -302,7 +291,6 @@ extern symchar *InlineNote(void);
 extern symchar *SelfNote(void);
 
 /**
- * <!--  CommitNote(dbid,note);                                        -->
  * Add a note to the database.
  * Notes with vlists may be internally replicated to optimize
  * future queries.
@@ -312,7 +300,6 @@ extern int CommitNote(symchar *dbid, struct Note *note);
 /**
  * Create a note. Destroy the note unless you commit it to a
  * database.
- * <!--  n = CreateNote(type,lang,id,method,file,btext,line,data,nd);  -->
  */
 extern struct Note *CreateNote(symchar *type,
                                symchar *lang,
@@ -335,7 +322,6 @@ extern void DestroyNote(struct Note *n);
 /*-****** regular expression matching madness for the database ******/
 
 /**
- * <!--  nl = GetMatchingNotes(dbid, pattern, token, engine);          -->
  * Returns a list of notes whose text (or name list if a vlist note in future)
  * matches the pattern given according to the engine given.
  * If token is NULL, entire database is given, OTHERWISE token
@@ -361,7 +347,6 @@ typedef void *(*NEInitFunc)(void *, /* NEdata */
                             char *  /* pattern */);
 
 /**
- * <!--  match = NECompareFunc(nedata,neinitfuncreturn,string,string); -->
  * An NECompareFunc returns -1 for error, 0 for no match, 1 for match.
  * Tcl_RegExpExec is an example of this function class.
  */
@@ -376,17 +361,15 @@ typedef int (*NECompareFunc)(void *, /* NEdata */
 /**
  * This is a wrapper to keep things independent of anyone in particular's
  * regular expression package.
- * <!--  engine = NotesCreateEngine(NEdata,NEInit,NECompare);          -->
  */
 extern struct NoteEngine *NotesCreateEngine(void *NEdata,
                                    NEInitFunc NEInit,
                                    NECompareFunc NECompare);
 
 /**
- * <!--  NotesDestroyEngine(engine);                                   -->
  * Destroys a previously returned engine.
  */
 extern void NotesDestroyEngine(struct NoteEngine *engine);
 
-#endif /* __NOTATE_H_SEEN__ */
+#endif /* ASC_NOTATE_H */
 

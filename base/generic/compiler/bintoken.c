@@ -479,8 +479,7 @@ enum bintoken_error WriteResidualCode(FILE *fp, struct Instance *i,
  * relations represented +1 since element 0 is {NULL,NULL}
  * by convention.
  */
-int ASC_DLLSPEC ExportBinTokenCTable(struct TableC *t,int size)
-{
+int ExportBinTokenCTable(struct TableC *t,int size){
   if (g_bt_data.newtable != NULL || t == NULL || size < 1) {
     return 1;
   }

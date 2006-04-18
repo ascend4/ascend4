@@ -1,57 +1,57 @@
-/*
- *  SLV: Ascend Nonlinear Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *  Copyright (C) 1996 Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1996 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Server functions for the SLV solver.
+
+	Requires:
+	#include <solver/var.h>
+	#include <solver/rel.h>
+	#include <solver/discrete.h>
+	#include <solver/conditional.h>
+	#include <solver/logrel.h>
+	#include <solver/bnd.h>
+	#include <solver/linsol.h>
+	#include <solver/linsolqr.h>
+	#include <solver/slv_common.h>
+	#include <solver/slv_types.h>
+	#include <solver/slv_client.h>
+
+	@NOTE
+		We are going through a solver API definition restructuring.
+		The appearance of a NOTE section in the header means the code in question
+		has, or is about to have, a change in its meaning or is code that
+		is new and replaces some or all the functionality of an old
+		function definition. Basically, expect to have to read NOTE sections
+		carefully and maybe patch calls dependent on them.
+*//*
+	by Karl Michael Westerberg
+	Created: 2/6/90
  */
-/** @file
-Server functions for the SLV solver.
-
-Requires:
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
-#include <solver/slv_common.h>
-#include <solver/slv_types.h>
-#include <solver/slv_client.h>
-
-@NOTE
-	We are going through a solver API definition restructuring.
-	The appearance of a NOTE section in the header means the code in question
-	has, or is about to have, a change in its meaning or is code that
-	is new and replaces some or all the functionality of an old
-	function definition. Basically, expect to have to read NOTE sections
-	carefully and maybe patch calls dependent on them.
-*/
 
 #ifndef ASC_SLV_SERVER_H
 #define ASC_SLV_SERVER_H
+
+#include <utilities/ascConfig.h>
 
 extern slv_system_t slv_create(void);
 /**<
@@ -334,7 +334,7 @@ extern int32 slv_get_obj_num(slv_system_t sys);
 	If the objective is NULL then -1 is returned.
 */
 
-extern int32 ASC_DLLSPEC slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
+extern ASC_DLLSPEC(int32) slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
 /**<
 	Allocates rip and fills it with:
 	-#  the number of vars close to lower bounds

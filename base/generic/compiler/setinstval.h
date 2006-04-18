@@ -1,47 +1,45 @@
-/*
- *  Routines to Process Set Instance Values
- *  by Tom Epperly
- *  11/16/89
- *  Version: $Revision: 1.7 $
- *  Version control file: $RCSfile: setinstval.h,v $
- *  Date last modified: $Date: 1998/02/05 16:37:52 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Routines to Process Set Instance Values.
- *
- *  This group of routines is used to process the value fields of set
- *  instances.
- *  <pre>
- *  When #including setinstval.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *         #include "list.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef __SETINSTVAL_H_SEEN__
-#define __SETINSTVAL_H_SEEN__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Routines to Process Set Instance Values.
+
+	This group of routines is used to process the value fields of set
+	instances.
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "compiler.h"
+	#include "list.h"
+*//*
+	by Tom Epperly
+	11/16/89
+	Version: $Revision: 1.7 $
+	Version control file: $RCSfile: setinstval.h,v $
+	Date last modified: $Date: 1998/02/05 16:37:52 $
+	Last modified by: $Author: ballan $
+*/
+
+#ifndef ASC_SETINSTVAL_H
+#define ASC_SETINSTVAL_H
+
+#include <utilities/ascConfig.h>
 
 enum set_kind {
   integer_set,  /**< set of integer values */
@@ -77,22 +75,16 @@ extern void DestroySetManager(void);
 
 extern void ReportSetManager(FILE*f);
 /**<
- *  <!--  ReportSetManager(f);                                         -->
- *  <!--  FILE *f;                                                     -->
  *  Reports on the set pool to f.
  */
 
 extern struct set_t *CreateEmptySet(void);
 /**<
- *  <!--  struct set_t *CreateEmptySet()                               -->
  *  Creates an empty set.
  */
 
 extern void InsertInteger(struct set_t *set, long i);
 /**<
- *  <!--  void InsertInteger(set,i)                                    -->
- *  <!--  struct set_t *set;                                           -->
- *  <!--  long i;                                                      -->
  *  Insert i into set.  You can insert i multiple times without causing
  *  problems.  Set must be non-NULL.  This will coerce an empty set type
  *  into an integer set type; after that no symbols can be inserted into
@@ -101,9 +93,6 @@ extern void InsertInteger(struct set_t *set, long i);
 
 extern void InsertIntegerRange(struct set_t *set, long lower, long upper);
 /**<
- *  <!--  struct InsertIntegerRange(set,lower,upper)                   -->
- *  <!--  struct set_t *set;                                           -->
- *  <!--  long lower, upper;                                           -->
  *  Insert the elements i such that i >= lower and i <= upper.  Note if
  *  lower > upper, no elements are inserted.  This will coerce an empty
  *  set type into an integer set type.
@@ -111,17 +100,12 @@ extern void InsertIntegerRange(struct set_t *set, long lower, long upper);
 
 extern void InsertString(struct set_t *set, symchar *str);
 /**<
- *  <!--  struct InsertString(set,str)                                 -->
- *  <!--  struct set_t *set;                                           -->
- *  <!--  symchar *str;                                                -->
  *  Insert str into set.  This will coerce an empty set type into
  *  a string set type; after which no integers can be inserted.
  */
 
 extern struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2);
 /**<
- *  <!--  struct set_t *SetUnion(s1,s2)                                -->
- *  <!--  const struct set_t *s1,*s2;                                  -->
  *  Create a set which is the union of s1 and s2.  s1 and s2 are uneffected.
  *  Union with empty set is always okay.
  */
@@ -129,41 +113,29 @@ extern struct set_t *SetUnion(CONST struct set_t *s1, CONST struct set_t *s2);
 extern struct set_t *SetIntersection(CONST struct set_t *s1,
                                      CONST struct set_t *s2);
 /**<
- *  <!--  struct set_t *SetIntersection(s1,s2);                        -->
- *  <!--  const struct set_t *s1,*s2;                                  -->
  *  Create a set which is the intersection of s1 and s2.  s1 and s2 are
  *  uneffected.  Intersection with empty set is okay.
  */
 
 extern struct set_t *SetDifference(CONST struct set_t *s1, CONST struct set_t *s2);
 /**<
- *  <!--  struct set_t *SetDifference(s1,s2)                           -->
- *  <!--  const struct set_t *s1,*s2;                                  -->
  *  Create a set which is define as follows:
  *  return set := { i | (i IN s1) and (NOT (i IN s2))}
  */
 
 extern struct set_t *CopySet(CONST struct set_t *set);
 /**<
- *  <!--  struct set_t *CopySet(set)                                   -->
- *  <!--  const struct set_t *set;                                     -->
  *  Copy a set.
  */
 
 extern int IntMember(long i, CONST struct set_t *set);
 /**<
- *  <!--  int IntMember(i,set)                                         -->
- *  <!--  long i;                                                      -->
- *  <!--  const struct set_t *set;                                     -->
  *  Return a TRUE value if i is a member of set; otherwise, return a false
  *  value.
  */
 
 extern int StrMember(symchar *str, CONST struct set_t *set);
 /**<
- *  <!--  int StrMember(str,set)                                       -->
- *  <!--  symchar *str;                                                -->
- *  <!--  const struct set_t *set;                                     -->
  *  Return a TRUE value if str is a member of set; otherwise, return a false
  *  value.
  */
@@ -174,25 +146,23 @@ extern void DestroySet(struct set_t *set);
 extern int NullSet(CONST struct set_t *set);
 /**<  Testing if the set is empty.  TRUE if set is empty. */
 
-extern unsigned long ASC_DLLSPEC Cardinality(CONST struct set_t *set);
+extern ASC_DLLSPEC(unsigned long) Cardinality(CONST struct set_t *set);
 /**<  Return the number of members. */
 
-extern symchar* ASC_DLLSPEC FetchStrMember(CONST struct set_t *set, unsigned long n);
+extern ASC_DLLSPEC(symchar*) FetchStrMember(CONST struct set_t *set, unsigned long n);
 /**<  Returns the nth (internal sort order ) member symbol. */
 
-extern long ASC_DLLSPEC FetchIntMember(CONST struct set_t *set, unsigned long n);
+extern ASC_DLLSPEC(long) FetchIntMember(CONST struct set_t *set, unsigned long n);
 /**<  Returns the nth (internal sort order ) member number. */
 
 extern void SetIterate(struct set_t *set, void (*func)());
 /**<  Calls func for every element in set. */
 
-extern enum set_kind ASC_DLLSPEC SetKind(CONST struct set_t *set);
+extern ASC_DLLSPEC(enum set_kind) SetKind(CONST struct set_t *set);
 /**<  Returns the type of the set. */
 
 extern int SetsEqual(CONST struct set_t *s1, CONST struct set_t *s2);
 /**<
- *  <!--  int SetsEqual(s1,s2)                                         -->
- *  <!--  const struct set_t *s1,*s2;                                  -->
  *  Returns a true value if the two sets are equal.  Set equality is
  *  defined as:
  *  (i IN s1) <==> (i IN s2)
@@ -201,8 +171,6 @@ extern int SetsEqual(CONST struct set_t *s1, CONST struct set_t *s2);
 
 extern int Subset(CONST struct set_t *s1, CONST struct set_t *s2);
 /**<
- *  <!--  int Subset(s1,s2);                                           -->
- *  <!--  struct set_t *s1,*s2;                                        -->
  *  Returns a true value if s1 is contained in s2.  It always returns FALSE
  *  if the sets are of different type(even if they are empty sets).
  *
@@ -212,8 +180,6 @@ extern int Subset(CONST struct set_t *s1, CONST struct set_t *s2);
 
 extern int CmpSetInstVal(CONST struct set_t *s1, CONST struct set_t *s2);
 /**<
- *  <!--  int CmpSetInstVal(s1,s2)                                     -->
- *  <!--  struct set_t *s1,*s2;                                        -->
  *  Returns -1, 0, 1 from comparing s1,s2.
  */
 
@@ -226,9 +192,6 @@ extern int CmpSetInstVal(CONST struct set_t *s1, CONST struct set_t *s2);
 
 extern void AppendIntegerElement(struct set_t *set, long int i );
 /**<
- *  <!--  void AppendIntegerElement(set,i);                            -->
- *  <!--  struct set_t *set;                                           -->
- *  <!--  long int i;                                                  -->
  *  This function will append an integer to a set. In so doing it will NOT
  *  attempt to sort the elements of the set or to make the elements of the
  *  set unique. In this way the set is treated as a list.
@@ -236,12 +199,10 @@ extern void AppendIntegerElement(struct set_t *set, long int i );
 
 extern void AppendStringElement(struct set_t *set, symchar *str);
 /**<
- *  <!--  struct set_t *set;                                           -->
- *  <!--  symchar *str;                                                -->
  *  This function will append an string to a set. In so doing it will NOT
  *  attempt to sort the elements of the set or to make the elements of the
  *  set unique. In this way the set is treated as a list.
  */
 
-#endif /* __SETINSTVAL_H_SEEN__ */
+#endif /* ASC_SETINSTVAL_H */
 

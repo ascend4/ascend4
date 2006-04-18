@@ -170,9 +170,7 @@ void AscCheckDuplicateLoad(CONST char *path)
 #if defined(__WIN32__)
 # include <windows.h>
 
-int ASC_DLLSPEC Asc_DynamicLoad(CONST char *path, CONST char *initFun)
-{
-#define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
+int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   HINSTANCE xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
 
@@ -207,6 +205,7 @@ int ASC_DLLSPEC Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   return (install == NULL) ? 0 : (*install)();
 }
+#define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
 
 # define UNLOAD FreeLibrary
 # define DLLSYM GetProcAddress
@@ -236,7 +235,6 @@ int ASC_DLLSPEC Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
-#define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   void *xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
 
@@ -270,6 +268,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   return (install == NULL) ? 0 : (*install)();
 }
+#define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
 
 # define UNLOAD dlclose
 # define DLLSYM dlsym
@@ -295,7 +294,6 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 
 int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
 {
-# define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
   shl_t xlib;
   ExternalLibraryRegister_fptr_t install = NULL;
   int i;
@@ -336,6 +334,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
   return (install == NULL) ? 0 : (*install)();
 }
+# define ASCDL_OK /* this line should appear inside each Asc_DynamicLoad */
 
 # define UNLOAD shl_unload
 # define DLL_CAST (shl_t)

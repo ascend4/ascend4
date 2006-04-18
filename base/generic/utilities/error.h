@@ -1,6 +1,21 @@
-#ifndef ASC_ERROR_H
-#define ASC_ERROR_H
-/**
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
 	This file provides error reporting to a callback function via
 	ASCEND's FPRINTF(ASCERR,...) syntax. It is anticipated that
 	this would gradually be expanded to including richer reporting
@@ -24,6 +39,8 @@
 		ASC_(USER|PROG)_(NOTE|WARNING|ERROR)
 	and ASC_USER_SUCCESS
 */
+#ifndef ASC_ERROR_H
+#define ASC_ERROR_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,10 +150,10 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_NOLINE error_reporter_noline
 # define CONSOLE_DEBUG console_debug
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,"[function?]");
-int error_reporter_note_no_line(const char *fmt,...);
-int error_reporter_here(const error_severity_t sev, const char *fmt,...);
-int error_reporter_noline(const error_severity_t sev, const char *fmt,...);
-int console_debug(const char *fmt,...);
+extern ASC_DLLSPEC(int) error_reporter_note_no_line(const char *fmt,...);
+extern ASC_DLLSPEC(int) error_reporter_here(const error_severity_t sev, const char *fmt,...);
+extern ASC_DLLSPEC(int) error_reporter_noline(const error_severity_t sev, const char *fmt,...);
+extern ASC_DLLSPEC(int) console_debug(const char *fmt,...);
 #endif
 
 #define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
@@ -163,30 +180,30 @@ typedef struct{
 	to print to stderr will be captured and passed to the error_reporter_callback
 	function for handling.
 */
-int ASC_DLLSPEC fprintf_error_reporter(FILE *file, const char *fmt, ...);
+extern ASC_DLLSPEC(int) fprintf_error_reporter(FILE *file, const char *fmt, ...);
 
 /**
 	If file!=stderr, this will do the usual thing. If file==stderr, it will output
 	the character via fprintf_error_reporter.
 */
-int ASC_DLLSPEC fputc_error_reporter(int c, FILE *file); /* just calls fprintf_error_reporter */
+extern ASC_DLLSPEC(int) fputc_error_reporter(int c, FILE *file); /* just calls fprintf_error_reporter */
 
 /**
 	This replaces the standard 'fflush' of Asc_FFlush. If file!=stderr, it will
 	call the standard fflush. If file==stderr, it will call error_reporter_end_flush.
 */
-int ASC_DLLSPEC fflush_error_reporter(FILE *file);
+extern ASC_DLLSPEC(int) fflush_error_reporter(FILE *file);
 
 /**
 	Start a cached error report. This means that multiple frprintf_error_reporter calls will
 	be stored in a global string until an error_reporter_end_flush is encountered.
 */
-int ASC_DLLSPEC error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
+extern ASC_DLLSPEC(int) error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
 
 /**
 	Output the contents of the checked global string as an error report
 */
-int ASC_DLLSPEC error_reporter_end_flush();
+extern ASC_DLLSPEC(int) error_reporter_end_flush();
 
 /**
 	This #define saves you typing the list of arguments in your
@@ -233,7 +250,7 @@ typedef int (*ErrorReporter_fptr_t)(
 
 	@return follows the style of fprintf
 */
-ASC_DLLSPEC int error_reporter(
+extern ASC_DLLSPEC(int) error_reporter(
       const error_severity_t sev
     , const char *errfile
     , const int errline
@@ -246,7 +263,7 @@ ASC_DLLSPEC int error_reporter(
 	This format of the error reporter is useful if you must call it
 	from another variable-argument-list function.
 */
-int ASC_DLLSPEC va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
+extern ASC_DLLSPEC(int) va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 
 /**
 	Set error reporting callback function using this
@@ -254,7 +271,7 @@ int ASC_DLLSPEC va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 	to standard error, which is effectively what the
 	hitherto FPRINTF has done.
 */
-void ASC_DLLSPEC error_reporter_set_callback(
+extern ASC_DLLSPEC(void) error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 );
 

@@ -1,52 +1,51 @@
-/*
- *  Type Definition Library
- *  by Tom Epperly
- *  Created: 1/12/90
- *  Version: $Revision: 1.17 $
- *  Version control file: $RCSfile: library.h,v $
- *  Date last modified: $Date: 1998/04/16 00:43:24 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Type Definition Library.
- *
- *  Implements a type definition library for use by the ASCEND compiler.
- *  Each type encountered during parsing is converted to a TypeDescription
- *  and stored in the main type library maintained by this module.
- *  The type library will only maintain one definition for a given type
- *  name.  The library will complain if you try to add two types with the
- *  same name unless it happens when reloading a module.
- *  <pre>
- *  When #including library.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler/compiler.h"
- *         #include "compiler/type_desc.h"
- *         #include "compiler/module.h"
- *         #include "general/list.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef library_h_seen__
-#define library_h_seen__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Type Definition Library.
+
+	Implements a type definition library for use by the ASCEND compiler.
+	Each type encountered during parsing is converted to a TypeDescription
+	and stored in the main type library maintained by this module.
+	The type library will only maintain one definition for a given type
+	name.  The library will complain if you try to add two types with the
+	same name unless it happens when reloading a module.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler/compiler.h"
+	#include "compiler/type_desc.h"
+	#include "compiler/module.h"
+	#include "general/list.h"
+*//*
+	by Tom Epperly
+	Created: 1/12/90
+	Version: $Revision: 1.17 $
+	Version control file: $RCSfile: library.h,v $
+	Date last modified: $Date: 1998/04/16 00:43:24 $
+	Last modified by: $Author: ballan $
+*/
+
+#ifndef ASC_LIBRARY_H
+#define ASC_LIBRARY_H
+
+#include <utilities/ascConfig.h>
 
 /** For use in constructing hierarchies. */
 struct HierarchyNode {
@@ -62,14 +61,14 @@ extern void InitializeLibrary(void);
  *  finished with the library.
  */
 
-extern void ASC_DLLSPEC DestroyLibrary(void);
+extern ASC_DLLSPEC(void) DestroyLibrary(void);
 /**<
  *  Cleans up after library use.
  *  Do not use any other functions or globals in this module after
  *  using this function until InitializeLibrary() is called.
  */
 
-extern struct TypeDescription* ASC_DLLSPEC FindType(symchar *name);
+extern ASC_DLLSPEC(struct TypeDescription*) FindType(symchar *name);
 /**<
  *  Finds the type description associated with name.
  *  Returns NULL if unable to locate the type.
@@ -140,7 +139,7 @@ extern struct gl_list_t *FindFundamentalTypes(void);
  *          fundamental types.
  */
 
-extern struct gl_list_t* ASC_DLLSPEC Asc_TypeByModule(CONST struct module_t *module);
+extern ASC_DLLSPEC(struct gl_list_t*) Asc_TypeByModule(CONST struct module_t *module);
 /**<
  *  Builds a list of type names defined in module that are already
  *  present in the main type library.  Destruction of the returned
@@ -238,5 +237,5 @@ extern unsigned int CheckFundamental(symchar *f);
  *  @return Returns 1 if f is a fundamental type name, 0 if not.
  */
 
-#endif /* library_h_seen__ */
+#endif /* ASC_LIBRARY_H */
 

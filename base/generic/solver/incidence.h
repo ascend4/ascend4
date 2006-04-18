@@ -1,5 +1,4 @@
-/*
-	ASCEND Solver Interface
+/*	ASCEND Solver Interface
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or
@@ -15,8 +14,8 @@
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-/**	@file
+*//**
+	@file
 	This file wraps up the routines for making a data structure
 	containing system incidence matrix information, which can then be
 	plotted or interactively queried using the GUI
@@ -51,7 +50,7 @@ typedef struct{
   struct rel_relation **rlist; /** pointer to the array of relations in the system */
 } incidence_vars_t;
 
-int ASC_DLLSPEC build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd);
+extern ASC_DLLSPEC(int) build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd);
 /**<
 	Fill in an mplotvars struct
 
@@ -66,7 +65,7 @@ int ASC_DLLSPEC build_incidence_data(CONST slv_system_t sys, incidence_vars_t *p
 */
 
 
-void ASC_DLLSPEC free_incidence_data(incidence_vars_t *pd);
+extern ASC_DLLSPEC(void) free_incidence_data(incidence_vars_t *pd);
 /**<
 	free memory in an mplotvars struct, if it is our memory
 */

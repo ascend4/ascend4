@@ -1,31 +1,27 @@
-/*
-	SLV: Ascend Nonlinear Solver
+/*	ASCEND modelling environment
 	Copyright (C) 1990 Karl Michael Westerberg
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 1996 Benjamin Andrew Allan
 	Copyright (C) 2005-2006 Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-	This file is part of the SLV solver.
-*/
-
-#ifndef ASC_SLV_CLIENT_H
-#define ASC_SLV_CLIENT_H
-
-/** @file
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
 	@see slv
 
 	Requires:
@@ -42,9 +38,8 @@
 	#include "solver/slv_common.h"
 	#include "solver/slv_types.h"
 	... some mtx.h files required as well?
-*/
-
-/** @page slv SLV Solver Interface
+*//**
+	@page slv SLV Solver Interface
 
 	ASCEND (the language) exists to separate, when desirable, the
 	formulation of a mathematical problem (numeric) from the solution of
@@ -250,6 +245,11 @@
 		carefully and maybe patch calls dependent on them.
 */
 
+#ifndef ASC_SLV_CLIENT_H
+#define ASC_SLV_CLIENT_H
+
+#include <utilities/ascConfig.h>
+
 typedef void *SlvClientToken;
 /**<
 	A pointer that is meaningful to a registered client.
@@ -285,7 +285,7 @@ typedef struct dof_data_structure {
 #define slv_number_of_solvers g_SlvNumberOfRegisteredClients
 /**< Alias for the number of solver's that have ever registered. */
 
-extern int ASC_DLLSPEC g_SlvNumberOfRegisteredClients;
+extern ASC_DLLSPEC(int) g_SlvNumberOfRegisteredClients;
 /**<
 	The number of solver's that have ever registered.
 	Once a solver is registered, we keep track of its name,
@@ -377,7 +377,7 @@ typedef int (SlvRegistration)(SlvFunctionsT *our_sft);
 	incompetent solver was registered.
 */
 
-extern int ASC_DLLSPEC slv_lookup_client( const char *solverName );
+extern ASC_DLLSPEC(int) slv_lookup_client( const char *solverName );
 /**<
  ***  Examples: @code
  ***  if (slv_lookup_client("QRSlv") < 0) {
@@ -387,7 +387,7 @@ extern int ASC_DLLSPEC slv_lookup_client( const char *solverName );
  ***  @return the number of the named client, or -1 if unknown.
  **/
 
-extern int ASC_DLLSPEC slv_register_client(SlvRegistration slv0_register
+extern ASC_DLLSPEC(int) slv_register_client(SlvRegistration slv0_register
 		,CONST char *yourregisterfuncname
 		,CONST char *yourbinaryname
 		,int *new_client_id);
@@ -407,7 +407,7 @@ extern int ASC_DLLSPEC slv_register_client(SlvRegistration slv0_register
 	@todo Note: the second syntax is NOT YET IMPLEMENTED.
 */
 
-extern const char* ASC_DLLSPEC slv_solver_name(int index);
+extern ASC_DLLSPEC(const char*) slv_solver_name(int index);
 /**<
 	@param index index of the solver in question (the index depends on the order in which the solvers have been registered)
 	@return name of the solver
@@ -470,7 +470,7 @@ extern dof_t *slv_get_log_dofdata(slv_system_t server);
 	@TODO The DEFAULT interpretation has not yet been established.
 */
 
-extern const mtx_block_t* ASC_DLLSPEC slv_get_solvers_blocks(slv_system_t sys);
+extern ASC_DLLSPEC(const mtx_block_t*) slv_get_solvers_blocks(slv_system_t sys);
 /**< Decomposition information for the nonlinear solver.
 
 	The blocks of the return value contain decomposition information
@@ -676,7 +676,7 @@ extern void slv_set_solvers_bnd_list(slv_system_t sys,
 		is reordered in some useful fashion defined elsewhere.
 */
 
-extern struct var_variable** ASC_DLLSPEC slv_get_solvers_var_list(slv_system_t sys);
+extern ASC_DLLSPEC(struct var_variable**) slv_get_solvers_var_list(slv_system_t sys);
 /**< Returns the most recently set variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
@@ -698,7 +698,7 @@ extern struct dis_discrete **slv_get_solvers_disunatt_list(slv_system_t sys);
 /**< Returns the most recently set unattached discrete variable list (never NULL)  from the system.
 	@see slv_get_master_disunatt_list()
 */
-extern struct var_variable ** ASC_DLLSPEC slv_get_master_var_list(slv_system_t sys);
+extern ASC_DLLSPEC(struct var_variable **) slv_get_master_var_list(slv_system_t sys);
 /**< Returns the most recently set master variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
@@ -733,7 +733,7 @@ extern struct dis_discrete **slv_get_master_disunatt_list(slv_system_t sys);
 	same MODEL.
 */
 
-extern struct rel_relation** ASC_DLLSPEC slv_get_solvers_rel_list(slv_system_t sys);
+extern ASC_DLLSPEC(struct rel_relation**) slv_get_solvers_rel_list(slv_system_t sys);
 /**<  Returns the (NULL-terminated) list of solver relations. */
 
 extern struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
@@ -781,7 +781,7 @@ extern struct gl_list_t *slv_get_symbol_list(slv_system_t sys);
 extern int32 slv_need_consistency(slv_system_t sys);
 /**< Gets the int need_consitency associated with the system. */
 
-extern int32 ASC_DLLSPEC slv_get_num_solvers_vars(slv_system_t sys);
+extern ASC_DLLSPEC(int32) slv_get_num_solvers_vars(slv_system_t sys);
 /**< Returns the length of the solver variable list.
 	The length does NOT include the terminating NULL.
 */
@@ -1034,7 +1034,7 @@ extern real64 slv_get_obj_variable_gradient(slv_system_t sys);
 	if no var is set.
 */
 
-extern int ASC_DLLSPEC slv_eligible_solver(slv_system_t sys);
+extern ASC_DLLSPEC(int) slv_eligible_solver(slv_system_t sys);
 /**<
 	Determines whether or not the current solver.
 	is capable of solving the given system as it is currently set up
@@ -1047,7 +1047,7 @@ extern int ASC_DLLSPEC slv_eligible_solver(slv_system_t sys);
 	If no solver is registered, this returns FALSE.
 */
 
-extern int ASC_DLLSPEC slv_select_solver(slv_system_t sys, int solver);
+extern ASC_DLLSPEC(int) slv_select_solver(slv_system_t sys, int solver);
 /**<
 	Sets the given solver to be the current solver
 	for the system.  The intelligence or stupidity of this move is not
@@ -1058,7 +1058,7 @@ extern int ASC_DLLSPEC slv_select_solver(slv_system_t sys, int solver);
 	@return number of solver actually selected or -1 on failure
 */
 
-extern int ASC_DLLSPEC slv_get_selected_solver(slv_system_t sys);
+extern ASC_DLLSPEC(int) slv_get_selected_solver(slv_system_t sys);
 /**<
 	Returns the current solver number for a system.
 */
@@ -1073,14 +1073,14 @@ extern int slv_switch_solver(slv_system_t sys, int solver);
 extern int32 slv_get_default_parameters(int32 index, slv_parameters_t *parameters);
 /**< @TODO needs commenting, KHACK */
 
-extern void ASC_DLLSPEC slv_get_parameters(slv_system_t sys, slv_parameters_t *parameters);
+extern ASC_DLLSPEC(void) slv_get_parameters(slv_system_t sys, slv_parameters_t *parameters);
 /**<
 	Copies the current system parameters to the given structure.
 
 	Do not confuse these parameters [algorithm control variables]
 	with the parameter list which is a list of pointers to var_variable.
 */
-extern void ASC_DLLSPEC slv_set_parameters(slv_system_t sys, slv_parameters_t *parameters);
+extern ASC_DLLSPEC(void) slv_set_parameters(slv_system_t sys, slv_parameters_t *parameters);
 /**<
 	Sets the current system parameters to the values contained
 	in the given structure.  It is recommended that one
@@ -1109,7 +1109,7 @@ extern void slv_set_solver_index(slv_system_t sys, int index);
 	Sets the solver index of the slv_system_t.
 */
 
-extern void ASC_DLLSPEC slv_get_status(slv_system_t sys, slv_status_t *status);
+extern ASC_DLLSPEC(void) slv_get_status(slv_system_t sys, slv_status_t *status);
 /**<
 	Copies the current system status into the given structure.
 */
@@ -1144,7 +1144,7 @@ extern void slv_dump_internals(slv_system_t sys, int level);
 	@TODO fix dubious documentation (return type is void...)
 */
 
-extern void ASC_DLLSPEC slv_presolve(slv_system_t sys);
+extern ASC_DLLSPEC(void) slv_presolve(slv_system_t sys);
 /**<
 	Prepares the system for solving.  This must be called before the
 	system is solved, but after everything about the system is set up
@@ -1191,7 +1191,7 @@ extern void slv_resolve(slv_system_t sys);
 	This function is considerably more efficient when it is usable.
 */
 
-extern void ASC_DLLSPEC slv_iterate(slv_system_t sys);
+extern ASC_DLLSPEC(void) slv_iterate(slv_system_t sys);
 /**<
 	Performs one iteration toward the ultimate solution (or
 	failure thereof) of the system.  The user can obtain information

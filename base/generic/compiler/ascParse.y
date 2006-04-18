@@ -37,45 +37,45 @@
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler/compiler.h"
-#include "compiler/scanner.h"
-#include "compiler/symtab.h"		/* the global string/symbol table */
-#include "compiler/notate.h"		/* notes database wrapper */
-#include "compiler/braced.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/name.h"
-#include "compiler/nameio.h"
-#include "compiler/instance_enum.h"
-#include "compiler/extfunc.h"
-#include "compiler/packages.h"
-#include "compiler/sets.h"
-#include "compiler/exprs.h"
-#include "compiler/exprio.h"
-#include "compiler/vlist.h"
-#include "compiler/vlistio.h"		/* for debugging only */
-#include "compiler/stattypes.h"
-#include "compiler/slist.h"
-#include "compiler/statement.h"
-#include "compiler/statio.h"
-#include "compiler/units.h"
-#include "compiler/when.h"
-#include "compiler/select.h"
-#include "compiler/switch.h"
-#include "compiler/proc.h"
-#include "compiler/watchpt.h"
-#include "compiler/module.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/typedef.h"
-#include "compiler/library.h"
-#include "compiler/syntax.h"
-#include "compiler/lexer.h"
-#include "compiler/parser.h"
+#include <compiler/compiler.h>
+#include <compiler/scanner.h>
+#include <compiler/symtab.h>		/* the global string/symbol table */
+#include <compiler/notate.h>		/* notes database wrapper */
+#include <compiler/braced.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include <compiler/types.h>
+#include <compiler/name.h>
+#include <compiler/nameio.h>
+#include <compiler/instance_enum.h>
+#include <compiler/extfunc.h>
+#include <compiler/packages.h>
+#include <compiler/sets.h>
+#include <compiler/exprs.h>
+#include <compiler/exprio.h>
+#include <compiler/vlist.h>
+#include <compiler/vlistio.h>		/* for debugging only */
+#include <compiler/stattypes.h>
+#include <compiler/slist.h>
+#include <compiler/statement.h>
+#include <compiler/statio.h>
+#include <compiler/units.h>
+#include <compiler/when.h>
+#include <compiler/select.h>
+#include <compiler/switch.h>
+#include <compiler/proc.h>
+#include <compiler/watchpt.h>
+#include <compiler/module.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/type_descio.h>
+#include <compiler/typedef.h>
+#include <compiler/library.h>
+#include <compiler/syntax.h>
+#include <compiler/lexer.h>
+#include <compiler/parser.h>
 
 /* 1 ==> expr can find missing , w/o  shift/reduce conflicts */
 #define COMMAEXPR_NOTBUGGY 0 

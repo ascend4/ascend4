@@ -1,86 +1,86 @@
-/*
- *  Ascend Instance Tree Link Implementation
- *  by Tom Epperly & Ben Allan
- *  8/16/89
- *  Version: $Revision: 1.11 $
- *  Version control file: $RCSfile: parentchild.h,v $
- *  Date last modified: $Date: 1998/02/05 16:37:24 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Ben Allan
- *  based on instance.c
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1996 Ben Allan
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Ascend Instance Tree Link Implementation.
- *  <pre>
- *  When #including parentchild.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *         #include "compiler.h"
- *  </pre>
- *  General comments on parents:
- *
- *    - Parents are numbered from 1 up, so zero is never a valid
- *      parent number
- *
- *    - Parent lists are kept sorted by address.
- *
- *    - The ordering of the parents list is not predictable in
- *      any usefull way.
- *
- *    - The number of parents for a given instance can be modified
- *      by ARE_THE_SAME's.
- *
- *    - The number of parents is NOT constant for a given type.
- *
- *    - Parent lists will contain no duplications.
- *      (when AddParent is used correctly, that is.)
- *
- *    - DummyInstances don't track parents -- they play a reference
- *      count game.
- *
- *  General comments on children:
- *
- *    - Children are number from 1 up, so zero is never a valid child
- *      number.
- *
- *    - Children numbers will remain constant for a given type except
- *      for arrays which can have varying numbers of children.
- *
- *    - Children numbers may or may not change will an instance is
- *      refined.
- *
- *    - Children are always sorted in increasing order either
- *      alphabetically or numerically depending on the type of
- *      naming.
- *
- *    - Children don't know what their name is.  Only a parent
- *      knows the names of the children below it.
- *
- *    - DummyInstances have no children.
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Ascend Instance Tree Link Implementation.
+
+	General comments on parents:
+
+	  - Parents are numbered from 1 up, so zero is never a valid
+	    parent number
+
+	  - Parent lists are kept sorted by address.
+
+	  - The ordering of the parents list is not predictable in
+	    any usefull way.
+
+	  - The number of parents for a given instance can be modified
+	    by ARE_THE_SAME's.
+
+	  - The number of parents is NOT constant for a given type.
+
+	  - Parent lists will contain no duplications.
+	    (when AddParent is used correctly, that is.)
+
+	  - DummyInstances don't track parents -- they play a reference
+	    count game.
+
+	General comments on children:
+
+	  - Children are number from 1 up, so zero is never a valid child
+	    number.
+
+	  - Children numbers will remain constant for a given type except
+	    for arrays which can have varying numbers of children.
+
+	  - Children numbers may or may not change will an instance is
+	    refined.
+
+	  - Children are always sorted in increasing order either
+	    alphabetically or numerically depending on the type of
+	    naming.
+
+	  - Children don't know what their name is.  Only a parent
+	    knows the names of the children below it.
+
+	  - DummyInstances have no children.
+
+	based on instance.c
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "instance_enum.h"
+	#include "compiler.h"
+*//*
+	by Tom Epperly & Ben Allan
+	8/16/89
+	Version: $Revision: 1.11 $
+	Version control file: $RCSfile: parentchild.h,v $
+	Date last modified: $Date: 1998/02/05 16:37:24 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_PARENTCHILD_H
 #define ASC_PARENTCHILD_H
+
+#include <utilities/ascConfig.h>
 
 /* Parent routines */
 
@@ -141,13 +141,13 @@ extern void AddParent(struct Instance *i, struct Instance *p);
 
 /* Children routines */
 
-extern unsigned long ASC_DLLSPEC NumberChildren(CONST struct Instance *i);
+extern ASC_DLLSPEC(unsigned long) NumberChildren(CONST struct Instance *i);
 /**<
  *  Return the number of children that instance i has.
  */
 
 
-extern struct Instance* ASC_DLLSPEC InstanceChild(CONST struct Instance *i,
+extern ASC_DLLSPEC(struct Instance*) InstanceChild(CONST struct Instance *i,
                                       unsigned long n);
 /**<
  *  Return a pointer to children number n.  Do not confuse the child number
@@ -157,7 +157,7 @@ extern struct Instance* ASC_DLLSPEC InstanceChild(CONST struct Instance *i,
  *  May exit on improper i.
  */
 
-extern struct InstanceName ASC_DLLSPEC ChildName(CONST struct Instance *i, unsigned long n);
+extern ASC_DLLSPEC(struct InstanceName) ChildName(CONST struct Instance *i, unsigned long n);
 /**<
  *  Returns the name of the n'th child of i.  Assumes that i has an
  *  n'th child.
@@ -201,7 +201,7 @@ extern unsigned long ChildSearch(CONST struct Instance *i,
  *  error. The strings in the InstanceName must come from the symbol table.
  */
 
-extern struct Instance* ASC_DLLSPEC ChildByChar(CONST struct Instance *i,
+extern ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
                                     symchar *str);
 /**<
  *  This returns to the pointer to a child, c, of parent,p, named by str.
@@ -247,4 +247,3 @@ extern void StoreChildPtr(struct Instance *i,
  */
 
 #endif  /* ASC_PARENTCHILD_H */
-

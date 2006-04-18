@@ -1,48 +1,45 @@
-/*
- *  Symbol Table Management
- *  by Tom Epperly
- *  7/24/89
- *  Version: $Revision: 1.7 $
- *  Version control file: $RCSfile: symtab.h,v $
- *  Date last modified: $Date: 1998/02/05 16:38:07 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *
- *
- *  Provide symbol table management facilities for Ascend compiler.  For
- *  now all the symbol table has to do is make sure that only one copy of each
- *  string is stored(to save space).  In the future it could have more
- *  information store in it.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Symbol Table Management.
- *  <pre>
- *  When #including symtab.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Symbol Table Management.
+
+	Provide symbol table management facilities for Ascend compiler.  For
+	now all the symbol table has to do is make sure that only one copy of each
+	string is stored(to save space).  In the future it could have more
+	information store in it.
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "compiler.h"
+*//*
+	by Tom Epperly
+	7/24/89
+	Version: $Revision: 1.7 $
+	Version control file: $RCSfile: symtab.h,v $
+	Date last modified: $Date: 1998/02/05 16:38:07 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_SYMTAB_H
 #define ASC_SYMTAB_H
+
+#include <utilities/ascConfig.h>
 
 #define MAXIMUM_STRING_LENGTH (2*MAXTOKENLENGTH)
 
@@ -62,7 +59,7 @@ extern void InitSymbolTable(void);
  *  Post: the symbol table is initialized
  */
 
-extern symchar* ASC_DLLSPEC AddSymbol(CONST char *c);
+extern ASC_DLLSPEC(symchar*) AddSymbol(CONST char *c);
 /**<
  *  This function adds the string c to the symbol table if it is not already
  *  defined.  This uses a copy of c rather than c itself.  c must be a
@@ -102,7 +99,7 @@ extern symchar *AddSymbolL(CONST char *c, int len);
  *  for the life of the ASCEND process.
  */
 
-extern symchar* ASC_DLLSPEC AscFindSymbol(symchar *s);
+extern ASC_DLLSPEC(symchar*) AscFindSymbol(symchar *s);
 /**<
  * Returns NULL if the pointer s given is not from the table.
  * Otherwise returns the pointer given.

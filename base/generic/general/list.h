@@ -1,90 +1,87 @@
-/*
- *  List Module
- *  by Tom Epperly
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: list.h,v $
- *  Date last modified: $Date: 1998/02/19 13:03:22 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute it
- *  and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
- *  Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc.,
- *  675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  List Module.
- *
- *  The purpose of this module is to provide a kind of flexible array.
- *  The flexible array has two interesting characteristics.  It allows
- *  contant time(O(1)) retrieval of list items and it is almost infinitely
- *  extendable (i.e. has no preset limit on the number of items in the list).
- *  It does not use much extra memory while providing these services.<br><br>
- *
- *  The list only stores pointers to items as VOIDPTR (void *).  This is
- *  an advantage, in that the user has the flexibility to store pointers to
- *  any data type in the list.  It is also a disadvanatage, since the data
- *  structure is not type safe and the user must carefully keep track of
- *  what is stored in the list.<br><br>
- *
- *  This module provides a standard set of list type operations.  Each includes
- *  some predictions about the efficiency of that operation.  Any  modification
- *  of these procedures should live up to those claims.
- *  <pre>
- *  When #including list.h, make sure these files are #included first:
- *         #include <stdio.h>
- *         #include "utilities/ascConfig.h"
- *         #include "compiler/compiler.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-/*
- *  Any bugs or suggestions can be sent to:
- *
- *  te07@edrc.cmu.edu or te07@andrew.cmu.edu or epperly@osnome.che.wisc.edu
- *  Tom Epperly
- *  314 South Orchard Street
- *  Madison, WI 53715-1542
- *
- *  Also please copy any bugs or suggestions to ascend+developers@cs.cmu.edu
- *
- *  This utility depends on ascmalloc.[ch] and (optionally) pool.[ch]
- *
- *  Change Log
- *  2/26/88   added gl_copy, gl_concat
- *  3/31/88   added additional commenting
- *  2/18/96   added defines when -DNDEBUG is active. We can't
- *              afford the calls in a production compiler. (Ben Allan)
- *  2/23/96   Added recycling feature to reuse gl_lists. (TGWE)
- *  3/25/96   Improved recycling feature. (Ben Allan)
- *  3/30/96   Took dispose flag off gl_destroy and added a mirror
- *              function gl_free_and_destroy to take its place.
- *              Added pooled list heads (optional) which depends on
- *              pool.[ch] and improves performance substantially.
- *              Tuned to large applications. (Ben Allan)
- *  9/9/96    Changed flags from struct to int.  (Ben Allan)
- *  10/2/96   Added switch over -DMOD_REALLOC to use ascreallocPURE.
- *              If this file is compiled -DMOD_REALLOC, purify leaks of
- *              list->data are real, OTHERWISE it may be noise.
- *              Skipping the call to gl_init may also help dianosis.
- *  9/20/97   Added gl_compare_ptrs.
- */
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	List Module.
+
+	The purpose of this module is to provide a kind of flexible array.
+	The flexible array has two interesting characteristics.  It allows
+	contant time(O(1)) retrieval of list items and it is almost infinitely
+	extendable (i.e. has no preset limit on the number of items in the list).
+	It does not use much extra memory while providing these services.<br><br>
+
+	The list only stores pointers to items as VOIDPTR (void *).  This is
+	an advantage, in that the user has the flexibility to store pointers to
+	any data type in the list.  It is also a disadvanatage, since the data
+	structure is not type safe and the user must carefully keep track of
+	what is stored in the list.<br><br>
+
+	This module provides a standard set of list type operations.  Each includes
+	some predictions about the efficiency of that operation.  Any  modification
+	of these procedures should live up to those claims.
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "compiler/compiler.h"
+*//*
+	by Tom Epperly
+	Version: $Revision: 1.3 $
+	Version control file: $RCSfile: list.h,v $
+	Date last modified: $Date: 1998/02/19 13:03:22 $
+	Last modified by: $Author: ballan $
+
+	Any bugs or suggestions can be sent to:
+
+	te07@edrc.cmu.edu or te07@andrew.cmu.edu or epperly@osnome.che.wisc.edu
+	Tom Epperly
+	314 South Orchard Street
+	Madison, WI 53715-1542
+
+	Also please copy any bugs or suggestions to ascend+developers@cs.cmu.edu
+
+	This utility depends on ascmalloc.[ch] and (optionally) pool.[ch]
+
+	Change Log
+	2/26/88   added gl_copy, gl_concat
+	3/31/88   added additional commenting
+	2/18/96   added defines when -DNDEBUG is active. We can't
+	            afford the calls in a production compiler. (Ben Allan)
+	2/23/96   Added recycling feature to reuse gl_lists. (TGWE)
+	3/25/96   Improved recycling feature. (Ben Allan)
+	3/30/96   Took dispose flag off gl_destroy and added a mirror
+	            function gl_free_and_destroy to take its place.
+	            Added pooled list heads (optional) which depends on
+	            pool.[ch] and improves performance substantially.
+	            Tuned to large applications. (Ben Allan)
+	9/9/96    Changed flags from struct to int.  (Ben Allan)
+	10/2/96   Added switch over -DMOD_REALLOC to use ascreallocPURE.
+	            If this file is compiled -DMOD_REALLOC, purify leaks of
+	            list->data are real, OTHERWISE it may be noise.
+	            Skipping the call to gl_init may also help dianosis.
+	9/20/97   Added gl_compare_ptrs.
+*/
 
 #ifndef ASC_LIST_H
 #define ASC_LIST_H
+
+#include <utilities/ascConfig.h>
 
 #ifndef TRUE
 #define TRUE 1
@@ -279,7 +276,7 @@ extern void gl_destroy(struct gl_list_t *list);
  *  @see gl_fetchF()
  */
 
-extern VOIDPTR ASC_DLLSPEC gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
+extern ASC_DLLSPEC(VOIDPTR) gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
 /**<
  *  Implementation function for gl_fetch() (debug mode).
  *  Do not call this function directly - use gl_fetch() instead.
@@ -410,7 +407,7 @@ extern void gl_append_list(struct gl_list_t *extendlist,
  *  @return The length as an unsigned long.
  *  @see gl_lengthF()
  */
-extern unsigned long ASC_DLLSPEC gl_lengthF(CONST struct gl_list_t *list);
+extern ASC_DLLSPEC(unsigned long) gl_lengthF(CONST struct gl_list_t *list);
 /**<
  *  Implementation function for gl_length() (debug mode).
  *  Do not call this function directly - use gl_length() instead.
@@ -554,7 +551,7 @@ extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
  *  @param func The comparison function to call during the sort.
  */
 
-extern void ASC_DLLSPEC gl_iterate(struct gl_list_t *list, IterateFunc func);
+extern ASC_DLLSPEC(void) gl_iterate(struct gl_list_t *list, IterateFunc func);
 /**<
  *  Executes the function func on all the members of the list.
  *  It will always execute the function on the items in the order

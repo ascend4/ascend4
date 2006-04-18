@@ -1,34 +1,28 @@
-/*
-	SLV Common utilities and definitions
-	Ben Allan, based on the original slv.h by KW and JZ.
-	01/94. Abstracted from slvX.c January 1995. Ben Allan.
-
+/*	ASCEND modelling environment
 	Copyright (C) 1990 Karl Michael Westerberg
 	Copyright (C) 1993 Joseph Zaher
 	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
 	Copyright (C) 1996 Benjamin Andrew Allan
-	Copyright (C) 2005 The ASCEND developers
+	Copyright (C) 2005-2006 Carnegie Mellon University
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-	This file is part of the SLV solver.
-*/
-
-/** @file
-
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
 	General C  utility routines for slv/Slv class interfaces. Abstracted from
-	slvX.c January 1995. Ben Allan.
+	slvX.c January 1995. Based on the original slv.h by KW and JZ (01/94), by Ben Allan.
 
 	slv.h is the header for folks on the ASCEND end, and this is the one for
 	folks on the Slv math end.
@@ -56,15 +50,14 @@
 	  - solver print routines
 	  - lnkmap support functions
 
-	Requires:<pre>
-#include <stdio.h>
-#include <utilities/ascConfig.h>
-#include <solver/slv_types.h>
-#include <solver/rel.h>
-#include <solver/logrel.h>
-#include <solver/mtx.h>
-#include <general/list.h>
-</pre>
+	Requires:
+	#include <stdio.h>
+	#include <utilities/ascConfig.h>
+	#include <solver/slv_types.h>
+	#include <solver/rel.h>
+	#include <solver/logrel.h>
+	#include <solver/mtx.h>
+	#include <general/list.h>
 
 	Details on solver parameter definition:
 
@@ -130,6 +123,8 @@
 
 #ifndef ASC_SLV_COMMON_H
 #define ASC_SLV_COMMON_H
+
+#include <utilities/ascConfig.h>
 
 #undef SLV_INSTANCES
 #define SLV_INSTANCES TRUE
@@ -572,7 +567,7 @@ extern int32 slv_define_parm(slv_parameters_t *p,
  */
 
 /* slv_set_char_parameter() is defined in slv.c */
-extern void ASC_DLLSPEC slv_set_char_parameter(char **cptr, CONST char *newvalue);
+extern ASC_DLLSPEC(void) slv_set_char_parameter(char **cptr, CONST char *newvalue);
 /**<
 	Sets a char parameter value to a new string.
 	Resetting the value of a parameter can be done directly except

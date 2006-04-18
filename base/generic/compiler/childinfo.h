@@ -1,7 +1,6 @@
 /*
  *  Atom Child Description List
  *  by Tom Epperly
- *  Part of Ascend
  *  Version: $Revision: 1.10 $
  *  Version control file: $RCSfile: childinfo.h,v $
  *  Date last modified: $Date: 1998/02/05 16:35:41 $
@@ -32,7 +31,7 @@
 
 /** @file
  *  Atom Child Description List.
- *  <pre> 
+ *  <pre>
  *  When #including childinfo.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
@@ -75,8 +74,8 @@ union ChildDescUnion {
 /** Atom child types. */
 enum ChildDescT {
   bad_child,       /**< invalid type.
-                    *  This should never, ever, ever be seen except in childless 
-                    *  atoms who need a place holder.  bad_child-ren are never 
+                    *  This should never, ever, ever be seen except in childless
+                    *  atoms who need a place holder.  bad_child-ren are never
                     *  assigned and the UNION meaningless
                     */
   real_child,     /**< real type. */
