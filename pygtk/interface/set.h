@@ -58,13 +58,13 @@ public:
 };
 
 template<>
-extern const bool ASCXX_Set<long>::isCorrectType() const;
+const bool ASCXX_Set<long>::isCorrectType() const;
 
 template<>
-extern const bool ASCXX_Set<SymChar>::isCorrectType() const;
+const bool ASCXX_Set<SymChar>::isCorrectType() const;
 
 template<>
-extern const bool ASCXX_Set<void>::isCorrectType() const;
+const bool ASCXX_Set<void>::isCorrectType() const;
 
 template<class T>
 std::ostream& operator<< (std::ostream& os, const ASCXX_Set<T>& s){

@@ -16,12 +16,25 @@ srcs = Split("""
 
 # Build a static library with all the sources
 
+cxxflags = []
+cppflags = []
+
+import platform
+
+if platform.system()=='Windows' and env.has_key('MSVS'):
+	cxxflags += ['/EHsc'] # for exceptions (as suggested by a MSVC error msg, dunno if it's right or not -- JP)
+
+if env.has_key('HAVE_GCC'):
+	cppflags += ['-O3']
+
+
 objs = []
 for s in srcs:
 	objs += env.SharedObject(s
 		, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
 
-		, CPPFLAGS = ['-O3']
+		, CPPFLAGS = cppflags
+		, CCFLAGS = cxxflags
 	)	
 
 #----------------------------------------------
@@ -47,13 +60,13 @@ def get_new_swig_flags(env):
 		flags += ['-O']
 	return flags
 
-	
 swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
 	, LIBS = ['ascend'] + env['PYTHON_LIB']
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	, CPPPATH = ['../../base/generic'] + env['PYTHON_CPPPATH']
-	, CPPFLAGS = ['-O3']
+	, CPPFLAGS = cppflags
+	, CCFLAGS = cxxflags
 	, SHLIBPREFIX = '_'
 )
 
@@ -85,4 +98,5 @@ if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
 if env.has_key('WITH_INSTALLER') and env['WITH_INSTALLER']:
 	import platform
 	if platform.system()=="Windows":
-		env.Nsis('create.nsi')
+		installer = env.Nsis('create.nsi')
+		Depends(installer,swiglib)

@@ -43,8 +43,10 @@
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
 
-/** 
- * Search error codes. 
+#include <compiler/value_type.h>
+
+/**
+ * Search error codes.
  * At present, there is a GREAT DEAL of insanity between find_errors and
  * evaluation_error (value_type.h). In particular there is a lot of idiocy
  * mapping undefined_instance <--> undefined_value which is just plain wrong
@@ -64,16 +66,16 @@ extern int ListMode;
  */
 
 extern int EvaluatingSets;
-/**< 
+/**<
  *  Tells whether the evaluation of a set is in place. Used for marking
  *  atoms as mutable or not.
  */
 
 extern int g_DeclarativeContext;
-/**< 
+/**<
  *  Tells whether declarative processing, the default = 0 , is in effect,
  *  or procedural processing as when doing initializations.
- *  Access this varible only by GetDeclarativeContext() and 
+ *  Access this varible only by GetDeclarativeContext() and
  *  SetDeclarativeContext() below.
  */
 

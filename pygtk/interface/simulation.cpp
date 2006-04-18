@@ -171,7 +171,7 @@ Simulation::checkStructuralSingularity() const{
 	}
 	ascfree(vil);
 	ascfree(ril);
-	ascfree(fil);	
+	ascfree(fil);
 }
 
 void
@@ -271,6 +271,7 @@ Simulation::check(){
 	cerr << "...DONE CHECKING" << endl;
 	this->checkConsistency();
 	this->checkStructuralSingularity();
+	return true;
 }
 
 void
@@ -374,7 +375,7 @@ Simulation::getVariablesNearBounds(const double &epsilon){
 	ascfree(vip);
 	return vars;
 }
-	
+
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 	if(!is_built){
@@ -420,7 +421,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 		}
 
 		status.getSimulationStatus(*this);
-		
+
 		if(reporter.report(&status)){
 			stop = true;
 		}
@@ -520,7 +521,7 @@ Simulation::getIncidenceMatrix(){
 	return IncidenceMatrix(*this);
 }
 
-const string 
+const string
 Simulation::getInstanceName(const Instanc &i) const{
 	char *n;
 	n = WriteInstanceNameString(i.getInternalType(),simroot.getInternalType());
