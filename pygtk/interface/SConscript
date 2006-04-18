@@ -74,8 +74,8 @@ swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
 
 #print env['SUBST_DICT']
 
-env.SubstInFile(source='config.py.in')
-env.SubstInFile(source='config.h.in')
+configpy = env.SubstInFile(source='config.py.in')
+configh = env.SubstInFile(source='config.h.in')
 
 ascendcmd = env.SubstInFile(source='ascend.in')
 
@@ -99,4 +99,4 @@ if env.has_key('WITH_INSTALLER') and env['WITH_INSTALLER']:
 	import platform
 	if platform.system()=="Windows":
 		installer = env.Nsis('create.nsi')
-		Depends(installer,swiglib)
+		Depends(installer,[swiglib,configpy,configh,ascendcmd])
