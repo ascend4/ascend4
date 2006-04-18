@@ -191,7 +191,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
     return 1;
   }
   if (NULL != initFun) {
-    install = (int (*)())GetProcAddress(xlib,initFun);
+    install = (int (*)(void))GetProcAddress(xlib,initFun);
     if (install == NULL) {
       ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: Required function %s not found\n", initFun);
       (void)FreeLibrary(xlib);
