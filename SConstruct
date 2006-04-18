@@ -581,6 +581,7 @@ if not conf.CheckFunc('isnan'):
 
 if conf.CheckGccVisibility():
 	conf.env['HAVE_GCCVISIBILITY']=True;
+	conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 
 # Tcl/Tk
 
