@@ -84,7 +84,7 @@ extern int Asc_InitModules(unsigned long init_length);
  */
 
 
-extern ASC_DLLSPEC(void) Asc_DestroyModules(DestroyFunc func);
+ASC_DLLSPEC(void) Asc_DestroyModules(DestroyFunc func);
 /**<
  *  Deallocate all of the modules.  This should be done when all types
  *  are destroyed and just before exiting.
@@ -111,7 +111,7 @@ extern struct module_t *Asc_OpenModule(CONST char *name, int *status);
  *  name is based on `name'.
  *  @see Asc_RequireModule() for additional information.
  */
-extern ASC_DLLSPEC(struct module_t*) Asc_RequireModule(CONST char *name, int *status);
+ASC_DLLSPEC(struct module_t*) Asc_RequireModule(CONST char *name, int *status);
 /**<
  *  Attempt to find and open (for reading) a file whose
  *  name is based on `name'.
@@ -296,7 +296,7 @@ extern int Asc_ModuleAddStatements(struct module_t *mod, struct gl_list_t *stats
  *  </pre>
  */
 
-extern ASC_DLLSPEC(CONST struct module_t*) Asc_GetModuleByName(CONST char *name);
+ASC_DLLSPEC(CONST struct module_t*) Asc_GetModuleByName(CONST char *name);
 /**<
  *  Return the module whose name is `name.'  `name' should be in the
  *  style returned by Asc_ModuleName(), namely, a base-name and a
@@ -309,7 +309,7 @@ extern ASC_DLLSPEC(CONST struct module_t*) Asc_GetModuleByName(CONST char *name)
  *  If a module with the requested name is not found, ruturn NULL.
  */
 
-extern ASC_DLLSPEC(struct gl_list_t*) Asc_ModuleList(int module_type);
+ASC_DLLSPEC(struct gl_list_t*) Asc_ModuleList(int module_type);
 /**<
  *  <pre>
  *  module_type 0;
@@ -360,7 +360,7 @@ extern struct module_t *g_current_module;
 /**<  Returns a pointer to the current module (release mode). */
 #endif /* NDEBUG */
 
-extern ASC_DLLSPEC(CONST char*) Asc_ModuleName(CONST struct module_t *m);
+ASC_DLLSPEC(CONST char*) Asc_ModuleName(CONST struct module_t *m);
 /**<
  *  Return the name of module m.
  */
@@ -384,7 +384,7 @@ extern CONST char *Asc_ModuleString(CONST struct module_t *m);
  *  string module, or NULL if it is a file module.
  */
 
-extern ASC_DLLSPEC(CONST char*) Asc_ModuleFileName(CONST struct module_t *m);
+ASC_DLLSPEC(CONST char*) Asc_ModuleFileName(CONST struct module_t *m);
 /**<
  *  Return the filename of module m.
  */
@@ -405,7 +405,7 @@ extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *m);
  */
 
 
-extern ASC_DLLSPEC(struct tm*) Asc_ModuleTimeModified(CONST struct module_t *m);
+ASC_DLLSPEC(struct tm*) Asc_ModuleTimeModified(CONST struct module_t *m);
 /**<
  *  Return the time that the module was last modified.  The time is
  *  coverted to the local time.

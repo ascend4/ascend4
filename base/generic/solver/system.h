@@ -50,7 +50,7 @@
 
 #include <utilities/ascConfig.h>
 
-extern ASC_DLLSPEC(slv_system_t) system_build(SlvBackendToken inst);
+ASC_DLLSPEC(slv_system_t) system_build(SlvBackendToken inst);
 /**<
  ***  In ascend, backendtoken is a struct Instance *.
  ***  Visits the instance tree and collects all variables,

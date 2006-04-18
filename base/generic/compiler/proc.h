@@ -98,7 +98,7 @@ extern struct gl_list_t *GetUniversalProcedureList(void);
  * unless they redefine the methods themselves.
  */
 
-extern ASC_DLLSPEC(void) SetUniversalProcedureList(struct gl_list_t *l);
+ASC_DLLSPEC(void) SetUniversalProcedureList(struct gl_list_t *l);
 /**<
  * Sets the list of procedures defined for all MODELs.
  * If a UPL already exists, it will be destroyed unless it

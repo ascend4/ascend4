@@ -35,14 +35,16 @@
 #include <signal.h>
 #include <time.h>
 #include <utilities/ascConfig.h>
+
 #ifndef __WIN32__
-#include <unistd.h>
+# include <unistd.h>
 #else
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <locale.h>
-#undef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+# include <locale.h>
+# undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
+
 #include <utilities/ascMalloc.h> /* for ascshutdown */
 #include <utilities/ascPanic.h>  /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>

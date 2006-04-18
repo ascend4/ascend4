@@ -567,7 +567,7 @@ extern int32 slv_define_parm(slv_parameters_t *p,
  */
 
 /* slv_set_char_parameter() is defined in slv.c */
-extern ASC_DLLSPEC(void) slv_set_char_parameter(char **cptr, CONST char *newvalue);
+ASC_DLLSPEC(void) slv_set_char_parameter(char **cptr, CONST char *newvalue);
 /**<
 	Sets a char parameter value to a new string.
 	Resetting the value of a parameter can be done directly except

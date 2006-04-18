@@ -64,7 +64,7 @@ extern void AddPrototype(struct Instance *i);
  *  of type "i" exists, it is deleted and replace with then new one.
  */
 
-extern ASC_DLLSPEC(void) DestroyPrototype(void);
+ASC_DLLSPEC(void) DestroyPrototype(void);
 /**<
  *  This deletes all the instances in the prototype library.  This should
  *  be done before the program exits.

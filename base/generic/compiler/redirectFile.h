@@ -49,7 +49,7 @@ extern FILE *g_ascend_errors;       /**< File for error messages.  Default is st
 extern FILE *g_ascend_warnings;     /**< File for warning messages.  Default is stderr. */
 extern FILE *g_ascend_information;  /**< File for informational messages.  Default is stderr. */
 
-extern ASC_DLLSPEC(void) Asc_RedirectCompilerDefault(void);
+ASC_DLLSPEC(void) Asc_RedirectCompilerDefault(void);
 /**< Set the default files/streams to receive ASCEND messages. */
 
 extern void Asc_RedirectCompilerStreams(FILE *errfile,

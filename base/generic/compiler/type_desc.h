@@ -235,7 +235,7 @@ struct TypeDescription {
  *  @return The childlist field as a ChildListPtr.
  *  @see GetChildListF()
  */
-extern ASC_DLLSPEC(ChildListPtr) GetChildListF(CONST struct TypeDescription *d);
+ASC_DLLSPEC(ChildListPtr) GetChildListF(CONST struct TypeDescription *d);
 /**<
  *  Returns the childlist field of d.
  *  Implementation function for GetChildList() (debug mode).
@@ -329,7 +329,7 @@ extern CONST struct StatementList
  *  @return The list as a CONST struct gl_list_t*.
  *  @see GetInitializationListF()
  */
-extern ASC_DLLSPEC(struct gl_list_t)
+ASC_DLLSPEC(struct gl_list_t)
 *GetInitializationListF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetInitializationList() (debug mode).
@@ -527,7 +527,7 @@ extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
  *  @return An unsigned.
  *  @see TypeHasParameterizedInstsF()
  */
-extern ASC_DLLSPEC(unsigned) TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
+ASC_DLLSPEC(unsigned) TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for TypeHasParameterizedInsts() (debug mode).
  *  Do not call this function directly - use TypeHasParameterizedInsts() instead.
@@ -595,7 +595,7 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
  *  @return The dimensions as a CONST dim_type*.
  *  @see GetRealDimensF()
  */
-extern ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
+ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
                                       CONST char *f, CONST int l);
 /**<
  *  Implementation function for GetRealDimens() (debug mode).
@@ -616,7 +616,7 @@ extern ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription 
  *  @return The dimensions as a CONST dim_type*.
  *  @see GetConstantDimensF()
  */
-extern ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
+ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
                                           CONST char *f, CONST int l);
 /**<
  *  Implementation function for GetConstantDimens() (debug mode).
@@ -634,7 +634,7 @@ extern ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescript
  *  @return The name as a symchar*.
  *  @see GetNameF()
  */
-extern ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
+ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetName() (debug mode).
  *  Do not call this function directly - use GetName() instead.
@@ -1076,7 +1076,7 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
-extern ASC_DLLSPEC(struct TypeDescription*) MoreRefined(CONST struct TypeDescription *desc1,
+ASC_DLLSPEC(struct TypeDescription*) MoreRefined(CONST struct TypeDescription *desc1,
                                            CONST struct TypeDescription *desc2);
 /**<
  *  Returns the more refined of desc1 or desc2, or
@@ -1157,7 +1157,7 @@ extern void WriteArrayTypeList(FILE *fp);
  *  @return The result as an unsigned.
  *  @see TypeShowF()
  */
-extern ASC_DLLSPEC(unsigned) TypeShowF(CONST struct TypeDescription *d);
+ASC_DLLSPEC(unsigned) TypeShowF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for TypeShow() (debug mode).
  *  Do not call this function directly - use TypeShow() instead.

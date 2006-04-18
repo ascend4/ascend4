@@ -160,7 +160,7 @@ extern struct StatementList
  *  newlist = AppendStatementList(oldlist,EmptyStatementList());
  */
 
-extern ASC_DLLSPEC(void) DestroyStatementList(struct StatementList *sl);
+ASC_DLLSPEC(void) DestroyStatementList(struct StatementList *sl);
 /**<
  *  Destroy a statement list.  Tolerates null input.
  */

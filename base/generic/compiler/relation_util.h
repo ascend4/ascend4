@@ -319,7 +319,7 @@ extern int SetRelationDim(struct relation *rel, dim_type *d);
  *  problem (rel was null, for instance.)
  */
 
-extern ASC_DLLSPEC(double) RelationResidual(CONST struct relation *rel);
+ASC_DLLSPEC(double) RelationResidual(CONST struct relation *rel);
 /**<
  *  Return the residual of the relation.
  */

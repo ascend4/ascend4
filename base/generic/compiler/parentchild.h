@@ -141,13 +141,13 @@ extern void AddParent(struct Instance *i, struct Instance *p);
 
 /* Children routines */
 
-extern ASC_DLLSPEC(unsigned long) NumberChildren(CONST struct Instance *i);
+ASC_DLLSPEC(unsigned long) NumberChildren(CONST struct Instance *i);
 /**<
  *  Return the number of children that instance i has.
  */
 
 
-extern ASC_DLLSPEC(struct Instance*) InstanceChild(CONST struct Instance *i,
+ASC_DLLSPEC(struct Instance*) InstanceChild(CONST struct Instance *i,
                                       unsigned long n);
 /**<
  *  Return a pointer to children number n.  Do not confuse the child number
@@ -157,7 +157,7 @@ extern ASC_DLLSPEC(struct Instance*) InstanceChild(CONST struct Instance *i,
  *  May exit on improper i.
  */
 
-extern ASC_DLLSPEC(struct InstanceName) ChildName(CONST struct Instance *i, unsigned long n);
+ASC_DLLSPEC(struct InstanceName) ChildName(CONST struct Instance *i, unsigned long n);
 /**<
  *  Returns the name of the n'th child of i.  Assumes that i has an
  *  n'th child.
@@ -201,7 +201,7 @@ extern unsigned long ChildSearch(CONST struct Instance *i,
  *  error. The strings in the InstanceName must come from the symbol table.
  */
 
-extern ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
+ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
                                     symchar *str);
 /**<
  *  This returns to the pointer to a child, c, of parent,p, named by str.

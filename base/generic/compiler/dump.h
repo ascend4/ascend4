@@ -51,7 +51,7 @@ extern void InitDump(void);
  *  Must be called to initialize the dump.
  */
 
-extern ASC_DLLSPEC(void) EmptyTrash(void);
+ASC_DLLSPEC(void) EmptyTrash(void);
 /**<
  *  Delete all the instances in the dump.  The dump can still be used
  *  after this call.

@@ -59,7 +59,7 @@ extern void InitSymbolTable(void);
  *  Post: the symbol table is initialized
  */
 
-extern ASC_DLLSPEC(symchar*) AddSymbol(CONST char *c);
+ASC_DLLSPEC(symchar*) AddSymbol(CONST char *c);
 /**<
  *  This function adds the string c to the symbol table if it is not already
  *  defined.  This uses a copy of c rather than c itself.  c must be a
@@ -99,7 +99,7 @@ extern symchar *AddSymbolL(CONST char *c, int len);
  *  for the life of the ASCEND process.
  */
 
-extern ASC_DLLSPEC(symchar*) AscFindSymbol(symchar *s);
+ASC_DLLSPEC(symchar*) AscFindSymbol(symchar *s);
 /**<
  * Returns NULL if the pointer s given is not from the table.
  * Otherwise returns the pointer given.

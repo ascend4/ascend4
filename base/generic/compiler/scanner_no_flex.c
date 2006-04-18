@@ -27,7 +27,9 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
-#include <unistd.h>
+#ifndef __WIN32__
+# include <unistd.h>
+#endif
 
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
@@ -3406,7 +3408,7 @@ int
 Asc_ScannerPushBuffer(CONST char *filename)
 {
   int status;        /* status returned from Asc_RequireModule */
-  
+
   if ( RequireIndex >= MAX_REQUIRE_DEPTH ) {
     FPRINTF(ASCERR,
 	    "Error:\tREQUIRE nested too deeply (%d levels) on line %s:%lu.\n"

@@ -91,7 +91,7 @@ include $(builddir)/Makefile.Rules
 
 ascParse.o: $(srcdir)/ascParse.y
 
-ascParse.c ascParse.h: $(srcdir)/ascParse.y $(srcdir)/ascParse.c.no.yacc $(srcdir)/ascParse.h.no.yacc
+ascParse.c ascParse.h: $(srcdir)/ascParse.y $(srcdir)/ascParse_no_yacc.c $(srcdir)/ascParse_no_yacc.h
 	$(MAKE) @parser_src@
 
 ascParse.c.from.yacc: $(srcdir)/ascParse.y
@@ -103,8 +103,8 @@ ascParse.c.from.yacc: $(srcdir)/ascParse.y
 	$(RM) y.tab.c y.tab.h
 
 ascParse.c.from.c:
-	$(CP) $(srcdir)/ascParse.c.no.yacc ascParse.c
-	$(CP) $(srcdir)/ascParse.h.no.yacc ascParse.h
+	$(CP) $(srcdir)/ascParse_no_yacc.c ascParse.c
+	$(CP) $(srcdir)/ascParse_no_yacc.h ascParse.h
 
 #  rounded needs a special define
 
@@ -119,17 +119,17 @@ rounded.o: $(srcdir)/rounded.h $(srcdir)/rounded.c $(srcdir)/compiler.h
 #      scanner.c.from.c      ---to use the pregenerated C file
 #  depending on the value of $(LEX).
 
-scanner.o: $(srcdir)/scanner.l $(srcdir)/scanner.c.no.flex ./ascParse.h
+scanner.o: $(srcdir)/scanner.l $(srcdir)/scanner_no_flex.c ./ascParse.h
 	$(MAKE) @scanner_src@
 	$(CC) $(CC_SWITCHES) -c scanner.c
 
 scanner.c.from.flex: $(srcdir)/scanner.l ./ascParse.h
 	$(LEX) -t -Pzz_ $(srcdir)/scanner.l > scanner.c
 
-scanner.c.from.c: $(srcdir)/scanner.c.no.flex
-	$(CP) $(srcdir)/scanner.c.no.flex scanner.c
+scanner.c.from.c: $(srcdir)/scanner_no_flex.c
+	$(CP) $(srcdir)/scanner_no_flex.c scanner.c
 
-scanner.c: $(srcdir)/scanner.l $(srcdir)/scanner.c.no.flex ./ascParse.h
+scanner.c: $(srcdir)/scanner.l $(srcdir)/scanner_no_flex.c ./ascParse.h
 	$(MAKE) @scanner_src@
 
 

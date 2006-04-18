@@ -56,7 +56,7 @@ extern void SetProcStackLimit(unsigned long l);
 extern unsigned long GetProcStackLimit(void);
 
 /** Run a METHOD on a model. */
-extern ASC_DLLSPEC(enum Proc_enum) Initialize(struct Instance *context,
+ASC_DLLSPEC(enum Proc_enum) Initialize(struct Instance *context,
 							    struct Name *name,
 							    char *cname,
 							    FILE *err,
