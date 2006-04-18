@@ -125,7 +125,7 @@ class Browser:
 		self.prefs = Preferences()
 
 		_prefpath = self.prefs.getStringPref("Directories","librarypath",None)
-		_preffileopenpath = self.prefs.getStringPref("Directories","loadfileopenpath",None)
+		_preffileopenpath = self.prefs.getStringPref("Directories","fileopenpath",None)
 
 		#--------
 		# set up library path and the path to use for File->Open dialogs
@@ -151,10 +151,7 @@ class Browser:
 		#--------
 		# Create the ASCXX 'Library' object
 		
-		print_loading_status("Creating ASCEND 'Library' object",
-			"From %s, using ASCENDLIBRARY = %s" % (_pathsrc,_path)
-
-		)
+		print_loading_status("Creating ASCEND 'Library' object")
 		self.library = ascpy.Library(_path)
 
 		self.sim = None
@@ -456,6 +453,7 @@ class Browser:
 
 	def run(self):
 		self.window.show()
+		print_loading_status("ASCEND is now running")
 		gtk.main()
 
 #   --------------------------------------------

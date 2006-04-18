@@ -44,7 +44,6 @@
 # define ASC_BUILDING_LIBASCEND
 #endif
 
-
 /*
 *
 *  Determine the Operating System we are building on
@@ -99,20 +98,17 @@
 	New versions of GCC are able to make use of these declarations
 	as well.
 */
-
-#ifdef __GNUC__
-#else
-# ifdef __WIN32__
-#  define HAVE_DECLSPEC_DLL
-# endif
-#endif
-
-#ifdef HAVE_DECLSPEC_DLL
+#ifdef __WIN32__
 # define ASC_EXPORT(TYPE) extern __declspec(dllexport)  TYPE
 # define ASC_IMPORT(TYPE) extern __declspec(dllimport)  TYPE
 #else
-# define ASC_EXPORT(TYPE) extern TYPE
-# define ASC_IMPORT(TYPE) extern TYPE
+# ifdef HAVE_GCCVISIBILITY
+#  define ASC_EXPORT(TYPE) extern __attribute__ ((visibility("default"))) TYPE
+#  define ASC_IMPORT(TYPE) extern TYPE
+# else
+#  define ASC_EXPORT(TYPE) extern TYPE
+#  define ASC_IMPORT(TYPE) extern TYPE
+# endif
 #endif
 
 #ifdef ASC_BUILDING_LIBASCEND
@@ -129,11 +125,9 @@
 	An attempt to prevent unexported symbols from slipping through
 	the net when developing with GCC on linux:
 */
-/*
-#if defined(__GNUC__) && __GNUC__ >= 4
+#ifdef HAVE_GCCVISIBILITY
 # pragma GCC visibility push(hidden)
 #endif
-*/
 
 /**
 	What kind of C compiler do we have?

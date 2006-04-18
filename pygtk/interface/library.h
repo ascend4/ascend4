@@ -18,7 +18,7 @@
 */
 class Library{
 public:
-	Library(const char *defaultpath=DEFAULT_ASCENDLIBRARY);
+	Library(const char *defaultpath=".");
 	~Library();
 	void load(const char *filename);
 	void listModules(const int &module_type=0) const;

@@ -10,4 +10,10 @@ extern "C"{
 #include <utilities/ascConfig.h>
 }
 
+#define DEFAULT_ASCENDLIBRARY "@DEFAULT_ASCENDLIBRARY@"
+
+#if @ASCXX_USE_PYTHON@
+# define ASCXX_USE_PYTHON
+#endif
+
 #endif

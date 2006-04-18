@@ -22,7 +22,7 @@ class Preferences:
 		self.n = self.n + 1;
 
 		if not hasattr(self,'ini'):
-			#print "CREATING CONFIG"
+			#print "READING/CREATING CONFIG"
 			self.ini = ConfigParser.SafeConfigParser();
 			self.ini.read( [ self.fname ] );
 

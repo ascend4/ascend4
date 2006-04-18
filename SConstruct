@@ -291,6 +291,9 @@ if env['WITH_LOCAL_HELP']:
 	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
 
+if with_python:
+	subst_dict['@ASCXX_USE_PYTHON@']="1"
+
 can_install = True
 if platform.system()=='Windows':
 	can_install = False
@@ -424,6 +427,28 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 	return is_ok
 
 #----------------
+# GCC VISIBILITY feature
+
+gccvisibility_test_text = """
+#if __GNUC__ < 4
+# error "Require GCC version 4 or newer"
+#endif
+
+__attribute__ ((visibility("default"))) int x;
+
+int main(void){
+	extern int x;
+	x = 4;
+}
+"""
+
+def CheckGccVisibility(context):
+	context.Message("Checking for GCC 'visibility' capability... ")
+	is_ok = context.TryCompile(gccvisibility_test_text,".c")
+	context.Result(is_ok)
+	return is_ok
+	
+#----------------
 # CUnit test
 
 cunit_test_text = """
@@ -532,6 +557,7 @@ conf = Configure(env
 		, 'CheckTclVersion' : CheckTclVersion
 		, 'CheckTk' : CheckTk
 		, 'CheckTkVersion' : CheckTkVersion
+		, 'CheckGccVisibility' : CheckGccVisibility
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -550,6 +576,11 @@ conf = Configure(env
 if not conf.CheckFunc('isnan'):
 	print "Didn't find isnan"
 #	Exit(1)
+
+# GCC visibility
+
+if conf.CheckGccVisibility():
+	conf.env['HAVE_GCCVISIBILITY']=True;
 
 # Tcl/Tk
 
@@ -579,12 +610,6 @@ else:
 	python_lib='python2.4'
 
 # SWIG version
-
-if platform.system()=="Windows":
-	env['ENV']['SWIGFEATURES']='-O'
-else:
-	env['ENV']['SWIGFEATURES']='-O'	
-
 
 if not conf.CheckSwigVersion():
 	without_python_reason = 'SWIG >= 1.3.24 is required'

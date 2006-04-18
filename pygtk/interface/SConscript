@@ -20,10 +20,7 @@ objs = []
 for s in srcs:
 	objs += env.SharedObject(s
 		, CPPPATH = ['../../base/generic']+env['PYTHON_CPPPATH']
-		, CPPDEFINES = {
-			'ASCXX_USE_PYTHON':None
-			,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
-		  }
+
 		, CPPFLAGS = ['-O3']
 	)	
 
@@ -56,10 +53,6 @@ swiglib = env.SharedLibrary("ascpy",objs + ['ascpy.i']
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	, CPPPATH = ['../../base/generic'] + env['PYTHON_CPPPATH']
-	, CPPDEFINES = {
-		'ASCXX_USE_PYTHON':None
-		,'DEFAULT_ASCENDLIBRARY':'\\"'+env['DEFAULT_ASCENDLIBRARY']+'\\"'
-	  }
 	, CPPFLAGS = ['-O3']
 	, SHLIBPREFIX = '_'
 )
