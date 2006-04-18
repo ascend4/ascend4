@@ -620,8 +620,7 @@ if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
 	if conf.CheckGccVisibility():
 		conf.env['HAVE_GCCVISIBILITY']=True;
-	conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
-
+		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 
 # YACC
 
