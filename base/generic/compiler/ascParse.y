@@ -33,7 +33,8 @@
 #include <limits.h>		/* need DBL_MAX and LONG_MAX */
 #include <float.h>		/* on a NeXT they are in here */
 
-#include <utilities/ascConfig.h>
+#include <compiler/parser.h>
+
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
 #include <general/dstring.h>
@@ -75,12 +76,11 @@
 #include <compiler/library.h>
 #include <compiler/syntax.h>
 #include <compiler/lexer.h>
-#include <compiler/parser.h>
 
 /* 1 ==> expr can find missing , w/o  shift/reduce conflicts */
 #define COMMAEXPR_NOTBUGGY 0 
 #if COMMAEXPR_NOTBUGGY
-#include "compiler/exprio.h"
+#include <compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
 #ifndef lint
@@ -89,11 +89,9 @@ static CONST char ParserID[] = "$Id: ascParse.y,v 1.23 2000/01/25 02:25:59 balla
 
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
-#include "compiler/redirectFile.h"
+#include <compiler/redirectFile.h>
 #ifndef ASCERR
-#define ASCERR g_ascend_errors
-#define ASCWAR g_ascend_warnings
-#define ASCINF g_ascend_information
+#error "ASCERR not defined"
 #endif
 
 extern int zz_error(char *);
@@ -404,7 +402,9 @@ static void CollectNote(struct Note *);
 %type <tptr> add_method_head replace_method_head
 %type <udefptr> unitdef
 %type <id_ptr> model_id atom_id procedure_id definition_id
+
 /* stuff without a particular need for a type */
+
 %%
 
 definitions:

@@ -46,8 +46,8 @@
 #include "system.h"
 #include "slv_server.h"
 #include "slv_common.h"
-#include "slv_client.h"
 #include "analyze.h"
+#include "slv_client.h"
 
 #define NEEDSTOBEDONE 0
 

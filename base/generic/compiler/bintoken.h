@@ -1,4 +1,4 @@
-/* 
+/*
  *  bintoken.h
  *  By Benjamin A. Allan
  *  Jan 7, 1998.
@@ -56,7 +56,7 @@ enum bintoken_kind {
   BT_MsJAVA   /**< Microsoft(tm) JAVA(hah!), unimplemented */
 };
 
-/** 
+/**
  * Set the configurations for building code.
  * The string arguments given are kept.
  * They are freed on the next call which specifies a new string or NULL.
@@ -75,7 +75,7 @@ enum bintoken_kind {
  * of unneeded files; specifically $srcname, objname will be deleted
  * after a successful link.
  */
-extern int BinTokenSetOptions(CONST char *srcname,
+ASC_DLLSPEC(int) BinTokenSetOptions(CONST char *srcname,
                               CONST char *objname,
                               CONST char *libname,
                               CONST char *buildcommand,

@@ -244,14 +244,10 @@ else:
 if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "INCLUDE =",env['ENV']['INCLUDE']
 	print "LIB =",env['ENV']['LIB']
-	print "LINK =",env['LINK']
-	print "LINKCOM =",env['LINKCOM']
-	print "AR =",env['AR']
-	print "ARCOM =",env['ARCOM']
-	#env['AR']='link /lib'
+	print "PATH =",env['ENV']['PATH']
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
-	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
+	#env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -624,8 +620,9 @@ if conf.CheckGcc():
 
 # YACC
 
-
-if conf.CheckYacc():
+if not conf.CheckYacc():
+	print "YACC NOT FOUND OR NOT WORKING"
+else:
 	conf.env['HAVE_YACC']=True
 
 conf.env['HAVE_LEX']=True

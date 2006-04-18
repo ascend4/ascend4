@@ -99,8 +99,8 @@
 	as well.
 */
 #ifdef __WIN32__
-# define ASC_EXPORT(TYPE) extern __declspec(dllexport)  TYPE
-# define ASC_IMPORT(TYPE) extern __declspec(dllimport)  TYPE
+# define ASC_EXPORT(TYPE) extern __declspec(dllexport) TYPE
+# define ASC_IMPORT(TYPE) extern __declspec(dllimport) TYPE
 #else
 # ifdef HAVE_GCCVISIBILITY
 #  define ASC_EXPORT(TYPE) extern __attribute__ ((visibility("default"))) TYPE

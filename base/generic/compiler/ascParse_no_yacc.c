@@ -26,7 +26,7 @@
 /* Written by Richard Stallman by simplifying the original so called
    ``semantic'' parser.  */
 
-/* All symbols defined below should begin with zz_ or ZZ_, to avoid
+/* All symbols defined below should begin with yy or YY, to avoid
    infringing on user name space.  This should be done even for local
    variables, as they might otherwise be expanded by user macros.
    There are some unavoidable exceptions within include files to
@@ -34,25 +34,33 @@
    USER NAME SPACE" below.  */
 
 /* Identify Bison output.  */
-#define ZZ_BISON 1
+#define YYBISON 1
 
 /* Skeleton name.  */
-#define ZZ_SKELETON_NAME "yacc.c"
+#define YYSKELETON_NAME "yacc.c"
 
 /* Pure parsers.  */
-#define ZZ_PURE 0
+#define YYPURE 0
 
 /* Using locations.  */
-#define ZZ_LSP_NEEDED 0
+#define YYLSP_NEEDED 0
 
+/* Substitute the variable and function names.  */
+#define yyparse zz_parse
+#define yylex   zz_lex
+#define yyerror zz_error
+#define yylval  zz_lval
+#define yychar  zz_char
+#define yydebug zz_debug
+#define yynerrs zz_nerrs
 
 
 /* Tokens.  */
-#ifndef ZZ_TOKENTYPE
-# define ZZ_TOKENTYPE
+#ifndef YYTOKENTYPE
+# define YYTOKENTYPE
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
-   enum zz_tokentype {
+   enum yytokentype {
      ADD_T = 258,
      ALIASES_T = 259,
      AND_T = 260,
@@ -274,89 +282,61 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 30 "base\\generic\\compiler\\ascParse.y"
 
-/*
- *  Ascend Grammar file
- *  by Tom Epperly
- *  Version: $Revision: 1.23 $
- *  Version control file: $RCSfile: ascParse.y,v $
- *  Date last modified: $Date: 2000/01/25 02:25:59 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *  Copyright (C) 1997 Benjamin Andrew Allan & Vicente Rico-Ramirez
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
 #include <stdio.h>
 #include <stdarg.h>
 #include <limits.h>		/* need DBL_MAX and LONG_MAX */
 #include <float.h>		/* on a NeXT they are in here */
 
-#include "utilities/ascConfig.h"
-#include "utilities/ascMalloc.h"
-#include "general/list.h"
-#include "general/dstring.h"
-#include "compiler/compiler.h"
-#include "compiler/scanner.h"
-#include "compiler/symtab.h"		/* the global string/symbol table */
-#include "compiler/notate.h"		/* notes database wrapper */
-#include "compiler/braced.h"
-#include "compiler/fractions.h"
-#include "compiler/dimen.h"
-#include "compiler/functype.h"
-#include "compiler/func.h"
-#include "compiler/types.h"
-#include "compiler/name.h"
-#include "compiler/nameio.h"
-#include "compiler/instance_enum.h"
-#include "compiler/extfunc.h"
-#include "compiler/packages.h"
-#include "compiler/sets.h"
-#include "compiler/exprs.h"
-#include "compiler/exprio.h"
-#include "compiler/vlist.h"
-#include "compiler/vlistio.h"		/* for debugging only */
-#include "compiler/stattypes.h"
-#include "compiler/slist.h"
-#include "compiler/statement.h"
-#include "compiler/statio.h"
-#include "compiler/units.h"
-#include "compiler/when.h"
-#include "compiler/select.h"
-#include "compiler/switch.h"
-#include "compiler/proc.h"
-#include "compiler/watchpt.h"
-#include "compiler/module.h"
-#include "compiler/child.h"
-#include "compiler/type_desc.h"
-#include "compiler/type_descio.h"
-#include "compiler/typedef.h"
-#include "compiler/library.h"
-#include "compiler/syntax.h"
-#include "compiler/lexer.h"
+#include <compiler/parser.h>
+
+#include <utilities/ascMalloc.h>
+#include <general/list.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/scanner.h>
+#include <compiler/symtab.h>		/* the global string/symbol table */
+#include <compiler/notate.h>		/* notes database wrapper */
+#include <compiler/braced.h>
+#include <compiler/fractions.h>
+#include <compiler/dimen.h>
+#include <compiler/functype.h>
+#include <compiler/func.h>
+#include <compiler/types.h>
+#include <compiler/name.h>
+#include <compiler/nameio.h>
+#include <compiler/instance_enum.h>
+#include <compiler/extfunc.h>
+#include <compiler/packages.h>
+#include <compiler/sets.h>
+#include <compiler/exprs.h>
+#include <compiler/exprio.h>
+#include <compiler/vlist.h>
+#include <compiler/vlistio.h>		/* for debugging only */
+#include <compiler/stattypes.h>
+#include <compiler/slist.h>
+#include <compiler/statement.h>
+#include <compiler/statio.h>
+#include <compiler/units.h>
+#include <compiler/when.h>
+#include <compiler/select.h>
+#include <compiler/switch.h>
+#include <compiler/proc.h>
+#include <compiler/watchpt.h>
+#include <compiler/module.h>
+#include <compiler/child.h>
+#include <compiler/type_desc.h>
+#include <compiler/type_descio.h>
+#include <compiler/typedef.h>
+#include <compiler/library.h>
+#include <compiler/syntax.h>
+#include <compiler/lexer.h>
+
 /* 1 ==> expr can find missing , w/o  shift/reduce conflicts */
 #define COMMAEXPR_NOTBUGGY 0 
 #if COMMAEXPR_NOTBUGGY
-#include "compiler/exprio.h"
+#include <compiler/exprio.h>
 #endif /* for CommaExpr if working. */
 
 #ifndef lint
@@ -365,11 +345,9 @@ static CONST char ParserID[] = "$Id: ascParse.y,v 1.23 2000/01/25 02:25:59 balla
 
 int g_compiler_warnings = 1;		/* level of whine to allow */
 
-#include "compiler/redirectFile.h"
+#include <compiler/redirectFile.h>
 #ifndef ASCERR
-#define ASCERR g_ascend_errors
-#define ASCWAR g_ascend_warnings
-#define ASCINF g_ascend_information
+#error "ASCERR not defined"
 #endif
 
 extern int zz_error(char *);
@@ -575,21 +553,21 @@ static void CollectNote(struct Note *);
 
 
 /* Enabling traces.  */
-#ifndef ZZ_DEBUG
-# define ZZ_DEBUG 0
+#ifndef YYDEBUG
+# define YYDEBUG 0
 #endif
 
 /* Enabling verbose error messages.  */
-#ifdef ZZ_ERROR_VERBOSE
-# undef ZZ_ERROR_VERBOSE
-# define ZZ_ERROR_VERBOSE 1
+#ifdef YYERROR_VERBOSE
+# undef YYERROR_VERBOSE
+# define YYERROR_VERBOSE 1
 #else
-# define ZZ_ERROR_VERBOSE 0
+# define YYERROR_VERBOSE 0
 #endif
 
-#if ! defined (ZZ_STYPE) && ! defined (ZZ_STYPE_IS_DECLARED)
-#line 300 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
-typedef union ZZ_STYPE {
+#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
+#line 299 "base\\generic\\compiler\\ascParse.y"
+typedef union YYSTYPE {
   double real_value;
   long   int_value;
   struct fraction frac_value;
@@ -615,12 +593,12 @@ typedef union ZZ_STYPE {
   dim_type dimen;
   enum ForOrder order;
   enum ForKind fkind;
-} ZZ_STYPE;
+} YYSTYPE;
 /* Line 190 of yacc.c.  */
-#line 621 "y.tab.c"
-# define zz_stype ZZ_STYPE /* obsolescent; will be withdrawn */
-# define ZZ_STYPE_IS_DECLARED 1
-# define ZZ_STYPE_IS_TRIVIAL 1
+#line 599 "base\\generic\\compiler\\ascParse.c"
+# define yystype YYSTYPE /* obsolescent; will be withdrawn */
+# define YYSTYPE_IS_DECLARED 1
+# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 
@@ -629,128 +607,128 @@ typedef union ZZ_STYPE {
 
 
 /* Line 213 of yacc.c.  */
-#line 633 "y.tab.c"
+#line 611 "base\\generic\\compiler\\ascParse.c"
 
-#if ! defined (zz_overflow) || ZZ_ERROR_VERBOSE
+#if ! defined (yyoverflow) || YYERROR_VERBOSE
 
-# ifndef ZZ_FREE
-#  define ZZ_FREE free
+# ifndef YYFREE
+#  define YYFREE free
 # endif
-# ifndef ZZ_MALLOC
-#  define ZZ_MALLOC malloc
+# ifndef YYMALLOC
+#  define YYMALLOC malloc
 # endif
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */
 
-# ifdef ZZ_STACK_USE_ALLOCA
-#  if ZZ_STACK_USE_ALLOCA
+# ifdef YYSTACK_USE_ALLOCA
+#  if YYSTACK_USE_ALLOCA
 #   ifdef __GNUC__
-#    define ZZ_STACK_ALLOC __builtin_alloca
+#    define YYSTACK_ALLOC __builtin_alloca
 #   else
-#    define ZZ_STACK_ALLOC alloca
+#    define YYSTACK_ALLOC alloca
 #   endif
 #  endif
 # endif
 
-# ifdef ZZ_STACK_ALLOC
+# ifdef YYSTACK_ALLOC
    /* Pacify GCC's `empty if-body' warning. */
-#  define ZZ_STACK_FREE(Ptr) do { /* empty */; } while (0)
+#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (0)
 # else
 #  if defined (__STDC__) || defined (__cplusplus)
 #   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#   define ZZ_SIZE_T size_t
+#   define YYSIZE_T size_t
 #  endif
-#  define ZZ_STACK_ALLOC ZZ_MALLOC
-#  define ZZ_STACK_FREE ZZ_FREE
+#  define YYSTACK_ALLOC YYMALLOC
+#  define YYSTACK_FREE YYFREE
 # endif
-#endif /* ! defined (zz_overflow) || ZZ_ERROR_VERBOSE */
+#endif /* ! defined (yyoverflow) || YYERROR_VERBOSE */
 
 
-#if (! defined (zz_overflow) \
+#if (! defined (yyoverflow) \
      && (! defined (__cplusplus) \
-	 || (defined (ZZ_STYPE_IS_TRIVIAL) && ZZ_STYPE_IS_TRIVIAL)))
+	 || (defined (YYSTYPE_IS_TRIVIAL) && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
-union zz_alloc
+union yyalloc
 {
-  short int zz_ss;
-  ZZ_STYPE zz_vs;
+  short int yyss;
+  YYSTYPE yyvs;
   };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
-# define ZZ_STACK_GAP_MAXIMUM (sizeof (union zz_alloc) - 1)
+# define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
 
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
-# define ZZ_STACK_BYTES(N) \
-     ((N) * (sizeof (short int) + sizeof (ZZ_STYPE))			\
-      + ZZ_STACK_GAP_MAXIMUM)
+# define YYSTACK_BYTES(N) \
+     ((N) * (sizeof (short int) + sizeof (YYSTYPE))			\
+      + YYSTACK_GAP_MAXIMUM)
 
 /* Copy COUNT objects from FROM to TO.  The source and destination do
    not overlap.  */
-# ifndef ZZ_COPY
+# ifndef YYCOPY
 #  if defined (__GNUC__) && 1 < __GNUC__
-#   define ZZ_COPY(To, From, Count) \
+#   define YYCOPY(To, From, Count) \
       __builtin_memcpy (To, From, (Count) * sizeof (*(From)))
 #  else
-#   define ZZ_COPY(To, From, Count)		\
+#   define YYCOPY(To, From, Count)		\
       do					\
 	{					\
-	  register ZZ_SIZE_T zz_i;		\
-	  for (zz_i = 0; zz_i < (Count); zz_i++)	\
-	    (To)[zz_i] = (From)[zz_i];		\
+	  register YYSIZE_T yyi;		\
+	  for (yyi = 0; yyi < (Count); yyi++)	\
+	    (To)[yyi] = (From)[yyi];		\
 	}					\
       while (0)
 #  endif
 # endif
 
 /* Relocate STACK from its old location to the new one.  The
-   local variables ZZ_SIZE and ZZ_STACKSIZE give the old and new number of
-   elements in the stack, and ZZ_PTR gives the new location of the
-   stack.  Advance ZZ_PTR to a properly aligned location for the next
+   local variables YYSIZE and YYSTACKSIZE give the old and new number of
+   elements in the stack, and YYPTR gives the new location of the
+   stack.  Advance YYPTR to a properly aligned location for the next
    stack.  */
-# define ZZ_STACK_RELOCATE(Stack)					\
+# define YYSTACK_RELOCATE(Stack)					\
     do									\
       {									\
-	ZZ_SIZE_T zz_newbytes;						\
-	ZZ_COPY (&zz_ptr->Stack, Stack, zz_size);				\
-	Stack = &zz_ptr->Stack;						\
-	zz_newbytes = zz_stacksize * sizeof (*Stack) + ZZ_STACK_GAP_MAXIMUM; \
-	zz_ptr += zz_newbytes / sizeof (*zz_ptr);				\
+	YYSIZE_T yynewbytes;						\
+	YYCOPY (&yyptr->Stack, Stack, yysize);				\
+	Stack = &yyptr->Stack;						\
+	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
+	yyptr += yynewbytes / sizeof (*yyptr);				\
       }									\
     while (0)
 
 #endif
 
 #if defined (__STDC__) || defined (__cplusplus)
-   typedef signed char zz_signed_char;
+   typedef signed char yysigned_char;
 #else
-   typedef short int zz_signed_char;
+   typedef short int yysigned_char;
 #endif
 
-/* ZZ_FINAL -- State number of the termination state. */
-#define ZZ_FINAL  2
-/* ZZ_LAST -- Last index in ZZ_TABLE.  */
-#define ZZ_LAST   1180
+/* YYFINAL -- State number of the termination state. */
+#define YYFINAL  2
+/* YYLAST -- Last index in YYTABLE.  */
+#define YYLAST   1180
 
-/* ZZ_NTOKENS -- Number of terminals. */
-#define ZZ_NTOKENS  127
-/* ZZ_NNTS -- Number of nonterminals. */
-#define ZZ_NNTS  116
-/* ZZ_NRULES -- Number of rules. */
-#define ZZ_NRULES  307
-/* ZZ_NRULES -- Number of states. */
-#define ZZ_NSTATES  615
+/* YYNTOKENS -- Number of terminals. */
+#define YYNTOKENS  127
+/* YYNNTS -- Number of nonterminals. */
+#define YYNNTS  116
+/* YYNRULES -- Number of rules. */
+#define YYNRULES  307
+/* YYNRULES -- Number of states. */
+#define YYNSTATES  615
 
-/* ZZ_TRANSLATE(ZZ_LEX) -- Bison symbol number corresponding to ZZ_LEX.  */
-#define ZZ_UNDEFTOK  2
-#define ZZ_MAXUTOK   364
+/* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
+#define YYUNDEFTOK  2
+#define YYMAXUTOK   364
 
-#define ZZ_TRANSLATE(ZZ_X) 						\
-  ((unsigned int) (ZZ_X) <= ZZ_MAXUTOK ? zz_translate[ZZ_X] : ZZ_UNDEFTOK)
+#define YYTRANSLATE(YYX) 						\
+  ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
-/* ZZ_TRANSLATE[ZZ_LEX] -- Bison symbol number corresponding to ZZ_LEX.  */
-static const unsigned char zz_translate[] =
+/* YYTRANSLATE[YYLEX] -- Bison symbol number corresponding to YYLEX.  */
+static const unsigned char yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -791,10 +769,10 @@ static const unsigned char zz_translate[] =
      105,   106,   107,   117,   118
 };
 
-#if ZZ_DEBUG
-/* ZZ_PRHS[ZZ_N] -- Index of the first RHS symbol of rule number ZZ_N in
-   ZZ_RHS.  */
-static const unsigned short int zz_prhs[] =
+#if YYDEBUG
+/* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
+   YYRHS.  */
+static const unsigned short int yyprhs[] =
 {
        0,     0,     3,     4,     7,     9,    11,    13,    15,    17,
       19,    21,    23,    25,    27,    29,    31,    33,    35,    41,
@@ -829,8 +807,8 @@ static const unsigned short int zz_prhs[] =
     1020,  1022,  1024,  1026,  1028,  1030,  1032,  1034
 };
 
-/* ZZ_RHS -- A `-1'-separated list of the rules' RHS. */
-static const short int zz_rhs[] =
+/* YYRHS -- A `-1'-separated list of the rules' RHS. */
+static const short int yyrhs[] =
 {
      128,     0,    -1,    -1,   128,   129,    -1,   131,    -1,   132,
       -1,   133,    -1,   136,    -1,   138,    -1,   134,    -1,   144,
@@ -938,47 +916,47 @@ static const short int zz_rhs[] =
       97,    -1,    12,    -1,    13,    -1
 };
 
-/* ZZ_RLINE[ZZ_N] -- source line where rule number ZZ_N was defined.  */
-static const unsigned short int zz_rline[] =
+/* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
+static const unsigned short int yyrline[] =
 {
-       0,   409,   409,   411,   415,   416,   417,   418,   419,   420,
-     421,   422,   423,   424,   425,   426,   427,   428,   435,   480,
-     484,   489,   497,   501,   506,   514,   518,   525,   556,   564,
-     584,   594,   602,   620,   629,   637,   690,   701,   710,   715,
-     720,   727,   734,   744,   783,   818,   823,   828,   835,   842,
-     852,   893,   902,   915,   924,   927,   935,   938,   946,   949,
-     956,   988,  1002,  1005,  1012,  1042,  1051,  1056,  1076,  1079,
-    1087,  1097,  1101,  1100,  1114,  1122,  1125,  1148,  1162,  1171,
-    1179,  1182,  1190,  1198,  1199,  1200,  1201,  1202,  1203,  1204,
-    1205,  1206,  1207,  1208,  1209,  1210,  1211,  1212,  1213,  1214,
-    1215,  1216,  1217,  1218,  1219,  1220,  1221,  1222,  1223,  1224,
-    1225,  1226,  1227,  1231,  1272,  1301,  1305,  1356,  1359,  1366,
-    1378,  1405,  1410,  1418,  1423,  1432,  1435,  1443,  1446,  1454,
-    1457,  1464,  1471,  1478,  1485,  1492,  1496,  1503,  1516,  1533,
-    1543,  1551,  1562,  1575,  1582,  1590,  1593,  1600,  1621,  1624,
-    1631,  1653,  1656,  1660,  1667,  1671,  1675,  1679,  1686,  1690,
-    1697,  1704,  1711,  1722,  1733,  1739,  1749,  1759,  1762,  1769,
-    1780,  1792,  1799,  1809,  1816,  1820,  1824,  1828,  1835,  1839,
-    1843,  1847,  1851,  1858,  1865,  1876,  1886,  1893,  1897,  1901,
-    1905,  1912,  1923,  1933,  1940,  1944,  1948,  1952,  1959,  1969,
-    2006,  2015,  2030,  2035,  2044,  2055,  2059,  2064,  2077,  2097,
-    2101,  2106,  2121,  2126,  2131,  2136,  2141,  2146,  2151,  2156,
-    2161,  2166,  2171,  2176,  2181,  2186,  2195,  2198,  2206,  2209,
-    2216,  2221,  2227,  2231,  2235,  2240,  2248,  2254,  2263,  2267,
-    2289,  2293,  2314,  2318,  2323,  2329,  2333,  2340,  2344,  2348,
-    2352,  2356,  2360,  2367,  2374,  2378,  2386,  2389,  2393,  2400,
-    2404,  2408,  2412,  2416,  2420,  2424,  2428,  2432,  2436,  2440,
-    2445,  2450,  2455,  2460,  2465,  2470,  2475,  2479,  2484,  2489,
-    2494,  2499,  2504,  2508,  2512,  2516,  2520,  2527,  2531,  2538,
-    2542,  2549,  2553,  2560,  2564,  2571,  2575,  2582,  2586,  2597,
-    2604,  2608,  2612,  2616,  2620,  2624,  2631,  2635
+       0,   410,   410,   412,   416,   417,   418,   419,   420,   421,
+     422,   423,   424,   425,   426,   427,   428,   429,   436,   481,
+     485,   490,   498,   502,   507,   515,   519,   526,   557,   565,
+     585,   595,   603,   621,   630,   638,   691,   702,   711,   716,
+     721,   728,   735,   745,   784,   819,   824,   829,   836,   843,
+     853,   894,   903,   916,   925,   928,   936,   939,   947,   950,
+     957,   989,  1003,  1006,  1013,  1043,  1052,  1057,  1077,  1080,
+    1088,  1098,  1102,  1101,  1115,  1123,  1126,  1149,  1163,  1172,
+    1180,  1183,  1191,  1199,  1200,  1201,  1202,  1203,  1204,  1205,
+    1206,  1207,  1208,  1209,  1210,  1211,  1212,  1213,  1214,  1215,
+    1216,  1217,  1218,  1219,  1220,  1221,  1222,  1223,  1224,  1225,
+    1226,  1227,  1228,  1232,  1273,  1302,  1306,  1357,  1360,  1367,
+    1379,  1406,  1411,  1419,  1424,  1433,  1436,  1444,  1447,  1455,
+    1458,  1465,  1472,  1479,  1486,  1493,  1497,  1504,  1517,  1534,
+    1544,  1552,  1563,  1576,  1583,  1591,  1594,  1601,  1622,  1625,
+    1632,  1654,  1657,  1661,  1668,  1672,  1676,  1680,  1687,  1691,
+    1698,  1705,  1712,  1723,  1734,  1740,  1750,  1760,  1763,  1770,
+    1781,  1793,  1800,  1810,  1817,  1821,  1825,  1829,  1836,  1840,
+    1844,  1848,  1852,  1859,  1866,  1877,  1887,  1894,  1898,  1902,
+    1906,  1913,  1924,  1934,  1941,  1945,  1949,  1953,  1960,  1970,
+    2007,  2016,  2031,  2036,  2045,  2056,  2060,  2065,  2078,  2098,
+    2102,  2107,  2122,  2127,  2132,  2137,  2142,  2147,  2152,  2157,
+    2162,  2167,  2172,  2177,  2182,  2187,  2196,  2199,  2207,  2210,
+    2217,  2222,  2228,  2232,  2236,  2241,  2249,  2255,  2264,  2268,
+    2290,  2294,  2315,  2319,  2324,  2330,  2334,  2341,  2345,  2349,
+    2353,  2357,  2361,  2368,  2375,  2379,  2387,  2390,  2394,  2401,
+    2405,  2409,  2413,  2417,  2421,  2425,  2429,  2433,  2437,  2441,
+    2446,  2451,  2456,  2461,  2466,  2471,  2476,  2480,  2485,  2490,
+    2495,  2500,  2505,  2509,  2513,  2517,  2521,  2528,  2532,  2539,
+    2543,  2550,  2554,  2561,  2565,  2572,  2576,  2583,  2587,  2598,
+    2605,  2609,  2613,  2617,  2621,  2625,  2632,  2636
 };
 #endif
 
-#if ZZ_DEBUG || ZZ_ERROR_VERBOSE
-/* ZZ_TNME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
-   First, the terminals, then, starting at ZZ_NTOKENS, nonterminals. */
-static const char *const zz_tname[] =
+#if YYDEBUG || YYERROR_VERBOSE
+/* YYTNME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
+   First, the terminals, then, starting at YYNTOKENS, nonterminals. */
+static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "ADD_T", "ALIASES_T", "AND_T", "ANY_T",
   "AREALIKE_T", "ARETHESAME_T", "ARRAY_T", "ASSERT_T", "ATOM_T", "BEQ_T",
@@ -1034,10 +1012,10 @@ static const char *const zz_tname[] =
 };
 #endif
 
-# ifdef ZZ_PRINT
-/* ZZ_TOKNUM[ZZ_LEX-NUM] -- Internal token number corresponding to
-   token ZZ_LEX-NUM.  */
-static const unsigned short int zz_toknum[] =
+# ifdef YYPRINT
+/* YYTOKNUM[YYLEX-NUM] -- Internal token number corresponding to
+   token YYLEX-NUM.  */
+static const unsigned short int yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
@@ -1055,8 +1033,8 @@ static const unsigned short int zz_toknum[] =
 };
 # endif
 
-/* ZZ_R1[ZZ_N] -- Symbol number of symbol that rule ZZ_N derives.  */
-static const unsigned char zz_r1[] =
+/* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
+static const unsigned char yyr1[] =
 {
        0,   127,   128,   128,   129,   129,   129,   129,   129,   129,
      129,   129,   129,   129,   129,   129,   129,   129,   130,   131,
@@ -1091,8 +1069,8 @@ static const unsigned char zz_r1[] =
      241,   241,   241,   241,   241,   241,   242,   242
 };
 
-/* ZZ_R2[ZZ_N] -- Number of symbols composing right hand side of rule ZZ_N.  */
-static const unsigned char zz_r2[] =
+/* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
+static const unsigned char yyr2[] =
 {
        0,     2,     0,     2,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     5,     3,
@@ -1127,10 +1105,10 @@ static const unsigned char zz_r2[] =
        1,     1,     1,     1,     1,     1,     1,     1
 };
 
-/* ZZ_DEFACT[STATE-NAME] -- Default rule to reduce with in state
-   STATE-NUM when ZZ_TABLE doesn't specify something else to do.  Zero
+/* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
+   STATE-NUM when YYTABLE doesn't specify something else to do.  Zero
    means the default is an error.  */
-static const unsigned short int zz_defact[] =
+static const unsigned short int yydefact[] =
 {
        2,     0,     1,    17,     0,     0,     0,     0,     0,     0,
        0,     0,    68,    63,     3,    16,     4,     5,     6,     9,
@@ -1196,8 +1174,8 @@ static const unsigned short int zz_defact[] =
        0,   116,   231,     0,   118
 };
 
-/* ZZ_DEFGOTO[NTERM-NUM]. */
-static const short int zz_defgoto[] =
+/* YYDEFGOTO[NTERM-NUM]. */
+static const short int yydefgoto[] =
 {
       -1,     1,    14,    15,    16,    17,    18,    19,    20,    21,
       22,    23,    24,    25,    58,    59,   470,    26,    60,   513,
@@ -1213,10 +1191,10 @@ static const short int zz_defgoto[] =
      565,   586,   523,   195,   303,   304
 };
 
-/* ZZ_PACT[STATE-NUM] -- Index in ZZ_TABLE of the portion describing
+/* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define ZZ_PACT_NINF -437
-static const short int zz_pact[] =
+#define YYPACT_NINF -437
+static const short int yypact[] =
 {
     -437,  1096,  -437,  -437,    81,   -59,     2,    25,    38,    57,
        1,    82,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
@@ -1282,8 +1260,8 @@ static const short int zz_pact[] =
      372,  -437,   165,   377,  -437
 };
 
-/* ZZ_PGOTO[NTERM-NUM].  */
-static const short int zz_pgoto[] =
+/* YYPGOTO[NTERM-NUM].  */
+static const short int yypgoto[] =
 {
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
     -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,  -437,
@@ -1299,12 +1277,12 @@ static const short int zz_pgoto[] =
     -437,  -437,  -373,   284,  -437,  -437
 };
 
-/* ZZ_TABLE[ZZ_PACT[STATE-NUM]].  What to do in state STATE-NUM.  If
+/* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which
-   number is the opposite.  If zero, do what ZZ_DEFACT says.
-   If ZZ_TABLE_NINF, syntax error.  */
-#define ZZ_TABLE_NINF -206
-static const short int zz_table[] =
+   number is the opposite.  If zero, do what YYDEFACT says.
+   If YYTABLE_NINF, syntax error.  */
+#define YYTABLE_NINF -206
+static const short int yytable[] =
 {
       85,    63,    88,    89,    52,    93,   173,    67,   495,   484,
       68,   271,   348,    78,    78,   355,   185,   196,   518,   402,
@@ -1427,7 +1405,7 @@ static const short int zz_table[] =
       13
 };
 
-static const short int zz_check[] =
+static const short int yycheck[] =
 {
       48,    32,    49,    50,    24,    52,    54,    38,   444,   426,
       40,   139,    17,    32,    32,    17,    27,    27,    35,    68,
@@ -1550,9 +1528,9 @@ static const short int zz_check[] =
       84
 };
 
-/* ZZ_STOS[STATE-NUM] -- The (internal number of the) accessing
+/* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
-static const unsigned char zz_stos[] =
+static const unsigned char yystos[] =
 {
        0,   128,     0,     1,     3,    27,    41,    43,    65,    67,
       69,    70,    83,    84,   129,   130,   131,   132,   133,   134,
@@ -1618,339 +1596,339 @@ static const unsigned char zz_stos[] =
      101,   174,   121,   229,   122
 };
 
-#if ! defined (ZZ_SIZE_T) && defined (__SIZE_TYPE__)
-# define ZZ_SIZE_T __SIZE_TYPE__
+#if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
+# define YYSIZE_T __SIZE_TYPE__
 #endif
-#if ! defined (ZZ_SIZE_T) && defined (size_t)
-# define ZZ_SIZE_T size_t
+#if ! defined (YYSIZE_T) && defined (size_t)
+# define YYSIZE_T size_t
 #endif
-#if ! defined (ZZ_SIZE_T)
+#if ! defined (YYSIZE_T)
 # if defined (__STDC__) || defined (__cplusplus)
 #  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  define ZZ_SIZE_T size_t
+#  define YYSIZE_T size_t
 # endif
 #endif
-#if ! defined (ZZ_SIZE_T)
-# define ZZ_SIZE_T unsigned int
+#if ! defined (YYSIZE_T)
+# define YYSIZE_T unsigned int
 #endif
 
-#define zz_errok		(zz_errstatus = 0)
-#define zz_clearin	(zz_char = ZZ_EMPTY)
-#define ZZ_EMPTY		(-2)
-#define ZZ_EOF		0
+#define yyerrok		(yyerrstatus = 0)
+#define yyclearin	(yychar = YYEMPTY)
+#define YYEMPTY		(-2)
+#define YYEOF		0
 
-#define ZZ_ACCEPT	goto zz_acceptlab
-#define ZZ_ABORT		goto zz_abortlab
-#define ZZ_ERROR		goto zz_errorlab
+#define YYACCEPT	goto yyacceptlab
+#define YYABORT		goto yyabortlab
+#define YYERROR		goto yyerrorlab
 
 
-/* Like ZZ_ERROR except do call zz_error.  This remains here temporarily
-   to ease the transition to the new meaning of ZZ_ERROR, for GCC.
+/* Like YYERROR except do call yyerror.  This remains here temporarily
+   to ease the transition to the new meaning of YYERROR, for GCC.
    Once GCC version 2 has supplanted version 1, this can go.  */
 
-#define ZZ_FAIL		goto zz_errlab
+#define YYFAIL		goto yyerrlab
 
-#define ZZ_RECOVERING()  (!!zz_errstatus)
+#define YYRECOVERING()  (!!yyerrstatus)
 
-#define ZZ_BACKUP(Token, Value)					\
+#define YYBACKUP(Token, Value)					\
 do								\
-  if (zz_char == ZZ_EMPTY && zz_len == 1)				\
+  if (yychar == YYEMPTY && yylen == 1)				\
     {								\
-      zz_char = (Token);						\
-      zz_lval = (Value);						\
-      zz_token = ZZ_TRANSLATE (zz_char);				\
-      ZZ_POPSTACK;						\
-      goto zz_backup;						\
+      yychar = (Token);						\
+      yylval = (Value);						\
+      yytoken = YYTRANSLATE (yychar);				\
+      YYPOPSTACK;						\
+      goto yybackup;						\
     }								\
   else								\
     { 								\
-      zz_error ("syntax error: cannot back up");\
-      ZZ_ERROR;							\
+      yyerror ("syntax error: cannot back up");\
+      YYERROR;							\
     }								\
 while (0)
 
 
-#define ZZ_TERROR	1
-#define ZZ_ERRCODE	256
+#define YYTERROR	1
+#define YYERRCODE	256
 
 
-/* ZZ_LLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
+/* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
    If N is 0, then set CURRENT to the empty location which ends
    the previous symbol: RHS[0] (always defined).  */
 
-#define ZZ_RHSLOC(Rhs, K) ((Rhs)[K])
-#ifndef ZZ_LLOC_DEFAULT
-# define ZZ_LLOC_DEFAULT(Current, Rhs, N)				\
+#define YYRHSLOC(Rhs, K) ((Rhs)[K])
+#ifndef YYLLOC_DEFAULT
+# define YYLLOC_DEFAULT(Current, Rhs, N)				\
     do									\
       if (N)								\
 	{								\
-	  (Current).first_line   = ZZ_RHSLOC (Rhs, 1).first_line;	\
-	  (Current).first_column = ZZ_RHSLOC (Rhs, 1).first_column;	\
-	  (Current).last_line    = ZZ_RHSLOC (Rhs, N).last_line;		\
-	  (Current).last_column  = ZZ_RHSLOC (Rhs, N).last_column;	\
+	  (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;	\
+	  (Current).first_column = YYRHSLOC (Rhs, 1).first_column;	\
+	  (Current).last_line    = YYRHSLOC (Rhs, N).last_line;		\
+	  (Current).last_column  = YYRHSLOC (Rhs, N).last_column;	\
 	}								\
       else								\
 	{								\
 	  (Current).first_line   = (Current).last_line   =		\
-	    ZZ_RHSLOC (Rhs, 0).last_line;				\
+	    YYRHSLOC (Rhs, 0).last_line;				\
 	  (Current).first_column = (Current).last_column =		\
-	    ZZ_RHSLOC (Rhs, 0).last_column;				\
+	    YYRHSLOC (Rhs, 0).last_column;				\
 	}								\
     while (0)
 #endif
 
 
-/* ZZ__LOCATION_PRINT -- Print the location on the stream.
+/* YY_LOCATION_PRINT -- Print the location on the stream.
    This macro was not mandated originally: define only if we know
    we won't break user code: when these are the locations we know.  */
 
-#ifndef ZZ__LOCATION_PRINT
-# if ZZ_LTYPE_IS_TRIVIAL
-#  define ZZ__LOCATION_PRINT(File, Loc)			\
+#ifndef YY_LOCATION_PRINT
+# if YYLTYPE_IS_TRIVIAL
+#  define YY_LOCATION_PRINT(File, Loc)			\
      fprintf (File, "%d.%d-%d.%d",			\
               (Loc).first_line, (Loc).first_column,	\
               (Loc).last_line,  (Loc).last_column)
 # else
-#  define ZZ__LOCATION_PRINT(File, Loc) ((void) 0)
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
 # endif
 #endif
 
 
-/* ZZ_LEX -- calling `zz_lex' with the right arguments.  */
+/* YYLEX -- calling `yylex' with the right arguments.  */
 
-#ifdef ZZ_LEX_PARAM
-# define ZZ_LEX zz_lex (ZZ_LEX_PARAM)
+#ifdef YYLEX_PARAM
+# define YYLEX yylex (YYLEX_PARAM)
 #else
-# define ZZ_LEX zz_lex ()
+# define YYLEX yylex ()
 #endif
 
 /* Enable debugging if requested.  */
-#if ZZ_DEBUG
+#if YYDEBUG
 
-# ifndef ZZ_FPRINTF
+# ifndef YYFPRINTF
 #  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
-#  define ZZ_FPRINTF fprintf
+#  define YYFPRINTF fprintf
 # endif
 
-# define ZZ_DPRINTF(Args)			\
+# define YYDPRINTF(Args)			\
 do {						\
-  if (zz_debug)					\
-    ZZ_FPRINTF Args;				\
+  if (yydebug)					\
+    YYFPRINTF Args;				\
 } while (0)
 
-# define ZZ__SYMBOL_PRINT(Title, Type, Value, Location)		\
+# define YY_SYMBOL_PRINT(Title, Type, Value, Location)		\
 do {								\
-  if (zz_debug)							\
+  if (yydebug)							\
     {								\
-      ZZ_FPRINTF (stderr, "%s ", Title);				\
-      zz_symprint (stderr, 					\
+      YYFPRINTF (stderr, "%s ", Title);				\
+      yysymprint (stderr, 					\
                   Type, Value);	\
-      ZZ_FPRINTF (stderr, "\n");					\
+      YYFPRINTF (stderr, "\n");					\
     }								\
 } while (0)
 
 /*------------------------------------------------------------------.
-| zz__stack_print -- Print the state stack from its BOTTOM up to its |
+| yy_stack_print -- Print the state stack from its BOTTOM up to its |
 | TOP (included).                                                   |
 `------------------------------------------------------------------*/
 
 #if defined (__STDC__) || defined (__cplusplus)
 static void
-zz__stack_print (short int *bottom, short int *top)
+yy_stack_print (short int *bottom, short int *top)
 #else
 static void
-zz__stack_print (bottom, top)
+yy_stack_print (bottom, top)
     short int *bottom;
     short int *top;
 #endif
 {
-  ZZ_FPRINTF (stderr, "Stack now");
+  YYFPRINTF (stderr, "Stack now");
   for (/* Nothing. */; bottom <= top; ++bottom)
-    ZZ_FPRINTF (stderr, " %d", *bottom);
-  ZZ_FPRINTF (stderr, "\n");
+    YYFPRINTF (stderr, " %d", *bottom);
+  YYFPRINTF (stderr, "\n");
 }
 
-# define ZZ__STACK_PRINT(Bottom, Top)				\
+# define YY_STACK_PRINT(Bottom, Top)				\
 do {								\
-  if (zz_debug)							\
-    zz__stack_print ((Bottom), (Top));				\
+  if (yydebug)							\
+    yy_stack_print ((Bottom), (Top));				\
 } while (0)
 
 
 /*------------------------------------------------.
-| Report that the ZZ_RULE is going to be reduced.  |
+| Report that the YYRULE is going to be reduced.  |
 `------------------------------------------------*/
 
 #if defined (__STDC__) || defined (__cplusplus)
 static void
-zz__reduce_print (int zz_rule)
+yy_reduce_print (int yyrule)
 #else
 static void
-zz__reduce_print (zz_rule)
-    int zz_rule;
+yy_reduce_print (yyrule)
+    int yyrule;
 #endif
 {
-  int zz_i;
-  unsigned int zz_lno = zz_rline[zz_rule];
-  ZZ_FPRINTF (stderr, "Reducing stack by rule %d (line %u), ",
-             zz_rule - 1, zz_lno);
+  int yyi;
+  unsigned int yylno = yyrline[yyrule];
+  YYFPRINTF (stderr, "Reducing stack by rule %d (line %u), ",
+             yyrule - 1, yylno);
   /* Print the symbols being reduced, and their result.  */
-  for (zz_i = zz_prhs[zz_rule]; 0 <= zz_rhs[zz_i]; zz_i++)
-    ZZ_FPRINTF (stderr, "%s ", zz_tname [zz_rhs[zz_i]]);
-  ZZ_FPRINTF (stderr, "-> %s\n", zz_tname [zz_r1[zz_rule]]);
+  for (yyi = yyprhs[yyrule]; 0 <= yyrhs[yyi]; yyi++)
+    YYFPRINTF (stderr, "%s ", yytname [yyrhs[yyi]]);
+  YYFPRINTF (stderr, "-> %s\n", yytname [yyr1[yyrule]]);
 }
 
-# define ZZ__REDUCE_PRINT(Rule)		\
+# define YY_REDUCE_PRINT(Rule)		\
 do {					\
-  if (zz_debug)				\
-    zz__reduce_print (Rule);		\
+  if (yydebug)				\
+    yy_reduce_print (Rule);		\
 } while (0)
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
-int zz_debug;
-#else /* !ZZ_DEBUG */
-# define ZZ_DPRINTF(Args)
-# define ZZ__SYMBOL_PRINT(Title, Type, Value, Location)
-# define ZZ__STACK_PRINT(Bottom, Top)
-# define ZZ__REDUCE_PRINT(Rule)
-#endif /* !ZZ_DEBUG */
+int yydebug;
+#else /* !YYDEBUG */
+# define YYDPRINTF(Args)
+# define YY_SYMBOL_PRINT(Title, Type, Value, Location)
+# define YY_STACK_PRINT(Bottom, Top)
+# define YY_REDUCE_PRINT(Rule)
+#endif /* !YYDEBUG */
 
 
-/* ZZ_INITDEPTH -- initial size of the parser's stacks.  */
-#ifndef	ZZ_INITDEPTH
-# define ZZ_INITDEPTH 200
+/* YYINITDEPTH -- initial size of the parser's stacks.  */
+#ifndef	YYINITDEPTH
+# define YYINITDEPTH 200
 #endif
 
-/* ZZ_MAXDEPTH -- maximum size the stacks can grow to (effective only
+/* YYMAXDEPTH -- maximum size the stacks can grow to (effective only
    if the built-in stack extension method is used).
 
    Do not make this value too large; the results are undefined if
-   SIZE_MAX < ZZ_STACK_BYTES (ZZ_MAXDEPTH)
+   SIZE_MAX < YYSTACK_BYTES (YYMAXDEPTH)
    evaluated with infinite-precision integer arithmetic.  */
 
-#ifndef ZZ_MAXDEPTH
-# define ZZ_MAXDEPTH 10000
+#ifndef YYMAXDEPTH
+# define YYMAXDEPTH 10000
 #endif
 
 
 
-#if ZZ_ERROR_VERBOSE
+#if YYERROR_VERBOSE
 
-# ifndef zz_strlen
+# ifndef yystrlen
 #  if defined (__GLIBC__) && defined (_STRING_H)
-#   define zz_strlen strlen
+#   define yystrlen strlen
 #  else
-/* Return the length of ZZ_STR.  */
-static ZZ_SIZE_T
+/* Return the length of YYSTR.  */
+static YYSIZE_T
 #   if defined (__STDC__) || defined (__cplusplus)
-zz_strlen (const char *zz_str)
+yystrlen (const char *yystr)
 #   else
-zz_strlen (zz_str)
-     const char *zz_str;
+yystrlen (yystr)
+     const char *yystr;
 #   endif
 {
-  register const char *zz_s = zz_str;
+  register const char *yys = yystr;
 
-  while (*zz_s++ != '\0')
+  while (*yys++ != '\0')
     continue;
 
-  return zz_s - zz_str - 1;
+  return yys - yystr - 1;
 }
 #  endif
 # endif
 
-# ifndef zz_stpcpy
+# ifndef yystpcpy
 #  if defined (__GLIBC__) && defined (_STRING_H) && defined (_GNU_SOURCE)
-#   define zz_stpcpy stpcpy
+#   define yystpcpy stpcpy
 #  else
-/* Copy ZZ_SRC to ZZ_DEST, returning the address of the terminating '\0' in
-   ZZ_DEST.  */
+/* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
+   YYDEST.  */
 static char *
 #   if defined (__STDC__) || defined (__cplusplus)
-zz_stpcpy (char *zz_dest, const char *zz_src)
+yystpcpy (char *yydest, const char *yysrc)
 #   else
-zz_stpcpy (zz_dest, zz_src)
-     char *zz_dest;
-     const char *zz_src;
+yystpcpy (yydest, yysrc)
+     char *yydest;
+     const char *yysrc;
 #   endif
 {
-  register char *zz_d = zz_dest;
-  register const char *zz_s = zz_src;
+  register char *yyd = yydest;
+  register const char *yys = yysrc;
 
-  while ((*zz_d++ = *zz_s++) != '\0')
+  while ((*yyd++ = *yys++) != '\0')
     continue;
 
-  return zz_d - 1;
+  return yyd - 1;
 }
 #  endif
 # endif
 
-#endif /* !ZZ_ERROR_VERBOSE */
+#endif /* !YYERROR_VERBOSE */
 
 
 
-#if ZZ_DEBUG
+#if YYDEBUG
 /*--------------------------------.
-| Print this symbol on ZZ_OUTPUT.  |
+| Print this symbol on YYOUTPUT.  |
 `--------------------------------*/
 
 #if defined (__STDC__) || defined (__cplusplus)
 static void
-zz_symprint (FILE *zz_output, int zz_type, ZZ_STYPE *zz_valuep)
+yysymprint (FILE *yyoutput, int yytype, YYSTYPE *yyvaluep)
 #else
 static void
-zz_symprint (zz_output, zz_type, zz_valuep)
-    FILE *zz_output;
-    int zz_type;
-    ZZ_STYPE *zz_valuep;
+yysymprint (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE *yyvaluep;
 #endif
 {
   /* Pacify ``unused variable'' warnings.  */
-  (void) zz_valuep;
+  (void) yyvaluep;
 
-  if (zz_type < ZZ_NTOKENS)
-    ZZ_FPRINTF (zz_output, "token %s (", zz_tname[zz_type]);
+  if (yytype < YYNTOKENS)
+    YYFPRINTF (yyoutput, "token %s (", yytname[yytype]);
   else
-    ZZ_FPRINTF (zz_output, "nterm %s (", zz_tname[zz_type]);
+    YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
 
 
-# ifdef ZZ_PRINT
-  if (zz_type < ZZ_NTOKENS)
-    ZZ_PRINT (zz_output, zz_toknum[zz_type], *zz_valuep);
+# ifdef YYPRINT
+  if (yytype < YYNTOKENS)
+    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
 # endif
-  switch (zz_type)
+  switch (yytype)
     {
       default:
         break;
     }
-  ZZ_FPRINTF (zz_output, ")");
+  YYFPRINTF (yyoutput, ")");
 }
 
-#endif /* ! ZZ_DEBUG */
+#endif /* ! YYDEBUG */
 /*-----------------------------------------------.
 | Release the memory associated to this symbol.  |
 `-----------------------------------------------*/
 
 #if defined (__STDC__) || defined (__cplusplus)
 static void
-zz_destruct (const char *zz_msg, int zz_type, ZZ_STYPE *zz_valuep)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
 #else
 static void
-zz_destruct (zz_msg, zz_type, zz_valuep)
-    const char *zz_msg;
-    int zz_type;
-    ZZ_STYPE *zz_valuep;
+yydestruct (yymsg, yytype, yyvaluep)
+    const char *yymsg;
+    int yytype;
+    YYSTYPE *yyvaluep;
 #endif
 {
   /* Pacify ``unused variable'' warnings.  */
-  (void) zz_valuep;
+  (void) yyvaluep;
 
-  if (!zz_msg)
-    zz_msg = "Deleting";
-  ZZ__SYMBOL_PRINT (zz_msg, zz_type, zz_valuep, zz_locationp);
+  if (!yymsg)
+    yymsg = "Deleting";
+  YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
 
-  switch (zz_type)
+  switch (yytype)
     {
 
       default:
@@ -1961,320 +1939,320 @@ zz_destruct (zz_msg, zz_type, zz_valuep)
 
 /* Prevent warnings from -Wmissing-prototypes.  */
 
-#ifdef ZZ_PARSE_PARAM
+#ifdef YYPARSE_PARAM
 # if defined (__STDC__) || defined (__cplusplus)
-int zz_parse (void *ZZ_PARSE_PARAM);
+int yyparse (void *YYPARSE_PARAM);
 # else
-int zz_parse ();
+int yyparse ();
 # endif
-#else /* ! ZZ_PARSE_PARAM */
+#else /* ! YYPARSE_PARAM */
 #if defined (__STDC__) || defined (__cplusplus)
-int zz_parse (void);
+int yyparse (void);
 #else
-int zz_parse ();
+int yyparse ();
 #endif
-#endif /* ! ZZ_PARSE_PARAM */
+#endif /* ! YYPARSE_PARAM */
 
 
 
 /* The look-ahead symbol.  */
-int zz_char;
+int yychar;
 
 /* The semantic value of the look-ahead symbol.  */
-ZZ_STYPE zz_lval;
+YYSTYPE yylval;
 
 /* Number of syntax errors so far.  */
-int zz_nerrs;
+int yynerrs;
 
 
 
 /*----------.
-| zz_parse.  |
+| yyparse.  |
 `----------*/
 
-#ifdef ZZ_PARSE_PARAM
+#ifdef YYPARSE_PARAM
 # if defined (__STDC__) || defined (__cplusplus)
-int zz_parse (void *ZZ_PARSE_PARAM)
+int yyparse (void *YYPARSE_PARAM)
 # else
-int zz_parse (ZZ_PARSE_PARAM)
-  void *ZZ_PARSE_PARAM;
+int yyparse (YYPARSE_PARAM)
+  void *YYPARSE_PARAM;
 # endif
-#else /* ! ZZ_PARSE_PARAM */
+#else /* ! YYPARSE_PARAM */
 #if defined (__STDC__) || defined (__cplusplus)
 int
-zz_parse (void)
+yyparse (void)
 #else
 int
-zz_parse ()
+yyparse ()
 
 #endif
 #endif
 {
   
-  register int zz_state;
-  register int zz_n;
-  int zz_result;
+  register int yystate;
+  register int yyn;
+  int yyresult;
   /* Number of tokens to shift before error messages enabled.  */
-  int zz_errstatus;
+  int yyerrstatus;
   /* Look-ahead token as an internal (translated) token number.  */
-  int zz_token = 0;
+  int yytoken = 0;
 
   /* Three stacks and their tools:
-     `zz_ss': related to states,
-     `zz_vs': related to semantic values,
-     `zz_ls': related to locations.
+     `yyss': related to states,
+     `yyvs': related to semantic values,
+     `yyls': related to locations.
 
-     Refer to the stacks thru separate pointers, to allow zz_overflow
+     Refer to the stacks thru separate pointers, to allow yyoverflow
      to reallocate them elsewhere.  */
 
   /* The state stack.  */
-  short int zz_ssa[ZZ_INITDEPTH];
-  short int *zz_ss = zz_ssa;
-  register short int *zz_ssp;
+  short int yyssa[YYINITDEPTH];
+  short int *yyss = yyssa;
+  register short int *yyssp;
 
   /* The semantic value stack.  */
-  ZZ_STYPE zz_vsa[ZZ_INITDEPTH];
-  ZZ_STYPE *zz_vs = zz_vsa;
-  register ZZ_STYPE *zz_vsp;
+  YYSTYPE yyvsa[YYINITDEPTH];
+  YYSTYPE *yyvs = yyvsa;
+  register YYSTYPE *yyvsp;
 
 
 
-#define ZZ_POPSTACK   (zz_vsp--, zz_ssp--)
+#define YYPOPSTACK   (yyvsp--, yyssp--)
 
-  ZZ_SIZE_T zz_stacksize = ZZ_INITDEPTH;
+  YYSIZE_T yystacksize = YYINITDEPTH;
 
   /* The variables used to return semantic value and location from the
      action routines.  */
-  ZZ_STYPE zz_val;
+  YYSTYPE yyval;
 
 
   /* When reducing, the number of symbols on the RHS of the reduced
      rule.  */
-  int zz_len;
+  int yylen;
 
-  ZZ_DPRINTF ((stderr, "Starting parse\n"));
+  YYDPRINTF ((stderr, "Starting parse\n"));
 
-  zz_state = 0;
-  zz_errstatus = 0;
-  zz_nerrs = 0;
-  zz_char = ZZ_EMPTY;		/* Cause a token to be read.  */
+  yystate = 0;
+  yyerrstatus = 0;
+  yynerrs = 0;
+  yychar = YYEMPTY;		/* Cause a token to be read.  */
 
   /* Initialize stack pointers.
      Waste one element of value and location stack
      so that they stay on the same level as the state stack.
      The wasted elements are never initialized.  */
 
-  zz_ssp = zz_ss;
-  zz_vsp = zz_vs;
+  yyssp = yyss;
+  yyvsp = yyvs;
 
 
-  zz_vsp[0] = zz_lval;
+  yyvsp[0] = yylval;
 
-  goto zz_setstate;
+  goto yysetstate;
 
 /*------------------------------------------------------------.
-| zz_newstate -- Push a new state, which is found in zz_state.  |
+| yynewstate -- Push a new state, which is found in yystate.  |
 `------------------------------------------------------------*/
- zz_newstate:
+ yynewstate:
   /* In all cases, when you get here, the value and location stacks
      have just been pushed. so pushing a state here evens the stacks.
      */
-  zz_ssp++;
+  yyssp++;
 
- zz_setstate:
-  *zz_ssp = zz_state;
+ yysetstate:
+  *yyssp = yystate;
 
-  if (zz_ss + zz_stacksize - 1 <= zz_ssp)
+  if (yyss + yystacksize - 1 <= yyssp)
     {
       /* Get the current used size of the three stacks, in elements.  */
-      ZZ_SIZE_T zz_size = zz_ssp - zz_ss + 1;
+      YYSIZE_T yysize = yyssp - yyss + 1;
 
-#ifdef zz_overflow
+#ifdef yyoverflow
       {
 	/* Give user a chance to reallocate the stack. Use copies of
 	   these so that the &'s don't force the real ones into
 	   memory.  */
-	ZZ_STYPE *zz_vs1 = zz_vs;
-	short int *zz_ss1 = zz_ss;
+	YYSTYPE *yyvs1 = yyvs;
+	short int *yyss1 = yyss;
 
 
 	/* Each stack pointer address is followed by the size of the
 	   data in use in that stack, in bytes.  This used to be a
 	   conditional around just the two extra args, but that might
-	   be undefined if zz_overflow is a macro.  */
-	zz_overflow ("parser stack overflow",
-		    &zz_ss1, zz_size * sizeof (*zz_ssp),
-		    &zz_vs1, zz_size * sizeof (*zz_vsp),
+	   be undefined if yyoverflow is a macro.  */
+	yyoverflow ("parser stack overflow",
+		    &yyss1, yysize * sizeof (*yyssp),
+		    &yyvs1, yysize * sizeof (*yyvsp),
 
-		    &zz_stacksize);
+		    &yystacksize);
 
-	zz_ss = zz_ss1;
-	zz_vs = zz_vs1;
+	yyss = yyss1;
+	yyvs = yyvs1;
       }
-#else /* no zz_overflow */
-# ifndef ZZ_STACK_RELOCATE
-      goto zz_overflowlab;
+#else /* no yyoverflow */
+# ifndef YYSTACK_RELOCATE
+      goto yyoverflowlab;
 # else
       /* Extend the stack our own way.  */
-      if (ZZ_MAXDEPTH <= zz_stacksize)
-	goto zz_overflowlab;
-      zz_stacksize *= 2;
-      if (ZZ_MAXDEPTH < zz_stacksize)
-	zz_stacksize = ZZ_MAXDEPTH;
+      if (YYMAXDEPTH <= yystacksize)
+	goto yyoverflowlab;
+      yystacksize *= 2;
+      if (YYMAXDEPTH < yystacksize)
+	yystacksize = YYMAXDEPTH;
 
       {
-	short int *zz_ss1 = zz_ss;
-	union zz_alloc *zz_ptr =
-	  (union zz_alloc *) ZZ_STACK_ALLOC (ZZ_STACK_BYTES (zz_stacksize));
-	if (! zz_ptr)
-	  goto zz_overflowlab;
-	ZZ_STACK_RELOCATE (zz_ss);
-	ZZ_STACK_RELOCATE (zz_vs);
+	short int *yyss1 = yyss;
+	union yyalloc *yyptr =
+	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
+	if (! yyptr)
+	  goto yyoverflowlab;
+	YYSTACK_RELOCATE (yyss);
+	YYSTACK_RELOCATE (yyvs);
 
-#  undef ZZ_STACK_RELOCATE
-	if (zz_ss1 != zz_ssa)
-	  ZZ_STACK_FREE (zz_ss1);
+#  undef YYSTACK_RELOCATE
+	if (yyss1 != yyssa)
+	  YYSTACK_FREE (yyss1);
       }
 # endif
-#endif /* no zz_overflow */
+#endif /* no yyoverflow */
 
-      zz_ssp = zz_ss + zz_size - 1;
-      zz_vsp = zz_vs + zz_size - 1;
+      yyssp = yyss + yysize - 1;
+      yyvsp = yyvs + yysize - 1;
 
 
-      ZZ_DPRINTF ((stderr, "Stack size increased to %lu\n",
-		  (unsigned long int) zz_stacksize));
+      YYDPRINTF ((stderr, "Stack size increased to %lu\n",
+		  (unsigned long int) yystacksize));
 
-      if (zz_ss + zz_stacksize - 1 <= zz_ssp)
-	ZZ_ABORT;
+      if (yyss + yystacksize - 1 <= yyssp)
+	YYABORT;
     }
 
-  ZZ_DPRINTF ((stderr, "Entering state %d\n", zz_state));
+  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
 
-  goto zz_backup;
+  goto yybackup;
 
 /*-----------.
-| zz_backup.  |
+| yybackup.  |
 `-----------*/
-zz_backup:
+yybackup:
 
 /* Do appropriate processing given the current state.  */
 /* Read a look-ahead token if we need one and don't already have one.  */
-/* zz_resume: */
+/* yyresume: */
 
   /* First try to decide what to do without reference to look-ahead token.  */
 
-  zz_n = zz_pact[zz_state];
-  if (zz_n == ZZ_PACT_NINF)
-    goto zz_default;
+  yyn = yypact[yystate];
+  if (yyn == YYPACT_NINF)
+    goto yydefault;
 
   /* Not known => get a look-ahead token if don't already have one.  */
 
-  /* ZZ_CHAR is either ZZ_EMPTY or ZZ_EOF or a valid look-ahead symbol.  */
-  if (zz_char == ZZ_EMPTY)
+  /* YYCHAR is either YYEMPTY or YYEOF or a valid look-ahead symbol.  */
+  if (yychar == YYEMPTY)
     {
-      ZZ_DPRINTF ((stderr, "Reading a token: "));
-      zz_char = ZZ_LEX;
+      YYDPRINTF ((stderr, "Reading a token: "));
+      yychar = YYLEX;
     }
 
-  if (zz_char <= ZZ_EOF)
+  if (yychar <= YYEOF)
     {
-      zz_char = zz_token = ZZ_EOF;
-      ZZ_DPRINTF ((stderr, "Now at end of input.\n"));
+      yychar = yytoken = YYEOF;
+      YYDPRINTF ((stderr, "Now at end of input.\n"));
     }
   else
     {
-      zz_token = ZZ_TRANSLATE (zz_char);
-      ZZ__SYMBOL_PRINT ("Next token is", zz_token, &zz_lval, &zz_lloc);
+      yytoken = YYTRANSLATE (yychar);
+      YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
     }
 
-  /* If the proper action on seeing token ZZ_TOKEN is to reduce or to
+  /* If the proper action on seeing token YYTOKEN is to reduce or to
      detect an error, take that action.  */
-  zz_n += zz_token;
-  if (zz_n < 0 || ZZ_LAST < zz_n || zz_check[zz_n] != zz_token)
-    goto zz_default;
-  zz_n = zz_table[zz_n];
-  if (zz_n <= 0)
+  yyn += yytoken;
+  if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)
+    goto yydefault;
+  yyn = yytable[yyn];
+  if (yyn <= 0)
     {
-      if (zz_n == 0 || zz_n == ZZ_TABLE_NINF)
-	goto zz_errlab;
-      zz_n = -zz_n;
-      goto zz_reduce;
+      if (yyn == 0 || yyn == YYTABLE_NINF)
+	goto yyerrlab;
+      yyn = -yyn;
+      goto yyreduce;
     }
 
-  if (zz_n == ZZ_FINAL)
-    ZZ_ACCEPT;
+  if (yyn == YYFINAL)
+    YYACCEPT;
 
   /* Shift the look-ahead token.  */
-  ZZ__SYMBOL_PRINT ("Shifting", zz_token, &zz_lval, &zz_lloc);
+  YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
 
   /* Discard the token being shifted unless it is eof.  */
-  if (zz_char != ZZ_EOF)
-    zz_char = ZZ_EMPTY;
+  if (yychar != YYEOF)
+    yychar = YYEMPTY;
 
-  *++zz_vsp = zz_lval;
+  *++yyvsp = yylval;
 
 
   /* Count tokens shifted since error; after three, turn off error
      status.  */
-  if (zz_errstatus)
-    zz_errstatus--;
+  if (yyerrstatus)
+    yyerrstatus--;
 
-  zz_state = zz_n;
-  goto zz_newstate;
+  yystate = yyn;
+  goto yynewstate;
 
 
 /*-----------------------------------------------------------.
-| zz_default -- do the default action for the current state.  |
+| yydefault -- do the default action for the current state.  |
 `-----------------------------------------------------------*/
-zz_default:
-  zz_n = zz_defact[zz_state];
-  if (zz_n == 0)
-    goto zz_errlab;
-  goto zz_reduce;
+yydefault:
+  yyn = yydefact[yystate];
+  if (yyn == 0)
+    goto yyerrlab;
+  goto yyreduce;
 
 
 /*-----------------------------.
-| zz_reduce -- Do a reduction.  |
+| yyreduce -- Do a reduction.  |
 `-----------------------------*/
-zz_reduce:
-  /* zz_n is the number of a rule to reduce with.  */
-  zz_len = zz_r2[zz_n];
+yyreduce:
+  /* yyn is the number of a rule to reduce with.  */
+  yylen = yyr2[yyn];
 
-  /* If ZZ_LEN is nonzero, implement the default value of the action:
+  /* If YYLEN is nonzero, implement the default value of the action:
      `$$ = $1'.
 
-     Otherwise, the following line sets ZZ_VAL to garbage.
+     Otherwise, the following line sets YYVAL to garbage.
      This behavior is undocumented and Bison
-     users should not rely upon it.  Assigning to ZZ_VAL
+     users should not rely upon it.  Assigning to YYVAL
      unconditionally makes the parser a bit smaller, and it avoids a
-     GCC warning that ZZ_VAL may be used uninitialized.  */
-  zz_val = zz_vsp[1-zz_len];
+     GCC warning that YYVAL may be used uninitialized.  */
+  yyval = yyvsp[1-yylen];
 
 
-  ZZ__REDUCE_PRINT (zz_n);
-  switch (zz_n)
+  YY_REDUCE_PRINT (yyn);
+  switch (yyn)
     {
         case 17:
-#line 429 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 430 "base\\generic\\compiler\\ascParse.y"
     {
 	  ErrMsg_Generic("Error in definition.");
-	}
+	;}
     break;
 
   case 18:
-#line 436 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 437 "base\\generic\\compiler\\ascParse.y"
     {
           /* the following steps apply to string buffers only, not files */
 	  struct gl_list_t *stats;
           int dispose;
-	  if ((zz_vsp[-2].slptr) != NULL) {
+	  if ((yyvsp[-2].slptr) != NULL) {
 	    stats = gl_create(1L);
-	    gl_append_ptr(stats,(void *)(zz_vsp[-2].slptr));
+	    gl_append_ptr(stats,(void *)(yyvsp[-2].slptr));
 	    if (g_untrapped_error) {
 	      ErrMsg_Generic("Because of a syntax error, the following statements are being ignored:");
-		WriteStatementList(ASCERR,(zz_vsp[-2].slptr),4);
-	      DestroyStatementList((zz_vsp[-2].slptr));
+		WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
+	      DestroyStatementList((yyvsp[-2].slptr));
             } else {
 	      dispose = Asc_ModuleAddStatements(Asc_CurrentModule(),stats);
               switch (dispose) {
@@ -2288,7 +2266,7 @@ zz_reduce:
               case -1: /* illegal in file */
 	        ErrMsg_Generic("GLOBAL statements can only be made interactively. Ignoring:");
 	        if (stats != NULL) {
-		  WriteStatementList(ASCERR,(zz_vsp[-2].slptr),4);
+		  WriteStatementList(ASCERR,(yyvsp[-2].slptr),4);
 	          gl_iterate(stats,(DestroyFunc)DestroyStatementList);
 	          gl_destroy(stats);
 	        }
@@ -2304,80 +2282,80 @@ zz_reduce:
 	    g_parameter_reduction =
 	    g_parameter_wheres = NULL;
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 19:
-#line 481 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 482 "base\\generic\\compiler\\ascParse.y"
     {
-	  Asc_ScannerPushBuffer((zz_vsp[-1].dquote_ptr));
-	}
+	  Asc_ScannerPushBuffer((yyvsp[-1].dquote_ptr));
+	;}
     break;
 
   case 20:
-#line 485 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 486 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroyName((zz_vsp[-1].nptr));
+	  DestroyName((yyvsp[-1].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
-	}
+	;}
     break;
 
   case 21:
-#line 490 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 491 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroyName((zz_vsp[0].nptr));
+	  DestroyName((yyvsp[0].nptr));
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
-	}
+	;}
     break;
 
   case 22:
-#line 498 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 499 "base\\generic\\compiler\\ascParse.y"
     {
-          Asc_ModuleCreateAlias(Asc_CurrentModule(),(zz_vsp[-1].dquote_ptr));
-        }
+          Asc_ModuleCreateAlias(Asc_CurrentModule(),(yyvsp[-1].dquote_ptr));
+        ;}
     break;
 
   case 23:
-#line 502 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 503 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroyName((zz_vsp[-1].nptr));
+	  DestroyName((yyvsp[-1].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
-	}
+	;}
     break;
 
   case 24:
-#line 507 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 508 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroyName((zz_vsp[0].nptr));
+	  DestroyName((yyvsp[0].nptr));
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
-	}
+	;}
     break;
 
   case 25:
-#line 515 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 516 "base\\generic\\compiler\\ascParse.y"
     {
-	  (void)LoadArchiveLibrary((zz_vsp[-1].dquote_ptr),SCP((zz_vsp[-3].id_ptr)));
-	}
+	  (void)LoadArchiveLibrary((yyvsp[-1].dquote_ptr),SCP((yyvsp[-3].id_ptr)));
+	;}
     break;
 
   case 26:
-#line 519 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 520 "base\\generic\\compiler\\ascParse.y"
     {
-	  (void)LoadArchiveLibrary(SCP((zz_vsp[-1].id_ptr)),NULL);
-	}
+	  (void)LoadArchiveLibrary(SCP((yyvsp[-1].id_ptr)),NULL);
+	;}
     break;
 
   case 27:
-#line 526 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 527 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*  see comments for notes statement.  */
-	  if( (zz_vsp[-1].int_value) != NOTES_T ) {
-	    WarnMsg_MismatchEnd("NOTES", NULL, (zz_vsp[-1].int_value), NULL);
+	  if( (yyvsp[-1].int_value) != NOTES_T ) {
+	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[-1].int_value), NULL);
 	  }
-	  if ((zz_vsp[-2].notesptr) != NULL) {
+	  if ((yyvsp[-2].notesptr) != NULL) {
 	    struct NoteTmp *nt;
 	    symchar *lang=NULL; /* dummy */
-	    nt = (zz_vsp[-2].notesptr);
+	    nt = (yyvsp[-2].notesptr);
 	    while (nt != NULL) {
 	      if (nt->lang != NULL) {
 	        lang = nt->lang;
@@ -2391,112 +2369,112 @@ zz_reduce:
 	    }
 	    /* now keep them */
 	    ProcessNotes(1);
-	    DestroyNoteTmpList((zz_vsp[-2].notesptr));
+	    DestroyNoteTmpList((yyvsp[-2].notesptr));
           }
           g_type_name = g_proc_name = NULL;
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 28:
-#line 557 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 558 "base\\generic\\compiler\\ascParse.y"
     {
-	  g_type_name = (zz_vsp[-2].id_ptr);
-	  g_proc_name = (zz_vsp[-1].id_ptr);
-	}
+	  g_type_name = (yyvsp[-2].id_ptr);
+	  g_proc_name = (yyvsp[-1].id_ptr);
+	;}
     break;
 
   case 29:
-#line 565 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 566 "base\\generic\\compiler\\ascParse.y"
     {
-	  if ((zz_vsp[-3].tptr) == NULL) {
-	    DestroyProcedureList((zz_vsp[-2].listp));
+	  if ((yyvsp[-3].tptr) == NULL) {
+	    DestroyProcedureList((yyvsp[-2].listp));
 	  } else {
-	    if( (zz_vsp[-1].int_value) != METHODS_T ) {
-	      WarnMsg_MismatchEnd("ADD METHODS", NULL, (zz_vsp[-1].int_value), "METHODS");
+	    if( (yyvsp[-1].int_value) != METHODS_T ) {
+	      WarnMsg_MismatchEnd("ADD METHODS", NULL, (yyvsp[-1].int_value), "METHODS");
 	    }
-	    if (AddMethods((zz_vsp[-3].tptr),(zz_vsp[-2].listp),g_untrapped_error) != 0) {
-	      if ((zz_vsp[-3].tptr) != ILLEGAL_DEFINITION) {
-                ErrMsg_ProcsRejected("ADD",SCP(GetName((zz_vsp[-3].tptr))));
-	        DestroyProcedureList((zz_vsp[-2].listp));
+	    if (AddMethods((yyvsp[-3].tptr),(yyvsp[-2].listp),g_untrapped_error) != 0) {
+	      if ((yyvsp[-3].tptr) != ILLEGAL_DEFINITION) {
+                ErrMsg_ProcsRejected("ADD",SCP(GetName((yyvsp[-3].tptr))));
+	        DestroyProcedureList((yyvsp[-2].listp));
 	      } /* else adding in DEFINITION MODEL may have misgone */
 	    }
 	  }
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 30:
-#line 585 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 586 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((zz_vsp[-1].id_ptr));
+	  tmptype = FindType((yyvsp[-1].id_ptr));
 	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("ADD", SCP((zz_vsp[-1].id_ptr)));
+            ErrMsg_ProcTypeMissing("ADD", SCP((yyvsp[-1].id_ptr)));
 	  }
-	  (zz_val.tptr) = tmptype; /* parent should check for NULL */
-	  g_type_name = (zz_vsp[-1].id_ptr); /* scope for notes */
-	}
+	  (yyval.tptr) = tmptype; /* parent should check for NULL */
+	  g_type_name = (yyvsp[-1].id_ptr); /* scope for notes */
+	;}
     break;
 
   case 31:
-#line 595 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 596 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.tptr) = ILLEGAL_DEFINITION;
+	  (yyval.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
-	}
+	;}
     break;
 
   case 32:
-#line 603 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 604 "base\\generic\\compiler\\ascParse.y"
     {
-	  if ((zz_vsp[-3].tptr) == NULL) {
-	    DestroyProcedureList((zz_vsp[-2].listp));
+	  if ((yyvsp[-3].tptr) == NULL) {
+	    DestroyProcedureList((yyvsp[-2].listp));
 	  } else {
-	    if( (zz_vsp[-1].int_value) != METHODS_T ) {
-	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, (zz_vsp[-1].int_value), "METHODS");
+	    if( (yyvsp[-1].int_value) != METHODS_T ) {
+	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, (yyvsp[-1].int_value), "METHODS");
 	    }
-	    if (ReplaceMethods((zz_vsp[-3].tptr),(zz_vsp[-2].listp),g_untrapped_error) != 0) {
-              ErrMsg_ProcsRejected("REPLACE",SCP(GetName((zz_vsp[-3].tptr))));
-	      DestroyProcedureList((zz_vsp[-2].listp));
+	    if (ReplaceMethods((yyvsp[-3].tptr),(yyvsp[-2].listp),g_untrapped_error) != 0) {
+              ErrMsg_ProcsRejected("REPLACE",SCP(GetName((yyvsp[-3].tptr))));
+	      DestroyProcedureList((yyvsp[-2].listp));
 	    }
 	  }
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 33:
-#line 621 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 622 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((zz_vsp[-1].id_ptr));
+	  tmptype = FindType((yyvsp[-1].id_ptr));
 	  if (tmptype == NULL) {
-            ErrMsg_ProcTypeMissing("REPLACE", SCP((zz_vsp[-1].id_ptr)));
+            ErrMsg_ProcTypeMissing("REPLACE", SCP((yyvsp[-1].id_ptr)));
 	  }
-	  (zz_val.tptr) = tmptype; /* parent should check for NULL */
-	}
+	  (yyval.tptr) = tmptype; /* parent should check for NULL */
+	;}
     break;
 
   case 34:
-#line 630 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 631 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.tptr) = ILLEGAL_DEFINITION;
+	  (yyval.tptr) = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
-	}
+	;}
     break;
 
   case 35:
-#line 638 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 639 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-          if(( (zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+          if(( (yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("ATOM", SCP(g_type_name),
-	                        (zz_vsp[-1].int_value), SCP(g_type_name));
+	                        (yyvsp[-1].int_value), SCP(g_type_name));
 	  }
 	  g_atom_dim_ptr = CheckDimensionsMatch(g_default_dim_ptr,
 	                                        g_atom_dim_ptr);
@@ -2505,9 +2483,9 @@ zz_reduce:
 	                                g_refines_name,
 	                                real_type, /* ignored..really */
 	                                Asc_CurrentModule(),
-	                                (zz_vsp[-5].int_value),
-	                                (zz_vsp[-3].slptr),
-	                                (zz_vsp[-2].listp),
+	                                (yyvsp[-5].int_value),
+	                                (yyvsp[-3].slptr),
+	                                (yyvsp[-2].listp),
 	                                g_defaulted,
 	                                g_default_double,
 	                                g_atom_dim_ptr,
@@ -2529,83 +2507,83 @@ zz_reduce:
 	            SCP(g_type_name),
 	            Asc_ModuleBestName(Asc_CurrentModule()),
 	            g_header_linenum);
-	    DestroyStatementList((zz_vsp[-3].slptr));
-	    DestroyProcedureList((zz_vsp[-2].listp));
+	    DestroyStatementList((yyvsp[-3].slptr));
+	    DestroyProcedureList((yyvsp[-2].listp));
 	  }
 	  ProcessNotes(keepnotes);
 	  g_type_name = g_refines_name = g_proc_name = NULL;
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 36:
-#line 691 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 692 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* g_type_name = $1; */
-	  g_refines_name = (zz_vsp[-3].id_ptr);
-	  g_atom_dim_ptr = (zz_vsp[-2].dimp);
-	  g_default_double = (zz_vsp[-1].real_value);
+	  g_refines_name = (yyvsp[-3].id_ptr);
+	  g_atom_dim_ptr = (yyvsp[-2].dimp);
+	  g_default_double = (yyvsp[-1].real_value);
 	  g_header_linenum = LineNum();
-	}
+	;}
     break;
 
   case 37:
-#line 702 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 703 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
-	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
-	}
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
+	;}
     break;
 
   case 38:
-#line 710 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 711 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = 0.0;
+	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
 	  g_defaulted = 0;
-	}
+	;}
     break;
 
   case 39:
-#line 716 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 717 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = (zz_vsp[-1].int_value) ? -(zz_vsp[0].real_value) : (zz_vsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[-1].int_value) ? -(yyvsp[0].real_value) : (yyvsp[0].real_value);
 	  g_defaulted = 1;
-	}
+	;}
     break;
 
   case 40:
-#line 721 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 722 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = 0.0;
+	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_long = 0;
 	  g_defaulted = 1;
-	}
+	;}
     break;
 
   case 41:
-#line 728 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 729 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = 0.0;
+	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_long = 1;
 	  g_defaulted = 1;
-	}
+	;}
     break;
 
   case 42:
-#line 735 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 736 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = 0.0;
+	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = Dimensionless();
-	  g_default_symbol = (zz_vsp[0].sym_ptr);
+	  g_default_symbol = (yyvsp[0].sym_ptr);
 	  g_defaulted = 0;
-	}
+	;}
     break;
 
   case 43:
-#line 745 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 746 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
@@ -2617,7 +2595,7 @@ zz_reduce:
 	    def_ptr = CreateConstantTypeDef(g_type_name,
 	                                    g_refines_name,
 	                                    Asc_CurrentModule(),
-	                                    (zz_vsp[-1].int_value),
+	                                    (yyvsp[-1].int_value),
 	                                    g_defaulted,
 	                                    g_default_double,
 	                                    g_default_long,
@@ -2640,107 +2618,107 @@ zz_reduce:
 	  ProcessNotes(keepnotes);
 	  g_type_name = g_refines_name = NULL;
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 44:
-#line 785 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 786 "base\\generic\\compiler\\ascParse.y"
     {
-	  g_type_name = (zz_vsp[-6].id_ptr);
-	  g_refines_name = (zz_vsp[-4].id_ptr);
-	  g_atom_dim_ptr = (zz_vsp[-3].dimp);
+	  g_type_name = (yyvsp[-6].id_ptr);
+	  g_refines_name = (yyvsp[-4].id_ptr);
+	  g_atom_dim_ptr = (yyvsp[-3].dimp);
 	  switch (g_constant_type) {
 	  case DOUBLECONSTANT:
-	    g_default_double = (zz_vsp[-2].real_value);
+	    g_default_double = (yyvsp[-2].real_value);
 	    break;
 	  case LONGCONSTANT:
-	    g_default_long = (zz_vsp[-2].real_value);
+	    g_default_long = (yyvsp[-2].real_value);
 	    break;
 	  case BOOLEANCONSTANT:
-	    g_default_long = (zz_vsp[-2].int_value);
+	    g_default_long = (yyvsp[-2].int_value);
 	    break;
 	  case SYMBOLCONSTANT:
-	    g_default_symbol = (zz_vsp[-2].sym_ptr);
+	    g_default_symbol = (yyvsp[-2].sym_ptr);
 	    break;
 	  default:
 	    ErrMsg_Generic("Wierd constant type assign encountered.");
 	    break; /* better not be reached. */
 	  }
 	  g_header_linenum = LineNum();
-	  if ((zz_vsp[-1].dquote_ptr) != NULL) {
+	  if ((yyvsp[-1].dquote_ptr) != NULL) {
 	    CollectNote(CreateNote(g_type_name,InlineNote(),SelfNote(),NULL,
 	                           Asc_ModuleBestName(Asc_CurrentModule()),
-	                           AddBraceChar((zz_vsp[-1].dquote_ptr),InlineNote()),
+	                           AddBraceChar((yyvsp[-1].dquote_ptr),InlineNote()),
 	                           g_header_linenum,NULL,nd_empty));
 	  }
-	}
+	;}
     break;
 
   case 45:
-#line 818 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 819 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = 0.0;
+	  (yyval.real_value) = 0.0;
 	  g_default_dim_ptr = WildDimension();
 	  g_defaulted = 0;
-	}
+	;}
     break;
 
   case 46:
-#line 824 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 825 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = (zz_vsp[-1].int_value) ? -(zz_vsp[0].real_value) : (zz_vsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[-1].int_value) ? -(yyvsp[0].real_value) : (yyvsp[0].real_value);
 	  g_defaulted = 1;
-	}
+	;}
     break;
 
   case 47:
-#line 829 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 830 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 1;
+	  (yyval.int_value) = 1;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = BOOLEANCONSTANT;
-	}
+	;}
     break;
 
   case 48:
-#line 836 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 837 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 0;
+	  (yyval.int_value) = 0;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = BOOLEANCONSTANT;
-	}
+	;}
     break;
 
   case 49:
-#line 843 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 844 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sym_ptr) = (zz_vsp[0].sym_ptr);
+	  (yyval.sym_ptr) = (yyvsp[0].sym_ptr);
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = SYMBOLCONSTANT;
-	}
+	;}
     break;
 
   case 50:
-#line 853 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 854 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
-	  if(( (zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if(( (yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("MODEL", SCP(g_type_name),
-	                        (zz_vsp[-1].int_value), SCP(g_type_name));
+	                        (yyvsp[-1].int_value), SCP(g_type_name));
 	  }
 	  def_ptr = CreateModelTypeDef(g_type_name,
 	                               g_refines_name,
 	                               Asc_CurrentModule(),
-	                               (zz_vsp[-5].int_value),
-	                               (zz_vsp[-3].slptr),
-	                               (zz_vsp[-2].listp),
+	                               (yyvsp[-5].int_value),
+	                               (yyvsp[-3].slptr),
+	                               (yyvsp[-2].listp),
 	                               g_model_parameters,
 	                               g_parameter_reduction,
 	                               g_parameter_wheres,
@@ -2761,99 +2739,99 @@ zz_reduce:
 	    g_parameter_reduction =
 	    g_parameter_wheres = NULL;
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 51:
-#line 895 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 896 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* g_type_name = $1; */
-	  g_model_parameters = (zz_vsp[-2].slptr);
-	  g_parameter_wheres = (zz_vsp[-1].slptr);
+	  g_model_parameters = (yyvsp[-2].slptr);
+	  g_parameter_wheres = (yyvsp[-1].slptr);
 	  g_refines_name = NULL;
 	  g_header_linenum = LineNum();
-	}
+	;}
     break;
 
   case 52:
-#line 904 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 905 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* g_type_name = $1; */
-	  g_model_parameters = (zz_vsp[-5].slptr);
-	  g_parameter_wheres = (zz_vsp[-4].slptr);
-	  g_refines_name = (zz_vsp[-2].id_ptr);
-	  g_parameter_reduction = (zz_vsp[-1].slptr);
+	  g_model_parameters = (yyvsp[-5].slptr);
+	  g_parameter_wheres = (yyvsp[-4].slptr);
+	  g_refines_name = (yyvsp[-2].id_ptr);
+	  g_parameter_reduction = (yyvsp[-1].slptr);
 	  g_header_linenum = LineNum();
-	}
+	;}
     break;
 
   case 53:
-#line 916 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 917 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
-	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
-	}
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
+	;}
     break;
 
   case 54:
-#line 924 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 925 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = NULL;
-	}
+	  (yyval.slptr) = NULL;
+	;}
     break;
 
   case 55:
-#line 928 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 929 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
-	}
+	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
+	;}
     break;
 
   case 56:
-#line 935 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 936 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = NULL;
-	}
+	  (yyval.slptr) = NULL;
+	;}
     break;
 
   case 57:
-#line 939 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 940 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
-	}
+	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
+	;}
     break;
 
   case 58:
-#line 946 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 947 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = NULL;
-	}
+	  (yyval.slptr) = NULL;
+	;}
     break;
 
   case 59:
-#line 950 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 951 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = (zz_vsp[-1].slptr); /* this could be much more sophisticated */
-	}
+	  (yyval.slptr) = (yyvsp[-1].slptr); /* this could be much more sophisticated */
+	;}
     break;
 
   case 60:
-#line 957 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 958 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
-	  if (((zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if (((yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
 	    WarnMsg_MismatchEnd("PATCH", SCP(g_type_name),
-	                        (zz_vsp[-1].int_value), SCP(g_type_name));
+	                        (yyvsp[-1].int_value), SCP(g_type_name));
 	  }
 	  def_ptr = CreatePatchTypeDef(g_type_name,
 	                               g_refines_name,
 	                               NULL,
 	                               Asc_CurrentModule(),
-	                               (zz_vsp[-3].slptr),
-	                               (zz_vsp[-2].listp),
+	                               (yyvsp[-3].slptr),
+	                               (yyvsp[-2].listp),
 	                               g_untrapped_error);
 	  g_untrapped_error = 0;
 	  if (def_ptr != NULL) {
@@ -2866,50 +2844,50 @@ zz_reduce:
 	    ErrMsg_NullDefPointer(SCP(g_type_name));
 	  }
 	  g_type_name = g_refines_name = g_proc_name = NULL;
-	}
+	;}
     break;
 
   case 61:
-#line 989 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 990 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * A patch definition looks just like a model def.
 	   * with the original name <=> refine name.
 	   */
-	  g_type_name = (zz_vsp[-3].id_ptr);
-	  g_refines_name = (zz_vsp[-1].id_ptr);
+	  g_type_name = (yyvsp[-3].id_ptr);
+	  g_refines_name = (yyvsp[-1].id_ptr);
 	  g_header_linenum = LineNum();
-	}
+	;}
     break;
 
   case 62:
-#line 1002 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1003 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 0;
-	}
+	  (yyval.int_value) = 0;
+	;}
     break;
 
   case 63:
-#line 1006 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1007 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 1;
-	}
+	  (yyval.int_value) = 1;
+	;}
     break;
 
   case 64:
-#line 1013 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1014 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-	  if(( (zz_vsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != (zz_vsp[-4].id_ptr) )) {
-	    WarnMsg_MismatchEnd("DEFINITION", SCP((zz_vsp[-4].id_ptr)), (zz_vsp[-1].int_value), SCP((zz_vsp[-4].id_ptr)));
+	  if(( (yyvsp[-1].int_value) != IDENTIFIER_T ) || ( g_end_identifier != (yyvsp[-4].id_ptr) )) {
+	    WarnMsg_MismatchEnd("DEFINITION", SCP((yyvsp[-4].id_ptr)), (yyvsp[-1].int_value), SCP((yyvsp[-4].id_ptr)));
 	  }
-	  if( (zz_vsp[-4].id_ptr) == GetBaseTypeName(relation_type)) {
-	    def_ptr = CreateRelationTypeDef(Asc_CurrentModule(),(zz_vsp[-4].id_ptr),(zz_vsp[-3].slptr),(zz_vsp[-2].listp));
+	  if( (yyvsp[-4].id_ptr) == GetBaseTypeName(relation_type)) {
+	    def_ptr = CreateRelationTypeDef(Asc_CurrentModule(),(yyvsp[-4].id_ptr),(yyvsp[-3].slptr),(yyvsp[-2].listp));
 	  }
-	  else if( (zz_vsp[-4].id_ptr) == GetBaseTypeName(logrel_type) ) {
-	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),(zz_vsp[-4].id_ptr),(zz_vsp[-3].slptr),(zz_vsp[-2].listp));
+	  else if( (yyvsp[-4].id_ptr) == GetBaseTypeName(logrel_type) ) {
+	    def_ptr = CreateLogRelTypeDef(Asc_CurrentModule(),(yyvsp[-4].id_ptr),(yyvsp[-3].slptr),(yyvsp[-2].listp));
 	  }
 	  else {
 	    ErrMsg_Generic("Bad type passed to DEFINITION statement.");
@@ -2918,1053 +2896,1053 @@ zz_reduce:
 	  if ( def_ptr != NULL ) {
 	    keepnotes = AddType(def_ptr);
 	  } else {
-	    ErrMsg_NullDefPointer(SCP((zz_vsp[-4].id_ptr)));
+	    ErrMsg_NullDefPointer(SCP((yyvsp[-4].id_ptr)));
 	  }
 	  ProcessNotes(keepnotes);
 	  g_type_name = NULL;
 	  g_untrapped_error = 0;
-	}
+	;}
     break;
 
   case 65:
-#line 1043 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1044 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
-	  g_type_name = (zz_vsp[0].id_ptr); /* want this set early so parm lists see it */
-	}
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  g_type_name = (yyvsp[0].id_ptr); /* want this set early so parm lists see it */
+	;}
     break;
 
   case 66:
-#line 1052 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
-    { /* nothing to do. just cruft to fix ; problem */ }
+#line 1053 "base\\generic\\compiler\\ascParse.y"
+    { /* nothing to do. just cruft to fix ; problem */ ;}
     break;
 
   case 67:
-#line 1057 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1058 "base\\generic\\compiler\\ascParse.y"
     {
           struct UnitDefinition *ud;
           unsigned long c,len;
 
-	  if( (zz_vsp[0].int_value) != UNITS_T ) {
-	    WarnMsg_MismatchEnd("UNITS", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != UNITS_T ) {
+	    WarnMsg_MismatchEnd("UNITS", NULL, (yyvsp[0].int_value), NULL);
 	  }
-          len = gl_length((zz_vsp[-1].listp));
+          len = gl_length((yyvsp[-1].listp));
           for (c=1; c <= len; c++) {
-            ud = (struct UnitDefinition *)gl_fetch((zz_vsp[-1].listp),c);
+            ud = (struct UnitDefinition *)gl_fetch((yyvsp[-1].listp),c);
             ProcessUnitDef(ud);
             DestroyUnitDef(ud);
           }
-          gl_destroy((zz_vsp[-1].listp));
-          (zz_val.statptr) = NULL;
-	}
+          gl_destroy((yyvsp[-1].listp));
+          (yyval.statptr) = NULL;
+	;}
     break;
 
   case 68:
-#line 1076 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1077 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.listp) = gl_create(100L);
-	}
+	  (yyval.listp) = gl_create(100L);
+	;}
     break;
 
   case 69:
-#line 1080 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1081 "base\\generic\\compiler\\ascParse.y"
     {
-	  gl_append_ptr((zz_vsp[-1].listp),(char *)(zz_vsp[0].udefptr));
-	  (zz_val.listp) = (zz_vsp[-1].listp);
-	}
+	  gl_append_ptr((yyvsp[-1].listp),(char *)(yyvsp[0].udefptr));
+	  (yyval.listp) = (yyvsp[-1].listp);
+	;}
     break;
 
   case 70:
-#line 1088 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1089 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.udefptr) = CreateUnitDef((zz_vsp[-3].id_ptr),(zz_vsp[-1].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
+	  (yyval.udefptr) = CreateUnitDef((yyvsp[-3].id_ptr),(yyvsp[-1].braced_ptr),Asc_ModuleBestName(Asc_CurrentModule()),
                              LineNum());
-	}
+	;}
     break;
 
   case 71:
-#line 1097 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1098 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.listp) = NULL;
-	}
+	  (yyval.listp) = NULL;
+	;}
     break;
 
   case 72:
-#line 1101 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1102 "base\\generic\\compiler\\ascParse.y"
     { /* To get rid of this, we will need a global proclist
            * that accumulates procs until a MODEL production is
            * completed. If any other sort of production is started,
            * and proclist is not NULL, it should be discarded.
            */
-	}
+	;}
     break;
 
   case 73:
-#line 1108 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1109 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.listp) = (zz_vsp[0].listp);
-	}
+	  (yyval.listp) = (yyvsp[0].listp);
+	;}
     break;
 
   case 74:
-#line 1115 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1116 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.listp) = (zz_vsp[0].listp);
-	  gl_sort((zz_val.listp),(CmpFunc)CmpProcs);
-	}
+	  (yyval.listp) = (yyvsp[0].listp);
+	  gl_sort((yyval.listp),(CmpFunc)CmpProcs);
+	;}
     break;
 
   case 75:
-#line 1122 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1123 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.listp) = gl_create(7L);
-	}
+	  (yyval.listp) = gl_create(7L);
+	;}
     break;
 
   case 76:
-#line 1126 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1127 "base\\generic\\compiler\\ascParse.y"
     {
 	  unsigned long c;
 	  struct InitProcedure *oldproc;
-	  c = gl_length((zz_vsp[-1].listp));
+	  c = gl_length((yyvsp[-1].listp));
           while (c > 0) {
-            oldproc = (struct InitProcedure *)gl_fetch((zz_vsp[-1].listp),c);
-            if (ProcName((zz_vsp[0].procptr)) == ProcName(oldproc)) {
-	      ErrMsg_DuplicateProc((zz_vsp[0].procptr));
+            oldproc = (struct InitProcedure *)gl_fetch((yyvsp[-1].listp),c);
+            if (ProcName((yyvsp[0].procptr)) == ProcName(oldproc)) {
+	      ErrMsg_DuplicateProc((yyvsp[0].procptr));
               break;
             }
             c--;
           }
 	  if (c) { /* broke early */
-	    DestroyProcedure((zz_vsp[0].procptr));
+	    DestroyProcedure((yyvsp[0].procptr));
 	  } else {
-	    gl_append_ptr((zz_vsp[-1].listp),(char *)(zz_vsp[0].procptr));
+	    gl_append_ptr((yyvsp[-1].listp),(char *)(yyvsp[0].procptr));
 	  }
-	  (zz_val.listp) = (zz_vsp[-1].listp);
-	}
+	  (yyval.listp) = (yyvsp[-1].listp);
+	;}
     break;
 
   case 77:
-#line 1149 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1150 "base\\generic\\compiler\\ascParse.y"
     {
-	  if (((zz_vsp[-1].int_value) != IDENTIFIER_T) || ((zz_vsp[-4].id_ptr) != g_end_identifier)) {
+	  if (((yyvsp[-1].int_value) != IDENTIFIER_T) || ((yyvsp[-4].id_ptr) != g_end_identifier)) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
-	    WarnMsg_MismatchEnd("METHOD", SCP((zz_vsp[-4].id_ptr)), (zz_vsp[-1].int_value), SCP((zz_vsp[-4].id_ptr)));
+	    WarnMsg_MismatchEnd("METHOD", SCP((yyvsp[-4].id_ptr)), (yyvsp[-1].int_value), SCP((yyvsp[-4].id_ptr)));
 	  }
-	  (zz_val.procptr) = CreateProcedure((zz_vsp[-4].id_ptr),(zz_vsp[-2].slptr));
+	  (yyval.procptr) = CreateProcedure((yyvsp[-4].id_ptr),(yyvsp[-2].slptr));
 	  g_proc_name = NULL;
-	}
+	;}
     break;
 
   case 78:
-#line 1163 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1164 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
-	  g_proc_name = (zz_vsp[0].id_ptr);
-	}
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	  g_proc_name = (yyvsp[0].id_ptr);
+	;}
     break;
 
   case 79:
-#line 1172 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1173 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = CreateStatementList((zz_vsp[0].listp));
-	}
+	  (yyval.slptr) = CreateStatementList((yyvsp[0].listp));
+	;}
     break;
 
   case 80:
-#line 1179 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1180 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.listp) = gl_create(7L);
-	}
+	  (yyval.listp) = gl_create(7L);
+	;}
     break;
 
   case 81:
-#line 1183 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1184 "base\\generic\\compiler\\ascParse.y"
     {
 	  /* this is appending to a gllist of statements, not yet slist. */
-	  if ((zz_vsp[-1].statptr) != NULL) {
-	    gl_append_ptr((zz_vsp[-2].listp),(char *)(zz_vsp[-1].statptr));
+	  if ((yyvsp[-1].statptr) != NULL) {
+	    gl_append_ptr((yyvsp[-2].listp),(char *)(yyvsp[-1].statptr));
 	  }
-	  (zz_val.listp) = (zz_vsp[-2].listp);
-	}
+	  (yyval.listp) = (yyvsp[-2].listp);
+	;}
     break;
 
   case 82:
-#line 1191 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1192 "base\\generic\\compiler\\ascParse.y"
     {
 	  ErrMsg_Generic("Error in statement input.");
-	  (zz_val.listp) = (zz_vsp[-2].listp);
-	}
+	  (yyval.listp) = (yyvsp[-2].listp);
+	;}
     break;
 
   case 113:
-#line 1232 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1233 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((zz_vsp[-2].id_ptr));
-	  if ((zz_vsp[0].eptr) != NULL) {
+	  tmptype = FindType((yyvsp[-2].id_ptr));
+	  if ((yyvsp[0].eptr) != NULL) {
 	    ErrMsg_Generic("WITH VALUE clause not allowed in IS_A.");
 	    g_untrapped_error++;
-	    DestroyVariableList((zz_vsp[-4].lptr));
+	    DestroyVariableList((yyvsp[-4].lptr));
 	    DestroySetList(g_typeargs);
-	    DestroyExprList((zz_vsp[0].eptr));
-	    (zz_val.statptr) = NULL;
+	    DestroyExprList((yyvsp[0].eptr));
+	    (yyval.statptr) = NULL;
 	  } else {
 	    if (tmptype != NULL) {
 	      if ((GetBaseType(tmptype) != model_type) &&
 	          (g_typeargs != NULL)) {
 	        error_reporter_current_line(ASC_USER_ERROR,
 	                "IS_A has arguments to the nonmodel type %s.\n",
-	                SCP((zz_vsp[-2].id_ptr)));
-	        DestroyVariableList((zz_vsp[-4].lptr));
+	                SCP((yyvsp[-2].id_ptr)));
+	        DestroyVariableList((yyvsp[-4].lptr));
 	        DestroySetList(g_typeargs);
-	        DestroyExprList((zz_vsp[0].eptr));
+	        DestroyExprList((yyvsp[0].eptr));
 	        g_untrapped_error++;
-	        (zz_val.statptr) = NULL;
+	        (yyval.statptr) = NULL;
 	      } else {
-	        (zz_val.statptr) = CreateISA((zz_vsp[-4].lptr),(zz_vsp[-2].id_ptr),g_typeargs,(zz_vsp[-1].id_ptr));
+	        (yyval.statptr) = CreateISA((yyvsp[-4].lptr),(yyvsp[-2].id_ptr),g_typeargs,(yyvsp[-1].id_ptr));
 	      }
 	    } else {
-	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP((zz_vsp[-2].id_ptr)));
-	      DestroyVariableList((zz_vsp[-4].lptr));
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_A uses the undefined type %s.", SCP((yyvsp[-2].id_ptr)));
+	      DestroyVariableList((yyvsp[-4].lptr));
 	      DestroySetList(g_typeargs);
-	      DestroyExprList((zz_vsp[0].eptr));
+	      DestroyExprList((yyvsp[0].eptr));
 	      g_untrapped_error++;
-	      (zz_val.statptr) = NULL;
+	      (yyval.statptr) = NULL;
 	    }
 	  }
 	  g_typeargs = NULL;
 
-	}
+	;}
     break;
 
   case 114:
-#line 1273 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1274 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((zz_vsp[-2].id_ptr));
+	  tmptype = FindType((yyvsp[-2].id_ptr));
 	  if (tmptype != NULL) {
 	    if ((GetBaseType(tmptype) != model_type) &&
 	        (g_typeargs != NULL)) {
-	      error_reporter_current_line(ASC_USER_ERROR,"WILL_BE has arguments to the nonmodel type '%s'",SCP((zz_vsp[-2].id_ptr)));
-	      DestroyVariableList((zz_vsp[-4].lptr));
+	      error_reporter_current_line(ASC_USER_ERROR,"WILL_BE has arguments to the nonmodel type '%s'",SCP((yyvsp[-2].id_ptr)));
+	      DestroyVariableList((yyvsp[-4].lptr));
 	      DestroySetList(g_typeargs);
-	      DestroyExprList((zz_vsp[0].eptr));
+	      DestroyExprList((yyvsp[0].eptr));
 	      g_untrapped_error++;
-	      (zz_val.statptr) = NULL;
+	      (yyval.statptr) = NULL;
 	    } else {
-	      (zz_val.statptr) = CreateWILLBE((zz_vsp[-4].lptr),(zz_vsp[-2].id_ptr),g_typeargs,(zz_vsp[-1].id_ptr),(zz_vsp[0].eptr));
+	      (yyval.statptr) = CreateWILLBE((yyvsp[-4].lptr),(yyvsp[-2].id_ptr),g_typeargs,(yyvsp[-1].id_ptr),(yyvsp[0].eptr));
 	    }
 	  } else {
-	    DestroyVariableList((zz_vsp[-4].lptr));
+	    DestroyVariableList((yyvsp[-4].lptr));
 	    DestroySetList(g_typeargs);
-	    DestroyExprList((zz_vsp[0].eptr));
+	    DestroyExprList((yyvsp[0].eptr));
 	    g_untrapped_error++;
-	    (zz_val.statptr) = NULL;
-	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP((zz_vsp[-2].id_ptr)));
+	    (yyval.statptr) = NULL;
+	    error_reporter_current_line(ASC_USER_ERROR,"WILL_BE uses the undefined type %s.",SCP((yyvsp[-2].id_ptr)));
 	  }
 	  g_typeargs = NULL;
-	}
+	;}
     break;
 
   case 115:
-#line 1302 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1303 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateALIASES((zz_vsp[-2].lptr),(zz_vsp[0].nptr));
-	}
+	  (yyval.statptr) = CreateALIASES((yyvsp[-2].lptr),(yyvsp[0].nptr));
+	;}
     break;
 
   case 116:
-#line 1307 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1308 "base\\generic\\compiler\\ascParse.y"
     {
 	  int carray_err;
 	  carray_err = 0;
-	  if (VariableListLength((zz_vsp[-11].lptr)) != 1L) {
+	  if (VariableListLength((yyvsp[-11].lptr)) != 1L) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,
 	            "Compound ALIASES allows only 1 LHS name. Found:");
-	    WriteVariableList(ASCERR,(zz_vsp[-11].lptr));
+	    WriteVariableList(ASCERR,(yyvsp[-11].lptr));
 	  }
-	  if (VariableListLength((zz_vsp[-5].lptr)) != 1L) {
+	  if (VariableListLength((yyvsp[-5].lptr)) != 1L) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,
 	            "Compound ALIASES/IS_A allows only one LHS name. Found:");
-	    WriteVariableList(ASCERR,(zz_vsp[-5].lptr));
+	    WriteVariableList(ASCERR,(yyvsp[-5].lptr));
 	  }
 	  /* verify $9 == "set" */
-	  if (!carray_err && (zz_vsp[-3].id_ptr) != GetBaseTypeName(set_type)) {
+	  if (!carray_err && (yyvsp[-3].id_ptr) != GetBaseTypeName(set_type)) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,"Compound ALIASES statement requires IS_A %s. ",SCP(GetBaseTypeName(set_type)));
-	    FPRINTF(ASCERR,"    Found %s.\n",SCP((zz_vsp[-3].id_ptr)));
+	    FPRINTF(ASCERR,"    Found %s.\n",SCP((yyvsp[-3].id_ptr)));
 	  }
 	  /* verify set type */
 	  if ((!carray_err) &&
-	      ((zz_vsp[-1].id_ptr) != GetBaseTypeName(symbol_constant_type)) &&
-	      ((zz_vsp[-1].id_ptr) != GetBaseTypeName(integer_constant_type))) {
+	      ((yyvsp[-1].id_ptr) != GetBaseTypeName(symbol_constant_type)) &&
+	      ((yyvsp[-1].id_ptr) != GetBaseTypeName(integer_constant_type))) {
 	    carray_err = 1;
 	    error_reporter_current_line(ASC_USER_ERROR,
 	            "Compound ALIASES IS_A statement requires %s or %s.\n",
 	            SCP(GetBaseTypeName(integer_constant_type)),
 	            SCP(GetBaseTypeName(symbol_constant_type)));
-	    FPRINTF(ASCERR,"	Found %s.\n",SCP((zz_vsp[-1].id_ptr)));
+	    FPRINTF(ASCERR,"	Found %s.\n",SCP((yyvsp[-1].id_ptr)));
 	  }
 	  if (carray_err) {
-	    DestroyVariableList((zz_vsp[-11].lptr));
-	    DestroyVariableList((zz_vsp[-8].lptr));
-	    DestroyVariableList((zz_vsp[-5].lptr));
-	    DestroySetList((zz_vsp[0].sptr));
+	    DestroyVariableList((yyvsp[-11].lptr));
+	    DestroyVariableList((yyvsp[-8].lptr));
+	    DestroyVariableList((yyvsp[-5].lptr));
+	    DestroySetList((yyvsp[0].sptr));
 	    g_untrapped_error++;
-	    (zz_val.statptr) = NULL;
+	    (yyval.statptr) = NULL;
 	  } else {
 	    int intset;
-	    intset = ((zz_vsp[-1].id_ptr) == GetBaseTypeName(integer_constant_type));
-	    (zz_val.statptr) = CreateARR((zz_vsp[-11].lptr),(zz_vsp[-8].lptr),(zz_vsp[-5].lptr),intset,(zz_vsp[0].sptr));
+	    intset = ((yyvsp[-1].id_ptr) == GetBaseTypeName(integer_constant_type));
+	    (yyval.statptr) = CreateARR((yyvsp[-11].lptr),(yyvsp[-8].lptr),(yyvsp[-5].lptr),intset,(yyvsp[0].sptr));
 	  }
-	}
+	;}
     break;
 
   case 117:
-#line 1356 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1357 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = NULL;
-	}
+	  (yyval.sptr) = NULL;
+	;}
     break;
 
   case 118:
-#line 1360 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1361 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = (zz_vsp[-1].sptr);
-	}
+	  (yyval.sptr) = (yyvsp[-1].sptr);
+	;}
     break;
 
   case 119:
-#line 1367 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1368 "base\\generic\\compiler\\ascParse.y"
     {
-	  if (FindType((zz_vsp[-1].id_ptr))) {
-	    (zz_val.statptr) = CreateREF((zz_vsp[-3].lptr),(zz_vsp[-1].id_ptr),(zz_vsp[0].id_ptr),1);
+	  if (FindType((yyvsp[-1].id_ptr))) {
+	    (yyval.statptr) = CreateREF((yyvsp[-3].lptr),(yyvsp[-1].id_ptr),(yyvsp[0].id_ptr),1);
 	  } else {
-	    (zz_val.statptr) = CreateREF((zz_vsp[-3].lptr),(zz_vsp[-1].id_ptr),(zz_vsp[0].id_ptr),1);
-	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP((zz_vsp[-1].id_ptr)));
+	    (yyval.statptr) = CreateREF((yyvsp[-3].lptr),(yyvsp[-1].id_ptr),(yyvsp[0].id_ptr),1);
+	    error_reporter_current_line(ASC_USER_WARNING,"_IS_ uses the unbuilt prototype %s.\n",SCP((yyvsp[-1].id_ptr)));
 	  }
-	}
+	;}
     break;
 
   case 120:
-#line 1379 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1380 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct TypeDescription *tmptype;
-	  tmptype = FindType((zz_vsp[0].id_ptr));
+	  tmptype = FindType((yyvsp[0].id_ptr));
 	  if (tmptype != NULL) {
 	    if ((GetBaseType(tmptype) != model_type) && 
                 (g_typeargs != NULL)) {
-	      error_reporter_current_line(ASC_USER_ERROR,"IS_REFINED_TO has arguments to the nonmodel type %s.",SCP((zz_vsp[0].id_ptr)));
-	      DestroyVariableList((zz_vsp[-2].lptr));
+	      error_reporter_current_line(ASC_USER_ERROR,"IS_REFINED_TO has arguments to the nonmodel type %s.",SCP((yyvsp[0].id_ptr)));
+	      DestroyVariableList((yyvsp[-2].lptr));
 	      DestroySetList(g_typeargs);
 	      g_untrapped_error++;
-	      (zz_val.statptr) = NULL;
+	      (yyval.statptr) = NULL;
 	    } else {
-	      (zz_val.statptr) = CreateIRT((zz_vsp[-2].lptr),(zz_vsp[0].id_ptr),g_typeargs);
+	      (yyval.statptr) = CreateIRT((yyvsp[-2].lptr),(yyvsp[0].id_ptr),g_typeargs);
 	    }
 	  } else {
-	    error_reporter_current_line(ASC_USER_ERROR,"The IS_REFINED_TO uses the undefined type %s.\n",SCP((zz_vsp[0].id_ptr)));
-	    DestroyVariableList((zz_vsp[-2].lptr));
+	    error_reporter_current_line(ASC_USER_ERROR,"The IS_REFINED_TO uses the undefined type %s.\n",SCP((yyvsp[0].id_ptr)));
+	    DestroyVariableList((yyvsp[-2].lptr));
 	    DestroySetList(g_typeargs);
 	    g_untrapped_error++;
-	    (zz_val.statptr) = NULL;
+	    (yyval.statptr) = NULL;
 	  }
 	  g_typeargs = NULL;
-	}
+	;}
     break;
 
   case 121:
-#line 1406 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1407 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
 	  g_callargs = NULL;
-	}
+	;}
     break;
 
   case 122:
-#line 1411 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1412 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[-3].id_ptr);
-	  g_callargs = (zz_vsp[-1].sptr);
-	}
+	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
+	  g_callargs = (yyvsp[-1].sptr);
+	;}
     break;
 
   case 123:
-#line 1419 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1420 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
 	  g_typeargs = NULL;
-	}
+	;}
     break;
 
   case 124:
-#line 1424 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1425 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[-3].id_ptr);
-	  g_typeargs = (zz_vsp[-1].sptr);
-	}
+	  (yyval.id_ptr) = (yyvsp[-3].id_ptr);
+	  g_typeargs = (yyvsp[-1].sptr);
+	;}
     break;
 
   case 125:
-#line 1432 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1433 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = NULL;
-	}
+	  (yyval.id_ptr) = NULL;
+	;}
     break;
 
   case 126:
-#line 1436 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1437 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
-	}
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	;}
     break;
 
   case 127:
-#line 1443 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1444 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = NULL;
-	}
+	  (yyval.id_ptr) = NULL;
+	;}
     break;
 
   case 128:
-#line 1447 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1448 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.id_ptr) = (zz_vsp[0].id_ptr);
-	}
+	  (yyval.id_ptr) = (yyvsp[0].id_ptr);
+	;}
     break;
 
   case 129:
-#line 1454 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1455 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = NULL;
-	}
+	  (yyval.eptr) = NULL;
+	;}
     break;
 
   case 130:
-#line 1458 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1459 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = (zz_vsp[0].eptr);
-	}
+	  (yyval.eptr) = (yyvsp[0].eptr);
+	;}
     break;
 
   case 131:
-#line 1465 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1466 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateAA((zz_vsp[-1].lptr));
-	}
+	  (yyval.statptr) = CreateAA((yyvsp[-1].lptr));
+	;}
     break;
 
   case 132:
-#line 1472 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1473 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateATS((zz_vsp[-1].lptr));
-	}
+	  (yyval.statptr) = CreateATS((yyvsp[-1].lptr));
+	;}
     break;
 
   case 133:
-#line 1479 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1480 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateWBTS((zz_vsp[-1].lptr));
-	}
+	  (yyval.statptr) = CreateWBTS((yyvsp[-1].lptr));
+	;}
     break;
 
   case 134:
-#line 1486 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1487 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateWNBTS((zz_vsp[-1].lptr));
-	}
+	  (yyval.statptr) = CreateWNBTS((yyvsp[-1].lptr));
+	;}
     break;
 
   case 135:
-#line 1493 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1494 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateASSIGN((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
-	}
+	  (yyval.statptr) = CreateASSIGN((yyvsp[-2].nptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 136:
-#line 1497 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1498 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateCASSIGN((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
-	}
+	  (yyval.statptr) = CreateCASSIGN((yyvsp[-2].nptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 137:
-#line 1504 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1505 "base\\generic\\compiler\\ascParse.y"
     {
-	  if (IsRelation((zz_vsp[0].eptr))) {
+	  if (IsRelation((yyvsp[0].eptr))) {
 	    if (g_parse_relns == 0) {
-	      DestroyExprList((zz_vsp[0].eptr));
-	      (zz_val.statptr) = NULL;
+	      DestroyExprList((yyvsp[0].eptr));
+	      (yyval.statptr) = NULL;
 	    } else {
-	      (zz_val.statptr) = CreateREL(NULL,(zz_vsp[0].eptr));
+	      (yyval.statptr) = CreateREL(NULL,(yyvsp[0].eptr));
 	    }
 	  } else {
-	    (zz_val.statptr) = CreateLOGREL(NULL,(zz_vsp[0].eptr));
+	    (yyval.statptr) = CreateLOGREL(NULL,(yyvsp[0].eptr));
 	  }
-	}
+	;}
     break;
 
   case 138:
-#line 1517 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1518 "base\\generic\\compiler\\ascParse.y"
     {
-	  if (IsRelation((zz_vsp[0].eptr))) {
+	  if (IsRelation((yyvsp[0].eptr))) {
 	    if (g_parse_relns == 0) {
-	      DestroyExprList((zz_vsp[0].eptr));
-	      DestroyName((zz_vsp[-2].nptr));
-	      (zz_val.statptr) = NULL;
+	      DestroyExprList((yyvsp[0].eptr));
+	      DestroyName((yyvsp[-2].nptr));
+	      (yyval.statptr) = NULL;
 	    } else {
-	      (zz_val.statptr) = CreateREL((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
+	      (yyval.statptr) = CreateREL((yyvsp[-2].nptr),(yyvsp[0].eptr));
 	    }
 	  } else {
-	    (zz_val.statptr) = CreateLOGREL((zz_vsp[-2].nptr),(zz_vsp[0].eptr));
+	    (yyval.statptr) = CreateLOGREL((yyvsp[-2].nptr),(yyvsp[0].eptr));
 	  }
-	}
+	;}
     break;
 
   case 139:
-#line 1534 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1535 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = (zz_vsp[0].eptr);
-	  if (NumberOfRelOps((zz_vsp[0].eptr)) < 1) {
+	  (yyval.eptr) = (yyvsp[0].eptr);
+	  if (NumberOfRelOps((yyvsp[0].eptr)) < 1) {
 	    /* want at least 1. restriction to exactly 1 is in typelint */
 	    ErrMsg_Generic("Missing punctuation (,;:) or else expression contains the \
 wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    g_untrapped_error++;
 	  }
-	}
+	;}
     break;
 
   case 140:
-#line 1544 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1545 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_minimize));
-	  if (NumberOfRelOps((zz_vsp[0].eptr)) > 0) {
+	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_minimize));
+	  if (NumberOfRelOps((yyvsp[0].eptr)) > 0) {
 	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
-	}
+	;}
     break;
 
   case 141:
-#line 1552 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1553 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_maximize));
-	  if (NumberOfRelOps((zz_vsp[0].eptr))>0) {
+	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_maximize));
+	  if (NumberOfRelOps((yyvsp[0].eptr))>0) {
 	    ErrMsg_Generic("Objective function contains relation operators (=, ==, <, >, <=, >=, !=).");
 	    g_untrapped_error++;
 	  }
-	}
+	;}
     break;
 
   case 142:
-#line 1563 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1564 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is the blackbox declarative external relation.
 	   */
 	  struct VariableList *vl;
-	  vl = JoinVariableLists((zz_vsp[-4].lptr),(zz_vsp[-2].lptr));
+	  vl = JoinVariableLists((yyvsp[-4].lptr),(yyvsp[-2].lptr));
 	  /* $$ = CreateEXTERN(2,$1,SCP($3),vl,$8,NULL); */
-	  (zz_val.statptr) = CreateEXTERNBlackBox((zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,(zz_vsp[-1].nptr));
-	}
+	  (yyval.statptr) = CreateEXTERNBlackBox((yyvsp[-8].nptr),SCP((yyvsp[-6].id_ptr)),vl,(yyvsp[-1].nptr));
+	;}
     break;
 
   case 143:
-#line 1576 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1577 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.lptr) = (zz_vsp[-2].lptr);
-	}
+	  (yyval.lptr) = (yyvsp[-2].lptr);
+	;}
     break;
 
   case 144:
-#line 1583 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1584 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.lptr) = (zz_vsp[-2].lptr);
-	}
+	  (yyval.lptr) = (yyvsp[-2].lptr);
+	;}
     break;
 
   case 145:
-#line 1590 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1591 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.nptr) = NULL;
-	}
+	  (yyval.nptr) = NULL;
+	;}
     break;
 
   case 146:
-#line 1594 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1595 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.nptr) = (zz_vsp[-2].nptr);
-	}
+	  (yyval.nptr) = (yyvsp[-2].nptr);
+	;}
     break;
 
   case 147:
-#line 1601 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1602 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is the glassbox declarative external relation.
 	   * This now allows a scope for placement of the relations
 	   */
-	  struct VariableList *vl = (zz_vsp[-4].lptr);
+	  struct VariableList *vl = (yyvsp[-4].lptr);
 	  struct Name *nptr;
 	  char tmp[32]; 
 	  symchar *str;
 
-	  sprintf(tmp,"%ld",(zz_vsp[-2].int_value));
+	  sprintf(tmp,"%ld",(yyvsp[-2].int_value));
 	  str = AddSymbol(tmp);
 	  nptr = CreateIdName(str);
 	/* $$ = CreateEXTERN(1,$1,SCP($3),vl,nptr,$9); */
-	  (zz_val.statptr) = CreateEXTERNGlassBox((zz_vsp[-8].nptr),SCP((zz_vsp[-6].id_ptr)),vl,nptr,(zz_vsp[0].nptr));
-	}
+	  (yyval.statptr) = CreateEXTERNGlassBox((yyvsp[-8].nptr),SCP((yyvsp[-6].id_ptr)),vl,nptr,(yyvsp[0].nptr));
+	;}
     break;
 
   case 148:
-#line 1621 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1622 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.nptr) = NULL;
-	}
+	  (yyval.nptr) = NULL;
+	;}
     break;
 
   case 149:
-#line 1625 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1626 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.nptr) = (zz_vsp[0].nptr);
-	}
+	  (yyval.nptr) = (yyvsp[0].nptr);
+	;}
     break;
 
   case 150:
-#line 1633 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1634 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != FOR_T ) {
-	    WarnMsg_MismatchEnd("FOR", SCP((zz_vsp[-6].id_ptr)), (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != FOR_T ) {
+	    WarnMsg_MismatchEnd("FOR", SCP((yyvsp[-6].id_ptr)), (yyvsp[0].int_value), NULL);
 	  }
-          if ((zz_vsp[-2].fkind) == fk_create && (zz_vsp[-3].order) != f_random) {
+          if ((yyvsp[-2].fkind) == fk_create && (yyvsp[-3].order) != f_random) {
             /* create cannot have an order in declarative FOR */
 	    ErrMsg_Generic("FOR loops only accept DECREASING or INCREASING in the method section.");
 	    g_untrapped_error++;
           }
-          if ((zz_vsp[-2].fkind) == fk_do && (zz_vsp[-3].order) == f_random) {
+          if ((yyvsp[-2].fkind) == fk_do && (yyvsp[-3].order) == f_random) {
             /* all FOR/DO default to increasing */
-	    (zz_val.statptr) = CreateFOR((zz_vsp[-6].id_ptr),(zz_vsp[-4].eptr),(zz_vsp[-1].slptr),f_increasing,(zz_vsp[-2].fkind));
+	    (yyval.statptr) = CreateFOR((yyvsp[-6].id_ptr),(yyvsp[-4].eptr),(yyvsp[-1].slptr),f_increasing,(yyvsp[-2].fkind));
           } else {
-	    (zz_val.statptr) = CreateFOR((zz_vsp[-6].id_ptr),(zz_vsp[-4].eptr),(zz_vsp[-1].slptr),(zz_vsp[-3].order),(zz_vsp[-2].fkind));
+	    (yyval.statptr) = CreateFOR((yyvsp[-6].id_ptr),(yyvsp[-4].eptr),(yyvsp[-1].slptr),(yyvsp[-3].order),(yyvsp[-2].fkind));
           }
-	}
+	;}
     break;
 
   case 151:
-#line 1653 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1654 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.order) = f_random;
-	}
+	  (yyval.order) = f_random;
+	;}
     break;
 
   case 152:
-#line 1657 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1658 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.order) = f_increasing;
-	}
+	  (yyval.order) = f_increasing;
+	;}
     break;
 
   case 153:
-#line 1661 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1662 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.order) = f_decreasing;
-	}
+	  (yyval.order) = f_decreasing;
+	;}
     break;
 
   case 154:
-#line 1668 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1669 "base\\generic\\compiler\\ascParse.y"
     {
-          (zz_val.fkind) = fk_create; /* declarative FOR */
-	}
+          (yyval.fkind) = fk_create; /* declarative FOR */
+	;}
     break;
 
   case 155:
-#line 1672 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1673 "base\\generic\\compiler\\ascParse.y"
     {
-          (zz_val.fkind) = fk_expect; /* parameter FOR */
-	}
+          (yyval.fkind) = fk_expect; /* parameter FOR */
+	;}
     break;
 
   case 156:
-#line 1676 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1677 "base\\generic\\compiler\\ascParse.y"
     {
-          (zz_val.fkind) = fk_check; /* WHERE FOR */
-	}
+          (yyval.fkind) = fk_check; /* WHERE FOR */
+	;}
     break;
 
   case 157:
-#line 1680 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1681 "base\\generic\\compiler\\ascParse.y"
     {
-          (zz_val.fkind) = fk_do; /* method FOR */
-	}
+          (yyval.fkind) = fk_do; /* method FOR */
+	;}
     break;
 
   case 158:
-#line 1687 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1688 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateRUN((zz_vsp[0].nptr),NULL);
-	}
+	  (yyval.statptr) = CreateRUN((yyvsp[0].nptr),NULL);
+	;}
     break;
 
   case 159:
-#line 1691 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1692 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateRUN((zz_vsp[0].nptr),(zz_vsp[-2].nptr));	  /* type :: name */
-	}
+	  (yyval.statptr) = CreateRUN((yyvsp[0].nptr),(yyvsp[-2].nptr));	  /* type :: name */
+	;}
     break;
 
   case 160:
-#line 1698 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1699 "base\\generic\\compiler\\ascParse.y"
     {
-		(zz_val.statptr) = CreateFIX((zz_vsp[0].lptr));
-	}
+		(yyval.statptr) = CreateFIX((yyvsp[0].lptr));
+	;}
     break;
 
   case 161:
-#line 1705 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1706 "base\\generic\\compiler\\ascParse.y"
     {
-		(zz_val.statptr) = CreateFREE((zz_vsp[0].lptr));
-	}
+		(yyval.statptr) = CreateFREE((yyvsp[0].lptr));
+	;}
     break;
 
   case 162:
-#line 1712 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1713 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is procedural external code. Was:
 	  $$ = CreateEXTERN(0,NULL,SCP($2),$4,NULL,NULL);
 	   */
-	  (zz_val.statptr) = CreateEXTERNMethod(SCP((zz_vsp[-3].id_ptr)),(zz_vsp[-1].lptr));
-	}
+	  (yyval.statptr) = CreateEXTERNMethod(SCP((yyvsp[-3].id_ptr)),(yyvsp[-1].lptr));
+	;}
     break;
 
   case 163:
-#line 1723 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1724 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * This is proper procedural external method code.
 	   */
-	  (zz_val.statptr) = CreateCALL((zz_vsp[0].id_ptr),g_callargs);
+	  (yyval.statptr) = CreateCALL((yyvsp[0].id_ptr),g_callargs);
           g_callargs = NULL;
-	}
+	;}
     break;
 
   case 164:
-#line 1734 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1735 "base\\generic\\compiler\\ascParse.y"
     {
-		(zz_val.statptr) = CreateASSERT((zz_vsp[0].eptr));
-	}
+		(yyval.statptr) = CreateASSERT((yyvsp[0].eptr));
+	;}
     break;
 
   case 165:
-#line 1740 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1741 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != IF_T ) {
-	    WarnMsg_MismatchEnd("IF", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != IF_T ) {
+	    WarnMsg_MismatchEnd("IF", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateIF((zz_vsp[-4].eptr),(zz_vsp[-2].slptr),(zz_vsp[-1].slptr));
-	}
+	  (yyval.statptr) = CreateIF((yyvsp[-4].eptr),(yyvsp[-2].slptr),(yyvsp[-1].slptr));
+	;}
     break;
 
   case 166:
-#line 1750 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1751 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != WHILE_T ) {
-	    WarnMsg_MismatchEnd("WHILE", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != WHILE_T ) {
+	    WarnMsg_MismatchEnd("WHILE", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateWhile((zz_vsp[-3].eptr),(zz_vsp[-1].slptr));
-	}
+	  (yyval.statptr) = CreateWhile((yyvsp[-3].eptr),(yyvsp[-1].slptr));
+	;}
     break;
 
   case 167:
-#line 1759 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1760 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = NULL;
-	}
+	  (yyval.slptr) = NULL;
+	;}
     break;
 
   case 168:
-#line 1763 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1764 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.slptr) = (zz_vsp[0].slptr);
-	}
+	  (yyval.slptr) = (yyvsp[0].slptr);
+	;}
     break;
 
   case 169:
-#line 1770 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1771 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
-	  DestroyWhenList((zz_vsp[-1].wptr));
-	  DestroyVariableList((zz_vsp[-2].lptr));
+	  DestroyWhenList((yyvsp[-1].wptr));
+	  DestroyVariableList((yyvsp[-2].lptr));
 	  g_untrapped_error++;
-	  (zz_val.statptr) = NULL;
-	}
+	  (yyval.statptr) = NULL;
+	;}
     break;
 
   case 170:
-#line 1781 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1782 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
-	  DestroyWhenList((zz_vsp[-1].wptr));
-	  DestroyVariableList((zz_vsp[-2].lptr));
-	  DestroyName((zz_vsp[-5].nptr));
+	  DestroyWhenList((yyvsp[-1].wptr));
+	  DestroyVariableList((yyvsp[-2].lptr));
+	  DestroyName((yyvsp[-5].nptr));
 	  g_untrapped_error++;
-	  (zz_val.statptr) = NULL;
-	}
+	  (yyval.statptr) = NULL;
+	;}
     break;
 
   case 171:
-#line 1793 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1794 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateWHEN(NULL,(zz_vsp[-3].lptr),(zz_vsp[-1].wptr));
-	}
+	  (yyval.statptr) = CreateWHEN(NULL,(yyvsp[-3].lptr),(yyvsp[-1].wptr));
+	;}
     break;
 
   case 172:
-#line 1800 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1801 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != WHEN_T ) {
-	    WarnMsg_MismatchEnd("WHEN", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != WHEN_T ) {
+	    WarnMsg_MismatchEnd("WHEN", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateWHEN((zz_vsp[-7].nptr),(zz_vsp[-3].lptr),(zz_vsp[-1].wptr));
-	}
+	  (yyval.statptr) = CreateWHEN((yyvsp[-7].nptr),(yyvsp[-3].lptr),(yyvsp[-1].wptr));
+	;}
     break;
 
   case 173:
-#line 1810 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1811 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.wptr) = ReverseWhenCases((zz_vsp[0].wptr));
-	}
+	  (yyval.wptr) = ReverseWhenCases((yyvsp[0].wptr));
+	;}
     break;
 
   case 174:
-#line 1817 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1818 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.wptr) = CreateWhen((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
-	}
+	  (yyval.wptr) = CreateWhen((yyvsp[-2].sptr),(yyvsp[0].slptr));
+	;}
     break;
 
   case 175:
-#line 1821 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1822 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.wptr) = CreateWhen(NULL,(zz_vsp[0].slptr));
-	}
+	  (yyval.wptr) = CreateWhen(NULL,(yyvsp[0].slptr));
+	;}
     break;
 
   case 176:
-#line 1825 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1826 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.wptr) = LinkWhenCases(CreateWhen((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].wptr));
-	}
+	  (yyval.wptr) = LinkWhenCases(CreateWhen((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].wptr));
+	;}
     break;
 
   case 177:
-#line 1829 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1830 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.wptr) = LinkWhenCases(CreateWhen(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].wptr));
-	}
+	  (yyval.wptr) = LinkWhenCases(CreateWhen(NULL,(yyvsp[0].slptr)),(yyvsp[-3].wptr));
+	;}
     break;
 
   case 178:
-#line 1836 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1837 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateFlow(fc_break,NULL);
-	}
+	  (yyval.statptr) = CreateFlow(fc_break,NULL);
+	;}
     break;
 
   case 179:
-#line 1840 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1841 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateFlow(fc_continue,NULL);
-	}
+	  (yyval.statptr) = CreateFlow(fc_continue,NULL);
+	;}
     break;
 
   case 180:
-#line 1844 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1845 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateFlow(fc_fallthru,NULL);
-	}
+	  (yyval.statptr) = CreateFlow(fc_fallthru,NULL);
+	;}
     break;
 
   case 181:
-#line 1848 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1849 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateFlow(fc_return,NULL);
-	}
+	  (yyval.statptr) = CreateFlow(fc_return,NULL);
+	;}
     break;
 
   case 182:
-#line 1852 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1853 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateFlow(fc_stop,(zz_vsp[0].braced_ptr));
-	}
+	  (yyval.statptr) = CreateFlow(fc_stop,(yyvsp[0].braced_ptr));
+	;}
     break;
 
   case 183:
-#line 1859 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1860 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.statptr) = CreateFNAME((zz_vsp[0].nptr));
-	}
+	  (yyval.statptr) = CreateFNAME((yyvsp[0].nptr));
+	;}
     break;
 
   case 184:
-#line 1866 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1867 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != SELECT_T ) {
-	    WarnMsg_MismatchEnd("SELECT", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != SELECT_T ) {
+	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in SELECT statement.");
-	  DestroySelectList((zz_vsp[-1].septr));
-	  DestroyVariableList((zz_vsp[-2].lptr));
+	  DestroySelectList((yyvsp[-1].septr));
+	  DestroyVariableList((yyvsp[-2].lptr));
 	  g_untrapped_error++;
-	  (zz_val.statptr) = NULL;
-	}
+	  (yyval.statptr) = NULL;
+	;}
     break;
 
   case 185:
-#line 1877 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1878 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != SELECT_T ) {
-	    WarnMsg_MismatchEnd("SELECT", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != SELECT_T ) {
+	    WarnMsg_MismatchEnd("SELECT", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateSELECT((zz_vsp[-3].lptr),(zz_vsp[-1].septr));
-	}
+	  (yyval.statptr) = CreateSELECT((yyvsp[-3].lptr),(yyvsp[-1].septr));
+	;}
     break;
 
   case 186:
-#line 1887 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1888 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.septr) = ReverseSelectCases((zz_vsp[0].septr));
-	}
+	  (yyval.septr) = ReverseSelectCases((yyvsp[0].septr));
+	;}
     break;
 
   case 187:
-#line 1894 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1895 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.septr) = CreateSelect((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
-	}
+	  (yyval.septr) = CreateSelect((yyvsp[-2].sptr),(yyvsp[0].slptr));
+	;}
     break;
 
   case 188:
-#line 1898 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1899 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.septr) = CreateSelect(NULL,(zz_vsp[0].slptr));
-	}
+	  (yyval.septr) = CreateSelect(NULL,(yyvsp[0].slptr));
+	;}
     break;
 
   case 189:
-#line 1902 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1903 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.septr) = LinkSelectCases(CreateSelect((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].septr));
-	}
+	  (yyval.septr) = LinkSelectCases(CreateSelect((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].septr));
+	;}
     break;
 
   case 190:
-#line 1906 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1907 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.septr) = LinkSelectCases(CreateSelect(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].septr));
-	}
+	  (yyval.septr) = LinkSelectCases(CreateSelect(NULL,(yyvsp[0].slptr)),(yyvsp[-3].septr));
+	;}
     break;
 
   case 191:
-#line 1913 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1914 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != SWITCH_T ) {
-	    WarnMsg_MismatchEnd("SWITCH", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != SWITCH_T ) {
+	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[0].int_value), NULL);
 	  }
 	  ErrMsg_Generic("() missing in SWITCH statement.");
-	  DestroySwitchList((zz_vsp[-1].swptr));
-	  DestroyVariableList((zz_vsp[-2].lptr));
+	  DestroySwitchList((yyvsp[-1].swptr));
+	  DestroyVariableList((yyvsp[-2].lptr));
 	  g_untrapped_error++;
-	  (zz_val.statptr) = NULL;
-	}
+	  (yyval.statptr) = NULL;
+	;}
     break;
 
   case 192:
-#line 1924 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1925 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != SWITCH_T ) {
-	    WarnMsg_MismatchEnd("SWITCH", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != SWITCH_T ) {
+	    WarnMsg_MismatchEnd("SWITCH", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateSWITCH((zz_vsp[-3].lptr),(zz_vsp[-1].swptr));
-	}
+	  (yyval.statptr) = CreateSWITCH((yyvsp[-3].lptr),(yyvsp[-1].swptr));
+	;}
     break;
 
   case 193:
-#line 1934 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1935 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.swptr) = ReverseSwitchCases((zz_vsp[0].swptr));
-	}
+	  (yyval.swptr) = ReverseSwitchCases((yyvsp[0].swptr));
+	;}
     break;
 
   case 194:
-#line 1941 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1942 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.swptr) = CreateSwitch((zz_vsp[-2].sptr),(zz_vsp[0].slptr));
-	}
+	  (yyval.swptr) = CreateSwitch((yyvsp[-2].sptr),(yyvsp[0].slptr));
+	;}
     break;
 
   case 195:
-#line 1945 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1946 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.swptr) = CreateSwitch(NULL,(zz_vsp[0].slptr));
-	}
+	  (yyval.swptr) = CreateSwitch(NULL,(yyvsp[0].slptr));
+	;}
     break;
 
   case 196:
-#line 1949 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1950 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.swptr) = LinkSwitchCases(CreateSwitch((zz_vsp[-2].sptr),(zz_vsp[0].slptr)),(zz_vsp[-4].swptr));
-	}
+	  (yyval.swptr) = LinkSwitchCases(CreateSwitch((yyvsp[-2].sptr),(yyvsp[0].slptr)),(yyvsp[-4].swptr));
+	;}
     break;
 
   case 197:
-#line 1953 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1954 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.swptr) = LinkSwitchCases(CreateSwitch(NULL,(zz_vsp[0].slptr)),(zz_vsp[-3].swptr));
-	}
+	  (yyval.swptr) = LinkSwitchCases(CreateSwitch(NULL,(yyvsp[0].slptr)),(yyvsp[-3].swptr));
+	;}
     break;
 
   case 198:
-#line 1960 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1961 "base\\generic\\compiler\\ascParse.y"
     {
-	  if( (zz_vsp[0].int_value) != CONDITIONAL_T ) {
-	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != CONDITIONAL_T ) {
+	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  (zz_val.statptr) = CreateCOND((zz_vsp[-1].slptr));
-	}
+	  (yyval.statptr) = CreateCOND((yyvsp[-1].slptr));
+	;}
     break;
 
   case 199:
-#line 1970 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 1971 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*  All processing of notes takes place on the notes_body here.
 	   *  Notes should NOT be added to the statement list.
 	   *  Here we know the current type and method names.
 	   */
-	  if( (zz_vsp[0].int_value) != NOTES_T ) {
-	    WarnMsg_MismatchEnd("NOTES", NULL, (zz_vsp[0].int_value), NULL);
+	  if( (yyvsp[0].int_value) != NOTES_T ) {
+	    WarnMsg_MismatchEnd("NOTES", NULL, (yyvsp[0].int_value), NULL);
 	  }
-	  if ((zz_vsp[-1].notesptr) != NULL) {
+	  if ((yyvsp[-1].notesptr) != NULL) {
 	    struct NoteTmp *nt;
 	    symchar *lang=NULL; /* dummy */
-	    nt = (zz_vsp[-1].notesptr);
+	    nt = (yyvsp[-1].notesptr);
 	    while (nt != NULL) {
 	      if (nt->lang != NULL) {
 	        /* this logic works because of the reverse sort that
@@ -3982,1136 +3960,1136 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	                             nt->line, nt->vardata, nd_vlist));
 	      nt = nt->next;
 	    }
-	    DestroyNoteTmpList((zz_vsp[-1].notesptr));
+	    DestroyNoteTmpList((yyvsp[-1].notesptr));
           }
-	  (zz_val.statptr) = NULL;
-	}
+	  (yyval.statptr) = NULL;
+	;}
     break;
 
   case 200:
-#line 2007 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2008 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*  At this point we have the "language", the names of the
 	   *  objects we are explaining, and the explanation/notes itself.
 	   */
-	  (zz_val.notesptr) = (zz_vsp[0].notesptr);
-	  assert((zz_val.notesptr)->lang == NULL);
-	  (zz_val.notesptr)->lang = (zz_vsp[-1].sym_ptr);
-	}
+	  (yyval.notesptr) = (yyvsp[0].notesptr);
+	  assert((yyval.notesptr)->lang == NULL);
+	  (yyval.notesptr)->lang = (yyvsp[-1].sym_ptr);
+	;}
     break;
 
   case 201:
-#line 2016 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2017 "base\\generic\\compiler\\ascParse.y"
     {
 	  struct NoteTmp *nt;
-	  (zz_val.notesptr) = (zz_vsp[-2].notesptr);
-	  assert((zz_vsp[0].notesptr)->lang == NULL);
-	  (zz_vsp[0].notesptr)->lang = (zz_vsp[-1].sym_ptr);
-	  nt = (zz_val.notesptr);
+	  (yyval.notesptr) = (yyvsp[-2].notesptr);
+	  assert((yyvsp[0].notesptr)->lang == NULL);
+	  (yyvsp[0].notesptr)->lang = (yyvsp[-1].sym_ptr);
+	  nt = (yyval.notesptr);
 	  while (nt->next != NULL) {
 	    nt = nt->next;
 	  }
-	  LinkNoteTmp(nt,(zz_vsp[0].notesptr));
-	}
+	  LinkNoteTmp(nt,(yyvsp[0].notesptr));
+	;}
     break;
 
   case 202:
-#line 2031 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2032 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.notesptr) = CreateNoteTmp(NULL, AddBraceChar((zz_vsp[0].braced_ptr),NULL),
-                             (void *)(zz_vsp[-1].lptr), LineNum());
-	}
+	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[0].braced_ptr),NULL),
+                             (void *)(yyvsp[-1].lptr), LineNum());
+	;}
     break;
 
   case 203:
-#line 2036 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2037 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.notesptr) = CreateNoteTmp(NULL, AddBraceChar((zz_vsp[0].braced_ptr),NULL),
-	                     (void *)(zz_vsp[-1].lptr), LineNum());
-	  LinkNoteTmp((zz_val.notesptr),(zz_vsp[-2].notesptr));
-	}
+	  (yyval.notesptr) = CreateNoteTmp(NULL, AddBraceChar((yyvsp[0].braced_ptr),NULL),
+	                     (void *)(yyvsp[-1].lptr), LineNum());
+	  LinkNoteTmp((yyval.notesptr),(yyvsp[-2].notesptr));
+	;}
     break;
 
   case 204:
-#line 2045 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2046 "base\\generic\\compiler\\ascParse.y"
     {
 	  /*
 	   * Reversing the variable list is now essential to deal with
 	   * external procedures and other things where order is important.
 	   */
-	  (zz_val.lptr) = ReverseVariableList((zz_vsp[0].lptr));
-	}
+	  (yyval.lptr) = ReverseVariableList((yyvsp[0].lptr));
+	;}
     break;
 
   case 205:
-#line 2056 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2057 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
-	}
+	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
+	;}
     break;
 
   case 206:
-#line 2060 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2061 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
-	  LinkVariableNodes((zz_val.lptr),(zz_vsp[-2].lptr));
-	}
+	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
+	  LinkVariableNodes((yyval.lptr),(yyvsp[-2].lptr));
+	;}
     break;
 
   case 207:
-#line 2065 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2066 "base\\generic\\compiler\\ascParse.y"
     {
-	  ErrMsg_CommaName("name",(zz_vsp[0].nptr));
-	  (zz_val.lptr) = CreateVariableNode((zz_vsp[0].nptr));
-	  LinkVariableNodes((zz_val.lptr),(zz_vsp[-1].lptr));
+	  ErrMsg_CommaName("name",(yyvsp[0].nptr));
+	  (yyval.lptr) = CreateVariableNode((yyvsp[0].nptr));
+	  LinkVariableNodes((yyval.lptr),(yyvsp[-1].lptr));
 	  /* trash the definition. keep the loose fname around because
 	   * destroying here is inconvenient
 	   */
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 208:
-#line 2078 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2079 "base\\generic\\compiler\\ascParse.y"
     {
 	  symchar *simple;
 	  void *data;
 	  enum NoteData nd;
-	  (zz_val.nptr) = ReverseName((zz_vsp[-1].nptr));
-	  if ((zz_vsp[0].dquote_ptr) != NULL && (zz_vsp[-1].nptr) != NULL) {
-            simple = SimpleNameIdPtr((zz_val.nptr));
-	    data = (simple == NULL ? (void *)(zz_val.nptr) : NULL);
+	  (yyval.nptr) = ReverseName((yyvsp[-1].nptr));
+	  if ((yyvsp[0].dquote_ptr) != NULL && (yyvsp[-1].nptr) != NULL) {
+            simple = SimpleNameIdPtr((yyval.nptr));
+	    data = (simple == NULL ? (void *)(yyval.nptr) : NULL);
 	    nd = (data == NULL ? nd_empty : nd_name);
 	    CollectNote(CreateNote(g_type_name, InlineNote(), simple,
 	                           g_proc_name,
 	                           Asc_ModuleBestName(Asc_CurrentModule()),
-	                           AddBraceChar((zz_vsp[0].dquote_ptr),InlineNote()),
+	                           AddBraceChar((yyvsp[0].dquote_ptr),InlineNote()),
 	                           LineNum(), data, nd));
 	  }
-	}
+	;}
     break;
 
   case 209:
-#line 2098 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2099 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.nptr) = CreateIdName((zz_vsp[0].id_ptr));
-	}
+	  (yyval.nptr) = CreateIdName((yyvsp[0].id_ptr));
+	;}
     break;
 
   case 210:
-#line 2102 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2103 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.nptr) = CreateIdName((zz_vsp[0].id_ptr));
-	  LinkNames((zz_val.nptr),(zz_vsp[-2].nptr));
-	}
+	  (yyval.nptr) = CreateIdName((yyvsp[0].id_ptr));
+	  LinkNames((yyval.nptr),(yyvsp[-2].nptr));
+	;}
     break;
 
   case 211:
-#line 2107 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2108 "base\\generic\\compiler\\ascParse.y"
     {
-	  if ((zz_vsp[-1].sptr) == NULL) {
+	  if ((yyvsp[-1].sptr) == NULL) {
 	    error_reporter_current_line(ASC_USER_ERROR,"syntax error: Empty set in name definition, name:");
-	    WriteName(ASCERR,(zz_vsp[-3].nptr));
+	    WriteName(ASCERR,(yyvsp[-3].nptr));
 	    FPRINTF(ASCERR,"[]\n");
 	    g_untrapped_error++;
 	  } else {
-	    (zz_val.nptr) = CreateSetName((zz_vsp[-1].sptr));
-	    LinkNames((zz_val.nptr),(zz_vsp[-3].nptr));
+	    (yyval.nptr) = CreateSetName((yyvsp[-1].sptr));
+	    LinkNames((yyval.nptr),(yyvsp[-3].nptr));
 	  }
-	}
+	;}
     break;
 
   case 212:
-#line 2122 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2123 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = CONDITIONAL_T;
-        }
+          (yyval.int_value) = CONDITIONAL_T;
+        ;}
     break;
 
   case 213:
-#line 2127 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2128 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = FOR_T;
-        }
+          (yyval.int_value) = FOR_T;
+        ;}
     break;
 
   case 214:
-#line 2132 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2133 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = IF_T;
-        }
+          (yyval.int_value) = IF_T;
+        ;}
     break;
 
   case 215:
-#line 2137 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2138 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = INTERACTIVE_T;
-        }
+          (yyval.int_value) = INTERACTIVE_T;
+        ;}
     break;
 
   case 216:
-#line 2142 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2143 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = METHODS_T;
-        }
+          (yyval.int_value) = METHODS_T;
+        ;}
     break;
 
   case 217:
-#line 2147 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2148 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = NOTES_T;
-        }
+          (yyval.int_value) = NOTES_T;
+        ;}
     break;
 
   case 218:
-#line 2152 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2153 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = SELECT_T;
-        }
+          (yyval.int_value) = SELECT_T;
+        ;}
     break;
 
   case 219:
-#line 2157 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2158 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = SWITCH_T;
-        }
+          (yyval.int_value) = SWITCH_T;
+        ;}
     break;
 
   case 220:
-#line 2162 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2163 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = UNITS_T;
-        }
+          (yyval.int_value) = UNITS_T;
+        ;}
     break;
 
   case 221:
-#line 2167 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2168 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = GLOBAL_T;
-        }
+          (yyval.int_value) = GLOBAL_T;
+        ;}
     break;
 
   case 222:
-#line 2172 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2173 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = WHEN_T;
-        }
+          (yyval.int_value) = WHEN_T;
+        ;}
     break;
 
   case 223:
-#line 2177 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2178 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = WHILE_T;
-        }
+          (yyval.int_value) = WHILE_T;
+        ;}
     break;
 
   case 224:
-#line 2182 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2183 "base\\generic\\compiler\\ascParse.y"
     {
-          g_end_identifier = (zz_vsp[0].id_ptr);
-          (zz_val.int_value) = IDENTIFIER_T;
-        }
+          g_end_identifier = (yyvsp[0].id_ptr);
+          (yyval.int_value) = IDENTIFIER_T;
+        ;}
     break;
 
   case 225:
-#line 2187 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2188 "base\\generic\\compiler\\ascParse.y"
     {
           g_end_identifier = NULL;
-          (zz_val.int_value) = END_T;
-        }
+          (yyval.int_value) = END_T;
+        ;}
     break;
 
   case 226:
-#line 2195 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2196 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.braced_ptr) = NULL;
-	}
+	  (yyval.braced_ptr) = NULL;
+	;}
     break;
 
   case 227:
-#line 2199 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2200 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.braced_ptr) = (zz_vsp[0].braced_ptr);
-	}
+	  (yyval.braced_ptr) = (yyvsp[0].braced_ptr);
+	;}
     break;
 
   case 228:
-#line 2206 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2207 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dquote_ptr) = NULL;
-	}
+	  (yyval.dquote_ptr) = NULL;
+	;}
     break;
 
   case 229:
-#line 2210 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2211 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dquote_ptr) = (zz_vsp[0].dquote_ptr);
-	}
+	  (yyval.dquote_ptr) = (yyvsp[0].dquote_ptr);
+	;}
     break;
 
   case 230:
-#line 2217 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2218 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = ReverseSetList((zz_vsp[0].sptr));
-	}
+	  (yyval.sptr) = ReverseSetList((yyvsp[0].sptr));
+	;}
     break;
 
   case 231:
-#line 2221 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2222 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = NULL;
-	}
+	  (yyval.sptr) = NULL;
+	;}
     break;
 
   case 232:
-#line 2228 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2229 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = CreateSingleSet((zz_vsp[0].eptr));
-	}
+	  (yyval.sptr) = CreateSingleSet((yyvsp[0].eptr));
+	;}
     break;
 
   case 233:
-#line 2232 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2233 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = CreateRangeSet((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyval.sptr) = CreateRangeSet((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 234:
-#line 2236 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2237 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = CreateSingleSet((zz_vsp[0].eptr));
-	  LinkSets((zz_val.sptr),(zz_vsp[-2].sptr));
-	}
+	  (yyval.sptr) = CreateSingleSet((yyvsp[0].eptr));
+	  LinkSets((yyval.sptr),(yyvsp[-2].sptr));
+	;}
     break;
 
   case 235:
-#line 2241 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2242 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.sptr) = CreateRangeSet((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	  LinkSets((zz_val.sptr),(zz_vsp[-4].sptr));
-	}
+	  (yyval.sptr) = CreateRangeSet((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	  LinkSets((yyval.sptr),(yyvsp[-4].sptr));
+	;}
     break;
 
   case 236:
-#line 2249 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2250 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = (zz_vsp[0].int_value);
+	  (yyval.real_value) = (yyvsp[0].int_value);
 	  g_constant_type = LONGCONSTANT;
 	  g_default_dim_ptr = Dimensionless();
-	}
+	;}
     break;
 
   case 237:
-#line 2255 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2256 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = (zz_vsp[0].real_value);
+	  (yyval.real_value) = (yyvsp[0].real_value);
 	  g_constant_type = DOUBLECONSTANT;
 	  g_default_dim_ptr = g_dim_ptr;
-	}
+	;}
     break;
 
   case 238:
-#line 2264 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2265 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.real_value) = (zz_vsp[-1].real_value)*(zz_vsp[0].real_value);
-	}
+	  (yyval.real_value) = (yyvsp[-1].real_value)*(yyvsp[0].real_value);
+	;}
     break;
 
   case 239:
-#line 2268 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2269 "base\\generic\\compiler\\ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
-	  g_units_ptr = FindOrDefineUnits((zz_vsp[0].braced_ptr),&pos,&error_code);
+	  g_units_ptr = FindOrDefineUnits((yyvsp[0].braced_ptr),&pos,&error_code);
 	  if (g_units_ptr != NULL) {
-	    (zz_val.real_value) = (double)(zz_vsp[-1].int_value)*UnitsConvFactor(g_units_ptr);
+	    (yyval.real_value) = (double)(yyvsp[-1].int_value)*UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
 	  } else {
             char **errv;
-	    (zz_val.real_value) = (double)(zz_vsp[-1].int_value);
+	    (yyval.real_value) = (double)(yyvsp[-1].int_value);
 	    g_dim_ptr = WildDimension();
-	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", (zz_vsp[0].braced_ptr));
-            errv = UnitsExplainError((zz_vsp[0].braced_ptr),error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'", (yyvsp[0].braced_ptr));
+            errv = UnitsExplainError((yyvsp[0].braced_ptr),error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
-	}
+	;}
     break;
 
   case 240:
-#line 2289 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2290 "base\\generic\\compiler\\ascParse.y"
     {
 	  g_dim_ptr = Dimensionless();
-	  (zz_val.real_value) = 1.0;
-	}
+	  (yyval.real_value) = 1.0;
+	;}
     break;
 
   case 241:
-#line 2294 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2295 "base\\generic\\compiler\\ascParse.y"
     {
 	  unsigned long pos;
 	  int error_code;
-	  g_units_ptr = FindOrDefineUnits((zz_vsp[0].braced_ptr),&pos,&error_code);
+	  g_units_ptr = FindOrDefineUnits((yyvsp[0].braced_ptr),&pos,&error_code);
 	  if (g_units_ptr != NULL) {
-	    (zz_val.real_value) = UnitsConvFactor(g_units_ptr);
+	    (yyval.real_value) = UnitsConvFactor(g_units_ptr);
 	    g_dim_ptr = UnitsDimensions(g_units_ptr);
 	  } else {
             char **errv;
-	    (zz_val.real_value) = 1.0;
+	    (yyval.real_value) = 1.0;
 	    g_dim_ptr = WildDimension();
-	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",(zz_vsp[0].braced_ptr));
-            errv = UnitsExplainError((zz_vsp[0].braced_ptr),error_code,pos);
+	    error_reporter_current_line(ASC_USER_ERROR,"Undefined units '%s'",(yyvsp[0].braced_ptr));
+            errv = UnitsExplainError((yyvsp[0].braced_ptr),error_code,pos);
 	    error_reporter_current_line(ASC_USER_ERROR,"  %s\n  %s\n  %s\n",errv[0],errv[1],errv[2]);
 	    g_untrapped_error++;
 	  }
-	}
+	;}
     break;
 
   case 242:
-#line 2315 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2316 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimp) = (zz_vsp[0].dimp);
-	}
+	  (yyval.dimp) = (yyvsp[0].dimp);
+	;}
     break;
 
   case 243:
-#line 2319 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2320 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimp) = Dimensionless();
-	}
+	  (yyval.dimp) = Dimensionless();
+	;}
     break;
 
   case 244:
-#line 2323 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2324 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimp) = WildDimension();
-	}
+	  (yyval.dimp) = WildDimension();
+	;}
     break;
 
   case 245:
-#line 2330 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2331 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimp) = WildDimension();
-	}
+	  (yyval.dimp) = WildDimension();
+	;}
     break;
 
   case 246:
-#line 2334 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2335 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimp) = FindOrAddDimen(&((zz_vsp[0].dimen)));
-	}
+	  (yyval.dimp) = FindOrAddDimen(&((yyvsp[0].dimen)));
+	;}
     break;
 
   case 247:
-#line 2341 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2342 "base\\generic\\compiler\\ascParse.y"
     {
-	  ParseDim(&((zz_val.dimen)),SCP((zz_vsp[0].id_ptr)));
-	}
+	  ParseDim(&((yyval.dimen)),SCP((yyvsp[0].id_ptr)));
+	;}
     break;
 
   case 248:
-#line 2345 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2346 "base\\generic\\compiler\\ascParse.y"
     {
-	  ClearDimensions(&((zz_val.dimen)));
-	}
+	  ClearDimensions(&((yyval.dimen)));
+	;}
     break;
 
   case 249:
-#line 2349 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2350 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimen) = SubDimensions(&((zz_vsp[-2].dimen)),&((zz_vsp[0].dimen)));
-	}
+	  (yyval.dimen) = SubDimensions(&((yyvsp[-2].dimen)),&((yyvsp[0].dimen)));
+	;}
     break;
 
   case 250:
-#line 2353 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2354 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimen) = AddDimensions(&((zz_vsp[-2].dimen)),&((zz_vsp[0].dimen)));
-	}
+	  (yyval.dimen) = AddDimensions(&((yyvsp[-2].dimen)),&((yyvsp[0].dimen)));
+	;}
     break;
 
   case 251:
-#line 2357 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2358 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.dimen) = ScaleDimensions(&((zz_vsp[-2].dimen)),(zz_vsp[0].frac_value));
-	}
+	  (yyval.dimen) = ScaleDimensions(&((yyvsp[-2].dimen)),(yyvsp[0].frac_value));
+	;}
     break;
 
   case 252:
-#line 2361 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2362 "base\\generic\\compiler\\ascParse.y"
     {
-	  CopyDimensions(&((zz_vsp[-1].dimen)),&((zz_val.dimen)));
-	}
+	  CopyDimensions(&((yyvsp[-1].dimen)),&((yyval.dimen)));
+	;}
     break;
 
   case 253:
-#line 2368 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2369 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.frac_value) = (zz_vsp[-1].int_value) ? NegateF((zz_vsp[0].frac_value)) : (zz_vsp[0].frac_value);
-	}
+	  (yyval.frac_value) = (yyvsp[-1].int_value) ? NegateF((yyvsp[0].frac_value)) : (yyvsp[0].frac_value);
+	;}
     break;
 
   case 254:
-#line 2375 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2376 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.frac_value) = CreateFraction((short)(zz_vsp[0].int_value),(short)1);
-	}
+	  (yyval.frac_value) = CreateFraction((short)(yyvsp[0].int_value),(short)1);
+	;}
     break;
 
   case 255:
-#line 2379 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2380 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.frac_value) = CreateFraction((short)(zz_vsp[-3].int_value),(short)(zz_vsp[-1].int_value));
-	}
+	  (yyval.frac_value) = CreateFraction((short)(yyvsp[-3].int_value),(short)(yyvsp[-1].int_value));
+	;}
     break;
 
   case 256:
-#line 2386 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2387 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 0;
-	}
+	  (yyval.int_value) = 0;
+	;}
     break;
 
   case 257:
-#line 2390 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2391 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 0;
-	}
+	  (yyval.int_value) = 0;
+	;}
     break;
 
   case 258:
-#line 2394 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2395 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.int_value) = 1;
-	}
+	  (yyval.int_value) = 1;
+	;}
     break;
 
   case 259:
-#line 2401 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2402 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateIntExpr((zz_vsp[0].int_value));
-	}
+	  (yyval.eptr) = CreateIntExpr((yyvsp[0].int_value));
+	;}
     break;
 
   case 260:
-#line 2405 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2406 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateIntExpr(LONG_MAX-1);
-	}
+	  (yyval.eptr) = CreateIntExpr(LONG_MAX-1);
+	;}
     break;
 
   case 261:
-#line 2409 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2410 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateRealExpr((zz_vsp[0].real_value),g_dim_ptr);
-	}
+	  (yyval.eptr) = CreateRealExpr((yyvsp[0].real_value),g_dim_ptr);
+	;}
     break;
 
   case 262:
-#line 2413 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2414 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
-	}
+	  (yyval.eptr) = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
+	;}
     break;
 
   case 263:
-#line 2417 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2418 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateTrueExpr();
-	}
+	  (yyval.eptr) = CreateTrueExpr();
+	;}
     break;
 
   case 264:
-#line 2421 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2422 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateFalseExpr();
-	}
+	  (yyval.eptr) = CreateFalseExpr();
+	;}
     break;
 
   case 265:
-#line 2425 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2426 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateAnyExpr();
-	}
+	  (yyval.eptr) = CreateAnyExpr();
+	;}
     break;
 
   case 266:
-#line 2429 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2430 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateSymbolExpr((zz_vsp[0].sym_ptr));
-	}
+	  (yyval.eptr) = CreateSymbolExpr((yyvsp[0].sym_ptr));
+	;}
     break;
 
   case 267:
-#line 2433 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2434 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateVarExpr((zz_vsp[0].nptr));
-	}
+	  (yyval.eptr) = CreateVarExpr((yyvsp[0].nptr));
+	;}
     break;
 
   case 268:
-#line 2437 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2438 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateSetExpr((zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateSetExpr((yyvsp[-1].sptr));
+	;}
     break;
 
   case 269:
-#line 2441 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2442 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_plus));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_plus));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 270:
-#line 2446 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2447 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_minus));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_minus));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 271:
-#line 2451 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2452 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_times));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_times));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 272:
-#line 2456 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2457 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_divide));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_divide));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 273:
-#line 2461 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2462 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_power));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_power));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 274:
-#line 2466 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2467 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_and));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_and));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 275:
-#line 2471 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2472 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_or));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_or));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 276:
-#line 2476 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2477 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_not));
-	}
+	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_not));
+	;}
     break;
 
   case 277:
-#line 2480 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2481 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),(zz_vsp[-1].eptr));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),(yyvsp[-1].eptr));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 278:
-#line 2485 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2486 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),(zz_vsp[-1].eptr));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),(yyvsp[-1].eptr));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 279:
-#line 2490 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2491 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_in));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_in));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 280:
-#line 2495 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2496 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_st));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_st));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 281:
-#line 2500 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2501 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_vsp[0].eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_st));
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[-2].eptr),(zz_vsp[0].eptr));
-	}
+	  (yyvsp[0].eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_st));
+	  (yyval.eptr) = JoinExprLists((yyvsp[-2].eptr),(yyvsp[0].eptr));
+	;}
     break;
 
   case 282:
-#line 2505 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2506 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = (zz_vsp[0].eptr);
-	}
+	  (yyval.eptr) = (yyvsp[0].eptr);
+	;}
     break;
 
   case 283:
-#line 2509 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2510 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = JoinExprLists((zz_vsp[0].eptr),CreateOpExpr(e_uminus));
-	}
+	  (yyval.eptr) = JoinExprLists((yyvsp[0].eptr),CreateOpExpr(e_uminus));
+	;}
     break;
 
   case 284:
-#line 2513 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2514 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateSatisfiedExpr((zz_vsp[-3].nptr),(zz_vsp[-1].real_value),g_dim_ptr);
-	}
+	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[-3].nptr),(yyvsp[-1].real_value),g_dim_ptr);
+	;}
     break;
 
   case 285:
-#line 2517 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2518 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateSatisfiedExpr((zz_vsp[-1].nptr),DBL_MAX,NULL);
-	}
+	  (yyval.eptr) = CreateSatisfiedExpr((yyvsp[-1].nptr),DBL_MAX,NULL);
+	;}
     break;
 
   case 286:
-#line 2521 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2522 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroySetList((zz_vsp[-1].sptr));
-	  (zz_val.eptr) = NULL;
+	  DestroySetList((yyvsp[-1].sptr));
+	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("SUM");
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 287:
-#line 2528 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2529 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateBuiltin(e_sum,(zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateBuiltin(e_sum,(yyvsp[-1].sptr));
+	;}
     break;
 
   case 288:
-#line 2532 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2533 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroySetList((zz_vsp[-1].sptr));
-	  (zz_val.eptr) = NULL;
+	  DestroySetList((yyvsp[-1].sptr));
+	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("PROD");
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 289:
-#line 2539 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2540 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateBuiltin(e_prod,(zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateBuiltin(e_prod,(yyvsp[-1].sptr));
+	;}
     break;
 
   case 290:
-#line 2543 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2544 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroySetList((zz_vsp[-1].sptr));
-	  (zz_val.eptr) = NULL;
+	  DestroySetList((yyvsp[-1].sptr));
+	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("UNION");
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 291:
-#line 2550 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2551 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateBuiltin(e_union,(zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateBuiltin(e_union,(yyvsp[-1].sptr));
+	;}
     break;
 
   case 292:
-#line 2554 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2555 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroySetList((zz_vsp[-1].sptr));
-	  (zz_val.eptr) = NULL;
+	  DestroySetList((yyvsp[-1].sptr));
+	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("INTERSECTION");
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 293:
-#line 2561 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2562 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateBuiltin(e_inter,(zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateBuiltin(e_inter,(yyvsp[-1].sptr));
+	;}
     break;
 
   case 294:
-#line 2565 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2566 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroySetList((zz_vsp[-1].sptr));
-	  (zz_val.eptr) = NULL;
+	  DestroySetList((yyvsp[-1].sptr));
+	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("CARD");
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 295:
-#line 2572 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2573 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateBuiltin(e_card,(zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateBuiltin(e_card,(yyvsp[-1].sptr));
+	;}
     break;
 
   case 296:
-#line 2576 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2577 "base\\generic\\compiler\\ascParse.y"
     {
-	  DestroySetList((zz_vsp[-1].sptr));
-	  (zz_val.eptr) = NULL;
+	  DestroySetList((yyvsp[-1].sptr));
+	  (yyval.eptr) = NULL;
 	  ErrMsg_ParensBrackets("CHOICE");
 	  g_untrapped_error++;
-	}
+	;}
     break;
 
   case 297:
-#line 2583 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2584 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateBuiltin(e_choice,(zz_vsp[-1].sptr));
-	}
+	  (yyval.eptr) = CreateBuiltin(e_choice,(yyvsp[-1].sptr));
+	;}
     break;
 
   case 298:
-#line 2587 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2588 "base\\generic\\compiler\\ascParse.y"
     {
 	  CONST struct Func *fptr;
-	  if ((fptr = LookupFunc(SCP((zz_vsp[-3].id_ptr))))!=NULL) {
-	    (zz_val.eptr) = JoinExprLists((zz_vsp[-1].eptr),CreateFuncExpr(fptr));
+	  if ((fptr = LookupFunc(SCP((yyvsp[-3].id_ptr))))!=NULL) {
+	    (yyval.eptr) = JoinExprLists((yyvsp[-1].eptr),CreateFuncExpr(fptr));
 	  } else {
-	    (zz_val.eptr) = NULL;
-	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP((zz_vsp[-3].id_ptr)));
+	    (yyval.eptr) = NULL;
+	    error_reporter_current_line(ASC_USER_ERROR,"Function '%s' is not defined.",SCP((yyvsp[-3].id_ptr)));
 	    g_untrapped_error++;
 	  }
-	}
+	;}
     break;
 
   case 299:
-#line 2598 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2599 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = (zz_vsp[-1].eptr);
-	}
+	  (yyval.eptr) = (yyvsp[-1].eptr);
+	;}
     break;
 
   case 300:
-#line 2605 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2606 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_equal);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_equal);
+	;}
     break;
 
   case 301:
-#line 2609 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2610 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_less);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_less);
+	;}
     break;
 
   case 302:
-#line 2613 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2614 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_greater);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_greater);
+	;}
     break;
 
   case 303:
-#line 2617 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2618 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_lesseq);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_lesseq);
+	;}
     break;
 
   case 304:
-#line 2621 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2622 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_greatereq);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_greatereq);
+	;}
     break;
 
   case 305:
-#line 2625 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2626 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_notequal);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_notequal);
+	;}
     break;
 
   case 306:
-#line 2632 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2633 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_boolean_eq);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_boolean_eq);
+	;}
     break;
 
   case 307:
-#line 2636 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2637 "base\\generic\\compiler\\ascParse.y"
     {
-	  (zz_val.eptr) = CreateOpExpr(e_boolean_neq);
-	}
+	  (yyval.eptr) = CreateOpExpr(e_boolean_neq);
+	;}
     break;
 
 
     }
 
 /* Line 1037 of yacc.c.  */
-#line 4887 "y.tab.c"
+#line 4865 "base\\generic\\compiler\\ascParse.c"
 
-  zz_vsp -= zz_len;
-  zz_ssp -= zz_len;
+  yyvsp -= yylen;
+  yyssp -= yylen;
 
 
-  ZZ__STACK_PRINT (zz_ss, zz_ssp);
+  YY_STACK_PRINT (yyss, yyssp);
 
-  *++zz_vsp = zz_val;
+  *++yyvsp = yyval;
 
 
   /* Now `shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
      number reduced by.  */
 
-  zz_n = zz_r1[zz_n];
+  yyn = yyr1[yyn];
 
-  zz_state = zz_pgoto[zz_n - ZZ_NTOKENS] + *zz_ssp;
-  if (0 <= zz_state && zz_state <= ZZ_LAST && zz_check[zz_state] == *zz_ssp)
-    zz_state = zz_table[zz_state];
+  yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
+  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp)
+    yystate = yytable[yystate];
   else
-    zz_state = zz_defgoto[zz_n - ZZ_NTOKENS];
+    yystate = yydefgoto[yyn - YYNTOKENS];
 
-  goto zz_newstate;
+  goto yynewstate;
 
 
 /*------------------------------------.
-| zz_errlab -- here on detecting error |
+| yyerrlab -- here on detecting error |
 `------------------------------------*/
-zz_errlab:
+yyerrlab:
   /* If not already recovering from an error, report this error.  */
-  if (!zz_errstatus)
+  if (!yyerrstatus)
     {
-      ++zz_nerrs;
-#if ZZ_ERROR_VERBOSE
-      zz_n = zz_pact[zz_state];
+      ++yynerrs;
+#if YYERROR_VERBOSE
+      yyn = yypact[yystate];
 
-      if (ZZ_PACT_NINF < zz_n && zz_n < ZZ_LAST)
+      if (YYPACT_NINF < yyn && yyn < YYLAST)
 	{
-	  ZZ_SIZE_T zz_size = 0;
-	  int zz_type = ZZ_TRANSLATE (zz_char);
-	  const char* zz_prefix;
-	  char *zz_msg;
-	  int zz_x;
+	  YYSIZE_T yysize = 0;
+	  int yytype = YYTRANSLATE (yychar);
+	  const char* yyprefix;
+	  char *yymsg;
+	  int yyx;
 
-	  /* Start ZZ_X at -ZZ_N if negative to avoid negative indexes in
-	     ZZ_CHECK.  */
-	  int zz_xbegin = zz_n < 0 ? -zz_n : 0;
+	  /* Start YYX at -YYN if negative to avoid negative indexes in
+	     YYCHECK.  */
+	  int yyxbegin = yyn < 0 ? -yyn : 0;
 
-	  /* Stay within bounds of both zz_check and zz_tname.  */
-	  int zz_checklim = ZZ_LAST - zz_n;
-	  int zz_xend = zz_checklim < ZZ_NTOKENS ? zz_checklim : ZZ_NTOKENS;
-	  int zz_count = 0;
+	  /* Stay within bounds of both yycheck and yytname.  */
+	  int yychecklim = YYLAST - yyn;
+	  int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+	  int yycount = 0;
 
-	  zz_prefix = ", expecting ";
-	  for (zz_x = zz_xbegin; zz_x < zz_xend; ++zz_x)
-	    if (zz_check[zz_x + zz_n] == zz_x && zz_x != ZZ_TERROR)
+	  yyprefix = ", expecting ";
+	  for (yyx = yyxbegin; yyx < yyxend; ++yyx)
+	    if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
 	      {
-		zz_size += zz_strlen (zz_prefix) + zz_strlen (zz_tname [zz_x]);
-		zz_count += 1;
-		if (zz_count == 5)
+		yysize += yystrlen (yyprefix) + yystrlen (yytname [yyx]);
+		yycount += 1;
+		if (yycount == 5)
 		  {
-		    zz_size = 0;
+		    yysize = 0;
 		    break;
 		  }
 	      }
-	  zz_size += (sizeof ("syntax error, unexpected ")
-		     + zz_strlen (zz_tname[zz_type]));
-	  zz_msg = (char *) ZZ_STACK_ALLOC (zz_size);
-	  if (zz_msg != 0)
+	  yysize += (sizeof ("syntax error, unexpected ")
+		     + yystrlen (yytname[yytype]));
+	  yymsg = (char *) YYSTACK_ALLOC (yysize);
+	  if (yymsg != 0)
 	    {
-	      char *zz_p = zz_stpcpy (zz_msg, "syntax error, unexpected ");
-	      zz_p = zz_stpcpy (zz_p, zz_tname[zz_type]);
+	      char *yyp = yystpcpy (yymsg, "syntax error, unexpected ");
+	      yyp = yystpcpy (yyp, yytname[yytype]);
 
-	      if (zz_count < 5)
+	      if (yycount < 5)
 		{
-		  zz_prefix = ", expecting ";
-		  for (zz_x = zz_xbegin; zz_x < zz_xend; ++zz_x)
-		    if (zz_check[zz_x + zz_n] == zz_x && zz_x != ZZ_TERROR)
+		  yyprefix = ", expecting ";
+		  for (yyx = yyxbegin; yyx < yyxend; ++yyx)
+		    if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
 		      {
-			zz_p = zz_stpcpy (zz_p, zz_prefix);
-			zz_p = zz_stpcpy (zz_p, zz_tname[zz_x]);
-			zz_prefix = " or ";
+			yyp = yystpcpy (yyp, yyprefix);
+			yyp = yystpcpy (yyp, yytname[yyx]);
+			yyprefix = " or ";
 		      }
 		}
-	      zz_error (zz_msg);
-	      ZZ_STACK_FREE (zz_msg);
+	      yyerror (yymsg);
+	      YYSTACK_FREE (yymsg);
 	    }
 	  else
-	    zz_error ("syntax error; also virtual memory exhausted");
+	    yyerror ("syntax error; also virtual memory exhausted");
 	}
       else
-#endif /* ZZ_ERROR_VERBOSE */
-	zz_error ("syntax error");
+#endif /* YYERROR_VERBOSE */
+	yyerror ("syntax error");
     }
 
 
 
-  if (zz_errstatus == 3)
+  if (yyerrstatus == 3)
     {
       /* If just tried and failed to reuse look-ahead token after an
 	 error, discard it.  */
 
-      if (zz_char <= ZZ_EOF)
+      if (yychar <= YYEOF)
         {
           /* If at end of input, pop the error token,
 	     then the rest of the stack, then return failure.  */
-	  if (zz_char == ZZ_EOF)
+	  if (yychar == YYEOF)
 	     for (;;)
 	       {
 
-		 ZZ_POPSTACK;
-		 if (zz_ssp == zz_ss)
-		   ZZ_ABORT;
-		 zz_destruct ("Error: popping",
-                             zz_stos[*zz_ssp], zz_vsp);
+		 YYPOPSTACK;
+		 if (yyssp == yyss)
+		   YYABORT;
+		 yydestruct ("Error: popping",
+                             yystos[*yyssp], yyvsp);
 	       }
         }
       else
 	{
-	  zz_destruct ("Error: discarding", zz_token, &zz_lval);
-	  zz_char = ZZ_EMPTY;
+	  yydestruct ("Error: discarding", yytoken, &yylval);
+	  yychar = YYEMPTY;
 	}
     }
 
   /* Else will try to reuse look-ahead token after shifting the error
      token.  */
-  goto zz_errlab1;
+  goto yyerrlab1;
 
 
 /*---------------------------------------------------.
-| zz_errorlab -- error raised explicitly by ZZ_ERROR.  |
+| yyerrorlab -- error raised explicitly by YYERROR.  |
 `---------------------------------------------------*/
-zz_errorlab:
+yyerrorlab:
 
 #ifdef __GNUC__
-  /* Pacify GCC when the user code never invokes ZZ_ERROR and the label
-     zz_errorlab therefore never appears in user code.  */
+  /* Pacify GCC when the user code never invokes YYERROR and the label
+     yyerrorlab therefore never appears in user code.  */
   if (0)
-     goto zz_errorlab;
+     goto yyerrorlab;
 #endif
 
-zz_vsp -= zz_len;
-  zz_ssp -= zz_len;
-  zz_state = *zz_ssp;
-  goto zz_errlab1;
+yyvsp -= yylen;
+  yyssp -= yylen;
+  yystate = *yyssp;
+  goto yyerrlab1;
 
 
 /*-------------------------------------------------------------.
-| zz_errlab1 -- common code for both syntax error and ZZ_ERROR.  |
+| yyerrlab1 -- common code for both syntax error and YYERROR.  |
 `-------------------------------------------------------------*/
-zz_errlab1:
-  zz_errstatus = 3;	/* Each real token shifted decrements this.  */
+yyerrlab1:
+  yyerrstatus = 3;	/* Each real token shifted decrements this.  */
 
   for (;;)
     {
-      zz_n = zz_pact[zz_state];
-      if (zz_n != ZZ_PACT_NINF)
+      yyn = yypact[yystate];
+      if (yyn != YYPACT_NINF)
 	{
-	  zz_n += ZZ_TERROR;
-	  if (0 <= zz_n && zz_n <= ZZ_LAST && zz_check[zz_n] == ZZ_TERROR)
+	  yyn += YYTERROR;
+	  if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
 	    {
-	      zz_n = zz_table[zz_n];
-	      if (0 < zz_n)
+	      yyn = yytable[yyn];
+	      if (0 < yyn)
 		break;
 	    }
 	}
 
       /* Pop the current state because it cannot handle the error token.  */
-      if (zz_ssp == zz_ss)
-	ZZ_ABORT;
+      if (yyssp == yyss)
+	YYABORT;
 
 
-      zz_destruct ("Error: popping", zz_stos[zz_state], zz_vsp);
-      ZZ_POPSTACK;
-      zz_state = *zz_ssp;
-      ZZ__STACK_PRINT (zz_ss, zz_ssp);
+      yydestruct ("Error: popping", yystos[yystate], yyvsp);
+      YYPOPSTACK;
+      yystate = *yyssp;
+      YY_STACK_PRINT (yyss, yyssp);
     }
 
-  if (zz_n == ZZ_FINAL)
-    ZZ_ACCEPT;
+  if (yyn == YYFINAL)
+    YYACCEPT;
 
-  *++zz_vsp = zz_lval;
+  *++yyvsp = yylval;
 
 
   /* Shift the error token. */
-  ZZ__SYMBOL_PRINT ("Shifting", zz_stos[zz_n], zz_vsp, zz_lsp);
+  YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
 
-  zz_state = zz_n;
-  goto zz_newstate;
+  yystate = yyn;
+  goto yynewstate;
 
 
 /*-------------------------------------.
-| zz_acceptlab -- ZZ_ACCEPT comes here.  |
+| yyacceptlab -- YYACCEPT comes here.  |
 `-------------------------------------*/
-zz_acceptlab:
-  zz_result = 0;
-  goto zz_return;
+yyacceptlab:
+  yyresult = 0;
+  goto yyreturn;
 
 /*-----------------------------------.
-| zz_abortlab -- ZZ_ABORT comes here.  |
+| yyabortlab -- YYABORT comes here.  |
 `-----------------------------------*/
-zz_abortlab:
-  zz_destruct ("Error: discarding lookahead",
-              zz_token, &zz_lval);
-  zz_char = ZZ_EMPTY;
-  zz_result = 1;
-  goto zz_return;
+yyabortlab:
+  yydestruct ("Error: discarding lookahead",
+              yytoken, &yylval);
+  yychar = YYEMPTY;
+  yyresult = 1;
+  goto yyreturn;
 
-#ifndef zz_overflow
+#ifndef yyoverflow
 /*----------------------------------------------.
-| zz_overflowlab -- parser overflow comes here.  |
+| yyoverflowlab -- parser overflow comes here.  |
 `----------------------------------------------*/
-zz_overflowlab:
-  zz_error ("parser stack overflow");
-  zz_result = 2;
+yyoverflowlab:
+  yyerror ("parser stack overflow");
+  yyresult = 2;
   /* Fall through.  */
 #endif
 
-zz_return:
-#ifndef zz_overflow
-  if (zz_ss != zz_ssa)
-    ZZ_STACK_FREE (zz_ss);
+yyreturn:
+#ifndef yyoverflow
+  if (yyss != yyssa)
+    YYSTACK_FREE (yyss);
 #endif
-  return zz_result;
+  return yyresult;
 }
 
 
-#line 2640 "/tmp/trunk/base/autotools/../generic/compiler/ascParse.y"
+#line 2641 "base\\generic\\compiler\\ascParse.y"
 
 /*
  * We really need to do something about freeing up the productions
@@ -5119,7 +5097,7 @@ zz_return:
  * for example  z[i IN [1..2]][j IN [process[i]] IS_A mass; eats a ton.
  */
 int
-zz_error(char *s)
+yyerror(char *s)
 {
   g_untrapped_error++;
   if (Asc_CurrentModule() != NULL) {

@@ -33,7 +33,7 @@ if env.has_key('HAVE_YACC'):
 	parserheader = 'ascParse.h'
 else:
 	parsersource = 'ascParse_no_yacc.c'
-	parserheader = 'ascParse_no_yacc.h'
+	parserheader = env.Command('ascParse.h', 'ascParse_no_yacc.h',Copy('$TARGET', '$SOURCE'))
 
 if env.has_key('HAVE_LEX'):
 	scannersource = 'scanner.l'
