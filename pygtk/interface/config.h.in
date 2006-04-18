@@ -6,6 +6,8 @@
 #define ASCXX_CONFIG_H
 
 #define ASC_BUILDING_INTERFACE
+extern "C"{
 #include <utilities/ascConfig.h>
+}
 
 #endif

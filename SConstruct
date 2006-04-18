@@ -11,21 +11,6 @@ version = "0.9.6rc0"
 opts = Options(['options.cache', 'config.py'])
 #print "PLATFORM = ",platform.system()
 
-# Import the outside environment
-env = Environment(ENV=os.environ)
-	
-if platform.system()=='Windows' and env.has_key('MSVS'):
-	print "INCLUDE =",env['ENV']['INCLUDE']
-	print "LIB =",env['ENV']['LIB']
-	print "LINK =",env['LINK']
-	print "LINKCOM =",env['LINKCOM']
-	print "AR =",env['AR']
-	print "ARCOM =",env['ARCOM']
-	#env['AR']='link /lib'
-	env.Append(CPPPATH=env['ENV']['INCLUDE'])
-	env.Append(LIBPATH=env['ENV']['LIB'])
-	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
-
 if platform.system()=="Windows":
 	default_tcl_lib = "tcl83"
 	default_tk_lib = "tk83"
@@ -247,6 +232,28 @@ if platform.system()=="Windows":
 # TODO: flags for optimisation
 # TODO: turning on/off bintoken functionality
 # TODO: Where will the 'Makefile.bt' file be installed?
+
+# Import the outside environment
+
+if os.environ.has_key('OSTYPE') and os.environ['OSTYPE']=='msys':
+	env = Environment(ENV=os.environ, tools=['mingw','swig','lex','yacc'])
+else:
+	env = Environment(ENV=os.environ, tools=['swig','lex','yacc'])
+
+env['HAVE_LEX']=True
+env['HAVE_YACC']=True
+
+if platform.system()=='Windows' and env.has_key('MSVS'):
+	print "INCLUDE =",env['ENV']['INCLUDE']
+	print "LIB =",env['ENV']['LIB']
+	print "LINK =",env['LINK']
+	print "LINKCOM =",env['LINKCOM']
+	print "AR =",env['AR']
+	print "ARCOM =",env['ARCOM']
+	#env['AR']='link /lib'
+	env.Append(CPPPATH=env['ENV']['INCLUDE'])
+	env.Append(LIBPATH=env['ENV']['LIB'])
+	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
 
 opts.Update(env)
 opts.Save('options.cache',env)
