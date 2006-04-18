@@ -129,9 +129,11 @@
 	An attempt to prevent unexported symbols from slipping through
 	the net when developing with GCC on linux:
 */
+/*
 #if defined(__GNUC__) && __GNUC__ >= 4
 # pragma GCC visibility push(hidden)
 #endif
+*/
 
 /**
 	What kind of C compiler do we have?
