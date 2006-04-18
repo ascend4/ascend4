@@ -78,7 +78,6 @@
 #include "instantiate.h"
 #include "universal.h"
 #include "packages.h"
-#include "interface.h"
 #include "pending.h"
 #include "scanner.h"
 #include "simlist.h"
