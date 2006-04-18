@@ -1,10 +1,9 @@
-#include "reporter.h"
-
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
 using namespace std;
 
+#include "reporter.h"
 #include "solver.h"
 
 extern "C"{

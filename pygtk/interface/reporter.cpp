@@ -6,6 +6,11 @@
 #include <iostream>
 using namespace std;
 
+#include "config.h"
+#ifndef ASCXX_USE_PYTHON
+# error "Where's ASCXX_USE_PYTHON?"
+#endif
+
 #include "reporter.h"
 
 static const int REPORTER_MAX_ERROR_MSG = 1024;
@@ -61,13 +66,13 @@ int
 Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	PyObject *pyfunc, *pyarglist, *pyresult;
 	pyfunc = (PyObject *)client_data;
-	
+
 	char msg[REPORTER_MAX_ERROR_MSG];
 	vsprintf(msg,fmt,args);
 
 	//cerr << "reportErrorPython: msg=" << msg ;
 	//cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;
-	
+
 	pyarglist = Py_BuildValue("(H,z,i,z)",sev,filename,line,msg);             // Build argument list
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
 	Py_DECREF(pyarglist);                           // Trash arglist
@@ -79,9 +84,9 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	}else{
 		//cerr << "pyresult = 0"<< endl;
 	}
-		
+
 	Py_XDECREF(pyresult);
-	return res;	
+	return res;
 }
 
 void

@@ -63,7 +63,7 @@ char *DimNames[NUM_DIMENS]={
 
 void InitDimenList(void)
 {
-  FPRINTF(ASCERR,"INITIALISING DIMENSION LIST\n");
+  /* FPRINTF(ASCERR,"INITIALISING DIMENSION LIST\n"); */
 
   g_dimen_list = gl_create(200L);
   AssertMemory(g_dimen_list);
@@ -254,12 +254,12 @@ int CmpDimen(CONST dim_type *d1, CONST dim_type *d2)
 	if (WILD(d2)) { return 1; }
 	for(c=0;c<NUM_DIMENS;c++) {
 		i = CmpF( GetDimFraction(*d1,c), GetDimFraction(*d2,c) );
-		if (i<0) { 
+		if (i<0) {
 			return -1;
-		} else { 
-			if (i>0) { 
-				return 1; 
-			} 
+		} else {
+			if (i>0) {
+				return 1;
+			}
 			/* else continue to next dimen */
 		}
   }
