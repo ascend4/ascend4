@@ -44,6 +44,50 @@
 # define ASC_BUILDING_LIBASCEND
 #endif
 
+
+/*
+*
+*  Determine the Operating System we are building on
+*
+*/
+
+/* windows */
+#if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
+# ifndef __WIN32__
+#  define __WIN32__
+# endif
+#endif
+
+#ifdef __alpha
+/** DEC Alpha running OSF */
+# define __ALPHA_OSF__
+#endif /* __alpha */
+
+#ifdef __hpux
+/** HP running HP-UX */
+# define __HPUX__
+#endif /* __hpux */
+
+#ifdef _AIX
+/** IBM RS6000 or PowerPC running AIX */
+# define __IBM_AIX__
+#endif /* _AIX */
+
+#ifdef __sgi
+/** SGI running IRIX */
+# define __SGI_IRIX__
+#endif /* __sgi */
+
+#if defined(__sun) || defined(sun)
+# ifdef __SVR4
+/** Sparc running Solaris 2.x (SunOS 5.x) */
+#  define __SUN_SOLARIS__
+# else /* __SVR4 */
+/** Sparc running SunOS 4.x (Solaris 1.x) */
+#  define __SUN_SUNOS__
+# endif /* __SVR4 */
+#endif /* __sun || sun */
+
 /*
 	ASCEND code in base/generic only EXPORTS symbols, no imports.
 	The ASC_DLLSPEC macro will, depending on whether we are
@@ -65,8 +109,8 @@
 #endif
 
 #ifdef HAVE_DECLSPEC_DLL
-# define ASC_EXPORT(TYPE) TYPE __declspec(dllexport)
-# define ASC_IMPORT(TYPE) TYPE __declspec(dllimport)
+# define ASC_EXPORT(TYPE)  __declspec(dllexport)  TYPE
+# define ASC_IMPORT(TYPE)  __declspec(dllimport)  TYPE
 #else
 # define ASC_EXPORT(TYPE) TYPE
 # define ASC_IMPORT(TYPE) TYPE
@@ -122,50 +166,6 @@
 #  define QUIET2(v) ((char **)v)
 # endif
 #endif
-
-/*
- *
- *  Determine the Operating System we are building on
- *
- */
-
-/* windows */
-#if defined(__WIN32__) || defined(_WIN32) || defined(WIN32)
-# ifndef __WIN32__
-#  define __WIN32__
-# endif
-#endif
-
-#ifdef __alpha
-/** DEC Alpha running OSF */
-# define __ALPHA_OSF__
-#endif /* __alpha */
-
-#ifdef __hpux
-/** HP running HP-UX */
-# define __HPUX__
-#endif /* __hpux */
-
-#ifdef _AIX
-/** IBM RS6000 or PowerPC running AIX */
-# define __IBM_AIX__
-#endif /* _AIX */
-
-#ifdef __sgi
-/** SGI running IRIX */
-# define __SGI_IRIX__
-#endif /* __sgi */
-
-#if defined(__sun) || defined(sun)
-# ifdef __SVR4
-/** Sparc running Solaris 2.x (SunOS 5.x) */
-#  define __SUN_SOLARIS__
-# else /* __SVR4 */
-/** Sparc running SunOS 4.x (Solaris 1.x) */
-#  define __SUN_SUNOS__
-# endif /* __SVR4 */
-#endif /* __sun || sun */
-
 
 /*
  *  Make certain we have proper limits defined
@@ -243,6 +243,7 @@ if 0 block is broken. */
  */
 
 /* for use by ascmalloc, which is also practically everywhere */
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 /*
