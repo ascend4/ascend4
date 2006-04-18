@@ -15,10 +15,14 @@ if platform.system()=="Windows":
 	default_tcl_lib = "tcl83"
 	default_tk_lib = "tk83"
 	default_tktable_lib = "Tktable28"
+	default_install_assets = "glade/"
+	icon_extension = '.png'
 else:
 	default_tcl_lib = "tcl"
 	default_tk_lib = "tk"
 	default_tktable_lib = "Tktable2.8"
+	default_install_assets = "$INSTALL_DATA/ascend/glade/"
+	icon_extension = '.svg'
 	
 
 # Package linking option
@@ -202,13 +206,6 @@ opts.Add(
 	,"$INSTALL_PREFIX/include"
 )
 
-if platform.system()=="Windows":
-	default_install_assets = "glade/"
-	icon_extension = '.png'
-else:
-	default_install_assets = "$INSTALL_DATA/ascend/glade/"
-	icon_extension = '.svg'
-
 opts.Add(
 	'PYGTK_ASSETS'
 	,'Default location for Glade assets (placed in pygtk/interface/config.py)'
@@ -238,7 +235,11 @@ if platform.system()=="Windows":
 if os.environ.has_key('OSTYPE') and os.environ['OSTYPE']=='msys':
 	env = Environment(ENV=os.environ, tools=['mingw','swig','lex','yacc'])
 else:
-	env = Environment(ENV=os.environ, tools=['swig','lex','yacc'])
+	env = Environment(ENV=os.environ)
+	Tool('lex')(env)
+	Tool('yacc')(env)
+	Tool('fortran')(env)
+	Tool('swig')(env)
 
 env['HAVE_LEX']=True
 env['HAVE_YACC']=True
