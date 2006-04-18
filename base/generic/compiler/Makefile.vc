@@ -124,8 +124,8 @@ LIB_OBJS = \
 #	$(SED) -e "s\yy\zz_\g" -e "s\YY\ZZ_\g" < y.tab.h > ascParse.h
 #	$(RM) y.tab.c y.tab.h
 
-ascParse.obj: $(srcdir)\ascParse.y $(srcdir)\ascParse.c.no.yacc
-	$(MAKE) -f Makefile.vc ascParse.c.from.c
+ascParse.obj: $(srcdir)\ascParse.y $(srcdir)\ascParse_no_yacc.c
+	$(MAKE) -f Makefile.vc ascParse_no_yacc.c
 	$(CC) $(CC_SWITCHES) -DYY_USE_CONST -c ascParse.c
 
 ascParse.c.from.yacc: $(srcdir)\ascParse.y
@@ -136,11 +136,11 @@ ascParse.c.from.yacc: $(srcdir)\ascParse.y
 	$(SED) -e "s\yy\zz_\g" -e "s\YY\ZZ_\g" < y.tab.h > ascParse.h
 	$(RM) y.tab.c y.tab.h
 
-ascParse.c.from.c: $(srcdir)\ascParse.c.no.yacc
-	$(CP) $(srcdir)\ascParse.c.no.yacc ascParse.c
-	$(CP) $(srcdir)\ascParse.h.no.yacc ascParse.h
+ascParse.c.from.c: $(srcdir)\ascParse_no_yacc.c
+	$(CP) $(srcdir)\ascParse_no_yacc.c ascParse.c
+	$(CP) $(srcdir)\ascParse_no_yacc.h ascParse.h
 
-ascParse.h ascParse.c: $(srcdir)\ascParse.y $(srcdir)\ascParse.c.no.yacc
+ascParse.h ascParse.c: $(srcdir)\ascParse.y $(srcdir)\ascParse_no_yacc.c
 	$(MAKE) -f Makefile.vc ascParse.c.from.c
 
 #  rounded needs a special define
@@ -156,17 +156,17 @@ rounded.obj: $(srcdir)\rounded.h $(srcdir)\rounded.c $(srcdir)\compiler.h
 #      scanner.c.from.c      ---to use the pregenerated C file
 #  depending on the value of $(LEX).
 
-scanner.obj: $(srcdir)\scanner.l $(srcdir)\scanner.c.no.flex .\ascParse.h
+scanner.obj: $(srcdir)\scanner.l $(srcdir)\scanner_no_flex.c .\ascParse.h
 	$(MAKE) -f Makefile.vc scanner.c.from.c
 	$(CC) $(CC_SWITCHES) -DYY_USE_CONST -c scanner.c
 
 scanner.c.from.flex: $(srcdir)\scanner.l .\ascParse.h
 	$(LEX) -Pzz_ -t $(srcdir)\scanner.l > scanner.c
 
-scanner.c.from.c: $(srcdir)\scanner.c.no.flex
-	$(CP) $(srcdir)\scanner.c.no.flex scanner.c
+scanner.c.from.c: $(srcdir)\scanner_no_flex.c
+	$(CP) $(srcdir)\scanner_no_flex.c scanner.c
 
-scanner.c: $(srcdir)\scanner.l $(srcdir)\scanner.c.no.flex .\ascParse.h
+scanner.c: $(srcdir)\scanner.l $(srcdir)\scanner_no_flex.c .\ascParse.h
 	$(MAKE) -f Makefile.vc scanner.c.from.c
 
 

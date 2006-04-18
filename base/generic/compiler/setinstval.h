@@ -146,19 +146,19 @@ extern void DestroySet(struct set_t *set);
 extern int NullSet(CONST struct set_t *set);
 /**<  Testing if the set is empty.  TRUE if set is empty. */
 
-extern ASC_DLLSPEC(unsigned long) Cardinality(CONST struct set_t *set);
+ASC_DLLSPEC(unsigned long) Cardinality(CONST struct set_t *set);
 /**<  Return the number of members. */
 
-extern ASC_DLLSPEC(symchar*) FetchStrMember(CONST struct set_t *set, unsigned long n);
+ASC_DLLSPEC(symchar*) FetchStrMember(CONST struct set_t *set, unsigned long n);
 /**<  Returns the nth (internal sort order ) member symbol. */
 
-extern ASC_DLLSPEC(long) FetchIntMember(CONST struct set_t *set, unsigned long n);
+ASC_DLLSPEC(long) FetchIntMember(CONST struct set_t *set, unsigned long n);
 /**<  Returns the nth (internal sort order ) member number. */
 
 extern void SetIterate(struct set_t *set, void (*func)());
 /**<  Calls func for every element in set. */
 
-extern ASC_DLLSPEC(enum set_kind) SetKind(CONST struct set_t *set);
+ASC_DLLSPEC(enum set_kind) SetKind(CONST struct set_t *set);
 /**<  Returns the type of the set. */
 
 extern int SetsEqual(CONST struct set_t *s1, CONST struct set_t *s2);

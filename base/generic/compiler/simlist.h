@@ -65,7 +65,7 @@ enum CreateInst_format {
   e_patch           /**< Compile a patch. */
 };
 
-extern struct ASC_DLLSPEC(Instance *) SimsCreateInstance(
+ASC_DLLSPEC(struct Instance *) SimsCreateInstance(
 	symchar *type,
 	symchar *name,
 	enum CreateInst_format format,
@@ -90,7 +90,7 @@ extern struct ASC_DLLSPEC(Instance *) SimsCreateInstance(
 	@return A pointer to the newly-created simulation instance.
 */
 
-extern ASC_DLLSPEC(void) Asc_DestroySimulations(void);
+ASC_DLLSPEC(void) Asc_DestroySimulations(void);
 /**<  Destroys all known instances on the simulation list. */
 
 

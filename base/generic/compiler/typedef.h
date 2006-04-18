@@ -221,7 +221,7 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
-extern ASC_DLLSPEC(void) DefineFundamentalTypes(void);
+ASC_DLLSPEC(void) DefineFundamentalTypes(void);
 /**<
  *  Define the fundamental and constant basetypes used in ascend.
  *  They will be named following the defines in type_desc.h.

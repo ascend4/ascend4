@@ -60,7 +60,7 @@
  * time.
  */
 
-extern ASC_DLLSPEC(int) slvDOF_eligible(slv_system_t server, int32 **vil);
+ASC_DLLSPEC(int) slvDOF_eligible(slv_system_t server, int32 **vil);
 /**
  * @return 1 if able to determine lists, 0 otherwise.
  * @param vil pointer to an int32 array which will fill in and return
@@ -75,7 +75,7 @@ extern ASC_DLLSPEC(int) slvDOF_eligible(slv_system_t server, int32 **vil);
  * since they cannot help the DOF state of the system.
  */
 
-extern ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
+ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
                              int32 relindex,
                              int32 **vil,
                              int32 **ril,
@@ -96,7 +96,7 @@ extern ASC_DLLSPEC(int) slvDOF_structsing(slv_system_t server,
  *  @param fil  int32 **, the vars which reduce the structural singularity if freed.
  */
 
-extern ASC_DLLSPEC(int32) slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
+ASC_DLLSPEC(int32) slvDOF_status(slv_system_t server, int32 *status, int32 *dof);
 /**<
  *  Return the status of the current problem.
  *
@@ -123,7 +123,7 @@ extern int32 get_globally_consistent_eligible(slv_system_t server,
  *  elist is incident vars eligible to be fixed.
  */
 
-extern ASC_DLLSPEC(int32) consistency_analysis(slv_system_t server, int32 **fixed);
+ASC_DLLSPEC(int32) consistency_analysis(slv_system_t server, int32 **fixed);
 /**<
  *  Returns 1 if system is structurally consistent, 0 otherwise.
  *  That is you send us the address of a pointer to an int32 array

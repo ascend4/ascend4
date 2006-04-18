@@ -334,7 +334,7 @@ extern int32 slv_get_obj_num(slv_system_t sys);
 	If the objective is NULL then -1 is returned.
 */
 
-extern ASC_DLLSPEC(int32) slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
+ASC_DLLSPEC(int32) slv_near_bounds(slv_system_t sys, real64 epsilon, int32 **rip);
 /**<
 	Allocates rip and fills it with:
 	-#  the number of vars close to lower bounds

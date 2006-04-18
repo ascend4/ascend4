@@ -50,7 +50,7 @@ extern void WriteNameNode(FILE *f, CONST struct Name *n);
  *  Write just this one name node, and not any of the ones following it.
  */
 
-extern ASC_DLLSPEC(char*) WriteNameString(CONST struct Name *n);
+ASC_DLLSPEC(char*) WriteNameString(CONST struct Name *n);
 /**<
  * Return a string containing the name.
  * User is responsible for freeing string.

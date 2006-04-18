@@ -76,7 +76,7 @@
 
 #endif /* CLOCKS_PER_SEC */
 
-extern ASC_DLLSPEC(double) tm_cpu_time(void);
+ASC_DLLSPEC(double) tm_cpu_time(void);
 /**<
  *  Returns elapsed CPU time in seconds since the first call
  *  to a timing function.  The timing functions that, when

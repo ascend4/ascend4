@@ -172,7 +172,7 @@ typedef struct var_filter_structure {
 	@see var_instanceF()
 */
 
-extern ASC_DLLSPEC(SlvBackendToken) var_instanceF(const struct var_variable *var);
+ASC_DLLSPEC(SlvBackendToken) var_instanceF(const struct var_variable *var);
 /**<
 	Implementation function for var_instance().  Do not call this
 	function directly - use var_instance() instead.
@@ -188,7 +188,7 @@ extern char *var_make_xname(const struct var_variable *var);
 	Returns the index name, eg x23 rather than full name.
 	See var_make_name() for more information.
 */
-extern ASC_DLLSPEC(char*) var_make_name(
+ASC_DLLSPEC(char*) var_make_name(
 	const slv_system_t sys,
 	const struct var_variable *var
 );
@@ -285,7 +285,7 @@ extern void var_set_mindexF(struct var_variable *var, int32 index);
 	@see var_set_sindexF().
 */
 
-extern ASC_DLLSPEC(int32) var_sindexF(const struct var_variable *var);
+ASC_DLLSPEC(int32) var_sindexF(const struct var_variable *var);
 /**<
 	Implementation function for var_sindex().  Do not call this
 	function directly - use var_sindex() instead.
@@ -296,14 +296,14 @@ extern void var_set_sindexF(struct var_variable *var, int32 index);
 	function directly - use var_set_sindex() instead.
 */
 
-extern ASC_DLLSPEC(real64) var_value(const struct var_variable *var);
+ASC_DLLSPEC(real64) var_value(const struct var_variable *var);
 /**<  Returns the value of the variable. */
 extern void var_set_value(struct var_variable *var, real64 value);
 /**<
 	Sets the value of the variable.
 */
 
-extern ASC_DLLSPEC(real64) var_nominal(struct var_variable *var);
+ASC_DLLSPEC(real64) var_nominal(struct var_variable *var);
 /**<  Returns the nominal value of the variable, or 1.0 if it has none. */
 extern void var_set_nominal(struct var_variable *var, real64 nominal);
 /**<
@@ -311,14 +311,14 @@ extern void var_set_nominal(struct var_variable *var, real64 nominal);
 	If no nominal field in var, returns 1.0.
 */
 
-extern ASC_DLLSPEC(real64) var_lower_bound(struct var_variable *var);
+ASC_DLLSPEC(real64) var_lower_bound(struct var_variable *var);
 /**<  Returns the lower bound value of the variable. */
 extern void var_set_lower_bound(struct var_variable *var, real64 lower_bound);
 /**<
 	Sets the lower bound value of the variable.
 */
 
-extern ASC_DLLSPEC(real64) var_upper_bound(struct var_variable *var);
+ASC_DLLSPEC(real64) var_upper_bound(struct var_variable *var);
 /**<  Returns the upper bound value of the variable. */
 extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 /**<
@@ -412,7 +412,7 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 	@see var_set_flagsF().
 */
 
-extern ASC_DLLSPEC(uint32) var_flagsF(const struct var_variable *var);
+ASC_DLLSPEC(uint32) var_flagsF(const struct var_variable *var);
 /**<
 	Implementation function for var_flags().  Do not call this
 	function directly - use var_flags() instead.
@@ -423,7 +423,7 @@ extern void var_set_flagsF(struct var_variable *var, uint32 flags);
 	function directly - use var_set_flags() instead.
 */
 
-extern ASC_DLLSPEC(uint32) var_flagbit(const struct var_variable *rel, const uint32 name);
+ASC_DLLSPEC(uint32) var_flagbit(const struct var_variable *rel, const uint32 name);
 /**<
 	Returns the value of the bit specified from the variable flags.
 	name should be a VAR_xx flag defined above.

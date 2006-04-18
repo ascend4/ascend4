@@ -28,7 +28,7 @@ typedef int (*isInitializedFunc)(void);
 typedef void (*cleanupFunc)(void);
 
 /** A public datum. */
-extern ASC_DLLSPEC(int) value;
+ASC_DLLSPEC(int) value;
 
 /** Initializes the library. Returns -5. */
 int ASC_DLLSPEC init(void);

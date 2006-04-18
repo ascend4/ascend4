@@ -134,15 +134,15 @@ typedef enum error_severity_enum{
                              fprintf(stderr, ##__VA_ARGS__) + \
                              fprintf(stderr, ERR_NORM "\n"))
 
-#elif defined(_MSC_VER) && _MSC_VER >= 1310 /* Microsoft Visual C++ 2003 or newer */
+/*#elif defined(_MSC_VER) && _MSC_VER >= 1310 /* Microsoft Visual C++ 2003 or newer *
 #  define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);
-#  define ERROR_REPORTER_DEBUG(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__,## __VA_ARGS__)
-#  define ERROR_REPORTER_HERE(SEV,...)  error_reporter(SEV,__FILE__,__LINE__,__FUNCTION__, ## __VA_ARGS__)
-#  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
+#  define ERROR_REPORTER_DEBUG(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
+#  define ERROR_REPORTER_HERE(SEV,...)  error_reporter(SEV,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
+#  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, __VA_ARGS__)
 #  define CONSOLE_DEBUG(...)   (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
-                                fprintf(stderr, ##__VA_ARGS__) + \
+                                fprintf(stderr, __VA_ARGS__) + \
                                 fprintf(stderr, ERR_NORM "\n"))
-
+*/
 #else /* workaround for compilers without variadic macros: last resort */
 # define NO_VARIADIC_MACROS
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
@@ -150,10 +150,10 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_NOLINE error_reporter_noline
 # define CONSOLE_DEBUG console_debug
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,"[function?]");
-extern ASC_DLLSPEC(int) error_reporter_note_no_line(const char *fmt,...);
-extern ASC_DLLSPEC(int) error_reporter_here(const error_severity_t sev, const char *fmt,...);
-extern ASC_DLLSPEC(int) error_reporter_noline(const error_severity_t sev, const char *fmt,...);
-extern ASC_DLLSPEC(int) console_debug(const char *fmt,...);
+ASC_DLLSPEC(int) error_reporter_note_no_line(const char *fmt,...);
+ASC_DLLSPEC(int) error_reporter_here(const error_severity_t sev, const char *fmt,...);
+ASC_DLLSPEC(int) error_reporter_noline(const error_severity_t sev, const char *fmt,...);
+ASC_DLLSPEC(int) console_debug(const char *fmt,...);
 #endif
 
 #define ERROR_REPORTER_START_NOLINE(SEV) error_reporter_start(SEV,NULL,0,NULL);
@@ -180,30 +180,30 @@ typedef struct{
 	to print to stderr will be captured and passed to the error_reporter_callback
 	function for handling.
 */
-extern ASC_DLLSPEC(int) fprintf_error_reporter(FILE *file, const char *fmt, ...);
+ASC_DLLSPEC(int) fprintf_error_reporter(FILE *file, const char *fmt, ...);
 
 /**
 	If file!=stderr, this will do the usual thing. If file==stderr, it will output
 	the character via fprintf_error_reporter.
 */
-extern ASC_DLLSPEC(int) fputc_error_reporter(int c, FILE *file); /* just calls fprintf_error_reporter */
+ASC_DLLSPEC(int) fputc_error_reporter(int c, FILE *file); /* just calls fprintf_error_reporter */
 
 /**
 	This replaces the standard 'fflush' of Asc_FFlush. If file!=stderr, it will
 	call the standard fflush. If file==stderr, it will call error_reporter_end_flush.
 */
-extern ASC_DLLSPEC(int) fflush_error_reporter(FILE *file);
+ASC_DLLSPEC(int) fflush_error_reporter(FILE *file);
 
 /**
 	Start a cached error report. This means that multiple frprintf_error_reporter calls will
 	be stored in a global string until an error_reporter_end_flush is encountered.
 */
-extern ASC_DLLSPEC(int) error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
+ASC_DLLSPEC(int) error_reporter_start(const error_severity_t sev, const char *filename, const int line, const char *func);
 
 /**
 	Output the contents of the checked global string as an error report
 */
-extern ASC_DLLSPEC(int) error_reporter_end_flush();
+ASC_DLLSPEC(int) error_reporter_end_flush();
 
 /**
 	This #define saves you typing the list of arguments in your
@@ -250,7 +250,7 @@ typedef int (*ErrorReporter_fptr_t)(
 
 	@return follows the style of fprintf
 */
-extern ASC_DLLSPEC(int) error_reporter(
+ASC_DLLSPEC(int) error_reporter(
       const error_severity_t sev
     , const char *errfile
     , const int errline
@@ -263,7 +263,7 @@ extern ASC_DLLSPEC(int) error_reporter(
 	This format of the error reporter is useful if you must call it
 	from another variable-argument-list function.
 */
-extern ASC_DLLSPEC(int) va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
+ASC_DLLSPEC(int) va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 
 /**
 	Set error reporting callback function using this
@@ -271,7 +271,7 @@ extern ASC_DLLSPEC(int) va_error_reporter(ERROR_REPORTER_CALLBACK_ARGS);
 	to standard error, which is effectively what the
 	hitherto FPRINTF has done.
 */
-extern ASC_DLLSPEC(void) error_reporter_set_callback(
+ASC_DLLSPEC(void) error_reporter_set_callback(
 		const error_reporter_callback_t new_callback
 );
 

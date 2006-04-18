@@ -61,14 +61,14 @@ extern void InitializeLibrary(void);
  *  finished with the library.
  */
 
-extern ASC_DLLSPEC(void) DestroyLibrary(void);
+ASC_DLLSPEC(void) DestroyLibrary(void);
 /**<
  *  Cleans up after library use.
  *  Do not use any other functions or globals in this module after
  *  using this function until InitializeLibrary() is called.
  */
 
-extern ASC_DLLSPEC(struct TypeDescription*) FindType(symchar *name);
+ASC_DLLSPEC(struct TypeDescription*) FindType(symchar *name);
 /**<
  *  Finds the type description associated with name.
  *  Returns NULL if unable to locate the type.
@@ -139,7 +139,7 @@ extern struct gl_list_t *FindFundamentalTypes(void);
  *          fundamental types.
  */
 
-extern ASC_DLLSPEC(struct gl_list_t*) Asc_TypeByModule(CONST struct module_t *module);
+ASC_DLLSPEC(struct gl_list_t*) Asc_TypeByModule(CONST struct module_t *module);
 /**<
  *  Builds a list of type names defined in module that are already
  *  present in the main type library.  Destruction of the returned

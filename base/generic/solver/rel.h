@@ -149,7 +149,7 @@ typedef struct rel_filter_structure {
 } rel_filter_t;
 /**< Relation filter type */
 
-extern ASC_DLLSPEC(SlvBackendToken) rel_instance(struct rel_relation *rel);
+ASC_DLLSPEC(SlvBackendToken) rel_instance(struct rel_relation *rel);
 /**<
  *  Returns the instance pointer from a rel.
  */
@@ -265,7 +265,7 @@ extern void rel_set_model(struct rel_relation *rel, int32 index);
  *  models. Models are numbered from 1 to some upper limit.
  */
 
-extern ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
+ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
 /**<
  *  Retrieves the residual field of the given relation.
  *  Note that the residual is not actually computed by rel_residual:
@@ -324,7 +324,7 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
  *  @see rel_set_incidencesF()
  */
 
-extern ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
+ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
 /**<
  *  Implementation function for rel_n_incidences().  Do not call
  *  this function directly - use rel_n_incidences() instead.
@@ -359,7 +359,7 @@ extern struct var_variable
  *  long of vars.
  *  @see rel_incidence_list().
  */
-extern ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation *rel);
+ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation *rel);
 /**<
  *  Returns a pointer to an array rel_n_incidences(rel) long of vars.
  *  Each element of the array is a struct var_variable *.
@@ -408,7 +408,7 @@ extern void rel_set_flags(struct rel_relation *rel, uint32 flags);
  *  Sets the entire flag field to the value of flags given.
  */
 
-extern ASC_DLLSPEC(uint32) rel_flagbit(struct rel_relation *rel, uint32 name);
+ASC_DLLSPEC(uint32) rel_flagbit(struct rel_relation *rel, uint32 name);
 /**<
  *  Returns the value of the bit specified from the relation flags.
  *  name should be a REL_xx flag defined above)
@@ -590,7 +590,7 @@ extern void rel_set_flagbit(struct rel_relation *rel,
         rel_set_flagbit((rel),REL_IN_CUR_SUBREGION,(bitval))
 #define rel_set_generated(rel,bitval)		rel_set_flagbit((rel),REL_GENERATED,(bitval))
 
-extern ASC_DLLSPEC(uint32) rel_included(struct rel_relation *rel);
+ASC_DLLSPEC(uint32) rel_included(struct rel_relation *rel);
 /**<
  *  Retrieves the included field of the given relation.
  *  @todo This has side effects on the ascend instance, so it isn't

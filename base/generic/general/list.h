@@ -276,7 +276,7 @@ extern void gl_destroy(struct gl_list_t *list);
  *  @see gl_fetchF()
  */
 
-extern ASC_DLLSPEC(VOIDPTR) gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
+ASC_DLLSPEC(VOIDPTR) gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
 /**<
  *  Implementation function for gl_fetch() (debug mode).
  *  Do not call this function directly - use gl_fetch() instead.
@@ -407,7 +407,7 @@ extern void gl_append_list(struct gl_list_t *extendlist,
  *  @return The length as an unsigned long.
  *  @see gl_lengthF()
  */
-extern ASC_DLLSPEC(unsigned long) gl_lengthF(CONST struct gl_list_t *list);
+ASC_DLLSPEC(unsigned long) gl_lengthF(CONST struct gl_list_t *list);
 /**<
  *  Implementation function for gl_length() (debug mode).
  *  Do not call this function directly - use gl_length() instead.
@@ -551,7 +551,7 @@ extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
  *  @param func The comparison function to call during the sort.
  */
 
-extern ASC_DLLSPEC(void) gl_iterate(struct gl_list_t *list, IterateFunc func);
+ASC_DLLSPEC(void) gl_iterate(struct gl_list_t *list, IterateFunc func);
 /**<
  *  Executes the function func on all the members of the list.
  *  It will always execute the function on the items in the order

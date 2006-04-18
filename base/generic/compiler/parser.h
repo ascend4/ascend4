@@ -23,7 +23,7 @@
 #include <utilities/ascConfig.h>
 
 /* ascParse.y supplies this function. */
-extern ASC_DLLSPEC(int) zz_parse();
+ASC_DLLSPEC(int) zz_parse();
 extern int zz_lex();
 
 #endif

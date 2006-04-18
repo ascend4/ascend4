@@ -122,7 +122,7 @@ extern void WriteInstanceNameDS(Asc_DString * dsPtr,
  *  relative names instead, where the context is assumed to be ref.
  */
 
-extern ASC_DLLSPEC(char*) WriteInstanceNameString(CONST struct Instance *i,
+ASC_DLLSPEC(char*) WriteInstanceNameString(CONST struct Instance *i,
                                      CONST struct Instance *ref);
 /**<
  *  Return a string (that the user must destroy eventually).  The name that is
@@ -188,7 +188,7 @@ extern void WriteClique(FILE *f, CONST struct Instance *i);
  *  Print all the instance's clique members.
  */
 
-extern ASC_DLLSPEC(void) WriteInstance(FILE *f, CONST struct Instance *i);
+ASC_DLLSPEC(void) WriteInstance(FILE *f, CONST struct Instance *i);
 /**<
  *  Print the information contained in i.
  */

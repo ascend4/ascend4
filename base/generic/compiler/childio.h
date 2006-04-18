@@ -81,7 +81,7 @@ extern CONST char *WriteChildMetaDetails(void);
  * Issues a child missing error to file if the same childname/scope
  * has not been missing since the last call with any NULL argument.
  */
-extern ASC_DLLSPEC(void) WriteChildMissing(FILE *fp, char *scope, symchar *childname);
+ASC_DLLSPEC(void) WriteChildMissing(FILE *fp, char *scope, symchar *childname);
 
 #endif  /* ASC_CHILDIO_H */
 

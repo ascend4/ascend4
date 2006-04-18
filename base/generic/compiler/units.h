@@ -149,7 +149,7 @@ extern void ProcessUnitDef(struct UnitDefinition *udp);
  * messages to ascerr if not possible.
  */
 
-extern ASC_DLLSPEC(CONST struct Units*) LookupUnits(CONST char *c);
+ASC_DLLSPEC(CONST struct Units*) LookupUnits(CONST char *c);
 /**<
  *  <!--  const struct Units *LookupUnits(c)                           -->
  *  <!--  const char *c;                                               -->
@@ -181,7 +181,7 @@ extern CONST struct Units *DefineUnits(symchar *c, double conv, CONST dim_type *
  *       know where to fix it. BAA 6-94
  */
 
-extern ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
+ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
                                              unsigned long * CONST pos,
                                              int * CONST error_code);
 /**<
@@ -220,7 +220,7 @@ extern ASC_DLLSPEC(CONST struct Units*) FindOrDefineUnits(CONST char *c,
  *  </pre>
  */
 
-extern ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
+ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
 /**<
  *  <!--  errv = UnitsExplainError(unitsexpr,code,pos);                -->
  *  Returns an array of strings which may be helpful in

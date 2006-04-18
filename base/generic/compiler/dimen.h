@@ -113,7 +113,7 @@ extern void ClearDimensions(dim_type *d);
  *  Initialize all the dimension fractions to zero.
  */
 
-extern ASC_DLLSPEC(CONST dim_type*) Dimensionless(void);
+ASC_DLLSPEC(CONST dim_type*) Dimensionless(void);
 /**<
  *  Return a pointer to the dimensionless structure.
  */
@@ -170,7 +170,7 @@ extern void SetWild(dim_type *dim);
  *  Set the wild flag of dimensions dim.
  */
 
-extern ASC_DLLSPEC(int) IsWild(CONST dim_type *d);
+ASC_DLLSPEC(int) IsWild(CONST dim_type *d);
 /**<
  *  Return a true value if d is wild, and otherwise return a false value.
  */
@@ -193,7 +193,7 @@ extern int SameDimen(CONST dim_type *d1, CONST dim_type *d2);
  *  Wild and any non-wild are NOT the same.
  */
 
-extern ASC_DLLSPEC(int) CmpDimen(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC(int) CmpDimen(CONST dim_type *d1, CONST dim_type *d2);
 /**<
  *  Return 1,0,-1 if d1 is >,=, or < d2 respectively.
  */
@@ -300,7 +300,7 @@ extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *
  *  - Otherwise return NULL
  */
 
-extern ASC_DLLSPEC(void) PrintDimen(FILE *f ,CONST dim_type *d);
+ASC_DLLSPEC(void) PrintDimen(FILE *f ,CONST dim_type *d);
 /**< Print a dimension to a file.  Used in interface */
 extern void DumpDimens(FILE *f);
 /**< Dump all dimensions to a file.  Used in interface */

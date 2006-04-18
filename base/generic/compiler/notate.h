@@ -124,7 +124,7 @@ extern void DestroyNoteTmpList(struct NoteTmp *head);
  * returns 1.
  * <!--  err = InitNotesDatabase(dbid);                                -->
  */
-extern ASC_DLLSPEC(int) InitNotesDatabase(symchar *dbid);
+ASC_DLLSPEC(int) InitNotesDatabase(symchar *dbid);
 
 /**
  * Returns a gl_list containing symchar * of names (dbid)
@@ -136,7 +136,7 @@ extern struct gl_list_t *ListNotesDatabases(void);
  * Destroy the database, and necessarily all tokens being held.
  * if dbid is 0x1, destroys all databases.
  */
-extern ASC_DLLSPEC(void) DestroyNotesDatabase(symchar *dbid);
+ASC_DLLSPEC(void) DestroyNotesDatabase(symchar *dbid);
 
 /**
  * Clear any notes associated with the type named out of
@@ -279,7 +279,7 @@ extern struct gl_list_t *GetNotesAllLanguages(symchar *dbid);
  */
 
 /** Returns the 'Loaded Libraries' symchar, which is useful for the parser. */
-extern ASC_DLLSPEC(symchar*) LibraryNote(void);
+ASC_DLLSPEC(symchar*) LibraryNote(void);
 
 /** Returns the 'All Known Files' symchar, which is useful for the parser. */
 extern symchar *GlobalNote(void);

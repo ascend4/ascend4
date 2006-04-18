@@ -38,7 +38,7 @@
 
 #include <utilities/ascConfig.h>
 
-extern ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
+ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.
  *  This is our function wrapping dlopen/LoadLibrary.  It makes

@@ -149,7 +149,7 @@ extern void (*InterfacePtrATS)();
  *  Return the enumerated inst_t that indicates the type of Instance* i.
  *  @see InstanceKindF()
  */
-extern ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
+ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
 /**<
  *  <!--  enum inst_t InstanceKind(i);                                 -->
  *  <!--  const struct Instance *i;                                    -->
@@ -203,7 +203,7 @@ extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
  *  This is not an intelligent function.
  */
 
-extern ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
+ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
 /**<
  *  <!--  struct Instance *NextCliqueMember(i);                        -->
  *  <!--  const struct Instance *i;                                    -->
@@ -226,7 +226,7 @@ extern ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
  *  This function can be call on *any* type of instance.
  */
 
-extern ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
+ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
 /**<
  *  <!--  VOIDPTR GetInterfacePtr(i)                                   -->
  *  <!--  const struct Instance *i;                                    -->
@@ -266,7 +266,7 @@ extern ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
  *  instance_io.h.
  */
 
-extern ASC_DLLSPEC(void) SetInterfacePtr(struct Instance *i, VOIDPTR c);
+ASC_DLLSPEC(void) SetInterfacePtr(struct Instance *i, VOIDPTR c);
 /**<
  *  <!--  void SetInterfacePtr(i,c)                                    -->
  *  <!--  struct Instance *i;                                          -->
@@ -320,7 +320,7 @@ extern symchar *InstanceType(CONST struct Instance *i);
  *  relations though.
  */
 
-extern ASC_DLLSPEC(struct TypeDescription*) InstanceTypeDesc(CONST struct Instance *i);
+ASC_DLLSPEC(struct TypeDescription*) InstanceTypeDesc(CONST struct Instance *i);
 /**<
  *  <!--  struct TypeDescription *InstanceTypeDesc(i)                  -->
  *  <!--  const struct Instance *i;                                    -->
@@ -378,7 +378,7 @@ extern struct gl_list_t *FindSimulationAncestors(struct Instance *i);
  * Caller should destroy the list (but obviously not its content).
  */
 
-extern ASC_DLLSPEC(struct Instance*) GetSimulationRoot(struct Instance *i);
+ASC_DLLSPEC(struct Instance*) GetSimulationRoot(struct Instance *i);
 /**<
  *  <!--  struct Instance *GetSimulationRoot(i);                       -->
  *  <!--  struct Instance *i;                                          -->

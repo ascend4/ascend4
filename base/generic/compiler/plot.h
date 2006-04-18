@@ -85,7 +85,7 @@ extern void plot_prepare_file(struct Instance *inst, char *plotfilename);
  *  Writes data points for the given plot instance to the given plot file.
  */
 
-extern ASC_DLLSPEC(boolean) plot_allowed(struct Instance *inst);
+ASC_DLLSPEC(boolean) plot_allowed(struct Instance *inst);
 /**<
  *  Determines whether or not the given instance is allowed to be plotted
  *  (i.e. whether it is a refinement of plt_plot).

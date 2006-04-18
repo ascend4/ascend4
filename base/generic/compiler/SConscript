@@ -27,26 +27,36 @@ csrcs = Split("""
 
 # SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
 
-sloppy_csrcs = ['rounded.c','interval.c']
+import platform
+if platform.system()=="Windows":
+	parsersource = 'ascParse_no_yacc.c'
+	parserheader = 'ascParse_no_yacc.h'
+	scannersource = 'scanner_no_flex.c'
+else:
+	parsersource = 'ascParse.y'
+	parserheader = 'ascParse.h'
+	scannersource = 'scanner.l'
 
-objs = []
+parser = env.SharedObject(target=['ascParse'], source=parsersource
+	, YACCFLAGS=['-d','-pzz_']
+)
+
+scanner = env.SharedObject(target=['scanner'],source=scannersource
+	, LEXFLAGS=['-Pzz_']
+)
+
+objs = [parser,scanner]
+
+sloppy_csrcs = ['rounded.c','interval.c']
 
 for s in sloppy_csrcs:
 	objs += env.SharedObject(s
 	,CPPDEFINES=['SLOPPY']
 )	
 
-parser = env.CFile(target=['ascParse'], source='ascParse.y'
-	, YACCFLAGS=['-d','-pzz_']
-)
+env.Depends(scanner,[parserheader])
 
-scanner = env.CFile(target=['scanner.c'],source=['scanner.l']
-	, LEXFLAGS=['-Pzz_']
-)
-
-env.Depends(scanner,['ascParse.h'])
-
-for s in [csrcs, 'ascParse.c',scanner]:
+for s in [csrcs]:
 	objs += env.SharedObject(s)
 
 Return('objs')

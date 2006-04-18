@@ -103,9 +103,9 @@ union TableUnion {
 };
 
 # ifdef __STDC__
-extern ASC_DLLSPEC(int) ExportBinTokenCTable(struct TableC *, int);
+ASC_DLLSPEC(int) ExportBinTokenCTable(struct TableC *, int);
 # else
-extern ASC_DLLSPEC(int) ExportBinTokenCTable();
+ASC_DLLSPEC(int) ExportBinTokenCTable();
 # endif /* __STDC__ */
 
 # ifndef __FUNC_H_SEEN__
@@ -121,120 +121,120 @@ extern ASC_DLLSPEC(int) ExportBinTokenCTable();
  * code: we aren't going to waste time reimplementing these basic
  * functions.
  */
-extern ASC_DLLSPEC(double) cbrt(double);
+ASC_DLLSPEC(double) cbrt(double);
 #    ifdef HAVE_ERF
-extern ASC_DLLSPEC(double) erf(double);
+ASC_DLLSPEC(double) erf(double);
 #    endif /* HAVE_ERF */
 #   endif /* __STDC__ == 1 */
 /*
  * in the case where __STDC__ is defined but == 0, system headers
  * should provide cbrt, erf.
  */
-extern ASC_DLLSPEC(int) ascnintF(double);
-extern ASC_DLLSPEC(double) dln(double);
-extern ASC_DLLSPEC(double) dln2(double);
-extern ASC_DLLSPEC(double) dlog10(double);
-extern ASC_DLLSPEC(double) dlog102(double);
-extern ASC_DLLSPEC(double) lnm(double);
-extern ASC_DLLSPEC(double) dlnm(double);
-extern ASC_DLLSPEC(double) dlnm2(double);
-extern ASC_DLLSPEC(double) dtanh(double);
-extern ASC_DLLSPEC(double) dtanh2(double);
-extern ASC_DLLSPEC(double) arcsinh(double);
-extern ASC_DLLSPEC(double) arccosh(double);
-extern ASC_DLLSPEC(double) arctanh(double);
-extern ASC_DLLSPEC(double) darcsinh(double);
-extern ASC_DLLSPEC(double) darcsinh2(double);
-extern ASC_DLLSPEC(double) darccosh(double);
-extern ASC_DLLSPEC(double) darccosh2(double);
-extern ASC_DLLSPEC(double) darctanh(double);
-extern ASC_DLLSPEC(double) darctanh2(double);
-extern ASC_DLLSPEC(double) sqr(double);
-extern ASC_DLLSPEC(double) dsqr(double);
-extern ASC_DLLSPEC(double) dsqr2(double);
-extern ASC_DLLSPEC(double) cube(double);
-extern ASC_DLLSPEC(double) dcube(double);
-extern ASC_DLLSPEC(double) dcube2(double);
-extern ASC_DLLSPEC(double) asc_ipow(double,int);
-extern ASC_DLLSPEC(double) asc_d1ipow(double,int);
-extern ASC_DLLSPEC(double) asc_d2ipow(double,int);
-extern ASC_DLLSPEC(double) hold(double);
-extern ASC_DLLSPEC(double) dsqrt(double);
-extern ASC_DLLSPEC(double) dsqrt2(double);
-extern ASC_DLLSPEC(double) dcbrt(double);
-extern ASC_DLLSPEC(double) dcbrt2(double);
-extern ASC_DLLSPEC(double) dfabs(double);
-extern ASC_DLLSPEC(double) dfabs2(double);
-extern ASC_DLLSPEC(double) dhold(double);
-extern ASC_DLLSPEC(double) dasin(double);
-extern ASC_DLLSPEC(double) dasin2(double);
-extern ASC_DLLSPEC(double) dcos(double);
-extern ASC_DLLSPEC(double) dcos2(double);
-extern ASC_DLLSPEC(double) dacos(double);
-extern ASC_DLLSPEC(double) dacos2(double);
-extern ASC_DLLSPEC(double) dtan(double);
-extern ASC_DLLSPEC(double) dtan2(double);
-extern ASC_DLLSPEC(double) datan(double);
-extern ASC_DLLSPEC(double) datan2(double);
-extern ASC_DLLSPEC(double) derf(double);
-extern ASC_DLLSPEC(double) derf2(double);
+ASC_DLLSPEC(int) ascnintF(double);
+ASC_DLLSPEC(double) dln(double);
+ASC_DLLSPEC(double) dln2(double);
+ASC_DLLSPEC(double) dlog10(double);
+ASC_DLLSPEC(double) dlog102(double);
+ASC_DLLSPEC(double) lnm(double);
+ASC_DLLSPEC(double) dlnm(double);
+ASC_DLLSPEC(double) dlnm2(double);
+ASC_DLLSPEC(double) dtanh(double);
+ASC_DLLSPEC(double) dtanh2(double);
+ASC_DLLSPEC(double) arcsinh(double);
+ASC_DLLSPEC(double) arccosh(double);
+ASC_DLLSPEC(double) arctanh(double);
+ASC_DLLSPEC(double) darcsinh(double);
+ASC_DLLSPEC(double) darcsinh2(double);
+ASC_DLLSPEC(double) darccosh(double);
+ASC_DLLSPEC(double) darccosh2(double);
+ASC_DLLSPEC(double) darctanh(double);
+ASC_DLLSPEC(double) darctanh2(double);
+ASC_DLLSPEC(double) sqr(double);
+ASC_DLLSPEC(double) dsqr(double);
+ASC_DLLSPEC(double) dsqr2(double);
+ASC_DLLSPEC(double) cube(double);
+ASC_DLLSPEC(double) dcube(double);
+ASC_DLLSPEC(double) dcube2(double);
+ASC_DLLSPEC(double) asc_ipow(double,int);
+ASC_DLLSPEC(double) asc_d1ipow(double,int);
+ASC_DLLSPEC(double) asc_d2ipow(double,int);
+ASC_DLLSPEC(double) hold(double);
+ASC_DLLSPEC(double) dsqrt(double);
+ASC_DLLSPEC(double) dsqrt2(double);
+ASC_DLLSPEC(double) dcbrt(double);
+ASC_DLLSPEC(double) dcbrt2(double);
+ASC_DLLSPEC(double) dfabs(double);
+ASC_DLLSPEC(double) dfabs2(double);
+ASC_DLLSPEC(double) dhold(double);
+ASC_DLLSPEC(double) dasin(double);
+ASC_DLLSPEC(double) dasin2(double);
+ASC_DLLSPEC(double) dcos(double);
+ASC_DLLSPEC(double) dcos2(double);
+ASC_DLLSPEC(double) dacos(double);
+ASC_DLLSPEC(double) dacos2(double);
+ASC_DLLSPEC(double) dtan(double);
+ASC_DLLSPEC(double) dtan2(double);
+ASC_DLLSPEC(double) datan(double);
+ASC_DLLSPEC(double) datan2(double);
+ASC_DLLSPEC(double) derf(double);
+ASC_DLLSPEC(double) derf2(double);
 
 #  else /* no stdc */
 
-extern ASC_DLLSPEC(double) cbrt();
+ASC_DLLSPEC(double) cbrt();
 
 #   ifdef HAVE_ERF
-extern ASC_DLLSPEC(double) erf();
+ASC_DLLSPEC(double) erf();
 #   endif /* HAVE_ERF */
 
-extern ASC_DLLSPEC(int) ascnintF();
-extern ASC_DLLSPEC(double) dln();
-extern ASC_DLLSPEC(double) dln2();
-extern ASC_DLLSPEC(double) dlog10();
-extern ASC_DLLSPEC(double) dlog102();
-extern ASC_DLLSPEC(double) lnm();
-extern ASC_DLLSPEC(double) dlnm();
-extern ASC_DLLSPEC(double) dlnm2();
-extern ASC_DLLSPEC(double) dtanh();
-extern ASC_DLLSPEC(double) dtanh2();
-extern ASC_DLLSPEC(double) arcsinh();
-extern ASC_DLLSPEC(double) arccosh();
-extern ASC_DLLSPEC(double) arctanh();
-extern ASC_DLLSPEC(double) darcsinh();
-extern ASC_DLLSPEC(double) darcsinh2();
-extern ASC_DLLSPEC(double) darccosh();
-extern ASC_DLLSPEC(double) darccosh2();
-extern ASC_DLLSPEC(double) darctanh();
-extern ASC_DLLSPEC(double) darctanh2();
-extern ASC_DLLSPEC(double) sqr();
-extern ASC_DLLSPEC(double) dsqr();
-extern ASC_DLLSPEC(double) dsqr2();
-extern ASC_DLLSPEC(double) cube();
-extern ASC_DLLSPEC(double) dcube();
-extern ASC_DLLSPEC(double) dcube2();
-extern ASC_DLLSPEC(double) asc_ipow();
-extern ASC_DLLSPEC(double) asc_d1ipow();
-extern ASC_DLLSPEC(double) asc_d2ipow();
-extern ASC_DLLSPEC(double) hold();
-extern ASC_DLLSPEC(double) dsqrt();
-extern ASC_DLLSPEC(double) dsqrt2();
-extern ASC_DLLSPEC(double) dcbrt();
-extern ASC_DLLSPEC(double) dcbrt2();
-extern ASC_DLLSPEC(double) dfabs();
-extern ASC_DLLSPEC(double) dfabs2();
-extern ASC_DLLSPEC(double) dhold();
-extern ASC_DLLSPEC(double) dasin();
-extern ASC_DLLSPEC(double) dasin2();
-extern ASC_DLLSPEC(double) dcos();
-extern ASC_DLLSPEC(double) dcos2();
-extern ASC_DLLSPEC(double) dacos();
-extern ASC_DLLSPEC(double) dacos2();
-extern ASC_DLLSPEC(double) dtan();
-extern ASC_DLLSPEC(double) dtan2();
-extern ASC_DLLSPEC(double) datan();
-extern ASC_DLLSPEC(double) datan2();
-extern ASC_DLLSPEC(double) derf();
-extern ASC_DLLSPEC(double) derf2();
+ASC_DLLSPEC(int) ascnintF();
+ASC_DLLSPEC(double) dln();
+ASC_DLLSPEC(double) dln2();
+ASC_DLLSPEC(double) dlog10();
+ASC_DLLSPEC(double) dlog102();
+ASC_DLLSPEC(double) lnm();
+ASC_DLLSPEC(double) dlnm();
+ASC_DLLSPEC(double) dlnm2();
+ASC_DLLSPEC(double) dtanh();
+ASC_DLLSPEC(double) dtanh2();
+ASC_DLLSPEC(double) arcsinh();
+ASC_DLLSPEC(double) arccosh();
+ASC_DLLSPEC(double) arctanh();
+ASC_DLLSPEC(double) darcsinh();
+ASC_DLLSPEC(double) darcsinh2();
+ASC_DLLSPEC(double) darccosh();
+ASC_DLLSPEC(double) darccosh2();
+ASC_DLLSPEC(double) darctanh();
+ASC_DLLSPEC(double) darctanh2();
+ASC_DLLSPEC(double) sqr();
+ASC_DLLSPEC(double) dsqr();
+ASC_DLLSPEC(double) dsqr2();
+ASC_DLLSPEC(double) cube();
+ASC_DLLSPEC(double) dcube();
+ASC_DLLSPEC(double) dcube2();
+ASC_DLLSPEC(double) asc_ipow();
+ASC_DLLSPEC(double) asc_d1ipow();
+ASC_DLLSPEC(double) asc_d2ipow();
+ASC_DLLSPEC(double) hold();
+ASC_DLLSPEC(double) dsqrt();
+ASC_DLLSPEC(double) dsqrt2();
+ASC_DLLSPEC(double) dcbrt();
+ASC_DLLSPEC(double) dcbrt2();
+ASC_DLLSPEC(double) dfabs();
+ASC_DLLSPEC(double) dfabs2();
+ASC_DLLSPEC(double) dhold();
+ASC_DLLSPEC(double) dasin();
+ASC_DLLSPEC(double) dasin2();
+ASC_DLLSPEC(double) dcos();
+ASC_DLLSPEC(double) dcos2();
+ASC_DLLSPEC(double) dacos();
+ASC_DLLSPEC(double) dacos2();
+ASC_DLLSPEC(double) dtan();
+ASC_DLLSPEC(double) dtan2();
+ASC_DLLSPEC(double) datan();
+ASC_DLLSPEC(double) datan2();
+ASC_DLLSPEC(double) derf();
+ASC_DLLSPEC(double) derf2();
 
 #  endif /* no stdc */
 # endif /* fake__FUNC_H_SEEN__ */

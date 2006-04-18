@@ -208,7 +208,7 @@ extern CONST struct Statement *ChildStatement(ChildListPtr cl, unsigned long n);
  *  Children are numbered 1..ChildListLen(cl).
  */
 
-extern ASC_DLLSPEC(unsigned) ChildGetBooleans(ChildListPtr cl, unsigned long n);
+ASC_DLLSPEC(unsigned) ChildGetBooleans(ChildListPtr cl, unsigned long n);
 /**<
  *  Return child number n current boolean flags.
  *  Children are numbered 1..ChildListLen(cl).

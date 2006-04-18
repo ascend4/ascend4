@@ -109,17 +109,17 @@ DriverNoTickle.o: Driver.date
 #      typelex.c.from.c      ---to use the pregenerated C file
 #  depending on the value of $(LEX).
 
-typelex.o: $(srcdir)/typelex.l $(srcdir)/typelex.c.no.flex
+typelex.o: $(srcdir)/typelex.l $(srcdir)/typelex_no_flex.c
 	$(MAKE) @typer_src@
 	$(CC) $(CC_SWITCHES) -I$(srcdir) -DYY_USE_CONST -c typelex.c
 
 typelex.c.from.flex: $(srcdir)/typelex.l
 	$(LEX) -Ptyp_ -t $(srcdir)/typelex.l > typelex.c
 
-typelex.c.from.c: $(srcdir)/typelex.c.no.flex
+typelex.c.from.c: $(srcdir)/typelex_no_flex.c
 	$(CP) $(srcdir)/typelex.c.no.flex typelex.c
 
-typelex.c: $(srcdir)/typelex.l $(srcdir)/typelex.c.no.flex
+typelex.c: $(srcdir)/typelex.l $(srcdir)/typelex_no_flex.c
 	$(MAKE) @typer_src@
 
 

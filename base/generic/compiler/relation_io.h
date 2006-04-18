@@ -108,7 +108,7 @@ extern void WriteRelation(FILE *f,
  *  Variables are written with names relative to ref.
  */
 
-extern ASC_DLLSPEC(char*) WriteRelationString(
+ASC_DLLSPEC(char*) WriteRelationString(
 	CONST struct Instance *relinst,
 	CONST struct Instance *ref,
 	WRSNameFunc func,

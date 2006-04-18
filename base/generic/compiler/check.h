@@ -40,7 +40,7 @@
 #include <utilities/ascConfig.h>
 
 #define CheckInstance(a,b) CheckInstanceLevel((a),(b),5)
-extern ASC_DLLSPEC(void) CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);
+ASC_DLLSPEC(void) CheckInstanceLevel(FILE *f, CONST struct Instance *i, int pass);
 /**<
  *  Perform all the possible consistency checks possible, and check for
  *  as many errors as possible.  This won't modify anything.

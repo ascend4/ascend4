@@ -225,7 +225,7 @@ int error_reporter_note_no_line(const char *fmt,...){
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(ASC_PROG_NOTE,"unknown-file",0,fmt,args);
+	res = va_error_reporter(ASC_PROG_NOTE,"unknown-file",0,NULL,fmt,args);
 	va_end(args);
 
 	return res;
@@ -240,7 +240,7 @@ int error_reporter_here(const error_severity_t sev, const char *fmt,...){
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(sev,"unknown-file",0,fmt,args);
+	res = va_error_reporter(sev,"unknown-file",0,NULL,fmt,args);
 	va_end(args);
 
 	return res;
@@ -256,7 +256,7 @@ int error_reporter_noline(const error_severity_t sev, const char *fmt,...){
 	va_list args;
 
 	va_start(args,fmt);
-	res = va_error_reporter(sev,NULL,0,fmt,args);
+	res = va_error_reporter(sev,NULL,0,NULL,fmt,args);
 	va_end(args);
 
 	return res;
