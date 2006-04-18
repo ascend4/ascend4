@@ -64,7 +64,7 @@ registerSolver(SlvRegistration regfuncptr){
 
 const vector<Solver>
 getSolvers(){
-	extern int g_SlvNumberOfRegisteredClients;
+	ASC_DLLSPEC(int) g_SlvNumberOfRegisteredClients;
 	vector<Solver> v;
 	for(int i=0; i < g_SlvNumberOfRegisteredClients; ++i){
 		v.push_back(Solver(slv_solver_name(i)));
