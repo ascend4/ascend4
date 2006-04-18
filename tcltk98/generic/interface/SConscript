@@ -11,12 +11,14 @@ srcs = Split("""
 	tkConsole.c old_utils.c
 """)
 
+if env['HAVE_LEX']:
+	typelexsource = 'typelex.l'
+else
+	typelexsource = 'typelex_no_flex.c'
 
-typelex = env.CFile(target='typelex.c',source='typelex.l'
+typelex = env.SharedObject(typelexsource
 	, LEXFLAGS = '-ll -Ptyp_'
 )
-
-#----------------
 
 libs = ['ascend']
 libpath = ['#']

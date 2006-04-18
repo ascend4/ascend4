@@ -28,14 +28,17 @@ csrcs = Split("""
 # SLOPPY sources. This is a painful hack that should be fixed using 'config.h' style solution.
 
 import platform
-if platform.system()=="Windows":
-	parsersource = 'ascParse_no_yacc.c'
-	parserheader = 'ascParse_no_yacc.h'
-	scannersource = 'scanner_no_flex.c'
-else:
+if env['HAVE_YACC']:
 	parsersource = 'ascParse.y'
 	parserheader = 'ascParse.h'
+else:
+	parsersource = 'ascParse_no_yacc.c'
+	parserheader = 'ascParse_no_yacc.h'
+
+if env['HAVE_LEX']:
 	scannersource = 'scanner.l'
+else:
+	scannersource = 'scanner_no_flex.c'
 
 parser = env.SharedObject(target=['ascParse'], source=parsersource
 	, YACCFLAGS=['-d','-pzz_']
