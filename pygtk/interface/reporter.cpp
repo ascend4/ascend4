@@ -1,17 +1,14 @@
-#ifdef ASCXX_USE_PYTHON
-# include <Python.h>
-#endif
+#include "config.h"
+#include "reporter.h"
 
 #include <cstdio>
 #include <iostream>
 using namespace std;
 
-#include "config.h"
 #ifndef ASCXX_USE_PYTHON
 # error "Where's ASCXX_USE_PYTHON?"
 #endif
 
-#include "reporter.h"
 
 static const int REPORTER_MAX_ERROR_MSG = 1024;
 

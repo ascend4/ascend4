@@ -1,8 +1,4 @@
 import config
-import matplotlib
-import numarray
-matplotlib.rcParams['numerix'] = 'numarray'  
-
 import pylab
 import platform
 from matplotlib.colors import LinearSegmentedColormap

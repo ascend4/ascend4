@@ -5,8 +5,8 @@ using namespace std;
 
 #undef NDEBUG
 
-//#include <compiler/module.h>
 #include "config.h"
+
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>

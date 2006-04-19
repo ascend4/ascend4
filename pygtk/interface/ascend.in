@@ -32,7 +32,7 @@ if [ "x$ASC_DEVELOPING" != "x" ]; then
 	# set the 'ASC_DEVELOPING' environment variable
 	# if you don't want to run ASCEND from the installed location
 	echo "RUNNING DEVELOPING MODE..."
-	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=$ASCENDLIBRARY $args"
+	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=../../models $args"
 	echo "Launching... $cmd"
 else
 	cmd="$bin @INSTALL_DATA@/ascend/gtkbrowser.py $args"

@@ -2,6 +2,7 @@
 #define ASCXX_REPORTER_H
 
 #include "config.h"
+
 extern "C"{
 #include <utilities/error.h>
 }
@@ -9,8 +10,6 @@ extern "C"{
 #ifdef ASCXX_USE_PYTHON
 # include <Python.h>
 #endif
-
-#include <cstdarg>
 
 /**
 	This class provides C++ abstraction of the error.h error callback

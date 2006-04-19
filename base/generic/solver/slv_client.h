@@ -286,6 +286,7 @@ typedef struct dof_data_structure {
 /**< Alias for the number of solver's that have ever registered. */
 
 ASC_DLLSPEC(int) g_SlvNumberOfRegisteredClients;
+
 /**<
 	The number of solver's that have ever registered.
 	Once a solver is registered, we keep track of its name,

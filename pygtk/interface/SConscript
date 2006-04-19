@@ -26,7 +26,8 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 
 if env.has_key('HAVE_GCC'):
 	cppflags += ['-O3']
-
+	if env.has_key('HAVE_GCCVISIBILITY'):
+		cxxflags += ['-fvisibility=hidden'];
 
 objs = []
 for s in srcs:

@@ -99,22 +99,22 @@
 	as well.
 */
 #ifdef __WIN32__
-# define ASC_EXPORT(TYPE) extern __declspec(dllexport) TYPE
-# define ASC_IMPORT(TYPE) extern __declspec(dllimport) TYPE
+# define ASC_EXPORT(TYPE) __declspec(dllexport) TYPE
+# define ASC_IMPORT(TYPE) __declspec(dllimport) TYPE
 #else
 # ifdef HAVE_GCCVISIBILITY
-#  define ASC_EXPORT(TYPE) extern __attribute__ ((visibility("default"))) TYPE
-#  define ASC_IMPORT(TYPE) extern TYPE
+#  define ASC_EXPORT(TYPE) __attribute__ ((visibility("default"))) TYPE
+#  define ASC_IMPORT(TYPE) TYPE
 # else
-#  define ASC_EXPORT(TYPE) extern TYPE
-#  define ASC_IMPORT(TYPE) extern TYPE
+#  define ASC_EXPORT(TYPE) TYPE
+#  define ASC_IMPORT(TYPE) TYPE
 # endif
 #endif
 
 #ifdef ASC_BUILDING_LIBASCEND
-# define ASC_DLLSPEC(TYPE) ASC_EXPORT(TYPE)
+# define ASC_DLLSPEC(TYPE) extern ASC_EXPORT(TYPE)
 #else
-# define ASC_DLLSPEC(TYPE) ASC_IMPORT(TYPE)
+# define ASC_DLLSPEC(TYPE) extern ASC_IMPORT(TYPE)
 #endif
 
 #if !defined(ASC_DLLSPEC) || !defined(ASC_EXPORT) || !defined(ASC_IMPORT)
