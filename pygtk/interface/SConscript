@@ -81,7 +81,7 @@ configh = env.SubstInFile(source='config.h.in')
 
 ascendcmd = env.SubstInFile(source='ascend.in')
 
-env.Execute(Chmod(ascendcmd, 0755))
+#env.Command(Chmod('$SOURCE', 0755),None,ascendcmd)
 
 #---------------------------------------------
 # INSTALLATION
