@@ -512,7 +512,7 @@ def CheckTclVersion(context):
 		context.Result("failed to run check")
 		return 0
 
-	major,minor,patch = tuple(int(i) for i in output.split("."))
+	major,minor,patch = tuple([int(i) for i in output.split(".")])
 	if major != 8 or minor > 3:
 		context.Result(output+" (bad version)")
 		# bad version
@@ -547,7 +547,7 @@ def CheckTkVersion(context):
 		return 0
 	context.Result(output)
 
-	major,minor,patch = tuple(int(i) for i in output.split("."))
+	major,minor,patch = tuple([int(i) for i in output.split(".")])
 	if major != 8 or minor > 3:
 		# bad version
 		return 0
