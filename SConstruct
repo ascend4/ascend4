@@ -212,6 +212,12 @@ opts.Add(
 	,default_install_assets
 )
 
+opts.Add(BoolOption(
+	'DEBUG'
+	,"Compile source with debugger symbols, eg for use with 'gdb'"
+	,False
+))
+
 opts.Add(
 	'INSTALL_ROOT'
 	,'For use by RPM only: location of %{buildroot} during rpmbuild'
@@ -726,6 +732,8 @@ subst_dict = {
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
+	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
+	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
 }
 
 if env['WITH_LOCAL_HELP']:
@@ -1035,6 +1043,9 @@ env.Append(CPPPATH=['#base/generic'])
 
 if gcc_version4:
 	env.Append(CCFLAGS=['-fvisibility=hidden'])
+
+if env['DEBUG']:
+	env.Append(CCFLAGS=['-g'])
 
 #-------------
 # TCL/TK GUI

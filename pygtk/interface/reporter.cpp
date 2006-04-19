@@ -67,8 +67,8 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	char msg[REPORTER_MAX_ERROR_MSG];
 	vsprintf(msg,fmt,args);
 
-	//cerr << "reportErrorPython: msg=" << msg ;
-	//cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;
+	cerr << "reportErrorPython: msg=" << msg ;
+	cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;
 
 	pyarglist = Py_BuildValue("(H,z,i,z)",sev,filename,line,msg);             // Build argument list
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
