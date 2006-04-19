@@ -40,7 +40,7 @@ class Preferences:
 			return None
 		except ConfigParser.NoOptionError:
 			return None
-		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(\d+)\+(\d+)\s*$');
+		_p = re.compile('^\s*(\d+)[Xx](\d+)\+([-]\d+)\+([-]\d+)\s*$');
 
 		_m = _p.match(_g)
 		#print "MATCH: ",_m.groups()
