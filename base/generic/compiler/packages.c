@@ -99,13 +99,10 @@ symchar *MakeArchiveLibraryName(CONST char *prefix){
 	sprintf(buffer,"%s%s%s",ASC_STRINGIFY(ASC_SHLIBPREFIX),prefix,ASC_STRINGIFY(ASC_SHLIBSUFFIX));
 # undef ASC_STRINGIFY
 #else
-# error "Please #define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX or pass as compiler flags to packages.c"
-/*
-#else
 # ifdef __WIN32__
 	sprintf(buffer,"%s.dll",prefix);
 # elif defined(linux)
-	sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP *
+	sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
 # elif defined(sun) || defined(solaris)
 	sprintf(buffer,"%s.so.1.0",prefix);
 # elif defined(__hpux)
@@ -113,9 +110,8 @@ symchar *MakeArchiveLibraryName(CONST char *prefix){
 # elif defined(_SGI_SOURCE)
 	sprintf(buffer,"%s.so",prefix);
 # else
-	sprintf(buffer,"%s.so.1.0",prefix);
+#   error "Please #define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX or pass as compiler flags to packages.c"
 # endif
-*/
 #endif
 
 	result = AddSymbol(buffer); /* the main symbol table */
