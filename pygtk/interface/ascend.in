@@ -22,16 +22,24 @@ else
 fi
 
 
-if [ $ASCEND_GDB ]; then
-    bin="gdb --args $python" 
+if [ $ASC_GDB ]; then
+	echo "RUNNING THROUGH DEBUGGER"
+    bin="gdb --symbols=../../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@ --args $python" 
 else
     bin=$python
 fi
 
-if [ "x$ASC_DEVELOPING" != "x" ]; then
+if [ `which ascend` ]; then
+	echo `which ascend` "?"
+else
+	ASC_DEV=1
+fi
+
+if [ "x$ASC_DEV" != "x" ]; then
 	# set the 'ASC_DEVELOPING' environment variable
 	# if you don't want to run ASCEND from the installed location
-	echo "RUNNING DEVELOPING MODE..."
+	echo "RUNNING ASC_DEV (LOCAL) MODE..."
+	export LD_LIBRARY_PATH=../..
 	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=../../models $args"
 	echo "Launching... $cmd"
 else

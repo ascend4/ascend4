@@ -12,7 +12,7 @@ csrcs = Split("""
 	instantiate.c instmacro.c instquery.c
 	library.c linkinst.c logrel_io.c logrel_util.c
 	logrelation.c mathinst.c mergeinst.c module.c name.c
-	nameio.c notate.c numlist.c packages.c parentchild.c
+	nameio.c notate.c numlist.c parentchild.c
 	parpend.c pending.c plot.c proc.c procframe.c
 	procio.c prototype.c qlfdid.c refineinst.c rel_common.c relation.c
 	relation_io.c relation_util.c rootfind.c safe.c
@@ -48,7 +48,11 @@ scanner = env.SharedObject(target=['scanner'],source=scannersource
 	, LEXFLAGS=['-Pzz_']
 )
 
-objs = [parser,scanner]
+packages_env = env.Copy()
+packages_env.Append(CPPDEFINES=[('ASC_SHLIBSUFFIX',env['SHLIBSUFFIX']),('ASC_SHLIBPREFIX',env['SHLIBPREFIX'])])
+packages = packages_env.SharedObject('packages.c')
+
+objs = [parser,scanner,packages]
 
 sloppy_csrcs = ['rounded.c','interval.c']
 

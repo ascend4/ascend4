@@ -86,32 +86,41 @@ void Init_Slv_Interp(struct Slv_Interp *slv_interp)
 /*
 	@deprecated, @see packages.h
 */
-symchar *MakeArchiveLibraryName(CONST char *prefix)
-{
-  char *buffer;
-  int len;
-  symchar *result;
+symchar *MakeArchiveLibraryName(CONST char *prefix){
+	char *buffer;
+	int len;
+	symchar *result;
 
-  len = strlen(prefix);
-  buffer = (char *)ascmalloc(len+40);
+	len = strlen(prefix);
+	buffer = (char *)ascmalloc(len+40);
 
-#ifdef __WIN32__
-  sprintf(buffer,"%s.dll",prefix);
-#elif defined(linux)
-  sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
-#elif defined(sun) || defined(solaris)
-  sprintf(buffer,"%s.so.1.0",prefix);
-#elif defined(__hpux)
-  sprintf(buffer,"%s.sl",prefix);
-#elif defined(_SGI_SOURCE)
-  sprintf(buffer,"%s.so",prefix);
+#if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
+# define ASC_STRINGIFY(ARG) #ARG
+	sprintf(buffer,"%s%s%s",ASC_STRINGIFY(ASC_SHLIBPREFIX),prefix,ASC_STRINGIFY(ASC_SHLIBSUFFIX));
+# undef ASC_STRINGIFY
 #else
-  sprintf(buffer,"%s.so.1.0",prefix);
+# error "Please #define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX or pass as compiler flags to packages.c"
+/*
+#else
+# ifdef __WIN32__
+	sprintf(buffer,"%s.dll",prefix);
+# elif defined(linux)
+	sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP *
+# elif defined(sun) || defined(solaris)
+	sprintf(buffer,"%s.so.1.0",prefix);
+# elif defined(__hpux)
+	sprintf(buffer,"%s.sl",prefix);
+# elif defined(_SGI_SOURCE)
+	sprintf(buffer,"%s.so",prefix);
+# else
+	sprintf(buffer,"%s.so.1.0",prefix);
+# endif
+*/
 #endif
 
-  result = AddSymbol(buffer); /* the main symbol table */
-  ascfree(buffer);
-  return result;              /* owns the string */
+	result = AddSymbol(buffer); /* the main symbol table */
+	ascfree(buffer);
+	return result;              /* owns the string */
 }
 
 /*---------------------------------------------
