@@ -600,10 +600,9 @@ if not conf.CheckFunc('isnan'):
 if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
 	if conf.CheckGccVisibility():
-		pass
-		#conf.env['HAVE_GCCVISIBILITY']=True;
-		#conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
-		#conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
+		conf.env['HAVE_GCCVISIBILITY']=True;
+		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
+		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
 
 # YACC
 
