@@ -25,6 +25,9 @@
 #include <math.h>
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
+
+ASC_EXPORT(int) g_SlvNumberOfRegisteredClients=0; /* see header */
+
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
@@ -237,7 +240,8 @@ struct slv_system_structure {
 */
 int Solv_C_CheckHalt_Flag = 0;
 
-int g_SlvNumberOfRegisteredClients; /* see header */
+
+/* ASC_EXPORT(int) g_SlvNumberOfRegisteredClients=0; */
 
 /** making ANSI assumption that RegisteredClients is init to 0/NULLs */
 static SlvFunctionsT SlvClientsData[SLVMAXCLIENTS];

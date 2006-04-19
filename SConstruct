@@ -267,33 +267,12 @@ without_cunit_reason = "not requested"
 #print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
 #print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
 
-subst_dict = {
-	'@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
-	, '@GLADE_FILE@':'ascend.glade'
-	, '@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
-	, '@ICON_EXTENSION@':icon_extension
-	, '@HELP_ROOT@':''
-	, '@INSTALL_DATA@':env['INSTALL_DATA']
-	, '@INSTALL_BIN@':env['INSTALL_BIN']
-	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
-	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
-	, '@VERSION@':version
-}
-
-if env['WITH_LOCAL_HELP']:
-	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
-	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
-
-if with_python:
-	subst_dict['@ASCXX_USE_PYTHON@']="1"
-
 can_install = True
 if platform.system()=='Windows':
 	can_install = False
 
 env['CAN_INSTALL']=can_install
 
-env.Append(SUBST_DICT=subst_dict)
 
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
@@ -615,8 +594,10 @@ if not conf.CheckFunc('isnan'):
 if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
 	if conf.CheckGccVisibility():
-		conf.env['HAVE_GCCVISIBILITY']=True;
-		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
+		pass
+		#conf.env['HAVE_GCCVISIBILITY']=True;
+		#conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
+		#conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
 
 # YACC
 
@@ -730,6 +711,34 @@ conf.Finish()
 env.Append(PYTHON_LIBPATH=[distutils.sysconfig.PREFIX+"/libs"])
 env.Append(PYTHON_LIB=[python_lib])
 env.Append(PYTHON_CPPPATH=[distutils.sysconfig.get_python_inc()])
+
+#---------------------------------------
+# SUBSTITUTION DICTIONARY for .in files
+
+subst_dict = {
+	'@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
+	, '@GLADE_FILE@':'ascend.glade'
+	, '@HELP_ROOT@':''
+	, '@ICON_EXTENSION@':icon_extension
+	, '@INSTALL_DATA@':env['INSTALL_DATA']
+	, '@INSTALL_BIN@':env['INSTALL_BIN']
+	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
+	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
+	, '@VERSION@':version
+	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
+}
+
+if env['WITH_LOCAL_HELP']:
+	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
+	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
+
+if with_python:
+	subst_dict['@ASCXX_USE_PYTHON@']="1"
+
+if env.has_key('HAVE_GCCVISIBILITY'):
+	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
+
+env.Append(SUBST_DICT=subst_dict)
 
 #------------------------------------------------------
 # RECIPE: 'SubstInFile', used in pygtk SConscript

@@ -25,6 +25,7 @@ import urlparse
 import optparse
 import platform
 import sys
+import os.path
 
 if platform.system() != "Windows":
 	import dl
@@ -43,7 +44,34 @@ import gtk
 import gtk.glade
 import pango
 
-print_loading_status("Loading ASCEND python modules...")
+print_loading_status("Loading python matplotlib")
+try:
+	import matplotlib
+
+	try:
+		print_loading_status("Trying python numpy")
+		import numpy
+		matplotlib.rcParams['numerix'] = 'numpy'  
+		print_loading_status("","Using python module numpy")
+	except ImportError:
+		try:
+			print_loading_status("Trying python numarray")
+			import numarray
+			matplotlib.rcParams['numerix'] = 'numarray'  
+			print_loading_status("","Using python module numarray")
+		except ImportError:
+			try:
+				print_loading_status("Trying python Numeric")
+				import Numeric
+				matplotlib.rcParams['numerix'] = 'Numeric'  
+				print_loading_status("","Using python module Numeric")
+			except ImportError:
+				print_loading_status("","FAILED TO LOAD A NUMERIC MODULE FOR PYTHON")
+
+except ImportError:
+	print_loading_status("Loading python matplotlib","FAILED TO LOAD MATPLOTLIB")
+
+print_loading_status("Loading ASCEND python modules")
 
 from preferences import *      # loading/saving of .ini options
 from solverparameters import * # 'solver parameters' window
@@ -131,10 +159,10 @@ class Browser:
 		# set up library path and the path to use for File->Open dialogs
 		
 		if options.library_path != None:
-			_path = options.library_path
+			_path = os.path.abspath(options.library_path)
 			_pathsrc = "commandline"
 			# when a special path is specified, use that as the file-open location
-			self.fileopenpath = options.library_path
+			self.fileopenpath = _path
 		else:
 			if _prefpath:
 				_path = _prefpath
@@ -151,7 +179,7 @@ class Browser:
 		#--------
 		# Create the ASCXX 'Library' object
 		
-		print_loading_status("Creating ASCEND 'Library' object")
+		print_loading_status("Creating ASCEND 'Library' object","PATH = "+_path+" FROM "+_pathsrc)
 		self.library = ascpy.Library(_path)
 
 		self.sim = None

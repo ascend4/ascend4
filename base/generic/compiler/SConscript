@@ -52,10 +52,10 @@ objs = [parser,scanner]
 
 sloppy_csrcs = ['rounded.c','interval.c']
 
+sloppy_env = env.Copy()
+sloppy_env.Append(CPPDEFINES=['SLOPPY']);
 for s in sloppy_csrcs:
-	objs += env.SharedObject(s
-	,CPPDEFINES=['SLOPPY']
-)	
+	objs += sloppy_env.SharedObject(s)	
 
 env.Depends(scanner,[parserheader])
 

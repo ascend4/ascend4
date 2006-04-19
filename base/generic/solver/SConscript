@@ -13,14 +13,14 @@ csrcs = Split("""
 
 """)
 
+solver_env = env.Copy()
+
 defs = []
 for i in env['WITH_SOLVERS']:
-	defs.append("STATIC_"+i)
+	solver_env.Append(CPPDEFINES=["STATIC_"+i])
 
 objs = []
 for c in csrcs:
-	objs += env.SharedObject(c
-		, CPPDEFINES=defs
-	)
+	objs += solver_env.SharedObject(c)
 	
 Return('objs')
