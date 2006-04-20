@@ -21,5 +21,33 @@ simpleunits.a4c*
 simpleunits.a4s*
 simpleunitsatoms.a4c*
 
+--------- 2006/04/11  AWW
+
+I ran the following scripts.  They functioned as their comments stated
+they should.
+
+casestudy.a4s
+collocation.a4s
+dyn_separation_demos.a4s  Placed a comment about the "source" statement
+                          requiring a full path definition.
+
+
+
+The following scripts did not work.
+
+collocation_tests.a4s  attempts to compile mw_demo_column, a type that
+                       no longer is in collocation.a4l.  I am removing
+                       this file from the model library.  You can
+                       retrieve it in versions earlier than 531.
+
+
+
+
+
+
+--------- 
+--------- 
+--------- 
+--------- 
 --------- 
 
