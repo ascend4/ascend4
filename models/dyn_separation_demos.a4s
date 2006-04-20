@@ -5,6 +5,10 @@
 
 DELETE TYPES;
 READ FILE "dyn_column.a4l";
+
+# The following source statement uses a full path to find the file
+# set_intervals.tcl.  If this path fails, edit in the correct
+# full path.
 source "$env(ASCENDDIST)/models/set_intervals.tcl";
 
 #Vapor liquid flash.
