@@ -362,10 +362,22 @@ proc set_cmuBindings {} {
 # baa 6/12/97, tk80b1-no patches
   bind Menubutton <Motion> {
     global tk_strictMotif
-    if {$tk_strictMotif} {
-      tkMbMotion %W up %X %Y
-    } else {
-      tkMbMotion %W down %X %Y
+    switch $tk_version {
+    8.5 -
+    8.4 {
+        if {$tk_strictMotif} {
+          tk::MbMotion %W up %X %Y
+        } else {
+          tk::MbMotion %W down %X %Y
+        }
+      }
+    8.3 {
+        if {$tk_strictMotif} {
+          tkMbMotion %W up %X %Y
+        } else {
+          tkMbMotion %W down %X %Y
+        }
+      }
     }
   }
 # puts "Adding cmu Entry and Text bindings"
