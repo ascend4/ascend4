@@ -64,7 +64,7 @@ fp_rnd global_rnd_mode;
 #define ROUND_TO_MINUS_INFINITY FP_RM
 #define ROUND_TO_PLUS_INFINITY FP_RP
 
-#endif
+#endif /* mips */
 
 double DPlus(register double d1, register double d2)
 {
