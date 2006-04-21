@@ -40,12 +40,12 @@ class Preferences:
 			return None
 		except ConfigParser.NoOptionError:
 			return None
-		_p = re.compile('^\s*(\d+)[Xx](\d+)\+([-]\d+)\+([-]\d+)\s*$');
+		_p = re.compile('^\s*(\d+)[Xx](\d+)\+(-?\d+)\+(-?\d+)\s*$');
 
 		_m = _p.match(_g)
 		#print "MATCH: ",_m.groups()
 		if not _m:
-			return []
+			return None
 		return [int(i) for i in _m.groups()]
 
 	def setGeometrySizePosition(self,displayname,key,width,height,top,left):
