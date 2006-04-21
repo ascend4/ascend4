@@ -3,12 +3,16 @@ Import('env')
 csrcs = Split("""
 
 	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c
-	ascPrint.c error.c ascSignal.c mem.c readln.c set.c
+	ascPrint.c error.c mem.c readln.c set.c
 
 """)
 
 objs = []
 for c in csrcs:
 	objs += env.SharedObject(c)
+
+sig_env = env.Copy()
+sig_env.Append(CPPDEFINES=['NO_SIGINT_TRAP','NO_SIGSEGV_TRAP'])
+objs += sig_env.SharedObject('ascSignal.c')
 
 Return('objs')

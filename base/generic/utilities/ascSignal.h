@@ -1,63 +1,54 @@
-/*
- *  Signal handling protocol definitions for ASCEND
- *  May 27, 1997
- *  By Benjamin Andrew Allan
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: ascSignal.h,v $
- *  Date last modified: $Date: 1998/01/10 18:00:05 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Programming System.
- *  This file standardizes the handling of signals because some OS
- *  reset signals to SIG_DFL when a trap goes off while others
- *  process the signal but leave the trapping function in place.
- *  We want the second behavior and this gives it to us.
- *
- *  Copyright (C) 1997 Benjamin Andrew Allan
- *
- *  The Ascend Programming System is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  ASCEND is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Signal handling protocol definitions for ASCEND.
- *
- *  This module implements limited support for managing signal handlers.
- *  This includes:
- *    - a standard signal handler - Asc_SignalTrap()
- *    - global jmp_buf's for use with Asc_SignalTrap()
- *    - functions for managing nested signal handlers
- *
- *  The following signal types are currently supported:
- *    - SIGFPE  - floating point exception
- *    - SIGINT  - CTRL-C interactive attention request
- *    - SIGSEGV - segmentation fault
- *
- *  A simple use of these facilities to trap floating point exceptions
- *  might be as follows:
- *  <pre>
- *     Asc_SignalInit();
- *     Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap);
- *     if (setjmp(g_fpe_env)==0) {
- *       y = sqrt(x);
- *     } else {
- *       y = sqrt(-x);
- *     }
- *     Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
- *     Asc_SignalDestroy();
- *  </pre>
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Signal handling protocol definitions for ASCEND.
+
+	This file standardizes the handling of signals because some OS
+	reset signals to SIG_DFL when a trap goes off while others
+	process the signal but leave the trapping function in place.
+	We want the second behavior and this gives it to us.
+
+	This module implements limited support for managing signal handlers.
+	This includes:
+	  - a standard signal handler - Asc_SignalTrap()
+	  - global jmp_buf's for use with Asc_SignalTrap()
+	  - functions for managing nested signal handlers
+	
+	The following signal types are currently supported:
+	  - SIGFPE  - floating point exception
+	  - SIGINT  - CTRL-C interactive attention request
+	  - SIGSEGV - segmentation fault
+	
+	A simple use of these facilities to trap floating point exceptions
+	might be as follows:
+	<pre>
+	   Asc_SignalInit();
+	   Asc_SignalHandlerPush(SIGFPE, Asc_SignalTrap);
+	   if (setjmp(g_fpe_env)==0) {
+	     y = sqrt(x);
+	   } else {
+	     y = sqrt(-x);
+	   }
+	   Asc_SignHandlerPop(SIGFPE,Asc_SignalTrap);
+	   Asc_SignalDestroy();
+	</pre>
  *  This example uses the built-in signal handler Asc_SignalTrap()
  *  and the global <code>jmp_buf</code> g_fpe_env.  After initializing
  *  the signal manager and registering the handler, <code>setjmp</code>
@@ -100,10 +91,18 @@
  *  to be lost or to corrupt the managed handlers.<br><br>
  *
  *  Another warning: setjmp is expensive if called inside a fast loop.
- *  <pre>
- *  Requires:     #include "utilities/ascConfig.h"
- *  </pre>
- */
+
+	Requires:
+	#include "utilities/ascConfig.h"
+*//*
+	Signal handling protocol definitions for ASCEND
+	May 27, 1997
+	By Benjamin Andrew Allan
+	Version: $Revision: 1.6 $
+	Version control file: $RCSfile: ascSignal.h,v $
+	Date last modified: $Date: 1998/01/10 18:00:05 $
+	Last modified by: $Author: ballan $
+*/
 
 #ifndef ASC_ASCSIGNAL_H
 #define ASC_ASCSIGNAL_H

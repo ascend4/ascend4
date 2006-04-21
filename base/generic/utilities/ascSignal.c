@@ -1,34 +1,23 @@
-/*
- *  Signal handling protocol definitions for ASCEND
- *  May 27, 1997
- *  By Benjamin Andrew Allan
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: ascSignal.c,v $
- *  Date last modified: $Date: 1999/01/19 12:23:20 $
- *  Last modified by: $Author: mthomas $
- *  Part of Ascend
- *
- *  This file is part of the Ascend Programming System.
- *
- *  Copyright (C) 1997 Benjamin Andrew Allan
- *
- *  The Ascend Programming System is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  ASCEND is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
-/*
+/*	ASCEND modelling environment
+	Copyright (C) 1997 Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+ * Signal handling protocol definitions for ASCEND
  * Start of making signal handling in ASCEND
  * code somewhat sane. Still needs to somehow
  * support the management of jmp_buf's so that
@@ -37,8 +26,14 @@
  * A better alternative is to make all our code check/return
  * status flags based on a variable set by the trap
  * and cleared by recipient.
- */
-/*
+*//*
+ *  May 27, 1997
+ *  By Benjamin Andrew Allan
+ *  Version: $Revision: 1.9 $
+ *  Version control file: $RCSfile: ascSignal.c,v $
+ *  Date last modified: $Date: 1999/01/19 12:23:20 $
+ *  Last modified by: $Author: mthomas $
+ *
  *  ChangeLog
  *
  *  10/15/2005  - Changed ascresetneeded() so that any previously
@@ -98,17 +93,15 @@ static int f_seg_top_of_stack = -1;     /**< top of SIGFPE stack, -1 for empty *
 
 #ifndef NO_SIGSEGV_TRAP
 /* function to throw an interrupt. system dependent. */
-static int testdooley2(int sig)
-{
+static int testdooley2(int sig){
   raise(sig);
   return 0;
 }
 #endif
 
-#ifndef NO_SIGINT_TRAP
+#if !defined(NO_SIGINT_TRAP) || !defined(NO_SIGSEGV_TRAP)
 /* function to catch an interrupt */
-static void testctrlc(int signum)
-{
+static void testcatch(int signum){
   FPRINTF(ASCERR," signal %d caught ",signum);
   if (signum == SIGFPE) {
     FPRESET;
@@ -153,8 +146,8 @@ static int ascresetneeded(void) {
 #ifndef NO_SIGINT_TRAP
 
   /* test interrupt */
-  savedtrap = signal(SIGINT, testctrlc);
-  CONSOLE_DEBUG("Testing signal SIGINT (signum = %d) %p\t%p\t", SIGINT, savedtrap, testctrlc);
+  savedtrap = signal(SIGINT, testcatch);
+  CONSOLE_DEBUG("Testing signal SIGINT (signum = %d) %p\t%p\t", SIGINT, savedtrap, testcatch);
   if (setjmp(f_test_env) == 0) {
     testdooley2(SIGINT);
   } else {
@@ -167,7 +160,7 @@ static int ascresetneeded(void) {
   }
   lasttrap = signal(SIGINT, (NULL != savedtrap) ? savedtrap : SIG_DFL);
   CONSOLE_DEBUG("%p",lasttrap);
-  if (lasttrap != testctrlc) {
+  if (lasttrap != testcatch) {
     result = 1;
   }
 
@@ -182,8 +175,8 @@ static int ascresetneeded(void) {
 
 #ifndef NO_SIGSEGV_TRAP
   /* passed interrupt, check fpe */
-  savedtrap=signal(SIGFPE, testctrlc);
-  CONSOLE_DEBUG("Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testctrlc);
+  savedtrap=signal(SIGFPE, testcatch);
+  CONSOLE_DEBUG("Testing signal %d %p\t%p\t",SIGFPE, savedtrap, testcatch);
   if (setjmp(f_test_env)==0) {
     testdooley2(SIGFPE);
   } else {
@@ -196,7 +189,7 @@ static int ascresetneeded(void) {
   }
   lasttrap = signal(SIGFPE, (NULL != savedtrap) ? savedtrap : SIG_DFL);
   CONSOLE_DEBUG("%p\n",lasttrap);
-  if (lasttrap != testctrlc) {
+  if (lasttrap != testcatch) {
     result = 1;
   }
 #else

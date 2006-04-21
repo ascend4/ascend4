@@ -3,12 +3,24 @@
 
 #include "config.h"
 
+#ifdef ASCXX_USE_PYTHON
+# include <Python.h>
+#endif
+
 extern "C"{
+#include <utilities/ascConfig.h>
 #include <utilities/error.h>
 }
 
+
 #ifdef ASCXX_USE_PYTHON
-# include <Python.h>
+extern "C"{
+/**
+	This function is a hook function that will convey errors 
+	back to Python via the C++ 'Reporter' class.
+*/
+ASC_EXPORT(int) reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS);
+}
 #endif
 
 /**
@@ -36,7 +48,7 @@ private:
 #endif
 
 public:
-	static Reporter *Instance();
+	static ASC_EXPORT(Reporter *) Instance();
 	void setErrorCallback(error_reporter_callback_t, void *client_data=NULL);
 
 #ifdef ASCXX_USE_PYTHON
@@ -48,10 +60,5 @@ public:
 };
 
 Reporter *getReporter();
-
-#ifdef ASCXX_USE_PYTHON
-// Python-invoking callback function
-int reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS);
-#endif
 
 #endif // ASCXX_REPORTER_H
