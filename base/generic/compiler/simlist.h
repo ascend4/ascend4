@@ -113,7 +113,7 @@ extern symchar *Asc_SimsFindSimulationName(CONST struct Instance *sim);
 extern void Asc_SetCurrentSim(struct Instance *sim);
 /**<  Sets the current working simulation to the specified simulation. */
 
-extern struct Instance *Asc_GetCurrentSim(void);
+ASC_DLLSPEC(struct Instance *) Asc_GetCurrentSim(void);
 /**<
  *  Returns a pointer to the current working simulation.
  *  Makes no checks on the state of the simulation.

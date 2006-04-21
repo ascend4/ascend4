@@ -8,7 +8,7 @@ srcs = Split("""
 	LibraryProc.c Lsode.c MtxProc.c ProbeProc.c Qlfdid.c
 	ScriptProc.c Sensitivity.c SimsProc.c SlvProc.c
 	SolverProc.c UnitsProc.c UserData.c
-	tkConsole.c old_utils.c
+	tkConsole.c old_utils.c Driver.c
 """)
 
 if env['HAVE_LEX']:
@@ -16,38 +16,56 @@ if env['HAVE_LEX']:
 else:
 	typelexsource = 'typelex_no_flex.c'
 
-typelex = env.SharedObject(typelexsource
+tcl_env = env.Copy()
+
+typelex = tcl_env.SharedObject(typelexsource
 	, LEXFLAGS = '-ll -Ptyp_'
 )
 
-libs = ['ascend']
-libpath = ['#']
+if tcl_env.has_key('TCL_CPPPATH'):
+	tcl_env.Append(CPPPATH=tcl_env['TCL_CPPPATH'])
 
-libs.append(env['TCL_LIB'])
-libs.append(env['TK_LIB'])
+if tcl_env.has_key('TK_CPPPATH'):
+	tcl_env.Append(CPPPATH=tcl_env['TK_CPPPATH'])
 
-if env.has_key('TCL_LIBPATH'):
-	libpath.append(env['TCL_LIBPATH'])
-if env.has_key('TK_LIBPATH'):
-	libpath.append(env['TK_LIBPATH'])
+tcl_env.Append(LIBS=['ascend'])
+tcl_env.Append(LIBPATH=['#'])
 
-cppdefines = []
-if env['STATIC_TKTABLE']:
-	libpath.append(env['TKTABLE_LIBPATH'])
-	libs.append(env['TKTABLE_LIB'])
-	cppdefines.append('STATIC_TKTABLE')
+if tcl_env['STATIC_TCLTK']:
+	print "STATIC TCL/TK PROGRAM LINKAGE"
+	srcs += ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB']
+	tcl_env.Append(LIBS=tcl_env['X11_LIB'])
+	tcl_env.Append(LIBPATH=tcl_env['X11_LIBPATH'])
 
-cpppath = ['../../../base/generic']
-if env.has_key('TCL_CPPPATH'):
-	cpppath.append(env['TCL_CPPPATH'])
+	tcl_env.Program("ascend4",["main.c"] + srcs)
+else:
+	print "DYNAMIC TCL/TK PROGRAM LINKAGE"
+	#tcl_env.Append(LIBS=tcl_env['TCL_LIB'])
+	#tcl_env.Append(LIBS=tcl_env['TK_LIB'])
 
-if env.has_key('TK_CPPPATH'):
-	cpppath.append(env['TK_CPPPATH'])
+	if tcl_env.has_key('TCL_LIBPATH'):
+		tcl_env.Append(LIBPATH=tcl_env['TCL_LIBPATH'])
+	if tcl_env.has_key('TK_LIBPATH'):
+		tcl_env.Append(LIBPATH=tcl_env['TK_LIBPATH'])
 
-env.Program("ascend4",srcs+typelex+['Driver.c']
-	, CPPDEFINES = cppdefines
-	, LIBS = libs
-	, LIBPATH = libpath
-	, CPPPATH = cpppath
-#	, RPATH = ["C:\\Tcl\\lib"]
-)
+	if tcl_env['TKTABLE_LIBPATH']:
+		tcl_env.Append(LIBPATH=tcl_env['TKTABLE_LIBPATH'])
+
+	ascendtcl = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
+
+	#tcl_so = tcl_env.Command(Copy('$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX','$TCL_LIBPATH/$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX'))
+	#tk_so = tcl_env.Command(Copy('$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX','$TK_LIBPATH/$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX'))
+	#tktable_so = tcl_env.Command(Copy('$SHLIBPREFIX$TKTABLE_LIB$SHLIBSUFFIX','$TKTABLE_LIBPATH/$SHLIBPREFIX$TKTABLE_LIB$SHLIBSUFFIX'))
+
+	tcl_env.Append(LIBPATH=['.'])
+
+	tcl_env.Program("ascend4",["main.c"]
+		, LIBS = ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB','ascendtcl','ascend']
+	)
+
+	#tcl_env.Append(LIBS=['ascend','ascendtcl'])
+	#tcl_env.Append(LIBPATH=['.'])
+	#tcl_env.Program("ascend4",['main.c']
+	#	, CPPPATH = ['#/base/generic']
+	#)
+

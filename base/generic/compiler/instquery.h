@@ -363,7 +363,7 @@ extern int IntegerSetInstance(CONST struct Instance *i);
  *  This should only be called on set instances.
  */
 
-extern symchar *GetSimulationName(struct Instance *i);
+ASC_DLLSPEC(symchar *) GetSimulationName(struct Instance *i);
 /**<
  *  <!--  const char *GetSimulationName(i);                            -->
  *  <!--  struct Instance *i;                                          -->

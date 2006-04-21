@@ -169,7 +169,7 @@ extern int32 logrel_residual(struct logrel_relation *logrel);
  *  there is no guarantee (from this function) that the residual is
  *  actually correct.
  */
-extern void logrel_set_residual(struct logrel_relation *logrel,
+ASC_DLLSPEC(void) logrel_set_residual(struct logrel_relation *logrel,
                                 int32 residual);
 /**<
  *  Sets the logical residual field of the given logrelation.

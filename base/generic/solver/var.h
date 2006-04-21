@@ -202,7 +202,7 @@ ASC_DLLSPEC(char*) var_make_name(
 	slv_system_t from which you got the var.
 */
 
-extern void var_write_name(const slv_system_t sys,
+ASC_DLLSPEC(void) var_write_name(const slv_system_t sys,
                            const struct var_variable *var,
                            FILE *file);
 /**<

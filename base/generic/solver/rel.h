@@ -272,7 +272,7 @@ ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
  *  there is no guarantee (from this function) that the residual is
  *  actually correct.
  */
-extern void rel_set_residual(struct rel_relation *rel, real64 residual);
+ASC_DLLSPEC(void) rel_set_residual(struct rel_relation *rel, real64 residual);
 /**<
  *  Sets the residual field of the given relation.
  */

@@ -291,7 +291,7 @@ extern char *linsolqr_rmethods(void);
  * Not all reorderings are appropriate to all factorizations.
  */
 
-extern char *linsolqr_fmethods(void);
+ASC_DLLSPEC(char *) linsolqr_fmethods(void);
 /**<
  * <!--  s=linsolqr_fmethods();                                        -->
  *
@@ -824,9 +824,10 @@ extern int32 linsolqr_org_col_to_org_row(linsolqr_system_t sys,
  *  @todo Separate documentation for these linsolqr functions?
  */
 
-extern void linsolqr_calc_row_dependencies(linsolqr_system_t sys);
+ASC_DLLSPEC(void) linsolqr_calc_row_dependencies(linsolqr_system_t sys);
 /**< See discussion under linsolqr_calc_col_dependencies(). */
-extern void linsolqr_calc_col_dependencies(linsolqr_system_t sys);
+
+ASC_DLLSPEC(void) linsolqr_calc_col_dependencies(linsolqr_system_t sys);
 /**<
  *  <pre>
  *  linsolqr_calc_row_dependencies(sys);
