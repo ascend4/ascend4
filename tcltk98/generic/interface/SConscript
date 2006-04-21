@@ -13,7 +13,7 @@ srcs = Split("""
 
 if env['HAVE_LEX']:
 	typelexsource = 'typelex.l'
-else
+else:
 	typelexsource = 'typelex_no_flex.c'
 
 typelex = env.SharedObject(typelexsource
