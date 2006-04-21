@@ -10,12 +10,12 @@ def print_loading_status(status,msg=None):
 
 print_loading_status("Loading PSYCO")
 
-try:
-	import psyco
-	psyco.full()
-	print "Running with PSYCO optimisation..."
-except ImportError:
-	pass
+#try:
+#	import psyco
+#	psyco.full()
+#	print "Running with PSYCO optimisation..."
+#except ImportError:
+#	pass
 
 
 print_loading_status("Loading python standard libraries")

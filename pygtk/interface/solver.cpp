@@ -1,10 +1,11 @@
+#include "config.h"
+#include "reporter.h"
+#include "solver.h"
+
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
 using namespace std;
-
-#include "reporter.h"
-#include "solver.h"
 
 extern "C"{
 #include <solver/slv0.h>

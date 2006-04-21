@@ -35,6 +35,12 @@ opts.Add(EnumOption(
     , ['DYNAMIC_PACKAGES', 'STATIC_PACKAGES', 'NO_PACKAGES']
 ))
 
+opts.Add(BoolOption(
+	'WITH_GCCVISIBILITY'
+	,"Whether to use GCC Visibility features (only applicable if available)"
+	,True
+))
+
 # You can turn off building of Tcl/Tk interface
 opts.Add(BoolOption(
 	'WITHOUT_TCLTK'
@@ -678,7 +684,7 @@ if not conf.CheckFunc('isnan'):
 
 if conf.CheckGcc():
 	conf.env['HAVE_GCC']=True;
-	if conf.CheckGccVisibility():
+	if env['WITH_GCCVISIBILITY'] and conf.CheckGccVisibility():
 		conf.env['HAVE_GCCVISIBILITY']=True;
 		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])

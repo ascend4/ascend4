@@ -15,8 +15,24 @@ static const int REPORTER_MAX_ERROR_MSG = 1024;
 #ifdef ASCXX_USE_PYTHON
 // Python-invoking callback function
 int reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS){
-	Reporter *reporter = Reporter::Instance();
-	return reporter->reportErrorPython(ERROR_REPORTER_CALLBACK_VARS);
+	int res=0;
+	if(filename!=NULL){
+		res += ASC_FPRINTF(ASCERR,"%s:",filename);
+	}
+	if(line!=0){
+		res += ASC_FPRINTF(ASCERR,"%d:",line);
+	}
+	if(funcname!=NULL){
+		res += ASC_FPRINTF(ASCERR,"%s:",funcname);
+	}
+	if ((filename!=NULL) || (line!=0) || (funcname!=NULL)){
+		res += ASC_FPRINTF(ASCERR," ");
+	}
+
+	res += ASC_VFPRINTF(ASCERR,fmt,args);
+	return res;
+	//Reporter *reporter = Reporter::Instance();
+	//return reporter->reportErrorPython(ERROR_REPORTER_CALLBACK_VARS);
 }
 #endif
 
@@ -69,6 +85,7 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 
 	cerr << "reportErrorPython: msg=" << msg ;
 	cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;
+	cerr.flush();
 
 	pyarglist = Py_BuildValue("(H,z,i,z)",sev,filename,line,msg);             // Build argument list
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
