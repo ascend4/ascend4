@@ -45,8 +45,7 @@ class Preferences:
 		_m = _p.match(_g)
 		#print "MATCH: ",_m.groups()
 		
-		_i = [int(i) for i in _m.groups()]
-		return tuple(_i)
+		return [int(i) for i in _m.groups()]
 
 	def setGeometrySizePosition(self,displayname,key,width,height,top,left):
 		if not self.ini.has_section("Geometry:"+displayname):

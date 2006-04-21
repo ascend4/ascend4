@@ -69,19 +69,21 @@ def get_new_swig_flags(env):
 		flags += ['-O']
 	return flags
 
-swiglib = python_env.SharedLibrary("ascpy",objs + ['ascpy.i']
+swigobj = python_env.SharedObject('ascpy.i'
+	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
+)
+python_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy_wrap.cc')
+
+swiglib = python_env.SharedLibrary("ascpy",objs + swigobj
 	, LIBS = ['ascend'] + env['PYTHON_LIB']
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
-	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 	, SHLIBPREFIX = '_'
 )
-
 configpy = env.SubstInFile(source='config.py.in')
 configh = env.SubstInFile(source='config.h.in')
 
 ascendcmd = env.SubstInFile(source='ascend.in')
-
-#env.Command(Chmod('$SOURCE', 0755),None,ascendcmd)
+env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
 
 #---------------------------------------------
 # INSTALLATION
