@@ -740,7 +740,7 @@ ASC_DLLSPEC(struct rel_relation**) slv_get_solvers_rel_list(slv_system_t sys);
 extern struct rel_relation **slv_get_solvers_condrel_list(slv_system_t sys);
 /**<  Returns the (NULL-terminated) list of solver conditional relations. */
 
-extern struct rel_relation **slv_get_solvers_obj_list(slv_system_t sys);
+ASC_DLLSPEC(struct rel_relation **)slv_get_solvers_obj_list(slv_system_t sys);
 /**<  Returns the (NULL-terminated) list of solver objective relations. */
 
 extern struct logrel_relation **slv_get_solvers_logrel_list(slv_system_t sys);
@@ -847,7 +847,7 @@ extern int32 slv_get_num_master_vars(slv_system_t sys);
  ***  Returns the length of the master variables list.
  ***  The length does NOT include the terminating NULL.
  **/
-extern int32 slv_get_num_master_pars(slv_system_t sys);
+ASC_DLLSPEC(int32) slv_get_num_master_pars(slv_system_t sys);
 /**< Returns the length of the master parameters list.
 	The length does NOT include the terminating NULL.
 */

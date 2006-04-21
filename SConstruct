@@ -17,12 +17,14 @@ if platform.system()=="Windows":
 	default_tktable_lib = "Tktable28"
 	default_install_assets = "glade/"
 	icon_extension = '.png'
+	default_tcl = "c:\\Tcl"
 else:
-	default_tcl_lib = "tcl"
-	default_tk_lib = "tk"
+	default_tcl_lib = "tcl8.3"
+	default_tk_lib = "tk8.3"
 	default_tktable_lib = "Tktable2.8"
 	default_install_assets = "$INSTALL_DATA/ascend/glade/"
 	icon_extension = '.svg'
+	default_tcl = os.path.expanduser("~/activetcl")
 	
 
 # Package linking option
@@ -114,24 +116,31 @@ opts.Add(PackageOption(
 	,'off'
 ))
 
+
+opts.Add(PackageOption(
+	'TCL'
+	,'Base of Tcl distribution'
+	,default_tcl
+))
+
 # Where are the Tcl includes?
 opts.Add(PackageOption(
 	'TCL_CPPPATH'
 	,"Where are your Tcl include files?"
-	,"disable"
+	,"$TCL/include"
 ))
 
 # Where are the Tcl libs?
 opts.Add(PackageOption(
 	'TCL_LIBPATH'
 	,"Where are your Tcl libraries?"
-	,'off'
+	,"$TCL/lib"
 ))
 
 # What is the name of the Tcl lib?
 opts.Add(
 	'TCL_LIB'
-	,"Name of Tcl lib (eg 'tcl' or 'tcl83')"
+	,"Name of Tcl lib (eg 'tcl' or 'tcl83'), for full path to static library"
 	,default_tcl_lib
 )
 
@@ -152,15 +161,15 @@ opts.Add(PackageOption(
 # What is the name of the Tk lib?
 opts.Add(
 	'TK_LIB'
-	,"Name of Tk lib (eg 'tk' or 'tk83')"
+	,"Name of Tk lib (eg 'tk' or 'tk83'), or full path to static library"
 	,default_tk_lib
 )	
 
 # Static linking to TkTable
 
 opts.Add(BoolOption(
-	'STATIC_TKTABLE'
-	,'Use static linking to TkTable or not'
+	'STATIC_TCLTK'
+	,'Set true for static linking for Tcl/Tk and TkTable'
 	,False
 ))
 
@@ -172,8 +181,38 @@ opts.Add(
 
 opts.Add(
 	'TKTABLE_LIB'
-	,'Name of TkTable static library (excluding suffix/prefix, eg libtktable2.8.so -> tktable2.8)'
+	,'Stem name of TkTable (eg tktable2.8, no ".so" or "lib") shared library, or full path of static tktable (/usr/lib/...)'
 	,default_tktable_lib
+)
+
+opts.Add(
+	'TKTABLE_CPPPATH'
+	,'Location of TkTable header file'
+	,'$TCL_CPPPATH'
+)
+
+opts.Add(
+	'X11'
+	,'Base X11 directory'
+	,'/usr/X11R6'
+)
+
+opts.Add(
+	'X11_LIBPATH'
+	,'Location of X11 lib'
+	,'$X11/lib'
+)
+
+opts.Add(
+	'X11_CPPPATH'
+	,'Location of X11 includes'
+	,'$X11/include'
+)
+
+opts.Add(
+	'X11_LIB'
+	,'Name of X11 lib'
+	,'X11'
 )
 
 opts.Add(
@@ -253,7 +292,6 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "PATH =",env['ENV']['PATH']
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
-	#env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATED','_CRT_SECURE_NO_DEPRECATE'])
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -279,6 +317,9 @@ if platform.system()=='Windows':
 
 env['CAN_INSTALL']=can_install
 
+print "TCL_CPPPATH =",env['TCL_CPPPATH']
+print "TCL_LIBPATH =",env['TCL_LIBPATH']
+print "TCL_LIB =",env['TCL_LIB']
 
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
@@ -332,34 +373,32 @@ def CheckSwigVersion(context):
 # General purpose library-and-header test
 
 class KeepContext:
-	def __init__(self,context,varprefix):
+	def __init__(self,context,varprefix,static=False):
 		self.keep = {}
-		for k in ['LIBS','LIBPATH','CPPPATH']:
+		for k in ['LIBS','LIBPATH','CPPPATH','LINKFLAGS']:
 			if context.env.has_key(k):
 				self.keep[k] = context.env[k]
 			else:
 				self.keep[k] = None
 		
-		libpath_add = []
-		if context.env.has_key(varprefix+'_LIBPATH'):
-			libpath_add = [env[varprefix+'_LIBPATH']]
-			#print "Adding '"+str(libpath_add)+"' to lib path"
-
-		cpppath_add = []
 		if context.env.has_key(varprefix+'_CPPPATH'):
-			cpppath_add = [env[varprefix+'_CPPPATH']]
+			context.env.Append(CPPPATH=[env[varprefix+'_CPPPATH']])
 			#print "Adding '"+str(cpppath_add)+"' to cpp path"
 
-		libs_add = []
-		if context.env.has_key(varprefix+'_LIB'):
-			libs_add = [env[varprefix+'_LIB']]
-			#print "Adding '"+str(libs_add)+"' to libs"	
+		if static:
+			staticlib=env[varprefix+'_LIB']
+			#print "STATIC LIB = ",staticlib
+			context.env.Append(
+				LINKFLAGS=[staticlib]
+			)
+		else:
+			if context.env.has_key(varprefix+'_LIBPATH'):
+				context.env.Append(LIBPATH=[env[varprefix+'_LIBPATH']])
+				#print "Adding '"+str(libpath_add)+"' to lib path"
 
-		context.env.Append(
-			LIBPATH = libpath_add
-			, CPPPATH = cpppath_add
-			, LIBS = libs_add
-		)
+			if context.env.has_key(varprefix+'_LIB'):
+				context.env.Append(LIBS=[env[varprefix+'_LIB']])
+				#print "Adding '"+str(libs_add)+"' to libs"	
 
 	def restore(self,context):
 		#print "RESTORING CONTEXT"
@@ -367,24 +406,28 @@ class KeepContext:
 		#print "..."
 		for k in self.keep:
 			if self.keep[k]==None:
-				#print "Clearing "+str(k)
-				del context.env[k];
+				if context.env.has_key(k):
+					#print "Clearing "+str(k)
+					del context.env[k];
 			else:
 				#print "Restoring "+str(k)+" to '"+self.keep[k]+"'"				
 				context.env[k]=self.keep[k];
 
-def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
+def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False):
 	"""This method will check for variables LIBNAME_LIBPATH
 	and LIBNAME_CPPPATH and try to compile and link the 
 	file with the provided text, linking with the 
 	library libname."""
 
-	context.Message( 'Checking for '+libname+'... ' )
-	
+	if static:
+		context.Message( 'Checking for static '+libname+'... ' )
+	else:
+		context.Message( 'Checking for '+libname+'... ' )
+		
 	if varprefix==None:
 		varprefix = libname.upper()
 	
-	keep = KeepContext(context,varprefix)
+	keep = KeepContext(context,varprefix,static)
 
 	if not context.env.has_key(varprefix+'_LIB'):
 		# if varprefix_LIB were in env, KeepContext would 
@@ -393,7 +436,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None):
 
 	is_ok = context.TryLink(text,ext)
 	
-#	print "Link success? ",(is_ok != 0)
+	#print "Link success? ",(is_ok != 0)
 
 	keep.restore(context)
 
@@ -501,10 +544,10 @@ int main(void){
 """
 
 def CheckTcl(context):
-	return CheckExtLib(context,'tcl',tcl_check_text)
+	return CheckExtLib(context,'tcl',tcl_check_text,static=env['STATIC_TCLTK'])
 
 def CheckTclVersion(context):
-	keep = KeepContext(context,'TCL')
+	keep = KeepContext(context,'TCL',static=env['STATIC_TCLTK'])
 	context.Message("Checking Tcl version... ")
 	(is_ok,output) = context.TryRun(tcl_check_text,'.c')
 	keep.restore(context)
@@ -534,12 +577,13 @@ int main(void){
 }
 """
 def CheckTk(context):
-	return CheckExtLib(context,'tk',tcl_check_text)
+	return CheckExtLib(context,'tk',tcl_check_text,static=env['STATIC_TCLTK'])
 
 
 def CheckTkVersion(context):
-	keep = KeepContext(context,'TK')
+	keep = KeepContext(context,'TK',static=context.env['STATIC_TCLTK'])
 	context.Message("Checking Tk version... ")
+	#print "LINKFLAGS =",context.env['LINKFLAGS']
 	(is_ok,output) = context.TryRun(tk_check_text,'.c')
 	keep.restore(context)
 	if not is_ok:
@@ -554,6 +598,39 @@ def CheckTkVersion(context):
 		
 	# good version
 	return 1
+
+#----------------
+# Tktable test
+
+tktable_check_text = r"""
+#include <tkTable.h>
+#include <stdio.h>
+int main(void){
+	Table mytable;
+	return 0;
+}
+"""
+
+def CheckTkTable(context):
+	return CheckExtLib(context,'tktable',tktable_check_text,static=env['STATIC_TCLTK'])
+
+#---------------
+# X11 test
+
+x11_check_text = r"""
+#include <X11/Xlib.h>
+#include <X11/IntrinsicP.h>
+#include <X11/Intrinsic.h>
+#include <X11/ObjectP.h>
+#include <X11/Object.h>
+int main(void){
+	Object mything;
+	return 0;
+}
+"""
+
+def CheckX11(context):
+	return CheckExtLib(context,'X11',x11_check_text)
 
 #----------------
 # GCC Version sniffing
@@ -576,6 +653,8 @@ conf = Configure(env
 		, 'CheckGcc' : CheckGcc
 		, 'CheckGccVisibility' : CheckGccVisibility
 		, 'CheckYacc' : CheckYacc
+		, 'CheckTkTable' : CheckTkTable
+		, 'CheckX11' : CheckX11
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -618,7 +697,13 @@ conf.env['HAVE_LEX']=True
 if conf.CheckTcl():
 	if with_tcltk_gui and conf.CheckTclVersion():
 		if conf.CheckTk():
-			if with_tcltk_gui and not conf.CheckTkVersion():
+			if with_tcltk_gui and conf.CheckTkVersion():
+				if conf.CheckTkTable():
+					pass
+				else:
+					without_tcltk_reason = "TkTable not found"
+					with_tcltk_gui = False
+			else:
 				without_tcltk_reason = "Require Tk version <= 8.3. See 'scons -h'"
 				with_tcltk_gui = False
 		else:
@@ -631,6 +716,9 @@ if conf.CheckTcl():
 else:
 	without_tcltk_reason = "Tcl not found."
 	with_tcltk_gui = False
+
+if env['STATIC_TCLTK']:
+	conf.CheckX11()
 
 # Python... obviously we're already running python, so we just need to
 # check that we can link to the python library OK:

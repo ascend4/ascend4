@@ -43,7 +43,7 @@
 #ifndef __STATIO_H_SEEN__
 #define __STATIO_H_SEEN__
 
-extern struct gl_list_t *GetTypeNamesFromStatList(CONST struct StatementList*sl);
+ASC_DLLSPEC(struct gl_list_t *) GetTypeNamesFromStatList(CONST struct StatementList*sl);
 /**<
  *  <!--  struct gl_list_t *GetTypesFromStatList(sl)                   -->
  *  <!--  CONST struct StatementList *sl;                              -->
