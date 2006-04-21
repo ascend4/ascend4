@@ -32,6 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include "compiler.h"
+#include "braced.h"
 
 /* We expect things in this file to get much more complicated
  * to deal with notes.

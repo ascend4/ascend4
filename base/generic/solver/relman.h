@@ -138,7 +138,7 @@ extern void relman_get_incidence(struct rel_relation *rel,
  *  depends on a variable with index var_n.
  */
 
-extern real64 relman_eval(struct rel_relation *rel, int32 *status, int safe);
+ASC_DLLSPEC(real64 ) relman_eval(struct rel_relation *rel, int32 *status, int safe);
 /**<
  *  <!--  residual = relman_eval(rel,status,safe)                      -->
  *  <!--  struct rel_relation *rel;                                    -->
@@ -274,7 +274,7 @@ extern int relman_diff_grad(struct rel_relation *rel,
  *    - the residual is evaluated
  */
 
-extern int relman_diffs(struct rel_relation *rel, 
+ASC_DLLSPEC(int ) relman_diffs(struct rel_relation *rel, 
                         var_filter_t *filter,
                         mtx_matrix_t mtx, 
                         real64 *resid, 
@@ -465,7 +465,7 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
  *  @todo Consider adding support for xstring postfix format. 
  */
 
-extern char *relman_make_vstring_infix(slv_system_t sys,
+ASC_DLLSPEC(char *) relman_make_vstring_infix(slv_system_t sys,
                                        struct rel_relation *rel,
                                        int style);
 /**< 

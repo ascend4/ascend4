@@ -424,7 +424,7 @@ ASC_DLLSPEC(const char*) slv_solver_name(int index);
 	of name-number pair.
 */
 
-extern int Solv_C_CheckHalt_Flag;
+ASC_DLLSPEC(int ) Solv_C_CheckHalt_Flag;
 /**<
 	Global variable used to communicate information between solvers and
 	an interface, whether a calculation should be halted or not.
@@ -446,7 +446,7 @@ extern int Solv_C_CheckHalt(void);
 	signal handling in the solver and scripting codes.
 */
 
-extern unsigned int slv_serial_id(slv_system_t sys);
+ASC_DLLSPEC(unsigned int ) slv_serial_id(slv_system_t sys);
 /**< Return the system serial number.
 
 	@return serial id number of given system.
@@ -454,7 +454,7 @@ extern unsigned int slv_serial_id(slv_system_t sys);
 	The id is unique within the life of the program.
 */
 
-extern dof_t *slv_get_dofdata(slv_system_t server);
+ASC_DLLSPEC(dof_t *) slv_get_dofdata(slv_system_t server);
 /**<
 	@return pointer to the system's dof structure for a nonlinear solver.
 
@@ -686,7 +686,7 @@ extern struct var_variable **slv_get_solvers_par_list(slv_system_t sys);
 /**< Returns the most recently set par list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
-extern struct var_variable **slv_get_solvers_unattached_list(slv_system_t sys);
+ASC_DLLSPEC(struct var_variable **) slv_get_solvers_unattached_list(slv_system_t sys);
 /**< Returns the most recently set unattached variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
@@ -703,11 +703,11 @@ ASC_DLLSPEC(struct var_variable **) slv_get_master_var_list(slv_system_t sys);
 /**< Returns the most recently set master variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
-extern struct var_variable **slv_get_master_par_list(slv_system_t sys);
+ASC_DLLSPEC(struct var_variable **) slv_get_master_par_list(slv_system_t sys);
 /**< Returns the most recently set master par list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
-extern struct var_variable **slv_get_master_unattached_list(slv_system_t sys);
+ASC_DLLSPEC(struct var_variable **) slv_get_master_unattached_list(slv_system_t sys);
 /**< Returns the most recently set master unattached variable list (never NULL) from the system.
 	@see slv_get_master_disunatt_list()
 */
@@ -755,7 +755,7 @@ extern struct w_when **slv_get_solvers_when_list(slv_system_t sys);
 extern struct bnd_boundary **slv_get_solvers_bnd_list(slv_system_t sys);
 /**<  Returns the (NULL-terminated) list of solver boundaries. */
 
-extern struct rel_relation **slv_get_master_rel_list(slv_system_t sys);
+ASC_DLLSPEC(struct rel_relation **) slv_get_master_rel_list(slv_system_t sys);
 /**<  Returns the (NULL-terminated) list of master relations. */
 
 extern struct rel_relation **slv_get_master_condrel_list(slv_system_t sys);
@@ -792,7 +792,7 @@ extern int32 slv_get_num_solvers_pars(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 */
 
-extern int32 slv_get_num_solvers_unattached(slv_system_t sys);
+ASC_DLLSPEC(int32 ) slv_get_num_solvers_unattached(slv_system_t sys);
 /**< Returns the length of the solver unsattached variable list.
 	The length does NOT include the terminating NULL.
 */
@@ -807,7 +807,7 @@ extern int32 slv_get_num_solvers_disunatt(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 */
 
-extern int32 slv_get_num_solvers_rels(slv_system_t sys);
+ASC_DLLSPEC(int32 ) slv_get_num_solvers_rels(slv_system_t sys);
 /**< Returns the length of the solver relations list.
 	The length does NOT include the terminating NULL.
 */
@@ -817,7 +817,7 @@ extern int32 slv_get_num_solvers_condrels(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 */
 
-extern int32 slv_get_num_solvers_objs(slv_system_t sys);
+ASC_DLLSPEC(int32 ) slv_get_num_solvers_objs(slv_system_t sys);
 /**< Returns the length of the solver objective relations list.
 	The length does NOT include the terminating NULL.
 */
@@ -842,7 +842,7 @@ extern int32 slv_get_num_solvers_bnds(slv_system_t sys);
  ***  Returns the length of the solver boundaries list.
  ***  The length does NOT include the terminating NULL.
  **/
-extern int32 slv_get_num_master_vars(slv_system_t sys);
+ASC_DLLSPEC(int32 ) slv_get_num_master_vars(slv_system_t sys);
 /**<
  ***  Returns the length of the master variables list.
  ***  The length does NOT include the terminating NULL.
@@ -852,7 +852,7 @@ ASC_DLLSPEC(int32) slv_get_num_master_pars(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 */
 
-extern int32 slv_get_num_master_unattached(slv_system_t sys);
+ASC_DLLSPEC(int32 ) slv_get_num_master_unattached(slv_system_t sys);
 /**< Returns the length of the master unattached variables list.
 	The length does NOT include the terminating NULL.
 */
@@ -867,7 +867,7 @@ extern int32 slv_get_num_master_disunatt(slv_system_t sys);
 	The length does NOT include the terminating NULL.
 */
 
-extern int32 slv_get_num_master_rels(slv_system_t sys);
+ASC_DLLSPEC(int32 ) slv_get_num_master_rels(slv_system_t sys);
 /**< Returns the length of the master relations list.
 	The length does NOT include the terminating NULL.
 */
@@ -908,13 +908,13 @@ extern int32 slv_get_num_models(slv_system_t sys);
 	Rel_relations will know which of these models they came from.
 */
 
-extern int32 slv_count_solvers_vars(slv_system_t sys, var_filter_t *vfilter);
+ASC_DLLSPEC(int32 ) slv_count_solvers_vars(slv_system_t sys, var_filter_t *vfilter);
 /**< Returns the number of solver variables matching the specified filter. */
 
 extern int32 slv_count_solvers_pars(slv_system_t sys, var_filter_t *vfilter);
 /**< Returns the number of solver parameters matching the specified filter. */
 
-extern int32 slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vfilter);
+ASC_DLLSPEC(int32 ) slv_count_solvers_unattached(slv_system_t sys, var_filter_t *vfilter);
 /**< Returns the number of solver unattached variables matching the specified filter. */
 
 extern int32 slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dfilter);
@@ -923,7 +923,7 @@ extern int32 slv_count_solvers_dvars(slv_system_t sys, dis_filter_t *dfilter);
 extern int32 slv_count_solvers_disunatt(slv_system_t sys, dis_filter_t *dfilter);
 /**< Returns the number of solver unattached discrete variables matching the specified filter. */
 
-extern int32 slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rfilter);
+ASC_DLLSPEC(int32 ) slv_count_solvers_rels(slv_system_t sys, rel_filter_t *rfilter);
 /**< Returns the number of solver relations matching the specified filter. */
 
 extern int32 slv_count_solvers_condrels(slv_system_t sys, rel_filter_t *rfilter);
@@ -992,7 +992,7 @@ extern int32 slv_count_master_bnds(slv_system_t sys, bnd_filter_t *bfilter);
 	Registered client queries.
 */
 
-extern void slv_set_obj_relation(slv_system_t sys, struct rel_relation *obj);
+ASC_DLLSPEC(void ) slv_set_obj_relation(slv_system_t sys, struct rel_relation *obj);
 /**<
 	Sets the objective relation of the solver to the
 	given one which should come from the objective list.  A special value
@@ -1000,7 +1000,7 @@ extern void slv_set_obj_relation(slv_system_t sys, struct rel_relation *obj);
 	Client solvers should minimize the residual of this equation.
 */
 
-extern struct rel_relation *slv_get_obj_relation(slv_system_t sys);
+ASC_DLLSPEC(struct rel_relation *) slv_get_obj_relation(slv_system_t sys);
 /**<
 	@return the internal copy of the objective function, or
 	NULL if none was specified.<br><br>
@@ -1071,7 +1071,7 @@ extern int slv_switch_solver(slv_system_t sys, int solver);
 	If failure, return is -1;
 */
 
-extern int32 slv_get_default_parameters(int32 index, slv_parameters_t *parameters);
+ASC_DLLSPEC(int32 ) slv_get_default_parameters(int32 index, slv_parameters_t *parameters);
 /**< @TODO needs commenting, KHACK */
 
 ASC_DLLSPEC(void) slv_get_parameters(slv_system_t sys, slv_parameters_t *parameters);
@@ -1115,26 +1115,26 @@ ASC_DLLSPEC(void) slv_get_status(slv_system_t sys, slv_status_t *status);
 	Copies the current system status into the given structure.
 */
 
-extern linsolqr_system_t slv_get_linsolqr_sys(slv_system_t sys);
+ASC_DLLSPEC(linsolqr_system_t ) slv_get_linsolqr_sys(slv_system_t sys);
 /**<
 	Returns the linsolqr system used, or NULL if none.
 	@deprecated { THIS CALL SHOULD GO AWAY }
 */
 
-extern linsol_system_t slv_get_linsol_sys(slv_system_t sys);
+ASC_DLLSPEC(linsol_system_t ) slv_get_linsol_sys(slv_system_t sys);
 /**<
 	Returns the linsol system used, or NULL if none.
 	@deprecated { THIS CALL SHOULD GO AWAY }
 */
 
-extern mtx_matrix_t slv_get_sys_mtx(slv_system_t sys);
+ASC_DLLSPEC(mtx_matrix_t ) slv_get_sys_mtx(slv_system_t sys);
 /**<
 	Returns the mtx used, or NULL if none. The user should check.
 
 	@deprecated {THIS CALL SHOULD GO AWAY}
  **/
 
-extern void slv_dump_internals(slv_system_t sys, int level);
+ASC_DLLSPEC(void ) slv_dump_internals(slv_system_t sys, int level);
 /**<
 	Will spew whatever the solver interface developer feels like to
 	stderr.  Larger values of level will give more detailed information,
@@ -1166,7 +1166,7 @@ ASC_DLLSPEC(void) slv_presolve(slv_system_t sys);
 	so that structural analysis flags in the status will be accurate.
 */
 
-extern void slv_resolve(slv_system_t sys);
+ASC_DLLSPEC(void ) slv_resolve(slv_system_t sys);
 /**<
 	This function re-prepares the system for solving.  This function may
 	be used instead of slv_presolve, provided the system was partially
@@ -1203,7 +1203,7 @@ ASC_DLLSPEC(void) slv_iterate(slv_system_t sys);
 	slv_presolve()).  See also slv_solve().
 */
 
-extern void slv_solve(slv_system_t sys);
+ASC_DLLSPEC(void ) slv_solve(slv_system_t sys);
 /**<
 	Attempts to solve the entire system in one shot (i.e.
 	performs as many iterations as needed or allowed).  For some solvers,
@@ -1216,7 +1216,7 @@ extern void slv_destroy_client(slv_system_t sys);
 	the allocated data space of sys
 */
 
-extern boolean slv_change_basis(slv_system_t,int32,mtx_range_t *);
+ASC_DLLSPEC(boolean ) slv_change_basis(slv_system_t,int32,mtx_range_t *);
 /**<
 	Move var (given by index #) to the unassigned region (far right)
 	of the solver matrix if possible. returns FALSE if impossible

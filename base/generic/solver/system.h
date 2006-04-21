@@ -57,7 +57,7 @@ ASC_DLLSPEC(slv_system_t) system_build(SlvBackendToken inst);
  ***  relations, and objective functions into pointer lists.
  **/
 
-extern void system_destroy(slv_system_t sys);
+ASC_DLLSPEC(void ) system_destroy(slv_system_t sys);
 /**<
  ***  <!--  system_destroy(sys)                                        -->
  ***  <!--  slv_system_t sys;                                          -->
@@ -65,7 +65,7 @@ extern void system_destroy(slv_system_t sys);
  ***  Destroys the latest model formulation.
  **/
 
-extern void system_free_reused_mem(void);
+ASC_DLLSPEC(void ) system_free_reused_mem(void);
 /**<
  ***  <!--  system_free_reused_mem()                                   -->
  ***

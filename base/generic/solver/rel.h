@@ -133,7 +133,7 @@ extern void rel_destroy(struct rel_relation *rel);
  *  Destroys a relation.
  */
 
-extern void rel_write_name(slv_system_t sys, struct rel_relation *rel, FILE *file);
+ASC_DLLSPEC(void ) rel_write_name(slv_system_t sys, struct rel_relation *rel, FILE *file);
 /**<
  *  Writes a name to the file given. Handles NULL inputs gracefully.
  *  Does not print any whitespace, including carriage returns.
@@ -222,7 +222,7 @@ extern enum rel_enum rel_relop(struct rel_relation *rel);
  * Returns the type of the relational operator of a given relation.
  */
 
-extern char *rel_make_name(slv_system_t sys, struct rel_relation *rel);
+ASC_DLLSPEC(char *) rel_make_name(slv_system_t sys, struct rel_relation *rel);
 /**<
  *  Copies of the relation instance name can be made and returned.
  *  The string returned should be freed when no longer in use.
@@ -239,7 +239,7 @@ extern void rel_set_mindex(struct rel_relation *rel, int32 index);
  *  appears in a slv_system_t master relation list.
  */
 
-extern int32 rel_sindex(const struct rel_relation *rel);
+ASC_DLLSPEC(int32 ) rel_sindex(const struct rel_relation *rel);
 /**<
  *  Retrieves the index number of the given relation as it
  *  appears in a solvers relation list. The index is most often used
@@ -277,7 +277,7 @@ ASC_DLLSPEC(void) rel_set_residual(struct rel_relation *rel, real64 residual);
  *  Sets the residual field of the given relation.
  */
 
-extern real64 rel_nominal(struct rel_relation *rel);
+ASC_DLLSPEC(real64 ) rel_nominal(struct rel_relation *rel);
 /**<
  *  Retrieves the nominal field of the given relation.
  *  No slv client has any business being able to set the nominal,
@@ -379,7 +379,7 @@ ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation 
  * these bits and for operations on the whole set.
  */
 
-extern int32 rel_apply_filter(const struct rel_relation *rel,
+ASC_DLLSPEC(int32 ) rel_apply_filter(const struct rel_relation *rel,
                               rel_filter_t *filter);
 /**<
  *  Returns 1 only if all of the positions specified in
@@ -414,7 +414,7 @@ ASC_DLLSPEC(uint32) rel_flagbit(struct rel_relation *rel, uint32 name);
  *  name should be a REL_xx flag defined above)
  */
 
-extern void rel_set_flagbit(struct rel_relation *rel,
+ASC_DLLSPEC(void ) rel_set_flagbit(struct rel_relation *rel,
                             uint32 NAME, uint32 oneorzero);
 /**<
  *  Sets the bit, which should be referred to by its macro name,

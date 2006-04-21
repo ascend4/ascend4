@@ -265,7 +265,7 @@ enum factor_method {
   symmetric_lu = 11 /**< anticipated */
 };
 
-extern int g_linsolqr_timing;
+ASC_DLLSPEC(int ) g_linsolqr_timing;
 /**< 
  * If nonzero and certain internal defines are set, factorization
  * generates a fill and timing message.
@@ -325,7 +325,7 @@ extern enum factor_class linsolqr_fmethod_to_fclass(enum factor_method fm);
  * If you implement a new method or class, update this function.
  */
 
-extern char *linsolqr_enum_to_rmethod(enum reorder_method m);
+ASC_DLLSPEC(char *) linsolqr_enum_to_rmethod(enum reorder_method m);
 /**<
  * <!--  s=linsolqr_enum_to_rmethod(m);                                -->
  *
@@ -343,7 +343,7 @@ extern char *linsolqr_enum_to_fmethod(enum factor_method m);
  * Do not free the name.
  */
 
-extern char *linsolqr_rmethod_description(enum reorder_method meth);
+ASC_DLLSPEC(char *) linsolqr_rmethod_description(enum reorder_method meth);
 /**<  
  * <!--  description=linsolqr_rmethod_description(meth);               -->
  *
@@ -352,7 +352,7 @@ extern char *linsolqr_rmethod_description(enum reorder_method meth);
  * If you implement a new method, update this function.
  */
 
-extern char *linsolqr_fmethod_description(enum factor_method meth);
+ASC_DLLSPEC(char *) linsolqr_fmethod_description(enum factor_method meth);
 /**<  
  * <!--  description=linsolqr_fmethod_description(meth);               -->
  *
@@ -390,7 +390,7 @@ extern void linsolqr_set_matrix(linsolqr_system_t sys, mtx_matrix_t mtx);
  *  Sets the coefficient matrix to mtx.
  */
 
-extern void linsolqr_set_region(linsolqr_system_t sys, mtx_region_t region);
+ASC_DLLSPEC(void ) linsolqr_set_region(linsolqr_system_t sys, mtx_region_t region);
 /**<
  *  <!--  linsolqr_set_region(sys,region)                              -->
  *  <!--  linsolqr_system_t sys;                                       -->
@@ -399,7 +399,7 @@ extern void linsolqr_set_region(linsolqr_system_t sys, mtx_region_t region);
  *  Sets the reg to region.
  */
 
-extern mtx_matrix_t linsolqr_get_matrix(linsolqr_system_t sys);
+ASC_DLLSPEC(mtx_matrix_t ) linsolqr_get_matrix(linsolqr_system_t sys);
 /**< 
  *  <!--  mtx = linsolqr_get_matrix(sys)                               -->
  *  <!--  mtx_matrix_t mtx;                                            -->
@@ -408,7 +408,7 @@ extern mtx_matrix_t linsolqr_get_matrix(linsolqr_system_t sys);
  *  Returns the coefficient matrix.
  */
 
-extern void linsolqr_add_rhs(linsolqr_system_t sys, 
+ASC_DLLSPEC(void ) linsolqr_add_rhs(linsolqr_system_t sys, 
                              real64 *rhs,
                              boolean transpose);
 /**<
@@ -451,7 +451,7 @@ extern void linsolqr_add_rhs(linsolqr_system_t sys,
  *  </pre>
  */
 
-extern void linsolqr_remove_rhs(linsolqr_system_t sys, real64 *rhs);
+ASC_DLLSPEC(void ) linsolqr_remove_rhs(linsolqr_system_t sys, real64 *rhs);
 /**< 
  *  <!--  linsolqr_remove_rhs(sys,rhs)                                 -->
  *  <!--  linsolqr_system_t sys;                                       -->
@@ -470,7 +470,7 @@ extern int32 linsolqr_number_of_rhs(linsolqr_system_t sys);
  *  Returns the number of rhs's currently part of the system.
  */
 
-extern real64 *linsolqr_get_rhs(linsolqr_system_t sys, int n);
+ASC_DLLSPEC(real64 *) linsolqr_get_rhs(linsolqr_system_t sys, int n);
 /**< 
  *  <!--  rhs = linsolqr_get_rhs(sys,n)                                -->
  *  <!--  real64 *rhs;                                                 -->
@@ -482,7 +482,7 @@ extern real64 *linsolqr_get_rhs(linsolqr_system_t sys, int n);
  *  if the index is out of range.
  */
 
-extern void linsolqr_matrix_was_changed(linsolqr_system_t sys);
+ASC_DLLSPEC(void ) linsolqr_matrix_was_changed(linsolqr_system_t sys);
 /**< 
  *  <!--  linsolqr_matrix_was_changed(sys)                             -->
  *  <!--  linsolqr_system_t sys;                                       -->
@@ -492,7 +492,7 @@ extern void linsolqr_matrix_was_changed(linsolqr_system_t sys);
  *  made.
  */
 
-extern void linsolqr_rhs_was_changed(linsolqr_system_t sys,
+ASC_DLLSPEC(void ) linsolqr_rhs_was_changed(linsolqr_system_t sys,
                                      real64 *rhs);
 /**<
  *  <!--  linsolqr_rhs_was_changed(sys,rhs)                            -->
@@ -589,7 +589,7 @@ extern enum factor_class linsolqr_fclass(linsolqr_system_t sys);
  *  The system should be previously prepped.
  */
 
-extern enum factor_method linsolqr_fmethod(linsolqr_system_t sys);
+ASC_DLLSPEC(enum factor_method ) linsolqr_fmethod(linsolqr_system_t sys);
 /**< 
  *  <!--  meth = linsolqr_fmethod(sys)                                 -->
  *  <!--  enum factor_method;                                          -->
@@ -599,7 +599,7 @@ extern enum factor_method linsolqr_fmethod(linsolqr_system_t sys);
  *  The system should be previously prepped.
  */
 
-extern enum reorder_method linsolqr_rmethod(linsolqr_system_t sys);
+ASC_DLLSPEC(enum reorder_method ) linsolqr_rmethod(linsolqr_system_t sys);
 /**< 
  *  <!--  meth = linsolqr_rmethod(sys)                                 -->
  *  <!--  enum reorder_method;                                         -->
@@ -658,7 +658,7 @@ extern int linsolqr_prep(linsolqr_system_t sys,
  *  Return 0 if ok, or 1 otherwise.
  */
 
-extern int linsolqr_reorder(linsolqr_system_t sys,
+ASC_DLLSPEC(int ) linsolqr_reorder(linsolqr_system_t sys,
                             mtx_region_t *region,
                             enum reorder_method rmeth);
 /**<
@@ -704,7 +704,7 @@ extern int linsolqr_reorder(linsolqr_system_t sys,
  *  </pre>
  */
 
-extern int linsolqr_factor(linsolqr_system_t sys,
+ASC_DLLSPEC(int ) linsolqr_factor(linsolqr_system_t sys,
                            enum factor_method fmethod);
 /**<
  *  <!--  linsolqr_factor(sys,fmethod)                                 -->
@@ -748,9 +748,9 @@ extern int linsolqr_get_pivot_sets(linsolqr_system_t sys,
  *  as the equivalents below have been implemented.
  */
 
-extern mtx_sparse_t *linsolqr_unpivoted_rows(linsolqr_system_t sys);
+ASC_DLLSPEC(mtx_sparse_t *) linsolqr_unpivoted_rows(linsolqr_system_t sys);
 /**< See discussion under linsolqr_unpivoted_cols(). */
-extern mtx_sparse_t *linsolqr_unpivoted_cols(linsolqr_system_t sys);
+ASC_DLLSPEC(mtx_sparse_t *) linsolqr_unpivoted_cols(linsolqr_system_t sys);
 /**< 
  *  <pre>
  *  singrows = linsolqr_unpivoted_rows(sys);
@@ -859,11 +859,13 @@ ASC_DLLSPEC(void) linsolqr_calc_col_dependencies(linsolqr_system_t sys);
  *  @todo Separate documentation for these linsolqr functions?
  */
 
-extern mtx_sparse_t
-*linsolqr_row_dependence_coefs(linsolqr_system_t sys, int32 orgrow);
+ASC_DLLSPEC(mtx_sparse_t *) linsolqr_row_dependence_coefs(
+	linsolqr_system_t sys, int32 orgrow);
 /**< See discussion under linsolqr_col_dependence_coefs(). */
-extern mtx_sparse_t
-*linsolqr_col_dependence_coefs(linsolqr_system_t sys, int32 orgcol);
+
+ASC_DLLSPEC(mtx_sparse_t *) linsolqr_col_dependence_coefs(
+	linsolqr_system_t sys, int32 orgcol
+);
 /**<
  *  <pre>
  *  rowcoefs = linsolqr_row_dependence_coefs(sys,orgrow);
@@ -918,7 +920,7 @@ extern real64 linsolqr_org_col_dependency(linsolqr_system_t sys,
  *  @todo Separate documentation for these linsolqr functions?
  */
 
-extern int linsolqr_solve(linsolqr_system_t sys, real64 *rhs);
+ASC_DLLSPEC(int ) linsolqr_solve(linsolqr_system_t sys, real64 *rhs);
 /**<
  *  <!--  linsolqr_solve(sys,rhs)                                      -->
  *  <!--  linsolqr_system_t sys;                                       -->
@@ -951,7 +953,7 @@ extern real64 linsolqr_var_value(linsolqr_system_t sys,
  *  and a warning is issued to stderr.
  */
 
-extern boolean linsolqr_copy_solution(linsolqr_system_t sys, 
+ASC_DLLSPEC(boolean ) linsolqr_copy_solution(linsolqr_system_t sys, 
                                       real64 *rhs, real64 *vector);
 /**<
  *  <!--  not_ok = linsolqr_copy_solution(sys,rhs,vector)              -->
@@ -1047,7 +1049,7 @@ extern void linsolqr_free_reused_mem(void);
  *  functionality to linsol.
  */
  
-extern mtx_matrix_t linsolqr_get_factors(linsolqr_system_t sys);
+ASC_DLLSPEC(mtx_matrix_t ) linsolqr_get_factors(linsolqr_system_t sys);
 /**< See discussion under linsolqr_get_inverse(). */
 extern mtx_matrix_t linsolqr_get_inverse(linsolqr_system_t sys);
 /**<

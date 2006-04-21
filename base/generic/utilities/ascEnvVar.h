@@ -68,13 +68,13 @@ extern int Asc_InitEnvironment(unsigned long anticipated);
  *  @return Returns 0 on success, 1 on failure.
  */
 
-extern void Asc_DestroyEnvironment(void);
+ASC_DLLSPEC(void ) Asc_DestroyEnvironment(void);
 /**<
  *  Destroys any information currently in the stored environment.
  *  All memory associated with the storage is released.
  */
 
-extern int Asc_SetPathList(CONST char *var, CONST char *path);
+ASC_DLLSPEC(int ) Asc_SetPathList(CONST char *var, CONST char *path);
 /**<
  *  Assigns the elements in path to ASCEND environment variable var.
  *  path should contain one or more strings delimited with :
@@ -180,7 +180,7 @@ ASC_DLLSPEC(int) Asc_ImportPathList(CONST char *osEnvVar);
  *  @return Returns 0 if variable is successfully imported, 1 otherwise.
  */
 
-extern int Asc_AppendPath(char *envvar, char *newelement);
+ASC_DLLSPEC(int ) Asc_AppendPath(char *envvar, char *newelement);
 /**<
  *  Adds a new element to the list of values for an ASCEND environment
  *  variable.  If envvar does not exist, it is created.  newelement is
@@ -198,7 +198,7 @@ extern int Asc_AppendPath(char *envvar, char *newelement);
  *  @return Returns 0 if newelement was successfully added, 1 otherwise.
  */
 
-extern char **Asc_GetPathList(char *envvar, int *argcPtr);
+ASC_DLLSPEC(char **) Asc_GetPathList(char *envvar, int *argcPtr);
 /**<
  *  Retrieve the current value(s) for ASCEND environment variable envvar.
  *  The values are returned as an array of pointers to the value strings.
@@ -234,7 +234,7 @@ ASC_DLLSPEC(char*) Asc_GetEnv(char *envvar);
  *          on error.  The caller is responsible for freeing it.
  */
 
-extern char **Asc_EnvNames(int *argc);
+ASC_DLLSPEC(char **) Asc_EnvNames(int *argc);
 /**<
  *  Retrieve a list of currently defined ASCEND environment variables.
  *  Pointers to the variable names are returned in a NULL-terminated

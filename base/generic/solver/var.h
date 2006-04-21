@@ -298,14 +298,14 @@ extern void var_set_sindexF(struct var_variable *var, int32 index);
 
 ASC_DLLSPEC(real64) var_value(const struct var_variable *var);
 /**<  Returns the value of the variable. */
-extern void var_set_value(struct var_variable *var, real64 value);
+ASC_DLLSPEC(void ) var_set_value(struct var_variable *var, real64 value);
 /**<
 	Sets the value of the variable.
 */
 
 ASC_DLLSPEC(real64) var_nominal(struct var_variable *var);
 /**<  Returns the nominal value of the variable, or 1.0 if it has none. */
-extern void var_set_nominal(struct var_variable *var, real64 nominal);
+ASC_DLLSPEC(void ) var_set_nominal(struct var_variable *var, real64 nominal);
 /**<
 	Sets the nominal value of the variable.
 	If no nominal field in var, returns 1.0.
@@ -429,7 +429,7 @@ ASC_DLLSPEC(uint32) var_flagbit(const struct var_variable *rel, const uint32 nam
 	name should be a VAR_xx flag defined above.
 */
 
-extern void var_set_flagbit(struct var_variable *var,
+ASC_DLLSPEC(void ) var_set_flagbit(struct var_variable *var,
                             uint32 NAME,
                             uint32 oneorzero);
 /**<
@@ -466,14 +466,14 @@ extern void var_set_flagbit(struct var_variable *var,
  * 6/96. baa
 */
 
-extern int32 var_apply_filter(const struct var_variable *var,
+ASC_DLLSPEC(int32 ) var_apply_filter(const struct var_variable *var,
                               const var_filter_t *filter);
 /**<
 	Returns 1 if filter and var flags are compatible, 0 elsewise.
 	See the filter description in rel.h. This is exactly the same.
 */
 
-extern uint32 var_fixed(struct var_variable *var);
+ASC_DLLSPEC(uint32 ) var_fixed(struct var_variable *var);
 /**< Returns the fixed flag of var.  Has side effects in the ascend instance. */
 extern void var_set_fixed(struct var_variable *var, uint32 fixed);
 /**< Sets the fixed flag of var.  Has side effects in the ascend instance. */

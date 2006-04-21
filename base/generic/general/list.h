@@ -179,7 +179,7 @@ extern void gl_report_pool(FILE *f);
  *  @param f Open file stream to which to print report.
  */
 
-extern struct gl_list_t *gl_create(unsigned long capacity);
+ASC_DLLSPEC(struct gl_list_t *) gl_create(unsigned long capacity);
 /**<
  *  Creates a new empty list having the specified initial capacity.
  *  If the number of list items later exceeds this size, the
@@ -204,7 +204,7 @@ extern struct gl_list_t *gl_create(unsigned long capacity);
  *  @return Returns a pointer to the new empty gl_list_t.
  */
 
-extern void gl_free_and_destroy(struct gl_list_t *list);
+ASC_DLLSPEC(void ) gl_free_and_destroy(struct gl_list_t *list);
 /**<
  *  Destroys a list and deallocates all list items.
  *  The specified list will be destroyed (its memory is to be
@@ -225,7 +225,7 @@ extern void gl_free_and_destroy(struct gl_list_t *list);
  *  @param list A pointer to the gl_list_t to destroy.
  */
 
-extern void gl_destroy(struct gl_list_t *list);
+ASC_DLLSPEC(void ) gl_destroy(struct gl_list_t *list);
 /**<
  *  Destroys a list without deallocating the list items.
  *  The specified list will be destroyed (its memory is to be
@@ -282,7 +282,7 @@ ASC_DLLSPEC(VOIDPTR) gl_fetchF(CONST struct gl_list_t *list, unsigned long pos);
  *  Do not call this function directly - use gl_fetch() instead.
  */
 
-extern void gl_store(struct gl_list_t *list, unsigned long pos, VOIDPTR ptr);
+ASC_DLLSPEC(void ) gl_store(struct gl_list_t *list, unsigned long pos, VOIDPTR ptr);
 /**<
  *  Stores an item in the list in position pos.  This procedure can only
  *  modify existing list items (i.e. 1 <= pos <= gl_length(list)).  It cannot
@@ -306,7 +306,7 @@ extern void gl_store(struct gl_list_t *list, unsigned long pos, VOIDPTR ptr);
  *  @param ptr   Pointer to data to store at index pos.
  */
 
-extern void gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
+ASC_DLLSPEC(void ) gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
 /**<
  *  <!--  PROCEDURE gl_append_ptr(list,ptr);                           -->
  *  <!--  struct gl_list_t *list;                                      -->
@@ -473,7 +473,7 @@ extern void gl_ptr_sort(struct gl_list_t *list, int inc);
  */
 #endif
 
-extern void gl_sort(struct gl_list_t *list, CmpFunc func);
+ASC_DLLSPEC(void ) gl_sort(struct gl_list_t *list, CmpFunc func);
 /**<
  *  Sorts the list in increasing order using Quick Sort.  It
  *  uses a somewhat intelligent pivot choice, so it is unlikely that the
@@ -520,7 +520,7 @@ extern void gl_insert_ptr_sorted(struct gl_list_t *list, VOIDPTR ptr, int inc);
  */
 #endif
 
-extern void gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
+ASC_DLLSPEC(void ) gl_insert_sorted(struct gl_list_t *list, VOIDPTR ptr, CmpFunc func);
 /**<
  *  Inserts an item into a sorted list in the position where it belongs to
  *  keep the list sorted.  The specified func is used to compare to list items
@@ -598,7 +598,7 @@ extern unsigned long gl_ptr_search(CONST struct gl_list_t *list,
  *          0 if match not found.
  */
 
-extern unsigned long gl_search(CONST struct gl_list_t *list,
+ASC_DLLSPEC(unsigned long ) gl_search(CONST struct gl_list_t *list,
                                CONST VOIDPTR match,
                                CmpFunc func);
 /**<
@@ -666,7 +666,7 @@ extern int gl_unique_list(CONST struct gl_list_t *list);
  *  @return TRUE if the pointers in the list are unique, FALSE otherwise.
  */
 
-extern void gl_delete(struct gl_list_t *list,
+ASC_DLLSPEC(void ) gl_delete(struct gl_list_t *list,
                       unsigned long pos,
                       int dispose);
 /**<

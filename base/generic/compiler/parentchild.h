@@ -86,13 +86,13 @@
 
 /* Parent routines */
 
-extern unsigned long NumberParents(CONST struct Instance *i);
+ASC_DLLSPEC(unsigned long ) NumberParents(CONST struct Instance *i);
 /**<
  *  Return the number of parents that instance i has.
  *  DummyInstances have no parents, apparently.
  */
 
-extern struct Instance *InstanceParent(CONST struct Instance *i, unsigned long n);
+ASC_DLLSPEC(struct Instance *) InstanceParent(CONST struct Instance *i, unsigned long n);
 /**<
  *  Return a pointer to parent number n.  Parents are numbered from
  *  1 to NumberParents(i).  0(zero) is not a valid parent number.
@@ -114,7 +114,7 @@ extern void DeleteParent(struct Instance *i, unsigned long pos);
  *  DummyInstance just reduces its reference count.
  */
 
-extern struct InstanceName ParentsName(CONST struct Instance *p,
+ASC_DLLSPEC(struct InstanceName ) ParentsName(CONST struct Instance *p,
                                        CONST struct Instance *c);
 /**<
  *  This will returns parent "p"'s name for "c".  This assumes that
@@ -165,7 +165,7 @@ ASC_DLLSPEC(struct InstanceName) ChildName(CONST struct Instance *i, unsigned lo
  *  n'th child.
  */
 
-extern CONST struct Statement *ChildDeclaration(CONST struct Instance *i,
+ASC_DLLSPEC(CONST struct Statement *) ChildDeclaration(CONST struct Instance *i,
                                                 unsigned long n);
 /**<
  *  Returns the declaration statement (IS_A,ALIASE,ARRAY) of the n'th child
@@ -192,7 +192,7 @@ extern CONST struct TypeDescription *ChildRefines(CONST struct Instance *i,
  *  instead of whatever type this returns.
  */
 
-extern unsigned long ChildSearch(CONST struct Instance *i,
+ASC_DLLSPEC(unsigned long ) ChildSearch(CONST struct Instance *i,
                                  CONST struct InstanceName *name);
 /**<
  *  This procedure will search instance i for a child that matches "name".
@@ -230,7 +230,7 @@ ASC_DLLSPEC(struct Instance*) ChildByChar(CONST struct Instance *i,
  *  f
  */
 
-extern unsigned long ChildIndex(CONST struct Instance *i,
+ASC_DLLSPEC(unsigned long ) ChildIndex(CONST struct Instance *i,
                                 CONST struct Instance *child);
 /**<
  *  This procedure searches through the child list of instance i for child.

@@ -65,7 +65,7 @@ extern void WriteLogRel(FILE *f,
  *  Write the logical relation in infix to the file indicated.
  */
 
-extern char *WriteLogRelToString(CONST struct Instance *lrelinst,
+ASC_DLLSPEC(char *) WriteLogRelToString(CONST struct Instance *lrelinst,
                                  CONST struct Instance *ref);
 /**<
  *  <!--  s = WriteLogRelToString(lrelinst,ref);                       -->
@@ -86,7 +86,7 @@ extern void WriteLogRelPostfix(FILE *f,
  *  Write the logical relation in postfix to the file indicated.
  */
 
-extern char *WriteLogRelPostfixToString(CONST struct Instance *lrelinst,
+ASC_DLLSPEC(char *) WriteLogRelPostfixToString(CONST struct Instance *lrelinst,
                                         CONST struct Instance *ref);
 /**<
  *  <!--  void WriteRelationPostfixString(lrelinst,ref)                -->

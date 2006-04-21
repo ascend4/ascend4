@@ -100,7 +100,7 @@
  *  @return A new copy of str as a char *, or NULL if an error occurs.
  */
 
-extern char *ascstrdupf(CONST char *str);
+ASC_DLLSPEC(char) *ascstrdupf(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
  *  is not defined.  Do not call this function directly - use 

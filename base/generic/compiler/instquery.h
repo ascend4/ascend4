@@ -185,7 +185,7 @@ extern unsigned long InstanceDepth(CONST struct Instance *i);
  *  The root instance is at depth 1.
  */
 
-extern unsigned long InstanceShortDepth(CONST struct Instance *i);
+ASC_DLLSPEC(unsigned long ) InstanceShortDepth(CONST struct Instance *i);
 /**<
  *  <!--  unsigned long InstanceShortDepth(i)                          -->
  *  <!--  const struct Instance *i;                                    -->
@@ -296,7 +296,7 @@ extern void SetAnonFlags(struct Instance *i, unsigned int flags);
  *  Works for all instance kinds except subatomic ones.
  */
 
-extern struct BitList *InstanceBitList(CONST struct Instance *i);
+ASC_DLLSPEC(struct BitList *) InstanceBitList(CONST struct Instance *i);
 /**<
  *  <!--  struct BitList *InstanceBitList(i)                           -->
  *  <!--  const struct Instance *i;                                    -->
@@ -311,7 +311,7 @@ extern struct BitList *InstanceBitList(CONST struct Instance *i);
  *  These are general instance querying routines.
  */
 
-extern symchar *InstanceType(CONST struct Instance *i);
+ASC_DLLSPEC(symchar *) InstanceType(CONST struct Instance *i);
 /**<
  *  <!--  symchar *InstanceType(i)                                     -->
  *  <!--  CONST struct Instance *i;                                    -->
@@ -355,7 +355,7 @@ extern unsigned long InstanceSize(CONST struct Instance *i);
  *  Returns TRUE if i is a UNIVERSAL instance.
  */
 
-extern int IntegerSetInstance(CONST struct Instance *i);
+ASC_DLLSPEC(int ) IntegerSetInstance(CONST struct Instance *i);
 /**<
  *  <!--  int IntegerSetInstance(i)                                    -->
  *  <!--  const struct Instance *i;                                    -->

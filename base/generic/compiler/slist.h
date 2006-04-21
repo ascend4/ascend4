@@ -59,7 +59,7 @@ extern struct StatementList *EmptyStatementList(void);
  *  @return The list as a struct gl_list_t*.
  *  @see GetListF()
  */
-extern struct gl_list_t *GetListF(CONST struct StatementList *sl,
+ASC_DLLSPEC(struct gl_list_t *) GetListF(CONST struct StatementList *sl,
                                   CONST char *file,
                                   int line);
 /**<

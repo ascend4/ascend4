@@ -39,7 +39,7 @@
 #ifndef __MERGEINST_H_SEEN__
 #define __MERGEINST_H_SEEN__
 
-extern struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2);
+ASC_DLLSPEC(struct Instance *) MergeInstances(struct Instance *i1, struct Instance *i2);
 /**< 
  *  <!--  struct Instance *MergeInstances(i1,i2)                       -->
  *  <!--  struct Instance *i1,*i2;                                     -->
@@ -60,7 +60,7 @@ extern struct Instance *MergeInstances(struct Instance *i1, struct Instance *i2)
  *       vars are also merged. Fixed for token relations, but not others.
  */
 
-extern void PostMergeCheck(struct Instance *i);
+ASC_DLLSPEC(void ) PostMergeCheck(struct Instance *i);
 /**< 
  *  <!--  void PostMergeCheck(i)                                       -->
  *  <!--  struct Instance *i;                                          -->
@@ -71,7 +71,7 @@ extern void PostMergeCheck(struct Instance *i);
  */
 
 
-extern void MergeCliques(struct Instance *i1, struct Instance *i2);
+ASC_DLLSPEC(void ) MergeCliques(struct Instance *i1, struct Instance *i2);
 /**< 
  *  <!--  void MergeCliques(i1,i2)                                     -->
  *  <!--  struct Instance *i1,*i2;                                     -->

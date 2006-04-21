@@ -253,7 +253,7 @@ ASC_DLLSPEC(ChildListPtr) GetChildListF(CONST struct TypeDescription *d);
  *  @return The base type as an enum type_kind.
  *  @see GetBaseTypeF()
  */
-extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
+ASC_DLLSPEC(enum type_kind ) GetBaseTypeF(CONST struct TypeDescription *d);
 /**<
  *  Implementation function for GetBaseType() (debug mode).
  *  Do not call this function directly - use GetBaseType() instead.
@@ -311,8 +311,9 @@ extern enum type_kind GetBaseTypeF(CONST struct TypeDescription *d);
  *  @return The statement list as a CONST struct StatementList*.
  *  @see GetStatementListF()
  */
-extern CONST struct StatementList
-*GetStatementListF(CONST struct TypeDescription *d);
+ASC_DLLSPEC(CONST struct StatementList *) GetStatementListF(
+	CONST struct TypeDescription *d
+);
 /**<
  *  Implementation function for GetStatementList() (debug mode).
  *  Do not call this function directly - use GetStatementList() instead.
@@ -664,7 +665,7 @@ ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
  *  @return The refiners of d as a gl_list of TypeDescription *.
  */
 
-extern struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d);
+ASC_DLLSPEC(struct gl_list_t *) GetAncestorNames(CONST struct TypeDescription *d);
 /**<
  *  Return the names of ancestors of type d given.
  *  If none, list may be empty. The list is of symchar *.
@@ -1163,7 +1164,7 @@ ASC_DLLSPEC(unsigned) TypeShowF(CONST struct TypeDescription *d);
  *  Do not call this function directly - use TypeShow() instead.
  */
 
-extern void SetTypeShowBit(struct TypeDescription *d, int value);
+ASC_DLLSPEC(void ) SetTypeShowBit(struct TypeDescription *d, int value);
 /**<
  *  Sets the bit TYPESHOW.  This bit is for browsing purposes.
  *  It will tell is the user wants to view the instances of a specific type.

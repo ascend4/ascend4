@@ -135,7 +135,7 @@ extern void WriteRelationPostfix(FILE *f,
  *  This function at the moment is only applicable to token relations.
  */
 
-extern char *WriteRelationPostfixString(CONST struct Instance *relinst,
+ASC_DLLSPEC(char *) WriteRelationPostfixString(CONST struct Instance *relinst,
                                         CONST struct Instance *ref);
 /**<
  *  Write the relation in postfix to the file indicated.

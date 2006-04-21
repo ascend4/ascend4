@@ -82,7 +82,7 @@ ASC_DLLSPEC(symchar*) AddSymbol(CONST char *c);
  *  @example symchar *permanentstring = AddSymbol(c);
  */
 
-extern symchar *AddSymbolL(CONST char *c, int len);
+ASC_DLLSPEC(symchar *) AddSymbolL(CONST char *c, int len);
 /**<
  *  This function does exactly what add symbol does except the length of the
  *  string is passed as a parameter.  The length is the number of characters

@@ -57,7 +57,7 @@ ASC_DLLSPEC(struct gl_list_t *) GetTypeNamesFromStatList(CONST struct StatementL
  *  reprocessing the several lists that define a type.
  */
 
-extern void WriteStatement(FILE *f, CONST struct Statement *s, int i);
+ASC_DLLSPEC(void ) WriteStatement(FILE *f, CONST struct Statement *s, int i);
 /**< 
  *  <!--  void WriteStatement(f,s,i)                                   -->
  *  <!--  FILE *f;                                                     -->

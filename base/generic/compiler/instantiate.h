@@ -56,7 +56,7 @@
 #define ALLRELS (GBOXRELS | BBOXRELS | TOKRELS)
 #define EXTRELS (GBOXRELS | BBOXRELS)
 
-extern long int g_compiler_counter;
+ASC_DLLSPEC(long int ) g_compiler_counter;
 /**<  Unique id of calls to instantiator. */
 
 
@@ -185,7 +185,7 @@ extern struct Instance *NewInstantiate(symchar *type, symchar *name,
  *  </pre>
  */
 
-extern void NewReInstantiate(struct Instance *i);
+ASC_DLLSPEC(void ) NewReInstantiate(struct Instance *i);
 /**<
  *  This routine is used to resume execution of an instance with unexecuted
  *  statements.  It will reattempt to execute the unexecuted statement.
@@ -193,7 +193,7 @@ extern void NewReInstantiate(struct Instance *i);
  *  assignments(assignments to reals and booleans).
  */
 
-extern void UpdateInstance(struct Instance *root,
+ASC_DLLSPEC(void ) UpdateInstance(struct Instance *root,
                            struct Instance *target,
                            CONST struct StatementList *slist);
 /**<

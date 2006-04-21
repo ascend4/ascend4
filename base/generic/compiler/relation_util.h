@@ -47,7 +47,7 @@
 
 #include <utilities/ascConfig.h>
 
-extern int g_check_dimensions_noisy;
+ASC_DLLSPEC(int ) g_check_dimensions_noisy;
 /**<
  *  If 0, warnings are suppressed.  If 1, warnings are given
  *  from RelationCheckDimensions();
@@ -72,7 +72,7 @@ extern int RelationCheckDimensions(struct relation *rel, dim_type *dimens);
  *  3/96 Ben Allan
  */
 
-extern enum Expr_enum RelationRelop(CONST struct relation *rel);
+ASC_DLLSPEC(enum Expr_enum ) RelationRelop(CONST struct relation *rel);
 /**<
  *  Return the type of the relation operator of the relation.
  *  Returns one of the following:
@@ -95,7 +95,7 @@ extern unsigned long NumberVariables(CONST struct relation *rel);
  *  This routine is smart enough to deal with all the different relation types.
  */
 
-extern struct Instance *RelationVariable(CONST struct relation *rel,
+ASC_DLLSPEC(struct Instance *) RelationVariable(CONST struct relation *rel,
                                          unsigned long varnum);
 /**<
  *  This will return the varnum'th variable.
@@ -112,14 +112,14 @@ extern struct Instance *RelationVariable(CONST struct relation *rel,
  *----------------------------------------------------------------------------
  */
 
-extern unsigned long RelationLength(CONST struct relation *rel, int lhs);
+ASC_DLLSPEC(unsigned long ) RelationLength(CONST struct relation *rel, int lhs);
 /**<
  *  If lhs is true, return the number of terms on the left hand side of the
  *  relation.  Otherwise, return the number of terms on the right hand side
  *  of the relation.
  */
 
-extern CONST struct relation_term *RelationTerm(CONST struct relation *rel,
+ASC_DLLSPEC(CONST struct relation_term *) RelationTerm(CONST struct relation *rel,
                                                 unsigned long pos,
                                                 int lhs);
 /**<
@@ -187,23 +187,23 @@ extern CONST struct relation_term
  *  @return The type as an enum Expr_enum.
  *  @see RelationTermTypeF()
  */
-extern enum Expr_enum RelationTermTypeF(CONST struct relation_term *term);
+ASC_DLLSPEC(enum Expr_enum ) RelationTermTypeF(CONST struct relation_term *term);
 /**<
  *  Implementation function for RelationTermType().  Do not call this
  *  function directly - use RelationTermType() instead.
  */
 
-extern unsigned long TermVarNumber(CONST struct relation_term *term);
+ASC_DLLSPEC(unsigned long ) TermVarNumber(CONST struct relation_term *term);
 /**<
  *  Return the index into the relations variable list.
  */
 
-extern long TermInteger(CONST struct relation_term *term);
+ASC_DLLSPEC(long ) TermInteger(CONST struct relation_term *term);
 /**<
  *  Return the integer value from a e_int type relation term.
  */
 
-extern double TermReal(CONST struct relation_term *term);
+ASC_DLLSPEC(double ) TermReal(CONST struct relation_term *term);
 /**<
  *  Return the double value from a e_real type relation term.
  */
@@ -214,18 +214,18 @@ extern double TermVariable(CONST struct relation *rel,
  *  Return the double value from a e_var type relation term.
  */
 
-extern CONST dim_type *TermDimensions(CONST struct relation_term *term);
+ASC_DLLSPEC(CONST dim_type *) TermDimensions(CONST struct relation_term *term);
 /**<
  *  Return the dimensions of a e_real, e_int, or e_zero relation term type.
  *  (e_int is always Dimensionless(); e_zero is always WildDimension().)
  */
 
-extern CONST struct Func *TermFunc(CONST struct relation_term *term);
+ASC_DLLSPEC(CONST struct Func *) TermFunc(CONST struct relation_term *term);
 /**<
  *  Return the function pointer of a function operator.
  */
 
-extern unsigned long RelationDepth(CONST struct relation *rel);
+ASC_DLLSPEC(unsigned long ) RelationDepth(CONST struct relation *rel);
 /**<
  *  Return the depth of stack required to evaluate this relation.
  */
@@ -307,13 +307,13 @@ extern CONST struct gl_list_t *RelationVarList(CONST struct relation *r);
  *  All relation types will properly respond to this qurey.
  */
 
-extern dim_type *RelationDim(CONST struct relation *rel);
+ASC_DLLSPEC(dim_type *) RelationDim(CONST struct relation *rel);
 /**<
  *  Return the derived dimensionality of the relation.
  *  Defaults to Wild.
  */
 
-extern int SetRelationDim(struct relation *rel, dim_type *d);
+ASC_DLLSPEC(int ) SetRelationDim(struct relation *rel, dim_type *d);
 /**<
  *  Set the  dimensionality of the relation. return 0 unless there is a
  *  problem (rel was null, for instance.)
@@ -342,7 +342,7 @@ extern void SetRelationMultiplier(struct relation *rel, double value);
  *  hybrid dimensions that still needs to be decided.
  */
 
-extern int RelationIsCond(CONST struct relation *rel);
+ASC_DLLSPEC(int ) RelationIsCond(CONST struct relation *rel);
 /**<
  *  Return the value of the iscond flag of the relation.
  *  If relation is NULL, returns 0.
@@ -359,13 +359,13 @@ extern double RelationNominal(CONST struct relation *rel);
  *  Return the nominal of the relation.
  */
 
-extern void SetRelationNominal(struct relation *rel, double d);
+ASC_DLLSPEC(void ) SetRelationNominal(struct relation *rel, double d);
 /**<
  *  Sets the value of the nominal field of the relation to the absolute
  *  value of d, unless d is 0.0.
  */
 
-extern double CalcRelationNominal(struct Instance *i);
+ASC_DLLSPEC(double ) CalcRelationNominal(struct Instance *i);
 /**<
  *    Calculate the nominal of a relation.
  *    Returns 0.0 if something went detectably wrong in the calculation,
@@ -469,7 +469,7 @@ extern int RelationCalcResidualPostfix(struct Instance *i, double *res);
 #define RCE_ERR_LHSNAN  0x40  /**< left side returns NaN */
 #define RCE_ERR_RHSNAN  0x80  /**< right side returns NaN */
 
-extern int RelationCalcExceptionsInfix(struct Instance *i);
+ASC_DLLSPEC(int ) RelationCalcExceptionsInfix(struct Instance *i);
 /**<
  *  Uses infix evaluation to check gradient and residual
  *  floating point exceptions.

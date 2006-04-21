@@ -521,7 +521,7 @@ typedef struct slv_parameters_structure {
 
 
 /* slv_destroy_parms() is defined in slv.c */
-extern void slv_destroy_parms(slv_parameters_t *p);
+ASC_DLLSPEC(void ) slv_destroy_parms(slv_parameters_t *p);
 /**<
 	Deallocates any allocated memory held by a parameter structure.
 	Only the held memory is freed, not p itself.  Further, if

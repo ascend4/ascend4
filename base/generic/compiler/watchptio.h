@@ -44,12 +44,9 @@
 #define __WATCHPTIO_H_SEEN__
 
 /**
- *  <!--  void WriteProcedure(f,p)                                     -->
- *  <!--  FILE *f;                                                     -->
- *  <!--  struct InitProcedure *p;                                     -->
  *  Write the procedure to the file.
  */
-extern void WriteProcedure(FILE *f, struct InitProcedure *p);
+ASC_DLLSPEC(void) WriteProcedure(FILE *f, struct InitProcedure *p);
 
 #endif  /* __WATCHPTIO_H_SEEN__ */
 

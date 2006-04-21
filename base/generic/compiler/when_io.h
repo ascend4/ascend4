@@ -52,7 +52,7 @@ extern void WriteWhen(FILE *f, CONST struct Instance *wheninst,
  *  Write a when instance to the file f
  */
 
-extern char *WriteWhenString(CONST struct Instance *wheninst,
+ASC_DLLSPEC(char *) WriteWhenString(CONST struct Instance *wheninst,
                              CONST struct Instance *ref);
 /**<
  *  <!--  char WriteWhenString(wheninst,ref);                          -->

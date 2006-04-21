@@ -100,7 +100,7 @@ extern void linsol_set_matrix(linsol_system_t sys, mtx_matrix_t mtx);
  *  Sets the coefficient matrix to mtx.
  */
 
-extern mtx_matrix_t linsol_get_matrix(linsol_system_t sys);
+ASC_DLLSPEC(mtx_matrix_t ) linsol_get_matrix(linsol_system_t sys);
 /**<
  *  <!--  mtx = linsol_get_matrix(sys)                                 -->
  *  <!--  mtx_matrix_t mtx;                                            -->
@@ -109,7 +109,7 @@ extern mtx_matrix_t linsol_get_matrix(linsol_system_t sys);
  *  Returns the coefficient matrix.
  */
 
-extern mtx_matrix_t linsol_get_inverse(linsol_system_t sys);
+ASC_DLLSPEC(mtx_matrix_t ) linsol_get_inverse(linsol_system_t sys);
 /**<
  *  <!--  mtx = linsol_get_inverse(sys)                                -->
  *  <!--  mtx_matrix_t mtx;                                            -->
@@ -154,7 +154,7 @@ extern int linsol_number_of_rhs(linsol_system_t sys);
  *  Returns the number of rhs's currently part of the system.
  */
 
-extern real64 *linsol_get_rhs(linsol_system_t sys, int n);
+ASC_DLLSPEC(real64 *) linsol_get_rhs(linsol_system_t sys, int n);
 /**< 
  *  <!--  rhs = linsol_get_rhs(sys,n)                                  -->
  *  <!--  real64 *rhs;                                                 -->
@@ -166,7 +166,7 @@ extern real64 *linsol_get_rhs(linsol_system_t sys, int n);
  *  if the index is out of range.
  */
 
-extern void linsol_matrix_was_changed(linsol_system_t sys);
+ASC_DLLSPEC(void ) linsol_matrix_was_changed(linsol_system_t sys);
 /**< 
  *  <!--  linsol_matrix_was_changed(sys)                               -->
  *  <!--  linsol_system_t sys;                                         -->
@@ -176,7 +176,7 @@ extern void linsol_matrix_was_changed(linsol_system_t sys);
  *  made.
  */
 
-extern void linsol_rhs_was_changed(linsol_system_t sys, real64 *rhs);
+ASC_DLLSPEC(void ) linsol_rhs_was_changed(linsol_system_t sys, real64 *rhs);
 /**< 
  *  <!--  linsol_rhs_was_changed(sys,rhs)                              -->
  *  <!--  linsol_system_t sys;                                         -->
@@ -225,7 +225,7 @@ extern real64 linsol_pivot_tolerance(linsol_system_t sys);
  *  <!--  linsol_matrix_was_changed().                                 -->
  */
 
-extern void linsol_reorder(linsol_system_t sys, mtx_region_t *region);
+ASC_DLLSPEC(void ) linsol_reorder(linsol_system_t sys, mtx_region_t *region);
 /**<
  *  <!--  linsol_reorder(sys,region)                                   -->
  *  <!--  linsol_system_t sys;                                         -->
@@ -236,7 +236,7 @@ extern void linsol_reorder(linsol_system_t sys, mtx_region_t *region);
  *  is assumed to contain only nonempty rows and columns.
  */
 
-extern void linsol_invert(linsol_system_t sys, mtx_region_t *region);
+ASC_DLLSPEC(void ) linsol_invert(linsol_system_t sys, mtx_region_t *region);
 /**<
  *  <!--  linsol_invert(sys,region)                                    -->
  *  <!--  linsol_system_t sys;                                         -->
@@ -344,7 +344,7 @@ extern real64 linsol_org_col_dependency(linsol_system_t sys,
  *  set of row / column pivots obtained by linsol_get_pivot_sets.
  */
 
-extern void linsol_solve(linsol_system_t sys, real64 *rhs);
+ASC_DLLSPEC(void ) linsol_solve(linsol_system_t sys, real64 *rhs);
 /**<
  *  <!--  linsol_solve(sys,rhs)                                        -->
  *  <!--  linsol_system_t sys;                                         -->
@@ -372,7 +372,7 @@ extern real64 linsol_var_value(linsol_system_t sys,
  *  original column number.
  */
 
-extern boolean linsol_copy_solution(linsol_system_t sys,
+ASC_DLLSPEC(boolean ) linsol_copy_solution(linsol_system_t sys,
                                     real64 *rhs, real64 *vector);
 /**<
  *  <!--  result = linsol_copy_solution(sys,rhs,vector)                -->

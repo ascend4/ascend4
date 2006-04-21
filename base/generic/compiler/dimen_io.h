@@ -45,7 +45,7 @@
  * Write the human readable and parser edible string form of the
  * dimen given.
  */
-extern char *WriteDimensionString(CONST dim_type *p);
+ASC_DLLSPEC(char *) WriteDimensionString(CONST dim_type *p);
 
 /** 
  * Write the canonical, indigestible form of the dimen with

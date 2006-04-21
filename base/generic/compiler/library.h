@@ -129,7 +129,7 @@ extern int AddType(struct TypeDescription *desc);
  *          0 if it was already present.
  */
 
-extern struct gl_list_t *FindFundamentalTypes(void);
+ASC_DLLSPEC(struct gl_list_t *) FindFundamentalTypes(void);
 /**<
  *  Creates a gl_list_t containing pointers to the fundamental
  *  types.  Destruction of the returned list (but not it's
@@ -150,7 +150,7 @@ ASC_DLLSPEC(struct gl_list_t*) Asc_TypeByModule(CONST struct module_t *module);
  *          both in module and in the main type library.
  */
 
-extern struct gl_list_t *TypesThatRefineMe (symchar *name);
+ASC_DLLSPEC(struct gl_list_t *) TypesThatRefineMe (symchar *name);
 /**<
  *  Builds a list of type names in the main type library which refine
  *  the type having the specified name.  The returned list includes
@@ -165,7 +165,7 @@ extern struct gl_list_t *TypesThatRefineMe (symchar *name);
  *          type library which refine the specified type.
  */
 
-extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *name);
+ASC_DLLSPEC(struct gl_list_t *) AllTypesThatRefineMe_Flat (symchar *name);
 /**<
  *  Builds a list of all type names in the main type library which
  *  refine the type having the specified name.  The returned list
@@ -180,7 +180,7 @@ extern struct gl_list_t *AllTypesThatRefineMe_Flat (symchar *name);
  *          type library which refine the specified type.
  */
 
-extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *name);
+ASC_DLLSPEC(struct HierarchyNode *) AllTypesThatRefineMe_Tree (symchar *name);
 /**<
  *  Builds a tree of HierarchyNodes all types in the main type library
  *  which refine the type having the specified name.  This is similar to
@@ -197,7 +197,7 @@ extern struct HierarchyNode *AllTypesThatRefineMe_Tree (symchar *name);
  *          type library which refine the specified type.
  */
 
-extern void DestroyHierarchyNode(struct HierarchyNode *heir);
+ASC_DLLSPEC(void ) DestroyHierarchyNode(struct HierarchyNode *heir);
 /**<
  *  Deallocates (recursively) all the memory associated with a
  *  HierarchyNode.  Use this function to destroy the tree returned
@@ -206,7 +206,7 @@ extern void DestroyHierarchyNode(struct HierarchyNode *heir);
  *  @param heir Head of the HeirarchyNode tree to destroy.
  */
 
-extern int IsTypeRefined(CONST struct TypeDescription *desc);
+ASC_DLLSPEC(int ) IsTypeRefined(CONST struct TypeDescription *desc);
 /**<
  *  Check whether the specified type is refined by any other type in
  *  the main type library.
@@ -215,7 +215,7 @@ extern int IsTypeRefined(CONST struct TypeDescription *desc);
  *  @return Returns 1 if desc is refined, 0 otherwise.
  */
 
-extern struct gl_list_t *DefinitionList(void);
+ASC_DLLSPEC(struct gl_list_t *) DefinitionList(void);
 /**<
  *  Makes a sorted list of all registered definitions.
  *  In the case of there being two versions of a given type,
@@ -227,7 +227,7 @@ extern struct gl_list_t *DefinitionList(void);
  *          the sorted types.
  */
 
-extern unsigned int CheckFundamental(symchar *f);
+ASC_DLLSPEC(unsigned int ) CheckFundamental(symchar *f);
 /**<
  *  Checks whether string f is a fundamental type name.
  *  f must be from the symbol table (i.e. not an externally-defined

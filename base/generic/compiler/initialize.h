@@ -107,7 +107,7 @@ extern enum Proc_enum ClassAccessInitialize(struct Instance *context,
 */
 
 /** Search for a named procedure on an instance */
-extern struct InitProcedure *FindProcedure(CONST struct Instance *i,
+ASC_DLLSPEC(struct InitProcedure *) FindProcedure(CONST struct Instance *i,
                                            symchar *procname);
 /**<
 	@param procname the name of the procedure searched for

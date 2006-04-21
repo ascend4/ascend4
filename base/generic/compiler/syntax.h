@@ -74,7 +74,7 @@ extern int GetParseRelnsFlag(void);
  *  @return The current value of the parse relations flag.
  */
 
-extern void SetParseRelnsFlag(int flag);
+ASC_DLLSPEC(void ) SetParseRelnsFlag(int flag);
 /**<
  *  Sets the parse relations flag. Any nonzero integer will
  *  cause relations to be parsed (see GetParseRelnsFlag()).

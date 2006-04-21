@@ -98,7 +98,7 @@ extern char *afreadln(FILE *fp);
  *  @return  A new string containing the input chars, of NULL on error.
  */
 
-extern long readlong(long number_default);
+ASC_DLLSPEC(long ) readlong(long number_default);
 /**<
  *  Reads in a line from standard input and extracts a long integer 
  *  from that line.  If none is found, then the default is returned.
