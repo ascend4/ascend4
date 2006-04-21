@@ -28,7 +28,6 @@
  *  Requires:   #include "CUnit/CUnit.h"
  *              #include "utilities/ascConfig.h"
  *              #include "utilities/ascPrint.h"
- *              #include "utilities/ascPrintType.h"
  *  </pre>
  */
 
