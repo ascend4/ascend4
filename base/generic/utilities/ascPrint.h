@@ -43,18 +43,22 @@
 #include <stdarg.h>
 
 #include <utilities/ascConfig.h>
-#include <utilities/ascPrintType.h>
 
 /**
- * Forward declaration of output functions interceptor vtable.
+ * Output functions interceptor vtable. This should be constructed
+ * and the functions fully operational before it is
+ * pushed on the stack of output tables.
+ * 
  * This should be constructed and the functions fully operational
  * before it is pushed on the stack of output tables.<br><br>
- *
- * Anyone implementing the vtable and using Asc_PrintPushVTable
- * to register it will need to include the complete struct
- * definition in ascPrintType.h.
  */
-struct Asc_PrintVTable;                                              
+struct Asc_PrintVTable {
+  CONST char *name;                                         /**< Vtable name. */
+  int (*print)(FILE *fp, CONST char *format, va_list args); /**< Print function. */
+  int (*fflush)(FILE *);                                    /**< Flush function. */
+  struct Asc_PrintVTable *next;                             /**< Next vtable in linked list. */
+};
+                                            
 
 extern int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
 /**< 

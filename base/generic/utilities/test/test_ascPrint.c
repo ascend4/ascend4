@@ -29,7 +29,6 @@
 #include <stdarg.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPrint.h>
-#include <utilities/ascPrintType.h>
 #include "CUnit/CUnit.h"
 #include "test_ascPrint.h"
 #include "printutil.h"

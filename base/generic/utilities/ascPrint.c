@@ -37,7 +37,6 @@
 #include <stdio.h>
 #include "ascConfig.h"
 #include "ascPrint.h"
-#include "ascPrintType.h"
 
 static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 
