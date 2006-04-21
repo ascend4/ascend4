@@ -1,4 +1,30 @@
-/*
+/*	ASCEND modelling environment
+	Copyright 1997, Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Registration of Tcl/Tk bitmaps.
+
+	Requires
+	#include <tcl.h>
+	#include <utilities/ascConfig.h>
+	#include "AscBitmaps.h"
+*//*
  *  AscBitmaps.h
  *  by Kirk Abbott and Ben Allan
  *  Created: 1/94
@@ -6,41 +32,13 @@
  *  Version control file: $RCSfile: AscBitmaps.h,v $
  *  Date last modified: $Date: 1998/04/25 18:14:15 $
  *  Last modified by: $Author: ballan $
- *
- *  This file is part of the ASCEND Tcl/Tk interface
- *
- *  Copyright 1997, Carnegie Mellon University
- *
- *  The ASCEND Tcl/Tk interface is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND Tcl/Tk interface is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+*/
 
-/** @file
- *  Registration of Tcl/Tk bitmaps.
- *  <pre>
- *  To include this header, you must include the following:
- *      #include <tcl.h>
- *      #include <utilities/ascConfig.h>
- *      #include "AscBitmaps.h"
- *  </pre>
- */
+#ifndef ASCTK_ASCBITMAPS_H
+#define ASCTK_ASCBITMAPS_H
 
-#ifndef AscBitmap_module_loaded
-#define AscBitmap_module_loaded
-
-/**
+extern int Asc_RegisterBitmaps(Tcl_Interp *interp);
+/**<
  *  Register all the bitmaps so we don't have to lug them around in files.
  *  For starters we define square type bitmaps in 1x1 -> 14x14 size
  *  named as follows:
@@ -64,7 +62,6 @@
  *  flying and not flying shoe is registered  wfeet feet
  *  grablock is registered (lock stolen from lire).
  */
-extern int Asc_RegisterBitmaps(Tcl_Interp *interp);
 
-#endif  /* AscBitmap_module_loaded */
+#endif  /* ASCTK_ASCBITMAPS_H */
 
