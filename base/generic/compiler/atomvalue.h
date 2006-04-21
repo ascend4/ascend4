@@ -57,7 +57,7 @@ ASC_DLLSPEC(unsigned) AtomAssigned(CONST struct Instance *i);
  *  Valid for *_INST, *_ATOM_INSTANCE, *_CONSTANT_INSTANCE.
  */
 
-extern unsigned AtomMutable(CONST struct Instance *i);
+ASC_DLLSPEC(unsigned ) AtomMutable(CONST struct Instance *i);
 /**<
  *  <!--  unsigned AtomMutable(i);                                     -->
  *  <!--  const struct Instance *i;                                    -->
@@ -135,7 +135,7 @@ ASC_DLLSPEC(long) GetIntegerAtomValue(CONST struct Instance *i);
  *  INTEGER_INST or INTEGER_ATOM_INST or INTEGER_CONSTANT_INST type instances.
  */
 
-extern void SetIntegerAtomValue(struct Instance *i, long v, unsigned depth);
+ASC_DLLSPEC(void ) SetIntegerAtomValue(struct Instance *i, long v, unsigned depth);
 /**<
  *  <!--  void SetIntegerAtomValue(i,v,depth)                          -->
  *  <!--  struct Instance *i;                                          -->
@@ -211,7 +211,7 @@ ASC_DLLSPEC(symchar*) GetSymbolAtomValue(CONST struct Instance *i);
  *  The symchar can be converted to a string with macro SCP from compiler.h.
  */
 
-extern void SetSymbolAtomValue(struct Instance *i, symchar *s);
+ASC_DLLSPEC(void ) SetSymbolAtomValue(struct Instance *i, symchar *s);
 /**<
  *  <!--  void SetSymbolAtomValue(i,s)                                 -->
  *  <!--  struct Instance *i;                                          -->

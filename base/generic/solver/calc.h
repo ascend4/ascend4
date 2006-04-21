@@ -62,7 +62,7 @@
 #ifndef calc__already_included
 #define calc__already_included
 
-extern int32 calc_ok;
+ASC_DLLSPEC(int32 ) calc_ok;
 /**<
  ***  The variable calc_ok will be set to FALSE whenever an undefined
  ***  numerical calculation is attempted.

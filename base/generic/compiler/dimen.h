@@ -62,7 +62,7 @@ struct DimStruct {
 /** Dimension typedef for general use */
 typedef struct DimStruct dim_type;
 
-extern struct gl_list_t *g_dimen_list;
+ASC_DLLSPEC(struct gl_list_t *) g_dimen_list;
 /**<
  *  Global list of dimension data structures. All persistent dim pointers
  *  should resolve to something pointed at in this list to minimize dim
@@ -108,7 +108,7 @@ extern void DestroyDimenList(void);
  *  Set fraction i in dim_type d to frac.
  */
 
-extern void ClearDimensions(dim_type *d);
+ASC_DLLSPEC(void ) ClearDimensions(dim_type *d);
 /**<
  *  Initialize all the dimension fractions to zero.
  */
@@ -118,12 +118,12 @@ ASC_DLLSPEC(CONST dim_type*) Dimensionless(void);
  *  Return a pointer to the dimensionless structure.
  */
 
-extern CONST dim_type *TrigDimension(void);
+ASC_DLLSPEC(CONST dim_type *) TrigDimension(void);
 /**<
  *  Return a pointer to the dimension structure for plane angle.
  */
 
-extern CONST dim_type *WildDimension(void);
+ASC_DLLSPEC(CONST dim_type *) WildDimension(void);
 /**<
  *  Return a pointer to a wild dimension structure.  You don't need to
  *  call FindOrAddDimen with this dimension.
@@ -198,7 +198,7 @@ ASC_DLLSPEC(int) CmpDimen(CONST dim_type *d1, CONST dim_type *d2);
  *  Return 1,0,-1 if d1 is >,=, or < d2 respectively.
  */
 
-extern CONST dim_type *FindOrAddDimen(CONST dim_type *d);
+ASC_DLLSPEC(CONST dim_type *) FindOrAddDimen(CONST dim_type *d);
 /**<
  *  This function is run to make sure only one copy of each dimensions
  *  is stored.  It is designed to be called as follows:
@@ -213,12 +213,12 @@ extern CONST dim_type *FindOrAddDimen(CONST dim_type *d);
  *  </pre>
  */
 
-extern void CopyDimensions(CONST dim_type *src, dim_type *dest);
+ASC_DLLSPEC(void ) CopyDimensions(CONST dim_type *src, dim_type *dest);
 /**<
  *  Copy from src to dest.
  */
 
-extern dim_type AddDimensions(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC(dim_type ) AddDimensions(CONST dim_type *d1, CONST dim_type *d2);
 /**<
  *  Add 2 dimensions.
  *  Wild+anything equals wild.
@@ -238,7 +238,7 @@ extern CONST dim_type *SumDimensions(CONST dim_type *d1, CONST dim_type *d2, int
  *  Result will be in global list.
  */
 
-extern dim_type SubDimensions(CONST dim_type *d1, CONST dim_type *d2);
+ASC_DLLSPEC(dim_type ) SubDimensions(CONST dim_type *d1, CONST dim_type *d2);
 /**<
  *  Subtract 2 dimensions.
  *  Wild-anything equals wild.
@@ -258,12 +258,12 @@ extern CONST dim_type *DiffDimensions(CONST dim_type *d1, CONST dim_type *d2, in
  *  Result will be in global list.
  */
 
-extern dim_type ScaleDimensions(CONST dim_type *dim, struct fraction frac);
+ASC_DLLSPEC(dim_type ) ScaleDimensions(CONST dim_type *dim, struct fraction frac);
 /**<
  *  Scale the dimensions by frac.  A wild scaled always remains wild.
  */
 
-extern void ParseDim(dim_type *dim, CONST char *c);
+ASC_DLLSPEC(void ) ParseDim(dim_type *dim, CONST char *c);
 /**<
  *  Initialize dim appropriately according to the string c.  If c doesn't
  *  match any of the dimension strings, dim will be dimensionless and
@@ -283,7 +283,7 @@ extern void ParseDim(dim_type *dim, CONST char *c);
  *  </pre>
  */
 
-extern char *DimName(CONST int index);
+ASC_DLLSPEC(char *) DimName(CONST int index);
 /**<
  *  <!--  char *DimName(index)                                         -->
  *  <!--  int index;                                                   -->
@@ -302,7 +302,7 @@ extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *
 
 ASC_DLLSPEC(void) PrintDimen(FILE *f ,CONST dim_type *d);
 /**< Print a dimension to a file.  Used in interface */
-extern void DumpDimens(FILE *f);
+ASC_DLLSPEC(void ) DumpDimens(FILE *f);
 /**< Dump all dimensions to a file.  Used in interface */
 
 #endif /* ASC_DIMEN_H */

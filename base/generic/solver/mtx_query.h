@@ -39,7 +39,7 @@
 #ifndef __MTX_QUERY_H_SEEN__
 #define __MTX_QUERY_H_SEEN__
 
-extern real64 mtx_next_in_row(mtx_matrix_t matrix, 
+ASC_DLLSPEC(real64 ) mtx_next_in_row(mtx_matrix_t matrix, 
                               mtx_coord_t *coord,
                               mtx_range_t *colrng);
 /**< See mtx_next_in_col(), switching row & column references. */
@@ -335,7 +335,7 @@ extern int32 mtx_numbers_in_region(mtx_matrix_t matrix,
 extern void mtx_org_row_vec(mtx_matrix_t mtx, int32 row,
                             real64 *vec, mtx_range_t *colrng);
 /**< See mtx_cur_col_vec(), switching row & column references. */
-extern void mtx_org_col_vec(mtx_matrix_t mtx, int32 col,
+ASC_DLLSPEC(void ) mtx_org_col_vec(mtx_matrix_t mtx, int32 col,
                             real64 *vec, mtx_range_t *rowrng);
 /**< See mtx_cur_col_vec(). */
 extern void mtx_cur_row_vec(mtx_matrix_t mtx, int32 row,
@@ -447,7 +447,7 @@ extern mtx_sparse_t *mtx_cur_col_sparse(mtx_matrix_t mtx,
 extern void mtx_zr_org_vec_using_row(mtx_matrix_t mtx, int32 row,
                                      real64 *vec, mtx_range_t *colrng);
 /**< See mtx_zr_cur_vec_using_col(), switching row & column references. */
-extern void mtx_zr_org_vec_using_col(mtx_matrix_t mtx, int32 col,
+ASC_DLLSPEC(void ) mtx_zr_org_vec_using_col(mtx_matrix_t mtx, int32 col,
                                      real64 *vec, mtx_range_t *rowrng);
 /**< See mtx_zr_cur_vec_using_col(). */
 extern void mtx_zr_cur_vec_using_row(mtx_matrix_t mtx, int32 row,

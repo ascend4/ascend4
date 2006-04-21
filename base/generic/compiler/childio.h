@@ -56,7 +56,7 @@ extern void WriteChildList(FILE *fp, ChildListPtr cl);
  *
  * The string returned is the caller's responsibility.
  */
-extern char *WriteChildDetails(ChildListPtr cl, unsigned long n);
+ASC_DLLSPEC(char *) WriteChildDetails(ChildListPtr cl, unsigned long n);
 
 /**
  * Returns a string with fields brace delimited. Each field
@@ -75,7 +75,7 @@ extern char *WriteChildDetails(ChildListPtr cl, unsigned long n);
  * ctype is boolean, integer, or string.
  * explanation is for human consumption and explains the field.
  */
-extern CONST char *WriteChildMetaDetails(void);
+ASC_DLLSPEC(CONST char *) WriteChildMetaDetails(void);
 
 /**
  * Issues a child missing error to file if the same childname/scope

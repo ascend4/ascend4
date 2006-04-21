@@ -116,14 +116,14 @@ struct bracechar;
 
 /* globals from ascParse.y that yacc won't put in ascParse.h generated. */
 
-extern int g_compiler_warnings;
+ASC_DLLSPEC(int ) g_compiler_warnings;
 /**<
  *  Flag to turn on ASCEND instantiation whinings in various ways.
  *  higher values mean more spew. 0 = no warnings.
  *  Variable is declared in ascParse.y.
  */
 
-extern int g_parser_warnings;
+ASC_DLLSPEC(int ) g_parser_warnings;
 /**<
  *  Flag to turn on lint-like ASCEND whinings in various ways.
  *  higher values mean less spew. 0 = no warnings.
@@ -136,14 +136,14 @@ extern int g_parse_relns;
  * A very bad idea, but useful for benchmarking sometimes.
  */
 
-extern int g_simplify_relations;
+ASC_DLLSPEC(int ) g_simplify_relations;
 /**<
  * Turn on or off relation simplification as noted in
  * relation.h. This variable is defined in relation.c and
  * headered here for UI exports.
  */
 
-extern int g_use_copyanon;
+ASC_DLLSPEC(int ) g_use_copyanon;
 /**<
  * Turn on/off relation sharing.
  *

@@ -49,7 +49,7 @@ struct fraction {
   FRACPART denominator;
 };
 
-extern struct fraction CreateFraction(short n, short d);
+ASC_DLLSPEC(struct fraction ) CreateFraction(short n, short d);
 /**< 
  *  <!--  struct fraction CreateFraction(n,d)                          -->
  *  <!--  short n,d;                                                   -->

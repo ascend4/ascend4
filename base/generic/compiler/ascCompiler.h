@@ -53,7 +53,7 @@ ASC_DLLSPEC(int) Asc_CompilerInit(int simplify_relations);
  *       from the functions this calls. Currently returns 0 regardless.
  */
 
-extern void Asc_CompilerDestroy(void);
+ASC_DLLSPEC(void ) Asc_CompilerDestroy(void);
 /**<
  *  Clean up any resources used by the compiler.
  *  This function should not be called while there are any clients

@@ -127,7 +127,7 @@ typedef void (*SigHandler)(int);
 #define MAX_TRAP_DEPTH 40L
 /**< The maximum number of traps that can be nested. */
 
-extern jmp_buf g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
+ASC_DLLSPEC(jmp_buf ) g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
 extern jmp_buf g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
 extern jmp_buf g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
 
@@ -138,7 +138,7 @@ extern jmp_buf g_foreign_code_call_env;
  * @todo Implement use of g_foreign_code_call_env?
  */
 
-extern void Asc_SignalTrap(int sigval);
+ASC_DLLSPEC(void ) Asc_SignalTrap(int sigval);
 /**<
  *  Standard signal handler.
  *  This is the trap that should be used for most applications in
@@ -200,7 +200,7 @@ extern void Asc_SignalDestroy(void);
  *  that were installed before Asc_SignalInit() was called will be lost.
  */
 
-extern void Asc_SignalRecover(int force);
+ASC_DLLSPEC(void ) Asc_SignalRecover(int force);
 /**<
  *  Reinstalls the most recently pushed handler that has been
  *  installed for each supported signal type.  This should be called
@@ -229,7 +229,7 @@ extern void Asc_SignalRecover(int force);
  *               compiler/platform.
  */
 
-extern int Asc_SignalHandlerPush(int signum, SigHandler func);
+ASC_DLLSPEC(int ) Asc_SignalHandlerPush(int signum, SigHandler func);
 /**<
  * Adds a handler to the stack of signal handlers for the given signal.
  * There is a maximum stack limit, so returns 1 if limit exceeded.
@@ -251,7 +251,7 @@ extern int Asc_SignalHandlerPush(int signum, SigHandler func);
  *        popping an unintended handler.
  */
 
-extern int Asc_SignalHandlerPop(int signum, SigHandler func);
+ASC_DLLSPEC(int ) Asc_SignalHandlerPop(int signum, SigHandler func);
 /**<
  *  Removes the last-pushed handler from the stack for signum signal types.
  *  If the removed handler is the same as func, it is uninstalled and

@@ -43,7 +43,7 @@
 		"Assertion failed in %s:%d:  '%s'", __FILE__, __LINE__, #cond))
 #endif
 
-extern void Asc_Panic(CONST int status, CONST char *function,
+ASC_DLLSPEC(void ) Asc_Panic(CONST int status, CONST char *function,
                       CONST char *format, ...);
 /**< Print fatal error message, run callback function & (usually) exit the program.
 

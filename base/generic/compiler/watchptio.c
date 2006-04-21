@@ -36,6 +36,7 @@
 #include "slist.h"
 #include "statio.h"
 #include "proc.h"
+#include "watchptio.h"
 
 /* move this function to watchpt.h, add WriteProcedureString */
 void WriteProcedure(FILE *f, struct InitProcedure *p)

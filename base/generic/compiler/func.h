@@ -133,7 +133,7 @@ extern void FuncSetLnmEpsilon(double e);
  *  Change the current epsilon for the modified log function lnm.
  *  epsilon > 0.0.
  */
-extern double g_lnm_epsilon;
+ASC_DLLSPEC(double ) g_lnm_epsilon;
 #define FuncSetLnmEpsilon(e) \
    (e>(double)0.0 ? g_lnm_epsilon=e : FPRINTF(ASCERR,"bad lnm eps"))
 
@@ -285,7 +285,7 @@ ASC_DLLSPEC(double) derf2(double x);
  *  First and second derivatives of erf()
  */
 
-extern CONST char *FuncName(CONST struct Func *f);
+ASC_DLLSPEC(CONST char *) FuncName(CONST struct Func *f);
 /**<
  *  Return the ASCEND language name of the function.
  *  Not a symchar.
@@ -306,7 +306,7 @@ extern CONST char *FuncDeriv2CName(CONST struct Func *f);
  *  Return the C language name of the function second derivative, if any.
  */
 
-extern enum Func_enum FuncId(CONST struct Func *f);
+ASC_DLLSPEC(enum Func_enum ) FuncId(CONST struct Func *f);
 /**<
  *  Return the identification of the function.
  */

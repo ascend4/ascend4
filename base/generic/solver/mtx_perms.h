@@ -169,7 +169,7 @@ extern void mtx_swap_rows(mtx_matrix_t mtx, int32 row1, int32 row2);
  ***  Passes calls on slave matrices up to the master matrix.
  -$-  Does nothing to a bad matrix.
  **/
-extern void mtx_swap_cols(mtx_matrix_t mtx, int32 col1, int32 col2);
+ASC_DLLSPEC(void ) mtx_swap_cols(mtx_matrix_t mtx, int32 col1, int32 col2);
 /**<
  ***  Swaps two columns of the matrix.  The association between the
  ***  "original column number" and the column contents is not
@@ -254,25 +254,25 @@ extern void mtx_reverse_diagonal(mtx_matrix_t mtx, int32 d1, int32 d2);
  -$-  Does nothing to a bad matrix.
  **/
 
-extern int32  mtx_row_to_org(mtx_matrix_t mtx, int32 row);
+ASC_DLLSPEC(int32  ) mtx_row_to_org(mtx_matrix_t mtx, int32 row);
 /**<
  ***  Converts original row number <--> row number.
  ***  Passes calls on slave matrices up to the master matrix.
  -$-  Returns -1 from a bad matrix.
  **/
-extern int32  mtx_col_to_org(mtx_matrix_t mtx, int32 col);
+ASC_DLLSPEC(int32  ) mtx_col_to_org(mtx_matrix_t mtx, int32 col);
 /**<
  ***  Converts  original column number <--> column number.
  ***  Passes calls on slave matrices up to the master matrix.
  -$-  Returns -1 from a bad matrix.
  **/
-extern int32  mtx_org_to_row(mtx_matrix_t mtx, int32 orgrow);
+ASC_DLLSPEC(int32  ) mtx_org_to_row(mtx_matrix_t mtx, int32 orgrow);
 /**<
  ***  Converts original row number <--> row number.
  ***  Passes calls on slave matrices up to the master matrix.
  -$-  Returns -1 from a bad matrix.
  **/
-extern int32  mtx_org_to_col(mtx_matrix_t mtx, int32 orgcol);
+ASC_DLLSPEC(int32  ) mtx_org_to_col(mtx_matrix_t mtx, int32 orgcol);
 /**<
  ***  Converts  original column number <--> column number.
  ***  Passes calls on slave matrices up to the master matrix.
@@ -387,7 +387,7 @@ extern void	mtx_output_assign(mtx_matrix_t mtx, int32 hirow, int32 hicol);
  ***  with the mtx_*_block_perm functions.
  **/
 
-extern boolean mtx_output_assigned(mtx_matrix_t mtx);
+ASC_DLLSPEC(boolean ) mtx_output_assigned(mtx_matrix_t mtx);
 /**< 
  ***  <!--  symbolic_rank_exists = mtx_output_assigned(matrix)         -->
  ***  <!--  boolean symbolic_rank_exists;                              -->
@@ -399,7 +399,7 @@ extern boolean mtx_output_assigned(mtx_matrix_t mtx);
  -$-  Returns FALSE on a bad matrix.
  **/
 
-extern int32  mtx_symbolic_rank(mtx_matrix_t mtx);
+ASC_DLLSPEC(int32  ) mtx_symbolic_rank(mtx_matrix_t mtx);
 /**< 
  ***  <!--  symbolic_rank = mtx_symbolic_rank(matrix)                  -->
  ***  <!--  int32 symbolic_rank;                                       -->
@@ -599,7 +599,7 @@ extern int32 mtx_block(mtx_matrix_t mtx,
  ***  Calls on slaves are passed up to the master matrix.
  **/
 
-extern int32 mtx_block_containing_row(mtx_matrix_t mtx, 
+ASC_DLLSPEC(int32 ) mtx_block_containing_row(mtx_matrix_t mtx, 
                                       int32 row,
                                       mtx_region_t *block);
 /**<

@@ -98,7 +98,7 @@ struct UnitDefinition {
 #define UNIT_BASE_SOLID_ANGLE        "steradian"
 /**< Name of basic SI unit for solid angle. */
 
-extern struct Units *g_units_hash_table[];
+ASC_DLLSPEC(struct Units *) g_units_hash_table[];
 /**<
  *  The hash table for unit structs.
  */
@@ -254,7 +254,7 @@ ASC_DLLSPEC(char**) UnitsExplainError(CONST char *unitsexpr, int code, int pos);
  *  Returns the dimensions of the units structure.
  */
 
-extern char *UnitsStringSI(struct Units *up);
+ASC_DLLSPEC(char *) UnitsStringSI(struct Units *up);
 /**<
  *  <!--  UnitsStringSI(up);                                           -->
  *  Returns the SI form of the units for the dimensionality of up.
@@ -262,7 +262,7 @@ extern char *UnitsStringSI(struct Units *up);
  *  Caller is responsible for freeing the string returned.
  */
 
-extern void DumpUnits(FILE *f);
+ASC_DLLSPEC(void ) DumpUnits(FILE *f);
 /**<  Dump all defined units to f. */
 
 #endif /* ASC_UNITS_H */

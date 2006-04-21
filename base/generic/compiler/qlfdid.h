@@ -45,17 +45,17 @@ struct SearchEntry {
   struct Instance *i;    /**< pointer to the instance */
 };
 
-extern struct Instance *g_search_inst;
+ASC_DLLSPEC(struct Instance *) g_search_inst;
 /**< Result of the last qlfdid search of any kind in c or tcl. */
 
-extern struct Instance *g_relative_inst;
+ASC_DLLSPEC(struct Instance *) g_relative_inst;
 /**<
  *  Result of the last qlfdid search of any kind in tcl.
  *  (C calls to qlfdid routines do not change this.)
  *  'qlfdid' and 'probe qlfdid' are known to set it.
  */
 
-extern char *Asc_MakeInitString(int len);
+ASC_DLLSPEC(char *) Asc_MakeInitString(int len);
 /**<
  *  <!--  Asc_MakeInitString(int len);                                 -->
  *  Will make a string of the specified length of a predefine default
@@ -63,7 +63,7 @@ extern char *Asc_MakeInitString(int len);
  *  Will return a pointer to the string;
  */
 
-extern void Asc_ReInitString(char *str);
+ASC_DLLSPEC(void ) Asc_ReInitString(char *str);
 /**<
  *  <!--  Asc_ReInitString;                                            -->
  *  <!--  char *str;                                                   -->
@@ -82,14 +82,14 @@ extern struct SearchEntry *Asc_SearchEntryCreate(char *name,
  *  try to make space for the string.
  */
 
-extern struct Instance *Asc_SearchEntryInstance(struct SearchEntry *se);
+ASC_DLLSPEC(struct Instance *) Asc_SearchEntryInstance(struct SearchEntry *se);
 /**<
  *  <!--  Asc_SearchEntryInstance(se);                                 -->
  *  <!--  struct SearchEntry *se;                                      -->
  *  Returns a the instance pointer from a search entry;
  */
 
-extern char *Asc_SearchEntryName(struct SearchEntry *se);
+ASC_DLLSPEC(char *) Asc_SearchEntryName(struct SearchEntry *se);
 /**<
  *  <!--  Asc_SearchEntryName(se)                                      -->
  *  <!--  struct SearchEntry *se;                                      -->
@@ -104,7 +104,7 @@ extern void Asc_SearchEntryDestroy(struct SearchEntry *se);
  *  to NULL, and free the memory associated with a SearchEntry.
  */
 
-extern void Asc_SearchListDestroy(struct gl_list_t *search_list);
+ASC_DLLSPEC(void ) Asc_SearchListDestroy(struct gl_list_t *search_list);
 /**<
  *  <!--  Asc_SearchListDestroy(search_list);                          -->
  *  <!--  struct gl_list_t *search_list;                               -->
@@ -112,7 +112,7 @@ extern void Asc_SearchListDestroy(struct gl_list_t *search_list);
  *  a list of SearchEntry(s).
  */
 
-extern struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp);
+ASC_DLLSPEC(struct gl_list_t *) Asc_BrowQlfdidSearch(char *str, char *temp);
 /**<
  *  <!--  Asc_BrowQlfdidSearch(str,temp)                               -->
  *  <!--  char *str, char *temp;                                       -->
@@ -125,7 +125,7 @@ extern struct gl_list_t *Asc_BrowQlfdidSearch(char *str, char *temp);
  *  If it returns NULL, the list does not exist; don't try to destroy it.
  */
 
-extern int Asc_QlfdidSearch2(char *str);
+ASC_DLLSPEC(int ) Asc_QlfdidSearch2(char *str);
 /**<
  *  <!--  Asc_QlfdidSearch2(str);                                      -->
  *  <!--  char *str;                                                   -->
@@ -140,7 +140,7 @@ extern int Asc_QlfdidSearch2(char *str);
  *  Returns 0 if found, 1 otherwise.
  */
 
-extern int Asc_QlfdidSearch3(CONST char *str, int relative);
+ASC_DLLSPEC(int ) Asc_QlfdidSearch3(CONST char *str, int relative);
 /**<
  *  <!--  Asc_QlfdidSearch3(str,relative);                             -->
  *  <!--  const char *str;                                             -->

@@ -58,7 +58,7 @@
 /**< Extension for new units files. */
 #define  MOD_CATCHALL    ""
 /**< Extension for general files. */
-extern CONST char *g_alt_ending[MOD_FILE_EXTS];
+ASC_DLLSPEC(CONST char *) g_alt_ending[MOD_FILE_EXTS];
 /**<
  *  This array defines the expected file extensions for
  *  parsable ascend MODEL/ATOM/unit code. Files are not
@@ -91,7 +91,7 @@ ASC_DLLSPEC(void) Asc_DestroyModules(DestroyFunc func);
  *  The function argument is not optional.
  */
 
-extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
+ASC_DLLSPEC(struct module_t *) Asc_OpenStringModule(CONST char *inputstring,
                                              int *status,
                                              CONST char *nameprefix);
 /**<
@@ -105,7 +105,7 @@ extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
  *  to zz_lex.
  */
 
-extern struct module_t *Asc_OpenModule(CONST char *name, int *status);
+ASC_DLLSPEC(struct module_t *) Asc_OpenModule(CONST char *name, int *status);
 /**<
  *  Attempt to find and open (for reading) a file whose
  *  name is based on `name'.
@@ -272,7 +272,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name);
  *  If any attempts to allocate memory fail, -3 is returned.
  */
 
-extern int Asc_CloseCurrentModule(void);
+ASC_DLLSPEC(int ) Asc_CloseCurrentModule(void);
 /**<
  *  This function will close the current module, and restore the module
  *  (tell the scanner to scan the module) that REQUIREd it.<br><br>
@@ -378,7 +378,7 @@ extern struct gl_list_t *Asc_ModuleStatementLists(CONST struct module_t *m);
  *    all the statements. module.c owns the gl_list.
  */
 
-extern CONST char *Asc_ModuleString(CONST struct module_t *m);
+ASC_DLLSPEC(CONST char *) Asc_ModuleString(CONST struct module_t *m);
 /**<
  *  Return the string of module m, if it is an interactive
  *  string module, or NULL if it is a file module.
@@ -389,7 +389,7 @@ ASC_DLLSPEC(CONST char*) Asc_ModuleFileName(CONST struct module_t *m);
  *  Return the filename of module m.
  */
 
-extern CONST char *Asc_ModuleBestName(CONST struct module_t *m);
+ASC_DLLSPEC(CONST char *) Asc_ModuleBestName(CONST struct module_t *m);
 /**<
  *  Return the filename of module m, if it is a file, or the
  *  buffer name if it is a string.
@@ -411,7 +411,7 @@ ASC_DLLSPEC(struct tm*) Asc_ModuleTimeModified(CONST struct module_t *m);
  *  coverted to the local time.
  */
 
-extern int Asc_ModuleStringIndex(CONST struct module_t *m);
+ASC_DLLSPEC(int ) Asc_ModuleStringIndex(CONST struct module_t *m);
 /**<
  *  Return the string index (the place in the sequence of parsing
  *  strings.

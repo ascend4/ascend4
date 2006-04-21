@@ -246,7 +246,7 @@ extern void slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
  *  If fp is NULL, does nothing.
  */
 
-extern int SlvRegisterStandardClients(void);
+ASC_DLLSPEC(int ) SlvRegisterStandardClients(void);
 /**<
  *  Attempts to register solvers slv0 through (as of 6/96) slv7.
  *  Returns the number of these which register successfully.

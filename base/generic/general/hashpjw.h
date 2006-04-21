@@ -19,7 +19,7 @@
 #ifndef __hashpjw_h_seen__
 #define __hashpjw_h_seen__
 
-extern unsigned long hashpjw(CONST char *str, unsigned long size);
+ASC_DLLSPEC(unsigned long ) hashpjw(CONST char *str, unsigned long size);
 /**<
  *  Return a hash value base on str.  The value will be >= 0 and < size.
  *  The specified string may not be NULL, and size must be greater than 0 

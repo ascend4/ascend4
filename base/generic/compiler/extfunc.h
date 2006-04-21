@@ -406,7 +406,7 @@ extern void PrintExtFuncLibrary(FILE *f);
 	file. The file must be opened for writing.
 */
 
-extern char *WriteExtFuncLibraryString(void);
+ASC_DLLSPEC(char *) WriteExtFuncLibraryString(void);
 /**<
 	Returns a string of formatted information about the external functions
 	defined. the string looks like "{{name1} {help1}} {{name2} {help2}} "

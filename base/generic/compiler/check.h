@@ -67,7 +67,7 @@ extern void InstanceTokenStatistics(FILE *f, CONST struct Instance *i);
  *  this instance tree.
  */
 
-extern void InstanceStatistics(FILE *f, CONST struct Instance *i);
+ASC_DLLSPEC(void ) InstanceStatistics(FILE *f, CONST struct Instance *i);
 /**<
  *  This compiles and prints various statistics about this instance tree.
  */

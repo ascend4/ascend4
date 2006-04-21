@@ -423,7 +423,7 @@ extern struct Statement *CreateCASSIGN(struct Name *n, struct Expr *rhs);
  *  @return The type as an enum stat_t.
  *  @see StatementTypeF()
  */
-extern enum stat_t StatementTypeF(CONST struct Statement *s);
+ASC_DLLSPEC(enum stat_t ) StatementTypeF(CONST struct Statement *s);
 /**<
  *  Implementation function for StatementType().  Do not call this
  *  function directly - use StatementType() instead.
@@ -1749,7 +1749,7 @@ extern struct VariableList *SelectStatVLF(CONST struct Statement *s);
  *  @return The statement count as an int.
  *  @see SelectStatNumberStatsF()
  */
-extern int SelectStatNumberStatsF(CONST struct Statement *s);
+ASC_DLLSPEC(int ) SelectStatNumberStatsF(CONST struct Statement *s);
 /**<
  *  Implementation function for SelectStatNumberStats().  Do not call this
  *  function directly - use SelectStatNumberStats() instead.
