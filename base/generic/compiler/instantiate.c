@@ -10238,8 +10238,10 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   case symbol_value:
   case boolean_value:
   case list_value:
+    ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
     WriteStatement(ASCERR,statement,0);
-    CONSOLE_DEBUG("FOR expression returns the wrong type.\n");
+    FPRINTF(ASCERR,"FOR expression returns the wrong type.\n");
+    error_reporter_end_flush();
     DestroyValue(&value);
     return 0;
   case set_value:

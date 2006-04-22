@@ -10,37 +10,11 @@ using namespace std;
 #endif
 
 
-static const int REPORTER_MAX_ERROR_MSG = 1024;
+static const int REPORTER_MAX_ERROR_MSG = ERROR_REPORTER_MAX_MSG;
 
 #ifdef ASCXX_USE_PYTHON
 // Python-invoking callback function
 int reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS){
-/*
-    const error_severity_t sev \
-  , const char *filename \
-  , const int line \
-  , const char *funcname \
-  , const char *fmt \
-  , const va_list args
-*/
-/*
-	int res=0;
-	if(filename!=NULL){
-		res += ASC_FPRINTF(ASCERR,"%s:",filename);
-	}
-	if(line!=0){
-		res += ASC_FPRINTF(ASCERR,"%d:",line);
-	}
-	if(funcname!=NULL){
-		res += ASC_FPRINTF(ASCERR,"%s:",funcname);
-	}
-	if ((filename!=NULL) || (line!=0) || (funcname!=NULL)){
-		res += ASC_FPRINTF(ASCERR," ");
-	}
-
-	res += ASC_VFPRINTF(ASCERR,fmt,args);
-	return res;
-*/
 	Reporter *reporter = Reporter::Instance();
 	return reporter->reportErrorPython(ERROR_REPORTER_CALLBACK_VARS);
 }
@@ -91,17 +65,7 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	pyfunc = (PyObject *)client_data;
 
 	char msg[REPORTER_MAX_ERROR_MSG];
-	vsprintf(msg,fmt,args);
-
-	cerr << "reportErrorPython: [[[start]]]: msg[" << strlen(msg) << "]=" << msg ;
-	cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;
-	if(filename==NULL){
-		cerr << "reportErrorPython: filename is NULL" << endl;
-	}else{
-		cerr << "reportErrorPython: filename[" << strlen(msg) << "]=" << filename << endl;
-	}
-	//cerr << "reportErrorPython: line=" << line << endl;
-	cerr.flush();
+	vsnprintf(msg,REPORTER_MAX_ERROR_MSG,fmt,args);
 
 	pyarglist = Py_BuildValue("(H,s,i,s#)",sev,filename,line,msg,strlen(msg));             // Build argument list
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
@@ -111,12 +75,9 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	if (pyresult) {                                 // If no errors, return int
     	long long_res = PyInt_AsLong(pyresult);
 		res = int(long_res);
-	}else{
-		//cerr << "pyresult = 0"<< endl;
 	}
 
 	Py_XDECREF(pyresult);
-	cerr << "reportErrorPython: [[[return]]]" << endl;
 	return res;
 }
 

@@ -401,7 +401,7 @@ void WriteStatement(FILE *f, CONST struct Statement *s, int i)
 		(ForContainsWbts(s)) ? " wbts" : "",
 		(ForContainsAts(s)) ? " ats" : "",
 		(ForContainsIrt(s)) ? " irt" : ""
-             );
+      );
     } else {
       FPRINTF(f," %s\n", ForKindString(ForLoopKind(s)));
     }
