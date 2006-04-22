@@ -1,38 +1,35 @@
-/*
- *  User Packages
- *  by Kirk Abbott
- *  Created: July 4, 1994
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- *  Last rev in old CVS: 1.14 ballan 1998/03/06 15:47:14
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
+	Copyright (C) 2006 Carnegie Mellon University
 
-/**
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
 	Code to support dynamic and static loading of user packages.
 
 	The default state is to have packages. As such it takes an explicit
 	definition of NO_PACKAGES, if packages are not to be handled.
 	An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
 	required.
+*//*
+	User Packages
+	by Kirk Abbott
+	Created: July 4, 1994
+	Last rev in old CVS: 1.14 ballan 1998/03/06 15:47:14
 */
+
 #if !defined(DYNAMIC_PACKAGES) && !defined(STATIC_PACKAGES) && !defined(NO_PACKAGES)
 # error "Package linking option not set!"
 #endif
@@ -95,9 +92,7 @@ symchar *MakeArchiveLibraryName(CONST char *prefix){
 	buffer = (char *)ascmalloc(len+40);
 
 #if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
-# define ASC_STRINGIFY(ARG) #ARG
-	sprintf(buffer,"%s%s%s",ASC_STRINGIFY(ASC_SHLIBPREFIX),prefix,ASC_STRINGIFY(ASC_SHLIBSUFFIX));
-# undef ASC_STRINGIFY
+	sprintf(buffer,"%s%s%s",ASC_SHLIBPREFIX,prefix,ASC_SHLIBSUFFIX);
 #else
 # ifdef __WIN32__
 	sprintf(buffer,"%s.dll",prefix);
@@ -231,7 +226,7 @@ int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
 
   full_file_name = SearchArchiveLibraryPath(SCP(name_with_extn),default_path,env);
   if (!full_file_name) {
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path",name_with_extn);
+    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path.",name_with_extn);
     return 1;
   }
 

@@ -137,16 +137,16 @@ public:
 
 %extend Reporter {
 	void reportError(const char *msg){
-		error_reporter(ASC_USER_ERROR,NULL,0,"%s", msg);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"%s", msg);
 	}
 	void reportNote(const char *msg){
-		error_reporter(ASC_USER_NOTE,NULL,0,"%s",msg);
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"%s",msg);
 	}
 	void reportWarning(const char *msg){
-		error_reporter(ASC_USER_WARNING,NULL,0,"%s",msg);
+		ERROR_REPORTER_NOLINE(ASC_USER_WARNING,"%s",msg);
 	}
 	void reportSuccess(const char *msg){
-		error_reporter(ASC_USER_SUCCESS,NULL,0,"%s",msg);
+		ERROR_REPORTER_NOLINE(ASC_USER_SUCCESS,"%s",msg);
 	}
 }
 

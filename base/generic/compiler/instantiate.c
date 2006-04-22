@@ -326,7 +326,7 @@ void WriteStatementLocation(FILE *f, struct Statement *stat)
 static
 void WriteSetError(struct Statement *statement, struct TypeDescription *def)
 {
-  WSEM(ASCERR,statement, (GetBaseType(def) == set_type) ?
+  STATEMENT_ERROR(statement, (GetBaseType(def) == set_type) ?
                              "No set type specified in IS_A statement"
                              : "Set type specified for a non-set type");
 }
@@ -383,12 +383,12 @@ int CalcSetType(symchar *c, struct Statement *statement)
     case integer_constant_type: return 1;
     case symbol_constant_type: return 0;
     default:
-      WSEM(ASCERR,statement, "Incorrect set type in IS_A");
+      STATEMENT_ERROR(statement, "Incorrect set type in IS_A");
       /* lint should keep us from ever getting here */
       return -2;
     }
   } else{
-    WSEM(ASCERR,statement, "Unable to determine type of set.");
+    STATEMENT_ERROR(statement, "Unable to determine type of set.");
     return -2;
   }
 }
@@ -521,12 +521,12 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   }
   if (StatInFOR(statement)) {
     MarkStatContext(statement,context_WRONG);
-    WSEM(ASCERR,statement, "Add another FOR index. In FOR loops,"
+    STATEMENT_ERROR(statement, "Add another FOR index. In FOR loops,"
          " all array subscripts must be scalar values, not sets.");
     WSS(ASCERR,statement);
   } else {
     MarkStatContext(statement,context_WRONG);
-    WSEM(ASCERR,statement, "Subscripts of conflicting or incorrect types"
+    STATEMENT_ERROR(statement, "Subscripts of conflicting or incorrect types"
          " in rectangular array.");
     WSS(ASCERR,statement);
   }
@@ -807,7 +807,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
     case set_value:
     case list_value:
       if (last==0) {
-        WSEM(ASCERR,stat, "Index to sparse array is of an incorrect type");
+        STATEMENT_ERROR(stat, "Index to sparse array is of an incorrect type");
         DestroyValue(&value);
         return NULL;
       } else {
@@ -841,7 +841,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       DestroyValue(&value);
       return NULL;
     default:
-      WSEM(ASCERR,stat, "Unknown result value type in MakeIndex.\n");
+      STATEMENT_ERROR(stat, "Unknown result value type in MakeIndex.\n");
       Asc_Panic(2, NULL, "Unknown result value type in MakeIndex.\n");
       exit(2);/* Needed to keep gcc from whining */
     }
@@ -869,7 +869,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       }
     default:
       DestroyValue(&value);
-      WSEM(ASCERR,stat, "Bad index to dense alias array");
+      STATEMENT_ERROR(stat, "Bad index to dense alias array");
       Asc_Panic(2, NULL, "Bad index to dense alias array");
       exit(2);/* Needed to keep gcc from whining */
     }
@@ -1005,7 +1005,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   case boolean_value:
   case list_value:
     if (last==0) {
-      WSEM(ASCERR,stat, "Index to array is of an incorrect type");
+      STATEMENT_ERROR(stat, "Index to array is of an incorrect type");
       DestroyValue(&value);
       return NULL;
     } else {
@@ -1035,7 +1035,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
     case name_unfound:
       break;
     default:
-      WSEM(ASCERR,stat, "Error in array indices");
+      STATEMENT_ERROR(stat, "Error in array indices");
       break;
     }
     DestroyValue(&value);
@@ -1136,7 +1136,7 @@ struct Instance *MakeSparseArray(struct Instance *parent,
                                  intset,0,0,0,indices);
       break;
     default:
-      WSEM(ASCERR,stat, "Utter screw-up in MakeSparseArray");
+      STATEMENT_ERROR(stat, "Utter screw-up in MakeSparseArray");
       Asc_Panic(2, NULL, "Utter screw-up in MakeSparseArray");
     }
     aryinst = CreateArrayInstance(desc,1);
@@ -1177,7 +1177,7 @@ void MakeAliasInstance(CONST struct Name *name,
     /* case of simple part name */
     if (StatInFOR(statement) && StatWrong(statement)==0) {
       MarkStatContext(statement,context_WRONG);
-      WSEM(ASCERR,statement,"Unindexed statement in FOR loop not allowed.");
+      STATEMENT_ERROR(statement,"Unindexed statement in FOR loop not allowed.");
       WSS(ASCERR,statement);
       return;
     }
@@ -1200,12 +1200,12 @@ void MakeAliasInstance(CONST struct Name *name,
                               strlen(REDEFINE_CHILD_MESG2)+1);
         strcpy(msg,REDEFINE_CHILD_MESG2);
         strcat(msg,SCP(childname));
-        WSEM(ASCERR,statement,msg);
+        STATEMENT_ERROR(statement,msg);
         ascfree(msg);
       }
     } else{			/* unknown child name */
       /* case of part not expected */
-      WSEM(ASCERR,statement, "Unknown child name.  Never should happen");
+      STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
       Asc_Panic(2, NULL, "Unknown child name.  Never should happen");
     }
   } else{
@@ -1237,12 +1237,12 @@ void MakeAliasInstance(CONST struct Name *name,
               SignalChildExpansionFailure(parent,pos);
             }
           } else {
-            WSEM(ASCERR,statement, "Unable to create alias array instance");
+            STATEMENT_ERROR(statement, "Unable to create alias array instance");
             Asc_Panic(2, NULL, "Unable to create alias array instance");
           }
         } else {
           DeleteTypeDesc(arydef);
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
                "Unknown array child name. Never should happen");
           Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
         }
@@ -1263,7 +1263,7 @@ void MakeAliasInstance(CONST struct Name *name,
                                  rhsinst,NULL,rhslist);
           }
         } else {
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
             "Unknown array child name. Never should happen");
           Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
         }
@@ -1272,7 +1272,7 @@ void MakeAliasInstance(CONST struct Name *name,
       /* bad child name. cannot create parts of parts. should never
        * happen, being trapped out in typelint.
        */
-      WSEM(ASCERR,statement,"Bad ALIASES child name.");
+      STATEMENT_ERROR(statement,"Bad ALIASES child name.");
     }
   }
 }
@@ -1309,14 +1309,14 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
     return 0; /* rhs not compiled yet */
   }
   if (gl_length(rhslist)>1) {
-    WSEM(ASCERR,statement,"ALIASES needs exactly 1 RHS");
+    STATEMENT_ERROR(statement,"ALIASES needs exactly 1 RHS");
     gl_destroy(rhslist);
     return 1; /* rhs not unique for current values of sets */
   }
   rhsinst = (struct Instance *)gl_fetch(rhslist,1);
   gl_destroy(rhslist);
   if (InstanceKind(rhsinst)==REL_INST || LREL_INST ==InstanceKind(rhsinst)) {
-    WSEM(ASCERR,statement,"Direct ALIASES of relations are not permitted");
+    STATEMENT_ERROR(statement,"Direct ALIASES of relations are not permitted");
     MarkStatContext(statement,context_WRONG);
     WSS(ASCERR,statement);
     return 1; /* relations only aliased through models */
@@ -1514,7 +1514,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
           "Undefined values in WITH_VALUE () list");
         return CreateErrorValue(undefined_value);
       default:
-        WSEM(ASCERR,statement,"Bad result in evaluating WITH_VALUE list\n");
+        STATEMENT_ERROR(statement,"Bad result in evaluating WITH_VALUE list\n");
         MarkStatContext(statement,context_WRONG);
         WSS(ASCERR,statement);
         DestroyValue(&subslist);
@@ -1532,7 +1532,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
        ) {
       DestroyValue(&result);
       DestroyValue(&subscripts);
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
         "WITH_VALUE list does not form a proper subscript set.\n");
       MarkStatContext(statement,context_WRONG);
       WSS(ASCERR,statement);
@@ -1540,7 +1540,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
     }
     /* check sanity of values. may need fixing around empty set. */
     if ( (SetKind(SetValue(subscripts))==integer_set) != (intset!=0)) {
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
         "Unable to construct set. Values and set type mismatched\n");
       DestroyValue(&result);
       DestroyValue(&subscripts);
@@ -1550,7 +1550,7 @@ struct value_t ComputeArrayElements(struct Instance *inst,
     }
     /* check set size == instances to alias */
     if (Cardinality(SetValue(subscripts)) != len) {
-      WSEM(ASCERR,statement,"In: ");
+      STATEMENT_ERROR(statement,"In: ");
       FPRINTF(ASCERR,
         "WITH_VALUE list length (%lu) != number of instances given (%lu)\n",
         Cardinality(SetValue(subscripts)),len);
@@ -1626,7 +1626,7 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   if (gl_length(rhsinstlist) >0) {
     rhsinst = (struct Instance *)gl_fetch(rhsinstlist,1);
     if (BaseTypeIsEquation(InstanceTypeDesc(rhsinst))) {
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
         "Direct ALIASES of rels/lrels/whens are not permitted");
       MarkStatContext(statement,context_WRONG);
       WSS(ASCERR,statement);
@@ -1773,7 +1773,7 @@ struct Instance *MakeSimpleInstance(struct TypeDescription *def,
       break;
     case array_type:
     default: /* picks up patch_type */
-      WSEM(ASCERR,statement, "MakeSimpleInstance error. PATCH/ARRAY found.\n");
+      STATEMENT_ERROR(statement, "MakeSimpleInstance error. PATCH/ARRAY found.\n");
       Asc_Panic(2, NULL,  "MakeSimpleInstance error. PATCH/ARRAY found.\n");
     }
   }
@@ -2222,7 +2222,7 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
     default:
       /* it questionable whether this is a correct action in all cases*/
       /* we could probably turn out more useful error messages here */
-      WSEM(ASCERR,statement, "Condition doesn't make sense.");
+      STATEMENT_ERROR(statement, "Condition doesn't make sense.");
       DestroyValue(&value);
       return MPIBADREL;
     }
@@ -2233,17 +2233,17 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
         return MPIOK;
       } else {
         DestroyValue(&value);
-        WSEM(ASCERR,statement, "Arguments do not conform to requirements");
+        STATEMENT_ERROR(statement, "Arguments do not conform to requirements");
         return MPIBADREL;
       }
     } else {
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Requirements cannot be satisfied by variables");
+      STATEMENT_ERROR(statement, "Requirements cannot be satisfied by variables");
       return MPIVARREL;
     }
   default:
     DestroyValue(&value);
-    WSEM(ASCERR,statement, "Constraint does not evaluate to boolean result.");
+    STATEMENT_ERROR(statement, "Constraint does not evaluate to boolean result.");
     return MPINOTBOOL;
   }
 }
@@ -2310,12 +2310,12 @@ int InsertParameterInst(struct Instance *parent,
               strlen(REDEFINE_CHILD_MESG)+1);
       strcpy(msg,REDEFINE_CHILD_MESG);
       strcat(msg,SCP(childname));
-      WSEM(ASCERR,statement,msg);
+      STATEMENT_ERROR(statement,msg);
       ascfree(msg);
       return 0;
     }
   } else {			/* unknown name */
-    WSEM(ASCERR,statement, "Unknown parameter name.  Never should happen");
+    STATEMENT_ERROR(statement, "Unknown parameter name.  Never should happen");
     Asc_Panic(2, NULL, "Unknown parameter name.  Never should happen");
     exit(2);/* Needed to keep gcc from whining */
   }
@@ -2382,7 +2382,7 @@ void mpierror(struct Set *argset,
     WriteSet(ASCERR,argset);
     FPRINTF(ASCERR,"\n");
   }
-  WSEM(ASCERR,statement,"Error in executing statement:");
+  STATEMENT_ERROR(statement,"Error in executing statement:");
   MarkStatContext(statement,context_WRONG);
   WSS(ASCERR,statement);
 }
@@ -2919,7 +2919,7 @@ int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement)
     switch(err){
     case impossible_instance:
       MissingInsts(tmpinst,GetStatVarList(statement),1);
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
         "WILL_BE_THE_SAME statement contains an impossible instance name");
       return MPIBADWBTS;
     default:
@@ -2939,7 +2939,7 @@ int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement)
           MoreRefined(InstanceTypeDesc(gl_fetch(instances,c)),
                       InstanceTypeDesc(head))==NULL) {
         /* can't be merged later */
-        WSEM(ASCERR,statement,
+        STATEMENT_ERROR(statement,
           "WILL_BE_THE_SAME statement contains incompatible instances");
         gl_destroy(instances);
         return MPIBADWBTS;
@@ -2977,7 +2977,7 @@ int MPICheckWNBTS(struct Instance *tmpinst, struct Statement *statement)
     switch(err){
     case impossible_instance:
       MissingInsts(tmpinst,GetStatVarList(statement),1);
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
         "WILL_NOT_BE_THE_SAME statement contains an impossible instance name");
       return MPIBADWNBTS;
     default:
@@ -2988,7 +2988,7 @@ int MPICheckWNBTS(struct Instance *tmpinst, struct Statement *statement)
     }
   }
   if (gl_unique_list(instances)==0) {
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
           "WILL_NOT_BE_THE_SAME statement contains"
          " identical/merged instances");
     gl_destroy(instances);
@@ -3017,7 +3017,7 @@ int CheckWhereFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return MPIFOR;
   }
   assert(GetEvaluationContext()==NULL);
@@ -3030,7 +3030,7 @@ int CheckWhereFOR(struct Instance *inst, struct Statement *statement)
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "FOR has undefined values");
+      STATEMENT_ERROR(statement, "FOR has undefined values");
       return MPIFOR; /* this maybe should be mpiwait? */
     default:
       WriteForValueError(statement,value);
@@ -3875,7 +3875,7 @@ void MakeInstance(CONST struct Name *name,
   if ((childname = SimpleNameIdPtr(name))!=NULL){ /* simple 1 element name */
     if (StatInFOR(statement) && StatWrong(statement)==0) {
       MarkStatContext(statement,context_WRONG);
-      WSEM(ASCERR,statement,"Unindexed statement in FOR loop not allowed.");
+      STATEMENT_ERROR(statement,"Unindexed statement in FOR loop not allowed.");
       WSS(ASCERR,statement);
       return;
     }
@@ -3891,11 +3891,11 @@ void MakeInstance(CONST struct Name *name,
                               strlen(REDEFINE_CHILD_MESG)+1);
         strcpy(msg,REDEFINE_CHILD_MESG);
         strcat(msg,SCP(childname));
-        WSEM(ASCERR,statement,msg);
+        STATEMENT_ERROR(statement,msg);
         ascfree(msg);
       }
     } else {			/* unknown child name */
-      WSEM(ASCERR,statement, "Unknown child name.  Never should happen");
+      STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
       Asc_Panic(2, NULL, "Unknown child name.  Never should happen");
     }
   } else {
@@ -3921,12 +3921,12 @@ void MakeInstance(CONST struct Name *name,
               SignalChildExpansionFailure(parent,pos);
             }
           } else {
-            WSEM(ASCERR,statement, "Unable to create array instance");
+            STATEMENT_ERROR(statement, "Unable to create array instance");
             Asc_Panic(2, NULL, "Unable to create array instance");
           }
         } else {
           DeleteTypeDesc(arydef);
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
                "Unknown array child name. Never should happen");
           Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
         }
@@ -3943,7 +3943,7 @@ void MakeInstance(CONST struct Name *name,
             (void)AddArrayChild(parent,name,statement,NULL,arginst,NULL);
           }
         } else {
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
             "Unknown array child name. Never should happen");
           Asc_Panic(2, NULL, "Unknown array child name. Never should happen");
         }
@@ -3952,7 +3952,7 @@ void MakeInstance(CONST struct Name *name,
       /* bad child name. cannot create parts of parts.  should never
        * happen, being trapped out in typelint.
        */
-      WSEM(ASCERR,statement,"Bad IS_A child name.");
+      STATEMENT_ERROR(statement,"Bad IS_A child name.");
     }
   }
 }
@@ -3999,7 +3999,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     }
     intset = CalcSetType(GetStatSetType(statement),statement);
     if (intset < 0) { /* incorrect set type */
-      WSEM(ASCERR,statement,"Illegal set type encountered.");
+      STATEMENT_ERROR(statement,"Illegal set type encountered.");
       /* should never happen due to lint */
       return 0;
     }
@@ -4020,7 +4020,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
                           SCLEN(GetStatType(statement))+1);
     strcpy(msg,UNDEFINED_TYPE_MESG);
     strcat(msg,SCP(GetStatType(statement)));
-    WSEM(ASCERR,statement,msg); /* added print. baa. string was here already*/
+    STATEMENT_ERROR(statement,msg); /* added print. baa. string was here already*/
     ascfree(msg);
     return 1;
   }
@@ -4059,11 +4059,11 @@ void MakeDummyInstance(CONST struct Name *name,
            strlen(REDEFINE_CHILD_MESG)+1);
       strcpy(msg,REDEFINE_CHILD_MESG);
       strcat(msg,SCP(childname));
-      WSEM(ASCERR,statement,msg);
+      STATEMENT_ERROR(statement,msg);
       ascfree(msg);
     }
   } else {			/* unknown child name */
-      WSEM(ASCERR,statement, "Unknown child name.  Never should happen");
+      STATEMENT_ERROR(statement, "Unknown child name.  Never should happen");
       Asc_Panic(2, NULL, "Unknown child name.  Never should happen");
   }
 }
@@ -4095,7 +4095,7 @@ int ExecuteUnSelectedISA( struct Instance *inst, struct Statement *statement)
     char *msg = ascmalloc(strlen(UNDEFINED_TYPE_MESG)+11);
     strcpy(msg,UNDEFINED_TYPE_MESG);
     strcat(msg,"dummy_type");
-    WSEM(ASCERR,statement,msg);
+    STATEMENT_ERROR(statement,msg);
     ascfree(msg);
     return 1;
   }
@@ -4372,7 +4372,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
     instances = FindInsts(work,GetStatVarList(statement),&err);
     if (instances != NULL){
       if (ListContainsFundamental(instances)){
-        WSEM(ASCERR,statement,
+        STATEMENT_ERROR(statement,
               "IS_REFINED_TO statement affects a part of an atom");
         gl_destroy(instances);
         MarkStatContext(statement,context_WRONG);
@@ -4406,7 +4406,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
           FPRINTF(ASCERR,"Incompatible instance: ");
           WriteInstanceName(ASCERR,inst,work);
           FPRINTF(ASCERR,"\n");
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
                "Unconformable refinement in IS_REFINED_TO statement");
           gl_destroy(instances);
           MarkStatContext(statement,context_WRONG);
@@ -4421,7 +4421,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
             FPRINTF(ASCERR,"ARE_ALIKE'd instance: ");
             WriteInstanceName(ASCERR,inst,work);
             FPRINTF(ASCERR,"\n");
-            WSEM(ASCERR,statement,
+            STATEMENT_ERROR(statement,
               "Refinement of clique to parameterized type family disallowed");
             gl_destroy(instances);
             MarkStatContext(statement,context_WRONG);
@@ -4461,7 +4461,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
     } else {
       switch(err){
       case impossible_instance:
-        WSEM(ASCERR,statement,
+        STATEMENT_ERROR(statement,
           "IS_REFINED_TO statement contains an impossible instance name");
         MissingInsts(work,GetStatVarList(statement),1);
         return 1;
@@ -4477,7 +4477,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
                           SCLEN(GetStatType(statement))+1);
     strcpy(msg,IRT_UNDEFINED_TYPE);
     strcat(msg,SCP(GetStatType(statement)));
-    WSEM(ASCERR,statement,msg);
+    STATEMENT_ERROR(statement,msg);
     ascfree(msg);
     return 1;
   }
@@ -4536,7 +4536,7 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
   instances = FindInsts(inst,GetStatVarList(statement),&err);
   if (instances != NULL){
     if (ListContainsFundamental(instances)){
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
         "ARE_THE_SAME statement affects a part of an atom");
       gl_destroy(instances);
       return 1;
@@ -4551,7 +4551,7 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
           inst2 = (struct Instance *)gl_fetch(instances,c);
           inst1 = MergeInstances(inst1,inst2);
           if (inst1==NULL){
-            WSEM(ASCERR,statement, "Fatal ARE_THE_SAME error");
+            STATEMENT_ERROR(statement, "Fatal ARE_THE_SAME error");
             Asc_Panic(2, NULL, "Fatal ARE_THE_SAME error");
             /*NOTREACHED Wanna bet? ! */
           }
@@ -4559,7 +4559,7 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
         PostMergeCheck(inst1);
       }
     } else {
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "ARE_THE_SAME statement contains unconformable instances");
     }
     gl_destroy(instances);
@@ -4568,7 +4568,7 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
     switch(err){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
-      WSEM(ASCERR,statement, "ARE_THE_SAME contains impossible instance");
+      STATEMENT_ERROR(statement, "ARE_THE_SAME contains impossible instance");
       return 1;
     default:
       MissingInsts(inst,GetStatVarList(statement),0);
@@ -4592,12 +4592,12 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
   instances = FindInsts(inst,GetStatVarList(statement),&err);
   if (instances != NULL){
     if (ListContainsFundamental(instances)){
-      WSEM(ASCERR,statement, "ARE_ALIKE statement affects a part of an atom");
+      STATEMENT_ERROR(statement, "ARE_ALIKE statement affects a part of an atom");
       gl_destroy(instances);
       return 1;
     }
     if (ListContainsParameterized(instances)){
-      WSEM(ASCERR,statement, "ARE_ALIKE statement affects parameterized type");
+      STATEMENT_ERROR(statement, "ARE_ALIKE statement affects parameterized type");
       gl_destroy(instances);
       return 1;
     }
@@ -4623,7 +4623,7 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
         }
       }
     } else {
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                     "ARE_ALIKE statement contains unconformable instances");
     }
     gl_destroy(instances);
@@ -4632,7 +4632,7 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
     switch(err){
     case impossible_instance:
       MissingInsts(inst,GetStatVarList(statement),1);
-      WSEM(ASCERR,statement, "ARE_ALIKE contains impossible instance");
+      STATEMENT_ERROR(statement, "ARE_ALIKE contains impossible instance");
       return 1;
     default:
       MissingInsts(inst,GetStatVarList(statement),0);
@@ -4718,7 +4718,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
       child = MakeRelationInstance(name,FindRelationType(),
                                    inst,statement,e_token);
       if (child==NULL){
-        WSEM(ASCERR,statement, "Unable to create expression structure");
+        STATEMENT_ERROR(statement, "Unable to create expression structure");
        /* print a better message here if needed. maybe an if!makeindices moan*/
         return 1;
       }
@@ -4735,15 +4735,15 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
       gl_destroy(instances);
       if (InstanceKind(child)==DUMMY_INST) {
 #ifdef DEBUG_RELS
-        WSEM(ASCERR,statement, "DUMMY_INST foundin compiling relation.");
+        STATEMENT_ERROR(statement, "DUMMY_INST foundin compiling relation.");
 #endif
         return 1;
       }
 #ifdef DEBUG_RELS
-      WSEM(ASCERR,statement, "REL_INST found in compiling relation.");
+      STATEMENT_ERROR(statement, "REL_INST found in compiling relation.");
 #endif
     } else {
-      WSEM(ASCERR,statement, "Expression name refers to more than one object");
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);	/* bizarre! */
       return 1;
     }
@@ -4757,7 +4757,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
   if (GetInstanceRelation(child,&reltype)==NULL) {
     if ( (g_instantiate_relns & TOKRELS) ==0) {
 #ifdef DEBUG_RELS
-        WSNM(ASCERR,statement, "TOKRELS 0 found in compiling relation.");
+      STATEMENT_NOTE(statement, "TOKRELS 0 found in compiling relation.");
 #endif
       return 1;
     }
@@ -4769,7 +4769,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
     if (reln != NULL){
       SetInstanceRelation(child,reln,e_token);
 #ifdef DEBUG_RELS
-      WSNM(ASCERR,statement, "Created relation.");
+      STATEMENT_NOTE(statement, "Created relation.");
 #endif
       return 1;
     } else {
@@ -4824,17 +4824,17 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
       }
     }
 #ifdef DEBUG_RELS
-    WSNM(ASCERR,statement, "   Failed relation -- unexpected scenario.");
+    STATEMENT_NOTE(statement, "   Failed relation -- unexpected scenario.");
 #endif
   } else{
     /*  Do nothing, somebody already completed the relation.  */
 #ifdef DEBUG_RELS
-        WSNM(ASCERR,statement, "Already compiled in compiling relation?!.");
+        STATEMENT_NOTE(statement, "Already compiled in compiling relation?!.");
 #endif
     return 1;
   }
 #ifdef DEBUG_RELS
-  WSNM(ASCERR,statement, "End of ExecuteREL. huh?");
+  STATEMENT_NOTE(statement, "End of ExecuteREL. huh?");
 #endif
 }
 
@@ -4952,7 +4952,7 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
       assert(InstanceKind(child)==DUMMY_INST);
       gl_destroy(instances);
     } else{
-      WSEM(ASCERR,statement, "Expression name refers to more than one object");
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       Asc_Panic(2, NULL, "Expression name refers to more than one object");
     }
@@ -5581,12 +5581,12 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
       child = MakeRelationInstance(name,FindRelationType(),
                                    inst,statement,e_glassbox);
       if (child==NULL){
-        WSEM(ASCERR,statement, "Unable to create expression structure");
+        STATEMENT_ERROR(statement, "Unable to create expression structure");
         return 1;
       }
     }
     else {
-      WSEM(ASCERR,statement, "Unable to execute expression");
+      STATEMENT_ERROR(statement, "Unable to execute expression");
       return 1;
     }
   }
@@ -5597,7 +5597,7 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
       gl_destroy(instances);
     }
     else{
-      WSEM(ASCERR,statement, "Expression name refers to more than one object");
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       return 1;
     }
@@ -5690,7 +5690,7 @@ static
 void StructuralAsgnErrorReport(struct Statement *statement,
                                struct value_t *value)
 {
-  WSEM(ASCERR,statement,
+  STATEMENT_ERROR(statement,
     "Structural assignment right hand side is not constant");
   DestroyValue(value);
 }
@@ -5707,39 +5707,39 @@ int AsgnErrorReport(struct Statement *statement, struct value_t *value)
   case undefined_value:
   case name_unfound: DestroyValue(value); return 0;
   case incorrect_name:
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
          "Assignment right hand side contains non-existent instance");
     DestroyValue(value);
     return 1;
   case temporary_variable_reused:
-    WSEM(ASCERR,statement, "Assignment re-used temporary variable");
+    STATEMENT_ERROR(statement, "Assignment re-used temporary variable");
     DestroyValue(value);
     return 1;
   case dimension_conflict:
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
           "Assignment right hand side is dimensionally inconsistent");
     DestroyValue(value);
     return 1;
   case incorrect_such_that:
-    WSEM(ASCERR,statement, "Assignment uses incorrect such that expression");
+    STATEMENT_ERROR(statement, "Assignment uses incorrect such that expression");
     DestroyValue(value);
     return 1;
   case empty_choice:
-    WSEM(ASCERR,statement, "Assignment has CHOICE of an empty set");
+    STATEMENT_ERROR(statement, "Assignment has CHOICE of an empty set");
     DestroyValue(value);
     return 1;
   case empty_intersection:
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
       "Assignment has an empty INTERSECTION() construct which is undefined");
     DestroyValue(value);
     return 1;
   case type_conflict:
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
          "Assignment right hand side contains a type conflict");
     DestroyValue(value);
     return 1;
   default:
-    WSEM(ASCERR,statement, "Assignment contains strange error");
+    STATEMENT_ERROR(statement, "Assignment contains strange error");
     DestroyValue(value);
     return 1;
   }
@@ -5753,7 +5753,7 @@ void ReAssignmentError(CONST char *str, struct Statement *statement)
   strcpy(msg,REASSIGN_MESG1);
   strcat(msg,str);
   strcat(msg,REASSIGN_MESG2);
-  WSEM(ASCERR,statement,msg);
+  STATEMENT_ERROR(statement,msg);
   ascfree(msg);
 }
 
@@ -5772,7 +5772,7 @@ int AssignStructuralValue(struct Instance *inst,
   case ARRAY_ENUM_INST:
   case REL_INST:
   case LREL_INST:
-    WSEM(ASCERR,statement, "Arg!  Attempt to assign to a non-scalar");
+    STATEMENT_ERROR(statement, "Arg!  Attempt to assign to a non-scalar");
     return 0;
   case REAL_ATOM_INST:
   case REAL_INST:
@@ -5782,7 +5782,7 @@ int AssignStructuralValue(struct Instance *inst,
   case INTEGER_INST:
   case SYMBOL_ATOM_INST:
   case SYMBOL_INST:
-    WSEM(ASCERR,statement, "Assignment to non-constant LHS ignored");
+    STATEMENT_ERROR(statement, "Assignment to non-constant LHS ignored");
     return 0;
   case REAL_CONSTANT_INST:
     switch(ValueKind(value)){
@@ -5797,7 +5797,7 @@ int AssignStructuralValue(struct Instance *inst,
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(RealValueDimensions(value),RealAtomDims(inst)) ) {
-            WSEM(ASCERR,statement, "Dimensionally inconsistent assignment");
+            STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
             return 0;
           } else {
       	    if (IsWild(RealAtomDims(inst))) {
@@ -5821,7 +5821,7 @@ int AssignStructuralValue(struct Instance *inst,
         if (!AtomAssigned(inst)) {
           if ( !IsWild(RealAtomDims(inst)) &&
                !SameDimen(Dimensionless(),RealAtomDims(inst)) ) {
-            WSEM(ASCERR,statement, "Dimensionally inconsistent assignment");
+            STATEMENT_ERROR(statement, "Dimensionally inconsistent assignment");
             return 0;
           } else {
       	    if (IsWild(RealAtomDims(inst))) {
@@ -5834,13 +5834,13 @@ int AssignStructuralValue(struct Instance *inst,
       /* case of same value,dimen reassigned is silently ignored */
       return 1;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "Attempt to assign non-real value to a real instance");
     }
     return 0;
   case BOOLEAN_CONSTANT_INST:
     if (ValueKind(value)!=boolean_value){
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
       "Attempt to assign a non-boolean value to a boolean instance");
       return 0;
     } else {
@@ -5885,7 +5885,7 @@ int AssignStructuralValue(struct Instance *inst,
       }
       /* intended to fall through to default if not wild real or not 0 */
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "Attempt to assign a non-integer value to an integer instance");
     }
     return 0;
@@ -5910,7 +5910,7 @@ int AssignStructuralValue(struct Instance *inst,
       }
       return 1;
     } else {
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "Attempt to assign a non-set value to a set instance");
       return 0;
     }
@@ -5929,12 +5929,12 @@ int AssignStructuralValue(struct Instance *inst,
       }
       return 1;
     } else {
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
               "Attempt to assign a non-symbol value to a symbol instance");
     }
     return 0;
   default:
-    WSEM(ASCERR,statement, "Error: Unknown value type");
+    STATEMENT_ERROR(statement, "Error: Unknown value type");
     return 0;
   }
 }
@@ -5983,7 +5983,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
         gl_destroy(instances);
         SetDeclarativeContext(previous_context);
         StructuralAsgnErrorReport(statement,&value);
-        WSEM(ASCERR,statement, "Assignment is impossible");
+        STATEMENT_ERROR(statement, "Assignment is impossible");
         MarkStatContext(statement,context_WRONG);
         WSS(ASCERR,statement);
         return 1;
@@ -5995,7 +5995,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
         inst = (struct Instance *)gl_fetch(instances,c);
         if (!AssignStructuralValue(inst,value,statement)) {
           MarkStatContext(statement,context_WRONG);
-          WSEM(ASCERR,statement, "Assignment is impossible (wrong set type)");
+          STATEMENT_ERROR(statement, "Assignment is impossible (wrong set type)");
           WSS(ASCERR,statement);
         }
       }
@@ -6007,7 +6007,7 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
   } else {
     switch(err){
     case impossible_instance:
-      WSEM(ASCERR,statement, "Left hand side of assignment statement"
+      STATEMENT_ERROR(statement, "Left hand side of assignment statement"
             " contains an impossible instance");
       SetDeclarativeContext(previous_context);
       return 1;
@@ -6300,7 +6300,7 @@ up later.
     return 0; /* rhs not compiled yet */
   }
   if (gl_length(rhslist)>1) {
-    WSEM(ASCERR,stat,"ALIASES needs exactly 1 RHS");
+    STATEMENT_ERROR(stat,"ALIASES needs exactly 1 RHS");
   }
   gl_destroy(rhslist);
 
@@ -6780,7 +6780,7 @@ int Pass3CheckCondStatements(struct Instance *inst,
     case WHEN:
     case FNAME:
     case SELECT:
-         WSEM(ASCERR,statement,
+         STATEMENT_ERROR(statement,
                "Statement not allowed inside a CONDITIONAL statement\n");
          return 0;
     default:
@@ -6837,7 +6837,7 @@ int Pass2CheckCondStatements(struct Instance *inst,
     case WHEN:
     case FNAME:
     case SELECT:
-         WSEM(ASCERR,statement,
+         STATEMENT_ERROR(statement,
                "Statement not allowed inside a CONDITIONAL statement\n");
          return 0;
     default:
@@ -7168,7 +7168,7 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement)
     case CALL:
     case ASGN:
     case SELECT:
-         WSEM(ASCERR,statement,
+         STATEMENT_ERROR(statement,
               "Statement not allowed inside a WHEN statement\n");
          return 0;
     default:
@@ -7271,7 +7271,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
     FPRINTF(ASCERR,"Name of a WHEN already exits in ");
     WriteInstanceName(ASCERR,inst,NULL);
     FPRINTF(ASCERR,"\n");
-    WSEM(ASCERR,statement,"The following statement will not be executed: \n");
+    STATEMENT_ERROR(statement,"The following statement will not be executed: \n");
     FPRINTF(ASCERR,"\n");
       return 0;
     }
@@ -7286,7 +7286,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
   if (!CheckWhenVariableList(inst,vlist,p1)) {
     FPRINTF(ASCERR,"In ");
     WriteInstanceName(ASCERR,inst,NULL);
-    WSEM(ASCERR,statement," the following statement will not be executed:\n");
+    STATEMENT_ERROR(statement," the following statement will not be executed:\n");
     FPRINTF(ASCERR,"\n");
     return 0;
   }
@@ -7301,7 +7301,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
 		    "number of values in a CASE");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
-            WSEM(ASCERR,statement,
+            STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
             FPRINTF(ASCERR,"\n");
 	    return 0;
@@ -7310,7 +7310,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
             FPRINTF(ASCERR,"\n");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
-            WSEM(ASCERR,statement,
+            STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
             FPRINTF(ASCERR,"\n");
 	    return 0;
@@ -7323,7 +7323,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
 		    "of values in a CASE");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
-            WSEM(ASCERR,statement,
+            STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
             FPRINTF(ASCERR,"\n");
 	    return 0;
@@ -7336,7 +7336,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
             FPRINTF(ASCERR,"More than one default case in a WHEN\n");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
-            WSEM(ASCERR,statement,
+            STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
             FPRINTF(ASCERR,"\n");
 	    return 0;
@@ -7347,7 +7347,7 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
         FPRINTF(ASCERR,"\n");
         FPRINTF(ASCERR,"In ");
         WriteInstanceName(ASCERR,inst,NULL);
-        WSEM(ASCERR,statement,
+        STATEMENT_ERROR(statement,
 	     " the following statement will not be executed: \n");
         FPRINTF(ASCERR,"\n");
 	return 0;
@@ -7396,7 +7396,7 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
   case WHEN: 
   case FNAME:
     if (g_iteration>=MAXNUMBER) { /* see WriteUnexecutedMessage */
-       WSEM(ASCERR,statement,
+       STATEMENT_ERROR(statement,
               "Statement not allowed inside a SELECT statement\n"); }
     /** AND WHY NOT? fix me. **/
     return 0;
@@ -7927,7 +7927,7 @@ void Pass3MarkCondLogRels(struct Instance *inst, struct Statement *statement)
     case REL:
       break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                      "Inappropriate statement type in CONDITIONAL Statement");
   }
 }
@@ -7955,7 +7955,7 @@ void Pass3MarkCondLogRelStatList(struct Instance *inst,
       case REL:
         break;
       default:
-        WSEM(ASCERR,stat,
+        STATEMENT_ERROR(stat,
                      "Inappropriate statement type in CONDITIONAL Statement");
     }
   }
@@ -8001,7 +8001,7 @@ int Pass3ExecuteCondStatements(struct Instance *inst,
     case REL:
       return 1; /* assume done */
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                      "Inappropriate statement type in CONDITIONAL Statement");
       return 0;
   }
@@ -8071,7 +8071,7 @@ void Pass2MarkCondRelations(struct Instance *inst, struct Statement *statement)
     case LOGREL:
       break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                      "Inappropriate statement type in CONDITIONAL Statement");
   }
 }
@@ -8098,7 +8098,7 @@ void Pass2MarkCondRelStatList(struct Instance *inst, struct StatementList *sl)
       case LOGREL:
         break;
       default:
-        WSEM(ASCERR,stat,
+        STATEMENT_ERROR(stat,
                      "Inappropriate statement type in CONDITIONAL Statement");
     }
   }
@@ -8132,19 +8132,19 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
   switch(StatementType(statement)){
     case REL:
 #ifdef DEBUG_RELS
-	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(stderr,"Pass2ExecuteCondStatements: case REL");
     WriteStatement(stderr, statement, 3);
-	error_reporter_end_flush();
+    error_reporter_end_flush();
 #endif
       return ExecuteREL(inst,statement);
     case FOR:
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
-	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-    FPRINTF(stderr,"Pass2ExecuteCondStatements: case FOR");
-    WriteStatement(stderr, statement, 3);
-	error_reporter_end_flush();
+        ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+        FPRINTF(stderr,"Pass2ExecuteCondStatements: case FOR");
+        WriteStatement(stderr, statement, 3);
+        error_reporter_end_flush();
 #endif
         return Pass2ExecuteFOR(inst,statement);
       }
@@ -8152,7 +8152,7 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
     case LOGREL:
       return 1; /* Ignore */
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                      "Inappropriate statement type in CONDITIONAL Statement");
       return 0;
   }
@@ -8486,7 +8486,7 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
       MakeRealWhenCaseReferencesFOR(inst,child,statement,listref);
       break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                       "Inappropriate statement type in declarative section");
       Asc_Panic(2, NULL,"Inappropriate statement type in declarative section");
       break;
@@ -8628,12 +8628,12 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
     /*    if (ferr == unmade_instance) { */
       child = MakeWhenInstance(inst,wname,statement);
       if (child == NULL) {
-        WSEM(ASCERR,statement,"Unable to create when instance");
+        STATEMENT_ERROR(statement,"Unable to create when instance");
         Asc_Panic(2, NULL, "Unable to create when instance");
       }
       /*    }
     else {
-      WSEM(ASCERR,statement,"Unable to execute statement");
+      STATEMENT_ERROR(statement,"Unable to execute statement");
       Asc_Panic(2, NULL, "Unable to execute statement");
     }  */
   } else {
@@ -8646,7 +8646,7 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
         return;
       }
     } else{
-      WSEM(ASCERR,statement, "Expression name refers to more than one object");
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       Asc_Panic(2, NULL, "Expression name refers to more than one object");
 	  child = NULL;
@@ -8745,7 +8745,7 @@ int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
       assert(InstanceKind(child)==DUMMY_INST);
       gl_destroy(instances);
     } else{
-      WSEM(ASCERR,statement, "Expression name refers to more than one object");
+      STATEMENT_ERROR(statement, "Expression name refers to more than one object");
       gl_destroy(instances);
       Asc_Panic(2, NULL, "Expression name refers to more than one object");
     }
@@ -8837,7 +8837,7 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
         break;
       case FNAME:
         if (g_iteration>=MAXNUMBER) {
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
               "FNAME not allowed inside a SELECT Statement");
         }
         return_value = 1; /* Ignore it */
@@ -8891,7 +8891,7 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
         break;
       case FNAME:
         if (g_iteration>=MAXNUMBER) {
-          WSEM(ASCERR,statement,"FNAME not allowed inside a SELECT Statement");
+          STATEMENT_ERROR(statement,"FNAME not allowed inside a SELECT Statement");
         }
         return_value = 1; /*ignore it */
         ClearBit(blist,*count);
@@ -9466,29 +9466,29 @@ void WriteForValueError(struct Statement *statement, struct value_t value)
 {
   switch(ErrorValue(value)){
   case type_conflict:
-    WSEM(ASCERR,statement, "Type conflict in FOR expression");
+    STATEMENT_ERROR(statement, "Type conflict in FOR expression");
     break;
   case incorrect_name:
-    WSEM(ASCERR,statement, "Impossible instance in FOR expression");
+    STATEMENT_ERROR(statement, "Impossible instance in FOR expression");
     break;
   case temporary_variable_reused:
-    WSEM(ASCERR,statement, "Temporary variable reused in FOR expression");
+    STATEMENT_ERROR(statement, "Temporary variable reused in FOR expression");
     break;
   case dimension_conflict:
-    WSEM(ASCERR,statement, "Dimension conflict in FOR expression");
+    STATEMENT_ERROR(statement, "Dimension conflict in FOR expression");
     break;
   case incorrect_such_that:
-    WSEM(ASCERR,statement, "Incorrect such that expression in FOR expression");
+    STATEMENT_ERROR(statement, "Incorrect such that expression in FOR expression");
     break;
   case empty_choice:
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
                          "CHOICE is called on an empty set in FOR expression");
     break;
   case empty_intersection:
-    WSEM(ASCERR,statement, "Empty INTERSECTION() in FOR expression");
+    STATEMENT_ERROR(statement, "Empty INTERSECTION() in FOR expression");
     break;
   default:
-    WSEM(ASCERR,statement, "Unexpected error in FOR expression");
+    STATEMENT_ERROR(statement, "Unexpected error in FOR expression");
     break;
   }
 }
@@ -9515,7 +9515,7 @@ int Pass4ExecuteForStatements(struct Instance *inst,
       if (!Pass4ExecuteFOR(inst,statement)) return 0;
       break;
     case SELECT:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "SELECT statements are not allowed inside a FOR Statement");
       return 0;
       /* I probably need to change NP4REF to integer */
@@ -9535,7 +9535,7 @@ int Pass4ExecuteForStatements(struct Instance *inst,
     case EXT:  /* ignore'm */
     break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "Inappropriate statement type in declarative section WHEN");
       Asc_Panic(2, NULL,
                 "Inappropriate statement type in declarative section WHEN");
@@ -9579,12 +9579,12 @@ int Pass3ExecuteForStatements(struct Instance *inst,
       return_value = 1; /* ignore'm until pass 4 */
       break;
     case FNAME:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                  "FNAME statements are only allowed inside a WHEN Statement");
       return_value = 0;
       break;
     case SELECT:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "SELECT statements are not allowed inside a FOR Statement");
       return_value = 0;
       break;
@@ -9594,7 +9594,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
       }
       break;
     case COND:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                  "COND not allowed inside a FOR. Try FOR inside COND");
       return_value = 0;
       break;
@@ -9607,7 +9607,7 @@ int Pass3ExecuteForStatements(struct Instance *inst,
       }
       break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "Inappropriate statement type in declarative section log rel\n");
       Asc_Panic(2, NULL, "Inappropriate statement type"
                 " in declarative section log rel\n");
@@ -9656,12 +9656,12 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       return_value = 1; /* ignore'm until pass 4 */
       break;
     case SELECT:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "SELECT statements are not allowed inside a FOR Statement");
       return_value = 0;
       break;
     case FNAME:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                  "FNAME statements are only allowed inside a WHEN Statement");
       return_value = 0;
       break;
@@ -9669,9 +9669,9 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       return_value = 1;
       if ( ForContainsRelations(statement) ) {
 #ifdef DEBUG_RELS
-	  ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-      WriteStatement(stderr, statement, 6);
-      error_reporter_end_flush();
+        ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+        WriteStatement(stderr, statement, 6);
+        error_reporter_end_flush();
 #endif
         Pass2RealExecuteFOR(inst,statement);
         /* p2ref expected to succeed or fail permanently.
@@ -9680,15 +9680,15 @@ void Pass2ExecuteForStatements(struct Instance *inst,
       }
       break;
     case COND:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                  "COND not allowed inside a FOR. Try FOR inside COND");
       return_value = 0;
       break;
     case REL:
 #ifdef DEBUG_RELS
-	  ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-      WriteStatement(stderr, statement, 6);
-	  error_reporter_end_flush();
+       ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+       WriteStatement(stderr, statement, 6);
+       error_reporter_end_flush();
 #endif
       return_value = ExecuteREL(inst,statement);
       /* ER expected to succeed or fail permanently,returning 1.
@@ -9698,11 +9698,11 @@ void Pass2ExecuteForStatements(struct Instance *inst,
     case EXT:
       return_value = 1;
       if (!ExecuteEXT(inst,statement)) {
-        WSEM(ASCERR,statement,"Impossible external relation encountered");
+        STATEMENT_ERROR(statement,"Impossible external relation encountered");
       }
       break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
       "Inappropriate statement type in declarative section relations");
       Asc_Panic(2, NULL, "Inappropriate statement type"
                 " in declarative section relations");
@@ -9767,17 +9767,17 @@ void Pass1ExecuteForStatements(struct Instance *inst,
       return_value = ExecuteCASGN(inst,statement);
       break;
     case FNAME:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                 "FNAME statements are only allowed inside a WHEN Statement");
       return_value = 0;
       break;
     case SELECT:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
                 "SELECT statements are not allowed inside a FOR Statement");
       return_value = 0;
       break;
     default:
-      WSEM(ASCERR,statement,
+      STATEMENT_ERROR(statement,
            "Inappropriate statement type in declarative section");
       Asc_Panic(2, NULL,
                 "Inappropriate statement type in declarative section");
@@ -9818,7 +9818,7 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
         break;
       case FNAME:
         if (g_iteration>=MAXNUMBER) {
-          WSEM(ASCERR,statement,
+          STATEMENT_ERROR(statement,
               "FNAME not allowed inside a SELECT Statement");
         }
         return_value = 1; /*ignore it */
@@ -9841,12 +9841,12 @@ int ExecuteUnSelectedForStatements(struct Instance *inst,
         return_value = ExecuteUnSelectedWHEN(inst,statement);
         break;
       case COND:
-        WSEM(ASCERR,statement,
+        STATEMENT_ERROR(statement,
         "CONDITIONAL not allowed inside a FOR loop. Try FOR inside COND");
         Asc_Panic(2, NULL, "CONDITIONAL not allowed inside a FOR loop."
                   " Try FOR inside COND");
       case SELECT:
-        WSEM(ASCERR,statement, "SELECT not allowed inside a FOR Statement");
+        STATEMENT_ERROR(statement, "SELECT not allowed inside a FOR Statement");
         Asc_Panic(2, NULL, "SELECT not allowed inside a FOR Statement");
         break;
       default:
@@ -9875,7 +9875,7 @@ int Pass4RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return 0;
   }
   assert(GetEvaluationContext()==NULL);
@@ -9888,7 +9888,7 @@ int Pass4RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Phase 4 FOR has undefined values");
+      STATEMENT_ERROR(statement, "Phase 4 FOR has undefined values");
       return 0;
     default:
       WriteForValueError(statement,value);
@@ -9967,7 +9967,7 @@ void MakeRealWhenCaseReferencesFOR(struct Instance *inst,
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return ;
   }
   assert(GetEvaluationContext()==NULL);
@@ -9980,7 +9980,7 @@ void MakeRealWhenCaseReferencesFOR(struct Instance *inst,
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Phase 2 FOR has undefined values");
+      STATEMENT_ERROR(statement, "Phase 2 FOR has undefined values");
       break;
     default:
       WriteForValueError(statement,value);
@@ -10045,7 +10045,7 @@ int Pass3RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return 0;
   }
   assert(GetEvaluationContext()==NULL);
@@ -10058,7 +10058,7 @@ int Pass3RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Phase 3 FOR has undefined values");
+      STATEMENT_ERROR(statement, "Phase 3 FOR has undefined values");
       return 0;
     default:
       WriteForValueError(statement,value);
@@ -10122,7 +10122,7 @@ void Pass3FORMarkCondLogRels(struct Instance *inst,
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return ;
   }
   assert(GetEvaluationContext()==NULL);
@@ -10135,7 +10135,7 @@ void Pass3FORMarkCondLogRels(struct Instance *inst,
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Phase 3 FOR has undefined values");
+      STATEMENT_ERROR(statement, "Phase 3 FOR has undefined values");
       break;
     default:
       WriteForValueError(statement,value);
@@ -10213,7 +10213,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return 0;
   }
   assert(GetEvaluationContext()==NULL);
@@ -10226,7 +10226,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Phase 2 FOR has undefined values");
+      STATEMENT_ERROR(statement, "Phase 2 FOR has undefined values");
       return 0;
     default:
       WriteForValueError(statement,value);
@@ -10239,7 +10239,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   case boolean_value:
   case list_value:
     WriteStatement(ASCERR,statement,0);
-    FPRINTF(ASCERR,"FOR expression returns the wrong type.\n");
+    CONSOLE_DEBUG("FOR expression returns the wrong type.\n");
     DestroyValue(&value);
     return 0;
   case set_value:
@@ -10247,7 +10247,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     switch(SetKind(sptr)){
     case empty_set:
 #ifdef DEBUG_RELS
-      FPRINTF(stderr,"Pass2RealExecuteFOR empty_set.\n");
+      ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Pass2RealExecuteFOR empty_set.\n");
 #endif
       break;
     case integer_set:
@@ -10256,7 +10256,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
       AddLoopVariable(GetEvaluationForTable(),fv);
       len = Cardinality(sptr);
 #ifdef DEBUG_RELS
-      FPRINTF(stderr,"Pass2RealExecuteFOR integer_set %lu.\n",len);
+      ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Pass2RealExecuteFOR integer_set %lu.\n",len);
 #endif
       for(c=1;c<=len;c++){
         SetForInteger(fv,FetchIntMember(sptr,c));
@@ -10271,7 +10271,7 @@ int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
       AddLoopVariable(GetEvaluationForTable(),fv);
       len = Cardinality(sptr);
 #ifdef DEBUG_RELS
-      FPRINTF(stderr,"Pass2RealExecuteFOR string_set %lu.\n",len);
+      ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Pass2RealExecuteFOR string_set %lu.\n",len);
 #endif
       for(c=1;c<=len;c++){
         SetForSymbol(fv,FetchStrMember(sptr,c));
@@ -10305,7 +10305,7 @@ void Pass2FORMarkCondRelations(struct Instance *inst,
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return ;
   }
   assert(GetEvaluationContext()==NULL);
@@ -10318,7 +10318,7 @@ void Pass2FORMarkCondRelations(struct Instance *inst,
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "Phase 2 FOR has undefined values");
+      STATEMENT_ERROR(statement, "Phase 2 FOR has undefined values");
       break;
     default:
       WriteForValueError(statement,value);
@@ -10391,7 +10391,7 @@ void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
   ex = ForStatExpr(statement);
   sl = ForStatStmts(statement);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable */
-    WSEM(ASCERR,statement, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(statement, "FOR construct uses duplicate index variable");
     return;
   }
   assert(GetEvaluationContext()==NULL);
@@ -10404,7 +10404,7 @@ void Pass1RealExecuteFOR(struct Instance *inst, struct Statement *statement)
     case name_unfound:
     case undefined_value:
       DestroyValue(&value);
-      WSEM(ASCERR,statement, "FOR has undefined values");
+      STATEMENT_ERROR(statement, "FOR has undefined values");
       Asc_Panic(2, NULL, "FOR has undefined values");
     default:
       WriteForValueError(statement,value);
@@ -10961,7 +10961,7 @@ int Pass3ExecuteStatement(struct Instance *inst,struct Statement *statement)
   case WHEN:
     return 1; /* assumed done  */
   case FNAME:
-    WSEM(ASCERR,statement,"FNAME are allowed only inside a WHEN statement");
+    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
     return 0;
   default:
     return 0;
@@ -10977,7 +10977,7 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
 #ifdef DEBUG_RELS
     ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     WriteStatement(stderr, statement, 3);
-	error_reporter_end_flush();
+    error_reporter_end_flush();
 #endif
     return Pass2ExecuteFOR(inst,statement);
   case REL:
@@ -11000,11 +11000,11 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
     FPRINTF(stderr,"-- IGNORING WHEN STAT\n");
     /* write statement */
     WriteStatement(stderr, statement, 3);
-	error_reporter_end_flush();
+    error_reporter_end_flush();
 #endif
     return 1; /* assumed done  */
   case FNAME:
-    WSEM(ASCERR,statement,"FNAME are allowed only inside a WHEN statement");
+    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
     return 0;
   default:
     return 0;
@@ -11049,12 +11049,12 @@ int Pass1ExecuteStatement(struct Instance *inst, unsigned long *c,
   case WHEN:
     return 1; /* automatically assume done */
   case FNAME:
-    WSEM(ASCERR,statement,"FNAME are allowed only inside a WHEN statement");
+    STATEMENT_ERROR(statement,"FNAME are allowed only inside a WHEN statement");
     return 0;
   case SELECT:
     return ExecuteSELECT(inst,c,statement);
   default:
-    WSEM(ASCERR,statement,
+    STATEMENT_ERROR(statement,
                        "Inappropriate statement type in declarative section");
     Asc_Panic(2, NULL, "Inappropriate statement type in declarative section");
   }
@@ -11370,9 +11370,9 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
       if (InstanceKind(proto) == MODEL_INST && InstanceInList(proto)) {
 #ifdef DEBUG_RELS
         ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
-		FPRINTF(stderr,"Rels in model: ");
+        FPRINTF(stderr,"Rels in model: ");
         WriteInstanceName(stderr,proto,NULL); FPRINTF(stderr,"\n");
-		error_reporter_end_flush();
+        error_reporter_end_flush();
 #endif
         blist = InstanceBitList(proto);
         if ((blist!=NULL) && !BitListEmpty(blist)) {
@@ -11593,14 +11593,14 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
               SetRealAtomDims(ptr,Dimensionless());
               break;
             default:
-              WSEM(ASCERR,stat,"Bad real default value");
+              STATEMENT_ERROR(stat,"Bad real default value");
               break;
             }
           } else {
             switch(ValueKind(value)) {
             case real_value:
               if ( !SameDimen(RealValueDimensions(value),RealAtomDims(ptr)) ){
-                WSEM(ASCERR,stat,
+                STATEMENT_ERROR(stat,
                 "Default right hand side is dimensionally inconsistent");
               } else {
                 SetRealAtomValue(ptr,RealValue(value),*depth);
@@ -11608,14 +11608,14 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
               break;
             case integer_value:
               if ( !SameDimen(Dimensionless(),RealAtomDims(ptr)) ){
-                WSEM(ASCERR,stat,
+                STATEMENT_ERROR(stat,
                 "Default right hand side is dimensionally inconsistent");
               } else {
                 SetRealAtomValue(ptr,(double)IntegerValue(value),*depth);
               }
               break;
             default:
-              WSEM(ASCERR,stat,"Bad real default value");
+              STATEMENT_ERROR(stat,"Bad real default value");
               break;
             }
           }
@@ -11635,7 +11635,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
             SetBooleanAtomValue(ptr,BooleanValue(value),*depth);
           }
           else{
-            WSEM(ASCERR,stat, "Bad boolean default value");
+            STATEMENT_ERROR(stat, "Bad boolean default value");
           }
           DestroyValue(&value);
         }
@@ -11652,7 +11652,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
           SetIntegerAtomValue(ptr,IntegerValue(value),0);
         }
         else{
-          WSEM(ASCERR,stat, "Bad integer default value");
+          STATEMENT_ERROR(stat, "Bad integer default value");
         }
         DestroyValue(&value);
         break;
@@ -11667,7 +11667,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
           SetSymbolAtomValue(ptr,SymbolValue(value));
         }
         else{
-          WSEM(ASCERR,stat, "Bad symbol default value");
+          STATEMENT_ERROR(stat, "Bad symbol default value");
         }
         DestroyValue(&value);
         break;
@@ -11678,7 +11678,7 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
     gl_destroy(lvals);
   }
   else{
-    WSEM(ASCERR,stat, "Nonexistent LHS variable in default statement.");
+    STATEMENT_ERROR(stat, "Nonexistent LHS variable in default statement.");
   }
 }
 
@@ -11730,7 +11730,7 @@ void RealDefaultFor(struct Instance *i,
   ex = ForStatExpr(stat);
   if (FindForVar(GetEvaluationForTable(),name)){ /* duplicated for variable*/
     FPRINTF(ASCERR,"Error during default stage.\n");
-    WSEM(ASCERR,stat, "FOR construct uses duplicate index variable");
+    STATEMENT_ERROR(stat, "FOR construct uses duplicate index variable");
     return;
   }
   assert(GetEvaluationContext()==NULL);
@@ -11744,7 +11744,7 @@ void RealDefaultFor(struct Instance *i,
     case undefined_value:
       DestroyValue(&value);
       FPRINTF(ASCERR,"Error in default stage.\n");
-      WSEM(ASCERR,stat, "FOR has undefined values");
+      STATEMENT_ERROR(stat, "FOR has undefined values");
       return;
     default:
       WriteForValueError(stat,value);
@@ -11757,7 +11757,7 @@ void RealDefaultFor(struct Instance *i,
   case boolean_value:
   case list_value:
     FPRINTF(ASCERR,"Error during default stage.\n");
-    WSEM(ASCERR,stat, "FOR expression returns the wrong type");
+    STATEMENT_ERROR(stat, "FOR expression returns the wrong type");
     DestroyValue(&value);
     return;
   case set_value:
@@ -12039,11 +12039,11 @@ void Pass2SetRelationBits(struct Instance *inst)
   if (inst != NULL && InstanceKind(inst)==MODEL_INST) {
     struct BitList *blist;
 #ifdef DEBUG_RELS
-	ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+    ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(ASCERR,"P2SRB: ");
     WriteInstanceName(ASCERR,inst,debug_rels_work);
     FPRINTF(ASCERR,"\n");
-	error_reporter_end_flush();
+    error_reporter_end_flush();
 #endif
 
     blist = InstanceBitList(inst);
@@ -12087,7 +12087,7 @@ void Pass2SetRelationBits(struct Instance *inst)
         AddBelow(NULL,inst);
         /* add PENDING model */
 #ifdef DEBUG_RELS
-		ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
+        ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
         FPRINTF(stderr,"Changed: ");
         WriteInstanceName(ASCERR,inst,debug_rels_work);
         error_reporter_end_flush();

@@ -163,7 +163,7 @@ ASC_DLLSPEC(int) console_debug(const char *fmt,...);
 /** An alias for ASC_PROG_ERROR */
 #define ASC_PROG_ERR ASC_PROG_ERROR
 
-#define ERROR_REPORTER_MAX_MSG 4096 /* no particular reason */
+#define ERROR_REPORTER_MAX_MSG 8192 /* no particular reason */
 
 typedef struct{
 	unsigned char iscaching; /** set to true for fprintf_error_reporter to do its work */

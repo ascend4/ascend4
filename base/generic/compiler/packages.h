@@ -1,53 +1,50 @@
-/*
- *  User Packages
- *  by Ben Allan & Kirk Abbott
- *  Created: July 4, 1994
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: packages.h,v $
- *  Date last modified: $Date: 1998/05/18 16:36:45 $
- *  Last modified by: $Author: ballan $
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
- *  Copyright (C) 1997 Benjamin Allan
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
+	Copyright (C) 1997 Benjamin Allan
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  User package management.
- *  <pre>
- *  When #including packages.h, make sure these files are #included first:
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
- *         #include <stdio.h>
- *         #include "compiler.h"
- *         #include "ascMalloc.h"
- *         #include "extfunc.h" (going away soon)
- *         #include "type_desc.h" (going away soon)
- *         #include "module.h" (going away soon)
- *         #include "library.h" (going away soon)
- *         #include "relation.h" (going away soon)
- *  </pre>
- *  Users of this header should not have to include anything
- *  except instance_enum.h and list.h and whatever headers those
- *  may require.
- *
- *  @todo Comments about header dependencies are contradictory.
- */
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	User package management.
+
+	RequiresL:
+	#include <stdio.h>
+	#include "compiler.h"
+	#include "ascMalloc.h"
+	#include "extfunc.h" (going away soon)
+	#include "type_desc.h" (going away soon)
+	#include "module.h" (going away soon)
+	#include "library.h" (going away soon)
+	#include "relation.h" (going away soon)
+
+	Users of this header should not have to include anything
+	except instance_enum.h and list.h and whatever headers those
+	may require.
+
+	@todo Comments about header dependencies are contradictory.
+*//*
+	by Ben Allan & Kirk Abbott
+	Created: July 4, 1994
+	Version: $Revision: 1.12 $
+	Version control file: $RCSfile: packages.h,v $
+	Date last modified: $Date: 1998/05/18 16:36:45 $
+	Last modified by: $Author: ballan $
+*/
+
 #ifndef ASC_PACKAGES_H
 #define ASC_PACKAGES_H
 
@@ -69,10 +66,11 @@
 # define ASC_CLIENTDATA_DECLARED
 #endif
 
-/** these are for external clients to return to us when they have
- * an error or other procedural message to report about flow of
- * control.
- */
+/** 
+	these are for external clients to return to us when they have
+	an error or other procedural message to report about flow of
+	control.
+*/
 #define ASC_OK          0
 #define ASC_ERROR       1
 #define ASC_RETURN      2
@@ -84,9 +82,10 @@ typedef int (Asc_MethodProc) (ascClientData, CONST char *,
 
 typedef int (Asc_MethodDelete) (ascClientData, CONST char *, Asc_MethodProc);
 
-/** Clients should use the operators below to access this enum and
- * associated structure.
- */
+/** 
+	Clients should use the operators below to access this enum and
+	associated structure.
+*/
 enum argItemEnum {
   argError,         /**< should never be seen by client */
   /* the first 3 characters of the comment lines are the
