@@ -1,6 +1,6 @@
 import os, commands, platform, distutils.sysconfig, os.path
 
-version = "0.9.6rc0"
+version = "0.9-svn.598"
 
 #------------------------------------------------------
 # OPTIONS
@@ -285,6 +285,7 @@ if platform.system()=="Windows":
 
 if os.environ.has_key('OSTYPE') and os.environ['OSTYPE']=='msys':
 	env = Environment(ENV=os.environ, tools=['mingw','swig','lex','yacc'])
+	env['IS_MINGW']=True
 else:
 	env = Environment(ENV=os.environ)
 	Tool('lex')(env)

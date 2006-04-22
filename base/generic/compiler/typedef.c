@@ -623,7 +623,7 @@ DoNameF(CONST struct Name *nptr,
         ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Same instance name \"%s\" used twice.",SCP(name));
         assert(g_lcl_pivot!=NULL);
         if (g_lcl_pivot->e.statement != stat ) {
-          WSEM(ASCERR,g_lcl_pivot->e.statement,"  First seen:");
+          STATEMENT_ERROR(g_lcl_pivot->e.statement,"  First seen:");
         } else {
           FPRINTF(ASCERR,"\n");
         }
@@ -1986,14 +1986,14 @@ int DeriveChildTypes(struct StatementList *stats, struct gl_list_t *clist)
           case FRC_badname: /* definitely garbage rhs */
             tmp->bits = AL_NORHS;
             MarkStatContext(tmp->stat,context_WRONG);
-            WSEM(ASCERR,tmp->stat,"Impossible RHS of ALIASES");
+            STATEMENT_ERROR(tmp->stat,"Impossible RHS of ALIASES");
             WSS(ASCERR,tmp->stat);
             whines++;
             break;
           case FRC_attrname: /* ATOM child rhs */
             tmp->bits = AL_DONE;
             MarkStatContext(tmp->stat,context_WRONG);
-            WSEM(ASCERR,tmp->stat,"Illegal subatomic RHS of ALIASES");
+            STATEMENT_ERROR(tmp->stat,"Illegal subatomic RHS of ALIASES");
             WSS(ASCERR,tmp->stat);
             whines++;
             break;
@@ -3287,7 +3287,7 @@ enum typelinterr VerifyForVars(CONST struct StatementList *stats,
         msg = (char *)ascmalloc(SCLEN(fvname)+1+80);
         sprintf(msg,"%sIndex %s shadows outer index",
                 StatioLabel(3),SCP(fvname));
-        WSEM(ASCERR,stat,msg);
+        STATEMENT_ERROR(stat,msg);
         ascfree(msg);
         return DEF_FOR_SHADOW;
       }
@@ -3297,7 +3297,7 @@ enum typelinterr VerifyForVars(CONST struct StatementList *stats,
         msg = (char *)ascmalloc(SCLEN(fvname)+1+80);
         sprintf(msg,"%sIndex %s shadows instance.",StatioLabel(3),
                 SCP(fvname));
-        WSEM(ASCERR,stat,msg);
+        STATEMENT_ERROR(stat,msg);
         ascfree(msg);
         return DEF_FOR_SHADOW;
       }
@@ -3879,7 +3879,7 @@ enum typelinterr DoParamName(CONST struct Name *nptr,
         FPRINTF(ASCERR,"Parameter \"%s\" redeclared.",SCP(name));
         assert(g_lcl_pivot!=NULL);
         if (g_lcl_pivot->e.statement != stat ) {
-          WSEM(ASCERR,g_lcl_pivot->e.statement,"  First seen:");
+          STATEMENT_ERROR(g_lcl_pivot->e.statement,"  First seen:");
         }
 		error_reporter_end_flush();
 
@@ -5022,7 +5022,7 @@ ChildListPtr MakeAtomChildList(struct StatementList *sl)
       }
       /* fall through when first if fails */
     default:
-      WSEM(ASCERR,stat, "Illegal statement in atom definition. Skipping it.");
+      STATEMENT_ERROR(stat, "Illegal statement in atom definition. Skipping it.");
       break;
     }
   }

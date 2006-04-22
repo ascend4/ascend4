@@ -353,16 +353,19 @@ int GetNameAndSet(CONST struct Expr *ex, CONST struct Expr *stop,
         return 1;
       } else {
         if (ValueKind(*value)==integer_value) {
-          FPRINTF(ASCERR,
-                 "Asc-Error: Found integer constant where set expected: ");
+          ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+		  FPRINTF(ASCERR,"Found integer constant where set expected: ");
           WriteExprNode(ASCERR,NextExpr(ex));
           FPRINTF(ASCERR,"\n");
+	  error_reporter_end_flush();
         }
         if (ValueKind(*value)==symbol_value) {
-          FPRINTF(ASCERR,
-                 "Asc-Error: Found symbol constant where set expected: ");
+	  
+          ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+	 	  FPRINTF(ASCERR,"Found symbol constant where set expected: ");
           WriteExprNode(ASCERR,NextExpr(ex));
           FPRINTF(ASCERR,"\n");
+	  error_reporter_end_flush();
         }
 	DestroyValue(value);
 	*value = CreateErrorValue(type_conflict);

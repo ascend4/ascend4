@@ -49,7 +49,7 @@ scanner = env.SharedObject(target=['scanner'],source=scannersource
 )
 
 packages_env = env.Copy()
-packages_env.Append(CPPDEFINES=[('ASC_SHLIBSUFFIX',env['SHLIBSUFFIX']),('ASC_SHLIBPREFIX',env['SHLIBPREFIX'])])
+packages_env.Append(CPPDEFINES=[('ASC_SHLIBSUFFIX','\\"'+env['SHLIBSUFFIX']+'\\"'),('ASC_SHLIBPREFIX','\\"'+env['SHLIBPREFIX']+'\\"')])
 packages = packages_env.SharedObject('packages.c')
 
 objs = [parser,scanner,packages]

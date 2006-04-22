@@ -224,7 +224,7 @@ void GetTypeInfoFromISA(struct Statement *stat,
     if ((bt == 1) || (bt == 4))
       TypeSetVarList(GetStatVarList(stat),clist,childd,inited,bt);
     else { /* error */
-      WSEM(ASCERR,stat, (bt < 0) ?
+      STATEMENT_ERROR(stat, (bt < 0) ?
                       "Missing OF clause in set IS_A declaration":
                       "Incorrect OF type in set IS_A declaration");
       FPRINTF(ASCERR,
@@ -236,7 +236,7 @@ void GetTypeInfoFromISA(struct Statement *stat,
     TypeSymbolVarList(GetStatVarList(stat),clist,childd,inited);
     break;
   default: /* error */
-    WSEM(ASCERR,stat, "Non-fundamental type used in atom definition");
+    STATEMENT_ERROR(stat, "Non-fundamental type used in atom definition");
     break;
   }
 }
@@ -337,7 +337,7 @@ static void EvaluateAssignment(struct Statement *stat,
                                                  dim));
           }
           else{
-            WSEM(ASCERR,stat, "Dimensionally inconsistent assignment");
+            STATEMENT_ERROR(stat, "Dimensionally inconsistent assignment");
           }
         }
         else{
@@ -356,7 +356,7 @@ static void EvaluateAssignment(struct Statement *stat,
                                                  dim));
           }
           else{
-            WSEM(ASCERR,stat, "Dimensionally inconsistent assignment");
+            STATEMENT_ERROR(stat, "Dimensionally inconsistent assignment");
           }
         }
         else{
@@ -366,7 +366,7 @@ static void EvaluateAssignment(struct Statement *stat,
         }
       }
       else /*error*/
-        WSEM(ASCERR,stat,"Assignment type conflict");
+        STATEMENT_ERROR(stat,"Assignment type conflict");
       break;
     case integer_child:
         if (ValueKind(result)==integer_value){
@@ -374,7 +374,7 @@ static void EvaluateAssignment(struct Statement *stat,
                                   MakeIntegerDesc(1,IntegerValue(result)));
         }
         else { /*error*/
-          WSEM(ASCERR,stat,"Assignment type conflict");
+          STATEMENT_ERROR(stat,"Assignment type conflict");
         }
       break;
     case boolean_child:
@@ -391,11 +391,11 @@ static void EvaluateAssignment(struct Statement *stat,
                                               ,SetValue(result)));
         }
         else/*error*/
-          WSEM(ASCERR,stat,"Assignment type conflict");
+          STATEMENT_ERROR(stat,"Assignment type conflict");
 
       }
       else /*error*/
-        WSEM(ASCERR,stat, "Attempt to reassign to a set atom child");
+        STATEMENT_ERROR(stat, "Attempt to reassign to a set atom child");
       break;
     case symbol_child:
       if (!ValueAssigned(rec)){
@@ -404,18 +404,18 @@ static void EvaluateAssignment(struct Statement *stat,
                                   MakeSymbolDesc(1,SymbolValue(result)));
         }
         else /*error*/
-          WSEM(ASCERR,stat,"Assignment type conflict");
+          STATEMENT_ERROR(stat,"Assignment type conflict");
       }
       else /*error*/
-        WSEM(ASCERR,stat, "Attempt to reassign to a symbol atom child");
+        STATEMENT_ERROR(stat, "Attempt to reassign to a symbol atom child");
       break;
     case bad_child:
-        WSEM(ASCERR,stat, "Attempt to assign to a childless atom child?");
+        STATEMENT_ERROR(stat, "Attempt to assign to a childless atom child?");
       break;
     }
   }
   else
-    WSEM(ASCERR,stat, "Assignment to undefined atom child");
+    STATEMENT_ERROR(stat, "Assignment to undefined atom child");
 }
 
 static

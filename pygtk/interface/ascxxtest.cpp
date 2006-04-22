@@ -9,8 +9,8 @@ using namespace std;
 int main(void){
 
 	Library L;
-	L.load("johnpye/extfn/jdpipe.a4c");
-	Type t = L.findType("test_jdpipe");
+	L.load("johnpye/extfn/extfntest.a4c");
+	Type t = L.findType("test_extfntest");
 	cerr << "Type = " << t.getName() << endl;
 	Simulation S = t.getSimulation("S");
 	

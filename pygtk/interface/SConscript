@@ -47,20 +47,7 @@ for s in srcs:
 	objs += python_env.SharedObject(s)	
 
 #----------------------------------------------
-# SWIG Builder
-
-#def swig_modify_targets(target, source, env):
-#	target.append('ascpy.py')
-#	target.append('ascpy_wrap.h')
-#	return target, source
-#
-#swig_builder = Builder(
-#	action='$SWIG $SWIGFLAGS -o $TARGET $SOURCE'
-#	, emitter=swig_modify_targets
-#)
-#python_env.Append(BUILDERS={'Swig':swig_builder})
-
-#---------------------------------------------
+# SWIG wrapper
 
 def get_new_swig_flags(env):
 	min,maj,pat = env['SWIGVERSION']
@@ -79,11 +66,31 @@ swiglib = python_env.SharedLibrary("ascpy",objs + swigobj
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SHLIBPREFIX = '_'
 )
+
+#---------------------------------------------
+# CONFIG & runtime shell script for posix
+
 configpy = env.SubstInFile(source='config.py.in')
 configh = env.SubstInFile(source='config.h.in')
 
-ascendcmd = env.SubstInFile(source='ascend.in')
-env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
+if platform.system() != "Windows" or env.has_key('IS_MINGW'):
+	ascendcmd = env.SubstInFile(source='ascend.in')
+	env.AddPostAction(ascendcmd, 'chmod 755 $TARGET')
+
+#---------------------------------------------
+# LITTLE WEE TEST PROGRAM for debuggin the c++ wrapper
+
+libascxx = env.SharedLibrary('ascxx',objs
+	, LIBS = ['ascend'] + env['PYTHON_LIB']
+	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
+)
+
+ascxxtest = env.Program('ascxxtest',['ascxxtest.cpp']
+	, LIBS = ['ascxx','ascend']
+	, LIBPATH = ['.','#']
+)
+
+env.Alias('ascxx',ascxxtest)
 
 #---------------------------------------------
 # INSTALLATION
@@ -105,4 +112,4 @@ if env.has_key('WITH_INSTALLER') and env['WITH_INSTALLER']:
 	import platform
 	if platform.system()=="Windows":
 		installer = env.Nsis('create.nsi')
-		Depends(installer,[swiglib,configpy,configh,ascendcmd])
+		Depends(installer,[swiglib,configpy,configh])

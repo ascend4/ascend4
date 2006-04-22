@@ -15,6 +15,15 @@ static const int REPORTER_MAX_ERROR_MSG = 1024;
 #ifdef ASCXX_USE_PYTHON
 // Python-invoking callback function
 int reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS){
+/*
+    const error_severity_t sev \
+  , const char *filename \
+  , const int line \
+  , const char *funcname \
+  , const char *fmt \
+  , const va_list args
+*/
+/*
 	int res=0;
 	if(filename!=NULL){
 		res += ASC_FPRINTF(ASCERR,"%s:",filename);
@@ -31,8 +40,9 @@ int reporter_error_python(ERROR_REPORTER_CALLBACK_ARGS){
 
 	res += ASC_VFPRINTF(ASCERR,fmt,args);
 	return res;
-	//Reporter *reporter = Reporter::Instance();
-	//return reporter->reportErrorPython(ERROR_REPORTER_CALLBACK_VARS);
+*/
+	Reporter *reporter = Reporter::Instance();
+	return reporter->reportErrorPython(ERROR_REPORTER_CALLBACK_VARS);
 }
 #endif
 
@@ -83,11 +93,17 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	char msg[REPORTER_MAX_ERROR_MSG];
 	vsprintf(msg,fmt,args);
 
-	cerr << "reportErrorPython: msg=" << msg ;
+	cerr << "reportErrorPython: [[[start]]]: msg[" << strlen(msg) << "]=" << msg ;
 	cerr << "reportErrorPython: pyfunc=" << pyfunc << endl;
+	if(filename==NULL){
+		cerr << "reportErrorPython: filename is NULL" << endl;
+	}else{
+		cerr << "reportErrorPython: filename[" << strlen(msg) << "]=" << filename << endl;
+	}
+	//cerr << "reportErrorPython: line=" << line << endl;
 	cerr.flush();
 
-	pyarglist = Py_BuildValue("(H,z,i,z)",sev,filename,line,msg);             // Build argument list
+	pyarglist = Py_BuildValue("(H,s,i,s#)",sev,filename,line,msg,strlen(msg));             // Build argument list
 	pyresult = PyEval_CallObject(pyfunc,pyarglist);     // Call Python
 	Py_DECREF(pyarglist);                           // Trash arglist
 
@@ -100,6 +116,7 @@ Reporter::reportErrorPython(ERROR_REPORTER_CALLBACK_ARGS){
 	}
 
 	Py_XDECREF(pyresult);
+	cerr << "reportErrorPython: [[[return]]]" << endl;
 	return res;
 }
 

@@ -5,12 +5,10 @@ MODEL test_extfntest;
 
 	y IS_A solver_var;
 	x IS_A solver_var;
-	d IS_A real;
 
 	do_addone: add_one(
 		x : INPUT; 
-		y : OUTPUT;
-		d : DATA
+		y : OUTPUT
 	);
 
 METHODS
@@ -20,7 +18,6 @@ METHOD specify;
 END specify;
 METHOD values;
 	x := 1.0;
-	d := 3.5;
 END values;
 
 METHOD default_self;
