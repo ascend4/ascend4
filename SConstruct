@@ -1,6 +1,6 @@
 import os, commands, platform, distutils.sysconfig, os.path
 
-version = "0.9-svn.598"
+version = "0.9-svn.601"
 
 #------------------------------------------------------
 # OPTIONS
@@ -253,7 +253,7 @@ opts.Add(
 
 opts.Add(
 	'PYGTK_ASSETS'
-	,'Default location for Glade assets (placed in pygtk/interface/config.py)'
+	,'Default location for Glade assets (placed in pygtk/config.py)'
 	,default_install_assets
 )
 
@@ -1161,7 +1161,7 @@ else:
 # PYTHON INTERFACE
 
 if with_python:
-	env.SConscript(['pygtk/interface/SConscript'],'env')
+	env.SConscript(['pygtk/SConscript'],'env')
 else:
 	print "Skipping... Python GUI isn't being built:",without_python_reason
 

@@ -1,7 +1,7 @@
 
 Name:		ascend
 Summary:	ASCEND Modelling Environment
-Version:	0.9-svn.598
+Version:	0.9-svn.601
 
 # Use release "0" so that distro-released versions will override ours.
 Release:	0.jdpipe
@@ -49,7 +49,7 @@ scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models
 rm -rf %{buildroot}
 scons DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} install
 
-pushd pygtk/interface/gnome
+pushd pygtk/gnome
 install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
 install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
 install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
@@ -81,5 +81,8 @@ update-mime-database /usr/share/mime
 
 
 %changelog
+* Mon Apr 24 2006 John Pye <john.pye@student.unsw.edu.au>
+- Modified for removed dir in pygtk source hierachy
+
 * Thu Apr 04 2006 John Pye <john.pye@student.unsw.edu.au>
 - First RPM package for new SCons build
