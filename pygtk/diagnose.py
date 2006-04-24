@@ -22,10 +22,15 @@ class DiagnoseWindow:
 		self.window = _xml.get_widget("diagnosewin")
 		self.window.set_transient_for(self.browser.window)
 
-		_icon = gtk.Image()
-		_iconpath = browser.assets_dir+'diagnose'+config.ICON_EXTENSION
-		_icon.set_from_file(_iconpath)
-		self.window.set_icon(_icon)
+		try:
+			_icon = gtk.Image()
+			_iconpath = browser.assets_dir+'diagnose'+config.ICON_EXTENSION
+			print "ICON PATH =",_iconpath
+			_icon.set_from_file(_iconpath)
+			print "ICON = ",_icon
+			self.window.set_icon(_icon)
+		except:
+			pass
 		
 		self.imagescroll = _xml.get_widget("imagescroll")
 		self.image = _xml.get_widget("image")
