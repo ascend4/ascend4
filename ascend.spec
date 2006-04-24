@@ -1,7 +1,7 @@
 
 Name:		ascend
 Summary:	ASCEND Modelling Environment
-Version:	0.9.6rc0
+Version:	0.9-svn.598
 
 # Use release "0" so that distro-released versions will override ours.
 Release:	0.jdpipe
