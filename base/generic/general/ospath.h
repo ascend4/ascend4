@@ -34,6 +34,8 @@ struct FilePath;
 
 struct FilePath *ospath_new(const char *path);
 
+struct FilePath *ospath_new_from_posix(char *posixpath);
+
 /**
 	Is the path valid? Returns true if so, false otherwise
 */
