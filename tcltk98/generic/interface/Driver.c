@@ -131,14 +131,10 @@ extern int zz_debug;
  */
 extern int  Tktable_Init(Tcl_Interp*);
 
-/*
- *  Forward declarations for procedures defined later in this file.
- */
-int  AscDriver(int, CONST84 char * argv[]);
 static void AscTrap(int);
 static int  AscCheckEnvironVars(Tcl_Interp*);
 static void AscPrintHelpExit(CONST char *);
-static int  AscProcessCommandLine(Tcl_Interp*, int, CONST84 char **);
+static int  AscProcessCommandLine(Tcl_Interp*, int, CONST char **);
 static void Prompt(Tcl_Interp*, int);
 static int  AscSetStartupFile(Tcl_Interp*);
 static void StdinProc(ClientData, int);
@@ -275,7 +271,7 @@ static char build_name[]=TIMESTAMP;
  *  in the Tk sources.
  *
  */
-int AscDriver(int argc, CONST84 char *argv[])
+int AscDriver(int argc, CONST char *argv[])
 {
   Tcl_Interp *interp;                   /* local version of global g_interp */
   Tcl_Channel inChannel;
@@ -812,7 +808,7 @@ static int AscSetStartupFile(Tcl_Interp *interp)
  *
  *  This function may call exit() if the user requests help.
  */
-static int AscProcessCommandLine(Tcl_Interp *interp, int argc, CONST84 char **argv)
+static int AscProcessCommandLine(Tcl_Interp *interp, int argc, CONST char **argv)
 {
   int i;
   int flag;                         /* set to 1 for `+arg', -1 for `-arg' */

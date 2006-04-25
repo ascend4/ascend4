@@ -25,6 +25,9 @@ int main(int argc, CONST char *argv[])
 
 #else /* __WIN32__ */
 
+#include <windows.h>
+#include <locale.h>
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      LPSTR lpszCmdLine, int nCmdShow)
 {
@@ -141,8 +144,7 @@ setargv(int *argcPtr, char ***argvPtr)
 	    }
 	}
     }
-    argSpace = (char *) ckalloc((unsigned) (size * sizeof(char *)
-	    + strlen(cmdLine) + 1));
+    argSpace = (char *) malloc((unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
     argv = (char **) argSpace;
     argSpace += size * sizeof(char *);
     size--;

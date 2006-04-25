@@ -40,8 +40,8 @@ if tcl_env['STATIC_TCLTK']:
 	tcl_env.Program("ascend4",["main.c"] + srcs)
 else:
 	print "DYNAMIC TCL/TK PROGRAM LINKAGE"
-	#tcl_env.Append(LIBS=tcl_env['TCL_LIB'])
-	#tcl_env.Append(LIBS=tcl_env['TK_LIB'])
+	tcl_env.Append(LIBS=tcl_env['TCL_LIB'])
+	tcl_env.Append(LIBS=tcl_env['TK_LIB'])
 
 	if tcl_env.has_key('TCL_LIBPATH'):
 		tcl_env.Append(LIBPATH=tcl_env['TCL_LIBPATH'])
