@@ -1,0 +1,114 @@
+#!/bin/sh
+
+# Added some new stuff here to allow reconfig to be
+# used without tweaking. Art, you should be able to use
+# it unmodified. Likewise Ben.
+
+# I tweaked it to install to ~/ascroot/bin/ascend4 
+# instead of the default /usr/local/bin
+# so that you can test without having to log in as root.
+
+# Platform-specific shenanigans
+if [ "$OSTYPE" = "msys" ]; then
+	echo "MINGW CONFIGURATION"
+	versep=
+	libsuff=.lib
+	libpref=
+	tkrootdefault=/c/Tcl
+	# *** INSTALL GnuWin32 'flex' in the default location... ***
+	export PATH=$PATH:/c/Program\ Files/GnuWin32/bin
+else
+	echo "LINUX CONFIGURATION"
+	versep=.
+	libsuff=.so
+	libpref=lib
+	tkrootdefault=/usr
+fi
+
+
+# Assume Tcl/Tk version 8.4 unless override with environment var
+if [ $TKVERSION ]; then
+	tkver=$TKVERSION
+else
+	tkmajor=8
+	tkminor=4
+	tkver=$tkmajor$versep$tkminor
+fi
+
+# Assume Tktable version 2.9 unless override with environment var
+if [ $TKTABLEVERSION ]; then
+	tktablever=$TKTABLEVERSION
+else
+	tktablemajor=2
+	tktableminor=9
+	tktablever=$tktablemajor$versep$tktableminor
+fi
+
+# Assume Tcl/Tk installed under /usr unless ~/tk or ~/tk83 present
+# or override with environment var
+if [ $TKROOT ]; then
+	tkroot=$TKROOT
+elif [ -d ~/tk ]; then
+	tkroot=~/tk
+elif [ -d ~/tk84 ]; then
+	tkroot=~/tk84
+else
+	tkroot=$tkrootdefault
+fi
+
+# Assume Tktable installed under $tkroot/share unless 
+# Tktable present in $tkroot/lib (not as good for non-root builds)
+# or override with environment var
+if [ $TKTABLEROOT ]; then
+	tktableroot=$TKTABLEROOT
+elif [ -d $tkroot/lib/Tktable$tktablever ]; then
+	tktableroot=$tkroot/lib/Tktable$tktablever
+else
+	tktableroot=$tkroot/share/Tktable$tktablever
+fi
+
+# Install everything in ~/ascroot unless override with envir var
+if [ $ASCROOT ]; then
+	ascroot=$ASCROOT;
+else
+	ascroot=~/ascroot
+fi
+
+# Use installed BLAS if it's found in an obvious place
+blaspath=/usr/lib/libblas
+if [ -e $blaspath.a ]; then
+	blasopt=--with-blas=$blaspath.a
+elif [ -e $blaspath.so.3 ]; then
+	blasopt=--with-blas=$blaspath.so.3
+else
+	blasopt=
+fi
+
+#--with-tcl="$tkroot/lib/${libpref}tcl$tkver$libsuff,$tkroot/include/tcl.h" \
+#--with-tk="$tkroot/lib/${libpref}tk$tkver$libsuff,$tkroot/include/tk.h" \
+#--with-tktable=$tktableroot/${libpref}Tktable$tktablever$libsuff
+#--with-wish="$tkroot/bin/wish" \
+
+if [ $COVERAGE ]; then
+	export CFLAGS="-ggdb -fprofile-arcs -ftest-coverage"
+fi
+
+cmd="./configure  \
+--prefix=$ascroot \
+--with-fortran=g77,/usr/lib/libg2c.so.0 \
+--enable-gcc \
+--enable-optimization \
+--enable-dynamic-packages \
+--with-tkconfig=$tkroot/lib \
+--with-tclconfig=$tkroot/lib \
+$blasopt"
+
+#--enable-relation-debugging 
+#--enable-compiler-timing 
+
+echo "RUNNING CONFIGURE WITH"
+echo $cmd
+echo ""
+
+$cmd
+
