@@ -26,7 +26,6 @@
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include <utilities/ascPrintType.h>
 #include <utilities/ascPrint.h>
 #include <general/list.h>
 #include "CUnit/CUnit.h"
@@ -148,7 +147,7 @@ static void test_list(void)
    *    1. pooling & recycling has been set up
    *    2. the local gl_list_t* have been destroyed
    *    3. pint_array[0..19] is allocated and initialized to [0..19]
-   *                                                                             
+   *
    *  If a test section messes with any of these, then it must restore
    *  this state before finishing.
    */
@@ -789,7 +788,7 @@ static void test_list(void)
   for (i=0 ; i<9 ; ++i) {
     CU_TEST(*((unsigned long*)gl_fetch(p_list1, i+2)) >= *((unsigned long*)gl_fetch(p_list1, i+1)));
   }
-  
+
   for (i=0 ; i<10 ; ++i) {              /* fill the list with unsorted data again */
     gl_store(p_list1, i+1, pint_array[9-i]);
     CU_TEST(0 == gl_sorted(p_list1));
@@ -1570,15 +1569,15 @@ static void test_list(void)
   else {
     CU_TEST(0 > gl_compare_ptrs(p_list1, p_list2));
   }
-  
+
   gl_reset(p_list1);
   gl_reset(p_list2);
 
   for (i=0 ; i<20 ; ++i) {
-    gl_append_ptr(p_list1, pint_array[i]);                           
+    gl_append_ptr(p_list1, pint_array[i]);
     gl_append_ptr(p_list2, pint_array[i]);
   }
-  
+
   CU_TEST(0 == gl_compare_ptrs(p_list1, p_list2));   /* compare equal lists */
   CU_TEST(0 == gl_compare_ptrs(p_list2, p_list1));   /* compare equal lists */
 

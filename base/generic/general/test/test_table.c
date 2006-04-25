@@ -26,7 +26,6 @@
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include <utilities/ascPrintType.h>
 #include <utilities/ascPrint.h>
 #include <general/table.h>
 #include "CUnit/CUnit.h"

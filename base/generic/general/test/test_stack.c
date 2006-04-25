@@ -26,7 +26,6 @@
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
-#include <utilities/ascPrintType.h>
 #include <utilities/ascPrint.h>
 #include <general/stack.h>
 #include "CUnit/CUnit.h"
@@ -297,7 +296,7 @@ static void test_stack(void)
   for (i=0 ; i<10 ; ++i) {
     gs_stack_push(p_stack1, pint_array[i]);
   }
-                                                                                  
+
   gs_stack_clear(p_stack1);             /* reset the stack */
   CU_TEST(0 == gs_stack_size(p_stack1));
 #ifdef MALLOC_DEBUG
