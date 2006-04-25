@@ -135,10 +135,19 @@ proc load_Templates {} {
   asc_source "$env(ASCENDTK)/templates/ascListSelectB1.tcl"
   puts "source $env(ASCENDTK)/templates/amlscroll.tcl"
   asc_source "$env(ASCENDTK)/templates/amlscroll.tcl"
-  global tcl_platform
+  global tcl_platform tk_version
   if {$tcl_platform(platform) == "unix"} {
-    puts "source $env(ASCENDTK)/templates/asctkfbox.tcl"
-    asc_source "$env(ASCENDTK)/templates/asctkfbox.tcl"
+    switch $tk_version {
+    8.5 -
+    8.4 {
+        puts "source $env(ASCENDTK)/templates/asctkfbox84.tcl"
+        asc_source "$env(ASCENDTK)/templates/asctkfbox84.tcl"
+      }
+    default  {
+        puts "source $env(ASCENDTK)/templates/asctkfbox.tcl"
+        asc_source "$env(ASCENDTK)/templates/asctkfbox.tcl"
+      }
+    }
   }
   puts "source $env(ASCENDTK)/templates/ascdialog.tcl"
   asc_source "$env(ASCENDTK)/templates/ascdialog.tcl"

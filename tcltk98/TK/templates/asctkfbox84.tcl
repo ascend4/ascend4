@@ -340,6 +340,7 @@ proc ::tk::IconList_DeleteAll {w} {
 ##
 # looks up special cases for icons. baa
 proc ::tk::CustomImage {img f} {
+    variable ::tk::Priv
     set a4c $Priv(a4cImage); 
     set a4l $Priv(a4lImage);
     set a4s $Priv(a4sImage);
@@ -404,7 +405,7 @@ proc ::tk::IconList_Add {w image items} {
 
     set image0 $image
     foreach text $items {
-        set image [::tk:CustomImage image0 $text]
+        set image [ ::tk::CustomImage $image0 $text ]
 	set iTag [$data(canvas) create image 0 0 -image $image -anchor nw \
 		-tags [list icon $data(numItems) item$data(numItems)]]
 	set tTag [$data(canvas) create text  0 0 -text  $text  -anchor nw \
