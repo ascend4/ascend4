@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 
 #include "ospath.h"
 
@@ -23,6 +24,7 @@ struct FilePath{
 #define M(MSG) fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG)
 #define E(MSG) fprintf(stderr,"%s:%d: (%s) ERROR: %s\n",__FILE__,__LINE__,__FUNCTION__,MSG)
 #define X(VAR) fprintf(stderr,"%s:%d: (%s) %s=%s\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR)
+#define V(VAR) fprintf(stderr,"%s:%d: (%s) %s=%d\n",__FILE__,__LINE__,__FUNCTION__,#VAR,VAR)
 #define D(VAR) ospath_debug(VAR,#VAR)
 
 /**
@@ -36,9 +38,17 @@ struct FilePath *ospath_gethomepath(void);
 
 	   ie. "///usr/bin///hello/////there// --> "/usr/bin/hello/there/"
 
-	2. Resolve any ~ directory found to the current user's HOME path
+	2. Resolve a leading tilde (~) to the current user's HOME path
 
-	3. @TODO what about "dir/../dir2/dir3" --> "dir2/dir3" ?
+	3. Remove redundant /./ in middle of path
+
+	4. Remove reduncant dir/.. in path
+
+	5. Environment substitution??
+
+	6. On windows, drive reference if not specified
+
+	7. What about \\server\path and URLs, gnomefs, etc?
 */
 void ospath_cleanup(struct FilePath *);
 
@@ -71,12 +81,84 @@ struct FilePath *ospath_new(const char *path){
 	strcpy(fp->path, path);
 
 #ifdef WINPATHS
+	X(fp->path);
 	ospath_extractdriveletter(fp);
 #endif
 
 	ospath_cleanup(fp);
 
 	return fp;
+}
+
+/**
+	This function will serve to allow #include-style file paths
+	to be specified with platform-independent forward slashes then
+	translated into the local filesystem format for subsequent use.
+
+	This method should be identical to ospath_new on posix, right?
+
+	@NOTE: on windows, we also want:
+				    C:dir/file --> c:$PWD\dir\file
+	                  e:/hello --> e:\hello
+	                 here/i/am --> here\i\am
+
+	@NOTE:
+	A path-search function should create full file paths by
+	appending relative file to each component of the search path
+	then performing a callback on each one to determine if the
+	match is OK or not.
+*/
+struct FilePath *ospath_new_from_posix(char *posixpath){
+	struct FilePath *fp = MALLOC(sizeof(struct FilePath));
+	char *p;
+	strcpy(fp->path,posixpath);
+#ifdef WINPATHS
+	X(fp->path);
+	ospath_extractdriveletter(fp);
+#endif
+
+	char path[PATHMAX];
+	strcpy(path,fp->path);
+
+	//X(path);
+
+	int startslash = (strlen(path) > 0 && path[0] == '/');
+	int endslash = (strlen(path) > 1 && path[strlen(path) - 1] == '/');
+
+	//V(startslash);
+	//V(endslash);
+
+	// reset fp->path as required.
+	strcpy(fp->path, (startslash ? PATH_SEPARATOR_STR : ""));
+
+	for(p = strtok(path, "/");
+			p!=NULL;
+			p = strtok(NULL,"/")
+	){
+		// add a separator if we've already got some stuff
+		if(
+			strlen(fp->path) > 0
+			&& fp->path[strlen(fp->path) - 1] != PATH_SEPARATOR_CHAR
+		){
+			strcat(fp->path,PATH_SEPARATOR_STR);
+		}
+
+		strcat(fp->path,p);
+	}
+
+	// put / on end as required, according to what the starting path had
+	if(endslash && (strlen(fp->path) > 0 ? (fp->path[strlen(fp->path) - 1] != PATH_SEPARATOR_CHAR) : 1))
+	{
+		//M("adding endslash!");
+
+		strcat(fp->path, PATH_SEPARATOR_STR);
+	}
+
+	//X(fp->path);
+
+	ospath_cleanup(fp);
+
+	return(fp);
 }
 
 /**
@@ -87,6 +169,7 @@ struct FilePath *ospath_new_noclean(const char *path){
 	strcpy(fp->path,path);
 
 #ifdef WINPATHS
+	X(fp->path);
 	ospath_extractdriveletter(fp);
 #endif
 
@@ -118,6 +201,7 @@ struct FilePath *ospath_gethomepath(void){
 #ifdef WINPATHS
 void ospath_extractdriveletter(struct FilePath *fp)
 {
+	X(fp->path);
 	// extract the drive the path resides on...
 	if(strlen(fp->path) >= 2 && fp->path[1] == ':')
 	{
@@ -126,13 +210,17 @@ void ospath_extractdriveletter(struct FilePath *fp)
 		char firsttwo[2];
 		strncpy(firsttwo,fp->path,2);
 
-		if(sscanf(firsttwo, "%c:", &driveletter) == 1)
-		{
-			//M("FOUND LEADING DRIVE: %c\n",driveletter);
+		if(sscanf(firsttwo, "%c:", &driveletter) == 1){
 			strncpy(fp->drive,fp->path,2);
+			fp->drive[0]=tolower(fp->drive[0]);
 			strcpy(fp->path, fp->path+2);
+		}else{
+			E("WHY HERE?");
 		}
+	}else{
+		strcpy(fp->drive,"");
 	}
+	X(fp->drive);
 }
 #endif
 
@@ -148,9 +236,9 @@ void ospath_cleanup(struct FilePath *fp){
 	int startslash = (strlen(fp->path) > 0 && fp->path[0] == PATH_SEPARATOR_CHAR);
 	int endslash = (strlen(fp->path) > 1 && fp->path[strlen(fp->path) - 1] == PATH_SEPARATOR_CHAR);
 
-	fprintf(stderr,"FS ON START = %d\n",startslash);
-	fprintf(stderr,"FS ON END   = %d\n",endslash);
-	fprintf(stderr,"FIRST CHAR = %c\n",fp->path[0]);
+	//fprintf(stderr,"FS ON START = %d\n",startslash);
+	//fprintf(stderr,"FS ON END   = %d\n",endslash);
+	//fprintf(stderr,"FIRST CHAR = %c\n",fp->path[0]);
 
 	home = ospath_gethomepath();
 
@@ -160,7 +248,7 @@ void ospath_cleanup(struct FilePath *fp){
 	// reset fp->path as required.
 	strcpy(fp->path, (startslash ? PATH_SEPARATOR_STR : ""));
 
-	X(fp->path);
+	//X(fp->path);
 
 	// split path into it tokens, using strtok which is NOT reentrant
 	// so be careful!
@@ -169,7 +257,7 @@ void ospath_cleanup(struct FilePath *fp){
 			p!=NULL;
 			p = strtok(NULL,PATH_SEPARATOR_STR)
 	){
-		X(p);
+		//X(p);
 		if(strcmp(p, "~")==0){
 
 			if(p == path){ // check that the ~ is the first character in the path
@@ -188,7 +276,7 @@ void ospath_cleanup(struct FilePath *fp){
 				M("EXPANDING LEADING '.' IN PATH");
 				// get current working directory
 				pBuff = (char *)getcwd(NULL, 0);
-				X(pBuff);
+				//X(pBuff);
 
 				// create new path with resolved working directory
 				workingPath = ospath_new_noclean(pBuff != NULL ? pBuff : ".");
@@ -505,20 +593,20 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2)
 	}
 
 	// now, both are valid...
-	M("BOTH ARE VALID");
+	//M("BOTH ARE VALID");
 
-	char *temp[2];
+	char temp[2][PATHMAX];
 #ifdef WINPATHS
-	temp[0] = CALLOC(1+strlen(fp1->drive)+strlen(fp1->path), sizeof(char));
+	X(fp1->drive);
 	strcpy(temp[0],fp1->drive);
+	X(temp[0]);
+	X(fp1->path);
 	strcat(temp[0],fp1->path);
-	temp[1] = CALLOC(1+strlen(fp2->drive)+strlen(fp2->path), sizeof(char));
+	X(temp[0]);
 	strcpy(temp[1],fp2->drive);
 	strcat(temp[1],fp2->path);
 #else
-	temp[0] = CALLOC(1+strlen(fp1->path), sizeof(char));
 	strcpy(temp[0], fp1->path);
-	temp[1] = CALLOC(1+strlen(fp2->path), sizeof(char));
 	strcpy(temp[1], fp2->path);
 #endif
 
@@ -532,8 +620,8 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2)
 		strcat(temp[1],PATH_SEPARATOR_STR);
 	}
 
-	//X(temp[0]);
-	//X(temp[1]);
+	X(temp[0]);
+	X(temp[1]);
 
 	return strcmp(temp[0],temp[1]);
 }
@@ -680,6 +768,16 @@ void ospath_debug(struct FilePath *fp, char *label){
 int main(void){
 	struct FilePath *fp1, *fp2, *fp3, *fp4;
 
+	fp1 = ospath_new_from_posix("models/johnpye/extfn/extfntest");
+	D(fp1);
+	fp2 = ospath_new("models\\johnpye\\extfn\\extfntest");
+	D(fp2);
+	assert(ospath_cmp(fp1,fp2)==0);
+	M("Passed 'new_from_posix' test");
+
+	FREE(fp1); FREE(fp2);
+
+	//------------------------
 	fp1 = ospath_new(".\\src\\.\\images\\..\\\\movies\\");
 	fp2 = ospath_new(".\\src\\movies");
 
@@ -697,8 +795,8 @@ int main(void){
 	assert(ospath_cmp(fp1,fp3)==0);
 	M("Passed 'parent' test");
 
-	FREE(fp2); FREE(fp3);
-
+	FREE(fp1); FREE(fp2); FREE(fp3);
+	//------------------------
 
 	fp2 = ospath_new("\\home\\john");
 	fp3 = ospath_new("where\\mojo");
@@ -708,13 +806,12 @@ int main(void){
 
 	ospath_append(fp2,fp3);
 
-	//fp4 = ospath_new("\\home\\john\\where\\mojo\\");
+	fp4 = ospath_new("\\home\\john\\where\\mojo\\");
 
 	D(fp2);
-	//assert(ospath_cmp(fp2,fp4)==0);
-	//M("Passed 'append' test");
+	assert(ospath_cmp(fp2,fp4)==0);
+	M("Passed 'append' test");
 
-/*
 	ospath_append(fp2,fp3);
 	fp4 = ospath_root(fp2);
 	D(fp2);
@@ -722,8 +819,7 @@ int main(void){
 
 	assert(ospath_cmp(fp2,fp4)==0);
 	M("Passed 'concat' test");
-*/
-/*
+
 	D(fp2);
 
 	FREE(fp2);
@@ -742,7 +838,7 @@ int main(void){
 
 	D(fp1);
 	D(fp2);
-*/
+
 
 }
 
