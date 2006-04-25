@@ -3,7 +3,6 @@
 #  November 24, 1993
 
 SHELL = /bin/sh
-#AWW20041206: builddir = ..
 builddir = ..
 srcdir = @fullpathsrcdir@/../../tcltk98/generic/interface
 VPATH := @fullpathsrcdir@/../../tcltk98/generic/interface
@@ -39,9 +38,9 @@ DIR_SPECIFIC_INCS = $(TK_INCS) $(X11_INCS)
 #  into the object files (EXEC_OBJS) that are linked with the
 #  library files (EXEC_LIBS) to make EXECUTABLE
 
-EXEC_SRCS = Driver.c
+EXEC_SRCS = Driver.c main.c
 
-EXEC_OBJS = Driver.o
+EXEC_OBJS = Driver.o main.o
 
 EXEC_LIBS = $(ASC_LIBS) $(FOR_LIBS) $(TK_LIBS) $(TKTABLE_LIB) $(X11_LIBS) \
 	$(MATH_LIBS) $(DEBUG_LIBS)
