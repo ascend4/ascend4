@@ -13,7 +13,7 @@ Name "ASCEND PyGTK"
 ; The file to write
 OutFile "ascend-setup.exe"
 
-SetCompressor /SOLID lzma
+; SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
@@ -45,17 +45,17 @@ Section "ASCEND (required)"
   
   ; Put file there
   File "_ascpy.dll"
-  File "..\..\ascend.dll"
+  File "..\ascend.dll"
   File "config.py"
   File "*.py"
   SetOutPath $INSTDIR\glade
   File "glade\*.glade"
   File "glade\*.png"
   SetOutPath $INSTDIR\models
-  File "..\..\models\*.a4c"
-  File "..\..\models\*.a4l"
+  File "..\models\*.a4c"
+  File "..\models\*.a4l"
   SetOutPath $INSTDIR\models\johnpye
-  File "..\..\models\johnpye\*.a4c"
+  File "..\models\johnpye\*.a4c"
   SetOutPath $INSTDIR
   File "Makefile.bt"
   File "ascend.syn"

@@ -1,7 +1,7 @@
 /*
 	Sensitivity add-on for ASCEND
 	by Tom Epperly, Kirk Abbot
-	
+
 	Copyright (C) 1990-2006 Carnegie-Mellon University
 
     This program is free software; you can redistribute it and/or modify
@@ -71,7 +71,6 @@ extern int do_solve_eval( struct Instance *i, struct gl_list_t *arglist);
 
 /* ignores: interp, i, whichvar */
 extern int do_finite_diff_eval( struct Instance *i, struct gl_list_t *arglist);
-                               
 
 extern char sensitivity_help[];
 
@@ -80,6 +79,8 @@ extern int do_sensitivity_eval_all( struct Instance *i, struct gl_list_t *arglis
 
 /* ignores: interp, i,  */
 extern int do_sensitivity_eval( struct Instance *i, struct gl_list_t *arglist);
+
+ASC_DLLSPEC(int) sensitivity_register(void);
 
 #endif  /* ASC_SENSITIVITY_H */
 

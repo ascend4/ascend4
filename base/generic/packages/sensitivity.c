@@ -208,7 +208,7 @@ int do_solve_eval( struct Instance *i,
   len = gl_length(arglist);
 
   /* Ignore unused params */
-  (void)i; 
+  (void)i;
 
   if (len!=2) {
 	ERROR_REPORTER_HERE(ASC_USER_ERROR,
@@ -340,7 +340,7 @@ int do_finite_diff_eval( struct Instance *i,
   int result;
 
   /* Ignore unused params */
-  (void)i; 
+  (void)i;
 
   if (FiniteDiffCheckArgs(arglist))
     return 1;
@@ -1164,6 +1164,34 @@ int do_sensitivity_eval_all( struct Instance *i,
     return 1;
   }
   result = sensitivity_anal_all(i,arglist,step_length);
+  return result;
+}
+
+
+int sensitivity_register(void){
+
+  int result=0;
+
+  char sensitivity_help[] =
+	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
+	"  1. name: name of a reference instance or SELF.\n"
+	"  2. x: x, where x is an array of > solver_var.\n"
+	"  3. y: where y is an array of > solver_var.\n"
+	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
+
+  result = CreateUserFunctionMethod("do_solve",
+			      do_solve_eval,
+			      2,NULL); /* was 2,0,null */
+  result += CreateUserFunctionMethod("do_finite_difference",
+			       do_finite_diff_eval,
+			       4,NULL); /* 4,0,null */
+  result += CreateUserFunctionMethod("do_sensitivity",
+			       do_sensitivity_eval,
+			       4,sensitivity_help);
+  result += CreateUserFunctionMethod("do_sensitivity_all",
+			       do_sensitivity_eval_all,
+			       4,"See do_sensitivity_eval for details");
+
   return result;
 }
 

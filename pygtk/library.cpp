@@ -52,7 +52,7 @@ Library::Library(const char *defaultpath){
 		char *x = Asc_GetEnv(PATHENVIRONMENTVAR);
 		if(x==NULL || strcmp(x,"")==0){
 			string s = string(PATHENVIRONMENTVAR "=") + defaultpath;
-			cerr << "Setting" << s << endl;
+			cerr << "Setting " << s << endl;
 			Asc_PutEnv(s.c_str());
 		}
 		Asc_ImportPathList(PATHENVIRONMENTVAR);
