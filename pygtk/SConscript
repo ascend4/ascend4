@@ -82,7 +82,7 @@ if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 
 libascxx = env.SharedLibrary('ascxx',objs
 	, LIBS = ['ascend'] + env['PYTHON_LIB']
-	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
+	, LIBPATH = ['.'] + ['#'] + env['PYTHON_LIBPATH']
 )
 
 ascxxtest = env.Program('ascxxtest',['ascxxtest.cpp']
