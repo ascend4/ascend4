@@ -146,6 +146,15 @@ int Builtins_Init(void)
 # ifdef DYNAMIC_PACKAGES
 static char path_var[PATH_MAX];
 
+
+#ifdef __WIN32__
+# define ASC_PATHSEP ';'
+# define ASC_SLASH '\\'
+#else
+# define ASC_PATHSEP ':'
+# define ASC_SLASH '/'
+#endif
+
 /**
 	Search the archive library path for a file matching the given
 	(platform specific, with extension?) library filename.
@@ -163,28 +172,41 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
   register CONST char *t;
   register unsigned length;
   register FILE *f;
-  /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Env var for user packages is '%s'\n",envv); */
-  /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Search path for user packages is '%s'\n",getenv(envv)); */
+  CONSOLE_DEBUG("NAME = %s",name);
+  CONSOLE_DEBUG("Library being searched for is '%s'\n",name);
+  CONSOLE_DEBUG("Env var for user packages is '%s'\n",envv);
+  CONSOLE_DEBUG("Search path for user packages is '%s'\n",getenv(envv));
   if ((path=getenv(envv))==NULL)
     path=dpath;
   while(isspace(*path)) path++;
   while(*path!='\0'){
-    if (*path==':') path++;
+    if (*path==ASC_PATHSEP) path++;
     else{
       length = 0;
       /* copy next directory into array */
-      while((*path!=':')&&(*path!='\0')&&(!isspace(*path)))
-        path_var[length++] = *(path++);
+      while((*path!=ASC_PATHSEP)&&(*path!='\0')&&(!isspace(*path))){
+        if(*path=='/'){
+        	path_var[length++] = ASC_SLASH; path++;
+        }else{
+	        path_var[length++] = *(path++);
+	    }
+	  }
+
+	  /* add a trailing slash to the path component */
       if (path_var[length-1]!='/')
-        path_var[length++]='/';
+        path_var[length++]=ASC_SLASH;
 
       /* copy file name into array */
       for(t=name;*t!='\0';){
-        path_var[length++] = *(t++);
+        if(*t=='/'){
+          path_var[length++] = ASC_SLASH; t++;
+        }else{
+          path_var[length++] = *(t++);
+        }
       }
       path_var[length]='\0';
 
-	  /* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for for '%s' at '%s'\n",name, path_var); */
+	  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for '%s' at '%s'\n",name, path_var);
 
       if ((f= fopen(path_var,"r"))!=NULL){
         result = path_var;
@@ -294,27 +316,8 @@ int StaticPackages_Init(void)
 {
   int result = 0;
 
-  char sensitivity_help[] =
-	"This function does sensitivity analysis dy/dx. It requires 4 args:\n"
-	"  1. name: name of a reference instance or SELF.\n"
-	"  2. x: x, where x is an array of > solver_var.\n"
-	"  3. y: where y is an array of > solver_var.\n"
-	"  4. dy/dx: which dy_dx[1..n_y][1..n_x].";
-
-  result = CreateUserFunctionMethod("do_solve",
-			      do_solve_eval,
-			      2,NULL); /* was 2,0,null */
-  result += CreateUserFunctionMethod("do_finite_difference",
-			       do_finite_diff_eval,
-			       4,NULL); /* 4,0,null */
-  result += CreateUserFunctionMethod("do_sensitivity",
-			       do_sensitivity_eval,
-			       4,sensitivity_help);
-  result += CreateUserFunctionMethod("do_sensitivity_all",
-			       do_sensitivity_eval_all,
-			       4,"See do_sensitivity_eval for details");
-
-  result += KValues_Init();
+  result += sensitivity_register();
+  result += kvalues_register();
 
   return result;
 }

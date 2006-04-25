@@ -135,6 +135,9 @@
 #  endif
 #endif
 
+/**
+	@TODO move the 'CONST84' stuff to a file in the TCL/TK section.
+*/
 /*
  * If we are in a tcl-infested file, define
  * CONST84 to be empty for back-compatibility with

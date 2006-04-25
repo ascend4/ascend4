@@ -1,5 +1,5 @@
 import os
-env = Environment(ENV=os.environ)
+env = Environment(ENV=os.environ,tools=['mingw'])
 
 srcs = Split("""
 	extfntest.c

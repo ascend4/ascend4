@@ -1,27 +1,31 @@
-/*********************************************************************\
-                        External Distillation Routines.
-			by Kirk Abbott
-			Created: July 4, 1994
-			Version: $Revision: 1.5 $
-			Date last modified: $Date: 1997/07/18 12:20:07 $
-This file is part of the Ascend Language Interpreter.
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
+	Copyright (C) 2006 Carnegie Mellon University
 
-Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Abbott.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-The Ascend Language Interpreter is free software; you can redistribute
-it and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the
-License, or (at your option) any later version.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-The Ascend Language Interpreter is distributed in hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	External distillation routines
+*//*
+	by Kirk Abbott
+	Created: July 4, 1994
+	Version: $Revision: 1.5 $
+	Date last modified: $Date: 1997/07/18 12:20:07 $
+*/
 
-You should have received a copy of the GNU General Public License along with
-the program; if not, write to the Free Software Foundation, Inc., 675
-Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
-\*********************************************************************/
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
 #include <compiler/packages.h>
@@ -101,9 +105,9 @@ static int LookupData(struct Vpdata *vp)
 
 
 /*
- * The 2nd. arguement is the array of mole fractions.
- * the length of this list is then the number of components.
- */
+	The 2nd. argument is the array of mole fractions.
+	the length of this list is then the number of components.
+*/
 static int GetNumberOfComponents(struct gl_list_t *arglist)
 {
   int ncomps;
@@ -118,29 +122,27 @@ static int GetNumberOfComponents(struct gl_list_t *arglist)
   }
 }
 
-/*
- *********************************************************************
- * The following code takes a data instance and tries to decode it
- * to determine the names of the components used in the model. It will
- * then create an array of these names and attach it to the problem.
- * The data is expected to be an instance of a model of the form:
- *
- *   MODEL kvalues_data;
- *      ncomps IS_A integer;
- *	ncomps := 3;
- *      components[1..ncomps] IS_A symbol;
- *
- *      components[1] := 'a';
- *      components[2] := 'b';
- *      components[3] := 'c';
- *   END kvalues_data;
- *
- *********************************************************************
- *
- */
-static int GetComponentData(struct Instance *data,
-			    struct KVALUES_problem *problem)
-{
+/**
+	The following code takes a data instance and tries to decode it
+	to determine the names of the components used in the model. It will
+	then create an array of these names and attach it to the problem.
+	The data is expected to be an instance of a model of the form:
+
+	  MODEL kvalues_data;
+	     ncomps IS_A integer;
+	     ncomps := 3;
+	     components[1..ncomps] IS_A symbol;
+
+	     components[1] := 'a';
+	     components[2] := 'b';
+	     components[3] := 'c';
+	  END kvalues_data;
+
+*/
+static int GetComponentData(
+		struct Instance *data,
+	    struct KVALUES_problem *problem
+){
   struct InstanceName name;
   struct Instance *child;
   unsigned long pos,c;
@@ -188,8 +190,8 @@ static int GetComponentData(struct Instance *data,
 static int CheckArgsOK(struct Slv_Interp *slv_interp,
 		       struct Instance *data,
 		       struct gl_list_t *arglist,
-		       struct KVALUES_problem *problem)
-{
+		       struct KVALUES_problem *problem
+){
   unsigned long len,ninputs,noutputs;
   int n_components;
   int result;
@@ -225,33 +227,31 @@ static int CheckArgsOK(struct Slv_Interp *slv_interp,
 }
 
 
-/*
- *********************************************************************
- * This function is one of the registered functions. It operates in
- * one of two modes, first_call or last_call. In the former it
- * creates a KVALUES_problem and calls a number of routines to check
- * the arguements (data and arglist) and to cache the information
- * processed away in the KVALUES_problem structure. We then attach
- * to the hook. *However*, the very first time this function is
- * called for any given external node, the slv_interp is guaranteed
- * to be in a clean state. Hence if we find that slv_interp->user_data
- * is non-NULL, it means that this function has been called before,
- * regardless of the first_call/last_call flags, and information was
- * stored there by us. So as not to leak, we either need to deallocate
- * any storage or just update the information there.
- *
- * In last_call mode, the memory associated with the problem needs to
- * released; this includes:
- * the array of compononent string pointers (we dont own the strings).
- * the array of doubles.
- * the problem structure itself.
- *
- *********************************************************************
- */
+/**
+	This function is one of the registered functions. It operates in
+	one of two modes, first_call or last_call. In the former it
+	creates a KVALUES_problem and calls a number of routines to check
+	the arguements (data and arglist) and to cache the information
+	processed away in the KVALUES_problem structure. We then attach
+	to the hook. *However*, the very first time this function is
+	called for any given external node, the slv_interp is guaranteed
+	to be in a clean state. Hence if we find that slv_interp->user_data
+	is non-NULL, it means that this function has been called before,
+	regardless of the first_call/last_call flags, and information was
+	stored there by us. So as not to leak, we either need to deallocate
+	any storage or just update the information there.
+
+	In last_call mode, the memory associated with the problem needs to
+	released; this includes:
+	the array of compononent string pointers (we dont own the strings).
+	the array of doubles.
+	the problem structure itself.
+*/
 int kvalues_preslv(struct Slv_Interp *slv_interp,
 		   struct Instance *data,
-		   struct gl_list_t *arglist)
-{
+		   struct gl_list_t *arglist
+
+){
   struct KVALUES_problem *problem;
   int workspace;
   /*struct Instance *arg;
@@ -288,25 +288,22 @@ int kvalues_preslv(struct Slv_Interp *slv_interp,
 
 
 /*
- *********************************************************************
- * This function provides support to kvalues_fex which is one of the
- * registered functions. The input variables are T,x[1..ncomps],P.
- * The output variables are y[1..n]. We also load up the x vector
- * (our copy) with satP[1..ncomps] as proof of concept that we can
- * do (re)initialization.
- *********************************************************************
- */
+	This function provides support to kvalues_fex which is one of the
+	registered functions. The input variables are T,x[1..ncomps],P.
+	The output variables are y[1..n]. We also load up the x vector
+	(our copy) with satP[1..ncomps] as proof of concept that we can
+	do (re)initialization.
+*/
 
 /*
- * The name field will be field in vp before the call.
- * The rest of the data will be filled the structure
- * provided that there are no errors.
- */
-static int GetCoefficients(struct Vpdata *vp)
-{
+	The name field will be field in vp before the call.
+	The rest of the data will be filled the structure
+	provided that there are no errors.
+*/
+static int GetCoefficients(struct Vpdata *vp){
   if (LookupData(vp)==0)
     return 0;
- else
+  else
     return 1; /* error in name lookup */
 }
 
@@ -314,8 +311,8 @@ static int GetCoefficients(struct Vpdata *vp)
 static int DoCalculation(struct Slv_Interp *slv_interp,
 			 int ninputs, int noutputs,
 			 double *inputs,
-			 double *outputs)
-{
+			 double *outputs
+){
   struct KVALUES_problem *problem;
   int c, offset;
   int ncomps;
@@ -390,8 +387,8 @@ static int DoCalculation(struct Slv_Interp *slv_interp,
 int kvalues_fex(struct Slv_Interp *slv_interp,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
-		double *jacobian)
-{
+		double *jacobian
+){
   int nok;
   nok = DoCalculation(slv_interp, ninputs, noutputs, inputs, outputs);
   if (nok)
@@ -400,9 +397,10 @@ int kvalues_fex(struct Slv_Interp *slv_interp,
     return 0;
 }
 
-
-int KValues_Init (void)
-{
+/**
+	Registration function
+*/
+int kvalues_register(void){
   int result;
 
   char kvalues_help[] = "This function does a bubble point calculation\

@@ -123,25 +123,25 @@ opts.Add(PackageOption(
 ))
 
 
-opts.Add(PackageOption(
+opts.Add(
 	'TCL'
 	,'Base of Tcl distribution'
 	,default_tcl
-))
+)
 
 # Where are the Tcl includes?
-opts.Add(PackageOption(
+opts.Add(
 	'TCL_CPPPATH'
 	,"Where are your Tcl include files?"
 	,"$TCL/include"
-))
+)
 
 # Where are the Tcl libs?
-opts.Add(PackageOption(
+opts.Add(
 	'TCL_LIBPATH'
 	,"Where are your Tcl libraries?"
 	,"$TCL/lib"
-))
+)
 
 # What is the name of the Tcl lib?
 opts.Add(
@@ -151,18 +151,18 @@ opts.Add(
 )
 
 # Where are the Tk includes?
-opts.Add(PackageOption(
+opts.Add(
 	'TK_CPPPATH'
 	,"Where are your Tk include files?"
 	,'$TCL_CPPPATH'
-))
+)
 
 # Where are the Tk libs?
-opts.Add(PackageOption(
+opts.Add(
 	'TK_LIBPATH'
 	,"Where are your Tk libraries?"
 	,'$TCL_LIBPATH'
-))
+)
 
 # What is the name of the Tk lib?
 opts.Add(
@@ -800,7 +800,7 @@ if platform.system()=="Windows" and env.has_key('MSVS'):
 			+"need to install the Microsoft Windows Server 2003 Platform SDK, or similar."
 		env['PACKAGE_LINKING']='STATIC_PACKAGES'
 		
-	if with_python and not conf.CheckHeader('basetsd.h'):
+	if with_python and not conf.CheckHeader(['basetsd.h','BaseTsd.h']):
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
 

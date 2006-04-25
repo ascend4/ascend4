@@ -1,5 +1,5 @@
 REQUIRE "system.a4l";
-IMPORT extfntest;
+IMPORT "johnpye/extfn/extfntest";
 
 MODEL test_extfntest;
 

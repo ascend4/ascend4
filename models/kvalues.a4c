@@ -1,5 +1,5 @@
 (* still not working. working on it. baa *)
-IMPORT KValues_Init FROM "kvalues";
+IMPORT "kvalues";
 
 ATOM comp_atom REFINES generic_real;
     component IS_A symbol;

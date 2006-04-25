@@ -91,7 +91,7 @@ int g_compiler_warnings = 1;		/* level of whine to allow */
 
 #include <compiler/redirectFile.h>
 #ifndef ASCERR
-#error "ASCERR not defined"
+# error "ASCERR not defined"
 #endif
 
 extern int zz_error(char *);
@@ -516,7 +516,7 @@ import:
 	{
 	  (void)LoadArchiveLibrary($4,SCP($2));
 	}
-	| IMPORT_T IDENTIFIER_T ';'
+	| IMPORT_T DQUOTE_T ';'
 	{
 	  (void)LoadArchiveLibrary(SCP($2),NULL);
 	}

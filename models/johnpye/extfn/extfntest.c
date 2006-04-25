@@ -1,8 +1,27 @@
+/*	ASCEND modelling environment
+	Copyright (C) 1999 Benjamin A Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*/
+
 #include <stdio.h>
 
-#include <utilities/error.h>
-
 #include <utilities/ascConfig.h>
+#include <utilities/error.h>
 
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
@@ -24,8 +43,12 @@ int addone_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double
 	It sets up the functions in this external function library
 */
 
-extern int
-ASC_EXPORT extfntest_register(){
+#ifndef ASC_EXPORT
+# error "Where is ASC_EXPORT?"
+#endif
+
+extern
+ASC_EXPORT(int) extfntest_register(){
 	const char *addone_help = "This is a test of the dynamic user packages functionality";
 	int result = 0;
 
