@@ -12,7 +12,7 @@
 # Properties of Liquids and Gases, 4th Edition
 # by Reid, Prausnitz, and Poling
 # Copyright 1987 The McGraw-Hill Companies.
-# http://www.bookstore.mcgraw-hill.com
+# http://books.mcgraw-hill.com
 # The authors of ASCEND IV are grateful for permission to
 # distribute this data in electronic form. This is, so far
 # as we know, the largest database of physical properties

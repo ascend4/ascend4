@@ -17,42 +17,64 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Operating system file-path manipulations, alla python os.path
+	A C-language class for simple file-path manipulations alla python os.path.
+	Attempts to handle windows 'drive' prefixes (eg "C:") and automatic
+	substitution of forward slashes with appropriate platform-specific
+	path separators.
 
-	Based on C++ code from codeproject.com written by Simon Parkinson-Bates
+	Has the goal of providing path-search functionality to ASCEND for
+	modules (a4c) and external library (.dll) files, etc.
+
+	Heavily modified version of C++ code from codeproject.com
+	originally written by Simon Parkinson-Bates.
 */
 
 #ifndef OSPATH_H
 #define OSPATH_H
 
-#include <string.h>
-#include <malloc.h>
-
-#define PATHMAX 1024
-
 struct FilePath;
 
+/**
+	Create a new ospath object from a string. This will
+	normalise the path and attempt to add a drive-prefix
+	if one is missing.
+*/
 struct FilePath *ospath_new(const char *path);
 
+/**
+	Free an ospath
+*/
+void ospath_free(struct FilePath *);
+
+/**
+	Create a new ospath object from a string, assuming
+	that standard forward-slash paths are used.
+*/
 struct FilePath *ospath_new_from_posix(char *posixpath);
 
 /**
-	Is the path valid? Returns true if so, false otherwise
+	Check that the created FilePath was valid (i.e. able
+	to be parsed. Doesn't check that the directory/file
+	actually exists.)
 */
 int ospath_isvalid(struct FilePath *fp);
 
 /**
-	Cast to string (char *)
-	(you must free the string when you don't need it any more)
+	Return the FilePath in the form of a string.
+	You must FREE the allocated string when you don't need it any more.
 */
 char *ospath_str(struct FilePath *fp);
 
 /**
-	Output string-cast to FILE
+	Output the FilePath to a file
 */
 void ospath_fwrite(struct FilePath *fp, FILE *dest);
 
-void ospath_debug(struct FilePath *fp, char *label);
+/**
+	Write out the internal structure of the FilePath object
+	to stderr.
+*/
+void ospath_debug(struct FilePath *fp);
 
 /**
 	Return length of path string
@@ -60,7 +82,7 @@ void ospath_debug(struct FilePath *fp, char *label);
 unsigned int ospath_length(struct FilePath *fp);
 
 /**
-	Create a new path that is the direct parent of this one
+	Create a new path that is the direct parent of this one.
 */
 struct FilePath *ospath_getparent(struct FilePath *fp);
 
@@ -113,5 +135,17 @@ struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2);
 
 void ospath_append(struct FilePath *fp, struct FilePath *fp1);
 
+//------------------------
+// SEARCH PATH FUNCTIONS
+
+struct FilePath **ospath_searchpath_new(char *path);
+
+typedef int (FilePathTestFn)(struct FilePath *,void *);
+
+struct FilePath *ospath_searchpath_iterate(
+		struct FilePath **searchpath
+		, FilePathTestFn *testfn
+		, void *searchdata
+);
 
 #endif
