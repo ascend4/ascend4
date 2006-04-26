@@ -18,6 +18,7 @@ if platform.system()=="Windows":
 	default_install_assets = "glade/"
 	icon_extension = '.png'
 	default_tcl = "c:\\Tcl"
+	default_tcl_libpath = "$TCL\\bin"
 else:
 	default_tcl_lib = "tcl8.3"
 	default_tk_lib = "tk8.3"
@@ -25,7 +26,7 @@ else:
 	default_install_assets = "$INSTALL_DATA/ascend/glade/"
 	icon_extension = '.svg'
 	default_tcl = os.path.expanduser("~/activetcl")
-	
+	default_tcl_libpath = "$TCL/lib"	
 
 # Package linking option
 opts.Add(EnumOption(
@@ -140,7 +141,7 @@ opts.Add(
 opts.Add(
 	'TCL_LIBPATH'
 	,"Where are your Tcl libraries?"
-	,"$TCL/lib"
+	,default_tcl_libpath
 )
 
 # What is the name of the Tcl lib?

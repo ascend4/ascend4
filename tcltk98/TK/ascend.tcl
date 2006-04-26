@@ -185,7 +185,7 @@ proc mcgraw_notice {} {
   puts "\n% The authors of ASCEND thank McGraw-Hill for permission to"
   puts "% distribute the database from Reid, Prausnitz, and Poling"
   puts "% Properties of Liquids and Gases, 4th Edition (RPP)"
-  puts "% http://www.bookstore.mcgraw-hill.com"
+  puts "% http://books.mcgraw-hill.com"
   puts "% via the World Wide Web as part of ASCEND IV."
   puts "% RPP is copyright 1987, The McGraw-Hill Companies"
 }
