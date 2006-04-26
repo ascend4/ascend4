@@ -36,7 +36,16 @@
 
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
+
 #include <utilities/ascConfig.h>
+#include <utilities/config.h> /* NEW */
+
+#ifndef ASC_DEFAULTPATH
+# error "Where is ASC_DEFAULTPATH???"
+#endif
+
+#include <general/ospath.h>
+
 #include "compiler.h"
 #include <utilities/ascMalloc.h>
 #include <general/list.h>
@@ -80,40 +89,6 @@ void Init_Slv_Interp(struct Slv_Interp *slv_interp)
   }
 }
 
-/*
-	@deprecated, @see packages.h
-*/
-symchar *MakeArchiveLibraryName(CONST char *prefix){
-	char *buffer;
-	int len;
-	symchar *result;
-
-	len = strlen(prefix);
-	buffer = (char *)ascmalloc(len+40);
-
-#if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
-	sprintf(buffer,"%s%s%s",ASC_SHLIBPREFIX,prefix,ASC_SHLIBSUFFIX);
-#else
-# ifdef __WIN32__
-	sprintf(buffer,"%s.dll",prefix);
-# elif defined(linux)
-	sprintf(buffer,"lib%s.so",prefix); /* changed from .o to .so -- JP */
-# elif defined(sun) || defined(solaris)
-	sprintf(buffer,"%s.so.1.0",prefix);
-# elif defined(__hpux)
-	sprintf(buffer,"%s.sl",prefix);
-# elif defined(_SGI_SOURCE)
-	sprintf(buffer,"%s.so",prefix);
-# else
-#   error "Please #define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX or pass as compiler flags to packages.c"
-# endif
-#endif
-
-	result = AddSymbol(buffer); /* the main symbol table */
-	ascfree(buffer);
-	return result;              /* owns the string */
-}
-
 /*---------------------------------------------
   BUILT-IN PACKAGES...
 */
@@ -146,146 +121,197 @@ int Builtins_Init(void)
 # ifdef DYNAMIC_PACKAGES
 static char path_var[PATH_MAX];
 
+/**
+	A little structure to help with searching for libraries
 
-#ifdef __WIN32__
-# define ASC_PATHSEP ';'
-# define ASC_SLASH '\\'
-#else
-# define ASC_PATHSEP ':'
-# define ASC_SLASH '/'
-#endif
+	@see test_librarysearch
+*/
+struct LibrarySearch{
+	struct FilePath *partialpath;
+	char fullpath[PATH_MAX];
+};
+
+FilePathTestFn test_librarysearch;
+
+/**
+	A 'test' function for passing to the ospath_searchpath_iterate function.
+	This test function will return a match when a library having the required
+	name is present in the fully resolved path.
+*/
+int test_librarysearch(struct FilePath *path, void *userdata){
+	/*  user data = the relative path, plus a place
+		to store the full path when found */
+	struct LibrarySearch *ls = (struct LibrarySearch *)userdata;
+
+	struct FilePath *fp = ospath_concat(path,ls->partialpath);
+	FILE *f;
+
+	ospath_strcpy(fp,ls->fullpath,PATH_MAX);
+	CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath);
+	
+	f = ospath_fopen(fp,"r");
+	if(f==NULL){
+		return 0;
+	}
+	fclose(f);
+
+	CONSOLE_DEBUG("FOUND! %s",ls->fullpath);
+	return 1;
+}
 
 /**
 	Search the archive library path for a file matching the given
 	(platform specific, with extension?) library filename.
 
+	@param name Name of library being searched for
+	@param envv Name of environment var containing the ASCEND search path
+	@param dpath Default search path for the case where the env var is not defined
+
 	@return a pointer to a string space holding the full path
 	name of the file to be opened. The returned pointer may be NULL
 
-	@TODO won't work correctly on windows
-	@deprecated { see packages.h }
+	If the returned pointer is not NULL, then it points to space that must be
+	freed when no longer needed.
 */
 static
-char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv)
-{
-  register char *path,*result;
-  register CONST char *t;
-  register unsigned length;
-  register FILE *f;
-  CONSOLE_DEBUG("NAME = %s",name);
-  CONSOLE_DEBUG("Library being searched for is '%s'\n",name);
-  CONSOLE_DEBUG("Env var for user packages is '%s'\n",envv);
-  CONSOLE_DEBUG("Search path for user packages is '%s'\n",getenv(envv));
-  if ((path=getenv(envv))==NULL)
-    path=dpath;
-  while(isspace(*path)) path++;
-  while(*path!='\0'){
-    if (*path==ASC_PATHSEP) path++;
-    else{
-      length = 0;
-      /* copy next directory into array */
-      while((*path!=ASC_PATHSEP)&&(*path!='\0')&&(!isspace(*path))){
-        if(*path=='/'){
-        	path_var[length++] = ASC_SLASH; path++;
-        }else{
-	        path_var[length++] = *(path++);
-	    }
-	  }
+char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
+	struct FilePath *fp1, *fp2, *fp3; /* relative path */
+	char *s1;
+	char buffer[PATH_MAX];
 
-	  /* add a trailing slash to the path component */
-      if (path_var[length-1]!='/')
-        path_var[length++]=ASC_SLASH;
+	struct LibrarySearch ls;
+	struct FilePath **sp;
+	extern char path_var[PATH_MAX];
+	char *path;
 
-      /* copy file name into array */
-      for(t=name;*t!='\0';){
-        if(*t=='/'){
-          path_var[length++] = ASC_SLASH; t++;
-        }else{
-          path_var[length++] = *(t++);
-        }
-      }
-      path_var[length]='\0';
+	fp1 = ospath_new(name);
+	fp2 = ospath_getdir(fp1);
+	s1 = ospath_getfilestem(fp1);
+	if(s1==NULL){
+		// not a file, so fail...
+		return NULL;
+	}
 
-	  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Searching for '%s' at '%s'\n",name, path_var);
+	CONSOLE_DEBUG("FILESTEM = '%s'",s1);
+	
+#if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
+	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
+#else
+# ifdef __WIN32__
+	snprintf(buffer,PATH_MAX,"%s.dll",s1);
+# elif defined(linux)
+	snprintf(buffer,PATH_MAX,"lib%s.so",s1); /* changed from .o to .so -- JP */
+# elif defined(sun) || defined(solaris)
+	snprintf(buffer,PATH_MAX,"%s.so.1.0",s1);
+# elif defined(__hpux)
+	snprintf(buffer,PATH_MAX,"%s.sl",s1);
+# elif defined(_SGI_SOURCE)
+	snprintf(buffer,PATH_MAX,"%s.so",s1);
+# else
+#  error "Please #define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX or pass as compiler flags to packages.c"
+# endif
+#endif
 
-      if ((f= fopen(path_var,"r"))!=NULL){
-        result = path_var;
-        fclose(f);
-        return result;
-      }
-    }
-    while(isspace(*path)) path++;
-  }
-  return NULL;
+	fp3 = ospath_new(buffer);
+	ospath_free(fp1);
+	fp1 = ospath_concat(fp2,fp3);
+	ospath_free(fp2);
+	ospath_free(fp3);
+	free(s1);
+
+	ls.partialpath = fp1;
+
+	CONSOLE_DEBUG("ENV VAR = '%s'",envv);
+
+	CONSOLE_DEBUG("GETTING SEARCH PATH FROM ENVIRONMENT VAR '%s'",envv);
+	path=getenv(envv);
+	if(path==NULL){
+		CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
+		path=ASC_DEFAULTPATH;
+	}
+
+	CONSOLE_DEBUG("SEARCHPATH = '%s'",path);
+
+	sp = ospath_searchpath_new(path);
+
+	if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
+		return NULL;
+	}
+
+	strncpy(path_var,ls.fullpath,PATH_MAX);
+
+	ospath_free(fp1);
+
+	return path_var;
 }
+
 #endif /* DYNAMIC_PACKAGES */
 /*
   END of DYNAMIC_PACKAGES-specific code
   ------------------------------------------*/
 
-int LoadArchiveLibrary(CONST char *name, CONST char *initfunc)
-{
-#ifdef NO_PACKAGES
-  /** avoid compiler warnings on params: */
-  (void) name; (void) initfunc;
+int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 
-  ERROR_REPORTER_HERE(ASC_PROG_ERROR,"LoadArchiveLibrary disabled: NO_PACKAGES");
-  return 1;
+#ifdef DYNAMIC_PACKAGES
+	char *file;
+	char auto_initfunc[PATH_MAX];
+	char *stem;
+	struct FilePath *fp1;
+	int result;
 
-#elif defined(DYNAMIC_PACKAGES)
+	CONSOLE_DEBUG("ABOUT TO SEARCH FOR '%s'",partialname);
 
-  symchar *name_with_extn;
+	file = SearchArchiveLibraryPath(partialname, ASC_DEFAULTPATH, PATHENVIRONMENTVAR);
+	if(file==NULL){
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path.",partialname);
+		return 1;
+	}
 
-  int result;
-  char *default_path = ".";
-  char *env = PATHENVIRONMENTVAR;
-  char *full_file_name = NULL;
-  extern int Asc_DynamicLoad(CONST char *,CONST char *);
+	fp1 = ospath_new(partialname);
+	stem = ospath_getfilestem(fp1);
+	if(stem==NULL){
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"What is the stem of named library '%s'???",partialname);
+		free(stem);
+		ospath_free(fp1);
+		return 1;
+	}
 
-  char initfunc_generated_name[255];
+	if(initfunc==NULL){
+		strncpy(auto_initfunc,stem,PATH_MAX);
+		strncat(auto_initfunc,"_register",PATH_MAX-strlen(auto_initfunc));
+		result = Asc_DynamicLoad(file,auto_initfunc);
+	}else{
+		result = Asc_DynamicLoad(file,initfunc);
+	}
 
-  name_with_extn = MakeArchiveLibraryName(name);
+	if (result) {
+		CONSOLE_DEBUG("FAILED TO LOAD LIBRARY '%s' (error %d)",partialname,result);
+    	result = 1;
+	}else{
+		if(initfunc==NULL){
+	  		ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",auto_initfunc,file);
+		}else{
+			ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc,file);
+		}
+	}
 
-  full_file_name = SearchArchiveLibraryPath(SCP(name_with_extn),default_path,env);
-  if (!full_file_name) {
-    ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path.",name_with_extn);
-    return 1;
-  }
+	free(stem);
+	ospath_free(fp1);
+  	return result;
 
-  if(initfunc==NULL){
-	CONSOLE_DEBUG("GENERATING NAME OF INITFUNC");
-	CONSOLE_DEBUG("NAME STEM = %s",name);
-	sprintf(initfunc_generated_name,"%s",name);
-	strcat(initfunc_generated_name,"_register");
-	CONSOLE_DEBUG("GENERATED NAME = %s",initfunc_generated_name);
-	result = Asc_DynamicLoad(full_file_name,initfunc_generated_name);
-  }else{
-	result = Asc_DynamicLoad(full_file_name,initfunc);
-  }
+#else
 
-  if (result) {
-    return 1;
-  }
-  if(initfunc==NULL){
-  	ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc_generated_name,name);
-  }else{
-  	ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc,name);
-  }
-  return 0;
+	DISUSED_PARAMETER(name); DISUSED_PARAMETER(initfunc);
 
-#elif defined(STATIC_PACKAGES)
-
-  /* avoid compiler warnings on params: */
-  (void) name; (void) initfunc;
-
-  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.\n");
-  return 0;
-
-#else /* unknown flags */
-
-# error "Invalid package linking flags"
-  (void) name; (void) initfunc;
-  return 1;
+# if defined(STATIC_PACKAGES)
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadArchiveLibrary disabled: STATIC_PACKAGES, no need to load dynamically.\n");
+	return 0;
+# elif defined(NO_PACKAGES)
+	ERROR_REPORTER_HERE(ASC_PROG_ERROR,"LoadArchiveLibrary disabled: NO_PACKAGES");
+	return 1;
+# else
+#  error "Invalid package linking flags"
+# endif
 
 #endif
 }

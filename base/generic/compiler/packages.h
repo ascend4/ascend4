@@ -21,21 +21,9 @@
 	@file
 	User package management.
 
-	RequiresL:
-	#include <stdio.h>
-	#include "compiler.h"
-	#include "ascMalloc.h"
-	#include "extfunc.h" (going away soon)
-	#include "type_desc.h" (going away soon)
-	#include "module.h" (going away soon)
-	#include "library.h" (going away soon)
-	#include "relation.h" (going away soon)
-
 	Users of this header should not have to include anything
 	except instance_enum.h and list.h and whatever headers those
 	may require.
-
-	@todo Comments about header dependencies are contradictory.
 *//*
 	by Ben Allan & Kirk Abbott
 	Created: July 4, 1994
@@ -443,21 +431,6 @@ int init(struct Slv_Interp *slv_interp
 The arglist and all references to instances have been intentionally removed from the value (function evaluation) and deriv* routines so as to allow ease of interfacing to existing standalone packages.
 */
 
-extern void Init_Slv_Interp(struct Slv_Interp *slv_interp);
-/**<
-	@deprecated { Needs revising @see packages.h }
-
-	Gets the interpreter back to a 'clean' state. The default settings are guaranteed to be as follows:
-	  @li nodestamp = 0;
-	  @li status = calc_all_ok;
-	  @li first_call  = (unsigned)0;
-	  @li last_call   = (unsigned)0;
-	  @li check_args = (unsigned)0;
-	  @li recalculate = (unsigned)0;
-	  @li deriv_eval = (unsigned)0;
-	  @li func_eval = (unsigned)0;
-*/
-
 /** Reset the interpreter to its initial state. */
 extern void Reset_Slv_Interp(struct Slv_Interp *slv_interp);
 /*
@@ -480,22 +453,6 @@ extern int CallExternalProcs(struct Instance *i);
 	This function given a handle to a relation instance which represents an external relation, will attempt to invoke it and write the results to stdout.
 */
 
-extern symchar *MakeArchiveLibraryName(CONST char *prefix);
-/**< 
-	@deprecated 
-	This function is obsolete and should not be used in new code. See ascDynaLoad.h for correct replacement.
-
-	@return platform-dependent shared-object name / symbol table entry (??)
-	@param prefix library filename prefix.
-
-	This function will try to construct a platform dependent name for a dynamically loadable archive. In the case of
-	 @li sun, alphas, solaris -- lib<prefix>.so.1.0
-	 @li hpux -- lib<prefix>.sl
-	 @li mips -- ???
-	 @li aix -- ???
-	 @li linux -- lib<prefix>.so
-*/
-
 /** Load an external library specified by 'short name'. */
 extern int LoadArchiveLibrary(CONST char *name, CONST char *initfunc);
 /**< 
@@ -508,6 +465,21 @@ extern int LoadArchiveLibrary(CONST char *name, CONST char *initfunc);
 	Given the name of a dynamically loadable library/archive (dll), and the name of an initialization routine to be found in this archive, this function will attempt to load the archive and to run the initialization routine. Will return a nonzero code in the event of failure. The calling protocol for the init routine is: 
 	
 	@code void Routine_init(void); @endcode
+*/
+
+extern void Init_Slv_Interp(struct Slv_Interp *slv_interp);
+/**<
+	@deprecated { Needs revising @see packages.h }
+
+	Gets the interpreter back to a 'clean' state. The default settings are guaranteed to be as follows:
+	  @li nodestamp = 0;
+	  @li status = calc_all_ok;
+	  @li first_call  = (unsigned)0;
+	  @li last_call   = (unsigned)0;
+	  @li check_args = (unsigned)0;
+	  @li recalculate = (unsigned)0;
+	  @li deriv_eval = (unsigned)0;
+	  @li func_eval = (unsigned)0;
 */
 
 #endif /* ASC_PACKAGES_H */

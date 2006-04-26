@@ -79,18 +79,18 @@ if platform.system() != "Windows" or env.has_key('IS_MINGW'):
 
 #---------------------------------------------
 # LITTLE WEE TEST PROGRAM for debuggin the c++ wrapper
-
-libascxx = env.SharedLibrary('ascxx',objs
-	, LIBS = ['ascend'] + env['PYTHON_LIB']
-	, LIBPATH = ['.'] + ['#'] + env['PYTHON_LIBPATH']
-)
-
-ascxxtest = env.Program('ascxxtest',['ascxxtest.cpp']
-	, LIBS = ['ascxx','ascend']
-	, LIBPATH = ['.','#']
-)
-
-env.Alias('ascxx',ascxxtest)
+#
+#libascxx = env.SharedLibrary('ascxx',objs
+#	, LIBS = ['ascend'] + env['PYTHON_LIB']
+#	, LIBPATH = ['.'] + ['#'] + env['PYTHON_LIBPATH']
+#)
+#
+#ascxxtest = env.Program('ascxxtest',['ascxxtest.cpp']
+#	, LIBS = ['ascxx','ascend']
+#	, LIBPATH = ['.','#']
+#)
+#
+#env.Alias('ascxx',ascxxtest)
 
 #---------------------------------------------
 # INSTALLATION

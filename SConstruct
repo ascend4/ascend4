@@ -44,16 +44,16 @@ opts.Add(BoolOption(
 
 # You can turn off building of Tcl/Tk interface
 opts.Add(BoolOption(
-	'WITHOUT_TCLTK'
+	'WITH_TCLTK'
 	,"Set to True if you don't want to build the original Tcl/Tk GUI."
-	, False
+	, True
 ))
 
 # You can turn off the building of the Python interface
 opts.Add(BoolOption(
-	'WITHOUT_PYTHON'
+	'WITH_PYTHON'
 	,"Set to True if you don't want to build Python wrappers."
-	, False
+	, True
 ))
 
 # Which solvers will we allow?
@@ -306,10 +306,10 @@ opts.Save('options.cache',env)
 
 Help(opts.GenerateHelpText(env))
 
-with_tcltk_gui = (env['WITHOUT_TCLTK']==False)
+with_tcltk_gui = (env['WITH_TCLTK']==True)
 without_tcltk_reason = "disabled by options/config.py"
 
-with_python = (env['WITHOUT_PYTHON']==False)
+with_python = (env['WITH_PYTHON']==True)
 without_python_reason = "disabled by options/config.py"
 
 with_cunit_tests = env['WITH_CUNIT_TESTS']

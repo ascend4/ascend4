@@ -58,6 +58,7 @@ ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
  *
  *  @param path     Path to the dynamic library to load (non-NULL).
  *  @param initFunc The DL initialization function to call.
+ *
  *  @return The return value from initFunc is returned if specified.
  *          Otherwise, 0 is returned if the library is successfully
  *          loaded, 1 if it is not.

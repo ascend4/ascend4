@@ -1,5 +1,8 @@
-import os
-env = Environment(ENV=os.environ,tools=['mingw'])
+import os, platform
+if platform.system()=="Windows" and os.environ.has_key('OSTYPE'):
+	env = Environment(ENV=os.environ,tools=['mingw'])
+else:
+	env = Environment(ENV=os.environ);
 
 srcs = Split("""
 	extfntest.c
@@ -7,7 +10,6 @@ srcs = Split("""
 
 env.SharedLibrary("extfntest",srcs
 	, CPPPATH=['../../../base/generic']
-	, LIBPREFIX=''
 	, LIBS=['ascend']
 	, LIBPATH=['../../..']
 )
