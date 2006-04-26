@@ -7,6 +7,8 @@ csrcs = Split("""
 
 """)
 
+configh = env.SubstInFile(source='config.h.in')
+
 objs = []
 for c in csrcs:
 	objs += env.SharedObject(c)

@@ -32,6 +32,10 @@
 #ifndef OSPATH_H
 #define OSPATH_H
 
+#ifndef PATH_MAX
+# define PATH_MAX 1023
+#endif
+
 struct FilePath;
 
 /**
@@ -64,6 +68,17 @@ int ospath_isvalid(struct FilePath *fp);
 	You must FREE the allocated string when you don't need it any more.
 */
 char *ospath_str(struct FilePath *fp);
+
+/**
+	Return the FilePath in the string location given.
+	If the user has allocated a local array before calling ospath_strcpy,
+	then this allows the FREE(dest) call to be avoided.
+
+	@param dest the location of allocated storage space where the FilePath
+		will be written.
+	@param destsize the amount of allocated string space at dest.
+*/
+void ospath_strcpy(struct FilePath *fp,char *dest, int destsize);
 
 /**
 	Output the FilePath to a file
@@ -103,14 +118,22 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned nDepth);
 char *ospath_getbasefilename(struct FilePath *fp);
 
 /**
-	retrieve the path's bottom level filename with out the extension
+	retrieve the path's bottom level filename without the extension.
+	A path that ends in a slash will be assumed to be directory, so the
+	file stem will be NULL (ie not a file)
 */
-char *ospath_getbasefiletitle(struct FilePath *fp);
+char *ospath_getfilestem(struct FilePath *fp);
 
 /**
 	retrieve the paths extension (if it has one) does not include the dot
 */
-char *ospath_getbasefileextension(struct FilePath *fp);
+char *ospath_getfileext(struct FilePath *fp);
+
+/**
+	retrieve the directory component of the path (everything up the the
+	last slash
+*/
+struct FilePath *ospath_getdir(struct FilePath *fp);
 
 /**
 	Function returns true if the current path is the root directory, otherwise it returns false.
@@ -135,10 +158,17 @@ struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2);
 
 void ospath_append(struct FilePath *fp, struct FilePath *fp1);
 
+/**
+	File-open function. Simply a wrapper about the 'fopen' call, except
+	that if the FilePath is not 'valid' it will return NULL without
+	attempting to open.
+*/
+FILE *ospath_fopen(struct FilePath *fp, const char *mode);
+
 //------------------------
 // SEARCH PATH FUNCTIONS
 
-struct FilePath **ospath_searchpath_new(char *path);
+struct FilePath **ospath_searchpath_new(const char *path);
 
 typedef int (FilePathTestFn)(struct FilePath *,void *);
 

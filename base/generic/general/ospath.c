@@ -13,9 +13,15 @@
 # endif
 #endif
 
-#ifndef TEST
+//#define VERBOSE
+
+#if !defined(TEST) && !defined(VERBOSE)
 # define NDEBUG
 #endif
+
+//#define TRY_GETPWUID
+
+#define DO_FIXSLASHES
 
 #ifndef NDEBUG
 # include <assert.h>
@@ -53,7 +59,7 @@
 # define GETENV(VAR) getenv(VAR)
 #endif
 
-#define PATHMAX 1024
+// PATH_MAX is in ospath.h
 #define DRIVEMAX 3
 #define LISTMAX 256
 
@@ -62,7 +68,7 @@
 #endif
 
 struct FilePath{
-    char path[PATHMAX]; /// the string version of the represented POSIX path
+    char path[PATH_MAX]; /// the string version of the represented POSIX path
 
 #ifdef WINPATHS
     char drive[DRIVEMAX]; /// the drive the path resides on (field is absent in POSIX systems)
@@ -77,7 +83,9 @@ struct FilePath{
 
 #define E(MSG) fprintf(stderr,"%s:%d: (%s) ERROR: %s\n",__FILE__,__LINE__,__FUNCTION__,MSG)
 
+#ifdef DO_FIXSLASHES
 void ospath_fixslash(char *path);
+#endif
 
 struct FilePath *ospath_getcwd();
 
@@ -117,11 +125,15 @@ void ospath_extractdriveletter(struct FilePath *);
 # define PATH_SEPARATOR_CHAR  '\\'
 # define PATH_LISTSEP_CHAR ';'
 # define PATH_LISTSEP_STR ";"
+# define PATH_WRONGSLASH_CHAR '/'
+# define PATH_WRONGSLASH_STR "/"
 #else
 # define PATH_SEPARATOR_STR "/"
 # define PATH_SEPARATOR_CHAR '/'
 # define PATH_LISTSEP_CHAR ':'
 # define PATH_LISTSEP_STR ":"
+# define PATH_WRONGSLASH_CHAR '\\'
+# define PATH_WRONGSLASH_STR "\\"
 #endif
 
 /**
@@ -130,7 +142,7 @@ void ospath_extractdriveletter(struct FilePath *);
 struct FilePath *ospath_new(const char *path){
 	struct FilePath *fp;
 	fp = MALLOC(sizeof(struct FilePath));
-	STRNCPY(fp->path, path, PATHMAX);
+	STRNCPY(fp->path, path, PATH_MAX);
 	//X(fp->path);
 	//X(path);
 	assert(strcmp(fp->path,path)==0);
@@ -141,7 +153,7 @@ struct FilePath *ospath_new(const char *path){
 
 	//X(fp->drive);
 
-#ifdef __MINGW32__
+#ifdef DO_FIXSLASHES
 	ospath_fixslash(fp->path);
 #endif
 
@@ -176,13 +188,13 @@ void ospath_free(struct FilePath *fp){
 */
 struct FilePath *ospath_new_from_posix(char *posixpath){
 	struct FilePath *fp = MALLOC(sizeof(struct FilePath));
-	STRNCPY(fp->path,posixpath,PATHMAX);
+	STRNCPY(fp->path,posixpath,PATH_MAX);
 #ifdef WINPATHS
 	X(fp->path);
 	ospath_extractdriveletter(fp);
 #endif
 
-#ifdef __WIN32__
+#ifdef DO_FIXSLASHES
 	ospath_fixslash(fp->path);
 #endif
 
@@ -193,31 +205,32 @@ struct FilePath *ospath_new_from_posix(char *posixpath){
 	return fp;
 }
 
+#ifdef DO_FIXSLASHES
 void ospath_fixslash(char *path){
 
 	char *p;
-	char temp[PATHMAX];
+	char temp[PATH_MAX];
 	int startslash;
 	int endslash;
 	STRTOKVAR(nexttok);
 
-	STRNCPY(temp,path,PATHMAX);
+	STRNCPY(temp,path,PATH_MAX);
 
 	//X(path);
 
-	startslash = (strlen(temp) > 0 && temp[0] == '/');
-	endslash = (strlen(temp) > 1 && temp[strlen(temp) - 1] == '/');
+	startslash = (strlen(temp) > 0 && temp[0] == PATH_WRONGSLASH_CHAR);
+	endslash = (strlen(temp) > 1 && temp[strlen(temp) - 1] == PATH_WRONGSLASH_CHAR);
 
 	//V(startslash);
 	//V(endslash);
 
 	// reset fp->path as required.
-	STRNCPY(path, (startslash ? PATH_SEPARATOR_STR : ""), PATHMAX);
+	STRNCPY(path, (startslash ? PATH_SEPARATOR_STR : ""), PATH_MAX);
 
 	//M("STARTING STRTOK");
-	for(p = STRTOK(temp, "/",nexttok);
+	for(p = STRTOK(temp, PATH_WRONGSLASH_STR,nexttok);
 			p!=NULL;
-			p = STRTOK(NULL,"/",nexttok)
+			p = STRTOK(NULL,PATH_WRONGSLASH_STR,nexttok)
 	){
 		// add a separator if we've already got some stuff
 		if(
@@ -241,11 +254,13 @@ void ospath_fixslash(char *path){
 
 	//X(path);
 }
+#endif
+
 
 /// Create but with no 'cleanup' call
 struct FilePath *ospath_new_noclean(const char *path){
 	struct FilePath *fp = MALLOC(sizeof(struct FilePath));
-	STRNCPY(fp->path,path,PATHMAX);
+	STRNCPY(fp->path,path,PATH_MAX);
 
 #ifdef WINPATHS
 	//X(fp->path);
@@ -255,7 +270,7 @@ struct FilePath *ospath_new_noclean(const char *path){
 	//D(fp);
 
 /*
-#ifdef __MINGW32__
+#ifdef DO_FIXSLASHES
 	ospath_fixslash(fp->path);
 	D(fp);
 #endif
@@ -284,26 +299,28 @@ struct FilePath *ospath_getcwd(void){
 */
 struct FilePath *ospath_gethomepath(void){
 
-	const char *pfx = getenv("HOME");
+	const char *pfx = (const char *)getenv("HOME");
 	struct FilePath *fp;
 
 #ifndef __WIN32__
+# ifdef TRY_GETPWUID
 	struct passwd *pw;
 
 	if(pfx==NULL){
-		 pw = getpwuid(getuid());
+		 pw = (struct passwd*)getpwuid(getuid());
 
 		if(pw){
-			pfx = pw -> pw_dir;
+			pfx = pw->pw_dir;
 		}
 	}
+# endif
 #endif
 
 	// create path object from HOME, but don't compress it
 	// (because that would lead to an infinite loop)
 	fp = ospath_new_noclean(pfx ? pfx : "");
 
-#ifdef __MINGW32__
+#ifdef DO_FIXSLASHES
 	ospath_fixslash(fp->path);
 #endif
 
@@ -337,7 +354,7 @@ void ospath_extractdriveletter(struct FilePath *fp)
 #endif
 
 void ospath_cleanup(struct FilePath *fp){
-	char path[PATHMAX];
+	char path[PATH_MAX];
 	char *p;
 	struct FilePath *home;
 	struct FilePath *working;
@@ -394,7 +411,9 @@ void ospath_cleanup(struct FilePath *fp){
 				working = ospath_getcwd();
 
 				D(working);
+#ifdef WINPATHS
 				X(working->drive);
+#endif
 				X(p);
 				X(path);
 
@@ -444,6 +463,7 @@ void ospath_cleanup(struct FilePath *fp){
 
 
 int ospath_isvalid(struct FilePath *fp){
+	//if(fp==NULL) return 0;
 	return strlen(fp->path) > 0 ? 1 : 0;
 }
 
@@ -459,6 +479,15 @@ char *ospath_str(struct FilePath *fp){
 	STRCPY(s,fp->path);
 #endif
 	return s;
+}
+
+void ospath_strcpy(struct FilePath *fp, char *dest, int destsize){
+#ifdef WINPATHS
+	STRNCPY(dest,fp->drive,destsize);
+	STRNCAT(dest,fp->path,destsize-strlen(dest));
+#else
+	STRNCPY(dest,fp->path,destsize);
+#endif
 }
 
 void ospath_fwrite(struct FilePath *fp, FILE *dest){
@@ -485,7 +514,7 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	int offset;
 	char *pos;
 	int len1;
-	char sub[PATHMAX];
+	char sub[PATH_MAX];
 	struct FilePath *fp1;
 
 	D(fp);
@@ -514,8 +543,11 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	if(*pos==PATH_SEPARATOR_CHAR){
 #ifdef WINPATHS
 		STRCPY(sub,fp->drive);
-#endif
 		STRNCAT(sub,fp->path,len1);
+#else
+		STRNCPY(sub,fp->path,len1);
+		sub[len1]='\0';
+#endif
 		X(sub);
 		if(strcmp(sub,"")==0){
 			M("DIRECTORY IS EMPTY");
@@ -534,12 +566,12 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 {
 	int startslash;
-	char path[PATHMAX];
+	char path[PATH_MAX];
 	char *temp;
 	char *p;
 	STRTOKVAR(nexttok);
 #ifdef WINPATHS
-	char temp2[PATHMAX];
+	char temp2[PATH_MAX];
 #endif
 
 	if(
@@ -567,7 +599,7 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 	{
 		if(strlen(temp) > 0 && temp[strlen(temp) - 1] != PATH_SEPARATOR_CHAR)
 		{
-			temp += PATH_SEPARATOR_CHAR;
+			strcat(temp,PATH_SEPARATOR_STR);
 		}
 
 		STRCAT(temp,p);
@@ -580,7 +612,7 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned depth)
 	// put / on end as required
 	if(strlen(temp) > 0 ? (temp[strlen(temp) - 1] != PATH_SEPARATOR_CHAR) : 1)
 	{
-		temp += PATH_SEPARATOR_CHAR;
+		strcat(temp,PATH_SEPARATOR_STR);
 	}
 
 #ifdef WINPATHS
@@ -602,21 +634,23 @@ char *ospath_getbasefilename(struct FilePath *fp){
 		return "";
 	}
 
-	// reverse find a / ignoring the end / if it exists.
+	if(fp->path[strlen(fp->path)-1]==PATH_SEPARATOR_CHAR){
+		return NULL;
+	}
+
+	// reverse find '/' but DON'T ignore a trailing slash
+	// (this is changed from the original implementation)
 	length = strlen(fp->path);
-	offset = (
-			fp->path[length - 1] == PATH_SEPARATOR_CHAR
-			&& length - 2 > 0
-		) ? length - 2
-		: length;
+	offset = length;
 
 	pos = strrchr(fp->path, PATH_SEPARATOR_CHAR); /* OFFSET! */
 
 	// extract filename given position of find / and return it.
-	if(pos != fp->path + length){
-		int length1 = length - ((pos - fp->path) + 1) - (offset != length ? 1 : 0);
+	if(pos != NULL){
+		unsigned length1 = length - ((pos - fp->path) + 1);
 		temp = CALLOC(length1,sizeof(char));
-
+		
+		V(length1);
 		STRNCPY(temp, pos + 1, length1);
 		return temp;
 	}else{
@@ -626,7 +660,7 @@ char *ospath_getbasefilename(struct FilePath *fp){
 	}
 }
 
-char *ospath_getbasefiletitle(struct FilePath *fp){
+char *ospath_getfilestem(struct FilePath *fp){
 	char *temp;
 	char *pos;
 
@@ -635,17 +669,26 @@ char *ospath_getbasefiletitle(struct FilePath *fp){
 	}
 
 	temp = ospath_getbasefilename(fp);
+	if(temp==NULL){
+		// it's a directory
+		return NULL;
+	}
+
 	pos = strrchr(temp,'.');
 
-	if(pos != NULL){
-		// remove extension.
-		*pos = '\0';
+	if(pos==NULL || pos==temp){
+		// no extension, or a filename starting with '.'
+		// -- return the whole filename
+		return temp;
 	}
+
+	// remove extension.
+	*pos = '\0';
 
 	return temp;
 }
 
-char *ospath_getbasefileextension(struct FilePath *fp){
+char *ospath_getfileext(struct FilePath *fp){
 	char *temp, *temp2, *pos;
 	int len1;
 
@@ -654,16 +697,20 @@ char *ospath_getbasefileextension(struct FilePath *fp){
 	}
 
 	temp = ospath_getbasefilename(fp);
+	if(temp==NULL){
+		// it's a directory
+		return NULL;
+	}
 
 	// make sure there is no / on the end.
+	/// FIXME: is this good policy, removing a trailing slash?
 	if(temp[strlen(temp) - 1] == PATH_SEPARATOR_CHAR){
 		temp[strlen(temp)-1] = '\0';
 	}
 
 	pos = strrchr(temp,'.');
 
-	if(pos != NULL)
-	{
+	if(pos != NULL && pos!=temp){
 		// extract extension.
 		len1 = temp + strlen(temp) - pos;
 		temp2 = CALLOC(len1, sizeof(char));
@@ -735,8 +782,25 @@ struct FilePath *ospath_root(struct FilePath *fp){
 #endif
 }
 
+struct FilePath *ospath_getdir(struct FilePath *fp){
+	char *pos;
+	char s[PATH_MAX];
+
+	pos = strrchr(fp->path,PATH_SEPARATOR_CHAR);
+	if(pos==NULL){
+		return ospath_new(".");
+	}
+#ifdef WINPATHS
+	strncpy(s,fp->drive,PATH_MAX);
+	strncat(s,fp->path,pos - fp->path);
+#else
+	strncpy(s,fp->path,pos - fp->path);
+#endif
+	return ospath_new(s);
+}
+
 int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
-	char temp[2][PATHMAX];
+	char temp[2][PATH_MAX];
 #ifdef WINPATHS
 	char *p;
 #endif
@@ -798,8 +862,8 @@ int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){
 struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2){
 
 	struct FilePath *fp;
-	char *temp[2];
-	char *temp2;
+	char temp[2][PATH_MAX];
+	char temp2[PATH_MAX];
 	struct FilePath *r;
 
 	fp = MALLOC(sizeof(struct FilePath));
@@ -828,24 +892,21 @@ struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2){
 	// now, both paths are valid...
 
 #ifdef WINPATHS
-	temp[0] = CALLOC(2 + strlen(fp1->drive)+strlen(fp1->path), sizeof(char));
-	STRCPY(temp[0],fp1->drive);
-	STRCAT(temp[0],fp1->path);
+	STRNCPY(temp[0],fp1->drive,PATH_MAX);
+	STRNCAT(temp[0],fp1->path,PATH_MAX-strlen(temp[0]));
 #else
-	temp[0] = CALLOC(2 + strlen(fp1->path), sizeof(char));
-	STRCPY(temp[0], fp1->path);
+	STRNCPY(temp[0], fp1->path,PATH_MAX);
 #endif
 
-	temp[1] = CALLOC(2 + strlen(fp2->path), sizeof(char));
-	STRCPY(temp[1], fp2->path);
+	STRNCPY(temp[1], fp2->path,PATH_MAX);
 
 	// make sure temp has a / on the end.
 	if(temp[0][strlen(temp[0]) - 1] != PATH_SEPARATOR_CHAR)
 	{
-		STRCAT(temp[0],PATH_SEPARATOR_STR);
+		STRNCAT(temp[0],PATH_SEPARATOR_STR,PATH_MAX-strlen(temp[0]));
 	}
 
-#ifdef WINPATHS
+#ifdef DO_FIXSLASHES
 	ospath_fixslash(temp[0]);
 	ospath_fixslash(temp[1]);
 #endif
@@ -857,21 +918,15 @@ struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2){
 
 	// make sure rhs path has NOT got a / at the start.
 	if(temp[1][0] == PATH_SEPARATOR_CHAR){
-		FREE(temp[0]);
-		FREE(temp[1]);
 		return NULL;
 	}
 
 	// create a new path object with the two path strings appended together.
-	temp2 = CALLOC(strlen(temp[0])+strlen(temp[1]), sizeof(char));
-	STRCPY(temp2,temp[0]);
-	STRCAT(temp2,temp[1]);
+	STRNCPY(temp2,temp[0],PATH_MAX);
+	STRNCAT(temp2,temp[1],PATH_MAX-strlen(temp2));
 	//V(strlen(temp2));
 	//X(temp2);
 	r = ospath_new_noclean(temp2);
-	FREE(temp2);
-	FREE(temp[0]);
-	FREE(temp[1]);
 	D(r);
 	/* ospath_cleanup(r);*/
 	return r;
@@ -883,7 +938,9 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 	struct FilePath fp2;
 
 	ospath_copy(&fp2,fp1);
+#ifdef DO_FIXSLASHES
 	ospath_fixslash(fp2.path);
+#endif
 
 	if(!ospath_isvalid(&fp2)){
 		M("fp1 invalid");
@@ -894,7 +951,9 @@ void ospath_append(struct FilePath *fp, struct FilePath *fp1){
 		// set this object to be the same as the rhs
 		M("fp invalid");
 		ospath_copy(fp,&fp2);
+#ifdef DO_FIXSLASHES
 		ospath_fixslash(fp->path);
+#endif
 		return;
 	}
 
@@ -953,10 +1012,21 @@ void ospath_debug(struct FilePath *fp){
 #endif
 }
 
+FILE *ospath_fopen(struct FilePath *fp, const char *mode){
+	char s[PATH_MAX];
+	if(!ospath_isvalid(fp)){
+		E("Invalid path");
+		return NULL;
+	}
+	ospath_strcpy(fp,s,PATH_MAX);
+	FILE *f = fopen(s,mode);
+	return f;
+}
+
 //------------------------
 // SEARCH PATH FUNCTIONS
 
-struct FilePath **ospath_searchpath_new(char *path){
+struct FilePath **ospath_searchpath_new(const char *path){
 	char *p;
 	char *list[LISTMAX];
 	unsigned n=0;
@@ -965,7 +1035,25 @@ struct FilePath **ospath_searchpath_new(char *path){
 	struct FilePath **pp;
 	STRTOKVAR(nexttok);
 
-	for(p=STRTOK(path,PATH_LISTSEP_STR,nexttok); p!= NULL; p=STRTOK(NULL,PATH_LISTSEP_STR,nexttok)){
+	char path1[PATH_MAX];
+	strncpy(path1,path,PATH_MAX);
+
+	X(path1);
+	X(PATH_LISTSEP_STR);
+
+	V(strlen(path1));
+	V(strlen(PATH_LISTSEP_STR));
+
+	/*
+	c = strstr(path,PATH_LISTSEP_CHAR);
+	if(c==NULL){
+		E("NO TOKEN FOUND");
+	}
+	*/
+
+	p=STRTOK(path1,PATH_LISTSEP_STR,nexttok);
+	X(p);
+	for(; p!= NULL; p=STRTOK(NULL,PATH_LISTSEP_STR,nexttok)){
 		c = CALLOC(strlen(p),sizeof(char));
 		X(p);
 		STRCPY(c,p);
@@ -993,10 +1081,21 @@ struct FilePath **ospath_searchpath_new(char *path){
 	pp[n] = NULL;
 
 	for(i=0;i<n;++i){
+#ifdef DO_FIXSLASHES
+		ospath_fixslash(pp[i]->path);
+#endif
 		D(pp[i]);
 	}
 
 	return pp;
+}
+
+void ospath_searchpath_free(struct FilePath **searchpath){
+	struct FilePath **p;
+	for(p=searchpath; *p!=NULL; ++p){
+		ospath_free(*p);
+	}
+	FREE(searchpath);
 }
 
 struct FilePath *ospath_searchpath_iterate(
@@ -1008,12 +1107,16 @@ struct FilePath *ospath_searchpath_iterate(
 
 	p = searchpath;
 
-	while(p!=NULL){
+	M("SEARCHING IN...");
+	for(p=searchpath; *p!=NULL; ++p){
+		D(*p);
+	}
+	
+	for(p=searchpath; *p!=NULL; ++p){
 		D(*p);
 		if((*testfn)(*p,searchdata)){
 			return *p;
 		}
-		++p;
 	}
 	return NULL;
 }
@@ -1030,11 +1133,16 @@ FilePathTestFn ospath_searchpath_testexists;
 	Return 1 if the file exists relative inside path
 */
 int ospath_searchpath_testexists(struct FilePath *path,void *file){
-	struct FilePath *fp, *fp1;
+	struct FilePath *fp, *fp1, *fp2;
 	fp = (struct FilePath *)file;
 	D(fp);
 	fp1 = ospath_concat(path,fp);
 	D(fp1);
+
+	fp2 = ospath_new("\\GTK\\bin\\johnpye\\extfn");
+	if(ospath_cmp(fp1,fp2)==0){
+		return 1;
+	}
 	return 0;
 }
 
@@ -1042,8 +1150,15 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 
 int main(void){
 	struct FilePath *fp1, *fp2, *fp3, *fp4;
+	char *s1, *s2;
 	struct FilePath **pp, **p1;// will be returned null-terminated
+#ifdef WINPATHS
 	char pathtext[]="c:\\Program Files\\GnuWin32\\bin;c:\\GTK\\bin;e:\\ascend\\;..\\..\\pygtk";
+	char pathtext2[]="c:\\Program Files\\ASCEND\\models";
+#else
+	char pathtext[]="\\Program Files\\GnuWin32\\bin:\\GTK\\bin:\\ascend\\:..\\..\\pygtk";
+	char pathtext2[]="/usr/local/ascend/models";
+#endif
 
 	//------------------------
 
@@ -1051,6 +1166,9 @@ int main(void){
 	fp2 = ospath_getparent(fp1);
 	fp3 = ospath_new_from_posix("/usr/local");
 
+	D(fp1);
+	D(fp2);
+	D(fp3);
 	assert(ospath_cmp(fp2,fp3)==0);
 	M("Passed 'getparent' test\n");
 
@@ -1175,7 +1293,7 @@ int main(void){
 
 	//---------------------------
 
-	fp1 = ospath_new("c:/program files");
+	fp1 = ospath_new("c:/Program Files");
 	fp2 = ospath_new("GnuWin32\\bin");
 	fp3 = ospath_concat(fp1, fp2);
 
@@ -1188,7 +1306,7 @@ int main(void){
 
 	//---------------------------
 
-	fp1 = ospath_new("c:/program files/");
+	fp1 = ospath_new("c:/Program Files/");
 	fp2 = ospath_new("GnuWin32\\bin");
 	fp3 = ospath_concat(fp1, fp2);
 
@@ -1201,7 +1319,7 @@ int main(void){
 
 	//---------------------------
 
-	fp1 = ospath_new("c:/program files/GnuWin32/bin");
+	fp1 = ospath_new("c:/Program Files/GnuWin32/bin");
 	fp2 = ospath_new("johnpye/extfn");
 	fp3 = ospath_concat(fp1, fp2);
 
@@ -1220,7 +1338,12 @@ int main(void){
 		D(*p1);
 	}
 
-	fp1 = ospath_new("c:\\Program Files\\GnuWin32\\bin");
+#ifdef WINPATHS
+	fp1 = ospath_new("c:\\program files\\GnuWin32\\bin");
+#else
+	fp1 = ospath_new("\\Program Files\\GnuWin32\\bin");
+#endif
+
 	D(fp1);
 	D(pp[0]);
 
@@ -1228,10 +1351,232 @@ int main(void){
 
 	fp2 = ospath_new_noclean("johnpye/extfn");
 
-	ospath_searchpath_iterate(pp,&ospath_searchpath_testexists,(void*)fp2);
+	fp3 = ospath_searchpath_iterate(pp,&ospath_searchpath_testexists,(void*)fp2);
 
-	assert(0);
+	assert(ospath_cmp(fp3,pp[1])==0);
+	M("Passed path-search test\n");
 
+	ospath_free(fp1);	
+	ospath_free(fp2);
+	ospath_searchpath_free(pp);
+
+	//-------------------------------
+
+	pp = ospath_searchpath_new(pathtext2);
+
+	for (p1=pp; *p1!=NULL; ++p1){
+		D(*p1);
+	}
+
+	fp2 = ospath_new_noclean("johnpye/extfn/extfntest");
+	fp3 = ospath_searchpath_iterate(pp,&ospath_searchpath_testexists,(void*)fp2);
+
+	D(fp2);
+	D(fp3);
+
+	assert(fp3==NULL);
+	M("Passed path-search test 2\n");
+
+	ospath_free(fp2);
+	ospath_free(fp3);
+	ospath_searchpath_free(pp);
+	
+	//-------------------------------
+
+	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest.a4c");
+	D(fp1);
+	s1 = ospath_getbasefilename(fp1);
+	X(s1);
+	assert(strcmp(s1,"extfntest.a4c")==0);
+	M("Passed getbasefilename test\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("extfntest.a4c");
+	D(fp1);
+	s1 = ospath_getbasefilename(fp1);
+	X(s1);
+	assert(strcmp(s1,"extfntest.a4c")==0);
+	M("Passed getbasefilename test 2\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+
+	//-------------------------------
+
+	fp1 = ospath_new("/here/is/my/path.dir/");
+	D(fp1);
+	s1 = ospath_getbasefilename(fp1);
+	X(s1);
+	assert(NULL==s1);
+	M("Passed getbasefilename test 3\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+#ifdef WINPATHS
+	fp1 = ospath_new("c:extfntest.a4c");
+	D(fp1);
+	s1 = ospath_getbasefilename(fp1);
+	X(s1);
+	assert(strcmp(s1,"extfntest.a4c")==0);
+	M("Passed getbasefilename test WINPATHS\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+#endif
+
+	//-------------------------------
+
+	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest.a4c");
+	D(fp1);
+	s1 = ospath_getfilestem(fp1);
+	X(s1);
+	assert(strcmp(s1,"extfntest")==0);
+	M("Passed getfilestem test\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest");
+	D(fp1);
+	s1 = ospath_getfilestem(fp1);
+	X(s1);
+	assert(strcmp(s1,"extfntest")==0);
+	M("Passed getfilestem test 2\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("/usr/share/data/ascend/.ascend.ini");
+	D(fp1);
+	s1 = ospath_getfilestem(fp1);
+	X(s1);
+	assert(strcmp(s1,".ascend")==0);
+	M("Passed getfilestem test 3\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("~/.vimrc");
+	D(fp1);
+	s1 = ospath_getfilestem(fp1);
+	X(s1);
+	assert(strcmp(s1,".vimrc")==0);
+	M("Passed getfilestem test 3\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("~/src/ascend-0.9.5-1.jdpipe.src.rpm");
+	D(fp1);
+	s1 = ospath_getfilestem(fp1);
+	X(s1);
+	assert(strcmp(s1,"ascend-0.9.5-1.jdpipe.src")==0);
+	M("Passed getfilestem test 4\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("~/dir1/dir2/");
+	D(fp1);
+	s1 = ospath_getfilestem(fp1);
+	X(s1);
+	assert(NULL==s1);
+	M("Passed getfilestem test 5\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("~/src/ascend-0.9.5-1.jdpipe.src.rpm");
+	D(fp1);
+	s1 = ospath_getfileext(fp1);
+	X(s1);
+	assert(strcmp(s1,".rpm")==0);
+	M("Passed getbasefileext test\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("~/.vimrc");
+	D(fp1);
+	s1 = ospath_getfileext(fp1);
+	X(s1);
+	assert(s1==NULL);
+	M("Passed getbasefileext test 2\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("./ascend4");
+	D(fp1);
+	s1 = ospath_getfileext(fp1);
+	X(s1);
+	assert(s1==NULL);
+	M("Passed getbasefileext test 3\n");
+
+	ospath_free(fp1);
+	FREE(s1);
+
+	//-------------------------------
+
+	fp1 = ospath_new("/home/myfile");
+	fp2 = ospath_getdir(fp1);
+	fp3 = ospath_new("/home");
+	assert(ospath_cmp(fp2,fp3)==0);
+	M("Passed ospath_getdir test\n");
+
+	ospath_free(fp1);
+	ospath_free(fp2);
+	ospath_free(fp3);
+
+	//-------------------------------
+
+	fp1 = ospath_new("/home/myfile.ext");
+	fp2 = ospath_getdir(fp1);
+	fp3 = ospath_new("/home");
+	assert(ospath_cmp(fp2,fp3)==0);
+	M("Passed ospath_getdir test 2\n");
+
+	ospath_free(fp1);
+	ospath_free(fp2);
+	ospath_free(fp3);
+
+	//-------------------------------
+
+	fp1 = ospath_new("/home/mydir/");
+	fp2 = ospath_getdir(fp1);
+	fp3 = ospath_new("/home/mydir");
+	assert(ospath_cmp(fp2,fp3)==0);
+	M("Passed ospath_getdir test 3\n");
+
+	ospath_free(fp1);
+	ospath_free(fp2);
+	ospath_free(fp3);
+
+	//---------------------------------	
 	M("ALL TESTS PASSED");
 }
 
