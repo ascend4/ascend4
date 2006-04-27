@@ -14,7 +14,7 @@
 define([AC_CACHE_LOAD], )dnl
 define([AC_CACHE_SAVE], )dnl
 
-
+AC_PREREQ(2.57)
 #--------------------------------------------------------------------
 #	This file must exist for configure to continue.  It's
 #	how we know we're in the right place.
@@ -1532,11 +1532,15 @@ else
 	AC_MSG_RESULT([no])
 fi
 
+DEFAULT_ASCENDLIBRARY=$prefix/models
+ASCEND_DEFAULTLIBRARY=$prefix/models
 
 #--------------------------------------------------------------------
 #	The variables we substitute into the Makefile.in files
 #	and the command to actually generate the Makefiles
 #--------------------------------------------------------------------
+AC_SUBST(DEFAULT_ASCENDLIBRARY)
+AC_SUBST(ASCEND_DEFAULTLIBRARY)
 AC_SUBST(ascpwd)
 AC_SUBST(fullpathsrcdir)
 AC_SUBST(asc_include)
@@ -1610,6 +1614,7 @@ AC_OUTPUT(
        packages/Makefile:../../base/generic/packages/Makefile.in
        solver/Makefile:../../base/generic/solver/Makefile.in
        utilities/Makefile:../../base/generic/utilities/Makefile.in
+       utilities/config.h:../../base/generic/utilities/config.h.in
        ../../jam/Jamrules
        ../../tcltk98/generic/Jamrules_tcltk98
        $tkdir_makefiles
