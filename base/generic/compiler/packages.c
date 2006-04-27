@@ -148,14 +148,15 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 
 	ospath_strcpy(fp,ls->fullpath,PATH_MAX);
 	CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath);
-	
+
 	f = ospath_fopen(fp,"r");
 	if(f==NULL){
+		ospath_free(fp);
 		return 0;
 	}
 	fclose(f);
 
-	CONSOLE_DEBUG("FOUND! %s",ls->fullpath);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s",ls->fullpath);
 	return 1;
 }
 
@@ -184,7 +185,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	extern char path_var[PATH_MAX];
 	char *path;
 
-	fp1 = ospath_new(name);
+	fp1 = ospath_new_from_posix(name);
 	fp2 = ospath_getdir(fp1);
 	s1 = ospath_getfilestem(fp1);
 	if(s1==NULL){
@@ -193,7 +194,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	}
 
 	CONSOLE_DEBUG("FILESTEM = '%s'",s1);
-	
+
 #if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
 	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
 #else
@@ -267,7 +268,7 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 		return 1;
 	}
 
-	fp1 = ospath_new(partialname);
+	fp1 = ospath_new_from_posix(partialname);
 	stem = ospath_getfilestem(fp1);
 	if(stem==NULL){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"What is the stem of named library '%s'???",partialname);

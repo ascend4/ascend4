@@ -13,7 +13,7 @@
 # endif
 #endif
 
-//#define VERBOSE
+#define VERBOSE
 
 #if !defined(TEST) && !defined(VERBOSE)
 # define NDEBUG
@@ -649,7 +649,7 @@ char *ospath_getbasefilename(struct FilePath *fp){
 	if(pos != NULL){
 		unsigned length1 = length - ((pos - fp->path) + 1);
 		temp = CALLOC(length1,sizeof(char));
-		
+
 		V(length1);
 		STRNCPY(temp, pos + 1, length1);
 		return temp;
@@ -1111,7 +1111,7 @@ struct FilePath *ospath_searchpath_iterate(
 	for(p=searchpath; *p!=NULL; ++p){
 		D(*p);
 	}
-	
+
 	for(p=searchpath; *p!=NULL; ++p){
 		D(*p);
 		if((*testfn)(*p,searchdata)){
@@ -1356,7 +1356,7 @@ int main(void){
 	assert(ospath_cmp(fp3,pp[1])==0);
 	M("Passed path-search test\n");
 
-	ospath_free(fp1);	
+	ospath_free(fp1);
 	ospath_free(fp2);
 	ospath_searchpath_free(pp);
 
@@ -1380,7 +1380,7 @@ int main(void){
 	ospath_free(fp2);
 	ospath_free(fp3);
 	ospath_searchpath_free(pp);
-	
+
 	//-------------------------------
 
 	fp1 = ospath_new("/usr/share/data/ascend/models/johnpye/extfn/extfntest.a4c");
@@ -1576,7 +1576,7 @@ int main(void){
 	ospath_free(fp2);
 	ospath_free(fp3);
 
-	//---------------------------------	
+	//---------------------------------
 	M("ALL TESTS PASSED");
 }
 
