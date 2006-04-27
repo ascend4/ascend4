@@ -697,10 +697,11 @@ proc set_Global_Defaults {} {
 
 # set color/etc vectors for transients with arrays
 proc set_Template_defaults {} {
-  global ascGlobalVect
+  global ascGlobalVect asc_tkfbox
   global AscMonoEntry1 AscMonoEntry2 AscMonoEntry4 AscConfirm VPaned
   global AscPopSlide ascParPageVect   ascMsgVect
   global ascListSelectBox ascListSelectB1Box
+  set asc_tkfbox(cancelled) 0
   set AscMonoEntry1(font) $ascGlobalVect(font)
   set AscMonoEntry2(font) $ascGlobalVect(font)
   set AscMonoEntry4(font) $ascGlobalVect(font)

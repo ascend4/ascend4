@@ -1532,7 +1532,7 @@ proc ascwhoami {} {
 # the current script. would be nice if inserted at current point.
 #------------------------------------------------------------------------
 proc Script_do_Import_File {} {
-  global ascScripVect asc_tkfbox
+  global ascScripVect asc_tkfbox ascToolVect
   set defaultname "$ascToolVect(dirinput)"
   set filename [tk_getOpenFile \
     -defaultextension "" \
