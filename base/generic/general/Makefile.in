@@ -47,11 +47,11 @@ EXEC_LIBS =
 
 LIB_SRCS = \
 	dstring.c hashpjw.c list.c listio.c pool.c pretty.c \
-	stack.c table.c tm_time.c
+	stack.c table.c tm_time.c ospath.c
 
 LIB_OBJS = \
 	dstring.o hashpjw.o list.o listio.o pool.o pretty.o \
-	stack.o table.o tm_time.o
+	stack.o table.o tm_time.o ospath.o
 
 
 

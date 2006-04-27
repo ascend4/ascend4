@@ -2190,8 +2190,12 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res)
   } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
     if (reltype == e_blackbox)
     {
-      FPRINTF(ASCERR, "error in RelationCalcResidualPostfixSafe:\n");
-      FPRINTF(ASCERR, "blackbox not implemented yet.\n");
+      if ( RelationCalcResidualPostfix(i,res) != 0) {
+        not_safe = safe_problem;
+        safe_error_to_stderr(&not_safe);
+        return not_safe;
+      }
+      return not_safe;
     }
     if (reltype == e_glassbox)
     {
@@ -2258,6 +2262,7 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
   } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
     if (reltype == e_blackbox)
     {
+      // FIXME
       FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
       FPRINTF(ASCERR, "blackbox not implemented yet.\n");
     }

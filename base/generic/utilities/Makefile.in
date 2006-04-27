@@ -48,6 +48,7 @@ EXEC_LIBS =
 LIB_SRCS = \
 	ascDynaLoad.c ascEnvVar.c ascMalloc.c ascPanic.c \
 	ascPrint.c error.c ascSignal.c mem.c readln.c set.c
+	
 
 LIB_OBJS = \
 	ascDynaLoad.o ascEnvVar.o ascMalloc.o ascPanic.o \
