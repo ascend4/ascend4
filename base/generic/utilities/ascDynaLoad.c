@@ -187,9 +187,11 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 
   xlib = LoadLibrary(path);
   if (xlib == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: LoadLibrary failed\n");
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: LoadLibrary failed\n'%s'",path);
     return 1;
   }
+  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Asc_DynamicLoad: LoadLibrary succeeded, '%s'\n",path);
+
   if (NULL != initFun) {
     install = (int (*)(void))GetProcAddress(xlib,initFun);
     if (install == NULL) {
