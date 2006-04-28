@@ -41,7 +41,7 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 %prep
-%setup -q
+%setup -n ascend -q
 
 %build
 scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models
