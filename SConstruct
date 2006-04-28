@@ -1,6 +1,6 @@
 import os, commands, platform, distutils.sysconfig, os.path
 
-version = "0.9-svn.601"
+version = "0.svn"
 
 #------------------------------------------------------
 # OPTIONS
