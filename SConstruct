@@ -270,6 +270,13 @@ opts.Add(
 	,""
 )
 
+if platform.system()!="Windows":
+	opts.Add(BoolOption(
+		'WITH_GCCVISIBILITY'
+		, 'Whether to use GCC Visibility extensions when building with GCC 4.0'
+		, True
+	))
+
 if platform.system()=="Windows":
 	opts.Add(BoolOption(
 		'WITH_INSTALLER'
@@ -492,6 +499,9 @@ int main(void){
 
 def CheckGccVisibility(context):
 	context.Message("Checking for GCC 'visibility' capability... ")
+	if not context.env.has_key('WITH_GCCVISIBILITY') or not env['WITH_GCCVISIBILITY']:
+		context.Result("disabled")
+		return 0
 	is_ok = context.TryCompile(gccvisibility_test_text,".c")
 	context.Result(is_ok)
 	return is_ok
