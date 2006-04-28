@@ -12,12 +12,12 @@ Source:		%{name}-%{version}.tar.bz2
 URL:		http://inkscape.sourceforge.net/
 
 Prefix:		%{_prefix}
-Packager:	Automatic
-Vendor:		The Inkscape Project
+Packager:	John Pye
+Vendor:		Carnegie Mellon University
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: python >= 2.4, python-devel
-BuildRequires: scons >= 0.96
+BuildRequires: scons >= 0.96.1
 BuildRequires: bison, flex
 BuildRequires: swig >= 1.3.24
 BuildRequires: desktop-file-utils
@@ -30,6 +30,7 @@ Requires: pygtk2 >= 2.6, pygtk2-libglade
 Requires: python-matplotlib, python-numeric
 Requires: gtksourceview
 Requires: make
+Requires: gcc
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
