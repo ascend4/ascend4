@@ -4,8 +4,9 @@ import glob
 
 a4c = glob.glob("*.a4c")
 a4s = glob.glob("*.a4s")
+a4l = glob.glob("*.a4l")
 
-env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models",a4c+a4s)
+env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models",a4c+a4l)
 
 subdirs = ['johnpye']
 

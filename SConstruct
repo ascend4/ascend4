@@ -295,14 +295,18 @@ if platform.system()=="Windows":
 # Import the outside environment
 
 if os.environ.has_key('OSTYPE') and os.environ['OSTYPE']=='msys':
-	env = Environment(ENV=os.environ, tools=['mingw','swig','lex','yacc'])
+	env = Environment(
+		ENV=os.environ
+		, tools=['mingw','lex','yacc','fortran','swig','disttar']
+		, toolpath=['scons']
+	)
 	env['IS_MINGW']=True
 else:
-	env = Environment(ENV=os.environ)
-	Tool('lex')(env)
-	Tool('yacc')(env)
-	Tool('fortran')(env)
-	Tool('swig')(env)
+	env = Environment(
+		ENV=os.environ
+		,tools=['default','lex','yacc','fortran','swig','disttar']
+		, toolpath=['scons']
+	)
 
 if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "INCLUDE =",env['ENV']['INCLUDE']
@@ -583,7 +587,7 @@ def CheckTclVersion(context):
 		return 0
 		
 	# good version
-	context.Result(output+" (good)")
+	context.Result(output+", good")
 	return 1
 
 #----------------
@@ -1211,7 +1215,7 @@ else:
 #------------------------------------------------------
 # INSTALLATION
 
-if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
+if env.get('CAN_INSTALL'):
 	# the models directory only needs to be processed for installation, no other processing required.
 	env.SConscript(['models/SConscript'],'env')
 
@@ -1228,3 +1232,17 @@ if env.has_key('CAN_INSTALL') and env['CAN_INSTALL']:
 
 if platform.system()=="Linux":
 	env.SubstInFile('ascend.spec.in')
+
+#------------------------------------------------------
+# DISTRIBUTION TAR FILE
+
+#subdirs = Split("base tcltk pygtk lsod blas emacsMode linpack models jam scons test")
+#rootfiles = Split("ascend.spec.in SConstruct LICENSE.txt INSTALL")
+#
+#env['DISTTAR_FORMAT']='bz2'
+#
+#tar = env.DistTar("dist/ascend"
+#	, rootfiles + [env.Dir(d) for d in subdirs]
+#)
+#
+#env.Alias('dist',tar)
