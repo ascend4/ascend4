@@ -54,7 +54,7 @@ void ospath_free(struct FilePath *);
 	Create a new ospath object from a string, assuming
 	that standard forward-slash paths are used.
 */
-struct FilePath *ospath_new_from_posix(char *posixpath);
+struct FilePath *ospath_new_from_posix(const char *posixpath);
 
 /**
 	Check that the created FilePath was valid (i.e. able

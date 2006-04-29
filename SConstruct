@@ -28,6 +28,9 @@ else:
 	default_tcl = os.path.expanduser("~/activetcl")
 	default_tcl_libpath = "$TCL/lib"	
 
+	if not os.path.isdir(default_tcl):
+		default_tcl = '/usr'
+
 # Package linking option
 opts.Add(EnumOption(
 	'PACKAGE_LINKING'
@@ -313,13 +316,13 @@ opts.Save('options.cache',env)
 
 Help(opts.GenerateHelpText(env))
 
-with_tcltk_gui = (env['WITH_TCLTK']==True)
+with_tcltk = env.get('WITH_TCLTK')
 without_tcltk_reason = "disabled by options/config.py"
 
-with_python = (env['WITH_PYTHON']==True)
+with_python = env.get('WITH_PYTHON')
 without_python_reason = "disabled by options/config.py"
 
-with_cunit_tests = env['WITH_CUNIT_TESTS']
+with_cunit_tests = env.get('WITH_CUNIT_TESTS')
 without_cunit_reason = "not requested"
 
 #print "SOLVERS:",env['WITH_SOLVERS']
@@ -713,27 +716,27 @@ conf.env['HAVE_LEX']=True
 # Tcl/Tk
 
 if conf.CheckTcl():
-	if with_tcltk_gui and conf.CheckTclVersion():
+	if with_tcltk and conf.CheckTclVersion():
 		if conf.CheckTk():
-			if with_tcltk_gui and conf.CheckTkVersion():
+			if with_tcltk and conf.CheckTkVersion():
 				if conf.CheckTkTable():
 					pass
 				else:
 					without_tcltk_reason = "TkTable not found"
-					with_tcltk_gui = False
+					with_tcltk = False
 			else:
 				without_tcltk_reason = "Require Tk version <= 8.3. See 'scons -h'"
-				with_tcltk_gui = False
+				with_tcltk = False
 		else:
 			without_tcltk_reason = "Tk not found."
-			with_tcltk_gui = False
+			with_tcltk = False
 	else:
 		without_tcltk_reason = "Require Tcl <= 8.3 Tcl."
-		with_tcltk_gui = False
+		with_tcltk = False
 
 else:
 	without_tcltk_reason = "Tcl not found."
-	with_tcltk_gui = False
+	with_tcltk = False
 
 if env['STATIC_TCLTK']:
 	conf.CheckX11()
@@ -761,15 +764,13 @@ if with_cunit_tests:
 # BLAS
 
 need_blas=False
-if with_tcltk_gui:
+if with_tcltk:
 	need_blas=True
 if need_blas:
 	if conf.CheckLib('blas'):
-		print "FOUND BLAS"
 		with_local_blas = False
 		without_local_blas_reason = "Found BLAS installed on system"
 	else:
-		print "DIDN'T FIND BLAS"
 		with_local_blas = True
 		need_fortran = True
 
@@ -1155,7 +1156,7 @@ if env['DEBUG']:
 #-------------
 # TCL/TK GUI
 
-if with_tcltk_gui:
+if with_tcltk:
 	if with_local_blas:
 		env.SConscript(['blas/SConscript'],'env')
 	else:

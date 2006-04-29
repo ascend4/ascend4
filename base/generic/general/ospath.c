@@ -186,7 +186,7 @@ void ospath_free(struct FilePath *fp){
 	then performing a callback on each one to determine if the
 	match is OK or not.
 */
-struct FilePath *ospath_new_from_posix(char *posixpath){
+struct FilePath *ospath_new_from_posix(const char *posixpath){
 	struct FilePath *fp = MALLOC(sizeof(struct FilePath));
 	STRNCPY(fp->path,posixpath,PATH_MAX);
 #ifdef WINPATHS
