@@ -49,6 +49,7 @@
 # undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
 
+#include <utilities/config.h>
 #include <utilities/ascMalloc.h>    /* for ascshutdown */
 #include <utilities/ascPanic.h>     /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>
@@ -80,20 +81,6 @@
 #ifndef lint
 static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan Exp $";
 #endif
-
-
-/*
- *  The following are the environment variables ASCEND requires.
- *  If the user does not have the DIST_ENVIRONVAR set in his or her
- *  environment, a default value is set based on the directory where the
- *  ascend binary lives.  The other environment variables will be set
- *  to default values keyed off of DIST_ENVIRONVAR.  See the function
- *  CheckEnvironmentVars later in this file for the details.
- */
-#define DIST_ENVIRONVAR   "ASCENDDIST"
-#define ASCTK_ENVIRONVAR  "ASCENDTK"
-#define BITMAP_ENVIRONVAR "ASCENDBITMAPS"
-#define LIBR_ENVIRONVAR   "ASCENDLIBRARY"
 
 /*
  *  EXPORTED VARIABLES
@@ -500,13 +487,10 @@ int AscDriver(int argc, CONST char *argv[])
  *
  *    CPP_MACRO            ENVIRONMENT VAR    DEFAULT VALUE
  *    =================    ===============    =============
- *    DIST_ENVIRONVAR      ASCENDDIST         parent of binary's directory
- * AWW20041208:   ASCTK_ENVIRONVAR     ASCENDTK           ASCENDDIST/TK
- *    ASCTK_ENVIRONVAR     ASCENDTK           ASCENDDIST/TK
- *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      ASCENDTK/bitmaps
- *    LIBR_ENVIRONVAR      ASCENDLIBRARY
- * AWW20041209: .:ASCENDDIST/models/libraries:ASCENDDIST/models/examples
- *       .:ASCENDDIST/../../models
+ *    DIST_ENVIRONVAR      ASCENDDIST         /usr/share/ascend
+ *    ASCTK_ENVIRONVAR     ASCENDTK           $ASCENDDIST/tcltk
+ *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      $ASCENDDIST/tcltk/bitmaps
+ *    LIBR_ENVIRONVAR      ASCENDLIBRARY      .:$ASCENDDIST/models
  *
  */
 static int AscCheckEnvironVars(Tcl_Interp *interp)
@@ -534,6 +518,10 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
    *  /foo/bar/bin/ascend4, set ASCENDDIST to /foo/bar
    *  If Tcl doesn't know where we are---the Tcl command
    *  `info nameofexecutable' returns ""---then ASCENDDIST is set
+
+	/home/john/ascroot/bin/ascend4
+	/home/john/ascroot/share/ascend/
+	
    *  to "."
    */
   if( Asc_ImportPathList(DIST_ENVIRONVAR) == 0 ) {
@@ -549,6 +537,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
       "file nativename [file dirname [file dirname [info nameofexecutable]]]";
     if( Tcl_Eval(interp, cmd) == TCL_OK ) {
       Tcl_DStringGetResult(interp, &ascenddist);
+      Tcl_DStringAppend(&ascenddist, "/share/ascend", -1);
       if(Asc_SetPathList(DIST_ENVIRONVAR,Tcl_DStringValue(&ascenddist)) != 0) {
         Asc_Panic(2, "AscCheckEnvironVars",
                   "Asc_SetPathList() returned Nonzero: "
@@ -581,11 +570,10 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
                 "Not enough memory to extend the environment");
     }
 
-    /*AWW20041209:  Add ``$ASCENDDIST/models'' to the ASCENDLIBRARY envar */
-    /* Add ``$ASCENDDIST/../../models'' to the ASCENDLIBRARY envar */
+    /* Add ``$ASCENDDIST/models'' to the ASCENDLIBRARY envar */
+
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
     Tcl_DStringAppend(&buffer2, "/models", -1);
-    /* Tcl_DStringAppend(&buffer2, "/../../models", -1); AWW */
     if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                        &buffer1))) {
       if(Asc_AppendPath(LIBR_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
@@ -596,37 +584,6 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
       Tcl_DStringFree(&buffer1);
     }
     Tcl_DStringFree(&buffer2);
-
-    /*  Add ``$ASCENDDIST/models/examples'' to the ASCENDLIBRARY envar */
-    /*AWW20041209 - remove all this:
-    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/models/examples", -1);
-    if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
-                                       &buffer1))) {
-      if(Asc_AppendPath(LIBR_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
-        Asc_Panic(2, "AscCheckEnvironVars",
-                  "Asc_AppendPath() returned Nonzero: "
-                  "Not enough memory to extend the environment");
-      }
-      Tcl_DStringFree(&buffer1);
-    }
-    Tcl_DStringFree(&buffer2);
-    */
-    /*  Add ``$ASCENDDIST/models/libraries'' to the ASCENDLIBRARY envar */
-    /*    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/models/libraries", -1);
-    if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
-                                       &buffer1))) {
-      if(Asc_AppendPath(LIBR_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
-        Asc_Panic(2, "AscCheckEnvironVars",
-                  "Asc_AppendPath() returned Nonzero: "
-                  "Not enough memory to extend the environment");
-      }
-      Tcl_DStringFree(&buffer1);
-    }
-    Tcl_DStringFree(&buffer2);
-
-    up to here */
 
     /*  Get the full value of the environment variable and set
      *  $env(ASCENDLIBRARY) in the Tcl code
@@ -643,7 +600,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
 
   /*
    *  If the user's environment does not have ASCENDTK set, then set it
-   *  by appending `TK' to ASCENDDIST.  Later in this function, we check
+   *  by appending 'tcltk' to ASCENDDIST.  Later in this function, we check
    *  to make sure it is a valid directory by checking for the existence
    *  of `AscendRC' in that directory.
    */
@@ -660,9 +617,9 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     ascfree(tmpenv);
   } else {
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    /* AWW20041208:    Tcl_DStringAppend(&buffer2, "/TK", -1);
+    /* AWW20041208:    Tcl_DStringAppend(&buffer2, "/tcltk", -1);
      */
-    Tcl_DStringAppend(&buffer2, "/TK", -1);
+    Tcl_DStringAppend(&buffer2, "/tcltk", -1);
     if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                       &buffer1))) {
       if( Asc_SetPathList(ASCTK_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
@@ -693,7 +650,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
                TCL_GLOBAL_ONLY);
   } else {
     Asc_Panic(2, "AscCheckEnvironVars",
-              "ERROR: Cannot find the file \"%s\" in the subdirectory \"TK\"\n"
+              "ERROR: Cannot find the file \"%s\" in the subdirectory \"tcltk\"\n"
               "under the directory \"%s\"\n"
               "Please check the value of the environment variables %s and\n"
               "and %s and start ASCEND again.\n",
@@ -717,7 +674,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     ascfree(tmpenv);
   } else {
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/TK/bitmaps", -1);
+    Tcl_DStringAppend(&buffer2, "/tcltk/bitmaps", -1);
     if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                       &buffer1))) {
       if(Asc_SetPathList(BITMAP_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {

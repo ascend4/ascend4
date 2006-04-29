@@ -22,16 +22,16 @@ typelex = tcl_env.SharedObject(typelexsource
 	, LEXFLAGS = '-ll -Ptyp_'
 )
 
-if tcl_env.has_key('TCL_CPPPATH'):
+if tcl_env.get('TCL_CPPPATH'):
 	tcl_env.Append(CPPPATH=tcl_env['TCL_CPPPATH'])
 
-if tcl_env.has_key('TK_CPPPATH'):
+if tcl_env.get('TK_CPPPATH'):
 	tcl_env.Append(CPPPATH=tcl_env['TK_CPPPATH'])
 
 tcl_env.Append(LIBS=['ascend'])
 tcl_env.Append(LIBPATH=['#'])
 
-if tcl_env['STATIC_TCLTK']:
+if tcl_env.get('STATIC_TCLTK'):
 	print "STATIC TCL/TK PROGRAM LINKAGE"
 	srcs += ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB']
 	tcl_env.Append(LIBS=tcl_env['X11_LIB'])
@@ -51,7 +51,7 @@ else:
 	if tcl_env['TKTABLE_LIBPATH']:
 		tcl_env.Append(LIBPATH=tcl_env['TKTABLE_LIBPATH'])
 
-	ascendtcl = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
+	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
 
 	#tcl_so = tcl_env.Command(Copy('$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX','$TCL_LIBPATH/$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX'))
 	#tk_so = tcl_env.Command(Copy('$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX','$TK_LIBPATH/$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX'))
@@ -59,13 +59,37 @@ else:
 
 	tcl_env.Append(LIBPATH=['.'])
 
-	tcl_env.Program("ascend4",["main.c"]
+	ascendtclprog = tcl_env.Program("ascend4",["main.c"]
 		, LIBS = ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB','ascendtcl','ascend']
 	)
 
-	#tcl_env.Append(LIBS=['ascend','ascendtcl'])
-	#tcl_env.Append(LIBPATH=['.'])
-	#tcl_env.Program("ascend4",['main.c']
-	#	, CPPPATH = ['#/base/generic']
-	#)
+	if tcl_env.get('CAN_INSTALL'):
+		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendtclprog)
+		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_LIB'],ascendtcllib)
 
+		import glob
+
+		sharedata = env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend"
+		tkdir = sharedata + "/tcltk/"
+
+		import os
+		import os.path
+	
+		cd = os.getcwd()
+		os.chdir(env.Dir("#tcltk98/TK").abspath)
+
+		files = {}
+
+		for root, dirs, files in os.walk("."):
+			#print root, "..."
+			dest = os.path.normpath(os.path.join(env.subst(tkdir),root))
+			for name in files:
+				env.Install(env.subst(dest),"#tcltk98/TK/"+os.path.join(root, name))
+				#print dest,"<---",os.path.join(root, name)
+
+			if 'CVS' in dirs:
+			    dirs.remove('CVS')  # don't visit CVS directories
+			if '.svn' in dirs:
+			    dirs.remove('.svn')  # don't visit .svn directories
+
+		os.chdir(cd)
