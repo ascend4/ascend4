@@ -1,13 +1,12 @@
-
 Name:		ascend
-Summary:	ASCEND Modelling Environment
+Summary:	ASCEND modelling environment - shared library and model files.
 Version:	@VERSION@
 
 # Use release "0" so that distro-released versions will override ours.
 Release:	0.jdpipe
 
 License:	GPL
-Group:		Applications/Graphics
+Group:		Applications/Engineering
 Source:		%{name}-%{version}.tar.bz2
 URL:		http://inkscape.sourceforge.net/
 
@@ -40,8 +39,29 @@ Engineers, great care has been exercised to assure that it is
 domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
+#%package -n ascend-python
+#Version:    @VERSION@
+#Summary:    PyGTK user interface for ASCEND
+#Group:		Applications/Engineering
+#
+#%description -n ascend-python
+#PyGTK user interface for ASCEND. This is a new interface that follows GNOME
+#human interface guidelines as closely as possible. It does not as yet provide
+#access to all of the ASCEND functionality provided by the Tcl/Tk interface.
+#
+#%package -n ascend-tcltk
+#Version:    @VERSION@
+#Summary:    Tcl/Tk user interface for ASCEND
+#Group:		Applications/Engineering
+#
+#%description -n ascend-tcltk
+#Tcl/Tk user interface for ASCEND. This is the original ASCEND IV interface
+#and is a more complete and mature interface than the alternative PyGTK
+#interface. Use this interface if you need to use ASCEND *.a4s files or other
+#functionality not provided by the PyGTK interface.
+
 %prep
-%setup -n ascend -q
+%setup -q
 
 %build
 scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1
@@ -76,7 +96,7 @@ update-mime-database /usr/share/mime
 %{_datadir}/models
 %{_libdir}/libascend.so
 
-%package python
+# %package -n ascend-python
 %{_bindir}/ascend
 %{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 %{_datadir}/icons/ascend-app.png
@@ -84,7 +104,7 @@ update-mime-database /usr/share/mime
 %{_datadir}/mime/packages/ascend.xml
 %{_datadir}/ascend/python
 
-%package tcltk
+# %package -n ascend-tcltk
 %{_bindir}/ascend4
 %{_datadir}/ascend/tcltk
 %{_libdir}/libascendtcl.so

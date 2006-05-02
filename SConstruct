@@ -1240,7 +1240,7 @@ subdirs = Split("base tcltk pygtk lsod blas emacsMode linpack models jam scons t
 rootfiles = Split("ascend.spec ascend.spec.in SConstruct LICENSE.txt INSTALL")
 
 env['DISTTAR_FORMAT']='bz2'
-env.Append(DISTTAR_EXCLUDEEXTS=['.lib','.cc'])
+env.Append(DISTTAR_EXCLUDEEXTS=['.lib','.cc','.cache','.pyc','.cvsignore','.dblite'])
 
 tar = env.DistTar("dist/ascend-"+version
 	, rootfiles + [env.Dir(d) for d in subdirs]
