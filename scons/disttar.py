@@ -1,13 +1,11 @@
-# vim: set et sw=3 tw=0 fo=awqorc ft=python:
-#
-# Astxx, the Asterisk C++ API and Utility Library.
+# DistTarBuilder: tool to generate tar files using SCons
 # Copyright (C) 2005, 2006  Matthew A. Nicholson
 #
-# This library is free software; you can redistribute it and/or
+# This file is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License version 2.1 as published by the Free Software Foundation.
 #
-# This library is distributed in the hope that it will be useful,
+# This file is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
@@ -15,6 +13,8 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# vim: set et sw=3 tw=0 fo=awqorc ft=python:
 
 def DistTar(target, source, env):
 	"""tar archive builder"""
@@ -24,7 +24,7 @@ def DistTar(target, source, env):
 
 	env_dict = env.Dictionary()
 
-	if env_dict.has_key("DISTTAR_FORMAT") and env_dict["DISTTAR_FORMAT"] in ["gz", "bz2"]:
+	if env_dict.get("DISTTAR_FORMAT") in ["gz", "bz2"]:
 		tar_format = env_dict["DISTTAR_FORMAT"]
 	else:
 		tar_format = ""
@@ -40,13 +40,24 @@ def DistTar(target, source, env):
 	# open our tar file for writing
 	tar = tarfile.open(str(target[0]), "w:%s" % (tar_format,))
 
+	excludeexts = env_dict.get('DISTTAR_EXCLUDEEXTS',[])
+	excludedirs = env_dict.get('DISTTAR_EXCLUDEDIRS',[])
+
 	# write sources to our tar file
 	for item in source:
-		item = str(item)
-		print "Adding '%s/%s'" % (dir_name, item)
-		tar.add(item, '%s/%s' % (dir_name, item))
+		for root, dirs, files in os.walk(str(item)):
+			for name in files:
+				ext = os.path.splitext(name)
+				if not ext[1] in excludeexts:
+					relpath = os.path.join(root,name)
+					#print "Adding %s/%s" %(dir_name,relpath)
+					tar.add(os.path.join(root,name),'%s/%s' % (dir_name,relpath))
+			for d in excludedirs:
+				if d in dirs:
+					dirs.remove(d)  # don't visit CVS directories etc
 
 	# all done
+	print "Closing TAR file"
 	tar.close()
 
 def DistTarSuffix(env, sources):
@@ -71,7 +82,9 @@ def generate(env):
 	})
 
 	env.AppendUnique(
-	    DISTTAR_FORMAT = 'gz',
+	    DISTTAR_FORMAT = 'gz'
+		, DISTTAR_EXCLUDEEXTS = ['.o','.os','.so','.a','.dll','.lib']
+		, DISTTAR_EXCLUDEDIRS = ['CVS','.svn']
 	)
 
 def exists(env):
