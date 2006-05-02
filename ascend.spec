@@ -93,7 +93,7 @@ update-mime-database /usr/share/mime
 %defattr(-, root, root)
 %doc INSTALL tcltk98/release_notes/license.txt
 %{_datadir}/applications/ascend.desktop
-%{_datadir}/models
+%{_datadir}/ascend/models
 %{_libdir}/libascend.so
 
 # %package -n ascend-python
@@ -102,7 +102,8 @@ update-mime-database /usr/share/mime
 %{_datadir}/icons/ascend-app.png
 %{_datadir}/icons/hicolor/64x64/ascend.png
 %{_datadir}/mime/packages/ascend.xml
-%{_datadir}/ascend/python
+%{_datadir}/ascend/*.py
+%{_datadir}/ascend/glade
 
 # %package -n ascend-tcltk
 %{_bindir}/ascend4
