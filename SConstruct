@@ -1,6 +1,6 @@
 import os, commands, platform, distutils.sysconfig, os.path
 
-version = "0.svn"
+version = "0.9.5.90"
 
 #------------------------------------------------------
 # OPTIONS
@@ -179,7 +179,7 @@ opts.Add(
 
 opts.Add(BoolOption(
 	'STATIC_TCLTK'
-	,'Set true for static linking for Tcl/Tk and TkTable'
+	,'Set true for static linking for Tcl/Tk and TkTable. EXPERIMENTAL'
 	,False
 ))
 
@@ -203,25 +203,25 @@ opts.Add(
 
 opts.Add(
 	'X11'
-	,'Base X11 directory'
+	,'Base X11 directory. Only used when STATIC_TCLTK is turned on. EXPERIMENTAL'
 	,'/usr/X11R6'
 )
 
 opts.Add(
 	'X11_LIBPATH'
-	,'Location of X11 lib'
+	,'Location of X11 lib. EXPERIMENTAL'
 	,'$X11/lib'
 )
 
 opts.Add(
 	'X11_CPPPATH'
-	,'Location of X11 includes'
+	,'Location of X11 includes. EXPERIMENTAL'
 	,'$X11/include'
 )
 
 opts.Add(
 	'X11_LIB'
-	,'Name of X11 lib'
+	,'Name of X11 lib. EXPERIMENTAL'
 	,'X11'
 )
 
@@ -1236,13 +1236,24 @@ if platform.system()=="Linux":
 #------------------------------------------------------
 # DISTRIBUTION TAR FILE
 
-#subdirs = Split("base tcltk pygtk lsod blas emacsMode linpack models jam scons test")
-#rootfiles = Split("ascend.spec.in SConstruct LICENSE.txt INSTALL")
-#
-#env['DISTTAR_FORMAT']='bz2'
-#
-#tar = env.DistTar("dist/ascend"
-#	, rootfiles + [env.Dir(d) for d in subdirs]
-#)
-#
-#env.Alias('dist',tar)
+subdirs = Split("base tcltk pygtk lsod blas emacsMode linpack models jam scons test")
+rootfiles = Split("ascend.spec ascend.spec.in SConstruct LICENSE.txt INSTALL")
+
+env['DISTTAR_FORMAT']='bz2'
+env.Append(DISTTAR_EXCLUDEEXTS=['.lib','.cc'])
+
+tar = env.DistTar("dist/ascend-"+version
+	, rootfiles + [env.Dir(d) for d in subdirs]
+)
+
+#------------------------------------------------------
+# RPM BUILD
+
+#if platform.system()=="Linux":
+#	pass
+
+#------------------------------------------------------
+# DEFAULT TARGETS
+
+env.Default(['base/generic'])
+
