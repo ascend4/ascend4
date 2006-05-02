@@ -16,11 +16,42 @@
 #
 # vim: set et sw=3 tw=0 fo=awqorc ft=python:
 
+import os
+
+def disttar_modify_sources(target,source,env):
+
+	source,origsource = [], source
+
+	excludeexts = env.Dictionary().get('DISTTAR_EXCLUDEEXTS',[])
+	excludedirs = env.Dictionary().get('DISTTAR_EXCLUDEDIRS',[])
+
+	# assume the sources are directories... need to check that
+	for item in origsource:
+		for root, dirs, files in os.walk(str(item)):
+
+			# don't make directory dependences as that triggers full build
+			# of that directory
+			if root in source:
+				#print "Removing directory %s" % root
+				source.remove(root)
+
+			# loop through files in a directory
+			for name in files:
+				ext = os.path.splitext(name)
+				if not ext[1] in excludeexts:
+					relpath = os.path.join(root,name)
+					#print "Adding source",relpath
+					source.append(relpath)
+			for d in excludedirs:
+				if d in dirs:
+					dirs.remove(d)  # don't visit CVS directories etc
+
+	return target, source
+
 def DistTar(target, source, env):
 	"""tar archive builder"""
 
 	import tarfile
-	import os
 
 	env_dict = env.Dictionary()
 
@@ -40,21 +71,11 @@ def DistTar(target, source, env):
 	# open our tar file for writing
 	tar = tarfile.open(str(target[0]), "w:%s" % (tar_format,))
 
-	excludeexts = env_dict.get('DISTTAR_EXCLUDEEXTS',[])
-	excludedirs = env_dict.get('DISTTAR_EXCLUDEDIRS',[])
-
 	# write sources to our tar file
 	for item in source:
-		for root, dirs, files in os.walk(str(item)):
-			for name in files:
-				ext = os.path.splitext(name)
-				if not ext[1] in excludeexts:
-					relpath = os.path.join(root,name)
-					#print "Adding %s/%s" %(dir_name,relpath)
-					tar.add(os.path.join(root,name),'%s/%s' % (dir_name,relpath))
-			for d in excludedirs:
-				if d in dirs:
-					dirs.remove(d)  # don't visit CVS directories etc
+		item = str(item)
+		print "Adding to TAR file: %s/%s" % (dir_name,item)
+		tar.add(item,'%s/%s' % (dir_name,item))
 
 	# all done
 	print "Closing TAR file"
@@ -78,13 +99,14 @@ def generate(env):
 	        action = DistTar,
 	        suffix = DistTarSuffix,
 	        target_factory = env.fs.Entry,
+			emitter = disttar_modify_sources
 	    ),
 	})
 
 	env.AppendUnique(
 	    DISTTAR_FORMAT = 'gz'
 		, DISTTAR_EXCLUDEEXTS = ['.o','.os','.so','.a','.dll','.lib']
-		, DISTTAR_EXCLUDEDIRS = ['CVS','.svn']
+		, DISTTAR_EXCLUDEDIRS = ['CVS','.svn','.sconf_temp']
 	)
 
 def exists(env):

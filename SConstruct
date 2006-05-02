@@ -1236,14 +1236,14 @@ if platform.system()=="Linux":
 #------------------------------------------------------
 # DISTRIBUTION TAR FILE
 
-subdirs = Split("base tcltk pygtk lsod blas emacsMode linpack models jam scons test")
-rootfiles = Split("ascend.spec ascend.spec.in SConstruct LICENSE.txt INSTALL")
-
 env['DISTTAR_FORMAT']='bz2'
-env.Append(DISTTAR_EXCLUDEEXTS=['.lib','.cc','.cache','.pyc','.cvsignore','.dblite'])
+env.Append(
+	DISTTAR_EXCLUDEEXTS=['.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log']
+	, DISTTAR_EXCLUDEDIRS=['dist']
+)
 
 tar = env.DistTar("dist/ascend-"+version
-	, rootfiles + [env.Dir(d) for d in subdirs]
+	, [env.Dir('#')]
 )
 
 #------------------------------------------------------
@@ -1255,5 +1255,5 @@ tar = env.DistTar("dist/ascend-"+version
 #------------------------------------------------------
 # DEFAULT TARGETS
 
-env.Default(['base/generic'])
+env.Default(['pygtk','tcltk98'])
 
