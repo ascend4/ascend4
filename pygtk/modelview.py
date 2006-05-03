@@ -326,14 +326,15 @@ class ModelView:
 		return 1
 
 	def plot_activate(self,widget):
-		self.reporter.reportNote("plot_activate...");
+	
+		self.browser.reporter.reportNote("plot_activate...");
 		_path,_col = self.modelview.get_cursor()
 		_instance = self.otank[_path][1]
 		if not _instance.isPlottable():
-			self.reporter.reportError("Can't plot instance %s" % _instance.getName().toString())
+			self.browser.reporter.reportError("Can't plot instance %s" % _instance.getName().toString())
 			return
 		else:
-			self.reporter.reportNote("Instance %s about to be plotted..." % _instance.getName().toString())
+			self.browser.reporter.reportNote("Instance %s about to be plotted..." % _instance.getName().toString())
 
 		print("Plotting instance '%s'..." % _instance.getName().toString())
 
