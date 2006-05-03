@@ -26,14 +26,14 @@ missing some functionality.
 
 Using SCons 0.96.91 or newer, see your build options by typing
 
-    scons -Qh
+  scons -Qh
 
 You can add your build options to a file in this directory
 which you can create, called 'config.py'.
 
 Then to build ASCEND, type
 
-    scons
+  scons
 
 SCons will tell you what version(s) of ASCEND it is able to build.
 The PyGTK interface requires Python (which is present if you have
@@ -48,13 +48,57 @@ setting up the PyGTK GUI, please see
 https://pse.cheme.cmu.edu/wiki/view/Ascend/PythonWrapper
 
 ------
+RUNNING FOR THE FIRST TIME
+
+If you've build ASCEND from source, you don't need to 'install'
+it before you can run it. The main issue with running from the
+source directories is that you need to set various environment
+variables: 
+
+ASCENDLIBRARY
+  Location of the 'models' directory, eg ~/src/ascend-NNN/models
+
+LD_LIBRARY_PATH
+  Must contain the paths to the ascend shared libraries, in
+  particular libascend.so, or for the Tcl/Tk interface, also
+  libascendtcl.so.
+  
+It can often be easier to simply install in your home directory
+as shown below.
+
+------
+ISSUES WITH THE TCL/TK INTERFACE
+
+It can sometimes be a bit challenging to build the Tcl/Tk
+interface. ASCEND requires Tcl/Tk version 8.3.5, which is not the
+standard version on modern Linux distributions. A suggested
+approach in this case is to download and install the 'ActiveTcl'
+distribution, version 8.3.5, and to install it in ~/activetcl.
+http://downloads.activestate.com/ActiveTcl/Windows/8.3.5/
+
+Then, you should be able to build the Tcl/Tk interface as shown:
+
+  export LD_LIBRARY_PATH=~/activetcl/lib:~/activetcl/lib/Tktable2.8
+  scons TCL=~/activetcl
+
+------
 INSTALLING ON LINUX
 
 To then install ASCEND, you will need to have write access to the 
 directories INSTALL_DATA, INSTALL_BIN as specified in your
 SCons configuration. You can then type
 
-    scons install
+  scons install
+    
+The simplest way to install ASCEND 'off-root' is something like:
+
+  scons INSTALL_PREFIX=~/ascroot
+  
+Note that if you install (or run) ASCEND off-root, you need to
+ensure that Linux can access the shared libraries. For example,
+in the above case, you would need to add
+
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/ascroot/lib
 
 ------
 INSTALLING ON WINDOWS
@@ -64,7 +108,7 @@ you will need to have the NSIS installer-creator installed on
 your system (which is free, at http://nsis.sf.net/). Then you 
 should simply need to type
 
-    scons WITH_INSTALLER=1
+  scons WITH_INSTALLER=1
 
 This will leave an installer package named 'ascend-setup.exe'
 in the pygtk/interface directory.
@@ -74,12 +118,12 @@ CREATING AN RPM/DEB PACKAGE
 
 Many users prefer to keep their systems clear of unpackaged
 software. For this reason, we aim to provide the ability to build 
-ASCEND as an RPM package. There is a "SPEC" file includes in the
+ASCEND as an RPM package. There is a "SPEC" file included in the
 source tree. If you have a source package, such as for example
 ascend-NNNNN.tar.bz2, place it in your home directory, then
 type the following
 
-    rpmbuild -ta ascend-NNNNN.tar.bz2
+  rpmbuild -ta ascend-NNNNN.tar.bz2
 
 This will pull out the 'spec' from from the source package, 
 which hopefully will be up to date in correspondance with the
@@ -87,7 +131,7 @@ package version number NNNNN.
 
 You will then be able to install ASCEND using something like
 
-    rpm -i ~/rpm/ascend-NNNNN-0.jdpipe.i386.rpm
+  rpm -i ~/rpm/ascend-NNNNN-0.jdpipe.i386.rpm
 
 Debian/Unbuntu users should find that they can create a usable
 .deb package using the tool 'alien'. We haven't got native
