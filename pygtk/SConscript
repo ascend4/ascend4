@@ -59,7 +59,10 @@ def get_new_swig_flags(env):
 swigobj = python_env.SharedObject('ascpy.i'
 	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 )
-python_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy_wrap.cc')
+python_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
+python_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
+python_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
+python_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
 
 swiglib = python_env.SharedLibrary("ascpy",objs + swigobj
 	, LIBS = ['ascend'] + env['PYTHON_LIB']
