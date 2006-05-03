@@ -91,7 +91,7 @@ update-mime-database /usr/share/mime
 
 %files
 %defattr(-, root, root)
-%doc INSTALL tcltk98/release_notes/license.txt
+%doc INSTALL.txt LICENSE.txt
 %{_datadir}/applications/ascend.desktop
 %{_datadir}/ascend/models
 %{_libdir}/libascend.so
