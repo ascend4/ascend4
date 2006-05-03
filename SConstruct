@@ -859,6 +859,20 @@ if env.has_key('HAVE_GCCVISIBILITY'):
 env.Append(SUBST_DICT=subst_dict)
 
 #------------------------------------------------------
+# RECIPE: SWIG scanner
+
+import SCons.Script
+
+SWIGScanner = SCons.Scanner.ClassicCPP(
+	"SWIGScan"
+	, ".i"
+	, "CPPPATH"
+	, '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+)
+
+env.Append(SCANNERS=[SWIGScanner])
+
+#------------------------------------------------------
 # RECIPE: 'SubstInFile', used in pygtk SConscript
 
 import re
