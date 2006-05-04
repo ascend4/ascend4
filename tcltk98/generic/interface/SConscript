@@ -37,6 +37,9 @@ if tcl_env.get('STATIC_TCLTK'):
 	tcl_env.Append(LIBS=tcl_env['X11_LIB'])
 	tcl_env.Append(LIBPATH=tcl_env['X11_LIBPATH'])
 
+	if tcl_env['TKTABLE_LIBPATH']:
+		tcl_env.Append(LIBPATH=tcl_env['TKTABLE_LIBPATH'])
+
 	tcl_env.Program("ascend4",["main.c"] + srcs)
 else:
 	print "DYNAMIC TCL/TK PROGRAM LINKAGE"
@@ -48,9 +51,6 @@ else:
 	if tcl_env.has_key('TK_LIBPATH'):
 		tcl_env.Append(LIBPATH=tcl_env['TK_LIBPATH'])
 
-	if tcl_env['TKTABLE_LIBPATH']:
-		tcl_env.Append(LIBPATH=tcl_env['TKTABLE_LIBPATH'])
-
 	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
 
 	#tcl_so = tcl_env.Command(Copy('$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX','$TCL_LIBPATH/$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX'))
@@ -60,7 +60,7 @@ else:
 	tcl_env.Append(LIBPATH=['.'])
 
 	ascendtclprog = tcl_env.Program("ascend4",["main.c"]
-		, LIBS = ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB','ascendtcl','ascend']
+		, LIBS = tcl_env['LIBS']+['ascendtcl','ascend']
 	)
 
 	if tcl_env.get('CAN_INSTALL'):

@@ -16,9 +16,10 @@
 #
 # vim: set et sw=3 tw=0 fo=awqorc ft=python:
 
-import os
+import os,sys
+from SCons.Script import *
 
-def disttar_modify_sources(target,source,env):
+def disttar_emitter(target,source,env):
 
 	source,origsource = [], source
 
@@ -48,7 +49,14 @@ def disttar_modify_sources(target,source,env):
 
 	return target, source
 
-def DistTar(target, source, env):
+def disttar_string(target, source, env):
+    """This is what gets printed on the console. We'll strip out the list
+	or source files, since it tends to get very long. If you want to see the 
+	contents, the easiest way is to uncomment the line 'Adding to TAR file'
+	below. """
+    return 'DistTar(%s,...)' % str(target[0])
+
+def disttar(target, source, env):
 	"""tar archive builder"""
 
 	import tarfile
@@ -69,19 +77,21 @@ def DistTar(target, source, env):
 		os.makedirs(target_dir)
 
 	# open our tar file for writing
+	sys.stderr.write("DistTar: Writing "+str(target[0]))
 	tar = tarfile.open(str(target[0]), "w:%s" % (tar_format,))
 
 	# write sources to our tar file
 	for item in source:
 		item = str(item)
-		print "Adding to TAR file: %s/%s" % (dir_name,item)
+		sys.stderr.write(".")
+		#print "Adding to TAR file: %s/%s" % (dir_name,item)
 		tar.add(item,'%s/%s' % (dir_name,item))
 
 	# all done
-	print "Closing TAR file"
+	sys.stderr.write("\n") #print "Closing TAR file"
 	tar.close()
 
-def DistTarSuffix(env, sources):
+def disttar_suffix(env, sources):
 	"""tar archive suffix generator"""
 
 	env_dict = env.Dictionary()
@@ -94,19 +104,17 @@ def generate(env):
 	"""
 	Add builders and construction variables for the DistTar builder.
 	"""
-	env.Append(BUILDERS = {
-	    'DistTar': env.Builder(
-	        action = DistTar,
-	        suffix = DistTarSuffix,
-	        target_factory = env.fs.Entry,
-			emitter = disttar_modify_sources
-	    ),
-	})
+
+	disttar_action=SCons.Action.Action(disttar, disttar_string)
+	env['BUILDERS']['DistTar'] =  Builder(
+		action=disttar_action
+		, emitter=disttar_emitter
+		, suffix = disttar_suffix
+		, target_factory = env.fs.Entry
+	)
 
 	env.AppendUnique(
 	    DISTTAR_FORMAT = 'gz'
-		, DISTTAR_EXCLUDEEXTS = ['.o','.os','.so','.a','.dll','.lib']
-		, DISTTAR_EXCLUDEDIRS = ['CVS','.svn','.sconf_temp']
 	)
 
 def exists(env):
