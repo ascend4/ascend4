@@ -23,16 +23,14 @@ BuildRequires: desktop-file-utils
 BuildRequires: tk-devel < 8.5
 BuildRequires: tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
-
-Requires(post):   desktop-file-utils
-Requires(postun): desktop-file-utils
+BuildRequires: ccache
 
 Requires: python >= 2.4
-Requires: pygtk2 >= 2.6, pygtk2-libglade
-Requires: python-matplotlib, python-numeric
+Requires: pygtk2 >= 2.6
+Requires: pygtk2-libglade
+Requires: python-matplotlib
+Requires: python-numeric
 Requires: gtksourceview
-Requires: make
-Requires: gcc
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
@@ -67,11 +65,11 @@ fields from Architecture to (computational) Zoology.
 %setup -q
 
 %build
-scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
 
 %install
 rm -rf %{buildroot}
-scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
 
 pushd pygtk/gnome
 install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
@@ -106,7 +104,10 @@ update-mime-database /usr/share/mime
 %{_datadir}/icons/hicolor/64x64/ascend.png
 %{_datadir}/mime/packages/ascend.xml
 %{_datadir}/ascend/*.py
+%{_datadir}/ascend/*.pyc
+%{_datadir}/ascend/*.pyo
 %{_datadir}/ascend/glade
+%{_datadir}/ascend/_ascpy.so
 
 # %package -n ascend-tcltk
 %{_bindir}/ascend4

@@ -31,6 +31,18 @@ else:
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
 
+opts.Add(
+	'CC'
+	,'C Compiler command'
+	,None
+)
+
+opts.Add(
+	'CXX'
+	,'C++ Compiler command'
+	,None
+)
+
 # Package linking option
 opts.Add(EnumOption(
 	'PACKAGE_LINKING'
@@ -342,6 +354,8 @@ env['CAN_INSTALL']=can_install
 print "TCL_CPPPATH =",env['TCL_CPPPATH']
 print "TCL_LIBPATH =",env['TCL_LIBPATH']
 print "TCL_LIB =",env['TCL_LIB']
+print "CC =",env['CC']
+print "CXX =",env['CXX']
 
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
