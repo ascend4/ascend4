@@ -1,16 +1,36 @@
 Import('env')
 
-import glob
+import os, os.path
 
-a4c = glob.glob("*.a4c")
-a4s = glob.glob("*.a4s")
-a4l = glob.glob("*.a4l")
+modelfiles = []
 
-env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models",a4c+a4l)
+excludedirs = ['.svn','CVS']
+excludefiles = ['Makefile.in','SConscript']
 
-subdirs = ['johnpye']
+modeldir = env.Dir(".").abspath
 
-for subdir in subdirs:
-	files = glob.glob("johnpye/*.a4c")
+cwd = os.getcwd()
+os.chdir(modeldir)
+for root,dirs,files in os.walk("."):
+	for d in dirs:
+		if d in excludedirs:
+			dirs.remove(d)
+	for f in files:
+		if f in excludefiles:
+			continue
+		modelfiles.append( os.path.normpath(os.path.join(root,f)) )
+os.chdir(cwd)
 
-	env.Install(env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models/"+subdir,files)
+modelsroot = env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend/models"
+
+installeddirs = []
+
+for f in modelfiles:
+	head,tail = os.path.split(f)
+	targetdir = os.path.join(modelsroot,head)
+	if not targetdir in installeddirs:
+		installeddirs.append(targetdir)
+	env.Install(targetdir,f)
+
+#print "MODEL INSTALLED DIRS =",installeddirs
+Return('installeddirs')

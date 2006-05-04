@@ -20,6 +20,9 @@ BuildRequires: scons >= 0.96.1
 BuildRequires: bison, flex
 BuildRequires: swig >= 1.3.24
 BuildRequires: desktop-file-utils
+BuildRequires: tk-devel < 8.5
+BuildRequires: tcl-devel < 8.5
+BuildRequires: tktable < 2.10, tktable >= 2.8
 
 Requires(post):   desktop-file-utils
 Requires(postun): desktop-file-utils
@@ -64,7 +67,7 @@ fields from Architecture to (computational) Zoology.
 %setup -q
 
 %build
-scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1
+scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
 
 %install
 rm -rf %{buildroot}

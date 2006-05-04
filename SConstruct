@@ -150,7 +150,7 @@ opts.Add(
 # What is the name of the Tcl lib?
 opts.Add(
 	'TCL_LIB'
-	,"Name of Tcl lib (eg 'tcl' or 'tcl83'), for full path to static library"
+	,"Name of Tcl lib (eg 'tcl' or 'tcl83'), for full path to static library (if STATIC_TCLTK is set)"
 	,default_tcl_lib
 )
 
@@ -559,6 +559,10 @@ def CheckCUnit(context):
 #----------------
 # Tcl test
 
+# TCL and TK required version 8.1, 8.2, 8.3, or 8.4:
+tcltk_minor_newest_acceptable = 4
+tcltk_major_required = 8
+
 tcl_check_text = r"""
 #include <tcl.h>
 #include <stdio.h>
@@ -581,7 +585,7 @@ def CheckTclVersion(context):
 		return 0
 
 	major,minor,patch = tuple([int(i) for i in output.split(".")])
-	if major != 8 or minor > 3:
+	if major != tcltk_major_required or minor > tcltk_minor_newest_acceptable:
 		context.Result(output+" (bad version)")
 		# bad version
 		return 0
@@ -614,14 +618,15 @@ def CheckTkVersion(context):
 	if not is_ok:
 		context.Result("failed to run check")
 		return 0
-	context.Result(output)
 
 	major,minor,patch = tuple([int(i) for i in output.split(".")])
-	if major != 8 or minor > 3:
+	if major != tcltk_major_required or minor > tcltk_minor_newest_acceptable:
 		# bad version
+		context.Result(output+" (bad version)")
 		return 0
 		
 	# good version
+	context.Result(output+" (good)")
 	return 1
 
 #----------------
@@ -723,19 +728,20 @@ if conf.CheckTcl():
 	if with_tcltk and conf.CheckTclVersion():
 		if conf.CheckTk():
 			if with_tcltk and conf.CheckTkVersion():
-				if conf.CheckTkTable():
-					pass
-				else:
-					without_tcltk_reason = "TkTable not found"
-					with_tcltk = False
+				if env['STATIC_TCLTK']:
+					if conf.CheckTkTable():
+						pass
+					else:
+						without_tcltk_reason = "TkTable not found"
+						with_tcltk = False
 			else:
-				without_tcltk_reason = "Require Tk version <= 8.3. See 'scons -h'"
+				without_tcltk_reason = "Require Tk version <= 8.4. See 'scons -h'"
 				with_tcltk = False
 		else:
 			without_tcltk_reason = "Tk not found."
 			with_tcltk = False
 	else:
-		without_tcltk_reason = "Require Tcl <= 8.3 Tcl."
+		without_tcltk_reason = "Require Tcl <= 8.4 Tcl."
 		with_tcltk = False
 
 else:
@@ -1252,8 +1258,8 @@ if platform.system()=="Linux":
 
 env['DISTTAR_FORMAT']='bz2'
 env.Append(
-	DISTTAR_EXCLUDEEXTS=['.lib','.cc','.cache','.pyc','.cvsignore','.dblite','.log']
-	, DISTTAR_EXCLUDEDIRS=['dist']
+	DISTTAR_EXCLUDEEXTS=['.o','.os','.so','.a','.dll','.cc','.cache','.pyc','.cvsignore','.dblite','.log']
+	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist']
 )
 
 tar = env.DistTar("dist/ascend-"+version
