@@ -1,0 +1,39 @@
+REQUIRE "atoms.a4l";
+
+(*
+   simple model to calculate the time taken for
+   an object to fall 10 m under gravity.
+*)
+MODEL sample;
+	
+	S IS_A distance;
+	u IS_A speed;
+	a IS_A acceleration;
+	t IS_A time;
+	
+	(* formula for displacement of a mass with initial
+	   displacement and constant acceleration *)
+	S = u * t + 1/2 * a *t^2;
+	
+METHODS
+
+METHOD specify; (* which variables are fixed *)
+	FIX u, a, S;
+END specify;
+
+METHOD values; (* set the fixed variables *)
+	S := 10 {m};  a := 9.8 {m/s^2};  u := 0 {m/s}; 
+END values;
+
+METHOD bound_self;
+	t.lower_bound := 0 {s}; (* t > 0 *)
+END values;
+
+(* this method will be run on startup *)
+METHOD default_self;
+	RUN reset; 
+	RUN values;
+	RUN bound_self;
+END default_self;
+
+END sample;
