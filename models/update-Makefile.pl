@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl5 -w
+#!/usr/bin/perl -w
 #
 
 #  This script updates the variable INSTALL_FILE_LIST in the
