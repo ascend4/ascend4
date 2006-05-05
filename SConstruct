@@ -285,6 +285,12 @@ opts.Add(
 	,""
 )
 
+opts.Add(
+	'DISTTAR_NAME'
+	,"Stem name of the tarball created by 'scons dist'. So for 'ascend-aaa.tar.bz2', set this to 'ascend-aaa'."
+	,"ascend-"+version
+)
+
 if platform.system()!="Windows":
 	opts.Add(BoolOption(
 		'WITH_GCCVISIBILITY'
@@ -861,6 +867,7 @@ subst_dict = {
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
+	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
 	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
 	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
@@ -1276,7 +1283,7 @@ env.Append(
 	, DISTTAR_EXCLUDEDIRS=['CVS','.svn','.sconf_temp', 'dist']
 )
 
-tar = env.DistTar("dist/ascend-"+version
+tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 	, [env.Dir('#')]
 )
 
