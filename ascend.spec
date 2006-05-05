@@ -72,11 +72,11 @@ rm -rf %{buildroot}
 scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
 
 pushd pygtk/gnome
-install -o root -g root -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
-install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
-install -o root -g root -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
-install -o root -g root -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
-install -o root -g root -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+install -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
+install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
+install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
+install -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
+install -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 popd
 
 %clean
