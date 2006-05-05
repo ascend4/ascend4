@@ -5,7 +5,7 @@ import os, os.path
 modelfiles = []
 
 excludedirs = ['.svn','CVS']
-excludefiles = ['Makefile.in','SConscript']
+excludefiles = ['Makefile.in','SConscript','update-Makefile.pl']
 
 modeldir = env.Dir(".").abspath
 
