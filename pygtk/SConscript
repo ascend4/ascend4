@@ -114,5 +114,6 @@ if env.get('CAN_INSTALL'):
 if env.get('WITH_INSTALLER'):
 	import platform
 	if platform.system()=="Windows":
-		installer = env.Nsis('create.nsi')
+		env.Append(NSISDEFINES={'OUTFILE':env['WIN_INSTALLER_NAME']})
+		installer = env.Installer('create.nsi')
 		Depends(installer,[swiglib,configpy,configh])
