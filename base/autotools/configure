@@ -1394,7 +1394,7 @@ fi
 ##AWW   Key elements of the source tree are:
 ##AWW       code/trunk/trunk/base/unixAC213/configure
 ##AWW       code/trunk/trunk/base/generic
-##AWW       code/trunk/tcltk98
+##AWW       code/trunk/tcltk
 ##AWW   where $srcdir is pointing to /home/me/trunk/base/unixAC213, the folder
 ##AWW   containing "configure"
 ##AWW
@@ -1406,7 +1406,7 @@ fi
 ##AWW       $srcdir/../generic/packages
 ##AWW       $srcdir/../generic/solver
 ##AWW       $srcdir/../generic/utilities
-##AWW       $srcdir/../../tcltk98/generic/interface
+##AWW       $srcdir/../../tcltk/generic/interface
 ##AWW
 ##AWW   Each of these directories contain Makefiles and possible
 ##AWW   need to find .h files in the other directories.  For example
@@ -1420,7 +1420,7 @@ fi
 ##AWW
 ##AWW   If in compiler, general, packages, solver, utilities
 ##AWW       ..                        for general, packages, etc
-##AWW       ../../../tcltk98/generic  for interface
+##AWW       ../../../tcltk/generic  for interface
 ##AWW   If in interface
 ##AWW       ..                        for interface
 ##AWW       ../../../base/generic        for compiler, general, ..
@@ -3460,7 +3460,7 @@ fi
 #	2. If `flex' was found, see if it understands -V.  If so,
 #	   set `scanner_src' and `typer_src' to have `flex' generate
 #	   the C files from the flex input files
-#	   base/generic/compiler/scanner.l & tcltk98/interface/typelex.l
+#	   base/generic/compiler/scanner.l & tcltk/interface/typelex.l
 #	   We don't need to look for libfl.a since we define
 #	   yywrap() ourselves.
 #	3. If `flex' wasn't found or was found but isn't new enough:
@@ -3527,12 +3527,12 @@ fi
 if test -z "$LEX" ; then
     { echo "$as_me:$LINENO: WARNING: Cannot find a flex lexer version 2.4.1 or greater.
 	Using pregenerated C files for base/generic/compiler/scanner.l
-	and tcltk98/interface/typelex.l.  If you have flex 2.4.1
+	and tcltk/interface/typelex.l.  If you have flex 2.4.1
 	or newer, set the LEX environment variable to its location
 	and run configure again." >&5
 echo "$as_me: WARNING: Cannot find a flex lexer version 2.4.1 or greater.
 	Using pregenerated C files for base/generic/compiler/scanner.l
-	and tcltk98/interface/typelex.l.  If you have flex 2.4.1
+	and tcltk/interface/typelex.l.  If you have flex 2.4.1
 	or newer, set the LEX environment variable to its location
 	and run configure again." >&2;}
     scanner_src="scanner.c.from.c"
@@ -8117,7 +8117,7 @@ if test ! "X$with_tkdir" = "Xno" ; then
 #AWW20041117: FIXME next line
 #AWW20041206:    subdir_locations='ascend4/TK'
     subdir_target="TK"
-    subdir_locations='../../tcltk98/TK'
+    subdir_locations='../../tcltk/TK'
     subdir_output='
 	$subdir_target/Makefile:$subdir_root/Makefile.in
 	$subdir_target/Makefile.Rules:$subdir_root/Makefile.Rules.in
@@ -8129,7 +8129,7 @@ if test ! "X$with_tkdir" = "Xno" ; then
 #AWW20041208:	    tkdir_root="../$subdir_root"
 	    tkdir_root=$subdir_target
             tkdir_makefiles=`eval echo $subdir_output`
-            tkdir_topbuilddir="$fullpathsrcdir/../../tcltk98/TK"
+            tkdir_topbuilddir="$fullpathsrcdir/../../tcltk/TK"
             break
         fi
     done
@@ -8359,7 +8359,7 @@ ASCEND_DEFAULTLIBRARY=$prefix/models
 
 
 
-                                                                                                                                                                                                                            ac_config_files="$ac_config_files ConfigAscend:../../base/generic/ConfigAscend.in Makefile:../../base/generic/Makefile.in bin/ascend4.sh:../../base/generic/bin/ascend4.sh.in Makefile.Rules:../../base/generic/Makefile.Rules.in archive/Makefile:../../base/generic/archive/Makefile.in bin/Makefile:../../base/generic/bin/Makefile.in compiler/Makefile:../../base/generic/compiler/Makefile.in general/Makefile:../../base/generic/general/Makefile.in interface/Makefile:../../tcltk98/generic/interface/Makefile.in lib/Makefile:../../base/generic/lib/Makefile.in packages/Makefile:../../base/generic/packages/Makefile.in solver/Makefile:../../base/generic/solver/Makefile.in utilities/Makefile:../../base/generic/utilities/Makefile.in utilities/config.h:../../base/generic/utilities/config.h.in ../../jam/Jamrules ../../tcltk98/generic/Jamrules_tcltk98 $tkdir_makefiles $models_makefiles $help_makefiles $blaslib_makefile $lpaklib_makefile $lsodlib_makefile"
+                                                                                                                                                                                                                            ac_config_files="$ac_config_files ConfigAscend:../../base/generic/ConfigAscend.in Makefile:../../base/generic/Makefile.in bin/ascend4.sh:../../base/generic/bin/ascend4.sh.in Makefile.Rules:../../base/generic/Makefile.Rules.in archive/Makefile:../../base/generic/archive/Makefile.in bin/Makefile:../../base/generic/bin/Makefile.in compiler/Makefile:../../base/generic/compiler/Makefile.in general/Makefile:../../base/generic/general/Makefile.in interface/Makefile:../../tcltk/generic/interface/Makefile.in lib/Makefile:../../base/generic/lib/Makefile.in packages/Makefile:../../base/generic/packages/Makefile.in solver/Makefile:../../base/generic/solver/Makefile.in utilities/Makefile:../../base/generic/utilities/Makefile.in utilities/config.h:../../base/generic/utilities/config.h.in ../../jam/Jamrules ../../tcltk/generic/Jamrules_tcltk $tkdir_makefiles $models_makefiles $help_makefiles $blaslib_makefile $lpaklib_makefile $lsodlib_makefile"
 
 
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
@@ -8865,14 +8865,14 @@ do
   "bin/Makefile" ) CONFIG_FILES="$CONFIG_FILES bin/Makefile:../../base/generic/bin/Makefile.in" ;;
   "compiler/Makefile" ) CONFIG_FILES="$CONFIG_FILES compiler/Makefile:../../base/generic/compiler/Makefile.in" ;;
   "general/Makefile" ) CONFIG_FILES="$CONFIG_FILES general/Makefile:../../base/generic/general/Makefile.in" ;;
-  "interface/Makefile" ) CONFIG_FILES="$CONFIG_FILES interface/Makefile:../../tcltk98/generic/interface/Makefile.in" ;;
+  "interface/Makefile" ) CONFIG_FILES="$CONFIG_FILES interface/Makefile:../../tcltk/generic/interface/Makefile.in" ;;
   "lib/Makefile" ) CONFIG_FILES="$CONFIG_FILES lib/Makefile:../../base/generic/lib/Makefile.in" ;;
   "packages/Makefile" ) CONFIG_FILES="$CONFIG_FILES packages/Makefile:../../base/generic/packages/Makefile.in" ;;
   "solver/Makefile" ) CONFIG_FILES="$CONFIG_FILES solver/Makefile:../../base/generic/solver/Makefile.in" ;;
   "utilities/Makefile" ) CONFIG_FILES="$CONFIG_FILES utilities/Makefile:../../base/generic/utilities/Makefile.in" ;;
   "utilities/config.h" ) CONFIG_FILES="$CONFIG_FILES utilities/config.h:../../base/generic/utilities/config.h.in" ;;
   "../../jam/Jamrules" ) CONFIG_FILES="$CONFIG_FILES ../../jam/Jamrules" ;;
-  "../../tcltk98/generic/Jamrules_tcltk98" ) CONFIG_FILES="$CONFIG_FILES ../../tcltk98/generic/Jamrules_tcltk98" ;;
+  "../../tcltk/generic/Jamrules_tcltk" ) CONFIG_FILES="$CONFIG_FILES ../../tcltk/generic/Jamrules_tcltk" ;;
   "$tkdir_makefiles" ) CONFIG_FILES="$CONFIG_FILES $tkdir_makefiles" ;;
   "$models_makefiles" ) CONFIG_FILES="$CONFIG_FILES $models_makefiles" ;;
   "$help_makefiles" ) CONFIG_FILES="$CONFIG_FILES $help_makefiles" ;;

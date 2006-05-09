@@ -312,7 +312,7 @@ if platform.system()=="Windows":
 
 # Import the outside environment
 
-if os.environ.has_key('OSTYPE') and os.environ['OSTYPE']=='msys':
+if os.environ.get('OSTYPE')=='msys':
 	env = Environment(
 		ENV=os.environ
 		, tools=['mingw','lex','yacc','fortran','swig','disttar']
@@ -1210,7 +1210,7 @@ if with_tcltk:
 	env.SConscript(['lsod/SConscript'],'env')		
 
 	env.SConscript(['linpack/SConscript'],'env')
-	env.SConscript(['tcltk98/generic/interface/SConscript'],'env')
+	env.SConscript(['tcltk/generic/interface/SConscript'],'env')
 else:
 	print "Skipping... Tcl/Tk GUI isn't being built:",without_tcltk_reason
 
@@ -1296,5 +1296,5 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 #------------------------------------------------------
 # DEFAULT TARGETS
 
-env.Default(['pygtk','tcltk98'])
+env.Default(['pygtk','tcltk'])
 

@@ -404,7 +404,7 @@ Instanc::getResidual() const{
 
 	return RelationResidual( ri->ptr );
 }
-		
+
 /**
 	Return the numerical value of an instance if it is an assigned atom.
 	If it is a relation, return the string form of the relation (ie the equation)
@@ -538,7 +538,7 @@ Instanc::setRealValue(const double &val, const unsigned &depth){
 }
 
 /**
-	Borrow the workings of this from tcltk98 UnitsProc.c
+	Borrow the workings of this from tcltk UnitsProc.c
 */
 void
 Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &depth){
@@ -577,7 +577,7 @@ Instanc::setRealValueWithUnits(double val, const char *units, const unsigned &de
 /**
 	Set the instance variable status. See @getVarStatus
 */
-void 
+void
 Instanc::setVarStatus(const VarStatus &s){
 	InstanceInterfaceData *d;
 	d = (InstanceInterfaceData *)GetInterfacePtr(i);
@@ -588,10 +588,10 @@ Instanc::setVarStatus(const VarStatus &s){
 	d->status = s;
 }
 
-/** 
+/**
 	Return the instance variable status.
 	This data is stored in the 'interface_ptr' of the instance, so
-	that we can be sure we'll get it, regardless of which 
+	that we can be sure we'll get it, regardless of which
 	instance of an Instanc we have in our hands :-)
 */
 const VarStatus
