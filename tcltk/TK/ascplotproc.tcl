@@ -782,10 +782,7 @@ proc ascplot_sources {} {
   global ascplotvect
   OKText .ascplot_sources "
 This widget and associated tools are part of the ASCEND modeling
-environment available by ftp:
-ftp.cs.cmu.edu:project/ascend/gnu-ascend.
-It is also available for standalone use
-at the same ftp site." "Plot availability" 0 $ascplotvect(textfont) \
+environment." "Plot availability" 0 $ascplotvect(textfont) \
 [getpos .ascplot] 8 40
 }
 #
