@@ -104,7 +104,7 @@ opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
-	,"$INSTALL_DATA/models"
+	,"$INSTALL_DATA/ascend/models"
 )
 
 # Where is SWIG?
