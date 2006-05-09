@@ -11,7 +11,7 @@
 Name "ASCEND PyGTK"
 
 ; The file to write
-OutFile "ascend-setup.exe"
+OutFile "ascend-@VERSION@.exe"
 
 ; SetCompressor /SOLID lzma
 

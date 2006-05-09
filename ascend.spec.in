@@ -3,7 +3,7 @@ Summary:	ASCEND modelling environment - shared library and model files.
 Version:	@VERSION@
 
 # Use release "0" so that distro-released versions will override ours.
-Release:	1.jdpipe
+Release:	0.jdpipe
 
 License:	GPL
 Group:		Applications/Engineering
