@@ -1,0 +1,95 @@
+Import('env')
+
+srcs = Split("""
+	AscBitmaps.c AscPrintTcl.c BrowLogRel_io.c BrowWhen_io.c
+	BrowserMethod.c BrowserProc.c BrowserQuery.c BrowserRel_io.c
+	Commands.c DebugProc.c DisplayProc.c
+	EnvVarProc.c HelpProc.c Integrators.c
+	LibraryProc.c Lsode.c MtxProc.c ProbeProc.c Qlfdid.c
+	ScriptProc.c Sensitivity.c SimsProc.c SlvProc.c
+	SolverProc.c UnitsProc.c UserData.c
+	tkConsole.c old_utils.c Driver.c
+""")
+
+if env['HAVE_LEX']:
+	typelexsource = 'typelex.l'
+else:
+	typelexsource = 'typelex_no_flex.c'
+
+tcl_env = env.Copy()
+
+typelex = tcl_env.SharedObject(typelexsource
+	, LEXFLAGS = '-ll -Ptyp_'
+)
+
+if tcl_env.get('TCL_CPPPATH'):
+	tcl_env.Append(CPPPATH=tcl_env['TCL_CPPPATH'])
+
+if tcl_env.get('TK_CPPPATH'):
+	tcl_env.Append(CPPPATH=tcl_env['TK_CPPPATH'])
+
+tcl_env.Append(LIBS=['ascend'])
+tcl_env.Append(LIBPATH=['#'])
+
+if tcl_env.get('STATIC_TCLTK'):
+	print "STATIC TCL/TK PROGRAM LINKAGE"
+	srcs += ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB']
+	tcl_env.Append(LIBS=tcl_env['X11_LIB'])
+	tcl_env.Append(LIBPATH=tcl_env['X11_LIBPATH'])
+
+	if tcl_env['TKTABLE_LIBPATH']:
+		tcl_env.Append(LIBPATH=tcl_env['TKTABLE_LIBPATH'])
+
+	tcl_env.Program("ascend4",["main.c"] + srcs)
+else:
+	print "DYNAMIC TCL/TK PROGRAM LINKAGE"
+	tcl_env.Append(LIBS=tcl_env['TCL_LIB'])
+	tcl_env.Append(LIBS=tcl_env['TK_LIB'])
+
+	if tcl_env.has_key('TCL_LIBPATH'):
+		tcl_env.Append(LIBPATH=tcl_env['TCL_LIBPATH'])
+	if tcl_env.has_key('TK_LIBPATH'):
+		tcl_env.Append(LIBPATH=tcl_env['TK_LIBPATH'])
+
+	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
+
+	#tcl_so = tcl_env.Command(Copy('$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX','$TCL_LIBPATH/$SHLIBPREFIX$TCL_LIB$SHLIBSUFFIX'))
+	#tk_so = tcl_env.Command(Copy('$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX','$TK_LIBPATH/$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX'))
+	#tktable_so = tcl_env.Command(Copy('$SHLIBPREFIX$TKTABLE_LIB$SHLIBSUFFIX','$TKTABLE_LIBPATH/$SHLIBPREFIX$TKTABLE_LIB$SHLIBSUFFIX'))
+
+	tcl_env.Append(LIBPATH=['.'])
+
+	ascendtclprog = tcl_env.Program("ascend4",["main.c"]
+		, LIBS = tcl_env['LIBS']+['ascendtcl','ascend']
+	)
+
+	if tcl_env.get('CAN_INSTALL'):
+		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendtclprog)
+		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_LIB'],ascendtcllib)
+
+		import glob
+
+		sharedata = env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend"
+		tkdir = sharedata + "/tcltk/"
+
+		import os
+		import os.path
+	
+		cd = os.getcwd()
+		os.chdir(env.Dir("#tcltk/TK").abspath)
+
+		files = {}
+
+		for root, dirs, files in os.walk("."):
+			#print root, "..."
+			dest = os.path.normpath(os.path.join(env.subst(tkdir),root))
+			for name in files:
+				env.Install(env.subst(dest),"#tcltk/TK/"+os.path.join(root, name))
+				#print dest,"<---",os.path.join(root, name)
+
+			if 'CVS' in dirs:
+			    dirs.remove('CVS')  # don't visit CVS directories
+			if '.svn' in dirs:
+			    dirs.remove('.svn')  # don't visit .svn directories
+
+		os.chdir(cd)

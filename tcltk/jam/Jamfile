@@ -1,0 +1,474 @@
+# THIS FILE IS DEPRECATED - 20-Dec-2005
+
+#
+# Jamfile to build Ascend Tcl/Tk98 interface
+# (see http://www.freetype.org/jam/index.html)
+#
+# This file is part of the Ascend Build System.
+#
+# Copyright (C) 2004  Jerry D. St.Clair
+#
+# The Ascend Build System is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This program is distributed in hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.
+# Check the file named COPYING.
+#---------------------------------------------------------------------------
+#
+# UNDER CONSTRUCTION
+#
+# The jam build depends on specialized Jamrules and Jambase files.
+# A central version of these files is currently maintained in
+# ../../jam.  This may change as work proceeds to decouple the
+# Ascend base from the original Tcl/Tk interface.
+#
+#---------------------------------------------------------------------------
+#
+# To compile & install the executable:
+#
+# Modify the parameters below and in Jamrules for your system, then:
+#
+#    jam -f ../../jam/Jambase ascend
+#
+#---------------------------------------------------------------------------
+
+# TODO: remove if end up using SubDir rules
+JAM_GENERAL_DIR = ..$(SLASH)..$(SLASH)jam ;
+include $(JAM_GENERAL_DIR)$(SLASH)Jamrules_general ;
+include .$(SLASH)Jamrules ;
+
+srcdir = ..$(SLASH)generic ;
+
+ASC_INTERFACE_DIR = $(srcdir)$(SLASH)interface ;
+
+HDRS += $(srcdir) ;
+
+# symbolic targets to build Ascend executable
+DEPENDS all : ascend ;
+NOTFILE ascend ;
+
+#=========================================================================
+# Tcl/Tk Interface
+#=========================================================================
+
+ASC_TCLTK_SOURCES =
+  AscBitmaps.c
+  AscPrintTcl.c
+  BrowLogRel_io.c
+  BrowWhen_io.c
+  BrowserMethod.c
+  BrowserProc.c
+  BrowserQuery.c
+  BrowserRel_io.c
+  Commands.c
+  DebugProc.c
+  DisplayProc.c
+  EnvVarProc.c
+  HelpProc.c
+  Integrators.c
+  LibraryProc.c
+  Lsode.c
+  MtxProc.c
+  ProbeProc.c
+  Qlfdid.c
+  ScriptProc.c
+  Sensitivity.c
+  SimsProc.c
+  SlvProc.c
+  SolverProc.c
+  UnitsProc.c
+  UserData.c
+  tkConsole.c
+  typelex.c
+  old_utils.c
+  ;
+
+# set temporary file location
+LOCATE_TARGET = $(BUILD_DIR)$(SLASH)interface ;
+SEARCH_SOURCE = $(ASC_INTERFACE_DIR) ;
+
+# Build the static libary of interface functions
+Library $(ASC_TCLTK_LIBROOT) : $(ASC_TCLTK_SOURCES) ;
+#MakeLocate $(ASC_TCLTK_LIB) : $(BUILD_DIR) ;
+
+# Build the Ascend executable
+Main $(EXE_NAME) : Driver.c ;
+
+ObjectCcFlags $(ASC_TCLTK_SOURCES) Driver.c : $(SOLVER_DEFS) -DTIMESTAMP="\"\\\"by $(BUILD_CREDIT)\\\"\"" ;
+
+ObjectHdrs $(ASC_TCLTK_SOURCES) Driver.c :
+  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_SOURCE_RELPATH)
+  $(TK_HDRS)
+  ;
+
+LinkLibraries $(EXE_NAME) : $(ASC_TCLTK_LIB) $(ASC_BASE_LIBS_QUAL) $(PACKAGE_LIBS) ;
+LINKLIBS on $(EXE_NAME)$(SUFEXE) +=
+    $(FOR_LIBS)
+    $(TK_LIBS)
+    $(TKTABLE_LIB)
+    $(X11_LIBS)
+    $(PC_LIBS)
+    $(MATH_LIBS)
+    $(DL_LIBS)
+    $(DEBUG_LIBS)
+    ;
+
+DEPENDS ascend : $(EXE_NAME)$(SUFEXE) ;
+
+#Depends $(EXE_NAME)$(SUFEXE) :
+#    $(FOR_LIBS)
+#    $(TK_LIBS)
+#    $(TKTABLE_LIB)
+#    $(X11_LIBS)
+#    $(PC_LIBS)
+#    $(MATH_LIBS)
+#    $(DEBUG_LIBS) ;
+
+# set executable build location
+MakeLocate $(EXE_NAME)$(SUFEXE) : $(BUILD_DIR) ;
+
+if $(NT)
+{
+  if ($(BCCROOT) || ($(TOOLSET) = BORLANDC))
+  {
+    # need to fix Borland to include standard libraries location
+    LINKFLAGS on $(EXE_NAME)$(SUFEXE) +=
+    -L$(STDLIBPATH) -tW
+    -L$(TCL_LIB_DIR)
+    -L$(TK_LIB_DIR)
+    -L$(TKTABLE_LIB_DIR)
+    ;
+    if ! $(NODEBUG)
+    { LINKFLAGS on $(EXE_NAME)$(SUFEXE) += -v ; }
+  }
+  else if $(MSVCNT) || $(TOOLSET) = VISUALC)
+  {
+    LINKFLAGS on $(EXE_NAME)$(SUFEXE) +=
+    /L$(TCL_LIB_DIR)
+    /L$(TK_LIB_DIR)
+    /L$(TKTABLE_LIB_DIR)
+    ;
+  }
+  else if $(MINGW) || $(TOOLSET) = MINGW)
+  {
+    LINKFLAGS on $(EXE_NAME)$(SUFEXE) +=
+    -L$(TCL_LIB_DIR)
+    -L$(TK_LIB_DIR)
+    -L$(TKTABLE_LIB_DIR)
+    -mwindows
+    ;
+  }
+  else if $(WATCOM) || $(TOOLSET) = WATCOM)
+  {
+    LINKFLAGS on $(EXE_NAME)$(SUFEXE) +=
+    -\"LIBPATH $(TCL_LIB_DIR)\"
+    -\"LIBPATH $(TK_LIB_DIR)\"
+    -\"LIBPATH $(TKTABLE_LIB_DIR)\"
+    ;
+  }
+}
+else if $(UNIX) || $(OS) = LINUX
+{
+  LINKFLAGS on $(EXE_NAME)$(SUFEXE) +=
+  -L$(TCL_LIB_DIR)
+  -L$(TK_LIB_DIR)
+  -L$(TKTABLE_LIB_DIR)
+  ;
+}
+
+#======================================================================
+# Directory-specific Build Instructions
+#======================================================================
+
+#----------------------------------------------------------------------
+# typelex.c
+#
+# typelex.c implements the Ascend lexical typer.  It is
+# generated by lex/flex if available in the build environment
+# (i.e. $(LEX) is non-null in jam).  If lex/flex is not available,
+# a copy of a pre-generated file is used instead.
+#----------------------------------------------------------------------
+
+# typelex.c needs a special define (Watcom requires the '=""'. )
+ObjectCcFlags typelex.c : -DYY_USE_CONST="" ;
+
+typelex_c = [ FGristSourceFiles typelex.c ] ;
+typelex_h = typelex.h ;
+typelex_l = typelex.l ;
+LEXOPTS on $(typelex_c) = -Ptyp_ ;
+
+LOCATE on $(typelex_c) = $(SEARCH_SOURCE) ;
+LOCATE on $(typelex_h) = $(SEARCH_SOURCE) ;
+LOCATE on $(typelex_l) = $(SEARCH_SOURCE) ;
+
+LEX_or_copy $(typelex_c) : $(typelex_l) : typelex_c_no_flex : $(typelex_h) ;
+
+#======================================================================
+# Install directives
+#======================================================================
+if $(INSTALL_BIN_DIR)
+{
+  InstallBin $(INSTALL_BIN_DIR) : $(EXE_NAME)$(SUFEXE) ;
+
+  if $(INSTALL_TCLTK_LIBS)
+  {
+    if $(NT)
+    {
+      SUFDLIB = .dll ;
+    }
+    else
+    {
+      SUFDLIB = .a ;
+    }
+    LOCATE on $(TCL_LIBS_TO_INSTALL)$(SUFDLIB) = $(TCL_DIR)$(SLASH)bin ;
+    LOCATE on $(TK_LIBS_TO_INSTALL)$(SUFDLIB)  = $(TK_DIR)$(SLASH)bin ;
+
+    InstallFile $(INSTALL_BIN_DIR) : $(TCL_LIBS_TO_INSTALL)$(SUFDLIB) ;
+    InstallFile $(INSTALL_BIN_DIR) : $(TK_LIBS_TO_INSTALL)$(SUFDLIB) ;
+  }
+}
+
+if $(INSTALL_MODELS_DIR)
+{
+  INSTALL_MODELS_FILES =
+    Guthrie_costs.a4l
+    KenPendings.a4l
+    README
+    README.html
+    README.txt
+    abc_flowsheet.a4l
+    atoms.a4l
+    basemodel.a4l
+    bvp.a4l
+    casestudy.a4s
+    collocation.a4l
+    collocation.a4s
+    collocation_tests.a4s
+    column.a4l
+    components.a4l
+    cost_column.a4l
+    distance_calc.a4c
+    dyn_column.a4l
+    dyn_flash.a4l
+    dyn_separation_demos.a4s
+    dyn_tank.a4c
+    dyn_tank.a4s
+    flash.a4l
+    force1d.a4c
+    force1d.a4s
+    heatex.a4c
+    heatex.a4s
+    ivpsystem.a4l
+    kinetics.a4l
+    kinetics.a4s
+    linear_balance.a4c
+    linear_balance.a4s
+    measures.a4l
+    mix.a4l
+    mix.a4s
+    old_separation_demos.a4s
+    phaseq.a4c
+    phaseq.a4s
+    phaseq_comp.a4c
+    phaseq_comp.a4s
+    phases.a4l
+    pipeline.a4c
+    pipeline.a4s
+    plot.a4l
+    plotbvp.a4c
+    plotbvp.a4s
+    plotcol.a4c
+    rachford.a4c
+    rachford.a4s
+    ratelaws.a4c
+    reactor.a4l
+    reactor.a4s
+    roots_of_poly.a4c
+    separation_demos.a4s
+    set_intervals.tcl
+    simple_fs.a4c
+    simple_fs.a4s
+    simple_fs_cost.a4c
+    simple_fs_cost.a4s
+    simple_fs_ext.a4c
+    sonic.a4c
+    sonic.a4s
+    splitter.a4l
+    splitter.a4s
+    stream_holdup.a4l
+    system.a4l
+    ternary_plot.a4l
+    thermodynamics.a4l
+    vessel.a4c
+    vessel.a4s
+    vesselMethods.a4c
+    vesselNotes.a4c
+    vesselParams.a4c
+    vesselPlain.a4c
+    vesselPlot.a4c
+    vesselPlot.a4s
+    vesselStudy.a4s
+    vesselTabulated.a4c
+    vesselTabulated.a4s
+    when_demo.a4c
+    when_demo.a4s
+    z-addmethod.a4c
+    z-align.a4c
+    z-alike.a4c
+    z-anontype.a4c
+    z-arsubs.a4c
+    z-context.a4c
+    z-emptyarg.a4c
+    z-emptyfor.a4c
+    z-iflogic.a4c
+    z-indirect.a4c
+    z-isawhere.a4c
+    z-relname.a4c
+    z-suite.a4s
+    ;
+
+  INSTALL_MODELS_BEN_FILES =
+    benHGthermo.a4l
+    bencolumn.a4l
+    bencomponents.a4l
+    benflash.a4l
+    benplot.a4l
+    benplotcol.a4c
+    benpropertyoptions.a4l
+    benstream.a4l
+    test_components.a4s
+    ;
+
+  LOCATE on $(INSTALL_MODELS_FILES) = $(ASC_MODELS_DIR) ;
+  InstallFile $(INSTALL_MODELS_DIR) : $(INSTALL_MODELS_FILES) ;
+
+  LOCATE on $(INSTALL_MODELS_BEN_FILES) = $(ASC_MODELS_DIR)$(SLASH)ben ;
+  InstallFile $(INSTALL_MODELS_DIR)$(SLASH)ben : $(INSTALL_MODELS_BEN_FILES) ;
+}
+
+if $(INSTALL_ASC_TK_DIR)
+{
+  INSTALL_TK_FILES =
+    AscendRC
+    BrowserProc.tcl
+    CallbackProc.tcl
+    DebugProc.tcl
+    DisplayProc.tcl
+    GlobalProc.tcl
+    HubProc.tcl
+    LibraryProc.tcl
+    License-Warranty.tcl
+    MtxProc.tcl
+    NoteboxProc.tcl
+    ProbeProc.tcl
+    ScriptProc.tcl
+    SolverProc.tcl
+    ToolboxProc.tcl
+    TypetreeProc.tcl
+    UnitsProc.tcl
+    UtilProc.tcl
+    View.tcl
+    WWWHelpProc.tcl
+    WhoDunnit.tcl
+    ascStudy.tcl
+    ascend.ad
+    ascend.tcl
+    ascplot.tcl
+    ascplotproc.tcl
+    baatest.tcl
+    browser.tcl
+    callback.tcl
+    debug.tcl
+    display.tcl
+    generalk.tcl
+    library.tcl
+    main.tcl
+    mergedat.tcl
+    methods.tcl
+    mps.tcl
+    mtx.tcl
+    notebox.tcl
+    pane.tcl
+    probe.tcl
+    script.tcl
+    solver.tcl
+    tclIndex
+    toolbox.tcl
+    typetree.tcl
+    units.tcl
+    util.tcl
+    ;
+    
+  INSTALL_TK_BITMAPS_FILES =
+    a4c.xbm
+    a4l.xbm
+    a4s.xbm
+    c.xbm
+    cpp.xbm
+    crash.xbm
+    cut.xf.xbm
+    delete.xf.xbm
+    emacs.xbm
+    error
+    feet.xbm
+    folder
+    global.xf.xbm
+    gnu-ascend.xbm
+    gnu.xbm
+    grablock.xbm
+    gray25
+    gray33
+    gray50
+    graybar
+    grill
+    h.xbm
+    hourglass
+    info
+    opt.xbm
+    place.xf.xbm
+    questhead
+    question
+    stop.xbm
+    text
+    time.xbm
+    toolAttributes.xbm
+    tree.xf.xbm
+    warning.xf.xbm
+    wfeet.xbm
+    ;
+
+  INSTALL_TK_TEMPLATES_FILES =
+    AscConfirm.t
+    AscMonoEntry1.t
+    AscMonoEntry2.t
+    AscMonoEntry4.t
+    amlscroll.tcl
+    ascKeepOnTop.tcl
+    ascListSelect.tcl
+    ascListSelectB1.tcl
+    ascMsgBox.tcl
+    ascdialog.tcl
+    ascfontsel.tcl
+    ascparm.tcl
+    balloon.tcl
+    asctkfbox.tcl
+    ;
+
+  LOCATE on $(INSTALL_TK_FILES) = $(ASC_TK_DIR) ;
+  InstallFile $(INSTALL_ASC_TK_DIR) : $(INSTALL_TK_FILES) ;
+
+  LOCATE on $(INSTALL_TK_BITMAPS_FILES) = $(ASC_TK_DIR)$(SLASH)bitmaps ;
+  InstallFile $(INSTALL_ASC_TK_DIR)$(SLASH)bitmaps : $(INSTALL_TK_BITMAPS_FILES) ;
+
+  LOCATE on $(INSTALL_TK_TEMPLATES_FILES) = $(ASC_TK_DIR)$(SLASH)templates ;
+  InstallFile $(INSTALL_ASC_TK_DIR)$(SLASH)templates : $(INSTALL_TK_TEMPLATES_FILES) ;
+}

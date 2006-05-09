@@ -1,0 +1,205 @@
+#
+# Jamrules support file for building Ascend4
+# (see http://www.freetype.org/jam/index.html)
+#
+# This file is part of the Ascend Build System.
+#
+# Copyright (C) 2004, 2005  Jerry D. St.Clair
+#
+# The Ascend Build System is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public 
+# License as published by the Free Software Foundation; either 
+# version 2 of the License, or (at your option) any later version.
+#
+# This program is distributed in hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the program; if not, write to the Free Software 
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  
+# Check the file named COPYING.
+#---------------------------------------------------------------------------
+#
+# UNDER CONSTRUCTION
+#
+# This is a template Jamrules file which supports building the
+# Tcl/Tk version of the Ascend modeling system, as well as a static
+# library of Tcl/Tk interface functionality. The Ascend jam build 
+# system currently supports building the libraries using the gcc 
+# (unix, linux, mingw), MSVC, Borland, and Watcom compilers.
+#
+# This file is part of the ASCEND jam build system rooted at ../../jam.
+# See ../../jam/ReadMe.txt for more information.
+#
+# This file is customized on autotools-capable systems like
+# Linux and MinGW/MSYS using configure.
+#
+# On other platforms, users should copy/rename this file to 
+# 'Jamrules_tcltk', then modify the settings manually for their 
+# particular system.  ASCEND cannot be built by jam unless the 
+# Jamrules_tcltk file is present.
+#
+# User-customized Jamrules_tcltk files should not be placed in 
+# version control.  Only the Jamrules_tcltk.in template should 
+# be versioned.
+#
+#---------------------------------------------------------------------------
+
+JAMRULES_TCLTK_ALREADY_SEEN = TRUE ;
+
+# root directory for installation
+if $(UNIX) || $(OS) = LINUX
+{
+  prefix = @prefix@ ;
+}
+prefix ?=  c:\\dev ;
+
+INSTALL_ROOT = $(prefix) ;
+
+# name of the builder of the executable (in double quotes)
+BUILD_CREDIT = "anonymous" ;
+
+# name of the executable to create
+if $(NODEBUG)
+  { EXE_NAME = ascopt4 ; }
+else
+  { EXE_NAME = ascend4 ; }
+
+# name of the tcltk library
+ASC_TCLTK_LIBROOT = libasctcltk ;
+ASC_TCLTK_LIB     = $(ASC_TCLTK_LIBROOT)$(SUFLIB) ;
+
+# Install directories - comment to not install that class of file
+INSTALL_BIN_DIR     = $(INSTALL_ROOT)$(SLASH)bin ;
+INSTALL_DOC_DIR     = $(INSTALL_ROOT)$(SLASH)doc ;
+#INSTALL_MODELS_DIR  = $(INSTALL_ROOT)$(SLASH)models ;
+INSTALL_ASC_TK_DIR  = $(INSTALL_ROOT)$(SLASH)TK ;
+INSTALL_USER_DIR    = $(INSTALL_ROOT)$(SLASH)user_models ;
+INSTALL_TCL_DIR     = $(INSTALL_ROOT)$(SLASH)Tcl ;
+
+# Locations of pre-built install files
+ASC_DOC_DIR    = ;
+ASC_MODELS_DIR = $(TOP)(SLASH)models ;
+ASC_TK_DIR     = $(TOP)$(SLASH)tcltk$(SLASH)TK ;
+
+# Paths to base libraries
+#ASC_BASE_LIBS_QUAL =
+#  $(JAM_GENERAL_DIR)$(SLASH)$(ASC_BASE_LIBS_RELPATH)$(ASC_BASE_LIBS) ;
+
+# Paths to FORTRAN libraries
+#FOR_LIBS =
+#  $(JAM_GENERAL_DIR)$(SLASH)$(LSODLIB_RELPATH)$(SLASH)$(LSODLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(MINOSLIB_RELPATH)$(SLASH)$(MINOSLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(CONOPTLIB_RELPATH)$(SLASH)$(CONOPTLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(LPAKLIB_RELPATH)$(SLASH)$(LPAKLIB)
+#  $(JAM_GENERAL_DIR)$(SLASH)$(BLASLIB_RELPATH)$(SLASH)$(BLASLIB)
+#  $(F77_LIBS)
+#  ;
+
+#======================================================================
+# TCL / TK
+#
+# Set the location of the Tcl/Tk import libraries and include files.
+# The order should be -ltk -ltcl
+#
+# We also need the TkTable widget which does not come as a
+# standard part of the Tcl/Tk distribution.  This library can
+# either be loaded statically or dynamically.
+#
+# If TK_LIBS and TK_HDRS are not properly set, ASCEND cannot build.
+#======================================================================
+
+if $(UNIX) || $(OS) = LINUX || $(OSTYPE) = msys {
+
+	# Here's the unix/Linux version
+	# This should also be run under msys, since it will work with
+	# autoconf, eventually...
+
+	TCL_LIBRARY = @TCL_LIB@ ;
+	TK_LIBRARY  = @TK_LIB@ ;
+	TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) $(DL_LIBS) ;
+	
+	#  The location of the tcl.h and tk.h header files
+	TK_INCS  = @TCL_HDR@ @TK_HDR@ ;
+	
+	#  We also need the TkTable widget which does not come as a
+	#  standard part of the Tcl/Tk distribution.  This library can
+	#  either be loaded statically or dynamically.  If the configure
+	#  script found libTktable.a, use static loading; otherwise, use
+	#  dynamic loading.
+	#
+	HAVE_TKTABLE = @HAVE_TKTABLE@ ;
+	TKTABLE_LIB = @TKTABLE_LIB@ ;
+
+	# INSTALL_TCLTK_LIBS = 1 ;
+
+} else if $(NT) {
+
+  # And here's the Windows version
+
+  # The top-level Tcl/Tk directories:
+  TCL_DIR = C:\\dev\\Tcl ;
+  TK_DIR  = $(TCL_DIR) ;
+
+  #  Location of the tcl.h and tk.h header files
+  TK_HDRS = $(TK_DIR)$(SLASH)include ;
+  if $(TCL_DIR) != $(TK_DIR)
+  {
+    TK_HDRS += $(TCL_DIR)$(SLASH)include ;
+  }
+
+  # the locations of the tcl, tk, and tktable libraries
+  TCL_LIB_DIR     = $(TCL_DIR)$(SLASH)lib ;
+  TK_LIB_DIR      = $(TK_DIR)$(SLASH)lib ;
+  TKTABLE_LIB_DIR = $(TCL_DIR)$(SLASH)lib ;
+
+  # Set the Tcl/Tk/tkTable import library names here to override the
+  # default, compiler-specific names below.  Comment out to use defaults.
+#  TCL_LIBRARY = libtcl8.0$(SUFLIB) ;
+#  TK_LIBRARY  = libtk8.0$(SUFLIB) ;
+#  TKTABLE_LIB = libTktable2.8$(SUFLIB) ;
+
+  if $(BCCROOT) || ( $(TOOLSET) = BORLANDC )
+  {
+    TCL_LIBRARY ?= tcl80_bc$(SUFLIB) ;
+    TK_LIBRARY  ?= tk80_bc$(SUFLIB) ;
+    TKTABLE_LIB ?= tkTable_bc$(SUFLIB) ;
+  }
+  else if $(MSVCNT) || ( $(TOOLSET) = VISUALC )
+  {
+    TCL_LIBRARY ?= tcl80$(SUFLIB) ;
+    TK_LIBRARY  ?= tk80$(SUFLIB) ;
+    TKTABLE_LIB ?= tkTable$(SUFLIB) ;
+  }
+  else if $(MINGW) || ( $(TOOLSET) = MINGW )
+  {
+    TCL_LIBRARY ?= libtcl80$(SUFLIB) ;
+    TK_LIBRARY  ?= libtk80$(SUFLIB) ;
+    TKTABLE_LIB ?= libtkTable$(SUFLIB) ;
+  }
+  else if $(WATCOM) || ( $(TOOLSET) = WATCOM )
+  {
+    TCL_LIBRARY ?= tcl80_wat$(SUFLIB) ;
+    TK_LIBRARY  ?= tk80_wat$(SUFLIB) ;
+    TKTABLE_LIB ?= tkTable_wat$(SUFLIB) ;
+  }
+
+  #  The tcl and tk library files (derived from variable set above)
+  TK_LIBS =
+    $(TK_LIB_DIR)$(SLASH)$(TK_LIBRARY)
+    $(TCL_LIB_DIR)$(SLASH)$(TCL_LIBRARY)
+    ;
+
+  #  The tktable library file (derived from variable set above)
+  TKTABLE_LIB = $(TKTABLE_LIB_DIR)$(SLASH)$(TKTABLE_LIB) ;
+
+  # Uncomment to copy Tcl/Tk dynamic libraries to install bin directory
+  INSTALL_TCLTK_LIBS = 1 ;
+}
+
+# TclTk dynamic libraries to install to bin directory
+TCL_LIBS_TO_INSTALL = tcl80 tclpip80 Tcl1680 Cw3215mt ;
+TK_LIBS_TO_INSTALL  = tk80 ;
+

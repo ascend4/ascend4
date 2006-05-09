@@ -1,0 +1,4 @@
+Here we find old hacks for entry bindings and emacs bindings on the
+text widget (Script). May want to selectively reintroduce some of these
+after the man pages for the tk8 widgets have been reviewed to see if
+there isn't a better way to get what we want.
