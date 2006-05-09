@@ -11,7 +11,7 @@ VPATH = @fullpathsrcdir@/../generic
 INCMAKE = $(builddir)/ConfigAscend
 include $(INCMAKE)
 
-IFACE_DIR=../../tcltk98/generic/
+IFACE_DIR=../../tcltk/generic/
 # remote IFACE_DIR no longer needed
 IFACE_DIR=.
 

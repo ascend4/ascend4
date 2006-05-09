@@ -227,8 +227,8 @@ patch: clean
 	pushd $(SOURCE_ROOT)/base && \
 	svn diff > ../pygtk/interface/ascend-base.patch && \
 	popd
-	pushd $(SOURCE_ROOT)/tcltk98 && \
-	svn diff > ../pygtk/interface/ascend-tcltk98.patch && \
+	pushd $(SOURCE_ROOT)/tcltk && \
+	svn diff > ../pygtk/interface/ascend-tcltk.patch && \
 	popd
 
 #---------------------------

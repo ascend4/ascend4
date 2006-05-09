@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\generic;..\..\..\tcltk98\generic"
+				AdditionalIncludeDirectories="..\generic;..\..\..\tcltk\generic"
 				PreprocessorDefinitions="_WIN32;WIN32;_DEBUG;_X86_=1"
 				MinimalRebuild="FALSE"
 				BasicRuntimeChecks="0"
@@ -62,7 +62,7 @@
 			ManagedExtensions="FALSE">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\generic;..\..\tcltk98\generic"
+				AdditionalIncludeDirectories="..\generic;..\..\tcltk\generic"
 				PreprocessorDefinitions="WIN32;_WIN32;_X86_=1;NDEBUG"
 				MinimalRebuild="FALSE"
 				RuntimeLibrary="0"
@@ -194,7 +194,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="..\..\tcltk98\generic"/>
+						AdditionalIncludeDirectories="..\..\tcltk\generic"/>
 				</FileConfiguration>
 			</File>
 			<File
@@ -218,7 +218,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="..\..\tcltk98\generic"/>
+						AdditionalIncludeDirectories="..\..\tcltk\generic"/>
 				</FileConfiguration>
 			</File>
 			<File

@@ -1,5 +1,5 @@
 /*
- *  base/generic/compiler/qlfdid.c created from tcltk98/generic/interface/Qlfdid.c
+ *  base/generic/compiler/qlfdid.c created from tcltk/generic/interface/Qlfdid.c
  *  Created: 1/94
  *  Version: $Revision: 1.22 $
  *  Version control file: $RCSfile: Qlfdid.c,v $
@@ -520,7 +520,7 @@ int Asc_QlfdidSearch3(CONST char *str, int relative)
   }
   found = BrowQlfdidSearch3(str,temp,relative);
   ascfree(temp);
-  if (found != NULL) {                            
+  if (found != NULL) {
     return 0;
   } else {
     return 1;

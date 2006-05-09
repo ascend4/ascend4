@@ -133,7 +133,7 @@
 
 static int g_iteration = 0;	/* the current iteration. */
 
-/* moved from tcltk98/generic/interface/SimsProc.c */
+/* moved from tcltk/generic/interface/SimsProc.c */
 struct Instance *g_cursim;
 
 #define NEW_ext 1
@@ -7390,10 +7390,10 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
   case SELECT:
     return CheckSELECT(inst,statement);
   case REL: /* not broken. equations disallowed. */
-  case LOGREL: 
-  case EXT: 
-  case CALL: 
-  case WHEN: 
+  case LOGREL:
+  case EXT:
+  case CALL:
+  case WHEN:
   case FNAME:
     if (g_iteration>=MAXNUMBER) { /* see WriteUnexecutedMessage */
        STATEMENT_ERROR(statement,
@@ -12071,7 +12071,7 @@ void Pass2SetRelationBits(struct Instance *inst)
           }
         }
         else {
-          if ( st == REL || 
+          if ( st == REL ||
 #if NEW_ext
 		st == EXT ||
 #endif

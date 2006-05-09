@@ -22,10 +22,10 @@ to build ASCEND with jam:
   ../blas/Jamfile            - builds the blas library
   ../linpack/Jamfile         - builds the linpack library
   ../lsod/Jamfile            - builds the LSODE library
-  ../tcltk98/generic/Jamfile - builds the tcltk98 executable
-  ../tcltk98/generic/Jamrules_tcltk98.in
+  ../tcltk/generic/Jamfile - builds the tcltk executable
+  ../tcltk/generic/Jamrules_tcltk.in
                              - configuration & custom build rules used
-                               build the tcltk98 executable
+                               build the tcltk executable
 
 
 The ASCEND jam build system intends to support building under Windows
@@ -36,7 +36,7 @@ However, the system was developed primarily using ftjam.  For best
 results using your default Jambase, use of ftjam is recommended and
 probably required.
 
-Automatic processing of Jamrules.in and ../tcltk98/generic/Jamrules_tcltk98.in
+Automatic processing of Jamrules.in and ../tcltk/generic/Jamrules_tcltk.in
 by configure has now been implemented for systems supporting autoconf.
 Configure should automatically set most necessary build options, although
 some manual tweaking may still be necessary.  The configure.in file is
@@ -66,11 +66,11 @@ You can build the Jam static libraries on Linux at present:
    (b) If NOT using autoconf, manually copy the following files:
    
       - ./Jamrules.in  -->  ./Jamrules
-      - ../tcltk98/generic/Jamrules_tcltk98.in  --> 
-                    ../tcltk98/generic/Jamrules_tcltk98
+      - ../tcltk/generic/Jamrules_tcltk.in  --> 
+                    ../tcltk/generic/Jamrules_tcltk
 
 3. If necessary or desired, manually edit the generated ./Jamrules and
-   ../tcltk98/generic/Jamrules_tcltk98 files to set configuration and local
+   ../tcltk/generic/Jamrules_tcltk files to set configuration and local
    directory options.  These settings are used by all the Jamfiles
    in the ASCEND source tree.
 

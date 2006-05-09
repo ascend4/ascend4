@@ -25,7 +25,7 @@
 # UNDER CONSTRUCTION                                 
 #
 # This Jamfile builds ASCEND.  This includes the base, blas,
-# linpack, lsod, and tcltk98 static libraries, the tcltk98
+# linpack, lsod, and tcltk static libraries, the tcltk
 # executable, and a prototype regression test suite.
 #
 # This file is part of the ASCEND jam build system rooted at ../../jam.
@@ -62,4 +62,4 @@ if $(BUILD_LPAK) != FALSE
   { SubInclude TOP linpack ; }
 if $(BUILD_LSODE) != FALSE
   { SubInclude TOP lsod ; }
-SubInclude TOP tcltk98 generic ;
+SubInclude TOP tcltk generic ;

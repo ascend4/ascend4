@@ -540,7 +540,7 @@ PIXIEDIR= a4
 #AWW: not sure why -I@asc_include@ is here, but I know the others are
 #AWW: needed - based on those comments.
 #AWW20041206: ASC_INCS = -I@asc_include@ -I..
-ASC_INCS = -I@fullpathsrcdir@/../generic  -I@fullpathsrcdir@/../../tcltk98/generic -I..
+ASC_INCS = -I@fullpathsrcdir@/../generic  -I@fullpathsrcdir@/../../tcltk/generic -I..
 
 #  library files for ascend
 #

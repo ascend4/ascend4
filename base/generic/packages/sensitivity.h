@@ -49,7 +49,7 @@
 	of dz/dx, that pertain to the y variables that we are interested in;
 	this will give us dy/dx.
 
-	@todo Do we really need 2 files called [Ss]ensitivity.[ch]?  Other one is in tcltk98.
+	@todo Do we really need 2 files called [Ss]ensitivity.[ch]?  Other one is in tcltk.
 
 	@todo Make this self-registering so that it can be compiled as a dlopenable library.
 */

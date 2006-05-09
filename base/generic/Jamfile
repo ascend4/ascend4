@@ -83,7 +83,7 @@ NOTFILE libs ;
 # source is reorganized to decouple the base and interface
 # components, we have to be able to find those headers
 # TODO:  remove/rework when Tcl/Tk decoupled from base library
-ASC_INTERFACE_ROOT = $(TOP)$(SLASH)tcltk98$(SLASH)generic ;
+ASC_INTERFACE_ROOT = $(TOP)$(SLASH)tcltk$(SLASH)generic ;
 
 #=========================================================================
 # Compiler module

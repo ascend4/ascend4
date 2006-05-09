@@ -33,7 +33,7 @@ THIS FILE IS DEPRECATED - 20-Dec-2005
 # If you have a linpack library (e.g. liblpak.a or liblpak.lib) tuned
 # to your hardware, use it instead.  To do that, set the LPAKLIB
 # variable in the corresponding Ascend executable Jamfile
-# (e.g. ../../tcltk98/jam/Jamfile) to point that library's
+# (e.g. ../../tcltk/jam/Jamfile) to point that library's
 # location (e.g., /usr/lib/liblinpack.a or c:\\linpack\\lib\\liblinpack.lib)
 #
 # The Ascend jam build system currently supports building the library
