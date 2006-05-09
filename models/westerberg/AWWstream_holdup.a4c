@@ -191,13 +191,13 @@ END bound_all;
 
 METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed := FALSE;
+	FREE state.y[components];
 END seqmod;
 
 METHOD specify;
 	RUN state.specify;
-	state.y[components].fixed := FALSE;
-	f[components].fixed := TRUE;
+	FREE state.y[components];
+	FIX f[components];
 END specify;
 
 END detailed_stream;
@@ -312,8 +312,8 @@ END scale_self;
 
 METHOD specify;
 	RUN state.specify;
-	m[components].fixed := TRUE;
-	state.y[components].fixed := FALSE;
+	FIX m[components];
+	FREE state.y[components];
 END specify;
 
 END detailed_holdup;
@@ -506,7 +506,7 @@ METHOD seqmod;
 END seqmod;
 
 METHOD specify;
-	P.fixed := TRUE;
+	FIX P;
 	RUN Details.specify;
 END specify;
 
@@ -623,7 +623,7 @@ METHOD scale_all;
 END scale_all;
 
 METHOD specify;
-	P.fixed := TRUE;
+	FIX P;
 	RUN Details.specify;
 END specify;
 

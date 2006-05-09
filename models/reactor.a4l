@@ -182,25 +182,25 @@ MODEL single_phase_cstr(
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed	:= FALSE;
-	    dMi_dt[cd.other_components].fixed	:= TRUE;
-	    Mi[cd.other_components].fixed	:= FALSE;
-	    dM_dt.fixed				:= TRUE;
-	    M.fixed				:= FALSE;
-	    dU_dt.fixed				:= TRUE;
-	    U.fixed				:= FALSE;
-	    Volume.fixed			:= TRUE;
+	    FREE state.y[cd.components];
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.other_components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FIX Volume;
 	    IF(dynamic = TRUE) THEN
-		Mi[cd.other_components].fixed	:= TRUE;
-		dMi_dt[cd.other_components].fixed:= FALSE;
-		M.fixed				:= TRUE;
-		dM_dt.fixed			:= FALSE;
-		U.fixed				:= TRUE;
-		dU_dt.fixed			:= FALSE;
-		output.flow.fixed		:= TRUE;
-		Volume.fixed			:= FALSE;
-		Qin.fixed			:= TRUE;
-		state.T.fixed			:= FALSE;
+		FIX Mi[cd.other_components];
+		FREE dMi_dt[cd.other_components];
+		FIX M;
+		FREE dM_dt;
+		FIX U;
+		FREE dU_dt;
+		FIX output.flow;
+		FREE Volume;
+		FIX Qin;
+		FREE state.T;
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};
@@ -418,39 +418,39 @@ MODEL multiple_phase_cstr(
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed := FALSE;
+	    FREE state.y[cd.components];
 	    IF equilibrated THEN
-		state.T.fixed :=FALSE;
+		FREE state.T;
 	    ELSE
-		state.T.fixed :=TRUE;
+		FIX state.T;
 	    END IF;
-	    state.phase_fraction['vapor'].fixed :=FALSE;
-	    split_fraction['vapor'].fixed :=TRUE;
-	    dMi_dt[cd.other_components].fixed :=TRUE;
-	    Mi[cd.other_components].fixed :=FALSE;
-	    dM_dt.fixed :=TRUE;
-	    M.fixed :=FALSE;
-	    dU_dt.fixed :=TRUE;
-	    U.fixed :=FALSE;
-	    Vol.fixed :=TRUE;
-	    vol_liq.fixed :=TRUE;
+	    FREE state.phase_fraction['vapor'];
+	    FIX split_fraction['vapor'];
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.other_components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FIX Vol;
+	    FIX vol_liq;
 	    IF dynamic THEN
-		dMi_dt[cd.other_components].fixed :=FALSE;
-		Mi[cd.other_components].fixed :=TRUE;
-		dM_dt.fixed :=FALSE;
-		M.fixed :=TRUE;
-		dU_dt.fixed :=FALSE;
-		U.fixed :=TRUE;
-		Qin.fixed :=TRUE;
+		FREE dMi_dt[cd.other_components];
+		FIX Mi[cd.other_components];
+		FREE dM_dt;
+		FIX M;
+		FREE dU_dt;
+		FIX U;
+		FIX Qin;
 		IF equilibrated THEN
-		    state.P.fixed		:=FALSE;
+		    FREE state.P;
 		ELSE
-		    state.T.fixed		:=FALSE;
+		    FREE state.T;
 		END IF;
-		vol_liq.fixed :=FALSE;
-		liqout.flow.fixed :=TRUE;
-		vapout.flow.fixed :=TRUE;
-		split_fraction['vapor'].fixed	:=FALSE;
+		FREE vol_liq;
+		FIX liqout.flow;
+		FIX vapout.flow;
+		FREE split_fraction['vapor'];
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};

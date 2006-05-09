@@ -61,9 +61,9 @@ MODEL cost_info_pressure_vessel;
   METHODS
 
     METHOD specify;
-	MandSindex.fixed	:=	TRUE;
-	Fm.fixed		:=	TRUE;
-	Fp.fixed		:=	TRUE;
+	FIX MandSindex;
+	FIX Fm;
+	FIX Fp;
     END specify;
 
     METHOD reset;
@@ -88,8 +88,8 @@ MODEL Guthrie_cost_pressure_vessel;
 
     METHOD specify;
 	RUN ci.specify;
-	D.fixed			:=	TRUE;
-	H.fixed			:=	TRUE;
+	FIX D;
+	FIX H;
     END specify;
 
     METHOD reset;
@@ -125,11 +125,11 @@ MODEL simple_pressure_vessel_cost;
 
     METHOD specify;
 	RUN gc.specify;
-	D.fixed			:=	FALSE;
-	H.fixed			:=	FALSE;
-	vol_flow.fixed		:=      TRUE;
-	liq_holdup_time.fixed	:=	TRUE;
-	H_to_D.fixed		:=	TRUE;
+	FREE D;
+	FREE H;
+	FIX vol_flow;
+	FIX liq_holdup_time;
+	FIX H_to_D;
     END specify;
 
     METHOD reset;

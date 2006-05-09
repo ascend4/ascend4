@@ -78,7 +78,7 @@ METHOD scale_self;
 END scale_self;
 
 METHOD specify;
-	F_right.fixed := TRUE;
+	FIX F_right;
 END specify;
 METHOD specify_float;
 END specify_float;
@@ -154,15 +154,15 @@ METHOD scale_self;
 END scale_self;
 
 METHOD specify;
-	L0.fixed := TRUE;
+	FIX L0;
 	RUN h_left.reset;
 	RUN h_right.reset;
-	h_left.F_right.fixed := FALSE;
-	h_left.X.fixed := TRUE;
+	FREE h_left.F_right;
+	FIX h_left.X;
 END specify;
 
 METHOD specify_float;
-	L0.fixed := TRUE;
+	FIX L0;
 	RUN h_left.specify_float;
 	RUN h_right.specify_float;
 END specify_float;
@@ -235,15 +235,15 @@ METHOD scale_self;
 END scale_self;
 
 METHOD specify;
-	width.fixed := TRUE;
+	FIX width;
 	RUN h_left.reset;
-	h_left.F_right.fixed := FALSE;
-	h_left.X.fixed := TRUE;
+	FREE h_left.F_right;
+	FIX h_left.X;
 	RUN h_right.reset;
 END specify;
 
 METHOD specify_float;
-	width.fixed := TRUE;
+	FIX width;
 	RUN h_left.specify_float;
 	RUN h_right.specify_float;
 END specify_float;
@@ -356,8 +356,8 @@ END scale_self;
 
 METHOD specify;
 	RUN h1.reset;
-	h1.F_right.fixed := FALSE;
-	pull.fixed := TRUE;
+	FREE h1.F_right;
+	FIX pull;
 END specify;
 
 END finger;

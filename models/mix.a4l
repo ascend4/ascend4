@@ -90,9 +90,9 @@ MODEL mixer(
 
     METHOD seqmod;
 	RUN output.specify;
-	output.T.fixed :=FALSE;
+	FREE output.T;
 	FOR i IN cd.components DO
-	    output.f[i].fixed :=FALSE;
+	    FREE output.f[i];
 	END FOR;
     END seqmod;
 

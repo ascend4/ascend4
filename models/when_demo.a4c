@@ -48,11 +48,11 @@ MODEL mixture;
     END default_self;
 
     METHOD specify;
-        Cpi[components].fixed := TRUE;
-        P.fixed := TRUE;
-        T.fixed := TRUE;
-        y[components].fixed := TRUE;
-        y[CHOICE[components]].fixed := FALSE;
+        FIX Cpi[components];
+        FIX P;
+        FIX T;
+        FIX y[components];
+        FREE y[CHOICE[components]];
     END specify;
 
 END mixture;
@@ -85,8 +85,8 @@ MODEL molar_stream;
 
     METHOD specify;
 	RUN state.specify;
-	state.y[components].fixed := FALSE;
-	f[components].fixed := TRUE;
+	FREE state.y[components];
+	FIX f[components];
    END specify;
 
 END molar_stream;
@@ -116,10 +116,10 @@ METHODS
 
     METHOD specify;
 	RUN stream.specify;
-	stream.f[stream.components].fixed := FALSE;
-	cost_factor.fixed := TRUE;
-	stream.T.fixed := FALSE;
-	stream.P.fixed := FALSE;
+	FREE stream.f[stream.components];
+	FIX cost_factor;
+	FREE stream.T;
+	FREE stream.P;
     END specify;
 
 END cheap_feed;
@@ -149,10 +149,10 @@ METHODS
 
     METHOD specify;
 	RUN stream.specify;
-	stream.f[stream.components].fixed := FALSE;
-	cost_factor.fixed := TRUE;
-	stream.T.fixed := FALSE;
-	stream.P.fixed := FALSE;
+	FREE stream.f[stream.components];
+	FIX cost_factor;
+	FREE stream.T;
+	FREE stream.P;
     END specify;
 
 END expensive_feed;
@@ -190,13 +190,13 @@ METHODS
 
    METHOD specify;
 	RUN input.specify;
-	cost_factor.fixed := TRUE;
-	heat_supplied.fixed := TRUE;
+	FIX cost_factor;
+	FIX heat_supplied;
    END specify;
 
    METHOD seqmod;
-	cost_factor.fixed := TRUE;
-	heat_supplied.fixed := TRUE;
+	FIX cost_factor;
+	FIX heat_supplied;
    END seqmod;
 
 END heater;
@@ -234,13 +234,13 @@ METHODS
 
    METHOD specify;
 	RUN input.specify;
-	cost_factor.fixed := TRUE;
-	heat_removed.fixed := TRUE;
+	FIX cost_factor;
+	FIX heat_removed;
    END specify;
 
    METHOD seqmod;
-	cost_factor.fixed := TRUE;
-	heat_removed.fixed := TRUE;
+	FIX cost_factor;
+	FIX heat_removed;
    END seqmod;
 
 END cooler;
@@ -283,13 +283,13 @@ METHODS
 
    METHOD specify;
 	RUN input.specify;
-	cost_factor.fixed := TRUE;
-	pressure_rate.fixed := TRUE;
+	FIX cost_factor;
+	FIX pressure_rate;
    END specify;
 
    METHOD seqmod;
-	cost_factor.fixed := TRUE;
-	pressure_rate.fixed := TRUE;
+	FIX cost_factor;
+	FIX pressure_rate;
    END seqmod;
 
 END single_compressor;
@@ -346,17 +346,17 @@ METHODS
 
    METHOD specify;
 	RUN input.specify;
-	n_stages.fixed := TRUE;
-	cost_factor_heat.fixed := TRUE;
-	cost_factor_work.fixed := TRUE;
-	pressure_rate.fixed := TRUE;
+	FIX n_stages;
+	FIX cost_factor_heat;
+	FIX cost_factor_work;
+	FIX pressure_rate;
    END specify;
 
    METHOD seqmod;
-	n_stages.fixed := TRUE;
-	cost_factor_heat.fixed := TRUE;
-	cost_factor_work.fixed := TRUE;
-	pressure_rate.fixed := TRUE;
+	FIX n_stages;
+	FIX cost_factor_heat;
+	FIX cost_factor_work;
+	FIX pressure_rate;
    END seqmod;
 
 END staged_compressor;
@@ -394,12 +394,12 @@ MODEL mixer;
     END default_self;
 
     METHOD specify;
-	To.fixed := TRUE;
+	FIX To;
 	RUN feed[1..n_inputs].specify;
     END specify;
 
     METHOD seqmod;
-	To.fixed := TRUE;
+	FIX To;
     END seqmod;
 
 END mixer;
@@ -433,11 +433,11 @@ MODEL splitter;
 
     METHOD specify;
 	RUN feed.specify;
-	split[1..n_outputs-1].fixed:=	TRUE;
+	FIX split[1..n_outputs-1];
     END specify;
 
     METHOD seqmod;
-	split[1..n_outputs-1].fixed:=	TRUE;
+	FIX split[1..n_outputs-1];
     END seqmod;
 
 END splitter;
@@ -476,15 +476,15 @@ MODEL cheap_reactor;
 
     METHOD specify;
 	RUN input.specify;
-	low_turnover.fixed:= TRUE;
-	stoich_coef[input.components].fixed:= TRUE;
-	cost_factor.fixed := TRUE;
+	FIX low_turnover;
+	FIX stoich_coef[input.components];
+	FIX cost_factor;
     END specify;
 
     METHOD seqmod;
-	low_turnover.fixed:= TRUE;
-	stoich_coef[input.components].fixed:= TRUE;
-	cost_factor.fixed := TRUE;
+	FIX low_turnover;
+	FIX stoich_coef[input.components];
+	FIX cost_factor;
     END seqmod;
 
 END cheap_reactor;
@@ -524,15 +524,15 @@ MODEL expensive_reactor;
 
     METHOD specify;
 	RUN input.specify;
-	high_turnover.fixed:= TRUE;
-	stoich_coef[input.components].fixed:= TRUE;
-	cost_factor.fixed := TRUE;
+	FIX high_turnover;
+	FIX stoich_coef[input.components];
+	FIX cost_factor;
     END specify;
 
     METHOD seqmod;
-	high_turnover.fixed:= TRUE;
-	stoich_coef[input.components].fixed:= TRUE;
-	cost_factor.fixed := TRUE;
+	FIX high_turnover;
+	FIX stoich_coef[input.components];
+	FIX cost_factor;
     END seqmod;
 
 END expensive_reactor;
@@ -577,13 +577,13 @@ MODEL flash;
 
     METHOD specify;
 	RUN feed.specify;
-	alpha[feed.components].fixed:=	TRUE;
-	vap_to_feed_ratio.fixed	:= TRUE;
+	FIX alpha[feed.components];
+	FIX vap_to_feed_ratio;
     END specify;
 
     METHOD seqmod;
-	alpha[feed.components].fixed:=	TRUE;
-	vap_to_feed_ratio.fixed	:= TRUE;
+	FIX alpha[feed.components];
+	FIX vap_to_feed_ratio;
     END seqmod;
 
 END flash;

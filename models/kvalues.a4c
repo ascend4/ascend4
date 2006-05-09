@@ -40,19 +40,19 @@ MODEL test1;
   END mytest;
 
   METHOD specify;
-      x[1].fixed := TRUE;
-      x[2].fixed := TRUE;
+      FIX x[1];
+      FIX x[2];
       x[1] := 0.3;
       x[2] := 0.5;
       x[3] := 1.0 - (x[1] + x[2]);
 
-      y[1].fixed := FALSE;
-      y[2].fixed := FALSE;
-      y[3].fixed := FALSE;    
+      FREE y[1];
+      FREE y[2];
+      FREE y[3];    
 
-      T.fixed := TRUE;
+      FIX T;
       T := 300.0;
-      P.fixed := TRUE;
+      FIX P;
       P := 760.0;
   END specify;
 
@@ -102,19 +102,19 @@ METHOD default_self;
 END default_self;
 
   METHOD specify;
-      x[1].fixed := TRUE;
-      x[3].fixed := TRUE;
+      FIX x[1];
+      FIX x[3];
       x[1] := 0.3;
       x[2] := 0.5;
       x[3] := 1.0 - (x[1] + x[2]);
 
-      y[1].fixed := FALSE;
-      y[2].fixed := FALSE;
-      y[3].fixed := FALSE;    
+      FREE y[1];
+      FREE y[2];
+      FREE y[3];    
 
-      T.fixed := TRUE;
+      FIX T;
       T := 300.0;
-      P.fixed := TRUE;
+      FIX P;
       P := 760.0;
   END specify;
 

@@ -249,39 +249,39 @@ END NOTES;
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed := FALSE;
+	    FREE state.y[cd.components];
 	    IF equilibrated THEN
-		state.T.fixed :=FALSE;
+		FREE state.T;
 	    ELSE
-		state.T.fixed :=TRUE;
+		FIX state.T;
 	    END IF;
-	    split_fraction['vapor'].fixed :=TRUE;
-	    state.phase_fraction['vapor'].fixed :=FALSE;
-	    dMi_dt[cd.other_components].fixed 	:=TRUE;
-	    Mi[cd.components].fixed 		:=FALSE;
-	    dM_dt.fixed 	:=TRUE;
-	    M.fixed 		:=FALSE;
-	    dU_dt.fixed 	:=TRUE;
-	    U.fixed 		:=FALSE;
-	    Vol.fixed 		:=TRUE;
-	    vol_liq.fixed 	:=TRUE;
+	    FIX split_fraction['vapor'];
+	    FREE state.phase_fraction['vapor'];
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FIX Vol;
+	    FIX vol_liq;
 	    IF dynamic THEN
-		dMi_dt[cd.other_components].fixed 	:=FALSE;
-		Mi[cd.other_components].fixed 		:=TRUE;
-		dM_dt.fixed 	:=FALSE;
-		M.fixed 	:=TRUE;
-		dU_dt.fixed 	:=FALSE;
-		U.fixed 	:=TRUE;
-		Qin.fixed 	:=TRUE;
+		FREE dMi_dt[cd.other_components];
+		FIX Mi[cd.other_components];
+		FREE dM_dt;
+		FIX M;
+		FREE dU_dt;
+		FIX U;
+		FIX Qin;
 		IF equilibrated THEN
-		    state.P.fixed		:=FALSE;
+		    FREE state.P;
 		ELSE
-		    state.T.fixed		:=FALSE;
+		    FREE state.T;
 		END IF;
-		vol_liq.fixed 	:=FALSE;
-		liqout.flow.fixed :=TRUE;
-		vapout.flow.fixed :=TRUE;
-		split_fraction['vapor'].fixed :=FALSE;
+		FREE vol_liq;
+		FIX liqout.flow;
+		FIX vapout.flow;
+		FREE split_fraction['vapor'];
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};
@@ -509,43 +509,43 @@ END NOTES;
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed := FALSE;
+	    FREE state.y[cd.components];
 	    IF equilibrated THEN
-		state.T.fixed :=FALSE;
+		FREE state.T;
 	    ELSE
-		state.T.fixed :=TRUE;
+		FIX state.T;
 	    END IF;
-	    state.phase_fraction['vapor'].fixed :=FALSE;
-	    cmo_ratio.fixed :=TRUE;
-	    dMi_dt[cd.other_components].fixed :=TRUE;
-	    Mi[cd.other_components].fixed :=FALSE;
-	    dM_dt.fixed :=TRUE;
-	    M.fixed :=FALSE;
-	    dU_dt.fixed :=TRUE;
-	    U.fixed :=FALSE;
-	    Vol.fixed :=TRUE;
-	    vol_liq.fixed :=TRUE;
-	    tauv.fixed :=FALSE;
-	    taul.fixed :=FALSE;
-    	    liqout.flow.fixed :=FALSE;
-	    vapout.flow.fixed :=FALSE;
+	    FREE state.phase_fraction['vapor'];
+	    FIX cmo_ratio;
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.other_components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FIX Vol;
+	    FIX vol_liq;
+	    FREE tauv;
+	    FREE taul;
+    	    FREE liqout.flow;
+	    FREE vapout.flow;
 	    IF dynamic THEN
-		dMi_dt[cd.other_components].fixed :=FALSE;
-		Mi[cd.other_components].fixed :=TRUE;
-		dM_dt.fixed :=FALSE;
-		M.fixed :=TRUE;
-		dU_dt.fixed :=FALSE;
-		U.fixed :=TRUE;
-		Qin.fixed :=TRUE;
+		FREE dMi_dt[cd.other_components];
+		FIX Mi[cd.other_components];
+		FREE dM_dt;
+		FIX M;
+		FREE dU_dt;
+		FIX U;
+		FIX Qin;
 		IF equilibrated THEN
-		    state.P.fixed		:=FALSE;
+		    FREE state.P;
 		ELSE
-		    state.T.fixed		:=FALSE;
+		    FREE state.T;
 		END IF;
-		vol_liq.fixed :=FALSE;
-		tauv.fixed :=TRUE;
-		taul.fixed :=TRUE;
-		cmo_ratio.fixed	:=FALSE;
+		FREE vol_liq;
+		FIX tauv;
+		FIX taul;
+		FREE cmo_ratio;
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};
@@ -560,8 +560,8 @@ END NOTES;
 	END specify;
 
 	METHOD reset_to_adiabatic;
-	    cmo_ratio.fixed := FALSE;
-	    Qin.fixed := TRUE;
+	    FREE cmo_ratio;
+	    FIX Qin;
 	    Qin := 0{W};
 	END reset_to_adiabatic;
 
@@ -951,41 +951,41 @@ END NOTES;
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed := FALSE;
+	    FREE state.y[cd.components];
 	    IF equilibrated THEN
-		state.T.fixed :=FALSE;
+		FREE state.T;
 	    ELSE
-		state.T.fixed :=TRUE;
+		FIX state.T;
 	    END IF;
-	    state.phase_fraction['vapor'].fixed :=FALSE;
-	    q.fixed :=TRUE;
-	    dMi_dt[cd.other_components].fixed :=TRUE;
-	    Mi[cd.other_components].fixed :=FALSE;
-	    dM_dt.fixed :=TRUE;
-	    M.fixed :=FALSE;
-	    dU_dt.fixed :=TRUE;
-	    U.fixed :=FALSE;
-	    Vol.fixed :=TRUE;
-	    vol_liq.fixed :=TRUE;
-	    tauv.fixed :=FALSE;
-	    taul.fixed :=FALSE;
+	    FREE state.phase_fraction['vapor'];
+	    FIX q;
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.other_components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FIX Vol;
+	    FIX vol_liq;
+	    FREE tauv;
+	    FREE taul;
 	    IF dynamic THEN
-		dMi_dt[cd.other_components].fixed :=FALSE;
-		Mi[cd.other_components].fixed :=TRUE;
-		dM_dt.fixed :=FALSE;
-		M.fixed :=TRUE;
-		dU_dt.fixed :=FALSE;
-		U.fixed :=TRUE;
-		Qin.fixed :=TRUE;
+		FREE dMi_dt[cd.other_components];
+		FIX Mi[cd.other_components];
+		FREE dM_dt;
+		FIX M;
+		FREE dU_dt;
+		FIX U;
+		FIX Qin;
 		IF equilibrated THEN
-		    state.P.fixed		:=FALSE;
+		    FREE state.P;
 		ELSE
-		    state.T.fixed		:=FALSE;
+		    FREE state.T;
 		END IF;
-		vol_liq.fixed :=FALSE;
-		tauv.fixed :=TRUE;
-		taul.fixed :=TRUE;
-		q.fixed	:=FALSE;
+		FREE vol_liq;
+		FIX tauv;
+		FIX taul;
+		FREE q;
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};
@@ -1002,8 +1002,8 @@ END NOTES;
 
 	METHOD reset_to_adiabatic;
 	    RUN seqmod;
-	    q.fixed := FALSE;
-	    Qin.fixed := TRUE;
+	    FREE q;
+	    FIX Qin;
 	    Qin := 0{W};
 	END reset_to_adiabatic;
 
@@ -1245,53 +1245,53 @@ END NOTES;
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed := FALSE;
-	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    FREE state.y[cd.components];
+	    FREE state.phase_fraction['vapor'];
 	    IF equilibrated THEN
-		state.T.fixed :=FALSE;
+		FREE state.T;
 	    ELSE
-		state.T.fixed :=TRUE;
+		FIX state.T;
 	    END IF;
 	    RUN split.seqmod;
-	    split.split[1].fixed :=FALSE;
-	    liqout.flow.fixed :=FALSE;
-	    vap_distillate.flow.fixed :=FALSE;
-	    liq_distillate.flow.fixed :=FALSE;
+	    FREE split.split[1];
+	    FREE liqout.flow;
+	    FREE vap_distillate.flow;
+	    FREE liq_distillate.flow;
 	    IF partial THEN
-		liq_distillate.flow.fixed :=TRUE;
+		FIX liq_distillate.flow;
 	    ELSE
-		vap_distillate.flow.fixed :=TRUE;
+		FIX vap_distillate.flow;
 	    END IF;
-	    reflux_ratio.fixed :=TRUE;
-	    dMi_dt[cd.other_components].fixed :=TRUE;
-	    Mi[cd.other_components].fixed :=FALSE;
-	    dM_dt.fixed :=TRUE;
-	    M.fixed :=FALSE;
-	    dU_dt.fixed :=TRUE;
-	    U.fixed :=FALSE;
-	    Qin.fixed :=FALSE;
-	    Vol.fixed :=TRUE;
-	    vol_liq.fixed :=TRUE;
+	    FIX reflux_ratio;
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.other_components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FREE Qin;
+	    FIX Vol;
+	    FIX vol_liq;
 	    IF dynamic THEN
-		dMi_dt[cd.other_components].fixed :=FALSE;
-		Mi[cd.other_components].fixed :=TRUE;
-		dM_dt.fixed :=FALSE;
-		M.fixed :=TRUE;
-		dU_dt.fixed :=FALSE;
-		U.fixed :=TRUE;
-		Qin.fixed :=TRUE;
+		FREE dMi_dt[cd.other_components];
+		FIX Mi[cd.other_components];
+		FREE dM_dt;
+		FIX M;
+		FREE dU_dt;
+		FIX U;
+		FIX Qin;
 		IF equilibrated THEN
-		    state.P.fixed		:=FALSE;
+		    FREE state.P;
 		ELSE
-		    state.T.fixed		:=FALSE;
+		    FREE state.T;
 		END IF;
-		vol_liq.fixed	:=FALSE;
-		reflux_ratio.fixed :=FALSE;
-		state.phase_fraction['vapor'].fixed :=FALSE;
-		liqout.flow.fixed :=TRUE;
-(*		liqout.Details.state.slack_PhaseDisappearance['liquid1'].fixed :=TRUE;*)
-		vap_distillate.flow.fixed :=TRUE;
-		liq_distillate.flow.fixed :=TRUE;
+		FREE vol_liq;
+		FREE reflux_ratio;
+		FREE state.phase_fraction['vapor'];
+		FIX liqout.flow;
+(*		FIX liqout.Details.state.slack_PhaseDisappearance['liquid1'];*)
+		FIX vap_distillate.flow;
+		FIX liq_distillate.flow;
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};
@@ -1542,52 +1542,52 @@ END NOTES;
 
 	METHOD seqmod;
 	    RUN state.specify;
-	    state.y[cd.components].fixed := FALSE;
-	    state.phase_fraction['vapor'].fixed :=FALSE;
+	    FREE state.y[cd.components];
+	    FREE state.phase_fraction['vapor'];
 	    IF equilibrated THEN
-		state.T.fixed :=FALSE;
+		FREE state.T;
 	    ELSE
-		state.T.fixed :=TRUE;
+		FIX state.T;
 	    END IF;
 	    RUN split.seqmod;
-	    split.split[1].fixed :=FALSE;
-	    vapout.flow.fixed :=FALSE;
-	    vap_bottom.flow.fixed :=FALSE;
-	    liq_bottom.flow.fixed :=FALSE;
+	    FREE split.split[1];
+	    FREE vapout.flow;
+	    FREE vap_bottom.flow;
+	    FREE liq_bottom.flow;
 	    IF partial THEN
-		vap_bottom.flow.fixed :=TRUE;
+		FIX vap_bottom.flow;
 	    ELSE
-		liq_bottom.flow.fixed :=TRUE;
+		FIX liq_bottom.flow;
 	    END IF;
-	    reboil_ratio.fixed :=TRUE;
-	    dMi_dt[cd.other_components].fixed :=TRUE;
-	    Mi[cd.other_components].fixed :=FALSE;
-	    dM_dt.fixed :=TRUE;
-	    M.fixed :=FALSE;
-	    dU_dt.fixed :=TRUE;
-	    U.fixed :=FALSE;
-	    Qin.fixed :=FALSE;
-	    Vol.fixed :=TRUE;
-	    vol_liq.fixed :=TRUE;
+	    FIX reboil_ratio;
+	    FIX dMi_dt[cd.other_components];
+	    FREE Mi[cd.other_components];
+	    FIX dM_dt;
+	    FREE M;
+	    FIX dU_dt;
+	    FREE U;
+	    FREE Qin;
+	    FIX Vol;
+	    FIX vol_liq;
 	    IF dynamic THEN
-		dMi_dt[cd.other_components].fixed :=FALSE;
-		Mi[cd.other_components].fixed :=TRUE;
-		dM_dt.fixed :=FALSE;
-		M.fixed :=TRUE;
-		dU_dt.fixed :=FALSE;
-		U.fixed :=TRUE;
-		Qin.fixed :=TRUE;
+		FREE dMi_dt[cd.other_components];
+		FIX Mi[cd.other_components];
+		FREE dM_dt;
+		FIX M;
+		FREE dU_dt;
+		FIX U;
+		FIX Qin;
 		IF equilibrated THEN
-		    state.P.fixed		:=FALSE;
+		    FREE state.P;
 		ELSE
-		    state.T.fixed		:=FALSE;
+		    FREE state.T;
 		END IF;
-		vol_liq.fixed	:=FALSE;
-		reboil_ratio.fixed :=FALSE;
-		state.phase_fraction['vapor'].fixed :=FALSE;
-		vapout.flow.fixed :=TRUE;
-		vap_bottom.flow.fixed :=TRUE;
-		liq_bottom.flow.fixed :=TRUE;
+		FREE vol_liq;
+		FREE reboil_ratio;
+		FREE state.phase_fraction['vapor'];
+		FIX vapout.flow;
+		FIX vap_bottom.flow;
+		FIX liq_bottom.flow;
 	    ELSE
 		dMi_dt[cd.other_components] :=0 {mole/sec};
 		dM_dt :=0 {mole/sec};

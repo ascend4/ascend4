@@ -96,19 +96,19 @@ END defaults;
 
     METHOD clear;
 	RUN state.clear;
-	Ftot.fixed				:= FALSE;
-	f[components].fixed	:= FALSE;
+	FREE Ftot;
+	FREE f[components];
 	f_def[components].included:= TRUE;
     END clear;
 
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed		:= FALSE;
+	FREE state.y[components];
     END seqmod;
 
     METHOD specify;  
 	RUN seqmod;   
-	f[components].fixed			:= TRUE;
+	FIX f[components];
     END specify;
 
     METHOD reset;
@@ -161,17 +161,17 @@ METHOD defaults;
 END defaults;
     METHOD clear;
 	RUN state.clear;
-	Ftot.fixed			:= FALSE;
-	f[components].fixed		:= FALSE;
-	Htot.fixed			:= FALSE;
-	H.fixed				:= FALSE;
+	FREE Ftot;
+	FREE f[components];
+	FREE Htot;
+	FREE H;
 	f_def[components].included	:= TRUE;
 	Htot_def.included		:= TRUE;
     END clear;
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed	:= FALSE;
-	H.fixed				:= TRUE;
+	FREE state.y[components];
+	FIX H;
     END seqmod;
 
 
@@ -223,19 +223,19 @@ METHOD defaults;
 END defaults;
     METHOD clear;
 	RUN state.clear;
-	Ftot.fixed				:= FALSE;
-	f[components].fixed	:= FALSE;
+	FREE Ftot;
+	FREE f[components];
 	f_def[components].included:= TRUE;
     END clear;
 
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed		:= FALSE;
+	FREE state.y[components];
     END seqmod;
 
     METHOD specify;  
 	RUN seqmod;   
-	f[components].fixed			:= TRUE;
+	FIX f[components];
     END specify;
 
     METHOD reset;
@@ -288,17 +288,17 @@ METHOD defaults;
 END defaults;
     METHOD clear;
 	RUN state.clear;
-	Ftot.fixed			:= FALSE;
-	f[components].fixed		:= FALSE;
-	Htot.fixed			:= FALSE;
-	H.fixed				:= FALSE;
+	FREE Ftot;
+	FREE f[components];
+	FREE Htot;
+	FREE H;
 	f_def[components].included	:= TRUE;
 	Htot_def.included		:= TRUE;
     END clear;
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed	:= FALSE;
-	H.fixed				:= TRUE;
+	FREE state.y[components];
+	FIX H;
     END seqmod;
 
 
@@ -332,7 +332,7 @@ MODEL vapor_stream (
 
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed		:= FALSE;
+	FREE state.y[components];
     END seqmod;
 
 END vapor_stream;
@@ -374,9 +374,9 @@ END defaults;
 
     METHOD seqmod;
 	RUN state.specify; (* fixes T, among others *)
-	state.y[components].fixed		:= FALSE;
+	FREE state.y[components];
 	IF (saturated) THEN
-		state.T.fixed		:= FALSE;
+		FREE state.T;
 	END IF;
 	IF (manual) THEN
 		IF (saturated) THEN
@@ -410,10 +410,10 @@ MODEL multiphase_stream(
 
     METHOD clear;      
 	RUN state.clear;
-	Ftot.fixed				:= FALSE;
-	f[components].fixed		:= FALSE;
-	Htot.fixed				:= FALSE;
-	phase_flow[phases].fixed	:= FALSE;
+	FREE Ftot;
+	FREE f[components];
+	FREE Htot;
+	FREE phase_flow[phases];
 	Htot_def.included			:= TRUE;
 	f_def[components].included	:= TRUE;
 	phase_flow_def[phases].included	:= TRUE;
@@ -442,7 +442,7 @@ MODEL multiphase_stream(
 
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed		:= FALSE;
+	FREE state.y[components];
     END seqmod;
 
 END multiphase_stream;

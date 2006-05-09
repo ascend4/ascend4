@@ -79,36 +79,36 @@ MODEL currentPtDynTank() REFINES pastPoint();
 	
 	(* states, state derivatives and predicted algebraics *)
         (* fix the time for the initial point *)
-	t.fixed          := TRUE;
-	tNom.fixed	 := TRUE;
-	x.fixed          := FALSE; (* computed using xDefn *)  
+	FIX t;
+	FIX tNom;
+	FREE x; (* computed using xDefn *)  
 
         (* fix the time step for the initial point *)
-	dt.fixed         := TRUE;
-	dtNom.fixed      := TRUE;
-	dx.fixed         := FALSE; (* computed using dxDefn *)
+	FIX dt;
+	FIX dtNom;
+	FREE dx; (* computed using dxDefn *)
 
         (* fix the holdup for the initial point *)
-	holdup.fixed     := TRUE;
-	holdupNom.fixed  := TRUE;
-	y[1].fixed       := FALSE; (* computed using y1Defn *)
+	FIX holdup;
+	FIX holdupNom;
+	FREE y[1]; (* computed using y1Defn *)
 
         (* compute the time derivative for the holdup *)
-	dholdup_dt.fixed := FALSE; (* computed using eqnDynTankholdup *)
-	dydx[1].fixed    := FALSE; (* computed using dydxDefn *)
+	FREE dholdup_dt; (* computed using eqnDynTankholdup *)
+	FREE dydx[1]; (* computed using dydxDefn *)
 
         (* algebraic variables *)
-	flowIn.fixed     := FALSE;  (* computed by eqnFlowIn *)
+	FREE flowIn;  (* computed by eqnFlowIn *)
 
-	flowMin.fixed    := TRUE;
-	flowStop.fixed   := FALSE;  (* computed by eqnFlowStop *)
-	flowNom.fixed    := TRUE;
-	y[2].fixed       := FALSE;  (* computed by y2Defn *)
+	FIX flowMin;
+	FREE flowStop;  (* computed by eqnFlowStop *)
+	FIX flowNom;
+	FREE y[2];  (* computed by y2Defn *)
 	
 	(* When initializing, we wish to compute the valve constant
 	  that will give us a desired flowOut *)
-	flowOut.fixed    := TRUE;
-	Cv.fixed         := FALSE;  (* computed by eqnFlowOut *)
+	FIX flowOut;
+	FREE Cv;  (* computed by eqnFlowOut *)
 
     END specifyForInitializing;
 
@@ -142,18 +142,18 @@ MODEL currentPtDynTank() REFINES pastPoint();
 	  The dimensionless value for step size has to be fixed when
 	  initializing for stepping. *)
 	
-	t.fixed          := FALSE; (* computed within integration package *)
-	dt.fixed         := FALSE; (* computed by xDefn *)
-	dx.fixed         := TRUE;  (* value has to be fixed for stepping *)
+	FREE t; (* computed within integration package *)
+	FREE dt; (* computed by xDefn *)
+	FIX dx;  (* value has to be fixed for stepping *)
 
 	(* taking a step is to compute the states, their derivatives
 	  and the algebraic variables for the model - in general *)
-	holdup.fixed	 := FALSE; (* computed by the integration eqns *)
+	FREE holdup; (* computed by the integration eqns *)
 	
 	(* when initializing, we fixed flowOut and computed the
 	  required valve constant, Cv. We need to reverse that for stepping *)
-	flowOut.fixed    := FALSE;
-	Cv.fixed         := TRUE;
+	FREE flowOut;
+	FIX Cv;
 	
     END specifyForStepping;
 
@@ -177,7 +177,7 @@ MODEL currentPtDynTank() REFINES pastPoint();
 
 	RUN integrationPoint::testForIndexProblem;
 	
-	Cv.fixed         := TRUE;
+	FIX Cv;
 	
     END testForIndexProblem;
     
@@ -294,8 +294,8 @@ MODEL ivpTest() REFINES ivpStep();
 	RUN ivpStep::specify;
 	RUN currentPt.specifyForStepping;
 	
-	maxDeltaX.fixed            := TRUE;
-	stopX.fixed                := TRUE;
+	FIX maxDeltaX;
+	FIX stopX;
 
     END specifyForStepping;
 

@@ -78,8 +78,8 @@ MODEL cost_info_pressure_vessel(
     END values;
 
     METHOD specify;
-	MandSindex.fixed := TRUE;
-	P.fixed          := TRUE;
+	FIX MandSindex;
+	FIX P;
     END specify;
 
 END cost_info_pressure_vessel;
@@ -146,10 +146,10 @@ MODEL simple_pressure_vessel_cost(
 
     METHOD specify;
 	RUN gc.specify;
-	liq_holdup_time.fixed	:= TRUE;
-	vol_flow.fixed		:= TRUE;
-	P.fixed                 := TRUE;
-	H_to_D.fixed            := TRUE;
+	FIX liq_holdup_time;
+	FIX vol_flow;
+	FIX P;
+	FIX H_to_D;
     END specify;
 
 END simple_pressure_vessel_cost;
@@ -207,9 +207,9 @@ MODEL test_Guthrie_cost_pressure_vessel;
 
     METHOD specify;
 	RUN gcpv.specify;
-	P.fixed := TRUE;
-	D.fixed := TRUE;
-	H.fixed := TRUE;
+	FIX P;
+	FIX D;
+	FIX H;
     END specify;
 
 END test_Guthrie_cost_pressure_vessel;
@@ -243,10 +243,10 @@ MODEL test_simple_pressure_vessel_cost;
 
     METHOD specify;
 	RUN spvc.specify;
-	lht.fixed := TRUE;
-	vf.fixed  := TRUE;
-	P.fixed   := TRUE;
-	HD.fixed  := TRUE;
+	FIX lht;
+	FIX vf;
+	FIX P;
+	FIX HD;
     END specify;
 
 END test_simple_pressure_vessel_cost;

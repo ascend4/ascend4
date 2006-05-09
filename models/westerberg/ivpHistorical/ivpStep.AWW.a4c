@@ -414,18 +414,18 @@ MODEL integrationPoint REFINES ivpBase;
     (* ----- integrationPoint ----- *)
 
     METHOD specify;
-	x.fixed                := TRUE;
-	y[1..nPredVars].fixed  := TRUE;
-	dydx[1..nStates].fixed := TRUE;
-	dx.fixed               := TRUE;
+	FIX x;
+	FIX y[1..nPredVars];
+	FIX dydx[1..nStates];
+	FIX dx;
     END specify;
     
     (* ----- integrationPoint ----- *)
 
     METHOD testForIndexProblem;
 	RUN specify;
-	dydx[1..nStates].fixed        := FALSE;
-	y[nStates+1..nPredVars].fixed := FALSE;
+	FREE dydx[1..nStates];
+	FREE y[nStates+1..nPredVars];
     END testForIndexProblem;
 
 END integrationPoint;
@@ -452,7 +452,7 @@ MODEL coefVect(
     (* ----- coefVect ----- *)
 
     METHOD specify;
-	var[1..nPredVars].fixed := TRUE;
+	FIX var[1..nPredVars];
     END specify;
     
 END coefVect;
@@ -1060,17 +1060,17 @@ MODEL ivpStep REFINES ivpBase;
 	RUN ms.specify;
 	RUN f.specify;
 	RUN pT.specify;
-	deltaX.fixed                                    := TRUE;
-	dxPow[0..6].fixed                               := TRUE;
-	iP[0].y[1..nPredVars].fixed                     := FALSE;
-	iP[0].dydx[1..nStates].fixed                    := FALSE;
-	p.a[0..usePolyOrder].var[1..nPredVars].fixed    := FALSE;
-	iP[0..usePolyOrder].dx.fixed                    := TRUE;
-	iP[0].x.fixed                                   := FALSE;
-	dxMax[['down','same','up']][1..nPredVars].fixed := TRUE;
-	maxNominalSteppingError.fixed                   := TRUE;
-	lastHighestDeriv[1..nPredVars].fixed            := TRUE;
-	eps.fixed                                       := TRUE;
+	FIX deltaX;
+	FIX dxPow[0..6];
+	FREE iP[0].y[1..nPredVars];
+	FREE iP[0].dydx[1..nStates];
+	FREE p.a[0..usePolyOrder].var[1..nPredVars];
+	FIX iP[0..usePolyOrder].dx;
+	FREE iP[0].x;
+	FIX dxMax[['down','same','up']][1..nPredVars];
+	FIX maxNominalSteppingError;
+	FIX lastHighestDeriv[1..nPredVars];
+	FIX eps;
     END specify;
 
     (* ----- ivpStep ----- *)
@@ -1105,7 +1105,7 @@ MODEL ivpStep REFINES ivpBase;
     METHOD incrementUsePolyOrder;
 	IF usePolyOrder <= 5 THEN
 	    usePolyOrder                              := usePolyOrder +1;
-	    p.a[usePolyOrder].var[1..nPredVars].fixed := FALSE;
+	    FREE p.a[usePolyOrder].var[1..nPredVars];
 	END IF;
     END incrementUsePolyOrder;
     
@@ -1114,7 +1114,7 @@ MODEL ivpStep REFINES ivpBase;
     METHOD decrementUsePolyOrder;
 	IF usePolyOrder >= 2 THEN
 	    p.a[usePolyOrder].var[1..nPredVars]       := 0.0 {?};
-	    p.a[usePolyOrder].var[1..nPredVars].fixed := TRUE;
+	    FIX p.a[usePolyOrder].var[1..nPredVars];
 	    usePolyOrder                              := usePolyOrder -1;
 	END IF;
     END decrementUsePolyOrder;
@@ -1355,14 +1355,14 @@ MODEL ivpStep REFINES ivpBase;
 	iP[0].x.upper_bound                   := iP[1].x.upper_bound;
 	
 	FOR i IN stopConds DO
-	    iP[0].y[i].fixed                  := FALSE;
+	    FREE iP[0].y[i];
             IF (newStopCondHit == 0) AND (abs(iP[0].y[i]) >= eps*iP[0].y[i].nominal) THEN 
                 IF (iP[0].y[i]*iP[1].y[i] <= -(eps*iP[0].y[i].nominal)^2) THEN
 	            iP[0].y[i]                := 0.0*iP[0].y[i].nominal;
 		    iP[0].dx.lower_bound      := iP[1].dx;
 		    iP[0].dx.upper_bound      := 0.0*iP[0].dx.nominal;
-                    iP[0].y[i].fixed          := TRUE;
-		    iP[0].dx.fixed            := FALSE;
+                    FIX iP[0].y[i];
+		    FREE iP[0].dx;
 		    newStopCondHit            := 1;
 		    stopCondHit               := i;
 		END IF;
@@ -1376,7 +1376,7 @@ MODEL ivpStep REFINES ivpBase;
 	    IF (stopCondHit >= 1) OR (stopXHit == 1) THEN
 		deltaX := iP[0].x - iP[1].x;		
 		thisIsTheFinalStep        := 1;
-		iP[0].dx.fixed            := TRUE;
+		FIX iP[0].dx;
 	    END IF;
 	END IF;
 

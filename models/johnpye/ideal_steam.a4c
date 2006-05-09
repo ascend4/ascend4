@@ -114,8 +114,8 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	rho.fixed := TRUE;
+	FIX T;
+	FIX rho;
 END specify;
 
 METHOD values;

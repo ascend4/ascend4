@@ -104,13 +104,13 @@ MODEL flowsheet_cost;
 	RUN cr1.specify;
 	RUN cfl1.specify;
 
-	cm1.vol_flow.fixed			:=	FALSE;
-	cr1.vol_flow.fixed			:=	FALSE;
-	cfl1.vol_flow.fixed			:=	FALSE;
+	FREE cm1.vol_flow;
+	FREE cr1.vol_flow;
+	FREE cfl1.vol_flow;
 
-	price[tc.fs.m1.out.components].fixed	:=	TRUE;
-	fuel_price.fixed			:=	TRUE;
-	payout_time.fixed			:=	TRUE;
+	FIX price[tc.fs.m1.out.components];
+	FIX fuel_price;
+	FIX payout_time;
     END specify;
 
     METHOD reset;

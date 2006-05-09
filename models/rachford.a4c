@@ -158,11 +158,11 @@ METHODS
 
     METHOD specify;
       FOR i IN components DO
-	z[i].fixed := TRUE;
+	FIX z[i];
       END FOR;
-      F.fixed := TRUE;
-      P.fixed := TRUE;
-      T.fixed := TRUE;
+      FIX F;
+      FIX P;
+      FIX T;
     END specify;
 
     METHOD values;

@@ -212,8 +212,8 @@ END reset_to_fullthermo;
 
 METHOD reset_to_adiabatic;
 	RUN reset_to_fullthermo;
-	Stack[Tray_set].cmo_ratio.fixed := FALSE;
-	Stack[Tray_set].Qin.fixed := TRUE;
+	FREE Stack[Tray_set].cmo_ratio;
+	FIX Stack[Tray_set].Qin;
 	Stack[Tray_set].Qin := 0{W};
 END reset_to_adiabatic;
 
@@ -648,8 +648,8 @@ END defaults;
 
 METHOD clear;
 	RUN Tray[zTr].clear;
-	reduce.fixed:= FALSE;
-	omb_slack[components].fixed := FALSE;
+	FREE reduce;
+	FREE omb_slack[components];
 	OMB[components].included:= TRUE;
 END clear;
 
@@ -657,7 +657,7 @@ METHOD overall_mb;
 (* is this method still useful? *)
 (*	tray[Feed_loc].totfeedflow[components].included := FALSE; *)
 	omb_slack[components] := 0.0{mol/s};
-	omb_slack[components].fixed := TRUE;
+	FIX omb_slack[components];
 END overall_mb;
 
 METHOD propagate_feed;
@@ -679,21 +679,21 @@ END propagate_feed;
 
 METHOD total_reflux;
 (* this method is BROKEN in both this library and Bob's *)
-condenser.reflux_ratio.fixed := TRUE;
+FIX condenser.reflux_ratio;
 condenser.reflux_def.included := FALSE;
 (*
 Tray[0].totprod.Ftot := 0.0{mol/s};
-Tray[0].totprod.Ftot.fixed := FALSE;
+FREE Tray[0].totprod.Ftot;
 *)
-feed.f[components].fixed := FALSE;
+FREE feed.f[components];
 feed_tray.qeq.included := FALSE;
 feed.Ftot := 0.0{mol/s};
-feed.Ftot.fixed := TRUE;
-feed_tray_state.y[components - [reference]].fixed := TRUE;
-feed_tray_state.phi['liquid'].fixed := TRUE;
+FIX feed.Ftot;
+feed_tray_state.y[components - [FIX reference]];
+FIX feed_tray_state.phi['liquid'];
 feed_tray_state.phi['liquid'] := 0.5;
 RUN feed_tray.liqout.specify;
-reboiler.reboil_ratio.fixed := TRUE;
+FIX reboiler.reboil_ratio;
 reboiler.reboil_def.included := FALSE;
 END total_reflux;
 
@@ -738,11 +738,11 @@ END reset_to_fullthermo;
 METHOD reset_to_adiabatic;
 	RUN reset_to_fullthermo;
 	(* condenser, reboiler Qin left free *)
-	rectifying_section.Stack[1..n_trays_above].cmo_ratio.fixed := FALSE;
-	stripping_section.Stack[1..n_trays_below].cmo_ratio.fixed := FALSE;
-	Tray[1..N_trays-1].Qin.fixed := TRUE; 
+	FREE rectifying_section.Stack[1..n_trays_above].cmo_ratio;
+	FREE stripping_section.Stack[1..n_trays_below].cmo_ratio;
+	FIX Tray[1..N_trays-1].Qin; 
 	Tray[1..N_trays-1].Qin := 0{W};
-	feed_tray.q.fixed := FALSE;
+	FREE feed_tray.q;
 END reset_to_adiabatic;
 
 END simple_column;

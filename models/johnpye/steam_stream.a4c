@@ -23,7 +23,7 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	mdot.fixed := TRUE;
+	FIX mdot;
 	RUN S.specify;
 END specify;
 
@@ -34,9 +34,9 @@ END values;
 
 METHOD test_ph;
 	RUN ClearAll;
-	mdot.fixed := TRUE; mdot := 0 {kg/s};
-	p.fixed := TRUE; p := 10 {bar};
-	h.fixed := TRUE; h := 419.7 {kJ/kg};
+	FIX mdot; mdot := 0 {kg/s};
+	FIX p; p := 10 {bar};
+	FIX h; h := 419.7 {kJ/kg};
 END test_ph;
 
 END steam_stream;

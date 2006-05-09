@@ -30,7 +30,7 @@ METHOD default_self;
 	RUN reset; RUN values;
 END default_self;
 METHOD specify;
-	T.fixed := TRUE;
+	FIX T;
 END specify;
 METHOD values;
 	T := 373.1243 {K};
@@ -83,7 +83,7 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	T.fixed := TRUE;
+	FIX T;
 END specify;
 
 METHOD values;

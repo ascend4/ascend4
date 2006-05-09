@@ -124,8 +124,8 @@ END NOTES;
     END scale_all;
 
     METHOD seqmod;
-	conc[components].fixed		:=TRUE;
-	reac_T.fixed   			:=TRUE;
+	FIX conc[components];
+	FIX reac_T;
     END seqmod;
 
     METHOD specify;
@@ -189,8 +189,8 @@ MODEL element_kinetics(
     END scale_all;
 
     METHOD seqmod;
-	conc[components].fixed		:=TRUE;
-	reac_T.fixed			:=TRUE;
+	FIX conc[components];
+	FIX reac_T;
     END seqmod;
 
     METHOD specify;
@@ -230,8 +230,8 @@ MODEL specify_kinetics(
     END default_self;
 
     METHOD seqmod;
-	conc[components].fixed		:=TRUE;
-	reac_T.fixed			:=TRUE;
+	FIX conc[components];
+	FIX reac_T;
     END seqmod;
 
     METHOD specify;

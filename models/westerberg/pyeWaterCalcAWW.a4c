@@ -107,14 +107,14 @@ METHOD specify;
        equilibrated := FALSE;
 
        (* internal thermodynamics stuff that needs to be fixed *)
-       thermo.phase['vapor'].alpha['water'].fixed := TRUE;
-       thermo.alpha_bar['vapor'].fixed := TRUE;
-       thermo.y['water'].fixed := TRUE;
-       thermo.y['methane'].fixed := TRUE;
+       FIX thermo.phase['vapor'].alpha['water'];
+       FIX thermo.alpha_bar['vapor'];
+       FIX thermo.y['water'];
+       FIX thermo.y['methane'];
 
        (* unless overridden, steam_state will use p,T to define other properties *)
-       T.fixed := TRUE;
-       rho.fixed := TRUE;
+       FIX T;
+       FIX rho;
 END specify;
 
 METHOD values;
@@ -154,7 +154,7 @@ METHOD specify;
        as one of its inputs or outputs.
        *)
        RUN steam_state::specify;
-       mdot.fixed := TRUE;
+       FIX mdot;
 END specify;
 
 METHOD values;

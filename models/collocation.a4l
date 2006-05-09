@@ -206,9 +206,9 @@ METHOD seqmod;
 	RUN liqout.seqmod;
 	RUN distillate.seqmod;
 	RUN vapin.seqmod;
-	reflux_ratio.fixed := TRUE;
-	liqout.T.fixed := FALSE;
-	liqout.P.fixed := FALSE;
+	FIX reflux_ratio;
+	FREE liqout.T;
+	FREE liqout.P;
 END seqmod;
 
 METHOD specify;
@@ -370,10 +370,10 @@ METHOD check_all;
 END check_all;
 
 METHOD specify;
-    w_points[0..npoints].fixed	:= TRUE;
-    f_int.fixed 			:= TRUE;
-    f_mid.fixed			:= TRUE;
-    mult[1..ntrays].fixed		:= TRUE;
+    FIX w_points[0..npoints];
+    FIX f_int;
+    FIX f_mid;
+    FIX mult[1..ntrays];
 END specify;
 METHOD reset;
     RUN ClearAll;
@@ -436,8 +436,8 @@ METHOD check_all;
 END check_all;
 
 METHOD seqmod;
-    a.fixed					:= TRUE;
-    s.fixed					:= TRUE;
+    FIX a;
+    FIX s;
 END seqmod;
 METHOD specify;
     RUN seqmod;
@@ -448,7 +448,7 @@ METHOD reset;
 END reset;
 METHOD s_off;
     s_def.included				:= FALSE;
-    s.fixed					:= TRUE;
+    FIX s;
 END s_off;
 
 END collpoint;
@@ -611,10 +611,10 @@ END check_all;
 
 METHOD specify;
     RUN lgr.specify;
-    lgr.w_points[0..lgr.npoints].fixed 	:= FALSE;
-    a.fixed					:= TRUE;
-    s_values[0].fixed			:= TRUE;
-    stot.fixed				:= TRUE;
+    FREE lgr.w_points[0..lgr.npoints];
+    FIX a;
+    FIX s_values[0];
+    FIX stot;
 END specify;
 METHOD reset;
     RUN ClearAll;
@@ -655,7 +655,7 @@ MODEL coll_material_detailed_stream(
 METHODS
 METHOD specify;
     RUN detailed_stream::specify;
-    state.H.fixed := TRUE;
+    FIX state.H;
 END specify;
 END coll_material_detailed_stream;
 
@@ -688,7 +688,7 @@ MODEL coll_material_stream(
 METHODS
 METHOD specify;
     RUN stream::specify;
-    state.H.fixed := TRUE;
+    FIX state.H;
 END specify;
 END coll_material_stream;
 
@@ -1319,8 +1319,8 @@ METHOD seqmod_massbal;
     equilibrated := FALSE;
     use_H_eqns := hb_on OR equilibrated;
 
-    cmo[1..ntrays].fixed 				:= TRUE;
-    cmotot.fixed					:= TRUE;
+    FIX cmo[1..ntrays];
+    FIX cmotot;
 
     RUN tray[1..ntrays].seqmod_massbal;
     RUN z_set.specify;
@@ -1332,13 +1332,13 @@ METHOD seqmod_massbal;
 
     RUN CMO;
 
-    topvap.state.H.fixed := TRUE;
-    botliq.state.H.fixed := TRUE;
+    FIX topvap.state.H;
+    FIX botliq.state.H;
 
-    liqin_state[1..ntrays].H.fixed := TRUE;
-    tray[1..ntrays].Qin.fixed := TRUE;
-    s_shift.fixed := FALSE;
-    z_shift.fixed := FALSE;
+    FIX liqin_state[1..ntrays].H;
+    FIX tray[1..ntrays].Qin;
+    FREE s_shift;
+    FREE z_shift;
 END seqmod_massbal;
 
 METHOD seqmod_fullthermo;
@@ -1346,8 +1346,8 @@ METHOD seqmod_fullthermo;
     equilibrated := TRUE;
     use_H_eqns := hb_on OR equilibrated;
 
-    cmo[1..ntrays].fixed 				:= TRUE;
-    cmotot.fixed					:= TRUE;
+    FIX cmo[1..ntrays];
+    FIX cmotot;
     RUN tray[1..ntrays].seqmod_fullthermo;
     RUN z_set.specify;
 
@@ -1358,19 +1358,19 @@ METHOD seqmod_fullthermo;
 
     RUN CMO;
 
-    topliq.state.T.fixed := FALSE;
-    botvap.state.T.fixed := FALSE;
-    topvap.state.T.fixed := FALSE;
-    botliq.state.T.fixed := FALSE;
+    FREE topliq.state.T;
+    FREE botvap.state.T;
+    FREE topvap.state.T;
+    FREE botliq.state.T;
 
 
-    topliq.state.H.fixed := FALSE;
-    botvap.state.H.fixed := FALSE;
-    topvap.state.H.fixed := FALSE;
-    botliq.state.H.fixed := FALSE;
+    FREE topliq.state.H;
+    FREE botvap.state.H;
+    FREE topvap.state.H;
+    FREE botliq.state.H;
 
-    s_shift.fixed := FALSE;
-    z_shift.fixed := FALSE;
+    FREE s_shift;
+    FREE z_shift;
 END seqmod_fullthermo;
 
 METHOD seqmod_adiabatic;
@@ -1379,26 +1379,26 @@ METHOD seqmod_adiabatic;
     use_H_eqns := hb_on OR equilibrated;
     RUN seqmod_fullthermo;
     RUN heat_balance;
-    s_shift.fixed := FALSE;
-    z_shift.fixed := FALSE;
+    FREE s_shift;
+    FREE z_shift;
 END seqmod_adiabatic;
 
 METHOD heat_balance;
     hb_on							:= TRUE;
     RUN tray[1..ntrays].heat_balance;
-    Qtot.fixed 						:= TRUE;
-    cmotot.fixed 						:= FALSE;
-    Qin[1..ntrays].fixed 					:= TRUE;
-    cmo[1..ntrays].fixed 					:= FALSE;
+    FIX Qtot;
+    FREE cmotot;
+    FIX Qin[1..ntrays];
+    FREE cmo[1..ntrays];
 END heat_balance;
 METHOD CMO;
     hb_on							:= FALSE;
-    tray[1..ntrays].cmo_ratio.fixed			:= TRUE;
-    tray[1..ntrays].Qin.fixed				:= FALSE;
-    Qtot.fixed 						:= FALSE;
-    cmotot.fixed 						:= TRUE;
-    Qin[1..ntrays].fixed 					:= FALSE;
-    cmo[1..ntrays].fixed 					:= TRUE;
+    FIX tray[1..ntrays].cmo_ratio;
+    FREE tray[1..ntrays].Qin;
+    FREE Qtot;
+    FIX cmotot;
+    FREE Qin[1..ntrays];
+    FIX cmo[1..ntrays];
 END CMO;
 METHOD specify;
     IF (hb_on AND NOT(equilibrated)) THEN
@@ -1416,8 +1416,8 @@ METHOD specify;
 
     RUN topliq.specify;
     RUN botvap.specify;
-    s_shift.fixed := TRUE;
-    z_shift.fixed := TRUE;
+    FIX s_shift;
+    FIX z_shift;
 END specify;
 METHOD reset;
     RUN ClearAll;
@@ -1872,19 +1872,19 @@ METHOD seqmod_massbal;
     equilibrated := FALSE;
     RUN coll[1..ncolls].seqmod_massbal;
     FOR j IN [1..ncolls] DO
-	(*coll[j].botliq.state.H.fixed := FALSE;*)
+	(*FREE coll[j].botliq.state.H;*)
 
 	coll[j].z_set
-	.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
-	coll[j].z_set.stot.fixed			:= FALSE;
+	.FREE z_values[coll[j].ntrays+1];
+	FREE coll[j].z_set.stot;
     END FOR;
-    stot.fixed					:= TRUE;
-    split[1..ncolls-1].fixed 			:= TRUE;
+    FIX stot;
+    FIX split[1..ncolls-1];
     IF (hb_on) THEN
 	RUN heat_balance;
     END IF;
-    z_shift.fixed := FALSE;
-    s_shift.fixed := FALSE;
+    FREE z_shift;
+    FREE s_shift;
 END seqmod_massbal;
 
 METHOD seqmod_fullthermo;
@@ -1892,20 +1892,20 @@ METHOD seqmod_fullthermo;
     equilibrated := TRUE;
     RUN coll[1..ncolls].seqmod_fullthermo;
     FOR j IN [1..ncolls] DO
-	(*coll[j].botliq.state.H.fixed := FALSE;*)
+	(*FREE coll[j].botliq.state.H;*)
 
 	coll[j].z_set
-	.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
-	coll[j].z_set.stot.fixed			:= FALSE;
+	.FREE z_values[coll[j].ntrays+1];
+	FREE coll[j].z_set.stot;
     END FOR;
-    stot.fixed					:= TRUE;
-    split[1..ncolls-1].fixed 			:= TRUE;
+    FIX stot;
+    FIX split[1..ncolls-1];
     IF (hb_on) THEN
 	RUN heat_balance;
     END IF;
 
-    z_shift.fixed := FALSE;
-    s_shift.fixed := FALSE;
+    FREE z_shift;
+    FREE s_shift;
 END seqmod_fullthermo;
 
 METHOD seqmod_adiabatic;
@@ -1913,20 +1913,20 @@ METHOD seqmod_adiabatic;
     equilibrated := TRUE;
     RUN coll[1..ncolls].seqmod_adiabatic;
     FOR j IN [1..ncolls] DO
-	(*coll[j].botliq.state.H.fixed := FALSE;*)
+	(*FREE coll[j].botliq.state.H;*)
 
 	coll[j].z_set
-	.z_values[coll[j].ntrays+1].fixed 	:= FALSE;
-	coll[j].z_set.stot.fixed			:= FALSE;
+	.FREE z_values[coll[j].ntrays+1];
+	FREE coll[j].z_set.stot;
     END FOR;
-    stot.fixed					:= TRUE;
-    split[1..ncolls-1].fixed 			:= TRUE;
+    FIX stot;
+    FIX split[1..ncolls-1];
     IF (hb_on) THEN
 	RUN heat_balance;
     END IF;
 
-    z_shift.fixed := FALSE;
-    s_shift.fixed := FALSE;
+    FREE z_shift;
+    FREE s_shift;
 END seqmod_adiabatic;
 
 
@@ -1945,8 +1945,8 @@ METHOD specify;
     END IF;
     RUN coll[1].topliq.specify;
     RUN coll[ncolls].botvap.specify;
-    z_shift.fixed := TRUE;
-    s_shift.fixed := TRUE;
+    FIX z_shift;
+    FIX s_shift;
 END specify;
 METHOD reset;
     RUN ClearAll;
@@ -2373,14 +2373,14 @@ METHOD default_self;
     hb_on := FALSE;
     equilibrated := FALSE;
     do_cost_calc := FALSE;
-    objmult.fixed := TRUE;
+    FIX objmult;
     objmult := 10000;
-    optime.fixed := TRUE;
+    FIX optime;
     optime := 1.0;
     split[1..nfeeds+1] := 1.0/(nfeeds+1);
 
-    z_shift.fixed := TRUE;
-    s_shift.fixed := TRUE;
+    FIX z_shift;
+    FIX s_shift;
     z_shift := 0;
     s_shift := 0;
     z_space := 0.1;
@@ -2480,14 +2480,14 @@ END check_all;
 
     METHOD heat_balance;
 	RUN coll_stack[1..nfeeds+1].heat_balance;
-	feed_tray.q.fixed := FALSE;
-	feed_tray.Qin.fixed := TRUE;
+	FREE feed_tray.q;
+	FIX feed_tray.Qin;
 	hb_on := TRUE;
      END heat_balance;
      METHOD CMO;
 	 RUN coll_stack[1..nfeeds+1].CMO;
-	 feed_tray[1..nfeeds].q.fixed := TRUE;
-	 feed_tray[1..nfeeds].Qin.fixed := FALSE;
+	 FIX feed_tray[1..nfeeds].q;
+	 FREE feed_tray[1..nfeeds].Qin;
 	 hb_on := FALSE;
      END CMO;
      METHOD reduce_Q;
@@ -2519,13 +2519,13 @@ END check_all;
 	     IF (equilibrated == TRUE) THEN
 		 IF (saturated_liquid_feed == TRUE) THEN
 		     saturated_vapor_feed := FALSE;
-		     feed.T.fixed := FALSE;
-		     feed.state.phase_fraction['vapor'].fixed := TRUE;
+		     FREE feed.T;
+		     FIX feed.state.phase_fraction['vapor'];
 		     feed.state.phase_fraction['vapor'] := 0.0;
 		 END IF;
 		 IF (saturated_vapor_feed == TRUE) THEN
-		     feed.T.fixed := FALSE;
-		     feed.state.phase_fraction['vapor'].fixed := TRUE;
+		     FREE feed.T;
+		     FIX feed.state.phase_fraction['vapor'];
 		     feed.state.phase_fraction['vapor'] := 1.0;
 		 END IF;
 	     END IF;
@@ -2539,22 +2539,22 @@ END check_all;
 	RUN feed_tray.seqmod;
 	RUN reboiler.seqmod;
 	OverallMB[components].included			:= FALSE;
-	reboiler.reboil_ratio.fixed 			:= FALSE;
-	condenser.distillate.flow.fixed			:= TRUE;
-	xsi_set[components].fixed			:= TRUE;
+	FREE reboiler.reboil_ratio;
+	FIX condenser.distillate.flow;
+	FIX xsi_set[components];
 	IF (hb_on) THEN
 	    RUN heat_balance;
 	END IF;
 	recovery.included				:= FALSE;
 	sep_opt[components][components].included	:= FALSE;
-	z_space.fixed					:= TRUE;
-	s_shift.fixed					:= TRUE;
-	z_shift.fixed					:= TRUE;
+	FIX z_space;
+	FIX s_shift;
+	FIX z_shift;
      END seqmod;
 
      METHOD seqmod_massbal;
-        objmult.fixed := TRUE;
-        optime.fixed := TRUE;
+        FIX objmult;
+        FIX optime;
 	hb_on := FALSE;
 	equilibrated := FALSE;
 
@@ -2564,21 +2564,21 @@ END check_all;
 	RUN feed_tray.seqmod_massbal;
 	RUN reboiler.seqmod;
 	OverallMB[components].included			:= FALSE;
-	reboiler.reboil_ratio.fixed 			:= FALSE;
-	condenser.distillate.flow.fixed			:= TRUE;
-	xsi_set[components].fixed			:= TRUE;
+	FREE reboiler.reboil_ratio;
+	FIX condenser.distillate.flow;
+	FIX xsi_set[components];
 	recovery.included				:= FALSE;
 	sep_opt[components][components].included	:= FALSE;
 
-	z_space.fixed					:= TRUE;
-	s_shift.fixed					:= TRUE;
-	z_shift.fixed					:= TRUE;
+	FIX z_space;
+	FIX s_shift;
+	FIX z_shift;
 
      END seqmod_massbal;
 
     METHOD seqmod_fullthermo;
-        objmult.fixed := TRUE;
-        optime.fixed := TRUE;
+        FIX objmult;
+        FIX optime;
 	hb_on := FALSE;
 	equilibrated := TRUE;
 
@@ -2588,29 +2588,29 @@ END check_all;
 	RUN feed_tray.seqmod_fullthermo;
 	RUN reboiler.seqmod;
 	OverallMB[components].included			:= FALSE;
-	reboiler.reboil_ratio.fixed 			:= FALSE;
-	condenser.distillate.flow.fixed			:= TRUE;
-	xsi_set[components].fixed			:= TRUE;
+	FREE reboiler.reboil_ratio;
+	FIX condenser.distillate.flow;
+	FIX xsi_set[components];
 	recovery.included				:= FALSE;
 	sep_opt[components][components].included	:= FALSE;
 
-	z_space.fixed					:= TRUE;
-	s_shift.fixed					:= TRUE;
-	z_shift.fixed					:= TRUE;
+	FIX z_space;
+	FIX s_shift;
+	FIX z_shift;
 
     END seqmod_fullthermo;
 
     METHOD seqmod_adiabatic;
-        objmult.fixed := TRUE;
-        optime.fixed := TRUE;
+        FIX objmult;
+        FIX optime;
 	hb_on := TRUE;
 	equilibrated := TRUE;
 	RUN seqmod_fullthermo;
 	RUN heat_balance;
 
-	z_space.fixed					:= TRUE;
-	s_shift.fixed					:= TRUE;
-	z_shift.fixed					:= TRUE;
+	FIX z_space;
+	FIX s_shift;
+	FIX z_shift;
 
     END seqmod_adiabatic;
 
@@ -2629,8 +2629,8 @@ END check_all;
 	END IF;
 	RUN specify_feed;
 
-	condenser.liqout.T.fixed := FALSE;
-	condenser.liqout.P.fixed := FALSE;
+	FREE condenser.liqout.T;
+	FREE condenser.liqout.P;
      END specify;
      METHOD reset;
 	RUN ClearAll;
@@ -2685,8 +2685,8 @@ METHOD reset_to_fullthermo;
         hb_on	:= FALSE;
     	equilibrated := TRUE;
 	RUN reset;
-	distillate.T.fixed := FALSE;
-	distillate.state.phase_fraction['vapor'].fixed := TRUE;
+	FREE distillate.T;
+	FIX distillate.state.phase_fraction['vapor'];
 	distillate.state.phase_fraction['vapor'] := 0;
 END reset_to_fullthermo;
 
@@ -2694,8 +2694,8 @@ METHOD reset_to_adiabatic;
 	hb_on	:= TRUE;
     	equilibrated := TRUE;
 	RUN reset;
-	distillate.T.fixed := FALSE;
-	distillate.state.phase_fraction['vapor'].fixed := TRUE;
+	FREE distillate.T;
+	FIX distillate.state.phase_fraction['vapor'];
 	distillate.state.phase_fraction['vapor'] := 0;
 END reset_to_adiabatic;
 
@@ -2704,9 +2704,9 @@ METHOD equipment_bounds;
 END equipment_bounds;
 
 METHOD optimization_DOF;
-    distillate.flow.fixed := FALSE;
-    condenser.reflux_ratio.fixed := FALSE;
-    s_stack[1..2].fixed := FALSE;
+    FREE distillate.flow;
+    FREE condenser.reflux_ratio;
+    FREE s_stack[1..2];
 END optimization_DOF;
 END simple_coll_column;
 

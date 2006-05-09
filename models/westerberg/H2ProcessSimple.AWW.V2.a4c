@@ -144,29 +144,29 @@ MODEL simpleH2Process;
 	RUN U01FeedMixer.specify;
 	RUN U02CompressorIdeal.specify;
 	RUN U03Compressor.specify;
-	U03Compressor_eff.fixed := TRUE;
+	FIX U03Compressor_eff;
 	
 	(* adjust flags for streams *)
 	(* S0001CityGas *)
-	S0001CityGas.f[compsCityGas].fixed := FALSE;
-	S0001CityGas.flow.fixed := TRUE;
-	S0001CityGas.y[C1].fixed := TRUE;
+	FREE S0001CityGas.f[compsCityGas];
+	FIX S0001CityGas.flow;
+	FIX S0001CityGas.y[C1];
 
 	(* S0001H2Recycle *)
-	S0001H2Recycle.flow.fixed := TRUE;
-	S0001H2Recycle.f[compsH2].fixed := FALSE;
+	FIX S0001H2Recycle.flow;
+	FREE S0001H2Recycle.f[compsH2];
 
 	(* S0102HeatedFeed *)
-	S0102HeatedFeed.f[compsFeed].fixed := FALSE;
+	FREE S0102HeatedFeed.f[compsFeed];
 
 	(* S20IdealCompressedFeed *)
-	S20IdealCompressedFeed.T.fixed := FALSE;
-	S20IdealCompressedFeed.f[compsFeed].fixed := FALSE;
+	FREE S20IdealCompressedFeed.T;
+	FREE S20IdealCompressedFeed.f[compsFeed];
 	
 	(* S34CompressedFeed *)
-	S34CompressedFeed.T.fixed := FALSE;	
-	S34CompressedFeed.P.fixed := FALSE;	
-	S34CompressedFeed.f[compsFeed].fixed := FALSE;
+	FREE S34CompressedFeed.T;	
+	FREE S34CompressedFeed.P;	
+	FREE S34CompressedFeed.f[compsFeed];
 
     END specify;
 

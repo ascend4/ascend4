@@ -208,8 +208,8 @@ MODEL tray_stack(
 	METHOD reset_to_adiabatic;
 	    RUN seqmod;
 	    Qin[1..ntrays] :=0 {kW};
-	    cmo_ratio[1..ntrays].fixed	:=FALSE;
-	    Qin[1..ntrays].fixed	:=TRUE;
+	    FREE cmo_ratio[1..ntrays];
+	    FIX Qin[1..ntrays];
 	END reset_to_adiabatic;
 	METHOD set_ode;
 	    RUN tray[1..ntrays].set_ode;

@@ -81,15 +81,15 @@ MODEL sonic;
     END default_self;
 
     METHOD specify;
-	friction.fixed := TRUE;
-	gamma.fixed := TRUE;
-	mw.fixed := TRUE;
-	L.fixed := TRUE;
-	Ti.fixed := TRUE;
-	Pi.fixed := TRUE;
-	Pd.fixed := TRUE;
-	D.fixed := TRUE;
-	Pifac.fixed := TRUE;
+	FIX friction;
+	FIX gamma;
+	FIX mw;
+	FIX L;
+	FIX Ti;
+	FIX Pi;
+	FIX Pd;
+	FIX D;
+	FIX Pifac;
     END specify;
 
     METHOD values;

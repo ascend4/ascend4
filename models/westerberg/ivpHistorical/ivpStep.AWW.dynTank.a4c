@@ -80,18 +80,18 @@ MODEL currentPtDynTank REFINES pastPoint;
     (* ----- currentPtDynTank ----- *)
 
     METHOD specifyForInitializing;
-	t.fixed          := TRUE;
-	Holdup.fixed     := TRUE;
-	flowMin.fixed    := TRUE;
+	FIX t;
+	FIX Holdup;
+	FIX flowMin;
 
 	(* When initializing, we wish to compute the valve constant
 	  that will give us a desired flow *)
-	flowOut.fixed    := TRUE;
-	Cv.fixed         := FALSE;  (* computed by eqnFlowOut       *)
+	FIX flowOut;
+	FREE Cv;  (* computed by eqnFlowOut       *)
 
-	dHoldup_dt.fixed := FALSE;  (* computed by dynEqnTankHoldup *)
-	flowIn.fixed     := FALSE;  (* computed by eqnFlowIn        *)
-	flowStop.fixed   := FALSE;  (* computed by eqnFlowStop      *)
+	FREE dHoldup_dt;  (* computed by dynEqnTankHoldup *)
+	FREE flowIn;  (* computed by eqnFlowIn        *)
+	FREE flowStop;  (* computed by eqnFlowStop      *)
 
     END specifyForInitializing;
 
@@ -108,12 +108,12 @@ MODEL currentPtDynTank REFINES pastPoint;
 
     METHOD specifyForStepping;
 	RUN specifyForInitializing;
-	t.fixed          := FALSE;
-	Holdup.fixed	 := FALSE;
+	FREE t;
+	FREE Holdup;
 	
 	(* When integrating, fix valve constant and compute flowOut *)
 	flowOut	         := FALSE;
-	Cv.fixed         := TRUE;
+	FIX Cv;
 	
     END specifyForStepping;
 
@@ -136,7 +136,7 @@ MODEL currentPtDynTank REFINES pastPoint;
 
 	RUN integrationPoint::testForIndexProblem;
 	
-	Cv.fixed         := TRUE;
+	FIX Cv;
 	
     END testForIndexProblem;
     

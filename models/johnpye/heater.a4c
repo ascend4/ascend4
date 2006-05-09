@@ -20,9 +20,9 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	in.p.fixed := TRUE;
-	in.h.fixed := TRUE;
-	Qdot.fixed := TRUE;
+	FIX in.p;
+	FIX in.h;
+	FIX Qdot;
 END specify;
 
 METHOD values;

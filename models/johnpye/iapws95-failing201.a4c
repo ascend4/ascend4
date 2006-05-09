@@ -477,8 +477,8 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	rho.fixed := TRUE;
+	FIX T;
+	FIX rho;
 END specify;
 
 METHOD values;
@@ -544,8 +544,8 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	x.fixed := TRUE;
+	FIX T;
+	FIX x;
 END specify;
 
 METHOD values;

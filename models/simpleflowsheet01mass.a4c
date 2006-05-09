@@ -80,8 +80,8 @@ MODEL mod_mixture REFINES mixture;
 
     METHOD specify;
 	RUN ClearAll;
-        y[components].fixed 		:= TRUE;
-        y[CHOICE[components]].fixed 	:= FALSE;
+        FIX y[components];
+        FREE y[CHOICE[components]];
     END specify;
 
 END mod_mixture;
@@ -114,7 +114,7 @@ MODEL mod_stream REFINES molar_stream;
 
     METHOD specify;
 	RUN ClearAll;
-	f[components].fixed		:= TRUE;
+	FIX f[components];
     END specify;
 
 END mod_stream;

@@ -137,10 +137,10 @@ MODEL phaseq;
     END default_self;
 
     METHOD specify;
-	P.fixed := TRUE;
-	T.fixed := TRUE;
+	FIX P;
+	FIX T;
 	FOR i IN components DO
-	    z[i].fixed := TRUE;
+	    FIX z[i];
         END FOR;
     END specify;
 

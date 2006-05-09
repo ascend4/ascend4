@@ -180,25 +180,25 @@ MODEL simpleflowsheet;
 	RUN U1feedMixer.specify;
 	
 	(* release specs set by splitter for flash vapor *)
-	S34flashV.f[compsAll].fixed  := FALSE;
+	FREE S34flashV.f[compsAll];
 
 	(* release specs for recycle stream *)
-	S51recycle.f[compsAll].fixed := FALSE;
-	S51recycle.T.fixed           := FALSE;
-	S51recycle.P.fixed           := FALSE;
+	FREE S51recycle.f[compsAll];
+	FREE S51recycle.T;
+	FREE S51recycle.P;
 
 	(* U1: feed mixer *)
 	(* fix product temperature of feed mixer *)
-	U1feedMixer.delT1.fixed      := TRUE;
-	U1feedMixer.Qin.fixed        := FALSE;
+	FIX U1feedMixer.delT1;
+	FREE U1feedMixer.Qin;
 	
 	(* U2: reactor *)
 	(* fix conversion *)
-	conv.fixed := TRUE;
-	U2reactor.turnover.fixed     := FALSE;
+	FIX conv;
+	FREE U2reactor.turnover;
 	(* product temperature is same as that of feed *)
-	U2reactor.delT.fixed         := TRUE;
-	U2reactor.Qin.fixed          := FALSE;
+	FIX U2reactor.delT;
+	FREE U2reactor.Qin;
 	
 	(* U3: flash *)
 	(* flash P and vapor fraction already fixed *)
@@ -206,7 +206,7 @@ MODEL simpleflowsheet;
 	(* U4: splitter *)
 
 	(* U5: compressor *)
-	U5compressor.compressionRatio.fixed := FALSE;
+	FREE U5compressor.compressionRatio;
 
     END specify;
     
