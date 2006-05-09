@@ -1,0 +1,171 @@
+#  ASCEND TK Makefile.Rules
+#  Mark Thomas
+#  May 27, 1996
+#  $Date: 1998/05/21 17:48:05 $
+#  $Revision: 1.8 $
+#  $Author: mthomas $
+#  $Source: /afs/cs.cmu.edu/project/ascend/Repository/ascend4/TK/Makefile.Rules.in,v $
+#
+
+#  This file contains the Make Rules which all Makefiles in this
+#  subdirectory tree use.
+#
+#  The Makefiles in this subdirectory tree and this Makefile.Rules
+#  file install the ASCEND specific tcl/tk code in the install
+#  directory ASCEND_TK_DIR
+
+#  Each Makefile.in in this directory tree should define two lists:
+#
+#    INSTALL_SUBDIR_LIST -- lists the subdirectories of this directory
+#                           which contain files to be installed
+#
+#    INSTALL_FILE_LIST -- lists the files that are to be installed
+#                         when ASCEND is installed.
+#
+#  See Makefile.Template in this directory for a sample Makefile.in
+
+
+SHELL = /bin/sh
+@SET_MAKE@
+
+
+
+#  dummy targets so make won't complain
+install install-binaries install-libraries install-models::
+
+#  this target traverses the directory tree and installs the files
+install-subtree: Makefile
+	@if [ ! -d $(INSTALL_TARGET_DIR) ]; then \
+	  echo Making directory $(INSTALL_TARGET_DIR) ; \
+	  mkdir -p $(INSTALL_TARGET_DIR) ; \
+	fi
+	@for i in $(INSTALL_FILE_LIST) /dev/null ; do \
+	  if $(CMP) -s $(srcdir)/$$i $(INSTALL_TARGET_DIR)/$$i ; then \
+	    echo "Skipping $$i (up to date)" ; \
+	  elif [ $$i != "/dev/null" ]; then \
+	    echo "Installing $$i --> $(INSTALL_TARGET_DIR)" ; \
+	    $(INSTALL_DATA) $(srcdir)/$$i $(INSTALL_TARGET_DIR) ; \
+	  fi ; \
+	done
+	@for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@  RULES_FILE="../$(RULES_FILE)" \
+		INSTALL_TARGET_DIR="$(INSTALL_TARGET_DIR)/$$i" \
+		INSTALL_DATA="$(INSTALL_DATA)" CMP="$(CMP)" ) ; \
+	  fi ; \
+	done
+
+#  the reverse of above
+uninstall::
+
+uninstall-subtree::
+	@for i in $(INSTALL_FILE_LIST) /dev/null ; do \
+	  if test -f $(INSTALL_TARGET_DIR)/$$i ; then \
+	    echo Removing $(INSTALL_TARGET_DIR)/$$i ; \
+	    $(RM) $(INSTALL_TARGET_DIR)/$$i ; \
+	  fi ; \
+	done
+	@for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@ RULES_FILE="../$(RULES_FILE)" \
+		INSTALL_TARGET_DIR="$(INSTALL_TARGET_DIR)/$$i" RM="$(RM)" ) ; \
+	  fi ; \
+	done
+
+
+
+#  Warn when the Makefile is older than Makefile.in
+Makefile: $(srcdir)/Makefile.in
+	@echo ""
+	@echo "$(srcdir)/Makefile.in is newer than Makefile"
+	@echo "Consider running 'configure' again or running 'make makes'"
+	@echo ""
+
+
+
+#  A target to make a backup copy of you Makefile.  Useful to do before
+#  you rerun configure so you don't lose all the hacks you added.
+save-makes::
+	@-for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@ CP="$(CP)" \
+		RULES_FILE="../$(RULES_FILE)"); \
+	  fi ; \
+	done
+	-$(CP) Makefile Makefile.SAVED
+
+
+
+#  Targets to remove generated files.  `distclean' removes nearly
+#  everything generated since you last ran `configure'
+clean::
+
+distclean:: clean
+	for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@ RM="$(RM)" \
+		RULES_FILE="../$(RULES_FILE)"); \
+	  fi ; \
+	done
+	$(RM) *~ \#* *.bak TAGS
+	$(RM) Makefile Makefile.Rules Makefile.SAVED Makefile.Rules.SAVED
+
+
+
+#  Targets to generate emacs style (TAGS) and vi style (tags) tables
+#  for quick lookup of Tcl procedures
+TAGS::
+	-$(ETAGS) --append --output=$(TAGSFILE) --language=none \
+	  --regex='/proc[ \t]+\([^ \t]+\)/\1/' \
+	  $(srcdir)/*.tcl $(srcdir)/*.t
+	-for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@ TAGSFILE="../$(TAGSFILE)" ETAGS="$(ETAGS)" \
+		RULES_FILE="../$(RULES_FILE)"); \
+	  fi ; \
+	done
+
+tags::
+	-$(CTAGS) --append --output=$(TAGSFILE) --language=none \
+	  --regex='/proc[ \t]+\([^ \t]+\)/\1/' \
+	  $(srcdir)/*.tcl $(srcdir)/*.
+	-for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@ TAGSFILE="../$(TAGSFILE)" CTAGS="$(CTAGS)" \
+		RULES_FILE="../$(RULES_FILE)"); \
+	  fi ; \
+	done
+
+
+
+#  untested targets for generating documentation from the tcl source files
+.SUFFIXES:
+.SUFFIXES: .tcl .tch
+
+.tcl.tch:
+	grep '^#' $< > $@
+
+documentation:
+	for i in `echo $(INSTALL_FILE_LIST) /dev/null | sed 's/tcl/tch/g'`; do\
+	  case "$$i" in *\.tch) \
+	    doc_file_list="$$doc_file_list $$i" ;; \
+	  esac ; \
+	done ; \
+	if [ -n "$$doc_file_list" ] ; then \
+	  $(MAKE) $$doc_file_list ; \
+	fi
+	$(RM) FILE_INDEX.tch ALPHA_INDEX.tch
+	-grep -n '^# proc ' *.tch > FILE_INDEX.tch
+	-cat *.tch | grep '^# proc ' | sort > ALPHA_INDEX.tch
+	for i in $(INSTALL_SUBDIR_LIST) /dev/null ; do \
+	  if [ $$i != "/dev/null" ]; then \
+	    (cd $$i ; $(MAKE) $@ RM="$(RM)" \
+		RULES_FILE="../$(RULES_FILE)") ; \
+	  fi ; \
+	done
+
+#  Force emacs to treat this file as a Makefile
+#
+# Local Variables: ***
+# mode:Makefile ***
+# End: ***

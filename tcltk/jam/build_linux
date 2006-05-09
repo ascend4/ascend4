@@ -1,0 +1,13 @@
+THIS FILE IS DEPRECATED - 20-Dec-2005
+
+#!/bin/bash
+# Script to build Ascend using jam
+
+# Build the Ascend base libraries
+cd ../../base/jam                                  
+./build_linux
+
+# Build the Ascend executable
+cd ../../tcltk/jam
+jam -f Jambase
+
