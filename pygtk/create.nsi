@@ -11,9 +11,14 @@
 Name "ASCEND PyGTK"
 
 ; The file to write
-OutFile "ascend-@VERSION@.exe"
+!ifdef OUTFILE
+OutFile ${OUTFILE}.exe
+!else
+OutFile ascend-setup.exe
+!endif
 
-; SetCompressor /SOLID lzma
+
+SetCompressor /SOLID lzma
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\ASCEND
