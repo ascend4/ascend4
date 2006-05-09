@@ -487,8 +487,8 @@ int AscDriver(int argc, CONST char *argv[])
  *    CPP_MACRO            ENVIRONMENT VAR    DEFAULT VALUE
  *    =================    ===============    =============
  *    DIST_ENVIRONVAR      ASCENDDIST         /usr/share/ascend
- *    ASCTK_ENVIRONVAR     ASCENDTK           $ASCENDDIST/tcltk
- *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      $ASCENDDIST/tcltk/bitmaps
+ *    ASCTK_ENVIRONVAR     ASCENDTK           $ASCENDDIST/TK
+ *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      $ASCENDDIST/TK/bitmaps
  *    LIBR_ENVIRONVAR      ASCENDLIBRARY      .:$ASCENDDIST/models
  *
  */
@@ -536,7 +536,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
       "file nativename [file dirname [file dirname [info nameofexecutable]]]";
     if( Tcl_Eval(interp, cmd) == TCL_OK ) {
       Tcl_DStringGetResult(interp, &ascenddist);
-      Tcl_DStringAppend(&ascenddist, "/share/ascend", -1);
+      /* Tcl_DStringAppend(&ascenddist, "/share/ascend", -1); */
       if(Asc_SetPathList(DIST_ENVIRONVAR,Tcl_DStringValue(&ascenddist)) != 0) {
         Asc_Panic(2, "AscCheckEnvironVars",
                   "Asc_SetPathList() returned Nonzero: "
@@ -599,9 +599,14 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
 
   /*
    *  If the user's environment does not have ASCENDTK set, then set it
-   *  by appending 'tcltk' to ASCENDDIST.  Later in this function, we check
+   *  by appending 'TK' to ASCENDDIST.  Later in this function, we check
    *  to make sure it is a valid directory by checking for the existence
    *  of `AscendRC' in that directory.
+   * 
+   *  The location of this directory is not subject to debate. It is
+   *  $prefix/TK. If one wants it anywhere else, for any reason, one
+   *  can provide a wrapper that sets the environment variable to override
+   *  it.
    */
   if( Asc_ImportPathList(ASCTK_ENVIRONVAR) == 0 ) {
     if( (tmpenv = Asc_GetEnv(ASCTK_ENVIRONVAR)) == NULL ) {
@@ -616,9 +621,9 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     ascfree(tmpenv);
   } else {
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    /* AWW20041208:    Tcl_DStringAppend(&buffer2, "/tcltk", -1);
+    /* AWW20041208:    Tcl_DStringAppend(&buffer2, "/TK", -1);
      */
-    Tcl_DStringAppend(&buffer2, "/tcltk", -1);
+    Tcl_DStringAppend(&buffer2, "/TK", -1);
     if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                       &buffer1))) {
       if( Asc_SetPathList(ASCTK_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
@@ -649,7 +654,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
                TCL_GLOBAL_ONLY);
   } else {
     Asc_Panic(2, "AscCheckEnvironVars",
-              "ERROR: Cannot find the file \"%s\" in the subdirectory \"tcltk\"\n"
+              "ERROR: Cannot find the file \"%s\" in the subdirectory \"TK\"\n"
               "under the directory \"%s\"\n"
               "Please check the value of the environment variables %s and\n"
               "and %s and start ASCEND again.\n",
@@ -673,7 +678,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp)
     ascfree(tmpenv);
   } else {
     Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/tcltk/bitmaps", -1);
+    Tcl_DStringAppend(&buffer2, "/TK/bitmaps", -1);
     if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
                                       &buffer1))) {
       if(Asc_SetPathList(BITMAP_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
