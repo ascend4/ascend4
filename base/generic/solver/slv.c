@@ -357,6 +357,7 @@ unsigned slv_serial_id(slv_system_t sys)
 		slv_set_logincidence
 */
 
+/* define but with error on null */
 #define DEFINE_SET_INCIDENCE(NAME,PROP,TYPE,SIZE) \
 	void slv_set_##NAME(slv_system_t sys, struct TYPE **inc, long s){ \
 		if(sys->data.PROP != NULL){ \
@@ -370,16 +371,29 @@ unsigned slv_serial_id(slv_system_t sys)
 		} \
 	}
 
+/* define, no error on null */
+#define DEFINE_SET_INCIDENCE_NONULLERROR(NAME,PROP,TYPE,SIZE) \
+	void slv_set_##NAME(slv_system_t sys, struct TYPE **inc, long s){ \
+		if(sys->data.PROP != NULL){ \
+			Asc_Panic(2,"slv_set_" #NAME,"bad call: sys->data." #PROP " is already defined!"); \
+		}else{ \
+			sys->data.PROP = inc; \
+			sys->data.SIZE = s; \
+		} \
+	}
+
+
+#define DEFINE_SET_INCIDENCES(D,D1) \
+	D(incidence, incidence, var_variable, incsize) \
+	D(var_incidence, varincidence, rel_relation, varincsize) \
+	D1(logincidence, logincidence, dis_discrete, incsize)
+
+DEFINE_SET_INCIDENCES(DEFINE_SET_INCIDENCE, DEFINE_SET_INCIDENCE_NONULLERROR)
+
+/* see below for the use of this one */
 #define SLV_FREE_INCIDENCE(NAME,PROP,TYPE,SIZE) \
     if (sys->data.PROP != NULL) ascfree(sys->data.PROP); \
     sys->data.PROP = NULL;
-
-#define DEFINE_SET_INCIDENCES(D) \
-	D(incidence, incidence, var_variable, incsize) \
-	D(var_incidence, varincidence, rel_relation, varincsize) \
-	D(logincidence, logincidence, dis_discrete, incsize)
-
-DEFINE_SET_INCIDENCES(DEFINE_SET_INCIDENCE)
 
 /*----------------------------------------------------
 	destructors
@@ -448,7 +462,7 @@ int slv_destroy(slv_system_t sys)
 
 	SLV_FREE_BUFS(SLV_FREE_BUF, SLV_FREE_BUF_GLOBAL)
 
-	DEFINE_SET_INCIDENCES(SLV_FREE_INCIDENCE)
+	DEFINE_SET_INCIDENCES(SLV_FREE_INCIDENCE,SLV_FREE_INCIDENCE)
 
     ascfree( (POINTER)sys );
   }
