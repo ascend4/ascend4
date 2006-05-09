@@ -933,7 +933,7 @@ set ascPopdata(delay) 1000
 # warning: handling cascades with this is messy. See BrowswerProc.tcl
 # for and example of how to bind the cascade.
 proc ascRightMouseAddCommand {widget enabler {kind command} args} {
-  global ascPopdata
+  global ascPopdata tk_version
   set b $widget.childpop
   # create if first entry
   if {![winfo exists $b]} {
@@ -944,10 +944,21 @@ proc ascRightMouseAddCommand {widget enabler {kind command} args} {
 
     # make it go away when user leaves it for more than half a second
     set ascPopdata($b.in) 0
+    switch $tk_version {
+	8.4 -
+	8.5 {
+    bind $b <Leave> "
+      set ascPopdata($b.in) 0
+      set ascPopdata($b.id) \[after \$ascPopdata(delay) \{if \{!\$ascPopdata($b.in)\} \{ tk::MenuUnpost $b \} \}\]
+    "
+	}
+	default {
     bind $b <Leave> "
       set ascPopdata($b.in) 0
       set ascPopdata($b.id) \[after \$ascPopdata(delay) \{if \{!\$ascPopdata($b.in)\} \{ tkMenuUnpost $b \} \}\]
     "
+	}
+    }
     bind $b <Any-Enter> "
       set ascPopdata($b.in) 1
       catch \{after cancel \$ascPopdata($b.id)\}

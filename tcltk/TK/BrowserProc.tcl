@@ -265,7 +265,7 @@ proc set_Browser_Defaults {} {
 }
 #update disabling on find popup
 proc BrowUpdateFindCascade {} {
-  global ascBrowVect ascPopdata
+  global ascBrowVect ascPopdata tk_version
     set m $ascBrowVect(parents).childpop.mfind
   if {![winfo exists $m]} {
     menu $m \
@@ -297,12 +297,24 @@ proc BrowUpdateFindCascade {} {
       -underline -1
     # bindings don't stick if you leave out this update.
     update
+    switch $tk_version {
+    8.4 -
+    8.5 {
+    bind $m <Any-Leave> "+
+      set ascPopdata($ascBrowVect(parents).childpop.in) 0
+      set ascPopdata($ascBrowVect(parents).childpop.id) \
+        \[after \$ascPopdata(delay) \{if \{!\$ascPopdata($ascBrowVect(parents).childpop.in)\} \
+             \{ tk::MenuUnpost $ascBrowVect(parents).childpop \} \}\]
+    "
+	}
+    default {
     bind $m <Any-Leave> "+
       set ascPopdata($ascBrowVect(parents).childpop.in) 0
       set ascPopdata($ascBrowVect(parents).childpop.id) \
         \[after \$ascPopdata(delay) \{if \{!\$ascPopdata($ascBrowVect(parents).childpop.in)\} \
              \{ tkMenuUnpost $ascBrowVect(parents).childpop \} \}\]
     "
+    }
     bind $m <Any-Enter> "+
       set ascPopdata($ascBrowVect(parents).childpop.in) 1
       catch \{after cancel \$ascPopdata($ascBrowVect(parents).childpop.id)\}

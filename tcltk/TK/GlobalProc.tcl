@@ -371,7 +371,7 @@ proc set_cmuBindings {} {
           tk::MbMotion %W down %X %Y
         }
       }
-    8.3 {
+    default {
         if {$tk_strictMotif} {
           tkMbMotion %W up %X %Y
         } else {
