@@ -51,11 +51,11 @@ MODEL mass_stream(
 
   METHODS
     METHOD clear;
-	Ftot.fixed := FALSE;
-	f[components].fixed := FALSE;
+	FREE Ftot;
+	FREE f[components];
     END clear;
     METHOD reset;
-	f[components].fixed := TRUE;
+	FIX f[components];
     END reset;
     METHOD seqmod;
 	RUN clear;
@@ -82,7 +82,7 @@ END NOTES;
     END clear;
     METHOD seqmod;
 	RUN output.specify;
-	output.f[output.state.options.ds.components].fixed := FALSE;
+	FREE output.f[output.state.options.ds.components];
     (* type OF inputs not know so must be handled somewhere ELSE *)
     END seqmod;
     METHOD specify;
@@ -117,21 +117,21 @@ MODEL mass_balance_homotopy_mixer_single_output_int(
   METHODS
     METHOD clear;
 	RUN mass_balance_mixer_single_output_base::clear;
-	f_mult[output.components].fixed := FALSE;
+	FREE f_mult[output.components];
         END clear;
     METHOD seqmod;
 (*	RUN mass_balance_mixer_single_output_base::seqmod;*)
 	RUN output.specify;
-	output.f[output.components].fixed := FALSE;
-	f_mult[output.components].fixed := TRUE;
+	FREE output.f[output.components];
+	FIX f_mult[output.components];
     END seqmod;
     METHOD calc_multipliers;
-	f_mult[output.components].fixed := FALSE;
-	output.f[output.components].fixed := TRUE;
+	FREE f_mult[output.components];
+	FIX output.f[output.components];
     END calc_multipliers;
     METHOD calc_outputs;
-	f_mult[output.components].fixed := TRUE;
-	output.f[output.components].fixed := FALSE;
+	FIX f_mult[output.components];
+	FREE output.f[output.components];
     END calc_outputs;
 
     METHOD reduce_mix_diff;
@@ -160,15 +160,15 @@ MODEL mass_balance_homotopy_mixer_single_output_int2(
   METHODS
     METHOD clear;
 	RUN mass_balance_mixer_single_output_base::clear;
-	f_mult[output.components].fixed := FALSE;
+	FREE f_mult[output.components];
         END clear;
     METHOD seqmod;
 	RUN mass_balance_mixer_single_output_base::seqmod;
-	f_mult[output.components].fixed := TRUE;
+	FIX f_mult[output.components];
     END seqmod;
     METHOD calc_multipliers;
-	f_mult[output.components].fixed := FALSE;
-	output.f[output.components].fixed := TRUE;
+	FREE f_mult[output.components];
+	FIX output.f[output.components];
     END calc_multipliers;
     METHOD reduce_mix_diff;
 	FOR i IN output.components DO
@@ -206,7 +206,7 @@ MODEL liquid_stream_splitter_int(
 	RUN input.clear;
 	RUN output[outputs].clear;
 (*	output[outputs].saturated := FALSE;*)
-	split[outputs].fixed := FALSE;
+	FREE split[outputs];
     END clear;
     METHOD seqmod;
 	RUN clear;

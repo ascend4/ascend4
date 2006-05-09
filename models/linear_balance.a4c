@@ -81,7 +81,7 @@ METHODS
 
    METHOD specify;
 	FOR i IN bounds DO
-	   B[i].fixed := TRUE;
+	   FIX B[i];
 	END FOR;
    END specify;
 
@@ -145,7 +145,7 @@ METHODS
 
    METHOD specify;
 	FOR i IN bounds DO
-	   B[i].fixed := TRUE;
+	   FIX B[i];
 	END FOR;
    END specify;
 
@@ -244,7 +244,7 @@ METHODS
 
 
    METHOD specify;
-	F[1].fixed := TRUE;
+	FIX F[1];
         FOR i IN num_units1 DO
 	   RUN U[i].specify;
 	END FOR;

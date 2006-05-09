@@ -315,8 +315,8 @@ END reset_to_full_thermo;
 
 METHOD reset_to_adiabatic;
 	RUN reset_to_full_thermo;
-	Stack[Tray_set].cmo_ratio.fixed := FALSE;
-	Stack[Tray_set].Qin.fixed := TRUE;
+	FREE Stack[Tray_set].cmo_ratio;
+	FIX Stack[Tray_set].Qin;
 	Stack[Tray_set].Qin := 0{W};
 END reset_to_adiabatic;
 
@@ -711,8 +711,8 @@ METHOD specify;
 	RUN seqmod;
 	RUN feed.specify;
         IF (feed.equilibrated AND (feed.pd.phase_indicator == 'VL')) THEN
-		feed.Details.state.phase[feed.pd.reference_phase].T.fixed := FALSE;
-		feed.Details.state.phase_fraction[feed.pd.other_phases].fixed := TRUE;
+		FREE feed.Details.state.phase[feed.pd.reference_phase].T;
+		FIX feed.Details.state.phase_fraction[feed.pd.other_phases];
         END IF;
 END specify;
 
@@ -731,11 +731,11 @@ END reset_to_full_thermo;
 METHOD reset_to_adiabatic;
 	RUN reset_to_full_thermo;
 	(* condenser, reboiler Qin left free *)
-	rectifying_section.Stack[1..n_trays_above].cmo_ratio.fixed := FALSE;
-	stripping_section.Stack[1..n_trays_below].cmo_ratio.fixed := FALSE;
-	Tray[1..N_trays-1].Qin.fixed := TRUE;
+	FREE rectifying_section.Stack[1..n_trays_above].cmo_ratio;
+	FREE stripping_section.Stack[1..n_trays_below].cmo_ratio;
+	FIX Tray[1..N_trays-1].Qin;
 	Tray[1..N_trays-1].Qin := 0{W};
-	feed_tray.q.fixed := FALSE;
+	FREE feed_tray.q;
 END reset_to_adiabatic;
 
 METHOD propagate_feed_values;

@@ -203,14 +203,14 @@ MODEL unitOneInOneOut
         (* first run specify on all parts *)
         RUN feed.specify;
     	RUN product.specify;
-	stoichCoef[compsAll].fixed := TRUE;
-	turnover.fixed := TRUE;
-	delP.fixed := TRUE;
+	FIX stoichCoef[compsAll];
+	FIX turnover;
+	FIX delP;
 	(* then patch up things such that this model is square *)
-	product.f[compsProduct].fixed := FALSE;
-	product.T.fixed := FALSE;
-	product.P.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FREE product.f[compsProduct];
+	FREE product.T;
+	FREE product.P;
+	FIX Qin;
     END specify;
     
 END unitOneInOneOut;
@@ -308,17 +308,17 @@ MODEL unitOneInTwoOut
 	RUN feed.specify;
 	RUN product1.specify;
 	RUN product2.specify;
-	split[compsInAll].fixed := TRUE;
-	delP1.fixed := TRUE;
-	delP12.fixed := TRUE;
-	delT12.fixed := TRUE;
-	product1.f[compsProduct1].fixed := FALSE;
-	product2.f[compsProduct2].fixed := FALSE;
-	product1.P.fixed := FALSE;
-	product1.T.fixed := FALSE;
-	product2.P.fixed := FALSE;
-	product2.T.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FIX split[compsInAll];
+	FIX delP1;
+	FIX delP12;
+	FIX delT12;
+	FREE product1.f[compsProduct1];
+	FREE product2.f[compsProduct2];
+	FREE product1.P;
+	FREE product1.T;
+	FREE product2.P;
+	FREE product2.T;
+	FIX Qin;
     END specify;
 
 END unitOneInTwoOut;
@@ -404,11 +404,11 @@ MODEL unitTwoInOneOut
 	RUN feed1.specify;
 	RUN feed2.specify;
 	RUN product.specify;
-	delP1.fixed := TRUE;
-	product.f[compsProduct].fixed := FALSE;
-	product.P.fixed := FALSE;
-	product.T.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FIX delP1;
+	FREE product.f[compsProduct];
+	FREE product.P;
+	FREE product.T;
+	FIX Qin;
     END specify;
 
 END unitTwoInOneOut;
@@ -441,12 +441,12 @@ MODEL simpleCompressor
     METHOD specify;
 	RUN idealCompressor.specify;
 	RUN realCompressor.specify;
-	idealCompressor.delP.fixed := FALSE;
-	realCompressor.delP.fixed := FALSE;
-	idealCompressor.Qin.fixed := FALSE;
-	Qin.fixed := FALSE;
-	compressionRatio.fixed := TRUE;
-	efficiency.fixed := TRUE;
+	FREE idealCompressor.delP;
+	FREE realCompressor.delP;
+	FREE idealCompressor.Qin;
+	FREE Qin;
+	FIX compressionRatio;
+	FIX efficiency;
     END specify;
 
 END simpleCompressor;
@@ -532,9 +532,9 @@ MODEL testUnitOneInOneOut;
     
     METHOD specify;
 	RUN unitNormal.specify;
-	prodNormal.f[compsAll].fixed := FALSE;
+	FREE prodNormal.f[compsAll];
 	RUN unitMissing.specify;
-	prodMissing.f[allButN2].fixed := FALSE;	
+	FREE prodMissing.f[allButN2];	
     END specify;
 
 END testUnitOneInOneOut;
@@ -607,8 +607,8 @@ MODEL testUnitOneInTwoOut;
 	RUN feedNormal.specify;
 	RUN unitMissing.specify;
 	RUN feedMissing.specify;
-	unitMissing.Qin.fixed := FALSE;
-	unitMissing.product1.T.fixed := TRUE;
+	FREE unitMissing.Qin;
+	FIX unitMissing.product1.T;
     END specify;
 
 END testUnitOneInTwoOut;
@@ -685,8 +685,8 @@ MODEL testUnitTwoInOneOut;
 	RUN unitMissing.specify;
 	RUN feed1Missing.specify;
 	RUN feed2Missing.specify;
-	unitMissing.Qin.fixed := FALSE;
-	unitMissing.product.T.fixed := TRUE;
+	FREE unitMissing.Qin;
+	FIX unitMissing.product.T;
     END specify;
 
 END testUnitTwoInOneOut;

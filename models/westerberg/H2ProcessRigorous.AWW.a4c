@@ -76,14 +76,14 @@ MODEL VaporStream;
     
     METHODS
     METHOD seqmod;
-	str.state.slack_PhaseDisappearance['vapor'].fixed := TRUE;
-	cost_per_mole.fixed := TRUE;
+	FIX str.state.slack_PhaseDisappearance['vapor'];
+	FIX cost_per_mole;
     END seqmod;
     METHOD specify;
 	RUN seqmod;
-	T.fixed := TRUE;
-	P.fixed := TRUE;
-	f[comp].fixed := TRUE;
+	FIX T;
+	FIX P;
+	FIX f[comp];
     END specify;
     METHOD values;
 	str.state.slack_PhaseDisappearance['vapor'] := 0;
@@ -99,10 +99,10 @@ MODEL ZeroFeedAll REFINES VaporStream;
     METHOD seqmod;
 	RUN VaporStream::seqmod;
 	
-	f[comp].fixed := FALSE;
-	y[comp].fixed := TRUE;
-	y['hydrogen'].fixed := FALSE;
-	flow.fixed := TRUE;
+	FREE f[comp];
+	FIX y[comp];
+	FREE y['hydrogen'];
+	FIX flow;
     END seqmod;
     METHOD specify;
 	RUN VaporStream::specify;
@@ -134,15 +134,15 @@ MODEL NaturalGasFeed REFINES VaporStream;
     METHOD seqmod;
 	RUN VaporStream::seqmod;
 	
-	f[comp].fixed := FALSE;
-	y[comp].fixed := TRUE;
-	y['hydrogen'].fixed := FALSE;
+	FREE f[comp];
+	FIX y[comp];
+	FREE y['hydrogen'];
     END seqmod;
     METHOD specify;
 	RUN VaporStream::specify;
 	RUN seqmod;
     
-	flow.fixed := TRUE;
+	FIX flow;
     END specify;
     METHOD values;
 	RUN VaporStream::values;
@@ -172,15 +172,15 @@ MODEL AirFeed REFINES VaporStream;
     METHOD seqmod;
 	RUN VaporStream::seqmod;
 	
-	f[comp].fixed := FALSE;
-	y[comp].fixed := TRUE;
-	y['hydrogen'].fixed := FALSE;
+	FREE f[comp];
+	FIX y[comp];
+	FREE y['hydrogen'];
     END seqmod;
     METHOD specify;
 	RUN VaporStream::specify;
 	RUN seqmod;
     
-	flow.fixed := TRUE;
+	FIX flow;
     END specify;
     METHOD values;
 	RUN VaporStream::values;
@@ -199,15 +199,15 @@ MODEL SteamFeed REFINES VaporStream;
     METHOD seqmod;
 	RUN VaporStream::seqmod;
 	
-	f[comp].fixed := FALSE;
-	y[comp].fixed := TRUE;
-	y['hydrogen'].fixed := FALSE;
+	FREE f[comp];
+	FIX y[comp];
+	FREE y['hydrogen'];
     END seqmod;
     METHOD specify;
 	RUN VaporStream::specify;
 	RUN seqmod;
     
-	flow.fixed := TRUE;
+	FIX flow;
     END specify;
     METHOD values;
 	RUN VaporStream::values;
@@ -225,15 +225,15 @@ MODEL HydrogenStream REFINES VaporStream;
     METHOD seqmod;
 	RUN VaporStream::seqmod;
 	
-	f[comp].fixed := FALSE;
-	y[comp].fixed := TRUE;
-	y['hydrogen'].fixed := FALSE;
+	FREE f[comp];
+	FIX y[comp];
+	FREE y['hydrogen'];
     END seqmod;
     METHOD specify;
 	RUN VaporStream::specify;
 	RUN seqmod;
     
-	flow.fixed := TRUE;
+	FIX flow;
     END specify;
     METHOD values;
 	RUN VaporStream::values;
@@ -382,7 +382,7 @@ MODEL PreReformerUnit(
 	RUN Ro.seqmod;
 	RUN Xo.seqmod;
 	
-	U.fixed := TRUE;
+	FIX U;
     END seqmod;
     METHOD specify;
 	RUN seqmod;
@@ -390,7 +390,7 @@ MODEL PreReformerUnit(
 	RUN Ri.specify;
 	RUN Xi.specify;
 	
-	A.fixed := TRUE;
+	FIX A;
     END specify;
     METHOD values;
 	RUN Ri.values;
@@ -542,8 +542,8 @@ MODEL ReformerSection(
 	RUN Xo.seqmod;
 	RUN Hx.seqmod;
     
-	U_heat.fixed := TRUE;
-	U_membrane.fixed := TRUE;
+	FIX U_heat;
+	FIX U_membrane;
     END seqmod;
     METHOD specify;
 	RUN seqmod;
@@ -552,9 +552,9 @@ MODEL ReformerSection(
 	RUN Ri.specify;
 	RUN Xi.specify;
 	
-	Cat.fixed := TRUE;
-	A_heat.fixed := TRUE;
-	A_membrane.fixed := TRUE;
+	FIX Cat;
+	FIX A_heat;
+	FIX A_membrane;
     END specify;
     METHOD values;
 	RUN Hi.values;
@@ -622,7 +622,7 @@ MODEL CocurrentReformer(
 	RUN Section1.seqmod;
 	RUN SectionN.seqmod;
 	
-	SectionTemp.fixed := TRUE;
+	FIX SectionTemp;
     END seqmod;
     METHOD specify;
 	RUN seqmod;
@@ -631,8 +631,8 @@ MODEL CocurrentReformer(
 	RUN Hi.specify;
 	RUN Xi.specify;
     
-	Cat.fixed := TRUE;
-	A_mem.fixed := TRUE;
+	FIX Cat;
+	FIX A_mem;
     END specify;
     METHOD values;
 	FOR i IN [2..NStages-1] DO
@@ -726,15 +726,15 @@ MODEL main;
 	RUN Hin.specify;
 	RUN Hydrogen.specify;
 	
-	Air.flow.fixed := FALSE;
-	Steam.flow.fixed := FALSE;
-	Hydrogen.flow.fixed := FALSE;
+	FREE Air.flow;
+	FREE Steam.flow;
+	FREE Hydrogen.flow;
 	
-	Rin.T.fixed := TRUE;
-	Rin.y['hydrogen'].fixed := TRUE;
-	Cat.fixed := TRUE; 
-	(*	A_mem.fixed := TRUE; *)
-	WaterRatio.fixed := TRUE;
+	FIX Rin.T;
+	FIX Rin.y['hydrogen'];
+	FIX Cat; 
+	(*	FIX A_mem; *)
+	FIX WaterRatio;
     END specify;
     METHOD values;
 	RUN Burner.values;

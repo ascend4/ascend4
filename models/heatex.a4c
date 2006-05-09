@@ -201,18 +201,18 @@ MODEL heatex;
 
     METHOD specify;
 	FOR j IN components DO
-	    z[j].fixed := TRUE;
+	    FIX z[j];
         END FOR;
-	A.fixed := TRUE;
-	P.fixed := TRUE;
-	Fc.fixed := TRUE;
-	Fh.fixed := TRUE;
-        erscale.fixed := TRUE;
-        entscale.fixed := TRUE;
-	eta[0].fixed := TRUE;
-	eta[3].fixed := TRUE;
-	Tc[0].fixed := TRUE;
-	Th[3].fixed := TRUE;
+	FIX A;
+	FIX P;
+	FIX Fc;
+	FIX Fh;
+        FIX erscale;
+        FIX entscale;
+	FIX eta[0];
+	FIX eta[3];
+	FIX Tc[0];
+	FIX Th[3];
     END specify;
 
     METHOD values;

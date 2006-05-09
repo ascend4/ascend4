@@ -75,8 +75,8 @@ MODEL mixture;
     END default_self;
 
     METHOD specify;
-        y[components].fixed := TRUE;
-        y[CHOICE[components]].fixed := FALSE;
+        FIX y[components];
+        FREE y[CHOICE[components]];
     END specify;
 
     METHOD reset;
@@ -109,12 +109,12 @@ MODEL molar_stream;
 
     METHOD seqmod;
 	RUN state.specify;
-	state.y[components].fixed		:= FALSE;
+	FREE state.y[components];
     END seqmod;
 
     METHOD specify;
 	RUN seqmod;
-	f[components].fixed			:= TRUE;
+	FIX f[components];
     END specify;
 
     METHOD reset;
@@ -192,8 +192,8 @@ MODEL reactor;
     END default_self;
 
     METHOD seqmod;
-	turnover.fixed				:=	TRUE;
-	stoich_coef[feed.components].fixed	:=	TRUE;
+	FIX turnover;
+	FIX stoich_coef[feed.components];
     END seqmod;
 
     METHOD specify;
@@ -243,8 +243,8 @@ MODEL flash;
     END default_self;
 
     METHOD seqmod;
-	alpha[feed.components].fixed	:=	TRUE;
-	vap_to_feed_ratio.fixed		:=	TRUE;
+	FIX alpha[feed.components];
+	FIX vap_to_feed_ratio;
     END seqmod;
 
     METHOD specify;
@@ -291,7 +291,7 @@ MODEL splitter;
     END default_self;
 
     METHOD seqmod;
-	split[1..n_outputs-1].fixed		:=	TRUE;
+	FIX split[1..n_outputs-1];
     END seqmod;
 
     METHOD specify;
@@ -381,8 +381,8 @@ MODEL controller;
 
     METHOD specify;
 	RUN fs.specify;
-	fs.r1.turnover.fixed		:=	FALSE;
-	conv.fixed			:=	TRUE;
+	FREE fs.r1.turnover;
+	FIX conv;
     END specify;
 
     METHOD reset;

@@ -288,82 +288,82 @@ MODEL simpleH2Process;
 	RUN U09Sweeper.specify;
 	RUN U10FlashTank.specify;
 	RUN U11Furnace.specify;		*)
-	U03CompressorP2_eff.fixed := TRUE;
-	U04EthaneCracker.turnover.fixed := FALSE;
-	U04EthaneCracker.error_LostFlowOut.fixed := TRUE;
+	FIX U03CompressorP2_eff;
+	FREE U04EthaneCracker.turnover;
+	FIX U04EthaneCracker.error_LostFlowOut;
 	
 	(* adjust flags for streams *)
 	(* S01CityGas *)
-	S01CityGas.f[compsCityGas].fixed := FALSE;
-	S01CityGas.flow.fixed := TRUE;
-	S01CityGas.y[C1].fixed := TRUE;
+	FREE S01CityGas.f[compsCityGas];
+	FIX S01CityGas.flow;
+	FIX S01CityGas.y[C1];
 
 	(* S01H2Recycle *)
-	S01H2Recycle.flow.fixed := TRUE;
-	S01H2Recycle.f[compsH2].fixed := FALSE;
+	FIX S01H2Recycle.flow;
+	FREE S01H2Recycle.f[compsH2];
 	
 	(* S13HeatedFeed *)
-	S13HeatedFeed.f[compsFeed].fixed := FALSE;
+	FREE S13HeatedFeed.f[compsFeed];
 
 	(* S20CompressorIntermediate *)
-	S20CompressorIntermediate.T.fixed := FALSE;
-	S20CompressorIntermediate.f[compsFeed].fixed := FALSE;
+	FREE S20CompressorIntermediate.T;
+	FREE S20CompressorIntermediate.f[compsFeed];
 	
 	(* S34CompressedFeed *)
-	S34CompressedFeed.T.fixed := FALSE;	
-	S34CompressedFeed.P.fixed := FALSE;	
-	S34CompressedFeed.f[compsFeed].fixed := FALSE;
+	FREE S34CompressedFeed.T;	
+	FREE S34CompressedFeed.P;	
+	FREE S34CompressedFeed.f[compsFeed];
 
 	(* S45AdiabaticMixerFeed *)
-	S45AdiabaticMixerFeed.T.fixed := FALSE;
-	U04EthaneCracker_Qin.fixed := TRUE;
-	S45AdiabaticMixerFeed.f[compsCracked].fixed := FALSE;
+	FREE S45AdiabaticMixerFeed.T;
+	FIX U04EthaneCracker_Qin;
+	FREE S45AdiabaticMixerFeed.f[compsCracked];
 	
 (*	(* S56ReformerFeed *)
-	S56ReformerFeed.T.fixed := FALSE;
-	S56ReformerFeed.P.fixed := FALSE;
-	S56ReformerFeed.y[C1].fixed := TRUE;
+	FREE S56ReformerFeed.T;
+	FREE S56ReformerFeed.P;
+	FIX S56ReformerFeed.y[C1];
 	
 	(* S67WaterGasShiftFeed *)
-	S67WaterGasShiftFeed.T.fixed := FALSE;
-	S67WaterGasShiftFeed.P.fixed := FALSE;
-	S67WaterGasShiftFeed.y[C1].fixed := FALSE;
+	FREE S67WaterGasShiftFeed.T;
+	FREE S67WaterGasShiftFeed.P;
+	FREE S67WaterGasShiftFeed.y[C1];
 	
 	(* S78SplitterFeed *)
-	S78SplitterFeed.T.fixed := FALSE;
-	S78SplitterFeed.P.fixed := FALSE;
-	S78SplitterFeed.y[CO].fixed := TRUE;
+	FREE S78SplitterFeed.T;
+	FREE S78SplitterFeed.P;
+	FIX S78SplitterFeed.y[CO];
 	
 	(* S89SweeperFeed *)
-	S89SweeperFeed.T.fixed := FALSE;
-	S89SweeperFeed.P.fixed := FALSE;
-	S89SweeperFeed.y[CO].fixed := TRUE;
-	S89SweeperFeed.y[CO2].fixed := TRUE;
+	FREE S89SweeperFeed.T;
+	FREE S89SweeperFeed.P;
+	FIX S89SweeperFeed.y[CO];
+	FIX S89SweeperFeed.y[CO2];
 	
 	(* S9SplitterExhaust *)
-	S9SplitterExhaust.T.fixed := FALSE;
-	S9SplitterExhaust.P.fixed := FALSE;
-	S9SplitterExhaust.y[H2].fixed := TRUE;
+	FREE S9SplitterExhaust.T;
+	FREE S9SplitterExhaust.P;
+	FIX S9SplitterExhaust.y[H2];
 	
 	(* S910FlashTankFeed *)
-	S910FlashTankFeed.T.fixed := TRUE;
-	S910FlashTankFeed.P.fixed := FALSE;
-	S910FlashTankFeed.f[compsReformStream].fixed := FALSE;
+	FIX S910FlashTankFeed.T;
+	FREE S910FlashTankFeed.P;
+	FREE S910FlashTankFeed.f[compsReformStream];
 	
 	(* S10FuelCellFeed *)
-	S10FuelCellFeed.T.fixed := TRUE;
-	S10FuelCellFeed.P.fixed := FALSE;
-	S10FuelCellFeed.f[compsReformStream].fixed := FALSE;
+	FIX S10FuelCellFeed.T;
+	FREE S10FuelCellFeed.P;
+	FREE S10FuelCellFeed.f[compsReformStream];
 	
 	(* S1011FlashTankBottoms *)
-	S1011FlashTankBottoms.T.fixed := FALSE;
-	S1011FlashTankBottoms.P.fixed := FALSE;
-	S1011FlashTank.liq.x[H2O].fixed := FALSE;	
+	FREE S1011FlashTankBottoms.T;
+	FREE S1011FlashTankBottoms.P;
+	FREE S1011FlashTank.liq.x[H2O];	
 
 	(* S511SuperheatedSteam *)
-	S511SuperheatedSteam.T.fixed := TRUE;
-	S511SuperheatedSteam.P.fixed := FALSE;
-	S511SuperheatedSteam.f[compsWater].fixed := FALSE;
+	FIX S511SuperheatedSteam.T;
+	FREE S511SuperheatedSteam.P;
+	FREE S511SuperheatedSteam.f[compsWater];
 
 *)  
     END specify;

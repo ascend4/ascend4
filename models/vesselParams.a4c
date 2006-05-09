@@ -50,10 +50,10 @@ METHOD specify;
     NOTES
 	'purpose' SELF {to fix four variables and make the problem well-posed}
     END NOTES;
-	vessel_vol.fixed	:=	TRUE;
-	H_to_D_ratio.fixed	:=	TRUE;
-	wall_thickness.fixed	:=	TRUE;
-	metal_density.fixed	:=	TRUE;
+	FIX vessel_vol;
+	FIX H_to_D_ratio;
+	FIX wall_thickness;
+	FIX metal_density;
 END specify;
 
 METHOD values;

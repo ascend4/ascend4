@@ -116,9 +116,9 @@ METHOD specify;
 	(* The state variables are set
  	* TRUE, while their derivatives are FALSE.
  	*)
-	x.fixed := TRUE;
-	y[1..n_eq].fixed := TRUE;
-	dydx[1..n_eq].fixed := FALSE;
+	FIX x;
+	FIX y[1..n_eq];
+	FREE dydx[1..n_eq];
 END specify;
 END bvp_point;
 
@@ -175,10 +175,10 @@ END NOTES;
 METHODS
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 END specify;
 END propagation;
 
@@ -206,10 +206,10 @@ METHODS
 (*
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 END specify;
 *)
 
@@ -240,10 +240,10 @@ END NOTES;
 (*
         METHOD specify;
             RUN eval[0..n_point].specify;
-            h.fixed := TRUE;
-            final.x.fixed := FALSE;
-            eval[1..n_point].y[1..n_eq].fixed := FALSE;
-            eval[1..n_point].x.fixed := FALSE;
+            FIX h;
+            FREE final.x;
+            FREE eval[1..n_point].y[1..n_eq];
+            FREE eval[1..n_point].x;
         END specify;
 *)
 
@@ -277,10 +277,10 @@ METHODS
 (*
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 END specify;
 *)
 END midpoint;
@@ -317,10 +317,10 @@ METHODS
 (*
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 END specify;
 *)
 
@@ -365,10 +365,10 @@ METHODS
 (*
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 END specify;
 *)
 
@@ -416,10 +416,10 @@ METHODS
 (*
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 specify;
 *)
 
@@ -473,10 +473,10 @@ METHODS
 (*
 METHOD specify;
 	RUN eval[0..n_point].specify;
-	h.fixed := TRUE;
-	final.x.fixed := FALSE;
-	eval[1..n_point].y[1..n_eq].fixed := FALSE;
-	eval[1..n_point].x.fixed := FALSE;
+	FIX h;
+	FREE final.x;
+	FREE eval[1..n_point].y[1..n_eq];
+	FREE eval[1..n_point].x;
 END specify;
 *)
 
@@ -580,7 +580,7 @@ METHOD values;
 	step[1..nstep].h := stepsize;
 END values;
 METHOD specify;
-	stepsize.fixed := TRUE;
+	FIX stepsize;
 	FOR i IN [1..nstep] DECREASING DO
 		RUN step[i].specify;
 	END FOR;
@@ -604,9 +604,9 @@ METHOD default_self;
 	RUN values;
 END default_self;
 METHOD specify;
-	x.fixed := TRUE;
-	xdot.fixed := FALSE;
-	t.fixed := TRUE;
+	FIX x;
+	FREE xdot;
+	FIX t;
 END specify;
 METHOD values;
 	xdot.lower_bound := -1e6{1/s};
@@ -671,7 +671,7 @@ METHOD default_self;
 	RUN integral.default_self;
 END default_self;
 METHOD specify;
-	stepsize.fixed := TRUE;
+	FIX stepsize;
 	RUN integral.specify;
 END specify;
 METHOD values;

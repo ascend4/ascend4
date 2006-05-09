@@ -53,8 +53,8 @@ MODEL H2basis;
 
     METHOD specify;
 	RUN react.specify;
-	react.Qin.fixed                    := FALSE;
-	react.delT.fixed                   := TRUE;
+	FREE react.Qin;
+	FIX react.delT;
     END specify;
    
 END H2basis;

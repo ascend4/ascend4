@@ -71,7 +71,7 @@ MODEL arc_w_no_valve REFINES arc;
     END default_self;
 
     METHOD specify;
-    	k.fixed := TRUE;
+    	FIX k;
     END specify;
 
     METHOD bound_self;
@@ -121,7 +121,7 @@ MODEL arc_w_valve REFINES arc;
     END default_self;
 
     METHOD specify;
-    	k.fixed := TRUE;
+    	FIX k;
     END specify;
 
     METHOD bound_self;
@@ -255,12 +255,12 @@ MODEL pipeline;
     END default_self;
 
     METHOD specify;
-	k.fixed := TRUE;
+	FIX k;
 	FOR i IN nodes DO
-	    W[i].fixed := TRUE;
+	    FIX W[i];
 	END FOR;
-	W[18].fixed := FALSE;
-	P[17].fixed := TRUE;
+	FREE W[18];
+	FIX P[17];
     END specify;
 
    METHOD bound_self;

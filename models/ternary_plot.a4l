@@ -180,8 +180,8 @@ MODEL ternary_plot_equilateral_all(
 
 METHODS
 METHOD default_self;
-    tcomp1[0..58].fixed := TRUE;
-    tcomp2[0..58].fixed := TRUE;
+    FIX tcomp1[0..58];
+    FIX tcomp2[0..58];
 
     tcomp1[0] := 1;
     tcomp2[0] := 0;
@@ -371,8 +371,8 @@ MODEL ternary_plot_equilateral(
 
 METHODS
 METHOD default_self;
-    tcomp1[0..58].fixed := TRUE;
-    tcomp2[0..58].fixed := TRUE;
+    FIX tcomp1[0..58];
+    FIX tcomp2[0..58];
 
 
     tcomp1[0] := 1;
@@ -448,12 +448,12 @@ METHOD check_all;
     RUN check_self;
 END check_all;
 METHOD seqmod;
-    tcomp1[0..60].fixed := TRUE;
-    tcomp2[0..60].fixed := TRUE;
+    FIX tcomp1[0..60];
+    FIX tcomp2[0..60];
 END seqmod;
 METHOD reset;
     RUN seqmod;
-    comp_data[components][npnts].fixed := TRUE;
+    FIX comp_data[components][npnts];
 END reset;
 END ternary_plot_equilateral;
 
@@ -491,8 +491,8 @@ MODEL ternary_plot_equilateral2(
 
 METHODS
 METHOD default_self;
-    tcomp1[0..58].fixed := TRUE;
-    tcomp2[0..58].fixed := TRUE;
+    FIX tcomp1[0..58];
+    FIX tcomp2[0..58];
 
 
     tcomp1[0] := 1;
@@ -573,7 +573,7 @@ END check_all;
 METHOD values;
 END values;
 METHOD seqmod;
-    tcomp1[0..60].fixed := TRUE;
-    tcomp2[0..60].fixed := TRUE;
+    FIX tcomp1[0..60];
+    FIX tcomp2[0..60];
 END seqmod;
 END ternary_plot_equilateral2;

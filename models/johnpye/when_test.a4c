@@ -24,8 +24,8 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
-	use_linear.fixed := TRUE;
-	x.fixed := TRUE;
+	FIX use_linear;
+	FIX x;
 END specify;
 
 METHOD values;

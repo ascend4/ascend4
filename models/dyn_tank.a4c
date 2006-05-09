@@ -66,21 +66,21 @@ MODEL tank;
     END scale_all;
 
     METHOD seqmod;
-	dM_dt.fixed :=TRUE;
-	M.fixed :=FALSE;
-	Volume.fixed :=TRUE;
-	input.fixed :=TRUE;
-	output.fixed :=FALSE;
+	FIX dM_dt;
+	FREE M;
+	FIX Volume;
+	FIX input;
+	FREE output;
 	IF dynamic THEN
-	    dM_dt.fixed :=FALSE;
-	    M.fixed :=TRUE;
-	    Volume.fixed :=FALSE;
-	    output.fixed :=TRUE;
+	    FREE dM_dt;
+	    FIX M;
+	    FREE Volume;
+	    FIX output;
 	END IF;
     END seqmod;
 
     METHOD specify;
-	input.fixed :=TRUE;
+	FIX input;
 	RUN seqmod;
     END specify;
 

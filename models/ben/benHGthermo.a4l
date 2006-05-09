@@ -132,18 +132,18 @@ MODEL thermodynamic_properties(
 
 METHODS
 METHOD clear;
-	T.fixed := FALSE;
-	P.fixed := FALSE;
-	V.fixed := FALSE;
-	H.fixed := FALSE;
-	G.fixed := FALSE;
+	FREE T;
+	FREE P;
+	FREE V;
+	FREE H;
+	FREE G;
 END clear;
 METHOD specify;
-	T.fixed := TRUE;
-	P.fixed := TRUE;
-	V.fixed := TRUE;
-	H.fixed := TRUE;
-	G.fixed := TRUE;
+	FIX T;
+	FIX P;
+	FIX V;
+	FIX H;
+	FIX G;
 END specify;
 METHOD reset;
 	RUN clear;
@@ -189,14 +189,14 @@ MODEL partial_component() REFINES hgmodel();
 
 METHODS
 METHOD clear;
-	V.fixed := FALSE;
-	H.fixed := FALSE;
-	G.fixed := FALSE;
+	FREE V;
+	FREE H;
+	FREE G;
 	END clear;
 METHOD specify;
-	V.fixed := TRUE;
-	H.fixed := TRUE;
-	G.fixed := TRUE;
+	FIX V;
+	FIX H;
+	FIX G;
 END specify;
 METHOD reset;
 	RUN clear;
@@ -231,10 +231,10 @@ MODEL homogeneous_mixture(
 
 METHODS
 METHOD clear;
-	y[options.ds.components].fixed := FALSE;
+	FREE y[options.ds.components];
 END clear;
 METHOD specify;
-	y[options.ds.components-[options.ds.reference]].fixed := TRUE;
+	FIX y[options.ds.components-[options.ds.reference]];
 END specify;
 METHOD reset;
 	RUN clear;
@@ -318,25 +318,25 @@ METHODS
 METHOD clear;
 	RUN light.clear;
 	RUN heavy.clear;
-	V.fixed := FALSE;
-	H.fixed := FALSE;
-	G.fixed := FALSE;
-	y[components].fixed := FALSE;
-	alpha[components].fixed := FALSE;
-	ave_alpha.fixed := FALSE;
-	phi[phases].fixed := FALSE;
+	FREE V;
+	FREE H;
+	FREE G;
+	FREE y[components];
+	FREE alpha[components];
+	FREE ave_alpha;
+	FREE phi[phases];
 END clear;
 METHOD specify;
 	(* this method buggy if number_stuck > 0 components *)
 	RUN light.specify;
-	light.y[components].fixed := FALSE;
+	FREE light.y[components];
 	RUN heavy.specify;
-	V.fixed := TRUE;
-	H.fixed := TRUE;
-	G.fixed := TRUE;
-	alpha[components].fixed := TRUE;
-	y[light.options.ds.other].fixed := TRUE;
-	phi[light.options.phase].fixed := TRUE;
+	FIX V;
+	FIX H;
+	FIX G;
+	FIX alpha[components];
+	FIX y[light.options.ds.other];
+	FIX phi[light.options.phase];
 END specify;
 METHOD scale;
 	alpha[components].lower_bound := 1e-8;
@@ -392,16 +392,16 @@ END defaults;
 METHOD clear;
 	RUN pure[ds.components].clear;
 	RUN partial[ds.components].clear;
-	y[ds.components].fixed := FALSE;
-	V.fixed := FALSE;
-	H.fixed := FALSE;
-	G.fixed := FALSE;
+	FREE y[ds.components];
+	FREE V;
+	FREE H;
+	FREE G;
 END clear;
 METHOD specify;
 	RUN pure[ds.components].specify;
 	RUN partial[ds.components].specify;
-	y[ds.components].fixed := TRUE;
-	y[ds.reference].fixed := FALSE;
+	FIX y[ds.components];
+	FREE y[ds.reference];
 END specify;
 METHOD scale;
 	RUN pure[ds.components].scale;
@@ -502,21 +502,21 @@ METHOD defaults;
 END defaults;
 METHOD clear;
 	RUN two_phase_mixture::clear;
-	V.fixed := FALSE;
-	H.fixed := FALSE;
-	G.fixed := FALSE;
+	FREE V;
+	FREE H;
+	FREE G;
 END clear;
 
 METHOD specify;
-	P.fixed	:= TRUE;
-	phi[light.options.phase].fixed	:= TRUE;
-	y[light.options.ds.other].fixed := TRUE;
+	FIX P;
+	FIX phi[light.options.phase];
+	FIX y[light.options.ds.other];
 	IF equilibrated THEN
 	        ave_alpha := 1.0;
-		ave_alpha.fixed := TRUE;
+		FIX ave_alpha;
 	ELSE
-		T.fixed := TRUE;
-		alpha[ds.components].fixed := TRUE;
+		FIX T;
+		FIX alpha[ds.components];
 	END IF;
 END specify;
 
@@ -626,8 +626,8 @@ METHOD defaults;
 END defaults;
 	
 METHOD specify;
-	T.fixed := TRUE;
-	P.fixed := TRUE;
+	FIX T;
+	FIX P;
 END specify;
 END Pitzer_vapor_component;
 
@@ -707,11 +707,11 @@ END defaults;
 		
 METHOD clear;
 	RUN liquid_component::clear;
-	VP.fixed := FALSE;
+	FREE VP;
 END clear;
 METHOD specify;
-	T.fixed := TRUE;
-	P.fixed := TRUE;
+	FIX T;
+	FIX P;
 END specify;
 METHOD scale;
 	RUN liquid_component::scale;
@@ -789,9 +789,9 @@ METHOD defaults;
 END defaults;
 
 METHOD specify;
-	partial[ds.components].V.fixed := FALSE;
-	partial[ds.components].H.fixed := FALSE;
-	partial[ds.components].G.fixed := FALSE;
+	FREE partial[ds.components].V;
+	FREE partial[ds.components].H;
+	FREE partial[ds.components].G;
 END specify;
 	
 END Pitzer_partials;
@@ -931,15 +931,15 @@ METHOD defaults;
 	pure[ds.components].V := 0.1{liter/mole};
 END defaults;
 METHOD clear;
-	Jv[ds.components].fixed := FALSE;
-	Ls[ds.components].fixed := FALSE;
-	theta[subgroups].fixed := FALSE;
-	eta[subgroups].fixed := FALSE;
+	FREE Jv[ds.components];
+	FREE Ls[ds.components];
+	FREE theta[subgroups];
+	FREE eta[subgroups];
 END clear;
 METHOD specify;
-	partial[ds.components].V.fixed := FALSE;
-	partial[ds.components].H.fixed := FALSE;
-	partial[ds.components].G.fixed := FALSE;
+	FREE partial[ds.components].V;
+	FREE partial[ds.components].H;
+	FREE partial[ds.components].G;
 END specify;
 
 METHOD scale;
@@ -1025,12 +1025,12 @@ METHOD defaults;
 	pure[ds.components].V := 0.1{liter/mole};
 END defaults;
 METHOD clear;
-	lambda[ds.components][ds.components].fixed := FALSE;
+	FREE lambda[ds.components][ds.components];
 END clear;
 METHOD specify;
-	partial[ds.components].V.fixed := FALSE;
-	partial[ds.components].G.fixed := FALSE;
-	partial[ds.components].H.fixed := FALSE;
+	FREE partial[ds.components].V;
+	FREE partial[ds.components].G;
+	FREE partial[ds.components].H;
 END specify;
 METHOD scale;
 	FOR i IN ds.components DO
@@ -1127,16 +1127,16 @@ METHOD specify;
 	RUN td_homogeneous_mixture::specify;
 	SWITCH (options.mixture_thermo_correlation)
 	CASE 'UNIFAC':
-		partial[ds.components].V.fixed := FALSE;
-		partial[ds.components].H.fixed := FALSE;
-		partial[ds.components].G.fixed := FALSE;
+		FREE partial[ds.components].V;
+		FREE partial[ds.components].H;
+		FREE partial[ds.components].G;
 	(* We ought to have break/fallthrough behavior here.
 	 * There's a sneaky way to get it without deep grammar changes.
 	 *)
 	CASE 'Wilson':
-		partial[ds.components].V.fixed := FALSE;
-		partial[ds.components].H.fixed := FALSE;
-		partial[ds.components].G.fixed := FALSE;
+		FREE partial[ds.components].V;
+		FREE partial[ds.components].H;
+		FREE partial[ds.components].G;
 	END SWITCH;
 END specify;
 METHOD scale;
@@ -1226,18 +1226,18 @@ METHODS
 METHOD clear;
 	RUN td_VLE_mixture::clear;
 	RUN vap_eq.clear;
-	equil_alpha[ds.components].fixed := FALSE;
-	ref_y[ds.components].fixed := FALSE;
-	murph_eff.fixed := FALSE;
+	FREE equil_alpha[ds.components];
+	FREE ref_y[ds.components];
+	FREE murph_eff;
 END clear;
 METHOD specify;
 	RUN td_two_phase_mixture::specify;
 	RUN vap_eq.specify;
-	vap_eq.y[ds.components].fixed := FALSE;
-	equil_alpha[ds.components].fixed := FALSE;
-	ref_y[ds.other].fixed := TRUE;
-	murph_eff.fixed := TRUE;
-	T.fixed := FALSE;
+	FREE vap_eq.y[ds.components];
+	FREE equil_alpha[ds.components];
+	FIX ref_y[ds.other];
+	FIX murph_eff;
+	FREE T;
 END specify;
 
 END murphree_equilibrium_mixture;

@@ -257,9 +257,9 @@ MODEL demo_flowsheet(
 	RUN Column[1..n_columns].scale;
     END scale;
     METHOD set_connections;
-	dist_split[1..n_columns].split[sinks].fixed := TRUE;
-	bot_split[1..n_columns].split[sinks].fixed := TRUE;
-	feed_split[1..n_sheet_feeds].split[sinks].fixed := TRUE;
+	FIX dist_split[1..n_columns].split[sinks];
+	FIX bot_split[1..n_columns].split[sinks];
+	FIX feed_split[1..n_sheet_feeds].split[sinks];
 
 	FOR i IN [1..n_columns] DO
 	    FOR j IN sinks DO
@@ -305,11 +305,11 @@ MODEL demo_flowsheet(
     END remove_connections;
     METHOD fix_splits;
 	FOR i IN [1..n_columns] DO
-	    dist_split[i].split[sinks].fixed := TRUE;
-	    bot_split[i].split[sinks].fixed := TRUE;
+	    FIX dist_split[i].split[sinks];
+	    FIX bot_split[i].split[sinks];
 	END FOR;
 	FOR i IN [1..n_sheet_feeds] DO
-	    feed_split[i].split[sinks].fixed := TRUE;
+	    FIX feed_split[i].split[sinks];
 	END FOR;
     END fix_splits;
 

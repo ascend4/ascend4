@@ -92,12 +92,12 @@ METHOD clear;
 	RUN vapout.clear;
 	RUN liqout.clear;
 	RUN flash_state.clear;
-	Qin.fixed := FALSE;
+	FREE Qin;
 END clear;
 
 METHOD seqmod;
 	RUN flash_state.specify;
-	flash_state.y[components].fixed := FALSE;
+	FREE flash_state.y[components];
 END seqmod;
 
 METHOD reset_to_massbal;
@@ -179,22 +179,22 @@ METHOD clear;
 	RUN vapout.clear;
 	RUN liqout.clear;
 	RUN tray_state.clear;
-	cmo_ratio.fixed	:= FALSE;
-	Qin.fixed := FALSE;
+	FREE cmo_ratio;
+	FREE Qin;
 END clear;
 
 METHOD seqmod;
 	RUN tray_state.specify;
-	tray_state.y[components].fixed := FALSE;
-	tray_state.phi['vapor'].fixed := FALSE;
-	cmo_ratio.fixed	:= TRUE;
+	FREE tray_state.y[components];
+	FREE tray_state.phi['vapor'];
+	FIX cmo_ratio;
 END seqmod;
 
 METHOD seqmod_massbal;
 	tray_state.equilibrated := FALSE;
 	RUN seqmod;
-	vapin.state.T.fixed		:= TRUE;
-	liqin.state.T.fixed		:= TRUE;
+	FIX vapin.state.T;
+	FIX liqin.state.T;
 END seqmod_massbal;
 
 METHOD seqmod_fullthermo;
@@ -204,8 +204,8 @@ END seqmod_fullthermo;
 
 METHOD seqmod_fixed_Q;
 	RUN fullthermo_seqmod;
-	cmo_ratio.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FREE cmo_ratio;
+	FIX Qin;
 END seqmod_fixed_Q;
 
 METHOD seqmod_adiabatic;
@@ -225,8 +225,8 @@ END reset_to_fullthermo;
 
 METHOD reset_to_adiabatic;
 	RUN reset_to_fullthermo;
-	cmo_ratio.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FREE cmo_ratio;
+	FIX Qin;
 	Qin := 0{W};
 END reset_to_adiabatic;
 
@@ -253,12 +253,12 @@ METHOD scale;
 END scale;
 
 METHOD heat_balance;
-    cmo_ratio.fixed := FALSE;
-    Qin.fixed := TRUE;
+    FREE cmo_ratio;
+    FIX Qin;
 END heat_balance;
 METHOD CMO;
-    cmo_ratio.fixed := TRUE;
-    Qin.fixed := FALSE;
+    FIX cmo_ratio;
+    FREE Qin;
 END CMO;
 
 END tray;
@@ -328,22 +328,22 @@ METHOD clear;
 	RUN vapout.clear;
 	RUN liqout.clear;
 	RUN feed_tray_state.clear;
-	q.fixed	:= FALSE;
-	Qin.fixed := FALSE;
+	FREE q;
+	FREE Qin;
 END clear;
 
 METHOD seqmod;
 	RUN feed_tray_state.specify;
-	feed_tray_state.y[components].fixed := FALSE;
-	feed_tray_state.phi['vapor'].fixed := FALSE;
-	q.fixed	:= TRUE;
+	FREE feed_tray_state.y[components];
+	FREE feed_tray_state.phi['vapor'];
+	FIX q;
 END seqmod;
 
 METHOD seqmod_massbal;
 	feed_tray_state.equilibrated := FALSE;
 	RUN seqmod;
-	vapin.state.T.fixed		:= TRUE;
-	liqin.state.T.fixed		:= TRUE;
+	FIX vapin.state.T;
+	FIX liqin.state.T;
 END seqmod_massbal;
 
 METHOD seqmod_fullthermo;
@@ -353,8 +353,8 @@ END seqmod_fullthermo;
 
 METHOD seqmod_fixed_Q;
 	RUN fullthermo_seqmod;
-	q.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FREE q;
+	FIX Qin;
 END seqmod_fixed_Q;
 
 METHOD seqmod_adiabatic;
@@ -374,8 +374,8 @@ END reset_to_fullthermo;
 
 METHOD reset_to_adiabatic;
 	RUN reset_to_fullthermo;
-	q.fixed := FALSE;
-	Qin.fixed := TRUE;
+	FREE q;
+	FIX Qin;
 	Qin := 0{W};
 END reset_to_adiabatic;
 
@@ -445,15 +445,15 @@ METHOD clear;
 	RUN distillate.clear;
 	RUN liqout.clear;
 	RUN condenser_state.clear;
-	Qin.fixed := FALSE;
-	reflux_ratio.fixed := FALSE;
+	FREE Qin;
+	FREE reflux_ratio;
 END clear;
 
 METHOD seqmod;
         RUN condenser_state.specify;
 	RUN distillate.seqmod;
-	condenser_state.y[components].fixed := FALSE;
-	reflux_ratio.fixed := TRUE;
+	FREE condenser_state.y[components];
+	FIX reflux_ratio;
 END seqmod;
 
 METHOD specify;
@@ -538,15 +538,15 @@ METHOD clear;
 	RUN bottoms.clear;
 	RUN vapout.clear;
 	RUN reboiler_state.clear;
-	Qin.fixed := FALSE;
-	reboil_ratio.fixed := FALSE;
+	FREE Qin;
+	FREE reboil_ratio;
 END clear;
 
 METHOD seqmod;
 	RUN reboiler_state.specify;
-	reboiler_state.y[components].fixed := FALSE;
-	reboiler_state.phi['vapor'].fixed := FALSE;
-	reboil_ratio.fixed := TRUE;
+	FREE reboiler_state.y[components];
+	FREE reboiler_state.phi['vapor'];
+	FIX reboil_ratio;
 END seqmod;
 
 METHOD reset_to_massbal;

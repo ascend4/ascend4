@@ -25,8 +25,8 @@ MODEL test_travel_distance REFINES travel_distance;
 METHODS
 
    METHOD specify;
-       v[1..2*kmax+1].fixed := TRUE;
-       delta_time.fixed := TRUE;
+       FIX v[1..2*kmax+1];
+       FIX delta_time;
    END specify;
 
    METHOD values;

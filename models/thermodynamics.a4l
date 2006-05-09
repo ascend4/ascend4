@@ -227,11 +227,11 @@ METHOD bound_self;
 END bound_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	P.fixed := TRUE;
-	v.fixed := TRUE;
-	h.fixed := TRUE;
-	g.fixed := TRUE;
+	FIX T;
+	FIX P;
+	FIX v;
+	FIX h;
+	FIX g;
 END specify;
 
 END thermodynamic_properties;
@@ -297,8 +297,8 @@ METHODS
  *)
 METHOD specify_partials_computed;
 	(* assumes equations for v,h,g have been added by refinement. *)
-	T.fixed := TRUE;
-	P.fixed := TRUE;
+	FIX T;
+	FIX P;
 END specify_partials_computed;
 
 END partial_component;
@@ -372,8 +372,8 @@ END default_self;
 
 METHOD specify;
 	(* release v,h,g since equations calculate them. *)
-	T.fixed := TRUE;
-	P.fixed := TRUE;
+	FIX T;
+	FIX P;
 END specify;
 
 END Pitzer_vapor_component;
@@ -438,8 +438,8 @@ METHOD default_self;
 END default_self;
 METHOD specify;
 	(* release v,h,g since equations calculate them. *)
-	T.fixed := TRUE;
-	P.fixed := TRUE;
+	FIX T;
+	FIX P;
 END specify;
 END ideal_vapor_component;
 
@@ -565,8 +565,8 @@ METHOD bound_self;
 END bound_self;
 
 METHOD specify;
-	T.fixed := TRUE;
-	P.fixed := TRUE;
+	FIX T;
+	FIX P;
 END specify;
 
 END Rackett_liquid_component;
@@ -705,43 +705,43 @@ END bound_self;
 
 METHOD specify_partials_seqmod_massonly;
 	(* like specify_partials_computed, except leaves alpha[i] free *)
-	P.fixed := TRUE;
-	T.fixed := TRUE;
-	alpha[components].fixed := FALSE;
+	FIX P;
+	FIX T;
+	FREE alpha[components];
 	RUN partial[components].specify;
-	y[cd.other_components].fixed := TRUE;
-	slack_PhaseDisappearance.fixed := TRUE;
+	FIX y[cd.other_components];
+	FIX slack_PhaseDisappearance;
 	slack_PhaseDisappearance := 0.0;
 END specify_partials_seqmod_massonly;
 
 METHOD specify_partials_seqmod;
 	(* like specify_partials_computed, except leaves alpha[i] free *)
-	P.fixed := TRUE;
-	T.fixed := TRUE;
-	alpha[components].fixed := FALSE;
+	FIX P;
+	FIX T;
+	FREE alpha[components];
 	RUN partial[components].specify_partials_computed;
-	y[cd.other_components].fixed := TRUE;
-	slack_PhaseDisappearance.fixed := TRUE;
+	FIX y[cd.other_components];
+	FIX slack_PhaseDisappearance;
 	slack_PhaseDisappearance := 0.0;
 END specify_partials_seqmod;
 
 METHOD specify_partials_computed;
-       P.fixed := TRUE;
-       T.fixed := TRUE;
-       alpha[components].fixed := TRUE;
+       FIX P;
+       FIX T;
+       FIX alpha[components];
        RUN partial[components].specify_partials_computed;
-       y[cd.other_components].fixed := TRUE;
-       slack_PhaseDisappearance.fixed := TRUE;
+       FIX y[cd.other_components];
+       FIX slack_PhaseDisappearance;
        slack_PhaseDisappearance := 0.0;
 END specify_partials_computed;
 
 METHOD specify;
-       P.fixed := TRUE;
-       T.fixed := TRUE;
-       alpha[components].fixed := TRUE;
+       FIX P;
+       FIX T;
+       FIX alpha[components];
        RUN partial[components].specify;
-       y[cd.other_components].fixed := TRUE;
-       slack_PhaseDisappearance.fixed := TRUE;
+       FIX y[cd.other_components];
+       FIX slack_PhaseDisappearance;
        slack_PhaseDisappearance := 0.0;
 END specify;
 
@@ -1485,24 +1485,24 @@ METHOD specify;
  	 * They also specify that the phases must not disappear.
 	 * They leave the alpha[i] free.
  	 *)
-	phase[pd.other_phases].P.fixed := FALSE;
-	phase[pd.other_phases].T.fixed := FALSE;
-	phase[pd.phases].y[cd.components].fixed := FALSE;
+	FREE phase[pd.other_phases].P;
+	FREE phase[pd.other_phases].T;
+	FREE phase[pd.phases].y[cd.components];
 	(* Now only reference phase P,T fixed, unless a mass only MODEL. *)
 
   	IF (number_of_other_phases != 0) THEN
 		(* allow phases to disappear *)
-		slack_PhaseDisappearance[pd.phases].fixed := FALSE;
+		FREE slack_PhaseDisappearance[pd.phases];
 		slack_PhaseDisappearance[pd.phases] := 0.0;
 	END IF;
 
 	(* Fix Np - 1 phase fractions and Nc - 1 overall mole fractions *)
-	y[cd.other_components].fixed := TRUE;
+	FIX y[cd.other_components];
 
 	IF (equilibrated) THEN
 		(* use thermo instead of relative volatility. free alphas. *)
-		phase[pd.phases].alpha[cd.components].fixed := FALSE;
-		alpha_bar[pd.other_phases].fixed := TRUE;
+		FREE phase[pd.phases].alpha[cd.components];
+		FIX alpha_bar[pd.other_phases];
 		alpha_bar[pd.other_phases] := 1.0;
 		(* When alphas are free, they are essentially K-values *)
 		(* Solve for fixed phase fraction for equilibrium
@@ -1511,8 +1511,8 @@ METHOD specify;
  		 *)
 	ELSE
 		(* Else solve as relative volatility model *)
-  		phase_fraction[pd.other_phases].fixed := TRUE;
-		phase[pd.other_phases].alpha[cd.components].fixed := TRUE;
+  		FIX phase_fraction[pd.other_phases];
+		FIX phase[pd.other_phases].alpha[cd.components];
 	END IF;
 END specify;
 

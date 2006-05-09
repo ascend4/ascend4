@@ -53,8 +53,8 @@ MODEL mixture;
     END default_self;
 
     METHOD specify;
-	y[components].fixed := TRUE;
-        y[CHOICE[components]].fixed := FALSE;
+	FIX y[components];
+        FREE y[CHOICE[components]];
     END specify;
 
  END mixture;
@@ -82,8 +82,8 @@ MODEL molar_stream;
 
     METHOD specify;
         RUN state.specify;
-        state.y[components].fixed               := FALSE;
-        f[components].fixed                     := TRUE;
+        FREE state.y[components];
+        FIX f[components];
     END specify;
 
     METHOD scale;
@@ -120,7 +120,7 @@ MODEL mixer;
     METHOD specify;
 	RUN feed[1..n_inputs].specify;
 	RUN out.specify;
-	out.f[out.components].fixed := FALSE;
+	FREE out.f[out.components];
     END specify;
 
     METHOD scale;
@@ -153,11 +153,11 @@ MODEL reactor;
     END default_self;
 
     METHOD specify;
-	turnover.fixed                          :=      TRUE;
-        stoich_coef[feed.components].fixed      :=      TRUE;
+	FIX turnover;
+        FIX stoich_coef[feed.components];
 	RUN feed.specify;
 	RUN out.specify;
-	out.f[out.components].fixed             := FALSE;
+	FREE out.f[out.components];
     END specify;
 
     METHOD scale;
@@ -200,13 +200,13 @@ MODEL flash;
     END default_self;
 
     METHOD specify;
-        alpha[feed.components].fixed    :=      TRUE;
-        vap_to_feed_ratio.fixed         :=      TRUE;
+        FIX alpha[feed.components];
+        FIX vap_to_feed_ratio;
         RUN feed.specify;
 	RUN vap.specify;
 	RUN liq.specify;
-	vap.f[feed.components].fixed     := FALSE;
-	liq.f[feed.components].fixed     := FALSE;
+	FREE vap.f[feed.components];
+	FREE liq.f[feed.components];
     END specify;
 
     METHOD scale;
@@ -245,10 +245,10 @@ MODEL splitter;
     END default_self;
 
     METHOD specify;
-	split[1..n_outputs-1].fixed             :=      TRUE;
+	FIX split[1..n_outputs-1];
 	RUN feed.specify;
 	RUN out[1..n_outputs].specify;
-	out[1..n_outputs].f[feed.components].fixed := FALSE;
+	FREE out[1..n_outputs].f[feed.components];
     END specify;
 
     METHOD scale;
@@ -297,7 +297,7 @@ MODEL flowsheet;
 	RUN fl1.specify;
 	RUN r1.specify;
 	RUN m1.specify;
-	sp1.out[2].f[sp1.feed.components].fixed := FALSE;
+	FREE sp1.out[2].f[sp1.feed.components];
     END specify;
 
     METHOD scale;
@@ -327,8 +327,8 @@ MODEL controller;
 
     METHOD specify;
         RUN fs.specify;
-        fs.r1.turnover.fixed            :=      FALSE;
-        conv.fixed                      :=      TRUE;
+        FREE fs.r1.turnover;
+        FIX conv;
     END specify;
 
     METHOD scale;

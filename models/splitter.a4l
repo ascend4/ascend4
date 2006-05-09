@@ -143,11 +143,11 @@ REFINES base_splitter;
     END scale_all;
 
     METHOD seqmod;
-	split[1..n_outs-1].fixed := TRUE;
+	FIX split[1..n_outs-1];
 	RUN out[1..n_outs].specify;
-	out[1..n_outs].P.fixed := FALSE;
-	out[1..n_outs].T.fixed := FALSE;
-	out[1..n_outs].f[feed.cd.components].fixed := FALSE;
+	FREE out[1..n_outs].P;
+	FREE out[1..n_outs].T;
+	FREE out[1..n_outs].f[feed.cd.components];
     END seqmod;
 
     METHOD specify;
@@ -210,11 +210,11 @@ MODEL splitter_with_shared_state(
     END scale_all;
 
     METHOD seqmod;
-	split[1..n_outs-1].fixed := TRUE;
+	FIX split[1..n_outs-1];
 	RUN out[1..n_outs].specify;
-	out[1..n_outs].P.fixed := FALSE;
-	out[1..n_outs].T.fixed := FALSE;
-	out[1..n_outs].f[feed.cd.components].fixed := FALSE;
+	FREE out[1..n_outs].P;
+	FREE out[1..n_outs].T;
+	FREE out[1..n_outs].f[feed.cd.components];
     END seqmod;
 
     METHOD specify;
