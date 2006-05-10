@@ -27,10 +27,38 @@
 
 	Heavily modified version of C++ code from codeproject.com
 	originally written by Simon Parkinson-Bates.
+
+	@TODO add environment variable expansion here for use in case like
+	"$ASCENDTK/bitmaps" or "ascend-$VERSION$EXESUFFIX"
+
+	@NOTE this library makes no allowance for fancy escape characters.
+	You better not try to put escaped slashes into your paths, and
+	make sure you've unescaped everything before you send it to
+	ospath.
 */
 
 #ifndef OSPATH_H
 #define OSPATH_H
+
+#ifdef TEST
+# define ASC_DLLSPEC(T) T
+# include "env.h"
+#else
+# include <utilities/config.h>
+# include <utilities/ascConfig.h>
+# include <utilities/ascMalloc.h>
+# include "env.h"
+#endif
+
+#if defined(__WIN32__) && !defined(__MINGW32__)
+# include <direct.h>
+# include <stdlib.h>
+#else
+# ifdef __MINGW32__
+#  include <io.h>
+#  include <limits.h>
+# endif
+#endif
 
 #ifndef PATH_MAX
 # define PATH_MAX 1023
@@ -43,18 +71,51 @@ struct FilePath;
 	normalise the path and attempt to add a drive-prefix
 	if one is missing.
 */
-struct FilePath *ospath_new(const char *path);
+ASC_DLLSPEC(struct FilePath *) ospath_new(const char *path);
+
+ASC_DLLSPEC(struct FilePath *) ospath_new_noclean(const char *path);
 
 /**
 	Free an ospath
 */
-void ospath_free(struct FilePath *);
+ASC_DLLSPEC(void) ospath_free(struct FilePath *);
+
+/**
+	Free a string allocated from ospath.
+*/
+ASC_DLLSPEC(void) ospath_free_str(char *str);
 
 /**
 	Create a new ospath object from a string, assuming
 	that standard forward-slash paths are used.
 */
 struct FilePath *ospath_new_from_posix(const char *posixpath);
+
+/**
+	Path with *VERY SIMPLE* environment variable expansion.
+	You must specify what 'getenv' function should be used.
+*/
+ASC_DLLSPEC(struct FilePath *) ospath_new_expand_env(const char *path, GetEnvFn *getenvptr);
+
+/**
+	This function cleans up the path string used to construct the FilePath object:
+	1. Get rid of multiple / 's one after the other...
+
+	   ie. "///usr/bin///hello/////there// --> "/usr/bin/hello/there/"
+
+	2. Resolve a leading tilde (~) to the current user's HOME path
+
+	3. Remove redundant /./ in middle of path
+
+	4. Remove reduncant dir/.. in path
+
+	5. Environment substitution??
+
+	6. On windows, drive reference if not specified
+
+	7. What about \\server\path and URLs, gnomefs, etc?
+*/
+ASC_DLLSPEC(void) ospath_cleanup(struct FilePath *);
 
 /**
 	Check that the created FilePath was valid (i.e. able
@@ -67,7 +128,7 @@ int ospath_isvalid(struct FilePath *fp);
 	Return the FilePath in the form of a string.
 	You must FREE the allocated string when you don't need it any more.
 */
-char *ospath_str(struct FilePath *fp);
+ASC_DLLSPEC(char *) ospath_str(struct FilePath *fp);
 
 /**
 	Return the FilePath in the string location given.
@@ -78,7 +139,14 @@ char *ospath_str(struct FilePath *fp);
 		will be written.
 	@param destsize the amount of allocated string space at dest.
 */
-void ospath_strcpy(struct FilePath *fp,char *dest, int destsize);
+ASC_DLLSPEC(void) ospath_strcpy(struct FilePath *fp,char *dest, int destsize);
+
+/**
+	Append string from FilePath to the already-allocated string 'dest',
+	while ensuring that the 'dest' strings *total* size doesn't exceed
+	destsize.
+*/
+ASC_DLLSPEC(void) ospath_strcat(struct FilePath *fp,char *dest, int destsize);
 
 /**
 	Output the FilePath to a file
@@ -118,7 +186,7 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned nDepth);
 char *ospath_getbasefilename(struct FilePath *fp);
 
 /**
-	retrieve the path's bottom level filename without the extension.
+	Retrieve the path's bottom level filename without the extension.
 	A path that ends in a slash will be assumed to be directory, so the
 	file stem will be NULL (ie not a file)
 */
@@ -130,10 +198,10 @@ char *ospath_getfilestem(struct FilePath *fp);
 char *ospath_getfileext(struct FilePath *fp);
 
 /**
-	retrieve the directory component of the path (everything up the the
-	last slash
+	Return a new FilePath containing the directory component of the path
+	(everything up the the last slash).
 */
-struct FilePath *ospath_getdir(struct FilePath *fp);
+ASC_DLLSPEC(struct FilePath *) ospath_getdir(struct FilePath *fp);
 
 /**
 	Function returns true if the current path is the root directory, otherwise it returns false.
@@ -154,16 +222,16 @@ struct FilePath *ospath_root(struct FilePath *fp);
 
 int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2);
 
-struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2);
+ASC_DLLSPEC(struct FilePath *) ospath_concat(struct FilePath *fp1, struct FilePath *fp2);
 
-void ospath_append(struct FilePath *fp, struct FilePath *fp1);
+ASC_DLLSPEC(void) ospath_append(struct FilePath *fp, struct FilePath *fp1);
 
 /**
 	File-open function. Simply a wrapper about the 'fopen' call, except
 	that if the FilePath is not 'valid' it will return NULL without
 	attempting to open.
 */
-FILE *ospath_fopen(struct FilePath *fp, const char *mode);
+ASC_DLLSPEC(FILE *) ospath_fopen(struct FilePath *fp, const char *mode);
 
 //------------------------
 // SEARCH PATH FUNCTIONS
@@ -172,6 +240,10 @@ struct FilePath **ospath_searchpath_new(const char *path);
 
 typedef int (FilePathTestFn)(struct FilePath *,void *);
 
+/**
+	@return pointer to path component in which testfn passed, or else
+	NULL if no component passed the test.
+*/
 struct FilePath *ospath_searchpath_iterate(
 		struct FilePath **searchpath
 		, FilePathTestFn *testfn
