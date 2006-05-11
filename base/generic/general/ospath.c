@@ -478,12 +478,14 @@ void ospath_strcpy(struct FilePath *fp, char *dest, int destsize){
 
 void ospath_strcat(struct FilePath *fp, char *dest, int destsize){
 	int remaining = destsize - strlen(dest);
+	V(remaining);	
 #ifdef WINPATHS
 	STRNCAT(dest,fp->drive,remaining);
 	STRNCAT(dest,fp->path,remaining-strlen(dest));
 #else
-	STRNCPY(dest,fp->path,remaining);
+	STRNCAT(dest,fp->path,remaining);
 #endif
+	D(fp);
 }
 
 void ospath_fwrite(struct FilePath *fp, FILE *dest){

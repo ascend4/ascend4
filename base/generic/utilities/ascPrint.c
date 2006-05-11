@@ -249,12 +249,11 @@ int color_on(FILE *f, const char *colorcode){
 	if(!use_xterm_color){
 		term = getenv("TERM");
 		if(term!=NULL){
-			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")){
+			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")==0){
 				use_xterm_color=1;
 			}else{
 				use_xterm_color=-1;
 			}
-			free(term);
 		}else{
 			use_xterm_color=-1;
 		}

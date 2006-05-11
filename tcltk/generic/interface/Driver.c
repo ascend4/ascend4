@@ -35,6 +35,7 @@
 #include <utilities/ascConfig.h>
 #include <general/ospath.h>
 #include <utilities/ascPrint.h>
+#include <utilities/error.h>
 
 #ifndef __WIN32__
 # include <unistd.h>
@@ -480,8 +481,10 @@ int AscDriver(int argc, CONST char *argv[])
 	variable.
 */
 #define OSPATH_PUTENV(VAR,FP) \
-	snprintf(envcmd,MAX_ENV_VAR_LENGTH,"%s=",VAR); \
+	CONSOLE_DEBUG("VAR: %s",VAR); \
+	sprintf(envcmd,"%s=",VAR); \
 	ospath_strcat(FP,envcmd,MAX_ENV_VAR_LENGTH); \
+	CONSOLE_DEBUG("ENVCMD: %s",envcmd); \
 	PUTENV(envcmd)
 
 /**
@@ -507,6 +510,13 @@ int AscDriver(int argc, CONST char *argv[])
 	Tcl_DStringAppend(&buffer,VAL,-1); \
 	Tcl_SetVar2(interp,#ARR,KEY,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
 	Tcl_DStringFree(&buffer);
+
+static void printenv(){
+	int n;
+	char **l;
+	l = Asc_EnvNames(&n);
+	CONSOLE_DEBUG("VARS = %d",n);
+}
 
 /**
 	Ensure that all required environment variables are present
@@ -543,10 +553,10 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
     CONSOLE_DEBUG("IMPORTING VARS");
 
-	distdir = getenv(ASC_ENV_DIST);
-	tkdir = getenv(ASC_ENV_TK);
-	bitmapsdir = getenv(ASC_ENV_BITMAPS);
-	librarydir = getenv(ASC_ENV_LIBRARY);
+	distdir = GETENV(ASC_ENV_DIST);
+	tkdir = GETENV(ASC_ENV_TK);
+	bitmapsdir = GETENV(ASC_ENV_BITMAPS);
+	librarydir = GETENV(ASC_ENV_LIBRARY);
 
 	int guessedtk=0;
 
@@ -588,8 +598,11 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		ospath_free(fp);
 # endif
 		distdir = ospath_str(distfp);
-		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"GUESSING %s = %s\n",ASC_ENV_DIST,distdir);
+		CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir);
 		OSPATH_PUTENV(ASC_ENV_DIST,distfp);
+		distdir = GETENV(ASC_ENV_DIST);
+		CONSOLE_DEBUG("RETRIEVED %s = %s",ASC_ENV_DIST,distdir);
+		printenv();
 	}
 
 	if(tkdir == NULL){
@@ -614,6 +627,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		/* Create a path $ASCENDTK/bitmaps */
 		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV);
 		OSPATH_PUTENV(ASC_ENV_BITMAPS,bitmapsfp);
+		bitmapsdir = ospath_str(bitmapsfp);
 	}
 
 	/**
@@ -627,6 +641,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		libraryfp = ospath_new_expand_env("$ASCENDDIST/models", &GETENV);
 		ospath_free(fp);
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
+		librarydir = ospath_str(libraryfp);
 	}
 
 

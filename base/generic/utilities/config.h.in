@@ -13,7 +13,7 @@
 	in order to create the executable path in cases where ASC_RELATIVE_PATHS
 	is set.
 */
-#define ASC_DISTDIR "../../.."
+#define ASC_DISTDIR "../share/ascend"
 
 #define ASC_RELATIVE_PATHS
 
