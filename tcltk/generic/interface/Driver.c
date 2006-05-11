@@ -258,7 +258,7 @@ static char build_name[]=TIMESTAMP;
  *  in the Tk sources.
  *
  */
-int AscDriver(int argc, CONST char *argv[])
+int AscDriver(int argc, CONST char **argv)
 {
   Tcl_Interp *interp;                   /* local version of global g_interp */
   Tcl_Channel inChannel;
