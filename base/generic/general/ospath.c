@@ -373,10 +373,7 @@ void ospath_cleanup(struct FilePath *fp){
 		//M("NEXT TOKEN");
 		//X(p);
 		//X(path+strlen(p)+1);
-		if(*p=='$'){
-			M("PATH COMPONENT WITH ENV VAR");
-
-		}else if(strcmp(p, "~")==0){
+		if(strcmp(p, "~")==0){
 
 			if(p == path){ // check that the ~ is the first character in the path
 				if(ospath_isvalid(home)){
@@ -457,11 +454,11 @@ int ospath_isvalid(struct FilePath *fp){
 char *ospath_str(struct FilePath *fp){
 	char *s;
 #ifdef WINPATHS
-	s = (char *)MALLOC(sizeof(char)*(strlen(fp->drive)+strlen(fp->path) ) );
+	s = (char *)MALLOC(sizeof(char)*(strlen(fp->drive)+strlen(fp->path) +1) );
 	STRCPY(s,fp->drive);
 	STRCAT(s,fp->path);
 #else
-	s = MALLOC(sizeof(char)*strlen(fp->path));
+	s = MALLOC(sizeof(char)*(strlen(fp->path)+1));
 	STRCPY(s,fp->path);
 #endif
 	return s;
@@ -513,14 +510,18 @@ struct FilePath *ospath_getparent(struct FilePath *fp)
 	char *pos;
 	int len1;
 	char sub[PATH_MAX];
-	struct FilePath *fp1;
+	struct FilePath *fp1, *fp2;
 
 	D(fp);
 
-	if(strlen(fp->path) == 0 || ospath_isroot(fp))
-	{
-		// return empty path.
-		return ospath_new("");
+	if(strlen(fp->path) == 0){
+		fp1 = ospath_getcwd();
+		fp2 = ospath_getparent(fp1);
+		ospath_free(fp1);
+		return fp2;
+	}else if(ospath_isroot(fp)){
+		// stay at root
+		return ospath_new("/");
 	}
 
 	// reverse find a / ignoring the end / if it exists.
@@ -890,9 +891,6 @@ struct FilePath *ospath_concat(struct FilePath *fp1, struct FilePath *fp2){
 	struct FilePath *r;
 
 	fp = (struct FilePath *)MALLOC(sizeof(struct FilePath));
-
-	D(fp1);
-	D(fp2);
 
 	if(!ospath_isvalid(fp1)){
 		if(ospath_isvalid(fp2)){

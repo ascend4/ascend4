@@ -75,6 +75,18 @@ char * env_subst(const char *path,GetEnvFn *getenvptr){
 	return env_subst_level(path,getenvptr, 0);
 }
 
+
+int env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr){
+	char *val = (*getenvptr)(varname);
+	char *envcmd;
+	if(val!=NULL){
+		envcmd = MALLOC(sizeof(char) * (strlen(varname) + 1 + strlen(val) + 1));
+		sprintf(envcmd,"%s=%s",varname,val);
+		return (*putenvptr)(envcmd);
+	}
+	return -1;
+}
+
 char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 	char *dest, *dest1;
 	char *msg;

@@ -525,7 +525,7 @@ static void printenv(){
 	<utilities/config.h>. The following comments assume that you
 	use the usual names for each of these:
 
-	ASCENDDIST defaults to @ASC_DATADIR@ (also in config.h)
+	ASCENDDIST defaults to $PROGDIR/@ASC_DATADIR_REL_BIN@ (also in config.h)
 	ASCENDTK defaults to $ASCENDDIST/@ASC_TK_SUBDIR_NAME@ (latter is from config.h)
 	ASCENDBITMAPS defaults $ASCENDTK/bitmaps
 	ASCENDLIBRARY defaults to $ASCENDDIST/models
@@ -539,17 +539,18 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp;
 	char envcmd[MAX_ENV_VAR_LENGTH];
 	char s1[PATH_MAX];
+	int err;
 
 	Tcl_DString buffer;
 
 	Tcl_DStringInit(&buffer);
 
-	/*
-	Asc_ImportPathList(ASC_ENV_DIST);
-	Asc_ImportPathList(ASC_ENV_TK);
-	Asc_ImportPathList(ASC_ENV_BITMAPS);
-	Asc_ImportPathList(ASC_ENV_LIBRARY);
-	*/
+	/* import these into the environment */
+	err = env_import(ASC_ENV_DIST,getenv,PUTENV);
+	if(err)CONSOLE_DEBUG("No %s var imported, error %d",ASC_ENV_DIST,err);
+	env_import(ASC_ENV_TK,getenv,PUTENV);
+	env_import(ASC_ENV_BITMAPS,getenv,PUTENV);
+	env_import(ASC_ENV_LIBRARY,getenv,PUTENV);
 
     CONSOLE_DEBUG("IMPORTING VARS");
 
@@ -574,16 +575,14 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
         CONSOLE_DEBUG("PROGNAME = %s",s1);
 
 		// get the directory name from the exe path
-        CONSOLE_DEBUG("Calculating dir...");
         fp1 = ospath_getdir(fp);
-        CONSOLE_DEBUG("Done calculating dir...");
         ospath_free(fp);
 
         ospath_strcpy(fp1,s1,PATH_MAX);
         CONSOLE_DEBUG("DIR = %s",s1);
 
-		// append the contents of ASC_DISTDIR to this path
-        fp = ospath_new_noclean(ASC_DISTDIR);
+		// append the contents of ASC_DISTDIR_REL_BIN to this path
+        fp = ospath_new_noclean(ASC_DISTDIR_REL_BIN);
 		distfp = ospath_concat(fp1,fp);
 		ospath_cleanup(distfp);
 
@@ -606,24 +605,23 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	}
 
 	if(tkdir == NULL){
-		CONSOLE_DEBUG("NO " ASC_ENV_TK " VAR DEFINED");
-
+		CONSOLE_DEBUG("USING DEFAULT %s = %s",ASC_ENV_TK,ASC_ENV_TK_DEFAULT);
 		guessedtk=1;
-		/* Create a path $ASCENDDIST/tcltk */
-		strcpy(envcmd,"$ASCENDDIST/");
-		strcat(envcmd,ASC_TK_SUBDIR_NAME);
-		CONSOLE_DEBUG("TK RAW = %s",envcmd);
-		tkfp = ospath_new_expand_env(envcmd, &GETENV);
+		tkfp = ospath_new_expand_env(ASC_ENV_TK_DEFAULT, &GETENV);
 		tkdir = ospath_str(tkfp);
 
 		ospath_strcpy(tkfp,envcmd,MAX_ENV_VAR_LENGTH);
 		CONSOLE_DEBUG("TK = %s",envcmd);
 
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
+	}else{
+		tkfp = ospath_new_expand_env(tkdir, &GETENV);
+		tkdir = ospath_str(tkfp);
+		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
 	}
 
 	if(bitmapsdir == NULL){
-	    CONSOLE_DEBUG("NO  " ASC_ENV_BITMAPS " VAR DEFINED");
+	    CONSOLE_DEBUG("NO " ASC_ENV_BITMAPS " VAR DEFINED");
 		/* Create a path $ASCENDTK/bitmaps */
 		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV);
 		OSPATH_PUTENV(ASC_ENV_BITMAPS,bitmapsfp);
@@ -637,9 +635,9 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		@TODO Also, what about ASCEND_DEFAULTLIBRARY ?
 	*/
 	if(librarydir == NULL){
-	    CONSOLE_DEBUG("NO  " ASC_ENV_LIBRARY " VAR DEFINED");
+	    CONSOLE_DEBUG("NO " ASC_ENV_LIBRARY " VAR DEFINED");
 		libraryfp = ospath_new_expand_env("$ASCENDDIST/models", &GETENV);
-		ospath_free(fp);
+		CONSOLE_DEBUG("CREATED LIBRARY VAL");
 		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
 		librarydir = ospath_str(libraryfp);
 	}

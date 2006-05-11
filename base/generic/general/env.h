@@ -43,6 +43,22 @@
 typedef char *(GetEnvFn)(const char *name);
 
 /**
+	This the type of a putenv function that can be used to set and environment
+	variable.
+*/
+typedef int (PutEnvFn)(const char *inputstring);
+
+/**
+	Attempts to read from a getenv function, and if the value is found, write it
+	using a putenv function. You would use this to copy values from one
+	environment to another.
+
+	@return nonzero on error, -1 means that the value didn't exist in getenv,
+	otherwise the errors are those returned by putenv.
+*/
+ASC_DLLSPEC(int) env_import(const char *varname,GetEnvFn *getenvptr,PutEnvFn *putenvptr);
+
+/**
 	Perform variable substitution on a string in shell-like way.
 	This should replace any $VARNAME with the result of
 	(*getenvptr)(VARNAME).
