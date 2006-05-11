@@ -14,7 +14,7 @@
  *  Copyright 2005, Benjamin Andrew Allan
  *
  *  The ASCEND utilities is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as     
+ *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
  *
@@ -33,9 +33,9 @@
  *  ASCEND Printf stdout/stderr substitutes dispatcher.
  *  These routines redirect output to stdout and stdin to other
  *  functions defined by the user.  This is not required when you
- *  desire to send output to an available console, which is normally 
- *  the case on Linux/unix.  However, in cases where a console is 
- *  not available (e.g. Win32 gui) or you prefer to redirect output 
+ *  desire to send output to an available console, which is normally
+ *  the case on Linux/unix.  However, in cases where a console is
+ *  not available (e.g. Win32 gui) or you prefer to redirect output
  *  for other reasons, these routines make it possible.<br><br>
  */
 
@@ -48,7 +48,7 @@
  * Output functions interceptor vtable. This should be constructed
  * and the functions fully operational before it is
  * pushed on the stack of output tables.
- * 
+ *
  * This should be constructed and the functions fully operational
  * before it is pushed on the stack of output tables.<br><br>
  */
@@ -58,10 +58,10 @@ struct Asc_PrintVTable {
   int (*fflush)(FILE *);                                    /**< Flush function. */
   struct Asc_PrintVTable *next;                             /**< Next vtable in linked list. */
 };
-                                            
+
 
 extern int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
-/**< 
+/**<
  *  Adds a vtable to the ASCEND output interceptor list.
  *  Each registered vtable defines print and flush functions that are
  *  called by the internal ASCEND print functions to do the actual output.
@@ -108,7 +108,7 @@ extern int Asc_Printf(CONST char *format, ...);
  *  function prints the `variable_number_args' to stdout using the print
  *  functions defined in the registered vtables.  The same output is
  *  printed using all registered vtables.  If no vtables are registered,
- *  nothing will be output.  Returns the number of bytes printed from 
+ *  nothing will be output.  Returns the number of bytes printed from
  *  the final vtable that is called.<br><br>
  *
  *  This is needed under Windows to redirect stdout to the TkConsole
@@ -119,14 +119,14 @@ extern int Asc_Printf(CONST char *format, ...);
  *  @return Returns the number of bytes printed from the final vtable called.
  */
 
-extern int Asc_FPrintf(FILE *fileptr, CONST char *format, ...);
+ASC_DLLSPEC(int) Asc_FPrintf(FILE *fileptr, CONST char *format, ...);
 /**<
  *  Prints the specified variables to fileptr using all registered print
  *  vtables.  Using the sprintf-style format string `format', this
  *  function prints the `variable_number_args' to the file handle
  *  'fileptr' using the print functions defined in the registered vtables.
  *  The same output is  printed using all registered vtables.  If no vtables
- *  are registered, nothing will be output.  Returns the number of bytes 
+ *  are registered, nothing will be output.  Returns the number of bytes
  *  printed from the final vtable that is called.<br><br>
  *
  *  This is needed under Windows to redirect stdout to the TkConsole
@@ -150,7 +150,7 @@ extern int Asc_FFlush(FILE *fileptr);
  *  Flushes output to fileptr.
  *  This function loops over all registered print vtables, flushing
  *  output to the file pointed to by `fileptr'.  If no vtables are
- *  registered, no streams will be flushed.  Returns 0 for success 
+ *  registered, no streams will be flushed.  Returns 0 for success
  *  and EOF for failure.<br><br>
  *
  *  This is needed for consistency with Asc_FPrintf() and Asc_Printf().
@@ -166,7 +166,7 @@ extern int Asc_FPutc(int c, FILE *fileptr);
  *  all registered print vtables.  For other file streams, the standard
  *  fputc() function is used.  Returns non-zero for success and EOF for
  *  failure.<br><br>
- *                            
+ *
  *  This is needed under Windows to redirect stdout and stderr to the
  *  TkConsole instead of into the bit bucket.
  *
@@ -178,7 +178,7 @@ extern int Asc_FPutc(int c, FILE *fileptr);
 extern int Asc_Putchar(int c);
 /**<
  *  Prints c to stdout.
- *  This function loops over all registered print vtables.  
+ *  This function loops over all registered print vtables.
  *  Returns 1 for success and EOF for failure.<br><br>
  *
  *  This is needed under Windows to redirect stdout and stderr to the
@@ -188,5 +188,9 @@ extern int Asc_Putchar(int c);
  *  @return Returns 1 for success, EOF otherwise.
  */
 
+ASC_DLLSPEC(int) color_on(FILE *f, const char *colorcode);
+ASC_DLLSPEC(int) color_off(FILE *f);
+
 #endif /* _ASCPRINT_H */
+
 

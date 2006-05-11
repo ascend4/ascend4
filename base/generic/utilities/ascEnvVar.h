@@ -218,7 +218,7 @@ ASC_DLLSPEC(char **) Asc_GetPathList(char *envvar, int *argcPtr);
  *          the returned array pointer will be NULL.
  */
 
-ASC_DLLSPEC(char*) Asc_GetEnv(char *envvar);
+ASC_DLLSPEC(char*) Asc_GetEnv(const char *envvar);
 /**<
  *  Retrieve the value(s) of ASCEND environment variable envvar
  *  as a delimited string.  The elements of envvar are assembled

@@ -71,27 +71,6 @@
 	using xterm codes. But that brings its own problems on MinGW and Windows...
 */
 
-#ifdef USE_XTERM_COLOR_CODES
-/** XTERM colour codes used to distinguish between errors of different types.
-
-	@TODO some runtime testing to determine if these should be used or not
-	depending on TERM env var.
-*/
-#  define ERR_RED "\033[31;1m"
-#  define ERR_GRN "\033[32;2m"
-#  define ERR_BLU "\033[34;1m"
-#  define ERR_BRN "\033[33;1m"
-#  define ERR_NORM "\033[0m"
-#  define ERR_BOLD "\033[1m"
-#else
-#  define ERR_RED ""
-#  define ERR_GRN ""
-#  define ERR_BLU ""
-#  define ERR_BRN ""
-#  define ERR_NORM ""
-#  define ERR_BOLD ""
-#endif
-
 /**
 	Error severity codes. This will be used to visually
 	the seriousness of errors. ASC_PROG_ERRORs for example
@@ -120,9 +99,9 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
-# define CONSOLE_DEBUG(args...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+# define CONSOLE_DEBUG(args...) (color_on(stderr,"1") + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
                                  fprintf(stderr, ##args) + \
-                                 fprintf(stderr, ERR_NORM "\n"))
+                                 fprintf(stderr, "\n") + color_off(stderr))
 
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
@@ -130,9 +109,9 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
-# define CONSOLE_DEBUG(...) (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+# define CONSOLE_DEBUG(...) (fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
                              fprintf(stderr, ##__VA_ARGS__) + \
-                             fprintf(stderr, ERR_NORM "\n"))
+                             fprintf(stderr, "\n"))
 
 #elif defined(_MSC_VER) && _MSC_VER >= 1400 /* Microsoft Visual C++ 2005 or newer */
 #  define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__FUNCTION__);
@@ -141,7 +120,7 @@ typedef enum error_severity_enum{
 #  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, __VA_ARGS__)
 #  define CONSOLE_DEBUG(...)   (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
                                 fprintf(stderr, __VA_ARGS__) + \
-                                fprintf(stderr, ERR_NORM "\n"))
+                                fprintf(stderr, "\n"))
 #else /* workaround for compilers without variadic macros: last resort */
 # define NO_VARIADIC_MACROS
 # define ERROR_REPORTER_DEBUG error_reporter_note_no_line
