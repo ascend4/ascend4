@@ -15,25 +15,38 @@ static error_reporter_callback_t g_error_reporter_callback;
 static error_reporter_meta_t g_error_reporter_cache;
 
 /**
+	XTERM colour codes used to distinguish between errors of different types.
+*/
+#  define ERR_RED "31;1"
+#  define ERR_GRN "32;2"
+#  define ERR_BLU "34;1"
+#  define ERR_BRN "33;1"
+#  define ERR_BOLD "1"
+
+/**
 	Default error reporter. To use this error reporter, set
 	the callback pointer to NULL.
 */
 int error_reporter_default_callback(ERROR_REPORTER_CALLBACK_ARGS){
 	char *sevmsg="";
+	char *color=NULL;
 	char *endtxt="\n";
 	int res=0;
 	switch(sev){
-		case ASC_PROG_FATAL:    sevmsg = ERR_RED "PROGRAM FATAL ERROR: " ERR_NORM; break;
-		case ASC_PROG_ERROR:    sevmsg = ERR_RED "PROGRAM ERROR: " ERR_NORM; break;
-		case ASC_PROG_WARNING:  sevmsg = "PROGRAM WARNING: "; break;
-		case ASC_PROG_NOTE:     sevmsg = ERR_GRN; endtxt=ERR_NORM; break; /* default, keep unembellished for now */
-		case ASC_USER_ERROR:    sevmsg = ERR_RED "ERROR: " ERR_NORM; break;
-		case ASC_USER_WARNING:  sevmsg = ERR_BRN "WARNING: " ERR_NORM; break;
+		case ASC_PROG_FATAL:    color=ERR_RED; sevmsg = "PROGRAM FATAL ERROR: "; break;
+		case ASC_PROG_ERROR:    color=ERR_RED; sevmsg = "PROGRAM ERROR: "; break;
+		case ASC_PROG_WARNING:  color=ERR_BOLD;sevmsg = "PROGRAM WARNING: "; break;
+		case ASC_PROG_NOTE:     color=ERR_GRN; endtxt=""; break; /* default, keep unembellished for now */
+		case ASC_USER_ERROR:    color=ERR_RED; sevmsg = "ERROR: "; break;
+		case ASC_USER_WARNING:  color=ERR_BRN; sevmsg = "WARNING: "; break;
 		case ASC_USER_NOTE:     sevmsg = "NOTE: "; break;
-		case ASC_USER_SUCCESS:  sevmsg = ERR_GRN "SUCCESS: " ERR_NORM; break;
+		case ASC_USER_SUCCESS:  color=ERR_GRN; sevmsg = "SUCCESS: "; break;
 	}
 
+	color_on(ASCERR,color);
 	res = ASC_FPRINTF(ASCERR,sevmsg);
+	color_off(ASCERR);
+
 	if(filename!=NULL){
 		res += ASC_FPRINTF(ASCERR,"%s:",filename);
 	}

@@ -12,7 +12,7 @@
  *  Copyright 1997, Carnegie Mellon University
  *
  *  The ASCEND utilities is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as            
+ *  it and/or modify it under the terms of the GNU General Public License as
  *  published by the Free Software Foundation; either version 2 of the
  *  License, or (at your option) any later version.
  *
@@ -238,3 +238,41 @@ int Asc_Putchar( int c )
   return Asc_Printf( "%c", c );
 }
 
+static int use_xterm_color = 0;
+
+/**
+	Little routine to aid output of XTERM colour codes where supported.
+	Not very efficient, so use sparingly.
+*/
+int color_on(FILE *f, const char *colorcode){
+	char *term;
+	if(!use_xterm_color){
+		term = getenv("TERM");
+		if(term!=NULL){
+			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")){
+				use_xterm_color=1;
+			}else{
+				use_xterm_color=-1;
+			}
+			free(term);
+		}else{
+			use_xterm_color=-1;
+		}
+	}
+
+	if(colorcode!=NULL && use_xterm_color==1){
+		return fprintf(f,"\033[%sm",colorcode);
+	}
+	return 0;
+}
+
+/**
+	Little routine to aid output of XTERM colour codes where supported.
+	Not very efficient, so use sparingly.
+*/
+int color_off(FILE *f){
+	if(use_xterm_color==1){
+		return fprintf(f,"\033[0m");
+	}
+	return 0;
+}

@@ -33,6 +33,8 @@
 #include <tcl.h>
 #include <tk.h>
 #include <utilities/ascConfig.h>
+#include <general/ospath.h>
+#include <utilities/ascPrint.h>
 
 #ifndef __WIN32__
 # include <unistd.h>
@@ -118,7 +120,7 @@ extern int zz_debug;
 extern int  Tktable_Init(Tcl_Interp*);
 
 static void AscTrap(int);
-static int  AscCheckEnvironVars(Tcl_Interp*);
+static int  AscCheckEnvironVars(Tcl_Interp*,const char *progname);
 static void AscPrintHelpExit(CONST char *);
 static int  AscProcessCommandLine(Tcl_Interp*, int, CONST char **);
 static void Prompt(Tcl_Interp*, int);
@@ -127,7 +129,6 @@ static void StdinProc(ClientData, int);
 #ifdef DEBUG_MALLOC
 static void InitDebugMalloc(void);
 #endif /* DEBUG_MALLOC */
-
 
 
 /*
@@ -230,7 +231,6 @@ static char build_name[]="by anonymous";
 #else
 static char build_name[]=TIMESTAMP;
 #endif /* TIMESTAMP */
-
 
 /**
 	Moved 'main' and 'WinMain' to separate 'main.c'
@@ -343,13 +343,17 @@ int AscDriver(int argc, CONST char *argv[])
    *  Now that our console and printing functions are properly
    *  initialized, print our startup banner.
    */
-  PRINTF("ASCEND VERSION IV\n");
-  PRINTF("Compiler Implemention Version: 2.0\n");
-  PRINTF("Written by Tom Epperly, Kirk Abbott, and Ben Allan\n");
-  PRINTF("  Built: %s %s %s\n",__DATE__,__TIME__,build_name);
-  PRINTF("Copyright(C) 1990, 1993, 1994 Thomas Guthrie Epperly\n");
-  PRINTF("Copyright(C) 1993-1996 Kirk Andre Abbott, Ben Allan\n");
-  PRINTF("Copyright(C) 1997 Carnegie Mellon University\n");
+
+  color_on(stderr,"34;1");
+  ASC_FPRINTF(stderr,"\nASCEND modelling environment\n");
+  ASC_FPRINTF(stderr,"Copyright(C) 1997, 2006 Carnegie Mellon University\n");
+  ASC_FPRINTF(stderr,"Copyright(C) 1993-1996 Kirk Andre Abbott, Ben Allan\n");
+  ASC_FPRINTF(stderr,"Copyright(C) 1990, 1993, 1994 Thomas Guthrie Epperly\n");
+  ASC_FPRINTF(stderr,"Built %s %s %s\n\n",__DATE__,__TIME__,build_name);
+  ASC_FPRINTF(stderr,"ASCEND comes with ABSOLUTELY NO WARRANTY, and is free software that you may\n");
+  ASC_FPRINTF(stderr,"redistribute within the conditions of the GNU General Public License. See the\n");
+  ASC_FPRINTF(stderr,"included file 'LICENSE.txt' for full details.\n\n");
+  color_off(stderr);
 
   /*
    *  Call the init procedures for included packages.
@@ -389,7 +393,7 @@ int AscDriver(int argc, CONST char *argv[])
    *  Set the environment, and set find the
    *  location of ASCEND's startup file.
    */
-  AscCheckEnvironVars(interp);
+  AscCheckEnvironVars(interp,argv[0]);
   if( AscSetStartupFile(interp) != TCL_OK ) {
     Asc_Panic(2, "Asc_Driver",
               "Cannot find ~/.ascendrc nor the default AscendRC\n%s",
@@ -464,240 +468,207 @@ int AscDriver(int argc, CONST char *argv[])
   return 0;
 }
 
+/*-------------------------------------------------------
+  SETTING UP ENVIRONMENT...
+*/
 
-/*
- *-----------------------------------------------------------------
- *  int AscCheckEnvironVars(interp)
- *      Tcl_Interp *interp;
- *
- *  This function checks the following environment variables and sets them
- *  to the default value if they are not set.  This function will set
- *  DIST_ENVIRONVAR to the parent of the directory where the ASCEND binary
- *  lives if it is not set, e.g., if the ascend binary is
- *      /foo/bar/ascend4
- *  DIST_ENVIRONVAR is set to "/foo".
- *
- *  We check to see if ASCTK_ENVIRONVAR points to the proper place by
- *  looking for the ASCEND startup script "AscendRC".  If we find it, set
- *  the Tcl variable tcl_rcFileName to its location, otherwise, call
- *  Asc_Panic() to exit.
- *
- *  Returns a standard Tcl return code.
- *
- *    CPP_MACRO            ENVIRONMENT VAR    DEFAULT VALUE
- *    =================    ===============    =============
- *    DIST_ENVIRONVAR      ASCENDDIST         /usr/share/ascend
- *    ASCTK_ENVIRONVAR     ASCENDTK           $ASCENDDIST/TK
- *    BITMAP_ENVIRONVAR    ASCENDBITMAPS      $ASCENDDIST/TK/bitmaps
- *    LIBR_ENVIRONVAR      ASCENDLIBRARY      .:$ASCENDDIST/models
- *
- */
-static int AscCheckEnvironVars(Tcl_Interp *interp)
-{
-  char *tmpenv;               /* holds values returned by Asc_GetEnv() */
-  Tcl_DString ascenddist;     /* holds the value of DIST_ENVIRONVAR */
-  Tcl_DString buffer2;        /* used to incrementally build environment
-                               * variable values
-                               */
-  Tcl_DString buffer1;        /* holds the environment variable value in the
-                               * native format: result of passing buffer2
-                               * into Tcl_TranslateFileName()
-                               */
-  Tcl_Channel c;              /* used to test if file exists */
+#define GETENV Asc_GetEnv
+#define PUTENV Asc_PutEnv
 
-  /* initialize */
-  Tcl_DStringInit(&ascenddist);
-  Tcl_DStringInit(&buffer1);
-  Tcl_DStringInit(&buffer2);
+/**
+	This is a quick macro to output a FilePath to an environment
+	variable.
+*/
+#define OSPATH_PUTENV(VAR,FP) \
+	snprintf(envcmd,MAX_ENV_VAR_LENGTH,"%s=",VAR); \
+	ospath_strcat(FP,envcmd,MAX_ENV_VAR_LENGTH); \
+	PUTENV(envcmd)
 
-  /*
-   *  Get the value of the ASCENDDIST environment variable;
-   *  if not set, set it to the parent of the directory containing
-   *  the ascend binary.  For example, if the ascend binary is
-   *  /foo/bar/bin/ascend4, set ASCENDDIST to /foo/bar
-   *  If Tcl doesn't know where we are---the Tcl command
-   *  `info nameofexecutable' returns ""---then ASCENDDIST is set
+/**
+	This is a quick macro to send data to Tcl using Tcl_SetVar.
+	It uses an intermediate buffer which is assumed to be
+	empty already.
 
-	/home/john/ascroot/bin/ascend4
-	/home/john/ascroot/share/ascend/
+	usage: ASC_SEND_TO_TCL(tclvarname,"some string value");
+*/
+#define ASC_SEND_TO_TCL(VAR,VAL) \
+	Tcl_DStringAppend(&buffer,VAL,-1); \
+	Tcl_SetVar(interp,#VAR,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
+	Tcl_DStringFree(&buffer);
 
-   *  to "."
-   */
-  if( Asc_ImportPathList(DIST_ENVIRONVAR) == 0 ) {
-    if( (tmpenv =  Asc_GetEnv(DIST_ENVIRONVAR)) == NULL ) {
-      /* shouldn't be NULL since we just imported it successfully */
-      Asc_Panic(2, "CheckEnvironmentVars",
-                "Asc_GetEnv(%s) returned NULL value.", DIST_ENVIRONVAR);
-    }
-    Tcl_DStringAppend(&ascenddist, tmpenv, -1);
-    ascfree(tmpenv);
-  } else {
-    char cmd[] =
-      "file nativename [file dirname [file dirname [info nameofexecutable]]]";
-    if( Tcl_Eval(interp, cmd) == TCL_OK ) {
-      Tcl_DStringGetResult(interp, &ascenddist);
-      /* Tcl_DStringAppend(&ascenddist, "/share/ascend", -1); */
-      if(Asc_SetPathList(DIST_ENVIRONVAR,Tcl_DStringValue(&ascenddist)) != 0) {
-        Asc_Panic(2, "AscCheckEnvironVars",
-                  "Asc_SetPathList() returned Nonzero: "
-                  "Not enough memory to extend the environment");
-      }
-    }
-  }
-  /*  Make sure the Tcl side can also see this variable */
-  Tcl_SetVar2(interp, "env", DIST_ENVIRONVAR,
-              Tcl_DStringValue(&ascenddist), TCL_GLOBAL_ONLY);
+/**
+	This is a quick macro to send data to Tcl using Tcl_SetVar2.
+	It uses an intermediate buffer which is assumed to be
+	empty already.
 
-  /*
-   *  If the user's environment does not have ASCENDLIBRARY set, then set
-   *  it to a reasonable default.
-   */
-  if( Asc_ImportPathList(LIBR_ENVIRONVAR) == 0 ) {
-    if( (tmpenv = Asc_GetEnv(LIBR_ENVIRONVAR)) == NULL ) {
-      /* shouldn't be NULL since we just imported it successfully */
-      Asc_Panic(2, "CheckEnvironmentVars",
-                "Asc_GetEnv(%s) returned NULL value.", LIBR_ENVIRONVAR);
-    }
-    /*  Make sure the Tcl side can also see this variable */
-    Tcl_SetVar2(interp, "env", LIBR_ENVIRONVAR, tmpenv, TCL_GLOBAL_ONLY);
-    ascfree(tmpenv);
-  } else {
-    /*  Add ``.'' to the ASCENDLIBRARY envar */
-    if( Asc_SetPathList(LIBR_ENVIRONVAR, ".") != 0 ) {
-      Asc_Panic(2, "AscCheckEnvironVars",
-                "Asc_SetPathList() returned Nonzero: "
-                "Not enough memory to extend the environment");
-    }
+	usage: ASC_SEND_TO_TCL2(arrayname,"keyname","some string value");
+*/
+#define ASC_SEND_TO_TCL2(ARR,KEY,VAL) \
+	Tcl_DStringAppend(&buffer,VAL,-1); \
+	Tcl_SetVar2(interp,#ARR,KEY,Tcl_DStringValue(&buffer),TCL_GLOBAL_ONLY); \
+	Tcl_DStringFree(&buffer);
 
-    /* Add ``$ASCENDDIST/models'' to the ASCENDLIBRARY envar */
+/**
+	Ensure that all required environment variables are present
+	and set values for them if they are not present. The names
+	for the environment variables are specified in
+	<utilities/config.h>. The following comments assume that you
+	use the usual names for each of these:
 
-    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/models", -1);
-    if( NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
-                                       &buffer1))) {
-      if(Asc_AppendPath(LIBR_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
-        Asc_Panic(2, "AscCheckEnvironVars",
-                  "Asc_AppendPath() returned Nonzero: "
-                  "Not enough memory to extend the environment");
-      }
-      Tcl_DStringFree(&buffer1);
-    }
-    Tcl_DStringFree(&buffer2);
+	ASCENDDIST defaults to @ASC_DATADIR@ (also in config.h)
+	ASCENDTK defaults to $ASCENDDIST/@ASC_TK_SUBDIR_NAME@ (latter is from config.h)
+	ASCENDBITMAPS defaults $ASCENDTK/bitmaps
+	ASCENDLIBRARY defaults to $ASCENDDIST/models
 
-    /*  Get the full value of the environment variable and set
-     *  $env(ASCENDLIBRARY) in the Tcl code
-     */
-    if( (tmpenv = Asc_GetEnv(LIBR_ENVIRONVAR)) == NULL ) {
-      /* shouldn't be NULL since we just set it.  memory error! */
-      Asc_Panic(2, "CheckEnvironmentVars",
-                "Asc_GetEnv(%s) returned NULL value.", LIBR_ENVIRONVAR);
-    }
-    /*  Make sure the Tcl side can also see this variable */
-    Tcl_SetVar2(interp, "env", LIBR_ENVIRONVAR, tmpenv, TCL_GLOBAL_ONLY);
-    ascfree(tmpenv);
-  }
+	Also check for the existence of the file AscendRC in $ASCENDTK
+	and if found, export the location of that file to the Tcl
+	variable tcl_rcFileName.
+*/
+static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
+	char *distdir, *tkdir, *bitmapsdir, *librarydir;
+	struct FilePath *fp, *fp1, *distfp, *tkfp, *bitmapsfp, *libraryfp;
+	char envcmd[MAX_ENV_VAR_LENGTH];
+	char s1[PATH_MAX];
 
-  /*
-   *  If the user's environment does not have ASCENDTK set, then set it
-   *  by appending 'TK' to ASCENDDIST.  Later in this function, we check
-   *  to make sure it is a valid directory by checking for the existence
-   *  of `AscendRC' in that directory.
-   * 
-   *  The location of this directory is not subject to debate. It is
-   *  $prefix/TK. If one wants it anywhere else, for any reason, one
-   *  can provide a wrapper that sets the environment variable to override
-   *  it.
-   */
-  if( Asc_ImportPathList(ASCTK_ENVIRONVAR) == 0 ) {
-    if( (tmpenv = Asc_GetEnv(ASCTK_ENVIRONVAR)) == NULL ) {
-      /* shouldn't be NULL since we just imported it successfully */
-      Asc_Panic(2, "CheckEnvironmentVars",
-                "Asc_GetEnv(%s) returned NULL value.", ASCTK_ENVIRONVAR);
-    }
-    /* store ASCENDTK in ``buffer1'' so we can check for ASCENDTK/AscendRC
-     * below
-     */
-    Tcl_DStringAppend(&buffer1, tmpenv, -1);
-    ascfree(tmpenv);
-  } else {
-    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    /* AWW20041208:    Tcl_DStringAppend(&buffer2, "/TK", -1);
-     */
-    Tcl_DStringAppend(&buffer2, "/TK", -1);
-    if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
-                                      &buffer1))) {
-      if( Asc_SetPathList(ASCTK_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
-        Asc_Panic(2, "Asc_EnvironmentInit",
-                  "Not enough memory to initialize the environment");
-      }
-    }
-    Tcl_DStringFree(&buffer2);
-  }
-  /*  Make sure the Tcl side can also see this variable */
-  Tcl_SetVar2(interp, "env", ASCTK_ENVIRONVAR,
-              Tcl_DStringValue(&buffer1), TCL_GLOBAL_ONLY);
+	Tcl_DString buffer;
 
-  /*
-   *  Check to see if ASCENDTK looks reasonable by checking
-   *  for ASCENDTK/AscendRC  We use the Tcl channel
-   *  mechanism to see if file exists.
-   */
-  Tcl_DStringAppend(&buffer1, "/AscendRC", -1 );
-  c = Tcl_OpenFileChannel( NULL, Tcl_DStringValue(&buffer1), "r", 0 );
-  if( c != (Tcl_Channel)NULL ) {
-    /*
-     *  file exists.  close the channel and set tcl_rcfilename to
-     *  this location
-     */
-    Tcl_Close( NULL, c );
-    Tcl_SetVar(interp, "tcl_rcFileName", Tcl_DStringValue(&buffer1),
-               TCL_GLOBAL_ONLY);
-  } else {
-    Asc_Panic(2, "AscCheckEnvironVars",
-              "ERROR: Cannot find the file \"%s\" in the subdirectory \"TK\"\n"
-              "under the directory \"%s\"\n"
-              "Please check the value of the environment variables %s and\n"
-              "and %s and start ASCEND again.\n",
-              "AscendRC", Tcl_DStringValue(&ascenddist), DIST_ENVIRONVAR,
-              ASCTK_ENVIRONVAR);
-  }
-  Tcl_DStringFree(&buffer1);
+	Tcl_DStringInit(&buffer);
 
-  /*
-   *  If the user's environment does not have ASCENDBITMAPS set, then set
-   *  it by appending `bitmaps' to ASCENDTK.
-   */
-  if( Asc_ImportPathList(BITMAP_ENVIRONVAR) == 0 ) {
-    if( (tmpenv = Asc_GetEnv(BITMAP_ENVIRONVAR)) == NULL ) {
-      /* shouldn't be NULL since we just imported it successfully */
-      Asc_Panic(2, "CheckEnvironmentVars",
-                "Asc_GetEnv(%s) returned NULL value.", BITMAP_ENVIRONVAR);
-    }
-    /*  Make sure the Tcl side can also see this variable */
-    Tcl_SetVar2(interp, "env", BITMAP_ENVIRONVAR, tmpenv, TCL_GLOBAL_ONLY);
-    ascfree(tmpenv);
-  } else {
-    Tcl_DStringAppend(&buffer2, Tcl_DStringValue(&ascenddist), -1);
-    Tcl_DStringAppend(&buffer2, "/TK/bitmaps", -1);
-    if(NULL != (Tcl_TranslateFileName(interp, Tcl_DStringValue(&buffer2),
-                                      &buffer1))) {
-      if(Asc_SetPathList(BITMAP_ENVIRONVAR, Tcl_DStringValue(&buffer1)) != 0) {
-        Asc_Panic(2, "Asc_EnvironmentInit",
-                  "Not enough memory to initialize the environment");
-      }
-    }
-    Tcl_DStringFree(&buffer2);
-    /*  Make sure the Tcl side can also see this variable */
-    Tcl_SetVar2(interp, "env", BITMAP_ENVIRONVAR,
-                Tcl_DStringValue(&buffer1), TCL_GLOBAL_ONLY);
-    Tcl_DStringFree(&buffer1);
-  }
+	/*
+	Asc_ImportPathList(ASC_ENV_DIST);
+	Asc_ImportPathList(ASC_ENV_TK);
+	Asc_ImportPathList(ASC_ENV_BITMAPS);
+	Asc_ImportPathList(ASC_ENV_LIBRARY);
+	*/
 
-  /*  Cleanup  */
-  Tcl_DStringFree(&ascenddist);
+    CONSOLE_DEBUG("IMPORTING VARS");
 
-  return TCL_OK;
+	distdir = getenv(ASC_ENV_DIST);
+	tkdir = getenv(ASC_ENV_TK);
+	bitmapsdir = getenv(ASC_ENV_BITMAPS);
+	librarydir = getenv(ASC_ENV_LIBRARY);
+
+	int guessedtk=0;
+
+	/* Create an ASCENDDIST value if it's missing */
+
+	if(distdir == NULL){
+		CONSOLE_DEBUG("NO " ASC_ENV_DIST " VAR DEFINED");
+
+# ifdef ASC_RELATIVE_PATHS
+
+		// read the executable's name/relative path.
+        fp = ospath_new(progname);
+
+        ospath_strcpy(fp,s1,PATH_MAX);
+        CONSOLE_DEBUG("PROGNAME = %s",s1);
+
+		// get the directory name from the exe path
+        CONSOLE_DEBUG("Calculating dir...");
+        fp1 = ospath_getdir(fp);
+        CONSOLE_DEBUG("Done calculating dir...");
+        ospath_free(fp);
+
+        ospath_strcpy(fp1,s1,PATH_MAX);
+        CONSOLE_DEBUG("DIR = %s",s1);
+
+		// append the contents of ASC_DISTDIR to this path
+        fp = ospath_new_noclean(ASC_DISTDIR);
+		distfp = ospath_concat(fp1,fp);
+		ospath_cleanup(distfp);
+
+        ospath_strcpy(fp1,s1,PATH_MAX);
+        CONSOLE_DEBUG("DIST = %s",s1);
+
+# else
+		distfp = ospath_new(ASC_DATADIR);
+		fp = ospath_new("ascend");
+
+		ospath_append(distfp,fp);
+		ospath_free(fp);
+# endif
+		distdir = ospath_str(distfp);
+		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"GUESSING %s = %s\n",ASC_ENV_DIST,distdir);
+		OSPATH_PUTENV(ASC_ENV_DIST,distfp);
+	}
+
+	if(tkdir == NULL){
+		CONSOLE_DEBUG("NO " ASC_ENV_TK " VAR DEFINED");
+
+		guessedtk=1;
+		/* Create a path $ASCENDDIST/tcltk */
+		strcpy(envcmd,"$ASCENDDIST/");
+		strcat(envcmd,ASC_TK_SUBDIR_NAME);
+		CONSOLE_DEBUG("TK RAW = %s",envcmd);
+		tkfp = ospath_new_expand_env(envcmd, &GETENV);
+		tkdir = ospath_str(tkfp);
+
+		ospath_strcpy(tkfp,envcmd,MAX_ENV_VAR_LENGTH);
+		CONSOLE_DEBUG("TK = %s",envcmd);
+
+		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
+	}
+
+	if(bitmapsdir == NULL){
+	    CONSOLE_DEBUG("NO  " ASC_ENV_BITMAPS " VAR DEFINED");
+		/* Create a path $ASCENDTK/bitmaps */
+		bitmapsfp = ospath_new_expand_env("$ASCENDTK/bitmaps", &GETENV);
+		OSPATH_PUTENV(ASC_ENV_BITMAPS,bitmapsfp);
+	}
+
+	/**
+		@TODO FIXME Note, at present this default library path only caters for a
+		** SINGLE PATH COMPONENT **
+
+		@TODO Also, what about ASCEND_DEFAULTLIBRARY ?
+	*/
+	if(librarydir == NULL){
+	    CONSOLE_DEBUG("NO  " ASC_ENV_LIBRARY " VAR DEFINED");
+		libraryfp = ospath_new_expand_env("$ASCENDDIST/models", &GETENV);
+		ospath_free(fp);
+		OSPATH_PUTENV(ASC_ENV_LIBRARY,libraryfp);
+	}
+
+
+    CONSOLE_DEBUG("CHECKING FOR AscendRC FILE");
+
+	fp1 = ospath_new("AscendRC");
+	fp = ospath_concat(tkfp,fp1);
+	ospath_free(fp1);
+	FILE *f = ospath_fopen(fp,"r");
+	if(f==NULL){
+		if(guessedtk){
+			Asc_Panic(2, "AscCheckEnvironVars",
+				"Cannot located AscendRC file in expected (guessed) location:\n%s\n"
+				"Please set the %s environment variable to the correct location (typically\n"
+				"it would be c:\\Program Files\\ASCEND\\TK or /usr/share/ascend/tcltk/TK. You\n"
+				"should do this, then start ASCEND again."
+					,tkdir,ASC_ENV_TK
+			);
+		}else{
+			Asc_Panic(2, "AscCheckEnvironVars",
+				"Cannot located AscendRC file in the specified location:\n%s\n"
+				"Please check your value for the %s environment variable.\n"
+					,tkdir,ASC_ENV_TK
+			);
+		}
+		/* can't get here, hopefully */
+	}
+	fclose(f);
+	/* reuse 'envcmd' to get the string file location for AscendRC */
+	ospath_strcpy(fp,envcmd,MAX_ENV_VAR_LENGTH);
+	ospath_free(fp);
+
+	/* export the value to Tcl/Tk */
+    ASC_SEND_TO_TCL(tcl_rcFileName, envcmd);
+
+    /* send all the environment variables to Tcl/Tk as well */
+    ASC_SEND_TO_TCL2(env,ASC_ENV_DIST,distdir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_LIBRARY,librarydir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_BITMAPS,bitmapsdir);
+    ASC_SEND_TO_TCL2(env,ASC_ENV_TK,tkdir);
 }
+
 
 
 /*

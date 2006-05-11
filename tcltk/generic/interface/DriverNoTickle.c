@@ -45,6 +45,7 @@
 # undef WIN32_LEAN_AND_MEAN
 #endif /* __WIN32__ */
 
+#include <utilities/config.h>
 #include <utilities/ascMalloc.h> /* for ascshutdown */
 #include <utilities/ascPanic.h>  /* for Asc_Panic */
 #include <utilities/ascEnvVar.h>
@@ -66,18 +67,6 @@
 #ifndef lint
 static CONST char DriverID[] = "$Id: DriverNoTickle.c,v 1.1 2004/07/13 07:42:30 ballan Exp $";
 #endif
-
-
-/*
- *  The following are the environment variables ASCEND requires.
- *  If the user does not have the DIST_ENVIRONVAR set in his or her
- *  environment, a default value is set based on the directory where the
- *  ascend binary lives.  The other enviornment variables will be set
- *  to default values keyed off of DIST_ENVIRONVAR.  See the function
- *  CheckEnvironmentVars later in this file for the details.
- */
-#define DIST_ENVIRONVAR   "ASCENDDIST"
-#define LIBR_ENVIRONVAR   "ASCENDLIBRARY"
 
 /*
  *  EXPORTED VARIABLES

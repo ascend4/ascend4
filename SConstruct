@@ -750,29 +750,30 @@ conf.env['HAVE_LEX']=True
 
 # Tcl/Tk
 
-if conf.CheckTcl():
-	if with_tcltk and conf.CheckTclVersion():
-		if conf.CheckTk():
-			if with_tcltk and conf.CheckTkVersion():
-				if env['STATIC_TCLTK']:
-					if conf.CheckTkTable():
-						pass
-					else:
-						without_tcltk_reason = "TkTable not found"
-						with_tcltk = False
+if with_tcltk:
+	if conf.CheckTcl():
+		if conf.CheckTclVersion():
+			if conf.CheckTk():
+				if with_tcltk and conf.CheckTkVersion():
+					if env['STATIC_TCLTK']:
+						if conf.CheckTkTable():
+							pass
+						else:
+							without_tcltk_reason = "TkTable not found"
+							with_tcltk = False
+				else:
+					without_tcltk_reason = "Require Tk version <= 8.4. See 'scons -h'"
+					with_tcltk = False
 			else:
-				without_tcltk_reason = "Require Tk version <= 8.4. See 'scons -h'"
+				without_tcltk_reason = "Tk not found."
 				with_tcltk = False
 		else:
-			without_tcltk_reason = "Tk not found."
+			without_tcltk_reason = "Require Tcl <= 8.4 Tcl."
 			with_tcltk = False
-	else:
-		without_tcltk_reason = "Require Tcl <= 8.4 Tcl."
-		with_tcltk = False
 
-else:
-	without_tcltk_reason = "Tcl not found."
-	with_tcltk = False
+	else:
+		without_tcltk_reason = "Tcl not found."
+		with_tcltk = False
 
 if env['STATIC_TCLTK']:
 	conf.CheckX11()
@@ -877,6 +878,7 @@ subst_dict = {
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
 	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
 	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
+	, '@ASC_TK_SUBDIR_NAME@' : 'tcltk'
 }
 
 if env['WITH_LOCAL_HELP']:

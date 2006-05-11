@@ -487,7 +487,7 @@ char **Asc_GetPathList(char *envvar, int *argc)
 }
 
 
-char *Asc_GetEnv(char *envvar)
+char *Asc_GetEnv(const char *envvar)
 {
   struct asc_env_t *ev;
   char *result, *val, *tmppos;

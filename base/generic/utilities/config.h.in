@@ -6,18 +6,32 @@
 #define ASC_CONFIG_H
 
 #define ASC_DEFAULTPATH "@DEFAULT_ASCENDLIBRARY@"
+#define ASC_DATADIR "@INSTALL_DATA@"
 
 /*
- *  The following are the environment variables ASCEND requires.
- *  If the user does not have the DIST_ENVIRONVAR set in his or her
- *  environment, a default value is set based on the directory where the
- *  ascend binary lives.  The other environment variables will be set
- *  to default values keyed off of DIST_ENVIRONVAR.  See the function
- *  CheckEnvironmentVars later in this file for the details.
- */
-#define DIST_ENVIRONVAR   "ASCENDDIST"
-#define ASCTK_ENVIRONVAR  "ASCENDTK"
-#define BITMAP_ENVIRONVAR "ASCENDBITMAPS"
-#define LIBR_ENVIRONVAR   "ASCENDLIBRARY"
+	This path will be appended to the location of the current executable
+	in order to create the executable path in cases where ASC_RELATIVE_PATHS
+	is set.
+*/
+#define ASC_DISTDIR "../../.."
 
+#define ASC_RELATIVE_PATHS
+
+/*
+	Ben, you'll just need to add ASC_TK_SUBDIR_NAME="TK" to your autoconf DEFS
+*/
+#define ASC_TK_SUBDIR_NAME "@ASC_TK_SUBDIR_NAME@"
+
+/*
+	The following are the environment variables ASCEND requires.
+	If the user does not have the ASC_ENV_DIST set in his or her
+	environment, a default value is set based on the directory where the
+	ascend binary lives.  The other environment variables will be set
+	to default values keyed off of ASC_ENV_DIST.  See the function
+	CheckEnvironmentVars later in this file for the details.
+ */
+#define ASC_ENV_DIST    "ASCENDDIST"
+#define ASC_ENV_TK      "ASCENDTK"
+#define ASC_ENV_BITMAPS "ASCENDBITMAPS"
+#define ASC_ENV_LIBRARY "ASCENDLIBRARY"
 #endif
