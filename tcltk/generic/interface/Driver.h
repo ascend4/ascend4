@@ -44,7 +44,7 @@ extern Tcl_Interp *g_interp;
  *  so that our signal/floating-porint traps can access it.
  */
 
-ASC_DLLSPEC(int) AscDriver(int argc, CONST char *argv[]);
+ASC_DLLSPEC(int) AscDriver(int argc, CONST char **argv);
 /**<
 	Entry point from main.c
 */

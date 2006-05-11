@@ -18,7 +18,7 @@
 */
 #include <utilities/ascConfig.h>
 
-ASC_IMPORT(int) AscDriver(int, CONST char * argv[]);
+ASC_IMPORT(int) AscDriver(int, CONST char **argv);
 
 #ifdef __WIN32__
 static void setargv(int*, char ***);
