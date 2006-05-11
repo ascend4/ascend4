@@ -878,7 +878,8 @@ subst_dict = {
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
 	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
 	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
-	, '@ASC_TK_SUBDIR_NAME@' : 'tcltk'
+	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
+	, '@ASC_DISTDIR_REL_BIN@' : '../share/ascend'
 }
 
 if env['WITH_LOCAL_HELP']:

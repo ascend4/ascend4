@@ -9,18 +9,27 @@
 #define ASC_DATADIR "@INSTALL_DATA@"
 
 /*
-	This path will be appended to the location of the current executable
-	in order to create the executable path in cases where ASC_RELATIVE_PATHS
-	is set.
+	This is the location of the 'dist dir' relative to the location of the 
+	running executable. When ASC_RELATIVE_PATHS is set, this will be used to
+	guess the location for ASCEND's data files. A good value is
+
+	..
+
+	but in /usr or /usr/local installations, a better value is
+
+	../share/ascend
 */
-#define ASC_DISTDIR "../share/ascend"
+#define ASC_DISTDIR_REL_BIN "@ASC_DISTDIR_REL_BIN@"
 
 #define ASC_RELATIVE_PATHS
 
 /*
-	Ben, you'll just need to add ASC_TK_SUBDIR_NAME="TK" to your autoconf DEFS
+	This is the default location of the tcl/tk scripts. $AAAAA environment
+	variables will be expanded at runtime, so a good value for example is
+	
+	$ASCENDDIST/TK
 */
-#define ASC_TK_SUBDIR_NAME "@ASC_TK_SUBDIR_NAME@"
+#define ASC_ENV_TK_DEFAULT "@ASC_ENV_TK_DEFAULT@"
 
 /*
 	The following are the environment variables ASCEND requires.

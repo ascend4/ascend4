@@ -128,7 +128,7 @@ int CmpEV(struct asc_env_t *ev1, struct asc_env_t *ev2)
  * returns the envvar with the name specified.
  */
 static
-struct asc_env_t *FindEnvVar(char *name)
+struct asc_env_t *FindEnvVar(const char *name)
 {
   unsigned long pos;
   struct asc_env_t dummy;
@@ -391,7 +391,7 @@ int Asc_ImportPathList(CONST char *envvar)
     return 1;
   }
   rhs = getenv(envvar);
-  if (( rhs == NULL ) || ( strlen(rhs) == '\0' )) {
+  if (( rhs == NULL ) || ( strlen(rhs) == 0 )) {
     return 1;
   }
   return Asc_SetPathList(envvar, rhs);
