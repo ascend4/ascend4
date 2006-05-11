@@ -159,9 +159,15 @@ char * env_subst_level(const char *path,GetEnvFn *getenvptr, int level){
 						*j=*q;
 					}
 
-					for(q=i;q!='\0'; ++q, ++j){
+					X(p);
+					X(i);
+					C(*j);
+
+					for(q=i;*q!='\0'; ++q, ++j){
 						*j=*q;
+						C(*q);
 					}
+					*j='\0';
 
 				}else{
 					MC("1","COPY FROM DUPLICATE");
