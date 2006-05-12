@@ -2,4 +2,4 @@ Import('env')
 
 import glob
 
-env['TESTSRCS_UTILITIES'] = glob.glob("*.c")
+env['TESTSRCS_UTILITIES'] = [env.File(i) for i in glob.glob("*.c")]

@@ -92,7 +92,7 @@ extern boolean check_sparse(const mtx_sparse_t * const sp,
  **  @return 1 if given matrix is valid, 0 otherwise.
  **/
 
-extern mtx_coord_t *mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
+ASC_DLLSPEC(mtx_coord_t *) mtx_coord(mtx_coord_t *coordp, int32 row, int32 col);
 /**<
  ***  Places the values of row and col into coordp and returns
  ***  the coordp pointer again.
@@ -147,7 +147,7 @@ extern void mtx_zero_ptr(void **data, int len);
  ***  Zeros a char vector of specified length. Ignores NULL input vectors.
  **/
 
-extern mtx_matrix_t mtx_create(void);
+ASC_DLLSPEC(mtx_matrix_t) mtx_create(void);
 /**<
  ***  <!--  matrix = mtx_create()                                      -->
  ***  <!--  mtx_matrix_t matrix;                                       -->
@@ -195,7 +195,7 @@ extern void mtx_debug_redirect_freeze(void);
  ***  redirecting errors back to stderr.
  **/
 
-extern void mtx_destroy(mtx_matrix_t matrix);
+ASC_DLLSPEC(void) mtx_destroy(mtx_matrix_t matrix);
 /**<
  ***  <!--  mtx_destroy(matrix);                                       -->
  ***  <!--  mtx_matrix_t matrix;                                       -->
@@ -361,7 +361,7 @@ ASC_DLLSPEC(int32 ) mtx_capacity(mtx_matrix_t matrix);
  -$-  capacity of a corrupt matrix is -1;
  **/
 
-extern void mtx_set_order(mtx_matrix_t matrix, int32 order);
+ASC_DLLSPEC(void) mtx_set_order(mtx_matrix_t matrix, int32 order);
 /**< 
  ***  <!--  mtx_set_order(matrix,order)                                -->
  ***  <!--  mtx_matrix_t matrix;                                       -->
@@ -448,7 +448,7 @@ extern void mtx_reset_perm(mtx_matrix_t matrix);
  ***  @see mtx_clear() for more about matrix clearing functions.
  **/
 
-extern void mtx_clear(mtx_matrix_t matrix);
+ASC_DLLSPEC(void) mtx_clear(mtx_matrix_t matrix);
 /**<
  ***  Clears everything in the matrix.
  -$-  Does nothing to a bad matrix if MTX_DEBUG is defined.<br><br>
@@ -556,7 +556,7 @@ extern void mtx_set_value(mtx_matrix_t matrix,
  *** @see mtx_fill_value()
  **/
 
-extern void mtx_fill_value(mtx_matrix_t matrix,
+ASC_DLLSPEC(void) mtx_fill_value(mtx_matrix_t matrix,
                            mtx_coord_t *coord, real64 value);
 /**<
  ***  Sets the value of the given element in the matrix.

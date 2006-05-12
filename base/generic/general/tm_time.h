@@ -143,7 +143,8 @@ extern void aftime(double *time);
 /**< Short name for tm_cpu_time_ftn() to satisfy FORTRAN's 6 char restriction. */
 extern void TM_CPU_TIME_FTN(double *time);
 /**< Variant of tm_cpu_time_ftn_(). */
-extern void AFTIME(double *time);
+
+ASC_DLLSPEC(void) AFTIME(double *time);
 /**< Short name for TM_CPU_TIME_FTN() to satisfy FORTRAN's 6 char restriction. */
 
 #endif  /* ASC_TM_TIME_H */

@@ -157,7 +157,7 @@ extern void mem_move(POINTER from, POINTER too, size_t nbytes);
  *  @see mem_move_disjoint()
  */
 
-extern void mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
+ASC_DLLSPEC(void) mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
 /**<
  *  Implementation function for mem_copy_cast().  Do not call this
  *  function directly - use mem_copy_cast() instead.
@@ -175,7 +175,7 @@ extern void mem_move_disjoint(POINTER from, POINTER too, size_t nbytes);
  *  @see mem_repl_byte()
  */
 
-extern void mem_repl_byte(POINTER too, unsigned byte, size_t nbytes);
+ASC_DLLSPEC(void) mem_repl_byte(POINTER too, unsigned byte, size_t nbytes);
 /**<
  *  Implementation function for mem_repl_byte_cast().  Do not call this
  *  function directly - use mem_repl_byte_cast() instead.
@@ -213,7 +213,7 @@ extern void mem_zero_byte(POINTER too, unsigned byte, size_t nbytes);
  *  @see mem_repl_word()
  */
 
-extern void mem_repl_word(POINTER too, unsigned word, size_t nwords);
+ASC_DLLSPEC(void) mem_repl_word(POINTER too, unsigned word, size_t nwords);
 /**<
  *  Implementation function for mem_repl_word_cast().  Do not call this
  *  function directly - use mem_repl_word_cast() instead.                    
@@ -223,16 +223,16 @@ extern void mem_repl_word(POINTER too, unsigned word, size_t nwords);
 #if 0
 extern int mem_get_byte(long from);               /**< Returns the byte located at from. */
 #endif
-extern unsigned char mem_get_byte(long from);     /**< Returns the byte located at from. */
-extern int mem_get_int(long from);                /**< Returns the int located at from. */
-extern long mem_get_long(long from);              /**< Returns the long located at from. */
-extern double mem_get_float(long from);           /**< Returns the float located at from. */
-extern double mem_get_double(long from);          /**< Returns the double located at from. */
-extern void mem_set_byte(long from, int b);       /**< Sets the byte located at from. */
-extern void mem_set_int(long from, int i);        /**< Sets the int located at from. */
-extern void mem_set_long(long from, long l);      /**< Sets the long located at from. */
-extern void mem_set_float(long from, double f);   /**< Sets the float located at from. */
-extern void mem_set_double(long from, double d);  /**< Sets the double located at from. */
+ASC_DLLSPEC(unsigned) char mem_get_byte(long from);     /**< Returns the byte located at from. */
+ASC_DLLSPEC(int) mem_get_int(long from);                /**< Returns the int located at from. */
+ASC_DLLSPEC(long) mem_get_long(long from);              /**< Returns the long located at from. */
+ASC_DLLSPEC(double) mem_get_float(long from);           /**< Returns the float located at from. */
+ASC_DLLSPEC(double) mem_get_double(long from);          /**< Returns the double located at from. */
+ASC_DLLSPEC(void) mem_set_byte(long from, int b);       /**< Sets the byte located at from. */
+ASC_DLLSPEC(void) mem_set_int(long from, int i);        /**< Sets the int located at from. */
+ASC_DLLSPEC(void) mem_set_long(long from, long l);      /**< Sets the long located at from. */
+ASC_DLLSPEC(void) mem_set_float(long from, double f);   /**< Sets the float located at from. */
+ASC_DLLSPEC(void) mem_set_double(long from, double d);  /**< Sets the double located at from. */
 
 #define	mem_get_unsigned(from)	((unsigned)mem_get_int(from))
 /**< Returns the unsigned located at from. */
@@ -299,7 +299,7 @@ struct mem_statistics {
   int str_wid;        /**< elements/pointer in pool. */
 };
 
-extern void mem_get_stats(struct mem_statistics *m_stats, mem_store_t ms);
+ASC_DLLSPEC(void) mem_get_stats(struct mem_statistics *m_stats, mem_store_t ms);
 /**<
  *  Get statistics about a memory store.
  *  Stuffs the user's interface structure, m_stats, with info
