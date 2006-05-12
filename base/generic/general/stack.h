@@ -55,7 +55,7 @@ struct gs_stack_t {
   unsigned long capacity; /**< Capacity of the stack. */
 };
 
-extern struct gs_stack_t *gs_stack_create(unsigned long capacity);
+ASC_DLLSPEC(struct gs_stack_t *) gs_stack_create(unsigned long capacity);
 /**<
  *  Creates a new empty stack having the specified initial capacity.
  *  If the number of stack items later exceeds this size, the
@@ -71,7 +71,7 @@ extern struct gs_stack_t *gs_stack_create(unsigned long capacity);
  *  @return Returns a pointer to the new empty gs_stack_t.
  */
 
-extern void gs_stack_clear(struct gs_stack_t *stack);
+ASC_DLLSPEC(void ) gs_stack_clear(struct gs_stack_t *stack);
 /**<
  *  Resets the stack to a *clean* state as if it had just been created.
  *  The stack will retain whatever capacity it had.  The items in the 
@@ -81,7 +81,7 @@ extern void gs_stack_clear(struct gs_stack_t *stack);
  *  @param stack The stack to clear (non-NULL).
  */
 
-extern void gs_stack_destroy(struct gs_stack_t *stack, int dispose);
+ASC_DLLSPEC(void ) gs_stack_destroy(struct gs_stack_t *stack, int dispose);
 /**<
  *  Destroys a stack with optional deallocation of the stack items.
  *  The specified stack will be destroyed (its memory is returned to 
@@ -98,7 +98,7 @@ extern void gs_stack_destroy(struct gs_stack_t *stack, int dispose);
  *                 0 to have the data preserved.
  */
 
-extern void gs_stack_push(struct gs_stack_t *stack, VOIDPTR ptr);
+ASC_DLLSPEC(void ) gs_stack_push(struct gs_stack_t *stack, VOIDPTR ptr);
 /**<
  *  Pushes the specified ptr onto the stack.  The stack capacity will
  *  be expanded if necessary. One can push any pointer (including NULL)
@@ -117,7 +117,7 @@ extern void gs_stack_push(struct gs_stack_t *stack, VOIDPTR ptr);
  *  @param ptr   Pointer to push onto stack.
  */
 
-extern VOIDPTR gs_stack_pop(struct gs_stack_t *stack);
+ASC_DLLSPEC(VOIDPTR ) gs_stack_pop(struct gs_stack_t *stack);
 /**<
  *  Pops and returns the top most item from the stack. The stack
  *  size will be appropriately accounted for.  The return value is a
@@ -140,7 +140,7 @@ extern VOIDPTR gs_stack_pop(struct gs_stack_t *stack);
  *  @return Returns the top-most data pointer as a (void *).
  */
 
-extern unsigned long gs_stack_size(CONST struct gs_stack_t *stack);
+ASC_DLLSPEC(unsigned long ) gs_stack_size(CONST struct gs_stack_t *stack);
 /**<
  *  Returns the current size of the stack.
  *  Zero is a valid size, meaning that the stack is empty.  The
@@ -150,7 +150,7 @@ extern unsigned long gs_stack_size(CONST struct gs_stack_t *stack);
  *  @return Returns the number of data items on the stack.
  */
 
-extern int gs_stack_empty(CONST struct gs_stack_t *stack);
+ASC_DLLSPEC(int ) gs_stack_empty(CONST struct gs_stack_t *stack);
 /**<
  *  Indicates whether the stack contains any data items.
  *  Returns TRUE (i.e. a nonzero), if the stack is empty,
@@ -161,7 +161,7 @@ extern int gs_stack_empty(CONST struct gs_stack_t *stack);
  *  @return Returns non-zero if the stack is empty, 0 otherwise.
  */
 
-extern void gs_stack_apply(struct gs_stack_t *stack, void (*func) (VOIDPTR));
+ASC_DLLSPEC(void ) gs_stack_apply(struct gs_stack_t *stack, void (*func) (VOIDPTR));
 /**<
  *  Executes the function func on all the members of the stack.
  *  It will always execute the function on the items from the bottom

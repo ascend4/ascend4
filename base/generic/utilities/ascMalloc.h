@@ -114,7 +114,7 @@ extern char *ascstrdupf_dbg(CONST char *str);
  *  MALLOC_DEBUG and use ascstrdup() instead.
  */
 
-extern char *asc_memcpy(char *dest, char *src, size_t n);
+ASC_DLLSPEC(char *) asc_memcpy(char *dest, char *src, size_t n);
 /**<
  *  Copies n bytes from memory address src to dest.
  *  This version of memcpy handles overlapping memory ranges

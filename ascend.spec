@@ -1,6 +1,6 @@
 Name:		ascend
 Summary:	ASCEND modelling environment - shared library and model files.
-Version:	0.9.5.90
+Version:	0.9.5.91
 
 # Use release "0" so that distro-released versions will override ours.
 Release:	0.jdpipe
@@ -41,7 +41,7 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 #%package -n ascend-python
-#Version:    0.9.5.90
+#Version:    0.9.5.91
 #Summary:    PyGTK user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -51,7 +51,7 @@ fields from Architecture to (computational) Zoology.
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
 #%package -n ascend-tcltk
-#Version:    0.9.5.90
+#Version:    0.9.5.91
 #Summary:    Tcl/Tk user interface for ASCEND
 #Group:		Applications/Engineering
 #

@@ -73,7 +73,7 @@ ASC_DLLSPEC(void ) Asc_Panic(CONST int status, CONST char *function,
 	testing purposes, and should be used with caution.	
 */
 
-extern void Asc_PanicSetOutfile(CONST char *filename);
+ASC_DLLSPEC(void ) Asc_PanicSetOutfile(CONST char *filename);
 /**< Sets a file name for reporting of Asc_Panic() messages.
 
 	@param filename Pointer to the name of the file to print messages to.
@@ -97,7 +97,7 @@ typedef int (*PanicCallbackFunc)(int);
 	error conditions, and current calls assume no return.
 */
 
-extern PanicCallbackFunc Asc_PanicSetCallback(PanicCallbackFunc func);
+ASC_DLLSPEC(PanicCallbackFunc ) Asc_PanicSetCallback(PanicCallbackFunc func);
 /**< Registers a callback function to be called by Asc_Panic().
 
 	@param func Pointer to the new function to call during an Asc_Panic().
@@ -110,7 +110,7 @@ extern PanicCallbackFunc Asc_PanicSetCallback(PanicCallbackFunc func);
 	@see PanicCallbackFunc for the form this callback function takes.
 */
 
-extern void Asc_PanicDisplayMessageBox(int is_displayed);
+ASC_DLLSPEC(void ) Asc_PanicDisplayMessageBox(int is_displayed);
 /**<
 	Controls whether a MessageBox is displayed by Asc_Panic() on Windows.
 

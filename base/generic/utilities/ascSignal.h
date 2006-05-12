@@ -127,8 +127,8 @@ typedef void (*SigHandler)(int);
 /**< The maximum number of traps that can be nested. */
 
 ASC_DLLSPEC(jmp_buf ) g_fpe_env;   /**< Standard signal jmp_buf - floating point error. */
-extern jmp_buf g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
-extern jmp_buf g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
+ASC_DLLSPEC(jmp_buf ) g_seg_env;   /**< Standard signal jmp_buf - segmentation fault. */
+ASC_DLLSPEC(jmp_buf ) g_int_env;   /**< Standard signal jmp_buf - interactive attention (<CTRL>C). */
 
 extern jmp_buf g_foreign_code_call_env;
 /**<
@@ -174,7 +174,7 @@ ASC_DLLSPEC(void ) Asc_SignalTrap(int sigval);
  *                an exception.
  */
 
-extern int Asc_SignalInit(void);
+ASC_DLLSPEC(int ) Asc_SignalInit(void);
 /**<
  *  Initializes the signal manager.
  *  This should be called before using any of the signal handling
@@ -188,7 +188,7 @@ extern int Asc_SignalInit(void);
  *          allocated, and 2 if an error occurred.
  */
 
-extern void Asc_SignalDestroy(void);
+ASC_DLLSPEC(void ) Asc_SignalDestroy(void);
 /**<
  *  Cleans up and destroys the stacks of signal handlers.
  *  It does not change the status of any registered signal handlers

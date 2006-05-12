@@ -928,7 +928,7 @@ ASC_DLLSPEC(void) slv_matrix_product(mtx_matrix_t mtx,
  *        does it go into mtx?
  */
 
-extern void slv_write_vector(FILE *fp, struct vector_data *vec);
+ASC_DLLSPEC(void ) slv_write_vector(FILE *fp, struct vector_data *vec);
 /**<
  *  Write vector information to a file stream.
  *  Prints general information about the vector followed by the

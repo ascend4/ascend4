@@ -45,8 +45,8 @@ opts.Add(
 
 opts.Add(BoolOption(
 	'GCOV'
-	'Whether to enable coverage testing in object code'
-	,False
+	, 'Whether to enable coverage testing in object code'
+	, False
 ))
 
 # Package linking option
@@ -123,7 +123,7 @@ opts.Add(
 
 # Build the test suite?
 opts.Add(BoolOption(
-	'WITH_CUNIT_TESTS'
+	'WITH_CUNIT'
 	,"Whether to build the CUnit tests. Default is off. If set to on,"
 		+" you must have CUnit installed somewhere that SCons can"
 		+" find it, or else use the CUNIT_* options to specify."
@@ -356,7 +356,7 @@ without_tcltk_reason = "disabled by options/config.py"
 with_python = env.get('WITH_PYTHON')
 without_python_reason = "disabled by options/config.py"
 
-with_cunit_tests = env.get('WITH_CUNIT_TESTS')
+with_cunit = env.get('WITH_CUNIT')
 without_cunit_reason = "not requested"
 
 #print "SOLVERS:",env['WITH_SOLVERS']
@@ -800,7 +800,7 @@ if not conf.CheckSwigVersion():
 
 # CUnit
 
-if with_cunit_tests:
+if with_cunit:
 	if not conf.CheckCUnit():
 		without_cunit_reason = 'CUnit not found'
 
@@ -1069,14 +1069,20 @@ libascend = env.SharedLibrary('ascend',srcs)
 #-------------
 # UNIT TESTS
 
-if with_cunit_tests:
+if with_cunit:
 	testdirs = ['general','solver','utilities']
+	testsrcs = []
 	for testdir in testdirs:
 		path = 'base/generic/'+testdir+'/test/'
 		env.SConscript([path+'SConscript'],'env')
+		testsrcs += [i.path for i in env['TESTSRCS_'+testdir.upper()]]
+
+	#print "TESTSRCS =",testsrcs
+		
 	env.SConscript(['test/SConscript'],'env')
 	env.SConscript(['base/generic/test/SConscript'],'env')
-	
+
+	env.Alias('test',[env.Dir('test'),env.Dir('base/generic/test')])
 	
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason

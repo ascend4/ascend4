@@ -75,7 +75,7 @@
  *                If less than 0, no formatting is performed.
  *  @return The total number of characters printed.
  */
-extern int print_long_string(FILE *fp, char *string, int width, int indent);
+ASC_DLLSPEC(int ) print_long_string(FILE *fp, char *string, int width, int indent);
 
 /**
  *  Writes a string to a file, splitting it at special delimiter
@@ -90,7 +90,7 @@ extern int print_long_string(FILE *fp, char *string, int width, int indent);
  *                If less than 0, no formatting is performed.
  *  @return The total number of characters printed.
  */
-extern int print_long_string_EOL(FILE *fp, char *string, int indent);
+ASC_DLLSPEC(int ) print_long_string_EOL(FILE *fp, char *string, int indent);
 
 #endif /* __pretty_h_seen__ */
 

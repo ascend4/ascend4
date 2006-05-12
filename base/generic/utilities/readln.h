@@ -48,7 +48,7 @@
 #ifndef _READLN_H
 #define _READLN_H
 
-extern int readln(char *str, int max);
+ASC_DLLSPEC(int ) readln(char *str, int max);
 /**<
  *  Reads a line from standard input to a target string having a
  *  specified capacity.  If the line read is too long, the remainder of 
@@ -62,7 +62,7 @@ extern int readln(char *str, int max);
  *          or -1 on error.
  */
 
-extern int freadln(char *str, int max, FILE *input);
+ASC_DLLSPEC(int ) freadln(char *str, int max, FILE *input);
 /**<
  *  Reads a line from a file stream to a target string having a
  *  specified capacity.  If the line read is too long, the remainder of
@@ -77,7 +77,7 @@ extern int freadln(char *str, int max, FILE *input);
  *          or -1 on error.
  */
 
-extern char *areadln(void);
+ASC_DLLSPEC(char *) areadln(void);
 /**<
  *  Reads a line from standard input and returns a newly-allocated
  *  string containing all that was read.  NULL is returned if EOF 
@@ -87,7 +87,7 @@ extern char *areadln(void);
  *  @return  A new string containing the input chars, of NULL on error.
  */
 
-extern char *afreadln(FILE *fp);
+ASC_DLLSPEC(char *) afreadln(FILE *fp);
 /**<
  *  Reads a line from a file stream and returns a newly-allocated
  *  string containing all that was read.  NULL is returned if EOF
@@ -108,7 +108,7 @@ ASC_DLLSPEC(long ) readlong(long number_default);
  *  @return The input long integer or number_default if none is found.
  */
 
-extern double readdouble(double value_default);
+ASC_DLLSPEC(double ) readdouble(double value_default);
 /**<
  *  Reads in a line from standard input and extracts a double from
  *  that line.  If none is found, then the default is returned.

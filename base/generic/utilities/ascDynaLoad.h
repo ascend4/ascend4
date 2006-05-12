@@ -64,7 +64,7 @@ ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
  *          loaded, 1 if it is not.
  */
 
-extern int Asc_DynamicUnLoad(CONST char *path);
+ASC_DLLSPEC(int ) Asc_DynamicUnLoad(CONST char *path);
 /**<
  *  Attempts to unload a dynamic library.
  *  This function tries to look up the previously-loaded library
@@ -91,7 +91,7 @@ extern int Asc_DynamicUnLoad(CONST char *path);
 #define Asc_DynamicSymbol(a,b) Asc_DynamicVariable((a),(b))
 /**< For backward compatibility to old name of Asc_DynamicVariable() */
 
-extern void *Asc_DynamicVariable(CONST char *libraryname,
+ASC_DLLSPEC(void *) Asc_DynamicVariable(CONST char *libraryname,
                                  CONST char *varname);
 /**<
  *  Returns a pointer to a variable exported from a dynamically-linked
@@ -120,7 +120,7 @@ extern void *Asc_DynamicVariable(CONST char *libraryname,
 typedef void (*DynamicF)(void);
 /**<  Function pointer type returned by Asc_DynamicFunction(). */
 
-extern DynamicF Asc_DynamicFunction(CONST char *libraryname,
+ASC_DLLSPEC(DynamicF ) Asc_DynamicFunction(CONST char *libraryname,
                                     CONST char *funcname);
 /**<
  *  Returns a pointer to a function exported from a dynamically-linked

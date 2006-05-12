@@ -52,7 +52,7 @@ ASC_DLLSPEC(FILE *) g_ascend_information;  /**< File for informational messages.
 ASC_DLLSPEC(void) Asc_RedirectCompilerDefault(void);
 /**< Set the default files/streams to receive ASCEND messages. */
 
-extern void Asc_RedirectCompilerStreams(FILE *errfile,
+ASC_DLLSPEC(void ) Asc_RedirectCompilerStreams(FILE *errfile,
                                         FILE *warnfile,
                                         FILE *infofile);
 /**< Set specific files/streams to receive ASCEND messages. */

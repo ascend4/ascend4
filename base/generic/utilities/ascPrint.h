@@ -60,7 +60,7 @@ struct Asc_PrintVTable {
 };
 
 
-extern int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
+ASC_DLLSPEC(int ) Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
 /**<
  *  Adds a vtable to the ASCEND output interceptor list.
  *  Each registered vtable defines print and flush functions that are
@@ -82,7 +82,7 @@ extern int Asc_PrintPushVTable(struct Asc_PrintVTable *vtable);
  *  @return Returns 1 if an error occurs, 0 otherwise.
  */
 
-extern struct Asc_PrintVTable *Asc_PrintRemoveVTable(CONST char *name);
+ASC_DLLSPEC(struct Asc_PrintVTable *) Asc_PrintRemoveVTable(CONST char *name);
 /**<
  *  Removes a vtable from the printing list and returns it.
  *  The first vtable found with the specified name is the one removed.
@@ -92,7 +92,7 @@ extern struct Asc_PrintVTable *Asc_PrintRemoveVTable(CONST char *name);
  *  @return Returns a pointer to the removed vtable if found, NULL otherwise.
  */
 
-extern int Asc_PrintHasVTable(CONST char *name);
+ASC_DLLSPEC(int ) Asc_PrintHasVTable(CONST char *name);
 /**<
  *  Queries whether a vtable is registered.
  *
@@ -101,7 +101,7 @@ extern int Asc_PrintHasVTable(CONST char *name);
  *          FALSE otherwise.
  */
 
-extern int Asc_Printf(CONST char *format, ...);
+ASC_DLLSPEC(int ) Asc_Printf(CONST char *format, ...);
 /**<
  *  Prints the specified variables to stdout using all registered print
  *  vtables.  Using the sprintf-style format string `format', this
@@ -145,7 +145,7 @@ extern int Asc_VFPrintf(FILE *fileptr, CONST char *format, va_list args);
 	Follows calling convention of vfprintf from <stdarg.h>, see K&R2, p 245.
 */
 
-extern int Asc_FFlush(FILE *fileptr);
+ASC_DLLSPEC(int ) Asc_FFlush(FILE *fileptr);
 /**<
  *  Flushes output to fileptr.
  *  This function loops over all registered print vtables, flushing
@@ -159,7 +159,7 @@ extern int Asc_FFlush(FILE *fileptr);
  *  @return Returns 0 for success, EOF otherwise.
  */
 
-extern int Asc_FPutc(int c, FILE *fileptr);
+ASC_DLLSPEC(int ) Asc_FPutc(int c, FILE *fileptr);
 /**<
  *  Prints c to the file stream pointed to by fileptr.
  *  If fileptr is 'stdout' or 'stderr', this function loops over
@@ -175,7 +175,7 @@ extern int Asc_FPutc(int c, FILE *fileptr);
  *  @return Returns non-zero for success, EOF otherwise.
  */
 
-extern int Asc_Putchar(int c);
+ASC_DLLSPEC(int ) Asc_Putchar(int c);
 /**<
  *  Prints c to stdout.
  *  This function loops over all registered print vtables.
