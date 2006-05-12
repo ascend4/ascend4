@@ -63,8 +63,11 @@
 /*
 	Whether to do use testing malloc. Required for some of the CUnit
 	tests to work fully.
+
+	SCons will replace 'ifdef MALLOC_DEBUG' with 'if 1' if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#ifdef MALLOC
+#ifdef MALLOC_DEBUG
 # define MALLOC_DEBUG
 #endif
 
