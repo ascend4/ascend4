@@ -52,8 +52,11 @@
 	If defined, colour will be used any time the the TERM environment
 	variable is set to 'xterm' or 'msys'. MSYS uses the 'rxvt' console,
 	which knows about xterm colour codes.
+
+	This sneaky approach should allow a safe fallback in the case where
+	you haven't substituted this conf-string.
 */
-#if @ASC_XTERM_COLORS@
+#if !("@ASC_NO_XTERM_COLORS@")
 # define ASC_XTERM_COLORS
 #endif
 
