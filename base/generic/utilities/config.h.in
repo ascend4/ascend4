@@ -56,9 +56,7 @@
 	This sneaky approach should allow a safe fallback in the case where
 	you haven't substituted this conf-string.
 */
-#if !("@ASC_NO_XTERM_COLORS@")
-# define ASC_XTERM_COLORS
-#endif
+#define ASC_XTERM_COLORS "@ASC_XTERM_COLORS@"
 
 /*
 	The following are the environment variables ASCEND requires.
