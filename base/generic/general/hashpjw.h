@@ -30,7 +30,7 @@ ASC_DLLSPEC(unsigned long ) hashpjw(CONST char *str, unsigned long size);
  *  @return Returns the hash value.
  */
 
-extern unsigned long hashpjw_int(int id, unsigned long size);
+ASC_DLLSPEC(unsigned long ) hashpjw_int(int id, unsigned long size);
 /**<
  *  Return a hash value base on id.  The value will be >= 0 and < size.
  *  The requested size must be greater than 0 (checked by assertion).

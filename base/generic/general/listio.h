@@ -48,7 +48,7 @@
  *  @param fp File stream to receive listing (stderr if fp == NULL).
  *  @param l  The gl_list_t to write to fp (non-NULL).
  */
-extern void gl_write_list(FILE *fp, struct gl_list_t *l);
+ASC_DLLSPEC(void ) gl_write_list(FILE *fp, struct gl_list_t *l);
 
 #endif  /* __listio_h_seen__ */
 

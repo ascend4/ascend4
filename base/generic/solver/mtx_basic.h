@@ -522,7 +522,7 @@ ASC_DLLSPEC(void) mtx_clear(mtx_matrix_t matrix);
  ***  mtx_clear(master or slave) passes up to the master.
  **/
 
-extern real64 mtx_value(mtx_matrix_t matrix, mtx_coord_t *coord);
+ASC_DLLSPEC(real64 ) mtx_value(mtx_matrix_t matrix, mtx_coord_t *coord);
 /**<
  ***
  ***  Use of mtx_value() should be avoided if at all possible

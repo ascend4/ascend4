@@ -61,7 +61,7 @@ typedef  void (*TableIteratorTwo)(void *,void *);
  * being passed to TableApply* functions.
  */
 
-extern struct Table *CreateTable(unsigned long hashsize);
+ASC_DLLSPEC(struct Table *) CreateTable(unsigned long hashsize);
 /**<
  *  Creates a new hash table with the specified hashsize.
  *  This ideally should be a prime number.  A good choice will give
@@ -78,7 +78,7 @@ extern struct Table *CreateTable(unsigned long hashsize);
  *  @todo Should general/table:CreateTable have lower limit on hashsize?
  */
 
-extern void DestroyTable(struct Table *table, int dispose);
+ASC_DLLSPEC(void ) DestroyTable(struct Table *table, int dispose);
 /**<
  *  Destroys the given table.  If dispose is set to TRUE (nonzero), 
  *  the data items stored in the table will be deallocated as well.  
@@ -91,7 +91,7 @@ extern void DestroyTable(struct Table *table, int dispose);
  *                 if 0 the data is destroyed as well.
  */
 
-extern void AddTableData(struct Table * table, void *data, CONST char *id);
+ASC_DLLSPEC(void ) AddTableData(struct Table * table, void *data, CONST char *id);
 /**<
  *  Stores *data* in the hash table using id as the lookup key. 
  *  Currently id must be a unique NULL-terminated string.  In the 
@@ -107,7 +107,7 @@ extern void AddTableData(struct Table * table, void *data, CONST char *id);
  *  @param id    NULL-terminated string to use for lookup key (non-NULL).
  */
 
-extern void *LookupTableData(struct Table *table, CONST char *id);
+ASC_DLLSPEC(void *) LookupTableData(struct Table *table, CONST char *id);
 /**<
  *  Retrieves the data stored in the table under the key *id*.
  *  It will return NULL if id is not found.  A pointer to the last item
@@ -121,7 +121,7 @@ extern void *LookupTableData(struct Table *table, CONST char *id);
  *  @return The data stored under lookup key id, or NULL if not found.
  */
 
-extern void *RemoveTableData(struct Table *table, char *id);
+ASC_DLLSPEC(void *) RemoveTableData(struct Table *table, char *id);
 /**<
  *  Removes the data stored in the table under the key *id*.
  *  It will return NULL if id is not found.  Otherwise, it will
@@ -135,7 +135,7 @@ extern void *RemoveTableData(struct Table *table, char *id);
  *  @return The data stored under lookup key id, or NULL if not found.
  */
 
-extern void TableApplyOne(struct Table *table,
+ASC_DLLSPEC(void ) TableApplyOne(struct Table *table,
                           TableIteratorOne applyfunc,
                           char *id);
 /**<
@@ -150,7 +150,7 @@ extern void TableApplyOne(struct Table *table,
  *  @param id        NULL-terminated string to use for lookup key (non-NULL).
  */
 
-extern void TableApplyAll(struct Table *table, TableIteratorOne applyfunc);
+ASC_DLLSPEC(void ) TableApplyAll(struct Table *table, TableIteratorOne applyfunc);
 /**<
  *  Calls the specified function for each data item stored in the table.
  *  The order of operation dependends on internal table structure, so is
@@ -164,7 +164,7 @@ extern void TableApplyAll(struct Table *table, TableIteratorOne applyfunc);
  *  @param applyfunc Pointer to the function to apply (non-NULL).
  */
 
-extern void TableApplyAllTwo(struct Table *table,
+ASC_DLLSPEC(void ) TableApplyAllTwo(struct Table *table,
                              TableIteratorTwo applyfunc,
                              void *arg2);
 /**<
@@ -195,7 +195,7 @@ extern void PrintTable(FILE *file, struct Table *table);
  *  @param table Pointer to the hash table to query (non-NULL).
  */
 
-extern unsigned long TableSize(struct Table *table);
+ASC_DLLSPEC(unsigned long ) TableSize(struct Table *table);
 /**<
  *  Returns the current number of entries in the table.  The
  *  specified table may not be NULL (checked by assertion).
@@ -203,7 +203,7 @@ extern unsigned long TableSize(struct Table *table);
  *  @param table Pointer to the hash table to query (non-NULL).
  */
 
-extern unsigned long TableHashSize(struct Table *table);
+ASC_DLLSPEC(unsigned long ) TableHashSize(struct Table *table);
 /**<
  *  Returns the current hashsize of the table.  If internally we 
  *  change the hashing/collision algorithm, this may be useful 
@@ -214,7 +214,7 @@ extern unsigned long TableHashSize(struct Table *table);
  *  @param table Pointer to the hash table to query (non-NULL).
  */
 
-extern void *TableLastFind(struct Table *table);
+ASC_DLLSPEC(void *) TableLastFind(struct Table *table);
 /**<
  *  Returns the data item that was last added to or retrieved from the 
  *  table.  Could be useful for those, "do you exist?; now do something 

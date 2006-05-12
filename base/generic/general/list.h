@@ -142,7 +142,7 @@ ASC_DLLSPEC(void) gl_init(void);
  *  gl_report_pool().
  */
 
-extern void gl_init_pool(void);
+ASC_DLLSPEC(void ) gl_init_pool(void);
 /**<
  *  Sets up list overhead structure data management.
  *  This function should be called before anything can be built,
@@ -163,7 +163,7 @@ ASC_DLLSPEC(void) gl_destroy_pool(void);
  *  been called.
  */
 
-extern int gl_pool_initialized(void);
+ASC_DLLSPEC(int ) gl_pool_initialized(void);
 /**<
  *  Query whether the list pool has been initialized.
  *  Always returns TRUE if the list does not use pooling.
@@ -338,7 +338,7 @@ ASC_DLLSPEC(void ) gl_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
  *  @param ptr   Pointer to data to append to the list.
  */
 
-extern void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
+ASC_DLLSPEC(void ) gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
 /**<
  *  Appends ptr to the end of the list without checking for adequate
  *  capacity.  If the addition of ptr exceeds the list capacity, the
@@ -363,7 +363,7 @@ extern void gl_fast_append_ptr(struct gl_list_t *list, VOIDPTR ptr);
  *  @param ptr   Pointer to data to append to the list.
  */
 
-extern void gl_append_list(struct gl_list_t *extendlist,
+ASC_DLLSPEC(void ) gl_append_list(struct gl_list_t *extendlist,
                            struct gl_list_t *list);
 /**<
  *  Appends the pointers stored in list to the end of extendlist.
@@ -415,7 +415,7 @@ ASC_DLLSPEC(unsigned long) gl_lengthF(CONST struct gl_list_t *list);
  *  @param list  CONST struct gl_list_t*. the list to query (non-NULL).
  */
 
-extern unsigned long gl_safe_length(CONST struct gl_list_t *list);
+ASC_DLLSPEC(unsigned long ) gl_safe_length(CONST struct gl_list_t *list);
 /**<
  *  Returns the length of list.  This is the number of items it
  *  is currently holding.  Unlike gl_length() this function
@@ -427,7 +427,7 @@ extern unsigned long gl_safe_length(CONST struct gl_list_t *list);
  *  @return The number of items stored in list.
  */
 
-extern unsigned long gl_capacity(CONST struct gl_list_t *list);
+ASC_DLLSPEC(unsigned long ) gl_capacity(CONST struct gl_list_t *list);
 /**<
  *  Returns the *potential* capacity of the list at the current time.
  *  This is the number of items the list can store without having to
@@ -566,7 +566,7 @@ ASC_DLLSPEC(void) gl_iterate(struct gl_list_t *list, IterateFunc func);
  *  @param func The function to execute for each list item.
  */
 
-extern unsigned long gl_ptr_search(CONST struct gl_list_t *list,
+ASC_DLLSPEC(unsigned long ) gl_ptr_search(CONST struct gl_list_t *list,
                                    CONST VOIDPTR match,
                                    int increasing);
 /**<
@@ -626,7 +626,7 @@ ASC_DLLSPEC(unsigned long ) gl_search(CONST struct gl_list_t *list,
  *          0 if match not found.
  */
 
-extern unsigned long gl_search_reverse(CONST struct gl_list_t *list,
+ASC_DLLSPEC(unsigned long ) gl_search_reverse(CONST struct gl_list_t *list,
                                        CONST VOIDPTR match,
                                        CmpFunc func);
 /**<
@@ -644,7 +644,7 @@ extern unsigned long gl_search_reverse(CONST struct gl_list_t *list,
  *          0 if match not found.
  */
 
-extern int gl_empty(CONST struct gl_list_t *list);
+ASC_DLLSPEC(int ) gl_empty(CONST struct gl_list_t *list);
 /**<
  *  Query whether the list is empty.  An empty list has no items stored.
  *  The specified list may not be NULL (checked by assertion).
@@ -655,7 +655,7 @@ extern int gl_empty(CONST struct gl_list_t *list);
  *  @return TRUE if the list is empty, FALSE otherwise.
  */
 
-extern int gl_unique_list(CONST struct gl_list_t *list);
+ASC_DLLSPEC(int ) gl_unique_list(CONST struct gl_list_t *list);
 /**<
  *  Query whether the pointers stored in the list are all unique.
  *  The specified list may be NULL, in which case TRUE is returned.
@@ -690,7 +690,7 @@ ASC_DLLSPEC(void ) gl_delete(struct gl_list_t *list,
  *        reason to expect this lone function to be called with pos == 0?
  */
 
-extern void gl_reverse(struct gl_list_t *list);
+ASC_DLLSPEC(void ) gl_reverse(struct gl_list_t *list);
 /**<
  *  Reverses the ordering of the list.
  *  If the list given is marked as sorted, this function will
@@ -717,7 +717,7 @@ ASC_DLLSPEC(void) gl_reset(struct gl_list_t *list);
  *  @param list The list to reset (non-NULL).
  */
 
-extern struct gl_list_t *gl_copy(CONST struct gl_list_t *list);
+ASC_DLLSPEC(struct gl_list_t *) gl_copy(CONST struct gl_list_t *list);
 /**<
  *  Copies a list.  The copy of the list will have its own memory
  *  associated with it, but the items themselves are shared between the
@@ -735,7 +735,7 @@ extern struct gl_list_t *gl_copy(CONST struct gl_list_t *list);
  *  @return A shallow copy of the list.
  */
 
-extern struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
+ASC_DLLSPEC(struct gl_list_t *) gl_concat(CONST struct gl_list_t *list1,
                                    CONST struct gl_list_t *list2);
 /**<
  *  Concatenates two lists into a new list.  Neither of the original
@@ -751,7 +751,7 @@ extern struct gl_list_t *gl_concat(CONST struct gl_list_t *list1,
  *  @return A new list containing the items of list1 and list2 appended.
  */
 
-extern int gl_compare_ptrs(CONST struct gl_list_t *list1,
+ASC_DLLSPEC(int ) gl_compare_ptrs(CONST struct gl_list_t *list1,
                            CONST struct gl_list_t *list2);
 /**<
  *  Compares the data (ptrs or whatever) in two lists.  Returns a code
@@ -777,7 +777,7 @@ extern int gl_compare_ptrs(CONST struct gl_list_t *list1,
  *         on a NULL pointer?  Assertions used in rest of module.
  */
 
-extern void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE);
+ASC_DLLSPEC(void ) gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE);
 /**<
  *  Sets the sorted flag for the list based on TRUE_or_FALSE.
  *  Setting a list to sorted should be done only if you are sure
@@ -787,7 +787,7 @@ extern void gl_set_sorted(struct gl_list_t *list, int TRUE_or_FALSE);
  *  @param list The list to modify (non-NULL).
  */
 
-extern int gl_expandable(struct gl_list_t *list);
+ASC_DLLSPEC(int ) gl_expandable(struct gl_list_t *list);
 /**<
  *  Query whether the specified list is expandable.  The specified list
  *  may not be NULL (checked by assertion).
@@ -798,7 +798,7 @@ extern int gl_expandable(struct gl_list_t *list);
  *  @return Non-zero if the list is expandable and 0 otherwise.
  */
 
-extern void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE);
+ASC_DLLSPEC(void ) gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE);
 /**<
  *  Sets the expandable flag for the list based on TRUE_or_FALSE.
  *  All lists are expandable until this flag is explicitly cleared.
@@ -812,7 +812,7 @@ extern void gl_set_expandable(struct gl_list_t *list, int TRUE_or_FALSE);
  *  @param list The list to modify (non-NULL).
  */
 
-extern VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list,
+ASC_DLLSPEC(VOIDPTR *) gl_fetchaddr(CONST struct gl_list_t *list,
                              unsigned long pos);
 /**<
  *  Returns the address of the pointer stored at position pos.  This

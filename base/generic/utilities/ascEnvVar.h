@@ -53,7 +53,7 @@
 #define MAX_ENV_VAR_LENGTH 4096
 /**< Maximum length of an environment variable string. */
 
-extern int Asc_InitEnvironment(unsigned long anticipated);
+ASC_DLLSPEC(int ) Asc_InitEnvironment(unsigned long anticipated);
 /**<
  *  Creates an empty environment of size anticipated.
  *  There is a minimum environment size, so the actual size
