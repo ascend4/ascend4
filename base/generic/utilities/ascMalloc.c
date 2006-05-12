@@ -81,7 +81,7 @@ char *ascstrdupf(CONST char *s)
  *  Here's the debug version of ascstrdup -
  *  all memory calls should be to the local debug versions.
  */
-char *ascstrdupf_dbg(CONST char *s)
+ASC_DLLSPEC(char *) ascstrdupf_dbg(CONST char *s)
 {
 	char *result;
 
