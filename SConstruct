@@ -43,6 +43,12 @@ opts.Add(
 	,None
 )
 
+opts.Add(BoolOption(
+	'GCOV'
+	'Whether to enable coverage testing in object code'
+	,False
+))
+
 # Package linking option
 opts.Add(EnumOption(
 	'PACKAGE_LINKING'
@@ -1013,6 +1019,13 @@ if gcc_version4:
 
 if env['DEBUG']:
 	env.Append(CCFLAGS=['-g'])
+
+if env['GCOV']:
+	env.Append(
+		CPPFLAGS=['-g','-fprofile-arcs','-ftest-coverage']
+		, LIBS=['gcov']
+		, LINKFLAGS=['-fprofile-arcs','-ftest-coverage']
+	)
 
 #-------------
 # TCL/TK GUI
