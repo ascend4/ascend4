@@ -53,10 +53,20 @@
 	variable is set to 'xterm' or 'msys'. MSYS uses the 'rxvt' console,
 	which knows about xterm colour codes.
 
-	This sneaky approach should allow a safe fallback in the case where
-	you haven't substituted this conf-string.
+	SCons will replace 'ifdef ASC_XTERM_COLORS' with 'if 1' if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#define ASC_XTERM_COLORS "@ASC_XTERM_COLORS@"
+#ifdef ASC_XTERM_COLORS
+# define ASC_XTERM_COLORS
+#endif
+
+/*
+	Whether to do use testing malloc. Required for some of the CUnit
+	tests to work fully.
+*/
+#ifdef MALLOC
+# define MALLOC_DEBUG
+#endif
 
 /*
 	The following are the environment variables ASCEND requires.

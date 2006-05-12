@@ -285,6 +285,12 @@ opts.Add(BoolOption(
 	,False
 ))
 
+opts.Add(BoolOption(
+	'MALLOC_DEBUG'
+	,"Compile with debugging version of MALLOC. Required for full CUnit testing"
+	,False
+))
+
 opts.Add(
 	'INSTALL_ROOT'
 	,'For use by RPM only: location of %{buildroot} during rpmbuild'
@@ -898,10 +904,10 @@ if env.get('WITH_LOCAL_HELP'):
 	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
 
-if env.get('WITH_XTERM_COLORS'):
-	subst_dict['@ASC_XTERM_COLORS@']="1"
-else:
-	subst_dict['@ASC_XTERM_COLORS@']='0'
+# bool options...
+for k,v in {'WITH_XTERM_COLORS':'ASC_XTERM_COLORS', 'MALLOC_DEBUG':'MALLOC_DEBUG'}.iteritems():
+	if env.get(k):
+		subst_dict['ifdef '+v]="if 1"
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
