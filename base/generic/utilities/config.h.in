@@ -9,7 +9,7 @@
 #define ASC_DATADIR "@INSTALL_DATA@"
 
 /*
-	This is the location of the 'dist dir' relative to the location of the 
+	This is the location of the 'dist dir' relative to the location of the
 	running executable. When ASC_RELATIVE_PATHS is set, this will be used to
 	guess the location for ASCEND's data files. A good value is
 
@@ -21,15 +21,41 @@
 */
 #define ASC_DISTDIR_REL_BIN "@ASC_DISTDIR_REL_BIN@"
 
+
+/*
+	This variable determines whether you want an 'application folder' style
+	installation, or whether you want ASCEND's data files to be referenced
+	using absolute paths.
+
+	For a discussion of this, see
+	http://linux.slashdot.org/article.pl?sid=04/04/03/174249
+
+	At present, the only place this has any effect is in the Tcl/Tk
+	interface, in Driver.c's choices for default values of non-specified
+	environment variables.
+*/
 #define ASC_RELATIVE_PATHS
+
 
 /*
 	This is the default location of the tcl/tk scripts. $AAAAA environment
 	variables will be expanded at runtime, so a good value for example is
-	
+
 	$ASCENDDIST/TK
 */
 #define ASC_ENV_TK_DEFAULT "@ASC_ENV_TK_DEFAULT@"
+
+
+/*
+	Whether to use xterm colours when writing 'error.h' output, eg
+	'ERROR' in red, etc. If not defined, colour will never be used.
+	If defined, colour will be used any time the the TERM environment
+	variable is set to 'xterm' or 'msys'. MSYS uses the 'rxvt' console,
+	which knows about xterm colour codes.
+*/
+#if @ASC_XTERM_COLORS@
+# define ASC_XTERM_COLORS
+#endif
 
 /*
 	The following are the environment variables ASCEND requires.

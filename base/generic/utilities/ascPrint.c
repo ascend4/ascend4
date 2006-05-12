@@ -245,6 +245,7 @@ static int use_xterm_color = 0;
 	Not very efficient, so use sparingly.
 */
 int color_on(FILE *f, const char *colorcode){
+#ifdef ASC_XTERM_COLORS
 	char *term;
 	if(!use_xterm_color){
 		term = getenv("TERM");
@@ -262,6 +263,7 @@ int color_on(FILE *f, const char *colorcode){
 	if(colorcode!=NULL && use_xterm_color==1){
 		return fprintf(f,"\033[%sm",colorcode);
 	}
+#endif
 	return 0;
 }
 
@@ -270,8 +272,10 @@ int color_on(FILE *f, const char *colorcode){
 	Not very efficient, so use sparingly.
 */
 int color_off(FILE *f){
+#ifdef ASC_XTERM_COLORS
 	if(use_xterm_color==1){
 		return fprintf(f,"\033[0m");
 	}
+#endif
 	return 0;
 }
