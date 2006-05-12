@@ -1,87 +1,87 @@
-/*
- *  Ascend Memory Allocation Routines
- *  by Tom Epperly
- *  Created: 2/6/90
- *  Version: $Revision: 1.2 $
- *  Version control file: $RCSfile: ascMalloc.h,v $
- *  Date last modified: $Date: 1997/07/18 11:44:50 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	ASCEND memory allocation & reporting routines.
+
+	These functions provide tracking of memory events and assist
+	finding and debugging memory errors.  Memory tracking options are
+	selected using the macros MALLOC_DEBUG and ALLOCATED_TESTS discussed
+	below.  This allows the enhanced functionality to be used or turned
+	off as desired.  This functionality adds considerable run-time overhead,
+	and so should generally be used for debugging purposes only.  There are
+	also routines for reporting on the status of memory blocks as well as
+	for the memory manager itself.<br><br>
+
+	To use the memory tracking features, you need to use the provided
+	allocation and deallocation functions (ascmalloc(), asccalloc(),
+	ascrealloc(), ascfree()).  Direct calls to the corresponding system
+	routines will by-pass the memory manager and not be tracked.  Memory
+	allocations which return NULL are not tracked or recorded.<br><br>
+
+	This module also standardizes critical implementation-specific features
+	such as behavior when an allocation of zero bytes is requested
+	(see MOD_ASCMALLOC), and the behavior of realloc() under purify
+	(see MOD_REALLOC).<br><br>
+
+	The following macros affect the compilation and run-time behavior
+	of Ascend memory management.
+
+	<pre>
+	  MOD_ASCMALLOC     Forces the memory allocation functions to always
+						allocate at least 1 byte and return a non-NULL
+						pointer.  This macro should be defined if your
+						allocator returns NULL when a zero-sized block is
+						requested (e.g. alpha or rs6000; Borland and Watcom
+						on Windows).  It need not be defined if your
+						allocator returns a non-NULL pointer to a zero-length
+						block, saving you a few bytes of memory.
+
+	  MALLOC_DEBUG      Causes all calls to memory allocation routines
+						to be tracked and logged to an output file.
+						This really slows down the memory management
+						system, and so should be used for debugging only.
+
+	  ALLOCATED_TESTS   Forces a lot of extra assertions when defined
+						along with MALLOC_DEBUG.
+
+	  MOD_REALLOC       If defined, ascreallocPURE() uses a homegrown
+						realloc() that behaves properly with purify.
+						This is more expensive, and should be used
+						for debugging only.
+
+	Requires:
+		   #include "utilities/ascConfig.h"
+		   #include "utilities/ascPanic.h"
+	</pre>
+*//*
+	by Tom Epperly
+	Created: 2/6/90
+	Version: $Revision: 1.2 $
+	Version control file: $RCSfile: ascMalloc.h,v $
+	Date last modified: $Date: 1997/07/18 11:44:50 $
+	Last modified by: $Author: mthomas $
+*/
 
 #ifndef ASC_ASCMALLOC_H
 #define ASC_ASCMALLOC_H
 
-/** @file
- *  ASCEND memory allocation & reporting routines.
- *  These functions provide tracking of memory events and assist 
- *  finding and debugging memory errors.  Memory tracking options are 
- *  selected using the macros MALLOC_DEBUG and ALLOCATED_TESTS discussed 
- *  below.  This allows the enhanced functionality to be used or turned
- *  off as desired.  This functionality adds considerable run-time overhead, 
- *  and so should generally be used for debugging purposes only.  There are
- *  also routines for reporting on the status of memory blocks as well as
- *  for the memory manager itself.<br><br>
- *
- *  To use the memory tracking features, you need to use the provided
- *  allocation and deallocation functions (ascmalloc(), asccalloc(), 
- *  ascrealloc(), ascfree()).  Direct calls to the corresponding system
- *  routines will by-pass the memory manager and not be tracked.  Memory
- *  allocations which return NULL are not tracked or recorded.<br><br>
- *
- *  This module also standardizes critical implementation-specific features
- *  such as behavior when an allocation of zero bytes is requested
- *  (see MOD_ASCMALLOC), and the behavior of realloc() under purify
- *  (see MOD_REALLOC).<br><br>
- *
- *  The following macros affect the compilation and run-time behavior
- *  of Ascend memory management.
- *  <pre>
- *    MOD_ASCMALLOC     Forces the memory allocation functions to always
- *                      allocate at least 1 byte and return a non-NULL
- *                      pointer.  This macro should be defined if your
- *                      allocator returns NULL when a zero-sized block is
- *                      requested (e.g. alpha or rs6000; Borland and Watcom
- *                      on Windows).  It need not be defined if your
- *                      allocator returns a non-NULL pointer to a zero-length
- *                      block, saving you a few bytes of memory.
- *
- *    MALLOC_DEBUG      Causes all calls to memory allocation routines
- *                      to be tracked and logged to an output file.
- *                      This really slows down the memory management
- *                      system, and so should be used for debugging only.
- *
- *    ALLOCATED_TESTS   Forces a lot of extra assertions when defined
- *                      along with MALLOC_DEBUG.
- *
- *    MOD_REALLOC       If defined, ascreallocPURE() uses a homegrown
- *                      realloc() that behaves properly with purify.
- *                      This is more expensive, and should be used
- *                      for debugging only.
- *
- *  Requires:
- *         #include "utilities/ascConfig.h"
- *         #include "utilities/ascPanic.h"
- *  </pre>
- */
+/* MALLOC_DEBUG may be defined in config.h... */
+#include <utilities/config.h>
 
 #ifdef MALLOC_DEBUG
 #  define ascstrdup(str) ascstrdupf_dbg(str)
@@ -103,7 +103,7 @@
 ASC_DLLSPEC(char) *ascstrdupf(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
- *  is not defined.  Do not call this function directly - use 
+ *  is not defined.  Do not call this function directly - use
  *  ascstrdup() instead.
  */
 
@@ -118,8 +118,8 @@ ASC_DLLSPEC(char *) asc_memcpy(char *dest, char *src, size_t n);
 /**<
  *  Copies n bytes from memory address src to dest.
  *  This version of memcpy handles overlapping memory ranges
- *  properly. It could be more efficient internally. As it is, 
- *  it moves data a char at a time.  Unless n is 0, neither dest 
+ *  properly. It could be more efficient internally. As it is,
+ *  it moves data a char at a time.  Unless n is 0, neither dest
  *  nor src may be NULL (checked by asc_assertion).
  *
  *  @param dest Pointer to address to which to copy (non-NULL).
@@ -141,15 +141,15 @@ ASC_DLLSPEC(char *) asc_memcpy(char *dest, char *src, size_t n);
  *  purify realloc() function for debugging purposes.
  *  In some OS, realloc() fools purify into thinking there
  *  is a memory leak.  If MOD_REALLOC is defined at compile
- *  time for all software referencing this header, then all 
+ *  time for all software referencing this header, then all
  *  calls to ascreallocPURE() will use a homegrown realloc
- *  that does not fool purify.  Leaks of memory reported 
- *  around realloc() when MOD_REALLOC is defined should be 
+ *  that does not fool purify.  Leaks of memory reported
+ *  around realloc() when MOD_REALLOC is defined should be
  *  real leaks and not OS noise.<br><br>
  *
- *  The custom function is somewhat more expensive than most 
+ *  The custom function is somewhat more expensive than most
  *  system-supplied realloc()'s, so should only be used for
- *  debugging.  Note that ascreallocPURE() will provide memory 
+ *  debugging.  Note that ascreallocPURE() will provide memory
  *  event tracking if MALLOC_DEBUG is also defined when this
  *  header is included.
  *
@@ -165,8 +165,8 @@ extern char *ascreallocPUREF(char *ptr, size_t oldbytes, size_t newbytes);
  *  Implementation function for release version of ascreallocPURE().
  *  Do not call this function directly - use ascreallocPURE()
  *  (by #defining MOD_REALLOC) instead.  This version does not have
- *  its memory tracked.  This is a custom realloc() which behaves 
- *  properly with purify.  It bypasses the standard realloc() function.  
+ *  its memory tracked.  This is a custom realloc() which behaves
+ *  properly with purify.  It bypasses the standard realloc() function.
  *  The caller must indicate the old size of the memory region.
  *
  *  @param ptr      Pointer to the memory block to reallocate.
@@ -519,7 +519,7 @@ extern int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2);
 #  define AssertMemory(ptr)
 #endif
 /**<
- *  Assertion that ptr points to (or into) an allocated memory 
+ *  Assertion that ptr points to (or into) an allocated memory
  *  block.  This assertion is only active if both MALLOC_DEBUG
  *  and ALLOCATED_TESTS are defined.
  *

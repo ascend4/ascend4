@@ -58,7 +58,7 @@ static real64 slow_inner_product(struct vector_data *vec1, struct vector_data *v
 
 /*
  *  Independent calculation of an array dot product.
- *  Nothing fancy, no validation of input.  
+ *  Nothing fancy, no validation of input.
  *  Assumes valid arrays of length at least len.
  */
 static real64 slow_dot_product(int32 len, real64 *array1, real64 *array2)
@@ -672,7 +672,7 @@ static void test_slv_common(void)
 
   slv_destroy_vector(pvec1);
   slv_destroy_vector(pvec2);
-         
+
   CU_TEST(test_meminuse == ascmeminuse());
 
   /* test slv_inner_product() */
@@ -1687,7 +1687,7 @@ extern int slv_direct_solve(slv_system_t server,
  *  @param epsilon       Tolerance for testing convergence.
  *  @param ignore_bounds If TRUE, ignore bounds on variable.
  *  @param scaled        If TRUE, test scaled residuals against epsilon.
- 
+
 
 extern int slv_direct_log_solve(slv_system_t sys,
                                 struct logrel_relation *lrel,
@@ -1718,7 +1718,7 @@ extern int slv_direct_log_solve(slv_system_t sys,
  *  @param file       File stream to receive other possible solutions.
  *  @param perturb    If TRUE, perturbs the truth values if necessary to find the solution.
  *  @param instances  List of instances.
- 
+
  */
 
   if (TRUE == i_initialized_lists) {          /* clean up list system if necessary */

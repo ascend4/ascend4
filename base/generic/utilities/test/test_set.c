@@ -156,7 +156,7 @@ static void test_set(void)
   CU_TEST(TRUE == asc_assert_failed());
 
   asc_assert_catch(FALSE);                       /* done testing assertions */
-#endif    /* !ASC_NO_ASSERTIONS */  
+#endif    /* !ASC_NO_ASSERTIONS */
 
   set1 = set_create(10);                              /* create a set & zero it */
   CU_TEST(NULL != set1);
