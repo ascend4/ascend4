@@ -1,5 +1,5 @@
 Name:		ascend
-Summary:	ASCEND modelling environment - shared library and model files.
+Summary:	ASCEND modelling environment
 Version:	0.9.5.91
 
 # Use release "0" so that distro-released versions will override ours.
@@ -7,8 +7,8 @@ Release:	0.jdpipe
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		%{name}-%{version}.tar.bz2
-URL:		http://inkscape.sourceforge.net/
+Source:		ascend.tar.bz2
+URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
 Packager:	John Pye
