@@ -100,7 +100,7 @@
  *  @return A new copy of str as a char *, or NULL if an error occurs.
  */
 
-ASC_DLLSPEC(char) *ascstrdupf(CONST char *str);
+ASC_DLLSPEC(char *) ascstrdupf(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
  *  is not defined.  Do not call this function directly - use
@@ -256,7 +256,7 @@ extern void ascstatus_detailf(CONST char *msg);
  *  @param msg The message to print before the detail report.
  */
 
-extern void ascshutdownf(CONST char *msg);
+ASC_DLLSPEC(void) ascshutdownf(CONST char *msg);
 /**<
  *  Implementation function for ascshutdown() if MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define
@@ -269,7 +269,7 @@ extern void ascshutdownf(CONST char *msg);
 #  define ascmeminuse() (0)
 #endif
 
-extern unsigned long ascmeminusef(void);
+ASC_DLLSPEC(unsigned long) ascmeminusef(void);
 /**<
  *  Returns the current total amount of allocated memory (iff
  *  MALLOC_DEBUG is #defined).  If MALLOC_DEBUG is not #defined,
@@ -305,7 +305,7 @@ extern unsigned long ascmeminusef(void);
  *  @return A (void *) to the newly-allocated block, or NULL on error.
  */
 
-extern VOIDPTR asccallocf(size_t nelem, size_t elsize,
+ASC_DLLSPEC(VOIDPTR) asccallocf(size_t nelem, size_t elsize,
                           CONST char *file, int line);
 /**<
  *  Implementation function for asccalloc() when MALLOC_DEBUG
@@ -329,7 +329,7 @@ extern VOIDPTR asccallocf(size_t nelem, size_t elsize,
  *  @return A (void *) to the newly-allocated block, or NULL on error.
  */
 
-extern VOIDPTR ascmallocf(size_t size, CONST char * file, int line);
+ASC_DLLSPEC(VOIDPTR) ascmallocf(size_t size, CONST char * file, int line);
 /**<
  *  Implementation function for ascmalloc() when MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define
@@ -358,7 +358,7 @@ extern VOIDPTR ascmallocf(size_t size, CONST char * file, int line);
  *  @return A (void *) to the newly-allocated block, or NULL on error.
  */
 
-extern VOIDPTR ascreallocf(VOIDPTR ptr, size_t size,
+ASC_DLLSPEC(VOIDPTR) ascreallocf(VOIDPTR ptr, size_t size,
                            CONST char *file, int line);
 /**<
  *  Implementation function for ascrealloc() when MALLOC_DEBUG
@@ -380,7 +380,7 @@ extern VOIDPTR ascreallocf(VOIDPTR ptr, size_t size,
  *  @param ptr Pointer to the memory block to free.
  */
 
-extern void ascfreef(VOIDPTR ptr, CONST char *file, int line);
+ASC_DLLSPEC(void) ascfreef(VOIDPTR ptr, CONST char *file, int line);
 /**<
  *  Implementation function for ascfree() when MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define
@@ -407,7 +407,7 @@ extern void ascfreef(VOIDPTR ptr, CONST char *file, int line);
  *  @return A (void *) to dest.
  */
 
-extern VOIDPTR ascbcopyf(CONST VOIDPTR src, VOIDPTR dest, size_t size,
+ASC_DLLSPEC(VOIDPTR) ascbcopyf(CONST VOIDPTR src, VOIDPTR dest, size_t size,
                          CONST char *file, int line);
 /**<
  *  Implementation function for ascbcopy() when MALLOC_DEBUG
@@ -433,7 +433,7 @@ extern VOIDPTR ascbcopyf(CONST VOIDPTR src, VOIDPTR dest, size_t size,
  *  @return A (void *) to dest.
  */
 
-extern VOIDPTR ascbzerof(VOIDPTR dest, size_t length, CONST char *file, int line);
+ASC_DLLSPEC(VOIDPTR) ascbzerof(VOIDPTR dest, size_t length, CONST char *file, int line);
 /**<
  *  Implementation function for ascbzero() when MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define
@@ -458,7 +458,7 @@ extern VOIDPTR ascbzerof(VOIDPTR dest, size_t length, CONST char *file, int line
  *  @param size size_t, size of the memory block to look up.
  */
 
-extern int AllocatedMemoryF(CONST VOIDPTR ptr, size_t size);
+ASC_DLLSPEC(int) AllocatedMemoryF(CONST VOIDPTR ptr, size_t size);
 /**<
  *  Implementation function for AllocatedMemory() when
  *  MALLOC_DEBUG is defined.  Do not call this function
@@ -478,7 +478,7 @@ extern int AllocatedMemoryF(CONST VOIDPTR ptr, size_t size);
  *  defined, always returns 1.
  */
 
-extern int InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2);
+ASC_DLLSPEC(int) InMemoryBlockF(CONST VOIDPTR ptr1, CONST VOIDPTR ptr2);
 /**<
  *  Implementation function for InMemoryBlock() when MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define
