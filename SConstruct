@@ -303,6 +303,12 @@ opts.Add(
 	,"ascend-"+version
 )
 
+opts.Add(BoolOption(
+	'WITH_XTERM_COLORS'
+	,"Set to 0 if you don't want xterm colour codes in the console output"
+	,True
+))
+
 if platform.system()!="Windows":
 	opts.Add(BoolOption(
 		'WITH_GCCVISIBILITY'
@@ -888,9 +894,12 @@ subst_dict = {
 	, '@ASC_DISTDIR_REL_BIN@' : '../share/ascend'
 }
 
-if env['WITH_LOCAL_HELP']:
+if env.get('WITH_LOCAL_HELP'):
 	print "WITH_LOCAL_HELP:",env['WITH_LOCAL_HELP']
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
+
+if env.get('WITH_XTERM_COLORS'):
+	subst_dict['@ASC_XTERM_COLORS@']="1"
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
