@@ -114,7 +114,7 @@ typedef void (*DestroyFunc)(VOIDPTR);
 /** Generic function called during iterations. */
 typedef void (*IterateFunc)(VOIDPTR);
 
-extern void gl_init(void);
+ASC_DLLSPEC(void) gl_init(void);
 /**<
  *  Initializes the list recycler control table.
  *  Until this function is called, no recycling will take place.
@@ -152,7 +152,7 @@ extern void gl_init_pool(void);
  *  call gl_create() before this is called if LISTUSESPOOL == TRUE.
  */
 
-extern void gl_destroy_pool(void);
+ASC_DLLSPEC(void) gl_destroy_pool(void);
 /**<
  *  Destroys list overhead structure data management.  This must be
  *  called to clean up before shutting down your application if
@@ -441,7 +441,7 @@ extern unsigned long gl_capacity(CONST struct gl_list_t *list);
  *  @return The number of items that can be stored in list without expanding.
  */
 
-extern int gl_sorted(CONST struct gl_list_t *list);
+ASC_DLLSPEC(int) gl_sorted(CONST struct gl_list_t *list);
 /**<
  *  Query whether the specified list is sorted.  A list having 0 or 1
  *  element is always sorted.  The specified list may not be NULL
@@ -703,7 +703,7 @@ extern void gl_reverse(struct gl_list_t *list);
  *  @param list The list to modify.
  */
 
-extern void gl_reset(struct gl_list_t *list);
+ASC_DLLSPEC(void) gl_reset(struct gl_list_t *list);
 /**<
  *  Resets the list to a *clean* state as if it had just been created.
  *  As such, the list will be considered as expandle and sorted but
@@ -825,7 +825,7 @@ extern VOIDPTR *gl_fetchaddr(CONST struct gl_list_t *list,
  *  @return The address of the pointer as position pos.
  */
 
-extern void gl_emptyrecycler(void);
+ASC_DLLSPEC(void) gl_emptyrecycler(void);
 /**<
  *  Empties the list recycler.
  *  To improve runtime performance, this list module trys to reuse destroyed

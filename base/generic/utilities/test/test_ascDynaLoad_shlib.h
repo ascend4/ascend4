@@ -31,10 +31,10 @@ typedef void (*cleanupFunc)(void);
 ASC_DLLSPEC(int) value;
 
 /** Initializes the library. Returns -5. */
-int ASC_DLLSPEC init(void);
+ASC_DLLSPEC(int) init(void);
 /** Returns TRUE if library has been initialized, FALSE otherwise. */
-int ASC_DLLSPEC isInitialized(void);
+ASC_DLLSPEC(int) isInitialized(void);
 /** Cleans up the library. */
-void ASC_DLLSPEC cleanup(void);
+ASC_DLLSPEC(void) cleanup(void);
 
 #endif  /* TEST_ASCDYNALOAD_SHLIB_H */

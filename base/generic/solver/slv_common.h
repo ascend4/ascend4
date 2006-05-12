@@ -767,7 +767,7 @@ struct vector_data {
    boolean      accurate;   /**< Is vector currently accurate?  User-manipulated. */
 };
 
-extern struct vector_data *slv_create_vector(int32 low, int32 high);
+ASC_DLLSPEC(struct vector_data *) slv_create_vector(int32 low, int32 high);
 /**<
  *  Returns a new vector_data initialized to the specified range.
  *  This function creates, initializes, and returns a new vector_data
@@ -785,7 +785,7 @@ extern struct vector_data *slv_create_vector(int32 low, int32 high);
  *          not be created.
  */
 
-extern int slv_init_vector(struct vector_data *vec, int32 low, int32 high);
+ASC_DLLSPEC(int) slv_init_vector(struct vector_data *vec, int32 low, int32 high);
 /**<
  *  Initializes a vector_data structure.
  *  The new range (low..high) is considered proper if both low and
@@ -806,7 +806,7 @@ extern int slv_init_vector(struct vector_data *vec, int32 low, int32 high);
  *          and 3 if memory cannot be allocated.
  */
 
-extern void slv_destroy_vector(struct vector_data *vec);
+ASC_DLLSPEC(void) slv_destroy_vector(struct vector_data *vec);
 /**<
  *  Destroys a vector and its assocated data.
  *  Deallocates any memory held in vec->rng and vec->vec,
@@ -816,7 +816,7 @@ extern void slv_destroy_vector(struct vector_data *vec);
  *  @param vec Pointer to the vector_data to destroy.
  */
 
-extern void slv_zero_vector(struct vector_data *vec);
+ASC_DLLSPEC(void) slv_zero_vector(struct vector_data *vec);
 /**<
  *  Zeroes a vector.
  *  The vector entries between vec->rng.low and  vec->rng.high will
@@ -831,7 +831,7 @@ extern void slv_zero_vector(struct vector_data *vec);
  *  @param vec The vector to zero.
  */
 
-extern void slv_copy_vector(struct vector_data *srcvec,
+ASC_DLLSPEC(void) slv_copy_vector(struct vector_data *srcvec,
                             struct vector_data *destvec);
 /**<
  *  Copies the data from srcvec to destvec.
@@ -853,7 +853,7 @@ extern void slv_copy_vector(struct vector_data *srcvec,
  *  @param destvec The vector to receive the copied data.
  */
 
-extern real64 slv_inner_product(struct vector_data *vec1,
+ASC_DLLSPEC(real64) slv_inner_product(struct vector_data *vec1,
                                 struct vector_data *vec2);
 /**<
  *  Calculates the dot product of 2 vectors.
@@ -875,7 +875,7 @@ extern real64 slv_inner_product(struct vector_data *vec1,
  *  @todo solver/slv_common:slv_inner_product() could stand to be optimized.
  */
 
-extern real64 slv_square_norm(struct vector_data *vec);
+ASC_DLLSPEC(real64) slv_square_norm(struct vector_data *vec);
 /**<
  *  Calculates the dot product of a vector with itself.
  *  Dot [vec->rng.low .. vec->rng.high] with itself and store the
@@ -891,7 +891,7 @@ extern real64 slv_square_norm(struct vector_data *vec);
  *  @todo solver/slv_common:slv_square_norm() could stand to be optimized.
  */
 
-extern void slv_matrix_product(mtx_matrix_t mtx,
+ASC_DLLSPEC(void) slv_matrix_product(mtx_matrix_t mtx,
                                struct vector_data *vec,
                                struct vector_data *prod,
                                real64 scale,
@@ -944,7 +944,7 @@ extern void slv_write_vector(FILE *fp, struct vector_data *vec);
  * ----------------------------
  */
 
-extern real64 slv_dot(int32 len, const real64 *a1, const real64 *a2);
+ASC_DLLSPEC(real64) slv_dot(int32 len, const real64 *a1, const real64 *a2);
 /**<
  *  Calculates the dot product of 2 arrays of real64.
  *  This is an optimized routine (loop unrolled).  It takes
@@ -970,7 +970,7 @@ extern real64 slv_dot(int32 len, const real64 *a1, const real64 *a2);
  * --------------------------------
  */
 
-extern FILE *slv_get_output_file(FILE *fp);
+ASC_DLLSPEC(FILE *)slv_get_output_file(FILE *fp);
 /**<
  *  Checks a file pointer, and if NULL returns a pointer to the nul device.
  *  If you are in environment that doesn't have something like
@@ -1216,7 +1216,7 @@ extern int slv_direct_log_solve(slv_system_t sys,
  * --------------------
  */
 
-extern int32 **slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *hj);
+ASC_DLLSPEC(int32 **) slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *hj);
 /**<
  *  Builds a row-biased mapping array from the hi,hj lists given.
  *  The map returned has the following format:
@@ -1256,7 +1256,7 @@ extern int32 **slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *h
  *  @return Pointer to the new lnkmap array, or NULL if an error occurred.
  */
 
-extern int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region);
+ASC_DLLSPEC(int32 **) slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region);
 /**<
  *  Generates a lnkmap from a region of a matrix.
  *  The length of the map returned will be the order of mtx.  Empty rows
@@ -1279,7 +1279,7 @@ extern int32 **slv_lnkmap_from_mtx(mtx_matrix_t mtx, mtx_region_t *region);
  *  @see slv_create_lnkmap() for a more details about lnkmaps.
  */
 
-extern void slv_destroy_lnkmap(int32 **map);
+ASC_DLLSPEC(void) slv_destroy_lnkmap(int32 **map);
 /**<
  *  Deallocate a map created by slv_create_lnkmap() or slv_destroy_lnkmap().
  *  destroy_lnkmap() will tolerate a NULL map as input.
@@ -1287,7 +1287,7 @@ extern void slv_destroy_lnkmap(int32 **map);
  *  @param map The lnkmap to destroy.
  */
 
-extern void slv_write_lnkmap(FILE *fp, int m, int32 **map);
+ASC_DLLSPEC(void) slv_write_lnkmap(FILE *fp, int m, int32 **map);
 /**<
  *  Prints a link map to a file.
  *  write_lnkmap() will tolerate a NULL map as input.

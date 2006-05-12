@@ -10,18 +10,18 @@ basesrcs = ['test_ascend_base.c']
 
 srcs = []
 for dir in ['general','utilities','solver']:
-	srcs += ['#base/generic/'+dir+'/test/'+i for i in env['TESTSRCS_'+dir.upper()]]
+	srcs += env['TESTSRCS_'+dir.upper()]
 
 cpppath = ['#test','#base/generic']
 if env.has_key('CUNIT_CPPPATH'):
 	cpppath.append(env['CUNIT_CPPPATH'])
 
-libpath = ['#base/generic/utilities', '#base/generic/general', '#base/generic/solver', '#base/generic/compiler', '#base/generic/packages', '#test']
+libpath = ['#', '#test']
 if env.has_key('CUNIT_LIBPATH'):
 	libpath.append(env['CUNIT_LIBPATH'])
 
 env.Program('test',srcs+basesrcs
 	, CPPPATH = cpppath
-	, LIBS = ['ascutilities','ascgeneral','ascsolver','asccompiler','ascpackages','asctest','m','cunit','dl']
+	, LIBS = ['ascend','asctest','m','cunit','dl']
 	, LIBPATH = libpath
 )
