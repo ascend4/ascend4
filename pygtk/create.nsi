@@ -48,7 +48,7 @@ Section "ASCEND (required)"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
   
-  ; Put file there
+  ; Python interface
   File "_ascpy.dll"
   File "..\ascend.dll"
   File "config.py"
@@ -56,17 +56,27 @@ Section "ASCEND (required)"
   SetOutPath $INSTDIR\glade
   File "glade\*.glade"
   File "glade\*.png"
+
+  ; Model Library
   SetOutPath $INSTDIR\models
-  File "..\models\*.a4c"
-  File "..\models\*.a4l"
-  SetOutPath $INSTDIR\models\johnpye
-  File "..\models\johnpye\*.a4c"
+  File /r "..\models\*.a4*"
+  File /r "..\models\*.bz2"
+
+  ; Tcl/Tk interface
+  SetOutPath $INSTDIR\tcltk
+  File /r "..\tcltk\TK\*"
+  SetOutPath $INSTDIR
+  File "..\tcltk\generic\interface\ascendtcl.dll"
+  File "..\tcltk\generic\interface\ascend4.exe"
+
   SetOutPath $INSTDIR
   File "Makefile.bt"
   File "ascend.syn"
 
+  ; Set 'librarypath' in .ascend.ini
   WriteINIstr $APPDATA\.ascend.ini Directories librarypath "$DOCUMENTS\ascdata;$INSTDIR\models"
 
+  ; Create 'ascend.bat' launcher for PyGTK interface
   ClearErrors
   FileOpen $0 $INSTDIR\ascend.bat w
   IfErrors done
@@ -86,7 +96,6 @@ Section "ASCEND (required)"
 
   FileClose $0
   done:
-
   
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\ASCEND "Install_Dir" "$INSTDIR"
@@ -106,6 +115,7 @@ Section "Start Menu Shortcuts"
   CreateDirectory "$SMPROGRAMS\ASCEND"
   CreateShortCut "$SMPROGRAMS\ASCEND\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND.lnk" "$INSTDIR\ascend.bat" "" "$INSTDIR\ascend.bat" 0
+  CreateShortCut "$SMPROGRAMS\ASCEND\ASCEND Tcl/Tk.lnk" "$INSTDIR\ascend4.exe" "" "$INSTDIR\ascend4.exe" 0
   
 SectionEnd
 
@@ -120,7 +130,9 @@ Section "Uninstall"
   DeleteRegKey HKLM SOFTWARE\ASCEND
 
   ; Remove files and uninstaller
-  Delete $INSTDIR\_ascend.dll
+  Delete $INSTDIR\_ascpy.dll
+  Delete $INSTDIR\ascendtcl.dll
+  Delete $INSTDIR\ascend.dll
   Delete $INSTDIR\ascend.bat
   Delete $INSTDIR\*.py
   Delete $INSTDIR\glade\*
@@ -128,6 +140,7 @@ Section "Uninstall"
   Delete $INSTDIR\ascend.syn
   Delete $INSTDIR\models\*
   Delete $INSTDIR\models\johnpye\*
+  RMDir /r $INSTDIR\tcltk
   RMDir $INSTDIR\models\johnpye
   RMDIR $INSTDIR\models
 

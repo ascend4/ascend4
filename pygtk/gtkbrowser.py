@@ -192,7 +192,10 @@ class Browser:
 			_icon = gtk.Image()
 			_iconpath = self.assets_dir+'ascend'+config.ICON_EXTENSION
 			_icon.set_from_file(_iconpath)
-			self.icon = _icon.get_pixbuf()		
+			try:
+				self.icon = _icon.get_pixbuf()		
+			except RuntimeError, e:
+				print "FAILED to set icon:",str(e)			
 
 		#-------------------
 		# Set up the window and main widget actions
