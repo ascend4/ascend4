@@ -400,8 +400,9 @@ proc set_cmuBindings {} {
   #
   #Texts
   #
+  global asc_swap_del_backspace
   # munge both backspace and delete to
-  if {$tcl_platform(platform)=="unix" && !$tk_strictMotif} {
+  if {$tcl_platform(platform)=="unix" && !$tk_strictMotif && $asc_swap_del_backspace=="1" } {
     # the standard tcl text bindings. Swap them.
     # bind Text <Delete> {
     #    if {[%W tag nextrange sel 1.0 end] != ""} {
