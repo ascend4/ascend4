@@ -6,9 +6,13 @@
 # $Revision: 1.9 $
 #
 global env tcl_platform
+set asc_swap_del_backspace 0
+global asc_swap_del_backspace
 source "$env(ASCENDTK)/ascend.tcl"
 # ----------- do not change anything above this line --------------
 # unless of course you know what you are doing in TCL/Tk
+# or want to reverse the delete/backspace behavior on
+# text widgets/entry widgets.
 
 #  Add a CLEAR ALL to the console's EDIT menu if the console
 #  exists; CLEAR ALL removes all text from the console window.
