@@ -89,7 +89,7 @@ int ospath_searchpath_testexists(struct FilePath *path,void *file){
 #undef M
 #define M MM
 
-static void test_dstring(void){
+static void test_ospath(void){
 
 	struct FilePath *fp1, *fp2, *fp3, *fp4;
 	char *s1;
@@ -534,7 +534,6 @@ static void test_dstring(void){
 
 	//---------------------------------
 	M("ALL TESTS PASSED");
-	return 0;
 }
 
 /*===========================================================================*/

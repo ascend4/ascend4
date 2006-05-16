@@ -89,7 +89,7 @@ ASC_DLLSPEC(void) ospath_free_str(char *str);
 	Create a new ospath object from a string, assuming
 	that standard forward-slash paths are used.
 */
-struct FilePath *ospath_new_from_posix(const char *posixpath);
+ASC_DLLSPEC(struct FilePath *) ospath_new_from_posix(const char *posixpath);
 
 /**
 	Path with *VERY SIMPLE* environment variable expansion.
@@ -157,7 +157,7 @@ void ospath_fwrite(struct FilePath *fp, FILE *dest);
 	Write out the internal structure of the FilePath object
 	to stderr.
 */
-void ospath_debug(struct FilePath *fp);
+ASC_DLLSPEC(void) ospath_debug(struct FilePath *fp);
 
 /**
 	Return length of path string
@@ -167,7 +167,7 @@ unsigned int ospath_length(struct FilePath *fp);
 /**
 	Create a new path that is the direct parent of this one.
 */
-struct FilePath *ospath_getparent(struct FilePath *fp);
+ASC_DLLSPEC(struct FilePath *) ospath_getparent(struct FilePath *fp);
 
 /**
 	Return a new path object which is a parent path of the current path up to the specified depth.
@@ -183,19 +183,19 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned nDepth);
 /**
 	Return then name of the bottom most level path entry (includes any extension)
 */
-char *ospath_getbasefilename(struct FilePath *fp);
+ASC_DLLSPEC(char *) ospath_getbasefilename(struct FilePath *fp);
 
 /**
 	Retrieve the path's bottom level filename without the extension.
 	A path that ends in a slash will be assumed to be directory, so the
 	file stem will be NULL (ie not a file)
 */
-char *ospath_getfilestem(struct FilePath *fp);
+ASC_DLLSPEC(char *) ospath_getfilestem(struct FilePath *fp);
 
 /**
 	retrieve the paths extension (if it has one) does not include the dot
 */
-char *ospath_getfileext(struct FilePath *fp);
+ASC_DLLSPEC(char *) ospath_getfileext(struct FilePath *fp);
 
 /**
 	Return a new FilePath containing the directory component of the path
@@ -218,9 +218,9 @@ unsigned ospath_depth(struct FilePath *fp);
 /**
 	Return the root path
 */
-struct FilePath *ospath_root(struct FilePath *fp);
+ASC_DLLSPEC(struct FilePath *) ospath_root(struct FilePath *fp);
 
-int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2);
+ASC_DLLSPEC(int) ospath_cmp(struct FilePath *fp1, struct FilePath *fp2);
 
 ASC_DLLSPEC(struct FilePath *) ospath_concat(struct FilePath *fp1, struct FilePath *fp2);
 
@@ -236,7 +236,9 @@ ASC_DLLSPEC(FILE *) ospath_fopen(struct FilePath *fp, const char *mode);
 //------------------------
 // SEARCH PATH FUNCTIONS
 
-struct FilePath **ospath_searchpath_new(const char *path);
+ASC_DLLSPEC(struct FilePath **) ospath_searchpath_new(const char *path);
+
+ASC_DLLSPEC(void) ospath_searchpath_free(struct FilePath **searchpath);
 
 typedef int (FilePathTestFn)(struct FilePath *,void *);
 
@@ -244,7 +246,7 @@ typedef int (FilePathTestFn)(struct FilePath *,void *);
 	@return pointer to path component in which testfn passed, or else
 	NULL if no component passed the test.
 */
-struct FilePath *ospath_searchpath_iterate(
+ASC_DLLSPEC(struct FilePath *) ospath_searchpath_iterate(
 		struct FilePath **searchpath
 		, FilePathTestFn *testfn
 		, void *searchdata
