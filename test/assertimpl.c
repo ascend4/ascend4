@@ -1,25 +1,25 @@
-/*
- *  Assert implementation override for ASCEND unit tests
- *
- *  Copyright (C) 2005 Jerry St.Clair
- *
- *  This file is part of the Ascend Environment.
- *
- *  The Ascend Environment is free software; you can redistribute it
- *  and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Environment is distributed in hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2005 Jerry St.Clair
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Assert implementation override for ASCEND unit tests
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,7 +70,7 @@ void _RTLENTRY _EXPFUNC _assert(char *cond, char *file, int line)
 #  if defined(__GNUC__)
 void __assert_fail (const char *cond, const char *file,
 		   unsigned int line, const char *__function)
-/*     __THROW __attribute__ ((__noreturn__)) */ 
+/*     __THROW __attribute__ ((__noreturn__)) */
 {
   UNUSED_PARAMETER(__function);
 
