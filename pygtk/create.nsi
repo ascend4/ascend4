@@ -90,7 +90,7 @@ Section "ASCEND (required)"
   FileWrite $0 $INSTDIR 
   FileWriteByte $0 "13"
   FileWriteByte $0 "10"
-  FileWrite $0 "c:\Python24\python gtkbrowser.py"
+  FileWrite $0 "c:\Python24\python gtkbrowser.py %%"
   FileWriteByte $0 "13"
   FileWriteByte $0 "10"
 
