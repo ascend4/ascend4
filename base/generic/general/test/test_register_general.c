@@ -35,57 +35,30 @@
 #include "test_table.h"
 #include "test_tm_time.h"
 
-CU_ErrorCode test_register_general(void)
-{
-  CU_ErrorCode result = CUE_SUCCESS;
+#define REGISTER(NAME) \
+	result = test_register_general_##NAME(); \
+	if(CUE_SUCCESS!=result){ \
+		return result; \
+	} \
 
-  /* for new tests, add the test registration call to the following sequence: */
 
-  /* general/dstring.c */
-  result = test_register_general_dstring();
-  if (CUE_SUCCESS != result)
-    return result;
+CU_ErrorCode test_register_general(void){
 
-  /* general/hashpjw.c */
-  result = test_register_general_hashpjw();
-  if (CUE_SUCCESS != result)
-    return result;
+	CU_ErrorCode result = CUE_SUCCESS;
 
-  /* general/list.c */
-  result = test_register_general_list();
-  if (CUE_SUCCESS != result)
-    return result;
+	/* for new tests, add the test registration call to the following sequence: */
 
-  /* general/listio.c */
-  result = test_register_general_listio();
-  if (CUE_SUCCESS != result)
-    return result;
+	REGISTER(dstring)
+	REGISTER(hashpjw)
+	REGISTER(list)
+	REGISTER(listio)
+	REGISTER(pool)
+	REGISTER(pretty)
+	REGISTER(stack)
+	REGISTER(table)
+	REGISTER(tm_time)
+	REGISTER(ospath)
 
-  /* general/pool.c */
-  result = test_register_general_pool();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  /* general/pretty.c */
-  result = test_register_general_pretty();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  /* general/stack.c */
-  result = test_register_general_stack();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  /* general/table.c */
-  result = test_register_general_table();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  /* general/tm_time.c */
-  result = test_register_general_tm_time();
-  if (CUE_SUCCESS != result)
-    return result;
-
-  return result;
+	return result;
 }
 
