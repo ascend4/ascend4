@@ -33,9 +33,13 @@
 	At present, the only place this has any effect is in the Tcl/Tk
 	interface, in Driver.c's choices for default values of non-specified
 	environment variables.
-*/
-#define ASC_RELATIVE_PATHS
 
+	SCons will replace 'ifndef ASC_ABSOLUTEPATHS' with 'if 0', depending on
+	configuration.
+*/
+#ifdef ASC_RELATIVE_PATHS
+# define ASC_RELATIVE_PATHS
+#endif
 
 /*
 	This is the default location of the tcl/tk scripts. $AAAAA environment
