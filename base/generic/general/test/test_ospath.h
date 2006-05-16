@@ -1,5 +1,4 @@
 /*	ASCEND modelling environment
-	Copyright (C) 2005 Jerry St.Clair
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify
@@ -18,29 +17,20 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	Registration function for unit tests of the ASCEND general/dstring.c module.
+	Registration function for unit tests for ospath.c
+*/
 
-	Requires:
-	#include "CUnit/CUnit.h"
-	#include "utilities/ascConfig.h"
-	#include "general/dstring.h"
- */
-
-#ifndef TEST_DSTRING_H_SEEN
-#define TEST_DSTRING_H_SEEN
+#ifndef TEST_OSPATH_H
+#define TEST_OSPATH_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-CU_ErrorCode test_register_general_dstring(void);
-/**<
- *  Registers the unit tests for the ASCEND general/dstring module.
- *  Returns a CUnit error code (CUE_SUCCESS if no errors).
- */
+CU_ErrorCode test_register_general_ospath(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* TEST_DSTRING_H_SEEN */
+#endif
