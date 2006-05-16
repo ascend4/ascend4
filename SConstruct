@@ -303,6 +303,12 @@ opts.Add(
 	,"ascend-"+version
 )
 
+opts.Add(BoolOption(
+	'RELATIVE_PATHS'
+	,"Whether to use absolute or relative paths in the installed Tcl/Tk interface. If you want to build an RPM, set this to false."
+	,True
+))
+
 opts.Add(
 	'WIN_INSTALLER_NAME'
 	,"Name of the installer .exe to create under Windows (minus the '.exe')"
@@ -905,7 +911,11 @@ if env.get('WITH_LOCAL_HELP'):
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
 
 # bool options...
-for k,v in {'WITH_XTERM_COLORS':'ASC_XTERM_COLORS', 'MALLOC_DEBUG':'MALLOC_DEBUG'}.iteritems():
+for k,v in { \
+		'RELATIVE_PATHS' : 'ASC_RELATIVE_PATHS', \
+		'WITH_XTERM_COLORS' : 'ASC_XTERM_COLORS', \
+		'MALLOC_DEBUG' : 'MALLOC_DEBUG' \
+}.iteritems():
 	if env.get(k):
 		subst_dict['ifdef '+v]="if 1"
 
