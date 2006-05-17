@@ -61,50 +61,34 @@ MODEL convection_boundary REFINES radial_loss;
 
 END convection_boundary;
 
-(*
-	A sequence of radial losses in series
-*)
-MODEL radial_losses(
-	n WILL_BE integer;
-) REFINES radial_loss;
+MODEL pipe_test REFINES radial_loss;
 
-	loss[1..n] IS_A radial_loss;
-	
-	(* all the same length *)
-	L, loss[1..n].L ARE_THE_SAME;
-	
-	(* the ID of the whole lot equals the ID for the first element *)
-	D_1, loss[1].D_1 ARE_THE_SAME;
-	
-	(* the OD of the whole lot equals the OD of the last element *)
-	D_2, loss[n].D_2 ARE_THE_SAME;
+	n IS_A integer_constant;
+	n:==5;
+
+	loss[1..5] IS_A radial_loss;
+
+	loss[1] IS_REFINED_TO convection_boundary;
+	loss[2] IS_REFINED_TO wall_conduction;
+	loss[3] IS_REFINED_TO wall_conduction;
+	loss[4] IS_REFINED_TO wall_conduction;
+	loss[5] IS_REFINED_TO convection_boundary;
+
+	L, loss[1..5].L ARE_THE_SAME;
 	
 	FOR i IN [1..n] CREATE
 		(* layers are touching *)
 		loss[i].D_1, loss[i-1].D_2 ARE_THE_SAME;
-		(* heat rate is uniform *)
+
+		(* steady state: heat rate is uniform *)
 		loss[i].q,loss[i-1].q ARE_THE_SAME;
 	END FOR;
-	
-END radial_losses;
 
-(* 
-	Sample model: a stainless steel pipe
-	with lagging (aka insulation) and a thin steel
-	sheel.
-*)
-MODEL test_lagged_pipe REFINES radial_losses(
-	n IS_A integer_constant;
-)
-	n:=5;
-	
-	loss[1] IS_A convection_boundary;
-	loss[2] IS_A wall_conduction;
-	loss[3] IS_A wall_conduction;
-	loss[4] IS_A wall_conduction;
-	loss[5] IS_A convection_boundary;
-	
 METHODS
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+
 METHOD specify;
 	FIX loss[1].h;
 	FIX loss[2..4].k;
@@ -125,4 +109,4 @@ METHOD values;
 	loss[4].D_1 := 0.17 {m}; (* cover interior *)
 	loss[4].D_2 := 0.19 {m}; (* cover exterior *)
 END values;
-END test_lagged_pipe;
+END pipe_test;
