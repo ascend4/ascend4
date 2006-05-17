@@ -1519,12 +1519,12 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
 #endif
 
 #if AWAL
-  char *WAL_file;
-
 # ifdef __WIN32__
   char WAL_filename[] = "atmlist.txt";
   char WAL_file[PATH_MAX + 12];
   char *temp_path;
+# else
+  char *WAL_file;
 # endif
 
 #endif
