@@ -254,6 +254,7 @@ int color_on(FILE *f, const char *colorcode){
 				use_xterm_color=1;
 			}else{
 				use_xterm_color=-1;
+				Asc_FPrintf(stderr,"COLOR CODES WILL NOT BE USED\n");
 			}
 		}else{
 			use_xterm_color=-1;

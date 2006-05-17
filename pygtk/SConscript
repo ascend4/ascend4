@@ -17,12 +17,6 @@ srcs = Split("""
 # Build a static library with all the sources
 
 python_env = env.Copy()
-python_env.Replace(
-	CPPFLAGS=[]
-	, CCFLAGS=[]
-	, CPPDEFINES=[]
-	, LIBS=[]
-)
 
 import platform
 

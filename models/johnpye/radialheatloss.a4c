@@ -76,13 +76,23 @@ MODEL pipe_test REFINES radial_loss;
 
 	L, loss[1..5].L ARE_THE_SAME;
 	
-	FOR i IN [1..n] CREATE
+	FOR i IN [2..n] CREATE
 		(* layers are touching *)
 		loss[i].D_1, loss[i-1].D_2 ARE_THE_SAME;
 
 		(* steady state: heat rate is uniform *)
 		loss[i].q,loss[i-1].q ARE_THE_SAME;
+
+		loss[i].T_1, loss[i-1].T_2 ARE_THE_SAME;
 	END FOR;
+
+	loss[i].D_1, D_1 ARE_THE_SAME;
+	loss[n].D_2, D_2 ARE_THE_SAME;
+
+	loss[i].T_1, T_1 ARE_THE_SAME;
+	loss[i].T_2, T_2 ARE_THE_SAME;
+
+	loss[i].q, q ARE_THE_SAME;
 
 METHODS
 METHOD default_self;
@@ -94,10 +104,13 @@ METHOD specify;
 	FIX loss[2..4].k;
 	FIX loss[5].h;
 	
-	FIX loss[1,3,5].D_1;
+	FIX loss[2].D_1, loss[2].D_2;
+	FIX loss[4].D_1, loss[4].D_2;
 END specify;
 
 METHOD values;
+	L = 1 {m};
+
 	loss[1].h := 1000 {W/m^2/K};
 	loss[2].k := 40 {W/m/K}; (* 'alloy steel', Ashby & Jones, Eng Matls 2, p.11 *)
 	loss[3].k := 0.05 {W/m/K}; (* Masud's figure for lagging *)

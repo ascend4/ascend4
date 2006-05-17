@@ -506,7 +506,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
       break;
     case EXT:
       if (ExternalStatMode(s) == ek_method) {
-        Asc_StatErrMsg_NotAllowedDeclarative(fp,s);
+        Asc_StatErrMsg_NotAllowedDeclarative(fp,s,"");
         rval = DEF_STAT_MISLOCATED;
       }
       break;
@@ -848,24 +848,21 @@ TypeLintIllegalMethodStatList(FILE *fp,
     case COND:
     case WILLBE:
     case FNAME:
-      Asc_StatErrMsg_NotAllowedMethod(fp,s);
+      Asc_StatErrMsg_NotAllowedMethod(fp,s,"");
       rval = DEF_STAT_MISLOCATED;
       break;
     case REL:
     case LOGREL:
-      Asc_StatErrMsg_NotAllowedMethod(fp,s);
+      Asc_StatErrMsg_NotAllowedMethod(fp,s,"Perhaps '=' or '==' should be ':='?");
       rval = DEF_STAT_MISLOCATED;
-      FPRINTF(stderr,"  Perhaps = or == should be := ?\n");
       break;
     case WHEN:
-      Asc_StatErrMsg_NotAllowedMethod(fp,s);
+      Asc_StatErrMsg_NotAllowedMethod(fp,s,"Perhaps WHEN should be SWITCH?");
       rval = DEF_STAT_MISLOCATED;
-      FPRINTF(stderr,"  Perhaps WHEN should be SWITCH?\n");
       break;
     case SELECT:
-      Asc_StatErrMsg_NotAllowedMethod(fp,s);
+      Asc_StatErrMsg_NotAllowedMethod(fp,s,"Perhaps SELECT should be SWITCH?");
       rval = DEF_STAT_MISLOCATED;
-      FPRINTF(stderr,"  Perhaps SELECT should be SWITCH?\n");
       break;
     case FOR:
       if (ForLoopKind(s) != fk_do) {
@@ -881,7 +878,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
       break;
     case EXT:
       if (ExternalStatMode(s) != ek_method) {
-        Asc_StatErrMsg_NotAllowedMethod(fp,s);
+        Asc_StatErrMsg_NotAllowedMethod(fp,s,"");
         rval = DEF_STAT_MISLOCATED;
       }
       break;
