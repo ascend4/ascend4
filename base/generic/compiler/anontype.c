@@ -1,32 +1,33 @@
+/*	ASCEND modelling environment
+	Copyright 1997, Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
 
-/*
- *  anontypes
- *  Anonymous ASCEND IV type classification functions.
- *  By Benjamin Andrew Allan
- *  Created August 30, 1997. 
- *  Copyright 1997, Carnegie Mellon University.
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: anontype.c,v $
- *  Date last modified: $Date: 2000/01/25 02:25:55 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Anonymous ASCEND IV type classification functions.
+*//*
+	By Benjamin Andrew Allan
+	Created August 30, 1997.
+	Copyright 1997, Carnegie Mellon University.
+	Version: $Revision: 1.9 $
+	Version control file: $RCSfile: anontype.c,v $
+	Date last modified: $Date: 2000/01/25 02:25:55 $
+	Last modified by: $Author: ballan $
+*/
 
 #include <limits.h> /* for LONG_MAX */
 #include <utilities/ascConfig.h>
@@ -82,6 +83,10 @@ static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:5
  * write merge list before returning.
  */
 #define AWAL 1
+#if AWAL
+# include <stdio.h>
+#endif
+
 
 /*
  * enum for use in sorting compound types
@@ -208,12 +213,12 @@ struct AnonBucket *FindAnonBucket(struct TypeDescription *d,
   }
   index = TYPEHASHINDEX(SCP(GetName(d)));
   result = t[index];
-  while (result != NULL && 
+  while (result != NULL &&
           (d != result->d ||  /* not type wanted */
             (indirected != LONG_MAX  && /* is array */
              indirected != result->indirected /*wrong level*/
             )
-          ) 
+          )
         ) {
     result = result->next;
   }
@@ -250,7 +255,7 @@ struct AnonBucket *AddAnonBucket(struct TypeDescription *d,
   return b;
 }
 
-/* 
+/*
  * Insert 'at' in anonlist of b after the AT 'after'.
  * after == NULL --> insert at head of anonlist of b.
  */
@@ -335,7 +340,7 @@ double AnonRealAtomValue(struct Instance *i)
   }
 }
 
-/* In the following atom/constant cases it is simply cheaper to 
+/* In the following atom/constant cases it is simply cheaper to
  * check the value directly instead of checking first to see that
  * the FT defines value or dimensionality.
  * In all atom-like cases, we are ignoring subatomic structure,
@@ -382,15 +387,15 @@ struct AnonType *NearestAnonTypeRC(struct Instance *i, struct AnonType *after,
    * We get rid of the NULL case so we can cope more easily with
    * unassigned.
    */
-  if (testat == NULL) { 
+  if (testat == NULL) {
     /* off end */
     *exact = 0;
     return after;
-  } 
-    
+  }
+
   val = AnonRealAtomValue(i);
   /* Find same value. Sorted by decreasing value. */
-  while (testat != NULL && 
+  while (testat != NULL &&
          ((testi = GAP(testat)), dim == RealAtomDims(testi)) &&
          val < AnonRealAtomValue(testi)) {
     /* C comma syntax: testi = in the logic above does nothing to
@@ -399,11 +404,11 @@ struct AnonType *NearestAnonTypeRC(struct Instance *i, struct AnonType *after,
     after = testat;
     testat = testat->next;
   }
-  if (testat == NULL) { 
+  if (testat == NULL) {
     /* off end */
     *exact = 0;
     return after;
-  } 
+  }
   if (val > AnonRealAtomValue(testi) ||
       dim != RealAtomDims(testi)) {
     /* insert at head or after */
@@ -457,7 +462,7 @@ struct AnonType *NearestAnonTypeRA(struct Instance *i,
   if (testat == NULL) {
     *exact = 0;
     return after; /* Works if after NULL or not. */
-  } 
+  }
   if (dim == RealAtomDims(testi)) {
     *exact = 1;
     return testat;
@@ -523,7 +528,7 @@ struct AnonType *NearestAnonTypeIC(struct Instance *i,
   if (testat == NULL) {
     *exact = 0;
     return after; /* Works if after NULL or not. */
-  } 
+  }
   if ( val == AnonIntegerAtomValue(testi) ) {
     /* stopped within list on a match */
     *exact = 1;
@@ -589,7 +594,7 @@ struct AnonType *NearestAnonTypeSC(struct Instance *i,
   if (testat == NULL) {
     *exact = 0;
     return after; /* Works if after NULL or not. */
-  } 
+  }
   if ( val == GetAnonInstSymbol(testi) ) {
     /* stopped within list on a match */
     *exact = 1;
@@ -627,7 +632,7 @@ struct AnonType *NearestAnonTypeBC(struct Instance *i,
       *exact = 0; /* add undefined at head */
       return NULL;
     }
-  } else { 
+  } else {
     /* i is not unassigned */
     val = GetBooleanAtomValue(i);
     if (!AtomAssigned(testi)) {
@@ -676,7 +681,7 @@ struct AnonType *NearestAnonTypeSA(struct Instance *i,
     *exact = 0;
     return after;
   }
-  
+
   /* check for add at front */
   cmp = CmpAtomValues(i,GAP(after));
   if (cmp < 0) {
@@ -697,7 +702,7 @@ struct AnonType *NearestAnonTypeSA(struct Instance *i,
   if (testat == NULL) {
     *exact = 0;
     return after; /* Works if after NULL or not. */
-  } 
+  }
   if ( CmpAtomValues(i,testi)==0 ) {
     /* stopped within list on a match */
     *exact = 1;
@@ -714,7 +719,7 @@ struct AnonType *NearestAnonTypeSA(struct Instance *i,
  * We aren't doing a full treatment because parent ft is
  * available only after a full pass with this partial treatment.
  * Finished comes first, then hollow, in the very limited
- * sort order. NULL is not to be here. 
+ * sort order. NULL is not to be here.
  */
 static
 struct AnonType *NearestAnonTypeRelation(struct Instance *i,
@@ -765,7 +770,7 @@ struct AnonType *NearestAnonTypeRelation(struct Instance *i,
  * We aren't doing a full treatment because parent ft is
  * available only after a full pass with this partial treatment.
  * Finished comes first, then hollow, in the very limited
- * sort order. NULL is not to be here. 
+ * sort order. NULL is not to be here.
  */
 static
 struct AnonType *NearestAnonTypeLogRel(struct Instance *i,
@@ -873,9 +878,9 @@ enum search_status MatchATMerges(struct Instance *i,
         if (testat->next == NULL) {
           s = at_append;  /* testat is end of at list, exact is 0 */
           break;          /* exit while early */
-        } 
+        }
         if (testat->next->exactfamily != *exactfamily) {
-          /* ok, so testat is the right edge of our exactfamily 
+          /* ok, so testat is the right edge of our exactfamily
            * and we want to append the family.
            */
           s = at_append;
@@ -904,9 +909,9 @@ enum search_status MatchATMerges(struct Instance *i,
   return s;
 }
 
-/* i1, i2 assumed != and not NULL. 
+/* i1, i2 assumed != and not NULL.
  * The ArrayAnonCmp function assume that the arrays to be compared have the
- * same array type description and level of indirection so that 
+ * same array type description and level of indirection so that
  * the basetype and set description
  * of the subscripts are identical -- eliminates int vs enum problems.
  */
@@ -1026,7 +1031,7 @@ struct AnonType *NearestAnonTypeArrayEnum(struct Instance *i,
       Asc_Panic(2,"NearestAnonTypeArrayInt","Returning while not (1) done");
       exit(2); /* NOTREACHED, but quiets gcc */
     }
-  } 
+  }
   if (ArrayAnonCmpEnum(i,GAP(after)) < 0) {
     *exact = 0;
     return after;
@@ -1059,7 +1064,7 @@ struct AnonType *NearestAnonTypeArrayEnum(struct Instance *i,
  * and the subscript name/AT of each child.
  * This classification function looks rather simple, mainly
  * because the real dirt goes on in the ArrayAnonCmpInt call.
- * 
+ *
  * We also have to compare mergedness of arrays of models/vars.
  */
 static
@@ -1116,7 +1121,7 @@ struct AnonType *NearestAnonTypeArrayInt(struct Instance *i,
       Asc_Panic(2,"NearestAnonTypeArrayInt","Returning while not (1) done");
       exit(2); /* NOTREACHED, but quiets gcc */
     }
-  } 
+  }
   if (ArrayAnonCmpInt(i,GAP(after)) < 0) {
     *exact = 0;
     return after;
@@ -1148,7 +1153,7 @@ struct AnonType *NearestAnonTypeArrayInt(struct Instance *i,
  * find exact matches (or the need for a new AT) in linear time.
  * Presumably a sorted strucure is faster as it permits us to do
  * fewer than nAT comparisons of the instance being classified
- * against the anonlist. 
+ * against the anonlist.
  * The minimum time to diagnose an exact match of two instances,
  * assuming all children already classified or NULL, is linear
  * in the number of children.
@@ -1173,7 +1178,7 @@ struct AnonType *NearestAnonTypeArrayInt(struct Instance *i,
  * So, the logic required for this picture is given in the function body.
  * The obscuring boundary case (there's always one of those :-() is
  * what to do with NULL instances. They can be most conveniently dealt
- * with by assigning them all (regardless of eventual kind) the 
+ * with by assigning them all (regardless of eventual kind) the
  * AT index of 0 (convenient since real indices start at 1, as they
  * are stored in a gl_list). Unfortunately, this makes a special case
  * out of them for TmpNum purposes because GetTmpNum returns
@@ -1234,7 +1239,7 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
     return after;
   }
   len = ChildListLen(GetChildList(b->d));
-  if (!len) {  
+  if (!len) {
     /* childless --> AT == FT */
     *exact = 1;
     return after;
@@ -1288,7 +1293,7 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
     /* now we have to compare the merge lists, sigh.  The for loop
      * leaves us with the first AT in our exact family.
      */
-    s = MatchATMerges(i,&after,&testat,exactfamily); 
+    s = MatchATMerges(i,&after,&testat,exactfamily);
   }
 #if ATDEBUG
   FPRINTF(ASCERR,"NearestAnonTypeModel: after merge check c = %lu, s = %d\n",c,s);
@@ -1331,7 +1336,7 @@ struct AnonType *NearestAnonTypeModel(struct Instance *i,
  * In the comments of this function, CT -> context, FT -> formal type.
  * By the time we reach this function, there isn't a question of
  * competing types with the same name, so anything determined entirely
- * by the formal type of the bucket, b, will have a bucket with length 
+ * by the formal type of the bucket, b, will have a bucket with length
  * 0 or 1. Every existing AT encountered is assumed to have at least
  * 1 instance associated with it.
  *
@@ -1371,10 +1376,10 @@ struct AnonType *NearestAnonType(struct Instance *i,
 
   case MODEL_INST:
     return NearestAnonTypeModel(i,b, /* need the whole bucket */
-                                exact, exactfamily); 
+                                exact, exactfamily);
 
   /* For all the following anon type -> FT.
-   * either there's already an AT or there isn't. 
+   * either there's already an AT or there isn't.
    * Strictly speaking, the wheninst is determined by parent AT,
    * but this is not available.
    */
@@ -1445,10 +1450,12 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
   }
   exactfamily = 0;
   after = NearestAnonType(i,b,&exact,&exactfamily);
+
 #if ATDEBUG
   WriteInstanceName(ASCERR,i,info->root);
   FPRINTF(ASCERR,"\nexact = %d. after = 0x%p\n",exact,(void *)after);
 #endif
+
   if (!exact) {
     at = ExpandAnonResult(info->atl); /* create, add to atl , set index */
     if (exactfamily != 0) {
@@ -1457,9 +1464,11 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
       at->exactfamily = ++(info->nextfamily);
     }
     InsertAnonType(b,at,after);
+
 #if ATDEBUG
     FPRINTF(ASCERR,"\tnew-at = 0x%p\n",(void *)at);
 #endif
+
   } else {
     at = after;
   }
@@ -1472,7 +1481,7 @@ void DeriveAnonType(struct Instance *i, struct AnonVisitInfo *info)
 
 static
 void DestroyAnonType(struct AnonType *at)
-{ 
+{
   if (at == NULL) {
     return;
   }
@@ -1493,11 +1502,12 @@ void Asc_DestroyAnonList(struct gl_list_t *l)
   gl_destroy(l);
 }
 
-/*
- * This function classifies an instance tree from the
- * bottom up and returns the list described above.
- * The list should be destroyed with Asc_DestroyAnonList.
- */
+
+/**
+	This function classifies an instance tree from the
+	bottom up and returns the list described above.
+	The list should be destroyed with Asc_DestroyAnonList.
+*/
 struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
 {
   struct AnonBucket **t;
@@ -1507,10 +1517,16 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
 #if (TIMECOMPILER && AMSTAT)
   clock_t start,classt;
 #endif
-#if (AWAL && defined(__WIN32__))
+
+#if AWAL
+  char *WAL_file;
+
+# ifdef __WIN32__
   char WAL_filename[] = "atmlist.txt";
   char WAL_file[PATH_MAX + 12];
   char *temp_path;
+# endif
+
 #endif
 
   ZeroTmpNums(i,0);
@@ -1542,12 +1558,16 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
             "Mergedetect\t\t%lu\n",(unsigned long)(classt-start));
 #endif
   SilentVisitInstanceTreeTwo(i,(VisitTwoProc)DeriveAnonType,1,0,(void *)&info);
+
+
 #if AWAL
   {
     FILE *fp;
+
 #if TIMECOMPILER
     FPRINTF(ASCERR, "start atmlist: %lu\n",(unsigned long)clock());
 #endif
+
 #ifdef __WIN32__
     temp_path = getenv("TEMP");   /* put file in TEMP, if defined */
     if (temp_path && (PATH_MAX > strlen(temp_path))) {
@@ -1557,26 +1577,35 @@ struct gl_list_t *Asc_DeriveAnonList(struct Instance *i)
     strcat(WAL_file, WAL_filename);
     fp = fopen(WAL_file,"w+");
 #else   /* !__WIN32__ */
-    fp = fopen("/tmp/atmlist","w+");
+	WAL_file = tmpnam(NULL);
+    fp = fopen(WAL_file,"w+");
 #endif  /* __WIN32__ */
+
     if (fp == NULL) {
-      FPRINTF(ASCERR, "Error opening output file in Asc_DeriveAnonList().\n");
-    }
-    else {
+      FPRINTF(ASCERR, "Error opening output file '%s'in Asc_DeriveAnonList().\n",WAL_file);
+    }else{
       Asc_WriteAnonList(fp, atl, i, 1);
       fclose(fp);
     }
+
 #if TIMECOMPILER
     FPRINTF(ASCERR, "done atmlist: %lu\n",(unsigned long)clock());
 #endif
+
   }
-#endif /* awal */
+
+#endif /* AWAL */
+
+
   Asc_AnonMergeUnmarkIPs(vp);
   DestroyAnonTable(t);
   /* ZeroTmpNums(i,0);  */
   /* not necessary, really, as any tn user should assume they are dirty */
   return atl;
 }
+
+
+
 
 static
 void WriteAnonType(FILE *fp, struct AnonType *at,
@@ -1636,7 +1665,7 @@ void Asc_WriteAnonList(FILE *fp, struct gl_list_t *atl,
   CONST struct TypeDescription *d, *base;
   int tot;
   char *reln, *simple;
-  
+
   if (atl==NULL) {
     return;
   }
@@ -1680,7 +1709,7 @@ void Asc_WriteAnonList(FILE *fp, struct gl_list_t *atl,
       }
 #define ABP 1 /* ATOMic bypass in writing anontypes */
 #if ABP
-      if (simple[0]!='S' /*  && InstanceKind(i) != MODEL_INST */) { 
+      if (simple[0]!='S' /*  && InstanceKind(i) != MODEL_INST */) {
         /* bypass details of ATOmlike things and models. */
 #endif
         FPRINTF(fp,
