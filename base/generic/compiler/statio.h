@@ -158,14 +158,19 @@ extern symchar *StatementTypeString(CONST struct Statement *stat);
  * statement type given.
  */
 
-extern void Asc_StatErrMsg_NotAllowedMethod(FILE *f, CONST struct Statement *stat);
+extern void Asc_StatErrMsg_NotAllowedMethod(FILE *f
+	, CONST struct Statement *stat
+	, CONST char *suggestion
+);
 /**< 
  * Writes a message to the file given indicating the statement is not
  * allowed in a method.
  */
 
-extern void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f,
-                                                 CONST struct Statement *stat);
+extern void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f
+	, CONST struct Statement *stat
+	, CONST char *suggestion
+);
 /**<
  * Writes a message to the file given indicating the statement is not
  * allowed in a declarative MODEL body.

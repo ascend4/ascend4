@@ -28,6 +28,7 @@
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 #include <general/list.h>
 #include <general/dstring.h>
 #include "compiler.h"
@@ -816,26 +817,26 @@ symchar *StatementTypeString(CONST struct Statement *s)
   }
 }
 
-void Asc_StatErrMsg_NotAllowedMethod(FILE *f,
-                                     CONST struct Statement *stat)
-{
-  FPRINTF(f,
-          "%sIn the method at %s:%lu.\n"
-          "  %s statements are not allowed.\n",
-          StatioLabel(3),
-          Asc_ModuleBestName(StatementModule(stat)),
-          StatementLineNum(stat),
-          SCP(StatementTypeString(stat)));
+void Asc_StatErrMsg_NotAllowedMethod(FILE *f
+		, CONST struct Statement *stat
+		, CONST char *suggestion
+){
+	error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(StatementModule(stat))
+		, StatementLineNum(stat), NULL
+		, "In a METHOD, %s statements are not allowed. %s"
+		, SCP(StatementTypeString(stat))
+		, suggestion
+	);
 }
 
-void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f,
-                                          CONST struct Statement *stat)
-{
-  FPRINTF(f,
-          "%sIn the declarative section %s:%lu.\n"
-          "  %s statements are not allowed.\n",
-          StatioLabel(3),
-          Asc_ModuleBestName(StatementModule(stat)),
-          StatementLineNum(stat),
-          SCP(StatementTypeString(stat)));
+void Asc_StatErrMsg_NotAllowedDeclarative(FILE *f
+		, CONST struct Statement *stat
+		, CONST char * suggestion
+){
+	error_reporter(ASC_USER_ERROR,Asc_ModuleBestName(StatementModule(stat))
+		, StatementLineNum(stat), NULL
+		, "In a MODEL's declarative section, %s statements not allowed. %s"
+		, SCP(StatementTypeString(stat))
+		, suggestion
+	);
 }
