@@ -46,7 +46,7 @@ END radial_loss;
 MODEL wall_conduction REFINES radial_loss;
 	k IS_A thermal_conductivity;
 	
-	q = 2 * 1{PI} * L * k *(T_1 - T_2) / ln(D_2/D_1);
+	q = 2 * 1{PI} * L * k * (T_1 - T_2) / ln(D_2/D_1);
 
 END wall_conduction;
 
@@ -57,15 +57,29 @@ MODEL convection_boundary REFINES radial_loss;
 	h IS_A heat_transfer_coefficient;
 	D_1, D_2 ARE_THE_SAME;
 	
+	(* heat loss is positive if T_1 > T_2 *)
 	q = h * 1{PI} * D_1 * (T_1 - T_2);
 
 END convection_boundary;
 
+(**
+	This modes a thick pipe with internal flow, surrounded by 100mm of
+	insulation and a thin external metal shell. In other words, a fairly
+	typical lagged high-temperature pipe as used in power and chemical plant
+	applications.
+
+	Solve the model, then examine the values of T_1 and T_2 for each layer.
+
+	@TODO add ability to plot the temperature versus radial distance...
+*)
 MODEL pipe_test REFINES radial_loss;
 
 	n IS_A integer_constant;
 	n:==5;
 
+	U IS_A heat_transfer_coefficient;
+	q = U * (1{PI} * D_1) * (loss[1].T_2 - T_2);
+	
 	loss[1..5] IS_A radial_loss;
 
 	loss[1] IS_REFINED_TO convection_boundary;
@@ -122,8 +136,8 @@ METHOD values;
 	loss[4].k := 240 {W/m/K}; (* aluminium, Ashby & Jones, Eng Matls 2, p.11 *)
 	loss[5].h := 50 {W/m^2/K};
 	
-	loss[1].D_1 := 0.05 {m}; (* pipe interior *)
-	loss[1].D_2 := 0.07 {m}; (* pipe exterior *)
+	loss[2].D_1 := 0.05 {m}; (* pipe interior *)
+	loss[2].D_2 := 0.07 {m}; (* pipe exterior *)
 	loss[4].D_1 := 0.17 {m}; (* cover interior *)
 	loss[4].D_2 := 0.19 {m}; (* cover exterior *)
 END values;
