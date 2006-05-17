@@ -22,7 +22,6 @@
 *//*
 	By Benjamin Andrew Allan
 	Created August 30, 1997.
-	Copyright 1997, Carnegie Mellon University.
 	Version: $Revision: 1.9 $
 	Version control file: $RCSfile: anontype.c,v $
 	Date last modified: $Date: 2000/01/25 02:25:55 $
