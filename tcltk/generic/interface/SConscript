@@ -69,7 +69,7 @@ else:
 
 		import glob
 
-		sharedata = env['INSTALL_ROOT']+env['INSTALL_DATA']+"/ascend"
+		sharedata = env['INSTALL_ROOT']+env['INSTALL_SHARE']+"/ascend"
 		tkdir = sharedata + "/tcltk/"
 
 		import os
