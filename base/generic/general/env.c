@@ -24,10 +24,12 @@
 #include <stdio.h>
 
 #if !defined(TEST) && !defined(VERBOSE)
-# define NDEBUG
+/* hard wiring NDEBUG here is a misuse of NDEBUG and causes errors/warning
+on the compile line. renamed to NOISY.*/
+# define NOISY 1
 #endif
 
-#ifndef NDEBUG
+#ifndef NOISY
 # include <assert.h>
 # define M(MSG) fprintf(stderr,"%s:%d: (%s) %s\n",__FILE__,__LINE__,__FUNCTION__,MSG);fflush(stderr)
 # define MC(CLR,MSG) fprintf(stderr,"\033[%sm%s:%d: (%s) %s\033[0m\n",CLR,__FILE__,__LINE__,__FUNCTION__,MSG)
@@ -38,7 +40,7 @@
 # define V(VAR) fprintf(stderr,"%s:%d: (%s) %s=%d\n",__FILE__,__LINE__,__FUNCTION__,#VAR,(VAR))
 # define D(VAR) fprintf(stderr,"%s:%d: (%s) %s=",__FILE__,__LINE__,__FUNCTION__,#VAR);ospath_debug(VAR)
 # define DD(VAR) fprintf(stderr,"%c[34;1m%s:%d: (%s)%c[0m %s=",27,__FILE__,__LINE__,__FUNCTION__,27,#VAR);ospath_debug(VAR)
-#else
+#else /*  NOISY*/ 
 # include <assert.h>
 # define M(MSG) ((void)0)
 # define MC(CLR,MSG) ((void)0)
@@ -49,7 +51,7 @@
 # define D(VAR) ((void)0)
 # define DD(VAR) ((void)0)
 # define MM(VAR) ((void)0)
-#endif
+#endif /* NOISY*/ 
 
 #if !defined(FREE) && !defined(MALLOC)
 # define FREE free

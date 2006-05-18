@@ -73,9 +73,47 @@ typedef int ExtProcFunc(int *mode, int *m, unsigned long *n,
    double *x, double *u, double *f, double *g);
 
 
+/** values a blackbox (or ?) can report when returning. */
 enum Calc_status {
-  calc_converged, calc_diverged, calc_fp_error, calc_incorrect_args,
-  calc_error, calc_all_ok
+  calc_converged,
+  calc_diverged, 
+  calc_fp_error,
+  calc_incorrect_args,
+  calc_error,
+  calc_all_ok
+};
+
+/** things that a blackbox can be asked to do. */
+enum Request_type {
+
+  /** do nothing. should never be sent. */
+  bb_none,
+
+  /** will be given when the initial function pointer is called. */
+  bb_first_call,
+
+  /** will be given when the final function pointer is called. */
+  bb_last_call,
+
+  /** If check_args, blackbox should do any argument checking of the variables, data. */
+  bb_check_args,
+
+  /** If recalculate, the caller thinks the input may have changed. */
+  bb_recalculate,
+
+  /** If func_eval, the caller is using the residual function pointer. */
+  bb_func_eval,
+
+  /** If deriv_eval, the caller is using the deriv function pointer. */
+  bb_deriv_eval,
+
+  /** If hess_eval, the caller is using the hessian function pointer. */
+  bb_hess_eval,
+
+  /** If single_step, the caller would like one step toward the solution;
+     usually this is meaningless and should be answered with calc_diverged. */
+  bb_single_step
+
 };
 
 /**
@@ -88,42 +126,27 @@ enum Calc_status {
 	it should store this state in the user_data pointer.
  */
 struct Slv_Interp {
-  /** unique identifier tied to instance tree. */
-  int nodestamp;
-
-  /** status is set by evaluation calls before returning. */
+  /** status is set by blackbox calls before returning. */
   enum Calc_status status;
 
-  /** user_data is set by the external library if it has any persistent state
+  /** user_data is set by the blackbox if it has any persistent state
      during calls to ExtBBoxInitFunc initial and final given in
      CreateUserFunctionBlackBox.
    */
   void *user_data;
 
-  /** will be true when the initial function pointer is called. */
-  unsigned first_call  :1;
+  /** unique identifier tied to instance tree. Set by system. */
+  int nodestamp;
 
-  /** will be true when the final function pointer is called. */
-  unsigned last_call   :1;
+  /** What the caller wants done on a given call.
+      As black boxes are represented with 5 function pointers,
+      one might think this is not needed. The task is provided for
+      those who wish to implement only one function and have it
+      handle all types of calls. It also handles the cases where
+      there is checking rather than evaluation.
+  */
+  enum Request_type task;
 
-  /** If check_args, blackbox should do any argument checking of the variables, data. */
-  unsigned check_args  :1;
-
-  /** If recalculate, the caller thinks the input may have changed. */
-  unsigned recalculate :1;
-
-  /** If func_eval, the caller is using the residual function pointer. */
-  unsigned func_eval   :1;
-
-  /** If deriv_eval, the caller is using the deriv function pointer. */
-  unsigned deriv_eval  :1;
-
-  /** If hess_eval, the caller is using the hessian function pointer. */
-  unsigned hess_eval   :1;
-
-  /** If single_step, the caller would like one step toward the solution;
-     usually this is meaningless and should be answered with calc_diverged. */
-  unsigned single_step :1;
 };
 
 /// Setup/teardown, if any needed, for a particular instance.
@@ -153,8 +176,27 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
                             struct Instance *,
                             struct gl_list_t *);
 
-/** @TODO this one may need splitting/rework for hessian */
-typedef int ExtBBoxFunc(struct Slv_Interp *,
+/** 
+External black box equations are of the block form
+y_out = f(x_in). This block expands to N_outputs equations
+of the form y_out[i] = f_i(x_in), where the functional details
+of f are assumed to be smooth enough but otherwise totally hidden
+and x_in, y_out are non-overlapping sets of variables.
+Note that solvers are not psychic; if this blackbox is embedded
+in a larger model such that some of y_out are fixed variables,
+the odds of convergence are small. Cleverer solvers may issue
+a warning. 
+@param interp the control information is exchanged in interp; interp->task
+	should be consulted.
+@param ninputs the length of the inputs, xi_in.
+@param noutputs, the length of the outputs, y_out.
+@param jacobian, the partial derivative df/dx, where
+each row is df[i]/dx[j] over each j for the y_out[i] of
+matching index. The jacobian array is 1-D, row major, i.e.
+df[i]/dx[j] -> jacobian[i*ninputs+j].
+@TODO this one may need splitting/rework for hessian.
+ */
+typedef int ExtBBoxFunc(struct Slv_Interp *interp,
                         int ninputs,
                         int noutputs,
                         double *inputs,
@@ -188,7 +230,7 @@ struct BlackBoxExternalFunc {
   ExtBBoxFunc *value; /**< relation residual function. */
   ExtBBoxFunc *deriv; /**< relation gradient function. */
   ExtBBoxFunc *deriv2; /**< relation hessian function. */
-  ExtBBoxFunc *final; /**< cleanup function. */
+  ExtBBoxInitFunc *final; /**< cleanup function. */
 };
 
 struct MethodExternalFunc {
@@ -269,7 +311,7 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
                               ExtBBoxFunc *value,
                               ExtBBoxFunc *deriv,
                               ExtBBoxFunc *deriv2,
-                              ExtBBoxFunc *final,
+                              ExtBBoxInitFunc *final,
                               CONST unsigned long n_inputs,
                               CONST unsigned long n_outputs,
                               CONST char *help);
@@ -282,6 +324,8 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 	*copy* of the help string if it is provided.  We also make a copy
 	of the name.  Anyone desirous of ASCEND knowing about their
 	functions must use this protocol.
+
+	Note: most blackboxes 
 
 	@param name Name of the function being added (or updated).
 	@param init Pointer to initialisation function, or NULL if none.

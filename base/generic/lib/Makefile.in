@@ -143,7 +143,7 @@ $(BTTARGET) _dummy_target: $(BTTARGET).c
 
 #  Files to install
 
-LIB_DIR_FILES = btprolog.h Makefile.bt instance_enum.h ascConfig.h
+LIB_DIR_FILES = Makefile.bt btprolog.h instance_enum.h ascConfig.h
 
 install-binaries:: $(LIB_DIR_FILES)
 	@if test ! -d $(LIB_DIR) ; then \
@@ -175,7 +175,7 @@ clean::
 	-$(RM) $(LIB_DIR_FILES) *.so *.sl
 
 
-.PHONY: btprolog.h
+# .PHONY: btprolog.h
 
 # DO NOT DELETE THIS LINE -- g++dep uses it.
 # DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.

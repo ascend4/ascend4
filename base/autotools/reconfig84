@@ -101,6 +101,7 @@ cmd="./configure  \
 --enable-dynamic-packages \
 --with-tkconfig=$tkroot/lib \
 --with-tclconfig=$tkroot/lib \
+--with-quiet=yes \
 $blasopt"
 
 #--enable-relation-debugging 

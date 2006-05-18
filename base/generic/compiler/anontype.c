@@ -81,7 +81,7 @@ static CONST char AnonTypeModuleID[] = "$Id: anontype.c,v 1.9 2000/01/25 02:25:5
 /*
  * write merge list before returning.
  */
-#define AWAL 1
+#define AWAL 0
 #if AWAL
 # include <stdio.h>
 #endif

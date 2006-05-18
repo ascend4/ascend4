@@ -23,7 +23,7 @@ else:
 	default_tcl_lib = "tcl8.3"
 	default_tk_lib = "tk8.3"
 	default_tktable_lib = "Tktable2.8"
-	default_install_assets = "$INSTALL_DATA/ascend/glade/"
+	default_install_assets = "$INSTALL_SHARE/glade/"
 	icon_extension = '.svg'
 	default_tcl = os.path.expanduser("~/activetcl")
 	default_tcl_libpath = "$TCL/lib"	
@@ -110,7 +110,7 @@ opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
-	,"$INSTALL_DATA/ascend/models"
+	,"$INSTALL_SHARE/models"
 )
 
 # Where is SWIG?
@@ -262,9 +262,9 @@ opts.Add(
 )
 
 opts.Add(
-	'INSTALL_DATA'
+	'INSTALL_SHARE'
 	,'Location to put data files during installation'
-	,"$INSTALL_PREFIX/share"
+	,"$INSTALL_PREFIX/share/ascend"
 )
 
 opts.Add(
@@ -893,7 +893,7 @@ subst_dict = {
 	, '@GLADE_FILE@':'ascend.glade'
 	, '@HELP_ROOT@':''
 	, '@ICON_EXTENSION@':icon_extension
-	, '@INSTALL_DATA@':env['INSTALL_DATA']
+	, '@INSTALL_SHARE@':env['INSTALL_SHARE']
 	, '@INSTALL_BIN@':env['INSTALL_BIN']
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
@@ -1122,7 +1122,7 @@ if env.get('CAN_INSTALL'):
 	# the models directory only needs to be processed for installation, no other processing required.
 	env.SConscript(['models/SConscript'],'env')
 
-	dirs = ['INSTALL_BIN','INSTALL_DATA','INSTALL_LIB']
+	dirs = ['INSTALL_BIN','INSTALL_SHARE','INSTALL_LIB']
 	install_dirs = [env['INSTALL_ROOT']+env[d] for d in dirs]
 
 	# TODO: add install options

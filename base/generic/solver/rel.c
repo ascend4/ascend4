@@ -604,9 +604,6 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup)
   struct Slv_Interp slv_interp;
 
   ExtBBoxInitFunc *init_func;
-/*  now a typedef in solver/extfunc.h - 1/22/2006 - jds
-  int32 (*init_func)(struct Slv_Interp *, struct Instance *, struct gl_list_t *);
-*/
   int32 nok = 0;
 
   if (!cache) return 1;
@@ -616,18 +613,25 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup)
   slv_interp.nodestamp = cache->nodestamp;
   slv_interp.user_data = cache->user_data;
   if (setup) {
+/*
     slv_interp.first_call = (unsigned)1;
     slv_interp.last_call = (unsigned)0;
     slv_interp.check_args = (unsigned)1;
+*/
+    slv_interp.task = bb_first_call;
   }
   else{
+    slv_interp.task = bb_last_call;
+/*
     slv_interp.first_call = (unsigned)0;
     slv_interp.last_call = (unsigned)1;
     slv_interp.check_args = (unsigned)0;
+*/
   }
   nok = (*init_func)(&slv_interp,cache->data,cache->arglist);
-  if (nok)
+  if (nok) {
     return 1;
+  }
 
   /*
    * Save the user's data and update our status.
@@ -701,7 +705,10 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel)
     Init_Slv_Interp(&slv_interp);
     slv_interp.nodestamp = cache->nodestamp;
     slv_interp.user_data = cache->user_data;
+/*
     slv_interp.func_eval = (unsigned)1;
+*/
+    slv_interp.task = bb_func_eval;
 
     nok = (*eval_func)(&slv_interp, ninputs, cache->noutputs,
 		       cache->inputs, cache->outputs, cache->jacobian);
@@ -728,7 +735,11 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel)
  */
 real64 ExtRel_Evaluate_LHS(struct rel_relation *rel)
 {
-  real64 res = 1.0;
+  real64 res = 0.0;
+  /* 
+   conceptual equation is 0 = f(y[i], x[]);
+   where f is the residual function for the ith output y[i] and all input x[j]
+  */
   UNUSED_PARAMETER(rel);
   FPRINTF(stderr,"Finsished calling ExtRel_Evaluate_LHS result ->%g\n",
 	  res);
@@ -936,7 +947,10 @@ int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d)
    * In any case init the interpreter.
    */
   Init_Slv_Interp(&slv_interp);
+/*
   slv_interp.deriv_eval = (unsigned)1;
+*/
+  slv_interp.task = bb_deriv_eval;
   slv_interp.user_data = cache->user_data;
   deriv_func = GetDerivFunc(efunc);
   if (deriv_func) {

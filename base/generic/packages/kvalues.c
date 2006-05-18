@@ -258,7 +258,7 @@ int kvalues_preslv(struct Slv_Interp *slv_interp,
    int nok,c; */
 
 
-  if (slv_interp->first_call) {
+  if (slv_interp->task = bb_first_call) {
     if (slv_interp->user_data!=NULL) { 	/* we have been called before */
       return 0;				/* the problem structure exists */
     }
