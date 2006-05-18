@@ -42,6 +42,7 @@ INSTALL_FILE_LIST = \
 	ascfontsel.tcl \
 	ascparm.tcl \
 	balloon.tcl \
+	asctkfbox84.tcl \
 	asctkfbox.tcl
 
 
