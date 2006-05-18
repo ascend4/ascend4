@@ -32,6 +32,7 @@
 #include "compiler.h"
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 #include <general/list.h>
 #include "fractions.h"
 #include "dimen.h"
@@ -423,6 +424,20 @@ void PrintDimen(FILE *file, CONST dim_type *dim)
     if (printed == 0) FPRINTF(file,"dimensionless");
   }
 }
+
+ASC_DLLSPEC(void) PrintDimenMessage(CONST char *message
+		, CONST char *label1, CONST dim_type *d1
+		, CONST char *label2, CONST dim_type *d2
+){
+		error_reporter_start(ASC_USER_ERROR,NULL,0,NULL);
+		FPRINTF(ASCERR,"%s: %s='", message, label1);
+		PrintDimen(ASCERR,d1);
+		FPRINTF(ASCERR,"', %s='",label2);
+		PrintDimen(ASCERR,d2);
+		FPRINTF(ASCERR,"'");
+		error_reporter_end_flush();
+}
+
 
 void DumpDimens(FILE *file)
 {

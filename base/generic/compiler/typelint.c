@@ -529,7 +529,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     case WHILE:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
       rval = DEF_STAT_MISLOCATED;
-      FPRINTF(fp,"  Flow controls are allowed only in methods.\n"); 
+      FPRINTF(fp,"  Flow controls are allowed only in methods.\n");
       break;
     case IF:
       TypeLintError(fp,s,DEF_STAT_MISLOCATED);
@@ -547,7 +547,7 @@ enum typelinterr TypeLintIllegalBodyStats(FILE *fp,
     }
   }
   if (rval != DEF_OKAY && g_tlibs_depth < 2 /* at top */) {
-    FPRINTF(fp,"  Errors detected in body statements of %s\n",
+    FPRINTF(fp,"  Errors detected in declarative section of '%s'\n",
             SCP(name));
   }
   g_tlibs_depth--;
@@ -666,7 +666,7 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
     case COND:
     case RUN:
     case CALL:
-    case FLOW: 
+    case FLOW:
     case WHILE:
     case IF:
     default:
@@ -675,7 +675,7 @@ enum typelinterr TypeLintIllegalParamStats(FILE * fp,
     }
   }
   if (rval != DEF_OKAY) {
-    FPRINTF(fp,"  Errors detected in argument definitions of %s\n",SCP(name));
+    FPRINTF(fp,"  Errors detected in argument definitions of '%s'\n",SCP(name));
   }
   return rval;
 }
@@ -734,7 +734,7 @@ TypeLintIllegalWhereStats(FILE * fp,
     case RUN:
     case CALL:
     case IF:
-    case FLOW: 
+    case FLOW:
     case WHILE:
     case WILLBE:
     default:
@@ -743,7 +743,7 @@ TypeLintIllegalWhereStats(FILE * fp,
     }
   }
   if (rval != DEF_OKAY) {
-    FPRINTF(fp," Errors detected in WHERE statements of %s\n",SCP(name));
+    FPRINTF(fp," Errors detected in WHERE statements of '%s'\n",SCP(name));
   }
   return rval;
 }
@@ -799,7 +799,7 @@ TypeLintIllegalReductionStats(FILE * fp,
     case RUN:
     case CALL:
     case IF:
-    case FLOW: 
+    case FLOW:
     case WHILE:
     case WILLBE:
     default:
@@ -808,7 +808,7 @@ TypeLintIllegalReductionStats(FILE * fp,
     }
   }
   if (rval != DEF_OKAY) {
-    FPRINTF(fp,"  Errors detected in parameter assignments of %s\n",SCP(name));
+    FPRINTF(fp,"  Errors detected in parameter assignments of '%s'\n",SCP(name));
   }
   return rval;
 }
@@ -895,7 +895,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
         if (tmperr != DEF_OKAY) {
           rval = tmperr;
           break;
-        } 
+        }
       }
       break;
     case ASSERT:
@@ -909,7 +909,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
         if (tmperr != DEF_OKAY) {
           rval = tmperr;
           break;
-        } 
+        }
       }
       if (IfStatElse(s) != NULL){
         tmperr = TypeLintIllegalMethodStatList(fp,name,pname,IfStatElse(s),
@@ -917,7 +917,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
         if (tmperr != DEF_OKAY) {
           rval = tmperr;
 	}
-      }    
+      }
       break;
     case SWITCH:
       sw = SwitchStatCases(s);
@@ -929,7 +929,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
           if (tmperr != DEF_OKAY) {
             rval = tmperr;
             break;
-          }           
+          }
 	}
         sw = NextSwitchCase(sw);
       }
@@ -966,7 +966,7 @@ TypeLintIllegalMethodStatList(FILE *fp,
     }
   }
   if (rval != DEF_OKAY) {
-    FPRINTF(fp,"  Errors detected in METHOD %s of %s\n",SCP(pname),SCP(name));
+    FPRINTF(fp,"  Errors detected in METHOD '%s' of '%s'\n",SCP(pname),SCP(name));
   }
   return rval;
 }

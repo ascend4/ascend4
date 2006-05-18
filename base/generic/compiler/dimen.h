@@ -285,8 +285,6 @@ ASC_DLLSPEC(void ) ParseDim(dim_type *dim, CONST char *c);
 
 ASC_DLLSPEC(char *) DimName(CONST int index);
 /**<
- *  <!--  char *DimName(index)                                         -->
- *  <!--  int index;                                                   -->
  *  Return the internal copy of the name of the dimension corresponding
  *  to index if index is within [0..NUM_DIMENS-1], otherwise return NULL.
  */
@@ -302,6 +300,15 @@ extern CONST dim_type *CheckDimensionsMatch(CONST dim_type *d1, CONST dim_type *
 
 ASC_DLLSPEC(void) PrintDimen(FILE *f ,CONST dim_type *d);
 /**< Print a dimension to a file.  Used in interface */
+
+
+ASC_DLLSPEC(void) PrintDimenMessage(CONST char *message
+		, CONST char *label1, CONST dim_type *d1
+		, CONST char *label2, CONST dim_type *d2
+);
+
+/**< Print a message like "LABEL1='dim1', LABEL2='dim2'" */
+
 ASC_DLLSPEC(void ) DumpDimens(FILE *f);
 /**< Dump all dimensions to a file.  Used in interface */
 

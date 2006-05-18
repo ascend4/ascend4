@@ -338,6 +338,10 @@ static void EvaluateAssignment(struct Statement *stat,
           }
           else{
             STATEMENT_ERROR(stat, "Dimensionally inconsistent assignment");
+            PrintDimenMessage("Mismatched dimensions"
+            	,"LHS",RealValueDimensions(result)
+            	,"RHS",RealDimensions(rec)
+            );
           }
         }
         else{
@@ -357,6 +361,10 @@ static void EvaluateAssignment(struct Statement *stat,
           }
           else{
             STATEMENT_ERROR(stat, "Dimensionally inconsistent assignment");
+            PrintDimenMessage("Mismatched dimensions"
+            	,"LHS",Dimensionless()
+            	,"RHS",RealDimensions(rec)
+            );
           }
         }
         else{
