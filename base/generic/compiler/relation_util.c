@@ -2262,7 +2262,12 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
   } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
     if (reltype == e_blackbox)
     {
-      // FIXME
+      /* FIXME */
+	/* note: blackbox equations support the form 
+		output[i] = f(input[j] for all j) foreach i
+	thus the residual is 
+	*/
+
       FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
       FPRINTF(ASCERR, "blackbox not implemented yet.\n");
     }

@@ -177,7 +177,7 @@ X11_LIBS = @X11_LIBRARIES@ -lX11 @X11_EXTRA_LIBS@ @X11_RUN_PATH@
 #  The order should be -ltk -ltcl
 TCL_LIBRARY = @TCLLIB@
 TK_LIBRARY  = @TKLIB@
-TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) $(TK_LD_SEARCH_FLAGS) $(DL_LIBS)
+TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) @TK_LD_HACK@ $(DL_LIBS)
 
 #  The location of the tcl.h and tk.h header files
 TK_INCS  = -I@TCLINCLUDE@ @TK_HDR@
@@ -414,7 +414,7 @@ MANn_DIR = $(MAN_DIR)/mann
 HELP_DIR = $(prefix)/help
 #
 #  directory for ascend models (libraries & examples)
-MODELS_DIR = $(prefix)/models
+MODELS_DIR = @INSTALL_SHARE@/models
 #
 #  directory for ascend package code
 PACK_DIR = $(prefix)/packages
@@ -423,8 +423,10 @@ PACK_DIR = $(prefix)/packages
 TK_LIBRARY_DIR = $(prefix)/lib/tcl
 #
 #  directory for ascend specific tcl/tk code
-ASCEND_TK_DIR = $(prefix)/TK
+# Note: the name for this is TK, not tcltk/TK.
+ASCEND_TK_DIR = @INSTALL_SHARE@/TK
 
+QUIET_INSTALL=@QUIET_INSTALL@
 
 ####>>>  CMU DEVELOPERS  <<<##################################################
 

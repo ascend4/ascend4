@@ -48,7 +48,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
 		       ExtBBoxFunc *value,
 		       ExtBBoxFunc *deriv,
 		       ExtBBoxFunc *deriv2,
-		       ExtBBoxFunc *final,
+		       ExtBBoxInitFunc *final,
 		       CONST unsigned long n_inputs,
 		       CONST unsigned long n_outputs,
 		       CONST char *help)
@@ -214,6 +214,12 @@ ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc)
   asc_assert(efunc!=NULL);
   /* return (ExtBBoxInitFunc*)efunc->u.black.init; */
   return efunc->u.black.initial;
+}
+
+ExtBBoxInitFunc * GetFinalFunc(struct ExternalFunc *efunc)
+{
+  asc_assert(efunc!=NULL);
+  return efunc->u.black.final;
 }
 
 ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc)

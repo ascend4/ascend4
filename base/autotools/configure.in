@@ -819,6 +819,13 @@ TKINCLUDE=
 TKLIB=
 TKPACKAGE=
 ASC_TK
+TK_LD_HACK="\$(TK_LD_SEARCH_FLAGS)"
+if test "x$TK_LD_SEARCH_FLAGS" = "x''"; then
+  TK_LD_HACK=""
+fi
+if test "x$TK_LD_SEARCH_FLAGS" = "x"; then
+  TK_LD_HACK=""
+fi
 
 
 #--------------------------------------------------------------------
@@ -1426,6 +1433,15 @@ if test ! "X$with_models" = "Xno" ; then
     done
 fi
 
+AC_ARG_WITH(quiet,
+    [  --with-quiet        Much less whining if reinstalling the tk,models subdirs],
+    , [with_quiet=no])
+if test ! "X$with_quiet" = "Xno" ; then
+	QUIET_INSTALL=1
+else
+	QUIET_INSTALL=0
+fi
+AC_SUBST(QUIET_INSTALL)
 
 # Initialize variables
 help_dir_root=''
@@ -1532,8 +1548,19 @@ else
 	AC_MSG_RESULT([no])
 fi
 
-DEFAULT_ASCENDLIBRARY=$prefix/models
-ASCEND_DEFAULTLIBRARY=$prefix/models
+ASC_DISTDIR_REL_BIN=".."
+# Next we determine whether models and TK get installed in
+# prefix or datadir. If datadir not explicitly given, we
+# use prefix.
+if test "x$datadir" = 'x${prefix}/share'; then
+  INSTALL_SHARE="$prefix"
+else
+  INSTALL_SHARE="$datadir"
+fi
+DEFAULT_ASCENDLIBRARY="$INSTALL_SHARE/models"
+ASCEND_DEFAULTLIBRARY="$INSTALL_SHARE/models"
+ASC_ENV_TK_DEFAULT="$INSTALL_SHARE/TK"
+
 
 #--------------------------------------------------------------------
 #	The variables we substitute into the Makefile.in files
@@ -1570,6 +1597,10 @@ AC_SUBST(TK_HDR)
 AC_SUBST(TKTABLE_LIB)
 AC_SUBST(ASC_TK_LIBRARY)
 AC_SUBST(ASC_TCL_LIBRARY)
+AC_SUBST(ASC_DISTDIR_REL_BIN)
+AC_SUBST(INSTALL_SHARE)
+AC_SUBST(ASC_ENV_TK_DEFAULT)
+AC_SUBST(TK_LD_HACK)
 AC_SUBST(HAVE_TKTABLE)
 AC_SUBST(asc_subdirs)
 AC_SUBST(F77)

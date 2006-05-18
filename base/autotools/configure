@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS RANLIB ac_ct_RANLIB LN_S SET_MAKE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP DEBUG_LIBS EGREP YACC parser_src LEX LEXLIB LEX_OUTPUT_ROOT LIBOBJS TCLINCLUDE NOTCLCONFIG TCLCONFIG TCLLIB TCLDYNAMICLINKING TKINCLUDE TKLIB TKDYNAMICLINKING F77 BLASLIB LPAKLIB LSODLIB DEFAULT_ASCENDLIBRARY ASCEND_DEFAULTLIBRARY ascpwd fullpathsrcdir asc_include scanner_src typer_src MATH_LIBS X11_INCLUDES X11_LIBRARIES X11_RUN_PATH X11_EXTRA_LIBS DL_LIBS LD_FLAGS LD_SEARCH_FLAGS SHLIB_CFLAGS SHLIB_LD SHLIB_LD_LIBS SHLIB_SUFFIX ASC_LIB_SUFFIX TK_LIB TK_HDR TKTABLE_LIB ASC_TK_LIBRARY ASC_TCL_LIBRARY HAVE_TKTABLE asc_subdirs F77LIBS make_blaslib make_lpaklib make_lsodlib HAVE_LSOD tkdir_root tkdir_topbuilddir models_dir_root models_topbuilddir help_dir_root help_topbuilddir LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS RANLIB ac_ct_RANLIB LN_S SET_MAKE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP DEBUG_LIBS EGREP YACC parser_src LEX LEXLIB LEX_OUTPUT_ROOT LIBOBJS TCLINCLUDE NOTCLCONFIG TCLCONFIG TCLLIB TCLDYNAMICLINKING TKINCLUDE TKLIB TKDYNAMICLINKING F77 BLASLIB LPAKLIB LSODLIB QUIET_INSTALL DEFAULT_ASCENDLIBRARY ASCEND_DEFAULTLIBRARY ascpwd fullpathsrcdir asc_include scanner_src typer_src MATH_LIBS X11_INCLUDES X11_LIBRARIES X11_RUN_PATH X11_EXTRA_LIBS DL_LIBS LD_FLAGS LD_SEARCH_FLAGS SHLIB_CFLAGS SHLIB_LD SHLIB_LD_LIBS SHLIB_SUFFIX ASC_LIB_SUFFIX TK_LIB TK_HDR TKTABLE_LIB ASC_TK_LIBRARY ASC_TCL_LIBRARY ASC_DISTDIR_REL_BIN INSTALL_SHARE ASC_ENV_TK_DEFAULT TK_LD_HACK HAVE_TKTABLE asc_subdirs F77LIBS make_blaslib make_lpaklib make_lsodlib HAVE_LSOD tkdir_root tkdir_topbuilddir models_dir_root models_topbuilddir help_dir_root help_topbuilddir LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -898,6 +898,7 @@ Fortran compiler and libraries:
 Generation of Makefiles:
   --without-tkdir         do not generate Makefiles in the TK subdir
   --without-models        do not generate Makefiles in the models subdir
+  --with-quiet        Much less whining if reinstalling the tk,models subdirs
 
 Some influential environment variables:
   CC          C compiler command
@@ -6134,6 +6135,13 @@ fi
 
 
 
+TK_LD_HACK="\$(TK_LD_SEARCH_FLAGS)"
+if test "x$TK_LD_SEARCH_FLAGS" = "x''"; then
+  TK_LD_HACK=""
+fi
+if test "x$TK_LD_SEARCH_FLAGS" = "x"; then
+  TK_LD_HACK=""
+fi
 
 
 #--------------------------------------------------------------------
@@ -8179,6 +8187,20 @@ if test ! "X$with_models" = "Xno" ; then
 fi
 
 
+# Check whether --with-quiet or --without-quiet was given.
+if test "${with_quiet+set}" = set; then
+  withval="$with_quiet"
+
+else
+  with_quiet=no
+fi;
+if test ! "X$with_quiet" = "Xno" ; then
+	QUIET_INSTALL=1
+else
+	QUIET_INSTALL=0
+fi
+
+
 # Initialize variables
 help_dir_root=''
 help_topbuilddir=''
@@ -8291,13 +8313,28 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-DEFAULT_ASCENDLIBRARY=$prefix/models
-ASCEND_DEFAULTLIBRARY=$prefix/models
+ASC_DISTDIR_REL_BIN=".."
+# Next we determine whether models and TK get installed in
+# prefix or datadir. If datadir not explicitly given, we
+# use prefix.
+if test "x$datadir" = 'x${prefix}/share'; then
+  INSTALL_SHARE="$prefix"
+else
+  INSTALL_SHARE="$datadir"
+fi
+DEFAULT_ASCENDLIBRARY="$INSTALL_SHARE/models"
+ASCEND_DEFAULTLIBRARY="$INSTALL_SHARE/models"
+ASC_ENV_TK_DEFAULT="$INSTALL_SHARE/TK"
+
 
 #--------------------------------------------------------------------
 #	The variables we substitute into the Makefile.in files
 #	and the command to actually generate the Makefiles
 #--------------------------------------------------------------------
+
+
+
+
 
 
 
@@ -9005,6 +9042,7 @@ s,@F77@,$F77,;t t
 s,@BLASLIB@,$BLASLIB,;t t
 s,@LPAKLIB@,$LPAKLIB,;t t
 s,@LSODLIB@,$LSODLIB,;t t
+s,@QUIET_INSTALL@,$QUIET_INSTALL,;t t
 s,@DEFAULT_ASCENDLIBRARY@,$DEFAULT_ASCENDLIBRARY,;t t
 s,@ASCEND_DEFAULTLIBRARY@,$ASCEND_DEFAULTLIBRARY,;t t
 s,@ascpwd@,$ascpwd,;t t
@@ -9030,6 +9068,10 @@ s,@TK_HDR@,$TK_HDR,;t t
 s,@TKTABLE_LIB@,$TKTABLE_LIB,;t t
 s,@ASC_TK_LIBRARY@,$ASC_TK_LIBRARY,;t t
 s,@ASC_TCL_LIBRARY@,$ASC_TCL_LIBRARY,;t t
+s,@ASC_DISTDIR_REL_BIN@,$ASC_DISTDIR_REL_BIN,;t t
+s,@INSTALL_SHARE@,$INSTALL_SHARE,;t t
+s,@ASC_ENV_TK_DEFAULT@,$ASC_ENV_TK_DEFAULT,;t t
+s,@TK_LD_HACK@,$TK_LD_HACK,;t t
 s,@HAVE_TKTABLE@,$HAVE_TKTABLE,;t t
 s,@asc_subdirs@,$asc_subdirs,;t t
 s,@F77LIBS@,$F77LIBS,;t t

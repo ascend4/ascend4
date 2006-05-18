@@ -6,7 +6,18 @@
 #define ASC_CONFIG_H
 
 #define ASC_DEFAULTPATH "@DEFAULT_ASCENDLIBRARY@"
-#define ASC_DATADIR "@INSTALL_DATA@"
+
+/* The value INSTALL_SHARE is usually equivalent to ASCENDDIST.
+The CMU depot packaging standards are different from the latest packaging
+fad in Linux. Note that there's nothing sacred about the
+Linux share directory fad: Sun, Adobe, Intel, and most other
+commercial software vendors ignore it and with good reasons.
+INSTALL_SHARE can be $prefix (the CMU standard) or any value specified with
+--datadir to the autoconf configure script.
+./configure --prefix=$prefix --datadir=$prefix/share/ascend 
+in order to get the typical non-CMU behavior.
+*/
+#define ASC_DATADIR "@INSTALL_SHARE@"
 
 /*
 	This is the location of the 'dist dir' relative to the location of the

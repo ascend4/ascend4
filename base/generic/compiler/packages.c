@@ -79,13 +79,16 @@ void Init_Slv_Interp(struct Slv_Interp *slv_interp)
     slv_interp->nodestamp = 0;
     slv_interp->status = calc_all_ok;
     slv_interp->user_data = NULL;
-    slv_interp->first_call = (unsigned)0;
-    slv_interp->last_call = (unsigned)0;
-    slv_interp->check_args = (unsigned)0;
-    slv_interp->recalculate = (unsigned)0;
-    slv_interp->func_eval = (unsigned)0;
-    slv_interp->deriv_eval = (unsigned)0;
-    slv_interp->single_step = (unsigned)0;
+    slv_interp->task = bb_none;
+/*
+    slv_interp->first_call = (unsigned)0; // gone away
+    slv_interp->last_call = (unsigned)0; // gone away
+    slv_interp->check_args = (unsigned)0; // gone away
+    slv_interp->recalculate = (unsigned)0; // gone away
+    slv_interp->func_eval = (unsigned)0; // gone away
+    slv_interp->deriv_eval = (unsigned)0; // gone away
+    slv_interp->single_step = (unsigned)0; // gone away
+*/
   }
 }
 
@@ -189,7 +192,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	fp2 = ospath_getdir(fp1);
 	s1 = ospath_getfilestem(fp1);
 	if(s1==NULL){
-		// not a file, so fail...
+		/* not a file, so fail... */
 		return NULL;
 	}
 
@@ -426,6 +429,8 @@ static void LoadInputVector(struct gl_list_t *arglist,
 
 /**
 	What's a black box, and what's a glass box? -- JP
+	See Abbott thesis. - baa
+	This function is, of course, a mess.
 */
 int CallBlackBox(struct Instance *inst,
 		 CONST struct relation *rel)
@@ -443,36 +448,11 @@ int CallBlackBox(struct Instance *inst,
   double *inputs = NULL, *outputs = NULL;
   double *jacobian = NULL;
 
-  /* All these desperately need a typedef in a header someplace */
-/*  now typedefs in solver/extfunc.h - 1/22/2006 - jds
-  int (*init_func) (struct Slv_Interp *,
-                    struct Instance *,
-                    struct gl_list_t *);
-
-  int (*eval_func)(struct Slv_Interp *,
-                   int,         // n_inputs
-                   int,         // n_outputs
-                   double *,    // inputs
-                   double * ,   // outputs
-                   double * );  // jacobian
-
-  int (*deriv_func)(struct Slv_Interp *,
-                   int,         // n_inputs
-                   int ,        // n_outputs
-                   double *,    // inputs
-                   double * ,   // outputs
-                   double * );  // jacobian
-*/
   ExtBBoxInitFunc *init_func;
+  ExtBBoxInitFunc *final_func;
   ExtBBoxFunc *eval_func;
   ExtBBoxFunc *deriv_func;
 
-/*------------------------------
-	After this point everything should be ok.
-	<-- says who? when? -- JP
-*/
-
-  /* Visual C doesn't like this before the func ptr defs. */
   UNUSED_PARAMETER(inst);
 
   ext = BlackBoxExtCall(rel);
@@ -480,6 +460,7 @@ int CallBlackBox(struct Instance *inst,
   data = ExternalCallDataInstance(ext);
   efunc = ExternalCallExtFunc(ext);
   init_func = GetInitFunc(efunc);
+  final_func = GetFinalFunc(efunc);
   eval_func = GetValueFunc(efunc);
   deriv_func = GetDerivFunc(efunc);
 
@@ -487,9 +468,11 @@ int CallBlackBox(struct Instance *inst,
 
     /* set up the interpreter. */
     Init_Slv_Interp(&slv_interp);
+/*
     slv_interp.check_args = (unsigned)1;
     slv_interp.first_call = (unsigned)1;
     slv_interp.last_call = (unsigned)0;
+*/
     slv_interp.nodestamp = ExternalCallNodeStamp(ext);
     n_input_args = NumberInputArgs(efunc);
     n_output_args = NumberOutputArgs(efunc);
@@ -506,11 +489,13 @@ int CallBlackBox(struct Instance *inst,
     /*
      * Call the init function.
      */
+    slv_interp.task = bb_first_call;
     nok = (*init_func)(&slv_interp,data,arglist);
     if (nok) goto error;
     /*
      * Call the evaluation function.
      */
+    slv_interp.task = bb_func_eval;
     nok = (*eval_func)(&slv_interp,ninputs,noutputs,
 		       inputs,outputs,jacobian);
     if (nok) goto error;
@@ -518,6 +503,7 @@ int CallBlackBox(struct Instance *inst,
      * Call the derivative routine.
      */
     if (deriv_func) {
+      slv_interp.task = bb_deriv_eval;
       nok = (*deriv_func)(&slv_interp,ninputs,noutputs,
 			  inputs,outputs,jacobian);
       if (nok) goto error;
@@ -525,10 +511,15 @@ int CallBlackBox(struct Instance *inst,
     /*
      * Call the init function to shut down
      */
-    slv_interp.first_call = (unsigned)0;
-    slv_interp.last_call = (unsigned)1;
-    nok = (*init_func)(&slv_interp,data,arglist);
-    if (nok) goto error;
+    if (final_func) {
+/*
+      slv_interp.first_call = (unsigned)0;
+      slv_interp.last_call = (unsigned)1;
+ */
+      slv_interp.task = bb_last_call;
+      nok = (*final_func)(&slv_interp,data,arglist);
+      if (nok) goto error;
+    }
   }
   else{
     FPRINTF(ASCERR,"External function not loaded\n");

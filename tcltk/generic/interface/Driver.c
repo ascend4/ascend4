@@ -591,10 +591,15 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 # else
 		distfp = ospath_new(ASC_DATADIR);
+#if 0
+/* umm, no, you may NOT stick an arbitrary subdirectory in underneath
+the configured value of the $datadir (which in the CMU packaging is $prefix).
+*/
 		fp = ospath_new("ascend");
 
 		ospath_append(distfp,fp);
 		ospath_free(fp);
+#endif /* 0*/
 # endif
 		distdir = ospath_str(distfp);
 		CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir);

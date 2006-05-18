@@ -118,8 +118,10 @@ rounded.o: $(srcdir)/rounded.h $(srcdir)/rounded.c $(srcdir)/compiler.h
 #      scanner.c.from.flex   ---to generate the scanner using flex
 #      scanner.c.from.c      ---to use the pregenerated C file
 #  depending on the value of $(LEX).
+# The scanner does not depend on btprolog.h, but we need to force it to
+# be in the build tree.
 
-scanner.o: $(srcdir)/scanner.l $(srcdir)/scanner_no_flex.c ./ascParse.h
+scanner.o: $(srcdir)/scanner.l $(srcdir)/scanner_no_flex.c ./ascParse.h ./btprolog.h
 	$(MAKE) @scanner_src@
 	$(CC) $(CC_SWITCHES) -c scanner.c
 
@@ -131,6 +133,9 @@ scanner.c.from.c: $(srcdir)/scanner_no_flex.c
 
 scanner.c: $(srcdir)/scanner.l $(srcdir)/scanner_no_flex.c ./ascParse.h
 	$(MAKE) @scanner_src@
+
+btprolog.h:
+	$(CP) $(srcdir)/btprolog.h .
 
 
 #  This ensures that packages was built with -DNO_PACKAGES 

@@ -43,7 +43,7 @@ if [ "x$ASC_DEV" != "x" ]; then
 	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=../models $args"
 	echo "Launching... $cmd"
 else
-	cmd="$bin @INSTALL_DATA@/ascend/gtkbrowser.py $args"
+	cmd="$bin @INSTALL_SHARE@/gtkbrowser.py $args"
 fi
 
 $cmd
