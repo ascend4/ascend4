@@ -1,0 +1,32 @@
+REQUIRE "atoms.a4l";
+
+MODEL testbadrelation;
+	x IS_A distance;
+	y IS_A speed;
+	x = y;
+
+METHODS
+
+METHOD default_self;
+END default_self;
+
+END testbadrelation;
+
+(*---------------------------*)
+
+MODEL testbadassignment;
+	x,y IS_A distance;
+	x=y;
+METHODS
+METHOD specify;
+	FIX x;
+END specify;
+
+METHOD values;
+	x := 3.0 {m/s};
+END values;
+
+METHOD default_self;
+	RUN reset; RUN values;
+END default_self;
+END testbadassignment;
