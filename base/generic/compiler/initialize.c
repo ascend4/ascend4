@@ -1387,6 +1387,10 @@ void AssignInitValue(struct Instance *i, struct value_t v, struct procFrame *fm)
     case real_value:
       dim = CheckDimensionsMatch(RealValueDimensions(v),RealAtomDims(i));
       if (dim==NULL){
+        PrintDimenMessage("Inconsistent units in assignment"
+              ,"LHS",RealAtomDims(i)
+              ,"RHS",RealValueDimensions(v)
+	);
         fm->ErrNo = Proc_nonconsistent_assignment;
         fm->flow = FrameError;
       } else {
@@ -1400,6 +1404,10 @@ void AssignInitValue(struct Instance *i, struct value_t v, struct procFrame *fm)
     case integer_value:
       dim = CheckDimensionsMatch(Dimensionless(),RealAtomDims(i));
       if (dim==NULL){
+        PrintDimenMessage("Inconsistent units in assignment"
+              ,"LHS",RealAtomDims(i)
+              ,"RHS",RealValueDimensions(v)
+	);
         fm->ErrNo = Proc_nonconsistent_assignment;
         fm->flow = FrameError;
       } else {
