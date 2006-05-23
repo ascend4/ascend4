@@ -59,12 +59,12 @@ Section "ASCEND (required)"
 
   ; Model Library
   SetOutPath $INSTDIR\models
-  File /r "..\models\*.a4*"
-  File /r "..\models\*.bz2"
+  File /r /x .svn "..\models\*.a4*"
+  File /r /x .svn "..\models\*.bz2"
 
   ; Tcl/Tk interface
   SetOutPath $INSTDIR\tcltk
-  File /r "..\tcltk\TK\*"
+  File /r /x .svn "..\tcltk\TK\*"
   SetOutPath $INSTDIR
   File "..\tcltk\generic\interface\ascendtcl.dll"
   File "..\tcltk\generic\interface\ascend4.exe"
@@ -90,7 +90,7 @@ Section "ASCEND (required)"
   FileWrite $0 $INSTDIR 
   FileWriteByte $0 "13"
   FileWriteByte $0 "10"
-  FileWrite $0 "c:\Python24\python gtkbrowser.py %%"
+  FileWrite $0 "c:\Python24\python gtkbrowser.py %1 %2 %3 %4 %5 %6 %7 %8"
   FileWriteByte $0 "13"
   FileWriteByte $0 "10"
 

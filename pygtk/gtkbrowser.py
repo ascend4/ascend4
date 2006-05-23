@@ -8,82 +8,106 @@ def print_loading_status(status,msg=None):
 	sys.stderr.write(status+"...")
 	sys.stderr.flush()
 
-print_loading_status("Loading PSYCO")
-
-#try:
-#	import psyco
-#	psyco.full()
-#	print "Running with PSYCO optimisation..."
-#except ImportError:
-#	pass
-
-
-print_loading_status("Loading python standard libraries")
-
-import re
-import urlparse
-import optparse
-import platform
-import sys
-import os.path
-
-if platform.system() != "Windows":
-	import dl
-	# This sets the flags for dlopen used by python so that the symbols in the
-	# ascend library are made available to libraries dlopened within ASCEND:
-	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-	
-print_loading_status("Loading LIBASCEND/ascpy")
-import ascpy
-
-print_loading_status("Loading PyGTK, glade, pango")
-
-import pygtk 
-pygtk.require('2.0') 
-import gtk
-import gtk.glade
-import pango
-
-print_loading_status("Loading python matplotlib")
 try:
-	import matplotlib
+	print_loading_status("Loading PSYCO")
 
+	#try:
+	#	import psyco
+	#	psyco.full()
+	#	print "Running with PSYCO optimisation..."
+	#except ImportError:
+	#	pass
+
+
+	print_loading_status("Loading python standard libraries")
+
+	import re
+	import urlparse
+	import optparse
+	import platform
+	import sys
+	import os.path
+
+	if platform.system() != "Windows":
+		import dl
+		# This sets the flags for dlopen used by python so that the symbols in the
+		# ascend library are made available to libraries dlopened within ASCEND:
+		sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+
+	print_loading_status("Loading LIBASCEND/ascpy")
+	import ascpy
+
+	print_loading_status("Loading PyGTK, glade, pango")
+
+	import pygtk 
+	pygtk.require('2.0') 
+	import gtk
+	import gtk.glade
+	import pango
+
+	print_loading_status("Loading python matplotlib")
 	try:
-		print_loading_status("Trying python numpy")
-		import numpy
-		matplotlib.rcParams['numerix'] = 'numpy'  
-		print_loading_status("","Using python module numpy")
-	except ImportError:
+		import matplotlib
+
 		try:
-			print_loading_status("Trying python numarray")
-			import numarray
-			matplotlib.rcParams['numerix'] = 'numarray'  
-			print_loading_status("","Using python module numarray")
+			print_loading_status("Trying python numpy")
+			import numpy
+			matplotlib.rcParams['numerix'] = 'numpy'  
+			print_loading_status("","Using python module numpy")
 		except ImportError:
 			try:
-				print_loading_status("Trying python Numeric")
-				import Numeric
-				matplotlib.rcParams['numerix'] = 'Numeric'  
-				print_loading_status("","Using python module Numeric")
+				print_loading_status("Trying python numarray")
+				import numarray
+				matplotlib.rcParams['numerix'] = 'numarray'  
+				print_loading_status("","Using python module numarray")
 			except ImportError:
-				print_loading_status("","FAILED TO LOAD A NUMERIC MODULE FOR PYTHON")
+				try:
+					print_loading_status("Trying python Numeric")
+					import Numeric
+					matplotlib.rcParams['numerix'] = 'Numeric'  
+					print_loading_status("","Using python module Numeric")
+				except ImportError:
+					print_loading_status("","FAILED TO LOAD A NUMERIC MODULE FOR PYTHON")
 
-except ImportError:
-	print_loading_status("Loading python matplotlib","FAILED TO LOAD MATPLOTLIB")
+	except ImportError,e:
+		print_loading_status("","FAILED TO LOAD MATPLOTLIB")
+		raise RuntimeError("Failed to load MATPLOTLIB (is it installed?). Details:"+str(e))
 
-print_loading_status("Loading ASCEND python modules")
+	print_loading_status("Loading ASCEND python modules")
 
-from preferences import *      # loading/saving of .ini options
-from solverparameters import * # 'solver parameters' window
-from help import *             # viewing help files
-from incidencematrix import *  # incidence/sparsity matrix matplotlib window
-from observer import *         # observer tab support
-from properties import *       # solver_var properties dialog
-from varentry import *         # for inputting of variables with units
-from diagnose import * 	       # for diagnosing block non-convergence
-from solverreporter import *   # solver status reporting
-from modelview import *        # model browser
-import config
+	from preferences import *      # loading/saving of .ini options
+	from solverparameters import * # 'solver parameters' window
+	from help import *             # viewing help files
+	from incidencematrix import *  # incidence/sparsity matrix matplotlib window
+	from observer import *         # observer tab support
+	from properties import *       # solver_var properties dialog
+	from varentry import *         # for inputting of variables with units
+	from diagnose import * 	       # for diagnosing block non-convergence
+	from solverreporter import *   # solver status reporting
+	from modelview import *        # model browser
+	import config
+except RuntimeError, e:
+	print "ASCEND had problems starting up. Please report the following"
+	print "error message at http://mantis.cruncher2.dyndns.org/."
+	print "\n\nFull error message:",str(e)
+	print "\n\nPress ENTER to close this window."
+	sys.stdout.flush()
+	sys.stdin.readline();
+	sys.exit();
+
+except ImportError, e:
+	print "\n\n------------------  ERROR  ---------------------"
+	print     "ASCEND had problems importing required models."
+	print "\nPlease ensure you have all the runtime prerequisites installed."
+	print "Please then report a bug if you continue to have problems."
+	print "\nFull error message:",str(e)
+	if platform.system()=="Windows":
+		print "\nYou will also need to report the contents of any popup error"
+		print "messages from Windows if any were shown."
+	print "\n\nPress ENTER to close this window."
+	sys.stdout.flush()
+	sys.stdin.readline();
+	sys.exit();
 
 print_loading_status("Starting GUI")
 
