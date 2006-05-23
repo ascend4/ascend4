@@ -1,6 +1,6 @@
 import os, commands, platform, distutils.sysconfig, os.path
 
-version = "0.9.5.91"
+version = "0.9.5.92"
 
 #------------------------------------------------------
 # OPTIONS
@@ -19,6 +19,7 @@ if platform.system()=="Windows":
 	icon_extension = '.png'
 	default_tcl = "c:\\Tcl"
 	default_tcl_libpath = "$TCL\\bin"
+	default_rel_distdir = '.'
 else:
 	default_tcl_lib = "tcl8.3"
 	default_tk_lib = "tk8.3"
@@ -27,6 +28,7 @@ else:
 	icon_extension = '.svg'
 	default_tcl = os.path.expanduser("~/activetcl")
 	default_tcl_libpath = "$TCL/lib"	
+	default_rel_distdir = '../share/ascend'
 
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
@@ -903,7 +905,7 @@ subst_dict = {
 	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
 	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
-	, '@ASC_DISTDIR_REL_BIN@' : '../share/ascend'
+	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 }
 
 if env.get('WITH_LOCAL_HELP'):
