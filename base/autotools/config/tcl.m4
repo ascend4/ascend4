@@ -47,7 +47,7 @@ else
     AC_MSG_RESULT(found $TCLCONFIG/tclConfig.sh)
     . $TCLCONFIG/tclConfig.sh
     if test -z "$TCLINCLUDE"; then
-        TCLINCLUDE=$ISYSTEM$TCL_PREFIX/include
+        TCLINCLUDE=$TCL_INCLUDE_SPEC
     fi
     if test -z "$TCLLIB"; then
         TCLLIB=$TCL_LIB_SPEC

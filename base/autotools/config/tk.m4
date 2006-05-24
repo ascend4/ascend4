@@ -47,7 +47,7 @@ else
     AC_MSG_RESULT(found $TKCONFIG/tkConfig.sh)
     . $TKCONFIG/tkConfig.sh
     if test -z "$TKINCLUDE"; then
-        TKINCLUDE=$ISYSTEM$TK_PREFIX/include
+        TKINCLUDE=$TK_INCLUDE_SPEC
     fi
     if test -z "$TKLIB"; then
         TKLIB=$TK_LIB_SPEC
@@ -110,8 +110,12 @@ case $host in
 esac
 fi
 
+AC_MSG_CHECKING(for tkconfig)
+AC_MSG_RESULT($TKCONFIG)
+
 AC_SUBST(TKINCLUDE)
 AC_SUBST(TKLIB)
+AC_SUBST(TKCONFIG)
 AC_SUBST(TKDYNAMICLINKING)
 
 ])

@@ -30,7 +30,7 @@ for f in modelfiles:
 	targetdir = os.path.join(modelsroot,head)
 	if not targetdir in installeddirs:
 		installeddirs.append(targetdir)
-	env.Install(targetdir,f)
+	env.InstallShared(targetdir,f)
 
 #print "MODEL INSTALLED DIRS =",installeddirs
 Return('installeddirs')

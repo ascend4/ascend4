@@ -23,8 +23,10 @@
 
 # tcl/tk basis
 LIB_RUNTIME_DIR=@TCLCONFIG@
+# required for Debian style installs:
+LIB_RUNTIME_DIR_TK=@TKCONFIG@
 @NOTCLCONFIG@include $(LIB_RUNTIME_DIR)/tclConfig.sh
-@NOTCLCONFIG@include $(LIB_RUNTIME_DIR)/tkConfig.sh
+@NOTCLCONFIG@include $(LIB_RUNTIME_DIR_TK)/tkConfig.sh
 
 ####>>>  C  <<<###############################################################
 
@@ -180,7 +182,7 @@ TK_LIBRARY  = @TKLIB@
 TK_LIBS  = $(TK_LIBRARY) $(TCL_LIBRARY) @TK_LD_HACK@ $(DL_LIBS)
 
 #  The location of the tcl.h and tk.h header files
-TK_INCS  = -I@TCLINCLUDE@ @TK_HDR@
+TK_INCS  = @TCLINCLUDE@ @TKINCLUDE@
 
 # If TK_LIBS and TK_INCS are not properly set, ASCEND cannot build.
 
