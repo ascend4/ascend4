@@ -526,13 +526,16 @@ static void printenv(){
 	use the usual names for each of these:
 
 	ASCENDDIST defaults to $PROGDIR/@ASC_DATADIR_REL_BIN@ (also in config.h)
-	ASCENDTK defaults to $ASCENDDIST/@ASC_TK_SUBDIR_NAME@ (latter is from config.h)
+	ASCENDTK defaults to $ASCENDDIST/TK (latter is from config.h)
 	ASCENDBITMAPS defaults $ASCENDTK/bitmaps
 	ASCENDLIBRARY defaults to $ASCENDDIST/models
 
 	Also check for the existence of the file AscendRC in $ASCENDTK
 	and if found, export the location of that file to the Tcl
 	variable tcl_rcFileName.
+
+	If you set ASC_ABSOLUTE_PATHS then ASCENDDIST defaults to @ASC_DATADIR@ and
+	the rest follows through as above.
 */
 static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	char *distdir, *tkdir, *bitmapsdir, *librarydir;
@@ -566,7 +569,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	if(distdir == NULL){
 		CONSOLE_DEBUG("NO " ASC_ENV_DIST " VAR DEFINED");
 
-# ifdef ASC_RELATIVE_PATHS
+# ifndef ASC_ABSOLUTE_PATHS
 
 		// read the executable's name/relative path.
         fp = ospath_new(progname);
@@ -591,10 +594,6 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 # else
 		distfp = ospath_new(ASC_DATADIR);
-		fp = ospath_new("ascend");
-
-		ospath_append(distfp,fp);
-		ospath_free(fp);
 # endif
 		distdir = ospath_str(distfp);
 		CONSOLE_DEBUG("GUESSING %s = %s",ASC_ENV_DIST,distdir);

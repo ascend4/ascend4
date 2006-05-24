@@ -98,12 +98,12 @@ if env.get('CAN_INSTALL'):
 	import glob
 	pythonfiles = glob.glob("*.py")
 
-	env.Install(env['INSTALL_ROOT']+env['INSTALL_SHARE']+"/ascend/",pythonfiles)
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",pythonfiles)
 
 	gladefiles = glob.glob("glade/*")
-	env.Install(env['INSTALL_ROOT']+env['INSTALL_SHARE']+"/ascend/glade/",gladefiles)
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/glade/",gladefiles)
 
-	env.Install(env['INSTALL_ROOT']+env['INSTALL_SHARE']+"/ascend/",swiglib)
+	env.Install(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",swiglib)
 
 if env.get('WITH_INSTALLER'):
 	import platform

@@ -7,54 +7,62 @@
 
 #define ASC_DEFAULTPATH "@DEFAULT_ASCENDLIBRARY@"
 
-/* The value INSTALL_SHARE is usually equivalent to ASCENDDIST.
-The CMU depot packaging standards are different from the latest packaging
-fad in Linux. Note that there's nothing sacred about the
-Linux share directory fad: Sun, Adobe, Intel, and most other
-commercial software vendors ignore it and with good reasons.
-INSTALL_SHARE can be $prefix (the CMU standard) or any value specified with
---datadir to the autoconf configure script.
-./configure --prefix=$prefix --datadir=$prefix/share/ascend 
-in order to get the typical non-CMU behavior.
-*/
-#define ASC_DATADIR "@INSTALL_SHARE@"
-
 /*
-	This is the location of the 'dist dir' relative to the location of the
-	running executable. When ASC_RELATIVE_PATHS is set, this will be used to
-	guess the location for ASCEND's data files. A good value is
+	This variable determines how ASCEND goes about finding all its stuff at runtime,
+	assuming the ASCENDDIST environment variable is *not* present.
 
-	..
+	ASCENDDIST is where Python, Tcl/Tk and model scripts, as well as graphics etc are
+	kept in the filesystem. Normally it is expected that ASCEND should be able to
+	know or work out this location itself.
 
-	but in /usr or /usr/local installations, a better value is
+	If ASC_ABSOLUTE_PATHS is defined, ASCEND will used a fixed absolute path to locate
+	its data files. This is the standard Red Hat and Debian system, in which
+	binaries are typically located in /usr/bin but related non-exe files are located
+	in /usr/share/appname/. See ASC_DATADIR in this case.
 
-	../share/ascend
-*/
-#define ASC_DISTDIR_REL_BIN "@ASC_DISTDIR_REL_BIN@"
-
-
-/*
-	This variable determines whether you want an 'application folder' style
-	installation, or whether you want ASCEND's data files to be referenced
-	using absolute paths.
+	If not defined, ASCEND will locate its data files using a relative path based on
+	the location of the running executable. See ASC_DISTDIR_REL_BIN. This is the
+	'application folder' style made popular on early Macs, and also favoured by CMU.
 
 	For a discussion of this, see
 	http://linux.slashdot.org/article.pl?sid=04/04/03/174249
 
 	At present, the only place this has any effect is in the Tcl/Tk
 	interface, in Driver.c's choices for default values of non-specified
-	environment variables.
+	environment variables. @TODO migrate this to Python as well.
 
-	SCons will replace 'ifndef ASC_ABSOLUTEPATHS' with 'if 0', depending on
-	configuration.
+	SCons will replace 'ifdef ASC_ABSOLUTE_PATHS' with 'if 1', depending on
+	configuration. It is assumed that Autotools users will be happy to use the
+	relative paths mode.
+
+	Note: do not use ASC_ABSOLUTE_PATHS on Windows. Absolute paths mess up the
+	ability of the installer to relocate files at install-time.
 */
-#ifdef ASC_RELATIVE_PATHS
-# define ASC_RELATIVE_PATHS
+#ifdef ASC_ABSOLUTE_PATHS
+# define ASC_ABSOLUTE_PATHS
 #endif
 
 /*
-	This is the default location of the tcl/tk scripts. $AAAAA environment
-	variables will be expanded at runtime, so a good value for example is
+	See ASC_ABSOLUTE_PATHS above. ASC_DATADIR is the default value of ASCCENDDIST
+	in the case of ASC_ABSOLUTE_PATHS.
+*/
+#define ASC_DATADIR "@INSTALL_ASCDATA@"
+
+/*
+  See ASC_ABSOLUTE_PATHS above. In the case of relative paths, ASCENDDIST is
+  derived from ASC_DISTDIR_REL_BIN: this path is suffixed to the name of
+  the directory in which the currently-running executable is located. Depending
+  on how you are installing ASCEND, sensible values are likely to be
+  either '..' or '../share/ascend'.
+
+  Only applies when ASC_ABSOLUTE_PATHS is *not* defined.
+*/
+#define ASC_DISTDIR_REL_BIN "@ASC_DISTDIR_REL_BIN@"
+
+/*
+	This is the default location of the tcl/tk scripts. Environment
+	variables (dollar sign followed by uppercase letters)
+	will be expanded at runtime, so a good value for example is
 
 	$ASCENDDIST/TK
 */

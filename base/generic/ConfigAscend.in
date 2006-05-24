@@ -414,7 +414,7 @@ MANn_DIR = $(MAN_DIR)/mann
 HELP_DIR = $(prefix)/help
 #
 #  directory for ascend models (libraries & examples)
-MODELS_DIR = @INSTALL_SHARE@/models
+MODELS_DIR = @INSTALL_ASCDATA@/models
 #
 #  directory for ascend package code
 PACK_DIR = $(prefix)/packages
@@ -424,7 +424,7 @@ TK_LIBRARY_DIR = $(prefix)/lib/tcl
 #
 #  directory for ascend specific tcl/tk code
 # Note: the name for this is TK, not tcltk/TK.
-ASCEND_TK_DIR = @INSTALL_SHARE@/TK
+ASCEND_TK_DIR = @INSTALL_ASCDATA@/TK
 
 QUIET_INSTALL=@QUIET_INSTALL@
 
