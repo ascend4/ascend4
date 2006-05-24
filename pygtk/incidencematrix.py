@@ -1,4 +1,6 @@
 import config
+import matplotlib
+matplotlib.use('GTKAgg')
 import pylab
 import platform
 from matplotlib.colors import LinearSegmentedColormap
