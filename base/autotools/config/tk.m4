@@ -56,7 +56,7 @@ fi
 
 if test -z "$TKINCLUDE"; then
    if test "x$TKPACKAGE" != xyes; then
-	TKINCLUDE="$ISYSTEM$TKPACKAGE/include"
+	TKINCLUDE="-I$ISYSTEM$TKPACKAGE/include"
    fi
 fi
 
@@ -74,7 +74,7 @@ if test -z "$TKINCLUDE"; then
 	for i in $dirs ; do
 		if test -r $i/tk.h; then
 			AC_MSG_RESULT($i)
-			TKINCLUDE="$ISYSTEM$i"
+			TKINCLUDE="-I$ISYSTEM$i"
 			break
 		fi
 	done

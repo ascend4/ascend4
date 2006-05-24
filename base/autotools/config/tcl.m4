@@ -56,7 +56,7 @@ fi
 
 if test -z "$TCLINCLUDE"; then
    if test "x$TCLPACKAGE" != xyes; then
-	TCLINCLUDE="$ISYSTEM$TCLPACKAGE/include"
+	TCLINCLUDE="-I$ISYSTEM$TCLPACKAGE/include"
    fi
 fi
 
@@ -74,7 +74,7 @@ if test -z "$TCLINCLUDE"; then
 	for i in $dirs ; do
 		if test -r $i/tcl.h; then
 			AC_MSG_RESULT($i)
-			TCLINCLUDE="$ISYSTEM$i"
+			TCLINCLUDE="-I$ISYSTEM$i"
 			break
 		fi
 	done
