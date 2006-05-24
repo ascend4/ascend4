@@ -850,8 +850,8 @@ if need_blas:
 # FORTRAN
 
 if need_fortran:
-	conf.env.Tool('f77')
-	detect_fortran = conf.env.Detect(['g77','f77'])
+	conf.env.Tool('fortran')
+	detect_fortran = conf.env.Detect(['g77','f77','gfortran'])
 	if detect_fortran:
 		# For some reason, g77 doesn't get detected properly on MinGW
 		if not env.has_key('F77'):
@@ -868,8 +868,9 @@ if need_fortran:
 			)
 			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
 	else:
-		print "FORTRAN-77 required but not found"
-		Exit(1)
+		with_tcltk=False;
+		without_tcltk_reason="FORTRAN-77 required but not found"
+
 #else:
 #	print "FORTRAN not required"
 
@@ -1046,6 +1047,7 @@ SConsEnvironment.InstallPerm = InstallPerm
 # define wrappers 	 
 SConsEnvironment.InstallProgram = lambda env, dest, files: InstallPerm(env, dest, files, 0755) 	 
 SConsEnvironment.InstallHeader = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
+SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest, files, 0644)
 
 #------------------------------------------------------
 # BUILD...
@@ -1140,7 +1142,7 @@ if env.get('CAN_INSTALL'):
 	# TODO: add install options
 	env.Alias('install',install_dirs)
 
-	env.Install(env['INSTALL_ROOT']+env['INSTALL_LIB'],libascend)
+	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_LIB'],libascend)
 
 #------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages
@@ -1170,5 +1172,13 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 #------------------------------------------------------
 # DEFAULT TARGETS
 
-env.Default(['pygtk','tcltk'])
+default_targets =[]
+if with_tcltk:
+	default_targets.append('tcltk')
+if with_python:
+	default_targets.append('pygtk')
+
+env.Default(default_targets)
+
+print "Building targets:"," ".join([str(i) for i in BUILD_TARGETS])
 

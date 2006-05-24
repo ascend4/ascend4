@@ -19,7 +19,7 @@ else:
 tcl_env = env.Copy()
 
 typelex = tcl_env.SharedObject(typelexsource
-	, LEXFLAGS = '-ll -Ptyp_'
+	, LEXFLAGS = '-l -Ptyp_'
 )
 
 if tcl_env.get('TCL_CPPPATH'):
@@ -65,7 +65,7 @@ else:
 
 	if tcl_env.get('CAN_INSTALL'):
 		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendtclprog)
-		env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_LIB'],ascendtcllib)
+		env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_LIB'],ascendtcllib)
 
 		import glob
 
@@ -83,7 +83,7 @@ else:
 			#print root, "..."
 			dest = os.path.normpath(os.path.join(env.subst(tkdir),root))
 			for name in files:
-				env.Install(env.subst(dest),"#tcltk/TK/"+os.path.join(root, name))
+				env.InstallShared(env.subst(dest),"#tcltk/TK/"+os.path.join(root, name))
 				#print dest,"<---",os.path.join(root, name)
 
 			if 'CVS' in dirs:

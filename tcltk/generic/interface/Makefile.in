@@ -24,7 +24,7 @@ LIBRARY = libascif.a
 
 default: $(LIBRARY) $(EXECUTABLE)
 
-
+main.o:main.c
 
 #  Defines and Includes that are specific to this directory
 
@@ -38,9 +38,8 @@ DIR_SPECIFIC_INCS = $(TK_INCS) $(X11_INCS)
 #  into the object files (EXEC_OBJS) that are linked with the
 #  library files (EXEC_LIBS) to make EXECUTABLE
 
-EXEC_SRCS = Driver.c main.c
-
-EXEC_OBJS = Driver.o main.o
+EXEC_OBJS = main.o
+EXEC_SRCS =  $(EXEC_OBJS:%.o=%.c)
 
 EXEC_LIBS = $(ASC_LIBS) $(FOR_LIBS) $(TK_LIBS) $(TKTABLE_LIB) $(X11_LIBS) \
 	$(MATH_LIBS) $(DEBUG_LIBS)
@@ -53,7 +52,7 @@ EXEC_LIBS = $(ASC_LIBS) $(FOR_LIBS) $(TK_LIBS) $(TKTABLE_LIB) $(X11_LIBS) \
 LIB_OBJS = \
 	AscBitmaps.o AscPrintTcl.o BrowLogRel_io.o BrowWhen_io.o \
 	BrowserMethod.o BrowserProc.o BrowserQuery.o BrowserRel_io.o \
-	Commands.o DebugProc.o DisplayProc.o \
+	Commands.o DebugProc.o DisplayProc.o Driver.o \
 	EnvVarProc.o HelpProc.o Integrators.o \
 	LibraryProc.o Lsode.o MtxProc.o ProbeProc.o Qlfdid.o \
 	ScriptProc.o Sensitivity.o SimsProc.o SlvProc.o \
@@ -61,7 +60,6 @@ LIB_OBJS = \
 	tkConsole.o typelex.o old_utils.o
 
 LIB_SRCS = $(LIB_OBJS:%.o=%.c)
-
 
 #  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
 #
@@ -91,7 +89,7 @@ DriverNoTickle.o: Driver.date
 
 #  Force an update of Driver.o so we update the value
 #  of TIMESTAMP in the ascend binary
-# -- disabled -- Dec 1 2005 -- johnpye
+# -- disabled -- Dec 1 2005 -- johnpye (dependencies should 'just work' for this)
 #Driver.o: Driver.date
 #	$(CC) $(CC_SWITCHES) $(HAVE_TKTABLE) $(TIMESTAMP) -c $(srcdir)/Driver.c
 #	$(RM) Driver.date

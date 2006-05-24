@@ -1,0 +1,6 @@
+#!/bin/sh
+# This script works with standard packages on Ubuntu Breezy Badget
+
+ASCROOT=~/ascroot
+
+./configure --prefix=$ASCROOT --with-fortran=gfortran,/usr/lib/libg2c.so.0 --enable-gcc --enable-optimization --enable-dynamic-packages --with-tkconfig=/usr/lib/tk8.4/ --with-tclconfig=/usr/lib/tcl8.4/
