@@ -65,11 +65,11 @@ fields from Architecture to (computational) Zoology.
 %setup -q -n @DISTTAR_NAME@
 
 %build
-scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" RELATIVE_PATHS=0 DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
 
 %install
 rm -rf %{buildroot}
-scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" RELATIVE_PATHS=0 DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
 
 pushd pygtk/gnome
 install -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop

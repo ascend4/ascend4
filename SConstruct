@@ -20,15 +20,17 @@ if platform.system()=="Windows":
 	default_tcl = "c:\\Tcl"
 	default_tcl_libpath = "$TCL\\bin"
 	default_rel_distdir = '.'
+	default_absolute_paths = False
 else:
 	default_tcl_lib = "tcl8.3"
 	default_tk_lib = "tk8.3"
 	default_tktable_lib = "Tktable2.8"
-	default_install_assets = "$INSTALL_SHARE/glade/"
+	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	icon_extension = '.svg'
 	default_tcl = os.path.expanduser("~/activetcl")
 	default_tcl_libpath = "$TCL/lib"	
 	default_rel_distdir = '../share/ascend'
+	default_absolute_paths = True
 
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
@@ -112,7 +114,7 @@ opts.Add(
 	'DEFAULT_ASCENDLIBRARY'
 	,"Set the default value of the ASCENDLIBRARY -- the location where"
 		+" ASCEND will look for models when running ASCEND"
-	,"$INSTALL_SHARE/models"
+	,"$INSTALL_ASCDATA/models"
 )
 
 # Where is SWIG?
@@ -265,8 +267,15 @@ opts.Add(
 
 opts.Add(
 	'INSTALL_SHARE'
-	,'Location to put data files during installation'
-	,"$INSTALL_PREFIX/share/ascend"
+	,'Common shared-file location on this system'
+	,"$INSTALL_PREFIX/share"
+)
+
+
+opts.Add(
+	'INSTALL_ASCDATA'
+	,"Location of ASCEND shared data (TK, python, models etc)"
+	,"$INSTALL_SHARE/ascend"
 )
 
 opts.Add(
@@ -306,9 +315,9 @@ opts.Add(
 )
 
 opts.Add(BoolOption(
-	'RELATIVE_PATHS'
+	'ABSOLUTE_PATHS'
 	,"Whether to use absolute or relative paths in the installed Tcl/Tk interface. If you want to build an RPM, set this to false."
-	,True
+	,default_absolute_paths
 ))
 
 opts.Add(
@@ -395,6 +404,7 @@ print "TCL_LIB =",env['TCL_LIB']
 print "CC =",env['CC']
 print "CXX =",env['CXX']
 
+print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
 #------------------------------------------------------
 # SPECIAL CONFIGURATION TESTS
 
@@ -895,7 +905,7 @@ subst_dict = {
 	, '@GLADE_FILE@':'ascend.glade'
 	, '@HELP_ROOT@':''
 	, '@ICON_EXTENSION@':icon_extension
-	, '@INSTALL_SHARE@':env['INSTALL_SHARE']
+	, '@INSTALL_ASCDATA@':env['INSTALL_ASCDATA']
 	, '@INSTALL_BIN@':env['INSTALL_BIN']
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
@@ -914,7 +924,7 @@ if env.get('WITH_LOCAL_HELP'):
 
 # bool options...
 for k,v in { \
-		'RELATIVE_PATHS' : 'ASC_RELATIVE_PATHS', \
+		'ABSOLUTE_PATHS' : 'ASC_ABSOLUTE_PATHS', \
 		'WITH_XTERM_COLORS' : 'ASC_XTERM_COLORS', \
 		'MALLOC_DEBUG' : 'MALLOC_DEBUG' \
 }.iteritems():
@@ -1124,7 +1134,7 @@ if env.get('CAN_INSTALL'):
 	# the models directory only needs to be processed for installation, no other processing required.
 	env.SConscript(['models/SConscript'],'env')
 
-	dirs = ['INSTALL_BIN','INSTALL_SHARE','INSTALL_LIB']
+	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB']
 	install_dirs = [env['INSTALL_ROOT']+env[d] for d in dirs]
 
 	# TODO: add install options
