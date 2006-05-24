@@ -48,6 +48,7 @@ try:
 	print_loading_status("Loading python matplotlib")
 	try:
 		import matplotlib
+		matplotlib.use('GTKAgg')
 
 		try:
 			print_loading_status("Trying python numpy")
