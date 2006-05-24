@@ -105,9 +105,9 @@ if env.get('CAN_INSTALL'):
 
 	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/",swiglib)
 
-if env.get('WITH_INSTALLER'):
-	import platform
-	if platform.system()=="Windows":
-		env.Append(NSISDEFINES={'OUTFILE':env['WIN_INSTALLER_NAME']})
-		installer = env.Installer('create.nsi')
-		Depends(installer,[swiglib,configpy,configh])
+import platform
+if platform.system()=="Windows":
+	env.Append(NSISDEFINES={'OUTFILE':env['WIN_INSTALLER_NAME']})
+	installer = env.Installer('create.nsi')
+	Depends(installer,[swiglib,configpy,configh])
+	env.Alias('installer',installer)

@@ -12,8 +12,8 @@ opts = Options(['options.cache', 'config.py'])
 #print "PLATFORM = ",platform.system()
 
 if platform.system()=="Windows":
-	default_tcl_lib = "tcl83"
-	default_tk_lib = "tk83"
+	default_tcl_lib = "tcl84"
+	default_tk_lib = "tk84"
 	default_tktable_lib = "Tktable28"
 	default_install_assets = "glade/"
 	icon_extension = '.png'
@@ -339,13 +339,6 @@ if platform.system()!="Windows":
 		, True
 	))
 
-if platform.system()=="Windows":
-	opts.Add(BoolOption(
-		'WITH_INSTALLER'
-		,'Build the Windows Installer (setup program) using NSIS'
-		,False
-	))
-
 # TODO: OTHER OPTIONS?
 # TODO: flags for optimisation
 # TODO: turning on/off bintoken functionality
@@ -387,6 +380,12 @@ without_python_reason = "disabled by options/config.py"
 
 with_cunit = env.get('WITH_CUNIT')
 without_cunit_reason = "not requested"
+
+if platform.system()=="Windows":
+	with_installer=1
+else:
+	with_installer=0
+	without_installer_reason = "only possible under Windows"
 
 #print "SOLVERS:",env['WITH_SOLVERS']
 #print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
@@ -1128,7 +1127,6 @@ if with_cunit:
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
 
-
 #------------------------------------------------------
 # INSTALLATION
 
@@ -1143,6 +1141,15 @@ if env.get('CAN_INSTALL'):
 	env.Alias('install',install_dirs)
 
 	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_LIB'],libascend)
+
+#------------------------------------------------------
+# WINDOWS INSTALLER
+# For the windows installer, please see pygtk/SConscript
+
+if with_installer:
+	pass
+else:
+	print "Skipping... Windows installer isn't being built:",without_installer_reason
 
 #------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages
@@ -1177,6 +1184,8 @@ if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:
 	default_targets.append('pygtk')
+if with_installer:
+	default_targets.append('installer')
 
 env.Default(default_targets)
 
