@@ -171,18 +171,13 @@
 #include<stdio.h>
 
 
-#if 0 /* there seems to be some confusion about the interaction of comment blocks and the preprocessor. there isn't any..., which means everything in this
-if 0 block is broken. */
-
-/* trying without this... */
 #if defined(__WIN32__) && !defined(__MINGW32__)
 # undef Status         /* jds20041229 - #define in tcl include/X11/XLib.h conflicts. */
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>  /* jds20041212 - some limits defined in winnt.h (MAXLONG). */
 # undef WIN32_LEAN_AND_MEAN
 #endif
-*/
-#endif /* 0 block needs fixing above */
+
 #ifndef PATH_MAX
 /** Normally will come from stdio.h or limits.h
  * POSIX values of PATH_MAX is 255, traditional is 1023
