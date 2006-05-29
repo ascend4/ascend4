@@ -370,6 +370,7 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
 	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
+	env.Append(CCFLAGS=['/Za'])
 
 opts.Update(env)
 opts.Save('options.cache',env)
