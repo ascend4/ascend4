@@ -582,13 +582,16 @@ def CheckGccVisibility(context):
 # YACC
 
 yacc_test_text = """
+%{
+#include <stdio.h>
+%}
+%token MSG
 %start ROOT
-   %token MSG
-   %%
-
-   ROOT:
-     MSG { print("HELLO"); } 
-   ;
+%%
+ROOT:
+	MSG { printf("HELLO"); } 
+	;
+%%
 """
 
 def CheckYacc(context):
