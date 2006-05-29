@@ -75,7 +75,7 @@
 # define STRNCAT strncat
 # define STRTOK(STR,PAT,VAR) strtok_s(STR,PAT,&VAR)
 # define STRTOKVAR(VAR) char *VAR
-# define GETCWD getcwd
+# define GETCWD _getcwd
 # define GETENV(VAR) getenv(VAR)
 #else
 # define STRCPY strcpy
