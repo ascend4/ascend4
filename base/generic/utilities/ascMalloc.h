@@ -107,7 +107,7 @@ ASC_DLLSPEC(char *) ascstrdupf(CONST char *str);
  *  ascstrdup() instead.
  */
 
-extern char *ascstrdupf_dbg(CONST char *str);
+ASC_DLLSPEC(char *) ascstrdupf_dbg(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
  *  is defined.  Do not call this function directly - define
