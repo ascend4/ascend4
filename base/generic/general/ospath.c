@@ -1063,12 +1063,14 @@ void ospath_debug(struct FilePath *fp){
 
 FILE *ospath_fopen(struct FilePath *fp, const char *mode){
 	char s[PATH_MAX];
+	FILE *f;
+
 	if(!ospath_isvalid(fp)){
 		E("Invalid path");
 		return NULL;
 	}
 	ospath_strcpy(fp,s,PATH_MAX);
-	FILE *f = fopen(s,mode);
+	f = fopen(s,mode);
 	return f;
 }
 
