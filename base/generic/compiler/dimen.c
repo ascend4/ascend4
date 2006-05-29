@@ -429,6 +429,7 @@ ASC_DLLSPEC(void) PrintDimenMessage(CONST char *message
 		, CONST char *label1, CONST dim_type *d1
 		, CONST char *label2, CONST dim_type *d2
 ){
+		/*
 		error_reporter_start(ASC_USER_ERROR,NULL,0,NULL);
 		FPRINTF(ASCERR,"%s: %s='", message, label1);
 		PrintDimen(ASCERR,d1);
@@ -436,6 +437,8 @@ ASC_DLLSPEC(void) PrintDimenMessage(CONST char *message
 		PrintDimen(ASCERR,d2);
 		FPRINTF(ASCERR,"'");
 		error_reporter_end_flush();
+		*/
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid dimensions");
 }
 
 
