@@ -366,7 +366,7 @@ if platform.system()=='Windows' and env.has_key('MSVS'):
 	print "PATH =",env['ENV']['PATH']
 	env.Append(CPPPATH=env['ENV']['INCLUDE'])
 	env.Append(LIBPATH=env['ENV']['LIB'])
-	env.Append(CCFLAGS=['/D_CRT_SECURE_NO_DEPRECATE'])
+	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
 
 opts.Update(env)
 opts.Save('options.cache',env)
