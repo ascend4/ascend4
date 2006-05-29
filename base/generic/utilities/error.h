@@ -118,7 +118,7 @@ typedef enum error_severity_enum{
 #  define ERROR_REPORTER_DEBUG(...)     error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_HERE(SEV,...)  error_reporter(SEV,__FILE__,__LINE__,__FUNCTION__, __VA_ARGS__)
 #  define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, __VA_ARGS__)
-#  define CONSOLE_DEBUG(...)   (fprintf(stderr, ERR_BOLD "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
+#  define CONSOLE_DEBUG(...)   (fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__FUNCTION__) + \
                                 fprintf(stderr, __VA_ARGS__) + \
                                 fprintf(stderr, "\n"))
 #else /* workaround for compilers without variadic macros: last resort */
