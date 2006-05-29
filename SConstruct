@@ -18,7 +18,10 @@ if platform.system()=="Windows":
 	default_install_assets = "glade/"
 	icon_extension = '.png'
 	default_tcl = "c:\\Tcl"
-	default_tcl_libpath = "$TCL\\bin"
+	if os.environ.get('MSYSTEM')="MINGW32":
+		default_tcl_libpath="$TCL\\bin"
+	else:
+		default_tcl_libpath="$TCL\\lib"
 	default_rel_distdir = '.'
 	default_absolute_paths = False
 else:
