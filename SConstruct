@@ -592,7 +592,7 @@ yacc_test_text = """
 """
 
 def CheckYacc(context):
-	context.Message("Checking for Yacc... ")
+	context.Message("Checking for Yacc ('%s')... " % context.env.get('YACC'))
 	is_ok = context.TryCompile(yacc_test_text,".y")
 	context.Result(is_ok)
 	return is_ok
