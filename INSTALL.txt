@@ -70,9 +70,10 @@ as shown below.
 ISSUES WITH THE TCL/TK INTERFACE
 
 It can sometimes be a bit challenging to build the Tcl/Tk
-interface. ASCEND requires Tcl/Tk version 8.3.5, which is not the
-standard version on modern Linux distributions. A suggested
-approach in this case is to download and install the 'ActiveTcl'
+interface. ASCEND can run with Tcl/Tk version 8.4 but it is more stable when
+using Tcl/Tk version 8.3. 
+
+A suggested approach in this case is to download and install the 'ActiveTcl'
 distribution, version 8.3.5, and to install it in ~/activetcl.
 http://downloads.activestate.com/ActiveTcl/Windows/8.3.5/
 
@@ -80,6 +81,8 @@ Then, you should be able to build the Tcl/Tk interface as shown:
 
   export LD_LIBRARY_PATH=~/activetcl/lib:~/activetcl/lib/Tktable2.8
   scons TCL=~/activetcl
+
+See also the TCL_LIB and TK_LIB flags (scons -Qh).
 
 ------
 INSTALLING ON LINUX
@@ -108,7 +111,7 @@ you will need to have the NSIS installer-creator installed on
 your system (which is free, at http://nsis.sf.net/). Then you 
 should simply need to type
 
-  scons WITH_INSTALLER=1
+  scons installer
 
 This will leave an installer package named 'ascend-setup.exe'
 in the pygtk/interface directory.
