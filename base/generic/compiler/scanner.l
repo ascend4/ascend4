@@ -157,15 +157,15 @@ IDChar       {letter}({integer}|{letter}|_)*
 
 %%
 
-<INITIAL>"<="			{ return LEQ_T; }
-<INITIAL>">="			{ return GEQ_T; }
-<INITIAL>"<>"			{ return NEQ_T; }
-<INITIAL>".."			{ return DOTDOT_T; }
-<INITIAL>"::"			{ return DBLCOLON_T;}
-<INITIAL>":="			{ return ASSIGN_T; }
-<INITIAL>":=="			{ return CASSIGN_T; }
-<INITIAL>"=="			{ return BEQ_T ; }
-<INITIAL>"!="			{ return BNE_T ; }
+<INITIAL>"<="			{ return LEQ_TOK; }
+<INITIAL>">="			{ return GEQ_TOK; }
+<INITIAL>"<>"			{ return NEQ_TOK; }
+<INITIAL>".."			{ return DOTDOT_TOK; }
+<INITIAL>"::"			{ return DBLCOLON_TOK;}
+<INITIAL>":="			{ return ASSIGN_TOK; }
+<INITIAL>":=="			{ return CASSIGN_TOK; }
+<INITIAL>"=="			{ return BEQ_TOK ; }
+<INITIAL>"!="			{ return BNE_TOK ; }
 
 <INITIAL>"="			{ return '=' ;}
 <INITIAL>">"			{ return '>' ;}
@@ -187,92 +187,92 @@ IDChar       {letter}({integer}|{letter}|_)*
 
 		/****  Reserved Keywords  ****/
 
-<INITIAL>"ADD"			{ return ADD_T			; }
-<INITIAL>"ALIASES"		{ return ALIASES_T		; }
-<INITIAL>"AND"			{ return AND_T			; }
-<INITIAL>"ANY"			{ return ANY_T			; }
-<INITIAL>"ARE_ALIKE"    { return AREALIKE_T		; }
-<INITIAL>"ARE_THE_SAME" { return ARETHESAME_T   ; }
-<INITIAL>"ARRAY"		{ return ARRAY_T		; }
-<INITIAL>"ATOM"			{ return ATOM_T			; }
-<INITIAL>"BREAK"		{ return BREAK_T		; }
-<INITIAL>"CALL"			{ return CALL_T			; }
-<INITIAL>"CARD"			{ return CARD_T			; }
-<INITIAL>"CASE"			{ return CASE_T			; }
-<INITIAL>"CHECK"		{ return CHECK_T		; }
-<INITIAL>"CHOICE"		{ return CHOICE_T	  	; }
-<INITIAL>"CONDITIONAL"		{ return CONDITIONAL_T		; }
-<INITIAL>"CONSTANT"		{ return CONSTANT_T		; }
-<INITIAL>"CONTINUE"		{ return CONTINUE_T		; }
-<INITIAL>"CREATE"		{ return CREATE_T		; }
-<INITIAL>"DATA"			{ return DATA_T			; }
-<INITIAL>"DECREASING"		{ return DECREASING_T		; }
-<INITIAL>"DEFAULT"		{ return DEFAULT_T		; }
-<INITIAL>"DEFINITION"		{ return DEFINITION_T		; }
-<INITIAL>"DIMENSION"		{ return DIMENSION_T		; }
-<INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_T	; }
-<INITIAL>"DO"			{ return DO_T			; }
-<INITIAL>"ELSE"			{ return ELSE_T			; }
-<INITIAL>"END"			{ return END_T			; }
-<INITIAL>"EXPECT"		{ return EXPECT_T		; }
-<INITIAL>"EXTERNAL"		{ return EXTERNAL_T		; }
-<INITIAL>"FALSE"		{ return FALSE_T		; }
-<INITIAL>"FALL_THROUGH" { return FALLTHRU_T		; }
-<INITIAL>"FIX"		    { return FIX_T	        ; }
-<INITIAL>"FREE"		    { return FREE_T	        ; }
-<INITIAL>"FOR"			{ return FOR_T			; }
-<INITIAL>"FROM"			{ return FROM_T			; }
-<INITIAL>"GLOBAL"		{ return GLOBAL_T		; }
-<INITIAL>"ASSERT"       { return ASSERT_T			; }
-<INITIAL>"IF"			{ return IF_T			; }
-<INITIAL>"IMPORT"		{ return IMPORT_T		; }
-<INITIAL>"IN"			{ return IN_T			; }
-<INITIAL>"INCREASING"		{ return INCREASING_T		; }
-<INITIAL>"INPUT"		{ return INPUT_T		; }
-<INITIAL>"INTERSECTION"		{ return INTERSECTION_T		; }
-<INITIAL>"IS_A"			{ return ISA_T			; }
-<INITIAL>"IS_REFINED_TO"	{ return ISREFINEDTO_T		; }
-<INITIAL>"MAXIMIZE"		{ return MAXIMIZE_T		; }
-<INITIAL>"MAX_INTEGER"		{ return MAXINTEGER_T		; }
-<INITIAL>"MAX_REAL"		{ return MAXREAL_T		; }
-<INITIAL>"METHOD"		{ return METHOD_T		; }
-<INITIAL>"METHODS"		{ return METHODS_T		; }
-<INITIAL>"MINIMIZE"		{ return MINIMIZE_T		; }
-<INITIAL>"MODEL"		{ return MODEL_T		; }
-<INITIAL>"NOT"			{ return NOT_T			; }
-<INITIAL>"NOTES"		{ return NOTES_T		; }
-<INITIAL>"OF"			{ return OF_T			; }
-<INITIAL>"OR"			{ return OR_T			; }
-<INITIAL>"OTHERWISE"		{ return OTHERWISE_T		; }
-<INITIAL>"OUTPUT"		{ return OUTPUT_T		; }
-<INITIAL>"PROD"			{ return PROD_T			; }
-<INITIAL>"PROVIDE"		{ return PROVIDE_T		; }
-<INITIAL>"REFINES"		{ return REFINES_T		; }
-<INITIAL>"REPLACE"		{ return REPLACE_T		; }
-<INITIAL>"REQUIRE"		{ return REQUIRE_T		; }
-<INITIAL>"RETURN"		{ return RETURN_T		; }
-<INITIAL>"RUN"			{ return RUN_T			; }
-<INITIAL>"SATISFIED"		{ return SATISFIED_T		; }
-<INITIAL>"SELECT"		{ return SELECT_T		; }
-<INITIAL>"SUCH_THAT"		{ return SUCHTHAT_T		; }
-<INITIAL>"SUM"			{ return SUM_T			; }
-<INITIAL>"SIZE"			{ return SIZE_T			; }
-<INITIAL>"SWITCH"		{ return SWITCH_T		; }
-<INITIAL>"STOP"			{ return STOP_T			; }
-<INITIAL>"THEN"			{ return THEN_T			; }
-<INITIAL>"TRUE"			{ return TRUE_T			; }
-<INITIAL>"UNION"		{ return UNION_T		; }
-<INITIAL>"UNITS"		{ return UNITS_T		; }
-<INITIAL>"UNIVERSAL"		{ return UNIVERSAL_T		; }
-<INITIAL>"USE"			{ return USE_T			; }
-<INITIAL>"VALUE"		{ return VALUE_T		; }
-<INITIAL>"WHEN"			{ return WHEN_T			; }
-<INITIAL>"WHERE"		{ return WHERE_T		; }
-<INITIAL>"WHILE"		{ return WHILE_T		; }
-<INITIAL>"WILL_BE"		{ return WILLBE_T		; }
-<INITIAL>"WILL_BE_THE_SAME"	{ return WILLBETHESAME_T	; }
-<INITIAL>"WILL_NOT_BE_THE_SAME"	{ return WILLNOTBETHESAME_T	; }
-<INITIAL>"WITH"			{ return WITH_T			; }
+<INITIAL>"ADD"			{ return ADD_TOK			; }
+<INITIAL>"ALIASES"		{ return ALIASES_TOK		; }
+<INITIAL>"AND"			{ return AND_TOK			; }
+<INITIAL>"ANY"			{ return ANY_TOK			; }
+<INITIAL>"ARE_ALIKE"    { return AREALIKE_TOK		; }
+<INITIAL>"ARE_THE_SAME" { return ARETHESAME_TOK   ; }
+<INITIAL>"ARRAY"		{ return ARRAY_TOK		; }
+<INITIAL>"ATOM"			{ return ATOM_TOK			; }
+<INITIAL>"BREAK"		{ return BREAK_TOK		; }
+<INITIAL>"CALL"			{ return CALL_TOK			; }
+<INITIAL>"CARD"			{ return CARD_TOK			; }
+<INITIAL>"CASE"			{ return CASE_TOK			; }
+<INITIAL>"CHECK"		{ return CHECK_TOK		; }
+<INITIAL>"CHOICE"		{ return CHOICE_TOK	  	; }
+<INITIAL>"CONDITIONAL"		{ return CONDITIONAL_TOK		; }
+<INITIAL>"CONSTANT"		{ return CONSTANT_TOK		; }
+<INITIAL>"CONTINUE"		{ return CONTINUE_TOK		; }
+<INITIAL>"CREATE"		{ return CREATE_TOK		; }
+<INITIAL>"DATA"			{ return DATA_TOK			; }
+<INITIAL>"DECREASING"		{ return DECREASING_TOK		; }
+<INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
+<INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
+<INITIAL>"DIMENSION"		{ return DIMENSION_TOK		; }
+<INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_TOK	; }
+<INITIAL>"DO"			{ return DO_TOK			; }
+<INITIAL>"ELSE"			{ return ELSE_TOK			; }
+<INITIAL>"END"			{ return END_TOK			; }
+<INITIAL>"EXPECT"		{ return EXPECT_TOK		; }
+<INITIAL>"EXTERNAL"		{ return EXTERNAL_TOK		; }
+<INITIAL>"FALSE"		{ return FALSE_TOK		; }
+<INITIAL>"FALL_THROUGH" { return FALLTHRU_TOK		; }
+<INITIAL>"FIX"		    { return FIX_TOK	        ; }
+<INITIAL>"FREE"		    { return FREE_TOK	        ; }
+<INITIAL>"FOR"			{ return FOR_TOK			; }
+<INITIAL>"FROM"			{ return FROM_TOK			; }
+<INITIAL>"GLOBAL"		{ return GLOBAL_TOK		; }
+<INITIAL>"ASSERT"       { return ASSERT_TOK			; }
+<INITIAL>"IF"			{ return IF_TOK			; }
+<INITIAL>"IMPORT"		{ return IMPORT_TOK		; }
+<INITIAL>"IN"			{ return IN_TOK			; }
+<INITIAL>"INCREASING"		{ return INCREASING_TOK		; }
+<INITIAL>"INPUT"		{ return INPUT_TOK		; }
+<INITIAL>"INTERSECTION"		{ return INTERSECTION_TOK		; }
+<INITIAL>"IS_A"			{ return ISA_TOK			; }
+<INITIAL>"IS_REFINED_TO"	{ return ISREFINEDTO_TOK		; }
+<INITIAL>"MAXIMIZE"		{ return MAXIMIZE_TOK		; }
+<INITIAL>"MAX_INTEGER"		{ return MAXINTEGER_TOK		; }
+<INITIAL>"MAX_REAL"		{ return MAXREAL_TOK		; }
+<INITIAL>"METHOD"		{ return METHOD_TOK		; }
+<INITIAL>"METHODS"		{ return METHODS_TOK		; }
+<INITIAL>"MINIMIZE"		{ return MINIMIZE_TOK		; }
+<INITIAL>"MODEL"		{ return MODEL_TOK		; }
+<INITIAL>"NOT"			{ return NOT_TOK			; }
+<INITIAL>"NOTES"		{ return NOTES_TOK		; }
+<INITIAL>"OF"			{ return OF_TOK			; }
+<INITIAL>"OR"			{ return OR_TOK			; }
+<INITIAL>"OTHERWISE"		{ return OTHERWISE_TOK		; }
+<INITIAL>"OUTPUT"		{ return OUTPUT_TOK		; }
+<INITIAL>"PROD"			{ return PROD_TOK			; }
+<INITIAL>"PROVIDE"		{ return PROVIDE_TOK		; }
+<INITIAL>"REFINES"		{ return REFINES_TOK		; }
+<INITIAL>"REPLACE"		{ return REPLACE_TOK		; }
+<INITIAL>"REQUIRE"		{ return REQUIRE_TOK		; }
+<INITIAL>"RETURN"		{ return RETURN_TOK		; }
+<INITIAL>"RUN"			{ return RUN_TOK			; }
+<INITIAL>"SATISFIED"		{ return SATISFIED_TOK		; }
+<INITIAL>"SELECT"		{ return SELECT_TOK		; }
+<INITIAL>"SUCH_THAT"		{ return SUCHTHAT_TOK		; }
+<INITIAL>"SUM"			{ return SUM_TOK			; }
+<INITIAL>"SIZE"			{ return SIZE_TOK			; }
+<INITIAL>"SWITCH"		{ return SWITCH_TOK		; }
+<INITIAL>"STOP"			{ return STOP_TOK			; }
+<INITIAL>"THEN"			{ return THEN_TOK			; }
+<INITIAL>"TRUE"			{ return TRUE_TOK			; }
+<INITIAL>"UNION"		{ return UNION_TOK		; }
+<INITIAL>"UNITS"		{ return UNITS_TOK		; }
+<INITIAL>"UNIVERSAL"		{ return UNIVERSAL_TOK		; }
+<INITIAL>"USE"			{ return USE_TOK			; }
+<INITIAL>"VALUE"		{ return VALUE_TOK		; }
+<INITIAL>"WHEN"			{ return WHEN_TOK			; }
+<INITIAL>"WHERE"		{ return WHERE_TOK		; }
+<INITIAL>"WHILE"		{ return WHILE_TOK		; }
+<INITIAL>"WILL_BE"		{ return WILLBE_TOK		; }
+<INITIAL>"WILL_BE_THE_SAME"	{ return WILLBETHESAME_TOK	; }
+<INITIAL>"WILL_NOT_BE_THE_SAME"	{ return WILLNOTBETHESAME_TOK	; }
+<INITIAL>"WITH"			{ return WITH_TOK			; }
 <INITIAL>"WITH_VALUE"		{ return WITH_VALUE_T		; }
 
 	/*
@@ -399,7 +399,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  followed by a (') is the symbol's text.
 				   *  Return to the INITIAL state, store the
 				   *  symbol in the symbol table and return
-				   *  SYMBOL_T to the parser.
+				   *  SYMBOL_TOK to the parser.
 				   */
 				  BEGIN (INITIAL);
 				  /*  strip off the final (')
@@ -410,7 +410,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    break;
 				  }
 				  zz_lval.sym_ptr = AddSymbolL(yytext,yyleng);
-				  return SYMBOL_T;
+				  return SYMBOL_TOK;
 				}
 <Symbol>[^'\n]*\n		{
 				  /*  If we find a newline before a ('), the
@@ -481,7 +481,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  /*  A double quote in the DoubleQuote state
 				   *  (that is not protected by backslash)
 				   *  will put us back in the INITIAL state.
-				   *  Process the string and return DQUOTE_T
+				   *  Process the string and return DQUOTE_TOK
 				   *  to the parser.
 				   */
 				  BEGIN (INITIAL);
@@ -497,7 +497,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  }
 				  zz_lval.dquote_ptr =
 				      CopyIntoWorkBuffer(yytext,yyleng);
-				  return DQUOTE_T;
+				  return DQUOTE_TOK;
 				}
 <DoubleQuote>[^\\"\n]*		{
 				  /*  Match anything that is not backslash nor
@@ -609,7 +609,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  If the nesting level is zero, go back to
 				   *  the INITIAL level, save the text as a
 				   *  Symbol, do the backslash substitution,
-				   *  and return BRACEDTEXT_T to the
+				   *  and return BRACEDTEXT_TOK to the
 				   *  parse; otherwise, add the "}" to the
 				   *  text and keep scanning.
 				   */
@@ -628,7 +628,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    }
 				    zz_lval.braced_ptr =
 				        CopyIntoWorkBuffer(yytext,yyleng);
-				    return BRACEDTEXT_T;
+				    return BRACEDTEXT_TOK;
 				  }
 				  yymore();
 				  break;
@@ -675,7 +675,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				  /*  An integer.  Defn near top of file.
 				   */
 				  zz_lval.int_value = atol(yytext);
-				  return INTEGER_T;
+				  return INTEGER_TOK;
 				}
 
 <INITIAL>{integer}/".."		{
@@ -684,14 +684,14 @@ IDChar       {letter}({integer}|{letter}|_)*
 				   *  as the real numbers 1.0 and 0.2).
 				   */
 				  zz_lval.int_value = atol(yytext);
-				  return INTEGER_T;
+				  return INTEGER_TOK;
 				}
 
 <INITIAL>{real}			{
 				  /*  A real number.  Defn near top of file.
 				   */
 				  zz_lval.real_value = atof(yytext);
-				  return REAL_T;
+				  return REAL_TOK;
 				}
 
 <INITIAL>{IDChar}+		{
@@ -702,7 +702,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 				    break;
 				  }
 				  zz_lval.id_ptr = AddSymbolL(yytext,yyleng);
-				  return IDENTIFIER_T;
+				  return IDENTIFIER_TOK;
 				}
 
 <INITIAL>{blank}*		{
