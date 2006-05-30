@@ -126,10 +126,10 @@ static symchar *g_refines_name=NULL;
 \*********************************************************************/
 
 static symchar *g_end_identifier = NULL;
-/*  This variable gets reset every time we see an ``END_T''.  If the
- *  token after END_T is missing (i.e., ``END;'') or if it is recognized
- *  (e.g., FOR_T), set this variable to NULL.  When we see an
- *  ``END_T IDENTIFIER_T'', set this variable to the pointer into the
+/*  This variable gets reset every time we see an ``END_TOK''.  If the
+ *  token after END_TOK is missing (i.e., ``END;'') or if it is recognized
+ *  (e.g., FOR_TOK), set this variable to NULL.  When we see an
+ *  ``END_TOK IDENTIFIER_TOK'', set this variable to the pointer into the
  *  symbol table returned by the scanner.
  */
 
@@ -149,14 +149,14 @@ static struct StatementList *g_parameter_reduction=NULL;
 static struct Set *g_typeargs=NULL;
 /* optional args to a typename in part declaration.
  * it is set in the production type_identifier. in
- * contexts where args are not allowed, use IDENTIFIER_T instead of the
+ * contexts where args are not allowed, use IDENTIFIER_TOK instead of the
  * type_identifier production.
  */
 
 static struct Set *g_callargs=NULL;
 /* optional args to a user defined method.
  * it is set in the production call_identifier. in
- * contexts where args are not allowed, use IDENTIFIER_T instead of the
+ * contexts where args are not allowed, use IDENTIFIER_TOK instead of the
  * type_identifier production.
  */
 
@@ -221,7 +221,7 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *
  *  For the block NOTES statement, the symtax is
  *
- *      NOTES ( SYMBOL_T ( fvarlist BRACEDTEXT_T )+ )+ END NOTES ';'
+ *      NOTES ( SYMBOL_TOK ( fvarlist BRACEDTEXT_TOK )+ )+ END NOTES ';'
  *
  *  Here I am using () as part of the meta-language to describe the syntax
  *  to you, they are not part of the formal grammer.  An example is
@@ -237,7 +237,7 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
  *  eaten in the fvarlist production.  I'm not sure if this is what we
  *  should do (which requires having the notes processing do something
  *  special when it sees SELF in the fvarlist), or if we should create
- *  a SELF_T token.  The latter is certainly easier to implement from
+ *  a SELF_TOK token.  The latter is certainly easier to implement from
  *  the parser's perspective, which is why I did it that way.
  *
  *  The block NOTES statement doesn't do anything with its stuff either,
@@ -289,8 +289,8 @@ static void error_reporter_current_line(const error_severity_t sev, const char *
 static void ProcessNotes(int);
 static void CollectNote(struct Note *);
 
-/* For 'inline' notes, note on DQUOTE_T from scanner.l:
- * Remember that DQUOTE_T is a string value which is local to the
+/* For 'inline' notes, note on DQUOTE_TOK from scanner.l:
+ * Remember that DQUOTE_TOK is a string value which is local to the
  * production that finds it. It must be copied if you want to
  * keep it.
  */
@@ -324,45 +324,45 @@ static void CollectNote(struct Note *);
   enum ForKind fkind;
 }
 
-%token ADD_T ALIASES_T AND_T ANY_T AREALIKE_T ARETHESAME_T ARRAY_T ASSERT_T ATOM_T
-%token BEQ_T BNE_T BREAK_T
-%token CALL_T CARD_T CASE_T CHOICE_T CHECK_T CONDITIONAL_T CONSTANT_T
-%token CONTINUE_T CREATE_T
-%token DATA_T DECREASING_T DEFAULT_T DEFINITION_T DIMENSION_T
-%token DIMENSIONLESS_T DO_T
-%token ELSE_T END_T EXPECT_T EXTERNAL_T
-%token FALSE_T FALLTHRU_T FIX_T FOR_T FREE_T FROM_T
-%token GLOBAL_T
-%token IF_T IMPORT_T IN_T INPUT_T INCREASING_T INTERACTIVE_T
-%token INTERSECTION_T ISA_T _IS_T ISREFINEDTO_T
-%token MAXIMIZE_T MAXINTEGER_T MAXREAL_T METHODS_T METHOD_T MINIMIZE_T MODEL_T
-%token NOT_T NOTES_T
-%token OF_T OR_T OTHERWISE_T OUTPUT_T
-%token PATCH_T PROD_T PROVIDE_T
-%token REFINES_T REPLACE_T REQUIRE_T RETURN_T RUN_T
-%token SATISFIED_T SELECT_T SIZE_T STOP_T SUCHTHAT_T SUM_T SWITCH_T
-%token THEN_T TRUE_T
-%token UNION_T UNITS_T UNIVERSAL_T
-%token WHEN_T WHERE_T WHILE_T WILLBE_T WILLBETHESAME_T WILLNOTBETHESAME_T
-%token ASSIGN_T CASSIGN_T DBLCOLON_T USE_T LEQ_T GEQ_T NEQ_T
-%token DOTDOT_T WITH_T VALUE_T WITH_VALUE_T
-%token <real_value> REAL_T
-%token <int_value> INTEGER_T
-%token <id_ptr> IDENTIFIER_T
-%token <braced_ptr> BRACEDTEXT_T
-%token <sym_ptr> SYMBOL_T
-%token <dquote_ptr> DQUOTE_T
+%token ADD_TOK ALIASES_TOK AND_TOK ANY_TOK AREALIKE_TOK ARETHESAME_TOK ARRAY_TOK ASSERT_TOK ATOM_TOK
+%token BEQ_TOK BNE_TOK BREAK_TOK
+%token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
+%token CONTINUE_TOK CREATE_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DIMENSION_TOK
+%token DIMENSIONLESS_TOK DO_TOK
+%token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
+%token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
+%token GLOBAL_TOK
+%token IF_TOK IMPORT_TOK IN_TOK INPUT_TOK INCREASING_TOK INTERACTIVE_TOK
+%token INTERSECTION_TOK ISA_TOK _IS_T ISREFINEDTO_TOK
+%token MAXIMIZE_TOK MAXINTEGER_TOK MAXREAL_TOK METHODS_TOK METHOD_TOK MINIMIZE_TOK MODEL_TOK
+%token NOT_TOK NOTES_TOK
+%token OF_TOK OR_TOK OTHERWISE_TOK OUTPUT_TOK
+%token PATCH_TOK PROD_TOK PROVIDE_TOK
+%token REFINES_TOK REPLACE_TOK REQUIRE_TOK RETURN_TOK RUN_TOK
+%token SATISFIED_TOK SELECT_TOK SIZE_TOK STOP_TOK SUCHTHAT_TOK SUM_TOK SWITCH_TOK
+%token THEN_TOK TRUE_TOK
+%token UNION_TOK UNITS_TOK UNIVERSAL_TOK
+%token WHEN_TOK WHERE_TOK WHILE_TOK WILLBE_TOK WILLBETHESAME_TOK WILLNOTBETHESAME_TOK
+%token ASSIGN_TOK CASSIGN_TOK DBLCOLON_TOK USE_TOK LEQ_TOK GEQ_TOK NEQ_TOK
+%token DOTDOT_TOK WITH_TOK VALUE_TOK WITH_VALUE_T
+%token <real_value> REAL_TOK
+%token <int_value> INTEGER_TOK
+%token <id_ptr> IDENTIFIER_TOK
+%token <braced_ptr> BRACEDTEXT_TOK
+%token <sym_ptr> SYMBOL_TOK
+%token <dquote_ptr> DQUOTE_TOK
 
 /* Set associativities */
-%left ',' '|' SUCHTHAT_T
-%left BEQ_T BNE_T
-%left AND_T OR_T IN_T
-%left '<' '=' '>' LEQ_T GEQ_T NEQ_T
+%left ',' '|' SUCHTHAT_TOK
+%left BEQ_TOK BNE_TOK
+%left AND_TOK OR_TOK IN_TOK
+%left '<' '=' '>' LEQ_TOK GEQ_TOK NEQ_TOK
 %left '+' '-'
 %left '/' '*'
-%left UMINUS_T UPLUS_T
+%left UMINUS_TOK UPLUS_TOK
 %right '^'
-%left NOT_T
+%left NOT_TOK
 %start definitions
 
 %type <real_value> default_val number realnumber opunits
@@ -433,7 +433,7 @@ definition:
     ;
 
 global_def:
-    GLOBAL_T ';' fstatements end ';'
+    GLOBAL_TOK ';' fstatements end ';'
 	{
           /* the following steps apply to string buffers only, not files */
 	  struct gl_list_t *stats;
@@ -478,16 +478,16 @@ global_def:
     ;
 
 require_file:
-    REQUIRE_T DQUOTE_T ';'
+    REQUIRE_TOK DQUOTE_TOK ';'
 	{
 	  Asc_ScannerPushBuffer($2);
 	}
-    | REQUIRE_T name ';'
+    | REQUIRE_TOK name ';'
 	{
 	  DestroyName($2);
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
 	}
-    | REQUIRE_T name
+    | REQUIRE_TOK name
 	{
 	  DestroyName($2);
 	  ErrMsg_Generic("REQUIRE statement syntax is 'REQUIRE \"filename\";'.");
@@ -495,16 +495,16 @@ require_file:
     ;
 
 provide_module:
-    PROVIDE_T DQUOTE_T ';'
+    PROVIDE_TOK DQUOTE_TOK ';'
 	{
           Asc_ModuleCreateAlias(Asc_CurrentModule(),$2);
         }
-    | PROVIDE_T name ';'
+    | PROVIDE_TOK name ';'
 	{
 	  DestroyName($2);
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
 	}
-    | PROVIDE_T name
+    | PROVIDE_TOK name
 	{
 	  DestroyName($2);
 	  ErrMsg_Generic("PROVIDE statement syntax is 'PROVIDE \"filename\";'.");
@@ -512,11 +512,11 @@ provide_module:
     ;
 
 import:
-    IMPORT_T IDENTIFIER_T FROM_T DQUOTE_T ';'
+    IMPORT_TOK IDENTIFIER_TOK FROM_TOK DQUOTE_TOK ';'
 	{
 	  (void)LoadArchiveLibrary($4,SCP($2));
 	}
-	| IMPORT_T DQUOTE_T ';'
+	| IMPORT_TOK DQUOTE_TOK ';'
 	{
 	  (void)LoadArchiveLibrary(SCP($2),NULL);
 	}
@@ -526,7 +526,7 @@ add_notes_def:
     add_notes_head notes_body end ';'
 	{
 	  /*  see comments for notes statement.  */
-	  if( $3 != NOTES_T ) {
+	  if( $3 != NOTES_TOK ) {
 	    WarnMsg_MismatchEnd("NOTES", NULL, $3, NULL);
 	  }
 	  if ($2 != NULL) {
@@ -554,7 +554,7 @@ add_notes_def:
     ;
 
 add_notes_head:
-    ADD_T NOTES_T IN_T IDENTIFIER_T optional_method ';'
+    ADD_TOK NOTES_TOK IN_TOK IDENTIFIER_TOK optional_method ';'
 	{
 	  g_type_name = $4;
 	  g_proc_name = $5;
@@ -567,7 +567,7 @@ add_method_def:
 	  if ($1 == NULL) {
 	    DestroyProcedureList($2);
 	  } else {
-	    if( $3 != METHODS_T ) {
+	    if( $3 != METHODS_TOK ) {
 	      WarnMsg_MismatchEnd("ADD METHODS", NULL, $3, "METHODS");
 	    }
 	    if (AddMethods($1,$2,g_untrapped_error) != 0) {
@@ -582,7 +582,7 @@ add_method_def:
     ;
 
 add_method_head:
-    ADD_T METHODS_T IN_T IDENTIFIER_T ';'
+    ADD_TOK METHODS_TOK IN_TOK IDENTIFIER_TOK ';'
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($4);
@@ -592,7 +592,7 @@ add_method_head:
 	  $$ = tmptype; /* parent should check for NULL */
 	  g_type_name = $4; /* scope for notes */
 	}
-    | ADD_T METHODS_T IN_T DEFINITION_T MODEL_T ';'
+    | ADD_TOK METHODS_TOK IN_TOK DEFINITION_TOK MODEL_TOK ';'
 	{
 	  $$ = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
@@ -605,7 +605,7 @@ replace_method_def:
 	  if ($1 == NULL) {
 	    DestroyProcedureList($2);
 	  } else {
-	    if( $3 != METHODS_T ) {
+	    if( $3 != METHODS_TOK ) {
 	      WarnMsg_MismatchEnd("REPLACE METHODS", NULL, $3, "METHODS");
 	    }
 	    if (ReplaceMethods($1,$2,g_untrapped_error) != 0) {
@@ -618,7 +618,7 @@ replace_method_def:
     ;
 
 replace_method_head:
-    REPLACE_T METHODS_T IN_T IDENTIFIER_T ';'
+    REPLACE_TOK METHODS_TOK IN_TOK IDENTIFIER_TOK ';'
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($4);
@@ -627,7 +627,7 @@ replace_method_head:
 	  }
 	  $$ = tmptype; /* parent should check for NULL */
 	}
-    | REPLACE_T METHODS_T IN_T DEFINITION_T MODEL_T ';'
+    | REPLACE_TOK METHODS_TOK IN_TOK DEFINITION_TOK MODEL_TOK ';'
 	{
 	  $$ = ILLEGAL_DEFINITION;
 	  /* need a bit of global state here to tag base methods */
@@ -640,7 +640,7 @@ atom_def:
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-          if(( $5 != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+          if(( $5 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -688,7 +688,7 @@ atom_def:
     ;
 
 atom_head:
-    atom_id REFINES_T IDENTIFIER_T dims default_val ';'
+    atom_id REFINES_TOK IDENTIFIER_TOK dims default_val ';'
 	{
 	  /* g_type_name = $1; */
 	  g_refines_name = $3;
@@ -699,7 +699,7 @@ atom_head:
     ;
 
 atom_id:
-    ATOM_T IDENTIFIER_T 
+    ATOM_TOK IDENTIFIER_TOK 
 	{
 	  $$ = $2;
 	  g_type_name = $2; /* want this set early so parm lists see it */
@@ -713,26 +713,26 @@ default_val:
 	  g_default_dim_ptr = WildDimension();
 	  g_defaulted = 0;
 	}
-    | DEFAULT_T optional_sign number
+    | DEFAULT_TOK optional_sign number
 	{
 	  $$ = $2 ? -$3 : $3;
 	  g_defaulted = 1;
 	}
-    | DEFAULT_T FALSE_T
+    | DEFAULT_TOK FALSE_TOK
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_long = 0;
 	  g_defaulted = 1;
 	}
-    | DEFAULT_T TRUE_T
+    | DEFAULT_TOK TRUE_TOK
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
 	  g_default_long = 1;
 	  g_defaulted = 1;
 	}
-    | DEFAULT_T SYMBOL_T
+    | DEFAULT_TOK SYMBOL_TOK
 	{
 	  $$ = 0.0;
 	  g_default_dim_ptr = Dimensionless();
@@ -781,7 +781,7 @@ constant_def:
     ;
 
 constant_head:
-    CONSTANT_T IDENTIFIER_T REFINES_T IDENTIFIER_T dims constant_val
+    CONSTANT_TOK IDENTIFIER_TOK REFINES_TOK IDENTIFIER_TOK dims constant_val
     optional_notes ';'
 	{
 	  g_type_name = $2;
@@ -821,26 +821,26 @@ constant_val:
 	  g_default_dim_ptr = WildDimension();
 	  g_defaulted = 0;
 	}
-    | CASSIGN_T optional_sign number
+    | CASSIGN_TOK optional_sign number
 	{
 	  $<real_value>$ = $2 ? -$3 : $3;
 	  g_defaulted = 1;
 	}
-    | CASSIGN_T TRUE_T
+    | CASSIGN_TOK TRUE_TOK
 	{
 	  $<int_value>$ = 1;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = BOOLEANCONSTANT;
 	}
-    | CASSIGN_T FALSE_T
+    | CASSIGN_TOK FALSE_TOK
 	{
 	  $<int_value>$ = 0;
 	  g_defaulted = 1;
 	  g_default_dim_ptr = Dimensionless();
 	  g_constant_type = BOOLEANCONSTANT;
 	}
-    | CASSIGN_T SYMBOL_T
+    | CASSIGN_TOK SYMBOL_TOK
 	{
 	  $<sym_ptr>$ = $2;
 	  g_defaulted = 1;
@@ -854,7 +854,7 @@ model_def:
 	{
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
-	  if(( $5 != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if(( $5 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -901,7 +901,7 @@ model_head:
 	  g_header_linenum = LineNum();
 	}
     | model_id optional_model_parameters optional_parameter_wheres
-    REFINES_T IDENTIFIER_T optional_parameter_reduction ';'
+    REFINES_TOK IDENTIFIER_TOK optional_parameter_reduction ';'
 	{
 	  /* g_type_name = $1; */
 	  g_model_parameters = $2;
@@ -913,7 +913,7 @@ model_head:
     ;
 
 model_id:
-    MODEL_T IDENTIFIER_T 
+    MODEL_TOK IDENTIFIER_TOK 
 	{
 	  $$ = $2;
 	  g_type_name = $2; /* want this set early so parm lists see it */
@@ -936,7 +936,7 @@ optional_parameter_wheres:
 	{
 	  $$ = NULL;
 	}
-    | WHERE_T '(' fstatements ')'
+    | WHERE_TOK '(' fstatements ')'
 	{
 	  $$ = $3; /* this could be much more sophisticated */
 	}
@@ -957,7 +957,7 @@ patch_def:
     patch_head fstatements methods end ';'
 	{
 	  struct TypeDescription *def_ptr;
-	  if (($4 != IDENTIFIER_T ) || ( g_end_identifier != g_type_name )) {
+	  if (($4 != IDENTIFIER_TOK ) || ( g_end_identifier != g_type_name )) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -986,7 +986,7 @@ patch_def:
     ;
 
 patch_head:
-    PATCH_T IDENTIFIER_T FOR_T IDENTIFIER_T ';'
+    PATCH_TOK IDENTIFIER_TOK FOR_TOK IDENTIFIER_TOK ';'
 	{
 	  /*
 	   * A patch definition looks just like a model def.
@@ -1003,7 +1003,7 @@ universal:
 	{
 	  $$ = 0;
 	}
-    | UNIVERSAL_T
+    | UNIVERSAL_TOK
 	{
 	  $$ = 1;
 	}
@@ -1015,7 +1015,7 @@ definition_def:
 	  struct TypeDescription *def_ptr;
 	  int keepnotes = 0;
 
-	  if(( $4 != IDENTIFIER_T ) || ( g_end_identifier != $1 )) {
+	  if(( $4 != IDENTIFIER_TOK ) || ( g_end_identifier != $1 )) {
 	    WarnMsg_MismatchEnd("DEFINITION", SCP($1), $4, SCP($1));
 	  }
 	  if( $1 == GetBaseTypeName(relation_type)) {
@@ -1040,7 +1040,7 @@ definition_def:
     ;
 
 definition_id:
-    DEFINITION_T IDENTIFIER_T
+    DEFINITION_TOK IDENTIFIER_TOK
 	{
 	  $$ = $2;
 	  g_type_name = $2; /* want this set early so parm lists see it */
@@ -1054,12 +1054,12 @@ units_def:
     ;
 
 units_statement:
-    UNITS_T unitdeflist end
+    UNITS_TOK unitdeflist end
 	{
           struct UnitDefinition *ud;
           unsigned long c,len;
 
-	  if( $3 != UNITS_T ) {
+	  if( $3 != UNITS_TOK ) {
 	    WarnMsg_MismatchEnd("UNITS", NULL, $3, NULL);
 	  }
           len = gl_length($2);
@@ -1085,7 +1085,7 @@ unitdeflist:
     ;
 
 unitdef:
-    IDENTIFIER_T '=' BRACEDTEXT_T ';'
+    IDENTIFIER_TOK '=' BRACEDTEXT_TOK ';'
 	{
 	  $$ = CreateUnitDef($1,$3,Asc_ModuleBestName(Asc_CurrentModule()),
                              LineNum());
@@ -1098,7 +1098,7 @@ methods:
 	{
 	  $$ = NULL;
 	}
-    | METHODS_T
+    | METHODS_TOK
 	{ /* To get rid of this, we will need a global proclist
            * that accumulates procs until a MODEL production is
            * completed. If any other sort of production is started,
@@ -1148,7 +1148,7 @@ proclistf:
 procedure:
     procedure_id ';' fstatements end ';'
 	{
-	  if (($4 != IDENTIFIER_T) || ($1 != g_end_identifier)) {
+	  if (($4 != IDENTIFIER_TOK) || ($1 != g_end_identifier)) {
 	    /* all identifier_t are from symbol table, so ptr match
 	     * is sufficient for equality.
 	     */
@@ -1160,7 +1160,7 @@ procedure:
     ;
 
 procedure_id:
-    METHOD_T IDENTIFIER_T
+    METHOD_TOK IDENTIFIER_TOK
 	{
 	  $$ = $2;
 	  g_proc_name = $2;
@@ -1229,7 +1229,7 @@ statement:
     ;
 
 isa_statement:
-    fvarlist ISA_T type_identifier optional_of optional_with_value
+    fvarlist ISA_TOK type_identifier optional_of optional_with_value
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($3);
@@ -1270,7 +1270,7 @@ isa_statement:
     ;
 
 willbe_statement:
-    fvarlist WILLBE_T type_identifier optional_of optional_with_value
+    fvarlist WILLBE_TOK type_identifier optional_of optional_with_value
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($3);
@@ -1299,12 +1299,12 @@ willbe_statement:
     ;
 
 aliases_statement:
-    fvarlist ALIASES_T fname
+    fvarlist ALIASES_TOK fname
 	{
 	  $$ = CreateALIASES($1,$3);
 	}
-    | fvarlist ALIASES_T '(' fvarlist ')' WHERE_T fvarlist ISA_T
-    IDENTIFIER_T OF_T IDENTIFIER_T optional_set_values
+    | fvarlist ALIASES_TOK '(' fvarlist ')' WHERE_TOK fvarlist ISA_TOK
+    IDENTIFIER_TOK OF_TOK IDENTIFIER_TOK optional_set_values
 	{
 	  int carray_err;
 	  carray_err = 0;
@@ -1364,7 +1364,7 @@ optional_set_values:
     ;
 
 is_statement:
-    fvarlist _IS_T IDENTIFIER_T optional_of
+    fvarlist _IS_T IDENTIFIER_TOK optional_of
 	{
 	  if (FindType($3)) {
 	    $$ = CreateREF($1,$3,$4,1);
@@ -1376,7 +1376,7 @@ is_statement:
     ;
 
 isrefinedto_statement:
-    fvarlist ISREFINEDTO_T type_identifier
+    fvarlist ISREFINEDTO_TOK type_identifier
 	{
 	  struct TypeDescription *tmptype;
 	  tmptype = FindType($3);
@@ -1403,12 +1403,12 @@ isrefinedto_statement:
     ;
 
 call_identifier:
-    IDENTIFIER_T
+    IDENTIFIER_TOK
 	{
 	  $$ = $1;
 	  g_callargs = NULL;
 	}
-    | IDENTIFIER_T '(' set ')'
+    | IDENTIFIER_TOK '(' set ')'
 	{
 	  $$ = $1;
 	  g_callargs = $3;
@@ -1416,12 +1416,12 @@ call_identifier:
     ;
 
 type_identifier:
-    IDENTIFIER_T
+    IDENTIFIER_TOK
 	{
 	  $$ = $1;
 	  g_typeargs = NULL;
 	}
-    | IDENTIFIER_T '(' set ')'
+    | IDENTIFIER_TOK '(' set ')'
 	{
 	  $$ = $1;
 	  g_typeargs = $3;
@@ -1433,7 +1433,7 @@ optional_method:
 	{
 	  $$ = NULL;
 	}
-    | METHOD_T IDENTIFIER_T
+    | METHOD_TOK IDENTIFIER_TOK
 	{
 	  $$ = $2;
 	}
@@ -1444,7 +1444,7 @@ optional_of:
 	{
 	  $$ = NULL;
 	}
-    | OF_T IDENTIFIER_T
+    | OF_TOK IDENTIFIER_TOK
 	{
 	  $$ = $2;
 	}
@@ -1462,39 +1462,39 @@ optional_with_value:
     ;
 
 arealike_statement:
-    fvarlist AREALIKE_T
+    fvarlist AREALIKE_TOK
 	{
 	  $$ = CreateAA($1);
 	}
     ;
 
 arethesame_statement:
-    fvarlist ARETHESAME_T
+    fvarlist ARETHESAME_TOK
 	{
 	  $$ = CreateATS($1);
 	}
     ;
 
 willbethesame_statement:
-    fvarlist WILLBETHESAME_T
+    fvarlist WILLBETHESAME_TOK
 	{
 	  $$ = CreateWBTS($1);
 	}
     ;
 
 willnotbethesame_statement:
-    fvarlist WILLNOTBETHESAME_T
+    fvarlist WILLNOTBETHESAME_TOK
 	{
 	  $$ = CreateWNBTS($1);
 	}
     ;
 
 assignment_statement:
-    fname ASSIGN_T expr
+    fname ASSIGN_TOK expr
 	{
 	  $$ = CreateASSIGN($1,$3);
 	}
-    | fname CASSIGN_T expr
+    | fname CASSIGN_TOK expr
 	{
 	  $$ = CreateCASSIGN($1,$3);
 	}
@@ -1541,7 +1541,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    g_untrapped_error++;
 	  }
 	}
-    | MINIMIZE_T expr
+    | MINIMIZE_TOK expr
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_minimize));
 	  if (NumberOfRelOps($2) > 0) {
@@ -1549,7 +1549,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
 	    g_untrapped_error++;
 	  }
 	}
-    | MAXIMIZE_T expr
+    | MAXIMIZE_TOK expr
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_maximize));
 	  if (NumberOfRelOps($2)>0) {
@@ -1560,7 +1560,7 @@ wrong number of relation operators (=, ==, <, >, <=, >=, !=) preceeding or.");
     ;
 
 blackbox_statement:
-    fname ':' IDENTIFIER_T '(' input_args ';' output_args data_args ')'
+    fname ':' IDENTIFIER_TOK '(' input_args ';' output_args data_args ')'
 	{
 	  /*
 	   * This is the blackbox declarative external relation.
@@ -1573,14 +1573,14 @@ blackbox_statement:
     ;
 
 input_args:
-    fvarlist ':' INPUT_T
+    fvarlist ':' INPUT_TOK
 	{
 	  $$ = $1;
 	}
     ;
 
 output_args:
-    fvarlist ':' OUTPUT_T
+    fvarlist ':' OUTPUT_TOK
 	{
 	  $$ = $1;
 	}
@@ -1591,14 +1591,14 @@ data_args:
 	{
 	  $$ = NULL;
 	}
-    | ';' fname ':' DATA_T
+    | ';' fname ':' DATA_TOK
 	{
 	  $$ = $2;
 	}
     ;
 
 glassbox_statement:
-    fname ':' IDENTIFIER_T '(' fvarlist ';' INTEGER_T ')' optional_scope
+    fname ':' IDENTIFIER_TOK '(' fvarlist ';' INTEGER_TOK ')' optional_scope
 	{
 	  /*
 	   * This is the glassbox declarative external relation.
@@ -1622,17 +1622,17 @@ optional_scope:
 	{
 	  $$ = NULL;
 	}
-    | IN_T fname
+    | IN_TOK fname
 	{
 	  $$ = $2;
 	}
     ;
 
 for_statement:
-    FOR_T IDENTIFIER_T IN_T expr optional_direction forexprend 
+    FOR_TOK IDENTIFIER_TOK IN_TOK expr optional_direction forexprend 
     fstatements end
 	{
-	  if( $8 != FOR_T ) {
+	  if( $8 != FOR_TOK ) {
 	    WarnMsg_MismatchEnd("FOR", SCP($2), $8, NULL);
 	  }
           if ($6 == fk_create && $5 != f_random) {
@@ -1654,62 +1654,62 @@ optional_direction:
 	{
 	  $$ = f_random;
 	}
-    | INCREASING_T
+    | INCREASING_TOK
 	{
 	  $$ = f_increasing;
 	}
-    | DECREASING_T
+    | DECREASING_TOK
 	{
 	  $$ = f_decreasing;
 	}
     ;
 
 forexprend:
-    CREATE_T
+    CREATE_TOK
 	{
           $$ = fk_create; /* declarative FOR */
 	}
-    | EXPECT_T
+    | EXPECT_TOK
 	{
           $$ = fk_expect; /* parameter FOR */
 	}
-    | CHECK_T
+    | CHECK_TOK
 	{
           $$ = fk_check; /* WHERE FOR */
 	}
-    | DO_T
+    | DO_TOK
 	{
           $$ = fk_do; /* method FOR */
 	}
     ;
 
 run_statement:
-    RUN_T fname
+    RUN_TOK fname
 	{
 	  $$ = CreateRUN($2,NULL);
 	}
-    | RUN_T fname DBLCOLON_T fname
+    | RUN_TOK fname DBLCOLON_TOK fname
 	{
 	  $$ = CreateRUN($4,$2);	  /* type :: name */
 	}
     ;
 
 fix_statement:
-	FIX_T fvarlist
+	FIX_TOK fvarlist
 	{
 		$$ = CreateFIX($2);
 	}
 	;
 
 free_statement:
-	FREE_T fvarlist
+	FREE_TOK fvarlist
 	{
 		$$ = CreateFREE($2);
 	}
 	;
 
 external_statement:
-    EXTERNAL_T IDENTIFIER_T '(' fvarlist ')'
+    EXTERNAL_TOK IDENTIFIER_TOK '(' fvarlist ')'
 	{
 	  /*
 	   * This is procedural external code. Was:
@@ -1720,7 +1720,7 @@ external_statement:
     ;
 
 call_statement:
-    CALL_T call_identifier
+    CALL_TOK call_identifier
 	{
 	  /*
 	   * This is proper procedural external method code.
@@ -1731,15 +1731,15 @@ call_statement:
     ;
 
 assert_statement:
-	ASSERT_T expr
+	ASSERT_TOK expr
 	{
 		$$ = CreateASSERT($2);
 	}	
 
 if_statement:
-    IF_T expr THEN_T fstatements optional_else end
+    IF_TOK expr THEN_TOK fstatements optional_else end
 	{
-	  if( $6 != IF_T ) {
+	  if( $6 != IF_TOK ) {
 	    WarnMsg_MismatchEnd("IF", NULL, $6, NULL);
 	  }
 	  $$ = CreateIF($2,$4,$5);
@@ -1747,9 +1747,9 @@ if_statement:
     ;
 
 while_statement:
-    WHILE_T expr DO_T fstatements end
+    WHILE_TOK expr DO_TOK fstatements end
 	{
-	  if( $5 != WHILE_T ) {
+	  if( $5 != WHILE_TOK ) {
 	    WarnMsg_MismatchEnd("WHILE", NULL, $5, NULL);
 	  }
 	  $$ = CreateWhile($2,$4);
@@ -1760,16 +1760,16 @@ optional_else:
 	{
 	  $$ = NULL;
 	}
-    | ELSE_T fstatements
+    | ELSE_TOK fstatements
 	{
 	  $$ = $2;
 	}
     ;
 
 when_statement:
-    WHEN_T fvarlist whenlist end
+    WHEN_TOK fvarlist whenlist end
 	{
-	  if( $4 != WHEN_T ) {
+	  if( $4 != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, $4, NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
@@ -1778,9 +1778,9 @@ when_statement:
 	  g_untrapped_error++;
 	  $$ = NULL;
 	}
-    | fname ':' WHEN_T fvarlist whenlist end
+    | fname ':' WHEN_TOK fvarlist whenlist end
 	{
-	  if( $6 != WHEN_T ) {
+	  if( $6 != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, $6, NULL);
 	  }
 	  ErrMsg_Generic("() missing in WHEN statement.");
@@ -1790,16 +1790,16 @@ when_statement:
 	  g_untrapped_error++;
 	  $$ = NULL;
 	}
-    | WHEN_T '(' fvarlist ')' whenlist end
+    | WHEN_TOK '(' fvarlist ')' whenlist end
 	{
-	  if( $6 != WHEN_T ) {
+	  if( $6 != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, $6, NULL);
 	  }
 	  $$ = CreateWHEN(NULL,$3,$5);
 	}
-    | fname ':' WHEN_T '(' fvarlist ')' whenlist end
+    | fname ':' WHEN_TOK '(' fvarlist ')' whenlist end
 	{
-	  if( $8 != WHEN_T ) {
+	  if( $8 != WHEN_TOK ) {
 	    WarnMsg_MismatchEnd("WHEN", NULL, $8, NULL);
 	  }
 	  $$ = CreateWHEN($1,$5,$7);
@@ -1814,58 +1814,58 @@ whenlist:
     ;
 
 whenlistf:
-    CASE_T set ':' fstatements
+    CASE_TOK set ':' fstatements
 	{
 	  $$ = CreateWhen($2,$4);
 	}
-    | OTHERWISE_T ':' fstatements
+    | OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = CreateWhen(NULL,$3);
 	}
-    | whenlistf CASE_T set ':' fstatements
+    | whenlistf CASE_TOK set ':' fstatements
 	{
 	  $$ = LinkWhenCases(CreateWhen($3,$5),$1);
 	}
-    | whenlistf OTHERWISE_T ':' fstatements
+    | whenlistf OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = LinkWhenCases(CreateWhen(NULL,$4),$1);
 	}
     ;
 
 flow_statement:
-    BREAK_T 
+    BREAK_TOK 
 	{
 	  $$ = CreateFlow(fc_break,NULL);
 	}
-    | CONTINUE_T
+    | CONTINUE_TOK
 	{
 	  $$ = CreateFlow(fc_continue,NULL);
 	}
-    | FALLTHRU_T
+    | FALLTHRU_TOK
 	{
 	  $$ = CreateFlow(fc_fallthru,NULL);
 	}
-    | RETURN_T
+    | RETURN_TOK
 	{
 	  $$ = CreateFlow(fc_return,NULL);
 	}
-    | STOP_T optional_bracedtext
+    | STOP_TOK optional_bracedtext
 	{
 	  $$ = CreateFlow(fc_stop,$2);
 	}
     ;
 
 use_statement:
-    USE_T fname
+    USE_TOK fname
 	{
 	  $$ = CreateFNAME($2);
 	}
     ;
 
 select_statement:
-    SELECT_T fvarlist selectlist end
+    SELECT_TOK fvarlist selectlist end
 	{
-	  if( $4 != SELECT_T ) {
+	  if( $4 != SELECT_TOK ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, $4, NULL);
 	  }
 	  ErrMsg_Generic("() missing in SELECT statement.");
@@ -1874,9 +1874,9 @@ select_statement:
 	  g_untrapped_error++;
 	  $$ = NULL;
 	}
-    | SELECT_T '(' fvarlist ')' selectlist end
+    | SELECT_TOK '(' fvarlist ')' selectlist end
 	{
-	  if( $6 != SELECT_T ) {
+	  if( $6 != SELECT_TOK ) {
 	    WarnMsg_MismatchEnd("SELECT", NULL, $6, NULL);
 	  }
 	  $$ = CreateSELECT($3,$5);
@@ -1891,28 +1891,28 @@ selectlist:
     ;
 
 selectlistf:
-    CASE_T set ':' fstatements
+    CASE_TOK set ':' fstatements
 	{
 	  $$ = CreateSelect($2,$4);
 	}
-    | OTHERWISE_T ':' fstatements
+    | OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = CreateSelect(NULL,$3);
 	}
-    | selectlistf CASE_T set ':' fstatements
+    | selectlistf CASE_TOK set ':' fstatements
 	{
 	  $$ = LinkSelectCases(CreateSelect($3,$5),$1);
 	}
-    | selectlistf OTHERWISE_T ':' fstatements
+    | selectlistf OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = LinkSelectCases(CreateSelect(NULL,$4),$1);
 	}
     ;
 
 switch_statement:
-    SWITCH_T fvarlist switchlist end
+    SWITCH_TOK fvarlist switchlist end
 	{
-	  if( $4 != SWITCH_T ) {
+	  if( $4 != SWITCH_TOK ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, $4, NULL);
 	  }
 	  ErrMsg_Generic("() missing in SWITCH statement.");
@@ -1921,9 +1921,9 @@ switch_statement:
 	  g_untrapped_error++;
 	  $$ = NULL;
 	}
-    | SWITCH_T '(' fvarlist ')' switchlist end
+    | SWITCH_TOK '(' fvarlist ')' switchlist end
 	{
-	  if( $6 != SWITCH_T ) {
+	  if( $6 != SWITCH_TOK ) {
 	    WarnMsg_MismatchEnd("SWITCH", NULL, $6, NULL);
 	  }
 	  $$ = CreateSWITCH($3,$5);
@@ -1938,28 +1938,28 @@ switchlist:
     ;
 
 switchlistf:
-    CASE_T set ':' fstatements
+    CASE_TOK set ':' fstatements
 	{
 	  $$ = CreateSwitch($2,$4);
 	}
-    | OTHERWISE_T ':' fstatements
+    | OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = CreateSwitch(NULL,$3);
 	}
-    | switchlistf CASE_T set ':' fstatements
+    | switchlistf CASE_TOK set ':' fstatements
 	{
 	  $$ = LinkSwitchCases(CreateSwitch($3,$5),$1);
 	}
-    | switchlistf OTHERWISE_T ':' fstatements
+    | switchlistf OTHERWISE_TOK ':' fstatements
 	{
 	  $$ = LinkSwitchCases(CreateSwitch(NULL,$4),$1);
 	}
     ;
 
 conditional_statement:
-    CONDITIONAL_T fstatements end
+    CONDITIONAL_TOK fstatements end
 	{
-	  if( $3 != CONDITIONAL_T ) {
+	  if( $3 != CONDITIONAL_TOK ) {
 	    WarnMsg_MismatchEnd("CONDITIONAL", NULL, $3, NULL);
 	  }
 	  $$ = CreateCOND($2);
@@ -1967,13 +1967,13 @@ conditional_statement:
     ;
 
 notes_statement:
-    NOTES_T notes_body end
+    NOTES_TOK notes_body end
 	{
 	  /*  All processing of notes takes place on the notes_body here.
 	   *  Notes should NOT be added to the statement list.
 	   *  Here we know the current type and method names.
 	   */
-	  if( $3 != NOTES_T ) {
+	  if( $3 != NOTES_TOK ) {
 	    WarnMsg_MismatchEnd("NOTES", NULL, $3, NULL);
 	  }
 	  if ($2 != NULL) {
@@ -2004,7 +2004,7 @@ notes_statement:
     ;
 
 notes_body:
-    SYMBOL_T noteslist
+    SYMBOL_TOK noteslist
 	{
 	  /*  At this point we have the "language", the names of the
 	   *  objects we are explaining, and the explanation/notes itself.
@@ -2013,7 +2013,7 @@ notes_body:
 	  assert($$->lang == NULL);
 	  $$->lang = $1;
 	}
-    | notes_body SYMBOL_T noteslist
+    | notes_body SYMBOL_TOK noteslist
 	{
 	  struct NoteTmp *nt;
 	  $$ = $1;
@@ -2028,12 +2028,12 @@ notes_body:
     ;
 
 noteslist:
-    fvarlist BRACEDTEXT_T
+    fvarlist BRACEDTEXT_TOK
 	{
 	  $$ = CreateNoteTmp(NULL, AddBraceChar($2,NULL),
                              (void *)$1, LineNum());
 	}
-    | noteslist fvarlist BRACEDTEXT_T
+    | noteslist fvarlist BRACEDTEXT_TOK
 	{
 	  $$ = CreateNoteTmp(NULL, AddBraceChar($3,NULL),
 	                     (void *)$2, LineNum());
@@ -2095,11 +2095,11 @@ fname:
     ;
 
 name:
-    IDENTIFIER_T
+    IDENTIFIER_TOK
 	{
 	  $$ = CreateIdName($1);
 	}
-    | name '.' IDENTIFIER_T
+    | name '.' IDENTIFIER_TOK
 	{
 	  $$ = CreateIdName($3);
 	  LinkNames($$,$1);
@@ -2119,75 +2119,75 @@ name:
     ;
 
 end:
-    END_T CONDITIONAL_T
+    END_TOK CONDITIONAL_TOK
 	{
           g_end_identifier = NULL;
-          $$ = CONDITIONAL_T;
+          $$ = CONDITIONAL_TOK;
         }
-    | END_T FOR_T
+    | END_TOK FOR_TOK
 	{
           g_end_identifier = NULL;
-          $$ = FOR_T;
+          $$ = FOR_TOK;
         }
-    | END_T IF_T
+    | END_TOK IF_TOK
 	{
           g_end_identifier = NULL;
-          $$ = IF_T;
+          $$ = IF_TOK;
         }
-    | END_T INTERACTIVE_T
+    | END_TOK INTERACTIVE_TOK
 	{
           g_end_identifier = NULL;
-          $$ = INTERACTIVE_T;
+          $$ = INTERACTIVE_TOK;
         }
-    | END_T METHODS_T
+    | END_TOK METHODS_TOK
 	{
           g_end_identifier = NULL;
-          $$ = METHODS_T;
+          $$ = METHODS_TOK;
         }
-    | END_T NOTES_T
+    | END_TOK NOTES_TOK
 	{
           g_end_identifier = NULL;
-          $$ = NOTES_T;
+          $$ = NOTES_TOK;
         }
-    | END_T SELECT_T
+    | END_TOK SELECT_TOK
 	{
           g_end_identifier = NULL;
-          $$ = SELECT_T;
+          $$ = SELECT_TOK;
         }
-    | END_T SWITCH_T
+    | END_TOK SWITCH_TOK
 	{
           g_end_identifier = NULL;
-          $$ = SWITCH_T;
+          $$ = SWITCH_TOK;
         }
-    | END_T UNITS_T
+    | END_TOK UNITS_TOK
 	{
           g_end_identifier = NULL;
-          $$ = UNITS_T;
+          $$ = UNITS_TOK;
         }
-    | END_T GLOBAL_T
+    | END_TOK GLOBAL_TOK
 	{
           g_end_identifier = NULL;
-          $$ = GLOBAL_T;
+          $$ = GLOBAL_TOK;
         }
-    | END_T WHEN_T
+    | END_TOK WHEN_TOK
 	{
           g_end_identifier = NULL;
-          $$ = WHEN_T;
+          $$ = WHEN_TOK;
         }
-    | END_T WHILE_T
+    | END_TOK WHILE_TOK
 	{
           g_end_identifier = NULL;
-          $$ = WHILE_T;
+          $$ = WHILE_TOK;
         }
-    | END_T IDENTIFIER_T
+    | END_TOK IDENTIFIER_TOK
 	{
           g_end_identifier = $2;
-          $$ = IDENTIFIER_T;
+          $$ = IDENTIFIER_TOK;
         }
-    | END_T /* empty */
+    | END_TOK /* empty */
 	{
           g_end_identifier = NULL;
-          $$ = END_T;
+          $$ = END_TOK;
         }
     ;
 
@@ -2196,7 +2196,7 @@ optional_bracedtext:
 	{
 	  $$ = NULL;
 	}
-    | BRACEDTEXT_T
+    | BRACEDTEXT_TOK
 	{
 	  $$ = $1;
 	}
@@ -2207,7 +2207,7 @@ optional_notes:
 	{
 	  $$ = NULL;
 	}
-    | DQUOTE_T
+    | DQUOTE_TOK
 	{
 	  $$ = $1;
 	}
@@ -2229,7 +2229,7 @@ setexprlist:
 	{
 	  $$ = CreateSingleSet($1);
 	}
-    | expr DOTDOT_T expr
+    | expr DOTDOT_TOK expr
 	{
 	  $$ = CreateRangeSet($1,$3);
 	}
@@ -2238,7 +2238,7 @@ setexprlist:
 	  $$ = CreateSingleSet($3);
 	  LinkSets($$,$1);
 	}
-    | setexprlist ',' expr DOTDOT_T expr
+    | setexprlist ',' expr DOTDOT_TOK expr
 	{
 	  $$ = CreateRangeSet($3,$5);
 	  LinkSets($$,$1);
@@ -2246,7 +2246,7 @@ setexprlist:
     ;
 
 number:
-    INTEGER_T
+    INTEGER_TOK
 	{
 	  $$ = $1;
 	  g_constant_type = LONGCONSTANT;
@@ -2261,11 +2261,11 @@ number:
     ;
 
 realnumber:
-    REAL_T opunits
+    REAL_TOK opunits
 	{
 	  $$ = $1*$2;
 	}
-    | INTEGER_T BRACEDTEXT_T
+    | INTEGER_TOK BRACEDTEXT_TOK
 	{
 	  unsigned long pos;
 	  int error_code;
@@ -2291,7 +2291,7 @@ opunits:
 	  g_dim_ptr = Dimensionless();
 	  $$ = 1.0;
 	}
-    | BRACEDTEXT_T
+    | BRACEDTEXT_TOK
 	{
 	  unsigned long pos;
 	  int error_code;
@@ -2312,11 +2312,11 @@ opunits:
     ;
 
 dims:
-    DIMENSION_T dimensions
+    DIMENSION_TOK dimensions
 	{
 	  $$ = $2;
 	}
-    | DIMENSIONLESS_T
+    | DIMENSIONLESS_TOK
 	{
 	  $$ = Dimensionless();
 	}
@@ -2338,11 +2338,11 @@ dimensions:
     ;
 
 dimexpr:
-    IDENTIFIER_T
+    IDENTIFIER_TOK
 	{
 	  ParseDim(&($$),SCP($1));
 	}
-    | INTEGER_T
+    | INTEGER_TOK
 	{
 	  ClearDimensions(&($$));
 	}
@@ -2372,11 +2372,11 @@ fraction:
     ;
 
 fractail:
-    INTEGER_T
+    INTEGER_TOK
 	{
 	  $$ = CreateFraction((short)$1,(short)1);
 	}
-    | '(' INTEGER_T '/' INTEGER_T ')'
+    | '(' INTEGER_TOK '/' INTEGER_TOK ')'
 	{
 	  $$ = CreateFraction((short)$2,(short)$4);
 	}
@@ -2398,11 +2398,11 @@ optional_sign:
     ;
 
 expr:
-    INTEGER_T
+    INTEGER_TOK
 	{
 	  $$ = CreateIntExpr($1);
 	}
-    | MAXINTEGER_T
+    | MAXINTEGER_TOK
 	{
 	  $$ = CreateIntExpr(LONG_MAX-1);
 	}
@@ -2410,23 +2410,23 @@ expr:
 	{
 	  $$ = CreateRealExpr($1,g_dim_ptr);
 	}
-    | MAXREAL_T
+    | MAXREAL_TOK
 	{
 	  $$ = CreateRealExpr(DBL_MAX/(1+1e-15),Dimensionless());
 	}
-    | TRUE_T
+    | TRUE_TOK
 	{
 	  $$ = CreateTrueExpr();
 	}
-    | FALSE_T
+    | FALSE_TOK
 	{
 	  $$ = CreateFalseExpr();
 	}
-    | ANY_T
+    | ANY_TOK
 	{
 	  $$ = CreateAnyExpr();
 	}
-    | SYMBOL_T
+    | SYMBOL_TOK
 	{
 	  $$ = CreateSymbolExpr($1);
 	}
@@ -2463,31 +2463,31 @@ expr:
 	  $3 = JoinExprLists($3,CreateOpExpr(e_power));
 	  $$ = JoinExprLists($1,$3);
 	}
-    | expr AND_T expr
+    | expr AND_TOK expr
 	{
 	  $3 = JoinExprLists($3,CreateOpExpr(e_and));
 	  $$ = JoinExprLists($1,$3);
 	}
-    | expr OR_T expr
+    | expr OR_TOK expr
 	{
 	  $3 = JoinExprLists($3,CreateOpExpr(e_or));
 	  $$ = JoinExprLists($1,$3);
 	}
-    | NOT_T expr
+    | NOT_TOK expr
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_not));
 	}
-    | expr relop expr %prec NEQ_T
+    | expr relop expr %prec NEQ_TOK
 	{
 	  $3 = JoinExprLists($3,$2);
 	  $$ = JoinExprLists($1,$3);
 	}
-    | expr logrelop expr %prec BEQ_T
+    | expr logrelop expr %prec BEQ_TOK
 	{
 	  $3 = JoinExprLists($3,$2);
 	  $$ = JoinExprLists($1,$3);
 	}
-    | expr IN_T expr
+    | expr IN_TOK expr
 	{
 	  $3 = JoinExprLists($3,CreateOpExpr(e_in));
 	  $$ = JoinExprLists($1,$3);
@@ -2497,94 +2497,94 @@ expr:
 	  $3 = JoinExprLists($3,CreateOpExpr(e_st));
 	  $$ = JoinExprLists($1,$3);
 	}
-    | expr SUCHTHAT_T expr
+    | expr SUCHTHAT_TOK expr
 	{
 	  $3 = JoinExprLists($3,CreateOpExpr(e_st));
 	  $$ = JoinExprLists($1,$3);
 	}
-    | '+' expr %prec UPLUS_T
+    | '+' expr %prec UPLUS_TOK
 	{
 	  $$ = $2;
 	}
-    | '-' expr %prec UMINUS_T
+    | '-' expr %prec UMINUS_TOK
 	{
 	  $$ = JoinExprLists($2,CreateOpExpr(e_uminus));
 	}
-    | SATISFIED_T '(' fname ',' realnumber ')'
+    | SATISFIED_TOK '(' fname ',' realnumber ')'
 	{
 	  $$ = CreateSatisfiedExpr($3,$5,g_dim_ptr);
 	}
-    | SATISFIED_T '(' fname ')'
+    | SATISFIED_TOK '(' fname ')'
 	{
 	  $$ = CreateSatisfiedExpr($3,DBL_MAX,NULL);
 	}
-    | SUM_T '(' set ')'
+    | SUM_TOK '(' set ')'
 	{
 	  DestroySetList($3);
 	  $$ = NULL;
 	  ErrMsg_ParensBrackets("SUM");
 	  g_untrapped_error++;
 	}
-    | SUM_T '[' set ']'
+    | SUM_TOK '[' set ']'
 	{
 	  $$ = CreateBuiltin(e_sum,$3);
 	}
-    | PROD_T '(' set ')'
+    | PROD_TOK '(' set ')'
 	{
 	  DestroySetList($3);
 	  $$ = NULL;
 	  ErrMsg_ParensBrackets("PROD");
 	  g_untrapped_error++;
 	}
-    | PROD_T '[' set ']'
+    | PROD_TOK '[' set ']'
 	{
 	  $$ = CreateBuiltin(e_prod,$3);
 	}
-    | UNION_T '(' set ')'
+    | UNION_TOK '(' set ')'
 	{
 	  DestroySetList($3);
 	  $$ = NULL;
 	  ErrMsg_ParensBrackets("UNION");
 	  g_untrapped_error++;
 	}
-    | UNION_T '[' set ']'
+    | UNION_TOK '[' set ']'
 	{
 	  $$ = CreateBuiltin(e_union,$3);
 	}
-    | INTERSECTION_T '(' set ')'
+    | INTERSECTION_TOK '(' set ')'
 	{
 	  DestroySetList($3);
 	  $$ = NULL;
 	  ErrMsg_ParensBrackets("INTERSECTION");
 	  g_untrapped_error++;
 	}
-    | INTERSECTION_T '[' set ']'
+    | INTERSECTION_TOK '[' set ']'
 	{
 	  $$ = CreateBuiltin(e_inter,$3);
 	}
-    | CARD_T '(' set ')'
+    | CARD_TOK '(' set ')'
 	{
 	  DestroySetList($3);
 	  $$ = NULL;
 	  ErrMsg_ParensBrackets("CARD");
 	  g_untrapped_error++;
 	}
-    | CARD_T '[' set ']'
+    | CARD_TOK '[' set ']'
 	{
 	  $$ = CreateBuiltin(e_card,$3);
 	}
-    | CHOICE_T '(' set ')'
+    | CHOICE_TOK '(' set ')'
 	{
 	  DestroySetList($3);
 	  $$ = NULL;
 	  ErrMsg_ParensBrackets("CHOICE");
 	  g_untrapped_error++;
 	}
-    | CHOICE_T '[' set ']'
+    | CHOICE_TOK '[' set ']'
 	{
 	  $$ = CreateBuiltin(e_choice,$3);
 	}
-    | IDENTIFIER_T '(' expr ')'
+    | IDENTIFIER_TOK '(' expr ')'
 	{
 	  CONST struct Func *fptr;
 	  if ((fptr = LookupFunc(SCP($1)))!=NULL) {
@@ -2614,26 +2614,26 @@ relop:
 	{
 	  $$ = CreateOpExpr(e_greater);
 	}
-    | LEQ_T /* less than or equal written "<=" */
+    | LEQ_TOK /* less than or equal written "<=" */
 	{
 	  $$ = CreateOpExpr(e_lesseq);
 	}
-    | GEQ_T /* greater than or equal written ">=" */
+    | GEQ_TOK /* greater than or equal written ">=" */
 	{
 	  $$ = CreateOpExpr(e_greatereq);
 	}
-    | NEQ_T /* not equal written "<>" */
+    | NEQ_TOK /* not equal written "<>" */
 	{
 	  $$ = CreateOpExpr(e_notequal);
 	}
     ;
 
 logrelop:
-    BEQ_T /* equality in boolean relations */
+    BEQ_TOK /* equality in boolean relations */
 	{
 	  $$ = CreateOpExpr(e_boolean_eq);
 	}
-    | BNE_T /* non equality in boolean relations */
+    | BNE_TOK /* non equality in boolean relations */
 	{
 	  $$ = CreateOpExpr(e_boolean_neq);
 	}
@@ -2767,8 +2767,8 @@ ErrMsg_ParensBrackets(CONST char *operation)
  *      statement --the current statement, e.g. ATOM, METHOD, FOR, IF, CASE
  *      opt_name  --the name of the thing we were defining for ATOMs, METHODs,
  *                  etc, or NULL anonymous statements (FOR, IF, CASE, etc)
- *      end_token --the TOKEN_T that we were received instead.  We use the
- *                  TokenAsString to produce a string given a TOKEN_T
+ *      end_token --the TOKEN_TOK that we were received instead.  We use the
+ *                  TokenAsString to produce a string given a TOKEN_TOK
  *      expecting --the keyword we were expecting to see after the END; if
  *                  NULL, we were expecting the string given in statement
  */
@@ -2789,13 +2789,13 @@ WarnMsg_MismatchEnd(CONST char *statement, CONST char *opt_name,
  *  CONST char *TokenAsString(token);
  *      unsigned long token;
  *
- *  Takes a TOKEN_T (e.g., FOR_T, MODEL_T, END_T, IDENTIFIER_T) and returns
+ *  Takes a TOKEN_TOK (e.g., FOR_TOK, MODEL_TOK, END_TOK, IDENTIFIER_TOK) and returns
  *  a string representation of it:
- *      e.g.:  TokenAsString(FOR_T) ==> "FOR"
+ *      e.g.:  TokenAsString(FOR_TOK) ==> "FOR"
  *
  *  Since this function is only used inside WarnMsg_MismatchEnd, we do a
- *  couple of things specific to that function:  If token is END_T, we
- *  return an empty string, and if it is IDENTIFIER_T, we return the
+ *  couple of things specific to that function:  If token is END_TOK, we
+ *  return an empty string, and if it is IDENTIFIER_TOK, we return the
  *  current value of g_end_identifier, or UNKNOWN if g_end_identifier is
  *  NULL.
  */
@@ -2803,39 +2803,39 @@ static CONST char *
 TokenAsString(unsigned long token)
 {
   switch( token ) {
-  case ATOM_T:
+  case ATOM_TOK:
     return "ATOM";
-  case CONDITIONAL_T:
+  case CONDITIONAL_TOK:
     return "CONDITIONAL";
-  case FOR_T:
+  case FOR_TOK:
     return "FOR";
-  case ASSERT_T:
+  case ASSERT_TOK:
 	return "ASSERT";
-  case IF_T:
+  case IF_TOK:
     return "IF";
-  case INTERACTIVE_T:
+  case INTERACTIVE_TOK:
     return "INTERACTIVE";
-  case METHOD_T:
+  case METHOD_TOK:
     return "METHOD";
-  case METHODS_T:
+  case METHODS_TOK:
     return "METHODS";
-  case MODEL_T:
+  case MODEL_TOK:
     return "MODEL";
-  case NOTES_T:
+  case NOTES_TOK:
     return "NOTES";
-  case PATCH_T:
+  case PATCH_TOK:
     return "PATCH";
-  case SELECT_T:
+  case SELECT_TOK:
     return "SELECT";
-  case SWITCH_T:
+  case SWITCH_TOK:
     return "SWITCH";
-  case UNITS_T:
+  case UNITS_TOK:
     return "UNITS";
-  case WHEN_T:
+  case WHEN_TOK:
     return "WHEN";
-  case END_T:
+  case END_TOK:
     return "";
-  case IDENTIFIER_T:
+  case IDENTIFIER_TOK:
   default:
     if( g_end_identifier != NULL ) {
       return SCP(g_end_identifier);
