@@ -81,7 +81,7 @@ global AscConfirm
   #
   # wait for the box to be destroyed
   update idletask
-  grab -global .ascConfirm
+  catch { grab -global .ascConfirm } err
   tkwait window .ascConfirm
   return $AscConfirm(button)
 }
