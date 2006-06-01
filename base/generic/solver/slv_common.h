@@ -21,8 +21,7 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	General C  utility routines for slv/Slv class interfaces. Abstracted from
-	slvX.c January 1995. Based on the original slv.h by KW and JZ (01/94), by Ben Allan.
+	General C  utility routines for slv/Slv class interfaces.
 
 	slv.h is the header for folks on the ASCEND end, and this is the one for
 	folks on the Slv math end.
@@ -119,6 +118,9 @@
 	   slv_set_char_parameter(&(p.parms[i].info.c.value),argv[j]);
 
 	@endcode
+*//*
+ 	Abstracted from
+	slvX.c January 1995. Based on the original slv.h by KW and JZ (01/94), by Ben Allan.
 */
 
 #ifndef ASC_SLV_COMMON_H

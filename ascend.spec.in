@@ -101,30 +101,34 @@ update-mime-database /usr/share/mime
 %files
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
-%{_datadir}/applications/ascend.desktop
 %{_datadir}/ascend/models
 %{_libdir}/libascend.so
+%{_datadir}/mime/packages/ascend.xml
+%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 
 # %package -n ascend-python
 %{_bindir}/ascend
-%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
-%{_datadir}/icons/ascend-app.png
-%{_datadir}/icons/hicolor/64x64/ascend.png
-%{_datadir}/icons/ascend4-app.png
-%{_datadir}/icons/hicolor/64x64/ascend4.png
-%{_datadir}/mime/packages/ascend.xml
 %{_datadir}/ascend/*.py
 %{_datadir}/ascend/*.pyc
 %{_datadir}/ascend/*.pyo
 %{_datadir}/ascend/glade
 %{_datadir}/ascend/_ascpy.so
+%{_datadir}/applications/ascend.desktop
+%{_datadir}/icons/ascend-app.png
+%{_datadir}/icons/hicolor/64x64/ascend.png
 
 # %package -n ascend-tcltk
 %{_bindir}/ascend4
 %{_datadir}/ascend/tcltk
 %{_libdir}/libascendtcl.so
+%{_datadir}/applications/ascend4.desktop
+%{_datadir}/icons/ascend4-app.png
+%{_datadir}/icons/hicolor/64x64/ascend4.png
 
 %changelog
+* Thu Jun 01 2006 John Pye <john.pye@student.unsw.edu.au>
+- Add Tcl/Tk interface to GNOME menu
+
 * Tue May 02 2006 John Pye <john.pye@student.unsw.edu.au>
 - Break out ascend-core, ascend-python and ascend-tcltk packages.
 
