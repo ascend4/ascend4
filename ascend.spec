@@ -1,13 +1,13 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.91
+Version:	0.9.5.93
 
 # Use release "0" so that distro-released versions will override ours.
 Release:	0.jdpipe
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		ascend.tar.bz2
+Source:		ascend-0.9.5.93.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
@@ -41,7 +41,7 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 #%package -n ascend-python
-#Version:    0.9.5.91
+#Version:    0.9.5.93
 #Summary:    PyGTK user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -51,7 +51,7 @@ fields from Architecture to (computational) Zoology.
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
 #%package -n ascend-tcltk
-#Version:    0.9.5.91
+#Version:    0.9.5.93
 #Summary:    Tcl/Tk user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -62,21 +62,29 @@ fields from Architecture to (computational) Zoology.
 #functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n ascend
+%setup -q -n ascend-0.9.5.93
 
 %build
-scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4
 
 %install
 rm -rf %{buildroot}
-scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_DATA=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_incdir} WITH_PYTHON=1 WITH_TCLTK=1 install
 
+# Install menu entry for PyGTK interface, gtksourceview syntax highlighting, and MIME definition
 pushd pygtk/gnome
 install -m 644 -D ascend.desktop %{buildroot}/%{_datadir}/applications/ascend.desktop
 install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/ascend-app.png
 install -m 644 -D ascend.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend.png
 install -m 644 -D ascend.xml %{buildroot}/%{_datadir}/mime/packages/ascend.xml
 install -m 644 -D ascend.lang %{buildroot}/%{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
+popd
+
+# Install menu entry for Tcl/Tk interface
+pushd tcltk/gnome
+install -m 644 -D ascend4.desktop %{buildroot}/%{_datadir}/applications/ascend4.desktop
+install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/ascend4-app.png
+install -m 644 -D ascend4.png %{buildroot}/%{_datadir}/icons/hicolor/64x64/ascend4.png
 popd
 
 %clean
@@ -102,6 +110,8 @@ update-mime-database /usr/share/mime
 %{_datadir}/gtksourceview-1.0/language-specs/ascend.lang
 %{_datadir}/icons/ascend-app.png
 %{_datadir}/icons/hicolor/64x64/ascend.png
+%{_datadir}/icons/ascend4-app.png
+%{_datadir}/icons/hicolor/64x64/ascend4.png
 %{_datadir}/mime/packages/ascend.xml
 %{_datadir}/ascend/*.py
 %{_datadir}/ascend/*.pyc
