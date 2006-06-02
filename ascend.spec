@@ -31,6 +31,7 @@ Requires: pygtk2-libglade
 Requires: python-matplotlib
 Requires: python-numeric
 Requires: gtksourceview
+Requires: xgraph >= 11
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
