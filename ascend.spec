@@ -3,6 +3,7 @@ Summary:	ASCEND modelling environment
 Version:	0.9.5.93
 
 # Use release 0.* so that other users can do patch releases with a higher number
+# and still have the update occur automatically.
 Release:	0
 
 License:	GPL
