@@ -914,6 +914,10 @@ env.Append(PYTHON_CPPPATH=[distutils.sysconfig.get_python_inc()])
 #---------------------------------------
 # SUBSTITUTION DICTIONARY for .in files
 
+release = env.get('RELEASE')
+if release=="0.":
+	release="0"
+
 subst_dict = {
 	'@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
 	, '@GLADE_FILE@':'ascend.glade'
@@ -924,7 +928,7 @@ subst_dict = {
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
-	, '@RELEASE@':env.get('RELEASE')
+	, '@RELEASE@':release
 	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
 	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
