@@ -317,6 +317,12 @@ opts.Add(
 	,"ascend-"+version
 )
 
+opts.Add(
+	'RELEASE'
+	,"Release number for use in RPM spec file. This should always start with a zero for releases made by the ASCEND group, in order that third parties can make 'patch' releases of higher version numbers."
+	,"0"
+)
+
 opts.Add(BoolOption(
 	'ABSOLUTE_PATHS'
 	,"Whether to use absolute or relative paths in the installed Tcl/Tk interface. If you want to build an RPM, set this to false."
@@ -918,6 +924,7 @@ subst_dict = {
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
+	, '@RELEASE@':env.get('RELEASE')
 	, '@DISTTAR_NAME@':env['DISTTAR_NAME']
 	, '@WEBHELPROOT@':'http://pye.dyndns.org/ascend/manual/'
 	, '@ASC_SHLIBSUFFIX@':env['SHLIBSUFFIX']
