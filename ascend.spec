@@ -65,7 +65,7 @@ fields from Architecture to (computational) Zoology.
 %setup -q -n ascend-0.9.5.93
 
 %build
-scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_includedir} TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4 WITH_SOLVERS=QRSLV,LSOD,CMSLV libascend pygtk tcltk
+scons %{?_smp_mflags} CC="ccache gcc" CXX="ccache g++" DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_includedir} TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4 WITH_SOLVERS=QRSLV,LSOD,CMSLV pygtk tcltk
 
 %install
 rm -rf %{buildroot}
