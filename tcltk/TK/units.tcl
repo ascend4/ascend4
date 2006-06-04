@@ -199,6 +199,11 @@ proc ShowWindow.units { args} {
     -underline 0 \
     -label {Read file ...}
   .units.menubar.file add command \
+    -command {Units_do_ReadFile} \
+    -accelerator {Alt-f o} \
+    -underline 0 \
+    -label {Open units file ...}
+  .units.menubar.file add command \
     -command {Units_do_WriteFile} \
     -underline 0 \
     -accelerator {Alt-f s} \

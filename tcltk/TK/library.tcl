@@ -310,6 +310,11 @@ proc ShowWindow.library { args} {
     -label {Read types from file...} \
     -accelerator {Alt-f r} \
     -underline 0
+  .library.menubar.file add command \
+    -command {Libr_do_read} \
+    -label {Open type file...} \
+    -accelerator {Alt-f o} \
+    -underline 0
   .library.menubar.file add separator
   .library.menubar.file add command \
     -command {Toggle_Remote ascLibrVect} \

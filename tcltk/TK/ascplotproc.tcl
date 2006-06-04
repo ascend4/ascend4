@@ -1938,8 +1938,8 @@ proc ascplot_disableunimplemented {} {
   .ascplot.menubar.options.graph entryconfigure 1 -state disabled
   .ascplot.menubar.options.graph entryconfigure 2 -state disabled
  # no save data set or unload
-  .ascplot.menubar.file entryconfigure 1 -state disabled
   .ascplot.menubar.file entryconfigure 2 -state disabled
+  .ascplot.menubar.file entryconfigure 3 -state disabled
   .ascplot.menubar.edit entryconfigure 0 -state disabled
 
  # disable plotting/calculating until data exists

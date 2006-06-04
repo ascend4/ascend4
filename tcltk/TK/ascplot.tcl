@@ -214,6 +214,11 @@ proc ShowWindow.ascplot {args} {# xf ignore me 7
     -accelerator {Alt-f r} \
     -underline 0
   .ascplot.menubar.file add command \
+    -command ascplot_loaddata \
+    -label {Open data set} \
+    -accelerator {Alt-f o} \
+    -underline 0
+  .ascplot.menubar.file add command \
     -command ascplot_savedata \
     -label {Save data set} \
     -accelerator {Alt-f s} \

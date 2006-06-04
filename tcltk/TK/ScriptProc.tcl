@@ -1837,12 +1837,13 @@ proc Script_Update_File_Buttons {} {
   $mb entryconfigure 0 -state normal
   $mb entryconfigure 1 -state normal
   $mb entryconfigure 2 -state normal
- # note 3: separators don't have states
-  $mb entryconfigure 4 -state normal
- # note 5: separators don't have states
-  $mb entryconfigure 6 -state normal
+  $mb entryconfigure 3 -state normal
+ # note 4: separators don't have states
+  $mb entryconfigure 5 -state normal
+ # note 6: separators don't have states
   $mb entryconfigure 7 -state normal
- # note 8: separators don't have states
+  $mb entryconfigure 8 -state normal
+ # note 9: separators don't have states
 }
 
 #

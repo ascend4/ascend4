@@ -200,18 +200,19 @@ proc Probe_Update_FileButtons {} {
   # New buffer is always available
   $m entryconfigure 0 -state normal
 
-  # Read
+  # Read/open
   $m entryconfigure 1 -state normal
+  $m entryconfigure 2 -state normal
 
   # Print
   if {[$ascProbVect(vbox) size] == 0} {
-    $m entryconfigure 2 -state disabled
     $m entryconfigure 3 -state disabled
     $m entryconfigure 4 -state disabled
+    $m entryconfigure 5 -state disabled
   } {
-    $m entryconfigure 2 -state normal
     $m entryconfigure 3 -state normal
     $m entryconfigure 4 -state normal
+    $m entryconfigure 5 -state normal
   }
 }
 
