@@ -295,6 +295,11 @@ StartupSrc.browser
     -label {Read values...} \
     -accelerator {Alt-f r} \
     -underline 0
+  .browser.menubar.file add command \
+    -command {Brow_do_Read} \
+    -label {Open values...} \
+    -accelerator {Alt-f o} \
+    -underline 0
   .browser.menubar.file add separator
   .browser.menubar.file add command  \
     -command {Toggle_Remote ascBrowVect} \

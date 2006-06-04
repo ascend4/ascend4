@@ -179,6 +179,11 @@ proc ShowWindow.script { args} {
     -accelerator {Alt-f r} \
     -underline 0
   .script.menubar.file add command  \
+    -command {Script_do_ReadFile} \
+    -label {Open script file...} \
+    -accelerator {Alt-f o} \
+    -underline 0
+  .script.menubar.file add command  \
     -command {Script_do_Import_File} \
     -label {Import file...} \
     -accelerator {Alt-f i} \

@@ -151,6 +151,11 @@ proc ShowWindow.probe {args} {
     -accelerator {Alt-f r} \
     -underline 0
   .probe.menubar.file add command \
+    -command {Probe_do_ReadFile} \
+    -label {Open...} \
+    -accelerator {Alt-f o} \
+    -underline 0
+  .probe.menubar.file add command \
     -command {Probe_do_WriteBuf} \
     -label {Save...} \
     -accelerator {Alt-f s} \
