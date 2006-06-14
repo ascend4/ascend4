@@ -1,32 +1,28 @@
-/*
- *  Ascend Module Control
- *  by Tom Epperly
- *  Created: 1/11/90
- *  Version: $Revision: 1.25 $
- *  Version control file: $RCSfile: module.c,v $
- *  Date last modified: $Date: 1998/03/17 22:09:12 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Ascend Module Control
+*//*
+	by Tom Epperly
+	Created: 1/11/90
+	Last in CVS: $Revision: 1.25 $ $Date: 1998/03/17 22:09:12 $ $Author: ballan $
+*/
 
 #include <errno.h>
 #include <stdarg.h>
@@ -127,14 +123,14 @@ CONST char *g_alt_ending[MOD_FILE_EXTS] = {
 
 /* extern */
 struct module_t *g_current_module = NULL;
-/*
+/**<
  *  The current module.  Even though this variable is "extern",
  *  do NOT use this variable directly.  Instead, use a call to
  *  Asc_CurrentModule() to get the current module.
  */
 
 static int g_string_modules_processed = 0;
-/*
+/**<
  * This is a counter, to be incremented each time it is used to
  * create a string module name. Should not be reset to 0
  * unless all modules have been destroyed.
@@ -143,10 +139,10 @@ static int g_string_modules_processed = 0;
 static struct gl_list_t *g_module_list = NULL;
 #define G_MODULE_LIST_INIT_SIZE 20L
 
+/*----------
+  forward declarations
+*/
 
-/*
- *---------- Forward Declarations ----------
- */
 static int CmpModulesNameVers(CONST struct module_t*, CONST struct module_t*);
 static struct module_t *FindModuleFile(CONST char *, int * CONST, int);
 static struct module_t *CreateStringModule(CONST char *, int * CONST, CONST char *);
@@ -163,11 +159,13 @@ static struct module_t *SearchForModule(CONST struct module_t *);
 static int StoreModule(CONST struct module_t *);
 static void WriteWhyNotFound(symchar *,  int);
 
+/*------------------------------------------------------------------------------
+  MODULE HANDLING
+*/
 
-/**  See the header file for this function's documentation
- **/
-int Asc_InitModules(unsigned long init_size)
-{
+/* see module.h for details of functions not documented here */
+
+int Asc_InitModules(unsigned long init_size){
   if( g_module_list != NULL ) {
     return 0;
   }
@@ -182,8 +180,7 @@ int Asc_InitModules(unsigned long init_size)
 
 static DestroyFunc g_sldestroy;
 
-static void DestroyModule(struct module_t *m)
-{
+static void DestroyModule(struct module_t *m){
   if (m == NULL) return;
   if (m->s != NULL) {
     ascfree((char *)m->s);
@@ -201,10 +198,8 @@ static void DestroyModule(struct module_t *m)
   DeleteModule(m);
 }
 
-/**  See the header file for this function's documentation
- **/
-void Asc_DestroyModules(DestroyFunc f)
-{
+
+void Asc_DestroyModules(DestroyFunc f){
   g_sldestroy = f;
   if (g_module_list != NULL) {
     gl_iterate(g_module_list,(DestroyFunc)DestroyModule);
@@ -214,12 +209,10 @@ void Asc_DestroyModules(DestroyFunc f)
 }
 
 
-/**  See the header file for this function's documentation
- **/
 extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
-                                             int *status,
-                                             CONST char *prefix)
-{
+    int *status,
+    CONST char *prefix
+){
   char *name = NULL;
   char *keep_string;
   int dummy;
@@ -254,10 +247,8 @@ extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
   return result;
 }
 
-/**  See the header file for this function's documentation
- **/
-extern struct module_t *Asc_OpenModule(CONST char *name, int *status)
-{
+
+extern struct module_t *Asc_OpenModule(CONST char *name, int *status){
   if( status != NULL ) {
     return OpenModuleInternal(name, status, FALSE, NULL);
   } else {
@@ -267,10 +258,7 @@ extern struct module_t *Asc_OpenModule(CONST char *name, int *status)
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern struct module_t *Asc_RequireModule(CONST char *name, int *status)
-{
+extern struct module_t *Asc_RequireModule(CONST char *name, int *status){
   if( status != NULL ) {
     return OpenModuleInternal(name, status, TRUE, NULL);
   } else {
@@ -280,29 +268,28 @@ extern struct module_t *Asc_RequireModule(CONST char *name, int *status)
 }
 
 
-/*
- *  struct module_t *OpenModuleInternal(name, status, do_not_overwrite, str)
- *      const char *name;      // filanem of the module to find
- *      int * const status;    // status to return to caller
- *      int do_not_overwrite;  // Should we keep existing modules?
- *      const char *str;       // String we keep and parse if not NULL.
- *
- *  When str is NULL:
- *  This function calls FindModuleFile() to find the module named `name'.
- *  The status of FindModuleFile is returned to the caller in `status'.
- *  If the call to FindModuleFile is successful and do_not_overwrite is
- *  FALSE, we make the returned module the current module and inform
- *  the scanner of the change.
- *  When str is NOT NULL:
- *  Calls FindModuleFile to guard against duplication, then sets up
- *  module and scanner for string scanning.
- *
- *  This function is the glue between the user callable Asc_OpenModule()
- *  and Asc_RequireModule() functions and FindModuleFile().  Consult
- *  those functions' documentation for more information.  The
- *  `do_not_overwrite' flag tells if we were called from
- *  Asc_OpenModule() (==FALSE) or Asc_RequireModule() (==TRUE).
- */
+/**
+	This function is the glue between the user callable Asc_OpenModule()
+	and Asc_RequireModule() functions and FindModuleFile().  Consult
+	those functions' documentation for more information.  The
+	`do_not_overwrite' flag tells if we were called from
+	Asc_OpenModule() (==FALSE) or Asc_RequireModule() (==TRUE).
+
+	@param name filanem of the module to find
+	@param status status to return to caller
+	@param do_not_overwrite Should we keep existing modules?
+	@param str String we keep and parse if not NULL.
+
+	When str is NULL:
+		This function calls FindModuleFile() to find the module named `name'.
+		The status of FindModuleFile is returned to the caller in `status'.
+		If the call to FindModuleFile is successful and do_not_overwrite is
+		FALSE, we make the returned module the current module and inform
+		the scanner of the change.
+	When str is NOT NULL:
+		Calls FindModuleFile to guard against duplication, then sets up
+		module and scanner for string scanning.
+*/
 static
 struct module_t *OpenModuleInternal(CONST char *name,
                                     int * CONST status,
@@ -386,39 +373,34 @@ struct module_t *OpenModuleInternal(CONST char *name,
 }
 
 
-/*
- *  struct module_t *FindModuleFile(name, status, do_not_overwrite)
- *      const char *name;
- *      int * const status;
- *      int do_not_overwrite;
- *
- *  Find or create a module named `name'.  Return the module and put
- *  an exit code in `status'.  If `do_not_overwrite' is TRUE, an existing
- *  module named `name' will be returned; otherwise, a new module will
- *  be created, overwriting any existing module having that name.
- *
- *  The value put into `status' is one of:
- *      -3  a memory error occurred: not enough memory to create module;
- *          returning NULL
- *      -2  a potential file matching module name was found but the
- *          file could not be opened for reading; returning NULL
- *      -1  could not find a file for the module `name'; returning NULL
- *       0  a new module was successfully created and is being returned
- *       1  a module with `name' already existed; the file it points to
- *          does NOT match the file just found for module `name'; the old
- *          module was overwritten and the new module is being returned
- *       2  a module with `name' already exited; the file it points to
- *          matches the file just found for module `name'; the existing
- *          module is being returned
- *       3  a module with `name' already existed; it was an alias for
- *          for another module; the old module was overwritten and the
- *          new module is being returned
- *       4  a module with `name' already existed; it was being read when
- *          we tried to open it again for reading (recursive require).
- *          The existing module is being returned.
- *       5  The argument `do_not_overwrite' is TRUE and a module named
- *          `name' was found, returning it
- */
+/**
+	Find or create a module named `name'.  Return the module and put
+	an exit code in `status'.  If `do_not_overwrite' is TRUE, an existing
+	module named `name' will be returned; otherwise, a new module will
+	be created, overwriting any existing module having that name.
+
+	The value put into `status' is one of:
+	   -3  a memory error occurred: not enough memory to create module;
+	       returning NULL
+	   -2  a potential file matching module name was found but the
+	       file could not be opened for reading; returning NULL
+	   -1  could not find a file for the module `name'; returning NULL
+	    0  a new module was successfully created and is being returned
+	    1  a module with `name' already existed; the file it points to
+	       does NOT match the file just found for module `name'; the old
+	       module was overwritten and the new module is being returned
+	    2  a module with `name' already exited; the file it points to
+	       matches the file just found for module `name'; the existing
+	       module is being returned
+	    3  a module with `name' already existed; it was an alias for
+	       for another module; the old module was overwritten and the
+	       new module is being returned
+	    4  a module with `name' already existed; it was being read when
+	       we tried to open it again for reading (recursive require).
+	       The existing module is being returned.
+	    5  The argument `do_not_overwrite' is TRUE and a module named
+	       `name' was found, returning it
+*/
 static
 struct module_t *FindModuleFile(CONST char *name,
                                 int * CONST status,
@@ -622,13 +604,7 @@ struct module_t *FindModuleFile(CONST char *name,
   return new_module;
 }
 
-/*
- *  struct module_t *CreateStringModule(name, status, keep_string)
- *      const char *name;
- *      int * const status;
- *      const char *keep_string;
- *
- *  Create a module named `name'.  Return the module and put
+/** Create a module named `name'.  Return the module and put
  *  an exit code in `status'. 
  *  Name is expected to be unique for all time (or at least until we
  *  reinit the compiler).
@@ -893,14 +869,7 @@ struct module_t *CreateStringModule(CONST char *name,
 }
 
 
-/*
- *  struct module_t *ModuleSearchPath(name, filename, m, error)
- *      const char *name;
- *      char *filename;
- *      struct module_t *m;
- *      int * const error;
- *
- *  This function tries to find a file corresponding to the argument
+/** This function tries to find a file corresponding to the argument
  *  "name" by sending "name" to the function ModuleStatFile() which
  *  will attempt to open "name" as a file.  If that fails, this
  *  function then prepends each entry in the search path
@@ -983,13 +952,7 @@ int ModuleSearchPath(CONST char *name,
 }
 
 
-/*
- *  int ModuleStatFile(m, filename, error)
- *      struct module_t * const m;
- *      const char *filename;
- *      int * const error;
- *
- *  Attempt to stat and open the file `filename' for reading.  If the
+/** Attempt to stat and open the file `filename' for reading.  If the
  *  stat call fails, set *error to the value of errno and return 1.  If
  *  the fopen call fails, set *error to errno and return -1.  If stat
  *  and fopen calls are successful, set the fields `f', `linenum', and
@@ -1029,11 +992,7 @@ int ModuleStatFile(struct module_t * CONST m,
 }
 
 
-/*
- *  void WriteWhyNotFound(filename,error)
- *      const char *filename;
- *      int error;
- *
+/**
  *  Print an error (based on the errno `error') explaining why we could
  *  not open/stat the file named `filename'.
  */
@@ -1196,11 +1155,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
   return -2;
 }
 
-/*
- *  struct module_t *NewModule(name);
- *      const char *name;
- *
- *  Allocate space for a new module and set its fields to some
+/** Allocate space for a new module and set its fields to some
  *  reasonable defaults.  If `name' is not NULL, set the module's
  *  base_name to point to the first character after the rightmost
  *  slash (`/' on UNIX, `/' on Windows) in `name', or to `name' if
@@ -1253,9 +1208,9 @@ struct module_t *NewModule(CONST char *name)
   return new;
 }
 
+/*------------------------------------------------------------------------------
+  GLOBAL MODULE LIST MANAGEMENT
 
-/*
- *-------------------------------------------------
  *  The following four functions are used to store, remove, and search
  *  for modules in the global module list, the gl_list `g_module_list'.
  *  We do this (instead of inlining the calls to gl_*()) to provide a
@@ -1294,11 +1249,7 @@ struct module_t *NewModule(CONST char *name)
  */
 
 
-/*
- *  int StoreModule(m);
- *      const struct module_t *m;
- *
- *  Store `m' in the global module gl_list `g_module_list', creating
+/** Store `m' in the global module gl_list `g_module_list', creating
  *  the g_module_list if needed.  Return 0 for success or 1 if the
  *  g_module_list could not be created.
  *
@@ -1317,11 +1268,7 @@ int StoreModule(CONST struct module_t *m)
 }
 
 
-/*
- *  int RemoveModule(m);
- *      const struct module_t *m;
- *
- *  Remove `m' from the global module gl_list `g_module_list'.
+/** Remove `m' from the global module gl_list `g_module_list'.
  *
  *  This function searches backwards through g_module_list and uses
  *  CmpModulesNameVers() to determine which module to remove.
@@ -1343,11 +1290,7 @@ void RemoveModule(CONST struct module_t *m)
 }
 
 
-/*
- *  int SearchForModule(m);
- *      const struct module_t *m;
- *
- *  Search for `m' in the global module gl_list `g_module_list'
+/** Search for `m' in the global module gl_list `g_module_list'
  *  and return it.  Return the matching module or NULL if no matching
  *  module exists or if the g_module_list is empty.
  *
@@ -1373,12 +1316,7 @@ struct module_t *SearchForModule(CONST struct module_t *m)
 }
 
 
-/*
- *  int CmpModulesNameVers(m1, m2);
- *      const struct module_t *m1;
- *      const struct module_t *m2;
- *
- *  Compare the base_names and version numbers of the modules
+/** Compare the base_names and version numbers of the modules
  *  `m1' and `m2'.
  *  Return:
  *      >0  m1->base_name > m2->base_name
@@ -1403,10 +1341,8 @@ int CmpModulesNameVers(CONST struct module_t *m1, CONST struct module_t *m2)
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern int Asc_CloseCurrentModule(void)
-{
+
+extern int Asc_CloseCurrentModule(void){
   struct module_t *prev;
 
   /*
@@ -1461,6 +1397,7 @@ extern int Asc_CloseCurrentModule(void)
   return FALSE;
 }
 
+
 int Asc_ModuleAddStatements(struct module_t *m, struct gl_list_t *l)
 {
   if (l == NULL || gl_length(l) == 0 ||
@@ -1482,10 +1419,7 @@ int Asc_ModuleAddStatements(struct module_t *m, struct gl_list_t *l)
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern CONST struct module_t *Asc_GetModuleByName(CONST char *module_name)
-{
+extern CONST struct module_t *Asc_GetModuleByName(CONST char *module_name){
   char name[PATH_MAX];
   unsigned long vers;
   struct module_t *mod;
@@ -1531,11 +1465,7 @@ extern CONST struct module_t *Asc_GetModuleByName(CONST char *module_name)
 }
 
 
-/*
- *  static unsigned long ModuleNameToInternalNameVers(module_name, name);
- *      const char *module_name;
- *      char * const name;
- *
+/**
  *  Parse the module name given in `module_name' (e.g., "foo.a4c<0>")
  *  into an base name and a version number.  Copy the base_name
  *  into the string `name' and use the version number as the return
@@ -1629,10 +1559,9 @@ struct gl_list_t *Asc_ModuleStatementLists(CONST struct module_t *m)
   return m->stats;
 }
 
-/**  See the header file for this function's documentation
- **/
-extern struct gl_list_t *Asc_ModuleList(int module_type)
-{
+
+
+extern struct gl_list_t *Asc_ModuleList(int module_type){
   struct gl_list_t *new = NULL;
   struct module_t *m;
   struct gl_list_t *types = NULL;
@@ -1678,10 +1607,7 @@ extern struct gl_list_t *Asc_ModuleList(int module_type)
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern void Asc_ModuleWrite(FILE *f, CONST struct module_t *m)
-{
+extern void Asc_ModuleWrite(FILE *f, CONST struct module_t *m){
   assert(m!=NULL);
   FPRINTF(f,"MODULE: %s\nFILENAME: %s\n",SCP(m->name),SCP(m->filename));
   FPRINTF(f,(m->f!=NULL)?"OPEN\n":"CLOSED\n");
@@ -1689,33 +1615,21 @@ extern void Asc_ModuleWrite(FILE *f, CONST struct module_t *m)
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern struct module_t *Asc_CurrentModuleF(void)
-{
+extern struct module_t *Asc_CurrentModuleF(void){
   return g_current_module;
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern CONST char *Asc_ModuleName(CONST struct module_t *m)
-{
+extern CONST char *Asc_ModuleName(CONST struct module_t *m){
   return (( m != NULL ) ? SCP(m->name) : "");
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern CONST char *Asc_ModuleFileName(CONST struct module_t *m)
-{
+extern CONST char *Asc_ModuleFileName(CONST struct module_t *m){
   return ((m != NULL) ? SCP(m->filename) : "");
 }
 
-/**  See the header file for this function's documentation
- **/
-extern CONST char *Asc_ModuleBestName(CONST struct module_t *m)
-{
+extern CONST char *Asc_ModuleBestName(CONST struct module_t *m){
   static char unk[] = "<UNKNOWN>";
   if (m == NULL) return "";
   if (SCP(m->filename) != NULL) return SCP(m->filename);
@@ -1724,24 +1638,15 @@ extern CONST char *Asc_ModuleBestName(CONST struct module_t *m)
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *m)
-{
+extern unsigned long Asc_ModuleTimesOpened(CONST struct module_t *m){
   return ((m != NULL) ? (m->open_count) : 0);
 }
 
 
-/**  See the header file for this function's documentation
- **/
-extern struct tm *Asc_ModuleTimeModified(CONST struct module_t *m)
-{
+extern struct tm *Asc_ModuleTimeModified(CONST struct module_t *m){
   return ((m != NULL) ? localtime(&(m->time_last_modified)) : NULL);
 }
 
-/**  See the header file for this function's documentation
- **/
-extern int Asc_ModuleStringIndex(CONST struct module_t *m)
-{
+extern int Asc_ModuleStringIndex(CONST struct module_t *m){
   return ((m != NULL) ? (int)(m->time_last_modified) : -1);
 }
