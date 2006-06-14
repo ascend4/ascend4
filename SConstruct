@@ -131,10 +131,12 @@ opts.Add(
 # Build the test suite?
 opts.Add(BoolOption(
 	'WITH_CUNIT'
-	,"Whether to build the CUnit tests. Default is off. If set to on,"
-		+" you must have CUnit installed somewhere that SCons can"
-		+" find it, or else use the CUNIT_* options to specify."
-	,False
+	,"You can disable CUnit tests with this option. This will basically stop"
+		+" SCons from parsing the SConscript files relating to the 'test'"
+        +" target, which just might make things marginally faster. Probably"
+		+" you can just ignore this option though. SCons will sniff for Cunit"
+		+" but build the tests only if you specify the 'test' target."
+	,True
 ))
 
 # Where are the CUnit includes?
@@ -846,6 +848,7 @@ if not conf.CheckSwigVersion():
 if with_cunit:
 	if not conf.CheckCUnit():
 		without_cunit_reason = 'CUnit not found'
+		with_cunit = False
 
 # BLAS
 
