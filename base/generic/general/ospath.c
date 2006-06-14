@@ -227,6 +227,7 @@ void ospath_free(struct FilePath *fp){
 	if(fp!=NULL){
 		FREE(fp);
 	}
+	fp=NULL;
 }
 
 void ospath_free_str(char *str){
