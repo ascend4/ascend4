@@ -325,8 +325,9 @@ int AddType(struct TypeDescription *desc)
 
   equiv = EquivalentExists(desc);
   if (equiv != NULL) {
-    FPRINTF(ASCERR,"  Keeping equivalent %s loaded from %s.\n",
-	  SCP(GetName(desc)),Asc_ModuleName(GetModule(equiv)));
+    CONSOLE_DEBUG("Keeping equivalent %s loaded from %s."
+		,SCP(GetName(desc)),Asc_ModuleName(GetModule(equiv))
+	);
     DeleteNewTypeDesc(desc);
     return 0;
   }

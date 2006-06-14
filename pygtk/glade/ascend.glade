@@ -20,7 +20,6 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <signal name="check_resize" handler="on_browserwin_check_resize" last_modification_time="Thu, 17 Nov 2005 15:56:29 GMT"/>
   <signal name="focus" handler="on_browserwin_focus" last_modification_time="Sun, 04 Dec 2005 05:39:42 GMT"/>
 
@@ -1066,7 +1065,6 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <signal name="destroy" handler="on_paramswin_destroy" last_modification_time="Fri, 27 Jan 2006 05:15:10 GMT"/>
 
   <child>
@@ -1329,7 +1327,6 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -1454,7 +1451,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
 
   <child>
     <widget class="GtkVBox" id="observervbox">
@@ -1643,7 +1639,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="delete_event" handler="on_varpropswin_close" last_modification_time="Sat, 04 Feb 2006 06:47:24 GMT"/>
   <signal name="close" handler="on_varpropswin_close" last_modification_time="Sat, 04 Feb 2006 06:47:44 GMT"/>
@@ -2303,7 +2298,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -2546,7 +2540,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -4070,7 +4063,6 @@ Conversion to LyX and other formats:
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="close" handler="on_solverstatusdialog_close" last_modification_time="Thu, 23 Feb 2006 09:33:28 GMT"/>
   <signal name="response" handler="on_solverstatusdialog_response" last_modification_time="Thu, 23 Feb 2006 09:37:55 GMT"/>
@@ -4744,7 +4736,6 @@ Conversion to LyX and other formats:
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="response" handler="on_paramswin_response" last_modification_time="Fri, 24 Feb 2006 06:01:08 GMT"/>
   <signal name="close" handler="on_paramswin_close" last_modification_time="Fri, 24 Feb 2006 06:01:12 GMT"/>

@@ -36,7 +36,7 @@
 # endif
 #endif
 
-#define VERBOSE
+/* #define VERBOSE */
 
 #if !defined(TEST) && !defined(VERBOSE)
 # define NDEBUG
@@ -224,7 +224,9 @@ struct FilePath *ospath_new_from_posix(const char *posixpath){
 }
 
 void ospath_free(struct FilePath *fp){
-	FREE(fp);
+	if(fp!=NULL){
+		FREE(fp);
+	}
 }
 
 void ospath_free_str(char *str){
@@ -652,6 +654,8 @@ char *ospath_getbasefilename(struct FilePath *fp){
 	unsigned length, offset;
 	char *pos;
 
+	if(fp==NULL)return NULL;
+
 	if(strlen(fp->path) == 0){
 		// return empty name.
 		return "";
@@ -670,15 +674,17 @@ char *ospath_getbasefilename(struct FilePath *fp){
 
 	// extract filename given position of find / and return it.
 	if(pos != NULL){
-		unsigned length1 = length - ((pos - fp->path) + 1);
-		temp = (char *)MALLOC(sizeof(char)*length1);
+		unsigned length1 = length - ((pos - fp->path));
+		temp = (char *)MALLOC(sizeof(char)*(length1+1));
 
 		V(length1);
 		STRNCPY(temp, pos + 1, length1);
+		*(temp + length1)='\0';
 		return temp;
 	}else{
-		temp = (char *)MALLOC(sizeof(char)*length);
+		temp = (char *)MALLOC(sizeof(char)*(length+1));
 		STRNCPY(temp, fp->path, length);
+		*(temp+length)='\0';
 		return temp;
 	}
 }
@@ -1074,6 +1080,17 @@ FILE *ospath_fopen(struct FilePath *fp, const char *mode){
 	return f;
 }
 
+int ospath_stat(struct FilePath *fp,struct stat *buf){
+	char s[PATH_MAX];
+
+	if(!ospath_isvalid(fp)){
+		E("Invalid path");
+		return -1;
+	}
+	ospath_strcpy(fp,s,PATH_MAX);
+	return stat(s,buf);
+}	
+
 //------------------------
 // SEARCH PATH FUNCTIONS
 
@@ -1105,7 +1122,7 @@ struct FilePath **ospath_searchpath_new(const char *path){
 	p=STRTOK(path1,PATH_LISTSEP_STR,nexttok);
 	X(p);
 	for(; p!= NULL; p=STRTOK(NULL,PATH_LISTSEP_STR,nexttok)){
-		c = (char *)MALLOC(sizeof(char)*strlen(p));
+		c = (char *)MALLOC(sizeof(char)*(strlen(p)+1));
 		X(p);
 		STRCPY(c,p);
 		if(n>=LISTMAX){
@@ -1149,6 +1166,15 @@ void ospath_searchpath_free(struct FilePath **searchpath){
 	FREE(searchpath);
 }
 
+int ospath_searchpath_length(struct FilePath **searchpath){
+	int i=0;
+	struct FilePath **p;
+	for(p=searchpath; *p!=NULL; ++p){
+		++i;
+	}
+	return i;
+}
+
 struct FilePath *ospath_searchpath_iterate(
 		struct FilePath **searchpath
 		, FilePathTestFn *testfn
@@ -1165,6 +1191,7 @@ struct FilePath *ospath_searchpath_iterate(
 
 	for(p=searchpath; *p!=NULL; ++p){
 		D(*p);
+		assert(*p!=NULL);
 		if((*testfn)(*p,searchdata)){
 			return *p;
 		}

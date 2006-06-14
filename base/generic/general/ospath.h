@@ -23,7 +23,7 @@
 	path separators.
 
 	Has the goal of providing path-search functionality to ASCEND for
-	modules (a4c) and external library (.dll) files, etc.
+	modules (.a4c) and external library (.so/.dll) files, etc.
 
 	Heavily modified version of C++ code from codeproject.com
 	originally written by Simon Parkinson-Bates.
@@ -35,6 +35,8 @@
 	You better not try to put escaped slashes into your paths, and
 	make sure you've unescaped everything before you send it to
 	ospath.
+*//*
+	by John Pye, May 2006
 */
 
 #ifndef OSPATH_H
@@ -57,6 +59,8 @@
 # ifdef __MINGW32__
 #  include <io.h>
 #  include <limits.h>
+# else
+#  include <sys/stat.h>
 # endif
 #endif
 
@@ -233,6 +237,13 @@ ASC_DLLSPEC(void) ospath_append(struct FilePath *fp, struct FilePath *fp1);
 */
 ASC_DLLSPEC(FILE *) ospath_fopen(struct FilePath *fp, const char *mode);
 
+/**
+	Stat function. Simply a wrappen around the 'stat' call.
+	The exception is that if the FilePath is not 'valid', -1 is returned
+	and no call to 'stat' is made.
+*/
+ASC_DLLSPEC(int) ospath_stat(struct FilePath *fp,struct stat *buf);
+
 //------------------------
 // SEARCH PATH FUNCTIONS
 
@@ -242,9 +253,13 @@ ASC_DLLSPEC(void) ospath_searchpath_free(struct FilePath **searchpath);
 
 typedef int (FilePathTestFn)(struct FilePath *,void *);
 
+ASC_DLLSPEC(int) ospath_searchpath_length(struct FilePath **searchpath);
+
 /**
 	@return pointer to path component in which testfn passed, or else
-	NULL if no component passed the test.
+	NULL if no component passed the test. There is no need to free the returned
+	path component, as it will be freed when you (later) free the searchpath 
+	param.
 */
 ASC_DLLSPEC(struct FilePath *) ospath_searchpath_iterate(
 		struct FilePath **searchpath

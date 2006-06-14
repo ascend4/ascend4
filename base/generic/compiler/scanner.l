@@ -825,25 +825,26 @@ Asc_ScannerPushBuffer(CONST char *filename)
   if( status == 5 ) {
     /* already required */
     RequireIndex--;
-    FPRINTF(ASCINF, "REQUIREd module \"%s\" already PROVIDEd\n", filename);
+    CONSOLE_DEBUG("REQUIREd module \"%s\" already PROVIDEd", filename);
     return 1;
   }
   if( status == 4 ) {
     /* recursive require */
     RequireIndex--;
-    FPRINTF(ASCWAR, "Asc-Warn: Recursive REQUIRE for module \"%s\", ignored\n",
-            filename);
+    ERROR_REPORTER_HERE(ASC_USER_WARNING
+		,"Recursive REQUIRE for module \"%s\" (ignored)",filename
+	);
     return 1;
   }
   if ( status != 0 ) {
     /*  The open failed.  Decrement RequireIndex and print an error.
      */
     RequireIndex--;
-    FPRINTF(ASCERR,
-	    "Error:\tREQUIRE cannot open module \"%s\" on line %s:%lu\n",
-	    filename,
-	    Asc_ModuleBestName(Asc_CurrentModule()),
-	    yy_line);
+    error_reporter(ASC_USER_ERROR
+		,Asc_ModuleBestName(Asc_CurrentModule()),yy_line,NULL
+		,"REQUIRE cannot open module \"%s\""
+	    ,filename
+	);
     return 2;
   }
 

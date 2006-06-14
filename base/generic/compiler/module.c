@@ -41,6 +41,7 @@
 #include "symtab.h"
 #include "module.h"
 #include "library.h"
+#include <general/ospath.h>
 
 #ifndef lint
 static CONST char ModuleRCSid[] = "$Id: module.c,v 1.25 1998/03/17 22:09:12 ballan Exp $";
@@ -150,7 +151,6 @@ static struct module_t *CreateStringModule(CONST char *, int * CONST, CONST char
 #define DeleteModule(m) ascfree(m)
 static unsigned long ModuleNameToInternalNameVers(CONST char *, char * CONST);
 static int ModuleSearchPath(CONST char*, char*, struct module_t*, int * CONST);
-static int ModuleStatFile(struct module_t * CONST, CONST char *, int * CONST);
 static struct module_t *NewModule(CONST char *);
 static struct module_t *OpenModuleInternal(CONST char *, int * CONST,
                                            int, CONST char *);
@@ -319,7 +319,7 @@ struct module_t *OpenModuleInternal(CONST char *name,
       /* FindModuleFile set *status */
       return NULL;
     }
-  } else {
+  }else{
     new_module = CreateStringModule(name, status, keep_string);
     if( new_module == NULL ) {
       /* CreateStringModule set *status */
@@ -410,16 +410,16 @@ struct module_t *FindModuleFile(CONST char *name,
   struct module_t *dup = NULL;  /* an existing module with the same name */
   char filename[PATH_MAX];      /* work area to find module's filename */
   int result;                   /* return value when searching for module */
-  int error;                    /* errno returned by fopen() or stat() */
+  int error;                    /* error number returned by fopen() or stat() */
 
   assert(name != NULL);
   assert(status != NULL);
 
   /*
-   *  Create space for the module and set its base_name to a "proper"
-   *  name---i.e,, to the first character after the rightmost slash in
-   *  the name the user passed to us.
-   */
+	Create space for the module and set its base_name to a "proper"
+	name---i.e,, to the first character after the rightmost slash in
+	the name the user passed to us.
+  */
   new_module = NewModule( name );
   if( new_module == NULL ) {
 	/*FPRINTF(ASCERR,"NEW MODULE RETURNED NULL\n");*/
@@ -430,18 +430,14 @@ struct module_t *FindModuleFile(CONST char *name,
 
 
   /*
-   *  Check to see if a module having the same base_name exists.
-   *  If so, fetch it.
+	Check to see if a module having the same base_name exists.
+	If so, fetch it.
    */
   dup = SearchForModule( new_module );
-/*  if( dup == NULL ) {
-	FPRINTF(ASCERR,"DID NOT FIND MODULE IN MEMORY\n");
-  }
-  */    
 
   /*
-   *  If were we called from RequireModule, return if a module
-   *  having this name already exists
+	If were we called from RequireModule, return if a module
+	having this name already exists
    */
   if(( do_not_overwrite == TRUE ) && ( dup != NULL )) {
     DeleteModule( new_module );
@@ -450,26 +446,26 @@ struct module_t *FindModuleFile(CONST char *name,
   }
 
   /*
-   *  Search for the module in ASCENDLIBRARY and, if found,  set its
-   *  `f', `time_last_modified', and `line_number' fields.
-   */
+	Search for the module in ASCENDLIBRARY and, if found,  set its
+	`f', `time_last_modified', and `line_number' fields.
+  */
   result = ModuleSearchPath( name, filename, new_module, &error );
  
   /*
-   * Check for a memory error in ModuleSearchPath.
-   */
+	Check for a memory error in ModuleSearchPath.
+  */
   if( result == -3 ) {
     DeleteModule( new_module );
     *status = -4;
     return NULL;
-  }/*else{
-	FPRINTF(ASCERR,"FOUND MODULE FILE, result=%d\n",result);
+  }/* else{
+	CONSOLE_DEBUG("FOUND MODULE FILE, result=%d\n",result);
   }*/
 
   /*
-   *  If we couldn't find the module or a fopen error occurred, print
-   *  a message and exit the function
-   */
+	If we couldn't find the module or a fopen error occurred, print
+	a message and exit the function
+  */
   if( result == -1 ) {
     WriteWhyNotFound( new_module->filename, error );
     DeleteModule(new_module);
@@ -477,24 +473,25 @@ struct module_t *FindModuleFile(CONST char *name,
     return NULL;
   }
   if( result == 1 ) {
-    FPRINTF(ASCERR, "Unable to locate file for module %s\n", name);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to locate file for module '%s'", name);
     DeleteModule(new_module);
     *status = -1;
     return NULL;
   }
 
   /*
-   *  Create a symbol for the filename.  We created a symbol for the
-   *  base_name when we created the module.
-   */
+	Create a symbol for the filename.  We created a symbol for the
+	base_name when we created the module.
+  */
   new_module->filename = AddSymbol(filename);
-  /* FPRINTF(ASCERR, "ADDED SYMBOL FOR FILENAME %s\n",filename); */
+
+  assert(new_module->f != NULL);
 
   /*
-   *  If a module having the same base_name does not exist,
-   *  set the version number to zero, insert the new module into
-   *  the module list and return it.
-   */
+	If a module having the same base_name does not exist,
+	set the version number to zero, insert the new module into
+	the module list and return it.
+  */
   if( dup == NULL ) {
     /* no module with name 'name' exists.  Save it and return */
     new_module->open_count = 1;
@@ -506,7 +503,7 @@ struct module_t *FindModuleFile(CONST char *name,
 	
     if( StoreModule( new_module ) != 0 ) {
       DeleteModule( new_module );
-	  FPRINTF(ASCERR,"COULDN'T STORE MODULE %s\n",new_module->filename);
+	  ERROR_REPORTER_HERE(ASC_PROG_ERROR,"COULDN'T STORE MODULE %s",new_module->filename);
       *status = -3;
       return NULL;
     }
@@ -515,9 +512,9 @@ struct module_t *FindModuleFile(CONST char *name,
   }
 
   /*
-   *  If the existing module's (dup) provided_by pointer is not null,
-   *  we are overwriting a module-alias.
-   */
+	If the existing module's (dup) provided_by pointer is not null,
+	we are overwriting a module-alias.
+  */
   if( dup->provided_by != NULL ) {
     /* remove the module-alias from the module list and destroy it */
     RemoveModule( dup );
@@ -537,15 +534,16 @@ struct module_t *FindModuleFile(CONST char *name,
   }
 
   /*
-   *  If the existing module's (dup) file pointer `f' is not null,
-   *  we have some bizarre situation.  Either return or PANIC.
-   */
+	If the existing module's (dup) file pointer `f' is not null,
+	we have some bizarre situation.  Either return or PANIC.
+  */
   if( dup->f != NULL ) {
     if( CmpSymchar( dup->filename, new_module->filename ) != 0 ) {
-      /*  we were reading `dup' as if it were module `mod_name' when we
-       *  were told to treat `new_module' as if it were module `mod_name'.
-       *  PANIC!
-       */
+      /*  
+		we were reading `dup' as if it were module `mod_name' when we
+		were told to treat `new_module' as if it were module `mod_name'.
+		PANIC!
+      */
       fclose(dup->f);
       fclose(new_module->f);
       Asc_Panic(2, "FindModuleFile", "While reading file \"%s\" for module %s,"
@@ -554,17 +552,17 @@ struct module_t *FindModuleFile(CONST char *name,
                 SCP(new_module->filename), SCP(new_module->base_name));
     }
     if( dup->time_last_modified != new_module->time_last_modified ) {
-      /* timestamp changed while reading the file. PANIC!
-       */
+      /* timestamp changed while reading the file. PANIC! */
       fclose(dup->f);
       fclose(new_module->f);
       Asc_Panic(2, "FindModuleFile", "Timestamp on file \"%s\" changed\n"
                 "while file was open for reading", SCP(dup->filename));
     }
     /* recursive require! */
-    FPRINTF(ASCERR,
-            "Asc-Warn: Module %s includes itself either directly"
-            " or indirectly\n\tIgnoring....\n", SCP(new_module->base_name));
+    ERROR_REPORTER_HERE(ASC_USER_WARNING
+		,"Module '%s' includes itself either directly or indirectly (ignoring)"
+		, SCP(new_module->base_name)
+	);
     DeleteModule( new_module );
     *status = 4;
     return dup;
@@ -574,10 +572,10 @@ struct module_t *FindModuleFile(CONST char *name,
      && ( dup->time_last_modified == new_module->time_last_modified ))
   {
     /*
-     *  The same module.  Copy the file pointer (f) from `new_module'
-     *  to `dup', increment dup's open count, free `new_module', and
-     *  return `dup'
-     */
+		The same module.  Copy the file pointer (f) from `new_module'
+		to `dup', increment dup's open count, free `new_module', and
+		return `dup'
+    */
     dup->f = new_module->f;
     dup->linenum = new_module->linenum;
     dup->open_count++;
@@ -587,10 +585,10 @@ struct module_t *FindModuleFile(CONST char *name,
   }
 
   /*
-   *  Either two different files both want to be called module `nmae',
-   *  or the timestamp on the file has changed.  In either case, treat
-   *  `new_module' as a new version of `dup'.
-   */
+	Either two different files both want to be called module `nmae',
+	or the timestamp on the file has changed.  In either case, treat
+	`new_module' as a new version of `dup'.
+  */
   new_module->open_count = 1;
   new_module->version = 1 + dup->version;
   sprintf(filename,"%s<%lu>",SCP(new_module->base_name),new_module->version);
@@ -723,7 +721,7 @@ struct module_t *CreateStringModule(CONST char *name,
     return NULL;
   }
   if( result == 1 ) {
-    FPRINTF(ASCERR, "Unable to locate file for module %s\n", name);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to locate file for module '%s'", name);
     DeleteModule(new_module);
     *status = -1;
     return NULL;
@@ -822,9 +820,10 @@ struct module_t *CreateStringModule(CONST char *name,
                 "while file was open for reading", SCP(dup->filename));
     }
     /* recursive require! */
-    FPRINTF(ASCERR,
-            "Asc-Warn: Module %s includes itself either directly"
-            " or indirectly\n\tIgnoring....\n", SCP(new_module->base_name));
+    ERROR_REPORTER_HERE(ASC_USER_WARNING
+		,"Module %s includes itself either directly or indirectly (ignoring)"
+		, SCP(new_module->base_name)
+	);
     DeleteModule( new_module );
     *status = 4;
     return dup;
@@ -869,169 +868,226 @@ struct module_t *CreateStringModule(CONST char *name,
 }
 
 
-/** This function tries to find a file corresponding to the argument
- *  "name" by sending "name" to the function ModuleStatFile() which
- *  will attempt to open "name" as a file.  If that fails, this
- *  function then prepends each entry in the search path
- *  PATHENVIRONMENTVAR to "name" and attempts to open the resulting
- *  file (by once again calling ModuleStatFile()).
- *
- *  On success, the argument "filename" will be set to the path to the
- *  file, and the `f', `time_last_modified', and `linenum' members of
- *  the module `m' will be set.
- *
- *  If ModuleStatFile() encounters an error opening the file, the
- *  value of errno will be passed back to the caller in the `error'
- *  argument.
- *
- *  The return values for this function are:
- *      -3  Memory error occurred when trying to get PATHENVIRONMENTVAR
- *      -1  Error encountered in ModuleStatFile, check `error' argument
- *       0  Success
- *       1  Could not find a file named "name"
- */
+/*------------------------------------------------------------------------------
+  OPENING A MODULE FROM THE SEARCHPATH
+*/
+
+struct ModuleSearchData{
+	struct FilePath *fp; /**< the relative path we're searching for */
+	int error;           /**< error code (in case stat or fopen failed) */
+	time_t mtime;        /**< mtime (from the stat command) */
+	FILE *f;             /**< return the open file pointer */
+	struct stat buf;
+	struct FilePath *fp_found; /**< the full path we found */
+};
+
+FilePathTestFn module_searchpath_test;
+
+/**
+	@return 1 on success
+*/
+int module_searchpath_test(struct FilePath *path,void *searchdata){
+	struct FilePath *fp, *fp1, *fp2;
+	struct ModuleSearchData *sd;
+	FILE *f;
+	char *tmp;
+
+	sd = (struct ModuleSearchData *)searchdata;
+	assert(sd!=NULL);
+	assert(sd->fp!=NULL);
+
+	tmp  = ospath_str(sd->fp);
+	/* CONSOLE_DEBUG("About to concat path '%s'...",tmp); */
+	ospath_free_str(tmp);
+
+	fp1 = ospath_concat(path,sd->fp);
+
+	if(ospath_stat(fp1,&sd->buf)){
+		sd->error = errno;
+		/* CONSOLE_DEBUG("Stat failed");*/
+		ospath_free(fp1);
+		return 0;
+	}
+
+	f = ospath_fopen(fp1, "r");
+	if(f==NULL){
+		sd->error = errno;
+		/* CONSOLE_DEBUG("Fopen failed"); */
+		ospath_free(fp1);
+		return 0;
+	}
+
+	sd->mtime = sd->buf.st_mtime;
+	sd->f = f;
+	sd->fp_found = fp1;
+	
+	/* CONSOLE_DEBUG("File found"); */
+	return 1;
+};
+
+
+/** 
+	This function tries to find a file corresponding to the argument
+	"name" by sending "name" to the function ModuleStatFile() which
+	will attempt to open "name" as a file.  If that fails, this
+	function then prepends each entry in the search path
+	PATHENVIRONMENTVAR to "name" and attempts to open the resulting
+	file (by once again calling ModuleStatFile()).
+	
+	On success, the argument "filename" will be set to the path to the
+	file, and the `f', `time_last_modified', and `linenum' members of
+	the module `m' will be set.
+	
+	If ModuleStatFile() encounters an error opening the file, the
+	value of errno will be passed back to the caller in the `error'
+	argument.
+
+	@return
+		-4  Invalid partial path in parameter 'filename'.
+	    -3  Memory error occurred when trying to get PATHENVIRONMENTVAR
+	    -1  Error encountered in ModuleStatFile, check `error' argument
+	     0  Success
+	     1  Could not find a file named "name"
+*/
 static
 int ModuleSearchPath(CONST char *name,
                      char *filename,
                      struct module_t *m,
-                     int * CONST error)
-{
-  register size_t length;
-  int result;
-  char **path_list;
-  int path_entries;
-  int j;
-  register CONST char *t;
+                     int * CONST error
+){
+	register size_t length;
+	int result;
+	int path_entries;
+	int j;
+	register CONST char *t;
+	struct FilePath *fp1, *fp2;
+	char *tmp;
+	struct FilePath **sp1 = NULL;
+	struct ModuleSearchData sd;
 
-  assert( name != NULL );
-  assert( filename != NULL );
-  assert( m != NULL );
-  assert( error != NULL );
+	assert( name != NULL );
+	assert( filename != NULL );
+	assert( m != NULL );
+	assert( error != NULL );
 
-  /* attempt to open "name" directly */
-  if( (result = ModuleStatFile(m, name, error)) <= 0 ) {
-    /* The file exists.  Copy "name" into "filename" before we return */
-    for( length = 0, t = name; *t != '\0'; filename[length++] = *t++ );
-    filename[length] = '\0';
-	/*FPRINTF(ASCERR,"FOUND EXPLICITLY STATED FILENAME\n");*/
-    return result;
-  }
+	/* CONSOLE_DEBUG("Launching ModuleSearchPath with '%s'",name); */
 
-  /* get paths to search */
-  path_list = Asc_GetPathList( PATHENVIRONMENTVAR, &path_entries );
-  if( path_entries == -1 ) {
-	FPRINTF(ASCERR,"UNABLE TO GETPATHLIST\n");
-    /* memory error */
-    return -3;
-  }
-  if( path_entries == 0 ) {
-    /* unknown variable: no paths to search, return not found */
-	FPRINTF(ASCERR,"NO PATHS TO SEARCH\n");
-    return 1;
-  }
+	fp1 = ospath_new_noclean(name);
+	if(fp1==NULL){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid partial path '%s'",name);
+		ospath_free(fp1);
+		return -4;
+	}
 
-  /* attempt to open by prepending paths to name */
-  for( j = 0; j < path_entries; j++ ) {
-    /* string copy path_list[j] into filename */
-    for(length=0, t=path_list[j]; *t != '\0'; filename[length++] = *t++);
-    /* add a slash if needed */
-    if( filename[length-1] != SLASH ) {
-      filename[length++] = SLASH;
-    }
-    /* string copy name onto the end of filename */
-    for( t = name; *t != '\0'; filename[length++] = *t++);
-    filename[length] = '\0';
-    /* try to create it */
-    if( (result = ModuleStatFile(m, filename, error)) <= 0 ) {
-      ascfree(path_list);
-      return result;
-    }
-  }
-  ascfree(path_list);
-  return 1;
-}
+	tmp = ospath_str(fp1);
+	/* CONSOLE_DEBUG("Searching for '%s'",tmp); */
+	ospath_free_str(tmp);
 
+	/* attempt to open "name" directly */
+	if(0==ospath_stat(fp1,&sd.buf) && NULL!=(sd.f = ospath_fopen(fp1,"r")) ){
 
-/** Attempt to stat and open the file `filename' for reading.  If the
- *  stat call fails, set *error to the value of errno and return 1.  If
- *  the fopen call fails, set *error to errno and return -1.  If stat
- *  and fopen calls are successful, set the fields `f', `linenum', and
- *  `time_last_modified' in the module `m' and return 0.
- */
-static
-int ModuleStatFile(struct module_t * CONST m,
-                   CONST char *filename,
-                   int * CONST error)
-{
-  struct stat buf;
-  FILE *f;
+		CONSOLE_DEBUG("File '%s' opened directly, without path search",name);
 
-  assert( m != NULL );
-  assert( filename != NULL && *filename != '\0' );
-  assert( error != NULL );
-  
-  /*
-   * FPRINTF(ASCERR, "ModuleStatFile args:\n\tname: %s\n\tfilename: %s\n",
-   *         m->name, filename);
-   */
+	}else{
 
-  if( (stat(filename, &buf)) != 0 ) {
-    /* error in stat call */
-    *error = errno;
-    return 1;
-  }
-  if( (f = fopen(filename, "r")) == NULL ) {
-    /* error in fopen */
-    *error = errno;
-    return -1;
-  }
-  m->f = f;
-  m->time_last_modified = buf.st_mtime;
-  m->linenum = 1;
-  return 0;
+		tmp = Asc_GetEnv(PATHENVIRONMENTVAR);
+		if(tmp==NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",PATHENVIRONMENTVAR);
+			return 1;
+		}
+
+		/* CONSOLE_DEBUG("ENV var is '%s'",tmp); */
+
+		sp1 = ospath_searchpath_new(tmp);
+		if(sp1==NULL){
+			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",PATHENVIRONMENTVAR,tmp);
+			/* memory error */
+			ascfree(tmp);
+			return -3;
+		}
+		ascfree(tmp);
+
+		/* CONSOLE_DEBUG("Created SP with %d elements",ospath_searchpath_length(sp1)); */
+
+		sd.fp = fp1;
+
+		fp2 = ospath_searchpath_iterate(sp1, &module_searchpath_test, &sd);
+
+		if(fp2==NULL){
+			*error = sd.error;
+			ospath_searchpath_free(sp1);		
+			return -1;
+		}
+
+		tmp = ospath_str(fp2);
+		ospath_searchpath_free(sp1);					
+		assert(tmp!=NULL);
+		/* CONSOLE_DEBUG("Found file in '%s' in search path",tmp); */
+		ospath_free_str(tmp);
+	}
+
+	m->f = sd.f;
+	m->time_last_modified = sd.mtime;
+	m->linenum = 1;
+	ospath_strcpy(sd.fp_found,filename,PATH_MAX);
+	ospath_free(fp1);
+	ospath_free(sd.fp_found);
+	return 0; /* success */
 }
 
 
 /**
- *  Print an error (based on the errno `error') explaining why we could
- *  not open/stat the file named `filename'.
- */
+	Print an error (based on the errno `error') explaining why we could
+	not open/stat the file named `filename'.
+*/
 static
 void WriteWhyNotFound(symchar *filename, int error)
 {
   switch( error ) {
   case EACCES:
-    FPRINTF(ASCERR,
-	    "Directory protections don't allow you to access %s.\n",
-	    SCP(filename));
+    ERROR_REPORTER_HERE(ASC_USER_ERROR,
+	    "File or directory permissions don't allow you to access '%s'.",
+	    SCP(filename)
+	);
     break;
   case EFAULT:
-    FPRINTF(ASCERR, "Filename pointer or buffer pointer was bad.\n");
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"Filename pointer or buffer pointer was bad."
+	);
     break;
   case EIO:
-    FPRINTF(ASCERR, "I/O error in reading %s.\n",SCP(filename));
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"I/O error in reading '%s'.",SCP(filename)
+	);
+    break;
+  case ENAMETOOLONG:
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"The path for '%s' is too long.",SCP(filename)
+	);
+    break;
+  case ENOENT:
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"File '%s' doesn't exist.",SCP(filename)
+	);
+    break;
+  case ENOTDIR:
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"A component of the path name '%s' is not a directory.",SCP(filename)
+	);
     break;
 #ifndef __WIN32__
   case ELOOP:
     /*  no symlinks in windows land  */
-    FPRINTF(ASCERR, "There are too many symbolic links in %s.\n",SCP(filename));
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"There are too many symbolic links in '%s'.",SCP(filename)
+	);
     break;
 #endif  /*  __WIN32__  */
-  case ENAMETOOLONG:
-    FPRINTF(ASCERR, "The path for %s is too long.\n",SCP(filename));
-    break;
-  case ENOENT:
-    FPRINTF(ASCERR, "File %s doesn't exist.\n",SCP(filename));
-    break;
-  case ENOTDIR:
-    FPRINTF(ASCERR,
-            "A component of the path name, %s, is not a directory.\n",
-	    SCP(filename));
-    break;
   default:
-    FPRINTF(ASCERR,
-            "File not available for unknown reasons.\nerrno = %d.\n",
-            error);
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+		,"File not available for unknown reasons (error %d)"
+        ,error
+	);
     break;
   }
 }
@@ -1059,10 +1115,10 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
    *  the user should not be able to get his hands on module-aliases.
    */
   if( m->provided_by != NULL ) {
-    FPRINTF(ASCERR,
-            "Error: Asc_ModuleCreateAlias: Module %s is a module-alias\n"
-            "  Module to alias must not be a module-alias\n",
-            SCP(m->name));
+    ERROR_REPORTER_HERE(ASC_USER_ERROR
+	    ,"Module '%s' is a module-alias. Module to alias must not be a module-alias\n"
+	    ,SCP(m->name)
+	);
     return -4;
   }
 
@@ -1111,11 +1167,11 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
    */
   if( dup->provided_by != NULL ) {
     if( CmpSymchar( dup->provided_by->filename, m->filename ) != 0 ) {
-      FPRINTF(ASCWAR,
-              "Warning: PROVIDE \"%s\" in file \"%s\" overwrites\n"
-              "  PROVIDE \"%s\" in file \"%s\"\n",
-              SCP(new_module->base_name), SCP(m->filename),
-              SCP(dup->base_name), SCP(dup->provided_by->filename));
+      ERROR_REPORTER_HERE(ASC_USER_WARNING,
+        "PROVIDE \"%s\" in file '%s' overwrites PROVIDE \"%s\" in file '%s'"
+        ,SCP(new_module->base_name), SCP(m->filename)
+        ,SCP(dup->base_name), SCP(dup->provided_by->filename)
+      );
     }
     RemoveModule( dup );
     DeleteModule( dup );
@@ -1147,65 +1203,56 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
    *  already exists.  Issue an error, destroy the new_module, and
    *  return.
    */
-  FPRINTF(ASCERR,
-          "Error: File \"%s\" cannot PROVIDE \"%s\"\n"
-          "  because a module with that name already exists (%s)\n",
-          SCP(m->filename), SCP(new_module->base_name), SCP(dup->name));
+  ERROR_REPORTER_HERE(ASC_USER_ERROR,
+    "File \"%s\" cannot PROVIDE '%s' because a module with that name already exists (%s)."
+    , SCP(m->filename), SCP(new_module->base_name), SCP(dup->name)
+  );
   DeleteModule( new_module );
   return -2;
 }
 
-/** Allocate space for a new module and set its fields to some
- *  reasonable defaults.  If `name' is not NULL, set the module's
- *  base_name to point to the first character after the rightmost
- *  slash (`/' on UNIX, `/' on Windows) in `name', or to `name' if
- *  it contains no slashes.  Note that this function will create
- *  a symbol for base_name.  Return NULL if malloc fails.
- */
+/** 
+	Allocate space for a new module and set its fields to some
+	reasonable defaults.  If `name' is not NULL, set the module's
+	base_name to point to the first character after the rightmost
+	slash (`/' on UNIX, `/' on Windows) in `name', or to `name' if
+	it contains no slashes.  Note that this function will create
+	a symbol for base_name.  Return NULL if malloc fails.
+*/
 static
-struct module_t *NewModule(CONST char *name)
-{
-  struct module_t *new;     /* the new module */
+struct module_t *NewModule(CONST char *name){
+  struct module_t *newmodule;     /* the new module */
   char *tmp;                /* result of strrchr(); used to get base_name */
+  struct FilePath *fp1;
 
-  new = (struct module_t*)ascmalloc(sizeof(struct module_t));
-  if( new == NULL ) {
-	FPRINTF(ASCERR,"ERROR: UNABLE TO MALLOC FOR NEW MODULE\n");
+  newmodule = (struct module_t *)ascmalloc(sizeof(struct module_t));
+  if( newmodule == NULL ) {
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO MALLOC FOR NEW MODULE");
     return NULL;
   }
-  new->name = NULL;
-  new->filename = NULL;
-  new->f = NULL;
-  new->s = NULL;
-  new->stats = NULL;
-  new->scanbuffer = NULL;
-  new->required_by = NULL;
-  new->provided_by = NULL;
-  new->time_last_modified = (time_t)0;
-  new->linenum = 0;
-  new->open_count = 0;
-  new->version = ULONG_MAX;
+  newmodule->name = NULL;
+  newmodule->filename = NULL;
+  newmodule->f = NULL;
+  newmodule->s = NULL;
+  newmodule->stats = NULL;
+  newmodule->scanbuffer = NULL;
+  newmodule->required_by = NULL;
+  newmodule->provided_by = NULL;
+  newmodule->time_last_modified = (time_t)0;
+  newmodule->linenum = 0;
+  newmodule->open_count = 0;
+  newmodule->version = ULONG_MAX;
 
-  /*
-   *  Create a symbol for the base_name from the argument `name'.
-   */
-  if( name == NULL ) {
-    new->base_name = NULL;
-  } else {
-    /* find the rightmost slash in name */
-    tmp = strrchr( name, SLASH );
-    if( tmp == NULL ) {
-      /* name does not contain a slash; use all of name for base_name */
-      new->base_name = AddSymbol(name);
-    } else {
-      /* name contains a slash; tmp is pointing at the rightmost slash */
-      ++tmp;
-      new->base_name = AddSymbol(tmp);
-    }
+  /* CONSOLE_DEBUG("New path: %s",name); */
+  fp1 = ospath_new(name);
+  tmp = ospath_getbasefilename(fp1);
+  if(tmp!=NULL && strlen(tmp)!=0){
+	newmodule->base_name = AddSymbol(tmp);
   }
+  ospath_free(fp1);
 
- /* FPRINTF(ASCERR,"OK: MODULE MALLOCED, name is %s\n", new->base_name);*/
-  return new;
+  /* CONSOLE_DEBUG("Module base-name: %s",newmodule->base_name); */
+  return newmodule;
 }
 
 /*------------------------------------------------------------------------------
@@ -1260,7 +1307,7 @@ int StoreModule(CONST struct module_t *m)
 {
   /* initialize the global module list if required */
   if((g_module_list==NULL) && (Asc_InitModules(G_MODULE_LIST_INIT_SIZE)!=0)) {
-	FPRINTF(ASCERR,"FAILED TO ASC_INITMODULES\n");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"FAILED TO ASC_INITMODULES");
     return 1;
   }
   gl_append_ptr( g_module_list, (VOIDPTR)m );
@@ -1434,8 +1481,10 @@ extern CONST struct module_t *Asc_GetModuleByName(CONST char *module_name){
    */
   vers = ModuleNameToInternalNameVers(module_name, name);
   if( vers == ULONG_MAX ) {
-    FPRINTF(ASCERR, "Bad format for module name %s, no version number found\n",
-            name);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR
+		,"Bad format for module name %s, no version number found."
+		,name
+	);
     return NULL;
   }
 
