@@ -987,6 +987,7 @@ int ModuleSearchPath(CONST char *name,
 	if(0==ospath_stat(fp1,&sd.buf) && NULL!=(sd.f = ospath_fopen(fp1,"r")) ){
 
 		CONSOLE_DEBUG("File '%s' opened directly, without path search",name);
+		sd.fp_found = fp1;
 
 	}else{
 
@@ -1030,7 +1031,9 @@ int ModuleSearchPath(CONST char *name,
 	m->time_last_modified = sd.mtime;
 	m->linenum = 1;
 	ospath_strcpy(sd.fp_found,filename,PATH_MAX);
-	ospath_free(fp1);
+	if(fp1!=sd.fp_found){
+		ospath_free(fp1);
+	}
 	ospath_free(sd.fp_found);
 	return 0; /* success */
 }
