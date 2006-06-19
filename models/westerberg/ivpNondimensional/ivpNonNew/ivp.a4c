@@ -1,0 +1,152 @@
+REQUIRE "atoms.a4l";
+
+(*
+ *  ivp.a4c
+ *  by Arthur W. Westerberg
+ *  Part of the ASCEND Library
+ *  $Date: 06/16/2006 $
+ *  $Revision: 1.0 $
+ *
+ *  This file is part of the ASCEND Modeling Library.
+ *
+ *  Copyright (C) 1994 - 2006 Carnegie Mellon University
+ *
+ *  The ASCEND Modeling Library is free software; you can redistribute
+ *  it and/or modify it under the terms of the GNU General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  The ASCEND Modeling Library is distributed in hope that it
+ *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
+ *  the file named COPYING.
+ *)
+
+(*============================================================================
+
+    I V P  .  A 4 C
+    -----------------------------
+
+    AUTHOR:      Arthur W. Westerberg
+
+    DATES:       06/2006 - Original code (AWW)
+    
+    CONTENTS:	 Models for the numerical integration equations for
+                 the two multistep methods: a bdf for stiff problems
+		 and the Adams Moulton for non-stiff problems.  There
+		 is also a framework within which one creates the
+		 model for the physical system.  These models are for
+		 taking one step of the independent variable.
+
+============================================================================*)
+
+
+(* ---------------------------------------------------------- *)
+
+MODEL ivpBase;
+END ivpBase;
+
+(* ---------------------------------------------------------- *)
+
+MODEL diff(
+    y                WILL_BE factor;
+    dydt             WILL_BE factor;
+    t                WILL_BE factor;
+) REFINES ivpBase;
+    
+END diff;
+
+(* ---------------------------------------------------------- *)
+
+MODEL diff12Step(
+    y                WILL_BE factor;
+    dydt             WILL_BE factor;
+    t                WILL_BE factor;
+) REFINES diff;
+
+
+    a[0..12]         IS_A factor;
+    dt[0..12]        IS_A factor;
+    yPast[0..12]     IS_A factor;
+    dydtPast[0..12]  IS_A factor;
+    tPast[0..12]     IS_A factor;
+    
+    yPast[0] = y;
+    dydtPast[0] = dydt;
+    dt[0] = t;
+    
+    FOR i IN 0..12 CREATE
+	dt[i] = tPast[i] - t;
+	valueP[i]    IS_A valuePoly(yPast[i], dt[i], a);
+	derivP[i]    IS_A derivPoly(dydtPast[i], dt[i], a);
+    END FOR;
+
+END diff12Step;
+
+(* ---------------------------------------------------------- *)
+
+MODEL valuePoly12(
+    y                WILL_BE factor;
+    dt               WILL_BE factor;
+    a[0..,12]        WILL_BE factor;
+) REFINES ivpBase;
+    
+    (* y is an algebraic variable for which prediction will be done as
+      one marches when solving *)
+    
+    (* a[i] in the polynomial as written below approximates the i-th
+      derivative of y wrt t (as in a Taylors Series expansion) *)
+
+     polyValue: y = a[0]
+       + dt*(a[1]
+       + dt*(a[2]/2
+       + dt*(a[3]/6
+       + dt*(a[4]/24
+       + dt*(a[5]/120
+       + dt*(a[6]/720
+       + dt*(a[7]/5040
+       + dt*(a[8]/40320
+       + dt*(a[9]/362880
+       + dt*(a[10]/3628800
+       + dt*(a[11]/39916800
+       + dt*(a[12]/479001600))))))))))));
+       
+END valuePoly12;
+
+(* ---------------------------------------------------------- *)
+
+MODEL derivPoly12(
+    dydt           WILL_BE factor;
+    y              WILL_BE factor;
+    dt             WILL_BE factor;
+    a[0..12]       WILL_BE factor;
+) REFINES ivpBase;
+
+    (* dydt is the derivative of the state variable y with respect to
+      the independent variable dt.  dt is the value of t for this
+      point less the current value of t (i.e., we are writing the
+      polynomial in dt where dt = 0 is the current point). *)
+    
+    (* a[i] in the polynomial as written below approximates the i-th
+      derivative of y wrt t (as in a Taylors Series expansion) *)
+    
+    polyDeriv: dydt = a[1]
+       + dt*(a[2]
+       + dt*(a[3]/2
+       + dt*(a[4]/6
+       + dt*(a[5]/24
+       + dt*(a[6]/120
+       + dt*(a[7]/720
+       + dt*(a[8]/5040
+       + dt*(a[9]/40320
+       + dt*(a[10]/362880
+       + dt*(a[11]/3638800
+       + dt*(a[12]/39916800)))))))))));
+
+END derivPoly12;
+
