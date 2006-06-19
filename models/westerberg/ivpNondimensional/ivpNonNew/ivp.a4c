@@ -1,7 +1,7 @@
 REQUIRE "atoms.a4l";
 
 (*
- *  ivp.a4c
+ *  ivp12Poly.a4c
  *  by Arthur W. Westerberg
  *  Part of the ASCEND Library
  *  $Date: 06/16/2006 $
@@ -58,16 +58,6 @@ MODEL diff(
     dydt             WILL_BE factor;
     t                WILL_BE factor;
 ) REFINES ivpBase;
-    
-END diff;
-
-(* ---------------------------------------------------------- *)
-
-MODEL diff12Step(
-    y                WILL_BE factor;
-    dydt             WILL_BE factor;
-    t                WILL_BE factor;
-) REFINES diff;
 
 
     a[0..12]         IS_A factor;
@@ -86,7 +76,7 @@ MODEL diff12Step(
 	derivP[i]    IS_A derivPoly(dydtPast[i], dt[i], a);
     END FOR;
 
-END diff12Step;
+END diff;
 
 (* ---------------------------------------------------------- *)
 
