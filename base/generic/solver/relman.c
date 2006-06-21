@@ -40,7 +40,7 @@
 #include <general/list.h>
 #include <compiler/extfunc.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/atomvalue.h>
 #include <compiler/mathinst.h>
@@ -386,6 +386,7 @@ real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
   }
   if( safe ) {
     *status = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
+    /* CONSOLE_DEBUG("residual = %g",res); */
     safe_error_to_stderr( (enum safe_err *)status );
     /* always set the relation residual when using safe functions */
     rel_set_residual(rel,res);
@@ -400,6 +401,7 @@ real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
   }
   /* flip the status flag: all values other than safe_ok become 0 */
   *status = !(*status);
+  /* CONSOLE_DEBUG("returning %g",res); */
   return res;
 
 #if REIMPLEMENT /* all this needs to be done on the compiler side */
@@ -518,7 +520,7 @@ int relman_diff2(struct rel_relation *rel, var_filter_t *filter,
 
 int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
                      real64 *derivatives, int32 *variables_master,
-		     int32 *variables_solver, int32 *count, real64 *resid, 
+		     int32 *variables_solver, int32 *count, real64 *resid,
 		     int32 safe)
 {
   const struct var_variable **vlist=NULL;
@@ -565,7 +567,7 @@ int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
 }
 
 int32 relman_diff_harwell(struct rel_relation **rlist,
-                          var_filter_t *vfilter, rel_filter_t *rfilter, 
+                          var_filter_t *vfilter, rel_filter_t *rfilter,
                           int32 rlen, int32 bias, int32 mORs,
                           real64 *avec, int32 *ivec, int32 *jvec)
 {
@@ -578,7 +580,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
   int32 errcnt;
   enum safe_err status;
 
-  if (rlist == NULL || vfilter == NULL || rfilter == NULL || avec == NULL || 
+  if (rlist == NULL || vfilter == NULL || rfilter == NULL || avec == NULL ||
       rlen < 0 || mORs >3 || mORs < 0 || bias <0 || bias > 1) {
     return 1;
   }
@@ -772,7 +774,7 @@ boolean relman_calc_satisfied( struct rel_relation *rel, real64 tolerance)
       if( rel_less(rel) ) {
          rel_set_satisfied(rel,TRUE);
          return( rel_satisfied(rel) );
-      } 
+      }
       if( rel_greater(rel) ) {
          rel_set_satisfied(rel,FALSE);
          return( rel_satisfied(rel) );
@@ -784,14 +786,14 @@ boolean relman_calc_satisfied( struct rel_relation *rel, real64 tolerance)
       if( rel_greater(rel) ) {
          rel_set_satisfied(rel,TRUE);
          return( rel_satisfied(rel) );
-      } 
+      }
       if( rel_less(rel) ) {
          rel_set_satisfied(rel,FALSE);
          return( rel_satisfied(rel) );
       }
       rel_set_satisfied(rel,(res <= tolerance ));
       return( rel_satisfied(rel) );
-   } 
+   }
    rel_set_satisfied(rel,rel_equal(rel)); /* strict >0 or <0 not satisfied */
    return( rel_satisfied(rel) );
 }
@@ -849,8 +851,8 @@ real64 *relman_directly_solve_new( struct rel_relation *rel,
   struct var_variable *solvefor, int *able, int *nsolns, real64 tolerance)
 {
   double *value;
-   if( rel_less(rel) || 
-       rel_greater(rel) || 
+   if( rel_less(rel) ||
+       rel_greater(rel) ||
        !rel_equal(rel) ||
        rel_extnodeinfo(rel)) {
       *able = FALSE;
@@ -909,7 +911,7 @@ char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style)
  * if mORs == TRUE master indices are used, else solver.
  */
 static
-void relman_cookup_indices(struct RXNameData *rd, 
+void relman_cookup_indices(struct RXNameData *rd,
                            struct rel_relation *rel,int mORs)
 {
   int nvars,n;
@@ -917,7 +919,7 @@ void relman_cookup_indices(struct RXNameData *rd,
 
   nvars = rel_n_incidences(rel);
   rd->indices = rel_tmpalloc_array(1+nvars,int);
-  if (rd->indices == NULL) { 
+  if (rd->indices == NULL) {
     return;
   }
   vlist = rel_incidence_list(rel);

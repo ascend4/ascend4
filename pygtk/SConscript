@@ -11,7 +11,8 @@ srcs = Split("""
 	solverparameters.cpp solverparameter.cpp solverparameteriterator.cpp
 	solverstatus.cpp solverreporter.cpp
 	incidencematrix.cpp
-
+	integrator.cpp
+	integratorreporter.cpp
 """)
 
 # Build a static library with all the sources

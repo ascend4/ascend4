@@ -1,34 +1,73 @@
-/*
-	Problem Analysis Routines
-	by Benjamin Andrew Allan 5/19/96
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1996 Benjamin Andrew Allan
 
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Problem Analysis Routines
+
+	@NOTE 'ip' signifies 'interface pointer' @ENDNOTE
+
+	The intent here is to do away with the old persistent interface pointer
+	scheme by making the struct rel_relation* individually keep track of the
+	map between the ascend RelationVariable list position and the
+	solver's var list index (and hence the column in jacobian for jacobian
+	involved clients).
+	In this mapping each struct relation* has its var list and this list
+	may contain RealAtomInstances that we don't consider variables.
+	In the rel_relation we will have the variable index list
+	which is an array of int32 the same length as the RelationVariable list.
+	In the array position 0 corresponds to RelationVariable 1 since the
+	compiler uses gl_lists. If in the variable index list we encounter
+	a number < 0 we know that that RelationVariable doesn't map to what
+	we consider a solver variable.
+
+	In the near future we may also add to the struct rel_relation *an array,
+	a, of int32 pairs like so:
+	vlindex | rvindex | vlindex | rvindex
+	and a length. This array could be built of the data for vars that pass
+	a filter provided by the client. This way a client could help us avoid
+	having to do if testing while stuffing jacobians.
+	In this scheme stuffing a jacobian row (or whatever) would simply mean
+	calling the compiler's derivative function (wrt RelationVariable list)
+
+	@code
+	which returns a vector d of values and then doing a loop:
+	  for( i = 0 ; i < length; i++) { coord.row fixed already
+	    coord.col = a[i++];
+	    mtx_fill_org_value(mtx,&coord,d[a[i]])
+	  }
+	}
+	@endcode
+
+	One begins to wonder if there isn't a better way to do all this, but
+	so far nothing has occurred.
+	The best way would be to feed clients only the block of stuff they
+	are interested in (no fixed, unattached vars or unincluded rels
+	or vars/rels solved in previous partitions) so that the solver
+	had no partitioning or var classification work to do except perhaps
+	classifying things as basic/nonbasic.
+
+	@see analyze.h
+*//*
+	by Benjamin Andrew Allan 5/19/96
 	Version: $Revision: 1.56 $
 	Date last modified: $Date: 2003/08/23 18:43:12 $
 	Last modified by: $Author: ballan $
-	Copyright(C) 1996 Benjamin Andrew Allan
-	Copyright(C) 2006 Carnegie Mellon University
-
-	This file is part of the ASCEND IV math programming system.
-
-	The SLV solver is free software; you can redistribute
-	it and/or modify it under the terms of the GNU General Public License as
-	published by the Free Software Foundation; either version 2 of the
-	License, or (at your option) any later version.
-
-	The SLV solver is distributed in hope that it will be
-	useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with the program; if not, write to the Free Software Foundation,
-	Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
-	COPYING.  COPYING is found in ../compiler.
-*/
-
-/** @file analyze.c
-
-	@see analyze.h
 */
 
 #include <stdarg.h>
@@ -45,7 +84,7 @@
 #include <compiler/atomvalue.h>
 #include <compiler/parentchild.h>
 #include <compiler/visitinst.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/exprs.h>
 #include <compiler/sets.h>
 #include <compiler/mathinst.h>
@@ -88,18 +127,16 @@
 #endif /* MAX_VAR_IN_LIST  */
 #define DEBUG_ANALYSIS FALSE
 
+/*------------------------------------------------------------------------------
+  GLOBAL VARS
+*/
+
+static symchar *g_strings[3];
+
 /* symbol table entries we need */
 #define INCLUDED_A g_strings[0]
 #define FIXED_A g_strings[1]
 #define BASIS_A g_strings[2]
-static symchar *g_strings[3];
-
-
-/*
-	Forward declaration
-*/
-static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
-                                 struct gl_list_t *, struct gl_list_t *);
 
 /*
 	Global variable. Set to true by classify if need be
@@ -109,6 +146,17 @@ static int g_bad_rel_in_list;
 
 /* used to give an integer value to each symbol used in a when */
 struct gl_list_t *g_symbol_values_list = NULL;
+
+
+/*-----------------------------------------------------------------------------
+  FORWARD DECLARATIONS
+*/
+static void ProcessModelsInWhens(struct Instance *, struct gl_list_t *,
+                                 struct gl_list_t *, struct gl_list_t *);
+
+/*-----------------------------------------------------------------------------
+  DATA STRUCTURES FOR USE DURING PROBLEM ANALYSIS
+*/
 
 struct varip {
   struct var_variable *data;  /* ptr to destination of data */
@@ -205,6 +253,17 @@ static struct reuse_t {
 	all fields should be empty if construction is not in progress.
 	In particular, do no operations that can throw an exception
 	while manipulating a problem_t, as it is way too big to let leak.
+
+	@TODO is this comment in the right place?
+	we are making the ANSI assumption that this will be init to 0/NULL
+	
+	@TODO what about this one?:
+	container for globals during assembly.
+	At present, the mastervl and solvervl are of the same length. This
+	is purely coincidental and the long run intent is that there is one
+	master list and that a problem coordinator would set up the
+	solver var/rel lists blockwise as we go along. We may want to put
+	block information in the rel/var structures.
 */
 struct problem_t {
 
@@ -327,59 +386,9 @@ struct problem_t {
   struct ExtRelCache **erlist;	/* external rel cache null terminated list */
 };
 
-/* we are making the ANSI assumption that this will be init to 0/NULL*/
-/*
-	container for globals during assembly.
-	At present, the mastervl and solvervl are of the same length. This
-	is purely coincidental and the long run intent is that there is one
-	master list and that a problem coordinator would set up the
-	solver var/rel lists blockwise as we go along. We may want to put
-	block information in the rel/var structures.
+/*------------------------------------------------------------------------------
+  SOME STUFF WITH INTERFACE POINTERS
 */
-
-
-/*
-	The intent here is to do away with the old persistent interface pointer
-	scheme by making the struct rel_relation* individually keep track of the
-	map between the ascend RelationVariable list position and the
-	solver's var list index (and hence the column in jacobian for jacobian
-	involved clients).
-	In this mapping each struct relation* has its var list and this list
-	may contain RealAtomInstances that we don't consider variables.
-	In the rel_relation we will have the variable index list
-	which is an array of int32 the same length as the RelationVariable list.
-	In the array position 0 corresponds to RelationVariable 1 since the
-	compiler uses gl_lists. If in the variable index list we encounter
-	a number < 0 we know that that RelationVariable doesn't map to what
-	we consider a solver variable.
-
-	In the near future we may also add to the struct rel_relation *an array,
-	a, of int32 pairs like so:
-	vlindex | rvindex | vlindex | rvindex
-	and a length. This array could be built of the data for vars that pass
-	a filter provided by the client. This way a client could help us avoid
-	having to do if testing while stuffing jacobians.
-	In this scheme stuffing a jacobian row (or whatever) would simply mean
-	calling the compiler's derivative function (wrt RelationVariable list)
-
-	@code
-	which returns a vector d of values and then doing a loop:
-	  for( i = 0 ; i < length; i++) { coord.row fixed already
-	    coord.col = a[i++];
-	    mtx_fill_org_value(mtx,&coord,d[a[i]])
-	  }
-	}
-	@endcode
-
-	One begins to wonder if there isn't a better way to do all this, but
-	so far nothing has occurred.
-	The best way would be to feed clients only the block of stuff they
-	are interested in (no fixed, unattached vars or unincluded rels
-	or vars/rels solved in previous partitions) so that the solver
-	had no partitioning or var classification work to do except perhaps
-	classifying things as basic/nonbasic.
-*/
-
 /* return a pointer to the oncesizefitsall ips we're using.
 	always returns nonnull because if we run out we exit
 */
@@ -443,6 +452,9 @@ int resize_ipbuf(size_t newcap, int resetmem)
   return 0;
 }
 
+/*------------------------------------------------------------------------------
+  SOME STUFF TO DO WITH INCIDENCE SPACE
+*/
 
 /*
 	checks size of request and returns a pointer to the next available
@@ -511,6 +523,9 @@ struct dis_discrete **get_logincidence_space(int len,
   return tmp;
 }
 
+/*------------------------------------------------------------------------------
+  SOME OTHER STUFF
+*/
 
 /*
 	InitTreeCounts(i); This resets the pointers and counters in
@@ -604,8 +619,9 @@ static void CollectArrayRelsAndWhens(struct Instance *i, long modindex,
     case ARRAY_INT_INST:
       if (ArrayIsRelation(child) ||
           ArrayIsLogRel(child) ||
-          ArrayIsWhen(child)) {
-	CollectArrayRelsAndWhens(child,modindex,p_data);
+          ArrayIsWhen(child)
+      ){
+        CollectArrayRelsAndWhens(child,modindex,p_data);
       }
       break;
     default:
@@ -668,8 +684,9 @@ static void CollectRelsAndWhens(struct solver_ipdata *ip,
     case ARRAY_INT_INST:
       if (ArrayIsRelation(child) ||
           ArrayIsLogRel(child)||
-          ArrayIsWhen(child)) {
-	CollectArrayRelsAndWhens(child,modindex,p_data);
+          ArrayIsWhen(child)
+      ){
+        CollectArrayRelsAndWhens(child,modindex,p_data);
       }
       break;
     default:
@@ -711,9 +728,9 @@ static struct ExtRelCache
 }
 
 /*
-	analyze_CountRelation
-	Call only with good relation instances.
 	Count the instance into the required bin.
+
+	@NOTE Call only with good relation instances.
 */
 static void analyze_CountRelation(struct Instance *inst,
                                   struct problem_t *p_data)
@@ -744,13 +761,13 @@ static void analyze_CountRelation(struct Instance *inst,
 
 
 /*
-	GetIntFromSymbol
-	Used for a WHEN statement. It intends to obtain an integer value
-	from a symbol value. Each symbol value is storaged in a symbol list.
+	Obtain an integer value from a symbol value
+	Used for a WHEN statement. Each symbol value is storaged in a symbol list.
 	It checks if the symval is already in the solver symbol list,
 	if it is, returns the integer corresponding to the position of symval
 	if it is not, appends the symval to the list and then returns the int
-	This is terrible inefficient as the number of symbols grows.
+
+	@NOTE This is terrible inefficient as the number of symbols grows.
 	I am keeping it by now, are they going to be so many symbols in
 	whens anyway ?
 */
@@ -780,7 +797,7 @@ int GetIntFromSymbol(CONST char *symval,
   length++;
   symbol_list_count++;
   entry = (struct SymbolValues *)ascmalloc(sizeof(struct SymbolValues));
-  entry->name = (char *)ascmalloc(length *sizeof(char));
+  entry->name = ASC_NEW_ARRAY(char,length);
   strcpy(entry->name,symval);
   entry->value = symbol_list_count;
   value = entry->value;
@@ -804,6 +821,9 @@ void DestroySymbolValuesList(struct gl_list_t *symbol_list)
     }
 }
 
+/*------------------------------------------------------------------------------
+  CLASSIFICATION OF INSTANCES, CREATING INTERFACE POINTERS
+*/
 
 /*
 	classify_instance : to be called by PushInterfacPtrs.
@@ -1058,17 +1078,10 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
   }
 }
 
-/*
-	make_problem
-
-	Makes variable/relations/when lists and objective function by heuristic.
-	Now also makes a list of all relations that are objectives.
-	This does not affect the semantics of the previous objective
-	code.
-	Do NOTHING in this function which can lead to floating point
-	errors -- in particular because we must leave the interface ptrs
-	in the state they were found.
+/*------------------------------------------------------------------------------
+  MAKE PROBLEM routines
 */
+
 /*
 	This function sets g_bad_rel_in_list TRUE if it finds any unhappy
 	relations. All the rest of the code depends on ALL relations being
@@ -1168,7 +1181,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
 }
 
 
-/*
+/**
 	This takes the already derived counts,
 	allocates all the memory we need to allocate for master,
 	and builds the var/rel/MODEL/etc master lists.
@@ -1507,20 +1520,21 @@ static int analyze_make_master_lists(struct problem_t *p_data)
 
   return 0;
 }
-
 
-/*
+/**
 	 This function cleans up an errant problem_t or a good one that we're
 	 done with. We should have set to null any pointers to memory we are
 	 keeping elsewhere before calling this.
 */
-#define AFUN(ptr) if (ptr!=NULL) ascfree(ptr); (ptr) = NULL
-#define ADUN(ptr) if (ptr!=NULL) gl_destroy(ptr); (ptr) = NULL
 static void analyze_free_lists(struct problem_t *p_data)
 {
-/* memory containing gl_lists of atomic structure pointers */
-  if (p_data->extrels != NULL) gl_free_and_destroy(p_data->extrels);
-/* gl_lists without memory items use ADUN */
+  /* memory containing gl_lists of atomic structure pointers */
+  if(p_data->extrels != NULL)gl_free_and_destroy(p_data->extrels);
+
+#define AFUN(ptr) if (ptr!=NULL) ascfree(ptr); (ptr) = NULL
+#define ADUN(ptr) if (ptr!=NULL) gl_destroy(ptr); (ptr) = NULL
+
+  /* gl_lists without memory items use ADUN */
   ADUN(p_data->vars);
   ADUN(p_data->dvars);
   ADUN(p_data->pars);
@@ -1533,7 +1547,8 @@ static void analyze_free_lists(struct problem_t *p_data)
   ADUN(p_data->logrels);
   ADUN(p_data->logcnds);
   ADUN(p_data->whens);
-/* blocks of memory use AFUN */
+  
+  /* blocks of memory use AFUN */
   AFUN(p_data->blocks);
   AFUN(p_data->reldata);
   AFUN(p_data->objdata);
@@ -1575,15 +1590,17 @@ static void analyze_free_lists(struct problem_t *p_data)
   AFUN(p_data->solverwl);
   AFUN(p_data->solverbl);
   AFUN(p_data->erlist);
+
+#undef AFUN
+#undef ADUN
 }
 
-
 
-/*
-	                          'WHEN' Processing
+/*------------------------------------------------------------------------------
+  'WHEN' PROCESSING
 */
 
-/*
+/**
 	This function receives as argument the list of values of each of the
 	CASES of a WHEN statement. The values in the list can be integer values,
 	symbol values, or boolean values. So, the goal of this function is to
@@ -1628,11 +1645,10 @@ void ProcessValueList(struct Set *ValueList, int *value,
 }
 
 
-/*
-	The next two functions are used because in the function
-	ProcessSolverWhens, the existence of MODELS or ARRAYs inside
-	a When Statement requires a recursive analysis.
-	See the explanation of such a function
+/**
+	Process arrays inside WHENs (requires a recursive analysis).
+
+	@see ProcessSolverWhens
 */
 static
 void ProcessArraysInWhens(struct Instance *cur_inst,
@@ -1687,6 +1703,11 @@ void ProcessArraysInWhens(struct Instance *cur_inst,
   }
 }
 
+/**
+	Process MODELs inside WHENs (requires a recursive analysis).
+
+	@see ProcessSolverWhens
+*/
 static
 void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels,
 			  struct gl_list_t *logrels, struct gl_list_t *whens)
@@ -1739,11 +1760,12 @@ void ProcessModelsInWhens(struct Instance *cur_inst, struct gl_list_t *rels,
 }
 
 
-/*
-	The goal of this function is to fill in the list of cases and variables
-	of a w_when structure with the appropriate data. The information required
-	is provided by the corresponding when Instance generated in the
-	compilation time. So, what we do is:
+/**
+	Fill in the list of cases and variables of a w_when structure with
+	the appropriate data. 
+
+	The information required is provided by the corresponding when Instance 
+	generated in the compilation time. So, what we do is:
 	1) Obtain the list of variables and the list of cases from each
 	   WHEN intance.
 	   The list of variables is actually a list of pointers to instances
@@ -1848,15 +1870,15 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i)
   }
 }
 
+/*------------------------------------------------------------------------------
+  RECONFIGURATION OF CONDITIONAL MODELS
 
-/*
-	Next two functions are for needed in the reconfiguration of
-	conditional models
-*/
+/**
+	Is this (discrete) variable inside a WHEN?
 
-/*
-	return 1 if the discrete var is a member of the when var list, else
-	return 0
+	@return 
+		1 if discrete var is a member of the when var list, 
+		else 0
 */
 int dis_var_in_a_when(struct Instance *var, struct w_when *when)
 {
@@ -1867,7 +1889,7 @@ int dis_var_in_a_when(struct Instance *var, struct w_when *when)
 }
 
 
-/*
+/**
 	Determine if the conditional variable inst is part of the
 	variable list of some when in the when list.
 */
@@ -1887,13 +1909,11 @@ int varinst_found_in_whenlist(slv_system_t sys, struct Instance *inst)
   return 0;
 }
 
-
-
-/*
-	                          Boundary Processing
+/*------------------------------------------------------------------------------
+  BOUNDARY PROCESSING
 */
 
-/*
+/**
 	Get the list or logrelation including a boundary (by means of a
 	SATISFIED term). This function look the structures in the compiler
 	side and make the same link in the solver side
@@ -1922,7 +1942,7 @@ void GetListOfLogRels(struct bnd_boundary *bnd, struct Instance *inst)
   return;
 }
 
-/*
+/**
 	Get the tolerance used to define the satisfaction of a boundary
 	(Defined in the SATISFIED term)
 */
@@ -1948,10 +1968,7 @@ void GetTolerance(struct bnd_boundary *bnd)
   }
 }
 
-
-
-
-/*
+/**
 	Here we roll the master lists and bridge data into relation/var/
 	logrelation/conditional/when etc. lists for the consumer.
 	Includes fixing up rel caches and initing flagbits as best we can.
@@ -2204,7 +2221,8 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->relincsize = p_data->nnztot+p_data->nnzobj + p_data->nnzcond;
   p_data->relincinuse = 0;
   p_data->lrelincinuse = 0;
-
+
+  /*-------*/
   /*
   	for c in varlist copy vardata. remember gllist # from 1 and data from 0
   */
@@ -2441,7 +2459,8 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   p_data->mastercl[vlen] = NULL; /* terminator */
   p_data->solvercl[vlen] = NULL; /* terminator */
 
-
+  /*-------*/
+
   /*
   	process discrete variables
   	for c in dvarlist copy disdata. gllist # from 1 and data from 0
@@ -2827,11 +2846,20 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
 }
 
 
+/**
+	Pass the array of stuff into the slv_system_t, and disown them. This is
+	where the analyse step finishes up and the solver work starts.
 
-/*
-	hand off all the null terminated arrays to slv_system_t.
 	Also makes sure all solver_var have been assigned at least once,
 	since 0 is a really stupid starting value.
+
+	@TODO this code is really repetitive, can't we clean it up with some
+	nice macros? The whole problem is that the naming isn't quite consistent
+	enough. eg.
+		slv_set_solvers_condlogrel_list(sys,p_data->solvercll,gl_length(p_data->logcnds));	
+	could be better written
+		slv_set_solvers_condlogrel_list(sys,p_data->solver_condlogrel,gl_length(p_data->condlogrel_list));
+
 */
 static
 int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
@@ -2855,7 +2883,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
   slv_set_when_buf(sys,p_data->whendata,gl_length(p_data->whens));
   p_data->whendata = NULL;
   slv_set_bnd_buf(sys,p_data->bnddata,
-                  gl_length(p_data->cnds)+gl_length(p_data->logcnds));
+  		gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->bnddata = NULL;
   slv_set_unattached_buf(sys,p_data->undata);
   p_data->undata = NULL;
@@ -2881,22 +2909,19 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
   p_data->mastercl = NULL;
   slv_set_master_obj_list(sys,p_data->masterol,gl_length(p_data->objrels));
   p_data->masterol = NULL;
-  slv_set_master_logrel_list(sys,p_data->masterll,
-                             gl_length(p_data->logrels));
+  slv_set_master_logrel_list(sys,p_data->masterll,gl_length(p_data->logrels));
   p_data->masterll = NULL;
-  slv_set_master_condlogrel_list(sys,p_data->mastercll,
-                                 gl_length(p_data->logcnds));
+  slv_set_master_condlogrel_list(sys,p_data->mastercll,gl_length(p_data->logcnds));
   p_data->mastercll = NULL;
   slv_set_master_when_list(sys,p_data->masterwl,gl_length(p_data->whens));
   p_data->masterwl = NULL;
   slv_set_master_bnd_list(sys,p_data->masterbl,
-                        gl_length(p_data->cnds)+gl_length(p_data->logcnds));
+          gl_length(p_data->cnds) + gl_length(p_data->logcnds)
+  );
   p_data->masterbl = NULL;
-  slv_set_master_unattached_list(sys,p_data->masterul,
-                                 gl_length(p_data->unas));
+  slv_set_master_unattached_list(sys,p_data->masterul,gl_length(p_data->unas));
   p_data->masterul = NULL;
-  slv_set_master_disunatt_list(sys,p_data->masterdul,
-                               gl_length(p_data->dunas));
+  slv_set_master_disunatt_list(sys,p_data->masterdul,gl_length(p_data->dunas));
   p_data->masterdul = NULL;
 
   slv_set_solvers_var_list(sys,p_data->solvervl,gl_length(p_data->vars));
@@ -2911,22 +2936,18 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
   p_data->solvercl = NULL;
   slv_set_solvers_obj_list(sys,p_data->solverol,gl_length(p_data->objrels));
   p_data->solverol = NULL;
-  slv_set_solvers_logrel_list(sys,p_data->solverll,
-                              gl_length(p_data->logrels));
+  slv_set_solvers_logrel_list(sys,p_data->solverll,gl_length(p_data->logrels));
   p_data->solverll = NULL;
-  slv_set_solvers_condlogrel_list(sys,p_data->solvercll,
-                                  gl_length(p_data->logcnds));
+  slv_set_solvers_condlogrel_list(sys,p_data->solvercll,gl_length(p_data->logcnds));
   p_data->solvercll = NULL;
   slv_set_solvers_when_list(sys,p_data->solverwl,gl_length(p_data->whens));
   p_data->solverwl = NULL;
   slv_set_solvers_bnd_list(sys,p_data->solverbl,
-                        gl_length(p_data->cnds)+gl_length(p_data->logcnds));
+                        gl_length(p_data->cnds) + gl_length(p_data->logcnds));
   p_data->solverbl = NULL;
-  slv_set_solvers_unattached_list(sys,p_data->solverul,
-                                  gl_length(p_data->unas));
+  slv_set_solvers_unattached_list(sys,p_data->solverul,gl_length(p_data->unas));
   p_data->solverul = NULL;
-  slv_set_solvers_disunatt_list(sys,p_data->solverdul,
-                                gl_length(p_data->dunas));
+  slv_set_solvers_disunatt_list(sys,p_data->solverdul,gl_length(p_data->dunas));
   p_data->solverdul = NULL;
 
   slv_set_obj_relation(sys,p_data->obj);
@@ -2944,12 +2965,25 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
 }
 
 /*
-	fills in a slv_system_t via its object interface from the
-	ascend side of the world, establishing any protocols needed to
-	communicate with the instance tree.
-	Return is 0 if everything ok, nonzero OTHERWISE.
-	1 = memory
-	2 = bad instance
+	This is the entry point for problem analysis. It takes the compiler
+	Instance, visits it with the 'CountStuffInTree' method, then constructs
+	lists of all the different types of variables and relations etc, then
+	convey them to the solver using the slv_ interface (i.e. methods that act
+	on the slv_system_t we've been given).
+
+	We're also establishing any any protocols needed to communicate with the
+	instance tree, eg telling the compiler about the new values of things, etc.
+
+	@return 0=success, 1=memory error, 2=bad instance error (nonzero=error)
+
+	@TODO: are the following comments still relevant?
+	Makes variable/relations/when lists and objective function by heuristic.
+	Now also makes a list of all relations that are objectives.
+	This does not affect the semantics of the previous objective
+	code.
+	Do NOTHING in this function which can lead to floating point
+	errors -- in particular because we must leave the interface ptrs
+	in the state they were found.
 */
 int analyze_make_problem(slv_system_t sys, struct Instance *inst)
 {

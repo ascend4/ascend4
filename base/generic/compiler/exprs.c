@@ -1,32 +1,39 @@
-/*
- *  Expression Implementation
- *  by Tom Epperly
- *  Version: $Revision: 1.13 $                          
- *  Version control file: $RCSfile: exprs.c,v $
- *  Date last modified: $Date: 1998/02/05 16:35:58 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
 
-#include<stdio.h>
-#include<assert.h>
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Expression Module
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "dimen.h"
+	#include "expr_types.h"
+*//*
+	by Tom Epperly
+	Last in CVS: $Revision: 1.13 $ $Date: 1998/02/05 16:35:58 $ $Author: ballan $
+*/
+
+#include <stdio.h>
+#include <assert.h>
+
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
 #include "compiler.h"
@@ -37,7 +44,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "func.h"
 #include "name.h"
 #include "sets.h"
@@ -50,34 +57,40 @@
 static CONST char ExpressionID[] = "$Id: exprs.c,v 1.13 1998/02/05 16:35:58 ballan Exp $";
 #endif
 
+/*------------------------------------------------------------------------------
+  MEMORY USAGE
+
+  Using 'pool' or else regular malloc...
+*/
+
 #ifdef ASC_NO_POOL
 #define EXPRSUSESPOOL FALSE
 #else
 #define EXPRSUSESPOOL TRUE
 #endif
 
-#if EXPRSUSESPOOL /* FALSE means hacking ascCompiler.c */
+#if EXPRSUSESPOOL /* using 'g_exprs_pool' for memory management */
+/** global for our memory manager */
 static pool_store_t g_exprs_pool = NULL;
-/* global for our memory manager */
-/* aim for 4096 chunks including malloc overhead */
-#define EMP_LEN 10
-#if (SIZEOF_VOID_P == 8)
-#define EMP_WID 63
-#else
-#define EMP_WID 127
-#endif
-/* retune rpwid if the size of struct name changes */
-#define EMP_ELT_SIZE (sizeof(struct Expr))
-#define EMP_MORE_ELTS 10
-/*
- *  Number of slots filled if more elements needed.
- *  So if the pool grows, it grows by EMP_MORE_ELTS*EMP_WID elements at a time.
- */
-#define EMP_MORE_BARS 500
-/* This is the number of pool bar slots to add during expansion.
+	/* aim for 4096 chunks including malloc overhead */
+# define EMP_LEN 10
+# if (SIZEOF_VOID_P == 8)
+#  define EMP_WID 63
+# else
+#  define EMP_WID 127
+# endif
+	/* retune rpwid if the size of struct name changes */
+# define EMP_ELT_SIZE (sizeof(struct Expr))
+# define EMP_MORE_ELTS 10
+/**< Number of slots filled if more elements needed.
+	So if the pool grows, it grows by EMP_MORE_ELTS*EMP_WID elements at a time. */
+# define EMP_MORE_BARS 500
+/**< This is the number of pool bar slots to add during expansion.
    not all the slots will be filled immediately. */
 
-/* This function is called at compiler startup time and destroy at shutdown. */
+/**
+	This function is called at compiler startup time and destroy at shutdown.
+*/
 void exprs_init_pool(void) {
   if (g_exprs_pool != NULL ) {
     Asc_Panic(2, NULL, "ERROR: exprs_init_pool called twice.\n");
@@ -105,39 +118,67 @@ void exprs_report_pool()
   pool_print_store(ASCERR,g_exprs_pool,0);
 }
 
-#define EPMALLOC ((struct Expr *)(pool_get_element(g_exprs_pool)))
-/* get a token. Token is the size of the struct struct Expr */
-#define EPFREE(p) (pool_free_element(g_exprs_pool,((void *)p)))
-/* return a struct Expr */
+# define EPMALLOC \
+	((struct Expr *)(pool_get_element(g_exprs_pool)))
+/**< get a token. Token is the size of the struct struct Expr */
 
-#else
+# define EPFREE(p) \
+	(pool_free_element(g_exprs_pool,((void *)p)))
+/**< return a struct Expr */
 
-#define EPFREE(p) ascfree(p)
-#define EPMALLOC (struct Expr *)ascmalloc(sizeof(struct Expr))
+# define EXPR_CHECK_MEMORY(VAR) \
+	AssertMemory(VAR)
+
+#else /* not using 'g_exprs_pool'... */
+
 void exprs_init_pool(void) {}
 void exprs_destroy_pool(void) {}
-void exprs_report_pool(void)
-{
-    FPRINTF(ASCERR,"ExprsPool not used at all\n");
+void exprs_report_pool(void){
+	FPRINTF(ASCERR,"ExprsPool not used at all\n");
 }
 
+# define EPFREE(p) \
+	ASC_FREE(p)
+
+# define EPMALLOC \
+	ASC_NEW(struct Expr)
+
+# define EXPR_CHECK_MEMORY(VAR) \
+	AssertAllocatedMemory(result,sizeof(struct Expr))
 
 #endif
+
+
+# define EXPR_NEW(VAR,TYPE) \
+	VAR = EPMALLOC; \
+	VAR->t = TYPE; \
+	VAR->next = NULL
+
+/*------------------------------------------------------------------------------
+  CREATION ROUTINES
+*/
 
 struct Expr *CreateVarExpr(struct Name *n)
 {
   register struct Expr *result;
   assert(n!=NULL);
   AssertMemory(n);
-  result = EPMALLOC;
-  result->t = e_var;
+  EXPR_NEW(result,e_var);
   result->v.nptr = n;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
+
+  return result;
+}
+
+/*
+	As with var, store pointer to the name, but give it a special type 'e_diff'.
+*/
+struct Expr *CreateDiffExpr(struct Name *n){
+  register struct Expr *result;
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"not yet implemented");
+  EXPR_NEW(result,e_diff);
+  result->v.nptr = n;
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
@@ -154,9 +195,7 @@ struct Expr *CreateOpExpr(enum Expr_enum t)
 {
   register struct Expr *result;
   assert((t!=e_var)&&(t!=e_func)&&(t!=e_int)&&(t!=e_real)&&(t!=e_zero));
-  result = EPMALLOC;
-  result->t = t;
-  result->next = NULL;
+  EXPR_NEW(result,t);
 #if EXPRSUSESPOOL
   AssertMemory(result);
 #else
@@ -169,123 +208,75 @@ struct Expr *CreateSatisfiedExpr(struct Name *n, double tol,
                                  CONST dim_type *dims)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_satisfied ;
+  EXPR_NEW(result,e_satisfied);
   result->v.se.sen =  n;
   result->v.se.ser.rvalue = tol;
   result->v.se.ser.dimensions = dims;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateFuncExpr(CONST struct Func *f)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_func;
+  EXPR_NEW(result,e_func);
   result->v.fptr = f;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateIntExpr(long int i)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_int;
+  EXPR_NEW(result,e_int);
   result->v.ivalue = i;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateRealExpr(double r, CONST dim_type *dims)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_real;
+  EXPR_NEW(result,e_real);
   result->v.r.rvalue = r;
   result->v.r.dimensions = dims;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateTrueExpr(void)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_boolean;
+  EXPR_NEW(result,e_boolean);
   result->v.bvalue = 1;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateFalseExpr(void)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_boolean;
+  EXPR_NEW(result,e_boolean);
   result->v.bvalue = 0;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateAnyExpr(void)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_boolean;
+  EXPR_NEW(result,e_boolean);
   result->v.bvalue = 2;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateSetExpr(struct Set *set)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_set;
+  EXPR_NEW(result,e_set);
   result->v.s = set;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
@@ -294,48 +285,33 @@ struct Expr *CreateSymbolExpr(symchar *sym)
 {
   register struct Expr *result;
   assert(AscFindSymbol(sym)!=NULL);
-  result = EPMALLOC;
-  result->t = e_symbol;
+  EXPR_NEW(result,e_symbol);
   result->v.sym_ptr = sym;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateQStringExpr(CONST char *qstr)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = e_qstring;
+  EXPR_NEW(result,e_qstring);
   result->v.sym_ptr = (symchar *)qstr; /* qstr really not symbol */
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
 struct Expr *CreateBuiltin(enum Expr_enum t, struct Set *set)
 {
   register struct Expr *result;
-  result = EPMALLOC;
-  result->t = t;
+  EXPR_NEW(result,t);
   result->v.s = set;
-  result->next = NULL;
-#if EXPRSUSESPOOL
-  AssertMemory(result);
-#else
-  AssertAllocatedMemory(result,sizeof(struct Expr));
-#endif
+  EXPR_CHECK_MEMORY(result);
   return result;
 }
 
+/*------------------------------------------------------------------------------
+  MANIPULATION ROUTINES
+*/
 
 void LinkExprs(struct Expr *cur, struct Expr *next)
 {
@@ -543,17 +519,20 @@ void DestroyExprList(struct Expr *e)
     AssertMemory(ep);
     next = ep->next;
     switch(ep->t) {
-    case e_var: DestroyName(ep->v.nptr); break;
-    case e_set:
-    case e_card:
-    case e_choice:
-    case e_sum:
-    case e_prod:
-    case e_union:
-    case e_inter:
-      DestroySetList(ep->v.s);
-      break;
-    default: break;
+		case e_var: 
+			DestroyName(ep->v.nptr);
+			break;
+		case e_set:
+		case e_card:
+		case e_choice:
+		case e_sum:
+		case e_prod:
+		case e_union:
+		case e_inter:
+			DestroySetList(ep->v.s);
+			break;
+		default:
+			break;
     }
     EPFREE((char *)ep);
     ep = next;

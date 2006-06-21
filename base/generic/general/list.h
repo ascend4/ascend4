@@ -18,7 +18,7 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	List Module.
+	'list' module
 
 	The purpose of this module is to provide a kind of flexible array.
 	The flexible array has two interesting characteristics.  It allows
@@ -42,21 +42,7 @@
 	#include "compiler/compiler.h"
 *//*
 	by Tom Epperly
-	Version: $Revision: 1.3 $
-	Version control file: $RCSfile: list.h,v $
-	Date last modified: $Date: 1998/02/19 13:03:22 $
-	Last modified by: $Author: ballan $
-
-	Any bugs or suggestions can be sent to:
-
-	te07@edrc.cmu.edu or te07@andrew.cmu.edu or epperly@osnome.che.wisc.edu
-	Tom Epperly
-	314 South Orchard Street
-	Madison, WI 53715-1542
-
-	Also please copy any bugs or suggestions to ascend+developers@cs.cmu.edu
-
-	This utility depends on ascmalloc.[ch] and (optionally) pool.[ch]
+	Last in CVS: $Revision: 1.3 $ $Date: 1998/02/19 13:03:22 $ $Author: ballan $
 
 	Change Log
 	2/26/88   added gl_copy, gl_concat

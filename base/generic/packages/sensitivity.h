@@ -54,17 +54,35 @@
 	@todo Make this self-registering so that it can be compiled as a dlopenable library.
 */
 
-/** @file
-Requires:
+#ifndef ASC_SENSITIVITY_H
+#define ASC_SENSITIVITY_H
+
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
 #include <compiler/compiler.h>
 #include <general/list.h>
 #include <compiler/extfunc.h>
-*/
 
-#ifndef ASC_SENSITIVITY_H
-#define ASC_SENSITIVITY_H
+#include <solver/mtx.h>
+#include <solver/mtx_basic.h>
+#include <solver/mtx_perms.h>
+#include <solver/mtx_query.h>
+#include <solver/linsol.h>
+#include <solver/linsolqr.h>
+#include <solver/slv_types.h>
+#include <solver/var.h>
+#include <solver/rel.h>
+#include <solver/discrete.h>
+#include <solver/conditional.h>
+#include <solver/logrel.h>
+#include <solver/bnd.h>
+#include <solver/calc.h>
+#include <solver/relman.h>
+#include <solver/slv_common.h>
+#include <solver/slv_stdcalls.h>
+#include <solver/system.h>
+#include <solver/slv_client.h>
+
 
 /* ignores: interp, i, whichvar */
 extern int do_solve_eval( struct Instance *i, struct gl_list_t *arglist);
@@ -81,6 +99,15 @@ extern int do_sensitivity_eval_all( struct Instance *i, struct gl_list_t *arglis
 extern int do_sensitivity_eval( struct Instance *i, struct gl_list_t *arglist);
 
 ASC_DLLSPEC(int) sensitivity_register(void);
+
+/*--------------------------------------------------
+	The following functions are provided only for use by BLSODE. We want to
+	phase this out and replace with a new solver like IDA.
+*/
+int Compute_J(slv_system_t sys);
+int NumberFreeVars(slv_system_t sys);
+int NumberIncludedRels(slv_system_t sys);
+int LUFactorJacobian(slv_system_t sys);
 
 #endif  /* ASC_SENSITIVITY_H */
 

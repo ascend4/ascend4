@@ -36,7 +36,7 @@
 #include <general/list.h>
 #include <compiler/extfunc.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/exprs.h>
 #include <compiler/find.h>
 #include <general/list.h>

@@ -934,8 +934,8 @@ static int32 *order_incidences_of_relation(struct var_variable **var_list,
   int32 v,vind,vcount = 0;
   int32 aux,vin,vindex = 0;
 
-  index = (int32 *)ascmalloc(vlen*sizeof(int32));
-  ordered_index = (int32 *)ascmalloc(vlen*sizeof(int32));
+  index = ASC_NEW_ARRAY(int32,vlen);
+  ordered_index = ASC_NEW_ARRAY(int32,vlen);
 
   for (v=0; v<vlen; v++) {
     var = var_list[v];
@@ -1171,7 +1171,7 @@ static void get_incidences_in_case(struct when_case *cur_case,
   }
 
   if (ninc>0) {
-    inc = (int32 *)ascmalloc(ninc*sizeof(int32));
+    inc = ASC_NEW_ARRAY(int32,ninc);
     ninc = 0;
     for (v=0; mastervl[v]!= NULL; v++) {
       var = mastervl[v];
@@ -1206,8 +1206,8 @@ static void order_relations_by_incidences(struct gl_list_t *scratch)
   int32 **var_ind;
 
   rlen = gl_length(scratch);
-  num_rel = (int32 *)ascmalloc(rlen*sizeof(int32));
-  ordered_num_rel = (int32 *)ascmalloc(rlen*sizeof(int32));
+  num_rel = ASC_NEW_ARRAY(int32,rlen);
+  ordered_num_rel = ASC_NEW_ARRAY(int32,rlen);
   var_ind = (int32 **)ascmalloc(rlen*sizeof(int32 *));
   array_rel = (struct rel_relation **)ascmalloc
                                       (rlen*sizeof(struct rel_relation *));
@@ -1303,8 +1303,8 @@ static void order_relations_in_case(struct when_case *cur_case)
   if (rels != NULL) {
     rlen = gl_length(rels);
     if (rlen > 1) {
-      num_inc = (int32 *)ascmalloc(rlen*sizeof(int32));
-      ordered_num_inc = (int32 *)ascmalloc(rlen*sizeof(int32));
+      num_inc = ASC_NEW_ARRAY(int32,rlen);
+      ordered_num_inc = ASC_NEW_ARRAY(int32,rlen);
       new_rels = gl_create(rlen);
       tmp =  gl_create(rlen);
       for (r=1;r<=rlen;r++) {    /* get number of incidences */

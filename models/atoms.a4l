@@ -407,7 +407,7 @@ END length_parameter;
     END vapor_pressure;
 
     ATOM k_constant REFINES solver_var
-    (* what IS this ? ? ? *)
+    (* what IS this ? ? ? (it rings a bell...) *)
         DIMENSION T^2/L^5
         DEFAULT 1.0 {s^2/ft^5};
         lower_bound := 0.001 {s^2/ft^5};
@@ -415,6 +415,13 @@ END length_parameter;
         nominal := 1.0 {s^2/ft^5};
     END k_constant;
 
+    ATOM pressure_per_length REFINES solver_var
+        DIMENSION M/L^2/T^2
+        DEFAULT 50 {Pa/m};
+        lower_bound := -10{bar/m};
+        upper_bound := +10{bar/m};
+        nominal := 50 {Pa/m};
+    END pressure_per_length;
 
 (*  M A S S / M O L E  Q U A N T I T I E S
     --------------------------------------  *)
@@ -453,6 +460,23 @@ END length_parameter;
         upper_bound := 1e50{g/s};
         nominal := 100.0{g/s};
     END mass_rate;
+
+    ATOM mass_rate_rate REFINES solver_var
+        DIMENSION M/T^2
+        DEFAULT 10{g/s/s};
+        lower_bound := -1e50{g/s/s};
+        upper_bound := 1e50{g/s/s};
+        nominal := 10.0{g/s/s};
+    END mass_rate_rate;
+
+    ATOM mass_rate_per_length REFINES solver_var
+        DIMENSION M/T/L
+        DEFAULT 0.1 {kg/s/m};
+        lower_bound := -1e50 {kg/s/m};
+        upper_bound := 1e50 {kg/s/m};
+        nominal := 1.0 {kg/s/m};
+    END mass_rate_per_length;
+	
 
     ATOM molar_rate_scale REFINES real DIMENSION Q/T DEFAULT 1 {mole/second};
     END molar_rate_scale;
@@ -593,6 +617,14 @@ END length_parameter;
         upper_bound := 1e50{BTU/hour};
         nominal := 100000.0{BTU/hour};
     END energy_rate;
+
+	ATOM power_per_length REFINES solver_var
+        DIMENSION M*L/T^3
+        DEFAULT 1.0{kW/m};
+        lower_bound := -1e50{kW/m};
+        upper_bound := 1e50{kW/m};
+        nominal := 1.0{kW/m};
+    END power_per_length;
 
     ATOM molar_heat_capacity REFINES solver_var
         DIMENSION M*L^2/T^2/Q/TMP
@@ -783,6 +815,15 @@ END cost_per_energy;
         nominal := 60.0{1/s};
     END frequency;
 
+    ATOM stiffness REFINES solver_var
+		DIMENSION M/T^2
+		DEFAULT 1 {N/m};
+		lower_bound := 0 {N/m};
+		upper_bound := 1e12 {N/m};
+		nominal := 1 {N/m};
+	END stiffness;
+
+		
 
 (*  T R A N S P O R T   Q U A N T I T I E S
     ---------------------------------------  *)
@@ -930,6 +971,14 @@ END cost_per_energy;
         nominal := 100.0{gpm};
     END delta_volume_rate;
 
+    ATOM density_rate REFINES solver_var
+        DIMENSION M/L^3/T
+        DEFAULT 0.0 {kg/m^3/s};
+        lower_bound := -1e50 {kg/m^3/s};
+        upper_bound := 1e50 {kg/m^3/s};
+        nominal := 0.1 {kg/m^3/s};
+    END density_rate;
+
     ATOM delta_energy_rate REFINES solver_var
         DIMENSION M*L^2/T^3
         DEFAULT 0.0{BTU/hour};
@@ -954,6 +1003,7 @@ END cost_per_energy;
         nominal := 1000.0{BTU/hour/R};
     END delta_entropy_rate;
 
+	
 (*  C O N T R O L L E R  Q U A N T I T I E S
     ----------------------------------------  *)
 

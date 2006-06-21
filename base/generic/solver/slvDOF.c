@@ -1037,7 +1037,7 @@ static int32 perform_combinatorial_consistency_analysis(slv_system_t server,
   elnum = slv_count_master_vars(server,&vfilter);
 
   if (elnum > 0) {
-    globeli = (int32 *)ascmalloc(elnum*sizeof(int32));
+    globeli = ASC_NEW_ARRAY(int32,elnum);
     elnum = 0;
     for (v=0; v<mnum; v++) {
       mvar = vmlist[v];

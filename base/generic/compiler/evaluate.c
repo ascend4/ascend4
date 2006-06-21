@@ -1,32 +1,29 @@
-/*
- *  Evaluation Routines
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	@file
+	Evaluation Routines
+*//*
  *  by Tom Epperly
  *  Created: 1/16/90
- *  Version: $Revision: 1.23 $
- *  Version control file: $RCSfile: evaluate.c,v $
- *  Date last modified: $Date: 1998/03/17 22:08:30 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+ *  Last in CVS: $Revision: 1.23 $ $Date: 1998/03/17 22:08:30 $ $Author: ballan $
+*/
 
 #include <stdio.h>
 #include <assert.h>
@@ -40,7 +37,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "setinstval.h"
 #include "value_type.h"
 #include "name.h"
@@ -61,12 +58,13 @@ static struct gl_list_t *g_names_needed = NULL;
  */
 #define GNN g_names_needed
 
-/*********************************************************************\
-  Support Evaluation Routines -- stacks.
+/*------------------------------------------------------------------------------
+  STACK ROUTINES
+
   small, fast, and local. Do not export. BAA. 2/96
   changed from longs to ints for size and capacity,
   particularly because expression stacks just don't get that deep.
-\*********************************************************************/
+*/
 struct stack_t {
   struct value_t *ptr; 	/* data pointer */
   unsigned capacity;	/* length of data */
@@ -179,10 +177,13 @@ void StackPush(struct stack_t *stack, struct value_t value)
   stack->ptr[(stack->size)++] = value;
 }
 
-/*********************************************************************\
-  Expression Evaluation Routines.
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+  EXPRESSION EVALUATION ROUTINES
+*/
 
+/**
+	@TODO What is this?
+*/
 static
 unsigned int ExprStackDepth(CONST struct Expr *ex,
 			    CONST struct Expr *stop)
@@ -192,6 +193,7 @@ unsigned int ExprStackDepth(CONST struct Expr *ex,
     AssertMemory(ex);
     switch(ExprType(ex)){
     case e_var:
+	case e_diff:
     case e_zero:
     case e_int:
     case e_satisfied:
@@ -251,6 +253,9 @@ unsigned int ExprStackDepth(CONST struct Expr *ex,
   return maxdepth;
 }
 
+/**
+	@TODO What is this?
+*/
 static
 CONST struct Expr *ContainsSuchThat(CONST struct Expr *expr,
 				    CONST struct Expr *stop)
@@ -263,6 +268,9 @@ CONST struct Expr *ContainsSuchThat(CONST struct Expr *expr,
   return 0;
 }
 
+/**
+	@TODO What is this?
+*/
 static
 unsigned SuchThatForm(CONST struct Expr *expr,
 		      CONST struct Expr *stop,
@@ -275,6 +283,7 @@ unsigned SuchThatForm(CONST struct Expr *expr,
     AssertMemory(expr);
     switch(ExprType(expr)){
     case e_var:
+	case e_diff:
     case e_zero:
     case e_int:
     case e_satisfied:
@@ -328,7 +337,7 @@ unsigned SuchThatForm(CONST struct Expr *expr,
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node type.\n");
+      Asc_Panic(2, NULL, "%s: Unknown expression node type.\n",__FUNCTION__);
       break;
     }
     previous = expr;
@@ -337,46 +346,59 @@ unsigned SuchThatForm(CONST struct Expr *expr,
   return 2;
 }
 
+/**
+	Evaluate the name of and contents of a set-valued expression.
+	@TODO more detail on this.
+
+	Expr must be a e_var type, and be named. Then, the expr is evaluated and if
+	its type is set_value, then 0 returned.
+
+	@return 0 if evaluation yeilds a set, else 1.
+*/
 static
 int GetNameAndSet(CONST struct Expr *ex, CONST struct Expr *stop,
 		  symchar **name, struct value_t *value,
 		  struct value_t (*EvaluateName) (/* ??? */))
 {
-  /* NAME SET IN */
-  if (ExprType(ex)==e_var){
-    if ((*name = SimpleNameIdPtr(ExprName(ex)))!=NULL){
-      *value = EvaluateExpr(NextExpr(ex),stop,EvaluateName);
-      if (ValueKind(*value)==set_value) {
-        return 0;
-      }
-      if (ValueKind(*value)==error_value) {
-        return 1;
-      } else {
-        if (ValueKind(*value)==integer_value) {
-          ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-		  FPRINTF(ASCERR,"Found integer constant where set expected: ");
-          WriteExprNode(ASCERR,NextExpr(ex));
-          FPRINTF(ASCERR,"\n");
-	  error_reporter_end_flush();
-        }
-        if (ValueKind(*value)==symbol_value) {
-	  
-          ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-	 	  FPRINTF(ASCERR,"Found symbol constant where set expected: ");
-          WriteExprNode(ASCERR,NextExpr(ex));
-          FPRINTF(ASCERR,"\n");
-	  error_reporter_end_flush();
-        }
-	DestroyValue(value);
-	*value = CreateErrorValue(type_conflict);
+	/* NAME SET IN */
+	if (ExprType(ex)==e_var){
+		if ((*name = SimpleNameIdPtr(ExprName(ex)))!=NULL){
+			*value = EvaluateExpr(NextExpr(ex),stop,EvaluateName);
+
+			if (ValueKind(*value)==set_value){
+				return 0;
+			}
+
+			if (ValueKind(*value)==error_value){
+				return 1;
+			}
+
+			if(ValueKind(*value)==integer_value){
+				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+				FPRINTF(ASCERR,"Found integer constant where set expected: ");
+				WriteExprNode(ASCERR,NextExpr(ex));
+				FPRINTF(ASCERR,"\n");
+				error_reporter_end_flush();
+			}else if (ValueKind(*value)==symbol_value){
+				ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
+				FPRINTF(ASCERR,"Found symbol constant where set expected: ");
+				WriteExprNode(ASCERR,NextExpr(ex));
+				FPRINTF(ASCERR,"\n");
+				error_reporter_end_flush();
+			}
+
+		    DestroyValue(value);
+		    *value = CreateErrorValue(type_conflict);
+		    return 1;
+	    }
+	}
+	*value = CreateErrorValue(incorrect_such_that);
 	return 1;
-      }
-    }
-  }
-  *value = CreateErrorValue(incorrect_such_that);
-  return 1;
 }
 
+/**
+	@TODO what is this?
+*/
 static
 int GetNameAndSetNamesNeeded(CONST struct Expr *ex,
                              CONST struct Expr *stop,
@@ -393,6 +415,9 @@ int GetNameAndSetNamesNeeded(CONST struct Expr *ex,
   return 1;
 }
 
+/**
+	@TODO what is this?
+*/
 static
 struct value_t EvaluateLeftIteration(CONST struct Expr *expr,
 				     CONST struct Expr *stop,
@@ -463,6 +488,9 @@ struct value_t EvaluateLeftIteration(CONST struct Expr *expr,
   return tmp_value;
 }
 
+/**
+	@TODO what is this?
+*/
 static
 void EvaluateLeftIterationNamesNeeded(CONST struct Expr *expr,
                                       CONST struct Expr *stop,
@@ -484,6 +512,11 @@ void EvaluateLeftIterationNamesNeeded(CONST struct Expr *expr,
   return;
 }
 
+/**
+	@TODO what is this?
+	Seems to be returning the *next* expression following a 'such that', although
+	the function is named 'before such that'...
+*/
 static
 CONST struct Expr *NodeBeforeSuchThat(CONST struct Expr *ex)
 {
@@ -493,6 +526,9 @@ CONST struct Expr *NodeBeforeSuchThat(CONST struct Expr *ex)
   return ex;
 }
 
+/**
+	@TODO what is this?
+*/
 static
 struct value_t EvaluateRightIteration(CONST struct Expr *expr,
 				      CONST struct Expr *stop,
@@ -617,6 +653,11 @@ void EvaluateSuchThatNamesNeeded(CONST struct Expr *expr,
   }
 }
 
+/**
+	The main expression-evaluation routine for the ASCEND compiler?
+
+	@TODO document this
+*/
 struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
 			    struct value_t (*EvaluateName) (/* ? */))
 {
@@ -635,9 +676,9 @@ struct value_t EvaluateExpr(CONST struct Expr *expr, CONST struct Expr *stop,
     case e_var:			/* variable */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ((cptr != NULL)&&TempExists(cptr)) {
-	top = TempValue(cptr);
+        top = TempValue(cptr);
       } else {
-	top = (*EvaluateName)(ExprName(expr));
+        top = (*EvaluateName)(ExprName(expr));
       }
       StackPush(stack,top);
       break;
@@ -863,7 +904,8 @@ struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
   while(expr!=stop){
     AssertMemory(expr);
     switch(ExprType(expr)){
-    case e_var:			/* variable */
+    case e_var:        /* variable */
+	case e_diff:       /* derivative */
       cptr = SimpleNameIdPtr(ExprName(expr));
       if ( cptr == NULL || TempExists(cptr)==0 ) {
         /* append if name not already seen in list */

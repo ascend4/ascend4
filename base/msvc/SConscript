@@ -1,0 +1,40 @@
+Import('env')
+Import('libascend')
+
+# Note, this source list doesn't need to be complete. This just sets which files are
+# visible in the IDE.
+
+compilersrcs = Split("""
+	anoncopy.c anoncopy.h anonmerg.c anonmerg.h anontype.c anontype.h arrayinst.c arrayinst.h ascCompiler.c ascCompiler.h ascParse.c ascParse.h atomsize.c atomsize.h atomvalue.c atomvalue.h bintoken.c bintoken.h bit.c bit.h braced.c braced.h btprolog.h case.c case.h check.c check.h child.c child.h childdef.c childdef.h childinfo.c childinfo.h childio.c childio.h childpriv.h cmpfunc.c cmpfunc.h commands.c commands.h compiler.h copyinst.c copyinst.h createinst.c createinst.h destroyinst.c destroyinst.h dimen.c dimen.h dimen_io.c dimen_io.h dump.c dump.h evaluate.c evaluate.h exprio.c exprio.h exprs.c exprs.h exprsym.c exprsym.h extcall.c extcall.h extfunc.c extfunc.h extinst.c extinst.h find.c find.h forvars.c forvars.h fractions.c fractions.h freestore.c freestore.h func.c func.h functype.h initialize.c initialize.h instance.c instance.h instance_enum.h instance_io.c instance_io.h instance_name.h instance_types.h instantiate.c instantiate.h instmacro.c instmacro.h instquery.c instquery.h interval.c interval.h lexer.h library.c library.h linkinst.c linkinst.h logical_relation.h logrel_io.c logrel_io.h logrel_util.c logrel_util.h logrelation.c logrelation.h mathinst.c mathinst.h mergeinst.c mergeinst.h module.c module.h name.c name.h nameio.c nameio.h notate.c notate.h numlist.c numlist.h packages.c packages.h parentchild.c parentchild.h parpend.c parpend.h parser.h pending.c pending.h plot.c plot.h proc.c proc.h procframe.c procframe.h procio.c procio.h prototype.c prototype.h qlfdid.c qlfdid.h redirectFile.c redirectFile.h refineinst.c refineinst.h rel_common.c rel_common.h relation.c relation.h relation_io.c relation_io.h relation_type.h relation_util.c relation_util.h rootfind.c rootfind.h rounded.c rounded.h safe.c safe.h scanner.c scanner.h select.c select.h setinst_io.c setinst_io.h setinstval.c setinstval.h setio.c setio.h sets.c sets.h simlist.c simlist.h slist.c slist.h statement.c statement.h statio.c statio.h stattypes.h switch.c switch.h symtab.c symtab.h syntax.c syntax.h temp.c temp.h tmpnum.c tmpnum.h type_desc.c type_desc.h type_descio.c type_descio.h typedef.c typedef.h typelint.c typelint.h types.h units.c units.h universal.c universal.h value_type.c value_type.h visitinst.c visitinst.h visitlink.c visitlink.h vlist.c vlist.h vlistio.c vlistio.h watchpt.c watchpt.h watchptio.c watchptio.h when.c when.h when_io.c when_io.h when_util.c when_util.h
+""")
+
+generalsrcs = Split("""
+	dstring.c dstring.h hashpjw.c hashpjw.h list.c list.h listio.c listio.h mathmacros.h pool.c pool.h pretty.c pretty.h stack.c stack.h table.c table.h tm_time.c tm_time.h
+""")
+
+packagessrcs = Split("""
+	..\generic\packages\ascFreeAllVars.c ..\generic\packages\ascFreeAllVars.h ..\generic\packages\bisect.c ..\generic\packages\bisect.h ..\generic\packages\kvalues.c ..\generic\packages\kvalues.h ..\generic\packages\sensitivity.c ..\generic\packages\sensitivity.h
+""")
+
+solversrcs = Split("""
+	analyze.c analyze.h bnd.c bnd.h bndman.c bndman.h calc.c calc.h checkdim.h cond_config.c cond_config.h conditional.c conditional.h conopt.c conopt.h conoptdll.h discrete.c discrete.h incidence.c incidence.h linsol.c linsol.h linsolqr.c linsolqr.h linutils.c linutils.h logrel.c logrel.h logrelman.c logrelman.h model_reorder.c model_reorder.h mps.c mps.h mtx.h mtx_basic.c mtx_basic.h mtx_linal.c mtx_linal.h mtx_perms.c mtx_perms.h mtx_query.c mtx_query.h mtx_reorder.c mtx_reorder.h mtx_use_only.c mtx_use_only.h rel.c rel.h relman.c relman.h rsqp.h slv.c slv0.c slv0.h slv1.c slv1.h slv2.c slv2.h slv3.c slv3.h slv6.c slv6.h slv7.c slv7.h slv8.c slv8.h slv9.c slv9.h slv9a.c slv9a.h slvDOF.c slvDOF.h slv_client.h slv_common.c slv_common.h slv_interface.c slv_interface.h slv_server.h slv_stdcalls.c slv_stdcalls.h slv_types.h system.c system.h var.c var.h
+""")
+
+utilitiessrcs = Split("""
+	ascConfig.h ascDynaLoad.c ascDynaLoad.h ascEnvVar.c ascEnvVar.h ascMalloc.c ascMalloc.h ascPanic.c ascPanic.h ascPrint.c ascPrint.h ascPrintType.h ascSignal.c ascSignal.h error.c error.h mem.c mem.h readln.c readln.h set.c set.h
+""")
+
+
+msvclibascsrcs = \
+	["../generic/compiler/"+i for i in compilersrcs] \
+	+ ["../generic/general/"+i for i in generalsrcs] \
+	+ ["../generic/packages/"+i for i in packagessrcs] \
+	+ ["../generic/solver/"+i for i in solversrcs] \
+	+ ["../generic/utilities/"+i for i in utilitiessrcs]
+
+Tool('msvs')(env)
+
+env.MSVSProject(target = 'libascend' + env['MSVSPROJECTSUFFIX'],
+                  srcs = msvclibascsrcs,
+                  buildtarget = libascend,
+                  variant = 'Debug')

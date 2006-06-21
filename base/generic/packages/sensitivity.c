@@ -2,40 +2,20 @@
   Sensititvity analysis code. Kirk Abbott.
 \*********************************************************************/
 
+#include "sensitivity.h"
+
 #include <string.h>
 #include <math.h>
-#include <utilities/ascConfig.h>
 #include <utilities/error.h>
-#include <compiler/instance_enum.h>
-#include <compiler/compiler.h>
-#include <general/list.h>
 #include <utilities/ascMalloc.h>
-#include <compiler/extfunc.h>
 #include <compiler/packages.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
-#include <solver/mtx.h>
-#include <solver/mtx_basic.h>
-#include <solver/mtx_perms.h>
-#include <solver/mtx_query.h>
-#include <solver/linsol.h>
-#include <solver/linsolqr.h>
-#include <solver/slv_types.h>
-#include <solver/var.h>
-#include <solver/rel.h>
-#include <solver/discrete.h>
-#include <solver/conditional.h>
-#include <solver/logrel.h>
-#include <solver/bnd.h>
-#include <solver/calc.h>
-#include <solver/relman.h>
-#include <solver/slv_common.h>
-#include <solver/slv_stdcalls.h>
-#include <solver/system.h>
-#include <solver/slv_client.h>
 #include <general/mathmacros.h>
+
+
 
 #define DEBUG 1
 
@@ -445,7 +425,7 @@ int SensitivityAllCheckArgs(struct gl_list_t *arglist, double *step_length)
 	@return int Number of relations in the system
 	@see slv_count_solvers_rels
 */
-static int NumberRels(slv_system_t sys)
+int NumberRels(slv_system_t sys)
 {
   static int nrels = -1;
   rel_filter_t rfilter;
@@ -466,6 +446,27 @@ static int NumberRels(slv_system_t sys)
   else return nrels;
 }
 
+int NumberIncludedRels(slv_system_t sys){
+  static int nrels = -1;
+  rel_filter_t rfilter;
+  int tmp;
+
+  if (!sys) { /* a NULL system may be used to reinitialise the count */
+    nrels = -1;
+    return -1;
+  }
+  if (nrels < 0) {
+    /*get used (included) relation count -- equalities only !*/
+    rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
+    rfilter.matchvalue = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
+    tmp = slv_count_solvers_rels(sys,&rfilter);
+    nrels = tmp;
+    return tmp;
+  } else {
+    return nrels;
+  }
+}
+
 /**
 	Looks like it returns the number of free variables in a solver's system
 
@@ -474,27 +475,30 @@ static int NumberRels(slv_system_t sys)
 
 	@see slv_count_solvers_vars
 */
-static int NumberFreeVars(slv_system_t sys)
-{
+int NumberFreeVars(slv_system_t sys){
+
   static int nvars = -1;
   var_filter_t vfilter;
   int tmp;
 
   if (!sys) {
+    /* no system: return error */
     nvars = -1;
     return -1;
   }
-  if (nvars < 0) {
-    /*get used (free and incident) variable count */
-    vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT  | VAR_SVAR | VAR_ACTIVE);
-    vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
-    tmp = slv_count_solvers_vars(sys,&vfilter);
-    nvars = tmp;
-    return tmp;
-  }
-  else return nvars;
-}
 
+  if (nvars >=0){
+    /* return stored value */
+    return nvars;
+  }
+
+  /* get used (free and incident) variable count */
+  vfilter.matchbits = (VAR_FIXED | VAR_INCIDENT  | VAR_SVAR | VAR_ACTIVE);
+  vfilter.matchvalue = (VAR_INCIDENT | VAR_SVAR | VAR_ACTIVE);
+  tmp = slv_count_solvers_vars(sys,&vfilter);
+  nvars = tmp;
+  return tmp;
+}
 
 /*
  * The following bit of code does the computation of the matrix
@@ -528,7 +532,7 @@ static int NumberFreeVars(slv_system_t sys)
  *  Calculates the entire jacobian.
  *  It is initially unscaled.
  */
-static int Compute_J(slv_system_t sys)
+int Compute_J(slv_system_t sys)
 {
   int32 row;
   var_filter_t vfilter;
@@ -567,15 +571,96 @@ static int Compute_J(slv_system_t sys)
   return(!calc_ok);
 }
 
+//-----------------------------------------------------------------
+// CODE FROM tcltk version:
+
+
+/**
+ * At this point we should have an empty jacobian. We now
+ * need to call relman_diff over the *entire* matrix.
+ * Calculates the entire jacobian. It is initially unscaled.
+ *
+ * Note: this assumes the sys given is using one of the ascend solvers
+ * with either linsol or linsolqr. Both are now allowed. baa 7/95
+ */
+#define SAFE_FIX_ME 0
+static int Compute_J_OLD(slv_system_t sys)
+{
+  int32 row;
+  var_filter_t vfilter;
+  linsol_system_t lin_sys = NULL;
+  linsolqr_system_t lqr_sys = NULL;
+  mtx_matrix_t mtx;
+  struct rel_relation **rlist;
+  int nrows;
+  int qr=0;
+#if DOTIME
+  double time1;
+#endif
+
+#if DOTIME
+  time1 = tm_cpu_time();
+#endif
+  /*
+   * Get the linear system from the solve system.
+   * Get the matrix from the linear system.
+   * Get the relations list from the solve system.
+   */
+  lin_sys = slv_get_linsol_sys(sys);
+  if (lin_sys==NULL) {
+    qr=1;
+    lqr_sys=slv_get_linsolqr_sys(sys);
+  }
+  mtx = slv_get_sys_mtx(sys);
+  if (mtx==NULL || (lin_sys==NULL && lqr_sys==NULL)) {
+    FPRINTF(stderr,"Compute_dy_dx: error, found NULL.\n");
+    return 1;
+  }
+  rlist = slv_get_solvers_rel_list(sys);
+  nrows = NumberIncludedRels(sys);
+
+  calc_ok = TRUE;
+  vfilter.matchbits = VAR_SVAR;
+  vfilter.matchvalue = VAR_SVAR;
+  /*
+   * Clear the entire matrix and then compute
+   * the gradients at the current point.
+   */
+  mtx_clear_region(mtx,mtx_ENTIRE_MATRIX);
+  for(row=0; row<nrows; row++) {
+    struct rel_relation *rel;
+    /* added  */
+    double resid;
+
+    rel = rlist[mtx_row_to_org(mtx,row)];
+    (void)relman_diffs(rel,&vfilter,mtx,&resid,SAFE_FIX_ME);
+
+    /* added  */
+    rel_set_residual(rel,resid);
+
+  }
+  if (qr) {
+    linsolqr_matrix_was_changed(lqr_sys);
+  } else {
+    linsol_matrix_was_changed(lin_sys);
+  }
+#if DOTIME
+  time1 = tm_cpu_time() - time1;
+  FPRINTF(stderr,"Time taken for Compute_J = %g\n",time1);
+#endif
+  return(!calc_ok);
+}
+
 
 /*
 	LU Factor Jacobian
 
 	@note The RHS will have been  will already have been added before
 		calling this function.
+
+	THERE SEEM TO BE TWO VERSIONS OF THIS... WHAT'S THE STORY?
 */
-static int LUFactorJacobian(slv_system_t sys,int rank)
-{
+int LUFactorJacobian1(slv_system_t sys,int rank){
   linsolqr_system_t lqr_sys;
   mtx_region_t region;
   enum factor_method fm;
@@ -594,30 +679,98 @@ static int LUFactorJacobian(slv_system_t sys,int rank)
 }
 
 /**
-	Compute dy/dx using the 'smart' approach
-	@see sensitivity.c
+	This is the other version of this, pulled in from Tcl/Tk files.
 
-	@note At this point, the RHS would already have been added.
+ * Note a rhs would have been previously added
+ * to keep the system happy.
+ * Now handles both linsol and linsolqr as needed.
+ * Assumes region to be factored is in upper left corner.
+ * Region is reordered using the last reorder method used in
+ * the case of linsolqr, so all linsolqr methods are available
+ * to this routine.
 */
-static int Compute_dy_dx_smart(slv_system_t sys,
-			       real64 *rhs,
-			       real64 **dy_dx,
-			       int *inputs, int ninputs,
-			       int *outputs, int noutputs)
+int LUFactorJacobian(slv_system_t sys){
+  linsol_system_t lin_sys=NULL;
+  linsolqr_system_t lqr_sys=NULL;
+  mtx_region_t region;
+  int size,nvars,nrels;
+#if DOTIME
+  double time1;
+#endif
+
+#if DOTIME
+  time1 = tm_cpu_time();
+#endif
+
+  nvars = NumberFreeVars(sys);
+  nrels = NumberIncludedRels(sys);
+  size = MAX(nvars,nrels);		/* get size of matrix */
+  mtx_region(&region,0,size-1,0,size-1);	/* set the region */
+  lin_sys = slv_get_linsol_sys(sys);	/* get the linear system */
+  if (lin_sys!=NULL) {
+    linsol_matrix_was_changed(lin_sys);
+    linsol_reorder(lin_sys,&region);	/* This was entire_MATRIX */
+    linsol_invert(lin_sys,&region); 	/* invert the given matrix over
+                                         * the given region */
+  } else {
+    enum factor_method fm;
+    int oldtiming;
+    lqr_sys = slv_get_linsolqr_sys(sys);
+    /* WE are ASSUMING that the system has been qr_preped before now! */
+    linsolqr_matrix_was_changed(lqr_sys);
+    linsolqr_reorder(lqr_sys,&region,natural); /* should retain original */
+    fm = linsolqr_fmethod(lqr_sys);
+    if (fm == unknown_f) {
+      fm = ranki_kw2; /* make sure somebody set it */
+    }
+    oldtiming = g_linsolqr_timing;
+    g_linsolqr_timing = 0;
+    linsolqr_factor(lqr_sys,fm);
+    g_linsolqr_timing = oldtiming;
+  }
+
+#if DOTIME
+  time1 = tm_cpu_time() - time1;
+  FPRINTF(stderr,"Time taken for LUFactorJacobian = %g\n",time1);
+#endif
+  return 0;
+}
+
+
+/*
+ * At this point the rhs would have already been added.
+ *
+ * Extended to handle either factorization code:
+ * linsol or linsolqr.
+ */
+int Compute_dy_dx_smart(slv_system_t sys,
+                               real64 *rhs,
+                               real64 **dy_dx,
+                               int *inputs, int ninputs,
+                               int *outputs, int noutputs)
 {
-  linsolqr_system_t lqr_sys;
+  linsol_system_t lin_sys=NULL;
+  linsolqr_system_t lqr_sys=NULL;
   mtx_matrix_t mtx;
   int col,current_col;
   int row;
   int capacity;
   real64 *solution = NULL;
-  int i,j,k;
+  int i,j;
+#if DOTIME
+  double time1;
+#endif
 
-  lqr_sys = slv_get_linsolqr_sys(sys); /* get the linear system */
-  mtx = linsolqr_get_matrix(lqr_sys); /* get the matrix */
+#if DOTIME
+  time1 = tm_cpu_time();
+#endif
+
+  lin_sys = slv_get_linsol_sys(sys); 	/* get the linear system */
+  lqr_sys = slv_get_linsolqr_sys(sys); 	/* get the linear system */
+  mtx = slv_get_sys_mtx(sys);	 	/* get the matrix */
 
   capacity = mtx_capacity(mtx);
-  solution = (real64 *)asccalloc(capacity,sizeof(real64));
+  solution = ASC_NEW_ARRAY_CLEAR(real64,capacity);
 
   /*
    * The array inputs is a list of original indexes, of the variables
@@ -627,36 +780,52 @@ static int Compute_dy_dx_smart(slv_system_t sys,
    * necessary for the computed solution as the solve routine returns
    * the results in the *original* order rather than the *current* order.
    */
-  for (j=0;j<ninputs;j++) {
-    col = inputs[j];
-    current_col = mtx_org_to_col(mtx,col);
-    mtx_org_col_vec(mtx,current_col,rhs,mtx_ALL_ROWS);
-    /* get the column in org row indexed order */
+  if (lin_sys!=NULL) {
+    for (j=0;j<ninputs;j++) {
+      col = inputs[j];
+      current_col = mtx_org_to_col(mtx,col);
+      mtx_org_col_vec(mtx,current_col,rhs,mtx_ALL_ROWS); /* get the column */
 
-    linsolqr_rhs_was_changed(lqr_sys,rhs);
-    linsolqr_solve(lqr_sys,rhs);			/* solve */
-    linsolqr_copy_solution(lqr_sys,rhs,solution);	/* get the solution */
+      linsol_rhs_was_changed(lin_sys,rhs);
+      linsol_solve(lin_sys,rhs);			/* solve */
+      linsol_copy_solution(lin_sys,rhs,solution);	/* get the solution */
 
-#if DEBUG
-    FPRINTF(stderr,"This is the rhs and solution for rhs #%d orgcol%d\n",j,col);
-    for (k=0;k<capacity;k++) {
-      FPRINTF(stderr,"%12.8g  %12.8g\n",rhs[k],solution[k]);
+      for (i=0;i<noutputs;i++) {	/* copy the solution to dy_dx */
+        row = outputs[i];
+        dy_dx[i][j] = -1.0*solution[row]; /* the -1 comes from the lin alg */
+      }
+      /*
+       * zero the vector using the incidence pattern of our column.
+       * This is faster than the naiive approach of zeroing
+       * everything especially if the vector is large.
+       */
+      mtx_zr_org_vec_using_col(mtx,current_col,rhs,mtx_ALL_ROWS);
     }
-#endif
+  } else {
+    for (j=0;j<ninputs;j++) {
+      col = inputs[j];
+      current_col = mtx_org_to_col(mtx,col);
+      mtx_org_col_vec(mtx,current_col,rhs,mtx_ALL_ROWS);
 
-    for (i=0;i<noutputs;i++) {	/* copy the solution to dy_dx */
-      row = outputs[i];
-      dy_dx[i][j] = -1.0*solution[row]; /* the -1 comes from the lin algebra */
+      linsolqr_rhs_was_changed(lqr_sys,rhs);
+      linsolqr_solve(lqr_sys,rhs);
+      linsolqr_copy_solution(lqr_sys,rhs,solution);
+
+      for (i=0;i<noutputs;i++) {
+        row = outputs[i];
+        dy_dx[i][j] = -1.0*solution[row];
+      }
+      mtx_zr_org_vec_using_col(mtx,current_col,rhs,mtx_ALL_ROWS);
     }
-    /*
-     * zero the vector using the incidence pattern of our column.
-     * This is faster than the naiive approach of zeroing
-     * everything especially if the vector is large.
-     */
-    mtx_zr_org_vec_using_col(mtx,current_col,rhs,mtx_ALL_ROWS);
+  }
+  if (solution) {
+    ascfree((char *)solution);
   }
 
-  if (solution) ascfree((char *)solution);
+#if DOTIME
+  time1 = tm_cpu_time() - time1;
+  FPRINTF(stderr,"Time for Compute_dy_dx_smart = %g\n",time1);
+#endif
   return 0;
 }
 
@@ -675,7 +844,7 @@ static int ComputeInverse(slv_system_t sys,
 
   capacity = mtx_capacity(mtx);
   zero_vector(rhs,capacity);		/* zero the rhs */
-  solution = (real64 *)asccalloc(capacity,sizeof(real64));
+  solution = ASC_NEW_ARRAY_CLEAR(real64,capacity);
 
   order = mtx_order(mtx);
   for (j=0;j<order;j++) {
@@ -746,7 +915,7 @@ int sensitivity_anal(
 
   branch = gl_fetch(arglist,2); /* input args */
   ninputs = gl_length(branch);
-  inputs_ndx_list = (int *)ascmalloc(ninputs*sizeof(int));
+  inputs_ndx_list = ASC_NEW_ARRAY(int,ninputs);
 
   num_vars = slv_get_num_solvers_vars(sys);
   for (c=0;c<ninputs;c++) {
@@ -774,7 +943,7 @@ int sensitivity_anal(
    */
   branch = gl_fetch(arglist,3); /* output args */
   noutputs = gl_length(branch);
-  outputs_ndx_list = (int *)ascmalloc(noutputs*sizeof(int));
+  outputs_ndx_list = ASC_NEW_ARRAY(int,noutputs);
   for (c=0;c<noutputs;c++) {
     atominst = (struct Instance *)gl_fetch(branch,c+1);
     found = 0;
@@ -813,9 +982,9 @@ int sensitivity_anal(
   lqr_sys = slv_get_linsolqr_sys(sys);	/* get the linear system */
   mtx = linsolqr_get_matrix(lqr_sys);	/* get the matrix */
   capacity = mtx_capacity(mtx);
-  scratch_vector = (real64 *)asccalloc(capacity,sizeof(real64));
+  scratch_vector = ASC_NEW_ARRAY_CLEAR(real64,capacity);
   linsolqr_add_rhs(lqr_sys,scratch_vector,FALSE);
-  result = LUFactorJacobian(sys,dof->structural_rank);
+  result = LUFactorJacobian1(sys,dof->structural_rank);
   if (result) {
     FPRINTF(stderr,"Early termination due to failure in LUFactorJacobian\n");
     goto error;
@@ -874,8 +1043,8 @@ static int DoDataAnalysis(struct var_variable **inputs,
   double input_nominal,maxvalue,sum;
   int i,j;
 
-  norm_1 = (double *)asccalloc(ninputs,sizeof(double));
-  norm_2 = (double *)asccalloc(ninputs,sizeof(double));
+  norm_1 = ASC_NEW_ARRAY_CLEAR(double,ninputs);
+  norm_2 = ASC_NEW_ARRAY_CLEAR(double,ninputs);
 
   fp = fopen("sensitivity.out","w+");
   if (!fp) return 0;
@@ -941,7 +1110,7 @@ static int DoProject_X(struct var_variable **old_inputs,
   real64 *delta_x;
   int i,j;
 
-  delta_x = (real64 *)asccalloc(ninputs,sizeof(real64));
+  delta_x = ASC_NEW_ARRAY_CLEAR(real64,ninputs);
 
   for (j=0;j<ninputs;j++) {
     delta_x[j] = var_value(new_inputs[j]) - var_value(old_inputs[j]);
@@ -969,6 +1138,7 @@ static int DoProject_X(struct var_variable **old_inputs,
   return 0;
 }
 #endif
+
 
 /// Sensitivity analysis for an entire system
 /**
@@ -1052,7 +1222,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
   inputs = (struct var_variable **)ascmalloc((ninputs+1)*sizeof(struct var_variable *));
   new_inputs = (struct var_variable **)ascmalloc((ninputs+1)*sizeof(struct var_variable *));
 
-  inputs_ndx_list = (int *)ascmalloc(ninputs*sizeof(int));
+  inputs_ndx_list = ASC_NEW_ARRAY(int,ninputs);
   for (c=0;c<ninputs;c++) {
     inputs[c] = (struct var_variable *)gl_fetch(branch2,c+1);
     inputs_ndx_list[c] = var_mindex(inputs[c]);
@@ -1069,7 +1239,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
   vfilter.matchbits = 0;
   noutputs = slv_count_solvers_vars(sys,&vfilter);
   outputs = (struct var_variable **)ascmalloc((noutputs+1)*sizeof(struct var_variable *));
-  outputs_ndx_list = (int *)ascmalloc(noutputs*sizeof(int));
+  outputs_ndx_list = ASC_NEW_ARRAY(int,noutputs);
   ptr = vp = slv_get_solvers_var_list(sys);
   for (c=0;c<noutputs;c++) {
     outputs[c] = *ptr;
@@ -1100,9 +1270,9 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
   lqr_sys = slv_get_linsolqr_sys(sys);	/* get the linear system */
   mtx = linsolqr_get_matrix(lqr_sys);	/* get the matrix */
   capacity = mtx_capacity(mtx);
-  scratch_vector = (real64 *)asccalloc(capacity,sizeof(real64));
+  scratch_vector = ASC_NEW_ARRAY_CLEAR(real64,capacity);
   linsolqr_add_rhs(lqr_sys,scratch_vector,FALSE);
-  result = LUFactorJacobian(sys,dof->structural_rank);
+  result = LUFactorJacobian1(sys,dof->structural_rank);
   if (result) {
     FPRINTF(stderr,"Early termination due to failure in LUFactorJacobian\n");
     goto error;
@@ -1194,5 +1364,7 @@ int sensitivity_register(void){
 
   return result;
 }
+
+
 
 #undef DEBUG

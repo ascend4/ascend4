@@ -1450,7 +1450,7 @@ void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
     len=reg->col.high-reg->col.low+1;
     if (len>1) {
       /* create sort space */
-      top=sort=(int *)ascmalloc(sizeof(int)*len);
+      top=sort=ASC_NEW_ARRAY(int,len);
       if (ISNULL(sort)) {
         FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_org_permute\n");
         FPRINTF(g_mtxerr,"        Insufficient memory. Not permuted.\n");
@@ -1478,7 +1478,7 @@ void mtx_org_permute(mtx_matrix_t mtx, mtx_region_t *reg)
     /* ditto for rows */
     len=reg->row.high-reg->row.low+1;
     if (len>1) {
-      top=sort=(int *)ascmalloc(sizeof(int)*len);
+      top=sort=ASC_NEW_ARRAY(int,len);
       if (ISNULL(sort)) {
         FPRINTF(g_mtxerr,"ERROR:  (mtx) mtx_org_permute\n");
         FPRINTF(g_mtxerr,"        Insufficient memory. Not permuted.\n");

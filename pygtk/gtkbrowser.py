@@ -74,8 +74,12 @@ try:
 		print_loading_status("","FAILED TO LOAD MATPLOTLIB")
 		raise RuntimeError("Failed to load MATPLOTLIB (is it installed?). Details:"+str(e))
 
-	print_loading_status("Loading ASCEND python modules")
+	print_loading_status("Loading IPython")
+	import console;
+	if not console.have_ipython:
+		print_loading_status("","IPython couldn't be loaded")
 
+	print_loading_status("Loading ASCEND python modules")
 	from preferences import *      # loading/saving of .ini options
 	from solverparameters import * # 'solver parameters' window
 	from help import *             # viewing help files
@@ -86,7 +90,9 @@ try:
 	from diagnose import * 	       # for diagnosing block non-convergence
 	from solverreporter import *   # solver status reporting
 	from modelview import *        # model browser
+	from integrator import *    # integrator dialog
 	import config
+
 except RuntimeError, e:
 	print "ASCEND had problems starting up. Please report the following"
 	print "error message at http://mantis.cruncher2.dyndns.org/."
@@ -256,6 +262,9 @@ class Browser:
 		
 		self.solvebutton=glade.get_widget("solvebutton")
 		self.solvebutton.connect("clicked",self.solve_click)
+
+		self.integratebutton=glade.get_widget("integratebutton")
+		self.integratebutton.connect("clicked",self.integrate_click)
 
 		self.checkbutton=glade.get_widget("checkbutton")
 		self.checkbutton.connect("clicked",self.check_click)
@@ -469,8 +478,7 @@ class Browser:
 			_lll=len(modules)
 		except:
 			_msg = "UNABLE TO ACCESS MODULES LIST. This is bad.\n"+\
-			"Check your SWIG configuration (check for warnings during build)."+\
-			"\nThis is a known problem with the MinGW build at present."
+			"Check your SWIG configuration (check for warnings during build)."
 			
 			self.reporter.reportError(_msg)
 			raise RuntimeError(_msg)
@@ -553,7 +561,7 @@ class Browser:
 		_activemethod = None;
 		for _m in _methods:
 			_i = self.methodstore.append([_m.getName()])
-			if _m.getName()=="default_self":
+			if _m.getName()=="on_load":
 				self.methodsel.set_active_iter(_i)
 
 		self.modelview.setSimulation(self.sim)
@@ -571,7 +579,7 @@ class Browser:
 	def do_solve(self):
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
-			return;
+			return
 
 		self.start_waiting("Solving...")
 
@@ -587,9 +595,22 @@ class Browser:
 		self.sim.processVarStatus()
 		self.modelview.refreshtree()
 
+	def do_integrate(self):
+		if not self.sim:
+			self.reporter.reportError("No model selected yet")
+			return
+		integwin = IntegratorWindow(self,self.sim)		
+		_integratorreporter = integwin.run()
+		if _integratorreporter!=None:
+			_integratorreporter.run()
+			self.sim.processVarStatus()
+			self.modelview.refreshtree()
+		
+
 	def do_check(self):
 		if not self.sim:
 			self.reporter.reportError("No model selected yet")
+			return
 
 		self.start_waiting("Checking system...")
 
@@ -774,7 +795,7 @@ class Browser:
 #   BUTTON METHODS
 
 	def open_click(self,*args):
-		print_loading_status("CURRENT FILEOPENPATH is",self.fileopenpath)
+		#print_loading_status("CURRENT FILEOPENPATH is",self.fileopenpath)
 		dialog = gtk.FileChooserDialog("Open ASCEND model...",
 			self.window,
 			gtk.FILE_CHOOSER_ACTION_OPEN,
@@ -798,7 +819,7 @@ class Browser:
 
 		response = dialog.run()
 		_filename = dialog.get_filename()
-		print "FILENAME SELECTED:",_filename
+		print "\nFILENAME SELECTED:",_filename
 		
 		_path = dialog.get_current_folder()
 		if _path:
@@ -832,6 +853,15 @@ class Browser:
 	def solve_click(self,*args):
 		#self.reporter.reportError("Solving simulation '" + self.sim.getName().toString() +"'...")
 		self.do_solve()
+
+	def console_click(self,*args):
+		try:
+			console.start(self)
+		except RuntimeError,e:
+			self.reporter.reportError("Unable to start console: "+str(e));
+
+	def integrate_click(self,*args):
+		self.do_integrate()
 	
 	def check_click(self,*args):
 		self.do_check()

@@ -35,7 +35,7 @@
 #include "compiler.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "slist.h"
 #include "proc.h"

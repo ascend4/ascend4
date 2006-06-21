@@ -9,6 +9,7 @@
 %include <python/std_except.i>
 %include <python/std_vector.i>
 %include <python/std_set.i>
+%include <python/std_map.i>
 
 %{
 #include "library.h"
@@ -105,6 +106,7 @@ public:
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
 %template(InstancSet) std::set<Instanc,InstancCompare>;
+%template(IntStringMap) std::map<int,std::string>;
 
 %rename(Instance) Instanc;
 %rename(Name) Nam;#include "incidencematrix.h"

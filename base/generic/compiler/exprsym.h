@@ -1,51 +1,41 @@
-/*
- *  Symbolic Expression Manipulation
+/*	ASCEND modelling environment
+	Copyright (C) 1994,1995 Kirk Andre Abbott.
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Symbolic Expression Manipulation
+	
+	Requires:
+	#utilities/ascConfig.h"
+	#include "instance_enum.h"
+
+	The author of these routines could not be bothered with dimensionality, so 
+	don't expect much in the way of output that dimensionally checks or can be
+	converted to real values in non-SI units unless the input was correct.
+
+	This code does not deal well with e_zero. e_zero should not exist in good 
+	models in any case.
+*//*
  *  by Kirk Abbott
  *  Created: Novermber 21, 1994
- *  Version: $Revision: 1.5 $
- *  Version control file: $RCSfile: exprsym.h,v $
- *  Date last modified: $Date: 1997/07/18 12:29:23 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the ASCEND compiler.
- *
- *  Copyright (C) 1994,1995 Kirk Andre Abbott.
- *  Copyright (C) 2006 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+ *  Last in CVS: $Revision: 1.5 $ $Date: 1997/07/18 12:29:23 $ $Author: mthomas $
+*/
 
-/** @file
- *  Symbolic Expression Manipulation
- *  <pre>
- *  When #including .h, make sure these files are #included first:
- *         #utilities/ascConfig.h"
- *         #include "instance_enum.h"
- *  </pre>
- *
- *  The user is reminded that the author of these routines
- *  could not be bothered with dimensionality, so don't expect
- *  much in the way of output that dimensionally checks or
- *  can be converted to real values in non-SI units unless the
- *  input was correct.
- *
- *  The user is also reminded that this code does not deal well
- *  with e_zero. e_zero should not exist in good models in any
- *  case.
- */
 
 #ifndef ASC_EXPRSYM_H
 #define ASC_EXPRSYM_H

@@ -306,7 +306,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
   }
   /* copy the block list. there is at least one if rank >=1 as above */
   len = mtx_number_of_blocks(mtx);
-  newblocks = (mtx_region_t *)ascmalloc(len*sizeof(mtx_region_t));
+  newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if (newblocks == NULL) {
     mtx_destroy(mtx);
     return 2;
@@ -559,17 +559,17 @@ int slv_block_partition_harwell(slv_system_t sys)
 
   size = MAX(nrow,ncol);
   /* Create vectors for fortran calls */
-  icn = (int32 *)ascmalloc(licn*sizeof(int32));
-  ip = (int32 *)ascmalloc(size*sizeof(int32));
-  lenr = (int32 *)ascmalloc(size*sizeof(int32));
-  iperm = (int32 *)ascmalloc(size*sizeof(int32));
-  iw1 = (int32 *)ascmalloc(size*sizeof(int32));
-  iw2 = (int32 *)ascmalloc(size*sizeof(int32));
-  iw3 = (int32 *)ascmalloc(size*sizeof(int32));
-  arp = (int32 *)ascmalloc(size*sizeof(int32));
-  ipnew = (int32 *)ascmalloc(size*sizeof(int32));
-  ib = (int32 *)ascmalloc(size*sizeof(int32));
-  row_perm = (int32 *)ascmalloc(size*sizeof(int32));
+  icn = ASC_NEW_ARRAY(int32,licn);
+  ip = ASC_NEW_ARRAY(int32,size);
+  lenr = ASC_NEW_ARRAY(int32,size);
+  iperm = ASC_NEW_ARRAY(int32,size);
+  iw1 = ASC_NEW_ARRAY(int32,size);
+  iw2 = ASC_NEW_ARRAY(int32,size);
+  iw3 = ASC_NEW_ARRAY(int32,size);
+  arp = ASC_NEW_ARRAY(int32,size);
+  ipnew = ASC_NEW_ARRAY(int32,size);
+  ib = ASC_NEW_ARRAY(int32,size);
+  row_perm = ASC_NEW_ARRAY(int32,size);
 
 
 /* Fill incidence vectors and place included relations w/o
@@ -674,7 +674,7 @@ int slv_block_partition_harwell(slv_system_t sys)
 
   /* copy the block list. there is at least one if rank >=1 as above */
   len = num;
-  newblocks = (mtx_region_t *)ascmalloc(len*sizeof(mtx_region_t));
+  newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if (newblocks == NULL) {
     return 2;
   }
@@ -1574,7 +1574,7 @@ int slv_log_block_partition(slv_system_t sys)
   mtx_partition(mtx);
   /* copy the block list. there is at least one if rank >=1 as above */
   len = mtx_number_of_blocks(mtx);
-  newblocks = (mtx_region_t *)ascmalloc(len*sizeof(mtx_region_t));
+  newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if (newblocks == NULL) {
     mtx_destroy(mtx);
     return 2;

@@ -43,7 +43,7 @@
 #include "parentchild.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "instantiate.h"
 #include <solver/slv_types.h>

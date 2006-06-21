@@ -2,6 +2,11 @@
 	SWIG interface for accessing Solver and choosing solver parameters
 */
 
+%{
+#include "integrator.h"
+#include "integratorreporter.h"
+%}
+
 class Solver{
 public:
 	Solver(const std::string &name);
@@ -152,7 +157,7 @@ public:
 class Variable{
 public:
 	explicit Variable(const Variable &old);
-	const std::string &getName() const;
+	const std::string getName() const;
 	const double getValue() const;
 	const double getNominal() const;
 	const double getLowerBound() const;
@@ -169,7 +174,7 @@ public:
 class Relation{
 public:
 	explicit Relation(const Relation &old);
-	const std::string &getName();
+	const std::string getName();
 	const double &getResidual();
 };
 
@@ -224,3 +229,15 @@ public:
 	virtual void finalise(SolverStatus *status);
 };
 
+%apply SWIGTYPE *DISOWN { IntegratorReporterCxx *reporter };
+
+%include "integrator.h"
+
+%feature("director") IntegratorReporterCxx;
+
+%ignore ascxx_integratorreporter_init;
+%ignore ascxx_integratorreporter_write;
+%ignore ascxx_integratorreporter_write_obs;
+%ignore ascxx_integratorreporter_close;
+
+%include "integratorreporter.h"

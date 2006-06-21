@@ -42,7 +42,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "child.h"
 #include "childinfo.h"
 #include "type_desc.h"
@@ -1092,6 +1092,7 @@ struct Instance *ChildByChar(CONST struct Instance *inst,symchar *name)
 {
   unsigned long ndx;
   struct InstanceName childname;
+  assert(name!=NULL);
   assert(AscFindSymbol(name)!=NULL);
 
   if (inst==NULL || name == NULL) {

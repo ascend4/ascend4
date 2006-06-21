@@ -21,34 +21,34 @@
 	@file
 	Relation module for the SLV solver.
 
-	This is the ascend version of the rel module.  This
-	version should be used by any user who receives his/her
-	equations directly from an instance tree created by the
-	ASCEND compiler.
+	This module provides a SLV solver (the "client") with access to
+	relations present in the ASCEND compiler (the "server").
 
-	Dates:        06/90 - original version
-				  04/94 - added rel_apply_filter() which uses the new
-						  rel_filter_t data structure for perfoming all
-						  relation filtering needs (eliminating the
-						  filter module)
+	Access to ASCEND relations is abstracted so that SLV solvers
+	can theoretically be used to solve other kinds of systems as
+	well. @see analyze.h
 
-	Requires:     #include "utilities/ascConfig.h"
-				  #include "var.h"
+	04/94 - added rel_apply_filter() which uses the new
+			rel_filter_t data structure for perfoming all
+			relation filtering needs (eliminating the
+			filter module)
 
-	SERVER ONLY:  #include "expr.h"
-				  #include "types.h"
-				  #include "extfunc.h"
-				  #include "relation.h"
-				  #include "packages.h"
-				  #include "extcall.h"
-				  #include "mtx.h"
+	Client (ie to access this functionality) requires:
+	#include "utilities/ascConfig.h"
+	#include "var.h"
+
+	Server (ie to build rel.c) requires:
+	#include "expr.h" ??
+	#include "expr_types.h" ??
+	#include "extfunc.h"
+	#include "relation.h"
+	#include "packages.h"
+	#include "extcall.h"
+	#include "mtx.h"
 *//*
 	by Karl Michael Westerberg and Joseph Zaher
 	Created: 2/6/90
-	Version: $Revision: 1.41 $
-	Version control file: $RCSfile: rel.h,v $
-	Date last modified: $Date: 1998/02/05 15:59:24 $
-	Last modified by: $Author: ballan $
+	Last CVS version: $Revision: 1.41 $ $Date: 1998/02/05 15:59:24 $ $Author: ballan $
 */
 
 #ifndef ASC_REL_H
@@ -673,7 +673,7 @@ extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
 #ifdef _SLV_SERVER_C_SEEN_
 /*
  *  requires #include "expr.h"
- *  requires #include "types.h"
+ *  requires #include "expr_types.h"
  *  requires #include "extfunc.h"
  *  requires #include "relation.h"
  *  requires #include "packages.h"

@@ -194,6 +194,7 @@ IncidenceMatrix::getBlockVars(const int &block){
 
 const vector<Relation>
 IncidenceMatrix::getBlockRels(const int &block){
+	CONSOLE_DEBUG("...");
 	if(!is_built){
 		buildPlotData();
 	}
@@ -208,6 +209,7 @@ IncidenceMatrix::getBlockRels(const int &block){
 	for(int j=low; j<=high; ++j){
 		v.push_back(getRelation(j));
 	}
+	CONSOLE_DEBUG("...");
 	return v;
 }
 	

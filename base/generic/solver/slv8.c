@@ -1547,7 +1547,7 @@ static linsol_system_t slv8_get_linsol_sys(slv_system_t server,
                                            SlvClientToken asys)
 {
   (void)server;  /* stop gcc whine about unused parameter */
-  (void)asys;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(asys);
   return( NULL );
 }
 
@@ -2017,8 +2017,8 @@ static void slv8_coirms(real64 *lower, real64 *curr, real64 *upper,
 
   if (sys->obj != NULL) {
     len = rel_n_incidences(sys->obj);
-    variables = (int32 *)ascmalloc(len*sizeof(int32));
-    derivatives = (real64 *)ascmalloc(len*sizeof(real64));
+    variables = ASC_NEW_ARRAY(int32,len);
+    derivatives = ASC_NEW_ARRAY(real64,len);
     relman_diff2(sys->obj,&vfilter,derivatives,variables,
 		 &(obj_count),SAFE_CALC);
   }
@@ -2176,8 +2176,8 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
   jac_row = (int32 *)ascmalloc((*n)*sizeof(int32));
   if (*mode == 2 || *mode == 3) {
     len = sys->con.maxrow;
-    variables = (int32 *)ascmalloc(len*sizeof(int32));
-    derivatives = (real64 *)ascmalloc(len*sizeof(real64));
+    variables = ASC_NEW_ARRAY(int32,len);
+    derivatives = ASC_NEW_ARRAY(real64,len);
     vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED);
     vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
     for (offset = row = sys->J.reg.row.low;
@@ -2280,8 +2280,8 @@ static void slv8_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
   }
   if (*mode == 2 || *mode == 3) {
     len = sys->con.maxrow;
-    variables = (int32 *)ascmalloc(len*sizeof(int32));
-    derivatives = (real64 *)ascmalloc(len*sizeof(real64));
+    variables = ASC_NEW_ARRAY(int32,len);
+    derivatives = ASC_NEW_ARRAY(real64,len);
     vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR | VAR_FIXED);
     vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
 

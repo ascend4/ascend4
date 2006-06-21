@@ -22,10 +22,12 @@
  	@file
 	Variable module of the SLV solver.
 
-	This is the ascend version of the var module.  This
-	version should be used by any user who receives his/her
-	equations indirectly from an instance tree created by the
-	ASCEND compiler.
+	This module provides a SLV solver (the "client") with access to
+	variables present in the ASCEND compiler (the "server").
+
+	Access to ASCEND variables is abstracted so that SLV solvers
+	can theoretically be used to solve other kinds of systems as
+	well. @see analyze.h
 
 	The idea of a var makes no sense outside the context of
 	a slv_system_t, so some of the functions here may require
@@ -48,7 +50,7 @@
 	@TODO
 	At present there is some insanity about asking the instance tree
 	vs asking our data structure about the flag values - This needs to
-	be fixed (see longer BAA comment in solver/var.h).
+	be fixed (see longer BAA comment in var.h).
 *//*
 	Authors: Karl Westerberg and Joseph Zaher
 	Version: $Revision: 1.26 $

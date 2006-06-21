@@ -59,6 +59,7 @@
 # ifdef __MINGW32__
 #  include <io.h>
 #  include <limits.h>
+#  include <sys/stat.h>
 # else
 #  include <sys/stat.h>
 # endif
@@ -258,7 +259,7 @@ ASC_DLLSPEC(int) ospath_searchpath_length(struct FilePath **searchpath);
 /**
 	@return pointer to path component in which testfn passed, or else
 	NULL if no component passed the test. There is no need to free the returned
-	path component, as it will be freed when you (later) free the searchpath 
+	path component, as it will be freed when you (later) free the searchpath
 	param.
 */
 ASC_DLLSPEC(struct FilePath *) ospath_searchpath_iterate(

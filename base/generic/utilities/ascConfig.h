@@ -29,6 +29,8 @@
 	should be included AFTER tcl.h or tk.h, not before.
 
 	If including the file, you should also include utilities/error.h
+
+	@NOTE you must include <tcl.h> BEFORE this file for it to work properly.
 *//*
 	by Mark Thomas
 	Version: $Revision: 1.12 $

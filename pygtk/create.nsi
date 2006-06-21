@@ -61,6 +61,7 @@ Section "ASCEND (required)"
   SetOutPath $INSTDIR\models
   File /r /x .svn "..\models\*.a4*"
   File /r /x .svn "..\models\*.bz2"
+  File /r /x .svn "..\models\*.tcl"
 
   ; Tcl/Tk interface
   SetOutPath $INSTDIR\tcltk

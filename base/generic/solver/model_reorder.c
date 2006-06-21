@@ -69,7 +69,7 @@ mr_reorder_t *mr_reorder_create(slv_system_t slv, mtx_matrix_t mtx, int32 size)
   res->activelen = size;
   res->local = (int32 *)asccalloc(2*size,sizeof(int32));
   res->tmpmodlist = res->local+size; /* 2nd half of allocation is tmpmodlist */
-  res->active = (char *)asccalloc(size,sizeof(char));
+  res->active = ASC_NEW_ARRAY_CLEAR(char,size);
   if (res->local == NULL || res->active == NULL) {
     if(res->local !=NULL) ascfree(res->local);
     if(res->active !=NULL) ascfree(res->active);

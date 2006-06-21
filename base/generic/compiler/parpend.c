@@ -37,7 +37,7 @@
 #include "fractions.h"
 #include "compiler.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "instance_enum.h"
 #include "parpend.h"

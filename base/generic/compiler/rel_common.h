@@ -29,7 +29,7 @@
  *  <pre>
  *  When #including rel_common.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
- *         #include "types.h"
+ *         #include "expr_types.h"
  *  </pre>
  */
 

@@ -68,14 +68,14 @@ proc IVP.AWW.Integrator {qlfdid method relativeError maxNumberSolves xUnits init
                  if {[expr ($ascStopCondHit == 0)]} {
                      RUN $qlfdid.stepX;
                  }
- 	 	 SOLVE $qlfdid WITH QRSlv;
+                 SOLVE $qlfdid WITH QRSlv;
 	         if {!$ascSolvStatVect(converged)} {
                      error "Model solution $numberSolves: Equations for model did not converge.";
                  }
-	     }
+             }
              if  {[expr ($ascThisIsTheFinalStep == 1)]} {
                  error "Model solution $numberSolves: STOP condition reached";
-	     }
+             }
 
              RUN $qlfdid.setStopConditions;
              set ascStopCondHit [lindex [u_getval $qlfdid.stopCondHit] 0];

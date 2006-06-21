@@ -24,7 +24,7 @@
 	#include <stdio.h>
 	#include "utilities/ascConfig.h"
 	#include "compiler.h"
-	#include "types.h"
+	#include "expr_types.h"
 	#include "symtab.h"
 *//*
 	by Tom Epperly

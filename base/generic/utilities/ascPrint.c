@@ -238,7 +238,28 @@ int Asc_Putchar( int c )
   return Asc_Printf( "%c", c );
 }
 
-static int use_xterm_color = 0;
+static int color_test(){
+	static int use_xterm_color = 0;
+	char *term;
+	if(!use_xterm_color){
+		term = getenv("TERM");
+		if(term!=NULL){
+			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")==0){
+				fprintf(stderr,"\n\n\nCOLOR CODES \033[1mWILL\033[0m BE USED\n\n\n");
+				use_xterm_color=1;
+			}else{
+				use_xterm_color=-1;
+				Asc_FPrintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED\n\n\n");
+			}
+		}else{		
+			fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");
+			use_xterm_color=-1;
+		}
+	}else{
+		Asc_FPrintf(stderr,"color=%d",use_xterm_color);
+	}
+	return use_xterm_color;
+}
 
 /**
 	Little routine to aid output of XTERM colour codes where supported.
@@ -246,22 +267,9 @@ static int use_xterm_color = 0;
 */
 int color_on(FILE *f, const char *colorcode){
 #ifdef ASC_XTERM_COLORS
-	char *term;
-	if(!use_xterm_color){
-		term = getenv("TERM");
-		if(term!=NULL){
-			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")==0){
-				use_xterm_color=1;
-			}else{
-				use_xterm_color=-1;
-				Asc_FPrintf(stderr,"COLOR CODES WILL NOT BE USED\n");
-			}
-		}else{
-			use_xterm_color=-1;
-		}
-	}
+	int use_color = color_test();
 
-	if(colorcode!=NULL && use_xterm_color==1){
+	if(colorcode!=NULL && use_color==1){
 		return fprintf(f,"\033[%sm",colorcode);
 	}
 #endif
@@ -274,7 +282,8 @@ int color_on(FILE *f, const char *colorcode){
 */
 int color_off(FILE *f){
 #ifdef ASC_XTERM_COLORS
-	if(use_xterm_color==1){
+	int use_color = color_test();
+	if(use_color==1){
 		return fprintf(f,"\033[0m");
 	}
 #endif

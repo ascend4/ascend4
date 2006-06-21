@@ -53,7 +53,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "extcall.h"
 #include "mathinst.h"
 #include "instance_enum.h"
@@ -481,8 +481,8 @@ int CallBlackBox(struct Instance *inst,
 				 n_input_args+n_output_args);
 
     /* Create the work vectors. Load the input vector from the instance tree. */
-    inputs = (double *)asccalloc(ninputs,sizeof(double));
-    outputs = (double *)asccalloc(ninputs,sizeof(double));
+    inputs = ASC_NEW_ARRAY_CLEAR(double,ninputs);
+    outputs = ASC_NEW_ARRAY_CLEAR(double,ninputs);
     jacobian = (double *)asccalloc(ninputs*noutputs,sizeof(double));
     LoadInputVector(arglist,inputs,ninputs,n_input_args);
 

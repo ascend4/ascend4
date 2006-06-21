@@ -33,7 +33,9 @@ Variable::Variable(Simulation *sim, struct var_variable *var) : sim(sim), var(va
 
 const string
 Variable::getName() const{
+	if(var==NULL)throw runtime_error("Variable::Variable: var is NULL");
 	char *n = WriteInstanceNameString((struct Instance *)var_instance(var),sim->getModel().getInternalType());
+	if(n==NULL)throw runtime_error("Variable::Variable: n is NULL");
 	string name = n;
 	ascfree(n);
 

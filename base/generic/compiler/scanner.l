@@ -38,7 +38,7 @@
 #include "compiler/dimen.h"
 #include "compiler/functype.h"
 #include "compiler/func.h"
-#include "compiler/types.h"
+#include "compiler/expr_types.h"
 #include "compiler/stattypes.h"
 #include "compiler/fractions.h"
 #include "compiler/proc.h"
@@ -210,6 +210,7 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"DECREASING"		{ return DECREASING_TOK		; }
 <INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
 <INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
+<INITIAL>"DIFF"     	{ return DIFF_TOK		; }
 <INITIAL>"DIMENSION"		{ return DIMENSION_TOK		; }
 <INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_TOK	; }
 <INITIAL>"DO"			{ return DO_TOK			; }

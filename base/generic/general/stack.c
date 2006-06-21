@@ -50,7 +50,7 @@ struct gs_stack_t *gs_stack_create(unsigned long capacity)
   if (result) {
     result->size = 0;
     result->capacity = capacity;
-    result->data = (VOIDPTR *)ascmalloc(capacity*sizeof(VOIDPTR));
+    result->data = ASC_NEW_ARRAY(VOIDPTR,capacity);
     return result;
   }
   else{
@@ -98,7 +98,7 @@ static void gs_stack_expand(struct gs_stack_t *stack)
   stack->capacity += increment;
   if (!stack->capacity) {
     stack->capacity += increment;
-    stack->data = (VOIDPTR *)ascmalloc(increment*sizeof(VOIDPTR));
+    stack->data = ASC_NEW_ARRAY(VOIDPTR,increment);
   } else {
     stack->capacity += increment;
     stack->data =

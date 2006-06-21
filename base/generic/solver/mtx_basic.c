@@ -697,13 +697,13 @@ mtx_sparse_t *mtx_create_sparse(int32 cap) {
     FPRINTF(g_mtxerr,"ERROR: (mtx_create_sparse) Insufficient memory.\n");
     return ret;
   }
-  ret->data = (real64 *)ascmalloc(cap*sizeof(real64));
+  ret->data = ASC_NEW_ARRAY(real64,cap);
   if (ISNULL(ret->data)) {
     FPRINTF(g_mtxerr,"ERROR: (mtx_create_sparse) Insufficient memory.\n");
     ascfree(ret);
     return NULL;
   }
-  ret->idata = (int32 *)ascmalloc(cap*sizeof(int32));
+  ret->idata = ASC_NEW_ARRAY(int32,cap);
   if (ISNULL(ret->idata)) {
     FPRINTF(g_mtxerr,"ERROR: (mtx_create_sparse) Insufficient memory.\n");
     ascfree(ret->data);
@@ -1717,7 +1717,7 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len)
   if (len <= ret->cap || len <1) return 0; /* already big enough */
 
   if (ret->idata == NULL) {
-    inew = (int32 *)ascmalloc(sizeof(int32)*len);
+    inew = ASC_NEW_ARRAY(int32,len);
   } else {
     inew = (int32 *)ascrealloc(ret->idata,sizeof(int32)*len);
   }
@@ -1729,7 +1729,7 @@ static int enlarge_sparse(mtx_sparse_t *ret, int32 len)
   ret->idata = inew; /* dnew can still fail without losing inew memory. */
 
   if (ret->data == NULL) {
-    dnew = (real64 *)ascmalloc(sizeof(real64)*len);
+    dnew = ASC_NEW_ARRAY(real64,len);
   } else {
     dnew = (real64 *)ascrealloc(ret->data,sizeof(real64)*len);
   }

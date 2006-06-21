@@ -47,7 +47,7 @@
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/name.h>
 #include <compiler/nameio.h>
 #include <compiler/instance_enum.h>
@@ -328,7 +328,7 @@ static void CollectNote(struct Note *);
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DIFF_TOK DEFINITION_TOK DIMENSION_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
@@ -2429,6 +2429,11 @@ expr:
     | SYMBOL_TOK
 	{
 	  $$ = CreateSymbolExpr($1);
+	}
+    | DIFF_TOK '(' fname ')'
+	{
+      error_reporter_current_line(ASC_USER_WARNING,"'DIFF' is not yet implemented, treating as zero.",SCP($3));
+	  $$ = CreateDiffExpr($3); 
 	}
     | fname
 	{

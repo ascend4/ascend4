@@ -1,0 +1,60 @@
+REQUIRE "ivpsystem.a4l";
+REQUIRE "atoms.a4l";
+
+(* spring oscillation model. Intended to demonstrate second-order ODE *)
+MODEL spring;
+    x IS_A distance;
+	v_x IS_A speed;
+	a_x	IS_A acceleration;
+
+	t IS_A time;
+
+	(* equations of motion *)
+	F IS_A force;
+	k IS_A stiffness;
+	m IS_A mass;
+	F = -k*x;
+	F = m*a_x;
+	DIFF(v_x) = a_x;
+METHODS
+METHOD specify;
+	FIX m, k;
+END specify;
+
+METHOD default_self; (* dynamic vals *)
+	x := 1 {m};
+	v_x := 0 {m/s};
+	a_x := -1 {m/s^2};
+END default_self;
+
+METHOD values; (* fixed vals *)
+	m := 1 {kg};
+	k := 5 {N/kg};
+	t := 0 {s};
+	x := 1 {m};
+	v := 0 {m/s};
+END values;
+
+METHOD set_ode; (* this is where the current implementation sux *)
+	x.ode_id := 1;   x.ode_type := 1;
+	v_x.ode_id := 1; v_x.ode_type := 2;
+	a_x.ode_id := 1; a_x.ode_type := 3; 
+
+	t.ode_type :=-1;
+END set_ode;
+
+METHOD set_obs; (* this sux also *)
+	x.obs_id := 1;
+	v_x.obs_id := 2;
+	a_x.obs_id := 3;
+END set_obs;
+
+METHOD on_load;
+	RUN default_self;
+	RUN reset;
+	RUN specify;
+	RUN set_obs;
+	RUN set_ode;
+END on_load;
+
+END spring;

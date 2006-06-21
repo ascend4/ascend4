@@ -46,7 +46,7 @@
 #include "safe.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "vlist.h"
 #include "dimen_io.h"
 #include "instance_enum.h"
@@ -81,8 +81,9 @@ static struct fraction real_to_frac(double real)
 #undef START
 
 
-/*  Create a static buffer to use for temporary memory storage  */
-
+/**
+	Create a static buffer to use for temporary memory storage
+*/
 char *tmpalloc(int nbytes)
 /**
  ***  Temporarily allocates a given number of bytes.  The memory need
@@ -109,10 +110,10 @@ char *tmpalloc(int nbytes)
   return ptr;
 }
 
-
-
-/* it is questionable whether this should be unified with the
-   ArgsForToken function in relation.c */
+/**
+	it is questionable whether this should be unified with the
+	ArgsForToken function in relation.c
+*/
 int ArgsForRealToken(enum Expr_enum type)
 {
    switch(type) {
@@ -155,7 +156,9 @@ static int IsZero(struct dimnode *node)
   return FALSE;
 }
 
-/* what this does needs to be documented here */
+/*
+	@TODO what this does needs to be documented here
+*/
 static void apply_term_dimensions(struct relation *rel,
                                   struct relation_term *rt,
                                   struct dimnode *first,
@@ -559,18 +562,18 @@ int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
   ascfree(stack);
   return( consistent && !wild );
 }
-
-/*********************************************************************\
-  calculation functions
-\*********************************************************************/
 
-/* global relation pointer to avoid passing a relation recursively */
+/*------------------------------------------------------------------------------
+  CALCULATION FUNCTIONS
+*/
+
+/** global relation pointer to avoid passing a relation recursively */
 static struct relation *glob_rel;
 
-/* Note that ANY function calling RelationBranchEvaluator should set
+/** @NOTE ANY function calling RelationBranchEvaluator should set
    glob_rel to point at the relation being evaluated.  The calling
-   function should also set glob_rel = NULL when it is done. */
-
+   function should also set glob_rel = NULL when it is done.
+*/
 static double RelationBranchEvaluator(struct relation_term *term)
 {
   assert(term != NULL);
@@ -586,6 +589,8 @@ static double RelationBranchEvaluator(struct relation_term *term)
     return TermReal(term);
   case e_zero:
     return 0.0;
+  case e_diff:
+	return 0.0;
 
   case e_plus:
     return (RelationBranchEvaluator(TermBinLeft(term)) +
@@ -612,18 +617,19 @@ static double RelationBranchEvaluator(struct relation_term *term)
   }
 }
 
-/* RelationEvaluatePostfixBranch
- * This function is passed a relation pointer, r, a pointer, pos, to a
- * position in the postfix version of the relation (0<=pos<length), and
- * a flag, lhs, telling whether we are interested in the left(=1) or
- * right(=0) side of the relation.  This function will tranverse and
- * evaluate the subtree rooted at pos and will return the value as a
- * double.  To do its evaluation, this function goes backwards through
- * the postfix representation of relation and calls itself at each
- * node--creating a stack of function calls.
- * NOTE: This function changes the value of pos---to the position of
- * the deepest leaf visited
- */
+/**
+	This function is passed a relation pointer, r, a pointer, pos, to a
+	position in the postfix version of the relation (0<=pos<length), and
+	a flag, lhs, telling whether we are interested in the left(=1) or
+	right(=0) side of the relation.  This function will tranverse and
+	evaluate the subtree rooted at pos and will return the value as a
+	double.  To do its evaluation, this function goes backwards through
+	the postfix representation of relation and calls itself at each
+	node--creating a stack of function calls.
+
+	@NOTE: This function changes the value of pos---to the position of
+	the deepest leaf visited
+*/
 static double
 RelationEvaluatePostfixBranch(CONST struct relation *r,
                               unsigned long *pos,
@@ -639,6 +645,9 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
   case e_zero:
   case e_real:
     return TermReal(term);
+  case e_diff:
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Can't evaluate DIFF(...)");
+	return 0;
   case e_int:
     return TermInteger(term);
   case e_var:
@@ -706,6 +715,8 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
   case e_zero:
   case e_real:
     return TermReal(term);
+  case e_diff:
+	return 0; /* for the moment, all derivatives evaluate to zero */
   case e_int:
     return TermInteger(term);
   case e_var:
@@ -771,14 +782,14 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
   }
 }
 
-/* RelationEvaluateResidualPostfix
- * Yet another function for calculating the residual of a relation.
- * This function also uses the postfix version of the relations, but it
- * manages a stack(array) of doubles and calculates the residual in this
- * stack; therefore the function is not recursive.  If the funtion
- * cannot allocate memory for its stack, it returns 0.0, so there is
- * currently no way of knowing if this function failed.
- */
+/**
+	Yet another function for calculating the residual of a relation.
+	This function also uses the postfix version of the relations, but it
+	manages a stack(array) of doubles and calculates the residual in this
+	stack; therefore the function is not recursive.  If the funtion
+	cannot allocate memory for its stack, it returns 0.0, so there is
+	currently no way of knowing if this function failed.
+*/
 static double
 RelationEvaluateResidualPostfix(CONST struct relation *r)
 {
@@ -888,18 +899,18 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
 }
 
 
-/* RelationEvaluateResidualGradient
- * This function evaluates the residual and the gradient for the relation
- * r.  The calling function must provide a pointer to a double for the
- * residual and an array of doubles for the gradients.  This function
- * assumes r exists and that the pointers to the residual and gradients
- * are not NULL.  This function returns 0 is everythings goes o.k., and
- * 1 otherwise (out of memory).  The function computes the gradients by
- * maintaining a n stacks, where n = (number-of-variables-in-r + 1)
- * The +1 is for the residual.  The stacks come from a single array which
- * this function gets by calling tmpalloc_array.  Two macros are defined
- * to make referencing this array easier.
- */
+/**
+	This function evaluates the residual and the gradient for the relation
+	r.  The calling function must provide a pointer to a double for the
+	residual and an array of doubles for the gradients.  This function
+	assumes r exists and that the pointers to the residual and gradients
+	are not NULL.  This function returns 0 is everythings goes o.k., and
+	1 otherwise (out of memory).  The function computes the gradients by
+	maintaining a n stacks, where n = (number-of-variables-in-r + 1)
+	The +1 is for the residual.  The stacks come from a single array which
+	this function gets by calling tmpalloc_array.  Two macros are defined
+	to make referencing this array easier.
+*/
 static int
 RelationEvaluateResidualGradient(CONST struct relation *r,
                                  double *residual,
@@ -1300,17 +1311,17 @@ RelationEvaluateResidualGradientSafe(CONST struct relation *r,
 #undef res_stack
 }
 
-/* RelationEvaluateDerivative
- * This function evaluates and returns the derivative of the
- * relation r with respect to the variable whose index is pos.
- * This function assumes r exists and that pos is within the proper range.
- * The function computes the gradients by maintaining 2 stacks, one for
- * the residual and one for the derivative.  The stacks come from a
- * single array which this gets by calling tmpalloc_array.  Two macros
- * are defined to make referencing this array easier.  Of the malloc fails,
- * this function returns 0.0, so there is currently no way to know if
- * the function failed.
- */
+/**
+	This function evaluates and returns the derivative of the
+	relation r with respect to the variable whose index is pos.
+	This function assumes r exists and that pos is within the proper range.
+	The function computes the gradients by maintaining 2 stacks, one for
+	the residual and one for the derivative.  The stacks come from a
+	single array which this gets by calling tmpalloc_array.  Two macros
+	are defined to make referencing this array easier.  Of the malloc fails,
+	this function returns 0.0, so there is currently no way to know if
+	the function failed.
+*/
 static double
 RelationEvaluateDerivative(CONST struct relation *r,
                            unsigned long pos)
@@ -1626,10 +1637,9 @@ RelationEvaluateDerivativeSafe(CONST struct relation *r,
 #undef res_stack
 }
 
-
-/*********************************************************************\
-  external relation/relation term queries section.
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+  RELATION & RELATION TERM QUERIES FUNCTIONS (FOR USE BY EXTERNAL CODE)
+*/
 
 /* return =, <, >, etc, etc. not e_token, e_glassbox, etc */
 enum Expr_enum RelationRelop(CONST struct relation *rel)
@@ -1967,10 +1977,11 @@ unsigned long RelationDepth(CONST struct relation *rel)
   return maxdepth;
 }
 
-/***************************************************
-  The following routines are used for equation scaling.
-  Documentation will be added at a later date.
-****************************************************/
+/*------------------------------------------------------------------------------
+  EQUATION SCALING
+
+  "Documentation will be added at a later date" -- someone last century
+*/
 
 static double FindMaxAdditiveTerm(struct relation_term *s)
 {
@@ -2079,17 +2090,17 @@ void PrintRelationNominals(struct Instance *i)
   VisitInstanceTree(i,PrintScale, 0, 0);
 }
 
-/**
- *** CALCULATION ROUTINES
- */
+/*------------------------------------------------------------------------------
+  CALCULATION ROUTINES
+*/
 
-/*
+/**
  * Load ATOM values into an array of doubles.
  * The array of doubles is indexed from 0 while the
  * var list is indexed from 1. The ultimate client of
  * the array calling this function thinks vars index from 0.
  */
-static 
+static
 void RelationLoadDoubles(struct gl_list_t *varlist, double *vars)
 {
   unsigned long c;
@@ -2099,7 +2110,9 @@ void RelationLoadDoubles(struct gl_list_t *varlist, double *vars)
   }
 }
 
-/* only called on token relations. */
+/**
+	only called on token relations.
+*/
 int RelationCalcResidualBinary(CONST struct relation *r, double *res)
 {
   double *vars;
@@ -2136,84 +2149,83 @@ int RelationCalcResidualBinary(CONST struct relation *r, double *res)
 }
 
 enum safe_err
-RelationCalcResidualPostfixSafe(struct Instance *i, double *res)
-{
-  struct relation *r;
-  enum Expr_enum reltype;
-  enum safe_err not_safe = safe_ok;
+RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
+	struct relation *r;
+	enum Expr_enum reltype;
+	enum safe_err status = safe_ok;
+	unsigned long length_lhs, length_rhs;
+
+	/* CONSOLE_DEBUG("..."); */
 
 #ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR,
-            "error in RelationCalcResidualPostfixSafe: null instance\n");
-    not_safe = safe_problem;
-    return not_safe;
-  }
-  if (res == NULL){
-    FPRINTF(ASCERR,
-            "error in RelationCalcResidualPostfixSafe: null relationptr\n");
-    not_safe = safe_problem;
-    return not_safe;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR,
-            "error in RelationCalcResidualPostfixSafe: not relation\n");
-    not_safe = safe_problem;
-    return not_safe;
-  }
+	if( i == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null instance");
+		return safe_problem;
+	}
+	if (res == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relationptr");
+		return safe_problem;
+	}
+	if( InstanceKind(i) != REL_INST ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
+		return safe_problem;
+	}
 #endif
-  r = (struct relation *)GetInstanceRelation(i, &reltype);
-  if( r == NULL ) {
-    FPRINTF(ASCERR,
-            "error in RelationCalcResidualPostfixSafe: null relation\n");
-    not_safe = safe_problem;
-    return not_safe;
-  }
-  if( reltype == e_token ) {
-    unsigned long length_lhs, length_rhs;
+	r = (struct relation *)GetInstanceRelation(i, &reltype);
 
-    length_lhs = RelationLength(r, 1);
-    length_rhs = RelationLength(r, 0);
-    if( length_lhs > 0 ) {
-      length_lhs--;
-      *res = RelationEvaluatePostfixBranchSafe(r, &length_lhs, 1,&not_safe);
-    }
-    else {
-      *res = 0.0;
-    }
-    if( length_rhs > 0 ) {
-      length_rhs--;
-      *res -= RelationEvaluatePostfixBranchSafe(r, &length_rhs, 0,&not_safe);
-    }
-    safe_error_to_stderr(&not_safe);
-    return not_safe;
-  } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    if (reltype == e_blackbox)
-    {
-      if ( RelationCalcResidualPostfix(i,res) != 0) {
-        not_safe = safe_problem;
-        safe_error_to_stderr(&not_safe);
-        return not_safe;
-      }
-      return not_safe;
-    }
-    if (reltype == e_glassbox)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidualPostfixSafe:\n");
-      FPRINTF(ASCERR, "glassbox not implemented yet.\n");
-    }
-    if (reltype == e_opcode)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidualPostfixSafe:\n");
-      FPRINTF(ASCERR, "opcode not supported.\n");
-    }
-    not_safe = safe_problem;
-    return not_safe;
-  } else {
-    Asc_Panic(2, NULL, "error in RelationCalcResidualPostfixSafe:\n"
-              "reached end of routine\n");
-    exit(2);/* Needed to keep gcc from whining */
-  }
+	/* CONSOLE_DEBUG("..."); */
+
+	if( r == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation");
+		return safe_problem;
+	}
+
+	/* CONSOLE_DEBUG("..."); */
+
+	switch(reltype){
+		case e_token:
+			length_lhs = RelationLength(r, 1);
+			length_rhs = RelationLength(r, 0);
+
+			if(length_lhs > 0){
+			    length_lhs--;
+			    *res = RelationEvaluatePostfixBranchSafe(r, &length_lhs, 1,&status);
+			  	/* CONSOLE_DEBUG("res = %g",res); */
+			}else{
+			    *res = 0.0;
+			}
+
+			if(length_rhs > 0){
+			    length_rhs--;
+			    *res -= RelationEvaluatePostfixBranchSafe(r, &length_rhs, 0,&status);
+			  	/* CONSOLE_DEBUG("res = %g",res); */
+			}
+
+			safe_error_to_stderr(&status);
+			break;
+		case e_blackbox:
+		    if ( RelationCalcResidualPostfix(i,res) != 0) {
+		    status = safe_problem;
+		    safe_error_to_stderr(&status);
+		    }
+		  break;
+		case e_glassbox:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_glassbox' relation not supported");
+			status = safe_problem;
+			break;
+		case e_opcode:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"'e_opcode' relation not supported");
+			status = safe_problem;
+			break;
+		default:
+			if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
+				status = safe_problem;
+			}else{
+			    Asc_Panic(2, NULL, "RelationCalcResidualPostfixSafe: reached end of routine!");
+				exit(2);
+			}
+	}
+	return status;
 }
 
 
@@ -2263,9 +2275,9 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
     if (reltype == e_blackbox)
     {
       /* FIXME */
-	/* note: blackbox equations support the form 
+	/* note: blackbox equations support the form
 		output[i] = f(input[j] for all j) foreach i
-	thus the residual is 
+	thus the residual is
 	*/
 
       FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
@@ -2409,9 +2421,9 @@ int RelationCalcResidualInfix(struct Instance *i, double *res)
 }
 
 
-/* RelationCalcResidualPostfix2
- * Yes, yet another function to calculate the residual
- */
+/*
+	There used to be a stoopid comment here so I removed it.
+*/
 int
 RelationCalcResidualPostfix2(struct Instance *i,
                              double *res)
@@ -2456,10 +2468,10 @@ RelationCalcResidualPostfix2(struct Instance *i,
 }
 
 
-/*  RelationCalcGradient
- *  simply call the version that calculates the gradient and the residual,
- *  then ignore the residual
- */
+/*
+	simply call the version that calculates the gradient and the residual,
+	then ignore the residual
+*/
 int
 RelationCalcGradient(struct Instance *r,
                      double *grad)
@@ -2468,10 +2480,10 @@ RelationCalcGradient(struct Instance *r,
   return RelationCalcResidGrad(r, &residual, grad);
 }
 
-/*  RelationCalcGradientSafe
- *  simply call the version that calculates the gradient and the residual,
- *  then ignore the residual
- */
+/*
+	simply call the version that calculates the gradient and the residual,
+	then ignore the residual
+*/
 enum safe_err
 RelationCalcGradientSafe(struct Instance *r,
                          double *grad)
@@ -2594,10 +2606,10 @@ RelationCalcResidGradSafe(struct Instance *i,
 }
 
 
-/*  RelationCalcDerivative
- *  calculate the derivative with respect to a single variable
- *  whose index is index, where 1<=index<=NumberVariables(r)
- */
+/*
+	calculate the derivative with respect to a single variable
+	whose index is index, where 1<=index<=NumberVariables(r)
+*/
 int
 RelationCalcDerivative(struct Instance *i,
                        unsigned long index,
@@ -2706,9 +2718,8 @@ RelationCalcDerivativeSafe(struct Instance *i,
 }
 
 /**
- *** Function for testing residual and gradient calulations
- **/
-
+	Function for testing residual and gradient calulations
+*/
 void PrintGradients(struct Instance *i)
 {
   if (InstanceKind(i) == REL_INST) {
@@ -2919,9 +2930,9 @@ void PrintRelationResiduals(struct Instance *i)
  ***      RelationFindRoots
  **/
 
-/*************************************************************************/
-/****************Memory Management and Copying Functions******************/
-/*************************************************************************/
+/*------------------------------------------------------------------------------
+  MEMORY MANAGEMENT AND COPYING FUNCTIONS
+*/
 
 /*
  * RelationCreateTmp creates a struct relation of type e_token
@@ -3047,6 +3058,7 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
       break;
     case e_zero:
     case e_var:			/* the var number will be correct */
+	case e_diff:
     case e_int:
     case e_real:
       break;
@@ -3124,7 +3136,7 @@ struct ds_soln_list {
 #define copy_nums(from,too,nnums)  \
    asc_memcpy((from),(too),(nnums)*sizeof(double))
 
-static 
+static
 void append_soln( struct ds_soln_list *sl, double soln)
 /**
  ***  Appends the solution onto the solution list
@@ -3147,7 +3159,7 @@ void append_soln( struct ds_soln_list *sl, double soln)
   sl->soln[sl->length++] = soln;
 }
 
-static 
+static
 void remove_soln( struct ds_soln_list *sl, int ndx)
 /*
  *  Removes solution at given index from solution list.
@@ -3157,9 +3169,9 @@ void remove_soln( struct ds_soln_list *sl, int ndx)
             (char *)(sl->soln+ndx), --(sl->length) - ndx);
 }
 
-/*************************************************************************/
-/*************************Direct Solve Functions**************************/
-/*************************************************************************/
+/*------------------------------------------------------------------------------
+  DIRECT SOLVE FUNCTIONS
+*/
 
 /**
  *** InsertBranchResult changes a relation term type to e_real and
@@ -3225,6 +3237,7 @@ static int SearchEval_Branch(struct relation_term *term)
   case e_int:
   case e_real:
   case e_zero:
+  case e_diff:
     return 0;
 
   case e_plus:
@@ -3711,7 +3724,7 @@ int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
     return 1;
   }
  /* ought to Call GetInstanceRelationRelop here to keep out the boxes.
-  * may need to set inst ptr. 
+  * may need to set inst ptr.
   */
 
   if(Infix_LhsSide(glob_rel) != NULL) {
@@ -3829,7 +3842,7 @@ double *RelationFindRoots(struct Instance *i,
     RootFind(NULL,NULL,NULL,NULL,NULL,0L,NULL); /*clear brent recycle */
     RelationCreateTmp(0,0,e_nop); /* clear tmprelation recycle */
     return NULL;
-  } 
+  }
   /* check assertions */
 #ifndef NDEBUG
   if( i == NULL ) {
@@ -3844,7 +3857,7 @@ double *RelationFindRoots(struct Instance *i,
   }
   if (varnum == NULL){
     FPRINTF(ASCERR,"error in RelationFindRoot: NULL varnum\n");
-    glob_rel = NULL; 
+    glob_rel = NULL;
     return NULL;
   }
   if( InstanceKind(i) != REL_INST ) {
@@ -3870,11 +3883,11 @@ double *RelationFindRoots(struct Instance *i,
    */
   if( reltype != e_token ) {
     FPRINTF(ASCERR, "error in RelationFindRoot: non-token relation\n");
-    glob_rel = NULL; 
+    glob_rel = NULL;
     return NULL;
   }
 
-  if (RelationRelop(rel) == e_equal){ 
+  if (RelationRelop(rel) == e_equal){
     glob_rel = RelationTmpTokenCopy(rel);
     assert(glob_rel!=NULL);
     glob_done = 0;
@@ -3924,7 +3937,7 @@ double *RelationFindRoots(struct Instance *i,
     }
     if (glob_done == 1) {
       /* set to 0 so while loop in RelationInvertToken will work */
-      glob_done = 0; 
+      glob_done = 0;
       glob_done = RelationInvertTokenTop(&(soln_list));
     }
     if (glob_done == 1) { /* if still one, token inversions successful */
@@ -4005,13 +4018,13 @@ static
 void CollectShares(struct Instance *i,struct ctrwubs *data)
 {
   struct relation *r;
-  /* If i ok and relation and token type and built and share not 
+  /* If i ok and relation and token type and built and share not
    * previously built binary or collected, collect it.
    * Previously built shared have a btable > 0 and < INT_MAX.
    * Collected relations have btable = INT_MAX.
    */
   if (gl_length(data->list) <= data->maxlen) {
-    if (i!=NULL && 
+    if (i!=NULL &&
         InstanceKind(i) == REL_INST &&
         GetInstanceRelationType(i) == e_token &&
         (r = (struct relation *)GetInstanceRelationOnly(i)) != NULL &&
@@ -4038,7 +4051,7 @@ CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
   if (data.list == NULL) {
     return NULL;
   }
-  SilentVisitInstanceTreeTwo(i,(VisitTwoProc)CollectShares,1,0,(void *)&data);   
+  SilentVisitInstanceTreeTwo(i,(VisitTwoProc)CollectShares,1,0,(void *)&data);
   if (data.overflowed) {
     for (c = gl_length(data.list); c >0; c--) {
       rel = (struct Instance *)gl_fetch(data.list,c);

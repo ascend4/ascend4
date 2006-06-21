@@ -21,8 +21,24 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	General C  utility routines for slv/Slv class interfaces.
+	SLV common utilities & structures for ASCEND solvers.
 
+	Routines in this header a applicable to both the system API (as accessed
+	from ASCEND compiler and GUI/CLI) as well as the solver backend (slv3.c, 
+	and other solvers, etc)
+
+	This header therefore includes the following:
+	  - parameters struct definitions & manipulation routines
+	  - status struct definitions & retrieval routines
+	  - vector operations
+	  - solver print routines
+	  - lnkmap support functions
+
+	@see slv_client.h for the routines that a concrete SLV solver will use to access the model.
+	@see slv_server.h for the routines that ASCEND uses to run and query the solver.
+
+	@NOTE
+	USAGE NOTES:
 	slv.h is the header for folks on the ASCEND end, and this is the one for
 	folks on the Slv math end.
 	Don't protoize this file for ASCEND types other than mtx, vec, and boolean
@@ -40,14 +56,7 @@
 
 	The parameters and status struct definitions have been moved here,
 	being of general interest.
-
-	SLV common utilities & structures for ASCEND solvers.
-	This includes the following:
-	  - parameters struct definitions & manipulation routines
-	  - status struct definitions & retrieval routines
-	  - vector operations
-	  - solver print routines
-	  - lnkmap support functions
+	@ENDNOTE
 
 	Requires:
 	#include <stdio.h>
@@ -132,11 +141,9 @@
 #define SLV_INSTANCES TRUE
 /**< SLV_INSTANCES should only be FALSE in a libasc.a free environment */
 
-/*
- * -------------------------------------------------------
-	Common data structures for Westerberg derived solvers
- * -------------------------------------------------------
- */
+/*------------------------------------------------------------------------------
+  DATA STRUCTURES
+*/
 
 /** Solver output file informationn. */
 struct slv_output_data {
@@ -263,7 +270,9 @@ struct slv_parameter {
   } info;                           /**< Data. */
 };
 
-/*
+/*------------------------------------------------------------------------------
+  ACCESSOR MACROS for parm_arg unions
+
  * Macros for parm_arg unions.
  * Sets appropriate member (parm_u) of the union to the
  * value specified (val) and returns (parm_u).
@@ -377,6 +386,9 @@ struct slv_parameter {
  * Local int make_macros; must be defined.
  */
 
+/*------------------------------------------------------------------------------
+  SOLVER PARAMETERS STRUCT & METHODS
+*/
 /**
 	Holds the array of parameters and keeps a count of how many it
 	contains.  Also holds various other information which should be
@@ -582,6 +594,9 @@ ASC_DLLSPEC(void) slv_set_char_parameter(char **cptr, CONST char *newvalue);
 	@param newvalue New value for *cptr.
  */
 
+/*------------------------------------------------------------------------------
+  OVERALL SOLVER STATUS and INDIVIDUAL BLOCK STATUS
+*/
 /** Solver block status record. */
 struct slv__block_status_structure {
    int32 number_of;                 /**< Number of blocks in system. */
@@ -736,15 +751,16 @@ typedef struct slv_status_structure {
    struct slv__block_status_structure block;  /**< Block status information. */
 } slv_status_t;
 
-/*
- * --------------------------------
- *  vector_data class & operations
- * --------------------------------
- *
- *  If we get brave, we will consider replacing the cores of these
- *  routines with blas calls. We aren't overeager to go mixed
- *  language call nuts just yet, however.
- */
+/*------------------------------------------------------------------------------
+  vector_data class & operations
+
+  If we get brave, we will consider replacing the cores of these routines with 
+  BLAS calls. We aren't overeager to go mixed language call nuts just yet,
+  however.
+
+  Comment: the NVector implementation provided with SUNDIALS might be an
+  easier-to-integrate solution for this. It's also MPI-friendly. -- John Pye
+*/
 
 /**
  *  A dense vector class of some utility and the functions for it.
@@ -940,11 +956,9 @@ ASC_DLLSPEC(void ) slv_write_vector(FILE *fp, struct vector_data *vec);
  *  @param vec The vector on which to report.
  */
 
-/*
- * ----------------------------
- *  Misc. BLAS-like functions
- * ----------------------------
- */
+/*------------------------------------------------------------------------------
+  BLAS-LIKE FUNCTIONS
+*/
 
 ASC_DLLSPEC(real64) slv_dot(int32 len, const real64 *a1, const real64 *a2);
 /**<
@@ -966,11 +980,9 @@ ASC_DLLSPEC(real64) slv_dot(int32 len, const real64 *a1, const real64 *a2);
  *  @param a2  The 2nd array for the dot product.
  */
 
-/*
- * --------------------------------
- *  General input/output routines
- * --------------------------------
- */
+/*------------------------------------------------------------------------------
+  GENERAL INPUT/OUTPUT ROUTINES
+*/
 
 ASC_DLLSPEC(FILE *)slv_get_output_file(FILE *fp);
 /**<
@@ -1031,7 +1043,17 @@ ASC_DLLSPEC(FILE *)slv_get_output_file(FILE *fp);
  *  @return A FILE * to the "less important" output file for sys.
  */
 
-/*------------------- begin compiler dependent functions -------------------*/
+/*===============================================================================
+  COMPILER-DEPENDENT FUNCTIONS
+
+  The following functions reach into the data structures in the <compiler>
+  section of ASCEND. That means that these functions can't be present in a
+  fully split-out and general-purpose SLV engine. 
+
+  If you're trying to use SLV to solve systems other that ASCEND models
+  therefore, these functions need to be re-implemented for your case.
+*/
+
 #if SLV_INSTANCES
 
 #ifdef NEWSTUFF
@@ -1210,13 +1232,15 @@ extern int slv_direct_log_solve(slv_system_t sys,
  */
 
 #endif
-/*-------------------- END compiler dependent functions --------------------*/
+/* === END compiler dependent functions === */
 
-/*
- * --------------------
- *  lnkmap functions
- * --------------------
- */
+/*------------------------------------------------------------------------------
+  LINK-MAP FUNCTIONS
+*/
+/**
+  @TODO what are these all abount? Something about linking permuted rows
+  and columns back to the original data? -- JP
+*/
 
 ASC_DLLSPEC(int32 **) slv_create_lnkmap(int32 m, int32 n, int32 hl, int32 *hi, int32 *hj);
 /**<

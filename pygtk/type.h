@@ -1,5 +1,5 @@
-#ifndef SWIG_TYPE_H
-#define SWIG_TYPE_H
+#ifndef ASCXX_TYPE_H
+#define ASCXX_TYPE_H
 
 #include <vector>
 

@@ -89,6 +89,7 @@ John Pye (C) 2005
 		<keyword>END</keyword>
 		<keyword>FIX</keyword>
 		<keyword>FOR</keyword>
+		<keyword>FREE</keyword>
 		<keyword>IF</keyword>
 		<keyword>IN</keyword>
 		<keyword>INTERSECTION</keyword>
@@ -308,8 +309,16 @@ John Pye (C) 2005
 		<keyword>energy_rate_scale</keyword>
 		<keyword>energy_rate</keyword>
 		<keyword>heat_capacity</keyword>
+		<keyword>heat_transfer_coefficient</keyword>
 		<keyword>molar_energy_rate</keyword>
+		<keyword>molar_heat_capacity</keyword>
 		<keyword>molar_entropy</keyword>
+		<keyword>relative_volatility</keyword>
+		<keyword>power_per_length</keyword>
+		<keyword>specific_enthalpy</keyword>
+		<keyword>specific_entropy</keyword>
+		<keyword>specific_heat_capacity</keyword>
+		<keyword>specific_volume</keyword>
 		<keyword>entropy</keyword>
 		<keyword>entropy_rate</keyword>
 		<keyword>conc_rate</keyword>
@@ -325,6 +334,7 @@ John Pye (C) 2005
 		<keyword>time</keyword>
 		<keyword>speed</keyword>
 		<keyword>acceleration</keyword>
+		<keyword>stiffness</keyword>
 		<keyword>viscosity</keyword>
 		<keyword>thermal_conductivity</keyword>
 		<keyword>diffusivity</keyword>
@@ -337,6 +347,7 @@ John Pye (C) 2005
 		<keyword>electric_field</keyword>
 		<keyword>delta_distance</keyword>
 		<keyword>delta_temperature</keyword>
+		<keyword>delta_pressure</keyword>
 		<keyword>delta_mass</keyword>
 		<keyword>delta_mole</keyword>
 		<keyword>delta_mass_rate</keyword>

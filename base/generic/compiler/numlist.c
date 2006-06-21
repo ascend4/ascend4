@@ -257,7 +257,7 @@ Numlist_p NumpairExpandableList(Numlist_p nlp, int newsize)
         return NULL; /* not reached */
       }
     }
-    nlp->list = (struct numpair *)ascmalloc(newsize*sizeof(struct numpair));
+    nlp->list = ASC_NEW_ARRAY(struct numpair,newsize);
     if (nlp->list == NULL) {
       NHFREE(nlp);
       return NULL;
@@ -354,7 +354,7 @@ Numlist_p NumpairDuplicate(Numlist_p nlp,int dlen)
     return NULL;
   }
   len = nlp->len;
-  result->list = (struct numpair *)ascmalloc(dlen*sizeof(struct numpair));
+  result->list = ASC_NEW_ARRAY(struct numpair,dlen);
   result->head = NULL;
   if (result->list == NULL) {
     NHFREE(result);

@@ -1,5 +1,5 @@
-#ifndef SWIG_NAME_H
-#define SWIG_NAME_H
+#ifndef ASCXX_NAME_H
+#define ASCXX_NAME_H
 
 #include <string>
 
@@ -9,7 +9,7 @@ extern "C"{
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/name.h>
 }
 

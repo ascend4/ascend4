@@ -1,8 +1,5 @@
-REQUIRE "ivpsystem.a4l";
-(* => modified version of system.a4l, basemodel.a4l *)
-REQUIRE "atoms.a4l";
-(* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "dyn_tank.a4c";
+REQUIRE "ivpsystem.a4l"; (* => modified version of system.a4l, basemodel.a4l *)
+REQUIRE "atoms.a4l"; (* => atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
 (*
  * This file is part of the ASCEND Modeling Library and is released
  * under the GNU Public License as described at the end of this file.
@@ -45,6 +42,8 @@ MODEL tank;
 	t :=0 {sec};
 	dM_dt :=0 {mol/sec};
 	dM_dt.lower_bound := -1e49 {mol/sec};
+	input := 1 {mol/sec};
+	output := 1 {mol/sec};
     END default_self;
 
     METHOD default_all;
@@ -110,6 +109,16 @@ MODEL tank;
 	Volume :=5 {m^3};
 	input :=100 {mole/s};
     END values;
+
+METHOD on_load;
+	RUN default_self;
+	dynamic := TRUE;
+	RUN reset;
+	RUN specify;
+	RUN set_obs;
+	RUN set_ode;
+END on_load;
+
 END tank;
 
 

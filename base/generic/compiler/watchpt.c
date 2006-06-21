@@ -45,7 +45,7 @@
 #include "watchpt.h"
 #include "proc.h"
 #include "procframe.h"
-#include "types.h"
+#include "expr_types.h"
 #include "initialize.h"
 
 void Asc_SetMethodUserInterrupt(int val)

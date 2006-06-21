@@ -100,6 +100,43 @@
  *  @return A new copy of str as a char *, or NULL if an error occurs.
  */
 
+/**
+	Shorthand for creating pointers to newly allocated data of a given type
+*/
+#define ASC_NEW(TYPE) (TYPE *)ascmalloc(sizeof(TYPE))
+
+#define ASC_NEW_CLEAR(TYPE) (TYPE *)asccalloc(1,sizeof(TYPE))
+
+/**
+	Shorthand for creating pointer to an array of newly allocated data of a
+	given type. 'ascmalloc' is used for the allocation.
+*/
+#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE *)ascmalloc(sizeof(TYPE)*(COUNT))
+
+/**
+	Shorthand for creating a pointer to allocated data, using asccalloc (to zero
+	the allocated space).
+*/
+#define ASC_NEW_ARRAY_CLEAR(TYPE,COUNT) (TYPE *)asccalloc(COUNT,sizeof(TYPE))
+
+/**
+	Shorthand for creating a pointer to an array of allocated data. If the
+	specified length is zero, no space is allocated, and a NULL is returned
+	instead.
+*/
+#define ASC_NEW_ARRAY_OR_NULL(TYPE,COUNT) \
+	((COUNT)>0 ? ASC_NEW_ARRAY(TYPE,COUNT) : NULL)
+
+#define ASC_NEW_ARRAY_OR_NULL_CLEAR(TYPE,COUNT) \
+	((COUNT)>0 ? ASC_NEW_ARRAY_CLEAR(TYPE,COUNT) : NULL)
+
+/* regular expressions for fixing up mallocs (in regexxer)
+	\(([^\*\)]+) ?\*\)\s*ascmalloc\(sizeof\(\1\)\s*\*\s*([a-zA-Z][a-zA-Z_0-9]*)\)
+\(([^\*\)]+) ?\*\)\s*asccalloc\(([a-zA-Z][a-zA-Z_0-9]*)\s*,\s*sizeof\(\1\)\s*\)
+*/
+
+#define ASC_FREE(PTR) ascfree(PTR)
+
 ASC_DLLSPEC(char *) ascstrdupf(CONST char *str);
 /**<
  *  Implementation function for ascstrdup() if MALLOC_DEBUG
