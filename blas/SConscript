@@ -5,4 +5,8 @@ srcs = Split("""
 	dtrsv.f dswap.f dgemv.f dtrsm.f xerbla.f lsame.f dgemm.f
 """)
 
-env.Library('blas',srcs)
+blas = []
+for src in srcs:
+	blas.append( env.SharedObject(src) )
+
+Return('blas')
