@@ -54,7 +54,7 @@ LIB_OBJS = \
 	BrowserMethod.o BrowserProc.o BrowserQuery.o BrowserRel_io.o \
 	Commands.o DebugProc.o DisplayProc.o Driver.o \
 	EnvVarProc.o HelpProc.o Integrators.o \
-	LibraryProc.o Lsode.o MtxProc.o ProbeProc.o Qlfdid.o \
+	LibraryProc.o MtxProc.o ProbeProc.o Qlfdid.o \
 	ScriptProc.o Sensitivity.o SimsProc.o SlvProc.o \
 	SolverProc.o UnitsProc.o UserData.o \
 	tkConsole.o typelex.o old_utils.o
