@@ -33,7 +33,7 @@ else:
 	default_tktable_lib = "Tktable2.8"
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	icon_extension = '.svg'
-	default_tcl = os.path.expanduser("~/activetcl")
+	default_tcl = '/usr'
 	default_tcl_libpath = "$TCL/lib"	
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
