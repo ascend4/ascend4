@@ -272,7 +272,8 @@ class Browser:
 		self.autotoggle=glade.get_widget("autotoggle")
 		self.autotoggle.connect("toggled",self.auto_toggle)
 
-		self.is_auto = self.autotoggle.get_active()
+		self.is_auto = self.prefs.getBoolPref("Browser","auto_solve",True)
+		self.autotoggle.set_active(self.is_auto)
 
 		self.methodrunbutton=glade.get_widget("methodrunbutton")
 		self.methodrunbutton.connect("clicked",self.methodrun_click)
@@ -648,6 +649,8 @@ class Browser:
 
 		print_loading_status("Saving current directory")			
 		self.prefs.setStringPref("Directories","fileopenpath",self.fileopenpath)
+
+		self.prefs.setBoolPref("Browser","auto_solve",self.is_auto)
 
 		print_loading_status("Saving preferences")
 		# causes prefs to be saved unless they are still being used elsewher
