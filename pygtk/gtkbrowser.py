@@ -270,10 +270,8 @@ class Browser:
 		self.checkbutton.connect("clicked",self.check_click)
 
 		self.autotoggle=glade.get_widget("autotoggle")
+		self.automenu = glade.get_widget("automenu")
 		self.autotoggle.connect("toggled",self.auto_toggle)
-
-		self.is_auto = self.prefs.getBoolPref("Browser","auto_solve",True)
-		self.autotoggle.set_active(self.is_auto)
 
 		self.methodrunbutton=glade.get_widget("methodrunbutton")
 		self.methodrunbutton.connect("clicked",self.methodrun_click)
@@ -285,12 +283,6 @@ class Browser:
 		self.statusbar = glade.get_widget("statusbar")
 
 		self.menu = glade.get_widget("browsermenu")
-		glade.signal_autoconnect(self)
-
-		self.automenu = glade.get_widget("automenu")
-		self.automenu.set_active(self.is_auto)
-		if self.automenu == None:
-			print "NO AUTOMENU FOUND"
 
 		self.show_solving_popup=glade.get_widget("show_solving_popup")
 		self.show_solving_popup.set_active(self.prefs.getBoolPref("SolverReporter","show_popup",True))
@@ -298,6 +290,8 @@ class Browser:
 		self.close_on_converged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_converged",True))
 		self.close_on_nonconverged=glade.get_widget("close_on_nonconverged")
 		self.close_on_nonconverged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_nonconverged",True))
+
+		glade.signal_autoconnect(self)
 
 		#-------
 		# Status icons
@@ -421,6 +415,13 @@ class Browser:
 		# set up the instance browser view
 
 		self.modelview = ModelView(self, glade)
+
+		#--------
+		# set the state of the 'auto' toggle
+
+		self.is_auto = self.prefs.getBoolPref("Browser","auto_solve",True)
+		self.autotoggle.set_active(self.is_auto)
+		self.automenu.set_active(self.is_auto)
 
 		#--------
 		# options
@@ -894,12 +895,15 @@ class Browser:
 	
 	def auto_toggle(self,button,*args):
 		self.is_auto = button.get_active()
-		self.automenu.set_active(self.is_auto)
-
-		if self.is_auto:
-			self.reporter.reportSuccess("Auto mode is now ON")
+		if hasattr(self,'automenu'):
+			self.automenu.set_active(self.is_auto)
 		else:
-			self.reporter.reportSuccess("Auto mode is now OFF")
+			raise RuntimeError("no automenu")
+
+		#if self.is_auto:
+		#	self.reporter.reportSuccess("Auto mode is now ON")
+		#else:
+		#	self.reporter.reportSuccess("Auto mode is now OFF")
 
 	def on_file_quit_click(self,*args):
 		self.do_quit()
