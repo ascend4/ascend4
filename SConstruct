@@ -24,9 +24,11 @@ if platform.system()=="Windows":
 		default_tcl_libpath="$TCL\\lib"
 	default_rel_distdir = '.'
 	default_absolute_paths = False
+	default_ida_prefix = "c:/mingw"
+	need_libm = False
 else:
-	default_tcl_lib = "tcl8.3"
-	default_tk_lib = "tk8.3"
+	default_tcl_lib = "tcl8.4"
+	default_tk_lib = "tk8.4"
 	default_tktable_lib = "Tktable2.8"
 	default_install_assets = "$INSTALL_ASCDATA/glade/"
 	icon_extension = '.svg'
@@ -34,7 +36,8 @@ else:
 	default_tcl_libpath = "$TCL/lib"	
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
-
+	default_ida_prefix="/usr/local"
+	need_libm = True
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
 
@@ -73,14 +76,14 @@ opts.Add(BoolOption(
 # You can turn off building of Tcl/Tk interface
 opts.Add(BoolOption(
 	'WITH_TCLTK'
-	,"Set to True if you don't want to build the original Tcl/Tk GUI."
+	,"Set to False if you don't want to build the original Tcl/Tk GUI."
 	, True
 ))
 
 # You can turn off the building of the Python interface
 opts.Add(BoolOption(
 	'WITH_PYTHON'
-	,"Set to True if you don't want to build Python wrappers."
+	,"Set to False if you don't want to build Python wrappers."
 	, True
 ))
 
@@ -89,10 +92,10 @@ opts.Add(ListOption(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works."
-	,["QRSLV","CMSLV"]
+	,["QRSLV","CMSLV","LSOD","IDA"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
-		,'LSOD','OPTSQP'
+		,'LSOD','OPTSQP',"IDA"
 	 ]
 ))
 
@@ -153,6 +156,42 @@ opts.Add(PackageOption(
 	,'off'
 ))
 
+opts.Add(PackageOption(
+	"IDA_PREFIX"
+	,"Prefix for your IDA install (IDA ./configure --prefix)"
+	,default_ida_prefix
+))
+
+opts.Add(
+	'IDA_CPPPATH'
+	,"Where is your ida.h?"
+	,"$IDA_PREFIX/include"
+)
+
+opts.Add(
+	'IDA_LIBPATH'
+	,"Where are your SUNDIALS libraries installed?"
+	,"$IDA_PREFIX/lib"
+)
+
+opts.Add(
+	"IDA_LIB"
+	,"What libraries to link to for use of IDA (comma-separated). Note that"
+		+" you will need to include the math library in this list (for now)."
+	,'sundials_ida,sundials_nvecserial,m'
+)
+
+opts.Add(
+	"F2C_LIB"
+	,"F2C library (eg. g2c, gfortran, f2c)"
+	,"g2c"
+)
+
+opts.Add(PackageOption(
+	"F2C_LIBPATH"
+	,"Directory containing F2C library (i.e. g2c, gfortran, f2c, etc.), if not already accessible"
+	,"off"
+))
 
 opts.Add(
 	'TCL'
@@ -400,6 +439,19 @@ else:
 	with_installer=0
 	without_installer_reason = "only possible under Windows"
 
+if 'LSOD' in env['WITH_SOLVERS']:
+	with_lsode=True
+else:
+	with_lsode=False
+	without_lsode_reason = "not requested (WITH_SOLVERS)"
+	
+if 'IDA' in env['WITH_SOLVERS']:
+	with_ida=True
+else:
+	with_ida=False
+	without_ida_reason = "not requested (WITH_SOLVERS)"
+
+
 #print "SOLVERS:",env['WITH_SOLVERS']
 #print "WITH_BINTOKEN:",env['WITH_BINTOKEN']
 #print "DEFAULT_ASCENDLIBRARY:",env['DEFAULT_ASCENDLIBRARY']
@@ -415,6 +467,7 @@ print "TCL_LIBPATH =",env['TCL_LIBPATH']
 print "TCL_LIB =",env['TCL_LIB']
 print "CC =",env['CC']
 print "CXX =",env['CXX']
+print "FORTRAN=",env.get('FORTRAN')
 
 print "ABSOLUTE PATHS =",env['ABSOLUTE_PATHS']
 #------------------------------------------------------
@@ -634,6 +687,59 @@ def CheckCUnit(context):
 	return CheckExtLib(context,'cunit',cunit_test_text)
 
 #----------------
+# MATH test
+
+math_test_text = """
+#include <math.h>
+int main(void){
+	double x;
+	x = sinh(0.1);
+	return 0;
+}
+"""
+
+def CheckMath(context):
+	return CheckExtLib(context,'m',math_test_text)
+#----------------
+# IDA test
+
+ida_test_text = """
+#include <ida.h>
+#include <nvector_serial.h>
+#include <ida_spgmr.h>
+int main(){
+	void *ida_mem;
+	ida_mem = IDACreate();
+}
+"""
+
+def CheckIDA(context):
+	context.Message( 'Checking for IDA (SUNDIALS)... ' )
+	
+	# add SUNDIALS subdirectories as well (what a pain)
+	if context.env.get('IDA_CPPPATH'):
+		extra = [context.env['IDA_CPPPATH']+"/ida",context.env['IDA_CPPPATH']+"/sundials"]
+		context.env.Append(CPPPATH=extra)
+	
+	if ',' in context.env.get('IDA_LIB'):
+		context.env['IDA_LIB']=context.env['IDA_LIB'].split(',')
+		#print "IDA_LIB NOW =",context.env['IDA_LIB']
+	else:
+		print "NO COMMA IN IDA_LIB:",context.env['IDA_LIB']
+
+	keep = KeepContext(context,"IDA")
+	
+	is_ok = context.TryLink(ida_test_text,".c")
+	context.Result(is_ok)
+	
+	keep.restore(context)
+	
+	if is_ok:
+		context.env.Append(IDA_CPPPATH_EXTRA=extra)
+	
+	return is_ok
+
+#----------------
 # Tcl test
 
 # TCL and TK required version 8.1, 8.2, 8.3, or 8.4:
@@ -683,7 +789,7 @@ int main(void){
 }
 """
 def CheckTk(context):
-	return CheckExtLib(context,'tk',tcl_check_text,static=env['STATIC_TCLTK'])
+	return CheckExtLib(context,'tk',tk_check_text,static=env['STATIC_TCLTK'])
 
 
 def CheckTkVersion(context):
@@ -751,7 +857,8 @@ gcc_version4 = False
 
 conf = Configure(env
 	, custom_tests = { 
-		'CheckSwigVersion' : CheckSwigVersion
+		'CheckMath' : CheckMath
+		, 'CheckSwigVersion' : CheckSwigVersion
 		, 'CheckCUnit' : CheckCUnit
 		, 'CheckTcl' : CheckTcl
 		, 'CheckTclVersion' : CheckTclVersion
@@ -762,6 +869,7 @@ conf = Configure(env
 		, 'CheckYacc' : CheckYacc
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
+		, 'CheckIDA' : CheckIDA
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -771,9 +879,11 @@ conf = Configure(env
 
 # Math library
 
-#if not conf.CheckFunc('sinh') and not conf.CheckLibWithHeader(['m','c','libc'], 'math.h', 'C'):
-#	print 'Did not find math library, exiting!'
-#	Exit(1)
+if need_libm:
+	if not conf.CheckMath():
+		print 'Did not find math library, exiting!'
+		Exit(1)
+	#pass
 
 # Where is 'isnan'?
 
@@ -850,11 +960,22 @@ if with_cunit:
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
 
+# IDA
+
+if not with_ida:
+	without_ida_reason = "Not selected (see config option WITH_SOLVERS)"
+elif not conf.CheckIDA():
+	with_ida = False
+	without_ida_reason = "IDA not found"
+
 # BLAS
 
 need_blas=False
-if with_tcltk:
+
+if with_lsode:
+	need_fortran = True
 	need_blas=True
+
 if need_blas:
 	if conf.CheckLib('blas'):
 		with_local_blas = False
@@ -862,6 +983,9 @@ if need_blas:
 	else:
 		with_local_blas = True
 		need_fortran = True
+else:
+	with_local_blas= False;
+	without_local_blas_reason = "BLAS not required"
 
 # FORTRAN
 
@@ -870,7 +994,7 @@ if need_fortran:
 	detect_fortran = conf.env.Detect(['g77','f77','gfortran'])
 	if detect_fortran:
 		# For some reason, g77 doesn't get detected properly on MinGW
-		if not env.has_key('F77'):
+		if not env.has_key('F77') and not env.has_key('FORTRAN'):
 			conf.env.Replace(F77=detect_fortran)
 			conf.env.Replace(F77COM='$F77 $F77FLAGS -c -o $TARGET $SOURCE')
 			conf.env.Replace(F77FLAGS='')
@@ -884,11 +1008,18 @@ if need_fortran:
 			)
 			conf.env.Append(BUILDERS={'Fortran':fortran_builder})
 	else:
-		with_tcltk=False;
-		without_tcltk_reason="FORTRAN-77 required but not found"
+		with_lsode=False;
+		without_lsode_reason="FORTRAN-77 required but not found"
 
 #else:
 #	print "FORTRAN not required"
+
+# F2C
+
+if need_fortran:
+	if platform.system()=="Windows":
+		conf.env.Append(LIBPATH='c:\mingw\lib')
+
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -945,16 +1076,24 @@ if env.get('WITH_LOCAL_HELP'):
 	subst_dict['@HELP_ROOT@']=env['WITH_LOCAL_HELP']
 
 # bool options...
-for k,v in { \
-		'ABSOLUTE_PATHS' : 'ASC_ABSOLUTE_PATHS', \
-		'WITH_XTERM_COLORS' : 'ASC_XTERM_COLORS', \
-		'MALLOC_DEBUG' : 'MALLOC_DEBUG' \
+for k,v in {
+		'ABSOLUTE_PATHS' : 'ASC_ABSOLUTE_PATHS'
+		,'WITH_XTERM_COLORS' : 'ASC_XTERM_COLORS'
+		,'MALLOC_DEBUG' : 'MALLOC_DEBUG'
 }.iteritems():
 	if env.get(k):
-		subst_dict['ifdef '+v]="if 1"
+#		subst_dict['@'+v+'@']='1'
+		subst_dict["/\\* #define "+v+' @'+v+"@ \\*/"]='# define '+v+' 1 '
+
+if with_ida:
+	subst_dict["/\\* #define ASC_WITH_IDA @ASC_WITH_IDA@ \\*/"]='#define ASC_WITH_IDA '
+
+if with_lsode:
+	subst_dict["/\\* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ \\*/"]='#define ASC_WITH_LSODE '
 
 if with_python:
 	subst_dict['@ASCXX_USE_PYTHON@']="1"
+	env['WITH_PYTHON']=1;
 
 if env.has_key('HAVE_GCCVISIBILITY'):
 	subst_dict['@HAVE_GCCVISIBILITY@'] = "1"
@@ -1089,18 +1228,13 @@ if env['GCOV']:
 		, LINKFLAGS=['-fprofile-arcs','-ftest-coverage']
 	)
 
+if with_ida:
+	env.Append(WITH_IDA=1)
+
 #-------------
 # TCL/TK GUI
 
 if with_tcltk:
-	if with_local_blas:
-		env.SConscript(['blas/SConscript'],'env')
-	else:
-		print "Skipping... BLAS won't be build:", without_local_blas_reason
-
-	env.SConscript(['lsod/SConscript'],'env')		
-
-	env.SConscript(['linpack/SConscript'],'env')
 	env.SConscript(['tcltk/generic/interface/SConscript'],'env')
 else:
 	print "Skipping... Tcl/Tk GUI isn't being built:",without_tcltk_reason
@@ -1116,17 +1250,38 @@ else:
 #------------
 # BASE/GENERIC SUBDIRECTORIES
 
+libascend_env = env.Copy()
+
 dirs = ['general','utilities','compiler','solver','packages']
 
 srcs = []
 for d in dirs:
-	heresrcs = env.SConscript('base/generic/'+d+'/SConscript','env')
+	heresrcs = libascend_env.SConscript('base/generic/'+d+'/SConscript','libascend_env')
 	srcs += heresrcs
+
+#-------------
+# IMPORTED CODE: LSODE, BLAS, etc
+
+if with_lsode:
+	srcs += env.SConscript(['lsod/SConscript'],'env')
+	srcs += env.SConscript(['linpack/SConscript'],'env')
+else:
+	print "Skipping... LSODE won't be built:", without_lsode_reason
+
+if with_local_blas:
+	srcs += env.SConscript(['blas/SConscript'],'env')
+else:
+	print "Skipping... BLAS won't be built:", without_local_blas_reason
+
+if not with_ida:
+	print "Skipping... IDA won't be built:", without_ida_reason
 
 #-------------
 # LIBASCEND -- all base/generic functionality
 
-libascend = env.SharedLibrary('ascend',srcs)
+libascend = libascend_env.SharedLibrary('ascend',srcs)
+
+env.Alias('libascend',libascend)
 
 #-------------
 # UNIT TESTS
@@ -1174,6 +1329,11 @@ else:
 	print "Skipping... Windows installer isn't being built:",without_installer_reason
 
 #------------------------------------------------------
+# PROJECT FILE for MSVC
+
+env.SConscript(['base/msvc/SConscript'],['env','libascend']);
+
+#------------------------------------------------------
 # CREATE the SPEC file for generation of RPM packages
 
 if platform.system()=="Linux":
@@ -1201,7 +1361,7 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 #------------------------------------------------------
 # DEFAULT TARGETS
 
-default_targets =[]
+default_targets =['libascend']
 if with_tcltk:
 	default_targets.append('tcltk')
 if with_python:
