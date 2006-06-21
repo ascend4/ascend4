@@ -9,4 +9,9 @@ srcs = Split("""
 	dgesl.f
 """)
 
-env.Library('linpack',srcs)
+linpack = []
+
+for src in srcs:
+	linpack.append( env.SharedObject(src) )
+
+Return('linpack')
