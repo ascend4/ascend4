@@ -39,6 +39,9 @@
 #ifndef ASCTK_HELPPROC_H
 #define ASCTK_HELPPROC_H
 
+#include <tcl.h>
+#include <utilities/ascConfig.h>
+
 /**
  * The largest number of strings that will be used in building a long
  * help string.

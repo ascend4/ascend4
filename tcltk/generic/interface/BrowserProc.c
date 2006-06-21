@@ -42,7 +42,7 @@
 #include <compiler/check.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/relation_type.h>
 #include <compiler/setinstval.h>
 #include <compiler/extfunc.h>
@@ -188,7 +188,7 @@ int Asc_BrowRootInitCmd(ClientData cdata, Tcl_Interp *interp,
    */
   int nok;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if( argc == 1 ) {
     g_root = g_curinst = NULL;
@@ -216,7 +216,7 @@ int Asc_BrowRootCmd(ClientData cdata, Tcl_Interp *interp,
 */
   unsigned long nch,c;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args to root", TCL_STATIC);
@@ -253,7 +253,7 @@ int Asc_BrowRootNCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned long index;
   struct Instance *i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args to \"rootn\"", TCL_STATIC);
@@ -297,7 +297,7 @@ int Asc_BrowRootBackupCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct Instance *newi;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -361,7 +361,7 @@ int Asc_BrowTransferCmd(ClientData cdata, Tcl_Interp *interp,
   struct gl_list_t *search_list;
   int nok;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage is \"transfer name\"",
@@ -389,7 +389,7 @@ int Asc_BrowSimListCmd(ClientData cdata, Tcl_Interp *interp,
   struct gl_list_t *sl;
   unsigned long len, c;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -414,7 +414,7 @@ int Asc_BrowSimTypeCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct Instance *sptr;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,"wrong # args: Usage \"simtype\" simname",TCL_STATIC);
@@ -432,7 +432,7 @@ int Asc_BrowSimTypeCmd(ClientData cdata, Tcl_Interp *interp,
 int Asc_BrowInstStatCmd(ClientData cdata, Tcl_Interp *interp,
                     int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -458,8 +458,8 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
   struct InstanceName name;
   unsigned long cc, index;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
-  (void)argv;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
+  UNUSED_PARAMETER(argv);
 
   if ( argc != 1 ) {
     Tcl_SetResult(interp, "wrong # args to \"instlist\"", TCL_STATIC);
@@ -493,7 +493,7 @@ int Asc_BrowInstListCmd(ClientData cdata, Tcl_Interp *interp,
 int Asc_BrowPrintCmd(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc > 2 ) {
@@ -808,7 +808,7 @@ int BrowInstName(struct Instance *i, char **rstring)
 {
   /* Now only goes to stdout */
 
-  (void)rstring;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(rstring);
 
   if (i) {
     WriteInstanceName(stdout,i,NULL);
@@ -930,7 +930,7 @@ int Asc_BrowInstQueryCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned long npa;
   int result;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc == 1 ) {
     Tcl_AppendResult(interp,"Usage : inst <",
@@ -1183,7 +1183,7 @@ int Asc_BrowInstanceMergeCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *result;
   struct Instance *i1, *i2;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1247,7 +1247,7 @@ int Asc_BrowInstanceRefineCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i, *top, *inst;
   double start_time =0.0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"brefine\" type ?cur?search?",
@@ -1340,7 +1340,7 @@ int Asc_BrowMakeAlikeCmd(ClientData cdata, Tcl_Interp *interp,
   struct TypeDescription *desc,*desc1,*desc2;
   struct Instance *i1, *i2;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 3 ) {

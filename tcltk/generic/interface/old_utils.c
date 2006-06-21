@@ -41,7 +41,7 @@
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/sets.h>
 #include <compiler/instance_enum.h>
 #include <compiler/instance_name.h>
@@ -99,7 +99,7 @@ char *asc_make_dimensions(const dim_type *dim)
       int n;
       size += SIZE_INCREMENT;
       if( dimens != NULL ) ascfree(dimens);
-      str = dimens = (char *)ascmalloc(size*sizeof(char));
+      str = dimens = ASC_NEW_ARRAY(char,size);
       slim = str + size;
       first = TRUE;
       for( n=0 ; n<NUM_DIMENS ; ++n ) {

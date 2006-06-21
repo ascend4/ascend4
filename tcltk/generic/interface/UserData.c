@@ -308,7 +308,7 @@ int Asc_UserDataCreateCmd(ClientData cdata, Tcl_Interp *interp,
   enum UserInfo_enum t;
   char *id;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage __userdata_create type",
@@ -337,7 +337,7 @@ int Asc_UserDataDestroyCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct UserData *user_data;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc > 3 )||( argc < 2 )) {
     Tcl_SetResult(interp,
@@ -477,7 +477,7 @@ int Asc_UserDataSaveValuesCmd(ClientData cdata, Tcl_Interp *interp,
   struct gl_list_t *list;
   char *id;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "__userdata_save from to", TCL_STATIC);
@@ -530,7 +530,7 @@ int Asc_UserDataRestoreValuesCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct UserData *user_data;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage __userdata_restore id",
@@ -554,7 +554,7 @@ int Asc_UserDataInitializeCmd(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[])
 {
   /* usage is __userdata_initialize */
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -593,7 +593,7 @@ int Asc_UserDataQueryCmd(ClientData cdata, Tcl_Interp *interp,
      usage is __userdata_query ?type?exists? id */
   struct UserData *user_data;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "wrong # args : __userdata_query ?type?exists? id",
@@ -629,7 +629,7 @@ int Asc_UserDataPrintLibrary(ClientData cdata, Tcl_Interp *interp,
   unsigned c;
   struct UserDataEntry *ptr;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 

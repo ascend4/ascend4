@@ -42,7 +42,7 @@
 #include <compiler/dimen.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/statement.h>
 #include <compiler/statio.h>
@@ -174,7 +174,7 @@ int Asc_BrowIsRelationCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   char buf[MAXIMUM_NUMERIC_LENGTH];  /* string to hold integer */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,
@@ -206,7 +206,7 @@ int Asc_BrowIsLogRelCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   char buf[MAXIMUM_NUMERIC_LENGTH];   /* string to hold integer */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,
@@ -237,7 +237,7 @@ int Asc_BrowIsWhenCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   char buf[MAXIMUM_NUMERIC_LENGTH];   /* string to hold integer */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,"wrong # args : Usage __brow_iswhen ?current?search?",
@@ -268,7 +268,7 @@ int Asc_BrowIsInstanceInWhenCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   char buf[MAXIMUM_NUMERIC_LENGTH];   /* string to hold integer */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,
@@ -301,7 +301,7 @@ int Asc_BrowIsModelCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   char buf[MAXIMUM_NUMERIC_LENGTH];       /* string to hold integer */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,
@@ -388,7 +388,7 @@ int Asc_BrowWriteInstanceNameCmd(ClientData cdata, Tcl_Interp *interp,
   CONST struct Instance *i, *ref;
   char *tmp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 2 ) {
     Tcl_SetResult(interp,
@@ -428,7 +428,7 @@ int Asc_BrowWriteAliasesCmd(ClientData cdata, Tcl_Interp *interp,
   char *tmp;
   unsigned long c,len;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"aliases\" ?current?search?",
@@ -574,7 +574,7 @@ int Asc_BrowCountNamesCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i = NULL;
   char tmp[40];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,
@@ -638,7 +638,7 @@ int Asc_BrowWriteISAsCmd(ClientData cdata, Tcl_Interp *interp,
   char *tmp;
   unsigned long c,len;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"isas\" <current,search>",
@@ -688,7 +688,7 @@ int Asc_BrowWriteCliqueCmd(ClientData cdata, Tcl_Interp *interp,
   CONST struct Instance *i;
   CONST struct Instance *tmp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
@@ -1380,7 +1380,7 @@ int Asc_BrowWriteInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   int show_child_atoms=0;
   int show_passed_parts=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   ASCUSE;
 
@@ -1449,7 +1449,7 @@ int Asc_BrowIsPlotAllowedCmd(ClientData cdata, Tcl_Interp *interp,
   char buf[MAXIMUM_NUMERIC_LENGTH];       /* string to hold integer */
   int result=0;         /* 0 = FALSE; 1 = TRUE */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"b_isplottable ?cur?search?",
@@ -1481,7 +1481,7 @@ int Asc_BrowPreparePlotFileCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   char *filename;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   /* We use the g_plot_type defined in plot.h */
   if (( argc < 3 ) || ( argc > 5 )) {
@@ -1529,7 +1529,7 @@ int Asc_BrowRefinesMeCmd(ClientData cdata, Tcl_Interp *interp,
   struct TypeDescription *desc;
   int result=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1642,7 +1642,7 @@ int Asc_BrowWriteValues(ClientData cdata, Tcl_Interp *interp,
   int fast_but_sloppy = 0;		/* default is original */
   int nok = 0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc<5|| argc>6) {
     Tcl_AppendResult(interp,"wrong # args: Usage : \"bwritevalues\" ",
@@ -2206,7 +2206,7 @@ int Asc_BrowFindTypeCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i=NULL;
   int j;                           /*  looping variable  */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc < 3 ) {
     Tcl_AppendResult(interp,"wrong # args: Usage \"__brow_find_type\" ",
@@ -2264,7 +2264,7 @@ int Asc_BrowRelationRelopCmd(ClientData cdata, Tcl_Interp *interp,
   CONST struct relation *rel;
   enum Expr_enum t, reltype;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong #args : Usage __brow_reln_relop ?cur?seach?",
@@ -2327,7 +2327,7 @@ int BrowLogRelRelopCmd(ClientData cdata, Tcl_Interp *interp,
   CONST struct logrelation *lrel;
   enum Expr_enum t;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong #args : Usage __brow_lrel_relop ?cur?seach?",
@@ -2374,7 +2374,7 @@ int Asc_BrowClearVarsCmd(ClientData cdata, Tcl_Interp *interp,
   int status;
   struct Instance *i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 1 ) || ( argc > 2 )) {
     Tcl_SetResult(interp, "wrong # args: Usage free_all_vars [qlfdid]",

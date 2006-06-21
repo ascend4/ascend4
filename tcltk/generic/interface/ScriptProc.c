@@ -135,7 +135,7 @@ int Asc_ScriptMergeCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i, *result=NULL;
   int status;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc!=3) {
     Tcl_SetResult(interp, "wrong # args : Usage smerge <qlfdid> <qlfdid>",
@@ -209,7 +209,7 @@ int Asc_FastRaiseCmd(ClientData cdata, Tcl_Interp *interp,
   Window window;
   Display *display;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc!=2) {
     Tcl_SetResult(interp, "wrong # args to asc_raise", TCL_STATIC);
@@ -232,7 +232,7 @@ int Asc_ScriptEvalCmd(ClientData cdata, Tcl_Interp *interp,
   /* see page 264 of the Tcl book. */
   int result;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc!=2) {
     Tcl_SetResult(interp, "Error in running ScriptEval", TCL_STATIC);
@@ -263,7 +263,7 @@ int Asc_TimeCmd(ClientData cdata, Tcl_Interp *interp,
   int i,n=1, status=TCL_OK;
   char tmps[40];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   ASCUSE;
 
@@ -343,7 +343,7 @@ int Asc_StringCompact(ClientData cdata, Tcl_Interp *interp,
   int bracenest=0,wcnt;
   char *result=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc != 2) {
     Tcl_SetResult(interp, "wrong args: stringcompact string", TCL_STATIC);

@@ -43,7 +43,7 @@
 #include <compiler/instance_name.h>
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/mathinst.h>
 #include <compiler/relation_type.h>
 #include <compiler/extfunc.h>
@@ -116,7 +116,7 @@ int Asc_DebuGetBlkOfVar(ClientData cdata, Tcl_Interp *interp,
   dof_t *d;
   const mtx_block_t *b;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_get_blk_of_var <var index>\n");
@@ -201,7 +201,7 @@ int Asc_DebuGetBlkOfEqn(ClientData cdata, Tcl_Interp *interp,
   dof_t *d;
   const mtx_block_t *b;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_get_blk_of_eqn <rel index>\n");
@@ -283,7 +283,7 @@ int Asc_DebuGetBlkCoords(ClientData cdata, Tcl_Interp *interp,
   dof_t *d;
   const mtx_block_t *b;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_get_blk_coords <blocknumber>\n");
@@ -338,7 +338,7 @@ int Asc_DebuGetEqnOfVar(ClientData cdata, Tcl_Interp *interp,
   mtx_matrix_t mtx;
   struct var_variable **vp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,"call is: dbg_get_eqn_of_var <var Cindex> \n");
@@ -394,7 +394,7 @@ int Asc_DebuGetVarPartition(ClientData cdata, Tcl_Interp *interp,
   dof_t *d;
   const mtx_block_t *b;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -455,7 +455,7 @@ int Asc_DebuGetEqnPartition(ClientData cdata, Tcl_Interp *interp,
   dof_t *d;
   const mtx_block_t *b;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -519,7 +519,7 @@ int Asc_DebuListVars(ClientData cdata, Tcl_Interp *interp,
   boolean vbool = FALSE;
   char tmps[MAXIMUM_NUMERIC_LENGTH+1];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc != 2 ) && ( argc != 3 )) {
     FPRINTF(ASCERR,"call is: dbg_list_vars <1 args> [not] \n");
@@ -623,7 +623,7 @@ int Asc_DebuListRels(ClientData cdata, Tcl_Interp *interp,
   boolean rbool = FALSE;
   char tmps[MAXIMUM_NUMERIC_LENGTH+1];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc != 2 ) && ( argc != 3 )) {
     FPRINTF(ASCERR,"call is: dbg_list_rels <1 args> [not] \n");
@@ -1550,7 +1550,7 @@ int Asc_DebuRelIncluded(ClientData cdata, Tcl_Interp *interp,
   slv_system_t sys=NULL;
   char res[40];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR, "call is: dbg_rel_included <var ndx>\n");
@@ -1596,7 +1596,7 @@ int Asc_DebuVarFixed(ClientData cdata, Tcl_Interp *interp,
   slv_system_t sys=NULL;
   char res[40];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR, "call is: dbg_var_fixed <var ndx>\n");
@@ -1642,7 +1642,7 @@ int Asc_DebuGetIncidence(ClientData cdata, Tcl_Interp *interp,
   int status=TCL_OK;
   char *tmps=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_get_incidence <rel index>\n");
@@ -1704,7 +1704,7 @@ int Asc_DebuGetOrder(ClientData cdata, Tcl_Interp *interp,
   char num[20];
   rel_filter_t rfilter;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,"call is: dbg_get_order <row,col> \n");
@@ -1761,7 +1761,7 @@ int Asc_DebuWriteIncidence(ClientData cdata, Tcl_Interp *interp,
   struct rel_relation **rp;
   char *line = (char *)ascmalloc(32);
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,"call is: dbg_write_incidence <device#> \n");
@@ -1826,7 +1826,7 @@ int Asc_DebuWriteIncidence(ClientData cdata, Tcl_Interp *interp,
     slv_select_solver(g_solvsys_cur,tmpi);
   }
   order = mtx_order(mtx);
-  tmp = (int32 *)ascmalloc(order*sizeof(int32));
+  tmp = ASC_NEW_ARRAY(int32,order);
   for( nz.row=0 ; nz.row < order ; ++nz.row ) {
 #if DP_DEBUG
     if (dev <2) {
@@ -1885,7 +1885,7 @@ int Asc_DebuFindEligible(ClientData cdata, Tcl_Interp *interp,
   symchar *eligible;
   symchar *none;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_find_eligible <out>\n");
@@ -1975,7 +1975,7 @@ int Asc_DebuInstEligible(ClientData cdata, Tcl_Interp *interp,
   unsigned long pc;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: brow_find_eligible <out>\n");
@@ -2105,7 +2105,7 @@ int Asc_DebuConsistencyAnalysis(ClientData cdata, Tcl_Interp *interp,
   symchar *consistent;
   symchar *none;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_consistency_analysis <out>\n");
@@ -2203,7 +2203,7 @@ int Asc_DebuFindGlobalEligible(ClientData cdata, Tcl_Interp *interp,
   symchar *eligible;
   symchar *none;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_global_eligible <out>\n");
@@ -2303,7 +2303,7 @@ int Asc_DebuFindActive(ClientData cdata, Tcl_Interp *interp,
   int i,dev,status;
   int count,len,aclen;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: dbg_find_activerels <out>\n");
@@ -2356,7 +2356,7 @@ int Asc_DebuFindActive(ClientData cdata, Tcl_Interp *interp,
   rp = slv_get_solvers_rel_list(g_solvsys_cur);
   len = slv_get_num_solvers_rels(g_solvsys_cur);
   aclen = slv_count_solvers_rels(g_solvsys_cur,&rfilter);
-  rip = (int32 *)ascmalloc(aclen*sizeof(int32));
+  rip = ASC_NEW_ARRAY(int32,aclen);
 
   count =0;
   for (i=0; i < len; i++) {
@@ -2419,7 +2419,7 @@ int Asc_DebuInstActive(ClientData cdata, Tcl_Interp *interp,
   int i,dev,status,len,count,aclen;
   int32 *rip;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,"call is: brow_find_activerels <out>\n");
@@ -2499,7 +2499,7 @@ int Asc_DebuInstActive(ClientData cdata, Tcl_Interp *interp,
   rp = slv_get_solvers_rel_list(g_browsys_cur);
   len = slv_get_num_solvers_rels(g_browsys_cur);
   aclen = slv_count_solvers_rels(g_browsys_cur,&rfilter);
-  rip = (int32 *)ascmalloc(aclen*sizeof(int32));
+  rip = ASC_NEW_ARRAY(int32,aclen);
 
   count =0;
   for (i=0; i < len; i++) {
@@ -2685,7 +2685,7 @@ int Asc_DebuNumBlockSing(ClientData cdata, Tcl_Interp *interp,
   char tmps[MAXIMUM_NUMERIC_LENGTH];
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 4 ) {
     FPRINTF(ASCERR,
@@ -2897,7 +2897,7 @@ int Asc_DebuStructSing(ClientData cdata, Tcl_Interp *interp,
   int32 relnum,maxrel;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     FPRINTF(ASCERR,  "call is: dbg_struct_singular <out> <relindex,-1>\n");
@@ -3042,7 +3042,7 @@ int Asc_DebuVarFree2Nom(ClientData cdata, Tcl_Interp *interp,
   var_filter_t vfilter;
   int32 c,maxvar;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -3078,7 +3078,7 @@ int Asc_DebuVarNom2Free(ClientData cdata, Tcl_Interp *interp,
   var_filter_t vfilter;
   int32 maxvar,c;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -3141,7 +3141,7 @@ int Asc_DebuCheckRelFp(ClientData cdata, Tcl_Interp *interp,
   struct Instance *rinst;
   char tmps[MAXIMUM_NUMERIC_LENGTH+1];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -3200,7 +3200,7 @@ int Asc_DebuCalcRelNominals(ClientData cdata, Tcl_Interp *interp,
   int ls,rs;
   real64 nom;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -3429,7 +3429,7 @@ int Asc_DebuHelpList(ClientData cdata, Tcl_Interp *interp,
 {
   boolean detail=1;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 2 ) {
     FPRINTF(ASCERR,"call is: dbghelp [s,l] \n");
@@ -3616,7 +3616,7 @@ int Asc_DebuWriteKirkSystem(ClientData cdata, Tcl_Interp *interp,
   char *objs=NULL, *lhs=NULL, *rhs=NULL;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "Usage dbg_write_kirk_sys <filename>", TCL_STATIC);
@@ -3743,7 +3743,7 @@ int Asc_DebuWriteGAMSSystem(ClientData cdata, Tcl_Interp *interp,
   real64 val_tmp;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "dbg_write_gams_sys takes 1 arg", TCL_STATIC);
@@ -3914,7 +3914,7 @@ int Asc_DebuMtxWritePlotCmd(ClientData cdata, Tcl_Interp *interp,
   mtx_region_t reg;
   real64 *rhs = NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc < 4 ) {
     Tcl_AppendResult(interp,"wrong # args: Usage :",
@@ -4028,7 +4028,7 @@ int Asc_DebuMtxCalcJacobianCmd(ClientData cdata, Tcl_Interp *interp,
   int whichsolver;
   int result=TCL_ERROR;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_AppendResult(interp,"wrong # args :",

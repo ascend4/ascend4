@@ -39,7 +39,7 @@ int Asc_BrowQlfdidSearchCmd(ClientData cdata, Tcl_Interp *interp,
   struct SearchEntry *se;
   unsigned long len,c;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp,"wrong # args : Usage is qlfdid \"name\"",TCL_STATIC);
