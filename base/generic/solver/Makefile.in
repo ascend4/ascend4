@@ -52,7 +52,7 @@ LIB_OBJS = \
 	slv.o slv0.o slv1.o slv2.o slv3.o slv6.o slv7.o \
 	slv8.o slv9.o slv9a.o slvDOF.o slv_common.o \
 	slv_interface.o slv_stdcalls.o system.o var.o \
-	integrator.c lsode.c samplelist.c
+	integrator.o lsode.o samplelist.o
 
 LIB_SRCS = $(LIB_OBJS:%.c=%.o)
 
