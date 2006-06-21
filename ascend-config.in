@@ -1,0 +1,62 @@
+#!@PYTHON@
+from optparse import OptionParser
+import sys
+
+#---------------------
+# This file is generated automatically by SCons and installed in at INSTALL_BIN.
+# Use it to query for local configuration of ASCEND on your system for example
+# when building external 'plugins' such as external computations and external
+# solvers etc.
+#
+# It's written in python since (because of SCons) we know we have Python on 
+# this system already tut we don't know that about unix shell (eg on Windows).
+#
+# Note that SCons supports reading of the output from this script, using
+# features offered since version 0.96.91
+#
+# This file inspired by other software that uses the same approach, eg
+# ginac-config, xft-config, cppunit-config.
+#
+# Type ascend-config --help for usage.
+#---------------------
+
+
+# here are the values passed to us from SCons:
+LIB="@INSTALL_LIB@"
+BIN="@INSTALL_BIN@"
+INCLUDE="@INSTALL_INCLUDE@"
+ASCDATA="@INSTALL_ASCDATA@"
+
+usage = "usage: %prog [--help,...]"
+# the rest of this script is about returning those values in the standard way
+parser = OptionParser(usage=usage, version="@VERSION@")
+
+parser.add_option("--libs", action="store_true", dest="libs", help="show linker flags (for ASCEND libraries)")
+parser.add_option("--cppflags", action="store_true", dest="cppflags", help="show C pre-processor flags (for ASCEND header files)")
+parser.add_option("--data", action="store_true", dest="data", help="show location of ASCEND data files")
+
+(options, args) = parser.parse_args()
+
+ok = False
+
+if options.cppflags:
+	include = ""
+	if INCLUDE!="/usr/include":
+		include=INCLUDE
+	print "-I"+include
+	ok = True
+
+if options.libs:
+	libs = ""
+	if LIB!="/usr/lib":
+		libs = LIB
+	print "-L"+libs+" -lascend"
+	ok = True
+
+if options.data:
+	print ASCDATA
+	ok = True
+
+if not ok:
+	sys.stderr.write("invalid option (use --help for more info)\n")
+	sys.exit(1)

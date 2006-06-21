@@ -9,22 +9,23 @@ https://pse.cheme.cmu.edu/wiki/view/Ascend/WebHome
 There are older versions of this document, which include instructions
 on how to build ASCEND with GNU Autotools. This may or may not work
 with the version you are currently looking at.
-https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/INSTALL?view=log
+https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/INSTALL.txt?view=log
 
 -----
 BUILDING ON LINUX AND WINDOWS
 
 To build ASCEND we now recommend using SCons. This is supported
-both on Windows (using the MinGW toolset) and Linux. Their fans
-will also find build tools for jam and autotools. The autotools
-build is still maintained for at least the tcl/tk interface version.
+both on Windows (using the MinGW toolset) and Linux. Build scripts for using
+jam and GNU Autotools are also provided although these scripts will not allow
+you access to the full range of ASCEND functionality. The Autotools
+scripts will only build the tcl/tk interface version.
 
 ASCEND provides two possible interfaces. The older, more mature
 GUI is based on Tcl/Tk. A newer interface that is more in keeping
 with modern GUI design is implemented using PyGTK, but it is still
-missing some functionality.
+missing some functionality and actively being developed.
 
-Using SCons 0.96.91 or newer, see your build options by typing
+Using SCons 0.96.92 or newer, see your build options by typing
 
   scons -Qh
 
@@ -35,12 +36,12 @@ Then to build ASCEND, type
 
   scons
 
-SCons will tell you what version(s) of ASCEND it is able to build.
-The PyGTK interface requires Python (which is present if you have
-SCons). The Tcl/Tk interface requires that you have Tcl/Tk and
-TkTable installed on your system.
+SCons will tell you what version(s) of ASCEND it is able to build, and then
+proceed to start the build. The PyGTK interface requires Python (which is
+already present if you have SCons!). The Tcl/Tk interface requires that you 
+have Tcl/Tk and TkTable installed on your system.
 
-For updates on this information, please check
+For updates on this information, and PLATFORM-SPECIFIC INFORMATION, please check
 https://pse.cheme.cmu.edu/wiki/view/Ascend/BuildingAscend
 
 For specific information on building the Python interface and
@@ -113,8 +114,9 @@ should simply need to type
 
   scons installer
 
-This will leave an installer package named 'ascend-setup.exe'
-in the pygtk/interface directory.
+This will leave an installer package named 'ascend-NNNNN.exe'
+in the pygtk/interface directory, with NNNNN being the version number specified
+at the top of the SConstruct file.
 
 ------
 CREATING AN RPM/DEB PACKAGE

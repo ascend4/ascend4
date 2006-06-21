@@ -26,6 +26,7 @@ if platform.system()=="Windows":
 	default_absolute_paths = False
 	default_ida_prefix = "c:/mingw"
 	need_libm = False
+	python_exe = "c:\\Python24\\python.exe"
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -40,6 +41,7 @@ else:
 	need_libm = True
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
+	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
 
 opts.Add(
 	'CC'
@@ -305,7 +307,7 @@ opts.Add(
 
 opts.Add(
 	'INSTALL_LIB'
-	,'Location to put binaries during installation'
+	,'Location to put libraries during installation'
 	,"$INSTALL_PREFIX/lib"
 )
 
@@ -1060,6 +1062,7 @@ subst_dict = {
 	, '@INSTALL_ASCDATA@':env['INSTALL_ASCDATA']
 	, '@INSTALL_BIN@':env['INSTALL_BIN']
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
+	, '@INSTALL_LIB@':env['INSTALL_LIB']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
@@ -1069,6 +1072,7 @@ subst_dict = {
 	, '@ASC_SHLIBPREFIX@':env['SHLIBPREFIX']
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
+	, '@PYTHON@' : python_exe
 }
 
 if env.get('WITH_LOCAL_HELP'):
@@ -1305,6 +1309,11 @@ else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
 
 #------------------------------------------------------
+# CREATE ASCEND-CONFIG scriptlet
+
+ascendconfig = env.SubstInFile('ascend-config.in')
+
+#------------------------------------------------------
 # INSTALLATION
 
 if env.get('CAN_INSTALL'):
@@ -1318,6 +1327,8 @@ if env.get('CAN_INSTALL'):
 	env.Alias('install',install_dirs)
 
 	env.InstallShared(env['INSTALL_ROOT']+env['INSTALL_LIB'],libascend)
+
+	env.InstallProgram(env['INSTALL_ROOT']+env['INSTALL_BIN'],ascendconfig)
 
 #------------------------------------------------------
 # WINDOWS INSTALLER
