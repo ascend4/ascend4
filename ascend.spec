@@ -111,6 +111,7 @@ update-mime-database /usr/share/mime
 %files
 %defattr(-, root, root)
 %doc INSTALL.txt LICENSE.txt
+%{_bindir}/ascend-config
 %{_datadir}/ascend/models
 %{_libdir}/libascend.so
 %{_datadir}/mime/packages/ascend.xml
