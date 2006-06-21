@@ -31,7 +31,7 @@
  *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
  *         #include "list.h"
- *         #include "types.h"
+ *         #include "expr_types.h"
  *  </pre>
  */
 

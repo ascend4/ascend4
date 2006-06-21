@@ -3,7 +3,7 @@
 # It would be a good idea to staticly link ALL packages
 # on those platforms that don't support dlopening.
 
-Import('env')
+Import('libascend_env')
 
 srcs = Split("""
 
@@ -13,6 +13,6 @@ srcs = Split("""
 
 objs = []
 for s in srcs:
-	objs += env.SharedObject(s)
+	objs += libascend_env.SharedObject(s)
 
 Return('objs')

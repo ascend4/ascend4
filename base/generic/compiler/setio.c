@@ -32,7 +32,7 @@
 #include "functype.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "sets.h"
 #include "setio.h"
 #include "exprio.h"

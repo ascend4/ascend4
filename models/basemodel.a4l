@@ -212,6 +212,16 @@ METHOD defaults;
 	STOP {GUI (or somebody) called non-standard method defaults. Call forwarded to default_self before stopping here.};
 END defaults;
 
+METHOD on_load;
+NOTES 'purpose' SELF {
+This method adds improved ability to perform stuff when a model is first loaded.
+By default, just 'default_self' will be run (this was the previous behaviour).
+Any model that has an on_load method can override this behaviour however.
+Note that this behaviour applies only in the C++/python interface at this stage.
+} END NOTES;
+  RUN default_self;
+END on_load;
+
 METHOD default_self;
 NOTES 'purpose' SELF {
 This method should set default values for any variables

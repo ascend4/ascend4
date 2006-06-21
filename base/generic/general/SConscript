@@ -1,4 +1,4 @@
-Import('env')
+Import('libascend_env')
 
 csrcs = Split("""
 	dstring.c hashpjw.c list.c listio.c pool.c pretty.c
@@ -8,6 +8,6 @@ csrcs = Split("""
 
 objs =[]
 for c in csrcs:
-	objs += env.SharedObject(c)
+	objs += libascend_env.SharedObject(c)
 
 Return('objs')

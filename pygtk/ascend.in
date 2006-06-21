@@ -29,21 +29,31 @@ else
     bin=$python
 fi
 
-if [ `which ascend` ]; then
-	echo `which ascend` "?"
+# if 'ascend' isn't in the path, assume ASC_DEV mode...
+whichascend=`which ascend &2>/dev/null`
+if [ $whichascend ]; then
+	echo $whichascend " ?"
 else
 	ASC_DEV=1
 fi
 
-if [ "x$ASC_DEV" != "x" ]; then
-	# set the 'ASC_DEVELOPING' environment variable
-	# if you don't want to run ASCEND from the installed location
-	echo "NOTE! RUNNING ASC_DEV (LOCAL) MODE..."
+if [ "x$ASC_TEST" != "x" ]; then
+	# set the 'ASC_TEST' env var to run the suite of
+	# unit tests instead of running ASCEND GUI.
+	echo "LAUNCHING ASCEND TEST SUITE..."
 	export LD_LIBRARY_PATH=..
-	cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=../models $args"
-	echo "Launching... $cmd"
+	cmd="$bin test.py"
 else
-	cmd="$bin @INSTALL_ASCDATA@/gtkbrowser.py $args"
+	if [ "x$ASC_DEV" != "x" ]; then
+		# set the 'ASC_DEV' environment variable
+		# if you don't want to run ASCEND from the installed location
+		echo "NOTE! RUNNING ASC_DEV (LOCAL) MODE..."
+		export LD_LIBRARY_PATH=..
+		cmd="$bin gtkbrowser.py --pygtk-assets=glade/ --library=../models $args"
+		echo "Launching... $cmd"
+	else
+		cmd="$bin @INSTALL_ASCDATA@/gtkbrowser.py $args"
+	fi
 fi
 
 $cmd

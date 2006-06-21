@@ -9,7 +9,7 @@ extern "C"{
 #include <general/dstring.h>
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/symtab.h>
 #include <compiler/nameio.h>
 }

@@ -1,7 +1,20 @@
-// This file will be processed by SCons and output as config.h.
-// Don't edit this file unless it's named 'config.h.in' unless
-// it doesn't bother you that your changes will be IGNORED!
+/*
+	This file will be processed by SCons and output as config.h.
+	Don't edit this file unless it's named 'config.h.in' unless
+	it doesn't bother you that your changes will be IGNORED!
 
+	DUAL SUPPORT FOR BOTH AUTOTOOLS AND SCONS
+
+	When I add a new flag to SCons, I will use the form (replace \ by /):
+		
+		\* #define FLAGNAME @FLAGNAME@ *\
+
+	Using SCons, I can uncomment these lines using text-substitution.
+	If you want to add support for these flags in your autotools build
+	you just need to uncomment these lines; no changes to the SCons build
+	will be necessary (as it will also hunt for @FLAGNAME@ in its
+	text-subst.
+*/
 #ifndef ASC_CONFIG_H
 #define ASC_CONFIG_H
 
@@ -31,15 +44,14 @@
 	interface, in Driver.c's choices for default values of non-specified
 	environment variables. @TODO migrate this to Python as well.
 
-	SCons will replace 'ifdef ASC_ABSOLUTE_PATHS' with 'if 1', depending on
-	configuration. It is assumed that Autotools users will be happy to use the
-	relative paths mode.
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
 
 	Note: do not use ASC_ABSOLUTE_PATHS on Windows. Absolute paths mess up the
 	ability of the installer to relocate files at install-time.
 */
-#ifdef ASC_ABSOLUTE_PATHS
-# define ASC_ABSOLUTE_PATHS
+#ifndef ASC_ABSOLUTE_PATHS
+/* #define ASC_ABSOLUTE_PATHS @ASC_ABSOLUTE_PATHS@ */
 #endif
 
 /*
@@ -76,23 +88,53 @@
 	variable is set to 'xterm' or 'msys'. MSYS uses the 'rxvt' console,
 	which knows about xterm colour codes.
 
-	SCons will replace 'ifdef ASC_XTERM_COLORS' with 'if 1' if required.
+	SCons will uncomment the #define line if required.
 	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#ifdef ASC_XTERM_COLORS
-# define ASC_XTERM_COLORS
+#ifndef ASC_XTERM_COLORS
+/* #define ASC_XTERM_COLORS @ASC_XTERM_COLORS@ */
 #endif
 
 /*
 	Whether to do use testing malloc. Required for some of the CUnit
 	tests to work fully.
 
-	SCons will replace 'ifdef MALLOC_DEBUG' with 'if 1' if required.
+	SCons will uncomment the #define line if required.
 	Doing it this (hacky) way so as not to mess up autoconf.
 */
-#ifdef MALLOC_DEBUG
-# define MALLOC_DEBUG
+#ifndef MALLOC_DEBUG
+/* #define MALLOC_DEBUG @MALLOC_DEBUG@ */
 #endif
+
+/*
+	Whether to compile with support for the IDA DAE solver.
+
+	Note that this option is automatically configured based on the value of 
+	WITH_SOLVERS in the SCons options.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_IDA
+/* #define ASC_WITH_IDA @ASC_WITH_IDA@ */
+#endif
+
+
+/*
+	Whether to compile with support for the LSODE integration engine. 
+	Note that you will usually need to manually specify the location of your 
+	'libg2c.a' in the link step, see F2C_* Scons options.
+
+	Note that this option is automatically configured based on the value of 
+	WITH_SOLVERS in the SCons options.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_LSODE
+/* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ */
+#endif
+
 
 /*
 	The following are the environment variables ASCEND requires.

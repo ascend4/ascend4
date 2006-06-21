@@ -3170,7 +3170,7 @@ int kirk1_factor(linsolqr_system_t sys,
   pivots=sys->ludata->pivlist;
   mtx = sys->factors;
   upper_mtx = sys->inverse;
-  inserted = (int32 *)asccalloc(length,sizeof(int32));
+  inserted = ASC_NEW_ARRAY_CLEAR(int32,length);
   eltbuffer = mem_create_store(2,256,sizeof(struct dlinklist),
 			       2,256);
 

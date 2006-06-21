@@ -110,7 +110,7 @@ class DiagnoseWindow:
 		nr = int(rh-rl+1);
 		nc = int(ch-cl+1);
 
-		#print "STARTING IMAGE CREATION"
+		print "STARTING IMAGE CREATION"
 		# refer http://pygtk.org/pygtk2tutorial/sec-DrawingMethods.html
 		c = chr(255)
 		b = nr*nc*3*[c]
@@ -162,7 +162,7 @@ class DiagnoseWindow:
 
 		d = ''.join(b)
 
-		#print "DONE IMAGE CREATION"
+		print "DONE IMAGE CREATION"
 	
 		self.pixbuf = gtk.gdk.pixbuf_new_from_data(d, gtk.gdk.COLORSPACE_RGB, False, 8 \
 				, nc, nr, rowstride);
@@ -172,7 +172,7 @@ class DiagnoseWindow:
 		self.zoom = -1 # to fit, up to max 16x
 		self.do_zoom()
 
-		#print "DONE IMAGE TRANSFER TO SERVER"
+		print "DONE IMAGE TRANSFER TO SERVER"
 
 		self.fill_var_names()
 		self.fill_rel_names()
@@ -182,6 +182,7 @@ class DiagnoseWindow:
 		self.relname.set_text("");
 		self.relresid.set_text("");
 
+		print "DONE FILL VALUES"
 
 	def do_zoom(self):
 		if self.zoom == -1:
@@ -212,7 +213,12 @@ class DiagnoseWindow:
 		self.image.set_from_pixbuf(pb1)
 
 	def fill_var_names(self):
+		print "FILL VAR NAMES"
+
 		names = [str(i) for i in self.im.getBlockVars(self.block)]
+
+		print "NAMES:",names
+
 		if self.varcollapsed.get_active():
 			res = reduce(names)
 			rows = []
@@ -227,8 +233,19 @@ class DiagnoseWindow:
 			text = "\n".join(names)
 		self.varbuf.set_text(text)
 
+		print "DONE VAR NAMES"
+
 	def fill_rel_names(self):
-		names = [str(i) for i in self.im.getBlockRels(self.block)]
+		print "REL NAMES"
+
+		rels = self.im.getBlockRels(self.block)
+
+		print "GOT RELS, NOW GETTING NAMES"
+
+		names = [str(i) for i in rels]
+
+		print "NAMES =",names
+
 		if self.relcollapsed.get_active():
 			res = reduce(names)
 			rows = []
@@ -242,6 +259,8 @@ class DiagnoseWindow:
 		else:
 			text = "\n".join(names)
 		self.relbuf.set_text(text)
+
+		print "DONE REL NAMES"
 
 	def set_block(self, block):
 		self.fill_values(block)

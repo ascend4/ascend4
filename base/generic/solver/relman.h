@@ -1,68 +1,53 @@
-/*
- *  SLV: Ascend Nonlinear Solver
- *  by Karl Michael Westerberg
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1990 Karl Michael Westerberg
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Relation manipulator module for the SLV solver.
+
+	This module will provide supplemental operations for
+	relations such as simplification, evaluation, and
+	differentiation.
+
+	Dates: 06/90 - original version
+	       06/93 - separated out exprman
+	       11/93 - added relman_calc_satisfied
+	
+	Requires:     
+	#include "utilities/ascConfig.h"
+	#include "mtx.h"
+	#include "var.h"
+	#include "rel.h"
+*//*
+ *  by Karl Michael Westerberg and Joseph Zaher
  *  Created: 2/6/90
  *  Version: $Revision: 1.29 $
  *  Version control file: $RCSfile: relman.h,v $
  *  Date last modified: $Date: 1998/04/23 23:56:24 $
  *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
-
-/** @file
- *  Relation manipulator module for the SLV solver.
- *  <pre>
- *  Contents:     Relation manipulator module
- *
- *  Authors:      Karl Westerberg
- *                Joseph Zaher
- *
- *  Dates:        06/90 - original version
- *                06/93 - separated out exprman
- *                11/93 - added relman_calc_satisfied
- *
- *  Description:  This module will provide supplemental operations for
- *                relations such as simplification, evaluation, and
- *                differentiation.
- *
- *  Requires:     #include "utilities/ascConfig.h"
- *                #include "mtx.h"
- *                #include "var.h"
- *                #include "rel.h"
- *  </pre>
- */
+*/
 
 #ifndef ASC_RELMAN_H
 #define ASC_RELMAN_H
 
 #define relman_is_linear(a,b) (FALSE)
 /**<
- *  <!--  extern boolean relman_is_linear(struct rel_relation *,var_filter_t *); -->
- *  <!--  islinear = relman_is_linear(rel,filter)                      -->
- *  <!--  boolean islinear;                                            -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *
  *  Determines whether or not the given relation is linear in
  *  all of the variables which pass through the variable filter, treating
  *  those variables which fail to pass as constants.<br><br>
@@ -75,12 +60,6 @@ extern real64 relman_linear_coef(struct rel_relation *rel,
                                  struct var_variable *var,
                                  var_filter_t *filter);
 /**<
- *  <!--  coef = relman_linear_coef(rel,var,filter)                    -->
- *  <!--  real64 coef;                                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  struct var_variable *var;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *
  *  Computes the coefficient of the given variable in a linear
  *  relation.  If var=NULL, then the "RHS" is returned instead.  More
  *  nprecisely, "a[var]" is returned where:<br><br>
@@ -93,10 +72,6 @@ extern real64 relman_linear_coef(struct rel_relation *rel,
 
 extern void relman_simplify(struct rel_relation *rel, int opt_level);
 /**<  NOT IMPLEMENTED
- *  <!--  relman_simplify(rel,opt_level)                               -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  int opt_level;                                               -->
- *
  *  The left and right hand sides of the given relation are simplified
  *  to the extent given by opt_level.  The effect of varying values of
  *  opt_level is given in the description for exprman_simplify().
@@ -104,19 +79,12 @@ extern void relman_simplify(struct rel_relation *rel, int opt_level);
 
 extern void relman_dissolve_vars(struct rel_relation *rel, var_filter_t *filter);
 /**<   NOT IMPLEMENTED
- *  <!--  relman_dissolve_vars(rel,filter)                             -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *
  *  Variables which pass through the filter are replaced in the
  *  relation by their current values.
  */
 
 extern void relman_decide_incidence(struct rel_relation *rel);
 /**<
- *  <!--  relman_decide_incidence(rel)                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Sets the incidence field of each variable which is found to be
  *  incident in the relation rel to TRUE.  If these variables make
  *  up a subset of some larger variable list, it is important to first
@@ -128,44 +96,31 @@ extern void relman_get_incidence(struct rel_relation *rel,
                                  var_filter_t *filter,
                                  mtx_matrix_t matrix);
 /**<
- *  <!--  relman_get_incidence(rel,filter,matrix)                      -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *  <!--  mtx_matrix_t matrix;                                         -->
- *
  *  Upon return, coefficient (rel_n,var_n) (using original row and column
  *  numbers) is non-zero if and only if the relation rel with index rel_n
  *  depends on a variable with index var_n.
  */
 
-ASC_DLLSPEC(real64 ) relman_eval(struct rel_relation *rel, int32 *status, int safe);
+ASC_DLLSPEC(real64 ) relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe);
 /**<
- *  <!--  residual = relman_eval(rel,status,safe)                      -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  int32 *status;                                               -->
- *  <!--  int safe;                                                    -->
- *  <!--  real64 residual;                                             -->
- *
- *  The residual of the relation is calculated and returned.  In addition
- *  to returning the residual, the residual field of the relation is
- *  updated.  Residual := LHS - RHS regardless of comparison.  The status
- *  value can be monitored to
- *  determine if any calculation errors were encountered.  It will be set
- *  0 if a calculation results in an error.
- *  If the value of safe is nonzero, "safe" functions will be used to
- *  calculate the residual.
- *  The residual field of the relation is not updated when an error occurs.<br><br>
- *
- *  This function should be surrounded by Asc_SignalHandlerPush/Pop both
- *  with arguments (SIGFPE,SIG_IGN). If it is being called in a loop,
- *  the push/pop should be _outside_ the loop.
- */
+	The residual of the relation is calculated and returned.  In addition
+	to returning the residual, the residual field of the relation is
+	updated. The residual field of the relation is not updated when an error
+	occurs.
+
+	@param safe If set nonzero, "safe" functions are used for evaluation (means
+		that overflows, divide by zero, etc are avoided)
+	@param calc_ok (returned) status of the calculation. 0=error, else ok.
+	@return residual (= LHS - RHS, regardless of comparison)
+
+	@note
+	This function should be surrounded by Asc_SignalHandlerPush/Pop both
+	with arguments (SIGFPE,SIG_IGN). If it is being called in a loop,
+	the push/pop should be _outside_ the loop.
+*/
 
 extern int32 relman_obj_direction(struct rel_relation *rel);
 /**<
- *  <!--  direction = relman_eval_obj(rel,status,safe)                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
  *  Returns:
  *    - direction = -1 if objective is minimization
  *    - direction =  1 if objective is maximization
@@ -174,10 +129,6 @@ extern int32 relman_obj_direction(struct rel_relation *rel);
 
 extern real64 relman_scale(struct rel_relation *rel);
 /**<
- *  <!--  residual = relman_scale(rel)                                 -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  real64 residual;                                             -->
- *
  *  Calculates relation nominal scaling factor for
  *  current values stored in the relations variables.
  *  Fills the relations nominal field and also returns
@@ -186,20 +137,12 @@ extern real64 relman_scale(struct rel_relation *rel);
 
 #define relman_diff(a,b,c,d) (abort(),1)
 /**<
- *  <!--  ExTERn int relman_diff(struct rel_relation *,struct var_variable*,real64*,int); -->
- *  <!--  status = relman_diff(rel,var,pd,safe);                       -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  struct var_variable *var;                                    -->
- *  <!--  real64 *pd;                                                  -->
- *  <!--  int safe;                                                    -->
- *  <!--  int status;                                                  -->
- *
  *  Calculates the derivative of the relation residual with respect to
  *  the specified variable and stuffs it in pd. if problem with
  *  calculation, returns 1, else 0.
  *  If the value of safe is nonzero, "safe" functions will be used to
  *  calculate the residual.
- *  @todo relman_diff() needs to be reimplemented - needs compiler side work.
+ *  @TODO relman_diff() needs to be reimplemented - needs compiler side work.
  */
 
 extern int relman_diff2(struct rel_relation *rel,
@@ -209,14 +152,6 @@ extern int relman_diff2(struct rel_relation *rel,
                         int32 *count, 
                         int32 safe);
 /**<
- *  <!--  status = relman_diff2(rel,filter,derivatives,variables,count,safe) -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *  <!--  real64 *derivatives;                                         -->
- *  <!--  int32 *variables;                                            -->
- *  <!--  int32 *count;                                                -->
- *  <!--  int32 status;                                                -->
- *
  *  Calculates the row of the jacobian matrix (the transpose gradient of
  *  the relation residual grad^T(f) ) corresponding to the relation
  *  rel.  The filter determines which variables actually contribute to the
@@ -242,17 +177,6 @@ extern int relman_diff_grad(struct rel_relation *rel,
                             real64 *resid,
                             int32 safe);
 /**<
- *  <!--  status = relman_diff_grad(rel,filter,derivatives,variables_master, -->
- *  <!--                           variables_solver,count,resid,safe)  -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *  <!--  real64 *derivatives;                                         -->
- *  <!--  real64 *resid;                                               -->
- *  <!--  int32 *variables_master;                                     -->
- *  <!--  int32 *variables_solver;                                     -->
- *  <!--  int32 *count;                                                -->
- *  <!--  int32 status;                                                -->
- *
  *  Calculates the row of the jacobian matrix (the transpose gradient of
  *  the relation residual grad^T(f) ) corresponding to the relation
  *  rel.  The filter determines which variables actually contribute to the
@@ -280,14 +204,6 @@ ASC_DLLSPEC(int ) relman_diffs(struct rel_relation *rel,
                         real64 *resid, 
                         int safe);
 /**<
- *  <!--  status = relman_diffs(rel,filter,mtx,resid,safe)             -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  var_filter_t *filter;                                        -->
- *  <!--  real64 *resid;                                               -->
- *  <!--  mtx_matrix_t mtx;                                            -->
- *  <!--  int safe;                                                    -->
- *  <!--  int status;                                                  -->
- *
  *  Calculates the row of the jacobian matrix (the transpose gradient of
  *  the relation residual grad^T(f) ) corresponding to the relation
  *  rel.  The filter determines which variables actually contribute to the
@@ -322,9 +238,6 @@ extern int32 relman_diff_harwell(struct rel_relation **rlist,
                                  int32 *ivec, 
                                  int32 *jvec);
 /**< 
- *  <!--  err = relman_diff_harwell(rlist,vfilter,rfilter,rlen,bias,mors, -->
- *  <!--                            avec,ivec,jvec);                      -->
- *
  *  This fills an "a-i-j" sparse matrix in the avec/ivec/jvec given.
  *  @param rlist   struct rel_relation **, list of relations rlen long.
  *  @param vfilter var_filter_t *, stuffs gradient for matching variables only.
@@ -353,7 +266,6 @@ extern int32 relman_jacobian_count(struct rel_relation **rlist,
                                    rel_filter_t *rfilter,
                                    int32 *rhomax);
 /**<
- *  <!--  nnz = relman_jacobian_count(rlist, rlen, vfilter, rfilter, rhomax); -->
  *  Return the number of nonzero gradient entries in the equations
  *  given. Only equations passing rfilter and entries passing vfilter
  *  are counted. rlen is the length of the relation list.
@@ -369,12 +281,6 @@ extern boolean relman_calc_satisfied_scaled(struct rel_relation *rel,
 extern boolean relman_calc_satisfied(struct rel_relation *rel,
                                      real64 tolerance);
 /**<
- *  <!--  satisfied = relman_calc_satisfied(rel,tolerance)             -->
- *  <!--  satisfied = relman_calc_satisfied_scaled(rel,tolerance)      -->
- *  <!--  boolean satisfied;                                           -->
- *  <!--  real64 tolerance;                                            -->
- *
- *  <!--  relman_calc_satisfied:                                       -->
  *  Returns TRUE or FALSE depending on whether the relation whose residual
  *  has been previously calculated is satisfied based on the value stored
  *  in the residual field.  The satisfied field of the relation is also
@@ -395,15 +301,6 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
                                          int *nsolns,
                                          real64 tol);
 /**<
- *  <!--  solution_list = relman_directly_solve(rel,solvefor,able,nsolns)         -->
- *  <!--  solution_list = relman_directly_solve_new(rel,solvefor,able,nsolns,tol) -->
- *  <!--  real64 *solution_list;                                       -->
- *  <!--  struct rel_relation *rel;                                    -->
- *  <!--  struct var_variable *solvefor;                               -->
- *  <!--  int *able;                                                   -->
- *  <!--  int *nsolns;                                                 -->
- *  <!--  real64 tol;                                                  -->
- *
  *  Attempts to solve the given equation for the given variable.  If this
  *  function is able to determine the solution set, then *able is set to
  *  1 and a newly allocated solution list is returned: *nsolns will be
@@ -433,26 +330,23 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 #define relman_make_xstring_infix(sys,rel)   \
       relman_make_vstring_infix((sys),(rel),FALSE)
 /**<
- *  <!--  string = relman_make_string_infix(sys,rel)                   -->
- *  <!--  string = relman_make_string_postfix(sys,rel)                 -->
- *  <!--  string = relman_make_xstring_infix(sys,rel)                  -->
- *  <!--  string = relman_make_xstring_postfix(sys,rel) // not working -->
- *  <!--  char *string;                                                -->
- *  <!--  struct rel_relation *rel;                                    -->
- *
- *  Creates a sufficiently large string (you must free it when you're
- *  done with it) into which it converts a relation.  The string will be
- *  terminated with a '\0' character. 
- *  
- *  The xstring versions of this call make strings where all the variables
- *  are written as x<varindex> (e.g. x23) rather than as object names.
- *  The MASTER index (var_mindex) is used, not the solver's sindex.
- *  Currently the compiler does not support xstring postfix format,
- *  but could easily do so if needed.
- *  
- *  The name of a var is context dependent, so you have to provide the
- *  slv_system_t from which you got the relation.
- */
+	@return string
+	@param sys
+	@param rel struct rel_relation *rel
+	
+	Creates a sufficiently large string (you must free it when you're
+	done with it) into which it converts a relation.  The string will be
+	terminated with a '\0' character. 
+	
+	The xstring versions of this call make strings where all the variables
+	are written as x<varindex> (e.g. x23) rather than as object names.
+	The MASTER index (var_mindex) is used, not the solver's sindex.
+	Currently the compiler does not support xstring postfix format,
+	but could easily do so if needed.
+	
+	The name of a var is context dependent, so you have to provide the
+	slv_system_t from which you got the relation.
+*/
 #if 0 /* needs compiler side work */
 #define relman_make_xstring_postfix(sys,rel) \
       relman_make_vstring_postfix((sys),(rel),FALSE)
@@ -462,7 +356,7 @@ extern real64 *relman_directly_solve_new(struct rel_relation *rel,
 #endif
 /**< 
  *  Not suppported.
- *  @todo Consider adding support for xstring postfix format. 
+ *  @TODO Consider adding support for xstring postfix format. 
  */
 
 ASC_DLLSPEC(char *) relman_make_vstring_infix(slv_system_t sys,
@@ -488,7 +382,6 @@ extern char *dummyrelstring(slv_system_t sys,
 
 extern void relman_free_reused_mem(void);
 /**<
- * <!--  relman_free_reused_mem(void);                                 -->
  * Call when desired to free memory cached internally.
  */
 

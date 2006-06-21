@@ -1,58 +1,44 @@
-/*
- *  Expression Evaluation Routine
- *  by Tom Epperly
- *  Created: 1/16/90
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: evaluate.h,v $
- *  Date last modified: $Date: 1997/07/18 12:29:08 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  Expression Evaluation Routine
- *  <pre>
- *  When #including evaluate.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "list.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "dimen.h"
- *         #include "types.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef __EVALUATE_H_SEEN__
-#define __EVALUATE_H_SEEN__
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Expression Evaluation Routine
+
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "list.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "dimen.h"
+	#include "expr_types.h"
+*//*
+	by Tom Epperly
+	Created: 1/16/90
+	Last in CVS: $Revision: 1.10 $ $Date: 1997/07/18 12:29:08 $ $Author: mthomas $
+*/
+
+#ifndef ASC_EVALUATE_H
+#define ASC_EVALUATE_H
 
 extern struct value_t EvaluateSet(CONST struct Set *sptr,
                                   struct value_t (*EvaluateName)());
 /**<
- *  <!--  struct value_t EvaluateSet(sptr,EvaluateName)                -->
- *  <!--  const struct Set *sptr;                                      -->
- *  <!--  struct value_t (*EvaluateName)();                            -->
- *
- *  <!--  POINTERS TO FUNCTIONS                                        -->
- *  <!--  struct value_t EvaluateName(nptr)                            -->
- *  <!--  struct Name *nptr;                                           -->
  *  Return the value of a Set structure, which just might be a set.
  */
 
@@ -60,13 +46,6 @@ extern struct value_t EvaluateExpr(CONST struct Expr *expr,
                                    CONST struct Expr *stop,
                                    struct value_t (*EvaluateName)());
 /**<
- *  <!--  struct value_t EvaluateExpr(expr,stop,EvaluateName)          -->
- *  <!--  const struct Expr *expr,*stop;                               -->
- *  <!--  struct value_t (*EvaluateName)();                            -->
- *
- *  <!--  POINTERS TO FUNCTIONS                                        -->
- *  <!--  struct value_t EvaluateName(nptr)                            -->
- *  <!--  struct Name *nptr;                                           -->
  *  Return the value of a name structure.
  *  In most cases stop = NULL.  stop can be used to evaluate just part of
  *  an expression.  If (stop!=NULL) the calling program, must know the
@@ -77,9 +56,7 @@ extern struct gl_list_t *EvaluateNamesNeeded(CONST struct Expr *expr,
                                              CONST struct Expr *stop,
                                              struct gl_list_t *list);
 /**<
- *  <!--  list = EvaluateNamesNeeded(expr,stop,list);                     -->
- *  <!--  const struct Expr *expr,*stop;                               -->
- *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
+ *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
  *
  *  Appends all the externally defined names found in expr to list.
  *  (Loop variables defined in the expression are ignored.)
@@ -102,9 +79,7 @@ extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *expr,
                                                     CONST struct Expr *stop,
                                                     struct gl_list_t *list);
 /**<
- *  <!--  list = EvaluateNamesNeededShallow(expr,stop,list);           -->
- *  <!--  const struct Expr *expr,*stop;                               -->
- *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
+ *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
  *
  *  Appends all the externally defined names found in expr to list.
  *  (Loop variables defined in the expression are ignored.)
@@ -126,10 +101,7 @@ extern struct gl_list_t *EvaluateNamesNeededShallow(CONST struct Expr *expr,
 extern struct gl_list_t
 *EvaluateSetNamesNeeded(CONST struct Set *sptr, struct gl_list_t *list);
 /**<
- *  <!--  list = EvaluateSetNamesNeeded(sptr,list)                     -->
- *  <!--  const struct Set *sptr;                                      -->
- *  <!--  extern struct gl_list_t *list;                               -->
- *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
+ *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
  *
  *  Appends all the externally defined names found in sptr to list.
  *  (Loop variables defined in the expression are ignored.)
@@ -150,10 +122,7 @@ extern struct gl_list_t
 extern struct gl_list_t
 *EvaluateSetNamesNeededShallow(CONST struct Set *sptr, struct gl_list_t *list);
 /**<
- *  <!--  list = EvaluateSetNamesNeededShallow(sptr,list)              -->
- *  <!--  const struct Set *sptr;                                      -->
- *  <!--  extern struct gl_list_t *list;                               -->
- *  <!--  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant). -->
+ *  (Analogous to EvaluateExpr, but the global EvaluatingSets is irrelevant).
  *
  *  Appends all the externally defined names found in sptr to list.
  *  (Loop variables defined in the expression are ignored.)
@@ -185,5 +154,5 @@ extern void ClearRecycleStack(void);
  *  report how many recycled stack elements it deallocates.
  */
 
-#endif /* __EVALUATE_H_SEEN__ */
+#endif /* ASC_EVALUATE_H */
 

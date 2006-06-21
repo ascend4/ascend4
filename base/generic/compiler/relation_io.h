@@ -26,7 +26,7 @@
 	#include "fractions.h"
 	#include "compiler.h"
 	#include "dimen.h"
-	#include "types.h"
+	#include "expr_types.h"
 	#include "relation_type.h"
 	#include "exprs.h"
 	#include "relation.h"

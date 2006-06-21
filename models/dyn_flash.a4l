@@ -1640,7 +1640,7 @@ END reboiler;
 
 
 MODEL testflashmodel() REFINES testcmumodel;
-(* root fo flash based test models *)
+(* root for flash based test models *)
 END testflashmodel;
 
 MODEL test_vapor_liquid_flash() REFINES testflashmodel();
@@ -1743,6 +1743,22 @@ METHOD values;
 	fl1.Vol := 10 {m^3};
 	fl1.vol_liq := 3 {m^3};
 END values;
+
+METHOD on_load;
+	RUN default_self;
+	equilibrated := FALSE;
+	RUN values; RUN reset;
+END on_load;
+
+METHOD prepare_ode;
+	(* solve *)
+	RUN check_self;
+	dynamic := TRUE;
+	RUN fl1.seqmod;
+	RUN fl1.set_ode;
+	RUN fl1.set_obs;
+END prepare_ode;
+
 END test_vapor_liquid_flash;
 
 

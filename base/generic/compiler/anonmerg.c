@@ -104,7 +104,7 @@
 #include "child.h"
 #include "type_desc.h"
 #include "instance_enum.h"
-#include "types.h"
+#include "expr_types.h"
 #include "instance_types.h"
 #include "instance_name.h"
 #include "tmpnum.h"
@@ -1054,16 +1054,16 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
 
   asize = amvi->maxchildren; /* now some buffers of this size */
 
-  amipd->listhints = (int *)ascmalloc(asize*sizeof(int));
-  amipd->graphs = (Numlist_p *)ascmalloc(asize*sizeof(Numlist_p));
-  amipd->mergegraphs = (Numlist_p *)ascmalloc(asize*sizeof(Numlist_p));
+  amipd->listhints = ASC_NEW_ARRAY(int,asize);
+  amipd->graphs = ASC_NEW_ARRAY(Numlist_p,asize);
+  amipd->mergegraphs = ASC_NEW_ARRAY(Numlist_p,asize);
   amipd->graphchildnum =
-      (unsigned long *)ascmalloc(asize*sizeof(unsigned long));
-  amipd->routes = (Numlist_p *)ascmalloc(asize*sizeof(Numlist_p));
+      ASC_NEW_ARRAY(unsigned long,asize);
+  amipd->routes = ASC_NEW_ARRAY(Numlist_p,asize);
   amipd->routechildnum =
-      (unsigned long *)ascmalloc(asize*sizeof(unsigned long));
+      ASC_NEW_ARRAY(unsigned long,asize);
   amipd->finalchildnum =
-      (unsigned long *)ascmalloc(asize*sizeof(unsigned long));
+      ASC_NEW_ARRAY(unsigned long,asize);
   /* totfinal, totroute, totgraph are all 'in use' counters, not
    * the size of allocation. amvi->maxchildren is the capacity.
    */

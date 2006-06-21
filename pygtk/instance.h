@@ -16,7 +16,7 @@ class Plot;
 extern "C"{
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/instance_enum.h>
 #include <compiler/atomvalue.h>
 #include <compiler/plot.h>

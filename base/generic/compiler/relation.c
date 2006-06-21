@@ -44,7 +44,7 @@
 #include "dimen.h"
 #include "functype.h"
 #include "func.h"
-#include "types.h"
+#include "expr_types.h"
 #include "name.h"
 #include "nameio.h"
 #include "instance_enum.h"
@@ -143,14 +143,15 @@ void FigureOutError(struct value_t value,
   }
 }
 
+/*-----------------------------------------------------------------------------
+  CREATION AND MANAGEMENT OF RELATION TERMS
 
-/*********************************************************************\
-  Section for creation and management of relation terms.
   It is cheaper to create relation terms in arrays the size of
   the union than individually because of operating system overhead.
 
   Lookout, the tokens have unionized: next they'll want a raise.
-\*********************************************************************/
+*/
+
 /*
  * The define POOL_ALLOCTERM is for people who are pulling terms out
  * of a pool and promise to return them immediately.
@@ -339,10 +340,11 @@ static void AppendTermBuf(struct relation_term *t) {
   return;
 }
 
-/************************************************************************\
- functions to simplify the postfix token list before final creation
- of the token relation array.
-\************************************************************************/
+/*------------------------------------------------------------------------------
+  FUNCS TO SIMPLIFY POSTFIX TOKEN LIST
+
+  ...before final creation of the token relation array.
+*/
 
 /* returns 1 if term is e_zero, e_real=0.0, or e_int=0 */
 static int SimplifyTBIsZero(struct relation_term *arg)
@@ -717,7 +719,7 @@ static int ArgsForToken(enum Expr_enum t) {
   }
 }
 
-/*
+/**
  * first = SimplifyTermBuf_SubExprLimit(ts,b,start,tt)
  * unsigned long CONST *ts;		 current term stack
  * struct relation_term ** CONST b;	 global term ptr array
@@ -802,7 +804,7 @@ static int check_gt1(unsigned long i) {
 }
 #endif
 
-/*
+/**
  * A function to simplify the term buffer before copying it into a
  * postfix array. Only mandatory dim checking is performed.
  * Cost: O(n) where n = blen.
@@ -901,6 +903,7 @@ static unsigned long SimplifyTermBuf(int level,
   case e_int:
   case e_real:
   case e_zero:
+  case e_diff:
     break;
   default:
     FPRINTF(ASCERR,"Compiler cannot simplify malformed expression\n");
@@ -933,6 +936,7 @@ static unsigned long SimplifyTermBuf(int level,
     case e_int:
     case e_real:
     case e_zero:
+	case e_diff:
       TS_PUSH(top);
       break;
     case e_nop:
@@ -1863,7 +1867,8 @@ static unsigned long SimplifyTermBuf(int level,
   return right;
 }
 /* END SimplifyTermBuf */
-
+
+
 struct relation_side_temp {
   unsigned long length;
   union RelationTermUnion *side;
@@ -1873,7 +1878,7 @@ static struct relation_term
 *InfixArr_MakeSide(CONST struct relation_side_temp *, int *);
 /* forward declaration */
 
-/* returns 1 if converting buf is successful
+/** returns 1 if converting buf is successful
  * returns 0 if buf empty or insufficient memory.
  * The structure tmp given is filled with an array of terms
  * and its length. You must free the array if you decide you
@@ -1900,7 +1905,7 @@ static int ConvertTermBuf(struct relation_side_temp *tmp)
   return 1;
 }
 
-/*
+/**
  *  usually we want to reset both simultaneously. reset our
  *  pooling and buffering data.
  */
@@ -1910,7 +1915,9 @@ void DestroyTermList(void) {
   TPBUF_RESET;
 }
 
-/* create a term from the pool */
+/**
+	create a term from the pool 
+*/
 static struct relation_term *CreateOpTerm(enum Expr_enum t)
 {
   struct relation_term *term;
@@ -1927,7 +1934,7 @@ static struct relation_term *CreateOpTerm(enum Expr_enum t)
   return term;
 }
 
-/* create a term from the pool, inserting it
+/** create a term from the pool, inserting it
  * in pointer sorted order on g_relation_var_list.
  * Note that this and ModifyTokenRelationPointers are the
  * only places where the sort
@@ -1969,7 +1976,7 @@ static struct relation_term *CreateVarTerm(CONST struct Instance *i)
   return term;
 }
 
-/* create a term from the pool */
+/** create a term from the pool */
 static struct relation_term *CreateIntegerTerm(long int v)
 {
   struct relation_term *term;
@@ -1981,7 +1988,7 @@ static struct relation_term *CreateIntegerTerm(long int v)
   return term;
 }
 
-/* create a term from the pool */
+/** create a term from the pool */
 static struct relation_term *CreateRealTerm(double v, CONST dim_type *dim)
 {
   struct relation_term *term;
@@ -1994,7 +2001,7 @@ static struct relation_term *CreateRealTerm(double v, CONST dim_type *dim)
   return term;
 }
 
-/* create a term from the pool. Zero terms look like real, wild zeros */
+/** create a term from the pool. Zero terms look like real, wild zeros */
 static struct relation_term *CreateZeroTerm(void)
 {
   struct relation_term *term;
@@ -2007,7 +2014,7 @@ static struct relation_term *CreateZeroTerm(void)
   return term;
 }
 
-/* create a term from the pool */
+/** create a term from the pool */
 static struct relation_term *CreateFuncTerm(CONST struct Func *f)
 {
   struct relation_term *term;
@@ -2020,9 +2027,18 @@ static struct relation_term *CreateFuncTerm(CONST struct Func *f)
   return term;
 }
 
+/** create a diff operator term */
+static struct relation_term *CreateDiffTerm(){
+	struct relation_term *term;
+	term = POOL_ALLOCTERM;
+	assert(term!=NULL);
+	PTINIT(term);
+	term->t = e_diff;
+	/* NOT YET IMPLEMENTED */
+}
 
+/** create a term from the pool */
 #ifdef  THIS_IS_AN_UNUSED_FUNCTION
-/* create a term from the pool */
 static struct relation_term *CreateNaryTerm(CONST struct Func *f)
 {
   struct relation_term *term;
@@ -2037,7 +2053,7 @@ static struct relation_term *CreateNaryTerm(CONST struct Func *f)
 #endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
-/*
+/**
  * This function create and *must* create the memory
  * for the structure and for the union that the structure
  * points to. Too much code depends on the pre-existent
@@ -2085,9 +2101,8 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
   return newrelation;
 }
 
-
-/*
- **************************************************************************
+
+/*------------------------------------------------------------------------------
  * External Procedures Processing.
  *
  * A special note on external relations.
@@ -2104,11 +2119,8 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
  * from 1 <= n <= 4, depending on how many ATS are done. Unfortunately
  * the ATS could have been done even before we have constructed the relation,
  * so we have to make sure that we check for aliasing.
- **************************************************************************
- */
+*/
 
-
-
 struct relation *CreateBlackBoxRelation(struct Instance *relinst,
 					struct ExternalFunc *efunc,
 					struct gl_list_t *arglist,
@@ -2188,7 +2200,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst,
   return result;
 }
 
-
+
 struct relation *CreateGlassBoxRelation(struct Instance *relinst,
 					struct ExternalFunc *efunc,
 					struct gl_list_t *varlist,
@@ -2241,11 +2253,9 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
   return result;
 }
 
-
-/**************************************************************************\
-  TokenRelation processing and general expr -> relation check routines.
-\**************************************************************************/
-
+/*------------------------------------------------------------------------------
+  TOKENRELATION PROCESSING AND GENERAL EXPR-TO-RELATION CHECK ROUTINES
+*/
 
 static
 struct value_t CheckIntegerCoercion(struct value_t v)
@@ -2323,7 +2333,7 @@ CONST struct Expr *ExprContainsSuchThat(register CONST struct Expr *ex)
   return ex;
 }
 
-/*
+/**
  *  Here we give up if vars are not well defined.
  *  At present e_var acceptable ARE:
  *  REAL_ATOM_INSTANCE
@@ -2395,6 +2405,11 @@ static int AppendList( CONST struct Instance *,
 		 enum relation_errors *,
 		 enum find_errors *);
 
+/**
+	@todo document this
+	
+	Convert a part of an expression into part of a relation (in postfix)?
+*/
 static
 int ConvertSubExpr(CONST struct Expr *ptr,
 		   CONST struct Expr *stop,
@@ -2457,57 +2472,63 @@ int ConvertSubExpr(CONST struct Expr *ptr,
          }
       }
       else{
-	instances = FindInstances(ref,ExprName(ptr),ferr);
-	if (instances!=NULL){
-	  if (NextExpr(ptr)==stop){ /* possibly multiple instances */
-	    len = gl_length(instances);
-	    for(c=1;c<=len;c++){
-	      inst = (struct Instance *)gl_fetch(instances,c);
-	      if ((term=CreateTermFromInst(inst,rel,err))!=NULL){
-		AppendTermBuf(term);
-		if (my_added++){
-		  switch(i){
-		  case SUM:
-		    term = CreateOpTerm(e_plus);
-		    break;
-		  case PROD:
-		    term = CreateOpTerm(e_times);
-		    break;
-		  }
-		  AppendTermBuf(term);
-		}
-	      }
-	      else{
-		gl_destroy(instances);
-		return 1;
-	      }
-	    }
-	    gl_destroy(instances);
-	  }
-	  else{			/* single instance */
-	    if (gl_length(instances)==1){
-	      inst = (struct Instance *)gl_fetch(instances,1);
-	      gl_destroy(instances);
-	      if ((term=CreateTermFromInst(inst,rel,err))!=NULL){
-		my_added++;
-		AppendTermBuf(term);
-	      }
-	      else
-		return 1;
-	    }
-	    else{
-	      gl_destroy(instances);
-	      *err = incorrect_structure;
+        instances = FindInstances(ref,ExprName(ptr),ferr);
+        if (instances!=NULL){
+          if (NextExpr(ptr)==stop){ /* possibly multiple instances */
+            len = gl_length(instances);
+            for(c=1;c<=len;c++){
+              inst = (struct Instance *)gl_fetch(instances,c);
+              if ((term=CreateTermFromInst(inst,rel,err))!=NULL){
+                AppendTermBuf(term);
+                if (my_added++){
+                  switch(i){
+                  case SUM:
+                    term = CreateOpTerm(e_plus);
+                    break;
+                  case PROD:
+                    term = CreateOpTerm(e_times);
+                    break;
+                  }
+                  AppendTermBuf(term);
+                }
+              }
+              else{
+                gl_destroy(instances);
+                return 1;
+              }
+            }
+            gl_destroy(instances);
+          }
+          else{			/* single instance */
+            if (gl_length(instances)==1){
+              inst = (struct Instance *)gl_fetch(instances,1);
+              gl_destroy(instances);
+              if ((term=CreateTermFromInst(inst,rel,err))!=NULL){
+                my_added++;
+                AppendTermBuf(term);
+              }
+              else
+                return 1;
+              }
+              else{
+              gl_destroy(instances);
+              *err = incorrect_structure;
               FPRINTF(ASCERR,"incorrect_structure in ConvertSubExpr 1\n");
-	      return 1;
-	    }
-	  }
-	} else{
-	  *err = find_error;
-	  return 1;
-	}
+              return 1;
+            }
+          }
+        } else{
+          *err = find_error;
+          return 1;
+        }
       }
       break;
+    case e_diff:
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CreateDiffTerm not yet implemented");
+	  term = CreateZeroTerm();
+      my_added++;
+	  AppendTermBuf(term);
+	  break;
     case e_int:
       term = CreateIntegerTerm(ExprIValue(ptr));
       my_added++;
@@ -2533,20 +2554,20 @@ int ConvertSubExpr(CONST struct Expr *ptr,
       DestroyValue(&svalue);
       switch(ValueKind(cvalue)){
       case integer_value:
-	term = CreateIntegerTerm(IntegerValue(cvalue));
-	my_added++;
-	AppendTermBuf(term);
-	break;
+        term = CreateIntegerTerm(IntegerValue(cvalue));
+        my_added++;
+        AppendTermBuf(term);
+        break;
       case error_value:
-	FigureOutError(cvalue,err,ferr);
-	DestroyValue(&cvalue);
-	return 1;
+        FigureOutError(cvalue,err,ferr);
+        DestroyValue(&cvalue);
+        return 1;
       default:
-	FPRINTF(ASCERR,"This message should never occur.\n");
-	FPRINTF(ASCERR,"If it does tell %s\n",ASC_BIG_BUGMAIL);
-	DestroyValue(&cvalue);
-	*err = incorrect_structure;
-	return 1;
+        FPRINTF(ASCERR,"This message should never occur.\n");
+        FPRINTF(ASCERR,"If it does tell %s\n",ASC_BIG_BUGMAIL);
+        DestroyValue(&cvalue);
+        *err = incorrect_structure;
+        return 1;
       }
       DestroyValue(&cvalue);
       break;
@@ -2649,7 +2670,7 @@ int CorrectSuchThat(CONST struct Expr *ex,
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node type.\n");
+      Asc_Panic(2, NULL, "%s: Unknown expression node type.\n",__FUNCTION__);
       break;
     }
     previous = ex;
@@ -2658,7 +2679,7 @@ int CorrectSuchThat(CONST struct Expr *ex,
   return 0;
 }
 
-/* if problem, returns 1. if ok, returns 0 */
+/** if problem, returns 1. if ok, returns 0 */
 static
 int DoNameAndSet(CONST struct Expr *ex,
 		 CONST struct Expr *stop,
@@ -2819,11 +2840,19 @@ static int AppendList(CONST struct Instance *ref,
   return 0;
 }
 
-/* nonrecursive, but may call recursive things. returns 1 if ok. 0 if not
- * On a return of 1, newside->arr will be filled and should be deallocated
- * if the user does not want it. a return of 0 means that newside data is
- * invalid.
- * This is the ONLY function that should call DestroyTermList.
+/**
+	Convert expression from ... to ... 
+	nonrecursive, but may call recursive things.
+
+	On a return of 1, newside->arr will be filled and should be deallocated
+	if the user does not want it. a return of 0 means that newside data is
+	invalid.
+	
+	This is the ONLY function that should call DestroyTermList.
+
+	@todo document this
+
+	@return 1 if ok, 0 if not.
  */
 static int ConvertExpr(CONST struct Expr *start,
 			      CONST struct Expr *stop,
@@ -2857,38 +2886,39 @@ static int ConvertExpr(CONST struct Expr *start,
       break;
     case e_var:
       if (GetEvaluationForTable() &&
-	  (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
-	  (NULL != (fvp = FindForVar(GetEvaluationForTable(),str)))) {
-	if (GetForKind(fvp)==f_integer){
-	  term = CreateIntegerTerm(GetForInteger(fvp));
-	  AppendTermBuf(term);
-	} else{
-	  *err = incorrect_inst_type;
-	  DestroyTermList();
-	  return 0;
-	}
-      } else{
-	instances = FindInstances(ref,ExprName(start),ferr);
-	if (instances!=NULL){
-	  if (gl_length(instances)==1){
-	    inst = (struct Instance *)gl_fetch(instances,1);
-	    gl_destroy(instances);
-	    if ((term = CreateTermFromInst(inst,rel,err))!=NULL){
-	      AppendTermBuf(term);
-	    }
-	    else{
-	      DestroyTermList();
-	      return 0;
-	    }
-	  } else{
-	    *err=incorrect_structure;
-            FPRINTF(ASCERR,"incorrect_structure in ConvertExpr 1\n");
-	    gl_destroy(instances);
-	    DestroyTermList();
-	    return 0;
-	  }
-	} else{
-	  *err = find_error;
+          (NULL != (str = SimpleNameIdPtr(ExprName(start)))) &&
+          (NULL != (fvp = FindForVar(GetEvaluationForTable(),str)))
+      ){
+        if (GetForKind(fvp)==f_integer){
+          term = CreateIntegerTerm(GetForInteger(fvp));
+          AppendTermBuf(term);
+        } else{
+          *err = incorrect_inst_type;
+          DestroyTermList();
+          return 0;
+        }
+      }else{
+        instances = FindInstances(ref,ExprName(start),ferr);
+        if (instances!=NULL){
+          if (gl_length(instances)==1){
+            inst = (struct Instance *)gl_fetch(instances,1);
+            gl_destroy(instances);
+            if ((term = CreateTermFromInst(inst,rel,err))!=NULL){
+              AppendTermBuf(term);
+            }
+            else{
+              DestroyTermList();
+              return 0;
+            }
+          } else{
+            *err=incorrect_structure;
+            ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect structure (1)");
+            gl_destroy(instances);
+            DestroyTermList();
+            return 0;
+          }
+        }else{
+          *err = find_error;
           if (*ferr == impossible_instance) {
 			ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
             FPRINTF(ASCERR,"Impossible name or subscript in '");
@@ -2896,11 +2926,15 @@ static int ConvertExpr(CONST struct Expr *start,
             FPRINTF(ASCERR,"'");
 			error_reporter_end_flush();
           }
-	  DestroyTermList();
-	  return 0;
-	}
+          DestroyTermList();
+          return 0;
+        }
       }
       break;
+    case e_diff:
+      term = CreateDiffTerm(ExprFunc(start));
+      AppendTermBuf(term);
+      break;	  
     case e_zero:
       /* this should never happen here */
       term = CreateZeroTerm();
@@ -2923,34 +2957,33 @@ static int ConvertExpr(CONST struct Expr *start,
       DestroyValue(&svalue);
       switch(ValueKind(cvalue)){
       case integer_value:
-	term = CreateIntegerTerm(IntegerValue(cvalue));
-	AppendTermBuf(term);
-	break;
+        term = CreateIntegerTerm(IntegerValue(cvalue));
+        AppendTermBuf(term);
+        break;
       case error_value:
-	DestroyTermList();
-	FigureOutError(cvalue,err,ferr);
-	DestroyValue(&cvalue);
-	return 0;
+        DestroyTermList();
+        FigureOutError(cvalue,err,ferr);
+        DestroyValue(&cvalue);
+        return 0;
       default:
-	FPRINTF(ASCERR,"This message should never occur.\n");
-	FPRINTF(ASCERR,"If it does tell %s\n",ASC_BIG_BUGMAIL);
-	DestroyValue(&cvalue);
-	DestroyTermList();
-	*err = incorrect_structure;
-	return 0;
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid ValueKind for cvalue (please notify developers)");
+        DestroyValue(&cvalue);
+        DestroyTermList();
+        *err = incorrect_structure;
+        return 0;
       }
       DestroyValue(&cvalue);
       break;
     case e_sum:
       if (AppendList(ref,rel,ExprBuiltinSet(start),SUM,err,ferr)){
-	DestroyTermList();
-	return 0;
+        DestroyTermList();
+        return 0;
       }
       break;
     case e_prod:
       if (AppendList(ref,rel,ExprBuiltinSet(start),PROD,err,ferr)){
-	DestroyTermList();
-	return 0;
+        DestroyTermList();
+        return 0;
       }
       break;
     case e_func:
@@ -2959,7 +2992,7 @@ static int ConvertExpr(CONST struct Expr *start,
       break;
     default:
       *err = incorrect_structure;
-      FPRINTF(ASCERR,"incorrect_structure in ConvertExpr 2\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"incorrect structure (2)");
       DestroyTermList();
       return 0;
     }
@@ -2971,6 +3004,9 @@ static int ConvertExpr(CONST struct Expr *start,
   /* we do not check result here. that is the callers job */
 }
 
+/**
+	@todo document this
+*/
 static
 CONST struct Expr *FindRHS(CONST struct Expr *ex)
 {
@@ -2980,6 +3016,7 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
     switch(ExprType(ex)){
     case e_zero:
     case e_var:
+	case e_diff:
     case e_int:
     case e_real:
     case e_boolean:
@@ -3033,7 +3070,7 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
                 "They are only allowed in relations.\n");
       break;
     default:
-      Asc_Panic(2, NULL, "Unknown expression node type.\n");
+      Asc_Panic(2, NULL, "%s: Unknown expression node type.\n",__FUNCTION__);
       break;
     }
     previous = ex;
@@ -3042,19 +3079,22 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
   return NULL;
 }
 
-/*********************************************************************\
-  This code is to support the conversion from postfix to infix.
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+	CODE TO SUPPORT CONVERSION FROM POSTFIX TO INFIX
+*/
 
+/**
+	@todo why do we have infix notation in ASCEND?
+*/
 
 #define PopTermStack(stack) \
    ((struct relation_term *)gs_stack_pop((stack)))
 #define PushTermStack(stack,term) \
    (gs_stack_push((stack),(char*)(term)))
 
-/*
- * *err = 0 if ok, 1 otherwise. Sets up infix pointers.
- */
+/**
+	*err = 0 if ok, 1 otherwise. Sets up infix pointers.
+*/
 static struct relation_term
 *InfixArr_MakeSide(CONST struct relation_side_temp *tmp, int *err)
 {
@@ -3071,6 +3111,7 @@ static struct relation_term
     term = A_TERM(&(tmp->side[count])); /* aka tmp->side+count */
     switch(t = RelationTermType(term)) {
     case e_var:
+    case e_diff:
     case e_int:
     case e_real:
     case e_zero:
@@ -3097,7 +3138,7 @@ static struct relation_term
       gs_stack_push(stack,(char *)term);
       break;
     default:
-      Asc_Panic(2, "MakeInfix",
+      Asc_Panic(2, __FUNCTION__,
                 "Dont know this type of relation term in MakeInfix\n");
       break;
     }
@@ -3152,7 +3193,7 @@ void DoInOrderVisit(struct relation_term *term,
 }
 
 #if 0 /* potential future use */
-/* tHis is a recursive deallocation of a term tree.
+/** tHis is a recursive deallocation of a term tree.
    It presupposes all terms are independently allocated,
    which at present is true nowhere in the compiler.
    It's a nice little function, though so we'll keep it in case,
@@ -3197,9 +3238,10 @@ void DestroyTermTree(struct relation_term *term)
 }
 #endif
 
-/*********************************************************************\
-  Relation Processing for Instantiation.
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+	RELATION PROCESSING FOR INSTANTIATION
+*/
+
 static void DestroyTermSide(struct relation_side_temp *);
 void DestroyVarList(struct gl_list_t *, struct Instance *);
 
@@ -3312,9 +3354,11 @@ struct relation *CreateTokenRelation(struct Instance *reference,
   return result;
 }
 
-/**************************************************************************\
-  OpCodeRelation processing.
-\**************************************************************************/
+/*------------------------------------------------------------------------------
+	OPCODE RELATION PROCESSING
+*/
+
+/** @todo what is an opcode? */
 
 struct relation *CreateOpCodeRelation(struct Instance *reference,
                                       struct Instance *relinst,
@@ -3341,16 +3385,14 @@ struct relation *CreateOpCodeRelation(struct Instance *reference,
   return result;
 }
 
-/*
- **************************************************************************
- * Destroy Code.
- *
- * This takes care of destroying the parts of relations.
- * At the same time it ensures that any variables that are
- * incident upon the relations have their relation references
- * removed. This is done using the RemoveRelation function.
- **************************************************************************
- */
+/*------------------------------------------------------------------------------
+	OBJECT DESTRUCTION
+
+	This takes care of destroying the parts of relations.
+	At the same time it ensures that any variables that are
+	incident upon the relations have their relation references
+	removed. This is done using the RemoveRelation function.
+*/
 
 static void DestroyTermSide(struct relation_side_temp *temp)
 {
@@ -3424,38 +3466,35 @@ void DestroyRelation(struct relation *rel, struct Instance *relinst)
   ascfree((char *)rel);
 }
 
-
-/*
- **************************************************************************
- * Variable Maintenance.
- *
- * Relations need to keep a *unique* list of variables incident upon
- * them. This is for the purpose of constructing incidence matrices
- * etc, when solving. However variables move around and also disappear,
- * in particular when being ARE_THE_SAME'd. This code does that variable
- * maintenance.
- *
- * This requires some explanaition. There are a number of cases
- * to consider.
- *
- * 1) the old instance does not exist in the var list -- do nothing.
- *
- * 2) the old instance exists, but the new does not -- store the
- *    the new instance in the slot where the old instance was and
- *    return.
- *
- * 3) the old instance exists, *and* the new instance also exists in
- *    the varlist. This can happen in the case when 2 variables
- *    incident upon a relation are going to be ATS'ed (not wise but
- *    possible.) We need to run down the entire token list in the case
- *    of token relations, or opcode array in the case of opcode relations,
- *    fixing up the indexing. This is expensive and uses the
- *    DeleteAndChange function.
- *
- *  4) the new instance is NULL, which can happen transiently during some
- *     operations. This defaults to case 2).
- **************************************************************************
- */
+/*------------------------------------------------------------------------------
+	VARIABLE MAINTENANCE
+
+	Relations need to keep a *unique* list of variables incident upon
+	them. This is for the purpose of constructing incidence matrices
+	etc, when solving. However variables move around and also disappear,
+	in particular when being ARE_THE_SAME'd. This code does that variable
+	maintenance.
+
+	This requires some explanation. There are a number of cases
+	to consider.
+
+	1) the old instance does not exist in the var list -- do nothing.
+
+	2) the old instance exists, but the new does not -- store the
+	   the new instance in the slot where the old instance was and
+	   return.
+
+	3) the old instance exists, *and* the new instance also exists in
+	   the varlist. This can happen in the case when 2 variables
+	   incident upon a relation are going to be ATS'ed (not wise but
+	   possible.) We need to run down the entire token list in the case
+	   of token relations, or opcode array in the case of opcode relations,
+	   fixing up the indexing. This is expensive and uses the
+	   DeleteAndChange function.
+
+	4) the new instance is NULL, which can happen transiently during some
+	   operations. This defaults to case 2).
+*/
 
 static
 void ChangeTermSide(union RelationTermUnion *side,
@@ -3613,13 +3652,13 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
 
-/*********************************************************************\
-  This procedure should change all references of "old" in relation
-  instance rel to "new. This is similar to ModifyTokenRelationPointers
-  but handles the "external variables incident on the relation".
-  Remember that variables may be exist more than once in the list, so
-  that we have to find ALL occurrences.
-\*********************************************************************/
+/*
+	This procedure should change all references of "old" in relation
+	instance rel to "new. This is similar to ModifyTokenRelationPointers
+	but handles the "external variables incident on the relation".
+	Remember that variables may be exist more than once in the list, so
+	that we have to find ALL occurrences.
+*/
 void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
 			       CONST struct Instance *old,
@@ -3651,7 +3690,9 @@ void ModifyBlackBoxRelPointers(struct Instance *relinst,
   }
 }
 
-
+/**
+	@todo what's this?
+*/
 static
 int ReturnFromValue(struct value_t value)
 {
@@ -3669,7 +3710,7 @@ CheckExpr(CONST struct Instance *ref, CONST struct Expr *start,
   CONST struct Expr *stop, int list);
 
 
-/**********************************************************************\
+/*
   Here we check that vars are well defined, a precondition to FOR
   statements being executed.
   If lists of vars are acceptable (don't know why they would be)
@@ -3679,10 +3720,9 @@ CheckExpr(CONST struct Instance *ref, CONST struct Expr *start,
   Well defined Real and Integer constants.
   CreateTermFromInst() and CheckExpr() must have matching semantics.
 
- Returns: -1 --> OK,
-	  0  --> BAD (undefined/unassigned) try again later
-	  1  --> incurably BAD
-\**********************************************************************/
+ 	@return -1 if OK, 0 if BAD (undefined/unassigned: try again later) and
+	1 if incurably BAD
+*/
 static int CheckExprVar(CONST struct Instance *ref, CONST struct Name *name,
 			int list)
 {
@@ -3826,7 +3866,7 @@ static int CheckLowerAndUpper(CONST struct Instance *ref,
   }
 }
 
-/* called only by CheckListExpr. does what? */
+/** called only by CheckListExpr. does what? */
 static int CheckSuchThat(CONST struct Instance *ref, CONST struct Expr *ex)
 {
   CONST struct Expr *depth_one,*node;
@@ -3882,9 +3922,9 @@ static int CheckListExpr(CONST struct Instance *ref, CONST struct Expr *ex)
   }
 }
 
-/**********************************************************************\
+/**
   here we enforce that sets are well defined.
-\**********************************************************************/
+*/
 static int CheckList(CONST struct Instance *ref, CONST struct Set *sptr)
 {
   while(sptr!=NULL){
@@ -3901,13 +3941,12 @@ static int CheckList(CONST struct Instance *ref, CONST struct Set *sptr)
   return 1;
 }
 
-/**********************************************************************\
- CheckExpr(ref, start, stop, list)
- struct Instance *ref; context of the relation instance, ie parent.
- int list; boolean whether list of instances are acceptable
- struct Expr *start, *stop; pointers to the portion of relation this
- checks.
-\**********************************************************************/
+/*
+	@param ref context of the relation instance, ie parent.
+ 	@param list boolean whether list of instances are acceptable
+ 	@param start start of the portion of the relation this checks
+	@param stop end of the portion of the relation this checks
+*/
 static int CheckExpr(CONST struct Instance *ref,
 			CONST struct Expr *start,
 			CONST struct Expr *stop,
@@ -3950,9 +3989,10 @@ static int CheckExpr(CONST struct Instance *ref,
   return 1;
 }
 
-/* see header. returns 1 if relation expression is fully instantiable
- * ie all vars exist, and, if need be, properly initialized.
- */
+/** see header.
+	@return 1 if relation expression is fully instantiable ie all vars exist,
+	and, if need be, properly initialized.
+*/
 int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex)
 {
   CONST struct Expr *last_ex,*rhs_ex;
@@ -3977,19 +4017,18 @@ int CheckRelation(CONST struct Instance *reference, CONST struct Expr *ex)
   }
 }
 
-
-/*
- * We can now just do a memcopy and the infix pointers
- * all adjust by the difference between the token
- * arrays that the gl_lists are hiding. Cool, eh?
- * Note, if any turkey ever tries to delete an individual
- * token from these gl_lists AND deallocate it,
- * they will get a severe headache.
- *
- * This is a full blown copy and not copy by reference.
- * You do not need to remake the infix pointers after
- * calling this function.
- */
+/**
+	We can now just do a memcopy and the infix pointers
+	all adjust by the difference between the token
+	arrays that the gl_lists are hiding. Cool, eh?
+	Note, if any turkey ever tries to delete an individual
+	token from these gl_lists AND deallocate it,
+	they will get a severe headache.
+
+	This is a full blown copy and not copy by reference.
+	You do not need to remake the infix pointers after
+	calling this function.
+*/
 static union RelationTermUnion
 *CopyRelationSide(union RelationTermUnion *old, unsigned long len)
 {
@@ -4055,12 +4094,12 @@ static union RelationTermUnion
 }
 
 
-/*
- * This function will *always create a new variables list, from
- * the copylist provided and the tmpnums of the variables
- * in the source instances var list. The copylist variables will be
- * made aware of the destination relation instance. -baa
- */
+/**
+	This function will *always create a new variables list, from
+	the copylist provided and the tmpnums of the variables
+	in the source instances var list. The copylist variables will be
+	made aware of the destination relation instance. -baa
+*/
 static
 struct gl_list_t *CopyAnonRelationVarList(CONST struct Instance *src_inst,
                                           struct Instance *dest_inst,
@@ -4092,10 +4131,10 @@ struct gl_list_t *CopyAnonRelationVarList(CONST struct Instance *src_inst,
 }
 
 /*
- * This function will *always create a new variables list, from
- * the variable list provided. The variables will be copied
- * and made aware of the destination relation instance.
- */
+	This function will *always create a new variables list, from
+	the variable list provided. The variables will be copied
+	and made aware of the destination relation instance.
+*/
 static
 struct gl_list_t *CopyRelationVarList(struct Instance *dest_inst,
 				      struct gl_list_t *copylist)
@@ -4168,10 +4207,10 @@ struct relation *CopyTokenRelation(CONST struct Instance *src_inst,
 }
 
 
-/*
- * This does nothing but copy the local struct relation content
- * and init the target vars to NULL.
- */
+/**
+	This does nothing but copy the local struct relation content
+	and init the target vars to NULL.
+*/
 static
 void CopyRelationHead(struct relation *src,struct relation *target)
 {
@@ -4185,7 +4224,7 @@ void CopyRelationHead(struct relation *src,struct relation *target)
 
 }
 
-/* see external header. -baa */
+/** @see external header -- BAA */
 struct relation *CopyAnonRelationByReference(CONST struct Instance *src_inst,
                                              struct Instance *dest_inst,
                                              struct gl_list_t *copyvars)
@@ -4292,9 +4331,9 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
   }
 }
 
-/*
- * baa
- */
+/**
+	-- BAA
+*/
 void RelationSetBinTokens(struct Instance *i,int btable, int bindex)
 {
   struct relation *rel;

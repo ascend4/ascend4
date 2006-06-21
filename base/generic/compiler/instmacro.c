@@ -39,7 +39,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "instance_types.h"
 #include "instmacro.h"
 

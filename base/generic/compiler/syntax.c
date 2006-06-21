@@ -32,7 +32,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "exprs.h"
 #include "syntax.h"
 #ifndef NULL

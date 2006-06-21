@@ -161,8 +161,8 @@ Type::getSimulation(SymChar sym){
 	cerr << "CREATING INSTANCE..." << endl;
 	// Perform the instantiation (C compile etc):
 	/*Instance *i = Instantiate(getInternalType()->name, sym.getInternalType(),
-								 0, SymChar("default_self").getInternalType()); */
-	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, SymChar("default_self").getInternalType());
+								 0, SymChar("on_load").getInternalType()); */
+	Instance *i = SimsCreateInstance(getInternalType()->name, sym.getInternalType(), e_normal, SymChar("on_load").getInternalType());
 
 	if(i==NULL){
 		throw runtime_error("Failed to create instance");

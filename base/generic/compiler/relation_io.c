@@ -42,7 +42,7 @@
 #include "dimen.h"
 #include "functype.h"
 #include "func.h"
-#include "types.h"
+#include "expr_types.h"
 #include "extcall.h"
 #include "instance_enum.h"
 #include "extfunc.h"
@@ -758,7 +758,9 @@ void WriteSide(FILE *f,
   }
 }
 
-/* write a side in infix */
+/**
+	write a side in infix notation
+*/
 static
 void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
                  CONST struct Instance *ref, WRSNameFunc func, void *userdata,
@@ -781,7 +783,15 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
     pos = PopRelation();	/* check the top */
     term = RelationTerm(r,pos,side);
     t = RelationTermType(term);
-    switch (t) { 
+    switch (t) {
+    case e_diff:
+	  /*cur_var = RelationVariable(r,TermVarNumber(term));
+	  Asc_DStringAppend(dsPtr,"DIFF(",-1);
+      WriteInstanceNameDS(dsPtr,cur_var,ref);
+	  Asc_DStringAppend(dsPtr,")",-1);*/
+	  Asc_DStringAppend(dsPtr,"DIFF(__something__)",-1);
+	  ERROR_REPORTER_HERE(ASC_PROG_WARNING,"e_diff relation term not implemented");
+	  break;
     case e_var:
       if (func == NULL) {
         cur_var = RelationVariable(r,TermVarNumber(term));
@@ -827,13 +837,13 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
     case e_func:
       if(first) {
         if (lang == relio_C) {
-	  sprintf(SB255,"%s(",FuncCName(TermFunc(term)));
+          sprintf(SB255,"%s(",FuncCName(TermFunc(term)));
         } else {
-	  sprintf(SB255,"%s(",FuncName(TermFunc(term)));
+          sprintf(SB255,"%s(",FuncName(TermFunc(term)));
         }
         Asc_DStringAppend(dsPtr,SB255,-1);
-	PushRelation(pos,0,NOLHS);
-	PushRelation(pos-1,1,NOLHS);
+        PushRelation(pos,0,NOLHS);
+        PushRelation(pos-1,1,NOLHS);
       }
       else{
         Asc_DStringAppend(dsPtr,")",1);
@@ -853,9 +863,9 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           } else {
             Asc_DStringAppend(dsPtr,"asc_ipow((",10);
           }
-	  PushRelation(pos,2,NOLHS);
-	  lhs = LeftHandSide(r,pos,side);
-	  PushRelation(lhs,1,NOLHS);
+          PushRelation(pos,2,NOLHS);
+          lhs = LeftHandSide(r,pos,side);
+          PushRelation(lhs,1,NOLHS);
 	  break;
         case 2:
           /* seeing this binary token the second time */
@@ -864,9 +874,9 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           } else {
             Asc_DStringAppend(dsPtr,") , ",4);
           }
-	  PushRelation(pos,0,NOLHS);
-	  PushRelation(pos-1,1,NOLHS);
-	  break;
+          PushRelation(pos,0,NOLHS);
+          PushRelation(pos-1,1,NOLHS);
+          break;
         case 0: 
           /* seeing binary token the third (last) time */
           if (t==e_power) {
@@ -874,7 +884,7 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
           } else {
             Asc_DStringAppend(dsPtr,")",1);
           }
-	  break;
+          break;
         default: /* first */
           Asc_Panic(2, "WriteSideDS", "Don't know this type of stack first");
           break;
@@ -889,74 +899,74 @@ void WriteSideDS(Asc_DString *dsPtr, CONST struct relation *r, int side,
       switch(first){
       case 1:
         /* seeing this binary token the first time */
-	lhs = LeftHandSide(r,pos,side);
-	term = RelationTerm(r,lhs,side);
-	if (NeedParen(t,RelationTermType(term),0)) {
+        lhs = LeftHandSide(r,pos,side);
+        term = RelationTerm(r,lhs,side);
+        if (NeedParen(t,RelationTermType(term),0)) {
           Asc_DStringAppend(dsPtr,"(",1);
         }
-	PushRelation(pos,2,lhs);
-	PushRelation(lhs,1,NOLHS);
-	break;
+        PushRelation(pos,2,lhs);
+        PushRelation(lhs,1,NOLHS);
+        break;
       case 2:
         /* seeing this binary token the second time */
-	term = RelationTerm(r,oldlhs,side);
-	if (NeedParen(t,RelationTermType(term),0)) {
+        term = RelationTerm(r,oldlhs,side);
+        if (NeedParen(t,RelationTermType(term),0)) {
           Asc_DStringAppend(dsPtr,")",1);
         }
         Asc_DStringAppend(dsPtr," ",1);
-	WriteOpDS(dsPtr,t,lang);
+        WriteOpDS(dsPtr,t,lang);
         Asc_DStringAppend(dsPtr," ",1);
-	PushRelation(pos,0,NOLHS);
-	term = RelationTerm(r,pos-1,side);
-	if (NeedParen(t,RelationTermType(term),1)) {
+        PushRelation(pos,0,NOLHS);
+        term = RelationTerm(r,pos-1,side);
+        if (NeedParen(t,RelationTermType(term),1)) {
           Asc_DStringAppend(dsPtr,"(",1);
         }
-	PushRelation(pos-1,1,NOLHS);
-	break;
+        PushRelation(pos-1,1,NOLHS);
+        break;
       case 0: 
         /* seeing binary token the third (last) time */
-	term = RelationTerm(r,pos-1,side);
-	if (NeedParen(t,RelationTermType(term),1))
+        term = RelationTerm(r,pos-1,side);
+        if (NeedParen(t,RelationTermType(term),1))
           Asc_DStringAppend(dsPtr,")",1);
-	break;
+        break;
       }
       break;
     case e_uminus:
       term = RelationTerm(r,pos-1,side);
       if (first){
         Asc_DStringAppend(dsPtr,"-",1);
-	PushRelation(pos,0,NOLHS);
-	switch(RelationTermType(term)){
-	case e_power:
-	case e_ipower:
-	case e_zero:
-	case e_int:
-	case e_real:
-	case e_var:
-	case e_func:
-	case e_uminus:
-	  break;
-	default:
+        PushRelation(pos,0,NOLHS);
+        switch(RelationTermType(term)){
+        case e_power:
+        case e_ipower:
+        case e_zero:
+        case e_int:
+        case e_real:
+        case e_var:
+        case e_func:
+        case e_uminus:
+          break;
+        default:
           Asc_DStringAppend(dsPtr,"(",1);
-	  break;
-	}
-	PushRelation(pos-1,1,NOLHS);
+          break;
+        }
+        PushRelation(pos-1,1,NOLHS);
       }
       else{
-	switch(RelationTermType(term)){
-	case e_power:
-	case e_ipower:
-	case e_int:
-	case e_zero:
-	case e_real:
-	case e_var:
-	case e_func:
-	case e_uminus:
-	  break;
-	default:
+        switch(RelationTermType(term)){
+        case e_power:
+        case e_ipower:
+        case e_int:
+        case e_zero:
+        case e_real:
+        case e_var:
+        case e_func:
+        case e_uminus:
+          break;
+        default:
           Asc_DStringAppend(dsPtr,")",1);
-	  break;
-	}
+          break;
+        }
       }
       break;
     default:

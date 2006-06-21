@@ -37,7 +37,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "instance_name.h"
 #include "find.h"
 #include "atomvalue.h"

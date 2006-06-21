@@ -1,4 +1,4 @@
-Import('env')
+Import('libascend_env')
 
 csrcs = Split("""
 
@@ -11,16 +11,42 @@ csrcs = Split("""
 	slv8.c slv9.c slv9a.c slvDOF.c slv_common.c
 	slv_interface.c slv_stdcalls.c system.c var.c
 
+	integrator.c lsode.c samplelist.c
 """)
 
-solver_env = env.Copy()
+solver_env = libascend_env.Copy()
 
 defs = []
-for i in env['WITH_SOLVERS']:
+for i in libascend_env.get('WITH_SOLVERS'):
 	solver_env.Append(CPPDEFINES=["STATIC_"+i])
 
 objs = []
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
-	
+
+if solver_env.get('WITH_IDA'):
+	sundials_env = solver_env.Copy()
+	sundials_env.Append(
+		CPPPATH=([solver_env.get('IDA_CPPPATH')])
+	)
+	if solver_env.get('IDA_CPPPATH_EXTRA'):
+		sundials_env.Append(
+			CPPPATH=solver_env.get('IDA_CPPPATH_EXTRA')
+		)
+
+	libascend_env.Append(
+		LIBPATH=[solver_env.get('IDA_LIBPPATH')]
+		, LIBS=[solver_env.get('IDA_LIB')]
+	)
+
+	objs += sundials_env.SharedObject('ida.c');
+else:
+	print "NO IDA REQUESTED!"
+
+if 'LSOD' in solver_env.get('WITH_SOLVERS'):
+	if solver_env.get('F2C_LIBPATH'):
+		libascend_env.AppendUnique(LIBPATH=[solver_env.get('F2C_LIBPATH')])
+	if solver_env.get('F2C_LIB'):
+		libascend_env.AppendUnique(LIBS=[solver_env.get('F2C_LIB')])
+
 Return('objs')

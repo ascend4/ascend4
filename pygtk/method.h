@@ -1,5 +1,5 @@
-#ifndef SWIG_METHOD_H
-#define SWIG_METHOD_H
+#ifndef ASCXX_METHOD_H
+#define ASCXX_METHOD_H
 
 #include <string>
 
@@ -13,7 +13,7 @@ extern "C"{
 #include <compiler/fractions.h>
 #include <compiler/compiler.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/proc.h>
 #include <compiler/initialize.h>
 

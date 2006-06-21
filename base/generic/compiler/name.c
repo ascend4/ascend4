@@ -39,7 +39,7 @@
 #include "dimen.h"
 #include "functype.h"
 #include "func.h"
-#include "types.h"
+#include "expr_types.h"
 #include "sets.h"
 #include "name.h"
 

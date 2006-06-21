@@ -22,6 +22,9 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
+	Routines to allow the ASCEND GUI/CLI to solve models, using an abstracted
+	'SLV' solver interface.
+
 	@see slv
 
 	Requires:
@@ -37,7 +40,6 @@
 	#include "solver/linsolqr.h"
 	#include "solver/slv_common.h"
 	#include "solver/slv_types.h"
-	... some mtx.h files required as well?
 *//**
 	@page slv SLV Solver Interface
 

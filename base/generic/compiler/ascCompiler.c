@@ -39,7 +39,7 @@
 #include <general/list.h>
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "name.h"
 #include "exprs.h"
 #include "sets.h"
@@ -113,8 +113,8 @@ static CONST char ascCompilerID[] = "$Id: ascCompiler.c,v 1.20 2000/01/25 02:25:
 static
 void InterfaceNotifyProc(char *ptr, struct Instance *old, struct Instance *new)
 {
-  (void)ptr;    /* stop gcc whine about unused parameter */
-  (void)new;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(ptr);
+  UNUSED_PARAMETER(new);
   (void)old;
 #if 0 /* is, officially, no big deal. baa .*/
   register unsigned long c,len;

@@ -37,7 +37,7 @@
 #include "instance_enum.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "statio.h"
 #include "child.h"
@@ -70,7 +70,7 @@ static CONST char ChildListID[] = "$Id: child.c,v 1.25 1998/03/26 20:39:34 balla
 #define CLSFREE(clp) ascfree(clp)
 
 /* returns an array of size n of childhash to be tabled singly. */
-#define CHMALLOC(n) (struct ChildHash *)ascmalloc(sizeof(struct ChildHash)*n)
+#define CHMALLOC(n) ASC_NEW_ARRAY(struct ChildHash,n)
 /* destroys all the hash entries of the type at one shot */
 #define CHFREE(chp) ascfree(chp)
 

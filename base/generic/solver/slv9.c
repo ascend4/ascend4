@@ -977,7 +977,7 @@ static int32 consistency(slv_system_t server, SlvClientToken asys,
   elnum = slv_count_master_vars(server,&vfilter);
 
   if (elnum > 0) {
-    globeli = (int32 *)ascmalloc(elnum*sizeof(int32));
+    globeli = ASC_NEW_ARRAY(int32,elnum);
     elnum = 0;
     for (v=0; v<mnum; v++) {
       mvar = vmlist[v];
@@ -3228,7 +3228,7 @@ static void get_multipliers(SlvClientToken asys,
   rank = mtx_symbolic_rank(sys->lin_mtx);
   mtx_partition(sys->lin_mtx);
   len = mtx_number_of_blocks(sys->lin_mtx);
-  newblocks = (mtx_region_t *)ascmalloc(len*sizeof(mtx_region_t));
+  newblocks = ASC_NEW_ARRAY(mtx_region_t,len);
   if (newblocks == NULL) {
     mtx_destroy(sys->lin_mtx);
     return;
@@ -3253,7 +3253,7 @@ static void get_multipliers(SlvClientToken asys,
   /*
    *Calculating weights
    */
-  weights = (real64 *)ascmalloc(nrel*sizeof(real64));
+  weights = ASC_NEW_ARRAY(real64,nrel);
   for (row=0; row<nrel; row++) {
     summ = mtx_sum_sqrs_in_row(sys->lin_mtx,row,&(oneblock->col));
     if (summ <= 0.0) {
@@ -3353,7 +3353,7 @@ static void get_gradient_in_subregion(slv_system_t server,
   vlist = slv_get_master_var_list(server);
   ntotvar = slv_get_num_master_vars(server);
   ntotrel = slv_get_num_master_rels(server);
-  tmp_value = (real64 *)ascmalloc(ntotvar*sizeof(real64));
+  tmp_value = ASC_NEW_ARRAY(real64,ntotvar);
 
   vfilter.matchbits = (VAR_ACTIVE | VAR_INCIDENT | VAR_NONBASIC
 		       | VAR_SVAR | VAR_FIXED);
@@ -3374,7 +3374,7 @@ static void get_gradient_in_subregion(slv_system_t server,
   /*
    * residual of the relations in the subregion
    */
-  func_val = (real64 *)ascmalloc(nrel*sizeof(real64));
+  func_val = ASC_NEW_ARRAY(real64,nrel);
 
   /*
    * Lagrange Multipliers of the subregion
@@ -3384,7 +3384,7 @@ static void get_gradient_in_subregion(slv_system_t server,
   /*
    * Gradients of the objective function
    */
-  grad_obj = (real64 *)ascmalloc(nvar*sizeof(real64));
+  grad_obj = ASC_NEW_ARRAY(real64,nvar);
 
   /*
    * Matrix for solving linear system
@@ -3404,7 +3404,7 @@ static void get_gradient_in_subregion(slv_system_t server,
   /*
    * Information for reduced gradient
    */
-  f_red_grad = (real64 *)ascmalloc(nvnb*sizeof(real64));
+  f_red_grad = ASC_NEW_ARRAY(real64,nvnb);
   rel_red_grad.cols = (struct opt_vector *)
                       (ascmalloc(nvnb*sizeof(struct opt_vector)));
   for (cv=0; cv<nvnb; cv++) {
@@ -3467,9 +3467,9 @@ static void get_gradient_in_subregion(slv_system_t server,
       rel_set_sindex(rel,countrel);
       coord.col = rel_sindex(rel);
       len = rel_n_incidences(rel);
-      variables_master = (int32 *)ascmalloc(len*sizeof(int32));
-      variables_solver = (int32 *)ascmalloc(len*sizeof(int32));
-      derivatives = (real64 *)ascmalloc(len*sizeof(real64));
+      variables_master = ASC_NEW_ARRAY(int32,len);
+      variables_solver = ASC_NEW_ARRAY(int32,len);
+      derivatives = ASC_NEW_ARRAY(real64,len);
       relman_diff_grad(rel,&vfilter,derivatives,variables_master,
 		       variables_solver,&count,&resid,1);
       func_val[countrel] = resid;
@@ -3523,9 +3523,9 @@ static void get_gradient_in_subregion(slv_system_t server,
    */
   rel = sys->obj;
   len = rel_n_incidences(rel);
-  variables_master = (int32 *)ascmalloc(len*sizeof(int32));
-  variables_solver = (int32 *)ascmalloc(len*sizeof(int32));
-  derivatives = (real64 *)ascmalloc(len*sizeof(real64));
+  variables_master = ASC_NEW_ARRAY(int32,len);
+  variables_solver = ASC_NEW_ARRAY(int32,len);
+  derivatives = ASC_NEW_ARRAY(real64,len);
   relman_diff_grad(rel,&vfilter,derivatives,variables_master,
 		    variables_solver,&count,&resid,1);
   for (cv=0; cv<count;cv++) {
@@ -3678,7 +3678,7 @@ static void get_invariant_of_gradient_in_subregions(slv_system_t server,
   vlist = slv_get_master_var_list(server);
   ntotvar = slv_get_num_master_vars(server);
   ntotrel = slv_get_num_master_rels(server);
-  tmp_value = (real64 *)ascmalloc(ntotvar*sizeof(real64));
+  tmp_value = ASC_NEW_ARRAY(real64,ntotvar);
 
   vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
 		       | VAR_SVAR | VAR_FIXED);
@@ -3704,9 +3704,9 @@ static void get_invariant_of_gradient_in_subregions(slv_system_t server,
     rel = rlist[cr];
     if (rel_apply_filter(rel,&rfilter)) {
       len = rel_n_incidences(rel);
-      variables = (int32 *)ascmalloc(len*sizeof(int32));
-      derivatives = (real64 *)ascmalloc(len*sizeof(real64));
-      varsindex = (int32 *)ascmalloc(len*sizeof(int32));
+      variables = ASC_NEW_ARRAY(int32,len);
+      derivatives = ASC_NEW_ARRAY(real64,len);
+      varsindex = ASC_NEW_ARRAY(int32,len);
       relman_diff_grad(rel,&vfilter,derivatives,variables,varsindex,
 		       &count,&resid,1);
       for (cv=0; cv<count;cv++) {
@@ -3767,7 +3767,7 @@ static void get_variant_of_gradient_in_subregion(slv_system_t server,
   vlist = slv_get_master_var_list(server);
   ntotvar = slv_get_num_master_vars(server);
   ntotrel = slv_get_num_master_rels(server);
-  tmp_value = (real64 *)ascmalloc(ntotvar*sizeof(real64));
+  tmp_value = ASC_NEW_ARRAY(real64,ntotvar);
 
   vfilter.matchbits = (VAR_ACTIVE_AT_BND | VAR_INCIDENT
 		       | VAR_SVAR | VAR_FIXED);
@@ -3793,9 +3793,9 @@ static void get_variant_of_gradient_in_subregion(slv_system_t server,
     rel = rlist[cr];
     if (rel_apply_filter(rel,&rfilter)) {
       len = rel_n_incidences(rel);
-      variables = (int32 *)ascmalloc(len*sizeof(int32));
-      derivatives = (real64 *)ascmalloc(len*sizeof(real64));
-      varsindex = (int32 *)ascmalloc(len*sizeof(int32));
+      variables = ASC_NEW_ARRAY(int32,len);
+      derivatives = ASC_NEW_ARRAY(real64,len);
+      varsindex = ASC_NEW_ARRAY(int32,len);
       relman_diff_grad(rel,&vfilter,derivatives,variables,varsindex,
 		       &count,&resid,1);
       for (cv=0; cv<count;cv++) {
@@ -4113,8 +4113,8 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   /*
    * keep current sindex of variables and relations
    */
-  var_ind = (int32 *)ascmalloc(ntotvar*sizeof(int32));
-  rel_ind = (int32 *)ascmalloc(ntotrel*sizeof(int32));
+  var_ind = ASC_NEW_ARRAY(int32,ntotvar);
+  rel_ind = ASC_NEW_ARRAY(int32,ntotrel);
   for (cv=0; cv<ntotvar; cv++) {
     var_ind[cv] = var_sindex(vlist[cv]);
   }

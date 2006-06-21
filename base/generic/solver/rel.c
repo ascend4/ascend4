@@ -48,7 +48,7 @@
 #include <compiler/functype.h>
 #include <compiler/safe.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
@@ -534,8 +534,8 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext)
   result->ninputs = ninputs;
   result->noutputs = noutputs;
 
-  result->inputs = (double *)asccalloc(ninputs,sizeof(double));
-  result->outputs = (double *)asccalloc(noutputs,sizeof(double));
+  result->inputs = ASC_NEW_ARRAY_CLEAR(double,ninputs);
+  result->outputs = ASC_NEW_ARRAY_CLEAR(double,noutputs);
   result->jacobian = (double *)asccalloc(ninputs*noutputs,sizeof(double));
   /*
    * Setup default flags for controlling calculations.
@@ -884,7 +884,7 @@ static int32 ExtRel__FDiff(struct Slv_Interp *slv_interp,
   double *ptr;
   double old_x,interval,value;
 
-  tmp_vector = (double *)asccalloc(noutputs,sizeof(double));
+  tmp_vector = ASC_NEW_ARRAY_CLEAR(double,noutputs);
   for (c1=0;c1<ninputs;c1++) {
     old_x = inputs[c1];					/* perturb x */
     interval = CalculateInterval(old_x);

@@ -345,7 +345,7 @@ static void zerointsF(int32 *a, int i)
 static real64 *alloc_zero_vector(int len)
 {
   double *result;
-  result  = (real64 *)ascmalloc(len*sizeof(real64));
+  result  = ASC_NEW_ARRAY(real64,len);
   if (result != NULL) {
     zerodoublesF(result,len);
   }
@@ -355,7 +355,7 @@ static real64 *alloc_zero_vector(int len)
 static int32 *alloc_zero_ivector(int len)
 {
   int32 *result;
-  result  = (int32 *)ascmalloc(len*sizeof(int32));
+  result  = ASC_NEW_ARRAY(int32,len);
   if (result != NULL) {
     zerointsF(result,len);
   }

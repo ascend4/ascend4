@@ -51,7 +51,7 @@ TIMESTAMP = -DTIMESTAMP="\"by `whoami`@`hostname`\""
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "statio.h"
 #include "instance_enum.h"
@@ -533,7 +533,7 @@ void ResizeIndices(struct Instance *rel, struct reusable_rxnd *r)
     newlen = 100;
   }
   /* create mem_*/
-  r->rd.indices = (int *)ascmalloc(sizeof(int)*newlen);
+  r->rd.indices = ASC_NEW_ARRAY(int,newlen);
   if (r->rd.indices == NULL) {
     Asc_Panic(2, "BinTokenSharesToC","out of memory error");
     exit(2);
@@ -581,7 +581,7 @@ enum bintoken_error BinTokenSharesToC(struct Instance *root,
     return BTE_write;
   }
   eqns_done = 0;
-  error = (int *)ascmalloc(len*sizeof(int));
+  error = ASC_NEW_ARRAY(int,len);
   WritePrologue(fp,root,len,verbose);
 
 /* algorithm to collect eqns:

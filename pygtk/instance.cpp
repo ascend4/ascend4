@@ -24,7 +24,7 @@ extern "C"{
 #include <compiler/atomvalue.h>
 #include <utilities/readln.h>
 #include <compiler/plot.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/find.h>
 #include <compiler/relation_type.h>
 #include <compiler/exprs.h>

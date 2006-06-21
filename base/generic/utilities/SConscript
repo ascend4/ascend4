@@ -1,4 +1,4 @@
-Import('env')
+Import('libascend_env')
 
 csrcs = Split("""
 
@@ -7,13 +7,13 @@ csrcs = Split("""
 
 """)
 
-configh = env.SubstInFile(source='config.h.in')
+configh = libascend_env.SubstInFile(source='config.h.in')
 
 objs = []
 for c in csrcs:
-	objs += env.SharedObject(c)
+	objs += libascend_env.SharedObject(c)
 
-sig_env = env.Copy()
+sig_env = libascend_env.Copy()
 sig_env.Append(CPPDEFINES=['NO_SIGINT_TRAP','NO_SIGSEGV_TRAP'])
 objs += sig_env.SharedObject('ascSignal.c')
 

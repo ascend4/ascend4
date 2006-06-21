@@ -222,8 +222,8 @@ int reset_elimination_data(int32 size, int init)
   } else {
      /* expand both */
     if (g_ba_elimdata.capacity == (size_t)0) {
-      tmpp = (struct PivListEntry *)ascmalloc(size*sizeof(struct PivListEntry));
-      tmpn = (struct NZListEntry *)ascmalloc(size*sizeof(struct NZListEntry));
+      tmpp = ASC_NEW_ARRAY(struct PivListEntry,size);
+      tmpn = ASC_NEW_ARRAY(struct NZListEntry,size);
     } else {
       tmpp = (struct PivListEntry *)
         ascrealloc(g_ba_elimdata.pivdata,size*sizeof(struct PivListEntry));

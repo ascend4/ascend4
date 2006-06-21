@@ -184,8 +184,8 @@ double linutils_A_condqr_kaa(linsolqr_system_t lin_sys,
    */
   factors = linsolqr_get_matrix(lin_sys);
   capacity = mtx_capacity(factors);
-  solution = (double *)asccalloc(capacity,sizeof(double));
-  rhs = (double *)asccalloc(capacity,sizeof(double));
+  solution = ASC_NEW_ARRAY_CLEAR(double,capacity);
+  rhs = ASC_NEW_ARRAY_CLEAR(double,capacity);
   linsolqr_add_rhs(lin_sys,rhs,FALSE);
 
   rank = mtx_symbolic_rank(factors);
@@ -260,8 +260,8 @@ double linutils_A_cond_kaa(linsol_system_t lin_sys,
    */
   factors = linsol_get_matrix(lin_sys);
   capacity = mtx_capacity(factors);
-  solution = (double *)asccalloc(capacity,sizeof(double));
-  rhs = (double *)asccalloc(capacity,sizeof(double));
+  solution = ASC_NEW_ARRAY_CLEAR(double,capacity);
+  rhs = ASC_NEW_ARRAY_CLEAR(double,capacity);
   linsol_add_rhs(lin_sys,rhs,FALSE);
 
   rank = mtx_symbolic_rank(factors);

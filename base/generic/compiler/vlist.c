@@ -34,7 +34,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "vlist.h"
 #include "name.h"
 

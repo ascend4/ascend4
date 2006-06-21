@@ -1,5 +1,5 @@
-#ifndef SWIG_LIBRARY_H
-#define SWIG_LIBRARY_H
+#ifndef ASCXX_LIBRARY_H
+#define ASCXX_LIBRARY_H
 
 #include <vector>
 #include <string>

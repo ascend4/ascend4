@@ -357,7 +357,7 @@ class ModelView:
 			_dia = VarPropsWin(self.browser,_instance);
 			_dia.run();
 		else:
-			self.reporter.reportWarning("Select a variable first...")
+			self.browser.reporter.reportWarning("Select a variable first...")
 
 	def observe_activate(self,widget,*args):
 		_path,_col = self.modelview.get_cursor()

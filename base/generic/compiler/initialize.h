@@ -26,7 +26,7 @@
 	#include "fractions.h"
 	#include "compiler.h"
 	#include "dimen.h"
-	#include "types.h"
+	#include "expr_types.h"
 *//*
 	by Tom Epperly
 	Created: 3/24/1990

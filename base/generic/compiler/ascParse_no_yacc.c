@@ -303,7 +303,7 @@
 #include <compiler/dimen.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/name.h>
 #include <compiler/nameio.h>
 #include <compiler/instance_enum.h>

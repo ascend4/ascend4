@@ -1,32 +1,22 @@
-/*
-	Problem Analysis Routines
-	by Benjamin Andrew Allan 5/19/96
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1996 Benjamin Andrew Allan
 
-	Version: $Revision: 1.10 $
-	Date last modified: $Date: 1997/07/18 12:13:50 $
-	Last modified by: $Author: mthomas $
-	Copyright(C) 1996 Benjamin Andrew Allan
-	Copyright(C) 2006 Carnegie Mellon University
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-	This file is part of the ASCEND IV math programming system.
-
-	The SLV solver is free software; you can redistribute
-	it and/or modify it under the terms of the GNU General Public License as
-	published by the Free Software Foundation; either version 2 of the
-	License, or (at your option) any later version.
-
-	The SLV solver is distributed in hope that it will be
-	useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with the program; if not, write to the Free Software Foundation,
-	Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
-	COPYING.  COPYING is found in ../compiler.
- */
-
-/** @file
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
 	Problem Analysis Routines.
 	
 	These functions are the start of a new design for feeding
@@ -53,10 +43,14 @@
 	and var and analyze modules.
 
 	Requires:
-	       #include "utilities/ascConfig.h"
-	       #include "system.h"
-	       #include "instance_enum.h"
-	</pre>
+	#include "utilities/ascConfig.h"
+	#include "system.h"
+	#include "instance_enum.h"
+*//*
+	by Benjamin Andrew Allan 5/19/96
+	Version: $Revision: 1.10 $
+	Date last modified: $Date: 1997/07/18 12:13:50 $
+	Last modified by: $Author: mthomas $
 */
 
 #ifndef ASC_ANALYZE_H

@@ -225,7 +225,7 @@ int Asc_SignalInit(void)
 
   /* initialize SIGFPE stack */
   if (f_fpe_traps == NULL) {
-    f_fpe_traps = (SigHandler *)asccalloc(MAX_TRAP_DEPTH,sizeof(SigHandler));
+    f_fpe_traps = ASC_NEW_ARRAY_CLEAR(SigHandler,MAX_TRAP_DEPTH);
     if (f_fpe_traps == NULL) {
       return 1;
     }
@@ -234,7 +234,7 @@ int Asc_SignalInit(void)
 
   /* initialize SIGINT stack */
   if (f_int_traps == NULL) {
-    f_int_traps = (SigHandler *)asccalloc(MAX_TRAP_DEPTH,sizeof(SigHandler));
+    f_int_traps = ASC_NEW_ARRAY_CLEAR(SigHandler,MAX_TRAP_DEPTH);
     if (f_int_traps == NULL) {
       ascfree(f_fpe_traps);
       f_fpe_traps = NULL;
@@ -245,7 +245,7 @@ int Asc_SignalInit(void)
 
   /* initialize SIGSEGV stack */
   if (f_seg_traps == NULL) {
-    f_seg_traps = (SigHandler *)asccalloc(MAX_TRAP_DEPTH,sizeof(SigHandler));
+    f_seg_traps = ASC_NEW_ARRAY_CLEAR(SigHandler,MAX_TRAP_DEPTH);
     if (f_seg_traps == NULL) {
       ascfree(f_fpe_traps);
       f_fpe_traps = NULL;

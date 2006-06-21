@@ -90,7 +90,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   */
   error_reporter_set_callback(NULL);
 
-  /* Print the message to ASCERR */
+  /* Print the message to the default error reporter (ASCERR) */
   ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,msg);
 
   /*
@@ -120,12 +120,20 @@ void Asc_Panic(CONST int status, CONST char *function,
     MessageBox(NULL, msg, "Fatal Error in ASCEND",
                (UINT)(MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND));
   }
-  if (0 == cancel)
+  if(cancel == 0){
     ExitProcess((UINT)status);
-#endif
-
-  if (0 == cancel)
+  }
+#else
+# ifndef NDEBUG
+  if(!cancel){
+    abort();
+  }
+# else
+  if(!cancel){
     exit(status);
+  }
+# endif
+#endif
 }
 
 

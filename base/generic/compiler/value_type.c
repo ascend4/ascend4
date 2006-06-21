@@ -48,7 +48,7 @@
 #include "func.h"
 #include "setinstval.h"
 /* stuf for ListMode */
-#include "types.h"
+#include "expr_types.h"
 #include "find.h"
 #include "value_type.h"
 

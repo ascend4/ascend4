@@ -36,7 +36,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "relation_type.h"
 #include "freestore.h"
 #include <general/mathmacros.h>

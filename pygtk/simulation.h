@@ -36,6 +36,7 @@ class SolverReporter;
 class Simulation : public Instanc{
 	friend class IncidenceMatrix;
 	friend class SolverStatus;
+	friend class Integrator;
 
 private:
 	Instanc simroot;

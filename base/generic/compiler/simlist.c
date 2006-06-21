@@ -108,7 +108,7 @@ void Asc_DestroySimulations(void)
 #include "cmpfunc.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "statement.h"
 #include "slist.h"

@@ -40,7 +40,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "stattypes.h"
 #include "statement.h"
 #include "slist.h"

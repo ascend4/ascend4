@@ -41,7 +41,7 @@
 #include "fractions.h"
 #include "dimen.h"
 #include "functype.h"
-#include "types.h"
+#include "expr_types.h"
 #include "child.h"
 #include "type_desc.h"
 #include "instance_enum.h"
@@ -535,7 +535,7 @@ void IndexedVisitCheckSize(unsigned long **llist, unsigned int *llen, int len)
       *llist = (unsigned long *)ascrealloc(*llist,
                          sizeof(unsigned long)*(*llen+IVIT_MIN_LEN));
     } else {
-      *llist = (unsigned long *)ascmalloc(sizeof(unsigned long)*IVIT_MIN_LEN);
+      *llist = ASC_NEW_ARRAY(unsigned long,IVIT_MIN_LEN);
     }
     if (*llist == NULL) {
       *llist = old;

@@ -32,7 +32,7 @@
  *  When #including vlist.h, make sure these files are #included first:
  *         #include "utilities/ascConfig.h"
  *         #include "compiler.h"
- *         #include "types.h"
+ *         #include "expr_types.h"
  *  </pre>
  */
 

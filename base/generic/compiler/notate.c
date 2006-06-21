@@ -46,7 +46,7 @@
 #include "vlist.h"
 #include "fractions.h"
 #include "dimen.h"
-#include "types.h"
+#include "expr_types.h"
 #include "sets.h"
 #include "name.h"
 #include "instance_enum.h"
