@@ -51,7 +51,8 @@ LIB_OBJS = \
 	mtx_reorder.o mtx_use_only.o rel.o relman.o \
 	slv.o slv0.o slv1.o slv2.o slv3.o slv6.o slv7.o \
 	slv8.o slv9.o slv9a.o slvDOF.o slv_common.o \
-	slv_interface.o slv_stdcalls.o system.o var.o
+	slv_interface.o slv_stdcalls.o system.o var.o \
+	integrator.c lsode.c samplelist.c
 
 LIB_SRCS = $(LIB_OBJS:%.c=%.o)
 
