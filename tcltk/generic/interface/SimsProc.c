@@ -40,7 +40,7 @@
 #include <compiler/cmpfunc.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/statement.h>
 #include <compiler/slist.h>
@@ -87,7 +87,7 @@ int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct Instance *sim;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc == 2 ) && ( (strncmp(argv[1],"getcurrent",4)) == 0 )) {
     sim = Asc_GetCurrentSim();
@@ -121,7 +121,7 @@ int Asc_SimsQueryCmd(ClientData cdata, Tcl_Interp *interp,
 int Asc_SimsUniqueNameCmd(ClientData cdata, Tcl_Interp *interp,
                       int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
      Tcl_SetResult(interp, "call is: unique \"name\"", TCL_STATIC);
@@ -143,7 +143,7 @@ int Asc_SimsCreateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   symchar *name, *defmethod;
   int len, format, k;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 3 ) || ( argc > 6 )) {
     Tcl_AppendResult(interp,"wrong # args:",
@@ -242,7 +242,7 @@ int Asc_SimsResumeInstantiateCmd(ClientData cdata, Tcl_Interp *interp,
   double start_time =0;
   struct Instance *xisting;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "call is: sresume <instancename> ", TCL_STATIC);
@@ -274,7 +274,7 @@ int Asc_SimsUpdateInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   CONST struct StatementList *slist;
   double start_time;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "call is: __sims_update qlfdid type", TCL_STATIC);
@@ -319,7 +319,7 @@ int Asc_SimsCopyInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *target;
   double start_time;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "call is: __sims_copy qlfdid", TCL_STATIC);
@@ -353,7 +353,7 @@ int Asc_SimsProtoTypeInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   CONST struct TypeDescription *desc;
   double start_time;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "call is: __sims_proto qlfdid", TCL_STATIC);
@@ -402,7 +402,7 @@ int Asc_SimsSaveInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *target;
   double start_time;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "call is: __sims_saveinst qlfdid file", TCL_STATIC);
@@ -459,7 +459,7 @@ int Asc_SimsDestroySimulationCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *xisting, *current;
   unsigned long ndx;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args: Usage: sim_destroy <simname>",
@@ -498,7 +498,7 @@ int Asc_BrowShowPendings(ClientData cdata, Tcl_Interp *interp,
   char buf[MAXIMUM_NUMERIC_LENGTH];       /* string to hold long */
   unsigned long p=0L;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_AppendResult(interp,"wrong # args: Usage: ",
@@ -560,7 +560,7 @@ int Asc_BrowWritePendingsSTDOUT(ClientData cdata, Tcl_Interp *interp,
 {
   struct Instance *i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"bwritependings\" simname",
@@ -582,7 +582,7 @@ int Asc_SimListPending(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   FILE *fp = stdout;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc != 2 ) && ( argc != 3 )) {
     Tcl_SetResult(interp,

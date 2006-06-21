@@ -45,7 +45,7 @@
 
 #include <solver/incidence.h>
 
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/functype.h>
 #include <compiler/func.h>
 #include <compiler/extfunc.h>
@@ -310,7 +310,7 @@ int Asc_MtxHelpList(ClientData cdata, Tcl_Interp *interp,
 {
   boolean detail=1;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 2 ) {
     FPRINTF(stderr,"call is: mtxhelp [s,l] \n");

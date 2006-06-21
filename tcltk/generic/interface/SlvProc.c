@@ -252,7 +252,7 @@ static void DoRelAnalyze(Tcl_Interp *interp,
   unsigned long c;
   char tmp[80];
 
-  (void)othervalue;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(othervalue);
 
   for (c=low; c<=high; c++) {
     if (b_type==b_residual) {
@@ -296,7 +296,7 @@ int Asc_VarAnalyzeCmd(ClientData cdata, Tcl_Interp *interp,
   int relative_check = 1;		/* what type of check;
                                          * relative is the default */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( g_solvsys_cur == NULL ) {
     FPRINTF(stderr,  "Asc_VarAnalyzeCmd called with NULL pointer\n");
@@ -386,7 +386,7 @@ int Asc_RelAnalyzeCmd(ClientData cdata, Tcl_Interp *interp,
   int relative_check = 1;		/* what type of check;
                                          * relative is the default */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( g_solvsys_cur == NULL ) {
     FPRINTF(stderr,  "Asc_RelAnalyzeCmd called with NULL pointer\n");
@@ -494,7 +494,7 @@ int MonUpdateData(struct SlvMonitor *m, slv_system_t sys)
     len = m->nrels = slv_get_num_master_rels(sys);
     if (len > 0) {
       rp = slv_get_master_rel_list(sys);
-      m->lastrelres = (real64 *)ascmalloc(sizeof(real64)*len);
+      m->lastrelres = ASC_NEW_ARRAY(real64,len);
       if (m->lastrelres == NULL) {
         return 1;
       }
@@ -509,11 +509,11 @@ int MonUpdateData(struct SlvMonitor *m, slv_system_t sys)
     len = m->nvars = slv_get_num_master_vars(sys);
     if (len > 0) {
       vp = slv_get_master_var_list(sys);
-      m->lastvarval = (real64 *)ascmalloc(sizeof(real64)*len);
+      m->lastvarval = ASC_NEW_ARRAY(real64,len);
       if (m->lastvarval == NULL) {
         return 1;
       }
-      m->lastvardel = (real64 *)ascmalloc(sizeof(real64)*len);
+      m->lastvardel = ASC_NEW_ARRAY(real64,len);
       if (m->lastvardel == NULL) {
         return 1;
       }
@@ -532,7 +532,7 @@ int MonUpdateData(struct SlvMonitor *m, slv_system_t sys)
   if (len > m->nrels) {
     free_unless_null(m->lastrelres);
     m->nrels = len;
-    m->lastrelres = (real64 *)ascmalloc(sizeof(real64)*len);
+    m->lastrelres = ASC_NEW_ARRAY(real64,len);
     if (m->lastrelres == NULL) {
       return 1;
     }
@@ -550,11 +550,11 @@ int MonUpdateData(struct SlvMonitor *m, slv_system_t sys)
     free_unless_null(m->lastvarval);
     free_unless_null(m->lastvardel);
     m->nvars = len;
-    m->lastvarval = (real64 *)ascmalloc(sizeof(real64)*len);
+    m->lastvarval = ASC_NEW_ARRAY(real64,len);
     if (m->lastvarval == NULL) {
       return 1;
     }
-    m->lastvardel = (real64 *)ascmalloc(sizeof(real64)*len);
+    m->lastvardel = ASC_NEW_ARRAY(real64,len);
     if (m->lastvardel == NULL) {
       return 1;
     }

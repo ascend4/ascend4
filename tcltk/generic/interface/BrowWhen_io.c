@@ -36,7 +36,7 @@
 #include <compiler/compiler.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/exprs.h>
 #include <compiler/instance.h>
 #include <compiler/instance_enum.h>
@@ -107,7 +107,7 @@ int Asc_BrowWriteWhenListCmd(ClientData cdata, Tcl_Interp *interp,
   int save=0;
   unsigned long nwhens;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 2 )||( argc > 3 )) {
     Tcl_AppendResult(interp,"wrong # args : ",
@@ -204,7 +204,7 @@ int Asc_BrowWriteWhensForInstanceCmd(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i, *when_inst;
   unsigned long nwhens, c;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_AppendResult(interp,"wrong # args : ",

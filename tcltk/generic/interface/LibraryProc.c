@@ -39,7 +39,7 @@
 #include <compiler/notate.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/syntax.h>
 #include <compiler/module.h>
 #include <compiler/instance_enum.h>
@@ -384,7 +384,7 @@ int LibrCatalog(Tcl_Interp *interp)
 int Asc_GNUTextCmd(ClientData cdata, Tcl_Interp *interp,
                    int argc, CONST84 char **argv)
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 

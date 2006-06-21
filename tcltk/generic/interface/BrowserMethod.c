@@ -37,7 +37,7 @@
 #include <compiler/symtab.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/slist.h>
 #include <compiler/statio.h>
@@ -71,7 +71,7 @@ static CONST char BrowserMethodID[] = "$Id: BrowserMethod.c,v 1.24 2003/08/23 18
 #define MAXIMUM_STRING_LENGTH 2048
 #endif
 #define BRSTRINGMALLOC \
-(char *)ascmalloc(MAXIMUM_STRING_LENGTH * sizeof(char))
+ASC_NEW_ARRAY(char,MAXIMUM_STRING_LENGTH)
 
 
 /*
@@ -93,7 +93,7 @@ int Asc_BrowInitializeCmd(ClientData cdata, Tcl_Interp *interp,
   CONST84 char *filename=NULL;
   int k,tmp=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   ASCUSE;
 
@@ -308,7 +308,7 @@ int Asc_BrowRunAssignQlfdidCmd2(ClientData cdata, Tcl_Interp *interp,
   CONST84 char *unit_str = NULL;
   int nok;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 3 ) || ( argc > 4 )) {
     Tcl_AppendResult(interp,"wrong # args: ",
@@ -342,7 +342,7 @@ int Asc_BrowRunAssignQlfdidCmd3(ClientData cdata, Tcl_Interp *interp,
   int nok;
   int relative = 0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 3 ) || ( argc > 5 )) {
     Tcl_AppendResult(interp,"wrong # args: ",
@@ -387,7 +387,7 @@ int Asc_BrowRunAssignmentCmd(ClientData cdata, Tcl_Interp *interp,
   int argstart=1;
   int nok;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc<2 || argc>4) {
     Tcl_AppendResult(interp, "Usage: \"", argv[0],
@@ -432,7 +432,7 @@ int Asc_BrowWriteProcedure(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   FILE *fp=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc < 3 || argc >4) {
     Tcl_SetResult(interp,"Usage bgetproc <methodname> <filepathname> [search]",

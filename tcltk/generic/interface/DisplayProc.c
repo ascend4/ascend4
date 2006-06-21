@@ -40,7 +40,7 @@
 #include <compiler/child.h>
 #include <compiler/type_desc.h>
 #include <compiler/type_descio.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/stattypes.h>
 #include <compiler/statio.h>
 #include <solver/slv_types.h>
@@ -69,7 +69,7 @@ int Asc_DispDefineCmd(ClientData cdata, Tcl_Interp *interp,
   FILE *ddef_outfile=NULL;
   int closefile=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 3 ) {
     Tcl_SetResult(interp, "ddefine [type [filename]]", TCL_STATIC);
@@ -126,7 +126,7 @@ int Asc_DispDiffDefineCmd(ClientData cdata, Tcl_Interp *interp,
   FILE *ddef_outfile=NULL;
   int closefile=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (argc > 3 || argc <2) {
     Tcl_SetResult(interp, "ddiffdefine type [filename]", TCL_STATIC);
@@ -167,7 +167,7 @@ int Asc_DispTypePartsCmd(ClientData cdata, Tcl_Interp *interp,
   symchar *name,*oldname;
   struct TypeDescription *t;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "wrong args: dgetparts <ATOM,MODEL,BOTH> <type>",
@@ -250,7 +250,7 @@ int Asc_DispQueryCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned long len,c;
   struct gl_list_t *list;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 3 ) {
     Tcl_SetResult(interp, "wrong # args to \"disp\" : try define", TCL_STATIC);
@@ -290,7 +290,7 @@ int Asc_DispHierarchyCmd(ClientData cdata, Tcl_Interp *interp,
   struct TypeDescription *desc, *refines=NULL;
   unsigned long c=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"hierarchy type\"",
@@ -327,7 +327,7 @@ int Asc_DispFileByTypeCmd(ClientData cdata, Tcl_Interp *interp,
   symchar *tablename;
   struct module_t *mod;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage \"file_by_type type\"",
@@ -358,7 +358,7 @@ int Asc_DispChildOneCmd(ClientData cdata, Tcl_Interp *interp,
   char buf[MAXIMUM_NUMERIC_LENGTH];            /* string to hold long */
   unsigned long nch, c=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     Tcl_SetResult(interp, "wrong # args to \"dchild name num\" ", TCL_STATIC);
@@ -490,7 +490,7 @@ int Asc_DispRefinesMeTreeCmd(ClientData cdata, Tcl_Interp *interp,
 {
   struct HierarchyNode *h=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "call is: drefinement_tree <type>", TCL_STATIC);
@@ -518,7 +518,7 @@ int Asc_DispIsRootTypeCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned int fundamental;
   CONST struct TypeDescription *desc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args to \"disroot_type\"", TCL_STATIC);

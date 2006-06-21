@@ -37,7 +37,7 @@
 #include <compiler/instance_enum.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/relation_type.h>
 #include <compiler/relation_io.h>
 #include <compiler/symtab.h>
@@ -108,7 +108,7 @@ int Asc_BrowWriteRelListCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned long len, c;
   int save=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 2 ) || ( argc > 3 )) {
     Tcl_AppendResult(interp,"wrong # args : ",
@@ -189,7 +189,7 @@ int Asc_BrowWriteCondRelListCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned long len, c;
   int save=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 2 ) || ( argc > 3 )) {
     Tcl_AppendResult(interp,"wrong # args : ",
@@ -254,7 +254,7 @@ int Asc_BrowWriteRelListPostfixCmd(ClientData cdata, Tcl_Interp *interp,
   unsigned long len, c;
   int save=0;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 2 ) || ( argc > 3 )) {
     Tcl_AppendResult(interp,"wrong # args : ",
@@ -324,7 +324,7 @@ int Asc_BrowWriteRelsForAtomCmd(ClientData cdata,Tcl_Interp *interp,
   struct Instance *i, *rel_inst;
   unsigned long nrels, c;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_AppendResult(interp,"wrong # args : ",

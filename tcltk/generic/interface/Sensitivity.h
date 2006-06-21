@@ -1,62 +1,43 @@
-/*
- *  Sensitivity.h
+/*	ASCEND modelling environment
+	Copyright 1997, Carnegie Mellon University
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Sensititvity analysis code.
+
+	Requires:     
+	#include "tcl.h"
+	#include "utilities/ascConfig.h"
+	#include "solver/slv_client.h"
+
+	@todo Do we really need 2 files called sensitivity.[ch]?  Other one in base/packages.
+*//*
  *  by Kirk Abbott and Ben Allan
  *  Created: 1/94
  *  Version: $Revision: 1.9 $
  *  Version control file: $RCSfile: Sensitivity.h,v $
  *  Date last modified: $Date: 2003/08/23 18:43:08 $
  *  Last modified by: $Author: ballan $
- *
- *  This file is part of the ASCEND Tcl/Tk interface
- *
- *  Copyright 1997, Carnegie Mellon University
- *
- *  The ASCEND Tcl/Tk interface is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The ASCEND Tcl/Tk interface is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+*/
 
-/** @file
- *  Sensititvity analysis code.
- *  <pre>
- *  Requires:     #include "tcl.h"
- *                #include "utilities/ascConfig.h"
- *                #include "solver/slv_client.h"
- *  </pre>
- *  @todo Do we really need 2 files called sensitivity.[ch]?  Other one in base/packages.
- */
+
 
 #ifndef ASCTK_SENSITIVITY_H
 #define ASCTK_SENSITIVITY_H
-
-extern int Asc_BLsodeDerivatives(slv_system_t sys,
-                                 double **dy_dx,
-                                 int *inputs_ndx_list,
-                                 int ninputs,
-                                 int *outputs_ndx_list,
-                                 int noutputs);
-/**<
- *  The entry point for the Lsode Integrator.
- *  This needs further explanation, but roughly:
- *  dy_dx IS_A 2d array of sensitivity partial derivatives.
- *  ninputs  the number of fixed state variables in the DAE.
- *  noutputs the number of derivatives
- *  ndx_list the var indices of the variables in question.
- *
- *  @todo Asc_BLsodeDerivatives() does not pass in a list of 
- *        var_variables instead of indices, as it should.
- */
 
 extern int Asc_MtxNormsCmd(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[]);

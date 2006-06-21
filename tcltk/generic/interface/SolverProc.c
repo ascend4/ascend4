@@ -42,7 +42,7 @@
 #include <compiler/instance_io.h>
 #include <compiler/fractions.h>
 #include <compiler/dimen.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/relation_type.h>
 #include <compiler/extfunc.h>
 #include <compiler/find.h>
@@ -146,7 +146,7 @@ int Asc_SolvTrapFP(ClientData cdata, Tcl_Interp *interp,
                    int argc, CONST84 char *argv[])
 {
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -160,7 +160,7 @@ int Asc_SolvTrapFP(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvUnTrapFP(ClientData cdata, Tcl_Interp *interp,
                      int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -173,7 +173,7 @@ int Asc_SolvTrapINT(ClientData cdata, Tcl_Interp *interp,
                    int argc, CONST84 char *argv[])
 {
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -186,7 +186,7 @@ int Asc_SolvTrapINT(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvUnTrapINT(ClientData cdata, Tcl_Interp *interp,
                      int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -207,7 +207,7 @@ int Asc_SolvGetModKids(ClientData cdata, Tcl_Interp *interp,
   unsigned long len,c,aryc,arylen;
   int status;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "expected get_model_children <qlfdid>", TCL_STATIC);
@@ -273,7 +273,7 @@ int Asc_SolvIncompleteSim(ClientData cdata, Tcl_Interp *interp,
 {
   unsigned long pendings;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_checksim <simname>\n");
@@ -303,7 +303,7 @@ int Asc_SolvIncompleteSim(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvCheckSys(ClientData cdata, Tcl_Interp *interp,
                   int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
@@ -323,7 +323,7 @@ int Asc_SolvGetObjList(ClientData cdata, Tcl_Interp *interp,
   int i,dev,status;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_get_obj_list <out>\n");
@@ -395,7 +395,7 @@ int Asc_SolvSetObjByNum(ClientData cdata, Tcl_Interp *interp,
   int32 i,status,len;
   struct rel_relation **rlist=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_set_obj_by_num <num>\n");
@@ -444,7 +444,7 @@ int Asc_SolvGetObjNumCmd(ClientData cdata, Tcl_Interp *interp,
 
   ASCUSE;  /* see if first arg is -help */
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_get_obj_num <out>\n");
@@ -511,7 +511,7 @@ int Asc_SolvGetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
   p.num_parms = 0;
   p.parms = NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_get_parmsnew <solver number>\n");
@@ -608,7 +608,7 @@ int Asc_SolvSetSlvParmsNew(ClientData cdata, Tcl_Interp *interp,
   int tmp_int =0, solver,i,j;
   double tmp_double = 0.1;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (g_solvsys_cur==NULL) {
     FPRINTF(ASCERR,  "set_slv_parms called with NULL pointer\n");
@@ -712,7 +712,7 @@ int Asc_SolvGetSlvParms(ClientData cdata, Tcl_Interp *interp,
   int status=TCL_OK;
   int i,n;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_get_parms <solver number>\n");
@@ -812,7 +812,7 @@ int Asc_SolvSetSlvParms(ClientData cdata, Tcl_Interp *interp,
   double tmpdouble = 0.1;
   char *tmpchar;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (g_solvsys_cur==NULL) {
     FPRINTF(ASCERR,  "set_slv_parms called with NULL pointer\n");
@@ -1060,7 +1060,7 @@ int Asc_SolvGetInstType(ClientData cdata, Tcl_Interp *interp,
 {
   char * it;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1093,7 +1093,7 @@ int Asc_SolvGetSlvStatPage(ClientData cdata, Tcl_Interp *interp,
   slv_status_t s;
   char * tmps=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1163,7 +1163,7 @@ int Asc_SolvGetSlvCostPage(ClientData cdata, Tcl_Interp *interp,
   slv_status_t s;
   int i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1216,7 +1216,7 @@ int Asc_SolvGetObjectiveVal(ClientData cdata, Tcl_Interp *interp,
 {
   struct rel_relation *obj;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1261,7 +1261,7 @@ int Asc_SolvGetInstName(ClientData cdata, Tcl_Interp *interp,
 {
   char *name=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1293,7 +1293,7 @@ int Asc_SolvGetPathName(ClientData cdata, Tcl_Interp *interp,
 {
   char *name=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1328,7 +1328,7 @@ int Asc_Sims2Solve(ClientData cdata, Tcl_Interp *interp,
   enum inst_t ikind;
   unsigned long pc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: slv_import_sim <simname>\n");
@@ -1406,7 +1406,7 @@ int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
   slv_system_t systmp;
   unsigned long pc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1483,7 +1483,7 @@ int Asc_Brow2Solve(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvSimInst(ClientData cdata, Tcl_Interp *interp,
                   int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR,  "call is: ssolve <simname> \n");
@@ -1516,7 +1516,7 @@ int Asc_SolvSimInst(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvCurInst(ClientData cdata, Tcl_Interp *interp,
                   int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 2 ) {
@@ -1545,7 +1545,7 @@ int Asc_SolvGetVRCounts(ClientData cdata, Tcl_Interp *interp,
   var_filter_t vfilter;
   rel_filter_t rfilter;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   tmps= (char *)ascmalloc((MAXIMUM_NUMERIC_LENGTH+1)*sizeof(char));
 
@@ -1700,7 +1700,7 @@ int Asc_SolvSlvDumpInt(ClientData cdata, Tcl_Interp *interp,
 {
   int status,level;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR, "call is: slvdump <level>\n");
@@ -1728,7 +1728,7 @@ int Asc_SolvSlvDumpInt(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
                       int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1766,7 +1766,7 @@ int Asc_SolvSlvPresolve(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvReanalyze(ClientData cdata, Tcl_Interp *interp,
                    int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1794,7 +1794,7 @@ int Asc_SolvReanalyze(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvCheckAndReanalyze(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 2 ) {
@@ -1816,7 +1816,7 @@ int Asc_SolvCheckAndReanalyze(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
                      int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1850,7 +1850,7 @@ int Asc_SolvSlvResolve(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvSlvSolve(ClientData cdata, Tcl_Interp *interp,
                    int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1889,7 +1889,7 @@ int Asc_SolvSlvIterate(ClientData cdata, Tcl_Interp *interp,
   double time=5.0,start,delta=0.0;
   safe_status=TCL_OK;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 3 ) {
     FPRINTF(ASCERR, "call is: slv_iterate <steps> [timelimit]\n");
@@ -1954,7 +1954,7 @@ int Asc_SolvAvailSolver(ClientData cdata, Tcl_Interp *interp,
 {
   int i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
@@ -1967,7 +1967,7 @@ int Asc_SolvAvailSolver(ClientData cdata, Tcl_Interp *interp,
 int Asc_SolvLinsolNames(ClientData cdata, Tcl_Interp *interp,
                       int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
@@ -1987,7 +1987,7 @@ int Asc_SolvEligSolver(ClientData cdata, Tcl_Interp *interp,
   int n;
   int tmpi;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 2 ) || ( argc > 3 )) {
     FPRINTF(ASCERR, "call is: slv_eligible_solver <solver number> [all]\n");
@@ -2036,7 +2036,7 @@ int Asc_SolvSelectSolver(ClientData cdata, Tcl_Interp *interp,
   int status=TCL_OK;
   int solver;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(ASCERR, "call is: slv_select_solver <N>\n");
@@ -2075,7 +2075,7 @@ int Asc_SolvGetSelectedSolver(ClientData cdata, Tcl_Interp *interp,
   int solver;
   char * tmps=NULL;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   tmps= (char *)ascmalloc((MAXIMUM_NUMERIC_LENGTH+1)*sizeof(char));
@@ -2102,7 +2102,7 @@ int Asc_SolvFlushSolver(ClientData cdata, Tcl_Interp *interp,
 {
   slv_system_t systmp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -2131,7 +2131,7 @@ int Asc_SolvMakeIndependent(ClientData cdata, Tcl_Interp *interp,
   mtx_matrix_t mtx=NULL;
   char res[40];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc < 2 ) {
     FPRINTF(ASCERR, "call is: slv_set_independent <ndx ...>\n");
@@ -2176,7 +2176,7 @@ int Asc_SolvMakeIndependent(ClientData cdata, Tcl_Interp *interp,
 
   swapvars=(int32 *)ascmalloc(sizeof(int32)*(argc-1));
   k=rng.high-rng.low+1;
-  unassvars=(int32 *)ascmalloc(sizeof(int32)*k);
+  unassvars=ASC_NEW_ARRAY(int32,k);
   for (j=0;j<k;j++) {
     unassvars[j]=mtx_col_to_org(mtx,j+rng.low); /* current outsiders */
   }
@@ -2398,7 +2398,7 @@ int Asc_SolvGetLnmEpsilon(ClientData cdata, Tcl_Interp *interp,
                        int argc, CONST84 char *argv[])
 {
   char buf[MAXIMUM_NUMERIC_LENGTH];   /* string to hold integer */
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc > 1 ) {
@@ -2415,7 +2415,7 @@ int Asc_SolvSetLnmEpsilon(ClientData cdata, Tcl_Interp *interp,
 {
   double eps;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "slv_lnmset takes 1 positive # argument.", TCL_STATIC);
@@ -2443,7 +2443,7 @@ int Asc_SolvSetCHaltFlag(ClientData cdata, Tcl_Interp *interp,
 {
   int value;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "wrong # args : Usage slv_set_haltflag", TCL_STATIC);
@@ -2464,7 +2464,7 @@ int Asc_SolvHelpList(ClientData cdata, Tcl_Interp *interp,
 {
   boolean detail=1;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 2 ) {
     FPRINTF(ASCERR,"call is: slvhelp [s,l] \n");
@@ -2659,7 +2659,7 @@ int Asc_SolvNearBounds(ClientData cdata, Tcl_Interp *interp,
   int i,dev,status,count;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     FPRINTF(ASCERR,  "call is: slv_near_bounds epsilon <out>\n");
@@ -2741,7 +2741,7 @@ int Asc_SolvFarFromNominal(ClientData cdata, Tcl_Interp *interp,
   int i,dev,status,count;
   FILE *fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 3 ) {
     FPRINTF(ASCERR,  "call is: slv_far_from_nom <bignum> <out>\n");

@@ -20,7 +20,7 @@
  *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  General Public License for more details.
- *                                                              
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with the program; if not, write to the Free Software Foundation,
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
@@ -81,7 +81,6 @@ extern char *Asc_UnitValue(CONST struct Instance *i);
 
 extern char *Asc_UnitlessValue(CONST struct Instance *i, int SI);
 /**<
- *  <!--  Unitless_Value(i,SI);                                        -->
  *  Like Unit_Value, except that contents of the string returned
  *  do not include the units and the printed value in the string
  *  will be in SI instead of display units if SI is TRUE.
@@ -91,15 +90,13 @@ extern char *Asc_UnitlessValue(CONST struct Instance *i, int SI);
 
 extern char *Asc_UnitString(CONST struct Instance *i, int SI);
 /**<
- *  <!--  Unit_String(i,SI);                                           -->
  *  Like Unit_Value, except that contents of the string returned
  *  do not include the value of the instance. If SI is TRUE, units
  *  returned will be SI units rather than units window specified units.
  */
 
-extern char *Asc_UnitDimString(dim_type *dimp, int SI);
+extern char *Asc_UnitDimString(const dim_type *dimp, int SI);
 /**<
- *  <!--  Unit_String(dimp,SI);                                        -->
  *  Like Unit_String, except that the instance is not needed.
  *  If SI is TRUE, units returned will be SI units rather than units
  *  window specified units.
@@ -109,7 +106,6 @@ extern char *Asc_UnitDimString(dim_type *dimp, int SI);
 extern int Asc_UnitConvert(struct Units *u, double in,
                            double *out, int direction);
 /**<
- *  <!--  Unit_Convert(u,in,out,direction);                            -->
  *  Attempts to unit convert the value in double to/from the units given.
  *  If args are wrong or conversion fails, return value is 1 and *out
  *  may be undefined.
@@ -127,7 +123,7 @@ extern int Asc_UnitSetRealAtomValue(CONST struct Instance *i,
  *  dimensionally compatible and value fits within a double in SI units.
  *  If atom is wild, dimensionality will be set by this call unless
  *  the second char argument is null/empty/"*".
- *  Return codes: 
+ *  Return codes:
  *    - 0 => ok
  *    - 1 => Unparseable units given- Not assigned
  *    - 2 => Dimensionally incompatible units- Not assigned
@@ -360,7 +356,7 @@ extern int Asc_UnitSlvGetObjVal(ClientData cdata, Tcl_Interp *interp,
                                 int argc, CONST84 char *argv[]);
 /**<
  *  Returns as Asc_UnitValue if possible from the obj indicated
- *  by index. Until there is an objlist, this will simply look 
+ *  by index. Until there is an objlist, this will simply look
  *  at obj and ignore index.
  *
  *  Registered as:  u_slvgetobjval <objlist index>

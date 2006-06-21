@@ -5,7 +5,7 @@ srcs = Split("""
 	BrowserMethod.c BrowserProc.c BrowserQuery.c BrowserRel_io.c
 	Commands.c DebugProc.c DisplayProc.c
 	EnvVarProc.c HelpProc.c Integrators.c
-	LibraryProc.c Lsode.c MtxProc.c ProbeProc.c Qlfdid.c
+	LibraryProc.c MtxProc.c ProbeProc.c Qlfdid.c
 	ScriptProc.c Sensitivity.c SimsProc.c SlvProc.c
 	SolverProc.c UnitsProc.c UserData.c
 	tkConsole.c old_utils.c Driver.c

@@ -493,7 +493,7 @@ STDHLF(Asc_HelpCmd,(Asc_HelpCmdHL1,Asc_HelpCmdHL2,Asc_HelpCmdHL3,
 int Asc_HelpCmd(ClientData cdata, Tcl_Interp *interp, int argc, CONST84 char *argv[])
 {
   CONST char *um, *sm, *lm;
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   ASCUSE;
 

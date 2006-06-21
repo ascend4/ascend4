@@ -89,34 +89,29 @@ static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan 
  */
 
 /**
- *  g_compiler_timing
- *
- *  TRUE if compiler timing is to be printed.
- *  default is false, set to TRUE by passing -t on the command line
- */
+	TRUE if compiler timing is to be printed.
+	default is false, set to TRUE by passing -t on the command line
+
+	jp: moved to compiler/simlist.c 
+*/
 /* int g_compiler_timing = 0; */
-/* moved to compiler/simlist.c */
 
 /**
- *  g_interp
- *
- *  Interpreter for this application.  We need to make it global
- *  so that our signal/floating-porint traps can access it.
- */
+	Interpreter for this application.  We need to make it global
+	so that our signal/floating-porint traps can access it.
+*/
 Tcl_Interp *g_interp;
 
 /*
- *  zz_debug
- *
- *  Comes from the yacc file if yacc was built with debugging information
- */
+	Comes from the yacc file if yacc was built with debugging information
+*/
 #ifdef ZZ_DEBUG
 extern int zz_debug;
 #endif
 
 
 /*
- *  Declarations for procedures defined outside of this file.
+	Declarations for procedures defined outside of this file.
  */
 extern int  Tktable_Init(Tcl_Interp*);
 
@@ -133,56 +128,41 @@ static void InitDebugMalloc(void);
 
 
 /*
- *  LOCALLY GLOBAL VARIABLES
- */
+	LOCALLY GLOBAL VARIABLES 
+	think global, act local :-)
+*/
 
-/*
- *  g_interface_simplify_relations
- *
- *  TRUE for compiler optimizations
- *  default is TRUE, set to FALSE by passing +s on the command line
- */
+/**
+	TRUE for compiler optimizations default is TRUE, set to FALSE by passing
+	+s on the command line 
+*/
 static int g_interface_simplify_relations = TRUE;
 
-/*
- *  g_interfacever
- *
- *  TRUE if windows to be built; default is TRUE, false is not supported
- */
+/** TRUE if windows to be built; default is TRUE, false is not supported */
 static int g_interfacever = 1;
 
-/*
- *  g_command
- *
- *  Used to assemble lines of terminal input into Tcl commands.
- */
+/** Used to assemble lines of terminal input into Tcl commands. */
 static Tcl_DString g_command;
 
-/*
- *  g_line
- *
- *  Used to read the next line from the terminal input.
- */
+/** Used to read the next line from the terminal input. */
 static Tcl_DString g_line;
 
-/*
- *  tty
- *
- *  Non-zero means standard input is a terminal-like device.
- *  Zero means it's a file.
- */
+/**
+	Non-zero means standard input is a terminal-like device.
+	Zero means it's a file.
+*/
 static int tty;
 
 /*
- *  initScriptTclAdjust
- *  initScriptTkAdjust
- *
- *  These two variables hold Tcl scripts that will set the TCL_LIBRARY
- *  and TK_LIBRARY environment variables if they are not already
- *  set in the user's environment.
- *  TCL_LIBRARY is set to:  dirnameofexecutable/../../Tcl/lib/tcl8.0
- *  TK_LIBRARY is set to $tcl_library/../tk8.0
- */
+	initScriptTclAdjust
+	initScriptTkAdjust
+	
+	These two variables hold Tcl scripts that will set the TCL_LIBRARY
+	and TK_LIBRARY environment variables if they are not already
+	set in the user's environment.
+	TCL_LIBRARY is set to:  dirnameofexecutable/../../Tcl/lib/tcl8.0
+	TK_LIBRARY is set to $tcl_library/../tk8.0
+*/
 static char initScriptTclAdjust[] =
 "proc asc_tclInit {} {\n\
     global env\n\
@@ -217,15 +197,13 @@ static char initScriptTkAdjust[] =
     }\n\
   }\n\
 asc_tkInit";
-/*
- * This assumes tcl_library has been found and that tcl8.0 and tk8.0
- * are installed in the same lib directory -- the default tcl/tk install.
- */
+/**<
+	This assumes tcl_library has been found and that tcl8.0 and tk8.0
+	are installed in the same lib directory -- the default tcl/tk install.
+*/
 
-/*
- *  build_name
- *
- *  who built this binary and when
+/**
+	who built this binary and when
  */
 #ifndef TIMESTAMP
 static char build_name[]="by anonymous";
@@ -233,31 +211,26 @@ static char build_name[]="by anonymous";
 static char build_name[]=TIMESTAMP;
 #endif /* TIMESTAMP */
 
-/**
-	Moved 'main' and 'WinMain' to separate 'main.c'
+/*
+	jp: Moved 'main' and 'WinMain' to separate 'main.c'
 	so that ascend4.exe can be built without linkage to Tcl/Tk
 */
 
 
-/*
- *  int AscDriver( argc, argv )
- *      int argc;
- *      char *argv;
- *
- *  A common entry point for Windows and Unix.  The corresponding
- *  WinMain() and main() functions just call this function.
- *
- *  This function creates a Tcl interpreter, initializes Tcl and Tk,
- *  initializes the Ascend data structures, sets up the user's
- *  environment, sources ASCEND's startup script, and calls Tk_MainLoop
- *  so the user can interact with ASCEND.  Cleans up and exits the
- *  program when Tk_MainLoop returns.
- *
- *  This function is based on the functions Tk_Main and Tcl_AppInit
- *  from the Tk8.0 distribution.  See the files tkMain.c and tkAppInit.c
- *  in the Tk sources.
- *
- */
+/**
+	A common entry point for Windows and Unix.  The corresponding
+	WinMain() and main() functions just call this function.
+	
+	This function creates a Tcl interpreter, initializes Tcl and Tk,
+	initializes the Ascend data structures, sets up the user's
+	environment, sources ASCEND's startup script, and calls Tk_MainLoop
+	so the user can interact with ASCEND.  Cleans up and exits the
+	program when Tk_MainLoop returns.
+	
+	This function is based on the functions Tk_Main and Tcl_AppInit
+	from the Tk8.0 distribution.  See the files tkMain.c and tkAppInit.c
+	in the Tk sources.
+*/
 int AscDriver(int argc, CONST char **argv)
 {
   Tcl_Interp *interp;                   /* local version of global g_interp */
@@ -555,7 +528,10 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	env_import(ASC_ENV_BITMAPS,getenv,PUTENV);
 	env_import(ASC_ENV_LIBRARY,getenv,PUTENV);
 
-    CONSOLE_DEBUG("IMPORTING VARS");
+	/* used for colour console output */
+	env_import("TERM",getenv,PUTENV);
+
+	CONSOLE_DEBUG("IMPORTING VARS");
 
 	distdir = GETENV(ASC_ENV_DIST);
 	tkdir = GETENV(ASC_ENV_TK);
@@ -683,16 +659,13 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 
 
 
-/*
- *  int AscSetStartupFile(interp)
- *      Tcl_Interp *interp;
- *
- *  Look for ~/.ascendrc; if found, set  the Tcl variable tcl_rcFileName
- *  to this file's location.  This overrides the value set in
- *  AscCheckEnvironVars().
- *  If ~/_ascendrc is available it only gets used if ~/.ascendrc is not.
- *  Returns a standard Tcl return code.
- */
+/**
+	Look for ~/.ascendrc; if found, set  the Tcl variable tcl_rcFileName
+	to this file's location.  This overrides the value set in
+	AscCheckEnvironVars().
+	If ~/_ascendrc is available it only gets used if ~/.ascendrc is not.
+	Returns a standard Tcl return code.
+*/
 static int AscSetStartupFile(Tcl_Interp *interp)
 {
   char *fullname;        /* try to find this if first fails */
@@ -737,20 +710,14 @@ static int AscSetStartupFile(Tcl_Interp *interp)
 }
 
 
-
-/*
- *  file = AscProcessCommandLine(argc, argv)
- *      char *file;
- *      int   argc;
- *      char *argv[];
- *
- *  Process the options given on the command line `argv' where `argc' is
- *  the length of argv.
- *
- *  Strip out ASCEND specific flags and then pass the rest to Tcl so it
- *  can set what it needs.
- *
- *  This function may call exit() if the user requests help.
+/**
+	Process the options given on the command line `argv' where `argc' is
+	the length of argv.
+	
+	Strip out ASCEND specific flags and then pass the rest to Tcl so it
+	can set what it needs.
+	
+	This function may call exit() if the user requests help.
  */
 static int AscProcessCommandLine(Tcl_Interp *interp, int argc, CONST char **argv)
 {
@@ -857,13 +824,9 @@ static int AscProcessCommandLine(Tcl_Interp *interp, int argc, CONST char **argv
 }
 
 
-/*
- *  AscPrintHelpExit(invoke_name)
- *      CONST char *invoke_name;
- *
- *  Print a help message and exit.  Use invoke_name as the name of
- *  the binary
- */
+/**
+	Print a help message and exit.  Use invoke_name as the name of the binary
+*/
 static
 void AscPrintHelpExit(CONST char *invoke_name)
 {
@@ -879,11 +842,8 @@ void AscPrintHelpExit(CONST char *invoke_name)
 }
 
 
-/*
- *  AscTrap(sig)
- *      int sig;
- *
- *  Function to call when we receive an interrupt.
+/**
+	Function to call when we receive an interrupt.
  */
 static
 void AscTrap(int sig)
@@ -893,13 +853,10 @@ void AscTrap(int sig)
 }
 
 
-/*
- *  See this file's header for documentation.
- */
 int Asc_LoadWin(ClientData cdata, Tcl_Interp *interp,
                 int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -914,36 +871,24 @@ int Asc_LoadWin(ClientData cdata, Tcl_Interp *interp,
   return TCL_OK;
 }
 
-
-/*
- *----------------------------------------------------------------------
- *----------------------------------------------------------------------
- *  The following StdinProc() and Prompt() are from tkMain.c in
- *  the Tk4.1 distribution (and did not change in Tk8.0).
- *----------------------------------------------------------------------
- *----------------------------------------------------------------------
- */
-/*
- *----------------------------------------------------------------------
- *
- * StdinProc --
- *
- *	This procedure is invoked by the event dispatcher whenever
- *	standard input becomes readable.  It grabs the next line of
- *	input characters, adds them to a command being assembled, and
- *	executes the command if it's complete.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Could be almost arbitrary, depending on the command that's
- *	typed.
- *
- *----------------------------------------------------------------------
- */
+/*---------------------------------------------------------------------
+  The following StdinProc() and Prompt() are from tkMain.c in
+  the Tk4.1 distribution (and did not change in Tk8.0).
+  ----------------------------------------------------------------------*/
 
-    /* ARGSUSED */
+/**
+	This procedure is invoked by the event dispatcher whenever
+	standard input becomes readable.  It grabs the next line of
+	input characters, adds them to a command being assembled, and
+	executes the command if it's complete.
+	
+	Results:
+		None.
+	
+	Side effects:
+	Could be almost arbitrary, depending on the command that's
+	typed.
+*/
 static void
 StdinProc(ClientData clientData, int mask)
 {
@@ -1021,29 +966,22 @@ StdinProc(ClientData clientData, int mask)
   Tcl_ResetResult(interp);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * Prompt --
- *
- *	Issue a prompt on standard output, or invoke a script
- *	to issue the prompt.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A prompt gets output, and a Tcl script may be evaluated
- *	in interp.
- *
- * Parameters:
- *   interp    Interpreter to use for prompting.
- *   partial   Non-zero means there already exists a partial
- *             command, so use the secondary prompt.
- *
- *----------------------------------------------------------------------
- */
-
+/**
+	Issue a prompt on standard output, or invoke a script
+	to issue the prompt.
+	
+	Results:
+		None.
+	
+	Side effects:
+	A prompt gets output, and a Tcl script may be evaluated
+	in interp.
+	
+	Parameters:
+	 interp    Interpreter to use for prompting.
+	 partial   Non-zero means there already exists a partial
+	           command, so use the secondary prompt.
+*/
 static void
 Prompt(Tcl_Interp *interp, int partial)
 {
@@ -1097,13 +1035,11 @@ Prompt(Tcl_Interp *interp, int partial)
     Tcl_Flush(outChannel);
   }
 }
-
-/*
- *----------------------------------------------------------------------
- *  Tom Epperly's Malloc Debugger
- *----------------------------------------------------------------------
- */
+
 #ifdef DEBUG_MALLOC
+/**
+	Tom Epperly's Malloc Debugger
+*/
 static void InitDebugMalloc(void)
 {
   union dbmalloptarg m;
@@ -1136,5 +1072,3 @@ int Asc_DebugMallocCmd(ClientData cdata, Tcl_Interp *interp,
   return TCL_OK;
 }
 #endif /* DEBUG_MALLOC */
-
-

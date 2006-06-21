@@ -54,7 +54,7 @@
 #include <compiler/instance_io.h>
 #include <compiler/atomvalue.h>
 #include <compiler/instquery.h>
-#include <compiler/types.h>
+#include <compiler/expr_types.h>
 #include <compiler/mathinst.h>
 #include <compiler/instance_name.h>
 #include <compiler/relation_type.h>
@@ -251,7 +251,7 @@ void Unit_WriteDenom(Tcl_DString *str, struct fraction frac,
 
 /* return a nicely formatted units string */
 static
-char *Unit_MakeString(dim_type *dimp, struct Units * units[NUM_DIMENS])
+char *Unit_MakeString(const dim_type *dimp, struct Units * units[NUM_DIMENS])
 {
   struct fraction frac;
   Tcl_DString str1, str2;
@@ -305,18 +305,18 @@ void Unit_PrintDU(struct DisplayUnit *du)
  * return the DisplayUnit pointer that matches dimp.
  * create it if necessary. failing create, crash.
  */
-static struct DisplayUnit *Unit_FindOrAddDU(dim_type *dimp)
+static struct DisplayUnit *Unit_FindOrAddDU(const dim_type *dimp)
 {
   unsigned long ndx;
   struct DisplayUnit dimpDU;
   struct DisplayUnit *newdu;
 
-  dimpDU.d = dimp;
+  dimpDU.d = (dim_type *)dimp;
   check_DU_set();
   ndx = gl_search(DUList,(VOIDPTR)&dimpDU,(CmpFunc)Unit_CmpDU);
   if (ndx==0L) {
-    newdu = (struct DisplayUnit *)ascmalloc(sizeof(struct DisplayUnit));
-    newdu->d = dimp;
+    newdu = ASC_NEW(struct DisplayUnit);
+    newdu->d = (dim_type *)dimp;
     newdu->u = NULL;
     newdu->fu = NULL;
     gl_insert_sorted(DUList,(VOIDPTR)newdu,(CmpFunc)Unit_CmpDU);
@@ -330,7 +330,7 @@ static struct DisplayUnit *Unit_FindOrAddDU(dim_type *dimp)
  * not existing. Will not actually create a Units struct. a NULL return
  * means the unit has been defaulted in the units window.
  */
-static struct Units *Unit_DisplayUnits(dim_type *dimp)
+static struct Units *Unit_DisplayUnits(const dim_type *dimp)
 {
   struct DisplayUnit *dimpdu;
   assert(check_DU_set());
@@ -343,7 +343,7 @@ static struct Units *Unit_DisplayUnits(dim_type *dimp)
  * if needed using user set base units and adds to the Units hash table.
  * returns the pointer of the fund units.
  */
-static struct Units *Unit_DisplayFund(dim_type *dimp)
+static struct Units *Unit_DisplayFund(const dim_type *dimp)
 {
   struct DisplayUnit* dimpDU;
   char *newunits = NULL;
@@ -373,7 +373,7 @@ static struct Units *Unit_DisplayFund(dim_type *dimp)
  * we are constructing the string every time rather than expanding
  * the DisplayUnit struct.
  */
-static struct Units *Unit_DisplaySI(dim_type *dimp)
+static struct Units *Unit_DisplaySI(const dim_type *dimp)
 {
   static unsigned long pos;
   static int ecode;
@@ -925,7 +925,7 @@ char *Asc_UnitString(CONST struct Instance *i, int si)
 }
 
 /* follows UDS string convention as for Asc_UnitValue. */
-char *Asc_UnitDimString(dim_type *dimp, int si)
+char *Asc_UnitDimString(const dim_type *dimp, int si)
 {
   struct Units *du;
   size_t len;
@@ -1058,7 +1058,7 @@ void Unit_GetUserSet(struct DisplayUnit *du)
 int Asc_UnitDestroyDisplayList(ClientData cdata, Tcl_Interp *interp,
                              int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
 
@@ -1076,7 +1076,7 @@ int Asc_UnitDefaultBaseUnits(ClientData cdata, Tcl_Interp *interp,
   static int SIset;
   int i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)interp;   /* stop gcc whine about unused parameter */
   (void)argc;     /* stop gcc whine about unused parameter */
   (void)argv;     /* stop gcc whine about unused parameter */
@@ -1134,7 +1134,7 @@ int Asc_UnitDump(ClientData cdata, Tcl_Interp *interp,
   int dev,status = TCL_OK, tmpi;
   FILE * fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if (( argc < 2 ) || ( argc > 3 )) {
     FPRINTF(stderr,"call is: u_dump <device #> \n");
@@ -1211,7 +1211,7 @@ int Asc_DimenDump(ClientData cdata, Tcl_Interp *interp,
   int dev,status = TCL_OK, tmpi;
   FILE * fp;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_dims <device #> \n");
@@ -1272,7 +1272,7 @@ int Asc_DimenRelCheck(ClientData cdata, Tcl_Interp *interp,
                    int argc, CONST84 char *argv[]) {
   int status,tmpi;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_dim_setverify <0,1>\n");
@@ -1302,7 +1302,7 @@ int Asc_UnitBaseDimToNum(ClientData cdata, Tcl_Interp *interp,
   char *c;
   int i;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_dim2num <M,T,L,C,Q,TMP,P,S,E,LUM> \n");
@@ -1327,7 +1327,7 @@ int Asc_UnitNumToBaseDim(ClientData cdata, Tcl_Interp *interp,
 {
   int status = TCL_OK, tmpi;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_num2dim <num> \n");
@@ -1405,7 +1405,7 @@ int Asc_UnitMatchAtomDim(ClientData cdata, Tcl_Interp *interp,
 {
   struct TypeDescription *desc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_fromatomdim <atom_typename> \n");
@@ -1449,7 +1449,7 @@ int Asc_UnitGetAtomList(ClientData cdata, Tcl_Interp *interp,
   register unsigned long c,len;
   char a[1024];
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1647,7 +1647,7 @@ int Asc_UnitGetPrec(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
 {
   char buf[MAXIMUM_NUMERIC_LENGTH];   /* string to hold integer */
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1670,7 +1670,7 @@ int Asc_UnitSetPrec(ClientData cdata, Tcl_Interp *interp,
 {
   int status,tmpi;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_setprec <number>\n");
@@ -1698,7 +1698,7 @@ int Asc_UnitGetUnits(ClientData cdata, Tcl_Interp *interp,
 {
   struct TypeDescription *desc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_get_units <atom_typename> \n");
@@ -1745,7 +1745,7 @@ int Asc_UnitGetUser(ClientData cdata, Tcl_Interp *interp,
 {
   struct TypeDescription *desc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_get_user <atom_typename> \n");
@@ -1777,7 +1777,7 @@ int Asc_UnitGetUser(ClientData cdata, Tcl_Interp *interp,
 int Asc_UnitGetList(ClientData cdata, Tcl_Interp *interp,
                  int argc, CONST84 char *argv[])
 {
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   if ( argc != 1 ) {
@@ -1795,7 +1795,7 @@ int Asc_UnitClearUser(ClientData cdata, Tcl_Interp *interp,
 {
   struct TypeDescription *desc;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     FPRINTF(stderr,"call is: u_clear_user <atom_typename> \n");
@@ -1826,7 +1826,7 @@ int Asc_UnitGetVal(ClientData cdata, Tcl_Interp *interp,
   struct Instance *i;
   int status;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_SetResult(interp, "u_getval expected <qlfdid>", TCL_STATIC);
@@ -1854,7 +1854,7 @@ int Asc_UnitBrowGetVal(ClientData cdata, Tcl_Interp *interp,
                     int argc, CONST84 char *argv[])
 {
   struct Instance *i;
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
   (void)argv;     /* stop gcc whine about unused parameter */
 
   ASCUSE;
@@ -1890,7 +1890,7 @@ int Asc_UnitSlvGetRelVal(ClientData cdata, Tcl_Interp *interp,
   int32 maxrel,relnum;
   int status = TCL_OK;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_AppendElement(interp,"u_slvgetrelval expects solver relation index.");
@@ -1932,7 +1932,7 @@ int Asc_UnitSlvGetVarVal(ClientData cdata, Tcl_Interp *interp,
   int32 maxvar,varnum;
   int status = TCL_OK;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_AppendElement(interp,"u_slvgetvarval expects solver variable index.");
@@ -1974,7 +1974,7 @@ int Asc_UnitSlvGetObjVal(ClientData cdata, Tcl_Interp *interp,
   int32 maxobj,objnum;
   int status = TCL_OK;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc != 2 ) {
     Tcl_AppendElement(interp,"u_slvgetobjval expects solver objective index.");
@@ -2026,7 +2026,7 @@ int Asc_UnitHelpList(ClientData cdata, Tcl_Interp *interp,
 {
   boolean detail = 1;
 
-  (void)cdata;    /* stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(cdata);
 
   if ( argc > 2 ) {
     FPRINTF(stderr,"call is: uhelp [s,l] \n");
