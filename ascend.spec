@@ -1,6 +1,6 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.93
+Version:	0.9.5.94
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
@@ -8,7 +8,7 @@ Release:	0
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		ascend-0.9.5.93.tar.bz2
+Source:		ascend-0.9.5.94.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
@@ -24,6 +24,7 @@ BuildRequires: desktop-file-utils
 BuildRequires: tk-devel < 8.5
 BuildRequires: tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
+BuildRequires: compat-gcc-32-g77 == 3.2.3
 
 Requires: python >= 2.4
 Requires: pygtk2 >= 2.6
@@ -42,7 +43,7 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 #%package -n ascend-python
-#Version:    0.9.5.93
+#Version:    0.9.5.94
 #Summary:    PyGTK user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -52,7 +53,7 @@ fields from Architecture to (computational) Zoology.
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
 #%package -n ascend-tcltk
-#Version:    0.9.5.93
+#Version:    0.9.5.94
 #Summary:    Tcl/Tk user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -63,10 +64,18 @@ fields from Architecture to (computational) Zoology.
 #functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n ascend-0.9.5.93
+%setup -q -n ascend-0.9.5.94
 
 %build
-scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models INSTALL_ROOT=%{buildroot} INSTALL_PREFIX=%{_prefix} INSTALL_SHARE=%{_datadir} INSTALL_BIN=%{_bindir} INSTALL_INCLUDE=%{_includedir} TCL=/usr TCL_LIB=tcl8.4 TK_LIB=tk8.4 WITH_SOLVERS=QRSLV,LSOD,CMSLV pygtk tcltk
+scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
+	INSTALL_ROOT=%{buildroot} \
+	INSTALL_PREFIX=%{_prefix} \
+	INSTALL_SHARE=%{_datadir} \
+	INSTALL_BIN=%{_bindir} \
+	INSTALL_INCLUDE=%{_includedir} \
+	F2C_LIBPATH=/usr/lib/gcc-lib/i386-redhat-linux/3.2.3/ \
+	WITH_SOLVERS=QRSLV,LSOD,CMSLV \
+	pygtk tcltk
 
 %install
 rm -rf %{buildroot}
