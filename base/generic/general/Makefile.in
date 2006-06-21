@@ -45,15 +45,11 @@ EXEC_LIBS =
 #  The next variables list the source files (LIB_SCRS) to compile
 #  into the object files (LIB_OBJS) that are combined to make LIBRARY
 
-LIB_SRCS = \
-	dstring.c hashpjw.c list.c listio.c pool.c pretty.c \
-	stack.c table.c tm_time.c ospath.c env.c
-
 LIB_OBJS = \
 	dstring.o hashpjw.o list.o listio.o pool.o pretty.o \
 	stack.o table.o tm_time.o ospath.o env.o
 
-
+LIB_SRCS = $(LIB_OBJS:%.c=%.o)
 
 #  The global makefile macros (ConfigAscend) and global rules (Makefile.Rules)
 #  

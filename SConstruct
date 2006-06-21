@@ -1352,6 +1352,8 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 	, [env.Dir('#')]
 )
 
+env.Depends(tar,'ascend.spec')
+
 #------------------------------------------------------
 # RPM BUILD
 

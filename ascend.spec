@@ -8,7 +8,7 @@ Release:	0
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		ascend-0.9.5.94.tar.bz2
+Source:		ascend.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
@@ -24,6 +24,8 @@ BuildRequires: desktop-file-utils
 BuildRequires: tk-devel < 8.5
 BuildRequires: tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
+
+# This contains the libg2c library; which on FC5 is not in the path, unfort.
 BuildRequires: compat-gcc-32-g77 == 3.2.3
 
 Requires: python >= 2.4
@@ -64,7 +66,7 @@ fields from Architecture to (computational) Zoology.
 #functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n ascend-0.9.5.94
+%setup -q -n ascend
 
 %build
 scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \

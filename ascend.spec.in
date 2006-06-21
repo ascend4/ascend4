@@ -24,6 +24,8 @@ BuildRequires: desktop-file-utils
 BuildRequires: tk-devel < 8.5
 BuildRequires: tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
+
+# This contains the libg2c library; which on FC5 is not in the path, unfort.
 BuildRequires: compat-gcc-32-g77 == 3.2.3
 
 Requires: python >= 2.4
