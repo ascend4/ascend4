@@ -150,7 +150,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	FILE *f;
 
 	ospath_strcpy(fp,ls->fullpath,PATH_MAX);
-	CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath);
+	/* CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath); */
 
 	f = ospath_fopen(fp,"r");
 	if(f==NULL){
@@ -159,7 +159,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	}
 	fclose(f);
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s",ls->fullpath);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s\n",ls->fullpath);
 	return 1;
 }
 
@@ -196,7 +196,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 		return NULL;
 	}
 
-	CONSOLE_DEBUG("FILESTEM = '%s'",s1);
+	/* CONSOLE_DEBUG("FILESTEM = '%s'",s1); */
 
 #if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
 	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
@@ -225,16 +225,16 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 
 	ls.partialpath = fp1;
 
-	CONSOLE_DEBUG("ENV VAR = '%s'",envv);
+	/* CONSOLE_DEBUG("ENV VAR = '%s'",envv); */
 
-	CONSOLE_DEBUG("GETTING SEARCH PATH FROM ENVIRONMENT VAR '%s'",envv);
+	/* CONSOLE_DEBUG("GETTING SEARCH PATH FROM ENVIRONMENT VAR '%s'",envv); */
 	path=getenv(envv);
 	if(path==NULL){
 		CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
 		path=ASC_DEFAULTPATH;
 	}
 
-	CONSOLE_DEBUG("SEARCHPATH = '%s'",path);
+	/* CONSOLE_DEBUG("SEARCHPATH = '%s'",path); */
 
 	sp = ospath_searchpath_new(path);
 
@@ -263,7 +263,7 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 	struct FilePath *fp1;
 	int result;
 
-	CONSOLE_DEBUG("ABOUT TO SEARCH FOR '%s'",partialname);
+	CONSOLE_DEBUG("Searching for external library '%s'",partialname);
 
 	file = SearchArchiveLibraryPath(partialname, ASC_DEFAULTPATH, PATHENVIRONMENTVAR);
 	if(file==NULL){

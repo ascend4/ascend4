@@ -62,15 +62,15 @@ ASC_EXPORT(int) extfntest_register(){
 			      (ExtEvalFunc **)NULL,
 			      1,1,addone_help);
 */
-	result += CreateUserFunctionBlackBox(
-			"add_one",
-			addone_prepare,
-			addone_calc,
-			(ExtBBoxFunc*)NULL, /* no grad */
-			(ExtBBoxFunc*)NULL, /* no hess */
-			(ExtBBoxFunc*)NULL, /* no final */
-			1,1,addone_help);
-
+	result += CreateUserFunctionBlackBox("add_one"
+		, addone_prepare
+		, addone_calc /* value */
+		, (ExtBBoxFunc*)NULL /* deriv */
+		, (ExtBBoxFunc*)NULL /* deriv2 */
+		, (ExtBBoxInitFunc*)NULL /* final */
+		, 1,1 /* inputs, outputs */
+		, addone_help
+	);
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
 	return result;

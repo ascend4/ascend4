@@ -9,7 +9,7 @@ import sys
 # solvers etc.
 #
 # It's written in python since (because of SCons) we know we have Python on 
-# this system already tut we don't know that about unix shell (eg on Windows).
+# this system already but we don't know that about unix shell (eg on Windows).
 #
 # Note that SCons supports reading of the output from this script, using
 # features offered since version 0.96.91

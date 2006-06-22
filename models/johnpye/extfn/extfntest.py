@@ -4,12 +4,12 @@ if platform.system() != "Windows":
 	import sys, re, dl
 	sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
 
-import ascend
-L = ascend.Library()
+import ascpy
+L = ascpy.Library()
 
 #--------------------------------
 print "\n\n\n\nLOADING EXTERNAL TEST...\n\n\n"
-L.load("extfntest.a4c")
+L.load("johnpye/extfn/extfntest.a4c")
 
 #--------------------------------
 #print "\n\n\n\nLOADING INTERNAL TEST...\n\n\n"
