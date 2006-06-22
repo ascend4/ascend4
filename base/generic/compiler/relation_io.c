@@ -1249,7 +1249,9 @@ static void WriteGlassBoxRelationDS(Asc_DString *dsPtr,
   WriteOpDS(dsPtr,RelationRelop(r),relio_ascend);
 }
 
-
+/**
+	Output a blackbox relation to the specified file pointer
+*/
 static
 void WriteBlackBoxRelation(FILE *f,
 			   CONST struct relation *r,
@@ -1266,32 +1268,26 @@ void WriteBlackBoxRelation(FILE *f,
   arglist = ExternalCallArgList(ext);
   len1 = gl_length(arglist);
   efunc = ExternalCallExtFunc(ext);
-  FPRINTF(f," %s(",ExternalFuncName(efunc)); /* function name */
+  FPRINTF(f,"%s(",ExternalFuncName(efunc)); /* function name */
 
   if (len1) {
+	FPRINTF(f,"\n\t");
     for (c1=1;c1<=len1;c1++) {
       branch = (struct gl_list_t *)gl_fetch(arglist,c1);
       if (branch) {
-	len2 = gl_length(branch);
-	for (c2=1;c2<len2;c2++) {		/* < is intentional */
-	  arg = (struct Instance *)gl_fetch(branch,c2);
-	  WriteInstanceName(f,arg,inst);
-	  FPRINTF(f,", ");
-	}
-	if (len2) {
-	  arg = (struct Instance *)gl_fetch(branch,c2);
-	  WriteInstanceName(f,arg,inst);
-	  FPRINTF(f,"\n");
-	}
+        len2 = gl_length(branch);
+		for (c2=1;c2<=len2;c2++) {
+		  arg = (struct Instance *)gl_fetch(branch,c2);
+		  WriteInstanceName(f,arg,inst);
+		  if(c2<len2)FPRINTF(f,", ");
+		}
       }
-      if (c1==len1)
-	FPRINTF(f,");\n");
-      else
-	FPRINTF(f,", ");
+      if (c1<len1)
+		FPRINTF(f,"\n);\n");
     }
-  } else {
-    FPRINTF(f,");\n ");
   }
+
+  FPRINTF(f,");\n");
 }
 
 static
@@ -1314,29 +1310,24 @@ void WriteBlackBoxRelationDS(Asc_DString *dsPtr,
   Asc_DStringAppend(dsPtr,SB255,-1);
 
   if (len1) {
+    Asc_DStringAppend(dsPtr,"\n\t",2);
     for (c1=1;c1<=len1;c1++) {
       branch = (struct gl_list_t *)gl_fetch(arglist,c1);
       if (branch) {
-	len2 = gl_length(branch);
-	for (c2=1;c2<len2;c2++) {		/* < is intentional */
-	  arg = (struct Instance *)gl_fetch(branch,c2);
-	  WriteInstanceNameDS(dsPtr,arg,inst);
-          Asc_DStringAppend(dsPtr,", ",2);
-	}
-	if (len2) {
-	  arg = (struct Instance *)gl_fetch(branch,c2);
-	  WriteInstanceNameDS(dsPtr,arg,inst);
-          Asc_DStringAppend(dsPtr,"\n",1);
-	}
+		len2 = gl_length(branch);
+		for (c2=1;c2<=len2;c2++) {
+		  arg = (struct Instance *)gl_fetch(branch,c2);
+		  WriteInstanceNameDS(dsPtr,arg,inst);
+		  if(c2<len2)Asc_DStringAppend(dsPtr,", ",2);
+		}
       }
-      if (c1==len1)
-        Asc_DStringAppend(dsPtr,");\n",3);
-      else
-        Asc_DStringAppend(dsPtr,", ",2);
+      if(c1<len1)
+        Asc_DStringAppend(dsPtr,"\n\t, ",4);
     }
-  } else {
-    Asc_DStringAppend(dsPtr,");\n ",3);
+	Asc_DStringAppend(dsPtr,"\n",1);
   }
+
+  Asc_DStringAppend(dsPtr,");\n ",3);
 }
 
 
