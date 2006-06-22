@@ -228,7 +228,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	/* CONSOLE_DEBUG("ENV VAR = '%s'",envv); */
 
 	/* CONSOLE_DEBUG("GETTING SEARCH PATH FROM ENVIRONMENT VAR '%s'",envv); */
-	path=getenv(envv);
+	path=Asc_GetEnv(envv);
 	if(path==NULL){
 		CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
 		path=ASC_DEFAULTPATH;
@@ -267,7 +267,7 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 
 	file = SearchArchiveLibraryPath(partialname, ASC_DEFAULTPATH, PATHENVIRONMENTVAR);
 	if(file==NULL){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"The named library '%s' was not found in the search path.",partialname);
+		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External library '%s' not found.",partialname);
 		return 1;
 	}
 
