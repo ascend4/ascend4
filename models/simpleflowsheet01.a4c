@@ -450,6 +450,16 @@ MODEL test_controller REFINES controller;
 	conv				:=	0.07;
     END values;
 
+METHOD on_load;
+	RUN default_self;
+	RUN reset;
+	RUN values;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(fs.m1.feed[2].f['C'] - 88.43978 {mol/s})< 0.0002 {mol/s};
+END self_test;
+
 END test_controller;
 
 
