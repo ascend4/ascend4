@@ -210,7 +210,6 @@ IDChar       {letter}({integer}|{letter}|_)*
 <INITIAL>"DECREASING"		{ return DECREASING_TOK		; }
 <INITIAL>"DEFAULT"		{ return DEFAULT_TOK		; }
 <INITIAL>"DEFINITION"		{ return DEFINITION_TOK		; }
-<INITIAL>"DIFF"     	{ return DIFF_TOK		; }
 <INITIAL>"DIMENSION"		{ return DIMENSION_TOK		; }
 <INITIAL>"DIMENSIONLESS"	{ return DIMENSIONLESS_TOK	; }
 <INITIAL>"DO"			{ return DO_TOK			; }
@@ -1142,13 +1141,19 @@ ErrMsg_SymbolEOL(void)
 	  Asc_ModuleBestName(Asc_CurrentModule()), yy_line);
 }
 
-
-static void
-ErrMsg_UnexpectedChar()
-{
-  FPRINTF(ASCERR,
-	  "Error:\tUnexpected character \"%s\" in input on line %s:%lu.\n",
-	  yytext,
-	  Asc_ModuleBestName(Asc_CurrentModule()),
-	  yy_line);
+#define ERRCOUNT_UNEXPCHAR 30
+static void ErrMsg_UnexpectedChar(){
+	static errcount=0;
+	if(errcount<ERRCOUNT_UNEXPCHAR){
+		error_reporter(ASC_USER_ERROR
+			,Asc_ModuleBestName(Asc_CurrentModule()), yy_line
+			,"Unexpected character '%s' in input.", yytext
+		);
+		errcount++;
+		if(errcount==ERRCOUNT_UNEXPCHAR){
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE
+				,"Further reports of this error will be supressed\n"
+			);
+		}
+	}
 }

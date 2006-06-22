@@ -328,7 +328,7 @@ static void CollectNote(struct Note *);
 %token BEQ_TOK BNE_TOK BREAK_TOK
 %token CALL_TOK CARD_TOK CASE_TOK CHOICE_TOK CHECK_TOK CONDITIONAL_TOK CONSTANT_TOK
 %token CONTINUE_TOK CREATE_TOK
-%token DATA_TOK DECREASING_TOK DEFAULT_TOK DIFF_TOK DEFINITION_TOK DIMENSION_TOK
+%token DATA_TOK DECREASING_TOK DEFAULT_TOK DEFINITION_TOK DIMENSION_TOK
 %token DIMENSIONLESS_TOK DO_TOK
 %token ELSE_TOK END_TOK EXPECT_TOK EXTERNAL_TOK
 %token FALSE_TOK FALLTHRU_TOK FIX_TOK FOR_TOK FREE_TOK FROM_TOK
@@ -2430,11 +2430,6 @@ expr:
 	{
 	  $$ = CreateSymbolExpr($1);
 	}
-    | DIFF_TOK '(' fname ')'
-	{
-      error_reporter_current_line(ASC_USER_WARNING,"'DIFF' is not yet implemented, treating as zero.",SCP($3));
-	  $$ = CreateDiffExpr($3); 
-	}
     | fname
 	{
 	  $$ = CreateVarExpr($1);
@@ -2677,7 +2672,7 @@ Asc_ErrMsgTypeDefnEOF(void)
   }
 }
 
-
+#define ERRCOUNT_PARSERGENERIC 30
 /*
  *  void ErrMsg_*(void)
  *
@@ -2686,18 +2681,26 @@ Asc_ErrMsgTypeDefnEOF(void)
  *  The type of error/warning that will be printed is indicated by the
  *  functions name and the arguments to fprintf.
  */
-static void
-ErrMsg_Generic(CONST char *string)
-{
-  /* the module may have be already closed, Asc_CurrentModule will be null */
-  error_reporter_current_line(ASC_USER_ERROR,"%s",string);
+static void ErrMsg_Generic(CONST char *string){
+	static errcount=0;
+	if(errcount<30){ 
+		/* the module may have be already closed, Asc_CurrentModule will be null */
+		error_reporter_current_line(ASC_USER_ERROR,"%s",string);
 
-  if (g_type_name != NULL) {
-    error_reporter_current_line(ASC_USER_ERROR,"    type %s\n",SCP(g_type_name));
-  }
-  if (g_proc_name != NULL) {
-    error_reporter_current_line(ASC_USER_ERROR,"    METHOD %s\n",SCP(g_proc_name));
-  }
+		if (g_type_name != NULL) {
+		error_reporter_current_line(ASC_USER_ERROR,"    type %s\n",SCP(g_type_name));
+		}
+		if (g_proc_name != NULL) {
+			error_reporter_current_line(ASC_USER_ERROR,"    METHOD %s\n",SCP(g_proc_name));
+		}
+
+		errcount++;
+		if(errcount==30){
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE
+				,"Further reports of this error will be suppressed.\n"
+			);
+		}
+	}
 }
 
 static void ErrMsg_CommaName(CONST char *what, struct Name *name)
