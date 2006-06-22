@@ -36,6 +36,7 @@ extern "C"{
 #include <compiler/simlist.h>
 #include <compiler/parser.h>
 #include <utilities/error.h>
+#include <general/env.h>
 }
 
 #include "library.h"
@@ -48,11 +49,18 @@ Library::Library(const char *defaultpath){
 		//cerr << "Initialising ASCEND library..." << endl;
 		Asc_RedirectCompilerDefault(); // Ensure that error message reach stderr
 		Asc_CompilerInit(1);
-		Asc_ImportPathList(PATHENVIRONMENTVAR);
+		env_import(PATHENVIRONMENTVAR,getenv,Asc_PutEnv);
 		char *x = Asc_GetEnv(PATHENVIRONMENTVAR);
 		if(x==NULL || strcmp(x,"")==0){
+			if(defaultpath==NULL){
+				ERROR_REPORTER_NOLINE(ASC_PROG_WARNING,"Using default "
+					PATHENVIRONMENTVAR " = '" DEFAULT_ASCENDLIBRARY "'"
+				);
+				defaultpath = DEFAULT_ASCENDLIBRARY;
+			}
+			
 			string s = string(PATHENVIRONMENTVAR "=") + defaultpath;
-			cerr << "Setting " << s << endl;
+			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Setting %s",s.c_str());;
 			Asc_PutEnv(s.c_str());
 		}
 		Asc_ImportPathList(PATHENVIRONMENTVAR);

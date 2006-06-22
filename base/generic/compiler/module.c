@@ -275,10 +275,10 @@ extern struct module_t *Asc_RequireModule(CONST char *name, int *status){
 	`do_not_overwrite' flag tells if we were called from
 	Asc_OpenModule() (==FALSE) or Asc_RequireModule() (==TRUE).
 
-	@param name filanem of the module to find
+	@param name filename of the module to find
 	@param status status to return to caller
 	@param do_not_overwrite Should we keep existing modules?
-	@param str String we keep and parse if not NULL.
+	@param keep_string String we keep and parse if not NULL.
 
 	When str is NULL:
 		This function calls FindModuleFile() to find the module named `name'.
@@ -902,6 +902,10 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 
 	fp1 = ospath_concat(path,sd->fp);
 
+	tmp  = ospath_str(sd->fp);
+	/* CONSOLE_DEBUG("Checking for path '%s'...",tmp); */
+	ospath_free_str(tmp);
+
 	if(ospath_stat(fp1,&sd->buf)){
 		sd->error = errno;
 		/* CONSOLE_DEBUG("Stat failed");*/
@@ -991,13 +995,15 @@ int ModuleSearchPath(CONST char *name,
 
 	}else{
 
+ 		/* CONSOLE_DEBUG("ENV var name is '%s'",PATHENVIRONMENTVAR); */
+
 		tmp = Asc_GetEnv(PATHENVIRONMENTVAR);
 		if(tmp==NULL){
 			ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",PATHENVIRONMENTVAR);
 			return 1;
 		}
 
-		/* CONSOLE_DEBUG("ENV var is '%s'",tmp); */
+		/*  CONSOLE_DEBUG("ENV var value is '%s'",tmp); */
 
 		sp1 = ospath_searchpath_new(tmp);
 		if(sp1==NULL){
@@ -1017,6 +1023,7 @@ int ModuleSearchPath(CONST char *name,
 		if(fp2==NULL){
 			*error = sd.error;
 			ospath_searchpath_free(sp1);		
+			CONSOLE_DEBUG("File '%s' not found in search path",name);		
 			return -1;
 		}
 

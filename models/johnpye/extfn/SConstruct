@@ -1,21 +1,26 @@
 import os, platform
+
 if platform.system()=="Windows" and os.environ.has_key('OSTYPE'):
 	env = Environment(ENV=os.environ,tools=['mingw'])
 else:
 	env = Environment(ENV=os.environ);
+	# assuming GCC, we will want the GCC visibility stuff set so that
+	# we ensure windows will work as well.
+	env.Append(CCFLAGS=['-fvisibility=hidden'])
+	env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
 
 srcs = Split("""
 	extfntest.c
 """)
 
-env.SharedLibrary("extfntest",srcs
-	, CPPPATH=['../../../base/generic']
-	, LIBS=['ascend']
-	, LIBPATH=['../../..']
-)
+env.ParseConfig('ascend-config')
+env.Append(CPPPATH=['../../../base/generic'])
+
+env.SharedLibrary("extfntest",srcs)
 
 # To run the test
 # type
 #
-# PYTHONPATH=../../../pygtk/interface ./extfntest.py
+# ASCENDLIBRARY=../../../models LD_LIBRARY_PATH=../../.. PYTHONPATH=../../../pygtk python extfntest.py
+
 
