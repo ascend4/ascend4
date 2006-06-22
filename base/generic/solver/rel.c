@@ -141,6 +141,7 @@ rel_create(SlvBackendToken instance, struct rel_relation *newrel)
     newrel->type = e_rel_glassbox;
     break;
   case e_blackbox:
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"blackbox support not yet implemented");
     newrel->type = e_rel_blackbox;
     ext = BlackBoxExtCall(instance_relation);
     if (ext) {
