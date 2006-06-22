@@ -23,4 +23,3 @@ env.SharedLibrary("extfntest",srcs)
 #
 # ASCENDLIBRARY=../../../models LD_LIBRARY_PATH=../../.. PYTHONPATH=../../../pygtk python extfntest.py
 
-

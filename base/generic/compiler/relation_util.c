@@ -65,81 +65,27 @@
 #include "rootfind.h"
 #include "func.h"
 
+/*------------------------------------------------------------------------------
+  DATA TYPES AND GLOBAL VARS
+*/
 
 int g_check_dimensions_noisy = 1;
 #define GCDN g_check_dimensions_noisy
 
-#define START 10000  /* largest power of 10 held by a short */
-static struct fraction real_to_frac(double real)
-{
-   short  num, den;
-   for( den=START; den>1 && fabs(real)*den>SHRT_MAX; den /= 10 ) ;
-   num = (short)(fabs(real)*den + 0.5);
-   if( real < 0.0 ) num = -num;
-   return( CreateFraction(num,den) );
-}
-#undef START
-
+/** global relation pointer to avoid passing a relation recursively */
+static struct relation *glob_rel;
 
 /**
-	Create a static buffer to use for temporary memory storage
+	The following global variables are used thoughout the
+	functions called by RelationFindroot.
+
+	These should probably be located at the top of this
+	file alonge with glob_rel. [OK, let it be so then. -- JP]
 */
-char *tmpalloc(int nbytes)
-/**
- ***  Temporarily allocates a given number of bytes.  The memory need
- ***  not be freed, but the next call to this function will reuse the
- ***  previous allocation. Memory returned will NOT be zeroed.
- ***  Calling with nbytes==0 will free any memory allocated.
- **/
-{
-  static char *ptr = NULL;
-  static int cap = 0;
+static unsigned long glob_varnum; 
+static int glob_done;
 
-  if( nbytes > 0 ) {
-    if( nbytes > cap ) {
-      if( ptr ) ascfree(ptr);
-      ptr = (char *)ascmalloc(nbytes);
-      cap = nbytes;
-    }
-  }
-  else {
-    if( ptr ) ascfree(ptr);
-    ptr = NULL;
-    cap = 0;
-  }
-  return ptr;
-}
-
-/**
-	it is questionable whether this should be unified with the
-	ArgsForToken function in relation.c
-*/
-int ArgsForRealToken(enum Expr_enum type)
-{
-   switch(type) {
-   case e_zero:
-   case e_int:
-   case e_real:
-   case e_var:
-     return(0);
-
-   case e_func:
-   case e_uminus:
-      return(1);
-
-   case e_plus:
-   case e_minus:
-   case e_times:
-   case e_divide:
-   case e_power:
-   case e_ipower:
-      return(2);
-
-   default:
-      FPRINTF(ASCERR,"ArgsForRealToken: Unknown relation term type.\n");
-      return(0);
-   }
-}
+/* some data structurs...*/
 
 struct dimnode {
    dim_type d;
@@ -149,23 +95,88 @@ struct dimnode {
    struct fraction power;
 };
 
-static int IsZero(struct dimnode *node)
-{
-  if( node->type==e_zero || (node->type==e_real && node->real_const==0.0) )
-    return TRUE;
-  return FALSE;
-}
+struct ds_soln_list {
+   int length,capacity;
+   double *soln;
+};
+
+/*
+	Define the following if you want ASCEND to panic when it hits a
+	relation error in this file. This will help with debugging (GDB).
+
+	Comment it out for ERROR_REPORTER to be used instead.
+*/
+#define RELUTIL_CHECK_ABORT
+
+/*------------------------------------------------------------------------------
+  forward declarations
+*/
+
+static struct fraction real_to_frac(double real);
+char *tmpalloc(int nbytes);
+int ArgsForRealToken(enum Expr_enum type);
+static int IsZero(struct dimnode *node);
+
+/* bunch of support functions for RelationFindRoots */
+static double RootFind(struct relation *rel, double *lower_bound, double *upper_bound,
+	double *nominal,double *tolerance,unsigned long varnum,int *status);
+static int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,double *val, double *u, double *f, double *g);
+int RelationInvertTokenTop(struct ds_soln_list *soln_list);
+int RelationInvertToken(struct relation_term **term,struct ds_soln_list *soln_list,enum safe_err *not_safe);
+static void SetUpInvertTokenTop(struct relation_term **invert_side,double *value);
+static int SetUpInvertToken(struct relation_term *term,struct relation_term **invert_side,double *value);
+static int SearchEval_Branch(struct relation_term *term);
+static void InsertBranchResult(struct relation_term *term, double value);
+static void remove_soln( struct ds_soln_list *sl, int ndx);
+static void append_soln( struct ds_soln_list *sl, double soln);
+static struct relation *RelationTmpTokenCopy(CONST struct relation *src);
+static int RelationTmpCopySide(union RelationTermUnion *old,unsigned long len,union RelationTermUnion *arr);
+static struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rhslen, enum Expr_enum relop);
+
+/* the following appear only to be used locally, so I've made them static  -- JP */
+
+static int RelationCalcDerivative(struct Instance *i, unsigned long index, double *grad);
+/**<
+ *  This calculates the derivative of the relation df/dx (f = lhs-rhs)
+ *  where x is the INDEX-th entry in the relation's var list.
+ *  The var list is a gl_list_t indexed from 1 to length.
+ *  Non-zero return value implies a problem.<br><br>
+ *
+ *  Notes: This function is a possible source of floating point
+ *         exceptions and should not be used during compilation.
+ */
+
+static enum safe_err
+RelationCalcDerivativeSafe(struct Instance *i, unsigned long index, double *grad);
+/**<
+ *  Calculates the derivative safely.
+ *  Non-zero return value implies a problem.
+ */
+
+#ifndef NDEBUG
+static int  relutil_check_inst_and_res(struct Instance *i, double *res);
+#endif
+
+#ifndef NDEBUG
+# define CHECK_INST_RES(i,res,retval) if(!relutil_check_inst_and_res(i,res)){return retval;}
+#else
+# define CHECK_INST_RES(i,res,retval) ((void)0)
+#endif
+
+/*------------------------------------------------------------------------------
+  SOME STUFF TO DO WITH DIMENSIONS
+*/
 
 /*
 	@TODO what this does needs to be documented here
 */
 static void apply_term_dimensions(struct relation *rel,
-                                  struct relation_term *rt,
-                                  struct dimnode *first,
-                                  struct dimnode *second,
-                                  int *con,
-                                  int *wild)
-{
+		struct relation_term *rt,
+		struct dimnode *first,
+		struct dimnode *second,
+		int *con,
+		int *wild
+){
    enum Expr_enum type;
 
    switch(type=RelationTermType(rt)) {
@@ -467,6 +478,9 @@ static void apply_term_dimensions(struct relation *rel,
    }
 }
 
+/**
+	@TODO what this does needs to be documented here
+*/
 int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
 {
   struct dimnode *stack, *sp;
@@ -566,9 +580,6 @@ int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
 /*------------------------------------------------------------------------------
   CALCULATION FUNCTIONS
 */
-
-/** global relation pointer to avoid passing a relation recursively */
-static struct relation *glob_rel;
 
 /** @NOTE ANY function calling RelationBranchEvaluator should set
    glob_rel to point at the relation being evaluated.  The calling
@@ -2057,20 +2068,12 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
       return temp;
     }
   }
-  if (reltype == e_blackbox)
-  {
-    FPRINTF(ASCERR, "error in CalcRelationNominal:\n");
-    FPRINTF(ASCERR, "blackbox not implemented yet. Assuming 1.0\n");
-  }
-  if (reltype == e_glassbox)
-  {
-    FPRINTF(ASCERR, "error in CalcRelationNominal:\n");
-    FPRINTF(ASCERR, "glassbox not implemented yet. Assuming 1.0\n");
-  }
-  if (reltype == e_opcode)
-  {
-    FPRINTF(ASCERR, "error in CalcRelationNominal:\n");
-    FPRINTF(ASCERR, "opcode not supported.\n");
+  if (reltype == e_blackbox){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+  }else if (reltype == e_glassbox){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+  }else if (reltype == e_opcode){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
   }
   glob_rel = NULL;
   return (double)1;
@@ -2157,20 +2160,8 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
 
 	/* CONSOLE_DEBUG("..."); */
 
-#ifndef NDEBUG
-	if( i == NULL ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null instance");
-		return safe_problem;
-	}
-	if (res == NULL){
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relationptr");
-		return safe_problem;
-	}
-	if( InstanceKind(i) != REL_INST ) {
-		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
-		return safe_problem;
-	}
-#endif
+	CHECK_INST_RES(i,res,1);
+
 	r = (struct relation *)GetInstanceRelation(i, &reltype);
 
 	/* CONSOLE_DEBUG("..."); */
@@ -2204,6 +2195,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
 			safe_error_to_stderr(&status);
 			break;
 		case e_blackbox:
+			ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Attempting to evaluate blackbox...");
 		    if ( RelationCalcResidualPostfix(i,res) != 0) {
 		    status = safe_problem;
 		    safe_error_to_stderr(&status);
@@ -2235,23 +2227,11 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
   struct relation *r;
   enum Expr_enum reltype;
 
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix: null instance\n");
-    return 1;
-  }
-  if (res == NULL){
-    FPRINTF(ASCERR,"error in RelationCalcResidualPostfix: null relationptr\n");
-    return 1;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix: not relation\n");
-    return 1;
-  }
-#endif
+  CHECK_INST_RES(i,res,1);
+
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix: null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     return 1;
   }
   if( reltype == e_token ) {
@@ -2272,32 +2252,23 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
     }
     return 0;
   } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    if (reltype == e_blackbox)
-    {
-      /* FIXME */
-	/* note: blackbox equations support the form
-		output[i] = f(input[j] for all j) foreach i
-	thus the residual is
-	*/
 
-      FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
-      FPRINTF(ASCERR, "blackbox not implemented yet.\n");
+    if (reltype == e_blackbox){
+      /* FIXME */
+      /* note: blackbox equations support the form
+         output[i] = f(input[j] for all j) foreach i
+         thus the residual is ... (?)
+	  */
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (%s)",__FUNCTION__);
+    }else if (reltype == e_glassbox){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
+    }else if (reltype == e_opcode)    {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
-    if (reltype == e_glassbox)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
-      FPRINTF(ASCERR, "glassbox not implemented yet.\n");
-    }
-    if (reltype == e_opcode)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidualPostfix:\n");
-      FPRINTF(ASCERR, "opcode not supported.\n");
-    }
+
     return 1;
   } else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcResidualPostfix:\n"
-              "reached end of routine\n");
+    Asc_Panic(2, __FUNCTION__,"reached end of routine");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -2310,19 +2281,12 @@ int RelationCalcExceptionsInfix(struct Instance *i)
   int old_errno;
 
   glob_rel = NULL;
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcExceptionsInfix: NULL instance\n");
-    return -1;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcExceptionsInfix: not relation\n");
-    return -1;
-  }
-#endif
+
+  CHECK_INST_RES(i,&res,-1);
+
   glob_rel = (struct relation *)GetInstanceRelation(i, &reltype);
   if( glob_rel == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcExceptionsInfix: NULL relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL relation");
     return -1;
   }
   if( reltype == e_token ) {
@@ -2359,41 +2323,27 @@ int RelationCalcExceptionsInfix(struct Instance *i)
     }
     glob_rel = NULL;
     return result;
-  } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcExceptionsInfix:\n");
-    FPRINTF(ASCERR, "reltype not implemented yet\n");
+  }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"relation type not implemented (%s)",__FUNCTION__);
     glob_rel = NULL;
     return -1;
-  } else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcExceptionsInfix:\n"
-              "reached end of routine\n");
+  }else{
+    Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
+
 
 int RelationCalcResidualInfix(struct Instance *i, double *res)
 {
   enum Expr_enum reltype;
   glob_rel = NULL;
 
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualInfix: NULL instance\n");
-    return 1;
-  }
-  if (res == NULL){
-    FPRINTF(ASCERR,"error in RelationCalcResidualInfix: NULL residual ptr\n");
-    return 1;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualInfix: not relation\n");
-    return 1;
-  }
-#endif
+  CHECK_INST_RES(i,res,1);
+
   glob_rel = (struct relation *)GetInstanceRelation(i, &reltype);
   if( glob_rel == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualInfix: NULL relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL relation\n");
     return 1;
   }
   if( reltype == e_token ) {
@@ -2407,15 +2357,12 @@ int RelationCalcResidualInfix(struct Instance *i, double *res)
     }
     glob_rel = NULL;
     return 0;
-  } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualInfix:\n");
-    FPRINTF(ASCERR, "reltype not implemented yet\n");
+  }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     glob_rel = NULL;
     return 1;
-  } else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcResidualInfix:\n"
-              "reached end of routine\n");
+  }else{
+    Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -2431,38 +2378,22 @@ RelationCalcResidualPostfix2(struct Instance *i,
   struct relation *r;
   enum Expr_enum reltype;
 
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix2: null instance\n");
-    return 1;
-  }
-  if( res == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix2: %s\n",
-            "null relation ptr");
-    return 1;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix2: not relation\n");
-    return 1;
-  }
-#endif
+  CHECK_INST_RES(i,res,1);
+
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix2: null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     return 1;
   }
 
-  if( reltype == e_token ) {
+  if( reltype == e_token ){
     *res = RelationEvaluateResidualPostfix(r);
     return 0;
-  } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcResidualPostfix2:\n");
-    FPRINTF(ASCERR, "reltype not implemented yet\n");
+  }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     return 1;
-  } else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcResidualPostfix2:\n"
-              "reached end of routine\n");
+  }else{
+    Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -2502,38 +2433,24 @@ RelationCalcResidGrad(struct Instance *i,
   struct relation *r;
   enum Expr_enum reltype;
 
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGrad: null instance\n");
-    return 1;
-  }
-  if( residual == NULL || gradient == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGrad: passed a null pointer\n");
-    return 1;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGrad: not relation\n");
-    return 1;
-  }
-#endif
+  CHECK_INST_RES(i,residual,1);
+  CHECK_INST_RES(i,residual,1);
+
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGrad: null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     return 1;
   }
 
-  if( reltype == e_token ) {
+  if(reltype == e_token ){
     return RelationEvaluateResidualGradient(r, residual, gradient);
-  }
-  else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGrad %s\n",
-            "reltype not implemented");
+
+  }else if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     return 1;
-  }
-  else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcResidGrad:\n"
-              "reached end of routine");
+
+  }else{
+    Asc_Panic(2, __FUNCTION__, "reached end of routine");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -2550,25 +2467,24 @@ RelationCalcResidGradSafe(struct Instance *i,
 
 #ifndef NDEBUG
   if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGradSafe: null instance\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null instance\n");
     not_safe = safe_problem;
     return not_safe;
   }
   if( residual == NULL || gradient == NULL ) {
-    FPRINTF(ASCERR,
-            "error in RelationCalcResidGradSafe: passed a null pointer\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null pointer\n");
     not_safe = safe_problem;
     return not_safe;
   }
   if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGradSafe: not relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation\n");
     not_safe = safe_problem;
     return not_safe;
   }
 #endif
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcResidGradSafe: null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     not_safe = safe_problem;
     return not_safe;
   }
@@ -2579,20 +2495,12 @@ RelationCalcResidGradSafe(struct Instance *i,
     return not_safe;
   }
   else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    if (reltype == e_blackbox)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidGradSafe:\n");
-      FPRINTF(ASCERR, "blackbox not implemented yet.\n");
-    }
-    if (reltype == e_glassbox)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidGradSafe:\n");
-      FPRINTF(ASCERR, "glassbox not implemented yet.\n");
-    }
-    if (reltype == e_opcode)
-    {
-      FPRINTF(ASCERR, "error in RelationCalcResidGradSafe:\n");
-      FPRINTF(ASCERR, "opcode not supported.\n");
+    if (reltype == e_blackbox){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (%s)",__FUNCTION__);
+    }else if (reltype == e_glassbox){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
+    }else if (reltype == e_opcode){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
     }
     not_safe = safe_problem;
     return not_safe;
@@ -2609,6 +2517,8 @@ RelationCalcResidGradSafe(struct Instance *i,
 /*
 	calculate the derivative with respect to a single variable
 	whose index is index, where 1<=index<=NumberVariables(r)
+
+	@TODO this appears only to be used in PrintGradients
 */
 int
 RelationCalcDerivative(struct Instance *i,
@@ -2618,27 +2528,15 @@ RelationCalcDerivative(struct Instance *i,
   struct relation *r;
   enum Expr_enum reltype;
 
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivative: null instance\n");
-    return 1;
-  }
-  if( gradient == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivative: passed null pointer\n");
-    return 1;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivative: not relation\n");
-    return 1;
-  }
-#endif
+  CHECK_INST_RES(i,gradient,1);
+
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivative: null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     return 1;
   }
   if( (index < 1) || (index > NumberVariables(r)) ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivative: index out of bounds\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"index out of bounds\n");
     return 1;
   }
 
@@ -2647,14 +2545,11 @@ RelationCalcDerivative(struct Instance *i,
     return 0;
   }
   else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivative %s\n",
-            "reltype not implemented");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not supported (%s)",__FUNCTION__);
     return 1;
   }
   else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcDerivative: \n"
-              "reached end of routine");
+    Asc_Panic(2, __FUNCTION__,"reached end of routine");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -2669,32 +2564,19 @@ RelationCalcDerivativeSafe(struct Instance *i,
   enum safe_err not_safe = safe_ok;
 
 #ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivativeSafe: null instance\n");
+  if(!relutil_check_inst_and_res(i,gradient)){
     not_safe = safe_problem;
-    return not_safe;
-  }
-  if( gradient == NULL ) {
-    FPRINTF(ASCERR,
-            "error in RelationCalcDerivativeSafe: passed null pointer\n");
-    not_safe = safe_problem;
-    return not_safe;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivativeSafe: not relation\n");
-    not_safe = safe_problem;
-    return not_safe;
+  	return not_safe;
   }
 #endif
   r = (struct relation *)GetInstanceRelation(i, &reltype);
   if( r == NULL ) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivativeSafe: null relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     not_safe = safe_problem;
     return not_safe;
   }
   if( (index < 1) || (index > NumberVariables(r)) ) {
-    FPRINTF(ASCERR,
-            "error in RelationCalcDerivativeSafe: index out of bounds\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"index out of bounds\n");
     not_safe = safe_problem;
     return not_safe;
   }
@@ -2704,15 +2586,12 @@ RelationCalcDerivativeSafe(struct Instance *i,
     return not_safe;
   }
   else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
-    FPRINTF(ASCERR, "error in RelationCalcDerivativeSafe %s\n",
-            "reltype not implemented");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not supported (%s)",__FUNCTION__);
     not_safe = safe_problem;
     return not_safe;
   }
   else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcDerivativeSafe:\n"
-              "reached end of routine");
+    Asc_Panic(2, __FUNCTION__, "reached end of routine");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -2913,41 +2792,190 @@ void PrintRelationResiduals(struct Instance *i)
   VisitInstanceTree(i,PrintResidual, 0, 0);
 }
 
+/*==============================================================================
+  'RELATIONFINDROOTS' AND SUPPORT FUNCTIONS
 
-/**
- *** The following functions support RelationFindRoots which
- *** is the compiler implementation of our old DirectSolve
- *** function.  These functions can be catagorized as follows:
- *** Memory Management and Copying functions:
- ***      RelationCreateTmp, RelationTmpCopySide,
- ***      RelationTmpTokenCopy, append_soln, remove_soln
- *** Direct Solve Functions:
- ***      InsertBranchResult, SearchEval_Branch, SetUpInvertToken,
- ***      SetUpInvertTokenTop, RelationInvertToken, RelationInvertTokenTop
- *** Rootfinding Functions:
- ***      CalcResidGivenValue, RootFind
- *** Eternal Function:
- ***      RelationFindRoots
- **/
+	The following functions support RelationFindRoots which
+	is the compiler implementation of our old DirectSolve
+	function.
+
+	I suspect that a lot of this stuff is deprecated -- JP
+*/
+
+double *RelationFindRoots(struct Instance *i,
+		double lower_bound, double upper_bound,
+		double nominal,
+		double tolerance,
+		unsigned long *varnum,
+		int *able,
+		int *nsolns
+){
+  struct relation *rel;
+  double sideval;
+  enum Expr_enum reltype;
+  static struct ds_soln_list soln_list = {0,0,NULL};
+  CONST struct gl_list_t *list;
+
+  /* check for recycle shutdown */
+  if (i==NULL && varnum == NULL && able == NULL && nsolns == NULL) {
+    if (soln_list.soln != NULL) {
+      ascfree(soln_list.soln);
+      soln_list.soln = NULL;
+      soln_list.length = soln_list.capacity = 0;
+    }
+    RootFind(NULL,NULL,NULL,NULL,NULL,0L,NULL); /*clear brent recycle */
+    RelationCreateTmp(0,0,e_nop); /* clear tmprelation recycle */
+    return NULL;
+  }
+  /* check assertions */
+#ifndef NDEBUG
+  if( i == NULL ) {
+    FPRINTF(ASCERR, "error in RelationFindRoot: NULL instance\n");
+    glob_rel = NULL;
+    return NULL;
+  }
+  if (able == NULL){
+    FPRINTF(ASCERR,"error in RelationFindRoot: NULL able ptr\n");
+    glob_rel = NULL;
+    return NULL;
+  }
+  if (varnum == NULL){
+    FPRINTF(ASCERR,"error in RelationFindRoot: NULL varnum\n");
+    glob_rel = NULL;
+    return NULL;
+  }
+  if( InstanceKind(i) != REL_INST ) {
+    FPRINTF(ASCERR, "error in RelationFindRoot: not relation\n");
+    glob_rel = NULL;
+    return NULL;
+  }
+#endif
+
+  *able = FALSE;
+  *nsolns = -1;     /* nsolns will be -1 for a very unhappy root-finder */
+  glob_rel = NULL;
+  glob_done = 0;
+  soln_list.length = 0; /* reset len to 0. if NULL to start, append mallocs */
+  append_soln(&soln_list,0.0);
+  rel = (struct relation *)GetInstanceRelation(i, &reltype);
+  if( rel == NULL ) {
+    FPRINTF(ASCERR, "error in RelationFindRoot: NULL relation\n");
+    glob_rel = NULL; return NULL;
+  }
+  /* here we should switch and handle all types. at present we don't
+   * handle anything except e_token
+   */
+  if( reltype != e_token ) {
+    FPRINTF(ASCERR, "error in RelationFindRoot: non-token relation\n");
+    glob_rel = NULL;
+    return NULL;
+  }
+
+  if (RelationRelop(rel) == e_equal){
+    glob_rel = RelationTmpTokenCopy(rel);
+    assert(glob_rel!=NULL);
+    glob_done = 0;
+    list = RelationVarList(glob_rel);
+    if( *varnum >= 1 && *varnum <= gl_length(list)){
+      glob_done = 1;
+    }
+    if (!glob_done) {
+      FPRINTF(ASCERR, "error in FindRoot: var not found\n");
+      glob_rel = NULL;
+      return NULL;
+    }
+
+    glob_varnum = *varnum;
+    glob_done = 0;
+    assert(Infix_LhsSide(glob_rel) != NULL);
+    /* In the following if statements we look for the target variable
+     * to the left and right, evaluating all branches without the
+     * target.
+     */
+    if (SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
+      sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
+      if (finite(sideval)) {
+        InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
+      } else {
+        FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite RHS.\n");
+        glob_rel = NULL;
+        return NULL;
+      }
+    }
+    assert(Infix_RhsSide(glob_rel) != NULL);
+    if (SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
+        sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
+        if (finite(sideval)) {
+          InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
+        } else {
+          FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite LHS.\n");
+          glob_rel = NULL;
+          return NULL;
+        }
+    }
+    if (glob_done < 1) {
+      /* RelationInvertToken never found variable */
+      glob_done = 0;
+      *able = FALSE;
+      return soln_list.soln;
+    }
+    if (glob_done == 1) {
+      /* set to 0 so while loop in RelationInvertToken will work */
+      glob_done = 0;
+      glob_done = RelationInvertTokenTop(&(soln_list));
+    }
+    if (glob_done == 1) { /* if still one, token inversions successful */
+      glob_done = 0;
+      *nsolns= soln_list.length;
+      *able = TRUE;
+      return soln_list.soln;
+    }
+    /* CALL ITERATIVE SOLVER */
+    *soln_list.soln = RootFind(glob_rel,&(lower_bound),
+        		       &(upper_bound),&(nominal),
+        		       &(tolerance),
+        		       glob_varnum,able);
+
+    glob_done = 0;
+    if(*able == 0) { /* Root-Find returns 0 for success*/
+      *nsolns = 1;
+      *able = TRUE;
+    } else {
+      *able = FALSE;
+    }
+    return soln_list.soln;
+
+  }
+  FPRINTF(ASCERR,"Inequality in RelationFindRoots. can't find roots.\n");
+  *able = FALSE;
+  return soln_list.soln;
+}
 
 /*------------------------------------------------------------------------------
   MEMORY MANAGEMENT AND COPYING FUNCTIONS
+  to support the RelationFindRoots function.
 */
 
-/*
- * RelationCreateTmp creates a struct relation of type e_token
- * and passes back a pointer to the relation.  The lengths of
- * the right and left sides (lhslen and rhslen) of the relation
- * are supplied by the calling function.
- * User is responsible for setting RTOKEN(return).*_len.
- * Basically, all this does is manage memory nicely.
- *
- * IF called with all 0/NULL, frees internal recycles.
- */
-static
-struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rhslen,
-                                   enum Expr_enum relop)
-{
+/**
+	@see RelationFindRoots
+
+	Create a struct relation of type e_token
+	and passes back a pointer to the relation.
+	
+	The lengths of
+	the right and left sides (lhslen and rhslen) of the relation
+	are supplied by the calling function.
+	
+	User is responsible for setting RTOKEN(return).*_len.
+	
+	Basically, all this does is manage memory nicely.
+
+	IF called with all 0/NULL, frees internal recycles.
+*/
+static struct relation *RelationCreateTmp(
+		unsigned long lhslen, unsigned long rhslen,
+		enum Expr_enum relop
+){
   static struct relation *rel=NULL;
   static unsigned long lhscap=0, rhscap=0;
 
@@ -2992,35 +3020,29 @@ struct relation *RelationCreateTmp(unsigned long lhslen, unsigned long rhslen,
 }
 
 /**
- *** The following global variables are used thoughout the
- *** functions called by RelationFindroot.
- *** These should probably be located at the top of this
- *** file alonge with glob_rel.
- **/
-static unsigned long glob_varnum;
-static int glob_done;
+	@see RelationFindRoots
 
-/**
- *** The following is documentation from the old exprman
- *** file.  RelationTmpCopySide and RelationTmpCopyToken
- *** are reimplimentations of exprman functions.
- **/
-/*
- * We can now just do a memcopy and the infix pointers
- * all adjust by the difference between the token
- * arrays that the gl_lists are hiding. Cool, eh?
- * Note, if any turkey ever tries to delete an individual
- * token from these gl_lists AND deallocate it,
- * they will get a severe headache.
- *
- * This is a full blown copy and not copy by reference.
- * You do not need to remake the infix pointers after
- * calling this function. return 0 if ok, 1 if error.
- */
+	Full-blown relation copy (not copy by reference)
+
+	We can now just do a memcopy and the infix pointers
+	all adjust by the difference between the token
+	arrays that the gl_lists are hiding. Cool, eh?
+	
+	@NOTE if any turkey ever tries to delete an individual
+	token from these gl_lists AND deallocate it,
+	they will get a severe headache. Ooo scary.
+
+	This is a full blown copy and not copy by reference.
+	You do not need to remake the infix pointers after
+	calling this function. return 0 if ok, 1 if error.
+
+	@NOTE RelationTmpCopySide and RelationTmpCopyToken are reimplimentations 
+	of functions from the v. old 'exprman' file.
+*/
 static int RelationTmpCopySide(union RelationTermUnion *old,
-        			unsigned long len,
-        			union RelationTermUnion *arr)
-{
+		unsigned long len,
+		union RelationTermUnion *arr
+){
   struct relation_term *term;
   unsigned long c;
   long int delta;
@@ -3080,16 +3102,21 @@ static int RelationTmpCopySide(union RelationTermUnion *old,
   return 0;
 }
 
-/*
- * The relation returned by this function should have
- * NO persistent pointers made to it, as it is still
- * our property. The vars in the relation do not
- * know about these references to them, as this is
- * a tmp rel.
- */
-static
-struct relation *RelationTmpTokenCopy(CONST struct relation *src)
-{
+/**
+	@see RelationFindRoots
+
+	Copy tmp token for a relation (guess -- JP)
+
+	The relation returned by this function should have
+	NO persistent pointers made to it, as it is still
+	our property. The vars in the relation do not
+	know about these references to them, as this is
+	a tmp rel.
+
+	@NOTE RelationTmpCopySide and RelationTmpCopyToken are reimplimentations 
+	of functions from the v. old 'exprman' file.
+*/
+static struct relation *RelationTmpTokenCopy(CONST struct relation *src){
   struct relation *result;
   long int delta;
   assert(src!=NULL);
@@ -3125,23 +3152,17 @@ struct relation *RelationTmpTokenCopy(CONST struct relation *src)
   return result;
 }
 
-struct ds_soln_list {
-   int length,capacity;
-   double *soln;
-};
-
-
 #define alloc_array(nelts,type)   \
    ((nelts) > 0 ? (type *)ascmalloc((nelts)*sizeof(type)) : NULL)
 #define copy_nums(from,too,nnums)  \
    asc_memcpy((from),(too),(nnums)*sizeof(double))
 
-static
-void append_soln( struct ds_soln_list *sl, double soln)
 /**
- ***  Appends the solution onto the solution list
- **/
-{
+	@see RelationFindRoots
+
+	Appends the solution onto the solution list
+*/
+static void append_soln( struct ds_soln_list *sl, double soln){
   if( sl->length == sl->capacity ) {
     int newcap;
     double *newlist;
@@ -3159,48 +3180,52 @@ void append_soln( struct ds_soln_list *sl, double soln)
   sl->soln[sl->length++] = soln;
 }
 
-static
-void remove_soln( struct ds_soln_list *sl, int ndx)
-/*
- *  Removes solution at given index from solution list.
- */
-{
+/**
+	@see RelationFindRoots
+
+	Removes solution at given index from solution list.
+*/
+static void remove_soln( struct ds_soln_list *sl, int ndx){
   copy_nums((char *)(sl->soln+ndx+1),
             (char *)(sl->soln+ndx), --(sl->length) - ndx);
 }
 
 /*------------------------------------------------------------------------------
   DIRECT SOLVE FUNCTIONS
+  to support the RelationFindRoots function.
 */
 
 /**
- *** InsertBranchResult changes a relation term type to e_real and
- *** fills the value field of this term.  In subsequent passes of
- *** the RelationBranchEvaluator the term will be considered to
- *** be a leaf.
+	@see RelationFindRoots
+
+	Change a relation term type to e_real and fill the value field of this term.
+
+	In subsequent passes of the RelationBranchEvaluator the term will be 
+	considered to be a leaf.
  */
-static void InsertBranchResult(struct relation_term *term, double value)
-{
+static void InsertBranchResult(struct relation_term *term, double value){
   assert(term!=NULL);
   term->t = e_real;
   R_TERM(term)->value = value;
 }
 
 /**
- *** SearchEval_Branch simplifies branches of a relation
- *** (the relation pointed to by glob_rel).  Only terms
- *** of type e_real, e_int, e_zero, and e_var are left
- *** hanging off the operators on the path to the
- *** variable (with varnum = glob_varnum) being direct
- *** solved for.
- *** This may need to be changed to only leave e_reals
- *** so that the inversion routine can make faster decisions???
- *** Probably not.
- ***
- *** Returns >= 1 if glob_varnum spotted, else 0 (or at least <1).
- **/
-static int SearchEval_Branch(struct relation_term *term)
-{
+	@see RelationFindRoots
+
+	Simplify branches of a relation (the relation pointed to by glob_rel).
+
+	Only terms of type e_real, e_int, e_zero, and e_var are left
+	hanging off the operators on the path to the
+	variable (with varnum = glob_varnum) being direct
+	solved for.
+
+	@TODO This may need to be changed to only leave e_reals
+	so that the inversion routine can make faster decisions???
+	Probably not.
+	
+	@return >= 1 if glob_varnum spotted, else 0 (or at least <1).
+*/
+static int SearchEval_Branch(struct relation_term *term){
   int result = 0;
   assert(term != NULL);
   switch(RelationTermType(term)) {
@@ -3278,16 +3303,19 @@ static int SearchEval_Branch(struct relation_term *term)
 }
 
 /**
- *** SetUpInvertToken selects the side of the relation which
- *** will be inverted next.  It also fills the value which is
- *** currently being inverted on.
- *** This function assumes SearchEval_Branch has been called
- *** previously.
- **/
+	@see RelationFindRoots
+
+	Select the side of the relation which will be inverted next.
+
+	Also fill the value which is currently being inverted on.
+	
+	@NOTE This function assumes SearchEval_Branch has been called
+	previously.
+*/
 static int SetUpInvertToken(struct relation_term *term,
-        	     struct relation_term **invert_side,
-        	     double *value)
-{
+		struct relation_term **invert_side,
+		double *value
+){
   switch(RelationTermType(term)) {
   case e_uminus:
       *invert_side = TermBinLeft(term);
@@ -3323,10 +3351,13 @@ static int SetUpInvertToken(struct relation_term *term,
   }
 }
 
-
-static void SetUpInvertTokenTop(struct relation_term **invert_side,
-        	     double *value)
-{
+/**
+	@see RelationFindRoots
+*/
+static void SetUpInvertTokenTop(
+		struct relation_term **invert_side,
+		double *value
+){
   switch(RelationTermType(Infix_RhsSide(glob_rel))) {
   case e_real:
   case e_int:
@@ -3350,25 +3381,27 @@ static void SetUpInvertTokenTop(struct relation_term **invert_side,
 }
 
 /**
- *** RelationInvertToken inverts tokens until the variable
- *** being solved for is found.  It is assumed that this
- *** variable only resides at ONE leaf of the relation tree.
- *** It is the calling function's responsibility to make sure
- *** this is the case and call another solver if needed.
- *** If the variable (with varnum = glob_varnum) is found,
- *** the solution list will contain all solutions to the
- *** equations.  It is the calling function's responsibility
- *** to select the root that suits his needs.
- *** Returns TRUE for success, FALSE for failure.
- **/
+	@see RelationFindRoots
 
-/* Note that there appears to be some redundant checking here and
- * we could probably be more efficient
- */
+	Invert tokens until the variable being solved for is found.  
+
+	It is assumed that this
+	variable only resides at ONE leaf of the relation tree.
+	It is the calling function's responsibility to make sure
+	this is the case and call another solver if needed.
+	If the variable (with varnum = glob_varnum) is found,
+	the solution list will contain all solutions to the
+	equations.  It is the calling function's responsibility
+	to select the root that suits his needs.
+	Returns TRUE for success, FALSE for failure.
+
+	@NOTE Note that there appears to be some redundant checking here and
+	we could probably be more efficient
+*/
 int RelationInvertToken(struct relation_term **term,
         		struct ds_soln_list *soln_list,
-        		enum safe_err *not_safe)
-{
+        		enum safe_err *not_safe
+){
   int side,ndx;
   double value = 0.0;
   struct relation_term *invert_side;
@@ -3665,12 +3698,13 @@ int RelationInvertToken(struct relation_term **term,
 }
 
 /*
- * RelationInvertTokenTop is baisically a while loop which
- * calls RelationInvertToken.  See RelationInvertToken for
- * information on what this function does.
- */
-int RelationInvertTokenTop(struct ds_soln_list *soln_list)
-{
+	@see RelationFindRoots
+
+	RelationInvertTokenTop is baisically a while loop which
+	calls RelationInvertToken.  See RelationInvertToken for
+	information on what this function does.
+*/
+int RelationInvertTokenTop(struct ds_soln_list *soln_list){
   int result;
   struct relation_term *invert_side;
   enum safe_err not_safe = safe_ok;
@@ -3687,19 +3721,22 @@ int RelationInvertTokenTop(struct ds_soln_list *soln_list)
   return result;
 }
 
-/*************************************************************************/
-/*************************Rootfinding Functions***************************/
-/*************************************************************************/
+/*-----------------------------------------------------------------------------
+  ROOT-FINDING FUNCTIONS
+  to support the RelationFindRoots function.
+*/
 
-/*
- *  --- glob_rel is ASSUMED to be of type e_token. ---
- *  CalcResidGivenValue sets the value of the variable being solved
- *  for (given the varnum) and calculates the residual.  Note that
- *  this function uses the glob_rel which should have been set in
- *  RelationFindRoots (and reduced by SearchEval_Branch).  This
- *  functions takes an excessive number of arguments so it will
- *  look like an ExtEvalFunc to our rootfinder.
- */
+/**
+	Set the value of the variable being solved
+	for (given the varnum) and calculate the residual.  
+
+	@NOTE glob_rel is ASSUMED to be of type e_token. ---
+
+	@NOTE uses the glob_rel which should have been set in
+	RelationFindRoots (and reduced by SearchEval_Branch).  This
+	functions takes an excessive number of arguments so it will
+	look like an ExtEvalFunc to our root-finder.
+*/
 static
 int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
         		double *val, double *u, double *f, double *g)
@@ -3710,9 +3747,9 @@ int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
    *  glob_rel is ASSUMED to be of type e_token.
    */
 
-  (void)mode;  /*  stop gcc whine about unused parameter  */
-  (void)u;     /*  stop gcc whine about unused parameter  */
-  (void)g;     /*  stop gcc whine about unused parameter  */
+  UNUSED_PARAMETER(mode);
+  UNUSED_PARAMETER(u);
+  UNUSED_PARAMETER(g);
 
   SetRealAtomValue(
       ((struct Instance *)gl_fetch(RelationVarList(glob_rel),*varnum)),
@@ -3739,23 +3776,22 @@ int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
   return 0;
 }
 
-/*
- *  RootFind is a distributor to a rootfinding method zbrent.
- *  at present, the rootfind can only handle token relations.
- * if varnum is 0 and status is NULL, frees the internal
- * memory recycle and returns. Currently this is slaved
- * to RelationFindRoots internal reset.
- * This function is not threadsafe.
- */
+/**
+	RootFind is a distributor to a root-finding method zbrent.
+	at present, the root-find can only handle token relations.
+	if varnum is 0 and status is NULL, frees the internal
+	memory recycle and returns. Currently this is slaved
+	to RelationFindRoots internal reset.
+	This function is not threadsafe.
+*/
 static
 double RootFind(struct relation *rel,
-        	double *lower_bound,
-        	double *upper_bound,
-        	double *nominal,
-        	double *tolerance,
-        	unsigned long varnum,
-                int *status)
-{
+		double *lower_bound, double *upper_bound,
+		double *nominal,
+		double *tolerance,
+		unsigned long varnum,
+		int *status
+){
   double *f = NULL;	/* vector of residuals, borrowed from tmpalloc */
   ExtEvalFunc *func;
   int mode;             /* to pass to the eval func */
@@ -3801,181 +3837,96 @@ double RootFind(struct relation *rel,
                 &(m),&(n),x,u,f,g,tolerance,status);
 }
 
-/*************************************************************************/
-/*************************External Function******************************/
-/*************************************************************************/
+/*------------------------------------------------------------------------------
+  UTILITY FUNCTIONS
+*/
 
 /**
- *** RelationFindRoot WILL find a root if there is one. It is
- *** in charge of trying every trick in the book. It returns
- *** 1 for success and 0 for failure. In general compiler functions
- *** return 0 for success but this function returns 1 for success
- *** because success = 1 is the convention on the solver side.
- *** (we really should make a system wide convention)
- *** A return of -1 indicates a problem such as var not found.
- *** If nsolns > 1 then a list of solutions will be returned.
- **/
+	Create a static buffer to use for temporary memory storage
 
-/* Note we should recycle the memory used for glob_rel */
-double *RelationFindRoots(struct Instance *i,
-        		  double lower_bound,
-        		  double upper_bound,
-        		  double nominal,
-        		  double tolerance,
-        		  unsigned long *varnum,
-        		  int *able,
-        		  int *nsolns)
-{
-  struct relation *rel;
-  double sideval;
-  enum Expr_enum reltype;
-  static struct ds_soln_list soln_list = {0,0,NULL};
-  CONST struct gl_list_t *list;
+	Temporarily allocates a given number of bytes.  The memory need
+	not be freed, but the next call to this function will reuse the
+	previous allocation. Memory returned will NOT be zeroed.
+	Calling with nbytes==0 will free any memory allocated.
+*/
+char *tmpalloc(int nbytes){
+  static char *ptr = NULL;
+  static int cap = 0;
 
-  /* check for recycle shutdown */
-  if (i==NULL && varnum == NULL && able == NULL && nsolns == NULL) {
-    if (soln_list.soln != NULL) {
-      ascfree(soln_list.soln);
-      soln_list.soln = NULL;
-      soln_list.length = soln_list.capacity = 0;
+  if( nbytes > 0 ) {
+    if( nbytes > cap ) {
+      if( ptr ) ascfree(ptr);
+      ptr = (char *)ascmalloc(nbytes);
+      cap = nbytes;
     }
-    RootFind(NULL,NULL,NULL,NULL,NULL,0L,NULL); /*clear brent recycle */
-    RelationCreateTmp(0,0,e_nop); /* clear tmprelation recycle */
-    return NULL;
   }
-  /* check assertions */
-#ifndef NDEBUG
-  if( i == NULL ) {
-    FPRINTF(ASCERR, "error in RelationFindRoot: NULL instance\n");
-    glob_rel = NULL;
-    return NULL;
+  else {
+    if( ptr ) ascfree(ptr);
+    ptr = NULL;
+    cap = 0;
   }
-  if (able == NULL){
-    FPRINTF(ASCERR,"error in RelationFindRoot: NULL able ptr\n");
-    glob_rel = NULL;
-    return NULL;
-  }
-  if (varnum == NULL){
-    FPRINTF(ASCERR,"error in RelationFindRoot: NULL varnum\n");
-    glob_rel = NULL;
-    return NULL;
-  }
-  if( InstanceKind(i) != REL_INST ) {
-    FPRINTF(ASCERR, "error in RelationFindRoot: not relation\n");
-    glob_rel = NULL;
-    return NULL;
-  }
-#endif
+  return ptr;
+}
 
-  *able = FALSE;
-  *nsolns = -1;     /* nsolns will be -1 for a very unhappy rootfinder */
-  glob_rel = NULL;
-  glob_done = 0;
-  soln_list.length = 0; /* reset len to 0. if NULL to start, append mallocs */
-  append_soln(&soln_list,0.0);
-  rel = (struct relation *)GetInstanceRelation(i, &reltype);
-  if( rel == NULL ) {
-    FPRINTF(ASCERR, "error in RelationFindRoot: NULL relation\n");
-    glob_rel = NULL; return NULL;
-  }
-  /* here we should switch and handle all types. at present we don't
-   * handle anything except e_token
-   */
-  if( reltype != e_token ) {
-    FPRINTF(ASCERR, "error in RelationFindRoot: non-token relation\n");
-    glob_rel = NULL;
-    return NULL;
-  }
+/**
+	@TODO what this does needs to be documented here
 
-  if (RelationRelop(rel) == e_equal){
-    glob_rel = RelationTmpTokenCopy(rel);
-    assert(glob_rel!=NULL);
-    glob_done = 0;
-    list = RelationVarList(glob_rel);
-    if( *varnum >= 1 && *varnum <= gl_length(list)){
-      glob_done = 1;
-    }
-    if (!glob_done) {
-      FPRINTF(ASCERR, "error in FindRoot: var not found\n");
-      glob_rel = NULL;
-      return NULL;
-    }
+	it is questionable whether this should be unified with the
+	ArgsForToken function in relation.c
+*/
+int ArgsForRealToken(enum Expr_enum type){
+   switch(type) {
+   case e_zero:
+   case e_int:
+   case e_real:
+   case e_var:
+     return(0);
 
-    glob_varnum = *varnum;
-    glob_done = 0;
-    assert(Infix_LhsSide(glob_rel) != NULL);
-    /* In the following if statements we look for the target variable
-     * to the left and right, evaluating all branches without the
-     * target.
-     */
-    if (SearchEval_Branch(Infix_LhsSide(glob_rel)) < 1) {
-      sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
-      if (finite(sideval)) {
-        InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
-      } else {
-        FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite RHS.\n");
-        glob_rel = NULL;
-        return NULL;
-      }
-    }
-    assert(Infix_RhsSide(glob_rel) != NULL);
-    if (SearchEval_Branch(Infix_RhsSide(glob_rel)) < 1) {
-        sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
-        if (finite(sideval)) {
-          InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
-        } else {
-          FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite LHS.\n");
-          glob_rel = NULL;
-          return NULL;
-        }
-    }
-    if (glob_done < 1) {
-      /* RelationInvertToken never found variable */
-      glob_done = 0;
-      *able = FALSE;
-      return soln_list.soln;
-    }
-    if (glob_done == 1) {
-      /* set to 0 so while loop in RelationInvertToken will work */
-      glob_done = 0;
-      glob_done = RelationInvertTokenTop(&(soln_list));
-    }
-    if (glob_done == 1) { /* if still one, token inversions successful */
-      glob_done = 0;
-      *nsolns= soln_list.length;
-      *able = TRUE;
-      return soln_list.soln;
-    }
-    /* CALL ITERATIVE SOLVER */
-    *soln_list.soln = RootFind(glob_rel,&(lower_bound),
-        		       &(upper_bound),&(nominal),
-        		       &(tolerance),
-        		       glob_varnum,able);
+   case e_func:
+   case e_uminus:
+      return(1);
 
-    glob_done = 0;
-    if(*able == 0) { /* Root-Find returns 0 for success*/
-      *nsolns = 1;
-      *able = TRUE;
-    } else {
-      *able = FALSE;
-    }
-    return soln_list.soln;
+   case e_plus:
+   case e_minus:
+   case e_times:
+   case e_divide:
+   case e_power:
+   case e_ipower:
+      return(2);
 
-  }
-  FPRINTF(ASCERR,"Inequality in RelationFindRoots. can't find roots.\n");
-  *able = FALSE;
-  return soln_list.soln;
+   default:
+      FPRINTF(ASCERR,"ArgsForRealToken: Unknown relation term type.\n");
+      return(0);
+   }
+}
+
+static int IsZero(struct dimnode *node){
+	if( node->type==e_zero || (node->type==e_real && node->real_const==0.0) ){
+		return TRUE;
+	}
+	return FALSE;
 }
 
 
+#define START 10000  /* largest power of 10 held by a short */
+
+static struct fraction real_to_frac(double real){
+   short  num, den;
+   for( den=START; den>1 && fabs(real)*den>SHRT_MAX; den /= 10 ) ;
+   num = (short)(fabs(real)*den + 0.5);
+   if( real < 0.0 ) num = -num;
+   return( CreateFraction(num,den) );
+}
+
+#undef START
 
 
-/*
- *  Temporary Functions for testing direct solve.
- *  Remove calls from interface.c when this is removed.
- */
-void PrintDirectResult(struct Instance *i)
-{
+/*------------------------------------------------------------------------------
+	Temporary Functions for testing direct solve.
+	Remove calls from interface.c when this is removed.
+*/
+
+void PrintDirectResult(struct Instance *i){
   struct relation *rel;
   enum Expr_enum reltype;
   int num,status,n,nsoln;
@@ -4037,6 +3988,7 @@ void CollectShares(struct Instance *i,struct ctrwubs *data)
   }
 }
 
+
 struct gl_list_t *
 CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
                                              unsigned long maxlen)
@@ -4063,3 +4015,33 @@ CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
     return data.list;
   }
 }
+
+#ifndef NDEBUG
+/**
+	Utility function to perform debug checking of (input) instance and residual
+	(or gradient) (output) pointers in the various functions in this file.
+*/
+static int  relutil_check_inst_and_res(struct Instance *i, double *res){
+# ifdef RELUTIL_CHECK_ABORT
+	if(i==NULL){
+		Asc_Panic(2,__FUNCTION__,"NULL instance");
+	}else if (res==NULL){
+		Asc_Panic(2,__FUNCTION__,"NULL residual pointer");
+	}else if(InstanceKind(i)!=REL_INST){
+		Asc_Panic(2,__FUNCTION__,"Not a relation");
+	}
+# else
+  if( i == NULL ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL instance");
+    return 0;
+  }else if (res == NULL){
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL residual ptr");
+    return 0;
+  }else if( InstanceKind(i) != REL_INST ) {
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
+    return 0;
+  }
+  return 1;
+# endif
+}
+#endif	

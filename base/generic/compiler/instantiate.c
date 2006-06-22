@@ -5354,6 +5354,10 @@ struct Instance *CheckExtCallData(struct Instance *inst,
   }
 }
 
+/**
+	This function does the job of creating an instance of a 'black box'	
+	external relation or set of relations.
+*/
 static
 int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
 {
@@ -5392,7 +5396,7 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
         return 1;
       default:
         WriteStatementLocation(ASCERR,statement);
-        FPRINTF(ASCERR,"Something really wrong in ExecuteEXT routine\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unhandled case!");
         return 1;
       }
     }
@@ -5409,7 +5413,7 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
         return 1;
       default:
         WriteStatementLocation(ASCERR,statement);
-        FPRINTF(ASCERR,"Something really wrong in ExecuteEXT routine\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unhandled case!");
         return 1;
       }
     }
