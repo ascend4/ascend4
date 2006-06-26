@@ -1,38 +1,32 @@
-/*
- *  External functions (ie blackbox relations) Module
- *  by Kirk Andre Abbott
- *  Created: Jun 1, 1995.
- *  Version: $Revision: 1.6 $
- *  Version control file: $RCSfile: extcall.h,v $
- *  Date last modified: $Date: 1997/07/18 12:29:27 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
 
-/** @file
- *  External functions (ie blackbox relations) Module
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Hold-all structure for external relations and method calls as declared in an
+	ASCEND model file.
+
+	The ExtCallNode	structure points to an ExternalFunc structure and holds a 
+	list of instances which are tied to the arguments in the calling ASCEND
+	statement.
 
 	@todo Complete documentation of compiler/extcall.h.
-*/
 
-/** @file
 	Requires:
        #include <stdio.h>
        #include <stdlib.h>
@@ -42,7 +36,12 @@
        #include "list.h"
        #include "extfunc.h"
        #include "instance_enum.h"
- */
+*//*
+	by Kirk Andre Abbott
+	Created: Jun 1, 1995.
+	Last in CVS: $Revision: 1.6 $ $Date: 1997/07/18 12:29:27 $ $Author: mthomas $
+*/
+
 
 #ifndef ASC_EXTCALL_H
 #define ASC_EXTCALL_H
@@ -61,13 +60,13 @@ extern struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
                                          struct Instance *subject,
                                          struct Instance *data);
 /**<
-	Create ExtCall
+	Create ExtCall structure and return.
 */
 
 extern void DestroyExtCall(struct ExtCallNode *ext,
                            struct Instance *relinst);
 /**<
-	Destroy ExtCall
+	Destroy ExtCall structure.
 */
 
 extern struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
@@ -75,10 +74,16 @@ extern struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
 
 extern unsigned long GetSubjectIndex(struct gl_list_t *arglist,
                                      struct Instance *subject);
+/**<
+	@TODO what is this?
+*/
 
 extern unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
                                        unsigned long start,
                                        unsigned long end);
+/**<
+	@TODO what is the purpose of the 'start' and 'end' parameters?
+*/
 
 extern struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
                                           unsigned long start,
@@ -113,7 +118,6 @@ extern void DestroySpecialList(struct gl_list_t *list);
 */
 extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *ext);
 /**<
-	Return the external function pointer of an external call;
 	Implementation function for ExternalCallExtFunc().  Do not call this
 	function directly - call ExternalCallExtFunc() instead.
 */
@@ -132,9 +136,6 @@ extern struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *ext);
 */
 extern struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext);
 /**<
-	Return the arguement list, which is a List of Lists of struct
-	Instances, for an external call;
-
 	Implementation function for ExternalCallArgList().  Do not call this
 	function directly - call ExternalCallArgList() instead.
 */
@@ -160,10 +161,10 @@ extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext);
 */
 extern unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext);
 /**<
-	@return the index in the argument list of the subject variable.
-	This function uses the primitives GetWhichVar etc.
 	Implementation function for ExternalCallVarIndex().  Do not call this
 	function directly - call ExternalCallVarIndex() instead.
+
+	This function uses the primitives GetWhichVar etc.
 */
 
 extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
@@ -189,9 +190,6 @@ extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
 
 extern int ExternalCallNodeStampF(struct ExtCallNode *ext);
 /**<
-	Return the nodestamp for the given external node. Valid results
-	are >= 0.
-
 	Implementation function for ExternalCallNodeStamp().  Do not call this
 	function directly - call ExternalCallNodeStamp() instead.
 */
