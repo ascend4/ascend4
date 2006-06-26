@@ -179,7 +179,7 @@ long int g_compiler_counter = 1;
  * which changes the instance tree is called.
  */
 
-#define DEBUG_RELS
+/* #define DEBUG_RELS */
 /* undef DEBUG_RELS if you want less spew in pass 2 */
 
 #ifdef DEBUG_RELS
