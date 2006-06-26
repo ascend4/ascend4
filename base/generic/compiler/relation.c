@@ -2148,7 +2148,8 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst,
    * on the integer args array.
    */
 
-  args = (int *)asccalloc((int)(len+1), sizeof(int));
+  args = ASC_NEW_ARRAY_CLEAR(int,len+1);
+
   newlist = gl_create(len);
 
   for (c=1;c<=n_inputs;c++) {

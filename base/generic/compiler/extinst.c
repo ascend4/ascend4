@@ -1,32 +1,27 @@
-/*
- *  Ascend Instance External Vars Functions
- *  by Kirk Abbott
- *  1995
- *  Version: $Revision: 1.7 $
- *  Version control file: $RCSfile: extinst.c,v $
- *  Date last modified: $Date: 1997/07/18 12:29:34 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1995 Kirk Andre' Abbott
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1995 Kirk Andre Abbott
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	Ascend Instance External Vars Functions
+	by Kirk Abbott
+	Last in CVS $Revision: 1.7 $ $Date: 1997/07/18 12:29:34 $ $Author: mthomas $
+*/
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include "compiler.h"
@@ -44,14 +39,6 @@
 #include "cmpfunc.h"
 #include "extinst.h"
 
-#ifndef lint
-static CONST char ExtInstModuleID[] = "$Id: extinst.c,v 1.7 1997/07/18 12:29:34 mthomas Exp $";
-#endif
-
-/*********************************************************************\
- External Relations Table
-\*********************************************************************/
-
 struct Instance **g_ExtVariablesTable = NULL;
 
 static
@@ -59,8 +46,7 @@ void InitExtVariablesTable(void)
 {
   int c;
   if (g_ExtVariablesTable==NULL) {
-    g_ExtVariablesTable = (struct Instance **)
-      ascmalloc(MAX_EXTRELATIONS*sizeof(struct Instance *));
+    g_ExtVariablesTable = ASC_NEW_ARRAY(struct Instance *,MAX_EXTRELATIONS);
     for (c=0;c<MAX_EXTRELATIONS;c++) {
       g_ExtVariablesTable[c] = NULL;
     }
@@ -122,18 +108,12 @@ struct Instance **AddVarToTable(struct Instance *inst, int *added)
     }
     c++;
   }
-  Asc_Panic(2, NULL,
-            "MAX_EXTRELATIONS internal limit has just been exceeded.\n"
-            "Please report failure in AddVarToTable to :\n"
-            "%s\n", ASC_BIG_BUGMAIL);
+  Asc_Panic(2, __FUNCTION__, "MAX_EXTRELATIONS limit exceeded.");
   exit(2);/* Needed to keep gcc from whining */
 }
 
-/*
- * This will be called only for models.
- */
-void FixExternalVars(struct Instance *old,struct Instance *new)
-{
+
+void FixExternalVars(struct Instance *old,struct Instance *new){
   struct Instance **hndl;
   struct gl_list_t *exists;
   unsigned long len,c;
@@ -142,9 +122,7 @@ void FixExternalVars(struct Instance *old,struct Instance *new)
   if (old==new)
     return;
   if ((old==NULL) || (new==NULL)) {
-    Asc_Panic(2, NULL,
-              "Internal error in FixExternalVars\n"
-              "Cannot handle NULL instances... exiting.\n");
+    Asc_Panic(2, __FUNCTION__,"Cannot handle NULL instances.");
   }
   exists = LookupVarInTable(old);
   if (exists) {
@@ -164,5 +142,4 @@ void SetSimulationExtVars(struct Instance *i,struct Instance **extvars)
   assert (i&&InstanceKind(i)==SIM_INST);
   SIM_INST(i)->extvars = extvars;
 }
-
 

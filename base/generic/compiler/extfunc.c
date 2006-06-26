@@ -39,9 +39,17 @@
 #include "instance_enum.h"
 #include "extfunc.h"
 
+/*------------------------------------------------------------------------------
+  forward decls and typedefs etc
+*/
+
 #define EXTFUNCHASHSIZE 31
 
 static struct Table *ExternalFuncLibrary = NULL;
+
+/*-----------------------------------------------------------------------------
+  BLACK BOX STUFF
+*/
 
 int CreateUserFunctionBlackBox(CONST char *name,
 		       ExtBBoxInitFunc *init,
@@ -63,7 +71,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
     isNew = 0;
   } else {
     isNew = 1;
-    efunc = (struct ExternalFunc *)ascmalloc(sizeof(struct ExternalFunc));
+    efunc = ASC_NEW(struct ExternalFunc);
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
     efunc->name = ascstrdup(SCP(AddSymbol(name)));
@@ -92,116 +100,10 @@ int CreateUserFunctionBlackBox(CONST char *name,
   return 0;
 }
 
-int CreateUserFunctionGlassBox(CONST char *name,
-		       ExtEvalFunc *init,
-		       ExtEvalFunc **value,
-		       ExtEvalFunc **deriv,
-		       ExtEvalFunc **deriv2,
-		       ExtEvalFunc *final,
-		       CONST unsigned long n_inputs,
-		       CONST unsigned long n_outputs,
-		       CONST char *help)
-{
-  struct ExternalFunc *efunc;
-  int isNew = 0;
-  if (name == NULL) {
-    return 1;
-  }
-  efunc = LookupExtFunc(name);
-  if (efunc != NULL) {    /* name was pre-loaded -- just update the info */
-    isNew = 0;
-  } else {
-    isNew = 1;
-    efunc = (struct ExternalFunc *)ascmalloc(sizeof(struct ExternalFunc));
-    asc_assert(efunc!=NULL);
-    efunc->help = NULL;
-    efunc->name = ascstrdup(SCP(AddSymbol(name)));
-	/* add or find name in symbol table */
-	/* the main symtab owns the string */
-  }
-
-  efunc->etype = efunc_GlassBox;
-  efunc->n_inputs = n_inputs;
-  efunc->n_outputs = n_outputs;
-  efunc->u.glass.initial = init;
-  efunc->u.glass.value = value;
-  efunc->u.glass.deriv = deriv;
-  efunc->u.glass.deriv2 = deriv2;
-  efunc->u.glass.final = final;
-  if (help) {
-    if (efunc->help) ascfree((char *)efunc->help);
-    efunc->help = ascstrdup(help);
-  } else {
-    efunc->help = NULL;
-  }
-
-  if (isNew) {
-    (void)AddExternalFunc(efunc,1);
-  }
-  return 0;
-}
-
-int CreateUserFunctionMethod(CONST char *name,
-	/* 	       ExtMethodInit *init, */
-		       ExtMethodRun *run,
-	/*	       ExtMethodInitEvalFunc *final, */
-		       CONST long n_args,
-	/*	       CONST unsigned long n_outputs, */
-		       CONST char *help)
-{
-  struct ExternalFunc *efunc;
-  int isNew = 1;
-  if (name == NULL) {
-    return 1;
-  }
-  efunc = LookupExtFunc(name);
-  if (efunc != NULL) {
-    isNew = 0;
-   /* name was pre-loaded -- just update the info. This may cause user
-      insanity if it wasn't a reload of the same thing. */
-  } else {
-    isNew = 1;
-    efunc = (struct ExternalFunc *)ascmalloc(sizeof(struct ExternalFunc));
-    asc_assert(efunc!=NULL);
-    efunc->help = NULL;
-    efunc->name = ascstrdup(SCP(AddSymbol(name)));
-	/* add or find name in symbol table, and copy because  */
-	/* the main symtab owns the string */
-  }
-  efunc->etype = efunc_Method;
-  efunc->n_inputs = n_args;
-  efunc->n_outputs = 0;
-  efunc->u.method.run = run;
-#if 0
-  efunc->u.method.initial = init;
-  efunc->u.method.final = final;
-#endif
-  if (help) {
-    if (efunc->help) { ascfree((char *)efunc->help); }
-    efunc->help = ascstrdup(help);
-  } else {
-    efunc->help = NULL;
-  }
-
-  if (isNew ) {
-    (void)AddExternalFunc(efunc,1);
-  }
-  return 0;
-}
-
-void DestroyExternalFunc(struct ExternalFunc *efunc)
-{
-  struct ExternalFunc *tmp;
-  if (efunc) {
-    tmp = efunc;
-    if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
-    if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */
-    tmp->name = NULL;
-    tmp->help = NULL;
-/* might want to set null pointers here depending on etype. */
-    tmp->etype = efunc_ERR;
-    ascfree((char *)tmp);
-  }
+double blackbox_evaluate_residual(struct BlackBoxRelation *bbox,struct gl_list_t *vars){
+	CONSOLE_DEBUG("Not yet implemented");
+	
+	return -1;
 }
 
 /*
@@ -245,6 +147,60 @@ ExtBBoxFunc *GetDeriv2Func(struct ExternalFunc *efunc)
   return efunc->u.black.deriv2;
 }
 
+/*------------------------------------------------------------------------------
+  GLASS BOX STUFF
+*/
+
+int CreateUserFunctionGlassBox(CONST char *name,
+		       ExtEvalFunc *init,
+		       ExtEvalFunc **value,
+		       ExtEvalFunc **deriv,
+		       ExtEvalFunc **deriv2,
+		       ExtEvalFunc *final,
+		       CONST unsigned long n_inputs,
+		       CONST unsigned long n_outputs,
+		       CONST char *help)
+{
+  struct ExternalFunc *efunc;
+  int isNew = 0;
+  if (name == NULL) {
+    return 1;
+  }
+  efunc = LookupExtFunc(name);
+  if (efunc != NULL) {    /* name was pre-loaded -- just update the info */
+    isNew = 0;
+  } else {
+    isNew = 1;
+    efunc = ASC_NEW(struct ExternalFunc);
+    asc_assert(efunc!=NULL);
+    efunc->help = NULL;
+    efunc->name = ascstrdup(SCP(AddSymbol(name)));
+	/* add or find name in symbol table */
+	/* the main symtab owns the string */
+  }
+
+  efunc->etype = efunc_GlassBox;
+  efunc->n_inputs = n_inputs;
+  efunc->n_outputs = n_outputs;
+  efunc->u.glass.initial = init;
+  efunc->u.glass.value = value;
+  efunc->u.glass.deriv = deriv;
+  efunc->u.glass.deriv2 = deriv2;
+  efunc->u.glass.final = final;
+  if (help) {
+    if (efunc->help) ascfree((char *)efunc->help);
+    efunc->help = ascstrdup(help);
+  } else {
+    efunc->help = NULL;
+  }
+
+  if (isNew) {
+    (void)AddExternalFunc(efunc,1);
+  }
+  return 0;
+}
+
+
 /*
  * GlassBox relations in particular register not just
  * a single function but rather a pointer to a jump table
@@ -281,11 +237,84 @@ ExtEvalFunc **GetDeriv2JumpTable(struct ExternalFunc *efunc)
   return efunc->u.glass.deriv2;
 }
 
+/*------------------------------------------------------------------------------
+  EXTERNAL METHOD STUFF
+*/
+
+int CreateUserFunctionMethod(CONST char *name,
+	/* 	       ExtMethodInit *init, */
+		       ExtMethodRun *run,
+	/*	       ExtMethodInitEvalFunc *final, */
+		       CONST long n_args,
+	/*	       CONST unsigned long n_outputs, */
+		       CONST char *help)
+{
+  struct ExternalFunc *efunc;
+  int isNew = 1;
+  if (name == NULL) {
+    return 1;
+  }
+  efunc = LookupExtFunc(name);
+  if (efunc != NULL) {
+    isNew = 0;
+   /* name was pre-loaded -- just update the info. This may cause user
+      insanity if it wasn't a reload of the same thing. */
+  } else {
+    isNew = 1;
+    efunc = ASC_NEW(struct ExternalFunc);
+    asc_assert(efunc!=NULL);
+    efunc->help = NULL;
+    efunc->name = ascstrdup(SCP(AddSymbol(name)));
+	/* add or find name in symbol table, and copy because  */
+	/* the main symtab owns the string */
+  }
+  efunc->etype = efunc_Method;
+  efunc->n_inputs = n_args;
+  efunc->n_outputs = 0;
+  efunc->u.method.run = run;
+#if 0
+  efunc->u.method.initial = init;
+  efunc->u.method.final = final;
+#endif
+  if (help) {
+    if (efunc->help) { ascfree((char *)efunc->help); }
+    efunc->help = ascstrdup(help);
+  } else {
+    efunc->help = NULL;
+  }
+
+  if (isNew ) {
+    (void)AddExternalFunc(efunc,1);
+  }
+  return 0;
+}
+
+
+
 ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
   asc_assert(efunc->etype == efunc_Method);
   return efunc->u.method.run;
+}
+
+/*------------------------------------------------------------------------------
+  REGISTRATION AND LOOKUP FUNCTIONS
+*/
+
+void DestroyExternalFunc(struct ExternalFunc *efunc)
+{
+  struct ExternalFunc *tmp;
+  if (efunc) {
+    tmp = efunc;
+    if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
+    if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */
+    tmp->name = NULL;
+    tmp->help = NULL;
+/* might want to set null pointers here depending on etype. */
+    tmp->etype = efunc_ERR;
+    ascfree((char *)tmp);
+  }
 }
 
 CONST char *ExternalFuncName(CONST struct ExternalFunc *efunc)

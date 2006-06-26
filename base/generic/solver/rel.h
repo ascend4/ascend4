@@ -33,17 +33,17 @@
 			relation filtering needs (eliminating the
 			filter module)
 
-	Client (ie to access this functionality) requires:
+	Client (ie a solver) requires:
 	#include "utilities/ascConfig.h"
 	#include "var.h"
 
-	Server (ie to build rel.c) requires:
-	#include "expr.h" ??
-	#include "expr_types.h" ??
-	#include "extfunc.h"
-	#include "relation.h"
-	#include "packages.h"
-	#include "extcall.h"
+	Server-side use (ie the ASCEND compiler, analyser, etc) requires:
+	#include <expr.h> ??
+	#include <compiler/expr_types.h> ??
+	#include <compiler/extfunc.h>
+	#include <compiler/relation.h>
+	#include <compiler/packages.h>
+	#include <compiler/extcall.h>
 	#include "mtx.h"
 *//*
 	by Karl Michael Westerberg and Joseph Zaher
@@ -55,6 +55,10 @@
 #define ASC_REL_H
 
 #include <utilities/ascConfig.h>
+
+/*------------------------------------------------------------------------------
+  forward decls and typedefs
+*/
 
 /*
  * rel_relation data type and basic type operators.
@@ -112,6 +116,10 @@ struct rel_relation {
    int32 model;             /**< index of a hypothetical MODEL rel is from */
    uint32 flags;            /**< flags */
 };
+
+/*------------------------------------------------------------------------------
+  CREATION / MANIPULATION OF REL_RELATION OBJECTS
+*/
 
 extern struct rel_relation *rel_create(SlvBackendToken instance,
                                        struct rel_relation *rel);
@@ -199,22 +207,6 @@ extern boolean rel_greater(struct rel_relation *rel);
  *  is among those that make up the comparator of the relation
  *  (i.e. <>, >, or >=).<br><br>
  *  gr==TRUE implies rel would be satisfied if lhs > rhs
- */
-/* OLD GROUP COMMENT */
-/*
- *  le = rel_less(rel)
- *  eq = rel_equal(rel)
- *  gr = rel_greater(rel)
- *  boolean le,eq,gr;
- *  struct rel_relation *rel;
- *
- *  Returns true if the given relation is satisfied if the
- *  operator in question is among those that make up the
- *  comparator of the relation. (e.g. rel_less is satisfied
- *  by (<>,<.<=).
- *  le==TRUE implies rel would be satisfied if lhs < rhs
- *  gr==TRUE implies rel would be satisfied if lhs > rhs
- *  eq==TRUE implies rel would be satisfied if lhs ~ rhs
  */
 
 extern enum rel_enum rel_relop(struct rel_relation *rel);
@@ -336,21 +328,6 @@ extern void rel_set_incidencesF(struct rel_relation *rel,
  *  Implementation function for rel_set_incidences().  Do not call
  *  this function directly - use rel_set_incidences() instead.
  */
-/* OLD GROUP COMMENTS */
-/*
- *  rel_n_incidences(rel)
- *  rel_set_incidences(rel,n,ilist) //SERVER ONLY
- *  struct rel_relation *rel;
- *  struct var_variable **ilist;
- *  int32 n;
- *
- *  rel_n_incidences returns the length of the incidence_list.
- *  Not everything in the incidence list is necessarily a
- *  variable for your particular solver -- check the flags.
- *  Solver clients should not call rel_set_incidences,
- *  it is only for use by constructors of bridges to relation
- *  back ends.
- */
 
 extern struct var_variable
 **rel_incidence_list_to_modify(struct rel_relation *rel);
@@ -371,13 +348,14 @@ ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation 
  *  The return value IS NOT A NULL-TERMINATED LIST.
  */
 
-/*
- * relation filtration functions.
- * We have a lot (32) of binary (one bit) flags a client may want to query
- * in arbitrary combinations and paying attention to only certain of
- * the bits. We will provide a set of macros and functions for each of
- * these bits and for operations on the whole set.
- */
+/*-----------------------------------------------------------------------------
+  RELATION FILTERING FUNCTIONS AND FLAG GET/SET FUNCTIONS
+
+	We have a lot (32) of binary (one bit) flags a client may want to query
+	in arbitrary combinations and paying attention to only certain of
+	the bits. We will provide a set of macros and functions for each of
+	these bits and for operations on the whole set.
+*/
 
 ASC_DLLSPEC(int32 ) rel_apply_filter(const struct rel_relation *rel,
                               rel_filter_t *filter);
@@ -483,32 +461,6 @@ ASC_DLLSPEC(void ) rel_set_flagbit(struct rel_relation *rel,
  *  Temporary relation that doesn't exist independently in the backend,
  *  but is made by some process of the backend or the solver client.
  *  Is rel fake and cooked up for this system only? */
-
-/* OLD GROUP COMMENTS */
-/*
- * REL_PARTITION	reordering clients. is it in the interesting region
- * REL_TORN	        reordering clients output. is it a tear.
- * REL_INTERFACE	solvers, ui clients. user suggests it's a tear eqn.
- * REL_INCLUDED 	solvers, ui clients. user wants eqn in problem.
- *	        	bit should be treated as readonly. use rel_set_*
- *	        	to change.
- * REL_OBJNEGATE	rel module. read_only for clients.
- * REL_BLACKBOX	        rel module. read_only for clients.
- * REL_SATISFIED	has rel been pronounced satisfied by someone?
- *       		bit should be treated as readonly. use rel_set_*
- *        		to change.
- * REL_EQUALITY 	is relation an equality? readonly for clients.
- * REL_INBLOCK  	is the relation in the current block of registered
- *	        	client? for clients.
- * REL_INWHEN   	is relation in a when? readonly for clients.
- * REL_ACTIVE           is this relation currently a part of my problem ?
- * REL_INVARIANT        is this relation an invariant in the conditional
- *                       modeling analysis
- * REL_CONDITIONAL	is relation conditional? readonly for clients
- * REL_IN_CUR_SUBREGION is the relation in the subregion currently
- *                      analyzed ?
- * REL_GENERATED	is rel fake and cooked up for this system only?
- */
 
 /*
  * the bit flag lookups
@@ -660,26 +612,17 @@ extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
  *  function.
  */
 
-/*
- *  rel_relation utility functions.
- *
- *  Things for the server side only. Not visible to clients.
- *
- *  Ok, really nosy clients courting death can cheat. Don't cry when
- *  they break.
- *  We make absolutely no commitment to being compatible with this portion
- *  of the header at any time in the future.
- */
+/*------------------------------------------------------------------------------
+  SERVER-SIDE UTILITY FUNCTIONS
+
+	Things for the server side only. Not visible to clients.
+
+	Ok, really nosy clients courting death can cheat. Don't cry when
+	they break.
+	We make absolutely no commitment to being compatible with this portion
+	of the header at any time in the future.
+*/
 #ifdef _SLV_SERVER_C_SEEN_
-/*
- *  requires #include "expr.h"
- *  requires #include "expr_types.h"
- *  requires #include "extfunc.h"
- *  requires #include "relation.h"
- *  requires #include "packages.h"
- *  requires #include "extcall.h"
- *  requires #include "mtx.h"
- */
 
 extern double g_external_tolerance; /**< DEFAULT 1e-12 */
 
@@ -749,59 +692,7 @@ extern real64 ExtRel_Diffs_LHS(struct rel_relation *rel,
 
 #endif /* _SLV_SERVER_C_SEEN_ */
 
-/*
- * Things dead.
- */
-/*  DEFUNCT
- *  extern struct rel_relation *rel_objcreate(SlvBackendToken, boolean);
- *  rel = rel_objcreate(instance,negate)
- *  struct rel_relation *rel;
- *  boolean negate;
- *  SlvBackendToken instance;
- *
- *  Creates an objective relation given the relation instance.
- *  The other fields are given default values. The lhs will be NULL.
- *  objrels may not have extrel caches. Use a dummy relation if
- *  necessary. Negate must be TRUE for a maximize relation, FALSE for
- *  a minimize relation.
- */
-
-/*  DEFUNCT
- * If you're smart enough to understand the answer to this question,
- * then you should be asking the instance directly, not asking us.
- * extern enum rel_enum rel_type(struct rel_relation *);
- * rtype = rel_type(rel);
- * rel_enum rtype;
- * struct rel_relation *rel;
- * Returns the type of a given relation. This indicates whether the
- * the relation is a token, opcode, glassbox, or blackbox relation.
- */
-
-/*   DEFUNCT for now.
- * extern boolean rel_in_subregion(struct rel_relation *);
- *  in_subregion = rel_in_subregion(rel)
- *  boolean in_subregion;
- *  struct rel_relation *rel;
- *
- *  Computes if the conditions of the relation are all met by the
- *  current values of the subregion field of each relevant boundary.
- *  It will return TRUE even if there are no conditions.
- */
-
-/* DEFUNCT the solver has no business knowing about sides. this is the
- *  compilers job. temporarily still active.
- * extern expr_t rel_lhs(struct rel_relation *);
- * extern expr_t rel_rhs(struct rel_relation *);
- *  lhs = rel_lhs(rel)
- *  rhs = rel_rhs(rel)
- *  expr_t lhs,rhs;
- *  struct rel_relation *rel;
- *
- *  Fetches the (internal copy of the) rhs and lhs of the relation.
- *  The user should not modify the expression, nor should the user
- *  use the expression after the relation is destroyed or the
- *  lhs/rhs has been re-set.
- */
+/* removed some dead stuff here -- JP  */
 
 #endif /* ASC_REL_H  */
 

@@ -32,7 +32,7 @@
 	#include "compiler/functype.h"
 	#include "compiler/safe.h"
 	#include "compiler/dimen.h"
-	#include "compiler/types.h"
+	#include "compiler/expr_types.h"
 	#include "compiler/relation_type.h"
 	#include "compiler/relation_util.h"
 *//*
@@ -46,6 +46,13 @@
 #define ASC_RELATION_UTIL_H
 
 #include <utilities/ascConfig.h>
+#include "fractions.h"
+#include "compiler.h"
+#include "functype.h"
+#include "safe.h"
+#include "dimen.h"
+#include "expr_types.h"
+#include "relation_type.h"
 
 ASC_DLLSPEC(int ) g_check_dimensions_noisy;
 /**<
@@ -118,8 +125,8 @@ ASC_DLLSPEC(unsigned long ) RelationLength(CONST struct relation *rel, int lhs);
 */
 
 ASC_DLLSPEC(CONST struct relation_term *) RelationTerm(CONST struct relation *rel,
-                                                unsigned long pos,
-                                                int lhs);
+        unsigned long pos,
+        int lhs);
 /**<
 	Returns the term in position POS (base 1) on one side of the equation. 
 	If lhs!=0, does this for the LHS. If lhs==0, does this for the RHS.
@@ -425,10 +432,6 @@ extern char *tmpalloc(int nbytes);
 /*------------------------------------------------------------------------------
 	RELATION EVALUATION STUFF
 
- *   The following mess of functions
- *   migrated out of the solver directory into this file. Who
- *   ever heard of a math modeling language that doesn't supply
- *   evaluation functions for its equations?
  *   These are for Token equations, though if they can be done
  *   for all equation types that's a plus.
  *   Supercedes the bleeding mess in calc.c, rel.c, relman.c which was

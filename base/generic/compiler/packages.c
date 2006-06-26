@@ -17,6 +17,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//**
+	@file
 	Code to support dynamic and static loading of user packages.
 
 	The default state is to have packages. As such it takes an explicit
@@ -24,10 +25,9 @@
 	An explicit definition of STATIC_PACKAGES or DYNAMIC_PACKAGES is also
 	required.
 *//*
-	User Packages
 	by Kirk Abbott
 	Created: July 4, 1994
-	Last rev in old CVS: 1.14 ballan 1998/03/06 15:47:14
+	Last in CVS: 1.14 ballan 1998/03/06 15:47:14
 */
 
 #if !defined(DYNAMIC_PACKAGES) && !defined(STATIC_PACKAGES) && !defined(NO_PACKAGES)
