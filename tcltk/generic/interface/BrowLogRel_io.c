@@ -42,7 +42,6 @@
 #include <compiler/dimen.h>
 #include <compiler/expr_types.h>
 #include <compiler/exprs.h>
-#include <compiler/instance.h>
 #include <compiler/instance_enum.h>
 #include <compiler/symtab.h>
 #include <compiler/instance_io.h>
