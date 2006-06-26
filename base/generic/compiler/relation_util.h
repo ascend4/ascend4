@@ -526,7 +526,7 @@ int RelationCalcGradient(struct Instance *i, double *grad);
 	You must provide grad, the space to put the gradient, an array of
 	double of length matching the gl_list_t.
 	We will stuff df/dx[i] into grad[i-1], where i is the list position
-	in the relation's var list.<br><br>
+	in the relation's var list.
 	
 	@return Non-zero return value implies a problem
 	
@@ -538,6 +538,7 @@ enum safe_err RelationCalcGradientSafe(struct Instance *i, double *grad);
 /**<
 	This calculates the gradient of the relation df/dx (f = lhs-rhs)
 	where x is ALL entries in the relation's var list.
+
 	This function is to RelationCalcGradient as
 	RelationCalcResidualSafe is to RelationCalcResidual.
 	Non-zero return value implies a problem.
@@ -547,7 +548,7 @@ int RelationCalcResidGrad(struct Instance *i, double *res, double *grad);
 /**<
 	This function combines the Residual and Gradient calls, since these
 	may be done together at basically the cost of just one.
-	Non-zero return value implies a problem.<br><br>
+	Non-zero return value implies a problem.
 	
 	@NOTE This function is a possible source of floating point exceptions
 	and should not be used during compilation.
