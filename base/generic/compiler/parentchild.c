@@ -135,7 +135,7 @@ unsigned long NumberParents(CONST struct Instance *i)
   case DUMMY_INST:
     return 0;
   default:
-    Asc_Panic(2, NULL, "Invalid instance passed to NumberParents.\n");
+    Asc_Panic(2, __FUNCTION__, "Invalid instance");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -187,7 +187,7 @@ struct Instance *InstanceParent(CONST struct Instance *i, unsigned long int n)
   case SIM_INST:
   case DUMMY_INST:
   default:
-    Asc_Panic(2, NULL, "Invalid instance passed to InstanceParent.\n");
+    Asc_Panic(2, __FUNCTION__, "Invalid instance");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -288,7 +288,7 @@ void DeleteParent(struct Instance *i, unsigned long int pos)
     D_INST(i)->ref_count--;
     break;
   default:
-    Asc_Panic(2, NULL, "Invalid instance passed to DeleteParent.\n");
+    Asc_Panic(2, __FUNCTION__, "Invalid instance");
   }
 }
 
@@ -345,7 +345,7 @@ unsigned long SearchForParent(CONST struct Instance *i,
   case DUMMY_INST:
     return 0;
   default:
-    Asc_Panic(2, NULL, "Invalid instance passed to SearchForParent.\n");
+    Asc_Panic(2, __FUNCTION__, "Invalid instance");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -450,13 +450,12 @@ struct InstanceName ParentsName(CONST struct Instance *p,
   case SET_INST:
   case SYMBOL_INST:
   case DUMMY_INST:
-    Asc_Panic(2, NULL,
-              "ParentsName cannot be called on a fundamental or constant.\n");
+    Asc_Panic(2, __FUNCTION__, "p is a fundamental or constant (invalid)");
     child = 0;
     clist = 0;
     num_children = 0;
   default:
-    Asc_Panic(2, NULL, "Invalid instance passed as parent to ParentsName.\n");
+    Asc_Panic(2, __FUNCTION__, "Invalid instance passed as parent");
     child = 0;
     clist = 0;
     num_children = 0;

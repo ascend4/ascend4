@@ -37,6 +37,7 @@
 #include "compiler.h"
 #include "symtab.h"
 #include "instance_enum.h"
+#include "instance_io.h"
 #include "extfunc.h"
 #include "extcall.h"
 
@@ -104,6 +105,21 @@ int CreateUserFunctionBlackBox(CONST char *name,
 double blackbox_evaluate_residual(struct relation *r){
 	struct ExtCallNode *ext;
 	struct ExternalFunc *efunc;
+	int i,n;
+	char *tmp;
+	struct Instance *inst;
+	double *in;
+	double *out;
+
+	CONSOLE_DEBUG("...");
+
+	n = NumberVariables(r);
+	for(i=1;i <= n; ++i){
+		inst = RelationVariable(r,i);
+		tmp = WriteInstanceNameString(inst, NULL);
+		CONSOLE_DEBUG("Variable %d: '%s'", i, tmp);
+		ASC_FREE(tmp);
+	}
 	
 	asc_assert(r!=NULL);
 	asc_assert(r->share!=NULL);	
@@ -118,14 +134,21 @@ double blackbox_evaluate_residual(struct relation *r){
 	ExtBBoxFunc *valfnptr = efunc->u.black.value;
 	asc_assert(valfnptr!=NULL);
 
+	in = ASC_NEW_ARRAY(double,NumberInputArgs(efunc));
+	out = ASC_NEW_ARRAY(double,NumberOutputArgs(efunc));
+
+	for(i=0; i < n; ++i){
+		inst = RelationVariable(r,i+1);
+		tmp = WriteInstanceNameString(inst,NULL);
+		in[i] = RealAtomValue(inst);
+		CONSOLE_DEBUG("Set var %d ('%s') to '%f'",i+1,tmp,in[i]);
+		ASC_FREE(tmp);
+	}
+
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox not implemented, returning -1");
 	return -1;
 }
 
-/*
- * This is simply a function returning a pointer to a function.
- * In this case the evaluation function. see Harbison&Steele p 258. :^)
- */
 
 ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc)
 {

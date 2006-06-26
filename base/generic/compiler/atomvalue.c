@@ -109,7 +109,7 @@ unsigned AtomMutable(CONST struct Instance *i)
   case BOOLEAN_INST: return 1; /* always */
   case BOOLEAN_ATOM_INST: return 1; /* always */
   default:
-    FPRINTF(ASCERR,"AtomMutable called on non-atomic instance.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"AtomMutable called on non-atomic instance.\n");
     return 0; /* not atomic, so can't very well be mutable, eh? */
     /* used to be exit(2) */
     /*NOTREACHED*/
@@ -130,7 +130,7 @@ unsigned DepthAssigned(CONST struct Instance *i)
   case BOOLEAN_INST:
     return B_INST(i)->depth;
   default:
-    Asc_Panic(2, NULL, "Incorrect type passed to DepthAssigned.\n");
+    Asc_Panic(2, __FUNCTION__, "Incorrect type passed");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -147,7 +147,7 @@ double RealAtomValue(CONST struct Instance *i)
   case REAL_ATOM_INST:
     return RA_INST(i)->value;
   default:
-    Asc_Panic(2, NULL, "RealAtomValue called on non-real instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called with non-real instance");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -159,7 +159,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth)
   switch(i->t) {
   case REAL_CONSTANT_INST:
     if (AtomAssigned(i)) {
-      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"SetRealAtomValue called on Constant instance.");
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"SetRealAtomValue called on a constant instance.");
     } else {
       struct Instance *ptr;
 
@@ -185,7 +185,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth)
     RA_INST(i)->depth = depth;
     break;
   default:
-    Asc_Panic(2, NULL, "SetRealAtomValue called on non-real instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-real instance.\n");
   }
 }
 
@@ -216,7 +216,7 @@ void SetRealAtomDims(struct Instance *i, CONST dim_type *dim)
     RA_INST(i)->dimen = dim;
     break;
   default:
-    Asc_Panic(2, NULL, "SetRealAtomDims called on non-real instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-real instance.");
   }
 }
 
@@ -232,7 +232,7 @@ CONST dim_type *RealAtomDims(CONST struct Instance *i)
   case REAL_ATOM_INST:
     return RA_INST(i)->dimen;
   default:
-    Asc_Panic(2, NULL, "RealAtomDims called on non-real instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-real instance.");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -248,13 +248,11 @@ long GetIntegerAtomValue(CONST struct Instance *i)
     return IA_INST(i)->value;
   case INTEGER_CONSTANT_INST:
     if (!CIASS(i)) {
-      FPRINTF(ASCERR,
-	      "Warning GetIntegerAtomValue called on unassigned constant.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"GetIntegerAtomValue called on unassigned constant.");
     }
     return IC_INST(i)->value;
   default:
-    Asc_Panic(2, "GetIntegerAtomValue",
-              "GetIntegerAtomValue called on non-integer instance.\n");
+    Asc_Panic(2, __FUNCTION__,"called on non-integer instance");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -276,8 +274,8 @@ void SetIntegerAtomValue(struct Instance *i, long int v,unsigned d)
     break;
   case INTEGER_CONSTANT_INST:
     if (CIASS(i)) {
-      FPRINTF(ASCERR,"SetIntegerAtomValue called on Constant instance.\n");
-    } else {
+      ERROR_REPORTER_HERE(ASC_PROG_ERROR,"SetIntegerAtomValue called on Constant instance.");
+    }else{
       struct Instance *ptr;
 
       IC_INST(i)->value = v;
@@ -307,13 +305,11 @@ int GetBooleanAtomValue(CONST struct Instance *i)
     return BA_INST(i)->value;
   case BOOLEAN_CONSTANT_INST:
     if (!CIASS(i)) {
-      FPRINTF(ASCERR,
-	      "Warning GetBooleanAtomValue called on unassigned constant.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"GetBooleanAtomValue called on unassigned constant.\n");
     }
     return BCV(i);
   default:
-    Asc_Panic(2, "GetBooleanAtomValue",
-              "GetBooleanAtomValue called on non-boolean instance.\n");
+    Asc_Panic(2, __FUNCTION__,"called on non-boolean instance.\n");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -335,7 +331,7 @@ void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth)
     break;
   case BOOLEAN_CONSTANT_INST:
     if (CIASS(i)) {
-      FPRINTF(ASCERR,"SetBooleanAtomValue called on Constant instance.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERROR,"SetBooleanAtomValue called on Constant instance.\n");
     } else {
       struct Instance *ptr;
 
@@ -359,8 +355,7 @@ void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth)
     }
     break;
   default:
-    Asc_Panic(2, NULL, "SetBooleanAtomValue",
-              "SetBooleanAtomValue called on non-boolean instance.\n");
+    Asc_Panic(2, NULL, __FUNCTION__,"called on non-boolean instance.\n");
   }
 }
 
@@ -383,7 +378,7 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list)
     if (SA_INST(i)->list != NULL) {
       FPRINTF(ASCERR,"AssignSetAtomList called on fixed set instance.\n");
       if (SetsEqual(list,SA_INST(i)->list)){ /* benign assignment */
-	FPRINTF(ASCERR,
+        FPRINTF(ASCERR,
           "The assignment is benign(assigns the same value), %s %s.\n",
           "so the program can continue\nrunning.  Report this message to",
           ASC_MILD_BUGMAIL);
@@ -406,7 +401,7 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list)
     if (S_INST(i)->list != NULL) {
       FPRINTF(ASCERR,"AssignSetAtomList called on fixed set instance.\n");
       if (SetsEqual(list,S_INST(i)->list)){ /* benign assignment */
-	FPRINTF(ASCERR,
+        FPRINTF(ASCERR,
           "The assignment is benign(assigns the same value), %s %s.\n",
           "so the program can continue\nrunning.  Report this message to",
           ASC_MILD_BUGMAIL);
@@ -419,7 +414,7 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list)
     S_INST(i)->list = list;
     return 1;
   default:
-    FPRINTF(ASCERR,"AssignSetAtomList called on non-set instance.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"AssignSetAtomList called on non-set instance.\n");
     return 0;
   }
 }
@@ -434,7 +429,7 @@ CONST struct set_t *SetAtomList(CONST struct Instance *i)
   case SET_ATOM_INST:
     return SA_INST(i)->list;
   default:
-    Asc_Panic(2, NULL, "SetAtomList called on non-set instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -449,7 +444,7 @@ int GetSetAtomKind(CONST struct Instance *i)
   case SET_ATOM_INST:
     return (int)(SA_INST(i)->int_set);
   default:
-    Asc_Panic(2, NULL, "GetSetAtomKind called on non-set instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -470,7 +465,7 @@ symchar *GetSymbolAtomValue(CONST struct Instance *i)
     }
     return SYMC_INST(i)->value;
   default:
-    Asc_Panic(2, NULL, "GetSymbolAtomValue called on non-symbol instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-symbol instance.");
     exit(2);/* Needed to keep gcc from whining */
   }
 }
@@ -512,7 +507,7 @@ void SetSymbolAtomValue(struct Instance *i, symchar *str)
     }
     break;
   default:
-    Asc_Panic(2, NULL, "SetSymbolAtomValue called on non-symbol instance.\n");
+    Asc_Panic(2, __FUNCTION__, "called on non-symbol instance.");
   }
 }
 
@@ -528,7 +523,7 @@ int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2)
     return 1;
   }
   if (InstanceKind(i1) != InstanceKind(i2)) {
-    FPRINTF(ASCERR,"CmpAtomValues called with mismatched ATOM types\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"CmpAtomValues called with mismatched ATOM types");
     return (((int)InstanceKind(i1) - (int)InstanceKind(i2)) < 0) ? -1 : 1;
   }
   if (InstanceKind(i1) & ISET) {
@@ -575,7 +570,7 @@ int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2)
   case SET_ATOM_INST:
     return CmpSetInstVal(SetAtomList(i1),SetAtomList(i2));
   default:
-    Asc_Panic(2, NULL, "Bad call to CmpAtomValues!\n");
+    Asc_Panic(2, __FUNCTION__, "Bad call!");
     exit(2);/* Needed to keep gcc from whining */
     break;
   }

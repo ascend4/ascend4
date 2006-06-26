@@ -217,9 +217,7 @@ void integrator_free_engine(IntegratorSystem *blsys){
 	switch(blsys->engine){
 		case INTEG_LSODE: integrator_lsode_free(blsys->enginedata); break;
 #ifdef ASC_WITH_IDA
-		case INTEG_IDA:	ERROR_REPORTER_HERE(ASC_PROG_ERR,"No engine selected: can't analyse");
-	return 0; /* failure */	
- integrator_ida_free(blsys->enginedata); break;
+		case INTEG_IDA: integrator_ida_free(blsys->enginedata); break;
 #endif
 	}
 	blsys->enginedata=NULL;

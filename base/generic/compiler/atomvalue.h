@@ -21,10 +21,12 @@
 	@file
 	Atom value querying and assignment routines.
 
-	based on instance.c
-
 	These routines provide access to atom values and related attributes.
 	All of the following routines may only be called on atomic instances.
+
+	Atoms are instances that ASCEND can deal with as a 'value'.They include
+	real numbers, integrers, boolean values and sets of integers and sets of
+	symbols.
 
 	Requires:
 	#include "utilities/ascConfig.h"
@@ -34,23 +36,19 @@
 	#include "dimen.h"
 	#include "sets.h"
 *//*
+	based on instance.c
 	by Tom Epperly & Ben Allan
 	8/16/89
-	Version: $Revision: 1.10 $
-	Version control file: $RCSfile: atomvalue.h,v $
-	Date last modified: $Date: 1998/02/05 16:35:24 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.10 $ $Date: 1998/02/05 16:35:24 $ $Author: ballan $
 */
 
-#ifndef __ATOMVALUE_H_SEEN__
-#define __ATOMVALUE_H_SEEN__
+#ifndef ASC_ATOMVALUE_H
+#define ASC_ATOMVALUE_H
 
 #include <utilities/ascConfig.h>
 
 ASC_DLLSPEC(unsigned) AtomAssigned(CONST struct Instance *i);
 /**<
- *  <!--  unsigned AtomAssigned(i)                                     -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return a nonzero value if the atom instance has been assigned; otherwise,
  *  return false.  It will actually return the number of times that the
  *  atom has been assigned.
@@ -59,8 +57,6 @@ ASC_DLLSPEC(unsigned) AtomAssigned(CONST struct Instance *i);
 
 ASC_DLLSPEC(unsigned ) AtomMutable(CONST struct Instance *i);
 /**<
- *  <!--  unsigned AtomMutable(i);                                     -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return a true value if the atom instance is mutable; otherwise, return
  *  false.
  *  Valid for *_INST, *_ATOM_INSTANCE, *_CONSTANT_INSTANCE.
@@ -70,8 +66,6 @@ ASC_DLLSPEC(unsigned ) AtomMutable(CONST struct Instance *i);
 
 extern unsigned DepthAssigned(CONST struct Instance *i);
 /**<
- *  <!--  unsigned DepthAssigned(i)                                    -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the depth of the assignment.  This only works on real and
  *  boolean instances.
  */
@@ -86,18 +80,12 @@ extern unsigned DepthAssigned(CONST struct Instance *i);
 
 ASC_DLLSPEC(double) RealAtomValue(CONST struct Instance *i);
 /**<
- *  <!--  double RealAtomValue(i)                                      -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the real value of real instance i.  This works only on
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCE.
  */
 
 ASC_DLLSPEC(void) SetRealAtomValue(struct Instance *i, double d, unsigned depth);
 /**<
- *  <!--  void SetRealAtomValue(i,d,depth)                             -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  double d;                                                    -->
- *  <!--  unsigned depth;                                              -->
  *  Assign the value d(in system units) to instance i.  This works only on
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCEs not assigned.
  *  This will set the assigned attribute also.
@@ -109,8 +97,6 @@ ASC_DLLSPEC(void) SetRealAtomValue(struct Instance *i, double d, unsigned depth)
 
 ASC_DLLSPEC(CONST dim_type*) RealAtomDims(CONST struct Instance *i);
 /**<
- *  <!--  const dim_type *RealAtomDims(i)                              -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the dimensions attribute of instance i.  This works only on
  *  REAL_INST or REAL_ATOM_INST or REAL_CONSTANT_INSTANCE.
  *  This should never return a NULL pointer.
@@ -118,9 +104,6 @@ ASC_DLLSPEC(CONST dim_type*) RealAtomDims(CONST struct Instance *i);
 
 ASC_DLLSPEC(void) SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
 /**<
- *  <!--  void SetRealAtomDims(i,dim)                                  -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  const dim_type *dim;                                         -->
  *  Set i's dimensions to dim.
  *  dim should already be in the dimensions list.
  *  This works only on
@@ -129,18 +112,12 @@ ASC_DLLSPEC(void) SetRealAtomDims(struct Instance *i, CONST dim_type *dim);
 
 ASC_DLLSPEC(long) GetIntegerAtomValue(CONST struct Instance *i);
 /**<
- *  <!--  long GetIntegerAtomValue(i)                                  -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the value of the integer instance i.  This only works on
  *  INTEGER_INST or INTEGER_ATOM_INST or INTEGER_CONSTANT_INST type instances.
  */
 
 ASC_DLLSPEC(void ) SetIntegerAtomValue(struct Instance *i, long v, unsigned depth);
 /**<
- *  <!--  void SetIntegerAtomValue(i,v,depth)                          -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  long v;                                                      -->
- *  <!--  unsigned depth;                                              -->
  *  Set the value of instance i to v.  This only works on INTEGER_INST or
  *  INTEGER_ATOM_INST or unassigned INTEGER_CONSTANT_INST type instances.
  *
@@ -150,8 +127,6 @@ ASC_DLLSPEC(void ) SetIntegerAtomValue(struct Instance *i, long v, unsigned dept
 
 ASC_DLLSPEC(int) GetBooleanAtomValue(CONST struct Instance *i);
 /**<
- *  <!--  int GetBooleanAtomValue(i)                                   -->
- *  <!--  struct Instance *i;                                          -->
  *  Return a true value if i is TRUE; otherwise return a false value.
  *  This only works on BOOLEAN_INST or BOOLEAN_ATOM_INST
  *  or BOOLEAN_CONSTANT_INST type instances.
@@ -159,10 +134,6 @@ ASC_DLLSPEC(int) GetBooleanAtomValue(CONST struct Instance *i);
 
 ASC_DLLSPEC(void) SetBooleanAtomValue(struct Instance *i, int truth, unsigned depth);
 /**<
- *  <!--  void SetBooleanAtomValue(i,truth,depth)                      -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  int truth;                                                   -->
- *  <!--  unsigned depth;                                              -->
  *  If truth is a true value, i will be set to TRUE; otherwise, i will be
  *  set to FALSE.  This only works on BOOLEAN_INST or BOOLEAN_ATOM_INST
  *  or unassigned BOOLEAN_CONSTANT_INST type instances.
@@ -174,8 +145,6 @@ ASC_DLLSPEC(void) SetBooleanAtomValue(struct Instance *i, int truth, unsigned de
 
 ASC_DLLSPEC(CONST struct set_t*) SetAtomList(CONST struct Instance *i);
 /**<
- *  <!--  struct set_t *SetAtomList(i)                                 -->
- *  <!--  struct Instance *i;                                          -->
  *  Return the list from the set instance i.  This only works on SET_INST
  *  and SET_ATOM_INST type instances.  This returns NULL when i has not
  *  been assigned.
@@ -183,9 +152,6 @@ ASC_DLLSPEC(CONST struct set_t*) SetAtomList(CONST struct Instance *i);
 
 extern int AssignSetAtomList(struct Instance *i, struct set_t *list);
 /**<
- *  <!--  void AssignSetAtomList(i,list)                               -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  struct set_t *list;                                          -->
  *  Set i's list to list.  This will set the assigned attribute unless
  *  list is NULL.  A set's value cannot be changed after it has been assigned.
  *  Returns 1 if successful. Returns 0 if not successful.
@@ -195,15 +161,11 @@ extern int AssignSetAtomList(struct Instance *i, struct set_t *list);
 
 extern int GetSetAtomKind(CONST struct Instance *i);
 /**<
- *  <!--  int GetSetAtomKind(i);                                       -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the kind of the set. 1 ==> integer set; 0 ==> string set.
  */
 
 ASC_DLLSPEC(symchar*) GetSymbolAtomValue(CONST struct Instance *i);
 /**<
- *  <!--  symchar *GetSymbolAtomValue(i)                               -->
- *  <!--  const struct Instance *i;                                    -->
  *  This returns the symbol that instance i is assigned to.
  *  If i is unassigned, it will return NULL.  This only works on
  *  SYMBOL_INST and SYMBOL_ATOM_INST or SYMBOL_CONSTANT_INST type instances.
@@ -213,9 +175,6 @@ ASC_DLLSPEC(symchar*) GetSymbolAtomValue(CONST struct Instance *i);
 
 ASC_DLLSPEC(void ) SetSymbolAtomValue(struct Instance *i, symchar *s);
 /**<
- *  <!--  void SetSymbolAtomValue(i,s)                                 -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  symchar *s;                                                  -->
  *  This makes an assignment to i. Instance i should be of type
  *  SYMBOL_INST or SYMBOL_ATOM_INST or unassigned SYMBOL_CONSTANT_INST.
  *  Character strings should not contain the single quote delimiters.
@@ -224,8 +183,6 @@ ASC_DLLSPEC(void ) SetSymbolAtomValue(struct Instance *i, symchar *s);
 
 extern int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2);
 /**<
- *  <!--  int CmpAtomValues(i1,i2)                                     -->
- *  <!--  struct Instance *i1,*i2;                                     -->
  *  Return -1,0,1 as i2 < == or > i1. i1 and i2 should be of the same base
  *  type. The following types are allowed:
  *  REAL_*INST, BOOLEAN_*INST, SYMBOL_*INST, INTEGER_*INST SET_*INST.
@@ -233,5 +190,5 @@ extern int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2);
  *  types.
  */
 
-#endif  /* __ATOMVALUE_H_SEEN__ */
+#endif  /* ASC_ATOMVALUE_H */
 

@@ -135,7 +135,7 @@ ASC_DLLSPEC(void ) Asc_DeAllocSim(struct Instance *sim);
 /**<
  *  Deallocates a simulation instance.
  *  The instance and its associated root instance are destroyed using
- *  DestroyInstance() (in instance.h).  The name string i(which it owns)
+ *  DestroyInstance() (in instance*.h).  The name string i(which it owns)
  *  is also destroyed, any external vars associated with the simulation
  *  are cleaned up.<br><br>
  *

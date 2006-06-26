@@ -47,7 +47,6 @@
 #include "instance_enum.h"
 #include "instance_name.h"
 #include "instance_io.h"
-#include "instance.h"
 #include "mathinst.h"
 #include "name.h"
 #include "nameio.h"

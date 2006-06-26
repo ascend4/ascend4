@@ -59,7 +59,6 @@
 #include "syntax.h"
 #include "setinstval.h"
 #include "childinfo.h"
-#include "instance.h"
 #include "evaluate.h"
 #include "proc.h"
 #include "type_desc.h"

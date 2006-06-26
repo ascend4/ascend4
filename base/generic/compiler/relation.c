@@ -2103,31 +2103,36 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 
 
 /*------------------------------------------------------------------------------
- * External Procedures Processing.
+ * EXTERNAL CALL PROCESSING
  *
- * A special note on external relations.
- * External relations behave like relations but they also behave like
- * procedures. As such when they are constructed and invoked they expect
- * a particular ordering of their variables.
- * However there are some operations that can mess up (reduce) the number
- * of incident variables on the incident varlist -- ATSing 2 variables in the
- * *same* relation will do this. BUT we still need to maintain the number
- * of variables in the call to the evaluation routine.
- * Consider the following example:
- * An glassbox relation is constructed as: test1(x[46,2,8,9] ; 2);
- * It *requires* 4 arguements, but its incident var count could be anything
- * from 1 <= n <= 4, depending on how many ATS are done. Unfortunately
- * the ATS could have been done even before we have constructed the relation,
- * so we have to make sure that we check for aliasing.
+
+/**	@note 
+	A special note on external relations
+
+	External relations behave like relations but they also behave like
+	procedures. As such when they are constructed and invoked they expect
+	a particular ordering of their variables.
+	
+	However there are some operations that can mess up (reduce) the number
+	of incident variables on the incident varlist -- ATSing 2 variables in the
+	*same* relation will do this. BUT we still need to maintain the number
+	of variables in the call to the evaluation routine.
+	
+	Consider the following example:
+	An glassbox relation is constructed as: test1(x[46,2,8,9] ; 2);
+	It *requires* 4 arguements, but its incident var count could be anything
+	from 1 <= n <= 4, depending on how many ATS are done. Unfortunately
+	the ATS could have been done even before we have constructed the relation,
+	so we have to make sure that we check for aliasing.
 */
 
-struct relation *CreateBlackBoxRelation(struct Instance *relinst,
-					struct ExternalFunc *efunc,
-					struct gl_list_t *arglist,
-					struct Instance *subject,
-					struct gl_list_t *inputs,
-					struct Instance *data)
-{
+struct relation *CreateBlackBoxRelation(struct Instance *relinst
+		, struct ExternalFunc *efunc
+		, struct gl_list_t *arglist
+		, struct Instance *subject
+		, struct gl_list_t *inputs
+		, struct Instance *data
+){
   struct relation *result;
   struct gl_list_t *newarglist;
   struct gl_list_t *newlist;
@@ -2140,13 +2145,13 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst,
   CONSOLE_DEBUG("CREATING BLACK BOX RELATION");
 
   n_inputs = gl_length(inputs);
-  len = n_inputs + 1;		/* an extra for the output variable. */
+  len = n_inputs + 1; /* an extra for the output variable. */
 
   /*
-   * Add the input vars, making sure that their incidence
-   * is unique, and adjusting the indexing appropriately
-   * on the integer args array.
-   */
+	Add the input vars, making sure that their incidence
+	is unique, and adjusting the indexing appropriately
+	on the integer args array.
+  */
 
   args = ASC_NEW_ARRAY_CLEAR(int,len+1);
 
@@ -2158,41 +2163,37 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst,
     if (pos) {
       FPRINTF(ASCERR,"Incidence for external relation will be inaccurate\n");
       *args++ = (int)pos;
-    }
-    else{
+    }else{
       gl_append_ptr(newlist,(VOIDPTR)var);
       *args++ = (int)gl_length(newlist);
       AddRelation(subject,relinst);
     }
   }
 
-  /*
-   * Add the subject.
-   */
+  /* add the subject */
   pos = gl_search(newlist,subject,(CmpFunc)CmpP);
   if (pos) {
     FPRINTF(ASCERR,"An input and output variable are the same !!\n");
     *args++ = (int)pos;
-  }
-  else{
-    gl_append_ptr(newlist,(VOIDPTR)subject);		/* add the subject */
+  }else{
+    gl_append_ptr(newlist,(VOIDPTR)subject); /* add the subject */
     *args++ = (int)gl_length(newlist);
     AddRelation(var,relinst);
   }
-  *args = 0;						/* terminate */
+  *args = 0; /* terminate */
 
   /*
-   * Create the BlackBox relation structure. This requires
-   * creating a ExtCallNode node.
-   */
+	Create the BlackBox relation structure. This requires
+	creating a ExtCallNode node.
+  */
   newarglist = CopySpecialList(arglist);
   ext = CreateExtCall(efunc,newarglist,subject,data);
   SetExternalCallNodeStamp(ext,g_ExternalNodeStamps);
 
   /*
-   * Now make the main relation structure and put it all
-   * together. Then append the necessary lists.
-   */
+	Now make the main relation structure and put it all
+	together. Then append the necessary lists.
+  */
   result = CreateRelationStructure(e_equal,crs_NEWUNION);
   RelationRefCount(result) = 1;
   RBBOX(result).args = args;
@@ -2238,12 +2239,12 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
       }
     }
   }
-  *tmp = 0;						/* terminate */
+  *tmp = 0;	/* terminate */
 
   /*
-   * Create the relation data structure and append the
-   * varlist.
-   */
+	Create the relation data structure and append the
+	varlist.
+  */
   result = CreateRelationStructure(relop,crs_NEWUNION);
   RelationRefCount(result) = 1;
   RGBOX(result).efunc = efunc;
