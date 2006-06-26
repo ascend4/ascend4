@@ -72,7 +72,7 @@
 typedef int ExtEvalFunc(int *mode, int *m, int *n,
    double *x, double *u, double *f, double *g);
 
-/**<
+/**
 	This is an enum to clarify and make type-safer the
 	the variation of external functions circa 1995.
 	Blackboxes might be callable from methods as well (@TODO), but
@@ -180,10 +180,12 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
 	of the form y_out[i] = f_i(x_in), where the functional details
 	of f are assumed to be smooth enough but otherwise totally hidden
 	and x_in, y_out are non-overlapping sets of variables.
+
 	Note that solvers are not psychic; if this blackbox is embedded
 	in a larger model such that some of y_out are fixed variables,
 	the odds of convergence are small. Cleverer solvers may issue
 	a warning. 
+
 	@param interp the control information is exchanged in interp; interp->task
 		should be consulted.
 	@param ninputs the length of the inputs, xi_in.
@@ -192,8 +194,9 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
 	each row is df[i]/dx[j] over each j for the y_out[i] of
 	matching index. The jacobian array is 1-D, row major, i.e.
 	df[i]/dx[j] -> jacobian[i*ninputs+j].
+
 	@TODO this one may need splitting/rework for hessian.
- */
+*/
 typedef int ExtBBoxFunc(struct Slv_Interp *interp,
                         int ninputs,
                         int noutputs,
@@ -420,8 +423,7 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 /**
 	Evaluate blackbox relation.
 */
-double blackbox_evaluate_residual(struct BlackBoxRelation *bbox,struct gl_list_t *vars);
-
+double blackbox_evaluate_residual(struct relation *r);
 
 /*-----------------------------------------------------------------------------
   GLASS BOX STUFF

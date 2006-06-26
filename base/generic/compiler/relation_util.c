@@ -2259,7 +2259,7 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
          thus the residual is ... (?)
 	  */
       ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox evaluation is experimental (%s)",__FUNCTION__);
-      *res = blackbox_evaluate_residual(&(r->share->bbox),r->vars);
+      *res = blackbox_evaluate_residual(r);
     }else if (reltype == e_glassbox){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
     }else if (reltype == e_opcode)    {
