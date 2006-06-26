@@ -49,6 +49,7 @@
 #define ASC_EXTFUNC_H
 
 #include <utilities/ascConfig.h>
+#include "relation_util.h"
 
 /*------------------------------------------------------------------------------
 	type definitions and forward decls
@@ -414,6 +415,13 @@ ASC_DLLSPEC(int) CreateUserFunctionBlackBox(CONST char *name,
 	@return Returns 0 if the function was successfully added,
 	        non-zero otherwise.
 */
+
+
+/**
+	Evaluate blackbox relation.
+*/
+double blackbox_evaluate_residual(struct BlackBoxRelation *bbox,struct gl_list_t *vars);
+
 
 /*-----------------------------------------------------------------------------
   GLASS BOX STUFF

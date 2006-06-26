@@ -1,33 +1,28 @@
-/*
- *  SLV: Ascend Numeric Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.29 $
- *  Version control file: $RCSfile: system.c,v $
- *  Date last modified: $Date: 2003/01/19 02:16:05 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along with
- *  the program; if not, write to the Free Software Foundation, Inc., 675
- *  Mass Ave, Cambridge, MA 02139 USA.  Check the file named COPYING.
- *  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	by Karl Michael Westerberg
+	Created: 2/6/90
+	Last in CVS: $Revision: 1.29 $ $Date: 2003/01/19 02:16:05 $ $Author: ballan $
+*/
 
 #include <utilities/ascConfig.h>
 #include <compiler/instance_enum.h>
@@ -61,7 +56,9 @@
 slv_system_t system_build(SlvBackendToken inst)
 {
   slv_system_t sys;
-  int stat;
+  int stat, i;
+  struct ExtRelCache **ep;
+
 #if DOTIME
   double time;
   time = tm_cpu_time();
@@ -98,6 +95,14 @@ slv_system_t system_build(SlvBackendToken inst)
 	  error_reporter_end_flush();
     }
   }
+
+  /* perform the 'presolve' on the external relations, whatever that means */
+  if( (ep=slv_get_extrel_list(sys))!=NULL ) {
+    for( i = 0; ep[i]!=NULL; i++ ) {
+      ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
+    }
+  }
+
 #if DOTIME
   FPRINTF(stderr,"Time to build system = %g\n", (tm_cpu_time() - time));
 #endif
@@ -117,78 +122,30 @@ void system_destroy(slv_system_t sys)
    struct ExtRelCache **ep;
    struct gl_list_t *symbollist;
 
-   if( (vp=slv_get_master_var_list(sys))!=NULL ) {
-      ascfree(vp);
-   }
-   if( (pp=slv_get_master_par_list(sys))!=NULL ) {
-      ascfree(pp);
-   }
-   if( (up=slv_get_master_unattached_list(sys))!=NULL ) {
-      ascfree(up);
-   }
-   if( (dp=slv_get_master_dvar_list(sys))!=NULL ) {
-      ascfree(dp);
-   }
-   if( (udp=slv_get_master_disunatt_list(sys))!=NULL ) {
-      ascfree(udp);
-   }
-   if( (rp=slv_get_master_rel_list(sys))!=NULL ) {
-      ascfree(rp);
-   }
-   if( (crp=slv_get_master_condrel_list(sys))!=NULL ) {
-      ascfree(crp);
-   }
-   if( (op=slv_get_master_obj_list(sys))!=NULL ) {
-      ascfree(op);
-   }
-   if( (lp=slv_get_master_logrel_list(sys))!=NULL ) {
-      ascfree(lp);
-   }
-   if( (clp=slv_get_master_condlogrel_list(sys))!=NULL ) {
-      ascfree(clp);
-   }
-   if( (wp=slv_get_master_when_list(sys))!=NULL ) {
-      ascfree(wp);
-   }
-   if( (bp=slv_get_master_bnd_list(sys))!=NULL ) {
-      ascfree(bp);
-   }
-   if( (vp=slv_get_solvers_var_list(sys))!=NULL ) {
-      ascfree(vp);
-   }
-   if( (pp=slv_get_solvers_par_list(sys))!=NULL ) {
-      ascfree(pp);
-   }
-   if( (up=slv_get_solvers_unattached_list(sys))!=NULL ) {
-      ascfree(up);
-   }
-   if( (dp=slv_get_solvers_dvar_list(sys))!=NULL ) {
-      ascfree(dp);
-   }
-   if( (udp=slv_get_solvers_disunatt_list(sys))!=NULL ) {
-      ascfree(udp);
-   }
-   if( (rp=slv_get_solvers_rel_list(sys))!=NULL ) {
-      ascfree(rp);
-   }
-   if( (crp=slv_get_solvers_condrel_list(sys))!=NULL ) {
-      ascfree(crp);
-   }
-   if( (op=slv_get_solvers_obj_list(sys))!=NULL ) {
-      ascfree(op);
-   }
-   if( (lp=slv_get_solvers_logrel_list(sys))!=NULL ) {
-      ascfree(lp);
-   }
-   if( (clp=slv_get_solvers_condlogrel_list(sys))!=NULL ) {
-      ascfree(clp);
-   }
-   if( (wp=slv_get_solvers_when_list(sys))!=NULL ) {
-      ascfree(wp);
-   }
-   if( (bp=slv_get_solvers_bnd_list(sys))!=NULL ) {
-      ascfree(bp);
-   }
+   if((vp=slv_get_master_var_list(sys))!=NULL        )ascfree(vp);
+   if((pp=slv_get_master_par_list(sys))!=NULL        )ascfree(pp);
+   if((up=slv_get_master_unattached_list(sys))!=NULL )ascfree(up);
+   if((dp=slv_get_master_dvar_list(sys))!=NULL       )ascfree(dp);
+   if((udp=slv_get_master_disunatt_list(sys))!=NULL  )ascfree(udp);
+   if((rp=slv_get_master_rel_list(sys))!=NULL        )ascfree(rp);
+   if((crp=slv_get_master_condrel_list(sys))!=NULL   )ascfree(crp);
+   if((op=slv_get_master_obj_list(sys))!=NULL        )ascfree(op);
+   if((lp=slv_get_master_logrel_list(sys))!=NULL     )ascfree(lp);
+   if((clp=slv_get_master_condlogrel_list(sys))!=NULL)ascfree(clp);
+   if((wp=slv_get_master_when_list(sys))!=NULL       )ascfree(wp);
+   if((bp=slv_get_master_bnd_list(sys))!=NULL        )ascfree(bp);
+   if((vp=slv_get_solvers_var_list(sys))!=NULL       )ascfree(vp);
+   if((pp=slv_get_solvers_par_list(sys))!=NULL       )ascfree(pp);
+   if((up=slv_get_solvers_unattached_list(sys))!=NULL)ascfree(up);
+   if((dp=slv_get_solvers_dvar_list(sys))!=NULL      )ascfree(dp);
+   if((udp=slv_get_solvers_disunatt_list(sys))!=NULL )ascfree(udp);
+   if((rp=slv_get_solvers_rel_list(sys))!=NULL       )ascfree(rp);
+   if((crp=slv_get_solvers_condrel_list(sys))!=NULL  )ascfree(crp);
+   if((op=slv_get_solvers_obj_list(sys))!=NULL       )ascfree(op);
+   if((lp=slv_get_solvers_logrel_list(sys))!=NULL    )ascfree(lp);
+   if((clp=slv_get_solvers_condlogrel_list(sys))!=NULL)ascfree(clp);
+   if((wp=slv_get_solvers_when_list(sys))!=NULL      )ascfree(wp);
+   if((bp=slv_get_solvers_bnd_list(sys))!=NULL       )ascfree(bp);
 
   symbollist=slv_get_symbol_list(sys);
   if(symbollist != NULL) {

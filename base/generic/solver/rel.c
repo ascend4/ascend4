@@ -1,34 +1,28 @@
-/*
- *  SLV: Ascend Numeric Solver
- *  by Karl Michael Westerberg
- *  Created: 2/6/90
- *  Version: $Revision: 1.32 $
- *  Version control file: $RCSfile: rel.c,v $
- *  Date last modified: $Date: 1998/01/29 00:42:28 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  Copyright (C) 1990 Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph Zaher
- *  Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990 Karl Michael Westerberg
+	Copyright (C) 1993 Joseph Zaher
+	Copyright (C) 1994 Joseph Zaher, Benjamin Andrew Allan
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	by Karl Michael Westerberg
+	Created: 2/6/90
+	Last in CVS $Revision: 1.32 $ $Date: 1998/01/29 00:42:28 $ $Author: ballan $
+*/
 
 #include <math.h>
 #include <stdarg.h>
@@ -141,7 +135,7 @@ rel_create(SlvBackendToken instance, struct rel_relation *newrel)
     newrel->type = e_rel_glassbox;
     break;
   case e_blackbox:
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"blackbox support not yet implemented");
+	/* ERROR_REPORTER_HERE(ASC_PROG_WARNING,"blackbox support not yet implemented"); */
     newrel->type = e_rel_blackbox;
     ext = BlackBoxExtCall(instance_relation);
     if (ext) {
@@ -582,23 +576,24 @@ void ExtRel_DestroyCache(struct ExtRelCache *cache)
   }
 }
 
-
-/*
- * ExtRel_PreSolve:
- *
- * To deal with the first time we also want to do arguement
- * checking, and then turn off the first_func_eval flag.
- * Turn on the newcalc_done flag. The rationale behind this is
- * as follows:
- * The solver at the moment does not treat an external relation
- * specially, i.e., as a block. It also calls for its functions
- * a relation at a time. However the external relations compute
- * all their outputs at once. So as not to do unnecessary
- * recalculations we use these flag bits. We set newcalc_done
- * initially to true, so as to force *at least* one calculation
- * of the external relations. By similar reasoning first_func_eval (done)
- * is set to false.
- */
+
+/**
+	Presolve an external relation...?
+
+	To deal with the first time we also want to do argument
+	checking, and then turn off the first_func_eval flag.
+	Turn on the newcalc_done flag. The rationale behind this is
+	as follows:
+	
+	The solver at the moment does not treat an external relation
+	specially, i.e., as a block. It also calls for its functions
+	a relation at a time. However the external relations compute
+	all their outputs at once. So as not to do unnecessary
+	recalculations we use these flag bits. We set newcalc_done
+	initially to true, so as to force *at least* one calculation
+	of the external relations. By similar reasoning first_func_eval (done)
+	is set to false.
+*/
 int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup)
 {
   struct ExternalFunc *efunc;
@@ -609,6 +604,7 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup)
 
   if (!cache) return 1;
   efunc = cache->efunc;
+  CONSOLE_DEBUG("ABOUT TO RUN INIT FUNCTION");
   init_func = GetInitFunc(efunc);
   Init_Slv_Interp(&slv_interp);
   slv_interp.nodestamp = cache->nodestamp;
