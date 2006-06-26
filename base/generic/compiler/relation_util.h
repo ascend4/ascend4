@@ -108,6 +108,8 @@ ASC_DLLSPEC(struct Instance *) RelationVariable(CONST struct relation *rel,
 	This will return the varnum'th variable.
 	This routine is smart enough to deal with all the different relation
 	types.
+
+	@param varnum variable index number, starts at one.
 */
 
 /*----------------------------------------------------------------------------

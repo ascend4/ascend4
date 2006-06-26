@@ -48,6 +48,7 @@
 
 #include "compiler.h"
 #include <utilities/ascMalloc.h>
+#include <utilities/ascEnvVar.h>
 #include <general/list.h>
 #include "symtab.h"
 #include "fractions.h"

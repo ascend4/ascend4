@@ -100,37 +100,37 @@ extern struct gl_list_t *ISAPaths(CONST struct gl_list_t *pathlist);
  */
 
 ASC_DLLSPEC(int ) WriteInstanceName(FILE *f,
-                             CONST struct Instance *i,
-                             CONST struct Instance *ref);
+		CONST struct Instance *i,
+		CONST struct Instance *ref);
 /**<
- *  Print the instance's name to the specified file.  The name that is
- *  printed is derived from the shortest path between i and ref.  If
- *  ref is NULL, the shortest path to root is used. The number of
- *  characters written is returned, to assist in pretty printing or
- *  line breaking.
- */
+	Print the instance's name to the specified file.  The name that is
+	printed is derived from the shortest path between i and ref.  If
+	ref is NULL, the shortest path to root is used. The number of
+	characters written is returned, to assist in pretty printing or
+	line breaking.
+*/
 
 extern void WriteInstanceNameDS(Asc_DString * dsPtr,
-                                CONST struct Instance *i,
-                                CONST struct Instance *ref);
+		CONST struct Instance *i,
+		CONST struct Instance *ref);
 /**<
- *  Print the instance's name to the specified dstring.  The name that is
- *  printed is derived from the shortest path between i and ref.  If
- *  ref is NULL, the shortest path to root is used.
- *  This does not put a . in at the beginning of a name, so you cannot
- *  build up proper names in a DS with it. It writes proper
- *  relative names instead, where the context is assumed to be ref.
- */
+	Print the instance's name to the specified dstring.  The name that is
+	printed is derived from the shortest path between i and ref.  If
+	ref is NULL, the shortest path to root is used.
+	This does not put a . in at the beginning of a name, so you cannot
+	build up proper names in a DS with it. It writes proper
+	relative names instead, where the context is assumed to be ref.
+*/
 
 ASC_DLLSPEC(char*) WriteInstanceNameString(CONST struct Instance *i,
-                                     CONST struct Instance *ref);
+		CONST struct Instance *ref);
 /**<
- *  Return a string (that the user must destroy eventually).  The name that is
- *  printed is derived from the shortest path between i and ref.  If
- *  ref is NULL, the shortest path to root is used.
- *  The name will not begin with a ., even if the path ref
- *  is not a simulation or NULL.
- */
+	Return a string (that the caller then owns). The name that is
+	printed is derived from the shortest path between i and ref. If
+	ref is NULL, the shortest path to root is used.
+	The name will not begin with a '.', even if the path ref
+	is not a simulation or NULL.
+*/
 
 ASC_DLLSPEC(int ) WriteAnyInstanceName(FILE *f, struct Instance *i);
 /**<

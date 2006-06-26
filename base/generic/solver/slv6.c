@@ -43,7 +43,6 @@
 #include <compiler/module.h>
 #include <compiler/compiler.h>
 #include <compiler/library.h>
-#include <compiler/instance.h>
 #include <compiler/instance_io.h>
 #include "mtx.h"
 #include "linsol.h"
