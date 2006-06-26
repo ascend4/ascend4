@@ -88,7 +88,14 @@ int samplelist_assign(SampleList *l, unsigned long n, double *values, const dim_
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
 			return 0; /* out of memory */
 		}
+# if 0
 		CopyDimensions(WildDimension(),l->d);
+// copydim is not a reference copy, which is what is needed.
+// persistent dimen references all come from the global
+// dim table or Wild or Dimensionless.
+#else
+		l->d = WildDimension();
+#endif 
 
 #if SAMPLELIST_DEBUG
 		FPRINTF(ASCERR,"copy of wild dimen looks like\n");
