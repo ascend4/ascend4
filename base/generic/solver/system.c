@@ -78,9 +78,7 @@ slv_system_t system_build(SlvBackendToken inst)
     return sys;
   }
   stat = analyze_make_problem(sys,IPTR(inst));
-  if (!stat) {
-    slv_set_instance(sys,inst);
-  } else {
+  if (stat) {
     system_destroy(sys);
     sys = NULL;
     if (stat==2) {
@@ -94,7 +92,10 @@ slv_system_t system_build(SlvBackendToken inst)
       FPRINTF(ASCERR,"Check pendings and problem structure.\n");
 	  error_reporter_end_flush();
     }
+    return sys;
   }
+
+  slv_set_instance(sys,inst);
 
   /* perform the 'presolve' on the external relations, whatever that means */
   if( (ep=slv_get_extrel_list(sys))!=NULL ) {
@@ -109,59 +110,57 @@ slv_system_t system_build(SlvBackendToken inst)
   return(sys);
 }
 
-void system_destroy(slv_system_t sys)
-{
-   int i;
-   struct var_variable **vp, **pp, **up;
-   struct dis_discrete **dp, **udp;
-   struct rel_relation **rp, **crp;
-   struct rel_relation **op;
-   struct logrel_relation **lp, **clp;
-   struct bnd_boundary **bp;
-   struct w_when **wp;
-   struct ExtRelCache **ep;
-   struct gl_list_t *symbollist;
-
-   if((vp=slv_get_master_var_list(sys))!=NULL        )ascfree(vp);
-   if((pp=slv_get_master_par_list(sys))!=NULL        )ascfree(pp);
-   if((up=slv_get_master_unattached_list(sys))!=NULL )ascfree(up);
-   if((dp=slv_get_master_dvar_list(sys))!=NULL       )ascfree(dp);
-   if((udp=slv_get_master_disunatt_list(sys))!=NULL  )ascfree(udp);
-   if((rp=slv_get_master_rel_list(sys))!=NULL        )ascfree(rp);
-   if((crp=slv_get_master_condrel_list(sys))!=NULL   )ascfree(crp);
-   if((op=slv_get_master_obj_list(sys))!=NULL        )ascfree(op);
-   if((lp=slv_get_master_logrel_list(sys))!=NULL     )ascfree(lp);
-   if((clp=slv_get_master_condlogrel_list(sys))!=NULL)ascfree(clp);
-   if((wp=slv_get_master_when_list(sys))!=NULL       )ascfree(wp);
-   if((bp=slv_get_master_bnd_list(sys))!=NULL        )ascfree(bp);
-   if((vp=slv_get_solvers_var_list(sys))!=NULL       )ascfree(vp);
-   if((pp=slv_get_solvers_par_list(sys))!=NULL       )ascfree(pp);
-   if((up=slv_get_solvers_unattached_list(sys))!=NULL)ascfree(up);
-   if((dp=slv_get_solvers_dvar_list(sys))!=NULL      )ascfree(dp);
-   if((udp=slv_get_solvers_disunatt_list(sys))!=NULL )ascfree(udp);
-   if((rp=slv_get_solvers_rel_list(sys))!=NULL       )ascfree(rp);
-   if((crp=slv_get_solvers_condrel_list(sys))!=NULL  )ascfree(crp);
-   if((op=slv_get_solvers_obj_list(sys))!=NULL       )ascfree(op);
-   if((lp=slv_get_solvers_logrel_list(sys))!=NULL    )ascfree(lp);
-   if((clp=slv_get_solvers_condlogrel_list(sys))!=NULL)ascfree(clp);
-   if((wp=slv_get_solvers_when_list(sys))!=NULL      )ascfree(wp);
-   if((bp=slv_get_solvers_bnd_list(sys))!=NULL       )ascfree(bp);
+void system_destroy(slv_system_t sys){
+  int i;
+  struct var_variable **vp, **pp, **up;
+  struct dis_discrete **dp, **udp;
+  struct rel_relation **rp, **crp;
+  struct rel_relation **op;
+  struct logrel_relation **lp, **clp;
+  struct bnd_boundary **bp;
+  struct w_when **wp;
+  struct ExtRelCache **ep;
+  struct gl_list_t *symbollist;
+  if((vp=slv_get_master_var_list(sys))!=NULL        )ascfree(vp);
+  if((pp=slv_get_master_par_list(sys))!=NULL        )ascfree(pp);
+  if((up=slv_get_master_unattached_list(sys))!=NULL )ascfree(up);
+  if((dp=slv_get_master_dvar_list(sys))!=NULL       )ascfree(dp);
+  if((udp=slv_get_master_disunatt_list(sys))!=NULL  )ascfree(udp);
+  if((rp=slv_get_master_rel_list(sys))!=NULL        )ascfree(rp);
+  if((crp=slv_get_master_condrel_list(sys))!=NULL   )ascfree(crp);
+  if((op=slv_get_master_obj_list(sys))!=NULL        )ascfree(op);
+  if((lp=slv_get_master_logrel_list(sys))!=NULL     )ascfree(lp);
+  if((clp=slv_get_master_condlogrel_list(sys))!=NULL)ascfree(clp);
+  if((wp=slv_get_master_when_list(sys))!=NULL       )ascfree(wp);
+  if((bp=slv_get_master_bnd_list(sys))!=NULL        )ascfree(bp);
+  if((vp=slv_get_solvers_var_list(sys))!=NULL       )ascfree(vp);
+  if((pp=slv_get_solvers_par_list(sys))!=NULL       )ascfree(pp);
+  if((up=slv_get_solvers_unattached_list(sys))!=NULL)ascfree(up);
+  if((dp=slv_get_solvers_dvar_list(sys))!=NULL      )ascfree(dp);
+  if((udp=slv_get_solvers_disunatt_list(sys))!=NULL )ascfree(udp);
+  if((rp=slv_get_solvers_rel_list(sys))!=NULL       )ascfree(rp);
+  if((crp=slv_get_solvers_condrel_list(sys))!=NULL  )ascfree(crp);
+  if((op=slv_get_solvers_obj_list(sys))!=NULL       )ascfree(op);
+  if((lp=slv_get_solvers_logrel_list(sys))!=NULL    )ascfree(lp);
+  if((clp=slv_get_solvers_condlogrel_list(sys))!=NULL)ascfree(clp);
+  if((wp=slv_get_solvers_when_list(sys))!=NULL      )ascfree(wp);
+  if((bp=slv_get_solvers_bnd_list(sys))!=NULL       )ascfree(bp);
 
   symbollist=slv_get_symbol_list(sys);
   if(symbollist != NULL) {
-     DestroySymbolValuesList(symbollist);
-   }
+    DestroySymbolValuesList(symbollist);
+  }
 
-   if( (ep=slv_get_extrel_list(sys))!=NULL ) {	/* extrels */
-      for( i = 0; ep[i]; i++ ) {
-	ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
-	ExtRel_DestroyCache(ep[i]);
-      }
-      ascfree(ep);
-   }
-   slv_set_solvers_blocks(sys,0,NULL);
-   slv_set_solvers_log_blocks(sys,0,NULL);	/* free blocks lists */
-   slv_destroy(sys);				/* frees buf data */
+  if( (ep=slv_get_extrel_list(sys))!=NULL ) {	/* extrels */
+    for( i = 0; ep[i]; i++ ) {
+      ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
+      ExtRel_DestroyCache(ep[i]);
+    }
+    ascfree(ep);
+  }
+  slv_set_solvers_blocks(sys,0,NULL);
+  slv_set_solvers_log_blocks(sys,0,NULL);	/* free blocks lists */
+  slv_destroy(sys);				/* frees buf data */
 }
 
 void system_free_reused_mem()
