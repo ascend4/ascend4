@@ -1,35 +1,30 @@
-/*
- *  External Call Module
- *  by Kirk Andre Abbott
- *  Created: Jun 1, 1995.
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: extcall.c,v $
- *  Date last modified: $Date: 1998/02/24 21:44:42 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
- *  Copyright (C) 1995  Kirk Andre' Abbott
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	by Kirk Andre Abbott
+	Created: Jun 1, 1995.
+	Last in CVS: $Revision: 1.9 $ $Date: 1998/02/24 21:44:42 $ $Author: ballan $
+*/
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 #include "compiler.h"
 #include <general/list.h>
 #include "fractions.h"
@@ -40,6 +35,59 @@
 #include "mathinst.h"
 #include "extcall.h"
 
+struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
+				      struct gl_list_t *args,
+				      struct Instance *subject,
+				      struct Instance *data)
+{
+  struct ExtCallNode *ext;
+  struct Instance **hndl=NULL;
+  unsigned long pos;
+  int added=0;
+
+  CONSOLE_DEBUG("...");
+
+  ext = ASC_NEW(struct ExtCallNode);
+  ext->efunc = efunc;
+  ext->arglist = args;
+  if (data) {
+    hndl = AddVarToTable(data,&added);	/** FIX FIX FIX **/
+  }
+  ext->data = hndl;
+  if (subject) {
+    pos = GetSubjectIndex(args,subject);
+    ext->subject = pos;
+  } else {
+    ext->subject = 0L;
+  }
+  ext->nodestamp = -1;
+  return ext;
+}
+
+void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst)
+{
+  struct Instance *ptr;
+  unsigned long len1, c1;
+  unsigned long len2, c2;
+  struct gl_list_t *arglist, *branch;
+
+  if (!ext) return;
+  arglist = ext->arglist;
+  if (arglist) {
+    len1 = gl_length(arglist);
+    for (c1=1;c1<=len1;c1++) {
+      branch = (struct gl_list_t *)gl_fetch(arglist,c1);
+      len2 = gl_length(branch);
+      for (c2=len2;c2>=1;c2--) {
+	if ( (ptr = (struct Instance *)gl_fetch(branch,c2)) !=NULL)
+	  RemoveRelation(ptr,relinst);
+      }
+      gl_destroy(branch);
+    }
+    gl_destroy(arglist);
+    arglist = NULL;
+  }
+}
 
 struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
 				     unsigned long varndx)
@@ -189,58 +237,6 @@ struct gl_list_t *CopySpecialList(struct gl_list_t *list)
     return result;
   }
   return NULL;
-}
-
-
-struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
-				      struct gl_list_t *args,
-				      struct Instance *subject,
-				      struct Instance *data)
-{
-  struct ExtCallNode *ext;
-  struct Instance **hndl=NULL;
-  unsigned long pos;
-  int added=0;
-  ext = (struct ExtCallNode *)ascmalloc(sizeof(struct ExtCallNode));
-  ext->efunc = efunc;
-  ext->arglist = args;
-  if (data) {
-    hndl = AddVarToTable(data,&added);	/** FIX FIX FIX **/
-  }
-  ext->data = hndl;
-  if (subject) {
-    pos = GetSubjectIndex(args,subject);
-    ext->subject = pos;
-  } else {
-    ext->subject = 0L;
-  }
-  ext->nodestamp = -1;
-  return ext;
-}
-
-void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst)
-{
-  struct Instance *ptr;
-  unsigned long len1, c1;
-  unsigned long len2, c2;
-  struct gl_list_t *arglist, *branch;
-
-  if (!ext) return;
-  arglist = ext->arglist;
-  if (arglist) {
-    len1 = gl_length(arglist);
-    for (c1=1;c1<=len1;c1++) {
-      branch = (struct gl_list_t *)gl_fetch(arglist,c1);
-      len2 = gl_length(branch);
-      for (c2=len2;c2>=1;c2--) {
-	if ( (ptr = (struct Instance *)gl_fetch(branch,c2)) !=NULL)
-	  RemoveRelation(ptr,relinst);
-      }
-      gl_destroy(branch);
-    }
-    gl_destroy(arglist);
-    arglist = NULL;
-  }
 }
 
 struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *ext)
