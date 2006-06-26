@@ -38,6 +38,7 @@
 #include "symtab.h"
 #include "instance_enum.h"
 #include "extfunc.h"
+#include "extcall.h"
 
 /*------------------------------------------------------------------------------
   forward decls and typedefs etc
@@ -100,9 +101,24 @@ int CreateUserFunctionBlackBox(CONST char *name,
   return 0;
 }
 
-double blackbox_evaluate_residual(struct BlackBoxRelation *bbox,struct gl_list_t *vars){
-	CONSOLE_DEBUG("Not yet implemented");
+double blackbox_evaluate_residual(struct relation *r){
+	struct ExtCallNode *ext;
+	struct ExternalFunc *efunc;
 	
+	asc_assert(r!=NULL);
+	asc_assert(r->share!=NULL);	
+	asc_assert(r->share->bbox.ext!=NULL);
+	ext = r->share->bbox.ext;
+	efunc = ext->efunc;
+	asc_assert(efunc!=NULL);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ABOUT TO EVALUATE %s",efunc->name);
+
+	asc_assert(efunc->etype==efunc_BlackBox);
+
+	ExtBBoxFunc *valfnptr = efunc->u.black.value;
+	asc_assert(valfnptr!=NULL);
+
+	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox not implemented, returning -1");
 	return -1;
 }
 
