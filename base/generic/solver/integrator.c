@@ -848,7 +848,7 @@ void integrator_ode_classify_var(IntegratorSystem *blsys, struct var_variable *v
           blsys->nderivs++;
         }else{
 		  ERROR_REPORTER_HERE(ASC_USER_WARNING,"Higher-order (>=2) derivatives are not supported in ODEs.");
-		}	}		
+		}	}		
 
     if(ObservationVar(var,&index) != NULL && index > 0L) {
 		INTEG_ADD_TO_LIST(info,0L,index,var,blsys->obslist);
@@ -1143,7 +1143,7 @@ void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
 	long i;
 #ifndef NDEBUG
 	char *varname;
-#endif
+#endif
 	for (i=0; i < blsys->n_y; i++) {
 		if(blsys->ydot[i]!=NULL){
     		var_set_value(blsys->ydot[i],dydx[i]);
@@ -1204,7 +1204,7 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const 
 	must be done before calling this function. 
 
 	Final Note: the callee owns the array, but not the array elements.
- */
+ */
 #define AVG_NUM_INCIDENT 4
 
 

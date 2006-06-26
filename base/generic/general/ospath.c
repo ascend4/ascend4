@@ -39,7 +39,9 @@
 /* #define VERBOSE */
 
 #if !defined(TEST) && !defined(VERBOSE)
+#ifndef NDEBUG
 # define NDEBUG
+#endif
 #endif
 
 //#define TRY_GETPWUID
@@ -498,7 +500,7 @@ void ospath_strcpy(struct FilePath *fp, char *dest, int destsize){
 	STRNCPY(dest,fp->path,destsize);
 #endif
 }
-
+
 void ospath_strcat(struct FilePath *fp, char *dest, int destsize){
 	int remaining = destsize - strlen(dest);
 	V(remaining);
