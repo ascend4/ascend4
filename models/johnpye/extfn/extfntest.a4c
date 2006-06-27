@@ -1,10 +1,10 @@
-REQUIRE "system.a4l";
+REQUIRE "atoms.a4l";
 IMPORT "johnpye/extfn/extfntest";
 
 MODEL test_extfntest;
 
-	y IS_A solver_var;
-	x IS_A solver_var;
+	y IS_A factor;
+	x IS_A factor;
 
 	do_addone: add_one(
 		x : INPUT; 
