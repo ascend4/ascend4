@@ -1,33 +1,33 @@
-/*
- *  Ascend Instantiator Implementation
- *  by Tom Epperly
- *  Created: 1/24/90
- *  Version: $Revision: 1.84 $
- *  Version control file: $RCSfile: instantiate.c,v $
- *  Date last modified: $Date: 2003/02/06 04:08:30 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *  Copyright (C) 1997 Benjamin Allan, Vicente Rico-Ramirez
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 1997 Benjamin Allan, Vicente Rico-Ramirez
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	@file
+	Ascend Instantiator Implementation
+
+	@TODO this file is enormous and should be broken into pieces! -- JP
+*//*
+	by Tom Epperly
+	Created: 1/24/90
+	Last in CVS: $Revision: 1.84 $ $Date: 2003/02/06 04:08:30 $ $Author: ballan $
+*/
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
@@ -107,7 +107,8 @@
 #include "watchpt.h"
 #include "initialize.h"
 #include "instantiate.h"
-/* don't even THINK ABOUT adding instmacro.h to this list */
+
+/* don't even THINK ABOUT adding instmacro.h to this list -- ...what the? */
 
 #define MAXNUMBER 4		/* maximum number of iterations allowed
                                  * without change */
@@ -138,46 +139,47 @@ struct Instance *g_cursim;
 
 #define NEW_ext 1
 #define OLD_ext 0
-/*************************************************************************\
-variable to check agreement in the number of boolean, integer or symbol
-variables in the WHEN/SELECT statement with the number of boolean, integer
-or symbol values in each of the CASEs
-\*************************************************************************/
+/**<
+	variable to check agreement in the number of boolean, integer or symbol
+	variables in the WHEN/SELECT statement with the number of boolean, integer
+	or symbol values in each of the CASEs
+*/
 
 #define MAX_VAR_IN_LIST  20
-
-/*
- * Variables to switch old and new pass 2 instantiation.
- * The condition for using new pass 2 (anonymous type-based
- * relation copying) is g_use_copyanon != 0
- * || FORCE applied.
- */
+/**<
+	Variables to switch old and new pass 2 instantiation.
+	The condition for using new pass 2 (anonymous type-based
+	relation copying) is g_use_copyanon != 0 || FORCE applied.
+*/
 
 int g_use_copyanon = 1;
-/* g_use_copyanon is the user switch for anonymous type based relation
- * copying. if 0, no copying by that method is done.
- */
+/**
+	the user switch for anonymous type based relation
+	copying. if 0, no copying by that method is done.
+*/
 
 #if TIMECOMPILER
-static
-int g_ExecuteREL_CreateTokenRelation_calls = 0;
-/* count the number of calls to CreateTokenRelation from ExecuteREL */
+static int g_ExecuteREL_CreateTokenRelation_calls = 0;
+/**<
+	count the number of calls to CreateTokenRelation from ExecuteREL
+*/
+
 int g_CopyAnonRelation = 0;
 #endif
 
 long int g_compiler_counter = 1;
-/*
- * What: counter incremented every time a compiler action capable of
- *       changing the instance tree is executed.
- *       At present the compiler cares nothing about this counter,
- *       but it is provided as a service to clients.
- *
- * Real applications:
- * 1) This variable is used for keeping track of calls to
- * the compiler which will create the need for a total solver system
- * rebuild.  This variable should be incremented anytime a function
- * which changes the instance tree is called.
- */
+/**<
+	What: counter incremented every time a compiler action capable of
+	     changing the instance tree is executed.
+	     At present the compiler cares nothing about this counter,
+	     but it is provided as a service to clients.
+	
+	Real applications:
+	1) This variable is used for keeping track of calls to
+	the compiler which will create the need for a total solver system
+	rebuild.  This variable should be incremented anytime a function
+	which changes the instance tree is called.
+*/
 
 /* #define DEBUG_RELS */
 /* undef DEBUG_RELS if you want less spew in pass 2 */
@@ -208,44 +210,33 @@ static char *g_trychildexpansion_errmessage = NULL;
 static CONST char InstantiatorRCSid[] = "$Id: instantiate.c,v 1.84 2003/02/06 04:08:30 ballan Exp $";
 #endif
 
+/*------------------------------------------------------------------------------
+	forward declarations
+*/
 
-/*************************   forward declarations   ************************/
-
-static
-void WriteForValueError(struct Statement *, struct value_t);
-static
-void MakeInstance(CONST struct Name *, struct TypeDescription *, int,
+static void WriteForValueError(struct Statement *, struct value_t);
+static void MakeInstance(CONST struct Name *, struct TypeDescription *, int,
                   struct Instance *, struct Statement *, struct Instance *);
-static
-int CheckVarList(struct Instance *, struct Statement *);
-static
-int CheckWhereStatements(struct Instance *,struct StatementList *);
-static
-int ExecuteISA(struct Instance *, struct Statement *);
-static
-int ExecuteCASGN(struct Instance *, struct Statement *);
-static
-int DigestArguments(struct Instance *,
+static int CheckVarList(struct Instance *, struct Statement *);
+static int CheckWhereStatements(struct Instance *,struct StatementList *);
+static int ExecuteISA(struct Instance *, struct Statement *);
+static int ExecuteCASGN(struct Instance *, struct Statement *);
+static int DigestArguments(struct Instance *,
                     struct gl_list_t *, struct StatementList *,
                     struct StatementList *, struct Statement *);
-static
-int DeriveSetType(CONST struct Set *, struct Instance *,CONST unsigned int);
+static int DeriveSetType(CONST struct Set *, struct Instance *,CONST unsigned int);
 
-static
-struct gl_list_t *FindInsts(struct Instance *, CONST struct VariableList *,
+static struct gl_list_t *FindInsts(struct Instance *, CONST struct VariableList *,
                             enum find_errors *);
 
-static
-void MissingInsts(struct Instance *, CONST struct VariableList *,int);
-static
-struct gl_list_t *FindArgInsts(struct Instance *, struct Set *,
+static void MissingInsts(struct Instance *, CONST struct VariableList *,int);
+static struct gl_list_t *FindArgInsts(struct Instance *, struct Set *,
                                enum find_errors *);
 static void AddIncompleteInst(struct Instance *);
 static int CheckALIASES(struct Instance *, struct Statement *);
 static int CheckARR(struct Instance *, struct Statement *);
 static int CheckISA(struct Instance *, struct Statement *);
-static
-int AssignStructuralValue(struct Instance *,struct value_t,struct Statement *);
+static int AssignStructuralValue(struct Instance *,struct value_t,struct Statement *);
 static int  CheckSELECT(struct Instance *, struct Statement *);
 static int  CheckWHEN(struct Instance *, struct Statement *);
 static void MakeRealWhenCaseReferencesFOR(struct Instance *,
@@ -302,7 +293,9 @@ static int ExecuteUnSelectedWHEN(struct Instance *, struct Statement *);
 static void ReEvaluateSELECT(struct Instance *, unsigned long *,
                              struct Statement *, int, int *);
 
-/***************************************************************************/
+/*-----------------------------------------------------------------------------
+	...
+*/
 
 
 static
@@ -331,13 +324,13 @@ void WriteSetError(struct Statement *statement, struct TypeDescription *def)
                              : "Set type specified for a non-set type");
 }
 
-/*
- * This code will emit error messages only on the last
- * iteration when trying to clear pending statements.
- * g_iteration is the global iteration counter, and MAXNUMBER
- * is the number of times that the instantiator will try
- * to clear the list, without change.
- */
+/**
+	This code will emit error messages only on the last
+	iteration when trying to clear pending statements.
+	g_iteration is the global iteration counter, and MAXNUMBER
+	is the number of times that the instantiator will try
+	to clear the list, without change.
+*/
 static
 void WriteUnexecutedMessage(FILE *f, struct Statement *stat, CONST char *msg)
 {
@@ -345,34 +338,34 @@ void WriteUnexecutedMessage(FILE *f, struct Statement *stat, CONST char *msg)
 }
 
 
-/*
- * Write Unexecuted Error Message in Pass 3 WUEMPASS3
- *
- * This code will emit error messages only on the last
- * iteration of pass3 when trying to clear pending statements.
- * g_iteration is the global iteration counter, and PASS3MAXNUMBER
- * is the number of times that the instantiator will try
- * to clear the list, without change.
- */
-
+/**
+	Write Unexecuted Error Message in Pass 3 WUEMPASS3
+	
+	This code will emit error messages only on the last
+	iteration of pass3 when trying to clear pending statements.
+	g_iteration is the global iteration counter, and PASS3MAXNUMBER
+	is the number of times that the instantiator will try
+	to clear the list, without change.
+*/
 static
 void WUEMPASS3(FILE *f, struct Statement *stat, CONST char *msg)
 {
   if (g_iteration>=(PASS3MAXNUMBER)) WSSM(f,stat,msg,0);
 }
 
+/*------------------------------------------------------------------------------
+  DENSE ARRAY PROCESSING
 
-/***************************************************************\
-  dense array processing, mostly.
-\***************************************************************/
+	...mostly
+*/
 
-/*
- * returns 0 if c is NULL, probably should be -1.
- * -2 if c is illegal set type
- * 1 if c IS_A integer_constant set type
- * 0 if c IS_A symbol_constant set type
- * statement is used only to issue error messages.
- */
+/**
+	returns 0 if c is NULL, probably should be -1.
+	-2 if c is illegal set type
+	1 if c IS_A integer_constant set type
+	0 if c IS_A symbol_constant set type
+	@param statement is used only to issue error messages.
+*/
 static
 int CalcSetType(symchar *c, struct Statement *statement)
 {
@@ -393,10 +386,11 @@ int CalcSetType(symchar *c, struct Statement *statement)
   }
 }
 
-/* last minute check for set values that subscript arrays.
- * probably should check constantness too but does not.
- * return 0 if ok, 1 if not.
- */
+/**
+	last minute check for set values that subscript arrays.
+	probably should check constantness too but does not.
+	return 0 if ok, 1 if not.
+*/
 static
 int CheckSetVal(struct value_t setval)
 {
@@ -437,21 +431,24 @@ int CheckSetVal(struct value_t setval)
   }
   return 0;
 }
-/* This attempts to evaluate a the next undone subscript of the
- * array and call ExpandArray with that set value.
- * In the case of ALIAS arrays this must always succeed, because
- * we have checked first that it will. If it did not we would
- * be stuck because later calls to ExpandArray will not know
- * the difference between the unexpanded alias array and the
- * unexpanded IS_A array.
- * Similarly, in the case of parameterized arrays this must
- * always succeed, OTHERWISE ExpandArray will not know the
- * arguments of the IS_A type, arginst next time around.
- *
- * In the event that the set given or set value expanded is bogus,
- * returns 1 and statement from which this call was derived is
- * semantically garbage.
- */
+
+/**
+	This attempts to evaluate a the next undone subscript of the
+	array and call ExpandArray with that set value.
+	In the case of ALIAS arrays this must always succeed, because
+	we have checked first that it will. If it did not we would
+	be stuck because later calls to ExpandArray will not know
+	the difference between the unexpanded alias array and the
+	unexpanded IS_A array.
+
+	Similarly, in the case of parameterized arrays this must
+	always succeed, OTHERWISE ExpandArray will not know the
+	arguments of the IS_A type, arginst next time around.
+
+	In the event that the set given or set value expanded is bogus,
+	returns 1 and statement from which this call was derived is
+	semantically garbage.
+*/
 static
 int ValueExpand(struct Instance *i, unsigned long int pos,
                  struct value_t value, int *changed,
@@ -489,16 +486,19 @@ int ValueExpand(struct Instance *i, unsigned long int pos,
   return 0;
 }
 
-/* When an incorrect combination of sparse and dense indices is found,
- * marks the statement wrong and whines. If the statement has already
- * been marked wrong, does not whine.
- * In FOR loops,
- * this function warns  about a problem that the implementation really
- * should allow. Alas, the fix is pending a complete rework of arrays.
- * In user is idiot case,
- * this really should have been ruled out by checkisa, which lets a little
- * too much trash through. Our whole array implementation sucks.
- */
+/**
+	When an incorrect combination of sparse and dense indices is found,
+	marks the statement wrong and whines. If the statement has already
+	been marked wrong, does not whine.
+
+	In FOR loops,
+	this function warns  about a problem that the implementation really
+	should allow. Alas, the fix is pending a complete rework of arrays.
+
+	In user is idiot case,
+	this really should have been ruled out by checkisa, which lets a little
+	too much trash through. Our whole array implementation sucks.
+*/
 static
 void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
 {
@@ -533,13 +533,13 @@ void SignalChildExpansionFailure(struct Instance *work,unsigned long cnum)
   return;
 }
 
-/*
- * Should never be called with BOTH rhs(inst/list) and arginst != NULL,
- * but one or both may be NULL depending on other circumstances.
- * Should never be called on ALIASES/IS_A inside a for loop.
- * Returns an error number other than 0 if called inside a for loop.
- * If error, outer scope should mark statement incorrect.
- */
+/**
+	Should never be called with BOTH rhs(inst/list) and arginst != NULL,
+	but one or both may be NULL depending on other circumstances.
+	Should never be called on ALIASES/IS_A inside a for loop.
+	Returns an error number other than 0 if called inside a for loop.
+	If error, outer scope should mark statement incorrect.
+*/
 static
 int TryChildExpansion(struct Instance *child,
                        struct Instance *parent,
@@ -573,9 +573,10 @@ int TryChildExpansion(struct Instance *child,
   return error;
 }
 
-/* expands, if possible, children of nonrelation,
- * nonalias, nonparameterized arrays.
- */
+/**
+	expands, if possible, children of nonrelation,
+	nonalias, nonparameterized arrays.
+*/
 static
 void TryArrayExpansion(struct Instance *work, int *changed)
 {
@@ -623,14 +624,14 @@ void DestroyIndexList(struct gl_list_t *gl)
   }
 }
 
+/**
+	returns 1 if ex believed to be integer, 0 if symbol, and -1 if
+	confused. if searchfor TRUE, includes fortable in search
+*/
 static
 int FindExprType(CONST struct Expr *ex, struct Instance *parent,
-                 CONST unsigned int searchfor)
-/*********************************************************************\
- returns 1 if ex believed to be integer, 0 if symbol, and -1 if
- confused. if searchfor TRUE, includes fortable in search
-\*********************************************************************/
-{
+                 CONST unsigned int searchfor
+){
   struct Instance *i;
   struct gl_list_t *ilist;
   enum find_errors err;
@@ -698,15 +699,15 @@ int FindExprType(CONST struct Expr *ex, struct Instance *parent,
   }
 }
 
+/**
+	returns -1 if has no clue,
+	returns 1 if set appears to be int set
+	returns 0 if apparently symbol_constant set.
+*/
 static
 int DeriveSetType(CONST struct Set *sptr, struct Instance *parent,
-                  CONST unsigned int searchfor)
-/*********************************************************************\
-returns -1 if has no clue,
-returns 1 if set appears to be int set
-returns 0 if apparently symbol_constant set.
-\*********************************************************************/
-{
+                  CONST unsigned int searchfor
+){
   register CONST struct Set *ptr;
   int result=-1;		/* -1 indicates a failure */
   ptr = sptr;
@@ -726,14 +727,14 @@ returns 0 if apparently symbol_constant set.
   return -1;			/* undefined type */
 }
 
-/*
- * Returns a gllist contain the string form (or forms) of array
- * subscripts(s)
- * e.g. Name a[1..2]['foo']
- * will return a gllist containing something like:
- * "1..2"
- * "foo"
- */
+/**
+	Returns a gllist contain the string form (or forms) of array
+	subscripts(s)
+	e.g. Name a[1..2]['foo']
+	will return a gllist containing something like:
+	"1..2"
+	"foo"
+*/
 static
 struct gl_list_t *ArrayIndices(CONST struct Name *name,
                                struct Instance *parent)
@@ -764,20 +765,21 @@ struct gl_list_t *ArrayIndices(CONST struct Name *name,
   return result;
 }
 
-/**************************************************************************\
-  Sparse and Dense Array Processing.
-\**************************************************************************/
+/*-----------------------------------------------------------------------------
+  SPARSE AND DENSE ARRAY PROCESSING
+*/
 
-/* this function has been modified to handle list results when called
- * from check aliases and dense executearr.
- * The indices made here in the aliases case where the alias is NOT
- * inside a FOR loop are NOT for consumption by anyone because they
- * contain a dummy index type. They merely indicate that
- * indices can be made. They should be immediately destroyed.
- * DestroyIndexType is the only thing that groks the Dummy.
- * This should not be called on the final subscript of an ALIASES/IS_A
- * inside a FOR loop unless you can grok a dummy in last place.
- */
+/**
+	this function has been modified to handle list results when called
+	from check aliases and dense executearr.
+	The indices made here in the aliases case where the alias is NOT
+	inside a FOR loop are NOT for consumption by anyone because they
+	contain a dummy index type. They merely indicate that
+	indices can be made. They should be immediately destroyed.
+	DestroyIndexType is the only thing that groks the Dummy.
+	This should not be called on the final subscript of an ALIASES/IS_A
+	inside a FOR loop unless you can grok a dummy in last place.
+*/
 static
 struct IndexType *MakeIndex(struct Instance *inst,
                             CONST struct Set *sptr,
@@ -877,15 +879,15 @@ struct IndexType *MakeIndex(struct Instance *inst,
   }
 }
 
-/*
- * This function is used for making the indices of individual
- * elements of sparse arrays (and for checking that it is possible)
- * and for checking that the indices of dense alias arrays (a
- * very wierd thing to have) and dense parameterized IS_A
- * are fully defined so that aliases
- * and parameterized/sparse IS_A can be fully constructed in 1 pass.
- * paves over the last subscript on sparse ALIASES-IS_A.
- */
+/**
+	This function is used for making the indices of individual
+	elements of sparse arrays (and for checking that it is possible)
+	and for checking that the indices of dense alias arrays (a
+	very wierd thing to have) and dense parameterized IS_A
+	are fully defined so that aliases
+	and parameterized/sparse IS_A can be fully constructed in 1 pass.
+	paves over the last subscript on sparse ALIASES-IS_A.
+*/
 static
 struct gl_list_t *MakeIndices(struct Instance *inst,
                               CONST struct Name *name,
@@ -917,9 +919,6 @@ struct gl_list_t *MakeIndices(struct Instance *inst,
   return result;
 }
 
-/*************************************************************************\
-  Sparse and Dense Array Processing.
-\**************************************************************************/
 static
 void LinkToParentByName(struct Instance *inst,
                         struct Instance *child,
@@ -963,16 +962,16 @@ struct Instance *GetArrayHead(struct Instance *inst, CONST struct Name *name)
   return NULL;
 }
 
-/*
- * We are inside a FOR loop.
- * If rhsinst is not null, we are in an alias statement and
- * will use rhsinst as the child added instead of
- * creating a new child.
- * If arginst is not null, we will use it to aid in
- * creating IS_A elements.
- * at least one of arginst, rhsinst must be NULL.
- * If last !=0, returns NULL naturally and ok.
- */
+/**
+	We are inside a FOR loop.
+	If rhsinst is not null, we are in an alias statement and
+	will use rhsinst as the child added instead of
+	creating a new child.
+	If arginst is not null, we will use it to aid in
+	creating IS_A elements.
+	at least one of arginst, rhsinst must be NULL.
+	If last !=0, returns NULL naturally and ok.
+*/
 static
 struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
                              struct Instance *ptr, /* array layer */
@@ -1046,16 +1045,16 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
   }
 }
 
-/*
- * We are inside a FOR loop.
- * If rhsinst is not null, we are in an alias statement and
- * will eventually use rhsinst as the child added instead of
- * creating a new child.
- * we expand each subscript individually here rahter than recursively.
- * If we are on last subscript of an ALIASES/IS_A, we copy the
- * layer in rhslist rather than expanding individually.
- * rhslist and intset only make sense simultaneously.
- */
+/**
+	We are inside a FOR loop.
+	If rhsinst is not null, we are in an alias statement and
+	will eventually use rhsinst as the child added instead of
+	creating a new child.
+	we expand each subscript individually here rahter than recursively.
+	If we are on last subscript of an ALIASES/IS_A, we copy the
+	layer in rhslist rather than expanding individually.
+	rhslist and intset only make sense simultaneously.
+*/
 static
 struct Instance *AddArrayChild(struct Instance *parentofary,
                                CONST struct Name *name,
@@ -1085,18 +1084,21 @@ struct Instance *AddArrayChild(struct Instance *parentofary,
   }
 }
 
-/*
- * Create the sparse array typedesc based on the statement kind
- * and also add first child named. intset and def used for nonrelation types
- * only.
- * This function returns the child pointer because relation functions
- * need it, not because the child is unconnected.
- * If rhsinst is not NULL, uses rhsinst instead of creating new one.
- * If rhslist is not NULL, uses rhslist instead of rhsinst or creating.
- * It is expected that all subscripts will be evaluatable and that
- * in the case of the ALIASES-IS_A statement, the IS_A part is done
- * just before the ALIASES part.
- */
+/**
+	Create the sparse array typedesc based on the statement kind
+	and also add first child named. intset and def used for nonrelation types
+	only.
+
+	This function returns the child pointer because relation functions
+	need it, not because the child is unconnected.
+	
+	If rhsinst is not NULL, uses rhsinst instead of creating new one.
+	If rhslist is not NULL, uses rhslist instead of rhsinst or creating.
+
+	It is expected that all subscripts will be evaluatable and that
+	in the case of the ALIASES-IS_A statement, the IS_A part is done
+	just before the ALIASES part.
+*/
 static
 struct Instance *MakeSparseArray(struct Instance *parent,
                                  CONST struct Name *name,
@@ -1147,12 +1149,16 @@ struct Instance *MakeSparseArray(struct Instance *parent,
   }
 }
 
-
-/* handles construction of alias statements, allegedly, per lhs.
- * parent function should find rhs and send it in as rhsinst.
- * rhsinst == null should never be used with this function.
- * currently, arrays ignored, fatally.
- */
+/*------------------------------------------------------------------------------
+	...
+*/
+
+/**
+	handles construction of alias statements, allegedly, per lhs.
+	parent function should find rhs and send it in as rhsinst.
+	rhsinst == null should never be used with this function.
+	currently, arrays ignored, fatally.
+*/
 static
 void MakeAliasInstance(CONST struct Name *name,
                        CONST struct TypeDescription *basedef,
@@ -1277,8 +1283,9 @@ void MakeAliasInstance(CONST struct Name *name,
   }
 }
 
-/* returns 1 if concluded with statement, 0 if might try later.
- */
+/**
+	@return 1 if concluded with statement, 0 if might try later.
+*/
 static
 int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
 {
@@ -1333,11 +1340,14 @@ int ExecuteALIASES(struct Instance *inst, struct Statement *statement)
 }
 
 
-/****************** support for ALIASES-IS_A statements ******************/
+/*------------------------------------------------------------------------------
+  SUPPORT FOR ALIASES-IS_A STATEMENTS
+*/
 
-/* enforce max len and no ' rules for subscripts. string returned
- * may not be string sent.
- */
+/**
+	enforce max len and no-apostrope (') rules for subscripts. string returned
+	may not be string sent.
+*/
 static
 char *DeSingleQuote(char *s)
 {
@@ -1369,10 +1379,11 @@ char *DeSingleQuote(char *s)
   return old;
 }
 
-/* returns a symchar based on but not in strset,
- * and adds original and results to sym table.
- * destroys the s given.
- */
+/**
+	returns a symchar based on but not in strset,
+	and adds original and results to sym table.
+	destroys the s given.
+*/
 static
 symchar *UniquifyString(char *s, struct set_t *strset)
 {
@@ -1449,13 +1460,13 @@ void DestroyArrayElements(struct gl_list_t *rhslist)
   gl_destroy(rhslist);
 }
 
-/*
- * this function computes the subscript set (or generates it if
- * needed) and checks it for matching against the instance list
- * and whines when things aren't kosher.
- * When things are kosher, creates a gl_list of array children.
- * This list is returned through rhslist.
- */
+/**
+	this function computes the subscript set (or generates it if
+	needed) and checks it for matching against the instance list
+	and whines when things aren't kosher.
+	When things are kosher, creates a gl_list of array children.
+	This list is returned through rhslist.
+*/
 static
 struct value_t ComputeArrayElements(struct Instance *inst,
                                     struct Statement *statement,
@@ -1583,8 +1594,9 @@ struct value_t ComputeArrayElements(struct Instance *inst,
   }
 }
 
-/* returns 1 if concluded with statement, 0 if might try later.
- */
+/**
+	@return 1 if concluded with statement, 0 if might try later.
+*/
 static
 int ExecuteARR(struct Instance *inst, struct Statement *statement)
 {
@@ -1700,16 +1712,22 @@ int ExecuteARR(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
-
-/*
- * Makes a single instance of the type given,which must not be array
- * or relation of any kind or when.
- * If type is a MODEL, adds the MODEL to pending list.
- * The argument intset is only used if type is set, then
- * if intset==1, set ATOM made will be integer set.
- * Attempts to find a UNIVERSAL before making the instance.
- * statement is used only for error messages.
- */
+/*------------------------------------------------------------------------------
+	...
+*/
+/**
+	Makes a single instance of the type given,which must not be array
+	or relation of any kind or when.
+
+	If type is a MODEL, adds the MODEL to pending list.
+
+	The argument intset is only used if type is set, then
+	if intset==1, set ATOM made will be integer set.
+
+	Attempts to find a UNIVERSAL before making the instance.
+
+	@param statement only used for error messages.
+*/
 static
 struct Instance *MakeSimpleInstance(struct TypeDescription *def,
                                     int intset,
@@ -1791,14 +1809,15 @@ void CountUnassignedConst(struct Instance *i)
     }
   }
 }
-/* Returns 0 if all constant scalars in ipass are assigned,
- * for ipass that are of set/scalar array/scalar type.
- * Handles null input gracefully, as if there is something
- * unassigned in it.
- * Variable types are considered permanently assigned, since
- * we are checking for constants being unassigned.
- * Assumes arrays, if passed in, are fully expanded.
- */
+/**
+	Returns 0 if all constant scalars in ipass are assigned,
+	for ipass that are of set/scalar array/scalar type.
+	Handles null input gracefully, as if there is something
+	unassigned in it.
+	Variable types are considered permanently assigned, since
+	we are checking for constants being unassigned.
+	Assumes arrays, if passed in, are fully expanded.
+*/
 static
 int ArgValuesUnassigned(struct Instance *ipass)
 {
@@ -1846,19 +1865,22 @@ int ArgValuesUnassigned(struct Instance *ipass)
     return 1; /* NOTREACHED */
   }
 }
-/*
- * This function appends the pointers in the set chain s
- * into the list given args. args must not be NULL unless s is.
- * If needed, args will be expanded, but if you know the length
- * to expect, make args of that size before calling and this
- * will be faster.
- * This does not go into the expressions (which may contain other
- * sets themselves) of the set nodes and disassemble them.
- * The list may be safely destroyed, but its contents should not
- * be destroyed with it as they belong to something else in all
- * likelihood.
- * This function should be moved into a set header someplace.
- */
+/**
+	Appends the pointers in the set chain s
+	into the list given args. args must not be NULL unless s is.
+
+	If needed, args will be expanded, but if you know the length
+	to expect, make args of that size before calling and this
+	will be faster.
+	
+	This does not go into the expressions (which may contain other
+	sets themselves) of the set nodes and disassemble them.
+	The list may be safely destroyed, but its contents should not
+	be destroyed with it as they belong to something else in all
+	likelihood.
+	
+	@TODO This function should be moved into a set header someplace.
+*/
 static
 void SplitArgumentSet(CONST struct Set *s, struct gl_list_t *args)
 {
@@ -1874,13 +1896,15 @@ void SplitArgumentSet(CONST struct Set *s, struct gl_list_t *args)
 
 #define GETARG(l,n) ((struct Set *)gl_fetch((l),(n)))
 
-/*
- * returns 1 if all ok,
- * returns 0 if any array child is < type required,
- * returns -1 if some array child is type incompatible with ptype/stype.
- * Does some optimization around arrays of sets and array basetypes.
- * Doesn't check names.
- */
+/**
+	Check compatibility of array elements? -- JP
+
+	@return 1 if all ok, 0 if any array child is < type required,
+		-1 if some array child is type incompatible with ptype/stype.
+
+	Does some optimization around arrays of sets and array basetypes.
+	Doesn't check names.
+*/
 static
 int ArrayElementsTypeCompatible(CONST struct Instance *ipass,
                                 CONST struct TypeDescription *ptype,
@@ -1939,11 +1963,12 @@ int ArrayElementsTypeCompatible(CONST struct Instance *ipass,
   return (lessrefined==0L); /* if any elements are inadequately refined, 0 */
 }
 
-/* returns a value_t, but the real result is learned by consulting err.
- * err == 0 means some interesting value found.
- * err == 1 means try again later
- * err == -1 means things are hopeless.
- */
+/**
+	returns a value_t, but the real result is learned by consulting err.
+	err == 0 means some interesting value found.
+	err == 1 means try again later
+	err == -1 means things are hopeless.
+*/
 static
 struct value_t FindArgValue(struct Instance *parent,
                             struct Set *argset,
@@ -2042,14 +2067,15 @@ char *g_mpi_message[] = {
 /* -25 */ "WHERE condition incorrect (nonboolean value)"
 };
 
-/* Returns MPIOK if value in ipass matches WITH_VALUE field of
- * statement, or if the test is silly beacause ipass isn't
- * a set/constant or if statement does not constrain value.
- * Returns MPIWAIT if statement truth cannot be tested because
- * WITH_VALUE clause is not yet evaluatable.
- * Returns MPIARGVAL if WITH_VALUE is provably unsatisfied.
- * On truly garbage input, unlikely to return.
- */
+/**
+	Returns MPIOK if value in ipass matches WITH_VALUE field of
+	statement, or if the test is silly beacause ipass isn't
+	a set/constant or if statement does not constrain value.
+	Returns MPIWAIT if statement truth cannot be tested because
+	WITH_VALUE clause is not yet evaluatable.
+	Returns MPIARGVAL if WITH_VALUE is provably unsatisfied.
+	On truly garbage input, unlikely to return.
+*/
 static
 int ArgValueCorrect(struct Instance *inst,
                     struct Instance *tmpinst,
@@ -2172,17 +2198,20 @@ int ArgValueCorrect(struct Instance *inst,
   return MPIOK;
 }
 
-/* evaluate a logical or real relation and see that it
- * is satisfied.
- * BUG baa. needs to be exception safe and is not.
- * returns MPIOK (satisfied)
- * returns MPIBADREL (dissatisified)
- * returns MPIVARREL (dissatisified - variable result)
- * returns MPIWAIT (not yet determinable)
- * returns MPIEXCEP (evaluation is impossible due to float/other error)
- * returns MPINOTBOOL (dissatisfied- nonboolean result)
- * statement given should be a rel or logrel.
- */
+/**
+	evaluate a logical or real relation and see that it is satisfied.
+	
+	@BUG baa. needs to be exception safe and is not.
+
+	returns MPIOK (satisfied)
+	returns MPIBADREL (dissatisified)
+	returns MPIVARREL (dissatisified - variable result)
+	returns MPIWAIT (not yet determinable)
+	returns MPIEXCEP (evaluation is impossible due to float/other error)
+	returns MPINOTBOOL (dissatisfied- nonboolean result)
+	
+	@param statement should be a rel or logrel.
+*/
 static
 int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
 {
@@ -2248,16 +2277,18 @@ int MPICheckConstraint(struct Instance *tmpinst, struct Statement *statement)
   }
 }
 
-/*
- * returns MPIOK if subscripts match declarations,
- * MPIWAIT if declarations cannot yet be interpretted,
- * or some other error if there is a mismatch.
- * So far only the square version. Should have a forvar
- * capable recursive version sometime when we allow
- * passage of sparse arrays.
- * Assumes the array given has proper number of
- * subscripts to match name and is fully expanded.
- */
+/**
+	returns MPIOK if subscripts match declarations,
+	MPIWAIT if declarations cannot yet be interpretted,
+	or some other error if there is a mismatch.
+
+	So far only the square version. Should have a forvar
+	capable recursive version sometime when we allow
+	passage of sparse arrays.
+
+	Assumes the array given has proper number of
+	subscripts to match name and is fully expanded.
+*/
 static
 int MPICheckSubscripts(struct Instance *tmpinst,
                        struct Instance *aryinst,
@@ -2277,11 +2308,12 @@ int MPICheckSubscripts(struct Instance *tmpinst,
   }
 }
 
-/* links parent and child. if checkdup != 0,
- * it will check child to see if it already has this parent.
- */
 #define NOIPICHECK 0
 #define IPICHECK 1
+/**
+	links parent and child. if checkdup != 0,
+	it will check child to see if it already has this parent.
+*/
 static
 int InsertParameterInst(struct Instance *parent,
                         struct Instance *child,
@@ -2321,20 +2353,22 @@ int InsertParameterInst(struct Instance *parent,
   }
 }
 
-/*
- * The instance this is called with should not have
- * any parents whatsoever. The instance this is called
- * with will be completely destroyed including any parts
- * of the instance that do not have other parents.
- */
+/**
+	The instance this is called with should not have
+	any parents whatsoever. The instance this is called
+	with will be completely destroyed including any parts
+	of the instance that do not have other parents.
+*/
 static
 void DestroyParameterInst(struct Instance *i)
 {
   DestroyInstance(i,NULL);
 }
-/* destroys everything you send it. If you send some arguments in
- * as null, we don't mind.
- */
+
+/** 
+	destroys everything you send it. If you send some arguments in
+	as null, we don't mind.
+*/
 static
 void ClearMPImem(
   struct gl_list_t *args,
@@ -2362,7 +2396,9 @@ void ClearMPImem(
   }
 }
 
-
+/**
+	 What is MPI? parallel computing stuff?? -- JP
+*/
 static
 void mpierror(struct Set *argset,
               unsigned long argn,
@@ -2412,12 +2448,13 @@ void MPIwum(struct Set *argset,
   WriteUnexecutedMessage(ASCERR,statement,g_mpi_message[arrloc]);
 }
 
-/* process pass by value scalar: evaluate and make it, or return
- * appropriate whine if not possible.
- * If this returns anything other than mpiok, the user may
- * wish to dispose of tmpinst, args as we do not here.
- * We do issue whines here, however.
- */
+/**
+	process pass by value scalar: evaluate and make it, or return
+	appropriate whine if not possible.
+	If this returns anything other than mpiok, the user may
+	wish to dispose of tmpinst, args as we do not here.
+	We do issue whines here, however.
+*/
 static
 int MPIMakeSimple(struct Instance *parent,
                   struct Instance *tmpinst,
@@ -2470,48 +2507,47 @@ int MPIMakeSimple(struct Instance *parent,
 }
 #define NOKEEPARGINST 0
 #define KEEPARGINST 1
-/*
- * This function is responsible for checking and assembling the
- * arguments of the parameterized type referenced in statement,
- * using information derived from the parent instance.
- * If the type found in the statement given is not a MODEL type,
- * we will immediately return 1 and *arginstptr will be set NULL.
- *
- * In general, we are trying to check and assemble enough information
- * to prove that a parameterized IS_A can be executed or proved wrong
- * once ExecuteISA sees it.
- *
- * If keepargs ==KEEPARGINST, then on a successful return,
- * *arginstptr will be to a MODEL instance (with no parents)
- * with its children derived via parameter list filled in and
- * all other children NULL.
- * If there are NO children derived via parameter list or
- * the reductions list, then *arginstptr will be NULL.
- * If keepargs != KEEPARGINST, then arginstptr will not be
- * used/set in any way, OTHERWISE it should be NULL on entry.
- * If keepargs != KEEPARGINST, then we will do only the minimal
- * necessary work to check that the arginst could be created.
- * At present, we can't tell what this last ambition amounts to -
- * we do the same amount of work regardless, though we try to put
- * the more likely to fail steps first.
- *
- * A successful return value is 1.
- *
- * A failure possibly to succeed later is 0.
- * Possible causes will be detailed via the WriteUnexecutedMessage
- * facility.
- *
- * A permanent failure is any value < 0.
- * Causes will be detailed via the WSEM facility, in addition return
- * values < 0 have the interpretations given in g_mpi_message[-value]
- * above.
- */
-/*
- * assumes statement is well formed, in terms of
- * arglist of IS_A/IS_REFINED_TO (if there is one) being of correct length.
- * returns fairly quickly for nonmodel and nonparametric
- * MODEL types.
- */
+/**
+	Check and assemble the arguments of the parameterized type referenced in
+	statement, using information derived from the parent instance.
+
+	If the type found in the statement given is not a MODEL type,
+	we will immediately return 1 and *arginstptr will be set NULL.
+
+	In general, we are trying to check and assemble enough information
+	to prove that a parameterized IS_A can be executed or proved wrong
+	once ExecuteISA sees it.
+
+	If keepargs ==KEEPARGINST, then on a successful return,
+	*arginstptr will be to a MODEL instance (with no parents)
+	with its children derived via parameter list filled in and
+	all other children NULL.
+	If there are NO children derived via parameter list or
+	the reductions list, then *arginstptr will be NULL.
+	If keepargs != KEEPARGINST, then arginstptr will not be
+	used/set in any way, OTHERWISE it should be NULL on entry.
+	If keepargs != KEEPARGINST, then we will do only the minimal
+	necessary work to check that the arginst could be created.
+	At present, we can't tell what this last ambition amounts to -
+	we do the same amount of work regardless, though we try to put
+	the more likely to fail steps first.
+
+	A successful return value is 1.
+	
+	A failure possibly to succeed later is 0.
+	Possible causes will be detailed via the WriteUnexecutedMessage
+	facility.
+
+	A permanent failure is any value < 0.
+	Causes will be detailed via the WSEM facility, in addition return
+	values < 0 have the interpretations given in g_mpi_message[-value]
+	above.
+	
+	@NOTE assumes statement is well formed, in terms of
+	arglist of IS_A/IS_REFINED_TO (if there is one) being of correct length.
+	returns fairly quickly for nonmodel and nonparametric
+	MODEL types.
+*/
 static
 int MakeParameterInst(struct Instance *parent,
                       struct Statement *statement,
@@ -2959,13 +2995,13 @@ int MPICheckWBTS(struct Instance *tmpinst, struct Statement *statement)
 #define MPICheckWB(a,b) MPIWEIRD
 /* WILL_BE not yet legal in where section. implement later if req'd */
 
-/*
- * verifies that all the instances found, if any, are different.
- * uses an nlogn (n = # of instance) algorithm, which
- * could be made order n using the interface pointer protocol,
- * but the additional overhead makes the multiplier for
- * o(n) probably not worth the trouble.
- */
+/**
+	verifies that all the instances found, if any, are different.
+	uses an nlogn (n = # of instance) algorithm, which
+	could be made order n using the interface pointer protocol,
+	but the additional overhead makes the multiplier for
+	o(n) probably not worth the trouble.
+*/
 static
 int MPICheckWNBTS(struct Instance *tmpinst, struct Statement *statement)
 {
@@ -2997,10 +3033,11 @@ int MPICheckWNBTS(struct Instance *tmpinst, struct Statement *statement)
   gl_destroy(instances);
   return MPIOK;
 }
-/*
- * Checks the for statements, along with all the horrid machinery needed
- * to make a for loop go.
- */
+
+/**
+	Checks the for statements, along with all the horrid machinery needed
+	to make a for loop go.
+*/
 static
 int CheckWhereFOR(struct Instance *inst, struct Statement *statement)
 {
@@ -3083,11 +3120,12 @@ int CheckWhereFOR(struct Instance *inst, struct Statement *statement)
   }
   return code;
 }
-/*
- * checks that all conditions are satisfied, else returns a whine.
- * does not call mpierror, so caller ought to if needed.
- * returns one of the defined MPI codes.
- */
+
+/**
+	checks that all conditions are satisfied, else returns a whine.
+	does not call mpierror, so caller ought to if needed.
+	returns one of the defined MPI codes.
+*/
 static
 int CheckWhereStatements(struct Instance *tmpinst, struct StatementList *sl)
 {
@@ -3158,12 +3196,13 @@ struct parpendingentry {
 
 #endif /* 0 migraining */
 
-/*
- * returns a single instance, if such can be properly derived
- * from the name given.
- * Returns NULL if too many or no instances are found.
- * Probably ought to have a return code, but doesn't.
- */
+/**
+	returns a single instance, if such can be properly derived
+	from the name given.
+	
+	Returns NULL if too many or no instances are found.
+	Probably ought to have a return code, but doesn't.
+*/
 static
 struct Instance *GetNamedInstance(CONST struct Name *nptr,
                                   CONST struct Instance *tmpinst)
@@ -3186,9 +3225,9 @@ struct Instance *GetNamedInstance(CONST struct Name *nptr,
 }
 
 /*
- * put the parameters open (if any) and absorbed statements into the
- * pending list we're creating.
- */
+	put the parameters open (if any) and absorbed statements into the
+	pending list we're creating.
+*/
 static
 struct parpendingentry *
 CreateParameterPendings(struct Instance *tmpinst,
@@ -3308,9 +3347,9 @@ void DestroyParameterPendings( struct parpendingentry *pp)
 }
 
 /*
- * this function should not be entered until all WB arguments have
- * been installed in tmpinst.
- */
+	this function should not be entered until all WB arguments have
+	been installed in tmpinst.
+*/
 static
 int DigestArguments(
                     struct Instance *tmpinst,
@@ -3587,14 +3626,15 @@ void ConfigureReference(struct Instance *inst,
   }
 }
 
-/* Connect WILL_BE'd children from arginst to inst.
- * Copy IS_A'd children from arginst to inst.
- * At this point there can be no alias children -- all
- * are either WILL_BE or IS_A of constants/arrays.
- * This must only be called with models when arginst !=NULL.
- * arginst == NULL --> immediate, no action return.
- * inst and arginst are assumed to be the same type.
- */
+/**
+	Connect WILL_BE'd children from arginst to inst.
+	Copy IS_A'd children from arginst to inst.
+	At this point there can be no alias children -- all
+	are either WILL_BE or IS_A of constants/arrays.
+	This must only be called with models when arginst !=NULL.
+	arginst == NULL --> immediate, no action return.
+	inst and arginst are assumed to be the same type.
+*/
 void ConfigureInstFromArgs(struct Instance *inst,
                            CONST struct Instance *arginst)
 {
@@ -3633,18 +3673,19 @@ void ConfigureInstFromArgs(struct Instance *inst,
   }
 }
 
-/*
- * For Those children not already present in inst,
- * which must be of the same type as arginst.
- * Connect WILL_BE'd children from arginst to inst.
- * Copy IS_A'd children from arginst to inst.
- * At this point there can be no alias children -- all
- * are either WILL_BE or IS_A of constants/arrays, so far as
- * arginst is concerned.
- * This must only be called with models when arginst !=NULL.
- * arginst == NULL --> immediate, no action return.
- * inst is expected to be of same type as arginst.
- */
+/**
+	For Those children not already present in inst,
+	which must be of the same type as arginst.
+	Connect WILL_BE'd children from arginst to inst.
+	Copy IS_A'd children from arginst to inst.
+	At this point there can be no alias children -- all
+	are either WILL_BE or IS_A of constants/arrays, so far as
+	arginst is concerned.
+	
+	This must only be called with models when arginst !=NULL.
+	arginst == NULL --> immediate, no action return.
+	inst is expected to be of same type as arginst.
+*/
 void ReConfigureInstFromArgs(struct Instance *inst,
                              CONST struct Instance *arginst)
 {
@@ -3700,12 +3741,14 @@ int EqualChildInsts(struct Instance *i1, struct Instance *i2,
   return 0;
 }
 
-/* Bugs:
- * do not call this with instances other than variables/constants
- * or arrays of same. relations, models, etc make it barf or lie.
- * On proper types returns 0 if the inst values are ==
- * for the c1th child of i1 and c2th child of i2. OTHERWISE nonzero.
- */
+/**
+	On proper types returns 0 if the inst values are ==
+	for the c1th child of i1 and c2th child of i2. OTHERWISE nonzero.
+
+	@BUG
+	do not call this with instances other than variables/constants
+	or arrays of same. relations, models, etc make it barf or lie.
+*/
 static
 int CompareChildInsts(struct Instance *i1, struct Instance *i2,
                       unsigned long c1, unsigned long c2)
@@ -3727,22 +3770,25 @@ int CompareChildInsts(struct Instance *i1, struct Instance *i2,
   }
 }
 
-/* Needs to see that all nonnull children in inst are compatible
- * with corresponding children in mpi if such exist.
- * arginst must be as or morerefined than inst.
- * In particular, needs to be damned picky about where's being met
- * and types matching exactly because we won't refine up stuff
- * by passing it through a parameter list.
- * WILL_BE child pointers of the arginst must = those in inst
- * when the inst has a child of that name.
- * IS_A child pointers of the arginst must have same value as
- * those in inst when the inst has a child of that name.
- * When inst has no child of that name, must eventually copy it
- * to the expanded instance.
- * This has to check that absolutely everything is correct
- * because RefineClique/RefineInstance asks no questions.
- * This itself assume arginst has been correctly constructed.
- */
+/**
+	Needs to see that all nonnull children in inst are compatible
+	with corresponding children in mpi if such exist.
+	arginst must be as or morerefined than inst.
+
+	In particular, needs to be damned picky about where's being met
+	and types matching exactly because we won't refine up stuff
+	by passing it through a parameter list.
+	WILL_BE child pointers of the arginst must = those in inst
+	when the inst has a child of that name.
+	IS_A child pointers of the arginst must have same value as
+	those in inst when the inst has a child of that name.
+	When inst has no child of that name, must eventually copy it
+	to the expanded instance.
+
+	This has to check that absolutely everything is correct
+	because RefineClique/RefineInstance asks no questions.
+	This itself assume arginst has been correctly constructed.
+*/
 static
 int CheckParamRefinement(struct Instance *parent,
                          struct Instance *inst,
@@ -3846,12 +3892,16 @@ int CheckParamRefinement(struct Instance *parent,
   return MPIOK;
 }
 
-
-/* handles construction of IS_A statements.
- * MakeInstance and its subsidiaries must not cannibalize
- * parts from arginst, because it may be used again on
- * subsequent calls when the IS_A has several lhs.
- */
+/*------------------------------------------------------------------------------
+	...
+*/
+
+/**
+	handles construction of IS_A statements.
+	MakeInstance and its subsidiaries must not cannibalize
+	parts from arginst, because it may be used again on
+	subsequent calls when the IS_A has several lhs.
+*/
 static
 void MakeInstance(CONST struct Name *name,
                   struct TypeDescription *def,
@@ -4026,9 +4076,10 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
   }
 }
 
-/* handles construction of Dummy Instance
- * A dummy instance is universal.
- */
+/**
+	handles construction of Dummy Instance
+	A dummy instance is universal.
+*/
 static
 void MakeDummyInstance(CONST struct Name *name,
                        struct TypeDescription *def,
@@ -4069,12 +4120,13 @@ void MakeDummyInstance(CONST struct Name *name,
 }
 
 
-/* Used for IS_A statement inside a non-matching CASE of a
- * SELECT statement.
- * Make a dummy instance for each name in vlisti,
- * but arrays are not expanded over subscripts.
- * The dummy instance is UNIVERSAL.
- */
+/**
+	Used for IS_A statement inside a non-matching CASE of a
+	SELECT statement.
+
+	Make a dummy instance for each name in vlisti, but arrays are not expanded 
+	over subscripts. The dummy instance is UNIVERSAL.
+*/
 static
 int ExecuteUnSelectedISA( struct Instance *inst, struct Statement *statement)
 {
@@ -4102,11 +4154,11 @@ int ExecuteUnSelectedISA( struct Instance *inst, struct Statement *statement)
 }
 
 
-/*
- * For ALIASES inside a non matching CASEs of a SELECT statement, we
- * do not even have to care about the rhs. Similar to ISAs, we only
- * take the list of variables and create the dummy instance
- */
+/**
+	For ALIASES inside a non matching CASEs of a SELECT statement, we
+	do not even have to care about the rhs. Similar to ISAs, we only
+	take the list of variables and create the dummy instance
+*/
 static
 int ExecuteUnSelectedALIASES(struct Instance *inst,
                              struct Statement *statement)
@@ -4122,14 +4174,11 @@ int ExecuteUnSelectedALIASES(struct Instance *inst,
   return 1;
 }
 
+/*------------------------------------------------------------------------------
+	REFERENCE STATEMENT PROCESSING
 
-/*
- **************************************************************************
- * Reference Statement Processing
- *
- * Highly incomplete		KAA_DEBUG
- **************************************************************************
- */
+	"Highly incomplete		KAA_DEBUG"
+*/
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
@@ -4153,16 +4202,17 @@ int ExecuteREF(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
-/*
- * Finds all the instances required to evaluate set element given.
- * If problem, returns NULL and err should be consulted.
- * Note this may have some angst around FOR vars, as it
- * should since forvars are not instances.
- * Lint is precluding passing a forvar where an instance is required.
- * err should only be consulted if result comes back NULL.
- * Note also that we will ignore any sets chained on to the end
- * of s.
- */
+/**
+	Finds all the instances required to evaluate set element given.
+	If problem, returns NULL and err should be consulted.
+	Note this may have some angst around FOR vars, as it
+	should since forvars are not instances.
+	
+	Lint is precluding passing a forvar where an instance is required.
+	err should only be consulted if result comes back NULL.
+
+	@NOTE that we will ignore any sets chained on to the end of s.
+*/
 static
 struct gl_list_t *FindArgInsts(struct Instance *parent,
                                struct Set *s,
@@ -4189,11 +4239,10 @@ struct gl_list_t *FindArgInsts(struct Instance *parent,
   return result;
 }
 
-/**************************************************************************\
-   FindInsts: makes sure at least one thing is found for
-   each name item on list (else returned list will be NULL)
-   and returns the collected instances.
-\**************************************************************************/
+/**
+	Find instances: Make sure at least one thing is found for each name item 
+	on list (else returned list will be NULL) and return the collected instances.
+*/
 static
 struct gl_list_t *FindInsts(struct Instance *inst,
                             CONST struct VariableList *list,
@@ -4218,12 +4267,12 @@ struct gl_list_t *FindInsts(struct Instance *inst,
   return result;
 }
 
-/**************************************************************************\
-   MissingInsts: makes sure at least one thing is found for
+/**
+   Missing instances: makes sure at least one thing is found for
    each name item on list (else prints the name with a little message)
    if noisy != 0 || on last iteration, does the printing, OTHERWISE
    returns immediately.
-\**************************************************************************/
+*/
 static
 void MissingInsts(struct Instance *inst,
                   CONST struct VariableList *list,
@@ -4249,11 +4298,11 @@ void MissingInsts(struct Instance *inst,
   }
 }
 
-/**************************************************************************\
-   VerifyInsts: makes sure at least one thing is found for
+/**
+   Verify instances: Makes sure at least one thing is found for
    each name item on list. Returns 1 if so, or 0 if not.
    Does not return the collected instances.
-\**************************************************************************/
+*/
 static
 int VerifyInsts(struct Instance *inst,
                 CONST struct VariableList *list,
@@ -4297,12 +4346,11 @@ int InPrecedingClique(struct gl_list_t *list, unsigned long int pos,
   return 0;
 }
 
+/**
+	This procedure takes time proportion to n^2.
+*/
 static
-void RemoveExtras(struct gl_list_t *list)
-/*********************************************************************\
-This procedure takes time proportional to n^2.
-\*********************************************************************/
-{
+void RemoveExtras(struct gl_list_t *list){
   unsigned long c=1;
   struct Instance *inst;
   while(c<=gl_length(list)){
@@ -4483,11 +4531,11 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
   }
 }
 
+/**
+	This assumes that NULL is not in the list.
+*/
 static
 void RemoveDuplicates(struct gl_list_t *list)
-/*********************************************************************\
-This assumes that Null is not in the list.
-\*********************************************************************/
 {
   VOIDPTR ptr=NULL;
   unsigned c=1;
@@ -4502,12 +4550,12 @@ This assumes that Null is not in the list.
   }
 }
 
+/**
+	Return NULL if the list is not conformable or empty.  Otherwise,
+	return the type description of the most refined instance.
+*/
 static
 struct TypeDescription *MostRefined(struct gl_list_t *list)
-/*********************************************************************\
-Return NULL if the list is not conformable or empty.  Otherwise,
-return the type description of the most refined instance.
-\*********************************************************************/
 {
   struct TypeDescription *mostrefined;
   struct Instance *inst;
@@ -4579,8 +4627,9 @@ int ExecuteATS(struct Instance *inst, struct Statement *statement)
   }
 }
 
-/* disallows parameterized objects from being added to cliques.
- */
+/**
+	disallows parameterized objects from being added to cliques.
+*/
 static
 int ExecuteAA(struct Instance *inst, struct Statement *statement)
 {
@@ -4643,10 +4692,10 @@ int ExecuteAA(struct Instance *inst, struct Statement *statement)
   }
 }
 
+/*------------------------------------------------------------------------------
+	RELATION PROCESSING
+*/
 
-/**************************************************************************\
-  Relation Processing.
-\**************************************************************************/
 static
 struct Instance *MakeRelationInstance(struct Name *name,
                                       struct TypeDescription *def,
@@ -4694,11 +4743,11 @@ struct Instance *MakeRelationInstance(struct Name *name,
 }
 
 
-/*
- * ok, now we can whine real loud about what's missing.
- * even in relations referencing relations, because they
- * should have been added to pendings in dependency order. (hah!)
- */
+/**
+	ok, now we can whine real loud about what's missing.
+	even in relations referencing relations, because they
+	should have been added to pendings in dependency order. (hah!)
+*/
 static
 int ExecuteREL(struct Instance *inst, struct Statement *statement)
 {
@@ -4838,12 +4887,12 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
 #endif
 }
 
-/*
- * set a relation instance as Conditional. This is done by activating
- * a bit ( relinst_set_conditional(rel,TRUE) ) and by using a flag
- * SetRelationIsCond(reln). Only one of these two would be strictly
- * required
- */
+/**
+	set a relation instance as Conditional. This is done by activating
+	a bit ( relinst_set_conditional(rel,TRUE) ) and by using a flag
+	SetRelationIsCond(reln). Only one of these two would be strictly
+	required
+*/
 static
 void MarkREL(struct Instance *inst, struct Statement *statement)
 {
@@ -4878,12 +4927,12 @@ void MarkREL(struct Instance *inst, struct Statement *statement)
   }
 }
 
-/*
- * set a logical relation instance as Conditional. This is done by activating
- * a bit ( logrelinst_set_conditional(lrel,TRUE) ) and by using a flag
- * SetLogRelIsCond(reln). Only one of these two would be strictly
- * required
- */
+/**
+	set a logical relation instance as Conditional. This is done by activating
+	a bit ( logrelinst_set_conditional(lrel,TRUE) ) and by using a flag
+	SetLogRelIsCond(reln). Only one of these two would be strictly
+	required
+*/
 static
 void MarkLOGREL(struct Instance *inst, struct Statement *statement)
 {
@@ -4918,11 +4967,11 @@ void MarkLOGREL(struct Instance *inst, struct Statement *statement)
 }
 
 
-/*
- * For its use in ExecuteUnSelectedStatements.
- * Execute the REL or LOGREL statements inside those cases of a SELECT
- * which do not match the selection variables
- */
+/**
+	For its use in ExecuteUnSelectedStatements.
+	Execute the REL or LOGREL statements inside those cases of a SELECT
+	which do not match the selection variables
+*/
 static
 int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
 {
@@ -4960,12 +5009,13 @@ int ExecuteUnSelectedEQN(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
+/*------------------------------------------------------------------------------
+  LOGICAL RELATIONS PROCESSING
 
-/******************************************************************\
-  LOGICAL RELATIONS Processing
   Making instances of logical relations or arrays of instances of
   logical relations.
-\******************************************************************/
+*/
+
 static
 struct Instance *MakeLogRelInstance(struct Name *name,
                                     struct TypeDescription *def,
@@ -5122,21 +5172,15 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
   }
 }
 
+/*==============================================================================
+  EXTERNAL CALL PROCESSING
+*/
 
+/*------------------------------------------------------------------------------
+  BLACK BOX RELATIONS PROCESSING
+*/
 
-/**************************************************************************\
-  External Procedures Processing.
-\**************************************************************************/
-
-/*
- **************************************************************************
- * BlackBox Relations processing.
- *
- **************************************************************************
- */
-static
-struct gl_list_t *MakeExtIndices(unsigned long nindices)
-{
+static struct gl_list_t *MakeExtIndices(unsigned long nindices){
   struct gl_list_t *result;
   struct Set *s;
   struct IndexType *index;
@@ -5155,19 +5199,18 @@ struct gl_list_t *MakeExtIndices(unsigned long nindices)
   }
 }
 
-/*
- * This function accepts an array instance for a relation array
- * and will construct the appropriate number of children for this
- * array and append them to the instance.
- */
-static
-int AddExtArrayChildren(struct Instance *inst, /* this is the aryinst */
-                        struct Statement *stat,
-                        struct gl_list_t *arglist,
-                        struct Instance *data,
-                        unsigned long n_input_args,
-                        unsigned long n_output_args)
-{
+/**
+	This function accepts an array instance for a relation array
+	and will construct the appropriate number of children for this
+	array and append them to the instance.
+*/
+static int AddExtArrayChildren(struct Instance *inst, /* this is the aryinst */
+		struct Statement *stat,
+		struct gl_list_t *arglist,
+		struct Instance *data,
+		unsigned long n_input_args,
+		unsigned long n_output_args
+){
   struct Instance *subject;
   struct Instance *relinst;
   struct relation *reln;
@@ -5206,16 +5249,14 @@ int AddExtArrayChildren(struct Instance *inst, /* this is the aryinst */
   }
 }
 
-/*
- * This function creates the array instance for which the
- * children of the array of relations will be apppended.
- */
-static
-struct Instance *MakeExtRelationArray(struct Instance * inst,
-                                      struct Name *name,
-                                      struct Statement *stat)
-{
-
+/**
+	This function creates the array instance for which the
+	children of the array of relations will be apppended.
+*/
+static struct Instance *MakeExtRelationArray(struct Instance * inst,
+		struct Name *name,
+		struct Statement *stat
+){
   symchar *relation_name;
   struct TypeDescription *desc;
   struct InstanceName rec;
@@ -5266,18 +5307,16 @@ int CheckExtCallArgTypes(struct gl_list_t *arglist)
   return 0;
 }
 
-/*
- * This function if fully successful will return a list of
- * lists. This will be wasteful if many singlets are used
- * as args, other wise it should be more useful than other
- * representations.
- */
-
-static
-struct gl_list_t *ProcessArgs(struct Instance *inst,
-                              CONST struct VariableList *vl,
-                              enum find_errors *ferr)
-{
+/**
+	This function if fully successful will return a list of
+	lists. This will be wasteful if many singlets are used
+	as args, other wise it should be more useful than other
+	representations.
+*/
+static struct gl_list_t *ProcessArgs(struct Instance *inst,
+		CONST struct VariableList *vl,
+		enum find_errors *ferr
+){
   struct gl_list_t *arglist;
   struct gl_list_t *branch;
 
@@ -5297,11 +5336,13 @@ struct gl_list_t *ProcessArgs(struct Instance *inst,
   return arglist;
 }
 
-static /* blackbox only */
-struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
-                                   struct Statement *stat,
-                                   enum find_errors *ferr)
-{
+/**
+	blackbox only
+*/
+static struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
+		struct Statement *stat,
+		enum find_errors *ferr
+){
   struct VariableList *vl;
   struct gl_list_t *result;
 
@@ -5313,11 +5354,11 @@ struct gl_list_t *CheckExtCallArgs(struct Instance *inst,
   return result;
 }
 
-static /* blackbox only */
-struct Instance *CheckExtCallData(struct Instance *inst,
-                                  struct Statement *stat,
-                                  enum find_errors *ferr)
-{
+/** black box only */
+static struct Instance *CheckExtCallData(struct Instance *inst,
+		struct Statement *stat,
+		enum find_errors *ferr
+){
   struct Name *n;
   struct Instance *result;
   struct gl_list_t *instances;
@@ -5358,9 +5399,9 @@ struct Instance *CheckExtCallData(struct Instance *inst,
 	This function does the job of creating an instance of a 'black box'	
 	external relation or set of relations.
 */
-static
-int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
-{
+static int ExecuteBlackBoxEXT(struct Instance *inst
+		, struct Statement *statement
+){
   struct Name *name;
   enum find_errors ferr;
   struct gl_list_t *arglist=NULL;
@@ -5459,15 +5500,12 @@ int ExecuteBlackBoxEXT(struct Instance *inst, struct Statement *statement)
   }
 }
 
-
-/*
- **************************************************************************
- * GlassBox Relations processing.
- *
- * GlassBox relations processing. As is to be expected this code
- * is a hybrid between TRUE ascend relations and blackbox relations.
- **************************************************************************
- */
+/*------------------------------------------------------------------------------
+  GLASS BOX RELATIONS PROCESSING
+
+	GlassBox relations processing. As is to be expected, this code
+	is a hybrid between TRUE ascend relations and blackbox relations.
+*/
 
 static
 struct gl_list_t *CheckGlassBoxArgs(struct Instance *inst,
@@ -5687,9 +5725,9 @@ int ExecuteEXT(struct Instance *inst, struct Statement *statement)
   }
 }
 
-/**************************************************************************\
-  Assignment Processing.
-\**************************************************************************/
+/*------------------------------------------------------------------------------
+  ASSIGNMENT PROCESSING
+*/
 static
 void StructuralAsgnErrorReport(struct Statement *statement,
                                struct value_t *value)
@@ -5761,10 +5799,10 @@ void ReAssignmentError(CONST char *str, struct Statement *statement)
   ascfree(msg);
 }
 
-/*
- * returns 1 if ok, 0 if unhappy.
- * for any given statement, once unhappy = always unhappy.
- */
+/**
+	returns 1 if ok, 0 if unhappy.
+	for any given statement, once unhappy = always unhappy.
+*/
 static
 int AssignStructuralValue(struct Instance *inst,
                  struct value_t value,
@@ -5943,14 +5981,14 @@ int AssignStructuralValue(struct Instance *inst,
   }
 }
 
-/*
- * Execute structural and dimensional assignments.
- * This is called by execute statements and exec for statements.
- * Assignments to variable types are ignored.
- * Variable defaults expressions are done in executedefaults.
- * rhs expressions must yield constant value_t.
- * Incorrect statements will be marked context_WRONG where possible.
- */
+/**
+	Execute structural and dimensional assignments.
+	This is called by execute statements and exec for statements.
+	Assignments to variable types are ignored.
+	Variable defaults expressions are done in executedefaults.
+	rhs expressions must yield constant value_t.
+	Incorrect statements will be marked context_WRONG where possible.
+*/
 static
 int ExecuteCASGN(struct Instance *work, struct Statement *statement)
 {
@@ -6022,13 +6060,14 @@ int ExecuteCASGN(struct Instance *work, struct Statement *statement)
   }
 }
 
-/**************************************************************************\
-  Check routines.
-\**************************************************************************/
-/*
- * Returns 1 if name can be found in name, or 0 OTHERWISE.
- * only deals well with n and sub being Id names.
- */
+/*------------------------------------------------------------------------------
+  CHECK ROUTINES
+*/
+
+/**
+	Returns 1 if name can be found in name, or 0 OTHERWISE.
+	only deals well with n and sub being Id names.
+*/
 static
 int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
 {
@@ -6055,32 +6094,34 @@ int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
   ascfree(en);
   return 0;
 }
-/*
- * Checks that the namelist, less any components that contain arrsetname,
- * can be evaluated to constant values.
- * Returns 1 if it can be evaluated.
- *
- * This is heuristic. It can fail in very very twisty circumstances.
- * What saves the heuristic is that usually all the other conditions
- * on the compound ALIASES (that rhs's must exist and so forth) will
- * be satisfied before this check is performed and that that will mean
- * enough structure to do the job at Execute time will be in place even
- * if this returns a FALSE positive.
- * Basically to trick this thing you have to do indirect addressing with
- * the set elements of the IS_A set in declaring the lhs of the ALIASES
- * part. Of course if you really do that sort of thing, you should be
- * coding in C++ or F90 anyway.
- *
- * What it comes down to is that this array constructor from diverse
- * elements really sucks -- but so does varargs and that's what we're
- * using the compound alias array constructor to implement.
- *
- * There is an extremely expensive alternative that is not heuristic --
- * create the IS_A set (which might be a sparse array) during the
- * check process and blow it away when the check fails. This is an
- * utter nuisance and a cost absurdity.
- * --baa 1/97.
- */
+
+/**
+	Checks that the namelist, less any components that contain arrsetname,
+	can be evaluated to constant values.
+	Returns 1 if it can be evaluated.
+
+	This is heuristic. It can fail in very very twisty circumstances.
+	What saves the heuristic is that usually all the other conditions
+	on the compound ALIASES (that rhs's must exist and so forth) will
+	be satisfied before this check is performed and that that will mean
+	enough structure to do the job at Execute time will be in place even
+	if this returns a FALSE positive.
+
+	Basically to trick this thing you have to do indirect addressing with
+	the set elements of the IS_A set in declaring the lhs of the ALIASES
+	part. Of course if you really do that sort of thing, you should be
+	coding in C++ or F90 anyway.
+
+	What it comes down to is that this array constructor from diverse
+	elements really sucks -- but so does varargs and that's what we're
+	using the compound alias array constructor to implement.
+
+	There is an extremely expensive alternative that is not heuristic --
+	create the IS_A set (which might be a sparse array) during the
+	check process and blow it away when the check fails. This is an
+	utter nuisance and a cost absurdity.
+	--baa 1/97.
+*/
 static
 int ArrayCheckNameList(struct Instance *inst,
                        struct Statement *statement,
@@ -6141,11 +6182,11 @@ int ArrayCheckNameList(struct Instance *inst,
   return 1;
 }
 /*
- * check the subscripts for definedness, including FOR table checks and
- * checks for the special name in the compound ALIASES-IS_A statement.
- * Assumes it is going to be handed a name consisting entirely of
- * subscripts.
- */
+	check the subscripts for definedness, including FOR table checks and
+	checks for the special name in the compound ALIASES-IS_A statement.
+	Assumes it is going to be handed a name consisting entirely of
+	subscripts.
+*/
 static
 int FailsCompoundArrayCheck(struct Instance *inst,
                             CONST struct Name *name,
@@ -6177,28 +6218,28 @@ int FailsCompoundArrayCheck(struct Instance *inst,
   return 0;
 }
 
+/**
+	The name pointer is known to be an array, so now it is checked to make
+	sure that each index type can be determined.
+	It is not a . qualified name.
+
+	With searchfor == 0:
+	This routine deliberately lets some errors through because the will
+	be trapped elsewhere.  Its *only* job is to detect undefined index
+	types. (defined indices simply missing values will merely be done
+	in a later array expansion.
+	Returns 1 if set type indeterminate.
+
+	With searchfor != 0:
+	Tries to expand the indices completely and returns 1 if fails.
+	arrset name is a special name that may be used in indices when
+	creating compound ALIASES-IS_A -- it is the name the IS_A will create.
+	It is only considered if searchfor != 0.
+*/
 static
 int FailsIndexCheck(CONST struct Name *name, struct Statement *statement,
                     struct Instance *inst, CONST unsigned int searchfor,
                     CONST struct Name *arrsetname)
-/*********************************************************************\
-The name pointer is known to be an array, so now it is checked to make
-sure that each index type can be determined.
-It is not a . qualified name.
-
-With searchfor == 0:
-This routine deliberately lets some errors through because the will
-be trapped elsewhere.  Its *only* job is to detect undefined index
-types. (defined indices simply missing values will merely be done
-in a later array expansion.
-Returns 1 if set type indeterminate.
-
-With searchfor != 0:
-Tries to expand the indices completely and returns 1 if fails.
-arrset name is a special name that may be used in indices when
-creating compound ALIASES-IS_A -- it is the name the IS_A will create.
-It is only considered if searchfor != 0.
-\*********************************************************************/
 {
   CONST struct Set *sptr;
   struct gl_list_t *indices;
@@ -6245,19 +6286,19 @@ It is only considered if searchfor != 0.
   return 0;
 }
 
+/**
+	This has to check this member of the variable list for unknown
+	array indices.  It returns TRUE iff it contains an unknown index;
+	otherwise, it returns FALSE.
+	If searchfor !=0, include for indices in list of valid things,
+	and insist that values actually have been assigned as well.
+*/
 static
 int ContainsUnknownArrayIndex(struct Instance *inst,
                               struct Statement *stat,
                               CONST struct Name *name,
                               CONST unsigned int searchfor,
                               CONST struct Name *arrsetname)
-/*********************************************************************\
-This has to check this member of the variable list for unknown
-array indices.  It returns TRUE iff it contains an unknown index;
-otherwise, it returns FALSE.
-If searchfor !=0, include for indices in list of valid things,
-and insist that values actually have been assigned as well.
-\*********************************************************************/
 {
   if (!SimpleNameIdPtr(name)){ /* simple names never miss indices */
     if (FailsIndexCheck(name,stat,inst,searchfor,arrsetname)) return 1;
@@ -6265,18 +6306,18 @@ and insist that values actually have been assigned as well.
   return 0;
 }
 
+/**
+	If there are no array instances, this should always return TRUE.  When
+	there are array instances to be created, it has to check to make sure
+	that all of the index types can be determined and their values are
+	defined!
+
+	aliases always appears to be in for loop because we must always have
+	a definition of all the sets because an alias array can't be finished
+	up later.
+*/
 static
 int CheckALIASES(struct Instance *inst, struct Statement *stat)
-/*********************************************************************\
-If there are no array instances, this should always return TRUE.  When
-there are array instances to be created, it has to check to make sure
-that all of the index types can be determined and their values are
-defined!
-
-aliases always appears to be in for loop because we must always have
-a definition of all the sets because an alias array can't be finished
-up later.
-\*********************************************************************/
 {
   CONST struct VariableList *vlist;
   int cu;
@@ -6311,19 +6352,19 @@ up later.
   return 1;
 }
 
+/**
+	This has to make sure the RHS list of the ALIASES and the WITH_VALUE
+	of the IS_A are both satisfied.
+
+	When the statement is in a FOR loop, this has to check to make sure
+	that all of the LHS index types can be determined and their values are
+	defined!
+	ALIASES always appears to be in for loop because we must always have
+	a definition of all the sets because an alias array can't be finished
+	up later.
+*/
 static
 int CheckARR(struct Instance *inst, struct Statement *stat)
-/*********************************************************************\
-This has to make sure the RHS list of the ALIASES and the WITH_VALUE
-of the IS_A are both satisfied.
-
-When the statement is in a FOR loop, this has to check to make sure
-that all of the LHS index types can be determined and their values are
-defined!
-ALIASES always appears to be in for loop because we must always have
-a definition of all the sets because an alias array can't be finished
-up later.
-\*********************************************************************/
 {
   CONST struct VariableList *vlist;
   struct value_t value;
@@ -6388,20 +6429,20 @@ up later.
   return 1;
 }
 
+/**
+	If there are no array instances, this should always return TRUE.  When
+	there are array instances to be created, it has to check to make sure
+	that all of the index types can be determined.
+	If statement requires type args, also checks that all array indices
+	can be evaluated.
+
+	Currently, this can handle checking for completable sets in any
+	statement's var list, not just ISAs.
+
+	It does not at present check arguments of IS_A's.
+*/
 static
 int CheckISA(struct Instance *inst, struct Statement *stat)
-/*********************************************************************\
-If there are no array instances, this should always return TRUE.  When
-there are array instances to be created, it has to check to make sure
-that all of the index types can be determined.
-If statement requires type args, also checks that all array indices
-can be evaluated.
-
-Currently, this can handle checking for completable sets in any
-statement's var list, not just ISAs.
-
-It does not at present check arguments of IS_A's.
-\*********************************************************************/
 {
   CONST struct VariableList *vlist;
   int cu;
@@ -6422,11 +6463,10 @@ It does not at present check arguments of IS_A's.
   return 1;
 }
 
-/***********************************************************************/
-/*
- * checks that all the names in a varlist exist as instances.
- * returns 1 if TRUE, 0 if not.
- */
+/**
+	checks that all the names in a varlist exist as instances.
+	returns 1 if TRUE, 0 if not.
+*/
 static
 int CheckVarList(struct Instance *inst, struct Statement *statement)
 {
@@ -6462,13 +6502,12 @@ int CheckAA(struct Instance *inst, struct Statement *statement)
   return CheckVarList(inst,statement);
 }
 
-/***********************************************************************/
-/*
- * Checks that the lhs of an assignment statement expands into
- * a complete set of instances.
- * Not check that the first of those instances is type compatible with
- * the value being assigned.
- */
+/**
+	Checks that the lhs of an assignment statement expands into
+	a complete set of instances.
+	Not check that the first of those instances is type compatible with
+	the value being assigned.
+*/
 static
 int CheckCASGN(struct Instance *inst, struct Statement *statement)
 {
@@ -6504,7 +6543,6 @@ int CheckCASGN(struct Instance *inst, struct Statement *statement)
   }
 }
 
-/***********************************************************************/
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
 int CheckASGN(struct Instance *inst, struct Statement *statement)
@@ -6544,12 +6582,11 @@ int CheckASGN(struct Instance *inst, struct Statement *statement)
 #endif   /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
-/***********************************************************************/
-/*
- * Check if the relation exists, also, if it exists as relation or as a
- * dummy instance. return -1 for DUMMY. 1 for relation. 0 if the checking
- * fails.
- */
+/**
+	Check if the relation exists, also, if it exists as relation or as a
+	dummy instance. return -1 for DUMMY. 1 for relation. 0 if the checking
+	fails.
+*/
 static
 int CheckRelName(struct Instance *work, struct Name *name)
 {
@@ -6578,11 +6615,11 @@ int CheckRelName(struct Instance *work, struct Name *name)
   }
 }
 
-/*
- * If the relation is already there, it may be a dummy instance. In
- * such a case, do not check the expression. Currently not in
- * use.
- */
+/**
+	If the relation is already there, it may be a dummy instance. In
+	such a case, do not check the expression. Currently not in
+	use.
+*/
 static
 int CheckREL(struct Instance *inst, struct Statement *statement)
 {
@@ -6596,13 +6633,12 @@ int CheckREL(struct Instance *inst, struct Statement *statement)
   return CheckRelation(inst,RelationStatExpr(statement));
 }
 
-/***********************************************************************/
-
-/* Check that the logical relation instance of some name has not been
- * previously created, or if it has, the instance is unique and
- * corresponds to a logical relation or to a dummy.
- * return -1 for DUMMY. 1 for log relation. 0 if the checking fails.
- */
+/**
+	Check that the logical relation instance of some name has not been
+	previously created, or if it has, the instance is unique and
+	corresponds to a logical relation or to a dummy.
+	return -1 for DUMMY. 1 for log relation. 0 if the checking fails.
+*/
 static
 int CheckLogRelName(struct Instance *work, struct Name *name)
 {
@@ -6631,10 +6667,11 @@ int CheckLogRelName(struct Instance *work, struct Name *name)
   }
 }
 
-/* Checking of Logical relation. First the name, then the expression.
- * If the logrel exists as a dummy, then do not check the expression.
- * Currently not in use.
- */
+/**
+	Checking of Logical relation. First the name, then the expression.
+	If the logrel exists as a dummy, then do not check the expression.
+	Currently not in use.
+*/
 static
 int CheckLOGREL(struct Instance *inst, struct Statement *statement)
 {
@@ -6646,13 +6683,13 @@ int CheckLOGREL(struct Instance *inst, struct Statement *statement)
 }
 
 
-/***********************************************************************/
-                    /* Checking FNAME statement */
+/**
+	Checking FNAME statement (1)
 
-/* The following two functions check that the FNAME inside a WHEN
- * make reference to instance of models, relations, or arrays of
- * models or relations previously created.
- */
+	["The following two functions..." -- ed] Check that the FNAME inside a WHEN
+	make reference to instance of models, relations, or arrays of
+	models or relations previously created.
+*/
 static
 int CheckArrayRelMod(struct Instance *child)
 {
@@ -6680,6 +6717,13 @@ int CheckArrayRelMod(struct Instance *child)
   }
 }
 
+/**
+	Checking FNAME statement (2)
+
+	Check that the FNAME inside a WHEN
+	make reference to instance of models, relations, or arrays of
+	models or relations previously created.
+*/
 static
 int CheckRelModName(struct Instance *work, struct Name *name)
 {
@@ -6740,11 +6784,11 @@ int CheckRelModName(struct Instance *work, struct Name *name)
   }
 }
 
-/*
- * A FNAME statement stands for a relation, model, or an array of models
- * or relations. This checking is to make sure that those instance
- * were already created
- */
+/**
+	A FNAME statement stands for a relation, model, or an array of models
+	or relations. This checking is to make sure that those instance
+	were already created
+*/
 static
 int CheckFNAME(struct Instance *inst, struct Statement *statement)
 {
@@ -6754,11 +6798,11 @@ int CheckFNAME(struct Instance *inst, struct Statement *statement)
     return 1;
 }
 
-/***********************************************************************/
-
-/* Only logrelations and FOR loops of logrelations are allowed inside a
- * conditional statement in Pass3. This function ask for recursively
- * checking these statements */
+/**
+	Only logrelations and FOR loops of logrelations are allowed inside a
+	conditional statement in Pass3. This function ask for recursively
+	checking these statements 
+*/
 static
 int Pass3CheckCondStatements(struct Instance *inst,
                              struct Statement *statement)
@@ -6793,7 +6837,9 @@ int Pass3CheckCondStatements(struct Instance *inst,
     }
 }
 
-/* Checking the statement list inside a CONDITIONAL statement in Pass3 */
+/**
+	Checking the statement list inside a CONDITIONAL statement in Pass3 
+*/
 static
 int Pass3CheckCOND(struct Instance *inst, struct Statement *statement)
 {
@@ -6813,9 +6859,11 @@ int Pass3CheckCOND(struct Instance *inst, struct Statement *statement)
 }
 
 
-/* Only relations and FOR loops of relations are allowed inside a
- * conditional statement in Pass2. This function ask for recursively
- * checking these statements */
+/**
+	Only relations and FOR loops of relations are allowed inside a
+	conditional statement in Pass2. This function ask for recursively
+	checking these statements
+*/
 static
 int Pass2CheckCondStatements(struct Instance *inst,
                              struct Statement *statement)
@@ -6850,7 +6898,9 @@ int Pass2CheckCondStatements(struct Instance *inst,
     }
 }
 
-/* Checking the statement list inside a CONDITIONAL statement in Pass2 */
+/**
+	Checking the statement list inside a CONDITIONAL statement in Pass2
+*/
 static
 int Pass2CheckCOND(struct Instance *inst, struct Statement *statement)
 {
@@ -6869,14 +6919,11 @@ int Pass2CheckCOND(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
-
-/***********************************************************************/
-
-/*
- * Checking that not other instance has been created with the same
- * name of the current WHEN. If it has, it has to be a WHEN or a
- * DUMMY. return -1 for DUMMY. 1 for WHEN. 0 if the checking fails.
- */
+/**
+	Checking that not other instance has been created with the same
+	name of the current WHEN. If it has, it has to be a WHEN or a
+	DUMMY. return -1 for DUMMY. 1 for WHEN. 0 if the checking fails.
+*/
 static
 int CheckWhenName(struct Instance *work, struct Name *name)
 {
@@ -6905,12 +6952,12 @@ int CheckWhenName(struct Instance *work, struct Name *name)
   }
 }
 
-/*
- * p1 and p2 are pointers to arrays of integers. Here we are checking
- * that the type (integer, boolean, symbol) of each variable in the
- * variable list of a WHEN (or a SELECT) is the same as the type of
- * each value in the list of values a CASE
- */
+/**
+	p1 and p2 are pointers to arrays of integers. Here we are checking
+	that the type (integer, boolean, symbol) of each variable in the
+	variable list of a WHEN (or a SELECT) is the same as the type of
+	each value in the list of values a CASE
+*/
 static
 int CompListInArray(unsigned long numvar, int *p1, int *p2)
 {
@@ -6928,15 +6975,15 @@ int CompListInArray(unsigned long numvar, int *p1, int *p2)
 }
 
 
-/*
- * Checking that the values of the set of values of each CASE of a
- * WHEN statement are appropriate. This is, they
- * are symbol, integer or boolean. The first part of the
- * function was written for the case of WHEN statement
- * inside a FOR loop. This function also sorts
- * the kinds of values in the set by assigning a value
- * to the integer *p2
- */
+/**
+	Checking that the values of the set of values of each CASE of a
+	WHEN statement are appropriate. This is, they
+	are symbol, integer or boolean. The first part of the
+	function was written for the case of WHEN statement
+	inside a FOR loop. This function also sorts
+	the kinds of values in the set by assigning a value
+	to the integer *p2
+*/
 static
 int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
                      int *p2)
@@ -7010,15 +7057,15 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
 }
 
 
-/*
- * Checking that the variables of the list of variables of a
- * WHEN statement are appropriate. This is, they
- * are boolean, integer or symbol instances. The first part of the
- * function was written for the case of WHEN statement
- * inside a FOR loop. This function also sorts
- * the kinds of variables in the list by assigning a value
- * to the integer *p1
- */
+/**
+	Checking that the variables of the list of variables of a
+	WHEN statement are appropriate. This is, they
+	are boolean, integer or symbol instances. The first part of the
+	function was written for the case of WHEN statement
+	inside a FOR loop. This function also sorts
+	the kinds of variables in the list by assigning a value
+	to the integer *p1
+*/
 static
 int CheckWhenVariableNode(struct Instance *ref,
                           CONST struct Name *name,
@@ -7143,11 +7190,11 @@ int CheckWhenVariableNode(struct Instance *ref,
 }
 
 
-/*
- * Inside a WHEN, only FNAMEs (name of models, relations or array of)
- * and nested WHENs ( and FOR loops of them) are allowed. This function
- * asks for the checking of these statements.
- */
+/**
+	Inside a WHEN, only FNAMEs (name of models, relations or array of)
+	and nested WHENs ( and FOR loops of them) are allowed. This function
+	asks for the checking of these statements.
+*/
 static
 int CheckWhenStatements(struct Instance *inst, struct Statement *statement)
 {
@@ -7181,10 +7228,10 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement)
     }
 }
 
-/*
- * Call CheckWhenSetNode for each value in the set of values included
- * in the CASE of a WHEN statement
- */
+/**
+	Call CheckWhenSetNode for each value in the set of values included
+	in the CASE of a WHEN statement
+*/
 static
 int CheckWhenSetList(struct Instance *inst, struct Set *s, int *p2)
 {
@@ -7200,10 +7247,10 @@ int CheckWhenSetList(struct Instance *inst, struct Set *s, int *p2)
   return 1;
 }
 
-/*
- * Call CheckWhenVariableNode for each variable vl in the variable
- * list of a WHEN statement
- */
+/**
+	Call CheckWhenVariableNode for each variable vl in the variable
+	list of a WHEN statement
+*/
 static
 int CheckWhenVariableList(struct Instance *inst, struct VariableList *vlist,
                           int *p1)
@@ -7220,10 +7267,10 @@ int CheckWhenVariableList(struct Instance *inst, struct VariableList *vlist,
   return 1;
 }
 
-/*
- * Checking the list statements of statements inside each CASE of the
- * WHEN statement by calling CheckWhenStatements
- */
+/**
+	Checking the list statements of statements inside each CASE of the
+	WHEN statement by calling CheckWhenStatements
+*/
 static
 int CheckWhenStatementList(struct Instance *inst, struct StatementList *sl)
 {
@@ -7241,20 +7288,21 @@ int CheckWhenStatementList(struct Instance *inst, struct StatementList *sl)
 }
 
 
-/* Checking of the Select statements. It checks that:
- * 1) The name of the WHEN. If it was already created. It has to be
- *    a WHEN or a DUMMY. If a Dummy (case -1 of CheckWhenName),
- *    do not check the structure of the WHEN statement, return 1.
- * 2) The number of conditional variables is equal to the number
- *    of values in each of the CASEs.
- * 3) That the conditional variables exist, and are boolean
- *    integer or symbol.
- * 4) The number and the type  of conditional variables is the same
- *    as the number of values in each of the CASEs.
- * 5) Only one OTHERWISE case is present.
- * 6) The statements inside a WHEN are only a FNAME or a nested WHEN,
- *    and ask for the chcking of these interior statements.
- */
+/**
+	Checking of the Select statements. It checks that:
+	1) The name of the WHEN. If it was already created. It has to be
+	   a WHEN or a DUMMY. If a Dummy (case -1 of CheckWhenName),
+	   do not check the structure of the WHEN statement, return 1.
+	2) The number of conditional variables is equal to the number
+	   of values in each of the CASEs.
+	3) That the conditional variables exist, and are boolean
+	   integer or symbol.
+	4) The number and the type  of conditional variables is the same
+	   as the number of values in each of the CASEs.
+	5) Only one OTHERWISE case is present.
+	6) The statements inside a WHEN are only a FNAME or a nested WHEN,
+	   and ask for the chcking of these interior statements.
+*/
 static
 int CheckWHEN(struct Instance *inst, struct Statement *statement)
 {
@@ -7361,18 +7409,19 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
 }
 
 
-/***********************************************************************/
-                       /*   Check SELECT Functions */
+/* - - - - - - - - - - - - - 
+	Check SELECT Functions
+*/
 
-/*****************************
- * Code curently not in use. It would be used in case that we want to do
- * the checking of all of the statement list in all of the cases of a
- * SELECT simultaneously, previous to execution.
- * Actually, the code is in disrepair, particularly around what is
- * allowed in SELECT. We surely need to create a CheckSelectStatement
- * function specific for each pass of instantiation.
- */
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
+/**
+	Code curently not in use. It would be used in case that we want to do
+	the checking of all of the statement list in all of the cases of a
+	SELECT simultaneously, previous to execution.
+	Actually, the code is in disrepair, particularly around what is
+	allowed in SELECT. We surely need to create a CheckSelectStatement
+	function specific for each pass of instantiation.
+*/
 static
 int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
 {
@@ -7413,7 +7462,9 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
 
 
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
-/* Currently not in use */
+/**
+	Currently not in use
+*/
 static
 int CheckSelectStatementList(struct Instance *inst, struct StatementList *sl)
 {
@@ -7432,18 +7483,18 @@ int CheckSelectStatementList(struct Instance *inst, struct StatementList *sl)
 #endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
-/*
- * Current checking of the Select statement starts here.
- *
- * Checking that the values of the set of values of each CASE of a
- * SELECT statement are appropriate. This is, they
- * are symbol, integer or boolean. The first part of the
- * function was written for the case of SELECT statement
- * inside a FOR loop. Therefore, it is going to be there,
- * but not used at the moment.This function also sorts
- * the kinds of values in the set by assigning a value
- * to the integer *p2
- */
+/**
+	Current checking of the Select statement starts here.
+	
+	Checking that the values of the set of values of each CASE of a
+	SELECT statement are appropriate. This is, they
+	are symbol, integer or boolean. The first part of the
+	function was written for the case of SELECT statement
+	inside a FOR loop. Therefore, it is going to be there,
+	but not used at the moment.This function also sorts
+	the kinds of values in the set by assigning a value
+	to the integer *p2
+*/
 static
 int CheckSelectSetNode(struct Instance *ref, CONST struct Expr *expr,
                        int *p2 )
@@ -7495,16 +7546,16 @@ int CheckSelectSetNode(struct Instance *ref, CONST struct Expr *expr,
   }
 }
 
-/*
- * Checking that the variables of the list of variables of a
- * SELECT statement are appropriate. This is, they
- * are constant and are assigned. The first part of the
- * function was written for the case of SELECT statement
- * inside a FOR loop. Therefore, it is going to be there,
- * but not used at the moment.This function also sorts
- * the kinds of variables in the list by assigning a value
- * to the integer *p1
- */
+/**
+	Checking that the variables of the list of variables of a
+	SELECT statement are appropriate. This is, they
+	are constant and are assigned. The first part of the
+	function was written for the case of SELECT statement
+	inside a FOR loop. Therefore, it is going to be there,
+	but not used at the moment.This function also sorts
+	the kinds of variables in the list by assigning a value
+	to the integer *p1
+*/
 static
 int CheckSelectVariableNode(struct Instance *ref,
                             CONST struct Name *name,
@@ -7582,10 +7633,10 @@ int CheckSelectVariableNode(struct Instance *ref,
   }
 }
 
-/*
- * Call CheckSelectSetNode for each set member of the set of
- * values of each CASE of a SELECT statement
- */
+/**
+	Call CheckSelectSetNode for each set member of the set of
+	values of each CASE of a SELECT statement
+*/
 static
 int CheckSelectSetList(struct Instance *inst, struct Set *s, int *p2 )
 {
@@ -7601,10 +7652,10 @@ int CheckSelectSetList(struct Instance *inst, struct Set *s, int *p2 )
   return 1;
 }
 
-/*
- * Call CheckSelectVariableNode for each variable vl in the variable
- *list of a SELECT statement
- */
+/**
+	Call CheckSelectVariableNode for each variable vl in the variable
+	list of a SELECT statement
+*/
 static
 int CheckSelectVariableList(struct Instance *inst, struct VariableList *vlist,
                             int *p1)
@@ -7622,14 +7673,14 @@ int CheckSelectVariableList(struct Instance *inst, struct VariableList *vlist,
 }
 
 
-/*
- * The conditions for checkselect is that
- * 1) The number of selection variables is equal to the number
- *    of values in each of the CASEs.
- * 2) That the selection variables exist, are constant and
- *    are assigned.
- * 3) Only one OTHERWISE case is present.
- */
+/**
+	The conditions for checkselect is that
+	1) The number of selection variables is equal to the number
+	   of values in each of the CASEs.
+	2) That the selection variables exist, are constant and
+	   are assigned.
+	3) Only one OTHERWISE case is present.
+*/
 static
 int CheckSELECT(struct Instance *inst, struct Statement *statement)
 {
@@ -7671,12 +7722,15 @@ int CheckSELECT(struct Instance *inst, struct Statement *statement)
 }
 
 
-/***********************************************************************/
+/*==============================================================================
+	PASS-BY-PASS CHECKING
+*/
 
-/* BUG!: CheckStatement and New flavors of same ignore the
-   type EXT. We never use external relations inside a loop?!
-   well, ok, maybe they are always hidden as models */
-
+/**
+	@BUG: CheckStatement and New flavors of same ignore the
+	type EXT. We never use external relations inside a loop?!
+	well, ok, maybe they are always hidden as models
+*/
 static
 int Pass4CheckStatement(struct Instance *inst, struct Statement *stat)
 {
@@ -7764,9 +7818,9 @@ int Pass2CheckStatement(struct Instance *inst, struct Statement *stat)
 }
 
 /**
- * checking statementlist, as in a FOR loop check.
- * relations are not handled in pass 1
- */
+	checking statementlist, as in a FOR loop check.
+	relations are not handled in pass 1
+*/
 static
 int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
 {
@@ -7880,16 +7934,16 @@ int Pass1CheckStatementList(struct Instance *inst, struct StatementList *sl)
 }
 
 
-/*************************************************************************\
-  FNAME  Statement Processing
-\*************************************************************************/
+/*------------------------------------------------------------------------------
+  'FNAME' STATEMENT PROCESSING
+*/
 
-/*
- * The FNAME statement is just used to stand for the model relations or
- * arrays inside the CASES of a WHEN statement. Actually, this
- * statement does not need to be executed. It is required only
- * for checking and for avoiding conflicts in the semantics.
- */
+/**
+	The FNAME statement is just used to stand for the model relations or
+	arrays inside the CASES of a WHEN statement. Actually, this
+	statement does not need to be executed. It is required only
+	for checking and for avoiding conflicts in the semantics.
+*/
 static
 int ExecuteFNAME(struct Instance *inst, struct Statement *statement)
 {
@@ -7898,24 +7952,23 @@ int ExecuteFNAME(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
-
-
-/******************************************************************\
+/*------------------------------------------------------------------------------
   CONDITIONAL Statement Processing
-\******************************************************************/
+*/
 
-/* The logical relations inside a conditional statement do not have
- * to be satisified. They are going to be used to check conditions in
- * the solution of other logical relations. So, we need something to
- * distinguish a conditional logrelation from a non-conditional
- * logrelation. The next three functions "Mark" those log relations
- * inside a CONDITIONAL statement as Conditional logrelations.
- * Right now we not only set a bit indicating
- * that the logrelation is conditional, but also set a flag equal to 1.
- * This is done in MarkLOGREL above. The flag could be eliminated, but
- * we need to fix some places in which it is used, and to use the
- * bit instead.
- */
+/**
+	The logical relations inside a conditional statement do not have
+	to be satisified. They are going to be used to check conditions in
+	the solution of other logical relations. So, we need something to
+	distinguish a conditional logrelation from a non-conditional
+	logrelation. The next three functions "Mark" those log relations
+	inside a CONDITIONAL statement as Conditional logrelations.
+	Right now we not only set a bit indicating
+	that the logrelation is conditional, but also set a flag equal to 1.
+	This is done in MarkLOGREL above. The flag could be eliminated, but
+	we need to fix some places in which it is used, and to use the
+	bit instead.
+*/
 static
 void Pass3MarkCondLogRels(struct Instance *inst, struct Statement *statement)
 {
@@ -7983,11 +8036,11 @@ void Pass3MarkCondLogRelStat(struct Instance *inst,
 }
 
 
-/*
- * Execution of the statements allowed inside a CONDITIONAL
- * statement. Only log/relations and FOR loops containing only
- * log/relations are allowed.
- */
+/**
+	Execution of the statements allowed inside a CONDITIONAL
+	statement. Only log/relations and FOR loops containing only
+	log/relations are allowed.
+*/
 static
 int Pass3ExecuteCondStatements(struct Instance *inst,
                                struct Statement *statement)
@@ -8028,12 +8081,12 @@ int Pass3RealExecuteCOND(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
-/*
- * Execution of the Conditional statements. In pass3 we consider only
- * logrelations (or FOR loops of logrelations),so  the checking is not
- * done at all. After execution, the logrelations are set as conditional
- * by means of a bit and a flag
- */
+/**
+	Execution of the Conditional statements. In pass3 we consider only
+	logrelations (or FOR loops of logrelations),so  the checking is not
+	done at all. After execution, the logrelations are set as conditional
+	by means of a bit and a flag
+*/
 static
 int Pass3ExecuteCOND(struct Instance *inst, struct Statement *statement)
 {
@@ -8049,17 +8102,18 @@ int Pass3ExecuteCOND(struct Instance *inst, struct Statement *statement)
   return return_value;
 }
 
-/* The relations inside a conditional statement do not have to be
- * solved. They are going to be used as boundaries in conditional
- * programming. So, we need something to distinguish a conditional
- * relation from a non-conditional relation. The next three functions
- * "Mark" those relations inside a CONDITIONAL statement as
- * Conditional relations. Right now we not only set a bit indicating
- * that the relation is conditional, but also set a flag equal to 1.
- * This is done in MarkREL above. The flag could be eliminated, but
- * we need to fix some places in which it is used, and to use the
- * bit instead.
- */
+/**
+	The relations inside a conditional statement do not have to be
+	solved. They are going to be used as boundaries in conditional
+	programming. So, we need something to distinguish a conditional
+	relation from a non-conditional relation. The next three functions
+	"Mark" those relations inside a CONDITIONAL statement as
+	Conditional relations. Right now we not only set a bit indicating
+	that the relation is conditional, but also set a flag equal to 1.
+	This is done in MarkREL above. The flag could be eliminated, but
+	we need to fix some places in which it is used, and to use the
+	bit instead.
+*/
 static
 void Pass2MarkCondRelations(struct Instance *inst, struct Statement *statement)
 {
@@ -8124,11 +8178,11 @@ void Pass2MarkCondRelStat(struct Instance *inst, struct Statement *statement)
   }
 }
 
-/*
- * Execution of the statements allowed inside a CONDITIONAL
- * statement. Only relations and FOR loops containing only
- * relations are considered in Pass2.
- */
+/**
+	Execution of the statements allowed inside a CONDITIONAL
+	statement. Only relations and FOR loops containing only
+	relations are considered in Pass2.
+*/
 static
 int Pass2ExecuteCondStatements(struct Instance *inst,
                                struct Statement *statement)
@@ -8179,12 +8233,12 @@ int Pass2RealExecuteCOND(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
-/*
- * Execution of the Conditional statements. In pass2 we consider only
- * relations (or FOR loops of relations),so  the checking is not
- * done at all. After execution, the relations are set as conditional
- * by means of a bit and a flag
- */
+/**
+	Execution of the Conditional statements. In pass2 we consider only
+	relations (or FOR loops of relations),so  the checking is not
+	done at all. After execution, the relations are set as conditional
+	by means of a bit and a flag
+*/
 static
 int Pass2ExecuteCOND(struct Instance *inst, struct Statement *statement)
 {
@@ -8201,15 +8255,16 @@ int Pass2ExecuteCOND(struct Instance *inst, struct Statement *statement)
 }
 
 
-/*
- * For its use in ExecuteUnSelectedStatements.
- * Execute the  statements of a CONDITIONAL statement which is inside
- * a CASE not matching the selection variables.
- * Only FOR loops containing log/relations or log/relations are allowed
- * inside CONDITIONAL statements. This function ultimately call
- * the function ExecuteUnSelectedEQN, to create Dummy instances
- * for the relations inside CONDITIONAL
- */
+/**
+	For its use in ExecuteUnSelectedStatements.
+	Execute the  statements of a CONDITIONAL statement which is inside
+	a CASE not matching the selection variables.
+
+	Only FOR loops containing log/relations or log/relations are allowed
+	inside CONDITIONAL statements. This function ultimately call
+	the function ExecuteUnSelectedEQN, to create Dummy instances
+	for the relations inside CONDITIONAL
+*/
 static
 int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
 {
@@ -8243,17 +8298,17 @@ int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
+/*------------------------------------------------------------------------------
+  'WHEN' STATEMENT PROCESSING
+*/
 
-/*************************************************************************\
-  WHEN Statement Processing
-\*************************************************************************/
-
-/* Find the instances corresponding to the list of conditional
- * variables of a WHEN, and append ther pointers in a gl_list.
- * This gl_list becomes part of the WHEN instance.
- * Also, this function notify those instances that the WHEN is
- * pointing to them, so that their list of whens is updated.
- */
+/**
+	Find the instances corresponding to the list of conditional
+	variables of a WHEN, and append ther pointers in a gl_list.
+	This gl_list becomes part of the WHEN instance.
+	Also, this function notify those instances that the WHEN is
+	pointing to them, so that their list of whens is updated.
+*/
 static
 struct gl_list_t *MakeWhenVarList(struct Instance *inst,
                                   struct Instance *child,
@@ -8305,13 +8360,16 @@ struct gl_list_t *MakeWhenVarList(struct Instance *inst,
   return whenvars;
 }
 
-/* The following four functions create the gl_list of references of
- * each CASE of a WHEN instance. By list of references I mean the
- * list of pointers to relations, models or arrays which will become
- * active if such a CASE applies.
- */
+/*- - - - - - - - - -  -  - - - - - - - - -
+	The following four functions create the gl_list of references of
+	each CASE of a WHEN instance. By list of references I mean the
+	list of pointers to relations, models or arrays which will become
+	active if such a CASE applies.
+*/
 
-/* dealing with arrays */
+/**
+	creating list of reference for each CASE in a WHEN: (1) dealing with arrays
+*/
 static
 void MakeWhenArrayReference(struct Instance *when,
                             struct Instance *child,
@@ -8353,6 +8411,9 @@ void MakeWhenArrayReference(struct Instance *when,
   }
 }
 
+/**
+	creating list of reference for each CASE in a WHEN: (2)
+*/
 static
 void MakeWhenReference(struct Instance *ref,
                        struct Instance *child,
@@ -8423,7 +8484,10 @@ void MakeWhenReference(struct Instance *ref,
   }
 }
 
-/* dealing with nested WHENs, nested FOR loops etc. */
+/**
+	creating list of reference for each CASE in a WHEN: (3) nested WHENs,
+	nested FOR loops etc. 
+*/
 static
 void MakeWhenCaseReferences(struct Instance *inst,
                             struct Instance *child,
@@ -8458,11 +8522,13 @@ void MakeWhenCaseReferences(struct Instance *inst,
   }
 }
 
-/* The following function is almos identical from the previous one.
- * They differ only in the case of a FOR loop. This function is
- * required to appropriately deal with nested FOR loops which
- * contain FNAMEs or WHENs
- */
+/**
+	creating list of reference for each CASE in a WHEN: (4) almost identical
+	to the previous one.
+	They differ only in the case of a FOR loop. This function is
+	required to appropriately deal with nested FOR loops which
+	contain FNAMEs or WHENs
+*/
 static
 void MakeRealWhenCaseReferencesList(struct Instance *inst,
                                     struct Instance *child,
@@ -8499,11 +8565,13 @@ void MakeRealWhenCaseReferencesList(struct Instance *inst,
   return ;
 }
 
+/*-  - - - - - - - - - -- - - - - -  - - */
 
-/* Make a WHEN instance or an array of WHEN instances by calling
- * CreateWhenInstance. It does not create the lists of pointers
- * to the conditional variables or the models or relations.
- */
+/**
+	Make a WHEN instance or an array of WHEN instances by calling
+	CreateWhenInstance. It does not create the lists of pointers
+	to the conditional variables or the models or relations.
+*/
 
 static
 struct Instance *MakeWhenInstance(struct Instance *parent,
@@ -8544,10 +8612,10 @@ struct Instance *MakeWhenInstance(struct Instance *parent,
   }
 }
 
-/*
- * Executing the possible kind of statements inside a WHEN. It
- * consider the existence of FOR loops and nested WHENs
- */
+/**
+	Executing the possible kind of statements inside a WHEN. It
+	consider the existence of FOR loops and nested WHENs
+*/
 static
 void ExecuteWhenStatements(struct Instance *inst,
                            struct StatementList *sl)
@@ -8582,12 +8650,12 @@ void ExecuteWhenStatements(struct Instance *inst,
 }
 
 
-/*
- * Creates a CASE included in a WHEN statement. It involves the
- * allocation of memory of the CASE and the creation of the
- * gl_list of references (pointer to models, arrays, relations)
- * which will be contained in such a case.
- */
+/**
+	Creates a CASE included in a WHEN statement. It involves the
+	allocation of memory of the CASE and the creation of the
+	gl_list of references (pointer to models, arrays, relations)
+	which will be contained in such a case.
+*/
 static
 struct Case *RealExecuteWhenStatements(struct Instance *inst,
                                        struct Instance *child,
@@ -8609,10 +8677,11 @@ struct Case *RealExecuteWhenStatements(struct Instance *inst,
   return cur_case;
 }
 
-/* Call the Creation of a WHEN instance. This function is also in charge
- * of filling the gl_list of conditional variables and the gl_list of
- * CASEs contained in the WHEN instance
- */
+/**
+	Call the Creation of a WHEN instance. This function is also in charge
+	of filling the gl_list of conditional variables and the gl_list of
+	CASEs contained in the WHEN instance
+*/
 static
 void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
 {
@@ -8670,7 +8739,9 @@ void RealExecuteWHEN(struct Instance *inst, struct Statement *statement)
 }
 
 
-/* After Checking the WHEN statement, it calls for its  execution */
+/**
+	After Checking the WHEN statement, it calls for its  execution
+*/
 static
 int ExecuteWHEN(struct Instance *inst, struct Statement *statement)
 {
@@ -8684,11 +8755,11 @@ int ExecuteWHEN(struct Instance *inst, struct Statement *statement)
 }
 
 
-/*
- * Written because of the possiblity of nested WHEN and
- * Nested WHEN inside a FOR loop in an unselected case of
- * SELECT statement
- */
+/**
+	Written because of the possiblity of nested WHEN and
+	Nested WHEN inside a FOR loop in an unselected case of
+	SELECT statement
+*/
 static
 void ExecuteUnSelectedWhenStatements(struct Instance *inst,
                                      struct StatementList *sl)
@@ -8722,10 +8793,10 @@ void ExecuteUnSelectedWhenStatements(struct Instance *inst,
 }
 
 /*
- * For its use in ExecuteUnSelectedStatements.
- * Execute the WHEN statements inside those cases of a SELECT
- * which do not match the selection variables
- */
+	For its use in ExecuteUnSelectedStatements.
+	Execute the WHEN statements inside those cases of a SELECT
+	which do not match the selection variables
+*/
 static
 int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
 {
@@ -8764,15 +8835,14 @@ int ExecuteUnSelectedWHEN(struct Instance *inst, struct Statement *statement)
   return 1;
 }
 
+/*------------------------------------------------------------------------------
+  'SELECT' STATEMENT PROCESSING
+*/
 
-/*************************************************************************\
-  SELECT  Statement Processing
-\*************************************************************************/
-
-/*
- * Execution of the Statements inside the case that
- * matches the selection variables
- */
+/**
+	Execution of the Statements inside the case that
+	matches the selection variables
+*/
 static
 void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
                              struct StatementList *sl)
@@ -8861,11 +8931,10 @@ void ExecuteSelectStatements(struct Instance *inst, unsigned long *count,
 }
 
 
-/*
- * Execution of the UnSelected Statements inside those cases of the
- * SELECT that do not match match the selection variables
- */
-
+/**
+	Execution of the UnSelected Statements inside those cases of the
+	SELECT that do not match match the selection variables
+*/
 static
 void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
                                  struct StatementList *sl)
@@ -8938,10 +9007,10 @@ void ExecuteUnSelectedStatements(struct Instance *inst,unsigned long *count,
   }
 }
 
-/*
- * Execution of the SELECT statement inside a case that does not
- * match the selection variables
- */
+/**
+	Execution of the SELECT statement inside a case that does not
+	match the selection variables
+*/
 static
 int ExecuteUnSelectedSELECT(struct Instance *inst, unsigned long *c,
                             struct Statement *statement)
@@ -8962,12 +9031,12 @@ int ExecuteUnSelectedSELECT(struct Instance *inst, unsigned long *c,
 }
 
 
-/*
- * Compare current values of the selection variables with
- * the set of values in a CASE of a SELECT statement, and try to find
- * is such values are the same. If they are, the function will return 1,
- * else, it will return 0.
- */
+/**
+	Compare current values of the selection variables with
+	the set of values in a CASE of a SELECT statement, and try to find
+	is such values are the same. If they are, the function will return 1,
+	else, it will return 0.
+*/
 static
 int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
                       struct Set *s)
@@ -9032,13 +9101,13 @@ int AnalyzeSelectCase(struct Instance *ref, struct VariableList *vlist,
 }
 
 
-/* This function will determine which case of a SELECT statement
- * applies for the current values of the selection variables.
- * this function  will call for the execution of the case which
- * matches. It handles OTHERWISE properly (case when set == NULL).
- * At most one case is going to be executed.
- */
-
+/**
+	This function will determine which case of a SELECT statement
+	applies for the current values of the selection variables.
+	this function  will call for the execution of the case which
+	matches. It handles OTHERWISE properly (case when set == NULL).
+	At most one case is going to be executed.
+*/
 static
 void RealExecuteSELECT(struct Instance *inst, unsigned long *c,
                        struct Statement *statement)
@@ -9083,15 +9152,16 @@ void RealExecuteSELECT(struct Instance *inst, unsigned long *c,
 }
 
 
-/* If A SELECT statement passess its checking, this function
- * will ask for its execution, otherwise the SELECT and all
- * the other statements inside of it, will not be touched.
- * The counter in the bitlist is increased properly.
- * NOTE for efficiency: Maybe we should integrate the
- * Check function of the SELECT together with the analysis
- * of the CASEs to see which of them matches.We are doing
- * twice the execution of some C functions.
- */
+/**
+	If A SELECT statement passess its checking, this function
+	will ask for its execution, otherwise the SELECT and all
+	the other statements inside of it, will not be touched.
+	The counter in the bitlist is increased properly.
+	NOTE for efficiency: Maybe we should integrate the
+	Check function of the SELECT together with the analysis
+	of the CASEs to see which of them matches.We are doing
+	twice the execution of some C functions.
+*/
 static
 int ExecuteSELECT(struct Instance *inst, unsigned long *c,
                   struct Statement *statement)
@@ -9113,14 +9183,14 @@ int ExecuteSELECT(struct Instance *inst, unsigned long *c,
 }
 
 
-/*
- * This function jumps the statements inside non-matching
- * cases of a SELECT statement, so that they are not analyzed
- * in compilation passes > 1.
- * If there is a SELECT inside a SELECT,
- * the function uses the number of statements in the nested
- * SELECTs
- */
+/**
+	This function jumps the statements inside non-matching
+	cases of a SELECT statement, so that they are not analyzed
+	in compilation passes > 1.
+	If there is a SELECT inside a SELECT,
+	the function uses the number of statements in the nested
+	SELECTs
+*/
 static
 void JumpSELECTStats(unsigned long *count,struct StatementList *sl)
 {
@@ -9146,12 +9216,13 @@ void JumpSELECTStats(unsigned long *count,struct StatementList *sl)
   return;
 }
 
-/* This function is used only for setting  the
- * bits ON for some statements in the matching case of a
- * SELECT statement. Only these statements will be
- * analyzed in Pass > 1. The conditions to set a bit ON
- * depend on the number of pass.
- */
+/**
+	This function is used only for setting  the
+	bits ON for some statements in the matching case of a
+	SELECT statement. Only these statements will be
+	analyzed in Pass > 1. The conditions to set a bit ON
+	depend on the number of pass.
+*/
 static
 void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
                             struct StatementList *sl, int pass, int *changed)
@@ -9260,14 +9331,15 @@ void SetBitsOnOfSELECTStats(struct Instance *inst, unsigned long *count,
 }
 
 
-/* This function will determine which case of a SELECT statement
- * applies for the current values of the selection variables.
- * Similar performance from RealExecuteSELECT, but this function
- * does not call for execution, it is used only for "jumping"
- * the statements inside a non-matching case, or seting the
- * bits on for some statements in the matching case.
- * It handles OTHERWISE properly (case when set == NULL).
- */
+/**
+	This function will determine which case of a SELECT statement
+	applies for the current values of the selection variables.
+	Similar performance from RealExecuteSELECT, but this function
+	does not call for execution, it is used only for "jumping"
+	the statements inside a non-matching case, or seting the
+	bits on for some statements in the matching case.
+	It handles OTHERWISE properly (case when set == NULL).
+*/
 static
 void SetBitOfSELECTStat(struct Instance *inst, unsigned long *c,
                         struct Statement *statement, int pass, int *changed)
@@ -9307,21 +9379,20 @@ void SetBitOfSELECTStat(struct Instance *inst, unsigned long *c,
   }
 }
 
-/*
- * For compilation passes > 1, this function will tell me if I
- * should Set the Bits on for statements inside the CASEs of
- * a SELECT statement. This evaluation is needed because there may be
- * relations, whens or log rels that should not be executed
- * at all (when the selection variables do not exist, for example)
- * or should  not be reanlyzed in pass2 3 and 4 (when they are
- * already dummys, for example). This re-evaluation will not be done
- * if the SELECT does not contain rels, logrels or when.
- * NOTE for efficiency: Maybe we should integrate the
- * Check function of the SELECT together with the analysis
- * of the CASEs to see which of them matches.We are doing
- * twice the execution of some C functions.
- */
-
+/**
+	For compilation passes > 1, this function will tell me if I
+	should Set the Bits on for statements inside the CASEs of
+	a SELECT statement. This evaluation is needed because there may be
+	relations, whens or log rels that should not be executed
+	at all (when the selection variables do not exist, for example)
+	or should  not be reanlyzed in pass2 3 and 4 (when they are
+	already dummys, for example). This re-evaluation will not be done
+	if the SELECT does not contain rels, logrels or when.
+	NOTE for efficiency: Maybe we should integrate the
+	Check function of the SELECT together with the analysis
+	of the CASEs to see which of them matches.We are doing
+	twice the execution of some C functions.
+*/
 static
 void ReEvaluateSELECT(struct Instance *inst, unsigned long *c,
                       struct Statement *statement, int pass, int *changed)
@@ -9341,12 +9412,13 @@ void ReEvaluateSELECT(struct Instance *inst, unsigned long *c,
 }
 
 
-/* This function is used only for setting  the
- * bits ON for some statements in the matching case of a
- * SELECT statement. Only these statements will be
- * analyzed in Pass > 1. The conditions to set a bit ON
- * depend on the number of pass.
- */
+/**
+	This function is used only for setting  the
+	bits ON for some statements in the matching case of a
+	SELECT statement. Only these statements will be
+	analyzed in Pass > 1. The conditions to set a bit ON
+	depend on the number of pass.
+*/
 static
 void ExecuteDefaultsInSELECTCase(struct Instance *inst, unsigned long *count,
                                  struct StatementList *sl,
@@ -9385,13 +9457,14 @@ void ExecuteDefaultsInSELECTCase(struct Instance *inst, unsigned long *count,
 }
 
 
-/* This function will determine which case of a SELECT statement
- * applies for the current values of the selection variables.
- * Similar performance from RealExecuteSELECT. This function
- * is used only for "jumping"  the statements inside a non-matching
- * case, or Executing Defaults in the matching case.
- * It handles OTHERWISE properly (case when set == NULL).
- */
+/**
+	This function will determine which case of a SELECT statement
+	applies for the current values of the selection variables.
+	Similar performance from RealExecuteSELECT. This function
+	is used only for "jumping"  the statements inside a non-matching
+	case, or Executing Defaults in the matching case.
+	It handles OTHERWISE properly (case when set == NULL).
+*/
 static
 void ExecuteDefaultsInSELECTStat(struct Instance *inst, unsigned long *c,
                                  struct Statement *statement,
@@ -9432,18 +9505,19 @@ void ExecuteDefaultsInSELECTStat(struct Instance *inst, unsigned long *c,
   }
 }
 
-/*
- * For Execution of Defaults, which uses a Visit Instance Tree instead of
- * a BitList. this function will tell me if I
- * should Set the Bits on for statements inside the CASEs of
- * a SELECT statement. This evaluation is needed because there is
- * the possibility of different assignments to the same variable in
- * different cases of the select. I need to execute only those in
- * cases mathing the selection variables.
- * It is becoming annoying to have so similar functions, I need
- * to create a robust and general function which considers all the
- * possible applications.
- */
+/**
+	For Execution of Defaults, which uses a Visit Instance Tree instead of
+	a BitList. this function will tell me if I
+	should Set the Bits on for statements inside the CASEs of
+	a SELECT statement. This evaluation is needed because there is
+	the possibility of different assignments to the same variable in
+	different cases of the select. I need to execute only those in
+	cases mathing the selection variables.
+	
+	@TODO It is becoming annoying to have so similar functions, I need
+	to create a robust and general function which considers all the
+	possible applications.
+*/
 static
 void ExecuteDefaultsInSELECT(struct Instance *inst, unsigned long *c,
                              struct Statement *statement,
@@ -9461,10 +9535,9 @@ void ExecuteDefaultsInSELECT(struct Instance *inst, unsigned long *c,
   return;
 }
 
-
-/**************************************************************************\
-  FOR Statement processing.
-\**************************************************************************/
+/*------------------------------------------------------------------------------
+  'FOR' STATEMENT PROCESSING
+*/
 static
 void WriteForValueError(struct Statement *statement, struct value_t value)
 {
@@ -9549,9 +9622,10 @@ int Pass4ExecuteForStatements(struct Instance *inst,
 }
 
 
-/* Note: this function must not be called until all the rel,ext
- * statements in sl pass their checks.
- */
+/**
+	@NOTE this function must not be called until all the rel,ext
+	statements in sl pass their checks.
+*/
 static
 int Pass3ExecuteForStatements(struct Instance *inst,
                               struct StatementList *sl)
@@ -9624,12 +9698,15 @@ int Pass3ExecuteForStatements(struct Instance *inst,
 }
 
 
-/* Note: this function must not be called until all the rel,ext
- * statements in sl pass their checks.
- * This is because if any of the Executes fail
- * (returning 0) we abort (at least when assert is active).
- * This should be changed.
- */
+/**
+	@NOTE this function must not be called until all the rel,ext
+	statements in sl pass their checks.
+	
+	This is because if any of the Executes fail
+	(returning 0) we abort (at least when assert is active).
+	
+	@TODO This should be changed.
+*/
 static
 void Pass2ExecuteForStatements(struct Instance *inst,
                                struct StatementList *sl)
@@ -9716,10 +9793,12 @@ void Pass2ExecuteForStatements(struct Instance *inst,
 }
 
 
-/* Note: this function must not be called until all the statements in sl
- * (except rel, ext)pass their checks.
- * This is because if any of the Executes fail
- * (returning 0) we abort (at least when assert is active)  */
+/**
+	@NOTE this function must not be called until all the statements in sl
+	(except rel, ext)pass their checks.
+	This is because if any of the Executes fail
+	(returning 0) we abort (at least when assert is active)
+*/
 static
 void Pass1ExecuteForStatements(struct Instance *inst,
                                struct StatementList *sl)
@@ -9791,12 +9870,11 @@ void Pass1ExecuteForStatements(struct Instance *inst,
 }
 
 
-/*
- * Execute UnSelected statements inside a FOR loop
- * Note that we are not expanding arrays. This actually
- * may be impossible even if we want to do it.
- */
-
+/**
+	Execute UnSelected statements inside a FOR loop
+	Note that we are not expanding arrays. This actually
+	may be impossible even if we want to do it.
+*/
 static
 int ExecuteUnSelectedForStatements(struct Instance *inst,
                                    struct StatementList *sl)
@@ -10031,10 +10109,11 @@ void MakeRealWhenCaseReferencesFOR(struct Instance *inst,
   }
 }
 
-/* this function needs to be made much less aggressive about exiting
- * and more verbose about error messages  so we can skip the np3checkfor
- * probably also means it needs the 0/1 fail/succeed return code.
- */
+/**
+	@TODO this function needs to be made much less aggressive about exiting
+	and more verbose about error messages  so we can skip the np3checkfor
+	probably also means it needs the 0/1 fail/succeed return code.
+*/
 static
 int Pass3RealExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
@@ -10199,10 +10278,11 @@ void Pass3FORMarkCond(struct Instance *inst, struct Statement *statement)
 }
 
 
-/* this function needs to be made much less aggressive about exiting
- * and more verbose about error messages  so we can skip the np2checkfor
- * probably also means it needs the 0/1 fail/succeed return code.
- */
+/**
+	@TODO this function needs to be made much less aggressive about exiting
+	and more verbose about error messages  so we can skip the np2checkfor
+	probably also means it needs the 0/1 fail/succeed return code.
+*/
 static
 int Pass2RealExecuteFOR(struct Instance *inst, struct Statement *statement)
 {
@@ -10651,7 +10731,9 @@ int Pass3RealCheckFOR (struct Instance *inst, struct Statement *statement)
 }
 
 
-/* a currently unused function, with therefore unused subsidiary functions */
+/** 
+	a currently unused function, with therefore unused subsidiary functions
+*/
 static
 int Pass2CheckFOR(struct Instance *inst, struct Statement *statement)
 {
@@ -10935,11 +11017,10 @@ int Pass1ExecuteFOR(struct Instance *inst, struct Statement *statement)
   }
 }
 
+/*------------------------------------------------------------------------------
+  GENERAL STATEMENT PROCESSING
+*/
 
-
-/**************************************************************************\
-  General Statement processing.
-\**************************************************************************/
 static
 int Pass4ExecuteStatement(struct Instance *inst,struct Statement *statement)
 {
@@ -11084,16 +11165,16 @@ int ArraysExpanded(struct Instance *work)
   return 1;
 }
 
+/**
+	Try to execute all the when statements in instance work.
+	It assumes that work is the top of the pending instance list.
+	Will skip all non-when statements.
+*/
 static
 void Pass4ExecuteWhenStatements(struct BitList *blist,
                                 struct Instance *work,
-                                int *changed)
-/*********************************************************************\
-Try to execute all the when statements in instance work.
-It assumes that work is the top of the pending instance list.
-Will skip all non-when statements.
-\*********************************************************************/
-{
+                                int *changed
+){
   unsigned long c;
   struct TypeDescription *def;
   struct gl_list_t *statements;
@@ -11112,16 +11193,16 @@ Will skip all non-when statements.
   }
 }
 
+/**
+	Try to execute all the unexecuted logical relations in instance work.
+	It assumes that work is the top of the pending instance list.
+	Will skip all non-logical relations.
+*/
 static
 void Pass3ExecuteLogRelStatements(struct BitList *blist,
                                      struct Instance *work,
-                                     int *changed)
-/*********************************************************************\
-Try to execute all the unexecuted logical relations in instance work.
-It assumes that work is the top of the pending instance list.
-Will skip all non-logical relations.
-\*********************************************************************/
-{
+                                     int *changed
+){
   unsigned long c;
   struct TypeDescription *def;
   struct gl_list_t *statements;
@@ -11140,16 +11221,16 @@ Will skip all non-logical relations.
   }
 }
 
+/**
+	Try to execute all the unexecuted relations in instance work.
+	Does not assume that work is the top of the pending instance list.
+	Will skip all non-relations in instance work.
+*/
 static
 void Pass2ExecuteRelationStatements(struct BitList *blist,
                                     struct Instance *work,
-                                    int *changed)
-/*********************************************************************\
-Try to execute all the unexecuted relations in instance work.
-Does not assume that work is the top of the pending instance list.
-Will skip all non-relations in instance work.
-\*********************************************************************/
-{
+                                    int *changed
+){
   unsigned long c;
   struct TypeDescription *def;
   struct gl_list_t *statements;
@@ -11168,17 +11249,17 @@ Will skip all non-relations in instance work.
   }
 }
 
+/**
+	Try to execute all the unexecuted statements in instance work.
+	It assumes that work is the top of the pending instance list.
+	Will skip relations in a new way. Relations instances and arrays of
+	relations will be left as NULL instances (not merely hollow relations)
+*/
 static
 void Pass1ExecuteInstanceStatements(struct BitList *blist,
                                     struct Instance *work,
-                                    int *changed)
-/*********************************************************************\
-Try to execute all the unexecuted statements in instance work.
-It assumes that work is the top of the pending instance list.
-Will skip relations in a new way. Relations instances and arrays of
-relations will be left as NULL instances (not merely hollow relations)
-\*********************************************************************/
-{
+                                    int *changed
+){
   unsigned long c;
   struct TypeDescription *def;
   struct gl_list_t *statements;
@@ -11330,12 +11411,12 @@ void Pass3ProcessPendingInstances(void)
   /* done, or there were no pendings at all and while failed */
 }
 
-/*
- * This is the singlepass phase2 with anontype sharing of
- * relations implemented. If relations can depend on other
- * relations (as in future differential work) then this function
- * needs to be slightly more sophisticated.
- */
+/**
+	This is the singlepass phase2 with anontype sharing of
+	relations implemented. If relations can depend on other
+	relations (as in future differential work) then this function
+	needs to be slightly more sophisticated.
+*/
 static
 void Pass2ProcessPendingInstancesAnon(struct Instance *result)
 {
@@ -11423,12 +11504,12 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
   /* done, or there were no pendings at all and while failed */
 }
 
-/*
- * This is the old pass1-like flavor of pass2process.
- * Do not delete it yet, as it is the way we'll have to
- * start thinking if relations reference relations, i.e.
- * in the use of derivatives in the ASCEND language.
- */
+/**
+	This is the old pass1-like flavor of pass2process.
+	Do not delete it yet, as it is the way we'll have to
+	start thinking if relations reference relations, i.e.
+	in the use of derivatives in the ASCEND language.
+*/
 static
 void Pass2ProcessPendingInstances(void)
 {
@@ -11492,11 +11573,11 @@ void Pass2ProcessPendingInstances(void)
 }
 
 
-/*
- * in a bizarre way, this will generally lead to a bottom up
- * instantiation finishing process, though it is started in a
- * top down fashion.
- */
+/**
+	in a bizarre way, this will generally lead to a bottom up
+	instantiation finishing process, though it is started in a
+	top down fashion.
+*/
 static
 void Pass1ProcessPendingInstances(void)
 {
@@ -11688,9 +11769,10 @@ static void ExecuteDefault(struct Instance *i, struct Statement *stat,
   }
 }
 
-/* run the default statements of i, including nested fors, but
- * not recursive to i children.
- */
+/**
+	run the default statements of i, including nested fors, but
+	not recursive to i children.
+*/
 static
 void ExecuteDefaultStatements(struct Instance *i,
                               struct gl_list_t *slist,
@@ -11853,10 +11935,11 @@ void DefaultInstanceTree(struct Instance *i)
   VisitInstanceTree(i,DefaultInstance,0,0);
 }
 
-/* This just handles instantiating whens,
- * ignoring anything else.
- * This works with Pass4ProcessPendingInstances.
- */
+/**
+	This just handles instantiating whens,
+	ignoring anything else.
+	This works with Pass4ProcessPendingInstances.
+*/
 static
 struct Instance *Pass4InstantiateModel(struct Instance *result,
                                        unsigned long *pcount)
@@ -11925,11 +12008,12 @@ void Pass4SetWhenBits(struct Instance *inst)
 
 
 
-/* This just handles instantiating logical relations,
- * ignoring anything else.
- * This works with Pass3ProcessPendingInstances.
- * No recursion. No reallocation of result.
- */
+/**
+	This just handles instantiating logical relations,
+	ignoring anything else.
+	This works with Pass3ProcessPendingInstances.
+	No recursion. No reallocation of result.
+*/
 static
 struct Instance *Pass3InstantiateModel(struct Instance *result,
                                        unsigned long *pcount)
@@ -11996,12 +12080,13 @@ void Pass3SetLogRelBits(struct Instance *inst)
   }
 }
 
-/* This just handles instantiating relations, ignoring anything else.
- * This works with Pass2ProcessPendingInstances AND
- * Pass2ProcessPendingInstancesAnon, both of which are required to
- * maintain a correct compilation.
- * No recursion. No reallocation of result.
- */
+/**
+	This just handles instantiating relations, ignoring anything else.
+	This works with Pass2ProcessPendingInstances AND
+	Pass2ProcessPendingInstancesAnon, both of which are required to
+	maintain a correct compilation.
+	No recursion. No reallocation of result.
+*/
 #define ANONFORCE 0 /* require anonymous type use, even if whining OTHERWISE */
 static
 struct Instance *Pass2InstantiateModel(struct Instance *result,
@@ -12104,13 +12189,14 @@ void Pass2SetRelationBits(struct Instance *inst)
 }
 
 
-/* This just handles instantiating models and reinstantiating models/arrays,
- * ignoring defaults and relations.
- * This works with Pass1ProcessPendingInstances.
- * This is not a recursive function.
- * Either def should be null or oldresult should null.
- * If def is null, it is a reinstantiation, else result will be created.
- */
+/**
+	This just handles instantiating models and reinstantiating models/arrays,
+	ignoring defaults and relations.
+	This works with Pass1ProcessPendingInstances.
+	This is not a recursive function.
+	Either def should be null or oldresult should null.
+	If def is null, it is a reinstantiation, else result will be created.
+*/
 static
 struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
                                        unsigned long *pcount,
@@ -12171,15 +12257,15 @@ struct Instance *Pass1InstantiateModel(struct TypeDescription *def,
   return result;
 }
 
-/*
- * we have to introduce a new head to instantiatemodel to manage
- * the phases.
- * 5 phases: model creation, relation creation,
- * logical relation creation, when creation,
- * defaulting.
- * BAA
- * each pass is responsible for clearing the pending list it leaves.
- */
+/**
+	we have to introduce a new head to instantiatemodel to manage
+	the phases.
+	5 phases: model creation, relation creation,
+	logical relation creation, when creation,
+	defaulting.
+	BAA
+	each pass is responsible for clearing the pending list it leaves.
+*/
 static
 struct Instance *NewInstantiateModel(struct TypeDescription *def)
 {
@@ -12308,7 +12394,9 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
 
 
 
-/* returns 1 if the type is uninstantiable as a sim or 0 other wise */
+/**
+	@return 1 if the type is uninstantiable as a sim or 0 otherwise 
+*/
 static
 int ValidRealInstantiateType(struct TypeDescription *def)
 {
@@ -12347,7 +12435,9 @@ int ValidRealInstantiateType(struct TypeDescription *def)
   }
 }
 
-/* this function not recursive */
+/**
+	this function not recursive
+*/
 static
 struct Instance *NewRealInstantiate(struct TypeDescription *def,
                                  int intset)
@@ -12405,8 +12495,6 @@ void ExecDefMethod(struct Instance *root,symchar *simname, symchar *defmethod)
   }
 }
 
-/*
- */
 struct Instance *NewInstantiate(symchar *type, symchar *name, int intset,
                                 symchar *defmethod)
 {
@@ -12498,12 +12586,12 @@ void AddIncompleteInst(struct Instance *i)
   }
 }
 
-/*
- * On entry it is assumed that the instance i has already been
- * refined and so will not MOVE during subsequent work.
- * The process here must be kept in sync with NewRealInstantiateModel,
- * but must, additionally, deal ok with array instances as input.
- */
+/**
+	On entry it is assumed that the instance i has already been
+	refined and so will not MOVE during subsequent work.
+	The process here must be kept in sync with NewRealInstantiateModel,
+	but must, additionally, deal ok with array instances as input.
+*/
 void NewReInstantiate(struct Instance *i)
 {
   struct Instance *result;
@@ -12581,10 +12669,10 @@ void NewReInstantiate(struct Instance *i)
   return;
 }
 
-/*
- * Some supporting code for the new partial instantiation,
- * and encapsulation schemes.
- */
+/*------------------------------------------------------------------------------
+	Some supporting code for the new (how new?) partial instantiation,
+	and encapsulation schemes.
+*/
 
 void SetInstantiationRelnFlags(unsigned int flag)
 {
@@ -12596,16 +12684,14 @@ unsigned int GetInstantiationRelnFlags(void)
   return g_instantiate_relns;
 }
 
-/*
- * This is the version of instantiate to deal with with 'patched'
- * types. Here name is the name of the patch that is to be
- * instantiated. We first find the 'original' type, instantiate it
- * and then apply the patch. The things that are properly and fully
- * supported is external relations, which is the real reason that
- * the patch was designed.
- */
-
-
+/**
+	This is the version of instantiate to deal with with 'patched'
+	types. Here name is the name of the patch that is to be
+	instantiated. We first find the 'original' type, instantiate it
+	and then apply the patch. The things that are properly and fully
+	supported is external relations, which is the real reason that
+	the patch was designed.
+*/
 void UpdateInstance(struct Instance *root, /* the simulation root */
                     struct Instance *target,
                     CONST struct StatementList *slist)
@@ -12656,15 +12742,17 @@ void UpdateInstance(struct Instance *root, /* the simulation root */
 }
 
 
-/*
- * this function instantiates a thing of type name
- * without doing relations.
- * Relations are then hacked in from external places
- * but OTHERWISE the object appears as a regular
- * ascend object. (note HACKED is the right word.)
- * This function is obsolete; bintoken.c and multiphase
- * instantiation make it irrelevant.
- */
+/**
+	this function instantiates a thing of type name
+	without doing relations.
+
+	Relations are then hacked in from external places
+	but OTHERWISE the object appears as a regular
+	ASCEND object. (note HACKED is the right word.)
+
+	@DEPRECATED This function is obsolete; bintoken.c and multiphase
+	instantiation make it irrelevant.
+*/
 struct Instance *InstantiatePatch(symchar *patch,
                                   symchar *name, int intset)
 {

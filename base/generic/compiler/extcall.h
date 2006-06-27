@@ -28,14 +28,14 @@
 	@todo Complete documentation of compiler/extcall.h.
 
 	Requires:
-       #include <stdio.h>
-       #include <stdlib.h>
-       #include "utilities/ascConfig.h"
-       #include "compiler.h"
-       #include "ascmalloc.h"
-       #include "list.h"
-       #include "extfunc.h"
-       #include "instance_enum.h"
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include "utilities/ascConfig.h"
+	#include "compiler.h"
+	#include "ascmalloc.h"
+	#include "list.h"
+	#include "extfunc.h"
+	#include "instance_enum.h"
 *//*
 	by Kirk Andre Abbott
 	Created: Jun 1, 1995.

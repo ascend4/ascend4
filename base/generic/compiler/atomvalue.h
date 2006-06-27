@@ -55,7 +55,7 @@ ASC_DLLSPEC(unsigned) AtomAssigned(CONST struct Instance *i);
  *  Valid for *_INST, *_ATOM_INSTANCE, *_CONSTANT_INSTANCE.
  */
 
-ASC_DLLSPEC(unsigned ) AtomMutable(CONST struct Instance *i);
+ASC_DLLSPEC(unsigned) AtomMutable(CONST struct Instance *i);
 /**<
  *  Return a true value if the atom instance is mutable; otherwise, return
  *  false.

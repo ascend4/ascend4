@@ -1,31 +1,27 @@
 /*
- *  External Functions Module
- *  by Kirk Andre Abbott
- *  Created: July 4, 1994.
- *  Version: $Revision: 1.8 $
- *  Version control file: $RCSfile: extfunc.c,v $
- *  Date last modified: $Date: 1998/02/05 22:23:26 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly, Kirk Andre Abbott
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	by Kirk Andre Abbott
+	Created: July 4, 1994.
+	Last in CVS: $Revision: 1.8 $ $Date: 1998/02/05 22:23:26 $ $Author: ballan $
+*/
 
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
@@ -114,13 +110,7 @@ double blackbox_evaluate_residual(struct relation *r){
 	CONSOLE_DEBUG("...");
 
 	n = NumberVariables(r);
-	for(i=1;i <= n; ++i){
-		inst = RelationVariable(r,i);
-		tmp = WriteInstanceNameString(inst, NULL);
-		CONSOLE_DEBUG("Variable %d: '%s'", i, tmp);
-		ASC_FREE(tmp);
-	}
-	
+
 	asc_assert(r!=NULL);
 	asc_assert(r->share!=NULL);	
 	asc_assert(r->share->bbox.ext!=NULL);
@@ -134,13 +124,35 @@ double blackbox_evaluate_residual(struct relation *r){
 	ExtBBoxFunc *valfnptr = efunc->u.black.value;
 	asc_assert(valfnptr!=NULL);
 
+	CONSOLE_DEBUG("vars=%d, inputs=%d, outputs=%d",n
+		,NumberInputArgs(efunc)
+		,NumberOutputArgs(efunc)
+	);
+
+	/* list all the variables associated with this black box */
+	for(i=1;i <= n; ++i){
+		inst = RelationVariable(r,i);
+		tmp = WriteInstanceNameString(inst, NULL);
+		if(i<=NumberInputArgs(efunc)){
+			CONSOLE_DEBUG("Input %d: '%s'", i, tmp);
+		}else{
+			CONSOLE_DEBUG("Output %d: '%s'", i-NumberInputArgs(efunc), tmp);
+		}
+		ASC_FREE(tmp);
+	}
+
 	in = ASC_NEW_ARRAY(double,NumberInputArgs(efunc));
 	out = ASC_NEW_ARRAY(double,NumberOutputArgs(efunc));
 
-	for(i=0; i < n; ++i){
+	for(i=0; i < NumberInputArgs(efunc); ++i){
 		inst = RelationVariable(r,i+1);
 		tmp = WriteInstanceNameString(inst,NULL);
-		in[i] = RealAtomValue(inst);
+		if(!AtomAssigned(inst)){
+			CONSOLE_DEBUG("Var %d ('%s') has not been assigned yet!",i+1,tmp);
+			in[i]=-1;
+		}else{
+			in[i] = RealAtomValue(inst);
+		}
 		CONSOLE_DEBUG("Set var %d ('%s') to '%f'",i+1,tmp,in[i]);
 		ASC_FREE(tmp);
 	}
