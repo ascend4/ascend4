@@ -527,10 +527,8 @@ class KeepContext:
 	def __init__(self,context,varprefix,static=False):
 		self.keep = {}
 		for k in ['LIBS','LIBPATH','CPPPATH','LINKFLAGS']:
-			if context.env.has_key(k):
-				self.keep[k] = context.env[k]
-			else:
-				self.keep[k] = None
+			#print "Keeping env %s = %s" % (k,context.env.get(k))
+			self.keep[k]=context.env.get(k)
 		
 		if context.env.has_key(varprefix+'_CPPPATH'):
 			context.env.Append(CPPPATH=[env[varprefix+'_CPPPATH']])
@@ -549,7 +547,7 @@ class KeepContext:
 
 			if context.env.has_key(varprefix+'_LIB'):
 				context.env.Append(LIBS=[env[varprefix+'_LIB']])
-				#print "Adding '"+str(libs_add)+"' to libs"	
+				#print "Adding '"+str(env[varprefix+'_LIB'])+"' to libs"	
 
 	def restore(self,context):
 		#print "RESTORING CONTEXT"
@@ -561,7 +559,7 @@ class KeepContext:
 					#print "Clearing "+str(k)
 					del context.env[k];
 			else:
-				#print "Restoring "+str(k)+" to '"+self.keep[k]+"'"				
+				#print "Restoring %s to '%s'" %(k,self.keep.get(k))
 				context.env[k]=self.keep[k];
 
 def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False):
@@ -578,12 +576,13 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False):
 	if varprefix==None:
 		varprefix = libname.upper()
 	
+	#print "LIBS is currently:",context.env.get('LIBS')
 	keep = KeepContext(context,varprefix,static)
 
 	if not context.env.has_key(varprefix+'_LIB'):
 		# if varprefix_LIB were in env, KeepContext would 
 		# have appended it already
-		context.env.Append(LIBS=libname)
+		context.env.Append(LIBS=[libname])
 
 	is_ok = context.TryLink(text,ext)
 	
@@ -592,7 +591,7 @@ def CheckExtLib(context,libname,text,ext='.c',varprefix=None,static=False):
 	keep.restore(context)
 
 #	print "Restored CPPPATH="+str(context.env['CPPPATH'])
-#	print "Restored LIBS="+libname
+#	print "Restored LIBS="+str(context.env['LIBS'])
 #	print "Restored LIBPATH="+str(context.env['LIBPATH'])
 
 	context.Result(is_ok)
@@ -692,16 +691,43 @@ def CheckCUnit(context):
 # MATH test
 
 math_test_text = """
+#ifndef _ALL_SOURCE
+# define _ALL_SOURCE
+#endif
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE
+#endif
+#ifndef _XOPEN_SOURCE_EXTENDED
+# define _XOPEN_SOURCE_EXTENDED 1
+#endif
 #include <math.h>
 int main(void){
-	double x;
-	x = sinh(0.1);
+	double x = 1.0; double y = 1.0; int i = 1;
+	acosh(x); asinh(x); atanh(x); cbrt(x); expm1(x); erf(x); erfc(x); isnan(x);
+	j0(x); j1(x); jn(i,x); ilogb(x); logb(x); log1p(x); rint(x);
+	y0(x); y1(x); yn(i,x);
+#ifdef _THREAD_SAFE
+	gamma_r(x,&i);
+	lgamma_r(x,&i);
+#else
+gamma(x);
+	lgamma(x);
+#endif
+	hypot(x,y); nextafter(x,y); remainder(x,y); scalb(x,y);
 	return 0;
 }
 """
 
 def CheckMath(context):
-	return CheckExtLib(context,'m',math_test_text)
+	context.Message('Checking for IEE math library... ')
+	libsave=context.env.get('LIBS');
+	context.env.AppendUnique(LIBS=['m'])
+	is_ok=context.TryLink(math_test_text,".c")
+	context.Result(is_ok)
+	if not is_ok:
+		context.env['LIBS']=libsave
+	return is_ok
+
 #----------------
 # IDA test
 
@@ -961,6 +987,7 @@ if with_cunit:
 	if not conf.CheckCUnit():
 		without_cunit_reason = 'CUnit not found'
 		with_cunit = False
+		#print "CUNIT NOT FOUND, LIBS=",conf.env.get('LIBS')
 
 # IDA
 
@@ -1385,4 +1412,6 @@ if with_installer:
 env.Default(default_targets)
 
 print "Building targets:"," ".join([str(i) for i in BUILD_TARGETS])
+
+# vim: set syntax=python:
 
