@@ -414,8 +414,8 @@ static int kirk_gauss_factor(linsolqr_system_t sys,mtx_region_t *A11)
   pivot_candidates.high = A11->col.high;	/* initialize */
 
   length = sys->rng.high - sys->rng.low + 1;
-  value = (real64 *)ascmalloc(length*sizeof(real64));
-  index = (int32 *)ascmalloc(length*sizeof(int32));
+  value = ASC_NEW_ARRAY(real64,length);
+  index = ASC_NEW_ARRAY(int32,length);
 
   /*
    * First find the maximum element in the col *regardless*. This

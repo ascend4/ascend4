@@ -956,7 +956,7 @@ struct Statement *CopyToModify(struct Statement *s)
   result = STMALLOC;
   if (s->stringform != NULL) {
     size = strlen(s->stringform);
-    result->stringform = (char *)ascmalloc(size+1);
+    result->stringform = ASC_NEW_ARRAY(char,size+1);
     memcpy(result->stringform,s->stringform,size+1);
   }
   result->ref_count = 1;

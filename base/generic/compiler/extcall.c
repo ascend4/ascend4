@@ -90,8 +90,8 @@ void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst)
 }
 
 struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
-				     unsigned long varndx)
-{
+		unsigned long varndx
+){
   struct Instance *arg;
   struct gl_list_t *branch;
   unsigned long len1,c=1L,len2,count=0L;
@@ -107,8 +107,7 @@ struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
       if (count>=varndx){
 	safetycheck = len2-count+varndx;
 	if (safetycheck<=0){
-	  FPRINTF(ASCERR,"Something really wrong in GetSubjectInstance\n");
-	  FPRINTF(ASCERR,"Please report to%s\n",ASC_BIG_BUGMAIL);
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Something really wrong (%s)",__FUNCTION__);
 	  return NULL;
 	}
 	arg = (struct Instance *)gl_fetch(branch,(unsigned long)safetycheck);
@@ -285,12 +284,4 @@ struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext)
   assert(i!=NULL);
   return i;
 }
-
-
-
-
-
-
-
-
 

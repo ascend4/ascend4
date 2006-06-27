@@ -236,7 +236,7 @@ int Asc_SetPathList(CONST char *envvar, CONST char *pathstring)
   if (spcseen) {
     return 1;
   }
-  keepname = (char *)ascmalloc(c+1);
+  keepname = ASC_NEW_ARRAY(char,c+1);
   if (keepname == NULL) {
     return 1;
   }
@@ -337,7 +337,7 @@ int Asc_PutEnv(CONST char *envstring)
   if (spcseen) {
     return 1;
   }
-  keepname = (char *)ascmalloc(c+1);
+  keepname = ASC_NEW_ARRAY(char,c+1);
   if (keepname == NULL) {
     return 1;
   }
@@ -507,7 +507,7 @@ char *Asc_GetEnv(const char *envvar)
   for (c = 1; c <= llen; c++) {
     slen += (strlen((char *)gl_fetch(ev->data,(unsigned long)c)) +1 );
   }
-  result = (char *)ascmalloc(slen+1);
+  result = ASC_NEW_ARRAY(char,slen+1);
   if (result == NULL) {
     return NULL;
   }

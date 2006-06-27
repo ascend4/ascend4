@@ -230,7 +230,7 @@ static void test_ascMalloc(void)
 
   /* test ascreallocPURE() */
 
-  p_str1 = (char *)ascmalloc(50);                       /* allocate a block & check status */
+  p_str1 = ASC_NEW_ARRAY(char,50);                       /* allocate a block & check status */
   CU_TEST_FATAL(NULL != p_str1);
 #ifdef MALLOC_DEBUG
   CU_TEST(50 == ascmeminuse());
@@ -462,9 +462,9 @@ static void test_ascMalloc(void)
 
   /* test ascrealloc() */
 
-  p_str1 = (char *)ascmalloc(50);                       /* allocate several blocks & check status */
-  p_str2 = (char *)ascmalloc(20);
-  p_str3 = (char *)ascmalloc(25);
+  p_str1 = ASC_NEW_ARRAY(char,50);                       /* allocate several blocks & check status */
+  p_str2 = ASC_NEW_ARRAY(char,20);
+  p_str3 = ASC_NEW_ARRAY(char,25);
   CU_TEST_FATAL(NULL != p_str1);
   CU_TEST_FATAL(NULL != p_str2);
   CU_TEST_FATAL(NULL != p_str3);
@@ -712,7 +712,7 @@ static void test_ascMalloc(void)
   CU_TEST(1 == AllocatedMemory(&str1_bad, 0));          /* non-NULL pointer, nothing allocated */
 #endif
 
-  p_str1 = (char *)ascmalloc(100);                      /* allocate 1 block */
+  p_str1 = ASC_NEW_ARRAY(char,100);                      /* allocate 1 block */
   CU_TEST_FATAL(NULL != p_str1);
 
   p_str2 = (char *)malloc(100);                         /* allocate another outside ascMalloc */
@@ -808,7 +808,7 @@ static void test_ascMalloc(void)
 
   /* test InMemoryBlock() */
 
-  p_str1 = (char *)ascmalloc(100);                      /* allocate 1 block */
+  p_str1 = ASC_NEW_ARRAY(char,100);                      /* allocate 1 block */
   CU_TEST_FATAL(NULL != p_str1);
   CU_TEST(0 != InMemoryBlock(p_str1, p_str1));
   CU_TEST(0 != InMemoryBlock(p_str1, p_str1+1));
@@ -843,7 +843,7 @@ static void test_ascMalloc(void)
   CU_TEST(FALSE == asc_assert_failed());
 #endif
 
-  p_str1 = (char *)ascmalloc(100);
+  p_str1 = ASC_NEW_ARRAY(char,100);
   p_int1 = (int *)asccalloc(10, sizeof(int));
 
   p_str2 = (char *)malloc(100);                       /* don't use asc*alloc! */
@@ -944,7 +944,7 @@ static void test_ascMalloc(void)
   CU_TEST(FALSE == asc_assert_failed());
 #endif
 
-  p_str1 = (char *)ascmalloc(100);
+  p_str1 = ASC_NEW_ARRAY(char,100);
   p_int1 = (int *)asccalloc(10, sizeof(int));
 
   p_str2 = (char *)malloc(100);                       /* don't use asc*alloc! */
@@ -1014,7 +1014,7 @@ static void test_ascMalloc(void)
   CU_TEST(FALSE == asc_assert_failed());
 #endif
 
-  p_str1 = (char *)ascmalloc(100);
+  p_str1 = ASC_NEW_ARRAY(char,100);
   p_int1 = (int *)asccalloc(10, sizeof(int));
 
   p_str2 = (char *)malloc(100);                       /* don't use asc*alloc! */
@@ -1112,7 +1112,7 @@ static void test_ascMalloc(void)
   CU_TEST(FALSE == asc_assert_failed());
 #endif
 
-  p_str1 = (char *)ascmalloc(100);                    /* allocate 1 block */
+  p_str1 = ASC_NEW_ARRAY(char,100);                    /* allocate 1 block */
   CU_TEST_FATAL(NULL != p_str1);
 
   asc_assert_reset();

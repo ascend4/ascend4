@@ -222,7 +222,7 @@ extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
   if (inputstring != NULL) {
     /* copy and configure to string we keep for flex processing */
     input_len = strlen(inputstring);
-    keep_string = (char *)ascmalloc(input_len+3);
+    keep_string = ASC_NEW_ARRAY(char,input_len+3);
     if (keep_string != NULL) {
       strcpy(keep_string,inputstring);
       keep_string[++input_len] = '\0';

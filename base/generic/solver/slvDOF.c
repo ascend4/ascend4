@@ -277,8 +277,8 @@ static void create_matrices(slv_system_t server,slvDOF_system_t sys)
   /* create integer,char workspaces. */
   sys->rows = (unsigned char *)asccalloc(sys->cap,1);
   sys->cols = (unsigned char *)asccalloc(sys->cap,1);
-  sys->rowlist = (int32 *)ascmalloc(sys->rtot*sizeof(int32));
-  sys->collist = (int32 *)ascmalloc(sys->vtotal*sizeof(int32));
+  sys->rowlist = ASC_NEW_ARRAY(int32,sys->rtot);
+  sys->collist = ASC_NEW_ARRAY(int32,sys->vtotal);
 
   /* Initialize Status */
   sys->s.over_defined = (sys->rused > sys->vused);

@@ -1359,7 +1359,7 @@ char *DeSingleQuote(char *s)
   len = strlen(s);
   if (len > 40) {
     old = s;
-    s = (char *)ascmalloc(41);
+    s = ASC_NEW_ARRAY(char,41);
     strncpy(s,old,17);
     s[17] = '.';
     s[18] = '.';

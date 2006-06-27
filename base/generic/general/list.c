@@ -1012,7 +1012,7 @@ void gl_reverse(struct gl_list_t *list)
   unsigned long c,len;
 
   if (list==NULL || list->length <2L) return;
-  tmpdata = (VOIDPTR *)ascmalloc(list->capacity*sizeof(VOIDPTR));
+  tmpdata = ASC_NEW_ARRAY(VOIDPTR,(list->capacity));
   if (tmpdata==NULL) {
     Asc_Panic(2, NULL, "gl_reverse out of memory. Bye!\n");
   }

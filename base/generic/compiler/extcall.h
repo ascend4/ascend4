@@ -25,7 +25,9 @@
 	list of instances which are tied to the arguments in the calling ASCEND
 	statement.
 
-	@todo Complete documentation of compiler/extcall.h.
+	@TODO Complete documentation of compiler/extcall.h.
+
+	@TODO Documentation: what is a 'subject' in the context of an ExtCallNode?
 
 	Requires:
 	#include <stdio.h>

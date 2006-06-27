@@ -435,7 +435,7 @@ char *WriteRelationPostfixString( CONST struct Instance *relinst,
   r = GetInstanceRelation(relinst,&type);
   if (type!=e_token) {
     FPRINTF(ASCERR,"Invalid relation type in WriteRelationPostfixString\n");
-    result=(char *)ascmalloc(60);
+    result=ASC_NEW_ARRAY(char,60);
     if (result==NULL) return result;
     sprintf(result,"WriteRelationPostfixString called on non-token relation.");
     return result;
@@ -1372,7 +1372,7 @@ char *WriteRelationString(CONST struct Instance *relinst,
 
   reln = GetInstanceRelation(relinst,&reltype);
   if (!reln) {
-    result = (char *) ascmalloc(15);
+    result = ASC_NEW_ARRAY(char,15);
     if (result == NULL) return result;
     sprintf(result,"NULL relation\n");
     if (lenptr != NULL) {

@@ -203,7 +203,7 @@ struct UnitDefinition *CreateUnitDef(symchar *lhs, CONST char *rhs,
     return NULL;
   }
   len = strlen(rhs) + 1;
-  ustr = (char *)ascmalloc(len);
+  ustr = ASC_NEW_ARRAY(char,len);
   if (ustr == NULL) {
     FPRINTF(ASCERR,"  malloc failed in CreateUnitDef for %s: %s %d\n",
       rhs,filename,linenum);
@@ -771,7 +771,7 @@ char *UnitsStringSI(struct Units *p)
     return NULL;
   }
   if (IsWild(p->dim)) {
-    result = (char *)ascmalloc(2);
+    result = ASC_NEW_ARRAY(char,2);
     sprintf(result,"*");
     return result;
   }

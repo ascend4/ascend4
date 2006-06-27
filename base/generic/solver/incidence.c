@@ -72,10 +72,10 @@ build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd){
   pd->nvar = slv_get_num_solvers_vars(sys); /* O(1) */
   pd->npcol = slv_count_solvers_vars(sys,&vincident); /* O(npcols) */
   pd->nfakevar = pd->npcol; /* this could change with autoslack solvers */
-  pd->pr2e = (int *)ascmalloc(sizeof(int)*(pd->nprow +1)); /* speed of these */
-  pd->e2pr = (int *)ascmalloc(sizeof(int)*(pd->neqn +1));
-  pd->pc2v = (int *)ascmalloc(sizeof(int)*(pd->npcol +1));
-  pd->v2pc = (int *)ascmalloc(sizeof(int)*(pd->nvar +1));
+  pd->pr2e = ASC_NEW_ARRAY(int,(pd->nprow +1)); /* speed of these */
+  pd->e2pr = ASC_NEW_ARRAY(int,(pd->neqn +1));
+  pd->pc2v = ASC_NEW_ARRAY(int,(pd->npcol +1));
+  pd->v2pc = ASC_NEW_ARRAY(int,(pd->nvar +1));
   pd->vfixed = (char *)asccalloc((pd->nvar +1),sizeof(char));
   if ( ISNULL(pd->pr2e) || ISNULL(pd->e2pr) ||
        ISNULL(pd->pc2v) || ISNULL(pd->v2pc) ||

@@ -67,7 +67,7 @@ extern int Asc_ScriptConfigureInterrupt(int start, Tcl_Interp *interp)
   /* assumes ansi NULL initialization of varName */
   if (start) {
     if (varName == NULL) {
-      varName = (char *)ascmalloc(60);
+      varName = ASC_NEW_ARRAY(char,60);
       if (varName == NULL) {
         return 1;
       }

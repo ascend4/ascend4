@@ -1918,7 +1918,7 @@ void AddShellChar(char c,
       len = strlen(p);
       if (len > 0) {
         char *shellstring;
-        shellstring = (char *)ascmalloc(len+1);
+        shellstring = ASC_NEW_ARRAY(char,len+1);
         strcpy(shellstring, p);
 	args[0].id = shellstring;
         ClearBuffers(line,gpos,piece,pos);
@@ -3467,11 +3467,11 @@ void SetupBinTokens(void)
   char *b[5];
   char leaf[25];
   g_uid++;
-  b[0]=(char *)ascmalloc(50);
-  b[1]=(char *)ascmalloc(50);
-  b[2]=(char *)ascmalloc(50);
-  b[3]=(char *)ascmalloc(180);
-  b[4]=(char *)ascmalloc(50);
+  b[0]=ASC_NEW_ARRAY(char,50);
+  b[1]=ASC_NEW_ARRAY(char,50);
+  b[2]=ASC_NEW_ARRAY(char,50);
+  b[3]=ASC_NEW_ARRAY(char,180);
+  b[4]=ASC_NEW_ARRAY(char,50);
   sprintf(b[0],"/tmp/btsrc%d.c",g_uid);
   sprintf(b[1],"/tmp/btsrc%d.o",g_uid);
   sprintf(b[2],"/tmp/btsrc%d.so",g_uid);

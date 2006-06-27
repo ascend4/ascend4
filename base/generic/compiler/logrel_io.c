@@ -772,7 +772,7 @@ char *WriteLogRelToString(CONST struct Instance *lrelinst,
 
   lreln = GetInstanceLogRel(lrelinst);
   if (!lreln) {
-    result = (char *) ascmalloc(15);
+    result = ASC_NEW_ARRAY(char,15);
     if (result == NULL) return result;
     sprintf(result,"NULL logical relation\n");
     return result;

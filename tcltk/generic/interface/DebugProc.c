@@ -1759,7 +1759,7 @@ int Asc_DebuWriteIncidence(ClientData cdata, Tcl_Interp *interp,
   mtx_region_t reg;
   real64 value;
   struct rel_relation **rp;
-  char *line = (char *)ascmalloc(32);
+  char *line = ASC_NEW_ARRAY(char,32);
 
   UNUSED_PARAMETER(cdata);
 

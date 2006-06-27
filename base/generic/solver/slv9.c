@@ -4191,7 +4191,7 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   conopt_estimate_memory(&(sys->con.nintgr),&(sys->con.ipsz[0]),
                          &(sys->con.minmem),&(sys->con.estmem));
 
-  sys->con.work = (real64 *)ascmalloc(sys->con.estmem*sizeof(real64));
+  sys->con.work = ASC_NEW_ARRAY(real64,sys->con.estmem);
   sys->con.lwork = sys->con.estmem;
   /*
    * Execute solution algorithm with CONOPT

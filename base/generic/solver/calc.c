@@ -85,7 +85,7 @@ static real64 *alloc_poly(int order)
       poly_cap = order+1;
       if( poly != NULL )
          ascfree( (POINTER)poly );
-      poly = (real64 *)ascmalloc( poly_cap * sizeof(real64) );
+      poly = ASC_NEW_ARRAY(real64,poly_cap );
    }
    return(poly);
 }

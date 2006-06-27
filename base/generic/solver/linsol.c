@@ -818,7 +818,7 @@ static void invert(linsol_system_t sys)
 
    length = sys->rng.high - sys->rng.low + 1;
    tmp_array_origin = length > 0 ?
-      (real64 *)ascmalloc( length*sizeof(real64) ) : NULL;
+      ASC_NEW_ARRAY(real64,length) : NULL;
    tmp = tmp_array_origin != NULL ?
       tmp_array_origin - sys->rng.low : NULL;
 
@@ -879,7 +879,7 @@ static real64 *raise_capacity(real64 *vec,int32 oldcap,int32 newcap)
 /*
    real64 *newvec;
    newvec = newcap > 0 ?
-      (real64 *)ascmalloc( newcap * sizeof(real64) ) : NULL;
+      ASC_NEW_ARRAY(real64,newcap ) : NULL;
    if( vec != NULL ) {
       mem_move_cast(vec,newvec,oldcap*sizeof(real64));
       ascfree( (POINTER)vec );
@@ -892,7 +892,7 @@ static real64 *raise_capacity(real64 *vec,int32 oldcap,int32 newcap)
     newvec = (real64 *)ascrealloc(vec,(newcap * sizeof(real64)));
   else
     newvec=newcap > 0 ?
-      (real64 *)ascmalloc( newcap * sizeof(real64) ) : NULL;
+      ASC_NEW_ARRAY(real64,newcap ) : NULL;
   return newvec;
 }
 
@@ -1180,7 +1180,7 @@ static void invert_alt(linsol_system_t sys)
 
    length = sys->rng.high - sys->rng.low + 1;
    tmp = length > 0 ?
-      (real64 *)ascmalloc( length*sizeof(real64) ) : NULL;
+      ASC_NEW_ARRAY(real64,length) : NULL;
 
    sys->smallest_pivot = MAXDOUBLE;
    candidates.row.high = sys->rng.high;
