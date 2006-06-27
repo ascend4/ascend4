@@ -228,7 +228,7 @@ char *WriteWhenString(CONST struct Instance *wheninst,
   Asc_DString *dsPtr;
   char *result;
 
-  result = (char *) ascmalloc(15);
+  result = ASC_NEW_ARRAY(char,15);
   if (result == NULL) {
     FPRINTF(stderr,"Memory error in WriteWhenString\n");
     return result;

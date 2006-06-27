@@ -1235,7 +1235,7 @@ int32 slv_define_parm(slv_parameters_t *p,
       (char **)ascmalloc(high.argi*sizeof(char *));
     for (i = 0; i < high.argi; i++) {
       len = strlen(low.argv[i]);
-      p->parms[length].info.c.argv[i] =(char *)ascmalloc(len+1*sizeof(char));
+      p->parms[length].info.c.argv[i] =ASC_NEW_ARRAY(char,len+1);
       strcpy(p->parms[length].info.c.argv[i],low.argv[i]);
     }
 
@@ -1254,15 +1254,15 @@ int32 slv_define_parm(slv_parameters_t *p,
     p->parms[length].number = length;
 
     len = strlen(name);
-    p->parms[length].name = (char *)ascmalloc(len+1*sizeof(char));
+    p->parms[length].name = ASC_NEW_ARRAY(char,len+1);
     strcpy(p->parms[length].name,name);
 
     len = strlen(interface_label);
-    p->parms[length].interface_label = (char *)ascmalloc(len+1*sizeof(char));
+    p->parms[length].interface_label = ASC_NEW_ARRAY(char,len+1);
     strcpy(p->parms[length].interface_label,interface_label);
 
     len = strlen(description);
-    p->parms[length].description = (char *)ascmalloc(len+1*sizeof(char));
+    p->parms[length].description = ASC_NEW_ARRAY(char,len+1);
     strcpy(p->parms[length].description,description);
 
     p->parms[length].display = display;

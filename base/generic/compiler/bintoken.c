@@ -174,7 +174,7 @@ int BinTokenCheckCapacity()
   if (g_bt_data.tables == NULL) {
     assert(g_bt_data.captables == 0);
     g_bt_data.tables =
-      (struct bt_table *)ascmalloc(20*sizeof(struct bt_table));
+      ASC_NEW_ARRAY(struct bt_table,20);
     assert(g_bt_data.tables != NULL);
     g_bt_data.captables = 20;
     return 0;
@@ -1014,11 +1014,11 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c *
   gl_append_ptr(g_test_list,(void *)30);
   gl_append_ptr(g_test_list,(void *)40);
   gl_append_ptr(g_test_list,(void *)50);
-  b[0]=(char *)ascmalloc(50);
-  b[1]=(char *)ascmalloc(50);
-  b[2]=(char *)ascmalloc(50);
-  b[4]=(char *)ascmalloc(50);
-  b[5]=(char *)ascmalloc(50);
+  b[0]=ASC_NEW_ARRAY(char,50);
+  b[1]=ASC_NEW_ARRAY(char,50);
+  b[2]=ASC_NEW_ARRAY(char,50);
+  b[4]=ASC_NEW_ARRAY(char,50);
+  b[5]=ASC_NEW_ARRAY(char,50);
   sprintf(b[0],"/tmp/btsrc.c");
   sprintf(b[1],"/tmp/btsrc.o");
   sprintf(b[2],"/tmp/btsrc.so");

@@ -1234,7 +1234,7 @@ mtx_block_t *mtx_block_partition( mtx_matrix_t mtx, mtx_region_t *reg)
   vars.vstack = reg->row.high + 1;	/* was symbolic_rank */
   if (vars.vstack > 0) {
     vars.lowlink = vars.blocksize =
-      (int32 *)ascmalloc(vars.vstack*sizeof(int32));
+      ASC_NEW_ARRAY(int32,vars.vstack);
   } else {
     vars.lowlink = vars.blocksize = NULL;
   }
@@ -1316,7 +1316,7 @@ void mtx_partition( mtx_matrix_t mtx)
 
   vars.vstack = mtx->data->symbolic_rank;
   vars.lowlink = vars.blocksize = vars.vstack > 0 ?
-    (int32 *)ascmalloc( vars.vstack*sizeof(int32) ) : NULL;
+    ASC_NEW_ARRAY(int32,vars.vstack) : NULL;
   vars.done = 0;
   vars.nblocks = 0;
 
@@ -1329,7 +1329,7 @@ void mtx_partition( mtx_matrix_t mtx)
     ascfree(mtx->data->block);
   mtx->data->nblocks = vars.nblocks;
   mtx->data->block = vars.nblocks > 0 ?
-    (mtx_region_t *)ascmalloc( vars.nblocks*sizeof(mtx_region_t) ) : NULL;
+    ASC_NEW_ARRAY(mtx_region_t,vars.nblocks) : NULL;
   for( start=blocknum=0 ; blocknum < vars.nblocks ; blocknum++ ) {
     size = vars.blocksize[start];
     mtx->data->block[blocknum].row.low =
@@ -1383,7 +1383,7 @@ void mtx_ut_partition( mtx_matrix_t mtx)
 
   vars.vstack = mtx->data->symbolic_rank;
   vars.lowlink = vars.blocksize = vars.vstack > 0 ?
-    (int32 *)ascmalloc( vars.vstack*sizeof(int32) ) : NULL;
+    ASC_NEW_ARRAY(int32,vars.vstack) : NULL;
   vars.done = 0;
   vars.nblocks = 0;
 
@@ -1398,7 +1398,7 @@ void mtx_ut_partition( mtx_matrix_t mtx)
   }
   mtx->data->nblocks = vars.nblocks;
   mtx->data->block = vars.nblocks > 0 ?
-    (mtx_region_t *)ascmalloc( vars.nblocks*sizeof(mtx_region_t) ) : NULL;
+    ASC_NEW_ARRAY(mtx_region_t,vars.nblocks) : NULL;
   for( start=blocknum=0 ; blocknum < vars.nblocks ; blocknum++ ) {
     size = vars.blocksize[start];
     mtx->data->block[blocknum].row.low =

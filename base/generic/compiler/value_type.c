@@ -555,7 +555,7 @@ struct value_t AddValues(struct value_t value1, struct value_t value2)
                                  BothConstantValue(value1,value2));
       }
       slen = strlen(value1.u.sym_ptr) + strlen(value2.u.sym_ptr);
-      str = (char *)ascmalloc(slen+1);
+      str = ASC_NEW_ARRAY(char,slen+1);
       if (str==NULL) {
        return TypeConflict(); /* out of memory error */
       }

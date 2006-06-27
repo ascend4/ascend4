@@ -115,7 +115,7 @@ static double *alloc_poly(int order)
       if( poly != NULL ) {
          ascfree( poly );
       }
-      poly = (double *)ascmalloc( poly_cap * sizeof(double) );
+      poly = ASC_NEW_ARRAY(double,poly_cap );
    }
    return(poly);
 }

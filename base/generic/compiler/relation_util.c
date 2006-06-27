@@ -3856,7 +3856,7 @@ char *tmpalloc(int nbytes){
   if( nbytes > 0 ) {
     if( nbytes > cap ) {
       if( ptr ) ascfree(ptr);
-      ptr = (char *)ascmalloc(nbytes);
+      ptr = ASC_NEW_ARRAY(char,nbytes);
       cap = nbytes;
     }
   }

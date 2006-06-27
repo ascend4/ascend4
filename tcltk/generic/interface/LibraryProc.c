@@ -1070,7 +1070,7 @@ int LibrDumpNotes(Tcl_Interp *interp, int tmax, long heldlist, symchar *dbid)
   /* process text */
   row = 0;
   len = gl_length(notes);
-  abbr = (char *)ascmalloc(tmax+1);
+  abbr = ASC_NEW_ARRAY(char,tmax+1);
   if (abbr == NULL) {
     Tcl_ResetResult(interp);
     Tcl_AppendResult(interp,"NOTES dump: out of memory",(char *)NULL);

@@ -103,21 +103,21 @@
 /**
 	Shorthand for creating pointers to newly allocated data of a given type
 */
-#define ASC_NEW(TYPE) (TYPE *)ascmalloc(sizeof(TYPE))
+#define ASC_NEW(TYPE) (TYPE*)ascmalloc(sizeof(TYPE))
 
-#define ASC_NEW_CLEAR(TYPE) (TYPE *)asccalloc(1,sizeof(TYPE))
+#define ASC_NEW_CLEAR(TYPE) (TYPE*)asccalloc(1,sizeof(TYPE))
 
 /**
 	Shorthand for creating pointer to an array of newly allocated data of a
 	given type. 'ascmalloc' is used for the allocation.
 */
-#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE *)ascmalloc(sizeof(TYPE)*(COUNT))
+#define ASC_NEW_ARRAY(TYPE,COUNT) (TYPE*)ascmalloc(sizeof(TYPE)*(COUNT))
 
 /**
 	Shorthand for creating a pointer to allocated data, using asccalloc (to zero
 	the allocated space).
 */
-#define ASC_NEW_ARRAY_CLEAR(TYPE,COUNT) (TYPE *)asccalloc(COUNT,sizeof(TYPE))
+#define ASC_NEW_ARRAY_CLEAR(TYPE,COUNT) (TYPE*)asccalloc((COUNT),sizeof(TYPE))
 
 /**
 	Shorthand for creating a pointer to an array of allocated data. If the

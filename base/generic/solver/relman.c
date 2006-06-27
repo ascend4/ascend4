@@ -81,7 +81,7 @@ static POINTER rel_tmpalloc( int nbytes)
   if (nbytes) {
     if( nbytes > cap ) {
       if( ptr != NULL ) ascfree(ptr);
-      ptr = (char *)ascmalloc(nbytes);
+      ptr = ASC_NEW_ARRAY(char,nbytes);
       cap = nbytes;
     }
   } else {
@@ -900,7 +900,7 @@ char *dummyrelstring(slv_system_t sys, struct rel_relation *rel, int style)
   UNUSED_PARAMETER(sys);
   UNUSED_PARAMETER(rel);
   UNUSED_PARAMETER(style);
-  result = (char *)ascmalloc(80);
+  result = ASC_NEW_ARRAY(char,80);
   sprintf(result,"relman_make_*string_*fix not implemented yet");
   return result;
 }
@@ -965,7 +965,7 @@ char *relman_make_vstring_postfix(slv_system_t sys,
      left = exprman_make_xstring_postfix(rel,sys,rel_lhs(rel));
      right = exprman_make_xstring_postfix(rel,sys,rel_rhs(rel));
 #else
-     sbeg = (char *)ascmalloc(60);
+     sbeg = ASC_NEW_ARRAY(char,60);
      if (sbeg==NULL) return sbeg;
      sprintf(sbeg,"relman_make_xstring_postfix not reimplemented.");
 #endif

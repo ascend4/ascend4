@@ -1343,7 +1343,7 @@ void CodeGen_Read_Values_Fast(slv_system_t sys,
     num_vars = g_cgdata.vars.num_vars;
     vp = g_cgdata.vars.var_list;
 
-    buffer = (char *)ascmalloc(16*sizeof(char));
+    buffer = ASC_NEW_ARRAY(char,16);
     fgets(buffer,16,fp);
     check = atoi(buffer);
     if ( check == num_vars) {

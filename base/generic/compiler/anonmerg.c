@@ -1013,7 +1013,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   amipd->iplen = amvi->nip;
   amipd->num_mergelists = 0;
   amipd->num_iwithmerge = 0;
-  amipd->node2ip = (int *)ascmalloc(sizeof(int)*(amvi->nim+1));
+  amipd->node2ip = ASC_NEW_ARRAY(int,(amvi->nim+1));
   if (amipd->node2ip == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for node2ip.");
     return NULL;
@@ -1092,17 +1092,17 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.header.");
     return NULL;
   }
-  amipd->md.colcount = (int *)ascmalloc(sizeof(int)*(amvi->nip+1));
+  amipd->md.colcount = ASC_NEW_ARRAY(int,(amvi->nip+1));
   if (amipd->md.colcount == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.colcount.");
     return NULL;
   }
-  amipd->md.sg2blob = (int *)ascmalloc(sizeof(int)*(asize+1));
+  amipd->md.sg2blob = ASC_NEW_ARRAY(int,(asize+1));
   if (amipd->md.sg2blob == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.sg2blob.");
     return NULL;
   }
-  amipd->md.blobcollected = (int *)ascmalloc(sizeof(int)*(asize+1));
+  amipd->md.blobcollected = ASC_NEW_ARRAY(int,(asize+1));
   if (amipd->md.blobcollected == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blobcollected.");
     return NULL;

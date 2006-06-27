@@ -1035,8 +1035,8 @@ static int make_specs(slv1_system_t sys)
   fp=MIF(sys);
   fpl=LIF(sys);
   sys->inform=0;
-  s72=(char *)ascmalloc((73*sizeof(char)));
-  s56=(char *)ascmalloc((57*sizeof(char)));
+  s72=ASC_NEW_ARRAY(char,(73));
+  s56=ASC_NEW_ARRAY(char,(57));
   if (!s56 || !s72) {
     FPRINTF(stderr,"ascmalloc failed in make_specs!");
     return (1);

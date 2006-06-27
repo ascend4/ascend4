@@ -148,7 +148,7 @@ char *logrelman_make_string_infix(slv_system_t sys,
    if (style) {
      sbeg = WriteLogRelToString(logrel_instance(lrel),slv_instance(sys));
    } else {
-     sbeg = (char *)ascmalloc(60);
+     sbeg = ASC_NEW_ARRAY(char,60);
      if (sbeg==NULL) return sbeg;
      sprintf(sbeg,"logrelman_make_string_infix not implemented.");
    }
@@ -164,7 +164,7 @@ char *logrelman_make_string_postfix(slv_system_t sys,
    if (style) {
      sbeg = WriteLogRelPostfixToString(logrel_instance(lrel),slv_instance(sys));
    } else {
-     sbeg = (char *)ascmalloc(60);
+     sbeg = ASC_NEW_ARRAY(char,60);
      if (sbeg==NULL) return sbeg;
      sprintf(sbeg,"logrelman_make_string_postfix not implemented.");
 

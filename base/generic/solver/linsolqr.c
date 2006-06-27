@@ -522,7 +522,7 @@ void linsolqr_add_rhs(linsolqr_system_t sys,
        ++(sys->rlength);
        if (sys->capacity>0)  {
          rl->varvalue =
-          (real64 *)ascmalloc(sys->capacity*sizeof(real64));
+          ASC_NEW_ARRAY(real64,sys->capacity);
        }
      }
    }
@@ -762,7 +762,7 @@ static real64 *raise_capacity(real64 *vec,
     newvec=(real64 *)ascrealloc(vec,(newcap * sizeof(real64)));
   } else {
     newvec=(newcap > 0 ?
-      (real64 *)ascmalloc( newcap * sizeof(real64) ) : NULL);
+      ASC_NEW_ARRAY(real64,newcap ) : NULL);
   }
 #ifndef NDEBUG
   for (i = 0; i < newcap; i++) {

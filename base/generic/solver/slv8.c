@@ -1817,7 +1817,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys)
 					   sys->con.estmem*sizeof(real64));
     } else {
       /* calloc here doesn't help the crash */
-      sys->con.work = (real64 *)ascmalloc(sys->con.estmem*sizeof(real64));
+      sys->con.work = ASC_NEW_ARRAY(real64,sys->con.estmem);
     }
     sys->con.lwork = sys->con.estmem;
     destroy_vectors(sys);

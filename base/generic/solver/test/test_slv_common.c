@@ -454,7 +454,7 @@ static void test_slv_common(void)
   pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
-  pvec1->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec1->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
@@ -470,7 +470,7 @@ static void test_slv_common(void)
     slv_zero_vector(pvec1);                      /* error - NULL vec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec1->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec1->vec = ASC_NEW_ARRAY(real64,10 );
   pvec1->rng->low = -1;
   pvec1->rng->high = 10;
 
@@ -557,7 +557,7 @@ static void test_slv_common(void)
   pvec2 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec2);
   pvec2->rng = NULL;
-  pvec2->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec2->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
@@ -583,7 +583,7 @@ static void test_slv_common(void)
     slv_copy_vector(pvec1, pvec2);              /* error - NULL destvec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec2->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec2->vec = ASC_NEW_ARRAY(real64,10 );
   pvec2->rng->low = -1;
   pvec2->rng->high = 10;
 
@@ -698,7 +698,7 @@ static void test_slv_common(void)
   pvec2 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec2);
   pvec2->rng = NULL;
-  pvec2->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec2->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
@@ -724,7 +724,7 @@ static void test_slv_common(void)
     slv_inner_product(pvec1, pvec2);              /* error - NULL vec2->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec2->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec2->vec = ASC_NEW_ARRAY(real64,10 );
   pvec2->rng->low = -1;
   pvec2->rng->high = 10;
 
@@ -824,7 +824,7 @@ static void test_slv_common(void)
   pvec1 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));  /* create a vector with NULL rng */
   CU_TEST_FATAL(NULL != pvec1);
   pvec1->rng = NULL;
-  pvec1->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec1->vec = ASC_NEW_ARRAY(real64,10 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
@@ -840,7 +840,7 @@ static void test_slv_common(void)
     slv_square_norm(pvec1);                     /* error - NULL vec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec1->vec = (real64 *)ascmalloc(10 * sizeof(real64));
+  pvec1->vec = ASC_NEW_ARRAY(real64,10 );
   pvec1->rng->low = -1;
   pvec1->rng->high = 10;
 
@@ -911,13 +911,13 @@ static void test_slv_common(void)
   pvec1->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
   pvec1->rng->low = 0;
   pvec1->rng->high = 10;
-  pvec1->vec = (real64 *)ascmalloc(11 * sizeof(real64));
+  pvec1->vec = ASC_NEW_ARRAY(real64,11 );
   pvec2 = (struct vector_data *)ascmalloc(sizeof(struct vector_data));
   CU_TEST_FATAL(NULL != pvec2);
   pvec2->rng = (mtx_range_t *)ascmalloc(sizeof(mtx_range_t));
   pvec2->rng->low = 0;
   pvec2->rng->high = 10;
-  pvec2->vec = (real64 *)ascmalloc(11 * sizeof(real64));
+  pvec2->vec = ASC_NEW_ARRAY(real64,11 );
 
   asc_assert_reset();
   if (0 == setjmp(g_asc_test_env))
@@ -964,7 +964,7 @@ static void test_slv_common(void)
     slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL vec->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec1->vec = (real64 *)ascmalloc(11 * sizeof(real64));
+  pvec1->vec = ASC_NEW_ARRAY(real64,11 );
   ascfree(pvec2->vec);
   pvec2->vec = NULL;
 
@@ -973,7 +973,7 @@ static void test_slv_common(void)
     slv_matrix_product(mtx, pvec1, pvec2, 1.0, FALSE);   /* error - NULL prod->vec */
   CU_TEST(TRUE == asc_assert_failed());
 
-  pvec2->vec = (real64 *)ascmalloc(11 * sizeof(real64));
+  pvec2->vec = ASC_NEW_ARRAY(real64,11 );
   pvec1->rng->low = -1;
   pvec1->rng->high = 10;
 

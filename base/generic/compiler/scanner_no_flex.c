@@ -3533,7 +3533,7 @@ CopyIntoWorkBuffer(CONST char *str, unsigned long len)
       g_workbuf_len *= 2;
     }
     if (g_workbuf == NULL ) {
-      g_workbuf = (char*)ascmalloc( g_workbuf_len );
+      g_workbuf = ASC_NEW_ARRAY(char, g_workbuf_len );
     } else {
       g_workbuf = (char*)ascrealloc( (void*)g_workbuf, g_workbuf_len );
     }

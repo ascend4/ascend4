@@ -77,7 +77,7 @@ char *WriteDimensionString(CONST dim_type *p)
     return NULL;
   }
   if (IsWild(p)) {
-    result = (char *)ascmalloc(2);
+    result = ASC_NEW_ARRAY(char,2);
     sprintf(result,"*");
     return result;
   }

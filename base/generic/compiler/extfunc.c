@@ -134,16 +134,18 @@ double blackbox_evaluate_residual(struct relation *r){
 		inst = RelationVariable(r,i);
 		tmp = WriteInstanceNameString(inst, NULL);
 		if(i<=NumberInputArgs(efunc)){
-			CONSOLE_DEBUG("Input %d: '%s'", i, tmp);
+			CONSOLE_DEBUG("Input %d: '%s' (at %p)", i, tmp, inst);
 		}else{
 			CONSOLE_DEBUG("Output %d: '%s'", i-NumberInputArgs(efunc), tmp);
 		}
 		ASC_FREE(tmp);
 	}
 
+	/* allocate space for the evaluation inputs and outputs */
 	in = ASC_NEW_ARRAY(double,NumberInputArgs(efunc));
-	out = ASC_NEW_ARRAY(double,NumberOutputArgs(efunc));
+	out = ASC_NEW_ARRAY_CLEAR(double,NumberOutputArgs(efunc));
 
+	/* pull the current input values and place them in our 'in' array */
 	for(i=0; i < NumberInputArgs(efunc); ++i){
 		inst = RelationVariable(r,i+1);
 		tmp = WriteInstanceNameString(inst,NULL);
@@ -156,6 +158,10 @@ double blackbox_evaluate_residual(struct relation *r){
 		CONSOLE_DEBUG("Set var %d ('%s') to '%f'",i+1,tmp,in[i]);
 		ASC_FREE(tmp);
 	}
+
+	/* call the evaluation function */
+
+	/* push the current output values back into the instance hierarchy */
 
 	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox not implemented, returning -1");
 	return -1;

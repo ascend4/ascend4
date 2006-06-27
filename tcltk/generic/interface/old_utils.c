@@ -89,7 +89,7 @@ char *asc_make_dimensions(const dim_type *dim)
    int size = 0;
 
    if( IsWild(dim) ) {
-      dimens = (char *)ascmalloc(2*sizeof(char));
+      dimens = ASC_NEW_ARRAY(char,2);
       sprintf(dimens,"*");
       return( dimens );
    }

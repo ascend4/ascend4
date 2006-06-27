@@ -347,7 +347,7 @@ struct gl_list_t *Pass2CollectAnonProtoVars(struct Instance *i)
 #endif
   len = NumberChildren(i);
   result = gl_create(100);
-  indices = (unsigned long *)ascmalloc(indexlen*sizeof( unsigned long));
+  indices = ASC_NEW_ARRAY(unsigned long,indexlen);
   if (indices == NULL || result == NULL) {
     FPRINTF(ASCERR,"Pass2CollectAnonProtoVars: Insufficient memory\n");
     return result;
