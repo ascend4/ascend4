@@ -146,8 +146,7 @@ struct Instance *CreateDummyInstance(struct TypeDescription *gdt)
 {
   struct GlobalDummyInstance *result;
   assert(GetBaseType(gdt)==dummy_type);
-  result = (struct GlobalDummyInstance *)
-             ascmalloc(sizeof(struct GlobalDummyInstance));
+  result = ASC_NEW(struct GlobalDummyInstance);
   assert(result!=NULL);
   CopyTypeDesc(gdt);
   result->t = DUMMY_INST;
@@ -697,6 +696,7 @@ struct Instance *CreateRelationInstance(struct TypeDescription *type,
     result->tmp_num = 0;
     result->anon_flags = 0;
     /* relation stuff */
+    CONSOLE_DEBUG("Creating instance with NULL rel ptr");
     result->ptr = NULL;
     result->whens = NULL;
     result->logrels = NULL;
@@ -742,6 +742,9 @@ struct Instance *CreateLogRelInstance(struct TypeDescription *type)
     result->logrels = NULL;
     result->padding = INT_MAX;
     /* relation stuff */
+    if(result->ptr!=NULL){
+      CONSOLE_DEBUG("Clearing rel ptr %p",result->ptr);
+    }
     result->ptr = NULL;
     MakeAtomChildren(num_children,
 		     INST(result),

@@ -138,6 +138,17 @@
 #endif
 
 /**
+	Flag non-returning functions for GCC
+
+	Previously, see comments 'Needed to keep gcc from whining'
+*/
+#ifdef __GNUC__
+# define NORETURN __attribute__((noreturn))
+#else
+# define NORETURN
+#endif
+
+/**
 	@TODO move the 'CONST84' stuff to a file in the TCL/TK section.
 */
 /*

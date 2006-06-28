@@ -1,101 +1,96 @@
-/*
- *  Standard Clients module of ASCEND environment
- *  by Benjamin Andrew Allan
- *  5/19/96
- *  Version: $Revision: 1.8 $
- *  Version control file: $RCSfile: slv_stdcalls.h,v $
- *  Date last modified: $Date: 1998/06/16 16:53:07 $
- *  Last modified by: $Author: mthomas $
- *
- *  Copyright(C) 1996 Benjamin Andrew Allan
- *  Copyright(C) 1998 Carnegie Mellon University
- *
- *  This file is part of the ASCEND IV math programming system.
- *  It registers our primary clients (solvers) and provides a home
- *  for several unregistered utility clients.
- *
- *  The Ascend Math Programming System is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Math Programming System is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998, 2006 Carnegie Mellon University
+	Copyright (C) 1996 Benjamin Andrew Allan
 
-/** @file
- *  Standard Clients module of ASCEND environment
- *  <pre>
- *  Requires:     #include <stdio.h>
- *                #include "utilities/ascConfig.h"
- *                #include "system.h"
- *                #include "slv_client.h"
- *                #include "mtx.h"
- *                #include "slvDOF.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	@file
+	'Standard clients' module. This appears to include stuff relating to block
+	partitioning, bounds checking, registration of solver engines.
+
+	Block partitioning gets done by a selected solver engine, at its
+	discretion. See functions 'structural_analysis' in slv3 and others.
+
+	Requires:
+	#include <stdio.h>
+	#include "utilities/ascConfig.h"
+	#include "system.h"
+	#include "slv_client.h"
+	#include "mtx.h"
+	#include "slvDOF.h"
+
+	@NOTE 'BLT' = block lower triangular, 'BUT' = block upper triangular.
+*//*
+	by Benjamin Andrew Allan
+	5/19/96
+	Last in CVS: $Revision: 1.8 $ $Date: 1998/06/16 16:53:07 $ $Author: mthomas $
+*/
 
 #ifndef ASC_SLV_STDCLIENTS_H
 #define ASC_SLV_STDCLIENTS_H
 
+
 extern int slv_std_make_incidence_mtx(slv_system_t sys, 
-                                      mtx_matrix_t mtx,
-                                      var_filter_t *vf,
-                                      rel_filter_t *rf);
+		mtx_matrix_t mtx, var_filter_t *vf, rel_filter_t *rf);
 /**<
- *  <!--  err = slv_std_make_incidence_mtx(sys,mtx,vf,rf);             -->
- *
- *  Populates a matrix according to the sys solvers_vars, solvers_rels
- *  lists and the filters given. The filter should have at least
- *  SVAR = 1 bit on. mtx given must be created (not null) and with
- *  order >= max( slv_get_num_solvers_rels(sys),slv_get_num_solvers_vars(sys));
- *  Vars and rels on solvers lists should be sindexed 0 -> len-1.
- *  Returns 0 if went ok.
- */
+	Populates a matrix according to the sys solvers_vars, solvers_rels
+	lists and the filters given. The filter should have at least
+	SVAR = 1 bit on. mtx given must be created (not null) and with
+	order >= max( slv_get_num_solvers_rels(sys),slv_get_num_solvers_vars(sys));
+	Vars and rels on solvers lists should be sindexed 0 -> len-1.
+
+	@return 0 on success
+*/
+
+/*------------------------------------------------------------------------------
+  BLOCK PARTITIONING
+*/
 
 #define slv_block_partition(s) slv_block_partition_real((s),0)
-/**< do BLT permutation to system solvers lists */
+/**< do block lower triangular permutation to system solver's lists */
 
 #define slv_block_partition_upper(s) slv_block_partition_real((s),1)
-/**< do BUT permutation to system solvers lists */
+/**< do block upper triangular permutation to system solver's lists */
 
 extern int slv_block_partition_real(slv_system_t sys, int uppertriangular);
 /**<
- *  <!--  status = slv_block_partition(sys,uppertriangular);           -->
- *
- *  Takes a system and reorders its solvers_vars and solvers_rels
- *  list so that they fall into a block lower(upper) triangular form and
- *  the system's block list is set to match.
- *  Only included equality relations and free, incident solver_var
- *  are so ordered.<br><br>
- *
- *  The blocks derived are put in the slv_system_t block list.
- *  If this succeeds, return value is 0.
- *  If fail due to insufficient memory, return is 2.
- *  If fail for any other reason, return is 1.
- *  Produces whine about DOF analysis on file stderr.<br><br>
- *
- *  ASSUMPTION: We assume that the variable and relation bit flags
- *  are in sync with the flags on the atoms.  The need for this
- *  assumption and the associated bookkeeping should go away when
- *  we move to using only the bit flags.  Currently var_fixed and
- *  rel_included are in charge of the syncronization.
- */
+	Takes a system and reorders its solvers_vars and solvers_rels
+	list so that they fall into a block lower(upper) triangular form and
+	the system's block list is set to match.
+	Only included equality relations and free, incident solver_var
+	are so ordered.
+	
+	The blocks derived are put in the slv_system_t block list.
+
+	Produces whine about DOF analysis on file stderr.
+
+	@NOTE doesn't grok inequalities	
+
+	ASSUMPTION: We assume that the variable and relation bit flags
+	are in sync with the flags on the atoms.  The need for this
+	assumption and the associated bookkeeping should go away when
+	we move to using only the bit flags.  Currently var_fixed and
+	rel_included are in charge of the syncronization.
+
+	@return 0 on success, 2 on out-of-memory, 1 on any other failure
+*/
 
 extern void slv_sort_rels_and_vars(slv_system_t sys,
-                                   int32 *rel_count,
-                                   int32 *var_count);
+		int32 *rel_count, int32 *var_count);
 /**<
- *  <!--  slv_sort_rels_and_vars(sys,rel_count,var_count);             -->
- *
  *  Reindexes systems rel and var lists such that rel list is in order:
  *  rel_list = |included and active rels|unincluded|inactive|
  *  and the var list is in the order:
@@ -118,8 +113,6 @@ int slv_block_unify(slv_system_t sys);
 
 extern int slv_set_up_block(slv_system_t sys, int32 block);
 /**<
- *  <!--  status = slv_set_up_block(sys,block);                        -->
- *
  *  This function should be called on blocks which have previously
  *  been reordered.  Variable and relation maintanence is performed
  *  so that the block will be ready for an interation.
@@ -136,9 +129,7 @@ extern int slv_set_up_block(slv_system_t sys, int32 block);
  *  If we made a matrix out of the block, it should have a full<br><br>
  *  diagonal.
  *
- *  If this succeeds, return value is 0.
- *  If fail due to insufficient memory, return is 2.
- *  If fail for any other reason, return is 1.<br><br>
+	@return 0 on success, 2 on out-of-memory, 1 on any other failure.
  *
  *  Preconditions of use:
  *    No vars outside the block in the solvers_var list should have
@@ -158,11 +149,8 @@ extern int slv_set_up_block(slv_system_t sys, int32 block);
  */
 
 extern int slv_spk1_reorder_block(slv_system_t sys,
-                                  int32 block,
-                                  int32 transpose);
+		int32 block, int32 transpose);
 /**<
- *  <!--  status = slv_spk1_reorder_block(sys,block,transpose);        -->
- *
  *  System should have first been processed by slv_block_partition,
  *  so that all the current rows and columns within the block
  *  correspond to org rows and columns within the block.
@@ -175,9 +163,7 @@ extern int slv_spk1_reorder_block(slv_system_t sys,
  *  If we made a matrix out of the block, it should have a full
  *  diagonal.
  *
- *  If this succeeds, return value is 0.
- *  If fail due to insufficient memory, return is 2.
- *  If fail for any other reason, return is 1.
+	@return 0 on success, 2 on out-of-memory, 1 on any other failure.
  *
  *  Preconditions of use:
  *    No vars outside the block in the solvers_var list should have
@@ -202,8 +188,6 @@ extern int slv_tear_drop_reorder_block(slv_system_t sys,
                                        int two,
                                        enum mtx_reorder_method blockmethod);
 /**<
- *  <!--  slv_tear_drop_reorder_block(sys,blockindex,cutoff,two,blockmethod); -->
- *
  *  System should have first been processed by slv_block_partition,
  *  so that all the current rows and columns within the block
  *  correspond to org rows and columns within the block.
@@ -221,74 +205,79 @@ extern int slv_tear_drop_reorder_block(slv_system_t sys,
  *  Preconditions of use: same as spk1_reorder_block.
  *  Sideeffects and bugs: same as spk1_reorder_block.
  *  Additional bugs: none known, but they're there.
+
+	@return ???
  */
+
+
+/*------------------------------------------------------------------------------
+  BOUNDS CHECKING
+*/
 
 extern int slv_insure_bounds(slv_system_t sys, int32 lo, int32 hi, FILE *fp);
 /**<
- *  <!--  nchange = slv_insure_bounds(sys,lo,hi,fp);                   -->
- *
- *  Takes a system and a range of vars (lo,hi) and makes sure all the
- *  variables are within bounds and bounds are reasonable. makes
- *  repairs in all cases where they are not. Returns the number
- *  of repairs made or -1 if something weird found.
- *  If fp is not NULL, prints notices to the file given.
- */
+	Takes a system and a range of vars (lo,hi) and makes sure all the
+	variables are within bounds and bounds are reasonable. makes
+	repairs in all cases where they are not. 
+
+	If fp is not NULL, prints notices to the file given.
+
+	@return number of repairs made or -1 if something weird found.
+*/
 
 extern void slv_check_bounds(const slv_system_t sys, int32 lo, int32 hi,
                              FILE * fp, const char *label);
 /**<
- *  <!--  slv_check_bounds(sys,lo,hi,fp,label);                        -->
- *
- *  Takes a system and a range of vars (lo,hi) and makes sure all the
- *  variables are within bounds and bounds are reasonable. Whines
- *  to fp using the label in all cases where they are not.
- *  Does not change anything.
- *  If fp is NULL, does nothing.
- */
+	Takes a system and a range of vars (lo,hi) and makes sure all the
+	variables are within bounds and bounds are reasonable. Whines
+	to fp using the label in all cases where they are not.
+	Does not change anything.
+	If fp is NULL, does nothing.
+*/
+
+/*------------------------------------------------------------------------------
+  SOLVER REGISTRATION
+*/
 
 ASC_DLLSPEC(int ) SlvRegisterStandardClients(void);
 /**<
- *  Attempts to register solvers slv0 through (as of 6/96) slv7.
- *  Returns the number of these which register successfully.
- *  The solvers registered here are those linked at build time of the
- *  ascend binary. See slv_client.h for registering dynamically loaded
- *  solvers.
- */
+	Attempts to register solvers slv0 through (as of 6/96) slv7.
 
-/*===================================================================*\
-        Output Assignment and partitioning in Logical Relations
-\*===================================================================*/
+	The solvers registered here are those linked at build time of the
+	ascend binary. See slv_client.h for registering dynamically loaded
+	solvers.
+
+	@return number of solvers registered successfully
+*/
+
+/*------------------------------------------------------------------------------
+  OUTPUT ASSIGNMENT AND PARTITIONING IN LOGICAL RELATIONS
+*/
 
 extern int slv_std_make_log_incidence_mtx(slv_system_t sys, 
                                           mtx_matrix_t mtx,
                                           dis_filter_t *dvf, 
                                           logrel_filter_t *lrf);
 /**<
- *  <!--  err = slv_std_make_log_incidence_mtx(sys,mtx,dvf,lrf);       -->
- *
- *  Populates a matrix according to the sys solvers_dvars, solvers_logrels
- *  lists and the filters given. mtx given must be created (not null) and with
- *  order >= max( slv_get_num_solvers_logrels(sys),
- *                slv_get_num_solvers_dvars(sys));
- *  Dvars and logrels on solvers lists should be sindexed 0 -> len-1.
- *  Returns 0 if went ok.
- */
+	Populates a matrix according to the sys solvers_dvars, solvers_logrels
+	lists and the filters given. mtx given must be created (not null) and with
+	order >= max( slv_get_num_solvers_logrels(sys),
+	              slv_get_num_solvers_dvars(sys));
+	Dvars and logrels on solvers lists should be sindexed 0 -> len-1.
+
+	@return 0 on success
+*/
 
 extern int slv_log_block_partition(slv_system_t sys);
 /**<
- *  <!--  status = slv_log_block_partition(sys);                       -->
- *
- *  Takes a system and reorders its solvers_dvars and solvers_logrels
- *  list so that they fall into a block lower triangular form and
- *  the system's block list is set to match.
- *  Only included and active logrelations and free, incident boolean_var
- *  are so ordered.
- *  The blocks derived are put in the slv_system_t block list.<br><br>
- *
- *  If this succeeds, return value is 0.
- *  If fail due to insufficient memory, return is 2.
- *  If fail for any other reason, return is 1.
- */
+	Takes a system and reorders its solvers_dvars and solvers_logrels
+	list so that they fall into a block lower triangular form and
+	the system's block list is set to match.
+	Only included and active logrelations and free, incident boolean_var
+	are so ordered.
+	The blocks derived are put in the slv_system_t block list.<br><br>
+
+	@return 0 on success, 2 on out-of-memory, 1 on any other failure	
+*/
 
 #endif  /** ASC_SLV_STDCLIENTS_H */
-

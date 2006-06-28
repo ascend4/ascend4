@@ -135,8 +135,7 @@ struct AnonBucket **CreateAnonTable(size_t size)
 {
   struct AnonBucket **t;
   size_t i;
-  t = (struct AnonBucket **)
-        ascmalloc(sizeof(struct AnonBucket *)*size);
+  t = ASC_NEW_ARRAY(struct AnonBucket *,size);
   if (t==NULL) {
     return t;
   }
@@ -240,7 +239,7 @@ struct AnonBucket *AddAnonBucket(struct TypeDescription *d,
   if (AssertBucketInfo(d,t)!=0 || FindAnonBucket(d,indirected,t) != NULL) {
     return NULL;
   }
-  b = (struct AnonBucket *)ascmalloc(sizeof(struct AnonBucket));
+  b = ASC_NEW(struct AnonBucket);
   if (b == NULL) {
     return NULL;
   }
@@ -291,7 +290,7 @@ static
 struct AnonType *ExpandAnonResult(struct gl_list_t *atl)
 {
   struct AnonType *at;
-  at = (struct AnonType *)ascmalloc(sizeof(struct AnonType));
+  at = ASC_NEW(struct AnonType);
   if (at==NULL) {
     Asc_Panic(2,"ExpandAnonResult","Insufficient memory");
     return NULL; /* NOTREACHED */

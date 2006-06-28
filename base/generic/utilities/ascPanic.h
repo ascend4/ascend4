@@ -44,7 +44,7 @@
 #endif
 
 ASC_DLLSPEC(void ) Asc_Panic(CONST int status, CONST char *function,
-                      CONST char *format, ...);
+                      CONST char *format, ...) NORETURN;
 /**< Print fatal error message, run callback function & (usually) exit the program.
 
 	@param status   Status code passed by the calling function.

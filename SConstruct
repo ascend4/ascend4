@@ -927,6 +927,7 @@ if conf.CheckGcc():
 		conf.env['HAVE_GCCVISIBILITY']=True;
 		conf.env.Append(CCFLAGS=['-fvisibility=hidden'])
 		conf.env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
+	conf.env.Append(CCFLAGS=['-Wall'])
 
 # YACC
 
@@ -1245,9 +1246,6 @@ SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest,
 
 # so that #include <modulename/headername.h> works across all modules...
 env.Append(CPPPATH=['#base/generic'])
-
-if gcc_version4:
-	env.Append(CCFLAGS=['-fvisibility=hidden'])
 
 if env['DEBUG']:
 	env.Append(CCFLAGS=['-g'])

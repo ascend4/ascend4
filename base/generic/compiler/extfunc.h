@@ -104,37 +104,22 @@ enum Calc_status {
   calc_all_ok
 };
 
-/** things that a blackbox can be asked to do. */
+/** 
+	Things that a blackbox can be asked to do. 
+
+	@NOTE Rhetorical question: Why do we want this? See comments in Slv_Interp.
+*/
 enum Request_type {
-
-  /** do nothing. should never be sent. */
-  bb_none,
-
-  /** will be given when the initial function pointer is called. */
-  bb_first_call,
-
-  /** will be given when the final function pointer is called. */
-  bb_last_call,
-
-  /** If check_args, blackbox should do any argument checking of the variables, data. */
-  bb_check_args,
-
-  /** If recalculate, the caller thinks the input may have changed. */
-  bb_recalculate,
-
-  /** If func_eval, the caller is using the residual function pointer. */
-  bb_func_eval,
-
-  /** If deriv_eval, the caller is using the deriv function pointer. */
-  bb_deriv_eval,
-
-  /** If hess_eval, the caller is using the hessian function pointer. */
-  bb_hess_eval,
-
-  /** If single_step, the caller would like one step toward the solution;
-     usually this is meaningless and should be answered with calc_diverged. */
-  bb_single_step
-
+  bb_none,        /**< do nothing. should never be sent. */
+  bb_first_call,  /**< will be given when the initial function pointer is called. */
+  bb_last_call,   /**< will be given when the final function pointer is called. */
+  bb_check_args,  /**< do any argument checking of the variables, data */
+  bb_recalculate, /**< the caller thinks the input may have changed: recalc if reqd */
+  bb_func_eval,   /**< the caller needs the residual function pointer. */
+  bb_deriv_eval,  /**< the caller needs the deriv function pointer. */
+  bb_hess_eval,   /**< the caller needs the hessian function pointer. */
+  bb_single_step  /**< the caller would like one step toward the solution;
+		usually this is meaningless and should be answered with calc_diverged. */
 };
 
 /**
@@ -160,14 +145,17 @@ struct Slv_Interp {
   int nodestamp;
 
   /** What the caller wants done on a given call.
+
       As black boxes are represented with 5 function pointers,
-      one might think this is not needed. The task is provided for
-      those who wish to implement only one function and have it
-      handle all types of calls. It also handles the cases where
-      there is checking rather than evaluation.
+      one might think this is not needed. Providing the 'task' here allows
+      one to implement only one function and have it handle all types of
+      calls. It also facilitates cases where there is checking rather than
+      evaluation.
+
+      @NOTE Problem? Don't init functions and evaluation functions have
+      different signatures?
   */
   enum Request_type task;
-
 };
 
 typedef int ExtBBoxInitFunc(struct Slv_Interp *,
@@ -198,11 +186,8 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
 	@TODO this one may need splitting/rework for hessian.
 */
 typedef int ExtBBoxFunc(struct Slv_Interp *interp,
-                        int ninputs,
-                        int noutputs,
-                        double *inputs,
-                        double *outputs,
-                        double *jacobian);
+        int ninputs, int noutputs,
+		double *inputs, double *outputs, double *jacobian);
 
 struct BlackBoxExternalFunc {
   ExtBBoxInitFunc *initial;

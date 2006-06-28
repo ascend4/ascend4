@@ -368,7 +368,7 @@ static struct lu_auxdata *create_ludata()
  **/
 {
   struct lu_auxdata *d;
-  d=(struct lu_auxdata *)asccalloc(1,sizeof(struct lu_auxdata));
+  d=ASC_NEW_CLEAR(struct lu_auxdata);
   return d;
 }
 
@@ -379,7 +379,7 @@ static struct qr_auxdata *create_qrdata()
  **/
 {
   struct qr_auxdata *d;
-  d=(struct qr_auxdata *)asccalloc(1,sizeof(struct qr_auxdata));
+  d=ASC_NEW_CLEAR(struct qr_auxdata);
   return d;
 }
 
@@ -789,8 +789,7 @@ static int32 *raise_qr_int_capacity(int32 *vec,
     newvec=(int32 *)ascrealloc(vec,(newcap * sizeof(int32)));
     mtx_zero_int32(vec,newcap);
   } else {
-    newvec= (newcap > 0 ?
-      (int32 *)asccalloc( newcap , sizeof(int32) ) : NULL);
+    newvec= (newcap > 0 ? ASC_NEW_ARRAY_CLEAR(int32,newcap) : NULL);
   }
   return newvec;
 }
@@ -812,8 +811,7 @@ static real64 *raise_qr_real_capacity(real64 *vec,
     newvec=(real64 *)ascrealloc(vec,(newcap * sizeof(real64)));
     mtx_zero_real64(vec,newcap);
   } else {
-    newvec= (newcap > 0 ?
-      (real64 *)asccalloc( newcap , sizeof(real64) ) : NULL);
+    newvec= (newcap > 0 ? ASC_NEW_ARRAY_CLEAR(real64,newcap) : NULL);
   }
   return newvec;
 }
@@ -835,10 +833,8 @@ static struct qr_fill_t *raise_qr_fill_capacity(struct qr_fill_t *vec,
     newvec=(struct qr_fill_t *)
       ascrealloc(vec,(newcap * sizeof(struct qr_fill_t)));
     mtx_zero_char((char *)vec,newcap*sizeof(struct qr_fill_t));
-  } else {
-    newvec= (newcap > 0 ?
-      (struct qr_fill_t *)asccalloc( newcap , sizeof(struct qr_fill_t) ) :
-      NULL);
+  }else{
+    newvec= (newcap > 0 ? ASC_NEW_ARRAY_CLEAR(struct qr_fill_t, newcap) : NULL);
   }
   return newvec;
 }
@@ -3164,8 +3160,7 @@ int kirk1_factor(linsolqr_system_t sys,
 #endif /* NOP_DEBUG */
 
   length = sys->rng.high + 1;
-  tmp_array_origin = length > 0 ?
-    (real64 *)asccalloc( length,sizeof(real64) ) : NULL;
+  tmp_array_origin = length > 0 ? ASC_NEW_ARRAY_CLEAR(real64,length) : NULL;
   tmp = tmp_array_origin;
   pivots=sys->ludata->pivlist;
   mtx = sys->factors;
@@ -5042,8 +5037,7 @@ boolean linsolqr_calc_residual(linsolqr_system_t sys,
       return TRUE;
     }
 
-    orgvars = sys->capacity > 0 ? (real64 *)
-      asccalloc(sys->capacity,sizeof(real64)) : NULL;
+    orgvars = sys->capacity > 0 ? ASC_NEW_ARRAY_CLEAR(real64,sys->capacity) : NULL;
     varvalue=rl->varvalue;
     eqnrhs=rl->rhs;
     hicol=sys->reg.col.high;

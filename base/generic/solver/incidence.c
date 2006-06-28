@@ -76,7 +76,7 @@ build_incidence_data(CONST slv_system_t sys, incidence_vars_t *pd){
   pd->e2pr = ASC_NEW_ARRAY(int,(pd->neqn +1));
   pd->pc2v = ASC_NEW_ARRAY(int,(pd->npcol +1));
   pd->v2pc = ASC_NEW_ARRAY(int,(pd->nvar +1));
-  pd->vfixed = (char *)asccalloc((pd->nvar +1),sizeof(char));
+  pd->vfixed = ASC_NEW_ARRAY_CLEAR(char,pd->nvar +1);
   if ( ISNULL(pd->pr2e) || ISNULL(pd->e2pr) ||
        ISNULL(pd->pc2v) || ISNULL(pd->v2pc) ||
        ISNULL(pd->vfixed) ) {

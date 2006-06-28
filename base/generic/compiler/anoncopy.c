@@ -155,6 +155,9 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
+  if(result->ptr!=NULL){
+    CONSOLE_DEBUG("Clearing rel ptr %p",result->ptr);
+  }
   result->ptr = NULL;
 
   RedoChildPointers(ChildListLen(GetChildList(result->desc)),
@@ -234,7 +237,7 @@ CopyAnonRelationArrayInstance(struct Instance *newparent,
   register struct ArrayInstance *ary,*result;
   AssertMemory(proto);
   ary = ARY_INST(proto);
-  result = ARY_INST(ascmalloc(sizeof(struct ArrayInstance)));
+  result = ARY_INST(ASC_NEW(struct ArrayInstance));
   AssertMemory(result);
   result->t = ary->t;
   result->pending_entry = NULL;
@@ -271,8 +274,7 @@ void Pass2AddAnonProtoVar(struct Instance *i,
   int j;
   if (GetTmpNum(i)) {
     assert(InstanceKind(i) == REAL_ATOM_INST);
-    indices = (unsigned long int *)
-        ascmalloc((activelen+1)*sizeof(unsigned long));
+    indices = ASC_NEW_ARRAY(unsigned long int,activelen+1);
     if (indices==NULL) {
       FPRINTF(ASCERR,"Pass2AddAnonProtoVar: Insufficient memory.");
       return;

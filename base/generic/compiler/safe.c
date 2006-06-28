@@ -987,7 +987,7 @@ double safe_div_D1(double x,double y,int wrt,enum safe_err *safe)
     return( -safe_mul_D0(safe_sqr_D0(y,safe),x,safe) );
   default:
     Asc_Panic(2, NULL, "'wrt' out of range!");
-    exit(2);/*  Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1003,7 +1003,7 @@ double safe_ipow_D1( double x,double y, int wrt,enum safe_err *safe)
                   * assume integers are constant */
   default:
     Asc_Panic(2, NULL, "'wrt' out of range!");
-    exit(2);/*  Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1016,7 +1016,7 @@ double safe_pow_D1(double x,double y,int wrt,enum safe_err *safe)
     return( safe_mul_D0( safe_ln_D0(x,safe) , safe_pow_D0(x,y,safe) ,safe) );
   default:
     Asc_Panic(2, NULL, "'wrt' out of range!");
-    exit(2);/*  Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1032,7 +1032,7 @@ double safe_div_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
     return( safe_rec(0.5*safe_mul_D0(y,safe_sqr_D0(y,safe),safe),safe) );
   default:
     Asc_Panic(2, NULL, "'wrt' out of range!");
-    exit(2);/*  Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1055,7 +1055,7 @@ double safe_ipow_D2( double x,double y, int wrt1,int wrt2,enum safe_err *safe)
                         safe_ipow_D0(x,y,safe),safe) );
   default:
     Asc_Panic(2, NULL, "'wrt' out of range!");
-    exit(2);/*  Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1076,7 +1076,7 @@ double safe_pow_D2(double x,double y,int wrt1,int wrt2,enum safe_err *safe)
                         safe_pow_D0(x,y,safe),safe) );
   default:
     Asc_Panic(2, NULL, "'wrt' out of range!");
-    exit(2);/*  Needed to keep gcc from whining */
+    
   }
 }
 

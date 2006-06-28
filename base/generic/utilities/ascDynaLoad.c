@@ -69,7 +69,7 @@ int AscAddRecord(void *dlreturn, CONST char *path)
   }
   keeppath = ascstrdup((char *)path);
   if (keeppath==NULL) return 1;
-  new = (struct ascend_dlrecord *)ascmalloc(sizeof(struct ascend_dlrecord));
+  new = ASC_NEW(struct ascend_dlrecord);
   if (new==NULL) {
     ascfree(keeppath);
     return 1;

@@ -276,7 +276,7 @@ static int CheckVisitNumber(struct Instance *i)
     /* rogues */
     Asc_Panic(2, "VisitInstanceTree",
               "VisitInstanceTree: Instance tree contains illegal instance.");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 #endif  /*  OLDCHECKVISIT  */
@@ -385,7 +385,7 @@ static int ZeroVisitNumber(struct Instance *i)
               "  Instance tree contains illegal instance.\n");
     /*NOTREACHED*/
   }
-  exit(2); /* Needed to keep gcc from whining */
+  
 }
 
 #endif /* old unused code. might be handy for debugging someday */
@@ -872,9 +872,7 @@ struct visitmapinfo *MakeVisitMap(struct Instance *root,unsigned long *len)
   global_visit_num++;
   *len = 0; /* we don't count root entry, since we don't know context. */
   CalcMapSize(root,len);
-  map = (struct visitmapinfo *)ascmalloc(sizeof(struct visitmapinfo) * 
-                                         ((*len)+1)
-                                        );
+  map = ASC_NEW_ARRAY(struct visitmapinfo,(*len)+1);
   if (map==NULL) {
     return NULL;
   }

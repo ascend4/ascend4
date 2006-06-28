@@ -541,7 +541,7 @@ unsigned long CalcByteSize(enum type_kind t,
     return LogRelAtomByteLength(ChildListLen(clist),childd);
   default:
     Asc_Panic(2, NULL, "Unknown type.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
   /*NOTREACHED*/
 }

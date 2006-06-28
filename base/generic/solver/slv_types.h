@@ -29,47 +29,47 @@
  */
 
 /** @file
- *  SLV type definition for ASCEND solvers.
- *  <pre>
- *  Contents:     Solver type definitions.
- *
- *  Authors:      Ben Allan
- *
- *  Dates:        06/96 - original version
- *
- *  Description:  The types we want system and slv to share are here.
- *
- *  Requires:     none
- *  </pre>
- */
+	Type definitions as they should be seen by solver engines.
+
+	We're trying to hide the implementation detail from the solver engines,
+	to force them to use the API defined in slv_common.h, slv_client.h, etc.
+
+	Requires: (none)
+*//*
+	by Ben Allan
+	06/96 - original version
+*/
 
 #ifndef ASC_SLV_TYPES_H
 #define ASC_SLV_TYPES_H
 
 typedef void *SlvBackendToken;
 /**<
- ***  Backends that provide the residuals, gradients, and so forth
- ***  may be object-oriented and associate some sort of pointer
- ***  with each of the variables or relations they are serving up.
- ***  In the case of ASCEND, this is a struct Instance *.
- ***  Since we want the Slv interface to appear totally backend
- ***  independent (in particular because it is convenient), we
- ***  define our interface in terms of SlvBackendTokens.
- ***  Any backend can be connected by an appropriate set of
- ***  routines conforming to the headers of slv_*, rel.h, var.h
- ***  and system.h.<br><br>
- ***
- ***  We haven't yet been able to think through the possibilities of
- ***  having multiple backends operating _simultaneously_, mainly
- ***  because the ASCEND backend is quite capable of wrapping all
- ***  the other backends we can think of.
- **/
+	Backends that provide the residuals, gradients, and so forth
+	may be object-oriented and associate some sort of pointer
+	with each of the variables or relations they are serving up.
+
+	<b>In the case of ASCEND, a SlvBackendToken is simply a pointer to an
+	Instance structure.</b>
+
+	Since we want the Slv interface to appear totally backend
+	independent (in particular because it is convenient), we
+	define our interface in terms of SlvBackendTokens.
+	Any backend can be connected by an appropriate set of
+	routines conforming to the headers of slv_*, rel.h, var.h
+	and system.h.
+	
+	We haven't yet been able to think through the possibilities of
+	having multiple backends operating _simultaneously_, mainly
+	because the ASCEND backend is quite capable of wrapping all
+	the other backends we can think of.
+*/
 
 typedef struct slv_system_structure *slv_system_t;
 /**<
- ***  This is the handle which should be used in all of the functions
- ***  in slv and system to reference a mathematical problem.
- **/
+	This is the handle which should be used in all of the functions
+	in slv and system to reference a mathematical problem.
+*/
 
 #endif  /* ASC_SLV_TYPES_H */
 

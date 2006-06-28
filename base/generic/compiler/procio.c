@@ -262,7 +262,7 @@ void ProcWriteExtError(struct procFrame *fm, CONST char *funcname,
 {
   char *errmsg;
   assert(funcname != NULL);
-  errmsg = (char *)ascmalloc(80+strlen(funcname));
+  errmsg = ASC_NEW_ARRAY(char,80+strlen(funcname));
   switch (peerr) {
   case PE_unloaded:
     WriteInitErr(fm,"External function has not been loaded.");

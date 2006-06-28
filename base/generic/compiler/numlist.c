@@ -196,8 +196,7 @@ struct numpair_list *GetPoolHead()
 /* return a struct numpair_list */
 #else
 #define NHFREE(p) ascfree(p)
-#define NHMALLOC \
-  (struct numpair_list *)ascmalloc(sizeof(struct numpair_list))
+#define NHMALLOC ASC_NEW(struct numpair_list)
 #endif
 
 

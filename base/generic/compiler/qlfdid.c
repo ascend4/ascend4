@@ -56,8 +56,7 @@ static CONST char QlfdidID[] = "$Id: Qlfdid.c,v 1.22 2003/08/23 18:43:07 ballan 
 #ifndef MAXIMUM_STRING_LENGTH
 #define MAXIMUM_STRING_LENGTH 1024
 #endif
-#define QLFDIDMALLOC \
-(struct SearchEntry *)ascmalloc(sizeof(struct SearchEntry));
+#define QLFDIDMALLOC ASC_NEW(struct SearchEntry);
 
 
 /* used for searching */
@@ -75,7 +74,7 @@ char *Asc_MakeInitString(int len)
             "Setting length to %d due to invalid length given\n",defaultlen);
     len = defaultlen;
   }
-  result = (char *)ascmalloc((len + 1)*sizeof(char));
+  result = ASC_NEW_ARRAY(char,(len + 1)*sizeof(char));
   assert(result!=NULL);
   sprintf(result,"%s","\0");
   return result;
@@ -97,7 +96,7 @@ struct SearchEntry *Asc_SearchEntryCreate(char *name,struct Instance *i)
   struct SearchEntry *result;
   result = QLFDIDMALLOC;
   assert(result!=NULL);
-  result->name = (char *)ascmalloc((strlen(name)+1)*sizeof(char));
+  result->name = ASC_NEW_ARRAY(char,strlen(name)+1);
   strcpy(result->name,name);
   result->i = i;
   return result;
@@ -114,7 +113,7 @@ struct SearchEntry *SearchEntryCreateIntArray(char *name,struct Instance *i)
   struct SearchEntry *result;
   result = QLFDIDMALLOC;
   assert(result!=NULL);
-  result->name = (char *)ascmalloc((strlen(name)+8)*sizeof(char));
+  result->name = ASC_NEW_ARRAY(char,strlen(name)+8);
   sprintf(result->name,"[%s]",name);
   result->i = i;
   return result;
@@ -131,7 +130,7 @@ struct SearchEntry *SearchEntryCreateStrArray(char *name,struct Instance *i)
   struct SearchEntry *result;
   result = QLFDIDMALLOC;
   assert(result!=NULL);
-  result->name = (char *)ascmalloc((strlen(name)+8)*sizeof(char));
+  result->name = ASC_NEW_ARRAY(char,strlen(name)+8);
   sprintf(result->name,"[\'%s\']",name);
   result->i = i;
   return result;

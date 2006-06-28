@@ -61,13 +61,13 @@ mr_reorder_t *mr_reorder_create(slv_system_t slv, mtx_matrix_t mtx, int32 size)
   if(slv==NULL  || mtx == NULL || size < 1) {
     return NULL;
   }
-  res = (mr_reorder_t *)asccalloc(1,sizeof(mr_reorder_t));
+  res = ASC_NEW_CLEAR(mr_reorder_t);
   if (res == NULL) return res;
   res->slv = slv;
   res->mtx = mtx;
   res->cutoff = CUTOFFDEFAULT;
   res->activelen = size;
-  res->local = (int32 *)asccalloc(2*size,sizeof(int32));
+  res->local = ASC_NEW_ARRAY_CLEAR(int32,2*size);
   res->tmpmodlist = res->local+size; /* 2nd half of allocation is tmpmodlist */
   res->active = ASC_NEW_ARRAY_CLEAR(char,size);
   if (res->local == NULL || res->active == NULL) {

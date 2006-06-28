@@ -146,7 +146,7 @@ void name_report_pool(void)
 #else /* NAMEUSESPOOL */
 
 #define IDNFREE(p) ascfree(p)
-#define IDNMALLOC (struct Name *)ascmalloc(sizeof(struct Name))
+#define IDNMALLOC ASC_NEW(struct Name)
 
 void name_init_pool(void) {}
 void name_destroy_pool(void) {}

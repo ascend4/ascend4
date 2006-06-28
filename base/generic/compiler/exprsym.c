@@ -58,7 +58,7 @@
 #define TMALLOC TERM_ALLOC
 #define UTMALLOC TERM_ALLOC
 #endif
-#define RMALLOC (RelationINF *)ascmalloc((unsigned)sizeof(RelationINF))
+#define RMALLOC ASC_NEW(RelationINF)
 
 /*
  * Toggle the next 2 for some memory usage statistics.

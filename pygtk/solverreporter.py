@@ -44,7 +44,8 @@ class PopupSolverReporter(PythonSolverReporter):
 		_xml.signal_autoconnect(self)
 
 		self.window = _xml.get_widget("solverstatusdialog")
-		self.window.set_icon(self.browser.icon)
+		if self.browser.icon:
+			self.window.set_icon(self.browser.icon)
 		self.window.set_transient_for(self.browser.window)
 		
 		self.numvars = _xml.get_widget("numvarsentry")
@@ -60,7 +61,7 @@ class PopupSolverReporter(PythonSolverReporter):
 		self.closebutton = _xml.get_widget("closebutton")
 		self.stopbutton = _xml.get_widget("stopbutton")
 			
-		print "SOLVER REPORTER ---- PYTHON"
+		#print "SOLVER REPORTER ---- PYTHON"
 
 		self.solvedvars = 0;
 

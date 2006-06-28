@@ -1550,7 +1550,7 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
   case logrel_type:
     break;
   case array_type:
-    return 0; /* array types are wierd */
+    return 0; /* array types are weird */ 
   case model_type:
   if (
       CompareStatementLists(

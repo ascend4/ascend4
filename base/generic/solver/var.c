@@ -105,7 +105,7 @@ char *var_make_xname(const struct var_variable *var)
    static char name[81];
    char *res;
    sprintf(name,"x%d",var_sindex(var));
-   res=(char *)ascmalloc((strlen(name)+1)*sizeof(char));
+   res=ASC_NEW_ARRAY(char,strlen(name)+1);
    sprintf(res,"%s",name);
    return res;
 }

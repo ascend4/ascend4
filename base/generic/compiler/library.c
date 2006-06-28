@@ -438,7 +438,7 @@ int AddType(struct TypeDescription *desc)
   }
 
   /* add new type to the head of the list */
-  ptr =	(struct LibraryStructure *)ascmalloc(sizeof(struct LibraryStructure));
+  ptr =	ASC_NEW(struct LibraryStructure);
   ptr->next = LibraryHashTable[bucket];
   ptr->type = desc;
   ptr->open_count = Asc_ModuleTimesOpened(GetModule(desc));
@@ -643,7 +643,7 @@ static void EstablishPaternity(struct HierarchyNode *hd, struct gl_list_t *fl)
     desc=(struct TypeDescription *)gl_fetch(fl,c);
     if (GetRefinement(desc)==head.desc) {
       /* squirrel away direct descendents and delete from fl. */
-      child=(struct HierarchyNode *)ascmalloc(sizeof(struct HierarchyNode));
+      child=ASC_NEW(struct HierarchyNode);
       child->desc=desc;
       gl_append_ptr(head.descendents,(VOIDPTR)child);
       gl_delete(fl,c,0); /* here's the horrendous bit */
@@ -679,7 +679,7 @@ struct HierarchyNode *AllTypesThatRefineMe_Tree(symchar *name)
   assert(name!=NULL && AscFindSymbol(name) != NULL);
   desc = FindType(name);
   if (!desc) return NULL; /* nobody home by that name */
-  head = (struct HierarchyNode *)ascmalloc(sizeof(struct HierarchyNode));
+  head = ASC_NEW(struct HierarchyNode);
   head->desc=desc;
   if (GetBaseType(desc)==model_type) {
     head->descendents=gl_create(10L);

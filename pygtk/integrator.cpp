@@ -162,6 +162,7 @@ Integrator::getCurrentObservations(){
 Variable
 Integrator::getObservedVariable(const long &i){
 	var_variable *v = integrator_get_observed_var(blsys,i);
+	return Variable(&simulation,v);
 }
 
 int

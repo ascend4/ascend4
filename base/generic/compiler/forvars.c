@@ -58,7 +58,7 @@ static struct for_var_t *ForVarMalloc(void)
     g_forvar_recycle_list = (struct for_var_t *)g_forvar_recycle_list->name;
     return result;
   } else {
-    return (struct for_var_t *)ascmalloc(sizeof(struct for_var_t));
+    return ASC_NEW(struct for_var_t);
   }
 }
 

@@ -3284,9 +3284,10 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
   var_filter_t vfilter;
   rel_filter_t rfilter;
 
-  /**
-   *** The server has marked incidence flags already.
-   **/
+  /* The server has marked incidence flags already. */
+
+  CONSOLE_DEBUG("...");
+
   /* count included equalities */
   rfilter.matchbits = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
   rfilter.matchvalue = (REL_INCLUDED | REL_EQUALITY | REL_ACTIVE);
@@ -3307,10 +3308,12 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
   sys->rank = sys->J.dofdata->structural_rank;
   sys->ZBZ.order = sys->obj ? (sys->vused - sys->rank) : 0;
   if( !(PARTITION) || OPTIMIZING(sys) ) {
+	CONSOLE_DEBUG("Calling 'slv_block_unify'");
     /* maybe we should reorder blocks here? maybe not */
     slv_block_unify(server);
   }
 
+  CONSOLE_DEBUG("Checking bounds");
   slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed");
 
   /* Initialize Status */
@@ -3318,6 +3321,9 @@ static void structural_analysis(slv_system_t server, slv3_system_t sys){
   sys->s.under_defined = (sys->rused < sys->vused);
   sys->s.struct_singular = (sys->rank < sys->rused);
   sys->s.block.number_of = (slv_get_solvers_blocks(SERVER))->nblocks;
+
+  struct rel_relation **rp = slv_get_solvers_rel_list(server);
+  CONSOLE_DEBUG("FIRST RELATION = %p",rp[0]);
 }
 
 static void set_factor_options (slv3_system_t sys)

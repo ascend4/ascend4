@@ -155,7 +155,7 @@ void InitLogRelInstantiator(void) {
               "ERROR: InitLogRelInstantiator unable to allocate pool.\n");
   }
   g_logterm_ptrs.buf = (struct logrel_term **)
-	asccalloc(TPBUF_LOGINITSIZE,sizeof(union LogRelTermUnion *));
+	ASC_NEW_ARRAY_CLEAR(union LogRelTermUnion *,TPBUF_LOGINITSIZE);
   if (g_logterm_ptrs.buf == NULL) {
     Asc_Panic(2, "InitLogRelInstantiator",
               "ERROR: InitLogRelInstantiator unable to allocate memory.\n");
@@ -163,8 +163,7 @@ void InitLogRelInstantiator(void) {
   g_logterm_ptrs.len = 0;
   g_logterm_ptrs.cap = TPBUF_LOGINITSIZE;
   g_logterm_ptrs.termstackcap = 200;
-  g_logterm_ptrs.termstack =
-    (unsigned long *)ascmalloc((sizeof(unsigned long)*200));
+  g_logterm_ptrs.termstack = ASC_NEW_ARRAY(unsigned long,200);
   if (g_logterm_ptrs.termstack == NULL) {
     Asc_Panic(2, "InitLogRelInstantiator",
               "ERROR: InitLogRelInstantiator unable to allocate memory.\n");
@@ -277,8 +276,7 @@ static int ConvertLogTermBuf(struct logrel_side_temp *tmp)
   realloc_term_stack(0);
   len = g_logterm_ptrs.len;
   if (len < 1) return 0;
-  arr = (union LogRelTermUnion *)
-	ascmalloc(len*sizeof(union LogRelTermUnion));
+  arr = ASC_NEW(union LogRelTermUnion);
   if (arr==NULL) {
     FPRINTF(ASCERR,"Create Logical Relation: Insufficient memory :-(.\n");
     return 0;
@@ -400,7 +398,7 @@ static struct logrel_term *CreateSatisfiedTerm(CONST struct Name *n,
 struct logrelation *CreateLogRelStructure(enum Expr_enum t)
 {
   struct logrelation *result;
-  result = (struct logrelation *)ascmalloc(sizeof(struct logrelation));
+  result = ASC_NEW(struct logrelation);
   assert(result!=NULL);
   memset((char *)&(result->token),0,sizeof(struct TokenLogRel));
   result->logresidual = 0;
@@ -1428,8 +1426,7 @@ static union LogRelTermUnion
   long int delta;
 
   if (!old || !len) return NULL;
-  arr = (union LogRelTermUnion *)
-	ascmalloc(len*sizeof(union LogRelTermUnion));
+  arr = ASC_NEW_ARRAY(union LogRelTermUnion,len);
   if (arr==NULL) {
     FPRINTF(ASCERR,"Copy Logical Relation: Insufficient memory :-(.\n");
     return NULL;

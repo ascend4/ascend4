@@ -222,7 +222,7 @@ void AddInstance(struct Instance *i)
   bucket = DUMPHASHINDEX(SCP(type));
   if ((p=g_dump_ht[bucket])==NULL) {
     g_dump_type_count++;
-    g_dump_ht[bucket] = (struct DumpRec *)ascmalloc(sizeof(struct DumpRec));
+    g_dump_ht[bucket] = ASC_NEW(struct DumpRec);
     p = g_dump_ht[bucket];
     p->next = NULL;
   }
@@ -230,7 +230,7 @@ void AddInstance(struct Instance *i)
     cmp = CmpSymchar(p->type,type);
     if (cmp > 0) {
       g_dump_type_count++;
-      p = (struct DumpRec *)ascmalloc(sizeof(struct DumpRec));
+      p = ASC_NEW(struct DumpRec);
       p->next = g_dump_ht[bucket];
       g_dump_ht[bucket] = p;
     }
@@ -254,7 +254,7 @@ void AddInstance(struct Instance *i)
 	}
 	/* insert between prev and p */
 	g_dump_type_count++;
-	prev->next = (struct DumpRec *)ascmalloc(sizeof(struct DumpRec));
+	prev->next = ASC_NEW(struct DumpRec);
 	prev->next->next = p;
 	p = prev->next;
       }

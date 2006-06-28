@@ -100,7 +100,8 @@ slv_system_t system_build(SlvBackendToken inst)
   /* perform the 'presolve' on the external relations, whatever that means */
   if( (ep=slv_get_extrel_list(sys))!=NULL ) {
     for( i = 0; ep[i]!=NULL; i++ ) {
-      ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
+      /* each item in the list is a 'struct ExtRelCache *' */
+      ExtRel_PreSolve(ep[i],FALSE);
     }
   }
 
@@ -152,7 +153,7 @@ void system_destroy(slv_system_t sys){
   }
 
   if( (ep=slv_get_extrel_list(sys))!=NULL ) {	/* extrels */
-    for( i = 0; ep[i]; i++ ) {
+    for(i = 0; ep[i]; i++ ) {
       ExtRel_PreSolve(ep[i],FALSE);		/* allow them to cleanup */
       ExtRel_DestroyCache(ep[i]);
     }

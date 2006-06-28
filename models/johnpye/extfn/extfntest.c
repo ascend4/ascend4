@@ -83,6 +83,7 @@ int addone_prepare(struct Slv_Interp *slv_interp,
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING PKG EXTFNTEST...\n");
 	const char *mystring = "MY STRING IS HERE";
 	slv_interp->user_data = (void *)mystring;
+	return 0;
 }
 
 int addone_calc(struct Slv_Interp *slv_interp,

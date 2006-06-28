@@ -746,7 +746,7 @@ LogRelEvaluatePostfixBranch(CONST struct logrelation *lrel,
     Asc_Panic(2, NULL,
               "Don't know this type of logical relation term\n"
               "in function LogRelEvaluatePostfixBranch\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1081,8 +1081,7 @@ struct ds_boolsol_list {
 };
 
 
-#define alloc_bool_array(nbools,type)   \
-   ((nbools) > 0 ? (type *)ascmalloc((nbools)*sizeof(type)) : NULL)
+#define alloc_bool_array(nbools,type) ((nbools) > 0 ? ASC_NEW_ARRAY(type,nbools) : NULL)
 #define copy_bool_value(from,too,nvalues)  \
    asc_memcpy((from),(too),(nvalues)*sizeof(int))
 
@@ -1116,10 +1115,8 @@ static struct logrelation *LogRelCreateTmp(int lhslen, int rhslen)
 {
   struct logrelation *lrel;
   lrel = CreateLogRelStructure(e_bol_token);
-  lrel->token.lhs = (union LogRelTermUnion *)
-	ascmalloc(lhslen*sizeof(union LogRelTermUnion));
-  lrel->token.rhs = (union LogRelTermUnion *)
-	ascmalloc(rhslen*sizeof(union LogRelTermUnion));
+  lrel->token.lhs = ASC_NEW_ARRAY(union LogRelTermUnion, lhslen);
+  lrel->token.rhs = ASC_NEW_ARRAY(union LogRelTermUnion, rhslen);
   return lrel;
 }
 

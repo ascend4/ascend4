@@ -877,7 +877,7 @@ char **UnitsExplainError(CONST char *ustr, int code, int pos)
     ERRV[2] = g_units_errors[UEECALL];
     return ERRV;
   }
-  line = (char *)asccalloc(1,len+2);
+  line = ASC_NEW_ARRAY_CLEAR(char,len+2);
   if (line==NULL) {
     ERRV[0] = g_units_errors[UEEMEM];
     ERRV[1] = g_units_errors[UEEMEM];

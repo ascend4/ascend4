@@ -253,7 +253,7 @@ int RectangleArrayExpanded(CONST struct Instance *i)
   } else {
     Asc_Panic(2, NULL,
               "Incorrect instance type passed to RectangleArrayExpanded.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -454,7 +454,7 @@ unsigned long NextToExpand(CONST struct Instance *i)
     return 0;
   } else {
     Asc_Panic(2, NULL, "Incorrect instance type passed to NextToExpand.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -483,7 +483,7 @@ CONST struct Set *IndexSet(CONST struct Instance *i, unsigned long int num)
     return GetIndexSet(ptr);
   } else {
     Asc_Panic(2, NULL, "Incorrect instance type passed to IndexSet.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -825,7 +825,7 @@ struct Instance *FindOrAddIntChild(struct Instance *i, long int v,
     return NULL;
   default:
     Asc_Panic(2, NULL, "Wrong type passed to ForOrAddIntChild.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -855,7 +855,7 @@ struct Instance *FindOrAddStrChild(struct Instance *i, symchar *sym,
     return NULL;
   default:
     Asc_Panic(2, NULL, "Wrong type passed to ForOrAddStrChild.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 

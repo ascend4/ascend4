@@ -241,7 +241,7 @@ void InitRelInstantiator(void) {
               "ERROR: InitRelInstantiator unable to allocate pool.\n");
   }
   g_term_ptrs.buf = (struct relation_term **)
-	asccalloc(TPBUF_INITSIZE,sizeof(union RelationTermUnion *));
+	ASC_NEW_ARRAY_CLEAR(union RelationTermUnion *,TPBUF_INITSIZE);
   /* don't let the above cast fool you about what's in the array */
   if (g_term_ptrs.buf == NULL) {
     Asc_Panic(2, "InitRelInstantiator",
@@ -250,8 +250,7 @@ void InitRelInstantiator(void) {
   g_term_ptrs.len = 0;
   g_term_ptrs.cap = TPBUF_INITSIZE;
   g_term_ptrs.termstackcap = 200;
-  g_term_ptrs.termstack =
-    (unsigned long *)ascmalloc((sizeof(unsigned long)*200));
+  g_term_ptrs.termstack = ASC_NEW_ARRAY(unsigned long,200);
   if (g_term_ptrs.termstack == NULL) {
     Asc_Panic(2, "InitRelInstantiator",
               "ERROR: InitRelInstantiator unable to allocate memory.\n");
@@ -1888,8 +1887,7 @@ static int ConvertTermBuf(struct relation_side_temp *tmp)
 
   len = SimplifyTermBuf(g_simplify_relations,g_term_ptrs.buf,g_term_ptrs.len);
   if (len < 1) return 0;
-  arr = (union RelationTermUnion *)
-	ascmalloc(len*sizeof(union RelationTermUnion));
+  arr = ASC_NEW_ARRAY(union RelationTermUnion,len);
   if (arr==NULL) {
     FPRINTF(ASCERR,"Create Token Relation: Insufficient memory :-(.\n");
     return 0;
@@ -2032,6 +2030,7 @@ static struct relation_term *CreateDiffTerm(){
 	PTINIT(term);
 	term->t = e_diff;
 	/* NOT YET IMPLEMENTED */
+	Asc_Panic(2,__FUNCTION__,"not yet implemented");
 }
 
 /** create a term from the pool */
@@ -2043,29 +2042,31 @@ static struct relation_term *CreateNaryTerm(CONST struct Func *f)
   assert(term!=NULL);
   PTINIT(term);
   term->t = e_func;
-  N_TERM(term) -> fptr = f;
-  N_TERM(term) -> args = NULL;
+  N_TERM(term)->fptr = f;
+  N_TERM(term)->args = NULL;
   return term;
 }
 #endif  /* THIS_IS_AN_UNUSED_FUNCTION */
 
 
 /**
- * This function create and *must* create the memory
- * for the structure and for the union that the structure
- * points to. Too much code depends on the pre-existent
- * of a properly initialized union.
- * If copyunion is crs_NOUNION, the share ptr is init to NULL and user
- * must set refcount,relop after the allocate a UNION or whatever.
- * If copyunion is crs_NEWUNION, share ptr is allocated and configured.
- *
- */
+	This function creates and *must* create the memory
+	for the structure and for the union that the structure
+	points to. 
+
+	Too much code depends on the pre-existence of a properly initialized union.
+
+	If copyunion is crs_NOUNION, the share ptr is init to NULL and user
+	must set refcount,relop after the allocate a UNION or whatever.
+	If copyunion is crs_NEWUNION, share ptr is allocated and configured.
+*/
 struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 {
   struct relation *newrelation;
 
-  newrelation = (struct relation *)ascmalloc(sizeof(struct relation));
+  newrelation = ASC_NEW(struct relation);
   assert(newrelation!=NULL);
+  CONSOLE_DEBUG("Created 'struct relation' at %p",newrelation);
 
   newrelation->residual = DBL_MAX;
   newrelation->multiplier = DBL_MAX;
@@ -2075,8 +2076,7 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
   newrelation->d =(dim_type *)WildDimension();
 
   if (copyunion) {
-    newrelation->share =
-        (union RelationUnion *)ascmalloc(sizeof(union RelationUnion));
+    newrelation->share = ASC_NEW(union RelationUnion);
     assert(newrelation->share!=NULL);
     RelationRefCount(newrelation) = 0;
     RelRelop(newrelation) = relop;
@@ -2100,10 +2100,11 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 
 
 /*------------------------------------------------------------------------------
- * EXTERNAL CALL PROCESSING
- *
+  EXTERNAL CALL PROCESSING
+*/
 
-/**	@note 
+/** @file "relation.h"
+	@note 
 	A special note on external relations
 
 	External relations behave like relations but they also behave like
@@ -2145,14 +2146,13 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   len = n_inputs + 1; /* an extra for the output variable. */
 
   /*
-	Add the input vars, making sure that their incidence
-	is unique, and adjusting the indexing appropriately
-	on the integer args array.
+	Create 'newlist' which is a uniquified list of inputs plus the 'subject'
+	Instance (output variable). Keep track of which instances in 'newlist'
+	correspond to which original blackbox argument by building up the 'args'
+	list at the same time.
   */
-
   args = ASC_NEW_ARRAY_CLEAR(int,len+1);
-
-  newlist = gl_create(len);
+  newlist = gl_create(len); /* list of Instance objects */
 
   for (c=1;c<=n_inputs;c++) {
     var = (struct Instance *)gl_fetch(inputs,c);
@@ -2167,7 +2167,10 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
     }
   }
 
-  /* add the subject */
+  /*
+	Add the 'subject' instance to the end of the newlist. For a black box,
+	I think that this means the output	variable. -- JP
+  */
   pos = gl_search(newlist,subject,(CmpFunc)CmpP);
   if (pos) {
     FPRINTF(ASCERR,"An input and output variable are the same !!\n");
@@ -2177,7 +2180,9 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
     *args++ = (int)gl_length(newlist);
     AddRelation(var,relinst);
   }
-  *args = 0; /* terminate */
+
+  /* Add a zero to terminate the 'args' list. */
+  *args = 0;
 
   /*
 	Create the BlackBox relation structure. This requires
@@ -2219,7 +2224,7 @@ struct relation *CreateGlassBoxRelation(struct Instance *relinst,
    * the args list indexing.
    */
   if (len) {
-    tmp = args = (int *)asccalloc((int)(len+1), sizeof(int));
+    tmp = args = ASC_NEW_ARRAY_CLEAR(int,len+1);
     newlist = gl_create(len);
 
     for (c=1;c<=len;c++) {
@@ -4037,8 +4042,7 @@ static union RelationTermUnion
   long int delta;
 
   if (!old || !len) return NULL;
-  arr = (union RelationTermUnion *)
-	ascmalloc(len*sizeof(union RelationTermUnion));
+  arr = ASC_NEW_ARRAY(union RelationTermUnion,len);
   if (arr==NULL) {
     FPRINTF(ASCERR,"CopyTokenRelation: Insufficient memory :-(.\n");
     return NULL;
@@ -4312,7 +4316,7 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
     return result;
   case e_opcode:
     Asc_Panic(2, NULL, "Opcode relation copying not yet supported\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
     break;
   case e_glassbox:
     result = CreateGlassBoxRelation(dest_inst, RGBOX(src).efunc,
@@ -4321,11 +4325,11 @@ struct relation *CopyRelationToModify(CONST struct Instance *src_inst,
     return result;
   case e_blackbox:
     Asc_Panic(2, NULL, "Blackbox relation copying not yet supported\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
     break;
   default:
     Asc_Panic(2, NULL, "unknown relation type in CopyRelationToModify\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
     break;
   }
 }

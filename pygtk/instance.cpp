@@ -180,8 +180,9 @@ Instanc::isRelation() const{
  		case REL_INST:
 		case LREL_INST:
 			return true;
+		default:
+			return false;
 	}
-	return false;
 }
 
 const bool
@@ -249,8 +250,9 @@ Instanc::isBool() const{
 		case BOOLEAN_ATOM_INST:
 		case BOOLEAN_CONSTANT_INST:
 			return true;
+		default:
+			return false;
 	}
-	return false;
 }
 
 const bool
@@ -260,8 +262,9 @@ Instanc::isInt() const{
 		case INTEGER_ATOM_INST:
 		case INTEGER_CONSTANT_INST:
 			return true;
+		default:
+			return false;
 	}
-	return false;
 }
 
 const bool
@@ -271,8 +274,9 @@ Instanc::isReal() const{
 		case REAL_ATOM_INST:
 		case REAL_CONSTANT_INST:
 			return true;
+		default:
+			return false;
 	}
-	return false;
 }
 
 const bool
@@ -282,8 +286,9 @@ Instanc::isSymbol() const{
 		case SYMBOL_ATOM_INST:
 		case SYMBOL_CONSTANT_INST:
 			return true;
+		default:
+			return false;
 	}
-	return false;
 }
 
 const bool

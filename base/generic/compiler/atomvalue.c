@@ -131,7 +131,7 @@ unsigned DepthAssigned(CONST struct Instance *i)
     return B_INST(i)->depth;
   default:
     Asc_Panic(2, __FUNCTION__, "Incorrect type passed");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -148,7 +148,7 @@ double RealAtomValue(CONST struct Instance *i)
     return RA_INST(i)->value;
   default:
     Asc_Panic(2, __FUNCTION__, "called with non-real instance");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -233,7 +233,7 @@ CONST dim_type *RealAtomDims(CONST struct Instance *i)
     return RA_INST(i)->dimen;
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-real instance.");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -253,7 +253,7 @@ long GetIntegerAtomValue(CONST struct Instance *i)
     return IC_INST(i)->value;
   default:
     Asc_Panic(2, __FUNCTION__,"called on non-integer instance");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -310,7 +310,7 @@ int GetBooleanAtomValue(CONST struct Instance *i)
     return BCV(i);
   default:
     Asc_Panic(2, __FUNCTION__,"called on non-boolean instance.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -430,7 +430,7 @@ CONST struct set_t *SetAtomList(CONST struct Instance *i)
     return SA_INST(i)->list;
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -445,7 +445,7 @@ int GetSetAtomKind(CONST struct Instance *i)
     return (int)(SA_INST(i)->int_set);
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -466,7 +466,7 @@ symchar *GetSymbolAtomValue(CONST struct Instance *i)
     return SYMC_INST(i)->value;
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-symbol instance.");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -571,7 +571,7 @@ int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2)
     return CmpSetInstVal(SetAtomList(i1),SetAtomList(i2));
   default:
     Asc_Panic(2, __FUNCTION__, "Bad call!");
-    exit(2);/* Needed to keep gcc from whining */
+    
     break;
   }
 }

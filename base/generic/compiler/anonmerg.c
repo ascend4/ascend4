@@ -730,7 +730,7 @@ struct AnonMergeUniBucket *AddUniBucket(struct TypeDescription *d,
 {
   struct AnonMergeUniBucket *b;
   int index;
-  b = (struct AnonMergeUniBucket *)ascmalloc(sizeof(struct AnonMergeUniBucket));
+  b = ASC_NEW(struct AnonMergeUniBucket);
   if (b==NULL) {
     return NULL;
   }
@@ -1003,7 +1003,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
   int i,len;
   unsigned long j,dlen;
 
-  amipd = (struct AnonMergeIPData *)ascmalloc(sizeof(struct AnonMergeIPData));
+  amipd = ASC_NEW(struct AnonMergeIPData);
   if (amipd==NULL) {
     ascfree(amipd);
     Asc_Panic(2,"AMIPDInit","Insufficent memory for amipd.");
@@ -1018,8 +1018,7 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
     Asc_Panic(2,"AMIPDInit","Insufficent memory for node2ip.");
     return NULL;
   }
-  amipd->ipbuf = (struct AnonMergeIP *)
-                   ascmalloc(sizeof(struct AnonMergeIP)*amvi->nip);
+  amipd->ipbuf = ASC_NEW_ARRAY(struct AnonMergeIP,amvi->nip);
   if (amipd->ipbuf==NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for ipbuf.");
     return NULL;
@@ -1086,29 +1085,27 @@ struct AnonMergeIPData *AMIPDInit(struct AnonMergeVisitInfo *amvi)
     return NULL;
   }
   /* setup md */
-  amipd->md.header = (struct sgelt **)
-      ascmalloc(sizeof(struct sgelt *)*(amvi->nip+1));
+  amipd->md.header = ASC_NEW_ARRAY(struct sgelt *,amvi->nip+1);
   if (amipd->md.header == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.header.");
     return NULL;
   }
-  amipd->md.colcount = ASC_NEW_ARRAY(int,(amvi->nip+1));
+  amipd->md.colcount = ASC_NEW_ARRAY(int,amvi->nip+1);
   if (amipd->md.colcount == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.colcount.");
     return NULL;
   }
-  amipd->md.sg2blob = ASC_NEW_ARRAY(int,(asize+1));
+  amipd->md.sg2blob = ASC_NEW_ARRAY(int,asize+1);
   if (amipd->md.sg2blob == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.sg2blob.");
     return NULL;
   }
-  amipd->md.blobcollected = ASC_NEW_ARRAY(int,(asize+1));
+  amipd->md.blobcollected = ASC_NEW_ARRAY(int,asize+1);
   if (amipd->md.blobcollected == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blobcollected.");
     return NULL;
   }
-  amipd->md.blob = (struct gl_list_t **)
-      ascmalloc(sizeof(struct gl_list_t *)*(asize+1));
+  amipd->md.blob = ASC_NEW_ARRAY(struct gl_list_t *,asize+1);
   if (amipd->md.blob == NULL) {
     Asc_Panic(2,"AMIPDInit","Insufficent memory for md.blob.");
     return NULL;

@@ -45,6 +45,10 @@
 
 #include <utilities/ascConfig.h>
 
+/*------------------------------------------------------------------------------
+	forward declarations and typedefs
+*/
+
 /**
  *  Bad pointer for a patently bogus type definition when needed.
  *  This token is an illegal address for any type definition,
@@ -71,7 +75,9 @@
 #define SIMPLE_KINDS \
      ( REAL_KIND | INT_KIND | BOOL_KIND | SYM_KIND | SET_KIND | EQN_KIND )
 
-/** (t & ERROR_KIND) ==> bogus type, there may be other bogus types as well.)*/
+/**
+	(t & ERROR_KIND) ==> bogus type, there may be other bogus types as well.)
+*/
 enum type_kind {
   /* complex base types */
   model_type =    COMPOUND_KIND | 0x100,
@@ -131,22 +137,21 @@ struct AtomTypeDesc {
 };
 
 /**
- * IndexType has been modified to store a key, and a string
- * representation of the set of indices. As it stands the set
- * of indices is of very little utility. For example, if we had
- * 	foo[1,2,3,4] IS_A thing; then what would be saved is
- *	1,2,3,4. -- which is useful
- * Likewise
- *	foo[fooset - [thingset]] IS_A thing; we would have
- *	fooset thingset -  -- which is not very useful.
- * So we now save a string representation of the set.<br><br>
- *
- * The above statement about sets could only have been made
- * by someone with no real clue about the instantiate process.
- * Both representations are critical to have, and since they
- * are cheap, we will have both.
- * The string IS a string from the symbol table.
- */
+	IndexType has been modified to store a key, and a string
+	representation of the set of indices. As it stands the set
+	of indices is of very little utility. For example, if we had
+	"foo[1,2,3,4] IS_A thing;" then what would be saved is
+	1,2,3,4. -- which is useful
+	Likewise "foo[fooset - [thingset]] IS_A thing;" we would have
+	"fooset thingset -"  -- which is not very useful.
+	
+	So we now save a string representation of the set.
+	
+	Apparently, the above statement about sets could only have been made
+	by someone "with no real clue about the instantiate process", and
+	"Both representations are critical to have, and since they
+	are cheap, we will have both. The string IS a string from the symbol table."
+*/
 struct IndexType {
   struct Set *set;    /**< the original set */
   symchar *sptr;      /**< a string representation of the set */
@@ -155,46 +160,52 @@ struct IndexType {
 };
 
 struct ArrayDesc {
-  struct gl_list_t *indices;    /**< a list of IndexTypes */
+  struct gl_list_t *indices;    /**< a list of IndexType objects */
   struct TypeDescription *desc; /**< the type of the array/common superclass*/
-  /* the following 4 need to be made bit flags.
-   * At present, this overuse of ints does not dominate the
-   * union cost at the end of the typedescription struct, so
-   * we have no incentive to do the fiddling with bits.
-   */
+  /* 
+	the following 4 need to be made bit flags.
+	At present, this overuse of ints does not dominate the
+	union cost at the end of the typedescription struct, so
+	we have no incentive to do the fiddling with bits.
+  */
   int isintset;       /**< in case the type of the array is a set */
   int isrelation;     /**< TRUE in case of an array of relations */
   int islogrel;       /**< TRUE in case of array of logical relation */
   int iswhen;         /**< TRUE in case of array of WHEN */
 };
 
-/** ModelArgs is a structure in preparation for parameterized types */
+/** 
+	ModelArgs is a structure in preparation for parameterized types 
+*/
 struct ModelArgs {
-  struct StatementList *declarations;
-  /**< list of the statements in the parameter list */
+  struct StatementList *declarations; /**< list of the statements in the parameter list */
   struct StatementList *absorbed;
-  /**< list of IS_A statements and their matching assignments
-   * removed in refinements.
-   */
+  /**<
+	list of IS_A statements and their matching assignments
+	removed in refinements.
+  */
   struct StatementList *reductions;
-  /**< list of assignments from the REFINES x(reductions)
-   * these statements are not directly used in instantiation.
-   * duplicates (references) end up in the absorbed list.
-   * this list is kept to enable printing types properly.
-   */
+  /**<
+	list of assignments from the REFINES x(reductions)
+	these statements are not directly used in instantiation.
+	duplicates (references) end up in the absorbed list.
+	this list is kept to enable printing types properly.
+  */
   struct StatementList *wheres;
-  /**< list of statements placing additional structural requirements
-   * on the arguments passed by reference. (WBTS's)
-   * these statements used for configuration checking in instantiation.
-   */
+  /**<
+	list of statements placing additional structural requirements
+	on the arguments passed by reference. (WBTS's)
+	these statements used for configuration checking in instantiation.
+  */
   /* struct gl_list_t *argdata;
    * list of final values, etc if needed. (not yet in use)
    */
-  unsigned int argcnt;
-  /**< number of args required in an IS_A of this type. */
+  unsigned int argcnt; /**< number of args required in an IS_A of this type. */
 };
 
-/** Type definition data structure. */
+/**
+	Type definition data structure.
+*/
 struct TypeDescription {
   symchar *name;                    /**< type name */
   enum type_kind t;                 /**< base type of the type */
@@ -209,20 +220,24 @@ struct TypeDescription {
   unsigned long ref_count;          /**< count includes instances, other types */
   long int parseid;                 /**< n as in 'nth definition made' */
   union {
-    struct ArrayDesc array;           /**< description of array things */
-    struct AtomTypeDesc atom;         /**< atom description stuff */
-    struct ConstantTypeDesc constant; /**< constant description stuff */
-    struct ModelArgs modarg;          /**< parameter list stuff */
-  } u;                                /**< union of description stuff */
+    struct ArrayDesc array;             /**< description of array things */
+    struct AtomTypeDesc atom;           /**< atom description stuff */
+    struct ConstantTypeDesc constant;   /**< constant description stuff */
+    struct ModelArgs modarg;            /**< parameter list stuff */
+  } u;                              /**< union of description stuff */
 };
 
 #define MAKEARRAYNAMES 1
 /**<
- *  If MAKEARRAYNAMES != 0 we will make up names for arrays
- *  so clients that want everything to have a name are happy.
- *  Note that virtually NOTHING works anymore if MAKEARRAYNAMES
- *  is 0.
- */
+	If MAKEARRAYNAMES != 0 we will make up names for arrays
+	so clients that want everything to have a name are happy.
+	Note that virtually NOTHING works anymore if MAKEARRAYNAMES
+	is 0.
+*/
+
+/*------------------------------------------------------------------------------
+  GETTER / QUERY FUNCTIONS
+*/
 
 #ifdef NDEBUG
 #define GetChildList(d) ((d)->children)
@@ -337,50 +352,52 @@ ASC_DLLSPEC(struct gl_list_t)
  *  Do not call this function directly - use GetInitializationList() instead.
  */
 
-/* the following two functions make it much easier to debug methods
- * interactively without reconstructing complex objects.
- * Since methods are fully interpretted at run time, this is not an
- * unreasonable thing to do.
- * It might be a good idea to procedure lock methods in types
- * found in files *.a4l.
- */
+/*------------------------------------------------------------------------------
+	the following two functions make it much easier to debug methods
+	interactively without reconstructing complex objects.
+	Since methods are fully interpretted at run time, this is not an
+	unreasonable thing to do.
+
+	It might be a good idea to procedure lock methods in types
+	found in files *.a4l.
+*/
 
 extern int AddMethods(struct TypeDescription *d,
                       struct gl_list_t *pl,
                       int err);
 /**<
- *  Inserts new methods into a type and all its refinements.
- *  pl should contain (struct InitProcedure *) to the methods to
- *  add to d.  The methods named in pl must not conflict with any
- *  method in d or its refinements.  If err != 0, rejects pl.<br><br>
- *
- *  If return is 1, caller is responsible for pl, OTHERWISE we manage it
- *  from here on.  If caller supplied d == ILLEGAL_DEFINITION, the caller
- *  can unconditionally forget pl.
- *
- *  @param d   The type to which the methods in pl should be added.
- *  @param pl  A gl_list_t of (struct InitProcedure *) to add to d.
- *  @param err If non-zero, pl is rejected and no methods are added.
- *  @return Returns 0 if successful, 1 if not.
- */
+	Inserts new methods into a type and all its refinements.
+	pl should contain (struct InitProcedure *) to the methods to
+	add to d.  The methods named in pl must not conflict with any
+	method in d or its refinements.  If err != 0, rejects pl.<br><br>
+	
+	If return is 1, caller is responsible for pl, OTHERWISE we manage it
+	from here on.  If caller supplied d == ILLEGAL_DEFINITION, the caller
+	can unconditionally forget pl.
+	
+	@param d   The type to which the methods in pl should be added.
+	@param pl  A gl_list_t of (struct InitProcedure *) to add to d.
+	@param err If non-zero, pl is rejected and no methods are added.
+	@return Returns 0 if successful, 1 if not.
+*/
 
 extern int ReplaceMethods(struct TypeDescription *d,
                           struct gl_list_t *pl,
                           int err);
 /**<
- *  Replaces listed methods in a type and all its refinements that do not
- *  themselves redefine the methods.  The methods in pl must exist in d or
- *  else an error condition is returned.  Methods not named in pl but found
- *  in d or its refinements are left undisturbed. If err != 0, rejects pl.<br><br>
- *
- *  If return is 1, caller is responsible for pl, OTHERWISE we manage it
- *  from here on.
- *
- *  @param d   The type to which the methods in pl should be replaced.
- *  @param pl  A gl_list_t of (struct InitProcedure *) to replace in.
- *  @param err If non-zero, pl is rejected and no methods are replaced.
- *  @return Returns 0 if successful, 1 if not.
- */
+	Replaces listed methods in a type and all its refinements that do not
+	themselves redefine the methods.  The methods in pl must exist in d or
+	else an error condition is returned.  Methods not named in pl but found
+	in d or its refinements are left undisturbed. If err != 0, rejects pl.<br><br>
+	
+	If return is 1, caller is responsible for pl, OTHERWISE we manage it
+	from here on.
+	
+	@param d   The type to which the methods in pl should be replaced.
+	@param pl  A gl_list_t of (struct InitProcedure *) to replace in.
+	@param err If non-zero, pl is rejected and no methods are replaced.
+	@return Returns 0 if successful, 1 if not.
+*/
 
 #ifdef NDEBUG
 #define CopyTypeDesc(d) ((d)->ref_count++)
@@ -388,11 +405,15 @@ extern int ReplaceMethods(struct TypeDescription *d,
 #define CopyTypeDesc(d) CopyTypeDescF(d)
 #endif
 /**<
- *  Increment the reference count.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return No return value.
- *  @see CopyTypeDescF()
- */
+	Increment the reference count.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return No return value.
+	@see CopyTypeDescF()
+
+	@todo Why is this called 'CopyTypeDesc' when in fact it's not doing any
+	copying?
+*/
+
 extern void CopyTypeDescF(struct TypeDescription *d);
 /**<
  *  Implementation function for CopyTypeDesc() (debug mode).
@@ -401,18 +422,21 @@ extern void CopyTypeDescF(struct TypeDescription *d);
 
 extern void DeleteTypeDesc(struct TypeDescription *d);
 /**<
- *  Decrement the reference count.  Eventually, this should delete it
- *  when ref_count == 0.  Note to myself:  Remember that array type
- *  descriptions need to be removed from a list too.
+	Decrement the reference count.  Eventually, this should delete it
+	when ref_count == 0.  
+
+	@NOTE ('to myself')  Remember that array type
+	descriptions need to be removed from a list too.
  */
 
 extern void DeleteNewTypeDesc(struct TypeDescription *d);
 /**<
- *  Checks that the type has a refcount of 1 before passing it on to
- *  DeleteTypeDesc. This is (or should be) the case when deleting
- *  types that are newly parsed but not yet in the type library.
- *  Essentially, this is a one-client (AddType) function.
- */
+	Checks that the type has a refcount of 1 before passing it on to
+	DeleteTypeDesc. This is (or should be) the case when deleting
+	types that are newly parsed but not yet in the type library.
+	Essentially, this is a one-client (AddType) function.
+*/
+
 
 #ifdef NDEBUG
 #define GetByteSize(d) ((unsigned)(d)->u.atom.byte_length)
@@ -420,16 +444,17 @@ extern void DeleteNewTypeDesc(struct TypeDescription *d);
 #define GetByteSize(d) GetByteSizeF(d)
 #endif
 /**<
- *  Return the byte size of an atom type description.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The size as an unsigned.
- *  @see GetByteSizeF()
- */
+	Return the byte size of an atom type description.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The size as an unsigned.
+	@see GetByteSizeF()
+*/
 extern unsigned GetByteSizeF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for GetByteSize() (debug mode).
- *  Do not call this function directly - use GetByteSize() instead.
- */
+	Implementation function for GetByteSize() (debug mode).
+	Do not call this function directly - use GetByteSize() instead.
+*/
+
 
 #ifdef NDEBUG
 #define GetChildDesc(d) ((d)->u.atom.childinfo)
@@ -437,16 +462,17 @@ extern unsigned GetByteSizeF(CONST struct TypeDescription *d);
 #define GetChildDesc(d) GetChildDescF(d)
 #endif
 /**<
- *  Return the child description field of an atom type description.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The child description field as a CONST struct ChildDesc*.
- *  @see GetChildDescF()
- */
+	Return the child description field of an atom type description.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The child description field as a CONST struct ChildDesc*.
+	@see GetChildDescF()
+*/
 extern CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for GetChildDesc() (debug mode).
- *  Do not call this function directly - use GetChildDesc() instead.
- */
+	Implementation function for GetChildDesc() (debug mode).
+	Do not call this function directly - use GetChildDesc() instead.
+*/
+
 
 #ifdef NDEBUG
 #define GetUniversalFlag(d) ((d)->universal)
@@ -454,17 +480,21 @@ extern CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *d);
 #define GetUniversalFlag(d) GetUniversalFlagF(d)
 #endif
 /**<
- *  Return the universal flag of a type definition
- *  Gets a short all to itself for no apparent reason.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The flag as an int.
- *  @see GetUniversalFlagF()
- */
+	Return the universal flag of a type definition
+	Gets a short all to itself for no apparent reason.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The flag as an int.
+	@see GetUniversalFlagF()
+*/
 extern int GetUniversalFlagF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for GetUniversalFlag() (debug mode).
- *  Do not call this function directly - use GetUniversalFlag() instead.
- */
+	Implementation function for GetUniversalFlag() (debug mode).
+	Do not call this function directly - use GetUniversalFlag() instead.
+*/
+
+/*------------------------------------------------------------------------------
+	'TYPE FLAGS'
+*/
 
 #ifdef NDEBUG
 #define GetTypeFlags(d) ((d)->flags)
@@ -472,27 +502,29 @@ extern int GetUniversalFlagF(CONST struct TypeDescription *d);
 #define GetTypeFlags(d) GetTypeFlagsF(d)
 #endif
 /**<
- *  Return the type flags of a type definition
- *  There are a number of flags we might want in various bit positions.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The flags as an unsigned short.
- *  @see GetTypeFlagsF()
- */
+	Return the type flags of a type definition
+	There are a number of flags we might want in various bit positions.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The flags as an unsigned short.
+	@see GetTypeFlagsF()
+*/
 extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for GetTypeFlags() (debug mode).
- *  Do not call this function directly - use GetTypeFlags() instead.
- */
+	Implementation function for GetTypeFlags() (debug mode).
+	Do not call this function directly - use GetTypeFlags() instead.
+*/
+
 
 #define TYPECONTAINSDEFAULTS 0x1
 #define TYPECONTAINSPARINSTS 0x2
 /**<
- *  We can add more, up to the minimum number of bits we expect a short
- *  to have under any C compiler.
- *  Universal really should be under this protocol.
- */
+	We can add more, up to the minimum number of bits we expect a short
+	to have under any C compiler.
+	Universal really should be under this protocol.
+*/
 #define TYPESHOW 0x100
 /**< For browsing purposes */
+
 
 #ifdef NDEBUG
 #define TypeHasDefaultStatements(d) (GetTypeFlags(d)&TYPECONTAINSDEFAULTS)
@@ -500,18 +532,19 @@ extern unsigned short GetTypeFlagsF(CONST struct TypeDescription *d);
 #define TypeHasDefaultStatements(d) TypeHasDefaultStatementsF(d)
 #endif
 /**<
- *  Tells if the statement list of a type has any default ( := ) statements.
- *  Returns 0 if not.
- *  This does not refer to the DEFAULT keyword in atoms.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return An unsigned.
- *  @see TypeHasDefaultStatementsF()
- */
+	Tells if the statement list of a type has any default ( := ) statements.
+	Returns 0 if not.
+	This does not refer to the DEFAULT keyword in atoms.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return An unsigned.
+	@see TypeHasDefaultStatementsF()
+*/
 extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for TypeHasDefaultStatements() (debug mode).
- *  Do not call this function directly - use TypeHasDefaultStatements() instead.
- */
+	Implementation function for TypeHasDefaultStatements() (debug mode).
+	Do not call this function directly - use TypeHasDefaultStatements() instead.
+*/
+
 
 #ifdef NDEBUG
 #define TypeHasParameterizedInsts(d) (GetTypeFlags(d)&TYPECONTAINSPARINSTS)
@@ -519,69 +552,86 @@ extern unsigned TypeHasDefaultStatementsF(CONST struct TypeDescription *d);
 #define TypeHasParameterizedInsts(d) TypeHasParameterizedInstsF(d)
 #endif
 /**<
- *  Tells if the statement lists of a type involve parameters in any way.
- *  A type that has parameters, or has children that have parameters or
- *  recursively so returns nonzero result (TYPECONTAINSPARINSTS).
- *  Returns 0 if not.
- *  This does not refer to the DEFAULT keyword in atoms.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return An unsigned.
- *  @see TypeHasParameterizedInstsF()
- */
+	Tells if the statement lists of a type involve parameters in any way.
+	A type that has parameters, or has children that have parameters or
+	recursively so returns nonzero result (TYPECONTAINSPARINSTS).
+	Returns 0 if not.
+	This does not refer to the DEFAULT keyword in atoms.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return An unsigned.
+	@see TypeHasParameterizedInstsF()
+*/
 ASC_DLLSPEC(unsigned) TypeHasParameterizedInstsF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for TypeHasParameterizedInsts() (debug mode).
- *  Do not call this function directly - use TypeHasParameterizedInsts() instead.
- */
+	Implementation function for TypeHasParameterizedInsts() (debug mode).
+	Do not call this function directly - use TypeHasParameterizedInsts() instead.
+*/
+
+/*------------------------------------------------------------------------------
+	DEFAULT VALUES
+*/
 
 #define AtomDefaulted(d) ((d)->u.atom.defaulted)
 /**<
- *  Returns TRUE if the atom has a default value; otherwise returns FALSE.
- */
+	Returns TRUE if the atom has a default value; otherwise returns FALSE.
+*/
 
 #define ConstantDefaulted(d) ((d)->u.constant.defaulted)
 /**<
- *  Returns TRUE if the Constant has a default value; otherwise returns FALSE.
- */
+	Returns TRUE if the Constant has a default value; otherwise returns FALSE.
+*/
 
 #define GetIntDefault(d) ((d)->u.atom.u.defint)
 /**<  Returns the long default value of TypeDescription *d. */
+
 #define GetSymDefault(d) ((d)->u.atom.u.defsym)
 /**<  Returns the symchar* default value of TypeDescription *d. */
+
+
 #ifdef NDEBUG
 #define GetRealDefault(d) ((d)->u.atom.u.defval)
 #else
 #define GetRealDefault(d) GetRealDefaultF((d),__FILE__,__LINE__)
 #endif
 /**<  Returns the double default value of TypeDescription *d. */
+extern double GetRealDefaultF(CONST struct TypeDescription *d,
+                              CONST char *f, CONST int l);
+/**<
+	Implementation function for GetRealDefault() (debug mode).
+	Do not call this function directly - use GetRealDefault() instead.
+*/
+
+
 #ifdef NDEBUG
 #define GetBoolDefault(d) ((d)->u.atom.u.defbool)
 #else
 #define GetBoolDefault(d) GetBoolDefaultF((d),__FILE__,__LINE__)
 #endif
 /**<  Returns the unsigned default value of TypeDescription *d. */
-extern double GetRealDefaultF(CONST struct TypeDescription *d,
-                              CONST char *f, CONST int l);
-/**<
- *  Implementation function for GetRealDefault() (debug mode).
- *  Do not call this function directly - use GetRealDefault() instead.
- */
-
 extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
                                 CONST char *f, CONST int l);
 /**<
- *  Implementation function for GetBoolDefault() (debug mode).
- *  Do not call this function directly - use GetBoolDefault() instead.
- */
+	Implementation function for GetBoolDefault() (debug mode).
+	Do not call this function directly - use GetBoolDefault() instead.
+*/
+
 
 #define GetConstantDefReal(d)    ((d)->u.constant.u.defreal)
 /**<  Returns the double default value of constant TypeDescription *d. */
+
 #define GetConstantDefInteger(d) ((d)->u.constant.u.definteger)
 /**<  Returns the long default value of constant TypeDescription *d. */
+
 #define GetConstantDefBoolean(d) ((d)->u.constant.u.defboolean)
 /**<  Returns the short default value of constant TypeDescription *d. */
+
 #define GetConstantDefSymbol(d)  ((d)->u.constant.u.defsymbol)
 /**<  Returns the symchar* default value of constant TypeDescription *d. */
+
+
+/*------------------------------------------------------------------------------
+	DIMENSIONS
+*/
 
 #ifdef NDEBUG
 #define GetRealDimens(d) ((d)->u.atom.dimp)
@@ -589,19 +639,20 @@ extern unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
 #define GetRealDimens(d) GetRealDimensF((d),__FILE__,__LINE__)
 #endif
 /**<
- *  Returns the dimensions of the atom.
- *  If atoms is not numeric, return value is uncertain.
- *  Will not work on constants.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The dimensions as a CONST dim_type*.
- *  @see GetRealDimensF()
- */
+	Returns the dimensions of the atom.
+	If atoms is not numeric, return value is uncertain.
+	Will not work on constants.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The dimensions as a CONST dim_type*.
+	@see GetRealDimensF()
+*/
 ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
                                       CONST char *f, CONST int l);
 /**<
- *  Implementation function for GetRealDimens() (debug mode).
- *  Do not call this function directly - use GetRealDimens() instead.
- */
+	Implementation function for GetRealDimens() (debug mode).
+	Do not call this function directly - use GetRealDimens() instead.
+*/
+
 
 #ifdef NDEBUG
 #define GetConstantDimens(d) ((d)->u.constant.dimp)
@@ -609,20 +660,21 @@ ASC_DLLSPEC(CONST dim_type*) GetRealDimensF(CONST struct TypeDescription *d,
 #define GetConstantDimens(d) GetConstantDimensF((d),__FILE__,__LINE__)
 #endif
 /**<
- *  Returns the dimensions of the constant.
- *  All constants have dimensionality. nonreal constants have the
- *  dim for DIMENSIONLESS. nonconstants and unassigned real constants
- *  will return WildDimension().
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The dimensions as a CONST dim_type*.
- *  @see GetConstantDimensF()
- */
+	Returns the dimensions of the constant.
+	All constants have dimensionality. nonreal constants have the
+	dim for DIMENSIONLESS. nonconstants and unassigned real constants
+	will return WildDimension().
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The dimensions as a CONST dim_type*.
+	@see GetConstantDimensF()
+*/
 ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
                                           CONST char *f, CONST int l);
 /**<
- *  Implementation function for GetConstantDimens() (debug mode).
- *  Do not call this function directly - use GetConstantDimens() instead.
- */
+	Implementation function for GetConstantDimens() (debug mode).
+	Do not call this function directly - use GetConstantDimens() instead.
+*/
+
 
 #ifdef NDEBUG
 #define GetName(d) ((d)->name)
@@ -630,71 +682,72 @@ ASC_DLLSPEC(CONST dim_type*) GetConstantDimensF(CONST struct TypeDescription *d,
 #define GetName(d) GetNameF(d)
 #endif
 /**<
- *  Returns the name of the type that this structure defines.
- *  @param d CONST struct TypeDescription*, the type description to query.
- *  @return The name as a symchar*.
- *  @see GetNameF()
- */
+	Returns the name of the type that this structure defines.
+	@param d CONST struct TypeDescription*, the type description to query.
+	@return The name as a symchar*.
+	@see GetNameF()
+*/
 ASC_DLLSPEC(symchar*) GetNameF(CONST struct TypeDescription *d);
 /**<
- *  Implementation function for GetName() (debug mode).
- *  Do not call this function directly - use GetName() instead.
- */
+	Implementation function for GetName() (debug mode).
+	Do not call this function directly - use GetName() instead.
+*/
+
 
 #define GetParseId(d) ((d)->parseid)
 /**<
- *  Returns the parseid of type d.
- *
- *  @param d The type to query (TypeDescription *).
- *  @return The parseid of d as a long int.
- */
+	Returns the parseid of type d.
+	
+	@param d The type to query (TypeDescription *).
+	@return The parseid of d as a long int.
+*/
 
 #define GetRefinement(d) ((d)->refines)
 /**<
- *  Returns the refinement of type d, or NULL if none.
- *
- *  @param d The type to query (TypeDescription *).
- *  @return The refinement of d as a TypeDescription *.
- */
+	Returns the refinement of type d, or NULL if none.
+	
+	@param d The type to query (TypeDescription *).
+	@return The refinement of d as a TypeDescription *.
+*/
 
 #define GetRefiners(d) ((d)->refiners)
 /**<
- *  Returns a list of refiners of type d, or NULL if none.
- *
- *  @param d The type to query (TypeDescription *).
- *  @return The refiners of d as a gl_list of TypeDescription *.
- */
+	Returns a list of refiners of type d, or NULL if none.
+	
+	@param d The type to query (TypeDescription *).
+	@return The refiners of d as a gl_list of TypeDescription *.
+*/
 
 ASC_DLLSPEC(struct gl_list_t *) GetAncestorNames(CONST struct TypeDescription *d);
 /**<
- *  Return the names of ancestors of type d given.
- *  If none, list may be empty. The list is of symchar *.
- *  The caller should destroy the list but not its contents.
- *
- *  @param d The type to query.
- *  @return Pointer to a gl_list_t containing the names of the ancestors of d.
- */
+	Return the names of ancestors of type d given.
+	If none, list may be empty. The list is of symchar *.
+	The caller should destroy the list but not its contents.
+
+	@param d The type to query.
+	@return Pointer to a gl_list_t containing the names of the ancestors of d.
+*/
 
 #define GetModelParameterList(d) ((d)->u.modarg.declarations)
 /**<
- *  Return the statements (forward declarations that constitute the
- *  parameter list for d. The statement list returned will contain
- *  willbes (possibly with value), and isas.
- *  Any attempt to use the type d in a RHS must fill in all the
- *  statements on this list with appropriate instances.
- *
- *  @param d The type to query (TypeDescription *).
- *  @return The parameter list of d as a struct StatementList *.
- */
+	Return the statements (forward declarations that constitute the
+	parameter list for d. The statement list returned will contain
+	willbes (possibly with value), and isas.
+	Any attempt to use the type d in a RHS must fill in all the
+	statements on this list with appropriate instances.
+
+	@param d The type to query (TypeDescription *).
+	@return The parameter list of d as a struct StatementList *.
+*/
 
 #define GetModelParameterCount(d) ((d)->u.modarg.argcnt)
 /**<
- *  Returns the number of arguments required when IS_A'ing a MODEL type.
- *  Any attempt to use the type d in a RHS must fill in this many slots.
- *
- *  @param d The type to query (TypeDescription *).
- *  @return The count as an unsigned int.
- */
+	Returns the number of arguments required when IS_A'ing a MODEL type.
+	Any attempt to use the type d in a RHS must fill in this many slots.
+
+	@param d The type to query (TypeDescription *).
+	@return The count as an unsigned int.
+*/
 
 #define GetModelAbsorbedParameters(d) ((d)->u.modarg.absorbed)
 /**<
@@ -867,6 +920,10 @@ extern void DestroyIndexType(struct IndexType *ind);
  *  @param p The type to query (IndexType *).
  *  @return The set string associated with p as a symchar *.
  */
+
+/*------------------------------------------------------------------------------
+  CONSTRUCTORS
+*/
 
 extern struct TypeDescription
 *CreateModelTypeDesc(symchar *name,
@@ -1045,8 +1102,6 @@ extern struct TypeDescription
  *  @return A pointer to the new TypeDescription structure.
  */
 
-/*  Patches  */
-
 extern struct TypeDescription
 *CreatePatchTypeDesc(symchar *name,
                      struct TypeDescription *rdesc,
@@ -1076,6 +1131,10 @@ extern struct TypeDescription
  *  @param sl     List of declarative statements.
  *  @return A pointer to the new TypeDescription structure.
  */
+
+/*------------------------------------------------------------------------------
+	POLYMORPHISM STUFF
+*/
 
 ASC_DLLSPEC(struct TypeDescription*) MoreRefined(CONST struct TypeDescription *desc1,
                                            CONST struct TypeDescription *desc2);
@@ -1116,7 +1175,7 @@ extern void DifferentVersionCheck(CONST struct TypeDescription *desc1,
  *  It is assumed that desc1 and desc2 are unconformable.  This routine
  *  tries to check if they are unconformable because of different versions
  *  of the types in their type hierarchy.  This can happen if one of these
- *  type descriptions is based on an edited version of the type.<br><br>
+ *  type descriptions is based on an edited version of the type.
  *
  *  It reports its findings to standard error.
  */
@@ -1145,6 +1204,10 @@ extern void WriteArrayTypeList(FILE *fp);
  *  to be very meaningful.  It relies on internal variables, so we
  *  can't put it in type_descio.c.
  */
+
+/*------------------------------------------------------------------------------
+  'SHOW' FLAG
+*/
 
 #ifdef NDEBUG
 #define TypeShow(d) (GetTypeFlags(d)&TYPESHOW)

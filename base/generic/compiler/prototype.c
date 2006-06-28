@@ -90,8 +90,7 @@ void AddPrototype(struct Instance *i)
   p = g_proto_ht[bucket=PROTOHASH(t)];
   if (p==NULL) {
     /* initialize bucket */
-    p=g_proto_ht[bucket] =
-      (struct ProtoRec *)ascmalloc(sizeof(struct ProtoRec));
+    p=g_proto_ht[bucket] = ASC_NEW(struct ProtoRec);
     g_proto_count++;
     p->next = NULL;
     p->t = t;
@@ -110,8 +109,7 @@ void AddPrototype(struct Instance *i)
   }
   if (!p) { /* reached the end of the chain */
     p = g_proto_ht[bucket];
-    g_proto_ht[bucket] =
-      (struct ProtoRec *)ascmalloc(sizeof(struct ProtoRec));
+    g_proto_ht[bucket] = ASC_NEW(struct ProtoRec);
     g_proto_count++;
     g_proto_ht[bucket]->next = p;
     p = g_proto_ht[bucket];

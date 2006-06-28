@@ -303,8 +303,7 @@ void PushLogRel(unsigned long int pos, int first)
 {
   struct logrel_stack *next;
   next = g_logrel_stack;
-  g_logrel_stack = (struct logrel_stack *)
-                                      ascmalloc(sizeof(struct logrel_stack));
+  g_logrel_stack = ASC_NEW(struct logrel_stack);
   g_logrel_stack->next = next;
   g_logrel_stack->pos = pos;
   g_logrel_stack->first = first;

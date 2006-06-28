@@ -603,8 +603,7 @@ int mtx_output_assign_region(mtx_matrix_t mtx,
 #endif
   }
 
-  vars.row_visited = mtx->order > ZERO ?
-    (int32 *)asccalloc(mtx->order, sizeof(int32)) : NULL;
+  vars.row_visited = mtx->order > ZERO ? ASC_NEW_ARRAY_CLEAR(int32,mtx->order) : NULL;
   vars.rv_indicator = 1;
 
   if (region!=mtx_ENTIRE_MATRIX) {
@@ -666,8 +665,7 @@ void mtx_output_assign( mtx_matrix_t mtx, int32 hirow, int32 hicol)
     if( !mtx_check_matrix(mtx) ) return;
 #endif
   }
-  vars.row_visited = mtx->order > ZERO ?
-    (int32 *)asccalloc( mtx->order,sizeof(int32) ) : NULL;
+  vars.row_visited = mtx->order > ZERO ? ASC_NEW_ARRAY_CLEAR(int32,mtx->order) : NULL;
   vars.rv_indicator = 1;
   vars.unassigned_cols.high = mtx->order-1;
   vars.assigned_cols.low = ZERO;
@@ -811,8 +809,7 @@ boolean mtx_make_col_independent( mtx_matrix_t mtx, int32 col, mtx_range_t *rng)
   if( rng->high < rng->low ) return FALSE; /* nobody to choose from */
   if( rng->low < mtx->data->symbolic_rank ) return FALSE; /* bad choices */
 
-  vars.row_visited = mtx->order > ZERO ?
-    (int32 *)asccalloc( mtx->order,sizeof(int32) ) : NULL;
+  vars.row_visited = mtx->order > ZERO ? ASC_NEW_ARRAY_CLEAR(int32,mtx->order) : NULL;
   vars.rv_indicator = 1;
   vars.unassigned_cols.low = rng->low;
   vars.unassigned_cols.high = rng->high;

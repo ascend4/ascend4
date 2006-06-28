@@ -76,7 +76,7 @@ static
 struct Statement *stmallocF()
 {
   struct Statement *result;
-  result = (struct Statement *)ascmalloc((unsigned)sizeof(struct Statement));
+  result = ASC_NEW(struct Statement);
   result->stringform = NULL;
   return result;
 }
@@ -2377,7 +2377,7 @@ int CompareStatements(CONST struct Statement *s1, CONST struct Statement *s2)
      * will not be fixed until the definitions are really known.
      */
     Asc_Panic(2, NULL, "Don't know how to compare REF statements\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   case COND:
     return CompareStatementLists(CondStatList(s1),CondStatList(s2),&ltmp);
   case FLOW:

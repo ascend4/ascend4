@@ -252,8 +252,7 @@ static struct element_t **calloc_nz_header(int32 cap)
  ***  Allocates a zeroed row or column header.
  **/
 {
-   return(cap > 0 ? (struct element_t **)
-          asccalloc(cap,sizeof(struct element_t *)) : NULL);
+   return(cap > 0 ? ASC_NEW_ARRAY_CLEAR(struct element_t *,cap) : NULL);
 }
 
 static void copy_nz_header(struct element_t **tarhdr,
@@ -3356,8 +3355,8 @@ void mtx_write_region_csr(FILE *fp,mtx_matrix_t mtx,
    * all the odd cases of empty rows, cols and matrices. The
    * irp vector however must be at least nrows + 1.
    */
-  colptr = ici = (int32 *)asccalloc(nnz+8,sizeof(int32));
-  irp = (int32 *)asccalloc(nrows+8,sizeof(int32));
+  colptr = ici = ASC_NEW_ARRAY_CLEAR(int32,nnz+8);
+  irp = ASC_NEW_ARRAY_CLEAR(int32,nrows+8);
   irp[0] = offset;
   rowptr = &irp[1];
 

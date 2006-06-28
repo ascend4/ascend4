@@ -185,6 +185,7 @@ static void IntegInitSymbols(void){
   INTEGRATOR ENGINE
 */
 
+/* return 1 on success */
 int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine){
 
 	/* verify integrator type ok. always passes for nonNULL inst. */
@@ -196,13 +197,15 @@ int integrator_set_engine(IntegratorSystem *blsys, IntegratorEngine engine){
 	}
 
 	if(engine==blsys->engine){
-		return;
+		return 1;
 	}
 	if(blsys->engine!=INTEG_UNKNOWN){
 		integrator_free_engine(blsys);
 	}
 	blsys->engine = engine;
 	integrator_create_engine(blsys);
+
+	return 1;
 }
 
 IntegratorEngine integrator_get_engine(const IntegratorSystem *blsys){
@@ -219,6 +222,7 @@ void integrator_free_engine(IntegratorSystem *blsys){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: integrator_ida_free(blsys->enginedata); break;
 #endif
+		default: break;
 	}
 	blsys->enginedata=NULL;
 }
@@ -237,6 +241,7 @@ void integrator_create_engine(IntegratorSystem *blsys){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: integrator_ida_create(blsys); break;
 #endif
+		default: break;
 	}
 }
 
@@ -338,7 +343,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 
 	integrator_visit_system_vars(blsys,&integrator_dae_classify_var);
 
-	CONSOLE_DEBUG("Found %d observation variables:",gl_length(blsys->obslist));
+	CONSOLE_DEBUG("Found %lu observation variables:",gl_length(blsys->obslist));
 	for(i=1; i<=gl_length(blsys->obslist); ++i){
 		info = (struct Integ_var_t *)gl_fetch(blsys->obslist, i);
 		varname = var_make_name(blsys->system,info->i);
@@ -352,7 +357,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		return 0;
 	}
 
-	CONSOLE_DEBUG("Found %d vars.", gl_length(blsys->dynvars));
+	CONSOLE_DEBUG("Found %lu vars.", gl_length(blsys->dynvars));
 	
 	maxderiv = 0;
 	numstates = 0;
@@ -361,7 +366,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		if(info->index==1 || info->index==0)numstates++;
 		if(maxderiv < info->type - 1)maxderiv = info->type - 1;
 		varname = var_make_name(blsys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": order = %d",i,varname,info->type-1);
+		CONSOLE_DEBUG("var[%d] = \"%s\": order = %ld",i,varname,info->type-1);
 		ASC_FREE(varname);
 	}
 	if(maxderiv == 0){
@@ -383,7 +388,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	for(i=1; i<=gl_length(blsys->dynvars); ++i){
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
 		varname = var_make_name(blsys->system,info->i);
-		CONSOLE_DEBUG("var[%d] = \"%s\": order = %d",i,varname,info->type-1);
+		CONSOLE_DEBUG("var[%d] = \"%s\": order = %ld",i,varname,info->type-1);
 		ASC_FREE(varname);
 	}
 
@@ -412,11 +417,11 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 			info->type = INTEG_STATE_VAR;
 		}else{
 			if(prev==NULL || info->index != prev->index){
-				CONSOLE_DEBUG("current current type = %d",info->type);
+				CONSOLE_DEBUG("current current type = %ld",info->type);
 				if(prev!=NULL){
-					CONSOLE_DEBUG("current index = %d, previous = %d",info->index,prev->index);
+					CONSOLE_DEBUG("current index = %ld, previous = %ld",info->index,prev->index);
 				}else{
-					CONSOLE_DEBUG("current index = %d, current type = %d",info->index,info->type);
+					CONSOLE_DEBUG("current index = %ld, current type = %ld",info->index,info->type);
 				}
 				varname = var_make_name(blsys->system,info->i);
 				ERROR_REPORTER_HERE(ASC_USER_ERROR,"Derivative %d of \"%s\" is present without its un-differentiated equivalent"
@@ -563,7 +568,7 @@ void integrator_visit_system_vars(IntegratorSystem *blsys,IntegratorVarVisitorFn
 */
 int integrator_analyse_ode(IntegratorSystem *blsys){
   struct Integ_var_t *v1,*v2;
-  long half,i,len,vlen;
+  long half,i,len;
   int happy=1;
 
   CONSOLE_DEBUG("Starting ODE analysis");
@@ -593,7 +598,7 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
 
   len = gl_length(blsys->dynvars);
   half = len/2;
-  CONSOLE_DEBUG("NUMBER OF DYNAMIC VARIABLES = %d",half);
+  CONSOLE_DEBUG("NUMBER OF DYNAMIC VARIABLES = %ld",half);
 
   if (len % 2 || len == 0L || blsys->nstates != blsys->nderivs ) {
     /* list length must be even for vars to pair off */
@@ -949,6 +954,8 @@ static struct var_variable *ObservationVar(struct var_variable *v, long *index){
 /*
 	Make the call to the actual integrator we've selected, for the range of
 	time values specified. The blsys contains all the specifics.
+
+	Return 1 on success
 */
 int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 
@@ -995,7 +1002,9 @@ int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 #ifdef ASC_WITH_IDA
 		case INTEG_IDA: return integrator_ida_solve(blsys,start_index, finish_index); break;
 #endif
-		default: ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator (invalid, or not implemented yet)");
+		default:
+			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown integrator (invalid, or not implemented yet)");
+			return 0;
 	}
 }
 
@@ -1109,7 +1118,7 @@ void integrator_set_y(IntegratorSystem *blsys, double *y) {
     var_set_value(blsys->y[i],y[i]);
 #ifndef NDEBUG
 	varname = var_make_name(blsys->system, blsys->y[i]);
-    CONSOLE_DEBUG("y[%d] = \"%s\" = %g --> ASCEND", i+1, varname, y[i]);
+    CONSOLE_DEBUG("y[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, y[i]);
 	ASC_FREE(varname);
 #endif
   }
@@ -1149,13 +1158,13 @@ void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
     		var_set_value(blsys->ydot[i],dydx[i]);
 #ifndef NDEBUG
 			varname = var_make_name(blsys->system, blsys->ydot[i]);
-			CONSOLE_DEBUG("ydot[%d] = \"%s\" = %g --> ASCEND", i+1, varname, dydx[i]);
+			CONSOLE_DEBUG("ydot[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, dydx[i]);
 			ASC_FREE(varname);
 #endif
 		}
 #ifndef NDEBUG
 		else{
-			CONSOLE_DEBUG("ydot[%d] = %g (internal)", i+1, dydx[i]);
+			CONSOLE_DEBUG("ydot[%ld] = %g (internal)", i+1, dydx[i]);
 		}
 #endif
 	}
@@ -1164,7 +1173,6 @@ void integrator_set_ydot(IntegratorSystem *blsys, double *dydx) {
 /*-------------------------------------------------------------
   RETRIEVING OBSERVATION DATA
 
-/*
    This function takes the inst in the solver and returns the vector of
    observation variables that are located in the submodel d.obs array.
 */
@@ -1258,6 +1266,7 @@ int integrator_set_reporter(IntegratorSystem *blsys
 	assert(blsys!=NULL);
 	blsys->reporter = reporter;
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"INTEGRATOR REPORTER HOOKS HAVE BEEN SET\n");
+	return 1;
 }
 
 int integrator_output_init(IntegratorSystem *blsys){

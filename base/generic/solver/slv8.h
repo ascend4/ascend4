@@ -49,6 +49,13 @@
 
 typedef struct slv8_system_structure *slv8_system_t;
 
+/* used by StaticSolverRegistration to detect this solver: */
+#if defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT)
+# define HAVE_CONOPT 1
+#else
+# define HAVE_CONOPT 0
+#endif
+
 int slv8_register(SlvFunctionsT *f);
 /**<
  *  Registration function for the CONOPT solver.

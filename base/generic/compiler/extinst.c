@@ -109,7 +109,7 @@ struct Instance **AddVarToTable(struct Instance *inst, int *added)
     c++;
   }
   Asc_Panic(2, __FUNCTION__, "MAX_EXTRELATIONS limit exceeded.");
-  exit(2);/* Needed to keep gcc from whining */
+  
 }
 
 

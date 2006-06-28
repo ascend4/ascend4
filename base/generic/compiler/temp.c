@@ -78,7 +78,7 @@ static struct temp_var_t *TempVarMalloc(void)
       (struct temp_var_t *)g_temporary_var_recycle->name;
     return result;
   } else {
-    return (struct temp_var_t *)ascmalloc(sizeof(struct temp_var_t));
+    return ASC_NEW(struct temp_var_t);
   }
 }
 

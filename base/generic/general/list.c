@@ -282,7 +282,7 @@ struct gl_list_t *gl_create(unsigned long int capacity)
     NewListsUsed++;
 #endif
 #ifndef NDEBUG
-    new->data = (VOIDPTR *)asccalloc((unsigned)capacity,sizeof(VOIDPTR));
+    new->data = ASC_NEW_ARRAY_CLEAR(VOIDPTR,capacity);
 #else
     new->data = (VOIDPTR *)ascmalloc((unsigned)capacity*sizeof(VOIDPTR));
 #endif

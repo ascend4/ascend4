@@ -54,8 +54,8 @@ struct Table *CreateTable(unsigned long hashsize)
 {
   struct Table *result;
   struct TableEntry **buckets;
-  result = (struct Table *)ascmalloc(sizeof(struct Table));
-  buckets = (struct TableEntry **)asccalloc(hashsize,sizeof(struct TableEntry *));
+  result = ASC_NEW(struct Table);
+  buckets = ASC_NEW_ARRAY_CLEAR(struct TableEntry *,hashsize);
   result->buckets = buckets;
   result->size = 0;
   result->hashsize = hashsize;
@@ -110,9 +110,8 @@ void AddTableData(struct Table *table, void *data, CONST char *id)
     ptr = ptr->next;
   }
   /* add new information node to the head of the list. */
-  ptr = (struct TableEntry *)
-           ascmalloc(sizeof(struct TableEntry));
-  ptr->id = (char *)ascmalloc((strlen(id)+1)*sizeof(char));
+  ptr = ASC_NEW(struct TableEntry);
+  ptr->id = ASC_NEW_ARRAY(char,strlen(id)+1);
   strcpy(ptr->id,id);      /* we will copy the string */
   ptr->next = table->buckets[c];
   ptr->data = data;

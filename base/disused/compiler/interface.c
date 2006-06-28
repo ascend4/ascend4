@@ -2131,7 +2131,7 @@ int StateFromArg(unsigned long int com, int arg)
   case shell_arg:	return 7;
   }
   Asc_Panic(2, NULL, "Unknown argument type in StateFromArg\n");
-  exit(2);/* Needed to keep gcc from whining */
+  
 }
 
 static

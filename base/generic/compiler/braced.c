@@ -45,7 +45,7 @@ struct bracechar {
   int refcount;
 };
 
-#define BCMALLOC (struct bracechar *)ascmalloc(sizeof(struct bracechar))
+#define BCMALLOC ASC_NEW(struct bracechar)
 #define BCFREE(bc) ascfree(bc)
 
 struct bracechar *AddBraceChar(CONST char *s, symchar *l)

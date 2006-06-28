@@ -38,8 +38,7 @@
 #include "vlist.h"
 #include "name.h"
 
-#define NLMALLOC \
-(struct VariableList *)ascmalloc((unsigned)sizeof(struct VariableList))
+#define NLMALLOC ASC_NEW(struct VariableList)
 
 #ifndef TRUE
 #define TRUE 1

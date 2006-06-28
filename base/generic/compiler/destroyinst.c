@@ -531,11 +531,14 @@ static void DestroyInstanceParts(struct Instance *i)
     }
     /* delete references of reals to this expression */
     if (RELN_INST(i)->ptr != NULL){
+      CONSOLE_DEBUG("Destroying relation at %p",RELN_INST(i)->ptr);
       DestroyRelation(RELN_INST(i)->ptr,i);
       RELN_INST(i)->ptr = NULL;
     }
     /* after relation has been destroyed */
-    RELN_INST(i)->ptr = NULL;
+    if(RELN_INST(i)->ptr != NULL){
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Rel ptr not null where expected");
+    }
     i->t = ERROR_INST;
     ascfree((char *)i);
     return;

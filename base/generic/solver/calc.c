@@ -748,7 +748,7 @@ extern real64 calc_div_D1(real64 x, real64 y, int wrt)
   default:
     Asc_Panic(2, "calc_div_D1",
               "calc_div_D1: Passed %d as value for \'wrt\'", wrt);
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -762,7 +762,7 @@ extern real64 calc_pow_D1(real64 x, real64 y, int wrt)
   default:
     Asc_Panic(2, "calc_pow_D1",
               "calc_pow_D1: Passed %d as value for \'wrt\'", wrt);
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -779,7 +779,7 @@ extern real64 calc_div_D2(real64 x, real64 y, int wrt1, int wrt2)
   default:
     Asc_Panic(2, "calc_div_D2",
               "calc_div_D2: Passed bad values for \'wrt1\' and \'wrt2\'");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -798,7 +798,7 @@ real64 calc_pow_D2(real64 x, real64 y, int wrt1, int wrt2)
   default:
     Asc_Panic(2, "calc_pow_D2",
               "calc_pow_D2: Passed bad values for \'wrt1\' and \'wrt2\'");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 

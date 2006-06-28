@@ -83,7 +83,7 @@ static
 struct asc_env_t *CreateEnvVar(char *keepname)
 {
   struct asc_env_t *ev;
-  ev = (struct asc_env_t *)ascmalloc(sizeof(struct asc_env_t));
+  ev = ASC_NEW(struct asc_env_t);
   if (ev == NULL) {
     return NULL;
   }
@@ -466,7 +466,7 @@ char **Asc_GetPathList(char *envvar, int *argc)
     /* space for the values */
     slen += (strlen((char *)gl_fetch(ev->data,(unsigned long)c)) +1 );
   }
-  argv = (char **)ascmalloc(slen);
+  argv = ASC_NEW_ARRAY(char *,slen);
   if ( argv == NULL ) {
     *argc = -1;
     return NULL;
@@ -535,7 +535,7 @@ char **Asc_EnvNames(int *argc)
   }
   len = gl_length(g_env_list);
   *argc =  (int)len;
-  argv = (char **)ascmalloc((*argc + 1)*sizeof(char *));
+  argv = ASC_NEW_ARRAY(char *,*argc + 1);
   if (argv==NULL) {
     *argc = -1;
     return NULL;

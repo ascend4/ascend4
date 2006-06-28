@@ -68,11 +68,11 @@ void InitDimenList(void)
 
   g_dimen_list = gl_create(200L);
   AssertMemory(g_dimen_list);
-  g_wild_dimen = (dim_type *)ascmalloc((unsigned)sizeof(dim_type));
+  g_wild_dimen = ASC_NEW(dim_type);
   AssertAllocatedMemory(g_wild_dimen,sizeof(dim_type));
-  g_trig_dimen = (dim_type *)ascmalloc((unsigned)sizeof(dim_type));
+  g_trig_dimen = ASC_NEW(dim_type);
   AssertAllocatedMemory(g_trig_dimen,sizeof(dim_type));
-  g_dimensionless = (dim_type *)ascmalloc((unsigned)sizeof(dim_type));
+  g_dimensionless = ASC_NEW(dim_type);
   AssertAllocatedMemory(g_dimensionless,sizeof(dim_type));
   assert((g_wild_dimen!=NULL)&&(g_dimensionless!=NULL)&&(g_trig_dimen!=NULL));
   ClearDimensions(g_wild_dimen);
@@ -301,7 +301,7 @@ dim_type *CopyDimen(register CONST dim_type *d)
 {
   register dim_type *result;
   assert(d!=NULL);
-  result = (dim_type *)ascmalloc((unsigned)sizeof(dim_type));
+  result = ASC_NEW(dim_type);
   ascbcopy((char *)d,(char *)result,sizeof(dim_type));
   AssertAllocatedMemory(result,sizeof(dim_type));
   return result;

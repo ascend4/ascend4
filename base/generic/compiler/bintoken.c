@@ -274,7 +274,7 @@ int InitEQData(struct bintoken_eqlist *eql, int len)
   if (eql->ue == NULL) {
     return 1;
   }
-  eql->rel2U = (int *)ascmalloc((len+1)*sizeof(int));
+  eql->rel2U = ASC_NEW_ARRAY(int,len+1);
   if (eql->rel2U == NULL) {
     gl_destroy( eql->ue );
     return 1;
@@ -358,8 +358,7 @@ int BinTokenAddUniqueEqn(struct bintoken_eqlist *eql, int relindex,
   pos = gl_search(eql->ue,&test,(CmpFunc)CmpUniqueEqn);
   if (!pos) {
     /* create new unique eqn */
-    new = (struct bintoken_unique_eqn *)
-             ascmalloc(sizeof(struct bintoken_unique_eqn));
+    new = ASC_NEW(struct bintoken_unique_eqn);
     assert(new!=NULL);
     new->len = test.len;
     new->firstrel = relindex;
@@ -811,13 +810,13 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
     } else {
       if (g_bt_data.housekeep) {
         /* trash src */
-        cbuf = (char *)ascmalloc(strlen(unlinkcommand)+1+strlen(srcname)+1);
+        cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(srcname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,srcname);
         system(cbuf); /* we don't care if the delete fails */
         ascfree(cbuf);
         /* trash obj */
-        cbuf = (char *)ascmalloc(strlen(unlinkcommand)+1+strlen(objname)+1);
+        cbuf = ASC_NEW_ARRAY(char,strlen(unlinkcommand)+1+strlen(objname)+1);
         assert(cbuf!=NULL);
         sprintf(cbuf,"%s %s",unlinkcommand,objname);
         system(cbuf); /* we don't care if the delete fails */

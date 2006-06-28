@@ -8,11 +8,9 @@
 using namespace std;
 
 extern "C"{
-#include <solver/slv0.h>
-#include <solver/slv1.h>
-#include <solver/slv2.h>
-#include <solver/slv3.h>
-#include <solver/slv9.h>
+#include <solver/system.h>
+#include <solver/slvDOF.h>
+#include <solver/slv_stdcalls.h>
 }
 
 /**
@@ -83,7 +81,10 @@ getSolvers(){
 void
 registerStandardSolvers(){
 	//cerr << "------------- REGISTERING SOLVERS -----------------" << endl;
+	SlvRegisterStandardClients();
+	/*
 	registerSolver(slv3_register);
 	registerSolver(slv9_register);
+	*/
 }
 

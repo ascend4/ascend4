@@ -76,6 +76,7 @@ std::ostream& operator<< (std::ostream& os, const ASCXX_Set<T>& s){
 		os << T(s[i]);
 	}
 	os << "]";
+	return os;
 }
 
 template<>

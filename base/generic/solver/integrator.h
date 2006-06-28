@@ -170,11 +170,13 @@ typedef struct IntegratorSystemStruct IntegratorSystem;
 ASC_DLLSPEC(IntegratorSystem *) integrator_new(slv_system_t sys, struct Instance *inst);
 
 ASC_DLLSPEC(int) integrator_analyse(IntegratorSystem *blsys);
-ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 
+ASC_DLLSPEC(int) integrator_solve(IntegratorSystem *blsys, long i0, long i1);
 /**<
 	Takes the type of integrator and sets up the global variables into the
 	current integration instance.
+
+	@return 1 on success, 0 on failure.
 */
 
 ASC_DLLSPEC(void) integrator_free(IntegratorSystem *blsys);

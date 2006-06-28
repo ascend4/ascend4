@@ -2326,11 +2326,11 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     } else {
       rel_set_incidences(rel,0,NULL);
     }
-    if (rel_extnodeinfo(rel)) {
+    if(rel_extnodeinfo(rel)) {
       cache = CheckIfCacheExists(rip->i,&nodestamp,p_data);
       if (cache) {
         rel_set_extcache(rel,cache);
-      } else {
+      }else{
         cache = CreateCacheFromInstance(rip->i);
         gl_append_ptr(p_data->extrels,(POINTER)cache);
         rel_set_extcache(rel,cache);
@@ -2953,6 +2953,7 @@ int analyze_configure_system(slv_system_t sys,struct problem_t *p_data)
   slv_set_obj_relation(sys,p_data->obj);
   p_data->obj = NULL;
 
+  CONSOLE_DEBUG("PASSING EXTRELCACHE LIST TO SOLVER");
   slv_set_extrel_list(sys,p_data->erlist,gl_length(p_data->extrels));
   p_data->erlist = NULL;
 
