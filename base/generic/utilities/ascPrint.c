@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include "ascConfig.h"
 #include "ascPrint.h"
+#include "config.h"
 
 static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 
@@ -245,7 +246,7 @@ static int color_test(){
 		term = getenv("TERM");
 		if(term!=NULL){
 			if(strcmp(term,"msys")==0 || strcmp(term,"xterm")==0){
-				fprintf(stderr,"\n\n\nCOLOR CODES \033[1mWILL\033[0m BE USED\n\n\n");
+				/* fprintf(stderr,"\n\n\nCOLOR CODES \033[1mWILL\033[0m BE USED\n\n\n"); */
 				use_xterm_color=1;
 			}else{
 				use_xterm_color=-1;

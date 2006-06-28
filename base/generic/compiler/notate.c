@@ -76,11 +76,11 @@ struct note_bucket {
 };
 
 /* replace this with a pool */
-#define NPALLOC (struct Note *)ascmalloc(sizeof(struct Note))
+#define NPALLOC ASC_NEW(struct Note)
 #define NPFREE(n) ascfree(n)
 
 /* replace this with a pool */
-#define NBALLOC (struct note_bucket *)ascmalloc(sizeof(struct note_bucket))
+#define NBALLOC ASC_NEW(struct note_bucket)
 #define NBFREE(b) ascfree(b)
 
 /* increment note reference count */
@@ -127,7 +127,7 @@ struct NoteTmp *CreateNoteTmp(symchar *lang, struct bracechar *bt,
                               void *varlist, int line)
 {
   struct NoteTmp *nt;
-  nt = (struct NoteTmp *)ascmalloc(sizeof(struct NoteTmp));
+  nt = ASC_NEW(struct NoteTmp);
   nt->lang = lang;
   nt->bt = bt;
   nt->vardata = varlist;
@@ -234,7 +234,7 @@ int InitNotesDatabase(symchar *dbid)
   if (dbid==NULL) {
     return 1;
   }
-  db = (struct data_base *)ascmalloc(sizeof(struct data_base));
+  db = ASC_NEW(struct data_base);
   if (db == NULL) {
     return 1;
   }
@@ -1082,7 +1082,7 @@ struct NoteEngine *NotesCreateEngine(void *ned,
                                      NECompareFunc necf)
 {
   struct NoteEngine *ne;
-  ne = (struct NoteEngine *)ascmalloc(sizeof(struct NoteEngine));
+  ne = ASC_NEW(struct NoteEngine);
   if (neif == (NEInitFunc)NULL || necf == (NECompareFunc)NULL) {
     return (struct NoteEngine *)NULL;
   }

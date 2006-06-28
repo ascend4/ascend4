@@ -103,6 +103,6 @@ int NotAtomF(struct Instance *i)
     return 0;
   default:
     Asc_Panic(2, NULL, "VisitTree: Illegal instance type.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }

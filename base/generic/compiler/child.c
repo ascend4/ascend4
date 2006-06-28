@@ -57,16 +57,14 @@ static CONST char ChildListID[] = "$Id: child.c,v 1.25 1998/03/26 20:39:34 balla
 #define LegalOrigin(n) ( ((n)>0 && (n) <=8) ? (n) : 0 )
 
 /* replace the following with a pool maybe */
-#define CLPOOLALLOC ((struct ChildListEntry *) \
-  ascmalloc(sizeof(struct ChildListEntry)))
+#define CLPOOLALLOC (ASC_NEW(struct ChildListEntry))
 #define CLPOOLFREE(p) ascfree(p)
 
 /* copy the contents of a entry pointer to another ptr */
 #define CLCOPY(src) copylistentry(src)
 
 /* wrappers for mem management if we want to pool heads later. unlikely */
-#define CLSMALLOC \
-  (struct ChildListStructure *)ascmalloc(sizeof(struct ChildListStructure))
+#define CLSMALLOC ASC_NEW(struct ChildListStructure)
 #define CLSFREE(clp) ascfree(clp)
 
 /* returns an array of size n of childhash to be tabled singly. */

@@ -483,7 +483,7 @@ static void free_unless_null(POINTER ptr)
 /* Zeros an array of nelts objects, each having given type. */
 
 #define alloc_vector(len) ((real64 *)ascmalloc((len)*sizeof(real64)))
-#define alloc_zero_vector(len) ((real64 *)asccalloc((len),sizeof(real64)))
+#define alloc_zero_vector(len) ASC_NEW_ARRAY_CLEAR(real64,len)
 #define copy_vector(from,too,len)  \
   mem_move_cast((from),(too),(len)*sizeof(real64))
 #define free_vector(vec)  \
@@ -2344,7 +2344,7 @@ void slv1_presolve(slv_system_t server, SlvClientToken asys)
     sys->ha[nz.row]=1; /* was nz.col */
 
   free_vector(sys->ka); /* create col offset array  */
-  sys->ka=(int *)asccalloc((sys->v.used+1),sizeof(int));/*this is not padding*/
+  sys->ka=ASC_NEW_ARRAY_CLEAR(int,(sys->v.used+1));/*this is not padding*/
 
   /* secondary rowsort nzlist. already column sorted by creation process */
   if (sys->njac > 1) {
@@ -2414,7 +2414,7 @@ void slv1_presolve(slv_system_t server, SlvClientToken asys)
   }
 
   free_vector(sys->hs); /* create var state flag array  */
-  sys->hs=(int *)asccalloc(sys->nb,sizeof(int));
+  sys->hs=ASC_NEW_ARRAY_CLEAR(int,sys->nb);
   if (!sys->hs) {
     FPRINTF(stderr,"Error mallocing variable state array!");
     return;

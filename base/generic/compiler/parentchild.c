@@ -136,7 +136,7 @@ unsigned long NumberParents(CONST struct Instance *i)
     return 0;
   default:
     Asc_Panic(2, __FUNCTION__, "Invalid instance");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -188,7 +188,7 @@ struct Instance *InstanceParent(CONST struct Instance *i, unsigned long int n)
   case DUMMY_INST:
   default:
     Asc_Panic(2, __FUNCTION__, "Invalid instance");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -346,7 +346,7 @@ unsigned long SearchForParent(CONST struct Instance *i,
     return 0;
   default:
     Asc_Panic(2, __FUNCTION__, "Invalid instance");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 

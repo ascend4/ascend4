@@ -41,8 +41,7 @@
 #include "slist.h"
 #include <general/mathmacros.h>
 
-#define SLMALLOC \
-(struct StatementList *)ascmalloc((unsigned)sizeof(struct StatementList))
+#define SLMALLOC ASC_NEW(struct StatementList)
 
 #ifndef lint
 static CONST char StatementListID[] = "$Id: slist.c,v 1.10 1997/07/18 12:34:56 mthomas Exp $";

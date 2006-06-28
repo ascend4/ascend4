@@ -64,7 +64,7 @@ static void test_listio(void)
   }
 
   for (i=0 ; i<20 ; ++i) {              /* create some test data */
-      pint_array[i] = (unsigned long*)ascmalloc(sizeof(unsigned long));
+      pint_array[i] = ASC_NEW(unsigned long);
       *pint_array[i] = i;
   }
 

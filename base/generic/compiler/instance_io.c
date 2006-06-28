@@ -316,7 +316,7 @@ for each of the NameNode structures and copies the contents from path.
   result = gl_create(length);
   for(c=1;c<=length;c++){
     orig = gl_fetch(path,c);
-    copy = (struct NameNode *)ascmalloc(sizeof(struct NameNode));
+    copy = ASC_NEW(struct NameNode);
     copy->inst = orig->inst;
     copy->index = orig->index;
     gl_append_ptr(result,(VOIDPTR)copy);
@@ -334,7 +334,7 @@ struct gl_list_t *AllPaths(CONST struct Instance *i)
   if (NumberParents(i)==0){	/* found root. will be sim. */
     result = gl_create(1);
     path = gl_create(1);
-    nptr = (struct NameNode *)ascmalloc(sizeof(struct NameNode));
+    nptr = ASC_NEW(struct NameNode);
     nptr->inst = i;
     nptr->index = 0;
     gl_append_ptr(path,(VOIDPTR)nptr);
@@ -370,7 +370,7 @@ struct gl_list_t *AllPaths(CONST struct Instance *i)
 	  } else {
             tmp1 = path;
           }
-	  nptr = (struct NameNode *)ascmalloc(sizeof(struct NameNode));
+	  nptr = ASC_NEW(struct NameNode);
 	  nptr->inst = i;
 	  nptr->index = index;
 	  gl_append_ptr(tmp1,(VOIDPTR)nptr);

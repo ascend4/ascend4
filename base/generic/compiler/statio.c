@@ -708,7 +708,7 @@ CONST char *StatioLabel(int level)
 int *GetStatioSuppressions(void) {
   /* WILLBE is the last element of the stattype enum. */
   int *table;
-  table = (int *)asccalloc(1,sizeof(int)*(WILLBE+1));
+  table = ASC_NEW_ARRAY_CLEAR(int,WILLBE+1);
   assert(table!=NULL);
   return table;
 }

@@ -19,15 +19,20 @@
 *//**
 	@file
 	Hold-all structure for external relations and method calls as declared in an
-	ASCEND model file.
+	ASCEND model file. -- JP
 
 	The ExtCallNode	structure points to an ExternalFunc structure and holds a 
 	list of instances which are tied to the arguments in the calling ASCEND
-	statement.
+	statement. -- JP
+
+	It seems that we shouldn't be accessing this structure at solve-time: the
+	ExtRelCache object contains a lot of pre-processed stuff that makes
+	evaluating black box functions easier (probably glass box too?) -- JP
 
 	@TODO Complete documentation of compiler/extcall.h.
 
-	@TODO Documentation: what is a 'subject' in the context of an ExtCallNode?
+	@TODO Documentation: what is a 'subject' in the context of an
+	ExtCallNode? -- JP
 
 	Requires:
 	#include <stdio.h>
@@ -48,7 +53,11 @@
 #ifndef ASC_EXTCALL_H
 #define ASC_EXTCALL_H
 
-/** External call data structure. */
+/**
+	External call data structure
+
+	@TODO Check the structure of the arglist. Maybe it's a list of lists? -- JP
+*/
 struct ExtCallNode{
   struct ExternalFunc *efunc; /**< Pointer to external function. */
   struct gl_list_t *arglist;  /**< List of Instance pointers. */
@@ -83,26 +92,30 @@ extern unsigned long GetSubjectIndex(struct gl_list_t *arglist,
 extern unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
         unsigned long start, unsigned long end);
 /**<
+	This function gets used in the ExtRelCache instantiation stuff.
+
 	@TODO what is the purpose of the 'start' and 'end' parameters?
 */
 
 extern struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
 	    unsigned long start, unsigned long end);
 /**<
-	Given a list of gl_list_t's this function will create a new list which
-	is a linearized representation,i.e, each of the lists is spliced into
-	the original list, to create one long list. The user now owns the
-	new list structure, although the data in the original list is shared
-	with the new list.
+	Taking a list of lists (list of struct gl_list_t*), this list will create
+	a new list that is effectively all of the lists lined up end-to-end, then
+	then sliced according to the start and end parameters.
+
+	The user now owns the new list structure, although the data in the
+	original list is shared with the new list.
 */
 
 extern struct gl_list_t *CopySpecialList(struct gl_list_t *list);
 
 extern void DestroySpecialList(struct gl_list_t *list);
 /**<
-	Given a list of gl_list_t's, this function will destroy the lists
-	structures associated with this complex list. It *will* not destroy
-	the *leaf* data, but it will destroy all the list structures.
+	Given a list of lists (list of struct gl_list_t*), this function will
+	destroy the lists structures associated with this complex list.
+	It *will* not destroy the *leaf* data, but it will destroy all the list
+	structures.
 */
 
 
@@ -149,9 +162,12 @@ extern struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext);
 extern struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext);
 /**< 
 	Return the 'data' instance for an external call.  This 'data'
-	instance can has to be a MODEL_INST. It is used to convey additional
+	instance "can has to be" (???) a MODEL_INST. It is used to convey additional
 	information to a client who may need it. A NULL result means that no
 	additional information was requested and is a valid result.
+
+	@TODO what is the normal usage of this in the context of ASCEND compiler
+	with an ASCEND solver???
 */
 
 
@@ -192,8 +208,14 @@ extern struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext);
 #define ExternalCallNodeStamp(ext) ExternalCallNodeStampF(ext)
 #endif
 /**< 
-	Return the nodestamp for the given external node.
-	Valid results are >= 0.
+	Return the (integer) nodestamp for the given external node.
+	Valid results are >= 0. The nodestamp is incremented in the function 
+	AddExtArrayChildren such that all BlackBoxRelation objects corresponding to 
+	a single black box have the same nodestamp.
+	This nodestamp is referenced by ExtRelCache objects.
+
+	@TODO why is a nodestamp required when we could be using instance pointers
+	or something more 'real'?
 	
 	@param ext <code>struct ExtCallNode*</code>, node to query.
 	@return Returns the node stamp as an <code>int</code>.

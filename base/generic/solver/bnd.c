@@ -68,7 +68,7 @@ struct bnd_boundary *bnd_create(struct bnd_boundary *newbnd)
 {
 
   if (newbnd==NULL) {
-    newbnd = (struct bnd_boundary *)ascmalloc( sizeof(struct bnd_boundary) );
+    newbnd = ASC_NEW(struct bnd_boundary);
     assert(newbnd!=NULL);
     memset((char *)&(newbnd->cond),0,sizeof(union bnd_union));
     newbnd->kind = e_bnd_undefined;

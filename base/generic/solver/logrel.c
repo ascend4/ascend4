@@ -94,8 +94,7 @@ static struct logrel_relation
 *logrel_copy(const struct logrel_relation *logrel)
 {
    struct logrel_relation *newlogrel;
-   newlogrel = (struct logrel_relation *)
-                               ascmalloc( sizeof(struct logrel_relation) );
+   newlogrel = ASC_NEW(struct logrel_relation);
    *newlogrel = *logrel;
    return(newlogrel);
 }

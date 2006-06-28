@@ -1,37 +1,33 @@
-/*
- *  Relation utility functions for Ascend
- *  Version: $Revision: 1.44 $
- *  Version control file: $RCSfile: relation_util.c,v $
- *  Date last modified: $Date: 1998/04/23 23:51:09 $
- *  Last modified by: $Author: ballan $
- *  Part of Ascend
- *
- *  This file is part of the Ascend Interpreter.
- *
- *  Copyright (C) 1990 Thomas Guthrie Epperly, Karl Michael Westerberg
- *  Copyright (C) 1993 Joseph James Zaher
- *  Copyright (C) 1993, 1994 Benjamin Andrew Allan, Joseph James Zaher
- *  Copyright (C) 1997 Carnegie Mellon University
- *
- *  The Ascend Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  ASCEND is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- *  This module defines the dimensionality checking and some other
- *  relation auxillaries for Ascend.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1997, 2006 Carnegie Mellon University
+	Copyright (C) 1993, 1994 Joseph James Zaher, Benjamin Andrew Allan
+	Copyright (C) 1993 Joseph James Zaher
+	Copyright (C) 1990 Thomas Guthrie Epperly, Karl Michael Westerberg
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Relation utility functions for Ascend
+
+	This module defines the dimensionality checking and some other
+	relation auxillaries for Ascend.
+*//*
+	Last in CVS: $Revision: 1.44 $ $Date: 1998/04/23 23:51:09 $ $Author: ballan $
+*/
+
 #include <math.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -64,6 +60,10 @@
 #include "extfunc.h"
 #include "rootfind.h"
 #include "func.h"
+
+#ifndef NDEBUG
+#include "relation_io.h"
+#endif
 
 /*------------------------------------------------------------------------------
   DATA TYPES AND GLOBAL VARS
@@ -492,8 +492,7 @@ int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
     CopyDimensions(RelationDim(rel),dimens);
     return 2;
   }
-  sp = stack = (struct dimnode *)
-    ascmalloc(RelationDepth(rel)*sizeof(struct dimnode));
+  sp = stack = ASC_NEW_ARRAY(struct dimnode,RelationDepth(rel));
   switch( RelationRelop(rel) ) {
   case e_less:
   case e_lesseq:
@@ -706,7 +705,7 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
     Asc_Panic(2, NULL,
               "Don't know this type of relation type\n"
               "in function RelationEvaluatePostfixBranch\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
     break;
   }
 }
@@ -788,7 +787,7 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
     Asc_Panic(2, NULL,
               "Don't know this type of relation type\n"
               "in function RelationEvaluatePostfixBranchSafe\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
     break;
   }
 }
@@ -2231,10 +2230,20 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
   CHECK_INST_RES(i,res,1);
 
   r = (struct relation *)GetInstanceRelation(i, &reltype);
-  if( r == NULL ) {
+  if(r == NULL){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"null relation\n");
     return 1;
   }
+
+  /*
+  struct Instance *p;
+  p = InstanceParent(i,1);
+  char *tmp;
+  tmp = WriteRelationString(i,p,NULL,NULL,relio_ascend,NULL);
+  CONSOLE_DEBUG("Evaluating residual for '%s'",tmp);
+  ASC_FREE(tmp);
+  */
+
   if( reltype == e_token ) {
     length_lhs = RelationLength(r, 1);
     length_rhs = RelationLength(r, 0);
@@ -2250,16 +2259,11 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
       *res -= RelationEvaluatePostfixBranch(r, &length_rhs, 0);
     }
     return 0;
-  } else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH) {
+  }else if (reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
 
     if (reltype == e_blackbox){
-      /* FIXME */
-      /* note: blackbox equations support the form
-         output[i] = f(input[j] for all j) foreach i
-         thus the residual is ... (?)
-	  */
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox evaluation is experimental (%s)",__FUNCTION__);
-      *res = blackbox_evaluate_residual(r);
+	  CONSOLE_DEBUG("REL = %p",r);
+      *res = ExtRel_Evaluate_Residual(r);
     }else if (reltype == e_glassbox){
       ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (%s)",__FUNCTION__);
     }else if (reltype == e_opcode)    {
@@ -2267,9 +2271,9 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
     }
 
     return 1;
-  } else {
+  }else{
     Asc_Panic(2, __FUNCTION__,"reached end of routine");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2329,7 +2333,7 @@ int RelationCalcExceptionsInfix(struct Instance *i)
     return -1;
   }else{
     Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2363,7 +2367,7 @@ int RelationCalcResidualInfix(struct Instance *i, double *res)
     return 1;
   }else{
     Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2394,7 +2398,7 @@ RelationCalcResidualPostfix2(struct Instance *i,
     return 1;
   }else{
     Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2451,7 +2455,7 @@ RelationCalcResidGrad(struct Instance *i,
 
   }else{
     Asc_Panic(2, __FUNCTION__, "reached end of routine");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2509,7 +2513,7 @@ RelationCalcResidGradSafe(struct Instance *i,
     Asc_Panic(2, NULL,
               "error in RelationCalcResidGradSafe:\n",
               "reached end of routine");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2550,7 +2554,7 @@ RelationCalcDerivative(struct Instance *i,
   }
   else {
     Asc_Panic(2, __FUNCTION__,"reached end of routine");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -2592,7 +2596,7 @@ RelationCalcDerivativeSafe(struct Instance *i,
   }
   else {
     Asc_Panic(2, __FUNCTION__, "reached end of routine");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -3005,16 +3009,14 @@ static struct relation *RelationCreateTmp(
     if ( RTOKEN(rel).lhs != NULL) {
       ascfree(RTOKEN(rel).lhs);
     }
-    RTOKEN(rel).lhs = (union RelationTermUnion *)
-        ascmalloc(lhscap*sizeof(union RelationTermUnion));
+    RTOKEN(rel).lhs = ASC_NEW_ARRAY(union RelationTermUnion,lhscap);
   }
   if (rhscap < rhslen) {
     rhscap = rhslen;
     if ( RTOKEN(rel).rhs != NULL) {
       ascfree(RTOKEN(rel).rhs);
     }
-    RTOKEN(rel).rhs = (union RelationTermUnion *)
-        ascmalloc(rhscap*sizeof(union RelationTermUnion));
+    RTOKEN(rel).rhs = ASC_NEW_ARRAY(union RelationTermUnion,rhscap);
   }
   return rel;
 }
@@ -3152,8 +3154,7 @@ static struct relation *RelationTmpTokenCopy(CONST struct relation *src){
   return result;
 }
 
-#define alloc_array(nelts,type)   \
-   ((nelts) > 0 ? (type *)ascmalloc((nelts)*sizeof(type)) : NULL)
+#define alloc_array(nelts,type) ((nelts) > 0 ? ASC_NEW_ARRAY(type,nelts) : NULL)
 #define copy_nums(from,too,nnums)  \
    asc_memcpy((from),(too),(nnums)*sizeof(double))
 
@@ -4020,6 +4021,8 @@ CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
 /**
 	Utility function to perform debug checking of (input) instance and residual
 	(or gradient) (output) pointers in the various functions in this file.
+	
+	@return 1 on all-ok
 */
 static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 # ifdef RELUTIL_CHECK_ABORT
@@ -4031,17 +4034,17 @@ static int  relutil_check_inst_and_res(struct Instance *i, double *res){
 		Asc_Panic(2,__FUNCTION__,"Not a relation");
 	}
 # else
-  if( i == NULL ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL instance");
-    return 0;
-  }else if (res == NULL){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL residual ptr");
-    return 0;
-  }else if( InstanceKind(i) != REL_INST ) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
-    return 0;
-  }
-  return 1;
+	if( i == NULL ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL instance");
+		return 0;
+	}else if (res == NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL residual ptr");
+		return 0;
+	}else if( InstanceKind(i) != REL_INST ) {
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"not relation");
+		return 0;
+	}
 # endif
+	return 1;
 }
 #endif	

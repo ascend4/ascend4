@@ -53,21 +53,18 @@ void CDescInit(struct ChildDesc *v)
  * gdb and purify.
  */                                 
 
-struct ChildDesc *CreateChildDescArray(unsigned long int l)
-{
+struct ChildDesc *CreateChildDescArray(unsigned long int l){
 #ifndef NDEBUG
-  return
-    ((struct ChildDesc *)asccalloc(1,(unsigned)(sizeof(struct ChildDesc)*l)));
+  return ASC_NEW_ARRAY_CLEAR(struct ChildDesc,l);
 #else
-  return
-    ((struct ChildDesc *)ascmalloc((unsigned)(sizeof(struct ChildDesc)*l)));
+  return ASC_NEW_ARRAY(struct ChildDesc,l);
 #endif
 }
 
 struct ChildDesc *CreateEmptyChildDescArray(void)
 {
   register struct ChildDesc *cda = NULL;
-  cda = (struct ChildDesc *)asccalloc(1,sizeof(struct ChildDesc));
+  cda = ASC_NEW_CLEAR(struct ChildDesc);
   assert(cda != NULL);
   cda->t = bad_child;
   return cda;

@@ -46,6 +46,17 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   int added=0;
 
   CONSOLE_DEBUG("...");
+  int i,n;
+  struct Instance *inst;
+  char *tmp;
+  n = gl_length(args);
+  for(i = 1; i < n; ++i){
+    inst = (struct Instance *)gl_fetch(args,i);
+	/* tmp = WriteInstanceNameString(inst, NULL); */
+	CONSOLE_DEBUG("Argument %d: (%p)", i, inst);
+	/* ASC_FREE(tmp) */
+
+  }
 
   ext = ASC_NEW(struct ExtCallNode);
   ext->efunc = efunc;
@@ -131,15 +142,20 @@ unsigned long GetSubjectIndex(struct gl_list_t *arglist,
     len1 = gl_length(arglist);
     for(c1=1;c1<=len1;c1++){
       branch = (struct gl_list_t *)gl_fetch(arglist,c1);
-      if (!branch) return 0L;	/* error */
+      if(branch==NULL){
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Found null branch");
+        return 0L; /* error */
+      }
       len2 = gl_length(branch);
       for(c2=1;c2<=len2;c2++){
-	count++;
-	arg = (struct Instance *)gl_fetch(branch,c2);
-	if (arg==subject)
-	  return count;
+        count++;
+        arg = (struct Instance *)gl_fetch(branch,c2);
+        if (arg==subject){
+          return count;
+        }
       }
     }
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Reached impossible place");
     return 0L;			/*NOTREACHED*/
   }
   return 0L;
@@ -151,17 +167,19 @@ unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
   unsigned long c,count=0L;
   struct gl_list_t *branch;
 
-  if (arglist) {
+  if(arglist){
     assert(start<=end);
     for (c=start;c<=end;c++){
       branch = (struct gl_list_t *)gl_fetch(arglist,c);
-      if (!branch) return 0L;	/*error*/
+      if(branch==NULL){
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Found null branch");
+        return 0L; /*error*/
+      }
       count += gl_length(branch);
     }
     return count;
   }
-  else
-    return 0L;
+  return 0L;
 }
 
 struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
@@ -252,10 +270,15 @@ struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext)
 {
   struct Instance **hndl;
   hndl = ext->data;
-  if (hndl)
+  if(hndl!=NULL){
+	/* 
+		ExtCallNode::data is an array of pointers to Instance
+		structures. We are here returning the first pointer from that array.
+	*/
     return *hndl;
-  else
+  }else{
     return NULL;
+  }
 }
 
 int ExternalCallNodeStampF(struct ExtCallNode *ext)

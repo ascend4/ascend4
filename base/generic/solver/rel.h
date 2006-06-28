@@ -28,16 +28,20 @@
 	can theoretically be used to solve other kinds of systems as
 	well. @see analyze.h
 
+	@TODO Question: shouldn't the 'ExtRel' stuff be in the compiler side of
+	things? Even if it is being cached, it seems that the request for 
+	evaluation is coming from the RelationCalcResidualPostfix call in
+	relation_util.c, so we're going	back and forth...
+
 	04/94 - added rel_apply_filter() which uses the new
 			rel_filter_t data structure for perfoming all
 			relation filtering needs (eliminating the
 			filter module)
 
-	Client (ie a solver) requires:
-	#include "utilities/ascConfig.h"
+	Client (ie solver engine) requires:
 	#include "var.h"
 
-	Server-side use (ie the ASCEND compiler, analyser, etc) requires:
+	Server-side use (ie the ASCEND compiler, analyser, etc) *further* requires:
 	#include <expr.h> ??
 	#include <compiler/expr_types.h> ??
 	#include <compiler/extfunc.h>
@@ -97,10 +101,18 @@ enum backend_enum {
  *  If you mess with this struct, change the defaults for it in .c file.
  */
 struct rel_relation {
-   SlvBackendToken instance;
-   struct rel_extnode *nodeinfo;  /**< Not NULL if blackbox relation */
-   struct var_variable **incidence;
-                        /**< array of atomic vars and nonvars in rel */
+	SlvBackendToken instance;
+		/**< Normally, this is a pointer to an Instance struct */
+	struct rel_extnode *nodeinfo;  
+		/**< For use by blackbox relations, NULL in other cases */
+	struct var_variable **incidence;
+	                    /**< array of atomic vars and nonvars in rel */
+	enum backend_enum type;  /**< tokens, glassbox or blackbox */
+	int32 n_incidences;      /**< length of incidence. */
+	int32 mindex;            /**< index in the slv_system_t master list */
+	int32 sindex;            /**< index in the slv_system_t solver list */
+	int32 model;             /**< index of a hypothetical MODEL rel is from */
+	uint32 flags;            /**< flags */
 /*
  * For future use:
  *
@@ -109,12 +121,34 @@ struct rel_relation {
  *
  * int32 n_incidentals;
  */
-   enum backend_enum type;  /**< tokens, glassbox or blackbox */
-   int32 n_incidences;      /**< length of incidence. */
-   int32 mindex;            /**< index in the slv_system_t master list */
-   int32 sindex;            /**< index in the slv_system_t solver list */
-   int32 model;             /**< index of a hypothetical MODEL rel is from */
-   uint32 flags;            /**< flags */
+};
+
+/**
+	Cache for external relations. This is a place to stash away information
+	relating to the evaluation of external relations, with the intention of
+	making them work efficiently. 
+
+	It is apparently intended to prevent repeated calls to external relations
+	when different outputs values are required for the same set of input
+	values. Not sure how complete etc it is -- JP.
+
+	Originally present in a separate file 'extrel.h', but now merged into
+	'rel.h' in the solver directory.
+*/
+struct ExtRelCache{
+  int32 nodestamp;
+  struct ExternalFunc *efunc;       /**< pre_slv, eval and deriv funcs */
+  SlvBackendToken data;             /**< only passed on pre_slv */
+  struct gl_list_t *arglist;        /**< only passed on pre_slv */
+  struct gl_list_t *inputlist;
+  void *user_data;                  /**< user data */
+  int32 ninputs, noutputs;
+  double *inputs;
+  double *outputs;
+  double *jacobian;
+  unsigned newcalc_done     :1;     /**< bits needed to control */
+  unsigned first_func_eval  :1;     /**< recalculation. until we can */
+  unsigned first_deriv_eval :1;     /**< do proper block coding */
 };
 
 /*------------------------------------------------------------------------------
@@ -124,31 +158,32 @@ struct rel_relation {
 extern struct rel_relation *rel_create(SlvBackendToken instance,
                                        struct rel_relation *rel);
 /**<
- *  Creates a relation given the relation instance.
- *  If the rel supplied is NULL, we allocate the memory for the
- *  rel we return, else we just init the memory you hand us and
- *  return it to you.<br><br>
- *  We set the fields instance, nodeinfo, type following
- *  the instance. Setting the rest of the information is the job
- *  of the bridge building function between the ascend instance
- *  tree (or other relation back end) and the slv_system_t.
- *  In particular, the incidence list and indexing info is not
- *  handled here.
- */
+	Creates a relation given the relation instance.
+	If the rel supplied is NULL, we allocate the memory for the
+	rel we return, else we just init the memory you hand us and
+	return it to you.
+
+	We set the fields instance, nodeinfo, type following
+	the instance. Setting the rest of the information is the job
+	of the bridge building function between the ascend instance
+	tree (or other relation back end) and the slv_system_t.
+	In particular, the incidence list and indexing info is not
+	handled here.
+*/
 
 extern void rel_destroy(struct rel_relation *rel);
 /**<
- *  Destroys a relation.
- */
+	Destroys a relation.
+*/
 
 ASC_DLLSPEC(void ) rel_write_name(slv_system_t sys, struct rel_relation *rel, FILE *file);
 /**<
- *  Writes a name to the file given. Handles NULL inputs gracefully.
- *  Does not print any whitespace, including carriage returns.
- *  Is faster than slv_print_var_name.
- *  If sys is NULL, writes full ascend name. If file or rel is NULL
- *  does not write.
- */
+	Writes a name to the file given. Handles NULL inputs gracefully.
+	Does not print any whitespace, including carriage returns.
+	Is faster than slv_print_var_name.
+	If sys is NULL, writes full ascend name. If file or rel is NULL
+	does not write.
+*/
 
 /** Relation filter structure */
 typedef struct rel_filter_structure {
@@ -159,128 +194,134 @@ typedef struct rel_filter_structure {
 
 ASC_DLLSPEC(SlvBackendToken) rel_instance(struct rel_relation *rel);
 /**<
- *  Returns the instance pointer from a rel.
- */
+	Returns the instance pointer from a rel.
+*/
 
 extern void rel_set_extnodeinfo(struct rel_relation *rel,
                                 struct rel_extnode *nodeinfo);
 /**< Sets the external node information structure for a relation. */
 extern struct rel_extnode *rel_extnodeinfo(struct rel_relation *rel);
 /**<
- *  Fetches the pointer to the external node information structure for
- *  a relation. If this is NULL, which will be the case for most
- *  relations, then there are no external call nodes present.
- */
+	Fetches the pointer to the external node information structure for
+	a relation. If this is NULL, which will be the case for most
+	relations, then there are no external call nodes present.
+*/
 
 extern void rel_set_extwhichvar(struct rel_relation *rel, int whichvar);
 /**< Sets the argument list index for a relation having external nodes. */
+
 extern int32 rel_extwhichvar(struct rel_relation *rel);
 /**<
- *  Returns the index into the argument list from which rel was
- *  constructed.  This applies ONLY to rels that have external nodes !
- *  Relations that have external nodes have associated with them an
- *  index into the argument list from which the relation was constructed.
- *  rel_whichvar returns that index. e.g. if when this relation was
- *  constructed from an external procedure call, the number of output
- *  variables was 4, and the number of inputs was 6, valid results from
- *  this rel_whichvar would be 7, 8, 9, 10.
- *  A return value <= 0 is an error.
- */
+	Returns the index into the argument list from which rel was
+	constructed.  This applies ONLY to rels that have external nodes!
+	Relations that have external nodes have associated with them an
+	index into the argument list from which the relation was constructed.
+	rel_whichvar returns that index. e.g. if when this relation was
+	constructed from an external procedure call, the number of output
+	variables was 4, and the number of inputs was 6, valid results from
+	this rel_whichvar would be 7, 8, 9, 10.
+
+	@return index into argument list, or a value <= 0 on error.
+*/
 
 extern boolean rel_less(struct rel_relation *rel);
 /**<
- *  Returns true if the given relation is satisfied if "less than"
- *  is among those that make up the comparator of the relation
- *  (i.e. <>, <, or <=).<br><br>
- *  le==TRUE implies rel would be satisfied if lhs < rhs
- */
+	Returns true if the given relation is satisfied if "less than"
+	is among those that make up the comparator of the relation
+	(i.e. <>, <, or <=).<br><br>
+	le==TRUE implies rel would be satisfied if lhs < rhs
+*/
+
 extern boolean rel_equal(struct rel_relation *rel);
 /**<
- *  Returns true if the given relation is satisfied if "equals"
- *  is among those that make up the comparator of the relation
- *  (i.e. =, >=, or <=).<br><br>
- *  eq==TRUE implies rel would be satisfied if lhs ~ rhs
- */
+	Returns true if the given relation is satisfied if "equals"
+	is among those that make up the comparator of the relation
+	(i.e. =, >=, or <=).<br><br>
+	eq==TRUE implies rel would be satisfied if lhs ~ rhs
+*/
 extern boolean rel_greater(struct rel_relation *rel);
 /**<
- *  Returns true if the given relation is satisfied if "greater than"
- *  is among those that make up the comparator of the relation
- *  (i.e. <>, >, or >=).<br><br>
- *  gr==TRUE implies rel would be satisfied if lhs > rhs
- */
+	Returns true if the given relation is satisfied if "greater than"
+	is among those that make up the comparator of the relation
+	(i.e. <>, >, or >=).<br><br>
+	gr==TRUE implies rel would be satisfied if lhs > rhs
+*/
 
 extern enum rel_enum rel_relop(struct rel_relation *rel);
 /**<
- * Returns the type of the relational operator of a given relation.
- */
+	Returns the type of the relational operator of a given relation.
+*/
 
 ASC_DLLSPEC(char *) rel_make_name(slv_system_t sys, struct rel_relation *rel);
 /**<
- *  Copies of the relation instance name can be made and returned.
- *  The string returned should be freed when no longer in use.
- */
+	Copies of the relation instance name can be made and returned.
+	The string returned should be freed when no longer in use.
+*/
 
 extern int32 rel_mindex(struct rel_relation *rel);
 /**<
- *  Retrieves the index number of the given relation as it
- *  appears in a slv_system_t master relation list.
- */
+	Retrieves the index number of the given relation as it
+	appears in a slv_system_t master relation list.
+*/
 extern void rel_set_mindex(struct rel_relation *rel, int32 index);
 /**<
- *  Sets the index number of the given relation as it
- *  appears in a slv_system_t master relation list.
- */
+	Sets the index number of the given relation as it
+	appears in a slv_system_t master relation list.
+*/
 
 ASC_DLLSPEC(int32 ) rel_sindex(const struct rel_relation *rel);
 /**<
- *  Retrieves the index number of the given relation as it
- *  appears in a solvers relation list. The index is most often used
- *  to assign the relation to a specific original row of a matrix.
- */
+	Retrieves the index number of the given relation as it
+	appears in a solvers relation list. The index is most often used
+	to assign the relation to a specific original row of a matrix.
+*/
+
 extern void rel_set_sindex(struct rel_relation *rel, int32 index);
 /**<
- *  Sets the index number of the given relation as it
- *  appears in a solvers relation list. The index is most often used
- *  to assign the relation to a specific original row of a matrix.
- */
+	Sets the index number of the given relation as it
+	appears in a solvers relation list. The index is most often used
+	to assign the relation to a specific original row of a matrix.
+*/
 
 extern int32 rel_model(const struct rel_relation *rel);
 /**<
- *  Retrieves the model number of the given relation.
- *  In a hierarchy, relations come in groups associated with
- *  models. Models are numbered from 1 to some upper limit.
- */
+	Retrieves the model number of the given relation.
+	In a hierarchy, relations come in groups associated with
+	models. Models are numbered from 1 to some upper limit.
+*/
 extern void rel_set_model(struct rel_relation *rel, int32 index);
 /**<
- *  Sets the model number of the given relation.
- *  In a hierarchy, relations come in groups associated with
- *  models. Models are numbered from 1 to some upper limit.
- */
+	Sets the model number of the given relation.
+	In a hierarchy, relations come in groups associated with
+	models. Models are numbered from 1 to some upper limit.
+*/
 
 ASC_DLLSPEC(real64) rel_residual(struct rel_relation *rel);
 /**<
- *  Retrieves the residual field of the given relation.
- *  Note that the residual is not actually computed by rel_residual:
- *  there is no guarantee (from this function) that the residual is
- *  actually correct.
- */
+	Retrieves the residual field of the given relation.
+	Note that the residual is not actually computed by rel_residual:
+	there is no guarantee (from this function) that the residual is
+	actually correct.
+*/
+
 ASC_DLLSPEC(void) rel_set_residual(struct rel_relation *rel, real64 residual);
 /**<
- *  Sets the residual field of the given relation.
- */
+	Sets the residual field of the given relation.
+*/
 
 ASC_DLLSPEC(real64 ) rel_nominal(struct rel_relation *rel);
 /**<
- *  Retrieves the nominal field of the given relation.
- *  No slv client has any business being able to set the nominal,
- *  so no such operator is provided.
- */
+	Retrieves the nominal field of the given relation.
+	No slv client has any business being able to set the nominal,
+	so no such operator is provided.
+*/	
 
 extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
 /**<
- *  Breaking the 'rule' of rel_nominal() for the time being.
- *  @todo Remove rel_set_nominal() or change "rule" stated by rel_nominal().
- */
+	Breaking the 'rule' of rel_nominal() for the time being.
+	@todo Remove rel_set_nominal() or change "rule" stated by rel_nominal().
+*/
+
 
 #ifdef NDEBUG
 #define rel_n_incidences(rel) ((rel)->n_incidences)
@@ -295,6 +336,12 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
  *  @return Returns the length as an int32.
  *  @see rel_n_incidencesF()
  */
+ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
+/**<
+ *  Implementation function for rel_n_incidences().  Do not call
+ *  this function directly - use rel_n_incidences() instead.
+ */
+
 
 #ifdef NDEBUG
 #define rel_set_incidences(rel,n,ilist) \
@@ -315,12 +362,6 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
  *  @return No return value.
  *  @see rel_set_incidencesF()
  */
-
-ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
-/**<
- *  Implementation function for rel_n_incidences().  Do not call
- *  this function directly - use rel_n_incidences() instead.
- */
 extern void rel_set_incidencesF(struct rel_relation *rel,
                                 int32 n,
                                 struct var_variable **ilist);
@@ -329,24 +370,25 @@ extern void rel_set_incidencesF(struct rel_relation *rel,
  *  this function directly - use rel_set_incidences() instead.
  */
 
+
 extern struct var_variable
 **rel_incidence_list_to_modify(struct rel_relation *rel);
 /**<
- *  Returns a non-const pointer to an array rel_n_incidences(rel)
- *  long of vars.
- *  @see rel_incidence_list().
- */
+	Returns a non-const pointer to an array rel_n_incidences(rel)
+	long of vars.
+	@see rel_incidence_list().
+*/
 ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation *rel);
 /**<
- *  Returns a pointer to an array rel_n_incidences(rel) long of vars.
- *  Each element of the array is a struct var_variable *.
- *  Check the var sindex to see where each might go in a jacobian.
- *  If there is no incidence, NULL is returned.
- *  Pointers in this array will be unique.<br><br>
- *  The list belongs to the relation. Do not destroy it. Do not change it.<br><br>
- *
- *  The return value IS NOT A NULL-TERMINATED LIST.
- */
+	Returns a pointer to an array rel_n_incidences(rel) long of vars.
+	Each element of the array is a struct var_variable *.
+	Check the var sindex to see where each might go in a jacobian.
+	If there is no incidence, NULL is returned.
+	Pointers in this array will be unique.<br><br>
+	The list belongs to the relation. Do not destroy it. Do not change it.<br><br>
+	
+	The return value IS NOT A NULL-TERMINATED LIST.
+*/
 
 /*-----------------------------------------------------------------------------
   RELATION FILTERING FUNCTIONS AND FLAG GET/SET FUNCTIONS
@@ -557,45 +599,6 @@ extern void rel_set_included(struct rel_relation *rel, uint32 included);
  *  <!--  change.                                                      -->
  */
 
-/*
- *  in_block = rel_in_block(rel)
- *  rel_set_in_block(rel,in_block)
- *  uint32 in_block;
- *  struct rel_relation *rel;
- *
- *  Sets or retrieves the INBLOCK member of the given relation flags
- *  which determines if the relation is within the current block.
- */
-
-/*
- *   rel_obj_negate(rel)
- *   struct rel_relation *rel;
- *
- *   Returns TRUE if relation is of type e_maximize.
- *   Returns FALSE if relation is of type e_minimize.
- *   Note: should only be used on objectives. other relations
- *   will give a meaningless result (probably FALSE).
- */
-
-/*
- *  satisfied = rel_satisfied(rel)
- *  rel_set_satisfied(rel,satisfied)
- *  uint32 satisfied;
- *  struct rel_relation *rel;
- *
- *  Sets or retrieves the satisfied field of the given relation (see
- *  rel_residual() for disclaimer).
- */
-
-/*
- *  equality = rel_equality(rel)
- *  rel_set_equality(rel,equality)
- *  uint32 equality;
- *  struct rel_relation *rel;
- *
- *  TRUE if relation is of form lhs = rhs.
- */
-
 extern real64 rel_multiplier(struct rel_relation *rel);
 /**<
  *  Retrieves the multiplier field of the given relation.
@@ -626,73 +629,118 @@ extern void rel_set_multiplier(struct rel_relation *rel, real64 multiplier);
 
 extern double g_external_tolerance; /**< DEFAULT 1e-12 */
 
-struct ExtRelCache {
-  int32 nodestamp;
-  struct ExternalFunc *efunc;       /**< pre_slv, eval and deriv funcs */
-  SlvBackendToken data;             /**< only passed on pre_slv */
-  struct gl_list_t *arglist;        /**< only passed on pre_slv */
-  struct gl_list_t *inputlist;
-  void *user_data;                  /**< user data */
-  int32 ninputs, noutputs;
-  double *inputs;
-  double *outputs;
-  double *jacobian;
-  unsigned newcalc_done     :1;     /**< bits needed to control */
-  unsigned first_func_eval  :1;     /**< recalculation. until we can */
-  unsigned first_deriv_eval :1;     /**< do proper block coding */
-};
+/* - - - - - - - - - - - - -
+	EXTERNAL RELATION CACHE STUFF
+	this wasn't originally documented, so I've added my own understanding
+	of all this stuff here... feel free to revise... -- JP
+*/
 
 extern struct ExtRelCache *rel_extcache(struct rel_relation *rel);
 /**<
- *  Retrieve external relation information.
- *  This applies ONLY to rels that have external nodes !
- *  Ensure this by calling rel_extnodeinfo FIRST !
- *  This is the gateway to the external relation information
- *  stashed away to make processing of external relations efficient.
- *  See the file extrel.[ch] for functions to deal with the external
- *  relations cache, unless of course you are a client in which CASE
- *  don't.
- */
+	Retrieve external relation information.
+
+	This is the gateway to the external relation information
+	stashed away to make processing of external relations efficient.
+	See the file extrel.[ch] for functions to deal with the external
+	relations cache, unless of course you are a client in which CASE
+	don't.
+
+	@NOTE This applies ONLY to rels that have external nodes! Ensure this by
+	calling rel_extnodeinfo FIRST !
+*/
+
 extern void rel_set_extcache(struct rel_relation *rel, struct ExtRelCache *cache);
 /**<
- *  cache = rel_extcache(rel);
- *  rel_set_extcache(rel,cache);
- *  struct rel_relation *rel;
- *  struct ExtRelCache *cache;
- *
- *  Set external relation information.
- *  This applies ONLY to rels that have external nodes !
- *  Ensure this by calling rel_extnodeinfo FIRST !
- *  This is the gateway to the external relation information
- *  stashed away to make processing of external relations efficient.
- *  See the file extrel.[ch] for functions to deal with the external
- *  relations cache, unless of course you are a client in which CASE
- *  don't.
- */
+	Set external relation information.
 
-/*
- * The following aren't commented because Kirk Abbott didn't comment them.
- * It's all server magic anyway?
- */
+	This is the gateway to the external relation information
+	stashed away to make processing of external relations efficient.
+	See the file extrel.[ch] for functions to deal with the external
+	relations cache, unless of course you are a client in which CASE
+	don't.
+
+	@NOTE This applies ONLY to rels that have external nodes! Ensure this by 
+	calling rel_extnodeinfo FIRST!
+*/
 
 extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext);
+/**<
+	Create an external relation cache from a given ExtCallNode. Copies over
+	all the pointers inside the ExtCallNode object, but also allocates its own
+	memory for the input and output arrays and jacobian.
+
+	Also creates a 'linearised arglist', (see LinearizeArgList) which puts
+	the input and output arguments all into one list (with the inputs coming
+	first, followed by the outpus, in the case of black box relations).
+*/
+
 struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst);
+
 extern void ExtRel_DestroyCache(struct ExtRelCache *cache);
+/**<
+	Destory an ExtRelCache object. Mostly we just throw away the pointers that
+	we have. The exception is the 'inputlist', which we own and must destroy
+	here.
+*/
+
 extern int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup);
+/**<
+	Presolve an external relation. This allows the external relation to
+	initialise its internal data if required, before the main solver
+	iterations begin. -- JP.
+
+	To deal with the first time we also want to do argument
+	checking, and then turn off the first_func_eval flag.
+	Turn on the newcalc_done flag. The rationale behind this is
+	as follows:
+	
+	The solver at the moment does not treat an external relation
+	specially, i.e., as a block. It also calls for its functions
+	a relation at a time. However the external relations compute
+	all their outputs at once. So as not to do unnecessary
+	recalculations we use these flag bits. We set newcalc_done
+	initially to true, so as to force *at least* one calculation
+	of the external relations. By similar reasoning first_func_eval (done)
+	is set to false.
+
+	@TODO Question: isn't the init function going to get called repeatedly here
+	for blackboxes with multiple outputs? -- JP
+*/
+
+extern real64 ExtRel_Evaluate_Residual(struct rel_relation *rel);
+/**<
+	Evaluate the external relation and return the required residual, but only
+	if evaluation is required. This means that current inputs are compared with
+	previous values to ensure that at least one has really changed.
+
+	Renamed from ExtRel_Evaluate_RHS (and *_LHS removed, because it was just
+	a placeholder).
+*/
+
 extern real64 ExtRel_Evaluate_RHS(struct rel_relation *rel);
+/**<
+	Evaluate the relation RHS, which is the externally-computed value of the
+	output for the current value of the inputs.
+*/
+
 extern real64 ExtRel_Evaluate_LHS(struct rel_relation *rel);
+/**<
+	Evaluate the relation LHS, which is always current value of the output
+	as retreived from the model.
+*/
+
 extern real64 ExtRel_Diffs_RHS(struct rel_relation *rel,
-                               var_filter_t *filter,
-                               int32 row,
-                               mtx_matrix_t matrix);
+		var_filter_t *filter, int32 row, mtx_matrix_t matrix
+);
+
 extern real64 ExtRel_Diffs_LHS(struct rel_relation *rel,
-                               var_filter_t *filter,
-                               int32 row,
-                               mtx_matrix_t matrix); /**< not implemented */
+        var_filter_t *filter, int32 row, mtx_matrix_t matrix);
+/**< 
+	not implemented 
+*/
 
 #endif /* _SLV_SERVER_C_SEEN_ */
 
 /* removed some dead stuff here -- JP  */
 
 #endif /* ASC_REL_H  */
-

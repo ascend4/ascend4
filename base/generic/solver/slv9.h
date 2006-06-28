@@ -38,6 +38,14 @@
 
 typedef struct slv9_system_structure *slv9_system_t;
 
+/* used by StaticSolverRegistration to detect this solver: */
+#if defined(STATIC_CMSLV) || defined(DYNAMIC_CMSLV)
+# define HAVE_CMSLV 1
+#else
+# define HAVE_CMSLV 0
+#endif
+
+
 ASC_DLLSPEC(int) slv9_register(SlvFunctionsT *f);
 /**<
  *  Registration function for the ASCEND CMSlv solver.

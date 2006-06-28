@@ -16,6 +16,7 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//**
+	@file
 	This file provides error reporting to a callback function via
 	ASCEND's FPRINTF(ASCERR,...) syntax. It is anticipated that
 	this would gradually be expanded to including richer reporting
@@ -38,6 +39,9 @@
 	Error severities are
 		ASC_(USER|PROG)_(NOTE|WARNING|ERROR)
 	and ASC_USER_SUCCESS
+*//*
+	by John Pye
+	2005
 */
 #ifndef ASC_ERROR_H
 #define ASC_ERROR_H
@@ -99,9 +103,14 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_DEBUG(args...) error_reporter(ASC_PROG_NOTE, __FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_HERE(SEV,args...) error_reporter(SEV,__FILE__, __LINE__, __func__, ##args)
 # define ERROR_REPORTER_NOLINE(SEV,args...) error_reporter(SEV, NULL, 0, NULL, ##args)
-# define CONSOLE_DEBUG(args...) (color_on(stderr,"1") + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
-                                 fprintf(stderr, ##args) + \
-                                 fprintf(stderr, "\n") + color_off(stderr))
+# define CONSOLE_DEBUG(args...) (color_on(stderr,"0;34") + \
+		fprintf(stderr, "%s:%d ",__FILE__,__LINE__) + \
+		color_on(stderr,"0;31") + \
+		fprintf(stderr, "(%s)", __func__) + \
+		color_on(stderr,"0;34") + \
+		fprintf(stderr, ": ") + \
+		fprintf(stderr, ##args) + \
+        fprintf(stderr, "\n") + color_off(stderr))
 
 # define ERROR_REPORTER_START_HERE(SEV) error_reporter_start(SEV,__FILE__,__LINE__,__func__);
 
@@ -109,7 +118,7 @@ typedef enum error_severity_enum{
 # define ERROR_REPORTER_DEBUG(...) error_reporter(ASC_PROG_NOTE,__FILE__,__LINE__,__func__,## __VA_ARGS__)
 # define ERROR_REPORTER_HERE(SEV,...) error_reporter(SEV,__FILE__,__LINE__,__func__, ## __VA_ARGS__)
 # define ERROR_REPORTER_NOLINE(SEV,...) error_reporter(SEV,NULL,0,NULL, ## __VA_ARGS__)
-# define CONSOLE_DEBUG(...) (color_on(stderr,"1") + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
+# define CONSOLE_DEBUG(...) (color_on(stderr,"0;34") + fprintf(stderr, "%s:%d (%s): ", __FILE__,__LINE__,__func__) + \
                              fprintf(stderr, ##__VA_ARGS__) + \
                              fprintf(stderr, "\n") + color_off(stderr))
 

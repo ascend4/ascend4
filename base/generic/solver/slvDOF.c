@@ -275,8 +275,8 @@ static void create_matrices(slv_system_t server,slvDOF_system_t sys)
   sys->rank = mtx_symbolic_rank(sys->J.mtx);
 
   /* create integer,char workspaces. */
-  sys->rows = (unsigned char *)asccalloc(sys->cap,1);
-  sys->cols = (unsigned char *)asccalloc(sys->cap,1);
+  sys->rows = ASC_NEW_ARRAY_CLEAR(unsigned char,sys->cap);
+  sys->cols = ASC_NEW_ARRAY_CLEAR(unsigned char,sys->cap);
   sys->rowlist = ASC_NEW_ARRAY(int32,sys->rtot);
   sys->collist = ASC_NEW_ARRAY(int32,sys->vtotal);
 

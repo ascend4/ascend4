@@ -405,7 +405,7 @@ ASC_DLLSPEC(int) slv_register_client(SlvRegistration slv0_register
 	The 2 char strings will be used in dynamically loading
 	a solver. @par
 
-	@return 0 if registration succeeds, nonzero OTHERWISE.
+	@return 0 on success, non-zero on failure
 
 	@todo Note: the second syntax is NOT YET IMPLEMENTED.
 */

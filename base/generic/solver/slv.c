@@ -309,7 +309,9 @@ int slv_lookup_client( const char *solverName )
   return -1;
 }
 
-/** Register a new solver.
+/** 
+	Register a new solver.
+	
 	@TODO This needs work still, particularly of the dynamic loading
 	sort. it would be good if here we farmed out the dynamic loading
 	to another file so we don't have to crap this one all up.
@@ -319,8 +321,8 @@ int slv_register_client(SlvRegistration registerfunc, CONST char *func
 {
   int status;
 
-  (void)func;  /*  stop gcc whine about unused parameter */
-  (void)file;  /*  stop gcc whine about unused parameter */
+  UNUSED_PARAMETER(func);
+  UNUSED_PARAMETER(file);
 
   status = registerfunc(&( SlvClientsData[NORC]));
   if (!status) { /* ok */

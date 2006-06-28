@@ -45,6 +45,13 @@
 
 typedef struct slv3_system_structure *slv3_system_t;
 
+/* used by StaticSolverRegistration to detect this solver: */
+#if defined(STATIC_QRSLV) || defined(DYNAMIC_QRSLV)
+# define HAVE_QRSLV 1
+#else
+# define HAVE_QRSLV 0
+#endif
+
 ASC_DLLSPEC(int) slv3_register(SlvFunctionsT *f);
 /**<
  *  Registration function for the ASCEND QRSlv nonlinear solver.

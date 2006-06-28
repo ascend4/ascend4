@@ -41,7 +41,7 @@
 #include "vlist.h"
 #include "when.h"
 
-#define WMALLOC(x) x = (struct WhenList *)ascmalloc(sizeof(struct WhenList))
+#define WMALLOC(x) x = ASC_NEW(struct WhenList)
 
 #ifndef lint
 static CONST char WhenRCSid[] = "$Id: when.c,v 1.11 1997/07/29 15:52:56 rv2a Exp $";

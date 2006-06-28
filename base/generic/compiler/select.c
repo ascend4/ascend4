@@ -41,8 +41,7 @@
 #include "exprs.h"
 #include "slist.h"
 
-#define SELMALLOC(x) \
-        (x) = (struct SelectList *)ascmalloc(sizeof(struct SelectList))
+#define SELMALLOC(x) (x) = ASC_NEW(struct SelectList)
 
 struct SelectList *CreateSelect(struct Set *set, struct StatementList *sl)
 {

@@ -110,7 +110,7 @@ void ReportSetManager(FILE *f)
 #define MALLOCSET(x) (x = (struct set_t *)pool_get_element(g_set_pool))
 #define FREESET(set) pool_free_element(g_set_pool,(set))
 #else
-#define MALLOCSET(x) x = (struct set_t *)ascmalloc(sizeof(struct set_t ))
+#define MALLOCSET(x) x = ASC_NEW(struct set_t)
 #define FREESET(set) ascfree(set)
 #endif /* SETINST_USES_POOL */
 

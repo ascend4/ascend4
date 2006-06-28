@@ -92,7 +92,7 @@ struct anywatch *CreateWatch(VOIDPTR key, unsigned long flags)
   if (key == NULL) {
     return NULL;
   }
-  w = (struct anywatch *)ascmalloc(sizeof(struct anywatch));
+  w = ASC_NEW(struct anywatch);
   if (w == NULL) {
     return NULL;
   }

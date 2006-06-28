@@ -368,7 +368,7 @@ Returns 0 if happy, 1 or other if not.
     return 0;
   default:
     Asc_Panic(2, NULL, "Error in MergeValues in instance.c. Unknown type.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1131,7 +1131,7 @@ struct Instance *RecursiveMergeInstance(struct Instance *i1,
     return result;
   } else {
     Asc_Panic(2, NULL, "Attempt to merge unconformable types in children.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 

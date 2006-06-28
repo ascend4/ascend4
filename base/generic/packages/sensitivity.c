@@ -1219,8 +1219,8 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
   branch2 = gl_fetch(arglist,2); /* input args -- old u_values */
   branch3 = gl_fetch(arglist,3); /* input args -- new u_values */
   ninputs = gl_length(branch2);
-  inputs = (struct var_variable **)ascmalloc((ninputs+1)*sizeof(struct var_variable *));
-  new_inputs = (struct var_variable **)ascmalloc((ninputs+1)*sizeof(struct var_variable *));
+  inputs = ASC_NEW_ARRAY(struct var_variable *,ninputs+1);
+  new_inputs = ASC_NEW_ARRAY(struct var_variable *,ninputs+1);
 
   inputs_ndx_list = ASC_NEW_ARRAY(int,ninputs);
   for (c=0;c<ninputs;c++) {
@@ -1238,7 +1238,7 @@ int sensitivity_anal_all( struct Instance *inst,  /* not used but will be */
    */
   vfilter.matchbits = 0;
   noutputs = slv_count_solvers_vars(sys,&vfilter);
-  outputs = (struct var_variable **)ascmalloc((noutputs+1)*sizeof(struct var_variable *));
+  outputs = ASC_NEW_ARRAY(struct var_variable *,noutputs+1);
   outputs_ndx_list = ASC_NEW_ARRAY(int,noutputs);
   ptr = vp = slv_get_solvers_var_list(sys);
   for (c=0;c<noutputs;c++) {

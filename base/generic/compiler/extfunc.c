@@ -98,6 +98,10 @@ int CreateUserFunctionBlackBox(CONST char *name,
   return 0;
 }
 
+/**
+	This function is hacking. The correct approach is to go through the 
+	ExtRelCache object, see rel.c.
+*/
 double blackbox_evaluate_residual(struct relation *r){
 	struct ExtCallNode *ext;
 	struct ExternalFunc *efunc;
@@ -160,6 +164,7 @@ double blackbox_evaluate_residual(struct relation *r){
 	}
 
 	/* call the evaluation function */
+	
 
 	/* push the current output values back into the instance hierarchy */
 

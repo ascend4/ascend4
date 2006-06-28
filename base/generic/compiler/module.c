@@ -228,7 +228,7 @@ extern struct module_t *Asc_OpenStringModule(CONST char *inputstring,
       keep_string[++input_len] = '\0';
       keep_string[++input_len] = '\0';
       /* create name only if we successfully copied inputstring */
-      name = (char *)ascmalloc(strlen((prefix != NULL)? prefix : "")+35);
+      name = ASC_NEW_ARRAY(char,strlen((prefix != NULL)? prefix : "")+35);
       if (name != NULL) {
         sprintf(name, "%s_global_%d", ((prefix != NULL) ? prefix : ""),
                                       ++g_string_modules_processed);
@@ -864,7 +864,7 @@ struct module_t *CreateStringModule(CONST char *name,
 #endif /* use for strings */
   Asc_Panic(2, "CreateStringModule", "String buffer \"%s\" misunderstood"
             "while opening for reading", new_module->name);
-  exit(2); /* Needed to keep gcc from whining */
+  
 }
 
 
@@ -1235,7 +1235,7 @@ struct module_t *NewModule(CONST char *name){
   char *tmp;                /* result of strrchr(); used to get base_name */
   struct FilePath *fp1;
 
-  newmodule = (struct module_t *)ascmalloc(sizeof(struct module_t));
+  newmodule = ASC_NEW(struct module_t);
   if( newmodule == NULL ) {
 	ERROR_REPORTER_HERE(ASC_PROG_ERR,"UNABLE TO MALLOC FOR NEW MODULE");
     return NULL;

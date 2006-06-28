@@ -46,7 +46,7 @@
 /* The following goo all goes to slow down the method execution.
  * need to be smarter about these macros.
  */
-#define FMALLOC ((struct procFrame *)ascmalloc(sizeof(struct procFrame)))
+#define FMALLOC ASC_NEW(struct procFrame)
 #define FMFREE(f) ascfree(f)
 
 /* make a name for the path we took to get here. join is either "" or "." */
@@ -56,8 +56,7 @@
   sprintf((new),"%s%s%s",((old)!=NULL?(old):""),(join),(incr))
 char * fmncreate(char *old, char *incr, char* join)
 {
-  char *new = (char *)ascmalloc(((old!=NULL)?strlen(old):0)+strlen(incr)+ 
-                            + strlen(join)+1);
+  char *new = ASC_NEW_ARRAY(char,( (old!=NULL) ? strlen(old) : 0 )+strlen(incr)+ strlen(join)+1);
   sprintf(new, "%s%s%s", ( old!=NULL ? old : ""), join , incr );
   return new;
 }

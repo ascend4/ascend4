@@ -362,6 +362,9 @@ struct Instance *CopyRelationInst(CONST struct Instance *i)
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
+  if(result->ptr){
+    CONSOLE_DEBUG("Clearing rel ptr %p",result->ptr);
+  }
   result->ptr = NULL;
 
   RedoChildPointers(ChildListLen(GetChildList(result->desc)),
@@ -389,6 +392,9 @@ struct Instance *CopyLogRelInst(CONST struct Instance *i)
   result->logrels = NULL;
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
+  if(result->ptr!=NULL){
+    CONSOLE_DEBUG("Clearing rel ptr %p",result->ptr);
+  }
   result->ptr = NULL;
   RedoChildPointers(ChildListLen(GetChildList(result->desc)),
 		    INST(result),LREL_CHILD(result,0),
@@ -823,7 +829,7 @@ static struct Instance *CopyNode(CONST struct Instance *i)
     return NULL;
   default:
     Asc_Panic(2, NULL, "Incorrect instance type passed to CopyNode.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1205,10 +1211,10 @@ struct Instance *CopyInstance(CONST struct Instance *i)
     Asc_Panic(2, NULL,
               "CopyInstance may not be called on"
               " fundamental atomic instances.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   default:
     Asc_Panic(2, NULL, "Unknown instance type passed to CopyInstance.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 /************ end of copy stuff ****************/

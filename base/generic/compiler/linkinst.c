@@ -95,6 +95,7 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
       ModifyGlassBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_blackbox:
+      CONSOLE_DEBUG("...");
       ModifyBlackBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_undefined:

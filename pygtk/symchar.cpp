@@ -32,7 +32,7 @@ SymChar::SymChar(const struct InstanceName &in) {
 
 	if(InstanceNameType(in) == IntArrayIndex){
 		char n[50];
-		snprintf(n,50,"%d",InstanceIntIndex(in));
+		snprintf(n,50,"%ld",InstanceIntIndex(in));
 		sc = AddSymbol(n);
 	}else{
 		sc = InstanceNameStr(in);

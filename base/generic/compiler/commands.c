@@ -78,7 +78,7 @@ extern void AddCommand(int dummy, ...)
   va_list pvar;
   struct command_t *ptr;
   int c = 0;
-  ptr = (struct command_t *)ascmalloc(sizeof(struct command_t));
+  ptr = ASC_NEW(struct command_t);
   va_start(pvar,dummy);
 
   ptr->str = va_arg(pvar,CONST char *);

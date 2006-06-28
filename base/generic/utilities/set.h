@@ -73,8 +73,7 @@
  *  @return The number of unsigned ints needed as an int.
  */
 
-#define	set_create(n) \
-   (set_size(n)>0?((unsigned *)ascmalloc(sizeof(unsigned)*set_size(n))):NULL)
+#define	set_create(n) ( set_size(n)>0 ? ASC_NEW_ARRAY(unsigned,set_size(n)) : NULL )
 /**<
  *  Creates a new set of size n.
  *  The size indicates the maximum integer that the set can hold.

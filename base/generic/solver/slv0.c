@@ -400,9 +400,9 @@ static int savlinnum=0;
 #define destroy_array(p)  \
    if( (p) != NULL ) ascfree((p))
 #define create_array(len,type)  \
-   ((len) > 0 ? (type *)ascmalloc((len)*sizeof(type)) : NULL)
+   ((len) > 0 ? ASC_NEW_ARRAY(type,len) : NULL)
 #define create_zero_array(len,type)  \
-   ((len) > 0 ? (type *)asccalloc((len),sizeof(type)) : NULL)
+   ((len) > 0 ? ASC_NEW_ARRAY_CLEAR(type,len) : NULL)
 #define zero_array(arr,nelts,type)    \
    mem_zero_byte_cast((arr),0,(nelts)*sizeof(type))
 /* Zeros an array of nelts objects, each having given type. */

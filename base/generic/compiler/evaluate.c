@@ -71,10 +71,8 @@ struct stack_t {
   unsigned long size;	/* pointer while recycled and data while in use */
 };
 
-#define SMALLOC(x) x=(struct stack_t *)ascmalloc(sizeof(struct stack_t));
-#define DMALLOC(x,n) x\
-       =(struct value_t *)ascmalloc((unsigned)n*\
-				    (unsigned)sizeof(struct value_t))
+#define SMALLOC(x) x=ASC_NEW(struct stack_t);
+#define DMALLOC(x,n) x = ASC_NEW_ARRAY(struct value_t,(unsigned)n)
 
 static struct stack_t *AllocStack(unsigned int capacity)
 {

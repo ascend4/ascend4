@@ -193,7 +193,7 @@ real64 *relman_glassbox_dsolve(struct rel_relation *rel,
   vlist = RelationVarList(cmplr_reln);
   m = rel_sindex(rel);
   n = (int)gl_length(vlist);
-  f = (real64 *)asccalloc((1 + 2*n),sizeof(double));
+  f = ASC_NEW_ARRAY_CLEAR(double,(1 + 2*n));
   x = &f[1];
   g = &f[n+1];
 
@@ -269,7 +269,7 @@ real64 relman_glassbox_eval(struct rel_relation *rel)
   m = rel_sindex(rel);
   n = (int)gl_length(vlist);
   /* this needs to be reused memory, fergossake */
-  f = (real64 *)asccalloc((1 + 2*n),sizeof(double));	/* resid */
+  f = ASC_NEW_ARRAY_CLEAR(double,(1 + 2*n));	/* resid */
   x = &f[1];						/* var values */
   g = &f[n+1];						/* gradient */
 
@@ -336,7 +336,7 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
   m = rel_sindex(rel);
   n = (int)gl_length(vlist);
   /* this needs to be reused memory ! */
-  f = (real64 *)asccalloc((1 + 2*n),sizeof(double));
+  f = ASC_NEW_ARRAY_CLEAR(double,(1 + 2*n));
   x = &f[1];
   g = &f[n+1];
 
@@ -369,64 +369,44 @@ real64 relman_glassbox_diffs( struct rel_relation *rel,
 #define relman_glassbox_diffs(rel,filter,mtx) abort()
 #endif
 
-real64 relman_eval(struct rel_relation *rel, int32 *status, int safe)
-{
+/* returns residual; sets *calc_ok = 1 on success */
+real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
   real64 res;
-  assert(status!=NULL && rel!=NULL);
-  if ( rel->type == e_rel_token ) {
-    if (!RelationCalcResidualBinary(
-          GetInstanceRelationOnly(IPTR(rel->instance)),&res)) {
-      *status = 1; /* calc_ok */
+  assert(calc_ok!=NULL && rel!=NULL);
+
+  if( rel->type == e_rel_token ){
+    if(!RelationCalcResidualBinary(
+			GetInstanceRelationOnly(IPTR(rel->instance))
+			,&res)
+	){
+      *calc_ok = 1;
       rel_set_residual(rel,res);
       return res;
     }
-    /* else we don't care -- go on to the old handling which
-     * is reasonably correct, if slow.
-     */
+    /* else we don't care -- go on to the old handling which is reasonably correct, if slow. */
   }
-  if( safe ) {
-    *status = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
-    /* CONSOLE_DEBUG("residual = %g",res); */
-    safe_error_to_stderr( (enum safe_err *)status );
+
+  CONSOLE_DEBUG("EVALUATE REL = %p",rel);
+  if(safe){
+    *calc_ok = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
+    safe_error_to_stderr( (enum safe_err *)calc_ok );
+
     /* always set the relation residual when using safe functions */
     rel_set_residual(rel,res);
-  } else {
-    *status = RelationCalcResidual(rel_instance(rel),&res);
-    if ( *status ) {
-      /* an error occured */
+  }else{
+    *calc_ok = RelationCalcResidual(rel_instance(rel),&res);
+
+	/* for unsafe functions, set a fallback value in case of error */
+    if(*calc_ok){
       res = 1.0e8;
-    } else {
+    }else{
       rel_set_residual(rel,res);
     }
   }
+
   /* flip the status flag: all values other than safe_ok become 0 */
-  *status = !(*status);
-  /* CONSOLE_DEBUG("returning %g",res); */
+  *calc_ok = !(*calc_ok);
   return res;
-
-#if REIMPLEMENT /* all this needs to be done on the compiler side */
-   it may take some changes in the CalcResidual header to do so.
-   switch (rel->type) {
-   case e_token:
-     res = exprman_eval(rel,rel_lhs(rel)) - exprman_eval(rel,rel_rhs(rel));
-     break;
-   case e_opcode:
-     FPRINTF(stderr,"opcode relation processing not yet supported\n");
-     res = 1.0e08;
-     break;
-   case e_glassbox:
-     res = relman_glassbox_eval(rel);
-     break;
-   case e_blackbox:
-     res = ExtRel_Evaluate_LHS(rel) - ExtRel_Evaluate_RHS(rel);
-     break;
-   default:
-     FPRINTF(stderr,"unknown relation type in (relman_eval)\n");
-     res = 1.0e08;
-     break;
-   }
-#endif
-
 }
 
 int32 relman_obj_direction(struct rel_relation *rel)

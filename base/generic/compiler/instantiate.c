@@ -845,7 +845,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
     default:
       STATEMENT_ERROR(stat, "Unknown result value type in MakeIndex.\n");
       Asc_Panic(2, NULL, "Unknown result value type in MakeIndex.\n");
-      exit(2);/* Needed to keep gcc from whining */
+      
     }
   } else { /* checking subscripts on dense ALIASES/param'd IS_A statement */
     if (sptr==NULL) {
@@ -873,7 +873,7 @@ struct IndexType *MakeIndex(struct Instance *inst,
       DestroyValue(&value);
       STATEMENT_ERROR(stat, "Bad index to dense alias array");
       Asc_Panic(2, NULL, "Bad index to dense alias array");
-      exit(2);/* Needed to keep gcc from whining */
+      
     }
     /* return NULL; */  /* unreachable */
   }
@@ -1041,7 +1041,7 @@ struct Instance *DoNextArray(struct Instance *parentofary, /* MODEL */
     return NULL;
   default:
     Asc_Panic(2, NULL ,"Unknown result value type.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -1202,8 +1202,7 @@ void MakeAliasInstance(CONST struct Name *name,
         }
       } else{			/* redefining instance */
         /* case of part already there and we barf */
-        char *msg = ascmalloc(SCLEN(childname)+
-                              strlen(REDEFINE_CHILD_MESG2)+1);
+        char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG2)+1);
         strcpy(msg,REDEFINE_CHILD_MESG2);
         strcat(msg,SCP(childname));
         STATEMENT_ERROR(statement,msg);
@@ -1411,7 +1410,7 @@ symchar *UniquifyString(char *s, struct set_t *strset)
     }
     Asc_Panic(2, NULL,
               "Unable to generate unique compound alias subscript.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   } else {
     ascfree(s);
     return tmp;
@@ -2338,8 +2337,7 @@ int InsertParameterInst(struct Instance *parent,
       }
       return 1;
     } else {			/* redefining instance */
-      char *msg = ascmalloc(SCLEN(childname)+
-              strlen(REDEFINE_CHILD_MESG)+1);
+      char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG)+1);
       strcpy(msg,REDEFINE_CHILD_MESG);
       strcat(msg,SCP(childname));
       STATEMENT_ERROR(statement,msg);
@@ -2349,7 +2347,7 @@ int InsertParameterInst(struct Instance *parent,
   } else {			/* unknown name */
     STATEMENT_ERROR(statement, "Unknown parameter name.  Never should happen");
     Asc_Panic(2, NULL, "Unknown parameter name.  Never should happen");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -3937,8 +3935,7 @@ void MakeInstance(CONST struct Name *name,
         inst = MakeSimpleInstance(def,intset,statement,arginst);
         LinkToParentByPos(parent,inst,pos);
       } else {			/* redefining instance */
-        char *msg = ascmalloc(SCLEN(childname)+
-                              strlen(REDEFINE_CHILD_MESG)+1);
+        char *msg = ASC_NEW_ARRAY(char,SCLEN(childname)+strlen(REDEFINE_CHILD_MESG)+1);
         strcpy(msg,REDEFINE_CHILD_MESG);
         strcat(msg,SCP(childname));
         STATEMENT_ERROR(statement,msg);
@@ -4066,8 +4063,7 @@ int ExecuteISA(struct Instance *inst, struct Statement *statement)
     /*
      * Should never happen, due to lint.
      */
-    char *msg = ascmalloc(strlen(UNDEFINED_TYPE_MESG)+
-                          SCLEN(GetStatType(statement))+1);
+    char *msg = ASC_NEW_ARRAY(char,strlen(UNDEFINED_TYPE_MESG)+SCLEN(GetStatType(statement))+1);
     strcpy(msg,UNDEFINED_TYPE_MESG);
     strcat(msg,SCP(GetStatType(statement)));
     STATEMENT_ERROR(statement,msg); /* added print. baa. string was here already*/
@@ -4106,8 +4102,7 @@ void MakeDummyInstance(CONST struct Name *name,
       }
       LinkToParentByPos(parent,inst,pos);
     } else {			/* redefining instance */
-      char *msg = ascmalloc(SCLEN(childname) +
-           strlen(REDEFINE_CHILD_MESG)+1);
+      char *msg = ASC_NEW_ARRAY(char,SCLEN(childname) + strlen(REDEFINE_CHILD_MESG)+1);
       strcpy(msg,REDEFINE_CHILD_MESG);
       strcat(msg,SCP(childname));
       STATEMENT_ERROR(statement,msg);
@@ -4144,7 +4139,7 @@ int ExecuteUnSelectedISA( struct Instance *inst, struct Statement *statement)
     /*
      * Should never happen, due to lint.
      */
-    char *msg = ascmalloc(strlen(UNDEFINED_TYPE_MESG)+11);
+    char *msg = ASC_NEW_ARRAY(char,strlen(UNDEFINED_TYPE_MESG)+11);
     strcpy(msg,UNDEFINED_TYPE_MESG);
     strcat(msg,"dummy_type");
     STATEMENT_ERROR(statement,msg);
@@ -4521,8 +4516,7 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
       }
     }
   } else {
-    char *msg = ascmalloc(strlen(IRT_UNDEFINED_TYPE)+
-                          SCLEN(GetStatType(statement))+1);
+    char *msg = ASC_NEW_ARRAY(char,strlen(IRT_UNDEFINED_TYPE)+SCLEN(GetStatType(statement))+1);
     strcpy(msg,IRT_UNDEFINED_TYPE);
     strcat(msg,SCP(GetStatType(statement)));
     STATEMENT_ERROR(statement,msg);
@@ -4869,7 +4863,7 @@ int ExecuteREL(struct Instance *inst, struct Statement *statement)
         Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
       default:
         Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
-        exit(2);/* Needed to keep gcc from whining */
+        
       }
     }
 #ifdef DEBUG_RELS
@@ -5160,10 +5154,10 @@ int ExecuteLOGREL(struct Instance *inst, struct Statement *statement)
           return 0;
       case lokay:
         Asc_Panic(2, NULL, "Incorrect error response.\n");/*NOTREACHED*/
-        exit(2);/* Needed to keep gcc from whining */
+        
       default:
         Asc_Panic(2, NULL, "Unknown error response.\n");/*NOTREACHED*/
-        exit(2);/* Needed to keep gcc from whining */
+        
       }
     }
   } else{
@@ -5410,14 +5404,14 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
   struct ExternalFunc *efunc;
   CONST char *funcname;
 
-  CONSOLE_DEBUG("ENTERED ExecuteBlackBoxExt\n");
+  /* CONSOLE_DEBUG("ENTERED ExecuteBlackBoxExt"); */
 
   /* make or find the array head */
   name = ExternalStatNameBlackBox(statement);
   aryinst = MakeExtRelationArray(inst,name,statement);
   if (aryinst==NULL) {
     WriteStatementLocation(ASCERR,statement);
-    CONSOLE_DEBUG("Unable to create external expression structure.\n");
+    CONSOLE_DEBUG("Unable to create external expression structure.");
     return 1;
   }
   /* we now have an array head */
@@ -5433,7 +5427,7 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
         return 0;
       case impossible_instance:
         WriteStatementLocation(ASCERR,statement);
-        FPRINTF(ASCERR,"Statement contains impossible DATA instance\n");
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Statement contains impossible DATA instance");
         return 1;
       default:
         WriteStatementLocation(ASCERR,statement);
@@ -5450,7 +5444,7 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
         return 0; /* for the time being give another crack */
       case impossible_instance:
         WriteStatementLocation(ASCERR,statement);
-        FPRINTF(ASCERR,"Statement contains impossible instance\n");
+        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Statement contains impossible instance");
         return 1;
       default:
         WriteStatementLocation(ASCERR,statement);
@@ -5464,31 +5458,31 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
      * loaded at this stage or report an error.
      */
     funcname = ExternalStatFuncName(statement);
-    FPRINTF(ASCERR,">>>>>> ExecuteBlackBoxEXT %s\n",funcname);
+    /* FPRINTF(ASCERR,">>>>>> ExecuteBlackBoxEXT %s\n",funcname); */
 
     efunc = LookupExtFunc(funcname);
     if (!efunc) {
-      FPRINTF(ASCERR,"External function %s was not loaded\n",funcname);
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"External function %s was not loaded",funcname);
       return 1;
     }
     n_input_args = NumberInputArgs(efunc);
     n_output_args = NumberOutputArgs(efunc);
     if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
       WriteStatementLocation(ASCERR,statement);
-      FPRINTF(ASCERR,"Incorrect number of arguements for statement\n");
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Incorrect number of arguements for statement");
       return 1;
     }
     /* we should have a valid arglist at this stage */
     if (CheckExtCallArgTypes(arglist)) {
       WriteStatementLocation(ASCERR,statement);
-      FPRINTF(ASCERR,"Wrong type of args to external statement\n");
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Wrong type of args to external statement");
       DestroySpecialList(arglist);
       return 1;
     }
     if (AddExtArrayChildren(aryinst,statement,arglist,data,
                             n_input_args,n_output_args)) {
       WriteStatementLocation(ASCERR,statement);
-      FPRINTF(ASCERR,"Unable to execute external expression.\n");
+      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to execute external expression.");
       DestroySpecialList(arglist);
       return 1;
     } else {
@@ -5706,7 +5700,7 @@ int ExecuteEXT(struct Instance *inst, struct Statement *statement)
 {
   int mode;
 
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
 
   mode = ExternalStatMode(statement);
   switch(mode) {
@@ -5790,8 +5784,7 @@ int AsgnErrorReport(struct Statement *statement, struct value_t *value)
 static
 void ReAssignmentError(CONST char *str, struct Statement *statement)
 {
-  char *msg = ascmalloc(strlen(REASSIGN_MESG1)+strlen(REASSIGN_MESG2)+
-                        strlen(str)+1);
+  char *msg = ASC_NEW_ARRAY(char,strlen(REASSIGN_MESG1)+strlen(REASSIGN_MESG2)+strlen(str)+1);
   strcpy(msg,REASSIGN_MESG1);
   strcat(msg,str);
   strcat(msg,REASSIGN_MESG2);
@@ -6077,7 +6070,7 @@ int NameContainsName(CONST struct Name *n,CONST struct Name *sub)
 
   assert(n!=NULL);
   assert(sub!=NULL);
-  en = (struct Expr *)ascmalloc(sizeof(struct Expr));
+  en = ASC_NEW(struct Expr);
   InitVarExpr(en,n);
   nl = EvaluateNamesNeededShallow(en,NULL,NULL);
   /* should this function be checking deep instead? can't tell yet. */
@@ -11076,7 +11069,7 @@ int Pass2ExecuteStatement(struct Instance *inst,struct Statement *statement)
     /* ER expected to succeed or fail permanently. this may change. */
     return ExecuteREL(inst,statement);
   case EXT:
-	CONSOLE_DEBUG("ABOUT TO EXECUTEEXT");
+	/* CONSOLE_DEBUG("ABOUT TO EXECUTEEXT"); */
     return ExecuteEXT(inst,statement);
   case COND:
     return Pass2ExecuteCOND(inst,statement);
@@ -11431,7 +11424,7 @@ void Pass2ProcessPendingInstancesAnon(struct Instance *result)
 #if TIMECOMPILER
   clock_t start,classt;
 #endif
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
 
   /* pending will have at least one instance, or quick return. */
   assert(PASS2MAXNUMBER==1);
@@ -12088,14 +12081,13 @@ void Pass3SetLogRelBits(struct Instance *inst)
 	No recursion. No reallocation of result.
 */
 #define ANONFORCE 0 /* require anonymous type use, even if whining OTHERWISE */
-static
-struct Instance *Pass2InstantiateModel(struct Instance *result,
-                                       unsigned long *pcount)
-{
-  CONSOLE_DEBUG("starting...");
+static struct Instance *Pass2InstantiateModel(struct Instance *result,
+		unsigned long *pcount
+){
+  /* CONSOLE_DEBUG("starting..."); */
   /* do we need a ForTable on the stack here? don't think so. np2ppi does it */
   if (result!=NULL) {
-    CONSOLE_DEBUG("result!=NULL...");
+    /* CONSOLE_DEBUG("result!=NULL..."); */
     /* pass2 pendings already set by visit */
     if (ANONFORCE || g_use_copyanon != 0) {
 #if TIMECOMPILER
@@ -12119,7 +12111,7 @@ struct Instance *Pass2InstantiateModel(struct Instance *result,
     }
     ClearList();
   }
-  CONSOLE_DEBUG("...done");
+  /* CONSOLE_DEBUG("...done"); */
   return result;
 }
 
@@ -12316,7 +12308,7 @@ struct Instance *NewInstantiateModel(struct TypeDescription *def)
   FPRINTF(ASCERR,"Phase 2 relations \t\t%lu\n",
     (unsigned long)(phase2t-phase1t));
 #endif
-  CONSOLE_DEBUG("Starting phase 3...");
+  /* CONSOLE_DEBUG("Starting phase 3..."); */
   /* at this point, there may be unexecuted non-logical relation
    * statements, but they can never be executed. The
    * pending list is therefore empty. We know how many.
@@ -12431,7 +12423,7 @@ int ValidRealInstantiateType(struct TypeDescription *def)
     return 1;
   default:
     Asc_Panic(2, NULL, "Unknown definition type.\n");			/*NOTREACHED*/
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -12443,7 +12435,7 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
                                  int intset)
 {
   struct Instance *result;
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
 
   result = ShortCutMakeUniversalInstance(def); /*does quick Universal check */
   if (result) return result;
@@ -12478,7 +12470,7 @@ struct Instance *NewRealInstantiate(struct TypeDescription *def,
     return NULL; /* how did we get here? */
   default:
     Asc_Panic(2, NULL, "Unknown definition type.\n");	/*NOTREACHED*/
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 

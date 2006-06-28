@@ -87,7 +87,6 @@ enum Expr_enum GetInstanceRelationType(CONST struct Instance *i)
     return RELN_INST(i)->type; /* the implementation kind */
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelationType.\n");
-    exit(2);/* Needed to keep gcc from whining */
   }
 }
 
@@ -98,7 +97,6 @@ CONST struct relation *GetInstanceRelationOnly(CONST struct Instance *i)
     return RELN_INST(i)->ptr;
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelationOnly.\n");
-    exit(2);/* Needed to keep gcc from whining */
   }
 }
 
@@ -111,7 +109,6 @@ CONST struct relation *GetInstanceRelation(CONST struct Instance *i,
     return RELN_INST(i)->ptr;
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelation.\n");
-    exit(2);/* Needed to keep gcc from whining */
   }
 }
 
@@ -124,7 +121,7 @@ struct relation *GetInstanceRelToModify(struct Instance *i,
     return RELN_INST(i)->ptr;
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelToModify.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -136,7 +133,7 @@ CONST struct logrelation *GetInstanceLogRel(CONST struct Instance *i)
     return LRELN_INST(i)->ptr;
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceLogRel.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -147,7 +144,7 @@ struct logrelation *GetInstanceLogRelToModify(struct Instance *i)
     return LRELN_INST(i)->ptr;
   } else {
     Asc_Panic(2, NULL,"Incorrect type passed to GetInstanceLogRelToModify.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance *i)
@@ -157,7 +154,7 @@ CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance *i)
     return LRELN_INST(i)->ptr;
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceLogRelOnly.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -229,7 +226,7 @@ struct gl_list_t *GetInstanceWhenVars(CONST struct Instance *i)
     return W_INST(i)->bvar;
   } else {
     Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceWhenVars.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -241,7 +238,7 @@ struct gl_list_t *GetInstanceWhenCases(CONST struct Instance *i)
     return W_INST(i)->cases;
   } else {
     Asc_Panic(2, NULL,"Incorrect type passed to GetInstanceWhenCases.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -272,7 +269,7 @@ struct gl_list_t *GetInstanceWhens(CONST struct Instance *i)
       return W_INST(i)->whens;
     default:
       Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceWhens.\n");
-      exit(2);/* Needed to keep gcc from whining */
+      
   }
 }
 
@@ -309,30 +306,30 @@ void SetInstanceRelation(struct Instance *i, struct relation *rel,
 			 enum Expr_enum type)
 {
   AssertMemory(i);
-  if (i->t==REL_INST) {
-    if (RELN_INST(i)->ptr==NULL) {
+  if(i->t==REL_INST){
+    if(RELN_INST(i)->ptr==NULL){
+      CONSOLE_DEBUG("Assigned rel ptr %p to instance %p",rel,i);
       RELN_INST(i)->ptr = rel;
       RELN_INST(i)->type = type;
-    } else {
+    }else{
       Asc_Panic(2, NULL, "Attempt to reassign RelationPointer.\n");
     }
-  } else {
+  }else{
     Asc_Panic(2, NULL, "Incorrect type passed to SetInstanceRelation.\n");
   }
 }
 
 
-void SetInstanceLogRel(struct Instance *i, struct logrelation *lrel)
-{
+void SetInstanceLogRel(struct Instance *i, struct logrelation *lrel){
   AssertMemory(i);
-  if (i->t==LREL_INST) {
-    if (LRELN_INST(i)->ptr==NULL) {
+  if(i->t==LREL_INST){
+    if(LRELN_INST(i)->ptr==NULL){
       LRELN_INST(i)->ptr = lrel;
-    } else {
-      Asc_Panic(2, NULL, "Attempt to reassign Logical Relation Pointer.\n");
+    }else{
+      Asc_Panic(2, __FUNCTION__, "Attempted reassignment to logrel ptr");
     }
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to SetInstanceLogRel.\n");
+  }else{
+    Asc_Panic(2, __FUNCTION__, "Incorrect instance type.");
   }
 }
 
@@ -353,7 +350,7 @@ unsigned long RelationsCount(CONST struct Instance *i)
     }
   default:
     Asc_Panic(2, NULL, "RelationsCount called with inappropriate argument.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -378,8 +375,7 @@ struct Instance *RelationsForAtom(CONST struct Instance *i,
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }
 
-void AddRelation(struct Instance *i, struct Instance *reln)
-{
+void AddRelation(struct Instance *i, struct Instance *reln){
   unsigned long len;
   assert(i&&reln&&(reln->t==REL_INST));
   AssertMemory(i);
@@ -449,7 +445,7 @@ unsigned long LogRelationsCount(CONST struct Instance *i)
   default:
     Asc_Panic(2, "LogRelationsCount",
               "LogRelationsCount called with inappropriate argument.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -637,7 +633,7 @@ unsigned long WhensCount(struct Instance *i)
     }
   default:
     Asc_Panic(2, NULL, "WhensCount called with inappropriate argument.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
 
   }
 }
@@ -875,8 +871,7 @@ void RemoveWhen(struct Instance *i, struct Instance *when)
     if (c>0) gl_delete(W_INST(i)->whens,c,0);
     break;
   default:
-    Asc_Panic(2, NULL, "Bad argument to RemoveWhen.\n");
-    /*NOTREACHED*/
+    Asc_Panic(2, NULL, "Bad argument to RemoveWhen.");
   }
 }
 

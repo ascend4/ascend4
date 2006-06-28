@@ -1,37 +1,26 @@
-/*
- *  Solver Standard Clients
- *  by Benjamin Andrew Allan
- *  5/19/96
- *  Version: $Revision: 1.28 $
- *  Version control file: $RCSfile: slv_stdcalls.c,v $
- *  Date last modified: $Date: 1998/06/16 16:53:04 $
- *  Last modified by: $Author: mthomas $
- *
- *  Copyright(C) 1996 Benjamin Andrew Allan
- *  Copyright(C) 1998 Carnegie Mellon University
- *
- *  This file is part of the ASCEND IV math programming system.
- *  Here is where we register our normal solvers and keep things
- *  like reordering clients and so forth. This file should probably
- *  be broken up into one file-one client layout for the unregistered
- *  clients so that we can load them selectively.
- *
- *  The Ascend Math Programming System is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Math Programming System is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1998, 2006 Carnegie Mellon University
+	Copyright (C) 1996 Benjamin Andrew Allan
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	by Benjamin Andrew Allan
+	5/19/96
+	Last in CVS: $Revision: 1.28 $ $Date: 1998/06/16 16:53:04 $ $Author: mthomas $
+*/
 
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
@@ -51,7 +40,8 @@
 #include "linsol.h"
 #include "linsolqr.h"
 #include "slv_client.h"
-/* header of registered clients */
+
+/* headers of registered clients */
 #include "slv0.h"
 #include "slv1.h"
 #include "slv2.h"
@@ -61,6 +51,7 @@
 #include "slv8.h"
 #include "slv9.h"
 #include "slv9a.h"
+
 #include "model_reorder.h"
 #include "slv_stdcalls.h"
 #include <general/mathmacros.h>
@@ -68,43 +59,41 @@
 #define KILL 0 /* deleteme code. compile old code if kill = 1 */
 #define NEEDSTOBEDONE 0 /* indicates code/comments that are not yet ready */
 #define USECODE 0  /* Code in good shape but not used currently */
-
-/*
- * Here we play some hefty jacobian reordering games.
- * What we want to happen eventually is as follows:
- *
- * Get the free & incident pattern for include relations.
- * Output assign jacobian.
- * BLT permute the jacobian. if underspecified, fake rows
- *	to make things appear square.
- * For all leading square blocks apply reordering (kirk, etc)
- * If trailing rectangular block, apply clever kirkbased scheme not known.
- *
- * At present, we aren't quite so clever. We:
- *
- * Get the free & incident pattern for include relations.
- * Output assign jacobian.
- * BLT permute the square output assigned region of the jacobian.
- * For all leading square blocks apply reordering (kirk, etc)
- *
- * Collect the block list as part of the master data structure.
- * Set sindices for rels, vars as current rows/cols in matrix so
- * that the jacobian is 'naturally' preordered for all solvers.
- *
- * Solvers are still free to reorder their own matrices any way they like;
- * it's probably a dumb idea, though.
- *
- * returns 0 if ok, 1 if out of memory.
- */
 
-#define MIMDEBUG 0
+#define MIMDEBUG 1 /* slv_std_make_incidence_mtx debugging */
+#define RIDEBUG 0 /* reindex debugging */
+#define SBPDEBUG 1 /* slv_block_partition_real debugging */
+#define SLBPDEBUG 0 /* slv_log_block_partition debugging */
+
+/* global to get around the mr header (for tear_subreorder) */
+static
+enum mtx_reorder_method g_blockmethod = mtx_UNKNOWN;
+
 /*
- * Populates a matrix according to the sys solvers_vars, solvers_rels
- * lists and the filters given. The filter should have at least
- * SVAR = 1 bit on. mtx given must be created (not null) and with
- * order >= MAX( slv_get_num_solvers_rels(sys),slv_get_num_solvers_vars(sys));
- * returns 0 if went ok.
- */
+	Here we play some hefty Jacobian reordering games.
+
+	What we want to happen eventually is as follows:
+	
+	  - Get the free & incident pattern for include relations.
+	  - Output-assign the Jacobian.
+	  - BLT permute the Jacobian. If underspecified, fake rows
+	    to make things appear square.
+	  - For all leading square blocks apply reordering (kirk, etc),
+	  - If trailing rectangular block, "apply clever kirkbased scheme not known."???
+	
+	At present, we aren't quite so clever. We:
+	
+	  - Get the free & incident pattern for include relations.
+	  - Output-assign the Jacobian.
+	  - BLT permute the square output assigned region of the Jacobian.
+	  - For all leading square blocks apply reordering (kirk, etc)
+	  - Collect the block list as part of the master data structure.
+      - Set sindices for rels, vars as current rows/cols in matrix so
+	    that the jacobian is 'naturally' preordered for all solvers.
+	
+	Solvers are still free to reorder their own matrices any way they like.
+	It's probably a dumb idea, though.
+*/
 int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
                                var_filter_t *vf,rel_filter_t *rf)
 {
@@ -115,7 +104,7 @@ int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
   struct rel_relation **rp;
 
   if (sys==NULL || mtx == NULL || vf == NULL || rf == NULL) {
-    FPRINTF(stderr,"make_incidence called with null\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"called with null");
     return 1;
   }
   rp = slv_get_solvers_rel_list(sys);
@@ -123,7 +112,7 @@ int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
   rlen = slv_get_num_solvers_rels(sys);
   ord = MAX(rlen,slv_get_num_solvers_vars(sys));
   if (ord > mtx_order(mtx)) {
-    FPRINTF(stderr,"make_incidence called with undersized matrix\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"undersized matrix");
     return 2;
   }
   for (r=0; r < rlen; r++) {
@@ -141,15 +130,18 @@ int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
   return 0;
 }
 
-#define RIDEBUG 0
-/* returns 0 if successful, 1 if insufficient memory. Does not change
- * the data in mtx. Orders the solvers_var list of the system to
- * match the permutation on the given mtx. It is assumed that
- * the org cols of mtx == var list position. Only the
- * vars in range lo to hi of the var list are affected and
- * only these vars should appear in the same org column range of
- * the mtx. This should not be called on blocks less than 3x3.
- */
+
+/**
+	Orders the solvers_var list of the system to match the permutation 
+	on the given mtx. Does not change the data in mtx. 
+
+	@return 0 on success, 1 on out-of-memory
+
+	It is assumed that the org cols of mtx == var list position. Only the
+	vars in range lo to hi of the var list are affected and
+	only these vars should appear in the same org column range of
+	the mtx. This should not be called on blocks less than 3x3.
+*/
 static int reindex_vars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
                                  const mtx_matrix_t mtx)
 {
@@ -160,7 +152,7 @@ static int reindex_vars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   vp = slv_get_solvers_var_list(sys);
   vlen = slv_get_num_solvers_vars(sys);
   /* on vtmp we DONT have the terminating null */
-  vtmp = (struct var_variable **)ascmalloc(vlen*sizeof(struct var_variable *));
+  vtmp = ASC_NEW_ARRAY(struct var_variable *,vlen);
   if (vtmp == NULL) {
     return 1;
   }
@@ -177,14 +169,17 @@ static int reindex_vars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   ascfree(vtmp);
   return 0;
 }
-/* returns 0 if successful, 1 if insufficient memory. Does not change
- * the data in mtx. Orders the solvers_rel list of the system to
- * match the permutation on the given mtx. It is assumed that
- * the org rows of mtx == rel list position. Only the
- * rels in range lo to hi of the rel list are affected and
- * only these rels should appear in the same org row range of
- * the input mtx. This should not be called on blocks less than 3x3.
- */
+/**
+	Orders the solvers_rel list of the system to match the permutation 
+	on the given mtx. Does not change the data in mtx. 
+
+	@return 0 on success, 1 on out-of-memory
+
+	It is assumed that the org rows of mtx == rel list position. Only the
+	rels in range lo to hi of the rel list are affected and
+	only these rels should appear in the same org row range of
+	the input mtx. This should not be called on blocks less than 3x3.
+*/
 static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
                                  const mtx_matrix_t mtx)
 {
@@ -194,7 +189,7 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   rp = slv_get_solvers_rel_list(sys);
   rlen = slv_get_num_solvers_rels(sys);
   /* on rtmp we DONT have the terminating null */
-  rtmp = (struct rel_relation **)ascmalloc(rlen*sizeof(struct rel_relation *));
+  rtmp = ASC_NEW_ARRAY(struct rel_relation*,rlen);
   if (rtmp == NULL) {
     return 1;
   }
@@ -203,7 +198,9 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   for (c=lo;c<=hi;c++) {
     v = mtx_row_to_org(mtx,c);
 #if RIDEBUG
-    FPRINTF(stderr,"Old rel sindex (org) %d becoming sindex (cur) %d\n",v,c);
+	if(c!=v){
+	  CONSOLE_DEBUG("Old rel sindex (org) %d becoming sindex (cur) %d\n",v,c);
+    }
 #endif
     rtmp[c] = rp[v];
   }
@@ -216,13 +213,14 @@ static int reindex_rels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   return 0;
 }
 
+/**
+	Perform var and rel reordering to achieve block form.
 
-/* returns 0 if ok, OTHERWISE if madness detected.
- * doesn't grok inequalities.
- */
-#define SBPDEBUG 0
-int slv_block_partition_real(slv_system_t sys,int uppertriangular)
-{
+	@param uppertrianguler if non-zero, BUT form. if 0, make BLT form.
+
+	@callergraph
+*/
+int slv_block_partition_real(slv_system_t sys,int uppertriangular){
 #if SBPDEBUG
   FILE *fp;
 #endif
@@ -237,6 +235,8 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
   int32 c,len,vlen,r,rlen;
   var_filter_t vf;
   rel_filter_t rf;
+
+  CONSOLE_DEBUG("...");
 
   rp = slv_get_solvers_rel_list(sys);
   vp = slv_get_solvers_var_list(sys);
@@ -270,15 +270,19 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
   mtx_set_order(mtx,order);
 
   if (slv_std_make_incidence_mtx(sys,mtx,&vf,&rf)) {
-    FPRINTF(stderr,
-      "slv_block_partition: failure in creating incidence matrix.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"failure in creating incidence matrix.");
     mtx_destroy(mtx);
     return 1;
   }
 
+  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+
   mtx_output_assign(mtx,rlen,vlen);
   rank = mtx_symbolic_rank(mtx);
   if (rank == 0 ) return 1; 	/* nothing to do, eh? */
+
+  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+
   /* lot of whining about dof */
   if (rank < nrow) {
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"System is row rank deficient (%d dependent equations)",
@@ -319,8 +323,10 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
   d->structural_rank = rank;
   d->n_rows = nrow;
   d->n_cols = ncol;
-  /* the next two lines assume inequalities are unincluded.
-   */
+
+  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+
+  /* the next two lines assume inequalities are un-included. */
 #define MINE 1
 #if MINE
   d->n_fixed = ncolpfix - ncol;
@@ -340,7 +346,6 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
     fclose(fp);
   }
 #endif
-
 
 #if MINE
   len = vlenmnv - 1;  /* row of last possible solver variable */
@@ -421,13 +426,17 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular)
     mtx_destroy(mtx);
     return 2;
   }
+
+  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+
   mtx_destroy(mtx);
   return 0;
 }
 
 
 #if 0 /* code not currently used */
-#ifdef STATIC_HARWELL
+#\ifdef STATIC_HARWELL /* added the backslash so that syntax highlighting behaves */
+/* note that you can't statically link to Harwell routines under the terms of the GPL */
 extern void mc21b();
 extern void mc13emod();
 /* returns 0 if ok, OTHERWISE if madness detected.
@@ -437,9 +446,9 @@ extern void mc13emod();
 #define SBPDEBUG 0
 int slv_block_partition_harwell(slv_system_t sys)
 {
-#if SBPDEBUG
+#\if SBPDEBUG
   FILE *fp;
-#endif
+#\endif
   struct rel_relation **rp;
   struct rel_relation **rtmp;
   struct rel_relation *rel;
@@ -474,8 +483,8 @@ int slv_block_partition_harwell(slv_system_t sys)
   if (vtmp == NULL || var ==NULL) {
     return 1;
   }
-  rtmp = (struct rel_relation **)ascmalloc(rlen*sizeof(struct rel_relation *));
-  rel = (struct rel_relation *)ascmalloc(sizeof(struct rel_relation *));
+  rtmp = ASC_NEW_ARRAY(struct rel_relation *,rlen);
+  rel = ASC_NEW(struct rel_relation);
   if (rtmp == NULL || rel ==NULL) {
     return 1;
   }
@@ -743,7 +752,7 @@ int slv_block_partition_harwell(slv_system_t sys)
   ascfree(ib);
   return 0;
 }
-#endif /*STATIC_HARWELL*/
+#\endif /*STATIC_HARWELL*/
 #endif /* 0 */
 
 
@@ -778,7 +787,7 @@ void slv_sort_rels_and_vars(slv_system_t sys,
   if (vtmp == NULL) {
     return;
   }
-  rtmp = (struct rel_relation **)ascmalloc(rlen*sizeof(struct rel_relation *));
+  rtmp = ASC_NEW_ARRAY(struct rel_relation *,rlen);
   if (rtmp == NULL) {
     ascfree(vtmp);
     return;
@@ -881,7 +890,7 @@ int slv_block_unify(slv_system_t sys)
   mbt = slv_get_solvers_blocks(sys);
   assert(d!=NULL && mbt!=NULL);
   if (d->structural_rank && mbt->nblocks >1) {
-    newblocks = (mtx_region_t *)ascmalloc(sizeof(mtx_region_t));
+    newblocks = ASC_NEW(mtx_region_t);
     if (newblocks == NULL) return 2;
     newblocks->row.low = newblocks->col.low = 0;
     newblocks->row.high = d->structural_rank - 1;
@@ -947,6 +956,8 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
   var_filter_t vf;
   rel_filter_t rf;
   dof_t *d;
+
+  CONSOLE_DEBUG("SPK reordering...");
 
   if (sys==NULL) return 1;
   rlen = slv_get_num_solvers_rels(sys);
@@ -1024,13 +1035,9 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
   return 0;
 }
 
-/* global to get around the mr header */
-static
-enum mtx_reorder_method g_blockmethod = mtx_UNKNOWN;
-
 /*
-A function to be called on the leftover diagonal blocks of mr_bisect.
-This function should be thoroughly investigated, which it has not been.
+	A function to be called on the leftover diagonal blocks of mr_bisect.
+	This function should be thoroughly investigated, which it has not been.
 */
 static int tear_subreorder(slv_system_t server,
                            mtx_matrix_t mtx, mtx_region_t *reg)
@@ -1060,6 +1067,8 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   int32 c,vlen,rlen,modcount;
   var_filter_t vf;
   rel_filter_t rf;
+
+  CONSOLE_DEBUG("TEARDROP reordering...");
 
   if (sys==NULL) return 1;
   rlen = slv_get_num_solvers_rels(sys);
@@ -1209,7 +1218,8 @@ int slv_insure_bounds(slv_system_t sys,int32 lo,int32 hi, FILE *mif)
   }
   return nchange;
 }
-
+
+
 void slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi,
                       FILE *mif,const char *label)
 {
@@ -1252,108 +1262,67 @@ void slv_check_bounds(const slv_system_t sys,int32 lo,int32 hi,
   }
   return;
 }
-
-int SlvRegisterStandardClients(void)
-{
-  int nclients = 0;
-  int newclient=0;
-  int status;
-#ifdef STATIC_SLV
-  status = slv_register_client(slv0_register,NULL,NULL,&newclient);
-  if (status) {
-    FPRINTF(stderr,"Unable to register SLV (slv0).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_MINOS
-  status = slv_register_client(slv1_register,NULL,NULL,&newclient);
-  if (status) {
-    FPRINTF(stderr,"Unable to register MINOS (slv1).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_QRSLV
-  status = slv_register_client(slv3_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register QRSlv.");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_CSLV
-  status = slv_register_client(slv4_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register CSlv.\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_LSSLV
-  status = slv_register_client(slv5_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register LSSlv (slv5).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_MPS
-  status = slv_register_client(slv6_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register MPS (slv6).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_NGSLV
-  status = slv_register_client(slv7_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register NGSlv (slv7).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_OPTSQP
-  status = slv_register_client(slv2_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register OPTSQP (slv2).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#if (defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT))
-  status = slv_register_client(slv8_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register CONOPT (slv8).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_CMSLV
-  status = slv_register_client(slv9_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register CMSlv (slv9).\n");
-  } else {
-    nclients++;
-  }
-#endif
-#ifdef STATIC_LRSLV
-  status = slv_register_client(slv9a_register,NULL,NULL,&newclient);
-  if (status) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Unable to register LRSlv (9a).\n");
-  } else {
-    nclients++;
-  }
-#endif
+
+/*------------------------------------------------------------------------------
+  SOLVER REGISTRATION
+*/
+
+/* rewrote this stuff to get rid of all the #ifdefs -- JP */
+
+struct StaticSolverRegistration{
+	int is_active;
+	const char *name;
+	SlvRegistration *regfunc;
+};
+
+/*
+	The names here are only used to provide information in the case where
+	solver registration fails. The definitive solver names are in the slv*.c
+	files.
+*/
+static const struct StaticSolverRegistration slv_reg[]={
+/* 	{0,"SLV",&slv0_register} */
+/*	,{0,"MINOS",&slv1_register} */
+	{HAVE_QRSLV,"QRSLV",&slv3_register}
+/*	,{0,"CSLV",&slv4_register} */
+/*	,{0,"LSSLV",&slv5_register} */
+/*	,{0,"MPS",&slv6_register} */
+/*	,{0,"NGSLV",&slv7_register} */
+/* 	,{0,"OPTSQP",&slv2_register} */
+	,{HAVE_CONOPT,"CONOPT",&slv8_register}
+	,{HAVE_CMSLV,"CMSLV",&slv9_register}
+/*	,{0,"LRSLV",&slv9a_register} */
+	,{0,NULL,NULL}
+};
+	
+int SlvRegisterStandardClients(void){
+	int nclients = 0;
+	int newclient=0;
+	int error;
+	int i;
+	CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES");
+	for(i=0;slv_reg[i].name!=NULL;++i){
+		if(slv_reg[i].is_active && slv_reg[i].regfunc){
+			error = slv_register_client(slv_reg[i].regfunc,NULL,NULL,&newclient);
+			if(error){
+				ERROR_REPORTER_HERE(ASC_PROG_ERR
+					,"Unable to register solver '%s' (error %d)."
+					,slv_reg[i].name,error
+				);
+			}else{
+				CONSOLE_DEBUG("Solver '%s' registered OK",slv_solver_name(newclient));
+				nclients++;
+			}
+		}else{
+			CONSOLE_DEBUG("Solver '%s' was not compiled.",slv_reg[i].name);
+		}
+	}
   return nclients;
 }
 
-
-
-/************************************************************************\
-          Output Assignment and partitiong in Logical Relations
-\************************************************************************/
+/*------------------------------------------------------------------------------
+  OUTPUT ASSIGNMENT AND PARTITIONG IN LOGICAL RELATIONS
+*/
 
 #define MLIMDEBUG 0
 /*
@@ -1483,7 +1452,6 @@ static int reindex_logrels_from_mtx(slv_system_t sys, int32 lo, int32 hi,
 /*
  * returns 0 if ok, OTHERWISE if madness detected.
  */
-#define SLBPDEBUG 0
 int slv_log_block_partition(slv_system_t sys)
 {
 #if SLBPDEBUG
@@ -1601,7 +1569,6 @@ int slv_log_block_partition(slv_system_t sys)
   }
 #endif
 
-
   len = vlenmnv - 1;  /* row of last possible boolean variable */
   for (c=ncol; len > c ; ) { /* sort the fixed out of inactive */
     r = mtx_col_to_org(mtx,c);
@@ -1655,9 +1622,9 @@ int slv_log_block_partition(slv_system_t sys)
     }
   }
 
-#if SBPDEBUG
+#if SLBPDEBUG
   fp = fopen("/tmp/sbp2.plot","w+");
-  if (fp !=NULL) {
+  if(fp !=NULL){
     mtx_write_region_plot(fp,mtx,mtx_ENTIRE_MATRIX);
     fclose(fp);
   }

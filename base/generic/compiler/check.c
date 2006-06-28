@@ -661,7 +661,7 @@ static void IncrementTypeCount(CONST struct Instance *i)
     ptr = (struct TypeCount *)gl_fetch(g_type_count_list,index);
     ptr->count++;
   } else{				/* add a new type count to the list */
-    ptr = (struct TypeCount *)ascmalloc(sizeof(struct TypeCount));
+    ptr = ASC_NEW(struct TypeCount);
     ptr->name = rec.name;
     ptr->count = 1;
     ptr->basetype = rec.basetype;

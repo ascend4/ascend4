@@ -19,9 +19,10 @@
 *//** @file
 	Special stuff for handling external relations in the instance hierarchy.
 
-	I think that this means that we are keeping a list of all those variables
-	in our systems that may be accessed by external methods and functions, so
-	that we can use a simplified API to allow get/set. -- JP
+	I think that this means that we keep track of all references by external
+	functions/methods etc to Instance objects in our hierarchy. This means
+	that when we merge and refine instances, we can update external references
+	to these objects as required. My guesswork. -- JP
 
 	@TODO add documentation! what this is all about?
 

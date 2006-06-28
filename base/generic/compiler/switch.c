@@ -37,8 +37,7 @@
 #include "sets.h"
 #include "exprs.h"
 #include "slist.h"
-#define SWMALLOC(x) \
-        (x) = (struct SwitchList *)ascmalloc(sizeof(struct SwitchList))
+#define SWMALLOC(x) (x) = ASC_NEW(struct SwitchList)
 
 struct SwitchList *CreateSwitch(struct Set *set, struct StatementList *sl)
 {

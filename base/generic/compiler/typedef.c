@@ -1,32 +1,29 @@
-/*
- *  Type definition module
- *  by Tom Epperly
- *  Created: 1/12/90
- *  Version: $Revision: 1.60 $
- *  Version control file: $RCSfile: typedef.c,v $
- *  Date last modified: $Date: 1998/04/21 23:50:02 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994, 1995 Thomas Guthrie Weidner Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994, 1995 Thomas Guthrie Epperly
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	@file
+	Type definition module
+*//*
+	by Tom Epperly
+	Created: 1/12/90
+	Last in CVS: $Revision: 1.60 $ $Date: 1998/04/21 23:50:02 $ $Author: ballan $
+*/
 
 #include <math.h>
 #include <stdarg.h>
@@ -268,8 +265,7 @@ struct LinkChildListEntry *GetLCL(void)
     g_lclrecycle_length--;
 #endif
   } else {
-    new = (struct LinkChildListEntry *)
-      ascmalloc(sizeof(struct LinkChildListEntry));
+    new = ASC_NEW(struct LinkChildListEntry);
   }
   return new;
 }
@@ -464,7 +460,7 @@ int AddLCL(symchar *s,CONST struct TypeDescription *d, int nsubs,
     new->e.origin = origin_ISA;
     break;
   case EXT:
-	CONSOLE_DEBUG("STORING EXT STATEMENT IN LCL");
+	/* CONSOLE_DEBUG("STORING EXT STATEMENT IN LCL"); */
     new->e.origin = origin_EXT;
     break;
   default:
@@ -579,9 +575,9 @@ DoNameF(CONST struct Name *nptr,
     name = NameIdPtr(nptr);
     switch (StatementType(stat)) {
     case EXT:
-	  CONSOLE_DEBUG("PROCESSING EXTERNAL RELATION");
+	  /* CONSOLE_DEBUG("PROCESSING EXTERNAL RELATION"); */
       nsubs = NameLength(nptr) - 1;
-	  CONSOLE_DEBUG("NSUBS = %d",nsubs);
+	  /* CONSOLE_DEBUG("NSUBS = %d",nsubs); */
 	  break;
     case ISA:
     case REF: /* IS_A of prototype */
@@ -893,7 +889,7 @@ symchar *GenerateId(symchar *type,
             "  The statement is in module %s.\n"
             "  Insufficiently uniqe name is \n%s.  Burp!\n",
             StatioLabel(4), module, statname);
-  exit(2);/* Needed to keep gcc from whining */
+  
 }
 
 static int IndexUsed(symchar *name, CONST struct Expr *expr);
@@ -1109,15 +1105,17 @@ int DoExternal(symchar *type,
     nptr = NULL;
     break;
   }
+  /* 
   ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
   FPRINTF(ASCERR,"DOEXTERNAL: nptr = ");
   WriteName(ASCERR,nptr);
   FPRINTF(ASCERR,"\n");
   error_reporter_end_flush();
+  */
 
   /* add the name to the child list */
   doname_status = DoName(nptr,FindExternalType(),stat);
-  CONSOLE_DEBUG("DONAME STATUS = %d",doname_status);
+  /* CONSOLE_DEBUG("DONAME STATUS = %d",doname_status); */
   return doname_status;
 }
 

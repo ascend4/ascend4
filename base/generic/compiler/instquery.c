@@ -245,7 +245,7 @@ struct Instance *NextCliqueMember(CONST struct Instance *i)
     return (struct Instance *)i;
   default:
     Asc_Panic(2, NULL, "Invalid arguments to NextCliqueMember.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -387,7 +387,7 @@ unsigned int GetAnonFlags(CONST struct Instance *i)
     return 0;
   default:
     Asc_Panic(2, NULL, "Incorrect type in GetAnonFlags\n"); /*NOTREACHED*/
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -603,7 +603,7 @@ unsigned long InstanceSize(CONST struct Instance *i)
     return len;
   default:
     Asc_Panic(2, NULL, "Invalid argument to InstanceSize.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -617,7 +617,7 @@ int IntegerSetInstance(CONST struct Instance *i)
     return S_INST(i)->int_set;
   default:
     Asc_Panic(2, NULL, "IntegerSetInstance called with non-set argument.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -668,7 +668,7 @@ struct TypeDescription *InstanceTypeDesc(CONST struct Instance *i)
     return NULL;
   default:
     Asc_Panic(2, NULL, "Unknown instance type passed to InstanceTypeDesc.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -730,7 +730,7 @@ symchar *InstanceType(register CONST struct Instance *i)
     return GetBaseTypeName(symbol_type);
   default:
     Asc_Panic(2, NULL, "InstanceType called on invalid instance.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 
@@ -764,7 +764,7 @@ struct BitList *InstanceBitList(CONST struct Instance *i)
     return NULL;
   default:
     Asc_Panic(2, NULL, "Unknown instance type passed to InstanceBitList.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
 }
 

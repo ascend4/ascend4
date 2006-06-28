@@ -203,11 +203,21 @@ struct GlassBoxRelation {
 };
 
 struct BlackBoxRelation {
-  enum Expr_enum relop;     /**< type of constraint */
-  REFCOUNT_T ref_count;     /**< number of instances looking here */
-  struct ExtCallNode *ext;  /**< external call info */
-  int *args;                /**< an array of indexes into the varlist */
-  int nargs;
+	enum Expr_enum relop;     /**< type of constraint */
+	REFCOUNT_T ref_count;     /**< number of instances looking here */
+	struct ExtCallNode *ext;
+		/**< external call info */
+	int *args;                
+		/**< Holds the indexes into the arglist of the Instance objects
+			referred to by the arguments in the original blackbox statment.
+			So, if arguments are ARE_THE_SAME'd (or aliases, etc) then we can
+			still work out where to locate each argument in the instance
+			hierarchy. 
+
+			This list is set up in CreateBlackBoxRelation.
+
+			These indexes are base-1, because of good ol' gl_list. */
+	int nargs;
 };
 
 union RelationUnion {
@@ -225,38 +235,42 @@ union doublong {
 };
 
 /**
- * Most of the attributes in this structure are instance
- * attributes that cannot be shared among relation instances,
- * not attributes of the relation recipe for calculating them.
- * The calculation recipe, 'share' is sharable among all relations with
- * identical symbolic form; roughly 80+% of relations
- * in physical models are duplicates in differing contexts.
- * That part (calculation recipe) which is instance independent
- * is stored in the union 'share'. <br><br>
- *
- * Share contains information mapping from the index in *vars
- * to value slots in the calculation. Each RelationInstance
- * has its own struct relation and vars gl_list-- if the
- * vars list is changed for one of the instances sharing
- * a the RelationUnion, then a new share structure must
- * be created for that instance. If this is not done,
- * the other instances will miscalculate or core dump.
- * Usually just miscalculates in silence.<br><br>
- *
- * To compile really large models, these must be memory
- * pooled and properly aligned.
- */
+	Most of the attributes in this structure are instance
+	attributes that cannot be shared among relation instances,
+	not attributes of the relation recipe for calculating them.
+	The calculation recipe, 'share' is sharable among all relations with
+	identical symbolic form; roughly 80+% of relations
+	in physical models are duplicates in differing contexts.
+	That part (calculation recipe) which is instance independent
+	is stored in the union 'share'. <br><br>
+	
+	To compile really large models, these must be memory
+	pooled and properly aligned.
+*/
 struct relation {
-  union RelationUnion *share; /**< should never be NULL but at creation */
-  double residual;
-  double multiplier;
-  double nominal;
-  int iscond;
-  struct gl_list_t *vars;     /**< list starting from 1 of RealAtomInst ptrs */
-/* coming soon.
- * union doublong *constants;	 loop variant constants. maybe NULL.
- */
-  dim_type *d;
+	union RelationUnion *share; 
+		/**< 	
+			Contains information mapping from the index in *vars
+			to value slots in the calculation. Each RelationInstance
+			has its own struct relation and vars gl_list-- if the
+			vars list is changed for one of the instances sharing
+			a the RelationUnion, then a new share structure must
+			be created for that instance. If this is not done,
+			the other instances will miscalculate or core dump.
+			Usually just miscalculates in silence.
+
+			Should never be NULL but at creation. */
+	double residual;
+	double multiplier;
+		/**< @todo What is this? */
+	double nominal;
+	int iscond;
+	struct gl_list_t *vars;
+		/**< list of RealAtomInst pointers */
+	/* coming soon.
+	* union doublong *constants;	 loop variant constants. maybe NULL.
+	*/
+	dim_type *d;
 };
 
 /* casts to fix things up, should they really be needed. */

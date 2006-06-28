@@ -432,6 +432,8 @@ static void LoadInputVector(struct gl_list_t *arglist,
 	What's a black box, and what's a glass box? -- JP
 	See Abbott thesis. - baa
 	This function is, of course, a mess.
+
+	This seems to be duplicated over in rel.c as ExtRel_Evaluate_RHS.
 */
 int CallBlackBox(struct Instance *inst,
 		 CONST struct relation *rel)
@@ -484,7 +486,7 @@ int CallBlackBox(struct Instance *inst,
     /* Create the work vectors. Load the input vector from the instance tree. */
     inputs = ASC_NEW_ARRAY_CLEAR(double,ninputs);
     outputs = ASC_NEW_ARRAY_CLEAR(double,ninputs);
-    jacobian = (double *)asccalloc(ninputs*noutputs,sizeof(double));
+    jacobian = ASC_NEW_ARRAY_CLEAR(double,ninputs*noutputs);
     LoadInputVector(arglist,inputs,ninputs,n_input_args);
 
     /*
@@ -574,7 +576,7 @@ int CallGlassBox(struct Instance *relinst, CONST struct relation *rel)
 
   m = 0;			  /* FIX not sure what this should be !!! */
   n = gl_length(incidence);
-  f = (double *)asccalloc((1 + 2*n),sizeof(double));
+  f = ASC_NEW_ARRAY_CLEAR(double,1 + 2*n);
   x = &f[1];
   g = &f[n+1];
 

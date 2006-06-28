@@ -82,8 +82,7 @@ static symchar *AddBigString(CONST char *str)
   char *sptr;
   int *lenptr;
   int slen;
-  item =
-    (struct symbol_entry *)ascmalloc((unsigned)sizeof(struct symbol_entry));
+  item =  ASC_NEW(struct symbol_entry);
   item->next = g_big_strings;
   g_big_strings = item;
   slen = strlen(str);
@@ -151,11 +150,9 @@ static symchar *CopyString(CONST char *str,int userlen)
     }
     ptr = g_string_space;
   }
-  if ((g_string_space =
-       (struct StringSpaceRec *)ascmalloc(sizeof(struct StringSpaceRec)))
-      ==NULL){
+  if ((g_string_space = ASC_NEW(struct StringSpaceRec))==NULL){
     Asc_Panic(2, NULL, "Unable to allocate string space.\n");
-    exit(2);/* Needed to keep gcc from whining */
+    
   }
   g_string_space->next = ptr;
   g_string_space->used = length + sizeof(int);
@@ -232,8 +229,7 @@ symchar *AddSymbolL(CONST char *c, int l)
   hv = SymHashFunction(c);
   if (l<=0) l = strlen(c);
   if (g_symbol_table[hv]==NULL) {
-    item =
-      (struct symbol_entry *)ascmalloc((unsigned)sizeof(struct symbol_entry));
+    item = ASC_NEW(struct symbol_entry);
     item->next = NULL;
     item->entry = CopyString(c,l);
     g_symbol_table[hv] = item;
@@ -242,8 +238,7 @@ symchar *AddSymbolL(CONST char *c, int l)
   else {
     item = g_symbol_table[hv];
     if ((cmp = strcmp(SCP(item->entry),c))>0) {
-      item =
-	(struct symbol_entry *)ascmalloc((unsigned)sizeof(struct symbol_entry));
+      item = ASC_NEW(struct symbol_entry);
       item->next = g_symbol_table[hv];
       item->entry = CopyString(c,l);
       g_symbol_table[hv] = item;
@@ -257,8 +252,7 @@ symchar *AddSymbolL(CONST char *c, int l)
 	  break;
 	}
       }
-      item->next = (struct symbol_entry *)
-	ascmalloc((unsigned)sizeof(struct symbol_entry));
+      item->next = ASC_NEW(struct symbol_entry);
       item = item->next;
       item->next = next;
       item->entry = CopyString(c,l);

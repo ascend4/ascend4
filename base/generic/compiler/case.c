@@ -36,7 +36,7 @@
 #include "sets.h"
 #include "case.h"
 
-#define CAMALLOC(x) x = (struct Case *)ascmalloc(sizeof(struct Case))
+#define CAMALLOC(x) x = ASC_NEW(struct Case)
 
 /********************************************************************\
                         Case processing

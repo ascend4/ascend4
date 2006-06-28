@@ -213,30 +213,17 @@ class Browser:
 		self.library = ascpy.Library(_path)
 
 		self.sim = None
-			
-		#--------
-		# Prepare the ASCEND icon
-
-		print_loading_status("Setting up windows")
-
-		if config.ICON_EXTENSION:
-			_icon = gtk.Image()
-			_iconpath = self.assets_dir+'ascend'+config.ICON_EXTENSION
-			_icon.set_from_file(_iconpath)
-			try:
-				self.icon = _icon.get_pixbuf()		
-			except RuntimeError, e:
-				print "FAILED to set icon:",str(e)			
 
 		#-------------------
 		# Set up the window and main widget actions
+
+		print_loading_status("Setting up windows")
 
 		self.glade_file = self.assets_dir+config.GLADE_FILE
 		glade = gtk.glade.XML(self.glade_file,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
-		if self.icon:
-			self.window.set_icon(self.icon)
+
 
 		if not self.window:
 			raise RuntimeError("Couldn't load window from glade file")
@@ -381,6 +368,24 @@ class Browser:
 		self.reporter = ascpy.getReporter()
 		self.reporter.setPythonErrorCallback(self.error_callback)
 
+		#--------
+		# Assign an icon to the main window
+
+		self.icon = None
+		if config.ICON_EXTENSION:
+			_iconpath = ""
+			try:
+				_icon = gtk.Image()
+				_iconpath = self.assets_dir+'ascend'+config.ICON_EXTENSION
+				_icon.set_from_file(_iconpath)
+				_iconpbuf = _icon.get_pixbuf()
+				self.window.set_icon(_iconpbuf)
+				self.icon = _iconpbuf
+			except Exception, e:
+				self.reporter.reportError("FAILED to set application icon '%s': %s"
+					 % (_iconpath,str(e)) 
+				)
+
 		#-------------------
 		# set up the module view
 
@@ -429,7 +434,7 @@ class Browser:
 		if(len(args)==1):
 			self.do_open(args[0])
 
-			print "Options: ",self.options
+			#print "Options: ",self.options
 
 			if self.options.model:
 				try:

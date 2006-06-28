@@ -57,11 +57,24 @@ Type::getName() const{
 	if(t==NULL){
 		throw runtime_error("Type::getName: t is NULL");
 	}
-	symchar *sym = GetName(t);
-	if(sym==NULL){
-		throw runtime_error("Unnamed type");
+	switch(GetBaseType(t)){
+		case array_type:
+			return SymChar("array");
+		case relation_type:
+			return SymChar("relation");
+		case logrel_type:
+			return SymChar("logrel");
+		case when_type:
+			return SymChar("when");		
+		case set_type:
+			return SymChar("set");
+		default:
+			symchar *sym = GetName(t);
+			if(sym==NULL){
+				throw runtime_error("Unnamed type");
+			}
+			return SymChar(SCP(sym));
 	}
-	return SymChar(SCP(GetName(t)));
 }
 
 const int
