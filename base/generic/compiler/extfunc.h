@@ -29,6 +29,12 @@
 	The ExternalFunc structure stores the number of input and output parameters
 	as well as 'help' string and 'name' string' for each of these 'calls'.
 
+	This header also provides functions for ExternalFunc library maintenance.
+	This allows ASCEND to maintain a list of the ExternalFunc requests derived
+	from statements in the model(s). When compilation completes, I suppose
+	it should be possible to alert the user about any external functions
+	that were not able to be resolved.
+
 	@todo Complete documentation of compiler/extfunc.h.
 
 	Requires:
@@ -258,6 +264,9 @@ extern int AddExternalFunc(struct ExternalFunc *efunc, int force);
 	is done and 0 is returned.  If force is true, then the old entry is
 	removed and the new one is added; 1 is returned.  If the name is not
 	found then the information is added to the library.
+
+	@return 1 if an element is added to ExternalFunctionLibrary Table,
+		or 0 if no addition is made.
 */
 
 extern struct ExternalFunc *LookupExtFunc(CONST char *funcname);

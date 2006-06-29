@@ -36,6 +36,7 @@
 #include "instance_io.h"
 #include "extfunc.h"
 #include "extcall.h"
+#include "atomvalue.h"
 
 /*------------------------------------------------------------------------------
   forward decls and typedefs etc
@@ -65,14 +66,17 @@ int CreateUserFunctionBlackBox(CONST char *name,
     return 1;
   }
   efunc = LookupExtFunc(name);
-  if (efunc != NULL) {    /* name was pre-loaded -- just update the info */
+  if (efunc != NULL) {
+	CONSOLE_DEBUG("Found efunc at %p",efunc);
+	/* name was pre-loaded -- just update the info */
     isNew = 0;
-  } else {
+  }else{
     isNew = 1;
     efunc = ASC_NEW(struct ExternalFunc);
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
     efunc->name = ascstrdup(SCP(AddSymbol(name)));
+	CONSOLE_DEBUG("Created new efunc at %p",efunc);
 	/* add or find name in symbol table */
 	/* the main symtab owns the string */
   }
@@ -93,83 +97,12 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
 
   if (isNew) {
+	CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d)"
+		,efunc, name, n_inputs, n_outputs, (int)efunc->etype
+	);
     (void)AddExternalFunc(efunc,1);
   }
   return 0;
-}
-
-/**
-	This function is hacking. The correct approach is to go through the 
-	ExtRelCache object, see rel.c.
-*/
-double blackbox_evaluate_residual(struct relation *r){
-	struct ExtCallNode *ext;
-	struct ExternalFunc *efunc;
-	int i,n;
-	char *tmp;
-	struct Instance *inst;
-	double *in;
-	double *out;
-
-	CONSOLE_DEBUG("...");
-
-	n = NumberVariables(r);
-
-	asc_assert(r!=NULL);
-	asc_assert(r->share!=NULL);	
-	asc_assert(r->share->bbox.ext!=NULL);
-	ext = r->share->bbox.ext;
-	efunc = ext->efunc;
-	asc_assert(efunc!=NULL);
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ABOUT TO EVALUATE %s",efunc->name);
-
-	asc_assert(efunc->etype==efunc_BlackBox);
-
-	ExtBBoxFunc *valfnptr = efunc->u.black.value;
-	asc_assert(valfnptr!=NULL);
-
-	CONSOLE_DEBUG("vars=%d, inputs=%d, outputs=%d",n
-		,NumberInputArgs(efunc)
-		,NumberOutputArgs(efunc)
-	);
-
-	/* list all the variables associated with this black box */
-	for(i=1;i <= n; ++i){
-		inst = RelationVariable(r,i);
-		tmp = WriteInstanceNameString(inst, NULL);
-		if(i<=NumberInputArgs(efunc)){
-			CONSOLE_DEBUG("Input %d: '%s' (at %p)", i, tmp, inst);
-		}else{
-			CONSOLE_DEBUG("Output %d: '%s'", i-NumberInputArgs(efunc), tmp);
-		}
-		ASC_FREE(tmp);
-	}
-
-	/* allocate space for the evaluation inputs and outputs */
-	in = ASC_NEW_ARRAY(double,NumberInputArgs(efunc));
-	out = ASC_NEW_ARRAY_CLEAR(double,NumberOutputArgs(efunc));
-
-	/* pull the current input values and place them in our 'in' array */
-	for(i=0; i < NumberInputArgs(efunc); ++i){
-		inst = RelationVariable(r,i+1);
-		tmp = WriteInstanceNameString(inst,NULL);
-		if(!AtomAssigned(inst)){
-			CONSOLE_DEBUG("Var %d ('%s') has not been assigned yet!",i+1,tmp);
-			in[i]=-1;
-		}else{
-			in[i] = RealAtomValue(inst);
-		}
-		CONSOLE_DEBUG("Set var %d ('%s') to '%f'",i+1,tmp,in[i]);
-		ASC_FREE(tmp);
-	}
-
-	/* call the evaluation function */
-	
-
-	/* push the current output values back into the instance hierarchy */
-
-	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"Blackbox not implemented, returning -1");
-	return -1;
 }
 
 
@@ -189,6 +122,9 @@ ExtBBoxInitFunc * GetFinalFunc(struct ExternalFunc *efunc)
 ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc)
 {
   asc_assert(efunc!=NULL);
+  AssertMemory(efunc->etype);
+
+  CONSOLE_DEBUG("GETVALUEFUNC efunc = %p, type = %d",efunc,(int)efunc->etype);
   asc_assert(efunc->etype == efunc_BlackBox);
   /* return (ExtBBoxFunc *)efunc->value; */
   return efunc->u.black.value;
@@ -364,16 +300,16 @@ ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc)
   REGISTRATION AND LOOKUP FUNCTIONS
 */
 
-void DestroyExternalFunc(struct ExternalFunc *efunc)
-{
+void DestroyExternalFunc(struct ExternalFunc *efunc){
   struct ExternalFunc *tmp;
-  if (efunc) {
+  if(efunc){
+    CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc);
     tmp = efunc;
     if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
     if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */
     tmp->name = NULL;
     tmp->help = NULL;
-/* might want to set null pointers here depending on etype. */
+    /* might want to set null pointers here depending on etype. */
     tmp->etype = efunc_ERR;
     ascfree((char *)tmp);
   }
@@ -397,9 +333,9 @@ unsigned long NumberOutputArgs(CONST struct ExternalFunc *efunc)
   return efunc->n_outputs;
 }
 
-/*
- * These are the table management routines.
- */
+/*------------------------------------------------------------------------------
+  EXTERNALFUNCLIBRARY TABLE-MANAGEMENT ROUTINES
+*/
 
 void InitExternalFuncLibrary(void)
 {
@@ -408,30 +344,37 @@ void InitExternalFuncLibrary(void)
   ExternalFuncLibrary = result;
 }
 
-int AddExternalFunc(struct ExternalFunc *efunc, int force)
-{
 
-  struct ExternalFunc *found, *tmp;
-  char *name;
+int AddExternalFunc(struct ExternalFunc *efunc, int force){
+	struct ExternalFunc *found, *tmp;
+	char *name;
 
-  asc_assert(efunc!=NULL);
-  name = (char *)efunc->name;
-  found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,name);
-  if (found) {		/* function name already exists */
-    if (force==0) {
-      return 0;
-    } else {		/* need to update information */
-      tmp = (struct ExternalFunc *)RemoveTableData(ExternalFuncLibrary,name);
-      DestroyExternalFunc(tmp);
-      AddTableData(ExternalFuncLibrary,(void *)efunc,name);
-      return 1;
-    }
-  }
-  else{			/* need to add function to library */
-    AddTableData(ExternalFuncLibrary,(void *)efunc,name);
-    return 1;
-  }
+	CONSOLE_DEBUG("efunc = %p",efunc);
+	asc_assert(efunc!=NULL);
+
+	name = (char *)efunc->name;
+	found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,name);
+	if(found){
+		/* function with this name already exists in the ExternalFuncLibrary */
+		if(!force){
+			CONSOLE_DEBUG("EFUNC found OK, not adding");
+			return 0;
+		}
+
+	    /* force!=0, so we're requested to update the entry in the table */
+		CONSOLE_DEBUG("EFUNC found OK, update forced");
+	    tmp = (struct ExternalFunc *)RemoveTableData(ExternalFuncLibrary,name);
+	    DestroyExternalFunc(tmp);
+	    AddTableData(ExternalFuncLibrary,(void *)efunc,name);
+	    return 1;
+	}else{
+		/* need to add function to library */
+		CONSOLE_DEBUG("EFUNC not found, adding pointer %p for efunc to table under name '%s'.",efunc,name);
+		AddTableData(ExternalFuncLibrary,(void *)efunc,name);
+		return 1;
+	}
 }
+
 
 struct ExternalFunc *LookupExtFunc(CONST char *funcname)
 {
@@ -439,9 +382,9 @@ struct ExternalFunc *LookupExtFunc(CONST char *funcname)
   if (!funcname) {
     return NULL;
   }
-  found = (struct ExternalFunc *)
-    LookupTableData(ExternalFuncLibrary,funcname);
+  found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,funcname);
   if (found) {
+	CONSOLE_DEBUG("Found '%s' in ExternalFuncLibrary at %p",funcname,found);
     return found;
   } else {
     return NULL; /* name not found */

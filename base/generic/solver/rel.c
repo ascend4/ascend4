@@ -514,6 +514,7 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->efunc = ExternalCallExtFunc(ext);
   cache->data = ExternalCallDataInstance(ext);
   cache->arglist = ExternalCallArgList(ext);
+  CONSOLE_DEBUG("ASSIGNED efunc %p to ExtRelCache %p",cache->efunc,cache);
 
   /* Fetch the size of the input/output argument lists */
   n_input_args = NumberInputArgs(cache->efunc);
@@ -645,6 +646,7 @@ static int ArgsDifferent(double new, double old){
 
 real64 ExtRel_Evaluate_Residual(struct rel_relation *rel){
 	double value;
+	CONSOLE_DEBUG("EVALUATING RELATION %p",rel);
 	value = ExtRel_Evaluate_RHS(rel) - ExtRel_Evaluate_LHS(rel);
 	CONSOLE_DEBUG("RESIDUAL = %f",value);
 	return value;
@@ -674,6 +676,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   cache = rel_extcache(rel);
   efunc = cache->efunc;
   CONSOLE_DEBUG("CACHE = %p",cache);
+  CONSOLE_DEBUG("efunc = %p",efunc);
 	
   eval_func = GetValueFunc(efunc);
   inputlist = cache->inputlist;
