@@ -2331,7 +2331,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
       if (cache) {
         rel_set_extcache(rel,cache);
       }else{
+		CONSOLE_DEBUG("rip = %p, rip->i = %p",rip,rip->i);
         cache = CreateCacheFromInstance(rip->i);
+		CONSOLE_DEBUG("cache = %p",cache);
         gl_append_ptr(p_data->extrels,(POINTER)cache);
         rel_set_extcache(rel,cache);
       }

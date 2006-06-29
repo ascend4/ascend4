@@ -374,6 +374,9 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
   real64 res;
   assert(calc_ok!=NULL && rel!=NULL);
 
+  /*
+	token relations
+  */
   if( rel->type == e_rel_token ){
     if(!RelationCalcResidualBinary(
 			GetInstanceRelationOnly(IPTR(rel->instance))
@@ -383,10 +386,21 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
       rel_set_residual(rel,res);
       return res;
     }
-    /* else we don't care -- go on to the old handling which is reasonably correct, if slow. */
   }
 
-  CONSOLE_DEBUG("EVALUATE REL = %p",rel);
+  if(rel->nodeinfo){
+	CONSOLE_DEBUG("ABOUT TO CALL EXTREL_EVALUATE_RESIDUAL");
+	CONSOLE_DEBUG("REL_RELATION = %p",rel);
+    *calc_ok = 1;
+	res = ExtRel_Evaluate_Residual(rel);
+	return res;
+  }
+
+  /*
+	other types of relations (which include...). This latter approach is
+	apparently older and "reasonably correct, if slow". 
+  */
+  CONSOLE_DEBUG("EVALUATE REL_RELATION = %p",rel);
   if(safe){
     *calc_ok = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
     safe_error_to_stderr( (enum safe_err *)calc_ok );

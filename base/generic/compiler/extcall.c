@@ -36,10 +36,10 @@
 #include "extcall.h"
 
 struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
-				      struct gl_list_t *args,
-				      struct Instance *subject,
-				      struct Instance *data)
-{
+		struct gl_list_t *args,
+		struct Instance *subject,
+		struct Instance *data
+){
   struct ExtCallNode *ext;
   struct Instance **hndl=NULL;
   unsigned long pos;
@@ -48,7 +48,7 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   CONSOLE_DEBUG("...");
   int i,n;
   struct Instance *inst;
-  char *tmp;
+  /* char *tmp; */
   n = gl_length(args);
   for(i = 1; i < n; ++i){
     inst = (struct Instance *)gl_fetch(args,i);
@@ -59,24 +59,26 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   }
 
   ext = ASC_NEW(struct ExtCallNode);
+  CONSOLE_DEBUG("ASSIGNING efunc = %p TO ExtCallNode %p",efunc,ext);
   ext->efunc = efunc;
   ext->arglist = args;
-  if (data) {
+  if(data){
     hndl = AddVarToTable(data,&added);	/** FIX FIX FIX **/
   }
   ext->data = hndl;
-  if (subject) {
+
+  if(subject){
     pos = GetSubjectIndex(args,subject);
     ext->subject = pos;
-  } else {
+  }else{
     ext->subject = 0L;
   }
+
   ext->nodestamp = -1;
   return ext;
 }
 
-void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst)
-{
+void DestroyExtCall(struct ExtCallNode *ext, struct Instance *relinst){
   struct Instance *ptr;
   unsigned long len1, c1;
   unsigned long len2, c2;
@@ -131,8 +133,8 @@ struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
 }
 
 unsigned long GetSubjectIndex(struct gl_list_t *arglist,
-			       struct Instance *subject)
-{
+		struct Instance *subject
+){
   unsigned long len1,c1,len2,c2;
   struct gl_list_t *branch;
   struct Instance *arg;
@@ -162,8 +164,8 @@ unsigned long GetSubjectIndex(struct gl_list_t *arglist,
 }
 
 unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
-				unsigned long start, unsigned long end)
-{
+		unsigned long start, unsigned long end
+){
   unsigned long c,count=0L;
   struct gl_list_t *branch;
 
@@ -183,8 +185,8 @@ unsigned long CountNumberOfArgs(struct gl_list_t *arglist,
 }
 
 struct gl_list_t *LinearizeArgList(struct gl_list_t *arglist,
-				   unsigned long start, unsigned long end)
-{
+		unsigned long start, unsigned long end
+){
   struct gl_list_t *result,*branch;
   struct Instance *arg;
   unsigned long c1,len2,c2;
@@ -227,8 +229,7 @@ void DestroySpecialList(struct gl_list_t *list)
   }
 }
 
-struct gl_list_t *CopySpecialList(struct gl_list_t *list)
-{
+struct gl_list_t *CopySpecialList(struct gl_list_t *list){
   unsigned long len1,c1,len2,c2;
   struct gl_list_t *result,*branch,*tmp;
   struct Instance *arg;
@@ -256,18 +257,15 @@ struct gl_list_t *CopySpecialList(struct gl_list_t *list)
   return NULL;
 }
 
-struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *ext)
-{
+struct ExternalFunc *ExternalCallExtFuncF(struct ExtCallNode *ext){
   return ext->efunc;
 }
 
-struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext)
-{
+struct gl_list_t *ExternalCallArgListF(struct ExtCallNode *ext){
   return ext->arglist;
 }
 
-struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext)
-{
+struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext){
   struct Instance **hndl;
   hndl = ext->data;
   if(hndl!=NULL){
@@ -281,26 +279,21 @@ struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext)
   }
 }
 
-int ExternalCallNodeStampF(struct ExtCallNode *ext)
-{
+int ExternalCallNodeStampF(struct ExtCallNode *ext){
   return ext->nodestamp;
 }
 
-void SetExternalCallNodeStamp(struct ExtCallNode *ext,
-			      int nodestamp)
-{
+void SetExternalCallNodeStamp(struct ExtCallNode *ext, int nodestamp){
   if (ext->nodestamp==-1) {
     ext->nodestamp = nodestamp;
   }
 }
 
-unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext)
-{
+unsigned long ExternalCallVarIndexF(struct ExtCallNode *ext){
   return ext->subject;
 }
 
-struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext)
-{
+struct Instance *ExternalCallVarInstance(struct ExtCallNode *ext){
   struct Instance *i;
   assert(ext->subject);
   i = GetSubjectInstance(ext->arglist,ext->subject);
