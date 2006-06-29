@@ -30,18 +30,19 @@ IntegratorReporterCxx::getInternalType(){
 
 int
 IntegratorReporterCxx::initOutput(){
-	ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Starting integration reporting...");
+	return ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Starting integration reporting...");
 }
 
 int
 IntegratorReporterCxx::closeOutput(){
-	ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Closing integration reporting...");
+	return ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Closing integration reporting...");
 }
 
 int
 IntegratorReporterCxx::updateStatus(){
 	double t = integrator->getCurrentTime();
-	ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"t = %f",t);
+	return ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"t = %f",t);
+	
 }
 
 int
@@ -49,6 +50,7 @@ IntegratorReporterCxx::recordObservedValues(){
 	CONSOLE_DEBUG("...");
 	double *data = ASC_NEW_ARRAY(double,integrator->getNumObservedVars());
 	integrator_get_observations(integrator->getInternalType(),data);
+	return 0;
 }
 
 Integrator *

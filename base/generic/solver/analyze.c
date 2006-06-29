@@ -1529,7 +1529,8 @@ static int analyze_make_master_lists(struct problem_t *p_data)
 static void analyze_free_lists(struct problem_t *p_data)
 {
   /* memory containing gl_lists of atomic structure pointers */
-  if(p_data->extrels != NULL)gl_free_and_destroy(p_data->extrels);
+  /* if(p_data->extrels != NULL)gl_free_and_destroy(p_data->extrels); */
+  if(p_data->extrels!=NULL)gl_destroy(p_data->extrels); /* -- JP HACK */
 
 #define AFUN(ptr) if (ptr!=NULL) ascfree(ptr); (ptr) = NULL
 #define ADUN(ptr) if (ptr!=NULL) gl_destroy(ptr); (ptr) = NULL
@@ -1872,6 +1873,7 @@ void ProcessSolverWhens(struct w_when *when,struct Instance *i)
 
 /*------------------------------------------------------------------------------
   RECONFIGURATION OF CONDITIONAL MODELS
+*/
 
 /**
 	Is this (discrete) variable inside a WHEN?

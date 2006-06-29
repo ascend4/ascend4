@@ -134,7 +134,7 @@ struct rel_relation *rel_create(SlvBackendToken instance
 	/* get the 'struct relation' object for this relation */
 	instance_relation = GetInstanceRelation(IPTR(instance),&ctype);
 
-	CONSOLE_DEBUG("Instance's RELATION = %p",IPTR(instance),instance_relation);
+	CONSOLE_DEBUG("Instance %p --> RELATION = %p",IPTR(instance),instance_relation);
 	switch (ctype) {
 		case e_token:
 		    newrel->type = e_rel_token;
@@ -462,7 +462,7 @@ struct rel_extnode *rel_extnodeinfo( struct rel_relation *rel){
   return(rel->nodeinfo);
 }
 
-int32 rel_extwhichvar( struct rel_relation *rel){
+unsigned long rel_extwhichvar( struct rel_relation *rel){
   CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
   if (rel->nodeinfo) {
     return(rel->nodeinfo->whichvar);
@@ -677,11 +677,13 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   efunc = cache->efunc;
   CONSOLE_DEBUG("CACHE = %p",cache);
   CONSOLE_DEBUG("efunc = %p",efunc);
-	
+  CONSOLE_DEBUG("efunc->etype = %u",efunc->etype);
+  CONSOLE_DEBUG("efunc->value = %p",efunc->u.black.value);
+
   eval_func = GetValueFunc(efunc);
   inputlist = cache->inputlist;
   ninputs = cache->ninputs;
-  whichvar = (unsigned long)rel_extwhichvar(rel);
+  whichvar = rel_extwhichvar(rel);
 
   /*
 	The determination of whether a new calculation is required needs
@@ -692,7 +694,11 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   for (c=0;c<ninputs;c++) {
     arg = (struct Instance *)gl_fetch(inputlist,c+1);
     value = RealAtomValue(arg);
+	CONSOLE_DEBUG("FOR INPUT %d, VALUE=%f (arg at %p), CACHED=%f"
+		,c+1, value, arg,cache->inputs[c]
+	);
     if(ArgsDifferent(value, cache->inputs[c])){
+	  CONSOLE_DEBUG("ARGS ARE DIFFERENT, new calc will be required");
       newcalc_reqd = 1;
       cache->inputs[c] = value;
     }
@@ -707,15 +713,26 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 	done, otherwise dont.
   */
   if (newcalc_reqd) {
+	CONSOLE_DEBUG("NEW CALCULATION REQUIRED");
     Init_Slv_Interp(&slv_interp);
     slv_interp.nodestamp = cache->nodestamp;
     slv_interp.user_data = cache->user_data;
 
     slv_interp.task = bb_func_eval;
 
+  	for (c=0;c<ninputs;c++){
+	  CONSOLE_DEBUG("input %d: value = %f",c+1, cache->inputs[c]);
+	}
+
     nok = (*eval_func)(&slv_interp, ninputs, cache->noutputs,
 		       cache->inputs, cache->outputs, cache->jacobian);
+	CONSOLE_DEBUG("EVAL FUNC RETURNED %d",nok);
+  	for (c=0;c<cache->noutputs;c++){
+	  CONSOLE_DEBUG("output %lu: value = %f",c+1, cache->outputs[c]);
+	}
+
     value = cache->outputs[whichvar - ninputs - 1];
+	CONSOLE_DEBUG("CALCULATED VALUE IS %f",value);
     cache->newcalc_done = (unsigned)1;			/* newcalc done */
     cache->user_data = slv_interp.user_data;		/* update user_data */
   }
@@ -734,17 +751,22 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 
 real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 	struct ExtRelCache *cache;
-	struct Instance *arg;
+	struct Instance *inst;
 	double value;
 	unsigned long whichvar;
 
 	CONSOLE_DEBUG("...");
 
 	assert(rel_extnodeinfo(rel));
+
+	whichvar = rel_extwhichvar(rel);
+	CONSOLE_DEBUG("WHICHVAR = %lu",whichvar);
+
 	cache = rel_extcache(rel);
-	whichvar = (unsigned long)rel_extwhichvar(rel);
-    arg = (struct Instance *)gl_fetch(cache->arglist,whichvar);
-    value = RealAtomValue(arg);
+    inst = (struct Instance *)gl_fetch(cache->arglist,whichvar);
+	CONSOLE_DEBUG("VAR IS INSTANCE AT %p",inst);
+
+    value = RealAtomValue(inst);
 	CONSOLE_DEBUG("LHS VALUE = %f",value);
 	return value;
 }

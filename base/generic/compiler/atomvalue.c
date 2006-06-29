@@ -1,34 +1,31 @@
-/*
- *  Ascend Instance Value Functions
- *  by Tom Epperly & Ben Allan
- *  9/3/89
- *  Version: $Revision: 1.18 $
- *  Version control file: $RCSfile: atomvalue.c,v $
- *  Date last modified: $Date: 1998/03/26 20:39:31 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Ben Allan
- *  based on instance.c
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1996 Ben Allan
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//**
+	@file
+	Ascend Atomic-Instance Value Functions
+*//*
+	by Tom Epperly & Ben Allan
+	based on instance.c
+	9/3/89
+	Last in CVS: $Revision: 1.18 $ $Date: 1998/03/26 20:39:31 $ $Author: ballan $
+*/
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
@@ -55,12 +52,7 @@
 #include "cmpfunc.h"
 #include "atomvalue.h"
 
-#ifndef lint
-static CONST char AtomValueModuleID[] = "$Id: atomvalue.c,v 1.18 1998/03/26 20:39:31 ballan Exp $";
-#endif
-
-unsigned AtomAssigned(CONST struct Instance *i)
-{
+unsigned AtomAssigned(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   if (i->t & ICONS) {
@@ -85,13 +77,10 @@ unsigned AtomAssigned(CONST struct Instance *i)
   default:
     ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"AtomAssigned called on non-atomic instance.");
     return 0; /* not atomic, so can't very well be assigned, eh? */
-    /* used to be exit(2) */
-    /*NOTREACHED*/
   }
 }
 
-unsigned AtomMutable(CONST struct Instance *i)
-{
+unsigned AtomMutable(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   if (i->t & ICONS) {
@@ -111,13 +100,10 @@ unsigned AtomMutable(CONST struct Instance *i)
   default:
     ERROR_REPORTER_HERE(ASC_PROG_ERROR,"AtomMutable called on non-atomic instance.\n");
     return 0; /* not atomic, so can't very well be mutable, eh? */
-    /* used to be exit(2) */
-    /*NOTREACHED*/
   }
 }
 
-unsigned DepthAssigned(CONST struct Instance *i)
-{
+unsigned DepthAssigned(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t){
@@ -135,8 +121,7 @@ unsigned DepthAssigned(CONST struct Instance *i)
   }
 }
 
-double RealAtomValue(CONST struct Instance *i)
-{
+double RealAtomValue(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -148,12 +133,10 @@ double RealAtomValue(CONST struct Instance *i)
     return RA_INST(i)->value;
   default:
     Asc_Panic(2, __FUNCTION__, "called with non-real instance");
-    
   }
 }
 
-void SetRealAtomValue(struct Instance *i, double d, unsigned int depth)
-{
+void SetRealAtomValue(struct Instance *i, double d, unsigned int depth){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -189,8 +172,7 @@ void SetRealAtomValue(struct Instance *i, double d, unsigned int depth)
   }
 }
 
-void SetRealAtomDims(struct Instance *i, CONST dim_type *dim)
-{
+void SetRealAtomDims(struct Instance *i, CONST dim_type *dim){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -220,8 +202,7 @@ void SetRealAtomDims(struct Instance *i, CONST dim_type *dim)
   }
 }
 
-CONST dim_type *RealAtomDims(CONST struct Instance *i)
-{
+CONST dim_type *RealAtomDims(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -232,13 +213,11 @@ CONST dim_type *RealAtomDims(CONST struct Instance *i)
   case REAL_ATOM_INST:
     return RA_INST(i)->dimen;
   default:
-    Asc_Panic(2, __FUNCTION__, "called on non-real instance.");
-    
+    Asc_Panic(2, __FUNCTION__, "called on non-real instance."); 
   }
 }
 
-long GetIntegerAtomValue(CONST struct Instance *i)
-{
+long GetIntegerAtomValue(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -253,12 +232,10 @@ long GetIntegerAtomValue(CONST struct Instance *i)
     return IC_INST(i)->value;
   default:
     Asc_Panic(2, __FUNCTION__,"called on non-integer instance");
-    
   }
 }
 
-void SetIntegerAtomValue(struct Instance *i, long int v,unsigned d)
-{
+void SetIntegerAtomValue(struct Instance *i, long int v,unsigned d){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -294,8 +271,7 @@ void SetIntegerAtomValue(struct Instance *i, long int v,unsigned d)
   }
 }
 
-int GetBooleanAtomValue(CONST struct Instance *i)
-{
+int GetBooleanAtomValue(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -305,17 +281,15 @@ int GetBooleanAtomValue(CONST struct Instance *i)
     return BA_INST(i)->value;
   case BOOLEAN_CONSTANT_INST:
     if (!CIASS(i)) {
-      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"GetBooleanAtomValue called on unassigned constant.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING,"GetBooleanAtomValue called on unassigned constant.");
     }
     return BCV(i);
   default:
-    Asc_Panic(2, __FUNCTION__,"called on non-boolean instance.\n");
-    
+    Asc_Panic(2, __FUNCTION__,"called on non-boolean instance."); 
   }
 }
 
-void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth)
-{
+void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -331,7 +305,7 @@ void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth)
     break;
   case BOOLEAN_CONSTANT_INST:
     if (CIASS(i)) {
-      ERROR_REPORTER_HERE(ASC_PROG_ERROR,"SetBooleanAtomValue called on Constant instance.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERROR,"SetBooleanAtomValue called on Constant instance.");
     } else {
       struct Instance *ptr;
 
@@ -359,8 +333,7 @@ void SetBooleanAtomValue(struct Instance *i, int truth, unsigned int depth)
   }
 }
 
-int AssignSetAtomList(struct Instance *i, struct set_t *list)
-{
+int AssignSetAtomList(struct Instance *i, struct set_t *list){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t) {
@@ -414,13 +387,12 @@ int AssignSetAtomList(struct Instance *i, struct set_t *list)
     S_INST(i)->list = list;
     return 1;
   default:
-    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"AssignSetAtomList called on non-set instance.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERROR,"AssignSetAtomList called on non-set instance.");
     return 0;
   }
 }
 
-CONST struct set_t *SetAtomList(CONST struct Instance *i)
-{
+CONST struct set_t *SetAtomList(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch (i->t) {
@@ -430,12 +402,10 @@ CONST struct set_t *SetAtomList(CONST struct Instance *i)
     return SA_INST(i)->list;
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
-    
   }
 }
 
-int GetSetAtomKind(CONST struct Instance *i)
-{
+int GetSetAtomKind(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch (i->t) {
@@ -445,12 +415,10 @@ int GetSetAtomKind(CONST struct Instance *i)
     return (int)(SA_INST(i)->int_set);
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-set instance.");
-    
   }
 }
 
-symchar *GetSymbolAtomValue(CONST struct Instance *i)
-{
+symchar *GetSymbolAtomValue(CONST struct Instance *i){
   assert(i!=NULL);
   AssertMemory(i);
   switch(i->t){
@@ -466,7 +434,6 @@ symchar *GetSymbolAtomValue(CONST struct Instance *i)
     return SYMC_INST(i)->value;
   default:
     Asc_Panic(2, __FUNCTION__, "called on non-symbol instance.");
-    
   }
 }
 
@@ -476,8 +443,7 @@ symchar *GetSymbolAtomValue(CONST struct Instance *i)
  * SYMBOL_ATOM_INST. Actually, it was only disabled with an if. VRR.
  */
 
-void SetSymbolAtomValue(struct Instance *i, symchar *str)
-{
+void SetSymbolAtomValue(struct Instance *i, symchar *str){
   assert(i!=NULL);
   AssertMemory(i);
   assert(AscFindSymbol(str)!=NULL);
@@ -511,8 +477,7 @@ void SetSymbolAtomValue(struct Instance *i, symchar *str)
   }
 }
 
-int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2)
-{
+int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2){
   if (i1==i2) {
     return 0;
   }
@@ -571,7 +536,5 @@ int CmpAtomValues(CONST struct Instance *i1, CONST struct Instance *i2)
     return CmpSetInstVal(SetAtomList(i1),SetAtomList(i2));
   default:
     Asc_Panic(2, __FUNCTION__, "Bad call!");
-    
-    break;
   }
 }
