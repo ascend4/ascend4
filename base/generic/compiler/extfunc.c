@@ -97,8 +97,8 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
 
   if (isNew) {
-	CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d)"
-		,efunc, name, n_inputs, n_outputs, (int)efunc->etype
+	CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d, value func=%p)"
+		,efunc, name, n_inputs, n_outputs, (int)efunc->etype, value
 	);
     (void)AddExternalFunc(efunc,1);
   }
@@ -309,7 +309,7 @@ void DestroyExternalFunc(struct ExternalFunc *efunc){
     if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */
     tmp->name = NULL;
     tmp->help = NULL;
-    /* might want to set null pointers here depending on etype. */
+/* might want to set null pointers here depending on etype. */
     tmp->etype = efunc_ERR;
     ascfree((char *)tmp);
   }

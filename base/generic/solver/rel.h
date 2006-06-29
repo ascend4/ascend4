@@ -210,7 +210,7 @@ extern struct rel_extnode *rel_extnodeinfo(struct rel_relation *rel);
 extern void rel_set_extwhichvar(struct rel_relation *rel, int whichvar);
 /**< Sets the argument list index for a relation having external nodes. */
 
-extern int32 rel_extwhichvar(struct rel_relation *rel);
+unsigned long rel_extwhichvar(struct rel_relation *rel);
 /**<
 	Returns the index into the argument list from which rel was
 	constructed.  This applies ONLY to rels that have external nodes!

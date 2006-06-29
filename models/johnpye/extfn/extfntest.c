@@ -62,6 +62,8 @@ ASC_EXPORT(int) extfntest_register(){
 			      (ExtEvalFunc **)NULL,
 			      1,1,addone_help);
 */
+	CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",addone_calc);
+
 	result += CreateUserFunctionBlackBox("add_one"
 		, addone_prepare
 		, addone_calc /* value */
@@ -97,11 +99,11 @@ int addone_calc(struct Slv_Interp *slv_interp,
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs);
 
-	double *x = &(inputs[0]);
+	CONSOLE_DEBUG("inputs[0] = %f, outputs[0] = %f",inputs[0],outputs[0]);
 
-	double *y = &(outputs[0]);
+	outputs[0] = inputs[0] + 1;
 
-	y = x + 1;
+	CONSOLE_DEBUG("INPUT = %f, OUTPUT = %f",inputs[0],outputs[0]);
 
 	return 1; /* success */
 }

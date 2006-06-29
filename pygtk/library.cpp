@@ -290,7 +290,7 @@ Library::clear(){
 	cerr << "... REGISTER_STANDARD_SOLVERS" << endl;
 	DefineFundamentalTypes();
 	cerr << "... DEFINED FUND TYPES" << endl;
-	/*SetUniversalProcedureList(NULL);
+	\*SetUniversalProcedureList(NULL);
 */
 	ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Destroying simulations...\n");
 	Asc_DestroySimulations();
