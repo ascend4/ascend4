@@ -91,6 +91,7 @@ void Asc_Panic(CONST int status, CONST char *function,
   error_reporter_set_callback(NULL);
 
   /* Print the message to the default error reporter (ASCERR) */
+  fprintf(stderr,"\n\n");
   ERROR_REPORTER_NOLINE(ASC_PROG_FATAL,msg);
 
   /*
@@ -111,6 +112,11 @@ void Asc_Panic(CONST int status, CONST char *function,
   /* Call the registered callback function, if any. */
   if (NULL != f_panic_callback_func) {
     cancel = (*f_panic_callback_func)(status);
+	if(cancel){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,
+			"AscPanic 'cancel' facility has been disabled, program will exit"
+		);
+	}
   }
 
   /* Display msg in a MessageBox under Windows unless turned off */
@@ -120,18 +126,12 @@ void Asc_Panic(CONST int status, CONST char *function,
     MessageBox(NULL, msg, "Fatal Error in ASCEND",
                (UINT)(MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND));
   }
-  if(cancel == 0){
-    ExitProcess((UINT)status);
-  }
+  ExitProcess((UINT)status);
 #else
 # ifndef NDEBUG
-  if(!cancel){
-    abort();
-  }
+  abort();
 # else
-  if(!cancel){
-    exit(status);
-  }
+  exit(status);
 # endif
 #endif
 }
@@ -163,5 +163,3 @@ void Asc_PanicDisplayMessageBox(int is_displayed)
   UNUSED_PARAMETER(is_displayed);
 #endif
 }
-
-/* removed superceded test 'main' */
