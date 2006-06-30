@@ -1143,7 +1143,7 @@ ErrMsg_SymbolEOL(void)
 
 #define ERRCOUNT_UNEXPCHAR 30
 static void ErrMsg_UnexpectedChar(){
-	static errcount=0;
+	static int errcount=0;
 	if(errcount<ERRCOUNT_UNEXPCHAR){
 		error_reporter(ASC_USER_ERROR
 			,Asc_ModuleBestName(Asc_CurrentModule()), yy_line

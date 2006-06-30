@@ -65,11 +65,6 @@
 #ifndef ASC_INSTANCE_ENUM_H
 #define ASC_INSTANCE_ENUM_H
 
-/**
-	@TODO add some macro wizardry here to enable simple reporting of instance
-	types as string values.
-*/
-
 #define IREAL   0x1
 #define IINT    0x2
 #define IBOOL   0x4
@@ -96,41 +91,85 @@
 
 #define IERRINST ~(IREAL|IINT|IBOOL|ISYM|ISET|IARR|IENUM|IFUND|ICONS|IATOM| \
  ICOMP|IMOD|IRELN|ILRELN|IWHEN|IAUTO|IDUMB)
-/**< any of these bits on is an error */
+/**<
+	any of these bits on is an error 
+	@TODO explain this
+*/
 
-/** Instance types. */
+/**
+	Values for use in declaration of enum inst_t.
+
+	@NOTE these enum declarations are done using the '#define list trick' so that
+	ASC_ENUM_DECLS can be re-purposed to give an string enum lookup table in
+	instance_io.h.
+*/
+#define ASC_ENUM_DECLS(D,X) \
+	D( ERROR_INST,           0) X                  /**< Deleted instance (error). */ \
+	D( SIM_INST,             ICOMP) X              /**< Simulation instance. */ \
+	D( MODEL_INST,           ICOMP | IMOD) X       /**< Model instance. */ \
+	D( REL_INST,             IRELN) X              /**< Relation(equality or inequality). */ \
+	D( LREL_INST,            ILRELN) X             /**< Logical relation( == || != ). */ \
+	D( WHEN_INST,            IWHEN) X              /**< WHEN instance  */ \
+	D( ARRAY_INT_INST,       ICOMP | IARR | IINT) X/**< Array instance integer */ \
+	D( ARRAY_ENUM_INST,      ICOMP | IARR | ISYM) X/**< Array instance enumed */ \
+	D( REAL_INST,            IFUND | IREAL) X      /**< Real instance. */ \
+	D( INTEGER_INST,         IFUND | IINT) X       /**< Int instance. */ \
+	D( BOOLEAN_INST,         IFUND | IBOOL) X      /**< Boolean instance. */ \
+	D( SYMBOL_INST,          IFUND | ISYM) X       /**< Symbol instance. */ \
+	D( SET_INST,             IFUND | ISET) X       /**< Set instance. */ \
+	D( REAL_ATOM_INST,       IATOM | IREAL) X      /**< Real atomic instance. */ \
+	D( INTEGER_ATOM_INST,    IATOM | IINT) X       /**< Int atomic instance. */ \
+	D( BOOLEAN_ATOM_INST,    IATOM | IBOOL) X      /**< Boolean atomic instance. */ \
+	D( SYMBOL_ATOM_INST,     IATOM | ISYM) X       /**< Symbol atomic instance. */ \
+	D( SET_ATOM_INST,        IATOM | ISET) X       /**< Set atomic instance. */ \
+	D( REAL_CONSTANT_INST,   ICONS | IREAL) X      /**< Real constant instance. */ \
+	D( BOOLEAN_CONSTANT_INST,ICONS | IINT) X       /**< Boolean constant instance. */ \
+	D( INTEGER_CONSTANT_INST,ICONS | IBOOL) X      /**< Int constant instance. */ \
+	D( SYMBOL_CONSTANT_INST, ICONS | ISYM) X       /**< Symbol constant instance. */ \
+	D( DUMMY_INST,           IDUMB)                /**< Dummy instance - unselected IS_A children. */
+    /* AUTO_INST = ICOMP | IMOD | IAUTO, */ /* future stack instance, would come after 'MODEL_INST' */
+
+/**
+	Instance types, see also comments at head of instance_enum.h.
+
+	There are 'fundamental instances' which include REAL, INTEGER, BOOLEAN,
+	SYMBOL and SET (suffixed with _INST).
+
+	There are nonfundamental 'atomic' instances, REAL, INTEGER, BOOLEAR, SYMBOL
+	and SET, (this time suffixed with _ATOM_INST).
+
+	There are nonfundamental constant instances, REAL, BOOLEAR, INTEGER and
+	SYMBOL (suffixed with _CONSTANT_INST).
+
+	Then there are some special instances:
+	  - ERROR_INST -- a deleted instance
+	  - SIM_INST -- a simulation
+	  - MODEL_INST -- a model instance (used where...)
+	  - REL_INST -- a 'relation' i.e. equality or inequality (real-valued LHS and RHS)
+	  - LREL_INST -- a logical relation (true or false) (An '==' or '!=' between LHS and RHS).
+	  - WHEN_INST -- ...
+	  - ARRAY_INT_INST -- 'array instance integer'...
+	  - ARRAY_ENUM_INST -- 'array instance enumed'...
+	  - DUMMY_INST -- dummy instance - unselected 'IS_A' children.
+
+	@see InstanceEnumLookup in instance_io.c
+*/
 enum inst_t {
-  ERROR_INST =        0,                    /**< Deleted instances get this type. */
-  SIM_INST =          ICOMP,                /**< A simulation instance. */
-  MODEL_INST =        ICOMP | IMOD,         /**< Model instance. */
-  /* AUTO_INST = ICOMP | IMOD | IAUTO, */ /* future stack instance */
-  REL_INST =          IRELN,                /**< Relation(equality or inequality). */
-  LREL_INST =         ILRELN,               /**< Logical relation( == || != ). */
-  WHEN_INST =         IWHEN,                /**< WHEN instance  */
-  ARRAY_INT_INST =    ICOMP | IARR | IINT,  /**< Array instance integer */
-  ARRAY_ENUM_INST =   ICOMP | IARR | ISYM,  /**< Array instance enumed */
-  /* fundamental instances */
-  REAL_INST =         IFUND | IREAL,        /**< Real instance. */
-  INTEGER_INST =      IFUND | IINT,         /**< Int instance. */
-  BOOLEAN_INST =      IFUND | IBOOL,        /**< Boolean instance. */
-  SYMBOL_INST =       IFUND | ISYM,         /**< Symbol instance. */
-  SET_INST =          IFUND | ISET,         /**< Set instance. */
-  /* nonfundamental atomic instances */
-  REAL_ATOM_INST =    IATOM | IREAL,        /**< Real atomic instance. */
-  INTEGER_ATOM_INST = IATOM | IINT,         /**< Int atomic instance. */
-  BOOLEAN_ATOM_INST = IATOM | IBOOL,        /**< Boolean atomic instance. */
-  SYMBOL_ATOM_INST =  IATOM | ISYM,         /**< Symbol atomic instance. */
-  SET_ATOM_INST =     IATOM | ISET,         /**< Set atomic instance. */
-  /* nonfundamental constant instances */
-  REAL_CONSTANT_INST =    ICONS | IREAL,    /**< Real constant instance. */
-  BOOLEAN_CONSTANT_INST = ICONS | IINT,     /**< Boolean constant instance. */
-  INTEGER_CONSTANT_INST = ICONS | IBOOL,    /**< Int constant instance. */
-  SYMBOL_CONSTANT_INST =  ICONS | ISYM,     /**< Symbol constant instance. */
-  /* dummy instance - unselected IS_A children. */
-  DUMMY_INST =  IDUMB                       /**< Dummy instance - unselected IS_A children. */
+#define ENUM_D(NAME,VALUE) NAME = VALUE
+#define ENUM_X ,
+	ASC_ENUM_DECLS(ENUM_D,ENUM_X)
+#undef ENUM_D
+#undef ENUM_X
 };
 
-/** Never, ever, allocate either one of these types. */
+/** 
+	@NOTE *NEVER* allocate either one of these types! See instead the file
+	instance_types.h. Note that all 'struct Instance *' types share the
+	leading 't'	member, but other than that they are not unionised so they
+	are not all of the same length. So you need to be careful when making
+	assumptions about the type of Instance (eg RealAtomInstance, etc) that you 
+	have.
+*/
 struct Instance {
   enum inst_t t;
 };

@@ -36,6 +36,7 @@
 #include <compiler/symtab.h>
 #include <compiler/fractions.h>
 #include <compiler/instance_enum.h>
+#include <compiler/instance_io.h>
 #include <compiler/symtab.h>
 #include <compiler/extfunc.h>
 #include <compiler/extcall.h>
@@ -446,13 +447,19 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
 		, struct ExtCallNode *ext
 ){
   struct rel_extnode *nodeinfo;
+  struct Instance *inst;
 
   CONSOLE_DEBUG("Creating rel_extnode");
   CONSOLE_DEBUG("REL = %p",rel);
   nodeinfo = ASC_NEW(struct rel_extnode);
   nodeinfo->whichvar = (int)ExternalCallVarIndex(ext);
+  asc_assert(nodeinfo->whichvar >= 1);
   nodeinfo->cache = NULL;
   rel->nodeinfo = nodeinfo;
+
+  inst = (struct Instance *)gl_fetch(ext->arglist,nodeinfo->whichvar);
+  CONSOLE_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst);
+
   CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
   return rel;
 }
@@ -659,7 +666,8 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   struct Instance *arg;
   struct gl_list_t *inputlist;
   double value;
-  int32 c,ninputs;
+  long unsigned c;
+  int32 ninputs;
   int32 nok;
   unsigned long whichvar;
   int32 newcalc_reqd=0;
@@ -694,7 +702,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   for (c=0;c<ninputs;c++) {
     arg = (struct Instance *)gl_fetch(inputlist,c+1);
     value = RealAtomValue(arg);
-	CONSOLE_DEBUG("FOR INPUT %d, VALUE=%f (arg at %p), CACHED=%f"
+	CONSOLE_DEBUG("FOR INPUT %lu, VALUE=%f (arg at %p), CACHED=%f"
 		,c+1, value, arg,cache->inputs[c]
 	);
     if(ArgsDifferent(value, cache->inputs[c])){
@@ -721,7 +729,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
     slv_interp.task = bb_func_eval;
 
   	for (c=0;c<ninputs;c++){
-	  CONSOLE_DEBUG("input %d: value = %f",c+1, cache->inputs[c]);
+	  CONSOLE_DEBUG("input %lu: value = %f",c+1, cache->inputs[c]);
 	}
 
     nok = (*eval_func)(&slv_interp, ninputs, cache->noutputs,
@@ -764,7 +772,10 @@ real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 
 	cache = rel_extcache(rel);
     inst = (struct Instance *)gl_fetch(cache->arglist,whichvar);
+
 	CONSOLE_DEBUG("VAR IS INSTANCE AT %p",inst);
+
+	CONSOLE_DEBUG("INSTANCE TYPE = %s",instance_typename(inst));
 
     value = RealAtomValue(inst);
 	CONSOLE_DEBUG("LHS VALUE = %f",value);

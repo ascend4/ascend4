@@ -1,33 +1,29 @@
-/* ex: set ts=8 : */
-/*
- *  Instance Output Routines
- *  by Tom Epperly
- *  Created: 2/8/90
- *  Version: $Revision: 1.45 $
- *  Version control file: $RCSfile: instance_io.c,v $
- *  Date last modified: $Date: 1998/04/10 23:25:44 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Instance output routines
+*//*
+	by Tom Epperly
+	Created: 2/8/90
+	Last in CVS: $Revision: 1.45 $ $Date: 1998/04/10 23:25:44 $ $Author: ballan $
+*/
 
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -74,17 +70,54 @@
 #include "instance_io.h"
 #include "module.h"
 
-
-#ifndef lint
-static CONST char InstanceIORCSid[]="$Id: instance_io.c,v 1.45 1998/04/10 23:25:44 ballan Exp $";
-#endif /* lint */
+/*------------------------------------------------------------------------------
+  globals, forward decls, typedefs
+*/
 
 static char g_string_buffer[256];
 #define SB255 g_string_buffer
+
+
+struct InstanceEnumLookup{
+  enum inst_t t;
+  const char *name;
+};
+
+static const struct InstanceEnumLookup g_instancetypenames[] = {
+#define LIST_D(NAME,VALUE) {NAME,#NAME}
+#define LIST_X ,
+	ASC_ENUM_DECLS(LIST_D,LIST_X)
+	LIST_X {DUMMY_INST,NULL}
+#undef LIST_D
+#undef LIST_X
+	
+};
+
+/*------------------------------------------------------------------------------
+  INSTANCE TYPE
+*/
+
+CONST char *instance_typename(CONST struct Instance *inst){
+	int i;
+	AssertMemory(inst);
+	for(i=0; g_instancetypenames[i].name!=NULL; ++i){
+		if(g_instancetypenames[i].t == inst->t){
+			return g_instancetypenames[i].name;
+		}
+	}
+	Asc_Panic(2,__FUNCTION__,"Invalid instance type (inst_t '%d' not found in list)",(int)inst->t);
+}
+
+/*------------------------------------------------------------------------------
+  PATH STUFF
+
+	for working out how to output contexted instance names
+*/
+
 struct gl_list_t *ShortestPath(CONST struct Instance *i,
-			       CONST struct Instance *ref,
-			       unsigned int height, unsigned int best)
-{
+		CONST struct Instance *ref,
+		unsigned int height, unsigned int best
+){
   struct gl_list_t *path,*shortest=NULL;
   unsigned long c,len;
   unsigned mybest= UINT_MAX;
@@ -167,8 +200,7 @@ int WritePath(FILE *f, CONST struct gl_list_t *path)
   return count;
 }
 
-static void WritePathDS(Asc_DString *dsPtr,CONST struct gl_list_t *path)
-{
+static void WritePathDS(Asc_DString *dsPtr,CONST struct gl_list_t *path){
   CONST struct Instance *parent,*child;
   struct InstanceName name;
   unsigned long c;
@@ -213,6 +245,10 @@ char *WritePathString(CONST struct gl_list_t *path)
   return result;
 }
 
+/*------------------------------------------------------------------------------
+  INSTANCE NAME OUTPUTTERS
+*/
+
 int WriteInstanceName(FILE *f,
 		      CONST struct Instance *i,
 		      CONST struct Instance *ref)
@@ -254,7 +290,7 @@ char *WriteInstanceNameString(CONST struct Instance *i,
   return result;
 }
 
-/*********************************************************************\
+/**
   This is a temporary fix for writing out instance names faster
   than we are now. This is for use in saving simulations. We dont
   really care if it is the shortest path or not. The third version of
@@ -270,8 +306,7 @@ char *WriteInstanceNameString(CONST struct Instance *i,
   Prototype code never dies. As expected, this is a production
   function now.
   BAA
-\*********************************************************************/
-
+*/
 static
 void InstanceAnyPath(struct Instance *i, struct gl_list_t *path)
 {
@@ -303,12 +338,11 @@ int WriteAnyInstanceName(FILE *f, struct Instance *i)
 }
 
 
-static struct gl_list_t *CopyPathHead(CONST struct gl_list_t *path)
-/*********************************************************************\
-This copy all but the last element of path.  It allocates new memory
-for each of the NameNode structures and copies the contents from path.
-\*********************************************************************/
-{
+/**
+	Copies all but the last element of path.  It allocates new memory
+	for each of the NameNode structures and copies the contents from path.
+*/
+static struct gl_list_t *CopyPathHead(CONST struct gl_list_t *path){
   struct gl_list_t *result;
   struct NameNode *orig, *copy;
   unsigned long c,length;
@@ -382,7 +416,9 @@ struct gl_list_t *AllPaths(CONST struct Instance *i)
   return result;
 }
 
-/* returns 0 if a WILL_BE or ALIASES or ARR origin is encountered in path */
+/**
+	@return 0 if a WILL_BE or ALIASES or ARR origin is encountered in path
+*/
 static
 int PathOnlyISAs(CONST struct gl_list_t *path)
 {
@@ -431,6 +467,10 @@ struct gl_list_t *ISAPaths(CONST struct gl_list_t *pathlist)
   }
   return result;
 }
+
+/*------------------------------------------------------------------------------
+  STUFF ABOUT ALIASES
+*/
 
 static
 void AliasWritePath(FILE *f, CONST struct gl_list_t *path)
@@ -505,6 +545,7 @@ char *AliasWritePathString(CONST struct gl_list_t *path)
     }
   }
   else{
+	/** @TODO what is the meaning of ????? and when might it happen? */
     Asc_DStringAppend(dsPtr,"?????",5);
   }
   result = Asc_DStringResult(dsPtr);
@@ -647,6 +688,10 @@ void WriteClique(FILE *f, CONST struct Instance *i)
   } while(tmp != i);
 }
 
+/*------------------------------------------------------------------------------
+  STUFF ABOUT PENDING STATEMENTS
+*/
+
 static
 void WritePendingStatements(FILE *f, CONST struct Instance *i)
 {
@@ -675,6 +720,10 @@ void WritePendingStatements(FILE *f, CONST struct Instance *i)
   }
 }
 
+/*------------------------------------------------------------------------------
+  ATOMS AND THEIR CHILDREN
+  (the nuclear family)
+*/
 
 void WriteAtomValue(FILE *f, CONST struct Instance *i)
 {
@@ -863,6 +912,10 @@ void ListChildren(FILE *f, CONST struct Instance *i)
   }
 }
 
+/*------------------------------------------------------------------------------
+  OUTPUT FUNCTIONS FOR DEBUGGING
+*/
+
 void WriteInstance(FILE *f, CONST struct Instance *i)
 {
   CONST struct logrelation *lreln;
@@ -1036,10 +1089,10 @@ void WriteInstance(FILE *f, CONST struct Instance *i)
   }
 }
 
-/*
- * This is a debugging aid and not intended for
- * general use
- */
+/**
+	This is a debugging aid and not intended for
+	general use
+*/
 void WriteInstanceList(struct gl_list_t *list)
 {
   unsigned long len,c;
@@ -1054,15 +1107,24 @@ void WriteInstanceList(struct gl_list_t *list)
   }
 }
 
-/* the following mess o' save hacks deserves its own file.,
- * probably a circular file.
- */
-/*
- * The below code is part of the code for saving/restoring instance
- * trees. It thus allows the creation of persistent objects. At this
- * time the format of the save_file is experimental, but has the
- * following format:
- *
+/*------------------------------------------------------------------------------
+  PERSISTENCE FUNCTIONS
+*/
+
+/**
+	@TODO the following mess o' save hacks deserves its own file.,
+	probably a circular file.
+*/
+
+/** @TODO what is the status of this? A lot of unused functions here. */
+
+/** @page instancepersistence "Saving/Restoring Instance Trees"
+
+	The below code is part of the code for saving/restoring instance
+	trees. It thus allows the creation of persistent objects. At this
+	time the format of the save_file is experimental, but has the
+	following format:
+<pre>
   $DATE
   $VERSION
 
@@ -1115,8 +1177,8 @@ void WriteInstanceList(struct gl_list_t *list)
       [...]
       index -> index ,index [..] ,index ';'
   }
-  *
-  */
+</pre>
+*/
 
 #define TYPE_HASH_SIZE 31
 
@@ -1140,22 +1202,22 @@ int ProcessArrayDesc(struct gl_list_t *arraytypelist,
   return 0;		/* indicate if we added or not */
 }
 
-/*
- * Collect a unique list of the types present in the instance
- * tree (which is stored in the list). We will *not* store
- * typedescriptions, with NULL names; This can happen in the case
- * of array types. We could probably filter here for all fundamental
- * types in fact.
- *
- * At this time we are doing a hack in type_desc.c to *ensure*
- * that the arrays have names. This means that name should not
- * come up NULL *ever* in the type table. If it does, its an
- * error. We now instead scan for base_types, so that we can
- * write out some index stuff for arrays.
- *
- * (BAA: the hack has been institutionalized as MAKEARRAYNAMES
- * in type_desc.h)
- */
+/**
+	Collect a unique list of the types present in the instance
+	tree (which is stored in the list). We will *not* store
+	typedescriptions, with NULL names; This can happen in the case
+	of array types. We could probably filter here for all fundamental
+	types in fact.
+	
+	At this time we are doing a hack in type_desc.c to *ensure*
+	that the arrays have names. This means that name should not
+	come up NULL *ever* in the type table. If it does, its an
+	error. We now instead scan for base_types, so that we can
+	write out some index stuff for arrays.
+	
+	(BAA: the hack has been institutionalized as MAKEARRAYNAMES
+	in type_desc.h)
+*/
 static int DoBreakPoint(void)
 {
   return 1;
@@ -1201,16 +1263,16 @@ void WriteIntegrityCheck(FILE *fp, unsigned long count)
   FPRINTF(fp,"}\n\n");
 }
 
-/*
- * Some special care in processing is required here.
- * The name of the type may be NULL, as in the case of arrays.
- * The module of the type may be NULL, as in the case of
- * fundamentals. In collecting the typelist and building the
- * type table we took care of the NULL type names. We will
- * write out NULL for types with NULL modules.
- * NOTE: The module names are written out as single-quoted strings.
- * NULL modules are simply written as NULL.
- */
+/**
+	Some special care in processing is required here.
+	The name of the type may be NULL, as in the case of arrays.
+	The module of the type may be NULL, as in the case of
+	fundamentals. In collecting the typelist and building the
+	type table we took care of the NULL type names. We will
+	write out NULL for types with NULL modules.
+	NOTE: The module names are written out as single-quoted strings.
+	NULL modules are simply written as NULL.
+*/
 static
 void Save__Types(void *arg1, void *arg2)
 {
@@ -1262,35 +1324,36 @@ void SaveIndexList(FILE *fp, struct IndexType *itype)
 }
 #endif /* THIS_IS_AN_UNUSED_FUNCTION */
 
+/**
+	SYNTAX:
+	arraydef : ARRAYTYPE IDENTIFIER '{' mandatory optional '}'
+			 ;
+	mandatory: TYPE SYMBOL ',' COUNT INTEGER ';'
+		 ;
+	optional: (INDEX INTEGER ':' string)* (i.e one or more)
 
-/*
- * Note: It is possible for array to *not* have any indicies.
- * This can happen for example, when the result of the set
- * evaluation comes up NULL;
- * 	foo[fooset] ISA FOO;
- *	fooset := [];
- * This code appropriately deals with these odd cases.
- *
- * You would not believe the stuff that is returned as a
- * result of this code. Yep the above note about evaluation
- * is rubbish. What is saved is the index set as found verbatim.
- * Using the above example what is seens is "fooset". Likewise
- * if we had foo2[alpha - [beta]], where alpha and beta are
- * sets, what we see is "alpha [beta] -". I am leaving this
- * code here for posterity. This craziness might just come in
- * handy. For example it makes a comparison of 2 index sets
- * very quick, rather than if we had saved the result of
- * the evaluations.
- */
-
-/*
- * SYNTAX:
- *	arraydef : ARRAYTYPE IDENTIFIER '{' mandatory optional '}'
- *		 ;
- *	mandatory: TYPE SYMBOL ',' COUNT INTEGER ';'
- *		 ;
- *	optional: (INDEX INTEGER ':' string)* (i.e one or more)
- */
+	@NOTE It is possible for array to *not* have any indicies.
+	This can happen for example, when the result of the set
+	evaluation comes up NULL;
+<pre>
+	    foo[fooset] IS_A FOO;
+	    fooset := [];
+</pre>
+	This code appropriately deals with these odd cases.
+	@ENDNOTE
+	
+	@NOTE (is that you, Ben?) 
+	You would not believe the stuff that is returned as a
+	result of this code. Yep the above note about evaluation
+	is rubbish. What is saved is the index set as found verbatim.
+	Using the above example what is seens is "fooset". Likewise
+	if we had foo2[alpha - [beta]], where alpha and beta are
+	sets, what we see is "alpha [beta] -". I am leaving this
+	code here for posterity. This craziness might just come in
+	handy. For example it makes a comparison of 2 index sets
+	very quick, rather than if we had saved the result of
+	the evaluations.
+*/
 static
 void Save__ArrayTypes(FILE *fp,struct TypeDescription *desc)
 {
@@ -1335,10 +1398,10 @@ void SaveArrayTypes(FILE *fp,struct gl_list_t *arraytypelist)
   }
 }
 
-/*
- * Write a comma delimited list of children names.
- * The caller must add own leaders/trailers.
- */
+/**
+	Write a comma-delimited list of children names.
+	The caller must add own leaders/trailers.
+*/
 static
 void SaveNameRec(FILE *f, CONST struct InstanceName *rec)
 {
@@ -1634,11 +1697,11 @@ void SaveLinks(FILE *fp, struct gl_list_t *list)
 }
 
 /*
- * These functions save the connectivity graph as 1 huge
- * node of all connections. It is useful for doing graph
- * algorithms. For saving instances though it is perhaps
- * better to use SaveLinks.
- */
+	These functions save the connectivity graph as 1 huge
+	node of all connections. It is useful for doing graph
+	algorithms. For saving instances though it is perhaps
+	better to use SaveLinks.
+*/
 #ifdef THIS_IS_AN_UNUSED_FUNCTION
 static
 void Save__Graph(FILE *fp, struct gl_list_t *list)
@@ -1755,9 +1818,8 @@ void SaveInstance(FILE *fp, CONST struct Instance *i,
 }
 
 /**
- * interface pointer bulk transport to a stack functions
- */
-
+	interface pointer bulk transport to a stack functions
+*/
 struct pipdata {
   IPFunc makeip;
   struct gl_list_t *old;
@@ -1827,12 +1889,16 @@ void PopInterfacePtrs(struct gl_list_t *old, IPDeleteFunc destroy, VOIDPTR vp)
   gl_destroy(old);
 }
 
-/*
- * Makes the assumption that the instance sent is not null
- * and that array children for relations are all of the same
- * type so that I can look at the first child only. Added to code
- * to take care of empty sets -- resulting in 0 children.
- */
+/**
+	@TODO is this file the right place for ArrayIsRelation, ArrayIsLogRel, etc?
+*/
+
+/**
+	Makes the assumption that the instance sent is not null
+	and that array children for relations are all of the same
+	type so that I can look at the first child only. Added to code
+	to take care of empty sets -- resulting in 0 children.
+*/
 int ArrayIsRelation(struct Instance *i)
 {
   if (i==NULL) return 0;
@@ -1880,3 +1946,5 @@ int ArrayIsModel(struct Instance *i)
   }
   if (InstanceKind(i)==MODEL_INST) return 1; else return 0;
 }
+
+/* vim: set ts=8 : */
