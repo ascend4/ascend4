@@ -44,6 +44,16 @@
 #include <utilities/ascConfig.h>
 
 /**
+	Return the instance's type name as given in instance_enum.h.
+	This is a constant char pointer that the called does NOT own.
+
+	Panics if the inst_t in the instance isn't found in our list of names.
+
+	@return the name
+*/ 
+CONST char *instance_typename(CONST struct Instance *inst);
+
+/**
  *  struct NameNode is used by the AllPaths() and WriteAliases() routines to
  *  keep track of an instance and which child name is used for a
  *  particular name chain.

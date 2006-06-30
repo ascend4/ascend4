@@ -2682,7 +2682,7 @@ Asc_ErrMsgTypeDefnEOF(void)
  *  functions name and the arguments to fprintf.
  */
 static void ErrMsg_Generic(CONST char *string){
-	static errcount=0;
+	static int errcount=0;
 	if(errcount<30){ 
 		/* the module may have be already closed, Asc_CurrentModule will be null */
 		error_reporter_current_line(ASC_USER_ERROR,"%s",string);

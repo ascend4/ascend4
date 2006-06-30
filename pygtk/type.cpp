@@ -152,15 +152,17 @@ Type::getSimulation(SymChar sym){
 		bin_libname = bin_targetstem + ".so";
 		bin_rm = "/bin/rm";
 #if 0
-//		bin_cmd = "make -C " ASCEND_TMPDIR " -f " ASCEND_MAKEFILEDIR_1 "/Makefile.bt" \
-	//		" SO=" + bin_targetstem + " ASCEND_INCDIR=\"" ASCEND_INCDIR "\" ASCEND_LIBDIR=\"" ASCEND_LIBDIR "\"";
-//
-	//	cerr << "BINTOKEN COMMAND" << endl << "----" << bin_cmd << endl << "----" << endl;
+/*		bin_cmd = "make -C " ASCEND_TMPDIR " -f " ASCEND_MAKEFILEDIR_1 "/Makefile.bt" \
+			" SO=" + bin_targetstem + " ASCEND_INCDIR=\"" ASCEND_INCDIR "\" ASCEND_LIBDIR=\"" ASCEND_LIBDIR "\"";
 
+		cerr << "BINTOKEN COMMAND" << endl << "----" << bin_cmd << endl << "----" << endl;
+*/
 #elif 0
-//# define BTINCLUDES "-I" ASCEND_INCDIR
-	//	bin_cmd = "cd " ASCEND_INCDIR " && make BTTARGET=" + bin_targetstem + " BTINCLUDES=" BTINCLUDES \
-	//		" -f " ASCEND_MAKEFILEDIR "/Makefile.bt " + bin_targetstem;
+/*
+		# define BTINCLUDES "-I" ASCEND_INCDIR
+		bin_cmd = "cd " ASCEND_INCDIR " && make BTTARGET=" + bin_targetstem + " BTINCLUDES=" BTINCLUDES \
+			" -f " ASCEND_MAKEFILEDIR "/Makefile.bt " + bin_targetstem;
+*/
 #else
 		bin_cmd = "echo \"FIXME: BINTOKEN COMMANDLINE PARAMETERS\" && exit 1";
 #endif
