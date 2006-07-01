@@ -530,6 +530,7 @@ int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
   assert(gradient !=NULL);
   *count = 0;
   if( safe ) {
+	CONSOLE_DEBUG("...");
     status =(int32)RelationCalcResidGradSafe(rel_instance(rel),
 					     resid,gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
@@ -591,6 +592,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       if (gradient == NULL) {
         return 1;
       }
+	  CONSOLE_DEBUG("...");
       status = RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
       safe_error_to_stderr(&status);
       if (status) {
@@ -612,6 +614,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       if (gradient == NULL) {
         return 1;
       }
+	  CONSOLE_DEBUG("...");
       status = RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
       safe_error_to_stderr(&status);
       if (status) {
@@ -684,7 +687,18 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
 
   gradient = (real64 *)rel_tmpalloc(len*sizeof(real64));
   assert(gradient !=NULL);
-  if( safe ) {
+
+  /** @TODO fix this (it should all be in the compiler, or something) */
+  if(rel->nodeinfo){
+	CONSOLE_DEBUG("EVALUTING BLACKBOX DERIVATIVES FOR ROW %d",coord.row);
+    *resid -= ExtRel_Diffs_RHS(rel, filter, coord.row, mtx);
+    mtx_mult_row(mtx, coord.row, -1.0, mtx_ALL_COLS);
+    *resid += ExtRel_Diffs_LHS(rel, filter, coord.row, mtx);
+    return 0;
+  }
+
+  if(safe){
+	CONSOLE_DEBUG("...");
     status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
@@ -695,8 +709,7 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
         mtx_fill_org_value(mtx,&coord,gradient[c]);
       }
     }
-  }
-  else {
+  }else{
     if((status=RelationCalcResidGrad(rel_instance(rel),resid,gradient)) == 0) {
       /* successful */
       for (c=0; c < len; c++) {

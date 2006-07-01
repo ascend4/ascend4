@@ -113,7 +113,7 @@ ASC_DLLSPEC(real64 ) relman_eval(struct rel_relation *rel, int32 *calc_ok, int s
 	@param calc_ok (returned) status of the calculation. 0=error, else ok.
 	@return residual (= LHS - RHS, regardless of comparison)
 
-	@note
+	@NOTE
 	This function should be surrounded by Asc_SignalHandlerPush/Pop both
 	with arguments (SIGFPE,SIG_IGN). If it is being called in a loop,
 	the push/pop should be _outside_ the loop.
@@ -137,13 +137,14 @@ extern real64 relman_scale(struct rel_relation *rel);
 
 #define relman_diff(a,b,c,d) (abort(),1)
 /**<
- *  Calculates the derivative of the relation residual with respect to
- *  the specified variable and stuffs it in pd. if problem with
- *  calculation, returns 1, else 0.
- *  If the value of safe is nonzero, "safe" functions will be used to
- *  calculate the residual.
- *  @TODO relman_diff() needs to be reimplemented - needs compiler side work.
- */
+	Calculates the derivative of the relation residual with respect to
+	the specified variable and stuffs it in pd. if problem with
+	calculation, returns 1, else 0.
+	If the value of safe is nonzero, "safe" functions will be used to
+	calculate the residual.
+
+	@TODO relman_diff() needs to be reimplemented - needs compiler-side work.
+*/
 
 extern int relman_diff2(struct rel_relation *rel,
                         var_filter_t *filter,
@@ -152,21 +153,26 @@ extern int relman_diff2(struct rel_relation *rel,
                         int32 *count, 
                         int32 safe);
 /**<
- *  Calculates the row of the jacobian matrix (the transpose gradient of
- *  the relation residual grad^T(f) ) corresponding to the relation
- *  rel.  The filter determines which variables actually contribute to the
- *  jacobian.
- *  If an error is encountered in the calculation, the status returned is
- *  1. Status = 0 is OK.
- *  If the value of safe is nonzero, "safe" functions are used to for
- *  the calucaltions.
- *  The calling function should allocate the output vectors 'derivatives'
- *  and 'variables'.  'count' will be set to the number of elements
- *  assigned upon exit.
- *  derivative(I) will contain the derivative of the relation with
- *  respect to the variable whose solver index is stored in
- *  variables(I).
- */
+	Calculates the row of the jacobian matrix (the transpose gradient of
+	the relation residual grad^T(f) ) corresponding to the relation
+	rel.  The filter determines which variables actually contribute to the
+	jacobian.
+
+	derivative(I) will contain the derivative of the relation with
+	respect to the variable whose solver index is stored in
+	variables(I).
+
+	@param safe If nonzero, "safe" functions are used to for
+	the calculations
+
+	@param derivatives output vector (allocated by the calling function)
+	@param variables output vector (allocated by the calling function)
+	@param count output value, will be set to the number of elements
+	assigned upon exit.
+
+
+	@return 0 on success, 1 if an error is encountered in the calculation
+*/
 
 extern int relman_diff_grad(struct rel_relation *rel, 
                             var_filter_t *filter,
@@ -191,7 +197,7 @@ extern int relman_diff_grad(struct rel_relation *rel,
  *  derivative(i) will contain the derivative of the relation with
  *  respect to the variable whose master index is stored in
  *  variables_master(i). The solver index of each variable is stored in
- *  variables_solver(i).<br><br>
+ *  variables_solver(i).
  *
  *  There are two differences wrt to relman_diff2:
  *    - the master index (solver independent) is obtained
@@ -199,44 +205,43 @@ extern int relman_diff_grad(struct rel_relation *rel,
  */
 
 ASC_DLLSPEC(int ) relman_diffs(struct rel_relation *rel, 
-                        var_filter_t *filter,
-                        mtx_matrix_t mtx, 
-                        real64 *resid, 
-                        int safe);
+		var_filter_t *filter, mtx_matrix_t mtx, 
+		real64 *resid, int safe);
 /**<
- *  Calculates the row of the jacobian matrix (the transpose gradient of
- *  the relation residual grad^T(f) ) corresponding to the relation
- *  rel.  The filter determines which variables actually contribute to the
- *  jacobian.  The residual of the relation is also computed and returned.
- *  If an error is encountered in the calculation, the status returned is
- *  1 and the residual is set to some number we managed to calculate,
- *  while the gradient is discarded. status = 0 is OK.
- *  If the value of safe is nonzero, "safe" functions are used to for
- *  the calucaltions.
- *  It doesn't matter how you have permuted the columns and rows:
- *  for the vars which pass the filter you send we
- *  fill the org row determined by rel_sindex and the org cols
- *  determined by var_sindex.<br><br>
- *
- *  NOTE: The row of the mtx corresponding to rel should be cleared
- *  before calling this function, since this FILLS with the gradient.<br><br>
- *
- *  CHANGE: This operator used to just ADD on top of any incidence already
- *          in the row. This is not TRUE now.
- *
- *  @todo This operator really needs to be redesigned so it can deal with 
- *        harwellian matrices, glassbox rels and blackbox.
- */
+	Calculates the row of the jacobian matrix (the transpose gradient of
+	the relation residual grad^T(f) ) corresponding to the relation
+	rel.  The filter determines which variables actually contribute to the
+	jacobian.  The residual of the relation is also computed and returned.
+	If an error is encountered in the calculation, the status returned is
+	1 and the residual is set to some number we managed to calculate,
+	while the gradient is discarded. status = 0 is OK.
+
+	@param rel  relation for which jacobian entries are required
+	@param filter  filter for which variables should actually contribute to the jacobian
+	@param mtx  matrix into which the row (corresponding to rel) is written
+	@param safe  if non-zero, "safe" functions are used to for the calucaltions.
+	
+	It doesn't matter how you have permuted the columns and rows:
+	for the vars which pass the filter you send we
+	fill the org row determined by rel_sindex and the org cols
+	determined by var_sindex.
+
+	@return 0 on success, 1 on calculation error (residual will be returned, grad discarded)
+	
+	@NOTE The row of the mtx corresponding to rel should be cleared
+	before calling this function, since this FILLS with the gradient.<br><br>
+	
+	@NOTE *changed* -- This operator used to just ADD on top of any incidence
+	already in the row. This is not TRUE now.
+	
+	@TODO This operator really needs to be redesigned so it can deal with 
+	harwellian matrices, glassbox rels and blackbox.
+*/
 
 extern int32 relman_diff_harwell(struct rel_relation **rlist,
-                                 var_filter_t *vfilter, 
-                                 rel_filter_t *rfilter,
-                                 int32 rlen, 
-                                 int32 bias, 
-                                 int32 mors,
-                                 real64 *avec, 
-                                 int32 *ivec, 
-                                 int32 *jvec);
+		var_filter_t *vfilter, rel_filter_t *rfilter,
+		int32 rlen, int32 bias, int32 mors,
+		real64 *avec, int32 *ivec, int32 *jvec);
 /**< 
  *  This fills an "a-i-j" sparse matrix in the avec/ivec/jvec given.
  *  @param rlist   struct rel_relation **, list of relations rlen long.
@@ -251,14 +256,14 @@ extern int32 relman_diff_harwell(struct rel_relation **rlist,
  *  Size of avec,ivec,jvec given is assumed big enough.
  *  big_enough = relman_jacobian_count(rlist,rlen,vfilter,rfilter,&dummy);
  *  If ivec or jvec given is NULL, then neither is stuffed, though avec is.
- *  @return err;
- *  err = 1 --> unrecoverable error/bad input. caller should probably punt.
- *  err = 0 --> ok;
- *  err < 0 --> -(number of floating point errors in evaluation).
- *              The matrix will contain an approximation only.
- *
- *  @todo relman_diff_harwell() bias == 1 is not yet implemented.
- */
+	@return 0 on success, <0 on floating point errors, 1 on unrecoverable error.
+
+	err = 1 --> unrecoverable error/bad input. caller should probably punt.
+	err < 0 --> -(number of floating point errors in evaluation).
+	            The matrix will contain an approximation only.
+	
+	@todo relman_diff_harwell() bias == 1 is not yet implemented.
+*/
 
 extern int32 relman_jacobian_count(struct rel_relation **rlist,
                                    int32 rlen,

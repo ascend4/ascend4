@@ -60,7 +60,7 @@
 #define NEEDSTOBEDONE 0 /* indicates code/comments that are not yet ready */
 #define USECODE 0  /* Code in good shape but not used currently */
 
-#define MIMDEBUG 1 /* slv_std_make_incidence_mtx debugging */
+#define MIMDEBUG 0 /* slv_std_make_incidence_mtx debugging */
 #define RIDEBUG 0 /* reindex debugging */
 #define SBPDEBUG 1 /* slv_block_partition_real debugging */
 #define SLBPDEBUG 0 /* slv_log_block_partition debugging */
