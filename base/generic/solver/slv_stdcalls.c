@@ -275,13 +275,13 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
     return 1;
   }
 
-  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+  /* CONSOLE_DEBUG("FIRST REL = %p",rp[0]); */
 
   mtx_output_assign(mtx,rlen,vlen);
   rank = mtx_symbolic_rank(mtx);
   if (rank == 0 ) return 1; 	/* nothing to do, eh? */
 
-  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+  /* CONSOLE_DEBUG("FIRST REL = %p",rp[0]); */
 
   /* lot of whining about dof */
   if (rank < nrow) {
@@ -324,7 +324,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
   d->n_rows = nrow;
   d->n_cols = ncol;
 
-  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+  /* CONSOLE_DEBUG("FIRST REL = %p",rp[0]); */
 
   /* the next two lines assume inequalities are un-included. */
 #define MINE 1
@@ -427,7 +427,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
     return 2;
   }
 
-  CONSOLE_DEBUG("FIRST REL = %p",rp[0]);
+  /* CONSOLE_DEBUG("FIRST REL = %p",rp[0]); */
 
   mtx_destroy(mtx);
   return 0;

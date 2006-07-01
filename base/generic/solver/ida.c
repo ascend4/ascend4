@@ -51,6 +51,7 @@
 #include "linsolqr.h"
 #include "slv_common.h"
 #include "slv_client.h"
+#include "relman.h"
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
@@ -129,7 +130,7 @@ int integrator_ida_solve(
 		, unsigned long finish_index
 ){
 	void *ida_mem;
-	int i, size, flag, t_index;
+	int size, flag, t_index;
 	realtype t0, reltol, t, tret, tout1;
 	N_Vector y0, yp0, abstol, ypret, yret;
 	IntegratorIdaData *enginedata;
@@ -143,7 +144,7 @@ int integrator_ida_solve(
 	enginedata->nrels = slv_get_num_solvers_rels(blsys->system);
 	enginedata->rellist = slv_get_solvers_rel_list(blsys->system);
 	CONSOLE_DEBUG("Number of relations: %d",enginedata->nrels);
-	CONSOLE_DEBUG("Number of dependent vars: %d",blsys->n_y);
+	CONSOLE_DEBUG("Number of dependent vars: %ld",blsys->n_y);
 	size = blsys->n_y;
 
 	if(enginedata->nrels!=size){
@@ -317,7 +318,7 @@ int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 	is_error = 0; 
 	relptr = enginedata->rellist;
 
-	CONSOLE_DEBUG("IDA requests residuals of length %d",NV_LENGTH_S(rr));
+	CONSOLE_DEBUG("IDA requests residuals of length %lu",NV_LENGTH_S(rr));
 	if(NV_LENGTH_S(rr)!=enginedata->nrels){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Invalid residuals nrels!=length(rr)");
 		return -1; /* unrecoverable */

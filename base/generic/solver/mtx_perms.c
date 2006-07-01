@@ -470,8 +470,7 @@ int32 mtx_org_to_row( mtx_matrix_t mtx, int32 org)
   return( mtx->perm.row.org_to_cur[org] );
 }
 
-int32 mtx_org_to_col( mtx_matrix_t mtx, int32 org)
-{
+int32 mtx_org_to_col( mtx_matrix_t mtx, int32 org){
 #if MTX_DEBUG
   if(!mtx_check_matrix(mtx)) return -1;
 #endif

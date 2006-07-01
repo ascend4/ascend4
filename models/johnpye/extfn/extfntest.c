@@ -88,6 +88,7 @@ int addone_prepare(struct Slv_Interp *slv_interp,
 	return 0;
 }
 
+/* return 0 on success */
 int addone_calc(struct Slv_Interp *slv_interp,
 		int ninputs, int noutputs,
 		double *inputs, double *outputs,
@@ -95,15 +96,15 @@ int addone_calc(struct Slv_Interp *slv_interp,
 ){
 	char *mystring = (char *)slv_interp->user_data;
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ADDONE_CALC: mystring = %s\n",mystring);
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ADDONE_CALC: mystring = %s\n",mystring); */
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs);
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"NINPUTS = %d, NOUTPUTS = %d\n",ninputs, noutputs); */
 
-	CONSOLE_DEBUG("inputs[0] = %f, outputs[0] = %f",inputs[0],outputs[0]);
+	/* CONSOLE_DEBUG("inputs[0] = %f, outputs[0] = %f",inputs[0],outputs[0]); */
 
 	outputs[0] = inputs[0] + 1;
 
-	CONSOLE_DEBUG("INPUT = %f, OUTPUT = %f",inputs[0],outputs[0]);
+	/* CONSOLE_DEBUG("INPUT = %f, OUTPUT = %f",inputs[0],outputs[0]); */
 
-	return 1; /* success */
+	return 0; /* success */
 }

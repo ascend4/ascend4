@@ -106,25 +106,22 @@ int CreateUserFunctionBlackBox(CONST char *name,
 }
 
 
-ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc)
-{
+ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   /* return (ExtBBoxInitFunc*)efunc->u.black.init; */
   return efunc->u.black.initial;
 }
 
-ExtBBoxInitFunc * GetFinalFunc(struct ExternalFunc *efunc)
-{
+ExtBBoxInitFunc * GetFinalFunc(struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   return efunc->u.black.final;
 }
 
-ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc)
-{
+ExtBBoxFunc *GetValueFunc(struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
   AssertMemory(efunc->etype);
 
-  CONSOLE_DEBUG("GETVALUEFUNC efunc = %p, type = %d",efunc,(int)efunc->etype);
+  /* CONSOLE_DEBUG("GETVALUEFUNC efunc = %p, type = %d",efunc,(int)efunc->etype); */
   asc_assert(efunc->etype == efunc_BlackBox);
   /* return (ExtBBoxFunc *)efunc->value; */
   return efunc->u.black.value;

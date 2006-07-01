@@ -2324,6 +2324,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         i = RelationVariable(gut,c+1);
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
+      CONSOLE_DEBUG("SETTING INCIDENCES FOR CONSTRAINING REL");
       rel_set_incidences(rel,len,incidence);
     } else {
       rel_set_incidences(rel,0,NULL);
@@ -2332,12 +2333,15 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
       cache = CheckIfCacheExists(rip->i,&nodestamp,p_data);
       if (cache) {
         rel_set_extcache(rel,cache);
+		extrel_store_output_var(rel);
       }else{
 		CONSOLE_DEBUG("rip = %p, rip->i = %p",rip,rip->i);
         cache = CreateCacheFromInstance(rip->i);
 		CONSOLE_DEBUG("cache = %p",cache);
         gl_append_ptr(p_data->extrels,(POINTER)cache);
         rel_set_extcache(rel,cache);
+		extrel_store_input_vars(rel);
+		extrel_store_output_var(rel);
       }
     }
     flags = 0; /* all init to FALSE */
@@ -2395,6 +2399,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         i = RelationVariable(gut,c+1);
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
+      CONSOLE_DEBUG("SETTING INCIDENCES FOR OBJECTIVE FN REL");
       rel_set_incidences(rel,len,incidence);
     } else {
       rel_set_incidences(rel,0,NULL);
@@ -2441,6 +2446,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         i = RelationVariable(gut,c+1);
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
+      CONSOLE_DEBUG("SETTING INCIDENCES FOR CONDITIONAL REL");
       rel_set_incidences(rel,len,incidence);
     } else {
       rel_set_incidences(rel,0,NULL);

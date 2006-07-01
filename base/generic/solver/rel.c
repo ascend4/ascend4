@@ -69,10 +69,6 @@
 	forward declarations, constants, typedefs
 */
 
-static struct rel_relation *rel_create_extnode(struct rel_relation * rel
-		, struct ExtCallNode *ext
-);
-
 #define IPTR(i) ((struct Instance *)(i))
 #define REIMPLEMENT 0 /* if set to 1, compiles code tagged with it. */
 #define REL_DEBUG FALSE
@@ -95,6 +91,13 @@ static const struct rel_relation g_rel_defaults = {
 /*
 	Don't forget to update the initialization when the structure is modified.
 */
+
+
+/* forward decls */
+
+static struct rel_relation *rel_create_extnode(struct rel_relation * rel
+		, struct ExtCallNode *ext
+);
 
 /*------------------------------------------------------------------------------
   GENERAL 'RELATION' ROUTINES
@@ -175,6 +178,41 @@ struct rel_relation *rel_create(SlvBackendToken instance
 SlvBackendToken rel_instance(struct rel_relation *rel){
   if (rel==NULL) return NULL;
   return (SlvBackendToken) rel->instance;
+}
+
+/**
+	This is an evil routine to determine a variable pointer inside a
+	relation, given the variable's Instance (backend) pointer.
+
+	Good design will eliminate the need for this function.
+
+	Aborts with Asc_Panic in case of var not found.
+
+	@param rel relation in which we're looking
+	@param inst token that we need to match
+	@return var_variable corresponding to the inst parameter
+*/
+static struct var_variable *rel_instance_to_var(struct rel_relation *rel,
+	SlvBackendToken inst
+){
+	int j, nincid;
+	struct var_variable *var, *var1;
+	const struct var_variable **incid = rel_incidence_list(rel);
+
+	nincid = rel_n_incidences(rel);
+	
+	var = NULL;
+	for(j=0;j<nincid;++j){
+		if(( var1 = var_instance(incid[j]) )==inst){
+			var = var1;
+			break;
+		}
+	}
+	if(var==NULL){
+		Asc_Panic(2,__FUNCTION__,"Var not found");
+	}
+
+	return var;
 }
 
 void rel_write_name(slv_system_t sys,struct rel_relation *rel,FILE *fp){
@@ -401,8 +439,8 @@ int32 rel_n_incidencesF(struct rel_relation *rel){
 }
 
 void rel_set_incidencesF(struct rel_relation *rel,int32 n,
-                         struct var_variable **i)
-{
+		struct var_variable **i
+){
   if(rel!=NULL && n >=0) {
     if (n && i==NULL) {
       FPRINTF(stderr,"rel_set_incidence miscalled with NULL ilist\n");
@@ -456,8 +494,8 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
   struct rel_extnode *nodeinfo;
   struct Instance *inst;
 
-  CONSOLE_DEBUG("Creating rel_extnode");
-  CONSOLE_DEBUG("REL = %p",rel);
+  /* CONSOLE_DEBUG("Creating rel_extnode"); */
+  /* CONSOLE_DEBUG("REL = %p",rel); */
   nodeinfo = ASC_NEW(struct rel_extnode);
   nodeinfo->whichvar = (int)ExternalCallVarIndex(ext);
   asc_assert(nodeinfo->whichvar >= 1);
@@ -465,10 +503,10 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
   rel->nodeinfo = nodeinfo;
 
   inst = ExternalCallVarInstance(ext);
-  CONSOLE_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst);
-  CONSOLE_DEBUG("INSTANCE type is %s",instance_typename(inst));
+  /* CONSOLE_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst); */
+  /* CONSOLE_DEBUG("INSTANCE type is %s",instance_typename(inst)); */
 
-  CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
+  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   return rel;
 }
 
@@ -478,7 +516,7 @@ struct rel_extnode *rel_extnodeinfo( struct rel_relation *rel){
 }
 
 unsigned long rel_extwhichvar( struct rel_relation *rel){
-  CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
+  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   if (rel->nodeinfo) {
     return(rel->nodeinfo->whichvar);
   } else {
@@ -487,7 +525,7 @@ unsigned long rel_extwhichvar( struct rel_relation *rel){
 }
 
 struct ExtRelCache *rel_extcache( struct rel_relation *rel){
-  CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
+  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   if(rel->nodeinfo!=NULL){
     return(rel->nodeinfo->cache);
   }else{
@@ -508,7 +546,7 @@ void rel_set_extnodeinfo( struct rel_relation *rel
 		, struct rel_extnode *nodeinfo
 ){
   rel->nodeinfo = nodeinfo;
-  CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
+  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
 }
 
 void rel_set_extwhichvar(struct rel_relation *rel, int32 whichvar){
@@ -548,6 +586,14 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->inputlist = LinearizeArgList(cache->arglist,1,n_input_args);
 		  /* Note: we own the cache of the LinearizeArgList call. */
 
+  /*
+	Create the 'invars' and 'outvars' lists so that we can insert stuff
+	into the solverside matrix correctly
+  */
+
+  cache->invars = NULL;
+  cache->outvars = ASC_NEW_ARRAY_CLEAR(struct var_variable *,noutputs); 
+
   ninputs = (int32)gl_length(cache->inputlist);
   noutputs = (int32)CountNumberOfArgs(cache->arglist,n_input_args+1,
 				    n_input_args+n_output_args);
@@ -559,7 +605,10 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->jacobian = ASC_NEW_ARRAY_CLEAR(double,ninputs*noutputs);
 
   /* Setup default flags for controlling calculations. */
-  cache->newcalc_done = (unsigned)1;
+  cache->newcalc_done = 1;
+  cache->first_func_eval = 1;
+  cache->first_deriv_eval = 1;
+
   CONSOLE_DEBUG("NEW CACHE = %p",cache);
   return cache;
 }
@@ -583,6 +632,21 @@ struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst){
   return cache;
 }
 
+void extrel_store_output_var(struct rel_relation *rel){
+	struct ExtRelCache *cache;
+	int whichvar;	
+	struct var_variable *var;
+	struct Instance *inst;
+
+	cache = rel_extcache(rel);	
+	inst = rel_extsubject(rel);
+	var = rel_instance_to_var(rel,inst);
+	whichvar = rel_extwhichvar(rel);
+
+	CONSOLE_DEBUG("outvar[%d] at %p",whichvar-cache->ninputs-1,var);
+	cache->outvars[whichvar - cache->ninputs - 1] = var;
+}
+
 void ExtRel_DestroyCache(struct ExtRelCache *cache)
 {
   if (cache) {
@@ -600,6 +664,38 @@ void ExtRel_DestroyCache(struct ExtRelCache *cache)
     ascfree(cache);
   }
 }
+
+/**
+	This function creates the lists of input and output var_variables so that
+	we can insert variables where required in the overall matrix (mtx).
+
+	This might form the core of a new implementation, if we decided to keep
+	the external relation caching stuff on the solver side.
+
+	At the moment the implementation is pretty naive, because it's the only
+	part in the ExtRel stuff where we have anything to do with var_variable
+	pointers. Ideally, all references to Instances in the ExtRelCache will
+	be switched over to var_variable, so we don't have the border trafficking
+	in struct Instance pointers, and so it all goes via var_variable...?
+*/
+void extrel_store_input_vars(struct rel_relation *rel){
+	struct ExtRelCache *cache;
+	int i, n;
+	struct var_variable *var;
+
+	cache = rel_extcache(rel);
+	n = rel_n_incidences(rel);
+
+	/* new stuff: create the 'invars' and 'outvars' lists */
+	cache->invars = ASC_NEW_ARRAY_CLEAR(struct var_variable *,cache->ninputs);
+
+	for(i=0;i<cache->ninputs;++i){
+		var = rel_instance_to_var(rel, gl_fetch(cache->inputlist,i+1));
+		cache->invars[i] = var;
+		CONSOLE_DEBUG("invar[%d] at %p",i,var);
+	}
+}
+	
 
 /*- - - - - - -
   'INIT' FUNCTION CALLS
@@ -667,7 +763,7 @@ static int ArgsDifferent(double new, double old){
 
 real64 ExtRel_Evaluate_Residual(struct rel_relation *rel){
 	double value;
-	CONSOLE_DEBUG("EVALUATING RELATION %p",rel);
+	/* CONSOLE_DEBUG("EVALUATING RELATION %p",rel); */
 	value = ExtRel_Evaluate_RHS(rel) - ExtRel_Evaluate_LHS(rel);
 	CONSOLE_DEBUG("RESIDUAL = %f",value);
 	return value;
@@ -686,21 +782,25 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   unsigned long whichvar;
   int32 newcalc_reqd=0;
 
-  CONSOLE_DEBUG("REL_RELATION = %p",rel);
+  /* CONSOLE_DEBUG("REL_RELATION = %p",rel); */
 
   ExtBBoxFunc *eval_func;
 
   assert(rel_extnodeinfo(rel));
 
+  /*
   struct rel_extnode *nodeinfo = rel_extnodeinfo(rel);
   CONSOLE_DEBUG("REL NODEINFO = %p",nodeinfo);
+  */
 
   cache = rel_extcache(rel);
   efunc = cache->efunc;
+  /*
   CONSOLE_DEBUG("CACHE = %p",cache);
   CONSOLE_DEBUG("efunc = %p",efunc);
   CONSOLE_DEBUG("efunc->etype = %u",efunc->etype);
   CONSOLE_DEBUG("efunc->value = %p",efunc->u.black.value);
+  */
 
   eval_func = GetValueFunc(efunc);
   inputlist = cache->inputlist;
@@ -716,7 +816,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   for (c=0;c<ninputs;c++) {
     arg = (struct Instance *)gl_fetch(inputlist,c+1);
     value = RealAtomValue(arg);
-	CONSOLE_DEBUG("FOR INPUT %lu, VALUE=%f (arg at %p), CACHED=%f"
+	CONSOLE_DEBUG("FOR INPUT %lu, value=%f (arg at %p), CACHED=%f"
 		,c+1, value, arg,cache->inputs[c]
 	);
     if(ArgsDifferent(value, cache->inputs[c])){
@@ -748,13 +848,18 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 
     nok = (*eval_func)(&slv_interp, ninputs, cache->noutputs,
 		       cache->inputs, cache->outputs, cache->jacobian);
-	CONSOLE_DEBUG("EVAL FUNC RETURNED %d",nok);
+	if(nok){
+		CONSOLE_DEBUG("EXTERNAL CALCULATION ERROR (%d)",nok);
+	}else{
+		CONSOLE_DEBUG("EVAL FUNC OK");
+	}
+
   	for (c=0;c<cache->noutputs;c++){
 	  CONSOLE_DEBUG("output %lu: value = %f",c+1, cache->outputs[c]);
 	}
 
     value = cache->outputs[whichvar - ninputs - 1];
-	CONSOLE_DEBUG("CALCULATED VALUE IS %f",value);
+	/* CONSOLE_DEBUG("CALCULATED VALUE IS %f",value); */
     cache->newcalc_done = (unsigned)1;			/* newcalc done */
     cache->user_data = slv_interp.user_data;		/* update user_data */
   }
@@ -781,9 +886,9 @@ real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 
 	inst = rel_extsubject(rel);
 
-	CONSOLE_DEBUG("VAR IS INSTANCE AT %p",inst);
+	/* CONSOLE_DEBUG("VAR IS INSTANCE AT %p",inst); */
 
-	CONSOLE_DEBUG("INSTANCE TYPE = %s",instance_typename(inst));
+	/* CONSOLE_DEBUG("INSTANCE TYPE = %s",instance_typename(inst)); */
 
     value = RealAtomValue(inst);
 	CONSOLE_DEBUG("LHS VALUE = %f",value);
@@ -832,6 +937,12 @@ struct deriv_data {
 	Since we are operating a relation at a time, we have to find
 	out where to index into our jacobian. This index is computed as
 	follows:
+
+	@param inputlist Instance objects corresponding to the blackbox inputs, in order
+	@param whichvar Output Instance index (for use with GetSubjectInstance(cache->arglist,whichvar))
+	@param ninputs The length of the inputlist
+	@param jacobian Dense-matrix Jacobian data returned from the blackbox func.
+	@param deriv_data Data cache (See rel.c)
 	
 	index = (whichvar - ninputs - 1) * ninputs
 	
@@ -839,20 +950,22 @@ struct deriv_data {
 	with the counting for vars 1..nvars, but the jacobian indexing
 	starting from 0 (c-wise).
 	
- *          V-------- first output variable
- *  1 2 3 4 5 6 7
- *            ^---------------- whichvar
- *							    ------------------- grads for whichvar = 6
- *							    |    |    |    |
- *							    v    v    v    v
- *  index    =	0    1    2    3    4    5    6    7   8    9   10    11
- *  jacobian = 2.0  9.0  4.0  6.0  0.5  1.3  0.0  9.7  80  7.0  1.0  2.5
- *
- * Hence jacobian index = (6 - 4 - 1) * 4 = 4
- *
- *
- * THIS FUNCTION IS TOTALLY AND COMPLETELY BROKEN.
- */
+	        v    used = var_apply_filter(var,d->filter);
+-------- first output variable
+	I I I I O O O
+	1 2 3 4 5 6 7
+	          ^--------- whichvar
+ 
+	                               ------------------ grads for whichvar = 6
+	                               |    |    |    |
+    row        1    1    1    1    2    2    2    2   3    3   3    3
+    col        1    2    3    4    1    2    3    4   1    2   3    4
+
+	index   =  0    1    2    3    4    5    6    7   8    9  10   11
+	jacobian =2.0  9.0  4.0  6.0  0.5  1.3  0.0  9.7  80  7.0 1.0 2.5
+	
+	Hence jacobian index = (6 - 4 - 1) * 4 = 4
+*/
 static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
 		unsigned long whichvar,
 		int32 ninputs,
@@ -866,18 +979,21 @@ static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
   unsigned long c;
   int32 index;
 
+  CONSOLE_DEBUG("whichvar = %lu, ninputs = %d",whichvar, ninputs);
   index = ((int)whichvar - ninputs - 1) * ninputs;
+  CONSOLE_DEBUG("JACOBIAN INDEX = %d",index);
   ptr = &jacobian[index];
 
-/* this is totally broken, thanks to kirk making the var=instance assumption */
   asc_assert(ninputs >= 0);
-  Asc_Panic(2,__FUNCTION__,"ExtRel_MapDataToMtx is totally broken");
+
   for (c=0;c<(unsigned long)ninputs;c++) {
     inst = (struct Instance *)gl_fetch(inputlist,c+1);
+	CONSOLE_DEBUG("input[%lu] at %p",c+1,inst);
 /*
     var = var_instance(inst);
-*/
     used = var_apply_filter(var,d->filter);
+*/
+	used = 1;
     if (used) {
       d->nz.col = mtx_org_to_col(d->mtx,var_sindex(var));
       value = ptr[c] + mtx_value(d->mtx,&(d->nz));
@@ -913,8 +1029,8 @@ static double CalculateInterval(double varvalue){
   return (1.0e-05);
 }
 
-static int32 ExtRel__FDiff(struct Slv_Interp *slv_interp,
-		int32 (*eval_func) (/* ARGS */),
+static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
+		ExtBBoxFunc *eval_func,
 		int32 ninputs, int32 noutputs,
 		double *inputs, double *outputs,
 		double *jacobian
@@ -924,23 +1040,37 @@ static int32 ExtRel__FDiff(struct Slv_Interp *slv_interp,
   double *ptr;
   double old_x,interval,value;
 
+  CONSOLE_DEBUG("NUMERICAL DERIVATIVE...");
+
   tmp_vector = ASC_NEW_ARRAY_CLEAR(double,noutputs);
-  for (c1=0;c1<ninputs;c1++) {
-    old_x = inputs[c1];					/* perturb x */
+  for (c1=0;c1<ninputs;c1++){
+    /* perturb x */
+    old_x = inputs[c1]; 
     interval = CalculateInterval(old_x);
     inputs[c1] = old_x + interval;
-    nok = (*eval_func)(slv_interp, ninputs, noutputs,	/* call routine */
-		       inputs, tmp_vector, jacobian);
-    if (nok) break;
+	CONSOLE_DEBUG("PETURBATION WITH input[%d]=%f",c1+1,inputs[c1]);
+
+	/* call routine */
+    nok = (*eval_func)(slv_interp, ninputs, noutputs, inputs, tmp_vector, jacobian);
+    if(nok){
+	    CONSOLE_DEBUG("External evaluation error (%d)",nok);
+		break;
+	}
+
+	/* load jacobian */
     ptr = &jacobian[c1];
-    for (c2=0;c2<noutputs;c2++) {			/* load jacobian */
+    for (c2=0;c2<noutputs;c2++) {
       value = (tmp_vector[c2] - outputs[c2])/interval;
+	  CONSOLE_DEBUG("output[%d]: value = %f, gradient = %f",c2+1,tmp_vector[c2],value);
       *ptr = value;
       ptr += ninputs;
     }
     inputs[c1] = old_x;
   }
-  ascfree((char *)tmp_vector);				/* cleanup */
+  ASC_FREE(tmp_vector);
+  if(nok){
+    CONSOLE_DEBUG("External evaluation error");
+  }
   return nok;
 }
 
@@ -953,6 +1083,8 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
   int32 (*eval_func)();
   int32 (*deriv_func)();
 
+  CONSOLE_DEBUG("...");
+
   assert(rel_extnodeinfo(rel));
   cache = rel_extcache(rel);
   whichvar = rel_extwhichvar(rel);
@@ -962,7 +1094,8 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * Check and deal with the special case of the first
    * computation.
    */
-  if (cache->first_deriv_eval) {
+  if(cache->first_deriv_eval) {
+	CONSOLE_DEBUG("FIRST DERIV EVAL");
     cache->newcalc_done = (unsigned)1;
     cache->first_deriv_eval = (unsigned)0;
   }
@@ -971,9 +1104,11 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * If a function evaluation was not recently done, then we
    * can return the results from the cached jacobian.
    */
-  if (!cache->newcalc_done) {
+  if(!cache->newcalc_done){
+	CONSOLE_DEBUG("NO NEW CALC DONE, RETURN CACHED JACOBIAN");
     ExtRel_MapDataToMtx(cache->inputlist, whichvar,
-			cache->ninputs, cache->jacobian, d);
+			cache->ninputs, cache->jacobian, d
+	);
     return 0;
   }
 
@@ -984,20 +1119,19 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * In any case init the interpreter.
    */
   Init_Slv_Interp(&slv_interp);
-/*
-  slv_interp.deriv_eval = (unsigned)1;
-*/
+
   slv_interp.task = bb_deriv_eval;
   slv_interp.user_data = cache->user_data;
   deriv_func = GetDerivFunc(efunc);
   if (deriv_func) {
+	CONSOLE_DEBUG("USING EXTERNAL DERIVATIVE FUNCTION");
     nok = (*deriv_func)(&slv_interp, cache->ninputs, cache->noutputs,
 			cache->inputs, cache->outputs, cache->jacobian);
     if (nok) return nok;
-  }
-  else{
+  }else{
+	CONSOLE_DEBUG("USING NUMERICAL DERIVATIVE");
     eval_func = GetValueFunc(efunc);
-    nok = ExtRel__FDiff(&slv_interp, eval_func,
+    nok = ExtRel_FDiff(&slv_interp, eval_func,
 			cache->ninputs, cache->noutputs,
 			cache->inputs, cache->outputs, cache->jacobian);
     if (nok) return nok;
