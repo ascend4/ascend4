@@ -424,12 +424,12 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	cerr << "SOLVING SYSTEM..." << endl;
 	// Add some stuff here for cleverer iteration....
 	unsigned niter = 1000;
-	double updateinterval = 0.02;
+	//double updateinterval = 0.02;
 
 	double starttime = tm_cpu_time();
-	double lastupdate = starttime;
+	//double lastupdate = starttime;
 	SolverStatus status;
-	int solved_vars=0;
+	//int solved_vars=0;
 	bool stop=false;
 
 	status.getSimulationStatus(*this);
