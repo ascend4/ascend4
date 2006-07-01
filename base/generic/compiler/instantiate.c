@@ -5232,8 +5232,7 @@ static int AddExtArrayChildren(struct Instance *inst, /* this is the aryinst */
     for (c=1;c<=n_outputs;c++){
       relinst = FindOrAddIntChild(inst,c,NULL,NULL);
       subject = (struct Instance *)gl_fetch(outputs,c);
-      reln = CreateBlackBoxRelation(relinst,efunc,arglist,
-                                    subject,inputs,data);
+      reln = CreateBlackBoxRelation(relinst,efunc,arglist,subject,inputs,data);
       SetInstanceRelation(relinst,reln,e_blackbox);
     }
     gl_destroy(inputs);

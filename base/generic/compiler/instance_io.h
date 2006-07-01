@@ -20,13 +20,6 @@
 *//**
 	@file
 	Instance Output Routines.
-
-	Requires:
-	#include "utilities/ascConfig.h"
-	#include "general/dstring.h"
-	#include "compiler/compiler.h"
-	#include "compiler/symtab.h"
-	#include "compiler/instance_enum.h"
 *//*
 	by Tom Epperly
 	Created: 2/8/90
@@ -42,6 +35,10 @@
 #define ASC_INSTANCE_IO_H
 
 #include <utilities/ascConfig.h>
+#include <general/dstring.h>
+#include <compiler/compiler.h>
+#include <compiler/symtab.h>
+#include <compiler/instance_enum.h>
 
 /**
 	Return the instance's type name as given in instance_enum.h.

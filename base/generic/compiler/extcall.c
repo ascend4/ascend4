@@ -53,7 +53,7 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   for(i = 1; i < n; ++i){
     inst = (struct Instance *)gl_fetch(args,i);
 	/* tmp = WriteInstanceNameString(inst, NULL); */
-	CONSOLE_DEBUG("Argument %d: (%p)", i, inst);
+	CONSOLE_DEBUG("argument[%d] at %p", i, inst);
 	/* ASC_FREE(tmp) */
 
   }
@@ -68,8 +68,10 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   ext->data = hndl;
 
   if(subject){
+	CONSOLE_DEBUG("subject at %p",subject);
     pos = GetSubjectIndex(args,subject);
     ext->subject = pos;
+	CONSOLE_DEBUG("subject index is %d",pos);
   }else{
     ext->subject = 0L;
   }
@@ -132,15 +134,13 @@ struct Instance *GetSubjectInstance(struct gl_list_t *arglist,
   return NULL;
 }
 
-unsigned long GetSubjectIndex(struct gl_list_t *arglist,
-		struct Instance *subject
-){
+unsigned long GetSubjectIndex(struct gl_list_t *arglist, struct Instance *subject){
   unsigned long len1,c1,len2,c2;
   struct gl_list_t *branch;
   struct Instance *arg;
   unsigned long count=0L;
 
-  if (arglist&&subject){
+  if(arglist&&subject){
     len1 = gl_length(arglist);
     for(c1=1;c1<=len1;c1++){
       branch = (struct gl_list_t *)gl_fetch(arglist,c1);
@@ -153,6 +153,7 @@ unsigned long GetSubjectIndex(struct gl_list_t *arglist,
         count++;
         arg = (struct Instance *)gl_fetch(branch,c2);
         if (arg==subject){
+          CONSOLE_DEBUG("Subject index %lu",count);
           return count;
         }
       }
@@ -160,6 +161,7 @@ unsigned long GetSubjectIndex(struct gl_list_t *arglist,
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Reached impossible place");
     return 0L;			/*NOTREACHED*/
   }
+  CONSOLE_DEBUG("No subject index found");
   return 0L;
 }
 

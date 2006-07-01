@@ -150,6 +150,10 @@ struct rel_relation *rel_create(SlvBackendToken instance
 			CONSOLE_DEBUG("Blackbox...");
 			newrel->type = e_rel_blackbox;
 			ext = BlackBoxExtCall(instance_relation);
+
+			CONSOLE_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
+			CONSOLE_DEBUG("Subject instance type '%s'",instance_typename(ExternalCallVarInstance(ext)));
+
 		    if(ext){
 				CONSOLE_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
 			    newrel = rel_create_extnode(newrel,ext);
@@ -162,6 +166,9 @@ struct rel_relation *rel_create(SlvBackendToken instance
 		    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type in rel_create");
 		    break;
 	}
+
+	CONSOLE_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));
+
 	return(newrel);
 }
 
@@ -457,8 +464,9 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
   nodeinfo->cache = NULL;
   rel->nodeinfo = nodeinfo;
 
-  inst = (struct Instance *)gl_fetch(ext->arglist,nodeinfo->whichvar);
+  inst = ExternalCallVarInstance(ext);
   CONSOLE_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst);
+  CONSOLE_DEBUG("INSTANCE type is %s",instance_typename(inst));
 
   CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo);
   return rel;
@@ -485,6 +493,15 @@ struct ExtRelCache *rel_extcache( struct rel_relation *rel){
   }else{
     return NULL;
   }
+}
+
+/**
+	This function is naughty!
+*/
+struct Instance *rel_extsubject(struct rel_relation *rel){
+	unsigned long subject = rel_extwhichvar(rel);
+	struct ExtRelCache *cache = rel_extcache(rel);
+	return GetSubjectInstance(cache->arglist,subject);
 }
 
 void rel_set_extnodeinfo( struct rel_relation *rel
@@ -545,12 +562,9 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->newcalc_done = (unsigned)1;
   CONSOLE_DEBUG("NEW CACHE = %p",cache);
   return cache;
-
 }
 
-
-struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst)
-{
+struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst){
   struct ExtCallNode *ext;
   struct ExtRelCache *cache;
   CONST struct relation *reln;
@@ -770,8 +784,7 @@ real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 	whichvar = rel_extwhichvar(rel);
 	CONSOLE_DEBUG("WHICHVAR = %lu",whichvar);
 
-	cache = rel_extcache(rel);
-    inst = (struct Instance *)gl_fetch(cache->arglist,whichvar);
+	inst = rel_extsubject(rel);
 
 	CONSOLE_DEBUG("VAR IS INSTANCE AT %p",inst);
 

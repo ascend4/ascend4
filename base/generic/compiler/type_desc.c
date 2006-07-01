@@ -1,32 +1,28 @@
-/*
- *  Type description structure Implementation
- *  by Tom Epperly
- *  Created: 1/12/90
- *  Version: $Revision: 1.41 $
- *  Version control file: $RCSfile: type_desc.c,v $
- *  Date last modified: $Date: 1998/05/18 16:36:48 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Type description structure Implementation
+*//*
+	by Tom Epperly
+	Created: 1/12/90
+	Last in CVS: $Revision: 1.41 $ $Date: 1998/05/18 16:36:48 $ $Author: ballan $
+*/
 
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
@@ -57,19 +53,6 @@
 #include "initialize.h"
 #include "type_desc.h"
 #include "type_descio.h"
-
-#ifndef lint
-static CONST char TypeDescRCSid[] = "$Id: type_desc.c,v 1.41 1998/05/18 16:36:48 ballan Exp $";
-#endif
-
-#if 0 /* a debugging version of tmalloc. change 0 to 1 to use it. */
-#define TMALLOC(x) (x) = \
-  (struct TypeDescription *)ascmalloc(sizeof(struct TypeDescription)); \
-  ascbfill((void *)(x),sizeof(struct TypeDescription))
-#else
-#define TMALLOC(x) (x) = \
-  (struct TypeDescription *)ascmalloc(sizeof(struct TypeDescription))
-#endif
 
 #define TYPELINKDEBUG 0
 /*
@@ -432,7 +415,7 @@ struct TypeDescription
 
 {
   register struct TypeDescription *result;
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = model_type;
   result->name = name;
@@ -466,7 +449,7 @@ struct TypeDescription
 *CreateDummyTypeDesc(symchar *name)
 {
   register struct TypeDescription *result;
-  TMALLOC(result);
+  result==ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = dummy_type;
   result->name = name;
@@ -483,26 +466,21 @@ struct TypeDescription
   return result;
 }
 
-struct TypeDescription
-  *CreateConstantTypeDesc(symchar *name,	/* name of type */
-		      enum type_kind t,	/* base type of atom */
-		      struct TypeDescription *rdesc, /* type */
-						     /* description */
-						     /* what it refines */
-		      struct module_t *mod, /* module where the type */
-					    /* is defined */
-			unsigned long bytesize, /* instance size */
-		      int defaulted, /* valid for constants */
-				     /* indicates default value was */
-				     /* assigned */
-		      double rval, /* default value for real const */
-		      CONST dim_type *dim, /* dimensions of default real */
-			long ival, /* default integer const */
-			symchar *sval,  /* default symbol */
-		      int univ)
-{
+struct TypeDescription *CreateConstantTypeDesc(
+		symchar *name,	        /* name of type */
+		enum type_kind t,	    /* base type of atom */
+		struct TypeDescription *rdesc, /* type description what it refines */
+		struct module_t *mod,   /* module where the type  is defined */
+		unsigned long bytesize, /* instance size */
+		int defaulted,          /* valid for constants, indicates default value was assigned */
+		double rval,            /* default value for real const */
+		CONST dim_type *dim,    /* dimensions of default real */
+		long ival,              /* default integer const */
+		symchar *sval,          /* default symbol */
+		int univ
+){
   register struct TypeDescription *result;
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
   result->t = t;
   result->ref_count = 1;
   result->name = name;
@@ -568,7 +546,7 @@ struct TypeDescription
 )
 {
   register struct TypeDescription *result;
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
 #if TYPELINKDEBUG
   FPRINTF(ASCERR,"\n");
 #endif
@@ -740,7 +718,7 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
   char name[64];
 #endif
   if ((result =FindArray(mod,desc,isint,isrel,islogrel,iswhen,indices))==NULL){
-    TMALLOC(result);
+    result=ASC_NEW(struct TypeDescription);
     result->t = array_type;
 #if MAKEARRAYNAMES
     sprintf(name,"array_%lu",g_array_desc_count++);
@@ -785,7 +763,7 @@ struct TypeDescription *CreateRelationTypeDesc(struct module_t *mod,
 					       struct ChildDesc *childd)
 {
   struct TypeDescription *result;
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
   result->t = relation_type;
   result->ref_count = 1;
   result->name = GetBaseTypeName(relation_type);
@@ -817,7 +795,7 @@ struct TypeDescription *CreateLogRelTypeDesc(struct module_t *mod,
 					       struct ChildDesc *childd)
 {
   struct TypeDescription *result;
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
   result->t = logrel_type;
   result->ref_count = 1;
   result->name = GetBaseTypeName(logrel_type);
@@ -848,7 +826,7 @@ struct TypeDescription
 		    struct StatementList *statl)
 {
   struct TypeDescription *result;
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = when_type;
   result->name = GetBaseTypeName(when_type);
@@ -875,7 +853,7 @@ struct TypeDescription
 {
   register struct TypeDescription *result;
   assert(rdesc!=NULL);			/* mandatory */
-  TMALLOC(result);
+  result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = patch_type;
   result->name = name;

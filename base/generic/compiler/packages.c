@@ -49,6 +49,7 @@
 #include "compiler.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/ascEnvVar.h>
+#include <utilities/ascDynaLoad.h>
 #include <general/list.h>
 #include "symtab.h"
 #include "fractions.h"
@@ -161,6 +162,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	fclose(f);
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s\n",ls->fullpath);
+	ospath_free(fp);
 	return 1;
 }
 
@@ -194,14 +196,24 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	s1 = ospath_getfilestem(fp1);
 	if(s1==NULL){
 		/* not a file, so fail... */
+		ospath_free(fp1);
+		ospath_free(fp2);
 		return NULL;
 	}
 
 	/* CONSOLE_DEBUG("FILESTEM = '%s'",s1); */
 
 #if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
+	/*
+		this is the preferred operation: SCons reports what the local system
+		uses as its shared library file extension.
+	*/
 	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
 #else
+	/*
+		if we don't have ASC_SHLIB-SUFFIX and -PREFIX then we can do some
+		system-specific stuff here, but it's not as general.
+	*/
 # ifdef __WIN32__
 	snprintf(buffer,PATH_MAX,"%s.dll",s1);
 # elif defined(linux)
@@ -213,7 +225,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 # elif defined(_SGI_SOURCE)
 	snprintf(buffer,PATH_MAX,"%s.so",s1);
 # else
-#  error "Please #define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX or pass as compiler flags to packages.c"
+#  error "Unknown system type (please define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX)"
 # endif
 #endif
 
@@ -222,7 +234,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	fp1 = ospath_concat(fp2,fp3);
 	ospath_free(fp2);
 	ospath_free(fp3);
-	free(s1);
+	ospath_free_str(s1);
 
 	ls.partialpath = fp1;
 
@@ -240,13 +252,14 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	sp = ospath_searchpath_new(path);
 
 	if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
+		ospath_free(fp1);
+		ospath_searchpath_free(sp);
 		return NULL;
 	}
 
 	strncpy(path_var,ls.fullpath,PATH_MAX);
-
 	ospath_free(fp1);
-
+	ospath_searchpath_free(sp);
 	return path_var;
 }
 
