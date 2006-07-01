@@ -141,6 +141,8 @@ struct ExtRelCache{
   SlvBackendToken data;             /**< only passed on pre_slv */
   struct gl_list_t *arglist;        /**< only passed on pre_slv */
   struct gl_list_t *inputlist;
+  struct var_variable **invars; 	/**< pointers to var_variables, in input argument order */
+  struct var_variable **outvars;    /**< pointers to var_variables, in output argument order */
   void *user_data;                  /**< user data */
   int32 ninputs, noutputs;
   double *inputs;
@@ -363,16 +365,15 @@ ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
  *  @see rel_set_incidencesF()
  */
 extern void rel_set_incidencesF(struct rel_relation *rel,
-                                int32 n,
-                                struct var_variable **ilist);
+		int32 n, struct var_variable **ilist);
 /**<
  *  Implementation function for rel_set_incidences().  Do not call
  *  this function directly - use rel_set_incidences() instead.
  */
 
 
-extern struct var_variable
-**rel_incidence_list_to_modify(struct rel_relation *rel);
+extern struct var_variable **
+rel_incidence_list_to_modify(struct rel_relation *rel);
 /**<
 	Returns a non-const pointer to an array rel_n_incidences(rel)
 	long of vars.
@@ -384,10 +385,11 @@ ASC_DLLSPEC(const struct var_variable**) rel_incidence_list(struct rel_relation 
 	Each element of the array is a struct var_variable *.
 	Check the var sindex to see where each might go in a jacobian.
 	If there is no incidence, NULL is returned.
-	Pointers in this array will be unique.<br><br>
-	The list belongs to the relation. Do not destroy it. Do not change it.<br><br>
+
+	Pointers in this array will be unique.
+	The list belongs to the relation. Do not destroy it. Do not change it.
 	
-	The return value IS NOT A NULL-TERMINATED LIST.
+	The returned array is *not* null-terminated.
 */
 
 /*-----------------------------------------------------------------------------
@@ -635,6 +637,12 @@ extern double g_external_tolerance; /**< DEFAULT 1e-12 */
 	of all this stuff here... feel free to revise... -- JP
 */
 
+void extrel_store_input_vars(struct rel_relation *rel);
+/**<
+	Convert the ExtRelCache 'inputlist' into a list of var_variable pointers
+	inside the ExtRElCAche object.
+*/
+
 extern struct ExtRelCache *rel_extcache(struct rel_relation *rel);
 /**<
 	Retrieve external relation information.
@@ -669,9 +677,9 @@ extern struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext);
 	all the pointers inside the ExtCallNode object, but also allocates its own
 	memory for the input and output arrays and jacobian.
 
-	Also creates a 'linearised arglist', (see LinearizeArgList) which puts
-	the input and output arguments all into one list (with the inputs coming
-	first, followed by the outpus, in the case of black box relations).
+	A pointer to the 'arglist' used by the ExtCallNode is put in the ExtRelCache
+	and also a linearised list of the inputs is put in the
+	'inputlist' of the ExtRelCache (and this list is owned by the ExtRelCache).
 */
 
 struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst);

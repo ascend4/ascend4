@@ -409,17 +409,15 @@ void var_set_flagbit(struct var_variable *var, uint32 field,uint32 one)
   }
 }
 
-int32 var_apply_filter(const struct var_variable *var,
-  const var_filter_t *filter)
-{
+int32 var_apply_filter(const struct var_variable *var, 
+	const var_filter_t *filter
+){
   if (var==NULL || filter==NULL || var->ratom == NULL) {
-    FPRINTF(stderr,"var_apply_filter miscalled with NULL\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"'%s' miscalled with NULL",__FUNCTION__);
     return FALSE;
   }
   /* AND to mask off irrelevant bits in flags and match value, then compare */
-  return ( (filter->matchbits & var->flags) ==
-           (filter->matchbits & filter->matchvalue)
-         );
+  return (filter->matchbits & var->flags) == (filter->matchbits & filter->matchvalue);
 }
 
 
