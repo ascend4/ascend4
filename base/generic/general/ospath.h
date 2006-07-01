@@ -78,6 +78,9 @@ struct FilePath;
 */
 ASC_DLLSPEC(struct FilePath *) ospath_new(const char *path);
 
+/**
+	Create but with no 'cleanup', and no fixing of / vs \.
+*/
 ASC_DLLSPEC(struct FilePath *) ospath_new_noclean(const char *path);
 
 /**
@@ -187,6 +190,8 @@ struct FilePath *ospath_getparentatdepthn(struct FilePath *fp, unsigned nDepth);
 
 /**
 	Return then name of the bottom most level path entry (includes any extension)
+
+	The caller owns *and must free* the returned string.
 */
 ASC_DLLSPEC(char *) ospath_getbasefilename(struct FilePath *fp);
 

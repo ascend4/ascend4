@@ -25,6 +25,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "ospath.h"
 
@@ -464,6 +465,8 @@ void ospath_cleanup(struct FilePath *fp){
 		STRCAT(fp->path, p);
 	}
 	//M("FINISHED STRTOK");
+
+	ospath_free(home);
 
 	// put / on end as required, according to what the starting path had
 	if(endslash && (strlen(fp->path) > 0 ? (fp->path[strlen(fp->path) - 1] != PATH_SEPARATOR_CHAR) : 1))
