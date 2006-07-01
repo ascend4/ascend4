@@ -161,13 +161,13 @@ struct rel_relation *rel_create(SlvBackendToken instance
 			    CONSOLE_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
 			    newrel->nodeinfo = NULL;
 		    }
+
+			CONSOLE_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));		
 		    break;
 		default:
 		    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type in rel_create");
 		    break;
 	}
-
-	CONSOLE_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));
 
 	return(newrel);
 }
