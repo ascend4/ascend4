@@ -772,17 +772,12 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 }
 
 real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
-	struct ExtRelCache *cache;
 	struct Instance *inst;
 	double value;
-	unsigned long whichvar;
 
 	CONSOLE_DEBUG("...");
 
 	assert(rel_extnodeinfo(rel));
-
-	whichvar = rel_extwhichvar(rel);
-	CONSOLE_DEBUG("WHICHVAR = %lu",whichvar);
 
 	inst = rel_extsubject(rel);
 
@@ -859,11 +854,11 @@ struct deriv_data {
  * THIS FUNCTION IS TOTALLY AND COMPLETELY BROKEN.
  */
 static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
-				unsigned long whichvar,
-				int32 ninputs,
-				double *jacobian,
-				struct deriv_data *d)
-{
+		unsigned long whichvar,
+		int32 ninputs,
+		double *jacobian,
+		struct deriv_data *d
+){
   struct Instance *inst;
   struct var_variable *var = NULL;
   double value, *ptr;
@@ -876,8 +871,7 @@ static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
 
 /* this is totally broken, thanks to kirk making the var=instance assumption */
   asc_assert(ninputs >= 0);
-  Asc_Panic(2, "ExtRel_MapDataToMtx",
-            "ExtRel_MapDataToMtx is totally broken");
+  Asc_Panic(2,__FUNCTION__,"ExtRel_MapDataToMtx is totally broken");
   for (c=0;c<(unsigned long)ninputs;c++) {
     inst = (struct Instance *)gl_fetch(inputlist,c+1);
 /*
