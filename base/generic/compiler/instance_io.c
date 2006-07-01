@@ -101,10 +101,13 @@ CONST char *instance_typename(CONST struct Instance *inst){
 	int i;
 	AssertMemory(inst);
 	for(i=0; g_instancetypenames[i].name!=NULL; ++i){
+		/* CONSOLE_DEBUG("Testing '%s' (value=%d)",g_instancetypenames[i].name,g_instancetypenames[i].t); */
 		if(g_instancetypenames[i].t == inst->t){
+			/* CONSOLE_DEBUG("MATCHED"); */
 			return g_instancetypenames[i].name;
 		}
 	}
+	CONSOLE_DEBUG("No match");
 	Asc_Panic(2,__FUNCTION__,"Invalid instance type (inst_t '%d' not found in list)",(int)inst->t);
 }
 

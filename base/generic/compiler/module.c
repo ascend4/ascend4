@@ -887,24 +887,28 @@ FilePathTestFn module_searchpath_test;
 	@return 1 on success
 */
 int module_searchpath_test(struct FilePath *path,void *searchdata){
-	struct FilePath *fp, *fp1, *fp2;
+	struct FilePath *fp1;
 	struct ModuleSearchData *sd;
 	FILE *f;
-	char *tmp;
+	/* char *tmp; */
 
 	sd = (struct ModuleSearchData *)searchdata;
 	assert(sd!=NULL);
 	assert(sd->fp!=NULL);
 
+	/* 
 	tmp  = ospath_str(sd->fp);
-	/* CONSOLE_DEBUG("About to concat path '%s'...",tmp); */
+	CONSOLE_DEBUG("About to concat path '%s'...",tmp);
 	ospath_free_str(tmp);
+	*/
 
 	fp1 = ospath_concat(path,sd->fp);
 
+	/* 
 	tmp  = ospath_str(sd->fp);
-	/* CONSOLE_DEBUG("Checking for path '%s'...",tmp); */
+	CONSOLE_DEBUG("Checking for path '%s'...",tmp);
 	ospath_free_str(tmp);
+	*/
 
 	if(ospath_stat(fp1,&sd->buf)){
 		sd->error = errno;
@@ -959,11 +963,11 @@ int ModuleSearchPath(CONST char *name,
                      struct module_t *m,
                      int * CONST error
 ){
-	register size_t length;
-	int result;
-	int path_entries;
-	int j;
-	register CONST char *t;
+	/* register size_t length; */
+	/* int result; */
+	/* int path_entries; */
+	/* int j; */
+	/* register CONST char *t; */
 	struct FilePath *fp1, *fp2;
 	char *tmp;
 	struct FilePath **sp1 = NULL;
@@ -1022,15 +1026,15 @@ int ModuleSearchPath(CONST char *name,
 
 		if(fp2==NULL){
 			*error = sd.error;
-			ospath_searchpath_free(sp1);		
 			CONSOLE_DEBUG("File '%s' not found in search path",name);		
+			ospath_searchpath_free(sp1);
 			return -1;
 		}
 
 		tmp = ospath_str(fp2);
-		ospath_searchpath_free(sp1);					
 		assert(tmp!=NULL);
 		/* CONSOLE_DEBUG("Found file in '%s' in search path",tmp); */
+		ospath_searchpath_free(sp1);					
 		ospath_free_str(tmp);
 	}
 
@@ -1259,6 +1263,7 @@ struct module_t *NewModule(CONST char *name){
   if(tmp!=NULL && strlen(tmp)!=0){
 	newmodule->base_name = AddSymbol(tmp);
   }
+  ospath_free_str(tmp); /* we can free tmp, since 'AddSymbol' takes a copy */
   ospath_free(fp1);
 
   /* CONSOLE_DEBUG("Module base-name: %s",newmodule->base_name); */

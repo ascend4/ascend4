@@ -33,6 +33,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 #include <general/list.h>
 #include <general/dstring.h>
 #include "compiler.h"
@@ -314,17 +315,17 @@ static void MakeAtomChildren(unsigned long int nc, /* number of children */
 }
 
 
-/*
- * This function, redone by kirk, no longer finds universals and
- * returns them. if that were appropriate, it should have been
- * checked and done before hand. By ShortCutMakeUniversalInstance
- */
-struct Instance *CreateRealInstance(struct TypeDescription *type)
-{
+/**
+	This function, redone by kirk, no longer finds universals and
+	returns them. if that were appropriate, it should have been
+	checked and done before hand. By ShortCutMakeUniversalInstance
+*/
+struct Instance *CreateRealInstance(struct TypeDescription *type){
 
   if (BaseTypeIsAtomic(type)) {
     register struct RealAtomInstance *result;
     register unsigned long num_children;
+
     if ((result=RA_INST(LookupPrototype(GetName(type))))==NULL) {
       CopyTypeDesc(type);
       num_children = ChildListLen(GetChildList(type));
@@ -340,7 +341,8 @@ struct Instance *CreateRealInstance(struct TypeDescription *type)
       result->dimen = GetRealDimens(type);
       result->relations = NULL;
       result->depth = UINT_MAX;
-      if (AtomDefaulted(type)) {
+
+      if(AtomDefaulted(type)){
         result->value = GetRealDefault(type);
         result->assigned = 1;
       }
@@ -348,25 +350,32 @@ struct Instance *CreateRealInstance(struct TypeDescription *type)
         result->value = UNDEFAULTEDREAL;
         result->assigned = 0;
       }
+
       MakeAtomChildren(num_children,
-		       INST(result),
-		       BASE_ADDR(result,num_children,struct RealAtomInstance),
-		       CLIST(result,struct RealAtomInstance),
-		       GetChildDesc(type));
+			INST(result),
+			BASE_ADDR(result,num_children,struct RealAtomInstance),
+			CLIST(result,struct RealAtomInstance),
+			GetChildDesc(type)
+      );
       AssertMemory(result);
+
+	  CONSOLE_DEBUG("CREATED REAL ATOM INSTANCE of type '%s' at %p",SCP(GetName(type)),result);
+
       if (GetUniversalFlag(type)){
         AddUniversalInstance(GetUniversalTable(),type,INST(result));
         return INST(result);
       }
       AddPrototype(CopyInstance(INST(result)));
       return INST(result);
+    }else{ /* instance type has a prototype which can be copied */
+      result = CopyInstance(INST(result));
+      CONSOLE_DEBUG("CREATED (COPIED PROTOTYPE) REAL ATOM INSTANCE of type '%s' at %p",SCP(GetName(type)),result);
+	  return result;
     }
-      else { /* instance type has a prototype which can be copied */
-      return CopyInstance(INST(result));
-    }
-  } else { /* create constant */
+  } else {
+    /* create constant */
     register struct RealConstantInstance *result;
-    if ((result=RC_INST(LookupPrototype(GetName(type))))==NULL) {
+    if((result=RC_INST(LookupPrototype(GetName(type))))==NULL){
       CopyTypeDesc(type);
       result = RC_INST(ascmalloc(GetByteSize(type)));
       result->t = REAL_CONSTANT_INST;

@@ -81,8 +81,7 @@ struct gl_list_t *LookupVarInTable(struct Instance *inst)
   return NULL;
 }
 
-struct Instance **AddVarToTable(struct Instance *inst, int *added)
-{
+struct Instance **AddVarToTable(struct Instance *inst, int *added){
   struct Instance **hndl;
   int c=0;
 
@@ -109,7 +108,6 @@ struct Instance **AddVarToTable(struct Instance *inst, int *added)
     c++;
   }
   Asc_Panic(2, __FUNCTION__, "MAX_EXTRELATIONS limit exceeded.");
-  
 }
 
 
@@ -129,6 +127,7 @@ void FixExternalVars(struct Instance *old,struct Instance *new){
     len = gl_length(exists);
     for (c=1;c<=len;c++) {
       hndl = (struct Instance **)gl_fetch(exists,c);
+      CONSOLE_DEBUG("Replacing reference %p with %p",*hndl,new);
       *hndl = new;
     }
     gl_destroy(exists);

@@ -1000,10 +1000,10 @@ int BinTokenCalcGradient(int btable, int bindex,double *vars,
   }
 }
 
-/*
-/* this code may be out of date, but should be saved. *
+#if 0
+/* this code may be out of date, but should be saved. */
 FILE *g_ascend_errors = stderr;
-int main() { /* built only if TESTBT defined TRUE in bintoken.c *
+int main() { /* built only if TESTBT defined TRUE in bintoken.c */
   double res;
   char *b[5];
   gl_init_pool();
@@ -1032,4 +1032,4 @@ int main() { /* built only if TESTBT defined TRUE in bintoken.c *
   gl_destroy_pool();
   return 0;
 }
-*/
+#endif
