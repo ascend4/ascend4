@@ -62,7 +62,7 @@
 
 #define MIMDEBUG 0 /* slv_std_make_incidence_mtx debugging */
 #define RIDEBUG 0 /* reindex debugging */
-#define SBPDEBUG 1 /* slv_block_partition_real debugging */
+#define SBPDEBUG 0 /* slv_block_partition_real debugging */
 #define SLBPDEBUG 0 /* slv_log_block_partition debugging */
 
 /* global to get around the mr header (for tear_subreorder) */
