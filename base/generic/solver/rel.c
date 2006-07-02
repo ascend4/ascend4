@@ -950,8 +950,7 @@ struct deriv_data {
 	with the counting for vars 1..nvars, but the jacobian indexing
 	starting from 0 (c-wise).
 	
-	        v    used = var_apply_filter(var,d->filter);
--------- first output variable
+	        v-------- first output variable
 	I I I I O O O
 	1 2 3 4 5 6 7
 	          ^--------- whichvar
@@ -966,39 +965,40 @@ struct deriv_data {
 	
 	Hence jacobian index = (6 - 4 - 1) * 4 = 4
 */
-static void ExtRel_MapDataToMtx(struct gl_list_t *inputlist,
+static void ExtRel_MapDataToMtx(struct ExtRelCache *cache, 
 		unsigned long whichvar,
-		int32 ninputs,
-		double *jacobian,
 		struct deriv_data *d
 ){
-  struct Instance *inst;
   struct var_variable *var = NULL;
   double value, *ptr;
   boolean used;
   unsigned long c;
   int32 index;
+  unsigned long ninputs;
 
-  CONSOLE_DEBUG("whichvar = %lu, ninputs = %d",whichvar, ninputs);
+  ninputs = cache->ninputs;
+
+  CONSOLE_DEBUG("whichvar = %lu, ninputs = %lu",whichvar, ninputs);
   index = ((int)whichvar - ninputs - 1) * ninputs;
   CONSOLE_DEBUG("JACOBIAN INDEX = %d",index);
-  ptr = &jacobian[index];
+  ptr = &(cache->jacobian[index]);
 
   asc_assert(ninputs >= 0);
 
   for (c=0;c<(unsigned long)ninputs;c++) {
-    inst = (struct Instance *)gl_fetch(inputlist,c+1);
-	CONSOLE_DEBUG("input[%lu] at %p",c+1,inst);
-/*
-    var = var_instance(inst);
+    var = cache->invars[c];
+	CONSOLE_DEBUG("invar[%lu] at %p",c+1,var);
     used = var_apply_filter(var,d->filter);
-*/
-	used = 1;
-    if (used) {
+
+	if (used) {
       d->nz.col = mtx_org_to_col(d->mtx,var_sindex(var));
+	  CONSOLE_DEBUG("column = %d",d->nz.col);
       value = ptr[c] + mtx_value(d->mtx,&(d->nz));
+	  CONSOLE_DEBUG("input %d is used, value = %f",c,value);
       mtx_set_value(d->mtx,&(d->nz), value);
-    }
+    }else{
+	  CONSOLE_DEBUG("var is not used");
+	}
   }
 }
 
@@ -1106,9 +1106,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    */
   if(!cache->newcalc_done){
 	CONSOLE_DEBUG("NO NEW CALC DONE, RETURN CACHED JACOBIAN");
-    ExtRel_MapDataToMtx(cache->inputlist, whichvar,
-			cache->ninputs, cache->jacobian, d
-	);
+    ExtRel_MapDataToMtx(cache, whichvar, d);
     return 0;
   }
 
@@ -1142,8 +1140,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * the main matrix with the derivative information.
    */
   cache->user_data = slv_interp.user_data;	/* save user info */
-  ExtRel_MapDataToMtx(cache->inputlist, whichvar,
-		      cache->ninputs, cache->jacobian, d);
+  ExtRel_MapDataToMtx(cache, whichvar, d);
   return 0;
 }
 
