@@ -448,13 +448,14 @@ class Browser:
 				print "MODEL: '%s'" % _model
 			elif self.options.auto_sim:
 				_model, _ext = os.path.splitext(args[0]);
-				self.reporter.reportNote("Instantiating self-titled model '%s'" %_model)
 
 			if _model:
 				try:
 					_t=self.library.findType(_model)
 					try:
 						self.do_sim(_t)
+						if not self.options.model:
+							self.reporter.reportNote("Instantiating self-titled model '%s'" %_model)
 					except RuntimeError, e:
 						self.reporter.reportError("Failed to create instance of '%s': %s" 
 							%(_model, str(e))

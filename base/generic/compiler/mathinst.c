@@ -1,32 +1,29 @@
-/*
- *  Ascend Instance Tree Type Implementation
- *  by Tom Epperly
- *  9/3/89
- *  Version: $Revision: 1.10 $
- *  Version control file: $RCSfile: mathinst.c,v $
- *  Date last modified: $Date: 1998/05/06 17:33:36 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*//**
+	@file
+	Ascend Instance Tree Type Implementation
+*//*
+	by Tom Epperly
+	9/3/89
+	Last in CVS: $Revision: 1.10 $ $Date: 1998/05/06 17:33:36 $ $Author: ballan $
+*/
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
@@ -76,17 +73,16 @@
 #include "tmpnum.h"
 #include "mathinst.h"
 
-#ifndef lint
-static CONST char MathInstModuleID[] = "$Id: mathinst.c,v 1.10 1998/05/06 17:33:36 ballan Exp $";
-#endif
+static const char panic_msg[]="Incorrect type passed";
+#define PANIC_INCORRECT_TYPE Asc_Panic(2,__FUNCTION__,panic_msg);
 
 enum Expr_enum GetInstanceRelationType(CONST struct Instance *i)
 {
   AssertMemory(i);
   if (i->t == REL_INST) {
     return RELN_INST(i)->type; /* the implementation kind */
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelationType.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -95,8 +91,8 @@ CONST struct relation *GetInstanceRelationOnly(CONST struct Instance *i)
   AssertMemory(i);
   if (i->t == REL_INST) {
     return RELN_INST(i)->ptr;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelationOnly.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -107,8 +103,8 @@ CONST struct relation *GetInstanceRelation(CONST struct Instance *i,
   if (i->t == REL_INST) {
     *type = RELN_INST(i)->type;
     return RELN_INST(i)->ptr;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelation.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -119,8 +115,8 @@ struct relation *GetInstanceRelToModify(struct Instance *i,
   if (i->t == REL_INST) {
     *type = RELN_INST(i)->type;
     return RELN_INST(i)->ptr;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceRelToModify.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
     
   }
 }
@@ -131,8 +127,8 @@ CONST struct logrelation *GetInstanceLogRel(CONST struct Instance *i)
   AssertMemory(i);
   if (i->t == LREL_INST) {
     return LRELN_INST(i)->ptr;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceLogRel.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
     
   }
 }
@@ -142,27 +138,27 @@ struct logrelation *GetInstanceLogRelToModify(struct Instance *i)
   AssertMemory(i);
   if (i->t == LREL_INST) {
     return LRELN_INST(i)->ptr;
-  } else {
-    Asc_Panic(2, NULL,"Incorrect type passed to GetInstanceLogRelToModify.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
     
   }
 }
+
 CONST struct logrelation *GetInstanceLogRelOnly(CONST struct Instance *i)
 {
   AssertMemory(i);
   if (InstanceKind(i) == LREL_INST) {
     return LRELN_INST(i)->ptr;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceLogRelOnly.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
     
   }
 }
 
-/*
- * l = GetInstanceOperands(i);
- * Returns list of vars/models/equations in a mathematical relationship.
- * May want to include the models/relations from the cases of a when.
- */
+/**
+	Returns list of vars/models/equations in a mathematical relationship.
+	May want to include the models/relations from the cases of a when.
+*/
 struct gl_list_t *GetInstanceOperands(CONST struct Instance *i)
 {
   CONST struct gl_list_t *list = NULL;
@@ -224,24 +220,22 @@ struct gl_list_t *GetInstanceWhenVars(CONST struct Instance *i)
   AssertMemory(i);
   if (i->t == WHEN_INST) {
     return W_INST(i)->bvar;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceWhenVars.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
     
   }
 }
-
 
 struct gl_list_t *GetInstanceWhenCases(CONST struct Instance *i)
 {
   AssertMemory(i);
   if (i->t == WHEN_INST) {
     return W_INST(i)->cases;
-  } else {
-    Asc_Panic(2, NULL,"Incorrect type passed to GetInstanceWhenCases.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
     
   }
 }
-
 
 struct gl_list_t *GetInstanceWhens(CONST struct Instance *i)
 {
@@ -268,8 +262,7 @@ struct gl_list_t *GetInstanceWhens(CONST struct Instance *i)
     case WHEN_INST:
       return W_INST(i)->whens;
     default:
-      Asc_Panic(2, NULL, "Incorrect type passed to GetInstanceWhens.\n");
-      
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -278,8 +271,8 @@ void SetWhenVarList(struct Instance *i,struct gl_list_t *whenvars)
   AssertMemory(i);
   if (i->t == WHEN_INST) {
     W_INST(i)->bvar = whenvars;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to SetWhenVarList.\n");
+  }else{
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -288,37 +281,35 @@ void SetWhenCases(struct Instance *i,struct gl_list_t *whencases)
   AssertMemory(i);
   if (i->t == WHEN_INST) {
     W_INST(i)->cases = whencases;
-  } else {
-    Asc_Panic(2, NULL, "Incorrect type passed to SetWhenCases.\n");
+  }else{
+     PANIC_INCORRECT_TYPE;
   }
 }
 
-
-/*
- * This is a tricky function. If we are attempting to set
- * a new relation, and if the i->ptr is not NULL, i.e. a
- * relation structure was already assigned, we must *not* force
- * the assignment, and destroy the old relation. Unfortunately
- * at this stage, we would have to back up todo undo the
- * AddRelations etc. So we punt.
- */
+/**
+	This is a tricky function. If we are attempting to set
+	a new relation, and if the i->ptr is not NULL, i.e. a
+	relation structure was already assigned, we must *not* force
+	the assignment, and destroy the old relation. Unfortunately
+	at this stage, we would have to back up todo undo the
+	AddRelations etc. So we punt.
+*/
 void SetInstanceRelation(struct Instance *i, struct relation *rel,
 			 enum Expr_enum type)
 {
   AssertMemory(i);
   if(i->t==REL_INST){
     if(RELN_INST(i)->ptr==NULL){
-      CONSOLE_DEBUG("Assigned rel ptr %p to instance %p",rel,i);
+      CONSOLE_DEBUG("RelationInstance %p points to relation at %p",i,rel);
       RELN_INST(i)->ptr = rel;
       RELN_INST(i)->type = type;
     }else{
-      Asc_Panic(2, NULL, "Attempt to reassign RelationPointer.\n");
+      Asc_Panic(2, NULL, "Attempt to reassign RelationPointer.");
     }
   }else{
-    Asc_Panic(2, NULL, "Incorrect type passed to SetInstanceRelation.\n");
+    PANIC_INCORRECT_TYPE;
   }
 }
-
 
 void SetInstanceLogRel(struct Instance *i, struct logrelation *lrel){
   AssertMemory(i);
@@ -329,13 +320,13 @@ void SetInstanceLogRel(struct Instance *i, struct logrelation *lrel){
       Asc_Panic(2, __FUNCTION__, "Attempted reassignment to logrel ptr");
     }
   }else{
-    Asc_Panic(2, __FUNCTION__, "Incorrect instance type.");
+    PANIC_INCORRECT_TYPE;
   }
 }
 
-/*********************************************************************\
-Relation list stuff
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+  RELATION LIST STUFF
+*/
 
 unsigned long RelationsCount(CONST struct Instance *i)
 {
@@ -345,11 +336,11 @@ unsigned long RelationsCount(CONST struct Instance *i)
   case REAL_ATOM_INST:
     if (RA_INST(i)->relations!=NULL) {
       return gl_length(RA_INST(i)->relations);
-    } else {
+    }else{
       return 0;
     }
   default:
-    Asc_Panic(2, NULL, "RelationsCount called with inappropriate argument.\n");
+    Asc_Panic(2, NULL, "RelationsCount called with inappropriate argument.");
     
   }
 }
@@ -363,13 +354,13 @@ struct Instance *RelationsForAtom(CONST struct Instance *i,
   case REAL_ATOM_INST:
     if (RA_INST(i)->relations!=NULL) {
       return INST(gl_fetch(RA_INST(i)->relations,c));
-    } else {
-      Asc_Panic(2, NULL, "c out of bounds in RelationsForAtom.\n");
+    }else{
+      Asc_Panic(2, NULL, "c out of bounds in RelationsForAtom.");
     }
     break;
   default:
     Asc_Panic(2, NULL,
-              "RelationsForAtom called with inappropriate argument.\n");
+              "RelationsForAtom called with inappropriate argument.");
     break;
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
@@ -381,6 +372,7 @@ void AddRelation(struct Instance *i, struct Instance *reln){
   AssertMemory(i);
   switch(i->t){
   case REAL_ATOM_INST:
+	CONSOLE_DEBUG("ADD RelationInstance %p to RealAtomInstance %p",reln,i);
     if (RA_INST(i)->relations==NULL) {
       RA_INST(i)->relations = gl_create(AVG_RELATIONS);
     }
@@ -390,7 +382,7 @@ void AddRelation(struct Instance *i, struct Instance *reln){
     }
     break;
   default:
-    Asc_Panic(2, NULL, "AddRelation called with inappropriate argument.\n");
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -410,14 +402,13 @@ void RemoveRelation(struct Instance *i, struct Instance *reln)
     }
     break;
   default:
-    Asc_Panic(2, NULL, "Bad argument to RemoveRelation.\n");
+    PANIC_INCORRECT_TYPE;
   }
 }
 
-
-/*********************************************************************\
-Logical Relation list stuff
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+  LOGICAL RELATION LIST STUFF
+*/
 
 unsigned long LogRelationsCount(CONST struct Instance *i)
 {
@@ -427,25 +418,23 @@ unsigned long LogRelationsCount(CONST struct Instance *i)
   case BOOLEAN_ATOM_INST:
     if (BA_INST(i)->logrelations!=NULL) {
       return gl_length(BA_INST(i)->logrelations);
-    } else {
+    }else{
       return 0;
     }
   case REL_INST:
     if (RELN_INST(i)->logrels!=NULL) {
       return gl_length(RELN_INST(i)->logrels);
-    } else {
+    }else{
       return 0;
     }
   case LREL_INST:
     if (LRELN_INST(i)->logrels!=NULL) {
       return gl_length(LRELN_INST(i)->logrels);
-    } else {
+    }else{
       return 0;
     }
   default:
-    Asc_Panic(2, "LogRelationsCount",
-              "LogRelationsCount called with inappropriate argument.\n");
-    
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -458,24 +447,23 @@ struct Instance *LogRelationsForInstance(CONST struct Instance *i,
   case BOOLEAN_ATOM_INST:
     if (BA_INST(i)->logrelations!=NULL) {
       return INST(gl_fetch(BA_INST(i)->logrelations,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in LogRelationsForInstance.\n");
     }
   case REL_INST:
     if (RELN_INST(i)->logrels!=NULL) {
       return INST(gl_fetch(RELN_INST(i)->logrels,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in LogRelationsForInstance.\n");
     }
   case LREL_INST:
     if (LRELN_INST(i)->logrels!=NULL) {
       return INST(gl_fetch(LRELN_INST(i)->logrels,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in LogRelationsForInstance.\n");
     }
   default:
-    Asc_Panic(2, NULL,
-              "LogRelationsForInstance called with inappropriate argument.\n");
+    PANIC_INCORRECT_TYPE;
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }
@@ -517,7 +505,7 @@ void AddLogRel(struct Instance *i, struct Instance *lreln)
     }
     break;
   default:
-    Asc_Panic(2, NULL, "AddLogRel called with inappropriate argument.\n");
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -558,13 +546,13 @@ void RemoveLogRel(struct Instance *i, struct Instance *lreln)
     }
     break;
   default:
-    Asc_Panic(2, NULL, "Bad argument to RemoveLogRel.\n");
+    PANIC_INCORRECT_TYPE;
   }
 }
 
-/*********************************************************************\
-When list stuff
-\*********************************************************************/
+/*------------------------------------------------------------------------------
+  'WHEN' LIST STUFF
+*/
 
 unsigned long WhensCount(struct Instance *i)
 {
@@ -574,67 +562,65 @@ unsigned long WhensCount(struct Instance *i)
   case BOOLEAN_ATOM_INST:
     if (BA_INST(i)->whens!=NULL) {
       return gl_length(BA_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case INTEGER_ATOM_INST:
     if (IA_INST(i)->whens!=NULL) {
       return gl_length(IA_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case SYMBOL_ATOM_INST:
     if (SYMA_INST(i)->whens!=NULL) {
       return gl_length(SYMA_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case BOOLEAN_CONSTANT_INST:
     if (BC_INST(i)->whens!=NULL) {
       return gl_length(BC_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case INTEGER_CONSTANT_INST:
     if (IC_INST(i)->whens!=NULL) {
       return gl_length(IC_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case SYMBOL_CONSTANT_INST:
     if (SYMC_INST(i)->whens!=NULL) {
       return gl_length(SYMC_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case MODEL_INST:
     if (MOD_INST(i)->whens!=NULL) {
       return gl_length(MOD_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case REL_INST:
     if (RELN_INST(i)->whens!=NULL) {
       return gl_length(RELN_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case LREL_INST:
     if (LRELN_INST(i)->whens!=NULL) {
       return gl_length(LRELN_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   case WHEN_INST:
     if (W_INST(i)->whens!=NULL) {
       return gl_length(W_INST(i)->whens);
-    } else {
+    }else{
       return 0;
     }
   default:
-    Asc_Panic(2, NULL, "WhensCount called with inappropriate argument.\n");
-    
-
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -654,60 +640,59 @@ struct Instance *WhensForInstance(struct Instance *i,
   case INTEGER_ATOM_INST:
     if (IA_INST(i)->whens!=NULL) {
       return INST(gl_fetch(IA_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case SYMBOL_ATOM_INST:
     if (SYMA_INST(i)->whens!=NULL) {
       return INST(gl_fetch(SYMA_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case BOOLEAN_CONSTANT_INST:
     if (BC_INST(i)->whens!=NULL) {
       return INST(gl_fetch(BC_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case INTEGER_CONSTANT_INST:
     if (IC_INST(i)->whens!=NULL) {
       return INST(gl_fetch(IC_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case SYMBOL_CONSTANT_INST:
     if (SYMC_INST(i)->whens!=NULL) {
       return INST(gl_fetch(SYMC_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case MODEL_INST:
     if (MOD_INST(i)->whens!=NULL) {
       return INST(gl_fetch(MOD_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case REL_INST:
     if (RELN_INST(i)->whens!=NULL) {
       return INST(gl_fetch(RELN_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case LREL_INST:
     if (LRELN_INST(i)->whens!=NULL) {
       return INST(gl_fetch(LRELN_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   case WHEN_INST:
     if (W_INST(i)->whens!=NULL) {
       return INST(gl_fetch(W_INST(i)->whens,c));
-    } else {
+    }else{
       Asc_Panic(2, NULL, "c out of bounds in WhensForInstance.\n");
     }
   default:
-    Asc_Panic(2, "WhensForInstance",
-              "WhensForInstance called with inappropriate argument.\n");
+    PANIC_INCORRECT_TYPE;
   }
   exit(2);/* NOT REACHED.  Needed to keep gcc from whining */
 }
@@ -800,7 +785,7 @@ void AddWhen(struct Instance *i, struct Instance *when)
       gl_append_ptr(W_INST(i)->whens,(VOIDPTR)when);
     break;
   default:
-    Asc_Panic(2, NULL, "AddWhen called with inappropriate argument.\n");
+    PANIC_INCORRECT_TYPE;
   }
 }
 
@@ -871,7 +856,7 @@ void RemoveWhen(struct Instance *i, struct Instance *when)
     if (c>0) gl_delete(W_INST(i)->whens,c,0);
     break;
   default:
-    Asc_Panic(2, NULL, "Bad argument to RemoveWhen.");
+    PANIC_INCORRECT_TYPE;
   }
 }
 

@@ -653,6 +653,8 @@ static boolean calc_J( slv3_system_t sys){
   vfilter.matchvalue = (VAR_INBLOCK | VAR_ACTIVE);
   time0=tm_cpu_time();
   mtx_clear_region(sys->J.mtx,&(sys->J.reg));
+  CONSOLE_DEBUG("CALCULATING BLOCK of ROWS %d - %d",sys->J.reg.row.low,sys->J.reg.row.high);
+  CONSOLE_DEBUG("(COLS %d - %d)",sys->J.reg.col.low,sys->J.reg.col.high);
   for( row = sys->J.reg.row.low; row <= sys->J.reg.row.high; row++ ) {
     struct rel_relation *rel;
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
@@ -1317,8 +1319,7 @@ static int calc_pivots(slv3_system_t sys){
 
   sys->J.rank = linsolqr_rank(lsys);
   sys->J.singular = FALSE;
-  row_rank_defect = sys->J.reg.row.high -
-    sys->J.reg.row.low+1 - sys->J.rank;
+  row_rank_defect = sys->J.reg.row.high - sys->J.reg.row.low+1 - sys->J.rank;
   if( row_rank_defect > 0 ) {
     int32 row,krow;
     mtx_sparse_t *uprows=NULL;

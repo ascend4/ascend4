@@ -400,7 +400,7 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
 	other types of relations (which include...). This latter approach is
 	apparently older and "reasonably correct, if slow". 
   */
-  CONSOLE_DEBUG("EVALUATE REL_RELATION = %p",rel);
+  /* CONSOLE_DEBUG("EVALUATE REL_RELATION = %p",rel); */
   if(safe){
     *calc_ok = (int32)RelationCalcResidualSafe(rel_instance(rel),&res);
     safe_error_to_stderr( (enum safe_err *)calc_ok );

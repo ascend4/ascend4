@@ -270,10 +270,10 @@ int integrator_find_indep_var(IntegratorSystem *blsys){
 
 	IntegInitSymbols();
 
-	CONSOLE_DEBUG("About to visit...");
+	/* CONSOLE_DEBUG("About to visit..."); */
 	integrator_visit_system_vars(blsys,&integrator_classify_indep_var);
 
-	CONSOLE_DEBUG("...");
+	/* CONSOLE_DEBUG("..."); */
 
 	result = integrator_check_indep_var(blsys);
 	gl_free_and_destroy(blsys->indepvars);	
@@ -874,7 +874,7 @@ void integrator_classify_indep_var(IntegratorSystem *blsys, struct var_variable 
 	vfilt.matchbits = VAR_SVAR;
 	vfilt.matchvalue = VAR_SVAR;
 
-	CONSOLE_DEBUG("...");
+	/* CONSOLE_DEBUG("..."); */
 
 	assert(var != NULL && var_instance(var)!=NULL );
 

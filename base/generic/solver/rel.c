@@ -492,7 +492,7 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
 		, struct ExtCallNode *ext
 ){
   struct rel_extnode *nodeinfo;
-  struct Instance *inst;
+  /* struct Instance *inst; */
 
   /* CONSOLE_DEBUG("Creating rel_extnode"); */
   /* CONSOLE_DEBUG("REL = %p",rel); */
@@ -502,7 +502,7 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
   nodeinfo->cache = NULL;
   rel->nodeinfo = nodeinfo;
 
-  inst = ExternalCallVarInstance(ext);
+  /* inst = ExternalCallVarInstance(ext); */
   /* CONSOLE_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst); */
   /* CONSOLE_DEBUG("INSTANCE type is %s",instance_typename(inst)); */
 
@@ -986,6 +986,11 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 
   asc_assert(ninputs >= 0);
 
+  CONSOLE_DEBUG("Filter matchbits %x, matchvalue %x"
+	,d->filter->matchbits
+	,d->filter->matchvalue
+  );
+
   for (c=0;c<(unsigned long)ninputs;c++) {
     var = cache->invars[c];
 	CONSOLE_DEBUG("invar[%lu] at %p",c+1,var);
@@ -997,7 +1002,15 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 	  CONSOLE_DEBUG("input %lu is used, value = %f",c,value);
       mtx_set_value(d->mtx,&(d->nz), value);
     }else{
-	  CONSOLE_DEBUG("var is not used");
+	  var_filter_t f1 = {VAR_INBLOCK,VAR_INBLOCK};
+	  var_filter_t f2 = {VAR_ACTIVE,VAR_ACTIVE};
+	  if(!var_apply_filter(var,&f1)){
+        CONSOLE_DEBUG("var not in this block");
+	  }else if(!var_apply_filter(var,&f2)){
+		CONSOLE_DEBUG("var is not active");
+	  }else{
+		CONSOLE_DEBUG("var not used...???");
+	  }
 	}
   }
 }

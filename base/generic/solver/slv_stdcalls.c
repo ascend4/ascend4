@@ -957,8 +957,6 @@ int slv_spk1_reorder_block(slv_system_t sys,int bnum,int transpose)
   rel_filter_t rf;
   dof_t *d;
 
-  CONSOLE_DEBUG("SPK reordering...");
-
   if (sys==NULL) return 1;
   rlen = slv_get_num_solvers_rels(sys);
   vlen = slv_get_num_solvers_vars(sys);
