@@ -2068,9 +2068,9 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
     }
   }
   if (reltype == e_blackbox){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"blackbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"blackbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
   }else if (reltype == e_glassbox){
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
   }else if (reltype == e_opcode){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
   }
