@@ -197,8 +197,9 @@ static struct var_variable *rel_instance_to_var(struct rel_relation *rel,
 ){
 	int j, nincid;
 	struct var_variable *var;
-	struct var_variable **incid = rel_incidence_list(rel);
+	struct var_variable **incid;
 
+	incid = rel_incidence_list_to_modify(rel);
 	nincid = rel_n_incidences(rel);
 	
 	var = NULL;
@@ -647,6 +648,13 @@ void extrel_store_output_var(struct rel_relation *rel){
 	cache->outvars[whichvar - cache->ninputs - 1] = var;
 }
 
+static struct var_variable *extrel_outvar(
+		struct ExtRelCache *cache
+		,int whichvar
+){
+	return cache->outvars[whichvar-cache->ninputs-1];
+}
+
 void ExtRel_DestroyCache(struct ExtRelCache *cache)
 {
   if (cache) {
@@ -965,6 +973,19 @@ struct deriv_data {
 	jacobian =2.0  9.0  4.0  6.0  0.5  1.3  0.0  9.7  80  7.0 1.0 2.5
 	
 	Hence jacobian index = (6 - 4 - 1) * 4 = 4
+
+	@NOTE This only corresponds to jacobian elements from the RHS of
+	blackbox equations. There remain minus-ones to put down the diagonal for
+	each output variable, since
+
+		RESID[j] = Y(x[i],..x[n]) - y[j]
+
+	(noting that it's RHS - LHS, see ExtRel_Evaluate_Residual),	so
+
+		dRESID[j]/dy[i] = -1
+		dRESID[j]/dx[i] = dy[j]/dx[i]
+
+	The latter is what's being filled in here.
 */
 static void ExtRel_MapDataToMtx(struct ExtRelCache *cache, 
 		unsigned long whichvar,
@@ -972,7 +993,7 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 ){
   struct var_variable *var = NULL;
   double value, *ptr;
-  boolean used;
+  //boolean used;
   unsigned long c;
   int32 index;
   unsigned long ninputs;
@@ -986,37 +1007,53 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 
   asc_assert(ninputs >= 0);
 
+  /*
   CONSOLE_DEBUG("Filter matchbits %x, matchvalue %x"
 	,d->filter->matchbits
 	,d->filter->matchvalue
   );
+  */
 
+  /* for input variables, the residual is taken from the matrix */
   for (c=0;c<(unsigned long)ninputs;c++) {
     var = cache->invars[c];
 	CONSOLE_DEBUG("invar[%lu] at %p",c+1,var);
-    used = var_apply_filter(var,d->filter);
+    /*
+	// this is perhaps conditional modelling stuff, broken for the moment
+	// for this first crack, all input variables are active and in the block
+	used = var_apply_filter(var,d->filter);
 	if (used) {
+	*/
       d->nz.col = mtx_org_to_col(d->mtx,var_sindex(var));
 	  CONSOLE_DEBUG("column = %d",d->nz.col);
       value = ptr[c] + mtx_value(d->mtx,&(d->nz));
 	  CONSOLE_DEBUG("input %lu is used, value = %f",c,value);
       mtx_set_value(d->mtx,&(d->nz), value);
+	/*
+	// disused, continued
     }else{
-	  var_filter_t f1 = {VAR_INBLOCK,VAR_INBLOCK};
 	  var_filter_t f2 = {VAR_ACTIVE,VAR_ACTIVE};
-	  if(!var_apply_filter(var,&f1)){
-        CONSOLE_DEBUG("var not in this block");
-	  }else if(!var_apply_filter(var,&f2)){
+	  if(!var_apply_filter(var,&f2)){
 		CONSOLE_DEBUG("var is not active");
 	  }else{
 		CONSOLE_DEBUG("var not used...???");
 	  }
 	}
+	*/
   }
 }
 
 
+static double CalculateInterval(double varvalue){
+  UNUSED_PARAMETER(varvalue);
+
+  return (1.0e-05);
+}
+
 /**
+	Evaluate jacobian elements for an external relation 
+	using finite difference (peturbation of each input variable).
+
 	ExtRel Finite Differencing.
 	
 	This routine actually does the finite differencing.
@@ -1035,13 +1072,6 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 	When we are finite differencing variable c, we will be loading
 	jacobian positions c, c+ninputs, c+2*ninputs ....
 */
-
-static double CalculateInterval(double varvalue){
-  (void)varvalue;  /* stop gcc whine about unused parameter */
-
-  return (1.0e-05);
-}
-
 static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
 		ExtBBoxFunc *eval_func,
 		int32 ninputs, int32 noutputs,
@@ -1130,11 +1160,11 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * In any case init the interpreter.
    */
   Init_Slv_Interp(&slv_interp);
-
   slv_interp.task = bb_deriv_eval;
   slv_interp.user_data = cache->user_data;
+
   deriv_func = GetDerivFunc(efunc);
-  if (deriv_func) {
+  if(deriv_func){
 	CONSOLE_DEBUG("USING EXTERNAL DERIVATIVE FUNCTION");
     nok = (*deriv_func)(&slv_interp, cache->ninputs, cache->noutputs,
 			cache->inputs, cache->outputs, cache->jacobian);
@@ -1164,36 +1194,61 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
 	on ExtRel_Evaluate being called  immediately before it.
 */
 
-real64 ExtRel_Diffs_RHS(struct rel_relation *rel,
+double ExtRel_Diffs_RHS(struct rel_relation *rel,
 		var_filter_t *filter,
 		int32 row,
 		mtx_matrix_t mtx
 ){
   int32 nok;
-  real64 res;
+  double rhs;
   struct deriv_data data;
 
   data.filter = filter;
   data.mtx = mtx;
   data.nz.row = row;
 
-  res = ExtRel_Evaluate_RHS(rel);
+  rhs = ExtRel_Evaluate_RHS(rel);
   nok = ExtRel_CalcDeriv(rel,&data);
   if (nok)
     return 0.0;
   else
-    return res;
+    return rhs;
 }
 
 
-/** @TODO FIXME */
-real64 ExtRel_Diffs_LHS(struct rel_relation *rel, var_filter_t *filter,
+double ExtRel_Diffs_LHS(struct rel_relation *rel, var_filter_t *filter,
 		int32 row, mtx_matrix_t mtx
 ){
-  UNUSED_PARAMETER(rel);
-  UNUSED_PARAMETER(filter);
-  UNUSED_PARAMETER(row);
-  UNUSED_PARAMETER(mtx);
-  return 1.0;
+	double lhs;
+	struct ExtRelCache *cache;
+	int whichvar;
+	struct var_variable *var;
+	mtx_coord_t nz;
+
+	lhs = ExtRel_Evaluate_LHS(rel);
+
+	cache = rel_extcache(rel);
+	whichvar = rel_extwhichvar(rel);
+	var = extrel_outvar(cache,whichvar);
+
+	/* enter '-1' into the matrix where the output var belongs */
+	nz.row = row;
+	nz.col = mtx_org_to_col(mtx,var_sindex(var));
+	mtx_set_value(mtx,&(nz), -1.0 );
+
+	CONSOLE_DEBUG("OUTPUTING MATRIX");
+	mtx_region_t r;
+	mtx_region(&r, 0, 2, 0, 4);
+	mtx_write_region_human(ASCERR,mtx,&r);
+
+	CONSOLE_DEBUG("Mapping LHS jacobian entry -1.0 to var at %p",var);
+
+	return lhs;	
 }
 
+double extrel_resid_and_jacobian(struct rel_relation *rel
+	, var_filter_t *filter, int32 row, mtx_matrix_t mtx
+){
+	return ExtRel_Diffs_RHS(rel,filter,row,mtx)
+		 - ExtRel_Diffs_LHS(rel,filter,row,mtx);
+}

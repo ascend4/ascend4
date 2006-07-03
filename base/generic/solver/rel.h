@@ -97,9 +97,11 @@ enum backend_enum {
 };
 
 /**
- *  Relation data structure.
- *  If you mess with this struct, change the defaults for it in .c file.
- */
+	Relation data structure (solver-side).
+
+	@NOTE
+		If you mess with this struct, change the defaults for it in .c file.
+*/
 struct rel_relation {
 	SlvBackendToken instance;
 		/**< Normally, this is a pointer to an Instance struct */
@@ -737,15 +739,13 @@ extern real64 ExtRel_Evaluate_LHS(struct rel_relation *rel);
 	as retreived from the model.
 */
 
-extern real64 ExtRel_Diffs_RHS(struct rel_relation *rel,
-		var_filter_t *filter, int32 row, mtx_matrix_t matrix
-);
-
-extern real64 ExtRel_Diffs_LHS(struct rel_relation *rel,
-        var_filter_t *filter, int32 row, mtx_matrix_t matrix);
-/**< 
-	not implemented 
+/**
+	Evaluate the residual as well as Jacobian elements for a given
+	external relation object
 */
+double extrel_resid_and_jacobian(struct rel_relation *rel
+	, var_filter_t *filter, int32 row, mtx_matrix_t mtx
+);
 
 #endif /* _SLV_SERVER_C_SEEN_ */
 
