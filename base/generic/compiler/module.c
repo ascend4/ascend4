@@ -43,20 +43,6 @@
 #include "library.h"
 #include <general/ospath.h>
 
-#ifndef lint
-static CONST char ModuleRCSid[] = "$Id: module.c,v 1.25 1998/03/17 22:09:12 ballan Exp $";
-#endif /* RCS ID keyword */
-
-
-#ifdef __WIN32__
-#define SLASH '\\'
-#define PATHDIV ';'
-#else /* ! __WIN32__ */
-#define SLASH '/'
-#define PATHDIV ':'
-#endif
-
-
 struct module_t {
   symchar *name;                /* module's name, including extension
                                  * and version number, no path information.
@@ -890,19 +876,24 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	struct FilePath *fp1;
 	struct ModuleSearchData *sd;
 	FILE *f;
-	/* char *tmp; */
+	/*char *tmp;*/
 
 	sd = (struct ModuleSearchData *)searchdata;
 	assert(sd!=NULL);
 	assert(sd->fp!=NULL);
 
-	/* 
-	tmp  = ospath_str(sd->fp);
+	
+	/*
+	tmp=ospath_str(sd->fp);
 	CONSOLE_DEBUG("About to concat path '%s'...",tmp);
 	ospath_free_str(tmp);
 	*/
 
 	fp1 = ospath_concat(path,sd->fp);
+	if(fp1==NULL){
+		CONSOLE_DEBUG("Couldn't concatenate path");
+		return 0;
+	}
 
 	/* 
 	tmp  = ospath_str(sd->fp);
@@ -944,7 +935,8 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	
 	On success, the argument "filename" will be set to the path to the
 	file, and the `f', `time_last_modified', and `linenum' members of
-	the module `m' will be set.
+	the module `m' will be set. (The 'FILE *' will be left open for
+	reading and the handle returned in the module struct.)
 	
 	If ModuleStatFile() encounters an error opening the file, the
 	value of errno will be passed back to the caller in the `error'

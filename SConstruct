@@ -464,6 +464,8 @@ if platform.system()=='Windows':
 
 env['CAN_INSTALL']=can_install
 
+env['INSTALL_MODELS']=env['INSTALL_ASCDATA']+"/models/"
+
 print "TCL_CPPPATH =",env['TCL_CPPPATH']
 print "TCL_LIBPATH =",env['TCL_LIBPATH']
 print "TCL_LIB =",env['TCL_LIB']
@@ -1091,6 +1093,7 @@ subst_dict = {
 	, '@INSTALL_BIN@':env['INSTALL_BIN']
 	, '@INSTALL_INCLUDE@':env['INSTALL_INCLUDE']
 	, '@INSTALL_LIB@':env['INSTALL_LIB']
+	, '@INSTALL_MODELS@':env['INSTALL_MODELS']
 	, '@PYGTK_ASSETS@':env['PYGTK_ASSETS']
 	, '@VERSION@':version
 	, '@RELEASE@':release
@@ -1345,7 +1348,7 @@ if env.get('CAN_INSTALL'):
 	# the models directory only needs to be processed for installation, no other processing required.
 	env.SConscript(['models/SConscript'],'env')
 
-	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB']
+	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE']
 	install_dirs = [env['INSTALL_ROOT']+env[d] for d in dirs]
 
 	# TODO: add install options

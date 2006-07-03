@@ -21,7 +21,7 @@ for root,dirs,files in os.walk("."):
 		modelfiles.append( os.path.normpath(os.path.join(root,f)) )
 os.chdir(cwd)
 
-modelsroot = env['INSTALL_ROOT']+env['INSTALL_ASCDATA']+"/models/"
+modelsroot = env['INSTALL_ROOT']+env['INSTALL_MODELS']
 
 installeddirs = []
 

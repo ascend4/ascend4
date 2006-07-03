@@ -728,14 +728,15 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup){
   }
 
   /* call the init function */
-  nok = (*init_func)(&slv_interp,cache->data,cache->arglist);
+  if(init_func!=NULL){
+    nok = (*init_func)(&slv_interp,cache->data,cache->arglist);
 
-  if (nok) {
-    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error running init function (%d)",nok);
-    return 1;
+	if (nok) {
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error running init function (%d)",nok);
+	  return 1;
+	}
+    CONSOLE_DEBUG("Ran init function");
   }
-
-  CONSOLE_DEBUG("Ran init function");
 
   /* Save the user's data and update our status. */
   cache->user_data = slv_interp.user_data;

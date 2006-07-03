@@ -316,6 +316,7 @@ John Pye (C) 2005
 		<keyword>molar_entropy</keyword>
 		<keyword>relative_volatility</keyword>
 		<keyword>power_per_length</keyword>
+		<keyword>specific_energy</keyword>
 		<keyword>specific_enthalpy</keyword>
 		<keyword>specific_entropy</keyword>
 		<keyword>specific_heat_capacity</keyword>

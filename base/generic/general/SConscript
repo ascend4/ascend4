@@ -10,4 +10,15 @@ objs =[]
 for c in csrcs:
 	objs += libascend_env.SharedObject(c)
 
+#--------------------
+# INSTALL
+
+import glob
+
+if libascend_env.get('CAN_INSTALL'):
+	installdir = libascend_env['INSTALL_ROOT']+libascend_env['INSTALL_INCLUDE']+'/general'
+
+	headers = glob.glob("*.h")
+	libascend_env.InstallHeader(installdir,headers)
+
 Return('objs')
