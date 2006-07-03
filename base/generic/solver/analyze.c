@@ -74,6 +74,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
 #include <utilities/ascMalloc.h>
+#include <utilities/error.h>
 #include <general/list.h>
 #include <general/dstring.h>
 #include <compiler/compiler.h>
@@ -427,17 +428,15 @@ int resize_ipbuf(size_t newcap, int resetmem)
       tmp = (struct solver_ipdata *)
         ascrealloc(g_reuse.ipbuf,newcap*sizeof(struct solver_ipdata));
       if (tmp == NULL) {
-        FPRINTF(ASCERR,"ERROR: (resize_ipbuf) Insufficient memory.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
         return 1;
       }
       g_reuse.ipbuf = tmp;
       g_reuse.ipcap = newcap;
     } else {
-      tmp = (struct solver_ipdata *)
-        ascmalloc(newcap*sizeof(struct solver_ipdata));
+      tmp = ASC_NEW_ARRAY(struct solver_ipdata,newcap);
       if (tmp == NULL) {
-        FPRINTF(ASCERR,
-            "ERROR:(resize_ipbuf 1st call) Insufficient memory.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
         return 1;
       }
       g_reuse.ipbuf = tmp;
@@ -470,7 +469,7 @@ struct var_variable **get_incidence_space(int len, struct problem_t *p_data)
   }
   if (len <1) return NULL;
   if (p_data->relincinuse + len > p_data->relincsize) {
-    FPRINTF(ASCERR,"get_incidence_space called excessively.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_incidence_space called excessively.");
     return NULL;
   }
   tmp = &(p_data->relincidence[p_data->relincinuse]);
@@ -493,7 +492,7 @@ struct rel_relation **get_var_incidence_space(int len,
   }
   if (len <1) return NULL;
   if (p_data->varincinuse + len > p_data->varincsize) {
-    FPRINTF(ASCERR,"get_var_incidence_space called excessively.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_var_incidence_space called excessively.");
     return NULL;
   }
   tmp = &(p_data->varincidence[p_data->varincinuse]);
@@ -515,7 +514,7 @@ struct dis_discrete **get_logincidence_space(int len,
   }
   if (len <1) return NULL;
   if (p_data->lrelincinuse + len > p_data->lrelincsize) {
-    FPRINTF(ASCERR,"get_logincidence_space called excessively.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"get_logincidence_space called excessively.");
     return NULL;
   }
   tmp = &(p_data->logrelinciden[p_data->lrelincinuse]);
@@ -550,8 +549,7 @@ static void InitTreeCounts(struct Instance *i,struct problem_t *p_data)
 	The following function should be moved out to the compiler
 	under the guise of a supported attribute.
 */
-static int BooleanChildValue(struct Instance *i,symchar *sc)
-{
+static int BooleanChildValue(struct Instance *i,symchar *sc){
   /* FPRINTF(ASCERR,"GETTING BOOLEAN CHILD VALUE OF %s\n",SCP(sc)); */
   if (i == NULL || sc == NULL || (i=ChildByChar(i,sc)) == NULL) {
     return 0;
@@ -754,8 +752,7 @@ static void analyze_CountRelation(struct Instance *inst,
     }
     break;
   default:
-    FPRINTF(ASCERR,"ERROR:  (analyze) analyze_CountRelation\n");
-    FPRINTF(ASCERR,"        Unknown relation type.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type in %s",__FUNCTION__);
   }
 }
 
@@ -843,6 +840,7 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
   struct solver_ipdata *ip;
   struct problem_t *p_data;
   CONST char *symval;
+
   p_data = (struct problem_t *)vp;
   switch( InstanceKind(inst) ) {
   case REAL_ATOM_INST:   		/* Variable or parameter or real */
@@ -852,13 +850,23 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
     ip->u.v.in_block = 0;
     ip->u.v.index = 0;
     ip->u.v.active = 0;
-    if( solver_var(inst) ) {
+    if(solver_var(inst)){
       ip->u.v.solvervar = 1; /* must set this regardless of what list */
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
+
+	  {
+		char *tmp;
+		tmp = WriteInstanceNameString(inst,NULL);
+		CONSOLE_DEBUG("INSTANCE '%s' AT %p",tmp,inst);
+		ASC_FREE(tmp);
+	  }
+
       if (RelationsCount(inst)) {
+	    CONSOLE_DEBUG("... IN VARS");
         gl_append_ptr(p_data->vars,(POINTER)ip);
-      } else {
+      }else{
+	    CONSOLE_DEBUG("... IN UNASSIGNED");
         gl_append_ptr(p_data->unas,(POINTER)ip);
       }
     } else {
@@ -1144,9 +1152,10 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
       if (WhensCount(inst)) {
         symval = SCP(GetSymbolAtomValue(inst));
         if (symval == NULL) {
-          FPRINTF(ASCERR,"ERROR: CountStuffInTree found undefined symbol or symbol_constant in WHEN.\n");
+          ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
+		  FPRINTF(ASCERR,"CountStuffInTree found undefined symbol or symbol_constant in WHEN.\n");
           WriteInstanceName(ASCERR,inst,p_data->root);
-          FPRINTF(ASCERR,"\n");
+          error_reporter_end_flush();
           g_bad_rel_in_list = TRUE;
           return;
         }
@@ -1155,9 +1164,10 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
       break;
     case LREL_INST:
       if( GetInstanceLogRelOnly(inst) == NULL ) {
-        FPRINTF(ASCERR,"ERROR: CountStuffInTree found bad logrel.\n");
+        ERROR_REPORTER_START_HERE(ASC_PROG_ERR);
+		FPRINTF(ASCERR,"CountStuffInTree found bad logrel.\n");
         WriteInstanceName(ASCERR,inst,p_data->root);
-        FPRINTF(ASCERR,"\n");
+        error_reporter_end_flush();
         g_bad_rel_in_list = TRUE;
         return;
       }
@@ -1229,8 +1239,7 @@ void CountStuffInTree(struct Instance *inst, struct problem_t *p_data)
 
 	Note that these are all indexed from 1, being stored in gllists.
 */
-static int analyze_make_master_lists(struct problem_t *p_data)
-{
+static int analyze_make_master_lists(struct problem_t *p_data){
   long int c, len,v,vlen;
   CONST struct Instance *i;
   CONST struct relation *gut;
@@ -1256,7 +1265,7 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   stat = resize_ipbuf(reqlen,1);
 #endif /* NDEBUG */
   if (stat) {
-    FPRINTF(ASCERR,"Error: (analyze_make_master) Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
 
@@ -1303,7 +1312,7 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   p_data->oldips = PushInterfacePtrs(p_data->root,classify_instance,
                                     g_reuse.ipcap,1,p_data);
   if (p_data->oldips == NULL) {
-    FPRINTF(ASCERR,"Error: (analyze) Insufficient memory.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
     return 1;
   }
 
@@ -1319,17 +1328,16 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   if ((long)gl_length(p_data->rels) != p_data->nr ||
       (long)gl_length(p_data->objrels) != p_data->no ||
       (long)gl_length(p_data->logrels) != p_data->nl ||
-      (long)gl_length(p_data->whens) != p_data->nw) {
-    FPRINTF(ASCERR,
-            "Warning: Mismatch in problem census and problem found\n");
-    FPRINTF(ASCERR,"Rels: Counted %lu\t Found %ld\n",
-      gl_length(p_data->rels), p_data->nr);
-    FPRINTF(ASCERR,"Objs: Counted %lu\t Found %ld\n",
-      gl_length(p_data->objrels), p_data->no);
-    FPRINTF(ASCERR,"LogRels: Counted %lu\t Found %ld\n",
-      gl_length(p_data->logrels),p_data->nl);
-    FPRINTF(ASCERR,"Whens: Counted %lu\t Found %ld\n",
-      gl_length(p_data->whens), p_data->nw);
+      (long)gl_length(p_data->whens) != p_data->nw
+  ){
+    ERROR_REPORTER_START_HERE(ASC_PROG_WARNING);
+	FPRINTF(ASCERR,"Warning: Mismatch in problem census and problem found\n");
+    FPRINTF(ASCERR,"Rels: Counted %lu\t Found %ld\n",gl_length(p_data->rels), p_data->nr);
+    FPRINTF(ASCERR,"Objs: Counted %lu\t Found %ld\n",gl_length(p_data->objrels), p_data->no);
+    FPRINTF(ASCERR,"LogRels: Counted %lu\t Found %ld\n",gl_length(p_data->logrels),p_data->nl);
+    FPRINTF(ASCERR,"Whens: Counted %lu\t Found %ld\n",gl_length(p_data->whens), p_data->nw);
+    error_reporter_end_flush();
+	
   }
   /*
   	relation list is now grouped by model, and the order will be
@@ -1499,12 +1507,9 @@ static int analyze_make_master_lists(struct problem_t *p_data)
   */
 
   if (p_data->nr != 0 &&  p_data->nv==0) {
-    FPRINTF(ASCERR, "\n");
-    FPRINTF(ASCERR, "A L E R T\n");
-    FPRINTF(ASCERR, "\n");
+	ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
     FPRINTF(ASCERR, "Problem should contain at least one variable %s",
             "and one relation\n");
-    FPRINTF(ASCERR, "\n");
     FPRINTF(ASCERR, "There are relations into the system, but the number \n");
     FPRINTF(ASCERR, "of variables is zero. That means that the existent \n");
     FPRINTF(ASCERR, "vars were not recognized as solver_vars. A possible \n");
@@ -1512,9 +1517,8 @@ static int analyze_make_master_lists(struct problem_t *p_data)
     FPRINTF(ASCERR, "definitions of solver_var into the system. Please \n");
     FPRINTF(ASCERR, "delete all your types and reload your models \n");
     FPRINTF(ASCERR, "with the appropriate definition of solver_var\n");
-    FPRINTF(ASCERR, "\n");
-    FPRINTF(ASCERR, "Solver system will not be built.\n");
-    FPRINTF(ASCERR, "\n");
+    FPRINTF(ASCERR, "Solver system will not be built.");
+	error_reporter_end_flush();
     return 2;
   }
 
@@ -1975,7 +1979,8 @@ void GetTolerance(struct bnd_boundary *bnd)
 	logrelation/conditional/when etc. lists for the consumer.
 	Includes fixing up rel caches and initing flagbits as best we can.
 	includes setting master indices on rel/var/logrel/when etc.
-	returns 0 if ok, 1 if out of memory, 2 if the problem does not
+	
+	@returns 0 on success, 1 on out-of-memory, or 2 if the problem does not
 	contain at least one variable in one equation
 */
 static int analyze_make_solvers_lists(struct problem_t *p_data)
@@ -2078,9 +2083,10 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         }
       }
       if (p_data->lognnz==lognnzold) {
-        FPRINTF(ASCWAR,
-                "No free boolean variables in included logrelation:\n");
+        ERROR_REPORTER_START_NOLINE(ASC_PROG_WARNING);
+		FPRINTF(ASCERR,"No free boolean variables in included logrelation:");
         WriteInstanceName(ASCWAR,rip->i,p_data->root);
+		error_reporter_end_flush();
       }
     }
   }
@@ -2094,8 +2100,8 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   }
 
   if (!(p_data->nnztot+p_data->nnzobj) && !(p_data->lognnz)) {
-    FPRINTF(ASCERR, "Problem should contain at least one variable %s",
-            "and one relation\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Problem should contain at least one"
+		" variable and one relation.");
     return 2;
   }
   /*
@@ -2233,6 +2239,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   */
   vlen = gl_length(p_data->vars);
   for (v = 0; v < vlen; v++) {
+	CONSOLE_DEBUG("VAR %d",v);
     var = &(p_data->vardata[v]);
     vip = SIP(gl_fetch(p_data->vars,v+1));
     vip->u.v.data = var;
@@ -2246,6 +2253,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     if (vip->u.v.fixed)     flags |= VAR_FIXED;
     if (!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if (vip->u.v.solvervar) flags |= VAR_SVAR;
+	CONSOLE_DEBUG("VAR %p IS IN BLOCK",var);
     var_set_flags(var,flags);
     p_data->mastervl[v] = var;
     p_data->solvervl[v] = var;
@@ -2293,6 +2301,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     if (vip->u.v.incident)  flags |= VAR_INCIDENT;
     if (vip->u.v.fixed)     flags |= VAR_FIXED;
     if (vip->u.v.solvervar) flags |= VAR_SVAR;
+	CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var);
     /* others may be appropriate (PVAR) */
     var_set_flags(var,flags);
     p_data->masterul[v] = var;
@@ -2768,12 +2777,12 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
 
 #if DEBUG_ANALYSIS
     if ( p_data->need_consistency == 0 ) {
-      FPRINTF(ASCERR,"All alternativeS HAVE THE SAME STRUCTURE \n");
-      FPRINTF(ASCERR,"Consistency analysis is not required \n");
+      CONSOLE_DEBUG("All alternativeS HAVE THE SAME STRUCTURE: Consistency"
+		" analysis is not required \n"
+	  );
     } else {
-      FPRINTF(ASCERR,"Consistency analysis may be required \n");
+      CONSOLE_DEBUG("Consistency analysis may be required \n");
     }
-    FPRINTF(ASCERR,"\n");
 #endif /* DEBUG_ANALYSIS  */
 
   } else {
@@ -3051,8 +3060,7 @@ int analyze_make_problem(slv_system_t sys, struct Instance *inst)
   return 0;
 }
 
-extern void analyze_free_reused_mem(void)
-{
+extern void analyze_free_reused_mem(void){
   resize_ipbuf((size_t)0,0);
   /* analyze_free_lists(); */
 }

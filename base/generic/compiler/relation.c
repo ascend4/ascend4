@@ -2156,14 +2156,18 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
 
   for (c=1;c<=n_inputs;c++) {
     var = (struct Instance *)gl_fetch(inputs,c);
+	CONSOLE_DEBUG("ADDING INPUT '%p' TO INCIDENCE",var);
+
     pos = gl_search(newlist,var,(CmpFunc)CmpP);
     if (pos) {
-      FPRINTF(ASCERR,"Incidence for external relation will be inaccurate\n");
+      ERROR_REPORTER_HERE(ASC_PROG_WARNING
+		,"Incidence for external relation will be inaccurate."
+	  );
       *args++ = (int)pos;
     }else{
       gl_append_ptr(newlist,(VOIDPTR)var);
       *args++ = (int)gl_length(newlist);
-      AddRelation(subject,relinst);
+      AddRelation(var,relinst);
     }
   }
 
@@ -2172,13 +2176,14 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
 	I think that this means the output	variable. -- JP
   */
   pos = gl_search(newlist,subject,(CmpFunc)CmpP);
-  if (pos) {
+  CONSOLE_DEBUG("ADDING OUTPUT INSTACE %p TO INCIDENCE",subject);
+  if(pos){
     FPRINTF(ASCERR,"An input and output variable are the same !!\n");
     *args++ = (int)pos;
   }else{
     gl_append_ptr(newlist,(VOIDPTR)subject); /* add the subject */
     *args++ = (int)gl_length(newlist);
-    AddRelation(var,relinst);
+    AddRelation(subject,relinst);
   }
 
   /* Add a zero to terminate the 'args' list. */

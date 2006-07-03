@@ -45,17 +45,25 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   unsigned long pos;
   int added=0;
 
-  CONSOLE_DEBUG("...");
-  int i,n;
-  struct Instance *inst;
-  /* char *tmp; */
-  n = gl_length(args);
-  for(i = 1; i < n; ++i){
-    inst = (struct Instance *)gl_fetch(args,i);
-	/* tmp = WriteInstanceNameString(inst, NULL); */
-	CONSOLE_DEBUG("argument[%d] at %p", i, inst);
-	/* ASC_FREE(tmp) */
-
+  {
+	CONSOLE_DEBUG("...");
+	int i,j,m,n;
+	struct gl_list_t *list1;
+	struct Instance *inst;
+	m = gl_length(args);
+	for(i = 1; i <= m; ++i){
+		list1 = (struct gl_list_t *)gl_fetch(args,i);
+		n = gl_length(list1);
+		for(j=1;j<=n;++j){
+			inst = (struct Instance *)gl_fetch(list1,j);
+			char *tmp;
+			tmp = WriteInstanceNameString(inst, NULL);
+			CONSOLE_DEBUG("list %d: argument[%d], type '%s', name '%s' at %p"
+				, i, j, instance_typename(inst), tmp, inst
+			);
+			ASC_FREE(tmp);
+		}
+	}
   }
 
   ext = ASC_NEW(struct ExtCallNode);
