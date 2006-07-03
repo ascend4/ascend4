@@ -184,6 +184,7 @@ typedef int ExtBBoxInitFunc(struct Slv_Interp *,
 		should be consulted.
 	@param ninputs the length of the inputs, xi_in.
 	@param noutputs, the length of the outputs, y_out.
+
 	@param jacobian, the partial derivative df/dx, where
 	each row is df[i]/dx[j] over each j for the y_out[i] of
 	matching index. The jacobian array is 1-D, row major, i.e.
@@ -198,7 +199,7 @@ typedef int ExtBBoxFunc(struct Slv_Interp *interp,
 struct BlackBoxExternalFunc {
   ExtBBoxInitFunc *initial;
   ExtBBoxFunc *value; /**< relation residual function. */
-  ExtBBoxFunc *deriv; /**< relation gradient function. */
+  ExtBBoxFunc *deriv; /**< relation gradient function (see jacobian)*/
   ExtBBoxFunc *deriv2; /**< relation hessian function. */
   ExtBBoxInitFunc *final; /**< cleanup function. */
 };

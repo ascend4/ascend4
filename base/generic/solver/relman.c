@@ -691,9 +691,7 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
   /** @TODO fix this (it should all be in the compiler, or something) */
   if(rel->nodeinfo){
 	CONSOLE_DEBUG("EVALUTING BLACKBOX DERIVATIVES FOR ROW %d",coord.row);
-    *resid -= ExtRel_Diffs_RHS(rel, filter, coord.row, mtx);
-    mtx_mult_row(mtx, coord.row, -1.0, mtx_ALL_COLS);
-    *resid += ExtRel_Diffs_LHS(rel, filter, coord.row, mtx);
+	*resid = extrel_resid_and_jacobian(rel, filter, coord.row, mtx);
     return 0;
   }
 

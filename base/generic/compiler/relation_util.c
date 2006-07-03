@@ -284,7 +284,7 @@ static void apply_term_dimensions(struct relation *rel,
                     FPRINTF(ASCERR,"        in function %s.\n",
                       FuncName(TermFunc(rt)) );
                   }
-               } else {
+               }else{
                  if( !IsWild(&(first->d)) &&
                          CmpDimen(&(first->d),TrigDimension()) ) {
                   if( *con ) *con = FALSE;
@@ -533,7 +533,7 @@ int RelationCheckDimensions(struct relation *rel, dim_type *dimens)
           FPRINTF(ASCERR,"        on right hand side.\n");
         }
       }
-    } else {
+    }else{
       if( CmpDimen(&(stack[0].d),&(stack[1].d)) ) {
         if( consistent ) consistent = FALSE;
         if (GCDN) {
@@ -710,12 +710,13 @@ RelationEvaluatePostfixBranch(CONST struct relation *r,
   }
 }
 
+#define RECURSE RelationEvaluatePostfixBranchSafe
 static double
 RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
                                   unsigned long *pos,
                                   int lhs,
-                                  enum safe_err *serr)
-{
+                                  enum safe_err *serr
+){
   CONST struct relation_term *term; /* the current term */
   double x, y;                      /* temporary values */
 
@@ -732,65 +733,34 @@ RelationEvaluatePostfixBranchSafe(CONST struct relation *r,
   case e_var:
     return TermVariable(r, term);
   case e_plus:
-    (*pos)--;
-    /* y is right-hand-side of '+' */
-    y = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
-    (*pos)--;
-    return
-      safe_add_D0(RelationEvaluatePostfixBranchSafe(r,pos,lhs,serr), y, serr);
+    (*pos)--; y = RECURSE(r, pos, lhs, serr); /* = RHS of '+' */
+    (*pos)--; return safe_add_D0(RECURSE(r,pos,lhs,serr), y, serr);
   case e_minus:
-    (*pos)--;
-    /* y is right-had-side of '-' */
-    y = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
-    (*pos)--;
-    return
-      safe_sub_D0(RelationEvaluatePostfixBranchSafe(r,pos,lhs,serr), y, serr);
+    (*pos)--; y = RECURSE(r, pos, lhs, serr); /* = RHS of '-' */
+    (*pos)--; return safe_sub_D0(RECURSE(r,pos,lhs,serr), y, serr);
   case e_times:
-    (*pos)--;
-    /* y is right-hand-side of '*' */
-    y = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
-    (*pos)--;
-    return
-      safe_mul_D0(RelationEvaluatePostfixBranchSafe(r,pos,lhs,serr), y, serr);
+    (*pos)--; y = RECURSE(r, pos, lhs, serr); /* = RHS of '*' */
+    (*pos)--; return safe_mul_D0(RECURSE(r,pos,lhs,serr), y, serr);
   case e_divide:
-    (*pos)--;
-    /* y is the divisor */
-    y = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
-    (*pos)--;
-    return
-      safe_div_D0(RelationEvaluatePostfixBranchSafe(r,pos,lhs,serr), y, serr);
+    (*pos)--; y = RECURSE(r, pos, lhs, serr); /* = the divisor (RHS of '/') */
+    (*pos)--; return safe_div_D0(RECURSE(r,pos,lhs,serr), y, serr);
   case e_power:
-    (*pos)--;
-    /* y is the power */
-    y = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
-    (*pos)--;
-    /* x is the base */
-    x = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
+    (*pos)--; y = RECURSE(r, pos, lhs, serr); /* = the power (RHS of '^') */
+    (*pos)--; x = RECURSE(r, pos, lhs, serr); /* = the base */
     return safe_pow_D0(x, y, serr);
   case e_ipower:
-    (*pos)--;
-    /* y is the power */
-    y = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
-    (*pos)--;
-    /* x is the base */
-    x = RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
+    (*pos)--; y = RECURSE(r, pos, lhs, serr); /* y is the power (RHS of '^') */
+    (*pos)--; x = RECURSE(r, pos, lhs, serr); /* x is the base */
     return safe_ipow_D0(x, (int)y, serr);
   case e_uminus:
-    (*pos)--;
-    return -1.0 * RelationEvaluatePostfixBranchSafe(r, pos, lhs, serr);
+    (*pos)--; return -1.0 * RECURSE(r, pos, lhs, serr);
   case e_func:
-    (*pos)--;
-    return
-      FuncEvalSafe(TermFunc(term),
-                   RelationEvaluatePostfixBranchSafe(r,pos,lhs,serr),serr);
+    (*pos)--; return FuncEvalSafe(TermFunc(term),RECURSE(r,pos,lhs,serr),serr);
   default:
-    Asc_Panic(2, NULL,
-              "Don't know this type of relation type\n"
-              "in function RelationEvaluatePostfixBranchSafe\n");
-    
-    break;
+    Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
   }
 }
+#undef RECURSE
 
 /**
 	Yet another function for calculating the residual of a relation.
@@ -900,14 +870,14 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
       res_stack[s] = FuncEval(funcptr, res_stack[s]);
       break;
     default:
-      Asc_Panic(2, NULL,
-                "Don't know this type of relation type\n"
-                "in function RelationEvaluateResidualPostfix\n");
-      break;
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
     }
   }
 }
 
+/*------------------------------------------------------------------------------
+  GRADIENT AND DERIVATIVE CALCULATIONS
+*/
 
 /**
 	This function evaluates the residual and the gradient for the relation
@@ -1109,9 +1079,7 @@ RelationEvaluateResidualGradient(CONST struct relation *r,
       res_stack(s) = FuncEval( fxnptr, res_stack(s) );
       break;
     default:
-      Asc_Panic(2, NULL,
-                "Don't know this type of relation type\n"
-                "in function RelationEvaluateResidualGradient\n");
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
       break;
     }
   }
@@ -1311,10 +1279,7 @@ RelationEvaluateResidualGradientSafe(CONST struct relation *r,
       res_stack(s) = FuncEvalSafe( fxnptr, res_stack(s), serr);
       break;
     default:
-      Asc_Panic(2, NULL,
-                "Don't know this type of relation type\n"
-                "in function RelationEvaluateResidualGradientSafe\n");
-      break;
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
     }
   }
 #undef grad_stack
@@ -1476,9 +1441,7 @@ RelationEvaluateDerivative(CONST struct relation *r,
       res_stack(s) = FuncEval( fxnptr, res_stack(s) );
       break;
     default:
-      Asc_Panic(2, NULL,
-                "Don't know this type of relation type\n"
-                "in function RelationEvaluateDerivative\n");
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
       break;
     }
   }
@@ -1637,10 +1600,7 @@ RelationEvaluateDerivativeSafe(CONST struct relation *r,
       res_stack(s) = FuncEvalSafe( fxnptr, res_stack(s), serr);
       break;
     default:
-      Asc_Panic(2, NULL,
-                "Don't know this type of relation type\n"
-                "in function RelationEvaluateDerivativeSafe\n");
-      break;
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
     }
   }
 #undef grad_stack
@@ -1651,16 +1611,18 @@ RelationEvaluateDerivativeSafe(CONST struct relation *r,
   RELATION & RELATION TERM QUERIES FUNCTIONS (FOR USE BY EXTERNAL CODE)
 */
 
-/* return =, <, >, etc, etc. not e_token, e_glassbox, etc */
+/**
+	@return =, <, >, etc, etc. not e_token, e_glassbox, etc 
+*/
 enum Expr_enum RelationRelop(CONST struct relation *rel)
 {
   AssertAllocatedMemory(rel,sizeof(struct relation));
   return rel->share->s.relop;
 }
 
-/*
- * This query only applies to TokenRelations and OpcodeRelations.
- */
+/**
+	This query only applies to TokenRelations and OpcodeRelations.
+*/
 unsigned long RelationLength(CONST struct relation *rel, int lhs)
 {
   assert(rel!=NULL);
@@ -1674,9 +1636,9 @@ unsigned long RelationLength(CONST struct relation *rel, int lhs)
 }
 
 /*
- * This query only applies to TokenRelations. It assumes the
- * user still thinks tokens number from [1..len].
- */
+	This query only applies to TokenRelations. It assumes the
+	user still thinks tokens number from [1..len].
+*/
 CONST struct relation_term *RelationTerm(CONST struct relation *rel,
         				 unsigned long int pos, int lhs)
 {
@@ -1694,10 +1656,10 @@ CONST struct relation_term *RelationTerm(CONST struct relation *rel,
   }
 }
 
-/*
- * This query only applies to TokenRelations. It assumes the
- * clued user thinks tokens number from [0..len-1], which they do.
- */
+/**
+	This query only applies to TokenRelations. It assumes the
+	clued user thinks tokens number from [0..len-1], which they do.
+*/
 CONST struct relation_term
 *NewRelationTermF(CONST struct relation *rel, unsigned long pos, int lhs)
 {
@@ -1707,18 +1669,18 @@ CONST struct relation_term
     if (RTOKEN(rel).lhs != NULL)
       return A_TERM(&(RTOKEN(rel).lhs[pos]));
     else return NULL;
-  } else {
+  }else{
     if (RTOKEN(rel).rhs != NULL)
       return A_TERM(&(RTOKEN(rel).rhs[pos]));
     else return NULL;
   }
 }
 
-/*
- * This query only applies to sides from TokenRelations. It assumes the
- * clued user thinks tokens number from [0..len-1], which they do,
- * and that the side came from a token relation instance.
- */
+/**
+	This query only applies to sides from TokenRelations. It assumes the
+	clued user thinks tokens number from [0..len-1], which they do,
+	and that the side came from a token relation instance.
+*/
 CONST struct relation_term
 *RelationSideTermF(CONST union RelationTermUnion *side, unsigned long pos)
 {
@@ -1726,10 +1688,10 @@ CONST struct relation_term
   return A_TERM(&(side[pos]));
 }
 
-/*
- * This query only applies to TokenRelations. It assumes the
- * clued user thinks tokens number from [0..len-1], which they do.
- */
+/**
+	This query only applies to TokenRelations. It assumes the
+	clued user thinks tokens number from [0..len-1], which they do.
+*/
 enum Expr_enum RelationTermTypeF(CONST struct relation_term *term)
 {
   AssertMemory(term);
@@ -1743,29 +1705,25 @@ unsigned long TermVarNumber(CONST struct relation_term *term)
   return V_TERM(term)->varnum;
 }
 
-long TermInteger(CONST struct relation_term *term)
-{
+long TermInteger(CONST struct relation_term *term){
   assert(term&&(term->t==e_int));
   AssertMemory(term);
   return I_TERM(term)->ivalue;
 }
 
-double TermReal(CONST struct relation_term *term)
-{
+double TermReal(CONST struct relation_term *term){
   assert(term&&( term->t==e_real || term->t==e_zero));
   AssertMemory(term);
   return R_TERM(term)->value;
 }
 
 double
-TermVariable(CONST struct relation *rel, CONST struct relation_term *term)
-{
+TermVariable(CONST struct relation *rel, CONST struct relation_term *term){
   return
     RealAtomValue((struct Instance*)RelationVariable(rel,TermVarNumber(term)));
 }
 
-CONST dim_type *TermDimensions(CONST struct relation_term *term)
-{
+CONST dim_type *TermDimensions(CONST struct relation_term *term){
   assert( term && (term->t==e_real || term->t == e_int || term->t == e_zero) );
   AssertMemory(term);
   if (term->t==e_real) return R_TERM(term)->dimensions;
@@ -1774,138 +1732,124 @@ CONST dim_type *TermDimensions(CONST struct relation_term *term)
   return NULL;
 }
 
-CONST struct Func *TermFunc(CONST struct relation_term *term)
-{
+CONST struct Func *TermFunc(CONST struct relation_term *term){
   assert(term&&(term->t == e_func));
   AssertMemory(term);
   return F_TERM(term)->fptr;
 }
 
-struct relation_term *RelationINF_Lhs(CONST struct relation *rel)
-{
+struct relation_term *RelationINF_Lhs(CONST struct relation *rel){
   return RTOKEN(rel).lhs_term;
 }
 
-struct relation_term *RelationINF_Rhs(CONST struct relation *rel)
-{
+struct relation_term *RelationINF_Rhs(CONST struct relation *rel){
   return RTOKEN(rel).rhs_term;
 }
 
 
-/*
- * For picking apart a BlackBox relation and its
- * ExternalCall node.
- */
+/*------------------------------------------------------------------------------
+  BLACKBOX RELATION QUERIES
 
-struct ExtCallNode *BlackBoxExtCall(CONST struct relation *rel)
-{
+  For picking apart a BlackBox relation and its ExternalCall node.
+*/
+
+struct ExtCallNode *BlackBoxExtCall(CONST struct relation *rel){
   assert(rel!=NULL);
   return RBBOX(rel).ext;
 }
 
-int *BlackBoxArgs(CONST struct relation *rel)
-{
+int *BlackBoxArgs(CONST struct relation *rel){
   assert(rel!=NULL);
   return RBBOX(rel).args;
 }
 
-/*
- * For picking apart a GlassBox relation.
- */
-struct ExternalFunc *GlassBoxExtFunc(CONST struct relation *rel)
-{
+/*------------------------------------------------------------------------------
+  GLASSBOX RELATION QUERIES
+
+  For picking apart a GlassBox relation.
+*/
+
+struct ExternalFunc *GlassBoxExtFunc(CONST struct relation *rel){
   assert(rel!=NULL);
   return RGBOX(rel).efunc;
 }
 
-int GlassBoxRelIndex(CONST struct relation *rel)
-{
+int GlassBoxRelIndex(CONST struct relation *rel){
   assert(rel!=NULL);
   return RGBOX(rel).index;
 }
 
-int *GlassBoxArgs(CONST struct relation *rel)
-{
+int *GlassBoxArgs(CONST struct relation *rel){
   assert(rel!=NULL);
   return RGBOX(rel).args;
 }
 
 
-/*
- * For picking apart a relation. Not all of these queries may be
- * applied to all relation types. Those that cannot be are so
- * marked.
- */
+/*------------------------------------------------------------------------------
+  GENERAL RELATION QUERIES
 
-CONST struct gl_list_t *RelationVarList(CONST struct relation *rel)
-{
+	Not all of these queries may be	applied to all relation types.
+	Those that cannot be are so	marked.
+*/
+
+CONST struct gl_list_t *RelationVarList(CONST struct relation *rel){
   return (CONST struct gl_list_t *)rel->vars;
 }
 
-dim_type *RelationDim(CONST struct relation *rel)
-{
+dim_type *RelationDim(CONST struct relation *rel){
   assert(rel!=NULL);
   return rel->d;
 }
 
-int SetRelationDim(struct relation *rel, dim_type *d)
-{
+int SetRelationDim(struct relation *rel, dim_type *d){
   if (!rel) return 1;
   rel->d = d;
   return 0;
 }
 
-double RelationResidual(CONST struct relation *rel)
-{
+double RelationResidual(CONST struct relation *rel){
   assert(rel!=NULL);
   return rel->residual;
 }
 
-void SetRelationResidual(struct relation *rel, double value)
-{
+void SetRelationResidual(struct relation *rel, double value){
   assert(rel!=NULL);
   rel->residual = value;
 }
 
-double RelationMultiplier(CONST struct relation *rel)
-{
+double RelationMultiplier(CONST struct relation *rel){
   assert(rel!=NULL);
   return rel->multiplier;
 }
 
-void SetRelationMultiplier(struct relation *rel, double value)
-{
+void SetRelationMultiplier(struct relation *rel, double value){
   assert(rel!=NULL);
   rel->multiplier = value;
 }
 
-double RelationNominal(CONST struct relation *rel)
-{
+double RelationNominal(CONST struct relation *rel){
   assert(rel!=NULL);
   return rel->nominal;
 }
 
-void SetRelationNominal(struct relation *rel, double value)
-{
+void SetRelationNominal(struct relation *rel, double value){
   assert(rel!=NULL);
   rel->nominal = (fabs(value) > 0.0) ? fabs(value) : rel->nominal;
 }
 
 
-int RelationIsCond(CONST struct relation *rel)
-{
+int RelationIsCond(CONST struct relation *rel){
   if ( rel != NULL) {
     return rel->iscond;
   }
   return 0;
 }
 
-void SetRelationIsCond(struct relation *rel)
-{
+void SetRelationIsCond(struct relation *rel){
   if ( rel != NULL) {
     rel->iscond = 1;
-  } else {
-    FPRINTF(ASCERR,"ERROR: SetRelationIsCond called with NULL relation\n");
+  }else{
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"NULL relation");
   }
 }
 
@@ -1918,17 +1862,17 @@ unsigned long NumberVariables(CONST struct relation *rel)
 }
 
 struct Instance *RelationVariable(CONST struct relation *rel,
-        			  unsigned long int varnum)
-{
+		unsigned long int varnum
+){
   assert(rel!=NULL);
   return (struct Instance *)gl_fetch(rel->vars,varnum);
 }
 
 static void CalcDepth(CONST struct relation *rel,
-               int lhs,
-               unsigned long int *depth,
-               unsigned long int *maxdepth)
-{
+		int lhs,
+		unsigned long int *depth,
+		unsigned long int *maxdepth
+){
   unsigned long c,length;
   CONST struct relation_term *term;
   length = RelationLength(rel,lhs);
@@ -1953,16 +1897,12 @@ static void CalcDepth(CONST struct relation *rel,
       (*depth)--;
       break;
     default:
-      Asc_Panic(2, NULL,
-                "Don't know this type of relation type.\n"
-                "in function CalcDepth\n");
-      break;
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
     }
   }
 }
 
-unsigned long RelationDepth(CONST struct relation *rel)
-{
+unsigned long RelationDepth(CONST struct relation *rel){
   unsigned long depth=0,maxdepth=0;
   switch(RelationRelop(rel)){
   case e_equal:
@@ -1981,8 +1921,7 @@ unsigned long RelationDepth(CONST struct relation *rel)
     assert(depth == 1);
     break;
   default:
-    Asc_Panic(2, NULL, "Unknown relation type.\n");
-    break;
+      Asc_Panic(2, __FUNCTION__,"Unknown relation term type");
   }
   return maxdepth;
 }
@@ -1993,8 +1932,7 @@ unsigned long RelationDepth(CONST struct relation *rel)
   "Documentation will be added at a later date" -- someone last century
 */
 
-static double FindMaxAdditiveTerm(struct relation_term *s)
-{
+static double FindMaxAdditiveTerm(struct relation_term *s){
   enum safe_err serr;
   double lhs, rhs;
 
@@ -2019,8 +1957,7 @@ static double FindMaxAdditiveTerm(struct relation_term *s)
   }
 }
 
-static double FindMaxFromTop(struct relation *s)
-{
+static double FindMaxFromTop(struct relation *s){
   double lhs;
   double rhs;
   if (s == NULL) {
@@ -2032,8 +1969,8 @@ static double FindMaxFromTop(struct relation *s)
   return MAX(fabs(lhs), fabs(rhs));
 }
 
-double CalcRelationNominal(struct Instance *i)     /* send in relation */
-{
+/* send in relation */
+double CalcRelationNominal(struct Instance *i){
   enum Expr_enum reltype;
 
   char *iname;
@@ -2068,7 +2005,7 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
     }
   }
   if (reltype == e_blackbox){
-    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"blackbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"assuming 1.0 for blackbox (%s)",__FUNCTION__);
   }else if (reltype == e_glassbox){
     ERROR_REPORTER_HERE(ASC_PROG_WARNING,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
   }else if (reltype == e_opcode){
@@ -2078,8 +2015,7 @@ double CalcRelationNominal(struct Instance *i)     /* send in relation */
   return (double)1;
 }
 
-void PrintScale(struct Instance *i)
-{
+void PrintScale(struct Instance *i){
   if (InstanceKind(i) == REL_INST) {
     double j;
     j = CalcRelationNominal(i);
@@ -2087,8 +2023,7 @@ void PrintScale(struct Instance *i)
   }
 }
 
-void PrintRelationNominals(struct Instance *i)
-{
+void PrintRelationNominals(struct Instance *i){
   VisitInstanceTree(i,PrintScale, 0, 0);
 }
 
@@ -2103,8 +2038,7 @@ void PrintRelationNominals(struct Instance *i)
  * the array calling this function thinks vars index from 0.
  */
 static
-void RelationLoadDoubles(struct gl_list_t *varlist, double *vars)
-{
+void RelationLoadDoubles(struct gl_list_t *varlist, double *vars){
   unsigned long c;
   vars--; /* back up the pointer so indexing from 1 puts data right */
   for (c= gl_length(varlist); c > 0; c--) {
@@ -2115,8 +2049,7 @@ void RelationLoadDoubles(struct gl_list_t *varlist, double *vars)
 /**
 	only called on token relations.
 */
-int RelationCalcResidualBinary(CONST struct relation *r, double *res)
-{
+int RelationCalcResidualBinary(CONST struct relation *r, double *res){
   double *vars;
   double tres;
   int old_errno;
@@ -2212,8 +2145,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
 			if(reltype >= TOK_REL_TYPE_LOW && reltype <= TOK_REL_TYPE_HIGH){
 				status = safe_problem;
 			}else{
-			    Asc_Panic(2, NULL, "RelationCalcResidualPostfixSafe: reached end of routine!");
-				exit(2);
+			    Asc_Panic(2, __FUNCTION__, "reached end of routine!");
 			}
 	}
 	return status;
@@ -2221,8 +2153,7 @@ RelationCalcResidualPostfixSafe(struct Instance *i, double *res){
 
 
 int
-RelationCalcResidualPostfix(struct Instance *i, double *res)
-{
+RelationCalcResidualPostfix(struct Instance *i, double *res){
   struct relation *r;
   enum Expr_enum reltype;
   unsigned long length_lhs, length_rhs;
@@ -2273,12 +2204,10 @@ RelationCalcResidualPostfix(struct Instance *i, double *res)
     return 1;
   }else{
     Asc_Panic(2, __FUNCTION__,"reached end of routine");
-    
   }
 }
 
-int RelationCalcExceptionsInfix(struct Instance *i)
-{
+int RelationCalcExceptionsInfix(struct Instance *i){
   enum Expr_enum reltype;
   double res;
   int result = 0;
@@ -2302,7 +2231,7 @@ int RelationCalcExceptionsInfix(struct Instance *i)
         result |= RCE_ERR_LHS;
         if (isnan(res)) {
           result |= RCE_ERR_LHSNAN;
-        } else {
+        }else{
           if (!finite(res)) {
             result |= RCE_ERR_LHSINF;
           }
@@ -2318,7 +2247,7 @@ int RelationCalcExceptionsInfix(struct Instance *i)
         result |= RCE_ERR_RHS;
         if (isnan(res)) {
           result |= RCE_ERR_RHSNAN;
-        } else {
+        }else{
           if (!finite(res)) {
             result |= RCE_ERR_LHSINF;
           }
@@ -2332,14 +2261,12 @@ int RelationCalcExceptionsInfix(struct Instance *i)
     glob_rel = NULL;
     return -1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
-    
+    Asc_Panic(2, __FUNCTION__,"reached end of routine");
   }
 }
 
 
-int RelationCalcResidualInfix(struct Instance *i, double *res)
-{
+int RelationCalcResidualInfix(struct Instance *i, double *res){
   enum Expr_enum reltype;
   glob_rel = NULL;
 
@@ -2353,7 +2280,7 @@ int RelationCalcResidualInfix(struct Instance *i, double *res)
   if( reltype == e_token ) {
     if(Infix_LhsSide(glob_rel) != NULL) {
       *res = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
-    } else {
+    }else{
       *res = 0.0;
     }
     if(Infix_RhsSide(glob_rel) != NULL) {
@@ -2366,8 +2293,7 @@ int RelationCalcResidualInfix(struct Instance *i, double *res)
     glob_rel = NULL;
     return 1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
-    
+    Asc_Panic(2, __FUNCTION__,"reached end of routine");
   }
 }
 
@@ -2376,9 +2302,7 @@ int RelationCalcResidualInfix(struct Instance *i, double *res)
 	There used to be a stoopid comment here so I removed it.
 */
 int
-RelationCalcResidualPostfix2(struct Instance *i,
-                             double *res)
-{
+RelationCalcResidualPostfix2(struct Instance *i, double *res){
   struct relation *r;
   enum Expr_enum reltype;
 
@@ -2397,8 +2321,7 @@ RelationCalcResidualPostfix2(struct Instance *i,
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"reltype not implemented (%s)",__FUNCTION__);
     return 1;
   }else{
-    Asc_Panic(2, __FUNCTION__,"reached end of routine\n");
-    
+    Asc_Panic(2, __FUNCTION__,"reached end of routine");
   }
 }
 
@@ -2408,9 +2331,7 @@ RelationCalcResidualPostfix2(struct Instance *i,
 	then ignore the residual
 */
 int
-RelationCalcGradient(struct Instance *r,
-                     double *grad)
-{
+RelationCalcGradient(struct Instance *r, double *grad){
   double residual;
   return RelationCalcResidGrad(r, &residual, grad);
 }
@@ -2420,9 +2341,7 @@ RelationCalcGradient(struct Instance *r,
 	then ignore the residual
 */
 enum safe_err
-RelationCalcGradientSafe(struct Instance *r,
-                         double *grad)
-{
+RelationCalcGradientSafe(struct Instance *r, double *grad){
   double residual;
 
   return RelationCalcResidGradSafe(r, &residual, grad);
@@ -2430,10 +2349,7 @@ RelationCalcGradientSafe(struct Instance *r,
 
 
 int
-RelationCalcResidGrad(struct Instance *i,
-                      double *residual,
-                      double *gradient)
-{
+RelationCalcResidGrad(struct Instance *i, double *residual, double *gradient){
   struct relation *r;
   enum Expr_enum reltype;
 
@@ -2455,15 +2371,13 @@ RelationCalcResidGrad(struct Instance *i,
 
   }else{
     Asc_Panic(2, __FUNCTION__, "reached end of routine");
-    
   }
 }
 
 enum safe_err
-RelationCalcResidGradSafe(struct Instance *i,
-                          double *residual,
-                          double *gradient)
-{
+RelationCalcResidGradSafe(struct Instance *i
+		, double *residual, double *gradient
+){
   struct relation *r;
   enum Expr_enum reltype;
   enum safe_err not_safe = safe_ok;
@@ -2510,10 +2424,7 @@ RelationCalcResidGradSafe(struct Instance *i,
     return not_safe;
   }
   else {
-    Asc_Panic(2, NULL,
-              "error in RelationCalcResidGradSafe:\n",
-              "reached end of routine");
-    
+    Asc_Panic(2, __FUNCTION__, "reached end of routine");
   }
 }
 
@@ -2526,9 +2437,8 @@ RelationCalcResidGradSafe(struct Instance *i,
 */
 int
 RelationCalcDerivative(struct Instance *i,
-                       unsigned long index,
-                       double *gradient)
-{
+		unsigned long index, double *gradient
+){
   struct relation *r;
   enum Expr_enum reltype;
 
@@ -2553,16 +2463,14 @@ RelationCalcDerivative(struct Instance *i,
     return 1;
   }
   else {
-    Asc_Panic(2, __FUNCTION__,"reached end of routine");
-    
+    Asc_Panic(2, __FUNCTION__, "reached end of routine");  
   }
 }
 
 enum safe_err
 RelationCalcDerivativeSafe(struct Instance *i,
-                           unsigned long index,
-                           double *gradient)
-{
+		unsigned long index,double *gradient
+){
   struct relation *r;
   enum Expr_enum reltype;
   enum safe_err not_safe = safe_ok;
@@ -2603,8 +2511,7 @@ RelationCalcDerivativeSafe(struct Instance *i,
 /**
 	Function for testing residual and gradient calulations
 */
-void PrintGradients(struct Instance *i)
-{
+void PrintGradients(struct Instance *i){
   if (InstanceKind(i) == REL_INST) {
     double res, grads[1000];
     unsigned long vars, v;
@@ -2718,8 +2625,7 @@ void PrintRelationGradients(struct Instance *i)
 #define m_PFS 1
 #define m_PF  2
 #define m_IF  3
-void TimeCalcResidual(struct gl_list_t *rlist,int method)
-{
+void TimeCalcResidual(struct gl_list_t *rlist,int method){
   unsigned long c,len;
   double res;
 
@@ -2751,8 +2657,7 @@ void TimeCalcResidual(struct gl_list_t *rlist,int method)
   return;
 }
 
-void PrintResidual(struct Instance *i)
-{
+void PrintResidual(struct Instance *i){
   enum safe_err se;
   struct relation *rel;
   enum Expr_enum reltype;
@@ -2768,13 +2673,13 @@ void PrintResidual(struct Instance *i)
     rel = (struct relation *)GetInstanceRelation(i,&reltype);
     if (reltype == e_token) {
       errb = RelationCalcResidualBinary(rel,&(binary));
-    } else {
+    }else{
       errb = 1;
     }
     se = RelationCalcResidualPostfixSafe(i,&(postsafe));
     if (errb || se != safe_ok) {
       FPRINTF(ASCERR,"Skipping Postfix,Infix\n");
-    } else {
+    }else{
       RelationCalcResidualPostfix(i,&(post));
       RelationCalcResidualInfix(i,&(in));
     }
@@ -2791,8 +2696,7 @@ void PrintResidual(struct Instance *i)
   }
 }
 
-void PrintRelationResiduals(struct Instance *i)
-{
+void PrintRelationResiduals(struct Instance *i){
   VisitInstanceTree(i,PrintResidual, 0, 0);
 }
 
@@ -2900,7 +2804,7 @@ double *RelationFindRoots(struct Instance *i,
       sideval = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
       if (finite(sideval)) {
         InsertBranchResult(Infix_LhsSide(glob_rel),sideval);
-      } else {
+      }else{
         FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite RHS.\n");
         glob_rel = NULL;
         return NULL;
@@ -2911,7 +2815,7 @@ double *RelationFindRoots(struct Instance *i,
         sideval = RelationBranchEvaluator(Infix_RhsSide(glob_rel));
         if (finite(sideval)) {
           InsertBranchResult(Infix_RhsSide(glob_rel),sideval);
-        } else {
+        }else{
           FPRINTF(ASCERR,"Inequality in RelationFindRoots. Infinite LHS.\n");
           glob_rel = NULL;
           return NULL;
@@ -2944,13 +2848,13 @@ double *RelationFindRoots(struct Instance *i,
     if(*able == 0) { /* Root-Find returns 0 for success*/
       *nsolns = 1;
       *able = TRUE;
-    } else {
+    }else{
       *able = FALSE;
     }
     return soln_list.soln;
 
   }
-  FPRINTF(ASCERR,"Inequality in RelationFindRoots. can't find roots.\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Inequality: can't find roots.");
   *able = FALSE;
   return soln_list.soln;
 }
@@ -3131,7 +3035,7 @@ static struct relation *RelationTmpTokenCopy(CONST struct relation *src){
     delta = UNION_TERM(RTOKEN(src).lhs_term) - RTOKEN(src).lhs;
     RTOKEN(result).lhs_term = A_TERM(RTOKEN(result).lhs+delta);
     RTOKEN(result).lhs_len = RTOKEN(src).lhs_len;
-  } else {
+  }else{
     RTOKEN(result).lhs_term = NULL;
     RTOKEN(result).lhs_len = 0;
   }
@@ -3141,7 +3045,7 @@ static struct relation *RelationTmpTokenCopy(CONST struct relation *src){
     delta = UNION_TERM(RTOKEN(src).rhs_term) - RTOKEN(src).rhs;
     RTOKEN(result).rhs_term = A_TERM(RTOKEN(result).rhs+delta);
     RTOKEN(result).rhs_len = RTOKEN(src).rhs_len;
-  } else {
+  }else{
     RTOKEN(result).rhs_term = NULL;
     RTOKEN(result).rhs_len = 0;
   }
@@ -3234,7 +3138,7 @@ static int SearchEval_Branch(struct relation_term *term){
     if(TermVarNumber(term) == glob_varnum) {
         ++glob_done;
         return 1;
-    } else {
+    }else{
         return 0;
     }
   case e_func:
@@ -3257,9 +3161,10 @@ static int SearchEval_Branch(struct relation_term *term){
       return 0;
     }
     return 1;
-/* Note that this algorithm could use some work.  Here we go back up the
- * tree only to call relationbranchevaluator to turn these into reals.
- */
+  /* 
+	Note that this algorithm could use some work.  Here we go back up the
+	tree only to call relationbranchevaluator to turn these into reals.
+  */
   case e_int:
   case e_real:
   case e_zero:
@@ -3275,13 +3180,13 @@ static int SearchEval_Branch(struct relation_term *term){
     if(SearchEval_Branch(TermBinLeft(term)) < 1) {
       InsertBranchResult(TermBinLeft(term),
                          RelationBranchEvaluator(TermBinLeft(term)));
-    } else {
+    }else{
         ++result;
     }
     if(SearchEval_Branch(TermBinRight(term)) < 1) {
       InsertBranchResult(TermBinRight(term),
                          RelationBranchEvaluator(TermBinRight(term)));
-    } else {
+    }else{
         ++result;
     }
     if(result == 0){
@@ -3416,7 +3321,7 @@ int RelationInvertToken(struct relation_term **term,
     case e_minus:
       if(side == 0) {
         soln_list->soln[ndx] += value;
-      } else {
+      }else{
         soln_list->soln[ndx] = value - soln_list->soln[ndx];
       }
       break;
@@ -3436,7 +3341,7 @@ int RelationInvertToken(struct relation_term **term,
         if( *not_safe != safe_ok || value == 0.0) {
           remove_soln(soln_list,ndx);
         }
-      } else {
+      }else{
         if(value == 0.0 && soln_list->soln[ndx] == 0.0 )
           return(FALSE);
         soln_list->soln[ndx] =
@@ -3481,7 +3386,7 @@ int RelationInvertToken(struct relation_term **term,
           safe_sqrt_D0( soln_list->soln[ndx],not_safe );
         if( *not_safe == safe_ok ) {
           append_soln(soln_list, -soln_list->soln[ndx]);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3515,7 +3420,7 @@ int RelationInvertToken(struct relation_term **term,
             soln_list->soln[ndx] <= safe_PI ) {
           soln_list->soln[ndx] =
             safe_cos_D0(soln_list->soln[ndx],not_safe);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3534,7 +3439,7 @@ int RelationInvertToken(struct relation_term **term,
             soln_list->soln[ndx] <= safe_PI/2.0 ) {
           soln_list->soln[ndx] =
             safe_sin_D0(soln_list->soln[ndx],not_safe);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3552,7 +3457,7 @@ int RelationInvertToken(struct relation_term **term,
             soln_list->soln[ndx] < safe_PI/2.0 ) {
           soln_list->soln[ndx] =
             safe_tan_D0(soln_list->soln[ndx],not_safe);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3561,7 +3466,7 @@ int RelationInvertToken(struct relation_term **term,
         if( -1.0 < soln_list->soln[ndx] && soln_list->soln[ndx] < 1.0 ) {
           soln_list->soln[ndx] =
             safe_tanh_D0(soln_list->soln[ndx],not_safe);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3570,7 +3475,7 @@ int RelationInvertToken(struct relation_term **term,
       case F_SIN:
         if( -1.0 <= soln_list->soln[ndx] && soln_list->soln[ndx] <= 1.0 ) {
           return(FALSE);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3583,7 +3488,7 @@ int RelationInvertToken(struct relation_term **term,
           safe_arccosh_D0( soln_list->soln[ndx],not_safe );
         if( *not_safe == safe_ok ) {
           append_soln(soln_list, -soln_list->soln[ndx]);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3609,7 +3514,7 @@ int RelationInvertToken(struct relation_term **term,
         if( -1.0 < soln_list->soln[ndx] && soln_list->soln[ndx] < 1.0 ) {
           soln_list->soln[ndx] =
             safe_erf_inv(soln_list->soln[ndx],not_safe);
-        } else {
+        }else{
           remove_soln(soln_list,ndx);
         }
         break;
@@ -3658,12 +3563,13 @@ int RelationInvertToken(struct relation_term **term,
             safe_pow_D0(soln_list->soln[ndx],1.0/value,not_safe);
           break;
         }
-      } else {   /*** Solve c^x = y ***/
-        if( value == 0.0 || value == 1.0 )
-          return(FALSE);
-        soln_list->soln[ndx] =
-          safe_div_D0(safe_ln_D0(soln_list->soln[ndx],not_safe),
-                      safe_ln_D0(value,not_safe),not_safe);
+      }else{ /* Solve c^x = y */
+        if( value == 0.0 || value == 1.0 )return(FALSE);
+        soln_list->soln[ndx] = safe_div_D0(
+			safe_ln_D0(soln_list->soln[ndx],not_safe)
+            ,safe_ln_D0(value,not_safe)
+			,not_safe
+		);
       }
 
       if( *not_safe != safe_ok ) {
@@ -3674,8 +3580,7 @@ int RelationInvertToken(struct relation_term **term,
     case e_real:
     case e_zero:
     case e_int:
-      FPRINTF(ASCERR,
-              "unexpected error: please notify kt2g@andrew.cmu.edu\n");
+      Asc_Panic(2,__FUNCTION__,"Unexpected error with real/zero/int type");
       break;
     case e_var:
       ++glob_done;
@@ -3740,8 +3645,8 @@ int RelationInvertTokenTop(struct ds_soln_list *soln_list){
 */
 static
 int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
-        		double *val, double *u, double *f, double *g)
-{
+		double *val, double *u, double *f, double *g
+){
   double res;
   /*  glob_rel = rel;*/
   /*
@@ -3767,7 +3672,7 @@ int CalcResidGivenValue(int *mode, int *m, unsigned long *varnum,
 
   if(Infix_LhsSide(glob_rel) != NULL) {
     res = RelationBranchEvaluator(Infix_LhsSide(glob_rel));
-  } else {
+  }else{
     res = 0.0;
   }
   if(Infix_RhsSide(glob_rel) != NULL) {
@@ -3834,8 +3739,11 @@ double RootFind(struct relation *rel,
    */
   func = (ExtEvalFunc *)CalcResidGivenValue;
   glob_rel = rel;
-  return zbrent(func,lower_bound,upper_bound,&(mode),
-                &(m),&(n),x,u,f,g,tolerance,status);
+
+  return zbrent(
+	func,lower_bound,upper_bound,&(mode),
+  	&(m),&(n),x,u,f,g,tolerance,status
+  );
 }
 
 /*------------------------------------------------------------------------------
@@ -3953,8 +3861,7 @@ void PrintDirectResult(struct Instance *i){
    }
 }
 
-void PrintDirectSolveSolutions(struct Instance *i)
-{
+void PrintDirectSolveSolutions(struct Instance *i){
   VisitInstanceTree(i,PrintDirectResult, 0, 0);
   /* reset internal memory recycle */
   RelationFindRoots(NULL,0,0,0,0,NULL,NULL,NULL);
@@ -3967,8 +3874,7 @@ struct ctrwubs {
 };
 
 static
-void CollectShares(struct Instance *i,struct ctrwubs *data)
-{
+void CollectShares(struct Instance *i,struct ctrwubs *data){
   struct relation *r;
   /* If i ok and relation and token type and built and share not
    * previously built binary or collected, collect it.
@@ -3984,7 +3890,7 @@ void CollectShares(struct Instance *i,struct ctrwubs *data)
       gl_append_ptr(data->list,i);
       RTOKEN(r).btable = INT_MAX;
     }
-  } else {
+  }else{
     data->overflowed = 1;
   }
 }
@@ -3992,8 +3898,8 @@ void CollectShares(struct Instance *i,struct ctrwubs *data)
 
 struct gl_list_t *
 CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
-                                             unsigned long maxlen)
-{
+		unsigned long maxlen
+){
   struct ctrwubs data;
   struct Instance *rel;
   struct relation *r;
@@ -4012,7 +3918,7 @@ CollectTokenRelationsWithUniqueBINlessShares(struct Instance *i,
       RTOKEN(r).btable = 0;
     }
     return NULL;
-  } else {
+  }else{
     return data.list;
   }
 }
