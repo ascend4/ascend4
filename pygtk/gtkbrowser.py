@@ -162,8 +162,14 @@ class Browser:
 
 		parser.add_option("--library"
 			,action="store", type="string", dest="library_path"
-			,help="overried the configuration value for the library path"
+			,help="override the configuration value for the library path"
 			,default=None
+		)
+
+		parser.add_option("--no-auto-sim"
+			,action="store_false", dest="auto_sim"
+			,help="disable auto-instantiation of MODEL named as the file stem"
+			,default=True
 		)
 
 		(self.options, args) = parser.parse_args()
@@ -434,15 +440,30 @@ class Browser:
 		if(len(args)==1):
 			self.do_open(args[0])
 
-			#print "Options: ",self.options
+			print "Options: ",self.options
 
+			_model = None
 			if self.options.model:
+				_model = self.options.model
+				print "MODEL: '%s'" % _model
+			elif self.options.auto_sim:
+				_model, _ext = os.path.splitext(args[0]);
+				self.reporter.reportNote("Instantiating self-titled model '%s'" %_model)
+
+			if _model:
 				try:
-					_t =self.library.findType(self.options.model);
-					self.do_sim(_t);
+					_t=self.library.findType(_model)
+					try:
+						self.do_sim(_t)
+					except RuntimeError, e:
+						self.reporter.reportError("Failed to create instance of '%s': %s" 
+							%(_model, str(e))
+						);
 				except RuntimeError, e:
-					self.reporter.reportError("Failed to create instance of '%s': %s" %(self.options.model, str(e)));
-		
+					if self.options.model:
+						self.reporter.reportError("Unknown model type '%s': %s" 
+							%(_model, str(e))
+						);		
 
 	def run(self):
 		self.window.show()
