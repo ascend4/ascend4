@@ -196,15 +196,15 @@ static struct var_variable *rel_instance_to_var(struct rel_relation *rel,
 	SlvBackendToken inst
 ){
 	int j, nincid;
-	struct var_variable *var, *var1;
-	const struct var_variable **incid = rel_incidence_list(rel);
+	struct var_variable *var;
+	struct var_variable **incid = rel_incidence_list(rel);
 
 	nincid = rel_n_incidences(rel);
 	
 	var = NULL;
 	for(j=0;j<nincid;++j){
-		if(( var1 = var_instance(incid[j]) )==inst){
-			var = var1;
+		if(( var_instance(incid[j]) )==inst){
+			var = incid[j];
 			break;
 		}
 	}
@@ -990,12 +990,11 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
     var = cache->invars[c];
 	CONSOLE_DEBUG("invar[%lu] at %p",c+1,var);
     used = var_apply_filter(var,d->filter);
-
 	if (used) {
       d->nz.col = mtx_org_to_col(d->mtx,var_sindex(var));
 	  CONSOLE_DEBUG("column = %d",d->nz.col);
       value = ptr[c] + mtx_value(d->mtx,&(d->nz));
-	  CONSOLE_DEBUG("input %d is used, value = %f",c,value);
+	  CONSOLE_DEBUG("input %lu is used, value = %f",c,value);
       mtx_set_value(d->mtx,&(d->nz), value);
     }else{
 	  CONSOLE_DEBUG("var is not used");
