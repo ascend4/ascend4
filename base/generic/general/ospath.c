@@ -823,7 +823,7 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 
 	pos = strrchr(fp->path,PATH_SEPARATOR_CHAR);
 	if(pos==NULL){
-		return ospath_new(".");
+		return ospath_new_noclean("");
 	}
 #ifdef WINPATHS
 	strncpy(s,fp->drive,PATH_MAX);
@@ -832,6 +832,18 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 	strncpy(s,fp->path,pos - fp->path);
 #endif
 	return ospath_new(s);
+}
+
+ASC_DLLSPEC(struct FilePath *) ospath_getabs(struct FilePath *fp){
+	struct FilePath *fp1, *fp2;
+	if(fp->path[0]==PATH_SEPARATOR_STR){
+		ospath_copy(fp1,fp);
+	}else{
+		fp2 = ospath_new(".");
+		fp1 = ospath_concat(fp2,fp);
+		ospath_free(fp2);
+	}
+	return fp1;
 }
 
 int ospath_cmp(struct FilePath *fp1, struct FilePath *fp2){

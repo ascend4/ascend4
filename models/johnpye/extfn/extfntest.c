@@ -54,14 +54,6 @@ ASC_EXPORT(int) extfntest_register(){
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
-/*
-	result += CreateUserFunction("add_one",
-                  (ExtEvalFunc *)addone_prepare,
-			      (ExtEvalFunc **)addone_calc,
-			      (ExtEvalFunc **)NULL,
-			      (ExtEvalFunc **)NULL,
-			      1,1,addone_help);
-*/
 	CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",addone_calc);
 
 	result += CreateUserFunctionBlackBox("add_one"

@@ -393,27 +393,18 @@ int ClaimNewMethodsTypeDesc(long parseid, struct gl_list_t *pl)
 }
 
 struct TypeDescription
-*CreateModelTypeDesc(symchar *name, 	   /* name of the type*/
-		     struct TypeDescription *rdesc,/* type that it */
-		                                   /* refines or NULL */
-		     struct module_t *mod, /* module it is defined in */
-		     ChildListPtr cl, /* list of the type's */
-		                           /* child names */
-		     struct gl_list_t *pl, /* list of initialization */
-					   /* procedures */
-		     struct StatementList *sl, /* list of declarative */
-					       /* statements */
-		     int univ,		/* UNIVERSAL flag */
-		     struct StatementList *psl, /* list of parameter */
-					       /* statements */
-		     struct StatementList *rsl,  /* list of reduction */
-					       /* statements */
-		     struct StatementList *tsl, /* list of reduced */
-					       /* statements */
-		     struct StatementList *wsl  /* list of wbts statements */
-                    )
-
-{
+*CreateModelTypeDesc(symchar *name, /* name of the type*/
+		struct TypeDescription *rdesc,/* type that it refines or NULL */
+		struct module_t *mod, /* module it is defined in */
+		ChildListPtr cl, /* list of the type's child names */
+		struct gl_list_t *pl, /* list of initialization procedures */
+		struct StatementList *sl, /* list of declarative statements */
+		int univ, /* UNIVERSAL flag */
+		struct StatementList *psl, /* list of parameter statements */
+		struct StatementList *rsl,  /* list of reduction statements */
+		struct StatementList *tsl, /* list of reduced statements */
+		struct StatementList *wsl  /* list of wbts statements */
+){
   register struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
@@ -449,7 +440,7 @@ struct TypeDescription
 *CreateDummyTypeDesc(symchar *name)
 {
   register struct TypeDescription *result;
-  result==ASC_NEW(struct TypeDescription);
+  result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
   result->t = dummy_type;
   result->name = name;
@@ -521,30 +512,21 @@ struct TypeDescription *CreateConstantTypeDesc(
 
 struct TypeDescription
   *CreateAtomTypeDesc(symchar *name,	/* name of type */
-		      enum type_kind t,	/* base type of atom */
-		      struct TypeDescription *rdesc, /* type */
-						     /* description */
-						     /* what it refines */
-		      struct module_t *mod, /* module where the type */
-					    /* is defined */
-		      ChildListPtr childl,	/* list of children names */
-		      struct gl_list_t *procl, /* list of */
-					       /* initialization procedures */
-		      struct StatementList *statl, /* list of */
-						   /* declarative statements */
-		      unsigned long int bytesize, /* size of an */
-						  /* instance in bytes. */
-		      struct ChildDesc *childd,	/* description of the */
-						/* atom's children */
-		      int defaulted, /* TRUE indicates default value was */
-				     /* assigned */
-		      double dval, /* default value for real atoms */
-		      CONST dim_type *ddim, /* dimensions of default value */
-		      int univ,
-		      long ival,
-		      symchar *sval
-)
-{
+		enum type_kind t,	/* base type of atom */
+		struct TypeDescription *rdesc, /* type description what it refines */
+		struct module_t *mod, /* module where the type is defined */
+		ChildListPtr childl,	/* list of children names */
+		struct gl_list_t *procl, /* list of initialization procedures */
+		struct StatementList *statl, /* list of declarative statements */
+		unsigned long int bytesize, /* size of an instance in bytes. */
+		struct ChildDesc *childd,	/* description of the atom's children */
+		int defaulted, /* TRUE indicates default value was assigned */
+		double dval, /* default value for real atoms */
+		CONST dim_type *ddim, /* dimensions of default value */
+		int univ,
+		long ival,
+		symchar *sval
+){
   register struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
 #if TYPELINKDEBUG
@@ -595,8 +577,7 @@ struct TypeDescription
 }
 
 static
-int IndicesEqual(struct gl_list_t *i1, struct gl_list_t *i2)
-{
+int IndicesEqual(struct gl_list_t *i1, struct gl_list_t *i2){
   unsigned long c,len;
   struct IndexType *ind1,*ind2;
   if (gl_length(i1)!=gl_length(i2)) return 0;
@@ -622,13 +603,13 @@ int IndicesEqual(struct gl_list_t *i1, struct gl_list_t *i2)
 
 static
 int ArrayDescsEqual(struct TypeDescription *src,
-		    struct module_t *mod,
-		    struct TypeDescription *desc,
-		    int isintset,
-		    int isrel,
-                    int islogrel,
-                    int iswhen,
-		    struct gl_list_t *indices)
+		struct module_t *mod,
+		struct TypeDescription *desc,
+		int isintset,
+		int isrel,
+		int islogrel,
+		int iswhen,
+		struct gl_list_t *indices)
 {
   if (src->mod != mod) return 0;
   if (src->u.array.desc != desc) return 0;
@@ -645,13 +626,13 @@ int ArrayDescsEqual(struct TypeDescription *src,
 
 static
 struct TypeDescription *FindArray(struct module_t *mod,
-				  struct TypeDescription *desc,
-				  int isintset,
-				  int isrel,
-                                  int islogrel,
-                                  int iswhen,
-				  struct gl_list_t *indices)
-{
+		struct TypeDescription *desc,
+		int isintset,
+		int isrel,
+		int islogrel,
+		int iswhen,
+		struct gl_list_t *indices
+){
   register struct ArrayDescList *ptr;
   int ade;
   ptr = g_array_desc_list;
@@ -669,8 +650,7 @@ struct TypeDescription *FindArray(struct module_t *mod,
 }
 
 static
-void AddArray(struct TypeDescription *d)
-{
+void AddArray(struct TypeDescription *d){
   register struct ArrayDescList *ptr;
   ptr = g_array_desc_list;
   g_array_desc_list =
@@ -680,8 +660,7 @@ void AddArray(struct TypeDescription *d)
 }
 
 static
-void RemoveArrayTypeDesc(struct TypeDescription *d)
-{
+void RemoveArrayTypeDesc(struct TypeDescription *d){
   register struct ArrayDescList *ptr , *next;
   ptr = g_array_desc_list;
   if (ptr!=NULL){
@@ -706,13 +685,13 @@ void RemoveArrayTypeDesc(struct TypeDescription *d)
 }
 
 struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
-					    struct TypeDescription *desc,
-					    int isint,
-					    int isrel,
-                                            int islogrel,
-                                            int iswhen,
-					    struct gl_list_t *indices)
-{
+		struct TypeDescription *desc,
+		int isint,
+		int isrel,
+		int islogrel,
+		int iswhen,
+		struct gl_list_t *indices
+){
   register struct TypeDescription *result;
 #if MAKEARRAYNAMES
   char name[64];
@@ -756,12 +735,12 @@ struct TypeDescription *CreateArrayTypeDesc(struct module_t *mod,
 }
 
 struct TypeDescription *CreateRelationTypeDesc(struct module_t *mod,
-					       ChildListPtr clist,
-					       struct gl_list_t *plist,
-					       struct StatementList *statl,
-					       unsigned long int bytesize,
-					       struct ChildDesc *childd)
-{
+		ChildListPtr clist,
+		struct gl_list_t *plist,
+		struct StatementList *statl,
+		unsigned long int bytesize,
+		struct ChildDesc *childd
+){
   struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->t = relation_type;
@@ -788,12 +767,12 @@ struct TypeDescription *CreateRelationTypeDesc(struct module_t *mod,
 
 
 struct TypeDescription *CreateLogRelTypeDesc(struct module_t *mod,
-					       ChildListPtr clist,
-					       struct gl_list_t *plist,
-					       struct StatementList *statl,
-					       unsigned long int bytesize,
-					       struct ChildDesc *childd)
-{
+		ChildListPtr clist,
+		struct gl_list_t *plist,
+		struct StatementList *statl,
+		unsigned long int bytesize,
+		struct ChildDesc *childd
+){
   struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->t = logrel_type;
@@ -823,8 +802,8 @@ struct TypeDescription *CreateLogRelTypeDesc(struct module_t *mod,
 struct TypeDescription
 *CreateWhenTypeDesc(struct module_t *mod,    /* module it is defined in */
 		    struct gl_list_t *plist,
-		    struct StatementList *statl)
-{
+		    struct StatementList *statl
+){
   struct TypeDescription *result;
   result=ASC_NEW(struct TypeDescription);
   result->ref_count = 1;
@@ -849,8 +828,8 @@ struct TypeDescription
 		     struct TypeDescription *rdesc,/* type that it patches*/
 		     struct module_t *mod, 	/* module patch was defined */
 		     struct gl_list_t *pl,	/* procedures */
-		     struct StatementList *sl) 	/* declarative */
-{
+		     struct StatementList *sl 	/* declarative */
+){
   register struct TypeDescription *result;
   assert(rdesc!=NULL);			/* mandatory */
   result=ASC_NEW(struct TypeDescription);
@@ -920,7 +899,7 @@ static struct ancestor *CreateAncestorList(CONST struct TypeDescription *d) {
   return list;
 }
 
-static void DestroyAncestorList(struct ancestor *list) {
+static void DestroyAncestorList(struct ancestor *list){
   struct ancestor *old;
   while (list != NULL) {
     old = list;
@@ -966,8 +945,7 @@ GreatestCommonAncestor(CONST struct TypeDescription *d1,
   return result;
 }
 
-struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d)
-{
+struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d){
   struct gl_list_t *result;
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
@@ -980,32 +958,28 @@ struct gl_list_t *GetAncestorNames(CONST struct TypeDescription *d)
   return result;
 }
 
-ChildListPtr GetChildListF(CONST struct TypeDescription *d)
-{
+ChildListPtr GetChildListF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return (CONST ChildListPtr)(d->children);
 }
 
-enum type_kind GetBaseTypeF(CONST struct TypeDescription *d)
-{
+enum type_kind GetBaseTypeF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return d->t;
 }
 
-CONST struct StatementList *GetStatementListF(CONST struct TypeDescription *d)
-{
+CONST struct StatementList *GetStatementListF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return d->stats;
 }
 
-struct gl_list_t *GetInitializationListF(CONST struct TypeDescription *d)
-{
+struct gl_list_t *GetInitializationListF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1031,8 +1005,7 @@ struct gl_list_t *GetInitializationListF(CONST struct TypeDescription *d)
  * then the filter should be in AddMethods, not in this function.
  */
 static
-void RealAddMethod(struct TypeDescription *d, struct InitProcedure *new)
-{
+void RealAddMethod(struct TypeDescription *d, struct InitProcedure *new){
   unsigned long c;
   struct gl_list_t *opl;
   struct InitProcedure *old, *copy;
@@ -1058,8 +1031,7 @@ void RealAddMethod(struct TypeDescription *d, struct InitProcedure *new)
 }
 
 static
-void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new)
-{
+void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new){
   unsigned long c,pos;
   struct gl_list_t *opl;
   struct InitProcedure *old = NULL, *copy;
@@ -1091,8 +1063,7 @@ void RealReplaceMethod(struct TypeDescription *d, struct InitProcedure *new)
 /* what's legal in the next two functions is different and needs
  * different checking.
  */
-int AddMethods(struct TypeDescription *d, struct gl_list_t *pl, int err)
-{
+int AddMethods(struct TypeDescription *d, struct gl_list_t *pl, int err){
   unsigned long c,len;
   int old;
   struct gl_list_t *opl;
@@ -1161,8 +1132,7 @@ int AddMethods(struct TypeDescription *d, struct gl_list_t *pl, int err)
   }
 }
 
-int ReplaceMethods(struct TypeDescription *d,struct gl_list_t *pl, int err)
-{
+int ReplaceMethods(struct TypeDescription *d,struct gl_list_t *pl, int err){
   unsigned long c,len,pos;
   int old;
   struct gl_list_t *opl;
@@ -1242,8 +1212,7 @@ void CopyTypeDescF(struct TypeDescription *d)
   d->ref_count++;
 }
 
-void DeleteNewTypeDesc(struct TypeDescription *d)
-{
+void DeleteNewTypeDesc(struct TypeDescription *d){
   if (d->ref_count!=1) {
     FPRINTF(ASCERR,"New type definition %s with unexpectedly high ref_count\n",
       SCP(GetName(d)));
@@ -1251,8 +1220,7 @@ void DeleteNewTypeDesc(struct TypeDescription *d)
   DeleteTypeDesc(d);
 }
 
-void DeleteTypeDesc(struct TypeDescription *d)
-{
+void DeleteTypeDesc(struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1322,48 +1290,42 @@ void DeleteTypeDesc(struct TypeDescription *d)
   }
 }
 
-unsigned GetByteSizeF(CONST struct TypeDescription *d)
-{
+unsigned GetByteSizeF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return (unsigned)d->u.atom.byte_length;
 }
 
-CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *d)
-{
+CONST struct ChildDesc *GetChildDescF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return d->u.atom.childinfo;
 }
 
-int GetUniversalFlagF(CONST struct TypeDescription *d)
-{
+int GetUniversalFlagF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return d->universal;
 }
 
-unsigned short int GetTypeFlagsF(CONST struct TypeDescription *d)
-{
+unsigned short int GetTypeFlagsF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return d->flags;
 }
 
-unsigned int TypeHasDefaultStatementsF(CONST struct TypeDescription *d)
-{
+unsigned int TypeHasDefaultStatementsF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
   return (d->flags & TYPECONTAINSDEFAULTS);
 }
 
-unsigned int TypeHasParameterizedInstsF(CONST struct TypeDescription *d)
-{
+unsigned int TypeHasParameterizedInstsF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1372,8 +1334,8 @@ unsigned int TypeHasParameterizedInstsF(CONST struct TypeDescription *d)
 
 
 double GetRealDefaultF(CONST struct TypeDescription *d,
-                       CONST char *file, CONST int line)
-{
+                       CONST char *file, CONST int line
+){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1386,8 +1348,8 @@ double GetRealDefaultF(CONST struct TypeDescription *d,
 }
 
 unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
-                       CONST char *file, CONST int line)
-{
+                       CONST char *file, CONST int line
+){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1400,8 +1362,8 @@ unsigned GetBoolDefaultF(CONST struct TypeDescription *d,
 }
 
 CONST dim_type *GetRealDimensF(CONST struct TypeDescription *d,
-				CONST char *file, CONST int line)
-{
+				CONST char *file, CONST int line
+){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1414,8 +1376,8 @@ CONST dim_type *GetRealDimensF(CONST struct TypeDescription *d,
 }
 
 CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *d,
-				CONST char *file, CONST int line)
-{
+				CONST char *file, CONST int line
+){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1430,8 +1392,7 @@ CONST dim_type *GetConstantDimensF(CONST struct TypeDescription *d,
   }
 }
 
-symchar *GetNameF(CONST struct TypeDescription *d)
-{
+symchar *GetNameF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   assert(d->ref_count > 0);
@@ -1439,8 +1400,8 @@ symchar *GetNameF(CONST struct TypeDescription *d)
 }
 
 int TypesAreEquivalent(CONST struct TypeDescription *d1,
-                       CONST struct TypeDescription *d2)
-{
+                       CONST struct TypeDescription *d2
+){
   unsigned long n;
   
   if (d1 == d2) {
@@ -1574,8 +1535,8 @@ int TypesAreEquivalent(CONST struct TypeDescription *d1,
 }
 
 void DifferentVersionCheck(CONST struct TypeDescription *desc1,
-			   CONST struct TypeDescription *desc2)
-{
+			   CONST struct TypeDescription *desc2
+){
   register CONST struct TypeDescription *ptr;
   int erred;
   erred = 0;
@@ -1612,7 +1573,7 @@ void DifferentVersionCheck(CONST struct TypeDescription *desc1,
   }
 }
 
-struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s) {
+struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s){
   symchar *tn;
   if (s==NULL) return NULL;
   switch(StatementType(s)) {
@@ -1651,7 +1612,7 @@ struct TypeDescription *GetStatTypeDesc(CONST struct Statement *s) {
   return NULL;
 }
 
-void WriteArrayTypeList(FILE *f) {
+void WriteArrayTypeList(FILE *f){
   struct ArrayDescList *ptr;
   unsigned long count = 0L;
 
@@ -1673,16 +1634,14 @@ void WriteArrayTypeList(FILE *f) {
 }
 
 
-unsigned TypeShowF(CONST struct TypeDescription *d)
-{
+unsigned TypeShowF(CONST struct TypeDescription *d){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   return (d->flags & TYPESHOW);
 }
 
 
-void SetTypeShowBit(struct TypeDescription *d, int value)
-{
+void SetTypeShowBit(struct TypeDescription *d, int value){
   AssertAllocatedMemory(d,sizeof(struct TypeDescription));
   assert((d->t&ERROR_KIND)==0);
   if (value) {

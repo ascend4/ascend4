@@ -49,4 +49,15 @@ if 'LSOD' in solver_env.get('WITH_SOLVERS'):
 	if solver_env.get('F2C_LIB'):
 		libascend_env.AppendUnique(LIBS=[solver_env.get('F2C_LIB')])
 
+#--------------------
+# INSTALL
+
+import glob
+
+if libascend_env.get('CAN_INSTALL'):
+	installdir = libascend_env['INSTALL_ROOT']+libascend_env['INSTALL_INCLUDE']+'/solver'
+
+	headers = glob.glob("*.h")
+	libascend_env.InstallHeader(installdir,headers)
+
 Return('objs')

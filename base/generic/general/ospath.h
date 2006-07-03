@@ -210,8 +210,17 @@ ASC_DLLSPEC(char *) ospath_getfileext(struct FilePath *fp);
 /**
 	Return a new FilePath containing the directory component of the path
 	(everything up the the last slash).
+
+	Returns an empty path if there is no slash.
 */
 ASC_DLLSPEC(struct FilePath *) ospath_getdir(struct FilePath *fp);
+
+/**
+	Return a new FilePath containin the absolute path reference generated from
+	the current path. This just means that if the path isn't already starting
+	with a slash, it will be concatenated with the current working directory.
+*/
+ASC_DLLSPEC(struct FilePath *) ospath_getabs(struct FilePath *fp);
 
 /**
 	Function returns true if the current path is the root directory, otherwise it returns false.

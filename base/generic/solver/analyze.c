@@ -2318,10 +2318,12 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     gut = GetInstanceRelationOnly(rip->i);
     assert(gut!=NULL);
     len = NumberVariables(gut);
+	CONSOLE_DEBUG("FOR REL INSTANCE AT %p, NUM INCID VARS= %d",rip->i, len);
     if (len > 0) {
       incidence = get_incidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = RelationVariable(gut,c+1);
+        CONSOLE_DEBUG("INCIDENCE OF REL INSTANCE %p WITH VAR %p",rip->i,i);
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
       CONSOLE_DEBUG("SETTING INCIDENCES FOR CONSTRAINING REL");

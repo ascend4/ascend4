@@ -146,10 +146,22 @@ FilePathTestFn test_librarysearch;
 int test_librarysearch(struct FilePath *path, void *userdata){
 	/*  user data = the relative path, plus a place
 		to store the full path when found */
-	struct LibrarySearch *ls = (struct LibrarySearch *)userdata;
-
-	struct FilePath *fp = ospath_concat(path,ls->partialpath);
 	FILE *f;
+	struct LibrarySearch *ls;
+	struct FilePath *fp;
+
+	ls = (struct LibrarySearch *)userdata;
+	fp = ospath_concat(path,ls->partialpath);
+	if(fp==NULL){
+		char *tmp;
+		tmp = ospath_str(path);
+		CONSOLE_DEBUG("Unable to concatenate '%s'...",tmp);
+		ospath_free_str(tmp);
+		tmp = ospath_str(ls->partialpath);
+		CONSOLE_DEBUG("... and '%s'...",tmp);
+		ospath_free_str(tmp);		
+		return 0;
+	}
 
 	ospath_strcpy(fp,ls->fullpath,PATH_MAX);
 	/* CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath); */
@@ -190,18 +202,29 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	struct FilePath **sp;
 	extern char path_var[PATH_MAX];
 	char *path;
+	struct stat buf;
+	FILE *f;
 
-	fp1 = ospath_new_from_posix(name);
-	fp2 = ospath_getdir(fp1);
+	fp1 = ospath_new_noclean(name);
+	if(fp1==NULL){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid partial path '%s'",name);
+		ospath_free(fp1);
+		return -4;
+	}
+
 	s1 = ospath_getfilestem(fp1);
 	if(s1==NULL){
 		/* not a file, so fail... */
-		ospath_free(fp1);
-		ospath_free(fp2);
 		return NULL;
 	}
 
-	/* CONSOLE_DEBUG("FILESTEM = '%s'",s1); */
+	fp2 = ospath_getdir(fp1);
+	if(fp2==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to retrieve file dir");
+		return NULL;
+	}
+
+	CONSOLE_DEBUG("FILESTEM = '%s'",s1);
 
 #if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
 	/*
@@ -236,30 +259,39 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	ospath_free(fp3);
 	ospath_free_str(s1);
 
-	ls.partialpath = fp1;
+	/* attempt to open "name" directly */
+	if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r")) ){
+		char *tmp;
+		tmp = ospath_str(fp1);
+		CONSOLE_DEBUG("Library '%s' opened directly, without path search",tmp);
+		ospath_free_str(tmp);
+		fp2 = ospath_getabs(fp1);
+		strncpy(path_var,fp2,PATH_MAX);
+		ospath_free(fp2);
+		fclose(f);
+	}else{
+				
+		ls.partialpath = fp1;
 
-	/* CONSOLE_DEBUG("ENV VAR = '%s'",envv); */
+		path=Asc_GetEnv(envv);
+		if(path==NULL){
+			CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
+			path=ASC_DEFAULTPATH;
+		}
 
-	/* CONSOLE_DEBUG("GETTING SEARCH PATH FROM ENVIRONMENT VAR '%s'",envv); */
-	path=Asc_GetEnv(envv);
-	if(path==NULL){
-		CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
-		path=ASC_DEFAULTPATH;
-	}
+		sp = ospath_searchpath_new(path);
 
-	/* CONSOLE_DEBUG("SEARCHPATH = '%s'",path); */
+		if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
+			ospath_free(fp1);
+			ospath_searchpath_free(sp);
+			return NULL;
+		}
 
-	sp = ospath_searchpath_new(path);
-
-	if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
-		ospath_free(fp1);
+		strncpy(path_var,ls.fullpath,PATH_MAX);
 		ospath_searchpath_free(sp);
-		return NULL;
 	}
 
-	strncpy(path_var,ls.fullpath,PATH_MAX);
 	ospath_free(fp1);
-	ospath_searchpath_free(sp);
 	return path_var;
 }
 
