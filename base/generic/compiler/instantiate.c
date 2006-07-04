@@ -32,6 +32,7 @@
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
+#include <utilities/error.h>
 #include <general/pool.h>
 #include <general/list.h>
 #include <general/dstring.h>
@@ -305,15 +306,32 @@ void ClearIteration(void)
 }
 
 static
-void WriteStatementLocation(FILE *f, struct Statement *stat)
-{
-  if (stat!= NULL){
-    FPRINTF(f,"\nStatement located on line %lu of %s.\n",
-            StatementLineNum(stat),
-            Asc_ModuleBestName(StatementModule(stat)));
-  }
-  else
-    FPRINTF(f,"NULL statement.\n");
+void instantiation_error(error_severity_t sev
+		, const struct Statement *stat, const char *msg
+){
+	if(stat!= NULL){
+		error_reporter(sev
+			,Asc_ModuleBestName(StatementModule(stat))
+			,StatementLineNum(stat)
+			,"%s", msg
+		);
+	}else{
+		error_reporter(sev
+			,NULL
+			,0
+			,"(NULL statement): %s", msg
+		);
+	}
+}
+
+static void instantiation_name_error(error_severity_t sev
+		, const struct Name *name,const char *msg
+){
+	ERROR_REPORTER_START_NOLINE(sev);
+	FPRINTF(ASCERR,"%s: name '",msg);
+	WriteName(ASCERR,name);
+	FPRINTF(ASCERR,"'");
+	error_reporter_end_flush();
 }
 
 static
@@ -2118,7 +2136,7 @@ int ArgValueCorrect(struct Instance *inst,
   }
   if (IsConstantValue(value)==0){
     DestroyValue(&value);
-    FPRINTF(ASCERR,"Variable value found where constant required\n");
+    FPRINTF(ASCERR,"Variable value found where constant required");
     return MPIARGVAL;
   }
   /* ok, so we have a reasonable inst type and a constant value */
@@ -2414,7 +2432,6 @@ void mpierror(struct Set *argset,
   if (argset !=NULL && argn >0) {
     FPRINTF(ASCERR,"  Argument %lu:",argn);
     WriteSet(ASCERR,argset);
-    FPRINTF(ASCERR,"\n");
   }
   STATEMENT_ERROR(statement,"Error in executing statement:");
   MarkStatContext(statement,context_WRONG);
@@ -2441,7 +2458,6 @@ void MPIwum(struct Set *argset,
   if (argset !=NULL && argn >0) {
     FPRINTF(ASCERR,"  Argument %lu:",argn);
     WriteSetNode(ASCERR,argset);
-    FPRINTF(ASCERR,"\n");
   }
   WriteUnexecutedMessage(ASCERR,statement,g_mpi_message[arrloc]);
 }
@@ -3825,7 +3841,6 @@ int CheckParamRefinement(struct Instance *parent,
         if (CompareChildInsts(inst,arginst,c,c)!=0) {
           FPRINTF(ASCERR,"Incompatible constants: ");
           WriteInstanceName(ASCERR,InstanceChild(inst,c),parent);
-          FPRINTF(ASCERR,"\n");
           mpierror(NULL,0,statement,MPIREASGN);
           return MPIREASGN;
         }
@@ -3834,7 +3849,6 @@ int CheckParamRefinement(struct Instance *parent,
         if (EqualChildInsts(inst,arginst,c,c)!=0) {
           FPRINTF(ASCERR,"Different object passed for: ");
           WriteInstanceName(ASCERR,InstanceChild(inst,c),parent);
-          FPRINTF(ASCERR,"\n");
           mpierror(NULL,0,statement,MPIREDEF);
           return MPIREDEF;
         }
@@ -3865,7 +3879,6 @@ int CheckParamRefinement(struct Instance *parent,
         if (pos > 0 && CompareChildInsts(inst,arginst,pos,c)!=0) {
           FPRINTF(ASCERR,"Incompatible constants: ");
           WriteInstanceName(ASCERR,InstanceChild(inst,pos),parent);
-          FPRINTF(ASCERR,"\n");
           mpierror(NULL,0,statement,MPIREASGN);
           return MPIREASGN;
         }
@@ -3876,7 +3889,6 @@ int CheckParamRefinement(struct Instance *parent,
         if (pos > 0 && EqualChildInsts(inst,arginst,pos,c)!=0) {
           FPRINTF(ASCERR,"Different object passed for: ");
           WriteInstanceName(ASCERR,InstanceChild(inst,pos),parent);
-          FPRINTF(ASCERR,"\n");
           mpierror(NULL,0,statement,MPIREDEF);
           return MPIREDEF;
         }
@@ -4280,10 +4292,9 @@ void MissingInsts(struct Instance *inst,
     while(list!=NULL){
       temp = FindInstances(inst,NamePointer(list),&err);
       if (temp==NULL){
-        ERROR_REPORTER_START_NOLINE(ASC_USER_ERROR);
-        FPRINTF(ASCERR,"Problem finding instance(s): \n");
-        WriteName(ASCERR,NamePointer(list));
-        FPRINTF(ASCERR,"\n");
+        instantiation_name_error(ASC_USER_ERROR,NamePointer(list),
+			"Instance not found"
+		);
 		error_reporter_end_flush();
       } else {
         gl_destroy(temp);
@@ -4448,7 +4459,6 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
         if ( more_refined == NULL){
           FPRINTF(ASCERR,"Incompatible instance: ");
           WriteInstanceName(ASCERR,inst,work);
-          FPRINTF(ASCERR,"\n");
           STATEMENT_ERROR(statement,
                "Unconformable refinement in IS_REFINED_TO statement");
           gl_destroy(instances);
@@ -4463,7 +4473,6 @@ int ExecuteIRT(struct Instance *work, struct Statement *statement)
           if (inst != NextCliqueMember(inst)) {
             FPRINTF(ASCERR,"ARE_ALIKE'd instance: ");
             WriteInstanceName(ASCERR,inst,work);
-            FPRINTF(ASCERR,"\n");
             STATEMENT_ERROR(statement,
               "Refinement of clique to parameterized type family disallowed");
             gl_destroy(instances);
@@ -5410,8 +5419,9 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
   name = ExternalStatNameBlackBox(statement);
   aryinst = MakeExtRelationArray(inst,name,statement);
   if (aryinst==NULL) {
-    WriteStatementLocation(ASCERR,statement);
-    CONSOLE_DEBUG("Unable to create external expression structure.");
+    instantiation_error(ASC_PROG_ERR,statement
+		,"Unable to create external expression structure."
+	);
     return 1;
   }
   /* we now have an array head */
@@ -5426,12 +5436,14 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
       case undefined_instance:
         return 0;
       case impossible_instance:
-        WriteStatementLocation(ASCERR,statement);
-        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Statement contains impossible DATA instance");
+        instantiation_error(ASC_USER_ERROR,statement
+			,"Statement contains impossible DATA instance"
+		);
         return 1;
       default:
-        WriteStatementLocation(ASCERR,statement);
-        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unhandled case!");
+        instantiation_error(ASC_PROG_ERROR,statement
+			,"Unhandled case!"
+		);
         return 1;
       }
     }
@@ -5443,12 +5455,12 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
       case undefined_instance:
         return 0; /* for the time being give another crack */
       case impossible_instance:
-        WriteStatementLocation(ASCERR,statement);
-        ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Statement contains impossible instance");
+        instantiation_error(ASC_USER_ERROR,statement
+			,"Statement contains impossible instance");
         return 1;
       default:
-        WriteStatementLocation(ASCERR,statement);
-        ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unhandled case!");
+        instantiation_error(ASC_USER_ERROR,statement
+			,"Unhandled case!");
         return 1;
       }
     }
@@ -5468,21 +5480,21 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
     n_input_args = NumberInputArgs(efunc);
     n_output_args = NumberOutputArgs(efunc);
     if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
-      WriteStatementLocation(ASCERR,statement);
-      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Incorrect number of arguements for statement");
+      instantiation_error(ASC_USER_ERROR,statement
+			,"Incorrect number of input or output arguments.");
       return 1;
     }
     /* we should have a valid arglist at this stage */
     if (CheckExtCallArgTypes(arglist)) {
-      WriteStatementLocation(ASCERR,statement);
-      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Wrong type of args to external statement");
+      instantiation_error(ASC_USER_ERROR,statement
+			,"Wrong type of args to external statement");
       DestroySpecialList(arglist);
       return 1;
     }
     if (AddExtArrayChildren(aryinst,statement,arglist,data,
                             n_input_args,n_output_args)) {
-      WriteStatementLocation(ASCERR,statement);
-      ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Unable to execute external expression.");
+      instantiation_error(ASC_USER_ERROR,statement
+			,"Unable to execute external expression.");
       DestroySpecialList(arglist);
       return 1;
     } else {
@@ -5652,12 +5664,12 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
     case undefined_instance:
       return 0; 		/* for the time being give another crack */
     case impossible_instance:
-      WriteStatementLocation(ASCERR,statement);
-      FPRINTF(ASCERR,"Statement contains impossible instance\n");
+      instantiation_error(ASC_PROG_ERROR,statement
+			,"Statement contains impossible instance\n");
       return 1;
     default:
-      WriteStatementLocation(ASCERR,statement);
-      FPRINTF(ASCERR,"Something really wrong in ExecuteGlassEXT routine\n");
+      instantiation_error(ASC_PROG_ERROR,statement
+			,"Something really wrong in ExecuteGlassEXT routine\n");
       return 1;
     }
   }
@@ -5668,7 +5680,8 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
    */
   index = CheckGlassBoxIndex(inst,statement,&err);
   if (index < 0) {
-    FPRINTF(ASCERR,"Invalid index in external relation statement\n");
+    instantiation_error(ASC_USER_ERROR,statement
+	    ,"Invalid index in external relation statement");
     return 1;
   }
 
@@ -5685,8 +5698,9 @@ int ExecuteGlassBoxEXT(struct Instance *inst, struct Statement *statement)
   }
   reln = CreateGlassBoxRelation(child,efunc,varlist,index,e_equal);
   if (!reln) {
-    Asc_Panic(2, NULL,
-              "Major error: Unable to create external relation structure\n");
+    Asc_Panic(2, __FUNCTION__,
+      "Major error: Unable to create external relation structure."
+    );
   }
   SetInstanceRelation(child,reln,e_glassbox);
 
@@ -5705,16 +5719,16 @@ int ExecuteEXT(struct Instance *inst, struct Statement *statement)
   mode = ExternalStatMode(statement);
   switch(mode) {
   case ek_method:
-    WriteStatementLocation(ASCERR,statement);
-    FPRINTF(ASCERR,"Invalid external statement in declarative section. \n");
+    instantiation_error(ASC_USER_ERROR,statement
+			,"Invalid external statement in declarative section. \n");
     return 1;
   case ek_glass:
     return ExecuteGlassBoxEXT(inst,statement);
   case ek_black:
     return ExecuteBlackBoxEXT(inst,statement);
   default:
-    WriteStatementLocation(ASCERR,statement);
-    FPRINTF(ASCERR,"Invalid external statement in declarative section. \n");
+    instantiation_error(ASC_USER_ERROR,statement
+			,"Invalid external statement in declarative section. \n");
     return 1;
   }
 }
@@ -6408,13 +6422,16 @@ int CheckARR(struct Instance *inst, struct Statement *stat)
         DestroyValue(&value);
         return 0;
       default:
-        FPRINTF(ASCERR,"Compound alias instance has incorrect index type.\n");
+        instantiation_error(ASC_USER_ERROR,stat
+			,"Compound alias instance has incorrect index type.\n"
+		);
         break;
       }
       break;
     default:
-      FPRINTF(ASCERR,
-        "Compound alias instance has incorrect index value type.\n");
+      instantiation_error(ASC_USER_ERROR,stat
+			,"Compound alias instance has incorrect index value type."
+	  );
       break;
     }
     DestroyValue(&value);
@@ -6726,11 +6743,9 @@ int CheckRelModName(struct Instance *work, struct Name *name)
   unsigned long len,c;
   instances = FindInstances(work,name,&ferr);
   if (instances==NULL){
-    FPRINTF(ASCERR,"\n");
-    FPRINTF(ASCERR,
-    "Name of an unmade instance (Relation/Model) inside a %s \n",
-    "WHEN statement:");
-    WriteName(ASCERR,name);
+    instantiation_name_error(ASC_USER_ERROR,name,
+		"Un-made Relation/Model instance inside a 'WHEN':"
+	);
     gl_destroy(instances);
     return 0;
   }
@@ -6756,21 +6771,17 @@ int CheckRelModName(struct Instance *work, struct Name *name)
       gl_destroy(instances);
       return 1;
      default:
-       FPRINTF(ASCERR,"\n");
-       FPRINTF(ASCERR,
-      "Incorrect instance name (No Model/Relation) inside a %s \n",
-       " WHEN statement:");
-       WriteName(ASCERR,name);
+       instantiation_name_error(ASC_USER_ERROR,name
+			,"Incorrect instance name (no Model/Relation) inside 'WHEN'"
+	   );
        gl_destroy(instances);
        return 0;
      }
     }
     else {
-    FPRINTF(ASCERR,"\n");
-    FPRINTF(ASCERR,
-    "Error in WHEN statement. Name assigned to more than one %s \n",
-    "instance type:");
-    WriteName(ASCERR,name);
+    instantiation_name_error(ASC_USER_ERROR,name
+		,"Error in 'WHEN'. Name assigned to more than one instance type"
+	);
     gl_destroy(instances);
     return 0;
     }
@@ -7013,24 +7024,20 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
           return 1;
         }
         else {
-	  FPRINTF(ASCERR,"\n");
-          FPRINTF(ASCERR,"Innapropriate index in the list of %s\n",
-	      "values of a CASE of a WHEN statement");
-          WriteName(ASCERR,ExprName(expr));
-	  FPRINTF(ASCERR,"Only symbols or integers are allowed\n");
-          FPRINTF(ASCERR,"\n");
+	  	  instantiation_name_error(ASC_USER_ERROR,ExprName(expr)
+			,"Inappropriate index in the list of values of a CASE in a 'WHEN'\n"
+			"(only symbols or integers are allowed)"
+		  );
 	  return 0;
 	}
       }
     }
     else {
-      FPRINTF(ASCERR,"\n");
-      FPRINTF(ASCERR,"Innapropriate value type in the list of %s\n",
-	      "values of a CASE of a WHEN statement");
-      FPRINTF(ASCERR,"Index has not been created\n");
-      WriteName(ASCERR,ExprName(expr));
-      FPRINTF(ASCERR,"\n");
-      return 0;
+		instantiation_name_error(ASC_USER_ERROR,ExprName(expr),
+			"Inappropriate value type in the list of values of a CASE of a 'WHEN'\n"
+			"(index has not been created)"
+		);
+        return 0;
     }
   case e_set:
     set = expr->v.s;
@@ -7040,11 +7047,9 @@ int CheckWhenSetNode(struct Instance *ref, CONST struct Expr *expr,
     es = GetSingleExpr(set);
     return CheckWhenSetNode(ref,es,p2);
   default:
-    FPRINTF(ASCERR,"\n");
     FPRINTF(ASCERR,"Innapropriate value type in the list of %s\n",
 	    "values of a CASE of a WHEN statement");
     FPRINTF(ASCERR,"Only symbols or integers and booleans are allowed\n");
-    FPRINTF(ASCERR,"\n");
     return 0;
   }
 }
@@ -7082,11 +7087,9 @@ int CheckWhenVariableNode(struct Instance *ref,
       *p1=2;
       return 1;
     default:
-      FPRINTF(ASCERR,"\n");
       FPRINTF(ASCERR,"Innapropriate index in the list of %s\n",
 	      "variables of a WHEN statement");
       FPRINTF(ASCERR,"only symbol or integer allowed\n");
-      FPRINTF(ASCERR,"\n");
       return 0;
     }
 
@@ -7096,18 +7099,14 @@ int CheckWhenVariableNode(struct Instance *ref,
     switch(err){
     case unmade_instance:
     case undefined_instance:
-      FPRINTF(ASCERR,"\n");
       FPRINTF(ASCERR,"Unmade instance in the list of %s\n",
 	      "variables of a WHEN statement");
       WriteName(ASCERR,name);
-      FPRINTF(ASCERR,"\n");
       return 0;
     default:
-      FPRINTF(ASCERR,"\n");
       FPRINTF(ASCERR,"Unmade instance in the list of %s\n",
 	      "variables of a WHEN statement");
       WriteName(ASCERR,name);
-      FPRINTF(ASCERR,"\n");
       return 0;
     }
   } else {
@@ -7123,11 +7122,9 @@ int CheckWhenVariableNode(struct Instance *ref,
           *p1=1;
           return 1;
         } else {
-          FPRINTF(ASCERR,"\n");
           FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
 	          "variables of a WHEN statement");
           WriteName(ASCERR,name);
-          FPRINTF(ASCERR,"\n");
           return 0;
         }
       case INTEGER_ATOM_INST:
@@ -7138,11 +7135,9 @@ int CheckWhenVariableNode(struct Instance *ref,
            *p1=0;
            return 1;
         } else {
-          FPRINTF(ASCERR,"\n");
           FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
 	          "variables of a WHEN statement");
           WriteName(ASCERR,name);
-          FPRINTF(ASCERR,"\n");
           return 0;
         }
       case SYMBOL_ATOM_INST:
@@ -7153,30 +7148,24 @@ int CheckWhenVariableNode(struct Instance *ref,
           *p1=2;
           return 1;
         } else {
-          FPRINTF(ASCERR,"\n");
           FPRINTF(ASCERR,"Undefined constant in the list of %s\n",
 	          "variables of a WHEN statement");
           WriteName(ASCERR,name);
-          FPRINTF(ASCERR,"\n");
           return 0;
         }
       default:
-        FPRINTF(ASCERR,"\n");
         FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
 		"variables of a WHEN statement");
         FPRINTF(ASCERR,"Only boolean, integer and symbols are allowed\n");
         WriteName(ASCERR,name);
-        FPRINTF(ASCERR,"\n");
 	return 0;
       }
     } else {
       gl_destroy(instances);
-      FPRINTF(ASCERR,"\n");
       FPRINTF(ASCERR,"Inappropriate instance in the list of %s\n",
 	      "variables of a WHEN statement");
       FPRINTF(ASCERR,"Multiple instances of\n");
       WriteName(ASCERR,name);
-      FPRINTF(ASCERR,"\n");
       return 0;
     }
   }
@@ -7312,12 +7301,9 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
   wname = WhenStatName(statement);
   if (wname!=NULL) {
     if (!CheckWhenName(inst,wname)) {
-    FPRINTF(ASCERR,"\n");
-    FPRINTF(ASCERR,"Name of a WHEN already exits in ");
+    FPRINTF(ASCERR,"Name of a WHEN already exits in\n");
     WriteInstanceName(ASCERR,inst,NULL);
-    FPRINTF(ASCERR,"\n");
     STATEMENT_ERROR(statement,"The following statement will not be executed: \n");
-    FPRINTF(ASCERR,"\n");
       return 0;
     }
     if ( CheckWhenName(inst,wname) == -1) return 1;
@@ -7332,7 +7318,6 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
     FPRINTF(ASCERR,"In ");
     WriteInstanceName(ASCERR,inst,NULL);
     STATEMENT_ERROR(statement," the following statement will not be executed:\n");
-    FPRINTF(ASCERR,"\n");
     return 0;
   }
   w1 = WhenStatCases(statement);
@@ -7341,60 +7326,50 @@ int CheckWHEN(struct Instance *inst, struct Statement *statement)
       if (s!=NULL) {
           numset = SetLength(s);
           if (numvar != numset) {
-            FPRINTF(ASCERR,"\n");
             FPRINTF(ASCERR,"Number of variables different from %s\n",
 		    "number of values in a CASE");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
             STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
           if (!CheckWhenSetList(inst,s,p2)) {
-            FPRINTF(ASCERR,"\n");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
             STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
           p1 = &vl[0];
           p2 = &casel[0];
           if (!CompListInArray(numvar,p1,p2)) {
-            FPRINTF(ASCERR,"\n");
             FPRINTF(ASCERR,"Type of variables different from type %s\n",
 		    "of values in a CASE");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
             STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
       }
       else {
           numother++;
           if (numother>1) {
-            FPRINTF(ASCERR,"\n");
             FPRINTF(ASCERR,"More than one default case in a WHEN\n");
             FPRINTF(ASCERR,"In ");
             WriteInstanceName(ASCERR,inst,NULL);
             STATEMENT_ERROR(statement,
 		 " the following statement will not be executed: \n");
-            FPRINTF(ASCERR,"\n");
 	    return 0;
 	  }
       }
       sl = WhenStatementList(w1);
       if (!CheckWhenStatementList(inst,sl)) {
-        FPRINTF(ASCERR,"\n");
         FPRINTF(ASCERR,"In ");
         WriteInstanceName(ASCERR,inst,NULL);
         STATEMENT_ERROR(statement,
 	     " the following statement will not be executed: \n");
-        FPRINTF(ASCERR,"\n");
 	return 0;
       }
       w1 = NextWhenCase(w1); }
@@ -8421,7 +8396,6 @@ void MakeWhenReference(struct Instance *ref,
   instances = FindInstances(ref,name,&err);
   if (instances==NULL){
     gl_destroy(instances);
-    FPRINTF(ASCERR,"\n");
     WriteName(ASCERR,name);
     Asc_Panic(2, NULL,
               "Name of an unmade instance (Relation-Model)"
@@ -8460,15 +8434,13 @@ void MakeWhenReference(struct Instance *ref,
           return;
         default:
           gl_destroy(instances);
-	  FPRINTF(ASCERR,"\n");
-	  WriteName(ASCERR,name);
+          WriteName(ASCERR,name);
           Asc_Panic(2, NULL,
                     "Incorrect instance name inside a WHEN statement\n");
           break;
       }
     } else {
       gl_destroy(instances);
-      FPRINTF(ASCERR,"\n");
       WriteName(ASCERR,name);
       Asc_Panic(2, NULL,
                 "Error in WHEN statement. Name assigned"
@@ -12125,7 +12097,6 @@ void Pass2SetRelationBits(struct Instance *inst)
     ERROR_REPORTER_START_NOLINE(ASC_PROG_NOTE);
     FPRINTF(ASCERR,"P2SRB: ");
     WriteInstanceName(ASCERR,inst,debug_rels_work);
-    FPRINTF(ASCERR,"\n");
     error_reporter_end_flush();
 #endif
 

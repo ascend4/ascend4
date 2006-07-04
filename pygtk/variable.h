@@ -20,8 +20,10 @@
 #define ASCXX_VARIABLE_H
 
 #include <string>
+#include <vector>
 
 #include "simulation.h"
+#include "relation.h"
 
 #include "config.h"
 extern "C"{
@@ -50,6 +52,8 @@ public:
 	const double getNominal() const;
 	const double getUpperBound() const;
 	const double getLowerBound() const;
+	const std::vector<Relation> getIncidentRelations() const;
+	const int getNumIncidentRelations() const;
 };
 
 #endif

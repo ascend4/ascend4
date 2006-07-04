@@ -330,6 +330,7 @@ extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 #ifdef NDEBUG
 # define var_n_incidences(var) ((var)->n_incidences)
 #else
+ASC_DLLSPEC(int32) var_n_incidencesF(struct var_variable *var);
 # define var_n_incidences(var) var_n_incidencesF(var)
 #endif
 /**<
@@ -358,11 +359,6 @@ extern void var_set_upper_bound(struct var_variable *var, real64 upper_bound);
 	@see var_set_incidencesF().
 */
 
-extern int32 var_n_incidencesF(struct var_variable *var);
-/**<
-	Implementation function for var_n_incidences().  Do not call this
-	function directly - use var_n_incidences() instead.
-*/
 extern void var_set_incidencesF(struct var_variable *var,
                                 int32 n,
                                 struct rel_relation **ilist);
@@ -371,9 +367,10 @@ extern void var_set_incidencesF(struct var_variable *var,
 	function directly - use var_set_incidences() instead.
 */
 
-extern struct rel_relation
-**var_incidence_list_to_modify(struct var_variable *var);
+ASC_DLLSPEC(struct rel_relation **) var_incidence_list_to_modify(
+		struct var_variable *var);
 /**<  Same as var_incidence_list(), except the returned list is modifiable. */
+
 extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 /**<
 	Returns a pointer to an array var_n_incidences(var) long of vars.
@@ -381,7 +378,8 @@ extern const struct rel_relation **var_incidence_list(struct var_variable *var);
 	Check the var sindex to see where each might go in a jacobian.
 	If there is no incidence, NULL is returned.
 	Pointers in this array will be unique.
-	The list belongs to the varation. Do not destroy it. Do not change it.<br><br>
+
+	The list belongs to the varation. Do not destroy it. Do not change it.
 
 	RA IS NOT a NULL-TERMINATED LIST.
 */

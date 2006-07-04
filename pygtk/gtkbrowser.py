@@ -90,7 +90,8 @@ try:
 	from diagnose import * 	       # for diagnosing block non-convergence
 	from solverreporter import *   # solver status reporting
 	from modelview import *        # model browser
-	from integrator import *    # integrator dialog
+	from integrator import *       # integrator dialog	
+	from infodialog import *       # general-purpose textual information dialog
 	import config
 
 except RuntimeError, e:
@@ -756,10 +757,17 @@ class Browser:
 
 	def on_show_variables_near_bounds_activate(self,*args):
 		_epsilon = 1e-4;
+		text = "Variables New Bounds"
+		title=text;
+		text += "\n"
 		_vars = self.sim.getVariablesNearBounds(_epsilon)
-		print "VARIABLES NEAR BOUNDS"
-		for _v in _vars:
-			print _v.getName();
+		if len(_vars):
+			for _v in _vars:
+				text += "\n%s"%_v.getName()
+		else:
+			text +="\nnone"
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
 
 #   --------------------------------------------
 #   MODULE LIST
@@ -956,8 +964,16 @@ class Browser:
 
 	def on_find_fixable_variables_activate(self,*args):
 		v = self.sim.getFixableVariables()
-		for var in v:
-			print "FIXABLE:",var
+		text = "Fixable Variables"
+		title = text;
+		text += "\n"
+		if len(v):
+			for var in v:
+				text += "\n%s"%var
+		else:
+			text += "\nnone"
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
 
 	def create_observer(self,name=None):
 		if name==None:
