@@ -34,33 +34,34 @@ class IncidenceMatrixWindow:
 		_im_cmap =  LinearSegmentedColormap('im_cmap',  cmapdata, 4)
 
 		pylab.ioff()
-		pylab.figure()
-		pylab.axis('equal') # aspect ratio = 1.0
-		pylab.imshow(self.data, cmap=_im_cmap, interpolation='nearest') 
+		ax = pylab.subplot(111)
+		ax.axis('equal') # aspect ratio = 1.0
+		ax.imshow(self.data, cmap=_im_cmap, interpolation='nearest') 
 			# integer 'type' values become reals 0..1, which are then coloured
 			# according to cmapdata
 		pylab.title("Incidence Matrix")
 		pylab.xlabel("Variables")
 		pylab.ylabel("Relations")
-		pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
+		#pylab.connect('motion_notify_event',self.on_sparsity_motion_notify)
+		ax.format_coord = self.incidence_get_coord_str
 		pylab.ion()
 		if platform.system()=="Windows":
 			pylab.show()
 		else:
 			pylab.show(False)
 
-	def on_sparsity_motion_notify(self, event):
-		if event.xdata != None and event.ydata != None:
-			_col = int(event.xdata)
-			_row = (self.im.getNumRows()-1) - int(event.ydata)
+	def incidence_get_coord_str(self,x,y):
+		
+			_col = int(x)
+			_row = (self.im.getNumRows()-1) - int(y)
 
 			try:
 				if self.data[_row, _col] == 0:
-					return
+					return ""
 	
 				if self.lastrow != None and self.lastcol != None:
 					if self.lastrow == _row and self.lastcol == _col:
-						return
+						return self.lastmsg
 
 				_var = self.im.getVariable(_col);
 				_rel = self.im.getRelation(_row);
@@ -68,7 +69,8 @@ class IncidenceMatrixWindow:
 			except IndexError:
 				return
 
-			print "rel:",_rel,"  var:", _var,"  block:",_blk
 			self.lastrow = _row;
 			self.lastcol = _col; 
+			self.lastmsg = "rel '%s', var '%s': block %d" %(_rel,_var,_blk)
+			return self.lastmsg
 
