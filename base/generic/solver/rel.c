@@ -69,9 +69,10 @@
 	forward declarations, constants, typedefs
 */
 
+#define REL_DEBUG(MSG,...) ((void)0)
+
 #define IPTR(i) ((struct Instance *)(i))
 #define REIMPLEMENT 0 /* if set to 1, compiles code tagged with it. */
-#define REL_DEBUG FALSE
 
 /* define symchar names needed */
 static symchar *g_strings[1];
@@ -106,7 +107,7 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
 static struct rel_relation *rel_copy(const struct rel_relation *rel){
 	struct rel_relation *newrel;
 	newrel = ASC_NEW(struct rel_relation);
-	CONSOLE_DEBUG("Copying REL_RELATION from %p to %p",rel,newrel);
+	REL_DEBUG("Copying REL_RELATION from %p to %p",rel,newrel);
 	*newrel = *rel;
 	return(newrel);
 }
@@ -118,17 +119,17 @@ struct rel_relation *rel_create(SlvBackendToken instance
 	struct ExtCallNode *ext;
 	enum Expr_enum ctype;
 
-	CONSOLE_DEBUG("instance = %p",IPTR(instance));
-	CONSOLE_DEBUG("REL_RELATION newrel = %p",newrel);
+	REL_DEBUG("instance = %p",IPTR(instance));
+	REL_DEBUG("REL_RELATION newrel = %p",newrel);
 
 	if(newrel==NULL){
 		/* if newrel was not provided, create new copy of a 'default relation' */
 		newrel = rel_copy(&g_rel_defaults);
-		CONSOLE_DEBUG("CREATED NEW REL_RELATION at %p",newrel);
+		REL_DEBUG("CREATED NEW REL_RELATION at %p",newrel);
 	}else{
 		/* else copy the default relation into the memory space we were given */
 		*newrel = g_rel_defaults;
-		CONSOLE_DEBUG("CLEARED REL_RELATION at %p, SETTING DEFAULTS", newrel);
+		REL_DEBUG("CLEARED REL_RELATION at %p, SETTING DEFAULTS", newrel);
 	}
 	assert(newrel!=NULL);
 
@@ -138,7 +139,7 @@ struct rel_relation *rel_create(SlvBackendToken instance
 	/* get the 'struct relation' object for this relation */
 	instance_relation = GetInstanceRelation(IPTR(instance),&ctype);
 
-	CONSOLE_DEBUG("Instance %p --> RELATION = %p",IPTR(instance),instance_relation);
+	REL_DEBUG("Instance %p --> RELATION = %p",IPTR(instance),instance_relation);
 	switch (ctype) {
 		case e_token:
 		    newrel->type = e_rel_token;
@@ -150,22 +151,22 @@ struct rel_relation *rel_create(SlvBackendToken instance
 		    newrel->type = e_rel_glassbox;
 		    break;
 		case e_blackbox:
-			CONSOLE_DEBUG("Blackbox...");
+			REL_DEBUG("Blackbox...");
 			newrel->type = e_rel_blackbox;
 			ext = BlackBoxExtCall(instance_relation);
 
-			CONSOLE_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
-			CONSOLE_DEBUG("Subject instance type '%s'",instance_typename(ExternalCallVarInstance(ext)));
+			REL_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
+			REL_DEBUG("Subject instance type '%s'",instance_typename(ExternalCallVarInstance(ext)));
 
 		    if(ext){
-				CONSOLE_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
+				REL_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
 			    newrel = rel_create_extnode(newrel,ext);
 		    }else{
-			    CONSOLE_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
+			    REL_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
 			    newrel->nodeinfo = NULL;
 		    }
 
-			CONSOLE_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));		
+			REL_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));		
 		    break;
 		default:
 		    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type in rel_create");
@@ -495,8 +496,8 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
   struct rel_extnode *nodeinfo;
   /* struct Instance *inst; */
 
-  /* CONSOLE_DEBUG("Creating rel_extnode"); */
-  /* CONSOLE_DEBUG("REL = %p",rel); */
+  /* REL_DEBUG("Creating rel_extnode"); */
+  /* REL_DEBUG("REL = %p",rel); */
   nodeinfo = ASC_NEW(struct rel_extnode);
   nodeinfo->whichvar = (int)ExternalCallVarIndex(ext);
   asc_assert(nodeinfo->whichvar >= 1);
@@ -504,20 +505,20 @@ static struct rel_relation *rel_create_extnode(struct rel_relation * rel
   rel->nodeinfo = nodeinfo;
 
   /* inst = ExternalCallVarInstance(ext); */
-  /* CONSOLE_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst); */
-  /* CONSOLE_DEBUG("INSTANCE type is %s",instance_typename(inst)); */
+  /* REL_DEBUG("rel_extnode whichvar IS INSTANCE AT %p",inst); */
+  /* REL_DEBUG("INSTANCE type is %s",instance_typename(inst)); */
 
-  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
+  /* REL_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   return rel;
 }
 
 struct rel_extnode *rel_extnodeinfo( struct rel_relation *rel){
-  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
+  /* REL_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   return(rel->nodeinfo);
 }
 
 unsigned long rel_extwhichvar( struct rel_relation *rel){
-  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
+  /* REL_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   if (rel->nodeinfo) {
     return(rel->nodeinfo->whichvar);
   } else {
@@ -526,7 +527,7 @@ unsigned long rel_extwhichvar( struct rel_relation *rel){
 }
 
 struct ExtRelCache *rel_extcache( struct rel_relation *rel){
-  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
+  /* REL_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
   if(rel->nodeinfo!=NULL){
     return(rel->nodeinfo->cache);
   }else{
@@ -547,7 +548,7 @@ void rel_set_extnodeinfo( struct rel_relation *rel
 		, struct rel_extnode *nodeinfo
 ){
   rel->nodeinfo = nodeinfo;
-  /* CONSOLE_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
+  /* REL_DEBUG("REL NODEINFO = %p",rel->nodeinfo); */
 }
 
 void rel_set_extwhichvar(struct rel_relation *rel, int32 whichvar){
@@ -577,7 +578,7 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->efunc = ExternalCallExtFunc(ext);
   cache->data = ExternalCallDataInstance(ext);
   cache->arglist = ExternalCallArgList(ext);
-  CONSOLE_DEBUG("ASSIGNED efunc %p to ExtRelCache %p",cache->efunc,cache);
+  REL_DEBUG("ASSIGNED efunc %p to ExtRelCache %p",cache->efunc,cache);
 
   /* Fetch the size of the input/output argument lists */
   n_input_args = NumberInputArgs(cache->efunc);
@@ -610,7 +611,7 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->first_func_eval = 1;
   cache->first_deriv_eval = 1;
 
-  CONSOLE_DEBUG("NEW CACHE = %p",cache);
+  REL_DEBUG("NEW CACHE = %p",cache);
   return cache;
 }
 
@@ -620,7 +621,7 @@ struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst){
   CONST struct relation *reln;
   enum Expr_enum type;
 
-  CONSOLE_DEBUG("CREATE CACHE FROM INSTANCE");
+  REL_DEBUG("CREATE CACHE FROM INSTANCE");
 
   assert(relinst != NULL && InstanceKind(IPTR(relinst))==REL_INST);
   reln = GetInstanceRelation(IPTR(relinst),&type);
@@ -644,7 +645,7 @@ void extrel_store_output_var(struct rel_relation *rel){
 	var = rel_instance_to_var(rel,inst);
 	whichvar = rel_extwhichvar(rel);
 
-	CONSOLE_DEBUG("outvar[%d] at %p",whichvar-cache->ninputs-1,var);
+	REL_DEBUG("outvar[%d] at %p",whichvar-cache->ninputs-1,var);
 	cache->outvars[whichvar - cache->ninputs - 1] = var;
 }
 
@@ -700,7 +701,7 @@ void extrel_store_input_vars(struct rel_relation *rel){
 	for(i=0;i<cache->ninputs;++i){
 		var = rel_instance_to_var(rel, gl_fetch(cache->inputlist,i+1));
 		cache->invars[i] = var;
-		CONSOLE_DEBUG("invar[%d] at %p",i,var);
+		REL_DEBUG("invar[%d] at %p",i,var);
 	}
 }
 	
@@ -723,7 +724,7 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup){
 
   /* prepare parameters to pass to the init function */
   efunc = cache->efunc;
-  CONSOLE_DEBUG("CACHE = %p",cache);
+  REL_DEBUG("CACHE = %p",cache);
   init_func = GetInitFunc(efunc);
   Init_Slv_Interp(&slv_interp);
   slv_interp.nodestamp = cache->nodestamp;
@@ -743,7 +744,7 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup){
 	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error running init function (%d)",nok);
 	  return 1;
 	}
-    CONSOLE_DEBUG("Ran init function");
+    REL_DEBUG("Ran init function");
   }
 
   /* Save the user's data and update our status. */
@@ -772,9 +773,9 @@ static int ArgsDifferent(double new, double old){
 
 real64 ExtRel_Evaluate_Residual(struct rel_relation *rel){
 	double value;
-	/* CONSOLE_DEBUG("EVALUATING RELATION %p",rel); */
+	/* REL_DEBUG("EVALUATING RELATION %p",rel); */
 	value = ExtRel_Evaluate_RHS(rel) - ExtRel_Evaluate_LHS(rel);
-	CONSOLE_DEBUG("RESIDUAL = %f",value);
+	REL_DEBUG("RESIDUAL = %f",value);
 	return value;
 }
 
@@ -791,7 +792,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   unsigned long whichvar;
   int32 newcalc_reqd=0;
 
-  /* CONSOLE_DEBUG("REL_RELATION = %p",rel); */
+  /* REL_DEBUG("REL_RELATION = %p",rel); */
 
   ExtBBoxFunc *eval_func;
 
@@ -799,16 +800,16 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 
   /*
   struct rel_extnode *nodeinfo = rel_extnodeinfo(rel);
-  CONSOLE_DEBUG("REL NODEINFO = %p",nodeinfo);
+  REL_DEBUG("REL NODEINFO = %p",nodeinfo);
   */
 
   cache = rel_extcache(rel);
   efunc = cache->efunc;
   /*
-  CONSOLE_DEBUG("CACHE = %p",cache);
-  CONSOLE_DEBUG("efunc = %p",efunc);
-  CONSOLE_DEBUG("efunc->etype = %u",efunc->etype);
-  CONSOLE_DEBUG("efunc->value = %p",efunc->u.black.value);
+  REL_DEBUG("CACHE = %p",cache);
+  REL_DEBUG("efunc = %p",efunc);
+  REL_DEBUG("efunc->etype = %u",efunc->etype);
+  REL_DEBUG("efunc->value = %p",efunc->u.black.value);
   */
 
   eval_func = GetValueFunc(efunc);
@@ -825,11 +826,11 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
   for (c=0;c<ninputs;c++) {
     arg = (struct Instance *)gl_fetch(inputlist,c+1);
     value = RealAtomValue(arg);
-	CONSOLE_DEBUG("FOR INPUT %lu, value=%f (arg at %p), CACHED=%f"
+	REL_DEBUG("FOR INPUT %lu, value=%f (arg at %p), CACHED=%f"
 		,c+1, value, arg,cache->inputs[c]
 	);
     if(ArgsDifferent(value, cache->inputs[c])){
-	  CONSOLE_DEBUG("ARGS ARE DIFFERENT, new calc will be required");
+	  REL_DEBUG("ARGS ARE DIFFERENT, new calc will be required");
       newcalc_reqd = 1;
       cache->inputs[c] = value;
     }
@@ -844,7 +845,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 	done, otherwise dont.
   */
   if (newcalc_reqd) {
-	CONSOLE_DEBUG("NEW CALCULATION REQUIRED");
+	REL_DEBUG("NEW CALCULATION REQUIRED");
     Init_Slv_Interp(&slv_interp);
     slv_interp.nodestamp = cache->nodestamp;
     slv_interp.user_data = cache->user_data;
@@ -852,23 +853,23 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
     slv_interp.task = bb_func_eval;
 
   	for (c=0;c<ninputs;c++){
-	  CONSOLE_DEBUG("input %lu: value = %f",c+1, cache->inputs[c]);
+	  REL_DEBUG("input %lu: value = %f",c+1, cache->inputs[c]);
 	}
 
     nok = (*eval_func)(&slv_interp, ninputs, cache->noutputs,
 		       cache->inputs, cache->outputs, cache->jacobian);
 	if(nok){
-		CONSOLE_DEBUG("EXTERNAL CALCULATION ERROR (%d)",nok);
+		REL_DEBUG("EXTERNAL CALCULATION ERROR (%d)",nok);
 	}else{
-		CONSOLE_DEBUG("EVAL FUNC OK");
+		REL_DEBUG("EVAL FUNC OK");
 	}
 
   	for (c=0;c<cache->noutputs;c++){
-	  CONSOLE_DEBUG("output %lu: value = %f",c+1, cache->outputs[c]);
+	  REL_DEBUG("output %lu: value = %f",c+1, cache->outputs[c]);
 	}
 
     value = cache->outputs[whichvar - ninputs - 1];
-	/* CONSOLE_DEBUG("CALCULATED VALUE IS %f",value); */
+	/* REL_DEBUG("CALCULATED VALUE IS %f",value); */
     cache->newcalc_done = (unsigned)1;			/* newcalc done */
     cache->user_data = slv_interp.user_data;		/* update user_data */
   }
@@ -877,7 +878,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
     cache->newcalc_done = (unsigned)0; /* a result was simply returned */
   }
 
-  CONSOLE_DEBUG("RHS VALUE = %f",value);
+  REL_DEBUG("RHS VALUE = %f",value);
   /*
 	FIXME need to get the value of the output and return the difference from
 	the computed value and the current value as the residual
@@ -889,18 +890,18 @@ real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 	struct Instance *inst;
 	double value;
 
-	CONSOLE_DEBUG("...");
+	REL_DEBUG("...");
 
 	assert(rel_extnodeinfo(rel));
 
 	inst = rel_extsubject(rel);
 
-	/* CONSOLE_DEBUG("VAR IS INSTANCE AT %p",inst); */
+	/* REL_DEBUG("VAR IS INSTANCE AT %p",inst); */
 
-	/* CONSOLE_DEBUG("INSTANCE TYPE = %s",instance_typename(inst)); */
+	/* REL_DEBUG("INSTANCE TYPE = %s",instance_typename(inst)); */
 
     value = RealAtomValue(inst);
-	CONSOLE_DEBUG("LHS VALUE = %f",value);
+	REL_DEBUG("LHS VALUE = %f",value);
 	return value;
 }
 
@@ -1000,15 +1001,15 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 
   ninputs = cache->ninputs;
 
-  CONSOLE_DEBUG("whichvar = %lu, ninputs = %lu",whichvar, ninputs);
+  REL_DEBUG("whichvar = %lu, ninputs = %lu",whichvar, ninputs);
   index = ((int)whichvar - ninputs - 1) * ninputs;
-  CONSOLE_DEBUG("JACOBIAN INDEX = %d",index);
+  REL_DEBUG("JACOBIAN INDEX = %d",index);
   ptr = &(cache->jacobian[index]);
 
   asc_assert(ninputs >= 0);
 
   /*
-  CONSOLE_DEBUG("Filter matchbits %x, matchvalue %x"
+  REL_DEBUG("Filter matchbits %x, matchvalue %x"
 	,d->filter->matchbits
 	,d->filter->matchvalue
   );
@@ -1017,7 +1018,7 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
   /* for input variables, the residual is taken from the matrix */
   for (c=0;c<(unsigned long)ninputs;c++) {
     var = cache->invars[c];
-	CONSOLE_DEBUG("invar[%lu] at %p",c+1,var);
+	REL_DEBUG("invar[%lu] at %p",c+1,var);
     /*
 	// this is perhaps conditional modelling stuff, broken for the moment
 	// for this first crack, all input variables are active and in the block
@@ -1025,18 +1026,18 @@ static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 	if (used) {
 	*/
       d->nz.col = mtx_org_to_col(d->mtx,var_sindex(var));
-	  CONSOLE_DEBUG("column = %d",d->nz.col);
+	  REL_DEBUG("column = %d",d->nz.col);
       value = ptr[c] + mtx_value(d->mtx,&(d->nz));
-	  CONSOLE_DEBUG("input %lu is used, value = %f",c,value);
+	  REL_DEBUG("input %lu is used, value = %f",c,value);
       mtx_set_value(d->mtx,&(d->nz), value);
 	/*
 	// disused, continued
     }else{
 	  var_filter_t f2 = {VAR_ACTIVE,VAR_ACTIVE};
 	  if(!var_apply_filter(var,&f2)){
-		CONSOLE_DEBUG("var is not active");
+		REL_DEBUG("var is not active");
 	  }else{
-		CONSOLE_DEBUG("var not used...???");
+		REL_DEBUG("var not used...???");
 	  }
 	}
 	*/
@@ -1083,7 +1084,7 @@ static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
   double *ptr;
   double old_x,interval,value;
 
-  CONSOLE_DEBUG("NUMERICAL DERIVATIVE...");
+  REL_DEBUG("NUMERICAL DERIVATIVE...");
 
   tmp_vector = ASC_NEW_ARRAY_CLEAR(double,noutputs);
   for (c1=0;c1<ninputs;c1++){
@@ -1091,12 +1092,12 @@ static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
     old_x = inputs[c1]; 
     interval = CalculateInterval(old_x);
     inputs[c1] = old_x + interval;
-	CONSOLE_DEBUG("PETURBATION WITH input[%d]=%f",c1+1,inputs[c1]);
+	REL_DEBUG("PETURBATION WITH input[%d]=%f",c1+1,inputs[c1]);
 
 	/* call routine */
     nok = (*eval_func)(slv_interp, ninputs, noutputs, inputs, tmp_vector, jacobian);
     if(nok){
-	    CONSOLE_DEBUG("External evaluation error (%d)",nok);
+	    REL_DEBUG("External evaluation error (%d)",nok);
 		break;
 	}
 
@@ -1104,7 +1105,7 @@ static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
     ptr = &jacobian[c1];
     for (c2=0;c2<noutputs;c2++) {
       value = (tmp_vector[c2] - outputs[c2])/interval;
-	  CONSOLE_DEBUG("output[%d]: value = %f, gradient = %f",c2+1,tmp_vector[c2],value);
+	  REL_DEBUG("output[%d]: value = %f, gradient = %f",c2+1,tmp_vector[c2],value);
       *ptr = value;
       ptr += ninputs;
     }
@@ -1112,7 +1113,7 @@ static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
   }
   ASC_FREE(tmp_vector);
   if(nok){
-    CONSOLE_DEBUG("External evaluation error");
+    REL_DEBUG("External evaluation error");
   }
   return nok;
 }
@@ -1126,7 +1127,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
   int32 (*eval_func)();
   int32 (*deriv_func)();
 
-  CONSOLE_DEBUG("...");
+  REL_DEBUG("...");
 
   assert(rel_extnodeinfo(rel));
   cache = rel_extcache(rel);
@@ -1138,7 +1139,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * computation.
    */
   if(cache->first_deriv_eval) {
-	CONSOLE_DEBUG("FIRST DERIV EVAL");
+	REL_DEBUG("FIRST DERIV EVAL");
     cache->newcalc_done = (unsigned)1;
     cache->first_deriv_eval = (unsigned)0;
   }
@@ -1148,7 +1149,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * can return the results from the cached jacobian.
    */
   if(!cache->newcalc_done){
-	CONSOLE_DEBUG("NO NEW CALC DONE, RETURN CACHED JACOBIAN");
+	REL_DEBUG("NO NEW CALC DONE, RETURN CACHED JACOBIAN");
     ExtRel_MapDataToMtx(cache, whichvar, d);
     return 0;
   }
@@ -1165,12 +1166,12 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
 
   deriv_func = GetDerivFunc(efunc);
   if(deriv_func){
-	CONSOLE_DEBUG("USING EXTERNAL DERIVATIVE FUNCTION");
+	REL_DEBUG("USING EXTERNAL DERIVATIVE FUNCTION");
     nok = (*deriv_func)(&slv_interp, cache->ninputs, cache->noutputs,
 			cache->inputs, cache->outputs, cache->jacobian);
     if (nok) return nok;
   }else{
-	CONSOLE_DEBUG("USING NUMERICAL DERIVATIVE");
+	REL_DEBUG("USING NUMERICAL DERIVATIVE");
     eval_func = GetValueFunc(efunc);
     nok = ExtRel_FDiff(&slv_interp, eval_func,
 			cache->ninputs, cache->noutputs,
@@ -1237,11 +1238,11 @@ double ExtRel_Diffs_LHS(struct rel_relation *rel, var_filter_t *filter,
 	mtx_set_value(mtx,&(nz), -1.0 );
 
 	/*
-	CONSOLE_DEBUG("OUTPUTING MATRIX");
+	REL_DEBUG("OUTPUTING MATRIX");
 	mtx_region_t r;
 	mtx_region(&r, 0, 2, 0, 4);
 	mtx_write_region_human(ASCERR,mtx,&r);
-	CONSOLE_DEBUG("Mapping LHS jacobian entry -1.0 to var at %p",var);
+	REL_DEBUG("Mapping LHS jacobian entry -1.0 to var at %p",var);
 	*/
 
 	return lhs;	

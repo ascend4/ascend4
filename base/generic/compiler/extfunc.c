@@ -67,7 +67,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
   efunc = LookupExtFunc(name);
   if (efunc != NULL) {
-	CONSOLE_DEBUG("Found efunc at %p",efunc);
+	/* CONSOLE_DEBUG("Found efunc at %p",efunc); */
 	/* name was pre-loaded -- just update the info */
     isNew = 0;
   }else{
@@ -76,7 +76,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
     asc_assert(efunc!=NULL);
     efunc->help = NULL;
     efunc->name = ascstrdup(SCP(AddSymbol(name)));
-	CONSOLE_DEBUG("Created new efunc at %p",efunc);
+	/* CONSOLE_DEBUG("Created new efunc at %p",efunc); */
 	/* add or find name in symbol table */
 	/* the main symtab owns the string */
   }
@@ -300,7 +300,7 @@ ExtMethodRun *GetExtMethodRun(struct ExternalFunc *efunc)
 void DestroyExternalFunc(struct ExternalFunc *efunc){
   struct ExternalFunc *tmp;
   if(efunc){
-    CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc);
+    /* CONSOLE_DEBUG("DESTROYING EFUNC at %p",efunc); */
     tmp = efunc;
     if (tmp->name ) ascfree((char *)(tmp->name)); /* we own the string */
     if (tmp->help) ascfree((char *)(tmp->help)); /* we own the string */
@@ -346,7 +346,7 @@ int AddExternalFunc(struct ExternalFunc *efunc, int force){
 	struct ExternalFunc *found, *tmp;
 	char *name;
 
-	CONSOLE_DEBUG("efunc = %p",efunc);
+	/* CONSOLE_DEBUG("efunc = %p",efunc); */
 	asc_assert(efunc!=NULL);
 
 	name = (char *)efunc->name;
@@ -366,7 +366,7 @@ int AddExternalFunc(struct ExternalFunc *efunc, int force){
 	    return 1;
 	}else{
 		/* need to add function to library */
-		CONSOLE_DEBUG("EFUNC not found, adding pointer %p for efunc to table under name '%s'.",efunc,name);
+		/* CONSOLE_DEBUG("EFUNC not found, adding pointer %p for efunc to table under name '%s'.",efunc,name); */
 		AddTableData(ExternalFuncLibrary,(void *)efunc,name);
 		return 1;
 	}
@@ -381,7 +381,7 @@ struct ExternalFunc *LookupExtFunc(CONST char *funcname)
   }
   found = (struct ExternalFunc *)LookupTableData(ExternalFuncLibrary,funcname);
   if (found) {
-	CONSOLE_DEBUG("Found '%s' in ExternalFuncLibrary at %p",funcname,found);
+	/* CONSOLE_DEBUG("Found '%s' in ExternalFuncLibrary at %p",funcname,found); */
     return found;
   } else {
     return NULL; /* name not found */

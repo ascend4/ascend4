@@ -389,8 +389,10 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
   }
 
   if(rel->nodeinfo){
+	/*
 	CONSOLE_DEBUG("ABOUT TO CALL EXTREL_EVALUATE_RESIDUAL");
 	CONSOLE_DEBUG("REL_RELATION = %p",rel);
+	*/
     *calc_ok = 1;
 	res = ExtRel_Evaluate_Residual(rel);
     rel_set_residual(rel,res);
