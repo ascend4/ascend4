@@ -2066,7 +2066,7 @@ struct relation *CreateRelationStructure(enum Expr_enum relop,int copyunion)
 
   newrelation = ASC_NEW(struct relation);
   assert(newrelation!=NULL);
-  CONSOLE_DEBUG("Created 'struct relation' at %p",newrelation);
+  /* CONSOLE_DEBUG("Created 'struct relation' at %p",newrelation); */
 
   newrelation->residual = DBL_MAX;
   newrelation->multiplier = DBL_MAX;
@@ -2140,7 +2140,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
   unsigned long c,len,pos;
   unsigned long n_inputs;
 
-  CONSOLE_DEBUG("CREATING BLACK BOX RELATION");
+  /* CONSOLE_DEBUG("CREATING BLACK BOX RELATION"); */
 
   n_inputs = gl_length(inputs);
   len = n_inputs + 1; /* an extra for the output variable. */
@@ -2156,7 +2156,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
 
   for (c=1;c<=n_inputs;c++) {
     var = (struct Instance *)gl_fetch(inputs,c);
-	CONSOLE_DEBUG("ADDING INPUT '%p' TO INCIDENCE",var);
+	/* CONSOLE_DEBUG("ADDING INPUT '%p' TO INCIDENCE",var); */
 
     pos = gl_search(newlist,var,(CmpFunc)CmpP);
     if (pos) {
@@ -2176,7 +2176,7 @@ struct relation *CreateBlackBoxRelation(struct Instance *relinst
 	I think that this means the output	variable. -- JP
   */
   pos = gl_search(newlist,subject,(CmpFunc)CmpP);
-  CONSOLE_DEBUG("ADDING OUTPUT INSTACE %p TO INCIDENCE",subject);
+  /* CONSOLE_DEBUG("ADDING OUTPUT INSTANCE %p TO INCIDENCE",subject); */
   if(pos){
     FPRINTF(ASCERR,"An input and output variable are the same !!\n");
     *args++ = (int)pos;

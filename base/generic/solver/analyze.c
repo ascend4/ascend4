@@ -2230,7 +2230,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
   */
   vlen = gl_length(p_data->vars);
   for (v = 0; v < vlen; v++) {
-	CONSOLE_DEBUG("VAR %d",v);
+	/* CONSOLE_DEBUG("VAR %d",v); */
     var = &(p_data->vardata[v]);
     vip = SIP(gl_fetch(p_data->vars,v+1));
     vip->u.v.data = var;
@@ -2244,7 +2244,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     if (vip->u.v.fixed)     flags |= VAR_FIXED;
     if (!vip->u.v.basis)    flags |= VAR_NONBASIC;
     if (vip->u.v.solvervar) flags |= VAR_SVAR;
-	CONSOLE_DEBUG("VAR %p IS IN BLOCK",var);
+	/* CONSOLE_DEBUG("VAR %p IS IN BLOCK",var); */
     var_set_flags(var,flags);
     p_data->mastervl[v] = var;
     p_data->solvervl[v] = var;
@@ -2292,7 +2292,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     if (vip->u.v.incident)  flags |= VAR_INCIDENT;
     if (vip->u.v.fixed)     flags |= VAR_FIXED;
     if (vip->u.v.solvervar) flags |= VAR_SVAR;
-	CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var);
+	/* CONSOLE_DEBUG("VAR AT %p IS UNASSIGNED",var); */
     /* others may be appropriate (PVAR) */
     var_set_flags(var,flags);
     p_data->masterul[v] = var;
@@ -2318,15 +2318,15 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
     gut = GetInstanceRelationOnly(rip->i);
     assert(gut!=NULL);
     len = NumberVariables(gut);
-	CONSOLE_DEBUG("FOR REL INSTANCE AT %p, NUM INCID VARS= %d",rip->i, len);
+	/* CONSOLE_DEBUG("FOR REL INSTANCE AT %p, NUM INCID VARS= %d",rip->i, len); */
     if (len > 0) {
       incidence = get_incidence_space(len,p_data);
       for( c = 0; c < len; c++ ) {
         i = RelationVariable(gut,c+1);
-        CONSOLE_DEBUG("INCIDENCE OF REL INSTANCE %p WITH VAR %p",rip->i,i);
+        /* CONSOLE_DEBUG("INCIDENCE OF REL INSTANCE %p WITH VAR %p",rip->i,i); */
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
-      CONSOLE_DEBUG("SETTING INCIDENCES FOR CONSTRAINING REL");
+      /* CONSOLE_DEBUG("SETTING INCIDENCES FOR CONSTRAINING REL"); */
       rel_set_incidences(rel,len,incidence);
     } else {
       rel_set_incidences(rel,0,NULL);
@@ -2337,9 +2337,9 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         rel_set_extcache(rel,cache);
 		extrel_store_output_var(rel);
       }else{
-		CONSOLE_DEBUG("rip = %p, rip->i = %p",rip,rip->i);
+		/* CONSOLE_DEBUG("rip = %p, rip->i = %p",rip,rip->i); */
         cache = CreateCacheFromInstance(rip->i);
-		CONSOLE_DEBUG("cache = %p",cache);
+		/* CONSOLE_DEBUG("cache = %p",cache); */
         gl_append_ptr(p_data->extrels,(POINTER)cache);
         rel_set_extcache(rel,cache);
 		extrel_store_input_vars(rel);
@@ -2401,7 +2401,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         i = RelationVariable(gut,c+1);
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
-      CONSOLE_DEBUG("SETTING INCIDENCES FOR OBJECTIVE FN REL");
+      /* CONSOLE_DEBUG("SETTING INCIDENCES FOR OBJECTIVE FN REL"); */
       rel_set_incidences(rel,len,incidence);
     } else {
       rel_set_incidences(rel,0,NULL);
@@ -2448,7 +2448,7 @@ static int analyze_make_solvers_lists(struct problem_t *p_data)
         i = RelationVariable(gut,c+1);
         incidence[c] = SIP(GetInterfacePtr(i))->u.v.data;
       }
-      CONSOLE_DEBUG("SETTING INCIDENCES FOR CONDITIONAL REL");
+      /* CONSOLE_DEBUG("SETTING INCIDENCES FOR CONDITIONAL REL"); */
       rel_set_incidences(rel,len,incidence);
     } else {
       rel_set_incidences(rel,0,NULL);

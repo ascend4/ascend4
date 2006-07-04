@@ -262,26 +262,31 @@ extern void Asc_IntegPrintObsHeader(FILE *fp, IntegratorSystem *blsys);
  *      of the ode_id/obs_id.
  */
 
-extern void Asc_IntegPrintYLine(FILE *fp, IntegratorSystem *blsys);
+extern int Asc_IntegPrintYLine(FILE *fp, IntegratorSystem *blsys);
 /**<
- *  Prints a Y line to the file given.
- *  If FILE is NULL, returns immediately.
- *  If FILE ok, but blsys NULL prints warning to stderr and returns.
- *  Each line is a set of values, identified by the header, following
- *  the value of the independent variable. These lines are of arbitrary
- *  length since it is expected that some other program will be
- *  reading the output, not a human.
- */
-extern void Asc_IntegPrintObsLine(FILE *fp, IntegratorSystem *blsys);
+	Prints a Y line to the file given.
+	If FILE is NULL, returns immediately.
+	If FILE ok, but blsys NULL prints warning to stderr and returns.
+	Each line is a set of values, identified by the header, following
+	the value of the independent variable. These lines are of arbitrary
+	length since it is expected that some other program will be
+	reading the output, not a human.
+
+	@return 1 on successful output
+*/
+
+extern int Asc_IntegPrintObsLine(FILE *fp, IntegratorSystem *blsys);
 /**<
- *  Prints an observation line to the file given.
- *  If FILE is NULL, returns immediately.
- *  If FILE ok, but blsys NULL prints warning to stderr and returns.
- *  Each line is a set of values, identified by the header, following
- *  the value of the independent variable. These lines are of arbitrary
- *  length since it is expected that some other program will be
- *  reading the output, not a human.
- */
+	Prints an observation line to the file given.
+	If FILE is NULL, returns immediately.
+	If FILE ok, but blsys NULL prints warning to stderr and returns.
+	Each line is a set of values, identified by the header, following
+	the value of the independent variable. These lines are of arbitrary
+	length since it is expected that some other program will be
+	reading the output, not a human.
+
+	@return 1 on successful output
+*/
 
 /*---------------------------------------
   Output reporting interface

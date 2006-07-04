@@ -359,7 +359,11 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
       );
       AssertMemory(result);
 
-	  CONSOLE_DEBUG("CREATED REAL ATOM INSTANCE of type '%s' at %p",SCP(GetName(type)),result);
+	  /*
+      CONSOLE_DEBUG("CREATED REAL ATOM INSTANCE of type '%s' at %p"
+		,SCP(GetName(type)),result
+      );
+      */
 
       if (GetUniversalFlag(type)){
         AddUniversalInstance(GetUniversalTable(),type,INST(result));
@@ -369,7 +373,11 @@ struct Instance *CreateRealInstance(struct TypeDescription *type){
       return INST(result);
     }else{ /* instance type has a prototype which can be copied */
       result = CopyInstance(INST(result));
-      CONSOLE_DEBUG("CREATED (COPIED PROTOTYPE) REAL ATOM INSTANCE of type '%s' at %p",SCP(GetName(type)),result);
+      /*
+      CONSOLE_DEBUG("CREATED (COPIED PROTOTYPE) REAL ATOM INSTANCE "
+			"of type '%s' at %p" ,SCP(GetName(type)),result
+	  );
+	  */
 	  return result;
     }
   } else {
