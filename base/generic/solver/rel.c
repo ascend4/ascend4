@@ -1236,12 +1236,13 @@ double ExtRel_Diffs_LHS(struct rel_relation *rel, var_filter_t *filter,
 	nz.col = mtx_org_to_col(mtx,var_sindex(var));
 	mtx_set_value(mtx,&(nz), -1.0 );
 
+	/*
 	CONSOLE_DEBUG("OUTPUTING MATRIX");
 	mtx_region_t r;
 	mtx_region(&r, 0, 2, 0, 4);
 	mtx_write_region_human(ASCERR,mtx,&r);
-
 	CONSOLE_DEBUG("Mapping LHS jacobian entry -1.0 to var at %p",var);
+	*/
 
 	return lhs;	
 }

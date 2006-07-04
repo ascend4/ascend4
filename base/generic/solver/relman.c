@@ -393,6 +393,7 @@ real64 relman_eval(struct rel_relation *rel, int32 *calc_ok, int safe){
 	CONSOLE_DEBUG("REL_RELATION = %p",rel);
     *calc_ok = 1;
 	res = ExtRel_Evaluate_Residual(rel);
+    rel_set_residual(rel,res);
 	return res;
   }
 

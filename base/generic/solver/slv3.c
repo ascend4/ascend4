@@ -804,8 +804,10 @@ static void jacobian_scaled(slv3_system_t sys){
   sys->J.accurate = TRUE;
   sys->J.singular = FALSE;  /* yet to be determined */
 #if DEBUG
-  FPRINTF(LIF(sys),"\nJacobian: \n");
-  debug_out_jacobian(LIF(sys),sys);
+  ERROR_REPORTER_START_HERE(ASC_PROG_NOTE);
+  FPRINTF(ASCERR,"Jacobian:\n");
+  debug_out_jacobian(stderr,sys);
+  error_reporter_end_flush();
 #endif
 }
 
@@ -825,7 +827,7 @@ static void scale_variables( slv3_system_t sys){
   square_norm( &(sys->variables) );
   sys->variables.accurate = TRUE;
 #if DEBUG
-  FPRINTF(LIF(sys),"Variables:  ");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Variables:  ");
   debug_out_vector(LIF(sys),sys,&(sys->variables));
 #endif
 }
@@ -846,7 +848,7 @@ static void scale_residuals( slv3_system_t sys){
   square_norm( &(sys->residuals) );
   sys->residuals.accurate = TRUE;
 #if DEBUG
-  FPRINTF(LIF(sys),"Residuals:  ");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Residuals:  ");
   debug_out_vector(LIF(sys),sys,&(sys->residuals));
 #endif
 }
@@ -1174,7 +1176,7 @@ static boolean calc_gradient(slv3_system_t sys){
   }
   sys->gradient.accurate = TRUE;
 #if DEBUG
-  FPRINTF(LIF(sys),"Gradient:  ");
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Gradient:  ");
   debug_out_vector(LIF(sys),sys,&(sys->gradient));
 #endif
   return calc_ok;
@@ -1273,7 +1275,7 @@ static void calc_B( slv3_system_t sys){
        (1.0-POSITIVE_DEFINITE)*sys->B->sBs/(sys->B->sBs - sys->B->ys):1.0;
     }
 #if DEBUG
-    FPRINTF(LIF(sys),"ys, sBs, PD, theta = %g, %g, %g, %g\n",
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ys, sBs, PD, theta = %g, %g, %g, %g\n",
             sys->B->ys,
             sys->B->sBs,
             POSITIVE_DEFINITE,
@@ -1385,9 +1387,9 @@ static int calc_pivots(slv3_system_t sys){
     }
   }
   if (SHOW_LESS_IMPT) {
-    FPRINTF(LIF(sys),"%-40s ---> %d (%s)\n","Jacobian rank", sys->J.rank,
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d (%s)\n","Jacobian rank", sys->J.rank,
             sys->J.singular ? "deficient":"full");
-    FPRINTF(LIF(sys),"%-40s ---> %g\n","Smallest pivot",
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n","Smallest pivot",
             linsolqr_smallest_pivot(sys->J.sys));
   }
   return row_rank_defect;
@@ -1458,7 +1460,7 @@ static void calc_ZBZ(slv3_system_t sys){
    }
    sys->ZBZ.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"\nReduced Hessian:  \n");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nReduced Hessian:  \n");
    debug_out_hessian(LIF(sys),sys);
 #endif
 }
@@ -1533,7 +1535,7 @@ static void calc_multipliers(slv3_system_t sys){
    }
    sys->multipliers.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Multipliers:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Multipliers:  ");
    debug_out_vector(LIF(sys),sys,&(sys->multipliers));
 #endif
 }
@@ -1561,7 +1563,7 @@ static void calc_stationary( slv3_system_t sys){
    }
    sys->stationary.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Stationary:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Stationary:  ");
    debug_out_vector(LIF(sys),sys,&(sys->stationary));
 #endif
 }
@@ -1579,7 +1581,7 @@ static void calc_gamma( slv3_system_t sys){
    square_norm( &(sys->gamma) );
    sys->gamma.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Gamma:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Gamma:  ");
    debug_out_vector(LIF(sys),sys,&(sys->gamma));
 #endif
 }
@@ -1596,7 +1598,7 @@ static void calc_Jgamma( slv3_system_t sys){
    square_norm( &(sys->Jgamma) );
    sys->Jgamma.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Jgamma:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Jgamma:  ");
    debug_out_vector(LIF(sys),sys,&(sys->Jgamma));
 #endif
 }
@@ -1637,7 +1639,7 @@ static void calc_newton( slv3_system_t sys){
    square_norm( &(sys->newton) );
    sys->newton.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Newton:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Newton:  ");
    debug_out_vector(LIF(sys),sys,&(sys->newton));
 #endif
 }
@@ -1672,7 +1674,7 @@ static void calc_Bnewton( slv3_system_t sys){
    }
    sys->Bnewton.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Bnewton:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Bnewton:  ");
    debug_out_vector(LIF(sys),sys,&(sys->Bnewton));
 #endif
 }
@@ -1734,7 +1736,7 @@ static void calc_nullspace( slv3_system_t sys){
          }
       }
 #if DEBUG
-   FPRINTF(LIF(sys),"\nInverse Reduced Hessian:  \n");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nInverse Reduced Hessian:  \n");
    debug_out_hessian(LIF(sys),sys);
 #endif
       /*
@@ -1768,7 +1770,7 @@ static void calc_nullspace( slv3_system_t sys){
    }
    sys->nullspace.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Nullspace:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Nullspace:  ");
    debug_out_vector(LIF(sys),sys,&(sys->nullspace));
 #endif
 }
@@ -1794,7 +1796,7 @@ static void calc_varstep1( slv3_system_t sys){
    }
    sys->varstep1.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Varstep1:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Varstep1:  ");
    debug_out_vector(LIF(sys),sys,&(sys->varstep1));
 #endif
 }
@@ -1829,7 +1831,7 @@ static void calc_Bvarstep1( slv3_system_t sys){
    }
    sys->Bvarstep1.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Bvarstep1:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Bvarstep1:  ");
    debug_out_vector(LIF(sys),sys,&(sys->Bvarstep1));
 #endif
 }
@@ -1868,7 +1870,7 @@ static void calc_varstep2( slv3_system_t sys){
    }
    sys->varstep2.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Varstep2:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Varstep2:  ");
    debug_out_vector(LIF(sys),sys,&(sys->varstep2));
 #endif
 }
@@ -1903,7 +1905,7 @@ static void calc_Bvarstep2( slv3_system_t sys){
    }
    sys->Bvarstep2.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Bvarstep2:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Bvarstep2:  ");
    debug_out_vector(LIF(sys),sys,&(sys->Bvarstep2));
 #endif
 }
@@ -1929,7 +1931,7 @@ static void calc_mulstep1( slv3_system_t sys){
    }
    sys->mulstep1.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Mulstep1:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Mulstep1:  ");
    debug_out_vector(LIF(sys),sys,&(sys->mulstep1));
 #endif
 }
@@ -1977,7 +1979,7 @@ static void calc_mulstep2( slv3_system_t sys){
    }
    sys->mulstep2.accurate = TRUE;
 #if DEBUG
-   FPRINTF(LIF(sys),"Mulstep2:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Mulstep2:  ");
    debug_out_vector(LIF(sys),sys,&(sys->mulstep2));
 #endif
 }
@@ -2145,9 +2147,9 @@ static void compute_step( slv3_system_t sys, struct calc_step_vars *vars){
       sys->mulstep.accurate = TRUE;
    }
 #if DEBUG
-   FPRINTF(LIF(sys),"Varstep:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Varstep:  ");
    debug_out_vector(LIF(sys),sys,&(sys->varstep));
-   FPRINTF(LIF(sys),"Mulstep:  ");
+   ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Mulstep:  ");
    debug_out_vector(LIF(sys),sys,&(sys->mulstep));
 #endif
 }
@@ -2168,7 +2170,7 @@ static void calc_step( slv3_system_t sys, int minor){
    if( sys->varstep.accurate && sys->mulstep.accurate )
       return;
    if (SHOW_LESS_IMPT) {
-     FPRINTF(LIF(sys),"\n%-40s ---> %d\n", "    Step trial",minor);
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d\n", "    Step trial",minor);
    }
 
    tot1_norm2 = sys->varstep1.norm2 + sys->mulstep1.norm2;
@@ -2227,11 +2229,11 @@ static void calc_step( slv3_system_t sys, int minor){
       } while( fabs(vars.error) > STEPSIZEERR_MAX &&
               vars.parms.high - vars.parms.low > PARMRNG_MIN );
       if (SHOW_LESS_IMPT) {
-        FPRINTF(LIF(sys),"%-40s ---> %g\n",
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    parameter high", vars.parms.high);
-        FPRINTF(LIF(sys),"%-40s ---> %g\n",
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    parameter low", vars.parms.low);
-        FPRINTF(LIF(sys),"%-40s ---> %g\n",
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    Error in step length", vars.error);
       }
       sys->varstep.norm2 = step_norm2(sys, &vars);
@@ -2239,9 +2241,9 @@ static void calc_step( slv3_system_t sys, int minor){
    }
 
    if (SHOW_LESS_IMPT) {
-     FPRINTF(LIF(sys),"%-40s ---> %g\n", "    Alpha1 coefficient (normalized)",
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Alpha1 coefficient (normalized)",
              vars.alpha1);
-     FPRINTF(LIF(sys),"%-40s ---> %g\n", "    Alpha2 coefficient (normalized)",
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Alpha2 coefficient (normalized)",
              vars.alpha2);
    }
    compute_step(sys,&vars);
@@ -2334,7 +2336,7 @@ static void apply_step( slv3_system_t sys){
                dx = TOWARD_BOUNDS*(bnd-val);
                sys->varstep.vec[col] = dx/vec[col];
                if (SHOW_LESS_IMPT) {
-                 FPRINTF(lif,"%-40s ---> ",
+                 ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> ",
                          "    Variable projected to upper bound");
                  print_var_name(lif,sys,var); PUTC('\n',lif);
                }
@@ -2343,7 +2345,7 @@ static void apply_step( slv3_system_t sys){
                dx = TOWARD_BOUNDS*(bnd-val);
                sys->varstep.vec[col] = dx/vec[col];
                if (SHOW_LESS_IMPT) {
-                 FPRINTF(lif,"%-40s ---> ",
+                 ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> ",
                          "    Variable projected to lower bound");
                  print_var_name(lif,sys,var); PUTC('\n',lif);
                }
@@ -2361,16 +2363,16 @@ static void apply_step( slv3_system_t sys){
             (calc_sqrt_D0((sys->varstep.norm2 + sys->mulstep.norm2)*
                           (sys->varstep1.norm2 + sys->mulstep1.norm2)));
          if (SHOW_LESS_IMPT) {
-           FPRINTF(lif,"%-40s ---> %g\n", "    Projected step length (scaled)",
+           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Projected step length (scaled)",
            calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2));
-           FPRINTF(lif,"%-40s ---> %g\n",
+           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                    "    Projected progress", sys->progress);
          }
       }
       if (bounds_coef < 1.0) {
          square_norm(&(sys->varstep));
          if (SHOW_LESS_IMPT) {
-            FPRINTF(lif,"%-40s ---> %g\n",
+            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                     "    Truncated step length (scaled)",
                     calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2));
          }
@@ -2378,7 +2380,7 @@ static void apply_step( slv3_system_t sys){
             (calc_sqrt_D0((sys->varstep.norm2 + sys->mulstep.norm2)*
                           (sys->varstep1.norm2 + sys->mulstep1.norm2)));
          if (SHOW_LESS_IMPT) {
-           FPRINTF(lif,"%-40s ---> %g\n",
+           ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                    "    Truncated progress", sys->progress);
          }
       }
@@ -2493,7 +2495,7 @@ static void move_to_next_block( slv3_system_t sys){
     /* De-initialize previous block */
     if (SHOW_LESS_IMPT && (sys->s.block.current_size >1 ||
         LIFDS)) {
-      FPRINTF(LIF(sys),"Block %d converged.\n",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Block %d converged.\n",
               sys->s.block.current_block);
     }
     for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ ) {
@@ -2536,10 +2538,10 @@ static void move_to_next_block( slv3_system_t sys){
       debug_delimiter(LIF(sys));
     }
     if(SHOW_LESS_IMPT && LIFDS) {
-      FPRINTF(LIF(sys),"\n%-40s ---> %d in [%d..%d]\n",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d in [%d..%d]\n",
               "Current block number", sys->s.block.current_block,
               0, sys->s.block.number_of-1);
-      FPRINTF(LIF(sys),"%-40s ---> %d\n", "Current block size",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d\n", "Current block size",
         sys->s.block.current_size);
     }
     sys->s.calc_ok = TRUE;
@@ -2550,7 +2552,7 @@ static void move_to_next_block( slv3_system_t sys){
 	  error_reporter_end_flush();
     }
     if(SHOW_LESS_IMPT && sys->obj) {
-      FPRINTF(LIF(sys),"%-40s ---> %g\n", "Objective", sys->objective);
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Objective", sys->objective);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
@@ -2569,7 +2571,7 @@ static void move_to_next_block( slv3_system_t sys){
     if( SHOW_LESS_IMPT &&
         (sys->s.block.current_size >1 ||
          LIFDS) ) {
-      FPRINTF(LIF(sys),"%-40s ---> %g\n", "Residual norm (unscaled)",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
         sys->s.block.residual);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
@@ -2629,7 +2631,7 @@ static void move_to_next_block( slv3_system_t sys){
       sys->s.block.current_size = sys->rused - sys->rank;
       if(SHOW_LESS_IMPT) {
         debug_delimiter(LIF(sys));
-        FPRINTF(LIF(sys),"%-40s ---> %d\n", "Unassigned Relations",
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d\n", "Unassigned Relations",
                 sys->s.block.current_size);
       }
       sys->J.reg.row.low = sys->J.reg.col.low = sys->rank;
@@ -2640,17 +2642,17 @@ static void move_to_next_block( slv3_system_t sys){
            "Residual calculation errors detected in leftover equations.\n");
       }
       if(SHOW_LESS_IMPT) {
-        FPRINTF(LIF(sys),"%-40s ---> %g\n", "Residual norm (unscaled)",
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
                 sys->s.block.residual);
       }
       if( block_feasible(sys) ) {
         if(SHOW_LESS_IMPT) {
-          FPRINTF(LIF(sys),"\nUnassigned relations ok. You lucked out.\n");
+          ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nUnassigned relations ok. You lucked out.\n");
         }
         sys->s.converged = TRUE;
       } else {
         if(SHOW_LESS_IMPT) {
-          FPRINTF(LIF(sys),"\nProblem inconsistent:  %s.\n",
+          ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\nProblem inconsistent:  %s.\n",
                   "Unassigned relations not satisfied");
         }
         sys->s.inconsistent = TRUE;
@@ -2757,9 +2759,9 @@ static void iteration_begins( slv3_system_t sys){
    ++(sys->s.iteration);
    if(SHOW_LESS_IMPT&& (sys->s.block.current_size >1 ||
       LIFDS)) {
-     FPRINTF(LIF(sys),"\n%-40s ---> %d\n",
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %d\n",
              "Iteration", sys->s.block.iteration);
-     FPRINTF(LIF(sys),"%-40s ---> %d\n",
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %d\n",
              "Total iteration", sys->s.iteration);
    }
 }
@@ -2776,9 +2778,9 @@ static void iteration_ends( slv3_system_t sys){
    sys->s.cpu_elapsed += cpu_elapsed;
    if(SHOW_LESS_IMPT && (sys->s.block.current_size >1 ||
          LIFDS)) {
-     FPRINTF(LIF(sys),"%-40s ---> %g\n",
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
             "Elapsed time", sys->s.block.cpu_elapsed);
-     FPRINTF(LIF(sys),"%-40s ---> %g\n",
+     ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
             "Total elapsed time", sys->s.cpu_elapsed);
    }
 }
@@ -3774,10 +3776,10 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,sys->J.reg.col.low)];
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,sys->J.reg.row.low)];
     if (SHOW_LESS_IMPT && LIFDS) {
-      FPRINTF(lif,"%-40s ---> (%d)", "Singleton relation",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> (%d)", "Singleton relation",
               mtx_row_to_org(sys->J.mtx,sys->J.reg.row.low));
       print_rel_name(lif,sys,rel); PUTC('\n',lif);
-      FPRINTF(lif,"%-40s ---> (%d)", "Singleton variable",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> (%d)", "Singleton variable",
               mtx_col_to_org(sys->J.mtx,sys->J.reg.col.low));
       print_var_name(lif,sys,var); PUTC('\n',lif);
     }
@@ -3791,12 +3793,12 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     switch( ds_status ) {
     case 0:
       if (SHOW_LESS_IMPT) {
-        FPRINTF(lif,"Unable to directly solve symbolically.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Unable to directly solve symbolically.\n");
       }
       break;
     case 1:
       if (SHOW_LESS_IMPT && LIFDS) {
-        FPRINTF(lif,"Directly solved.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Directly solved.\n");
       }
       sys->s.calc_ok = calc_residuals(sys);
       if (sys->s.calc_ok) {
@@ -3862,7 +3864,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
   calc_phi(sys);
 
   if (SHOW_LESS_IMPT) {
-    FPRINTF(lif,"%-40s ---> %g\n","Phi", sys->phi);
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n","Phi", sys->phi);
   }
 
   calc_gamma(sys);
@@ -3934,7 +3936,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
         if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
         if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
         if (SHOW_LESS_IMPT) {
-          FPRINTF(lif,"%-40s ---> %g\n",
+          ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
             "    Step reduction (bounds not ok)", maxstep_coef);
         }
         restore_variables(sys);
@@ -3944,7 +3946,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
           real64 maxstep_coef;
           maxstep_coef = 0.50;
           if (SHOW_LESS_IMPT) {
-            FPRINTF(lif,"%-40s ---> %g\n",
+            ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
               "    Step reduction (calculations not ok)", maxstep_coef);
           }
           restore_variables(sys);
@@ -3965,7 +3967,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
             if (maxstep_coef < MIN_COEF) maxstep_coef = MIN_COEF;
             if (maxstep_coef > MAX_COEF) maxstep_coef = MAX_COEF;
             if (SHOW_LESS_IMPT) {
-              FPRINTF(lif,"%-40s ---> %g\n",
+              ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
                 "    Step reduction (descent not ok)",maxstep_coef);
             }
             sys->phi = oldphi;
@@ -3982,9 +3984,9 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       (sys->varstep1.norm2+sys->mulstep1.norm2)));
     sys->maxstep = calc_sqrt_D0(sys->varstep.norm2 + sys->mulstep.norm2);
     if (SHOW_LESS_IMPT) {
-      FPRINTF(lif,"%-40s ---> %g\n",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
         "    Suggested step length (scaled)", sys->maxstep);
-      FPRINTF(lif,"%-40s ---> %g\n",
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n",
         "    Suggested progress", sys->progress);
     }
 
@@ -4037,7 +4039,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     calc_objectives(sys);
     if (!sys->s.calc_ok) {
       if (SHOW_LESS_IMPT) {
-        FPRINTF(lif,"    Step accepted.\n");
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"    Step accepted.\n");
       }
       if (new_ok)
         FPRINTF(mif,"\nCalculation errors resolved.\n");
@@ -4059,7 +4061,7 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
     calc_phi(sys);
     sys->phi += inner_product( &(sys->mulstep),&(sys->residuals) );
     if (SHOW_LESS_IMPT) {
-      FPRINTF(lif,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "    Anticipated phi",sys->phi);
     }
     descent_ok = (sys->phi < oldphi);
     if (EXACT_LINE_SEARCH)
@@ -4068,11 +4070,11 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
 
   step_accepted(sys);
   if (SHOW_LESS_IMPT) {
-    FPRINTF(lif,"    Step accepted.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"    Step accepted.\n");
     if (sys->obj) {
-      FPRINTF(lif,"\n%-40s ---> %g\n", "Objective", sys->objective);
+      ERROR_REPORTER_HERE(ASC_PROG_NOTE,"\n%-40s ---> %g\n", "Objective", sys->objective);
     }
-    FPRINTF(lif,"%-40s ---> %g\n", "Residual norm (unscaled)",
+    ERROR_REPORTER_HERE(ASC_PROG_NOTE,"%-40s ---> %g\n", "Residual norm (unscaled)",
             sys->s.block.residual);
   }
 
