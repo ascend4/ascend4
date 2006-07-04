@@ -447,7 +447,9 @@ class Browser:
 				_model = self.options.model
 				print "MODEL: '%s'" % _model
 			elif self.options.auto_sim:
-				_model, _ext = os.path.splitext(args[0]);
+				_head, _tail = os.path.split(args[0])
+				if(_tail):
+					_model, _ext = os.path.splitext(_tail)
 
 			if _model:
 				try:

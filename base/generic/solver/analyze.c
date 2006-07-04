@@ -855,18 +855,9 @@ void *classify_instance(struct Instance *inst, VOIDPTR vp)
       ip->u.v.fixed = BooleanChildValue(inst,FIXED_A);
       ip->u.v.basis = BooleanChildValue(inst,BASIS_A);
 
-	  {
-		char *tmp;
-		tmp = WriteInstanceNameString(inst,NULL);
-		CONSOLE_DEBUG("INSTANCE '%s' AT %p",tmp,inst);
-		ASC_FREE(tmp);
-	  }
-
       if (RelationsCount(inst)) {
-	    CONSOLE_DEBUG("... IN VARS");
         gl_append_ptr(p_data->vars,(POINTER)ip);
       }else{
-	    CONSOLE_DEBUG("... IN UNASSIGNED");
         gl_append_ptr(p_data->unas,(POINTER)ip);
       }
     } else {
