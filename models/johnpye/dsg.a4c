@@ -1,0 +1,120 @@
+REQUIRE "atoms.a4l";
+REQUIRE "johnpye/thermo_types.a4c";
+IMPORT "freesteam";
+IMPORT "dsg";
+
+(*
+	This model requires the 'freesteam' library be installed on your system.
+	You must compile it with the 'ASCEND_CONFIG=`which ascend-config`' flag
+	to ensure that the required external library is installed where ASCEND
+	can find it. Alternatively, you can specify the location by adding to the
+	ASCENDLIBRARY path variable
+*)
+
+MODEL dsg;
+	(* temporal derivatives *)
+	drho_dt IS_A density_rate;
+	dmdot_dt IS_A mass_rate_rate;
+	drhou_dt IS_A solver_var;
+	dTw_dt IS_A temperature_rate;
+
+	(* spatial derivatives *)
+	dmdot_dz IS_A mass_rate_per_length;
+	dmdoth_dz IS_A solver_var;
+	dekdot_dz IS_A solver_var;
+	dp_dz IS_A pressure_per_length;
+	drhovel2_dz IS_A pressure_per_length;
+
+	(* wall properties *)
+	rhow IS_A mass_density;
+	Aw IS_A area;
+	cw IS_A specific_heat_capacity;
+
+	(* conservation equations *)
+	drho_dt = -1/A * dmdot_dz;
+	1/A * dmdot_dt = -dp_dz - f/D/2*rho*vel^2 - drhovel2_dz;
+	drhou_dt = 1/A * ( qdott - dmdoth_dz + mdot * dekdot_dz );
+	dTw_dt = 1/rhow/Aw/cw * (qdots - qdotl - qdott);
+
+	rho IS_A mass_density;
+	mdot IS_A mass_rate;
+	p IS_A pressure;
+	f IS_A factor; (* pipe friction factor *)
+	u IS_A specific_energy;
+	h IS_A specific_enthalpy;
+	vel IS_A speed;
+	qdott, qdotl,qdots IS_A power_per_length;
+	mu IS_A viscosity;
+	v IS_A specific_volume;
+
+	rho * v = 1;
+
+	thermo_props: iapws97_phmu_uv(
+		u,v : INPUT;
+		p,h,mu : OUTPUT
+	);
+
+	vel = rho*mdot/A;
+
+	A IS_A area;
+
+	Re IS_A factor;
+	Re_rel: Re = rho*vel*D/mu;
+	eps_on_D IS_A factor;
+	eps_on_D_rel: eps_on_D = eps/D;
+
+	D IS_A distance;
+	eps IS_A distance;
+	A = 1{PI}* D^2 / 4;
+
+	friction: dsg_fric_factor_two_phase(
+		Re, eps_on_D : INPUT;
+		f : OUTPUT
+	);
+
+	cavity_losses: dsg_ext_heat_loss(
+		T2 : INPUT;
+		qdotl : OUTPUT
+	);
+
+	Tw,T1,T2 IS_A temperature;
+
+	Tw = (T1 + T2)/2;
+
+METHODS
+METHOD on_load;
+	RUN reset;
+	RUN specify;
+END on_load;
+
+METHOD values;
+	(*  derivative variables *)
+	drho_dt := 0 {kg/m^3/s};
+	dmdot_dt := 0 {kg/s/s};
+	drhou_dt := 0 {kg/m^3*kJ/kg/s};
+	dTw_dt := 0 {K/s};
+
+	D := 25 {mm};
+	eps := 0.05 {mm};
+
+	(* bounds *)
+	f.lower_bound := 0;
+END values;
+
+METHOD specify;
+	(* derivative variables *)
+	FIX drhou_dt;
+
+	(* design parameters, geometry, materials of construction *)
+	FIX rhow,Aw,cw;
+	FIX D, eps;
+	FIX qdots;
+
+	(* spatial derivs *)
+	FIX dmdot_dz, dmdoth_dz, dekdot_dz, dp_dz, drhovel2_dz;
+
+	(* states *)
+	FIX T1, T2, rho, u, mdot;
+END specify;
+
+END dsg;
