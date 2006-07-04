@@ -509,7 +509,7 @@ struct Statement *CreateEXTERNBlackBox(
 			       struct Name *data)
 {
   register struct Statement *result;
-  ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname);
+  /* ERROR_REPORTER_DEBUG("Found blackbox equation statement '%s'\n",funcname); */
 
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_black;
@@ -525,7 +525,7 @@ struct Statement *CreateEXTERNMethod(
 			       struct VariableList *vl)
 {
   register struct Statement *result;
-  ERROR_REPORTER_DEBUG("Found external method statement '%s'\n",funcname);
+  /* ERROR_REPORTER_DEBUG("Found external method statement '%s'\n",funcname); */
   result=create_statement_here(EXT);
   result->v.ext.mode = ek_method;
   result->v.ext.extcall = funcname;

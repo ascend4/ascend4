@@ -8,7 +8,6 @@
 %include <python/std_string.i>
 %include <python/std_except.i>
 %include <python/std_vector.i>
-%include <python/std_set.i>
 %include <python/std_map.i>
 
 %{
@@ -105,7 +104,6 @@ public:
 %template(IntVector) std::vector<int>;
 %template(CurveVector) std::vector<Curve>;
 %template(StringVector) std::vector<std::string>;
-%template(InstancSet) std::set<Instanc,InstancCompare>;
 %template(IntStringMap) std::map<int,std::string>;
 
 %rename(Instance) Instanc;
@@ -347,6 +345,7 @@ private:
 public:
 	Instanc(Instance *);
 	Instanc(Instance *, SymChar &name);
+	~Instanc();
 	std::vector<Instanc> getChildren();
 	const std::string getKindStr() const;
 	const SymChar &getName();
@@ -400,7 +399,7 @@ public:
 	const double  getUpperBound() const;
 	const double  getNominal() const;
 
-	const std::set<Instanc,InstancCompare> getClique() const;
+	const std::vector<Instanc> getClique() const;
 };
 
 %extend Instanc{

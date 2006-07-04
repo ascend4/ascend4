@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
-using namespace std;
 
 extern "C"{
 #include <utilities/ascConfig.h>
@@ -42,6 +41,8 @@ extern "C"{
 #include "plot.h"
 #include "instanceinterfacedata.h"
 
+using namespace std;
+
 /**
 	Create an instance of a type. @see Simulation for instantiation.
 */
@@ -78,6 +79,15 @@ Instanc::Instanc() : name("unnamed2"){
 Instanc::Instanc(const Instanc &parent, const unsigned long &childnum)
 		: i( InstanceChild(parent.i,childnum) ), name( ChildName(parent.i,childnum) ){
 	// cerr << "CREATED CHILD #" << childnum << ", named '" << getName() << "' OF " << parent.getName() << endl;
+}
+
+/** 
+	Destructor 
+
+	There's no data owned by this object, so nothing to be done here.
+*/
+Instanc::~Instanc(){
+	//cerr << "DESTROYING INSTANC OBJECT" << endl;
 }
 
 const SymChar &
@@ -643,21 +653,15 @@ DEFINE_CHILD_METHODS(DEFINE_GET_REAL_CHILD)
 
 //------------------------------------------------------
 
-bool
-InstancCompare::operator()(const Instanc &s1, const Instanc &s2) const{
-	    return (unsigned long)s1.i < (unsigned long)s2.i;
-	}
-
-const Instanc::set
+const vector<Instanc>
 Instanc::getClique() const{
-	Instanc::set s;
+	vector<Instanc> v;
 	struct Instance *i1 = i;
 	do{
-		s.insert(Instanc(i1));
+		v.push_back(Instanc(i1));
 		i1=NextCliqueMember(i1);
-	}while(i1 != i); // ie we've got around the circuit
-
-	return s;
+	}while(i1 != i); // ie we've gone around the circuit
+	return v;
 }
 
 //------------------------------------------------------

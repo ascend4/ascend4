@@ -173,7 +173,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	}
 	fclose(f);
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s\n",ls->fullpath);
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s\n",ls->fullpath); */
 	ospath_free(fp);
 	return 1;
 }
@@ -334,14 +334,14 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 		result = Asc_DynamicLoad(file,initfunc);
 	}
 
-	if (result) {
+	if(result){
 		CONSOLE_DEBUG("FAILED TO LOAD LIBRARY '%s' (error %d)",partialname,result);
     	result = 1;
 	}else{
 		if(initfunc==NULL){
-	  		ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",auto_initfunc,file);
+	  		CONSOLE_DEBUG("Successfully ran '%s' from dynamic package '%s'",auto_initfunc,file);
 		}else{
-			ERROR_REPORTER_DEBUG("Successfully ran '%s' from dynamic package '%s'\n",initfunc,file);
+			CONSOLE_DEBUG("Successfully ran '%s' from dynamic package '%s'",initfunc,file);
 		}
 	}
 

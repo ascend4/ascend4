@@ -420,13 +420,17 @@ int32 var_apply_filter(const struct var_variable *var,
   return (filter->matchbits & var->flags) == (filter->matchbits & filter->matchvalue);
 }
 
-
+/**
+	Implementation function for var_n_incidences().  Do not call this
+	function directly - use var_n_incidences() instead.
+*/
 int32 var_n_incidencesF(struct var_variable *var)
 {
   if (var!=NULL) return var->n_incidences;
   FPRINTF(stderr,"var_n_incidences miscalled with NULL\n");
   return 0;
 }
+
 void var_set_incidencesF(struct var_variable *var,int32 n,
                          struct rel_relation **i)
 {

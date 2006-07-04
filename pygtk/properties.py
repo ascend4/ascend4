@@ -3,6 +3,7 @@
 import gtk, gtk.glade
 import ascpy
 from varentry import *
+from infodialog import *
 
 class RelPropsWin:
 	def __init__(self,browser,instance):
@@ -63,7 +64,7 @@ class VarPropsWin:
 		self.statusimg = _xml.get_widget("statusimg");
 		self.statusmessage = _xml.get_widget("statusmessage");
 
-		self.othernames = _xml.get_widget("othernames"); 
+		self.cliquebutton = _xml.get_widget("cliquebutton"); 
 
 		self.fill_values()
 
@@ -102,19 +103,6 @@ class VarPropsWin:
 		self.statusimg.set_from_pixbuf(self.browser.statusicons[_status]);
 		self.statusmessage.set_text(self.browser.statusmessages[_status]);
 
-		#self.clique = self.instance.getClique()
-		#print "CLIQUE:",self.clique
-		#
-		#if len(self.clique) > 1:
-		#	self.othernames.set_label("%d other names..." % len(self.clique));
-		#	self.othernames.set_sensitive(True)
-		#else:
-		#	self.othernames.set_label("No other names");
-		#	self.othernames.set_sensitive(False)
-		#
-		self.othernames.set_label("Clique not implemented");
-		self.othernames.set_sensitive(False)
-
 	def apply_changes(self):
 		print "APPLY"
 		# check the units of the entered values are acceptable
@@ -151,7 +139,7 @@ class VarPropsWin:
 		entry.modify_base(gtk.STATE_ACTIVE, gtk.gdk.color_parse(color))
 
 	def on_varpropswin_close(self,*args):
-		self.varpropswin.response(gtk.RESPONSE_CANCEL)
+		self.window.response(gtk.RESPONSE_CANCEL)
 
 	def on_entry_key_press_event(self,widget,event):
 		keyname = gtk.gdk.keyval_name(event.keyval)
@@ -163,11 +151,17 @@ class VarPropsWin:
 			return True;
 		return False;
 
-	def on_othernames_clicked(self,*args):
-		print "OTHER NAMES..."
+	def on_cliquebutton_clicked(self,*args):
+		title = "Clique of '%s'"%self.browser.sim.getInstanceName(self.instance)
+		text = title + "\n\n"
 		s = self.instance.getClique();
-		for i in s:
-			print self.browser.sim.getInstanceName(i)
+		if s:
+			for i in s:
+				text += "%s\n"%self.browser.sim.getInstanceName(i)
+		else:
+			text += "CLIQUE IS EMPTY"
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
 
 	def run(self):
 		self.valueentry.grab_focus()
