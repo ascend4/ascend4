@@ -301,7 +301,7 @@ struct Statement *CreateFIX(struct VariableList *vars){
 
 struct Statement *CreateFREE(struct VariableList *vars){
   register struct Statement *result;
-  CONSOLE_DEBUG("CREATING FREE STMT");
+  /* CONSOLE_DEBUG("CREATING FREE STMT"); */
   result=create_statement_here(FREE);
   result->v.fx.vars = vars;
   return result;

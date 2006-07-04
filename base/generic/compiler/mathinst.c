@@ -300,7 +300,7 @@ void SetInstanceRelation(struct Instance *i, struct relation *rel,
   AssertMemory(i);
   if(i->t==REL_INST){
     if(RELN_INST(i)->ptr==NULL){
-      CONSOLE_DEBUG("RelationInstance %p points to relation at %p",i,rel);
+      /* CONSOLE_DEBUG("RelationInstance %p points to relation at %p",i,rel); */
       RELN_INST(i)->ptr = rel;
       RELN_INST(i)->type = type;
     }else{
@@ -372,7 +372,7 @@ void AddRelation(struct Instance *i, struct Instance *reln){
   AssertMemory(i);
   switch(i->t){
   case REAL_ATOM_INST:
-	CONSOLE_DEBUG("ADD RelationInstance %p to RealAtomInstance %p",reln,i);
+	/* CONSOLE_DEBUG("ADD RelationInstance %p to RealAtomInstance %p",reln,i); */
     if (RA_INST(i)->relations==NULL) {
       RA_INST(i)->relations = gl_create(AVG_RELATIONS);
     }

@@ -20,15 +20,13 @@
 	@file
 	Tcl/Tk interface functions for the Integration feature
 *//*
-	by Kirk Abbott and Ben Allan
+	by Kirk Abbott, Ben Allan, John Pye
 	Created: 1/94
-	Version: $Revision: 1.32 $
-	Version control file: $RCSfile: Integrators.c,v $
-	Date last modified: $Date: 2003/08/23 18:43:06 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.32 $ $Date: 2003/08/23 18:43:06 $ $Author: ballan $
 */
 
 #include <tcl.h>
+#include <time.h>
 
 #include <utilities/ascConfig.h>
 #include <solver/integrator.h>
@@ -43,10 +41,6 @@
 #include "BrowserProc.h"
 #include "HelpProc.h"
 #include "SolverGlobals.h"
-
-#ifndef lint
-static CONST char IntegratorsID[] = "$Id: Integrators.c,v 1.32 2003/08/23 18:43:06 ballan Exp $";
-#endif
 
 #define SNULL (char *)NULL
 
@@ -233,24 +227,28 @@ void Asc_IntegPrintObsHeader(FILE *fp, IntegratorSystem *blsys)
 }
 
 /********************************************************************/
-void Asc_IntegPrintYLine(FILE *fp, IntegratorSystem *blsys)
+
+/**
+	@return 1 on success
+*/
+int Asc_IntegPrintYLine(FILE *fp, IntegratorSystem *blsys)
 {
   long i,len;
   struct var_variable **vp;
   int si;
   if (fp==NULL) {
-    return;
+    return 0;
   }
   if (blsys==NULL) {
     FPRINTF(ASCERR,"WARNING: (Asc_IntegPrintYLine: called w/o data\n");
-    return;
+    return 0;
   }
   if (blsys->n_y == 0) {
-    return;
+    return 0;
   }
   if (blsys->y == NULL) {
     FPRINTF(ASCERR,"ERROR: (Asc_IntegPrintYHeader: called w/NULL data\n");
-    return;
+    return 0;
   }
   vp = blsys->y;
   len = blsys->n_y;
@@ -260,26 +258,29 @@ void Asc_IntegPrintYLine(FILE *fp, IntegratorSystem *blsys)
     FPRINTF(fp,BCOLNFMT, Asc_UnitlessValue(var_instance(vp[i]),si));
   }
   FPRINTF(fp,"\n");
+  return 1;
 }
 
-void Asc_IntegPrintObsLine(FILE *fp, IntegratorSystem *blsys)
-{
+/**
+	@return 1 on success
+*/
+int Asc_IntegPrintObsLine(FILE *fp, IntegratorSystem *blsys){
   long i,len;
   struct var_variable **vp;
   int si;
   if (fp==NULL) {
-    return;
+    return 0;
   }
   if (blsys==NULL) {
     FPRINTF(ASCERR,"WARNING: (Asc_IntegPrintObsLine: called w/o data\n");
-    return;
+    return 0;
   }
   if (blsys->n_obs == 0) {
-    return;
+    return 0;
   }
   if (blsys->obs == NULL) {
     FPRINTF(ASCERR,"ERROR: (Asc_IntegPrintObsHeader: called w/NULL data\n");
-    return;
+    return 0;
   }
   vp = blsys->obs;
   len = blsys->n_obs;
@@ -289,6 +290,7 @@ void Asc_IntegPrintObsLine(FILE *fp, IntegratorSystem *blsys)
     FPRINTF(fp,BCOLNFMT, Asc_UnitlessValue(var_instance(vp[i]),si));
   }
   FPRINTF(fp,"\n");
+  return 1;
 }
 
 
@@ -421,7 +423,6 @@ int Asc_IntegGetXSamplesCmd(ClientData cdata, Tcl_Interp *interp,
   char *ustring;
   double *uv;
   int trydu=0, prec, stat=0;
-  SampleList *samples;
 
   UNUSED_PARAMETER(cdata);
 
@@ -883,6 +884,8 @@ IntegratorReporter *Asc_GetIntegReporter(){
 }
 
 int Asc_IntegReporterInit(IntegratorSystem *blsys){
+	int status = 1;
+
 	CONSOLE_DEBUG("INITIALISING REPORTER");
 
 	/* set up output files */
@@ -897,19 +900,22 @@ int Asc_IntegReporterInit(IntegratorSystem *blsys){
 	CONSOLE_DEBUG("WRITING HEADERS");
 
 	/* write headers to yout, obsout and initial points */
+	
 	Asc_IntegPrintYHeader(integ_y_out,blsys);
-	Asc_IntegPrintYLine(integ_y_out,blsys);
+	status &= Asc_IntegPrintYLine(integ_y_out,blsys);
 	Asc_IntegPrintObsHeader(integ_obs_out,blsys);
-	Asc_IntegPrintObsLine(integ_obs_out,blsys);
+	status &= Asc_IntegPrintObsLine(integ_obs_out,blsys);
+
+	return status;
 }
 
 int Asc_IntegReporterWrite(IntegratorSystem *blsys){
 	/* write out a line of stuff */
-    Asc_IntegPrintYLine(integ_y_out,blsys);
+    return Asc_IntegPrintYLine(integ_y_out,blsys);
 }
 
 int Asc_IntegReporterWriteObs(IntegratorSystem *blsys){
-	Asc_IntegPrintObsLine(integ_obs_out,blsys);
+	return Asc_IntegPrintObsLine(integ_obs_out,blsys);
 }
 
 int Asc_IntegReporterClose(IntegratorSystem *blsys){
@@ -921,5 +927,6 @@ int Asc_IntegReporterClose(IntegratorSystem *blsys){
 	if (integ_obs_out!=NULL) {
 		fclose(integ_obs_out);
 	}
+	return 1;
 }
 

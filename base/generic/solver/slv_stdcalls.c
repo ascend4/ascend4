@@ -236,7 +236,7 @@ int slv_block_partition_real(slv_system_t sys,int uppertriangular){
   var_filter_t vf;
   rel_filter_t rf;
 
-  CONSOLE_DEBUG("...");
+  /* CONSOLE_DEBUG("..."); */
 
   rp = slv_get_solvers_rel_list(sys);
   vp = slv_get_solvers_var_list(sys);
@@ -1298,7 +1298,7 @@ int SlvRegisterStandardClients(void){
 	int newclient=0;
 	int error;
 	int i;
-	CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES");
+	/* CONSOLE_DEBUG("REGISTERING STANDARD SOLVER ENGINES"); */
 	for(i=0;slv_reg[i].name!=NULL;++i){
 		if(slv_reg[i].is_active && slv_reg[i].regfunc){
 			error = slv_register_client(slv_reg[i].regfunc,NULL,NULL,&newclient);

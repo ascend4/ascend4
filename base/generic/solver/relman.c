@@ -533,7 +533,7 @@ int relman_diff_grad(struct rel_relation *rel, var_filter_t *filter,
   assert(gradient !=NULL);
   *count = 0;
   if( safe ) {
-	CONSOLE_DEBUG("...");
+	/* CONSOLE_DEBUG("..."); */
     status =(int32)RelationCalcResidGradSafe(rel_instance(rel),
 					     resid,gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
@@ -595,7 +595,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       if (gradient == NULL) {
         return 1;
       }
-	  CONSOLE_DEBUG("...");
+	  /* CONSOLE_DEBUG("..."); */
       status = RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
       safe_error_to_stderr(&status);
       if (status) {
@@ -617,7 +617,7 @@ int32 relman_diff_harwell(struct rel_relation **rlist,
       if (gradient == NULL) {
         return 1;
       }
-	  CONSOLE_DEBUG("...");
+	  /* CONSOLE_DEBUG("..."); */
       status = RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
       safe_error_to_stderr(&status);
       if (status) {
@@ -693,13 +693,13 @@ int relman_diffs(struct rel_relation *rel, var_filter_t *filter,
 
   /** @TODO fix this (it should all be in the compiler, or something) */
   if(rel->nodeinfo){
-	CONSOLE_DEBUG("EVALUTING BLACKBOX DERIVATIVES FOR ROW %d",coord.row);
+	/* CONSOLE_DEBUG("EVALUTING BLACKBOX DERIVATIVES FOR ROW %d",coord.row); */
 	*resid = extrel_resid_and_jacobian(rel, filter, coord.row, mtx);
     return 0;
   }
 
   if(safe){
-	CONSOLE_DEBUG("...");
+	/* CONSOLE_DEBUG("..."); */
     status =(int32)RelationCalcResidGradSafe(rel_instance(rel),resid,gradient);
     safe_error_to_stderr( (enum safe_err *)&status );
     /* always map when using safe functions */
