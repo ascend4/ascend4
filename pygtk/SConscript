@@ -55,6 +55,7 @@ swigobj = python_env.SharedObject('ascpy.i'
 	, SWIGFLAGS=['-python','-c++'] + get_new_swig_flags(env)
 )
 python_env.SideEffect(['ascpy.py','ascpy_wrap.h'],'ascpy$SWIGCXXFILESUFFIX')
+python_env.Depends('ascpy.py',['ascpy.i'])
 python_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
 python_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
 python_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
