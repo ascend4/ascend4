@@ -1,11 +1,11 @@
 # General-purpose popup window for reporting texty stuff
 
-import gtk, gtk.glade
+import gtk, gtk.glade, pango
 import ascpy
 from varentry import *
 
 class InfoDialog:
-	def __init__(self,browser,parent,text,title):
+	def __init__(self,browser,parent,text,title,tabs=None):
 		self.browser = browser;
 
 		# GUI config
@@ -24,11 +24,23 @@ class InfoDialog:
 		self.textview = _xml.get_widget("textview")
 		self.closebutton = _xml.get_widget("closebutton")
 
+		if tabs:
+			self.setTabs(*tabs)
+
 		self.textbuff = gtk.TextBuffer();
 		self.textview.set_buffer(self.textbuff)
 
 		self.fill_values(text)
 		_xml.signal_autoconnect(self)
+
+	def setTabs(self,*args):
+		n = len(args)
+		t = pango.TabArray(n,True)
+		i = 0
+		for v in args:
+			t.set_tab(i,pango.TAB_LEFT,v)
+			i+=1;
+		self.textview.set_tabs(t)
 
 	def fill_values(self,text):
 		self.textbuff.set_text(text);

@@ -69,7 +69,11 @@
 	forward declarations, constants, typedefs
 */
 
-#define REL_DEBUG(MSG,...) ((void)0)
+#ifdef DEBUG
+# define REL_DEBUG CONSOLE_DEBUG
+#else
+# define REL_DEBUG(MSG,...) ((void)0)
+#endif
 
 #define IPTR(i) ((struct Instance *)(i))
 #define REIMPLEMENT 0 /* if set to 1, compiles code tagged with it. */
@@ -611,7 +615,7 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->jacobian = ASC_NEW_ARRAY_CLEAR(double,ninputs*noutputs);
 
   /* Setup default flags for controlling calculations. */
-  cache->newcalc_done = 1;
+  cache->evaluation_required = 1;
   cache->first_func_eval = 1;
   cache->first_deriv_eval = 1;
 
@@ -753,7 +757,7 @@ int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup){
 
   /* Save the user's data and update our status. */
   cache->user_data = slv_interp.user_data;
-  cache->newcalc_done = (unsigned)1;	/* force at least one calculation */
+  cache->evaluation_required = (unsigned)1;	/* force at least one calculation */
   cache->first_func_eval = (unsigned)0;
   return 0;
 }
@@ -777,7 +781,7 @@ static int ArgsDifferent(double new, double old){
 
 real64 ExtRel_Evaluate_Residual(struct rel_relation *rel){
 	double value;
-	/* REL_DEBUG("EVALUATING RELATION %p",rel); */
+	REL_DEBUG("EVALUATING RELATION %p",rel);
 	value = ExtRel_Evaluate_RHS(rel) - ExtRel_Evaluate_LHS(rel);
 	REL_DEBUG("RESIDUAL = %f",value);
 	return value;
@@ -864,6 +868,8 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 		       cache->inputs, cache->outputs, cache->jacobian);
 	if(nok){
 		REL_DEBUG("EXTERNAL CALCULATION ERROR (%d)",nok);
+		/* return, don't change the output values, don't update flags */ 
+		return 0;
 	}else{
 		REL_DEBUG("EVAL FUNC OK");
 	}
@@ -874,12 +880,12 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 
     value = cache->outputs[whichvar - ninputs - 1];
 	/* REL_DEBUG("CALCULATED VALUE IS %f",value); */
-    cache->newcalc_done = (unsigned)1;			/* newcalc done */
+    cache->evaluation_required = (unsigned)1;			/* newcalc done */
     cache->user_data = slv_interp.user_data;		/* update user_data */
   }
   else{
     value = cache->outputs[whichvar - ninputs - 1];
-    cache->newcalc_done = (unsigned)0; /* a result was simply returned */
+    cache->evaluation_required = 0; /* a result was simply returned */
   }
 
   REL_DEBUG("RHS VALUE = %f",value);
@@ -1144,7 +1150,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    */
   if(cache->first_deriv_eval) {
 	REL_DEBUG("FIRST DERIV EVAL");
-    cache->newcalc_done = (unsigned)1;
+    cache->evaluation_required = (unsigned)1;
     cache->first_deriv_eval = (unsigned)0;
   }
 
@@ -1152,7 +1158,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
    * If a function evaluation was not recently done, then we
    * can return the results from the cached jacobian.
    */
-  if(!cache->newcalc_done){
+  if(!cache->evaluation_required){
 	REL_DEBUG("NO NEW CALC DONE, RETURN CACHED JACOBIAN");
     ExtRel_MapDataToMtx(cache, whichvar, d);
     return 0;
@@ -1173,14 +1179,20 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
 	REL_DEBUG("USING EXTERNAL DERIVATIVE FUNCTION");
     nok = (*deriv_func)(&slv_interp, cache->ninputs, cache->noutputs,
 			cache->inputs, cache->outputs, cache->jacobian);
-    if (nok) return nok;
+    if(nok){
+      cache->evaluation_required = 1;
+      return nok;
+	}
   }else{
 	REL_DEBUG("USING NUMERICAL DERIVATIVE");
     eval_func = GetValueFunc(efunc);
     nok = ExtRel_FDiff(&slv_interp, eval_func,
 			cache->ninputs, cache->noutputs,
 			cache->inputs, cache->outputs, cache->jacobian);
-    if (nok) return nok;
+    if(nok){
+      cache->evaluation_required = 1;
+      return nok;
+	}
   }
 
   /*

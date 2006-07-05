@@ -68,7 +68,7 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc = LookupExtFunc(name);
   if (efunc != NULL) {
 	/* CONSOLE_DEBUG("Found efunc at %p",efunc); */
-	/* name was pre-loaded -- just update the info */
+	/* name has already been seen, so now fill in the details */
     isNew = 0;
   }else{
     isNew = 1;

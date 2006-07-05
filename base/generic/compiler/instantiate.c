@@ -307,21 +307,24 @@ void ClearIteration(void)
 
 static
 void instantiation_error(error_severity_t sev
-		, const struct Statement *stat, const char *msg
+		, const struct Statement *stat, const char *fmt
+		, ...
 ){
+	va_list args;
+	va_start(args,fmt);
 	if(stat!= NULL){
-		error_reporter(sev
-			,Asc_ModuleBestName(StatementModule(stat))
-			,StatementLineNum(stat)
-			,"%s", msg
+		va_error_reporter(sev
+			, Asc_ModuleBestName(StatementModule(stat))
+			, StatementLineNum(stat), NULL
+			, fmt, args
 		);
 	}else{
-		error_reporter(sev
-			,NULL
-			,0
-			,"(NULL statement): %s", msg
+		va_error_reporter(sev
+			, NULL, 0, NULL
+			, fmt, args
 		);
 	}
+	va_end(args);
 }
 
 static void instantiation_name_error(error_severity_t sev
@@ -5481,7 +5484,10 @@ static int ExecuteBlackBoxEXT(struct Instance *inst
     n_output_args = NumberOutputArgs(efunc);
     if ((len =gl_length(arglist)) != (n_input_args + n_output_args)) {
       instantiation_error(ASC_USER_ERROR,statement
-			,"Incorrect number of input or output arguments.");
+	    ,"Incorrect number of input+output args\n"
+	      "(expected total %d, got %d)."
+	    ,(n_input_args + n_output_args),len
+	  );
       return 1;
     }
     /* we should have a valid arglist at this stage */
