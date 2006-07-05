@@ -60,3 +60,17 @@ const int
 Relation::getNumIncidentVariables() const{
 	return rel_n_incidences(rel);
 }
+
+Instanc
+Relation::getInstance() const{
+	return Instanc((struct Instance *)rel_instance(rel));
+}
+
+string
+Relation::getRelationAsString() const{
+	if(sim==NULL){
+		throw runtime_error("Simulation not set");
+	}
+	return getInstance().getRelationAsString(sim->getModel());
+}
+

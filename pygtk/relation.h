@@ -28,6 +28,8 @@ public:
 	const double getResidual() const;
 	const std::vector<Variable> getIncidentVariables() const;
 	const int getNumIncidentVariables() const;
+	Instanc getInstance() const;
+	std::string getRelationAsString() const;
 };
 
 #endif /* ASCXX_RELATION_H */

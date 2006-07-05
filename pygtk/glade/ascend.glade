@@ -3027,9 +3027,9 @@ upper and lower bounds displayed.</property>
 			      <child>
 				<widget class="GtkLabel" id="label46">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">var</property>
+				  <property name="label" translatable="yes">&lt;u&gt;v&lt;/u&gt;ar</property>
 				  <property name="use_underline">False</property>
-				  <property name="use_markup">False</property>
+				  <property name="use_markup">True</property>
 				  <property name="justify">GTK_JUSTIFY_LEFT</property>
 				  <property name="wrap">False</property>
 				  <property name="selectable">False</property>
@@ -3055,9 +3055,9 @@ upper and lower bounds displayed.</property>
 			      <child>
 				<widget class="GtkLabel" id="label47">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">rel</property>
+				  <property name="label" translatable="yes">&lt;u&gt;r&lt;/u&gt;el</property>
 				  <property name="use_underline">False</property>
-				  <property name="use_markup">False</property>
+				  <property name="use_markup">True</property>
 				  <property name="justify">GTK_JUSTIFY_LEFT</property>
 				  <property name="wrap">False</property>
 				  <property name="selectable">False</property>
@@ -3247,6 +3247,7 @@ upper and lower bounds displayed.</property>
 				  <property name="relief">GTK_RELIEF_NORMAL</property>
 				  <property name="focus_on_click">True</property>
 				  <signal name="clicked" handler="on_varinfobutton_clicked" last_modification_time="Wed, 05 Jul 2006 01:24:21 GMT"/>
+				  <accelerator key="v" modifiers="GDK_MOD1_MASK" signal="clicked"/>
 
 				  <child>
 				    <widget class="GtkImage" id="varinfoimg">
@@ -3277,6 +3278,7 @@ upper and lower bounds displayed.</property>
 				  <property name="relief">GTK_RELIEF_NORMAL</property>
 				  <property name="focus_on_click">True</property>
 				  <signal name="clicked" handler="on_relinfobutton_clicked" last_modification_time="Wed, 05 Jul 2006 01:24:06 GMT"/>
+				  <accelerator key="r" modifiers="GDK_MOD1_MASK" signal="clicked"/>
 
 				  <child>
 				    <widget class="GtkImage" id="relinfoimg">

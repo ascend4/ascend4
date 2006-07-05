@@ -84,7 +84,7 @@ MODEL dsg;
 METHODS
 METHOD on_load;
 	RUN reset;
-	RUN specify;
+	RUN values;
 END on_load;
 
 METHOD values;
@@ -97,8 +97,11 @@ METHOD values;
 	D := 25 {mm};
 	eps := 0.05 {mm};
 
+	dp_dz := -500 {Pa/m};
+	dmdot_dz := 0 {kg/s/m};
+
 	(* bounds *)
-	f.lower_bound := 0;
+	f.lower_bound := 0.0;
 END values;
 
 METHOD specify;
