@@ -27,14 +27,18 @@ MODEL dsg;
 
 	(* wall properties *)
 	rhow IS_A mass_density;
-	Aw IS_A area;
+	D2 IS_A distance;
 	cw IS_A specific_heat_capacity;
+	Aw IS_A area;
+	hw IS_A heat_transfer_coefficient;
+
+	Aw = 1{PI}*(D2^2 - D^2)/4;
 
 	(* conservation equations *)
-	drho_dt = -1/A * dmdot_dz;
-	1/A * dmdot_dt = -dp_dz - f/D/2*rho*vel^2 - drhovel2_dz;
-	drhou_dt = 1/A * ( qdott - dmdoth_dz + mdot * dekdot_dz );
-	dTw_dt = 1/rhow/Aw/cw * (qdots - qdotl - qdott);
+	massbal: drho_dt = -1/A * dmdot_dz;
+	mombal:  1/A * dmdot_dt = -dp_dz - f/D/2*rho*vel^2 - drhovel2_dz;
+	enerbal: drhou_dt = 1/A * ( qdott - dmdoth_dz + mdot * dekdot_dz );
+	pipebal: dTw_dt = 1/rhow/Aw/cw * (qdots - qdotl - qdott);
 
 	rho IS_A mass_density;
 	mdot IS_A mass_rate;
@@ -46,17 +50,16 @@ MODEL dsg;
 	qdott, qdotl,qdots IS_A power_per_length;
 	mu IS_A viscosity;
 	v IS_A specific_volume;
+	T1,Tw,T2,Tamb IS_A temperature;
 
 	rho * v = 1;
 
-	thermo_props: iapws97_phmu_uv(
-		u,v : INPUT;
-		p,h,mu : OUTPUT
+	thermo_props: iapws97_uvmu_ph(
+		p,h : INPUT;
+		u,v,mu : OUTPUT
 	);
 
 	vel = rho*mdot/A;
-
-	A IS_A area;
 
 	Re IS_A factor;
 	Re_rel: Re = rho*vel*D/mu;
@@ -65,6 +68,7 @@ MODEL dsg;
 
 	D IS_A distance;
 	eps IS_A distance;
+	A IS_A area;
 	A = 1{PI}* D^2 / 4;
 
 	friction: dsg_fric_factor_two_phase(
@@ -73,51 +77,74 @@ MODEL dsg;
 	);
 
 	cavity_losses: dsg_ext_heat_loss(
-		T2 : INPUT;
+		T2,Tamb,D2,hw : INPUT;
 		qdotl : OUTPUT
 	);
-
-	Tw,T1,T2 IS_A temperature;
 
 	Tw = (T1 + T2)/2;
 
 METHODS
-METHOD on_load;
-	RUN reset;
-	RUN values;
-END on_load;
+
+METHOD specify;
+	(* design parameters, geometry, materials of construction *)
+	FIX rhow,D2,cw,hw;
+	FIX D, eps;
+	FIX qdots;
+	FIX Tamb;
+
+	(* states *)
+	FIX T1, T2, p, h, mdot;
+
+	(* spatial derivs are all fixed -- because we would know what's next door *)
+	FIX dmdot_dz, dmdoth_dz, dekdot_dz, dp_dz, drhovel2_dz;
+
+	FIX dTw_dt;
+END specify;
 
 METHOD values;
-	(*  derivative variables *)
+	(* design parameters *)
+	D := 60 {mm};
+	D2 := 70 {mm};
+	eps := 0.05 {mm};
+	rhow := 7.8 {g/cm^3};
+	cw := 0.47 {J/g/K};
+	hw := 10 {W/m^2/K};
+	Tamb := 300 {K};
+
+	(* states *)
+	T1 := 600 {K};
+	T2 := 500 {K};
+	p := 10 {bar};
+	h := 2000 {kJ/kg};
+	mdot := 0.001 {kg/s};
+
+	(* spatial derivs *)
+	dp_dz := -500 {Pa/m};
+	dmdot_dz := 0 {kg/s/m};
+	drhovel2_dz := (0 {kg/m^3}) * (0 {m/s})^2 / (1 {m});
+	dekdot_dz := 0 {W/m};
+	dmdoth_dz := dmdot_dz * 0 {kJ/kg};
+
+	(* derivative variables *)
 	drho_dt := 0 {kg/m^3/s};
 	dmdot_dt := 0 {kg/s/s};
 	drhou_dt := 0 {kg/m^3*kJ/kg/s};
 	dTw_dt := 0 {K/s};
 
-	D := 25 {mm};
-	eps := 0.05 {mm};
-
-	dp_dz := -500 {Pa/m};
-	dmdot_dz := 0 {kg/s/m};
-
 	(* bounds *)
-	f.lower_bound := 0.0;
+	f.lower_bound := 0.008;
+	v.lower_bound := 0.00999 {m^3/kg};
+	v.upper_bound := 1/(0.0202 {kg/m^3});
+	u.lower_bound := 0 {kJ/kg};
+	u.upper_bound := 3663 {kJ/kg};
+
+	(* starting guesses *)
+	Re := 10000;
 END values;
 
-METHOD specify;
-	(* derivative variables *)
-	FIX drhou_dt;
-
-	(* design parameters, geometry, materials of construction *)
-	FIX rhow,Aw,cw;
-	FIX D, eps;
-	FIX qdots;
-
-	(* spatial derivs *)
-	FIX dmdot_dz, dmdoth_dz, dekdot_dz, dp_dz, drhovel2_dz;
-
-	(* states *)
-	FIX T1, T2, rho, u, mdot;
-END specify;
+METHOD on_load;
+	RUN reset;
+	RUN values;
+END on_load;
 
 END dsg;

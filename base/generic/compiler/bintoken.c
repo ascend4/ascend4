@@ -781,17 +781,16 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
     return;
   }
   if (srcname == NULL || buildcommand == NULL || unlinkcommand == NULL) {
-    FPRINTF(ASCERR,"%sBinaryTokensCreate called with no options set.\n",
-            StatioLabel(3));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"BinaryTokensCreate called with no options set.");
     return;
   }
 
   rellist =
     CollectTokenRelationsWithUniqueBINlessShares(root,g_bt_data.maxrels);
   if (rellist==NULL) {
-    FPRINTF(ASCERR,
-        "%sBinaryTokensCreate found 0 or too many unique relations\n",
-        StatioLabel(2));
+    ERROR_REPORTER_HERE(ASC_PROG_WARNING
+        ,"BinaryTokensCreate found 0 or too many unique relations."
+    );
     return;
   }
 
@@ -836,8 +835,8 @@ void BinTokensCreate(struct Instance *root, enum bintoken_kind method)
   case BT_SunJAVA:
   case BT_MsJAVA:
   default:
-    FPRINTF(ASCERR,"%sBinaryTokensCreate called with\n" /* no comma */
-            "  unavailable method %d",StatioLabel(3),(int)method);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"BinaryTokensCreate called with\n"
+            "  unavailable method '%d'",(int)method);
     break;
   }
   gl_destroy(rellist);

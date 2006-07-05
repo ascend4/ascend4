@@ -826,45 +826,26 @@ RelationEvaluateResidualPostfix(CONST struct relation *r)
     term = NewRelationTerm(r, t++, lhs);
     switch( RelationTermType(term) ) {
     case e_zero:
-      s++;
-      res_stack[s] = 0.0;
-      break;
+      s++;  res_stack[s] = 0.0;  break;
     case e_real:
-      s++;
-      res_stack[s] = TermReal(term);
-      break;
+      s++;  res_stack[s] = TermReal(term);  break;
     case e_int:
-      s++;
-      res_stack[s] = TermInteger(term);
-      break;
+      s++;  res_stack[s] = TermInteger(term);  break;
     case e_var:
-      s++;
-      res_stack[s] = TermVariable(r, term);
-      break;
+      s++;  res_stack[s] = TermVariable(r, term);  break;
     case e_plus:
-      res_stack[s-1] += res_stack[s];
-      s--;
-      break;
+      res_stack[s-1] += res_stack[s];  s--;  break;
     case e_minus:
-      res_stack[s-1] -= res_stack[s];
-      s--;
-      break;
+      res_stack[s-1] -= res_stack[s];  s--;  break;
     case e_times:
-      res_stack[s-1] *= res_stack[s];
-      s--;
-      break;
+      res_stack[s-1] *= res_stack[s];  s--;  break;
     case e_divide:
-      res_stack[s-1] /= res_stack[s];
-      s--;
-      break;
+      res_stack[s-1] /= res_stack[s];  s--;  break;
     case e_uminus:
-      res_stack[s] *= -1.0;
-      break;
+      res_stack[s] *= -1.0;  break;
     case e_power:
     case e_ipower:
-      res_stack[s-1] = pow(res_stack[s-1], res_stack[s]);
-      s--;
-      break;
+      res_stack[s-1] = pow(res_stack[s-1], res_stack[s]);  s--;  break;
     case e_func:
       funcptr = TermFunc(term);
       res_stack[s] = FuncEval(funcptr, res_stack[s]);

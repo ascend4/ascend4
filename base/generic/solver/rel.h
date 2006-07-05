@@ -150,7 +150,7 @@ struct ExtRelCache{
   double *inputs;
   double *outputs;
   double *jacobian;
-  unsigned newcalc_done     :1;     /**< bits needed to control */
+  unsigned evaluation_required     :1;     /**< bits needed to control */
   unsigned first_func_eval  :1;     /**< recalculation. until we can */
   unsigned first_deriv_eval :1;     /**< do proper block coding */
 };
@@ -696,14 +696,14 @@ extern int32 ExtRel_PreSolve(struct ExtRelCache *cache, int32 setup);
 
 	To deal with the first time we also want to do argument
 	checking, and then turn off the first_func_eval flag.
-	Turn on the newcalc_done flag. The rationale behind this is
+	Turn on the evaluation_required flag. The rationale behind this is
 	as follows:
 	
 	The solver at the moment does not treat an external relation
 	specially, i.e., as a block. It also calls for its functions
 	a relation at a time. However the external relations compute
 	all their outputs at once. So as not to do unnecessary
-	recalculations we use these flag bits. We set newcalc_done
+	recalculations we use these flag bits. We set evaluation_required
 	initially to true, so as to force *at least* one calculation
 	of the external relations. By similar reasoning first_func_eval (done)
 	is set to false.

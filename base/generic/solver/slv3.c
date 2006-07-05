@@ -3805,10 +3805,11 @@ static void slv3_iterate(slv_system_t server, SlvClientToken asys)
       sys->s.inconsistent = TRUE;
 
       ERROR_REPORTER_START_NOLINE(ASC_PROG_ERROR);
-      FPRINTF(ASCERR,"No solution exists within the bounds given for variable '");
-      print_var_name(ASCERR,sys,var);
-      FPRINTF(ASCERR,"' when inverting relation:\n");
+      FPRINTF(ASCERR,"Direct solution of relation '");
       print_rel_name(ASCERR,sys,rel);
+      FPRINTF(ASCERR,"' gives a\nvalue of '");
+      print_var_name(ASCERR,sys,var);
+      FPRINTF(ASCERR,"' outside its bounds.");
 	  error_reporter_end_flush();
 
       iteration_ends(sys);

@@ -340,31 +340,28 @@ class DiagnoseWindow:
 			,"Upper bound": self.var.getUpperBound()
 		}
 		for k,v in _rows.iteritems():
-			if v!=0:
-				l = math.log10(abs(v))
-			else:
-				l = 0;
-			if l > 8 or l < -8:
-				text += "\n  %-30s%15e" % (k,v)
-			else:
-				text += "\n  %-30s%15f" % (k,v)
+			text += "\n  %s\t%s" % (k,value_human(v))
 		
-		text += "\n\nIncidence with %d relations:" % self.var.getNumIncidentRelations()
+		text += "\n\nIncident with %d relations:" % self.var.getNumIncidentRelations()
 		for r in self.var.getIncidentRelations():
 			text += "\n  %s" % r.getName()
 
-		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog = InfoDialog(self.browser,self.window,text,title,tabs=(150,300))
 		_dialog.run()
 
 	def on_relinfobutton_clicked(self,*args):
 		title = "Relation '%s'" % self.rel
 		text = "%s\n%s\n" % (title,"(from the solver's view)")
-		text += "\n  %-30s%15f" % ("Residual", self.rel.getResidual())
+		text += "\n  %s\t%15f" % ("Residual", self.rel.getResidual())
 
 		text += "\n\nRelation expression:\n"
 		text += self.rel.getRelationAsString()
 
-		_dialog = InfoDialog(self.browser,self.window,text,title)
+		text += "\n\nIncident with %d variables:" % self.rel.getNumIncidentVariables()
+		for v in self.rel.getIncidentVariables():
+			text += "\n  %s\t= %s" % ( v.getName(),value_human(v.getValue()) )
+
+		_dialog = InfoDialog(self.browser,self.window,text,title,tabs=(150,300))
 		_dialog.run()
 		
 
@@ -434,9 +431,15 @@ class DiagnoseWindow:
 		self.show_cursor(event.x, event.y)
 
 
-# The following is from 
+def value_human(v):
+	if v==0 or abs( math.log10(abs(v)) )<8:
+		return "%f" % v	
+	return "%e" % v
+
+#---------------------------------------
+# Procedures to 'fold' a list of items from a hierarchy
 # http://www.experts-exchange.com/Programming/Programming_Languages/Python/Q_21719649.html
-# it's still buggy.
+# It's still buggy, I think
 
 def fold(data):
     """ fold sorted numeric sequence data into ranged representation:
@@ -482,3 +485,4 @@ def get(indexed, item):
         item, idx = item[:-1].split('[')
         indexed.setdefault(item, []).append(int(idx))
     return item
+
