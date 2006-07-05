@@ -4,6 +4,7 @@ using namespace std;
 
 #include "relation.h"
 #include "simulation.h"
+#include "variable.h"
 
 extern "C"{
 #include <utilities/ascConfig.h>
@@ -42,4 +43,20 @@ Relation::getName() const{
 const double
 Relation::getResidual() const{
 	return rel_residual(rel);
+}
+
+const std::vector<Variable> 
+Relation::getIncidentVariables() const{
+	struct var_variable **incid = rel_incidence_list_to_modify(rel);
+	int n = rel_n_incidences(rel);
+	vector<Variable> v;
+	for(int i=0; i<n; ++i){
+		v.push_back(Variable(sim,incid[i]));
+	}
+	return v;
+}
+
+const int
+Relation::getNumIncidentVariables() const{
+	return rel_n_incidences(rel);
 }

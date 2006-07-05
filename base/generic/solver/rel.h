@@ -328,9 +328,10 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
 
 
 #ifdef NDEBUG
-#define rel_n_incidences(rel) ((rel)->n_incidences)
+# define rel_n_incidences(rel) ((rel)->n_incidences)
 #else
-#define rel_n_incidences(rel) rel_n_incidencesF(rel)
+ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
+# define rel_n_incidences(rel) rel_n_incidencesF(rel)
 #endif
 /**<
  *  Returns the length of the incidence_list for a relation.
@@ -340,18 +341,12 @@ extern void rel_set_nominal(struct rel_relation *rel, real64 nominal);
  *  @return Returns the length as an int32.
  *  @see rel_n_incidencesF()
  */
-ASC_DLLSPEC(int32) rel_n_incidencesF(struct rel_relation *rel);
-/**<
- *  Implementation function for rel_n_incidences().  Do not call
- *  this function directly - use rel_n_incidences() instead.
- */
-
 
 #ifdef NDEBUG
-#define rel_set_incidences(rel,n,ilist) \
+# define rel_set_incidences(rel,n,ilist) \
   (rel)->n_incidences=(n); (rel)->incidence = (ilist)
 #else
-#define rel_set_incidences(rel,n,ilist) rel_set_incidencesF((rel),(n),(ilist))
+# define rel_set_incidences(rel,n,ilist) rel_set_incidencesF((rel),(n),(ilist))
 #endif
 /**<
  *  Sets the length and incidence_list for a relation.
@@ -374,7 +369,7 @@ extern void rel_set_incidencesF(struct rel_relation *rel,
  */
 
 
-extern struct var_variable **
+ASC_DLLSPEC(struct var_variable **)
 rel_incidence_list_to_modify(struct rel_relation *rel);
 /**<
 	Returns a non-const pointer to an array rel_n_incidences(rel)

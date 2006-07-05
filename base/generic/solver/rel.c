@@ -434,6 +434,10 @@ int32 rel_apply_filter( const struct rel_relation *rel, rel_filter_t *filter){
          );
 }
 
+/**
+	Implementation function for rel_n_incidences().  Do not call
+	this function directly - use rel_n_incidences() instead.
+*/
 int32 rel_n_incidencesF(struct rel_relation *rel){
   if (rel!=NULL) return rel->n_incidences;
   FPRINTF(stderr,"rel_n_incidences miscalled with NULL\n");

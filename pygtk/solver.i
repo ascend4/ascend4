@@ -7,6 +7,10 @@
 #include "integratorreporter.h"
 %}
 
+%template(VariableVector) std::vector<Variable>;
+%template(RelationVector) std::vector<Relation>;
+
+
 class Solver{
 public:
 	Solver(const std::string &name);
@@ -162,6 +166,8 @@ public:
 	const double getNominal() const;
 	const double getLowerBound() const;
 	const double getUpperBound() const;
+	const std::vector<Relation> getIncidentRelations() const;
+	const int getNumIncidentRelations() const;
 };
 
 %extend Variable {
@@ -176,6 +182,8 @@ public:
 	explicit Relation(const Relation &old);
 	const std::string getName();
 	const double &getResidual();
+	const std::vector<Variable> getIncidentVariables() const;
+	const int getNumIncidentVariables() const;
 };
 
 %extend Relation {

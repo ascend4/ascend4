@@ -2,6 +2,7 @@
 #define ASCXX_RELATION_H
 
 #include <string>
+#include <vector>
 
 #include "simulation.h"
 
@@ -25,7 +26,8 @@ public:
 
 	const std::string getName() const;
 	const double getResidual() const;
-
+	const std::vector<Variable> getIncidentVariables() const;
+	const int getNumIncidentVariables() const;
 };
 
 #endif /* ASCXX_RELATION_H */
