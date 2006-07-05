@@ -184,6 +184,8 @@ public:
 	const double &getResidual();
 	const std::vector<Variable> getIncidentVariables() const;
 	const int getNumIncidentVariables() const;
+	Instanc getInstance() const;
+	std::string getRelationAsString() const;
 };
 
 %extend Relation {

@@ -38,11 +38,12 @@ class DiagnoseWindow:
 		self.blockentry = _xml.get_widget("blockentry")
 		self.zoomentry = _xml.get_widget("zoomentry")
 
-		self.varname = _xml.get_widget("varname");
-		self.varval = _xml.get_widget("varval");
-		self.varinfobutton = _xml.get_widget("varinfobutton");
-		self.relname = _xml.get_widget("relname");
-		self.relresid = _xml.get_widget("relresid");
+		self.var = None; self.rel = None
+		self.varname = _xml.get_widget("varname")
+		self.varval = _xml.get_widget("varval")
+		self.varinfobutton = _xml.get_widget("varinfobutton")
+		self.relname = _xml.get_widget("relname")
+		self.relresid = _xml.get_widget("relresid")
 		self.relinfobutton = _xml.get_widget("relinfobutton")
 
 		self.varview = _xml.get_widget("varview")
@@ -88,6 +89,15 @@ class DiagnoseWindow:
 	def fill_values(self, block):
 		
 		try:
+			if self.im.getNumBlocks()==0:
+				print "NO BLOCKS!"
+				self.image.set_from_stock(gtk.STOCK_DIALOG_ERROR
+					,gtk.ICON_SIZE_DIALOG
+				)
+				self.browser.reporter.reportError(
+					"Can't 'Diagnose blocks' until solver has been used."
+				)
+				return;
 			rl,cl,rh,ch = self.im.getBlockLocation(block)
 		except IndexError:
 			if block >= self.im.getNumBlocks():
@@ -322,14 +332,26 @@ class DiagnoseWindow:
 	def on_varinfobutton_clicked(self,*args):
 		title = "Variable '%s'" % self.var
 		text = "%s\n%s\n" % (title,"(from the solver's view)")
-		text += "\n%-30s%15f" % ("Value", self.var.getValue())
-		text += "\n%-30s%15f" % ("Nominal", self.var.getNominal())
-		text += "\n%-30s%15f" % ("Lower bound", self.var.getLowerBound())
-		text += "\n%-30s%15f" % ("Upper bound", self.var.getUpperBound())
+
+		_rows = {
+			"Value": self.var.getValue()
+			,"Nominal": self.var.getNominal()
+			,"Lower bound": self.var.getLowerBound()
+			,"Upper bound": self.var.getUpperBound()
+		}
+		for k,v in _rows.iteritems():
+			if v!=0:
+				l = math.log10(abs(v))
+			else:
+				l = 0;
+			if l > 8 or l < -8:
+				text += "\n  %-30s%15e" % (k,v)
+			else:
+				text += "\n  %-30s%15f" % (k,v)
 		
 		text += "\n\nIncidence with %d relations:" % self.var.getNumIncidentRelations()
 		for r in self.var.getIncidentRelations():
-			text += "\n%s" % r.getName()
+			text += "\n  %s" % r.getName()
 
 		_dialog = InfoDialog(self.browser,self.window,text,title)
 		_dialog.run()
@@ -337,7 +359,10 @@ class DiagnoseWindow:
 	def on_relinfobutton_clicked(self,*args):
 		title = "Relation '%s'" % self.rel
 		text = "%s\n%s\n" % (title,"(from the solver's view)")
-		text += "\n%-30s%15f" % ("Residual", self.rel.getResidual())
+		text += "\n  %-30s%15f" % ("Residual", self.rel.getResidual())
+
+		text += "\n\nRelation expression:\n"
+		text += self.rel.getRelationAsString()
 
 		_dialog = InfoDialog(self.browser,self.window,text,title)
 		_dialog.run()
