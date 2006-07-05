@@ -93,8 +93,6 @@ public:
 
 %template(ModuleVector) std::vector<Module>;
 %template(TypeVector) std::vector<Type>;
-%template(VariableVector) std::vector<Variable>;
-%template(RelationVector) std::vector<Relation>;
 %template(MethodVector) std::vector<Method>;
 %template(InstancVector) std::vector<Instanc>;
 %template(ExtMethodVector) std::vector<ExtMethod>;

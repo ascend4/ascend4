@@ -7,6 +7,7 @@ import math
 import re
 
 import config
+from infodialog import *
 
 ZOOM_RE = re.compile(r"([0-9]+)\s*%?")
 MAX_ZOOM_SIZE = 2000
@@ -39,8 +40,10 @@ class DiagnoseWindow:
 
 		self.varname = _xml.get_widget("varname");
 		self.varval = _xml.get_widget("varval");
+		self.varinfobutton = _xml.get_widget("varinfobutton");
 		self.relname = _xml.get_widget("relname");
 		self.relresid = _xml.get_widget("relresid");
+		self.relinfobutton = _xml.get_widget("relinfobutton")
 
 		self.varview = _xml.get_widget("varview")
 		self.varbuf = gtk.TextBuffer()
@@ -177,12 +180,28 @@ class DiagnoseWindow:
 		self.fill_var_names()
 		self.fill_rel_names()
 	
-		self.varname.set_text("");
-		self.varval.set_text("");
-		self.relname.set_text("");
-		self.relresid.set_text("");
+		self.fill_selection_info()
 
 		print "DONE FILL VALUES"
+
+	def fill_selection_info(self):
+		if self.var:
+			self.varname.set_text(self.var.getName())
+			self.varval.set_text(str(self.var.getValue()))
+			self.varinfobutton.set_sensitive(True)
+		else:
+			self.varname.set_text("")
+			self.varval.set_text("")
+			self.varinfobutton.set_sensitive(False)
+
+		if self.rel:
+			self.relname.set_text(self.rel.getName())
+			self.relresid.set_text(str(self.rel.getResidual()))
+			self.relinfobutton.set_sensitive(True)
+		else:
+			self.relname.set_text("")
+			self.relresid.set_text("")
+			self.relinfobutton.set_sensitive(False)
 
 	def do_zoom(self):
 		if self.zoom == -1:
@@ -275,14 +294,16 @@ class DiagnoseWindow:
 		if c > self.ch or r > self.rh:
 			#print "OUT OF RANGE"
 			return
-		var = self.im.getVariable(c)
-		self.varname.set_text(var.getName())
-		self.varval.set_text(str(var.getValue()))
-		rel = self.im.getRelation(r)
-		self.relname.set_text(rel.getName())
-		self.relresid.set_text(str(rel.getResidual()))
+		self.var = self.im.getVariable(c)
+		self.rel = self.im.getRelation(r)
+		self.fill_selection_info()
 
 	# GUI EVENT HOOKS-----------------------------------------------------------
+
+	def on_diagnosewin_close(self,*args):
+		self.window.response(gtk.RESPONSE_CLOSE);
+
+	# incidence data view
 
 	def on_varcollapsed_toggled(self,*args):
 		vc = self.varcollapsed.get_active()
@@ -295,6 +316,34 @@ class DiagnoseWindow:
 		self.browser.prefs.setBoolPref("Diagnose","relcollapsed",rc)	
 		if self.im:
 			self.fill_rel_names()
+
+	# detailed information about vars and rels (solver-side information!)
+
+	def on_varinfobutton_clicked(self,*args):
+		title = "Variable '%s'" % self.var
+		text = "%s\n%s\n" % (title,"(from the solver's view)")
+		text += "\n%-30s%15f" % ("Value", self.var.getValue())
+		text += "\n%-30s%15f" % ("Nominal", self.var.getNominal())
+		text += "\n%-30s%15f" % ("Lower bound", self.var.getLowerBound())
+		text += "\n%-30s%15f" % ("Upper bound", self.var.getUpperBound())
+		
+		text += "\n\nIncidence with %d relations:" % self.var.getNumIncidentRelations()
+		for r in self.var.getIncidentRelations():
+			text += "\n%s" % r.getName()
+
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+
+	def on_relinfobutton_clicked(self,*args):
+		title = "Relation '%s'" % self.rel
+		text = "%s\n%s\n" % (title,"(from the solver's view)")
+		text += "\n%-30s%15f" % ("Residual", self.rel.getResidual())
+
+		_dialog = InfoDialog(self.browser,self.window,text,title)
+		_dialog.run()
+		
+
+	# block navigation
 
 	def on_nextbutton_clicked(self,*args):
 		self.set_block(self.block + 1)
@@ -327,6 +376,8 @@ class DiagnoseWindow:
 		if keyname=="Return":
 			self.set_block( int(self.blockentry.get_text()) )
 
+	# zoom in and out
+
 	def on_zoominbutton_clicked(self,*args):
 		z = int( math.log(self.zoom)/math.log(2) )
 		z = pow(2,z + 1);
@@ -348,6 +399,8 @@ class DiagnoseWindow:
 			for mm in m:
 				print m
 			self.set_zoom( int(self.zoomentry.get_text()) )
+
+	# clicking in incidence matrix to get updated information at RHS
 
 	def on_imageevent_motion_notify_event(self,widget,event):
 		self.show_cursor(event.x, event.y)
