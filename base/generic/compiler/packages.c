@@ -76,7 +76,7 @@
 #include "module.h"
 #include "packages.h"
 
-#if _MSC_VAR
+#ifdef _MSC_VER
 # ifndef _stat
 #  error "Where is STAT?"
 # endif
@@ -212,7 +212,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	struct FilePath **sp;
 	extern char path_var[PATH_MAX];
 	char *path;
-	struct _stat buf;
+	ospath_stat_t buf;
 	FILE *f;
 
 	fp1 = ospath_new_noclean(name);

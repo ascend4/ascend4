@@ -30,11 +30,11 @@ if solver_env.get('WITH_IDA'):
 		CPPPATH=([solver_env.get('IDA_CPPPATH')])
 	)
 	if solver_env.get('IDA_CPPPATH_EXTRA'):
-		sundials_env.Append(
+		sundials_env.AppendUnique(
 			CPPPATH=solver_env.get('IDA_CPPPATH_EXTRA')
 		)
 
-	libascend_env.Append(
+	libascend_env.AppendUnique(
 		LIBPATH=[solver_env.get('IDA_LIBPPATH')]
 		, LIBS=[solver_env.get('IDA_LIB')]
 	)

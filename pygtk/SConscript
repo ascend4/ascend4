@@ -36,7 +36,7 @@ if env.get('HAVE_GCC'):
 
 objs = []
 
-python_env.Append(CPPPATH=['#base/generic']+env['PYTHON_CPPPATH'])
+python_env.AppendUnique(CPPPATH=['#base/generic']+env['PYTHON_CPPPATH'])
 
 for s in srcs:
 	objs += python_env.SharedObject(s)	

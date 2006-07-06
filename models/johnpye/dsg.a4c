@@ -79,6 +79,10 @@ MODEL dsg;
 		f : OUTPUT
 	);
 
+	twophmult: dsg_phi2_martinelli_nelson(
+		p,x : INPUT;
+		rho2 : OUTPUT
+
 	cavity_losses: dsg_ext_heat_loss(
 		T2,Tamb,D2,hw : INPUT;
 		qdotl : OUTPUT
