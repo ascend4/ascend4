@@ -83,21 +83,23 @@ struct int_option {
   int high;
 };
 
-/* keep the names here < 60 chars. Data for Options command */
-#define OPTIONCOUNT 4
-static
-struct int_option g_option_list[OPTIONCOUNT] = {
-  {&g_compiler_warnings,"-compilerWarnings",0,INT_MAX},
-  {&g_parser_warnings,"-parserWarnings",0,5},
-  {&g_simplify_relations,"-simplifyRelations",0,1},
-  {&g_use_copyanon,"-useCopyAnon",0,1}
-};
-#define GOL g_option_list
-
 STDHLF(Asc_LibrOptionsCmd,(Asc_LibrOptionsCmdHL,HLFSTOP));
 int Asc_LibrOptionsCmd(ClientData cdata, Tcl_Interp *interp,
-                           int argc, CONST84 char **argv)
-{
+		int argc, CONST84 char **argv
+){
+
+/* keep the names here < 60 chars. Data for Options command */
+#define OPTIONCOUNT 4
+  struct int_option option_list[OPTIONCOUNT] = {
+    {&g_compiler_warnings,"-compilerWarnings",0,INT_MAX},
+    {&g_parser_warnings,"-parserWarnings",0,5},
+    {&g_simplify_relations,"-simplifyRelations",0,1},
+    {&g_use_copyanon,"-useCopyAnon",0,1}
+  };
+#define GOL option_list
+
+
+
   int i, opt, status;
   char buf[80];
   ASCUSE;  /* see if first arg is -help */
