@@ -409,21 +409,40 @@ if os.environ.get('OSTYPE')=='msys':
 		, toolpath=['scons']
 	)
 	env['IS_MINGW']=True
+
+elif platform.system()=="Windows":
+	#print "ENVIRONMENT =",os.environ
+	print "ENV PATH =",os.environ['PATH']
+	
+	env = Environment(
+		ENV={
+			'PATH':os.environ['PATH']
+			,'INCLUDE':os.environ['INCLUDE']
+			,'LIB':os.environ['LIB']
+			,'MSVS_IGNORE_IDE_PATHS':1
+		}
+		, tools = ['default','lex','yacc','fortran','swig','disttar','nsis']
+		, toolpath = ['scons']
+	)
+	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
+	#env.Append(CCFLAGS=['/Za'])
+	print "INCLUDE = ",env.get('INCLUDE')
+	print "LIB = ",env.get('LIB')
+	print "\nPATH =",env['ENV'].get('PATH')
+	
 else:
 	env = Environment(
 		ENV=os.environ
-		,tools=['default','lex','yacc','fortran','swig','disttar','nsis']
+		, tools=['default','lex','yacc','fortran','swig','disttar','nsis']
 		, toolpath=['scons']
 	)
 
-if platform.system()=='Windows' and env.has_key('MSVS'):
-	print "INCLUDE =",env['ENV']['INCLUDE']
-	print "LIB =",env['ENV']['LIB']
-	print "PATH =",env['ENV']['PATH']
-	env.Append(CPPPATH=env['ENV']['INCLUDE'])
-	env.Append(LIBPATH=env['ENV']['LIB'])
-	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
-	env.Append(CCFLAGS=['/Za'])
+#if platform.system()=='Windows' and env.has_key('MSVS'):
+	#print "INCLUDE =",env['ENV']['INCLUDE']
+	#print "LIB =",env['ENV']['LIB']
+	#print "PATH =",env['ENV']['PATH']
+	#env.Append(CPPPATH=env['ENV']['INCLUDE'].split(";"))
+	#env.Append(LIBPATH=env['ENV']['LIB'].split(";"))
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -910,6 +929,11 @@ conf = Configure(env
 #	, config_h = "config.h"
 )
 
+# stdio -- just to check that compiler is behaving
+
+if not conf.CheckHeader('stdio.h'):
+	print "Did not find 'stdio.h'! Check your compiler configuration."
+	Exit(1)
 
 # Math library
 
@@ -921,7 +945,7 @@ if need_libm:
 
 # Where is 'isnan'?
 
-if not conf.CheckFunc('isnan'):
+if not conf.CheckFunc('isnan') and not conf.CheckFunc('_isnan'):
 	print "Didn't find isnan"
 #	Exit(1)
 
@@ -1064,11 +1088,24 @@ if need_fortran:
 # TODO: detect if dynamic libraries are possible or not
 
 if platform.system()=="Windows" and env.has_key('MSVS'):
-	if not conf.CheckHeader('windows.h') and env['PACKAGE_LINKING']=='DYNAMIC_PACKAGES':
+	_p = "C:\\Program Files\\Microsoft Platform SDK for Windows Server 2003 R2\\Include"
+	if not os.path.exists(os.path.join(_p,"Windows.h")):
+		print "WINDOWS.H NOT FOUND AT '%s'"%_p
+	else:
+		print "\n\nPATH '%s' OK\n\n" % _p
+		conf.env.Append(CPPPATH=[_p])
+
+	_found_windows_h = conf.CheckHeader('Windows.h')
+
+	if not _found_windows_h:
+		print "WINDOWS NOT FOUND IN '%s'" % conf.env.get('CPPPATH')
+		Exit(1)
+		
+	if not _found_windows_h and env['PACKAGE_LINKING']=='DYNAMIC_PACKAGES':
 		print "Reverting to STATIC_PACKAGES since windows.h is not available. Probably you "\
 			+"need to install the Microsoft Windows Server 2003 Platform SDK, or similar."
 		env['PACKAGE_LINKING']='STATIC_PACKAGES'
-		
+	
 	if with_python and not conf.CheckHeader(['basetsd.h','BaseTsd.h']):
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."
