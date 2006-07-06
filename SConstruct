@@ -24,7 +24,11 @@ if platform.system()=="Windows":
 		default_tcl_libpath="$TCL\\lib"
 	default_rel_distdir = '.'
 	default_absolute_paths = False
-	default_ida_prefix = "c:/mingw"
+	
+	default_ida_prefix = "c:\\MinGW"
+	if not os.path.exists(default_ida_prefix):
+		default_ida_prefix = None
+		
 	need_libm = False
 	python_exe = "c:\\Python24\\python.exe"
 else:
