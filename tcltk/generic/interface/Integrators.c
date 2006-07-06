@@ -25,6 +25,8 @@
 	Last in CVS: $Revision: 1.32 $ $Date: 2003/08/23 18:43:06 $ $Author: ballan $
 */
 
+#define ASC_BUILDING_INTERFACE
+
 #include <tcl.h>
 #include <time.h>
 
@@ -900,7 +902,7 @@ int Asc_IntegReporterInit(IntegratorSystem *blsys){
 	CONSOLE_DEBUG("WRITING HEADERS");
 
 	/* write headers to yout, obsout and initial points */
-	
+
 	Asc_IntegPrintYHeader(integ_y_out,blsys);
 	status &= Asc_IntegPrintYLine(integ_y_out,blsys);
 	Asc_IntegPrintObsHeader(integ_obs_out,blsys);

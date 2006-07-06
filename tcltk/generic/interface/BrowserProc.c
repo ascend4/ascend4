@@ -27,6 +27,8 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#define ASC_BUILDING_INTERFACE
+
 #include <stdarg.h>
 #include <time.h>
 #include <tcl.h>

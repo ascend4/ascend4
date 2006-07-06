@@ -32,12 +32,6 @@
 #ifndef ASCTK_DRIVER_H
 #define ASCTK_DRIVER_H
 
-extern int g_compiler_timing;
-/**<
- *  TRUE if compiler timing is to be printed.
- *  default is false, set to TRUE by passing -t on the command line
- */
-
 extern Tcl_Interp *g_interp;
 /**<
  *  Interpreter for this application.  We need tp make it global

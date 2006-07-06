@@ -60,8 +60,12 @@ python_env.Clean('ascpy_wrap$SWIGCXXFILESUFFIX',swigobj)
 python_env.Clean('ascpy.py','ascpy$SWIGCXXFILESUFFIX')
 python_env.Clean('ascpy_wrap.h','ascpy$SWIGCXXFILESUFFIX')
 
+_libs = ['ascend']+env['PYTHON_LIB']
+if not env.get('MSVS'):
+	_libs.append('stdc++')
+
 swiglib = python_env.SharedLibrary("ascpy",objs + swigobj
-	, LIBS = ['ascend'] + env['PYTHON_LIB'] + ['stdc++']
+	, LIBS = _libs
 	, LIBPATH = ['#'] + env['PYTHON_LIBPATH']
 	, SHLIBPREFIX = '_'
 )

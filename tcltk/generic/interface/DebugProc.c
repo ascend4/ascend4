@@ -27,10 +27,13 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#define ASC_BUILDING_INTERFACE
+
 #ifndef NO_SIGNAL_TRAPS
-#include <signal.h>
-#include <setjmp.h>
+# include <signal.h>
+# include <setjmp.h>
 #endif /* NO_SIGNAL_TRAPS */
+
 #include <tcl.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>

@@ -44,9 +44,9 @@
 #ifndef ASC_INSTANTIATE_H
 #define ASC_INSTANTIATE_H
 
-/* 
+/*
  *  Relation instantiation flags.
- *  If you add/remove/change these, update the comments in 
+ *  If you add/remove/change these, update the comments in
  *  SetInstantiationRelnFlags().
  */
 #define NORELS 	 0x0
@@ -58,15 +58,6 @@
 
 ASC_DLLSPEC(long int ) g_compiler_counter;
 /**<  Unique id of calls to instantiator. */
-
-
-/* exported to UI via compiler.h.
- * extern int g_use_copyanon;
- *
- * If TRUE, anonymous type detection is used to enable relation
- * sharing. This variable is defined in instantiate.c and
- * headered for export in compiler.h.
- */
 
 extern void SetInstantiationRelnFlags(unsigned int flag);
 /**<
@@ -114,7 +105,7 @@ extern unsigned int GetInstantiationRelnFlags(void);
  */
 #define ReInstantiate(a) NewReInstantiate(a)
 
-extern struct Instance *NewInstantiate(symchar *type, symchar *name, 
+extern struct Instance *NewInstantiate(symchar *type, symchar *name,
                                        int intset, symchar *defmethod);
 /**<
  *  This routine will return an instance of type SIM_INST. It will make
@@ -226,7 +217,7 @@ extern void ConfigureInstFromArgs(struct Instance *inst,
  *  children of arginst into inst.
  */
 
-extern void ReConfigureInstFromArgs(struct Instance *inst, 
+extern void ReConfigureInstFromArgs(struct Instance *inst,
                                              CONST struct Instance *arginst);
 /**<
  *  inst and arginst must be or are about to be of the same MODEL type.

@@ -83,14 +83,6 @@ extern char *asc_make_dimensions(CONST dim_type *dim);
  * @deprecated No longer supported.
  */
 
-extern int g_check_dimensions_noisy;
-/**<
- *  If 0, warnings are suppressed. If 1, warnings are given
- *  from asc_check_dimensions().
- *
- * @deprecated No longer supported.
- */
-
 extern int asc_check_dimensions(CONST struct relation *rel, dim_type *dimens);
 /**<
  *  <!--  valid = asc_check_dimensions(rel,dimens);                    -->

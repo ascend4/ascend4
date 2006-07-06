@@ -32,6 +32,8 @@
  *                 Browser Logical Relation Output Routines
  */
 
+#define ASC_BUILDING_INTERFACE
+
 #include <tcl.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascMalloc.h>

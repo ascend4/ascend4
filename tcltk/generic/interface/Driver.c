@@ -17,14 +17,12 @@
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
 *//*
-	Driver.c
 	by Kirk Abbott and Ben Allan
 	Created: 1/94
-	Version: $Revision: 1.48 $
-	Version control file: $RCSfile: Driver.c,v $
-	Date last modified: $Date: 2003/08/23 18:43:06 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.48 $ $Date: 2003/08/23 18:43:06 $ $Author: ballan $
 */
+
+#define ASC_BUILDING_INTERFACE
 
 #include <stdarg.h>
 #include <ctype.h>
@@ -63,6 +61,7 @@
 #include <compiler/compiler.h>      /* for symchar for units.h */
 #include <compiler/units.h>
 #include <compiler/redirectFile.h>  /* for Asc_RedirectCompilerDefault() */
+#include <compiler/simlist.h>
 #include <solver/slv_types.h>
 #include <solver/var.h>
 #include <solver/rel.h>
@@ -87,14 +86,6 @@ static CONST char DriverID[] = "$Id: Driver.c,v 1.48 2003/08/23 18:43:06 ballan 
 /*
  *  EXPORTED VARIABLES
  */
-
-/**
-	TRUE if compiler timing is to be printed.
-	default is false, set to TRUE by passing -t on the command line
-
-	jp: moved to compiler/simlist.c 
-*/
-/* int g_compiler_timing = 0; */
 
 /**
 	Interpreter for this application.  We need to make it global
@@ -128,13 +119,13 @@ static void InitDebugMalloc(void);
 
 
 /*
-	LOCALLY GLOBAL VARIABLES 
+	LOCALLY GLOBAL VARIABLES
 	think global, act local :-)
 */
 
 /**
 	TRUE for compiler optimizations default is TRUE, set to FALSE by passing
-	+s on the command line 
+	+s on the command line
 */
 static int g_interface_simplify_relations = TRUE;
 
@@ -156,7 +147,7 @@ static int tty;
 /*
 	initScriptTclAdjust
 	initScriptTkAdjust
-	
+
 	These two variables hold Tcl scripts that will set the TCL_LIBRARY
 	and TK_LIBRARY environment variables if they are not already
 	set in the user's environment.
@@ -220,13 +211,13 @@ static char build_name[]=TIMESTAMP;
 /**
 	A common entry point for Windows and Unix.  The corresponding
 	WinMain() and main() functions just call this function.
-	
+
 	This function creates a Tcl interpreter, initializes Tcl and Tk,
 	initializes the Ascend data structures, sets up the user's
 	environment, sources ASCEND's startup script, and calls Tk_MainLoop
 	so the user can interact with ASCEND.  Cleans up and exits the
 	program when Tk_MainLoop returns.
-	
+
 	This function is based on the functions Tk_Main and Tcl_AppInit
 	from the Tk8.0 distribution.  See the files tkMain.c and tkAppInit.c
 	in the Tk sources.
@@ -516,6 +507,8 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	char envcmd[MAX_ENV_VAR_LENGTH];
 	char s1[PATH_MAX];
 	int err;
+	int guessedtk=0;
+	FILE *f;
 
 	Tcl_DString buffer;
 
@@ -538,8 +531,6 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	bitmapsdir = GETENV(ASC_ENV_BITMAPS);
 	librarydir = GETENV(ASC_ENV_LIBRARY);
 
-	int guessedtk=0;
-
 	/* Create an ASCENDDIST value if it's missing */
 
 	if(distdir == NULL){
@@ -550,14 +541,14 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		// read the executable's name/relative path.
         fp = ospath_new(progname);
 
-        ospath_strcpy(fp,s1,PATH_MAX);
+        ospath_strncpy(fp,s1,PATH_MAX);
         CONSOLE_DEBUG("PROGNAME = %s",s1);
 
 		// get the directory name from the exe path
         fp1 = ospath_getdir(fp);
         ospath_free(fp);
 
-        ospath_strcpy(fp1,s1,PATH_MAX);
+        ospath_strncpy(fp1,s1,PATH_MAX);
         CONSOLE_DEBUG("DIR = %s",s1);
 
 		// append the contents of ASC_DISTDIR_REL_BIN to this path
@@ -565,7 +556,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		distfp = ospath_concat(fp1,fp);
 		ospath_cleanup(distfp);
 
-        ospath_strcpy(fp1,s1,PATH_MAX);
+        ospath_strncpy(fp1,s1,PATH_MAX);
         CONSOLE_DEBUG("DIST = %s",s1);
 
 # else
@@ -585,7 +576,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 		tkfp = ospath_new_expand_env(ASC_ENV_TK_DEFAULT, &GETENV);
 		tkdir = ospath_str(tkfp);
 
-		ospath_strcpy(tkfp,envcmd,MAX_ENV_VAR_LENGTH);
+		ospath_strncpy(tkfp,envcmd,MAX_ENV_VAR_LENGTH);
 		CONSOLE_DEBUG("TK = %s",envcmd);
 
 		OSPATH_PUTENV(ASC_ENV_TK,tkfp);
@@ -623,7 +614,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	fp1 = ospath_new("AscendRC");
 	fp = ospath_concat(tkfp,fp1);
 	ospath_free(fp1);
-	FILE *f = ospath_fopen(fp,"r");
+	f = ospath_fopen(fp,"r");
 	if(f==NULL){
 		if(guessedtk){
 			Asc_Panic(2, "AscCheckEnvironVars",
@@ -644,7 +635,7 @@ static int AscCheckEnvironVars(Tcl_Interp *interp,const char *progname){
 	}
 	fclose(f);
 	/* reuse 'envcmd' to get the string file location for AscendRC */
-	ospath_strcpy(fp,envcmd,MAX_ENV_VAR_LENGTH);
+	ospath_strncpy(fp,envcmd,MAX_ENV_VAR_LENGTH);
 	ospath_free(fp);
 
 	/* export the value to Tcl/Tk */
@@ -713,10 +704,10 @@ static int AscSetStartupFile(Tcl_Interp *interp)
 /**
 	Process the options given on the command line `argv' where `argc' is
 	the length of argv.
-	
+
 	Strip out ASCEND specific flags and then pass the rest to Tcl so it
 	can set what it needs.
-	
+
 	This function may call exit() if the user requests help.
  */
 static int AscProcessCommandLine(Tcl_Interp *interp, int argc, CONST char **argv)
@@ -881,10 +872,10 @@ int Asc_LoadWin(ClientData cdata, Tcl_Interp *interp,
 	standard input becomes readable.  It grabs the next line of
 	input characters, adds them to a command being assembled, and
 	executes the command if it's complete.
-	
+
 	Results:
 		None.
-	
+
 	Side effects:
 	Could be almost arbitrary, depending on the command that's
 	typed.
@@ -969,14 +960,14 @@ StdinProc(ClientData clientData, int mask)
 /**
 	Issue a prompt on standard output, or invoke a script
 	to issue the prompt.
-	
+
 	Results:
 		None.
-	
+
 	Side effects:
 	A prompt gets output, and a Tcl script may be evaluated
 	in interp.
-	
+
 	Parameters:
 	 interp    Interpreter to use for prompting.
 	 partial   Non-zero means there already exists a partial
