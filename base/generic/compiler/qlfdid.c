@@ -60,10 +60,9 @@ static CONST char QlfdidID[] = "$Id: Qlfdid.c,v 1.22 2003/08/23 18:43:07 ballan 
 
 
 /* used for searching */
-struct Instance *g_search_inst = NULL;
-struct Instance *g_relative_inst = NULL;
 
-
+ASC_DLLSPEC(struct Instance *) g_search_inst = NULL;
+ASC_DLLSPEC(struct Instance *) g_relative_inst = NULL;
 
 char *Asc_MakeInitString(int len)
 {

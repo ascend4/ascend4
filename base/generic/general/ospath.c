@@ -1113,7 +1113,6 @@ FILE *ospath_fopen(struct FilePath *fp, const char *mode){
 	return f;
 }
 
-#ifndef _MSC_VER
 int ospath_stat(struct FilePath *fp,ospath_stat_t *buf){
 	char s[PATH_MAX];
 
@@ -1122,9 +1121,8 @@ int ospath_stat(struct FilePath *fp,ospath_stat_t *buf){
 		return -1;
 	}
 	ospath_strncpy(fp,s,PATH_MAX);
-	return FSTAT(s,buf);
+	return STAT(s,buf);
 }
-#endif
 
 //------------------------
 // SEARCH PATH FUNCTIONS

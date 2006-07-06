@@ -27,6 +27,8 @@
  *  COPYING.  COPYING is found in ../compiler.
  */
 
+#define ASC_BUILDING_INTERFACE
+
 #include <time.h>
 #include <tcl.h>
 #include <utilities/ascConfig.h>
@@ -62,10 +64,6 @@
 #include "Commands.h"
 #include "SimsProc.h"
 
-#ifndef lint
-static CONST char LibraryProcID[] = "$Id: LibraryProc.c,v 1.44 2003/08/23 18:43:06 ballan Exp $";
-#endif
-
 
 extern
 int Asc_FileIDCopy(FILE *filein, FILE *fileout)
@@ -80,7 +78,7 @@ int Asc_FileIDCopy(FILE *filein, FILE *fileout)
 
 struct int_option {
   int *option_ptr;
-  char *option_name;
+  const char *option_name;
   int low;
   int high;
 };
@@ -95,6 +93,7 @@ struct int_option g_option_list[OPTIONCOUNT] = {
   {&g_use_copyanon,"-useCopyAnon",0,1}
 };
 #define GOL g_option_list
+
 STDHLF(Asc_LibrOptionsCmd,(Asc_LibrOptionsCmdHL,HLFSTOP));
 int Asc_LibrOptionsCmd(ClientData cdata, Tcl_Interp *interp,
                            int argc, CONST84 char **argv)

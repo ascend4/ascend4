@@ -43,16 +43,13 @@
 
 extern int Asc_FileIDCopy(FILE *filein, FILE *fileout);
 /**<
- *  <!--  int Asc_FileIDCopy                                           -->
- *  <!--  FILE *filein;                                                -->
- *  <!--  FILE *fileout;                                               -->
  *  Copies the input from a file with specified file id to the other.
  *  It is the responsibility of the user to ensure that the files are
  *  open and writable.
  */
 
 STDHLF_H(Asc_LibrParseCmd);
-extern int Asc_LibrParseCmd(ClientData cdata, Tcl_Interp *interp, 
+extern int Asc_LibrParseCmd(ClientData cdata, Tcl_Interp *interp,
                             int argc, CONST84 char**argv);
 /**  Registered as */
 #define Asc_LibrParseCmdHN "libr_parsestring"
@@ -161,10 +158,9 @@ extern int Asc_LibrDestroyTypesCmd(ClientData, Tcl_Interp*, int, CONST84 char**)
  *  Empties prototype library.\n\
 "
 
-extern int Asc_GNUTextCmd(ClientData cdata, Tcl_Interp *interp, 
+extern int Asc_GNUTextCmd(ClientData cdata, Tcl_Interp *interp,
                           int argc, CONST84 char**argv);
 /**<
- *  <!--  Asc_GNUTextCmd                                               -->
  *  gnutext [l,w] returns the string requested from
  *  Tom's license.c. defaults to warranty<br><br>
  *

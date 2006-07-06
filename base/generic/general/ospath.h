@@ -146,7 +146,7 @@ ASC_DLLSPEC(char *) ospath_str(struct FilePath *fp);
 
 /**
 	Return the FilePath in the string location given.
-	If the user has allocated a local array before calling ospath_strcpy,
+	If the user has allocated a local array before calling ospath_strncpy,
 	then this allows the FREE(dest) call to be avoided.
 
 	@param dest the location of allocated storage space where the FilePath

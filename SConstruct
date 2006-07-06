@@ -411,9 +411,6 @@ if os.environ.get('OSTYPE')=='msys':
 	env['IS_MINGW']=True
 
 elif platform.system()=="Windows":
-	#print "ENVIRONMENT =",os.environ
-	print "ENV PATH =",os.environ['PATH']
-	
 	env = Environment(
 		ENV={
 			'PATH':os.environ['PATH']
@@ -425,24 +422,12 @@ elif platform.system()=="Windows":
 		, toolpath = ['scons']
 	)
 	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
-	#env.Append(CCFLAGS=['/Za'])
-	print "INCLUDE = ",env.get('INCLUDE')
-	print "LIB = ",env.get('LIB')
-	print "\nPATH =",env['ENV'].get('PATH')
-	
 else:
 	env = Environment(
 		ENV=os.environ
 		, tools=['default','lex','yacc','fortran','swig','disttar','nsis']
 		, toolpath=['scons']
 	)
-
-#if platform.system()=='Windows' and env.has_key('MSVS'):
-	#print "INCLUDE =",env['ENV']['INCLUDE']
-	#print "LIB =",env['ENV']['LIB']
-	#print "PATH =",env['ENV']['PATH']
-	#env.Append(CPPPATH=env['ENV']['INCLUDE'].split(";"))
-	#env.Append(LIBPATH=env['ENV']['LIB'].split(";"))
 
 opts.Update(env)
 opts.Save('options.cache',env)

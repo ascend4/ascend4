@@ -31,6 +31,8 @@
  *  for Ascend.
  */
 
+#define ASC_BUILDING_INTERFACE
+
 #include <ctype.h>
 #include <math.h>
 #include <utilities/ascConfig.h>
