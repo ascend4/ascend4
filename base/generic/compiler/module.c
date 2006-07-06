@@ -61,7 +61,7 @@ struct module_t {
                                  * reading file, NULL otherwise---the result
                                  * of calling fopen() on filename.
                                  */
-  CONST char *s;		/* module's string pointer. Never NULL 
+  CONST char *s;		/* module's string pointer. Never NULL
                                  * except in creation process, destruction
                                  * process or if module wraps a file instead
                                  * of a string. NULL implies a file.
@@ -84,7 +84,7 @@ struct module_t {
                                  * incremented when a module with the same
                                  * name is loaded.
                                  */
-  struct gl_list_t *stats;	/* A pointer to a list of 
+  struct gl_list_t *stats;	/* A pointer to a list of
                                  * struct StatementList maintained at
                                  * NULL or length 1. It's a gl_list
                                  * so interfaces using module don't
@@ -436,7 +436,7 @@ struct module_t *FindModuleFile(CONST char *name,
 	`f', `time_last_modified', and `line_number' fields.
   */
   result = ModuleSearchPath( name, filename, new_module, &error );
- 
+
   /*
 	Check for a memory error in ModuleSearchPath.
   */
@@ -486,7 +486,7 @@ struct module_t *FindModuleFile(CONST char *name,
 	/*FPRINTF(ASCERR,"SYMBOL FOR FILE IS %s\n",filename);*/
     new_module->name = AddSymbol(filename);
 
-	
+
     if( StoreModule( new_module ) != 0 ) {
       DeleteModule( new_module );
 	  ERROR_REPORTER_HERE(ASC_PROG_ERROR,"COULDN'T STORE MODULE %s",new_module->filename);
@@ -525,7 +525,7 @@ struct module_t *FindModuleFile(CONST char *name,
   */
   if( dup->f != NULL ) {
     if( CmpSymchar( dup->filename, new_module->filename ) != 0 ) {
-      /*  
+      /*
 		we were reading `dup' as if it were module `mod_name' when we
 		were told to treat `new_module' as if it were module `mod_name'.
 		PANIC!
@@ -589,7 +589,7 @@ struct module_t *FindModuleFile(CONST char *name,
 }
 
 /** Create a module named `name'.  Return the module and put
- *  an exit code in `status'. 
+ *  an exit code in `status'.
  *  Name is expected to be unique for all time (or at least until we
  *  reinit the compiler).
  *
@@ -751,7 +751,7 @@ struct module_t *CreateStringModule(CONST char *name,
       *status = -3;
       return NULL;
     }
-    new_module->scanbuffer = 
+    new_module->scanbuffer =
       Asc_ScannerCreateStringBuffer(keep_string,strlen(keep_string));
     *status = 0;
     return new_module;
@@ -850,7 +850,7 @@ struct module_t *CreateStringModule(CONST char *name,
 #endif /* use for strings */
   Asc_Panic(2, "CreateStringModule", "String buffer \"%s\" misunderstood"
             "while opening for reading", new_module->name);
-  
+
 }
 
 
@@ -863,7 +863,7 @@ struct ModuleSearchData{
 	int error;           /**< error code (in case stat or fopen failed) */
 	time_t mtime;        /**< mtime (from the stat command) */
 	FILE *f;             /**< return the open file pointer */
-	struct stat buf;
+	ospath_stat_t buf;
 	struct FilePath *fp_found; /**< the full path we found */
 };
 
@@ -882,7 +882,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	assert(sd!=NULL);
 	assert(sd->fp!=NULL);
 
-	
+
 	/*
 	tmp=ospath_str(sd->fp);
 	CONSOLE_DEBUG("About to concat path '%s'...",tmp);
@@ -895,7 +895,7 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 		return 0;
 	}
 
-	/* 
+	/*
 	tmp  = ospath_str(sd->fp);
 	CONSOLE_DEBUG("Checking for path '%s'...",tmp);
 	ospath_free_str(tmp);
@@ -919,25 +919,25 @@ int module_searchpath_test(struct FilePath *path,void *searchdata){
 	sd->mtime = sd->buf.st_mtime;
 	sd->f = f;
 	sd->fp_found = fp1;
-	
+
 	/* CONSOLE_DEBUG("File found"); */
 	return 1;
 };
 
 
-/** 
+/**
 	This function tries to find a file corresponding to the argument
 	"name" by sending "name" to the function ModuleStatFile() which
 	will attempt to open "name" as a file.  If that fails, this
 	function then prepends each entry in the search path
 	PATHENVIRONMENTVAR to "name" and attempts to open the resulting
 	file (by once again calling ModuleStatFile()).
-	
+
 	On success, the argument "filename" will be set to the path to the
 	file, and the `f', `time_last_modified', and `linenum' members of
 	the module `m' will be set. (The 'FILE *' will be left open for
 	reading and the handle returned in the module struct.)
-	
+
 	If ModuleStatFile() encounters an error opening the file, the
 	value of errno will be passed back to the caller in the `error'
 	argument.
@@ -1018,7 +1018,7 @@ int ModuleSearchPath(CONST char *name,
 
 		if(fp2==NULL){
 			*error = sd.error;
-			CONSOLE_DEBUG("File '%s' not found in search path",name);		
+			CONSOLE_DEBUG("File '%s' not found in search path",name);
 			ospath_searchpath_free(sp1);
 			return -1;
 		}
@@ -1026,14 +1026,14 @@ int ModuleSearchPath(CONST char *name,
 		tmp = ospath_str(fp2);
 		assert(tmp!=NULL);
 		/* CONSOLE_DEBUG("Found file in '%s' in search path",tmp); */
-		ospath_searchpath_free(sp1);					
+		ospath_searchpath_free(sp1);
 		ospath_free_str(tmp);
 	}
 
 	m->f = sd.f;
 	m->time_last_modified = sd.mtime;
 	m->linenum = 1;
-	ospath_strcpy(sd.fp_found,filename,PATH_MAX);
+	ospath_strncpy(sd.fp_found,filename,PATH_MAX);
 	if(fp1!=sd.fp_found){
 		ospath_free(fp1);
 	}
@@ -1193,7 +1193,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
     }
     return 3;
   }
-  
+
   /*
    *  Check to see if the duplicate module is actually the current
    *  module---i.e., module ``foo.a4c'' contains the statement
@@ -1217,7 +1217,7 @@ extern int Asc_ModuleCreateAlias(CONST struct module_t *m, CONST char *name)
   return -2;
 }
 
-/** 
+/**
 	Allocate space for a new module and set its fields to some
 	reasonable defaults.  If `name' is not NULL, set the module's
 	base_name to point to the first character after the rightmost
@@ -1361,7 +1361,7 @@ struct module_t *SearchForModule(CONST struct module_t *m)
   if( g_module_list == NULL ) {
     return NULL;
   }
-  
+
   place = gl_search_reverse( g_module_list, m, (CmpFunc)CmpModulesNameVers );
   if( place == 0 ) {
     return NULL;
@@ -1456,9 +1456,9 @@ int Asc_ModuleAddStatements(struct module_t *m, struct gl_list_t *l)
 {
   if (l == NULL || gl_length(l) == 0 ||
       m == NULL || m->s == NULL || m->f != NULL) {
-    return -1; 
+    return -1;
     /* list is empty or module is not a string module.
-     * caller should dump l and contents. 
+     * caller should dump l and contents.
      */
   }
   if (m->stats == NULL) {

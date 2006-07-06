@@ -139,7 +139,7 @@ struct rel_relation *rel_create(SlvBackendToken instance
 
 	/* the rel_relation points to the instance */
 	newrel->instance = instance;
-	
+
 	/* get the 'struct relation' object for this relation */
 	instance_relation = GetInstanceRelation(IPTR(instance),&ctype);
 
@@ -170,7 +170,7 @@ struct rel_relation *rel_create(SlvBackendToken instance
 			    newrel->nodeinfo = NULL;
 		    }
 
-			REL_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));		
+			REL_DEBUG("Subject instance is at %p",ExternalCallVarInstance(ext));
 		    break;
 		default:
 		    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unknown relation type in rel_create");
@@ -206,7 +206,7 @@ static struct var_variable *rel_instance_to_var(struct rel_relation *rel,
 
 	incid = rel_incidence_list_to_modify(rel);
 	nincid = rel_n_incidences(rel);
-	
+
 	var = NULL;
 	for(j=0;j<nincid;++j){
 		if(( var_instance(incid[j]) )==inst){
@@ -391,7 +391,7 @@ void rel_set_nominal( struct rel_relation *rel, real64 nominal){
 }
 
 /**
-	too bad there's no entry point that rel must call before being used 
+	too bad there's no entry point that rel must call before being used
 	generally, like the FindType checking stuff in var.c
 */
 static void check_included_flag(void){
@@ -602,7 +602,7 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   */
 
   cache->invars = NULL;
-  cache->outvars = ASC_NEW_ARRAY_CLEAR(struct var_variable *,noutputs); 
+  cache->outvars = ASC_NEW_ARRAY_CLEAR(struct var_variable *,noutputs);
 
   ninputs = (int32)gl_length(cache->inputlist);
   noutputs = (int32)CountNumberOfArgs(cache->arglist,n_input_args+1,
@@ -644,11 +644,11 @@ struct ExtRelCache *CreateCacheFromInstance(SlvBackendToken relinst){
 
 void extrel_store_output_var(struct rel_relation *rel){
 	struct ExtRelCache *cache;
-	int whichvar;	
+	int whichvar;
 	struct var_variable *var;
 	struct Instance *inst;
 
-	cache = rel_extcache(rel);	
+	cache = rel_extcache(rel);
 	inst = rel_extsubject(rel);
 	var = rel_instance_to_var(rel,inst);
 	whichvar = rel_extwhichvar(rel);
@@ -712,7 +712,7 @@ void extrel_store_input_vars(struct rel_relation *rel){
 		REL_DEBUG("invar[%d] at %p",i,var);
 	}
 }
-	
+
 
 /*- - - - - - -
   'INIT' FUNCTION CALLS
@@ -868,7 +868,7 @@ real64 ExtRel_Evaluate_RHS(struct rel_relation *rel){
 		       cache->inputs, cache->outputs, cache->jacobian);
 	if(nok){
 		REL_DEBUG("EXTERNAL CALCULATION ERROR (%d)",nok);
-		/* return, don't change the output values, don't update flags */ 
+		/* return, don't change the output values, don't update flags */
 		return 0;
 	}else{
 		REL_DEBUG("EVAL FUNC OK");
@@ -915,7 +915,7 @@ real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 	return value;
 }
 
-/*- - - - - 
+/*- - - - -
   GRADIENT EVALUATION
 
 	The following code implements gradient evaluation routines for
@@ -931,12 +931,12 @@ real64 ExtRel_Evaluate_LHS(struct rel_relation *rel){
 	away the results, as for the residuals. Based on calculation flags, the
 	appropriate *row* of this cached jacobian will be extracted and mapped to
 	the	main solve matrix.
-	
+
 	The cached jacobian is a contiguous vector ninputs*noutputs long
 	and is loaded row wise. Indexing starts from 0. Each row corresponds
 	to the partial derivatives of the output variable (associated with
 	that row, wrt to all its incident input variables.
-	
+
 	Careful attention needs to be paid to the way this jacobian is
 	loaded/unloaded, because of the multiple indexing schemes in use.
 	i.e, arglist's and inputlists index 1..nvars, whereas all numeric
@@ -963,18 +963,18 @@ struct deriv_data {
 	@param ninputs The length of the inputlist
 	@param jacobian Dense-matrix Jacobian data returned from the blackbox func.
 	@param deriv_data Data cache (See rel.c)
-	
+
 	index = (whichvar - ninputs - 1) * ninputs
-	
+
 	Example: a problem with 4 inputs, 3 outputs and whichvar = 6.
 	with the counting for vars 1..nvars, but the jacobian indexing
 	starting from 0 (c-wise).
-	
+
 	        v-------- first output variable
 	I I I I O O O
 	1 2 3 4 5 6 7
 	          ^--------- whichvar
- 
+
 	                               ------------------ grads for whichvar = 6
 	                               |    |    |    |
     row        1    1    1    1    2    2    2    2   3    3   3    3
@@ -982,7 +982,7 @@ struct deriv_data {
 
 	index   =  0    1    2    3    4    5    6    7   8    9  10   11
 	jacobian =2.0  9.0  4.0  6.0  0.5  1.3  0.0  9.7  80  7.0 1.0 2.5
-	
+
 	Hence jacobian index = (6 - 4 - 1) * 4 = 4
 
 	@NOTE This only corresponds to jacobian elements from the RHS of
@@ -998,7 +998,7 @@ struct deriv_data {
 
 	The latter is what's being filled in here.
 */
-static void ExtRel_MapDataToMtx(struct ExtRelCache *cache, 
+static void ExtRel_MapDataToMtx(struct ExtRelCache *cache,
 		unsigned long whichvar,
 		struct deriv_data *d
 ){
@@ -1062,24 +1062,24 @@ static double CalculateInterval(double varvalue){
 }
 
 /**
-	Evaluate jacobian elements for an external relation 
+	Evaluate jacobian elements for an external relation
 	using finite difference (peturbation of each input variable).
 
 	ExtRel Finite Differencing.
-	
+
 	This routine actually does the finite differencing.
 	The jacobian is a single contiguous vector. We load information
 	in it *row* wise. If we have noutputs x ninputs = 3 x 4, variables,
 	then jacobian entry 4,
 	would correspond to jacobian[1][0], i.e., = 0.5 for this eg.
-	
+
 	  2.0  9.0   4.0  6.0
 	  0.5  1.3   0.0  9.7
 	  80   7.0   1.0  2.5
-	
+
 	 2.0  9.0  4.0  6.0  0.5  1.3  0.0  9.7  80  7.0  1.0  2.5
 	[0][0]              [1][0]		      [2][1]
-	
+
 	When we are finite differencing variable c, we will be loading
 	jacobian positions c, c+ninputs, c+2*ninputs ....
 */
@@ -1099,7 +1099,7 @@ static int32 ExtRel_FDiff(struct Slv_Interp *slv_interp,
   tmp_vector = ASC_NEW_ARRAY_CLEAR(double,noutputs);
   for (c1=0;c1<ninputs;c1++){
     /* perturb x */
-    old_x = inputs[c1]; 
+    old_x = inputs[c1];
     interval = CalculateInterval(old_x);
     inputs[c1] = old_x + interval;
 	REL_DEBUG("PETURBATION WITH input[%d]=%f",c1+1,inputs[c1]);
@@ -1134,8 +1134,8 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
   struct ExtRelCache *cache;
   struct ExternalFunc *efunc;
   unsigned long whichvar;
-  int32 (*eval_func)();
-  int32 (*deriv_func)();
+  ExtBBoxFunc *eval_func;
+  ExtBBoxFunc *deriv_func;
 
   REL_DEBUG("...");
 
@@ -1206,7 +1206,7 @@ static int32 ExtRel_CalcDeriv(struct rel_relation *rel, struct deriv_data *d){
 
 /**
 	ExtRel Deriv routines.
-	
+
 	This is the entry point for most cases. ExtRel_CalcDeriv depends
 	on ExtRel_Evaluate being called  immediately before it.
 */
@@ -1261,7 +1261,7 @@ double ExtRel_Diffs_LHS(struct rel_relation *rel, var_filter_t *filter,
 	REL_DEBUG("Mapping LHS jacobian entry -1.0 to var at %p",var);
 	*/
 
-	return lhs;	
+	return lhs;
 }
 
 double extrel_resid_and_jacobian(struct rel_relation *rel

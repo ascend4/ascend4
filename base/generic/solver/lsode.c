@@ -24,7 +24,7 @@
 
 	As fortran io is unreliably portable (vc5+digital fortran)
 	we have converted xerrwv to xascwv provided here.
-	
+
 	The lsode interface variable t is actually an array of
 	2 doubles rather than just 1. The first is the the one
 	used by lsode. The second is used by LSODE_FEX to tell
@@ -33,7 +33,7 @@
 	observation variables. If x[0]==x[1] we save ourselves
 	a solve.
 
-	@NOTE The above doesn't work since lsode doesn't use the same t internally 
+	@NOTE The above doesn't work since lsode doesn't use the same t internally
 	that we hand it.
 
 *//*
@@ -145,7 +145,7 @@ void InitTolNames(void)
 }
 
 /**
-	Because LSODE doesn't seem to make an allowance for 'client data' we 
+	Because LSODE doesn't seem to make an allowance for 'client data' we
 	have to store this as a 'local global' and fish it out when we're in the
 	callbacks.
 */
@@ -323,7 +323,7 @@ int integrator_lsode_setup_diffs(IntegratorSystem *blsys) {
 	assert(enginedata->n_eqns==blsys->n_y);
 
   /*
-  	Put the 
+  	Put the
   	Let us now process what we consider *inputs* to the problem as
   	far as ASCEND is concerned; i.e. the state vars or the y_vars's
   	if you prefer.
@@ -704,6 +704,7 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 ){
 	slv_status_t status;
 	slv_parameters_t params;
+	IntegratorLsodeData *d;
 
 	double x[2];
 	double xend,xprev;
@@ -722,7 +723,6 @@ int integrator_lsode_solve(IntegratorSystem *blsys
 	/* store the local variable so that we can get at stuff from inside LSODE_FEX. */
 	l_lsode_blsys = blsys;
 
-	IntegratorLsodeData *d;
 	d = (IntegratorLsodeData *)(blsys->enginedata);
 
 	/* the numer of equations must be equal to blsys->n_y, the number of states */

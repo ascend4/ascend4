@@ -59,8 +59,8 @@
 static symchar *g_symbols[4];
 
 #define STATEFLAG g_symbols[0]
-/* 
-	Integer child. 0= algebraic, 1 = state, 2 = derivative, 3 = 2nd deriv etc 
+/*
+	Integer child. 0= algebraic, 1 = state, 2 = derivative, 3 = 2nd deriv etc
 	independent variable is -1.
 */
 #define INTEG_OTHER_VAR -1L
@@ -213,7 +213,7 @@ IntegratorEngine integrator_get_engine(const IntegratorSystem *blsys){
 }
 
 /**
-	Free any engine-specific  data that was required for the solution of 
+	Free any engine-specific  data that was required for the solution of
 	this system. Note that this data is pointed to by blsys->enginedata.
 */
 void integrator_free_engine(IntegratorSystem *blsys){
@@ -250,7 +250,7 @@ void integrator_create_engine(IntegratorSystem *blsys){
 
   Provide two modes in order to provide analysis suitable for solution of both
   ODEs (the previous technique) and DAEs (new code). These share a common
-  "visit" method that needs to eventually be integrated with the code in 
+  "visit" method that needs to eventually be integrated with the code in
   <solver/analyze.c>. For the moment, we're just hacking in to the compiler.
 */
 
@@ -276,13 +276,13 @@ int integrator_find_indep_var(IntegratorSystem *blsys){
 	/* CONSOLE_DEBUG("..."); */
 
 	result = integrator_check_indep_var(blsys);
-	gl_free_and_destroy(blsys->indepvars);	
+	gl_free_and_destroy(blsys->indepvars);
 	blsys->indepvars = NULL;
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Returning result %d",result);
 
 	return result;
-}	
+}
 
 /**
 	Analyse the system, either as DAE or as an ODE system, depending on the
@@ -333,7 +333,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	blsys->dynvars = gl_create(200L);  /* y ydot var info */
 	blsys->obslist = gl_create(100L);  /* obs info */
 
-	if(blsys->indepvars==NULL 
+	if(blsys->indepvars==NULL
 		|| blsys->dynvars==NULL
 		|| blsys->obslist==NULL
 	){
@@ -358,7 +358,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	}
 
 	CONSOLE_DEBUG("Found %lu vars.", gl_length(blsys->dynvars));
-	
+
 	maxderiv = 0;
 	numstates = 0;
 	for(i=1; i<=gl_length(blsys->dynvars); ++i){
@@ -393,7 +393,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	}
 
 	/* link up derivative chains */
-	
+
 	prev = NULL;
 	for(i=1; i<=gl_length(blsys->dynvars); ++i){ /* why does gl_list index with base 1??? */
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
@@ -451,7 +451,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 				info->derivative_of = prev;
 				numy++;
 			}
-		}						
+		}
 		prev = info;
 	}
 
@@ -460,7 +460,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 		info = (struct Integ_var_t *)gl_fetch(blsys->dynvars, i);
 		if(info->derivative_of){
 			info->derivative_of->derivative = info->i;
-		}		
+		}
 	}
 
 	CONSOLE_DEBUG("Indentifying states...");
@@ -490,7 +490,7 @@ int integrator_analyse_dae(IntegratorSystem *blsys){
 	blsys->y = ASC_NEW_ARRAY(struct var_variable *,numy);
 	blsys->ydot = ASC_NEW_ARRAY(struct var_variable *,numy);
 
-	/* 
+	/*
 		at this point we know there are no missing derivatives etc, so we
 		can use (i-1) as the index into y and ydot. any variable with
 		'derivative_of' set to null is a state variable... but it might already
@@ -579,7 +579,7 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
   blsys->dynvars = gl_create(200L);  /* y ydot var info */
   blsys->obslist = gl_create(100L);  /* obs info */
   if (blsys->dynvars == NULL
-    || blsys->obslist == NULL 
+    || blsys->obslist == NULL
     || blsys->indepvars == NULL
   ){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"Insufficient memory.");
@@ -666,14 +666,14 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
 /**
 	Reindex observations. Sort if the user mostly numbered. Take natural order
 	if user just booleaned.
-	
+
 	@return 1 on success
 */
 static int integrator_sort_obs_vars(IntegratorSystem *blsys){
   int half, len, i;
-  half = blsys->n_y;
   struct Integ_var_t *v2;
 
+  half = blsys->n_y;
   len = gl_length(blsys->obslist);
   /* we shouldn't be seeing NULL here ever except if malloc fail. */
   if (len > 1L) {
@@ -853,7 +853,7 @@ void integrator_ode_classify_var(IntegratorSystem *blsys, struct var_variable *v
           blsys->nderivs++;
         }else{
 		  ERROR_REPORTER_HERE(ASC_USER_WARNING,"Higher-order (>=2) derivatives are not supported in ODEs.");
-		}	}		
+		}	}
 
     if(ObservationVar(var,&index) != NULL && index > 0L) {
 		INTEG_ADD_TO_LIST(info,0L,index,var,blsys->obslist);
@@ -863,7 +863,7 @@ void integrator_ode_classify_var(IntegratorSystem *blsys, struct var_variable *v
 
 /**
 	Look at a variable and determine if it's the independent variable or not.
-	This is just for the purpose of the integrator_find_indep_var function, 
+	This is just for the purpose of the integrator_find_indep_var function,
 	which is a utility function provided for use by the GUI.
 */
 void integrator_classify_indep_var(IntegratorSystem *blsys, struct var_variable *var){
@@ -960,13 +960,12 @@ static struct var_variable *ObservationVar(struct var_variable *v, long *index){
 int integrator_solve(IntegratorSystem *blsys, long i0, long i1){
 
 	long nstep;
+	unsigned long start_index=0, finish_index=0;
 
 	assert(blsys!=NULL);
 
 	nstep = integrator_getnsamples(blsys)-1;
 	/* check for at least 2 steps and dimensionality of x vs steps here */
-
-	unsigned long start_index=0, finish_index=0;
 
 	if (i0<0 || i1 <0) {
 		/* dude, there's no way we're writing interactive stuff here... */
@@ -1059,10 +1058,10 @@ ASC_DLLSPEC(long) integrator_getcurrentstep(IntegratorSystem *blsys){
   GET/SET VALUE OF THE INDEP VARIABLE
 */
 
-/** 
+/**
 	Retrieve the value of the independent variable (time) from ASCEND
 	and return it as a double.
-*/	
+*/
 double integrator_get_t(IntegratorSystem *blsys){
 	assert(blsys->x!=NULL);
 	return var_value(blsys->x);
@@ -1199,7 +1198,7 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const 
 }
 
 /*----------------------------------------------------
-	Build an analytic jacobian for solving the state system 
+	Build an analytic jacobian for solving the state system
 
 	This necessarily ugly piece of code attempts to create a unique
 	list of relations that explicitly contain the variables in the
@@ -1209,7 +1208,7 @@ struct var_variable *integrator_get_observed_var(IntegratorSystem *blsys, const 
 	be of great savings. If the problem arose from the discretization of
 	a pde, then this will be not so useful. The decision wether to use
 	this function or to simply differentiate the entire relations list
-	must be done before calling this function. 
+	must be done before calling this function.
 
 	Final Note: the callee owns the array, but not the array elements.
  */
@@ -1233,7 +1232,7 @@ static void Integ_SetObsId(struct var_variable *v, long index){
 }
 
 /**
-	Compares observation structs. NULLs should end up at far end. 
+	Compares observation structs. NULLs should end up at far end.
 */
 static int Integ_CmpObs(struct Integ_var_t *v1, struct Integ_var_t *v2){
   if(v1 == NULL)return 1;
@@ -1305,7 +1304,7 @@ int integrator_output_write_obs(IntegratorSystem *blsys){
 		reported_already=1;
 	}
 	return 1;
-}	
+}
 
 int integrator_output_close(IntegratorSystem *blsys){
 	assert(blsys!=NULL);

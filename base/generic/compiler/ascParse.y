@@ -294,6 +294,11 @@ static void CollectNote(struct Note *);
  * production that finds it. It must be copied if you want to
  * keep it.
  */
+
+/* MS VC++ won't compiler Bison output unless we switch this */
+#ifdef _MSC_VER
+# define __STDC__
+#endif
 %}
 
 %union {

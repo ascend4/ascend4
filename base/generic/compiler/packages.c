@@ -37,6 +37,10 @@
 #include <math.h>
 #include <ctype.h>  /* was compiler/actype.h */
 
+#ifdef _MSC_VER
+# include <sys/stat.h>
+#endif
+
 #include <utilities/ascConfig.h>
 #include <utilities/config.h> /* NEW */
 
@@ -71,6 +75,12 @@
 #include <packages/ascFreeAllVars.h>
 #include "module.h"
 #include "packages.h"
+
+#if _MSC_VAR
+# ifndef _stat
+#  error "Where is STAT?"
+# endif
+#endif
 
 /*
 	Initialise the slv data structures used when calling external fns
@@ -159,11 +169,11 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 		ospath_free_str(tmp);
 		tmp = ospath_str(ls->partialpath);
 		CONSOLE_DEBUG("... and '%s'...",tmp);
-		ospath_free_str(tmp);		
+		ospath_free_str(tmp);
 		return 0;
 	}
 
-	ospath_strcpy(fp,ls->fullpath,PATH_MAX);
+	ospath_strncpy(fp,ls->fullpath,PATH_MAX);
 	/* CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath); */
 
 	f = ospath_fopen(fp,"r");
@@ -202,14 +212,14 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 	struct FilePath **sp;
 	extern char path_var[PATH_MAX];
 	char *path;
-	struct stat buf;
+	struct _stat buf;
 	FILE *f;
 
 	fp1 = ospath_new_noclean(name);
 	if(fp1==NULL){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid partial path '%s'",name);
 		ospath_free(fp1);
-		return -4;
+		return NULL;
 	}
 
 	s1 = ospath_getfilestem(fp1);
@@ -266,11 +276,11 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 		CONSOLE_DEBUG("Library '%s' opened directly, without path search",tmp);
 		ospath_free_str(tmp);
 		fp2 = ospath_getabs(fp1);
-		strncpy(path_var,fp2,PATH_MAX);
+		ospath_strncpy(fp2,path_var,PATH_MAX);
 		ospath_free(fp2);
 		fclose(f);
 	}else{
-				
+
 		ls.partialpath = fp1;
 
 		path=Asc_GetEnv(envv);
@@ -387,9 +397,7 @@ int LoadArchiveLibrary(CONST char *partialname, CONST char *initfunc){
 
 	@return 0 on success, >0 if any CreateUserFunction calls failed.
 */
-static
-int StaticPackages_Init(void)
-{
+static int StaticPackages_Init(void){
   int result = 0;
 
   result += sensitivity_register();
@@ -447,13 +455,16 @@ void AddUserFunctions(void)
 */
 
 /**
-	What's this do? -- JP
+	Get the real values of each struct Instance pointed to in the gl_list
+	'arglist' and put it into the 'inputs' array of doubles.
+
+	For example, use this to evaluate the input arguments for a Black Box relation.
 */
 static void LoadInputVector(struct gl_list_t *arglist,
 			    double *inputs,
 			    unsigned ninputs,
-			    unsigned long n_input_args)
-{
+			    unsigned long n_input_args
+){
   struct Instance *inst;
   struct gl_list_t *input_list;
   unsigned long c,len;

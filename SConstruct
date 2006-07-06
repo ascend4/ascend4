@@ -672,6 +672,11 @@ def CheckGccVisibility(context):
 yacc_test_text = """
 %{
 #include <stdio.h>
+
+/* MSVC++ needs this before it can swallow Bison output */
+#ifdef _MSC_VER
+# define __STDC__
+#endif
 %}
 %token MSG
 %start ROOT
@@ -1088,24 +1093,12 @@ if need_fortran:
 # TODO: detect if dynamic libraries are possible or not
 
 if platform.system()=="Windows" and env.has_key('MSVS'):
-	_p = "C:\\Program Files\\Microsoft Platform SDK for Windows Server 2003 R2\\Include"
-	if not os.path.exists(os.path.join(_p,"Windows.h")):
-		print "WINDOWS.H NOT FOUND AT '%s'"%_p
-	else:
-		print "\n\nPATH '%s' OK\n\n" % _p
-		conf.env.Append(CPPPATH=[_p])
-
 	_found_windows_h = conf.CheckHeader('Windows.h')
 
 	if not _found_windows_h:
-		print "WINDOWS NOT FOUND IN '%s'" % conf.env.get('CPPPATH')
+		print "Could not locate 'Windows.h' in CPPPATH. Check your configuration."
 		Exit(1)
-		
-	if not _found_windows_h and env['PACKAGE_LINKING']=='DYNAMIC_PACKAGES':
-		print "Reverting to STATIC_PACKAGES since windows.h is not available. Probably you "\
-			+"need to install the Microsoft Windows Server 2003 Platform SDK, or similar."
-		env['PACKAGE_LINKING']='STATIC_PACKAGES'
-	
+
 	if with_python and not conf.CheckHeader(['basetsd.h','BaseTsd.h']):
 		with_python = 0;
 		without_python_reason = "Header file 'basetsd.h' not found. Install the MS Platform SDK."

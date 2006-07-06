@@ -21,21 +21,25 @@
 	By John Pye.
 */
 
-#include <string.h>
-#include <malloc.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <unistd.h>
-
-#include "ospath.h"
-
-// to test this code, 'gcc -DTEST ospath.c && ./a'
-
 #if defined(WIN32) || defined(__WIN32) || defined(_MSC_VER)
 # ifndef __WIN32__
 #  define __WIN32__
 # endif
 #endif
+
+#include <string.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <ctype.h>
+
+#ifndef __WIN32__
+# include <unistd.h>
+#endif
+
+#include "ospath.h"
+
+// to test this code, 'gcc -DTEST ospath.c && ./a'
+
 
 /* #define VERBOSE */
 
@@ -43,6 +47,12 @@
 #ifndef NDEBUG
 # define NDEBUG
 #endif
+#endif
+
+#ifdef _MSC_VER
+# define STAT _stat
+#else
+# define STAT stat
 #endif
 
 //#define TRY_GETPWUID
@@ -192,6 +202,11 @@ struct FilePath *ospath_new_expand_env(const char *path, GetEnvFn *getenvptr){
 	return fp;
 }
 
+struct FilePath *ospath_new_copy(struct FilePath *fp){
+	struct FilePath *fp1 = (struct FilePath *)MALLOC(sizeof(struct FilePath));
+	ospath_copy(fp1,fp);
+	return fp1;
+}
 
 /**
 	This function will serve to allow #include-style file paths
@@ -495,7 +510,7 @@ char *ospath_str(struct FilePath *fp){
 	return s;
 }
 
-void ospath_strcpy(struct FilePath *fp, char *dest, int destsize){
+void ospath_strncpy(struct FilePath *fp, char *dest, int destsize){
 #ifdef WINPATHS
 	STRNCPY(dest,fp->drive,destsize);
 	STRNCAT(dest,fp->path,destsize-strlen(dest));
@@ -836,8 +851,8 @@ struct FilePath *ospath_getdir(struct FilePath *fp){
 
 ASC_DLLSPEC(struct FilePath *) ospath_getabs(struct FilePath *fp){
 	struct FilePath *fp1, *fp2;
-	if(fp->path[0]==PATH_SEPARATOR_STR){
-		ospath_copy(fp1,fp);
+	if(fp->path[0]==PATH_SEPARATOR_CHAR){
+		fp1 = ospath_new_copy(fp);
 	}else{
 		fp2 = ospath_new(".");
 		fp1 = ospath_concat(fp2,fp);
@@ -1093,21 +1108,23 @@ FILE *ospath_fopen(struct FilePath *fp, const char *mode){
 		E("Invalid path");
 		return NULL;
 	}
-	ospath_strcpy(fp,s,PATH_MAX);
+	ospath_strncpy(fp,s,PATH_MAX);
 	f = fopen(s,mode);
 	return f;
 }
 
-int ospath_stat(struct FilePath *fp,struct stat *buf){
+#ifndef _MSC_VER
+int ospath_stat(struct FilePath *fp,ospath_stat_t *buf){
 	char s[PATH_MAX];
 
 	if(!ospath_isvalid(fp)){
 		E("Invalid path");
 		return -1;
 	}
-	ospath_strcpy(fp,s,PATH_MAX);
-	return stat(s,buf);
-}	
+	ospath_strncpy(fp,s,PATH_MAX);
+	return FSTAT(s,buf);
+}
+#endif
 
 //------------------------
 // SEARCH PATH FUNCTIONS
