@@ -14,7 +14,7 @@ srcs = Split("""
 """)
 
 env.ParseConfig('ascend-config --cppflags --libs')
-env.Append(CPPPATH=['../../../base/generic'])
+env.AppendUnique(CPPPATH=['../../../base/generic'])
 
 env.SharedLibrary("extfntest",srcs)
 

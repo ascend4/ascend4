@@ -541,7 +541,7 @@ class KeepContext:
 			self.keep[k]=context.env.get(k)
 		
 		if context.env.has_key(varprefix+'_CPPPATH'):
-			context.env.Append(CPPPATH=[env[varprefix+'_CPPPATH']])
+			context.env.AppendUnique(CPPPATH=[env[varprefix+'_CPPPATH']])
 			#print "Adding '"+str(cpppath_add)+"' to cpp path"
 
 		if static:
@@ -762,7 +762,7 @@ def CheckIDA(context):
 	# add SUNDIALS subdirectories as well (what a pain)
 	if context.env.get('IDA_CPPPATH'):
 		extra = [context.env['IDA_CPPPATH']+"/ida",context.env['IDA_CPPPATH']+"/sundials"]
-		context.env.Append(CPPPATH=extra)
+		context.env.AppendUnique(CPPPATH=extra)
 	
 	if ',' in context.env.get('IDA_LIB'):
 		context.env['IDA_LIB']=context.env['IDA_LIB'].split(',')
@@ -1267,7 +1267,7 @@ SConsEnvironment.InstallShared = lambda env, dest, files: InstallPerm(env, dest,
 # BUILD...
 
 # so that #include <modulename/headername.h> works across all modules...
-env.Append(CPPPATH=['#base/generic'])
+env.AppendUnique(CPPPATH=['#base/generic'])
 
 if env['DEBUG']:
 	env.Append(CCFLAGS=['-g'])

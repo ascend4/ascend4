@@ -23,19 +23,19 @@ typelex = tcl_env.SharedObject(typelexsource
 )
 
 if tcl_env.get('TCL_CPPPATH'):
-	tcl_env.Append(CPPPATH=tcl_env['TCL_CPPPATH'])
+	tcl_env.AppendUnique(CPPPATH=[tcl_env['TCL_CPPPATH']])
 
 if tcl_env.get('TK_CPPPATH'):
-	tcl_env.Append(CPPPATH=tcl_env['TK_CPPPATH'])
+	tcl_env.AppendUnique(CPPPATH=[tcl_env['TK_CPPPATH']])
 
 tcl_env.Append(LIBS=['ascend'])
-tcl_env.Append(LIBPATH=['#'])
+tcl_env.AppendUnique(LIBPATH=['#'])
 
 if tcl_env.get('STATIC_TCLTK'):
 	print "STATIC TCL/TK PROGRAM LINKAGE"
 	srcs += ['$TCL_LIB','$TK_LIB','$TKTABLE_LIB']
-	tcl_env.Append(LIBS=tcl_env['X11_LIB'])
-	tcl_env.Append(LIBPATH=tcl_env['X11_LIBPATH'])
+	tcl_env.AppendUnique(LIBS=[tcl_env['X11_LIB']])
+	tcl_env.AppendUnique(LIBPATH=[tcl_env['X11_LIBPATH']])
 
 	if tcl_env['TKTABLE_LIBPATH']:
 		tcl_env.Append(LIBPATH=tcl_env['TKTABLE_LIBPATH'])
@@ -47,9 +47,9 @@ else:
 	tcl_env.Append(LIBS=tcl_env['TK_LIB'])
 
 	if tcl_env.has_key('TCL_LIBPATH'):
-		tcl_env.Append(LIBPATH=tcl_env['TCL_LIBPATH'])
+		tcl_env.AppendUnique(LIBPATH=[tcl_env['TCL_LIBPATH']])
 	if tcl_env.has_key('TK_LIBPATH'):
-		tcl_env.Append(LIBPATH=tcl_env['TK_LIBPATH'])
+		tcl_env.AppendUnique(LIBPATH=[tcl_env['TK_LIBPATH']])
 
 	ascendtcllib = tcl_env.SharedLibrary('ascendtcl',srcs+typelex)
 
@@ -57,7 +57,7 @@ else:
 	#tk_so = tcl_env.Command(Copy('$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX','$TK_LIBPATH/$SHLIBPREFIX$TK_LIB$SHLIBSUFFIX'))
 	#tktable_so = tcl_env.Command(Copy('$SHLIBPREFIX$TKTABLE_LIB$SHLIBSUFFIX','$TKTABLE_LIBPATH/$SHLIBPREFIX$TKTABLE_LIB$SHLIBSUFFIX'))
 
-	tcl_env.Append(LIBPATH=['.'])
+	tcl_env.Prepend(LIBPATH=['.'])
 
 	ascendtclprog = tcl_env.Program("ascend4",["main.c"]
 		, LIBS = tcl_env['LIBS']+['ascendtcl','ascend']
