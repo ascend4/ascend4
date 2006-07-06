@@ -69,6 +69,12 @@
 # define PATH_MAX 1023
 #endif
 
+#ifdef _MSC_VER
+typedef struct _stat ospath_stat_t;
+#else
+typedef struct stat ospath_stat_t;
+#endif
+
 struct FilePath;
 
 /**
@@ -147,7 +153,7 @@ ASC_DLLSPEC(char *) ospath_str(struct FilePath *fp);
 		will be written.
 	@param destsize the amount of allocated string space at dest.
 */
-ASC_DLLSPEC(void) ospath_strcpy(struct FilePath *fp,char *dest, int destsize);
+ASC_DLLSPEC(void) ospath_strncpy(struct FilePath *fp,char *dest, int destsize);
 
 /**
 	Append string from FilePath to the already-allocated string 'dest',
@@ -257,7 +263,7 @@ ASC_DLLSPEC(FILE *) ospath_fopen(struct FilePath *fp, const char *mode);
 	The exception is that if the FilePath is not 'valid', -1 is returned
 	and no call to 'stat' is made.
 */
-ASC_DLLSPEC(int) ospath_stat(struct FilePath *fp,struct stat *buf);
+ASC_DLLSPEC(int) ospath_stat(struct FilePath *fp,ospath_stat_t *buf);
 
 //------------------------
 // SEARCH PATH FUNCTIONS

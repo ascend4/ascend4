@@ -46,17 +46,19 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   int added=0;
 
   {
-	CONSOLE_DEBUG("...");
 	int i,j,m,n;
 	struct gl_list_t *list1;
 	struct Instance *inst;
+
+	CONSOLE_DEBUG("...");
+
 	m = gl_length(args);
 	for(i = 1; i <= m; ++i){
 		list1 = (struct gl_list_t *)gl_fetch(args,i);
 		n = gl_length(list1);
 		for(j=1;j<=n;++j){
-			inst = (struct Instance *)gl_fetch(list1,j);
 			char *tmp;
+			inst = (struct Instance *)gl_fetch(list1,j);
 			tmp = WriteInstanceNameString(inst, NULL);
 			CONSOLE_DEBUG("list %d: argument[%d], type '%s', name '%s' at %p"
 				, i, j, instance_typename(inst), tmp, inst
@@ -279,7 +281,7 @@ struct Instance *ExternalCallDataInstance(struct ExtCallNode *ext){
   struct Instance **hndl;
   hndl = ext->data;
   if(hndl!=NULL){
-	/* 
+	/*
 		ExtCallNode::data is an array of pointers to Instance
 		structures. We are here returning the first pointer from that array.
 	*/

@@ -27,19 +27,23 @@ csrcs = Split("""
 
 import platform, glob
 
-if libascend_env.has_key('HAVE_YACC'):
+scanparse_env = libascend_env.Copy()
+
+scanparse_env.Append(CCFLAGS=scanparse_env.get('YACC_CCFLAGS'))
+
+if scanparse_env.has_key('HAVE_YACC'):
 	parsersource = 'ascParse.y'
 	parserheader = 'ascParse.h'
 else:
 	parsersource = 'ascParse_no_yacc.c'
 	parserheader = libascend_env.Command('ascParse.h', 'ascParse_no_yacc.h',Copy('$TARGET', '$SOURCE'))
 
-if libascend_env.has_key('HAVE_LEX'):
+if scanparse_env.has_key('HAVE_LEX'):
 	scannersource = 'scanner.l'
 else:
 	scannersource = 'scanner_no_flex.c'
 
-parser = libascend_env.SharedObject(target=['ascParse'], source=parsersource
+parser = scanparse_env.SharedObject(target=['ascParse'], source=parsersource
 	, YACCFLAGS=['-d','-pzz_']
 )
 
