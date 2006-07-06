@@ -9,6 +9,9 @@ IMPORT "dsg";
 	to ensure that the required external library is installed where ASCEND
 	can find it. Alternatively, you can specify the location by adding to the
 	ASCENDLIBRARY path variable
+
+	This model also requires the 'dsg' library for Direct Steam Generation
+	calculations, available on request from http://pye.dyndns.org/
 *)
 
 MODEL dsg;
