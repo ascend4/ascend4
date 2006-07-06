@@ -72,7 +72,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    * This is only needed for Windows 3.x, since NT dynamically expands
    * the queue.
    */
-  SetMessageQueue(64);
+  /*
+  	RIP WIndows 3.1
+  	SetMessageQueue(64);
+  */
 
   /*
    * Create the console channels and install them as the standard
