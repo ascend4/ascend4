@@ -57,9 +57,9 @@ MODEL dsg;
 
 	rho * v = 1;
 
-	thermo_props: iapws97_uvmu_ph(
+	thermo_props: iapws97_uvmux_ph(
 		p,h : INPUT;
-		u,v,mu : OUTPUT
+		u,v,mu,x : OUTPUT
 	);
 
 	vel = rho*mdot/A;
@@ -79,9 +79,15 @@ MODEL dsg;
 		f : OUTPUT
 	);
 
+	phi2 IS_A factor;
+	x IS_A factor;
 	twophmult: dsg_phi2_martinelli_nelson(
 		p,x : INPUT;
-		rho2 : OUTPUT
+		phi2 : OUTPUT
+	);
+	(* TODO: compute LIQUID ONLY reynolds number when in the two-phase region...
+	that's a bit tricky and needs conditional modelling, so maybe try putting 
+	it in the external code. *)
 
 	cavity_losses: dsg_ext_heat_loss(
 		T2,Tamb,D2,hw : INPUT;
