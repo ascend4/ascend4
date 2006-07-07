@@ -51,16 +51,16 @@ try:
 		matplotlib.use('GTKAgg')
 
 		try:
-			print_loading_status("Trying python numpy")
-			import numpy
-			matplotlib.rcParams['numerix'] = 'numpy'  
-			print_loading_status("","Using python module numpy")
+			print_loading_status("Trying python numarray")
+			import numarray
+			matplotlib.rcParams['numerix'] = 'numarray'  
+			print_loading_status("","Using python module numarray")
 		except ImportError:
 			try:
-				print_loading_status("Trying python numarray")
-				import numarray
-				matplotlib.rcParams['numerix'] = 'numarray'  
-				print_loading_status("","Using python module numarray")
+				print_loading_status("Trying python numpy")
+				import numpy
+				matplotlib.rcParams['numerix'] = 'numpy'  
+				print_loading_status("","Using python module numpy")
 			except ImportError:
 				try:
 					print_loading_status("Trying python Numeric")

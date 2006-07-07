@@ -142,7 +142,7 @@ Integrator::setLinearTimesteps(UnitsM units, double start, double end, unsigned 
 	samplelist = samplelist_new(num+1, d);
 	double val = start;
 	double inc = (end-start)/(num);
-	for(int i=0;i<=num;++i){
+	for(unsigned long i=0;i<=num;++i){
 		samplelist_set(samplelist,i,val);
 		val += inc;
 	}

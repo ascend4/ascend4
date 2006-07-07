@@ -435,7 +435,7 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	status.getSimulationStatus(*this);
 	reporter.report(&status);
 
-	for(int iter = 1; iter <= niter && !stop; ++iter){
+	for(unsigned iter = 1; iter <= niter && !stop; ++iter){
 
 		if(status.isReadyToSolve()){
 			slv_iterate(sys);
