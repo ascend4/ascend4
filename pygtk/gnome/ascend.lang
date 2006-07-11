@@ -104,6 +104,7 @@ John Pye (C) 2005
 		<keyword>MINIMIZE</keyword>
 		<keyword>MODEL</keyword>
 		<keyword>NOTES</keyword>
+		<keyword>OF</keyword>
 		<keyword>OR</keyword>
 		<keyword>OTHERWISE</keyword>
 		<keyword>PROVIDE</keyword>
@@ -153,6 +154,7 @@ John Pye (C) 2005
 		<keyword>symbol</keyword>
 		<keyword>integer</keyword>
 		<keyword>real</keyword>
+		<keyword>set</keyword>
 	</keyword-list>
 
 	<keyword-list _name="Standard Constants" style="Preprocessor" case-sensitive="true">
