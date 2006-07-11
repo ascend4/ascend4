@@ -1051,9 +1051,9 @@ static int tear_subreorder(slv_system_t server,
 }
 
 int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
-				int32 cutoff, int two,
-                                enum mtx_reorder_method blockmethod)
-{
+		int32 cutoff, int two,
+		enum mtx_reorder_method blockmethod
+){
   struct rel_relation **rp;
   struct var_variable **vp;
   const mtx_block_t *b;
@@ -1065,8 +1065,6 @@ int slv_tear_drop_reorder_block(slv_system_t sys, int32 bnum,
   int32 c,vlen,rlen,modcount;
   var_filter_t vf;
   rel_filter_t rf;
-
-  CONSOLE_DEBUG("TEARDROP reordering...");
 
   if (sys==NULL) return 1;
   rlen = slv_get_num_solvers_rels(sys);

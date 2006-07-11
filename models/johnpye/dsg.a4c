@@ -8,7 +8,7 @@ IMPORT "dsg";
 	You must compile it with the 'ASCEND_CONFIG=`which ascend-config`' flag
 	to ensure that the required external library is installed where ASCEND
 	can find it. Alternatively, you can specify the location by adding to the
-	ASCENDLIBRARY path variable
+	ASCENDLIBRARY path variable. See http://freesteam.sf.net/
 
 	This model also requires the 'dsg' library for Direct Steam Generation
 	calculations, available on request from http://pye.dyndns.org/
@@ -54,7 +54,6 @@ MODEL dsg;
 	mu IS_A viscosity;
 	v IS_A specific_volume;
 	T1,Tw,T2,Tamb IS_A temperature;
-
 	rho * v = 1;
 
 	thermo_props: iapws97_uvmux_ph(
@@ -96,23 +95,41 @@ MODEL dsg;
 
 	Tw = (T1 + T2)/2;
 
+	mdoth IS_A solver_var;
+	mdoth = mdot * h;
+
+	rhovel2 IS_A solver_var;
+	rhovel2 = rho * vel^2;
+
 METHODS
 
 METHOD specify;
+	(* states *)
+	FIX T1, T2, p, h, mdot;
+	RUN fix_design;
+	RUN fix_temporals;
+END specify;
+
+METHOD fix_design;
 	(* design parameters, geometry, materials of construction *)
 	FIX rhow,D2,cw,hw;
 	FIX D, eps;
 	FIX qdots;
 	FIX Tamb;
-
-	(* states *)
-	FIX T1, T2, p, h, mdot;
-
-	(* spatial derivs are all fixed -- because we would know what's next door *)
-	FIX dmdot_dz, dmdoth_dz, dekdot_dz, dp_dz, drhovel2_dz;
-
-	FIX dTw_dt;
 END specify;
+
+METHOD fix_spatials;
+	(* for use when tinkering about with a single node only *)
+	FIX dmdot_dz, dmdoth_dz, dekdot_dz, dp_dz, drhovel2_dz;
+END fix_spatials;
+
+METHOD fix_temporals;
+	(* for steady-state solution *)
+	FIX drho_dt;
+	FIX dmdot_dt;
+	FIX drhou_dt;
+	FIX dTw_dt;
+END fix_temporals;
 
 METHOD values;
 	(* design parameters *)
