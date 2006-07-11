@@ -17,13 +17,13 @@ Vendor:		Carnegie Mellon University
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: python >= 2.4, python-devel
-BuildRequires: scons >= 0.96.1
-BuildRequires: bison, flex
+BuildRequires: scons >= 0.96.91
+BuildRequires: bison >= 2.1
+BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
-BuildRequires: desktop-file-utils
-BuildRequires: tk-devel < 8.5
-BuildRequires: tcl-devel < 8.5
+BuildRequires: tk-devel < 8.5, tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
+BuildRequires: desktop-file-utils
 
 # This contains the libg2c library; which on FC5 is not in the path, unfort.
 BuildRequires: compat-gcc-32-g77 == 3.2.3
