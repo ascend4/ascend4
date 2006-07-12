@@ -141,7 +141,6 @@ update-mime-database /usr/share/mime
 %{_includedir}/general
 %{_includedir}/utilities
 %{_includedir}/solver
-%{_includedir}/packages
 
 %changelog
 * Wed Jul 12 2006 John Pye <john.pye@student.unsw.edu.au>
