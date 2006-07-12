@@ -596,6 +596,12 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->inputlist = LinearizeArgList(cache->arglist,1,n_input_args);
 		  /* Note: we own the cache of the LinearizeArgList call. */
 
+  ninputs = (int32)gl_length(cache->inputlist);
+  noutputs = (int32)CountNumberOfArgs(cache->arglist,n_input_args+1,
+				    n_input_args+n_output_args);
+  cache->ninputs = ninputs;
+  cache->noutputs = noutputs;
+
   /*
 	Create the 'invars' and 'outvars' lists so that we can insert stuff
 	into the solverside matrix correctly
@@ -604,12 +610,7 @@ struct ExtRelCache *CreateExtRelCache(struct ExtCallNode *ext){
   cache->invars = NULL;
   cache->outvars = ASC_NEW_ARRAY_CLEAR(struct var_variable *,noutputs);
 
-  ninputs = (int32)gl_length(cache->inputlist);
-  noutputs = (int32)CountNumberOfArgs(cache->arglist,n_input_args+1,
-				    n_input_args+n_output_args);
-  cache->ninputs = ninputs;
-  cache->noutputs = noutputs;
-
+  REL_DEBUG("ALLOCATED FOR %d OUTPUTS",noutputs);
   cache->inputs = ASC_NEW_ARRAY_CLEAR(double,ninputs);
   cache->outputs = ASC_NEW_ARRAY_CLEAR(double,noutputs);
   cache->jacobian = ASC_NEW_ARRAY_CLEAR(double,ninputs*noutputs);
@@ -654,6 +655,7 @@ void extrel_store_output_var(struct rel_relation *rel){
 	whichvar = rel_extwhichvar(rel);
 
 	REL_DEBUG("outvar[%d] at %p",whichvar-cache->ninputs-1,var);
+	asc_assert(cache->outvars!=NULL);
 	cache->outvars[whichvar - cache->ninputs - 1] = var;
 }
 
@@ -661,6 +663,7 @@ static struct var_variable *extrel_outvar(
 		struct ExtRelCache *cache
 		,int whichvar
 ){
+	asc_assert(cache->outvars!=NULL);
 	return cache->outvars[whichvar-cache->ninputs-1];
 }
 

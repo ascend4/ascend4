@@ -51,22 +51,22 @@ static struct Table *ExternalFuncLibrary = NULL;
 */
 
 int CreateUserFunctionBlackBox(CONST char *name,
-		       ExtBBoxInitFunc *init,
-		       ExtBBoxFunc *value,
-		       ExtBBoxFunc *deriv,
-		       ExtBBoxFunc *deriv2,
-		       ExtBBoxInitFunc *final,
-		       CONST unsigned long n_inputs,
-		       CONST unsigned long n_outputs,
-		       CONST char *help)
-{
+		ExtBBoxInitFunc *init,
+		ExtBBoxFunc *value,
+		ExtBBoxFunc *deriv,
+		ExtBBoxFunc *deriv2,
+		ExtBBoxInitFunc *final,
+		CONST unsigned long n_inputs,
+		CONST unsigned long n_outputs,
+		CONST char *help
+){
   struct ExternalFunc *efunc;
   int isNew = 0;
-  if (name == NULL) {
+  if(name == NULL){
     return 1;
   }
   efunc = LookupExtFunc(name);
-  if (efunc != NULL) {
+  if(efunc != NULL){
 	/* CONSOLE_DEBUG("Found efunc at %p",efunc); */
 	/* name has already been seen, so now fill in the details */
     isNew = 0;
@@ -89,14 +89,14 @@ int CreateUserFunctionBlackBox(CONST char *name,
   efunc->u.black.deriv = deriv;
   efunc->u.black.deriv2 = deriv2;
   efunc->u.black.final = final;
-  if (help) {
+  if(help){
     if (efunc->help) ascfree((char *)efunc->help);
     efunc->help = ascstrdup(help);
-  } else {
+  }else{
     efunc->help = NULL;
   }
 
-  if (isNew) {
+  if(isNew){
 	CONSOLE_DEBUG("NEW BLACKBOX EFUNC %p ('%s', %lu inputs, %lu outputs, type=%d, value func=%p)"
 		,efunc, name, n_inputs, n_outputs, (int)efunc->etype, value
 	);
@@ -104,7 +104,6 @@ int CreateUserFunctionBlackBox(CONST char *name,
   }
   return 0;
 }
-
 
 ExtBBoxInitFunc * GetInitFunc(struct ExternalFunc *efunc){
   asc_assert(efunc!=NULL);
@@ -366,7 +365,7 @@ int AddExternalFunc(struct ExternalFunc *efunc, int force){
 	    return 1;
 	}else{
 		/* need to add function to library */
-		/* CONSOLE_DEBUG("EFUNC not found, adding pointer %p for efunc to table under name '%s'.",efunc,name); */
+		CONSOLE_DEBUG("Adding external function '%s' (at %p).",name,efunc);
 		AddTableData(ExternalFuncLibrary,(void *)efunc,name);
 		return 1;
 	}
