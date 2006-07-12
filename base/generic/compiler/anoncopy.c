@@ -1,33 +1,29 @@
-/*
- *  anoncopy.c
- *  by Benjamin Allan
- *  September 08, 1997
- *  Part of ASCEND
- *  Version: $Revision: 1.3 $
- *  Version control file: $RCSfile: anoncopy.c,v $
- *  Date last modified: $Date: 1998/06/16 16:38:34 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The Ascend Language Interpreter is free software; you can
- *  redistribute it and/or modify it under the terms of the GNU
- *  General Public License as published by the Free Software
- *  Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1998 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Anonymous copy implementation
+*//*
+	by Benjamin Allan
+	September 08, 1997
+	Last in CVS $Revision: 1.3 $ $Date: 1998/06/16 16:38:34 $ $Author: mthomas $
+*/
 
 /*
  * we really need to ditch some of this crap.
@@ -103,10 +99,6 @@
 #include "anontype.h"
 #include "instmacro.h" /* some of this should move to relation.c */
 #include "instantiate.h"
-
-#ifndef lint
-static CONST char anoncopyModuleId[] = "$Id: anoncopy.c,v 1.3 1998/06/16 16:38:34 mthomas Exp $";
-#endif
 
 #if ATDEBUG
 #include "relation_io.h"
