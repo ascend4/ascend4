@@ -73,6 +73,15 @@ ATOM specific_energy REFINES solver_var
 	nominal := 1000{kJ/kg};
 END specific_energy;
 
+ATOM specific_power REFINES solver_var
+		DIMENSION L^2/T^3
+		DEFAULT 100{W/kg};
+
+	lower_bound := 0{W/kg};
+	upper_bound := 1e50{W/kg};
+	nominal := 100{W/kg};
+END specific_power;
+
 ATOM ua_value REFINES solver_var
 		DIMENSION M/T^3/TMP*L^2
 		DEFAULT 1{kW/K};

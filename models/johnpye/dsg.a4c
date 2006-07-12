@@ -53,12 +53,15 @@ MODEL dsg;
 	qdott, qdotl,qdots IS_A power_per_length;
 	mu IS_A viscosity;
 	v IS_A specific_volume;
-	T1,Tw,T2,Tamb IS_A temperature;
-	rho * v = 1;
+	T, T1, Tw, T2, Tamb IS_A temperature;
+	ekdot IS_A specific_power;
 
-	thermo_props: iapws97_uvmux_ph(
+	rho * v = 1;
+	ekdot = 0.5 * rho * vel^2;
+
+	thermo_props: iapws97_uvTxmu_ph(
 		p,h : INPUT;
-		u,v,mu,x : OUTPUT
+		u,v,T,x,mu : OUTPUT
 	);
 
 	vel = rho*mdot/A;
@@ -95,19 +98,31 @@ MODEL dsg;
 
 	Tw = (T1 + T2)/2;
 
-	mdoth IS_A solver_var;
+	mdoth IS_A energy_rate;
 	mdoth = mdot * h;
 
 	rhovel2 IS_A solver_var;
 	rhovel2 = rho * vel^2;
 
+	(* internal heat transfer *)
+
+	h1 IS_A heat_transfer_coefficient;
+
+	qdott = h1 * 1{PI} * D * (T1 - T);
+
+	twophconv: dsg_conv_coeff_two_phase(
+		p, h, mdot, D, f : INPUT;
+		h1 : OUTPUT
+	);
+
 METHODS
 
 METHOD specify;
+	RUN fix_design;
+
 	(* states *)
 	FIX T1, T2, p, h, mdot;
-	RUN fix_design;
-	RUN fix_temporals;
+	RUN fix_spatials;
 END specify;
 
 METHOD fix_design;
@@ -116,7 +131,7 @@ METHOD fix_design;
 	FIX D, eps;
 	FIX qdots;
 	FIX Tamb;
-END specify;
+END fix_design;
 
 METHOD fix_spatials;
 	(* for use when tinkering about with a single node only *)
@@ -145,7 +160,7 @@ METHOD values;
 	T1 := 600 {K};
 	T2 := 500 {K};
 	p := 10 {bar};
-	h := 2000 {kJ/kg};
+	h := 4000 {kJ/kg};
 	mdot := 0.001 {kg/s};
 
 	(* spatial derivs *)

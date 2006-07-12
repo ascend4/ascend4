@@ -1,21 +1,9 @@
-REQUIRE "system.a4l";
-(* => system.a4l, basemodel.a4l *)
-REQUIRE "measures.a4l";
-(* => measures.a4l *)
+REQUIRE "system.a4l";   (* => system.a4l, basemodel.a4l *)
+REQUIRE "measures.a4l"; (* => measures.a4l *)
 PROVIDE "atoms.a4l";
 
-(*
- *  atoms.a4l
- *  by Joseph J. Zaher, Benjamin A. Allan, Robert S. Huss
- *  Part of the ASCEND Library
- *  $Date: 1998/08/17 13:07:11 $
- *  $Revision: 1.11 $
- *  $Author: ballan $
- *  $Source: /afs/cs.cmu.edu/project/ascend/Repository/models/atoms.a4l,v $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1994-1998 Carnegie Mellon University
+(*  ASCEND modelling environment
+ *  Copyright (C) 1994-2006 Carnegie Mellon University
  *
  *  The ASCEND Modeling Library is free software; you can redistribute
  *  it and/or modify it under the terms of the GNU General Public
@@ -62,6 +50,10 @@ PROVIDE "atoms.a4l";
                  using the UNITS tool kit of the environment.
 
     REQUIRES:   see top of file.
+
+    This file by Joseph J. Zaher, Benjamin A. Allan, Robert S. Huss, John Pye
+    Last in CVS: $Date: 1998/08/17 13:07:11 $ $Revision: 1.11 $
+
  *===========================================================================*)
 
 (*  G E N E R I C    C O N S T A N T S      ( C H E M .  E .   B I A S )

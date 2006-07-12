@@ -45,6 +45,7 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   unsigned long pos;
   int added=0;
 
+  /*
   {
 	int i,j,m,n;
 	struct gl_list_t *list1;
@@ -67,9 +68,10 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
 		}
 	}
   }
+  */
 
   ext = ASC_NEW(struct ExtCallNode);
-  CONSOLE_DEBUG("ASSIGNING efunc = %p TO ExtCallNode %p",efunc,ext);
+  /* CONSOLE_DEBUG("ASSIGNING efunc = %p TO ExtCallNode %p",efunc,ext); */
   ext->efunc = efunc;
   ext->arglist = args;
   if(data){
@@ -78,10 +80,10 @@ struct ExtCallNode *CreateExtCall(struct ExternalFunc *efunc,
   ext->data = hndl;
 
   if(subject){
-	CONSOLE_DEBUG("subject at %p",subject);
+	/* CONSOLE_DEBUG("subject at %p",subject); */
     pos = GetSubjectIndex(args,subject);
     ext->subject = pos;
-	CONSOLE_DEBUG("subject index is %d",pos);
+	/* CONSOLE_DEBUG("subject index is %d",pos); */
   }else{
     ext->subject = 0L;
   }
@@ -163,7 +165,7 @@ unsigned long GetSubjectIndex(struct gl_list_t *arglist, struct Instance *subjec
         count++;
         arg = (struct Instance *)gl_fetch(branch,c2);
         if (arg==subject){
-          CONSOLE_DEBUG("Subject index %lu",count);
+          /* CONSOLE_DEBUG("Subject index %lu",count);*/
           return count;
         }
       }
