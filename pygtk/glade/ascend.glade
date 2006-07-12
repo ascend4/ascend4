@@ -20,7 +20,6 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <signal name="check_resize" handler="on_browserwin_check_resize" last_modification_time="Thu, 17 Nov 2005 15:56:29 GMT"/>
   <signal name="focus" handler="on_browserwin_focus" last_modification_time="Sun, 04 Dec 2005 05:39:42 GMT"/>
 
@@ -33,8 +32,6 @@
       <child>
 	<widget class="GtkMenuBar" id="browsermenu">
 	  <property name="visible">True</property>
-	  <property name="pack_direction">GTK_PACK_DIRECTION_LTR</property>
-	  <property name="child_pack_direction">GTK_PACK_DIRECTION_LTR</property>
 
 	  <child>
 	    <widget class="GtkMenuItem" id="menuitem8">
@@ -63,7 +60,7 @@
 		      <accelerator key="F5" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image531">
+			<widget class="GtkImage" id="image559">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-refresh</property>
 			  <property name="icon_size">1</property>
@@ -113,7 +110,7 @@
 		      <accelerator key="C" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image532">
+			<widget class="GtkImage" id="image560">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-copy</property>
 			  <property name="icon_size">1</property>
@@ -141,7 +138,7 @@
 		      <accelerator key="F" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image533">
+			<widget class="GtkImage" id="image561">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">locked.png</property>
 			  <property name="xalign">0.5</property>
@@ -162,7 +159,7 @@
 		      <accelerator key="R" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image534">
+			<widget class="GtkImage" id="image562">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">unlocked.png</property>
 			  <property name="xalign">0.5</property>
@@ -189,7 +186,7 @@
 		      <accelerator key="F4" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image535">
+			<widget class="GtkImage" id="image563">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">properties.png</property>
 			  <property name="xalign">0.5</property>
@@ -223,7 +220,7 @@
 		      <accelerator key="F7" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image536">
+			<widget class="GtkImage" id="image564">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-spell-check</property>
 			  <property name="icon_size">1</property>
@@ -245,7 +242,7 @@
 		      <accelerator key="F9" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image537">
+			<widget class="GtkImage" id="image565">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-media-forward</property>
 			  <property name="icon_size">1</property>
@@ -267,7 +264,7 @@
 		      <accelerator key="F9" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image538">
+			<widget class="GtkImage" id="image566">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">integrator-sm.png</property>
 			  <property name="xalign">0.5</property>
@@ -295,7 +292,7 @@
 		      <accelerator key="F12" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image539">
+			<widget class="GtkImage" id="image567">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-connect</property>
 			  <property name="icon_size">1</property>
@@ -335,6 +332,16 @@
 		  </child>
 
 		  <child>
+		    <widget class="GtkMenuItem" id="show_external_functions">
+		      <property name="visible">True</property>
+		      <property name="label" translatable="yes">Show e_xternal functions</property>
+		      <property name="use_underline">True</property>
+		      <signal name="activate" handler="on_show_external_functions_activate" last_modification_time="Wed, 12 Jul 2006 02:07:28 GMT"/>
+		      <accelerator key="E" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
+		    </widget>
+		  </child>
+
+		  <child>
 		    <widget class="GtkImageMenuItem" id="sparsity">
 		      <property name="visible">True</property>
 		      <property name="tooltip" translatable="yes">View the incidence matrix from the solver</property>
@@ -344,7 +351,7 @@
 		      <accelerator key="I" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image540">
+			<widget class="GtkImage" id="image568">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">incidence.png</property>
 			  <property name="xalign">0.5</property>
@@ -365,7 +372,7 @@
 		      <accelerator key="D" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image541">
+			<widget class="GtkImage" id="image569">
 			  <property name="visible">True</property>
 			  <property name="pixbuf">diagnose.png</property>
 			  <property name="xalign">0.5</property>
@@ -392,7 +399,7 @@
 		      <accelerator key="O" modifiers="GDK_CONTROL_MASK | GDK_SHIFT_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image542">
+			<widget class="GtkImage" id="image570">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-add</property>
 			  <property name="icon_size">1</property>
@@ -414,7 +421,7 @@
 		      <accelerator key="K" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image543">
+			<widget class="GtkImage" id="image571">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-indent</property>
 			  <property name="icon_size">1</property>
@@ -442,7 +449,7 @@
 		      <accelerator key="F11" modifiers="0" signal="activate"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image544">
+			<widget class="GtkImage" id="image572">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-preferences</property>
 			  <property name="icon_size">1</property>
@@ -531,7 +538,7 @@
 		      <signal name="activate" handler="on_help_contents_click" last_modification_time="Sun, 29 Jan 2006 06:36:19 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image545">
+			<widget class="GtkImage" id="image573">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-help</property>
 			  <property name="icon_size">1</property>
@@ -1139,7 +1146,6 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <signal name="destroy" handler="on_paramswin_destroy" last_modification_time="Fri, 27 Jan 2006 05:15:10 GMT"/>
 
   <child>
@@ -1402,7 +1408,6 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -1527,7 +1532,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
 
   <child>
     <widget class="GtkVBox" id="observervbox">
@@ -1716,7 +1720,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="delete_event" handler="on_varpropswin_close" last_modification_time="Sat, 04 Feb 2006 06:47:24 GMT"/>
   <signal name="close" handler="on_varpropswin_close" last_modification_time="Sat, 04 Feb 2006 06:47:44 GMT"/>
@@ -2376,7 +2379,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -2619,7 +2621,6 @@ upper and lower bounds displayed.</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="close" handler="on_diagnosewin_close" last_modification_time="Wed, 05 Jul 2006 02:38:25 GMT"/>
 
@@ -3253,8 +3254,7 @@ upper and lower bounds displayed.</property>
 				  <child>
 				    <widget class="GtkImage" id="varinfoimg">
 				      <property name="visible">True</property>
-				      <property name="stock">gtk-info</property>
-				      <property name="icon_size">4</property>
+				      <property name="pixbuf">gtk-info</property>
 				      <property name="xalign">0.5</property>
 				      <property name="yalign">0.5</property>
 				      <property name="xpad">0</property>
@@ -3285,8 +3285,7 @@ upper and lower bounds displayed.</property>
 				  <child>
 				    <widget class="GtkImage" id="relinfoimg">
 				      <property name="visible">True</property>
-				      <property name="stock">gtk-info</property>
-				      <property name="icon_size">4</property>
+				      <property name="pixbuf">gtk-info</property>
 				      <property name="xalign">0.5</property>
 				      <property name="yalign">0.5</property>
 				      <property name="xpad">0</property>
@@ -4098,7 +4097,6 @@ POSSIBILITY OF SUCH DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
 </property>
-  <property name="wrap_license">False</property>
   <property name="website">http://ascend.cheme.cmu.edu/</property>
   <property name="website_label" translatable="yes">website:</property>
   <property name="authors">ASCEND engine:
@@ -4149,7 +4147,6 @@ Conversion to LyX and other formats:
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="close" handler="on_solverstatusdialog_close" last_modification_time="Thu, 23 Feb 2006 09:33:28 GMT"/>
   <signal name="response" handler="on_solverstatusdialog_response" last_modification_time="Thu, 23 Feb 2006 09:37:55 GMT"/>
@@ -4823,7 +4820,6 @@ Conversion to LyX and other formats:
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="response" handler="on_paramswin_response" last_modification_time="Fri, 24 Feb 2006 06:01:08 GMT"/>
   <signal name="close" handler="on_paramswin_close" last_modification_time="Fri, 24 Feb 2006 06:01:12 GMT"/>
@@ -5092,7 +5088,6 @@ Conversion to LyX and other formats:
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="close" handler="on_integratorwin_close" last_modification_time="Mon, 05 Jun 2006 10:53:07 GMT"/>
 
@@ -5799,7 +5794,6 @@ Westerberg	</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -5921,7 +5915,6 @@ Westerberg	</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
   <property name="has_separator">True</property>
   <signal name="close" handler="on_infodialog_close" last_modification_time="Tue, 04 Jul 2006 13:01:21 GMT"/>
 

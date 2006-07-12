@@ -965,13 +965,30 @@ class Browser:
 	def on_find_fixable_variables_activate(self,*args):
 		v = self.sim.getFixableVariables()
 		text = "Fixable Variables"
-		title = text;
+		title = text
 		text += "\n"
 		if len(v):
 			for var in v:
 				text += "\n%s"%var
 		else:
 			text += "\nnone"
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
+
+	def on_show_external_functions_activate(self,*args):
+		v = self.library.getExtMethods()
+		text = "External Functions"
+		title = text
+		text +="\nHere is the list of external functions currently present in"
+		text +=" the Library:"
+
+		if len(v):
+			for ext in v:
+				text += "\n\n%s (%d inputs, %d outputs):" % \
+					(ext.getName(), ext.getNumInputs(), ext.getNumOutputs())
+				text += "\n%s" % ext.getHelp()
+		else:
+			text +="\n\nNone"		
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
