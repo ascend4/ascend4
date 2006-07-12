@@ -144,6 +144,12 @@ update-mime-database /usr/share/mime
 %{_includedir}/packages
 
 %changelog
+* Wed Jul 12 2006 John Pye <john.pye@student.unsw.edu.au>
+- Fixed fortran linking
+- Removed ccache dependency
+- Added xgraph dependency
+- Added 'include' files plus 'ascend-config' script
+
 * Thu Jun 01 2006 John Pye <john.pye@student.unsw.edu.au>
 - Add Tcl/Tk interface to GNOME menu
 
