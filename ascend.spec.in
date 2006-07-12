@@ -136,6 +136,13 @@ update-mime-database /usr/share/mime
 %{_datadir}/icons/ascend4-app.png
 %{_datadir}/icons/hicolor/64x64/ascend4.png
 
+# %package -b ascend-devel
+%{_includedir}/compiler
+%{_includedir}/general
+%{_includedir}/utilities
+%{_includedir}/solver
+%{_includedir}/packages
+
 %changelog
 * Thu Jun 01 2006 John Pye <john.pye@student.unsw.edu.au>
 - Add Tcl/Tk interface to GNOME menu
