@@ -24,9 +24,13 @@ fi
 
 if [ $ASC_GDB ]; then
 	echo "RUNNING THROUGH DEBUGGER"
-    bin="gdb --symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@ --args $python" 
+	ASC_DEBUGGER="gdb --symbols=../@ASC_SHLIBPREFIX@ascend@ASC_SHLIBSUFFIX@ --args" 
+fi
+
+if [ "x$ASC_DEBUGGER" != "x" ]; then
+	bin="$ASC_DEBUGGER $python"
 else
-    bin=$python
+	bin="$python"
 fi
 
 # if 'ascend' isn't in the path, assume ASC_DEV mode...
