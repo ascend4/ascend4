@@ -388,6 +388,13 @@ opts.Add(BoolOption(
 	,True
 ))
 
+opts.Add(BoolOption(
+	'WITH_EXTFNS'
+	,"Set to 0 if you don't want to attempt to build external modules bundled"
+		+ " with ASCEND."
+	,True
+))
+
 if platform.system()!="Windows":
 	opts.Add(BoolOption(
 		'WITH_GCCVISIBILITY'
@@ -442,6 +449,9 @@ without_python_reason = "disabled by options/config.py"
 
 with_cunit = env.get('WITH_CUNIT')
 without_cunit_reason = "not requested"
+
+with_extfns = env.get('WITH_EXTFNS')
+without_extfn_reason = "disabled by options/config.py"
 
 if platform.system()=="Windows":
 	with_installer=1
@@ -1335,7 +1345,7 @@ libascend = libascend_env.SharedLibrary('ascend',srcs)
 env.Alias('libascend',libascend)
 
 #-------------
-# UNIT TESTS
+# UNIT TESTS (C CODE)
 
 if with_cunit:
 	testdirs = ['general','solver','utilities']
@@ -1354,6 +1364,20 @@ if with_cunit:
 	
 else:
 	print "Skipping... CUnit tests aren't being built:",without_cunit_reason
+
+#-------------
+# EXTERNAL FUNCTIONS
+
+extfns = []
+if with_extfns:
+	testdirs = ['johnpye/extfn']
+	for testdir in testdirs:
+		path = 'models/'+testdir+"/SConscript"
+		extfns += env.SConscript(path,'env')
+else:
+	print "Skipping... External modules aren't being built:",without_extfns_reason
+
+env.Alias('extfns',extfns)
 
 #------------------------------------------------------
 # CREATE ASCEND-CONFIG scriptlet
@@ -1428,6 +1452,8 @@ if with_python:
 	default_targets.append('pygtk')
 if with_installer:
 	default_targets.append('installer')
+if with_extfns:
+	default_targets.append('extfns')
 
 env.Default(default_targets)
 

@@ -6,10 +6,14 @@ srcs = Split("""
 """)
 
 extfn_env.Append(LIBS=['ascend'])
-extfn_env.SharedLibrary("extfntest",srcs)
+
+targets = []
+targets.append( extfn_env.SharedLibrary("extfntest",srcs) )
 
 # To run the test
 # type
 #
 # ASCENDLIBRARY=../../../models LD_LIBRARY_PATH=../../.. PYTHONPATH=../../../pygtk python extfntest.py
 
+# Return the targs
+Return('targets')
