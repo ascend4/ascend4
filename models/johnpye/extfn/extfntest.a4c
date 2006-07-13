@@ -1,7 +1,7 @@
 REQUIRE "atoms.a4l";
 IMPORT "johnpye/extfn/extfntest";
 
-MODEL test_extfntest;
+MODEL extfntest;
 
 	y IS_A factor;
 	x IS_A factor;
@@ -28,4 +28,4 @@ METHOD self_test;
 	ASSERT y == 2;
 END self_test;
 
-END test_extfntest;
+END extfntest;
