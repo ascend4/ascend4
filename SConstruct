@@ -412,7 +412,7 @@ if platform.system()!="Windows":
 if os.environ.get('OSTYPE')=='msys':
 	env = Environment(
 		ENV=os.environ
-		, tools=['mingw','lex','yacc','fortran','swig','disttar','nsis']
+		, tools=['mingw','lex','yacc','fortran','swig','disttar','nsis','doxygen']
 		, toolpath=['scons']
 	)
 	env['IS_MINGW']=True
@@ -425,14 +425,14 @@ elif platform.system()=="Windows":
 			,'LIB':os.environ['LIB']
 			,'MSVS_IGNORE_IDE_PATHS':1
 		}
-		, tools = ['default','lex','yacc','fortran','swig','disttar','nsis']
+		, tools = ['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
 		, toolpath = ['scons']
 	)
 	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
 else:
 	env = Environment(
 		ENV=os.environ
-		, tools=['default','lex','yacc','fortran','swig','disttar','nsis']
+		, tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
 		, toolpath=['scons']
 	)
 
@@ -1437,10 +1437,15 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 env.Depends(tar,'ascend.spec')
 
 #------------------------------------------------------
+# LIBASCEND DOXYGEN DOCUMENTATION
+
+env.SConscript('base/doc/SConscript',['env'])
+
+#------------------------------------------------------
 # RPM BUILD
 
-#if platform.system()=="Linux":
-#	pass
+# for RPM builds, 'scons dist' then 'rpmbuild -ta dist/ascend-*.tar.bz2'
+# (check * for the version number used to create the tarball)
 
 #------------------------------------------------------
 # DEFAULT TARGETS
