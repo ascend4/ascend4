@@ -207,6 +207,8 @@ static struct var_variable *rel_instance_to_var(struct rel_relation *rel,
 	incid = rel_incidence_list_to_modify(rel);
 	nincid = rel_n_incidences(rel);
 
+	CONSOLE_DEBUG("Looking for var in list of %d incident on rel %p",nincid,rel);
+
 	var = NULL;
 	for(j=0;j<nincid;++j){
 		if(( var_instance(incid[j]) )==inst){
