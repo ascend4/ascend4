@@ -1,45 +1,56 @@
-/*
- *  Ascend Interpretter(Instantiator)
- *  by Tom Epperly
- *  Created: 1/24/90
- *  Version: $Revision: 1.18 $
- *  Version control file: $RCSfile: instantiate.h,v $
- *  Date last modified: $Date: 1998/03/25 00:32:03 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
 
-/** @file
- *  Ascend Interpretter(Instantiator).
- *  <pre>
- *  When #including instantiate.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "compiler/instance_enum.h"
- *         #include "compiler/fractions.h"
- *         #include "compiler/compiler.h"
- *         #include "compiler/dimen.h"
- *         #include "compiler/types.h"
- *         #include "compiler/stattypes.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Ascend Interpreter(Instantiator).
+	
+	Requires:
+	       #include "utilities/ascConfig.h"
+	       #include "compiler/instance_enum.h"
+	       #include "compiler/fractions.h"
+	       #include "compiler/compiler.h"
+	       #include "compiler/dimen.h"
+	       #include "compiler/types.h"
+	       #include "compiler/stattypes.h"
+	</pre>
+*//*
+	by Tom Epperly
+	Created: 1/24/90
+	Last in CVS: $Revision: 1.18 $ $Date: 1998/03/25 00:32:03 $ $Author: ballan $
+*//** @mainpage
+
+	@section intro_sec Introduction
+
+	This the the code documentation for 'libascend', which contains the 'base'
+	or 'core' components of the ASCEND modelling environment.
+
+	The two main parts are the compiler and the solver. There are also a number
+	of general and utilities files, as well as some 'internal' packages.
+
+	For further information about ASCEND, see the Developers' Wiki at
+	https://pse.cheme.cmu.edu/wiki/view/Ascend/WebHome
+
+	@section license License
+
+	ASCEND is licensed under the GNU General Public License. See the the file
+	'LICENSE.txt' for more information, which is available at:
+	https://pse.cheme.cmu.edu/svn-view/ascend/code/trunk/LICENSE.txt?view=markup
+*/
 
 #ifndef ASC_INSTANTIATE_H
 #define ASC_INSTANTIATE_H
