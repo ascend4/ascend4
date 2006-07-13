@@ -30,7 +30,10 @@ Using SCons 0.96.92 or newer, see your build options by typing
   scons -Qh
 
 You can add your build options to a file in this directory
-which you can create, called 'config.py'.
+which you can create, called 'config.py'. Otherwise you can
+specify your build options via the commandline. By default they will
+be recorded in the file 'options.cache', so watch out for that if scons
+seems to not be doing what you expected.
 
 Then to build ASCEND, type
 
@@ -89,8 +92,8 @@ See also the TCL_LIB and TK_LIB flags (scons -Qh).
 INSTALLING ON LINUX
 
 To then install ASCEND, you will need to have write access to the 
-directories INSTALL_DATA, INSTALL_BIN as specified in your
-SCons configuration. You can then type
+directories INSTALL_* as specified in your SCons configuration.
+You can then type:
 
   scons install
     
@@ -117,6 +120,14 @@ should simply need to type
 This will leave an installer package named 'ascend-NNNNN.exe'
 in the pygtk/interface directory, with NNNNN being the version number specified
 at the top of the SConstruct file.
+
+------
+A NOTE ABOUT PREFERENCES
+
+ASCEND PyGTK GUI stores your preferences in the file ~/.ascend.ini.
+The Tcl/Tk GUI creates a file under ~/ascdata.
+You may wish to check these files if ASCEND seems to be doing 
+something you didn't expect.
 
 ------
 CREATING AN RPM/DEB PACKAGE
