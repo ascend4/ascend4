@@ -1,44 +1,36 @@
-/*
- *  Ascend Instance Tree Search Routines
- *  by Tom Epperly
- *  Created: 1/24/90
- *  Version: $Revision: 1.12 $
- *  Version control file: $RCSfile: find.h,v $
- *  Date last modified: $Date: 1998/03/26 20:39:45 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
 
-/** @file
- *  Ascend Instance Tree Search Routines.
- *  <pre>
- *  When #including find.h, make sure these files are #included first:
- *         #include "utilities/ascConfig.h"
- *         #include "fractions.h"
- *         #include "compiler.h"
- *         #include "instance_enum.h"
- *         #include "dimen.h"
- *         #include "expr_types.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//** @file
+	Ascend Instance Tree Search Routines.
+	
+	Requires:
+	#include "utilities/ascConfig.h"
+	#include "fractions.h"
+	#include "compiler.h"
+	#include "instance_enum.h"
+	#include "dimen.h"
+	#include "expr_types.h"
+*//*
+	by Tom Epperly
+	Created: 1/24/90
+	Last in CVS: $Revision: 1.12 $ $Date: 1998/03/26 20:39:45 $ $Author: ballan $
+*/
 
 #ifndef ASC_FIND_H
 #define ASC_FIND_H
@@ -81,20 +73,20 @@ extern int g_DeclarativeContext;
 
 #define FINDEBUG 0
 #if (FINDEBUG==0)
-/** retrieve the declarative context */
-#define GetDeclarativeContext() g_DeclarativeContext
-#define SetDeclarativeContext(n) g_DeclarativeContext = (n)
-/**< set the declarative context */
+# define GetDeclarativeContext() g_DeclarativeContext
+  /**< retrieve the declarative context */
+# define SetDeclarativeContext(n) g_DeclarativeContext = (n)
+  /**< set the declarative context */
 #else
-/** retrieve the declarative context */
-#define GetDeclarativeContext() GetDeclarativeContextF()
-#define SetDeclarativeContext(n) SetDeclarativeContextF((n),__FILE__,__LINE__)
-/**< set the declarative context */
-#endif
+# define GetDeclarativeContext() GetDeclarativeContextF()
+  /** retrieve the declarative context */
 extern int GetDeclarativeContextF(void);
-/**< retrieve the declarative context (for debugging) */
+  /**< retrieve the declarative context (for debugging) */
+# define SetDeclarativeContext(n) SetDeclarativeContextF((n),__FILE__,__LINE__)
+  /**< set the declarative context */
 extern void SetDeclarativeContextF(int value, char *file, int line);
-/**< set the declarative context (for debugging) */
+  /**< set the declarative context (for debugging) */
+#endif
 
 extern CONST struct Instance *g_EvaluationContext;
 /**<
@@ -103,6 +95,7 @@ extern CONST struct Instance *g_EvaluationContext;
  * directly, but use GetEvaluationContext() and
  * SetEvaluationContext() instead.
  */
+
 extern struct for_table_t *g_EvaluationForTable;
 /**<
  * Global variable used throughout semantic analysis to
@@ -112,30 +105,30 @@ extern struct for_table_t *g_EvaluationForTable;
  */
 
 #ifndef NDEBUG
-#define EVALDEBUG 0 /**< 1 = contextnoisy, 2 = fornoisy, 3 = both */
-#define GetEvaluationContext() GetEvaluationContextF()
-#define GetEvaluationForTable() GetEvaluationForTableF()
-#if EVALDEBUG
-#if (EVALDEBUG == 1 || EVALDEBUG == 3)
-#define SetEvaluationContext(i) SetEvaluationContextF((i),__FILE__,__LINE__)
-#else /* evaldebug 12 */
-#define SetEvaluationContext(i) SetEvaluationContextF(i)
-#endif /* evaldebug  12 */
-#if (EVALDEBUG == 2 || EVALDEBUG == 3)
-#define SetEvaluationForTable(ft) SetEvaluationForTableF((ft),__FILE__,__LINE__)
-#else /* evaldebug 23 */
-#define SetEvaluationForTable(ft) SetEvaluationForTableF(ft)
-#endif /* evaldebug  23 */
-#else /* evaldebug */
-#define SetEvaluationContext(i) SetEvaluationContextF(i)
-#define SetEvaluationForTable(ft) SetEvaluationForTableF(ft)
-#endif /* evaldebug */
-#else /* ndebug */
-#define GetEvaluationContext() g_EvaluationContext
-#define SetEvaluationContext(i) g_EvaluationContext = (i)
-#define GetEvaluationForTable() g_EvaluationForTable
-#define SetEvaluationForTable(ft) g_EvaluationForTable = (ft)
-#endif /* ndebug */
+# define EVALDEBUG 0 /**< 1 = contextnoisy, 2 = fornoisy, 3 = both */
+# define GetEvaluationContext() GetEvaluationContextF()
+# define GetEvaluationForTable() GetEvaluationForTableF()
+# if EVALDEBUG
+#  if (EVALDEBUG == 1 || EVALDEBUG == 3)
+#   define SetEvaluationContext(i) SetEvaluationContextF((i),__FILE__,__LINE__)
+#  else
+#   define SetEvaluationContext(i) SetEvaluationContextF(i)
+#  endif
+#  if (EVALDEBUG == 2 || EVALDEBUG == 3)
+#   define SetEvaluationForTable(ft) SetEvaluationForTableF((ft),__FILE__,__LINE__)
+#  else
+#   define SetEvaluationForTable(ft) SetEvaluationForTableF(ft)
+#  endif
+# else
+#  define SetEvaluationContext(i) SetEvaluationContextF(i)
+#  define SetEvaluationForTable(ft) SetEvaluationForTableF(ft)
+# endif
+#else
+# define GetEvaluationContext() g_EvaluationContext
+# define SetEvaluationContext(i) g_EvaluationContext = (i)
+# define GetEvaluationForTable() g_EvaluationForTable
+# define SetEvaluationForTable(ft) g_EvaluationForTable = (ft)
+#endif
 
 /*
  * Wrappers mainly for break point purposes of g_EvaluationContext
@@ -171,12 +164,10 @@ extern void SetEvaluationForTableF(struct for_table_t *ft);
 
 extern struct value_t InstanceEvaluateName(CONST struct Name *nptr);
 /**<
- *  <!--  struct value_t InstanceEvaluateName(nptr)                    -->
- *  <!--  struct Name *nptr;                                           -->
  *  This evaluates the name in the context given by EvaluationContext.
  *  This must be set before the InstanceEvaluateName call.  Note since
  *  this is a global variable you cannot evaluate names in more than
- *  one context simultaneously.<br><br>
+ *  one context simultaneously.
  *
  *  If EvaluationForTable is non-NULL, the for table will be checked before
  *  the instance tree.
@@ -185,11 +176,7 @@ extern struct value_t InstanceEvaluateName(CONST struct Name *nptr);
 extern struct value_t InstanceEvaluateSatisfiedName(CONST struct Name *nptr,
                                                     double tol);
 /**<
- *  <!--  struct value_t InstanceEvaluateName(nptr,tol)                -->
- *  <!--  struct Name *nptr;                                           -->
- *  <!--  double tol;                                                  -->
- *
- *  This functionis specially to evaluate name of relations or logical
+ *  This function is specially to evaluate name of relations or logical
  *  relations included in SATISFIED expressions.
  *  This evaluates the name in the context given by EvaluationContext.
  *  This must be set before the InstanceEvaluateName call.  Note since
@@ -203,10 +190,6 @@ extern struct gl_list_t *FindInstances(CONST struct Instance *i,
                                        CONST struct Name *n,
                                        enum find_errors *err);
 /**<
- *  <!--  struct gl_list_t *FindInstances(i,n,err)                     -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  CONST struct Name *n;                                        -->
- *  <!--  enum find_errors *err;                                       -->
  *  Return the list of instances specified by n.  If this returns NULL,
  *  it indicates that it couldn't find the name.  Check err to discover why.
  */
