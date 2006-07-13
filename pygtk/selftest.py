@@ -1,12 +1,13 @@
-import os, os.path, mmap, re
-import threading, heapq
-import time, platform
+# Sort of an experiment in thread programming. This script locates all
+# ASCEND files in the ASCENDLIBRARY path, then for any that contain 'self_test'
+# methods, it loads them and solves them and runs the self test. It's not
+# very good at checking the results just yet: probably there needs to be a
+# 'TestReporter' hook implemented that we can script with.
 
-import sys, dl
-# This sets the flags for dlopen used by python so that the symbols in the
-# ascend library are made available to libraries dlopened within ASCEND:
-sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
-import ascpy
+# The initial file scan is done by filename, then followed with the regular
+# expression check for the METHOD_RE expression. Then the file is accessed with
+# ASCEND to check that the TEST_METHOD_NAME ('self_test') method really exists.
+# Only *then* is the model instantiated and the test run.
 
 # Our input will be the ASCENDLIBRARY environment variable
 # plus perhaps some commandline options relating to exclusions and inclusions.
@@ -18,9 +19,23 @@ import ascpy
 
 TEST_METHOD_NAME='self_test';
 METHOD_RE = '\\s*METHOD\\s+'+TEST_METHOD_NAME+'\\s*;';
+
+#-------------------------------------------------------------------------------
+
+import os, os.path, mmap, re
+import threading, heapq
+import time, platform
+import sys, dl
+
+# This sets the flags for dlopen used by python so that the symbols in the
+# ascend library are made available to libraries dlopened within ASCEND:
+sys.setdlopenflags(dl.RTLD_GLOBAL|dl.RTLD_NOW)
+
+import ascpy
+
 METHOD_REGEXP = re.compile(METHOD_RE);
 
-#---------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # TASK CLASSES
 
 # These classes represent tasks that will be added to the queue. They

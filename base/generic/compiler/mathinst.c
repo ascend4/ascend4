@@ -304,7 +304,7 @@ void SetInstanceRelation(struct Instance *i, struct relation *rel,
       RELN_INST(i)->ptr = rel;
       RELN_INST(i)->type = type;
     }else{
-      Asc_Panic(2, NULL, "Attempt to reassign RelationPointer.");
+      Asc_Panic(2, __FUNCTION__, "Attempt to reassign RelationPointer.");
     }
   }else{
     PANIC_INCORRECT_TYPE;

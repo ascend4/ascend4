@@ -6842,7 +6842,8 @@ int Pass3CheckCondStatements(struct Instance *inst,
                "Statement not allowed inside a CONDITIONAL statement\n");
          return 0;
     default:
-      FPRINTF(ASCERR,"Inappropriate statement type in CheckStatement\n");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
       return 1;
     }
 }
@@ -6903,7 +6904,8 @@ int Pass2CheckCondStatements(struct Instance *inst,
                "Statement not allowed inside a CONDITIONAL statement\n");
          return 0;
     default:
-      FPRINTF(ASCERR,"Inappropriate statement type in CheckStatement\n");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
       return 1;
     }
 }
@@ -7211,7 +7213,8 @@ int CheckWhenStatements(struct Instance *inst, struct Statement *statement)
               "Statement not allowed inside a WHEN statement\n");
          return 0;
     default:
-      FPRINTF(ASCERR,"Inappropriate statement type in CheckStatement\n");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
       return 1;
     }
 }
@@ -7428,7 +7431,8 @@ int CheckSelectStatements(struct Instance *inst, struct Statement *statement)
     /** AND WHY NOT? fix me. **/
     return 0;
   default:
-    FPRINTF(ASCERR,"Inappropriate statement type in CheckStatement\n");
+    STATEMENT_ERROR(statement,"Inappropriate statement type");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
     return 1;
   }
 }
@@ -7837,8 +7841,14 @@ int Pass1CheckStatement(struct Instance *inst, struct Statement *stat)
   case FNAME:
     FPRINTF(ASCERR,"FNAME are only allowed inside a WHEN Statement\n");
     return 0;
+  case EXT:
+	STATEMENT_ERROR(stat,"External functions are not allowed directly"
+		"\ninside a FOR loop. Maybe Must be embedded inside a MODEL or...?"
+	);
+	return 1;
   default:
-    FPRINTF(ASCERR,"Inappropriate statement type in CheckStatement.\n");
+    STATEMENT_ERROR(stat,"Inappropriate statement type");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
     return 1;
   }
 }
@@ -7958,8 +7968,8 @@ void Pass3MarkCondLogRels(struct Instance *inst, struct Statement *statement)
     case REL:
       break;
     default:
-      STATEMENT_ERROR(statement,
-                     "Inappropriate statement type in CONDITIONAL Statement");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
   }
 }
 
@@ -7986,8 +7996,8 @@ void Pass3MarkCondLogRelStatList(struct Instance *inst,
       case REL:
         break;
       default:
-        STATEMENT_ERROR(stat,
-                     "Inappropriate statement type in CONDITIONAL Statement");
+        STATEMENT_ERROR(stat,"Inappropriate statement type");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
     }
   }
 }
@@ -8032,8 +8042,8 @@ int Pass3ExecuteCondStatements(struct Instance *inst,
     case REL:
       return 1; /* assume done */
     default:
-      STATEMENT_ERROR(statement,
-                     "Inappropriate statement type in CONDITIONAL Statement");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
       return 0;
   }
 }
@@ -8103,8 +8113,8 @@ void Pass2MarkCondRelations(struct Instance *inst, struct Statement *statement)
     case LOGREL:
       break;
     default:
-      STATEMENT_ERROR(statement,
-                     "Inappropriate statement type in CONDITIONAL Statement");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
   }
 }
 
@@ -8130,8 +8140,8 @@ void Pass2MarkCondRelStatList(struct Instance *inst, struct StatementList *sl)
       case LOGREL:
         break;
       default:
-        STATEMENT_ERROR(stat,
-                     "Inappropriate statement type in CONDITIONAL Statement");
+        STATEMENT_ERROR(stat,"Inappropriate statement type");
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
     }
   }
 }
@@ -8184,8 +8194,8 @@ int Pass2ExecuteCondStatements(struct Instance *inst,
     case LOGREL:
       return 1; /* Ignore */
     default:
-      STATEMENT_ERROR(statement,
-                     "Inappropriate statement type in CONDITIONAL Statement");
+      STATEMENT_ERROR(statement,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
       return 0;
   }
 }
@@ -8262,8 +8272,8 @@ int ExecuteUnSelectedCOND(struct Instance *inst, struct Statement *statement)
       return_value = ExecuteUnSelectedEQN(inst,stat);
       break;
     default:
-      WSEM(stderr,stat,
-                      "Inappropriate statement type in CONDITIONAL Statement");
+      STATEMENT_ERROR(stat,"Inappropriate statement type");
+	  ERROR_REPORTER_HERE(ASC_PROG_ERR,"while running %s",__FUNCTION__);
       Asc_Panic(2, NULL,
                 "Inappropriate statement type in CONDITIONAL Statement");
     }

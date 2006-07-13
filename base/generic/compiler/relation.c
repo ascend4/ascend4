@@ -66,11 +66,6 @@
 #include "tmpnum.h"
 #include "relation.h"
 
-#ifndef lint
-static CONST char RelationModRCSid[] =
-	 "$Id: relation.c,v 1.32 1998/03/17 22:09:24 ballan Exp $";
-#endif
-
 /*
  * internal form of RelationRelop for lval or rval use.
  */
@@ -3661,9 +3656,10 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
       gl_store(rel->vars,pos,(VOIDPTR)new);
 }
 
-/*
-	This procedure should change all references of "old" in relation
-	instance rel to "new. This is similar to ModifyTokenRelationPointers
+/**
+	Change all references of "old" in relation instance rel to "new.
+
+	This is similar to ModifyTokenRelationPointers
 	but handles the "external variables incident on the relation".
 	Remember that variables may be exist more than once in the list, so
 	that we have to find ALL occurrences.
@@ -3671,32 +3667,44 @@ void ModifyGlassBoxRelPointers(struct Instance *relinst,
 void ModifyBlackBoxRelPointers(struct Instance *relinst,
 			       struct relation *rel,
 			       CONST struct Instance *old,
-			       CONST struct Instance *new)
-{
-  unsigned long len1,c1,len2,c2;
-  struct gl_list_t *branch, *extvars;
-  struct Instance *arg;
+			       CONST struct Instance *new
+){
+	unsigned long len1,c1,len2,c2;
+	struct gl_list_t *branch, *extvars;
+	struct Instance *arg;
 
-  (void)relinst;    /*  stop gcc whine about unused parameter  */
+	UNUSED_PARAMETER(relinst);
 
-  assert(rel!=NULL);
-  if (old==new) return;
-  extvars = ExternalCallArgList(RBBOX(rel).ext);
-  if (extvars==NULL) return;
+	assert(rel!=NULL);
+	if(old==new){
+		CONSOLE_DEBUG("old==new");
+		return;
+	}
+	extvars = ExternalCallArgList(RBBOX(rel).ext);
+	if (extvars==NULL){
+		CONSOLE_DEBUG("extvars list is NULL");
+		return;
+	}
 
-  len1 = gl_length(extvars);
-  if (!len1) return;
-  for (c1=1;c1<=len1;c1++){	/* find all occurrences and change them */
-    branch = (struct gl_list_t *)gl_fetch(extvars,c1);
-    if (branch){
-      len2 = gl_length(branch);
-      for (c2=1;c2<=len2;c2++){
-	arg = (struct Instance *)gl_fetch(branch,c2);
-	if (arg==old)
-	  gl_store(branch,c2,(VOIDPTR)new);
-      }
-    }
-  }
+	len1 = gl_length(extvars);
+	if(!len1){
+		CONSOLE_DEBUG("length is 0");
+		return;
+	}
+
+	for (c1=1;c1<=len1;c1++){	/* find all occurrences and change them */
+		branch = (struct gl_list_t *)gl_fetch(extvars,c1);
+		if (branch){
+			len2 = gl_length(branch);
+			for (c2=1;c2<=len2;c2++){
+				arg = (struct Instance *)gl_fetch(branch,c2);
+				if (arg==old){
+					CONSOLE_DEBUG("STORING 'new' IN PLACE of 'old' in pos %lu of list %lu",c2,c1);
+					gl_store(branch,c2,(VOIDPTR)new);
+				}
+			}
+		}
+	}
 }
 
 /**

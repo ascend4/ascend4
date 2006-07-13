@@ -1,34 +1,31 @@
-/*
- *  Ascend Instance Tree Link Management
- *  by Tom Epperly & Ben Allan
- *  9/3/89
- *  Version: $Revision: 1.13 $
- *  Version control file: $RCSfile: linkinst.c,v $
- *  Date last modified: $Date: 1998/02/05 16:36:59 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the Ascend Language Interpreter.
- *
- *  Copyright (C) 1996 Ben Allan
- *  based on instance.c
- *  Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
- *
- *  The Ascend Language Interpreter is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The Ascend Language Interpreter is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+	Copyright (C) 1996 Ben Allan
+	Copyright (C) 1990, 1993, 1994 Thomas Guthrie Epperly
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//*
+	@file
+	Ascend Instance Tree Link Management
+*//*
+	based in instance.c by Tom Epperly
+	9/3/89
+	Last in CVS: $Revision: 1.13 $ $Date: 1998/02/05 16:36:59 $ $Author: ballan $
+*/
+
 #include <stdarg.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascPanic.h>
@@ -75,14 +72,11 @@
 #include "mathinst.h"
 #include "parentchild.h"
 
-#ifndef lint
-static CONST char LinkInstModuleID[] = "$Id: linkinst.c,v 1.13 1998/02/05 16:36:59 ballan Exp $";
-#endif
-
+#define PANIC_ILLEGAL_INSTANCE Asc_Panic(2, __FUNCTION__, "invalid instance type")
 
 void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
-			    struct Instance *new)
-{
+			    struct Instance *new
+){
   assert(rel!=NULL);
   assert(rel->t==REL_INST);
   AssertMemory(rel);
@@ -95,19 +89,19 @@ void ChangeRelationPointers(struct Instance *rel, struct Instance *old,
       ModifyGlassBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_blackbox:
-      CONSOLE_DEBUG("...");
+      CONSOLE_DEBUG("MODIFY BLACK BOX POINTERS");
       ModifyBlackBoxRelPointers(rel,RELN_INST(rel)->ptr,old,new);
       return;
     case e_undefined:
     default:
-      Asc_Panic(2, NULL, "Unknown relation type in ChangeRelationPointers\n");
+      PANIC_ILLEGAL_INSTANCE;
     }
   }
 }
 
 void ChangeLogRelPointers(struct Instance *lrel, struct Instance *old,
-			  struct Instance *new)
-{
+			  struct Instance *new
+){
   struct gl_list_t *varlist,*rellist;
   struct Instance *inst;
   struct logrelation *logrel;
@@ -139,14 +133,13 @@ void ChangeLogRelPointers(struct Instance *lrel, struct Instance *old,
       }
       break;
     default:
-      Asc_Panic(2, "ChangeLogRelPointers",
-                "Wrong instance type passed to ChangeLogRelPointers\n");
+      PANIC_ILLEGAL_INSTANCE;
   }
 }
 
 void ChangeWhenPointers(struct Instance *when, struct Instance *old,
-			struct Instance *new)
-{
+			struct Instance *new
+){
   struct gl_list_t *varlist,*caselist,*reflist;
   struct Instance *scratch;
   struct Case *cur_case;
@@ -189,16 +182,16 @@ void ChangeWhenPointers(struct Instance *when, struct Instance *old,
       }
     return;
     default:
-      Asc_Panic(2, NULL, "ChangeWhenPointers receives wrong instance.\n");
+      PANIC_ILLEGAL_INSTANCE;
   }
 }
 
-/*********************************************************************\
-Tell parent to change pointers to oldchild to pointers to newchild.
-\*********************************************************************/
+/**
+	Tell parent to change pointers to oldchild to pointers to newchild.
+*/
 void ChangeParent(struct Instance *parent, struct Instance *oldchild,
-		  struct Instance *newchild)
-{
+		  struct Instance *newchild
+){
   register unsigned long c,length;
   AssertMemory(parent);
   length = NumberChildren(parent);
@@ -209,8 +202,7 @@ void ChangeParent(struct Instance *parent, struct Instance *oldchild,
   }
 }
 
-void ReDirectParents(struct Instance *old, struct Instance *new)
-{
+void ReDirectParents(struct Instance *old, struct Instance *new){
   register struct Instance *parent;
   register unsigned long index1,length;
   length = NumberParents(new);
@@ -220,8 +212,7 @@ void ReDirectParents(struct Instance *old, struct Instance *new)
   }
 }
 
-void ReDirectChildren(struct Instance *old, struct Instance *new)
-{
+void ReDirectChildren(struct Instance *old, struct Instance *new){
   register struct Instance *child;
   register unsigned long c,length,pos;
   length = NumberChildren(new);
@@ -237,11 +228,9 @@ void ReDirectChildren(struct Instance *old, struct Instance *new)
 
 
 void ReorderChildrenPtrs(register struct Instance **c,
-			 register CONST ChildListPtr old,
-			 register CONST ChildListPtr new,
-			 register unsigned long int olen,
-			 register unsigned long int nlen)
-{
+		register CONST ChildListPtr old, register CONST ChildListPtr new,
+		register unsigned long int olen, register unsigned long int nlen
+){
   register unsigned nzero;
   if (olen==0) return;
   nzero = nlen-olen;
@@ -258,12 +247,10 @@ void ReorderChildrenPtrs(register struct Instance **c,
   }
 }
 
-void FixCliques(struct Instance *old, struct Instance *new)
-
-/*********************************************************************\
-Remove old from the clique put new in its place.
-\*********************************************************************/
-{
+/**
+	Remove old from the clique put new in its place.
+*/
+void FixCliques(struct Instance *old, struct Instance *new){
   register struct Instance *ptr,*next;
   ptr = new;
   /*  SetNextCliqueMember(ptr,NextCliqueMember(old)); not needed */
@@ -274,12 +261,12 @@ Remove old from the clique put new in its place.
 }
 
 
-/* this is called to tell relations about a change in variable location
- * e.g. If two atoms are merged, point all the relations that know about
- * ATOM old to ATOM new.
- */
-void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new)
-{
+/**
+	this is called to tell relations about a change in variable location
+	e.g. If two atoms are merged, point all the relations that know about
+	ATOM old to ATOM new.
+*/
+void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new){
   register unsigned long c,len;
   AssertMemory(old);
   AssertMemory(new);
@@ -309,8 +296,7 @@ void FixRelations(struct RealAtomInstance *old, struct RealAtomInstance *new)
 
 
 static
-void FixLogRelationsIf(struct Instance *old, struct Instance *new)
-{
+void FixLogRelationsIf(struct Instance *old, struct Instance *new){
   register unsigned long c,len;
   if ((len=LogRelationsCount(new))>0){
     for(c=1;c<=len;c++) {
@@ -320,8 +306,7 @@ void FixLogRelationsIf(struct Instance *old, struct Instance *new)
 }
 
 static
-void FixLogRelationsElse(struct Instance *old, struct Instance *new)
-{
+void FixLogRelationsElse(struct Instance *old, struct Instance *new){
   register unsigned long c,len;
   if ((len=LogRelationsCount(INST(old)))>0){
     for(c=1;c<=len;c++){
@@ -333,8 +318,8 @@ void FixLogRelationsElse(struct Instance *old, struct Instance *new)
 
 
 void FixLogRelations(struct Instance *old,
-                     struct Instance *new)
-{
+                     struct Instance *new
+){
   switch(old->t){
     case BOOLEAN_ATOM_INST:
       AssertMemory(BA_INST(old));
@@ -379,14 +364,12 @@ void FixLogRelations(struct Instance *old,
       LRELN_INST(old)->logrels=NULL;
       break;
     default:
-      Asc_Panic(2, "FixLogRelationss",
-                "FixLogRelations called with inappropriate argument.\n");
+      PANIC_ILLEGAL_INSTANCE;
   }
 }
 
 static
-void FixWhensIf(struct Instance *old, struct Instance *new)
-{
+void FixWhensIf(struct Instance *old, struct Instance *new){
   register unsigned long c,len;
   if ((len=WhensCount(new))>0){
     for(c=1;c<=len;c++) {
@@ -396,8 +379,7 @@ void FixWhensIf(struct Instance *old, struct Instance *new)
 }
 
 static
-void FixWhensElse(struct Instance *old, struct Instance *new)
-{
+void FixWhensElse(struct Instance *old, struct Instance *new){
   register unsigned long c,len;
   if ((len=WhensCount(INST(old)))>0){
     for(c=1;c<=len;c++){
@@ -407,8 +389,7 @@ void FixWhensElse(struct Instance *old, struct Instance *new)
   }
 }
 
-void FixWhens(struct Instance *old, struct Instance *new)
-{
+void FixWhens(struct Instance *old, struct Instance *new){
   switch(old->t){
     case BOOLEAN_ATOM_INST:
       AssertMemory(BA_INST(old));
@@ -551,14 +532,12 @@ void FixWhens(struct Instance *old, struct Instance *new)
       W_INST(old)->whens=NULL;
       break;
     default:
-      Asc_Panic(2, "FixWhens",
-                "FixWhens called with inappropriate instance type.\n");
+      PANIC_ILLEGAL_INSTANCE;
   }
 }
 
 
-void FixWhensForRefinement(struct Instance *old, struct Instance *new)
-{
+void FixWhensForRefinement(struct Instance *old, struct Instance *new){
   switch(new->t){
     case BOOLEAN_ATOM_INST:
       AssertMemory(BA_INST(new));
@@ -621,9 +600,7 @@ void FixWhensForRefinement(struct Instance *old, struct Instance *new)
       }
       break;
     default:
-      Asc_Panic(2, NULL,
-                "FixWhensForRefinement called with"
-                " inappropriate instance type.\n");
+      PANIC_ILLEGAL_INSTANCE;
   }
 }
 

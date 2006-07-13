@@ -111,12 +111,12 @@ CopyAnonRelationArrayInstance(struct Instance *, struct Instance *,
                               unsigned long, struct gl_list_t *);
 
 /*
- * Create a new relation instance based on protorel,
- * and attach it to newparent, copying details by reference.
- * If newparent is NULL, no attachment done. This should only
- * be the case when the newparent is an array and will be
- * OTHERWISE established.
- */
+	Create a new relation instance based on protorel,
+	and attach it to newparent, copying details by reference.
+	If newparent is NULL, no attachment done. This should only
+	be the case when the newparent is an array and will be
+	OTHERWISE established.
+*/
 static
 struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
 			                  struct Instance *protorel,
@@ -134,6 +134,8 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   g_CopyAnonRelation++;
 #endif
 
+  CONSOLE_DEBUG("COPYING PROTOTYPE %p TO POS %lu UNDER PARENT %p",protorel,pos,newparent);
+
   assert(InstanceKind(protorel) == REL_INST);
   src = RELN_INST(protorel);
   size = GetByteSize(src->desc);
@@ -148,7 +150,7 @@ struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
   result->anon_flags = 0x0;
   CopyTypeDesc(result->desc);
   if(result->ptr!=NULL){
-    CONSOLE_DEBUG("Clearing rel ptr %p",result->ptr);
+    CONSOLE_DEBUG("Clearing ptr %p in new rel %p, copy of %p",result->ptr,result,src);
   }
   result->ptr = NULL;
 
@@ -189,8 +191,8 @@ struct gl_list_t *CopyAnonArrayChildPtrs(struct Instance *newparent,
           switch (InstanceKind(new->inst)) {
           /* should add an lrel case here */
           case REL_INST:
-            new->inst = CopyAnonRelationInstance(NULL,new->inst,c,
-                                                 copyvars);
+			CONSOLE_DEBUG("Copying relation...");
+            new->inst = CopyAnonRelationInstance(NULL,new->inst,c, copyvars);
             AddParent(new->inst,newparent);
             break;
           case ARRAY_ENUM_INST:
@@ -200,7 +202,7 @@ struct gl_list_t *CopyAnonArrayChildPtrs(struct Instance *newparent,
             AddParent(new->inst,newparent);
             break;
           default:
-            Asc_Panic(2,"CopyAnonArrayChildPtrs","Non-relation array child!");
+            Asc_Panic(2,__FUNCTION__,"Non-relation array child!");
           }
         }
 	gl_append_ptr(result,(VOIDPTR)new);
@@ -464,17 +466,17 @@ void CopyAnonDummyInstance(struct Instance *parent,
 }
 
 /*
- * Copies all the local relations (including those in arrays)
- * of the MODEL instance proto to the instance i using only
- * local information. No global information is needed, but
- * we need to arrange that the tmpnums all start and end 0
- * so we can avoid extra 0ing of them.
- */
+	Copies all the local relations (including those in arrays)
+	of the MODEL instance proto to the instance i using only
+	local information. No global information is needed, but
+	we need to arrange that the tmpnums all start and end 0
+	so we can avoid extra 0ing of them.
+*/
 void Pass2CopyAnonProto(struct Instance *proto,
-                        struct BitList *protoblist,
-                        struct gl_list_t *protovarindices,
-                        struct Instance *i)
-{
+		struct BitList *protoblist,
+		struct gl_list_t *protovarindices,
+		struct Instance *i
+){
   struct BitList *blist;
   struct gl_list_t *copyvars;
   struct Instance *ch;
