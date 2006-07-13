@@ -64,9 +64,11 @@ ASC_EXPORT(int) extfntest_register(){
 		, (ExtBBoxInitFunc*)NULL /* final */
 		, 1,1 /* inputs, outputs */
 		, addone_help
-	);
+	); /* returns 0 on success */
 
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
+	if(result){
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"CreateUserFunction result = %d\n",result);
+	}
 	return result;
 }
 

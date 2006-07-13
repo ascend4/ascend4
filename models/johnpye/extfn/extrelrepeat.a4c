@@ -1,0 +1,41 @@
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/extfn/extfntest";
+
+(* 
+	This is a test model to ensure that repeated instances of the same
+	external relation behave correctly. This is because the 'anoncopy' stuff
+	wasn't working for my extrel hack when I tried it -- JP
+*)
+MODEL extrelrepeat;
+
+	x IS_A factor;
+	y IS_A factor;
+	z IS_A factor;
+
+	do_it_once: add_one(
+		x : INPUT; 
+		y : OUTPUT
+	);
+
+	do_it_again: add_one(
+		y : INPUT;
+		z : OUTPUT
+	);
+
+METHODS
+METHOD specify;
+	FIX x;
+END specify;
+METHOD values;
+	x := 1.0;
+END values;
+
+METHOD default_self;
+	RUN specify; RUN values;
+END default_self;
+
+METHOD self_test;
+	ASSERT z == 3.0;
+END self_test;
+
+END extrelrepeat;

@@ -1,0 +1,44 @@
+REQUIRE "atoms.a4l";
+IMPORT "johnpye/extfn/extfntest";
+
+MODEL extrelelement;
+	x IS_A factor;
+	y IS_A factor;
+	do_it: add_one(
+		x : INPUT;
+		y : OUTPUT
+	);
+END extrelelement;
+
+(* 
+	This is a test model to ensure that repeated instances of the same
+	external relation behave correctly. This is because the 'anoncopy' stuff
+	wasn't working for my extrel hack when I tried it -- JP
+*)
+MODEL extrelarray;
+
+	e[1..2] IS_A extrelelement;
+
+	FOR i IN [1] CREATE
+		e[i].y, e[i+1].x ARE_THE_SAME;
+	END FOR;
+
+METHODS
+METHOD specify;
+	FIX e[1].x;
+END specify;
+
+METHOD values;
+	e[1].x := 1.0;
+END values;
+
+METHOD default_self;
+	RUN specify;
+	RUN values;
+END default_self;
+
+METHOD self_test;
+	ASSERT e[2].y == 3.0;
+END self_test;
+
+END extrelarray;

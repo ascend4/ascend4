@@ -6,37 +6,40 @@ MODEL dsg_array;
 	t IS_A time;	
 	dz IS_A distance;
 	n IS_A integer_constant;
-	n :== 10;
+	n :== 3;
 
 	node[1..n] IS_A dsg;
 	
 	(* central difference *)
+	(*
 	FOR i IN [2..(n-1)] CREATE
-		(* spatial derivatives *)
 		node[i].dp_dz = (node[i+1].p - node[i-1].p)/(2*dz);
 		node[i].dmdot_dz = (node[i+1].mdot - node[i-1].mdot)/(2*dz);
 		node[i].dmdoth_dz = (node[i+1].mdoth - node[i-1].mdoth)/(2*dz);
-		node[i].drhovel2_dz = (node[i+1].rholvel2 - node[i-1].rhovel2)/(2*dz);
+		node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i-1].rhovel2)/(2*dz);
 		node[i].dekdot_dz = (node[i+1].ekdot - node[i-1].ekdot)/(2*dz);
 	END FOR;
-	
+	*)
+
 	(* backward difference *)
-	FOR i IN [n] CREATE
-		node[i].dp_dz = (node[i].p - node[i-1].p)/dz;
-		node[i].dmdot_dz = (node[i].mdot - node[i-1].mdot)/dz;
-		node[i].dmdoth_dz = (node[i].mdoth - node[i-1].mdoth)/dz;
-		node[i].drhovel2_dz = (node[i].rholvel2 - node[i-1].rhovel2)/dz;
-		node[i].dekdot_dz = (node[i].ekdot - node[i-1].ekdot)/dz;
+	FOR i IN [2..n] CREATE
+		dz_p[i]:       node[i].dp_dz = (node[i].p - node[i-1].p)/dz;
+		dz_mdot[i]:    node[i].dmdot_dz = (node[i].mdot - node[i-1].mdot)/dz;
+		dz_mdoth[i]:   node[i].dmdoth_dz = (node[i].mdoth - node[i-1].mdoth)/dz;
+		dz_rhovel2[i]: node[i].drhovel2_dz = (node[i].rhovel2 - node[i-1].rhovel2)/dz;
+		dz_ekdot[i]:   node[i].dekdot_dz = (node[i].ekdot - node[i-1].ekdot)/dz;
 	END FOR;
 
 	(* forward difference *)
+	(*
 	FOR i IN [1] CREATE
 		node[i].dp_dz = (node[i+1].p - node[i].p)/dz;
 		node[i].dmdot_dz = (node[i+1].mdot - node[i].mdot)/dz;
 		node[i].dmdoth_dz = (node[i+1].mdoth - node[i].mdoth)/dz;
-		node[i].drhovel2_dz = (node[i+1].rholvel2 - node[i].rhovel2)/dz;
+		node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i].rhovel2)/dz;
 		node[i].dekdot_dz = (node[i+1].ekdot - node[i].ekdot)/dz;
 	END FOR;
+	*)
 	
 METHODS
 METHOD specify;
