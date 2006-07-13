@@ -1,22 +1,12 @@
-import os, platform
-
-if platform.system()=="Windows" and os.environ.has_key('OSTYPE'):
-	env = Environment(ENV=os.environ,tools=['mingw'])
-else:
-	env = Environment(ENV=os.environ);
-	# assuming GCC, we will want the GCC visibility stuff set so that
-	# we ensure windows will work as well.
-	env.Append(CCFLAGS=['-fvisibility=hidden'])
-	env.Append(CPPDEFINES=['HAVE_GCCVISIBILITY'])
+Import('env')
+extfn_env = env.Copy()
 
 srcs = Split("""
 	extfntest.c
 """)
 
-env.ParseConfig('ascend-config --cppflags --libs')
-env.AppendUnique(CPPPATH=['../../../base/generic'])
-
-env.SharedLibrary("extfntest",srcs)
+extfn_env.Append(LIBS=['ascend'])
+extfn_env.SharedLibrary("extfntest",srcs)
 
 # To run the test
 # type
