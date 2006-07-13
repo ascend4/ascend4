@@ -76,9 +76,11 @@ int addone_prepare(struct Slv_Interp *slv_interp,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
-	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING PKG EXTFNTEST...\n");
 	const char *mystring = "MY STRING IS HERE";
+
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"PREPARING PKG EXTFNTEST...\n");
 	slv_interp->user_data = (void *)mystring;
+
 	return 0;
 }
 
