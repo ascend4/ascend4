@@ -143,7 +143,7 @@ struct rel_relation *rel_create(SlvBackendToken instance
 	/* get the 'struct relation' object for this relation */
 	instance_relation = GetInstanceRelation(IPTR(instance),&ctype);
 
-	CONSOLE_DEBUG("The 'relation' struct is at %p",instance_relation);
+	REL_DEBUG("The 'relation' struct is at %p",instance_relation);
 
 	REL_DEBUG("Instance %p --> RELATION = %p",IPTR(instance),instance_relation);
 	switch (ctype) {
@@ -157,18 +157,18 @@ struct rel_relation *rel_create(SlvBackendToken instance
 		    newrel->type = e_rel_glassbox;
 		    break;
 		case e_blackbox:
-			CONSOLE_DEBUG("Blackbox...");
+			REL_DEBUG("Blackbox...");
 			newrel->type = e_rel_blackbox;
 			ext = BlackBoxExtCall(instance_relation);
 
-			CONSOLE_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
+			REL_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
 			REL_DEBUG("Subject instance type '%s'",instance_typename(ExternalCallVarInstance(ext)));
 
 		    if(ext){
-				CONSOLE_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
+				REL_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
 			    newrel = rel_create_extnode(newrel,ext);
 		    }else{
-			    CONSOLE_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
+			    REL_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
 			    newrel->nodeinfo = NULL;
 		    }
 
@@ -209,7 +209,7 @@ static struct var_variable *rel_instance_to_var(struct rel_relation *rel,
 	incid = rel_incidence_list_to_modify(rel);
 	nincid = rel_n_incidences(rel);
 
-	CONSOLE_DEBUG("Looking for var in list of %d incident on rel %p",nincid,rel);
+	REL_DEBUG("Looking for var in list of %d incident on rel %p",nincid,rel);
 
 	var = NULL;
 	for(j=0;j<nincid;++j){

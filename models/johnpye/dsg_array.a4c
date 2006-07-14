@@ -10,8 +10,15 @@ MODEL dsg_array;
 
 	node[1..n] IS_A dsg;
 	
+	(* consistent design *)
+	node[1..n].rhow ARE_THE_SAME;
+	node[1..n].D2 ARE_THE_SAME;
+	node[1..n].cw ARE_THE_SAME;
+	node[1..n].hw ARE_THE_SAME;
+	node[1..n].qdots ARE_THE_SAME;
+	node[1..n].Tamb ARE_THE_SAME;
+	
 	(* central difference *)
-	(*
 	FOR i IN [2..(n-1)] CREATE
 		node[i].dp_dz = (node[i+1].p - node[i-1].p)/(2*dz);
 		node[i].dmdot_dz = (node[i+1].mdot - node[i-1].mdot)/(2*dz);
@@ -19,10 +26,9 @@ MODEL dsg_array;
 		node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i-1].rhovel2)/(2*dz);
 		node[i].dekdot_dz = (node[i+1].ekdot - node[i-1].ekdot)/(2*dz);
 	END FOR;
-	*)
 
 	(* backward difference *)
-	FOR i IN [2..n] CREATE
+	FOR i IN [n] CREATE
 		dz_p[i]:       node[i].dp_dz = (node[i].p - node[i-1].p)/dz;
 		dz_mdot[i]:    node[i].dmdot_dz = (node[i].mdot - node[i-1].mdot)/dz;
 		dz_mdoth[i]:   node[i].dmdoth_dz = (node[i].mdoth - node[i-1].mdoth)/dz;
@@ -31,7 +37,6 @@ MODEL dsg_array;
 	END FOR;
 
 	(* forward difference *)
-	(*
 	FOR i IN [1] CREATE
 		node[i].dp_dz = (node[i+1].p - node[i].p)/dz;
 		node[i].dmdot_dz = (node[i+1].mdot - node[i].mdot)/dz;
@@ -39,13 +44,15 @@ MODEL dsg_array;
 		node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i].rhovel2)/dz;
 		node[i].dekdot_dz = (node[i+1].ekdot - node[i].ekdot)/dz;
 	END FOR;
-	*)
 	
 METHODS
 METHOD specify;
 	FOR i IN [1..n] DO
-		RUN node[i].specify;
+		RUN node[i].fix_design;
+		RUN node[i].fix_states;
 	END FOR;
+	RUN node[1].fix_temporals;
+	RUN node[2].fix_temporals;
 END specify;
 
 METHOD values;

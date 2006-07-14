@@ -5235,7 +5235,7 @@ static int AddExtArrayChildren(struct Instance *inst, /* this is the aryinst */
     outputs = LinearizeArgList(arglist,start,end);
     n_outputs = gl_length(outputs);
     efunc = LookupExtFunc(ExternalStatFuncName(stat));
-	CONSOLE_DEBUG("Using efunc = %p",efunc);
+	/* CONSOLE_DEBUG("Using efunc = %p",efunc);*/
 
     /* Now create the relations, all with the same
      * nodestamp. Valid nodestamps are >= 1.
