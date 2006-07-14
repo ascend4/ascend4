@@ -48,12 +48,13 @@ MODEL dsg_array;
 METHODS
 METHOD specify;
 	FIX dz;
-	FOR i IN [1..n] DO
+(*	FOR i IN [1..n] DO
 		RUN node[i].fix_design;
 		RUN node[i].fix_states;
 	END FOR;
 	RUN node[1].fix_temporals;
 	RUN node[2].fix_temporals;
+*)
 END specify;
 
 METHOD values;

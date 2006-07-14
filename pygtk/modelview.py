@@ -286,7 +286,7 @@ class ModelView:
 		# self.reporter.reportError("Right click on %s" % self.otank[_path][0])
 		_instance = self.otank[_path][1]
 		if _instance.getType().isRefinedSolverVar():
-			_canpop = True;
+			_canpop = True
 			self.observemenuitem.set_sensitive(True)
 			if _instance.isFixed():
 				self.fixmenuitem.set_sensitive(False)
@@ -295,8 +295,16 @@ class ModelView:
 				self.fixmenuitem.set_sensitive(True)
 				self.freemenuitem.set_sensitive(False)
 		elif _instance.isRelation():
-			_canpop = True;
+			_canpop = True
 			self.propsmenuitem.set_sensitive(True)					
+		elif _instance.isModel():
+			# MODEL instances have a special context menu:
+			_menu = self.get_model_context_menu(_instance)
+			self.modelview.grab_focus()
+			self.modelview.set_cursor(_path,_col,0)
+			print "RUNNING POPUP MENU"
+			_menu.popup(None,None,None,_button,event.time)
+			return
 
 		if _instance.isPlottable():
 			self.plotmenuitem.set_sensitive(True)
@@ -311,6 +319,36 @@ class ModelView:
 		self.modelview.set_cursor( _path, _col, 0)
 		self.treecontext.popup( None, None, None, _button, event.time)
 		return 1
+
+	def get_model_context_menu(self,instance):
+		menu = gtk.Menu()
+
+		mi = gtk.ImageMenuItem("Run method...",False)
+		mi.set_sensitive(False)
+		img = gtk.Image()
+		img.set_from_stock(gtk.STOCK_EXECUTE,gtk.ICON_SIZE_MENU)
+		mi.set_image(img)
+		mi.show()
+		menu.append(mi)
+
+		sep = gtk.SeparatorMenuItem(); sep.show()
+		menu.append(sep)
+
+		t = instance.getType()
+		ml = t.getMethods()
+		if len(ml):
+			for m in ml:
+				mi = gtk.MenuItem(m.getName(),False)
+				mi.show()
+				mi.connect("activate",self.run_activate,instance,m)
+				menu.append(mi)		
+		
+		return menu
+
+	def run_activate(self,widget,instance,method):
+		print "RUNNING %s" % method.getName()
+		self.browser.sim.run(method,instance)
+		self.refreshtree()		
 
 	def fix_activate(self,widget):
 		_path,_col = self.modelview.get_cursor()
