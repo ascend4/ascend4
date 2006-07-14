@@ -655,7 +655,31 @@ class Browser:
 		try:
 			if self.sim.check():
 				self.reporter.reportNote("System check OK")
-			self.sim.checkDoF()
+			if self.sim.checkDoF():
+				self.reporter.reportNode("System DoF check OK")
+			else:
+				sing = self.sim.getSingularityInfo()
+				title = "Structural singularity"
+				text = title
+				text += "\n\nThe singularity can be reduced by freeing the following variables:"
+				msgs = {
+					"The singularity can be reduced by freeing the following variables" : sing.freeablevars
+					,"Relations involved in the structural singularity" : sing.rels
+					,"Variables involved in the structural singularity" : sing.vars
+				}
+				for k,v in msgs.iteritems():
+					text+="\n\n%s:" % k
+					if len(v):
+						_l = [j.getName() for j in v]
+						_l.sort()
+						text+= "\n\t" + "\n\t".join(_l)
+					else:
+						text += "\nnone"
+
+				_dialog = InfoDialog(self,self.window,text,title)
+				_dialog.run()
+
+				self.reporter.reportError("System DoF check failed")
 		except RuntimeError, e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))

@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include "variable.h"
+#include "relation.h"
 #include "simulation.h"
 
 extern "C"{

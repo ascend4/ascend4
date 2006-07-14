@@ -6,6 +6,8 @@
 
 #include "simulation.h"
 
+struct Variable;
+
 #include "config.h"
 extern "C"{
 #include <utilities/ascConfig.h>

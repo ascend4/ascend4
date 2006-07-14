@@ -23,7 +23,8 @@
 #include <vector>
 
 #include "simulation.h"
-#include "relation.h"
+
+struct Relation;
 
 #include "config.h"
 extern "C"{

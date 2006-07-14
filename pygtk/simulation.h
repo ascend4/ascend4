@@ -8,8 +8,8 @@
 #include "symchar.h"
 #include "type.h"
 #include "instance.h"
-
-class Variable;
+#include "variable.h"
+#include "relation.h"
 
 #include "config.h"
 extern "C"{
@@ -22,6 +22,18 @@ class SolverParameters;
 class SolverStatus;
 class IncidenceMatrix;
 class SolverReporter;
+
+/**
+	A class to contain singularity information as returned by the DOF
+	function slvDOF_structsing.
+*/
+class SingularityInfo{
+public:
+	bool isSingular() const;
+	std::vector<Relation> rels; /**< relations involved in the singularity */
+	std::vector<Variable> vars; /**< variables involved in the singularity */
+	std::vector<Variable> freeablevars; /**< vars that should be freed */
+};
 
 /**
 	@TODO This class is for *Simulation* instances.
@@ -42,6 +54,7 @@ private:
 	Instanc simroot;
 	slv_system_structure *sys;
 	bool is_built;
+	SingularityInfo *sing; /// will be used to store this iff singularity found
 
 	// options to pass to BinTokenSetOptions
 	/// TODO these should probably be put somewhere else
@@ -88,7 +101,8 @@ public:
 	const int getActiveBlock() const;
 
 	void checkConsistency() const;
-	void checkStructuralSingularity() const;
+	bool checkStructuralSingularity();
+	const SingularityInfo &getSingularityInfo() const;
 };
 
 
