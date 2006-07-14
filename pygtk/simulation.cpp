@@ -153,8 +153,9 @@ Simulation::checkConsistency() const{
 	}
 }
 
-void
-Simulation::checkStructuralSingularity() const{
+/** Returns TRUE if all is OK (not singular) */
+bool
+Simulation::checkStructuralSingularity(){
 	cerr << "CHECKING STRUCTURAL SINGULARITY..." << endl;
 
 	int *vil;
@@ -165,34 +166,58 @@ Simulation::checkStructuralSingularity() const{
 	struct var_variable **varlist = slv_get_solvers_var_list(sys);
 	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
 
-	if(res==0){
-		cerr << "UNABLE TO DETERMINE SINGULARITY LISTS" << endl;
-		return;
-	}else if(res==1){
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Structurally singular. Check the listing on the console.");
-		cerr << "STRUCTURALLY SINGULAR: The found singularity involves these relations:" << endl;
-		for(int i=0; ril[i]!=-1; ++i){
-			Instanc i1((struct Instance *)rel_instance(rellist[ril[i]]));
-			cerr << "  " << getInstanceName(i1) << endl;
-		}
-
-		cerr << "STRUCTURALLY SINGULAR: ... and these variables:" << endl;
-		for(int i=0; vil[i]!=-1; ++i){
-			Instanc i1((struct Instance *)var_instance(varlist[vil[i]]));
-			cerr << "  " << getInstanceName(i1) << endl;
-		}
-
-		cerr << "STRUCTURALLY SINGULAR: ... and may be mitigated by freeing these variables:" << endl;
-		for(int i=0; fil[i]!=-1; ++i){
-			Instanc i1((struct Instance *)var_instance(varlist[fil[i]]));
-			cerr << "  " << getInstanceName(i1) << endl;
-		}
-	}else{
-		throw runtime_error("Invalid return from slvDOF_structsing.");
+	if(this->sing){
+		delete this->sing;
+		this->sing = NULL;
 	}
-	ascfree(vil);
-	ascfree(ril);
-	ascfree(fil);
+
+	if(res==1){
+		CONSOLE_DEBUG("processing singularity data...");
+		sing = new SingularityInfo;
+
+		// 'singular relations'
+		for(int i=0; ril[i]!=-1; ++i){
+			sing->rels.push_back( Relation( this, rellist[ril[i]] ) );
+		}
+
+		// 'singular variables'
+		for(int i=0; vil[i]!=-1; ++i){
+			sing->vars.push_back( Variable( this, varlist[vil[i]] ) );
+		}
+
+		// 'free these variables'
+		for(int i=0; fil[i]!=-1; ++i){
+			sing->freeablevars.push_back( Variable( this, varlist[fil[i]] ) );
+		}
+
+		// we're done with those lists now
+		ASC_FREE(vil);
+		ASC_FREE(ril);
+		ASC_FREE(fil);
+
+		if(sing->isSingular()){
+			CONSOLE_DEBUG("singularity found");
+			this->sing = sing;
+			return FALSE;
+		}
+		CONSOLE_DEBUG("no singularity");
+		delete sing;
+		return TRUE;
+	}else{
+		if(res==0){
+			throw runtime_error("Unable to determine singularity lists");
+		}else{
+			throw runtime_error("Invalid return from slvDOF_structsing.");
+		}
+	}
+}
+
+const SingularityInfo &
+Simulation::getSingularityInfo() const{
+	if(sing==NULL){
+		throw runtime_error("No singularity info present");
+	}
+	return *sing;
 }
 
 void
@@ -284,6 +309,9 @@ Simulation::run(const Method &method){
 	}
 }
 
+/**
+	@return TRUE if all is OK
+*/
 const bool
 Simulation::check(){
 	cerr << "CHECKING SIMULATION" << endl;
@@ -291,8 +319,8 @@ Simulation::check(){
 	CheckInstance(stderr, &*i1);
 	cerr << "...DONE CHECKING" << endl;
 	this->checkConsistency();
-	this->checkStructuralSingularity();
-	return true;
+
+	return this->checkStructuralSingularity();
 }
 
 void
@@ -322,13 +350,7 @@ Simulation::getFixableVariables(){
 	if(!slvDOF_eligible(sys,&vip)){
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"No fixable variables found.");
 	}else{
-		//cerr << "FIXABLE VARS FOUND" << endl;
 		struct var_variable **vp = slv_get_solvers_var_list(sys);
-
-		/*struct var_variable *first_var = vp[0];
-		char *first_var_name = var_make_name(sys,first_var);
-		cerr << "FIRST SYS VAR IS NAMED " << var_make_name(s,first_var) << endl;
-		ascfree(first_var_name);*/
 
 		if(vp==NULL){
 			throw runtime_error("Simulation variable list is null");
@@ -338,25 +360,15 @@ Simulation::getFixableVariables(){
 		int i=0;
 		int var_index = vip[i];
 		while(var_index >= 0){
-			//cerr << "FOUND VARIABLE var_index = " << var_index << endl;
 			struct var_variable *var = vp[var_index];
-			//cerr << "VARIABLE " << var_index << " IS ELIGIBLE" << endl;
-
-			//char *var_name = var_make_name(sys,var);
-			//cerr << "ELIGIBLE VAR: " << var_name << endl;
-			//ascfree(var_name);
-
 			vars.push_back( Variable(this, var) );
 			++i;
 			var_index = vip[i];
 		}
 		ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Found %d fixable variables.",i);
-		//cerr << "END ELEGIBLE VARS LIST" << endl;
 		ascfree(vip);
-		//cerr << "FREED VIP LIST" << endl;
 	}
 
-	//cerr << "FINISHED WITH FINDING ELEGIBLE VARIABLES" << endl;
 	return vars;
 }
 
@@ -599,4 +611,12 @@ Simulation::processVarStatus(){
 const int
 Simulation::getActiveBlock() const{
 	return activeblock;
+}
+
+bool
+SingularityInfo::isSingular() const{
+	if(vars.size()||rels.size()){
+		return true;
+	}
+	return false;
 }

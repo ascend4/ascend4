@@ -47,6 +47,7 @@ MODEL dsg_array;
 	
 METHODS
 METHOD specify;
+	FIX dz;
 	FOR i IN [1..n] DO
 		RUN node[i].fix_design;
 		RUN node[i].fix_states;
@@ -56,6 +57,7 @@ METHOD specify;
 END specify;
 
 METHOD values;
+	dz := 1.0 {m};
 	FOR i IN [1..n] DO
 		RUN node[i].values;
 	END FOR;

@@ -20,32 +20,7 @@ public:
 	const std::string getName() const;
 };
 
-class Simulation : public Instanc{
-public:
-	Simulation(Instance *&, const SymChar &name);
-	Instanc &getModel();
-	std::vector<Variable> getFixableVariables();
-	std::vector<Variable> getVariablesNearBounds(const double &epsilon=1e-4);
-	void build();
-	const bool check();
-	void checkDoF() const;
-	void run(const Method &);
-	void setSolver(Solver&);
-	const Solver getSolver() const;
-	void solve(Solver s,SolverReporter &);
-	SolverParameters getSolverParameters() const;
-	void setSolverParameters(SolverParameters&);
-
-	IncidenceMatrix getIncidenceMatrix();
-	const std::string getInstanceName(const Instanc &) const;
-
-	void processVarStatus();
-	const int getNumVars();
-	const int getActiveBlock() const;
-	void checkConsistency() const;
-	void checkStructuralSingularity() const;
-};
-
+%include "simulation.h"
 // SOLVE PARAMETERS
 
 %pythoncode{
