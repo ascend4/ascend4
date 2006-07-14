@@ -143,6 +143,8 @@ struct rel_relation *rel_create(SlvBackendToken instance
 	/* get the 'struct relation' object for this relation */
 	instance_relation = GetInstanceRelation(IPTR(instance),&ctype);
 
+	CONSOLE_DEBUG("The 'relation' struct is at %p",instance_relation);
+
 	REL_DEBUG("Instance %p --> RELATION = %p",IPTR(instance),instance_relation);
 	switch (ctype) {
 		case e_token:
@@ -155,18 +157,18 @@ struct rel_relation *rel_create(SlvBackendToken instance
 		    newrel->type = e_rel_glassbox;
 		    break;
 		case e_blackbox:
-			REL_DEBUG("Blackbox...");
+			CONSOLE_DEBUG("Blackbox...");
 			newrel->type = e_rel_blackbox;
 			ext = BlackBoxExtCall(instance_relation);
 
-			REL_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
+			CONSOLE_DEBUG("Subject instance at %p",ExternalCallVarInstance(ext));
 			REL_DEBUG("Subject instance type '%s'",instance_typename(ExternalCallVarInstance(ext)));
 
 		    if(ext){
-				REL_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
+				CONSOLE_DEBUG("REL_EXTNODE FOUND, ATTACHING REL_RELATION TO EXT at %p",ext);
 			    newrel = rel_create_extnode(newrel,ext);
 		    }else{
-			    REL_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
+			    CONSOLE_DEBUG("SET NODEINFO TO NULL IN NEWREL AT %p",newrel);
 			    newrel->nodeinfo = NULL;
 		    }
 

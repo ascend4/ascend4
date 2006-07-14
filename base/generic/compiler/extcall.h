@@ -31,8 +31,11 @@
 
 	@TODO Complete documentation of compiler/extcall.h.
 
-	@TODO Documentation: what is a 'subject' in the context of an
-	ExtCallNode? -- JP
+	In the context of an ExtCallNode (at least in the case of black box
+	relations) the 'subject' is the output variable for the particular
+	relation within the black box. There is 'relation' created for each
+	output variable, as required for the [eye(NxN), ones(NxM)] submatrix
+	in the jacobian. -- JP
 
 	Requires:
 	#include <stdio.h>

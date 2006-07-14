@@ -121,6 +121,10 @@ Type::isRefinedConstant() const{
 
 	Once you have an instance of your model, you can start
 	to eliminate variables and attempt to solve it, see Instanc.
+
+	Note that there is some kind of dastardly underhand reference to the
+	Compiler class implicit here: the model instantiation call refers to
+	g_use_copyanon which is sort-of owned by the Compiler class.
 */
 Simulation
 Type::getSimulation(SymChar sym){
