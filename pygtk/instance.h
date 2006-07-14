@@ -80,6 +80,7 @@ public:
 	const bool isSymbol() const;
 	const bool isReal() const;
 	const bool isAssigned() const;
+	const bool isModel() const;
 	const SymChar &getName() const;
 	const double getRealValue() const;
 	const bool isDimensionless() const;

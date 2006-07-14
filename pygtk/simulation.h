@@ -76,6 +76,7 @@ public:
 
 	Instanc &getModel();
 	void run(const Method &method);
+	void run(const Method &method, Instanc &model);
 	void checkDoF() const;
 	const bool check();
 	void build();

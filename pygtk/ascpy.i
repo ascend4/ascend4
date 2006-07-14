@@ -370,6 +370,8 @@ public:
 	const bool isInt() const;
 	const bool isSymbol() const;
 	const bool isReal() const;
+	const bool isModel() const;
+
 	const double getRealValue() const;
 	const bool isDimensionless() const;
 	const Dimensions getDimensions() const;

@@ -307,6 +307,16 @@ Instanc::isDefined() const{
 	return AtomAssigned(i);
 }
 
+const bool
+Instanc::isModel() const{
+	cerr << "TESTING FOR MODEL TYPE" << endl;	
+	if(getKind()==MODEL_INST){
+		return true;
+	}
+	cerr << "RETURNOING FALSE" << endl;
+	return false;
+}
+
 const double
 Instanc::getRealValue() const{
 	// Check that the instance has a real value:

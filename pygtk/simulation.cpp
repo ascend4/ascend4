@@ -222,12 +222,19 @@ Simulation::getSingularityInfo() const{
 
 void
 Simulation::run(const Method &method){
+	Instanc &model = getModel();
+	this->run(method,model);
+}
+
+void
+Simulation::run(const Method &method, Instanc &model){
+
 	cerr << "RUNNING PROCEDURE " << method.getName() << endl;
 	Nam name = Nam(method.getSym());
 	//cerr << "CREATED NAME '" << name.getName() << "'" << endl;
 	Proc_enum pe;
 	pe = Initialize(
-		&*(getModel().getInternalType()) ,name.getInternalType(), "__not_named__"
+		&*(model.getInternalType()) ,name.getInternalType(), "__not_named__"
 		,ASCERR
 		,0, NULL, NULL
 	);
@@ -302,7 +309,6 @@ Simulation::run(const Method &method){
 			default:
 				ss << "Invalid error code";
 		}
-
 
 		ss << " (" << int(pe) << ")";
 		throw runtime_error(ss.str());

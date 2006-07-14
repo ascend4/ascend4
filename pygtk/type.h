@@ -47,6 +47,7 @@ public:
 	const bool isRefinedAtom() const;
 	const bool isRefinedReal() const;
 	const bool isRefinedConstant() const;
+	const bool isModel() const;
 	const bool hasParameters() const;
 };
 
