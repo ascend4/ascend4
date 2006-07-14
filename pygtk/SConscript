@@ -2,7 +2,7 @@ Import('env')
 
 srcs = Split("""
 
-	library.cpp type.cpp module.cpp symchar.cpp
+	library.cpp compiler.cpp type.cpp module.cpp symchar.cpp
 	instance.cpp instanceinterfacedata.cpp
 	method.cpp name.cpp
 	reporter.cpp simulation.cpp set.cpp units.cpp dimensions.cpp extmethod.cpp

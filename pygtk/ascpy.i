@@ -12,6 +12,7 @@
 
 %{
 #include "library.h"
+#include "compiler.h"
 #include "type.h"
 #include "instance.h"
 #include "variable.h"
@@ -295,6 +296,10 @@ public:
 	Nam(const SymChar &);
 	const std::string getName() const;
 };
+
+%include "compiler.h"
+/* we can always disown Compiler * as it's a singleton */
+%apply SWIGTYPE *DISOWN { Compiler * };
 
 class Type{
 public:

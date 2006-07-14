@@ -25,63 +25,7 @@
  *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
  *  COPYING.
  *
- *  The idea is to find and mark all the merges that need to be
- *  marked to disambiguate the anontype classification scheme
- *  which can be mislead into believing identical anontypes when
- *  one instance has some children merged but the other doesn't.
- *  Put another way, we want to record the minimum set of merges
- *  that can account for the identity of all variables/constants
- *  in any relation,logical relation, or when statement.
- *
- *  Assumptions:
- *  - We will perform this step at a point in the compilation
- *  sequence where the instance structures are set (any time after
- *  phase 1). Instances cannot move while detecting merges.
- *  - The tmpnums and interface pointers are not in use. (To be
- *  safe we will PushInterfacePointers. Tmpnums left 0.)
- *  - Universal instances need not be investigated for merge
- *  properties. That is, when enumerating a namespace and we
- *  encounter a universal instance, we will skip it and all
- *  its children. We should probably introduce a child-of-universal
- *  bit in the ChildList info and disallow merges/aliases of parts
- *  of universals with the outside in order to prevent graphs of
- *  universal instances from having connections anywhere except at
- *  the top. There are unofficial universals, and we will detect them.
- *
- *
- *  Desirables:
- *  - We want to mark instances with a minimal set of merges that accounts
- *  for the deviations in their name space, i.e. we don't want to collect
- *  the merges for all a.b.x, c.b.x if a.b, c.b are merged.
- *  - We want to mark the instance which is the smallest scope containing
- *  both merges. That is, a.b.c, a.b.d are merged, we want to mark a.b,
- *  not a.
- *
- *  Problems:
- *  Because there is no simple indexing of parents of an instance
- *  (i.e. I can't travel from a parent p to a child c and easily
- *  know which of the back (parent) links of c I should follow
- *  to return to the parent) we must store paths for navigation
- *  in terms of child number/instance context pairs. Following
- *  back a parent trail requires a search for the child being
- *  left which is unacceptable. This is the same as an io NameNode,
- *  unless we decide to play a reference count game to avoid memory
- *  consumption.
- *
- *  Much of this process is readily explained in terms of a global
- *  list of childnumber/context pairs which maps the entire namespace.
- *  Fortunately we don't need to build this list, we can build parts
- *  of it only, but the overall algorithm becomes obscured.
- *  Because we are mapping the LINK space, rather than the node space,
- *  we have to write our own bizarre set of VisitName functions.
- *  We will have to visit each link between any two objects once.
- *
- *  These functions maintain all their own data and do not use any
- *  global information, EXCEPT that they use instance InterfacePtrs.
- *  For this reason they are not thread-safe. They also build data
- *  structures with references to instances, so no instance moving
- *  actions should be performed while there are structures from this
- *  module in use.
+ * (further comments moved to anonmerg.h)
  */
 
 

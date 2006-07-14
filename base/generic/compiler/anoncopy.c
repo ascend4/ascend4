@@ -31,13 +31,12 @@
 #include <time.h>
 #include <stdarg.h>
 
-#include <utilities/ascConfig.h>
+#include "compiler.h"
 #include <utilities/ascMalloc.h>
 #include <utilities/ascPanic.h>
 #include <general/pool.h>
 #include <general/list.h>
 #include <general/dstring.h>
-#include "compiler.h"
 #include "bit.h"
 #include "symtab.h"
 #include "fractions.h"
@@ -110,12 +109,17 @@ static struct Instance *
 CopyAnonRelationArrayInstance(struct Instance *, struct Instance *,
                               unsigned long, struct gl_list_t *);
 
-/*
+/**
 	Create a new relation instance based on protorel,
 	and attach it to newparent, copying details by reference.
 	If newparent is NULL, no attachment done. This should only
 	be the case when the newparent is an array and will be
 	OTHERWISE established.
+
+	When we copy an anonymous relation instance, we don't copy the 'ptr'
+	element, since that contains the specific stuff about which *variable*
+	are being indicated. This needs to be torn out and replaced by the
+	correct stuff from the original (duplicand) relation. -- JP
 */
 static
 struct Instance *CopyAnonRelationInstance(struct Instance *newparent,
@@ -197,6 +201,7 @@ struct gl_list_t *CopyAnonArrayChildPtrs(struct Instance *newparent,
             break;
           case ARRAY_ENUM_INST:
           case ARRAY_INT_INST:
+			CONSOLE_DEBUG("Copying ARRAY_INT_INST");
             new->inst = CopyAnonRelationArrayInstance(NULL, new->inst,
                                                       0, copyvars);
             AddParent(new->inst,newparent);
@@ -512,6 +517,7 @@ void Pass2CopyAnonProto(struct Instance *proto,
         break;
       case ARRAY_ENUM_INST:
       case ARRAY_INT_INST:
+		CONSOLE_DEBUG("Copying ARRAY_*_INST");
         CopyAnonRelationArrayInstance(i,ch,c,copyvars);
         break;
       case DUMMY_INST:

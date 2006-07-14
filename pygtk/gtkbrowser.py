@@ -285,6 +285,9 @@ class Browser:
 		self.close_on_nonconverged=glade.get_widget("close_on_nonconverged")
 		self.close_on_nonconverged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_nonconverged",True))
 
+		self.use_relation_sharing=glade.get_widget("use_relation_sharing")
+		self.use_relation_sharing.set_active(self.prefs.getBoolPref("Compiler","use_relation_sharing",True))
+
 		glade.signal_autoconnect(self)
 
 		#-------
@@ -563,6 +566,9 @@ class Browser:
 		self.start_waiting("Compiling...")
 
 		try:
+			_v = self.prefs.getBoolPref("Compiler","use_relation_sharing",True)
+			ascpy.getCompiler().setUseRelationSharing(_v)
+
 			self.sim = type_object.getSimulation(str(type_object.getName())+"_sim")
 		except RuntimeError, e:
 			self.stop_waiting()
@@ -741,6 +747,11 @@ class Browser:
 			self.reporter.reportError("No observer defined!")
 			return
 		self.observers[0].copy_to_clipboard(self.clip)
+
+	def on_use_relation_sharing_toggle(self,checkmenuitem,*args):
+		_v = checkmenuitem.get_active()
+		self.prefs.setBoolPref("Compiler","use_relation_sharing",_v)
+		self.reporter.reportNote("Relation sharing set to "+str(_v))
 
 	def on_show_solving_popup_toggle(self,checkmenuitem,*args):
 		_v = checkmenuitem.get_active()

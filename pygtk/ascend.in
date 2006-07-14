@@ -18,7 +18,7 @@ fi
 if [ $PYTHON ]; then 
     python=$PYTHON
 else
-    python=python
+    python=`which python`
 fi
 
 
