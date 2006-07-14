@@ -119,11 +119,13 @@ METHODS
 
 METHOD specify;
 	RUN fix_design;
-
-	(* states *)
-	FIX T1, T2, p, h, mdot;
+	RUN fix_states;
 	RUN fix_spatials;
 END specify;
+
+METHOD fix_states;
+	FIX T1, T2, p, h, mdot;
+END fix_states;
 
 METHOD fix_design;
 	(* design parameters, geometry, materials of construction *)
