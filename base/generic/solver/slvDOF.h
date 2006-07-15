@@ -26,23 +26,17 @@
 	its own incidence matrix separate from the mtx of
 	any given solver.
 
-	<pre>
+	Requires:
+	#include "slv_client.h"
+*//*
+	by Benjamin A Allan and Vicente Rico-Ramirez
+	Created: 7/11/94
+	Last in CVS: $Revision: 1.10 $ $Date: 1998/03/30 22:07:03 $ $Author: rv2a $
+
 	Dates:        07/94 - original version
 	              06/96 - reimplementation
 	              03/98 - Added the consistency analysis for conditional
-	                      models</pre>
-
-	Requires:
-	#include <stdio.h>
-	#include "utilities/ascConfig.h"
-	#include "slv_client.h"
-*//*
-	by Benjamin A Allan and Vicente Rico-Ramirez and Ben Allan
-	Created: 7/11/94
-	Version: $Revision: 1.10 $
-	Version control file: $RCSfile: slvDOF.h,v $
-	Date last modified: $Date: 1998/03/30 22:07:03 $
-	Last modified by: $Author: rv2a $
+	                      models
 */
 
 #ifndef ASC_SLVDOF_H

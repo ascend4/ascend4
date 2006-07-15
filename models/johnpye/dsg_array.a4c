@@ -10,55 +10,60 @@ MODEL dsg_array;
 
 	node[1..n] IS_A dsg;
 	
-	(* consistent design *)
-	node[1..n].rhow ARE_THE_SAME;
-	node[1..n].D2 ARE_THE_SAME;
-	node[1..n].cw ARE_THE_SAME;
-	node[1..n].hw ARE_THE_SAME;
-	node[1..n].qdots ARE_THE_SAME;
-	node[1..n].Tamb ARE_THE_SAME;
+	(* design variables shared *)
+	rhow ALIASES node[1].rhow;   node[1..n].rhow ARE_THE_SAME;
+	eps ALIASES node[1].eps;     node[1..n].eps ARE_THE_SAME;
+	D ALIASES node[1].D;         node[1..n].D ARE_THE_SAME;
+	D2 ALIASES node[1].D2;       node[1..n].D2 ARE_THE_SAME;
+	cw ALIASES node[1].cw;       node[1..n].cw ARE_THE_SAME;
+	hw ALIASES node[1].hw;       node[1..n].hw ARE_THE_SAME;
+	qdots ALIASES node[1].qdots; node[1..n].qdots ARE_THE_SAME;
+	Tamb ALIASES node[1].Tamb;   node[1..n].Tamb ARE_THE_SAME;
 	
 	(* central difference *)
 	FOR i IN [2..(n-1)] CREATE
-		node[i].dp_dz = (node[i+1].p - node[i-1].p)/(2*dz);
-		node[i].dmdot_dz = (node[i+1].mdot - node[i-1].mdot)/(2*dz);
-		node[i].dmdoth_dz = (node[i+1].mdoth - node[i-1].mdoth)/(2*dz);
-		node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i-1].rhovel2)/(2*dz);
-		node[i].dekdot_dz = (node[i+1].ekdot - node[i-1].ekdot)/(2*dz);
+		z_cd_p[i]:      node[i].dp_dz = (node[i+1].p - node[i-1].p)/(2*dz);
+		z_cd_mdot[i]:   node[i].dmdot_dz = (node[i+1].mdot - node[i-1].mdot)/(2*dz);
+		z_cd_mdoth[i]:  node[i].dmdoth_dz = (node[i+1].mdoth - node[i-1].mdoth)/(2*dz);
+		z_cd_rhovel2[i]:node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i-1].rhovel2)/(2*dz);
+		z_cd_ekdot[i]:  node[i].dekdot_dz = (node[i+1].ekdot - node[i-1].ekdot)/(2*dz);
 	END FOR;
 
 	(* backward difference *)
 	FOR i IN [n] CREATE
-		dz_p[i]:       node[i].dp_dz = (node[i].p - node[i-1].p)/dz;
-		dz_mdot[i]:    node[i].dmdot_dz = (node[i].mdot - node[i-1].mdot)/dz;
-		dz_mdoth[i]:   node[i].dmdoth_dz = (node[i].mdoth - node[i-1].mdoth)/dz;
-		dz_rhovel2[i]: node[i].drhovel2_dz = (node[i].rhovel2 - node[i-1].rhovel2)/dz;
-		dz_ekdot[i]:   node[i].dekdot_dz = (node[i].ekdot - node[i-1].ekdot)/dz;
+		z_bd_p[i]:       node[i].dp_dz = (node[i].p - node[i-1].p)/dz;
+		z_bd_mdot[i]:    node[i].dmdot_dz = (node[i].mdot - node[i-1].mdot)/dz;
+		z_bd_mdoth[i]:   node[i].dmdoth_dz = (node[i].mdoth - node[i-1].mdoth)/dz;
+		z_bd_rhovel2[i]: node[i].drhovel2_dz = (node[i].rhovel2 - node[i-1].rhovel2)/dz;
+		z_bd_ekdot[i]:   node[i].dekdot_dz = (node[i].ekdot - node[i-1].ekdot)/dz;
 	END FOR;
 
 	(* forward difference *)
 	FOR i IN [1] CREATE
-		node[i].dp_dz = (node[i+1].p - node[i].p)/dz;
-		node[i].dmdot_dz = (node[i+1].mdot - node[i].mdot)/dz;
-		node[i].dmdoth_dz = (node[i+1].mdoth - node[i].mdoth)/dz;
-		node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i].rhovel2)/dz;
-		node[i].dekdot_dz = (node[i+1].ekdot - node[i].ekdot)/dz;
+		z_fd_p[i]:       node[i].dp_dz = (node[i+1].p - node[i].p)/dz;
+		z_fd_mdot[i]:    node[i].dmdot_dz = (node[i+1].mdot - node[i].mdot)/dz;
+		z_fd_mdoth[i]:   node[i].dmdoth_dz = (node[i+1].mdoth - node[i].mdoth)/dz;
+		z_fd_rhovel2[i]: node[i].drhovel2_dz = (node[i+1].rhovel2 - node[i].rhovel2)/dz;
+		z_fd_ekdot[i]:   node[i].dekdot_dz = (node[i+1].ekdot - node[i].ekdot)/dz;
 	END FOR;
 	
 METHODS
 METHOD specify;
+	(* steady state solution, hopefully... *)
 	FIX dz;
-(*	FOR i IN [1..n] DO
-		RUN node[i].fix_design;
-		RUN node[i].fix_states;
+	RUN fix_design;
+	FOR i IN [1..n] DO
+		RUN node[i].fix_temporals;
 	END FOR;
-	RUN node[1].fix_temporals;
-	RUN node[2].fix_temporals;
-*)
 END specify;
+
+METHOD fix_design;
+	RUN node[1].fix_design;
+END fix_design;
 
 METHOD values;
 	dz := 1.0 {m};
+	t := 0 {s};
 	FOR i IN [1..n] DO
 		RUN node[i].values;
 	END FOR;

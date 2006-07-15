@@ -35,6 +35,13 @@ public:
 	std::vector<Variable> freeablevars; /**< vars that should be freed */
 };
 
+enum StructuralStatus{
+	ASCXX_DOF_UNDERSPECIFIED=1,
+	ASCXX_DOF_SQUARE=2, /* = everything's ok */
+	ASCXX_DOF_OVERSPECIFIED=4,
+	ASCXX_DOF_STRUCT_SINGULAR=3
+};
+
 /**
 	@TODO This class is for *Simulation* instances.
 
@@ -57,7 +64,7 @@ private:
 	SingularityInfo *sing; /// will be used to store this iff singularity found
 
 	// options to pass to BinTokenSetOptions
-	/// TODO these should probably be put somewhere else
+	/// @TODO these should probably be put somewhere else
 	std::string *bin_srcname;
 	std::string *bin_objname;
 	std::string *bin_libname;
@@ -77,8 +84,8 @@ public:
 	Instanc &getModel();
 	void run(const Method &method);
 	void run(const Method &method, Instanc &model);
-	void checkDoF() const;
-	const bool check();
+	enum StructuralStatus checkDoF() const;
+	void checkInstance();
 	void build();
 	void solve(Solver s, SolverReporter &reporter);
 	std::vector<Variable> getFixableVariables();
@@ -101,7 +108,7 @@ public:
 
 	const int getActiveBlock() const;
 
-	void checkConsistency() const;
+	std::vector<Variable> getFreeableVariables();
 	bool checkStructuralSingularity();
 	const SingularityInfo &getSingularityInfo() const;
 };
