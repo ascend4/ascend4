@@ -606,7 +606,7 @@ class Browser:
 	
 	def do_solve_if_auto(self):
 		if self.is_auto:
-			self.sim.check()
+			self.sim.checkInstance()
 			self.do_solve()
 		else:
 			self.sim.processVarStatus()
@@ -647,39 +647,47 @@ class Browser:
 
 	def do_check(self):
 		if not self.sim:
-			self.reporter.reportError("No model selected yet")
+			self.reporter.reportError("No simulation yet")
 			return
 
 		self.start_waiting("Checking system...")
 
 		try:
-			if self.sim.check():
-				self.reporter.reportNote("System check OK")
-			if self.sim.checkDoF():
-				self.reporter.reportNode("System DoF check OK")
-			else:
-				sing = self.sim.getSingularityInfo()
-				title = "Structural singularity"
-				text = title
-				text += "\n\nThe singularity can be reduced by freeing the following variables:"
-				msgs = {
-					"The singularity can be reduced by freeing the following variables" : sing.freeablevars
-					,"Relations involved in the structural singularity" : sing.rels
-					,"Variables involved in the structural singularity" : sing.vars
-				}
-				for k,v in msgs.iteritems():
-					text+="\n\n%s:" % k
-					if len(v):
-						_l = [j.getName() for j in v]
-						_l.sort()
-						text+= "\n\t" + "\n\t".join(_l)
-					else:
-						text += "\nnone"
+			self.sim.checkInstance()
+			self.reporter.reportWarning("System instance check run, check above for error (if any).")
+			# the above gives output but doesn't throw errors or return a status.
+			# ... this is a problem (at the C level)
 
-				_dialog = InfoDialog(self,self.window,text,title)
-				_dialog.run()
+			status = self.sim.checkDoF()
+			if status==ascpy.ASCXX_DOF_UNDERSPECIFIED:
+				self.on_show_fixable_vars(None)
+			elif status==ascpy.ASCXX_DOF_OVERSPECIFIED:
+				self.on_show_freeable_vars(None)
+			elif status==ascpy.ASCXX_DOF_STRUCT_SINGULAR:
+				if not self.sim.checkStructuralSingularity():
+					sing = self.sim.getSingularityInfo()
+					title = "Structural singularity"
+					text = title
+					text += "\n\nThe singularity can be reduced by freeing the following variables:"
+					msgs = {
+						"The singularity can be reduced by freeing the following variables" : sing.freeablevars
+						,"Relations involved in the structural singularity" : sing.rels
+						,"Variables involved in the structural singularity" : sing.vars
+					}
+					for k,v in msgs.iteritems():
+						text+="\n\n%s:" % k
+						if len(v):
+							_l = [j.getName() for j in v]
+							_l.sort()
+							text+= "\n\t" + "\n\t".join(_l)
+						else:
+							text += "\nnone"
 
-				self.reporter.reportError("System DoF check failed")
+					_dialog = InfoDialog(self,self.window,text,title)
+					_dialog.run()
+
+			self.reporter.reportNote("System DoF check OK")
+
 		except RuntimeError, e:
 			self.stop_waiting()
 			self.reporter.reportError(str(e))
@@ -997,7 +1005,7 @@ class Browser:
 		_help = Help(HELP_ROOT)
 		_help.run()
 
-	def on_find_fixable_variables_activate(self,*args):
+	def on_show_fixable_variables_activate(self,*args):
 		v = self.sim.getFixableVariables()
 		text = "Fixable Variables"
 		title = text
@@ -1010,6 +1018,20 @@ class Browser:
 		_dialog = InfoDialog(self,self.window,text,title)
 		_dialog.run()
 
+	def on_show_freeable_variables_activate(self,*args):
+		v = self.sim.getFreeableVariables()
+
+		text = "Freeable Variables"
+		title = text
+		text += "\n"
+		if len(v):
+			for var in v:
+				text += "\n%s" % var
+		else:
+			text += "\nnone"
+		_dialog = InfoDialog(self,self.window,text,title)
+		_dialog.run()
+		
 	def on_show_external_functions_activate(self,*args):
 		v = self.library.getExtMethods()
 		text = "External Functions"

@@ -98,6 +98,7 @@ Simulation::Simulation(const Simulation &old) : Instanc(old), simroot(old.simroo
 	bin_libname = old.bin_libname;
 	bin_cmd = old.bin_cmd;
 	bin_rm = old.bin_rm;
+	sing = NULL;
 }
 
 Simulation::~Simulation(){
@@ -112,113 +113,36 @@ Simulation::getModel(){
 	return simroot;
 }
 
+
+slv_system_structure *
+Simulation::getSystem(){
+	if(!sys)throw runtime_error("Can't getSystem: simulation not yet built");
+	return sys;
+}
+
+
+const string
+Simulation::getInstanceName(const Instanc &i) const{
+	char *n;
+	n = WriteInstanceNameString(i.getInternalType(),simroot.getInternalType());
+	string s(n);
+	ascfree(n);
+	return s;
+}
+
+const int
+Simulation::getNumVars(){
+	return slv_get_num_solvers_vars(getSystem());
+}
+
+
 void
-Simulation::checkDoF() const{
-		cerr << "CHECKING DOF..." << endl;
-        int dof, status;
-        if(!sys){
-                throw runtime_error("System not yet built");
-        }
-        slvDOF_status(sys, &status, &dof);
-        switch(status){
-                case 1: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Underspecified; %d degrees of freedom",dof); break;
-                case 2: ERROR_REPORTER_NOLINE(ASC_USER_NOTE,"Square"); break;
-                case 3: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Structurally singular"); break;
-                case 4: ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Overspecified"); break;
-                case 5:
-                        throw runtime_error("Unable to resolve degrees of freedom"); break;
-                default:
-                        throw runtime_error("Invalid return status from slvDOF_status");
-        }
+Simulation::write(){
+	simroot.write();
 }
 
-void
-Simulation::checkConsistency() const{
-	cerr << "CHECKING CONSISTENCY..." << endl;
-	int *fixedarrayptr;
-
-	int res = consistency_analysis(sys, &fixedarrayptr);
-	struct var_variable **vp = slv_get_master_var_list(sys);
-
-	if(res==1){
-		cerr << "STRUCTURALLY CONSISTENT" << endl;
-		return;
-	}else{
-		ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"Structurally inconsistent. Free the variables listed on the console\nin order to make system consistent.");
-		cerr << "INCONSISTENT: Free these vars:" << endl;
-		for(int i=0; fixedarrayptr[i]!=-1; ++i){
-			Instanc i1((struct Instance *)var_instance(vp[fixedarrayptr[i]]));
-			cerr << "  " << getInstanceName(i1) << endl;
-		}
-	}
-}
-
-/** Returns TRUE if all is OK (not singular) */
-bool
-Simulation::checkStructuralSingularity(){
-	cerr << "CHECKING STRUCTURAL SINGULARITY..." << endl;
-
-	int *vil;
-	int *ril;
-	int *fil;
-
-	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
-	struct var_variable **varlist = slv_get_solvers_var_list(sys);
-	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
-
-	if(this->sing){
-		delete this->sing;
-		this->sing = NULL;
-	}
-
-	if(res==1){
-		CONSOLE_DEBUG("processing singularity data...");
-		sing = new SingularityInfo;
-
-		// 'singular relations'
-		for(int i=0; ril[i]!=-1; ++i){
-			sing->rels.push_back( Relation( this, rellist[ril[i]] ) );
-		}
-
-		// 'singular variables'
-		for(int i=0; vil[i]!=-1; ++i){
-			sing->vars.push_back( Variable( this, varlist[vil[i]] ) );
-		}
-
-		// 'free these variables'
-		for(int i=0; fil[i]!=-1; ++i){
-			sing->freeablevars.push_back( Variable( this, varlist[fil[i]] ) );
-		}
-
-		// we're done with those lists now
-		ASC_FREE(vil);
-		ASC_FREE(ril);
-		ASC_FREE(fil);
-
-		if(sing->isSingular()){
-			CONSOLE_DEBUG("singularity found");
-			this->sing = sing;
-			return FALSE;
-		}
-		CONSOLE_DEBUG("no singularity");
-		delete sing;
-		return TRUE;
-	}else{
-		if(res==0){
-			throw runtime_error("Unable to determine singularity lists");
-		}else{
-			throw runtime_error("Invalid return from slvDOF_structsing.");
-		}
-	}
-}
-
-const SingularityInfo &
-Simulation::getSingularityInfo() const{
-	if(sing==NULL){
-		throw runtime_error("No singularity info present");
-	}
-	return *sing;
-}
+//------------------------------------------------------------------------------
+// RUNNING MODEL 'METHODS'
 
 void
 Simulation::run(const Method &method){
@@ -315,20 +239,188 @@ Simulation::run(const Method &method, Instanc &model){
 	}
 }
 
+//-----------------------------------------------------------------------------
+// CHECKING METHODS
+
 /**
-	@return TRUE if all is OK
+	Check that all the analysis went OK: solver lists are all there, etc...?
+
+	Can't return anything here because of limitations in the C API
 */
-const bool
-Simulation::check(){
-	cerr << "CHECKING SIMULATION" << endl;
+void
+Simulation::checkInstance(){
+	cerr << "CHECKING SIMULATION INSTANCE" << endl;
 	Instance *i1 = getModel().getInternalType();
 	CheckInstance(stderr, &*i1);
-	cerr << "...DONE CHECKING" << endl;
-	this->checkConsistency();
-
-	return this->checkStructuralSingularity();
+	cerr << "DONE CHECKING INSTANCE" << endl;
 }
 
+/**
+	@return 1 = underspecified, 2 = square, 3 = structurally singular, 4 = overspecified
+*/
+enum StructuralStatus
+Simulation::checkDoF() const{
+	cerr << "CHECKING DOF..." << endl;
+    int dof, status;
+    if(!sys){
+            throw runtime_error("System not yet built");
+    }
+    slvDOF_status(sys, &status, &dof);
+    switch(status){
+        case ASCXX_DOF_UNDERSPECIFIED:
+		case ASCXX_DOF_SQUARE:
+		case ASCXX_DOF_OVERSPECIFIED:
+		case ASCXX_DOF_STRUCT_SINGULAR:
+			return (enum StructuralStatus)status;
+		case 5:
+		    throw runtime_error("Unable to resolve degrees of freedom"); break;
+		default:
+		    throw runtime_error("Invalid return status from slvDOF_status");
+    }
+}
+
+/**
+	Check consistency
+
+	@TODO what is the difference between this and checkStructuralSingularity?
+	
+	@return list of freeable variables. List will be empty if sys is consistent.
+*/
+vector<Variable>
+Simulation::getFreeableVariables(){
+	vector<Variable> v;
+
+	cerr << "CHECKING CONSISTENCY..." << endl;
+	int *fixedarrayptr;
+
+	int res = consistency_analysis(sys, &fixedarrayptr);
+	struct var_variable **vp = slv_get_master_var_list(sys);
+
+	if(res==1){
+		cerr << "STRUCTURALLY CONSISTENT" << endl;
+	}else{
+		for(int i=0; fixedarrayptr[i]!=-1; ++i){
+			v.push_back( Variable(this, vp[fixedarrayptr[i]]) );
+		}
+	}
+	return v;
+}
+
+/** Returns TRUE if all is OK (not singular) */
+bool
+Simulation::checkStructuralSingularity(){
+	int *vil;
+	int *ril;
+	int *fil;
+
+	cerr << "RETREIVING slfDOF_structsing INFO" << endl;
+
+	int res = slvDOF_structsing(sys, mtx_FIRST, &vil, &ril, &fil);
+	struct var_variable **varlist = slv_get_solvers_var_list(sys);
+	struct rel_relation **rellist = slv_get_solvers_rel_list(sys);
+
+	if(this->sing){
+		cerr << "DELETING OLD SINGULATING INFO" << endl;
+		delete this->sing;
+		this->sing = NULL;
+	}
+
+	if(res==1){
+		CONSOLE_DEBUG("processing singularity data...");
+		sing = new SingularityInfo();
+
+		// pull in the lists of vars and rels, and the freeable vars:
+		for(int i=0; ril[i]!=-1; ++i){
+			sing->rels.push_back( Relation(this, rellist[ril[i]]) );
+		}
+
+		for(int i=0; vil[i]!=-1; ++i){
+			sing->vars.push_back( Variable(this, varlist[vil[i]]) );
+		}
+
+		for(int i=0; fil[i]!=-1; ++i){
+			sing->freeablevars.push_back( Variable(this, varlist[fil[i]]) );
+		}
+
+		// we're done with those lists now
+		ASC_FREE(vil);
+		ASC_FREE(ril);
+		ASC_FREE(fil);
+
+		if(sing->isSingular()){
+			CONSOLE_DEBUG("singularity found");
+			this->sing = sing;
+			return FALSE;
+		}
+		CONSOLE_DEBUG("no singularity");
+		delete sing;
+		return TRUE;
+	}else{
+		if(res==0){
+			throw runtime_error("Unable to determine singularity lists");
+		}else{
+			throw runtime_error("Invalid return from slvDOF_structsing.");
+		}
+	}
+}
+
+/**
+	If the checkStructuralSingularity analysis has been done,
+	this funciton will let you access the SingularityInfo data that was
+	stored.
+*/
+const SingularityInfo &
+Simulation::getSingularityInfo() const{
+	if(sing==NULL){
+		throw runtime_error("No singularity info present");
+	}
+	return *sing;
+}
+
+//------------------------------------------
+// ASSIGNING SOLVER TO SIMULATION
+
+void
+Simulation::setSolver(Solver &solver){
+	cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
+
+	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
+	// Update the solver object because sometimes an alternative solver can be returned, apparently.
+
+	int selected = slv_select_solver(sys, solver.getIndex());
+	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
+
+	if(selected<0){
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Failed to select solver");
+		throw runtime_error("Failed to select solver");
+	}
+
+	if(selected!=solver.getIndex()){
+		solver = Solver(slv_solver_name(selected));
+		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Substitute solver '%s' (index %d) selected.\n", solver.getName().c_str(), selected);
+	}
+
+	if( slv_eligible_solver(sys) <= 0){
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Inelegible solver '%s'", solver.getName().c_str() );
+		throw runtime_error("Inelegible solver");
+	}
+}
+
+const Solver
+Simulation::getSolver() const{
+	int index = slv_get_selected_solver(sys);
+	//cerr << "Simulation::getSolver: index = " << index << endl;
+	if(index<0)throw runtime_error("No solver selected");
+
+	return Solver(slv_solver_name(index));
+}
+
+//------------------------------------------------------------------------------
+// BUILD THE SYSTEM (SEND IT TO THE SOLVER)
+
+/**
+	Build the system (send it to the solver)
+*/
 void
 Simulation::build(){
 	cerr << "BUILDING SIMULATION..." << endl;
@@ -341,6 +433,39 @@ Simulation::build(){
 	cerr << "...DONE BUILDING" << endl;
 }
 
+
+//------------------------------------------------------------------------------
+// SOLVER CONFIGURATION PARAMETERS
+
+/**
+	Get solver parameters struct wrapped up as a SolverParameters class.
+*/
+SolverParameters
+Simulation::getSolverParameters() const{
+	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
+
+	slv_parameters_t p;
+	slv_get_parameters(sys,&p);
+	return SolverParameters(p);
+}
+
+/**
+	Update the solver parameters by passing a new set back
+*/
+void
+Simulation::setSolverParameters(SolverParameters &P){
+	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
+	slv_set_parameters(sys, &(P.getInternalType()));
+}
+
+//------------------------------------------------------------------------------
+// PRE-SOLVE DIAGNOSTICS
+
+/** 
+	Get a list of variables to fix to make an underspecified system
+	become square. Also seems to return stuff when you have a structurally
+	singuler system.
+*/
 vector<Variable>
 Simulation::getFixableVariables(){
 	cerr << "GETTING FIXABLE VARIABLES..." << endl;
@@ -378,6 +503,10 @@ Simulation::getFixableVariables(){
 	return vars;
 }
 
+/**
+	Get the list of variables near their bounds. Helps to indentify why
+	you might be having non-convergence problems.
+*/
 vector<Variable>
 Simulation::getVariablesNearBounds(const double &epsilon){
 	cerr << "GETTING VARIABLES NEAR BOUNDS..." << endl;
@@ -415,6 +544,23 @@ Simulation::getVariablesNearBounds(const double &epsilon){
 	return vars;
 }
 
+
+bool
+SingularityInfo::isSingular() const{
+	if(vars.size()||rels.size()){
+		return true;
+	}
+	return false;
+}
+
+//------------------------------------------------------------------------------
+// SOLVING
+
+/**
+	Solve the system through to convergence. This function is hardwired with 
+	a maximum of 1000 iterations, but will interrupt itself when the 'stop'
+	condition comes back from the SolverReporter.
+*/
 void
 Simulation::solve(Solver solver, SolverReporter &reporter){
 	if(!is_built){
@@ -484,96 +630,35 @@ Simulation::solve(Solver solver, SolverReporter &reporter){
 	cerr << "SOLVER PERFORMED " << status.getIterationNum() << " ITERATIONS IN " << elapsed << "s" << endl;
 }
 
-void
-Simulation::write(){
-	simroot.write();
-}
+//------------------------------------------------------------------------------
+// POST-SOLVE DIAGNOSTICS
 
-//------------------------------------------
-// ASSIGNING SOLVER TO SIMULATION
-
-void
-Simulation::setSolver(Solver &solver){
-	cerr << "SETTING SOLVER ON SIMULATION TO " << solver.getName() << endl;
-
-	if(!sys)throw runtime_error("Can't solve: Simulation system has not been built yet.");
-	// Update the solver object because sometimes an alternative solver can be returned, apparently.
-
-	int selected = slv_select_solver(sys, solver.getIndex());
-	//cerr << "Simulation::setSolver: slv_select_solver returned " << selected << endl;
-
-	if(selected<0){
-		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Failed to select solver");
-		throw runtime_error("Failed to select solver");
-	}
-
-	if(selected!=solver.getIndex()){
-		solver = Solver(slv_solver_name(selected));
-		ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Substitute solver '%s' (index %d) selected.\n", solver.getName().c_str(), selected);
-	}
-
-	if( slv_eligible_solver(sys) <= 0){
-		ERROR_REPORTER_NOLINE(ASC_PROG_ERROR,"Inelegible solver '%s'", solver.getName().c_str() );
-		throw runtime_error("Inelegible solver");
-	}
-}
-
-const Solver
-Simulation::getSolver() const{
-	int index = slv_get_selected_solver(sys);
-	//cerr << "Simulation::getSolver: index = " << index << endl;
-	if(index<0)throw runtime_error("No solver selected");
-
-	return Solver(slv_solver_name(index));
-}
-
-
-/**
-	Get solver parameters struct wrapped up as a SolverParameters class.
-*/
-SolverParameters
-Simulation::getSolverParameters() const{
-	if(!sys)throw runtime_error("Can't getSolverParameters: Simulation system has not been built yet.");
-
-	slv_parameters_t p;
-	slv_get_parameters(sys,&p);
-	return SolverParameters(p);
+const int
+Simulation::getActiveBlock() const{
+	return activeblock;
 }
 
 /**
-	Update the solver parameters by passing a new set back
+	Return an IncidenceMatrix built from the current state of the solver system.
+
+	This will actually return something meaningful even before solve.
 */
-void
-Simulation::setSolverParameters(SolverParameters &P){
-	if(!sys)throw runtime_error("Can't set solver parameters: simulation has not been built yet.");
-	slv_set_parameters(sys, &(P.getInternalType()));
-}
-
-slv_system_structure *
-Simulation::getSystem(){
-	if(!sys)throw runtime_error("Can't getSystem: simulation not yet built");
-	return sys;
-}
-
 IncidenceMatrix
 Simulation::getIncidenceMatrix(){
 	return IncidenceMatrix(*this);
 }
 
-const string
-Simulation::getInstanceName(const Instanc &i) const{
-	char *n;
-	n = WriteInstanceNameString(i.getInternalType(),simroot.getInternalType());
-	string s(n);
-	ascfree(n);
-	return s;
-}
+/**
+	This function looks at all the variables in the solve's list and updates
+	the variable status for the corresponding instances.
 
-const int
-Simulation::getNumVars(){
-	return slv_get_num_solvers_vars(getSystem());
-}
+	It does this by using the 'interface pointer' in the Instance, see
+	the C-API function GetInterfacePtr.
 
+	This is used to display visually which variables have been solved, which
+	ones have not yet been attempted, and which ones were active when the solver
+	failed (ASCXX_VAR_ACTIVE).
+*/
 void
 Simulation::processVarStatus(){
 
@@ -614,15 +699,3 @@ Simulation::processVarStatus(){
 	}
 }
 
-const int
-Simulation::getActiveBlock() const{
-	return activeblock;
-}
-
-bool
-SingularityInfo::isSingular() const{
-	if(vars.size()||rels.size()){
-		return true;
-	}
-	return false;
-}
