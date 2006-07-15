@@ -660,9 +660,9 @@ class Browser:
 
 			status = self.sim.checkDoF()
 			if status==ascpy.ASCXX_DOF_UNDERSPECIFIED:
-				self.on_show_fixable_vars(None)
+				self.on_show_fixable_variables_activate(None)
 			elif status==ascpy.ASCXX_DOF_OVERSPECIFIED:
-				self.on_show_freeable_vars(None)
+				self.on_show_freeable_variables_activate(None)
 			elif status==ascpy.ASCXX_DOF_STRUCT_SINGULAR:
 				if not self.sim.checkStructuralSingularity():
 					sing = self.sim.getSingularityInfo()
