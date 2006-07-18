@@ -1,6 +1,8 @@
 #include "compiler.h"
 
+extern "C"{
 #include <compiler/compiler.h>
+}
 
 #include <iostream>
 using namespace std;
