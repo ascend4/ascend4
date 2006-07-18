@@ -138,16 +138,15 @@
 #endif
 
 /**
-	Flag non-returning functions for GCC and Visual C++
-
-	Previously, see comments 'Needed to keep gcc from whining'
+	Define 'NORETURN' to the appropriate compiler-specific flags
+	for a function that never returns
 */
-#ifdef __GNUC__ /* GCC */
+#ifdef __GNUC__
 # define NORETURN __attribute__((noreturn))
-#elif defined(_MSC_VER) /* Visual C++ */
+#elif defined(_MSC_VER)
 # define NORETURN __declspec(noreturn)
 #else
-# define NORETURN
+# define NORETURN /* nothing */
 #endif
 
 /**
