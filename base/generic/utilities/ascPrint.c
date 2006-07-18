@@ -37,7 +37,9 @@
 #include <stdio.h>
 #include "ascConfig.h"
 #include "ascPrint.h"
-#include "config.h"
+
+/* <..> path is required here for the autotools build to be happy */
+#include <utilities/config.h>
 
 static struct Asc_PrintVTable *g_Asc_printVtables = NULL;
 
@@ -252,7 +254,7 @@ static int color_test(){
 				use_xterm_color=-1;
 				Asc_FPrintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED\n\n\n");
 			}
-		}else{		
+		}else{
 			fprintf(stderr,"\n\n\n----------------------------------\nCOLOR CODES WILL NOT BE USED (NO ENV VAR 'TERM')\n\n\n");
 			use_xterm_color=-1;
 		}
