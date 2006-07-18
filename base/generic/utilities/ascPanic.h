@@ -43,8 +43,10 @@
 		"Assertion failed in %s:%d:  '%s'", __FILE__, __LINE__, #cond))
 #endif
 
-ASC_DLLSPEC(void ) Asc_Panic(CONST int status, CONST char *function,
-                      CONST char *format, ...) NORETURN;
+NORETURN ASC_DLLSPEC(void) Asc_Panic(
+		CONST int status, CONST char *function,
+		CONST char *format, ...
+);
 /**< Print fatal error message, run callback function & (usually) exit the program.
 
 	@param status   Status code passed by the calling function.
@@ -58,19 +60,19 @@ ASC_DLLSPEC(void ) Asc_Panic(CONST int status, CONST char *function,
 	followed by the variables & format passed as arguments.  ASCERR
 	should have been initialized to a valid file stream or else the
 	message will not be printed (checked by assertion). @par
-	
+
 	If a valid file name has been previously set using
 	Asc_PanicSetOutfile(), the message is printed to this file also.
 	Under Windows, a MessageBox will also be displayed with the
 	message. @par
-	
+
 	If a callback has been set using Asc_PanicSetCallback(), the
 	registered function will be called with the specified status.
 	If the callback returns non-NULL, then exit() is called to end
 	the program.  This is the default behavior.  If the callback
 	is able to resolve the problem, then it should return zero and
 	Asc_Panic() will just return.  This will be useful mostly for
-	testing purposes, and should be used with caution.	
+	testing purposes, and should be used with caution.
 */
 
 ASC_DLLSPEC(void ) Asc_PanicSetOutfile(CONST char *filename);
@@ -90,7 +92,7 @@ typedef int (*PanicCallbackFunc)(int);
 
 	@param the status code passed to Asc_Panic() by the original caller.
 	@return nonzero if ASCEND should exit, 0 if Asc_Panic should just return.
-	
+
 	This functionality is provided primarily for internal testing
 	purposes.  It should be used with extreme caution in release
 	code.  Asc_Panic() is called from all over ASCEND for many
@@ -105,7 +107,7 @@ ASC_DLLSPEC(PanicCallbackFunc ) Asc_PanicSetCallback(PanicCallbackFunc func);
 		if none was registered.
 
 	This allows the user to specify a cleanup function to be
-	called during a fatal error.  
+	called during a fatal error.
 
 	@see PanicCallbackFunc for the form this callback function takes.
 */
