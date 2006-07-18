@@ -670,7 +670,7 @@ int integrator_analyse_ode(IntegratorSystem *blsys){
 	@return 1 on success
 */
 static int integrator_sort_obs_vars(IntegratorSystem *blsys){
-  int half, len, i;
+  int half, i, len = 0;
   struct Integ_var_t *v2;
 
   half = blsys->n_y;
