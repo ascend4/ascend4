@@ -189,7 +189,7 @@ Library::listModules(const int &module_type) const{
 		//throw std::runtime_error("Library::listModules: Asc_ModuleList returned NULL");
 	}
 
-	char *type;
+	char *type = NULL;
 	switch(module_type){
 		case 0: type = "modules containing defined types"; break;
 		case 1: type = "modules with string definitions"; break;
