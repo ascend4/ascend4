@@ -62,6 +62,7 @@ Section "ASCEND (required)"
   File /r /x .svn "..\models\*.a4*"
   File /r /x .svn "..\models\*.bz2"
   File /r /x .svn "..\models\*.tcl"
+  File /r /x .svn "..\models\*.dll" ; extension modules
 
   ; Tcl/Tk interface
   SetOutPath $INSTDIR\tcltk
