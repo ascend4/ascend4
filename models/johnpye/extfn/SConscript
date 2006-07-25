@@ -5,6 +5,7 @@ srcs = Split("""
 	extfntest.c
 """)
 
+extfn_env.Append(LIBPATH=['#'])
 extfn_env.Append(LIBS=['ascend'])
 
 targets = []
