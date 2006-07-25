@@ -169,6 +169,12 @@ opts.Add(PackageOption(
 ))
 
 opts.Add(
+	"IDA_LIB"
+	,"Libraries linked to for IDA"
+	,['sundials_ida','sundials_nvecserial','m']
+)
+
+opts.Add(
 	'IDA_CPPPATH'
 	,"Where is your ida.h?"
 	,"$IDA_PREFIX/include"
@@ -178,13 +184,6 @@ opts.Add(
 	'IDA_LIBPATH'
 	,"Where are your SUNDIALS libraries installed?"
 	,"$IDA_PREFIX/lib"
-)
-
-opts.Add(
-	"IDA_LIB"
-	,"What libraries to link to for use of IDA (comma-separated). Note that"
-		+" you will need to include the math library in this list (for now)."
-	,'sundials_ida,sundials_nvecserial,m'
 )
 
 opts.Add(
@@ -757,28 +756,18 @@ def CheckMath(context):
 # IDA test
 
 ida_test_text = """
-#include <ida.h>
-#include <nvector_serial.h>
-#include <ida_spgmr.h>
+#include <ida/ida.h>
+#include <nvector/nvector_serial.h>
+#include <ida/ida_spgmr.h>
 int main(){
 	void *ida_mem;
 	ida_mem = IDACreate();
+	return 0;
 }
 """
 
 def CheckIDA(context):
 	context.Message( 'Checking for IDA (SUNDIALS)... ' )
-	
-	# add SUNDIALS subdirectories as well (what a pain)
-	if context.env.get('IDA_CPPPATH'):
-		extra = [context.env['IDA_CPPPATH']+"/ida",context.env['IDA_CPPPATH']+"/sundials"]
-		context.env.AppendUnique(CPPPATH=extra)
-	
-	if ',' in context.env.get('IDA_LIB'):
-		context.env['IDA_LIB']=context.env['IDA_LIB'].split(',')
-		#print "IDA_LIB NOW =",context.env['IDA_LIB']
-	else:
-		print "NO COMMA IN IDA_LIB:",context.env['IDA_LIB']
 
 	keep = KeepContext(context,"IDA")
 	
@@ -786,10 +775,7 @@ def CheckIDA(context):
 	context.Result(is_ok)
 	
 	keep.restore(context)
-	
-	if is_ok:
-		context.env.Append(IDA_CPPPATH_EXTRA=extra)
-	
+		
 	return is_ok
 
 #----------------

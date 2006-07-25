@@ -1537,7 +1537,7 @@ int main()
   NLPWrite(NULL,ep5);
 
 #if TESTITER
-  /* test iteration *
+  * test iteration *
   FPRINTF(stderr,"\nIteration tests\n");
   FPRINTF(stderr,"Prev\n");
   hint = 0;
@@ -1709,8 +1709,8 @@ int main()
   NumpairClearPuddle();
   gl_destroy(nlpgl);
 
-  gl_emptyrecycler();                  /* empty the reused list pool *
-  gl_destroy_pool();                   /* empty the reused list head pool *
+  gl_emptyrecycler();                  * empty the reused list pool *
+  gl_destroy_pool();                   * empty the reused list head pool *
 
   exit(0);
 }

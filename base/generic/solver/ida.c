@@ -55,9 +55,9 @@
 
 /* SUNDIALS includes */
 #ifdef ASC_WITH_IDA
-# include <ida.h>
-# include <nvector_serial.h>
-# include <ida_spgmr.h>
+# include <ida/ida.h>
+# include <nvector/nvector_serial.h>
+# include <ida/ida_spgmr.h>
 # ifndef IDA_SUCCESS
 #  error "Failed to include SUNDIALS IDA header file"
 # endif
@@ -357,7 +357,7 @@ int IDA_FEX(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *res_data){
 
 /*----------------------------------------------
   ERROR REPORTING
-
+*/
 /**
 	Error message reporter function to be passed to IDA. All error messages
 	will trigger a call to this function, so we should find everything
