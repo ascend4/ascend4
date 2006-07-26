@@ -38,6 +38,13 @@
 #ifndef ASC_SLV9A_H
 #define ASC_SLV9A_H
 
+/* used by StaticSolverRegistration to detect this solver: */
+#if defined(STATIC_LRSLV) || defined(DYNAMIC_LRSLV)
+# define HAVE_LRSLV 1
+#else
+# define HAVE_LRSLV 0
+#endif
+
 typedef struct slv9a_system_structure *slv9a_system_t;
 
 int slv9a_register(SlvFunctionsT *sft);
