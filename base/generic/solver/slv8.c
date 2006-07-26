@@ -1477,13 +1477,15 @@ static void destroy_vectors( slv8_system_t sys)
 }
 
 
-static int32 slv8_eligible_solver(slv_system_t server)
-{
-  struct rel_relation **rp;
-  for( rp=slv_get_solvers_rel_list(server); *rp != NULL ; ++rp ) {
-    if( rel_less(*rp) || rel_greater(*rp) ) return(FALSE);
-  }
-  return(TRUE);
+static int32 slv8_eligible_solver(slv_system_t server){
+	struct rel_relation **rp;
+	for( rp=slv_get_solvers_rel_list(server); *rp != NULL ; ++rp ) {
+		if( rel_less(*rp) || rel_greater(*rp) ){
+			ERROR_REPORTER_NOLINE(ASC_USER_ERROR,"less-than and greater-than relations are not permitted with CONOPT");
+			return(FALSE);
+		}
+	}
+	return(TRUE);
 }
 
 
@@ -2748,8 +2750,8 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
 	COIDEF_ReadMatrix(cntvect, &slv8_conopt_readmatrix);
 	COIDEF_FDEval(cntvect, &slv8_conopt_fdeval);
 	COIDEF_Option(cntvect, &slv8_conopt_option);
-	COIDEF_Solution(cntvect, &asc_conopt_solution);
-	COIDEF_Status(cntvect, &asc_conopt_status);
+	COIDEF_Solution(cntvect, &slv8_conopt_solution);
+	COIDEF_Status(cntvect, &slv8_conopt_status);
 	COIDEF_Message(cntvect, &asc_conopt_message);
 	COIDEF_ErrMsg(cntvect, &asc_conopt_errmsg);
 	COIDEF_Progress(cntvect, &asc_conopt_progress);
