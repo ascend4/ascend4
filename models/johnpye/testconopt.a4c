@@ -1,0 +1,58 @@
+REQUIRE "atoms.a4l";
+
+MODEL testconopt;
+	Profit, Inp, Out IS_A solver_var;
+	P, L, K IS_A solver_var;
+
+	Al, Ak, Ainp, Rho IS_A real_constant;
+	Pinp, P0, D IS_A real_constant;
+	W, L0, K0 IS_A real_constant;
+
+	Out = ( Al*L^(-Rho) + Ak*K^(-Rho) + Ainp*Inp^(-Rho) )^(-1/Rho);
+
+	Out = ( P0 - P ) / D;
+
+	L0 < L;
+	K = K0;
+	0 <= P;
+	0 < Out;
+	0 < Inp;
+
+	W :== 1.0;
+	L0 :== 0.1;
+	Pinp :== 1.0;
+	Al :== 0.16;
+	Ak :== 2.00;
+	Ainp :== 0.16;
+	Rho :== 1.0;
+	K0 :== 4.0;
+	P0 :== 2.0;
+	D :== 0.5;
+
+	Profit = P*Out - (L-L0)*W - Inp*Pinp;
+
+METHODS
+
+METHOD default_self;
+END default_self;
+
+METHOD specify;
+END specify;
+
+METHOD values;
+END values;
+
+METHOD on_load;
+	RUN default_self;
+	RUN specify;
+	RUN values;
+END on_load;
+
+METHOD self_test;
+	ASSERT L = 0.295686;
+	ASSERT Inp = 0.295686;
+	ASSERT Out = 0.632019;
+	ASSERT P = 1.683990;	
+END self_test;
+
+END testconopt;
