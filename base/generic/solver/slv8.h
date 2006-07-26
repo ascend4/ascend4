@@ -49,8 +49,7 @@
 
 typedef struct slv8_system_structure *slv8_system_t;
 
-/* used by StaticSolverRegistration to detect this solver: */
-#if defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT)
+#ifdef ASC_WITH_CONOPT
 # define HAVE_CONOPT 1
 #else
 # define HAVE_CONOPT 0
@@ -58,15 +57,15 @@ typedef struct slv8_system_structure *slv8_system_t;
 
 int slv8_register(SlvFunctionsT *f);
 /**<
- *  Registration function for the CONOPT solver.
- *  This is the function that tells the system about the CONOPT solver.
- *  Our index is not necessarily going to be 8. That everything here is
- *  named slv8* is just a historical result and a convenient way of
- *  shutting up the linker.
- *
- *  @param f SlvFunctionsT to receive the solver registration info.
- *  @return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
- */
+	Registration function for the CONOPT solver.
+	This is the function that tells the system about the CONOPT solver.
+	Our index is not necessarily going to be 8. That everything here is
+	named slv8* is just a historical result and a convenient way of
+	shutting up the linker.
+	
+	@param f SlvFunctionsT to receive the solver registration info.
+	@return Returns non-zero on error (e.g. f == NULL), zero if all is ok.
+*/
 
 #endif  /* ASC_SLV8_H */
 

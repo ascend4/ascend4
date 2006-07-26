@@ -1,39 +1,38 @@
-/*
- *  External Definitions of CONOPT Subroutines
- *  by Vicente Rico Ramirez
- *  Created: 05/97
- *  Version: $Revision: 1.9 $
- *  Version control file: $RCSfile: conopt.h,v $
- *  Date last modified: $Date: 1998/02/26 15:57:56 $
- *  Last modified by: $Author: mthomas $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
 
-/** @file
- *  External Definitions of CONOPT Subroutines.
- *  <pre>
- *  Requires:       #include "utilities/ascConfig.h"
- *  </pre>
- */
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
-#ifndef conopt__already_included
-#define conopt__already_included
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Header file that in turn includes <conopt.h>.
+	
+	This file exists in order to pass the correct FNAME_* parameter to
+	<conopt.h> and to permit wrapping of conopt routines for use in
+	a dlopened implementation.
+*//*
+	By John Pye
+	Based on conopt.h by Vicente Rico Ramirez (created 05/97)
+*/
+
+#ifndef ASC_CONOPT_H
+#define ASC_CONOPT_H
+
+#include <utilities/ascConfig.h>
+
+#ifdef ASC_WITH_CONOPT  /* code used if CONOPT is available */
 
 /**
  * Macros defined because of the different convention of Fortran from C about
@@ -49,13 +48,37 @@
 #define MAX_INT 20000
 #define MAX_REAL 10e300
 
+/* What is our calling convention? */
+
+#if defined(__GNUC__) || defined(sun) || defined(__alpha) || defined(__sgi)
+# define FNAME_LCASE_DECOR
+#elif defined(__WIN32__)
+# define FNAME_UCASE_NODECOR
+#else
+# define FNAME_LCASE_NODECOR
+#endif
+
+#include <conopt.h>
+
+#ifndef COIDEF_Size
+# error "Where is COIDEF_Size?"
+#endif
+
 /**
- * CONOPT data structure.
- */
+	Data structure for dealing with CONOPT
+	Do we still need this?
+*/
 struct conopt_data {
-  int32 n;                  /**< Number of columns. */
-  int32 m;                  /**< Number of rows. */
-  int32 nz;                 /**< Number of nonzeros. */
+  int *cntvect; /* CONOPT's 'control vector' */
+
+  int n;                  /**< Number of columns. */
+  int m;                  /**< Number of rows. */
+  int nz;                 /**< Number of nonzeros. */
+  int nlnz;               /**< Number of nonlinear nonzeros */
+  int base;               /**< base of arrays, 1=fortran style */
+  int optdir;             /**< optimisation direction */
+  int objcon;             /**< objective constraint */ 
+
   int32 maxrow;             /**< Number of elements in densest row. */
   int32 modsta;             /**< Model status. */
   int32 solsta;             /**< Solver status. */
@@ -67,7 +90,7 @@ struct conopt_data {
   int32 estmem;             /**< Estimated memory suggested by conopt. */
   int32 lwork;              /**< Size of allocated workspace. */
   int32 nintgr;             /**< Size of problem size vector. */
-  int32 ipsz[NINTGR];       /**< Problem size vector. */
+/*  int32 ipsz[NINTGR]; */      /**< Problem size vector. */ 
 
   int32 kept;               /**< If 1 can call warm conopt restart. */
 
@@ -79,25 +102,24 @@ struct conopt_data {
 };
 
 /**
+	This structure holds the callback functions that will be passed to CONOPT.
+	
  * Structure of function pointers, so that a particular solver can define
  * its user-defined CONOPT subroutines independently
  */
 struct conopt_function_pointers {
-  void (*coirms_ptr)();
-  void (*coifbl_ptr)();
-  void (*coifde_ptr)();
-  void (*coista_ptr)();
-  void (*coirs_ptr)();
-  void (*coiusz_ptr)();
-  void (*coiopt_ptr)();
-  void (*coipsz_ptr)();
-  void (*coimsg_ptr)();
-  void (*coiscr_ptr)();
-  void (*coiec_ptr)();
-  void (*coier_ptr)();
-  void (*coienz_ptr)();
-  void (*coiprg_ptr)();
-  void (*coiorc_ptr)();
+  COI_READMATRIX coirms_ptr;
+/* void (*coifbl_ptr)(); */
+  COI_FDEVAL coifde_ptr;
+  COI_STATUS coista_ptr;
+  COI_SOLUTION coirs_ptr;
+/*  void (*coiusz_ptr)(); */
+  COI_OPTION coiopt_ptr;
+/*void (*coipsz_ptr)(); */
+  COI_ERRMSG coierr_ptr;
+  COI_MESSAGE coimsg_ptr;
+  COI_PROGRESS coiprg_ptr;
+/*  void (*coiorc_ptr)(); */
 };
 
 /**
@@ -105,498 +127,30 @@ struct conopt_function_pointers {
  */
 typedef struct conopt_function_pointers *conopt_pointers;
 
+/* reporting functions (derived from 'std.c' in CONOPT examples) */
 
-#if (defined(STATIC_CONOPT) || defined(DYNAMIC_CONOPT))
-#define CONOPT_ACTIVE TRUE
-#else  /* !defined(STATIC_CONOPT) */
-#define CONOPT_ACTIVE FALSE
-#endif /* defined(STATIC_CONOPT) */
-/**<
- * Is CONOPT available?
- */
+int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
+		,double* USRMEM, char* MSGV, int MSGLEN
+);
 
+int COI_CALL asc_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
+		, double* USRMEM, char* MSG, int LENMSG
+);
 
-#if CONOPT_ACTIVE  /* code used if CONOPT is available */
-/*
- *  Take care of fortran underbar madness
- */
-#ifdef sun
-#define FORTRAN_UNDERBARS
-#endif /* sun */
+int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
+		, int* ITER, double* OBJVAL, double* USRMEM
+);
 
-#ifdef __alpha
-#define FORTRAN_UNDERBARS
-#endif /* __alpha */
+int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
+		, int* XSTA, double* YVAL, double* YMAR, int* YBAS, int* YSTA
+		, int* N, int* M, double* USRMEM
+);
 
-#ifdef __sgi
-#define FORTRAN_UNDERBARS
-#endif /* __sgi */
+int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
+		, double* RL, double* X, double* USRMEM 
+);
 
-#ifdef __WIN32__
-/* dec visual fortran */
-#define COICSM COICSM
-#define COIMEM COIMEM
-#define COIRMS COIRMS
-#define COIFBL COIFBL
-#define COIFDE COIFDE
-#define COISTA COISTA
-#define COIRS  COIRS
-#define COIUSZ COIUSZ
-#define COIOPT COIOPT
-#define COIPSZ COIPSZ
-#define COIMSG COIMSG
-#define COISCR COISCR
-#define COIEC COIEC
-#define COIER COIER
-#define COIENZ COIENZ
-#define COIPRG COIPRG
-#define COIORC COIORC
-#else
-/* unixisms */
-#ifdef FORTRAN_UNDERBARS
-#define COICSM coicsm_
-#define COICRM coicrm_
-#define COIMEM coimem_
-#define COIRMS coirms_
-#define COIFBL coifbl_
-#define COIFDE coifde_
-#define COISTA coista_
-#define COIRS  coirs_
-#define COIUSZ coiusz_
-#define COIOPT coiopt_
-#define COIPSZ coipsz_
-#define COIMSG coimsg_
-#define COISCR coiscr_
-#define COIEC coiec_
-#define COIER coier_
-#define COIENZ coienz_
-#define COIPRG coiprg_
-#define COIORC coiorc_
-#else
-#define COICSM coicsm
-#define COICRM coicrm
-#define COIMEM coimem
-#define COIRMS coirms
-#define COIFBL coifbl
-#define COIFDE coifde
-#define COISTA coista
-#define COIRS  coirs
-#define COIUSZ coiusz
-#define COIOPT coiopt
-#define COIPSZ coipsz
-#define COIMSG coimsg
-#define COISCR coiscr
-#define COIEC coiec
-#define COIER coier
-#define COIENZ coienz
-#define COIPRG coiprg
-#define COIORC coiorc
-#endif  /* FORTRAN_UNDERBARS */
-#endif /* !WIN */
+#endif /* if ASC_WITH_CONOPT */
 
-/*
- *  Optimization subroutines for CONOPT
- *  ---------------------------------
- */
-
-extern void COIRMS(real64 *lower,
-                   real64 *curr,
-                   real64 *upper,
-                   int32  *vsta,
-                   int32  *type,
-                   real64 *rhs,
-                   real64 *fv,
-                   int32  *esta,
-                   int32  *colsta,
-                   int32  *rowno,
-                   real64 *value,
-                   int32  *nlflag,
-                   int32  *n,
-                   int32  *m,
-                   int32  *n1,
-                   int32  *nz,
-                   real64 *usrmem);
-/**<
- *  COIRMS Based on the information provided in Coispz, CONOPT will
- *  allocate the number of vectors into which the user can define
- *  the details of the model. The details of the model are defined here.
- *
- *  @param  lower    lower bounds on the variables
- *  @param  curr     intial values of the variables
- *  @param  upper    upper bounds on the variables
- *  @param  vsta     initial status of the variable(o nonbasic, 1 basic)
- *  @param  type     types of equations (0 equality,1 greater,2 less)
- *  @param  rhs      values of the right hand sides
- *  @param  fv       sum of the nonlinear terms in the initial point
- *  @param  esta     initial status of the slack in the constraint (nonbasic,basic)
- *  @param  colsta   start of column pointers
- *  @param  rowno    row or equation numbers of the nonzeros
- *  @param  value    values of the jacobian elements
- *  @param  nlflag   nonlinearity flags(0 nonzero constant,1 varying)
- *  @param  n        number of variables
- *  @param  m        number of constraints
- *  @param  n1       n+1
- *  @param  nz       number of jacobian elements
- *  @param  usrmem   user memory defined by conopt
- */
-
-extern void COIFBL(real64 *x,
-                   real64 *g,
-                   int32  *otn,
-                   int32  *nto,
-                   int32  *from,
-                   int32  *to,
-                   real64 *jac,
-                   int32  *stcl,
-                   int32  *rnum,
-                   int32  *cnum,
-                   int32  *nl,
-                   int32  *strw,
-                   int32  *llen,
-                   int32  *indx,
-                   int32  *mode,
-                   int32  *errcnt,
-                   int32  *n,
-                   int32  *m,
-                   int32  *n1,
-                   int32  *m1,
-                   int32  *nz,
-                   real64 *usrmem);
-/**<
- *  COIFBL Defines the nonlinearities of the model by returning
- *  numerical values. It works on a block of rows during each call.
- *
- *  @param  x        punt of evaluation provided by conopt
- *  @param  g        vector of function values
- *  @param  otn      old to new permutation vector
- *  @param  nto      new to old permutation vector
- *  @param  from     range in permutation
- *  @param  to       range in permutation
- *  @param  jac      vector of jacobian values.
- *                   The following are vectors defining the jacobian structure
- *  @param  stcl     start of column pointers
- *  @param  rnum     row numbers
- *  @param  cnum     column numbers
- *  @param  nl       nonlinearity flags
- *  @param  strw     start row pointers
- *  @param  llen     count of linear jacobian elements
- *  @param  indx     pointers from the row-wise representation
- *  @param  mode     indicator of mode of evaluation
- *  @param  errcnt   number of function evaluation errors
- *  @param  n        umber of variables
- *  @param  m        number of constraints
- *  @param  n1       n+1
- *  @param  m1       m+1
- *  @param  nz       number of jacobian elements
- *  @param  usrmem   user memory defined by conopt
- */
-
-extern void COIFDE(real64 *x,
-                   real64 *g,
-                   real64 *jac,
-                   int32  *rowno,
-                   int32  *jcnm,
-                   int32  *mode,
-                   int32  *errcnt,
-                   int32  *newpt,
-                   int32  *n,
-                   int32  *nj,
-                   real64 *usrmem);
-/**<
- *  COIFDE Defines the nonlinearities of the model by returning
- *  numerical values. It works on one row or equation at a time
- *
- *  @param  x        punt of evaluation provided by conopt
- *  @param  g        function value
- *  @param  jac      jacobian values
- *  @param  rowno    number of the row for which nonlinearities will be eval
- *  @param  jcnm     list of column number fon the NL nonzeros
- *  @param  mode     indicator of mode of evaluation
- *  @param  errcnt   sum of number of func evaluation errors thus far
- *  @param  newpt    new point indicator
- *  @param  nj       number of nonlinear nonzero jacobian elements
- *  @param  n        number of variables
- *  @param  usrmem   user memory
- */
-
-extern void COISTA(int32  *modsta,
-                   int32  *solsts,
-                   int32  *iter,
-                   real64 *objval,
-                   real64 *usrmem);
-/**<
- *  COISTA Pass the solution from CONOPT to the modeler.
- *  It returns the completion status
- *
- *  @param  modsta   model status
- *  @param  solsta   solver status
- *  @param  iter     number of iterations
- *  @param  objval   objective value
- *  @param  usrmem   user memory
- */
-
-extern void COIRS(real64 *xval,
-                  real64 *xmar,
-                  int32  *xbas,
-                  int32  *xsta,
-                  real64 *yval,
-                  real64 *ymar,
-                  int32  *ybas,
-                  int32  *ysta,
-                  int32  *n,
-                  int32  *m,
-                  real64 *usrmem);
-/**<
- *  COIRS passes the solution from CONOPT to the modeler.
- *  It returns solution values
- *
- *  @param  xval     the solution values of the variables
- *  @param  xmar     corresponding marginal values
- *  @param  xbas     basis indicator for column (at bound, basic, nonbasic)
- *  @param  xsta     status of column (normal, nonoptimal, infeasible,unbounded)
- *  @param  yval     values of the left hand side in all the rows
- *  @param  ymar     corresponding marginal values
- *  @param  ybas     basis indicator for row
- *  @param  ysta     status of row
- *  @param  n        number of variables
- *  @param  m        number of constraints
- *  @param  usrmem   user memory
- */
-
-extern void COIUSZ(int32  *nintg,
-                   int32  *ipsz,
-                   int32  *nreal,
-                   real64 *rpsz,
-                   real64 *usrmem);
-/**<
- *  COIUSZ communicates and update of an existing model to CONOPT.
- *
- *  @param  nintg    number of positions in ipsz
- *  @param  ipsz     array describing problem size and options
- *  @param  nreal    number of positions in rpsz
- *  @param  rpsz     array of reals describing problem size and options
- *  @param  usrmem   user memory
- */
-
-extern void COIOPT(char *name, 
-                   real64 *rval,
-                   int32  *ival,
-                   int32  *lval,
-                   real64 *usrmem);
-/**<
- *  COIOPT communicates non-default option values to CONOPT.
- *
- *  @param  name     the name of a CONOPT CR-cell defined by the modeler
- *  @param  rval     the value to be assigned to name if the cells contains a real
- *  @param  ival     the value to be assigned to name if the cells contains an int
- *  @param  lval     the value to be assigned to name if the cells contains a log value
- *  @param  usrmem   user memory
- */
-
-extern void COIPSZ(int32  *nintg,
-                   int32  *ipsz,
-                   int32  *nreal,
-                   real64 *rpsz,
-                   real64 *usrmem);
-/**<
- *  COIPSZ communicates the model size and structure to CONOPT.
- *
- *  @param  ningt    number of positions in ipsz
- *  @param  ipsz     array describing problem size and options
- *  @param  nreal    number of positions in rpsz
- *  @param  rpsz     array of reals describing problem size and options
- *  @param  usrmem   user memory
- */
-
-extern void COIMSG (int32  *nmsg,
-                    int32  *smsg,
-                    int32  *llen,
-                    char   msgv[],
-                    real64 *usrmem);
-/**<
- *  @todo Document solver/conopt.h:COIMSG().
- *
- *  @param nmsg
- *  @param smsg
- *  @param llen
- *  @param msgv    char array of size 80*15
- *  @param usrmem
- */
-
-extern void COISCR (char msg[], int32 *len);
-/**<
- *  @todo Document solver/conopt.h:COISCR().
- *
- *  @param msg  char array of size 80
- *  @param len
- */
-
-extern void COIEC (int32  *colno,
-                   int32  *msglen,
-                   char   msg[],
-                   real64 *usrmem);
-/**<
- *  @todo Document solver/conopt.h:COIEC().
- *
- *  @param colno
- *  @param msglen
- *  @param msg     char array of size 80
- *  @param usrmem
- */
-
-extern void COIER (int32  *rowno,
-                   int32  *msglen,
-                   char   msg[],
-                   real64 *usrmem);
-/**<
- *  @todo Document solver/conopt.h:COIER().
- *
- *  @param rowono
- *  @param msglen
- *  @param msg     char array of size 80
- *  @param usrmem
- */
-
-extern void COIENZ (int32  *colno,
-                    int32  *rowno,
-                    int32  *posno,
-                    int32  *msglen,
-                    char   msg[],
-                    real64 *usrmem);
-/**<
- *  @todo Document solver/conopt.h:COENZ().
- *
- *  @param colno
- *  @param rowno
- *  @param posno
- *  @param msglen
- *  @param msg     char array of size 80
- *  @param usrmem
- */
-
-extern void COIPRG (int32  *nintgr,
-                    int32  *intrep,
-                    int32  *nreal,
-                    real64 *rl,
-                    real64 *x,
-                    real64 *usrmem,
-                    int32  *finish);
-/**<
- *  @todo Document solver/conopt.h:COIPRG().
- *
- *  @param nintgr
- *  @param intrep
- *  @param nreal
- *  @param rl
- *  @param x
- *  @param usrmem
- *  @param finish
- */
-
-extern void COIORC (int32  *colno,
-                    int32  *rowno,
-                    real64 *value,
-                    real64 *resid,
-                    real64 *usrmem);
-/**<
- *  @todo Document solver/conopt.h:COIEC().
- *
- *  @param colno
- *  @param rowno
- *  @param value
- *  @param resid
- *  @param usrmem
- */
-
-/*
- * IMPORTANT: The use of the following functions is a   H A C K   to avoid
- * unresolved externals while linking to the CONOPT library. For some
- * reason, the linker wants the calls to the provided subroutines
- * COICSM and COIMEM in the same file as the definition of the user
- * defined CONOPT subroutines
- */
-
-extern void conopt_estimate_memory(int32 *nintgr, int32 *ipsz,
-                                   int32 *minmem, int32 *estmem);
-/**<
- * Passes arguments to COIMEM
- */
-
-extern void conopt_restart(int32 *kept, real64 **usrmem, int32 *lwork,
-                           real64 *work, int32 *maxusd, int32 *curusd);
-/**<
- * Passes arguments to COICRM
- */
-
-extern void conopt_start(int32 *kept, real64 **usrmem, int32 *lwork,
-                         real64 *work, int32 *maxusd, int32 *curusd);
-/**<
- * Passes arguments to COICSM
- */
-
-
-#if defined(DYNAMIC_CONOPT)
-extern int32 conopt_load(void);
-/**<
- * conopt_load attempts to dynamically load CONOPT.
- * Returns 0 for success, 1 for failure.
- */
-#else
-/*
- * CONOPT Provided Subroutines.Only the external definition. The
- * code for the subroutines is provided by CONOPT.
- */
-
-extern void COIMEM(int32 *nintgr, 
-                   int32 *ipsz,
-                   int32 *minmem, 
-                   int32 *estmem);
-/**<
- *  COIMEM Estimates the amount of memory needed by CONOPT.
- *  Memory estimation by using CONOPT subroutine coimem.
- *
- *  @param  nintgr   number of elements in the array ipsz. Should be 3.
- *  @param  ipsz     vector of integers to describe the size of the model
- *  @param  minmem   Minimum estimate for the memory needed. Measured in
- *                    number of real elements of work
- *  @param  estmem   Estimate of the amount of memory
- */
-
-extern void COICRM(int32  *kept,
-                   real64 *usrmem,
-                   int32  *lwork,
-                   real64 *work,
-                   int32  *maxusd,
-                   int32  *curusd);
-/**
- *  COICRM restarts CONOPT with user memory.
- *
- *  @param  kept     Whether CONOPT has kept the model after solving it or not
- *  @param  usrmem   array passed to all subroutines. If not needed is dummy array
- *  @param  lwork    lenght of working array work
- *  @param  work     working array supplied by the user
- *  @param  maxusd   maximum amount of memory in work used during optimization
- *  @param  curusd   current amount of memory in use
- */
-
-extern void COICSM(int32  *kept,
-                   real64 *usrmem,
-                   int32  lwork,
-                   real64 *work,
-                   int32  *maxusd,
-                   int32  *curusd);
-/**<
- *  COICSM starts up CONOPT with user memory.
- *
- *  @param  kept     Whether CONOPT has kept the model after solving it or not
- *  @param  usrmem   array passed to all subroutines. If not needed is dummy array
- *  @param  lwork    lenght of working array work
- *  @param  work     working array supplied by the user
- *  @param  maxusd   maximum amount of memory in work used during optimization
- *  @param  curusd   current amount of memory in use
- */
-
-#endif /* DYNAMIC_CONOPT */
-#endif /* if CONOPT_ACTIVE */
-#endif /* conopt__already_included */
+#endif /* ASC_CONOPT_H */
 

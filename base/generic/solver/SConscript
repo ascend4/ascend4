@@ -3,7 +3,7 @@ Import('libascend_env')
 csrcs = Split("""
 
 	analyze.c bnd.c bndman.c calc.c cond_config.c
-	conditional.c conopt.c discrete.c incidence.c linsol.c
+	conditional.c discrete.c incidence.c linsol.c
 	linsolqr.c linutils.c logrel.c logrelman.c model_reorder.c
 	mps.c mtx_basic.c mtx_linal.c mtx_perms.c mtx_query.c
 	mtx_reorder.c mtx_use_only.c rel.c relman.c
@@ -35,13 +35,25 @@ if solver_env.get('WITH_IDA'):
 		)
 
 	libascend_env.AppendUnique(
-		LIBPATH=[solver_env.get('IDA_LIBPPATH')]
+		LIBPATH=[solver_env.get('IDA_LIBPATH')]
 		, LIBS=[solver_env.get('IDA_LIB')]
 	)
 
 	objs += sundials_env.SharedObject('ida.c');
 else:
 	print "NO IDA REQUESTED!"
+
+if solver_env.get('WITH_CONOPT'):
+	conopt_env = solver_env.Copy()
+	conopt_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
+
+	libascend_env.AppendUnique(
+		LIBPATH=[solver_env.get('CONOPT_LIBPATH')]
+		, LIBS=[solver_env.get('CONOPT_LIB')]
+	)
+
+	objs += conopt_env.SharedObject('conopt.c')
+	print "BUILDING CONOPT.OS"
 
 if 'LSOD' in solver_env.get('WITH_SOLVERS'):
 	if solver_env.get('F2C_LIBPATH'):

@@ -364,12 +364,28 @@ END length_parameter;
 
 (* forces *)
     ATOM force REFINES solver_var
-	DIMENSION M*L/T^2
-	DEFAULT 1.0{N};
-	lower_bound := -1e20{N};
-	upper_bound := 1e20{N};
-        nominal := 1.0{kN};
+		DIMENSION M*L/T^2
+		DEFAULT 1.0{N};
+		lower_bound := -1e20{N};
+		upper_bound := 1e20{N};
+		nominal := 1.0{kN};
     END force;
+
+	ATOM force_per_length REFINES solver_var
+			DIMENSION M/T^2 
+			DEFAULT 1.0{N/m};
+		lower_bound := -1e20{N/m};
+		upper_bound := 1e20{N/m};
+		nominal := 1.0{N/m};
+	END force_per_length;
+
+	ATOM surface_tension REFINES solver_var
+			DIMENSION M/T^2 
+			DEFAULT 1.0{N/m};
+		lower_bound := 0{N/m};
+		upper_bound := 1e20{N/m};
+		nominal := 1.0{N/m};
+	END surface_tension;
 
 (*  P R E S S U R E
     ---------------  *)
@@ -385,7 +401,7 @@ END length_parameter;
     ATOM delta_pressure REFINES solver_var
         DIMENSION M/L/T^2
         DEFAULT 1.0{atm};
-	lower_bound := -1000{atm};
+		lower_bound := -1000{atm};
         upper_bound := 1000{atm};
         nominal := 1.0{atm};
     END delta_pressure;
@@ -452,6 +468,15 @@ END length_parameter;
         upper_bound := 1e50{g/s};
         nominal := 100.0{g/s};
     END mass_rate;
+
+	ATOM mass_flux REFINES solver_var
+        DIMENSION M/T/L^2
+        DEFAULT 10{kg/s/m^2};
+        lower_bound := -1e12{kg/s/m^2};
+        upper_bound := 1e12{kg/s/m^2};
+        nominal := 10.0{kg/s/m^2};
+    END mass_flux;
+
 
     ATOM mass_rate_rate REFINES solver_var
         DIMENSION M/T^2

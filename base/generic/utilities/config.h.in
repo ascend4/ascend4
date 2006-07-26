@@ -119,6 +119,18 @@
 /* #define ASC_WITH_IDA @ASC_WITH_IDA@ */
 #endif
 
+/*
+	Whether to compile with support for the IDA DAE solver.
+
+	Note that this option is automatically configured based on the value of 
+	WITH_SOLVERS in the SCons options.
+
+	SCons will uncomment the #define line if required.
+	Doing it this (hacky) way so as not to mess up autoconf.
+*/
+#ifndef ASC_WITH_CONOPT
+/* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ */
+#endif
 
 /*
 	Whether to compile with support for the LSODE integration engine. 
