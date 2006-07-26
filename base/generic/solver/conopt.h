@@ -103,27 +103,6 @@ struct conopt_data {
 };
 
 /**
-	This structure holds the callback functions that will be passed to CONOPT.
-	
- * Structure of function pointers, so that a particular solver can define
- * its user-defined CONOPT subroutines independently
- */
-struct conopt_function_pointers {
-  COI_READMATRIX coirms_ptr;
-/* void (*coifbl_ptr)(); */
-  COI_FDEVAL coifde_ptr;
-  COI_STATUS coista_ptr;
-  COI_SOLUTION coirs_ptr;
-/*  void (*coiusz_ptr)(); */
-  COI_OPTION coiopt_ptr;
-/*void (*coipsz_ptr)(); */
-  COI_ERRMSG coierr_ptr;
-  COI_MESSAGE coimsg_ptr;
-  COI_PROGRESS coiprg_ptr;
-/*  void (*coiorc_ptr)(); */
-};
-
-/**
  * Pointer to the previous structure
  */
 typedef struct conopt_function_pointers *conopt_pointers;

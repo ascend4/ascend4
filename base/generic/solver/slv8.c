@@ -1726,214 +1726,6 @@ static void update_cost(slv8_system_t sys)
   sys->s.cost[ci].resid	= sys->s.block.residual;
 }
 
-
-static void slv8_presolve(slv_system_t server, SlvClientToken asys)
-{
-  struct var_variable **vp;
-  struct rel_relation **rp;
-  int32 cap, ind;
-  int32 matrix_creation_needed = 1;
-  slv8_system_t sys;
-  int *cntvect, temp;
-
-  sys = SLV8(asys);
-  iteration_begins(sys);
-  check_system(sys);
-  if( sys->vlist == NULL ) {
-    FPRINTF(MIF(sys),"ERROR:  (slv8) slv8_presolve\n");
-    FPRINTF(MIF(sys),"        Variable list was never set.\n");
-    return;
-  }
-  if( sys->rlist == NULL && sys->obj == NULL ) {
-    FPRINTF(MIF(sys),"ERROR:  (slv8) slv8_presolve\n");
-    FPRINTF(MIF(sys),"        Relation list and objective never set.\n");
-    return;
-  }
-
-  sys->obj = slv_get_obj_relation(server); /*may have changed objective*/
-
-  if(sys->presolved > 0) { /* system has been presolved before */
-    if(!slv8_dof_changed(sys) /*no changes in fixed or included flags*/
-       && sys->p.partition == sys->J.old_partition
-       && sys->obj == sys->old_obj) {
-#if DEBUG
-      FPRINTF(MIF(sys),"YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION\n");
-#endif  /* DEBUG */
-      matrix_creation_needed = 0;
-    }
-  }
-
-  rp=sys->rlist;
-  for( ind = 0; ind < sys->rtot; ++ind ) {
-    rel_set_satisfied(rp[ind],FALSE);
-  }
-  if( matrix_creation_needed ) {
-
-    cap = slv_get_num_solvers_rels(SERVER);
-    sys->cap = slv_get_num_solvers_vars(SERVER);
-    sys->cap = MAX(sys->cap,cap);
-    vp=sys->vlist;
-    for( ind = 0; ind < sys->vtot; ++ind ) {
-      var_set_in_block(vp[ind],FALSE);
-    }
-    rp=sys->rlist;
-    for( ind = 0; ind < sys->rtot; ++ind ) {
-      rel_set_in_block(rp[ind],FALSE);
-      rel_set_satisfied(rp[ind],FALSE);
-    }
-
-    sys->presolved = 1; /* full presolve recognized here */
-    sys->resolve = 0;   /* initialize resolve flag */
-    sys->J.old_partition = sys->p.partition;
-    sys->old_obj = sys->obj;
-
-    slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
-    if (sys->obj != NULL) {
-      sys->con.m++; /* treat objective as a row */
-    }
-
-	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
-	COIDEF_Ini(cntvect);
-	sys->con.cntvect = cntvect;
-	COIDEF_NumVar(cntvect, &(sys->con.n));
-	COIDEF_NumCon(cntvect, &(sys->con.m));
-	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
-	COIDEF_NumNZ(cntvect, &(sys->con.nz));
-	COIDEF_NumNlNz(cntvect, &(sys->con.nz));
-	
-	sys->con.base = 1;
-	COIDEF_Base(cntvect,&(sys->con.base));
-    COIDEF_ErrLim(cntvect, &(DOMLIM));
-    COIDEF_ItLim(cntvect, &(ITER_LIMIT));
-
-    if(sys->obj!=NULL){
-		sys->con.optdir = relman_obj_direction(sys->obj);
-		sys->con.objcon = sys->con.m; /* objective will be last row */
-	}else{
-		sys->con.optdir = 0;
-		sys->con.objcon = 0;
-	}
-    COIDEF_OptDir(cntvect, &(sys->con.optdir));
-	COIDEF_ObjCon(cntvect, &(sys->con.objcon));
-
-	temp = 0;
-	COIDEF_StdOut(cntvect, &temp);
-	
-	COIDEF_Message(cntvect, &asc_conopt_message);
-	COIDEF_ErrMsg(cntvect, &asc_conopt_errmsg);
-	COIDEF_Progress(cntvect, &asc_conopt_progress);
-	COIDEF_Status(cntvect, &asc_conopt_status);
-	COIDEF_Solution(cntvect, &asc_conopt_solution);
-
-#if 0 /* these are the parameters we need to pass to CONOPT */
-  ipsz[F2C(4)] = 0;             /* FIX THESE AT A LATER DATE!!!!  */
-  if (sys->obj != NULL) {
-    ipsz[F2C(6)] = relman_obj_direction(sys->obj);
-    ipsz[F2C(7)] = sys->con.m;    /* objective will be last row     */
-  } else {
-    ipsz[F2C(7)] = 0;
-  }
-  ipsz[F2C(10)] = 1;             /* OUTPUT TO SUBROUTINE */
-  ipsz[F2C(11)] = 0;             /* NO OUTPUT TO SCREEN */
-  ipsz[F2C(12)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(13)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(14)] = 1;		 /* NON DEFAULT VALUE */
-  ipsz[F2C(15)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(16)] = 1;             /* NON DEFAULT VALUE */
-  ipsz[F2C(17)] = 0;
-  ipsz[F2C(18)] = 0;
-  ipsz[F2C(19)] = 0;
-  ipsz[F2C(20)] = 0;
-  ipsz[F2C(21)] = 0;
-  ipsz[F2C(22)] = 1;             /* NON DEFAULT VALUE */
-  /*skipping remainder of ipsz which are fortran io parameters */
-
-  rpsz[F2C(1)] = 1e20;
-  rpsz[F2C(2)] = -1e20;
-  rpsz[F2C(3)] = 1.2e20;
-/*rpsz[F2C(4)] = NA*/
-/*rpsz[F2C(5)] = eps*/
-  rpsz[F2C(6)] = 0;
-  rpsz[F2C(7)] = TIME_LIMIT;
-  rpsz[F2C(8)] = 1;
-#endif
-
-    destroy_vectors(sys);
-    destroy_matrices(sys);
-    create_matrices(server,sys);
-    create_vectors(sys);
-
-    sys->s.block.current_reordered_block = -2;
-  }
-
-  /* Reset status */
-  sys->con.optimized = 0;
-  sys->s.iteration = 0;
-  sys->s.cpu_elapsed = 0.0;
-  sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
-  sys->s.block.previous_total_size = 0;
-  sys->s.costsize = 1+sys->s.block.number_of;
-
-  if( matrix_creation_needed ) {
-    destroy_array(sys->s.cost);
-    sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
-    for( ind = 0; ind < sys->s.costsize; ++ind ) {
-      sys->s.cost[ind].reorder_method = -1;
-    }
-  } else {
-    reset_cost(sys->s.cost,sys->s.costsize);
-  }
-
-  /* set to go to first unconverged block */
-  sys->s.block.current_block = -1;
-  sys->s.block.current_size = 0;
-  sys->s.calc_ok = TRUE;
-  sys->s.block.iteration = 0;
-  sys->objective =  MAXDOUBLE/2000.0;
-
-  update_status(sys);
-  iteration_ends(sys);
-  sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
-}
-
-
-static void slv8_resolve(slv_system_t server, SlvClientToken asys)
-{
-  struct var_variable **vp;
-  struct rel_relation **rp;
-  slv8_system_t sys;
-  (void)server;  /* stop gcc whine about unused parameter */
-
-  sys = SLV8(asys);
-
-  check_system(sys);
-  for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
-    var_set_in_block(*vp,FALSE);
-  }
-  for( rp = sys->rlist ; *rp != NULL ; ++rp ) {
-    rel_set_in_block(*rp,FALSE);
-    rel_set_satisfied(*rp,FALSE);
-  }
-
-  sys->resolve = 1; /* resolved recognized here */
-
-  /* Reset status */
-  sys->s.iteration = 0;
-  sys->s.cpu_elapsed = 0.0;
-  sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
-  sys->s.block.previous_total_size = 0;
-
-  /* go to first unconverged block */
-  sys->s.block.current_block = -1;
-  sys->s.block.current_size = 0;
-  sys->s.calc_ok = TRUE;
-  sys->s.block.iteration = 0;
-  sys->objective =  MAXDOUBLE/2000.0;
-
-  update_status(sys);
-}
-
-
 /*
  * CONOPT ROUTINES
  */
@@ -2808,35 +2600,11 @@ void slv8_coiscr COISCR_ARGS {
  */
 static void slv_conopt_iterate(slv8_system_t sys)
 {
-  
-  real64 **usrmem;
-  conopt_pointers conopt_ptrs;
-
-  conopt_ptrs = ASC_NEW_CLEAR(struct conopt_function_pointers);
-  conopt_ptrs->coirms_ptr = slv8_conopt_readmatrix;
-/*  conopt_ptrs->coifbl_ptr = NULL; */
-  conopt_ptrs->coifde_ptr = slv8_conopt_fdeval;
-  conopt_ptrs->coirs_ptr = slv8_conopt_solution;
-  conopt_ptrs->coista_ptr = slv8_conopt_status;
-/*  conopt_ptrs->coiusz_ptr = NULL; */
-  conopt_ptrs->coiopt_ptr = slv8_conopt_option;
-/*  conopt_ptrs->coipsz_ptr = slv8_coipsz; */
-
-  conopt_ptrs->coimsg_ptr = asc_conopt_message;
-  conopt_ptrs->coierr_ptr = asc_conopt_errmsg;
-  conopt_ptrs->coiprg_ptr = asc_conopt_progress;
-/*  conopt_ptrs->coiorc_ptr = slv8_coiorc; */
-
-  usrmem = ASC_NEW_ARRAY(void,2);
-
-/*
- * We pass the pointers to sys and conopt_ptrs instead of a usrmem array.
- * Cast the appropriate element of usrmem back to slv9_system_t and
- * conopt_pointers to access the information required
+  /*
+	We pass the pointer to sys as 'usrmem'.
+	Cast back to slv9_system_t to access the information required
  */
-  usrmem[0] = (void *)conopt_ptrs;
-  usrmem[1] = (void *)sys;
-  COIDEF_UsrMem(sys->con.cntvect, usrmem);
+  COIDEF_UsrMem(sys->con.cntvect, (double *)sys);
 
   sys->con.opt_count = 0; /* reset count on slv8_coiopt calls */
   sys->con.progress_count = 0; /* reset count on coiprg calls */
@@ -2852,9 +2620,6 @@ static void slv_conopt_iterate(slv8_system_t sys)
   }else{
 	sys->con.optimized = 0;
   }
-
-  ascfree(conopt_ptrs);
-  ascfree(usrmem);
 }
 
 
@@ -2889,8 +2654,216 @@ static void update_block_information(slv8_system_t sys)
 }
 
 
-static void slv8_iterate(slv_system_t server, SlvClientToken asys)
-{
+static void slv8_presolve(slv_system_t server, SlvClientToken asys){
+  struct var_variable **vp;
+  struct rel_relation **rp;
+  int32 cap, ind;
+  int32 matrix_creation_needed = 1;
+  slv8_system_t sys;
+  int *cntvect, temp;
+
+  sys = SLV8(asys);
+  iteration_begins(sys);
+  check_system(sys);
+  if( sys->vlist == NULL ) {
+    FPRINTF(MIF(sys),"ERROR:  (slv8) slv8_presolve\n");
+    FPRINTF(MIF(sys),"        Variable list was never set.\n");
+    return;
+  }
+  if( sys->rlist == NULL && sys->obj == NULL ) {
+    FPRINTF(MIF(sys),"ERROR:  (slv8) slv8_presolve\n");
+    FPRINTF(MIF(sys),"        Relation list and objective never set.\n");
+    return;
+  }
+
+  sys->obj = slv_get_obj_relation(server); /*may have changed objective*/
+
+  if(sys->presolved > 0) { /* system has been presolved before */
+    if(!slv8_dof_changed(sys) /*no changes in fixed or included flags*/
+       && sys->p.partition == sys->J.old_partition
+       && sys->obj == sys->old_obj) {
+#if DEBUG
+      FPRINTF(MIF(sys),"YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION\n");
+#endif  /* DEBUG */
+      matrix_creation_needed = 0;
+    }
+  }
+
+  rp=sys->rlist;
+  for( ind = 0; ind < sys->rtot; ++ind ) {
+    rel_set_satisfied(rp[ind],FALSE);
+  }
+  if( matrix_creation_needed ) {
+
+    cap = slv_get_num_solvers_rels(SERVER);
+    sys->cap = slv_get_num_solvers_vars(SERVER);
+    sys->cap = MAX(sys->cap,cap);
+    vp=sys->vlist;
+    for( ind = 0; ind < sys->vtot; ++ind ) {
+      var_set_in_block(vp[ind],FALSE);
+    }
+    rp=sys->rlist;
+    for( ind = 0; ind < sys->rtot; ++ind ) {
+      rel_set_in_block(rp[ind],FALSE);
+      rel_set_satisfied(rp[ind],FALSE);
+    }
+
+    sys->presolved = 1; /* full presolve recognized here */
+    sys->resolve = 0;   /* initialize resolve flag */
+    sys->J.old_partition = sys->p.partition;
+    sys->old_obj = sys->obj;
+
+    slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
+    if (sys->obj != NULL) {
+      sys->con.m++; /* treat objective as a row */
+    }
+
+	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
+	COIDEF_Ini(cntvect);
+	sys->con.cntvect = cntvect;
+	COIDEF_NumVar(cntvect, &(sys->con.n));
+	COIDEF_NumCon(cntvect, &(sys->con.m));
+	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
+	COIDEF_NumNZ(cntvect, &(sys->con.nz));
+	COIDEF_NumNlNz(cntvect, &(sys->con.nz));
+	
+	sys->con.base = 1;
+	COIDEF_Base(cntvect,&(sys->con.base));
+    COIDEF_ErrLim(cntvect, &(DOMLIM));
+    COIDEF_ItLim(cntvect, &(ITER_LIMIT));
+
+    if(sys->obj!=NULL){
+		sys->con.optdir = relman_obj_direction(sys->obj);
+		sys->con.objcon = sys->con.m; /* objective will be last row */
+	}else{
+		sys->con.optdir = 0;
+		sys->con.objcon = 0;
+	}
+    COIDEF_OptDir(cntvect, &(sys->con.optdir));
+	COIDEF_ObjCon(cntvect, &(sys->con.objcon));
+
+	temp = 0;
+	COIDEF_StdOut(cntvect, &temp);
+	
+	COIDEF_ReadMatrix(cntvect, &slv8_conopt_readmatrix);
+	COIDEF_FDEval(cntvect, &slv8_conopt_fdeval);
+	COIDEF_Option(cntvect, &slv8_conopt_option);
+	COIDEF_Solution(cntvect, &asc_conopt_solution);
+	COIDEF_Status(cntvect, &asc_conopt_status);
+	COIDEF_Message(cntvect, &asc_conopt_message);
+	COIDEF_ErrMsg(cntvect, &asc_conopt_errmsg);
+	COIDEF_Progress(cntvect, &asc_conopt_progress);
+
+
+#if 0 /* these are the parameters we need to pass to CONOPT */
+  ipsz[F2C(4)] = 0;             /* FIX THESE AT A LATER DATE!!!!  */
+  if (sys->obj != NULL) {
+    ipsz[F2C(6)] = relman_obj_direction(sys->obj);
+    ipsz[F2C(7)] = sys->con.m;    /* objective will be last row     */
+  } else {
+    ipsz[F2C(7)] = 0;
+  }
+  ipsz[F2C(10)] = 1;             /* OUTPUT TO SUBROUTINE */
+  ipsz[F2C(11)] = 0;             /* NO OUTPUT TO SCREEN */
+  ipsz[F2C(12)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(13)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(14)] = 1;		 /* NON DEFAULT VALUE */
+  ipsz[F2C(15)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(16)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(17)] = 0;
+  ipsz[F2C(18)] = 0;
+  ipsz[F2C(19)] = 0;
+  ipsz[F2C(20)] = 0;
+  ipsz[F2C(21)] = 0;
+  ipsz[F2C(22)] = 1;             /* NON DEFAULT VALUE */
+  /*skipping remainder of ipsz which are fortran io parameters */
+
+  rpsz[F2C(1)] = 1e20;
+  rpsz[F2C(2)] = -1e20;
+  rpsz[F2C(3)] = 1.2e20;
+/*rpsz[F2C(4)] = NA*/
+/*rpsz[F2C(5)] = eps*/
+  rpsz[F2C(6)] = 0;
+  rpsz[F2C(7)] = TIME_LIMIT;
+  rpsz[F2C(8)] = 1;
+#endif
+
+    destroy_vectors(sys);
+    destroy_matrices(sys);
+    create_matrices(server,sys);
+    create_vectors(sys);
+
+    sys->s.block.current_reordered_block = -2;
+  }
+
+  /* Reset status */
+  sys->con.optimized = 0;
+  sys->s.iteration = 0;
+  sys->s.cpu_elapsed = 0.0;
+  sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+  sys->s.block.previous_total_size = 0;
+  sys->s.costsize = 1+sys->s.block.number_of;
+
+  if( matrix_creation_needed ) {
+    destroy_array(sys->s.cost);
+    sys->s.cost = create_zero_array(sys->s.costsize,struct slv_block_cost);
+    for( ind = 0; ind < sys->s.costsize; ++ind ) {
+      sys->s.cost[ind].reorder_method = -1;
+    }
+  } else {
+    reset_cost(sys->s.cost,sys->s.costsize);
+  }
+
+  /* set to go to first unconverged block */
+  sys->s.block.current_block = -1;
+  sys->s.block.current_size = 0;
+  sys->s.calc_ok = TRUE;
+  sys->s.block.iteration = 0;
+  sys->objective =  MAXDOUBLE/2000.0;
+
+  update_status(sys);
+  iteration_ends(sys);
+  sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
+}
+
+
+static void slv8_resolve(slv_system_t server, SlvClientToken asys){
+  struct var_variable **vp;
+  struct rel_relation **rp;
+  slv8_system_t sys;
+  (void)server;  /* stop gcc whine about unused parameter */
+
+  sys = SLV8(asys);
+
+  check_system(sys);
+  for( vp = sys->vlist ; *vp != NULL ; ++vp ) {
+    var_set_in_block(*vp,FALSE);
+  }
+  for( rp = sys->rlist ; *rp != NULL ; ++rp ) {
+    rel_set_in_block(*rp,FALSE);
+    rel_set_satisfied(*rp,FALSE);
+  }
+
+  sys->resolve = 1; /* resolved recognized here */
+
+  /* Reset status */
+  sys->s.iteration = 0;
+  sys->s.cpu_elapsed = 0.0;
+  sys->s.converged = sys->s.diverged = sys->s.inconsistent = FALSE;
+  sys->s.block.previous_total_size = 0;
+
+  /* go to first unconverged block */
+  sys->s.block.current_block = -1;
+  sys->s.block.current_size = 0;
+  sys->s.calc_ok = TRUE;
+  sys->s.block.iteration = 0;
+  sys->objective =  MAXDOUBLE/2000.0;
+
+  update_status(sys);
+}
+
+
+static void slv8_iterate(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
   FILE              *mif;
   FILE              *lif;

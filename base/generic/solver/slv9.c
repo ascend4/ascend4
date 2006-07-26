@@ -2952,8 +2952,8 @@ static void slv9_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
  * usrmem - user memory
  */
 static int COI_CALL slv9_conopt_option(
-		char *name, double *rval, int *ival, int *logical
-	    , double *usrmem
+		int *NCALL, double *rval, int *ival, int *logical
+	    , double *usrmem, char *name, int lenname
 ){
   slv9_system_t sys;
   sys = (slv9_system_t)usrmem;
@@ -2991,6 +2991,7 @@ static int COI_CALL slv9_conopt_option(
 }
 
 
+#if 0 /* not in API any more */
 /*
  * COIPSZ communicates the model size and structure to CONOPT
  * COIPSZ(nintgr, ipsz, nreal, rpsz, usrmem)
@@ -3053,7 +3054,7 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 
 
 }
-
+#endif
 
 
 /*
@@ -3065,34 +3066,74 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 
 static void slv_conopt_iterate(slv9_system_t sys)
 {
-  double **usrmem;
-  conopt_pointers conopt_ptrs;
 
-  conopt_ptrs = ASC_NEW_CLEAR(struct conopt_function_pointers);
-  conopt_ptrs->coirms_ptr = &slv9_conopt_readmatrix;
-/*  conopt_ptrs->coifbl_ptr = slv9_coifbl; */
-  conopt_ptrs->coifde_ptr = &slv9_conopt_fdeval;
-  conopt_ptrs->coirs_ptr = &slv9_conopt_solution;
-  conopt_ptrs->coista_ptr = &slv9_conopt_status;
-/*  conopt_ptrs->coiusz_ptr = slv9_coiusz; */
-  conopt_ptrs->coiopt_ptr = &slv9_conopt_option;
-/*   conopt_ptrs->coipsz_ptr = slv9_coipsz; */
-  conopt_ptrs->coimsg_ptr = NULL;
-/*  conopt_ptrs->coiscr_ptr = NULL; */
-  conopt_ptrs->coierr_ptr = &asc_conopt_errmsg;
-  conopt_ptrs->coiprg_ptr = &asc_conopt_progress;
-/*  conopt_ptrs->coiorc_ptr = NULL; */
+  /*
+   * Memory estimation by calling the CONOPT subroutine coimem
+   * The use of conopt_estimate_memory is a hack to avoid
+   * unresolved external during the linking of the CONOPT library.
+   * See conopt.h
+   */
+  if(sys->con.cntvect == NULL){
+	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
+  }
 
-/*
- * We pass the pointers to sys and conopt_ptrs instead of a usrmem array.
- * Cast the appropriate element of usrmem back to slv9_system_t and
- * conopt_pointers to access the information required
- */
-  usrmem = ASC_NEW_ARRAY(void,2);
-  usrmem[0] = (void *)conopt_ptrs;
-  usrmem[1] = (void *)sys;
+  COIDEF_Ini(sys->con.cntvect);
 
-  COIDEF_UsrMem(sys->con.cntvect,(double *)usrmem);
+  /*
+	We pass pointer to sys as usrmem data.
+	Cast back to slv9_system_t to access the information required
+  */
+
+  COIDEF_UsrMem(sys->con.cntvect,(double *)sys);
+
+  COIDEF_NumVar(sys->con.cntvect, &(sys->con.n));
+  COIDEF_NumCon(sys->con.cntvect, &(sys->con.m)); /* include the obj fn */
+  COIDEF_NumNZ(sys->con.cntvect, &(sys->con.nz));
+  COIDEF_NumNlNz(sys->con.cntvect, &(sys->con.nlnz));
+  COIDEF_OptDir(sys->con.cntvect, &(sys->con.optdir));
+  COIDEF_ObjCon(sys->con.cntvect, &(sys->con.m)); /* objective will be last row     */
+  COIDEF_Base(sys->con.cntvect, &(sys->con.base));
+  COIDEF_ErrLim(sys->con.cntvect, &(DOMLIM));
+  COIDEF_ItLim(sys->con.cntvect, &(OPT_ITER_LIMIT));
+
+  COIDEF_ReadMatrix(sys->con.cntvect, &slv9_conopt_readmatrix);
+  COIDEF_FDEval(sys->con.cntvect, &slv9_conopt_fdeval);
+  COIDEF_Option(sys->con.cntvect, &slv9_conopt_option);
+  COIDEF_Solution(sys->con.cntvect, &slv9_conopt_solution);
+  COIDEF_Status(sys->con.cntvect, &slv9_conopt_status);
+  COIDEF_Message(sys->con.cntvect, &asc_conopt_message);
+  COIDEF_ErrMsg(sys->con.cntvect, &asc_conopt_errmsg);
+  COIDEF_Progress(sys->con.cntvect, &asc_conopt_progress);
+
+  /** @TODO implement the following options as well... */
+#if 0
+  ipsz[F2C(10)] = 0;             /* output to file */
+  ipsz[F2C(11)] = 1;             /* progress info to screen */
+  ipsz[F2C(12)] = 1;             /* correct value of func in coirms */
+  ipsz[F2C(13)] = 0;             /* not correct value of jacs in coirms */
+  ipsz[F2C(14)] = 0;             /* status not known by modeler */
+  ipsz[F2C(15)] = 0;             /* function value include only NL terms */
+  ipsz[F2C(16)] = 1;             /* Objective is a constraint */
+  ipsz[F2C(17)] = 0;             /* sorted order for jacobian */
+  ipsz[F2C(18)] = 0;             /* append the log file after restarts */
+  ipsz[F2C(19)] = 0;             /* one subroutine call to coirms */
+  ipsz[F2C(20)] = 0;             /* eval subroutine is coifde */
+  ipsz[F2C(21)] = 0;             /* no debugging of derivatives */
+  ipsz[F2C(22)] = 0;             /* coifde not called for linear eqns */
+  /*
+   * skipping remainder of ipsz which are fortran io parameters
+   */
+
+  /*
+   * Real array
+   */
+  rpsz[F2C(1)] = ASC_INFINITY;       /* infinity */
+  rpsz[F2C(2)] = -ASC_INFINITY;      /* -infinity */
+  rpsz[F2C(3)] = UNDEFINED;      /* undefined */
+  rpsz[F2C(6)] = 0;              /* work space allocated by conopt */
+  rpsz[F2C(7)] = TIME_LIMIT;     /* resource limit (time) */
+  rpsz[F2C(8)] = 1;              /* initial value for vars if none given */
+#endif
 
 /*
  * reset count on coiopt calls
@@ -3113,9 +3154,6 @@ static void slv_conopt_iterate(slv9_system_t sys)
    * boundary
    */
   sys->con.optimized = 1;
-
-  ascfree(conopt_ptrs);
-  ascfree(usrmem);
 }
 
 #endif /* ASC_WITH_CONOPT  */
@@ -4192,59 +4230,6 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   sys->con.base = 1; /* fortan calling convention */
   sys->con.optdir = -1; /* minimisation */
 
-
-  /*
-   * Memory estimation by calling the CONOPT subroutine coimem
-   * The use of conopt_estimate_memory is a hack to avoid
-   * unresolved external during the linking of the CONOPT library.
-   * See conopt.h
-   */
-  if(sys->con.cntvect == NULL){
-	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
-  }
-
-  COIDEF_Ini(sys->con.cntvect);
-
-  COIDEF_NumVar(sys->con.cntvect, &(sys->con.n));
-  COIDEF_NumCon(sys->con.cntvect, &(sys->con.m)); /* include the obj fn */
-  COIDEF_NumNZ(sys->con.cntvect, &(sys->con.nz));
-  COIDEF_NumNlNz(sys->con.cntvect, &(sys->con.nlnz));
-  COIDEF_OptDir(sys->con.cntvect, &(sys->con.optdir));
-  COIDEF_ObjCon(sys->con.cntvect, &(sys->con.m)); /* objective will be last row     */
-  COIDEF_Base(sys->con.cntvect, &(sys->con.base));
-  COIDEF_ErrLim(sys->con.cntvect, &(DOMLIM));
-  COIDEF_ItLim(sys->con.cntvect, &(OPT_ITER_LIMIT));
-
-  /** @TODO implement the following options as well... */
-#if 0
-  ipsz[F2C(10)] = 0;             /* output to file */
-  ipsz[F2C(11)] = 1;             /* progress info to screen */
-  ipsz[F2C(12)] = 1;             /* correct value of func in coirms */
-  ipsz[F2C(13)] = 0;             /* not correct value of jacs in coirms */
-  ipsz[F2C(14)] = 0;             /* status not known by modeler */
-  ipsz[F2C(15)] = 0;             /* function value include only NL terms */
-  ipsz[F2C(16)] = 1;             /* Objective is a constraint */
-  ipsz[F2C(17)] = 0;             /* sorted order for jacobian */
-  ipsz[F2C(18)] = 0;             /* append the log file after restarts */
-  ipsz[F2C(19)] = 0;             /* one subroutine call to coirms */
-  ipsz[F2C(20)] = 0;             /* eval subroutine is coifde */
-  ipsz[F2C(21)] = 0;             /* no debugging of derivatives */
-  ipsz[F2C(22)] = 0;             /* coifde not called for linear eqns */
-  /*
-   * skipping remainder of ipsz which are fortran io parameters
-   */
-
-  /*
-   * Real array
-   */
-  rpsz[F2C(1)] = ASC_INFINITY;       /* infinity */
-  rpsz[F2C(2)] = -ASC_INFINITY;      /* -infinity */
-  rpsz[F2C(3)] = UNDEFINED;      /* undefined */
-  rpsz[F2C(6)] = 0;              /* work space allocated by conopt */
-  rpsz[F2C(7)] = TIME_LIMIT;     /* resource limit (time) */
-  rpsz[F2C(8)] = 1;              /* initial value for vars if none given */
-#endif
-
   /*
    * Execute solution algorithm with CONOPT
    */
@@ -4984,17 +4969,20 @@ static SlvClientToken slv9_create(slv_system_t server, int *statusindex)
 
 static int slv9_eligible_solver(slv_system_t server)
 {
-  int32 numr, numlr, numb;
-
-  numr = slv_get_num_solvers_rels(server);
-  numlr = slv_get_num_solvers_logrels(server);
-  numb = slv_get_num_solvers_bnds(server);
-
-  if (!numr || !numlr || !numb) {
-    return(FALSE);
-  } else {
-    return(TRUE);
+  const char *msg;
+  if(!slv_get_num_solvers_rels(server)){
+	msg = "No relations were found";
+  }else if(!slv_get_num_solvers_logrels(server)){
+	msg = "Model must contain at least one logical relation";
+  }else if(!slv_get_num_solvers_bnds(server)){
+	msg = "Model must contain at least one boundary";
+  }else{
+    return TRUE;
   }
+
+  ERROR_REPORTER_NOLINE(ASC_USER_ERROR
+	,"CMSlv not elegible for this model: %s",msg
+  );
 }
 
 static void slv9_get_parameters(slv_system_t server, SlvClientToken asys,

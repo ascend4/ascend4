@@ -34,6 +34,7 @@ class Solver{
 private:
 	std::string name;
 public:
+	Solver();
 	Solver(const Solver &);
 	Solver(const std::string &name);
 
