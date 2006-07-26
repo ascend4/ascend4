@@ -389,7 +389,6 @@ class Browser:
 		self.solver_engine.set_submenu(self.solver_engine_menu)
 		self.solver_engine_menu_dict = {}
 		_fmi = None
-		_qrslv = None
 		for _s in _slvlist:
 			_mi = gtk.RadioMenuItem(_fmi,_s.getName(),False)
 			if _fmi==None:
@@ -399,7 +398,7 @@ class Browser:
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi	
 		
-		_mi = self.solver_engine_menu_dict.get('CMSlv')
+		_mi = self.solver_engine_menu_dict.get('QRSlv')
 		_mi.set_active(1)
 
 		#--------
@@ -654,7 +653,7 @@ class Browser:
 			self.reporter.reportError("No model selected yet")
 			return
 
-		self.start_waiting("Solving...")
+		self.start_waiting("Solving with %s..." % self.solver.getName())
 
 		if self.prefs.getBoolPref("SolverReporter","show_popup",True):
 			reporter = PopupSolverReporter(self,self.sim.getNumVars())
