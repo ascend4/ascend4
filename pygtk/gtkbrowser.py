@@ -284,6 +284,7 @@ class Browser:
 		self.close_on_converged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_converged",True))
 		self.close_on_nonconverged=glade.get_widget("close_on_nonconverged")
 		self.close_on_nonconverged.set_active(self.prefs.getBoolPref("SolverReporter","close_on_nonconverged",True))
+		self.solver_engine=glade.get_widget("solver_engine")
 
 		self.use_relation_sharing=glade.get_widget("use_relation_sharing")
 		self.use_relation_sharing.set_active(self.prefs.getBoolPref("Compiler","use_relation_sharing",True))
@@ -377,6 +378,29 @@ class Browser:
 		# set up the error reporter callback
 		self.reporter = ascpy.getReporter()
 		self.reporter.setPythonErrorCallback(self.error_callback)
+
+
+		#-------
+		# Solver engine list
+
+		_slvlist = ascpy.getSolvers()
+		self.solver_engine_menu = gtk.Menu()
+		self.solver_engine_menu.show()
+		self.solver_engine.set_submenu(self.solver_engine_menu)
+		self.solver_engine_menu_dict = {}
+		_fmi = None
+		_qrslv = None
+		for _s in _slvlist:
+			_mi = gtk.RadioMenuItem(_fmi,_s.getName(),False)
+			if _fmi==None:
+				_fmi = _mi
+			_mi.show()
+			_mi.connect('toggled',self.on_select_solver_toggled,_s.getName())
+			self.solver_engine_menu.append(_mi)
+			self.solver_engine_menu_dict[_s.getName()]=_mi	
+		
+		_mi = self.solver_engine_menu_dict.get('CMSlv')
+		_mi.set_active(1)
 
 		#--------
 		# Assign an icon to the main window
@@ -477,6 +501,13 @@ class Browser:
 		print_loading_status("ASCEND is now running")
 		gtk.main()
 
+#   ------------------
+#   SOLVER LIST
+
+	def set_solver(self,solvername):
+		self.solver = ascpy.Solver(solvername)
+		self.reporter.reportNote("Set solver engine to '%s'" % solvername)
+
 #   --------------------------------------------
 # 	MAJOR GUI COMMANDS
 
@@ -485,6 +516,10 @@ class Browser:
 
 	def on_free_variable_activate(self,*args):
 		self.modelview.on_free_variable_activate(*args)
+
+	def on_select_solver_toggled(self,widget,solvername):
+		if widget.get_active():
+			self.set_solver(solvername)
 
 	def do_open(self,filename):
 		# TODO does the user want to lose their work?
@@ -591,7 +626,7 @@ class Browser:
 		print "DONE BUILDING"
 		self.stop_waiting()
 
-		self.sim.setSolver(ascpy.Solver("QRSlv"))
+		self.sim.setSolver(self.solver)
 
 		# methods
 		self.methodstore.clear()
@@ -626,7 +661,7 @@ class Browser:
 		else:
 			reporter = SimpleSolverReporter(self)
 
-		self.sim.solve(ascpy.Solver("QRSlv"),reporter)
+		self.sim.solve(self.solver,reporter)
 
 		self.stop_waiting()
 		

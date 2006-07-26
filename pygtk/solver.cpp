@@ -27,6 +27,10 @@ Solver::Solver(const Solver &old){
 	//cerr << "COPIED SOLVER, name = " << name << endl;
 }
 
+Solver::Solver(){
+	this->name = "";
+}
+
 const int
 Solver::getIndex() const{
 	int index = slv_lookup_client(name.c_str());

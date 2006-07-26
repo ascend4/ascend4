@@ -9,16 +9,11 @@
 
 %template(VariableVector) std::vector<Variable>;
 %template(RelationVector) std::vector<Relation>;
+%template(SolverVector) std::vector<Solver>;
 
-
-class Solver{
-public:
-	Solver(const std::string &name);
-	Solver(const Solver &);
-
-	const int &getIndex() const;
-	const std::string getName() const;
-};
+%ignore registerSolver;
+%ignore registerStandardSolvers;
+%include "solver.h"
 
 %include "simulation.h"
 // SOLVE PARAMETERS
