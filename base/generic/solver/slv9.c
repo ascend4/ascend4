@@ -1,31 +1,32 @@
-/*
- *  Conditional Modeling Solver
- *  by Vicente Rico-Ramirez
- *  Version: $Revision: 1.22 $
- *  Version control file: $RCSfile: slv9.c,v $
- *  Date last modified: $Date: 2000/01/25 02:27:58 $
- *  Last modified by: $Author: ballan $
- *
- *  This file is part of the SLV solver.
- *
- *  The SLV solver is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version.
- *
- *  The SLV solver is distributed in hope that it will be
- *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software Foundation,
- *  Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check the file named
- *  COPYING.  COPYING is found in ../compiler.
- *
- */
+/*	ASCEND modelling environment
+	Copyright (C) 2006 Carnegie Mellon University
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*//**
+	@file
+	Conditional Modeling Solver (CMSlv) module.
+*//*
+	Conditional Modeling Solver
+	by Vicente Rico-Ramirez
+	Last in CVS: $Revision: 1.22 $ $Date: 2000/01/25 02:27:58 $ $Author: ballan $
+*/
 
 #include <math.h>
+
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <utilities/ascSignal.h>
 #include <utilities/ascMalloc.h>
@@ -60,9 +61,12 @@
 #include "slv_stdcalls.h"
 #include "slvDOF.h"
 
-#include <solver/conopt.h>
-#undef ASC_WITH_CONOPT
-
+#ifdef ASC_WITH_CONOPT
+# include <solver/conopt.h>
+#else
+# define MAX_INT MAXINT
+# define MAX_REAL MAXDOUBLE
+#endif
 
 #if !defined(STATIC_CMSLV) && !defined(DYNAMIC_CMSLV)
 int slv9_register(SlvFunctionsT *f)
@@ -286,10 +290,12 @@ struct slv9_system_structure {
   void *parm_array[slv9_PA_SIZE];     /* array of pointers to param values */
   struct slv_parameter pa[slv9_PA_SIZE]; /* &pa[0] => sys->p.parms */
 
+#ifdef ASC_WITH_CONOPT
   /*
    *  Data for optimizer at boundaries (CONOPT)
    */
   struct conopt_data con;
+#endif
 };
 
 
@@ -2709,7 +2715,7 @@ static int COI_CALL slv9_conopt_readmatrix(
   return 0;
 }
 
-
+#if 0 /* not in API any more */
 /*
  * COIFBL Defines the nonlinearities of the model by returning
  * numerical values. It works on a block of rows during each call.
@@ -2758,7 +2764,7 @@ static void slv9_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
 
   return;
 }
-
+#endif
 
 /*
  * COIFDE Defines the nonlinearities of the model by returning
@@ -2851,7 +2857,7 @@ static int COI_CALL slv9_conopt_fdeval(
  * objval - objective value
  * usrmem - user memory
  */
-static void slv9_conopt_status(int *modsta, int *solsta, int *iter
+static int COI_CALL slv9_conopt_status(int *modsta, int *solsta, int *iter
 		, double *objval, double *usrmem
 ){
   slv9_system_t sys;
@@ -2862,6 +2868,8 @@ static void slv9_conopt_status(int *modsta, int *solsta, int *iter
   sys->con.solsta = *solsta;
   sys->con.iter = *iter;
   sys->con.obj = *objval;
+
+  return 0;
 }
 
 
@@ -2882,7 +2890,7 @@ static void slv9_conopt_status(int *modsta, int *solsta, int *iter
  * m      - number of constraints
  * usrmem - user memory
  */
-static void slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
+static int COI_CALL slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
 		double *yval, double *ymar, int *ybas, int * ysta,
 		int *n, int *m, double *usrmem
 ){
@@ -2904,6 +2912,8 @@ static void slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xst
     value = xval[c];
     opt_var_values->element[c] = value;
   }
+
+  return 0;
 }
 
 #if 0
@@ -2941,7 +2951,7 @@ static void slv9_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
  * lval   - the value to be assigned to name if the cells contains a log value
  * usrmem - user memory
  */
-static void slv9_conopt_option(
+static int COI_CALL slv9_conopt_option(
 		char *name, double *rval, int *ival, int *logical
 	    , double *usrmem
 ){
@@ -2962,14 +2972,14 @@ static void slv9_conopt_option(
                                   interface_label,6);
 	*rval = sys->p.parms[sys->con.opt_count].info.r.value;
 	sys->con.opt_count++;
-	return;
+	return 0;
       } else if (strncmp(sys->p.parms[sys->con.opt_count]. /* . break */
                              interface_label,"L",1) == 0) {
 	name = strncpy(name,sys->p.parms[sys->con.opt_count]. /* . break */
                                  interface_label,6);
 	*ival = sys->p.parms[sys->con.opt_count].info.i.value;
 	sys->con.opt_count++;
-	return;
+	return 0;
       }
     }
     sys->con.opt_count++;
@@ -2977,6 +2987,7 @@ static void slv9_conopt_option(
 
   /* sending blank to quit iterative calling */
   name = memset(name,' ',8);
+  return 0;
 }
 
 
@@ -3059,20 +3070,18 @@ static void slv_conopt_iterate(slv9_system_t sys)
 
   conopt_ptrs = ASC_NEW_CLEAR(struct conopt_function_pointers);
   conopt_ptrs->coirms_ptr = &slv9_conopt_readmatrix;
-  conopt_ptrs->coifbl_ptr = slv9_coifbl;
+/*  conopt_ptrs->coifbl_ptr = slv9_coifbl; */
   conopt_ptrs->coifde_ptr = &slv9_conopt_fdeval;
-  conopt_ptrs->coirs_ptr = slv9_conopt_solution;
-  conopt_ptrs->coista_ptr = slv9_conopt_status;
+  conopt_ptrs->coirs_ptr = &slv9_conopt_solution;
+  conopt_ptrs->coista_ptr = &slv9_conopt_status;
 /*  conopt_ptrs->coiusz_ptr = slv9_coiusz; */
-  conopt_ptrs->coiopt_ptr = slv9_conopt_option;
+  conopt_ptrs->coiopt_ptr = &slv9_conopt_option;
 /*   conopt_ptrs->coipsz_ptr = slv9_coipsz; */
   conopt_ptrs->coimsg_ptr = NULL;
-  conopt_ptrs->coiscr_ptr = NULL;
-  conopt_ptrs->coiec_ptr = NULL;
-  conopt_ptrs->coier_ptr = NULL;
-  conopt_ptrs->coienz_ptr = NULL;
-  conopt_ptrs->coiprg_ptr = NULL;
-  conopt_ptrs->coiorc_ptr = NULL;
+/*  conopt_ptrs->coiscr_ptr = NULL; */
+  conopt_ptrs->coierr_ptr = &asc_conopt_errmsg;
+  conopt_ptrs->coiprg_ptr = &asc_conopt_progress;
+/*  conopt_ptrs->coiorc_ptr = NULL; */
 
 /*
  * We pass the pointers to sys and conopt_ptrs instead of a usrmem array.
@@ -4172,6 +4181,7 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   sys->opt_var_values = &opt_var_values;
   sys->subregions = (*n_subregions);
 
+#ifdef ASC_WITH_CONOPT
   /*
    * Information for CONOPT parameters
    */
@@ -4182,7 +4192,6 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   sys->con.base = 1; /* fortan calling convention */
   sys->con.optdir = -1; /* minimisation */
 
-#ifdef ASC_WITH_CONOPT
 
   /*
    * Memory estimation by calling the CONOPT subroutine coimem

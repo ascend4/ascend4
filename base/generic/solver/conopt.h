@@ -30,6 +30,7 @@
 #ifndef ASC_CONOPT_H
 #define ASC_CONOPT_H
 
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
 
 #ifdef ASC_WITH_CONOPT  /* code used if CONOPT is available */

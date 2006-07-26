@@ -103,7 +103,7 @@ opts.Add(ListOption(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works."
-	,["QRSLV","CMSLV","LSOD","IDA","CONOPT"]
+	,["QRSLV","CMSLV","LSOD","IDA","CONOPT","LRSLV"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
 		,'LSOD','OPTSQP',"IDA"
