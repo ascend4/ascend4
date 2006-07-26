@@ -54,7 +54,7 @@ ASC_EXPORT(int) extfntest_register(){
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising EXTFNTEST...\n");
 
-	CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",addone_calc);
+	(void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",addone_calc);
 
 	result += CreateUserFunctionBlackBox("add_one"
 		, addone_prepare
@@ -90,7 +90,7 @@ int addone_calc(struct Slv_Interp *slv_interp,
 		double *inputs, double *outputs,
 		double *jacobian
 ){
-	char *mystring = (char *)slv_interp->user_data;
+	/* char *mystring = (char *)slv_interp->user_data; */
 
 	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"ADDONE_CALC: mystring = %s\n",mystring); */
 

@@ -53,31 +53,23 @@
 #include "relman.h"
 #include "slv_common.h"
 #include "slv_client.h"
-#include "conopt.h"
 #include "slv8.h"
 #include "slv_stdcalls.h"
-#include "conoptdll.h"
+
+#include <solver/conopt.h>
 
 #define slv8_register_conopt_function register_conopt_function
 #define slv8_coicsm coicsm
 #define slv8_coimem coimem
 
-#if !defined(STATIC_CONOPT) && !defined(DYNAMIC_CONOPT)
-
-int slv8_register(SlvFunctionsT *f)
-{
+#ifndef ASC_WITH_CONOPT
+int slv8_register(SlvFunctionsT *f){
   (void)f;  /* stop gcc whine about unused parameter */
 
   FPRINTF(stderr,"CONOPT not compiled in this ASCEND IV.\n");
   return 1;
 }
-
-#else /* either STATIC_CONOPT or DYNAMIC_CONOPT is defined */
-
-/* #ifdef DYNAMIC_CONOPT */
-/* do dynamic loading stuff.   yeah, right */
-
-/* #else *//* following is used if STATIC_CONOPT is defined */
+#else
 
 /*
  * Output in user defined CONOPT subroutines
@@ -1607,6 +1599,7 @@ static void structural_analysis(slv_system_t server, slv8_system_t sys)
   sys->J.reg.row.high = sys->con.m -1;
   if (sys->obj != NULL) sys->J.reg.row.high--;
   sys->J.reg.col.high = sys->con.n -1;
+
   slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed");
 
   /* Initialize Status */
@@ -1741,6 +1734,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys)
   int32 cap, ind;
   int32 matrix_creation_needed = 1;
   slv8_system_t sys;
+  int *cntvect, temp;
 
   sys = SLV8(asys);
   iteration_begins(sys);
@@ -1798,28 +1792,72 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys)
       sys->con.m++; /* treat objective as a row */
     }
 
-    sys->con.ipsz[0] = sys->con.n;
-    sys->con.ipsz[1] = sys->con.m;
-    sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
-    sys->con.ipsz[2] = sys->con.nz;
-    sys->con.nintgr = NINTGR;
-    /*
-     * Memory estimation by calling the CONOPT subroutine coimem
-     * The use of conopt_estimate_memory is a hack to avoid
-     * unresolved external during the linking of the CONOPT library.
-     * See conopt.h
-     */
-    conopt_estimate_memory(&(sys->con.nintgr),&(sys->con.ipsz[0]),
-                &(sys->con.minmem),&(sys->con.estmem));
+	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
+	COIDEF_Ini(cntvect);
+	sys->con.cntvect = cntvect;
+	COIDEF_NumVar(cntvect, &(sys->con.n));
+	COIDEF_NumCon(cntvect, &(sys->con.m));
+	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
+	COIDEF_NumNZ(cntvect, &(sys->con.nz));
+	COIDEF_NumNlNz(cntvect, &(sys->con.nz));
+	
+	sys->con.base = 1;
+	COIDEF_Base(cntvect,&(sys->con.base));
+    COIDEF_ErrLim(cntvect, &(DOMLIM));
+    COIDEF_ItLim(cntvect, &(ITER_LIMIT));
 
-    if (sys->con.work != NULL) {
-      sys->con.work = (real64 *)ascrealloc(sys->con.work,
-					   sys->con.estmem*sizeof(real64));
-    } else {
-      /* calloc here doesn't help the crash */
-      sys->con.work = ASC_NEW_ARRAY(real64,sys->con.estmem);
-    }
-    sys->con.lwork = sys->con.estmem;
+    if(sys->obj!=NULL){
+		sys->con.optdir = relman_obj_direction(sys->obj);
+		sys->con.objcon = sys->con.m; /* objective will be last row */
+	}else{
+		sys->con.optdir = 0;
+		sys->con.objcon = 0;
+	}
+    COIDEF_OptDir(cntvect, &(sys->con.optdir));
+	COIDEF_ObjCon(cntvect, &(sys->con.objcon));
+
+	temp = 0;
+	COIDEF_StdOut(cntvect, &temp);
+	
+	COIDEF_Message(cntvect, &asc_conopt_message);
+	COIDEF_ErrMsg(cntvect, &asc_conopt_errmsg);
+	COIDEF_Progress(cntvect, &asc_conopt_progress);
+	COIDEF_Status(cntvect, &asc_conopt_status);
+	COIDEF_Solution(cntvect, &asc_conopt_solution);
+
+#if 0 /* these are the parameters we need to pass to CONOPT */
+  ipsz[F2C(4)] = 0;             /* FIX THESE AT A LATER DATE!!!!  */
+  if (sys->obj != NULL) {
+    ipsz[F2C(6)] = relman_obj_direction(sys->obj);
+    ipsz[F2C(7)] = sys->con.m;    /* objective will be last row     */
+  } else {
+    ipsz[F2C(7)] = 0;
+  }
+  ipsz[F2C(10)] = 1;             /* OUTPUT TO SUBROUTINE */
+  ipsz[F2C(11)] = 0;             /* NO OUTPUT TO SCREEN */
+  ipsz[F2C(12)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(13)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(14)] = 1;		 /* NON DEFAULT VALUE */
+  ipsz[F2C(15)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(16)] = 1;             /* NON DEFAULT VALUE */
+  ipsz[F2C(17)] = 0;
+  ipsz[F2C(18)] = 0;
+  ipsz[F2C(19)] = 0;
+  ipsz[F2C(20)] = 0;
+  ipsz[F2C(21)] = 0;
+  ipsz[F2C(22)] = 1;             /* NON DEFAULT VALUE */
+  /*skipping remainder of ipsz which are fortran io parameters */
+
+  rpsz[F2C(1)] = 1e20;
+  rpsz[F2C(2)] = -1e20;
+  rpsz[F2C(3)] = 1.2e20;
+/*rpsz[F2C(4)] = NA*/
+/*rpsz[F2C(5)] = eps*/
+  rpsz[F2C(6)] = 0;
+  rpsz[F2C(7)] = TIME_LIMIT;
+  rpsz[F2C(8)] = 1;
+#endif
+
     destroy_vectors(sys);
     destroy_matrices(sys);
     create_matrices(server,sys);
@@ -1955,13 +1993,13 @@ static void slv8_resolve(slv_system_t server, SlvClientToken asys)
  * nz    - number of jacobian elements
  * usrmem- user memory defined by conopt
  */
-static void slv8_coirms(real64 *lower, real64 *curr, real64 *upper,
-                        int32 *vsta, int32 *type, real64 *rhs,
-                        real64 *fv, int32 *esta, int32 *colsta,
-                        int32 *rowno, real64 *value, int32 *nlflag,
-                        int32 *n, int32 *m, int32 *n1, int32 *nz,
-                        real64 *usrmem)
-{
+static int COI_CALL slv8_conopt_readmatrix(
+		double *lower, double *curr, double *upper
+		, int *vsta,  int *type, double *rhs
+		, int *esta,  int *colsta, int *rowno
+		, double *value, int *nlflag, int *n, int *m, int *nz
+		, double *usrmem
+){
   int32 col,row,count,count_old,len,c,r,offset, obj_count;
   real64 nominal, up, low;
   struct var_variable *var;
@@ -2006,7 +2044,7 @@ static void slv8_coirms(real64 *lower, real64 *curr, real64 *upper,
        row <= sys->J.reg.row.high; row++) {
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
     nominal = sys->weights.vec[row];
-    fv[row-offset] = sys->residuals.vec[row]; /* already scaled */
+    /* fv[row-offset] = sys->residuals.vec[row];*/ /* already scaled */
   }
   for (row = 0; row < *m; row++) {
     type[row] = 0;
@@ -2085,11 +2123,13 @@ static void slv8_coirms(real64 *lower, real64 *curr, real64 *upper,
       colsta[col - offset] = C2F(count_old);
     }
   }
-  colsta[F2C(*n1)] = *nz + 1;
+  colsta[*n] = *nz + 1;
   if (sys->obj != NULL) {
     ascfree(variables);
     ascfree(derivatives);
   }
+
+  return 0;
 }
 
 #if 0 /* not compatible with our version */
@@ -2229,9 +2269,15 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
  * n      - number of variables
  * usrmem - user memory
  */
-static void slv8_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
+static int COI_CALL slv8_conopt_fdeval(
+		double *x, double *g, double *jac
+		, int *rowno, int *jcnm, int *mode, int *ignerr
+		, int *errcnt, int *newpt, int *n, int *nj
+		, double *usrmem
+)
+/*static int COI_CALL slv8_conopt_fdeval(real64 *x, real64 *g, real64 *jac, int32 *rowno,
 	                int32 *jcnm, int32 *mode, int32 *errcnt,
-	                int32 *newpt, int32 *n, int32 *nj, real64 *usrmem)
+	                int32 *newpt, int32 *n, int32 *nj, real64 *usrmem) */
 {
   int32 offset, col, row, len, c;
   real64 nominal, value;
@@ -2265,17 +2311,17 @@ static void slv8_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
     row = F2C(*rowno + offset);
     if ((*rowno == sys->con.m) && (sys->obj != NULL)){
       if(calc_objective(sys)){
-	*g = sys->objective;
+		*g = sys->objective;
       } else {
-	FPRINTF(MIF(sys),"slv8_coifde: ERROR IN OBJECTIVE CALCULATION\n");
+		FPRINTF(MIF(sys),"%s: ERROR IN OBJECTIVE CALCULATION\n",__FUNCTION__);
       }
     } else {
-      rel = sys->rlist[row];
-      *g = relman_eval(rel,&calc_ok,SAFE_CALC)
-	* sys->weights.vec[row];
-      if (!calc_ok) {
-	(*errcnt)++;
-      }
+	  rel = sys->rlist[row];
+	  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
+	  * sys->weights.vec[row];
+	  if (!calc_ok) {
+		(*errcnt)++;
+	  }
     }
   }
   if (*mode == 2 || *mode == 3) {
@@ -2292,39 +2338,40 @@ static void slv8_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
       calc_ok = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
-	jac[variables[c]] = derivatives[c]
-	  *  sys->nominals.vec[variables[c]];
+		jac[variables[c]] = derivatives[c]
+			  *  sys->nominals.vec[variables[c]];
       }
       if (!calc_ok) {
-	(*errcnt)++;
+		(*errcnt)++;
       }
     } else {
       rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
       calc_ok = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
-	jac[variables[c]] = derivatives[c]
-	  * sys->weights.vec[row] *  sys->nominals.vec[variables[c]];
+		jac[variables[c]] = derivatives[c]
+		  * sys->weights.vec[row] *  sys->nominals.vec[variables[c]];
       }
       if (!calc_ok) {
-	(*errcnt)++;
+		(*errcnt)++;
       }
     }
     for (c = 0; c < len; c++) {
       if(fabs(jac[variables[c]]) > RTMAXJ) {
 #if CONDBG
-	FPRINTF(stderr,"large jac element\n");
+		FPRINTF(stderr,"large jac element\n");
 #endif /* CONDBG  */
         if (jac[variables[c]] < 0) {
           jac[variables[c]] = -RTMAXJ+1;
-	} else {
+		} else {
           jac[variables[c]] = RTMAXJ-1;
-	}
+		}
       }
     }
     ascfree(variables);
     ascfree(derivatives);
   }
+  return 0;
 }
 
 
@@ -2339,7 +2386,7 @@ static void slv8_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
  * objval - objective value
  * usrmem - user memory
  */
-static void slv8_coista(int32 *modsta, int32 *solsta, int32 *iter,
+static int COI_CALL slv8_conopt_status(int32 *modsta, int32 *solsta, int32 *iter,
 	                real64 *objval, real64 *usrmem)
 {
   slv8_system_t sys;
@@ -2354,6 +2401,8 @@ static void slv8_coista(int32 *modsta, int32 *solsta, int32 *iter,
 
   sys->con.iter = *iter;
   sys->con.obj = sys->objective = *objval;
+
+  return 0;
 }
 
 
@@ -2374,10 +2423,10 @@ static void slv8_coista(int32 *modsta, int32 *solsta, int32 *iter,
  * m      - number of constraints
  * usrmem - user memory
  */
-static void slv8_coirs(real64 *xval, real64 *xmar, int32 *xbas, int32 *xsta,
-	               real64 *yval, real64 *ymar, int32 *ybas, int32 * ysta,
-	               int32 *n, int32 *m, real64 *usrmem)
-{
+static int COI_CALL slv8_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
+		double *yval, double *ymar, int *ybas, int * ysta,
+		int *n, int *m, double *usrmem
+){
   int32 offset, col, c;
   real64 nominal, value;
   struct var_variable *var;
@@ -2418,9 +2467,10 @@ static void slv8_coirs(real64 *xval, real64 *xmar, int32 *xbas, int32 *xsta,
   }
 
   /* should pull out additional info here */
+  return 0;
 }
 
-
+#if 0 /* think that this is removed from the API now */
 /*
  * COIUSZ communicates and update of an existing model to CONOPT
  * COIUSZ(nintg, ipsz, nreal, rpsz, usrmem)
@@ -2445,7 +2495,7 @@ static void slv8_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal,
   (void)nintg;  (void)ipsz;   (void)nreal;  (void)rpsz;
   (void)usrmem;
 
-#if 0
+$if 0
   slv8_system_t sys;
 
   /*
@@ -2478,10 +2528,11 @@ static void slv8_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal,
 
   rpsz[F2C(7)] = TIME_LIMIT;
 
-#endif
+$endif
 
  return;
 }
+#endif
 
 
 /*
@@ -2493,9 +2544,10 @@ static void slv8_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal,
  * lval   - the value to be assigned to name if the cells contains a log value
  * usrmem - user memory
  */
-static void slv8_coiopt(char *name, real64 *rval, int32 *ival,
-		        int32 *logical, real64 *usrmem)
-{
+static int COI_CALL slv8_conopt_option(
+		int *NCALL, double *rval, int *ival, int *logical
+	    , double *usrmem, char *name, int lenname
+){
   slv8_system_t sys;
 
   /*
@@ -2509,18 +2561,18 @@ static void slv8_coiopt(char *name, real64 *rval, int32 *ival,
     if (strlen(sys->p.parms[sys->con.opt_count].interface_label) == 6){
       if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
                   "R",1) == 0) {
-	name = 
+		name = 
           strncpy(name, sys->p.parms[sys->con.opt_count].interface_label,6);
-	*rval = sys->p.parms[sys->con.opt_count].info.r.value;
-	sys->con.opt_count++;
-	return;
+		*rval = sys->p.parms[sys->con.opt_count].info.r.value;
+		sys->con.opt_count++;
+		return 0;
       } else if (strncmp(sys->p.parms[sys->con.opt_count].interface_label,
                          "L",1) == 0) {
-	name = 
-          strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
-	*ival = sys->p.parms[sys->con.opt_count].info.i.value;
-	sys->con.opt_count++;
-	return;
+		name = 
+	          strncpy(name,sys->p.parms[sys->con.opt_count].interface_label,6);
+		*ival = sys->p.parms[sys->con.opt_count].info.i.value;
+		sys->con.opt_count++;
+		return 0;
       }
     }
     sys->con.opt_count++;
@@ -2528,9 +2580,11 @@ static void slv8_coiopt(char *name, real64 *rval, int32 *ival,
 
   /* sending blank to quit iterative calling */
   name = memset(name,' ',8);
+
+  return 0;
 }
 
-
+#if 0 /* this stuff has been superceded in the new API */
 /*
  * COIPSZ communicates the model size and structure to CONOPT
  * COIPSZ(nintg, ipsz, nreal, rpsz, usrmem)
@@ -2591,7 +2645,9 @@ static void slv8_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal,
   rpsz[F2C(8)] = 1;
 
 }
+#endif
 
+#if 0 /* the calling convention has changed for these ones */
 /* conopt communication subroutines */
 void slv8_coiec COIEC_ARGS {
   char *name=NULL;
@@ -2649,8 +2705,13 @@ void slv8_coienz COIENZ_ARGS {
     ascfree(varname);
   }
 }
+#endif
 
-void slv8_coimsg COIMSG_ARGS {
+#if 0 /* replace these in conopt.c */
+int COI_CALL slv8_conopt_message(
+		int *smsg, int *dmsg, int* nmsg, int* llen
+		, double *usrmem, char *msgv, int msglen
+){
   int32 stop, i, len;
   char *line[15];
   /* should put option to make stop = *smsg or *nmsg 
@@ -2659,36 +2720,43 @@ void slv8_coimsg COIMSG_ARGS {
   stop = *nmsg;
   for (i = 0; i < stop; i++) {
     len = llen[i];
-    line[i] = &msgv[i*80];
+    line[i] = &msgv[i*msglen];
     FPRINTF(stdout,"%.*s\n",len,line[i]);
   }
 }
 
-void slv8_coiprg COIPRG_ARGS {
+void slv8_conopt_progress(
+		int *len_intrep, int* intrep
+		, int *len_rl, double* rl
+		, double* x, double *usrmem
+){
   slv8_system_t sys;
   sys = (slv8_system_t)usrmem;
+
   if (sys->con.progress_count == 0) {
-    FPRINTF(stderr,
+    fprintf(stderr,
       "  iter   phase  numinf  numnop   nsuper  ");
-    FPRINTF(stderr,
+    fprintf(stderr,
       "                    suminf                     objval          rgmax\n");
   }
-  FPRINTF(stdout,"%6i  ",intrep[0]);
-  FPRINTF(stdout,"  %6i  ",intrep[1]);
-  FPRINTF(stdout,"    %6i  ",intrep[2]);
-  FPRINTF(stdout,"     %6i  ",intrep[3]);
-  FPRINTF(stdout,"     %6i    ",intrep[4]);
-  FPRINTF(stdout,"  %16e  ",rl[0]);
-  FPRINTF(stdout,"  %16e  ",rl[1]);
-  FPRINTF(stdout,"  %7.2e  ",rl[2]);
-  FPRINTF(stdout,"\n");
+  fprintf(stderr,"%6i  ",intrep[0]);
+  fprintf(stderr,"  %6i  ",intrep[1]);
+  fprintf(stderr,"    %6i  ",intrep[2]);
+  fprintf(stderr,"     %6i  ",intrep[3]);
+  fprintf(stderr,"     %6i    ",intrep[4]);
+  fprintf(stderr,"  %16e  ",rl[0]);
+  fprintf(stderr,"  %16e  ",rl[1]);
+  fprintf(stderr,"  %7.2e  ",rl[2]);
+  fprintf(stderr,"\n");
+
   sys->con.progress_count++;
   if (sys->con.progress_count == 10) { /* 10 should be iface parm */
     sys->con.progress_count = 0;
   }
-  
 }
+#endif
 
+#if 0 /* seems not to be available any more */
 void slv8_coiorc COIORC_ARGS {
   if (*resid != 0.0) {
     char *relname=NULL;
@@ -2724,11 +2792,13 @@ void slv8_coiorc COIORC_ARGS {
     }
   }
 }
+#endif
+
+#if 0 /* not present in API any more */
 void slv8_coiscr COISCR_ARGS {
   FPRINTF(stdout,"%.*s\n",*len,&msg[0]);
 }
-
-
+#endif
 
 /*
  * slv_conopt iterate calls conopt_start, which calls coicsm
@@ -2738,49 +2808,50 @@ void slv8_coiscr COISCR_ARGS {
  */
 static void slv_conopt_iterate(slv8_system_t sys)
 {
+  
   real64 **usrmem;
   conopt_pointers conopt_ptrs;
 
-  conopt_ptrs = (conopt_pointers)asccalloc
-                 (1, sizeof(struct conopt_function_pointers ) );
-  conopt_ptrs->coirms_ptr = slv8_coirms;
-  conopt_ptrs->coifbl_ptr = NULL;
-  conopt_ptrs->coifde_ptr = slv8_coifde;
-  conopt_ptrs->coirs_ptr = slv8_coirs;
-  conopt_ptrs->coista_ptr = slv8_coista;
-  conopt_ptrs->coiusz_ptr = NULL;
-  conopt_ptrs->coiopt_ptr = slv8_coiopt;
-  conopt_ptrs->coipsz_ptr = slv8_coipsz;
+  conopt_ptrs = ASC_NEW_CLEAR(struct conopt_function_pointers);
+  conopt_ptrs->coirms_ptr = slv8_conopt_readmatrix;
+/*  conopt_ptrs->coifbl_ptr = NULL; */
+  conopt_ptrs->coifde_ptr = slv8_conopt_fdeval;
+  conopt_ptrs->coirs_ptr = slv8_conopt_solution;
+  conopt_ptrs->coista_ptr = slv8_conopt_status;
+/*  conopt_ptrs->coiusz_ptr = NULL; */
+  conopt_ptrs->coiopt_ptr = slv8_conopt_option;
+/*  conopt_ptrs->coipsz_ptr = slv8_coipsz; */
 
-  conopt_ptrs->coimsg_ptr = slv8_coimsg;
-  conopt_ptrs->coiscr_ptr = slv8_coiscr;
-  conopt_ptrs->coiec_ptr = slv8_coiec;
-  conopt_ptrs->coier_ptr = slv8_coier;
-  conopt_ptrs->coienz_ptr = slv8_coienz;
-  conopt_ptrs->coiprg_ptr = slv8_coiprg;
-  conopt_ptrs->coiorc_ptr = slv8_coiorc;
+  conopt_ptrs->coimsg_ptr = asc_conopt_message;
+  conopt_ptrs->coierr_ptr = asc_conopt_errmsg;
+  conopt_ptrs->coiprg_ptr = asc_conopt_progress;
+/*  conopt_ptrs->coiorc_ptr = slv8_coiorc; */
 
-  usrmem = (real64 **)(ascmalloc(2*sizeof(real64 *)));
+  usrmem = ASC_NEW_ARRAY(void,2);
 
 /*
  * We pass the pointers to sys and conopt_ptrs instead of a usrmem array.
  * Cast the appropriate element of usrmem back to slv9_system_t and
  * conopt_pointers to access the information required
  */
-  usrmem[0] = (real64 *)conopt_ptrs;
-  usrmem[1] = (real64 *)sys;
+  usrmem[0] = (void *)conopt_ptrs;
+  usrmem[1] = (void *)sys;
+  COIDEF_UsrMem(sys->con.cntvect, usrmem);
 
   sys->con.opt_count = 0; /* reset count on slv8_coiopt calls */
   sys->con.progress_count = 0; /* reset count on coiprg calls */
 
   sys->con.kept = 1;
-  conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
-	 sys->con.work, &(sys->con.maxusd), &(sys->con.curusd));
-  /*
-   * We need to check conopt's status codes before claim
-   * optimization complete. For now just see status file
-   */
-  sys->con.optimized = 1;
+
+  COI_Solve(sys->con.cntvect);
+  /* conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
+	 sys->con.work, &(sys->con.maxusd), &(sys->con.curusd)); */
+
+  if(sys->con.solsta == 1 && sys->con.modsta == 1){
+	  sys->con.optimized = 1;
+  }else{
+	sys->con.optimized = 0;
+  }
 
   ascfree(conopt_ptrs);
   ascfree(usrmem);
@@ -2911,12 +2982,8 @@ int32 slv8_register(SlvFunctionsT *sft)
     FPRINTF(stderr,"slv8_register called with NULL pointer\n");
     return 1;
   }
-#ifdef DYNAMIC_CONOPT
-  if (conopt_load() == 1) {
-    FPRINTF(stderr,"Registration failure: CONOPT dll unavailable\n");
-	return 1;
-  }
-#endif /* DYNAMIC_CONOPT */
+
+  /* do dlopening here, conopt_load, if DYNAMIC_CONOPT. not implemented. */
 
   sft->name = "CONOPT";
   sft->ccreate = slv8_create;
@@ -2937,5 +3004,4 @@ int32 slv8_register(SlvFunctionsT *sft)
   return 0;
 }
 
-/* #endif */ /* #else clause of DYNAMIC_CONOPT */
 #endif /* #else clause of !STATIC_CONOPT && !DYNAMIC_CONOPT */

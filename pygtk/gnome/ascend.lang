@@ -93,6 +93,7 @@ John Pye (C) 2005
 		<keyword>IF</keyword>
 		<keyword>IMPORT</keyword>
 		<keyword>IN</keyword>
+		<keyword>INPUT</keyword>
 		<keyword>INTERSECTION</keyword>
 		<keyword>IS_A</keyword>
 		<keyword>IS_REFINED_TO</keyword>
@@ -107,6 +108,7 @@ John Pye (C) 2005
 		<keyword>OF</keyword>
 		<keyword>OR</keyword>
 		<keyword>OTHERWISE</keyword>
+		<keyword>OUTPUT</keyword>
 		<keyword>PROVIDE</keyword>
 		<keyword>PROD</keyword>
 		<keyword>REPLACE</keyword>
@@ -240,6 +242,7 @@ John Pye (C) 2005
 
 	<keyword-list _name="Standard model methods" style="Function" case-sensitive="TRUE">
 		<keyword>default_self</keyword>
+		<keyword>on_load</keyword>
 		<keyword>specify</keyword>
 		<keyword>values</keyword>
 		<keyword>self_test</keyword>
@@ -288,6 +291,8 @@ John Pye (C) 2005
 		<keyword>power_sub</keyword>
 		<keyword>inverse_temperature</keyword>
 		<keyword>force</keyword>
+		<keyword>force_per_length</keyword>
+		<keyword>surface_tension</keyword>
 		<keyword>vapor_pressure</keyword>
 		<keyword>k_constant</keyword>
 		<keyword>molar_mass</keyword>
@@ -296,6 +301,7 @@ John Pye (C) 2005
 		<keyword>mole_scale</keyword>
 		<keyword>mole</keyword>
 		<keyword>mass_rate</keyword>
+		<keyword>mass_flux</keyword>
 		<keyword>molar_rate_scale</keyword>
 		<keyword>conc_rate</keyword>
 		<keyword>mole_fraction</keyword>

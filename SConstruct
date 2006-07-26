@@ -28,6 +28,10 @@ if platform.system()=="Windows":
 	default_ida_prefix = "c:\\MinGW"
 	if not os.path.exists(default_ida_prefix):
 		default_ida_prefix = None
+
+	default_conopt_prefix = "c:\\MinGW"
+	if not os.path.exists(default_conopt_prefix):
+		default_conopt_prefix = None
 		
 	need_libm = False
 	python_exe = "c:\\Python24\\python.exe"
@@ -42,6 +46,7 @@ else:
 	default_rel_distdir = '../share/ascend'
 	default_absolute_paths = True
 	default_ida_prefix="/usr/local"
+	default_conopt_prefix="/usr"
 	need_libm = True
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
@@ -98,7 +103,7 @@ opts.Add(ListOption(
 	'WITH_SOLVERS'
 	,"List of the solvers you want to build. The default is the minimum that"	
 		+" works."
-	,["QRSLV","CMSLV","LSOD","IDA"]
+	,["QRSLV","CMSLV","LSOD","IDA","CONOPT"]
 	,['QRSLV','MPS','SLV','OPTSQP'
 		,'NGSLV','CMSLV','LRSLV','MINOS','CONOPT'
 		,'LSOD','OPTSQP',"IDA"
@@ -184,6 +189,32 @@ opts.Add(
 	'IDA_LIBPATH'
 	,"Where are your SUNDIALS libraries installed?"
 	,"$IDA_PREFIX/lib"
+)
+
+# conopt
+
+opts.Add(PackageOption(
+	"CONOPT_PREFIX"
+	,"Prefix for your CONOPT install (CONOPT ./configure --prefix)"
+	,default_ida_prefix
+))
+
+opts.Add(
+	"CONOPT_LIB"
+	,"Library linked to for CONOPT"
+	,'consub3'
+)
+
+opts.Add(
+	'CONOPT_CPPPATH'
+	,"Where is your conopt.h?"
+	,"$CONOPT_PREFIX/include"
+)
+
+opts.Add(
+	'CONOPT_LIBPATH'
+	,"Where is your CONOPT libraries installed?"
+	,"$CONOPT_PREFIX/lib"
 )
 
 opts.Add(
@@ -469,6 +500,13 @@ if 'IDA' in env['WITH_SOLVERS']:
 else:
 	with_ida=False
 	without_ida_reason = "not requested (WITH_SOLVERS)"
+
+
+if 'CONOPT' in env['WITH_SOLVERS']:
+	with_conopt=True
+else:
+	with_conopt=False
+	without_conopt_reason = "not requested (WITH_SOLVERS)"
 
 
 #print "SOLVERS:",env['WITH_SOLVERS']
@@ -779,6 +817,34 @@ def CheckIDA(context):
 	return is_ok
 
 #----------------
+# CONOPT test
+
+conopt_test_text = """
+#define FNAME_LCASE_DECOR
+#include <conopt.h>
+#include <stdlib.h>
+int main(){
+	int s, *v, e;
+	s = COIDEF_Size();
+	v = (int *)malloc(s*sizeof(int));
+	e = COIDEF_Ini(v);
+	return e;
+}
+"""
+
+def CheckCONOPT(context):
+	context.Message( 'Checking for CONOPT... ' )
+
+	keep = KeepContext(context,"CONOPT")
+	
+	is_ok = context.TryLink(conopt_test_text,".c")
+	context.Result(is_ok)
+	
+	keep.restore(context)
+		
+	return is_ok
+
+#----------------
 # Tcl test
 
 # TCL and TK required version 8.1, 8.2, 8.3, or 8.4:
@@ -909,6 +975,7 @@ conf = Configure(env
 		, 'CheckTkTable' : CheckTkTable
 		, 'CheckX11' : CheckX11
 		, 'CheckIDA' : CheckIDA
+		, 'CheckCONOPT' : CheckCONOPT
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -1013,6 +1080,14 @@ if not with_ida:
 elif not conf.CheckIDA():
 	with_ida = False
 	without_ida_reason = "IDA not found"
+
+# IDA
+
+if not with_conopt:
+	without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
+elif not conf.CheckCONOPT():
+	with_ida = False
+	without_ida_reason = "CONOPT not found"
 
 # BLAS
 
@@ -1137,6 +1212,9 @@ for k,v in {
 
 if with_ida:
 	subst_dict["/\\* #define ASC_WITH_IDA @ASC_WITH_IDA@ \\*/"]='#define ASC_WITH_IDA '
+
+if with_conopt:
+	subst_dict["/\\* #define ASC_WITH_CONOPT @ASC_WITH_CONOPT@ \\*/"]='#define ASC_WITH_CONOPT '
 
 if with_lsode:
 	subst_dict["/\\* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ \\*/"]='#define ASC_WITH_LSODE '
@@ -1277,6 +1355,9 @@ if env['GCOV']:
 
 if with_ida:
 	env.Append(WITH_IDA=1)
+
+if with_conopt:
+	env.Append(WITH_CONOPT=1)
 
 #-------------
 # TCL/TK GUI

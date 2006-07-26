@@ -56,11 +56,12 @@
 #include "cond_config.h"
 #include "slv_common.h"
 #include "slv_client.h"
-#include "conopt.h"
 #include "slv9.h"
 #include "slv_stdcalls.h"
 #include "slvDOF.h"
 
+#include <solver/conopt.h>
+#undef ASC_WITH_CONOPT
 
 
 #if !defined(STATIC_CMSLV) && !defined(DYNAMIC_CMSLV)
@@ -93,16 +94,6 @@ int slv9_register(SlvFunctionsT *f)
 #define DEBUG_CONSISTENCY FALSE
 #define TEST_CONSISTENCY FALSE
 #define USE_CONSISTENCY FALSE
-
-/*
- * Is CONOPT  available ?
- */
-#if defined(STATIC_CONOPT)
-
-#define CONOPT_ACTIVE TRUE
-#else  /* defined(STATIC_CONOPT) */
-#define CONOPT_ACTIVE FALSE
-#endif /* defined(STATIC_CONOPT) */
 
 /*
  * system definitions
@@ -2515,11 +2506,10 @@ static void update_relations_residuals(slv_system_t server)
 }
 
 
-#if CONOPT_ACTIVE
-/*
- *  Optimization subroutines for CONOPT
- *  ---------------------------------
- */
+#ifdef ASC_WITH_CONOPT
+/*------------------------------------------------------------------------------
+  CALLBACK ROUTINES FOR CONOPT
+*/
 
 /*
  * COIRMS Based on the information provided in Coispz, CONOPT will
@@ -2528,7 +2518,7 @@ static void update_relations_residuals(slv_system_t server)
  * here.
  *
  * COIRMS(lower, curr, upper, vsta, type,rhs, fv, esta, colsta,
- * rowno, value, nlflag, n, m, n1, nz, usrmem)
+ * rowno, value, nlflag, n, m, nz, usrmem)
  *
  * lower - lower bounds on the variables
  * curr  - intial values of the variables
@@ -2544,22 +2534,22 @@ static void update_relations_residuals(slv_system_t server)
  * nlflag- nonlinearity flags(0 nonzero constant,1 varying)
  * n     - number of variables
  * m     - number of constraints
- * n1    - n+1
  * nz    - number of jacobian elements
  * usrmem- user memory defined by conopt
  */
-static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
-			int32 *vsta,  int32 *type, real64 *rhs, real64 *fv,
-			int32 *esta,  int32 *colsta, int32 *rowno,
-			real64 *value, int32 *nlflag, int32 *n, int32 *m,
-			int32 *n1, int32 *nz, real64 *usrmem)
-{
+static int COI_CALL slv9_conopt_readmatrix(
+		double *lower, double *curr, double *upper
+		, int *vsta,  int *type, double *rhs
+		, int *esta,  int *colsta, int *rowno
+		, double *value, int *nlflag, int *n, int *m, int *nz
+		, double *usrmem
+){
   slv9_system_t sys;
   struct var_variable *var;
   struct var_variable **varlist;
   struct opt_matrix *coeff_matrix;
   static var_filter_t vfilter;
-  real64 obj_val, deriv;
+  real64 /*obj_val,*/ deriv;
   real64 nominal, up, low, uplow;
   int32 num_var, n_subregions, c, num_eqns;
   int32 numnz, eq;
@@ -2636,6 +2626,7 @@ static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
   }
   rhs[(*m)-2] = 1.0;
 
+#ifdef DISUSED_CONOPT_PARAMETER
   /*
    * fv =0 for all linear relations. For the objective is the two
    * norm
@@ -2648,6 +2639,7 @@ static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
     obj_val = obj_val + (curr[c] * curr[c]);
   }
   fv[(*m)-1] = obj_val;
+#endif
 
   /*
    * esta not used since STATOK is zero
@@ -2674,7 +2666,7 @@ static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
     colsta[c] = 2 * num_var + num_eqns * (c - num_var) + 1;
   }
 
-  colsta[(*n1)-1] = *nz + 1;
+  colsta[*n] = *nz + 1; /** @TODO check this */
 
   /*
    * rowno, value and nlflag can be done in same loop. The use of the
@@ -2713,6 +2705,8 @@ static void slv9_coirms(real64 *lower, real64 *curr, real64 *upper,
     nlflag[numnz] = 0;
     value[numnz] = 1.0;
   }
+
+  return 0;
 }
 
 
@@ -2787,10 +2781,12 @@ static void slv9_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
  * be called only of the objective function, constraint number m.
  *
  */
-static void slv9_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
-			int32 *jcnm, int32 *mode, int32 *errcnt, int32 *newpt,
-			int32 *n, int32 *nj, real64 *usrmem)
-{
+static int COI_CALL slv9_conopt_fdeval(
+		double *x, double *g, double *jac
+		, int *rowno, int *jcnm, int *mode, int *ignerr
+		, int *errcnt, int *newpt, int *n, int *nj
+		, double *usrmem
+){
   slv9_system_t sys;
   int32 num_vars, v;
   real64 obj, deriv;
@@ -2812,6 +2808,7 @@ static void slv9_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
       *g = obj;
     } else {
       FPRINTF(ASCERR,"Wrong number of constraint in COIFDE");
+      return 1;
     }
   }
 
@@ -2835,8 +2832,11 @@ static void slv9_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
       }
     } else {
       FPRINTF(ASCERR,"Wrong number of constraint in COIFDE");
+	  return 1;
     }
   }
+
+  return 0;
 }
 
 
@@ -2851,9 +2851,9 @@ static void slv9_coifde(real64 *x, real64 *g, real64 *jac, int32 *rowno,
  * objval - objective value
  * usrmem - user memory
  */
-static void slv9_coista(int32 *modsta, int32 *solsta, int32 *iter,
-			real64 *objval, real64 *usrmem)
-{
+static void slv9_conopt_status(int *modsta, int *solsta, int *iter
+		, double *objval, double *usrmem
+){
   slv9_system_t sys;
 
   sys = (slv9_system_t)usrmem;
@@ -2882,10 +2882,10 @@ static void slv9_coista(int32 *modsta, int32 *solsta, int32 *iter,
  * m      - number of constraints
  * usrmem - user memory
  */
-static void slv9_coirs(real64 *xval, real64 *xmar, int32 *xbas, int32 *xsta,
-		       real64 *yval, real64 *ymar, int32 *ybas, int32 * ysta,
-		       int32 *n, int32 *m, real64 *usrmem)
-{
+static void slv9_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
+		double *yval, double *ymar, int *ybas, int * ysta,
+		int *n, int *m, double *usrmem
+){
   slv9_system_t sys;
   struct opt_vector *opt_var_values;
   int32 c;
@@ -2906,7 +2906,7 @@ static void slv9_coirs(real64 *xval, real64 *xmar, int32 *xbas, int32 *xsta,
   }
 }
 
-
+#if 0
 /*
  * COIUSZ communicates and update of an existing model to CONOPT
  * COIUSZ(nintg, ipsz, nreal, rpsz, usrmem)
@@ -2930,7 +2930,7 @@ static void slv9_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 
   return;
 }
-
+#endif
 
 /*
  * COIOPT communicates non-default option values to CONOPT
@@ -2941,9 +2941,10 @@ static void slv9_coiusz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
  * lval   - the value to be assigned to name if the cells contains a log value
  * usrmem - user memory
  */
-static void slv9_coiopt(char *name, real64 *rval, int32 *ival, int32 *logical,
-	                real64 *usrmem)
-{
+static void slv9_conopt_option(
+		char *name, double *rval, int *ival, int *logical
+	    , double *usrmem
+){
   slv9_system_t sys;
   sys = (slv9_system_t)usrmem;
 
@@ -3053,19 +3054,18 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 
 static void slv_conopt_iterate(slv9_system_t sys)
 {
-  real64 **usrmem;
+  double **usrmem;
   conopt_pointers conopt_ptrs;
 
-  conopt_ptrs = (conopt_pointers)asccalloc
-                 (1, sizeof(struct conopt_function_pointers ) );
-  conopt_ptrs->coirms_ptr = slv9_coirms;
+  conopt_ptrs = ASC_NEW_CLEAR(struct conopt_function_pointers);
+  conopt_ptrs->coirms_ptr = &slv9_conopt_readmatrix;
   conopt_ptrs->coifbl_ptr = slv9_coifbl;
-  conopt_ptrs->coifde_ptr = slv9_coifde;
-  conopt_ptrs->coirs_ptr = slv9_coirs;
-  conopt_ptrs->coista_ptr = slv9_coista;
-  conopt_ptrs->coiusz_ptr = slv9_coiusz;
-  conopt_ptrs->coiopt_ptr = slv9_coiopt;
-  conopt_ptrs->coipsz_ptr = slv9_coipsz;
+  conopt_ptrs->coifde_ptr = &slv9_conopt_fdeval;
+  conopt_ptrs->coirs_ptr = slv9_conopt_solution;
+  conopt_ptrs->coista_ptr = slv9_conopt_status;
+/*  conopt_ptrs->coiusz_ptr = slv9_coiusz; */
+  conopt_ptrs->coiopt_ptr = slv9_conopt_option;
+/*   conopt_ptrs->coipsz_ptr = slv9_coipsz; */
   conopt_ptrs->coimsg_ptr = NULL;
   conopt_ptrs->coiscr_ptr = NULL;
   conopt_ptrs->coiec_ptr = NULL;
@@ -3074,15 +3074,16 @@ static void slv_conopt_iterate(slv9_system_t sys)
   conopt_ptrs->coiprg_ptr = NULL;
   conopt_ptrs->coiorc_ptr = NULL;
 
-  usrmem = (real64 **)(ascmalloc(2*sizeof(real64 *)));
-
 /*
  * We pass the pointers to sys and conopt_ptrs instead of a usrmem array.
  * Cast the appropriate element of usrmem back to slv9_system_t and
  * conopt_pointers to access the information required
  */
-  usrmem[0] = (real64 *)conopt_ptrs;
-  usrmem[1] = (real64 *)sys;
+  usrmem = ASC_NEW_ARRAY(void,2);
+  usrmem[0] = (void *)conopt_ptrs;
+  usrmem[1] = (void *)sys;
+
+  COIDEF_UsrMem(sys->con.cntvect,(double *)usrmem);
 
 /*
  * reset count on coiopt calls
@@ -3092,12 +3093,11 @@ static void slv_conopt_iterate(slv9_system_t sys)
   /*
    * do not keep model in memory after solution
    */
-  sys->con.kept = 0;
+  sys->con.kept = 0;	
 
-#if CONOPT_ACTIVE
-  conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
-	       sys->con.work, &(sys->con.maxusd), &(sys->con.curusd));
-#endif /* CONOPT_ACTIVE */
+  COI_Solve(sys->con.cntvect);
+  /* conopt_start(&(sys->con.kept), usrmem, &(sys->con.lwork),
+	       sys->con.work, &(sys->con.maxusd), &(sys->con.curusd)); */
 
   /*
    * We assume that we get convergence in optimization problem at
@@ -3109,7 +3109,10 @@ static void slv_conopt_iterate(slv9_system_t sys)
   ascfree(usrmem);
 }
 
-#endif /* #if CONOPT_ACTIVE  */
+#endif /* ASC_WITH_CONOPT  */
+
+/*-------------------end of conopt callbacks----------------------------------*/
+
 
 /*
  * Creates an array of columns (containing an array of real elements
@@ -4174,13 +4177,12 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
    */
   sys->con.n = num_opt_vars;
   sys->con.m = num_opt_eqns + 1;  /*including objective function */
-  sys->con.ipsz[0] = sys->con.n;
-  sys->con.ipsz[1] = sys->con.m;
   sys->con.nz = (num_opt_eqns * (*n_subregions) ) + 2 * num_vars;
-  sys->con.ipsz[2] = sys->con.nz;
-  sys->con.nintgr = NINTGR;
+  sys->con.nlnz = sys->con.nz - (sys->con.m - 2);
+  sys->con.base = 1; /* fortan calling convention */
+  sys->con.optdir = -1; /* minimisation */
 
-#if CONOPT_ACTIVE
+#ifdef ASC_WITH_CONOPT
 
   /*
    * Memory estimation by calling the CONOPT subroutine coimem
@@ -4188,11 +4190,52 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
    * unresolved external during the linking of the CONOPT library.
    * See conopt.h
    */
-  conopt_estimate_memory(&(sys->con.nintgr),&(sys->con.ipsz[0]),
-                         &(sys->con.minmem),&(sys->con.estmem));
+  if(sys->con.cntvect == NULL){
+	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
+  }
 
-  sys->con.work = ASC_NEW_ARRAY(real64,sys->con.estmem);
-  sys->con.lwork = sys->con.estmem;
+  COIDEF_Ini(sys->con.cntvect);
+
+  COIDEF_NumVar(sys->con.cntvect, &(sys->con.n));
+  COIDEF_NumCon(sys->con.cntvect, &(sys->con.m)); /* include the obj fn */
+  COIDEF_NumNZ(sys->con.cntvect, &(sys->con.nz));
+  COIDEF_NumNlNz(sys->con.cntvect, &(sys->con.nlnz));
+  COIDEF_OptDir(sys->con.cntvect, &(sys->con.optdir));
+  COIDEF_ObjCon(sys->con.cntvect, &(sys->con.m)); /* objective will be last row     */
+  COIDEF_Base(sys->con.cntvect, &(sys->con.base));
+  COIDEF_ErrLim(sys->con.cntvect, &(DOMLIM));
+  COIDEF_ItLim(sys->con.cntvect, &(OPT_ITER_LIMIT));
+
+  /** @TODO implement the following options as well... */
+#if 0
+  ipsz[F2C(10)] = 0;             /* output to file */
+  ipsz[F2C(11)] = 1;             /* progress info to screen */
+  ipsz[F2C(12)] = 1;             /* correct value of func in coirms */
+  ipsz[F2C(13)] = 0;             /* not correct value of jacs in coirms */
+  ipsz[F2C(14)] = 0;             /* status not known by modeler */
+  ipsz[F2C(15)] = 0;             /* function value include only NL terms */
+  ipsz[F2C(16)] = 1;             /* Objective is a constraint */
+  ipsz[F2C(17)] = 0;             /* sorted order for jacobian */
+  ipsz[F2C(18)] = 0;             /* append the log file after restarts */
+  ipsz[F2C(19)] = 0;             /* one subroutine call to coirms */
+  ipsz[F2C(20)] = 0;             /* eval subroutine is coifde */
+  ipsz[F2C(21)] = 0;             /* no debugging of derivatives */
+  ipsz[F2C(22)] = 0;             /* coifde not called for linear eqns */
+  /*
+   * skipping remainder of ipsz which are fortran io parameters
+   */
+
+  /*
+   * Real array
+   */
+  rpsz[F2C(1)] = ASC_INFINITY;       /* infinity */
+  rpsz[F2C(2)] = -ASC_INFINITY;      /* -infinity */
+  rpsz[F2C(3)] = UNDEFINED;      /* undefined */
+  rpsz[F2C(6)] = 0;              /* work space allocated by conopt */
+  rpsz[F2C(7)] = TIME_LIMIT;     /* resource limit (time) */
+  rpsz[F2C(8)] = 1;              /* initial value for vars if none given */
+#endif
+
   /*
    * Execute solution algorithm with CONOPT
    */
@@ -4203,12 +4246,7 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   FPRINTF(ASCERR," objective function = %f \n",obj_val);
 #endif /* DEBUG */
 
-  /*
-   * destroy memory created for CONOPT
-   */
-  ascfree(sys->con.work);
-
-#endif /* if CONOPT_ACTIVE */
+#endif /* ASC_WITH_CONOPT */
 
   /*
    * Analyze and apply CONOPT step
