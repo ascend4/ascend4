@@ -2224,38 +2224,43 @@ static int COI_CALL slv8_conopt_solution(
   struct var_variable *var;
   slv8_system_t sys;
 
+  struct var_variable **vp;
+  struct rel_relation **rp;
+  char *varname;
+  const char *varstat;
+
   /*
    * stop gcc whining about unused parameter
    */
   (void)xmar;  (void)xsta;  (void)yval;
   (void)ymar;  (void)ysta;  (void)ybas;    (void)m;
 
-
   sys = (slv8_system_t)usrmem;
-
   offset = sys->J.reg.col.low;
-  for (c = 0; c < *n; c++) {
-    col = c + offset;
+
+  /* the values returned... */
+  vp=slv_get_solvers_var_list(SERVER);
+  for(c = 0; c < *n; ++c){
+	col = c + offset;
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
-    nominal = sys->nominals.vec[col];
-    /*
-     * value of the variable
-     */
-    value = xval[c] * nominal;
-    var_set_value(var, value);
-    /*
-     * status (basic, nonbasic) of the variable
-     */
-    if (xbas[c] != 2) {
-      var_set_nonbasic(var,TRUE);
-#if NONBASIC_DEBUG
-      CONSOLE_DEBUG(" c = %d\n",c);
-      CONSOLE_DEBUG(" status = %d\n",xbas[c]);
-      CONSOLE_DEBUG(" nonbasic \n");
-#endif /* NONBASIC_DEBUG */
-    } else {
-      var_set_nonbasic(var,FALSE);
+	nominal = sys->nominals.vec[col];
+    value = xval[c]*nominal;
+    varname = var_make_name(SERVER,var);
+    /* pass the value back to ASCEND */
+	var_set_value(var,value);
+    /* pass the variable status (basic, nonbasic) back to ASCEND */
+	switch(xbas[c]){
+		case 0: varstat = "at lower bound"; break;
+		case 1: varstat = "at upper bound"; break;
+		case 2: varstat = "basic"; var_set_nonbasic(var,FALSE); break;
+		case 3: varstat = "super-basic"; break;
     }
+    if(xbas[c] != 2){
+	  var_set_nonbasic(var,TRUE);
+	}
+
+	CONSOLE_DEBUG("%d: %s = %f (%s)",c,varname,value,varstat);
+	ASC_FREE(varname);
   }
 
   /* should pull out additional info here */
@@ -2442,7 +2447,6 @@ static void slv8_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal,
 int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
 		, double* USRMEM, char* MSG, int LENMSG
 ){
-/* Standard ErrMsg routine. Write to Documentation and Status file*/
 	slv8_system_t sys;
 	char *relname=NULL, *varname=NULL;
 	struct var_variable **vp;
