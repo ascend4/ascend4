@@ -186,7 +186,7 @@ class ModelView:
 				_e.setValue()
 				_e.exportPreferredUnits(self.browser.prefs)
 			except InputError, e:
-				self.reporter.reportError(str(e))
+				self.browser.reporter.reportError(str(e))
 				return;
 
 		else:
@@ -197,22 +197,22 @@ class ModelView:
 				elif _lower.startswith("f") or _lower.startswith("n") or _lower.strip()=="0":
 					newtext = 0
 				else:
-					self.reporter.reportError("Invalid entry for a boolean variable: '%s'" % newtext)
+					self.browser.reporter.reportError("Invalid entry for a boolean variable: '%s'" % newtext)
 					return
 				_val = bool(newtext);
 				if _val == _instance.getValue():
-					self.reporter.reportNote("Boolean atom '%s' was not altered" % _instance.getName())
+					self.browser.reporter.reportNote("Boolean atom '%s' was not altered" % _instance.getName())
 					return
 				_instance.setBoolValue(_val)
 
 			elif _instance.isInt():
 				_val = int(newtext)
 				if _val == _instance.getValue():
-					self.reporter.reportNote("Integer atom '%s' was not altered" % _instance.getName())
+					self.browser.reporter.reportNote("Integer atom '%s' was not altered" % _instance.getName())
 					return
 				_instance.setIntValue(_val)
 			else:
-				self.reporter.reportError("Attempt to set a non-real, non-boolean, non-integer value!")
+				self.browser.reporter.reportError("Attempt to set a non-real, non-boolean, non-integer value!")
 				return
 
 		# now that the variable is set, update the GUI and re-solve if desired
@@ -232,7 +232,7 @@ class ModelView:
 				_piter = self.make_row(piter,_name,child)
 				_path = self.modelstore.get_path(_piter)
 				self.otank[_path]=(_name,child)
-				#self.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
+				#self.browser.reporter.reportError("2 Added %s at path %s" % (_name,repr(_path)))
 
 	def make(self, name=None, value=None, path=None, depth=1):
 		if path is None:
@@ -240,7 +240,7 @@ class ModelView:
 			piter = self.make_row( None, name, value )
 			path = self.modelstore.get_path( piter )
 			self.otank[ path ] = (name, value)
-			#self.reporter.reportError("4 Added %s at path %s" % (name, path))
+			#self.browser.reporter.reportError("4 Added %s at path %s" % (name, path))
 		else:
 		    name, value = self.otank[ path ]
 
@@ -283,7 +283,7 @@ class ModelView:
 			return 
 
 		_canpop = False;
-		# self.reporter.reportError("Right click on %s" % self.otank[_path][0])
+		# self.browser.reporter.reportError("Right click on %s" % self.otank[_path][0])
 		_instance = self.otank[_path][1]
 		if _instance.getType().isRefinedSolverVar():
 			_canpop = True
