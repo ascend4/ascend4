@@ -5,7 +5,7 @@ MODEL testconopt;
 	P, L IS_A solver_var;
 
 	K IS_A real_constant;
-	Al, Ak, Ainp, Rho IS_A real_constant;
+	Al, Ak, Ainp, Rho IS_A solver_var;
 	Pinp, P0, D IS_A real_constant;
 	W, L0, K0 IS_A real_constant;
 
@@ -16,10 +16,7 @@ MODEL testconopt;
 	W :== 1.0;
 	L0 :== 0.1;
 	Pinp :== 1.0;
-	Al :== 0.16;
-	Ak :== 2.00;
-	Ainp :== 0.16;
-	Rho :== 1.0;
+
 	K0 :== 4.0;
 	P0 :== 2.0;
 	D :== 0.5;
@@ -36,9 +33,15 @@ METHOD default_self;
 END default_self;
 
 METHOD specify;
+	FIX Al, Ak, Ainp, Rho;
 END specify;
 
 METHOD values;
+	Al := 0.16;
+	Ak := 2.00;
+	Ainp := 0.16;
+	Rho := 1.0;
+
 	L.lower_bound := L0;
 	P.lower_bound := 0;
 	Out.lower_bound := 0;

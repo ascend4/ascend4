@@ -15,8 +15,9 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330,
 	Boston, MA 02111-1307, USA.
-*/
-/*
+*//**
+	@file
+
 	This file *should* support unix/linux-style systems (dlfcn.h)
 	and Windows.
 
@@ -34,6 +35,8 @@
 #include "ascMalloc.h"
 #include "ascDynaLoad.h"
 
+#include <general/env.h>
+#include <general/ospath.h>
 #include <compiler/instance_enum.h>
 #include <general/list.h>
 #include <compiler/compiler.h>
@@ -52,16 +55,13 @@ struct ascend_dlrecord {
 };
 
 /* Linked list of library names & dlopen() return values. */
-static
-struct ascend_dlrecord *g_ascend_dllist = NULL;
+static struct ascend_dlrecord *g_ascend_dllist = NULL;
 
 /*
  * Adds a record of the path and handle to the list.
  * If it fails to do this, returns 1, else 0.
  */
-static
-int AscAddRecord(void *dlreturn, CONST char *path)
-{
+static int AscAddRecord(void *dlreturn, CONST char *path){
   struct ascend_dlrecord *new;
   char *keeppath;
   if (dlreturn == NULL || path == NULL) {
@@ -163,6 +163,7 @@ void AscCheckDuplicateLoad(CONST char *path)
     r = r->next;
   }
 }
+
 
 /*-----------------------------------------------
 	WINDOWS
@@ -491,3 +492,164 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
   return symreturn;
 }
 
+
+/*-----------------------------------------------------------------------------
+  SEARCHING FOR LIBRARIES
+*/
+
+/**
+	A little structure to help with searching for libraries
+
+	@see test_librarysearch
+*/
+struct LibrarySearch{
+	struct FilePath *partialpath;
+	char fullpath[PATH_MAX];
+};
+
+FilePathTestFn test_librarysearch;
+
+/**
+	A 'test' function for passing to the ospath_searchpath_iterate function.
+	This test function will return a match when a library having the required
+	name is present in the fully resolved path.
+*/
+int test_librarysearch(struct FilePath *path, void *userdata){
+	/*  user data = the relative path, plus a place
+		to store the full path when found */
+	FILE *f;
+	struct LibrarySearch *ls;
+	struct FilePath *fp;
+
+	ls = (struct LibrarySearch *)userdata;
+	fp = ospath_concat(path,ls->partialpath);
+	if(fp==NULL){
+		char *tmp;
+		tmp = ospath_str(path);
+		CONSOLE_DEBUG("Unable to concatenate '%s'...",tmp);
+		ospath_free_str(tmp);
+		tmp = ospath_str(ls->partialpath);
+		CONSOLE_DEBUG("... and '%s'...",tmp);
+		ospath_free_str(tmp);
+		return 0;
+	}
+
+	ospath_strncpy(fp,ls->fullpath,PATH_MAX);
+	/* CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath); */
+
+	f = ospath_fopen(fp,"r");
+	if(f==NULL){
+		ospath_free(fp);
+		return 0;
+	}
+	fclose(f);
+
+	/* ERROR_REPORTER_HERE(ASC_PROG_NOTE,"FOUND! %s\n",ls->fullpath); */
+	ospath_free(fp);
+	return 1;
+}
+
+char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
+	struct FilePath *fp1, *fp2, *fp3; /* relative path */
+	char *s1;
+	char buffer[PATH_MAX];
+
+	struct LibrarySearch ls;
+	struct FilePath **sp;
+	char *path, *foundpath;
+	ospath_stat_t buf;
+	FILE *f;
+
+	fp1 = ospath_new_noclean(name);
+	if(fp1==NULL){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid partial path '%s'",name);
+		ospath_free(fp1);
+		return NULL;
+	}
+
+	s1 = ospath_getfilestem(fp1);
+	if(s1==NULL){
+		/* not a file, so fail... */
+		return NULL;
+	}
+
+	fp2 = ospath_getdir(fp1);
+	if(fp2==NULL){
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"unable to retrieve file dir");
+		return NULL;
+	}
+
+	/* CONSOLE_DEBUG("FILESTEM = '%s'",s1); */
+
+# if defined(ASC_SHLIBSUFFIX) && defined(ASC_SHLIBPREFIX)
+	/*
+		this is the preferred operation: SCons reports what the local system
+		uses as its shared library file extension.
+	*/
+	snprintf(buffer,PATH_MAX,"%s%s%s",ASC_SHLIBPREFIX,s1,ASC_SHLIBSUFFIX);
+# else
+	/**
+		@DEPRECATED
+
+		If we don't have ASC_SHLIB-SUFFIX and -PREFIX then we can do some
+		system-specific stuff here, but it's not as general.
+	*/
+#  ifdef __WIN32__
+	snprintf(buffer,PATH_MAX,"%s.dll",s1);
+#  elif defined(linux)
+	snprintf(buffer,PATH_MAX,"lib%s.so",s1); /* changed from .o to .so -- JP */
+#  elif defined(sun) || defined(solaris)
+	snprintf(buffer,PATH_MAX,"%s.so.1.0",s1);
+#  elif defined(__hpux)
+	snprintf(buffer,PATH_MAX,"%s.sl",s1);
+#  elif defined(_SGI_SOURCE)
+	snprintf(buffer,PATH_MAX,"%s.so",s1);
+#  else
+#   error "Unknown system type (please define ASC_SHLIBSUFFIX and ASC_SHLIBPREFIX)"
+#  endif
+# endif
+
+	fp3 = ospath_new(buffer);
+	ospath_free(fp1);
+	fp1 = ospath_concat(fp2,fp3);
+	ospath_free(fp2);
+	ospath_free(fp3);
+	ospath_free_str(s1);
+
+	/* attempt to open "name" directly */
+	if(0==ospath_stat(fp1,&buf) && NULL!=(f = ospath_fopen(fp1,"r")) ){
+		char *tmp;
+		tmp = ospath_str(fp1);
+		CONSOLE_DEBUG("Library '%s' opened directly, without path search",tmp);
+		ospath_free_str(tmp);
+		fp2 = ospath_getabs(fp1);
+		foundpath = ospath_str(fp2);
+		ospath_free(fp2);
+		fclose(f);
+	}else{
+
+		ls.partialpath = fp1;
+
+		path=Asc_GetEnv(envv);
+		if(path==NULL){
+			/* CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath); */
+			path=dpath;
+		}
+
+		/* CONSOLE_DEBUG("SEARCHPATH IS %s",path); */
+		sp = ospath_searchpath_new(path);
+
+		if(NULL==ospath_searchpath_iterate(sp,&test_librarysearch,&ls)){
+			ospath_free(fp1);
+			ospath_searchpath_free(sp);
+			return NULL;
+		}
+
+		foundpath = ASC_NEW_ARRAY(char,strlen(ls.fullpath)+1);
+		strcpy(foundpath,ls.fullpath);
+		ospath_searchpath_free(sp);
+	}
+
+	ospath_free(fp1);
+	return foundpath;
+}

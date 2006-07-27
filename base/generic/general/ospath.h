@@ -61,7 +61,11 @@
 #  include <limits.h>
 #  include <sys/stat.h>
 # else
-#  include <sys/stat.h>
+#  ifndef stat
+#   include <sys/stat.h>
+#  else
+#   error "STAT alreay defined..."
+#  endif
 # endif
 #endif
 
