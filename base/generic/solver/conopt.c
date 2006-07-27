@@ -69,7 +69,7 @@ int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
       (void)CONSOLE_DEBUG("%s", line);
       k += MSGLEN;
    }
-   k = 0;
+/*   k = 0;
    for( i=0; i<*DMSG;i++ ){
       j = LLEN[i];
       for( l= 0; l<j; l++ ) line[l] = MSGV[k+l];
@@ -77,6 +77,7 @@ int COI_CALL asc_conopt_message( int* SMSG, int* DMSG, int* NMSG, int* LLEN
       ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"%s\n", line);
       k += MSGLEN;
    }
+*/
    k = 0;
    for( i=0; i<*NMSG;i++ ){
       j = LLEN[i];
@@ -113,11 +114,11 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		, int* ITER, double* OBJVAL, double* USRMEM
 ){
 /* Standard Status routine. Write to all files */
-	(void)CONSOLE_DEBUG("CONOPT has finished Optimizing\n");
-	(void)CONSOLE_DEBUG("Model status    = %8d\n", *MODSTA);
-	(void)CONSOLE_DEBUG("Solver status   = %8d\n", *SOLSTA);
-	(void)CONSOLE_DEBUG("Iteration count = %8d\n", *ITER);
-	(void)CONSOLE_DEBUG("Objective value = %10f\n", *OBJVAL);
+	(void)CONSOLE_DEBUG("CONOPT has finished Optimizing");
+	(void)CONSOLE_DEBUG("Model status    = %8d", *MODSTA);
+	(void)CONSOLE_DEBUG("Solver status   = %8d", *SOLSTA);
+	(void)CONSOLE_DEBUG("Iteration count = %8d", *ITER);
+	(void)CONSOLE_DEBUG("Objective value = %10f", *OBJVAL);
 
 	const char *modsta;
 	error_severity_t t = ASC_USER_SUCCESS;
@@ -135,6 +136,7 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		case 4: t = ASC_PROG_ERR; solsta = "failed (terminated by solver)"; break;
 	}
 	
+	(void)CONSOLE_DEBUG("CONOPT %s: %s", solsta, modsta);
 	ERROR_REPORTER_NOLINE(t,"CONOPT %s: %s", solsta, modsta);
 
 	return 0;
