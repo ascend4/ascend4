@@ -1780,7 +1780,6 @@ static int COI_CALL slv8_conopt_readmatrix(
   int32 col,row,count,count_old,len,c,r,offset, obj_count;
   real64 nominal, up, low;
   struct var_variable *var;
-  struct rel_relation *rel;
   const struct rel_relation **rlist=NULL;
   static rel_filter_t rfilter;
   static var_filter_t vfilter;
@@ -2225,7 +2224,6 @@ static int COI_CALL slv8_conopt_solution(
   slv8_system_t sys;
 
   struct var_variable **vp;
-  struct rel_relation **rp;
   char *varname;
   const char *varstat;
 
@@ -3013,6 +3011,13 @@ int32 slv8_register(SlvFunctionsT *sft){
     return 1;
   }
 
+#ifndef ASC_LINKED_CONOPT
+  if(asc_conopt_load()){
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to load CONOPT");
+	return 1;
+  }
+#endif
+
   /* do dlopening here, conopt_load, if DYNAMIC_CONOPT. not implemented. */
 
   sft->name = "CONOPT";
@@ -3034,4 +3039,4 @@ int32 slv8_register(SlvFunctionsT *sft){
   return 0;
 }
 
-#endif /* #else clause of !STATIC_CONOPT && !DYNAMIC_CONOPT */
+#endif

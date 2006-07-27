@@ -150,14 +150,14 @@ void AscCheckDuplicateLoad(CONST char *path)
   struct ascend_dlrecord *r;
 
   if (NULL == path) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Null path in AscCheckDuplicateLoad.");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Null path");
     return;
   }
 
   r = g_ascend_dllist;
   while (r != NULL) {
     if (strcmp(path,r->path)==0) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Attempt to load already loaded '%s'.",path);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Attempt to load already loaded '%s'.",path);
       return;
     }
     r = r->next;
@@ -175,7 +175,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
   ExternalLibraryRegister_fptr_t install = NULL;
 
   if (NULL == path) {
-    FPRINTF(stderr,"Asc_DynamicLoad failed: Null path\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: Null path\n");
     return 1;
   }
 
@@ -187,15 +187,15 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 
   xlib = LoadLibrary(path);
   if (xlib == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: LoadLibrary failed\n'%s'",path);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"LoadLibrary failed\n'%s'",path);
     return 1;
   }
-  ERROR_REPORTER_NOLINE(ASC_PROG_NOTE,"Asc_DynamicLoad: LoadLibrary succeeded, '%s'\n",path);
+  ERROR_REPORTER_HERE(ASC_PROG_NOTE,"LoadLibrary succeeded, '%s'\n",path);
 
   if (NULL != initFun) {
     install = (int (*)(void))GetProcAddress(xlib,initFun);
     if (install == NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad: Required function %s not found\n", initFun);
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Required function '%s' not found", initFun);
       (void)FreeLibrary(xlib);
       return 1;
     }else{
@@ -203,7 +203,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun){
 	}
   }
   if (0 != AscAddRecord(xlib,path)) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to record library (%s)\n",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -241,7 +241,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   ExternalLibraryRegister_fptr_t install = NULL;
 
   if (NULL == path) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed: Null path\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: null path");
     return 1;
   }
 
@@ -266,7 +266,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   }
 
   if (0 != AscAddRecord(xlib,path)) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to record library (%s)",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -301,7 +301,7 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
   int i;
 
   if (NULL == path) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed: Null path\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: Null path");
     return 1;
   }
 
@@ -313,26 +313,25 @@ int Asc_DynamicLoad(CONST char *path, CONST char *initFun)
    */
   xlib = shl_load(path, BIND_IMMEDIATE | BIND_VERBOSE, 0L);
   if (xlib == (shl_t) NULL)  {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to load shared library : %s\n",strerror(errno));
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to load shared library: %s",strerror(errno));
     return 1;
   }
   if (NULL != initFun) {
     i = shl_findsym(&xlib, initFun, TYPE_PROCEDURE, &install);
     if (i == -1) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to find needed symbol %s %s\n",
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find needed symbol '%s': %s",
   		       initFun, strerror(errno));
       shl_unload(xlib); /* baa */
       return 1;
     }
-    if (install == NULL) {
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Unable to find needed symbol %s\n",initFun);
-      ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type unknown\n");
+    if(install == NULL) {
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find needed symbol '%s'. Error type unknown",initFun);
       shl_unload(xlib); /* baa */
       return 1;
     }
   }
   if (0 != AscAddRecord(xlib,path)) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicLoad failed to record library (%s)\n",path);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed to record library (%s)",path);
   }
   return (install == NULL) ? 0 : (*install)();
 }
@@ -363,16 +362,16 @@ int Asc_DynamicUnLoad(CONST char *path)
   int retval;
 
   if (NULL == path) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR, "Asc_DynamicUnLoad failed: Null path\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR, "Failed: Null path");
     return -3;
   }
 
   dlreturn = AscDeleteRecord(path);
   if (dlreturn == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR, "Asc_DynamicUnLoad: unable to remember or unload %s\n", path);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR, "Unable to remember or unload %s", path);
     return -3;
   }
-  CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s \n", path);
+  CONSOLE_DEBUG("Asc_DynamicUnLoad: forgetting & unloading %s", path);
   /*
    *  dlclose() returns 0 on success, FreeLibrary() returns TRUE.
    *  A uniform convention is preferable, so trap and return 0 on success.
@@ -393,23 +392,23 @@ void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
 #endif
 
   if (libname == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol failed:  Null libname\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed:  Null libname");
     return NULL;
   }
   if (symbol == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol failed:  Null symbol\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed:  Null symbol");
     return NULL;
   }
 
   dlreturn = AscFindDLRecord(libname);
   if (dlreturn == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol: Unable to find requested library %s\n", libname);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find requested library %s", libname);
     return NULL;
   }
 #ifdef __hpux
   i = shl_findsym(&dlreturn, symbol, TYPE_UNDEFINED, &symreturn);
   if (i == -1) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s (%s)\n",
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find requested symbol '%s' in %s (%s)",
                        symbol, libname, strerror(errno));
     symreturn = NULL;
   }
@@ -431,8 +430,8 @@ void *Asc_DynamicVariable(CONST char *libname, CONST char *symbol)
   symreturn = dlsym(dlreturn, symbol);
 #endif
   if (symreturn == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicSymbol: Unable to find requested symbol %s in %s\n",symbol,libname);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type %s\n",ASC_DLERRSTRING);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find requested symbol '%s' in %s",symbol,libname);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type: %s",ASC_DLERRSTRING);
   }
   return symreturn;
 }
@@ -449,23 +448,23 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
 #endif
 
   if (libname == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction failed:  Null library name\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: null library name");
     return NULL;
   }
   if (symbol == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction failed:  Null function name\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Failed: null function name");
     return NULL;
   }
 
   dlreturn = AscFindDLRecord(libname);
   if (dlreturn == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction: Unable to find requested library %s\n", libname);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find requested library %s", libname);
     return NULL;
   }
 #ifdef __hpux
   i = shl_findsym(&dlreturn, symbol, TYPE_UNDEFINED, &symreturn);
   if (i == -1) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction: Unable to find requested function %s in %s (%s)\n",
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find requested function '%s' in %s (%s)",
                        symbol, libname, strerror(errno));
     symreturn = NULL;
   }
@@ -486,8 +485,8 @@ DynamicF Asc_DynamicFunction(CONST char *libname, CONST char *symbol)
   *(void**)(&symreturn) = dlsym(dlreturn, symbol);
 #endif
   if (symreturn == NULL) {
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Asc_DynamicFunction: Unable to find requested function %s in %s\n",symbol,libname);
-    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type %s\n",ASC_DLERRSTRING);
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Unable to find requested function '%s' in %s",symbol,libname);
+    ERROR_REPORTER_NOLINE(ASC_PROG_ERR,"Error type: %s",ASC_DLERRSTRING);
   }
   return symreturn;
 }
