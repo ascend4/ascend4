@@ -1,80 +1,57 @@
 REQUIRE "simpleflowsheet01mass.a4c";
-(* => simpleflowsheet01mass.a4c, simpleflowsheet01.a4c, atoms.a4l, measures.a4l,
- *    system.a4l, basemodel.a4l *)
 REQUIRE "guthriecosts.a4l";
-(* => guthriecosts.a4l, atoms.a4l, measures.a4l, system.a4l, basemodel.a4l *)
-PROVIDE "simpleflowsheet01cost.a4c";
 
-(*
- *  simpleflowsheet01cost.a4c
- *  by Arthur W. Westerberg
- *  Part of the ASCEND Library
- *  $Date: 2006/04/10 10:08:42 $
- *  $Revision: 1.95 $
- *  $Author: a.westerberg $
- *
- *  This file is part of the ASCEND Modeling Library.
- *
- *  Copyright (C) 1998 Carnegie Mellon University
- *
- *  The ASCEND Modeling Library is free software; you can redistribute
- *  it and/or modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  The ASCEND Modeling Library is distributed in hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied
- *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *  See the GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with the program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139 USA.  Check
- *  the file named COPYING.
- *)
+(*  simpleflowsheet01cost.a4c
+	by Arthur W. Westerberg
+	
+	ASCEND modelling environment
+	Copyright (C) 1998 Carnegie Mellon University
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
 
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+*)
 
 ATOM cash_flow REFINES cost_per_time;
     lower_bound := -1.0e50 {USD/min};
     nominal     := 1.0 {USD/s};
 END cash_flow;
 
-
-MODEL flowsheet_cost;
 
-	tc				IS_A 	test_controller;
+MODEL simpleflowsheet01cost;
+
+	tc						IS_A 	test_controller;
 	cm1,cr1,cfl1			IS_A 	simple_pressure_vessel_cost;
 
-       	feed_cost,bleed_value,
-	    product_value,
-	    annual_profit,
-	    annual_investment_cost	IS_A 	cash_flow;
-       	price[tc.fs.m1.out.components],
-	    fuel_price			IS_A	cost_per_mass;
-	payout_time			IS_A	time;
+	feed_cost,bleed_value, product_value, annual_profit,
+	annual_investment_cost	IS_A 	cash_flow;
+
+	price[tc.fs.m1.out.components],
+	fuel_price				IS_A	cost_per_mass;
+	payout_time				IS_A	time;
 
 
-	tc.fs.m1.feed[1],
-	    tc.fs.m1.out,
-	    tc.fs.r1.out,
-	    tc.fs.fl1.liq,
-	    tc.fs.fl1.vap,
-	    tc.fs.sp1.out[1..2]		IS_REFINED_TO mod_stream;
+	tc.fs.m1.feed[1], tc.fs.m1.out, tc.fs.r1.out, tc.fs.fl1.liq,
+	tc.fs.fl1.vap, tc.fs.sp1.out[1..2]
+							IS_REFINED_TO mod_stream;
 
 
-	cm1.gc.ci,
-	cr1.gc.ci,
-	cfl1.gc.ci			ARE_THE_SAME;
+	cm1.gc.ci, cr1.gc.ci, cfl1.gc.ci ARE_THE_SAME;
+	cm1.vol_flow, tc.fs.m1.out.Vtot_liq	ARE_THE_SAME;
+	cr1.vol_flow, tc.fs.r1.feed.Vtot_liq ARE_THE_SAME;
 
-	cm1.vol_flow,
-	    tc.fs.m1.out.Vtot_liq	ARE_THE_SAME;
-
-	cr1.vol_flow,
-	    tc.fs.r1.feed.Vtot_liq	ARE_THE_SAME;
-
-	cfl1.vol_flow,
-	    tc.fs.fl1.feed.Vtot_liq	ARE_THE_SAME;
+	cfl1.vol_flow, tc.fs.fl1.feed.Vtot_liq ARE_THE_SAME;
 
 	annual_investment_cost = (cm1.installed_cost + cr1.installed_cost
 	    + cfl1.installed_cost)/payout_time;
@@ -92,13 +69,12 @@ MODEL flowsheet_cost;
 
 	MAXIMIZE annual_profit;
 
-
-  METHODS
+METHODS
 
-    METHOD default_self;
-    END default_self;
+METHOD default_self;
+END default_self;
 
-    METHOD specify;
+METHOD specify;
 	RUN tc.specify;
 	RUN cm1.specify;
 	RUN cr1.specify;
@@ -111,14 +87,14 @@ MODEL flowsheet_cost;
 	FIX price[tc.fs.m1.out.components];
 	FIX fuel_price;
 	FIX payout_time;
-    END specify;
+END specify;
 
-    METHOD reset;
+METHOD reset;
 	RUN ClearAll;
 	RUN specify;
-    END reset;
+END reset;
 
-    METHOD values;
+METHOD values;
 
 	RUN tc.values;
 
@@ -141,6 +117,18 @@ MODEL flowsheet_cost;
 	cfl1.H_to_D				:=	2.0;
 	cfl1.liq_holdup_time			:=	10{s};
 
-    END values;
+END values;
 
-END flowsheet_cost;
+METHOD on_load;
+	RUN default_self;
+	RUN reset;
+	RUN values;
+END on_load;
+
+METHOD self_test;
+	ASSERT abs(annual_investment_cost - 1204344{USD/yr}) < 1 {USD/yr};
+	ASSERT abs(annual_profit - -38963990{USD/yr}) < 1 {USD/yr};
+	ASSERT abs(product_value - 72187780{USD/yr}) < 1 {USD/yr};
+END self_test;
+
+END simpleflowsheet01cost;
