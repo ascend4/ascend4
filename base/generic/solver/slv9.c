@@ -4983,6 +4983,7 @@ static int slv9_eligible_solver(slv_system_t server)
   ERROR_REPORTER_NOLINE(ASC_USER_ERROR
 	,"CMSlv not elegible for this model: %s",msg
   );
+  return FALSE;
 }
 
 static void slv9_get_parameters(slv_system_t server, SlvClientToken asys,
