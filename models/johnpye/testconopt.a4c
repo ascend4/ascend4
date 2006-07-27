@@ -31,6 +31,8 @@ MODEL testconopt;
 METHODS
 
 METHOD default_self;
+	L := 0.5;
+	Inp := 0.5;
 END default_self;
 
 METHOD specify;
@@ -40,7 +42,7 @@ METHOD values;
 	L.lower_bound := L0;
 	P.lower_bound := 0;
 	Out.lower_bound := 0;
-	Inp.lower_bound := 0;
+	Inp.lower_bound := -0.001;
 END values;
 
 METHOD on_load;

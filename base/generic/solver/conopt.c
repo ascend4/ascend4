@@ -46,9 +46,10 @@
 int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT
 		, int* LEN_RL, double* RL, double* X, double* USRMEM
 ){
-	(void)CONSOLE_DEBUG("Iteration %d, phase %d: %d infeasible, %d non-optimal; objective = %e"
+	/*(void)CONSOLE_DEBUG("Iteration %d, phase %d: %d infeasible, %d non-optimal; objective = %e"
 		, INT[0], INT[1], INT[2], INT[3], RL[1]
-	);
+	);*/
+	/* NEED TO IMPLEMENT SOME KIND OF CALLBACK TO THE SOLVERREPORTER */
 	return 0;
 }
 

@@ -398,7 +398,7 @@ class Browser:
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi	
 		
-		_mi = self.solver_engine_menu_dict.get('CONOPT')
+		_mi = self.solver_engine_menu_dict.get('QRSlv')
 		_mi.set_active(1)
 
 		#--------
