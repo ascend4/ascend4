@@ -72,14 +72,20 @@ int slv8_register(SlvFunctionsT *f){
 #else
 
 /*
- * Output in user defined CONOPT subroutines
- */
+  Output in user defined CONOPT subroutines
+*/
 #define CONDBG 0
 #define NONBASIC_DEBUG FALSE
 
+#if CONDBG
+# define CONOPT_CONSOLE_DEBUG(...) CONSOLE_DEBUG(__VA_ARGS__)
+#else
+# define CONOPT_CONSOLE_DEBUG(...) (void)0
+#endif
+
 /*
- * makes lots of extra spew
- */
+  makes lots of extra spew
+*/
 #define DEBUG FALSE
 
 #define SLV8(s) ((slv8_system_t)(s))
@@ -128,8 +134,8 @@ int slv8_register(SlvFunctionsT *f){
 #define RTMAXJ     ((*(real64 *)RTMAXJ_PTR))
 
 /*
- * Auxiliar structures
- */
+  Auxiliary structures
+*/
 
 struct update_data {
   int                    jacobian;   /* Countdown on jacobian updating */
@@ -141,9 +147,9 @@ struct update_data {
 
 
 /*
- * varpivots, relpivots used only in optimizing, if we rewrite calc_pivots
- * without them.
- */
+  varpivots, relpivots used only in optimizing, if we rewrite calc_pivots
+  without them.
+*/
 struct jacobian_data {
   linsolqr_system_t      sys;          /* Linear system */
   mtx_matrix_t           mtx;          /* Transpose gradient of residuals */
@@ -154,26 +160,26 @@ struct jacobian_data {
   dof_t                  *dofdata;     /* dof data pointer from server */
   mtx_region_t           reg;          /* Current block region */
   int32                  rank;         /* Numerical rank of the jacobian */
-  enum factor_method     fm;		/* Linear factorization method */
+  enum factor_method     fm;           /* Linear factorization method */
   boolean                accurate;     /* ? Recalculate matrix */
   boolean                singular;     /* ? Can matrix be inverted */
-  boolean                old_partition;     /* old value of partition flag */
+  boolean                old_partition;/* old value of partition flag */
 };
 
 struct slv8_system_structure {
 
   /*
-   *  Problem definition
-   */
-  slv_system_t   	      slv;     /* slv_system_t back-link */
+    Problem definition
+  */
+  slv_system_t                slv;     /* slv_system_t back-link */
   struct rel_relation         *obj;    /* Objective function: NULL = none */
   struct rel_relation         *old_obj;/* Objective function: NULL = none */
   struct var_variable         **vlist; /* Variable list (NULL terminated) */
   struct rel_relation         **rlist; /* Relation list (NULL terminated) */
 
   /*
-   *  Solver information
-   */
+    Solver information
+  */
   int                    integrity;    /* ? Has the system been created */
   int32                  presolved;    /* ? Has the system been presolved */
   int32                  resolve;      /* ? Has the system been resolved */
@@ -192,13 +198,13 @@ struct slv8_system_structure {
   struct slv_parameter pa[slv8_PA_SIZE];
 
   /*
-   *  CONOPT DATA
-   */
+    CONOPT DATA
+  */
   struct conopt_data con;
 
   /*
-   *  Calculated data (scaled)
-   */
+    Calculated data (scaled)
+  */
   struct jacobian_data   J;            /* linearized system */
 
   struct vector_data     nominals;     /* Variable nominals */
@@ -207,22 +213,20 @@ struct slv8_system_structure {
   struct vector_data     variables;    /* Variable values */
   struct vector_data     residuals;    /* Relation residuals */
 
-  real64           objective;    /* Objective function evaluation */
+  real64                 objective;    /* Objective function evaluation */
 };
 
 
-/*
- *  Integrity checks
- *  ----------------
- *  check_system(sys)
- */
+/*------------------------------------------------------------------------------
+  INTEGRITY CHECKS
+*/
 
 #define OK        ((int32)813029392)
 #define DESTROYED ((int32)103289182)
 
-/*
- *  Checks sys for NULL and for integrity.
- */
+/**
+	Checks sys for NULL and for integrity.
+*/
 static int check_system(slv8_system_t sys)
 {
   if( sys == NULL ) {
@@ -245,122 +249,108 @@ static int check_system(slv8_system_t sys)
   }
 }
 
-/*
- *  General input/output routines
- *  -----------------------------
- *  print_var_name(out,sys,var)
- *  print_rel_name(out,sys,rel)
- */
+/*------------------------------------------------------------------------------
+  GENERAL INPUT/OUTPUT ROUTINES
+*/
 
 #define print_var_name(a,b,c) slv_print_var_name((a),(b)->slv,(c))
 #define print_rel_name(a,b,c) slv_print_rel_name((a),(b)->slv,(c))
 
-/*
- *  Debug output routines
- *  ---------------------
- *  debug_delimiter(fp)
- *  debug_out_vector(fp,vec)
- *  debug_out_var_values(fp,sys)
- *  debug_out_rel_residuals(fp,sys)
- *  debug_out_jacobian(fp,sys)
- *  debug_out_hessian(fp,sys)
- */
+/*------------------------------------------------------------------------------
+  DEBUG OUTPUT ROUTINES
+*/
 
-/*
- *  Outputs a hyphenated line.
- */
-static void debug_delimiter( FILE *fp)
-{
-  int32 i;
-  for( i=0; i<60; i++ ) PUTC('-',fp);
-  PUTC('\n',fp);
+/**
+	Output a hyphenated line.
+*/
+static void debug_delimiter(){
+  CONSOLE_DEBUG("------------------------------------------------");
 }
 
 #if DEBUG
 
-/*
- *  Outputs a vector.
- */
-static void debug_out_vector( FILE *fp, slv8_system_t sys,
-                              struct vector_data *vec)
-{
+/**
+	Output a vector.
+*/
+static void debug_out_vector(slv8_system_t sys
+		,struct vector_data *vec
+){
   int32 ndx;
-  FPRINTF(fp,"Norm = %g, Accurate = %s, Vector range = %d to %d\n",
+  CONSOLE_DEBUG("Norm = %g, Accurate = %s, Vector range = %d to %d\n",
     calc_sqrt_D0(vec->norm2), vec->accurate?"TRUE":"FALSE",
-    vec->rng->low,vec->rng->high);
-  FPRINTF(fp,"Vector --> ");
+    vec->rng->low,vec->rng->high
+  );
+  CONSOLE_DEBUG("Vector --> ");
   for( ndx=vec->rng->low ; ndx<=vec->rng->high ; ++ndx )
-    FPRINTF(fp, "%g ", vec->vec[ndx]);
-  PUTC('\n',fp);
+    CONSOLE_DEBUG("%g ", vec->vec[ndx]);
 }
 
-/*
- *  Outputs all variable values in current block.
- */
-static void debug_out_var_values( FILE *fp, slv8_system_t sys)
-{
+/**
+	Output all variable values in current block.
+*/
+static void debug_out_var_values(slv8_system_t sys){
   int32 col;
   struct var_variable *var;
 
-  FPRINTF(fp,"Var values --> \n");
+  CONSOLE_DEBUG("Var values -->");
   for( col = sys->J.reg.col.low; col <= sys->J.reg.col.high ; col++ ) {
     var = sys->vlist[mtx_col_to_org(sys->J.mtx,col)];
-    print_var_name(fp,sys,var);
-    FPRINTF(fp, "\nI	Lb	Value	Ub	Scale	Col	INom\n");
-    FPRINTF(fp,"%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\t%.4g\n",
+    print_var_name(ASCERR,sys,var); /** @TODO fix this */
+    CONSOLE_DEBUG("I	Lb	Value	Ub	Scale	Col	INom");
+    CONSOLE_DEBUG("%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\t%.4g",
       var_sindex(var),var_lower_bound(var),var_value(var),
       var_upper_bound(var),var_nominal(var),
-      col,sys->nominals.vec[col]);
+      col,sys->nominals.vec[col]
+    );
   }
 }
 
-/*
- *  Outputs all relation residuals in current block.
- */
-static void debug_out_rel_residuals( FILE *fp, slv8_system_t sys)
-{
+/**
+	Output all relation residuals in current block.
+*/
+static void debug_out_rel_residuals(slv8_system_t sys){
   int32 row;
 
-  FPRINTF(fp,"Rel residuals --> \n");
+  CONSOLE_DEBUG("Rel residuals -->");
   for( row = sys->J.reg.row.low; row <= sys->J.reg.row.high ; row++ ) {
     struct rel_relation *rel;
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
-    FPRINTF(fp,"  %g : ",rel_residual(rel));
-    print_rel_name(fp,sys,rel);
-    PUTC('\n',fp);
+    CONSOLE_DEBUG("  %g : ",rel_residual(rel));
+    print_rel_name(ASCERR,sys,rel); /** @TODO fix this */
   }
-  PUTC('\n',fp);
 }
 
 
-/*
- *  Outputs permutation and values of the nonzero elements in the
- *  the jacobian matrix.
- */
-static void debug_out_jacobian( FILE *fp, slv8_system_t sys)
-{
+/**
+	Output permutation and values of the nonzero elements in the
+	the jacobian matrix.
+*/
+static void debug_out_jacobian(slv8_system_t sys){
   mtx_coord_t nz;
   real64 value;
 
   nz.row = sys->J.reg.row.low;
-  for( ; nz.row <= sys->J.reg.row.high; ++(nz.row) ) {
-    FPRINTF(fp,"   Row %d (rel %d)\n", nz.row,
-      mtx_row_to_org(sys->J.mtx,nz.row));
+  for( ; nz.row <= sys->J.reg.row.high; ++(nz.row) ){
+    CONSOLE_DEBUG("Row %d (rel %d)\n"
+	  , nz.row, mtx_row_to_org(sys->J.mtx,nz.row)
+    );
     nz.col = mtx_FIRST;
-    while( value = mtx_next_in_row(sys->J.mtx,&nz,&(sys->J.reg.col)),
-           nz.col != mtx_LAST ) {
-      FPRINTF(fp,"      Col %d (var %d) has value %g\n", nz.col,
+
+    while(
+	  value = mtx_next_in_row(sys->J.mtx,&nz,&(sys->J.reg.col))
+      , nz.col != mtx_LAST
+	){
+      CONSOLE_DEBUG("Col %d (var %d) has value %g\n", nz.col,
         mtx_col_to_org(sys->J.mtx,nz.col), value);
     }
   }
 }
 
-/*
- *  Outputs permutation and values of the nonzero elements in the
- *  reduced hessian matrix.
- */
-static void debug_out_hessian( FILE *fp, slv8_system_t sys)
-{
+/**
+	Output permutation and values of the nonzero elements in the
+	reduced hessian matrix.
+*/
+static void debug_out_hessian( FILE *fp, slv8_system_t sys){
   mtx_coord_t nz;
 
   for( nz.row = 0; nz.row < sys->ZBZ.order; nz.row++ ) {
@@ -376,19 +366,18 @@ static void debug_out_hessian( FILE *fp, slv8_system_t sys)
 
 #endif /* DEBUG */
 
+/*------------------------------------------------------------------------------
+  ARRAY AND VECTOR OPERATIONS
 
-/*
- *  Array/vector operations
- *  ----------------------------
- *  destroy_array(p)
- *  create_array(len,type)
- *
- *  zero_vector(vec)
- *  copy_vector(vec1,vec2)
- *  prod = inner_product(vec1,vec2)
- *  norm2 = square_norm(vec)
- *  matrix_product(mtx,vec,prod,scale,transpose)
- */
+	destroy_array(p)
+	create_array(len,type)
+	
+	zero_vector(vec)
+	copy_vector(vec1,vec2)
+	prod = inner_product(vec1,vec2)
+	norm2 = square_norm(vec)
+	matrix_product(mtx,vec,prod,scale,transpose)
+*/
 
 #define destroy_array(p)  \
    if( (p) != NULL ) ascfree((p))
@@ -404,25 +393,24 @@ static void debug_out_hessian( FILE *fp, slv8_system_t sys)
 #define matrix_product(m,v,p,s,t) slv_matrix_product((m),(v),(p),(s),(t))
 
 
-/*
- *  Calculation routines
- *  --------------------
- *  ok = calc_objective(sys)
- *  ok = calc_residuals(sys)
- *  ok = calc_J(sys)
- *  calc_nominals(sys)
- *  calc_weights(sys)
- *  scale_J(sys)
- *  scale_variables(sys)
- *  scale_residuals(sys)
- */
+/*------------------------------------------------------------------------------
+  CALCULATION ROUTINES
 
-/*
- * counts jacobian elements and sets max to the number of elements
- * in the densest row
- */
-static int32 num_jacobian_nonzeros(slv8_system_t sys, int32 *max)
-{
+	ok = calc_objective(sys)
+	ok = calc_residuals(sys)
+	ok = calc_J(sys)
+	calc_nominals(sys)
+	calc_weights(sys)
+	scale_J(sys)
+	scale_variables(sys)
+	scale_residuals(sys)
+*/
+
+/**
+	Count jacobian elements and set max to the number of elements
+	in the densest row
+*/
+static int32 num_jacobian_nonzeros(slv8_system_t sys, int32 *max){
   int32 row, len, licn,c,count,row_max;
   struct rel_relation *rel;
   rel_filter_t rf;
@@ -475,23 +463,20 @@ static int32 num_jacobian_nonzeros(slv8_system_t sys, int32 *max)
 }
 
 
-/*
- *  Evaluate the objective function.
- */
-static boolean calc_objective( slv8_system_t sys)
-{
+/**
+	Evaluate the objective function.
+*/
+static boolean calc_objective( slv8_system_t sys){
   calc_ok = TRUE;
-  sys->objective =
-    (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
+  assert(sys->obj!=NULL);
+  sys->objective = (sys->obj ? relman_eval(sys->obj,&calc_ok,SAFE_CALC) : 0.0);
   return calc_ok;
 }
 
-
-/*
- *  Evaluate all objectives.
- */
-static boolean calc_objectives( slv8_system_t sys)
-{
+/**
+	Evaluate all objectives.
+*/
+static boolean calc_objectives( slv8_system_t sys){
   int32 len,i;
   static rel_filter_t rfilter;
   struct rel_relation **rlist=NULL;
@@ -502,11 +487,12 @@ static boolean calc_objectives( slv8_system_t sys)
   calc_ok = TRUE;
   for (i = 0; i < len; i++) {
     if (rel_apply_filter(rlist[i],&rfilter)) {
+	  assert(rlist[i]!=NULL);
       relman_eval(rlist[i],&calc_ok,SAFE_CALC);
 #if DEBUG
       if (calc_ok == FALSE) {
-	FPRINTF(stderr,"error in calc_objectives\n");
-	calc_ok = TRUE;
+        ERROR_REPORTER_HERE(ASC_PROG_ERR,"error in calc_objectives");
+        calc_ok = TRUE;
       }
 #endif /* DEBUG */
     }
@@ -514,13 +500,13 @@ static boolean calc_objectives( slv8_system_t sys)
   return calc_ok;
 }
 
-/*
- *  Calculates all of the residuals in the current block and computes
- *  the residual norm for block status.  Returns true iff calculations
- *  preceded without error.
- */
-static boolean calc_residuals( slv8_system_t sys)
-{
+/**
+	Calculate all of the residuals in the current block and compute
+	the residual norm for block status.  
+
+	@return true iff calculations preceded without error.
+*/
+static boolean calc_residuals( slv8_system_t sys){
   int32 row;
   struct rel_relation *rel;
   double time0;
@@ -536,11 +522,12 @@ static boolean calc_residuals( slv8_system_t sys)
     if (!rel) {
       int32r;
       r=mtx_row_to_org(sys->J.mtx,row);
-      FPRINTF(MIF(sys),"NULL relation found !!\n");
-      FPRINTF(MIF(sys),"at row %d rel %d in calc_residuals\n",(int)row,r);
-      FFLUSH(MIF(sys));
+      ERROR_REPORTER_HERE(ASC_PROG_ERR
+		,"NULL relation found at row %d rel %d in calc_residuals!",(int)row,r
+      );
     }
 #endif /* DEBUG */
+    assert(rel!=NULL);
     sys->residuals.vec[row] = relman_eval(rel,&calc_ok,SAFE_CALC);
 
     relman_calc_satisfied(rel,sys->p.tolerance.feasible);
@@ -553,12 +540,11 @@ static boolean calc_residuals( slv8_system_t sys)
 }
 
 
-/*
- *  Calculates the current block of the jacobian.
- *  It is initially unscaled.
- */
-static boolean calc_J( slv8_system_t sys)
-{
+/**
+	Calculate the current block of the jacobian.
+	It is initially unscaled.
+*/
+static boolean calc_J( slv8_system_t sys){
   int32 row;
   var_filter_t vfilter;
   double time0;
@@ -583,12 +569,11 @@ static boolean calc_J( slv8_system_t sys)
   return(calc_ok);
 }
 
-/*
- *  Retrieves the nominal values of all of the block variables,
- *  insuring that they are all strictly positive.
- */
-static void calc_nominals( slv8_system_t sys)
-{
+/**
+	Retrieve the nominal values of all of the block variables,
+	and ensure that they are all strictly positive.
+*/
+static void calc_nominals( slv8_system_t sys){
   int32 col;
   FILE *fp = MIF(sys);
   if( sys->nominals.accurate ) return;
@@ -608,19 +593,25 @@ static void calc_nominals( slv8_system_t sys)
       if( n <= 0.0 ) {
 	if( n == 0.0 ) {
 	  n = TOO_SMALL;
-	  FPRINTF(fp,"ERROR:  (slv8) calc_nominals\n");
-	  FPRINTF(fp,"        Variable ");
+
+	  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);
+	  FPRINTF(ASCERR,"Variable ");
 	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"        \nhas nominal value of zero.\n");
-	  FPRINTF(fp,"        Resetting to %g.\n",n);
+	  FPRINTF(ASCERR," has nominal value of zero.\n");
+	  FPRINTF(ASCERR,"Resetting to %g.\n",n);
+      error_reporter_end_flush();
+
 	  var_set_nominal(var,n);
 	} else {
 	  n =  -n;
-	  FPRINTF(fp,"ERROR:  (slv8) calc_nominals\n");
-	  FPRINTF(fp,"        Variable ");
+
+	  ERROR_REPORTER_START_HERE(ASC_USER_ERROR);	
+	  FPRINTF(fp,"Variable ");
 	  print_var_name(fp,sys,var);
-	  FPRINTF(fp,"        \nhas negative nominal value.\n");
-	  FPRINTF(fp,"        Resetting to %g.\n",n);
+	  FPRINTF(fp," has negative nominal value.\n");
+	  FPRINTF(fp,"Resetting to %g.\n",n);
+      error_reporter_end_flush();
+
 	  var_set_nominal(var,n);
 	}
       }
@@ -638,10 +629,10 @@ static void calc_nominals( slv8_system_t sys)
 }
 
 
-/*
- *  Calculates the weights of all of the block relations
- *  to scale the rows of the Jacobian.
- */
+/**
+	Calculate the weights of all of the block relations
+	to scale the rows of the Jacobian.
+*/
 static void calc_weights( slv8_system_t sys)
 {
   mtx_coord_t nz;
@@ -676,11 +667,10 @@ static void calc_weights( slv8_system_t sys)
 }
 
 
-/*
- *  Scales the jacobian.
- */
-static void scale_J( slv8_system_t sys)
-{
+/**
+	Scale the jacobian.
+*/
+static void scale_J( slv8_system_t sys){
   int32 row;
   int32 col;
 
@@ -695,17 +685,19 @@ static void scale_J( slv8_system_t sys)
      mtx_mult_row(sys->J.mtx,row,sys->weights.vec[row],&(sys->J.reg.col));
 }
 
-static void jacobian_scaled(slv8_system_t sys)
-{
+/**
+	@TODO document this
+*/
+static void jacobian_scaled(slv8_system_t sys){
   int32 col;
   if (DUMPCNORM) {
     for( col=sys->J.reg.col.low; col <= sys->J.reg.col.high; col++ ) {
       real64 cnorm;
-      cnorm =
-        calc_sqrt_D0(mtx_sum_sqrs_in_col(sys->J.mtx,col,&(sys->J.reg.row)));
+      cnorm = calc_sqrt_D0(mtx_sum_sqrs_in_col(sys->J.mtx,col,&(sys->J.reg.row)));
       if (cnorm >CNHIGH || cnorm <CNLOW) {
-        FPRINTF(MIF(sys),"[col %d org %d] %g\n", col,
-          mtx_col_to_org(sys->J.mtx,col), cnorm);
+        ERROR_REPORTER_HERE(ASC_PROG_NOTE,"[col %d org %d] %g\n", col,
+          mtx_col_to_org(sys->J.mtx,col), cnorm
+        );
       }
     }
   }
@@ -714,13 +706,14 @@ static void jacobian_scaled(slv8_system_t sys)
   sys->J.accurate = TRUE;
   sys->J.singular = FALSE;  /* yet to be determined */
 #if DEBUG
-  FPRINTF(LIF(sys),"\nJacobian: \n");
-  debug_out_jacobian(LIF(sys),sys);
+  CONSOLE_DEBUG("Jacobian:");
+  debug_out_jacobian(sys);
 #endif /* DEBUG */
 }
 
-
-
+/**
+	@TODO document this
+*/
 static void scale_variables( slv8_system_t sys)
 {
   int32 col;
@@ -735,8 +728,8 @@ static void scale_variables( slv8_system_t sys)
   square_norm( &(sys->variables) );
   sys->variables.accurate = TRUE;
 #if DEBUG
-  FPRINTF(LIF(sys),"Variables:  ");
-  debug_out_vector(LIF(sys),sys,&(sys->variables));
+  CONSOLE_DEBUG("Variables:");
+  debug_out_vector(sys,&(sys->variables));
 #endif /* DEBUG */
 }
 
@@ -758,18 +751,17 @@ static void scale_residuals( slv8_system_t sys)
   square_norm( &(sys->residuals) );
   sys->residuals.accurate = TRUE;
 #if DEBUG
-  FPRINTF(LIF(sys),"Residuals:  ");
-  debug_out_vector(LIF(sys),sys,&(sys->residuals));
+  CONSOLE_DEBUG("Residuals:");
+  debug_out_vector(sys,&(sys->residuals));
 #endif  /* DEBUG */
 }
 
 
-/*
- * Calculates relnoms for all relations in sys
- * using variable nominals.
- */
-static void calc_relnoms(slv8_system_t sys)
-{
+/**
+	Calculate relnoms for all relations in sys
+	using variable nominals.
+*/
+static void calc_relnoms(slv8_system_t sys){
   int32 row, col;
   struct var_variable *var;
   struct rel_relation *rel;
@@ -805,10 +797,10 @@ static void calc_relnoms(slv8_system_t sys)
 }
 
 /*
- *  Returns the maximum ratio of magnitudes of any two nonzero
- *  elements in the same column of mtx.  Only considers elements
- *  in region reg.
- */
+	Return the maximum ratio of magnitudes of any two nonzero
+	elements in the same column of mtx.  Only consider elements
+	in region reg.
+*/
 static real64 col_max_ratio(mtx_matrix_t *mtx,
 			    mtx_region_t *reg)
 {
@@ -839,11 +831,11 @@ static real64 col_max_ratio(mtx_matrix_t *mtx,
 }
 
 
-/*
- *  Returns the maximum ratio of magnitudes of any two nonzero
- *  elements in the same row of mtx.  Only considers elements
- *  in region reg.
- */
+/**
+	Return the maximum ratio of magnitudes of any two nonzero
+	elements in the same row of mtx.  Only consider elements
+	in region reg.
+*/
 static real64 row_max_ratio(mtx_matrix_t *mtx,
 			    mtx_region_t *reg)
 {
@@ -873,13 +865,15 @@ static real64 row_max_ratio(mtx_matrix_t *mtx,
   return max_ratio;
 }
 
-/*
- *  Calculates scaling factor suggested by Fourer.
- *  For option = 0, returns scaling factor for
- *  row number loc.
- *  For option = 1, returns scaling factor for
- *  col number loc.
- */
+/**
+	Calculate scaling factor suggested by Fourer.
+
+	For option==0, returns scaling factor for
+	row number loc.
+
+	For option==1, returns scaling factor for
+	col number loc.
+*/
 static real64 calc_fourer_scale(mtx_matrix_t mtx,
 			      mtx_region_t reg,
 			      int32 loc,
@@ -919,18 +913,17 @@ static real64 calc_fourer_scale(mtx_matrix_t mtx,
   }
 }
 
-/*
- *  This funcion is an implementation of the scaling
- *  routine by Fourer on p304 of Mathematical Programing
- *  vol 23, (1982).
- *  This function will scale the Jacobian and store the scaling
- *  factors in sys->nominals and sys->weights.
- *  If the Jacobian has been previously scaled
- *  by another method (during this iteration) then these vectors
- *  should contain the scale factors used in that scaling.
- */
-static void scale_J_iterative(slv8_system_t sys)
-{
+/**
+	An implementation of the scaling routine by Fourer on
+	p304 of Mathematical Programing vol 23, (1982).
+
+	Scale the Jacobian and store the scaling
+	factors in sys->nominals and sys->weights.
+	If the Jacobian has been previously scaled
+	by another method (during this iteration) then these vectors
+	should contain the scale factors used in that scaling.
+*/
+static void scale_J_iterative(slv8_system_t sys){
   real64 rho_col_old, rho_col_new;
   real64 rho_row_old, rho_row_new;
   int32 k;
@@ -980,11 +973,10 @@ static void scale_J_iterative(slv8_system_t sys)
 }
 
 
-/*
- * Scale system dependent on interface parameters
- */
-static void scale_system( slv8_system_t sys )
-{
+/**
+	Scale system dependent on interface parameters
+*/
+static void scale_system( slv8_system_t sys ){
   if(strcmp(SCALEOPT,"NONE") == 0){
     if(sys->J.accurate == FALSE){
       calc_nominals(sys);
@@ -1048,15 +1040,14 @@ static void scale_system( slv8_system_t sys )
 }
 
 
-/*
- *  Resets all flags to setup a new solve.
- *  Should set sys->s.block.current_block = -1
- *  before calling.
- *  This is currently a HACK!
- *  not sure if should call when done.
- */
-static void conopt_initialize( slv8_system_t sys)
-{
+/**
+	Reset all flags to setup a new solve.
+	Should set sys->s.block.current_block = -1
+	before calling.
+	
+	@TODO This is currently a HACK! Not sure if should call when done.
+*/
+static void conopt_initialize( slv8_system_t sys){
 
   sys->s.block.current_block++;
   /*
@@ -1079,38 +1070,41 @@ static void conopt_initialize( slv8_system_t sys)
 
     if(sys->p.output.less_important && (LIFDS ||
       sys->s.block.current_size > 1)) {
-      debug_delimiter(LIF(sys));
-      debug_delimiter(LIF(sys));
+      debug_delimiter();
     }
     if(sys->p.output.less_important && LIFDS) {
-      FPRINTF(LIF(sys),"\n%-40s ---> %d in [%d..%d]\n",
-              "Current block number", sys->s.block.current_block,
-              0, sys->s.block.number_of-1);
-      FPRINTF(LIF(sys),"%-40s ---> %d\n", "Current block size",
-        sys->s.block.current_size);
+      CONSOLE_DEBUG("%-40s ---> %d in [%d..%d]"
+        , "Current block number", sys->s.block.current_block
+        , 0, sys->s.block.number_of-1
+      );
+      CONSOLE_DEBUG("%-40s ---> %d", "Current block size"
+        , sys->s.block.current_size
+      );
     }
     if( !(ok = calc_objective(sys)) ) {
-         FPRINTF(MIF(sys),"Objective calculation errors detected.\n");
+         ERROR_REPORTER_HERE(ASC_PROG_ERR,"Objective calculation errors detected.");
     }
     if(sys->p.output.less_important && sys->obj) {
-      FPRINTF(LIF(sys),"%-40s ---> %g\n", "Objective", sys->objective);
+      CONSOLE_DEBUG("%-40s ---> %g", "Objective", sys->objective);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
-    if (!(sys->p.ignore_bounds) ) {
-      slv_insure_bounds(SERVER, sys->J.reg.col.low,
-                        sys->J.reg.col.high,MIF(sys));
+    if(!(sys->p.ignore_bounds) ) {
+      slv_insure_bounds(
+          SERVER, sys->J.reg.col.low,
+          sys->J.reg.col.high,MIF(sys)
+      );
     }
 
     sys->residuals.accurate = FALSE;
     if( !(ok = calc_residuals(sys)) ) {
-      FPRINTF(MIF(sys),"Residual calculation errors detected.\n");
+      ERROR_REPORTER_HERE(ASC_PROG_ERR,"Residual calculation errors detected.");
     }
-    if( sys->p.output.less_important &&
+    if(sys->p.output.less_important &&
         (sys->s.block.current_size >1 ||
-         LIFDS) ) {
-      FPRINTF(LIF(sys),"%-40s ---> %g\n", "Residual norm (unscaled)",
-        sys->s.block.residual);
+        LIFDS)
+    ){
+      CONSOLE_DEBUG("%-40s ---> %g", "Residual norm (unscaled)",sys->s.block.residual);
     }
     sys->s.calc_ok = sys->s.calc_ok && ok;
 
@@ -1125,56 +1119,46 @@ static void conopt_initialize( slv8_system_t sys)
 }
 
 
-/*
- *  Iteration begin/end routines
- *  ----------------------------
- *  iteration_begins(sys)
- *  iteration_ends(sys)
- */
+/*------------------------------------------------------------------------------
+  ITERATION BEGIN/END ROUTINES
+*/
 
-/*
- *  Prepares sys for entering an iteration, increasing the iteration counts
- *  and starting the clock.
- */
-static void iteration_begins( slv8_system_t sys)
-{
+/**
+	Prepare sys for entering an iteration, increasing the iteration counts
+	and starting the clock.
+*/
+static void iteration_begins( slv8_system_t sys){
    sys->clock = tm_cpu_time();
    ++(sys->s.block.iteration);
    ++(sys->s.iteration);
    if(sys->p.output.less_important && LIFDS) {
-     FPRINTF(LIF(sys),"\n%-40s ---> %d\n",
-             "Iteration", sys->s.block.iteration);
-     FPRINTF(LIF(sys),"%-40s ---> %d\n",
-             "Total iteration", sys->s.iteration);
+     CONSOLE_DEBUG("%-40s ---> %d","Iteration", sys->s.block.iteration);
+     CONSOLE_DEBUG("%-40s ---> %d","Total iteration", sys->s.iteration);
    }
 }
 
 
 /*
- *  Prepares sys for exiting an iteration, stopping the clock and recording
- *  the cpu time.
- */
-static void iteration_ends( slv8_system_t sys)
-{
+	Prepare sys for exiting an iteration, stopping the clock and recording
+	the cpu time.
+*/
+static void iteration_ends( slv8_system_t sys){
    double cpu_elapsed;   /* elapsed this iteration */
 
    cpu_elapsed = (double)(tm_cpu_time() - sys->clock);
    sys->s.block.cpu_elapsed += cpu_elapsed;
    sys->s.cpu_elapsed += cpu_elapsed;
    if(sys->p.output.less_important && LIFDS) {
-     FPRINTF(LIF(sys),"%-40s ---> %g\n",
-            "Elapsed time", sys->s.block.cpu_elapsed);
-     FPRINTF(LIF(sys),"%-40s ---> %g\n",
-            "Total elapsed time", sys->s.cpu_elapsed);
+     CONSOLE_DEBUG("%-40s ---> %g","Elapsed time", sys->s.block.cpu_elapsed);
+     CONSOLE_DEBUG("%-40s ---> %g","Total elapsed time", sys->s.cpu_elapsed);
    }
 }
 
 
-/*
- *  Updates the solver status.
+/**
+	Update the solver status.
  */
-static void update_status( slv8_system_t sys)
-{
+static void update_status( slv8_system_t sys){
    boolean unsuccessful;
 
    if( !sys->s.converged ) {
@@ -1193,9 +1177,9 @@ static void update_status( slv8_system_t sys)
 
 
 static
-int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys,
-                                  slv_parameters_t *parameters)
-{
+int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys
+		, slv_parameters_t *parameters
+){
   slv8_system_t sys;
   union parm_arg lo,hi,val;
   struct slv_parameter *new_parms = NULL;
@@ -1406,14 +1390,11 @@ int32 slv8_get_default_parameters(slv_system_t server, SlvClientToken asys,
 }
 
 
-/*
- *  External routines
- *  -----------------
- *  See slv_client.h
- */
+/*-----------------------------------------------------------------------------
+  EXTERNAL ROUTINES (see slv_client.h)
+*/
 
-static SlvClientToken slv8_create(slv_system_t server, int32*statusindex)
-{
+static SlvClientToken slv8_create(slv_system_t server, int32*statusindex){
   slv8_system_t sys;
 
   sys = (slv8_system_t)asccalloc(1, sizeof(struct slv8_system_structure) );
@@ -1442,13 +1423,13 @@ static SlvClientToken slv8_create(slv_system_t server, int32*statusindex)
   sys->obj = slv_get_obj_relation(server);
   if (sys->vlist == NULL) {
     ascfree(sys);
-    FPRINTF(MIF(sys),"CONOPT called with no variables.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT called with no variables.");
     *statusindex = -2;
     return NULL; /* prolly leak here */
   }
   if (sys->rlist == NULL && sys->obj == NULL) {
     ascfree(sys);
-    FPRINTF(MIF(sys),"CONOPT called with no relations or objective.\n");
+	ERROR_REPORTER_HERE(ASC_PROG_ERR,"CONOPT called with no relations or objective.");
     *statusindex = -1;
     return NULL; /* prolly leak here */
   }
@@ -1460,15 +1441,13 @@ static SlvClientToken slv8_create(slv_system_t server, int32*statusindex)
   return((SlvClientToken)sys);
 }
 
-static void destroy_matrices( slv8_system_t sys)
-{
+static void destroy_matrices( slv8_system_t sys){
    if( sys->J.mtx ) {
      mtx_destroy(sys->J.mtx);
    }
 }
 
-static void destroy_vectors( slv8_system_t sys)
-{
+static void destroy_vectors( slv8_system_t sys){
    destroy_array(sys->nominals.vec);
    destroy_array(sys->weights.vec);
    destroy_array(sys->relnoms.vec);
@@ -1489,9 +1468,9 @@ static int32 slv8_eligible_solver(slv_system_t server){
 }
 
 
-static void slv8_get_parameters(slv_system_t server, SlvClientToken asys,
-                                slv_parameters_t *parameters)
-{
+static void slv8_get_parameters(slv_system_t server, SlvClientToken asys
+		, slv_parameters_t *parameters
+){
   slv8_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
@@ -1525,9 +1504,9 @@ static void slv8_get_status(slv_system_t server, SlvClientToken asys,
 }
 
 
-static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server,
-                                               SlvClientToken asys)
-{
+static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server
+		, SlvClientToken asys
+){
   slv8_system_t sys;
   (void)server;  /* stop gcc whine about unused parameter */
 
@@ -1537,28 +1516,30 @@ static linsolqr_system_t slv8_get_linsolqr_sys(slv_system_t server,
 }
 
 
-static linsol_system_t slv8_get_linsol_sys(slv_system_t server,
-                                           SlvClientToken asys)
-{
+static linsol_system_t slv8_get_linsol_sys(slv_system_t server
+		, SlvClientToken asys
+){
   (void)server;  /* stop gcc whine about unused parameter */
   UNUSED_PARAMETER(asys);
   return( NULL );
 }
 
 
-/*
- *  Performs structural analysis on the system, setting the flags in
- *  status.  The problem must be set up, the relation/variable list
- *  must be non-NULL.  The
- *  jacobian (linear) system must be created and have the correct order
- *  (stored in sys->cap).  Everything else will be determined here.
- *  On entry there isn't yet a correspondence between var_sindex and
- *  jacobian column. Here we establish that.
- */
-static void structural_analysis(slv_system_t server, slv8_system_t sys)
-{
-/* this function has been striped of its guts for conopt
-   and may go away */
+/**
+	Perform structural analysis on the system, setting the flags in
+	status.  
+
+	The problem must be set up, the relation/variable list
+	must be non-NULL. The jacobian (linear) system must be created 
+	and have the correct order (stored in sys->cap).  Everything else
+	will be determined here.
+
+	On entry there isn't yet a correspondence between var_sindex and
+	jacobian column. Here we establish that.
+
+	@NOTE this function has been striped of its guts for CONOPT and may go away
+*/
+static void structural_analysis(slv_system_t server, slv8_system_t sys){
 
   var_filter_t vfilter;
   rel_filter_t rfilter;
@@ -1598,9 +1579,9 @@ static void structural_analysis(slv_system_t server, slv8_system_t sys)
 
 
   sys->J.reg.row.low = sys->J.reg.col.low = 0;
-  sys->J.reg.row.high = sys->con.m -1;
+  sys->J.reg.row.high = sys->con.m - 1;
   if (sys->obj != NULL) sys->J.reg.row.high--;
-  sys->J.reg.col.high = sys->con.n -1;
+  sys->J.reg.col.high = sys->con.n - 1;
 
   slv_check_bounds(SERVER,sys->vused,sys->vtot-1,MIF(sys),"fixed");
 
@@ -1613,17 +1594,14 @@ static void structural_analysis(slv_system_t server, slv8_system_t sys)
 }
 
 
-static void create_matrices(slv_system_t server, slv8_system_t sys)
-{
+static void create_matrices(slv_system_t server, slv8_system_t sys){
   sys->J.mtx = mtx_create();
   mtx_set_order(sys->J.mtx,sys->cap);
   structural_analysis(server,sys);
 }
 
 
-static void create_vectors(sys)
-slv8_system_t sys;
-{
+static void create_vectors(slv8_system_t sys){
   sys->nominals.vec = create_array(sys->cap,real64);
   sys->nominals.rng = &(sys->J.reg.col);
   sys->weights.vec = create_array(sys->cap,real64);
@@ -1637,23 +1615,22 @@ slv8_system_t sys;
 }
 
 
-static void slv8_dump_internals(slv_system_t server,
-				SlvClientToken sys,int32 level)
-{
+static void slv8_dump_internals(slv_system_t server
+		, SlvClientToken sys, int32 level
+){
   (void)server;  /* stop gcc whine about unused parameter */
 
   check_system(sys);
   if (level > 0) {
-    FPRINTF(MI8F(sys),"ERROR:  (slv8) slv8_dump_internals\n");
-    FPRINTF(MI8F(sys),"        slv8 does not dump its internals.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Can't dump internals with CONOPT");
   }
 }
 
 
-/*
- * Here we will check if any fixed or included flags have
- * changed since the last presolve.
- */
+/**
+	Check if any fixed or included flags have
+	changed since the last presolve.
+*/
 static int32 slv8_dof_changed(slv8_system_t sys)
 {
   int32 ind, result = 0;
@@ -1709,11 +1686,10 @@ static void reset_cost(struct slv_block_cost *cost,int32 costsize)
 }
 
 
-/*
- * After running CONOPT, we need to update the values of the array
- * cost, which is used by the interface to display residual and number
- * of iterations
- */
+/**
+	Update the values of the array cost, which is used by the interface
+	to display residual and number of iterations. For use after running CONOPT
+*/
 static void update_cost(slv8_system_t sys)
 {
   int32 ci;
@@ -1728,65 +1704,72 @@ static void update_cost(slv8_system_t sys)
   sys->s.cost[ci].resid	= sys->s.block.residual;
 }
 
-/*
- * CONOPT ROUTINES
- */
+/*------------------------------------------------------------------------------
+	CONOPT ROUTINES
+*/
 
-/*
- * WORK TO DO:
- * Fix interface so that solvers define status messages. We
- * should not be stuck with one standard set that all solvers
- * must deal with.
- * Reimplement old code to detect linear coefficients and use
- * in conopt hookup.
- * Implement better communication routines.
- * Give more contol to interface (ex. turn off error counting,
- * switch from we alocate to conopt allocates, etc.).
- * Record marginal values and make available to user.
- * Set up interface such that any variable can be selected and
- * either maximized or minimized.
- * Get rid of our Jacobian calculation routine and stuff conopt's
- * workspace directly (in unsorted order). This will require
- * rewriting the scaling functions. (This code really should
- * not be in the solver)
- * Fix up restart code...we don't keep track of which values
- * change so must update entire Jacobian and residual vector
- * but may save some time by not having to redo column pointers etc.
- * Implement a way to bailout...check for ^C and tell conopt to
- * return as soon as possible.
- * Currently will not take problem like MIN x^2...it will complain
- * about empty rows.  Must formulate as y=x^2; MIN y; until we
- * fix the way we handle objectives.
- */
+/**
+	@TODO
+	  - Fix interface so that solvers define status messages. We
+	    should not be stuck with one standard set that all solvers
+	    must deal with.
+	
+	  - Reimplement old code to detect linear coefficients and use
+	    in conopt hookup.
+
+	  - Implement better communication routines.
+
+	  - Give more contol to interface (ex. turn off error counting,
+	    switch from we alocate to conopt allocates, etc.).
+
+	  - Record marginal values and make available to user.
+
+	  - Set up interface such that any variable can be selected and
+	    either maximized or minimized.
+
+	  - Get rid of our Jacobian calculation routine and stuff conopt's
+	    workspace directly (in unsorted order). This will require
+	    rewriting the scaling functions. (This code really should
+	    not be in the solver)
+
+	  - Fix up restart code...we don't keep track of which values
+	    change so must update entire Jacobian and residual vector
+	    but may save some time by not having to redo column pointers etc.
+
+	  - Implement a way to bailout...check for ^C and tell conopt to
+	    return as soon as possible.
+
+	  - Currently will not take problem like MIN x^2...it will complain
+	    about empty rows.  Must formulate as y=x^2; MIN y; until we
+	    fix the way we handle objectives.
+*/
 
 
-/*
- * COIRMS Based on the information provided in Coispz, CONOPT will
- * allocate the number of vectors into which the user can define
- * the details of the model. The details of the model are defined
- * here.
- *
- * COIRMS(lower, curr, upper, vsta, type,rhs, fv, esta, colsta,
- * rowno, value, nlflag, n, m, n1, nz, usrmem)
- *
- * lower - lower bounds on the variables
- * curr  - intial values of the variables
- * upper - upper bounds on the variables
- * vsta  - initial status of the variable(o nonbasic, 1 basic)
- * type  - types of equations (0 equality,1 greater,2 less)
- * rhs   - values of the right hand sides
- * fv    - sum of the nonlinear terms in the initial point
- * esta  - initial status of the slack in the constraint (nonbasic,basic)
- * colsta- start of column pointers
- * rowno - row or equation numbers of the nonzeros
- * value - values of the jacobian elements
- * nlflag- nonlinearity flags(0 nonzero constant,1 varying)
- * n     - number of variables
- * m     - number of constraints
- * n1    - n+1
- * nz    - number of jacobian elements
- * usrmem- user memory defined by conopt
- */
+/**
+	This is the 'ReadMatrix' callback. The provides the mechanism for ASCEND
+	to tell CONOPT about the lower and upper bounds on variables, the initial
+	values, the initial basic/non-basis status of variables, the types of
+	equation constraints and the values of the RHSes, and information about the
+	structure of the equations.
+
+	See the CONOPT reference manual for full details.
+
+	@param lower   lower bounds on the variables
+	@param curr    intial values of the variables
+	@param upper   upper bounds on the variables
+	@param vsta    initial status of the variable(o nonbasic, 1 basic)
+	@param type    types of equations (0 equality,1 greater,2 less)
+	@param rhs     values of the right hand sides
+	@param esta    initial status of the slack in the constraint (nonbasic,basic)
+	@param colsta  start of column pointers
+	@param rowno   row or equation numbers of the nonzeros
+	@param value   values of the jacobian elements
+	@param nlflag  nonlinearity flags(0 nonzero constant,1 varying)
+	@param n       number of variables
+	@param m       number of constraints
+	@param nz      number of jacobian elements
+	@param usrmem  user memory defined by conopt
+*/
 static int COI_CALL slv8_conopt_readmatrix(
 		double *lower, double *curr, double *upper
 		, int *vsta,  int *type, double *rhs
@@ -1807,8 +1790,8 @@ static int COI_CALL slv8_conopt_readmatrix(
   slv8_system_t sys;
 
   /*
-   * stop gcc whining about unused parameter
-   */
+    stop gcc whining about unused parameter
+  */
   (void)vsta;  (void)rhs;   (void)esta;  (void)n;
 
   sys = (slv8_system_t)usrmem;
@@ -1829,43 +1812,55 @@ static int COI_CALL slv8_conopt_readmatrix(
     low = var_lower_bound(var)/nominal;
     up = var_upper_bound(var)/nominal;
 /* KHACK: get rid of hard coded numbers */
-    lower[col-offset] = low > -1e20 ? low : -1e20;
-    upper[col-offset] = up < 1e20 ? up : 1e20;
+	/* CONSOLE_DEBUG("SETTING VALUES FOR VARIABLE %d",col-offset); */
+    lower[col-offset] = low > -1e12 ? low : -1e12;
+    upper[col-offset] = up < 1e12 ? up : 1e12;
     curr[col-offset] = sys->variables.vec[col]; /* already scaled */
     vsta[col-offset] = !var_nonbasic(var);
   }
+  /*
   for (offset = row = sys->J.reg.row.low;
        row <= sys->J.reg.row.high; row++) {
+	
     rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
     nominal = sys->weights.vec[row];
-    /* fv[row-offset] = sys->residuals.vec[row];*/ /* already scaled */
+    * fv[row-offset] = sys->residuals.vec[row];* * already scaled *
   }
+  */
+
+  /* set relation types: all equalities except for last one */
   for (row = 0; row < *m; row++) {
     type[row] = 0;
   }
   if (sys->obj != NULL) {
-    type[*m-1] = 3;
+    type[*m - 1] = 3; /* objective function */
   }
 
+  /* get derivatives of objective function? */
   if (sys->obj != NULL) {
     len = rel_n_incidences(sys->obj);
     variables = ASC_NEW_ARRAY(int32,len);
     derivatives = ASC_NEW_ARRAY(real64,len);
-    relman_diff2(sys->obj,&vfilter,derivatives,variables,
-		 &(obj_count),SAFE_CALC);
+
+    relman_diff2(
+        sys->obj,&vfilter,derivatives,variables
+	    , &(obj_count),SAFE_CALC
+    );
   }
 
   count = count_old = 0;
 
-  colsta[0] = 1;
+  colsta[0] = 0;
 
-  for (offset = col = sys->J.reg.col.low;
-       col <= sys->J.reg.col.high; col++) {
+  for(offset = col = sys->J.reg.col.low
+      ; col <= sys->J.reg.col.high
+      ; col++
+  ){
     coord.col = col;
     var = sys->vlist[col];
 #if CONDBG
     if (!var_apply_filter(var,&vfilter) ) {
-      FPRINTF(stderr,"var doesn't pass filter\n");
+      CONSOLE_DEBUG("var doesn't pass filter");
     }
 #endif /* CONDBG */
     len = var_n_incidences(var);
@@ -1874,50 +1869,52 @@ static int COI_CALL slv8_conopt_readmatrix(
     for (c=0; c < len; c++) {
       /* assuming obj on list... check this */
       if (rel_apply_filter(rlist[c],&rfilter)) {
-	coord.row = rel_sindex(rlist[c]);
-	rowno[count] = C2F(rel_sindex(rlist[c]) - offset);
-	value[count] = mtx_value(sys->J.mtx,&coord);
-	nlflag[count] = 1;               /* fix this later */
-	if(rlist[c] == sys->obj) {
+		coord.row = rel_sindex(rlist[c]);
+		rowno[count] = (rel_sindex(rlist[c]) - offset);
+		value[count] = mtx_value(sys->J.mtx,&coord);
+		nlflag[count] = 1;               /* fix this later */
+		if(rlist[c] == sys->obj) {
 #if CONDBG
-	  FPRINTF(stderr,"found objective in unexpected location\n");
+		  CONSOLE_DEBUG("found objective in unexpected location");
 #endif /* CONDBG */
-	}
-      if (fabs(value[count]) > RTMAXJ) {
+		}
+        if (fabs(value[count]) > RTMAXJ) {
 #if CONDBG
-	FPRINTF(stderr,"Large Jacobian value being set to RTMAXJ\n");
+		  CONSOLE_DEBUG("Large Jacobian value being set to RTMAXJ");
 #endif /* CONDBG */
-	if (value[count] > 0) {
-	  value[count] = RTMAXJ-1;
-	} else {
-	  value[count] = -RTMAXJ+1;
-	}
-      }
-	count++;
+		  if (value[count] > 0) {
+			value[count] = RTMAXJ-1;
+		  } else {
+			value[count] = -RTMAXJ+1;
+		  }
+	    }
+		count++;
       }
       if(rlist[c] == sys->obj) {
-	for (r = 0; r < obj_count; r++) {
-	  if ( variables[r] == var_sindex(var) ) {
-	    rowno[count] = *m;
-	    value[count] = derivatives[r];
-	    nlflag[count] = 1;               /* fix this later */
-	    if (fabs(value[count]) > RTMAXJ) {
-	      if (value[count] > 0) {
-		value[count] = RTMAXJ-1;
-	      } else {
-		value[count] = -RTMAXJ+1;
-	      }
-	    }
-	    count++;
-	  }
-	}
+		for (r = 0; r < obj_count; r++) {
+		  if ( variables[r] == var_sindex(var) ) {
+		    rowno[count] = *m - 1;
+		    value[count] = derivatives[r];
+		    nlflag[count] = 1;               /* fix this later */
+		    if (fabs(value[count]) > RTMAXJ) {
+		      if (value[count] > 0) {
+			value[count] = RTMAXJ-1;
+		      } else {
+			value[count] = -RTMAXJ+1;
+		      }
+		    }
+		    count++;
+		  }
+		}
       }
     }
     if (count_old != count) {
-      colsta[col - offset] = C2F(count_old);
+	  /* CONSOLE_DEBUG("COLSTA[%d] = %d",col-offset,count_old); */
+      colsta[col - offset] = count_old;
     }
   }
-  colsta[*n] = *nz + 1;
+  /* CONSOLE_DEBUG("COLSTA[%d] = %d",*n,*nz + 1); */
+  colsta[*n] = *nz;
   if (sys->obj != NULL) {
     ascfree(variables);
     ascfree(derivatives);
@@ -2047,32 +2044,28 @@ static void slv8_coifbl(real64 *x, real64 *g, int32 *otn, int32 *nto,
 #endif /* 0 */
 
 /*
- * COIFDE Defines the nonlinearities of the model by returning
- * numerical values. It works on one row or equation at a time
- * COIFDE(x, g, jac, rowno, jcnm, mode, errcnt, newpt, n, nj, usrmem)
- *
- * x      - punt of evaluation provided by conopt
- * g      - function value
- * jac    - jacobian values
- * rowno  - number of the row for which nonlinearities will be eval
- * jcnm   - list of column number fon the NL nonzeros
- * mode   - indicator of mode of evaluation
- * errcnt - sum of number of func evaluation errors thus far
- * newpt  - new point indicator
- * nj     - number of nonlinear nonzero jacobian elements
- * n      - number of variables
- * usrmem - user memory
- */
+	COIFDE Defines the nonlinearities of the model by returning
+	numerical values. It works on one row or equation at a time
+
+	@param x      punt of evaluation provided by conopt
+	@param g      function value
+	@param jac    jacobian values
+	@param rowno  number of the row for which nonlinearities will be eval
+	@param jcnm   list of column number fon the NL nonzeros
+	@param mode   indicator of mode of evaluation, 1=G, 2=JAC, 3=G & JAC
+	@param ignerr ???
+	@param errcnt sum of number of func evaluation errors thus far
+	@param newpt  new point indicator
+	@param nj     number of nonlinear nonzero jacobian elements
+	@param n      number of variables
+	@param usrmem user memory
+*/
 static int COI_CALL slv8_conopt_fdeval(
 		double *x, double *g, double *jac
 		, int *rowno, int *jcnm, int *mode, int *ignerr
 		, int *errcnt, int *newpt, int *n, int *nj
 		, double *usrmem
-)
-/*static int COI_CALL slv8_conopt_fdeval(real64 *x, real64 *g, real64 *jac, int32 *rowno,
-	                int32 *jcnm, int32 *mode, int32 *errcnt,
-	                int32 *newpt, int32 *n, int32 *nj, real64 *usrmem) */
-{
+){
   int32 offset, col, row, len, c;
   real64 nominal, value;
   struct var_variable *var;
@@ -2082,13 +2075,15 @@ static int COI_CALL slv8_conopt_fdeval(
   static var_filter_t vfilter;
   slv8_system_t sys;
 
-  /*
-   * stop gcc whining about unused parameter
-   */
+  /* stop gcc whining about unused parameter */
   (void)jcnm;  (void)n;   (void)nj;
+
+  /* CONSOLE_DEBUG("EVALUATION STARTING"); */
 
   sys = (slv8_system_t)usrmem;
   if (*newpt == 1) {
+	/* CONSOLE_DEBUG("NEW POINT"); */
+	/* a new point */
     for (offset = col = sys->J.reg.col.low;
 	 col <= sys->J.reg.col.high; col++) {
       var = sys->vlist[col];
@@ -2097,20 +2092,24 @@ static int COI_CALL slv8_conopt_fdeval(
       var_set_value(var, value);
     }
   }
-  /* NOTE: could be more efficient when mode = 3
-   * (with future versions of CONOPT)
-   */
+  /** 
+	@TODO could be more efficient when mode = 3
+	(with future versions of CONOPT)
+  */
   if (*mode == 1 || *mode == 3) {
+	/* CONSOLE_DEBUG("FUNCTION VALUES"); */
     offset =  sys->J.reg.row.low;
-    row = F2C(*rowno + offset);
-    if ((*rowno == sys->con.m) && (sys->obj != NULL)){
+    row = *rowno + offset;
+	/* CONSOLE_DEBUG("ROWNO = %d, OFFSET = %d: ROW = ROW = %d",*rowno, offset, row); */
+    if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       if(calc_objective(sys)){
 		*g = sys->objective;
-      } else {
-		FPRINTF(MIF(sys),"%s: ERROR IN OBJECTIVE CALCULATION\n",__FUNCTION__);
+      }else{
+		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error in calculation of objective.");
       }
-    } else {
+    }else{
 	  rel = sys->rlist[row];
+	  assert(rel!=NULL);
 	  *g = relman_eval(rel,&calc_ok,SAFE_CALC)
 	  * sys->weights.vec[row];
 	  if (!calc_ok) {
@@ -2119,6 +2118,7 @@ static int COI_CALL slv8_conopt_fdeval(
     }
   }
   if (*mode == 2 || *mode == 3) {
+	/* CONSOLE_DEBUG("JACOBIAN VALUES"); */
     len = sys->con.maxrow;
     variables = ASC_NEW_ARRAY(int32,len);
     derivatives = ASC_NEW_ARRAY(real64,len);
@@ -2126,9 +2126,10 @@ static int COI_CALL slv8_conopt_fdeval(
     vfilter.matchvalue = (VAR_ACTIVE | VAR_INCIDENT | VAR_SVAR);
 
     offset =  sys->J.reg.row.low;
-    row = F2C(*rowno + offset);
-    if ((*rowno == sys->con.m) && (sys->obj != NULL)){
+    row = *rowno + offset;
+    if ((*rowno == sys->con.m - 1) && (sys->obj != NULL)){
       rel = sys->obj;
+	  assert(rel!=NULL);
       calc_ok = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
@@ -2138,8 +2139,9 @@ static int COI_CALL slv8_conopt_fdeval(
       if (!calc_ok) {
 		(*errcnt)++;
       }
-    } else {
+    }else{
       rel = sys->rlist[mtx_row_to_org(sys->J.mtx,row)];
+	  assert(rel!=NULL);
       calc_ok = relman_diff2(rel,&vfilter,derivatives,variables,
 		   &(len),SAFE_CALC);
       for (c = 0; c < len; c++) {
@@ -2153,7 +2155,7 @@ static int COI_CALL slv8_conopt_fdeval(
     for (c = 0; c < len; c++) {
       if(fabs(jac[variables[c]]) > RTMAXJ) {
 #if CONDBG
-		FPRINTF(stderr,"large jac element\n");
+		CONSOLE_DEBUG("large jac element");
 #endif /* CONDBG  */
         if (jac[variables[c]] < 0) {
           jac[variables[c]] = -RTMAXJ+1;
@@ -2169,55 +2171,51 @@ static int COI_CALL slv8_conopt_fdeval(
 }
 
 
-/*
- * COISTA Pass the solution from CONOPT to the modeler. It returns
- * completion status
- * COISTA(modsta, solsts, iter, objval, usrmem)
- *
- * modsta - model status
- * solsta - solver status
- * iter   - number of iterations
- * objval - objective value
- * usrmem - user memory
- */
-static int COI_CALL slv8_conopt_status(int32 *modsta, int32 *solsta, int32 *iter,
-	                real64 *objval, real64 *usrmem)
-{
+/**
+	COISTA Pass the solution from CONOPT to the modeler. It returns
+	completion status
+	
+	@param modsta model status
+	@param solsta solver status
+	@param iter   number of iterations
+	@param objval objective value
+	@param usrmem user memory
+*/
+static int COI_CALL slv8_conopt_status(
+		int32 *modsta, int32 *solsta, int32 *iter
+		, real64 *objval, real64 *usrmem
+){
   slv8_system_t sys;
   sys = (slv8_system_t)usrmem;
   sys->con.modsta = *modsta;
   sys->con.solsta = *solsta;
-
-#if NONBASIC_DEBUG
-  FPRINTF(ASCERR," Model Status = %d\n",*modsta);
-  FPRINTF(ASCERR," Solver Status = %d\n",*solsta);
-#endif /* NONBASIC_DEBUG */
-
   sys->con.iter = *iter;
   sys->con.obj = sys->objective = *objval;
+
+  asc_conopt_status(modsta,solsta,iter,objval,usrmem);
 
   return 0;
 }
 
 
-/*
- * COIRS passes the solution from CONOPT to the modeler. It returns
- * solution values
- * COIRS(val, xmar, xbas, xsta, yval, ymar, ybas, ysta, n, m, usrmem)
- *
- * xval   - the solution values of the variables
- * xmar   - corresponding marginal values
- * xbas   - basis indicator for column (at bound, basic, nonbasic)
- * xsta   - status of column (normal, nonoptimal, infeasible,unbounded)
- * yval   - values of the left hand side in all the rows
- * ymar   - corresponding marginal values
- * ybas   - basis indicator for row
- * ysta   - status of row
- * n      - number of variables
- * m      - number of constraints
- * usrmem - user memory
- */
-static int COI_CALL slv8_conopt_solution(double *xval, double *xmar, int *xbas, int *xsta,
+/**
+	COIRS passes the solution from CONOPT to the modeler. It returns
+	solution values
+
+	@param xval   - the solution values of the variables
+	@param xmar   - corresponding marginal values
+	@param xbas   - basis indicator for column (at bound, basic, nonbasic)
+	@param xsta   - status of column (normal, nonoptimal, infeasible,unbounded)
+	@param yval   - values of the left hand side in all the rows
+	@param ymar   - corresponding marginal values
+	@param ybas   - basis indicator for row
+	@param ysta   - status of row
+	@param n      - number of variables
+	@param m      - number of constraints
+	@param usrmem - user memory
+*/
+static int COI_CALL slv8_conopt_solution(
+		double *xval, double *xmar, int *xbas, int *xsta,
 		double *yval, double *ymar, int *ybas, int * ysta,
 		int *n, int *m, double *usrmem
 ){
@@ -2251,9 +2249,9 @@ static int COI_CALL slv8_conopt_solution(double *xval, double *xmar, int *xbas, 
     if (xbas[c] != 2) {
       var_set_nonbasic(var,TRUE);
 #if NONBASIC_DEBUG
-      FPRINTF(ASCERR," c = %d\n",c);
-      FPRINTF(ASCERR," status = %d\n",xbas[c]);
-      FPRINTF(ASCERR," nonbasic \n");
+      CONSOLE_DEBUG(" c = %d\n",c);
+      CONSOLE_DEBUG(" status = %d\n",xbas[c]);
+      CONSOLE_DEBUG(" nonbasic \n");
 #endif /* NONBASIC_DEBUG */
     } else {
       var_set_nonbasic(var,FALSE);
@@ -2329,15 +2327,15 @@ $endif
 #endif
 
 
-/*
- * COIOPT communicates non-default option values to CONOPT
- * COIOPT(name, rval, ival, lval, usrmem)
- * name   - the name of a CONOPT CR-cell defined by the modeler
- * rval   - the value to be assigned to name if the cells contains a real
- * ival   - the value to be assigned to name if the cells contains an int
- * lval   - the value to be assigned to name if the cells contains a log value
- * usrmem - user memory
- */
+/**
+	COIOPT communicates non-default option values to CONOPT
+
+	@param name   - the name of a CONOPT CR-cell defined by the modeler
+	@param rval   - the value to be assigned to name if the cells contains a real
+	@param ival   - the value to be assigned to name if the cells contains an int
+	@param lval   - the value to be assigned to name if the cells contains a log value
+	@param usrmem - user memory
+*/
 static int COI_CALL slv8_conopt_option(
 		int *NCALL, double *rval, int *ival, int *logical
 	    , double *usrmem, char *name, int lenname
@@ -2440,6 +2438,48 @@ static void slv8_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal,
 
 }
 #endif
+
+int COI_CALL slv8_conopt_errmsg( int* ROWNO, int* COLNO, int* POSNO, int* MSGLEN
+		, double* USRMEM, char* MSG, int LENMSG
+){
+/* Standard ErrMsg routine. Write to Documentation and Status file*/
+	slv8_system_t sys;
+	char *relname=NULL, *varname=NULL;
+	struct var_variable **vp;
+	struct rel_relation **rp;
+
+	sys = (slv8_system_t)USRMEM;
+
+
+	if(*COLNO!=-1){
+		vp=slv_get_solvers_var_list(SERVER);
+		vp = vp + (*COLNO + sys->J.reg.col.low);
+		assert(*vp!=NULL);
+		varname= var_make_name(SERVER,*vp);
+	}
+	if(*ROWNO!=-1){
+		rp=slv_get_solvers_rel_list(SERVER);
+		rp = rp + (*ROWNO + sys->J.reg.row.low);
+		assert(*rp!=NULL);
+		relname = rel_make_name(SERVER,*rp);
+	}
+
+	ERROR_REPORTER_START_NOLINE(ASC_PROG_ERR);
+	if(*ROWNO == -1){
+	    FPRINTF(ASCERR,"Variable '%s' : ",varname);
+		ASC_FREE(varname);
+	}else if(*COLNO == -1 ){
+	    FPRINTF(ASCERR,"Relation '%s' : ",relname); 
+		ASC_FREE(relname);
+	}else{
+	    FPRINTF(ASCERR,"Variable '%s' appearing in relation '%s' : ",varname,relname);
+		ASC_FREE(varname);
+		ASC_FREE(relname);
+	}
+	FPRINTF(ASCERR,"%*s", *MSGLEN, MSG);
+	error_reporter_end_flush();
+	return 0;
+}
 
 #if 0 /* the calling convention has changed for these ones */
 /* conopt communication subroutines */
@@ -2594,18 +2634,19 @@ void slv8_coiscr COISCR_ARGS {
 }
 #endif
 
-/*
- * slv_conopt iterate calls conopt_start, which calls coicsm
- * to starts CONOPT. The use of conopt_start is a H A C K    to avoid
- * unresolved external during the linking of the CONOPT library.
- * See conopt.h
- */
+/**
+	slv_conopt iterate calls conopt_start, which calls coicsm
+	to starts CONOPT.
+
+	The use of conopt_start is a H A C K to avoid
+	unresolved external during the linking of the CONOPT library.
+*/
 static void slv_conopt_iterate(slv8_system_t sys)
 {
   /*
 	We pass the pointer to sys as 'usrmem'.
 	Cast back to slv9_system_t to access the information required
- */
+  */
   COIDEF_UsrMem(sys->con.cntvect, (double *)sys);
 
   sys->con.opt_count = 0; /* reset count on slv8_coiopt calls */
@@ -2625,10 +2666,10 @@ static void slv_conopt_iterate(slv8_system_t sys)
 }
 
 
-/*
- * Function created to provide the interface with the correct values
- * for number of iterations, residuals, solved variables, etc
- */
+/**
+	Function created to provide the interface with the correct values
+	for number of iterations, residuals, solved variables, etc
+*/
 static void update_block_information(slv8_system_t sys)
 {
   int32 row,col;
@@ -2668,13 +2709,11 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
   iteration_begins(sys);
   check_system(sys);
   if( sys->vlist == NULL ) {
-    FPRINTF(MIF(sys),"ERROR:  (slv8) slv8_presolve\n");
-    FPRINTF(MIF(sys),"        Variable list was never set.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Variable list was not set.");
     return;
   }
   if( sys->rlist == NULL && sys->obj == NULL ) {
-    FPRINTF(MIF(sys),"ERROR:  (slv8) slv8_presolve\n");
-    FPRINTF(MIF(sys),"        Relation list and objective never set.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Relation list and objective were not set.");
     return;
   }
 
@@ -2682,12 +2721,13 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
 
   if(sys->presolved > 0) { /* system has been presolved before */
     if(!slv8_dof_changed(sys) /*no changes in fixed or included flags*/
-       && sys->p.partition == sys->J.old_partition
-       && sys->obj == sys->old_obj) {
-#if DEBUG
-      FPRINTF(MIF(sys),"YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION\n");
-#endif  /* DEBUG */
+         && sys->p.partition == sys->J.old_partition
+         && sys->obj == sys->old_obj
+    ){
       matrix_creation_needed = 0;
+#if DEBUG
+      CONSOLE_DEBUG("YOU JUST AVOIDED MATRIX DESTRUCTION/CREATION");
+#endif
     }
   }
 
@@ -2716,27 +2756,31 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
     sys->old_obj = sys->obj;
 
     slv_sort_rels_and_vars(server,&(sys->con.m),&(sys->con.n));
+    CONSOLE_DEBUG("FOUND %d CONSTRAINTS AND %d VARS",sys->con.m,sys->con.n);
     if (sys->obj != NULL) {
+      CONSOLE_DEBUG("ADDING OBJECT AS A ROW");
       sys->con.m++; /* treat objective as a row */
     }
 
 	cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
 	COIDEF_Ini(cntvect);
 	sys->con.cntvect = cntvect;
+	CONSOLE_DEBUG("NUMBER OF CONSTRAINTS = %d",sys->con.m);
 	COIDEF_NumVar(cntvect, &(sys->con.n));
 	COIDEF_NumCon(cntvect, &(sys->con.m));
 	sys->con.nz = num_jacobian_nonzeros(sys, &(sys->con.maxrow));
 	COIDEF_NumNZ(cntvect, &(sys->con.nz));
 	COIDEF_NumNlNz(cntvect, &(sys->con.nz));
 	
-	sys->con.base = 1;
+	sys->con.base = 0;
 	COIDEF_Base(cntvect,&(sys->con.base));
     COIDEF_ErrLim(cntvect, &(DOMLIM));
     COIDEF_ItLim(cntvect, &(ITER_LIMIT));
 
     if(sys->obj!=NULL){
 		sys->con.optdir = relman_obj_direction(sys->obj);
-		sys->con.objcon = sys->con.m; /* objective will be last row */
+		sys->con.objcon = sys->con.m - 1; /* objective will be last row */
+		CONSOLE_DEBUG("SETTING OBJECTIVE CONSTRAINT TO BE %d",sys->con.objcon);
 	}else{
 		sys->con.optdir = 0;
 		sys->con.objcon = 0;
@@ -2753,7 +2797,7 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
 	COIDEF_Solution(cntvect, &slv8_conopt_solution);
 	COIDEF_Status(cntvect, &slv8_conopt_status);
 	COIDEF_Message(cntvect, &asc_conopt_message);
-	COIDEF_ErrMsg(cntvect, &asc_conopt_errmsg);
+	COIDEF_ErrMsg(cntvect, &slv8_conopt_errmsg);
 	COIDEF_Progress(cntvect, &asc_conopt_progress);
 
 
@@ -2828,7 +2872,9 @@ static void slv8_presolve(slv_system_t server, SlvClientToken asys){
   sys->s.cost[sys->s.block.number_of].time=sys->s.cpu_elapsed;
 }
 
-
+/**
+	@TODO check this: not sure if 'resolve' is really working or not -- JP
+*/
 static void slv8_resolve(slv_system_t server, SlvClientToken asys){
   struct var_variable **vp;
   struct rel_relation **rp;
@@ -2864,7 +2910,9 @@ static void slv8_resolve(slv_system_t server, SlvClientToken asys){
   update_status(sys);
 }
 
-
+/**
+	@TODO document this
+*/
 static void slv8_iterate(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
   FILE              *mif;
@@ -2875,8 +2923,7 @@ static void slv8_iterate(slv_system_t server, SlvClientToken asys){
   if (server == NULL || sys==NULL) return;
   if (check_system(SLV8(sys))) return;
   if( !sys->s.ready_to_solve ) {
-    FPRINTF(mif,"ERROR:  (slv8) slv8_iterate\n");
-    FPRINTF(mif,"        Not ready to solve.\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Not ready to solve.");
     return;
   }
   
@@ -2891,7 +2938,7 @@ static void slv8_iterate(slv_system_t server, SlvClientToken asys){
   }
   if (sys->p.output.less_important && (sys->s.block.current_size >1 ||
       LIFDS)) {
-    debug_delimiter(lif);
+    debug_delimiter();
   }
   iteration_begins(sys);
   if (1 || sys->J.reg.row.high != sys->J.reg.col.high) {
@@ -2910,9 +2957,10 @@ static void slv8_iterate(slv_system_t server, SlvClientToken asys){
   }
 }
 
-
-static void slv8_solve(slv_system_t server, SlvClientToken asys)
-{
+/**
+	@TODO document this
+*/
+static void slv8_solve(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
   sys = SLV8(asys);
   if (server == NULL || sys==NULL) return;
@@ -2920,15 +2968,19 @@ static void slv8_solve(slv_system_t server, SlvClientToken asys)
   while( sys->s.ready_to_solve ) slv8_iterate(server,sys);
 }
 
-static mtx_matrix_t slv8_get_jacobian(slv_system_t server, SlvClientToken sys)
-{
+/**
+	@TODO document this
+*/
+static mtx_matrix_t slv8_get_jacobian(slv_system_t server, SlvClientToken sys){
   if (server == NULL || sys==NULL) return NULL;
   if (check_system(SLV8(sys))) return NULL;
   return SLV8(sys)->J.mtx;
 }
 
-static int32 slv8_destroy(slv_system_t server, SlvClientToken asys)
-{
+/**
+	@TODO document this
+*/
+static int32 slv8_destroy(slv_system_t server, SlvClientToken asys){
   slv8_system_t sys;
 
   /*
@@ -2951,10 +3003,9 @@ static int32 slv8_destroy(slv_system_t server, SlvClientToken asys)
   return 0;
 }
 
-int32 slv8_register(SlvFunctionsT *sft)
-{
+int32 slv8_register(SlvFunctionsT *sft){
   if (sft==NULL)  {
-    FPRINTF(stderr,"slv8_register called with NULL pointer\n");
+    ERROR_REPORTER_HERE(ASC_PROG_ERR,"Called with NULL pointer.");
     return 1;
   }
 

@@ -2,21 +2,16 @@ REQUIRE "atoms.a4l";
 
 MODEL testconopt;
 	Profit, Inp, Out IS_A solver_var;
-	P, L, K IS_A solver_var;
+	P, L IS_A solver_var;
 
+	K IS_A real_constant;
 	Al, Ak, Ainp, Rho IS_A real_constant;
 	Pinp, P0, D IS_A real_constant;
 	W, L0, K0 IS_A real_constant;
 
-	Out = ( Al*L^(-Rho) + Ak*K^(-Rho) + Ainp*Inp^(-Rho) )^(-1/Rho);
+	cesfn: Out = ( Al*L^(-Rho) + Ak*K^(-Rho) + Ainp*Inp^(-Rho) )^(-1/Rho);
 
-	Out = ( P0 - P ) / D;
-
-	L0 < L;
-	K = K0;
-	0 <= P;
-	0 < Out;
-	0 < Inp;
+	demandfn: Out = ( P0 - P ) / D;
 
 	W :== 1.0;
 	L0 :== 0.1;
@@ -28,8 +23,10 @@ MODEL testconopt;
 	K0 :== 4.0;
 	P0 :== 2.0;
 	D :== 0.5;
+	K :== K0;
 
-	Profit = P*Out - (L-L0)*W - Inp*Pinp;
+	profitfn: Profit = P*Out - (L-L0)*W - Inp*Pinp;
+	maxprofit: MAXIMIZE Profit;
 
 METHODS
 
@@ -40,6 +37,10 @@ METHOD specify;
 END specify;
 
 METHOD values;
+	L.lower_bound := L0;
+	P.lower_bound := 0;
+	Out.lower_bound := 0;
+	Inp.lower_bound := 0;
 END values;
 
 METHOD on_load;
@@ -49,10 +50,10 @@ METHOD on_load;
 END on_load;
 
 METHOD self_test;
-	ASSERT L = 0.295686;
-	ASSERT Inp = 0.295686;
-	ASSERT Out = 0.632019;
-	ASSERT P = 1.683990;	
+	ASSERT abs(L - 0.295686) < 0.000001;
+	ASSERT abs(Inp - 0.295686) < 0.000001;
+	ASSERT abs(Out - 0.632019) < 0.000001;
+	ASSERT abs(P - 1.683990) < 0.000001;	
 END self_test;
 
 END testconopt;
