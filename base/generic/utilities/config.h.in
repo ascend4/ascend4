@@ -133,6 +133,14 @@
 #endif
 
 /*
+	Searchpath for CONOPT DLL/SO. This is in platform-specific
+	form (paths with ';' separator in Windows, ':' separator on Linux).
+*/
+#ifndef ASC_CONOPT_LIBPATH
+/* #define ASC_CONOPT_LIBPATH @ASC_CONOPT_LIBPATH@ */
+#endif
+
+/*
 	Whether to compile with support for the LSODE integration engine. 
 	Note that you will usually need to manually specify the location of your 
 	'libg2c.a' in the link step, see F2C_* Scons options.
@@ -146,7 +154,6 @@
 #ifndef ASC_WITH_LSODE
 /* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ */
 #endif
-
 
 /*
 	The following are the environment variables ASCEND requires.

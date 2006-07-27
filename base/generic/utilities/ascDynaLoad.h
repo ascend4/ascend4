@@ -38,6 +38,27 @@
 
 #include <utilities/ascConfig.h>
 
+char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv);
+/**<
+	Search the archive library path for a file matching the given
+	(platform specific, with extension?) library filename.
+
+	@param name Name of library being searched for
+	@param envv Name of environment var containing the ASCEND search path
+	@param dpath Default search path for the case where the env var is not defined
+
+	@return a pointer to a string space holding the full path
+	name of the file to be opened. The returned pointer may be NULL
+
+	If the returned pointer is not NULL, then it points to space that must be
+	FREEd when no longer needed.
+
+	@NOTE
+	This function has been moved out of compiler/packages.c into 
+	utilities/ascDynaLoad.c so that it can be shared with the solver for use
+	in dynamic loading of external solver DLLs.
+*/
+
 ASC_DLLSPEC(int) Asc_DynamicLoad(CONST char *path, CONST char *initFunc);
 /**<
  *  Loads a dynamic library and calls its initialization function.

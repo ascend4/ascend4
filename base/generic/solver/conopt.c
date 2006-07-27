@@ -35,38 +35,40 @@
 #endif
 
 #ifndef ASC_LINKED_CONOPT
-#include <utilities/ascDynaLoad.h>
+# include <ctype.h>
+# include <utilities/ascMalloc.h>
+# include <utilities/ascDynaLoad.h>
 /*------------------------------------------------------------------------------
   DLOPENING CONOPT SUPPORT FUNCTIONS
 */
 
-#define INTINT (int*cntvect,int*v)
-#define INTINT1 (cntvect,v)
-#define INTDOUBLE (int*cntvect,double*v)
-#define INTDOUBLE1 (cntvect,v)
-#define SEMICOLON ;
-#define SPACE
+# define INTINT (int*cntvect,int*v)
+# define INTINT1 (cntvect,v)
+# define INTDOUBLE (int*cntvect,double*v)
+# define INTDOUBLE1 (cntvect,v)
+# define SEMICOLON ;
+# define SPACE
 
 /*
 	Typedefs for the various function pointers
 */
-#define FN_TYPE_DECL(T,A,V) \
+# define FN_TYPE_DECL(T,A,V) \
 	typedef int COI_CALL (T##_fn_t) A
 
 CONOPT_FNS(FN_TYPE_DECL,SEMICOLON);
-#undef FN_TYPE_DECL
+# undef FN_TYPE_DECL
 
 /*
 	Define a struct to hold all the function pointers, then
 	declare it as a global variable.
 */
-#define FN_PTR_DECL(T,A,V) \
+# define FN_PTR_DECL(T,A,V) \
 	T##_fn_t* T##_ptr
 
 typedef struct{
     CONOPT_FNS(FN_PTR_DECL,SEMICOLON);
 } conopt_fptrs_t;
-#undef FN_PTR_DECL
+# undef FN_PTR_DECL
 
 conopt_fptrs_t conopt_fptrs;
 
@@ -74,7 +76,7 @@ conopt_fptrs_t conopt_fptrs;
 /*
 	Declare local functions to hook into the DLL
 */
-#define FN_PTR_EXEC(T,A,V) \
+# define FN_PTR_EXEC(T,A,V) \
 	int COI_CALL T A{ \
 		if(conopt_fptrs.T##_ptr==NULL){ \
 			return 1; \
@@ -84,17 +86,19 @@ conopt_fptrs_t conopt_fptrs;
 
 CONOPT_FNS(FN_PTR_EXEC,SPACE)
 
-#undef FN_PTR_EXEC
+# undef FN_PTR_EXEC
 
 /**
 	This funciton will load the DLL and resolve all the required symbols
 */
 int asc_conopt_load(){
 	static int loaded=0;
-	char *lib = "consub3";
-	char *libpath = "/usr/lib/libconsub3.so";
+	char *libpath;
 	int status;
 	char fnsymbol[400], *c;
+	const char *libname="consub3";
+	const char *envvar;
+	const char *defaultpath;
 
 	if(loaded) {
 		return 0; /* already loaded */
@@ -102,26 +106,45 @@ int asc_conopt_load(){
 
 	CONSOLE_DEBUG("LOADING CONOPT...");
 
+# ifdef __WIN32__
+	envvar  = "PATH";
+	defaultpath = "C:\\Program Files\\ASCEND";
+# else
+	envvar = "LD_LIBRARY_PATH";
+	defaultpath = "/usr/lib:/usr/local/lib";
+# endif
+
+	libpath = SearchArchiveLibraryPath(libname, defaultpath, envvar);
+
+	if(libpath==NULL){
+		ERROR_REPORTER_NOLINE(ASC_PROG_ERR
+			, "Library '%s' could not be loaded (check env var %s)"
+			, libname, envvar
+		);
+		return 1;
+	}
+
 	status = Asc_DynamicLoad(libpath, NULL);
 	if (status != 0) {
+		ASC_FREE(libpath);
 		return 1; /* failed to load */
 	}
 
-#if defined(FNAME_UCASE_NODECOR) || defined(FNAME_UCASE_DECOR)
-# define FNCASE(C) C=toupper(C)
-#elif defined(FNAME_LCASE_NODECOR) || defined(FNAME_LCASE_DECOR)
-# define FNCASE(C) C=tolower(C)
-#else
-# error "CONOP case rule not defined"
-#endif
+# if defined(FNAME_UCASE_NODECOR) || defined(FNAME_UCASE_DECOR)
+#  define FNCASE(C) C=toupper(C)
+# elif defined(FNAME_LCASE_NODECOR) || defined(FNAME_LCASE_DECOR)
+#  define FNCASE(C) C=tolower(C)
+# else
+#  error "CONOP case rule not defined"
+# endif
 
-#if defined(FNAME_UCASE_DECOR) || defined(FNAME_LCASE_DECOR)
-# define FNDECOR(S) strcat(S,"_")
-#else
-# define FNDECOR(S) (void)0
-#endif
+# if defined(FNAME_UCASE_DECOR) || defined(FNAME_LCASE_DECOR)
+#  define FNDECOR(S) strcat(S,"_")
+# else
+#  define FNDECOR(S) (void)0
+# endif
 
-#define FN_PTR_GET(T,A,V) \
+# define FN_PTR_GET(T,A,V) \
 	sprintf(fnsymbol,"%s",#T); \
 	for(c=fnsymbol;*c!='\0';++c){ \
 		FNCASE(*c); \
@@ -132,9 +155,11 @@ int asc_conopt_load(){
 
 	CONOPT_FNS(FN_PTR_GET,SPACE)
 
-#undef FN_PTR_GET
-#undef FNDECOR
-#undef FNCASE
+# undef FN_PTR_GET
+# undef FNDECOR
+# undef FNCASE
+
+	ASC_FREE(libpath);
 
 	if(status!=0){
 		return 1; /* faile to result all symbols */

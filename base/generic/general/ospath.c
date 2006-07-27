@@ -1165,12 +1165,12 @@ struct FilePath **ospath_searchpath_new(const char *path){
 		list[n++]=c;
 	}
 
-	/*
+	
 	for(i=0;i<n;++i){
 		X(list[i]);
 	}
 	V(n);
-	*/
+	
 
 	pp = (struct FilePath **)MALLOC(sizeof(struct FilePath*)*(n+1));
 	for(i=0; i<n; ++i){
