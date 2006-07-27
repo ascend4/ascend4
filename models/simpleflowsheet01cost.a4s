@@ -9,7 +9,7 @@ DELETE TYPES;
 # models work, however.
 READ FILE "simpleflowsheet01cost.a4c";
 
-COMPILE tfc OF flowsheet_cost;
+COMPILE tfc OF simpleflowsheet01cost;
 BROWSE {tfc};
 
 RUN {tfc.values};
