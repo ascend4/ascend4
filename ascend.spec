@@ -1,6 +1,6 @@
 Name:		ascend
 Summary:	ASCEND modelling environment
-Version:	0.9.5.94
+Version:	0.9.5.96
 
 # Use release 0.* so that other users can do patch releases with a higher number
 # and still have the update occur automatically.
@@ -8,7 +8,7 @@ Release:	0
 
 License:	GPL
 Group:		Applications/Engineering
-Source:		ascend.tar.bz2
+Source:		ascend-0.9.5.96.tar.bz2
 URL:		http://ascend.cheme.cmu.edu/
 
 Prefix:		%{_prefix}
@@ -17,13 +17,13 @@ Vendor:		Carnegie Mellon University
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: python >= 2.4, python-devel
-BuildRequires: scons >= 0.96.1
-BuildRequires: bison, flex
+BuildRequires: scons >= 0.96.91
+BuildRequires: bison >= 2.1
+BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
-BuildRequires: desktop-file-utils
-BuildRequires: tk-devel < 8.5
-BuildRequires: tcl-devel < 8.5
+BuildRequires: tk-devel < 8.5, tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
+BuildRequires: desktop-file-utils
 
 # This contains the libg2c library; which on FC5 is not in the path, unfort.
 BuildRequires: compat-gcc-32-g77 == 3.2.3
@@ -45,7 +45,7 @@ domain independent. ASCEND can support modeling activities in
 fields from Architecture to (computational) Zoology.
 
 #%package -n ascend-python
-#Version:    0.9.5.94
+#Version:    0.9.5.96
 #Summary:    PyGTK user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -55,7 +55,7 @@ fields from Architecture to (computational) Zoology.
 #access to all of the ASCEND functionality provided by the Tcl/Tk interface.
 #
 #%package -n ascend-tcltk
-#Version:    0.9.5.94
+#Version:    0.9.5.96
 #Summary:    Tcl/Tk user interface for ASCEND
 #Group:		Applications/Engineering
 #
@@ -66,7 +66,7 @@ fields from Architecture to (computational) Zoology.
 #functionality not provided by the PyGTK interface.
 
 %prep
-%setup -q -n ascend
+%setup -q -n ascend-0.9.5.96
 
 %build
 scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
@@ -136,7 +136,19 @@ update-mime-database /usr/share/mime
 %{_datadir}/icons/ascend4-app.png
 %{_datadir}/icons/hicolor/64x64/ascend4.png
 
+# %package -b ascend-devel
+%{_includedir}/compiler
+%{_includedir}/general
+%{_includedir}/utilities
+%{_includedir}/solver
+
 %changelog
+* Wed Jul 12 2006 John Pye <john.pye@student.unsw.edu.au>
+- Fixed fortran linking
+- Removed ccache dependency
+- Added xgraph dependency
+- Added 'include' files plus 'ascend-config' script
+
 * Thu Jun 01 2006 John Pye <john.pye@student.unsw.edu.au>
 - Add Tcl/Tk interface to GNOME menu
 
