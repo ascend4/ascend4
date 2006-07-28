@@ -24,6 +24,8 @@ BuildRequires: swig >= 1.3.24
 BuildRequires: tk-devel < 8.5, tcl-devel < 8.5
 BuildRequires: tktable < 2.10, tktable >= 2.8
 BuildRequires: desktop-file-utils
+BuildRequires: sundials >= 2.3.0
+BuildRequires: conopt >= 3.14
 
 # This contains the libg2c library; which on FC5 is not in the path, unfort.
 BuildRequires: compat-gcc-32-g77 == 3.2.3
@@ -35,6 +37,7 @@ Requires: python-matplotlib
 Requires: python-numeric
 Requires: gtksourceview
 Requires: xgraph >= 11
+Requires: sundials >= 2.3.0
 
 %description
 ASCEND IV is both a large-scale object-oriented mathematical
@@ -69,17 +72,19 @@ fields from Architecture to (computational) Zoology.
 %setup -q -n ascend-0.9.5.96
 
 %build
-scons %{?_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
+scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
 	INSTALL_ROOT=%{buildroot} \
 	INSTALL_PREFIX=%{_prefix} \
 	INSTALL_SHARE=%{_datadir} \
 	INSTALL_BIN=%{_bindir} \
 	INSTALL_INCLUDE=%{_includedir} \
-	F2C_LIBPATH=/usr/lib/gcc-lib/i386-redhat-linux/3.2.3/ WITH_SOLVERS=QRSLV,LSOD,CMSLV pygtk tcltk
+	F2C_LIBPATH=/usr/lib/gcc-lib/i386-redhat-linux/3.2.3/ \
+	WITH_SOLVERS=QRSLV,LSOD,CMSLV,IDA,LRSLV,CONOPT \
+	pygtk tcltk
 
 %install
 rm -rf %{buildroot}
-scons %{?_smp_mflags} install
+scons %{_smp_mflags} install
 
 # Install menu entry for PyGTK interface, gtksourceview syntax highlighting, and MIME definition
 pushd pygtk/gnome
@@ -143,6 +148,9 @@ update-mime-database /usr/share/mime
 %{_includedir}/solver
 
 %changelog
+* Fri Jul 28 2006 John Pye <john.pye@student.unsw.edu.au>
+- Added CONOPT support
+
 * Wed Jul 12 2006 John Pye <john.pye@student.unsw.edu.au>
 - Fixed fortran linking
 - Removed ccache dependency
