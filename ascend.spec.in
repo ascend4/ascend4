@@ -79,7 +79,7 @@ scons %{_smp_mflags} DEFAULT_ASCENDLIBRARY=%{_datadir}/ascend/models \
 	INSTALL_BIN=%{_bindir} \
 	INSTALL_INCLUDE=%{_includedir} \
 	F2C_LIBPATH=/usr/lib/gcc-lib/i386-redhat-linux/3.2.3/ \
-	WITH_SOLVERS=QRSLV,LSOD,CMSLV,IDA,LRSLV,CONOPT \
+	WITH_SOLVERS=QRSLV,LSOD,CMSLV,LRSLV,CONOPT \
 	pygtk tcltk
 
 %install
