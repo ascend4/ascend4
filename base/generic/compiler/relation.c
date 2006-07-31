@@ -3065,16 +3065,17 @@ CONST struct Expr *FindRHS(CONST struct Expr *ex)
       }
       break;
     case e_st:
-      Asc_Panic(2, NULL, "Such that expressions are not allowed.\n");
+      Asc_Panic(2, __FUNCTION__, "Such that expressions are not allowed.");
       break;
     case e_minimize:
     case e_maximize:
-      Asc_Panic(2, NULL,
-                "Maximize and minimize are not allowed in expression.\n"
-                "They are only allowed in relations.\n");
+      Asc_Panic(2, __FUNCTION__,
+                "Maximize and minimize are not allowed in expression. "
+                "They are only allowed in relations.");
       break;
     default:
-      Asc_Panic(2, NULL, "%s: Unknown expression node type.\n",__FUNCTION__);
+      Asc_Panic(2, __FUNCTION__, "Invalid node in expression (%d)."
+		,(int)ExprType(ex));
       break;
     }
     previous = ex;
