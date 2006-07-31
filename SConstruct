@@ -1081,13 +1081,13 @@ elif not conf.CheckIDA():
 	with_ida = False
 	without_ida_reason = "IDA not found"
 
-# IDA
+# CONOPT
 
 if not with_conopt:
 	without_conopt_reason = "Not selected (see config option WITH_SOLVERS)"
 elif not conf.CheckCONOPT():
-	with_ida = False
-	without_ida_reason = "CONOPT not found"
+	with_conopt = False
+	without_conpt_reason = "CONOPT not found"
 
 # BLAS
 

@@ -1,0 +1,66 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Model the solution of a piecewise-specified continuous x-y curve
+
+     + 3
+	 |             '  
+	 |            /     (y-2)=(x-1)^2  for x > 1
+	 |          .`
+	 + 2    ,-'
+	 |    .'
+	 |  .'                  y = x + 1 otherwise
+	 |.'
+	 # 1
+	 #                   x = 0 for y < 1;
+	 #
+     #------+------+-----+->
+      0      1      2     3
+*)
+MODEL testcmslv;
+	x IS_A factor;
+	y IS_A factor;
+	
+	isvert: y <= 1;
+	isparab: x > 1;
+
+	vert: x = 0;
+	diag: y = x + 1;
+	parab:y - 2 = (x - 1)^2;
+
+	isvertp IS_A boolean_var;
+	isvertp = SATISFIED(isvert);
+
+	isparabp IS_A boolean_var;
+	isparabp = SATISFIED(isparab);
+
+	WHEN (isvertp, isparabp)
+		CASE TRUE,FALSE:
+			USE vert;
+		CASE FALSE,TRUE:
+			USE parab;
+		OTHERWISE :
+			USE diag;
+	END WHEN;
+
+METHODS
+METHOD default_self;
+	isvert := FALSE;
+	isparam := FALSE;
+	y := 0.5;
+	x := 0.5;
+END default_self;
+
+METHOD values;
+	x := 3;
+END values;
+
+METHOD specify;
+	FIX x;
+END specify;
+
+METHOD on_load;
+	RUN default_self; RUN values; RUN specify;
+END on_load;
+
+END testcmslv;
