@@ -360,6 +360,7 @@ public:
 	const bool isAssigned() const;
 	const bool isCompound() const;
 	const bool isRelation() const;
+	const bool isLogicalRelation() const;
 	const bool isWhen() const;
 	const bool isSet() const; // a set (group) of things
 	const bool isSetInt() const;

@@ -186,13 +186,18 @@ Instanc::isCompound() const{
 
 const bool
 Instanc::isRelation() const{
-	switch(getKind()){
- 		case REL_INST:
-		case LREL_INST:
-			return true;
-		default:
-			return false;
+	if(getKind()==REL_INST){
+		return true;
 	}
+	return false;
+}
+
+const bool
+Instanc::isLogicalRelation() const{
+	if(getKind()==LREL_INST){
+		return true;
+	}
+	return false;
 }
 
 const bool
