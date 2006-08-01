@@ -20,19 +20,21 @@ REQUIRE "atoms.a4l";
 MODEL testcmslv;
 	x IS_A factor;
 	y IS_A factor;
-	
-	isvert: y <= 1;
-	isparab: x > 1;
 
 	vert: x = 0;
 	diag: y = x + 1;
 	parab:y - 2 = (x - 1)^2;
 
+	CONDITIONAL
+		isvert: y <= 1;
+		isparab: x > 1;
+	END CONDITIONAL;
+
 	isvertp IS_A boolean_var;
-	isvertp = SATISFIED(isvert);
+	isvertp == SATISFIED(isvert);
 
 	isparabp IS_A boolean_var;
-	isparabp = SATISFIED(isparab);
+	isparabp == SATISFIED(isparab);
 
 	WHEN (isvertp, isparabp)
 		CASE TRUE,FALSE:

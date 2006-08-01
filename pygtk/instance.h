@@ -67,6 +67,7 @@ public:
 	const bool isConst() const;
 	const bool isCompound() const;
 	const bool isRelation() const;
+	const bool isLogicalRelation() const;
 	const bool isWhen() const;
 	const bool isSet() const;
 	const bool isSetInt() const;

@@ -1812,8 +1812,8 @@ static int COI_CALL slv8_conopt_readmatrix(
     up = var_upper_bound(var)/nominal;
 /* KHACK: get rid of hard coded numbers */
 	/* CONSOLE_DEBUG("SETTING VALUES FOR VARIABLE %d",col-offset); */
-    lower[col-offset] = low > -1e12 ? low : -1e12;
-    upper[col-offset] = up < 1e12 ? up : 1e12;
+    lower[col-offset] = low > -CONOPT_BOUNDLIMIT ? low : -CONOPT_BOUNDLIMIT;
+    upper[col-offset] = up < CONOPT_BOUNDLIMIT ? up : CONOPT_BOUNDLIMIT;
     curr[col-offset] = sys->variables.vec[col]; /* already scaled */
     vsta[col-offset] = !var_nonbasic(var);
   }

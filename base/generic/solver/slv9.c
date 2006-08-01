@@ -2595,8 +2595,8 @@ static int COI_CALL slv9_conopt_readmatrix(
       low = var_lower_bound(var);
       up = var_upper_bound(var);
       uplow = fabs( up - low);
-      lower[count] = -uplow > -ASC_INFINITY ? -uplow : -0.5*ASC_INFINITY;
-      upper[count] = uplow < ASC_INFINITY ? uplow : 0.5*ASC_INFINITY;
+      lower[count] = -uplow > -CONOPT_BOUNDLIMIT ? -uplow : -0.5*CONOPT_BOUNDLIMIT;
+      upper[count] = uplow < CONOPT_BOUNDLIMIT ? uplow : 0.5*CONOPT_BOUNDLIMIT;
       curr[count] = 0.5 * nominal;
       count++;
     }
@@ -2665,14 +2665,14 @@ static int COI_CALL slv9_conopt_readmatrix(
    */
 
   for (c=0; c<num_var; c++) {
-    colsta[c] = 1 + 2 * c;
+    colsta[c] = 2 * c;
   }
 
   for (c=num_var; c<(*n); c++) {
-    colsta[c] = 2 * num_var + num_eqns * (c - num_var) + 1;
+    colsta[c] = 2 * num_var + num_eqns * (c - num_var);
   }
 
-  colsta[*n] = *nz + 1; /** @TODO check this */
+  colsta[*n] = *nz; /** @TODO check this */
 
   /*
    * rowno, value and nlflag can be done in same loop. The use of the
