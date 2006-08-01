@@ -1,4 +1,4 @@
-import os, commands, platform, distutils.sysconfig, os.path
+import os, commands, platform, distutils.sysconfig, os.path, re
 
 version = "0.9.5.96"
 
@@ -29,7 +29,12 @@ if platform.system()=="Windows":
 	if not os.path.exists(default_ida_prefix):
 		default_ida_prefix = None
 
-	default_conopt_prefix = "c:\\MinGW"
+	default_conopt_prefix = "c:\\Program Files\\CONOPT"
+	default_conopt_libpath="$CONOPT_PREFIX"
+	default_conopt_cpppath="$CONOPT_PREFIX"
+	default_conopt_lib="conopt3"
+	default_conopt_envvar="CONOPT_PATH"
+	
 	if not os.path.exists(default_conopt_prefix):
 		default_conopt_prefix = None
 		
@@ -47,6 +52,11 @@ else:
 	default_absolute_paths = True
 	default_ida_prefix="/usr/local"
 	default_conopt_prefix="/usr"
+	default_conopt_libpath="$CONOPT_PREFIX/lib"
+	default_conopt_cpppath="$CONOPT_PREFIX/include"
+	default_conopt_lib="consub3"
+	default_conopt_envvar="LD_LIBRARY_PATH"
+
 	need_libm = True
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
@@ -196,25 +206,31 @@ opts.Add(
 opts.Add(PackageOption(
 	"CONOPT_PREFIX"
 	,"Prefix for your CONOPT install (CONOPT ./configure --prefix)"
-	,default_ida_prefix
+	,default_conopt_prefix
 ))
 
 opts.Add(
 	"CONOPT_LIB"
 	,"Library linked to for CONOPT"
-	,'consub3'
+	,default_conopt_lib
 )
 
 opts.Add(
 	'CONOPT_CPPPATH'
 	,"Where is your conopt.h?"
-	,"$CONOPT_PREFIX/include"
+	,default_conopt_cpppath
 )
 
 opts.Add(
 	'CONOPT_LIBPATH'
 	,"Where is your CONOPT libraries installed?"
-	,"$CONOPT_PREFIX/lib"
+	,default_conopt_libpath
+)
+
+opts.Add(
+	'CONOPT_ENVVAR'
+	,"What environment variable should be used at runtime to override the default search location for CONOPT DLL/SO?"
+	,default_conopt_envvar
 )
 
 opts.Add(
@@ -439,32 +455,34 @@ if platform.system()!="Windows":
 
 # Import the outside environment
 
+def c_escape(str):
+        return re.sub("\\\\","/",str)
+
+envadditional={}
 if os.environ.get('OSTYPE')=='msys':
-	env = Environment(
-		ENV=os.environ
-		, tools=['mingw','lex','yacc','fortran','swig','disttar','nsis','doxygen']
-		, toolpath=['scons']
-	)
-	env['IS_MINGW']=True
+	envenv = os.environ;
+	tools = ['mingw','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+	envadditional['IS_MINGW']=True
 
 elif platform.system()=="Windows":
-	env = Environment(
-		ENV={
-			'PATH':os.environ['PATH']
-			,'INCLUDE':os.environ['INCLUDE']
-			,'LIB':os.environ['LIB']
-			,'MSVS_IGNORE_IDE_PATHS':1
-		}
-		, tools = ['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
-		, toolpath = ['scons']
-	)
-	env.Append(CPPDEFINES=['_CRT_SECURE_NO_DEPRECATE'])
+	envenv = {
+		'PATH':os.environ['PATH']
+		,'INCLUDE':os.environ['INCLUDE']
+		,'LIB':os.environ['LIB']
+		,'MSVS_IGNORE_IDE_PATHS':1
+	}
+	tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']	
+	envadditional['CPPDEFINES']=['_CRT_SECURE_NO_DEPRECATE']
 else:
-	env = Environment(
-		ENV=os.environ
-		, tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
-		, toolpath=['scons']
-	)
+	envenv = os.environ
+	tools=['default','lex','yacc','fortran','swig','disttar','nsis','doxygen']
+	
+env = Environment(
+	ENV=envenv
+	, toolpath=['scons']
+	, tools=tools
+	, **envadditional
+)
 
 opts.Update(env)
 opts.Save('options.cache',env)
@@ -589,7 +607,7 @@ class KeepContext:
 		
 		if context.env.has_key(varprefix+'_CPPPATH'):
 			context.env.AppendUnique(CPPPATH=[env[varprefix+'_CPPPATH']])
-			#print "Adding '"+str(cpppath_add)+"' to cpp path"
+			#print "Adding '"+str(env[varprefix+'_CPPPATH'])+"' to cpp path"
 
 		if static:
 			staticlib=env[varprefix+'_LIB']
@@ -600,7 +618,7 @@ class KeepContext:
 		else:
 			if context.env.has_key(varprefix+'_LIBPATH'):
 				context.env.Append(LIBPATH=[env[varprefix+'_LIBPATH']])
-				#print "Adding '"+str(libpath_add)+"' to lib path"
+				#print "Adding '"+str(env[varprefix+'_LIBPATH'])+"' to lib path"
 
 			if context.env.has_key(varprefix+'_LIB'):
 				context.env.Append(LIBS=[env[varprefix+'_LIB']])
@@ -820,7 +838,14 @@ def CheckIDA(context):
 # CONOPT test
 
 conopt_test_text = """
-#define FNAME_LCASE_DECOR
+#ifndef __MINGW32__
+# error "where is mingw?"
+#endif
+
+#if !defined(_WIN32)
+# define FNAME_LCASE_DECOR
+#endif
+
 #include <conopt.h>
 #include <stdlib.h>
 int main(){
@@ -1174,6 +1199,8 @@ release = env.get('RELEASE')
 if release=="0.":
 	release="0"
 
+#print "SUBSTITUTED CONOPT_LIBPATH:",c_escape(env.subst("$CONOPT_LIBPATH"))
+
 subst_dict = {
 	'@DEFAULT_ASCENDLIBRARY@':env['DEFAULT_ASCENDLIBRARY']
 	, '@GLADE_FILE@':'ascend.glade'
@@ -1194,6 +1221,9 @@ subst_dict = {
 	, '@ASC_ENV_TK_DEFAULT@' : '$$ASCENDDIST/tcltk'
 	, '@ASC_DISTDIR_REL_BIN@' : default_rel_distdir
 	, '@PYTHON@' : python_exe
+	, '@ASC_CONOPT_LIB@':env.get('CONOPT_LIB')
+	, '@ASC_CONOPT_ENVVAR@':env.get('CONOPT_ENVVAR')
+	, '@ASC_CONOPT_DLPATH@':c_escape(env.subst("$CONOPT_LIBPATH"))
 }
 
 if env.get('WITH_LOCAL_HELP'):

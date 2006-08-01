@@ -21,6 +21,19 @@ for i in libascend_env.get('WITH_SOLVERS'):
 	solver_env.Append(CPPDEFINES=["STATIC_"+i])
 
 objs = []
+
+if solver_env.get('WITH_CONOPT'):
+	solver_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
+
+	if solver_env.get('LINKED_CONOPT'):
+		libascend_env.AppendUnique(
+			LIBPATH=[solver_env.get('CONOPT_LIBPATH')]
+			, LIBS=[solver_env.get('CONOPT_LIB')]
+		)
+
+	objs += solver_env.SharedObject('conopt.c')
+	print "BUILDING CONOPT.OS"
+
 for c in csrcs:
 	objs += solver_env.SharedObject(c)
 
@@ -42,19 +55,6 @@ if solver_env.get('WITH_IDA'):
 	objs += sundials_env.SharedObject('ida.c');
 else:
 	print "NO IDA REQUESTED!"
-
-if solver_env.get('WITH_CONOPT'):
-	conopt_env = solver_env.Copy()
-	conopt_env.AppendUnique(CPPPATH=[solver_env.get('CONOPT_CPPPATH')])
-
-	if solver_env.get('LINKED_CONOPT'):
-		libascend_env.AppendUnique(
-			LIBPATH=[solver_env.get('CONOPT_LIBPATH')]
-			, LIBS=[solver_env.get('CONOPT_LIB')]
-		)
-
-	objs += conopt_env.SharedObject('conopt.c')
-	print "BUILDING CONOPT.OS"
 
 if 'LSOD' in solver_env.get('WITH_SOLVERS'):
 	if solver_env.get('F2C_LIBPATH'):

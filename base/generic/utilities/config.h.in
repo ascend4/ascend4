@@ -6,7 +6,7 @@
 	DUAL SUPPORT FOR BOTH AUTOTOOLS AND SCONS
 
 	When I add a new flag to SCons, I will use the form (replace \ by /):
-		
+
 		\* #define FLAGNAME @FLAGNAME@ *\
 
 	Using SCons, I can uncomment these lines using text-substitution.
@@ -106,10 +106,14 @@
 /* #define MALLOC_DEBUG @MALLOC_DEBUG@ */
 #endif
 
+/*-----------------------------------------------------------------------
+  IDA
+*/
+
 /*
 	Whether to compile with support for the IDA DAE solver.
 
-	Note that this option is automatically configured based on the value of 
+	Note that this option is automatically configured based on the value of
 	WITH_SOLVERS in the SCons options.
 
 	SCons will uncomment the #define line if required.
@@ -119,10 +123,14 @@
 /* #define ASC_WITH_IDA @ASC_WITH_IDA@ */
 #endif
 
+/*-----------------------------------------------------------------------
+  CONOPT
+*/
+
 /*
 	Whether to compile with support for the IDA DAE solver.
 
-	Note that this option is automatically configured based on the value of 
+	Note that this option is automatically configured based on the value of
 	WITH_SOLVERS in the SCons options.
 
 	SCons will uncomment the #define line if required.
@@ -133,19 +141,37 @@
 #endif
 
 /*
+	This is the name of the CONOPT .so or DLL. On Windows
+	it's called 'copopt3' but on linux it seems to be called
+	'consub3.so'.
+*/
+#define ASC_CONOPT_LIB "@ASC_CONOPT_LIB@"
+
+/*
+	This is the name of the optional environment variable which will
+	be used for the value of the searchpath for the CONOPT DLL/SO.
+*/
+#define ASC_CONOPT_ENVVAR "@ASC_CONOPT_ENVVAR@"
+
+/*
+	This is the default *fallback* searchpath that will be used when hunting
+	for CONOPT at runtime
+
 	Searchpath for CONOPT DLL/SO. This is in platform-specific
 	form (paths with ';' separator in Windows, ':' separator on Linux).
 */
-#ifndef ASC_CONOPT_LIBPATH
-/* #define ASC_CONOPT_LIBPATH @ASC_CONOPT_LIBPATH@ */
-#endif
+#define ASC_CONOPT_DLPATH "@ASC_CONOPT_DLPATH@"
+
+/*-------------------------------------------------------------------------
+  LSODE
+*/
 
 /*
-	Whether to compile with support for the LSODE integration engine. 
-	Note that you will usually need to manually specify the location of your 
+	Whether to compile with support for the LSODE integration engine.
+	Note that you will usually need to manually specify the location of your
 	'libg2c.a' in the link step, see F2C_* Scons options.
 
-	Note that this option is automatically configured based on the value of 
+	Note that this option is automatically configured based on the value of
 	WITH_SOLVERS in the SCons options.
 
 	SCons will uncomment the #define line if required.
@@ -154,6 +180,10 @@
 #ifndef ASC_WITH_LSODE
 /* #define ASC_WITH_LSODE @ASC_WITH_LSODE@ */
 #endif
+
+/*--------------------------------------------------------------------------
+  ENV VAR
+*/
 
 /*
 	The following are the environment variables ASCEND requires.
