@@ -17,7 +17,7 @@
 	Boston, MA 02111-1307, USA.
 *//**
 	@file
-	This file is just a place-holder at the moment. It will be used to 
+	This file is just a place-holder at the moment. It will be used to
 	implement the DYNAMIC_CONOPT interface, which will allow the CONOPT
 	solver to be dlopened at runtime.
 *//*
@@ -28,16 +28,19 @@
 #include <utilities/config.h>
 #include <utilities/ascConfig.h>
 #include <utilities/error.h>
+#include <utilities/ascEnvVar.h>
+#include <general/env.h>
 #include "conopt.h"
 
 #ifndef ASC_WITH_CONOPT
-# error "Shouldn't compile this file unless ASC_WITH_CONOPT set
+# error "Shouldn't compile this file unless ASC_WITH_CONOPT set"
 #endif
 
 #ifndef ASC_LINKED_CONOPT
 # include <ctype.h>
 # include <utilities/ascMalloc.h>
 # include <utilities/ascDynaLoad.h>
+
 /*------------------------------------------------------------------------------
   DLOPENING CONOPT SUPPORT FUNCTIONS
 */
@@ -52,7 +55,7 @@
 /*
 	Typedefs for the various function pointers
 */
-# define FN_TYPE_DECL(T,A,V) \
+# define FN_TYPE_DECL(T,A,V,L) \
 	typedef int COI_CALL (T##_fn_t) A
 
 CONOPT_FNS(FN_TYPE_DECL,SEMICOLON);
@@ -62,7 +65,7 @@ CONOPT_FNS(FN_TYPE_DECL,SEMICOLON);
 	Define a struct to hold all the function pointers, then
 	declare it as a global variable.
 */
-# define FN_PTR_DECL(T,A,V) \
+# define FN_PTR_DECL(T,A,V,L) \
 	T##_fn_t* T##_ptr
 
 typedef struct{
@@ -76,7 +79,7 @@ conopt_fptrs_t conopt_fptrs;
 /*
 	Declare local functions to hook into the DLL
 */
-# define FN_PTR_EXEC(T,A,V) \
+# define FN_PTR_EXEC(T,A,V,L) \
 	int COI_CALL T A{ \
 		if(conopt_fptrs.T##_ptr==NULL){ \
 			return 1; \
@@ -96,9 +99,8 @@ int asc_conopt_load(){
 	char *libpath;
 	int status;
 	char fnsymbol[400], *c;
-	const char *libname="consub3";
+	const char *libname=ASC_CONOPT_LIB;
 	const char *envvar;
-	const char *defaultpath;
 
 	if(loaded) {
 		return 0; /* already loaded */
@@ -106,19 +108,16 @@ int asc_conopt_load(){
 
 	CONSOLE_DEBUG("LOADING CONOPT...");
 
-# ifdef __WIN32__
-	envvar  = "PATH";
-	defaultpath = "C:\\Program Files\\ASCEND";
-# else
-	envvar = "LD_LIBRARY_PATH";
-	defaultpath = "/usr/lib:/usr/local/lib";
-# endif
+	envvar  = ASC_CONOPT_ENVVAR;
 
-	libpath = SearchArchiveLibraryPath(libname, defaultpath, envvar);
+	/* need to import this variable into the ascend 'environment' */
+	env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv);
+
+	libpath = SearchArchiveLibraryPath(libname, ASC_CONOPT_DLPATH, envvar);
 
 	if(libpath==NULL){
 		ERROR_REPORTER_NOLINE(ASC_PROG_ERR
-			, "Library '%s' could not be loaded (check env var %s)"
+			, "Library '%s' could not be located (check env var %s)"
 			, libname, envvar
 		);
 		return 1;
@@ -130,26 +129,28 @@ int asc_conopt_load(){
 		return 1; /* failed to load */
 	}
 
-# if defined(FNAME_UCASE_NODECOR) || defined(FNAME_UCASE_DECOR)
+# if defined(FNAME_UCASE_NODECOR) || defined(FNAME_UCASE_DECOR) || defined(FNAME_UCASE_PREDECOR)
 #  define FNCASE(C) C=toupper(C)
 # elif defined(FNAME_LCASE_NODECOR) || defined(FNAME_LCASE_DECOR)
 #  define FNCASE(C) C=tolower(C)
 # else
-#  error "CONOP case rule not defined"
+#  error "CONOPT case rule not defined"
 # endif
 
 # if defined(FNAME_UCASE_DECOR) || defined(FNAME_LCASE_DECOR)
-#  define FNDECOR(S) strcat(S,"_")
+#  define FNDECOR(S,L) strcat(S,"_")
+# elif defined(FNAME_UCASE_PREDECOR) /* on windows, precede with _ and append @L (integer value of L) */
+#  define FNDECOR(S,L) strcat(S,L);for(c=S+strlen(S)+1;c>S;--c){*c=*(c-1);} *S='_';
 # else
-#  define FNDECOR(S) (void)0
+#  define FNDECOR(S,L) (void)0
 # endif
 
-# define FN_PTR_GET(T,A,V) \
+# define FN_PTR_GET(T,A,V,L) \
 	sprintf(fnsymbol,"%s",#T); \
 	for(c=fnsymbol;*c!='\0';++c){ \
 		FNCASE(*c); \
 	} \
-	FNDECOR(fnsymbol); \
+	FNDECOR(fnsymbol,L); \
 	conopt_fptrs.T##_ptr = (T##_fn_t *)Asc_DynamicFunction(libpath,fnsymbol); \
 	if(conopt_fptrs.T##_ptr==NULL)status+=1;
 
@@ -276,7 +277,7 @@ int COI_CALL asc_conopt_status(int* MODSTA, int* SOLSTA
 		case 3: t = ASC_PROG_NOTE; solsta = "time limit exceeded"; break;
 		case 4: t = ASC_PROG_ERR; solsta = "failed (terminated by solver)"; break;
 	}
-	
+
 	(void)CONSOLE_DEBUG("CONOPT %s: %s", solsta, modsta);
 	ERROR_REPORTER_NOLINE(t,"CONOPT %s: %s", solsta, modsta);
 

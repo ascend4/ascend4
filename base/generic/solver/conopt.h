@@ -18,7 +18,7 @@
 *//**
 	@file
 	Header file that in turn includes <conopt.h>.
-	
+
 	This file exists in order to pass the correct FNAME_* parameter to
 	<conopt.h> and to permit wrapping of conopt routines for use in
 	a dlopened implementation.
@@ -45,7 +45,7 @@
 /*
 	Bound limit for CONOPT
 */
-#define CONOPT_BOUNDLIMIT 3.1999e13
+#define CONOPT_BOUNDLIMIT 3.1e13
 
 /**
  * Parameter required for CONOPT subroutines
@@ -56,12 +56,8 @@
 
 /* What is our calling convention? */
 
-#if defined(__GNUC__) || defined(sun) || defined(__alpha) || defined(__sgi)
+#if !defined(_WIN32)
 # define FNAME_LCASE_DECOR
-#elif defined(__WIN32__)
-# define FNAME_UCASE_NODECOR
-#else
-# define FNAME_LCASE_NODECOR
 #endif
 
 #ifdef ASC_LINKED_CONOPT
@@ -89,70 +85,79 @@ int asc_conopt_load();
 # define INTDOUBLE (int*cntvect,double*v)
 # define INTDOUBLE1 (cntvect,v)
 
+/**
+	This is a compressed list describing the function calls in the CONOPT
+	API. The first parameter in each 'D(...)' is the name we will be using to
+	access the function. The second is the parameter declaration. The third is a
+	parameter list that can be used to pass on the parameter to another function.
+	The final one is the text that is appended to the symbol name in the
+	case of the windows DLL, eg "_COIDEF_SIZE@0". That's a kludge because
+	the DLL contains decorated export symbols.
+*/
 # define CONOPT_FNS(D,X) \
-	D( COIDEF_Size      , ()            , ()) X \
-	D( COIDEF_Ini       , ( int*cntvect), (cntvect)  ) X \
-	D( COIDEF_NumVar    , INTINT        , INTINT1) X \
-	D( COIDEF_NumCon    , INTINT        , INTINT1) X \
-	D( COIDEF_NumNZ     , INTINT        , INTINT1) X \
-	D( COIDEF_NumNlNz   , INTINT        , INTINT1) X \
-	D( COIDEF_Base      , INTINT        , INTINT1) X \
-	D( COIDEF_OptDir    , INTINT        , INTINT1) X \
-	D( COIDEF_ObjCon    , INTINT        , INTINT1) X \
-	D( COIDEF_ObjVar    , INTINT        , INTINT1) X \
-	D( COIDEF_ItLim     , INTINT        , INTINT1) X \
-	D( COIDEF_ErrLim    , INTINT        , INTINT1) X \
-	D( COIDEF_IniStat   , INTINT        , INTINT1) X \
-	D( COIDEF_FVincLin  , INTINT        , INTINT1) X \
-	D( COIDEF_FVforAll  , INTINT        , INTINT1) X \
-	D( COIDEF_DebugFV   , INTINT        , INTINT1) X \
-	D( COIDEF_MaxSup    , INTINT        , INTINT1) X \
-	D( COIDEF_Square    , INTINT        , INTINT1) X \
-	D( COIDEF_EmptyRow  , INTINT        , INTINT1) X \
-	D( COIDEF_EmptyCol  , INTINT        , INTINT1) X \
-	D( COIDEF_Num2D     , INTINT        , INTINT1) X \
-	D( COIDEF_Debug2D   , INTINT        , INTINT1) X \
-	D( COIDEF_DisCont   , INTINT        , INTINT1) X \
-	D( COIDEF_StdOut    , INTINT        , INTINT1) X \
-	D( COIDEF_ClearM    , INTINT        , INTINT1) X \
-	D( COIDEF_2DPerturb , INTINT        , INTINT1) X \
-	D( COIDEF_NDual     , INTINT        , INTINT1) X \
-	D( COIDEF_ResLim    , INTDOUBLE     , INTDOUBLE1) X \
-	D( COIDEF_WorkSpace , INTDOUBLE     , INTDOUBLE1) X \
-	D( COIDEF_WorkFactor, INTDOUBLE     , INTDOUBLE1) X \
-	D( COIDEF_ReadMatrix, (int*cntvect, COI_READMATRIX f), (cntvect,f) ) X \
-	D( COIDEF_FDEval    , (int*cntvect, COI_FDEVAL     f), (cntvect,f) ) X \
-	D( COIDEF_Status    , (int*cntvect, COI_STATUS     f), (cntvect,f) ) X \
-	D( COIDEF_Solution  , (int*cntvect, COI_SOLUTION   f), (cntvect,f) ) X \
-	D( COIDEF_Message   , (int*cntvect, COI_MESSAGE    f), (cntvect,f) ) X \
-	D( COIDEF_ErrMsg    , (int*cntvect, COI_ERRMSG     f), (cntvect,f) ) X \
-	D( COIDEF_Progress  , (int*cntvect, COI_PROGRESS   f), (cntvect,f) ) X \
-	D( COIDEF_Optfile   , (int*cntvect, COI_OPTFILE    f), (cntvect,f) ) X \
-	D( COIDEF_Option    , (int*cntvect, COI_OPTION     f), (cntvect,f) ) X \
-	D( COIDEF_TriOrd    , (int*cntvect, COI_TRIORD     f), (cntvect,f) ) X \
-	D( COIDEF_FDInterval, (int*cntvect, COI_FDINTERVAL f), (cntvect,f) ) X \
-	D( COIDEF_2DDir     , (int*cntvect, COI_2DDIR      f), (cntvect,f) ) X \
-	D( COIDEF_2DDirLag  , (int*cntvect, COI_2DDIRLAG   f), (cntvect,f) ) X \
-	D( COIDEF_2DLagr    , (int*cntvect, COI_2DLAGR     f), (cntvect,f) ) X \
-	D( COIDEF_SRFile    , (int*cntvect, COI_SRFILE     f), (cntvect,f) ) X \
-	D( COIDEF_DualBnd   , (int*cntvect, COI_DUALBND    f), (cntvect,f) ) X \
-	D( COIDEF_UsrMem    , INTDOUBLE     , INTDOUBLE1) X \
-	D( COIDEF_WorkMem   , (int*cntvect, double*v, int*v2), (cntvect,v,v2)) X \
-	D( COIGET_MaxUsed   , (int*cntvect) , (cntvect) ) X \
-	D( COIGET_CurUsed   , (int*cntvect) , (cntvect) ) X \
-	D( COI_Solve        , (int*cntvect) , (cntvect) ) X \
-	D( COI_MemEst       , (int*cntvect, double*v, double*v2 ),(cntvect,v,v2)) X \
-	D( COI_Version      , (float*v, char*c, int i), (v,c,i) )
+	D( COIDEF_Size      , ()            , ()         ,"@0") X \
+	D( COIDEF_Ini       , ( int*cntvect), (cntvect)  ,"@4") X \
+	D( COIDEF_NumVar    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_NumCon    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_NumNZ     , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_NumNlNz   , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_Base      , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_OptDir    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_ObjCon    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_ObjVar    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_ItLim     , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_ErrLim    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_IniStat   , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_FVincLin  , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_FVforAll  , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_DebugFV   , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_MaxSup    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_Square    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_EmptyRow  , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_EmptyCol  , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_Num2D     , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_Debug2D   , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_DisCont   , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_StdOut    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_ClearM    , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_2DPerturb , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_NDual     , INTINT        , INTINT1    ,"@8") X \
+	D( COIDEF_ResLim    , INTDOUBLE     , INTDOUBLE1 ,"@8") X \
+	D( COIDEF_WorkSpace , INTDOUBLE     , INTDOUBLE1 ,"@8") X \
+	D( COIDEF_WorkFactor, INTDOUBLE     , INTDOUBLE1 ,"@8") X \
+	D( COIDEF_ReadMatrix, (int*cntvect, COI_READMATRIX f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_FDEval    , (int*cntvect, COI_FDEVAL     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_Status    , (int*cntvect, COI_STATUS     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_Solution  , (int*cntvect, COI_SOLUTION   f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_Message   , (int*cntvect, COI_MESSAGE    f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_ErrMsg    , (int*cntvect, COI_ERRMSG     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_Progress  , (int*cntvect, COI_PROGRESS   f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_Optfile   , (int*cntvect, COI_OPTFILE    f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_Option    , (int*cntvect, COI_OPTION     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_TriOrd    , (int*cntvect, COI_TRIORD     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_FDInterval, (int*cntvect, COI_FDINTERVAL f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_2DDir     , (int*cntvect, COI_2DDIR      f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_2DDirLag  , (int*cntvect, COI_2DDIRLAG   f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_2DLagr    , (int*cntvect, COI_2DLAGR     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_SRFile    , (int*cntvect, COI_SRFILE     f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_DualBnd   , (int*cntvect, COI_DUALBND    f), (cntvect,f)   ,"@8") X \
+	D( COIDEF_UsrMem    , INTDOUBLE     , INTDOUBLE1                     ,"@8") X \
+	D( COIDEF_WorkMem   , (int*cntvect, double*v, int*v2), (cntvect,v,v2),"@12")X \
+	D( COIGET_MaxUsed   , (int*cntvect) , (cntvect)                      ,"@4") X \
+	D( COIGET_CurUsed   , (int*cntvect) , (cntvect)                      ,"@4") X \
+	D( COI_Solve        , (int*cntvect) , (cntvect)                      ,"@4") X \
+	D( COI_MemEst       , (int*cntvect,double*v,double*v2),(cntvect,v,v2),"@12")X \
+	D( COI_Version      , (float*v, char*c, int i), (v,c,i)              ,"@12")
 
 /*
 	Declare local functions to hook into the DLL
 */
-# define FN_PTR_HDR(T,A,V) \
+# define FN_PTR_HDR(T,A,V,L) \
 	int COI_CALL T A;
 # define SPACE
 
 CONOPT_FNS(FN_PTR_HDR,SPACE)
- 
+
 # undef FN_PTR_HDR
 # undef SPACE
 
@@ -181,7 +186,7 @@ struct conopt_data {
   int nlnz;               /**< Number of nonlinear nonzeros */
   int base;               /**< base of arrays, 1=fortran style */
   int optdir;             /**< optimisation direction */
-  int objcon;             /**< objective constraint */ 
+  int objcon;             /**< objective constraint */
 
   int32 maxrow;             /**< Number of elements in densest row. */
   int32 modsta;             /**< Model status. */
@@ -194,7 +199,7 @@ struct conopt_data {
   int32 estmem;             /**< Estimated memory suggested by conopt. */
   int32 lwork;              /**< Size of allocated workspace. */
   int32 nintgr;             /**< Size of problem size vector. */
-/*  int32 ipsz[NINTGR]; */      /**< Problem size vector. */ 
+/*  int32 ipsz[NINTGR]; */      /**< Problem size vector. */
 
   int32 kept;               /**< If 1 can call warm conopt restart. */
 
@@ -230,7 +235,7 @@ int COI_CALL asc_conopt_solution( double* XVAL, double* XMAR, int* XBAS
 );
 
 int COI_CALL asc_conopt_progress( int* LEN_INT, int* INT, int* LEN_RL
-		, double* RL, double* X, double* USRMEM 
+		, double* RL, double* X, double* USRMEM
 );
 
 #endif /* if ASC_WITH_CONOPT */
