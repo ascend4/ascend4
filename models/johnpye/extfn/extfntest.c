@@ -1,5 +1,4 @@
 /*	ASCEND modelling environment
-	Copyright (C) 1999 Benjamin A Allan
 	Copyright (C) 2006 Carnegie Mellon University
 
 	This program is free software; you can redistribute it and/or modify

@@ -838,10 +838,6 @@ def CheckIDA(context):
 # CONOPT test
 
 conopt_test_text = """
-#ifndef __MINGW32__
-# error "where is mingw?"
-#endif
-
 #if !defined(_WIN32)
 # define FNAME_LCASE_DECOR
 #endif
