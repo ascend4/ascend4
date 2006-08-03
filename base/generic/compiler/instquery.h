@@ -20,19 +20,14 @@
 *//** @file
 	Ascend Instance Miscellaneous Queries.
 
-	based on instance.c
-
 	Requires:
-	#include "utilities/ascConfig.h"
 	#include "instance_enum.h"
 	#include "compiler.h"
 *//*
 	by Tom Epperly & Ben Allan
+	based on instance.c
 	8/16/89
-	Version: $Revision: 1.13 $
-	Version control file: $RCSfile: instquery.h,v $
-	Date last modified: $Date: 1998/02/05 16:36:48 $
-	Last modified by: $Author: ballan $
+	Last in CVS: $Revision: 1.13 $ $Date: 1998/02/05 16:36:48 $ $Author: ballan $
 */
 
 #ifndef ASC_INSTQUERY_H
@@ -151,10 +146,6 @@ extern void (*InterfacePtrATS)();
  */
 ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
 /**<
- *  <!--  enum inst_t InstanceKind(i);                                 -->
- *  <!--  const struct Instance *i;                                    -->
- *
- *  <!--  Return the enumerated type that indicates the type of i.     -->
  *  Implementation function for InstanceKind().  Do not use
  *  this function directly - use InstanceKind() instead.
  */
@@ -179,16 +170,12 @@ ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
 
 extern unsigned long InstanceDepth(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long InstanceDepth(i)                               -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the longest distance between i and root.  The depth of NULL is 0.
  *  The root instance is at depth 1.
  */
 
 ASC_DLLSPEC(unsigned long ) InstanceShortDepth(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long InstanceShortDepth(i)                          -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the shortest distance between i and root.  The depth of NULL
  *  is 0, and the depth of root is 1.
  */
@@ -196,7 +183,6 @@ ASC_DLLSPEC(unsigned long ) InstanceShortDepth(CONST struct Instance *i);
 
 extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
 /**<
- *  <!--  SetNextCliqueMember(i,ptr)                                   -->
  *  Sets i->alike_ptr to ptr for types that have alike_ptrs.
  *  Exits on types that don't or bad input.
  *  Instantiator use only!  Clients should never ever touch this.
@@ -205,9 +191,6 @@ extern void SetNextCliqueMember(struct Instance *i, struct Instance *ptr);
 
 ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
 /**<
- *  <!--  struct Instance *NextCliqueMember(i);                        -->
- *  <!--  const struct Instance *i;                                    -->
- *
  *  This is defined to give clients access to the cliques(ARE_ALIKE) links
  *  between instances.  Each instance has a clique pointer which points to
  *  the next member of the clique list.  These pointers form a circularly
@@ -228,8 +211,6 @@ ASC_DLLSPEC(struct Instance*) NextCliqueMember(CONST struct Instance *i);
 
 ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
 /**<
- *  <!--  VOIDPTR GetInterfacePtr(i)                                   -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the interface pointer.  The compiler initializes this to NULL
  *  when it creates an instance of the following kinds, and hence should
  *  only be called on them.
@@ -268,9 +249,6 @@ ASC_DLLSPEC(VOIDPTR) GetInterfacePtr(CONST struct Instance *i);
 
 ASC_DLLSPEC(void) SetInterfacePtr(struct Instance *i, VOIDPTR c);
 /**<
- *  <!--  void SetInterfacePtr(i,c)                                    -->
- *  <!--  struct Instance *i;                                          -->
- *  <!--  VOIDPTR c;                                                   -->
  *  Set the interface pointer.  The interface must set and maintain this
  *  pointer. See the note for GetInterfacePtr about applicability of this
  *  function.
@@ -278,8 +256,6 @@ ASC_DLLSPEC(void) SetInterfacePtr(struct Instance *i, VOIDPTR c);
 
 extern unsigned int GetAnonFlags(CONST struct Instance *i);
 /**<
- *  <!--  unsigned int GetAnonFlags(i)                                 -->
- *  <!--  const struct Instance *i;                                    -->
  *  Returns the flags associated with an instance. This is a utility
  *  service provided for clients who need access to flags associated with
  *  an instance. These flags may also be set with the below function.
@@ -288,9 +264,6 @@ extern unsigned int GetAnonFlags(CONST struct Instance *i);
 
 extern void SetAnonFlags(struct Instance *i, unsigned int flags);
 /**<
- *  <!--  void SetAnonFlags(i,flags)                                   -->
- *  <!--  const struct Instance *i;                                    -->
- *  <!--  unsigned int flags;                                          -->
  *  Sets the flags associated with an instance. This is a utility
  *  service provided for clients who need access to flags associated with
  *  Works for all instance kinds except subatomic ones.
@@ -298,23 +271,19 @@ extern void SetAnonFlags(struct Instance *i, unsigned int flags);
 
 ASC_DLLSPEC(struct BitList *) InstanceBitList(CONST struct Instance *i);
 /**<
- *  <!--  struct BitList *InstanceBitList(i)                           -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the bit list which indicates which statements have and have not
  *  been executed.  NULL indicates that there aren't any unexecuted statements.
  *  Only MODEL_INST have bitlists.
  */
 
-/*
- *  Instance querying routines
- *
- *  These are general instance querying routines.
- */
+/*------------------------------------------------------------------------------
+  INSTANCE QUERYING ROUTINES
+
+	These are general instance querying routines.
+*/
 
 ASC_DLLSPEC(symchar *) InstanceType(CONST struct Instance *i);
 /**<
- *  <!--  symchar *InstanceType(i)                                     -->
- *  <!--  CONST struct Instance *i;                                    -->
  *  Return a string indicating the type of instance i.  This works for
  *  all types of instances.  It returns the blank string for arrays and
  *  relations though.
@@ -322,8 +291,6 @@ ASC_DLLSPEC(symchar *) InstanceType(CONST struct Instance *i);
 
 ASC_DLLSPEC(struct TypeDescription*) InstanceTypeDesc(CONST struct Instance *i);
 /**<
- *  <!--  struct TypeDescription *InstanceTypeDesc(i)                  -->
- *  <!--  const struct Instance *i;                                    -->
  *  Return the instance's type description.  This returns NULL for fundamental
  *  instances.
  */
@@ -337,8 +304,6 @@ extern unsigned long InstanceIndirected(CONST struct Instance *i);
 
 extern unsigned long InstanceSize(CONST struct Instance *i);
 /**<
- *  <!--  unsigned long InstanceSize(i);                               -->
- *  <!--  CONST struct Instance *i;                                    -->
  *  Returns the number of bytes chargeable to the given instance i.
  *  This is not recursive.
  *  Fundamental types (which occur only as children of atoms/relations)
@@ -351,37 +316,29 @@ extern unsigned long InstanceSize(CONST struct Instance *i);
 #define InstanceUniversal(i) \
   (GetUniversalFlag(InstanceTypeDesc(i)) != 0)
 /**<
- *  <!--  macro InstanceUniversal(i);                                  -->
  *  Returns TRUE if i is a UNIVERSAL instance.
  */
 
 ASC_DLLSPEC(int ) IntegerSetInstance(CONST struct Instance *i);
 /**<
- *  <!--  int IntegerSetInstance(i)                                    -->
- *  <!--  const struct Instance *i;                                    -->
  *  It will return true if the set is of integers and false otherwise.
  *  This should only be called on set instances.
  */
 
 ASC_DLLSPEC(symchar *) GetSimulationName(struct Instance *i);
 /**<
- *  <!--  const char *GetSimulationName(i);                            -->
- *  <!--  struct Instance *i;                                          -->
  *  Returns the name of the simulation instance.
  *  i must be a SIM_INST kind.
  */
 
 extern struct gl_list_t *FindSimulationAncestors(struct Instance *i);
 /**<
- * <!--  sl = FindSimulationAncestors(i);                              -->
  * Returns a list of all the simulation ancestors of i.
  * Caller should destroy the list (but obviously not its content).
  */
 
 ASC_DLLSPEC(struct Instance*) GetSimulationRoot(struct Instance *i);
 /**<
- *  <!--  struct Instance *GetSimulationRoot(i);                       -->
- *  <!--  struct Instance *i;                                          -->
  *  Returns the root instance of the simulation. This is where most if not
  *  all useful queries of a simulation should be based.
  *  i must be a sim instance.
