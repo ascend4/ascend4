@@ -1,0 +1,53 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Model an even simpler CMSlv model
+
+              ^
+	    `.    |    .'
+          `.  |  .'
+            `.|.'
+	 <-+------*------+->
+	  -1      0      1 
+*)
+MODEL testcmslv2;
+	x IS_A factor;
+	y IS_A factor;
+
+	rhs: y = x;
+	lhs: y = -x;
+
+	CONDITIONAL
+		ispos: x > 0;
+	END CONDITIONAL;
+
+	isposp IS_A boolean_var;
+	isposp == SATISFIED(ispos);
+	
+	WHEN (isposp)
+		CASE TRUE:
+			USE rhs;
+		CASE FALSE:
+			USE lhs;
+	END WHEN;
+
+METHODS
+METHOD default_self;
+	ispos := TRUE;
+	y := 0.0;
+	x := 0.0;
+END default_self;
+
+METHOD values;
+	x := 3;
+END values;
+
+METHOD specify;
+	FIX x;
+END specify;
+
+METHOD on_load;
+	RUN default_self; RUN values; RUN specify;
+END on_load;
+
+END testcmslv2;
