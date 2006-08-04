@@ -340,7 +340,7 @@ int logrel_apply_filter( struct logrel_relation *logrel,
            (filter->matchbits & filter->matchvalue) );
 }
 
-/* to bad there's no entry point that rel must call before being used
+/* too bad there's no entry point that rel must call before being used
  * generally, like the FindType checking stuff in var.c
  */
 static void check_included_flag(void){
