@@ -71,9 +71,9 @@
 #if !defined(STATIC_CMSLV) && !defined(DYNAMIC_CMSLV)
 int slv9_register(SlvFunctionsT *f)
 {
-  (void)f;  /* stop gcc whining about unused parameter */
+  UNUSED_PARAMETER(f);
 
-  FPRINTF(ASCERR,"CMSlv not compiled in this ASCEND IV.\n");
+  ERROR_REPORTER_HERE(ASC_PROG_ERR,"CMSlv was not built in this copy of ASCEND");
   return 1;
 }
 #else /* either STATIC_CMSLV or DYNAMIC_CMSLV is defined */
@@ -2561,11 +2561,8 @@ static int COI_CALL slv9_conopt_readmatrix(
   int32 numnz, eq;
   int32 count, totvar;
 
-  /*
-   * stop gcc whining about unused parameters
-   */
-   (void)vsta;
-   (void)esta;
+  UNUSED_PARAMETER(vsta);
+  UNUSED_PARAMETER(esta);
 
   sys = (slv9_system_t)usrmem;
   n_subregions = sys->subregions;
@@ -2675,26 +2672,31 @@ static int COI_CALL slv9_conopt_readmatrix(
   colsta[*n] = *nz; /** @TODO check this */
 
   /*
-   * rowno, value and nlflag can be done in same loop. The use of the
-   * parameter RTMAXJ is really a Hack to keep CONOPT from complaining
-   * about large derivatives
-   */
+	rowno, value and nlflag can be done in same loop. The use of the
+	parameter RTMAXJ is really a Hack to keep CONOPT from complaining
+	about large derivatives
+  */
 
   numnz = 0;
+  CONSOLE_DEBUG("NUM_VAR = %d",num_var);
   for (c=0; c<num_var; c++) {
-    rowno[numnz] = c + 1;
+	CONSOLE_DEBUG("C = %d",c);
+    rowno[numnz] = c;
     nlflag[numnz] = 0;
     value[numnz] = -1;
     numnz++;
-    rowno[numnz] = *m;
+	CONSOLE_DEBUG("NUMNZ = %d",numnz);
+    rowno[numnz] = *m - 1;
     nlflag[numnz] = 1;
+	CONSOLE_DEBUG("FOUND A NONLINEAR NONZERO");
     numnz++;
+	CONSOLE_DEBUG("NUMNZ = %d",numnz);
   }
 
   for (c=num_var; c<(*n); c++) {
     numnz = 2 * num_var + num_eqns * (c - num_var);
     for(eq = 0; eq<num_eqns-1; eq++) {
-      rowno[numnz] = eq + 1;
+      rowno[numnz] = eq;
       nlflag[numnz] = 0;
       deriv = -1.0 * (coeff_matrix->cols[c - num_var].element[eq]);
       if (deriv > RTMAXJ ) {
@@ -2707,7 +2709,7 @@ static int COI_CALL slv9_conopt_readmatrix(
       value[numnz] = deriv;
       numnz++;
     }
-    rowno[numnz] = num_eqns;
+    rowno[numnz] = num_eqns - 1;
     nlflag[numnz] = 0;
     value[numnz] = 1.0;
   }
@@ -2797,16 +2799,17 @@ static int COI_CALL slv9_conopt_fdeval(
   int32 num_vars, v;
   real64 obj, deriv;
 
-  /*
-   * stop gcc whining about unused parameter
-   */
-  (void)jcnm;  (void)errcnt;   (void)newpt;  (void)n;  (void)nj;
+  UNUSED_PARAMETER(jcnm);
+  UNUSED_PARAMETER(errcnt);
+  UNUSED_PARAMETER(newpt);
+  UNUSED_PARAMETER(n);
+  UNUSED_PARAMETER(nj);
 
   sys = (slv9_system_t)usrmem;
   num_vars = sys->con.n - sys->subregions;
 
   if (*mode == 1 || *mode == 3) {
-    if (*rowno == sys->con.m){
+    if (*rowno == sys->con.m - 1){
       obj = 0.0;
       for (v=0; v<num_vars; v++) {
         obj = obj + (x[v] * x[v]);
@@ -2824,7 +2827,7 @@ static int COI_CALL slv9_conopt_fdeval(
    */
 
   if (*mode == 2 || *mode == 3) {
-    if (*rowno == sys->con.m){
+    if (*rowno == sys->con.m - 1){
       for (v=0; v<num_vars; v++) {
         deriv = 2.0 * x[v];
         if (deriv > RTMAXJ ) {
@@ -2899,11 +2902,9 @@ static int COI_CALL slv9_conopt_solution(double *xval, double *xmar, int *xbas, 
   int32 c;
   real64 value;
 
-  /*
-   * stop gcc whining about unused parameter
-   */
-  (void)xmar;  (void)xbas;   (void)xsta;  (void)yval;
-  (void)ymar;  (void)ybas;   (void)ysta;  (void)m;
+  UNUSED_PARAMETER(xmar);UNUSED_PARAMETER(xbas);UNUSED_PARAMETER(xsta);
+  UNUSED_PARAMETER(yval);UNUSED_PARAMETER(ymar);UNUSED_PARAMETER(ybas);
+  UNUSED_PARAMETER(ysta);UNUSED_PARAMETER(m);
 
   sys = (slv9_system_t)usrmem;
   opt_var_values = sys->opt_var_values;
@@ -2958,10 +2959,7 @@ static int COI_CALL slv9_conopt_option(
   slv9_system_t sys;
   sys = (slv9_system_t)usrmem;
 
-  /*
-   * stop gcc whining about unused parameters
-   */
-  (void)logical;
+  UNUSED_PARAMETER(logical);
 
   name = memset(name,' ',8);
   while (sys->con.opt_count < slv9_PA_SIZE) {
@@ -3057,22 +3055,16 @@ static void slv9_coipsz(int32 *nintg, int32 *ipsz, int32 *nreal, real64 *rpsz,
 #endif
 
 
-/*
- * slv_conopt iterate calls conopt start, which calls coicsm
- * to starts CONOPT. The use of conopt_start is a hack to avoid
- * unresolved external during the linking of the CONOPT library.
- * See conopt.h
- */
+/**
+	slv_conopt iterate calls conopt start, which calls coicsm
+	to starts CONOPT. The use of conopt_start is a hack to avoid
+	unresolved external during the linking of the CONOPT library.
+	
+	@see conopt.h
+*/
+static void slv_conopt_iterate(slv9_system_t sys){
+  int n;
 
-static void slv_conopt_iterate(slv9_system_t sys)
-{
-
-  /*
-   * Memory estimation by calling the CONOPT subroutine coimem
-   * The use of conopt_estimate_memory is a hack to avoid
-   * unresolved external during the linking of the CONOPT library.
-   * See conopt.h
-   */
   if(sys->con.cntvect == NULL){
 	sys->con.cntvect = ASC_NEW_ARRAY(int,COIDEF_Size());
   }
@@ -3083,7 +3075,6 @@ static void slv_conopt_iterate(slv9_system_t sys)
 	We pass pointer to sys as usrmem data.
 	Cast back to slv9_system_t to access the information required
   */
-
   COIDEF_UsrMem(sys->con.cntvect,(double *)sys);
 
   COIDEF_NumVar(sys->con.cntvect, &(sys->con.n));
@@ -3091,7 +3082,8 @@ static void slv_conopt_iterate(slv9_system_t sys)
   COIDEF_NumNZ(sys->con.cntvect, &(sys->con.nz));
   COIDEF_NumNlNz(sys->con.cntvect, &(sys->con.nlnz));
   COIDEF_OptDir(sys->con.cntvect, &(sys->con.optdir));
-  COIDEF_ObjCon(sys->con.cntvect, &(sys->con.m)); /* objective will be last row     */
+  
+  COIDEF_ObjCon(sys->con.cntvect, &(sys->con.objcon)); /* objective will be last row     */
   COIDEF_Base(sys->con.cntvect, &(sys->con.base));
   COIDEF_ErrLim(sys->con.cntvect, &(DOMLIM));
   COIDEF_ItLim(sys->con.cntvect, &(OPT_ITER_LIMIT));
@@ -4220,19 +4212,22 @@ static int32 optimize_at_boundary(slv_system_t server, SlvClientToken asys,
   sys->subregions = (*n_subregions);
 
 #ifdef ASC_WITH_CONOPT
-  /*
-   * Information for CONOPT parameters
-   */
+  /* CONOPT parameters */
   sys->con.n = num_opt_vars;
   sys->con.m = num_opt_eqns + 1;  /*including objective function */
-  sys->con.nz = (num_opt_eqns * (*n_subregions) ) + 2 * num_vars;
-  sys->con.nlnz = sys->con.nz - (sys->con.m - 2);
-  sys->con.base = 1; /* fortan calling convention */
+  sys->con.objcon = num_opt_eqns; /* last row is the objective fn */
+  sys->con.nz = (num_opt_eqns * sys->subregions) + 2 * num_vars;
+  /* sys->con.nlnz = sys->con.nz - (num_opt_eqns - 1); */
+  sys->con.nlnz = num_opt_vars - sys->subregions;
+  sys->con.base = 0; /* C calling convention */
   sys->con.optdir = -1; /* minimisation */
 
-  /*
-   * Execute solution algorithm with CONOPT
-   */
+  CONSOLE_DEBUG("%d vars, %d rows",sys->con.n,sys->con.m);
+  CONSOLE_DEBUG("objective constraint: %d",sys->con.objcon);
+  CONSOLE_DEBUG("nonzeros: %d",sys->con.nz);
+  CONSOLE_DEBUG("nonlinear nonzeros: %d",sys->con.nlnz);
+
+  /* Perform optimisation using CONOPT */
   slv_conopt_iterate(sys);
   obj_val = sys->con.obj;
 

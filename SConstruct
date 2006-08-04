@@ -55,7 +55,7 @@ else:
 	default_conopt_libpath="$CONOPT_PREFIX/lib"
 	default_conopt_cpppath="$CONOPT_PREFIX/include"
 	default_conopt_lib="consub3"
-	default_conopt_envvar="LD_LIBRARY_PATH"
+	default_conopt_envvar="CONOPT_PATH"
 
 	need_libm = True
 	if not os.path.isdir(default_tcl):

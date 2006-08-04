@@ -535,7 +535,7 @@ int test_librarysearch(struct FilePath *path, void *userdata){
 	}
 
 	ospath_strncpy(fp,ls->fullpath,PATH_MAX);
-	/* CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath); */
+	CONSOLE_DEBUG("SEARCHING FOR %s",ls->fullpath);
 
 	f = ospath_fopen(fp,"r");
 	if(f==NULL){

@@ -111,7 +111,11 @@ int asc_conopt_load(){
 	envvar  = ASC_CONOPT_ENVVAR;
 
 	/* need to import this variable into the ascend 'environment' */
-	env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv);
+	if(-1!=env_import(ASC_CONOPT_ENVVAR,getenv,Asc_PutEnv)){
+		CONSOLE_DEBUG("Using searchpath env var %s = %s",envvar,getenv(envvar));
+	}else{
+		CONSOLE_DEBUG("Using default conopt search path: %s", ASC_CONOPT_DLPATH);
+	}
 
 	libpath = SearchArchiveLibraryPath(libname, ASC_CONOPT_DLPATH, envvar);
 

@@ -193,7 +193,7 @@ static int ascresetneeded(void) {
     result = 1;
   }
 #else
-  CONSOLE_DEBUG("SIGSEGV trap bypassed: compile-time settings\n");
+  CONSOLE_DEBUG("SIGSEGV trap bypassed: compile-time settings.");
 #endif
 
   return result;

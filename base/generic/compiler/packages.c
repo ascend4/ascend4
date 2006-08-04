@@ -111,7 +111,7 @@ int Builtins_Init(void)
 #ifdef NO_PACKAGES
   ERROR_REPORTER_HERE(ASC_USER_WARNING,"Builtins_Init: DISABLED at compile-time");
 #else
-  ERROR_REPORTER_DEBUG("Builtins_Init: Loading function asc_free_all_variables\n");
+  /* ERROR_REPORTER_DEBUG("Loading function asc_free_all_variables\n"); */
   result = CreateUserFunctionMethod("asc_free_all_variables",
 			Asc_FreeAllVars,
 			1,
