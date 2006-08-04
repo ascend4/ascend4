@@ -18,6 +18,7 @@ class RelPropsWin:
 		self.relname = _xml.get_widget("relname")
 		self.residual = _xml.get_widget("residual")
 		self.expr = _xml.get_widget("expr")
+		self.included = _xml.get_widget("included")
 		self.exprbuff = gtk.TextBuffer();
 		self.expr.set_buffer(self.exprbuff)
 
@@ -28,6 +29,7 @@ class RelPropsWin:
 		self.relname.set_text( self.browser.sim.getInstanceName(self.instance) )
 		self.residual.set_text( str( self.instance.getResidual() ) )
 		self.exprbuff.set_text( self.instance.getRelationAsString(self.browser.sim.getModel() ) )
+		self.included.set_active( self.instance.isIncluded() )
 
 	def on_relpropswin_close(self,*args):
 		self.window.response(gtk.RESPONSE_CANCEL)

@@ -179,6 +179,15 @@ Instanc::isFixed() const{
 	throw runtime_error("Instanc::isFixed: Not a solver_var");
 }
 
+/** Is the relation currently included in the simulation (ie active WHEN) */
+const bool
+Instanc::isIncluded() const{
+	if(getKind()==REL_INST){
+		return getChild("included").getBoolValue();
+	}
+	throw runtime_error("Instanc::isIncluded: Not a relation");
+}
+
 const bool
 Instanc::isCompound() const{
 	return getKind() & ICOMP;

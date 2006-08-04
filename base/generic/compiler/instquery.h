@@ -35,19 +35,22 @@
 
 #include <utilities/ascConfig.h>
 
-/*
- *  The following InterfacePtr functions are to support a global,
- *  persistent client (most likely a GUI) that for some reason
- *  insists (brain dead idiot) that it must decorate the instance
- *  tree with persistent pointers to information packets of its own
- *  devising.
- *  These functions are used by the compiler to handle data an
- *  interface may have left hanging off the instance when an incremental
- *  compile (delete, move, merge) action is in progress. They should never
- *  OTHERWISE be active.
- *
- *  For a more robust, transient protocol see instance_io.h.
- */
+/*------------------------------------------------------------------------------
+  INTERFACE POINTER FUNCTIONS
+
+	The following InterfacePtr functions are to support a global,
+	persistent client (most likely a GUI) that for some reason
+	insists (brain dead idiot) that it must decorate the instance
+	tree with persistent pointers to information packets of its own
+	devising.
+	
+	These functions are used by the compiler to handle data an
+	interface may have left hanging off the instance when an incremental
+	compile (delete, move, merge) action is in progress. They should never
+	OTHERWISE be active.
+	
+	For a more robust, transient protocol see instance_io.h.
+*/
 
 extern void (*InterfacePtrDelete)();
 /**<
@@ -131,42 +134,44 @@ extern void (*InterfacePtrATS)();
  *  </pre>
  */
 
-/**<
- *  General instance interogation routines
- */
+/*------------------------------------------------------------------------------
+  GENERAL INSTANCE INTERROGATION ROUTINES
+*/
 
 #ifndef NDEBUG
-#define InstanceKind(i) InstanceKindF(i)
-#else
-#define InstanceKind(i) ((i==NULL) ? ERROR_INST : ((struct Instance *)(i))->t)
-#endif
-/**<
- *  Return the enumerated inst_t that indicates the type of Instance* i.
- *  @see InstanceKindF()
- */
 ASC_DLLSPEC(enum inst_t) InstanceKindF(CONST struct Instance *i);
 /**<
- *  Implementation function for InstanceKind().  Do not use
- *  this function directly - use InstanceKind() instead.
+	Implementation function for InstanceKind().  Do not use
+	this function directly - use InstanceKind() instead.
+*/
+# define InstanceKind(i) InstanceKindF(i)
+#else
+# define InstanceKind(i) ((i==NULL) ? ERROR_INST : ((struct Instance *)(i))->t)
+#endif
+/**<
+	Return the enumerated inst_t that indicates the type of Instance* i.
+	@see InstanceKindF()
+
+	@see instance_enum.h for the various values you get back.
  */
 
 #define IsConstantInstance(i)     ((i)->t & ICONS)
 /**<  Returns TRUE (some value >0) if i is a constant instance. */
+
 #define IsFundamentalInstance(i)  ((i)->t & IFUND)
 /**<  Returns TRUE (some value >0) if i is a fundamental instance. */
+
 #define IsAtomicInstance(i)       ((i)->t & IATOM)
 /**<  Returns TRUE (some value >0) if i is an atomic instance. */
+
 #define IsCompoundInstance(i)     ((i)->t & ICOMP)
 /**<  Returns TRUE (some value >0) if i is a compound instance. */
+
 #define IsArrayInstance(i)        ((i)->t & IARR)
 /**<  Returns TRUE (some value >0) if i is an array instance. */
+
 #define IsChildlessInstance(i)    ((i)->t & ICHILDLESS)
 /**<  Returns TRUE (some value >0) if i is a childless instance. */
-/**<
- *  <!--  int Is*Instance(i);                                          -->
- *  <!--  const struct Instance *i;                                    -->
- *  <!--  TRUE (some value >0) if i is of the instance class indicated.-->
- */
 
 extern unsigned long InstanceDepth(CONST struct Instance *i);
 /**<

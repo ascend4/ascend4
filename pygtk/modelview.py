@@ -139,7 +139,9 @@ class ModelView:
 				_fontweight = pango.WEIGHT_BOLD
 			_status = instance.getVarStatus();
 			_statusicon = self.browser.statusicons[_status]
-	
+		elif instance.isRelation():
+			if not instance.isIncluded():
+				_fgcolor = "#888888"
 		elif instance.isBool() or instance.isReal() or instance.isInt():
 			# TODO can't edit constants that have already been refined
 			_editable = True

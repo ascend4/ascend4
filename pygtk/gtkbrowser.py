@@ -224,9 +224,10 @@ class Browser:
 		#-------------------
 		# Set up the window and main widget actions
 
-		print_loading_status("Setting up windows")
-
 		self.glade_file = self.assets_dir+config.GLADE_FILE
+
+		print_loading_status("Setting up windows","GLADE_FILE = %s" % self.glade_file)
+
 		glade = gtk.glade.XML(self.glade_file,"browserwin")
 
 		self.window = glade.get_widget("browserwin")
