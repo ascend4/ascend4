@@ -4,18 +4,21 @@ REQUIRE "atoms.a4l";
 	Model an even simpler CMSlv model
 
               ^
-	    `.    |    .'
-          `.  |  .'
-            `.|.'
+            1 +      .
+	          |    .'
+              |  .'
+              |.'
 	 <-+------*------+->
-	  -1      0      1 
+	  -1  .-'`|      1 
+	  ,-'`    + -1/2
+              |  
 *)
 MODEL testcmslv2;
 	x IS_A factor;
 	y IS_A factor;
 
 	rhs: y = x;
-	lhs: y = -x;
+	lhs: y = -0.5*x;
 
 	CONDITIONAL
 		ispos: x > 0;

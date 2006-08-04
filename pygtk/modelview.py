@@ -9,6 +9,9 @@ from properties import *
 BROWSER_FIXED_COLOR = "#008800"
 BROWSER_FREE_COLOR = "#000088"
 
+BROWSER_ACTIVE_COLOR = "black"
+BROWSER_INACTIVE_COLOR = "#888888"
+
 class ModelView:
 	def __init__(self,browser,glade):
 		self.browser = browser # the parent object: the entire ASCEND browser		
@@ -125,7 +128,7 @@ class ModelView:
 		_value = str(instance.getValue())
 		_type = str(instance.getType())
 		_name = str(instance.getName())
-		_fgcolor = "black"
+		_fgcolor = BROWSER_ACTIVE_COLOR
 		_fontweight = pango.WEIGHT_NORMAL
 		_editable = False
 		_statusicon = None
@@ -140,8 +143,8 @@ class ModelView:
 			_status = instance.getVarStatus();
 			_statusicon = self.browser.statusicons[_status]
 		elif instance.isRelation():
-			if not instance.isIncluded():
-				_fgcolor = "#888888"
+			if not instance.isActive():
+				_fgcolor = BROWSER_INACTIVE_COLOR
 		elif instance.isBool() or instance.isReal() or instance.isInt():
 			# TODO can't edit constants that have already been refined
 			_editable = True
@@ -168,6 +171,11 @@ class ModelView:
 				elif not _instance.isFixed() and self.modelstore.get_value(_iter,3)==BROWSER_FIXED_COLOR:
 					self.modelstore.set_value(_iter,3,BROWSER_FREE_COLOR)
 				self.modelstore.set_value(_iter, 6, self.browser.statusicons[_instance.getVarStatus()])
+			elif _instance.isRelation():
+				if _instance.isActive():
+					self.modelstore.set_value(_iter,3,BROWSER_ACTIVE_COLOR)
+				else:
+					self.modelstore.set_value(_iter,3,BROWSER_INACTIVE_COLOR)
 
 	def cell_edited_callback(self, renderer, path, newtext, **kwargs):
 		# get back the Instance object we just edited (having to use this seems like a bug)

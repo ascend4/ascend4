@@ -355,7 +355,7 @@ public:
 	const Type getType() const;
 	const bool isAtom() const;
 	const bool isFixed() const;
-	const bool isIncluded() const;
+	const bool isActive() const;
 	const bool isFund() const;
 	const bool isConst() const;
 	const bool isAssigned() const;
