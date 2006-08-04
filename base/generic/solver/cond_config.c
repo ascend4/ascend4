@@ -89,21 +89,26 @@ static void cases_matching_in_when_list(struct gl_list_t *,
  */
 static int32 g_case_number = 0;
 
-/*
- * Set the ACTIVE bit to value for all the relations
- * included in the case 
- */
-static void set_rels_status_in_case(struct when_case *cur_case, 
-				    uint32 value)
-{
+/**
+	Set the ACTIVE bit to value for all the relations
+	included in the case 
+*/
+static void set_rels_status_in_case(struct when_case *cur_case
+		, uint32 value
+){
   struct gl_list_t *rels;
   struct rel_relation *rel;
   int32 r,rlen;
+
+  CONSOLE_DEBUG("...");
 
   rels = when_case_rels_list(cur_case);
   rlen = gl_length(rels);
   for(r=1;r<=rlen;r++) {
     rel = (struct rel_relation *)(gl_fetch(rels,r));
+	if(!value){
+		CONSOLE_DEBUG("INACTIVE REL AT %p",rel);
+	}	
     rel_set_active(rel,value);
   }
 }

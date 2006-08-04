@@ -181,11 +181,11 @@ Instanc::isFixed() const{
 
 /** Is the relation currently included in the simulation (ie active WHEN) */
 const bool
-Instanc::isIncluded() const{
+Instanc::isActive() const{
 	if(getKind()==REL_INST){
 		return getChild("included").getBoolValue();
 	}
-	throw runtime_error("Instanc::isIncluded: Not a relation");
+	throw runtime_error("Instanc::isActive: Not a relation");
 }
 
 const bool
