@@ -18,7 +18,7 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 BuildRequires: python >= 2.4, python-devel
 BuildRequires: scons >= 0.96.91
-BuildRequires: bison >= 2.1
+BuildRequires: bison >= 2.0
 BuildRequires: flex >= 2.5.4
 BuildRequires: swig >= 1.3.24
 BuildRequires: tk-devel < 8.5, tcl-devel < 8.5
