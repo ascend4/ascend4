@@ -60,13 +60,13 @@ Library::Library(const char *defaultpath){
 			}
 			
 			string s = string(PATHENVIRONMENTVAR "=") + defaultpath;
-			ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Setting %s",s.c_str());;
+			//ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Setting %s",s.c_str());;
 			Asc_PutEnv(s.c_str());
 		}
 		Asc_ImportPathList(PATHENVIRONMENTVAR);
-		cerr << PATHENVIRONMENTVAR << " = " << x << endl;
+		//cerr << PATHENVIRONMENTVAR << " = " << x << endl;
 		//cerr << "Created LIBRARY" << endl;
-		cerr << "Registering solvers..." << endl;
+		//cerr << "Registering solvers..." << endl;
 		registerStandardSolvers();
 	}else{
 		std::cerr << "Reusing LIBRARY" << std::endl;

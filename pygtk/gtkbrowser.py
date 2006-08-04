@@ -5,7 +5,7 @@ def print_loading_status(status,msg=None):
 	sys.stderr.write("\r                                                 \r")
 	if msg!=None:
 		sys.stderr.write(msg+"\n")
-	sys.stderr.write(status+"...")
+	sys.stderr.write(status+"...\r")
 	sys.stderr.flush()
 
 try:
@@ -398,8 +398,10 @@ class Browser:
 			self.solver_engine_menu.append(_mi)
 			self.solver_engine_menu_dict[_s.getName()]=_mi	
 		
-		_mi = self.solver_engine_menu_dict.get('QRSlv')
-		_mi.set_active(1)
+		_pref_solver = self.prefs.getStringPref("Solver","engine","QRSlv")
+		_mi = self.solver_engine_menu_dict.get(_pref_solver)
+		if _mi:
+			_mi.set_active(1)
 
 		#--------
 		# Assign an icon to the main window
@@ -505,6 +507,7 @@ class Browser:
 
 	def set_solver(self,solvername):
 		self.solver = ascpy.Solver(solvername)
+		self.prefs.setStringPref("Solver","engine",solvername)
 		self.reporter.reportNote("Set solver engine to '%s'" % solvername)
 
 #   --------------------------------------------
