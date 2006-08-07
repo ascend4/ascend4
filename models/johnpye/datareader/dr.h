@@ -33,9 +33,14 @@
 
 struct DataReader;
 
+typedef enum datareader_file_format_enum{
+	DATAREADER_FORMAT_TMY2
+	,DATAREADER_FORMAT_UNKNOWN
+} datareader_file_format_t;
+
 int datareader_new(const char *fn);
 int datareader_init(DataReader *d);
-int datareader_set_input_filter(DataReader *d, InputFilterFn *iff);
+int datareader_set_file_format(DataReader *d, const datareader_file_format_t &format);
 int datareader_delete(DataReader *d);
 
 int datareader_num_inputs(const DataReader *d);
@@ -46,10 +51,24 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian);
 
 
 /**
-	An input filter function must be able to return a row of data by reading the
-	file at the current point. Returns 0 on success.
+	Function that can read a single data point from the open file.
+	Should return 0 on success.
 */
-typedef int (InputFilterFn)(FILE *f, double *inputs, double *ouputs);
+typedef int (DataReaderReadFn)(DataReader *d);
 
+/**
+	Function that can read the file header and allocate necessary memory
+*/
+typedef int (DataReaderHeaderFn)(DataReader *d);
+
+
+/**
+	A function that should be called when a file is first opened, optional.
+	This function can read header lines and determine the number of columns if
+	necessary.
+
+	Return 0 on success.
+*/
+typedef int (DataHeaderFn)(DataRader *d);
 
 #endif
