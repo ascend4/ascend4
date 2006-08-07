@@ -231,6 +231,11 @@ int datareader_tmy2_read(DataReader *d){
 
 #define MEAS(N) int N; char N##_source; int N##_uncert
 
+typedef struct Tmy2Point{
+	double t;
+	float G;
+	float G
+	
 /**
 	Read a line of data and store in d.
 	@return 0 on success
@@ -307,5 +312,17 @@ int datareader_tmy2_read(DataReader *d){
 		,snow, snow_source, snow_uncert
 		,dsno, dsno_source, dsno_uncert
 	);
+
+	/* 
+		for the moment, we only record global horizontal, direct normal,
+		ambient temperature, wind speed.
+	*/
+
+	struct Tmy2Point tmy;
+	tmy.t = double(year
+	tmy.G0 = float(Igh);
+	tmy,
+	
+	
 }
 	
