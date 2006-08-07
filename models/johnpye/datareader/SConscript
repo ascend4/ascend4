@@ -1,0 +1,16 @@
+Import('env')
+dr_env = env.Copy()
+
+srcs = Split("""
+	datareader.c
+	dr.c
+	texttable.c
+""")
+
+dr_env.Append(LIBPATH=['#'])
+dr_env.Append(LIBS=['ascend'])
+
+targets = []
+targets.append( dr_env.SharedLibrary("datareader",srcs) )
+
+Return('targets')
