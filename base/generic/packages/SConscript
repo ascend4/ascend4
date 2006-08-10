@@ -16,3 +16,6 @@ for s in srcs:
 	objs += libascend_env.SharedObject(s)
 
 Return('objs')
+
+# vim: set syntax=python:
+

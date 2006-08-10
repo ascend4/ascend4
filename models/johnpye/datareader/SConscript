@@ -4,13 +4,16 @@ dr_env = env.Copy()
 srcs = Split("""
 	datareader.c
 	dr.c
+	tmy.c
 	texttable.c
 """)
 
 dr_env.Append(LIBPATH=['#'])
-dr_env.Append(LIBS=['ascend'])
-
+dr_env.Append(LIBS=['ascend','Radtran_c'])
 targets = []
 targets.append( dr_env.SharedLibrary("datareader",srcs) )
 
-Return('targets')
+env['extfns'] += targets
+
+# vim: set syntax=python:
+

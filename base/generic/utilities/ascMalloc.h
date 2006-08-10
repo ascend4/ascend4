@@ -82,6 +82,7 @@
 
 /* MALLOC_DEBUG may be defined in config.h... */
 #include <utilities/config.h>
+#include <utilities/ascConfig.h>
 
 #ifdef MALLOC_DEBUG
 #  define ascstrdup(str) ascstrdupf_dbg(str)

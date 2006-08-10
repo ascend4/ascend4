@@ -1461,16 +1461,13 @@ else:
 #-------------
 # EXTERNAL FUNCTIONS
 
-extfns = []
-if with_extfns:
-	testdirs = ['johnpye/extfn']
-	for testdir in testdirs:
-		path = 'models/'+testdir+"/SConscript"
-		extfns += env.SConscript(path,'env')
-else:
+env['extfns']=[]
+modeldirs = env.SConscript(['models/SConscript'],'env')
+
+if not with_extfns:
 	print "Skipping... External modules aren't being built:",without_extfns_reason
 
-env.Alias('extfns',extfns)
+env.Alias('extfns',env['extfns'])
 
 #------------------------------------------------------
 # CREATE ASCEND-CONFIG scriptlet
@@ -1481,11 +1478,10 @@ ascendconfig = env.SubstInFile('ascend-config.in')
 # INSTALLATION
 
 if env.get('CAN_INSTALL'):
-	# the models directory only needs to be processed for installation, no other processing required.
-	env.SConscript(['models/SConscript'],'env')
 
 	dirs = ['INSTALL_BIN','INSTALL_ASCDATA','INSTALL_LIB', 'INSTALL_INCLUDE']
 	install_dirs = [env['INSTALL_ROOT']+env[d] for d in dirs]
+	install_dirs += modeldirs
 
 	# TODO: add install options
 	env.Alias('install',install_dirs)

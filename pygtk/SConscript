@@ -117,3 +117,6 @@ if platform.system()=="Windows":
 	installer = env.Installer('create.nsi')
 	Depends(installer,[swiglib,configpy,configh])
 	env.Alias('installer',installer)
+
+# vim: set syntax=python:
+
