@@ -1,0 +1,20 @@
+IMPORT "johnpye/datareader/datareader";
+REQUIRE "atoms.a4l";
+
+MODEL testtmy;
+	t IS_A time;
+	G IS_A real;
+	Gbn IS_A real;
+
+	filename IS_A symbol_constant;
+	filename :== '23161.tm2';
+
+	filereader:datareader(
+		t : INPUT;
+		G, Gbn : OUTPUT;
+		filename : DATA
+	);
+
+	t = 0;
+
+END testtmy;

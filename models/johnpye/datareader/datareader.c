@@ -29,11 +29,23 @@
 #include <general/list.h>
 #include <compiler/module.h>
 #include <compiler/childinfo.h>
+#include <compiler/parentchild.h>
 #include <compiler/slist.h>
 #include <compiler/type_desc.h>
 #include <compiler/packages.h>
+#include <compiler/symtab.h>
+#include <compiler/instquery.h>
+#include <compiler/instmacro.h>
+#include <compiler/instance_types.h>
 
-#include "datareader.h"
+#include "dr.h"
+
+/*------------------------------------------------------------------------------
+  GLOBALS
+*/
+
+static symchar *dr_symbols[1];
+#define FILENAME_SYM dr_symbols[0]
 
 /*------------------------------------------------------------------------------
   BINDINGS FOR THE DATA READER TO THE ASCEND EXTERNAL FUNCTIONS API
@@ -55,14 +67,14 @@ int asc_datareader_close(struct Slv_Interp *slv_interp, struct Instance *data, s
 
 extern
 ASC_EXPORT(int) datareader_register(){
-	const char *addone_help = "The is the ASCEND Data Reader, for pulling in"
+	const char *help = "The is the ASCEND Data Reader, for pulling in"
 		" time-series data such as weather readings for use in simulations.";
 
 	int result = 0;
 
 	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Initialising data reader...\n");
 
-	(void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",datareader_calc);
+	(void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",asc_datareader_calc);
 
 	result += CreateUserFunctionBlackBox("add_one"
 		, asc_datareader_prepare
@@ -71,7 +83,7 @@ ASC_EXPORT(int) datareader_register(){
 		, NULL /* deriv2 */
 		, asc_datareader_close /* final */
 		, 1,1 /* inputs, outputs */
-		, datareader_help
+		, help
 	); /* returns 0 on success */
 
 	if(result){
@@ -88,8 +100,10 @@ int asc_datareader_prepare(struct Slv_Interp *slv_interp,
 	const char *fn;
 	DataReader *d;
 
+	dr_symbols[0] = AddSymbol("filename");
+
 	/* get the data file name (we will look for this file in the ASCENDLIBRARY path) */
-	fninst = ChildByChar(data,'filename');
+	fninst = ChildByChar(data,FILENAME_SYM);
 	if(!fninst){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
 			,"Couldn't locate 'filename', please check Data Reader usage."
@@ -139,7 +153,7 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 
-	if(nouputs > datareader_num_outputs(d)){
+	if(noutputs > datareader_num_outputs(d)){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
 			,"Invalid number of outputs, expected <=%d but received %d"
 			,datareader_num_outputs(d), noutputs
@@ -151,7 +165,7 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 		CONSOLE_DEBUG("inputs[%d] = %f", i, inputs[i]);
 	}
 
-	switch(slv_interp->user_data){
+	switch(slv_interp->task){
 		case bb_func_eval:
 			CONSOLE_DEBUG("DATA READER EVALUATION");
 			if(datareader_func(d,inputs,outputs)){
@@ -166,5 +180,16 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 				return 1;
 			}
 			return 0; /* success */
+		default:
+			CONSOLE_DEBUG("UNHANDLED REQUEST");
+			return 1;
 	}
+}
+
+int asc_datareader_close(struct Slv_Interp *slv_interp,
+	   struct Instance *data,
+	   struct gl_list_t *arglist
+){
+	CONSOLE_DEBUG("NOT IMPLEMENTED");
+	return 1;
 }

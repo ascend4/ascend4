@@ -26,21 +26,24 @@
 	by John Pye, 3 Aug 2006
 */
 
-#ifndef DATAREADER_H
-#define DATAREADER_H
+#include <stdio.h>
+
+#ifndef ASCEX_DR_H
+#define ASCEX_DR_H
 
 /* DATA READER API DEFINITION */
 
-struct DataReader;
+struct DataReader_struct;
+typedef struct DataReader_struct DataReader;
 
-typedef enum datareader_file_format_enum{
+typedef enum {
 	DATAREADER_FORMAT_TMY2
 	,DATAREADER_FORMAT_UNKNOWN
-} datareader_file_format_t;
+} DataReaderFileFormat;
 
-int datareader_new(const char *fn);
+DataReader *datareader_new(const char *fn);
 int datareader_init(DataReader *d);
-int datareader_set_file_format(DataReader *d, const datareader_file_format_t &format);
+int datareader_set_file_format(DataReader *d, DataReaderFileFormat format);
 int datareader_delete(DataReader *d);
 
 int datareader_num_inputs(const DataReader *d);
@@ -49,17 +52,21 @@ int datareader_num_outputs(const DataReader *d);
 int datareader_func(DataReader *d, double *inputs, double *outputs);
 int datareader_deriv(DataReader *d, double *inputs, double *jacobian);
 
-
 /**
 	Function that can read a single data point from the open file.
 	Should return 0 on success.
 */
-typedef int (DataReaderReadFn)(DataReader *d);
+typedef int (DataReaderDataFn)(DataReader *d);
 
 /**
 	Function that can read the file header and allocate necessary memory
 */
 typedef int (DataReaderHeaderFn)(DataReader *d);
+
+/**
+	Function that returns 1 when the end of file has been reached
+*/
+typedef int (DataReaderEofFn)(DataReader *d);
 
 
 /**
@@ -69,6 +76,52 @@ typedef int (DataReaderHeaderFn)(DataReader *d);
 
 	Return 0 on success.
 */
-typedef int (DataHeaderFn)(DataRader *d);
+typedef int (DataHeaderFn)(DataReader *d);
+
+/*------------------------------------------------------------------------------
+  DATA STRUCTURES
+
+	Don't use these unless you're writing a new reader format (eg TMY, CSV etc)
+*/
+
+/**
+	Record where in the file the data for a particular time can be found,
+	for fast backtracking.
+*/
+struct IndexPoint{
+	int pos;
+	double t;
+};
+
+/**
+	Structure to hold the data for a particular data point after being loaded.
+*/
+typedef struct{
+	double t;
+	double *outputs;
+} DataPoint;
+
+/**
+	Need some kind of structure here to hold spline data for a particular
+	interval.
+*/
+
+/**
+	Top-level structure for the data reader. Keeps track of the file we're
+	working with, the number of columns, etc.
+*/
+struct DataReader_struct{
+	const char *fn;
+	struct FilePath *fp;
+	FILE *f;
+	int noutputs;
+	int ndata; /** number of data points in the raw data */
+	int i; /** 'current location' in the data array */
+	void *data; /**< stored data (form depends on what what loaded) */
+	DataReaderHeaderFn *headerfn;
+	DataReaderDataFn *datafn;
+	DataReaderEofFn *eoffn;
+};
 
 #endif
+

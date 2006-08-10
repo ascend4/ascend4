@@ -82,6 +82,7 @@
 
 #include <utilities/ascConfig.h>
 #include <compiler/compiler.h>
+#include <compiler/instance_enum.h>
 #include <compiler/instance_name.h>
 
 /* Parent routines */

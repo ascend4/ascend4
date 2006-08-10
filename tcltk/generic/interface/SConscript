@@ -92,3 +92,6 @@ else:
 			    dirs.remove('.svn')  # don't visit .svn directories
 
 		os.chdir(cd)
+
+# vim: set syntax=python:
+

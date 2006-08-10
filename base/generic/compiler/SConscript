@@ -81,3 +81,6 @@ if libascend_env.get('CAN_INSTALL'):
 	libascend_env.InstallHeader(installdir,headers)
 
 Return('objs')
+
+# vim: set syntax=python:
+

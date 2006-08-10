@@ -1,5 +1,7 @@
 Import('env')
 
+env.SConscript(['johnpye/SConscript'],['env'])
+
 import os, os.path
 
 modelfiles = []
@@ -34,3 +36,6 @@ for f in modelfiles:
 
 #print "MODEL INSTALLED DIRS =",installeddirs
 Return('installeddirs')
+
+# vim: set syntax=python:
+

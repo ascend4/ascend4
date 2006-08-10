@@ -167,7 +167,7 @@ ASC_DLLSPEC(void) ospath_strncpy(struct FilePath *fp,char *dest, int destsize);
 ASC_DLLSPEC(void) ospath_strcat(struct FilePath *fp,char *dest, int destsize);
 
 /**
-	Output the FilePath to a file
+	Output a filepath to a file (ie print the filename fp)
 */
 void ospath_fwrite(struct FilePath *fp, FILE *dest);
 
