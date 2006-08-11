@@ -1953,6 +1953,7 @@ static double FindMaxFromTop(struct relation *s){
 /* send in relation */
 double CalcRelationNominal(struct Instance *i){
   enum Expr_enum reltype;
+  static int msg=0;
 
   char *iname;
   iname = WriteInstanceNameString(i,NULL);
@@ -1986,9 +1987,15 @@ double CalcRelationNominal(struct Instance *i){
     }
   }
   if (reltype == e_blackbox){
-    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"assuming 1.0 for blackbox (%s)",__FUNCTION__);
+	if(!msg){
+    	ERROR_REPORTER_HERE(ASC_PROG_WARNING,"assuming 1.0 for blackbox (%s)",__FUNCTION__);
+		msg=1;
+	}
   }else if (reltype == e_glassbox){
-    ERROR_REPORTER_HERE(ASC_PROG_WARNING,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+    if(!msg){
+		ERROR_REPORTER_HERE(ASC_PROG_WARNING,"glassbox not implemented yet (assuming 1.0) (%s)",__FUNCTION__);
+		msg=2;
+	}
   }else if (reltype == e_opcode){
     ERROR_REPORTER_HERE(ASC_PROG_ERR,"opcode not supported (%s)",__FUNCTION__);
   }

@@ -220,30 +220,30 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2){
 	if(*t1 > t && d->i > 0){
 		/* start of current interval is too late */
 		do{
-			CONSOLE_DEBUG("STEPPING BACK (d->i = %d currently)",d->i);
+			/* CONSOLE_DEBUG("STEPPING BACK (d->i = %d currently)",d->i); */
 			--(d->i);
 			(*d->indepfn)(d,t1);
 		}while(*t1 > t && d->i > 0);
 	}
 	/* now either d->i==0 or t1 < t*/
-	CONSOLE_DEBUG("d->i==%d",d->i);
+	/* CONSOLE_DEBUG("d->i==%d",d->i); */
 	++d->i;
 	(*d->indepfn)(d,t2);
 	if(*t2 <= t){
 		/* end of current interface is too early */
 		do{
-			CONSOLE_DEBUG("STEPPING FORWARD (d->i = %d currently)",d->i);
+			/* CONSOLE_DEBUG("STEPPING FORWARD (d->i = %d currently)",d->i); */
 			++(d->i);
 			(*d->indepfn)(d,t2);
 		}while(*t2 < t && d->i < d->ndata);
 	}
-	CONSOLE_DEBUG("d->i==%d",d->i);
+	/* CONSOLE_DEBUG("d->i==%d",d->i); */
 
 	if(d->i == d->ndata || d->i == 0){
 		return 1;
 	}
 
-	CONSOLE_DEBUG("INTERVAL OK");
+	/* CONSOLE_DEBUG("INTERVAL OK"); */
 	return 0;
 }
 
@@ -266,7 +266,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 	double t;
 	t = inputs[0];
 
-	CONSOLE_DEBUG("EVALUATING");
+	/* CONSOLE_DEBUG("EVALUATING"); */
 
 	asc_assert(d->indepfn);
 
@@ -276,7 +276,7 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 		return 1;
 	}
 
-	CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %f, t2 = %f", d->i, *t1, *t2);
+	/* CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %f, t2 = %f", d->i, *t1, *t2); */
 
 	(*d->valfn)(d,v2);
 	--d->i;
@@ -303,11 +303,12 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian){
 	double t;
 	t = inputs[0];
 
-	CONSOLE_DEBUG("EVALUATING");
+	/* CONSOLE_DEBUG("EVALUATING"); */
 
 	asc_assert(d->indepfn);
 
 	if(datareader_locate(d,t,t1,t2)){
+		CONSOLE_DEBUG("LOCATION ERROR");
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Time value t=%f is out of range",t);
 		return 1;
 	}		
