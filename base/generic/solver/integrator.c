@@ -1072,7 +1072,7 @@ double integrator_get_t(IntegratorSystem *blsys){
 */
 void integrator_set_t(IntegratorSystem *blsys, double value){
   var_set_value(blsys->x, value);
-  CONSOLE_DEBUG("set_t = %g", value);
+  /* CONSOLE_DEBUG("set_t = %g", value); */
 }
 
 /*------------------------------------------------------------------------------
@@ -1096,7 +1096,7 @@ double *integrator_get_y(IntegratorSystem *blsys, double *y) {
   for (i=0; i< blsys->n_y; i++) {
 	assert(blsys->y[i]!=NULL);
     y[i] = var_value(blsys->y[i]);
-    CONSOLE_DEBUG("ASCEND --> y[%ld] = %g", i+1, y[i]);
+    /* CONSOLE_DEBUG("ASCEND --> y[%ld] = %g", i+1, y[i]); */
   }
   return y;
 }
@@ -1117,7 +1117,7 @@ void integrator_set_y(IntegratorSystem *blsys, double *y) {
     var_set_value(blsys->y[i],y[i]);
 #ifndef NDEBUG
 	varname = var_make_name(blsys->system, blsys->y[i]);
-    CONSOLE_DEBUG("y[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, y[i]);
+    /* CONSOLE_DEBUG("y[%ld] = \"%s\" = %g --> ASCEND", i+1, varname, y[i]); */
 	ASC_FREE(varname);
 #endif
   }
@@ -1142,7 +1142,7 @@ double *integrator_get_ydot(IntegratorSystem *blsys, double *dydx) {
     if(blsys->ydot[i]!=NULL){
 		dydx[i] = var_value(blsys->ydot[i]);
 	}
-    CONSOLE_DEBUG("ASCEND --> ydot[%ld] = %g", i+1, dydx[i]);
+    /* CONSOLE_DEBUG("ASCEND --> ydot[%ld] = %g", i+1, dydx[i]); */
   }
   return dydx;
 }

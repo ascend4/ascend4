@@ -201,13 +201,15 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 
+	/*
 	for(i=0; i< ninputs; ++i){
 		CONSOLE_DEBUG("inputs[%d] = %f", i, inputs[i]);
 	}
+	*/
 
 	switch(slv_interp->task){
 		case bb_func_eval:
-			CONSOLE_DEBUG("DATA READER EVALUATION");
+			/* CONSOLE_DEBUG("DATA READER EVALUATION"); */
 			if(datareader_func(d,inputs,outputs)){
 				CONSOLE_DEBUG("Datareader evaluation error");
 				return 1;
