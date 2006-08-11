@@ -1,5 +1,7 @@
-IMPORT "johnpye/datareader/datareader";
+REQUIRE "ivpsystem.a4l";
 REQUIRE "atoms.a4l";
+
+IMPORT "johnpye/datareader/datareader";
 
 MODEL drconf;
 	filename IS_A symbol_constant;
@@ -12,7 +14,7 @@ MODEL testtmy;
 	G IS_A solver_var;
 	Gbn IS_A solver_var;
 	G2 IS_A solver_var;
-
+	E IS_A solver_var; (* total radiation *)
 	tmydata IS_A drconf;
 	tmydata.filename :== '/home/john/src/ascend/models/johnpye/datareader/23161.tm2';
 
@@ -34,6 +36,10 @@ METHOD on_load;
 END on_load;
 
 METHOD specify;
+	E.ode_id := 1; E.ode_type := 1;
+	G.ode_id := 1; G.ode_type := 2;
+
+	t.ode_type :=-1;	
 	FIX t;
 END specify;
 
