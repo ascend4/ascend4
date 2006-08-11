@@ -1,20 +1,44 @@
 IMPORT "johnpye/datareader/datareader";
 REQUIRE "atoms.a4l";
 
+MODEL drconf;
+	filename IS_A symbol_constant;
+	format IS_A symbol_constant;
+	format :== 'TMY2';
+END drconf;
+
 MODEL testtmy;
 	t IS_A time;
-	G IS_A real;
-	Gbn IS_A real;
+	G IS_A solver_var;
+	Gbn IS_A solver_var;
+	G2 IS_A solver_var;
 
-	filename IS_A symbol_constant;
-	filename :== '23161.tm2';
+	tmydata IS_A drconf;
+	tmydata.filename :== '/home/john/src/ascend/models/johnpye/datareader/23161.tm2';
 
 	filereader:datareader(
 		t : INPUT;
 		G, Gbn : OUTPUT;
-		filename : DATA
+		tmydata : DATA
 	);
 
-	t = 0;
+	G2 = G + Gbn;
+
+METHODS
+
+METHOD default_self;
+END default_self;
+
+METHOD on_load;
+	RUN default_self; RUN specify; RUN values; 
+END on_load;
+
+METHOD specify;
+	FIX t;
+END specify;
+
+METHOD values;
+	t := 0 {s};
+END values;
 
 END testtmy;

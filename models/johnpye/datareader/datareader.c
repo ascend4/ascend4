@@ -44,8 +44,9 @@
   GLOBALS
 */
 
-static symchar *dr_symbols[1];
+static symchar *dr_symbols[2];
 #define FILENAME_SYM dr_symbols[0]
+#define FORMAT_SYM dr_symbols[1]
 
 /*------------------------------------------------------------------------------
   BINDINGS FOR THE DATA READER TO THE ASCEND EXTERNAL FUNCTIONS API
@@ -55,16 +56,16 @@ int asc_datareader_prepare(struct Slv_Interp *slv_interp, struct Instance *data,
 int asc_datareader_calc(struct Slv_Interp *slv_interp, int ninputs, int noutputs, double *inputs, double *outputs, double *jacobian);
 int asc_datareader_close(struct Slv_Interp *slv_interp, struct Instance *data, struct gl_list_t *arglist);
 
-/**
-	This is the function called from "IMPORT extfntest"
-
-	It sets up the functions in this external function library
-*/
-
 #ifndef ASC_EXPORT
 # error "Where is ASC_EXPORT?"
 #endif
 
+/**
+	This is the function called from "IMPORT datareader"
+
+	It sets up the functions in this external function library and tells ASCEND
+	how many inputs and outputs it needs.
+*/
 extern
 ASC_EXPORT(int) datareader_register(){
 	const char *help = "The is the ASCEND Data Reader, for pulling in"
@@ -76,13 +77,13 @@ ASC_EXPORT(int) datareader_register(){
 
 	(void)CONSOLE_DEBUG("EVALUATION FUNCTION AT %p",asc_datareader_calc);
 
-	result += CreateUserFunctionBlackBox("add_one"
+	result += CreateUserFunctionBlackBox("datareader"
 		, asc_datareader_prepare
 		, asc_datareader_calc /* value */
 		, asc_datareader_calc /* deriv */
 		, NULL /* deriv2 */
 		, asc_datareader_close /* final */
-		, 1,1 /* inputs, outputs */
+		, 1,2 /* inputs, outputs */
 		, help
 	); /* returns 0 on success */
 
@@ -92,15 +93,20 @@ ASC_EXPORT(int) datareader_register(){
 	return result;
 }
 
+/**
+	This function prepares the data that we will use before starting the solver
+	process.
+*/
 int asc_datareader_prepare(struct Slv_Interp *slv_interp,
 	   struct Instance *data,
 	   struct gl_list_t *arglist
 ){
-	struct Instance *fninst;
-	const char *fn;
+	struct Instance *fninst, *fmtinst;
+	const char *fn, *fmt;
 	DataReader *d;
 
 	dr_symbols[0] = AddSymbol("filename");
+	dr_symbols[1] = AddSymbol("format");
 
 	/* get the data file name (we will look for this file in the ASCENDLIBRARY path) */
 	fninst = ChildByChar(data,FILENAME_SYM);
@@ -111,7 +117,7 @@ int asc_datareader_prepare(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 	if(InstanceKind(fninst)!=SYMBOL_CONSTANT_INST){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'filename' must be a symbol constant");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'filename' must be a symbol_constant");
 		return 1;
 	}
 	fn = SCP(SYMC_INST(fninst)->value);
@@ -121,8 +127,42 @@ int asc_datareader_prepare(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 
+	/* get the data reader format *//**
+	This is the function called from "IMPORT extfntest"
+
+	It sets up the functions in this external function library
+*/
+
+	fmtinst = ChildByChar(data,FORMAT_SYM);
+	if(!fmtinst){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"Couldn't locate 'format', please check Data Reader usage."
+		);
+		return 1;
+	}
+	if(InstanceKind(fmtinst)!=SYMBOL_CONSTANT_INST){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'format' must be a symbol_constant");
+		return 1;
+	}
+	fmt = SCP(SYMC_INST(fmtinst)->value);
+	CONSOLE_DEBUG("FORMAT: %s",fmt);
+	if(fmt==NULL || strlen(fmt)==0){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"'format' is NULL or empty");
+		return 1;
+	}
+
+	CONSOLE_DEBUG("Creating the datareader object...");
+
 	/* create the data reader and tell it the filename */
 	d = datareader_new(fn);
+
+	if(fmt!=NULL){
+		if(datareader_set_format(d,fmt)){
+			CONSOLE_DEBUG("Invalid 'format'");
+			return 1;
+		}		
+	}
+	
 	if(datareader_init(d)){
 		CONSOLE_DEBUG("Error initialising data reader");
 		return 1;

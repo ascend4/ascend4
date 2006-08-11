@@ -36,14 +36,9 @@
 struct DataReader_struct;
 typedef struct DataReader_struct DataReader;
 
-typedef enum {
-	DATAREADER_FORMAT_TMY2
-	,DATAREADER_FORMAT_UNKNOWN
-} DataReaderFileFormat;
-
 DataReader *datareader_new(const char *fn);
 int datareader_init(DataReader *d);
-int datareader_set_file_format(DataReader *d, DataReaderFileFormat format);
+int datareader_set_format(DataReader *d, const char *format);
 int datareader_delete(DataReader *d);
 
 int datareader_num_inputs(const DataReader *d);
@@ -70,13 +65,17 @@ typedef int (DataReaderEofFn)(DataReader *d);
 
 
 /**
-	A function that should be called when a file is first opened, optional.
-	This function can read header lines and determine the number of columns if
-	necessary.
-
+	Function that returns current value of dependent variables
 	Return 0 on success.
 */
-typedef int (DataHeaderFn)(DataReader *d);
+typedef int (DataReaderValFn)(DataReader *d,double *dep);
+
+/**
+	A function that returns the current value of independent variables.
+	Return 0 on success.
+*/
+typedef int (DataReaderIndepFn)(DataReader *d,double *indep);
+
 
 /*------------------------------------------------------------------------------
   DATA STRUCTURES
@@ -114,6 +113,7 @@ struct DataReader_struct{
 	const char *fn;
 	struct FilePath *fp;
 	FILE *f;
+	int ninputs;
 	int noutputs;
 	int ndata; /** number of data points in the raw data */
 	int i; /** 'current location' in the data array */
@@ -121,6 +121,8 @@ struct DataReader_struct{
 	DataReaderHeaderFn *headerfn;
 	DataReaderDataFn *datafn;
 	DataReaderEofFn *eoffn;
+	DataReaderIndepFn *indepfn;
+	DataReaderValFn *valfn;
 };
 
 #endif

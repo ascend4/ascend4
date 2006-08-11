@@ -43,7 +43,7 @@ typedef struct{
 	
 } Tmy2Point;
 
-#define DATA(D,I) ((Tmy2Point *)(D->data))[D->I]
+#define DATA(D) ((Tmy2Point *)(D->data))[D->i]
 
 /**
 	@return 0 on success
@@ -76,6 +76,7 @@ int datareader_tmy2_header(DataReader *d){
 	CONSOLE_DEBUG( "TMY2 data for city '%s' (WBAN %s, time zone %+d) at lat=%.3f, long=%.3f, elev=%d m"
 		, city, wban, zone, lat, lng, elev
 	);
+	ERROR_REPORTER_HERE(ASC_PROG_NOTE,"TMY2 data is for %s, %s",city, state);
 
 	d->i = 0;
 	d->ndata=8760;
@@ -85,10 +86,15 @@ int datareader_tmy2_header(DataReader *d){
 
 int datareader_tmy2_eof(DataReader *d){
 	if(feof(d->f)){
-		/* terminate the data array with a NULL */
+		CONSOLE_DEBUG("REACHED END OF FILE");
 		d->ndata=d->i;
+		ERROR_REPORTER_HERE(ASC_PROG_NOTE,"Read %d rows",d->ndata);
 		return 1;
 	}
+
+	/* set the number of inputs and outputs */
+	d->ninputs = 1;
+	d->noutputs = 2;
 	return 0;
 }
 
@@ -100,6 +106,10 @@ int datareader_tmy2_eof(DataReader *d){
 	@return 0 on success
 */
 int datareader_tmy2_data(DataReader *d){
+	/* static int lastmonth=-1;
+	static int lastday=-1; */
+	int res = 0;
+
 	Tmy2Point *tmy;
 	int year,month,day,hour;
 	int Iegh,Iedn; // Irradiation
@@ -134,13 +144,14 @@ int datareader_tmy2_data(DataReader *d){
 
 	/* brace yourself for this one... */
 
-	fscanf(d->f, 
+	res = fscanf(d->f, 
 		/* 1 */ "%2d%2d%2d%2d" "%4d%4d" "%4d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" /* =15 */
 		/* 2 */ "%4d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" /* +12=27 */
 		/* 3 */ "%2d%1s%1d" "%2d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" "%3d%1s%1d" "%4d%1s%1d" /* +18=45 */
-		/* 4 */ "%3d%1s%1d" "%3d%1s%1d" "%4d%1s%1d" "%5drh = 0.01*(float)rh; /* relative humidity */%1s%1d" /* +12=57 */
+		/* 4 */ "%3d%1s%1d" "%3d%1s%1d" "%4d%1s%1d" "%5d%1s%1d" /* +12=57 */
 		/* 5 */ "%1d%1d%1d%1d%1d%1d%1d%1d%1d%1d" /* +10=67 */
 		/* 6 */ "%3d%1s%1d" "%3d%1s%1d" "%3d%1s%1d" "%2d%1s%1d" /* +12=79 */
+		" " /* to ensure that we move to the start of the next line, else end of file */
 
 	/* 1 */
 		,&year, &month, &day, &hour
@@ -174,17 +185,42 @@ int datareader_tmy2_data(DataReader *d){
 		,READ(dsno)
 	);
 
+	if(res!=79){
+		CONSOLE_DEBUG("Bad input data in data row %d (read %d items OK) (%d/%d/%d %2d:00",d->i,res,day,month,year,hour);
+		return 1;
+	}
+
+	/*
+	if(month!=lastmonth || day!=lastday){
+		CONSOLE_DEBUG("Reading data for %d/%d",day,month);
+		lastmonth=month;
+		lastday=day;
+	}
+	*/
+
 	/* 
 		for the moment, we only record global horizontal, direct normal,
 		ambient temperature, wind speed.
 	*/
 
-	tmy = &DATA(d,i);
+	tmy = &DATA(d);
 	tmy->t = ((day_of_year_specific(day,month,year) - 1)*24 + hour)*3600;
 	tmy->G = (float)Igh; /* average W/m2 for the hour in question */
 	tmy->Gbn = (float)Idn; /* normal beam radiation */
 	tmy->T = 0.1*(float)T + 273.15; /* temperature */
 	tmy->v_wind = (float)wvel;
 	d->i++;
+
+	return 0;
+}
+
+int datareader_tmy2_time(DataReader *d, double *t){
+	*t = DATA(d).t;
+	return 0;
+}
+
+int datareader_tmy2_vals(DataReader *d, double *v){
+	v[0]=DATA(d).G;
+	v[1]=DATA(d).Gbn;
 	return 0;
 }

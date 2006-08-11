@@ -17,6 +17,8 @@
 	Boston, MA 02111-1307, USA.
 */
 
+#include <errno.h>
+
 #include "dr.h"
 #include "tmy.h"
 
@@ -29,6 +31,22 @@
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
 */
+
+/*
+	declare the possible formats that we will accept ('format' child in the
+	DATA instance of the external relation
+*/
+
+#define FMTS(D,X) D(TMY2) X D(CSV) X D(TDV)
+
+#define ENUM(F_) DATAREADER_FORMAT_##F_
+#define COMMA ,
+typedef enum{
+	FMTS(ENUM,COMMA),
+	DATAREADER_INVALID_FORMAT
+} DataReaderFormat;
+#undef ENUM
+#undef COMMA
 
 
 /*------------------------------------------------------------------------------
@@ -48,6 +66,11 @@ DataReader *datareader_new(const char *fn){
 	d->f = NULL;
 	d->noutputs = 0;
 
+	d->datafn=NULL;
+	d->headerfn=NULL;
+	d->eoffn=NULL;
+
+	CONSOLE_DEBUG("Datareader created...");
 	return d;
 }
 
@@ -55,35 +78,88 @@ DataReader *datareader_new(const char *fn){
 	Set data file format
 	@return 0 on success
 */
-int datareader_set_file_format(DataReader *d, const DataReaderFileFormat format){
-	switch(format){
+int datareader_set_format(DataReader *d, const char *format){
+
+#define STR(N) #N
+#define COMMA ,
+	const char *fmts[]={ FMTS(STR,COMMA) };
+#undef STR
+#undef COMMA
+
+	int i;
+
+	CONSOLE_DEBUG("FORMAT '%s'",format);
+
+	DataReaderFormat found = DATAREADER_INVALID_FORMAT;
+	for(i=0; i < DATAREADER_INVALID_FORMAT; ++i){
+		if(strcmp(format,fmts[i])==0){
+			found = (DataReaderFormat)i;
+			break;
+		}
+	}
+
+	CONSOLE_DEBUG("FOUND DATA FORMAT %d",found);
+
+	switch(found){
 		case DATAREADER_FORMAT_TMY2:
 			d->headerfn=&datareader_tmy2_header;
 			d->datafn=&datareader_tmy2_data;
+			d->eoffn=&datareader_tmy2_eof;
+			d->indepfn=&datareader_tmy2_time;
+			d->valfn=&datareader_tmy2_vals;
 			break;
+		case DATAREADER_FORMAT_TDV:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Tab delimited values (TDV) format not yet implemenented.");
+			return 1;
+		case DATAREADER_FORMAT_CSV:
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Comma-separated values (TDV) format not yet implemenented.");
+			return 1;
 		default:
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unknown file format specified");
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unknown file format '%s' specified",format);
 			return 1;
 	}
+
 	return 0;
 }
 
 /**	
 	Initialise the datareader: open the file, check the number of columns, etc.
 	@return 0 on success
+
+	@TODO search for the file in the ASCENDLIBRARY if not found immediately
 */
 int datareader_init(DataReader *d){
+	ospath_stat_t s;
+
 	d->fp = ospath_new(d->fn);
 	if(d->fp==NULL){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Invalid filepath");
 		return 1;
 	}
 
+	if(ospath_stat(d->fp,&s)){
+		if(errno==ENOENT){
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"The file '%s' does not exist.",d->fn);
+			return 1;
+		}else{
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"The file '%s' can not be accessed.",d->fn);
+			return 1;
+		}
+	}
+
+	CONSOLE_DEBUG("About to open the data file");
+
 	d->f = ospath_fopen(d->fp,"r");
 	if(d->f == NULL){
-		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to open file '%s' for reading",d->fn);
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Unable to open file '%s' for reading.",d->fn);
 		return 1;
 	}
+
+	CONSOLE_DEBUG("Data file open ok");
+
+	asc_assert(d->headerfn);
+	asc_assert(d->eoffn);
+	asc_assert(d->datafn);
 
 	if((*d->headerfn)(d)){
 		ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error processing file header in '%s'",d->fn);
@@ -99,6 +175,8 @@ int datareader_init(DataReader *d){
 		}
 	}
 	fclose(d->f);
+
+	d->i = 0; /* set current position to zero */
 
 	return 0;
 }
@@ -125,7 +203,7 @@ int datareader_delete(DataReader *d){
 	DataReader's current file. Can only be 1 at this stage.
 */
 int datareader_num_inputs(const DataReader *d){
-	return 1;
+	return d->ninputs;
 }
 
 /**
@@ -136,6 +214,38 @@ int datareader_num_outputs(const DataReader *d){
 	return d->noutputs;
 }
 
+
+int datareader_locate(DataReader *d, double t, double *t1, double *t2){
+	(*d->indepfn)(d,t1);
+	if(*t1 > t && d->i > 0){
+		/* start of current interval is too late */
+		do{
+			CONSOLE_DEBUG("STEPPING BACK (d->i = %d currently)",d->i);
+			--(d->i);
+			(*d->indepfn)(d,t1);
+		}while(*t1 > t && d->i > 0);
+	}
+	/* now either d->i==0 or t1 < t*/
+	CONSOLE_DEBUG("d->i==%d",d->i);
+	++d->i;
+	(*d->indepfn)(d,t2);
+	if(*t2 <= t){
+		/* end of current interface is too early */
+		do{
+			CONSOLE_DEBUG("STEPPING FORWARD (d->i = %d currently)",d->i);
+			++(d->i);
+			(*d->indepfn)(d,t2);
+		}while(*t2 < t && d->i < d->ndata);
+	}
+	CONSOLE_DEBUG("d->i==%d",d->i);
+
+	if(d->i == d->ndata || d->i == 0){
+		return 1;
+	}
+
+	CONSOLE_DEBUG("INTERVAL OK");
+	return 0;
+}
 
 /**
 	Return an interpolated set of output values for the given input values.
@@ -150,13 +260,33 @@ int datareader_num_outputs(const DataReader *d){
 */
 int datareader_func(DataReader *d, double *inputs, double *outputs){
 	int i;
+	double t1[1], t2[1];
+	double v1[2], v2[2];
+
 	double t;
-
 	t = inputs[0];
-	i = 0;
 
-	CONSOLE_DEBUG("Not implemented");
-	return 1;
+	CONSOLE_DEBUG("EVALUATING");
+
+	asc_assert(d->indepfn);
+
+	if(datareader_locate(d,t,t1,t2)){
+		CONSOLE_DEBUG("LOCATION ERROR");
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Time value t=%f is out of range",t);
+		return 1;
+	}
+
+	CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %f, t2 = %f", d->i, *t1, *t2);
+
+	(*d->valfn)(d,v2);
+	--d->i;
+	(*d->valfn)(d,v1);
+	
+	for(i=0;i<d->noutputs;++i){
+		outputs[i]=v1[i]+(t-*t1)/(*t2-*t1)*(v2[i]-v1[i]);
+	}
+	
+	return 0;
 }
 
 /**
@@ -166,8 +296,31 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 	@TODO implement this
 */
 int datareader_deriv(DataReader *d, double *inputs, double *jacobian){
-	CONSOLE_DEBUG("Not implemented");
-	return 1;
+	int i;
+	double t1[1], t2[1];
+	double v1[2], v2[2];
+
+	double t;
+	t = inputs[0];
+
+	CONSOLE_DEBUG("EVALUATING");
+
+	asc_assert(d->indepfn);
+
+	if(datareader_locate(d,t,t1,t2)){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Time value t=%f is out of range",t);
+		return 1;
+	}		
+
+	(*d->valfn)(d,v2);
+	--d->i;
+	(*d->valfn)(d,v1);
+	
+	for(i=0;i<d->noutputs;++i){
+		jacobian[i]=(v2[i]-v1[i])/(*t2-*t1);
+	}
+	
+	return 0;
 }
 
 
