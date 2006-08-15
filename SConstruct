@@ -40,6 +40,7 @@ if platform.system()=="Windows":
 		
 	need_libm = False
 	python_exe = "c:\\Python24\\python.exe"
+	default_with_scrollkeeper=False
 else:
 	default_tcl_lib = "tcl8.4"
 	default_tk_lib = "tk8.4"
@@ -61,6 +62,7 @@ else:
 	if not os.path.isdir(default_tcl):
 		default_tcl = '/usr'
 	python_exe = distutils.sysconfig.EXEC_PREFIX+"/bin/python"
+	default_with_scrollkeeper=False
 
 opts.Add(
 	'CC'
@@ -367,6 +369,11 @@ opts.Add(
 	,"$INSTALL_PREFIX/share"
 )
 
+opts.Add(
+	'INSTALL_DOC'
+	,'Location to install documentation files'
+	,"$INSTALL_SHARE/doc/ascend"
+)
 
 opts.Add(
 	'INSTALL_ASCDATA'
@@ -441,6 +448,12 @@ opts.Add(BoolOption(
 	,True
 ))
 
+opts.Add(BoolOption(
+	'WITH_SCROLLKEEPER'
+	,"Set to to 1 if you want to install an OMF file that can be read by scrollkeeper (eg Yelp on GNOME)"
+	,default_with_scrollkeeper
+))
+
 if platform.system()!="Windows":
 	opts.Add(BoolOption(
 		'WITH_GCCVISIBILITY'
@@ -500,6 +513,9 @@ without_cunit_reason = "not requested"
 
 with_extfns = env.get('WITH_EXTFNS')
 without_extfn_reason = "disabled by options/config.py"
+
+with_scrollkeeper = env.get('WITH_SCROLLKEEPER')
+without_scrollkeeper_reason = "disabled by options/config.py"
 
 if platform.system()=="Windows":
 	with_installer=1
@@ -594,6 +610,26 @@ def CheckSwigVersion(context):
 	else:
 		context.Result("too old, %d.%d.%d" % (maj,min,pat))
 		return 0;
+
+#----------------
+# Scrollkeeper (Linux documentation system)
+
+def get_scrollkeeper_omfdir(env):
+	cmd = 'scrollkeeper-config --omfdir'
+	(cin,coutcerr) = os.popen4(cmd)
+	output = coutcerr.read()
+	return output.strip()
+
+def CheckScrollkeeperConfig(context):
+	try:
+		context.Message("Checking for scrollkeeper...")
+		dir=get_scrollkeeper_omfdir(context.env)
+	except:
+		context.Result("Failed to run 'scrollkeeper-config'")
+		return 0
+	context.env['OMFDIR']=dir
+	context.Result("OK, %s" % dir)
+	return 1
 
 #----------------
 # General purpose library-and-header test
@@ -997,6 +1033,7 @@ conf = Configure(env
 		, 'CheckX11' : CheckX11
 		, 'CheckIDA' : CheckIDA
 		, 'CheckCONOPT' : CheckCONOPT
+		, 'CheckScrollkeeperConfig' : CheckScrollkeeperConfig
 #		, 'CheckIsNan' : CheckIsNan
 #		, 'CheckCppUnitConfig' : CheckCppUnitConfig
 	} 
@@ -1162,6 +1199,12 @@ if need_fortran:
 	if platform.system()=="Windows":
 		conf.env.Append(LIBPATH='c:\mingw\lib')
 
+# scrollkeeper
+
+if with_scrollkeeper:
+	if not conf.CheckScrollkeeperConfig():
+		with_scrollkeeper=False
+		without_scrollkeeper_reason="unable to detect scrollkeeper-config"
 
 # TODO: -D_HPUX_SOURCE is needed
 
@@ -1511,6 +1554,13 @@ if platform.system()=="Linux":
 	env.SubstInFile('ascend.spec.in')
 
 #------------------------------------------------------
+# CREATE OMF FILE FOR USE WITH SCROLLKEEPER
+
+if with_scrollkeeper:
+	env.SubstInFile('#/pygtk/gnome/ascend.omf.in')
+	env.InstallShared(env['INSTALL_ROOT']+env['OMFDIR'],"#/pygtk/gnome/ascend.omf")
+
+#------------------------------------------------------
 # DISTRIBUTION TAR FILE
 
 env['DISTTAR_FORMAT']='bz2'
@@ -1524,6 +1574,11 @@ tar = env.DistTar("dist/"+env['DISTTAR_NAME']
 )
 
 env.Depends(tar,'ascend.spec')
+
+#------------------------------------------------------
+# USER'S MANUAL
+
+env.SConscript('doc/SConscript',['env'])
 
 #------------------------------------------------------
 # LIBASCEND DOXYGEN DOCUMENTATION

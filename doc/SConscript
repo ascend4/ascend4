@@ -1,0 +1,5 @@
+Import('env')
+
+# this sconscript will build the ASCEND user's manual and install it in the desired location
+
+

@@ -26,7 +26,8 @@
 */
 
 #include <stdio.h>
-#include <libradtran/sun.h>
+/* #include <libradtran/sun.h> */
+#include "sun.h"
 
 #include <utilities/ascMalloc.h>
 #include <utilities/error.h>
