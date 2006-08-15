@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<omf>
+  <resource>
+    <creator>(John Pye)</creator>
+    <maintainer>(The ASCEND Development Team)</maintainer>
+    <contributor>(Ben Allan wrote much of the original manual)</contributor>
+    <contributor>(Art Westerberg, Tom Epperly, John Pye and Krishnan Chittur made further contributions.</contributor>
+    <title>ASCEND Manual @VERSION@</title>
+    <date>@OMFDOCDATE@</date>
+    <version identifier="ASCEND Manual V@VERSION@" date="@OMFDOCDATE@"/>
+    <subject category="Applications|Scientific"/>
+    <description>
+      Tutorial and Reference Manual for the ASCEND modelling environment.
+    </description>
+    <type>user's guide</type>
+    <format mime="text/html"/>
+    <identifier url="file:///@ASCDOCDIR@/index.html"/>
+    <language code="C"/>
+    <rights type="GNU FDL" license.version="1.1" holder="Carnegie Mellon University"/>
+  </resource>
+</omf>
