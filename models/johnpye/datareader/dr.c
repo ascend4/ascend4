@@ -27,6 +27,7 @@
 #include <utilities/ascMalloc.h>
 #include <utilities/error.h>
 #include <utilities/ascPanic.h>
+#include <utilities/ascEnvVar.h>
 
 /*------------------------------------------------------------------------------
   FORWARD DECLARATIONS
@@ -122,6 +123,43 @@ int datareader_set_format(DataReader *d, const char *format){
 	return 0;
 }
 
+typedef struct DataFileSearchData_struct{
+	struct FilePath *fp; /**< the relative path we're searching for */
+	ospath_stat_t buf; /**< saves memory allocation in the 'test' fn */
+	int error;           /**< error code (in case stat or fopen failed) */
+	struct FilePath *fp_found; /**< the full path we found */
+} DataFileSearchData;
+
+FilePathTestFn datareader_searchpath_test;
+
+/**
+	@return 1 on success
+*/
+int datareader_searchpath_test(struct FilePath *path,void *searchdata){
+	struct FilePath *fp1;
+	DataFileSearchData *sd;
+
+	sd = (DataFileSearchData *)searchdata;
+	assert(sd!=NULL);
+	assert(sd->fp!=NULL);
+
+	fp1 = ospath_concat(path,sd->fp);
+	if(fp1==NULL){
+		CONSOLE_DEBUG("Couldn't concatenate path");
+		return 0;
+	}
+
+	if(ospath_stat(fp1,&sd->buf)){
+		sd->error = errno;
+		ospath_free(fp1);
+		return 0;
+	}
+
+	sd->fp_found = fp1;
+	return 1;
+};
+
+
 /**	
 	Initialise the datareader: open the file, check the number of columns, etc.
 	@return 0 on success
@@ -130,6 +168,9 @@ int datareader_set_format(DataReader *d, const char *format){
 */
 int datareader_init(DataReader *d){
 	ospath_stat_t s;
+	char *tmp;
+	struct FilePath **sp1, *fp2;
+	DataFileSearchData sd;
 
 	d->fp = ospath_new(d->fn);
 	if(d->fp==NULL){
@@ -139,10 +180,42 @@ int datareader_init(DataReader *d){
 
 	if(ospath_stat(d->fp,&s)){
 		if(errno==ENOENT){
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"The file '%s' does not exist.",d->fn);
-			return 1;
+			/* file doesn't exist: check the search path instead */
+			tmp = Asc_GetEnv(PATHENVIRONMENTVAR);
+			if(tmp==NULL){
+				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"No paths to search (is env var '%s' set?)",PATHENVIRONMENTVAR);
+				return 1;
+			}
+
+			sp1 = ospath_searchpath_new(tmp);
+			if(sp1==NULL){
+				ERROR_REPORTER_HERE(ASC_PROG_ERROR,"Unable to process %s value '%s'",PATHENVIRONMENTVAR,tmp);
+				/* memory error */
+				ascfree(tmp);
+				return -3;
+			}
+			ascfree(tmp);
+
+			sd.fp = d->fp;
+
+			fp2 = ospath_searchpath_iterate(sp1, &datareader_searchpath_test, &sd);
+
+			if(fp2==NULL){
+				CONSOLE_DEBUG("File '%s' not found in search path (error %d)",d->fn,sd.error);
+				ospath_searchpath_free(sp1);
+				return -1;
+			}
+
+			ospath_searchpath_free(sp1);
+
+			/* replace our relative path with an absolute one */
+			ospath_free(d->fp);
+			d->fp = sd.fp_found;
+
 		}else{
-			ERROR_REPORTER_HERE(ASC_USER_ERROR,"The file '%s' can not be accessed.",d->fn);
+			ERROR_REPORTER_HERE(ASC_USER_ERROR,"The file '%s' cannot be accessed.\n"
+				"Check the file privileges, or try specifying an absolute path.",d->fn
+			);
 			return 1;
 		}
 	}
@@ -220,24 +293,25 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2){
 	if(*t1 > t && d->i > 0){
 		/* start of current interval is too late */
 		do{
-			/* CONSOLE_DEBUG("STEPPING BACK (d->i = %d currently)",d->i); */
 			--(d->i);
 			(*d->indepfn)(d,t1);
+			/*CONSOLE_DEBUG("STEPPING BACK (d->i = %d currently), t1=%lf",d->i, *t1); */
 		}while(*t1 > t && d->i > 0);
 	}
 	/* now either d->i==0 or t1 < t*/
-	/* CONSOLE_DEBUG("d->i==%d",d->i); */
+	/* CONSOLE_DEBUG("d->i==%d, t1=%lf",d->i,*t1); */
 	++d->i;
 	(*d->indepfn)(d,t2);
 	if(*t2 <= t){
 		/* end of current interface is too early */
 		do{
-			/* CONSOLE_DEBUG("STEPPING FORWARD (d->i = %d currently)",d->i); */
+			/* CONSOLE_DEBUG("STEPPING FORWARD (d->i = %d currently), t1=%lf, t2=%lf",d->i,*t1,*t2); */
+			(*d->indepfn)(d,t1);
 			++(d->i);
 			(*d->indepfn)(d,t2);
 		}while(*t2 < t && d->i < d->ndata);
 	}
-	/* CONSOLE_DEBUG("d->i==%d",d->i); */
+	CONSOLE_DEBUG("d->i==%d, t1[0] = %lf, t2[0] = %lf",d->i,t1[0],t2[0]);
 
 	if(d->i == d->ndata || d->i == 0){
 		return 1;
@@ -261,12 +335,12 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2){
 int datareader_func(DataReader *d, double *inputs, double *outputs){
 	int i;
 	double t1[1], t2[1];
-	double v1[2], v2[2];
+	double v1[5], v2[5]; /** @TODO this is a fixed size... not good */
 
-	double t;
+	double t,g,dt;
 	t = inputs[0];
 
-	/* CONSOLE_DEBUG("EVALUATING"); */
+	CONSOLE_DEBUG("EVALUATING AT t = %lf",inputs[0]);
 
 	asc_assert(d->indepfn);
 
@@ -275,15 +349,19 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Time value t=%f is out of range",t);
 		return 1;
 	}
-
-	/* CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %f, t2 = %f", d->i, *t1, *t2); */
+	CONSOLE_DEBUG("LOCATED AT t1 = %lf, t2 = %lf",t1[0], t2[0]);
 
 	(*d->valfn)(d,v2);
 	--d->i;
 	(*d->valfn)(d,v1);
+
+	CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0],v1[0],v2[0]);
 	
 	for(i=0;i<d->noutputs;++i){
-		outputs[i]=v1[i]+(t-*t1)/(*t2-*t1)*(v2[i]-v1[i]);
+		dt = t2[0] - t1[0];
+		g = (v2[i]-v1[i])/dt;
+		outputs[i]=v1[i]+g*(t-(*t1));
+		CONSOLE_DEBUG("[%d]: DT = %lf, START = %lf, GRADIENT = %lf, VALUE=%lf",i,dt, v1[i],g,outputs[i]);
 	}
 	
 	return 0;

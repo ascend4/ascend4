@@ -18,6 +18,14 @@
 #ifndef ASC_CONFIG_H
 #define ASC_CONFIG_H
 
+/**
+	The name of the environment variable containing a list' of paths
+	to search when trying to open a module.  The list is in the style
+	of the native OS: colon-separated on UNIX and semicolon separated
+	under Windows.
+*/
+#define PATHENVIRONMENTVAR "ASCENDLIBRARY"
+
 #define ASC_DEFAULTPATH "@DEFAULT_ASCENDLIBRARY@"
 
 /*

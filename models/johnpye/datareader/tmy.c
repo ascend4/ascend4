@@ -35,10 +35,11 @@
 #include "tmy.h"
 
 
-typedef struct{
+typedef struct Tmy2Point_struct{
 	double t;
-	float G;
-	float Gbn;
+	float I;
+	float Ibn;
+	float Id;
 	float T;
 	float v_wind;
 	
@@ -95,7 +96,7 @@ int datareader_tmy2_eof(DataReader *d){
 
 	/* set the number of inputs and outputs */
 	d->ninputs = 1;
-	d->noutputs = 2;
+	d->noutputs = 5;
 	return 0;
 }
 
@@ -146,13 +147,14 @@ int datareader_tmy2_data(DataReader *d){
 	/* brace yourself for this one... */
 
 	res = fscanf(d->f, 
-		/* 1 */ "%2d%2d%2d%2d" "%4d%4d" "%4d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" /* =15 */
-		/* 2 */ "%4d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" /* +12=27 */
-		/* 3 */ "%2d%1s%1d" "%2d%1s%1d" "%4d%1s%1d" "%4d%1s%1d" "%3d%1s%1d" "%4d%1s%1d" /* +18=45 */
-		/* 4 */ "%3d%1s%1d" "%3d%1s%1d" "%4d%1s%1d" "%5d%1s%1d" /* +12=57 */
+		/* 1 */ "%2d%2d%2d%2d" "%4d%4d" "%4d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" /* =15 */
+		/* 2 */ "%4d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" /* +12=27 */
+		/* 3 */ "%2d%1c%1d" "%2d%1c%1d" "%4d%1c%1d" "%4d%1c%1d" "%3d%1c%1d" "%4d%1c%1d" /* +18=45 */
+		/* 4 */ "%3d%1c%1d" "%3d%1c%1d" "%4d%1c%1d" "%5d%1c%1d" /* +12=57 */
 		/* 5 */ "%1d%1d%1d%1d%1d%1d%1d%1d%1d%1d" /* +10=67 */
-		/* 6 */ "%3d%1s%1d" "%3d%1s%1d" "%3d%1s%1d" "%2d%1s%1d" /* +12=79 */
+		/* 6 */ "%3d%1c%1d" "%3d%1c%1d" "%3d%1c%1d" "%2d%1c%1d" /* +12=79 */
 		" " /* to ensure that we move to the start of the next line, else end of file */
+
 
 	/* 1 */
 		,&year, &month, &day, &hour
@@ -205,13 +207,20 @@ int datareader_tmy2_data(DataReader *d){
 	*/
 
 	tmy = &DATA(d);
-	tmy->t = ((day_of_year_specific(day,month,year) - 1)*24 + hour)*3600;
-	tmy->G = (float)Igh; /* average W/m2 for the hour in question */
-	tmy->Gbn = (float)Idn; /* normal beam radiation */
-	tmy->T = 0.1*(float)T + 273.15; /* temperature */
-	tmy->v_wind = (float)wvel;
-	d->i++;
+	tmy->t = ((day_of_year_specific(day,month,year) - 1)*24.0 + hour)*3600.0;
+	tmy->I = Igh; /* average W/m2 for the hour in question */
+	tmy->Ibn = Idn; /* normal beam radiation */
+	tmy->Id = Idh;
+	tmy->T = 0.1*T + 273.15; /* temperature */
+	tmy->v_wind = wvel;
 
+	if(d->i < 20){
+		CONSOLE_DEBUG("ROW %d: year %d, month %d, day %d, hour %d (t = %.0f), Iegh %d, Iedn %d, Igh (%c) = %d --> I = %f"
+			, d->i, year, month, day, hour, tmy->t, Iegh, Iedn, Igh_source, Igh, tmy->I
+		);
+	}
+
+	d->i++;
 	return 0;
 }
 
@@ -221,7 +230,13 @@ int datareader_tmy2_time(DataReader *d, double *t){
 }
 
 int datareader_tmy2_vals(DataReader *d, double *v){
-	v[0]=DATA(d).G;
-	v[1]=DATA(d).Gbn;
+	CONSOLE_DEBUG("At t=%f h, T = %lf, I = %f J/m2"
+		,(DATA(d).t/3600.0),DATA(d).T, DATA(d).I
+	);
+	v[0]=DATA(d).I;
+	v[1]=DATA(d).Ibn;
+	v[2]=DATA(d).Id;
+	v[3]=DATA(d).T;
+	v[4]=DATA(d).v_wind;
 	return 0;
 }

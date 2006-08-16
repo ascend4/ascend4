@@ -20,6 +20,7 @@
 #include <stdio.h>
 
 #include <utilities/ascConfig.h>
+#include <utilities/ascPanic.h>
 #include <utilities/error.h>
 
 #include <compiler/fractions.h>
@@ -83,7 +84,7 @@ ASC_EXPORT(int) datareader_register(){
 		, asc_datareader_calc /* deriv */
 		, NULL /* deriv2 */
 		, asc_datareader_close /* final */
-		, 1,2 /* inputs, outputs */
+		, 1,5 /* inputs, outputs */
 		, help
 	); /* returns 0 on success */
 
@@ -184,6 +185,12 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 	int i;
 
 	d = (DataReader *)slv_interp->user_data;
+	if(!d){
+		ERROR_REPORTER_HERE(ASC_USER_ERROR
+			,"Datareader was not initialised successfully"
+		);
+		return 1;
+	}
 
 	if(ninputs!=datareader_num_inputs(d)){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
@@ -193,7 +200,7 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 
-	if(noutputs > datareader_num_outputs(d)){
+	if(noutputs!=datareader_num_outputs(d)){
 		ERROR_REPORTER_HERE(ASC_USER_ERROR
 			,"Invalid number of outputs, expected <=%d but received %d"
 			,datareader_num_outputs(d), noutputs
@@ -201,18 +208,21 @@ int asc_datareader_calc(struct Slv_Interp *slv_interp,
 		return 1;
 	}
 
-	/*
+	
 	for(i=0; i< ninputs; ++i){
 		CONSOLE_DEBUG("inputs[%d] = %f", i, inputs[i]);
 	}
-	*/
+	
 
 	switch(slv_interp->task){
 		case bb_func_eval:
-			/* CONSOLE_DEBUG("DATA READER EVALUATION"); */
+			CONSOLE_DEBUG("DATA READER EVALUATION");
 			if(datareader_func(d,inputs,outputs)){
 				CONSOLE_DEBUG("Datareader evaluation error");
 				return 1;
+			}
+			for(i=0; i< noutputs; ++i){
+				CONSOLE_DEBUG("outputs[%d] = %f", i, outputs[i]);
 			}
 			return 0; /* success */
 		case bb_deriv_eval:

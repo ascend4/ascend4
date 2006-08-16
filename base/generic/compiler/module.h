@@ -35,15 +35,8 @@
 #ifndef ASC_MODULE_H
 #define ASC_MODULE_H
 
+#include <utilities/config.h>
 #include <utilities/ascConfig.h>
-
-#define PATHENVIRONMENTVAR "ASCENDLIBRARY"
-/**<
- *  The name of the environment variable containing a list' of paths
- *  to search when trying to open a module.  The list is in the style
- *  of the native OS: colon-separated on UNIX and semicolon separated
- *  under Windows.
- */
 
 #define  MOD_FILE_EXTS   6
 #define  MOD_OLD_CODE    ".asc"
