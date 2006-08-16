@@ -632,7 +632,7 @@ char *SearchArchiveLibraryPath(CONST char *name, char *dpath, char *envv){
 
 		path=Asc_GetEnv(envv);
 		if(path==NULL){
-			/* CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath); */
+			CONSOLE_DEBUG("ENV VAR NOT FOUND, FALLING BACK TO DEFAULT SEARCH PATH = '%s'",dpath);
 			path=dpath;
 		}
 

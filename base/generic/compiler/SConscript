@@ -44,11 +44,11 @@ else:
 	scannersource = 'scanner_no_flex.c'
 
 parser = scanparse_env.SharedObject(target=['ascParse'], source=parsersource
-	, YACCFLAGS=['-d','-pzz_']
+	, YACCFLAGS=['-y','-d','-pzz_']
 )
 
 scanner = libascend_env.SharedObject(target=['scanner'],source=scannersource
-	, LEXFLAGS=['-Pzz_']
+	, LEXFLAGS=['-l','-Pzz_']
 )
 
 packages_env = libascend_env.Copy()

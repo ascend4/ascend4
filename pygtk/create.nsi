@@ -8,7 +8,7 @@
 ;--------------------------------
 
 ; The name of the installer
-Name "ASCEND PyGTK"
+Name "ASCEND"
 
 ; The file to write
 !ifdef OUTFILE
