@@ -73,16 +73,16 @@ enum mtx_reorder_method g_blockmethod = mtx_UNKNOWN;
 	Here we play some hefty Jacobian reordering games.
 
 	What we want to happen eventually is as follows:
-	
+
 	  - Get the free & incident pattern for include relations.
 	  - Output-assign the Jacobian.
 	  - BLT permute the Jacobian. If underspecified, fake rows
 	    to make things appear square.
 	  - For all leading square blocks apply reordering (kirk, etc),
 	  - If trailing rectangular block, "apply clever kirkbased scheme not known."???
-	
+
 	At present, we aren't quite so clever. We:
-	
+
 	  - Get the free & incident pattern for include relations.
 	  - Output-assign the Jacobian.
 	  - BLT permute the square output assigned region of the Jacobian.
@@ -90,7 +90,7 @@ enum mtx_reorder_method g_blockmethod = mtx_UNKNOWN;
 	  - Collect the block list as part of the master data structure.
       - Set sindices for rels, vars as current rows/cols in matrix so
 	    that the jacobian is 'naturally' preordered for all solvers.
-	
+
 	Solvers are still free to reorder their own matrices any way they like.
 	It's probably a dumb idea, though.
 */
@@ -132,8 +132,8 @@ int slv_std_make_incidence_mtx(slv_system_t sys, mtx_matrix_t mtx,
 
 
 /**
-	Orders the solvers_var list of the system to match the permutation 
-	on the given mtx. Does not change the data in mtx. 
+	Orders the solvers_var list of the system to match the permutation
+	on the given mtx. Does not change the data in mtx.
 
 	@return 0 on success, 1 on out-of-memory
 
@@ -170,8 +170,8 @@ static int reindex_vars_from_mtx(slv_system_t sys, int32 lo, int32 hi,
   return 0;
 }
 /**
-	Orders the solvers_rel list of the system to match the permutation 
-	on the given mtx. Does not change the data in mtx. 
+	Orders the solvers_rel list of the system to match the permutation
+	on the given mtx. Does not change the data in mtx.
 
 	@return 0 on success, 1 on out-of-memory
 
@@ -1290,7 +1290,7 @@ static const struct StaticSolverRegistration slv_reg[]={
 	,{HAVE_LRSLV,"LRSLV",&slv9a_register}
 	,{0,NULL,NULL}
 };
-	
+
 int SlvRegisterStandardClients(void){
 	int nclients = 0;
 	int newclient=0;
