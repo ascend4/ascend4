@@ -357,26 +357,20 @@ double solar_azimuth (int time, int day,
 }
 
 
+/**
+	Calculate the day of year for given data (ignoring leap years)
 
-/***********************************************************************************/
-/* Function: day_of_year                                                  @42_30i@ */
-/* Description:                                                                    */
-/*  Calculate the day of year for given date (leap days are not considered.        */
-/*                                                                                 */
-/* Parameters:                                                                     */
-/*  int day:          Day of month (1..31).                                        */
-/*  int month:        Month (1..12).                                               */
-/*                                                                                 */
-/* Return value:                                                                   */
-/*  The day of year (int); -1 if error.                                            */
-/*                                                                                 */
-/* Example:                                                                        */
-/* Files:                                                                          */
-/* Known bugs:                                                                     */
-/* Author:                                                                         */
-/*                                                                        @i42_30@ */
-/***********************************************************************************/
+	Use this function when you don't know specifically what year you're dealing
+	with.
 
+	@param day Day of month (1..31)
+	@param month Month (1..12)
+
+	@return -1 on error, else the day of the year, with 1 = the first of January
+
+	@note If your number of days exceeds the number in the month you've given,
+	your value will overflow into the next month.
+*/
 int day_of_year (int day, int month)
 {
   char mon =  0;
@@ -391,51 +385,55 @@ int day_of_year (int day, int month)
   mon = (char) month;
 
   switch (mon)  {
-  case 1:
-    doy = day + 0;
-    break;
-  case 2:
-    doy = day + 31;
-    break;
-  case 3:
-    doy = day + 59;
-    break;
-  case 4:
-    doy = day + 90;
-    break;
-  case 5:
-    doy = day + 120;
-    break;
-  case 6:
-    doy = day + 151;
-    break;
-  case 7:
-    doy = day + 181;
-    break;
-  case 8:
-    doy = day + 212;
-    break;
-  case 9:
-    doy = day + 243;
-    break;
-  case 10:
-    doy = day + 273;
-    break;
-  case 11:
-    doy = day + 304;
-    break;
-  case 12:
-    doy = day + 334;
-    break;
-  default:
-    doy = -1;
+  case 1: doy = day + 0; break;
+  case 2: doy = day + 31; break;
+  case 3: doy = day + 59; break;
+  case 4: doy = day + 90; break;
+  case 5: doy = day + 120; break;
+  case 6: doy = day + 151; break;
+  case 7: doy = day + 181; break;
+
+  case 8: doy = day + 212; break;
+  case 9: doy = day + 243; break;
+  case 10: doy = day + 273; break;
+  case 11: doy = day + 304; break;
+  case 12: doy = day + 334; break;
+  default: doy = -1;
   }
 
   return (doy);
 }
 
+/**
+	is the specified year a leap year?
 
+	@param year the Gregorian year A.D. (no constraints are asserted)
 
+	@see http://h71000.www7.hp.com/openvms/products/year-2000/leap.html
+	@see http://www.mitre.org/tech/cots/LEAPCALC.html
+	
+	returns integer 1 if the year is a leap year, else 0.
+
+	@note A leap year is a year which has 29 days in february, instead of the usual 28.
+*/
+char is_leap_year(int year){
+	if(year % 4 != 0)return 0; /* use 28 for days in February */
+	if(year % 400 == 0)return 1; /* use 29 for days in February */
+	if(year % 100 == 0)return 0; /* use 28 for days in February */
+	return 1; /* use 29 for days in February */
+}
+
+/**
+	day of year, for a specified year (corrects for leap year)
+*/
+int day_of_year_specific(int day, int month, int year){
+	int d;
+	d=day_of_year(day,month);
+	if(is_leap_year(year) && month>=3){
+		d++;
+	}
+	return d;
+}
 
 /**************************************************************************/
 /* convert time to string                                                 */

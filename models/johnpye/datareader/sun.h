@@ -69,10 +69,14 @@ int zenith2time      (int day,             /* day of year          */
 		      int *time1,          /* first time           */
 		      int *time2);         /* second time          */
 
-int day_of_year (int day,                  /* day of month (1..31) */ 
+int day_of_year (int day,          /* day of month (1..31) */ 
 		 int month);               /* month        (1..12) */       
 
-char *time2str  (char *timestr,            /* buffer for timestr   */
+char is_leap_year(int year);
+
+int day_of_year_specific(int day, int month, int year); /* i.e. with leap years */
+
+char *time2str(char *timestr,            /* buffer for timestr   */
 		 int hour,                 /* hour                 */
 		 int min,                  /* minute               */
 		 int sec);                 /* second               */

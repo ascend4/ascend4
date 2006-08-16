@@ -13,20 +13,23 @@ MODEL testtmy;
 	t IS_A time;
 	G IS_A solver_var;
 	Gbn IS_A solver_var;
-	G2 IS_A solver_var;
+	Gd IS_A solver_var;
+	T IS_A solver_var;
+	v_wind IS_A solver_var;
 	E IS_A solver_var; (* total radiation *)
+	Gb IS_A solver_var;
 
 	(* source data: http://rredc.nrel.gov/solar/old_data/nsrdb/tmy2/unix/23161.tm2.Z *)
 	tmydata IS_A drconf;
-	tmydata.filename :== '/home/john/src/ascend/models/johnpye/datareader/23161.tm2';
+	tmydata.filename :== 'johnpye/23161.tm2';
 
 	filereader:datareader(
 		t : INPUT;
-		G, Gbn : OUTPUT;
+		G, Gbn, Gd, T, v_wind : OUTPUT;
 		tmydata : DATA
 	);
 
-	G2 = G + Gbn;
+	Gb = G - Gd;
 
 METHODS
 
@@ -47,6 +50,7 @@ END specify;
 
 METHOD values;
 	t := 0 {s};
+	E := 0;
 END values;
 
 END testtmy;
