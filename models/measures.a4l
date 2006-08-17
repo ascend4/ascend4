@@ -141,6 +141,7 @@ year = {yr};
 week = {wk};
 day = {d};
 hour = {h};
+hr={h};
 minute = {min};
 millisecond = {ms};
 microsecond = {us};
