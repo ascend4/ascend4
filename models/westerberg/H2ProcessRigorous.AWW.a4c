@@ -6,10 +6,10 @@ REQUIRE "stream_holdup.a4l";
 
 ATOM heat_transfer_coefficient REFINES solver_var
     DIMENSION M/T^3/TMP
-    DEFAULT 10.0 {BTU/ft^2/hr/R};
-    lower_bound := 0.001 {BTU/ft^2/hr/R};
-    upper_bound := 1000 {BTU/ft^2/hr/R};
-    nominal := 10 {BTU/ft^2/hr/R};
+    DEFAULT 10.0 {BTU/ft^2/h/R};
+    lower_bound := 0.001 {BTU/ft^2/h/R};
+    upper_bound := 1000 {BTU/ft^2/h/R};
+    nominal := 10 {BTU/ft^2/h/R};
 END heat_transfer_coefficient;
 
 ATOM reaction_rate REFINES solver_var
@@ -294,18 +294,18 @@ MODEL BurnerUnit(
     exhaust.f['water'] = feed.f['water'] + feed.f['hydrogen']
 			  + 2.0*feed.f['methane'] + 3.0*feed.f['ethane']
 			  + 4.0*feed.f['propane'] + 5.0*feed.f['n_butane'];
-    exhaust.f['hydrogen'] = 0 {mole/hr};
+    exhaust.f['hydrogen'] = 0 {mole/h};
     exhaust.f['carbon_dioxide'] = feed.f['carbon_dioxide']
                                   + 1.0*feed.f['carbon_monoxide']
 				  + 1.0*feed.f['methane']
 				  + 2.0*feed.f['ethane']
 				  + 3.0*feed.f['propane']
 				  + 4.0*feed.f['n_butane'];
-    exhaust.f['carbon_monoxide'] = 0 {mole/hr};
-    exhaust.f['methane'] = 0 {mole/hr};
-    exhaust.f['ethane'] = 0 {mole/hr};
-    exhaust.f['propane'] = 0 {mole/hr};
-    exhaust.f['n_butane'] = 0 {mole/hr};
+    exhaust.f['carbon_monoxide'] = 0 {mole/h};
+    exhaust.f['methane'] = 0 {mole/h};
+    exhaust.f['ethane'] = 0 {mole/h};
+    exhaust.f['propane'] = 0 {mole/h};
+    exhaust.f['n_butane'] = 0 {mole/h};
     
     exhaust.H_flow = feed.H_flow;
 
@@ -399,7 +399,7 @@ MODEL PreReformerUnit(
 	RUN Xo.values;
 	
 	A := 40 {cm^2};
-	U := 10 {BTU/ft^2/hr/R}; (* Perry's table 11-5, p.11-26 *)
+	U := 10 {BTU/ft^2/h/R}; (* Perry's table 11-5, p.11-26 *)
     END values;
 END PreReformerUnit;
 
@@ -565,8 +565,8 @@ MODEL ReformerSection(
 	RUN Xo.values;
 	RUN Hx.values;
     
-        U_heat     := 10 {BTU/ft^2/hr/R}; (* Perry's table 11-5, p.11-26 *)
-	U_membrane :=  2 {BTU/ft^2/hr/R}; (* Perry's table 11-4, p.11-25 *)
+        U_heat     := 10 {BTU/ft^2/h/R}; (* Perry's table 11-5, p.11-26 *)
+	U_membrane :=  2 {BTU/ft^2/h/R}; (* Perry's table 11-4, p.11-25 *)
 	
 	Cat := 1 {gram};
 	A_heat := 2 {cm^2};
@@ -824,34 +824,34 @@ END specify;
 METHOD values;
     MethaneFeed.T            := 300 {K};
     MethaneFeed.P            := 200 {psia};
-    MethaneFeed.state.f[H2]  := 0.0 {kmol/hr};
-    MethaneFeed.state.f[CO]  := 0.0 {kmol/hr};
-    MethaneFeed.state.f[CO2] := 0.0 {kmol/hr};
-    MethaneFeed.state.f[C1]  := 0.93 {kmol/hr};
-    MethaneFeed.state.f[C2]  := 0.06 {kmol/hr};
-    MethaneFeed.state.f[C3]  := 0.01 {kmol/hr};
-    MethaneFeed.state.f[H2O] := 0.0 {kmol/hr};
+    MethaneFeed.state.f[H2]  := 0.0 {kmol/h};
+    MethaneFeed.state.f[CO]  := 0.0 {kmol/h};
+    MethaneFeed.state.f[CO2] := 0.0 {kmol/h};
+    MethaneFeed.state.f[C1]  := 0.93 {kmol/h};
+    MethaneFeed.state.f[C2]  := 0.06 {kmol/h};
+    MethaneFeed.state.f[C3]  := 0.01 {kmol/h};
+    MethaneFeed.state.f[H2O] := 0.0 {kmol/h};
 
-    WaterFeed.flow           := 1 {kmol/hr};
+    WaterFeed.flow           := 1 {kmol/h};
     WaterFeed.T              := 300 {K};
     WaterFeed.P              := 200 {psia};
-    WaterFeed.state.f[H2]    := 0.0 {kmol/hr};
-    WaterFeed.state.f[CO]    := 0.0 {kmol/hr};
-    WaterFeed.state.f[CO2]   := 0.0 {kmol/hr};
-    WaterFeed.state.f[C1]    := 0.0 {kmol/hr};
-    WaterFeed.state.f[C2]    := 0.0 {kmol/hr};
-    WaterFeed.state.f[C3]    := 0.0 {kmol/hr};
-    WaterFeed.state.f[H2O]   := 1.0 {kmol/hr};
+    WaterFeed.state.f[H2]    := 0.0 {kmol/h};
+    WaterFeed.state.f[CO]    := 0.0 {kmol/h};
+    WaterFeed.state.f[CO2]   := 0.0 {kmol/h};
+    WaterFeed.state.f[C1]    := 0.0 {kmol/h};
+    WaterFeed.state.f[C2]    := 0.0 {kmol/h};
+    WaterFeed.state.f[C3]    := 0.0 {kmol/h};
+    WaterFeed.state.f[H2O]   := 1.0 {kmol/h};
     
     refOut.T            := 300 {K};
     refOut.P            := 190 {psia};
-    refOut.state.f[H2]  := 0.0 {kmol/hr};
-    refOut.state.f[CO]  := 0.0 {kmol/hr};
-    refOut.state.f[CO2] := 0.0 {kmol/hr};
-    refOut.state.f[C1]  := 0.93 {kmol/hr};
-    refOut.state.f[C2]  := 0.06 {kmol/hr};
-    refOut.state.f[C3]  := 0.01 {kmol/hr};
-    refOut.state.f[H2O] := 0.0 {kmol/hr};
+    refOut.state.f[H2]  := 0.0 {kmol/h};
+    refOut.state.f[CO]  := 0.0 {kmol/h};
+    refOut.state.f[CO2] := 0.0 {kmol/h};
+    refOut.state.f[C1]  := 0.93 {kmol/h};
+    refOut.state.f[C2]  := 0.06 {kmol/h};
+    refOut.state.f[C3]  := 0.01 {kmol/h};
+    refOut.state.f[H2O] := 0.0 {kmol/h};
 
 END values;
 

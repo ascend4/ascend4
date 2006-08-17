@@ -24,7 +24,7 @@ RUN {react.reactor.seqmod};
 RUN {react.reactor.set_ode};
 RUN {react.reactor.set_obs};
 set_int 100 1 {s};
-ASSIGN {react.input.f['n_butane']} 110 {kmol/hr};
+ASSIGN {react.input.f['n_butane']} 110 {kmol/h};
 INTEGRATE react FROM 0 TO 99 WITH BLSODE;
 
 #Multiple Phase Reactor / Reactive Tray
@@ -40,7 +40,7 @@ RUN {m_reac.reactor.seqmod};
 RUN {m_reac.reactor.set_ode};
 RUN {m_reac.reactor.set_obs};
 set_int 100 1 {s};
-ASSIGN {m_reac.liqin.f['n_butane']} 90 {kmol/hr};
+ASSIGN {m_reac.liqin.f['n_butane']} 90 {kmol/h};
 INTEGRATE m_reac FROM 0 TO 99 WITH BLSODE;
 
 DELETE SYSTEM;
@@ -52,7 +52,7 @@ SOLVE {m_reac} WITH QRSlv;
 RUN {m_reac.check_all};
 ASSIGN {m_reac.dynamic} TRUE;
 ASSIGN {m_reac.t} 0 {s};
-ASSIGN {m_reac.liqin.f['n_butane']} 101 {kmol/hr};
+ASSIGN {m_reac.liqin.f['n_butane']} 101 {kmol/h};
 INTEGRATE m_reac FROM 0 TO 99 WITH BLSODE;
 
 ##########  reactor.a4s ends here  ##########
