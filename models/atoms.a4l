@@ -647,9 +647,18 @@ END length_parameter;
 		DIMENSION M/T^3
 		DEFAULT 1000{W/m^2};
 		lower_bound := 0{W/m^2};
-		upper_bound := 1.5{MW/m^3}; (* a bit more that the max possible from sunlight *)
+		upper_bound := 1.5{MW/m^2}; (* a bit more that the max possible from sunlight *)
 		nominal := 300{W/m^2};
 	END irradiance;
+
+	ATOM irradiation REFINES solver_var
+		DIMENSION M/T^2
+		DEFAULT 1000{J/m^2};
+		lower_bound := 0{J/m^2};
+		upper_bound := 1e50{J/m^2}; (* a bit more that the max possible from sunlight *)
+		nominal := 300{J/m^2};
+	END irradiation;
+
 
     ATOM molar_heat_capacity REFINES solver_var
         DIMENSION M*L^2/T^2/Q/TMP

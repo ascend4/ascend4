@@ -1,0 +1,276 @@
+REQUIRE "atoms.a4l";
+
+(*
+	Using the equations given in Duffie & Beckman (1980)
+	the following model allows calculation of the angle of incidence of
+	sunlight onto an inclined surface
+
+	The equation of time has been changes to the Duffie & Beckman 2nd edition
+	form, cited as coming from Iqbal 1983. The equation for 'B' has also
+	been changed to the 2nd Ed D&B form.
+
+	For the longitude correction we use the spherical geometry convention
+	of making east positive. D&B are americocentric, obviously :-)
+
+	by John Pye, 2006
+*)
+MODEL sunpos;
+	t IS_A time; (* starting at zero at midnight on 1 Jan *)
+		
+	L_st IS_A angle; (* standard meridian for the current time zone *)
+	L_loc IS_A angle; (* local longitude *)
+	phi IS_A angle; (* latitude, north positive *)
+
+	E IS_A time; (* 'Equation of time' correction *)
+	E = 229.2{min}*(0.000075 + 0.001868*cos(B) - 0.032077*sin(B)
+			- 0.014615*cos(2*B) - 0.04089*sin(2*B) );
+	(* where *) B IS_A angle;
+	B = t*360{deg}/365{day};
+
+	t_solar IS_A time; (* solar time *)
+	t_solar = t - 4{min/deg}*(L_st - L_loc) + E;
+	t_long IS_A time;
+	t_long = 4{min/deg}*(L_st - L_loc);
+	t_corr IS_A time;
+	t_corr = E - t_long;
+
+	delta IS_A angle; (* solar declination *)
+	delta = 23.45{deg}*sin(360{deg}*(285{day}+t)/(365{day}));
+
+	theta IS_A angle; (* angle of incidence of sun onto inclined surface *)
+	omega IS_A angle; (* hour angle, noon=0, afternoon positive *)
+	gamma IS_A angle; (* surface azimuth angle, south=0, west positive *)
+	beta IS_A angle; (* surface inclination, horiz=0, +90deg=vertical *)	
+
+	omega = (t_solar - 12{h})*(360{deg}/1{d});
+	omega_RHP IS_A angle;
+	omega_RHP = arccos(cos(omega));
+
+	omega_s IS_A angle;
+	omega_s = arccos( - tan(phi)*tan(delta) );
+
+	theta = arccos( 
+		sin(delta)*sin(phi)*cos(beta) - sin(delta)*cos(phi)*sin(beta)*cos(gamma)
+		+ cos(delta)*cos(phi)*cos(beta)*cos(omega)
+		+ cos(delta)*sin(phi)*sin(beta)*cos(gamma)*cos(omega)
+		+ cos(delta)*sin(beta)*sin(gamma)*sin(omega)
+	);
+
+	theta_z IS_A angle; (* zenith angle of the sun *)
+	theta_z = arccos(
+		cos(delta)*cos(phi)*cos(omega) + sin(delta)*sin(phi)
+	);
+
+	costheta IS_A factor;
+	costheta = cos(theta);
+	costhetaz IS_A factor;
+	costhetaz = cos(theta_z);
+
+	Gsc IS_A real_constant; (* solar constant *)
+	Gsc :== 1353 {W/m^2};
+
+	(* extraterrestrial irradiance on a normal surface*)
+	Gon IS_A irradiance;
+	Gon = Gsc*(1 + 0.033*cos(
+		300{deg}/365{day}*(1{day}+t))
+	);
+
+	R_b IS_A factor; (* ratio of beam radiation, inclined : horizontal *)
+	R_b = cos(theta) / cos(theta_z);
+
+METHODS
+METHOD default_self;
+	t := 0{day};
+	L_st := -120{deg}; (* USA Pacific time *)
+	L_loc := -(116{deg}+47{arcmin}); (* Daggett, California, home of SEGS *)
+END default_self;
+METHOD on_load;
+	RUN default_self;
+	RUN reset;
+	RUN values;
+END on_load;
+METHOD specify;
+	FIX t, L_st, L_loc, phi; (* time and location *)
+	FIX beta, gamma; (* surface orientation *)
+END specify;
+METHOD values;
+	(* values for Duffie & Beckman examples 1.5.1 ff *)
+	L_st := -90{deg}; (* USA Central time*)
+	L_loc := -89.4{deg};
+	phi := +43{deg};
+	(* t := 32.4375 {d}; *)
+	t := 32{d} + 10{h}+30{min};
+
+	(* surface orientation *)
+	beta := 45{deg};
+	gamma := 15{deg};
+
+END values;
+END sunpos;
+
+(*
+	Total daily extraterrestrial radiation, from sunrise to sunset.
+	
+	Set 't' to the start of the day in question.
+*)
+MODEL dailyextraterrestrial REFINES sunpos;
+	(* extraterrestrial irradiance on a horizontal surface -- problems coz it goes negative! *)
+	(* Go IS_A irradiance;
+	Go = Gsc*(1 + 0.033*cos( 300{deg}/365{day}*(1{day}+t)) )*cos(theta_z); *)
+
+	(* day's-total extraterrestrial radiation on a horizontal surface *)
+	Ho IS_A irradiation;
+	Ho = 1{d}*Gon*(
+		1/1{PI} * (cos(phi)*cos(delta)*sin(omega_s) + omega_s*sin(phi)*sin(delta))
+	);
+END dailyextraterrestrial;
+
+(*------------------------------------------------------------------------------
+	EXAMPLES
+
+	The following examples come from chapter one of Duffie and Beckman (1980)
+*)
+
+(*
+	For Madison (Wisconsin), calculate the angle of incidence of beam radiation
+	on a surface at 10:30 AM solar time on February 13, if the surface is
+	tilted 45 from the horizontal and pointed 15 degrees west of south.
+
+	checked, this looks OK -- JP 
+*)
+MODEL example_1_6_1 REFINES sunpos;
+METHODS
+METHOD specify;
+	RUN sunpos::specify;
+	FREE t;
+	FIX t_solar;
+END specify;
+METHOD values;
+	RUN sunpos::values;
+	t_solar := 43{d} + 10{h} + 30{min};
+	beta := 45 {deg};
+	gamma := 15 {deg};
+	L_st := -90{deg}; (* USA Central time*)
+	L_loc := -89.4{deg};
+	phi := +43{deg};
+END values;
+METHOD self_test;
+	ASSERT abs(theta-35.0{deg}) < 0.15{deg};
+	ASSERT abs(delta-(-13.80{deg})) < 0.02{deg};
+END self_test;
+END example_1_6_1;
+
+(*
+	Calculate the zenith angle of the sun at 9:30 AM solar time in Madison on
+	Feb 13.
+
+	checked, this looks OK -- JP
+*)
+MODEL example_1_6_2 REFINES sunpos;
+METHODS
+METHOD specify;
+	RUN sunpos::specify;
+	FREE t;
+	FIX t_solar;
+END specify;
+METHOD values;
+	RUN sunpos::values;
+	t_solar := 43{d} + 9{h} + 30{min};
+	L_st := -90{deg}; (* USA Central time*)
+	L_loc := -89.4{deg};
+	phi := +43{deg};
+END values;
+METHOD self_test;
+	ASSERT abs(theta_z-66.0{deg}) < 0.4{deg};
+END self_test;
+END example_1_6_2;
+
+(*
+	What is the ratio of beam radiiation for the surface and time specified in
+	Example 1.6.1 to that on a horizontal surface?
+
+	checked, this looks OK -- JP
+*)
+MODEL example_1_7_1 REFINES example_1_6_1;
+METHODS
+METHOD self_test;
+	ASSERT abs(R_b-1.6577) < 0.013;
+END self_test;
+END example_1_7_1;
+
+(* 
+	Calculate Rb for a surface at latitude 40 N, at a tilt 30 degrees toward 
+	the south, for the hour 9 to 10 (solar time) on Feb 16.
+
+	checked, this looks OK -- JP
+*)
+MODEL example_1_7_2 REFINES example_1_6_1;
+METHODS
+METHOD values;
+	phi := 40{deg};
+	beta := 30{deg};
+	gamma := 0{deg};
+	t_solar := 46{d} + 9.5{h};
+END values;
+METHOD self_test;
+	ASSERT abs(delta - (-13{deg})) < 0.5{deg};
+	ASSERT abs(R_b-1.61) < 0.005;
+END self_test;
+END example_1_7_2;
+
+(*
+	As for Example 1.7.2, but with a surface inclined at 50 degrees
+
+	checked, this looks OK
+*)
+MODEL example_1_7_3 REFINES example_1_7_2;
+METHODS
+METHOD values;
+	RUN example_1_7_2::values;
+	beta := 50{deg};
+END values;
+METHOD self_test;
+	ASSERT abs(delta - (-13{deg})) < 0.5{deg};
+	ASSERT abs(R_b-1.80) < 0.005;
+END self_test;
+END example_1_7_3;
+
+(* checked, looks OK (although the error in Ho is a little high) *)
+MODEL example_1_8_1 REFINES dailyextraterrestrial;
+METHODS
+METHOD values;
+	phi := 43{deg};
+	t := 104{d};
+END values;
+METHOD self_test;
+	ASSERT abs(omega_s - 98.9{deg}) < 0.05 {deg};
+	ASSERT abs(Ho - 33.4{MJ/m^2}) < 0.4{MJ/m^2};
+END self_test;
+END dailyextraterrestrial;
+
+(* 
+	NOTE
+	although these calcs are very useful, we are now starting to see why it 
+	might be a good idea to do them outside ASCEND in an external library.
+
+	The reason is that when integrating around the clock, some of these
+	functions go unphysically negative, eg radiation on a horizontal surface.
+	Using external functions we can easily apply such constraints without
+	even necessarily needing to cause nonsmoothness in the 'G' values.
+
+	Another reason is that using the sun position calculations enable smarter
+	time-wise interpolation of TMY data, preventing non-physical situations
+	from arising, eg sun after sunset.
+
+	--
+
+	REFERENCES
+
+	Duffie & Beckman (1980) Solar Engineering of Thermal Processes, 
+	1st ed., Wiley
+
+	Duffie & Beckman (1991) Solar Engineering of Thermal Processes, 
+	2nd ed., Wiley
+
+	Iqbal (1983) An Introduction to Solar Radiation, Academic Press, Toronto.
+*)
