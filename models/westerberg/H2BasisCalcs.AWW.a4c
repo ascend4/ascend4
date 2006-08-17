@@ -25,16 +25,16 @@ MODEL H2basis;
 	equil                              := TRUE;
 	feed.T                             := 298 {K};
 	feed.P                             := 1.0 {atm};
-	feed.f[comps]                      := tmf*1.0 {mol/hr};
+	feed.f[comps]                      := tmf*1.0 {mol/h};
 	react.stoichCoef[comps]            := 0.0;
-	react.turnover                     := 1.0 {mol/hr};
+	react.turnover                     := 1.0 {mol/h};
     END values;
     
     METHOD valuesH2Combustion;
 	(* H2 + 0.5O2 = H20 *)
 	RUN values;
-	feed.f['hydrogen']                 := 1.0 {mol/hr};
-	feed.f['oxygen']                   := 0.5 {mol/hr};
+	feed.f['hydrogen']                 := 1.0 {mol/h};
+	feed.f['oxygen']                   := 0.5 {mol/h};
 	react.stoichCoef['hydrogen']       := -1.0;
 	react.stoichCoef['oxygen']         := -0.5;
 	react.stoichCoef['water']          := 1.0;
@@ -43,8 +43,8 @@ MODEL H2basis;
     METHOD valuesCH4Combustion;
 	(* CH4 + 2O2 = C02 + 2H2O *)
 	RUN values;
-	feed.f['methane']                  := 1.0 {mol/hr};
-	feed.f['oxygen']                   := 2.0 {mol/hr};
+	feed.f['methane']                  := 1.0 {mol/h};
+	feed.f['oxygen']                   := 2.0 {mol/h};
 	react.stoichCoef['methane']        := -1.0;
 	react.stoichCoef['oxygen']         := -2.0;
 	react.stoichCoef['carbon_dioxide'] := 1.0;

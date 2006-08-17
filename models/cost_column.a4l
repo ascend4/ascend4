@@ -127,7 +127,7 @@ MODEL cost_calc(
 
 
 	FOR j IN [1..nsections] CREATE
-	    Area = 1{ft^2}*V[j]*1{hr/lb_mole}
+	    Area = 1{ft^2}*V[j]*1{h/lb_mole}
 		*sqrt(M_g*1{lb_mole^2/lbm/ft^3}
 		*V_bar[j])/Afrac/F[j]/3600;
 	END FOR;
@@ -153,7 +153,7 @@ MODEL cost_calc(
 
 	LMT = ln((Tc-Tin)/(Tc-Tout));
 	Ac = -QC*LMT/((Tout-Tin)*Uc);
-	Ar = QR/11250{BTU/hr/ft^2};
+	Ar = QR/11250{BTU/h/ft^2};
 	Tout IS_REFINED_TO temperature;
 	Tout = Tc - 5{K};
 
@@ -200,7 +200,7 @@ METHOD default_self;
 
 	Tin := 459.67{R} + 70{R};
 	Tout := 459.67{R} + 90{R};
-	Uc := 100{BTU/hr/ft^2/R};
+	Uc := 100{BTU/h/ft^2/R};
 	CpW := 1{cal/mole/K};
 	Hs := 933{BTU/lbm};
 	Cw := 0.03{USD}/1000{gallon};

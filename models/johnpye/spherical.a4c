@@ -8,6 +8,10 @@ REQUIRE "atoms.a4l";
 
 	The 'on load' configuration of this model gives the dimensions N-S and E-W
 	corresponding to a 1 deg-lat x 1 deg-long square in Sydney.
+
+	TODO:
+	More useful calculators such as distance between two points,
+	area of trianges, etc.
 *)
 MODEL spherical;
 	dx, dy IS_A delta_distance; (* E-W, N-S *)

@@ -128,8 +128,8 @@ slug = {14.5939*kilogram};
 
 yr = {31557600*second};
 wk = {604800*second};
-dy = {86400*second};
-hr = {3600*second};
+d = {86400*second};
+h = {3600*second};
 min = {60*second};
 sec = {second};
 s = {second};
@@ -139,8 +139,8 @@ ns = {second/1e9};
 ps = {second/1e12};
 year = {yr};
 week = {wk};
-day = {dy};
-hour = {hr};
+day = {d};
+hour = {h};
 minute = {min};
 millisecond = {ms};
 microsecond = {us};
@@ -446,7 +446,7 @@ gpm = {gallon/minute};
 
 (* time variant conversions *)
 
-MINIMUMWAGE = {5.15*USD/hr}; (* Dec 2005, see http://www.dol.gov/ *)
+MINIMUMWAGE = {5.15*USD/h}; (* Dec 2005, see http://www.dol.gov/ *)
 (*
 * conversions we'd like to see , but probably won't
 * milliHelen = {beauty/ship};
