@@ -1,0 +1,38 @@
+REQUIRE "atoms.a4l";
+
+(* 
+	simple model for some spherical geometry: latitude and longitude angles
+	subtended by North-South distance (dy) and East-West distance (dx) on
+	a sphere of given radius, given the local latutide (phi) and longitude
+	(theta).
+
+	The 'on load' configuration of this model gives the dimensions N-S and E-W
+	corresponding to a 1 deg-lat x 1 deg-long square in Sydney.
+*)
+MODEL spherical;
+	dx, dy IS_A delta_distance; (* E-W, N-S *)
+	R IS_A distance;
+
+	phi, theta IS_A angle; (* latitude, longitude *)
+	dphi, dtheta IS_A angle;
+
+	dx = R*cos(phi)*dtheta;
+	dy = R*dphi;
+METHODS
+METHOD on_load;
+	RUN default_self; RUN reset; RUN values;
+END on_load;
+METHOD default_self;
+	R := 1 {m};
+	theta := 0{deg}; phi := 0{deg};
+	dtheta := 1{deg}; dphi := 1{deg};
+END default_self;
+METHOD specify;
+	FIX R,theta,phi,dtheta,dphi;
+END specify;
+METHOD values;
+	R := 6372.795477598 {km}; (* earth's quadratic mean radius *)
+	theta := -33.9189{deg};  
+	phi := 151.2295{deg};
+END values;
+END spherical;
