@@ -941,9 +941,9 @@ struct Func g_arctan_f = {
   atan,
   datan,
   datan2,
-  safe_tan_D0,
-  safe_tan_D1,
-  safe_tan_D2,
+  safe_arctan_D0,
+  safe_arctan_D1,
+  safe_arctan_D2,
 #ifdef CHRIS_FUNC
   NULL,
   NULL,
