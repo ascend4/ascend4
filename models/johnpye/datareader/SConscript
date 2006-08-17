@@ -9,8 +9,8 @@ srcs = Split("""
 	sun.c
 """)
 
-#dr_env.Append(LIBPATH=['#'])
-#dr_env.Append(LIBS=['ascend','Radtran_c'])
+dr_env.Append(LIBPATH=['#'])
+dr_env.Append(LIBS=['ascend'])
 targets = []
 targets.append( dr_env.SharedLibrary("datareader",srcs) )
 

@@ -57,10 +57,10 @@ typedef enum{
 /**
 	Create a data reader object, with the filename specified. The filename
 	will be searched for in a specified path, eg ASCENDLIBRARY.
-*/		
+*/
 DataReader *datareader_new(const char *fn){
 	DataReader *d;
-	
+
 	d = ASC_NEW(DataReader);
 	d->fn = fn;
 	d->fp = NULL;
@@ -160,7 +160,7 @@ int datareader_searchpath_test(struct FilePath *path,void *searchdata){
 };
 
 
-/**	
+/**
 	Initialise the datareader: open the file, check the number of columns, etc.
 	@return 0 on success
 
@@ -201,7 +201,7 @@ int datareader_init(DataReader *d){
 			fp2 = ospath_searchpath_iterate(sp1, &datareader_searchpath_test, &sd);
 
 			if(fp2==NULL){
-				CONSOLE_DEBUG("File '%s' not found in search path (error %d)",d->fn,sd.error);
+				ERROR_REPORTER_HERE(ASC_USER_ERROR,"File '%s' not found in search path (error %d)",d->fn,sd.error);
 				ospath_searchpath_free(sp1);
 				return -1;
 			}
@@ -239,7 +239,7 @@ int datareader_init(DataReader *d){
 		fclose(d->f);
 		return 1;
 	}
-	
+
 	while(! (*d->eoffn)(d)){
 		if((*d->datafn)(d)){
 			ERROR_REPORTER_HERE(ASC_PROG_ERR,"Error reading file data in '%s'",d->fn);
@@ -323,7 +323,7 @@ int datareader_locate(DataReader *d, double t, double *t1, double *t2){
 
 /**
 	Return an interpolated set of output values for the given input values.
-	This should be computed such that the output values are smooth in their 
+	This should be computed such that the output values are smooth in their
 	first derivatives.
 
 	The required memory for the inputs and outputs must be allocated by the
@@ -356,14 +356,14 @@ int datareader_func(DataReader *d, double *inputs, double *outputs){
 	(*d->valfn)(d,v1);
 
 	CONSOLE_DEBUG("LOCATED OK, d->i = %d, t1 = %lf, t2 = %lf, v1=%lf, v2=%lf", d->i, t1[0], t2[0],v1[0],v2[0]);
-	
+
 	for(i=0;i<d->noutputs;++i){
 		dt = t2[0] - t1[0];
 		g = (v2[i]-v1[i])/dt;
 		outputs[i]=v1[i]+g*(t-(*t1));
 		CONSOLE_DEBUG("[%d]: DT = %lf, START = %lf, GRADIENT = %lf, VALUE=%lf",i,dt, v1[i],g,outputs[i]);
 	}
-	
+
 	return 0;
 }
 
@@ -389,16 +389,16 @@ int datareader_deriv(DataReader *d, double *inputs, double *jacobian){
 		CONSOLE_DEBUG("LOCATION ERROR");
 		ERROR_REPORTER_HERE(ASC_USER_ERROR,"Time value t=%f is out of range",t);
 		return 1;
-	}		
+	}
 
 	(*d->valfn)(d,v2);
 	--d->i;
 	(*d->valfn)(d,v1);
-	
+
 	for(i=0;i<d->noutputs;++i){
 		jacobian[i]=(v2[i]-v1[i])/(*t2-*t1);
 	}
-	
+
 	return 0;
 }
 
